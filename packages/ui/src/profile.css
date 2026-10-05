@@ -463,3 +463,167 @@
 .gcs-menu__item:hover {
   background: var(--gcs-surface2);
 }
+
+/* ─── Setările contului ─────────────────────────────────────────────────── */
+
+.gcs-settingsLayout {
+  display: grid;
+  grid-template-columns: minmax(200px, 240px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+@media (max-width: 800px) {
+  .gcs-settingsLayout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.gcs-settingsNav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+@media (max-width: 800px) {
+  .gcs-settingsNav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+.gcs-settingsNav__link {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 10px;
+  color: var(--gcs-muted);
+  font-weight: 600;
+}
+.gcs-settingsNav__link:hover {
+  color: var(--gcs-text);
+  background: var(--gcs-surface2);
+}
+.gcs-settingsNav__link--active {
+  color: var(--gcs-text);
+  background: var(--gcs-surface2);
+  box-shadow: inset 3px 0 0 var(--gcs-accent);
+}
+.gcs-settingsTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+.gcs-settingsForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.gcs-settingsFieldset {
+  border: 1px solid var(--gcs-border);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.gcs-settingsFieldset > legend {
+  padding: 0 6px;
+  font-weight: 700;
+}
+.gcs-settingsList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.gcs-settingsList > li,
+.gcs-settingsList__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-checkRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  font-size: 14px;
+}
+.gcs-coverPreview {
+  height: 110px;
+  border-radius: 10px;
+  background: linear-gradient(120deg, #1b1033, #2a1b4d 40%, #0f2236);
+}
+.gcs-appearancePreview {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--gcs-border);
+  border-radius: 14px;
+  padding: 48px 20px 18px;
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+}
+.gcs-appearancePreview__cover {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 70px;
+  opacity: 0.55;
+}
+.gcs-appearancePreview > :not(.gcs-appearancePreview__cover) {
+  position: relative;
+}
+.gcs-choiceGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+}
+.gcs-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 8px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 13px;
+  text-align: center;
+}
+.gcs-choice:has(input:checked) {
+  border-color: var(--gcs-accent);
+  background: var(--gcs-surface2);
+}
+.gcs-choice input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.gcs-choice:has(input:focus-visible) {
+  outline: 2px solid var(--gcs-accent);
+  outline-offset: 2px;
+}
+.gcs-swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+.gcs-swatch--active {
+  border-color: var(--gcs-text);
+}
+.gcs-swatchInput {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+.gcs-notice--warn {
+  background: rgba(244, 183, 64, 0.14);
+  color: #f4b740;
+}

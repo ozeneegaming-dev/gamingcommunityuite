@@ -124,7 +124,18 @@
       "unsupported_type": "File type not allowed",
       "invalid_parent": "Parent not allowed",
       "cycle": "A forum can't be moved under its own subforum",
-      "invalid_image": "Invalid or damaged image"
+      "invalid_image": "Invalid or damaged image",
+      "invalid_number": "The value must be a number.",
+      "same_email": "This is already your address.",
+      "taken": "This value is already used by another account.",
+      "unknown_user": "No member with this name.",
+      "self": "You can't do this with your own account.",
+      "staff": "Staff members cannot be ignored.",
+      "invalid_password": "The current password is wrong.",
+      "password_too_short": "The password must have at least 8 characters.",
+      "last_login_method": "You can't unlink your only sign-in method.",
+      "not_allowed": "One of the recipients doesn't accept messages from you.",
+      "conversation_limit": "You reached the maximum number of conversations. Leave an older one."
     }
   },
   "acp": {
@@ -757,13 +768,102 @@
     },
     "profile": {
       "cover_max_mb": "Maximum cover size (MB)",
-      "wall_enabled": "Profile wall enabled"
+      "wall_enabled": "Profile wall enabled",
+      "title": "Profile",
+      "bio": "Short bio",
+      "bioHint": "Shown under your name, on your profile and card (up to 160 characters).",
+      "save": "Save",
+      "saved": "Saved.",
+      "choose": "— Choose —",
+      "about": "About",
+      "games": "Games & accounts",
+      "avatar": "Avatar",
+      "cover": "Cover",
+      "coverAnimated": "Cover (can be animated)",
+      "upload": "Upload image",
+      "remove": "Remove",
+      "position": "Vertical cover position",
+      "coverDenied": "Your group cannot set a cover."
     },
     "pm": {
       "messages_per_page": "Messages per page in a conversation"
     },
     "vip": {
       "warn_days": "Days before expiry the member is warned"
+    },
+    "title": "Account settings",
+    "nav": {
+      "profile": "Profile",
+      "appearance": "Appearance",
+      "privacy": "Privacy",
+      "ignored": "Ignored",
+      "account": "Account"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "vipHint": "Avatar frames and name styles come with VIP tiers. Anyone can pick an accent color.",
+      "frame": "Avatar frame",
+      "noFrame": "No frame",
+      "style": "Name style",
+      "groupStyle": "Group style",
+      "accent": "Accent color",
+      "defaultAccent": "Default",
+      "save": "Save",
+      "saved": "Saved.",
+      "preview": "Preview"
+    },
+    "privacy": {
+      "title": "Privacy",
+      "save": "Save",
+      "saved": "Saved.",
+      "profile": "Who can see my profile",
+      "messages": "Who can send me private messages",
+      "wall": "Who can post on my wall",
+      "showOnline": "Show when I'm online",
+      "followedHint": "“Only people I follow” means members you follow. Staff can always see profiles and message you.",
+      "profile_PUBLIC": "Anyone, including guests",
+      "profile_MEMBERS": "Members only",
+      "profile_FOLLOWED": "Only people I follow",
+      "messages_MEMBERS": "Any member",
+      "messages_FOLLOWED": "Only people I follow",
+      "messages_NOBODY": "Nobody",
+      "wall_MEMBERS": "Any member",
+      "wall_FOLLOWED": "Only people I follow",
+      "wall_NOBODY": "Nobody"
+    },
+    "ignored": {
+      "title": "Ignored members",
+      "intro": "Their posts are collapsed and they cannot send you private messages. Staff cannot be ignored.",
+      "saved": "Saved.",
+      "name": "Member name",
+      "posts": "posts",
+      "messages": "messages",
+      "add": "Ignore",
+      "empty": "You are not ignoring anyone.",
+      "remove": "Stop ignoring"
+    },
+    "account": {
+      "title": "Account",
+      "saved": "Saved.",
+      "emailSent": "We sent a confirmation link to the new address.",
+      "passwordChanged": "Your password was changed.",
+      "emailTitle": "Email",
+      "currentEmail": "Current address: {email}",
+      "noEmail": "Your account has no real email yet.",
+      "newEmail": "New address",
+      "sendLink": "Send confirmation link",
+      "passwordTitle": "Password",
+      "currentPassword": "Current password",
+      "newPassword": "New password (at least 8 characters)",
+      "changePassword": "Change password",
+      "linkedTitle": "Linked accounts",
+      "linked": "linked",
+      "notLinked": "not linked",
+      "unlink": "Unlink",
+      "emailChanged": "Your email address was confirmed and changed.",
+      "emailInvalid": "The confirmation link is invalid or has expired.",
+      "steamBanner": "Your account was created with Steam and has no real email.",
+      "steamBannerLink": "Add one now"
     }
   },
   "permissions": {

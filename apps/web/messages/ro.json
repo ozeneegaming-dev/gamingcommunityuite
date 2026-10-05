@@ -124,7 +124,18 @@
       "unsupported_type": "Tip de fișier nepermis",
       "invalid_parent": "Părinte nepermis",
       "cycle": "Un forum nu poate fi mutat sub propriul subforum",
-      "invalid_image": "Imagine invalidă sau deteriorată"
+      "invalid_image": "Imagine invalidă sau deteriorată",
+      "invalid_number": "Valoarea trebuie să fie un număr.",
+      "same_email": "Aceasta e deja adresa ta.",
+      "taken": "Valoarea e deja folosită de alt cont.",
+      "unknown_user": "Nu există un membru cu acest nume.",
+      "self": "Nu poți face asta cu propriul cont.",
+      "staff": "Membrii staff-ului nu pot fi ignorați.",
+      "invalid_password": "Parola curentă nu e corectă.",
+      "password_too_short": "Parola trebuie să aibă minimum 8 caractere.",
+      "last_login_method": "Nu poți dezlega singura metodă de autentificare.",
+      "not_allowed": "Unul dintre destinatari nu primește mesaje de la tine.",
+      "conversation_limit": "Ai atins numărul maxim de conversații. Părăsește una mai veche."
     }
   },
   "acp": {
@@ -757,13 +768,102 @@
     },
     "profile": {
       "cover_max_mb": "Mărimea maximă a cover-ului (MB)",
-      "wall_enabled": "Peretele de pe profil e activ"
+      "wall_enabled": "Peretele de pe profil e activ",
+      "title": "Profil",
+      "bio": "Descriere scurtă",
+      "bioHint": "Apare sub numele tău, pe profil și pe card (maximum 160 de caractere).",
+      "save": "Salvează",
+      "saved": "Salvat.",
+      "choose": "— Alege —",
+      "about": "Despre",
+      "games": "Jocuri & conturi",
+      "avatar": "Avatar",
+      "cover": "Cover",
+      "coverAnimated": "Cover (poate fi animat)",
+      "upload": "Încarcă imagine",
+      "remove": "Șterge",
+      "position": "Poziția verticală a cover-ului",
+      "coverDenied": "Grupul tău nu poate pune cover."
     },
     "pm": {
       "messages_per_page": "Mesaje pe pagină într-o conversație"
     },
     "vip": {
       "warn_days": "Cu câte zile înainte de expirare e anunțat membrul"
+    },
+    "title": "Setări cont",
+    "nav": {
+      "profile": "Profil",
+      "appearance": "Aspect",
+      "privacy": "Confidențialitate",
+      "ignored": "Ignorați",
+      "account": "Cont"
+    },
+    "appearance": {
+      "title": "Aspect",
+      "vipHint": "Ramele de avatar și stilurile de nume vin cu nivelurile VIP. Culoarea de accent o poate alege oricine.",
+      "frame": "Rama avatarului",
+      "noFrame": "Fără ramă",
+      "style": "Stilul numelui",
+      "groupStyle": "Stilul grupului",
+      "accent": "Culoarea de accent",
+      "defaultAccent": "Implicită",
+      "save": "Salvează",
+      "saved": "Salvat.",
+      "preview": "Previzualizare"
+    },
+    "privacy": {
+      "title": "Confidențialitate",
+      "save": "Salvează",
+      "saved": "Salvat.",
+      "profile": "Cine îmi vede profilul",
+      "messages": "Cine îmi poate scrie mesaje private",
+      "wall": "Cine poate scrie pe peretele meu",
+      "showOnline": "Arată când sunt online",
+      "followedHint": "„Doar cei pe care îi urmăresc” înseamnă membrii pe care tu îi urmărești. Staff-ul vede profilurile și îți poate scrie oricând.",
+      "profile_PUBLIC": "Oricine, inclusiv vizitatorii",
+      "profile_MEMBERS": "Doar membrii",
+      "profile_FOLLOWED": "Doar cei pe care îi urmăresc",
+      "messages_MEMBERS": "Orice membru",
+      "messages_FOLLOWED": "Doar cei pe care îi urmăresc",
+      "messages_NOBODY": "Nimeni",
+      "wall_MEMBERS": "Orice membru",
+      "wall_FOLLOWED": "Doar cei pe care îi urmăresc",
+      "wall_NOBODY": "Nimeni"
+    },
+    "ignored": {
+      "title": "Membri ignorați",
+      "intro": "Postările lor apar pliate, iar ei nu-ți pot scrie mesaje private. Staff-ul nu poate fi ignorat.",
+      "saved": "Salvat.",
+      "name": "Numele membrului",
+      "posts": "postări",
+      "messages": "mesaje",
+      "add": "Ignoră",
+      "empty": "Nu ignori pe nimeni.",
+      "remove": "Nu mai ignora"
+    },
+    "account": {
+      "title": "Cont",
+      "saved": "Salvat.",
+      "emailSent": "Ți-am trimis un link de confirmare pe adresa nouă.",
+      "passwordChanged": "Parola a fost schimbată.",
+      "emailTitle": "Email",
+      "currentEmail": "Adresa curentă: {email}",
+      "noEmail": "Contul tău nu are încă un email real.",
+      "newEmail": "Adresa nouă",
+      "sendLink": "Trimite linkul de confirmare",
+      "passwordTitle": "Parolă",
+      "currentPassword": "Parola curentă",
+      "newPassword": "Parola nouă (minimum 8 caractere)",
+      "changePassword": "Schimbă parola",
+      "linkedTitle": "Conturi legate",
+      "linked": "legat",
+      "notLinked": "nelegat",
+      "unlink": "Dezleagă",
+      "emailChanged": "Adresa de email a fost confirmată și schimbată.",
+      "emailInvalid": "Linkul de confirmare e invalid sau a expirat.",
+      "steamBanner": "Contul tău a fost creat prin Steam și nu are un email real.",
+      "steamBannerLink": "Adaugă-l acum"
     }
   },
   "permissions": {
