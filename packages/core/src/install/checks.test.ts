@@ -18,9 +18,10 @@ afterAll(() => {
 
 const byId = (results: Awaited<ReturnType<typeof runChecks>>) => Object.fromEntries(results.map((r) => [r.id, r]));
 
+// Sub încărcarea `pnpm test` (toate pachetele în paralel), conexiunile pot depăși limita de 3 s din producție.
 describe("runChecks", () => {
   test("cu PostgreSQL și Redis pornite → postgres, redis, disc și config ok", async () => {
-    const results = byId(await runChecks({ databaseUrl: testDbUrl(), redisUrl: inject("redisUrl"), configDir: dir }));
+    const results = byId(await runChecks({ databaseUrl: testDbUrl(), redisUrl: inject("redisUrl"), configDir: dir, timeoutMs: 30_000 }));
     expect(results.postgres).toMatchObject({ ok: true });
     expect(results.redis).toMatchObject({ ok: true });
     expect(results.config_writable).toMatchObject({ ok: true });

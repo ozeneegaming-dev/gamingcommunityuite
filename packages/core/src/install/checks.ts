@@ -23,9 +23,9 @@ const result = (id: GcsCheckId, ok: boolean, detail: string): GcsCheckResult =>
 
 const message = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
-async function checkPostgres(url: string | undefined): Promise<GcsCheckResult[]> {
+async function checkPostgres(url: string | undefined, timeoutMs: number): Promise<GcsCheckResult[]> {
   if (!url) return [result("postgres", false, "DATABASE_URL lipsește"), result("extensions", false, "—")];
-  const client = new pg.Client({ connectionString: url, connectionTimeoutMillis: TIMEOUT_MS });
+  const client = new pg.Client({ connectionString: url, connectionTimeoutMillis: timeoutMs });
   client.on("error", () => {});
   try {
     await client.connect();
@@ -46,11 +46,11 @@ async function checkPostgres(url: string | undefined): Promise<GcsCheckResult[]>
   }
 }
 
-async function checkRedis(url: string | undefined): Promise<GcsCheckResult> {
+async function checkRedis(url: string | undefined, timeoutMs: number): Promise<GcsCheckResult> {
   if (!url) return result("redis", false, "REDIS_URL lipsește");
   const redis = new Redis(url, {
     lazyConnect: true,
-    connectTimeout: TIMEOUT_MS,
+    connectTimeout: timeoutMs,
     maxRetriesPerRequest: 0,
     enableOfflineQueue: false,
     retryStrategy: () => null,
@@ -67,10 +67,10 @@ async function checkRedis(url: string | undefined): Promise<GcsCheckResult> {
   }
 }
 
-async function checkMinio(endpoint: string | undefined): Promise<GcsCheckResult> {
+async function checkMinio(endpoint: string | undefined, timeoutMs: number): Promise<GcsCheckResult> {
   if (!endpoint) return result("minio", false, "S3_ENDPOINT lipsește");
   try {
-    const res = await fetch(new URL("/minio/health/live", endpoint), { signal: AbortSignal.timeout(TIMEOUT_MS) });
+    const res = await fetch(new URL("/minio/health/live", endpoint), { signal: AbortSignal.timeout(timeoutMs) });
     return result("minio", res.ok, `HTTP ${res.status}`);
   } catch (error) {
     return result("minio", false, message(error));
@@ -108,11 +108,12 @@ async function checkConfigWritable(dir: string): Promise<GcsCheckResult> {
  * MinIO, spațiul pe disc (≥ 2 GB) și folderul de configurare. O verificare eșuată are `fixKey`,
  * cheia textului care explică remedierea.
  */
-export async function runChecks(env: GcsCheckEnv): Promise<GcsCheckResult[]> {
+export async function runChecks(env: GcsCheckEnv & { timeoutMs?: number }): Promise<GcsCheckResult[]> {
+  const timeoutMs = env.timeoutMs ?? TIMEOUT_MS;
   const [postgres, redis, minio, disk, config] = await Promise.all([
-    checkPostgres(env.databaseUrl),
-    checkRedis(env.redisUrl),
-    checkMinio(env.s3Endpoint),
+    checkPostgres(env.databaseUrl, timeoutMs),
+    checkRedis(env.redisUrl, timeoutMs),
+    checkMinio(env.s3Endpoint, timeoutMs),
     checkDisk(env.configDir),
     checkConfigWritable(env.configDir),
   ]);
