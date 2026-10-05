@@ -3,6 +3,7 @@ import { GcsAchievementService } from "../src/profile/achievements";
 import { GcsAchievementAdmin } from "../src/profile/achievementsAdmin";
 import { GcsCosmeticsService } from "../src/profile/cosmetics";
 import { GcsRankDirectory } from "../src/profile/display";
+import { GcsProfileFieldAdmin } from "../src/profile/fieldsAdmin";
 import { GcsMembership } from "../src/profile/membership";
 import { GcsProfileService } from "../src/profile/profile";
 import { GcsPromotionService } from "../src/profile/promotions";
@@ -90,7 +91,7 @@ export async function createProfileWorld() {
     await world.redis.del(`gcs:rl:wall-post:${actor.userId}`);
   }
 
-  return { ...world, outbox, mailer, profiles, social, achievements, achievementAdmin, membership, promotions, cosmetics, vip, ranks, profileQueries, conversations, conversationQueries, moderator, clearWallFlood, clearPmFlood };
+  return { ...world, outbox, mailer, profiles, social, profileFields: new GcsProfileFieldAdmin({ db: world.db, bus: world.bus, acp: world.acp }), achievements, achievementAdmin, membership, promotions, cosmetics, vip, ranks, profileQueries, conversations, conversationQueries, moderator, clearWallFlood, clearPmFlood };
 }
 
 export type GcsProfileWorld = Awaited<ReturnType<typeof createProfileWorld>>;

@@ -140,7 +140,10 @@
       "rule_empty": "The rule must give points or a badge.",
       "one_required": "Fill in at least one threshold.",
       "same_group": "The target group cannot also be a source group.",
-      "already_awarded": "The member already has this badge."
+      "already_awarded": "The member already has this badge.",
+      "two_required": "A list needs at least two options.",
+      "not_vip": "The chosen group is not a VIP tier.",
+      "permanent": "A permanent VIP cannot be extended."
     }
   },
   "acp": {
@@ -798,6 +801,79 @@
       "delete": "Delete",
       "add": "New promotion",
       "confirmDelete": "Delete this promotion?"
+    },
+    "profiles": {
+      "title": "Profiles",
+      "settingsTitle": "Profile settings",
+      "coverMaxMb": "Maximum cover size (MB)",
+      "wallEnabled": "Profile wall enabled",
+      "key": "Key",
+      "label": "Label",
+      "type": "Type",
+      "section": "Tab",
+      "visibility": "Who can see it",
+      "maxLength": "Max length",
+      "position": "Order",
+      "options": "Options (for lists)",
+      "optionsHint": "Comma separated: PC, PlayStation, Xbox",
+      "required": "Required",
+      "showOnCard": "Shown on the hover card",
+      "save": "Save",
+      "delete": "Delete",
+      "add": "New field",
+      "confirmDelete": "Delete the field and every value members filled in?",
+      "types": {
+        "TEXT": "Short text",
+        "TEXTAREA": "Long text",
+        "URL": "Link",
+        "NUMBER": "Number",
+        "SELECT": "List"
+      },
+      "sections": {
+        "ABOUT": "About",
+        "GAMES": "Games & accounts"
+      },
+      "visibilities": {
+        "PUBLIC": "Anyone",
+        "MEMBERS": "Members only",
+        "STAFF": "Staff only"
+      }
+    },
+    "memberProfile": {
+      "profileTitle": "Profile",
+      "bio": "Short bio",
+      "save": "Save profile",
+      "resetAvatar": "Remove avatar",
+      "resetCover": "Remove cover",
+      "confirmReset": "Remove the image?",
+      "badgesTitle": "Badges",
+      "noBadges": "No badges.",
+      "revoke": "Revoke",
+      "confirmRevoke": "Revoke this badge?",
+      "award": "Award badge",
+      "badge": "Badge",
+      "automatic": "automatic",
+      "reason": "Reason",
+      "vipTitle": "VIP",
+      "noVip": "No active VIP.",
+      "expires": "expires on {date}",
+      "permanent": "Permanent",
+      "asPrimary": "as primary group",
+      "extend": "Extend",
+      "days": "Days",
+      "revokeVip": "Revoke VIP",
+      "confirmRevokeVip": "Revoke VIP?",
+      "grant": "Grant VIP",
+      "tier": "Tier",
+      "note": "Note",
+      "history": "VIP history",
+      "until": "until {date}",
+      "actions": {
+        "GRANT": "Granted",
+        "EXTEND": "Extended",
+        "REVOKE": "Revoked",
+        "EXPIRE": "Expired"
+      }
     }
   },
   "settings": {

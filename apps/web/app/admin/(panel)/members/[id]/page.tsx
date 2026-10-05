@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
+import { MemberProfileSections } from "./MemberProfileSections";
 import { addSecondaryGroup, banMember, liftBan, removeSecondaryGroup, setPrimaryGroup, warnMember } from "../actions";
 
 type Props = { params: Promise<{ id: string }> };
@@ -198,6 +199,9 @@ export default async function AcpMemberPage({ params }: Props) {
             </div>
           ))}
         </Section>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(380px, 1fr))", gap: 16, alignItems: "start" }}>
+        <MemberProfileSections userId={member.id} />
       </div>
     </>
   );

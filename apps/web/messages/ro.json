@@ -140,7 +140,10 @@
       "rule_empty": "Regula trebuie să dea puncte sau un badge.",
       "one_required": "Completează cel puțin un prag.",
       "same_group": "Grupul țintă nu poate fi și grup sursă.",
-      "already_awarded": "Membrul are deja acest badge."
+      "already_awarded": "Membrul are deja acest badge.",
+      "two_required": "O listă are nevoie de cel puțin două opțiuni.",
+      "not_vip": "Grupul ales nu e un nivel VIP.",
+      "permanent": "Un VIP permanent nu se prelungește."
     }
   },
   "acp": {
@@ -798,6 +801,79 @@
       "delete": "Șterge",
       "add": "Promovare nouă",
       "confirmDelete": "Ștergi promovarea?"
+    },
+    "profiles": {
+      "title": "Profiluri",
+      "settingsTitle": "Setări profil",
+      "coverMaxMb": "Mărimea maximă a cover-ului (MB)",
+      "wallEnabled": "Peretele de pe profil e activ",
+      "key": "Cheie",
+      "label": "Etichetă",
+      "type": "Tip",
+      "section": "Tab",
+      "visibility": "Cine îl vede",
+      "maxLength": "Lungime maximă",
+      "position": "Ordine",
+      "options": "Opțiuni (pentru listă)",
+      "optionsHint": "Separate prin virgulă: PC, PlayStation, Xbox",
+      "required": "Obligatoriu",
+      "showOnCard": "Apare pe hover card",
+      "save": "Salvează",
+      "delete": "Șterge",
+      "add": "Câmp nou",
+      "confirmDelete": "Ștergi câmpul și toate valorile completate de membri?",
+      "types": {
+        "TEXT": "Text scurt",
+        "TEXTAREA": "Text lung",
+        "URL": "Link",
+        "NUMBER": "Număr",
+        "SELECT": "Listă"
+      },
+      "sections": {
+        "ABOUT": "Despre",
+        "GAMES": "Jocuri & conturi"
+      },
+      "visibilities": {
+        "PUBLIC": "Oricine",
+        "MEMBERS": "Doar membrii",
+        "STAFF": "Doar staff-ul"
+      }
+    },
+    "memberProfile": {
+      "profileTitle": "Profil",
+      "bio": "Descriere scurtă",
+      "save": "Salvează profilul",
+      "resetAvatar": "Șterge avatarul",
+      "resetCover": "Șterge cover-ul",
+      "confirmReset": "Ștergi imaginea?",
+      "badgesTitle": "Badge-uri",
+      "noBadges": "Niciun badge.",
+      "revoke": "Retrage",
+      "confirmRevoke": "Retragi badge-ul?",
+      "award": "Acordă badge",
+      "badge": "Badge",
+      "automatic": "automat",
+      "reason": "Motiv",
+      "vipTitle": "VIP",
+      "noVip": "Fără VIP activ.",
+      "expires": "expiră pe {date}",
+      "permanent": "Permanent",
+      "asPrimary": "ca grup principal",
+      "extend": "Prelungește",
+      "days": "Zile",
+      "revokeVip": "Retrage VIP",
+      "confirmRevokeVip": "Retragi VIP-ul?",
+      "grant": "Acordă VIP",
+      "tier": "Nivel",
+      "note": "Notă",
+      "history": "Istoric VIP",
+      "until": "până pe {date}",
+      "actions": {
+        "GRANT": "Acordat",
+        "EXTEND": "Prelungit",
+        "REVOKE": "Retras",
+        "EXPIRE": "Expirat"
+      }
     }
   },
   "settings": {

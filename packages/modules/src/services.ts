@@ -47,6 +47,7 @@ import { GcsAchievementService } from "./profile/achievements";
 import { GcsAchievementAdmin } from "./profile/achievementsAdmin";
 import { GcsCosmeticsService } from "./profile/cosmetics";
 import { GcsRankDirectory } from "./profile/display";
+import { GcsProfileFieldAdmin } from "./profile/fieldsAdmin";
 import { GcsMembership } from "./profile/membership";
 import { GcsProfileService } from "./profile/profile";
 import { GcsPromotionService } from "./profile/promotions";
@@ -93,6 +94,7 @@ export type GcsServices = {
   forumModerators: GcsForumModeratorService;
   mailer: GcsMailer;
   profiles: GcsProfileService;
+  profileFields: GcsProfileFieldAdmin;
   social: GcsSocialService;
   achievements: GcsAchievementService;
   achievementAdmin: GcsAchievementAdmin;
@@ -293,6 +295,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     forumModerators: new GcsForumModeratorService({ db, permissions, acp }),
     mailer,
     profiles,
+    profileFields: new GcsProfileFieldAdmin({ db, bus, acp }),
     social,
     achievements,
     achievementAdmin: new GcsAchievementAdmin({ db, bus, acp, achievements, jobs }),
