@@ -133,6 +133,7 @@ fi
 
 # 8. Comanda `gcs` și codul de instalare.
 step "Instalez comanda gcs în /usr/local/bin"
+run chmod +x "$DIR/gcs"
 run $SUDO ln -sf "$DIR/gcs" /usr/local/bin/gcs
 CODE="(vezi: cd $DIR && docker compose logs web | grep 'Cod de instalare')"
 if [ "$DRY_RUN" -eq 0 ]; then
