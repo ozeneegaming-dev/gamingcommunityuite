@@ -13,3 +13,4 @@ logs/
 .pgtest/
 .e2e/
 .gcs-config/
+apps/web/cli/dist/

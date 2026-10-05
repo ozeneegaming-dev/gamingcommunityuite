@@ -1,8 +1,6 @@
-import { runInstall } from "@gcs/core";
 import type { NextRequest } from "next/server";
 import { INSTALL_COOKIE, installInput, installState, targetDatabaseUrl } from "@/lib/install";
-import { migrationsDir } from "@/lib/migrations";
-import { resetServices, services } from "@/lib/services";
+import { performInstall } from "@/lib/install-run";
 
 export const dynamic = "force-dynamic";
 
@@ -32,18 +30,8 @@ export async function POST(request: NextRequest): Promise<Response> {
     async start(controller) {
       const send = (event: string, data: unknown) => controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
       try {
-        await state.advance("run");
-        const { registry, cache, bus } = services();
-        await runInstall(input, (e) => send("progress", e), { databaseUrl, migrationsDir: migrationsDir(), registry, cache, bus, state });
-        if (external) {
-          // Baza externă devine baza aplicației: rămâne în `.env.runtime`, citit la pornire.
-          await state.writeSecrets({ DATABASE_URL: databaseUrl });
-          process.env.DATABASE_URL = databaseUrl;
-        }
-        await state.clearInstallSecrets();
-        await resetServices();
-        const token = await state.createFinishToken(input.admin.email);
-        send("done", { finishUrl: `/api/auth/gcs-install/finish?token=${token}` });
+        const { finishToken } = await performInstall({ input, databaseUrl, external, onProgress: (e) => send("progress", e) });
+        send("done", { finishUrl: `/api/auth/gcs-install/finish?token=${finishToken}` });
       } catch (error) {
         console.error("[RED-LINE] Instalarea a eșuat", error);
         send("error", { message: error instanceof Error ? error.message : String(error) });

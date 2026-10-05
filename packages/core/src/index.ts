@@ -6,6 +6,7 @@ export * from "./acp/roles";
 export * from "./acp/search";
 export * from "./audit";
 export * from "./auth/actor";
+export * from "./auth/adminReset";
 export * from "./auth/passwords";
 export * from "./auth/rateLimit";
 export * from "./auth/registration";

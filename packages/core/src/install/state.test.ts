@@ -131,6 +131,7 @@ describe("installGate", () => {
     expect(installGate("/install", false)).toBe("pass");
     expect(installGate("/install/database", false)).toBe("pass");
     expect(installGate("/api/health", false)).toBe("pass");
+    expect(installGate("/api/internal/cli", false)).toBe("pass");
     expect(installGate("/_next/static/chunk.js", false)).toBe("pass");
     expect(installGate("/installer-fals", false)).toBe("redirect");
   });

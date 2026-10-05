@@ -24,6 +24,8 @@ RUN addgroup -S gcs && adduser -S gcs -G gcs \
  && mkdir -p /app/config && chown gcs:gcs /app/config
 COPY --from=build --chown=gcs:gcs /app/apps/web/.next/standalone ./
 COPY --from=build --chown=gcs:gcs /app/apps/web/.next/static ./apps/web/.next/static
+# CLI-ul `gcs` (un singur fișier, fără dependențe): docker compose exec web node apps/web/cli/gcs.mjs …
+COPY --from=build --chown=gcs:gcs /app/apps/web/cli/dist/gcs.mjs ./apps/web/cli/gcs.mjs
 USER gcs
 EXPOSE 3000
 HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=5 \

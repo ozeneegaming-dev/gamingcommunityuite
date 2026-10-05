@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+# RED-LINE — consola de administrare (rulează pe server, din /opt/redline sau prin /usr/local/bin/gcs).
+#
+#   gcs status | install | reset-admin-password <nume> | maintenance on|off   → în containerul web
+#   gcs backup [--out <folder>] | gcs restore <fișier>                       → aici, cu docker compose
+#
+# Coduri de ieșire: 0 = ok, 1 = eroare, 2 = utilizare greșită.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+cd "$ROOT"
+
+die() { echo "Eroare: $*" >&2; exit 1; }
+
+# Variabilele din .env (utilizatorul și baza PostgreSQL).
+load_env() {
+  [ -f .env ] || die "lipsește $ROOT/.env (rulează întâi install.sh)"
+  set -a
+  # shellcheck disable=SC1091
+  . ./.env
+  set +a
+}
+
+# CLI-ul Node din containerul web (cu terminal interactiv dacă există unul).
+cli() {
+  if [ -t 0 ] && [ -t 1 ]; then
+    docker compose exec web node apps/web/cli/gcs.mjs "$@"
+  else
+    docker compose exec -T web node apps/web/cli/gcs.mjs "$@"
+  fi
+}
+
+backup() {
+  local out="./backups"
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --out) out="${2:-}"; [ -n "$out" ] || { echo "Folosire: gcs backup [--out <folder>]" >&2; exit 2; }; shift 2 ;;
+      *) echo "Folosire: gcs backup [--out <folder>]" >&2; exit 2 ;;
+    esac
+  done
+  load_env
+  mkdir -p "$out"
+  local stamp work archive
+  stamp="$(date +%Y%m%d-%H%M)"
+  work="$(mktemp -d)"
+  trap 'rm -rf "$work"' RETURN
+  echo "Backup baza de date…"
+  docker compose exec -T postgres pg_dump -U "$POSTGRES_USER" -Fc "$POSTGRES_DB" > "$work/db.dump"
+  echo "Backup fișiere (MinIO)…"
+  docker compose exec -T minio tar -C /data -cf - . > "$work/files.tar"
+  echo "Backup configurare…"
+  docker compose exec -T web tar -C /app/config -cf - . > "$work/config.tar"
+  # .env conține secretele (inclusiv cheia cu care sunt criptate secretele 2FA): fără el, backup-ul nu e complet.
+  cp .env "$work/env"
+  archive="$out/redline-backup-$stamp.tar.gz"
+  tar -C "$work" -czf "$archive" db.dump files.tar config.tar env
+  chmod 600 "$archive"
+  echo "Backup salvat: $archive"
+}
+
+restore() {
+  local file="${1:-}"
+  [ -n "$file" ] || { echo "Folosire: gcs restore <fișier>" >&2; exit 2; }
+  [ -f "$file" ] || die "fișierul $file nu există"
+  load_env
+  local site answer work
+  site="$(cli site-name | tr -d '\r')"
+  # shellcheck disable=SC1111 # ghilimelele românești „…” sunt intenționate
+  echo "Restaurarea înlocuiește TOATE datele actuale ale site-ului „$site”."
+  read -r -p "Scrie numele site-ului ca să confirmi: " answer
+  [ "$answer" = "$site" ] || die "numele nu se potrivește; restaurarea a fost anulată"
+
+  work="$(mktemp -d)"
+  trap 'rm -rf "$work"' RETURN
+  tar -C "$work" -xzf "$file"
+  cli maintenance on
+  echo "Restaurez baza de date…"
+  docker compose exec -T postgres pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --if-exists --no-owner < "$work/db.dump"
+  echo "Restaurez fișierele…"
+  docker compose exec -T minio sh -c 'rm -rf /data/* && tar -C /data -xf -' < "$work/files.tar"
+  echo "Restaurez configurarea…"
+  docker compose exec -T web sh -c 'tar -C /app/config -xf -' < "$work/config.tar"
+  cli maintenance off
+  echo "Restaurare finalizată. Dacă backup-ul vine de pe alt server, compară .env cu $work/env (secretele trebuie să fie aceleași)."
+}
+
+case "${1:-}" in
+  backup) shift; backup "$@" ;;
+  restore) shift; restore "$@" ;;
+  *) cli "$@" ;;
+esac

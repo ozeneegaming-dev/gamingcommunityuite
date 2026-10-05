@@ -10,7 +10,7 @@ export default defineConfig({
     },
   },
   test: {
-    include: ["lib/**/*.test.ts", "app/**/*.test.ts"],
+    include: ["lib/**/*.test.ts", "app/**/*.test.ts", "cli/**/*.test.ts"],
     globalSetup: ["../../packages/db/test/globalSetup.ts", "../../packages/core/test/redisSetup.ts"],
     setupFiles: ["./test/setup-env.ts"],
     // Serviciile web sunt singleton-uri pe proces; un singur worker ține testele simple și deterministe.

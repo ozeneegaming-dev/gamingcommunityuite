@@ -249,6 +249,7 @@ export async function verifyInstallCode(
 export function installGate(pathname: string, installed: boolean): "pass" | "redirect" | "not_found" {
   const isInstall = pathname === "/install" || pathname.startsWith("/install/");
   if (installed) return isInstall ? "not_found" : "pass";
-  if (isInstall || pathname === "/api/health" || pathname.startsWith("/_next/")) return "pass";
+  // `/api/internal/` = endpoint-ul CLI-ului `gcs` (`gcs install` rulează înainte de instalare), protejat cu un HMAC.
+  if (isInstall || pathname === "/api/health" || pathname.startsWith("/api/internal/") || pathname.startsWith("/_next/")) return "pass";
   return "redirect";
 }
