@@ -35,6 +35,8 @@ export default async function AcpGroupsPage() {
       </h1>
       <GcsCard as="section" aria-label={t("order")}>
         <GroupOrder
+          // Lista se reinițializează când se schimbă grupurile (ex. după „Creează grupul”).
+          key={rows.map((r) => `${r.id}:${r.name}`).join(",")}
           groups={rows}
           labels={{
             name: t("columns.name"),

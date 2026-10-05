@@ -25,6 +25,13 @@ export default defineConfig({
       testMatch: "**/install.spec.ts",
       use: { ...devices["Desktop Chrome"], baseURL: process.env.GCS_E2E_INSTALL_URL ?? "http://localhost:3101" },
     },
-    { name: "chromium", testIgnore: "**/install.spec.ts", use: { ...devices["Desktop Chrome"] } },
+    // Smoke test-ul etapei 1 continuă pe instanța instalată de „install”.
+    {
+      name: "smoke",
+      testMatch: "**/stage1-smoke.spec.ts",
+      dependencies: ["install"],
+      use: { ...devices["Desktop Chrome"], baseURL: process.env.GCS_E2E_INSTALL_URL ?? "http://localhost:3101" },
+    },
+    { name: "chromium", testIgnore: ["**/install.spec.ts", "**/stage1-smoke.spec.ts"], use: { ...devices["Desktop Chrome"] } },
   ],
 });

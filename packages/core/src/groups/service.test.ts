@@ -66,6 +66,16 @@ describe("GcsGroupService", () => {
     expect(events[0]?.tags).toEqual(expect.arrayContaining([`group:${group.id}`, "name-styles"]));
   });
 
+  test("un grup nou pornește cu setările și permisiunile pe container ale grupului „member”", async () => {
+    await service.setContainerPermissions("forum", "1", { [groups.member!]: ["forums.view"] }, root);
+    const group = await service.create({ name: "Clan Beta" }, root);
+    const actor = { ...member, groupIds: [group.id], primaryGroupId: group.id };
+
+    await expect(permissions.can(actor, "core.view_public")).resolves.toBe(true);
+    await expect(permissions.groupValue(actor, "upload.max_mb")).resolves.toBe(10);
+    await expect(permissions.can(actor, "forums.view", { type: "forum", id: "1" })).resolves.toBe(true);
+  });
+
   test("update salvează valorile înainte/după în audit", async () => {
     await service.update(groups.member!, { color: "#22D3EE" }, root);
     const log = await db.auditLog.findFirstOrThrow({ where: { action: "group.update" } });
