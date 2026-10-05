@@ -41,8 +41,8 @@ export async function GcsForumSidebar({ stats, recent }: Props) {
             <GcsUserLink
               userId={stats.newestMember.id}
               name={stats.newestMember.name}
-              groupKey={stats.newestMember.groupKey}
-              href={memberHref(stats.newestMember.id)}
+              nameKey={stats.newestMember.nameKey}
+              href={memberHref(stats.newestMember)}
             />
           </p>
         )}
@@ -61,7 +61,7 @@ export async function GcsForumSidebar({ stats, recent }: Props) {
                 <span>
                   {r.user && (
                     <>
-                      <GcsUserLink userId={r.user.id} name={r.user.name} groupKey={r.user.groupKey} href={memberHref(r.user.id)} />
+                      <GcsUserLink userId={r.user.id} name={r.user.name} nameKey={r.user.nameKey} href={memberHref(r.user)} />
                       {" · "}
                     </>
                   )}

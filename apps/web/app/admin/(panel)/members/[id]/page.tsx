@@ -193,7 +193,7 @@ export default async function AcpMemberPage({ params }: Props) {
           {member.sharedIpAccounts.length === 0 && <p style={muted}>{t("ips.sharedNone")}</p>}
           {member.sharedIpAccounts.map((a) => (
             <div key={a.id} style={listRow}>
-              <GcsUserLink userId={a.id} name={a.name} groupKey={a.groupKey} href={`/admin/members/${a.id}`} />
+              <GcsUserLink userId={a.id} name={a.name} nameKey={a.groupKey} href={`/admin/members/${a.id}`} />
               <span style={muted}>{a.ip}</span>
             </div>
           ))}

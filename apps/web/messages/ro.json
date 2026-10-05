@@ -19,7 +19,10 @@
       "cta": "Creează cont"
     },
     "searchLabel": "Caută",
-    "searchPlaceholder": "Caută topicuri, postări…"
+    "searchPlaceholder": "Caută topicuri, postări…",
+    "messages": "Mesaje",
+    "messagesUnread": "{count, plural, one {Mesaje (# conversație necitită)} few {Mesaje (# conversații necitite)} other {Mesaje (# de conversații necitite)}}",
+    "settings": "Setări cont"
   },
   "auth": {
     "login": {
@@ -1102,7 +1105,8 @@
       "uploading": "Se încarcă fișierul…",
       "uploadFailed": "Încărcarea a eșuat",
       "noMentions": "Niciun membru găsit"
-    }
+    },
+    "ignored": "Ai ignorat pe {name}. Arată postarea"
   },
   "newTopic": {
     "title": "Topic nou în {forum}",

@@ -126,7 +126,7 @@ export default async function SearchPage({ searchParams }: Props) {
               <p className="gcs-searchResult__meta">
                 {r.author && (
                   <>
-                    <GcsUserLink userId={r.author.id} name={r.author.name} groupKey={r.author.groupKey} href={memberHref(r.author.id)} />
+                    <GcsUserLink userId={r.author.id} name={r.author.name} nameKey={r.author.nameKey} href={memberHref(r.author)} />
                     {" · "}
                   </>
                 )}

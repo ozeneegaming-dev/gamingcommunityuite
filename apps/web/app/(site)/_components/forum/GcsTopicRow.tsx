@@ -12,7 +12,7 @@ export async function GcsTopicRow({ topic, select }: { topic: Row; select?: Reac
     <div className="gcs-topicRow" data-testid="gcs-topic-row" data-topic-id={topic.id}>
       {select}
       <span className="gcs-topicRow__avatar">
-        {topic.author && <GcsAvatar name={topic.author.name} size="s" {...(topic.author.image ? { src: topic.author.image } : {})} />}
+        {topic.author && <GcsAvatar name={topic.author.name} size="s" {...(topic.author.image ? { src: topic.author.image } : {})} {...(topic.author.frameKey ? { frame: topic.author.frameKey } : {})} />}
       </span>
       <div className="gcs-topicRow__main">
         <div className="gcs-topicRow__badges">
@@ -41,7 +41,7 @@ export async function GcsTopicRow({ topic, select }: { topic: Row; select?: Reac
           {topic.author && (
             <>
               {t("byWord")}{" "}
-              <GcsUserLink userId={topic.author.id} name={topic.author.name} groupKey={topic.author.groupKey} href={memberHref(topic.author.id)} />
+              <GcsUserLink userId={topic.author.id} name={topic.author.name} nameKey={topic.author.nameKey} href={memberHref(topic.author)} />
               {" · "}
             </>
           )}
@@ -59,7 +59,7 @@ export async function GcsTopicRow({ topic, select }: { topic: Row; select?: Reac
       </div>
       <div className="gcs-topicRow__last">
         {topic.last.user && (
-          <GcsUserLink userId={topic.last.user.id} name={topic.last.user.name} groupKey={topic.last.user.groupKey} href={memberHref(topic.last.user.id)} />
+          <GcsUserLink userId={topic.last.user.id} name={topic.last.user.name} nameKey={topic.last.user.nameKey} href={memberHref(topic.last.user)} />
         )}
         <GcsRelTime at={topic.last.at} />
       </div>

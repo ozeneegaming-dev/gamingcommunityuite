@@ -52,7 +52,7 @@ export default async function TopicPage({ params, searchParams }: Props) {
   if (!ref) notFound();
   const page = pageParam((await searchParams).page);
   const actor = await currentActor();
-  const { forumQueries, readMarkers, permissions } = services();
+  const { forumQueries, readMarkers, permissions, social } = services();
   const t = await getTranslations("topic");
   const tf = await getTranslations("forum");
   const format = await getFormatter();
@@ -69,6 +69,7 @@ export default async function TopicPage({ params, searchParams }: Props) {
   if (ref.slug !== topic.slug) permanentRedirect(topicHref(topic, page));
 
   const visibleIds = data.posts.filter((p) => p.visibility === "VISIBLE").map((p) => p.id);
+  const ignored = new Set(await social.ignoredIds(actor.userId, "posts"));
   const isMod = data.modPowers.length > 0;
   const [maxUploadMb, , targets] = await Promise.all([
     actor.userId ? permissions.groupValue<number | boolean>(actor, "upload.max_mb") : Promise.resolve(0),
@@ -101,7 +102,7 @@ export default async function TopicPage({ params, searchParams }: Props) {
             {topic.author && (
               <span>
                 {t("startedBy")}{" "}
-                <GcsUserLink userId={topic.author.id} name={topic.author.name} groupKey={topic.author.groupKey} href={memberHref(topic.author.id)} /> ·{" "}
+                <GcsUserLink userId={topic.author.id} name={topic.author.name} nameKey={topic.author.nameKey} href={memberHref(topic.author)} /> ·{" "}
                 {format.dateTime(new Date(topic.createdAt), { dateStyle: "medium" })}
               </span>
             )}
@@ -161,6 +162,7 @@ export default async function TopicPage({ params, searchParams }: Props) {
             isSolved={topic.solvedPostId === post.id}
             reactionList={data.reactions}
             actorId={actor.userId}
+            ignored={post.author !== null && ignored.has(post.author.id)}
             can={{
               react: actor.userId !== null && post.visibility === "VISIBLE",
               quote: data.canReply,

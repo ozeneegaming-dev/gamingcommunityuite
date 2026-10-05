@@ -70,7 +70,7 @@ export default async function AcpMembersPage({ searchParams }: Props) {
             {
               key: "name",
               header: t("columns.name"),
-              render: (m) => <GcsUserLink userId={m.id} name={m.name} groupKey={m.primaryGroup.key} href={`/admin/members/${m.id}`} />,
+              render: (m) => <GcsUserLink userId={m.id} name={m.name} nameKey={m.primaryGroup.key} href={`/admin/members/${m.id}`} />,
             },
             { key: "email", header: t("columns.email") },
             { key: "primaryGroup", header: t("columns.group"), render: (m) => m.primaryGroup.name },

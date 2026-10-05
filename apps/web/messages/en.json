@@ -19,7 +19,10 @@
       "cta": "Create account"
     },
     "searchLabel": "Search",
-    "searchPlaceholder": "Search topics, posts…"
+    "searchPlaceholder": "Search topics, posts…",
+    "messages": "Messages",
+    "messagesUnread": "{count, plural, one {Messages (# unread conversation)} other {Messages (# unread conversations)}}",
+    "settings": "Account settings"
   },
   "auth": {
     "login": {
@@ -1102,7 +1105,8 @@
       "uploading": "Uploading file…",
       "uploadFailed": "Upload failed",
       "noMentions": "No members found"
-    }
+    },
+    "ignored": "You are ignoring {name}. Show post"
   },
   "newTopic": {
     "title": "New topic in {forum}",

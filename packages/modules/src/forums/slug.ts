@@ -26,3 +26,12 @@ export function parseRef(ref: string): { id: number; slug: string } | null {
   if (!Number.isSafeInteger(id) || id <= 0) return null;
   return { id, slug: m[2] ?? "" };
 }
+
+/**
+ * `cmabc123-krypt` → `{ id: "cmabc123", slug: "krypt" }` (id-urile userilor sunt cuid-uri, fără `-`).
+ * Doar caractere sigure în id; altceva → `null`.
+ */
+export function parseUserRef(ref: string): { id: string; slug: string } | null {
+  const m = /^([a-z0-9]{8,40})(?:-(.*))?$/i.exec(ref);
+  return m ? { id: m[1]!, slug: m[2] ?? "" } : null;
+}

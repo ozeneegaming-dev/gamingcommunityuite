@@ -92,8 +92,8 @@ describe("GcsAvatar", () => {
 });
 
 describe("GcsUserLink", () => {
-  test('groupKey="vip_gold" → clasa gcs-name--vip_gold', () => {
-    render(<GcsUserLink userId="u1" name="ShadowRO" groupKey="vip_gold" href="/members/u1-shadowro" />);
+  test('nameKey="vip_gold" → clasa gcs-name--vip_gold', () => {
+    render(<GcsUserLink userId="u1" name="ShadowRO" nameKey="vip_gold" href="/members/u1-shadowro" />);
     const link = screen.getByRole("link", { name: "ShadowRO" });
     expect(link.className).toBe("gcs-userLink gcs-name--vip_gold");
     expect(link.getAttribute("href")).toBe("/members/u1-shadowro");

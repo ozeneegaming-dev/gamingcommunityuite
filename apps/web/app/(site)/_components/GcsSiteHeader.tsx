@@ -2,21 +2,19 @@ import { GcsAvatar, GcsButton, GcsUserLink } from "@gcs/ui";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
+import { memberHref } from "@/lib/forum-urls";
 import { services } from "@/lib/services";
 import { GcsLogoutButton } from "./GcsLogoutButton";
 
 /** Header-ul site-ului, după macheta `Main` (logo, meniu principal, zona userului). */
 export async function GcsSiteHeader() {
   const t = await getTranslations("site");
-  const { db, permissions } = services();
+  const { permissions, profileQueries, conversations } = services();
   const actor = await currentActor();
-  const user = actor.userId
-    ? await db.user.findUnique({
-        where: { id: actor.userId },
-        select: { id: true, name: true, image: true, primaryGroup: { select: { key: true } } },
-      })
-    : null;
-  const canAcp = user ? await permissions.can(actor, "acp.access") : false;
+  const user = actor.userId ? ((await profileQueries.userDisplays([actor.userId])).get(actor.userId) ?? null) : null;
+  const [canAcp, unread] = user
+    ? await Promise.all([permissions.can(actor, "acp.access"), conversations.unreadCount(actor.userId)])
+    : [false, 0];
 
   return (
     <header className="gcs-siteHeader" style={{ background: "#0F1116", borderBottom: "1px solid var(--gcs-border)" }}>
@@ -74,18 +72,34 @@ export async function GcsSiteHeader() {
                   <Link href="/admin">{t("acp")}</Link>
                 </GcsButton>
               )}
+              <Link
+                href="/messages"
+                className="gcs-headerIcon"
+                aria-label={unread > 0 ? t("messagesUnread", { count: unread }) : t("messages")}
+                data-testid="gcs-header-messages"
+              >
+                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="5" width="18" height="14" rx="2" />
+                  <path d="m3 7 9 6 9-6" />
+                </svg>
+                {unread > 0 && (
+                  <span className="gcs-headerIcon__count" data-testid="gcs-header-unread">
+                    {unread > 99 ? "99+" : unread}
+                  </span>
+                )}
+              </Link>
               <span
                 style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 8px", minHeight: 44, boxSizing: "border-box" }}
               >
-                <GcsAvatar name={user.name} size="s" {...(user.image ? { src: user.image } : {})} />
-                <GcsUserLink
-                  userId={user.id}
-                  name={user.name}
-                  groupKey={user.primaryGroup.key}
-                  href={`/members/${user.id}`}
-                  data-testid="gcs-header-user"
-                />
+                <GcsAvatar name={user.name} size="s" {...(user.image ? { src: user.image } : {})} {...(user.frameKey ? { frame: user.frameKey } : {})} />
+                <GcsUserLink userId={user.id} name={user.name} nameKey={user.nameKey} href={memberHref(user)} data-testid="gcs-header-user" />
               </span>
+              <Link href="/settings/profile" className="gcs-headerIcon" aria-label={t("settings")} data-testid="gcs-header-settings">
+                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
+                </svg>
+              </Link>
               <GcsLogoutButton label={t("logout")} />
             </>
           ) : (

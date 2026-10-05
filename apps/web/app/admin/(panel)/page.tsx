@@ -142,7 +142,7 @@ export default async function AcpDashboardPage() {
           <div>
             {admins.map((a) => (
               <div key={a.id} style={row}>
-                <GcsUserLink userId={a.id} name={a.name} groupKey={a.groupKey} href={`/admin/members/${a.id}`} />
+                <GcsUserLink userId={a.id} name={a.name} nameKey={a.groupKey} href={`/admin/members/${a.id}`} />
               </div>
             ))}
           </div>

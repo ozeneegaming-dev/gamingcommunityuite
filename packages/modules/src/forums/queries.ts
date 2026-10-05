@@ -88,6 +88,7 @@ export type GcsForumPage = {
 
 export type GcsPostAuthor = GcsUserRef & {
   rank: GcsRankLabel | null;
+  groupColor: string | null;
   groupName: string;
   groupTitle: string | null;
   postsCount: number;
@@ -363,7 +364,7 @@ export class GcsForumQueries {
               createdAt: true,
               rankId: true,
               primaryGroupId: true,
-              primaryGroup: { select: { key: true, name: true, title: true } },
+              primaryGroup: { select: { key: true, name: true, title: true, color: true } },
             },
           }),
       ids.length === 0
@@ -404,6 +405,7 @@ export class GcsForumQueries {
           ? {
               ...toRef(author),
               rank: rankLabel(rankData, author.rankId, author.primaryGroupId),
+              groupColor: author.primaryGroup.color,
               groupName: author.primaryGroup.name,
               groupTitle: author.primaryGroup.title,
               postsCount: author.postsCount,

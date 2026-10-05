@@ -1,4 +1,5 @@
 /** URL-urile forumului (spec §4: `/{tip}/{id}-{slug}`). Fără dependențe de server: se folosesc și în componentele client. */
+import { slugify } from "@gcs/modules/slug";
 
 const withPage = (base: string, page?: number) => (page && page > 1 ? `${base}?page=${page}` : base);
 
@@ -7,7 +8,8 @@ export const topicHref = (t: { id: number; slug: string }, page?: number) => wit
 export const newTopicHref = (f: { id: number; slug: string }) => `/forum/${f.id}-${f.slug}/new`;
 export const postHref = (topicId: number, postId: number) => `/topic/${topicId}/post/${postId}`;
 export const unreadHref = (topicId: number) => `/topic/${topicId}/unread`;
-export const memberHref = (id: string) => `/members/${id}`;
+/** Profilul unui membru: `/members/{id}-{slug}` (spec §4). */
+export const memberHref = (u: { id: string; name: string }) => `/members/${u.id}-${slugify(u.name)}`;
 export const tagHref = (slug: string) => `/tags/${slug}`;
 
 /** Culoarea forumului ca fundal transparent (iconul din macheta Main: `rgba(..., .14)`). */
