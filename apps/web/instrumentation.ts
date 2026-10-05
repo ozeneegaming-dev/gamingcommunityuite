@@ -1,7 +1,7 @@
 /**
  * Rulează o singură dată, la pornirea serverului Next.js (spec §17, §17.1):
  * - neinstalat: generează codul de instalare și îl scrie în log (`docker compose logs web`);
- * - instalat: aplică migrațiile care lipsesc (cu lock, sigur și cu mai multe containere `web`).
+ * - instalat: aplică migrațiile care lipsesc (cu lock, sigur și cu mai multe containere `web`), apoi seed-ul modulelor.
  */
 export async function register(): Promise<void> {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
@@ -21,5 +21,16 @@ export async function register(): Promise<void> {
     if (applied.length > 0) console.log(`[RED-LINE] Migrații aplicate: ${applied.join(", ")}`);
   } catch (error) {
     console.error("[RED-LINE] Migrarea bazei de date a eșuat", error);
+    return;
+  }
+  // Datele implicite ale modulelor (ex. reacțiile și setările de grup ale forumului) pentru site-urile instalate
+  // înaintea modulului. Seed-ul e idempotent și nu suprascrie ce s-a schimbat din ACP.
+  try {
+    const { seedDefaults } = await import("@gcs/core");
+    const { services } = await import("./lib/services");
+    const { db, registry } = services();
+    await seedDefaults(db, registry);
+  } catch (error) {
+    console.error("[RED-LINE] Seed-ul modulelor a eșuat", error);
   }
 }
