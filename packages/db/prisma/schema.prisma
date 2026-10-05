@@ -1,0 +1,340 @@
+// RED-LINE — schema nucleului (Etapa 1, Task 3).
+// Tabele: snake_case plural, fără prefix (spec §4).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Utilizatori și autentificare (Better Auth) ─────────────────────────────
+
+model User {
+  id                     String    @id @default(cuid())
+  name                   String
+  nameNormalized         String    @unique
+  email                  String    @unique // salvat lowercase
+  emailVerified          Boolean   @default(false)
+  image                  String?
+  primaryGroupId         Int
+  previousPrimaryGroupId Int?
+  locale                 String    @default("ro")
+  timezone               String    @default("Europe/Bucharest")
+  twoFactorEnabled       Boolean   @default(false)
+  twoFactorSecret        String?
+  lastActiveAt           DateTime?
+  lastAcpAuthAt          DateTime?
+  lastAcpAuthIp          String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  primaryGroup    Group               @relation("UserPrimaryGroup", fields: [primaryGroupId], references: [id], onDelete: Restrict)
+  groups          UserGroup[]
+  accounts        Account[]
+  sessions        Session[]
+  warnings        Warning[]           @relation("WarningTarget")
+  warningsIssued  Warning[]           @relation("WarningIssuer")
+  bans            Ban[]               @relation("BanTarget")
+  bansCreated     Ban[]               @relation("BanCreator")
+  moderatorOf     Moderator[]
+  acpRoles        AcpRoleAssignment[]
+  dashboardLayout AcpDashboardLayout?
+
+  @@index([primaryGroupId])
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  userId                String
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verifications")
+}
+
+// ─── Grupuri și permisiuni (spec §6) ────────────────────────────────────────
+
+model Group {
+  id          Int     @id @default(autoincrement())
+  key         String  @unique // root_admin, admin, …, vip_legend; custom_<id> pentru grupurile din ACP
+  name        String
+  isProtected Boolean @default(false)
+  isVip       Boolean @default(false)
+  color       String?
+  nameStyle   Json?
+  title       String?
+  position    Int     @default(0)
+
+  primaryUsers         User[]                @relation("UserPrimaryGroup")
+  members              UserGroup[]
+  settings             GroupSetting[]
+  containerPermissions ContainerPermission[]
+  moderators           Moderator[]
+  acpRoles             AcpRoleAssignment[]
+
+  @@map("groups")
+}
+
+/// Grupurile secundare ale unui user.
+model UserGroup {
+  userId  String
+  groupId Int
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([userId, groupId])
+  @@index([groupId])
+  @@map("user_groups")
+}
+
+model GroupSetting {
+  id      Int    @id @default(autoincrement())
+  groupId Int
+  key     String
+  value   Json
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, key])
+  @@map("group_settings")
+}
+
+model ContainerPermission {
+  id            Int    @id @default(autoincrement())
+  containerType String
+  containerId   String
+  groupId       Int
+  action        String
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([containerType, containerId, groupId, action])
+  @@index([containerType, containerId])
+  @@map("container_permissions")
+}
+
+model ContainerInherit {
+  id            Int     @id @default(autoincrement())
+  containerType String
+  containerId   String
+  parentId      String?
+  inherits      Boolean @default(false)
+
+  @@unique([containerType, containerId])
+  @@map("container_inherit")
+}
+
+model Moderator {
+  id            Int      @id @default(autoincrement())
+  containerType String
+  containerId   String
+  userId        String?
+  groupId       Int?
+  powers        String[]
+
+  user  User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group Group? @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([containerType, containerId])
+  @@map("moderators")
+}
+
+// ─── Bannuri și avertismente (spec §6.5) ────────────────────────────────────
+
+enum BanType {
+  ACCOUNT
+  IP
+  EMAIL
+}
+
+model Ban {
+  id          String    @id @default(cuid())
+  type        BanType
+  value       String
+  userId      String?
+  reason      String
+  expiresAt   DateTime?
+  createdById String?
+  createdAt   DateTime  @default(now())
+  liftedAt    DateTime?
+
+  user      User? @relation("BanTarget", fields: [userId], references: [id], onDelete: Cascade)
+  createdBy User? @relation("BanCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([type, value])
+  @@index([userId])
+  @@map("bans")
+}
+
+model Warning {
+  id         String    @id @default(cuid())
+  userId     String
+  points     Int
+  reason     String
+  expiresAt  DateTime?
+  issuedById String?
+  createdAt  DateTime  @default(now())
+
+  user     User  @relation("WarningTarget", fields: [userId], references: [id], onDelete: Cascade)
+  issuedBy User? @relation("WarningIssuer", fields: [issuedById], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@map("warnings")
+}
+
+enum WarningActionType {
+  MODERATE_POSTS
+  RESTRICT
+  BAN
+}
+
+model WarningAction {
+  id            Int               @id @default(autoincrement())
+  threshold     Int               @unique
+  action        WarningActionType
+  durationHours Int?
+
+  @@map("warning_actions")
+}
+
+// ─── ACP (spec §6.4, §12) ───────────────────────────────────────────────────
+
+model AcpRole {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  permissions AcpRolePermission[]
+  assignments AcpRoleAssignment[]
+
+  @@map("acp_roles")
+}
+
+model AcpRolePermission {
+  id        Int     @id @default(autoincrement())
+  roleId    Int
+  section   String
+  canView   Boolean @default(false)
+  canEdit   Boolean @default(false)
+  canDelete Boolean @default(false)
+
+  role AcpRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, section])
+  @@map("acp_role_permissions")
+}
+
+model AcpRoleAssignment {
+  id      Int     @id @default(autoincrement())
+  roleId  Int
+  userId  String?
+  groupId Int?
+
+  role  AcpRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user  User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group Group?  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([groupId])
+  @@map("acp_role_assignments")
+}
+
+model AcpDashboardLayout {
+  userId String @id
+  layout Json
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("acp_dashboard_layouts")
+}
+
+model AdminNote {
+  id          Int      @id @default(1)
+  body        String   @default("")
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+
+  @@map("admin_notes")
+}
+
+// ─── Sistem ─────────────────────────────────────────────────────────────────
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
+
+model SystemState {
+  id          Int       @id @default(1)
+  installedAt DateTime?
+  permVersion Int       @default(0)
+  appVersion  String    @default("1.0.0")
+
+  @@map("system_state")
+}
+
+/// Jurnalul ACP. `actorId` nu are cheie străină, ca intrările să rămână după ștergerea unui user.
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  targetType String
+  targetId   String
+  before     Json?
+  after      Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([actorId])
+  @@index([targetType, targetId])
+  @@map("audit_logs")
+}

@@ -3,16 +3,29 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
+  "exports": {
+    ".": "./src/index.ts",
+    "./test/helpers": "./test/helpers.ts",
+    "./test/globalSetup": "./test/globalSetup.ts",
+    "./test/url": "./test/url.ts"
+  },
   "scripts": {
+    "generate": "prisma generate",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.16.0"
   },
   "devDependencies": {
     "@gcs/config": "workspace:*",
     "@types/node": "^22.0.0",
+    "@types/pg": "^8.15.0",
+    "embedded-postgres": "latest",
     "eslint": "^9.30.0",
+    "pg": "^8.16.0",
+    "prisma": "^6.16.0",
     "typescript": "^5.9.0",
     "vitest": "^3.2.0"
   }
