@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
 import type { ReactNode } from "react";
 import { services } from "@/lib/services";
+import { siteBaseUrl } from "@/lib/seo";
 import "./globals.css";
 
 const display = Chakra_Petch({ subsets: ["latin", "latin-ext"], weight: ["500", "600", "700"], variable: "--font-gcs-display" });
@@ -23,7 +24,12 @@ async function orDefault<T>(value: () => Promise<T>, fallback: T): Promise<T> {
 /** Titlul vine din setarea `site.name` (ACP → Setări → Generale) și se schimbă fără restart. */
 export async function generateMetadata(): Promise<Metadata> {
   const siteName = await orDefault(() => services().settings.get<string>("site.name"), "RED-LINE");
-  return { title: { default: siteName, template: `%s · ${siteName}` } };
+  const base = await siteBaseUrl();
+  return {
+    title: { default: siteName, template: `%s · ${siteName}` },
+    metadataBase: new URL(base),
+    openGraph: { siteName, type: "website" },
+  };
 }
 
 export default async function RootLayout({ children }: { children: ReactNode }) {

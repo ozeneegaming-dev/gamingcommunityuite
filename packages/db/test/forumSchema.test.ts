@@ -36,6 +36,14 @@ describe("schema forum", () => {
     expect(row).toEqual({ hit: true, flex: true });
   });
 
+  test("cuvintele cu litere și cifre (ex. nume de jucători) ignoră și ele diacriticele", async () => {
+    const [row] = await db.$queryRaw<{ numword: boolean; hyphen: boolean }[]>`
+      SELECT
+        to_tsvector('gcs_ro', 'Ștefan99 și Mașina2') @@ plainto_tsquery('gcs_ro', 'stefan99 masina2') AS numword,
+        to_tsvector('gcs_ro', 'clan Șoim-2 România') @@ plainto_tsquery('gcs_ro', 'soim-2') AS hyphen`;
+    expect(row).toEqual({ numword: true, hyphen: true });
+  });
+
   test("search_vector pe topicuri e indexat și interogabil", async () => {
     const { topic } = await seedTopic();
     await db.$executeRaw`

@@ -17,10 +17,17 @@ import { GcsTopicRow } from "../../_components/forum/GcsTopicRow";
 
 type Props = { params: Promise<{ ref: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const ref = parseRef((await params).ref);
-  const forum = ref ? await services().db.forum.findUnique({ where: { id: ref.id }, select: { name: true, description: true } }) : null;
-  return forum ? { title: forum.name, description: forum.description || undefined } : {};
+  const forum = ref ? await services().db.forum.findUnique({ where: { id: ref.id }, select: { id: true, name: true, slug: true, description: true } }) : null;
+  if (!forum) return {};
+  const canonical = forumHref(forum, pageParam((await searchParams).page));
+  return {
+    title: forum.name,
+    ...(forum.description ? { description: forum.description } : {}),
+    alternates: { canonical },
+    openGraph: { title: forum.name, url: canonical },
+  };
 }
 
 /** Pagina unui forum: subforumurile, topicurile (fixate primele), paginarea și acțiunile (spec §7). */

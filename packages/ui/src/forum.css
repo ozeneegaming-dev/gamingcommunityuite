@@ -1030,3 +1030,48 @@
   gap: 8px;
   align-items: center;
 }
+
+/* ─── Căutare ─────────────────────────────────────────────────────────────── */
+.gcs-searchForm {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+.gcs-searchForm .gcs-field {
+  flex: 1 1 180px;
+}
+.gcs-searchForm__q {
+  flex: 3 1 280px;
+}
+.gcs-searchResults {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.gcs-searchResult {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gcs-searchResult__title {
+  margin: 0;
+  font-size: 16px;
+}
+.gcs-searchResult__snippet {
+  margin: 0;
+  color: #c9cdd6;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.gcs-searchResult__snippet mark {
+  background: rgba(214, 40, 57, 0.25);
+  color: var(--gcs-text);
+  border-radius: 3px;
+  padding: 0 2px;
+}
+.gcs-searchResult__meta {
+  margin: 0;
+  font-size: 12px;
+  color: var(--gcs-muted);
+}

@@ -8,6 +8,7 @@ import { currentActor } from "@/lib/actor";
 import { forumQuery, moveTargets, pageParam } from "@/lib/forum-page";
 import { forumHref, memberHref, tagHref, tint, topicHref } from "@/lib/forum-urls";
 import { services } from "@/lib/services";
+import { excerpt, firstImage, guestActor } from "@/lib/seo";
 import { registerTopicView } from "@/lib/topic-views";
 import { GcsBreadcrumb } from "../../_components/forum/GcsBreadcrumb";
 import { GcsFollowButton } from "../../_components/forum/GcsForumButtons";
@@ -19,10 +20,28 @@ import { GcsTopicModMenu, SPLIT_FORM_ID } from "../../_components/topic/GcsTopic
 
 type Props = { params: Promise<{ ref: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+/** Titlu, descriere (primul paragraf), prima imagine și `canonical`; un topic invizibil vizitatorilor nu se indexează. */
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const ref = parseRef((await params).ref);
-  const topic = ref ? await services().db.topic.findUnique({ where: { id: ref.id }, select: { title: true, visibility: true } }) : null;
-  return topic && topic.visibility === "VISIBLE" ? { title: topic.title } : {};
+  if (!ref) return {};
+  const { db, permissions } = services();
+  const topic = await db.topic.findUnique({
+    where: { id: ref.id },
+    select: { id: true, title: true, slug: true, visibility: true, forumId: true, posts: { orderBy: { id: "asc" }, take: 1, select: { contentHtml: true } } },
+  });
+  if (!topic || topic.visibility !== "VISIBLE") return {};
+  const page = pageParam((await searchParams).page);
+  const html = topic.posts[0]?.contentHtml ?? "";
+  const image = firstImage(html);
+  const description = excerpt(html);
+  const publicRead = await permissions.can(await guestActor(), "forums.read", { type: "forum", id: String(topic.forumId) });
+  return {
+    title: topic.title,
+    description,
+    alternates: { canonical: topicHref(topic, page) },
+    openGraph: { title: topic.title, description, type: "article", url: topicHref(topic, page), ...(image ? { images: [image] } : {}) },
+    ...(publicRead ? {} : { robots: { index: false } }),
+  };
 }
 
 const has = (powers: string[], power: string) => powers.includes("*") || powers.includes(power);

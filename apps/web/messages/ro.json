@@ -958,5 +958,28 @@
     "menu": "Unelte de moderare",
     "confirmDelete": "Ștergi definitiv topicul cu toate postările?",
     "done": "Gata"
+  },
+  "search": {
+    "title": "Căutare",
+    "query": "Caută",
+    "type": "Caută în",
+    "types": {
+      "topics": "Topicuri",
+      "posts": "Postări"
+    },
+    "forum": "Forum",
+    "allForums": "Toate forumurile",
+    "author": "Autor",
+    "since": "De la data",
+    "submit": "Caută",
+    "results": "{count, plural, one {# rezultat} few {# rezultate} other {# de rezultate}} pentru „{q}”",
+    "none": "Niciun rezultat pentru „{q}”.",
+    "tooShort": "Scrie cel puțin 2 caractere.",
+    "rateLimited": "Prea multe căutări. Încearcă din nou peste un minut.",
+    "in": "în {forum}"
+  },
+  "tags": {
+    "title": "Tag: #{tag}",
+    "empty": "Niciun topic cu acest tag."
   }
 }

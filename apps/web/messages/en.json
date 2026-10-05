@@ -958,5 +958,28 @@
     "menu": "Moderation tools",
     "confirmDelete": "Permanently delete the topic and all its posts?",
     "done": "Done"
+  },
+  "search": {
+    "title": "Search",
+    "query": "Search",
+    "type": "Search in",
+    "types": {
+      "topics": "Topics",
+      "posts": "Posts"
+    },
+    "forum": "Forum",
+    "allForums": "All forums",
+    "author": "Author",
+    "since": "Since",
+    "submit": "Search",
+    "results": "{count, plural, one {# result} other {# results}} for “{q}”",
+    "none": "No results for “{q}”.",
+    "tooShort": "Type at least 2 characters.",
+    "rateLimited": "Too many searches. Try again in a minute.",
+    "in": "in {forum}"
+  },
+  "tags": {
+    "title": "Tag: #{tag}",
+    "empty": "No topics with this tag."
   }
 }
