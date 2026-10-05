@@ -44,6 +44,7 @@ import { GcsForumService } from "./forums/forums";
 import { GcsTopicService } from "./forums/topics";
 import { registerAppJobs } from "./jobs";
 import { GcsProfileService } from "./profile/profile";
+import { GcsSocialService } from "./profile/social";
 import { createRegistry } from "./registry";
 
 export type GcsServices = {
@@ -82,6 +83,7 @@ export type GcsServices = {
   forumModerators: GcsForumModeratorService;
   mailer: GcsMailer;
   profiles: GcsProfileService;
+  social: GcsSocialService;
 };
 
 export type GcsServicesOptions = {
@@ -208,6 +210,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     mailer,
     baseUrl: async () => baseUrl(await settings.get<string>("site.url")),
   });
+  const social = new GcsSocialService({ db, bus, cache, permissions, settings, rateLimiter, profiles, render: (content) => posting.render(content) });
+  social.registerContent({ reactions, reports });
 
   const services: GcsServices = {
     db,
@@ -245,6 +249,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     forumModerators: new GcsForumModeratorService({ db, permissions, acp }),
     mailer,
     profiles,
+    social,
   };
   registerAppJobs(services);
   return services;
