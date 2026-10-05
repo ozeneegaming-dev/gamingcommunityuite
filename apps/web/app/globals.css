@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+/* Tokenurile complete și clasele gcs-* vin în @gcs/ui (Task 10). */
+body {
+  margin: 0;
+  background: #0b0c10;
+  color: #ecedf1;
+}
