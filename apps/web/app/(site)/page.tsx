@@ -3,41 +3,48 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
 import { services } from "@/lib/services";
+import { GcsCategoryCard } from "./_components/forum/GcsCategoryCard";
+import { GcsForumSidebar } from "./_components/forum/GcsForumSidebar";
 
-/** Pagina principală provizorie: anunțul din machetă; forumul vine în etapa 2. */
+/** Pagina principală a forumului (macheta Main): anunțul, categoriile cu forumurile și coloana din dreapta. */
 export default async function HomePage() {
-  const t = await getTranslations("site.comingSoon");
-  const siteName = await services().settings.get<string>("site.name");
+  const t = await getTranslations("forum");
+  const { settings, forumQueries } = services();
   const actor = await currentActor();
+  const [siteName, categories, stats, recent] = await Promise.all([
+    settings.get<string>("site.name"),
+    forumQueries.index(actor),
+    forumQueries.stats(),
+    forumQueries.recentTopics(actor, 6),
+  ]);
 
   return (
-    <GcsCard
-      as="section"
-      style={{
-        padding: "28px 32px",
-        display: "flex",
-        flexWrap: "wrap",
-        gap: 24,
-        alignItems: "center",
-        justifyContent: "space-between",
-        background: "linear-gradient(120deg, #1A0F12 0%, #14161C 55%)",
-        borderColor: "#3A1C22",
-      }}
-    >
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: "1 1 420px" }}>
-        <GcsBadge tone="accent" style={{ alignSelf: "flex-start" }}>
-          {t("badge")}
-        </GcsBadge>
-        <h1 className="gcs-display" style={{ margin: 0, fontSize: 34, fontWeight: 700, letterSpacing: ".02em" }}>
-          {t("title", { site: siteName })}
-        </h1>
-        <p style={{ margin: 0, color: "var(--gcs-muted)", fontSize: 15, lineHeight: 1.6, maxWidth: 620 }}>{t("body")}</p>
+    <>
+      <GcsCard as="section" className="gcs-announcement">
+        <div className="gcs-announcement__text">
+          <GcsBadge tone="accent" style={{ alignSelf: "flex-start" }}>
+            {t("announcement.badge")}
+          </GcsBadge>
+          <h1 className="gcs-display gcs-announcement__title">{t("announcement.title", { site: siteName })}</h1>
+          <p className="gcs-announcement__body">{t("announcement.body")}</p>
+        </div>
+        {!actor.userId && (
+          <GcsButton variant="primary" asChild>
+            <Link href="/register">{t("announcement.cta")}</Link>
+          </GcsButton>
+        )}
+      </GcsCard>
+
+      <div className="gcs-forumLayout">
+        <div className="gcs-forumLayout__main" data-testid="gcs-forum-index">
+          {categories.length === 0 ? (
+            <GcsCard style={{ padding: 24, color: "var(--gcs-muted)" }}>{t("emptyForums")}</GcsCard>
+          ) : (
+            categories.map((c) => <GcsCategoryCard key={c.id} category={c} />)
+          )}
+        </div>
+        <GcsForumSidebar stats={stats} recent={recent} />
       </div>
-      {!actor.userId && (
-        <GcsButton variant="primary" asChild>
-          <Link href="/register">{t("cta")}</Link>
-        </GcsButton>
-      )}
-    </GcsCard>
+    </>
   );
 }

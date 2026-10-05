@@ -17,7 +17,9 @@
       "title": "Welcome to {site}",
       "body": "The forum arrives in stage 2. Until then, you can create your account and set up your profile.",
       "cta": "Create account"
-    }
+    },
+    "searchLabel": "Search",
+    "searchPlaceholder": "Search topics, posts…"
   },
   "auth": {
     "login": {
@@ -755,5 +757,63 @@
       "session": "The installation session expired. Enter the code again.",
       "busy": "The installation is already running."
     }
+  },
+  "forum": {
+    "home": "Forum",
+    "breadcrumb": "Breadcrumb",
+    "topics": "topics",
+    "posts": "posts",
+    "subforums": "Subforums:",
+    "by": "by {name}",
+    "noPosts": "No posts yet",
+    "unread": "Unread",
+    "unreadForum": "{name} — has unread posts",
+    "firstUnread": "First unread",
+    "newTopic": "New topic",
+    "markRead": "Mark read",
+    "marked": "Marked as read",
+    "follow": "Follow",
+    "following": "Following",
+    "followCount": "{label} · {count}",
+    "empty": "No topics yet. Be the first to start one!",
+    "emptyForums": "There are no forums yet.",
+    "forbidden": "You don't have access to this forum.",
+    "pinned": "Pinned",
+    "locked": "Locked",
+    "solved": "Solved",
+    "pending": "Awaiting approval",
+    "hidden": "Hidden",
+    "featured": "Featured",
+    "replies": "{count, plural, one {# reply} other {# replies}}",
+    "views": "{count, plural, one {# view} other {# views}}",
+    "startedBy": "Started by {name}",
+    "lastBy": "last by {name}",
+    "external": "External link",
+    "topicsTitle": "Topics",
+    "prefixFilter": "Prefix",
+    "allPrefixes": "All",
+    "filter": "Filter",
+    "pagination": {
+      "label": "Pages",
+      "prev": "Previous",
+      "next": "Next",
+      "page": "Page {page}"
+    },
+    "sidebar": {
+      "stats": "Statistics",
+      "topics": "Topics",
+      "posts": "Posts",
+      "members": "Members",
+      "newest": "Newest member",
+      "recent": "Recent topics",
+      "noRecent": "No topics yet."
+    },
+    "announcement": {
+      "badge": "Announcement",
+      "title": "Welcome to {site}",
+      "body": "Your gaming community: forum, servers, clans, tournaments and VIP — all in one place.",
+      "cta": "Create account"
+    },
+    "byWord": "by"
   }
 }

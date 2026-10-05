@@ -1,0 +1,77 @@
+import type { GcsUserRef } from "@gcs/modules";
+import { GcsUserLink } from "@gcs/ui";
+import Link from "next/link";
+import { getFormatter, getTranslations } from "next-intl/server";
+import { memberHref, topicHref } from "@/lib/forum-urls";
+import { GcsRelTime } from "./GcsRelTime";
+
+type Props = {
+  stats: { topics: number; posts: number; members: number; newestMember: GcsUserRef | null };
+  recent: { id: number; title: string; slug: string; lastPostAt: string; user: GcsUserRef | null }[];
+};
+
+/** Coloana din dreapta a paginii principale: statistici și topicuri recente (shoutbox-ul și evenimentele vin în etapele 4–5). */
+export async function GcsForumSidebar({ stats, recent }: Props) {
+  const t = await getTranslations("forum.sidebar");
+  const format = await getFormatter();
+  const n = (v: number) => format.number(v);
+  return (
+    <aside className="gcs-forumSidebar">
+      <section className="gcs-card gcs-sideCard" aria-labelledby="gcs-side-stats">
+        <h2 id="gcs-side-stats" className="gcs-display gcs-sideCard__title">
+          {t("stats")}
+        </h2>
+        <dl className="gcs-statGrid">
+          <div>
+            <dt>{t("topics")}</dt>
+            <dd>{n(stats.topics)}</dd>
+          </div>
+          <div>
+            <dt>{t("posts")}</dt>
+            <dd>{n(stats.posts)}</dd>
+          </div>
+          <div>
+            <dt>{t("members")}</dt>
+            <dd>{n(stats.members)}</dd>
+          </div>
+        </dl>
+        {stats.newestMember && (
+          <p className="gcs-sideCard__line">
+            {t("newest")}:{" "}
+            <GcsUserLink
+              userId={stats.newestMember.id}
+              name={stats.newestMember.name}
+              groupKey={stats.newestMember.groupKey}
+              href={memberHref(stats.newestMember.id)}
+            />
+          </p>
+        )}
+      </section>
+      <section className="gcs-card gcs-sideCard" aria-labelledby="gcs-side-recent">
+        <h2 id="gcs-side-recent" className="gcs-display gcs-sideCard__title">
+          {t("recent")}
+        </h2>
+        {recent.length === 0 ? (
+          <p className="gcs-sideCard__line">{t("noRecent")}</p>
+        ) : (
+          <ul className="gcs-recentList">
+            {recent.map((r) => (
+              <li key={r.id}>
+                <Link href={topicHref(r)}>{r.title}</Link>
+                <span>
+                  {r.user && (
+                    <>
+                      <GcsUserLink userId={r.user.id} name={r.user.name} groupKey={r.user.groupKey} href={memberHref(r.user.id)} />
+                      {" · "}
+                    </>
+                  )}
+                  <GcsRelTime at={r.lastPostAt} />
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </aside>
+  );
+}

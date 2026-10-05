@@ -13,7 +13,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { ensureInstallCode, seedDefaults, GcsModuleRegistry } from "@gcs/core";
-import { coreModule } from "@gcs/modules";
+import { coreModule, forumsModule } from "@gcs/modules";
 import { PrismaClient } from "@gcs/db";
 import pg from "pg";
 
@@ -122,6 +122,7 @@ async function prepareDatabase(baseUrl: string): Promise<string> {
   const db = new PrismaClient({ datasourceUrl: url.toString() });
   const registry = new GcsModuleRegistry();
   registry.register(coreModule);
+  registry.register(forumsModule);
   await seedDefaults(db, registry);
   await db.$disconnect();
   return url.toString();

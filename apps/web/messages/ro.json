@@ -17,7 +17,9 @@
       "title": "Bun venit pe {site}",
       "body": "Forumul vine în etapa 2. Până atunci, îți poți crea contul și îți poți configura profilul.",
       "cta": "Creează cont"
-    }
+    },
+    "searchLabel": "Caută",
+    "searchPlaceholder": "Caută topicuri, postări…"
   },
   "auth": {
     "login": {
@@ -755,5 +757,63 @@
       "session": "Sesiunea de instalare a expirat. Introdu din nou codul.",
       "busy": "Instalarea rulează deja."
     }
+  },
+  "forum": {
+    "home": "Forum",
+    "breadcrumb": "Breadcrumb",
+    "topics": "topicuri",
+    "posts": "postări",
+    "subforums": "Subforumuri:",
+    "by": "de {name}",
+    "noPosts": "Niciun mesaj încă",
+    "unread": "Necitit",
+    "unreadForum": "{name} — are mesaje necitite",
+    "firstUnread": "Prima necitită",
+    "newTopic": "Topic nou",
+    "markRead": "Marchează citit",
+    "marked": "Marcat ca citit",
+    "follow": "Urmărește",
+    "following": "Urmărești",
+    "followCount": "{label} · {count}",
+    "empty": "Niciun topic încă. Fii primul care deschide unul!",
+    "emptyForums": "Nu există forumuri încă.",
+    "forbidden": "Nu ai acces la acest forum.",
+    "pinned": "Fixat",
+    "locked": "Blocat",
+    "solved": "Rezolvat",
+    "pending": "Așteaptă aprobare",
+    "hidden": "Ascuns",
+    "featured": "Evidențiat",
+    "replies": "{count, plural, one {# răspuns} few {# răspunsuri} other {# de răspunsuri}}",
+    "views": "{count, plural, one {# vizualizare} few {# vizualizări} other {# de vizualizări}}",
+    "startedBy": "Început de {name}",
+    "lastBy": "ultimul de {name}",
+    "external": "Link extern",
+    "topicsTitle": "Topicuri",
+    "prefixFilter": "Prefix",
+    "allPrefixes": "Toate",
+    "filter": "Filtrează",
+    "pagination": {
+      "label": "Pagini",
+      "prev": "Înapoi",
+      "next": "Înainte",
+      "page": "Pagina {page}"
+    },
+    "sidebar": {
+      "stats": "Statistici",
+      "topics": "Topicuri",
+      "posts": "Postări",
+      "members": "Membri",
+      "newest": "Cel mai nou membru",
+      "recent": "Topicuri recente",
+      "noRecent": "Niciun topic încă."
+    },
+    "announcement": {
+      "badge": "Anunț",
+      "title": "Bun venit pe {site}",
+      "body": "Comunitatea ta de gaming: forum, servere, clanuri, turnee și VIP — totul într-un singur loc.",
+      "cta": "Creează cont"
+    },
+    "byWord": "de"
   }
 }

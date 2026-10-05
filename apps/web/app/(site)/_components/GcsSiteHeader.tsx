@@ -61,6 +61,12 @@ export async function GcsSiteHeader() {
         </nav>
 
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <form action="/search" method="get" role="search" className="gcs-siteSearch">
+            <label htmlFor="gcs-site-search" className="gcs-srOnly">
+              {t("searchLabel")}
+            </label>
+            <input id="gcs-site-search" name="q" type="search" placeholder={t("searchPlaceholder")} className="gcs-siteSearch__input" />
+          </form>
           {user ? (
             <>
               {canAcp && (
