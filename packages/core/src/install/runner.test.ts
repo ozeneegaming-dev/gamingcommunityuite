@@ -142,7 +142,8 @@ describe("runInstall", () => {
   });
 });
 
-describe("testDatabase", () => {
+// Creează o bază nouă (CREATE DATABASE copiază șablonul); sub încărcarea `pnpm test` depășește 30 s.
+describe("testDatabase", { timeout: 120_000 }, () => {
   test("baza existentă → ok fără creare; o bază nouă e creată și primește extensiile", async () => {
     await expect(testDatabase({ ...pgTarget(), database: DB })).resolves.toEqual({ ok: true, created: false });
     const fresh = `${DB}_nou`;

@@ -104,6 +104,10 @@ export async function seedDefaults(db: PrismaClient, registry: GcsModuleRegistry
       await tx.warningAction.upsert({ where: { threshold: a.threshold }, update: {}, create: a });
     }
 
+    for (const m of registry.all()) {
+      if (m.seed) await m.seed({ tx, groupIds });
+    }
+
     await tx.systemState.upsert({ where: { id: 1 }, update: {}, create: { id: 1 } });
   }, SEED_TX);
 }

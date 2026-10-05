@@ -1,3 +1,4 @@
+import type { Prisma } from "@gcs/db";
 import type { GcsEvent } from "../events";
 import type { GcsSettingDef } from "../settings/registry";
 
@@ -30,13 +31,22 @@ export interface GcsAcpMenuSection {
   items: { key: string; labelKey: string; href: string; section: string }[];
 }
 
+/** Contextul primit de hook-ul `seed` al unui modul: tranzacția seed-ului și id-urile grupurilor implicite. */
+export type GcsSeedContext = { tx: Prisma.TransactionClient; groupIds: ReadonlyMap<string, number> };
+
 /** Un modul RED-LINE (spec §5). Restul câmpurilor din spec se adaugă în etapele care le folosesc. */
 export interface GcsModule {
   key: string;
+  /**
+   * Permisiunile modulului. Pentru `scope: "container"`, `default` dă permisiunile unui container nou
+   * creat la rădăcină (ex. un forum fără părinte): grupurile cu `true` primesc acțiunea.
+   */
   permissions: GcsPermissionDef[];
   settings: GcsSettingDef[];
   acpMenu: GcsAcpMenuSection[];
   eventListeners: { event: string; handler: (e: GcsEvent) => Promise<void> }[];
+  /** Datele implicite ale modulului, create la instalare. Trebuie să fie idempotent (rulat din nou, nu dublează nimic). */
+  seed?: (ctx: GcsSeedContext) => Promise<void>;
 }
 
 export class GcsModuleRegistry {

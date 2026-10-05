@@ -99,7 +99,8 @@
       "invalid_port": "Port invalid (1–65535)",
       "invalid_url": "Adresă URL invalidă",
       "invalid_choice": "Valoare nepermisă",
-      "unknown_setting": "Setare necunoscută"
+      "unknown_setting": "Setare necunoscută",
+      "invalid_range": "Valoare în afara intervalului permis"
     }
   },
   "acp": {
@@ -208,6 +209,13 @@
         "acp_roles": "Administratori și roluri ACP",
         "staff_page": "Pagina Staff",
         "bulk_mail": "Email în masă"
+      },
+      "community": {
+        "forums_group": "Forumuri",
+        "forums": "Forumuri",
+        "prefixes": "Prefixe",
+        "saved_actions": "Acțiuni salvate",
+        "forum_settings": "Setări forum"
       }
     },
     "comingSoon": {
@@ -494,7 +502,8 @@
         "general": "Setări generale",
         "email": "Email",
         "auth": "Login & Înregistrare",
-        "advanced": "Avansat"
+        "advanced": "Avansat",
+        "posting": "Postare & Editor"
       },
       "save": "Salvează setările",
       "secretSet": "•••• salvat (lasă gol ca să păstrezi valoarea)",
@@ -544,6 +553,13 @@
       "dark": "Întunecată",
       "light": "Luminoasă",
       "auto": "Automată (după sistem)"
+    },
+    "forums": {
+      "posts_per_page": "Postări pe pagină",
+      "topics_per_page": "Topicuri pe pagină",
+      "post_max_chars": "Lungimea maximă a unei postări (caractere)",
+      "embeds": "Embed-uri permise (youtube, twitch, medal, image)",
+      "revisions_visible_to_author": "Autorul își vede istoricul editărilor"
     }
   },
   "permissions": {
@@ -574,6 +590,21 @@
     },
     "new_member": {
       "post_threshold": "Postări aprobate până devine Membru"
+    },
+    "forums": {
+      "view": "Vede forumul în listă",
+      "read": "Citește topicurile",
+      "create": "Deschide topicuri",
+      "reply": "Răspunde",
+      "upload": "Încarcă atașamente",
+      "download": "Descarcă atașamente",
+      "edit_own_minutes": "Își editează postarea (minute, -1 = oricând)",
+      "hide_own": "Își ascunde propria postare",
+      "approval_first_posts": "Primele postări trec prin aprobare (număr)",
+      "flood_seconds": "Pauză între postări (secunde)",
+      "moderate_all": "Moderator pe toate forumurile",
+      "poll_create": "Creează sondaje",
+      "tags_max": "Tag-uri pe topic (maxim)"
     }
   },
   "profile": {

@@ -99,7 +99,8 @@
       "invalid_port": "Invalid port (1–65535)",
       "invalid_url": "Invalid URL",
       "invalid_choice": "Value not allowed",
-      "unknown_setting": "Unknown setting"
+      "unknown_setting": "Unknown setting",
+      "invalid_range": "Value outside the allowed range"
     }
   },
   "acp": {
@@ -208,6 +209,13 @@
         "acp_roles": "Administrators and ACP roles",
         "staff_page": "Staff page",
         "bulk_mail": "Bulk mail"
+      },
+      "community": {
+        "forums_group": "Forums",
+        "forums": "Forums",
+        "prefixes": "Prefixes",
+        "saved_actions": "Saved actions",
+        "forum_settings": "Forum settings"
       }
     },
     "comingSoon": {
@@ -494,7 +502,8 @@
         "general": "General settings",
         "email": "Email",
         "auth": "Login & Registration",
-        "advanced": "Advanced"
+        "advanced": "Advanced",
+        "posting": "Posting & Editor"
       },
       "save": "Save settings",
       "secretSet": "•••• saved (leave empty to keep the value)",
@@ -544,6 +553,13 @@
       "dark": "Dark",
       "light": "Light",
       "auto": "Automatic (system)"
+    },
+    "forums": {
+      "posts_per_page": "Posts per page",
+      "topics_per_page": "Topics per page",
+      "post_max_chars": "Maximum post length (characters)",
+      "embeds": "Allowed embeds (youtube, twitch, medal, image)",
+      "revisions_visible_to_author": "Authors see their edit history"
     }
   },
   "permissions": {
@@ -574,6 +590,21 @@
     },
     "new_member": {
       "post_threshold": "Approved posts until Member"
+    },
+    "forums": {
+      "view": "Sees the forum in the list",
+      "read": "Reads topics",
+      "create": "Starts topics",
+      "reply": "Replies",
+      "upload": "Uploads attachments",
+      "download": "Downloads attachments",
+      "edit_own_minutes": "Edits own post (minutes, -1 = always)",
+      "hide_own": "Hides own post",
+      "approval_first_posts": "First posts need approval (count)",
+      "flood_seconds": "Delay between posts (seconds)",
+      "moderate_all": "Moderator in all forums",
+      "poll_create": "Creates polls",
+      "tags_max": "Tags per topic (maximum)"
     }
   },
   "profile": {

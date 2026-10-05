@@ -18,7 +18,7 @@ import {
 import { PrismaClient } from "@gcs/db";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { coreModule } from "@gcs/modules";
+import { coreModule, forumsModule } from "@gcs/modules";
 import Redis from "ioredis";
 import { revalidateTag } from "next/cache";
 import { gcsConfigDir } from "./config";
@@ -78,6 +78,7 @@ function createServices(): GcsServices {
 
   const registry = new GcsModuleRegistry();
   registry.register(coreModule);
+  registry.register(forumsModule);
   // Permisiunea de test folosită de E2E (ruta /_test/container/…); există doar cu GCS_TEST_ROUTES=1.
   if (process.env.GCS_TEST_ROUTES === "1") {
     registry.register({

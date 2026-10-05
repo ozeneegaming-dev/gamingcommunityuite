@@ -16,9 +16,15 @@
     "@types/node": "^22.0.0",
     "eslint": "^9.30.0",
     "typescript": "^5.9.0",
-    "vitest": "^3.2.0"
+    "vitest": "^3.2.0",
+    "embedded-postgres": "18.4.0-beta.17",
+    "pg": "^8.16.0",
+    "@types/pg": "^8.23.1",
+    "redis-memory-server": "^0.17.1",
+    "ioredis": "^5.11.1"
   },
   "dependencies": {
-    "@gcs/core": "workspace:*"
+    "@gcs/core": "workspace:*",
+    "@gcs/db": "workspace:*"
   }
 }
