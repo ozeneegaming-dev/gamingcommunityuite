@@ -39,21 +39,28 @@ export default async function setup(project: TestProject): Promise<() => Promise
     const { default: EmbeddedPostgres } = await import("embedded-postgres");
     // Folder și port separate per pachet: turbo rulează în paralel testele din `db` și `core`.
     const databaseDir = path.resolve(process.cwd(), ".pgtest");
-    rmSync(databaseDir, { recursive: true, force: true });
+    // Pe Windows, folderul poate rămâne blocat câteva clipe după oprirea unui server anterior.
+    rmSync(databaseDir, { recursive: true, force: true, maxRetries: 10, retryDelay: 500 });
     const port = process.env.TEST_PG_PORT ? Number(process.env.TEST_PG_PORT) : await freePort();
     const server = new EmbeddedPostgres({
       databaseDir,
       user: "postgres",
       password: "postgres",
       port,
-      persistent: false,
+      // Folderul îl ștergem noi, cu reîncercări, la pornirea următoare (vezi mai sus).
+      persistent: true,
       initdbFlags: ["--encoding=UTF8", "--locale=C"],
+      // Fiecare worker are propriul pool Prisma; serverul de test e local, fără nevoie de durabilitate.
+      postgresFlags: ["-c", "max_connections=200", "-c", "fsync=off", "-c", "synchronous_commit=off", "-c", "full_page_writes=off"],
       onLog: () => {},
     });
     await server.initialise();
     await server.start();
     baseUrl = `postgresql://postgres:postgres@localhost:${port}/postgres`;
-    stopServer = () => server.stop();
+    stopServer = async () => {
+      // O eroare la oprire (ex. fișier blocat de Windows) nu trebuie să pice testele care au trecut.
+      await server.stop().catch((error: unknown) => console.warn("[gcs] oprirea PostgreSQL de test a eșuat", error));
+    };
   }
 
   const admin = new pg.Client({ connectionString: baseUrl });

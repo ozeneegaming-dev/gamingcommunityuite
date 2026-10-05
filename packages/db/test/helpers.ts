@@ -13,7 +13,12 @@ let client: PrismaClient | undefined;
 /** URL-ul bazei de test a worker-ului curent. */
 export function testDbUrl(): string {
   const poolId = process.env.VITEST_POOL_ID ?? "1";
-  return withDatabase(inject("pgBaseUrl"), `redline_test_${poolId}`);
+  const url = new URL(withDatabase(inject("pgBaseUrl"), `redline_test_${poolId}`));
+  // Pool mic și timeout-uri generoase: mai mulți workeri și pachete împart același server de test.
+  url.searchParams.set("connection_limit", "4");
+  url.searchParams.set("connect_timeout", "60");
+  url.searchParams.set("pool_timeout", "60");
+  return url.toString();
 }
 
 /** Clientul Prisma pentru baza de test a worker-ului curent. */

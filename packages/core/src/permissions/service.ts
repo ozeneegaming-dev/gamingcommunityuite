@@ -47,6 +47,11 @@ export class GcsPermissionService {
     },
   ) {}
 
+  /** Definiția unei chei de permisiune, din modulele înregistrate. */
+  permissionDef(key: string): GcsPermissionDef | undefined {
+    return this.deps.registry.permissionDef(key);
+  }
+
   async can(actor: GcsActor, key: string, container?: GcsContainerRef): Promise<boolean> {
     const version = await this.version();
     const perms = await this.groupSetPerms(actor.groupIds, version);
