@@ -17,6 +17,7 @@ export * from "./content/embeds";
 export * from "./content/files/attachments";
 export * from "./content/follows";
 export * from "./content/reactions";
+export * from "./content/reports";
 export * from "./content/files/localStore";
 export * from "./content/files/s3Store";
 export * from "./content/files/store";

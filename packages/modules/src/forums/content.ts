@@ -1,5 +1,6 @@
-import type { GcsActor, GcsAttachmentService, GcsReactionService } from "@gcs/core";
+import type { GcsActor, GcsAttachmentService, GcsReactionService, GcsReportService } from "@gcs/core";
 import { forumContainer, POST_CONTENT_TYPE, type GcsForumPosting } from "./posting";
+import type { GcsPostService } from "./posts";
 
 /**
  * Cine vede o postare (aceeași regulă ca în `GcsForumQueries.topic`): cine citește forumul vede postările vizibile
@@ -15,9 +16,21 @@ export async function canViewPost(posting: GcsForumPosting, actor: GcsActor, pos
   return (await permissions.moderatorPowers(actor, forumContainer(post.topic.forumId))).length > 0 || (await permissions.can(actor, "forums.moderate_all"));
 }
 
-/** Înregistrează postările forumului la serviciile de conținut comune (reacții, descărcarea atașamentelor). */
-export function registerForumContent(posting: GcsForumPosting, services: { reactions: GcsReactionService; attachments: GcsAttachmentService }): void {
+/** Înregistrează postările forumului la serviciile de conținut comune (reacții, rapoarte, descărcarea atașamentelor). */
+export function registerForumContent(
+  posting: GcsForumPosting,
+  services: { reactions: GcsReactionService; attachments: GcsAttachmentService; reports: GcsReportService; posts: GcsPostService },
+): void {
   const { db } = posting.deps;
+  const forumOf = async (id: string) => (await db.post.findUnique({ where: { id: Number(id) }, select: { topic: { select: { forumId: true } } } }))?.topic.forumId;
+  services.reports.registerContent(POST_CONTENT_TYPE, {
+    canView: (actor, id) => canViewPost(posting, actor, Number(id)),
+    canModerate: async (actor, id) => {
+      const forumId = await forumOf(id);
+      return forumId !== undefined && (await posting.isModerator(actor, "hide", forumId));
+    },
+    hide: (actor, id, reason) => services.posts.hide(actor, Number(id), reason),
+  });
   services.reactions.registerContent(POST_CONTENT_TYPE, {
     author: async (id) => (await db.post.findUnique({ where: { id: Number(id) }, select: { authorId: true } }))?.authorId ?? null,
     canView: (actor, id) => canViewPost(posting, actor, Number(id)),

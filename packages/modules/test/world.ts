@@ -5,6 +5,7 @@ import {
   GcsContentRenderer,
   GcsFollowService,
   GcsReactionService,
+  GcsReportService,
   GcsLocalFileStore,
   GcsModuleRegistry,
   GcsRedisRateLimiter,
@@ -17,6 +18,7 @@ import { coreModule } from "../src/core-module";
 import { forumsModule } from "../src/forums";
 import { registerForumContent } from "../src/forums/content";
 import { GcsForumService } from "../src/forums/forums";
+import { GcsForumModerationService } from "../src/forums/moderation";
 import { GcsPollService } from "../src/forums/polls";
 import { GcsForumPosting } from "../src/forums/posting";
 import { GcsPostService } from "../src/forums/posts";
@@ -80,9 +82,11 @@ export async function createForumWorld() {
   const polls = new GcsPollService(posting);
   const prefixes = new GcsPrefixService({ db, bus, acp: world.acp });
   const reactions = new GcsReactionService({ db, bus, cache, acp: world.acp });
-  registerForumContent(posting, { reactions, attachments });
+  const reports = new GcsReportService({ db, bus, rateLimiter });
   const topics = new GcsTopicService(posting, { polls, prefixes });
   const posts = new GcsPostService(posting);
+  registerForumContent(posting, { reactions, attachments, reports, posts });
+  const moderation = new GcsForumModerationService(posting, { posts, reports, acp: world.acp });
   const readMarkers = new GcsReadMarkerService({ db, settings });
   const follows = new GcsFollowService({ db });
   const queries = new GcsForumQueries({ db, cache, permissions, settings, readMarkers, follows, reactions, polls });
@@ -127,6 +131,8 @@ export async function createForumWorld() {
     polls,
     prefixes,
     reactions,
+    reports,
+    moderation,
     root,
     member,
     guest,

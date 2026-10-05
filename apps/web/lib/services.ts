@@ -8,6 +8,7 @@ import {
   GcsContentRenderer,
   GcsFollowService,
   GcsReactionService,
+  GcsReportService,
   GcsBanService,
   GcsCache,
   GcsEventBus,
@@ -29,6 +30,7 @@ import {
   coreModule,
   forumsModule,
   GcsForumPosting,
+  GcsForumModerationService,
   GcsForumQueries,
   GcsForumService,
   GcsPollService,
@@ -70,6 +72,8 @@ export type GcsServices = {
   reactions: GcsReactionService;
   polls: GcsPollService;
   prefixes: GcsPrefixService;
+  reports: GcsReportService;
+  moderation: GcsForumModerationService;
 };
 
 /** Revalidează paginile Next.js cache-uite; în afara unui request (ex. scripturi) nu e disponibil. */
@@ -177,7 +181,9 @@ function createServices(): GcsServices {
   const polls = new GcsPollService(posting);
   const prefixes = new GcsPrefixService({ db, bus, acp });
   const reactions = new GcsReactionService({ db, bus, cache, acp });
-  registerForumContent(posting, { reactions, attachments });
+  const reports = new GcsReportService({ db, bus, rateLimiter });
+  const posts = new GcsPostService(posting);
+  registerForumContent(posting, { reactions, attachments, reports, posts });
 
   return {
     db,
@@ -200,13 +206,15 @@ function createServices(): GcsServices {
     attachments,
     forums,
     topics: new GcsTopicService(posting, { polls, prefixes }),
-    posts: new GcsPostService(posting),
+    posts,
     forumQueries: new GcsForumQueries({ db, cache, permissions, settings, readMarkers, follows, reactions, polls }),
     readMarkers,
     follows,
     reactions,
     polls,
     prefixes,
+    reports,
+    moderation: new GcsForumModerationService(posting, { posts, reports, acp }),
   };
 }
 
