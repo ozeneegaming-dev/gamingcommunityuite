@@ -3,15 +3,18 @@
 #   docker compose build web
 
 FROM node:22-alpine AS base
-RUN corepack enable
+# OpenSSL: motorul Prisma îl cere pe Alpine (musl).
+RUN apk add --no-cache openssl && corepack enable
 WORKDIR /app
 
 FROM base AS build
 COPY . .
 RUN pnpm install --frozen-lockfile
-RUN pnpm --filter @gcs/web build
+# Prin turbo, ca să ruleze întâi și `prisma generate` din @gcs/db (clientul Prisma).
+RUN pnpm turbo run build --filter=@gcs/web
 
 FROM node:22-alpine AS runner
+RUN apk add --no-cache openssl
 WORKDIR /app
 ENV NODE_ENV=production \
     PORT=3000 \
