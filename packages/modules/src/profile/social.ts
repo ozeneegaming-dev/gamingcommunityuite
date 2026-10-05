@@ -42,7 +42,7 @@ const userTags = (...ids: string[]) => ids.map((id) => `user:${id}`);
 export async function actorOf(db: PrismaClient, userId: string): Promise<GcsActor | null> {
   const user = await db.user.findUnique({ where: { id: userId }, select: { id: true, primaryGroupId: true, groups: { select: { groupId: true } } } });
   if (!user) return null;
-  return { userId: user.id, groupIds: [user.primaryGroupId, ...user.groups.map((g) => g.groupId)], primaryGroupId: user.primaryGroupId, isBanned: false, ip: null };
+  return { userId: user.id, groupIds: [user.primaryGroupId, ...user.groups.map((g) => g.groupId)], primaryGroupId: user.primaryGroupId, isBanned: false, ip: "" };
 }
 
 /** Urmăritori, ignorare și peretele profilului (specul etapei 3, §4, §6). */
