@@ -56,7 +56,8 @@ const permissions: GcsPermissionDef[] = [
   groupPermission("forums.flood_seconds", perTier({ newMember: 30, member: 10, vip: 5, staff: 0 }), "min"),
   // Moderator pe toate forumurile, cu toate puterile.
   groupPermission("forums.moderate_all", { ...GLOBAL_MODS }),
-  groupPermission("forums.poll_create", { ...STAFF, ...VIPS, member: true }),
+  // Și membrii noi: sondajul trece prin coada de aprobare odată cu topicul (specul etapei 2, §1).
+  groupPermission("forums.poll_create", { ...MEMBERS }),
   groupPermission("forums.tags_max", perTier({ newMember: 5, member: 5, vip: 5, staff: 10 })),
 ];
 

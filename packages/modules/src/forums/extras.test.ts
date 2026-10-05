@@ -114,8 +114,9 @@ describe("sondaje", () => {
     await expect(w.topics.create(w.member, { forumId: tree.forum.id, title: "Sondaj rău", content: doc("x"), poll: bad })).rejects.toBeInstanceOf(
       GcsValidationError,
     );
-    const newbie = await w.actorFor(await w.createUser("Nou", "new_member"));
-    await expect(w.topics.create(newbie, { forumId: tree.forum.id, title: "Fără drept", content: doc("x"), poll })).rejects.toBeInstanceOf(
+    await w.groupService.setSetting(w.groups.member!, "forums.poll_create", false, w.root);
+    await w.clearFlood(w.member);
+    await expect(w.topics.create(w.member, { forumId: tree.forum.id, title: "Fără drept", content: doc("x"), poll })).rejects.toBeInstanceOf(
       GcsForbidden,
     );
   });

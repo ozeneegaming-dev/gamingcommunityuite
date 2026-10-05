@@ -120,7 +120,8 @@
       "too_large": "Fișier prea mare",
       "unsupported_type": "Tip de fișier nepermis",
       "invalid_parent": "Părinte nepermis",
-      "cycle": "Un forum nu poate fi mutat sub propriul subforum"
+      "cycle": "Un forum nu poate fi mutat sub propriul subforum",
+      "invalid_image": "Imagine invalidă sau deteriorată"
     }
   },
   "acp": {

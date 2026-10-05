@@ -149,7 +149,13 @@ export class GcsAttachmentService {
       let img = sharp(bytes, { animated, limitInputPixels: 100_000_000 });
       if (!animated) img = img.rotate();
       img = img.resize({ width: MAX_IMAGE_SIDE, height: MAX_IMAGE_SIDE, fit: "inside", withoutEnlargement: true });
-      const out = await (format === "jpeg" ? img.jpeg({ quality: 85, mozjpeg: true }) : format === "png" ? img.png() : format === "webp" ? img.webp({ quality: 85 }) : img.gif()).toBuffer();
+      let out: Buffer;
+      try {
+        out = await (format === "jpeg" ? img.jpeg({ quality: 85, mozjpeg: true }) : format === "png" ? img.png() : format === "webp" ? img.webp({ quality: 85 }) : img.gif()).toBuffer();
+      } catch {
+        // Antet valid, conținut stricat (sau prea mare): e o eroare a fișierului, nu a serverului.
+        throw new GcsValidationError({ file: "invalid_image" });
+      }
       const meta = await sharp(out).metadata();
       return { bytes: out, mime, ext: detected.ext, width: meta.width ?? null, height: meta.pageHeight ?? meta.height ?? null };
     }

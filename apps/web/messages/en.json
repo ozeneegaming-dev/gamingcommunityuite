@@ -120,7 +120,8 @@
       "too_large": "File too large",
       "unsupported_type": "File type not allowed",
       "invalid_parent": "Parent not allowed",
-      "cycle": "A forum can't be moved under its own subforum"
+      "cycle": "A forum can't be moved under its own subforum",
+      "invalid_image": "Invalid or damaged image"
     }
   },
   "acp": {

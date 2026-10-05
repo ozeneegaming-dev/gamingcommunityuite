@@ -94,6 +94,12 @@ describe("GcsAttachmentService.upload", () => {
     await expect(service.upload(member, { name: "poza.png", bytes }, CTX)).rejects.toBeInstanceOf(GcsValidationError);
   });
 
+  test("o imagine cu antet valid, dar date stricate → GcsValidationError (nu eroare de server)", async () => {
+    const valid = await png(32, 16);
+    const corrupt = Buffer.concat([valid.subarray(0, 40), Buffer.alloc(40, 7)]);
+    await expect(service.upload(member, { name: "stricat.png", bytes: corrupt }, CTX)).rejects.toBeInstanceOf(GcsValidationError);
+  });
+
   test("configurile text (.cfg) sunt acceptate ca text/plain; binarele fără tip cunoscut nu", async () => {
     const cfg = await service.upload(member, { name: "autoexec.cfg", bytes: Buffer.from("cl_crosshairsize 2.5\n") }, CTX);
     expect(cfg).toMatchObject({ isImage: false, mime: "text/plain" });
