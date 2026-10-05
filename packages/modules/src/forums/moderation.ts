@@ -10,7 +10,7 @@ import {
 import type { ModSavedAction, Prisma } from "@gcs/db";
 import { POST_CONTENT_TYPE, WRITE_TX, type GcsForumPosting } from "./posting";
 import type { GcsPostService } from "./posts";
-import type { GcsUserRef } from "./queries";
+import { toRef as userToRef, userRefSelect, type GcsUserRef } from "./queries";
 import { slugify } from "./slug";
 
 export const SAVED_ACTIONS_ACP_SECTION = "community.saved_actions";
@@ -45,9 +45,8 @@ export type GcsQueueReport = {
 
 type Tx = Prisma.TransactionClient;
 const QUEUE_PAGE = 50;
-const userRef = { id: true, name: true, image: true, primaryGroup: { select: { key: true } } } as const;
-const toRef = (u: { id: string; name: string; image: string | null; primaryGroup: { key: string } } | null): GcsUserRef | null =>
-  u ? { id: u.id, name: u.name, image: u.image, groupKey: u.primaryGroup.key } : null;
+const userRef = userRefSelect;
+const toRef = (u: Parameters<typeof userToRef>[0] | null): GcsUserRef | null => (u ? userToRef(u) : null);
 
 /**
  * Moderarea forumului (spec §7): acțiuni pe topicuri, mutare, unire, despărțire, coada de aprobare, rapoarte și

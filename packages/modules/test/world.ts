@@ -25,6 +25,7 @@ import { GcsForumQueries } from "../src/forums/queries";
 import { GcsReadMarkerService } from "../src/forums/readMarkers";
 import { GcsForumSearch } from "../src/forums/search";
 import { GcsTopicService } from "../src/forums/topics";
+import { GcsRankDirectory } from "../src/profile/display";
 import { createRegistry } from "../src/registry";
 
 /** Registry-ul real: modulele din producție. */
@@ -86,7 +87,7 @@ export async function createForumWorld() {
   const moderation = new GcsForumModerationService(posting, { posts, reports, acp: world.acp });
   const readMarkers = new GcsReadMarkerService({ db, settings });
   const follows = new GcsFollowService({ db });
-  const queries = new GcsForumQueries({ db, cache, permissions, settings, readMarkers, follows, reactions, polls });
+  const queries = new GcsForumQueries({ db, cache, permissions, settings, readMarkers, follows, reactions, polls, ranks: new GcsRankDirectory({ db, cache }) });
 
   const root = await world.actorFor(await world.createUser("Fondator", "root_admin"));
   const member = await world.actorFor(await world.createUser("Mara", "member"));

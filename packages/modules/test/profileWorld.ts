@@ -1,9 +1,11 @@
 import type { GcsMail } from "@gcs/core";
 import { GcsAchievementService } from "../src/profile/achievements";
 import { GcsCosmeticsService } from "../src/profile/cosmetics";
+import { GcsRankDirectory } from "../src/profile/display";
 import { GcsMembership } from "../src/profile/membership";
 import { GcsProfileService } from "../src/profile/profile";
 import { GcsPromotionService } from "../src/profile/promotions";
+import { GcsProfileQueries } from "../src/profile/queries";
 import { GcsSocialService } from "../src/profile/social";
 import { GcsVipService } from "../src/vip/vip";
 import { createForumWorld } from "./world";
@@ -56,6 +58,8 @@ export async function createProfileWorld() {
   });
   cosmetics.listen(world.bus);
   const vip = new GcsVipService({ db: world.db, bus: world.bus, permissions: world.permissions, settings: world.settings, membership, mailer });
+  const ranks = new GcsRankDirectory({ db: world.db, cache: world.cache });
+  const profileQueries = new GcsProfileQueries({ db: world.db, cache: world.cache, permissions: world.permissions, profiles, social, ranks });
   const moderator = await world.actorFor(await world.createUser("NeoX", "moderator"));
 
   /** Șterge pauza de flood pe perete. */
@@ -63,7 +67,7 @@ export async function createProfileWorld() {
     await world.redis.del(`gcs:rl:wall-post:${actor.userId}`);
   }
 
-  return { ...world, outbox, mailer, profiles, social, achievements, membership, promotions, cosmetics, vip, moderator, clearWallFlood };
+  return { ...world, outbox, mailer, profiles, social, achievements, membership, promotions, cosmetics, vip, ranks, profileQueries, moderator, clearWallFlood };
 }
 
 export type GcsProfileWorld = Awaited<ReturnType<typeof createProfileWorld>>;

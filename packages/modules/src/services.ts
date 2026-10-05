@@ -45,9 +45,11 @@ import { GcsTopicService } from "./forums/topics";
 import { registerAppJobs } from "./jobs";
 import { GcsAchievementService } from "./profile/achievements";
 import { GcsCosmeticsService } from "./profile/cosmetics";
+import { GcsRankDirectory } from "./profile/display";
 import { GcsMembership } from "./profile/membership";
 import { GcsProfileService } from "./profile/profile";
 import { GcsPromotionService } from "./profile/promotions";
+import { GcsProfileQueries } from "./profile/queries";
 import { GcsSocialService } from "./profile/social";
 import { createRegistry } from "./registry";
 import { GcsVipService } from "./vip/vip";
@@ -94,6 +96,8 @@ export type GcsServices = {
   promotions: GcsPromotionService;
   cosmetics: GcsCosmeticsService;
   vip: GcsVipService;
+  ranks: GcsRankDirectory;
+  profileQueries: GcsProfileQueries;
 };
 
 export type GcsServicesOptions = {
@@ -202,6 +206,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const reactions = new GcsReactionService({ db, bus, cache, acp });
   const reports = new GcsReportService({ db, bus, rateLimiter });
   const posts = new GcsPostService(posting);
+  const ranks = new GcsRankDirectory({ db, cache });
   registerForumContent(posting, { reactions, attachments, reports, posts });
   const mailer: GcsMailer =
     process.env.GCS_TEST_ROUTES === "1"
@@ -255,7 +260,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     forums,
     topics: new GcsTopicService(posting, { polls, prefixes }),
     posts,
-    forumQueries: new GcsForumQueries({ db, cache, permissions, settings, readMarkers, follows, reactions, polls }),
+    forumQueries: new GcsForumQueries({ db, cache, permissions, settings, readMarkers, follows, reactions, polls, ranks }),
     readMarkers,
     follows,
     reactions,
@@ -274,6 +279,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     promotions,
     cosmetics,
     vip,
+    ranks,
+    profileQueries: new GcsProfileQueries({ db, cache, permissions, profiles, social, ranks }),
   };
   registerAppJobs(services);
   return services;

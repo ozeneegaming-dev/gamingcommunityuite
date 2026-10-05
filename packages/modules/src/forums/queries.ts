@@ -1,3 +1,4 @@
+import { rankLabel, type GcsRankDirectory, type GcsRankLabel } from "../profile/display";
 import {
   GcsForbidden,
   GcsNotFound,
@@ -24,10 +25,15 @@ export type GcsQueriesDeps = {
   follows: GcsFollowService;
   reactions: GcsReactionService;
   polls: GcsPollService;
+  /** Rangurile afișate sub numele autorilor (etapa 3). */
+  ranks: GcsRankDirectory;
 };
 
-/** Un user, pe scurt: destul pentru un link cu numele stilizat (`gcs-name--{groupKey}`). */
-export type GcsUserRef = { id: string; name: string; image: string | null; groupKey: string };
+/**
+ * Un user, pe scurt: destul pentru un link cu numele stilizat (`gcs-name--{nameKey}`: stilul ales sau grupul principal)
+ * și avatarul cu ramă (`gcs-avatarFrame--{frameKey}`).
+ */
+export type GcsUserRef = { id: string; name: string; image: string | null; groupKey: string; nameKey: string; frameKey: string | null };
 export type GcsPagination = { page: number; pages: number; perPage: number; total: number };
 export type GcsCrumb = { id: number; name: string; slug: string; type: ForumType };
 export type GcsLastPost = { postId: number; topicId: number; topicTitle: string; topicSlug: string; at: string; user: GcsUserRef | null };
@@ -81,6 +87,7 @@ export type GcsForumPage = {
 };
 
 export type GcsPostAuthor = GcsUserRef & {
+  rank: GcsRankLabel | null;
   groupName: string;
   groupTitle: string | null;
   postsCount: number;
@@ -162,10 +169,19 @@ type TreeData = { forums: TreeForum[]; topics: Record<string, { title: string; s
 const TREE_KEY = "forums:tree";
 const TREE_TTL = 3600;
 const STATS_TTL = 300;
-const userRefSelect = { id: true, name: true, image: true, primaryGroup: { select: { key: true } } } as const;
+export const userRefSelect = {
+  id: true,
+  name: true,
+  image: true,
+  primaryGroup: { select: { key: true } },
+  nameStyle: { select: { key: true } },
+  avatarFrame: { select: { key: true } },
+} as const;
 
-function toRef(u: { id: string; name: string; image: string | null; primaryGroup: { key: string } }): GcsUserRef {
-  return { id: u.id, name: u.name, image: u.image, groupKey: u.primaryGroup.key };
+type UserRefRow = { id: string; name: string; image: string | null; primaryGroup: { key: string }; nameStyle: { key: string } | null; avatarFrame: { key: string } | null };
+
+export function toRef(u: UserRefRow): GcsUserRef {
+  return { id: u.id, name: u.name, image: u.image, groupKey: u.primaryGroup.key, nameKey: u.nameStyle?.key ?? u.primaryGroup.key, frameKey: u.avatarFrame?.key ?? null };
 }
 
 const has = (powers: string[], power: string) => powers.includes("*") || powers.includes(power);
@@ -335,18 +351,18 @@ export class GcsForumQueries {
     const userIds = [...new Set(posts.flatMap((p) => [p.authorId, p.editedById]).filter((id): id is string => id !== null))];
     const { follows, reactions, polls } = this.deps;
     const postKeys = ids.map(String);
-    const [users, files, followCount, following, summary, mine, poll, reactionList] = await Promise.all([
+    const [users, files, followCount, following, summary, mine, poll, reactionList, rankData] = await Promise.all([
       userIds.length === 0
         ? Promise.resolve([])
         : db.user.findMany({
             where: { id: { in: userIds } },
             select: {
-              id: true,
-              name: true,
-              image: true,
+              ...userRefSelect,
               postsCount: true,
               reputation: true,
               createdAt: true,
+              rankId: true,
+              primaryGroupId: true,
               primaryGroup: { select: { key: true, name: true, title: true } },
             },
           }),
@@ -363,6 +379,7 @@ export class GcsForumQueries {
       reactions.mine(actor.userId, POST_CONTENT_TYPE, postKeys),
       polls.forTopic(actor, topicId),
       reactions.list(),
+      this.deps.ranks.data(),
     ]);
     const userMap = new Map(users.map((u) => [u.id, u]));
     const myReactions = mine;
@@ -385,10 +402,8 @@ export class GcsForumQueries {
         hiddenReason: p.visibility === "HIDDEN" ? p.hiddenReason : null,
         author: author
           ? {
-              id: author.id,
-              name: author.name,
-              image: author.image,
-              groupKey: author.primaryGroup.key,
+              ...toRef(author),
+              rank: rankLabel(rankData, author.rankId, author.primaryGroupId),
               groupName: author.primaryGroup.name,
               groupTitle: author.primaryGroup.title,
               postsCount: author.postsCount,

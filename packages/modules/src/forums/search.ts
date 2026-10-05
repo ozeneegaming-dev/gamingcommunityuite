@@ -10,7 +10,7 @@ import {
 import { Prisma, type PrismaClient } from "@gcs/db";
 import sanitizeHtml from "sanitize-html";
 import { forumContainer } from "./posting";
-import type { GcsPagination, GcsUserRef } from "./queries";
+import { toRef, userRefSelect, type GcsPagination, type GcsUserRef } from "./queries";
 
 export type GcsSearchInput = {
   q: string;
@@ -129,9 +129,9 @@ export class GcsForumSearch {
 
     const authorIds = [...new Set(rows.map((r) => r.authorId).filter((id): id is string => id !== null))];
     const users = authorIds.length
-      ? await db.user.findMany({ where: { id: { in: authorIds } }, select: { id: true, name: true, image: true, primaryGroup: { select: { key: true } } } })
+      ? await db.user.findMany({ where: { id: { in: authorIds } }, select: userRefSelect })
       : [];
-    const byId = new Map(users.map((u) => [u.id, { id: u.id, name: u.name, image: u.image, groupKey: u.primaryGroup.key }]));
+    const byId = new Map(users.map((u) => [u.id, toRef(u)]));
 
     return {
       results: rows.map((r) => ({
