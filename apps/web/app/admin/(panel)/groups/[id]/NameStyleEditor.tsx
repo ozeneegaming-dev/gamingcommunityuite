@@ -1,14 +1,14 @@
 "use client";
 
-import type { GcsNameStyle } from "@gcs/core";
+import type { GcsNameStyle, GcsResult } from "@gcs/core";
 import { GcsButton } from "@gcs/ui";
 import { useRouter } from "next/navigation";
 import { useState, type CSSProperties } from "react";
 import { useErrorMessage } from "../../_components/GcsActionForm";
-import { updateGroupStyle } from "../actions";
 
 type Props = {
-  groupId: number;
+  /** Salvarea stilului (Server Action): stilul unui grup sau un stil de nume VIP. */
+  onSave: (style: GcsNameStyle) => Promise<GcsResult<unknown>>;
   name: string;
   initial: GcsNameStyle;
   fallbackColor: string;
@@ -50,7 +50,7 @@ function previewStyle(s: { color: string; gradient: string[] | null; animated: b
 }
 
 /** Editorul stilului de nume (spec §9), cu previzualizare live. */
-export function NameStyleEditor({ groupId, name, initial, fallbackColor, labels }: Props) {
+export function NameStyleEditor({ onSave, name, initial, fallbackColor, labels }: Props) {
   const router = useRouter();
   const errorMessage = useErrorMessage();
   const [color, setColor] = useState(initial.color ?? fallbackColor);
@@ -86,7 +86,7 @@ export function NameStyleEditor({ groupId, name, initial, fallbackColor, labels 
     }
     if (style.glow) payload.glow = style.glow;
     if (icon.trim()) payload.icon = icon.trim();
-    const result = await updateGroupStyle(groupId, payload);
+    const result = await onSave(payload);
     setPending(false);
     if (!result.ok) return setStatus({ ok: false, text: errorMessage(result.error) });
     setStatus({ ok: true, text: labels.saved });

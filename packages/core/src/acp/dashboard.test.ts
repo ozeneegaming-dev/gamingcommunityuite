@@ -31,7 +31,7 @@ describe("layout-ul dashboard-ului", () => {
       appOrder: ["members", "system", "inventat"],
     });
     const layout = await dash.getLayout(user.id);
-    expect(layout.main).toEqual(["system_health", "registrations"]);
+    expect(layout.main).toEqual(["system_health", "registrations", "vip_expiring"]);
     expect(layout.side.slice(0, 2)).toEqual(["online_users", "admin_notes"]);
     // Widgeturile nemenționate sunt adăugate la final, ca niciunul să nu dispară definitiv.
     expect(new Set([...layout.main, ...layout.side])).toEqual(

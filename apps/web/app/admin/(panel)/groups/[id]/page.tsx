@@ -8,7 +8,7 @@ import type { ReactNode } from "react";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
-import { deleteGroup, updateGroupDetails, updateGroupSettings } from "../actions";
+import { deleteGroup, updateGroupDetails, updateGroupSettings, updateGroupStyle } from "../actions";
 import { NameStyleEditor } from "./NameStyleEditor";
 
 type Props = { params: Promise<{ id: string }> };
@@ -85,7 +85,7 @@ export default async function AcpGroupPage({ params }: Props) {
 
           <Section title={t("style.title")}>
             <NameStyleEditor
-              groupId={group.id}
+              onSave={updateGroupStyle.bind(null, group.id)}
               name={group.name}
               initial={(group.nameStyle as GcsNameStyle | null) ?? {}}
               fallbackColor={group.color ?? "#ECEDF1"}

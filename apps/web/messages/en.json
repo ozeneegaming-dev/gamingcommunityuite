@@ -143,7 +143,8 @@
       "already_awarded": "The member already has this badge.",
       "two_required": "A list needs at least two options.",
       "not_vip": "The chosen group is not a VIP tier.",
-      "permanent": "A permanent VIP cannot be extended."
+      "permanent": "A permanent VIP cannot be extended.",
+      "image": "Upload an image for an image frame."
     }
   },
   "acp": {
@@ -331,6 +332,11 @@
           "pending": "{count, plural, one {# post awaiting approval} other {# posts awaiting approval}}",
           "reports": "{count, plural, one {# open report} other {# open reports}}",
           "open": "Open the queue"
+        },
+        "vip_expiring": {
+          "title": "VIP expirations",
+          "empty": "No VIP expires in the next 7 days.",
+          "all": "All subscribers expiring soon"
         }
       },
       "banners": {
@@ -874,6 +880,58 @@
         "REVOKE": "Revoked",
         "EXPIRE": "Expired"
       }
+    },
+    "vip": {
+      "tiersTitle": "VIP tiers",
+      "tiersHelp": "Each tier is a VIP group. Privileges (name style, frames, animated cover, limits) are group settings.",
+      "activeCount": "{count, plural, one {# active subscriber} other {# active subscribers}}",
+      "editTier": "Edit group",
+      "addTier": "New tier",
+      "name": "Name",
+      "color": "Color",
+      "copyFrom": "Copy privileges from",
+      "subscribersTitle": "Subscribers",
+      "tier": "Tier",
+      "allTiers": "All tiers",
+      "expiringSoon": "Expires in < 7 days",
+      "filter": "Filter",
+      "noSubscribers": "No active subscriptions.",
+      "expiresOn": "expires on {date}",
+      "permanent": "permanent",
+      "extend": "Extend",
+      "days": "Days",
+      "revoke": "Revoke",
+      "confirmRevoke": "Revoke this member's VIP?",
+      "sources": {
+        "MANUAL": "granted manually",
+        "STORE": "from the store"
+      },
+      "historyTitle": "VIP history",
+      "noHistory": "No changes yet.",
+      "by": "by {name}",
+      "bySystem": "automatic",
+      "stylesTitle": "Name styles",
+      "stylesHelp": "Styles members can pick in Settings → Appearance instead of their group style. They also need the “styled name” group permission.",
+      "addStyle": "New style",
+      "key": "Key",
+      "save": "Save",
+      "delete": "Delete",
+      "confirmDelete": "Delete? Members using it go back to their group style.",
+      "availability": "Available to",
+      "availableAll": "All members (with the group permission)",
+      "availableGroups": "Groups",
+      "availableBadges": "Or holders of the badge",
+      "framesTitle": "Avatar frames",
+      "framesHelp": "Frames members can pick in Settings → Appearance. The preview uses the saved CSS.",
+      "addFrame": "New frame",
+      "kind": "Kind",
+      "image": "Image",
+      "colors": "Colors (2–6, comma separated)",
+      "width": "Thickness (px)",
+      "glow": "Glow",
+      "spin": "Spins",
+      "imageFile": "Image (for the Image kind)",
+      "preview": "Preview"
     }
   },
   "settings": {

@@ -143,7 +143,8 @@
       "already_awarded": "Membrul are deja acest badge.",
       "two_required": "O listă are nevoie de cel puțin două opțiuni.",
       "not_vip": "Grupul ales nu e un nivel VIP.",
-      "permanent": "Un VIP permanent nu se prelungește."
+      "permanent": "Un VIP permanent nu se prelungește.",
+      "image": "Încarcă o imagine pentru rama de tip imagine."
     }
   },
   "acp": {
@@ -331,6 +332,11 @@
           "pending": "{count, plural, one {# postare așteaptă aprobare} few {# postări așteaptă aprobare} other {# de postări așteaptă aprobare}}",
           "reports": "{count, plural, one {# raport deschis} few {# rapoarte deschise} other {# de rapoarte deschise}}",
           "open": "Deschide coada"
+        },
+        "vip_expiring": {
+          "title": "Expirări VIP",
+          "empty": "Niciun VIP nu expiră în următoarele 7 zile.",
+          "all": "Toți abonații care expiră curând"
         }
       },
       "banners": {
@@ -874,6 +880,58 @@
         "REVOKE": "Retras",
         "EXPIRE": "Expirat"
       }
+    },
+    "vip": {
+      "tiersTitle": "Niveluri VIP",
+      "tiersHelp": "Fiecare nivel e un grup VIP. Privilegiile (stil de nume, rame, cover animat, limite) sunt setări de grup.",
+      "activeCount": "{count, plural, one {# abonat activ} few {# abonați activi} other {# de abonați activi}}",
+      "editTier": "Editează grupul",
+      "addTier": "Nivel nou",
+      "name": "Nume",
+      "color": "Culoare",
+      "copyFrom": "Copiază privilegiile de la",
+      "subscribersTitle": "Abonați",
+      "tier": "Nivel",
+      "allTiers": "Toate nivelurile",
+      "expiringSoon": "Expiră în < 7 zile",
+      "filter": "Filtrează",
+      "noSubscribers": "Niciun abonament activ.",
+      "expiresOn": "expiră pe {date}",
+      "permanent": "permanent",
+      "extend": "Prelungește",
+      "days": "Zile",
+      "revoke": "Retrage",
+      "confirmRevoke": "Retragi VIP-ul acestui membru?",
+      "sources": {
+        "MANUAL": "acordat manual",
+        "STORE": "din magazin"
+      },
+      "historyTitle": "Istoric VIP",
+      "noHistory": "Nicio schimbare încă.",
+      "by": "de {name}",
+      "bySystem": "automat",
+      "stylesTitle": "Stiluri de nume",
+      "stylesHelp": "Stilurile pe care membrii le pot alege în Setări → Aspect, în locul stilului grupului. Cer și permisiunea de grup „nume stilizat”.",
+      "addStyle": "Stil nou",
+      "key": "Cheie",
+      "save": "Salvează",
+      "delete": "Șterge",
+      "confirmDelete": "Ștergi? Membrii care îl folosesc revin la stilul grupului.",
+      "availability": "Disponibil pentru",
+      "availableAll": "Toți membrii (cu permisiunea de grup)",
+      "availableGroups": "Grupuri",
+      "availableBadges": "Sau cine are badge-ul",
+      "framesTitle": "Avatar frames",
+      "framesHelp": "Ramele pe care membrii le pot alege în Setări → Aspect. Previzualizarea folosește CSS-ul salvat.",
+      "addFrame": "Ramă nouă",
+      "kind": "Tip",
+      "image": "Imagine",
+      "colors": "Culori (2–6, separate prin virgulă)",
+      "width": "Grosime (px)",
+      "glow": "Glow",
+      "spin": "Se rotește",
+      "imageFile": "Imagine (pentru tipul Imagine)",
+      "preview": "Previzualizare"
     }
   },
   "settings": {

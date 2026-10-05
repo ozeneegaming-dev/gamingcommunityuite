@@ -4,9 +4,10 @@ import { GcsValidationError } from "../errors";
 import type { GcsActor } from "../permissions/types";
 import type { GcsAcpRoleService } from "./roles";
 
-/** Widgeturile dashboard-ului ACP (spec §12.2): cele din etapa 1, plus coada de moderare (etapa 2). */
+/** Widgeturile dashboard-ului ACP (spec §12.2): cele din etapa 1, coada de moderare (etapa 2) și expirările VIP (etapa 3). */
 export const ACP_WIDGETS = [
   "registrations",
+  "vip_expiring",
   "moderation_queue",
   "system_health",
   "admin_notes",
@@ -25,7 +26,7 @@ export type GcsAcpLayout = {
 };
 
 export const DEFAULT_ACP_LAYOUT: GcsAcpLayout = {
-  main: ["registrations", "system_health"],
+  main: ["registrations", "system_health", "vip_expiring"],
   side: ["moderation_queue", "admin_notes", "online_users", "online_admins", "failed_acp_logins"],
   collapsed: [],
   appOrder: [],

@@ -22,7 +22,7 @@ const row = { display: "flex", justifyContent: "space-between", alignItems: "cen
 
 export default async function AcpDashboardPage() {
   const panel = await requireAcpPanel();
-  const { acp, acpDashboard, moderation, redis } = services();
+  const { acp, acpDashboard, moderation, redis, vip } = services();
   if (!(await acp.can(panel.actor, "system.dashboard", "view"))) {
     // Un admin fără dashboard ajunge pe prima secțiune pe care o vede.
     const first = panel.menu[0]?.items[0]?.href;
@@ -33,7 +33,7 @@ export default async function AcpDashboardPage() {
 
   const t = await getTranslations("acp.dashboard");
   const format = await getFormatter();
-  const [layout, totals, registrations, health, note, online, admins, failed, canEditNote, queue, worker] = await Promise.all([
+  const [layout, totals, registrations, health, note, online, admins, failed, canEditNote, queue, worker, [expiring]] = await Promise.all([
     acpDashboard.getLayout(panel.user.id),
     acpDashboard.totals(),
     acpDashboard.registrations(14),
@@ -45,6 +45,7 @@ export default async function AcpDashboardPage() {
     acp.can(panel.actor, "system.dashboard", "edit"),
     moderation.queueCount(panel.actor),
     workerStatus(redis).catch(() => ({ up: false, lastBeatAt: null })),
+    vip.subscribers({ expiringDays: 7, page: 1, perPage: 8 }),
   ]);
 
   const w = (key: GcsAcpWidget, k: string, values?: Record<string, string | number>) => t(`widgets.${key}.${k}`, values);
@@ -85,6 +86,29 @@ export default async function AcpDashboardPage() {
           <p style={{ margin: 0, padding: "12px 16px" }}>
             <Link href="/admin/members/moderation/queue">{w("moderation_queue", "open")}</Link>
           </p>
+        </div>
+      ),
+    },
+    vip_expiring: {
+      title: w("vip_expiring", "title"),
+      body: (
+        <div data-testid="gcs-widget-vip-expiring">
+          {expiring.length === 0 && (
+            <div style={{ ...row, borderBottom: 0 }}>
+              <span style={muted}>{w("vip_expiring", "empty")}</span>
+            </div>
+          )}
+          {expiring.map((s) => (
+            <div key={s.id} style={row}>
+              <Link href={`/admin/members/${s.user.id}`}>{s.user.name}</Link>
+              <span style={muted}>
+                {s.group.name} · {s.expiresAt ? format.relativeTime(s.expiresAt) : "—"}
+              </span>
+            </div>
+          ))}
+          <div style={{ ...row, borderBottom: 0 }}>
+            <Link href="/admin/vip/subscribers?expiring=1">{w("vip_expiring", "all")}</Link>
+          </div>
         </div>
       ),
     },
