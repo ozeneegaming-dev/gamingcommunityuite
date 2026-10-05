@@ -21,6 +21,7 @@ export * from "./health";
 export * from "./install/seed";
 export * from "./moderation/bans";
 export * from "./moderation/warnings";
+export * from "./members/directory";
 export * from "./modules/registry";
 export * from "./permissions/service";
 export * from "./permissions/types";

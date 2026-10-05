@@ -63,14 +63,19 @@ export async function logout(page: Page): Promise<void> {
 /** Codul TOTP curent pentru cheia afișată la activarea 2FA. */
 export const totp = (secret: string) => generateSync({ secret });
 
+/** Un Root Admin complet intrat în ACP (vezi `enterAcp`). */
+export function enterAcpAsRoot(page: Page, name: string, email: string): Promise<string> {
+  return enterAcp(page, name, email, "root_admin");
+}
+
 /**
- * Un Root Admin complet intrat în ACP: înregistrare, promovare, activarea 2FA și reautentificarea.
+ * Un user complet intrat în ACP: înregistrare, mutarea în grupul dat, activarea 2FA și reautentificarea.
  * Întoarce cheia TOTP, pentru reautentificări ulterioare.
  */
-export async function enterAcpAsRoot(page: Page, name: string, email: string): Promise<string> {
+export async function enterAcp(page: Page, name: string, email: string, groupKey: string): Promise<string> {
   await register(page, name, email);
   await expect(page.getByTestId("gcs-header-user")).toHaveText(name);
-  await setPrimaryGroup(email, "root_admin");
+  await setPrimaryGroup(email, groupKey);
 
   await page.goto("/admin");
   await expect(page).toHaveURL(/\/admin\/2fa-setup$/);
@@ -86,4 +91,16 @@ export async function enterAcpAsRoot(page: Page, name: string, email: string): P
   await page.getByRole("button", { name: "Intră în ACP" }).click();
   await expect(page).toHaveURL(/\/admin$/);
   return secret;
+}
+
+/** Id-ul unui user după email. */
+export async function userId(email: string): Promise<string> {
+  const rows = await sql<{ id: string }>(`SELECT id FROM users WHERE email = $1`, [email]);
+  return rows[0]!.id;
+}
+
+/** Id-ul unui grup după cheie. */
+export async function groupId(key: string): Promise<number> {
+  const rows = await sql<{ id: number }>(`SELECT id FROM groups WHERE key = $1`, [key]);
+  return rows[0]!.id;
 }

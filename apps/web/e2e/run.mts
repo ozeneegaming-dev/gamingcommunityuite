@@ -1,7 +1,7 @@
 /**
  * Rulează testele E2E (modul ES: top-level await) pe o instanță completă, pornită și oprită automat:
  * PostgreSQL (embedded sau `TEST_PG_URL`), Redis (`redis-memory-server` sau `TEST_REDIS_URL`),
- * migrații + seed, apoi aplicația Next.js pe portul 3100 și, la final, Playwright.
+ * migrații + seed, apoi aplicația Next.js pe portul 3100 (build de producție + `next start`) și, la final, Playwright.
  *
  * Folosire: `pnpm --filter @gcs/web test:e2e [argumente playwright]`, ex. `test:e2e auth`.
  * Codul de ieșire e cel al Playwright. La final, toate procesele pornite sunt oprite curat.
@@ -150,11 +150,19 @@ async function main(): Promise<number> {
     DATABASE_URL: databaseUrl,
     REDIS_URL: redisUrl,
     GCS_BASE_URL: BASE_URL,
+    // În producție Better Auth cere un secret propriu; pentru teste e unul de unică folosință.
+    GCS_SECRET: process.env.GCS_SECRET ?? "gcs-e2e-secret-0123456789abcdef0123456789abcdef",
+    GCS_TEST_ROUTES: "1",
     NEXT_TELEMETRY_DISABLED: "1",
   };
 
-  // `next start` (după `pnpm build`) e mai rapid și mai aproape de producție; implicit, `next dev`.
-  const mode = process.env.GCS_E2E_MODE === "start" ? "start" : "dev";
+  // Implicit: build de producție + `next start` (stabil, ca în producție). `GCS_E2E_MODE=dev` folosește `next dev`;
+  // `GCS_E2E_SKIP_BUILD=1` refolosește un build existent.
+  const mode = process.env.GCS_E2E_MODE === "dev" ? "dev" : "start";
+  if (mode === "start" && process.env.GCS_E2E_SKIP_BUILD !== "1") {
+    console.log("[gcs e2e] next build…");
+    execFileSync(process.execPath, [nextBin, "build"], { cwd: webDir, env: { ...process.env, NEXT_TELEMETRY_DISABLED: "1" }, stdio: "inherit" });
+  }
   const nextArgs = mode === "start" ? ["start", "-p", String(PORT)] : ["dev", "-p", String(PORT)];
   const next = run(nextBin, nextArgs, env, process.env.GCS_E2E_VERBOSE ? "inherit" : "ignore");
   cleanups.push(() => killTree(next));

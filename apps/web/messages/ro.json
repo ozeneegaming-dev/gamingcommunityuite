@@ -74,7 +74,29 @@
     "validation": "Verifică datele introduse.",
     "rate_limited": "Prea multe cereri. Încearcă din nou mai târziu.",
     "conflict": "Acțiunea intră în conflict cu starea curentă.",
-    "csrf": "Cererea nu a putut fi verificată. Reîncarcă pagina."
+    "csrf": "Cererea nu a putut fi verificată. Reîncarcă pagina.",
+    "reasons": {
+      "last_root": "Ultimul Root Admin nu își poate pierde rolul.",
+      "root_protected": "Un Root Admin poate fi gestionat doar de alt Root Admin.",
+      "group_protected": "Grupurile implicite nu se pot șterge.",
+      "role_exists": "Există deja un rol cu acest nume.",
+      "root_role_protected": "Rolul Root nu poate fi modificat.",
+      "acp_gate": "Sesiunea ACP a expirat. Reîncarcă pagina.",
+      "csrf": "Cererea nu a putut fi verificată. Reîncarcă pagina.",
+      "user_not_found": "Nu există un utilizator cu acest nume."
+    },
+    "fields": {
+      "invalid_color": "Culoare invalidă (folosește formatul #RRGGBB)",
+      "invalid_length": "Lungime invalidă",
+      "invalid_type": "Valoare invalidă",
+      "invalid_ip": "Adresă IP invalidă",
+      "invalid_email": "Email invalid",
+      "invalid_points": "Punctele trebuie să fie între 1 și 100",
+      "required": "Câmp obligatoriu",
+      "unknown_permission": "Permisiune necunoscută",
+      "unknown_section": "Secțiune necunoscută",
+      "invalid_order": "Ordine invalidă"
+    }
   },
   "acp": {
     "title": "Panou de administrare",
@@ -267,6 +289,201 @@
         "code": "Codul nu e corect",
         "generic": "A apărut o eroare. Încearcă din nou."
       }
+    },
+    "saved": "Salvat",
+    "members": {
+      "title": "Membri",
+      "search": "Caută membri",
+      "searchPlaceholder": "Nume sau email…",
+      "group": "Grup",
+      "allGroups": "Toate grupurile",
+      "filter": "Filtrează",
+      "columns": {
+        "name": "Nume",
+        "email": "Email",
+        "group": "Grup principal",
+        "joined": "Înregistrat",
+        "lastActive": "Ultima activitate"
+      },
+      "empty": "Niciun membru găsit",
+      "total": "{count, plural, one {# membru} few {# membri} other {# de membri}}",
+      "prev": "Pagina anterioară",
+      "next": "Pagina următoare",
+      "page": "Pagina {page} din {pages}",
+      "never": "niciodată"
+    },
+    "member": {
+      "back": "Înapoi la membri",
+      "info": {
+        "email": "Email",
+        "joined": "Înregistrat",
+        "lastActive": "Ultima activitate",
+        "twoFactor": "2FA",
+        "yes": "activ",
+        "no": "inactiv",
+        "viewProfile": "Vezi profilul"
+      },
+      "groups": {
+        "title": "Grupuri",
+        "primary": "Grup principal",
+        "secondary": "Grupuri secundare",
+        "none": "Niciun grup secundar",
+        "add": "Adaugă grup secundar",
+        "addSubmit": "Adaugă",
+        "remove": "Scoate {group}",
+        "save": "Salvează grupul principal"
+      },
+      "ban": {
+        "title": "Ban",
+        "reason": "Motiv",
+        "duration": "Durată",
+        "durations": {
+          "permanent": "Permanent",
+          "d1": "1 zi",
+          "d7": "7 zile",
+          "d30": "30 de zile"
+        },
+        "submit": "Banează",
+        "history": "Istoric bannuri",
+        "none": "Niciun ban",
+        "lift": "Ridică bannul",
+        "status": {
+          "active": "activ",
+          "lifted": "ridicat",
+          "expired": "expirat"
+        },
+        "until": "până la {date}",
+        "permanent": "permanent"
+      },
+      "warn": {
+        "title": "Avertisment",
+        "points": "Puncte",
+        "reason": "Motiv",
+        "expiresDays": "Expiră după (zile, 0 = niciodată)",
+        "submit": "Avertizează",
+        "history": "Istoric avertismente",
+        "none": "Niciun avertisment",
+        "by": "de {name}",
+        "expired": "expirat"
+      },
+      "ips": {
+        "title": "IP-uri cunoscute",
+        "none": "Niciun IP cunoscut",
+        "shared": "Conturi care împart același IP",
+        "sharedNone": "Niciun alt cont pe aceste IP-uri"
+      }
+    },
+    "groups": {
+      "title": "Grupuri",
+      "create": {
+        "title": "Grup nou",
+        "name": "Numele grupului",
+        "submit": "Creează grupul"
+      },
+      "columns": {
+        "name": "Grup",
+        "members": "Membri",
+        "type": "Tip"
+      },
+      "protected": "Implicit",
+      "vip": "VIP",
+      "custom": "Personalizat",
+      "edit": "Editează",
+      "order": "Ordinea grupurilor",
+      "moveUp": "Mută {group} mai sus",
+      "moveDown": "Mută {group} mai jos"
+    },
+    "group": {
+      "back": "Înapoi la grupuri",
+      "details": {
+        "title": "Detalii",
+        "name": "Nume",
+        "groupTitle": "Titlu (afișat sub nume)",
+        "isVip": "Grup VIP",
+        "save": "Salvează detaliile"
+      },
+      "style": {
+        "title": "Stilul numelui",
+        "color": "Culoare",
+        "useGradient": "Gradient",
+        "gradientColor": "Culoarea {n} a gradientului",
+        "animated": "Animat (shimmer)",
+        "glow": "Strălucire (glow)",
+        "bold": "Îngroșat",
+        "italic": "Înclinat",
+        "icon": "Iconiță înaintea numelui (emoji)",
+        "preview": "Previzualizare",
+        "save": "Salvează stilul"
+      },
+      "settings": {
+        "title": "Setări și permisiuni de grup",
+        "save": "Salvează setările",
+        "unlimited": "-1 = nelimitat, 0 = interzis"
+      },
+      "delete": {
+        "title": "Ștergere",
+        "body": "Membrii care au acest grup ca grup principal trec în „Membru”.",
+        "submit": "Șterge grupul",
+        "protected": "Grupurile implicite nu se pot șterge."
+      }
+    },
+    "permissions": {
+      "title": "Permisiuni: {type} #{id}",
+      "inherit": "Moștenește permisiunile părintelui",
+      "parentId": "ID-ul containerului părinte",
+      "group": "Grup",
+      "save": "Salvează permisiunile",
+      "allow": "{group}: {action}"
+    },
+    "roles": {
+      "title": "Administratori și roluri ACP",
+      "create": {
+        "name": "Numele rolului",
+        "submit": "Creează rolul"
+      },
+      "root": "Rolul Root are toate drepturile și nu poate fi modificat.",
+      "matrix": {
+        "section": "Secțiune",
+        "view": "Vezi",
+        "edit": "Editează",
+        "delete": "Șterge",
+        "save": "Salvează drepturile",
+        "cell": "{section}: {right}",
+        "title": "Drepturi pe secțiuni"
+      },
+      "assignments": {
+        "title": "Atribuit la",
+        "none": "Neatribuit",
+        "group": "Grup",
+        "user": "Nume de utilizator",
+        "addGroup": "Atribuie grupului",
+        "addUser": "Atribuie userului",
+        "remove": "Retrage de la {target}"
+      },
+      "delete": "Șterge rolul",
+      "userNotFound": "Nu există un utilizator cu acest nume"
+    },
+    "logs": {
+      "title": "Jurnal ACP",
+      "filters": {
+        "actor": "Actor (nume)",
+        "action": "Acțiune",
+        "from": "De la",
+        "to": "Până la",
+        "apply": "Filtrează"
+      },
+      "columns": {
+        "time": "Data",
+        "actor": "Actor",
+        "action": "Acțiune",
+        "target": "Țintă",
+        "ip": "IP"
+      },
+      "empty": "Nicio intrare",
+      "details": "Detalii",
+      "before": "Înainte",
+      "after": "După",
+      "system": "sistem"
     }
   },
   "settings": {
@@ -296,5 +513,40 @@
     "system": {
       "maintenance": "Mod mentenanță"
     }
+  },
+  "permissions": {
+    "core": {
+      "view_public": "Vede paginile publice",
+      "test_view": "Vede containerul de test"
+    },
+    "acp": {
+      "access": "Acces în ACP"
+    },
+    "mod": {
+      "access": "Acces la uneltele de moderare"
+    },
+    "pm": {
+      "max_conversations": "Conversații private (maxim)",
+      "flood_seconds": "Pauză între mesaje private (secunde)"
+    },
+    "upload": {
+      "max_mb": "Mărime maximă upload (MB)"
+    },
+    "signature": {
+      "max_chars": "Lungime maximă semnătură (caractere)"
+    },
+    "profile": {
+      "styled_name": "Nume stilizat",
+      "avatar_frame": "Ramă de avatar",
+      "animated_cover": "Copertă animată (GIF)"
+    },
+    "new_member": {
+      "post_threshold": "Postări aprobate până devine Membru"
+    }
+  },
+  "profile": {
+    "memberSince": "Membru din {date}",
+    "lastActive": "Ultima activitate: {date}",
+    "group": "Grup"
   }
 }

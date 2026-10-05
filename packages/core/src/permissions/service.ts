@@ -129,6 +129,11 @@ export class GcsPermissionService {
     });
   }
 
+  /** Versiunea curentă a permisiunilor (se schimbă la orice modificare de grupuri sau permisiuni). */
+  currentVersion(): Promise<number> {
+    return this.version();
+  }
+
   private async version(): Promise<number> {
     const cached = await this.deps.cache.get<number>("perm:version");
     if (cached !== null) return cached;

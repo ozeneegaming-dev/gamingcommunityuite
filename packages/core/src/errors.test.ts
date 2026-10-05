@@ -25,6 +25,35 @@ describe("GcsError", () => {
   });
 });
 
+describe("instanceof între copii ale modulului", () => {
+  test("o eroare dintr-o altă copie a modulului (ex. alt bundle Next.js) e recunoscută după cod", async () => {
+    // Simulăm o a doua copie a modulului: o clasă diferită, cu aceeași marcă.
+    const copy = await import(`./errors?copie=${Date.now()}`);
+    const foreign: unknown = new copy.GcsForbidden();
+    expect(copy.GcsForbidden).not.toBe(GcsForbidden);
+    expect(foreign instanceof GcsForbidden).toBe(true);
+    expect(foreign instanceof GcsError).toBe(true);
+    expect(foreign instanceof GcsNotFound).toBe(false);
+    await expect(
+      toResult(async () => {
+        throw foreign;
+      }),
+    ).resolves.toMatchObject({ ok: false, error: { code: "forbidden" } });
+  });
+
+  test("numele minificate ale claselor nu contează", () => {
+    const minified = new GcsForbidden();
+    minified.name = "h";
+    expect(minified instanceof GcsForbidden).toBe(true);
+    expect(minified instanceof GcsNotFound).toBe(false);
+  });
+
+  test("un Error obișnuit nu e GcsError", () => {
+    expect(new Error("x") instanceof GcsError).toBe(false);
+    expect(new GcsForbidden() instanceof GcsValidationError).toBe(false);
+  });
+});
+
 describe("toResult", () => {
   test("valoarea întoarsă devine {ok:true,data}", async () => {
     await expect(toResult(async () => 42)).resolves.toEqual({ ok: true, data: 42 });

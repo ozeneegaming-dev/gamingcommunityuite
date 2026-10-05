@@ -8,6 +8,7 @@ import {
   GcsCache,
   GcsEventBus,
   GcsGroupService,
+  GcsMemberDirectory,
   GcsModuleRegistry,
   GcsPermissionService,
   GcsRedisRateLimiter,
@@ -31,6 +32,7 @@ export type GcsServices = {
   acpDashboard: GcsAcpDashboardService;
   acpSearch: GcsAcpSearch;
   groups: GcsGroupService;
+  members: GcsMemberDirectory;
   bans: GcsBanService;
   warnings: GcsWarningService;
   actors: GcsActorResolver;
@@ -53,6 +55,18 @@ function createServices(): GcsServices {
 
   const registry = new GcsModuleRegistry();
   registry.register(coreModule);
+  // Permisiunea de test folosită de E2E (ruta /_test/container/…); există doar cu GCS_TEST_ROUTES=1.
+  if (process.env.GCS_TEST_ROUTES === "1") {
+    registry.register({
+      key: "e2e",
+      settings: [],
+      acpMenu: [],
+      eventListeners: [],
+      permissions: [
+        { key: "core.test_view", scope: "container", containerType: "test", labelKey: "permissions.core.test_view", default: {} },
+      ],
+    });
+  }
 
   const cache = new GcsCache(redis);
   const bus = new GcsEventBus({ cache, revalidate });
@@ -66,12 +80,13 @@ function createServices(): GcsServices {
   const acpDashboard = new GcsAcpDashboardService({ db, acp });
   const acpSearch = new GcsAcpSearch({ db, registry, acp });
   const groups = new GcsGroupService({ db, bus, permissions, acp });
+  const members = new GcsMemberDirectory({ db });
   const bans = new GcsBanService({ db, cache, bus, acp });
   const warnings = new GcsWarningService({ db, bus, acp, bans });
   const actors = new GcsActorResolver({ db, cache });
   const rateLimiter = new GcsRedisRateLimiter(redis);
 
-  return { db, redis, cache, bus, registry, settings, permissions, acp, acpDashboard, acpSearch, groups, bans, warnings, actors, rateLimiter };
+  return { db, redis, cache, bus, registry, settings, permissions, acp, acpDashboard, acpSearch, groups, members, bans, warnings, actors, rateLimiter };
 }
 
 // Un singur set de servicii pe proces (în dev, Next.js reîncarcă modulele).

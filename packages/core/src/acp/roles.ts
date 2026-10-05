@@ -1,11 +1,25 @@
-import type { PrismaClient } from "@gcs/db";
-import { GcsForbidden } from "../errors";
+import type { AcpRole, AcpRoleAssignment, PrismaClient } from "@gcs/db";
+import { writeAudit } from "../audit";
+import { GcsConflict, GcsForbidden, GcsNotFound, GcsValidationError } from "../errors";
 import type { GcsModuleRegistry } from "../modules/registry";
 import type { GcsActor } from "../permissions/types";
 
 export type GcsAcpRight = "view" | "edit" | "delete";
 export type GcsAcpSectionRights = { view: boolean; edit: boolean; delete: boolean };
 export type GcsAcpRights = Record<string, GcsAcpSectionRights>;
+
+/** Rolul creat la instalare, cu toate drepturile; nu se poate modifica sau șterge. */
+const ROOT_ROLE = "Root";
+/** Secțiunea ACP care dă dreptul de a gestiona rolurile (Staff → Administratori și roluri ACP). */
+const ROLES_SECTION = "members.acp_roles";
+
+export type GcsAcpRoleView = {
+  id: number;
+  name: string;
+  isRoot: boolean;
+  permissions: GcsAcpRights;
+  assignments: { id: number; userId: string | null; userName: string | null; groupId: number | null; groupKey: string | null; groupName: string | null }[];
+};
 
 /**
  * Drepturile de staff în ACP (spec §6.4): o matrice secțiune × {view, edit, delete},
@@ -65,5 +79,131 @@ export class GcsAcpRoleService {
   /** Aruncă `GcsForbidden` dacă actorul nu are dreptul `right` pe secțiunea ACP `section`. */
   async assert(actor: GcsActor, section: string, right: GcsAcpRight): Promise<void> {
     if (!(await this.can(actor, section, right))) throw new GcsForbidden({ section, right });
+  }
+
+  // ─── Gestionarea rolurilor (ACP → Staff → Administratori și roluri ACP) ───
+
+  /** Secțiunile ACP cunoscute (din meniurile modulelor), în ordinea meniului. */
+  sections(): string[] {
+    return [...new Set(this.deps.registry.acpMenu().flatMap((s) => s.items.map((i) => i.section)))];
+  }
+
+  async listRoles(): Promise<GcsAcpRoleView[]> {
+    const roles = await this.deps.db.acpRole.findMany({
+      orderBy: { id: "asc" },
+      include: {
+        permissions: true,
+        assignments: { include: { user: { select: { name: true } }, group: { select: { key: true, name: true } } } },
+      },
+    });
+    return roles.map((r) => ({
+      id: r.id,
+      name: r.name,
+      isRoot: r.name === ROOT_ROLE,
+      permissions: Object.fromEntries(
+        r.permissions.map((p) => [p.section, { view: p.canView, edit: p.canEdit, delete: p.canDelete }]),
+      ),
+      assignments: r.assignments.map((a) => ({
+        id: a.id,
+        userId: a.userId,
+        userName: a.user?.name ?? null,
+        groupId: a.groupId,
+        groupKey: a.group?.key ?? null,
+        groupName: a.group?.name ?? null,
+      })),
+    }));
+  }
+
+  async createRole(name: string, actor: GcsActor): Promise<AcpRole> {
+    await this.assert(actor, ROLES_SECTION, "edit");
+    const clean = name.trim();
+    if (clean.length < 1 || clean.length > 64) throw new GcsValidationError({ name: "invalid_length" });
+    const { db } = this.deps;
+    if (await db.acpRole.findUnique({ where: { name: clean } })) throw new GcsConflict({ reason: "role_exists" });
+    return db.$transaction(async (tx) => {
+      const role = await tx.acpRole.create({ data: { name: clean } });
+      await writeAudit(tx, { actorId: actor.userId, action: "acp.role.create", targetType: "acp_role", targetId: String(role.id), after: { name: clean }, ip: actor.ip });
+      return role;
+    });
+  }
+
+  /** Înlocuiește matricea secțiune × {view, edit, delete} a unui rol. `edit`/`delete` implică `view`. */
+  async setRolePermissions(roleId: number, matrix: GcsAcpRights, actor: GcsActor): Promise<void> {
+    await this.assert(actor, ROLES_SECTION, "edit");
+    const role = await this.editableRole(roleId);
+    const known = new Set(this.sections());
+    const unknown = Object.keys(matrix).filter((s) => !known.has(s));
+    if (unknown.length > 0) throw new GcsValidationError(Object.fromEntries(unknown.map((s) => [s, "unknown_section"])));
+
+    const rows = Object.entries(matrix)
+      .filter(([, r]) => r.view || r.edit || r.delete)
+      .map(([section, r]) => ({ roleId, section, canView: true, canEdit: r.edit, canDelete: r.delete }));
+    await this.deps.db.$transaction(async (tx) => {
+      const before = await tx.acpRolePermission.findMany({ where: { roleId } });
+      await tx.acpRolePermission.deleteMany({ where: { roleId } });
+      await tx.acpRolePermission.createMany({ data: rows });
+      await writeAudit(tx, {
+        actorId: actor.userId,
+        action: "acp.role.permissions",
+        targetType: "acp_role",
+        targetId: String(role.id),
+        before: Object.fromEntries(before.map((p) => [p.section, { view: p.canView, edit: p.canEdit, delete: p.canDelete }])),
+        after: Object.fromEntries(rows.map((p) => [p.section, { view: p.canView, edit: p.canEdit, delete: p.canDelete }])),
+        ip: actor.ip,
+      });
+    });
+  }
+
+  async assignRole(roleId: number, target: { userId: string } | { groupId: number }, actor: GcsActor): Promise<AcpRoleAssignment> {
+    await this.assert(actor, ROLES_SECTION, "edit");
+    const role = await this.editableRole(roleId);
+    const { db } = this.deps;
+    if ("userId" in target) {
+      if (!(await db.user.findUnique({ where: { id: target.userId }, select: { id: true } }))) throw new GcsNotFound({ entity: "user" });
+    } else if (!(await db.group.findUnique({ where: { id: target.groupId }, select: { id: true } }))) {
+      throw new GcsNotFound({ entity: "group" });
+    }
+    const existing = await db.acpRoleAssignment.findFirst({ where: { roleId, ...target } });
+    if (existing) return existing;
+    return db.$transaction(async (tx) => {
+      const assignment = await tx.acpRoleAssignment.create({ data: { roleId, ...target } });
+      await writeAudit(tx, { actorId: actor.userId, action: "acp.role.assign", targetType: "acp_role", targetId: String(role.id), after: target, ip: actor.ip });
+      return assignment;
+    });
+  }
+
+  async unassignRole(assignmentId: number, actor: GcsActor): Promise<void> {
+    await this.assert(actor, ROLES_SECTION, "edit");
+    const { db } = this.deps;
+    const assignment = await db.acpRoleAssignment.findUnique({ where: { id: assignmentId } });
+    if (!assignment) throw new GcsNotFound({ entity: "acp_role_assignment" });
+    await this.editableRole(assignment.roleId);
+    await db.$transaction(async (tx) => {
+      await tx.acpRoleAssignment.delete({ where: { id: assignmentId } });
+      await writeAudit(tx, {
+        actorId: actor.userId,
+        action: "acp.role.unassign",
+        targetType: "acp_role",
+        targetId: String(assignment.roleId),
+        before: { userId: assignment.userId, groupId: assignment.groupId },
+        ip: actor.ip,
+      });
+    });
+  }
+
+  async deleteRole(roleId: number, actor: GcsActor): Promise<void> {
+    await this.assert(actor, ROLES_SECTION, "delete");
+    const role = await this.editableRole(roleId);
+    await this.deps.db.$transaction(async (tx) => {
+      await tx.acpRole.delete({ where: { id: roleId } });
+      await writeAudit(tx, { actorId: actor.userId, action: "acp.role.delete", targetType: "acp_role", targetId: String(roleId), before: { name: role.name }, ip: actor.ip });
+    });
+  }
+
+  private async editableRole(roleId: number): Promise<AcpRole> {
+    const role = await this.deps.db.acpRole.findUnique({ where: { id: roleId } });
+    if (!role) throw new GcsNotFound({ entity: "acp_role" });
+    if (role.name === ROOT_ROLE) throw new GcsConflict({ reason: "root_role_protected" });
+    return role;
   }
 }

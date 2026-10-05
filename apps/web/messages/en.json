@@ -74,7 +74,29 @@
     "validation": "Please check the data you entered.",
     "rate_limited": "Too many requests. Try again later.",
     "conflict": "This action conflicts with the current state.",
-    "csrf": "The request could not be verified. Reload the page."
+    "csrf": "The request could not be verified. Reload the page.",
+    "reasons": {
+      "last_root": "The last Root Admin cannot lose the role.",
+      "root_protected": "A Root Admin can only be managed by another Root Admin.",
+      "group_protected": "Default groups cannot be deleted.",
+      "role_exists": "A role with this name already exists.",
+      "root_role_protected": "The Root role cannot be changed.",
+      "acp_gate": "Your ACP session expired. Reload the page.",
+      "csrf": "The request could not be verified. Reload the page.",
+      "user_not_found": "No user with this name."
+    },
+    "fields": {
+      "invalid_color": "Invalid color (use the #RRGGBB format)",
+      "invalid_length": "Invalid length",
+      "invalid_type": "Invalid value",
+      "invalid_ip": "Invalid IP address",
+      "invalid_email": "Invalid email",
+      "invalid_points": "Points must be between 1 and 100",
+      "required": "Required field",
+      "unknown_permission": "Unknown permission",
+      "unknown_section": "Unknown section",
+      "invalid_order": "Invalid order"
+    }
   },
   "acp": {
     "title": "Admin control panel",
@@ -267,6 +289,201 @@
         "code": "The code is not correct",
         "generic": "Something went wrong. Please try again."
       }
+    },
+    "saved": "Saved",
+    "members": {
+      "title": "Members",
+      "search": "Search members",
+      "searchPlaceholder": "Name or email…",
+      "group": "Group",
+      "allGroups": "All groups",
+      "filter": "Filter",
+      "columns": {
+        "name": "Name",
+        "email": "Email",
+        "group": "Primary group",
+        "joined": "Joined",
+        "lastActive": "Last active"
+      },
+      "empty": "No members found",
+      "total": "{count, plural, one {# member} other {# members}}",
+      "prev": "Previous page",
+      "next": "Next page",
+      "page": "Page {page} of {pages}",
+      "never": "never"
+    },
+    "member": {
+      "back": "Back to members",
+      "info": {
+        "email": "Email",
+        "joined": "Joined",
+        "lastActive": "Last active",
+        "twoFactor": "2FA",
+        "yes": "on",
+        "no": "off",
+        "viewProfile": "View profile"
+      },
+      "groups": {
+        "title": "Groups",
+        "primary": "Primary group",
+        "secondary": "Secondary groups",
+        "none": "No secondary groups",
+        "add": "Add secondary group",
+        "addSubmit": "Add",
+        "remove": "Remove {group}",
+        "save": "Save primary group"
+      },
+      "ban": {
+        "title": "Ban",
+        "reason": "Reason",
+        "duration": "Duration",
+        "durations": {
+          "permanent": "Permanent",
+          "d1": "1 day",
+          "d7": "7 days",
+          "d30": "30 days"
+        },
+        "submit": "Ban",
+        "history": "Ban history",
+        "none": "No bans",
+        "lift": "Lift ban",
+        "status": {
+          "active": "active",
+          "lifted": "lifted",
+          "expired": "expired"
+        },
+        "until": "until {date}",
+        "permanent": "permanent"
+      },
+      "warn": {
+        "title": "Warning",
+        "points": "Points",
+        "reason": "Reason",
+        "expiresDays": "Expires after (days, 0 = never)",
+        "submit": "Warn",
+        "history": "Warning history",
+        "none": "No warnings",
+        "by": "by {name}",
+        "expired": "expired"
+      },
+      "ips": {
+        "title": "Known IPs",
+        "none": "No known IPs",
+        "shared": "Accounts sharing the same IP",
+        "sharedNone": "No other accounts on these IPs"
+      }
+    },
+    "groups": {
+      "title": "Groups",
+      "create": {
+        "title": "New group",
+        "name": "Group name",
+        "submit": "Create group"
+      },
+      "columns": {
+        "name": "Group",
+        "members": "Members",
+        "type": "Type"
+      },
+      "protected": "Default",
+      "vip": "VIP",
+      "custom": "Custom",
+      "edit": "Edit",
+      "order": "Group order",
+      "moveUp": "Move {group} up",
+      "moveDown": "Move {group} down"
+    },
+    "group": {
+      "back": "Back to groups",
+      "details": {
+        "title": "Details",
+        "name": "Name",
+        "groupTitle": "Title (shown under the name)",
+        "isVip": "VIP group",
+        "save": "Save details"
+      },
+      "style": {
+        "title": "Name style",
+        "color": "Color",
+        "useGradient": "Gradient",
+        "gradientColor": "Gradient color {n}",
+        "animated": "Animated (shimmer)",
+        "glow": "Glow",
+        "bold": "Bold",
+        "italic": "Italic",
+        "icon": "Icon before the name (emoji)",
+        "preview": "Preview",
+        "save": "Save style"
+      },
+      "settings": {
+        "title": "Group settings and permissions",
+        "save": "Save settings",
+        "unlimited": "-1 = unlimited, 0 = not allowed"
+      },
+      "delete": {
+        "title": "Delete",
+        "body": "Members with this primary group move to “Member”.",
+        "submit": "Delete group",
+        "protected": "Default groups cannot be deleted."
+      }
+    },
+    "permissions": {
+      "title": "Permissions: {type} #{id}",
+      "inherit": "Inherit the parent's permissions",
+      "parentId": "Parent container ID",
+      "group": "Group",
+      "save": "Save permissions",
+      "allow": "{group}: {action}"
+    },
+    "roles": {
+      "title": "Administrators and ACP roles",
+      "create": {
+        "name": "Role name",
+        "submit": "Create role"
+      },
+      "root": "The Root role has every right and cannot be changed.",
+      "matrix": {
+        "section": "Section",
+        "view": "View",
+        "edit": "Edit",
+        "delete": "Delete",
+        "save": "Save rights",
+        "cell": "{section}: {right}",
+        "title": "Rights per section"
+      },
+      "assignments": {
+        "title": "Assigned to",
+        "none": "Not assigned",
+        "group": "Group",
+        "user": "Username",
+        "addGroup": "Assign to group",
+        "addUser": "Assign to user",
+        "remove": "Remove from {target}"
+      },
+      "delete": "Delete role",
+      "userNotFound": "No user with this name"
+    },
+    "logs": {
+      "title": "ACP log",
+      "filters": {
+        "actor": "Actor (name)",
+        "action": "Action",
+        "from": "From",
+        "to": "To",
+        "apply": "Filter"
+      },
+      "columns": {
+        "time": "Date",
+        "actor": "Actor",
+        "action": "Action",
+        "target": "Target",
+        "ip": "IP"
+      },
+      "empty": "No entries",
+      "details": "Details",
+      "before": "Before",
+      "after": "After",
+      "system": "system"
     }
   },
   "settings": {
@@ -296,5 +513,40 @@
     "system": {
       "maintenance": "Maintenance mode"
     }
+  },
+  "permissions": {
+    "core": {
+      "view_public": "Sees public pages",
+      "test_view": "Sees the test container"
+    },
+    "acp": {
+      "access": "ACP access"
+    },
+    "mod": {
+      "access": "Moderation tools access"
+    },
+    "pm": {
+      "max_conversations": "Private conversations (maximum)",
+      "flood_seconds": "Delay between private messages (seconds)"
+    },
+    "upload": {
+      "max_mb": "Maximum upload size (MB)"
+    },
+    "signature": {
+      "max_chars": "Maximum signature length (characters)"
+    },
+    "profile": {
+      "styled_name": "Styled name",
+      "avatar_frame": "Avatar frame",
+      "animated_cover": "Animated cover (GIF)"
+    },
+    "new_member": {
+      "post_threshold": "Approved posts until Member"
+    }
+  },
+  "profile": {
+    "memberSince": "Member since {date}",
+    "lastActive": "Last active: {date}",
+    "group": "Group"
   }
 }

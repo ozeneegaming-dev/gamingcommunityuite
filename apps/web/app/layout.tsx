@@ -19,11 +19,14 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const locale = await getLocale();
+  // Versiunea permisiunilor se schimbă la orice modificare de grup: browserul ia imediat CSS-ul nou,
+  // deși îl poate păstra în cache 60 s.
+  const version = await services().permissions.currentVersion();
   return (
     <html lang={locale} className={`${display.variable} ${text.variable}`}>
       <head>
         {/* Stilurile de nume ale grupurilor, generate din ACP (spec §9). */}
-        <link rel="stylesheet" href="/gcs-names.css" />
+        <link rel="stylesheet" href={`/gcs-names.css?v=${version}`} />
       </head>
       <body className="gcs-root">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>

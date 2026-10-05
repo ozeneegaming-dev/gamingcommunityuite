@@ -1,7 +1,7 @@
 import { ACP_WIDGETS, checkHealth, type GcsAcpWidget } from "@gcs/core";
 import { GcsCard, GcsUserLink } from "@gcs/ui";
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { requireAcpPanel } from "@/lib/acp";
@@ -26,6 +26,8 @@ export default async function AcpDashboardPage() {
     // Un admin fără dashboard ajunge pe prima secțiune pe care o vede.
     const first = panel.menu[0]?.items[0]?.href;
     if (first && first !== "/admin") redirect(first);
+    // Fără niciun drept ACP: nimic de arătat (ca pentru cine nu are acces).
+    notFound();
   }
 
   const t = await getTranslations("acp.dashboard");

@@ -185,6 +185,48 @@ export class GcsGroupService {
     if (removed) await this.changed([groupId], [`user:${userId}`]);
   }
 
+  /** Ordinea grupurilor (ACP → Grupuri, drag & drop): `order` conține toate grupurile, în ordinea nouă. */
+  async reorder(order: number[], actor: GcsActor): Promise<void> {
+    await this.authorize(actor);
+    await this.deps.db.$transaction(async (tx) => {
+      const groups = await tx.group.findMany({ select: { id: true, position: true }, orderBy: { position: "asc" } });
+      const ids = new Set(groups.map((g) => g.id));
+      if (order.length !== ids.size || new Set(order).size !== order.length || !order.every((id) => ids.has(id))) {
+        throw new GcsValidationError({ order: "invalid_order" });
+      }
+      for (const [position, id] of order.entries()) await tx.group.update({ where: { id }, data: { position } });
+      await this.audit(tx, actor, "group.reorder", "all", groups.map((g) => g.id), order);
+    });
+    await this.changed(order);
+  }
+
+  /** Moștenirea pe container: cu `inherits`, containerul folosește permisiunile părintelui. */
+  async setContainerInherit(
+    containerType: string,
+    containerId: string,
+    input: { parentId: string | null; inherits: boolean },
+    actor: GcsActor,
+  ): Promise<void> {
+    await this.authorize(actor);
+    if (input.inherits && !input.parentId) throw new GcsValidationError({ parentId: "required" });
+    const where = { containerType_containerId: { containerType, containerId } };
+    await this.deps.db.$transaction(async (tx) => {
+      const before = await tx.containerInherit.findUnique({ where });
+      const data = { parentId: input.parentId, inherits: input.inherits };
+      await tx.containerInherit.upsert({ where, create: { containerType, containerId, ...data }, update: data });
+      await this.audit(
+        tx,
+        actor,
+        "container.inherit",
+        `${containerType}:${containerId}`,
+        before ? { parentId: before.parentId, inherits: before.inherits } : undefined,
+        data,
+        "container",
+      );
+    });
+    await this.changed([], [`container:${containerType}:${containerId}`]);
+  }
+
   private authorize(actor: GcsActor): Promise<void> {
     return this.deps.acp.assert(actor, ACP_SECTION, "edit");
   }
