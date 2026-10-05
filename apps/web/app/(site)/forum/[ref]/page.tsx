@@ -5,12 +5,13 @@ import Link from "next/link";
 import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
-import { forumQuery, pageParam } from "@/lib/forum-page";
+import { forumQuery, moveTargets, pageParam } from "@/lib/forum-page";
 import { forumHref, newTopicHref } from "@/lib/forum-urls";
 import { services } from "@/lib/services";
 import { GcsBreadcrumb } from "../../_components/forum/GcsBreadcrumb";
 import { GcsFollowButton, GcsMarkReadButton } from "../../_components/forum/GcsForumButtons";
 import { GcsForumRow } from "../../_components/forum/GcsForumRow";
+import { GcsModBar } from "../../_components/forum/GcsModBar";
 import { GcsPagination } from "../../_components/forum/GcsPagination";
 import { GcsTopicRow } from "../../_components/forum/GcsTopicRow";
 
@@ -30,7 +31,7 @@ export default async function ForumPage({ params, searchParams }: Props) {
   const page = pageParam(sp.page);
   const prefixId = pageParam(sp.prefix);
   const actor = await currentActor();
-  const { forumQueries, follows, prefixes } = services();
+  const { forumQueries, follows, prefixes, moderation } = services();
   const t = await getTranslations("forum");
 
   const data = await forumQuery(() => forumQueries.forum(actor, ref.id, { page, ...(sp.prefix ? { prefixId } : {}) }));
@@ -45,11 +46,15 @@ export default async function ForumPage({ params, searchParams }: Props) {
   if (forum.type === "LINK" && forum.linkUrl) redirect(forum.linkUrl);
   if (ref.slug !== forum.slug) permanentRedirect(forumHref(forum, page));
 
-  const [following, followers, allowedPrefixes] = await Promise.all([
+  const isMod = data.modPowers.length > 0;
+  const [following, followers, allowedPrefixes, targets, savedActions] = await Promise.all([
     follows.isFollowing(actor.userId, "forum", String(forum.id)),
     follows.count("forum", String(forum.id)),
     forum.type === "FORUM" || forum.type === "QA" ? prefixes.allowedFor(forum.id) : Promise.resolve([]),
+    isMod ? moveTargets(actor) : Promise.resolve([]),
+    isMod ? moderation.listActions() : Promise.resolve([]),
   ]);
+  const tm = await getTranslations("mod");
 
   return (
     <>
@@ -101,10 +106,42 @@ export default async function ForumPage({ params, searchParams }: Props) {
               </form>
             )}
           </header>
+          {isMod && data.topics.length > 0 && (
+            <>
+              <form id="gcs-mod-topics" />
+              <GcsModBar
+                formId="gcs-mod-topics"
+                powers={data.modPowers}
+                forums={targets.filter((f) => f.id !== forum.id)}
+                savedActions={savedActions
+                  .filter((a) => a.forumIds.length === 0 || a.forumIds.includes(forum.id))
+                  .map((a) => ({ id: a.id, name: a.name }))}
+              />
+            </>
+          )}
           {data.topics.length === 0 ? (
             <p className="gcs-topicList__empty">{t("empty")}</p>
           ) : (
-            data.topics.map((topic) => <GcsTopicRow key={topic.id} topic={topic} />)
+            data.topics.map((topic) => (
+              <GcsTopicRow
+                key={topic.id}
+                topic={topic}
+                {...(isMod
+                  ? {
+                      select: (
+                        <input
+                          type="checkbox"
+                          form="gcs-mod-topics"
+                          name="topicId"
+                          value={topic.id}
+                          className="gcs-modCheck"
+                          aria-label={tm("select", { title: topic.title })}
+                        />
+                      ),
+                    }
+                  : {})}
+              />
+            ))
           )}
         </section>
       )}

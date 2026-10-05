@@ -918,3 +918,115 @@
   font-size: 12px;
   color: var(--gcs-muted);
 }
+
+/* ─── Topic nou și unelte de moderare ─────────────────────────────────────── */
+.gcs-formCard {
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.gcs-field__hint {
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-tagInput {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  min-height: 44px;
+  padding: 4px 8px;
+  border-radius: 10px;
+  background: var(--gcs-surface2);
+  border: 1px solid var(--gcs-border);
+  box-sizing: border-box;
+}
+.gcs-tagInput input {
+  flex: 1 1 120px;
+  min-width: 80px;
+  min-height: 34px;
+  background: transparent;
+  border: 0;
+  color: var(--gcs-text);
+  font: 500 14px var(--gcs-font-text);
+  outline: none;
+}
+.gcs-tagInput .gcs-tag button {
+  margin-left: 4px;
+  background: transparent;
+  border: 0;
+  color: var(--gcs-muted);
+  cursor: pointer;
+  font-size: 14px;
+}
+.gcs-pollEditor {
+  border: 1px solid var(--gcs-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gcs-pollEditor legend {
+  padding: 0 6px;
+  font-weight: 700;
+}
+.gcs-pollEditor__option {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+.gcs-check {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 36px;
+}
+.gcs-modCheck {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--gcs-accent);
+}
+.gcs-modBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--gcs-border);
+  background: #12141a;
+}
+.gcs-modBar__count {
+  font-size: 13px;
+  color: var(--gcs-muted);
+  margin-right: 8px;
+}
+.gcs-modBar__group {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+.gcs-modBar .gcs-input,
+.gcs-modMenu .gcs-input {
+  width: auto;
+  min-height: 36px;
+}
+.gcs-modMenu__summary {
+  padding: 12px 18px;
+  cursor: pointer;
+  font-weight: 700;
+  min-height: 24px;
+}
+.gcs-modMenu__body {
+  padding: 0 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gcs-modMenu__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}

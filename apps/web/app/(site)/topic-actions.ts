@@ -76,3 +76,30 @@ export const voteAction = gcsAction(z.object({ pollId: id, optionIds: z.array(id
 export const markSolvedAction = gcsAction(z.object({ topicId: id, postId: id.nullable() }), async ({ topicId, postId }, { actor }) => {
   await services().topics.markSolved(actor, topicId, postId);
 });
+
+const poll = z
+  .object({
+    question: z.string().max(300),
+    options: z.array(z.string().max(200)).max(10),
+    multiple: z.boolean(),
+    closesAt: z.string().max(40).nullable().optional(),
+  })
+  .nullable();
+
+/** Topic nou (cu prefix, tag-uri și sondaj opțional). Întoarce linkul topicului (sau `pending`). */
+export const createTopicAction = gcsAction(
+  z.object({
+    forumId: id,
+    title: z.string().max(200),
+    content,
+    prefixId: id.nullable(),
+    tags: z.array(z.string().max(40)).max(20),
+    poll,
+  }),
+  async (input, { actor }) => {
+    const { topics, db } = services();
+    const res = await topics.create(actor, { ...input, poll: input.poll ?? null });
+    const topic = await db.topic.findUniqueOrThrow({ where: { id: res.topicId }, select: { slug: true } });
+    return { ...res, href: `/topic/${res.topicId}-${topic.slug}` };
+  },
+);

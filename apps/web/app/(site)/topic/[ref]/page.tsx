@@ -5,8 +5,8 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
-import { forumQuery, pageParam } from "@/lib/forum-page";
-import { memberHref, tagHref, tint, topicHref } from "@/lib/forum-urls";
+import { forumQuery, moveTargets, pageParam } from "@/lib/forum-page";
+import { forumHref, memberHref, tagHref, tint, topicHref } from "@/lib/forum-urls";
 import { services } from "@/lib/services";
 import { registerTopicView } from "@/lib/topic-views";
 import { GcsBreadcrumb } from "../../_components/forum/GcsBreadcrumb";
@@ -15,6 +15,7 @@ import { GcsPagination } from "../../_components/forum/GcsPagination";
 import { GcsPollCard } from "../../_components/topic/GcsPollCard";
 import { GcsPost } from "../../_components/topic/GcsPost";
 import { GcsReplyBox } from "../../_components/topic/GcsReplyBox";
+import { GcsTopicModMenu, SPLIT_FORM_ID } from "../../_components/topic/GcsTopicModMenu";
 
 type Props = { params: Promise<{ ref: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -49,9 +50,11 @@ export default async function TopicPage({ params, searchParams }: Props) {
   if (ref.slug !== topic.slug) permanentRedirect(topicHref(topic, page));
 
   const visibleIds = data.posts.filter((p) => p.visibility === "VISIBLE").map((p) => p.id);
-  const [maxUploadMb] = await Promise.all([
+  const isMod = data.modPowers.length > 0;
+  const [maxUploadMb, , targets] = await Promise.all([
     actor.userId ? permissions.groupValue<number | boolean>(actor, "upload.max_mb") : Promise.resolve(0),
     registerTopicView(actor, topic.id),
+    isMod ? moveTargets(actor) : Promise.resolve([]),
     actor.userId && visibleIds.length > 0 ? readMarkers.markRead(actor.userId, topic.id, Math.max(...visibleIds)) : Promise.resolve(),
   ]);
   const isTopicAuthor = actor.userId !== null && actor.userId === topic.author?.id;
@@ -106,6 +109,20 @@ export default async function TopicPage({ params, searchParams }: Props) {
         </div>
       </section>
 
+      {isMod && (
+        <>
+          <form id={SPLIT_FORM_ID} />
+          <GcsTopicModMenu
+            topicId={topic.id}
+            forumId={forum.id}
+            forumHref={forumHref(forum)}
+            powers={data.modPowers}
+            flags={{ pinned: topic.pinned, locked: topic.locked, featured: topic.featured, hidden: topic.visibility === "HIDDEN" }}
+            forums={targets}
+          />
+        </>
+      )}
+
       {data.poll && (
         <GcsPollCard
           poll={data.poll}
@@ -132,6 +149,8 @@ export default async function TopicPage({ params, searchParams }: Props) {
               restore: has(data.modPowers, "hide"),
               delete: has(data.modPowers, "delete"),
               solve: canSolve && post.id !== topic.firstPostId && post.visibility === "VISIBLE",
+              approve: has(data.modPowers, "approve"),
+              split: has(data.modPowers, "split"),
             }}
           />
         ))}

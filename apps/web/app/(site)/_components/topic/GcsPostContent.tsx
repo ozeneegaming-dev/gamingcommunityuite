@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useRef, useState, useTransition } from "react";
 import { useErrorMessage } from "@/lib/use-error-message";
+import { approvePostsAction } from "../../mod-actions";
 import {
   deletePostAction,
   editPostAction,
@@ -19,6 +20,7 @@ import {
   restorePostAction,
   revisionsAction,
 } from "../../topic-actions";
+import { SPLIT_FORM_ID } from "./GcsTopicModMenu";
 import { QUOTE_EVENT, useEditorLabels, type GcsQuoteDetail } from "./useEditorLabels";
 
 export type GcsPostContentProps = {
@@ -41,7 +43,19 @@ export type GcsPostContentProps = {
   myReaction: number | null;
   reactionList: GcsReactionView[];
   permalink: string;
-  can: { react: boolean; quote: boolean; report: boolean; edit: boolean; hide: boolean; restore: boolean; delete: boolean; solve: boolean };
+  can: {
+    react: boolean;
+    quote: boolean;
+    report: boolean;
+    edit: boolean;
+    hide: boolean;
+    restore: boolean;
+    delete: boolean;
+    solve: boolean;
+    approve: boolean;
+    /** Checkbox pentru despărțirea postărilor (moderatori cu puterea `split`). */
+    split: boolean;
+  };
 };
 
 type Revision = { id: number; html: string; createdAt: string; editor: string | null };
@@ -50,6 +64,7 @@ type Revision = { id: number; html: string; createdAt: string; editor: string | 
 export function GcsPostContent(props: GcsPostContentProps) {
   const { topicId, forumId, post, can } = props;
   const t = useTranslations("topic");
+  const tm = useTranslations("mod");
   const labels = useEditorLabels();
   const errorMessage = useErrorMessage();
   const router = useRouter();
@@ -122,6 +137,16 @@ export function GcsPostContent(props: GcsPostContentProps) {
       <div className="gcs-post__head">
         <time dateTime={post.dateIso}>{post.date}</time>
         <span className="gcs-post__headRight">
+          {can.split && (
+            <input
+              type="checkbox"
+              form={SPLIT_FORM_ID}
+              name="postId"
+              value={post.id}
+              className="gcs-modCheck"
+              aria-label={tm("splitSelect", { number: post.number })}
+            />
+          )}
           {props.isSolved && <GcsBadge tone="ok">{t("bestAnswer")}</GcsBadge>}
           <a href={props.permalink} aria-label={t("permalink", { number: post.number })}>
             {t("postNumber", { number: post.number })}
@@ -197,6 +222,11 @@ export function GcsPostContent(props: GcsPostContentProps) {
           })}
         </div>
         <div className="gcs-post__actions">
+          {can.approve && post.visibility === "PENDING" && (
+            <GcsButton variant="primary" size="sm" onClick={() => run(() => approvePostsAction({ postIds: [post.id] }))}>
+              {tm("approve")}
+            </GcsButton>
+          )}
           {can.quote && (
             <GcsButton variant="ghost" size="sm" onClick={quote}>
               {t("quote")}
