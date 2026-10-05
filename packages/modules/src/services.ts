@@ -50,6 +50,7 @@ import { GcsProfileService } from "./profile/profile";
 import { GcsPromotionService } from "./profile/promotions";
 import { GcsSocialService } from "./profile/social";
 import { createRegistry } from "./registry";
+import { GcsVipService } from "./vip/vip";
 
 export type GcsServices = {
   db: PrismaClient;
@@ -92,6 +93,7 @@ export type GcsServices = {
   membership: GcsMembership;
   promotions: GcsPromotionService;
   cosmetics: GcsCosmeticsService;
+  vip: GcsVipService;
 };
 
 export type GcsServicesOptions = {
@@ -228,6 +230,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   achievements.onDaily((now) => promotions.dailySweep(now));
   const cosmetics = new GcsCosmeticsService({ db, bus, cache, permissions, acp, attachments, redis });
   cosmetics.listen(bus);
+  const vip = new GcsVipService({ db, bus, permissions, settings, membership, mailer });
 
   const services: GcsServices = {
     db,
@@ -270,6 +273,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     membership,
     promotions,
     cosmetics,
+    vip,
   };
   registerAppJobs(services);
   return services;

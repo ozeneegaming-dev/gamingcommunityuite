@@ -28,3 +28,4 @@ export * from "./profile/achievements";
 export { GcsMembership } from "./profile/membership";
 export * from "./profile/promotions";
 export * from "./profile/cosmetics";
+export * from "./vip/vip";

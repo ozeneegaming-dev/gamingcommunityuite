@@ -6,6 +6,7 @@ import { testDbUrl } from "@gcs/db/test/helpers";
 import { afterAll, beforeAll, describe, expect, inject, test } from "vitest";
 import { HEARTBEAT_JOB } from "./jobs";
 import { ACHIEVEMENTS_JOB, MEMBERS_DAILY_JOB } from "./profile/achievements";
+import { VIP_SWEEP_JOB } from "./vip/vip";
 import { closeGcsServices, createGcsServices, type GcsServices } from "./services";
 
 let services: GcsServices;
@@ -28,7 +29,7 @@ afterAll(async () => {
 describe("createGcsServices", () => {
   test("înregistrează modulele aplicației și joburile", () => {
     expect(services.registry.all().map((m) => m.key)).toEqual(expect.arrayContaining(["core", "forums"]));
-    expect(services.jobs.registered().map((j) => j.name)).toEqual(expect.arrayContaining([HEARTBEAT_JOB, ACHIEVEMENTS_JOB, MEMBERS_DAILY_JOB]));
+    expect(services.jobs.registered().map((j) => j.name)).toEqual(expect.arrayContaining([HEARTBEAT_JOB, ACHIEVEMENTS_JOB, MEMBERS_DAILY_JOB, VIP_SWEEP_JOB]));
   });
 
   test("jobul de heartbeat marchează worker-ul ca pornit", async () => {
