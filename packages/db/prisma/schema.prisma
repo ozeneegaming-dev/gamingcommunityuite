@@ -87,6 +87,12 @@ model User {
   achievementLog   AchievementLog[]
   vipSubscriptions VipSubscription[]
 
+  // Timp real (etapa 4).
+  notifications           Notification[]
+  notificationPreferences NotificationPreference[]
+  chatMessages            ChatMessage[]            @relation("ChatAuthor")
+  chatMutes               ChatMute[]               @relation("ChatMuted")
+
   @@index([primaryGroupId])
   @@map("users")
 }
@@ -1090,4 +1096,117 @@ model AvatarFrame {
   users User[]
 
   @@map("avatar_frames")
+}
+
+// ─── Timp real (etapa 4, specul etapei §4) ───────────────────────────────────
+
+enum NotificationEmail {
+  OFF
+  INSTANT
+  DIGEST
+}
+
+/**
+ * O notificare. Notificările necitite de același fel, pe același conținut, se grupează (`groupKey`; index unic
+ * parțial `WHERE readAt IS NULL`, în migrație): `count` crește, iar `actorIds` ține ultimii actori.
+ */
+model Notification {
+  id         Int       @id @default(autoincrement())
+  userId     String
+  type       String
+  targetType String
+  targetId   String
+  groupKey   String
+  actorIds   String[]
+  count      Int       @default(1)
+  data       Json
+  readAt     DateTime?
+  emailedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, updatedAt])
+  @@index([readAt, emailedAt])
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  userId String
+  type   String
+  site   Boolean           @default(true)
+  email  NotificationEmail @default(DIGEST)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, type])
+  @@map("notification_preferences")
+}
+
+/**
+ * Valorile implicite pe tip (ACP → Membri → Setări membri → Notificări).
+ */
+model NotificationDefault {
+  type  String            @id
+  site  Boolean           @default(true)
+  email NotificationEmail @default(DIGEST)
+
+  @@map("notification_defaults")
+}
+
+/**
+ * Un canal de chat. Permisiunile sunt în matricea pe container (`containerType = "chat"`, id = cheia).
+ */
+model ChatChannel {
+  id              Int     @id @default(autoincrement())
+  key             String  @unique
+  name            String
+  description     String  @default("")
+  position        Int     @default(0)
+  slowModeSeconds Int     @default(0)
+  retentionDays   Int     @default(7)
+  enabled         Boolean @default(true)
+  showOnHome      Boolean @default(false)
+
+  messages ChatMessage[]
+  mutes    ChatMute[]
+
+  @@map("chat_channels")
+}
+
+model ChatMessage {
+  id          Int       @id @default(autoincrement())
+  channelId   Int
+  authorId    String?
+  body        String
+  createdAt   DateTime  @default(now())
+  deletedAt   DateTime?
+  deletedById String?
+
+  channel ChatChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  author  User?       @relation("ChatAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([channelId, id])
+  @@index([createdAt])
+  @@map("chat_messages")
+}
+
+/**
+ * Mute în chat: pe un canal sau pe toate (`channelId` null); `until` null = permanent.
+ */
+model ChatMute {
+  id          Int       @id @default(autoincrement())
+  userId      String
+  channelId   Int?
+  until       DateTime?
+  reason      String    @default("")
+  createdById String?
+  createdAt   DateTime  @default(now())
+
+  user    User         @relation("ChatMuted", fields: [userId], references: [id], onDelete: Cascade)
+  channel ChatChannel? @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@index([userId, until])
+  @@map("chat_mutes")
 }
