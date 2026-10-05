@@ -5,6 +5,7 @@ import {
   GcsAcpSearch,
   GcsActorResolver,
   GcsAttachmentService,
+  GcsContentRenderer,
   GcsBanService,
   GcsCache,
   GcsEventBus,
@@ -22,7 +23,7 @@ import {
 import { PrismaClient } from "@gcs/db";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { coreModule, forumsModule } from "@gcs/modules";
+import { coreModule, forumsModule, GcsForumPosting, GcsForumService, GcsPostService, GcsTopicService } from "@gcs/modules";
 import Redis from "ioredis";
 import { revalidateTag } from "next/cache";
 import { gcsConfigDir } from "./config";
@@ -46,6 +47,9 @@ export type GcsServices = {
   rateLimiter: GcsRedisRateLimiter;
   files: GcsFileStore;
   attachments: GcsAttachmentService;
+  forums: GcsForumService;
+  topics: GcsTopicService;
+  posts: GcsPostService;
 };
 
 /** Revalidează paginile Next.js cache-uite; în afara unui request (ex. scripturi) nu e disponibil. */
@@ -72,6 +76,12 @@ function loadRuntimeEnv(): void {
     const m = /^(DATABASE_URL|GCS_SECRET)=(.*)$/.exec(line);
     if (m) process.env[m[1]!] = m[2]!.startsWith('"') ? (JSON.parse(m[2]!) as string) : m[2]!;
   }
+}
+
+/** Host-ul public: din setarea `site.url`, altfel din `GCS_BASE_URL` (embed-urile Twitch îl cer). */
+function siteHost(siteUrl: string): string {
+  const url = siteUrl || process.env.GCS_BASE_URL || "http://localhost";
+  return URL.canParse(url) ? new URL(url).host : "localhost";
 }
 
 /** MinIO (S3) dacă e configurat (`docker compose`); altfel un folder local, în folderul de configurare (dev, E2E). */
@@ -131,6 +141,17 @@ function createServices(): GcsServices {
   const rateLimiter = new GcsRedisRateLimiter(redis);
   const files = createFileStore();
   const attachments = new GcsAttachmentService({ db, store: files, permissions, rateLimiter });
+  const forums = new GcsForumService({ db, bus, permissions, acp, registry });
+  const posting = new GcsForumPosting({
+    db,
+    bus,
+    permissions,
+    settings,
+    rateLimiter,
+    renderer: new GcsContentRenderer(),
+    attachments,
+    siteHost: async () => siteHost(await settings.get<string>("site.url")),
+  });
 
   return {
     db,
@@ -151,6 +172,9 @@ function createServices(): GcsServices {
     rateLimiter,
     files,
     attachments,
+    forums,
+    topics: new GcsTopicService(posting),
+    posts: new GcsPostService(posting),
   };
 }
 

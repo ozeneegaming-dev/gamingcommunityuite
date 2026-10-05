@@ -19,6 +19,7 @@ export * from "./content/files/localStore";
 export * from "./content/files/s3Store";
 export * from "./content/files/store";
 export * from "./content/renderer";
+export * from "./content/search";
 export * from "./errors";
 export * from "./email/send";
 export * from "./events";

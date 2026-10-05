@@ -1,9 +1,22 @@
-import { GcsModuleRegistry, type GcsActor } from "@gcs/core";
+import os from "node:os";
+import path from "node:path";
+import {
+  GcsAttachmentService,
+  GcsContentRenderer,
+  GcsLocalFileStore,
+  GcsModuleRegistry,
+  GcsRedisRateLimiter,
+  GcsSettingsService,
+  type GcsActor,
+} from "@gcs/core";
 import { createWorld } from "@gcs/core/test/world";
-import type { ForumType } from "@gcs/db";
+import type { ForumType, PrismaClient } from "@gcs/db";
 import { coreModule } from "../src/core-module";
 import { forumsModule } from "../src/forums";
 import { GcsForumService } from "../src/forums/forums";
+import { GcsForumPosting } from "../src/forums/posting";
+import { GcsPostService } from "../src/forums/posts";
+import { GcsTopicService } from "../src/forums/topics";
 
 /** Registry-ul real: modulele din producție. */
 export function realRegistry(): GcsModuleRegistry {
@@ -13,19 +26,52 @@ export function realRegistry(): GcsModuleRegistry {
   return registry;
 }
 
+/** Un document Tiptap cu un singur paragraf. */
+export function doc(text: string) {
+  return { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] };
+}
+
+/** Toate contoarele denormalizate, ca să fie comparate cu cele recalculate (`recountAll`). */
+export async function snapshotCounters(db: PrismaClient) {
+  const [forums, topics, users] = await Promise.all([
+    db.forum.findMany({
+      orderBy: { id: "asc" },
+      select: { id: true, topicsCount: true, postsCount: true, lastPostId: true, lastTopicId: true, lastPosterId: true, lastPostAt: true },
+    }),
+    db.topic.findMany({
+      orderBy: { id: "asc" },
+      select: { id: true, repliesCount: true, firstPostId: true, lastPostId: true, lastPosterId: true, lastPostAt: true },
+    }),
+    db.user.findMany({ orderBy: { id: "asc" }, select: { id: true, postsCount: true, approvedPostsCount: true } }),
+  ]);
+  return { forums, topics, users };
+}
+
 /**
  * Un site de test cu modulul Forum: baza cu seed-ul real, serviciile forumului și actori gata făcuți
  * (Root Admin, membru, vizitator).
  */
 export async function createForumWorld() {
   const world = await createWorld([], realRegistry);
-  const forums = new GcsForumService({
-    db: world.db,
-    bus: world.bus,
-    permissions: world.permissions,
-    acp: world.acp,
-    registry: world.registry,
+  const { db, bus, cache, permissions, registry, redis } = world;
+
+  const settings = new GcsSettingsService({ db, cache, bus, registry });
+  const rateLimiter = new GcsRedisRateLimiter(redis);
+  const files = new GcsLocalFileStore(path.join(os.tmpdir(), `gcs-forum-files-${process.pid}`));
+  const attachments = new GcsAttachmentService({ db, store: files, permissions, rateLimiter });
+  const forums = new GcsForumService({ db, bus, permissions, acp: world.acp, registry });
+  const posting = new GcsForumPosting({
+    db,
+    bus,
+    permissions,
+    settings,
+    rateLimiter,
+    renderer: new GcsContentRenderer(),
+    attachments,
+    siteHost: async () => "forum.test",
   });
+  const topics = new GcsTopicService(posting);
+  const posts = new GcsPostService(posting);
 
   const root = await world.actorFor(await world.createUser("Fondator", "root_admin"));
   const member = await world.actorFor(await world.createUser("Mara", "member"));
@@ -45,7 +91,28 @@ export async function createForumWorld() {
     return { category, forum, subforum };
   }
 
-  return { ...world, forums, root, member, guest, createTree };
+  /** Șterge pauza de flood a unui user (testele postează mai des decât ar putea un om). */
+  async function clearFlood(actor: GcsActor) {
+    await redis.del(`gcs:rl:forum-post:${actor.userId}`);
+  }
+
+  return {
+    ...world,
+    settings,
+    rateLimiter,
+    files,
+    attachments,
+    forums,
+    posting,
+    counters: posting.counters,
+    topics,
+    posts,
+    root,
+    member,
+    guest,
+    createTree,
+    clearFlood,
+  };
 }
 
 export type GcsForumWorld = Awaited<ReturnType<typeof createForumWorld>>;
