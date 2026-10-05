@@ -94,7 +94,7 @@ export class GcsTopicService {
 
     await bus.emit({
       name: "topic.created",
-      payload: { topicId: result.topicId, forumId: forum.id, pending },
+      payload: { topicId: result.topicId, postId: result.postId, forumId: forum.id, pending, authorId },
       tags: ["forums-tree", `forum:${forum.id}`, `topic:${result.topicId}`],
     });
     if (result.promoted) await posting.emitPromoted(authorId);
@@ -120,8 +120,17 @@ export class GcsTopicService {
         throw new GcsValidationError({ postId: "invalid_choice" });
       }
     }
+    // Autorii răspunsului marcat înainte și acum: `solutionsCount` se recalculează pentru amândoi (etapa 3).
+    const solvers = await db.post.findMany({
+      where: { id: { in: [topic.solvedPostId, postId].filter((id): id is number => id !== null) } },
+      select: { id: true, authorId: true },
+    });
+    const solverOf = (id: number | null) => solvers.find((p) => p.id === id)?.authorId ?? null;
     await db.$transaction(async (tx) => {
       await tx.topic.update({ where: { id: topicId }, data: { solvedPostId: postId } });
+      for (const userId of new Set(solvers.map((p) => p.authorId).filter((id): id is string => id !== null))) {
+        await posting.counters.recountUser(tx, userId);
+      }
       if (isMod && actor.userId !== topic.authorId) {
         await writeAudit(tx, {
           actorId: actor.userId,
@@ -135,5 +144,12 @@ export class GcsTopicService {
       }
     });
     await bus.emit({ name: "topic.updated", payload: { topicId }, tags: [`topic:${topicId}`, `forum:${topic.forumId}`] });
+    if (topic.solvedPostId !== postId) {
+      await bus.emit({
+        name: "topic.solved",
+        payload: { topicId, postId, solverId: solverOf(postId), previousSolverId: solverOf(topic.solvedPostId) },
+        tags: [`topic:${topicId}`],
+      });
+    }
   }
 }

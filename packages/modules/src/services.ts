@@ -43,6 +43,7 @@ import { GcsForumSearch } from "./forums/search";
 import { GcsForumService } from "./forums/forums";
 import { GcsTopicService } from "./forums/topics";
 import { registerAppJobs } from "./jobs";
+import { GcsAchievementService } from "./profile/achievements";
 import { GcsProfileService } from "./profile/profile";
 import { GcsSocialService } from "./profile/social";
 import { createRegistry } from "./registry";
@@ -84,6 +85,7 @@ export type GcsServices = {
   mailer: GcsMailer;
   profiles: GcsProfileService;
   social: GcsSocialService;
+  achievements: GcsAchievementService;
 };
 
 export type GcsServicesOptions = {
@@ -212,6 +214,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   });
   const social = new GcsSocialService({ db, bus, cache, permissions, settings, rateLimiter, profiles, render: (content) => posting.render(content) });
   social.registerContent({ reactions, reports });
+  const achievements = new GcsAchievementService({ db, bus, acp, jobs });
+  achievements.listen(bus);
 
   const services: GcsServices = {
     db,
@@ -250,6 +254,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     mailer,
     profiles,
     social,
+    achievements,
   };
   registerAppJobs(services);
   return services;

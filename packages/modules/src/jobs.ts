@@ -10,4 +10,5 @@ export const HEARTBEAT_JOB = "system.heartbeat";
  */
 export function registerAppJobs(s: GcsServices): void {
   s.jobs.register({ name: HEARTBEAT_JOB, everyMs: 60_000, handler: () => writeWorkerHeartbeat(s.redis) });
+  s.achievements.registerJobs(s.jobs);
 }

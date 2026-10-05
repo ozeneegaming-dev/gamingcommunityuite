@@ -172,6 +172,11 @@ export class GcsForumModerationService {
     }, WRITE_TX);
 
     await this.changed([...new Set(posts.map((p) => p.topicId))], forums);
+    await this.posting.deps.bus.emit({
+      name: "post.approved",
+      payload: { posts: posts.map((p) => ({ postId: p.id, authorId: p.authorId })) },
+      tags: authors.map((id) => `user:${id}`),
+    });
     for (const userId of promoted) await this.posting.emitPromoted(userId);
   }
 

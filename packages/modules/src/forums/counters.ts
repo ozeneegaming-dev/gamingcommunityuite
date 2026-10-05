@@ -107,11 +107,13 @@ export class GcsForumCounters {
 
   /** Contoarele unui user, din date. */
   async recountUser(tx: Tx, userId: string): Promise<void> {
-    const [postsCount, approvedPostsCount] = await Promise.all([
+    const [postsCount, approvedPostsCount, solutions] = await Promise.all([
       tx.post.count({ where: { authorId: userId, visibility: "VISIBLE", topic: { visibility: "VISIBLE" } } }),
       tx.post.count({ where: { authorId: userId, visibility: { not: "PENDING" } } }),
+      // Răspunsurile marcate „cel mai bun răspuns” (etapa 3: regula Top helper).
+      tx.$queryRaw<{ n: number }[]>`SELECT count(*)::int AS n FROM topics t JOIN posts p ON p.id = t."solvedPostId" WHERE p."authorId" = ${userId}`,
     ]);
-    await tx.user.update({ where: { id: userId }, data: { postsCount, approvedPostsCount } });
+    await tx.user.update({ where: { id: userId }, data: { postsCount, approvedPostsCount, solutionsCount: solutions[0]?.n ?? 0 } });
   }
 
   /** Recalculează tot (sau doar forumurile date, cu topicurile și autorii lor): unealtă de reparare și oracolul testelor. */

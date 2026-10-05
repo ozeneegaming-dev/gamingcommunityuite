@@ -63,7 +63,7 @@ export class GcsPostService {
 
     await bus.emit({
       name: "post.created",
-      payload: { postId: result.postId, topicId: topic.id, forumId, pending },
+      payload: { postId: result.postId, topicId: topic.id, forumId, pending, authorId },
       tags: ["forums-tree", `forum:${forumId}`, `topic:${topic.id}`],
     });
     if (result.promoted) await posting.emitPromoted(authorId);

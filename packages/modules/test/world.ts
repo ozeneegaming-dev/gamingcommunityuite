@@ -48,7 +48,7 @@ export async function snapshotCounters(db: PrismaClient) {
       orderBy: { id: "asc" },
       select: { id: true, repliesCount: true, firstPostId: true, lastPostId: true, lastPosterId: true, lastPostAt: true },
     }),
-    db.user.findMany({ orderBy: { id: "asc" }, select: { id: true, postsCount: true, approvedPostsCount: true } }),
+    db.user.findMany({ orderBy: { id: "asc" }, select: { id: true, postsCount: true, approvedPostsCount: true, solutionsCount: true } }),
   ]);
   return { forums, topics, users };
 }

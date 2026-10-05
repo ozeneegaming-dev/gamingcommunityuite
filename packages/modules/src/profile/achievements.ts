@@ -1,0 +1,324 @@
+import {
+  debouncedJobId,
+  GcsConflict,
+  GcsNotFound,
+  GcsValidationError,
+  writeAudit,
+  type GcsAcpRoleService,
+  type GcsActor,
+  type GcsEventBus,
+  type GcsJobQueue,
+} from "@gcs/core";
+import type { AchievementTrigger, PrismaClient, Rank } from "@gcs/db";
+
+export const ACHIEVEMENTS_JOB = "achievements.evaluate";
+export const RANKS_RECOMPUTE_JOB = "achievements.recompute_ranks";
+export const MEMBERS_DAILY_JOB = "members.daily";
+export const BADGES_ACP_SECTION = "members.badges";
+
+/** Evenimentele unui user din aceeași fereastră de 2 s produc o singură evaluare (specul etapei 3, §5). */
+const EVALUATE_WINDOW_MS = 2000;
+/** Regulile pe puncte se pot declanșa în lanț (un badge dă puncte); limităm numărul de treceri. */
+const MAX_PASSES = 5;
+const BATCH = 500;
+
+type EachTrigger = Extract<AchievementTrigger, "EACH_POST" | "EACH_REACTION_RECEIVED" | "EACH_SOLUTION">;
+type ThresholdTrigger = Exclude<AchievementTrigger, EachTrigger>;
+const THRESHOLD_TRIGGERS: ThresholdTrigger[] = ["POSTS_COUNT", "REPUTATION", "POINTS", "MEMBER_DAYS", "SOLUTIONS_COUNT", "IS_VIP"];
+
+export type GcsUserStats = { postsCount: number; reputation: number; points: number; solutionsCount: number; memberDays: number; isVip: boolean };
+
+const userTags = (id: string) => [`user:${id}`];
+
+/** Valoarea unui user pentru un trigger cu prag. */
+function statFor(trigger: ThresholdTrigger, s: GcsUserStats): number {
+  switch (trigger) {
+    case "POSTS_COUNT":
+      return s.postsCount;
+    case "REPUTATION":
+      return s.reputation;
+    case "POINTS":
+      return s.points;
+    case "MEMBER_DAYS":
+      return s.memberDays;
+    case "SOLUTIONS_COUNT":
+      return s.solutionsCount;
+    case "IS_VIP":
+      return s.isVip ? 1 : 0;
+  }
+}
+
+/** Cel mai înalt rang (ultimul după `position`) cu toate pragurile completate atinse; `null` dacă niciunul. */
+export function pickRank(ranks: Pick<Rank, "id" | "position" | "minPosts" | "minPoints" | "minReputation">[], s: Pick<GcsUserStats, "postsCount" | "points" | "reputation">): number | null {
+  const ok = (min: number | null, value: number) => min === null || value >= min;
+  let best: { id: number; position: number } | null = null;
+  for (const r of ranks) {
+    if (ok(r.minPosts, s.postsCount) && ok(r.minPoints, s.points) && ok(r.minReputation, s.reputation)) {
+      if (!best || r.position > best.position || (r.position === best.position && r.id > best.id)) best = r;
+    }
+  }
+  return best?.id ?? null;
+}
+
+/**
+ * Puncte, reguli de realizări, badge-uri și ranguri (specul etapei 3, §4, §5).
+ * - Punctele pe acțiune (`EACH_*`) se acordă imediat, cu o cheie unică pe eveniment (un eveniment repetat nu dublează).
+ * - Regulile cu prag, rangul și promovările se evaluează în worker (`achievements.evaluate`), o dată pe regulă și user.
+ */
+export class GcsAchievementService {
+  /** Rulate după fiecare evaluare (ex. promovările de grup, Task 7). */
+  private readonly afterEvaluate: ((userId: string) => Promise<void>)[] = [];
+
+  constructor(private readonly deps: { db: PrismaClient; bus: GcsEventBus; acp: GcsAcpRoleService; jobs: GcsJobQueue | null }) {}
+
+  onEvaluated(fn: (userId: string) => Promise<void>): void {
+    this.afterEvaluate.push(fn);
+  }
+
+  /** Programează evaluarea unui user (deduplicată pe fereastra de 2 s). Fără coadă (teste), nu face nimic. */
+  async schedule(userId: string): Promise<void> {
+    await this.deps.jobs?.enqueue(ACHIEVEMENTS_JOB, { userId }, { jobId: debouncedJobId(`ach-${userId}`, EVALUATE_WINDOW_MS), delayMs: EVALUATE_WINDOW_MS });
+  }
+
+  /** Punctele unei acțiuni (`EACH_*`), o singură dată pe `ref` (ex. `post:120`). Întoarce punctele acordate. */
+  async awardEach(userId: string, trigger: EachTrigger, ref: string): Promise<number> {
+    const { db, bus } = this.deps;
+    const rules = await db.achievementRule.findMany({ where: { trigger, enabled: true, points: { not: 0 } } });
+    if (rules.length === 0) return 0;
+    const total = await db.$transaction(async (tx) => {
+      let sum = 0;
+      for (const rule of rules) {
+        const { count } = await tx.achievementLog.createMany({
+          data: [{ userId, ruleId: rule.id, points: rule.points, uniqueKey: `each:${rule.id}:${ref}`, contentRef: ref }],
+          skipDuplicates: true,
+        });
+        if (count > 0) sum += rule.points;
+      }
+      if (sum !== 0) await tx.user.update({ where: { id: userId }, data: { points: { increment: sum } } });
+      return sum;
+    });
+    if (total !== 0) await bus.emit({ name: "points.changed", payload: { userId, delta: total }, tags: userTags(userId) });
+    return total;
+  }
+
+  async stats(userId: string, now = new Date()): Promise<GcsUserStats | null> {
+    const user = await this.deps.db.user.findUnique({
+      where: { id: userId },
+      select: {
+        postsCount: true,
+        reputation: true,
+        points: true,
+        solutionsCount: true,
+        createdAt: true,
+        primaryGroup: { select: { isVip: true } },
+        groups: { select: { group: { select: { isVip: true } } } },
+      },
+    });
+    if (!user) return null;
+    return {
+      postsCount: user.postsCount,
+      reputation: user.reputation,
+      points: user.points,
+      solutionsCount: user.solutionsCount,
+      memberDays: Math.floor((now.getTime() - user.createdAt.getTime()) / 86_400_000),
+      isVip: user.primaryGroup.isVip || user.groups.some((g) => g.group.isVip),
+    };
+  }
+
+  /**
+   * Evaluează regulile cu prag (badge + puncte, o singură dată pe regulă, chiar cu rulări paralele),
+   * apoi rangul și promovările. Idempotent.
+   */
+  async evaluate(userId: string, now = new Date()): Promise<void> {
+    const { db, bus } = this.deps;
+    const rules = await db.achievementRule.findMany({
+      where: { enabled: true, trigger: { in: THRESHOLD_TRIGGERS } },
+      include: { badge: true },
+      orderBy: [{ position: "asc" }, { id: "asc" }],
+    });
+    for (let pass = 0; pass < MAX_PASSES; pass++) {
+      const stats = await this.stats(userId, now);
+      if (!stats) return;
+      const due = rules.filter((r) => statFor(r.trigger as ThresholdTrigger, stats) >= Math.max(r.threshold, r.trigger === "IS_VIP" ? 1 : 0));
+      if (due.length === 0) break;
+      const awarded = await db.$transaction(async (tx) => {
+        const out: { badgeId: number | null; points: number }[] = [];
+        for (const rule of due) {
+          const { count } = await tx.achievementLog.createMany({
+            data: [{ userId, ruleId: rule.id, points: rule.points, uniqueKey: `rule:${rule.id}` }],
+            skipDuplicates: true,
+          });
+          if (count === 0) continue;
+          let points = rule.points;
+          let badgeId: number | null = null;
+          if (rule.badge) {
+            const created = await tx.userBadge.createMany({ data: [{ userId, badgeId: rule.badge.id }], skipDuplicates: true });
+            if (created.count > 0) {
+              points += rule.badge.points;
+              badgeId = rule.badge.id;
+            }
+          }
+          if (points !== 0) await tx.user.update({ where: { id: userId }, data: { points: { increment: points } } });
+          out.push({ badgeId, points });
+        }
+        return out;
+      });
+      if (awarded.length === 0) break;
+      for (const a of awarded) {
+        if (a.badgeId !== null) await bus.emit({ name: "badge.awarded", payload: { userId, badgeId: a.badgeId, byRule: true }, tags: userTags(userId) });
+      }
+      const delta = awarded.reduce((s, a) => s + a.points, 0);
+      if (delta !== 0) await bus.emit({ name: "points.changed", payload: { userId, delta }, tags: userTags(userId) });
+      // Doar regulile pe puncte pot deveni îndeplinite după acordare; altfel o trecere ajunge.
+      if (!rules.some((r) => r.trigger === "POINTS")) break;
+    }
+    await this.recomputeRank(userId);
+    for (const fn of this.afterEvaluate) await fn(userId);
+  }
+
+  async recomputeRank(userId: string, ranks?: Rank[]): Promise<number | null> {
+    const { db, bus } = this.deps;
+    const list = ranks ?? (await db.rank.findMany());
+    const user = await db.user.findUnique({ where: { id: userId }, select: { rankId: true, postsCount: true, points: true, reputation: true } });
+    if (!user) return null;
+    const rankId = pickRank(list, user);
+    if (rankId !== user.rankId) {
+      await db.user.update({ where: { id: userId }, data: { rankId } });
+      await bus.emit({ name: "rank.changed", payload: { userId, rankId, previousRankId: user.rankId }, tags: userTags(userId) });
+    }
+    return rankId;
+  }
+
+  /** Recalculează rangurile tuturor (după editarea rangurilor în ACP), în loturi. */
+  async recomputeAllRanks(): Promise<number> {
+    const { db, bus } = this.deps;
+    const ranks = await db.rank.findMany();
+    let cursor: string | undefined;
+    let changed = 0;
+    for (;;) {
+      const users = await db.user.findMany({
+        take: BATCH,
+        ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+        orderBy: { id: "asc" },
+        select: { id: true, rankId: true, postsCount: true, points: true, reputation: true },
+      });
+      if (users.length === 0) break;
+      const byRank = new Map<number | null, string[]>();
+      for (const u of users) {
+        const rankId = pickRank(ranks, u);
+        if (rankId === u.rankId) continue;
+        byRank.set(rankId, [...(byRank.get(rankId) ?? []), u.id]);
+        changed++;
+      }
+      for (const [rankId, ids] of byRank) await db.user.updateMany({ where: { id: { in: ids } }, data: { rankId } });
+      cursor = users[users.length - 1]!.id;
+    }
+    await bus.emit({ name: "ranks.recomputed", payload: { changed }, tags: ["ranks"] });
+    return changed;
+  }
+
+  /** Jobul zilnic: membrii care au atins o vechime cerută de o regulă `MEMBER_DAYS` și n-au primit-o încă. */
+  async dailySweep(now = new Date()): Promise<number> {
+    const { db } = this.deps;
+    const rules = await db.achievementRule.findMany({ where: { enabled: true, trigger: "MEMBER_DAYS" }, select: { id: true, threshold: true } });
+    const due = new Set<string>();
+    for (const rule of rules) {
+      const before = new Date(now.getTime() - rule.threshold * 86_400_000);
+      const users = await db.user.findMany({
+        where: { createdAt: { lte: before }, achievementLog: { none: { uniqueKey: `rule:${rule.id}` } } },
+        select: { id: true },
+      });
+      for (const u of users) due.add(u.id);
+    }
+    for (const userId of due) await this.evaluate(userId, now);
+    return due.size;
+  }
+
+  // ─── Badge-uri manuale (staff) ───────────────────────────────────────────
+
+  async awardBadge(actor: GcsActor, userId: string, badgeId: number, reason: string): Promise<void> {
+    const { db, bus, acp } = this.deps;
+    await acp.assert(actor, BADGES_ACP_SECTION, "edit");
+    const [badge, user] = await Promise.all([db.badge.findUnique({ where: { id: badgeId } }), db.user.findUnique({ where: { id: userId }, select: { id: true } })]);
+    if (!badge || !user) throw new GcsNotFound();
+    const clean = reason.trim().slice(0, 200);
+    if (clean === "") throw new GcsValidationError({ reason: "required" });
+    await db.$transaction(async (tx) => {
+      const { count } = await tx.userBadge.createMany({ data: [{ userId, badgeId, awardedById: actor.userId, reason: clean }], skipDuplicates: true });
+      if (count === 0) throw new GcsConflict({ reason: "already_awarded" });
+      if (badge.points !== 0) await tx.user.update({ where: { id: userId }, data: { points: { increment: badge.points } } });
+      await writeAudit(tx, { actorId: actor.userId, action: "badge.award", targetType: "user", targetId: userId, after: { badge: badge.key, reason: clean }, ip: actor.ip });
+    });
+    await bus.emit({ name: "badge.awarded", payload: { userId, badgeId, byRule: false }, tags: userTags(userId) });
+    await this.schedule(userId);
+  }
+
+  /** Retrage un badge (punctele primite rămân; o regulă nu-l mai acordă din nou, pentru că a rulat deja). */
+  async revokeBadge(actor: GcsActor, userId: string, badgeId: number): Promise<void> {
+    const { db, bus, acp } = this.deps;
+    await acp.assert(actor, BADGES_ACP_SECTION, "edit");
+    const row = await db.userBadge.findUnique({ where: { userId_badgeId: { userId, badgeId } }, include: { badge: true } });
+    if (!row) throw new GcsNotFound();
+    await db.$transaction(async (tx) => {
+      await tx.userBadge.delete({ where: { id: row.id } });
+      await writeAudit(tx, { actorId: actor.userId, action: "badge.revoke", targetType: "user", targetId: userId, before: { badge: row.badge.key }, ip: actor.ip });
+    });
+    await bus.emit({ name: "badge.revoked", payload: { userId, badgeId }, tags: userTags(userId) });
+  }
+
+  /**
+   * Ascultătorii care leagă forumul, reacțiile și VIP-ul de reguli: punctele pe acțiune pe loc,
+   * apoi evaluarea programată în worker.
+   */
+  listen(bus: GcsEventBus): void {
+    const each = async (userId: unknown, trigger: EachTrigger, ref: string) => {
+      if (typeof userId !== "string") return;
+      await this.awardEach(userId, trigger, ref);
+      await this.schedule(userId);
+    };
+    bus.on("post.created", async (e) => {
+      if (!e.payload.pending) await each(e.payload.authorId, "EACH_POST", `post:${String(e.payload.postId)}`);
+    });
+    bus.on("topic.created", async (e) => {
+      if (!e.payload.pending) await each(e.payload.authorId, "EACH_POST", `post:${String(e.payload.postId)}`);
+    });
+    bus.on("post.approved", async (e) => {
+      for (const p of (e.payload.posts as { postId: number; authorId: string | null }[]) ?? []) {
+        await each(p.authorId, "EACH_POST", `post:${p.postId}`);
+      }
+    });
+    bus.on("reaction.changed", async (e) => {
+      const { authorId, reactionId, contentType, contentId, userId } = e.payload as Record<string, unknown>;
+      if (typeof authorId !== "string" || authorId === userId) return;
+      if (typeof reactionId === "number") {
+        const reaction = await this.deps.db.reaction.findUnique({ where: { id: reactionId }, select: { weight: true } });
+        if (reaction && reaction.weight > 0) {
+          await this.awardEach(authorId, "EACH_REACTION_RECEIVED", `reaction:${String(contentType)}:${String(contentId)}:${String(userId)}`);
+        }
+      }
+      await this.schedule(authorId);
+    });
+    bus.on("topic.solved", async (e) => {
+      const { solverId, previousSolverId, topicId, postId } = e.payload as Record<string, unknown>;
+      if (typeof solverId === "string") await each(solverId, "EACH_SOLUTION", `solution:${String(topicId)}:${String(postId)}`);
+      if (typeof previousSolverId === "string") await this.schedule(previousSolverId);
+    });
+    for (const name of ["vip.granted", "vip.expired", "vip.revoked", "group.promoted"]) {
+      bus.on(name, async (e) => {
+        if (typeof e.payload.userId === "string") await this.schedule(e.payload.userId);
+      });
+    }
+  }
+
+  /** Joburile din worker: evaluarea unui user, recalcularea rangurilor și sweep-ul zilnic (04:00). */
+  registerJobs(jobs: GcsJobQueue): void {
+    jobs.register({
+      name: ACHIEVEMENTS_JOB,
+      handler: async (data) => {
+        if (typeof data.userId === "string") await this.evaluate(data.userId);
+      },
+    });
+    jobs.register({ name: RANKS_RECOMPUTE_JOB, handler: async () => void (await this.recomputeAllRanks()) });
+    jobs.register({ name: MEMBERS_DAILY_JOB, pattern: "0 4 * * *", handler: async () => void (await this.dailySweep()) });
+  }
+}
