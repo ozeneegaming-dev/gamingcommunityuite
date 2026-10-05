@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, inject, test } from "vitest";
 import { HEARTBEAT_JOB } from "./jobs";
 import { ACHIEVEMENTS_JOB, MEMBERS_DAILY_JOB } from "./profile/achievements";
 import { VIP_SWEEP_JOB } from "./vip/vip";
-import { closeGcsServices, createGcsServices, type GcsServices } from "./services";
+import { closeGcsServices, createGcsServices, PRESENCE_RECORD_SETTING, type GcsServices } from "./services";
 
 let services: GcsServices;
 let configDir: string;
@@ -37,5 +37,20 @@ describe("createGcsServices", () => {
     const job = services.jobs.registered().find((j) => j.name === HEARTBEAT_JOB)!;
     await job.handler({});
     expect(await workerStatus(services.redis)).toMatchObject({ up: true });
+  });
+
+  test("recordul de prezență se salvează în baza de date și nu coboară", async () => {
+    await services.redis.flushdb();
+    await services.db.setting.deleteMany({ where: { key: PRESENCE_RECORD_SETTING } });
+    const now = Date.now();
+    await services.presence.touch({ userId: "rec-u1" }, now);
+    await services.presence.touch({ userId: "rec-u2" }, now + 1);
+    const read = async () => (await services.db.setting.findUnique({ where: { key: PRESENCE_RECORD_SETTING } }))?.value;
+    expect(await read()).toMatchObject({ count: 2 });
+
+    // Redis-ul pierdut: recordul din Redis o ia de la 1, dar cel salvat rămâne 2.
+    await services.redis.flushdb();
+    await services.presence.touch({ userId: "rec-u3" }, now + 2);
+    expect(await read()).toMatchObject({ count: 2 });
   });
 });

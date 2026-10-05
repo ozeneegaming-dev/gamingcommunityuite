@@ -2,6 +2,7 @@ import { testDb, truncateAll } from "@gcs/db/test/helpers";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { testRegistry } from "../../test/fixtures";
 import { seedDefaults } from "../install/seed";
+import { guestPresenceId, type GcsPresenceViewer } from "../presence/presence";
 import { GcsActorResolver } from "./actor";
 import { prepareNewUser } from "./registration";
 
@@ -94,5 +95,26 @@ describe("GcsActorResolver.getActor", () => {
       userId: user.id,
       isBanned: false,
     });
+  });
+
+  test("notează prezența (membru sau vizitator pe IP), cel mult o dată pe minut, dar nu pentru banați", async () => {
+    const touched: GcsPresenceViewer[] = [];
+    const withPresence = new GcsActorResolver({ db, presence: { touch: async (v) => void touched.push(v) } });
+    const { user, token } = await userWithSession("Prezent");
+    const t0 = new Date();
+    await withPresence.getActor({ sessionToken: token, ip: "203.0.113.5" }, t0);
+    await withPresence.getActor({ sessionToken: token, ip: "203.0.113.5" }, new Date(t0.getTime() + 30_000));
+    await withPresence.getActor({ ip: "203.0.113.9" }, t0);
+    await withPresence.getActor({ sessionToken: token, ip: "203.0.113.5" }, new Date(t0.getTime() + 61_000));
+    expect(touched).toEqual([{ userId: user.id }, { guestId: guestPresenceId("203.0.113.9") }, { userId: user.id }]);
+
+    await db.ban.create({ data: { type: "IP", value: "203.0.113.66", reason: "x" } });
+    await withPresence.getActor({ ip: "203.0.113.66" }, t0);
+    expect(touched).toHaveLength(3);
+  });
+
+  test("o eroare la notarea prezenței nu oprește request-ul", async () => {
+    const failing = new GcsActorResolver({ db, presence: { touch: async () => Promise.reject(new Error("redis down")) } });
+    await expect(failing.getActor({ ip: "203.0.113.5" })).resolves.toMatchObject({ userId: null });
   });
 });

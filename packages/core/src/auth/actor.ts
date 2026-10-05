@@ -2,9 +2,13 @@ import type { PrismaClient } from "@gcs/db";
 import type { GcsCache } from "../cache";
 import { bannedSessionKey, findActiveBan } from "../moderation/bans";
 import type { GcsActor } from "../permissions/types";
+import { guestPresenceId, type GcsPresenceService, type GcsPresenceViewer } from "../presence/presence";
 
 /** `lastActiveAt` se actualizează cel mult o dată la 5 minute (pentru „cine e online”), nu la fiecare request. */
 const ACTIVITY_THROTTLE_MS = 5 * 60_000;
+/** Prezența în Redis se notează cel mult o dată pe minut pentru același vizitator, din același proces. */
+const PRESENCE_THROTTLE_MS = 60_000;
+const PRESENCE_MEMO_MAX = 10_000;
 
 /**
  * Rezolvă cine face request-ul (spec §6.3): sesiunea, grupurile și bannurile active (cont, email, IP).
@@ -16,8 +20,9 @@ const ACTIVITY_THROTTLE_MS = 5 * 60_000;
  */
 export class GcsActorResolver {
   private guestGroupId: number | undefined;
+  private readonly lastTouch = new Map<string, number>();
 
-  constructor(private readonly deps: { db: PrismaClient; cache?: GcsCache }) {}
+  constructor(private readonly deps: { db: PrismaClient; cache?: GcsCache; presence?: Pick<GcsPresenceService, "touch"> }) {}
 
   async getActor(
     req: { sessionToken?: string; staleSessionToken?: string; ip: string },
@@ -48,21 +53,22 @@ export class GcsActorResolver {
       const revoked = req.sessionToken ?? req.staleSessionToken;
       const revokedByBan =
         revoked !== undefined && (await this.deps.cache?.get<boolean>(bannedSessionKey(revoked))) === true;
-      return this.guest(req.ip, ipBanned || revokedByBan);
+      return this.guest(req.ip, ipBanned || revokedByBan, now);
     }
 
     const { user } = session;
     const accountBanned = (await findActiveBan(db, { userId: user.id, email: user.email }, now)) !== null;
     if (accountBanned) {
       await db.session.deleteMany({ where: { userId: user.id } });
-      return this.guest(req.ip, true);
+      return this.guest(req.ip, true, now);
     }
-    if (ipBanned) return this.guest(req.ip, true);
+    if (ipBanned) return this.guest(req.ip, true, now);
 
     if (!user.lastActiveAt || now.getTime() - user.lastActiveAt.getTime() > ACTIVITY_THROTTLE_MS) {
       await db.user.update({ where: { id: user.id }, data: { lastActiveAt: now } });
     }
 
+    await this.touchPresence({ userId: user.id }, now);
     return {
       userId: user.id,
       groupIds: [user.primaryGroupId, ...user.groups.map((g) => g.groupId).filter((id) => id !== user.primaryGroupId)],
@@ -72,10 +78,24 @@ export class GcsActorResolver {
     };
   }
 
-  private async guest(ip: string, isBanned: boolean): Promise<GcsActor> {
+  private async guest(ip: string, isBanned: boolean, now: Date): Promise<GcsActor> {
+    if (!isBanned) await this.touchPresence({ guestId: guestPresenceId(ip) }, now);
     this.guestGroupId ??= (
       await this.deps.db.group.findUniqueOrThrow({ where: { key: "guest" }, select: { id: true } })
     ).id;
     return { userId: null, groupIds: [this.guestGroupId], primaryGroupId: this.guestGroupId, isBanned, ip };
+  }
+
+  /** „Cine e online” (prezența în Redis); o eroare Redis nu oprește request-ul. */
+  private async touchPresence(viewer: GcsPresenceViewer, now: Date): Promise<void> {
+    if (!this.deps.presence) return;
+    const id = "userId" in viewer ? `u:${viewer.userId}` : `g:${viewer.guestId}`;
+    const last = this.lastTouch.get(id);
+    if (last !== undefined && now.getTime() - last < PRESENCE_THROTTLE_MS) return;
+    if (this.lastTouch.size >= PRESENCE_MEMO_MAX) this.lastTouch.clear();
+    this.lastTouch.set(id, now.getTime());
+    await this.deps.presence.touch(viewer, now.getTime()).catch((error: unknown) => {
+      console.error("[gcs] notarea prezenței a eșuat", error);
+    });
   }
 }

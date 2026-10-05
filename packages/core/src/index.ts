@@ -44,5 +44,8 @@ export * from "./notifications/service";
 export * from "./modules/registry";
 export * from "./permissions/service";
 export * from "./permissions/types";
+export * from "./presence/presence";
+export * from "./realtime/publish";
+export * from "./realtime/token";
 export * from "./settings/registry";
 export * from "./settings/service";

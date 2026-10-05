@@ -16,6 +16,8 @@ import {
   GcsLocalFileStore,
   GcsMemberDirectory,
   GcsNotificationService,
+  GcsPresenceService,
+  GcsRealtime,
   GcsPermissionService,
   GcsReactionService,
   GcsRedisRateLimiter,
@@ -74,6 +76,8 @@ export type GcsServices = {
   groups: GcsGroupService;
   members: GcsMemberDirectory;
   notifications: GcsNotificationService;
+  realtime: GcsRealtime;
+  presence: GcsPresenceService;
   bans: GcsBanService;
   warnings: GcsWarningService;
   actors: GcsActorResolver;
@@ -144,6 +148,8 @@ function siteHost(siteUrl: string): string {
 
 /** Lista Redis în care ajung emailurile când rulează E2E (`GCS_TEST_ROUTES=1`), în loc de SMTP. */
 export const TEST_OUTBOX_KEY = "gcs:test:outbox";
+/** Cheia internă (în `settings`) a recordului de utilizatori online. */
+export const PRESENCE_RECORD_SETTING = "presence.record";
 
 /** Adresa publică a site-ului: setarea `site.url`, altfel `GCS_BASE_URL`. */
 function baseUrl(siteUrl: string): string {
@@ -195,7 +201,25 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const notifications = new GcsNotificationService({ db, bus, cache, registry });
   const bans = new GcsBanService({ db, cache, bus, acp });
   const warnings = new GcsWarningService({ db, bus, acp, bans });
-  const actors = new GcsActorResolver({ db, cache });
+  const realtime = new GcsRealtime(redis);
+  // Recordul de prezență se păstrează și în baza de date (cheie internă, nu apare în ACP), ca să supraviețuiască Redis-ului.
+  const presence = new GcsPresenceService({
+    redis,
+    // Scrierile concurente nu pot coborî recordul: se actualizează doar dacă numărul e mai mare.
+    persistRecord: async (r) => {
+      const value = JSON.stringify({ count: r.count, at: r.at.toISOString() });
+      await db.$executeRaw`
+        INSERT INTO settings (key, value, "updatedAt") VALUES (${PRESENCE_RECORD_SETTING}, ${value}::jsonb, ${r.at.toISOString()}::timestamp)
+        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, "updatedAt" = EXCLUDED."updatedAt"
+        WHERE COALESCE((settings.value->>'count')::int, 0) < (EXCLUDED.value->>'count')::int`;
+    },
+    loadRecord: async () => {
+      const row = await db.setting.findUnique({ where: { key: PRESENCE_RECORD_SETTING } });
+      const v = row?.value as { count?: number; at?: string } | undefined;
+      return v?.count && v.at ? { count: v.count, at: new Date(v.at) } : null;
+    },
+  });
+  const actors = new GcsActorResolver({ db, cache, presence });
   const rateLimiter = new GcsRedisRateLimiter(redis);
   const files = createFileStore(opts.configDir);
   const attachments = new GcsAttachmentService({ db, store: files, permissions, rateLimiter });
@@ -277,6 +301,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     groups,
     members,
     notifications,
+    realtime,
+    presence,
     bans,
     warnings,
     actors,
