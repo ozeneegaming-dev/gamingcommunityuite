@@ -27,6 +27,7 @@ export const testCoreModule: GcsModule = {
       items: [
         { key: "members.members", labelKey: "m", href: "/admin/members", section: "members.members" },
         { key: "members.groups", labelKey: "g", href: "/admin/members/groups", section: "members.groups" },
+        { key: "members.warnings", labelKey: "w", href: "/admin/members/warnings", section: "members.warnings" },
       ],
     },
     {

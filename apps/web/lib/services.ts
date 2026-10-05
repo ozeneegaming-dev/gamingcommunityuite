@@ -2,6 +2,7 @@ import "server-only";
 import {
   GcsAcpRoleService,
   GcsActorResolver,
+  GcsBanService,
   GcsCache,
   GcsEventBus,
   GcsGroupService,
@@ -9,6 +10,7 @@ import {
   GcsPermissionService,
   GcsRedisRateLimiter,
   GcsSettingsService,
+  GcsWarningService,
 } from "@gcs/core";
 import { db } from "@gcs/db";
 import { coreModule } from "@gcs/modules";
@@ -25,6 +27,8 @@ export type GcsServices = {
   permissions: GcsPermissionService;
   acp: GcsAcpRoleService;
   groups: GcsGroupService;
+  bans: GcsBanService;
+  warnings: GcsWarningService;
   actors: GcsActorResolver;
   rateLimiter: GcsRedisRateLimiter;
 };
@@ -56,10 +60,12 @@ function createServices(): GcsServices {
   const permissions = new GcsPermissionService({ db, cache, bus, registry });
   const acp = new GcsAcpRoleService({ db, registry });
   const groups = new GcsGroupService({ db, bus, permissions, acp });
-  const actors = new GcsActorResolver({ db });
+  const bans = new GcsBanService({ db, cache, bus, acp });
+  const warnings = new GcsWarningService({ db, bus, acp, bans });
+  const actors = new GcsActorResolver({ db, cache });
   const rateLimiter = new GcsRedisRateLimiter(redis);
 
-  return { db, redis, cache, bus, registry, settings, permissions, acp, groups, actors, rateLimiter };
+  return { db, redis, cache, bus, registry, settings, permissions, acp, groups, bans, warnings, actors, rateLimiter };
 }
 
 // Un singur set de servicii pe proces (în dev, Next.js reîncarcă modulele).

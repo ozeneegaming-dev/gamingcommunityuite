@@ -75,7 +75,7 @@ describe("seedDefaults", () => {
       where: { name: "Root" },
       include: { permissions: true, assignments: { include: { group: true } } },
     });
-    expect(role.permissions.map((p) => p.section).sort()).toEqual(["members.groups", "members.members", "vip.tiers"]);
+    expect(role.permissions.map((p) => p.section).sort()).toEqual(["members.groups", "members.members", "members.warnings", "vip.tiers"]);
     expect(role.permissions.every((p) => p.canView && p.canEdit && p.canDelete)).toBe(true);
     expect(role.assignments[0]?.group?.key).toBe("root_admin");
   });

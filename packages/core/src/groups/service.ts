@@ -1,11 +1,12 @@
 import { Prisma, type Group, type PrismaClient } from "@gcs/db";
 import type { GcsAcpRoleService } from "../acp/roles";
 import { writeAudit } from "../audit";
-import { GcsConflict, GcsNotFound, GcsValidationError } from "../errors";
+import { GcsConflict, GcsForbidden, GcsNotFound, GcsValidationError } from "../errors";
 import type { GcsEventBus } from "../events";
 import type { GcsPermissionService } from "../permissions/service";
 import type { GcsActor } from "../permissions/types";
 import { isHexColor, type GcsNameStyle } from "./nameStyles";
+import { assertCanManageUser, losesRootOnPrimaryChange, losesRootOnSecondaryRemoval } from "./rootGuard";
 
 export type GcsGroupInput = {
   name?: string;
@@ -63,6 +64,7 @@ export class GcsGroupService {
     const data = validateInput(input);
     const group = await this.deps.db.$transaction(async (tx) => {
       const before = await this.findGroup(tx, id);
+      assertCanTouchGroup(before, actor);
       const after = await tx.group.update({ where: { id }, data });
       await this.audit(tx, actor, "group.update", id, snapshot(before), snapshot(after));
       return after;
@@ -96,7 +98,7 @@ export class GcsGroupService {
 
     const json = value as Prisma.InputJsonValue;
     await this.deps.db.$transaction(async (tx) => {
-      await this.findGroup(tx, groupId);
+      assertCanTouchGroup(await this.findGroup(tx, groupId), actor);
       const where = { groupId_key: { groupId, key } };
       const before = await tx.groupSetting.findUnique({ where });
       await tx.groupSetting.upsert({ where, create: { groupId, key, value: json }, update: { value: json } });
@@ -138,8 +140,10 @@ export class GcsGroupService {
     const oldGroupId = await this.deps.db.$transaction(async (tx) => {
       const user = await tx.user.findUnique({ where: { id: userId } });
       if (!user) throw new GcsNotFound({ entity: "user" });
-      await this.findGroup(tx, groupId);
+      assertCanTouchGroup(await this.findGroup(tx, groupId), actor);
       if (user.primaryGroupId === groupId) return null;
+      const removesRoot = await losesRootOnPrimaryChange(tx, userId, groupId);
+      await assertCanManageUser(tx, actor, userId, { removesRoot });
       await tx.user.update({
         where: { id: userId },
         data: { primaryGroupId: groupId, previousPrimaryGroupId: user.primaryGroupId },
@@ -157,7 +161,8 @@ export class GcsGroupService {
     const added = await this.deps.db.$transaction(async (tx) => {
       const user = await tx.user.findUnique({ where: { id: userId } });
       if (!user) throw new GcsNotFound({ entity: "user" });
-      await this.findGroup(tx, groupId);
+      assertCanTouchGroup(await this.findGroup(tx, groupId), actor);
+      await assertCanManageUser(tx, actor, userId);
       if (user.primaryGroupId === groupId) return false;
       const { count } = await tx.userGroup.createMany({ data: [{ userId, groupId }], skipDuplicates: true });
       if (count === 0) return false;
@@ -170,6 +175,8 @@ export class GcsGroupService {
   async removeSecondary(userId: string, groupId: number, actor: GcsActor): Promise<void> {
     await this.authorize(actor);
     const removed = await this.deps.db.$transaction(async (tx) => {
+      const removesRoot = await losesRootOnSecondaryRemoval(tx, userId, groupId);
+      await assertCanManageUser(tx, actor, userId, { removesRoot });
       const { count } = await tx.userGroup.deleteMany({ where: { userId, groupId } });
       if (count === 0) return false;
       await this.audit(tx, actor, "user.secondary_remove", userId, { groupId }, undefined, "user");
@@ -249,6 +256,13 @@ function validateInput(input: GcsGroupInput): GcsGroupData {
 
   if (Object.keys(errors).length > 0) throw new GcsValidationError(errors);
   return data;
+}
+
+/** Grupul `root_admin` (setări, membri noi) poate fi modificat doar de un Root Admin (spec §6.4). */
+function assertCanTouchGroup(group: Group, actor: GcsActor): void {
+  if (group.key === "root_admin" && !actor.groupIds.includes(group.id)) {
+    throw new GcsForbidden({ reason: "root_protected" });
+  }
 }
 
 function snapshot(g: Group) {
