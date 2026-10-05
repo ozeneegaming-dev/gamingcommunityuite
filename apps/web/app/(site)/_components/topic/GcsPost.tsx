@@ -88,6 +88,7 @@ export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, 
           hiddenReason: post.hiddenReason,
           authorId: author?.id ?? null,
           authorName: author?.name ?? "",
+          attachments: post.attachments,
         }}
         isSolved={isSolved}
         reactions={post.reactions}

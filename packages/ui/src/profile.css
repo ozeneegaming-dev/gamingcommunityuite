@@ -627,3 +627,126 @@
   background: rgba(244, 183, 64, 0.14);
   color: #f4b740;
 }
+
+/* ─── Mesaje private ───────────────────────────────────────────────────── */
+
+.gcs-inbox {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.gcs-inbox__item {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-inbox__item--unread {
+  background: rgba(214, 40, 57, 0.06);
+}
+.gcs-inbox__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.gcs-inbox__title {
+  font-weight: 700;
+  color: var(--gcs-text);
+}
+.gcs-inbox__item--unread .gcs-inbox__title {
+  font-weight: 800;
+}
+.gcs-inbox__snippet {
+  font-size: 13px;
+  color: #c9cdd6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-message {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gcs-message--mine {
+  border-color: #3b3054;
+}
+.gcs-message__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.gcs-message__head > :last-child {
+  margin-left: auto;
+}
+.gcs-userPicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  min-height: 44px;
+  padding: 4px 8px;
+  background: var(--gcs-surface2);
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+.gcs-userPicker__input {
+  flex: 1 1 120px;
+  min-width: 0;
+  min-height: 34px;
+  background: none;
+  border: 0;
+  color: var(--gcs-text);
+  font: 500 14px var(--gcs-font-text);
+  outline: none;
+}
+.gcs-userPicker__list {
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  background: var(--gcs-surface);
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+}
+.gcs-userPicker__list button {
+  width: 100%;
+  min-height: 40px;
+  text-align: left;
+  background: none;
+  border: 0;
+  color: var(--gcs-text);
+  font: inherit;
+  padding: 0 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.gcs-userPicker__list button:hover,
+.gcs-userPicker__list button:focus-visible {
+  background: var(--gcs-surface2);
+}
+.gcs-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 4px 4px 10px;
+  border-radius: 999px;
+  background: rgba(214, 40, 57, 0.16);
+  color: var(--gcs-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.gcs-chip button {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}

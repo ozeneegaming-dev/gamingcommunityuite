@@ -37,6 +37,8 @@ export type GcsPostContentProps = {
     hiddenReason: string | null;
     authorId: string | null;
     authorName: string;
+    /** Fișierele atașate care nu sunt imagini (imaginile apar în conținut). */
+    attachments?: { id: string; filename: string; size: number }[];
   };
   isSolved: boolean;
   reactions: GcsReactionCount[];
@@ -195,6 +197,15 @@ export function GcsPostContent(props: GcsPostContentProps) {
         </div>
       ) : (
         <div ref={body} className="gcs-postBody" dangerouslySetInnerHTML={{ __html: post.html }} />
+      )}
+      {post.attachments && post.attachments.length > 0 && (
+        <ul className="gcs-attachments" data-testid="gcs-post-attachments">
+          {post.attachments.map((a) => (
+            <li key={a.id}>
+              <a href={`/files/${a.id}`}>{a.filename}</a> <span className="gcs-muted">({Math.max(1, Math.round(a.size / 1024))} KB)</span>
+            </li>
+          ))}
+        </ul>
       )}
       {post.edited && <p className="gcs-post__edited">{post.edited}</p>}
 

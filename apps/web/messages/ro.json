@@ -1349,5 +1349,31 @@
     "follow": "Urmărește",
     "unfollow": "Nu mai urmări",
     "message": "Mesaj"
+  },
+  "messages": {
+    "title": "Mesaje",
+    "new": "Conversație nouă",
+    "empty": "Nicio conversație încă.",
+    "unread": "Necitită",
+    "onlyYou": "doar tu",
+    "pages": "Pagini",
+    "to": "Către",
+    "toPlaceholder": "Scrie un nume…",
+    "remove": "Scoate",
+    "subject": "Titlu",
+    "send": "Trimite",
+    "sending": "Se trimite…",
+    "reply": "Răspunde",
+    "report": "Raportează",
+    "reportReason": "De ce raportezi acest mesaj?",
+    "reported": "Raportat",
+    "readBy": "Citit de {names}",
+    "participants": "Participanți · {count}",
+    "starter": "a început conversația",
+    "invite": "Invită",
+    "inviteTo": "Invită în conversație",
+    "leave": "Părăsește conversația",
+    "confirmLeave": "Părăsești conversația? Nu o vei mai vedea.",
+    "invited": "Invitat."
   }
 }

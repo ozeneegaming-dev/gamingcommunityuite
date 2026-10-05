@@ -1349,5 +1349,31 @@
     "follow": "Follow",
     "unfollow": "Unfollow",
     "message": "Message"
+  },
+  "messages": {
+    "title": "Messages",
+    "new": "New conversation",
+    "empty": "No conversations yet.",
+    "unread": "Unread",
+    "onlyYou": "only you",
+    "pages": "Pages",
+    "to": "To",
+    "toPlaceholder": "Type a name…",
+    "remove": "Remove",
+    "subject": "Title",
+    "send": "Send",
+    "sending": "Sending…",
+    "reply": "Reply",
+    "report": "Report",
+    "reportReason": "Why are you reporting this message?",
+    "reported": "Reported",
+    "readBy": "Read by {names}",
+    "participants": "Participants · {count}",
+    "starter": "started the conversation",
+    "invite": "Invite",
+    "inviteTo": "Invite to conversation",
+    "leave": "Leave conversation",
+    "confirmLeave": "Leave the conversation? You won't see it anymore.",
+    "invited": "Invited."
   }
 }

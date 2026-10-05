@@ -1183,3 +1183,19 @@
   gap: 4px;
   align-items: center;
 }
+
+/* Fișierele atașate (non-imagini) sub o postare sau un mesaj. */
+.gcs-attachments {
+  list-style: none;
+  margin: 0;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--gcs-surface2);
+  border-radius: 10px;
+  font-size: 13px;
+}
+.gcs-attachments li::before {
+  content: "📎 ";
+}
