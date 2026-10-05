@@ -45,9 +45,14 @@ export default async function AcpGroupPage({ params }: Props) {
   const defs = registry.permissionDefs().filter((d) => d.scope === "group");
   const settings = defs.map((def) => {
     const value = stored.has(def.key) ? stored.get(def.key) : def.default[group.key];
-    // Tipul setării: numeric dacă vreun grup are o valoare numerică implicită.
-    const numeric = Object.values(def.default).some((v) => typeof v === "number") || typeof value === "number";
-    return { def, numeric, value };
+    // Tipul setării: după valorile implicite ale grupurilor (text, număr sau da/nu).
+    const defaults = Object.values(def.default);
+    const kind = defaults.some((v) => typeof v === "string") || typeof value === "string"
+      ? "text"
+      : defaults.some((v) => typeof v === "number") || typeof value === "number"
+        ? "number"
+        : "boolean";
+    return { def, kind, value };
   });
 
   return (
@@ -120,10 +125,22 @@ export default async function AcpGroupPage({ params }: Props) {
         <Section title={t("settings.title")}>
           <GcsActionForm action={updateGroupSettings.bind(null, group.id)} submitLabel={t("settings.save")}>
             <p style={{ margin: 0, color: "var(--gcs-muted)", fontSize: 13 }}>{t("settings.unlimited")}</p>
-            {settings.map(({ def, numeric, value }) => (
+            {settings.map(({ def, kind, value }) => (
               <div key={def.key}>
-                <input type="hidden" name={`kind:${def.key}`} value={numeric ? "number" : "boolean"} />
-                {numeric ? (
+                <input type="hidden" name={`kind:${def.key}`} value={kind} />
+                {kind === "text" ? (
+                  <label className="gcs-field">
+                    {tAll.has(def.labelKey) ? tAll(def.labelKey) : def.key}
+                    <input
+                      className="gcs-input"
+                      type="text"
+                      maxLength={40}
+                      name={`setting:${def.key}`}
+                      defaultValue={typeof value === "string" ? value : ""}
+                      style={{ maxWidth: 280 }}
+                    />
+                  </label>
+                ) : kind === "number" ? (
                   <label className="gcs-field">
                     {tAll.has(def.labelKey) ? tAll(def.labelKey) : def.key}
                     <input

@@ -17,3 +17,7 @@ export { DEFAULT_REACTIONS } from "./forums/seed";
 export { parseRef, slugify } from "./forums/slug";
 export { GcsTopicService, type GcsNewTopicInput, type GcsNewTopicResult } from "./forums/topics";
 export { appModules, createRegistry } from "./registry";
+export { messagesModule } from "./messages";
+export { profileModule } from "./profile";
+export { DEFAULT_BADGES, DEFAULT_FRAMES, DEFAULT_NAME_STYLES, DEFAULT_RANKS, DEFAULT_RULES } from "./profile/seed";
+export { vipModule } from "./vip";

@@ -238,6 +238,14 @@
         "prefixes": "Prefixe",
         "saved_actions": "Acțiuni salvate",
         "forum_settings": "Setări forum"
+      },
+      "vip": {
+        "vip_group": "VIP",
+        "tiers": "Niveluri",
+        "subscribers": "Abonați",
+        "history": "Istoric",
+        "name_styles": "Stiluri de nume",
+        "frames": "Avatar frames"
       }
     },
     "comingSoon": {
@@ -743,6 +751,16 @@
       "post_max_chars": "Lungimea maximă a unei postări (caractere)",
       "embeds": "Embed-uri permise (youtube, twitch, medal, image)",
       "revisions_visible_to_author": "Autorul își vede istoricul editărilor"
+    },
+    "profile": {
+      "cover_max_mb": "Mărimea maximă a cover-ului (MB)",
+      "wall_enabled": "Peretele de pe profil e activ"
+    },
+    "pm": {
+      "messages_per_page": "Mesaje pe pagină într-o conversație"
+    },
+    "vip": {
+      "warn_days": "Cu câte zile înainte de expirare e anunțat membrul"
     }
   },
   "permissions": {
@@ -758,7 +776,9 @@
     },
     "pm": {
       "max_conversations": "Conversații private (maxim)",
-      "flood_seconds": "Pauză între mesaje private (secunde)"
+      "flood_seconds": "Pauză între mesaje private (secunde)",
+      "send": "Poate trimite mesaje private",
+      "max_participants": "Participanți maximi într-o conversație"
     },
     "upload": {
       "max_mb": "Mărime maximă upload (MB)"
@@ -769,7 +789,12 @@
     "profile": {
       "styled_name": "Nume stilizat",
       "avatar_frame": "Ramă de avatar",
-      "animated_cover": "Copertă animată (GIF)"
+      "animated_cover": "Copertă animată (GIF)",
+      "cover": "Poate pune cover pe profil",
+      "wall_post": "Poate scrie pe pereții profilurilor",
+      "rank_override": "Text afișat în locul rangului (gol = rangul obținut)",
+      "see_private_fields": "Vede câmpurile de profil vizibile doar staff-ului",
+      "moderate": "Moderează profiluri (editare, pereți, avatar, cover)"
     },
     "new_member": {
       "post_threshold": "Postări aprobate până devine Membru"
@@ -788,6 +813,9 @@
       "moderate_all": "Moderator pe toate forumurile",
       "poll_create": "Creează sondaje",
       "tags_max": "Tag-uri pe topic (maxim)"
+    },
+    "vip": {
+      "manage": "Acordă, prelungește și retrage VIP"
     }
   },
   "profile": {

@@ -62,14 +62,15 @@ export async function updateGroupSettings(groupId: number, fd: FormData): Promis
       const name = `setting:${def.key}`;
       const kind = field(fd, `kind:${def.key}`);
       if (!kind) continue;
-      const value = kind === "number" ? intField(fd, name) : fd.get(name) === "on";
+      const value =
+        kind === "number" ? intField(fd, name) : kind === "text" ? String(fd.get(name) ?? "").trim().slice(0, 40) : fd.get(name) === "on";
       if (typeof value === "number" && !Number.isInteger(value)) {
         errors[def.key] = "invalid_type";
         continue;
       }
       // Scriem (și jurnalizăm) doar valorile schimbate față de cea efectivă (salvată sau implicită).
       const current = stored.has(def.key) ? stored.get(def.key) : group ? def.default[group.key] : undefined;
-      const effective = current ?? (kind === "number" ? 0 : false);
+      const effective = current ?? (kind === "number" ? 0 : kind === "text" ? "" : false);
       if (effective === value) continue;
       await groups.setSetting(groupId, def.key, value, actor);
     }

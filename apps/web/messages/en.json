@@ -238,6 +238,14 @@
         "prefixes": "Prefixes",
         "saved_actions": "Saved actions",
         "forum_settings": "Forum settings"
+      },
+      "vip": {
+        "vip_group": "VIP",
+        "tiers": "Tiers",
+        "subscribers": "Subscribers",
+        "history": "History",
+        "name_styles": "Name styles",
+        "frames": "Avatar frames"
       }
     },
     "comingSoon": {
@@ -743,6 +751,16 @@
       "post_max_chars": "Maximum post length (characters)",
       "embeds": "Allowed embeds (youtube, twitch, medal, image)",
       "revisions_visible_to_author": "Authors see their edit history"
+    },
+    "profile": {
+      "cover_max_mb": "Maximum cover size (MB)",
+      "wall_enabled": "Profile wall enabled"
+    },
+    "pm": {
+      "messages_per_page": "Messages per page in a conversation"
+    },
+    "vip": {
+      "warn_days": "Days before expiry the member is warned"
     }
   },
   "permissions": {
@@ -758,7 +776,9 @@
     },
     "pm": {
       "max_conversations": "Private conversations (maximum)",
-      "flood_seconds": "Delay between private messages (seconds)"
+      "flood_seconds": "Delay between private messages (seconds)",
+      "send": "Can send private messages",
+      "max_participants": "Maximum participants in a conversation"
     },
     "upload": {
       "max_mb": "Maximum upload size (MB)"
@@ -769,7 +789,12 @@
     "profile": {
       "styled_name": "Styled name",
       "avatar_frame": "Avatar frame",
-      "animated_cover": "Animated cover (GIF)"
+      "animated_cover": "Animated cover (GIF)",
+      "cover": "Can set a profile cover",
+      "wall_post": "Can post on profile walls",
+      "rank_override": "Text shown instead of the rank (empty = earned rank)",
+      "see_private_fields": "Sees staff-only profile fields",
+      "moderate": "Moderates profiles (edit, walls, avatar, cover)"
     },
     "new_member": {
       "post_threshold": "Approved posts until Member"
@@ -788,6 +813,9 @@
       "moderate_all": "Moderator in all forums",
       "poll_create": "Creates polls",
       "tags_max": "Tags per topic (maximum)"
+    },
+    "vip": {
+      "manage": "Grants, extends and revokes VIP"
     }
   },
   "profile": {
