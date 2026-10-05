@@ -8,7 +8,9 @@
     "./tokens.css": "./src/tokens.css",
     "./base.css": "./src/base.css",
     "./theme.css": "./src/theme.css",
-    "./themes.css": "./src/themes.css"
+    "./themes.css": "./src/themes.css",
+    "./editor": "./src/editor/index.ts",
+    "./forum.css": "./src/forum.css"
   },
   "scripts": {
     "lint": "eslint .",
@@ -23,13 +25,21 @@
     "@types/react-dom": "^19.3.0",
     "eslint": "^9.30.0",
     "jsdom": "^30.1.2",
-    "typescript": "^5.9.0",
-    "vitest": "^3.2.0",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.3.3",
+    "@tiptap/core": "^3.31.4",
+    "@tiptap/extension-image": "^3.31.4",
+    "@tiptap/extension-mention": "^3.31.4",
+    "@tiptap/extensions": "^3.31.4",
+    "@tiptap/pm": "^3.31.4",
+    "@tiptap/react": "^3.31.4",
+    "@tiptap/starter-kit": "^3.31.4",
+    "@tiptap/suggestion": "^3.31.4",
     "recharts": "^3.10.1"
   },
   "peerDependencies": {

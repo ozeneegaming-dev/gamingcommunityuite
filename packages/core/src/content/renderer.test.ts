@@ -89,6 +89,11 @@ describe("GcsContentRenderer — randare", () => {
     expect(out.attachments).toEqual(["att_1"]);
   });
 
+  test("un link spre `/files/{id}` (fișier atașat) e extras ca atașament", () => {
+    const out = render(doc(p(text("autoexec.cfg", [{ type: "link", attrs: { href: "/files/att_9" } }]))));
+    expect(out.attachments).toEqual(["att_9"]);
+  });
+
   test("embed YouTube → iframe youtube-nocookie, în sandbox", () => {
     const out = render(doc({ type: "embed", attrs: { url: "https://youtu.be/dQw4w9WgXcQ" } }));
     expect(out.html).toBe(

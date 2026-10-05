@@ -3,6 +3,7 @@
 @import "@gcs/ui/themes.css";
 @import "@gcs/ui/theme.css";
 @import "@gcs/ui/base.css";
+@import "@gcs/ui/forum.css";
 
 /* Componentele Gcs* din @gcs/ui folosesc utilitare Tailwind; sursele lor trebuie scanate. */
 @source "../../../packages/ui/src";

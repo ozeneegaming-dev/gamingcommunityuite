@@ -89,14 +89,14 @@ export const GCS_DOC_NODES: Record<string, NodeSpec> = {
   },
 };
 
-/** Mărcile permise. La `link`, `target`/`rel`/`class` din Tiptap sunt acceptate, dar ignorate (le punem noi). */
+/** Mărcile permise. La `link`, `target`/`rel`/`class`/`title` din Tiptap sunt acceptate, dar ignorate (le punem noi). */
 export const GCS_DOC_MARKS: Record<string, Record<string, AttrRule>> = {
   bold: {},
   italic: {},
   underline: {},
   strike: {},
   code: {},
-  link: { href: (v) => typeof v === "string" && isSafeHref(v), target: any, rel: any, class: any },
+  link: { href: (v) => typeof v === "string" && isSafeHref(v), target: any, rel: any, class: any, title: any },
 };
 
 function isSafeHref(href: string): boolean {
@@ -230,7 +230,13 @@ function toHtml(doc: GcsDoc, opts: GcsRenderOptions) {
           else if (mark.type === "underline") html = `<u>${html}</u>`;
           else if (mark.type === "strike") html = `<s>${html}</s>`;
           else if (mark.type === "code") html = `<code>${html}</code>`;
-          else if (mark.type === "link") html = link(mark.attrs!.href!, html);
+          else if (mark.type === "link") {
+            const href = mark.attrs!.href!;
+            // Un fișier atașat (non-imagine) apare în postare ca link spre `/files/{id}`.
+            const file = /^\/files\/([A-Za-z0-9_-]{1,40})$/.exec(href);
+            if (file) attachments.add(file[1]!);
+            html = link(href, html);
+          }
         }
         return html;
       }
