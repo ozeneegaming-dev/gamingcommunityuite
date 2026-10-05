@@ -44,6 +44,7 @@ import { GcsForumService } from "./forums/forums";
 import { GcsTopicService } from "./forums/topics";
 import { registerAppJobs } from "./jobs";
 import { GcsAchievementService } from "./profile/achievements";
+import { GcsAchievementAdmin } from "./profile/achievementsAdmin";
 import { GcsCosmeticsService } from "./profile/cosmetics";
 import { GcsRankDirectory } from "./profile/display";
 import { GcsMembership } from "./profile/membership";
@@ -94,6 +95,7 @@ export type GcsServices = {
   profiles: GcsProfileService;
   social: GcsSocialService;
   achievements: GcsAchievementService;
+  achievementAdmin: GcsAchievementAdmin;
   membership: GcsMembership;
   promotions: GcsPromotionService;
   cosmetics: GcsCosmeticsService;
@@ -293,6 +295,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     profiles,
     social,
     achievements,
+    achievementAdmin: new GcsAchievementAdmin({ db, bus, acp, achievements, jobs }),
     membership,
     promotions,
     cosmetics,

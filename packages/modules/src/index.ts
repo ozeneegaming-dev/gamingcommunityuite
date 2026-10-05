@@ -33,3 +33,4 @@ export * from "./profile/display";
 export * from "./profile/queries";
 export * from "./messages/conversations";
 export * from "./messages/queries";
+export * from "./profile/achievementsAdmin";

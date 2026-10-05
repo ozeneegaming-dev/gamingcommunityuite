@@ -234,7 +234,7 @@ export class GcsProfileQueries {
         .sort((a, b) => a.field.position - b.field.position)
         .map((v) => ({ label: v.field.label, value: v.value })),
     };
-    await cache.set(key, base, { ttlSec: CARD_TTL, tags: [`user:${userId}`, "cosmetics"] });
+    await cache.set(key, base, { ttlSec: CARD_TTL, tags: [`user:${userId}`, "cosmetics", "badges"] });
     return base;
   }
 
