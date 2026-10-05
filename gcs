@@ -47,7 +47,7 @@ backup() {
   echo "Backup baza de date…"
   docker compose exec -T postgres pg_dump -U "$POSTGRES_USER" -Fc "$POSTGRES_DB" > "$work/db.dump"
   echo "Backup fișiere (MinIO)…"
-  docker compose exec -T minio tar -C /data -cf - . > "$work/files.tar"
+  minio_data 'tar -C /data -cf - .' > "$work/files.tar"
   echo "Backup configurare…"
   docker compose exec -T web tar -C /app/config -cf - . > "$work/config.tar"
   # .env conține secretele (inclusiv cheia cu care sunt criptate secretele 2FA): fără el, backup-ul nu e complet.
@@ -56,6 +56,11 @@ backup() {
   tar -C "$work" -czf "$archive" db.dump files.tar config.tar env
   chmod 600 "$archive"
   echo "Backup salvat: $archive"
+}
+
+# Imaginea MinIO nu are `tar`: volumul de date se citește/scrie dintr-un container alpine temporar.
+minio_data() {
+  docker run --rm -i --volumes-from "$(docker compose ps -q minio)" alpine:3 sh -c "$1"
 }
 
 restore() {
@@ -77,7 +82,7 @@ restore() {
   echo "Restaurez baza de date…"
   docker compose exec -T postgres pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --if-exists --no-owner < "$work/db.dump"
   echo "Restaurez fișierele…"
-  docker compose exec -T minio sh -c 'rm -rf /data/* && tar -C /data -xf -' < "$work/files.tar"
+  minio_data 'rm -rf /data/* && tar -C /data -xf -' < "$work/files.tar"
   echo "Restaurez configurarea…"
   docker compose exec -T web sh -c 'tar -C /app/config -xf -' < "$work/config.tar"
   cli maintenance off

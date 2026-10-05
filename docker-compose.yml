@@ -45,7 +45,8 @@ services:
       retries: 10
 
   minio:
-    image: minio/minio:latest
+    # minio/minio nu mai e publicat pe Docker Hub; Chainguard construiește MinIO din sursă.
+    image: cgr.dev/chainguard/minio:latest
     restart: unless-stopped
     command: ["server", "/data", "--console-address", ":9001"]
     environment:
