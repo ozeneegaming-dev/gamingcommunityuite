@@ -64,4 +64,11 @@ describe("seedProfileDemo", () => {
     await demo("empty");
     expect(await w.db.user.findUnique({ where: { email: "krypt@demo.invalid" } })).toBeNull();
   });
+
+  test("dacă numele unui membru demo e deja luat (ex. de admin), membrul demo nu se creează", async () => {
+    await w.db.user.update({ where: { id: w.member.userId! }, data: { name: "Krypt", nameNormalized: "krypt" } });
+    await demo("demo");
+    expect(await w.db.user.findUnique({ where: { email: "krypt@demo.invalid" } })).toBeNull();
+    expect(await w.db.user.findUnique({ where: { email: "shadowro@demo.invalid" } })).not.toBeNull();
+  });
 });

@@ -85,7 +85,8 @@ export async function seedProfileDemo(ctx: GcsDemoContext): Promise<void> {
   const created: string[] = [];
 
   for (const m of DEMO_MEMBERS) {
-    if (await db.user.findUnique({ where: { email: m.email } })) continue;
+    // Deja creat, sau numele e luat (ex. adminul și-a ales „Krypt” la instalare): membrul demo nu se creează.
+    if (await db.user.findFirst({ where: { OR: [{ email: m.email }, { nameNormalized: normalizeUsername(m.name) }] } })) continue;
     const [tier, frame, badges] = await Promise.all([
       db.group.findUniqueOrThrow({ where: { key: m.tier } }),
       db.avatarFrame.findUnique({ where: { key: m.frame } }),

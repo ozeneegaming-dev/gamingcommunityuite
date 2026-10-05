@@ -125,7 +125,8 @@ export default async function setup(project: TestProject): Promise<() => Promise
       await admin.query(`DROP DATABASE IF EXISTS "${name}" WITH (FORCE)`);
       await admin.query(`CREATE DATABASE "${name}"`);
       execFileSync(process.execPath, [prismaCli, "migrate", "deploy", "--schema", schemaPath], {
-        env: { ...process.env, DATABASE_URL: withDatabase(baseUrl, name) },
+        // Sub încărcarea `pnpm test` (toate pachetele pornesc PostgreSQL în paralel), conexiunea poate întârzia peste 5 s.
+        env: { ...process.env, DATABASE_URL: `${withDatabase(baseUrl, name)}?connect_timeout=60` },
         stdio: "pipe",
       });
     }

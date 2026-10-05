@@ -96,9 +96,9 @@ describe("gcs (CLI)", () => {
     await runCli(["install", "--non-interactive"], io(installEnv));
     const { db } = services();
     const member = await db.group.findUniqueOrThrow({ where: { key: "member" } });
-    await db.user.create({ data: { name: "Krypt", nameNormalized: normalizeUsername("Krypt"), email: "krypt@example.com", primaryGroupId: member.id } });
+    await db.user.create({ data: { name: "Dexter", nameNormalized: normalizeUsername("Dexter"), email: "dexter@example.com", primaryGroupId: member.id } });
     lines = { out: [], err: [] };
-    await expect(runCli(["reset-admin-password", "Krypt"], io())).resolves.toBe(1);
+    await expect(runCli(["reset-admin-password", "Dexter"], io())).resolves.toBe(1);
     expect(lines.err.join("\n")).toContain("Doar conturile Root Admin");
   });
 
