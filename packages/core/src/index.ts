@@ -13,6 +13,8 @@ export * from "./auth/registration";
 export * from "./auth/steam";
 export * from "./auth/usernames";
 export * from "./cache";
+export * from "./content/embeds";
+export * from "./content/renderer";
 export * from "./errors";
 export * from "./email/send";
 export * from "./events";
