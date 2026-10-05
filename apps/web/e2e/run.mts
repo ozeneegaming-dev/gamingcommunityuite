@@ -221,7 +221,13 @@ async function main(): Promise<number> {
     { ...env, ...installEnv, GCS_E2E_BASE_URL: BASE_URL },
     "inherit",
   );
-  return new Promise((resolve) => playwright.on("exit", (code) => resolve(code ?? 1)));
+  const code = await new Promise<number>((resolve) => playwright.on("exit", (c) => resolve(c ?? 1)));
+  // Cu GCS_E2E_KEEP=1, serverele rămân pornite după teste (verificare manuală în browser, cu datele de test).
+  if (process.env.GCS_E2E_KEEP === "1") {
+    console.log(`[gcs e2e] serverele rămân pornite: ${BASE_URL} (Ctrl+C pentru oprire)`);
+    await new Promise<void>((resolve) => process.once("SIGINT", () => resolve()));
+  }
+  return code;
 }
 
 async function cleanup(): Promise<void> {
