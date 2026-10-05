@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { rmSync } from "node:fs";
+import net from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
@@ -10,6 +11,19 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const schemaPath = path.resolve(here, "../prisma/schema.prisma");
 // Pachetul `prisma` nu expune `build/index.js` prin "exports", așa că îl luăm direct din node_modules-ul lui @gcs/db.
 const prismaCli = path.resolve(here, "../node_modules/prisma/build/index.js");
+
+/** Un port TCP liber pe localhost. */
+function freePort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+    server.unref();
+    server.on("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      const { port } = server.address() as net.AddressInfo;
+      server.close(() => resolve(port));
+    });
+  });
+}
 
 /**
  * Pornește un server PostgreSQL de test și creează câte o bază migrată pentru fiecare worker.
@@ -23,9 +37,10 @@ export default async function setup(project: TestProject): Promise<() => Promise
 
   if (!baseUrl) {
     const { default: EmbeddedPostgres } = await import("embedded-postgres");
-    const databaseDir = path.resolve(here, "../.pgtest");
+    // Folder și port separate per pachet: turbo rulează în paralel testele din `db` și `core`.
+    const databaseDir = path.resolve(process.cwd(), ".pgtest");
     rmSync(databaseDir, { recursive: true, force: true });
-    const port = Number(process.env.TEST_PG_PORT ?? 54329);
+    const port = process.env.TEST_PG_PORT ? Number(process.env.TEST_PG_PORT) : await freePort();
     const server = new EmbeddedPostgres({
       databaseDir,
       user: "postgres",

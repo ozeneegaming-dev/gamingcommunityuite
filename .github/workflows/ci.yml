@@ -28,6 +28,7 @@ jobs:
       DATABASE_URL: postgresql://redline:redline@localhost:5432/redline
       REDIS_URL: redis://localhost:6379
       TEST_PG_URL: postgresql://redline:redline@localhost:5432/postgres
+      TEST_REDIS_URL: redis://localhost:6379
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
