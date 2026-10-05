@@ -29,8 +29,14 @@ jobs:
       REDIS_URL: redis://localhost:6379
       TEST_PG_URL: postgresql://redline:redline@localhost:5432/postgres
       TEST_REDIS_URL: redis://localhost:6379
+      TEST_S3_URL: http://redline:redline-secret@localhost:9000
     steps:
       - uses: actions/checkout@v4
+      # MinIO pentru testul store-ului S3 (serviciile GitHub nu pot primi comanda `server /data`).
+      - name: Start MinIO
+        run: |
+          docker run -d --name minio -p 9000:9000 -e MINIO_ROOT_USER=redline -e MINIO_ROOT_PASSWORD=redline-secret             cgr.dev/chainguard/minio:latest server /data
+          for i in $(seq 1 30); do curl -sf http://localhost:9000/minio/health/ready && break; sleep 1; done
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:

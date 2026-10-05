@@ -4,16 +4,20 @@ import {
   GcsAcpRoleService,
   GcsAcpSearch,
   GcsActorResolver,
+  GcsAttachmentService,
   GcsBanService,
   GcsCache,
   GcsEventBus,
   GcsGroupService,
+  GcsLocalFileStore,
   GcsMemberDirectory,
   GcsModuleRegistry,
   GcsPermissionService,
   GcsRedisRateLimiter,
+  GcsS3FileStore,
   GcsSettingsService,
   GcsWarningService,
+  type GcsFileStore,
 } from "@gcs/core";
 import { PrismaClient } from "@gcs/db";
 import { readFileSync } from "node:fs";
@@ -40,6 +44,8 @@ export type GcsServices = {
   warnings: GcsWarningService;
   actors: GcsActorResolver;
   rateLimiter: GcsRedisRateLimiter;
+  files: GcsFileStore;
+  attachments: GcsAttachmentService;
 };
 
 /** Revalidează paginile Next.js cache-uite; în afara unui request (ex. scripturi) nu e disponibil. */
@@ -66,6 +72,20 @@ function loadRuntimeEnv(): void {
     const m = /^(DATABASE_URL|GCS_SECRET)=(.*)$/.exec(line);
     if (m) process.env[m[1]!] = m[2]!.startsWith('"') ? (JSON.parse(m[2]!) as string) : m[2]!;
   }
+}
+
+/** MinIO (S3) dacă e configurat (`docker compose`); altfel un folder local, în folderul de configurare (dev, E2E). */
+function createFileStore(): GcsFileStore {
+  const endpoint = process.env.S3_ENDPOINT;
+  if (endpoint) {
+    return new GcsS3FileStore({
+      endpoint,
+      accessKey: process.env.S3_ACCESS_KEY ?? "",
+      secretKey: process.env.S3_SECRET_KEY ?? "",
+      bucket: process.env.S3_BUCKET ?? "redline",
+    });
+  }
+  return new GcsLocalFileStore(path.join(gcsConfigDir(), "files"));
 }
 
 function createServices(): GcsServices {
@@ -109,8 +129,29 @@ function createServices(): GcsServices {
   const warnings = new GcsWarningService({ db, bus, acp, bans });
   const actors = new GcsActorResolver({ db, cache });
   const rateLimiter = new GcsRedisRateLimiter(redis);
+  const files = createFileStore();
+  const attachments = new GcsAttachmentService({ db, store: files, permissions, rateLimiter });
 
-  return { db, redis, cache, bus, registry, settings, permissions, acp, acpDashboard, acpSearch, groups, members, bans, warnings, actors, rateLimiter };
+  return {
+    db,
+    redis,
+    cache,
+    bus,
+    registry,
+    settings,
+    permissions,
+    acp,
+    acpDashboard,
+    acpSearch,
+    groups,
+    members,
+    bans,
+    warnings,
+    actors,
+    rateLimiter,
+    files,
+    attachments,
+  };
 }
 
 // Un singur set de servicii pe proces (în dev, Next.js reîncarcă modulele).

@@ -27,10 +27,13 @@
     "vitest": "^3.2.0"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1146.0",
     "@gcs/db": "workspace:*",
     "@node-rs/argon2": "^2.2.1",
+    "file-type": "^21.3.4",
     "ioredis": "^5.11.1",
     "nodemailer": "^10.0.14",
-    "sanitize-html": "^2.18.0"
+    "sanitize-html": "^2.18.0",
+    "sharp": "^0.35.5"
   }
 }

@@ -1,0 +1,200 @@
+import { randomUUID } from "node:crypto";
+import path from "node:path";
+import type { Prisma, PrismaClient } from "@gcs/db";
+import { fileTypeFromBuffer } from "file-type";
+import sharp from "sharp";
+import type { GcsRedisRateLimiter } from "../../auth/rateLimit";
+import { GcsForbidden, GcsNotFound, GcsRateLimited, GcsValidationError } from "../../errors";
+import type { GcsPermissionService } from "../../permissions/service";
+import type { GcsActor, GcsContainerRef } from "../../permissions/types";
+import type { GcsFileStore } from "./store";
+
+/** Imaginile se recodează (fără EXIF, max 4096 px). */
+const IMAGE_FORMATS = { "image/jpeg": "jpeg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" } as const;
+type ImageMime = keyof typeof IMAGE_FORMATS;
+
+/** Tipurile binare acceptate, recunoscute după magic bytes (nu după extensie). */
+const BINARY_MIMES = new Set([
+  "application/pdf",
+  "application/zip",
+  "application/x-7z-compressed",
+  "application/x-rar-compressed",
+  "video/mp4",
+  "video/webm",
+  "audio/mpeg",
+  "audio/ogg",
+]);
+
+/** Fișierele text (configuri de joc, loguri) nu au magic bytes; se acceptă după extensie, doar dacă sunt UTF-8 valid. */
+const TEXT_EXTENSIONS = new Set(["txt", "cfg", "ini", "log", "json", "md", "csv", "yml", "yaml"]);
+
+const MAX_IMAGE_SIDE = 4096;
+const UPLOAD_LIMIT = { window: 3600, max: 30 };
+
+export type GcsUploadedFile = { name: string; bytes: Buffer };
+/** Unde se încarcă: containerul și permisiunea cerută pe el (ex. `{ type: "forum", id: "3" }`, `forums.upload`). */
+export type GcsUploadContext = { container: GcsContainerRef; permission: string };
+
+export type GcsAttachmentInfo = {
+  id: string;
+  url: string;
+  filename: string;
+  mime: string;
+  size: number;
+  isImage: boolean;
+  width: number | null;
+  height: number | null;
+};
+
+export type GcsOpenedAttachment = {
+  body: ReadableStream<Uint8Array>;
+  size: number;
+  mime: string;
+  filename: string;
+  /** Imaginile se afișează în pagină; restul se descarcă (`Content-Disposition: attachment`). */
+  inline: boolean;
+};
+
+/** Verifică dacă actorul vede conținutul de care e legat un atașament (înregistrată de fiecare modul). */
+export type GcsAttachmentAccess = (actor: GcsActor, contentId: string) => Promise<boolean>;
+
+type Tx = Prisma.TransactionClient;
+
+function cleanFilename(name: string): string {
+  const base = path.basename(name.replace(/\\/g, "/"));
+  const clean = base.replace(/[\u0000-\u001f\u007f"<>|:*?/\\]/g, "").trim().slice(0, 120);
+  return clean || "fisier";
+}
+
+function isUtf8Text(bytes: Buffer): boolean {
+  if (bytes.includes(0)) return false;
+  try {
+    new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Atașamentele (spec §15, „Upload-uri”): tipul real din magic bytes, limite de mărime pe grup, imagini recodate,
+ * iar descărcarea respectă permisiunile conținutului de care e legat fișierul.
+ */
+export class GcsAttachmentService {
+  private readonly access = new Map<string, GcsAttachmentAccess>();
+
+  constructor(
+    private readonly deps: {
+      db: PrismaClient;
+      store: GcsFileStore;
+      permissions: GcsPermissionService;
+      rateLimiter: GcsRedisRateLimiter;
+    },
+  ) {}
+
+  /** Un modul își înregistrează verificarea pentru `contentType` (ex. `forums.post`). */
+  registerAccess(contentType: string, check: GcsAttachmentAccess): void {
+    this.access.set(contentType, check);
+  }
+
+  async upload(actor: GcsActor, file: GcsUploadedFile, ctx: GcsUploadContext): Promise<GcsAttachmentInfo> {
+    const { db, store, permissions, rateLimiter } = this.deps;
+    if (!actor.userId) throw new GcsForbidden({ permission: ctx.permission });
+    await permissions.assert(actor, ctx.permission, ctx.container);
+
+    const maxMb = await permissions.groupValue<number | boolean>(actor, "upload.max_mb");
+    if (typeof maxMb !== "number" || (maxMb !== -1 && file.bytes.length > maxMb * 1024 * 1024)) {
+      throw new GcsValidationError({ file: "too_large" }, { maxMb: String(maxMb) });
+    }
+    const limit = await rateLimiter.consume(`upload:${actor.userId}`, UPLOAD_LIMIT);
+    if (!limit.allowed) throw new GcsRateLimited({ retryAfter: String(limit.retryAfter) });
+
+    const filename = cleanFilename(file.name);
+    const prepared = await this.prepare(file.bytes, filename);
+    const now = new Date();
+    const key = `${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, "0")}/${randomUUID()}.${prepared.ext}`;
+
+    await store.put(key, prepared.bytes, prepared.mime);
+    const row = await db.attachment.create({
+      data: {
+        ownerId: actor.userId,
+        storageKey: key,
+        filename,
+        mime: prepared.mime,
+        size: prepared.bytes.length,
+        width: prepared.width,
+        height: prepared.height,
+      },
+    });
+    return {
+      id: row.id,
+      url: `/files/${row.id}`,
+      filename,
+      mime: row.mime,
+      size: row.size,
+      isImage: prepared.mime in IMAGE_FORMATS,
+      width: row.width,
+      height: row.height,
+    };
+  }
+
+  /** Tipul real și, pentru imagini, recodarea. */
+  private async prepare(bytes: Buffer, filename: string) {
+    const detected = await fileTypeFromBuffer(bytes);
+
+    if (detected && detected.mime in IMAGE_FORMATS) {
+      const mime = detected.mime as ImageMime;
+      const format = IMAGE_FORMATS[mime];
+      const animated = format === "gif" || format === "webp";
+      let img = sharp(bytes, { animated, limitInputPixels: 100_000_000 });
+      if (!animated) img = img.rotate();
+      img = img.resize({ width: MAX_IMAGE_SIDE, height: MAX_IMAGE_SIDE, fit: "inside", withoutEnlargement: true });
+      const out = await (format === "jpeg" ? img.jpeg({ quality: 85, mozjpeg: true }) : format === "png" ? img.png() : format === "webp" ? img.webp({ quality: 85 }) : img.gif()).toBuffer();
+      const meta = await sharp(out).metadata();
+      return { bytes: out, mime, ext: detected.ext, width: meta.width ?? null, height: meta.pageHeight ?? meta.height ?? null };
+    }
+    if (detected && BINARY_MIMES.has(detected.mime)) {
+      return { bytes, mime: detected.mime, ext: detected.ext, width: null, height: null };
+    }
+    const ext = path.extname(filename).slice(1).toLowerCase();
+    if (!detected && TEXT_EXTENSIONS.has(ext) && isUtf8Text(bytes)) {
+      return { bytes, mime: "text/plain", ext, width: null, height: null };
+    }
+    throw new GcsValidationError({ file: "unsupported_type" });
+  }
+
+  /**
+   * Leagă atașamentele încărcate de conținutul salvat, în tranzacția conținutului.
+   * Doar atașamentele proprietarului, încă nelegate (sau deja legate de același conținut).
+   */
+  async attach(tx: Tx, ids: string[], ref: { contentType: string; contentId: string; ownerId: string }): Promise<void> {
+    const unique = [...new Set(ids)];
+    if (unique.length === 0) return;
+    const rows = await tx.attachment.findMany({ where: { id: { in: unique } } });
+    const ok = rows.length === unique.length &&
+      rows.every((r) => r.ownerId === ref.ownerId && (r.contentType === null || (r.contentType === ref.contentType && r.contentId === ref.contentId)));
+    if (!ok) throw new GcsForbidden({ reason: "attachment" });
+    await tx.attachment.updateMany({ where: { id: { in: unique } }, data: { contentType: ref.contentType, contentId: ref.contentId } });
+  }
+
+  /** Deschide un atașament pentru descărcare. Orice lipsă de acces arată ca „nu există” (nu dezvăluim fișierul). */
+  async open(actor: GcsActor, id: string): Promise<GcsOpenedAttachment> {
+    const row = await this.deps.db.attachment.findUnique({ where: { id } });
+    if (!row) throw new GcsNotFound();
+    const allowed = row.contentType === null || row.contentId === null
+      ? actor.userId !== null && row.ownerId === actor.userId
+      : ((await this.access.get(row.contentType)?.(actor, row.contentId)) ?? false);
+    if (!allowed) throw new GcsNotFound();
+
+    const file = await this.deps.store.get(row.storageKey);
+    if (!file) throw new GcsNotFound();
+    return { body: file.body, size: file.size, mime: row.mime, filename: row.filename, inline: row.mime in IMAGE_FORMATS };
+  }
+
+  /** Șterge din store fișierele unui conținut șters (după commit-ul tranzacției). */
+  async deleteFor(contentType: string, contentIds: string[]): Promise<void> {
+    const rows = await this.deps.db.attachment.findMany({ where: { contentType, contentId: { in: contentIds } } });
+    for (const row of rows) await this.deps.store.delete(row.storageKey).catch(() => {});
+    await this.deps.db.attachment.deleteMany({ where: { id: { in: rows.map((r) => r.id) } } });
+  }
+}
