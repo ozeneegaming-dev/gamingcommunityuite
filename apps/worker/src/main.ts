@@ -6,6 +6,7 @@
  */
 import path from "node:path";
 import { GcsInstallState, writeWorkerHeartbeat } from "@gcs/core";
+import { BACKFILL_JOB } from "@gcs/modules";
 import { closeGcsServices, createGcsServices } from "@gcs/modules/services";
 
 const configDir = process.env.GCS_CONFIG_DIR ?? path.resolve(process.cwd(), ".gcs-config");
@@ -32,6 +33,8 @@ async function main(): Promise<void> {
   const services = createGcsServices({ configDir });
   const stopWorker = await services.jobs.start({ onError: (name, error) => log(`Jobul ${name} a eșuat`, error) });
   await writeWorkerHeartbeat(services.redis);
+  // Evaluarea inițială a membrilor existenți (o singură dată; jobul verifică marcajul).
+  await services.jobs.enqueue(BACKFILL_JOB, {}, { jobId: "achievements-backfill" });
   log(`Pornit; joburi: ${services.jobs.registered().map((j) => j.name).join(", ")}`);
 
   let stopping = false;

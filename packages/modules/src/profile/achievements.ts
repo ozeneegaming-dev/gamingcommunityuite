@@ -14,6 +14,9 @@ import type { AchievementTrigger, PrismaClient, Rank } from "@gcs/db";
 export const ACHIEVEMENTS_JOB = "achievements.evaluate";
 export const RANKS_RECOMPUTE_JOB = "achievements.recompute_ranks";
 export const MEMBERS_DAILY_JOB = "members.daily";
+export const BACKFILL_JOB = "achievements.backfill";
+/** Marcajul evaluării inițiale (site-urile actualizate din etapele anterioare sau importate). */
+const BACKFILL_DONE = "achievements.backfill_done";
 export const BADGES_ACP_SECTION = "members.badges";
 
 /** Evenimentele unui user din aceeași fereastră de 2 s produc o singură evaluare (specul etapei 3, §5). */
@@ -241,6 +244,26 @@ export class GcsAchievementService {
     return due.size;
   }
 
+  /**
+   * Evaluarea inițială, o singură dată: membrii existenți dinaintea regulilor (site actualizat, import) primesc
+   * rangul, badge-urile și punctele pentru pragurile deja atinse. Rulează în worker, în loturi; apoi pune un marcaj.
+   */
+  async backfill(): Promise<number> {
+    const { db } = this.deps;
+    if (await db.setting.findUnique({ where: { key: BACKFILL_DONE } })) return 0;
+    let cursor: string | undefined;
+    let count = 0;
+    for (;;) {
+      const users = await db.user.findMany({ take: BATCH, ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}), orderBy: { id: "asc" }, select: { id: true } });
+      if (users.length === 0) break;
+      for (const u of users) await this.evaluate(u.id);
+      count += users.length;
+      cursor = users[users.length - 1]!.id;
+    }
+    await db.setting.upsert({ where: { key: BACKFILL_DONE }, create: { key: BACKFILL_DONE, value: true }, update: { value: true } });
+    return count;
+  }
+
   // ─── Badge-uri manuale (staff) ───────────────────────────────────────────
 
   async awardBadge(actor: GcsActor, userId: string, badgeId: number, reason: string): Promise<void> {
@@ -326,6 +349,7 @@ export class GcsAchievementService {
       },
     });
     jobs.register({ name: RANKS_RECOMPUTE_JOB, handler: async () => void (await this.recomputeAllRanks()) });
+    jobs.register({ name: BACKFILL_JOB, handler: async () => void (await this.backfill()) });
     jobs.register({
       name: MEMBERS_DAILY_JOB,
       pattern: "0 4 * * *",

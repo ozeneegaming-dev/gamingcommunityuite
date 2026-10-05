@@ -151,3 +151,14 @@ describe("badge-uri manuale", () => {
     expect(await badgeKeys(w.member)).toEqual([]);
   });
 });
+
+describe("evaluarea inițială", () => {
+  test("membrii existenți primesc badge-urile pentru pragurile deja atinse, o singură dată", async () => {
+    await w.db.user.update({ where: { id: w.member.userId! }, data: { postsCount: 120 } });
+    expect(await w.achievements.backfill()).toBeGreaterThan(0);
+    expect(await badgeKeys(w.member)).toEqual(["first_post", "posts_100"]);
+    expect((await user(w.member)).rank?.name).toBe("Activ");
+    expect(await w.achievements.backfill()).toBe(0);
+  });
+});
+
