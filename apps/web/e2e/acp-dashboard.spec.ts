@@ -23,7 +23,7 @@ test("Root Admin cu 2FA intră pe /admin și vede widgetul „Înregistrări noi
 
 test("widgetul „Notițe admin” se mută din tastatură, iar ordinea rămâne după reîncărcare", async ({ page }) => {
   await enterAcpAsRoot(page, "RootB", "root-b@example.com");
-  expect(await widgetOrder(page, "side")).toEqual(["admin_notes", "online_users", "online_admins", "failed_acp_logins"]);
+  expect(await widgetOrder(page, "side")).toEqual(["moderation_queue", "admin_notes", "online_users", "online_admins", "failed_acp_logins"]);
 
   const handle = page.getByRole("button", { name: "Mută widgetul Notițe admin" });
   await handle.focus();
@@ -34,10 +34,10 @@ test("widgetul „Notițe admin” se mută din tastatură, iar ordinea rămâne
   await page.waitForTimeout(250);
   await page.keyboard.press("Space");
   await saved;
-  expect(await widgetOrder(page, "side")).toEqual(["online_users", "admin_notes", "online_admins", "failed_acp_logins"]);
+  expect(await widgetOrder(page, "side")).toEqual(["moderation_queue", "online_users", "admin_notes", "online_admins", "failed_acp_logins"]);
 
   await page.reload();
-  expect(await widgetOrder(page, "side")).toEqual(["online_users", "admin_notes", "online_admins", "failed_acp_logins"]);
+  expect(await widgetOrder(page, "side")).toEqual(["moderation_queue", "online_users", "admin_notes", "online_admins", "failed_acp_logins"]);
 });
 
 test("o notiță salvată rămâne după reîncărcare", async ({ page }) => {

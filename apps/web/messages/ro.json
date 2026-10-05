@@ -293,6 +293,12 @@
           "title": "Login-uri eșuate în ACP",
           "empty": "Niciun login eșuat",
           "unknown": "necunoscut"
+        },
+        "moderation_queue": {
+          "title": "Coadă moderare",
+          "pending": "{count, plural, one {# postare așteaptă aprobare} few {# postări așteaptă aprobare} other {# de postări așteaptă aprobare}}",
+          "reports": "{count, plural, one {# raport deschis} few {# rapoarte deschise} other {# de rapoarte deschise}}",
+          "open": "Deschide coada"
         }
       }
     },
@@ -606,6 +612,86 @@
       "moveUp": "Mută {name} mai sus",
       "moveDown": "Mută {name} mai jos",
       "empty": "Niciun prefix încă."
+    },
+    "queue": {
+      "title": "Coadă unificată",
+      "empty": "Nimic de aprobat.",
+      "topic": "Topic nou",
+      "reply": "Răspuns",
+      "in": "în {forum}",
+      "approve": "Aprobă",
+      "reject": "Respinge",
+      "rejectReason": "Respins de moderator",
+      "selectAll": "Selectează tot",
+      "select": "Selectează postarea {id}",
+      "approveSelected": "Aprobă selectatele",
+      "rejectSelected": "Respinge selectatele",
+      "reportsLink": "Rapoarte deschise: {count}"
+    },
+    "reports": {
+      "title": "Rapoarte",
+      "empty": "Niciun raport deschis.",
+      "reasons": "Motive",
+      "by": "de {name}",
+      "close": "Închide",
+      "hide": "Ascunde conținutul și închide",
+      "open": "Vezi postarea"
+    },
+    "reactions": {
+      "title": "Reputație & Reacții",
+      "help": "Greutatea se adaugă la reputația autorului (pozitivă, neutră sau negativă). Schimbarea ei nu recalculează reputația existentă.",
+      "key": "Cheie",
+      "label": "Etichetă",
+      "symbol": "Simbol",
+      "color": "Culoare",
+      "weight": "Greutate",
+      "enabled": "Activă",
+      "save": "Salvează",
+      "add": "Adaugă reacția",
+      "moveUp": "Mută {name} mai sus",
+      "moveDown": "Mută {name} mai jos"
+    },
+    "moderators": {
+      "title": "Moderatori",
+      "empty": "Niciun moderator pe forum. Moderatorii globali sunt grupurile cu „Moderator pe toate forumurile”.",
+      "forum": "Forum",
+      "who": "Moderator",
+      "powers": "Puteri",
+      "remove": "Scoate",
+      "add": "Adaugă moderatori",
+      "forums": "Forumuri",
+      "user": "Nume de utilizator",
+      "group": "sau grupul",
+      "noGroup": "—",
+      "submit": "Adaugă",
+      "power": {
+        "edit": "Editează",
+        "hide": "Ascunde",
+        "delete": "Șterge",
+        "move": "Mută",
+        "merge": "Unește",
+        "split": "Desparte",
+        "pin": "Fixează",
+        "lock": "Blochează",
+        "feature": "Evidențiază",
+        "approve": "Aprobă",
+        "warn": "Avertizează"
+      }
+    },
+    "savedActions": {
+      "title": "Acțiuni salvate",
+      "empty": "Nicio acțiune salvată.",
+      "name": "Nume",
+      "forums": "Forumuri (niciunul = toate)",
+      "lock": "Blochează topicul",
+      "pin": "Fixează topicul",
+      "feature": "Evidențiază topicul",
+      "moveTo": "Mută în",
+      "noMove": "(nu muta)",
+      "reply": "Răspuns predefinit (opțional)",
+      "save": "Salvează acțiunea",
+      "delete": "Șterge",
+      "steps": "Pași"
     }
   },
   "settings": {

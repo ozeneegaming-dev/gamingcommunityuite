@@ -1,6 +1,7 @@
 import { ACP_WIDGETS, checkHealth, type GcsAcpWidget } from "@gcs/core";
 import { GcsCard, GcsUserLink } from "@gcs/ui";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
@@ -21,7 +22,7 @@ const row = { display: "flex", justifyContent: "space-between", alignItems: "cen
 
 export default async function AcpDashboardPage() {
   const panel = await requireAcpPanel();
-  const { acp, acpDashboard } = services();
+  const { acp, acpDashboard, moderation } = services();
   if (!(await acp.can(panel.actor, "system.dashboard", "view"))) {
     // Un admin fără dashboard ajunge pe prima secțiune pe care o vede.
     const first = panel.menu[0]?.items[0]?.href;
@@ -32,7 +33,7 @@ export default async function AcpDashboardPage() {
 
   const t = await getTranslations("acp.dashboard");
   const format = await getFormatter();
-  const [layout, totals, registrations, health, note, online, admins, failed, canEditNote] = await Promise.all([
+  const [layout, totals, registrations, health, note, online, admins, failed, canEditNote, queue] = await Promise.all([
     acpDashboard.getLayout(panel.user.id),
     acpDashboard.totals(),
     acpDashboard.registrations(14),
@@ -42,6 +43,7 @@ export default async function AcpDashboardPage() {
     acpDashboard.onlineAdmins(),
     acpDashboard.failedAcpLogins(5),
     acp.can(panel.actor, "system.dashboard", "edit"),
+    moderation.queueCount(panel.actor),
   ]);
 
   const w = (key: GcsAcpWidget, k: string, values?: Record<string, string | number>) => t(`widgets.${key}.${k}`, values);
@@ -67,6 +69,22 @@ export default async function AcpDashboardPage() {
             csv: w("registrations", "csv"),
           }}
         />
+      ),
+    },
+    moderation_queue: {
+      title: w("moderation_queue", "title"),
+      body: (
+        <div data-testid="gcs-widget-moderation">
+          <div style={row}>
+            <span>{w("moderation_queue", "pending", { count: queue.pending })}</span>
+          </div>
+          <div style={row}>
+            <span>{w("moderation_queue", "reports", { count: queue.reports })}</span>
+          </div>
+          <p style={{ margin: 0, padding: "12px 16px" }}>
+            <Link href="/admin/members/moderation/queue">{w("moderation_queue", "open")}</Link>
+          </p>
+        </div>
       ),
     },
     system_health: {

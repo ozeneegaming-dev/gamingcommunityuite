@@ -5,6 +5,7 @@ export { canViewPost, registerForumContent } from "./forums/content";
 export { GcsForumCounters } from "./forums/counters";
 export { FORUMS_ACP_SECTION, GcsForumService, type GcsForumInput, type GcsForumOrderItem, type GcsForumPatch } from "./forums/forums";
 export * from "./forums/moderation";
+export * from "./forums/moderators";
 export { forumContainer, GcsForumPosting, POST_CONTENT_TYPE, type GcsForumDeps } from "./forums/posting";
 export { GcsPollService, validatePoll, type GcsPollInput, type GcsPollView } from "./forums/polls";
 export { GcsPrefixService, PREFIXES_ACP_SECTION, type GcsPrefixInput } from "./forums/prefixes";

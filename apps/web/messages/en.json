@@ -293,6 +293,12 @@
           "title": "Failed ACP logins",
           "empty": "No failed logins",
           "unknown": "unknown"
+        },
+        "moderation_queue": {
+          "title": "Moderation queue",
+          "pending": "{count, plural, one {# post awaiting approval} other {# posts awaiting approval}}",
+          "reports": "{count, plural, one {# open report} other {# open reports}}",
+          "open": "Open the queue"
         }
       }
     },
@@ -606,6 +612,86 @@
       "moveUp": "Move {name} up",
       "moveDown": "Move {name} down",
       "empty": "No prefixes yet."
+    },
+    "queue": {
+      "title": "Unified queue",
+      "empty": "Nothing to approve.",
+      "topic": "New topic",
+      "reply": "Reply",
+      "in": "in {forum}",
+      "approve": "Approve",
+      "reject": "Reject",
+      "rejectReason": "Rejected by a moderator",
+      "selectAll": "Select all",
+      "select": "Select post {id}",
+      "approveSelected": "Approve selected",
+      "rejectSelected": "Reject selected",
+      "reportsLink": "Open reports: {count}"
+    },
+    "reports": {
+      "title": "Reports",
+      "empty": "No open reports.",
+      "reasons": "Reasons",
+      "by": "by {name}",
+      "close": "Close",
+      "hide": "Hide content and close",
+      "open": "View post"
+    },
+    "reactions": {
+      "title": "Reputation & Reactions",
+      "help": "The weight is added to the author's reputation (positive, neutral or negative). Changing it does not recompute existing reputation.",
+      "key": "Key",
+      "label": "Label",
+      "symbol": "Symbol",
+      "color": "Color",
+      "weight": "Weight",
+      "enabled": "Enabled",
+      "save": "Save",
+      "add": "Add reaction",
+      "moveUp": "Move {name} up",
+      "moveDown": "Move {name} down"
+    },
+    "moderators": {
+      "title": "Moderators",
+      "empty": "No forum moderators. Global moderators are the groups with “Moderator in all forums”.",
+      "forum": "Forum",
+      "who": "Moderator",
+      "powers": "Powers",
+      "remove": "Remove",
+      "add": "Add moderators",
+      "forums": "Forums",
+      "user": "Username",
+      "group": "or group",
+      "noGroup": "—",
+      "submit": "Add",
+      "power": {
+        "edit": "Edit",
+        "hide": "Hide",
+        "delete": "Delete",
+        "move": "Move",
+        "merge": "Merge",
+        "split": "Split",
+        "pin": "Pin",
+        "lock": "Lock",
+        "feature": "Feature",
+        "approve": "Approve",
+        "warn": "Warn"
+      }
+    },
+    "savedActions": {
+      "title": "Saved actions",
+      "empty": "No saved actions.",
+      "name": "Name",
+      "forums": "Forums (none = all)",
+      "lock": "Lock the topic",
+      "pin": "Pin the topic",
+      "feature": "Feature the topic",
+      "moveTo": "Move to",
+      "noMove": "(don't move)",
+      "reply": "Canned reply (optional)",
+      "save": "Save action",
+      "delete": "Delete",
+      "steps": "Steps"
     }
   },
   "settings": {
