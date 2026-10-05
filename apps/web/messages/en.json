@@ -272,7 +272,8 @@
           "db": "Database",
           "redis": "Redis",
           "ok": "running",
-          "down": "not responding"
+          "down": "not responding",
+          "worker": "Background jobs (worker)"
         },
         "admin_notes": {
           "title": "Admin notes",
@@ -300,6 +301,13 @@
           "pending": "{count, plural, one {# post awaiting approval} other {# posts awaiting approval}}",
           "reports": "{count, plural, one {# open report} other {# open reports}}",
           "open": "Open the queue"
+        }
+      },
+      "banners": {
+        "workerDown": {
+          "title": "Background jobs are not running",
+          "since": "Last heartbeat from the worker: {time}. VIP expiry, rules and promotions are paused.",
+          "never": "The worker has not started yet. VIP expiry, rules and promotions are paused (start the `worker` service)."
         }
       }
     },

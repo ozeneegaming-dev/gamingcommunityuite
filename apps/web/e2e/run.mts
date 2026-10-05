@@ -1,7 +1,8 @@
 /**
  * Rulează testele E2E (modul ES: top-level await) pe o instanță completă, pornită și oprită automat:
  * PostgreSQL (embedded sau `TEST_PG_URL`), Redis (`redis-memory-server` sau `TEST_REDIS_URL`),
- * migrații + seed, apoi aplicația Next.js pe portul 3100 (build de producție + `next start`) și, la final, Playwright.
+ * migrații + seed, apoi aplicația Next.js pe portul 3100 (build de producție + `next start`), `gcs-worker` pentru fiecare
+ * instanță și, la final, Playwright.
  *
  * Folosire: `pnpm --filter @gcs/web test:e2e [argumente playwright]`, ex. `test:e2e auth`.
  * Codul de ieșire e cel al Playwright. La final, toate procesele pornite sunt oprite curat.
@@ -12,8 +13,8 @@ import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { ensureInstallCode, seedDefaults, GcsModuleRegistry } from "@gcs/core";
-import { coreModule, forumsModule } from "@gcs/modules";
+import { ensureInstallCode, seedDefaults } from "@gcs/core";
+import { createRegistry } from "@gcs/modules";
 import { PrismaClient } from "@gcs/db";
 import pg from "pg";
 
@@ -24,6 +25,7 @@ const prismaCli = path.join(dbDir, "node_modules/prisma/build/index.js");
 const schemaPath = path.join(dbDir, "prisma/schema.prisma");
 const nextBin = path.join(webDir, "node_modules/next/dist/bin/next");
 const playwrightBin = path.join(webDir, "node_modules/@playwright/test/cli.js");
+const workerDir = path.resolve(webDir, "../worker");
 const PORT = Number(process.env.GCS_E2E_PORT ?? 3100);
 const BASE_URL = `http://localhost:${PORT}`;
 /** A doua instanță, proaspătă și neinstalată, pentru testele installer-ului (`install.spec.ts`). */
@@ -120,10 +122,7 @@ async function prepareDatabase(baseUrl: string): Promise<string> {
     stdio: "pipe",
   });
   const db = new PrismaClient({ datasourceUrl: url.toString() });
-  const registry = new GcsModuleRegistry();
-  registry.register(coreModule);
-  registry.register(forumsModule);
-  await seedDefaults(db, registry);
+  await seedDefaults(db, createRegistry());
   await db.$disconnect();
   return url.toString();
 }
@@ -158,6 +157,16 @@ function run(bin: string, args: string[], env: NodeJS.ProcessEnv, stdio: "inheri
   return spawn(process.execPath, [bin, ...args], { cwd: webDir, env, stdio });
 }
 
+/** `gcs-worker` (din sursele TypeScript, cu tsx), cu același mediu ca instanța web pe care o deservește. */
+function startWorker(env: NodeJS.ProcessEnv): void {
+  const worker = spawn(process.execPath, ["--import", "tsx", "src/main.ts"], {
+    cwd: workerDir,
+    env,
+    stdio: process.env.GCS_E2E_VERBOSE ? "inherit" : "ignore",
+  });
+  cleanups.push(() => killTree(worker));
+}
+
 async function main(): Promise<number> {
   const [pgUrl, redisUrl] = await Promise.all([startPostgres(), startRedis()]);
   const databaseUrl = await prepareDatabase(pgUrl);
@@ -187,6 +196,7 @@ async function main(): Promise<number> {
   const nextArgs = mode === "start" ? ["start", "-p", String(PORT)] : ["dev", "-p", String(PORT)];
   const next = run(nextBin, nextArgs, env, process.env.GCS_E2E_VERBOSE ? "inherit" : "ignore");
   cleanups.push(() => killTree(next));
+  startWorker(env);
 
   // Instanța pentru installer: altă bază (goală), alt folder de configurare (neinstalat), altă bază Redis.
   // Doar cu build de producție: două `next dev` nu pot rula în același proiect.
@@ -197,19 +207,17 @@ async function main(): Promise<number> {
     const code = await ensureInstallCode(installConfigDir);
     const installRedis = new URL(redisUrl);
     installRedis.pathname = "/2";
-    const installServer = run(
-      nextBin,
-      ["start", "-p", String(INSTALL_PORT)],
-      {
-        ...env,
-        DATABASE_URL: await emptyDatabase(pgUrl, "redline_e2e_install"),
-        REDIS_URL: installRedis.toString(),
-        GCS_CONFIG_DIR: installConfigDir,
-        GCS_BASE_URL: INSTALL_URL,
-      },
-      process.env.GCS_E2E_VERBOSE ? "inherit" : "ignore",
-    );
+    const installInstanceEnv = {
+      ...env,
+      DATABASE_URL: await emptyDatabase(pgUrl, "redline_e2e_install"),
+      REDIS_URL: installRedis.toString(),
+      GCS_CONFIG_DIR: installConfigDir,
+      GCS_BASE_URL: INSTALL_URL,
+    };
+    const installServer = run(nextBin, ["start", "-p", String(INSTALL_PORT)], installInstanceEnv, process.env.GCS_E2E_VERBOSE ? "inherit" : "ignore");
     cleanups.push(() => killTree(installServer));
+    // Worker-ul așteaptă `installed.lock`, apoi pornește singur (ca în Docker, pe un site proaspăt).
+    startWorker(installInstanceEnv);
     Object.assign(installEnv, { GCS_E2E_INSTALL_URL: INSTALL_URL, GCS_E2E_INSTALL_CODE: code ?? "" });
     await waitForHealth(180_000, INSTALL_URL);
   }

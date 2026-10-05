@@ -272,7 +272,8 @@
           "db": "Baza de date",
           "redis": "Redis",
           "ok": "funcționează",
-          "down": "nu răspunde"
+          "down": "nu răspunde",
+          "worker": "Procese în fundal (worker)"
         },
         "admin_notes": {
           "title": "Notițe admin",
@@ -300,6 +301,13 @@
           "pending": "{count, plural, one {# postare așteaptă aprobare} few {# postări așteaptă aprobare} other {# de postări așteaptă aprobare}}",
           "reports": "{count, plural, one {# raport deschis} few {# rapoarte deschise} other {# de rapoarte deschise}}",
           "open": "Deschide coada"
+        }
+      },
+      "banners": {
+        "workerDown": {
+          "title": "Procesele în fundal nu rulează",
+          "since": "Ultimul semn de la worker: {time}. Expirarea VIP, regulile și promovările sunt în pauză.",
+          "never": "Worker-ul nu a pornit încă. Expirarea VIP, regulile și promovările sunt în pauză (pornește serviciul `worker`)."
         }
       }
     },

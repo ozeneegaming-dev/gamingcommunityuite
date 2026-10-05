@@ -14,8 +14,6 @@ import {
 } from "@gcs/core";
 import { createWorld } from "@gcs/core/test/world";
 import type { ForumType, PrismaClient } from "@gcs/db";
-import { coreModule } from "../src/core-module";
-import { forumsModule } from "../src/forums";
 import { registerForumContent } from "../src/forums/content";
 import { GcsForumService } from "../src/forums/forums";
 import { GcsForumModerationService } from "../src/forums/moderation";
@@ -27,13 +25,11 @@ import { GcsForumQueries } from "../src/forums/queries";
 import { GcsReadMarkerService } from "../src/forums/readMarkers";
 import { GcsForumSearch } from "../src/forums/search";
 import { GcsTopicService } from "../src/forums/topics";
+import { createRegistry } from "../src/registry";
 
 /** Registry-ul real: modulele din producție. */
 export function realRegistry(): GcsModuleRegistry {
-  const registry = new GcsModuleRegistry();
-  registry.register(coreModule);
-  registry.register(forumsModule);
-  return registry;
+  return createRegistry();
 }
 
 /** Un document Tiptap cu un singur paragraf. */

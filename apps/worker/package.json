@@ -1,0 +1,24 @@
+{
+  "name": "@gcs/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "tsx src/main.ts",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@gcs/core": "workspace:*",
+    "@gcs/db": "workspace:*",
+    "@gcs/modules": "workspace:*",
+    "tsx": "^4.23.15"
+  },
+  "devDependencies": {
+    "@gcs/config": "workspace:*",
+    "@types/node": "^22.0.0",
+    "eslint": "^9.30.0",
+    "typescript": "^5.9.0"
+  }
+}

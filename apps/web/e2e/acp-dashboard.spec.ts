@@ -73,3 +73,13 @@ test("un vizitator care deschide /admin primește 404", async ({ page }) => {
   const res = await page.goto("/admin/members");
   expect(res?.status()).toBe(404);
 });
+
+test("worker-ul pornit: /api/health raportează `worker: up`, iar dashboard-ul nu arată bannerul", async ({ page, request }) => {
+  // Worker-ul pornește odată cu serverul (e2e/run.mts) și scrie primul heartbeat imediat.
+  await expect
+    .poll(async () => ((await (await request.get("/api/health")).json()) as { worker?: string }).worker, { timeout: 60_000 })
+    .toBe("up");
+  await enterAcpAsRoot(page, "RootW", "root-w@example.com");
+  await expect(page.getByTestId("gcs-health-worker")).toContainText("funcționează");
+  await expect(page.getByTestId("gcs-banner-worker")).toHaveCount(0);
+});

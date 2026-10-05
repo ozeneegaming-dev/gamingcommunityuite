@@ -1,4 +1,4 @@
-import { ACP_WIDGETS, checkHealth, type GcsAcpWidget } from "@gcs/core";
+import { ACP_WIDGETS, checkHealth, workerStatus, type GcsAcpWidget } from "@gcs/core";
 import { GcsCard, GcsUserLink } from "@gcs/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -22,7 +22,7 @@ const row = { display: "flex", justifyContent: "space-between", alignItems: "cen
 
 export default async function AcpDashboardPage() {
   const panel = await requireAcpPanel();
-  const { acp, acpDashboard, moderation } = services();
+  const { acp, acpDashboard, moderation, redis } = services();
   if (!(await acp.can(panel.actor, "system.dashboard", "view"))) {
     // Un admin fără dashboard ajunge pe prima secțiune pe care o vede.
     const first = panel.menu[0]?.items[0]?.href;
@@ -33,7 +33,7 @@ export default async function AcpDashboardPage() {
 
   const t = await getTranslations("acp.dashboard");
   const format = await getFormatter();
-  const [layout, totals, registrations, health, note, online, admins, failed, canEditNote, queue] = await Promise.all([
+  const [layout, totals, registrations, health, note, online, admins, failed, canEditNote, queue, worker] = await Promise.all([
     acpDashboard.getLayout(panel.user.id),
     acpDashboard.totals(),
     acpDashboard.registrations(14),
@@ -44,6 +44,7 @@ export default async function AcpDashboardPage() {
     acpDashboard.failedAcpLogins(5),
     acp.can(panel.actor, "system.dashboard", "edit"),
     moderation.queueCount(panel.actor),
+    workerStatus(redis).catch(() => ({ up: false, lastBeatAt: null })),
   ]);
 
   const w = (key: GcsAcpWidget, k: string, values?: Record<string, string | number>) => t(`widgets.${key}.${k}`, values);
@@ -95,9 +96,13 @@ export default async function AcpDashboardPage() {
             <span>{w("system_health", "db")}</span>
             {status(health.db)}
           </div>
-          <div style={{ ...row, borderBottom: 0 }}>
+          <div style={row}>
             <span>{w("system_health", "redis")}</span>
             {status(health.redis)}
+          </div>
+          <div style={{ ...row, borderBottom: 0 }} data-testid="gcs-health-worker">
+            <span>{w("system_health", "worker")}</span>
+            {status(worker.up)}
           </div>
         </div>
       ),
@@ -180,6 +185,17 @@ export default async function AcpDashboardPage() {
         </h1>
         <span style={muted}>{allOk ? t("statusOk") : t("statusDegraded")}</span>
       </div>
+
+      {!worker.up && (
+        <GcsCard role="alert" data-testid="gcs-banner-worker" style={{ padding: "14px 18px", borderColor: "#FF4D57", display: "flex", flexDirection: "column", gap: 4 }}>
+          <strong>{t("banners.workerDown.title")}</strong>
+          <span style={muted}>
+            {worker.lastBeatAt
+              ? t("banners.workerDown.since", { time: format.relativeTime(worker.lastBeatAt) })
+              : t("banners.workerDown.never")}
+          </span>
+        </GcsCard>
+      )}
 
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 14 }}>
         {kpis.map((k) => (

@@ -5,6 +5,7 @@ services:
     build:
       context: .
       dockerfile: docker/web.Dockerfile
+      target: runner
     env_file: .env
     restart: unless-stopped
     depends_on:
@@ -14,6 +15,22 @@ services:
         condition: service_healthy
       minio:
         condition: service_started
+    volumes:
+      - gcsconfig:/app/config
+
+  # Joburile în fundal (BullMQ): expirarea VIP, reguli de realizări, promovări. Așteaptă singur instalarea.
+  worker:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+      target: worker
+    env_file: .env
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - gcsconfig:/app/config
 

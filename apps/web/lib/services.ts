@@ -1,85 +1,9 @@
 import "server-only";
-import {
-  GcsAcpDashboardService,
-  GcsAcpRoleService,
-  GcsAcpSearch,
-  GcsActorResolver,
-  GcsAttachmentService,
-  GcsContentRenderer,
-  GcsFollowService,
-  GcsReactionService,
-  GcsReportService,
-  GcsBanService,
-  GcsCache,
-  GcsEventBus,
-  GcsGroupService,
-  GcsLocalFileStore,
-  GcsMemberDirectory,
-  GcsModuleRegistry,
-  GcsPermissionService,
-  GcsRedisRateLimiter,
-  GcsS3FileStore,
-  GcsSettingsService,
-  GcsWarningService,
-  type GcsFileStore,
-} from "@gcs/core";
-import { PrismaClient } from "@gcs/db";
-import { readFileSync } from "node:fs";
-import path from "node:path";
-import {
-  coreModule,
-  forumsModule,
-  GcsForumPosting,
-  GcsForumModerationService,
-  GcsForumModeratorService,
-  GcsForumQueries,
-  GcsForumSearch,
-  GcsForumService,
-  GcsPollService,
-  GcsPrefixService,
-  GcsReadMarkerService,
-  registerForumContent,
-  GcsPostService,
-  GcsTopicService,
-} from "@gcs/modules";
-import Redis from "ioredis";
+import { closeGcsServices, createGcsServices, type GcsServices } from "@gcs/modules/services";
 import { revalidateTag } from "next/cache";
 import { gcsConfigDir } from "./config";
 
-export type GcsServices = {
-  db: PrismaClient;
-  redis: Redis;
-  cache: GcsCache;
-  bus: GcsEventBus;
-  registry: GcsModuleRegistry;
-  settings: GcsSettingsService;
-  permissions: GcsPermissionService;
-  acp: GcsAcpRoleService;
-  acpDashboard: GcsAcpDashboardService;
-  acpSearch: GcsAcpSearch;
-  groups: GcsGroupService;
-  members: GcsMemberDirectory;
-  bans: GcsBanService;
-  warnings: GcsWarningService;
-  actors: GcsActorResolver;
-  rateLimiter: GcsRedisRateLimiter;
-  files: GcsFileStore;
-  attachments: GcsAttachmentService;
-  forums: GcsForumService;
-  topics: GcsTopicService;
-  posts: GcsPostService;
-  forumQueries: GcsForumQueries;
-  readMarkers: GcsReadMarkerService;
-  follows: GcsFollowService;
-  reactions: GcsReactionService;
-  polls: GcsPollService;
-  prefixes: GcsPrefixService;
-  reports: GcsReportService;
-  moderation: GcsForumModerationService;
-  search: GcsForumSearch;
-  posting: GcsForumPosting;
-  forumModerators: GcsForumModeratorService;
-};
+export type { GcsServices } from "@gcs/modules/services";
 
 /** Revalidează paginile Next.js cache-uite; în afara unui request (ex. scripturi) nu e disponibil. */
 function revalidate(tag: string): void {
@@ -90,140 +14,26 @@ function revalidate(tag: string): void {
   }
 }
 
-/**
- * Variabilele scrise de installer în `.env.runtime` (ex. `DATABASE_URL` pentru o bază externă aleasă în wizard)
- * au prioritate față de mediul containerului.
- */
-function loadRuntimeEnv(): void {
-  let content: string;
-  try {
-    content = readFileSync(path.join(gcsConfigDir(), ".env.runtime"), "utf8");
-  } catch {
-    return;
-  }
-  for (const line of content.split(/\r?\n/)) {
-    const m = /^(DATABASE_URL|GCS_SECRET)=(.*)$/.exec(line);
-    if (m) process.env[m[1]!] = m[2]!.startsWith('"') ? (JSON.parse(m[2]!) as string) : m[2]!;
-  }
-}
-
-/** Host-ul public: din setarea `site.url`, altfel din `GCS_BASE_URL` (embed-urile Twitch îl cer). */
-function siteHost(siteUrl: string): string {
-  const url = siteUrl || process.env.GCS_BASE_URL || "http://localhost";
-  return URL.canParse(url) ? new URL(url).host : "localhost";
-}
-
-/** MinIO (S3) dacă e configurat (`docker compose`); altfel un folder local, în folderul de configurare (dev, E2E). */
-function createFileStore(): GcsFileStore {
-  const endpoint = process.env.S3_ENDPOINT;
-  if (endpoint) {
-    return new GcsS3FileStore({
-      endpoint,
-      accessKey: process.env.S3_ACCESS_KEY ?? "",
-      secretKey: process.env.S3_SECRET_KEY ?? "",
-      bucket: process.env.S3_BUCKET ?? "redline",
-    });
-  }
-  return new GcsLocalFileStore(path.join(gcsConfigDir(), "files"));
-}
-
 function createServices(): GcsServices {
-  loadRuntimeEnv();
-  const databaseUrl = process.env.DATABASE_URL;
-  const db = databaseUrl ? new PrismaClient({ datasourceUrl: databaseUrl }) : new PrismaClient();
-  const redis = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379", { maxRetriesPerRequest: 2 });
-  // Erorile de conexiune sunt raportate de /api/health; nu trebuie să oprească procesul.
-  redis.on("error", () => {});
-
-  const registry = new GcsModuleRegistry();
-  registry.register(coreModule);
-  registry.register(forumsModule);
-  // Permisiunea de test folosită de E2E (ruta /_test/container/…); există doar cu GCS_TEST_ROUTES=1.
-  if (process.env.GCS_TEST_ROUTES === "1") {
-    registry.register({
-      key: "e2e",
-      settings: [],
-      acpMenu: [],
-      eventListeners: [],
-      permissions: [
-        { key: "core.test_view", scope: "container", containerType: "test", labelKey: "permissions.core.test_view", default: {} },
-      ],
-    });
-  }
-
-  const cache = new GcsCache(redis);
-  const bus = new GcsEventBus({ cache, revalidate });
-  for (const m of registry.all()) {
-    for (const listener of m.eventListeners) bus.on(listener.event, listener.handler);
-  }
-
-  const settings = new GcsSettingsService({ db, cache, bus, registry });
-  const permissions = new GcsPermissionService({ db, cache, bus, registry });
-  const acp = new GcsAcpRoleService({ db, registry });
-  const acpDashboard = new GcsAcpDashboardService({ db, acp });
-  const acpSearch = new GcsAcpSearch({ db, registry, acp });
-  const groups = new GcsGroupService({ db, bus, permissions, acp });
-  const members = new GcsMemberDirectory({ db });
-  const bans = new GcsBanService({ db, cache, bus, acp });
-  const warnings = new GcsWarningService({ db, bus, acp, bans });
-  const actors = new GcsActorResolver({ db, cache });
-  const rateLimiter = new GcsRedisRateLimiter(redis);
-  const files = createFileStore();
-  const attachments = new GcsAttachmentService({ db, store: files, permissions, rateLimiter });
-  const forums = new GcsForumService({ db, bus, permissions, acp, registry });
-  const readMarkers = new GcsReadMarkerService({ db, settings });
-  const follows = new GcsFollowService({ db });
-  const posting = new GcsForumPosting({
-    db,
-    bus,
-    permissions,
-    settings,
-    rateLimiter,
-    renderer: new GcsContentRenderer(),
-    attachments,
-    siteHost: async () => siteHost(await settings.get<string>("site.url")),
+  return createGcsServices({
+    configDir: gcsConfigDir(),
+    revalidate,
+    // Permisiunea de test folosită de E2E (ruta /_test/container/…); există doar cu GCS_TEST_ROUTES=1.
+    extraModules:
+      process.env.GCS_TEST_ROUTES === "1"
+        ? [
+            {
+              key: "e2e",
+              settings: [],
+              acpMenu: [],
+              eventListeners: [],
+              permissions: [
+                { key: "core.test_view", scope: "container", containerType: "test", labelKey: "permissions.core.test_view", default: {} },
+              ],
+            },
+          ]
+        : [],
   });
-  const polls = new GcsPollService(posting);
-  const prefixes = new GcsPrefixService({ db, bus, acp });
-  const reactions = new GcsReactionService({ db, bus, cache, acp });
-  const reports = new GcsReportService({ db, bus, rateLimiter });
-  const posts = new GcsPostService(posting);
-  registerForumContent(posting, { reactions, attachments, reports, posts });
-
-  return {
-    db,
-    redis,
-    cache,
-    bus,
-    registry,
-    settings,
-    permissions,
-    acp,
-    acpDashboard,
-    acpSearch,
-    groups,
-    members,
-    bans,
-    warnings,
-    actors,
-    rateLimiter,
-    files,
-    attachments,
-    forums,
-    topics: new GcsTopicService(posting, { polls, prefixes }),
-    posts,
-    forumQueries: new GcsForumQueries({ db, cache, permissions, settings, readMarkers, follows, reactions, polls }),
-    readMarkers,
-    follows,
-    reactions,
-    polls,
-    prefixes,
-    reports,
-    moderation: new GcsForumModerationService(posting, { posts, reports, acp }),
-    search: new GcsForumSearch({ db, permissions, settings, rateLimiter }),
-    posting,
-    forumModerators: new GcsForumModeratorService({ db, permissions, acp }),
-  };
 }
 
 // Un singur set de servicii pe proces (în dev, Next.js reîncarcă modulele).
@@ -242,8 +52,5 @@ export async function resetServices(): Promise<void> {
   const current = globalForServices.gcsServices;
   globalForServices.gcsServices = undefined;
   (globalThis as unknown as { gcsAuth?: unknown }).gcsAuth = undefined;
-  if (current) {
-    await current.db.$disconnect().catch(() => {});
-    current.redis.disconnect();
-  }
+  if (current) await closeGcsServices(current);
 }

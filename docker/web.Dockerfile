@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
-# Imaginea serviciului `web` (Next.js standalone). Build din rădăcina monorepo-ului:
-#   docker compose build web
+# Imaginile serviciilor `web` (Next.js standalone, ținta implicită `runner`) și `worker` (ținta `worker`).
+# Build din rădăcina monorepo-ului: docker compose build
 
 FROM node:22-alpine AS base
 # OpenSSL: motorul Prisma îl cere pe Alpine (musl).
@@ -12,6 +12,16 @@ COPY . .
 RUN pnpm install --frozen-lockfile
 # Prin turbo, ca să ruleze întâi și `prisma generate` din @gcs/db (clientul Prisma).
 RUN pnpm turbo run build --filter=@gcs/web
+
+# `gcs-worker`: rulează din sursele TypeScript (tsx), cu dependențele workspace-ului (Prisma, sharp, argon2).
+# Același user `gcs` ca `web` (același UID), ca să poată citi `.env.runtime` (0600) din volumul de configurare.
+FROM build AS worker
+ENV NODE_ENV=production
+RUN addgroup -S gcs && adduser -S gcs -G gcs \
+ && mkdir -p /app/config && chown gcs:gcs /app/config
+USER gcs
+WORKDIR /app/apps/worker
+CMD ["node", "--import", "tsx", "src/main.ts"]
 
 FROM node:22-alpine AS runner
 RUN apk add --no-cache openssl

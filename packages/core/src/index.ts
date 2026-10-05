@@ -35,6 +35,8 @@ export * from "./install/checks";
 export * from "./install/runner";
 export * from "./install/seed";
 export * from "./install/state";
+export * from "./jobs/heartbeat";
+export * from "./jobs/queue";
 export * from "./moderation/bans";
 export * from "./moderation/warnings";
 export * from "./members/directory";

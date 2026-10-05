@@ -16,3 +16,4 @@ export { GcsForumSearch, type GcsSearchInput, type GcsSearchResult } from "./for
 export { DEFAULT_REACTIONS } from "./forums/seed";
 export { parseRef, slugify } from "./forums/slug";
 export { GcsTopicService, type GcsNewTopicInput, type GcsNewTopicResult } from "./forums/topics";
+export { appModules, createRegistry } from "./registry";

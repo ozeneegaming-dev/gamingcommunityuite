@@ -60,7 +60,8 @@ describe("migrateDatabase", { timeout: 120_000 }, () => {
 
   test("rezultatul e compatibil cu Prisma: `prisma migrate status` vede schema la zi", () => {
     const output = execFileSync(process.execPath, [prismaCli, "migrate", "status", "--schema", schemaPath], {
-      env: { ...process.env, DATABASE_URL: url },
+      // Sub încărcarea `pnpm test` (toate pachetele în paralel), conexiunea poate întârzia peste cele 5 s implicite.
+      env: { ...process.env, DATABASE_URL: `${url}${url.includes("?") ? "&" : "?"}connect_timeout=60` },
       encoding: "utf8",
     });
     expect(output).toContain("Database schema is up to date");
