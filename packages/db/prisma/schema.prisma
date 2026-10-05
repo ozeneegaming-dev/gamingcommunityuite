@@ -60,6 +60,33 @@ model User {
   reports        Report[]          @relation("ReportReporter")
   attachments    Attachment[]
 
+  // Profil, social, VIP (etapa 3). `privacy`: { profile, messages, wall, showOnline } (specul etapei 3 §6).
+  bio               String  @default("")
+  accentColor       String?
+  coverAttachmentId String?
+  coverPositionY    Int     @default(50)
+  privacy           Json    @default("{}")
+  points            Int     @default(0)
+  followersCount    Int     @default(0)
+  solutionsCount    Int     @default(0)
+  rankId            Int?
+  nameStyleId       Int?
+  avatarFrameId     Int?
+
+  rank             Rank?                     @relation(fields: [rankId], references: [id], onDelete: SetNull)
+  nameStyle        NameStyle?                @relation(fields: [nameStyleId], references: [id], onDelete: SetNull)
+  avatarFrame      AvatarFrame?              @relation(fields: [avatarFrameId], references: [id], onDelete: SetNull)
+  profileValues    ProfileFieldValue[]
+  wallPosts        StatusUpdate[]            @relation("StatusProfile")
+  statusesWritten  StatusUpdate[]            @relation("StatusAuthor")
+  ignoring         UserIgnore[]              @relation("IgnoreOwner")
+  ignoredBy        UserIgnore[]              @relation("IgnoreTarget")
+  conversations    ConversationParticipant[]
+  messagesWritten  ConversationMessage[]
+  badges           UserBadge[]
+  achievementLog   AchievementLog[]
+  vipSubscriptions VipSubscription[]
+
   @@index([primaryGroupId])
   @@map("users")
 }
@@ -150,6 +177,9 @@ model Group {
   containerPermissions ContainerPermission[]
   moderators           Moderator[]
   acpRoles             AcpRoleAssignment[]
+  promotionsTo         GroupPromotion[]
+  vipSubscriptions     VipSubscription[]
+  vipLog               VipLog[]
 
   @@map("groups")
 }
@@ -706,4 +736,358 @@ model ModSavedAction {
   actions  Json
 
   @@map("mod_saved_actions")
+}
+
+// ─── Profil, social, VIP (etapa 3, specul etapei §4) ─────────────────────────
+
+enum ProfileFieldType {
+  TEXT
+  TEXTAREA
+  URL
+  NUMBER
+  SELECT
+}
+
+/// Tabul în care apare câmpul pe profil.
+enum ProfileFieldSection {
+  ABOUT
+  GAMES
+}
+
+enum FieldVisibility {
+  PUBLIC
+  MEMBERS
+  STAFF
+}
+
+/// Câmp custom de profil, definit în ACP → Membri → Setări membri → Profiluri.
+model ProfileField {
+  id         Int                 @id @default(autoincrement())
+  key        String              @unique
+  label      String
+  type       ProfileFieldType    @default(TEXT)
+  options    String[]
+  section    ProfileFieldSection @default(ABOUT)
+  required   Boolean             @default(false)
+  maxLength  Int                 @default(200)
+  visibility FieldVisibility     @default(PUBLIC)
+  showOnCard Boolean             @default(false)
+  position   Int                 @default(0)
+
+  values ProfileFieldValue[]
+
+  @@map("profile_fields")
+}
+
+model ProfileFieldValue {
+  userId  String
+  fieldId Int
+  value   String
+
+  user  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  field ProfileField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@id([userId, fieldId])
+  @@index([fieldId])
+  @@map("profile_field_values")
+}
+
+/// Un status pe peretele unui profil. `parentId` = răspuns (un singur nivel).
+model StatusUpdate {
+  id            Int               @id @default(autoincrement())
+  profileUserId String
+  authorId      String?
+  parentId      Int?
+  contentJson   Json
+  contentHtml   String
+  visibility    ContentVisibility @default(VISIBLE)
+  repliesCount  Int               @default(0)
+  ip            String?
+  createdAt     DateTime          @default(now())
+
+  profileUser User           @relation("StatusProfile", fields: [profileUserId], references: [id], onDelete: Cascade)
+  author      User?          @relation("StatusAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  parent      StatusUpdate?  @relation("StatusReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies     StatusUpdate[] @relation("StatusReplies")
+
+  @@index([profileUserId, parentId, createdAt])
+  @@map("status_updates")
+}
+
+model UserIgnore {
+  userId    String
+  ignoredId String
+  posts     Boolean  @default(true)
+  messages  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  user    User @relation("IgnoreOwner", fields: [userId], references: [id], onDelete: Cascade)
+  ignored User @relation("IgnoreTarget", fields: [ignoredId], references: [id], onDelete: Cascade)
+
+  @@id([userId, ignoredId])
+  @@index([ignoredId])
+  @@map("user_ignores")
+}
+
+/// Conversație privată cu mai mulți participanți. `lastMessageId` nu are cheie străină (evită ciclul).
+model Conversation {
+  id            Int      @id @default(autoincrement())
+  title         String
+  starterId     String?
+  lastMessageId Int?
+  lastMessageAt DateTime @default(now())
+  messagesCount Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  participants ConversationParticipant[]
+  messages     ConversationMessage[]
+
+  @@map("conversations")
+}
+
+/// `leftAt` setat = a părăsit conversația (nu o mai vede).
+model ConversationParticipant {
+  conversationId    Int
+  userId            String
+  joinedAt          DateTime  @default(now())
+  leftAt            DateTime?
+  lastReadMessageId Int       @default(0)
+  invitedById       String?
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+  @@index([userId, leftAt])
+  @@map("conversation_participants")
+}
+
+model ConversationMessage {
+  id             Int       @id @default(autoincrement())
+  conversationId Int
+  authorId       String?
+  contentJson    Json
+  contentHtml    String
+  editedAt       DateTime?
+  ip             String?
+  createdAt      DateTime  @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  author       User?        @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([conversationId, id])
+  @@map("conversation_messages")
+}
+
+/// Rang: pragurile null nu se cer. Se acordă cel mai înalt rang (după `position`) cu toate pragurile completate atinse.
+model Rank {
+  id            Int     @id @default(autoincrement())
+  name          String
+  icon          String?
+  minPosts      Int?
+  minPoints     Int?
+  minReputation Int?
+  position      Int     @default(0)
+
+  users User[]
+
+  @@map("ranks")
+}
+
+/// Badge: simbol scurt (1–3 caractere) sau imagine. `manual` = acordat doar de staff.
+model Badge {
+  id                Int     @id @default(autoincrement())
+  key               String  @unique
+  name              String
+  description       String  @default("")
+  symbol            String?
+  imageAttachmentId String?
+  color             String
+  manual            Boolean @default(false)
+  points            Int     @default(0)
+  position          Int     @default(0)
+
+  users UserBadge[]
+  rules AchievementRule[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  id          Int      @id @default(autoincrement())
+  userId      String
+  badgeId     Int
+  awardedById String?
+  reason      String?
+  createdAt   DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@index([badgeId])
+  @@map("user_badges")
+}
+
+/// Ce declanșează o regulă. `EACH_*` dau puncte la fiecare eveniment; restul au prag și se acordă o singură dată.
+enum AchievementTrigger {
+  POSTS_COUNT
+  REPUTATION
+  POINTS
+  MEMBER_DAYS
+  SOLUTIONS_COUNT
+  IS_VIP
+  EACH_POST
+  EACH_REACTION_RECEIVED
+  EACH_SOLUTION
+}
+
+model AchievementRule {
+  id        Int                @id @default(autoincrement())
+  key       String?            @unique // regulile din seed; null pentru cele create în ACP
+  name      String
+  trigger   AchievementTrigger
+  threshold Int                @default(0)
+  points    Int                @default(0)
+  badgeId   Int?
+  enabled   Boolean            @default(true)
+  position  Int                @default(0)
+
+  badge Badge?           @relation(fields: [badgeId], references: [id], onDelete: SetNull)
+  log   AchievementLog[]
+
+  @@map("achievement_rules")
+}
+
+/// Ce s-a acordat prin reguli. `uniqueKey` (ex. `rule:3`, `post:120`) împiedică acordarea dublă.
+model AchievementLog {
+  id         Int      @id @default(autoincrement())
+  userId     String
+  ruleId     Int?
+  points     Int      @default(0)
+  uniqueKey  String?
+  contentRef String?
+  createdAt  DateTime @default(now())
+
+  user User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rule AchievementRule? @relation(fields: [ruleId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, uniqueKey])
+  @@index([userId, createdAt])
+  @@map("achievement_log")
+}
+
+/// Promovare automată: din unul dintre `fromGroupIds`, cu toate pragurile completate atinse → `toGroupId`.
+model GroupPromotion {
+  id            Int     @id @default(autoincrement())
+  name          String
+  fromGroupIds  Int[]
+  toGroupId     Int
+  asPrimary     Boolean @default(true)
+  minPosts      Int?
+  minDays       Int?
+  minReputation Int?
+  minPoints     Int?
+  enabled       Boolean @default(true)
+  position      Int     @default(0)
+
+  toGroup Group @relation(fields: [toGroupId], references: [id], onDelete: Cascade)
+
+  @@map("group_promotions")
+}
+
+enum VipSource {
+  MANUAL
+  STORE
+}
+
+enum VipStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+enum VipAction {
+  GRANT
+  EXTEND
+  REVOKE
+  EXPIRE
+}
+
+/// Abonament VIP. `expiresAt` null = permanent. Cel mult unul `ACTIVE` pe user (index unic parțial, în migrație).
+model VipSubscription {
+  id          Int       @id @default(autoincrement())
+  userId      String
+  groupId     Int
+  startsAt    DateTime  @default(now())
+  expiresAt   DateTime?
+  source      VipSource @default(MANUAL)
+  grantedById String?
+  status      VipStatus @default(ACTIVE)
+  warnedAt    DateTime?
+  madePrimary Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([status, expiresAt])
+  @@index([userId, status])
+  @@map("vip_subscriptions")
+}
+
+model VipLog {
+  id        Int       @id @default(autoincrement())
+  userId    String
+  groupId   Int?
+  action    VipAction
+  expiresAt DateTime?
+  actorId   String?
+  note      String?
+  createdAt DateTime  @default(now())
+
+  group Group? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@map("vip_log")
+}
+
+/// Stil de nume ales de user (clasa `gcs-name--{key}`; cheile încep cu `ns_`). Disponibil pentru toți, pe grupuri sau pe badge-uri.
+model NameStyle {
+  id        Int     @id @default(autoincrement())
+  key       String  @unique
+  name      String
+  style     Json
+  allGroups Boolean @default(false)
+  groupIds  Int[]
+  badgeIds  Int[]
+  position  Int     @default(0)
+
+  users User[]
+
+  @@map("name_styles")
+}
+
+enum FrameKind {
+  CSS
+  IMAGE
+}
+
+/// Ramă de avatar (clasa `gcs-avatarFrame--{key}`): CSS (conic-gradient) sau imagine.
+model AvatarFrame {
+  id                Int       @id @default(autoincrement())
+  key               String    @unique
+  name              String
+  kind              FrameKind @default(CSS)
+  style             Json?
+  imageAttachmentId String?
+  allGroups         Boolean   @default(false)
+  groupIds          Int[]
+  badgeIds          Int[]
+  position          Int       @default(0)
+
+  users User[]
+
+  @@map("avatar_frames")
 }

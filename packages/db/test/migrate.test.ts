@@ -86,6 +86,32 @@ describe("migrateDatabase", { timeout: 120_000 }, () => {
     expect(update.applied).toEqual(ALL_MIGRATIONS.filter((m) => m >= "20261006"));
   });
 
+  test("actualizarea unui site din etapa 2 (cu useri) aplică migrația etapei 3 și completează valorile implicite", async () => {
+    await admin(async (c) => {
+      await c.query(`DROP DATABASE IF EXISTS "${DB}" WITH (FORCE)`);
+      await c.query(`CREATE DATABASE "${DB}"`);
+    });
+    const stage2 = mkdtempSync(path.join(os.tmpdir(), "gcs-stage2-"));
+    for (const name of ALL_MIGRATIONS.filter((m) => m < "20261007")) cpSync(path.join(migrationsDir, name), path.join(stage2, name), { recursive: true });
+    await migrateDatabase(url, stage2);
+    rmSync(stage2, { recursive: true, force: true });
+    const client = new pg.Client({ connectionString: url });
+    await client.connect();
+    try {
+      await client.query(`INSERT INTO groups (key, name) VALUES ('member', 'Membru')`);
+      await client.query(
+        `INSERT INTO users (id, name, "nameNormalized", email, "primaryGroupId", "updatedAt") VALUES ('u1', 'Mara', 'mara', 'mara@example.com', 1, now())`,
+      );
+
+      const update = await migrateDatabase(url, migrationsDir);
+      expect(update.applied).toEqual(ALL_MIGRATIONS.filter((m) => m >= "20261007"));
+      const { rows } = await client.query(`SELECT bio, points, privacy FROM users WHERE id = 'u1'`);
+      expect(rows[0]).toEqual({ bio: "", points: 0, privacy: {} });
+    } finally {
+      await client.end();
+    }
+  });
+
   test("două rulări simultane nu aplică migrațiile de două ori (lock)", async () => {
     await admin(async (c) => {
       await c.query(`DROP DATABASE IF EXISTS "${DB}" WITH (FORCE)`);
