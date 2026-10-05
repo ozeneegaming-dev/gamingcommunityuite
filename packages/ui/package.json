@@ -7,7 +7,8 @@
     ".": "./src/index.ts",
     "./tokens.css": "./src/tokens.css",
     "./base.css": "./src/base.css",
-    "./theme.css": "./src/theme.css"
+    "./theme.css": "./src/theme.css",
+    "./themes.css": "./src/themes.css"
   },
   "scripts": {
     "lint": "eslint .",

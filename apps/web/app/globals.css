@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "@gcs/ui/tokens.css";
+@import "@gcs/ui/themes.css";
 @import "@gcs/ui/theme.css";
 @import "@gcs/ui/base.css";
 

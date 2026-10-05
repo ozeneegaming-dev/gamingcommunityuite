@@ -1,6 +1,7 @@
 import { testDb, truncateAll } from "@gcs/db/test/helpers";
 import { GcsAcpRoleService } from "../src/acp/roles";
 import { GcsActorResolver } from "../src/auth/actor";
+import { normalizeUsername } from "../src/auth/usernames";
 import { GcsCache } from "../src/cache";
 import { GcsEventBus, type GcsEvent } from "../src/events";
 import { GcsGroupService } from "../src/groups/service";
@@ -48,7 +49,7 @@ export async function createWorld() {
     return db.user.create({
       data: {
         name,
-        nameNormalized: name.toLowerCase(),
+        nameNormalized: normalizeUsername(name),
         email: `${name.toLowerCase()}${counter}@mail.com`,
         primaryGroupId: groups[primaryGroup]!,
         groups: { create: secondary.map((g) => ({ groupId: groups[g]! })) },

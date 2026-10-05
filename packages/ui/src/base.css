@@ -446,3 +446,120 @@ textarea.gcs-input {
     scroll-behavior: auto !important;
   }
 }
+
+/* ─── Shell ACP (macheta Admin): bară de aplicații 96px, submeniu 236px, off-canvas pe mobil ─────── */
+
+.gcs-acp {
+  display: flex;
+  min-height: 100vh;
+  background: var(--gcs-bg);
+  color: var(--gcs-text);
+}
+.gcs-acpShell__nav {
+  display: flex;
+  flex: 0 0 auto;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+.gcs-acpRail {
+  width: 96px;
+  background: var(--gcs-chrome);
+  border-right: 1px solid var(--gcs-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 0;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+.gcs-acpSub {
+  width: 236px;
+  background: var(--gcs-chrome2);
+  border-right: 1px solid var(--gcs-border);
+  padding: 16px 12px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.gcs-acpMain {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.gcs-acpHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--gcs-border);
+  background: var(--gcs-chrome);
+}
+.gcs-acpShell__menuBtn {
+  display: none;
+}
+.gcs-acpShell__backdrop {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .gcs-acpShell__menuBtn {
+    display: inline-flex;
+  }
+  .gcs-acpShell__nav {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+  }
+  .gcs-acpShell__nav--open {
+    transform: none;
+  }
+  .gcs-acpShell__backdrop--open {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: rgba(0, 0, 0, 0.55);
+    border: 0;
+  }
+}
+
+.gcs-acpSearch {
+  position: relative;
+  flex: 1 1 320px;
+  max-width: 520px;
+}
+.gcs-acpSearch__results {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  background: var(--gcs-surface);
+  border: 1px solid var(--gcs-border);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  max-height: 420px;
+  overflow-y: auto;
+}
+.gcs-acpSearch__result,
+.gcs-root a.gcs-acpSearch__result {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 8px;
+  color: var(--gcs-text);
+  font-size: 14px;
+}
+.gcs-acpSearch__result:hover,
+.gcs-acpSearch__result[aria-selected="true"] {
+  background: var(--gcs-surface2);
+}

@@ -89,7 +89,8 @@ function createAuth(config: GcsAuthConfig) {
       ipAddress: { ipAddressHeaders: ["x-forwarded-for"] },
     },
     plugins: [
-      twoFactor({ issuer: config.siteName }),
+      // allowPasswordless: și conturile fără parolă (doar Discord/Steam) pot activa 2FA, cerut pentru ACP.
+      twoFactor({ issuer: config.siteName, allowPasswordless: true }),
       // Cloudflare Turnstile la înregistrare, doar când e configurat în ACP (spec §15).
       ...(config.turnstileSecret
         ? [captcha({ provider: "cloudflare-turnstile", secretKey: config.turnstileSecret, endpoints: ["/sign-up/email"] })]

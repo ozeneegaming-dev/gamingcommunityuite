@@ -1,5 +1,9 @@
 // @gcs/core — logica de business (servicii Gcs*), fără UI.
+export * from "./acp/dashboard";
+export * from "./acp/guard";
+export * from "./acp/menu";
 export * from "./acp/roles";
+export * from "./acp/search";
 export * from "./audit";
 export * from "./auth/actor";
 export * from "./auth/passwords";

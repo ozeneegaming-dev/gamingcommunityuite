@@ -1,0 +1,34 @@
+/*
+ * Temele: implicit întunecată (spec §1). `data-theme="light"` și `data-theme="auto"` (după sistem)
+ * schimbă tokenurile. `--gcs-chrome*` sunt fundalurile barelor (header, meniul ACP) din machete.
+ */
+:root {
+  --gcs-chrome: #0F1116;
+  --gcs-chrome2: #111319;
+}
+
+[data-theme="light"] {
+  --gcs-bg: #F4F5F7;
+  --gcs-surface: #FFFFFF;
+  --gcs-surface2: #EEF0F3;
+  --gcs-border: #D9DCE2;
+  --gcs-text: #14161C;
+  --gcs-muted: #5B6170;
+  --gcs-accentInk: #C21F31;
+  --gcs-chrome: #FFFFFF;
+  --gcs-chrome2: #F8F9FB;
+}
+
+@media (prefers-color-scheme: light) {
+  [data-theme="auto"] {
+    --gcs-bg: #F4F5F7;
+    --gcs-surface: #FFFFFF;
+    --gcs-surface2: #EEF0F3;
+    --gcs-border: #D9DCE2;
+    --gcs-text: #14161C;
+    --gcs-muted: #5B6170;
+    --gcs-accentInk: #C21F31;
+    --gcs-chrome: #FFFFFF;
+    --gcs-chrome2: #F8F9FB;
+  }
+}

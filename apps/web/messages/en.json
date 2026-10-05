@@ -75,5 +75,226 @@
     "rate_limited": "Too many requests. Try again later.",
     "conflict": "This action conflicts with the current state.",
     "csrf": "The request could not be verified. Reload the page."
+  },
+  "acp": {
+    "title": "Admin control panel",
+    "apps": {
+      "system": "System",
+      "community": "Community",
+      "members": "Members",
+      "vip": "VIP & Store",
+      "gaming": "Gaming",
+      "pages": "Pages",
+      "stats": "Statistics",
+      "appearance": "Appearance"
+    },
+    "appsNav": "ACP applications",
+    "submenuNav": "{app} menu",
+    "home": "RED-LINE ACP",
+    "reorderApps": "Reorder applications",
+    "reorderDone": "Done",
+    "moveUp": "Move {app} up",
+    "moveDown": "Move {app} down",
+    "openMenu": "Menu",
+    "closeMenu": "Close menu",
+    "header": {
+      "search": "Search the ACP",
+      "searchPlaceholder": "Search settings, members, groups…",
+      "viewSite": "View site",
+      "theme": "Theme",
+      "themes": {
+        "auto": "Auto",
+        "light": "Light",
+        "dark": "Dark"
+      },
+      "noResults": "No results",
+      "resultGroups": {
+        "settings": "Settings",
+        "members": "Members",
+        "groups": "Groups"
+      },
+      "twoFactorOn": "2FA on",
+      "logout": "Sign out"
+    },
+    "menu": {
+      "system": {
+        "overview": "Overview",
+        "dashboard": "Dashboard",
+        "files": "Files",
+        "site_features": "Site features",
+        "applications": "Applications",
+        "integrations": "Integrations",
+        "menu_manager": "Menu manager",
+        "api": "API",
+        "webhooks": "Webhooks",
+        "rss_import": "RSS import",
+        "settings": "Settings",
+        "settings_general": "General",
+        "settings_terms": "Terms & Privacy",
+        "settings_posting": "Posting & Editor",
+        "settings_email": "Email",
+        "settings_auth": "Login & Registration",
+        "settings_contact": "Contact",
+        "settings_2fa": "Two-factor authentication",
+        "settings_advanced": "Advanced",
+        "settings_pwa": "Web App (PWA)",
+        "discovery": "Content discovery",
+        "search": "Search",
+        "streams": "Streams",
+        "rss": "RSS",
+        "tags": "Tags",
+        "promotion": "Promotion",
+        "ads": "Advertisements",
+        "seo": "SEO",
+        "share": "Share",
+        "support": "Support",
+        "status": "System status",
+        "logs": "System logs",
+        "cache": "Clear cache",
+        "conversions": "Conversions",
+        "import": "IPS / Indungi import"
+      },
+      "members": {
+        "members": "Members",
+        "groups": "Groups",
+        "promotions": "Group promotions",
+        "ip_tools": "IP tools",
+        "gdpr": "GDPR requests",
+        "achievements": "Achievements",
+        "achievement_rules": "Rules",
+        "ranks": "Ranks",
+        "badges": "Badges",
+        "achievement_settings": "Achievement settings",
+        "member_settings": "Member settings",
+        "profiles": "Profiles",
+        "reputation": "Reputation & Reactions",
+        "notifications": "Notifications",
+        "bans": "Bans",
+        "referral": "Referrals",
+        "moderation": "Moderation",
+        "queue": "Unified queue",
+        "reports": "Reports",
+        "antispam": "Anti-spam",
+        "warnings": "Warnings",
+        "tickets": "Tickets",
+        "staff": "Staff",
+        "moderators": "Moderators",
+        "acp_roles": "Administrators and ACP roles",
+        "staff_page": "Staff page",
+        "bulk_mail": "Bulk mail"
+      }
+    },
+    "comingSoon": {
+      "body": "This section arrives in a later stage of the platform.",
+      "back": "Back to dashboard"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "statusOk": "RED-LINE · all services are running",
+      "statusDegraded": "RED-LINE · some services are not responding",
+      "kpis": {
+        "members": "Members",
+        "today": "Registrations today",
+        "online": "Online now"
+      },
+      "move": "Move widget {title}",
+      "collapse": "Collapse {title}",
+      "expand": "Expand {title}",
+      "moveToOther": "Move {title} to the other column",
+      "widgets": {
+        "registrations": {
+          "title": "New registrations",
+          "subtitle": "last 14 days",
+          "series": "Registrations",
+          "area": "Area",
+          "column": "Columns",
+          "bar": "Bars",
+          "csv": "CSV"
+        },
+        "system_health": {
+          "title": "System status",
+          "db": "Database",
+          "redis": "Redis",
+          "ok": "running",
+          "down": "not responding"
+        },
+        "admin_notes": {
+          "title": "Admin notes",
+          "label": "Admin notes",
+          "save": "Save",
+          "saved": "Saved",
+          "updated": "Updated by {name} · {time}",
+          "never": "No notes yet"
+        },
+        "online_users": {
+          "title": "Members online",
+          "body": "{count, plural, one {# active member} other {# active members}} in the last 15 minutes"
+        },
+        "online_admins": {
+          "title": "Admins online",
+          "empty": "No admin is active right now"
+        },
+        "failed_acp_logins": {
+          "title": "Failed ACP logins",
+          "empty": "No failed logins",
+          "unknown": "unknown"
+        }
+      }
+    },
+    "reauth": {
+      "title": "Confirm your identity",
+      "subtitle": "For safety, the ACP asks for your password and 2FA code every 12 hours or when your IP changes.",
+      "password": "Password",
+      "code": "2FA code",
+      "submit": "Enter the ACP",
+      "errors": {
+        "invalid": "The password or 2FA code is not correct",
+        "rate_limited": "Too many attempts. Try again in a few minutes."
+      }
+    },
+    "twoFactorSetup": {
+      "title": "Enable two-step verification",
+      "subtitle": "The ACP requires 2FA. Scan the QR code with an authenticator app (Google Authenticator, Authy, 1Password…).",
+      "password": "Account password",
+      "start": "Continue",
+      "secret": "Key for manual entry",
+      "backupCodes": "Backup codes (keep them somewhere safe)",
+      "code": "Code from the app",
+      "verify": "Enable 2FA",
+      "qr": "QR code for the authenticator app",
+      "errors": {
+        "password": "The password is not correct",
+        "code": "The code is not correct",
+        "generic": "Something went wrong. Please try again."
+      }
+    }
+  },
+  "settings": {
+    "site": {
+      "name": "Site name",
+      "url": "Site address (URL)",
+      "locale": "Default language",
+      "timezone": "Time zone",
+      "theme": "Default theme"
+    },
+    "email": {
+      "smtp_host": "SMTP server",
+      "smtp_port": "SMTP port",
+      "smtp_user": "SMTP username",
+      "smtp_pass": "SMTP password",
+      "from": "Sender address"
+    },
+    "auth": {
+      "registration_open": "Registration open",
+      "email_confirm": "Email confirmation",
+      "discord_client_id": "Discord: Client ID",
+      "discord_client_secret": "Discord: Client Secret",
+      "steam_api_key": "Steam: Web API key",
+      "turnstile_site_key": "Turnstile: Site Key",
+      "turnstile_secret": "Turnstile: Secret Key"
+    },
+    "system": {
+      "maintenance": "Maintenance mode"
+    }
   }
 }

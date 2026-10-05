@@ -3,6 +3,9 @@ import type { GcsCache } from "../cache";
 import { bannedSessionKey, findActiveBan } from "../moderation/bans";
 import type { GcsActor } from "../permissions/types";
 
+/** `lastActiveAt` se actualizează cel mult o dată la 5 minute (pentru „cine e online”), nu la fiecare request. */
+const ACTIVITY_THROTTLE_MS = 5 * 60_000;
+
 /**
  * Rezolvă cine face request-ul (spec §6.3): sesiunea, grupurile și bannurile active (cont, email, IP).
  * La un ban de cont, șterge sesiunile userului și întoarce un vizitator cu `isBanned: true`.
@@ -28,7 +31,15 @@ export class GcsActorResolver {
           where: { token: req.sessionToken },
           select: {
             expiresAt: true,
-            user: { select: { id: true, email: true, primaryGroupId: true, groups: { select: { groupId: true } } } },
+            user: {
+              select: {
+                id: true,
+                email: true,
+                primaryGroupId: true,
+                lastActiveAt: true,
+                groups: { select: { groupId: true } },
+              },
+            },
           },
         })
       : null;
@@ -47,6 +58,10 @@ export class GcsActorResolver {
       return this.guest(req.ip, true);
     }
     if (ipBanned) return this.guest(req.ip, true);
+
+    if (!user.lastActiveAt || now.getTime() - user.lastActiveAt.getTime() > ACTIVITY_THROTTLE_MS) {
+      await db.user.update({ where: { id: user.id }, data: { lastActiveAt: now } });
+    }
 
     return {
       userId: user.id,

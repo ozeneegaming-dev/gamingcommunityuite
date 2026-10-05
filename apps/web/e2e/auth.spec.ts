@@ -1,46 +1,16 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { formAlert, login, logout, PASSWORD, register, useFreshIp } from "./helpers";
 
-// Fiecare test are propriul IP (antetul X-Forwarded-For), ca limita de 5 login-uri / 15 minute să nu se adune între teste.
-let ipCounter = 10;
 test.beforeEach(async ({ context }) => {
-  ipCounter++;
-  await context.setExtraHTTPHeaders({ "x-forwarded-for": `198.51.100.${ipCounter}` });
+  await useFreshIp(context);
 });
 
-/** Eroarea afișată în formular (Next.js mai are un `role="alert"` pentru anunțarea rutelor). */
-const formAlert = (page: Page) => page.locator("form [role=alert]");
-
-async function register(page: Page, name: string, email: string, password: string) {
-  await page.goto("/register");
-  await page.getByLabel("Nume de utilizator").fill(name);
-  await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Parolă").fill(password);
-  await page.getByRole("button", { name: "Creează cont" }).click();
-}
-
-/** Ieșire din cont: așteptăm reîncărcarea paginii, ca navigările următoare să nu se suprapună cu ea. */
-async function logout(page: Page) {
-  await page.getByRole("button", { name: "Ieșire" }).click();
-  await expect(page.getByRole("link", { name: "Autentificare" })).toBeVisible();
-}
-
-async function login(page: Page, email: string, password: string) {
-  await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Parolă").fill(password);
-  // Așteptăm răspunsul serverului: mesajul de eroare poate fi identic cu cel de la încercarea anterioară.
-  await Promise.all([
-    page.waitForResponse((r) => r.url().includes("/api/auth/sign-in/email")),
-    page.getByRole("button", { name: "Intră în cont" }).click(),
-  ]);
-}
-
 test("înregistrare, logout, login greșit și rate limit", async ({ page }) => {
-  await register(page, "Krypt", "krypt@example.com", "parola-sigura-123");
+  await register(page, "Krypt", "krypt@example.com");
   await expect(page).toHaveURL("/");
   await expect(page.getByTestId("gcs-header-user")).toHaveText("Krypt");
 
   await logout(page);
-  await expect(page.getByRole("link", { name: "Autentificare" })).toBeVisible();
 
   await page.goto("/login");
   await login(page, "krypt@example.com", "parola-gresita");
@@ -51,27 +21,27 @@ test("înregistrare, logout, login greșit și rate limit", async ({ page }) => 
     await login(page, "krypt@example.com", "parola-gresita");
     await expect(formAlert(page)).toHaveText("Email sau parolă incorectă");
   }
-  await login(page, "krypt@example.com", "parola-sigura-123");
+  await login(page, "krypt@example.com", PASSWORD);
   await expect(formAlert(page)).toHaveText(/Prea multe încercări/);
 });
 
 test("login corect după înregistrare", async ({ page }) => {
-  await register(page, "Vortex", "vortex@example.com", "parola-sigura-123");
+  await register(page, "Vortex", "vortex@example.com");
   await expect(page.getByTestId("gcs-header-user")).toHaveText("Vortex");
   await logout(page);
 
   await page.goto("/login");
-  await login(page, "VORTEX@example.com", "parola-sigura-123");
+  await login(page, "VORTEX@example.com");
   await expect(page).toHaveURL("/");
   await expect(page.getByTestId("gcs-header-user")).toHaveText("Vortex");
 });
 
 test("un nume care diferă doar prin diacritice e refuzat pe câmp", async ({ page }) => {
-  await register(page, "Ștefan", "stefan1@example.com", "parola-sigura-123");
+  await register(page, "Ștefan", "stefan1@example.com");
   await expect(page.getByTestId("gcs-header-user")).toHaveText("Ștefan");
   await logout(page);
 
-  await register(page, "ştefan", "stefan2@example.com", "parola-sigura-123");
+  await register(page, "ştefan", "stefan2@example.com");
   await expect(page.getByText("Numele e deja folosit")).toBeVisible();
   await expect(page.getByLabel("Nume de utilizator")).toHaveAttribute("aria-invalid", "true");
 });

@@ -75,5 +75,226 @@
     "rate_limited": "Prea multe cereri. Încearcă din nou mai târziu.",
     "conflict": "Acțiunea intră în conflict cu starea curentă.",
     "csrf": "Cererea nu a putut fi verificată. Reîncarcă pagina."
+  },
+  "acp": {
+    "title": "Panou de administrare",
+    "apps": {
+      "system": "Sistem",
+      "community": "Comunitate",
+      "members": "Membri",
+      "vip": "VIP & Magazin",
+      "gaming": "Gaming",
+      "pages": "Pages",
+      "stats": "Statistici",
+      "appearance": "Aspect"
+    },
+    "appsNav": "Aplicații ACP",
+    "submenuNav": "Meniu {app}",
+    "home": "ACP RED-LINE",
+    "reorderApps": "Reordonează aplicațiile",
+    "reorderDone": "Gata",
+    "moveUp": "Mută {app} mai sus",
+    "moveDown": "Mută {app} mai jos",
+    "openMenu": "Meniu",
+    "closeMenu": "Închide meniul",
+    "header": {
+      "search": "Căutare în ACP",
+      "searchPlaceholder": "Caută setări, membri, grupuri…",
+      "viewSite": "Vezi site-ul",
+      "theme": "Temă",
+      "themes": {
+        "auto": "Auto",
+        "light": "Light",
+        "dark": "Dark"
+      },
+      "noResults": "Niciun rezultat",
+      "resultGroups": {
+        "settings": "Setări",
+        "members": "Membri",
+        "groups": "Grupuri"
+      },
+      "twoFactorOn": "2FA activ",
+      "logout": "Ieșire"
+    },
+    "menu": {
+      "system": {
+        "overview": "Prezentare",
+        "dashboard": "Dashboard",
+        "files": "Fișiere",
+        "site_features": "Funcții site",
+        "applications": "Aplicații",
+        "integrations": "Integrări",
+        "menu_manager": "Manager meniu",
+        "api": "API",
+        "webhooks": "Webhooks",
+        "rss_import": "Import RSS",
+        "settings": "Setări",
+        "settings_general": "Generale",
+        "settings_terms": "Termeni & Confidențialitate",
+        "settings_posting": "Postare & Editor",
+        "settings_email": "Email",
+        "settings_auth": "Login & Înregistrare",
+        "settings_contact": "Contact",
+        "settings_2fa": "Autentificare 2FA",
+        "settings_advanced": "Avansat",
+        "settings_pwa": "Web App (PWA)",
+        "discovery": "Descoperire conținut",
+        "search": "Căutare",
+        "streams": "Stream-uri",
+        "rss": "RSS",
+        "tags": "Taguri",
+        "promotion": "Promovare",
+        "ads": "Reclame",
+        "seo": "SEO",
+        "share": "Share",
+        "support": "Suport",
+        "status": "Stare sistem",
+        "logs": "Jurnale sistem",
+        "cache": "Golire cache",
+        "conversions": "Conversii",
+        "import": "Import IPS / Indungi"
+      },
+      "members": {
+        "members": "Membri",
+        "groups": "Grupuri",
+        "promotions": "Promovări de grup",
+        "ip_tools": "Unelte IP",
+        "gdpr": "Cereri GDPR",
+        "achievements": "Realizări",
+        "achievement_rules": "Reguli",
+        "ranks": "Ranguri",
+        "badges": "Badge-uri",
+        "achievement_settings": "Setări realizări",
+        "member_settings": "Setări membri",
+        "profiles": "Profiluri",
+        "reputation": "Reputație & Reacții",
+        "notifications": "Notificări",
+        "bans": "Ban",
+        "referral": "Referral",
+        "moderation": "Moderare",
+        "queue": "Coadă unificată",
+        "reports": "Rapoarte",
+        "antispam": "Anti-spam",
+        "warnings": "Avertismente",
+        "tickets": "Tichete",
+        "staff": "Staff",
+        "moderators": "Moderatori",
+        "acp_roles": "Administratori și roluri ACP",
+        "staff_page": "Pagina Staff",
+        "bulk_mail": "Email în masă"
+      }
+    },
+    "comingSoon": {
+      "body": "Această secțiune vine într-o etapă următoare a platformei.",
+      "back": "Înapoi la dashboard"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "statusOk": "RED-LINE · toate serviciile funcționează",
+      "statusDegraded": "RED-LINE · unele servicii nu răspund",
+      "kpis": {
+        "members": "Membri",
+        "today": "Înregistrări azi",
+        "online": "Online acum"
+      },
+      "move": "Mută widgetul {title}",
+      "collapse": "Pliază {title}",
+      "expand": "Desfășoară {title}",
+      "moveToOther": "Mută {title} în cealaltă coloană",
+      "widgets": {
+        "registrations": {
+          "title": "Înregistrări noi",
+          "subtitle": "ultimele 14 zile",
+          "series": "Înregistrări",
+          "area": "Area",
+          "column": "Coloane",
+          "bar": "Bare",
+          "csv": "CSV"
+        },
+        "system_health": {
+          "title": "Stare sistem",
+          "db": "Baza de date",
+          "redis": "Redis",
+          "ok": "funcționează",
+          "down": "nu răspunde"
+        },
+        "admin_notes": {
+          "title": "Notițe admin",
+          "label": "Notițe admin",
+          "save": "Salvează",
+          "saved": "Salvat",
+          "updated": "Actualizat de {name} · {time}",
+          "never": "Nicio notiță încă"
+        },
+        "online_users": {
+          "title": "Membri online",
+          "body": "{count, plural, one {# membru activ} few {# membri activi} other {# de membri activi}} în ultimele 15 minute"
+        },
+        "online_admins": {
+          "title": "Admini online",
+          "empty": "Niciun admin activ acum"
+        },
+        "failed_acp_logins": {
+          "title": "Login-uri eșuate în ACP",
+          "empty": "Niciun login eșuat",
+          "unknown": "necunoscut"
+        }
+      }
+    },
+    "reauth": {
+      "title": "Confirmă-ți identitatea",
+      "subtitle": "Pentru siguranță, ACP-ul cere parola și codul 2FA la fiecare 12 ore sau când se schimbă IP-ul.",
+      "password": "Parolă",
+      "code": "Cod 2FA",
+      "submit": "Intră în ACP",
+      "errors": {
+        "invalid": "Parola sau codul 2FA nu sunt corecte",
+        "rate_limited": "Prea multe încercări. Încearcă din nou peste câteva minute."
+      }
+    },
+    "twoFactorSetup": {
+      "title": "Activează autentificarea în doi pași",
+      "subtitle": "ACP-ul cere 2FA. Scanează codul QR cu o aplicație de autentificare (Google Authenticator, Authy, 1Password…).",
+      "password": "Parola contului",
+      "start": "Continuă",
+      "secret": "Cheie pentru introducere manuală",
+      "backupCodes": "Coduri de rezervă (păstrează-le într-un loc sigur)",
+      "code": "Codul din aplicație",
+      "verify": "Activează 2FA",
+      "qr": "Cod QR pentru aplicația de autentificare",
+      "errors": {
+        "password": "Parola nu e corectă",
+        "code": "Codul nu e corect",
+        "generic": "A apărut o eroare. Încearcă din nou."
+      }
+    }
+  },
+  "settings": {
+    "site": {
+      "name": "Numele site-ului",
+      "url": "Adresa site-ului (URL)",
+      "locale": "Limba implicită",
+      "timezone": "Fusul orar",
+      "theme": "Tema implicită"
+    },
+    "email": {
+      "smtp_host": "Server SMTP",
+      "smtp_port": "Port SMTP",
+      "smtp_user": "Utilizator SMTP",
+      "smtp_pass": "Parolă SMTP",
+      "from": "Adresa expeditorului"
+    },
+    "auth": {
+      "registration_open": "Înregistrări deschise",
+      "email_confirm": "Confirmare pe email",
+      "discord_client_id": "Discord: Client ID",
+      "discord_client_secret": "Discord: Client Secret",
+      "steam_api_key": "Steam: cheie Web API",
+      "turnstile_site_key": "Turnstile: Site Key",
+      "turnstile_secret": "Turnstile: Secret Key"
+    },
+    "system": {
+      "maintenance": "Mod mentenanță"
+    }
   }
 }

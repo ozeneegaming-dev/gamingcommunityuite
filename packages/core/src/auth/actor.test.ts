@@ -46,6 +46,19 @@ describe("GcsActorResolver.getActor", () => {
     expect(actor.groupIds.sort()).toEqual([groups.new_member, groups.vip_gold].sort());
   });
 
+  test("actualizează lastActiveAt cel mult o dată la 5 minute", async () => {
+    const { user, token } = await userWithSession("Activ");
+    const t0 = new Date(Date.now() - 10 * 60_000);
+    await db.user.update({ where: { id: user.id }, data: { lastActiveAt: t0 } });
+
+    await resolver.getActor({ sessionToken: token, ip: "1.1.1.1" }, new Date(t0.getTime() + 60_000));
+    expect((await db.user.findUniqueOrThrow({ where: { id: user.id } })).lastActiveAt).toEqual(t0);
+
+    const later = new Date(t0.getTime() + 6 * 60_000);
+    await resolver.getActor({ sessionToken: token, ip: "1.1.1.1" }, later);
+    expect((await db.user.findUniqueOrThrow({ where: { id: user.id } })).lastActiveAt).toEqual(later);
+  });
+
   test("un token necunoscut sau o sesiune expirată → vizitator", async () => {
     const { token } = await userWithSession("Expirat", new Date(Date.now() - 1000));
     await expect(resolver.getActor({ sessionToken: token, ip: "1.1.1.1" })).resolves.toMatchObject({ userId: null });
