@@ -1,5 +1,6 @@
-import type { Prisma } from "@gcs/db";
-import type { GcsEvent } from "../events";
+import type { Prisma, PrismaClient } from "@gcs/db";
+import type { GcsCache } from "../cache";
+import type { GcsEvent, GcsEventBus } from "../events";
 import type { GcsSettingDef } from "../settings/registry";
 
 /** Valorile `Group.key` (root_admin, member, vip_gold, custom_<id>…). */
@@ -34,6 +35,16 @@ export interface GcsAcpMenuSection {
 /** Contextul primit de hook-ul `seed` al unui modul: tranzacția seed-ului și id-urile grupurilor implicite. */
 export type GcsSeedContext = { tx: Prisma.TransactionClient; groupIds: ReadonlyMap<string, number> };
 
+/** Contextul hook-ului `seedDemo`: datele alese în wizard (date demo sau site gol) și adminul creat. */
+export type GcsDemoContext = {
+  db: PrismaClient;
+  cache: GcsCache;
+  bus: GcsEventBus;
+  registry: GcsModuleRegistry;
+  variant: "demo" | "empty";
+  adminEmail: string;
+};
+
 /** Un modul RED-LINE (spec §5). Restul câmpurilor din spec se adaugă în etapele care le folosesc. */
 export interface GcsModule {
   key: string;
@@ -47,6 +58,8 @@ export interface GcsModule {
   eventListeners: { event: string; handler: (e: GcsEvent) => Promise<void> }[];
   /** Datele implicite ale modulului, create la instalare. Trebuie să fie idempotent (rulat din nou, nu dublează nimic). */
   seed?: (ctx: GcsSeedContext) => Promise<void>;
+  /** Conținutul de pornire ales în wizard (pasul „demo” al instalării). Idempotent. */
+  seedDemo?: (ctx: GcsDemoContext) => Promise<void>;
 }
 
 export class GcsModuleRegistry {

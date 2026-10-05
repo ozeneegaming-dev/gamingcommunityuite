@@ -1,5 +1,5 @@
 import type { GcsAcpMenuSection, GcsModule, GcsPermissionDef, GcsSettingDef } from "@gcs/core";
-import { seedForums } from "./seed";
+import { seedForumDemo, seedForums } from "./seed";
 
 const ADMINS = { root_admin: true, admin: true } as const;
 const GLOBAL_MODS = { ...ADMINS, super_moderator: true } as const;
@@ -102,4 +102,5 @@ export const forumsModule: GcsModule = {
   acpMenu,
   eventListeners: [],
   seed: seedForums,
+  seedDemo: seedForumDemo,
 };

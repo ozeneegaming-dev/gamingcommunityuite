@@ -159,8 +159,13 @@ export async function runInstall(
           await tx.account.create({ data: { userId: user.id, accountId: user.id, providerId: "credential", password: input.admin.passwordHash } });
         });
       },
-      // Datele demo (forumuri, topicuri) apar odată cu modulul Forum, în etapa 2.
-      demo: async () => {},
+      // Conținutul de pornire ales în wizard; importul IPS (etapa 6) pornește deocamdată de la un site gol.
+      demo: async () => {
+        const variant = input.data === "demo" ? "demo" : "empty";
+        for (const m of deps.registry.all()) {
+          await m.seedDemo?.({ db, cache: deps.cache, bus: deps.bus, registry: deps.registry, variant, adminEmail: normalizeEmail(input.admin.email) });
+        }
+      },
       name_styles: async () => {
         const groups = await db.group.findMany({ select: { key: true, color: true, nameStyle: true }, orderBy: { position: "asc" } });
         const css = compileNameStylesCss(groups.map((g) => ({ ...g, nameStyle: (g.nameStyle as GcsNameStyle | null) ?? null })));

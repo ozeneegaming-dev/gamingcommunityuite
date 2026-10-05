@@ -91,5 +91,9 @@ test("instalarea completă: 9 pași, reluare după refresh, login automat, /inst
     expect((await page.goto("/install/code"))?.status()).toBe(404);
     await page.goto("/");
     await expect(page).toHaveTitle("Comunitatea E2E");
+    // „Date demo”: structura din macheta Main și topicul de bun venit.
+    await expect(page.getByRole("link", { name: "Anunțuri", exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Ajutor tehnic", exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Bun venit pe Comunitatea E2E!" }).first()).toBeVisible();
   });
 });

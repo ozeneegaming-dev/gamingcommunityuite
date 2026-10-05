@@ -121,6 +121,29 @@ describe("runInstall", () => {
     expect(events.at(-1)?.pct).toBe(100);
   });
 
+  test("pasul „demo” apelează `seedDemo` al modulelor cu varianta aleasă și emailul adminului", async () => {
+    const state = new GcsInstallState(dir);
+    const calls: { variant: string; adminEmail: string; admins: number }[] = [];
+    const r = registry();
+    r.register({
+      key: "demo-test",
+      settings: [],
+      permissions: [],
+      acpMenu: [],
+      eventListeners: [],
+      seedDemo: async (ctx) => {
+        calls.push({ variant: ctx.variant, adminEmail: ctx.adminEmail, admins: await ctx.db.user.count() });
+      },
+    });
+    await runInstall(input(), () => {}, { databaseUrl: url, migrationsDir, registry: r, cache, bus, state });
+    // „import” (etapa 6) pornește deocamdată ca un site gol.
+    await runInstall(input({ data: "import" }), () => {}, { databaseUrl: url, migrationsDir, registry: r, cache, bus, state });
+    expect(calls).toEqual([
+      { variant: "demo", adminEmail: "fondator@example.com", admins: 1 },
+      { variant: "empty", adminEmail: "fondator@example.com", admins: 1 },
+    ]);
+  });
+
   test("un runner care eșuează la name_styles, rulat din nou → reușește, fără un al doilea admin", async () => {
     const state = new GcsInstallState(dir);
     const deps = { databaseUrl: url, migrationsDir, registry: registry(), cache, bus, state };
