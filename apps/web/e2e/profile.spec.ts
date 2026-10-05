@@ -1,6 +1,6 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
 import { forumTree, member, memberInNewContext, topicWithReplies, uid } from "./forum-fixtures";
-import { useFreshIp } from "./helpers";
+import { sql, useFreshIp } from "./helpers";
 
 /** Datele etapei 3 prin ruta de test (`/api/_test/profile`). */
 async function profileFixture<T = unknown>(request: APIRequestContext, data: Record<string, unknown>): Promise<T> {
@@ -55,3 +55,69 @@ test.describe("ignorare și mesaje", () => {
     await expect(page.getByTestId("gcs-header-unread")).toHaveText("1");
   });
 });
+
+test.describe("hover card", () => {
+  test("apare după 300 ms de hover, cu grupul, rangul și badge-urile; „Urmărește” crește contorul; al doilea hover nu mai cere nimic", async ({ page, request, browser }) => {
+    const id = uid();
+    const { forum } = await forumTree(request);
+    const author = await memberInNewContext(browser, `Krypt${id}`, `krypt-${id}@example.com`, "198.51.100");
+    await author.close();
+    await profileFixture(request, { action: "vip", email: `krypt-${id}@example.com`, groupKey: "vip_legend", days: null });
+    const topic = await topicWithReplies(request, forum.id, `krypt-${id}@example.com`, `Topic card ${id}`);
+    await profileFixture(request, { action: "evaluate", email: `krypt-${id}@example.com` });
+    await member(page, `Fan${id}`, `fan-${id}@example.com`);
+
+    let cardRequests = 0;
+    page.on("request", (r) => {
+      if (r.url().includes("/api/users/") && r.url().endsWith("/card")) cardRequests++;
+    });
+    await page.goto(topic.url);
+    const name = page.getByTestId("gcs-post").first().locator(".gcs-post__authorName a");
+
+    // Un hover scurt (sub 300 ms) nu deschide nimic.
+    await name.hover();
+    await page.mouse.move(0, 0);
+    await page.waitForTimeout(600);
+    await expect(page.getByTestId("gcs-hover-card")).toHaveCount(0);
+
+    await name.hover();
+    const card = page.getByTestId("gcs-hover-card");
+    await expect(card).toBeVisible();
+    await expect(card.getByText("VIP Legend")).toBeVisible();
+    await expect(card.getByTestId("gcs-hover-rank")).toHaveText("Recrut");
+    await expect(card.locator(".gcs-profileBadge")).not.toHaveCount(0);
+    await expect(card.getByTestId("gcs-hover-followers")).toHaveText("0");
+    await card.getByTestId("gcs-hover-follow").click();
+    await expect(card.getByTestId("gcs-hover-followers")).toHaveText("1");
+    await expect(card.getByTestId("gcs-hover-follow")).toHaveText("Nu mai urmări");
+
+    await page.keyboard.press("Escape");
+    await expect(card).toHaveCount(0);
+    const before = cardRequests;
+    await page.mouse.move(0, 0);
+    await name.hover();
+    await expect(page.getByTestId("gcs-hover-card")).toBeVisible();
+    expect(cardRequests).toBe(before);
+  });
+
+  test("un profil vizibil doar membrilor nu deschide cardul pentru vizitator", async ({ page, request, browser }) => {
+    const id = uid();
+    const { forum } = await forumTree(request);
+    const author = await memberInNewContext(browser, `Privat${id}`, `privat-${id}@example.com`, "198.51.100");
+    await author.goto("/");
+    await author.close();
+    const topic = await topicWithReplies(request, forum.id, `privat-${id}@example.com`, `Topic privat ${id}`);
+    await sqlPrivacy(`privat-${id}@example.com`, "MEMBERS");
+    await page.goto(topic.url);
+    const res = page.waitForResponse((r) => r.url().endsWith("/card"));
+    await page.getByTestId("gcs-post").first().locator(".gcs-post__authorName a").hover();
+    expect((await res).status()).toBe(404);
+    await page.waitForTimeout(300);
+    await expect(page.getByTestId("gcs-hover-card")).toHaveCount(0);
+  });
+});
+
+/** Confidențialitatea profilului, direct în bază (setările contului vin în Task 15). */
+async function sqlPrivacy(email: string, profile: string): Promise<void> {
+  await sql(`UPDATE users SET privacy = jsonb_build_object('profile', $2::text) WHERE email = $1`, [email, profile]);
+}

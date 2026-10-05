@@ -1180,5 +1180,15 @@
   "tags": {
     "title": "Tag: #{tag}",
     "empty": "No topics with this tag."
+  },
+  "hoverCard": {
+    "posts": "Posts",
+    "reputation": "Reputation",
+    "followers": "Followers",
+    "online": "Online",
+    "joined": "Member since",
+    "follow": "Follow",
+    "unfollow": "Unfollow",
+    "message": "Message"
   }
 }

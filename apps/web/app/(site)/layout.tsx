@@ -1,8 +1,11 @@
+import { getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
+import { GcsHoverCardHost } from "./_components/GcsHoverCardHost";
 import { GcsSiteFooter } from "./_components/GcsSiteFooter";
 import { GcsSiteHeader } from "./_components/GcsSiteHeader";
 
-export default function SiteLayout({ children }: { children: ReactNode }) {
+export default async function SiteLayout({ children }: { children: ReactNode }) {
+  const [t, locale] = await Promise.all([getTranslations("hoverCard"), getLocale()]);
   return (
     <>
       <GcsSiteHeader />
@@ -10,6 +13,19 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
         {children}
       </main>
       <GcsSiteFooter />
+      <GcsHoverCardHost
+        locale={locale}
+        labels={{
+          posts: t("posts"),
+          reputation: t("reputation"),
+          followers: t("followers"),
+          online: t("online"),
+          joined: t("joined"),
+          follow: t("follow"),
+          unfollow: t("unfollow"),
+          message: t("message"),
+        }}
+      />
     </>
   );
 }

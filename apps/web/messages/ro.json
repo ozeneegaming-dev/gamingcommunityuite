@@ -1180,5 +1180,15 @@
   "tags": {
     "title": "Tag: #{tag}",
     "empty": "Niciun topic cu acest tag."
+  },
+  "hoverCard": {
+    "posts": "Postări",
+    "reputation": "Reputație",
+    "followers": "Urmăritori",
+    "online": "Online",
+    "joined": "Membru din",
+    "follow": "Urmărește",
+    "unfollow": "Nu mai urmări",
+    "message": "Mesaj"
   }
 }

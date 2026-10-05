@@ -10,7 +10,8 @@
     "./theme.css": "./src/theme.css",
     "./themes.css": "./src/themes.css",
     "./editor": "./src/editor/index.ts",
-    "./forum.css": "./src/forum.css"
+    "./forum.css": "./src/forum.css",
+    "./profile.css": "./src/profile.css"
   },
   "scripts": {
     "lint": "eslint .",
