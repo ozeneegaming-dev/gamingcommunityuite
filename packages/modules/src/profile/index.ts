@@ -1,4 +1,5 @@
 import type { GcsModule, GcsPermissionDef, GcsSettingDef } from "@gcs/core";
+import { seedProfileDemo } from "./demo";
 import { seedProfile } from "./seed";
 
 const ADMINS = { root_admin: true, admin: true } as const;
@@ -45,4 +46,5 @@ export const profileModule: GcsModule = {
   acpMenu: [],
   eventListeners: [],
   seed: seedProfile,
+  seedDemo: seedProfileDemo,
 };
