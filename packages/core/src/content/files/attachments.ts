@@ -170,6 +170,75 @@ export class GcsAttachmentService {
   }
 
   /**
+   * Avatarul sau cover-ul unui user (specul etapei 3, §4): doar imagini, recodate în WebP
+   * (avatar 512×512 decupat, cover max 1920 px lățime). Animația se păstrează doar cu `animated: true`
+   * (GIF/WebP animat → WebP animat); altfel rămâne primul cadru. Legat direct de user (`user.avatar` / `user.cover`),
+   * iar fișierele vechi de același fel sunt șterse.
+   */
+  async uploadProfileImage(
+    actor: GcsActor,
+    file: GcsUploadedFile,
+    opts: { kind: "avatar" | "cover"; maxMb: number; animated: boolean },
+  ): Promise<GcsAttachmentInfo> {
+    const { db, store, rateLimiter } = this.deps;
+    if (!actor.userId) throw new GcsForbidden({ reason: "guest" });
+    if (opts.maxMb !== -1 && file.bytes.length > opts.maxMb * 1024 * 1024) {
+      throw new GcsValidationError({ file: "too_large" }, { maxMb: String(opts.maxMb) });
+    }
+    const limit = await rateLimiter.consume(`upload:${actor.userId}`, UPLOAD_LIMIT);
+    if (!limit.allowed) throw new GcsRateLimited({ retryAfter: String(limit.retryAfter) });
+
+    const detected = await fileTypeFromBuffer(file.bytes);
+    if (!detected || !(detected.mime in IMAGE_FORMATS)) throw new GcsValidationError({ file: "unsupported_type" });
+    const animatedSource = detected.mime === "image/gif" || detected.mime === "image/webp";
+    const animated = opts.animated && animatedSource;
+    let out: Buffer;
+    try {
+      let img = sharp(file.bytes, { animated, limitInputPixels: 100_000_000 });
+      if (!animated) img = img.rotate();
+      img =
+        opts.kind === "avatar"
+          ? img.resize({ width: 512, height: 512, fit: "cover", position: "attention" })
+          : img.resize({ width: 1920, height: 1080, fit: "inside", withoutEnlargement: true });
+      out = await img.webp({ quality: 85 }).toBuffer();
+    } catch {
+      throw new GcsValidationError({ file: "invalid_image" });
+    }
+    const meta = await sharp(out).metadata();
+    const contentType = `user.${opts.kind}`;
+    const now = new Date();
+    const key = `${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, "0")}/${randomUUID()}.webp`;
+    await store.put(key, out, "image/webp");
+    const previous = await db.attachment.findMany({ where: { contentType, contentId: actor.userId } });
+    const row = await db.attachment.create({
+      data: {
+        ownerId: actor.userId,
+        storageKey: key,
+        filename: `${opts.kind}.webp`,
+        mime: "image/webp",
+        size: out.length,
+        width: meta.width ?? null,
+        height: meta.pageHeight ?? meta.height ?? null,
+        contentType,
+        contentId: actor.userId,
+      },
+    });
+    await this.deleteRows(previous);
+    return { id: row.id, url: `/files/${row.id}`, filename: row.filename, mime: row.mime, size: row.size, isImage: true, width: row.width, height: row.height };
+  }
+
+  /** Șterge avatarul sau cover-ul unui user (resetare de către staff sau înlocuire). */
+  async deleteProfileImage(userId: string, kind: "avatar" | "cover"): Promise<void> {
+    await this.deleteRows(await this.deps.db.attachment.findMany({ where: { contentType: `user.${kind}`, contentId: userId } }));
+  }
+
+  private async deleteRows(rows: { id: string; storageKey: string }[]): Promise<void> {
+    if (rows.length === 0) return;
+    for (const row of rows) await this.deps.store.delete(row.storageKey).catch(() => {});
+    await this.deps.db.attachment.deleteMany({ where: { id: { in: rows.map((r) => r.id) } } });
+  }
+
+  /**
    * Leagă atașamentele încărcate de conținutul salvat, în tranzacția conținutului.
    * Doar atașamentele proprietarului, încă nelegate (sau deja legate de același conținut).
    */
@@ -199,8 +268,6 @@ export class GcsAttachmentService {
 
   /** Șterge din store fișierele unui conținut șters (după commit-ul tranzacției). */
   async deleteFor(contentType: string, contentIds: string[]): Promise<void> {
-    const rows = await this.deps.db.attachment.findMany({ where: { contentType, contentId: { in: contentIds } } });
-    for (const row of rows) await this.deps.store.delete(row.storageKey).catch(() => {});
-    await this.deps.db.attachment.deleteMany({ where: { id: { in: rows.map((r) => r.id) } } });
+    await this.deleteRows(await this.deps.db.attachment.findMany({ where: { contentType, contentId: { in: contentIds } } }));
   }
 }

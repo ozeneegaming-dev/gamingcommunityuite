@@ -21,3 +21,5 @@ export { messagesModule } from "./messages";
 export { profileModule } from "./profile";
 export { DEFAULT_BADGES, DEFAULT_FRAMES, DEFAULT_NAME_STYLES, DEFAULT_RANKS, DEFAULT_RULES } from "./profile/seed";
 export { vipModule } from "./vip";
+export * from "./profile/privacy";
+export { GcsProfileService, STEAM_PLACEHOLDER_DOMAIN, USER_AVATAR, USER_COVER, type GcsVisibleField } from "./profile/profile";

@@ -22,7 +22,9 @@ import {
   GcsS3FileStore,
   GcsSettingsService,
   GcsWarningService,
+  sendEmail,
   type GcsFileStore,
+  type GcsMailer,
   type GcsModule,
   type GcsModuleRegistry,
 } from "@gcs/core";
@@ -41,6 +43,7 @@ import { GcsForumSearch } from "./forums/search";
 import { GcsForumService } from "./forums/forums";
 import { GcsTopicService } from "./forums/topics";
 import { registerAppJobs } from "./jobs";
+import { GcsProfileService } from "./profile/profile";
 import { createRegistry } from "./registry";
 
 export type GcsServices = {
@@ -77,6 +80,8 @@ export type GcsServices = {
   search: GcsForumSearch;
   posting: GcsForumPosting;
   forumModerators: GcsForumModeratorService;
+  mailer: GcsMailer;
+  profiles: GcsProfileService;
 };
 
 export type GcsServicesOptions = {
@@ -109,6 +114,14 @@ export function loadRuntimeEnv(configDir: string): void {
 function siteHost(siteUrl: string): string {
   const url = siteUrl || process.env.GCS_BASE_URL || "http://localhost";
   return URL.canParse(url) ? new URL(url).host : "localhost";
+}
+
+/** Lista Redis în care ajung emailurile când rulează E2E (`GCS_TEST_ROUTES=1`), în loc de SMTP. */
+export const TEST_OUTBOX_KEY = "gcs:test:outbox";
+
+/** Adresa publică a site-ului: setarea `site.url`, altfel `GCS_BASE_URL`. */
+function baseUrl(siteUrl: string): string {
+  return siteUrl || process.env.GCS_BASE_URL || "http://localhost:3000";
 }
 
 /** MinIO (S3) dacă e configurat (`docker compose`); altfel un folder local, în folderul de configurare (dev, E2E). */
@@ -178,6 +191,23 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const reports = new GcsReportService({ db, bus, rateLimiter });
   const posts = new GcsPostService(posting);
   registerForumContent(posting, { reactions, attachments, reports, posts });
+  const mailer: GcsMailer =
+    process.env.GCS_TEST_ROUTES === "1"
+      ? async (mail) => {
+          await redis.lpush(TEST_OUTBOX_KEY, JSON.stringify(mail));
+          await redis.ltrim(TEST_OUTBOX_KEY, 0, 49);
+        }
+      : (mail) => sendEmail(mail, settings);
+  const profiles = new GcsProfileService({
+    db,
+    bus,
+    permissions,
+    settings,
+    attachments,
+    rateLimiter,
+    mailer,
+    baseUrl: async () => baseUrl(await settings.get<string>("site.url")),
+  });
 
   const services: GcsServices = {
     db,
@@ -213,6 +243,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     search: new GcsForumSearch({ db, permissions, settings, rateLimiter }),
     posting,
     forumModerators: new GcsForumModeratorService({ db, permissions, acp }),
+    mailer,
+    profiles,
   };
   registerAppJobs(services);
   return services;

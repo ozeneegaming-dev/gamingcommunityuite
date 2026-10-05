@@ -21,13 +21,14 @@
     "eslint": "^9.30.0",
     "pg": "^8.16.0",
     "redis-memory-server": "^0.17.1",
+    "sharp": "^0.35.5",
     "typescript": "^5.9.0",
     "vitest": "^3.2.0"
   },
   "dependencies": {
     "@gcs/core": "workspace:*",
     "@gcs/db": "workspace:*",
-    "sanitize-html": "^2.18.0",
-    "ioredis": "^5.11.1"
+    "ioredis": "^5.11.1",
+    "sanitize-html": "^2.18.0"
   }
 }

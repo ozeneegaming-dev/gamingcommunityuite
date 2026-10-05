@@ -4,6 +4,11 @@ import { GcsValidationError } from "../errors";
 /** Ce citește `sendEmail` din setări (`GcsSettingsService` o satisface). */
 export type GcsEmailSettings = { get<T>(key: string): Promise<T> };
 
+/** Un email de trimis. */
+export type GcsMail = { to: string; subject: string; html: string; text?: string };
+/** Trimiterea unui email: în producție prin SMTP (`sendEmail`), în teste într-un outbox. */
+export type GcsMailer = (mail: GcsMail) => Promise<void>;
+
 type GcsMailTransport = { sendMail(message: Record<string, unknown>): Promise<unknown> };
 type GcsTransportFactory = (options: Record<string, unknown>) => GcsMailTransport;
 

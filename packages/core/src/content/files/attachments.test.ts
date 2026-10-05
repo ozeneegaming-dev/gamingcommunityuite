@@ -169,3 +169,37 @@ describe("GcsAttachmentService.attach / open", () => {
     await expect(service.open(member, "nu-exista")).rejects.toBeInstanceOf(GcsNotFound);
   });
 });
+
+describe("GcsAttachmentService.uploadProfileImage", () => {
+  async function gif(): Promise<Buffer> {
+    const frame = (color: string) => sharp({ create: { width: 64, height: 64, channels: 3, background: color } }).png().toBuffer();
+    return sharp([await frame("#FF0000"), await frame("#00FF00")], { join: { animated: true } }).gif().toBuffer();
+  }
+
+  test("avatarul e decupat la 512×512 WebP, e public și îl înlocuiește pe cel vechi", async () => {
+    const first = await service.uploadProfileImage(member, { name: "a.png", bytes: await png(800, 400) }, { kind: "avatar", maxMb: 2, animated: false });
+    expect(first).toMatchObject({ mime: "image/webp", width: 512, height: 512 });
+    service.registerAccess("user.avatar", async () => true);
+    await expect(service.open(guest, first.id)).resolves.toMatchObject({ inline: true });
+
+    const second = await service.uploadProfileImage(member, { name: "b.png", bytes: await png() }, { kind: "avatar", maxMb: 2, animated: false });
+    expect(await world.db.attachment.findUnique({ where: { id: first.id } })).toBeNull();
+    expect(await world.db.attachment.findUniqueOrThrow({ where: { id: second.id } })).toMatchObject({ contentType: "user.avatar", contentId: member.userId });
+  });
+
+  test("un GIF animat rămâne animat doar cu `animated: true`; altfel primul cadru", async () => {
+    const bytes = await gif();
+    const still = await service.uploadProfileImage(member, { name: "c.gif", bytes }, { kind: "cover", maxMb: 2, animated: false });
+    const moving = await service.uploadProfileImage(other, { name: "c.gif", bytes }, { kind: "cover", maxMb: 2, animated: true });
+    const pages = async (id: string, actor: GcsActor) => (await sharp(await readAll((await service.open(actor, id)).body)).metadata()).pages ?? 1;
+    service.registerAccess("user.cover", async () => true);
+    expect(await pages(still.id, member)).toBe(1);
+    expect(await pages(moving.id, other)).toBe(2);
+  });
+
+  test("peste limită → too_large; un fișier care nu e imagine → unsupported_type; vizitator → GcsForbidden", async () => {
+    await expect(service.uploadProfileImage(member, { name: "a.png", bytes: await png() }, { kind: "cover", maxMb: 0.00001, animated: false })).rejects.toBeInstanceOf(GcsValidationError);
+    await expect(service.uploadProfileImage(member, { name: "a.txt", bytes: Buffer.from("x\n") }, { kind: "avatar", maxMb: 2, animated: false })).rejects.toBeInstanceOf(GcsValidationError);
+    await expect(service.uploadProfileImage(guest, { name: "a.png", bytes: await png() }, { kind: "avatar", maxMb: 2, animated: false })).rejects.toBeInstanceOf(GcsForbidden);
+  });
+});
