@@ -42,6 +42,8 @@ export class GcsTopicService {
       await posting.search.indexTopic(tx, topic.id);
       await posting.search.indexPost(tx, post.id, rendered.text);
       await attachments.attach(tx, rendered.attachments, { contentType: POST_CONTENT_TYPE, contentId: String(post.id), ownerId: authorId });
+      // Autorul își urmărește automat topicul.
+      await tx.follow.createMany({ data: [{ userId: authorId, contentType: "topic", contentId: String(topic.id) }], skipDuplicates: true });
 
       let promoted = false;
       if (!pending) {

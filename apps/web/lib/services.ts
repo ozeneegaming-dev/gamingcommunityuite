@@ -6,6 +6,7 @@ import {
   GcsActorResolver,
   GcsAttachmentService,
   GcsContentRenderer,
+  GcsFollowService,
   GcsBanService,
   GcsCache,
   GcsEventBus,
@@ -29,6 +30,7 @@ import {
   GcsForumPosting,
   GcsForumQueries,
   GcsForumService,
+  GcsReadMarkerService,
   GcsPostService,
   GcsTopicService,
 } from "@gcs/modules";
@@ -59,6 +61,8 @@ export type GcsServices = {
   topics: GcsTopicService;
   posts: GcsPostService;
   forumQueries: GcsForumQueries;
+  readMarkers: GcsReadMarkerService;
+  follows: GcsFollowService;
 };
 
 /** Revalidează paginile Next.js cache-uite; în afara unui request (ex. scripturi) nu e disponibil. */
@@ -151,6 +155,8 @@ function createServices(): GcsServices {
   const files = createFileStore();
   const attachments = new GcsAttachmentService({ db, store: files, permissions, rateLimiter });
   const forums = new GcsForumService({ db, bus, permissions, acp, registry });
+  const readMarkers = new GcsReadMarkerService({ db, settings });
+  const follows = new GcsFollowService({ db });
   const posting = new GcsForumPosting({
     db,
     bus,
@@ -184,7 +190,9 @@ function createServices(): GcsServices {
     forums,
     topics: new GcsTopicService(posting),
     posts: new GcsPostService(posting),
-    forumQueries: new GcsForumQueries({ db, cache, permissions, settings }),
+    forumQueries: new GcsForumQueries({ db, cache, permissions, settings, readMarkers, follows }),
+    readMarkers,
+    follows,
   };
 }
 

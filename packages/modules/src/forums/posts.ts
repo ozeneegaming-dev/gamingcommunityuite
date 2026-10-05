@@ -181,6 +181,8 @@ export class GcsPostService {
       });
       if (isFirst) {
         await tx.topic.delete({ where: { id: post.topicId } });
+        // Urmăririle sunt generice (fără cheie străină), deci se șterg explicit.
+        await tx.follow.deleteMany({ where: { contentType: "topic", contentId: String(post.topicId) } });
         await this.audit(tx, actor, "mod.topic.delete", post, { title: post.topic.title, posts: posts.length }, null);
       } else {
         await tx.post.delete({ where: { id: postId } });

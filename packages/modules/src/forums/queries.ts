@@ -3,13 +3,22 @@ import {
   GcsNotFound,
   type GcsActor,
   type GcsCache,
+  type GcsFollowService,
   type GcsPermissionService,
   type GcsSettingsService,
 } from "@gcs/core";
 import type { ContentVisibility, ForumType, Prisma, PrismaClient } from "@gcs/db";
 import { forumContainer, POST_CONTENT_TYPE } from "./posting";
+import type { GcsReadMarkerService } from "./readMarkers";
 
-export type GcsQueriesDeps = { db: PrismaClient; cache: GcsCache; permissions: GcsPermissionService; settings: GcsSettingsService };
+export type GcsQueriesDeps = {
+  db: PrismaClient;
+  cache: GcsCache;
+  permissions: GcsPermissionService;
+  settings: GcsSettingsService;
+  readMarkers: GcsReadMarkerService;
+  follows: GcsFollowService;
+};
 
 /** Un user, pe scurt: destul pentru un link cu numele stilizat (`gcs-name--{groupKey}`). */
 export type GcsUserRef = { id: string; name: string; image: string | null; groupKey: string };
@@ -114,6 +123,7 @@ export type GcsTopicPage = {
   pagination: GcsPagination;
   canReply: boolean;
   modPowers: string[];
+  follow: { count: number; following: boolean };
 };
 
 type TreeForum = {
@@ -198,10 +208,11 @@ export class GcsForumQueries {
   async index(actor: GcsActor): Promise<GcsIndexCategory[]> {
     const tree = await this.tree();
     const { viewable, readable } = await this.access(actor, tree);
+    const unread = await this.deps.readMarkers.unreadForumIds(actor.userId, [...readable]);
     const categories: GcsIndexCategory[] = [];
     for (const cat of tree.childrenOf(null)) {
       if (cat.type !== "CATEGORY" || !viewable.has(cat.id)) continue;
-      const forums = tree.childrenOf(cat.id).filter((f) => viewable.has(f.id)).map((f) => this.row(tree, f, viewable, readable));
+      const forums = tree.childrenOf(cat.id).filter((f) => viewable.has(f.id)).map((f) => this.row(tree, f, viewable, readable, unread));
       if (forums.length > 0) categories.push({ id: cat.id, name: cat.name, slug: cat.slug, color: cat.color, forums });
     }
     return categories;
@@ -240,12 +251,17 @@ export class GcsForumQueries {
           }),
         ])
       : [0, []];
-    const posters = await this.users(rows.map((t) => t.lastPosterId));
+    const subtreeIds = tree.subtree(forumId).filter((f) => readable.has(f.id)).map((f) => f.id);
+    const [posters, unreadTopics, unreadForums] = await Promise.all([
+      this.users(rows.map((t) => t.lastPosterId)),
+      this.deps.readMarkers.unreadTopicIds(actor.userId, rows.filter((t) => t.visibility === "VISIBLE")),
+      this.deps.readMarkers.unreadForumIds(actor.userId, subtreeIds.filter((id) => id !== forumId)),
+    ]);
 
     return {
       forum: { id: node.id, type: node.type, name: node.name, slug: node.slug, description: node.description, linkUrl: node.linkUrl },
       breadcrumb: this.crumbs(tree, forumId, viewable),
-      subforums: tree.childrenOf(forumId).filter((f) => viewable.has(f.id)).map((f) => this.row(tree, f, viewable, readable)),
+      subforums: tree.childrenOf(forumId).filter((f) => viewable.has(f.id)).map((f) => this.row(tree, f, viewable, readable, unreadForums)),
       topics: rows.map((t) => ({
         id: t.id,
         title: t.title,
@@ -262,7 +278,7 @@ export class GcsForumQueries {
         repliesCount: t.repliesCount,
         viewsCount: t.viewsCount,
         last: { at: t.lastPostAt.toISOString(), user: t.lastPosterId ? (posters.get(t.lastPosterId) ?? null) : null },
-        unread: false,
+        unread: unreadTopics.has(t.id),
       })),
       pagination: paginate(opts.page, perPage, total),
       canCreate: hostsTopics && actor.userId !== null && (await this.deps.permissions.can(actor, "forums.create", forumContainer(forumId))),
@@ -325,7 +341,8 @@ export class GcsForumQueries {
 
     const ids = posts.map((p) => p.id);
     const userIds = [...new Set(posts.flatMap((p) => [p.authorId, p.editedById]).filter((id): id is string => id !== null))];
-    const [users, files] = await Promise.all([
+    const { follows } = this.deps;
+    const [users, files, followCount, following] = await Promise.all([
       userIds.length === 0
         ? Promise.resolve([])
         : db.user.findMany({
@@ -347,6 +364,8 @@ export class GcsForumQueries {
             select: { id: true, filename: true, size: true, mime: true, contentId: true },
             orderBy: { createdAt: "asc" },
           }),
+      follows.count("topic", String(topicId)),
+      follows.isFollowing(actor.userId, "topic", String(topicId)),
     ]);
     const userMap = new Map(users.map((u) => [u.id, u]));
     const now = Date.now();
@@ -413,6 +432,7 @@ export class GcsForumQueries {
         (topic.visibility === "VISIBLE" || has(modPowers, "approve")) &&
         (!topic.locked || has(modPowers, "lock")),
       modPowers,
+      follow: { count: followCount, following },
     };
   }
 
@@ -521,7 +541,7 @@ export class GcsForumQueries {
   }
 
   /** Un forum în listă: contoarele și ultimul mesaj, adunate din subarborele citibil de actor. */
-  private row(tree: GcsTree, f: TreeForum, viewable: Set<number>, readable: Set<number>): GcsForumRow {
+  private row(tree: GcsTree, f: TreeForum, viewable: Set<number>, readable: Set<number>, unread: Set<number>): GcsForumRow {
     const nodes = tree.subtree(f.id).filter((n) => readable.has(n.id));
     const latest = nodes.reduce<TreeForum | null>((best, n) => (n.lastPostId !== null && (best === null || n.lastPostId > best.lastPostId!) ? n : best), null);
     const topic = latest?.lastTopicId ? tree.data.topics[String(latest.lastTopicId)] : undefined;
@@ -548,7 +568,7 @@ export class GcsForumQueries {
               user: latest.lastPosterId ? (tree.data.users[latest.lastPosterId] ?? null) : null,
             }
           : null,
-      unread: false,
+      unread: nodes.some((n) => unread.has(n.id)),
     };
   }
 

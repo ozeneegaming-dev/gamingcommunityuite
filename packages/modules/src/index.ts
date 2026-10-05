@@ -6,6 +6,7 @@ export { FORUMS_ACP_SECTION, GcsForumService, type GcsForumInput, type GcsForumO
 export { GcsForumPosting, type GcsForumDeps } from "./forums/posting";
 export { GcsPostService, type GcsEditInput, type GcsReplyInput, type GcsReplyResult, type GcsRevisionView } from "./forums/posts";
 export * from "./forums/queries";
+export { GcsReadMarkerService, UNREAD_DAYS } from "./forums/readMarkers";
 export { DEFAULT_REACTIONS } from "./forums/seed";
 export { parseRef, slugify } from "./forums/slug";
 export { GcsTopicService, type GcsNewTopicInput, type GcsNewTopicResult } from "./forums/topics";
