@@ -1,0 +1,448 @@
+/*
+ * RED-LINE — clasele de bază `gcs-*`, cu valorile din machetele aprobate (docs/mockups: Main, Admin, Install).
+ * Clasele sunt API-ul public pentru teme (spec §4): nu se redenumesc fără alias.
+ */
+
+body {
+  margin: 0;
+  background: var(--gcs-bg);
+}
+
+.gcs-root {
+  font-family: var(--gcs-font-text);
+  color: var(--gcs-text);
+  background: var(--gcs-bg);
+  min-height: 100vh;
+}
+
+.gcs-root a {
+  color: var(--gcs-accentInk);
+  text-decoration: none;
+}
+.gcs-root a:hover {
+  color: #FF9AA0;
+}
+
+.gcs-display {
+  font-family: var(--gcs-font-display);
+}
+
+.gcs-srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+:where(.gcs-root) :focus-visible {
+  outline: 2px solid var(--gcs-accentInk);
+  outline-offset: 2px;
+}
+
+/* ─── Butoane ─────────────────────────────────────────────────────────────── */
+
+.gcs-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 10px;
+  border: 0;
+  font: 600 14px var(--gcs-font-text);
+  cursor: pointer;
+  box-sizing: border-box;
+  text-decoration: none;
+}
+.gcs-btn--primary,
+.gcs-root a.gcs-btn--primary {
+  background: var(--gcs-accent);
+  color: #fff;
+}
+.gcs-btn--primary:hover {
+  background: #E23446;
+  color: #fff;
+}
+.gcs-btn--ghost,
+.gcs-root a.gcs-btn--ghost {
+  background: var(--gcs-surface2);
+  color: var(--gcs-text);
+  border: 1px solid var(--gcs-border);
+}
+.gcs-btn--ghost:hover {
+  background: var(--gcs-border);
+  color: var(--gcs-text);
+}
+/* `sm` doar în zone dense (ACP); ținta de click rămâne ≥ 44px prin padding-ul containerului. */
+.gcs-btn--sm {
+  min-height: 40px;
+  padding: 0 16px;
+  font-size: 13.5px;
+}
+.gcs-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.gcs-iconBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 0;
+  background: transparent;
+  color: #7D8494;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.gcs-iconBtn:hover {
+  background: var(--gcs-border);
+  color: var(--gcs-text);
+}
+
+.gcs-seg {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 0;
+  background: transparent;
+  color: var(--gcs-muted);
+  font: 600 12px var(--gcs-font-text);
+  cursor: pointer;
+  border-radius: 7px;
+}
+.gcs-seg--active {
+  background: var(--gcs-border);
+  color: var(--gcs-text);
+}
+
+/* ─── Card, badge, punct de stare ─────────────────────────────────────────── */
+
+.gcs-card {
+  background: var(--gcs-surface);
+  border: 1px solid var(--gcs-border);
+  border-radius: 14px;
+}
+
+.gcs-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+.gcs-badge--accent { background: rgba(214, 40, 57, 0.18); color: #FF8A91; }
+.gcs-badge--ok { background: rgba(61, 220, 151, 0.14); color: var(--gcs-ok); }
+.gcs-badge--warn { background: rgba(244, 183, 64, 0.14); color: var(--gcs-warn); }
+.gcs-badge--info { background: rgba(94, 162, 255, 0.14); color: #5EA2FF; }
+.gcs-badge--vip { background: rgba(183, 148, 255, 0.16); color: #C7ADFF; }
+.gcs-badge--neutral { background: rgba(216, 223, 234, 0.12); color: #D8DFEA; }
+
+.gcs-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* ─── Formulare (macheta Install) ─────────────────────────────────────────── */
+
+.gcs-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #C9CDD6;
+}
+.gcs-field__hint {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: #7D8494;
+}
+.gcs-field__error {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #FF8A91;
+}
+
+.gcs-input {
+  background: var(--gcs-surface2);
+  border: 1px solid var(--gcs-border);
+  color: var(--gcs-text);
+  border-radius: 10px;
+  height: 44px;
+  padding: 0 14px;
+  font: 500 14px var(--gcs-font-text);
+  box-sizing: border-box;
+  width: 100%;
+}
+textarea.gcs-input {
+  height: auto;
+  min-height: 96px;
+  padding: 10px 14px;
+}
+.gcs-input:focus {
+  border-color: var(--gcs-accent);
+  outline: none;
+}
+.gcs-input[aria-invalid="true"] {
+  border-color: #FF4D57;
+}
+
+.gcs-option {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--gcs-border);
+  background: var(--gcs-surface2);
+  cursor: pointer;
+}
+.gcs-option--active {
+  border-color: var(--gcs-accent);
+  background: rgba(214, 40, 57, 0.08);
+}
+
+/* ─── Tabel ───────────────────────────────────────────────────────────────── */
+
+.gcs-table {
+  overflow-x: auto;
+}
+.gcs-table__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.gcs-table__th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #7D8494;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-table__td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-table__row:hover {
+  background: #181B22;
+}
+.gcs-table__empty {
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--gcs-muted);
+}
+
+/* ─── Navigare site ───────────────────────────────────────────────────────── */
+
+.gcs-nav__link,
+.gcs-root a.gcs-nav__link {
+  color: var(--gcs-muted);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+.gcs-nav__link:hover,
+.gcs-root a.gcs-nav__link:hover {
+  color: var(--gcs-text);
+  background: var(--gcs-surface2);
+}
+.gcs-nav__link--active,
+.gcs-root a.gcs-nav__link--active {
+  color: var(--gcs-text);
+  background: var(--gcs-surface2);
+  box-shadow: inset 0 -2px 0 var(--gcs-accent);
+}
+
+.gcs-forumRow:hover {
+  background: #181B22;
+}
+
+/* ─── Useri: link, avatar, rame ───────────────────────────────────────────── */
+
+.gcs-userLink {
+  font-weight: 600;
+}
+
+.gcs-avatarFrame {
+  position: relative;
+  display: inline-flex;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+.gcs-avatarFrame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  animation: gcsSpin 4s linear infinite;
+}
+.gcs-avatarFrame--fire { padding: 3px; }
+.gcs-avatarFrame--fire::before { background: conic-gradient(#FF3B3B, #FF9F1C, #FFE066, #FF3B3B); }
+.gcs-avatarFrame--gold { padding: 3px; }
+.gcs-avatarFrame--gold::before { background: conic-gradient(#F4B740, #FFF4CC, #B97A0E, #F4B740); }
+.gcs-avatarFrame--neon { padding: 3px; }
+.gcs-avatarFrame--neon::before {
+  background: conic-gradient(#22D3EE, #B794FF, #FF7AC6, #22D3EE);
+  filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.6));
+}
+
+.gcs-avatar {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #fff;
+  border: 2px solid var(--gcs-bg);
+  box-sizing: border-box;
+  font-family: var(--gcs-font-display);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.gcs-avatar__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ─── ACP (macheta Admin) ─────────────────────────────────────────────────── */
+
+.gcs-acpApp,
+.gcs-root a.gcs-acpApp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 76px;
+  min-height: 66px;
+  border-radius: 12px;
+  color: var(--gcs-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-align: center;
+  box-sizing: border-box;
+  padding: 6px 2px;
+}
+.gcs-acpApp:hover,
+.gcs-root a.gcs-acpApp:hover {
+  color: var(--gcs-text);
+  background: var(--gcs-surface2);
+}
+.gcs-acpApp--active,
+.gcs-acpApp--active:hover,
+.gcs-root a.gcs-acpApp--active,
+.gcs-root a.gcs-acpApp--active:hover {
+  color: #fff;
+  background: var(--gcs-accent);
+}
+
+.gcs-acpSub__link,
+.gcs-root a.gcs-acpSub__link {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  color: #C9CDD6;
+  font-size: 13.5px;
+  font-weight: 500;
+}
+.gcs-acpSub__link:hover,
+.gcs-root a.gcs-acpSub__link:hover {
+  background: var(--gcs-surface2);
+  color: var(--gcs-text);
+}
+.gcs-acpSub__link--active,
+.gcs-root a.gcs-acpSub__link--active {
+  background: rgba(214, 40, 57, 0.14);
+  color: #FF8A91;
+  font-weight: 700;
+}
+.gcs-acpSub__title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #7D8494;
+  padding: 14px 12px 6px;
+}
+
+.gcs-acpWidget__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-acpWidget__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ─── Grafic ──────────────────────────────────────────────────────────────── */
+
+.gcs-chart__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.gcs-chart__types {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 9px;
+  background: var(--gcs-surface2);
+}
+
+/* ─── Animații ────────────────────────────────────────────────────────────── */
+
+@keyframes gcsShimmer {
+  to { background-position: 200% center; }
+}
+@keyframes gcsSpin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gcs-avatarFrame::before,
+  [class*="gcs-name--"] {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

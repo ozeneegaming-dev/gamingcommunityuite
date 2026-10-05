@@ -1,0 +1,18 @@
+/*
+ * Tema Tailwind v4 pentru componentele `Gcs*`: expune tokenurile `--gcs-*` ca utilitare
+ * (`bg-gcs-surface`, `text-gcs-muted`, `font-display` …). Se importă după `tailwindcss`.
+ */
+@theme inline {
+  --color-gcs-bg: var(--gcs-bg);
+  --color-gcs-surface: var(--gcs-surface);
+  --color-gcs-surface2: var(--gcs-surface2);
+  --color-gcs-border: var(--gcs-border);
+  --color-gcs-text: var(--gcs-text);
+  --color-gcs-muted: var(--gcs-muted);
+  --color-gcs-accent: var(--gcs-accent);
+  --color-gcs-accentInk: var(--gcs-accentInk);
+  --color-gcs-ok: var(--gcs-ok);
+  --color-gcs-warn: var(--gcs-warn);
+  --font-display: var(--gcs-font-display);
+  --font-sans: var(--gcs-font-text);
+}

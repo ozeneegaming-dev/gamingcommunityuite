@@ -1,0 +1,15 @@
+/* RED-LINE — tokenurile vizuale din macheta aprobată (Global Constraints, plan Etapa 1). */
+:root {
+  --gcs-bg: #0B0C10;
+  --gcs-surface: #14161C;
+  --gcs-surface2: #1B1E26;
+  --gcs-border: #262A34;
+  --gcs-text: #ECEDF1;
+  --gcs-muted: #A1A7B4;
+  --gcs-accent: #D62839;
+  --gcs-accentInk: #FF6B74;
+  --gcs-ok: #3DDC97;
+  --gcs-warn: #F4B740;
+  --gcs-font-display: "Chakra Petch", sans-serif;
+  --gcs-font-text: Manrope, system-ui, sans-serif;
+}
