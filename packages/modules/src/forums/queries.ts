@@ -5,9 +5,13 @@ import {
   type GcsCache,
   type GcsFollowService,
   type GcsPermissionService,
+  type GcsReactionCount,
+  type GcsReactionService,
+  type GcsReactionView,
   type GcsSettingsService,
 } from "@gcs/core";
 import type { ContentVisibility, ForumType, Prisma, PrismaClient } from "@gcs/db";
+import type { GcsPollService, GcsPollView } from "./polls";
 import { forumContainer, POST_CONTENT_TYPE } from "./posting";
 import type { GcsReadMarkerService } from "./readMarkers";
 
@@ -18,6 +22,8 @@ export type GcsQueriesDeps = {
   settings: GcsSettingsService;
   readMarkers: GcsReadMarkerService;
   follows: GcsFollowService;
+  reactions: GcsReactionService;
+  polls: GcsPollService;
 };
 
 /** Un user, pe scurt: destul pentru un link cu numele stilizat (`gcs-name--{groupKey}`). */
@@ -96,6 +102,8 @@ export type GcsPostView = {
   attachments: { id: string; filename: string; size: number; mime: string }[];
   canEdit: boolean;
   canHide: boolean;
+  reactions: GcsReactionCount[];
+  myReaction: number | null;
 };
 
 export type GcsTopicPage = {
@@ -124,7 +132,12 @@ export type GcsTopicPage = {
   canReply: boolean;
   modPowers: string[];
   follow: { count: number; following: boolean };
+  poll: GcsPollView | null;
+  /** Reacțiile active (bara de reacții). */
+  reactions: GcsReactionView[];
 };
+
+export type GcsTagPage = { tag: { name: string; slug: string }; topics: GcsTopicRow[]; pagination: GcsPagination };
 
 type TreeForum = {
   id: number;
@@ -243,11 +256,7 @@ export class GcsForumQueries {
             orderBy: [{ pinned: "desc" }, { lastPostAt: "desc" }, { id: "desc" }],
             skip: (Math.max(1, opts.page) - 1) * perPage,
             take: perPage,
-            include: {
-              author: { select: userRefSelect },
-              prefix: { select: { id: true, name: true, color: true } },
-              tags: { select: { tag: { select: { name: true, slug: true } } } },
-            },
+            include: topicRowInclude,
           }),
         ])
       : [0, []];
@@ -262,24 +271,7 @@ export class GcsForumQueries {
       forum: { id: node.id, type: node.type, name: node.name, slug: node.slug, description: node.description, linkUrl: node.linkUrl },
       breadcrumb: this.crumbs(tree, forumId, viewable),
       subforums: tree.childrenOf(forumId).filter((f) => viewable.has(f.id)).map((f) => this.row(tree, f, viewable, readable, unreadForums)),
-      topics: rows.map((t) => ({
-        id: t.id,
-        title: t.title,
-        slug: t.slug,
-        visibility: t.visibility,
-        pinned: t.pinned,
-        locked: t.locked,
-        featured: t.featured,
-        solved: t.solvedPostId !== null,
-        prefix: t.prefix,
-        tags: t.tags.map((x) => x.tag),
-        author: t.author ? toRef(t.author) : null,
-        createdAt: t.createdAt.toISOString(),
-        repliesCount: t.repliesCount,
-        viewsCount: t.viewsCount,
-        last: { at: t.lastPostAt.toISOString(), user: t.lastPosterId ? (posters.get(t.lastPosterId) ?? null) : null },
-        unread: unreadTopics.has(t.id),
-      })),
+      topics: rows.map((t) => topicRow(t, posters, unreadTopics)),
       pagination: paginate(opts.page, perPage, total),
       canCreate: hostsTopics && actor.userId !== null && (await this.deps.permissions.can(actor, "forums.create", forumContainer(forumId))),
       modPowers,
@@ -341,8 +333,9 @@ export class GcsForumQueries {
 
     const ids = posts.map((p) => p.id);
     const userIds = [...new Set(posts.flatMap((p) => [p.authorId, p.editedById]).filter((id): id is string => id !== null))];
-    const { follows } = this.deps;
-    const [users, files, followCount, following] = await Promise.all([
+    const { follows, reactions, polls } = this.deps;
+    const postKeys = ids.map(String);
+    const [users, files, followCount, following, summary, mine, poll, reactionList] = await Promise.all([
       userIds.length === 0
         ? Promise.resolve([])
         : db.user.findMany({
@@ -366,8 +359,13 @@ export class GcsForumQueries {
           }),
       follows.count("topic", String(topicId)),
       follows.isFollowing(actor.userId, "topic", String(topicId)),
+      reactions.summary(POST_CONTENT_TYPE, postKeys),
+      reactions.mine(actor.userId, POST_CONTENT_TYPE, postKeys),
+      polls.forTopic(actor, topicId),
+      reactions.list(),
     ]);
     const userMap = new Map(users.map((u) => [u.id, u]));
+    const myReactions = mine;
     const now = Date.now();
     const inWindow = (createdAt: Date) =>
       editMinutes === -1 || (typeof editMinutes === "number" && editMinutes > 0 && now - createdAt.getTime() <= editMinutes * 60_000);
@@ -401,6 +399,8 @@ export class GcsForumQueries {
         attachments: files.filter((f) => f.contentId === String(p.id)).map(({ contentId: _c, ...f }) => f),
         canEdit: has(modPowers, "edit") || (mine && p.visibility !== "HIDDEN" && !topic.locked && inWindow(p.createdAt)),
         canHide: has(modPowers, "hide") || (mine && hideOwn === true && p.visibility === "VISIBLE"),
+        reactions: summary[String(p.id)] ?? [],
+        myReaction: myReactions[String(p.id)] ?? null,
       };
     });
 
@@ -433,7 +433,32 @@ export class GcsForumQueries {
         (!topic.locked || has(modPowers, "lock")),
       modPowers,
       follow: { count: followCount, following },
+      poll: poll ? { ...poll, canVote: poll.canVote && topic.visibility === "VISIBLE" } : null,
+      reactions: reactionList,
     };
+  }
+
+  /** Topicurile vizibile cu un tag, din forumurile pe care actorul le poate citi. */
+  async topicsByTag(actor: GcsActor, slug: string, opts: { page: number }): Promise<GcsTagPage> {
+    const { db, settings } = this.deps;
+    const tag = await db.tag.findUnique({ where: { slug }, select: { id: true, name: true, slug: true } });
+    if (!tag) throw new GcsNotFound();
+    const tree = await this.tree();
+    const { readable } = await this.access(actor, tree);
+    const perPage = await settings.get<number>("forums.topics_per_page");
+    const where: Prisma.TopicWhereInput = { forumId: { in: [...readable] }, visibility: "VISIBLE", tags: { some: { tagId: tag.id } } };
+    const [total, rows] = await Promise.all([
+      db.topic.count({ where }),
+      db.topic.findMany({
+        where,
+        orderBy: [{ lastPostAt: "desc" }, { id: "desc" }],
+        skip: (Math.max(1, opts.page) - 1) * perPage,
+        take: perPage,
+        include: topicRowInclude,
+      }),
+    ]);
+    const [posters, unread] = await Promise.all([this.users(rows.map((t) => t.lastPosterId)), this.deps.readMarkers.unreadTopicIds(actor.userId, rows)]);
+    return { tag: { name: tag.name, slug: tag.slug }, topics: rows.map((t) => topicRow(t, posters, unread)), pagination: paginate(opts.page, perPage, total) };
   }
 
   /** Ultimele topicuri active, doar din forumurile pe care actorul le poate citi. */
@@ -579,6 +604,36 @@ export class GcsForumQueries {
     const rows = await this.deps.db.user.findMany({ where: { id: { in: unique } }, select: userRefSelect });
     return new Map(rows.map((u) => [u.id, toRef(u)]));
   }
+}
+
+const topicRowInclude = {
+  author: { select: userRefSelect },
+  prefix: { select: { id: true, name: true, color: true } },
+  tags: { select: { tag: { select: { name: true, slug: true } } } },
+} as const satisfies Prisma.TopicInclude;
+
+type TopicWithRow = Prisma.TopicGetPayload<{ include: typeof topicRowInclude }>;
+
+/** Un topic în listă (forum, pagina unui tag). */
+function topicRow(t: TopicWithRow, posters: Map<string, GcsUserRef>, unread: Set<number>): GcsTopicRow {
+  return {
+    id: t.id,
+    title: t.title,
+    slug: t.slug,
+    visibility: t.visibility,
+    pinned: t.pinned,
+    locked: t.locked,
+    featured: t.featured,
+    solved: t.solvedPostId !== null,
+    prefix: t.prefix,
+    tags: t.tags.map((x) => x.tag),
+    author: t.author ? toRef(t.author) : null,
+    createdAt: t.createdAt.toISOString(),
+    repliesCount: t.repliesCount,
+    viewsCount: t.viewsCount,
+    last: { at: t.lastPostAt.toISOString(), user: t.lastPosterId ? (posters.get(t.lastPosterId) ?? null) : null },
+    unread: unread.has(t.id),
+  };
 }
 
 function paginate(page: number, perPage: number, total: number): GcsPagination {

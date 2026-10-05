@@ -4,6 +4,7 @@ import {
   GcsAttachmentService,
   GcsContentRenderer,
   GcsFollowService,
+  GcsReactionService,
   GcsLocalFileStore,
   GcsModuleRegistry,
   GcsRedisRateLimiter,
@@ -14,9 +15,12 @@ import { createWorld } from "@gcs/core/test/world";
 import type { ForumType, PrismaClient } from "@gcs/db";
 import { coreModule } from "../src/core-module";
 import { forumsModule } from "../src/forums";
+import { registerForumContent } from "../src/forums/content";
 import { GcsForumService } from "../src/forums/forums";
+import { GcsPollService } from "../src/forums/polls";
 import { GcsForumPosting } from "../src/forums/posting";
 import { GcsPostService } from "../src/forums/posts";
+import { GcsPrefixService } from "../src/forums/prefixes";
 import { GcsForumQueries } from "../src/forums/queries";
 import { GcsReadMarkerService } from "../src/forums/readMarkers";
 import { GcsTopicService } from "../src/forums/topics";
@@ -73,11 +77,15 @@ export async function createForumWorld() {
     attachments,
     siteHost: async () => "forum.test",
   });
-  const topics = new GcsTopicService(posting);
+  const polls = new GcsPollService(posting);
+  const prefixes = new GcsPrefixService({ db, bus, acp: world.acp });
+  const reactions = new GcsReactionService({ db, bus, cache, acp: world.acp });
+  registerForumContent(posting, { reactions, attachments });
+  const topics = new GcsTopicService(posting, { polls, prefixes });
   const posts = new GcsPostService(posting);
   const readMarkers = new GcsReadMarkerService({ db, settings });
   const follows = new GcsFollowService({ db });
-  const queries = new GcsForumQueries({ db, cache, permissions, settings, readMarkers, follows });
+  const queries = new GcsForumQueries({ db, cache, permissions, settings, readMarkers, follows, reactions, polls });
 
   const root = await world.actorFor(await world.createUser("Fondator", "root_admin"));
   const member = await world.actorFor(await world.createUser("Mara", "member"));
@@ -116,6 +124,9 @@ export async function createForumWorld() {
     queries,
     readMarkers,
     follows,
+    polls,
+    prefixes,
+    reactions,
     root,
     member,
     guest,

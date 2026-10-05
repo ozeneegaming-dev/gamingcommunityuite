@@ -1,9 +1,12 @@
 // @gcs/modules — câte un folder pe modul.
 export { coreModule, DEFAULT_GROUP_KEYS } from "./core-module";
 export { forumsModule } from "./forums";
+export { canViewPost, registerForumContent } from "./forums/content";
 export { GcsForumCounters } from "./forums/counters";
 export { FORUMS_ACP_SECTION, GcsForumService, type GcsForumInput, type GcsForumOrderItem, type GcsForumPatch } from "./forums/forums";
 export { GcsForumPosting, type GcsForumDeps } from "./forums/posting";
+export { GcsPollService, validatePoll, type GcsPollInput, type GcsPollView } from "./forums/polls";
+export { GcsPrefixService, PREFIXES_ACP_SECTION, type GcsPrefixInput } from "./forums/prefixes";
 export { GcsPostService, type GcsEditInput, type GcsReplyInput, type GcsReplyResult, type GcsRevisionView } from "./forums/posts";
 export * from "./forums/queries";
 export { GcsReadMarkerService, UNREAD_DAYS } from "./forums/readMarkers";
