@@ -71,8 +71,15 @@ export class GcsAchievementService {
 
   constructor(private readonly deps: { db: PrismaClient; bus: GcsEventBus; acp: GcsAcpRoleService; jobs: GcsJobQueue | null }) {}
 
+  /** Rulate în jobul zilnic, după sweep-ul regulilor (ex. promovările pe vechime). */
+  private readonly daily: ((now: Date) => Promise<unknown>)[] = [];
+
   onEvaluated(fn: (userId: string) => Promise<void>): void {
     this.afterEvaluate.push(fn);
+  }
+
+  onDaily(fn: (now: Date) => Promise<unknown>): void {
+    this.daily.push(fn);
   }
 
   /** Programează evaluarea unui user (deduplicată pe fereastra de 2 s). Fără coadă (teste), nu face nimic. */
@@ -319,6 +326,14 @@ export class GcsAchievementService {
       },
     });
     jobs.register({ name: RANKS_RECOMPUTE_JOB, handler: async () => void (await this.recomputeAllRanks()) });
-    jobs.register({ name: MEMBERS_DAILY_JOB, pattern: "0 4 * * *", handler: async () => void (await this.dailySweep()) });
+    jobs.register({
+      name: MEMBERS_DAILY_JOB,
+      pattern: "0 4 * * *",
+      handler: async () => {
+        const now = new Date();
+        await this.dailySweep(now);
+        for (const fn of this.daily) await fn(now);
+      },
+    });
   }
 }

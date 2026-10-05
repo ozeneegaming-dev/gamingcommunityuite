@@ -1,6 +1,8 @@
 import type { GcsMail } from "@gcs/core";
 import { GcsAchievementService } from "../src/profile/achievements";
+import { GcsMembership } from "../src/profile/membership";
 import { GcsProfileService } from "../src/profile/profile";
+import { GcsPromotionService } from "../src/profile/promotions";
 import { GcsSocialService } from "../src/profile/social";
 import { createForumWorld } from "./world";
 
@@ -38,6 +40,9 @@ export async function createProfileWorld() {
   // Fără coadă: evaluarea (jobul din worker) se apelează direct în teste; punctele pe acțiune vin din ascultători.
   const achievements = new GcsAchievementService({ db: world.db, bus: world.bus, acp: world.acp, jobs: null });
   achievements.listen(world.bus);
+  const membership = new GcsMembership({ bus: world.bus, permissions: world.permissions });
+  const promotions = new GcsPromotionService({ db: world.db, bus: world.bus, acp: world.acp, membership });
+  achievements.onEvaluated(async (userId) => void (await promotions.evaluateUser(userId)));
   const moderator = await world.actorFor(await world.createUser("NeoX", "moderator"));
 
   /** Șterge pauza de flood pe perete. */
@@ -45,7 +50,7 @@ export async function createProfileWorld() {
     await world.redis.del(`gcs:rl:wall-post:${actor.userId}`);
   }
 
-  return { ...world, outbox, mailer, profiles, social, achievements, moderator, clearWallFlood };
+  return { ...world, outbox, mailer, profiles, social, achievements, membership, promotions, moderator, clearWallFlood };
 }
 
 export type GcsProfileWorld = Awaited<ReturnType<typeof createProfileWorld>>;

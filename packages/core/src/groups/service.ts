@@ -167,7 +167,10 @@ export class GcsGroupService {
       await this.audit(tx, actor, "user.primary_group", userId, { primaryGroupId: user.primaryGroupId }, { primaryGroupId: groupId }, "user");
       return user.primaryGroupId;
     });
-    if (oldGroupId !== null) await this.changed([oldGroupId, groupId], [`user:${userId}`]);
+    if (oldGroupId !== null) {
+      await this.changed([oldGroupId, groupId], [`user:${userId}`]);
+      await this.userGroupsChanged(userId);
+    }
   }
 
   async addSecondary(userId: string, groupId: number, actor: GcsActor): Promise<void> {
@@ -183,7 +186,10 @@ export class GcsGroupService {
       await this.audit(tx, actor, "user.secondary_add", userId, undefined, { groupId }, "user");
       return true;
     });
-    if (added) await this.changed([groupId], [`user:${userId}`]);
+    if (added) {
+      await this.changed([groupId], [`user:${userId}`]);
+      await this.userGroupsChanged(userId);
+    }
   }
 
   async removeSecondary(userId: string, groupId: number, actor: GcsActor): Promise<void> {
@@ -196,7 +202,10 @@ export class GcsGroupService {
       await this.audit(tx, actor, "user.secondary_remove", userId, { groupId }, undefined, "user");
       return true;
     });
-    if (removed) await this.changed([groupId], [`user:${userId}`]);
+    if (removed) {
+      await this.changed([groupId], [`user:${userId}`]);
+      await this.userGroupsChanged(userId);
+    }
   }
 
   /** Ordinea grupurilor (ACP → Grupuri, drag & drop): `order` conține toate grupurile, în ordinea nouă. */
@@ -261,6 +270,11 @@ export class GcsGroupService {
     targetType = "group",
   ): Promise<void> {
     return writeAudit(tx, { actorId: actor.userId, action, targetType, targetId: String(targetId), before, after, ip: actor.ip });
+  }
+
+  /** Grupurile unui user s-au schimbat: modulele reacționează (ex. cosmeticele care nu mai sunt permise, etapa 3). */
+  private async userGroupsChanged(userId: string): Promise<void> {
+    await this.deps.bus.emit({ name: "user.groups_changed", payload: { userId }, tags: [`user:${userId}`] });
   }
 
   private async changed(groupIds: number[], extraTags: string[] = []): Promise<void> {
