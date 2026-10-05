@@ -110,7 +110,7 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
       },
     },
     onUpdate: ({ editor: e }) => {
-      onChange?.(e.getJSON());
+      onChange?.(JSON.parse(JSON.stringify(e.getJSON())) as JSONContent);
       if (!draftKey) return;
       clearTimeout(draftTimer.current);
       draftTimer.current = setTimeout(() => saveDraft(draftKey, e.getJSON()), DRAFT_DELAY_MS);
@@ -143,7 +143,9 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
   useImperativeHandle(
     ref,
     () => ({
-      getJSON: () => editorRef.current?.getJSON() ?? { type: "doc", content: [] },
+      // Copie JSON simplă: ProseMirror creează atributele cu `Object.create(null)`, iar serializarea Server Actions
+      // din React pierde obiectele fără prototip (citatul ajungea pe server fără `postId` și autor).
+      getJSON: () => JSON.parse(JSON.stringify(editorRef.current?.getJSON() ?? { type: "doc", content: [] })) as JSONContent,
       isEmpty: () => editorRef.current?.isEmpty ?? true,
       clear: () => {
         editorRef.current?.commands.clearContent(true);

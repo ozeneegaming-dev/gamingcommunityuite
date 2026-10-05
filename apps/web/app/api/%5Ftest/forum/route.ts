@@ -20,6 +20,11 @@ async function actorFor(email: string): Promise<GcsActor> {
   return { userId: user.id, groupIds: [user.primaryGroupId, ...user.groups.map((g) => g.groupId)], primaryGroupId: user.primaryGroupId, isBanned: false, ip: "e2e" };
 }
 
+/** Șterge și pauza lăsată de postarea creată, ca testul să poată posta imediat din browser. */
+async function clearFlood(actor: GcsActor): Promise<void> {
+  await services().redis.del(`gcs:rl:forum-post:${actor.userId}`);
+}
+
 /** Un Root Admin „de sistem” (fără user), pentru structura forumului. */
 async function rootActor(): Promise<GcsActor> {
   const root = await services().db.group.findUniqueOrThrow({ where: { key: "root_admin" } });
@@ -39,16 +44,22 @@ export async function POST(req: Request): Promise<Response> {
       return Response.json({ id: forum.id, slug: forum.slug });
     }
     case "topic": {
-      const res = await s.topics.create(await actorFor(body.authorEmail), {
+      const actor = await actorFor(body.authorEmail);
+      const res = await s.topics.create(actor, {
         forumId: body.forumId,
         title: body.title,
         content: doc(body.text),
         ...(body.tags ? { tags: body.tags } : {}),
       });
+      await clearFlood(actor);
       return Response.json(res);
     }
-    case "reply":
-      return Response.json(await s.posts.reply(await actorFor(body.authorEmail), { topicId: body.topicId, content: doc(body.text) }));
+    case "reply": {
+      const actor = await actorFor(body.authorEmail);
+      const res = await s.posts.reply(actor, { topicId: body.topicId, content: doc(body.text) });
+      await clearFlood(actor);
+      return Response.json(res);
+    }
     case "permissions": {
       // Matricea efectivă a forumului (urcând pe moștenire), cu acțiunile grupului înlocuite.
       let source = String(body.forumId);

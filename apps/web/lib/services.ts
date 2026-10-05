@@ -76,6 +76,7 @@ export type GcsServices = {
   reports: GcsReportService;
   moderation: GcsForumModerationService;
   search: GcsForumSearch;
+  posting: GcsForumPosting;
 };
 
 /** Revalidează paginile Next.js cache-uite; în afara unui request (ex. scripturi) nu e disponibil. */
@@ -218,6 +219,7 @@ function createServices(): GcsServices {
     reports,
     moderation: new GcsForumModerationService(posting, { posts, reports, acp }),
     search: new GcsForumSearch({ db, permissions, settings, rateLimiter }),
+    posting,
   };
 }
 

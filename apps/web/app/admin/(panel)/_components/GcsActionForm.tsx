@@ -1,10 +1,11 @@
 "use client";
 
-import type { GcsErrorPayload, GcsResult } from "@gcs/core";
+import type { GcsResult } from "@gcs/core";
 import { GcsButton } from "@gcs/ui";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
+import { useErrorMessage } from "@/lib/use-error-message";
 
 type Props = {
   action: (fd: FormData) => Promise<GcsResult<unknown>>;
@@ -19,19 +20,7 @@ type Props = {
   confirm?: string;
 };
 
-/** Mesajul tradus pentru o eroare `GcsResult`: motivul (`params.reason`), erorile pe câmpuri sau codul general. */
-export function useErrorMessage(): (error: GcsErrorPayload) => string {
-  const t = useTranslations("errors");
-  return (error) => {
-    const reason = error.params?.reason;
-    if (reason && t.has(`reasons.${reason}`)) return t(`reasons.${reason}`);
-    const fieldCodes = Object.values(error.fields ?? {});
-    if (fieldCodes.length > 0) {
-      return fieldCodes.map((c) => (t.has(`fields.${c}`) ? t(`fields.${c}`) : c)).join(" · ");
-    }
-    return t.has(error.code) ? t(error.code) : error.code;
-  };
-}
+export { useErrorMessage } from "@/lib/use-error-message";
 
 /** Un formular ACP legat de o Server Action care întoarce `GcsResult`: afișează „Salvat” sau eroarea. */
 export function GcsActionForm({ action, submitLabel, variant = "primary", children, style, redirectTo, compact, confirm }: Props) {

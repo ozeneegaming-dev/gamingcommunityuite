@@ -135,3 +135,14 @@ describe("GcsEditor", () => {
     expect(screen.getByRole("alert").textContent).toBe("Link nerecunoscut");
   });
 });
+
+describe("GcsEditor.getJSON", () => {
+  test("întoarce obiecte simple (cu prototip), ca serializarea Server Actions să nu piardă atributele", async () => {
+    const ref = createRef<GcsEditorHandle>();
+    render(<GcsEditor ref={ref} labels={labels} forumId={1} />);
+    await waitFor(() => expect(ref.current?.isEmpty()).toBe(true));
+    act(() => ref.current!.insertQuote({ postId: 7, authorId: "u1", authorName: "ShadowRO", text: "x" }));
+    const quote = ref.current!.getJSON().content!.find((n) => n.type === "quote")!;
+    expect(Object.getPrototypeOf(quote.attrs)).toBe(Object.prototype);
+  });
+});
