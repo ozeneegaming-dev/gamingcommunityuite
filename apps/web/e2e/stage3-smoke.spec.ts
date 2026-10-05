@@ -10,8 +10,9 @@ import { PASSWORD, register, totp, useFreshIp } from "./helpers";
 test.skip(!process.env.GCS_E2E_INSTALL_URL, "Rulează doar pe instanța de instalare (e2e/run.mts, build de producție).");
 
 async function installSql<T extends Record<string, unknown>>(query: string, params: unknown[] = []): Promise<T[]> {
-  const url = new URL(process.env.DATABASE_URL!);
-  url.pathname = "/redline_e2e_install";
+  // Pe VPS (prin tunel), baza instanței se dă explicit; local e `redline_e2e_install` pe serverul E2E.
+  const url = new URL(process.env.GCS_E2E_INSTALL_DB_URL ?? process.env.DATABASE_URL!);
+  if (!process.env.GCS_E2E_INSTALL_DB_URL) url.pathname = "/redline_e2e_install";
   const client = new pg.Client({ connectionString: url.toString() });
   await client.connect();
   try {
@@ -75,6 +76,7 @@ test("etapa 3: profil + badge → VIP din ACP → ramă → hover card → conve
 
   await test.step("admin-ul acordă VIP Gold pe 30 de zile din ACP; numele e stilizat pe topic în ≤ 2 s; membrul alege rama Gold", async () => {
     await register(page, "Sef3", "sef3@example.com");
+    await expect(page.getByTestId("gcs-header-user")).toHaveText("Sef3");
     await setGroup("Sef3", "root_admin");
     await page.goto("/admin");
     await expect(page).toHaveURL(/\/admin\/2fa-setup$/);

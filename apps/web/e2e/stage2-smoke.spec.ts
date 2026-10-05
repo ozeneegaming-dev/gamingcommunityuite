@@ -11,8 +11,9 @@ test.skip(!process.env.GCS_E2E_INSTALL_URL, "Rulează doar pe instanța de insta
 
 /** SQL pe baza instanței de instalare (`redline_e2e_install`, pe același server ca baza E2E). */
 async function installSql<T extends Record<string, unknown>>(query: string, params: unknown[] = []): Promise<T[]> {
-  const url = new URL(process.env.DATABASE_URL!);
-  url.pathname = "/redline_e2e_install";
+  // Pe VPS (prin tunel), baza instanței se dă explicit; local e `redline_e2e_install` pe serverul E2E.
+  const url = new URL(process.env.GCS_E2E_INSTALL_DB_URL ?? process.env.DATABASE_URL!);
+  if (!process.env.GCS_E2E_INSTALL_DB_URL) url.pathname = "/redline_e2e_install";
   const client = new pg.Client({ connectionString: url.toString() });
   await client.connect();
   try {

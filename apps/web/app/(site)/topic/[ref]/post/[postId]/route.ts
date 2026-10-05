@@ -2,6 +2,7 @@ import { canViewPost, parseRef } from "@gcs/modules";
 import { currentActor } from "@/lib/actor";
 import { topicHref } from "@/lib/forum-urls";
 import { services } from "@/lib/services";
+import { localRedirect } from "@/lib/redirect";
 
 export const dynamic = "force-dynamic";
 
@@ -20,5 +21,5 @@ export async function GET(req: Request, { params }: Props): Promise<Response> {
   if (!post || post.topicId !== ref.id || !(await canViewPost(posting, actor, postId))) return new Response(null, { status: 404 });
 
   const page = await posting.pageOf(ref.id, postId);
-  return Response.redirect(new URL(`${topicHref({ id: ref.id, slug: post.topic.slug }, page)}#post-${postId}`, req.url), 303);
+  return localRedirect(`${topicHref({ id: ref.id, slug: post.topic.slug }, page)}#post-${postId}`);
 }

@@ -1,5 +1,6 @@
 import { GcsError } from "@gcs/core";
 import { services } from "@/lib/services";
+import { localRedirect } from "@/lib/redirect";
 
 export const dynamic = "force-dynamic";
 
@@ -9,9 +10,9 @@ export async function GET(req: Request): Promise<Response> {
   const token = url.searchParams.get("token") ?? "";
   try {
     await services().profiles.confirmEmailChange(token);
-    return Response.redirect(new URL("/settings/account?email=changed", url), 303);
+    return localRedirect("/settings/account?email=changed");
   } catch (error) {
-    if (error instanceof GcsError) return Response.redirect(new URL("/settings/account?email=invalid", url), 303);
+    if (error instanceof GcsError) return localRedirect("/settings/account?email=invalid");
     throw error;
   }
 }
