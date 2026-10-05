@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { readdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
@@ -9,6 +10,11 @@ import { withDatabase } from "./url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const migrationsDir = path.resolve(here, "../prisma/migrations");
+/** Toate migrațiile din folder, în ordine (numele încep cu data). */
+const ALL_MIGRATIONS = readdirSync(migrationsDir, { withFileTypes: true })
+  .filter((e) => e.isDirectory())
+  .map((e) => e.name)
+  .sort();
 const schemaPath = path.resolve(here, "../prisma/schema.prisma");
 const prismaCli = path.resolve(here, "../node_modules/prisma/build/index.js");
 const DB = `redline_migrate_${process.env.VITEST_POOL_ID ?? "1"}`;
@@ -36,10 +42,11 @@ afterAll(async () => {
   await admin((c) => c.query(`DROP DATABASE IF EXISTS "${DB}" WITH (FORCE)`));
 });
 
-describe("migrateDatabase", () => {
+// Fiecare test aplică toate migrațiile; sub încărcarea `pnpm test` (toate pachetele în paralel) durează peste 30 s.
+describe("migrateDatabase", { timeout: 120_000 }, () => {
   test("pe o bază goală aplică toate migrațiile; a doua rulare nu mai aplică nimic", async () => {
     const first = await migrateDatabase(url, migrationsDir);
-    expect(first.applied).toEqual(["20261005000000_core", "20261005010000_two_factor"]);
+    expect(first.applied).toEqual(ALL_MIGRATIONS);
     const second = await migrateDatabase(url, migrationsDir);
     expect(second.applied).toEqual([]);
 
@@ -64,6 +71,6 @@ describe("migrateDatabase", () => {
       await c.query(`CREATE DATABASE "${DB}"`);
     });
     const [a, b] = await Promise.all([migrateDatabase(url, migrationsDir), migrateDatabase(url, migrationsDir)]);
-    expect([...a.applied, ...b.applied].sort()).toEqual(["20261005000000_core", "20261005010000_two_factor"]);
+    expect([...a.applied, ...b.applied].sort()).toEqual(ALL_MIGRATIONS);
   });
 });

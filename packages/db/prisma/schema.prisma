@@ -44,6 +44,22 @@ model User {
   acpRoles        AcpRoleAssignment[]
   dashboardLayout AcpDashboardLayout?
 
+  // Forum (etapa 2). Contoarele sunt denormalizate și se actualizează în tranzacția scrierii.
+  postsCount         Int @default(0)
+  approvedPostsCount Int @default(0)
+  reputation         Int @default(0)
+
+  topics         Topic[]           @relation("TopicAuthor")
+  posts          Post[]            @relation("PostAuthor")
+  postRevisions  PostRevision[]
+  reactionsGiven ContentReaction[]
+  pollVotes      PollVote[]
+  readMarkers    ReadMarker[]
+  forumReadMarks ForumReadMark[]
+  follows        Follow[]
+  reports        Report[]          @relation("ReportReporter")
+  attachments    Attachment[]
+
   @@index([primaryGroupId])
   @@map("users")
 }
@@ -355,4 +371,339 @@ model AuditLog {
   @@index([actorId])
   @@index([targetType, targetId])
   @@map("audit_logs")
+}
+
+// ─── Forum (etapa 2, specul etapei §4) ──────────────────────────────────────
+
+enum ForumType {
+  CATEGORY
+  FORUM
+  LINK
+  QA
+}
+
+/// Starea de vizibilitate a unui topic sau a unei postări.
+enum ContentVisibility {
+  VISIBLE
+  PENDING
+  HIDDEN
+}
+
+enum ReportStatus {
+  OPEN
+  CLOSED
+}
+
+/// Categorie, forum, subforum sau link. `parentId` null = rădăcină. Câmpurile `last*` nu au chei străine (evită ciclurile).
+model Forum {
+  id              Int       @id @default(autoincrement())
+  parentId        Int?
+  type            ForumType @default(FORUM)
+  name            String
+  slug            String
+  description     String    @default("")
+  icon            String?
+  color           String?
+  position        Int       @default(0)
+  linkUrl         String?
+  requireApproval Boolean   @default(false)
+  topicsCount     Int       @default(0)
+  postsCount      Int       @default(0)
+  lastPostId      Int?
+  lastPostAt      DateTime?
+  lastTopicId     Int?
+  lastPosterId    String?
+  createdAt       DateTime  @default(now())
+
+  parent   Forum?        @relation("ForumTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children Forum[]       @relation("ForumTree")
+  topics   Topic[]
+  prefixes ForumPrefix[]
+
+  @@index([parentId, position])
+  @@map("forums")
+}
+
+model Topic {
+  id           Int                      @id @default(autoincrement())
+  forumId      Int
+  title        String
+  slug         String
+  authorId     String?
+  prefixId     Int?
+  visibility   ContentVisibility        @default(VISIBLE)
+  pinned       Boolean                  @default(false)
+  locked       Boolean                  @default(false)
+  featured     Boolean                  @default(false)
+  solvedPostId Int?
+  firstPostId  Int?
+  lastPostId   Int?
+  lastPostAt   DateTime                 @default(now())
+  lastPosterId String?
+  repliesCount Int                      @default(0)
+  viewsCount   Int                      @default(0)
+  createdAt    DateTime                 @default(now())
+  searchVector Unsupported("tsvector")?
+
+  forum       Forum        @relation(fields: [forumId], references: [id], onDelete: Cascade)
+  author      User?        @relation("TopicAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  prefix      TopicPrefix? @relation(fields: [prefixId], references: [id], onDelete: SetNull)
+  posts       Post[]
+  tags        TopicTag[]
+  poll        Poll?
+  readMarkers ReadMarker[]
+
+  @@index([forumId, visibility, pinned(sort: Desc), lastPostAt(sort: Desc)])
+  @@index([authorId])
+  @@map("topics")
+}
+
+model Post {
+  id           Int                      @id @default(autoincrement())
+  topicId      Int
+  authorId     String?
+  contentJson  Json
+  contentHtml  String
+  visibility   ContentVisibility        @default(VISIBLE)
+  hiddenById   String?
+  hiddenReason String?
+  editedAt     DateTime?
+  editedById   String?
+  ip           String?
+  createdAt    DateTime                 @default(now())
+  searchVector Unsupported("tsvector")?
+
+  topic     Topic          @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  author    User?          @relation("PostAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  revisions PostRevision[]
+
+  @@index([topicId, visibility, id])
+  @@index([authorId, createdAt])
+  @@map("posts")
+}
+
+model PostRevision {
+  id          Int      @id @default(autoincrement())
+  postId      Int
+  contentJson Json
+  contentHtml String
+  editorId    String?
+  createdAt   DateTime @default(now())
+
+  post   Post  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  editor User? @relation(fields: [editorId], references: [id], onDelete: SetNull)
+
+  @@index([postId])
+  @@map("post_revisions")
+}
+
+model TopicPrefix {
+  id       Int    @id @default(autoincrement())
+  name     String
+  color    String
+  position Int    @default(0)
+
+  topics Topic[]
+  forums ForumPrefix[]
+
+  @@map("topic_prefixes")
+}
+
+/// Prefixele permise pe un forum. Niciun rând pentru forum = toate prefixele sunt permise.
+model ForumPrefix {
+  forumId  Int
+  prefixId Int
+
+  forum  Forum       @relation(fields: [forumId], references: [id], onDelete: Cascade)
+  prefix TopicPrefix @relation(fields: [prefixId], references: [id], onDelete: Cascade)
+
+  @@id([forumId, prefixId])
+  @@map("forum_prefixes")
+}
+
+model Tag {
+  id   Int    @id @default(autoincrement())
+  name String
+  slug String @unique
+
+  topics TopicTag[]
+
+  @@map("tags")
+}
+
+model TopicTag {
+  topicId Int
+  tagId   Int
+
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  tag   Tag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([topicId, tagId])
+  @@index([tagId])
+  @@map("topic_tags")
+}
+
+model Poll {
+  id       Int       @id @default(autoincrement())
+  topicId  Int       @unique
+  question String
+  multiple Boolean   @default(false)
+  closesAt DateTime?
+
+  topic   Topic        @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  options PollOption[]
+  votes   PollVote[]
+
+  @@map("polls")
+}
+
+model PollOption {
+  id         Int    @id @default(autoincrement())
+  pollId     Int
+  text       String
+  position   Int    @default(0)
+  votesCount Int    @default(0)
+
+  poll  Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes PollVote[]
+
+  @@index([pollId])
+  @@map("poll_options")
+}
+
+model PollVote {
+  pollId    Int
+  optionId  Int
+  userId    String
+  createdAt DateTime @default(now())
+
+  poll   Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  option PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([pollId, optionId, userId])
+  @@index([pollId, userId])
+  @@map("poll_votes")
+}
+
+/// Reacțiile configurabile din ACP. `weight` se adună la reputația autorului.
+model Reaction {
+  id       Int     @id @default(autoincrement())
+  key      String  @unique
+  label    String
+  symbol   String
+  color    String
+  weight   Int     @default(0)
+  position Int     @default(0)
+  enabled  Boolean @default(true)
+
+  given ContentReaction[]
+
+  @@map("reactions")
+}
+
+/// O reacție pe orice conținut (`forums.post`, `downloads.file`…). Una per user per conținut.
+model ContentReaction {
+  id          Int      @id @default(autoincrement())
+  contentType String
+  contentId   String
+  userId      String
+  reactionId  Int
+  createdAt   DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reaction Reaction @relation(fields: [reactionId], references: [id], onDelete: Cascade)
+
+  @@unique([contentType, contentId, userId])
+  @@index([contentType, contentId])
+  @@map("content_reactions")
+}
+
+model ReadMarker {
+  userId         String
+  topicId        Int
+  lastReadPostId Int
+  updatedAt      DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@id([userId, topicId])
+  @@index([topicId])
+  @@map("read_markers")
+}
+
+/// „Marchează tot citit” pe un forum: topicurile fără activitate după `markedAt` sunt citite.
+model ForumReadMark {
+  userId   String
+  forumId  Int
+  markedAt DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, forumId])
+  @@map("forum_read_marks")
+}
+
+model Follow {
+  id          Int      @id @default(autoincrement())
+  userId      String
+  contentType String
+  contentId   String
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contentType, contentId])
+  @@index([contentType, contentId])
+  @@map("follows")
+}
+
+model Report {
+  id          String       @id @default(cuid())
+  contentType String
+  contentId   String
+  reporterId  String?
+  reason      String
+  status      ReportStatus @default(OPEN)
+  handledById String?
+  handledAt   DateTime?
+  createdAt   DateTime     @default(now())
+
+  reporter User? @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([contentType, contentId])
+  @@map("reports")
+}
+
+/// Un fișier încărcat. `contentType`/`contentId` sunt null până la salvarea conținutului care îl folosește.
+model Attachment {
+  id          String   @id @default(cuid())
+  ownerId     String?
+  storageKey  String   @unique
+  filename    String
+  mime        String
+  size        Int
+  width       Int?
+  height      Int?
+  contentType String?
+  contentId   String?
+  createdAt   DateTime @default(now())
+
+  owner User? @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
+  @@index([contentType, contentId])
+  @@index([ownerId, createdAt])
+  @@map("attachments")
+}
+
+/// Macro de moderare: `actions` = listă de pași (lock, pin, feature, move, prefix, reply). `forumIds` gol = toate forumurile.
+model ModSavedAction {
+  id       Int    @id @default(autoincrement())
+  name     String
+  forumIds Int[]
+  actions  Json
+
+  @@map("mod_saved_actions")
 }
