@@ -4,7 +4,7 @@ import type { GcsModuleRegistry } from "../modules/registry";
 import type { GcsActor } from "../permissions/types";
 import type { GcsAcpRoleService } from "./roles";
 
-export type GcsAcpSearchResult = { group: "settings" | "members" | "groups"; label: string; href: string };
+export type GcsAcpSearchResult = { group: "settings" | "members" | "groups" | "forums"; label: string; href: string };
 
 const MAX_PER_GROUP = 8;
 
@@ -57,6 +57,16 @@ export class GcsAcpSearch {
         take: MAX_PER_GROUP,
       });
       results.push(...groups.map((g) => ({ group: "groups" as const, label: g.name, href: `/admin/groups/${g.id}` })));
+    }
+
+    if (await acp.can(actor, "community.forums", "view")) {
+      // Fără diacritice: numele forumurilor sunt comparate cu `unaccent` (extensia din migrația forumului).
+      const forums = await db.$queryRaw<{ id: number; name: string }[]>`
+        SELECT id, name FROM forums
+        WHERE unaccent(lower(name)) LIKE '%' || unaccent(lower(${query})) || '%'
+        ORDER BY "parentId" NULLS FIRST, position
+        LIMIT ${MAX_PER_GROUP}`;
+      results.push(...forums.map((f) => ({ group: "forums" as const, label: f.name, href: `/admin/community/forums/${f.id}` })));
     }
 
     return results;

@@ -1075,3 +1075,60 @@
   font-size: 12px;
   color: var(--gcs-muted);
 }
+
+/* ─── ACP: arborele forumurilor, prefixe ──────────────────────────────────── */
+.gcs-forumTree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gcs-forumTree .gcs-forumTree {
+  margin: 6px 0 0 28px;
+  padding-left: 12px;
+  border-left: 1px dashed var(--gcs-border);
+}
+.gcs-forumTree__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--gcs-surface2);
+}
+.gcs-forumTree__name {
+  font-weight: 700;
+  flex: 1 1 160px;
+}
+.gcs-forumTree__handle {
+  cursor: grab;
+  touch-action: none;
+}
+.gcs-forumTree__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
+}
+.gcs-forumTree__parent {
+  width: auto;
+  min-height: 36px;
+  max-width: 220px;
+}
+.gcs-prefixOrder {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.gcs-prefixOrder li {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}

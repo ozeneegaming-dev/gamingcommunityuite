@@ -53,6 +53,7 @@ export default async function AcpPanelLayout({ children }: { children: ReactNode
             settings: t("acp.header.resultGroups.settings"),
             members: t("acp.header.resultGroups.members"),
             groups: t("acp.header.resultGroups.groups"),
+            forums: t("acp.header.resultGroups.forums"),
           },
         }}
       />

@@ -71,6 +71,20 @@ describe("GcsAcpSearch", () => {
     ]);
   });
 
+  test("forumuri după nume (fără diacritice), doar cu dreptul pe `community.forums`", async () => {
+    const root = await w.actorFor(await w.createUser("Root", "root_admin"));
+    await w.db.forum.create({ data: { type: "CATEGORY", name: "Servere de joc", slug: "servere-de-joc" } });
+    await w.db.forum.create({ data: { type: "FORUM", name: "Cereri și reclamații", slug: "cereri-si-reclamatii" } });
+    const results = await search.search("cereri si", root, translate);
+    expect(results.filter((r) => r.group === "forums")).toEqual([
+      { group: "forums", label: "Cereri și reclamații", href: expect.stringMatching(/^\/admin\/community\/forums\/\d+$/) },
+    ]);
+
+    const admin = await w.actorFor(await w.createUser("Adi", "admin"));
+    await w.grantAdmin(["members.groups"]);
+    expect((await search.search("cereri", admin, translate)).filter((r) => r.group === "forums")).toEqual([]);
+  });
+
   test("maxim 8 rezultate pe grupă", async () => {
     const root = await w.actorFor(await w.createUser("Root", "root_admin"));
     for (let i = 0; i < 12; i++) await w.createUser(`player${i}`, "member");

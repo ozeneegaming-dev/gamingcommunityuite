@@ -93,12 +93,14 @@
       "already_reported": "You already reported this content.",
       "already_voted": "You already voted.",
       "poll_closed": "The poll is closed.",
-      "guest": "You need to sign in."
+      "guest": "You need to sign in.",
+      "has_children": "The category still has forums.",
+      "has_content": "The forum has topics: choose where they move."
     },
     "fields": {
-      "invalid_color": "Invalid color (use the #RRGGBB format)",
+      "invalid_color": "Invalid color (#RRGGBB)",
       "invalid_length": "Invalid length",
-      "invalid_type": "Invalid value",
+      "invalid_type": "Type not allowed",
       "invalid_ip": "Invalid IP address",
       "invalid_email": "Invalid email",
       "invalid_points": "Points must be between 1 and 100",
@@ -116,7 +118,9 @@
       "invalid": "Invalid value",
       "too_many": "Too many",
       "too_large": "File too large",
-      "unsupported_type": "File type not allowed"
+      "unsupported_type": "File type not allowed",
+      "invalid_parent": "Parent not allowed",
+      "cycle": "A forum can't be moved under its own subforum"
     }
   },
   "acp": {
@@ -154,7 +158,8 @@
       "resultGroups": {
         "settings": "Settings",
         "members": "Members",
-        "groups": "Groups"
+        "groups": "Groups",
+        "forums": "Forums"
       },
       "twoFactorOn": "2FA on",
       "logout": "Sign out"
@@ -534,6 +539,73 @@
         "subject": "Test email from {site}",
         "html": "<p>Hi, {name}!</p><p>This is a test email sent from the {site} admin control panel. If you receive it, the SMTP settings are correct.</p>"
       }
+    },
+    "forums": {
+      "title": "Forums",
+      "tree": "Forum structure",
+      "empty": "There are no forums. Create a category first.",
+      "types": {
+        "CATEGORY": "Category",
+        "FORUM": "Forum",
+        "QA": "Q&A",
+        "LINK": "Link"
+      },
+      "moveUp": "Move {name} up",
+      "moveDown": "Move {name} down",
+      "drag": "Drag to move {name}",
+      "parent": "Move {name} under",
+      "root": "(root)",
+      "edit": "Edit",
+      "permissions": "Permissions",
+      "view": "View on site",
+      "saved": "Order saved",
+      "create": {
+        "title": "New forum",
+        "name": "Name",
+        "type": "Type",
+        "parent": "Parent",
+        "submit": "Create"
+      },
+      "form": {
+        "title": "Edit: {name}",
+        "name": "Name",
+        "description": "Description",
+        "type": "Type",
+        "icon": "Icon",
+        "color": "Color",
+        "noColor": "Category color",
+        "linkUrl": "Link address",
+        "requireApproval": "All posts need approval",
+        "prefixes": "Allowed prefixes (none checked = all)",
+        "save": "Save forum",
+        "savePrefixes": "Save prefixes",
+        "delete": "Delete forum",
+        "deleteHelp": "Topics move to the chosen forum; subforums move up to the parent.",
+        "moveContentTo": "Move topics to",
+        "noMove": "(the forum has no topics)",
+        "confirmDelete": "Delete the forum?"
+      },
+      "icons": {
+        "chat": "Discussions",
+        "megaphone": "Announcements",
+        "book": "Guides",
+        "shield": "Rules",
+        "gamepad": "Games",
+        "users": "Community",
+        "help": "Help",
+        "link": "Link"
+      }
+    },
+    "prefixes": {
+      "title": "Prefixes",
+      "name": "Name",
+      "color": "Color",
+      "create": "Add prefix",
+      "save": "Save",
+      "delete": "Delete",
+      "moveUp": "Move {name} up",
+      "moveDown": "Move {name} down",
+      "empty": "No prefixes yet."
     }
   },
   "settings": {

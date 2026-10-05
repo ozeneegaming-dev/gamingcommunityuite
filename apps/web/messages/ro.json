@@ -93,12 +93,14 @@
       "already_reported": "Ai raportat deja acest conținut.",
       "already_voted": "Ai votat deja.",
       "poll_closed": "Sondajul s-a închis.",
-      "guest": "Trebuie să fii autentificat."
+      "guest": "Trebuie să fii autentificat.",
+      "has_children": "Categoria mai are forumuri.",
+      "has_content": "Forumul are topicuri: alege unde se mută."
     },
     "fields": {
-      "invalid_color": "Culoare invalidă (folosește formatul #RRGGBB)",
+      "invalid_color": "Culoare invalidă (#RRGGBB)",
       "invalid_length": "Lungime invalidă",
-      "invalid_type": "Valoare invalidă",
+      "invalid_type": "Tip nepermis",
       "invalid_ip": "Adresă IP invalidă",
       "invalid_email": "Email invalid",
       "invalid_points": "Punctele trebuie să fie între 1 și 100",
@@ -116,7 +118,9 @@
       "invalid": "Valoare invalidă",
       "too_many": "Prea multe",
       "too_large": "Fișier prea mare",
-      "unsupported_type": "Tip de fișier nepermis"
+      "unsupported_type": "Tip de fișier nepermis",
+      "invalid_parent": "Părinte nepermis",
+      "cycle": "Un forum nu poate fi mutat sub propriul subforum"
     }
   },
   "acp": {
@@ -154,7 +158,8 @@
       "resultGroups": {
         "settings": "Setări",
         "members": "Membri",
-        "groups": "Grupuri"
+        "groups": "Grupuri",
+        "forums": "Forumuri"
       },
       "twoFactorOn": "2FA activ",
       "logout": "Ieșire"
@@ -534,6 +539,73 @@
         "subject": "Email de test de la {site}",
         "html": "<p>Salut, {name}!</p><p>Acesta e un email de test trimis din panoul de administrare {site}. Dacă îl primești, setările SMTP sunt corecte.</p>"
       }
+    },
+    "forums": {
+      "title": "Forumuri",
+      "tree": "Structura forumului",
+      "empty": "Nu există forumuri. Creează întâi o categorie.",
+      "types": {
+        "CATEGORY": "Categorie",
+        "FORUM": "Forum",
+        "QA": "Q&A",
+        "LINK": "Link"
+      },
+      "moveUp": "Mută {name} mai sus",
+      "moveDown": "Mută {name} mai jos",
+      "drag": "Trage pentru a muta {name}",
+      "parent": "Mută {name} sub",
+      "root": "(rădăcină)",
+      "edit": "Editează",
+      "permissions": "Permisiuni",
+      "view": "Vezi pe site",
+      "saved": "Ordinea a fost salvată",
+      "create": {
+        "title": "Forum nou",
+        "name": "Nume",
+        "type": "Tip",
+        "parent": "Părinte",
+        "submit": "Creează"
+      },
+      "form": {
+        "title": "Editează: {name}",
+        "name": "Nume",
+        "description": "Descriere",
+        "type": "Tip",
+        "icon": "Icon",
+        "color": "Culoare",
+        "noColor": "Culoarea categoriei",
+        "linkUrl": "Adresa linkului",
+        "requireApproval": "Toate postările trec prin aprobare",
+        "prefixes": "Prefixe permise (niciunul bifat = toate)",
+        "save": "Salvează forumul",
+        "savePrefixes": "Salvează prefixele",
+        "delete": "Șterge forumul",
+        "deleteHelp": "Topicurile se mută în forumul ales; subforumurile urcă la părinte.",
+        "moveContentTo": "Mută topicurile în",
+        "noMove": "(forumul nu are topicuri)",
+        "confirmDelete": "Ștergi forumul?"
+      },
+      "icons": {
+        "chat": "Discuții",
+        "megaphone": "Anunțuri",
+        "book": "Ghiduri",
+        "shield": "Reguli",
+        "gamepad": "Jocuri",
+        "users": "Comunitate",
+        "help": "Ajutor",
+        "link": "Link"
+      }
+    },
+    "prefixes": {
+      "title": "Prefixe",
+      "name": "Nume",
+      "color": "Culoare",
+      "create": "Adaugă prefixul",
+      "save": "Salvează",
+      "delete": "Șterge",
+      "moveUp": "Mută {name} mai sus",
+      "moveDown": "Mută {name} mai jos",
+      "empty": "Niciun prefix încă."
     }
   },
   "settings": {

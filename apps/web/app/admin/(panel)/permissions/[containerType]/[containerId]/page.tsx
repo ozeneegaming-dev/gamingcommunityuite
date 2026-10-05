@@ -28,6 +28,18 @@ export default async function AcpPermissionsPage({ params }: Props) {
     db.containerPermission.findMany({ where: { containerType, containerId }, select: { groupId: true, action: true } }),
     db.containerInherit.findUnique({ where: { containerType_containerId: { containerType, containerId } } }),
   ]);
+  // Un container care moștenește nu are reguli proprii: matricea pornește de la permisiunile efective (ale părintelui),
+  // ca la oprirea moștenirii să se schimbe doar ce bifează adminul.
+  let effectiveRows = rows;
+  if (inherit?.inherits && inherit.parentId) {
+    let source = inherit.parentId;
+    for (let depth = 0; depth < 32; depth++) {
+      const up = await db.containerInherit.findUnique({ where: { containerType_containerId: { containerType, containerId: source } } });
+      if (!up?.inherits || !up.parentId) break;
+      source = up.parentId;
+    }
+    effectiveRows = await db.containerPermission.findMany({ where: { containerType, containerId: source }, select: { groupId: true, action: true } });
+  }
   const actions = defs.map((d) => ({ key: d.key, label: tAll.has(d.labelKey) ? tAll(d.labelKey) : d.key }));
   const cell: Record<string, string> = {};
   for (const g of groups) for (const a of actions) cell[`${g.id}:${a.key}`] = t("allow", { group: g.name, action: a.label });
@@ -43,7 +55,7 @@ export default async function AcpPermissionsPage({ params }: Props) {
           containerId={containerId}
           groups={groups}
           actions={actions}
-          allowed={rows.map((r) => `${r.groupId}:${r.action}`)}
+          allowed={effectiveRows.map((r) => `${r.groupId}:${r.action}`)}
           inherit={{ inherits: inherit?.inherits ?? false, parentId: inherit?.parentId ?? "" }}
           labels={{ group: t("group"), inherit: t("inherit"), parentId: t("parentId"), save: t("save"), cell }}
         />
