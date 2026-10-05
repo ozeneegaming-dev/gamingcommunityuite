@@ -1,0 +1,49 @@
+import { mkdtempSync, rmSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { inject } from "vitest";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { testDbUrl } from "@gcs/db/test/helpers";
+import { runChecks } from "./checks";
+
+let dir: string;
+
+beforeAll(() => {
+  dir = mkdtempSync(path.join(os.tmpdir(), "gcs-checks-"));
+});
+
+afterAll(() => {
+  rmSync(dir, { recursive: true, force: true });
+});
+
+const byId = (results: Awaited<ReturnType<typeof runChecks>>) => Object.fromEntries(results.map((r) => [r.id, r]));
+
+describe("runChecks", () => {
+  test("cu PostgreSQL și Redis pornite → postgres, redis, disc și config ok", async () => {
+    const results = byId(await runChecks({ databaseUrl: testDbUrl(), redisUrl: inject("redisUrl"), configDir: dir }));
+    expect(results.postgres).toMatchObject({ ok: true });
+    expect(results.redis).toMatchObject({ ok: true });
+    expect(results.config_writable).toMatchObject({ ok: true });
+    expect(results.disk?.ok).toBe(true);
+    expect(Object.keys(results).sort()).toEqual(["config_writable", "disk", "extensions", "minio", "postgres", "redis"]);
+  });
+
+  test("cu Redis oprit → intrarea redis are ok:false și fixKey:'install.fix.redis'", async () => {
+    const results = byId(await runChecks({ databaseUrl: testDbUrl(), redisUrl: "redis://127.0.0.1:1", configDir: dir }));
+    expect(results.redis).toMatchObject({ ok: false, fixKey: "install.fix.redis" });
+  });
+
+  test("fără S3 configurat → minio ok:false; un folder inexistent → config_writable ok:false", async () => {
+    const results = byId(
+      await runChecks({ databaseUrl: testDbUrl(), redisUrl: inject("redisUrl"), configDir: path.join(dir, "nu", "exista\0") }),
+    );
+    expect(results.minio).toMatchObject({ ok: false, fixKey: "install.fix.minio" });
+    expect(results.config_writable).toMatchObject({ ok: false, fixKey: "install.fix.config_writable" });
+  });
+
+  test("o bază de date inaccesibilă → postgres și extensions ok:false", async () => {
+    const results = byId(await runChecks({ databaseUrl: "postgresql://x:y@127.0.0.1:1/z", redisUrl: inject("redisUrl"), configDir: dir }));
+    expect(results.postgres).toMatchObject({ ok: false, fixKey: "install.fix.postgres" });
+    expect(results.extensions?.ok).toBe(false);
+  });
+});

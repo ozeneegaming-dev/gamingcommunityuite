@@ -12,3 +12,4 @@ test-results/
 logs/
 .pgtest/
 .e2e/
+.gcs-config/

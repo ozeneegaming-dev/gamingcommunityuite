@@ -7,7 +7,7 @@
  * Codul de ieșire e cel al Playwright. La final, toate procesele pornite sunt oprite curat.
  */
 import { execFileSync, spawn, type ChildProcess } from "node:child_process";
-import { mkdirSync, readdirSync, rmSync } from "node:fs";
+import { mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import net from "node:net";
 import os from "node:os";
 import path from "node:path";
@@ -145,11 +145,16 @@ function run(bin: string, args: string[], env: NodeJS.ProcessEnv, stdio: "inheri
 async function main(): Promise<number> {
   const [pgUrl, redisUrl] = await Promise.all([startPostgres(), startRedis()]);
   const databaseUrl = await prepareDatabase(pgUrl);
+  // Un folder de configurare „deja instalat”: testele (în afară de cele ale installer-ului) pornesc de pe un site instalat.
+  const configDir = path.join(webDir, ".e2e", `config-${process.pid}`);
+  mkdirSync(configDir, { recursive: true });
+  writeFileSync(path.join(configDir, "installed.lock"), new Date().toISOString());
   const env: NodeJS.ProcessEnv = {
     ...process.env,
     DATABASE_URL: databaseUrl,
     REDIS_URL: redisUrl,
     GCS_BASE_URL: BASE_URL,
+    GCS_CONFIG_DIR: configDir,
     // În producție Better Auth cere un secret propriu; pentru teste e unul de unică folosință.
     GCS_SECRET: process.env.GCS_SECRET ?? "gcs-e2e-secret-0123456789abcdef0123456789abcdef",
     GCS_TEST_ROUTES: "1",
