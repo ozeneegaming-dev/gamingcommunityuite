@@ -37,5 +37,10 @@ export const vipModule: GcsModule = {
   permissions,
   settings,
   acpMenu,
+  notificationTypes: [
+    { key: "vip.expiring", labelKey: "notifications.type.vip.expiring", important: true, defaultEmail: "INSTANT" },
+    { key: "vip.granted", labelKey: "notifications.type.vip.granted", important: false, defaultEmail: "DIGEST" },
+    { key: "vip.expired", labelKey: "notifications.type.vip.expired", important: false, defaultEmail: "DIGEST" },
+  ],
   eventListeners: [],
 };

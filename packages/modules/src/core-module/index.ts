@@ -231,5 +231,8 @@ export const coreModule: GcsModule = {
   settings,
   permissions,
   acpMenu,
+  notificationTypes: [
+    { key: "core.warning", labelKey: "notifications.type.core.warning", important: true, defaultEmail: "INSTANT" },
+  ],
   eventListeners: [],
 };

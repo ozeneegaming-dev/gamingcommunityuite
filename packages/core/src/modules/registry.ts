@@ -45,6 +45,9 @@ export type GcsDemoContext = {
   adminEmail: string;
 };
 
+/** Un tip de notificare. `important` = emailul implicit e imediat (ex. mesaj privat). */
+export type GcsNotificationTypeDef = { key: string; labelKey: string; important: boolean; defaultEmail: "OFF" | "INSTANT" | "DIGEST" };
+
 /** Un modul RED-LINE (spec §5). Restul câmpurilor din spec se adaugă în etapele care le folosesc. */
 export interface GcsModule {
   key: string;
@@ -58,6 +61,8 @@ export interface GcsModule {
   eventListeners: { event: string; handler: (e: GcsEvent) => Promise<void> }[];
   /** Datele implicite ale modulului, create la instalare. Trebuie să fie idempotent (rulat din nou, nu dublează nimic). */
   seed?: (ctx: GcsSeedContext) => Promise<void>;
+  /** Tipurile de notificări ale modulului (etapa 4): cheie, etichetă, importanță și emailul implicit. */
+  notificationTypes?: GcsNotificationTypeDef[];
   /** Conținutul de pornire ales în wizard (pasul „demo” al instalării). Idempotent. */
   seedDemo?: (ctx: GcsDemoContext) => Promise<void>;
 }
@@ -98,6 +103,14 @@ export class GcsModuleRegistry {
 
   permissionDef(key: string): GcsPermissionDef | undefined {
     return this.permissions.get(key);
+  }
+
+  notificationTypes(): GcsNotificationTypeDef[] {
+    return this.modules.flatMap((m) => m.notificationTypes ?? []);
+  }
+
+  notificationType(key: string): GcsNotificationTypeDef | undefined {
+    return this.notificationTypes().find((t) => t.key === key);
   }
 
   acpMenu(): GcsAcpMenuSection[] {

@@ -44,6 +44,11 @@ export const profileModule: GcsModule = {
   permissions,
   settings,
   acpMenu: [],
+  notificationTypes: [
+    { key: "profile.follower", labelKey: "notifications.type.profile.follower", important: false, defaultEmail: "DIGEST" },
+    { key: "profile.wall", labelKey: "notifications.type.profile.wall", important: false, defaultEmail: "DIGEST" },
+    { key: "profile.badge", labelKey: "notifications.type.profile.badge", important: false, defaultEmail: "OFF" },
+  ],
   eventListeners: [],
   seed: seedProfile,
   seedDemo: seedProfileDemo,

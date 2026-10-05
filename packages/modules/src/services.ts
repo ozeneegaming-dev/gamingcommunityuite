@@ -15,6 +15,7 @@ import {
   GcsJobQueue,
   GcsLocalFileStore,
   GcsMemberDirectory,
+  GcsNotificationService,
   GcsPermissionService,
   GcsReactionService,
   GcsRedisRateLimiter,
@@ -72,6 +73,7 @@ export type GcsServices = {
   acpSearch: GcsAcpSearch;
   groups: GcsGroupService;
   members: GcsMemberDirectory;
+  notifications: GcsNotificationService;
   bans: GcsBanService;
   warnings: GcsWarningService;
   actors: GcsActorResolver;
@@ -190,6 +192,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const acpSearch = new GcsAcpSearch({ db, registry, acp });
   const groups = new GcsGroupService({ db, bus, permissions, acp });
   const members = new GcsMemberDirectory({ db });
+  const notifications = new GcsNotificationService({ db, bus, cache, registry });
   const bans = new GcsBanService({ db, cache, bus, acp });
   const warnings = new GcsWarningService({ db, bus, acp, bans });
   const actors = new GcsActorResolver({ db, cache });
@@ -273,6 +276,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     acpSearch,
     groups,
     members,
+    notifications,
     bans,
     warnings,
     actors,

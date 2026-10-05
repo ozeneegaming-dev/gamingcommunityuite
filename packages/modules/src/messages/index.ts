@@ -48,5 +48,8 @@ export const messagesModule: GcsModule = {
   permissions,
   settings,
   acpMenu: [],
+  notificationTypes: [
+    { key: "pm.message", labelKey: "notifications.type.pm.message", important: true, defaultEmail: "INSTANT" },
+  ],
   eventListeners: [],
 };
