@@ -121,3 +121,66 @@ test.describe("hover card", () => {
 async function sqlPrivacy(email: string, profile: string): Promise<void> {
   await sql(`UPDATE users SET privacy = jsonb_build_object('profile', $2::text) WHERE email = $1`, [email, profile]);
 }
+
+test.describe("pagina de profil", () => {
+  test("arată rangul, badge-urile, statisticile; /members/{id} redirecționează la slug; avertismentele doar pentru proprietar", async ({ page, request, browser }) => {
+    const id = uid();
+    const { forum } = await forumTree(request);
+    const other = await memberInNewContext(browser, `Vizitator${id}`, `viz-${id}@example.com`, "198.51.100");
+    await member(page, `Mara${id}`, `mara-${id}@example.com`);
+    await topicWithReplies(request, forum.id, `mara-${id}@example.com`, `Topicul Marei ${id}`);
+    await profileFixture(request, { action: "evaluate", email: `mara-${id}@example.com` });
+    const [row] = await sql<{ id: string }>(`SELECT id FROM users WHERE email = $1`, [`mara-${id}@example.com`]);
+
+    await page.goto(`/members/${row!.id}`);
+    await expect(page).toHaveURL(new RegExp(`/members/${row!.id}-mara${id}$`));
+    await expect(page.getByTestId("gcs-profile-name")).toHaveText(`Mara${id}`);
+    await expect(page.getByTestId("gcs-profile-rank")).toHaveText("Recrut");
+    await expect(page.getByTestId("gcs-profile-badges").locator(".gcs-badgeGrid__item", { hasText: "Primul post" })).toBeVisible();
+    await expect(page.getByTestId("gcs-profile-activity").getByRole("link", { name: `Topicul Marei ${id}` })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Avertismente" })).toBeVisible();
+
+    await other.goto(`/members/${row!.id}`);
+    await expect(other.getByTestId("gcs-profile-name")).toBeVisible();
+    await expect(other.getByRole("link", { name: "Avertismente" })).toHaveCount(0);
+    await other.close();
+  });
+
+  test("peretele: un membru scrie, proprietarul ascunde; „Ignoră” din meniu pliază postările pe topic", async ({ page, request, browser }) => {
+    const id = uid();
+    const { forum } = await forumTree(request);
+    const owner = await memberInNewContext(browser, `Owner${id}`, `owner-${id}@example.com`, "198.51.100");
+    const topic = await topicWithReplies(request, forum.id, `owner-${id}@example.com`, `Topic owner ${id}`);
+    const [row] = await sql<{ id: string }>(`SELECT id FROM users WHERE email = $1`, [`owner-${id}@example.com`]);
+    await member(page, `Guest${id}`, `guest-${id}@example.com`);
+
+    await page.goto(`/members/${row!.id}?tab=about`);
+    await page.getByTestId("gcs-wall-input").fill("GG la turneu!");
+    await page.getByRole("button", { name: "Postează" }).click();
+    await expect(page.getByTestId("gcs-wall-item").filter({ hasText: "GG la turneu!" })).toBeVisible();
+
+    await owner.goto(`/members/${row!.id}?tab=about`);
+    const item = owner.getByTestId("gcs-wall-item").filter({ hasText: "GG la turneu!" });
+    await item.getByRole("button", { name: "Ascunde" }).click();
+    await expect(owner.getByTestId("gcs-wall-item").filter({ hasText: "GG la turneu!" })).toHaveCount(0);
+    await owner.close();
+
+    await page.goto(`/members/${row!.id}`);
+    await page.locator(".gcs-menu summary").click();
+    await page.getByTestId("gcs-profile-ignore").click();
+    await expect(page.getByTestId("gcs-profile-ignore")).toHaveText("Nu mai ignora");
+    await page.goto(topic.url);
+    await expect(page.getByTestId("gcs-post-ignored")).toBeVisible();
+  });
+
+  test("un profil vizibil doar membrilor dă 404 vizitatorilor", async ({ page, request, browser }) => {
+    const id = uid();
+    const owner = await memberInNewContext(browser, `Ascuns${id}`, `ascuns-${id}@example.com`, "198.51.100");
+    await owner.close();
+    await sqlPrivacy(`ascuns-${id}@example.com`, "MEMBERS");
+    const [row] = await sql<{ id: string }>(`SELECT id FROM users WHERE email = $1`, [`ascuns-${id}@example.com`]);
+    void request;
+    const res = await page.goto(`/members/${row!.id}-ascuns${id}`);
+    expect(res?.status()).toBe(404);
+  });
+});

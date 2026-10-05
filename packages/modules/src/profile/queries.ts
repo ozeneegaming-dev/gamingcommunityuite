@@ -5,7 +5,7 @@ import { slugify } from "../forums/slug";
 import { rankLabel, toUserDisplay, userDisplaySelect, type GcsRankDirectory, type GcsRankLabel, type GcsUserDisplay } from "./display";
 import { normalizePrivacy } from "./privacy";
 import type { GcsProfileService, GcsVisibleField } from "./profile";
-import type { GcsSocialService } from "./social";
+import { actorOf, type GcsSocialService } from "./social";
 
 /** Online = activitate în ultimele 15 minute (spec etapa 3 §2). `lastActiveAt` se scrie cel mult o dată la 5 minute. */
 export const ONLINE_MS = 15 * 60_000;
@@ -29,6 +29,8 @@ export type GcsProfileView = {
     isFollowing: boolean;
     isIgnored: boolean;
     canFollow: boolean;
+    /** Staff-ul nu poate fi ignorat. */
+    canIgnore: boolean;
     canMessage: boolean;
     canPostWall: boolean;
     canModerate: boolean;
@@ -141,13 +143,15 @@ export class GcsProfileQueries {
     if (!user || !(await profiles.canView(viewer, user))) return null;
     const isSelf = viewer.userId === userId;
     const isModerator = viewer.userId !== null && (await profiles.isModerator(viewer));
-    const [rankData, fields, isFollowing, isIgnored, canMessage, canPostWall] = await Promise.all([
+    const target = viewer.userId && !isSelf ? await actorOf(db, userId) : null;
+    const [rankData, fields, isFollowing, isIgnored, canMessage, canPostWall, targetIsStaff] = await Promise.all([
       ranks.data(),
       profiles.visibleFields(viewer, userId),
       social.isFollowing(viewer.userId, userId),
       viewer.userId ? social.isIgnoring(viewer.userId, userId, "posts") : Promise.resolve(false),
       this.canMessage(viewer, userId, user.privacy),
       social.canPostOnWall(viewer, user),
+      target ? this.deps.permissions.can(target, "profile.moderate") : Promise.resolve(true),
     ]);
     return {
       user: {
@@ -171,6 +175,7 @@ export class GcsProfileQueries {
         isFollowing,
         isIgnored,
         canFollow: viewer.userId !== null && !isSelf,
+        canIgnore: viewer.userId !== null && !isSelf && !targetIsStaff,
         canMessage,
         canPostWall,
         canModerate: isModerator,

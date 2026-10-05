@@ -824,7 +824,66 @@
   "profile": {
     "memberSince": "Membru din {date}",
     "lastActive": "Ultima activitate: {date}",
-    "group": "Grup"
+    "group": "Grup",
+    "online": "Online",
+    "hiddenOnline": "ascuns",
+    "now": "Acum",
+    "follow": "Urmărește",
+    "unfollow": "Nu mai urmări",
+    "message": "Mesaj",
+    "more": "Mai multe opțiuni",
+    "ignore": "Ignoră",
+    "unignore": "Nu mai ignora",
+    "editAcp": "Editează în ACP",
+    "stats": {
+      "posts": "Postări",
+      "reputation": "Reputație",
+      "followers": "Urmăritori",
+      "joined": "Membru din",
+      "lastActive": "Ultima activitate"
+    },
+    "tabsLabel": "Secțiuni profil",
+    "tabs": {
+      "activity": "Activitate",
+      "about": "Despre",
+      "games": "Jocuri & conturi",
+      "followers": "Urmăritori",
+      "badges": "Badge-uri",
+      "warnings": "Avertismente"
+    },
+    "noFields": "Nimic completat încă.",
+    "linkedAccounts": "Conturi legate",
+    "noAccounts": "Niciun cont legat.",
+    "viewSteamProfile": "Vezi profilul Steam",
+    "connected": "Conectat",
+    "badgesCount": "Badge-uri · {count}",
+    "noBadges": "Niciun badge încă.",
+    "recentActivity": "Activitate recentă",
+    "noActivity": "Nicio activitate încă.",
+    "older": "Mai vechi",
+    "activity": {
+      "post": "a răspuns în",
+      "topic": "a creat topicul",
+      "badge": "a primit badge-ul"
+    },
+    "followersCount": "{count, plural, one {# urmăritor} few {# urmăritori} other {# de urmăritori}}",
+    "noFollowers": "Niciun urmăritor încă.",
+    "noWarnings": "Niciun avertisment.",
+    "warningPoints": "{count, plural, one {# punct} few {# puncte} other {# de puncte}}",
+    "wall": {
+      "title": "Perete",
+      "empty": "Niciun mesaj pe perete încă.",
+      "placeholder": "Scrie ceva pe peretele lui {name}…",
+      "post": "Postează",
+      "reply": "Răspunde",
+      "hide": "Ascunde",
+      "restore": "Restaurează",
+      "delete": "Șterge",
+      "report": "Raportează",
+      "reportReason": "De ce raportezi acest mesaj?",
+      "confirmDelete": "Ștergi definitiv acest mesaj?",
+      "hidden": "ascuns"
+    }
   },
   "maintenance": {
     "title": "Mentenanță",

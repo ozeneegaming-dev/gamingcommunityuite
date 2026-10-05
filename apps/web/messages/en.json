@@ -824,7 +824,66 @@
   "profile": {
     "memberSince": "Member since {date}",
     "lastActive": "Last active: {date}",
-    "group": "Group"
+    "group": "Group",
+    "online": "Online",
+    "hiddenOnline": "hidden",
+    "now": "Now",
+    "follow": "Follow",
+    "unfollow": "Unfollow",
+    "message": "Message",
+    "more": "More options",
+    "ignore": "Ignore",
+    "unignore": "Stop ignoring",
+    "editAcp": "Edit in ACP",
+    "stats": {
+      "posts": "Posts",
+      "reputation": "Reputation",
+      "followers": "Followers",
+      "joined": "Member since",
+      "lastActive": "Last active"
+    },
+    "tabsLabel": "Profile sections",
+    "tabs": {
+      "activity": "Activity",
+      "about": "About",
+      "games": "Games & accounts",
+      "followers": "Followers",
+      "badges": "Badges",
+      "warnings": "Warnings"
+    },
+    "noFields": "Nothing filled in yet.",
+    "linkedAccounts": "Linked accounts",
+    "noAccounts": "No linked accounts.",
+    "viewSteamProfile": "View Steam profile",
+    "connected": "Connected",
+    "badgesCount": "Badges · {count}",
+    "noBadges": "No badges yet.",
+    "recentActivity": "Recent activity",
+    "noActivity": "No activity yet.",
+    "older": "Older",
+    "activity": {
+      "post": "replied in",
+      "topic": "started the topic",
+      "badge": "earned the badge"
+    },
+    "followersCount": "{count, plural, one {# follower} other {# followers}}",
+    "noFollowers": "No followers yet.",
+    "noWarnings": "No warnings.",
+    "warningPoints": "{count, plural, one {# point} other {# points}}",
+    "wall": {
+      "title": "Wall",
+      "empty": "No wall posts yet.",
+      "placeholder": "Write something on {name}'s wall…",
+      "post": "Post",
+      "reply": "Reply",
+      "hide": "Hide",
+      "restore": "Restore",
+      "delete": "Delete",
+      "report": "Report",
+      "reportReason": "Why are you reporting this post?",
+      "confirmDelete": "Delete this post permanently?",
+      "hidden": "hidden"
+    }
   },
   "maintenance": {
     "title": "Maintenance",

@@ -146,3 +146,320 @@
     transform: translateY(4px);
   }
 }
+
+/* ─── Pagina de profil (macheta Profil) ──────────────────────────────────── */
+
+.gcs-profileHeader {
+  overflow: hidden;
+}
+.gcs-profileHeader__cover {
+  height: 240px;
+}
+.gcs-profileHeader__main {
+  padding: 0 32px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: flex-end;
+  margin-top: -76px;
+}
+.gcs-profileHeader__identity {
+  flex: 1 1 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 6px;
+  min-width: 0;
+}
+.gcs-profileHeader__actions {
+  display: flex;
+  gap: 10px;
+  padding-bottom: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+@media (max-width: 640px) {
+  .gcs-profileHeader__cover {
+    height: 160px;
+  }
+  .gcs-profileHeader__main {
+    padding: 0 16px 20px;
+    margin-top: -60px;
+  }
+  .gcs-profileHeader__main .gcs-avatarFrame,
+  .gcs-profileHeader__main > .gcs-avatar {
+    width: 120px !important;
+    height: 120px !important;
+  }
+}
+.gcs-profileStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  border-top: 1px solid var(--gcs-border);
+  margin: 0;
+}
+.gcs-profileStats > div {
+  padding: 16px 24px;
+  border-right: 1px solid var(--gcs-border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.gcs-profileStats dd {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+.gcs-profileStats dt {
+  font-size: 12px;
+  color: var(--gcs-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.gcs-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 0 16px;
+  border-top: 1px solid var(--gcs-border);
+}
+.gcs-tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 14px;
+  color: var(--gcs-muted);
+  font-weight: 700;
+  font-size: 14px;
+  border-bottom: 2px solid transparent;
+}
+.gcs-tab:hover {
+  color: var(--gcs-text);
+}
+.gcs-tab--active {
+  color: var(--gcs-text);
+  border-bottom-color: var(--gcs-accent);
+}
+.gcs-profileField {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+}
+.gcs-profileField > span:first-child {
+  color: var(--gcs-muted);
+}
+.gcs-profileField > span:last-child {
+  font-weight: 600;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.gcs-linkedAccount {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--gcs-surface2);
+  border-radius: 10px;
+}
+.gcs-linkedAccount__tag {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.gcs-badgeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 10px;
+}
+.gcs-badgeGrid__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 6px;
+  background: var(--gcs-surface2);
+  border-radius: 10px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #c9cdd6;
+}
+.gcs-badgeGrid__item .gcs-profileBadge--m {
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  border-radius: 0;
+}
+.gcs-activity,
+.gcs-wall,
+.gcs-userGrid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.gcs-activity__item {
+  display: flex;
+  gap: 14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--gcs-border);
+  align-items: flex-start;
+}
+.gcs-activity__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.gcs-activity__icon--post {
+  background: rgba(94, 162, 255, 0.14);
+  color: #8ebeff;
+}
+.gcs-activity__icon--topic {
+  background: rgba(244, 183, 64, 0.14);
+  color: #f4b740;
+}
+.gcs-activity__text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  font-size: 14px;
+}
+.gcs-activity__snippet {
+  font-size: 13px;
+  color: #c9cdd6;
+  line-height: 1.5;
+}
+.gcs-activity__time {
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-wallItem {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--gcs-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gcs-wallItem--hidden {
+  opacity: 0.6;
+  border-left: 3px dashed var(--gcs-border);
+}
+.gcs-wallItem__body {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.gcs-wallItem__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-left: 52px;
+  font-size: 12px;
+}
+.gcs-wall--replies {
+  padding-left: 40px;
+}
+.gcs-wall--replies .gcs-wallItem {
+  border-bottom: 0;
+  padding: 10px 0 0;
+}
+.gcs-wallComposer {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.gcs-wallComposer--compact {
+  padding-left: 52px;
+}
+.gcs-wallComposer__input {
+  flex: 1 1 240px;
+  min-width: 0;
+  min-height: 44px;
+  resize: vertical;
+  font: inherit;
+}
+.gcs-userGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+.gcs-userGrid li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.gcs-linkButton {
+  background: none;
+  border: 0;
+  padding: 0;
+  min-height: 24px;
+  color: var(--gcs-muted);
+  font: inherit;
+  cursor: pointer;
+}
+.gcs-linkButton:hover {
+  color: var(--gcs-text);
+  text-decoration: underline;
+}
+.gcs-formError {
+  color: var(--gcs-accentInk);
+  font-size: 13px;
+}
+
+/* Meniu simplu cu <details> (fără JavaScript). */
+.gcs-menu {
+  position: relative;
+}
+.gcs-menu__toggle {
+  list-style: none;
+  width: 44px;
+  padding: 0;
+  justify-content: center;
+}
+.gcs-menu__toggle::-webkit-details-marker {
+  display: none;
+}
+.gcs-menu__list {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 20;
+  min-width: 200px;
+  background: var(--gcs-surface);
+  border: 1px solid var(--gcs-border);
+  border-radius: 12px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+.gcs-menu__item {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: none;
+  border: 0;
+  color: var(--gcs-text);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+.gcs-menu__item:hover {
+  background: var(--gcs-surface2);
+}
