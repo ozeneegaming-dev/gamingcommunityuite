@@ -414,7 +414,7 @@ ALTER TABLE "reports" ADD CONSTRAINT "reports_reporterId_fkey" FOREIGN KEY ("rep
 ALTER TABLE "attachments" ADD CONSTRAINT "attachments_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 
--- Indexuri de căutare (Prisma nu le poate exprima).
-CREATE INDEX "topics_searchVector_idx" ON "topics" USING GIN ("searchVector");
-CREATE INDEX "posts_searchVector_idx" ON "posts" USING GIN ("searchVector");
-CREATE INDEX "users_nameNormalized_trgm_idx" ON "users" USING GIN ("nameNormalized" gin_trgm_ops);
+-- Indexuri de căutare (Prisma nu le poate exprima). IF NOT EXISTS: installer-ul din etapa 1 creează deja indexul trigram pe users.
+CREATE INDEX IF NOT EXISTS "topics_searchVector_idx" ON "topics" USING GIN ("searchVector");
+CREATE INDEX IF NOT EXISTS "posts_searchVector_idx" ON "posts" USING GIN ("searchVector");
+CREATE INDEX IF NOT EXISTS "users_nameNormalized_trgm_idx" ON "users" USING GIN ("nameNormalized" gin_trgm_ops);

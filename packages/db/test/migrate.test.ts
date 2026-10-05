@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
-import { readdirSync } from "node:fs";
+import { cpSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
@@ -63,6 +64,26 @@ describe("migrateDatabase", { timeout: 120_000 }, () => {
       encoding: "utf8",
     });
     expect(output).toContain("Database schema is up to date");
+  });
+
+  test("actualizarea unui site din etapa 1 (cu indexul trigram creat de installer) aplică migrațiile forumului", async () => {
+    await admin(async (c) => {
+      await c.query(`DROP DATABASE IF EXISTS "${DB}" WITH (FORCE)`);
+      await c.query(`CREATE DATABASE "${DB}"`);
+    });
+    // Doar migrațiile etapei 1, apoi ce face pasul „search_indexes” al installer-ului din etapa 1.
+    const stage1 = mkdtempSync(path.join(os.tmpdir(), "gcs-stage1-"));
+    for (const name of ALL_MIGRATIONS.filter((m) => m < "20261006")) cpSync(path.join(migrationsDir, name), path.join(stage1, name), { recursive: true });
+    await migrateDatabase(url, stage1);
+    const client = new pg.Client({ connectionString: url });
+    await client.connect();
+    await client.query(`CREATE EXTENSION IF NOT EXISTS pg_trgm`);
+    await client.query(`CREATE INDEX IF NOT EXISTS "users_nameNormalized_trgm_idx" ON "users" USING gin ("nameNormalized" gin_trgm_ops)`);
+    await client.end();
+    rmSync(stage1, { recursive: true, force: true });
+
+    const update = await migrateDatabase(url, migrationsDir);
+    expect(update.applied).toEqual(ALL_MIGRATIONS.filter((m) => m >= "20261006"));
   });
 
   test("două rulări simultane nu aplică migrațiile de două ori (lock)", async () => {
