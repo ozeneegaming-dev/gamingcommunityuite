@@ -16,6 +16,7 @@ import { forumsModule } from "../src/forums";
 import { GcsForumService } from "../src/forums/forums";
 import { GcsForumPosting } from "../src/forums/posting";
 import { GcsPostService } from "../src/forums/posts";
+import { GcsForumQueries } from "../src/forums/queries";
 import { GcsTopicService } from "../src/forums/topics";
 
 /** Registry-ul real: modulele din producție. */
@@ -72,6 +73,7 @@ export async function createForumWorld() {
   });
   const topics = new GcsTopicService(posting);
   const posts = new GcsPostService(posting);
+  const queries = new GcsForumQueries({ db, cache, permissions, settings });
 
   const root = await world.actorFor(await world.createUser("Fondator", "root_admin"));
   const member = await world.actorFor(await world.createUser("Mara", "member"));
@@ -107,6 +109,7 @@ export async function createForumWorld() {
     counters: posting.counters,
     topics,
     posts,
+    queries,
     root,
     member,
     guest,

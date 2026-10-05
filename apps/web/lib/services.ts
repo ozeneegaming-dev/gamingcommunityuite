@@ -23,7 +23,15 @@ import {
 import { PrismaClient } from "@gcs/db";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { coreModule, forumsModule, GcsForumPosting, GcsForumService, GcsPostService, GcsTopicService } from "@gcs/modules";
+import {
+  coreModule,
+  forumsModule,
+  GcsForumPosting,
+  GcsForumQueries,
+  GcsForumService,
+  GcsPostService,
+  GcsTopicService,
+} from "@gcs/modules";
 import Redis from "ioredis";
 import { revalidateTag } from "next/cache";
 import { gcsConfigDir } from "./config";
@@ -50,6 +58,7 @@ export type GcsServices = {
   forums: GcsForumService;
   topics: GcsTopicService;
   posts: GcsPostService;
+  forumQueries: GcsForumQueries;
 };
 
 /** Revalidează paginile Next.js cache-uite; în afara unui request (ex. scripturi) nu e disponibil. */
@@ -175,6 +184,7 @@ function createServices(): GcsServices {
     forums,
     topics: new GcsTopicService(posting),
     posts: new GcsPostService(posting),
+    forumQueries: new GcsForumQueries({ db, cache, permissions, settings }),
   };
 }
 

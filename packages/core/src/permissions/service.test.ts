@@ -192,3 +192,26 @@ describe("GcsPermissionService.canModerate", () => {
     await expect(perms.canModerate(actor([g.member], { isBanned: true }), "pin", forum1)).resolves.toBe(false);
   });
 });
+
+describe("GcsPermissionService.filterContainers / moderatorPowers", () => {
+  test("filterContainers dă aceleași rezultate ca `can` pe fiecare container (cu moștenire și ban)", async () => {
+    await db.containerPermission.create({ data: { containerType: "forum", containerId: "1", groupId: g.member, action: "forums.view" } });
+    await db.containerInherit.create({ data: { containerType: "forum", containerId: "2", parentId: "1", inherits: true } });
+    const refs = ["1", "2", "3"].map((id) => ({ type: "forum", id }));
+
+    await expect(perms.filterContainers(actor([g.member]), "forums.view", refs)).resolves.toEqual(new Set(["1", "2"]));
+    await expect(perms.filterContainers(actor([g.guest]), "forums.view", refs)).resolves.toEqual(new Set());
+    await expect(perms.filterContainers(actor([g.member], { isBanned: true }), "forums.view", refs)).resolves.toEqual(new Set());
+    await expect(perms.filterContainers(actor([g.root_admin]), "forums.view", refs)).resolves.toEqual(new Set(["1", "2", "3"]));
+  });
+
+  test("moderatorPowers întoarce puterile actorului pe container; root_admin le are pe toate", async () => {
+    await db.user.create({ data: { id: "u1", name: "Mod", nameNormalized: "mod", email: "mod@example.com", primaryGroupId: g.member } });
+    await db.moderator.create({ data: { containerType: "forum", containerId: "1", userId: "u1", powers: ["edit", "pin"] } });
+    await db.moderator.create({ data: { containerType: "forum", containerId: "1", groupId: g.vip_gold, powers: ["pin", "hide"] } });
+
+    await expect(perms.moderatorPowers(actor([g.member, g.vip_gold]), forum1)).resolves.toEqual(["edit", "hide", "pin"]);
+    await expect(perms.moderatorPowers(actor([g.member], { userId: "u2" }), forum1)).resolves.toEqual([]);
+    await expect(perms.moderatorPowers(actor([g.root_admin]), forum1)).resolves.toEqual(["*"]);
+  });
+});

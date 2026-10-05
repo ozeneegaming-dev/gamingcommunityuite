@@ -94,10 +94,16 @@ export class GcsPermissionService {
 
   /** Moderator pe container: un rând `moderators` pe user sau pe unul din grupuri, cu puterea cerută. */
   async canModerate(actor: GcsActor, power: string, container: GcsContainerRef): Promise<boolean> {
+    const powers = await this.moderatorPowers(actor, container);
+    return powers.includes("*") || powers.includes(power);
+  }
+
+  /** Toate puterile de moderare ale actorului pe container, sortate; `["*"]` pentru root_admin, `[]` pentru banați. */
+  async moderatorPowers(actor: GcsActor, container: GcsContainerRef): Promise<string[]> {
     const version = await this.version();
     const perms = await this.groupSetPerms(actor.groupIds, version);
-    if (actor.isBanned || perms.groupKeys.includes(BANNED)) return false;
-    if (perms.groupKeys.includes(ROOT_ADMIN)) return true;
+    if (actor.isBanned || perms.groupKeys.includes(BANNED)) return [];
+    if (perms.groupKeys.includes(ROOT_ADMIN)) return ["*"];
 
     const cacheKey = `perm:${version}:mod:${container.type}:${container.id}`;
     let rows = await this.deps.cache.get<GcsModeratorRow[]>(cacheKey);
@@ -108,11 +114,30 @@ export class GcsPermissionService {
       });
       await this.deps.cache.set(cacheKey, rows, { ttlSec: CACHE_TTL_SEC, tags: [CACHE_TAG] });
     }
-    return rows.some(
-      (r) =>
-        r.powers.includes(power) &&
-        ((r.userId !== null && r.userId === actor.userId) || (r.groupId !== null && actor.groupIds.includes(r.groupId))),
+    const mine = rows.filter(
+      (r) => (r.userId !== null && r.userId === actor.userId) || (r.groupId !== null && actor.groupIds.includes(r.groupId)),
     );
+    return [...new Set(mine.flatMap((r) => r.powers))].sort();
+  }
+
+  /**
+   * `can(actor, key, container)` pentru mai multe containere de același tip, cu o singură citire a permisiunilor
+   * (ex. lista de forumuri). Întoarce id-urile permise.
+   */
+  async filterContainers(actor: GcsActor, key: string, containers: GcsContainerRef[]): Promise<Set<string>> {
+    const version = await this.version();
+    const perms = await this.groupSetPerms(actor.groupIds, version);
+    if ((actor.isBanned || perms.groupKeys.includes(BANNED)) && key !== BAN_EXEMPT_KEY) return new Set();
+    if (perms.groupKeys.includes(ROOT_ADMIN)) return new Set(containers.map((c) => c.id));
+
+    const parents = await this.inheritMap(version);
+    const granted = new Set(perms.containers);
+    const allowed = new Set<string>();
+    for (const c of containers) {
+      const effective = resolveInherit(parents, c);
+      if (effective && granted.has(`${effective.type}:${effective.id}:${key}`)) allowed.add(c.id);
+    }
+    return allowed;
   }
 
   /** Incrementează `permVersion` și emite `permissions.updated`. Se apelează după orice schimbare de permisiuni. */
@@ -182,14 +207,7 @@ export class GcsPermissionService {
 
   /** Urcă pe lanțul de moștenire până la containerul care își definește permisiunile; `null` la ciclu. */
   private async effectiveContainer(container: GcsContainerRef, version: number): Promise<GcsContainerRef | null> {
-    const parents = await this.inheritMap(version);
-    let id = container.id;
-    for (let depth = 0; depth <= MAX_INHERIT_DEPTH; depth++) {
-      const parent = parents[`${container.type}:${id}`];
-      if (parent === undefined) return { type: container.type, id };
-      id = parent;
-    }
-    return null;
+    return resolveInherit(await this.inheritMap(version), container);
   }
 
   /** `${type}:${id}` → id-ul părintelui, pentru containerele care moștenesc. */
@@ -206,6 +224,17 @@ export class GcsPermissionService {
     await this.deps.cache.set(cacheKey, map, { ttlSec: CACHE_TTL_SEC, tags: [CACHE_TAG] });
     return map;
   }
+}
+
+/** Containerul care își definește permisiunile, urcând pe lanțul de moștenire; `null` la ciclu sau peste 32 de niveluri. */
+function resolveInherit(parents: Record<string, string>, container: GcsContainerRef): GcsContainerRef | null {
+  let id = container.id;
+  for (let depth = 0; depth <= MAX_INHERIT_DEPTH; depth++) {
+    const parent = parents[`${container.type}:${id}`];
+    if (parent === undefined) return { type: container.type, id };
+    id = parent;
+  }
+  return null;
 }
 
 function isGranted(value: unknown): boolean {
