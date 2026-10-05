@@ -27,3 +27,4 @@ export { actorOf, GcsSocialService, STATUS_CONTENT_TYPE, USER_FOLLOW } from "./p
 export * from "./profile/achievements";
 export { GcsMembership } from "./profile/membership";
 export * from "./profile/promotions";
+export * from "./profile/cosmetics";

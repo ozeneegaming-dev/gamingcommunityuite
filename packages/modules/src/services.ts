@@ -44,6 +44,7 @@ import { GcsForumService } from "./forums/forums";
 import { GcsTopicService } from "./forums/topics";
 import { registerAppJobs } from "./jobs";
 import { GcsAchievementService } from "./profile/achievements";
+import { GcsCosmeticsService } from "./profile/cosmetics";
 import { GcsMembership } from "./profile/membership";
 import { GcsProfileService } from "./profile/profile";
 import { GcsPromotionService } from "./profile/promotions";
@@ -90,6 +91,7 @@ export type GcsServices = {
   achievements: GcsAchievementService;
   membership: GcsMembership;
   promotions: GcsPromotionService;
+  cosmetics: GcsCosmeticsService;
 };
 
 export type GcsServicesOptions = {
@@ -224,6 +226,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const promotions = new GcsPromotionService({ db, bus, acp, membership });
   achievements.onEvaluated(async (userId) => void (await promotions.evaluateUser(userId)));
   achievements.onDaily((now) => promotions.dailySweep(now));
+  const cosmetics = new GcsCosmeticsService({ db, bus, cache, permissions, acp, attachments, redis });
+  cosmetics.listen(bus);
 
   const services: GcsServices = {
     db,
@@ -265,6 +269,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     achievements,
     membership,
     promotions,
+    cosmetics,
   };
   registerAppJobs(services);
   return services;

@@ -297,15 +297,7 @@ textarea.gcs-input {
   border-radius: 50%;
   animation: gcsSpin 4s linear infinite;
 }
-.gcs-avatarFrame--fire { padding: 3px; }
-.gcs-avatarFrame--fire::before { background: conic-gradient(#FF3B3B, #FF9F1C, #FFE066, #FF3B3B); }
-.gcs-avatarFrame--gold { padding: 3px; }
-.gcs-avatarFrame--gold::before { background: conic-gradient(#F4B740, #FFF4CC, #B97A0E, #F4B740); }
-.gcs-avatarFrame--neon { padding: 3px; }
-.gcs-avatarFrame--neon::before {
-  background: conic-gradient(#22D3EE, #B794FF, #FF7AC6, #22D3EE);
-  filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.6));
-}
+/* Ramele concrete (`.gcs-avatarFrame--{key}`) sunt generate din ACP → VIP → Avatar frames, în `/gcs-names.css`. */
 
 .gcs-avatar {
   position: relative;

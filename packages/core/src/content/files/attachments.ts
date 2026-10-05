@@ -179,14 +179,17 @@ export class GcsAttachmentService {
     actor: GcsActor,
     file: GcsUploadedFile,
     opts: { kind: "avatar" | "cover"; maxMb: number; animated: boolean },
+    internal: { skipRateLimit?: boolean } = {},
   ): Promise<GcsAttachmentInfo> {
     const { db, store, rateLimiter } = this.deps;
     if (!actor.userId) throw new GcsForbidden({ reason: "guest" });
     if (opts.maxMb !== -1 && file.bytes.length > opts.maxMb * 1024 * 1024) {
       throw new GcsValidationError({ file: "too_large" }, { maxMb: String(opts.maxMb) });
     }
-    const limit = await rateLimiter.consume(`upload:${actor.userId}`, UPLOAD_LIMIT);
-    if (!limit.allowed) throw new GcsRateLimited({ retryAfter: String(limit.retryAfter) });
+    if (!internal.skipRateLimit) {
+      const limit = await rateLimiter.consume(`upload:${actor.userId}`, UPLOAD_LIMIT);
+      if (!limit.allowed) throw new GcsRateLimited({ retryAfter: String(limit.retryAfter) });
+    }
 
     const detected = await fileTypeFromBuffer(file.bytes);
     if (!detected || !(detected.mime in IMAGE_FORMATS)) throw new GcsValidationError({ file: "unsupported_type" });
@@ -225,6 +228,28 @@ export class GcsAttachmentService {
     });
     await this.deleteRows(previous);
     return { id: row.id, url: `/files/${row.id}`, filename: row.filename, mime: row.mime, size: row.size, isImage: true, width: row.width, height: row.height };
+  }
+
+  /**
+   * Dacă imaginea de profil e animată, o înlocuiește cu primul cadru (ex. cover-ul unui VIP expirat).
+   * Întoarce noul atașament, sau `null` dacă nu era nimic de schimbat.
+   */
+  async flattenProfileImage(userId: string, kind: "avatar" | "cover"): Promise<GcsAttachmentInfo | null> {
+    const { db, store } = this.deps;
+    const row = await db.attachment.findFirst({ where: { contentType: `user.${kind}`, contentId: userId }, orderBy: { createdAt: "desc" } });
+    if (!row) return null;
+    const file = await store.get(row.storageKey);
+    if (!file) return null;
+    const chunks: Uint8Array[] = [];
+    for await (const chunk of file.body as unknown as AsyncIterable<Uint8Array>) chunks.push(chunk);
+    const bytes = Buffer.concat(chunks);
+    if (((await sharp(bytes, { animated: true }).metadata()).pages ?? 1) <= 1) return null;
+    return this.uploadProfileImage(
+      { userId, groupIds: [], primaryGroupId: 0, isBanned: false, ip: "" },
+      { name: row.filename, bytes },
+      { kind, maxMb: -1, animated: false },
+      { skipRateLimit: true },
+    );
   }
 
   /** Șterge avatarul sau cover-ul unui user (resetare de către staff sau înlocuire). */
