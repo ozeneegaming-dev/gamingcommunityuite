@@ -1,0 +1,79 @@
+{
+  "site": {
+    "home": "Home",
+    "mainNav": "Main",
+    "nav": {
+      "forum": "Forum"
+    },
+    "acp": "ACP",
+    "myProfile": "My profile",
+    "logout": "Sign out",
+    "login": "Sign in",
+    "register": "Register",
+    "language": "Language",
+    "footer": "Your gaming community.",
+    "comingSoon": {
+      "badge": "Under construction",
+      "title": "Welcome to {site}",
+      "body": "The forum arrives in stage 2. Until then, you can create your account and set up your profile.",
+      "cta": "Create account"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Sign in to your {site} account.",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "or": "or",
+      "discord": "Continue with Discord",
+      "steam": "Continue with Steam",
+      "noAccount": "No account yet?",
+      "registerLink": "Register"
+    },
+    "twoFactor": {
+      "title": "Two-step verification",
+      "subtitle": "Enter the 6-digit code from your authenticator app.",
+      "code": "Verification code",
+      "trustDevice": "Remember this device for 30 days",
+      "submit": "Verify"
+    },
+    "register": {
+      "title": "Register",
+      "subtitle": "Create your {site} account.",
+      "name": "Username",
+      "nameHint": "3–24 characters: letters, digits, _ . -",
+      "email": "Email",
+      "password": "Password",
+      "passwordHint": "At least 8 characters.",
+      "submit": "Create account",
+      "hasAccount": "Already have an account?",
+      "loginLink": "Sign in"
+    },
+    "errors": {
+      "invalid_credentials": "Incorrect email or password",
+      "rate_limited": "Too many attempts. Try again in a few minutes.",
+      "username_taken": "This username is already taken",
+      "username_too_short": "The username is too short (minimum 3 characters)",
+      "username_too_long": "The username is too long (maximum 24 characters)",
+      "username_invalid_chars": "The username may only contain letters, digits and _ . -",
+      "email_taken": "An account with this email already exists",
+      "email_invalid": "This email address is not valid",
+      "password_too_short": "The password must have at least 8 characters",
+      "invalid_code": "The code is not correct",
+      "captcha": "The anti-spam check failed. Please try again.",
+      "steam": "Steam sign-in failed.",
+      "steam_linked": "This Steam account is already linked to another user.",
+      "generic": "Something went wrong. Please try again."
+    }
+  },
+  "errors": {
+    "forbidden": "You don't have access to this action.",
+    "not_found": "We couldn't find what you're looking for.",
+    "validation": "Please check the data you entered.",
+    "rate_limited": "Too many requests. Try again later.",
+    "conflict": "This action conflicts with the current state.",
+    "csrf": "The request could not be verified. Reload the page."
+  }
+}

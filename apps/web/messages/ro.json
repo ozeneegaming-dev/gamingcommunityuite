@@ -1,0 +1,79 @@
+{
+  "site": {
+    "home": "Acasă",
+    "mainNav": "Principal",
+    "nav": {
+      "forum": "Forum"
+    },
+    "acp": "ACP",
+    "myProfile": "Profilul meu",
+    "logout": "Ieșire",
+    "login": "Autentificare",
+    "register": "Înregistrare",
+    "language": "Limba",
+    "footer": "Comunitatea ta de gaming.",
+    "comingSoon": {
+      "badge": "În construcție",
+      "title": "Bun venit pe {site}",
+      "body": "Forumul vine în etapa 2. Până atunci, îți poți crea contul și îți poți configura profilul.",
+      "cta": "Creează cont"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Autentificare",
+      "subtitle": "Intră în contul tău {site}.",
+      "email": "Email",
+      "password": "Parolă",
+      "submit": "Intră în cont",
+      "or": "sau",
+      "discord": "Continuă cu Discord",
+      "steam": "Continuă cu Steam",
+      "noAccount": "Nu ai cont?",
+      "registerLink": "Înregistrează-te"
+    },
+    "twoFactor": {
+      "title": "Verificare în doi pași",
+      "subtitle": "Introdu codul de 6 cifre din aplicația de autentificare.",
+      "code": "Cod de verificare",
+      "trustDevice": "Ține minte acest dispozitiv 30 de zile",
+      "submit": "Verifică"
+    },
+    "register": {
+      "title": "Înregistrare",
+      "subtitle": "Creează-ți contul pe {site}.",
+      "name": "Nume de utilizator",
+      "nameHint": "3–24 de caractere: litere, cifre, _ . -",
+      "email": "Email",
+      "password": "Parolă",
+      "passwordHint": "Cel puțin 8 caractere.",
+      "submit": "Creează cont",
+      "hasAccount": "Ai deja cont?",
+      "loginLink": "Autentifică-te"
+    },
+    "errors": {
+      "invalid_credentials": "Email sau parolă incorectă",
+      "rate_limited": "Prea multe încercări. Încearcă din nou peste câteva minute.",
+      "username_taken": "Numele e deja folosit",
+      "username_too_short": "Numele e prea scurt (minimum 3 caractere)",
+      "username_too_long": "Numele e prea lung (maximum 24 de caractere)",
+      "username_invalid_chars": "Numele poate conține doar litere, cifre și _ . -",
+      "email_taken": "Există deja un cont cu acest email",
+      "email_invalid": "Adresa de email nu e validă",
+      "password_too_short": "Parola trebuie să aibă cel puțin 8 caractere",
+      "invalid_code": "Codul nu e corect",
+      "captcha": "Verificarea anti-spam a eșuat. Încearcă din nou.",
+      "steam": "Autentificarea cu Steam a eșuat.",
+      "steam_linked": "Contul Steam e legat deja de alt utilizator.",
+      "generic": "A apărut o eroare. Încearcă din nou."
+    }
+  },
+  "errors": {
+    "forbidden": "Nu ai acces la această acțiune.",
+    "not_found": "Nu am găsit ce cauți.",
+    "validation": "Verifică datele introduse.",
+    "rate_limited": "Prea multe cereri. Încearcă din nou mai târziu.",
+    "conflict": "Acțiunea intră în conflict cu starea curentă.",
+    "csrf": "Cererea nu a putut fi verificată. Reîncarcă pagina."
+  }
+}

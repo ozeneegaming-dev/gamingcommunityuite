@@ -44,6 +44,26 @@ jobs:
   e2e:
     needs: ci
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: redline
+          POSTGRES_PASSWORD: redline
+          POSTGRES_DB: redline
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U redline"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      TEST_PG_URL: postgresql://redline:redline@localhost:5432/postgres
+      TEST_REDIS_URL: redis://localhost:6379
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

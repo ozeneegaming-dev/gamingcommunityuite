@@ -4,6 +4,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { APIError } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
+import { captcha } from "better-auth/plugins";
 import { twoFactor } from "better-auth/plugins/two-factor";
 import { services } from "./services";
 import { steamPlugin } from "./steam-plugin";
@@ -15,6 +16,7 @@ type GcsAuthConfig = {
   emailConfirm: boolean;
   discordClientId: string;
   discordClientSecret: string;
+  turnstileSecret: string;
 };
 
 const SIGN_IN_RULE = { window: 15 * 60, max: 5 };
@@ -88,6 +90,10 @@ function createAuth(config: GcsAuthConfig) {
     },
     plugins: [
       twoFactor({ issuer: config.siteName }),
+      // Cloudflare Turnstile la înregistrare, doar când e configurat în ACP (spec §15).
+      ...(config.turnstileSecret
+        ? [captcha({ provider: "cloudflare-turnstile", secretKey: config.turnstileSecret, endpoints: ["/sign-up/email"] })]
+        : []),
       steamPlugin({ apiKey: () => settings.get<string>("auth.steam_api_key") }),
       // Trebuie să fie ultimul: setează cookie-urile din Server Actions.
       nextCookies(),
@@ -105,14 +111,15 @@ const globalForAuth = globalThis as unknown as { gcsAuth?: { key: string; auth: 
  */
 export async function getAuth(): Promise<GcsAuth> {
   const { settings } = services();
-  const [siteName, siteUrl, emailConfirm, discordClientId, discordClientSecret] = await Promise.all([
+  const [siteName, siteUrl, emailConfirm, discordClientId, discordClientSecret, turnstileSecret] = await Promise.all([
     settings.get<string>("site.name"),
     settings.get<string>("site.url"),
     settings.get<boolean>("auth.email_confirm"),
     settings.get<string>("auth.discord_client_id"),
     settings.get<string>("auth.discord_client_secret"),
+    settings.get<string>("auth.turnstile_secret"),
   ]);
-  const config: GcsAuthConfig = { siteName, siteUrl, emailConfirm, discordClientId, discordClientSecret };
+  const config: GcsAuthConfig = { siteName, siteUrl, emailConfirm, discordClientId, discordClientSecret, turnstileSecret };
   const key = JSON.stringify(config);
   if (globalForAuth.gcsAuth?.key !== key) globalForAuth.gcsAuth = { key, auth: createAuth(config) };
   return globalForAuth.gcsAuth.auth;
