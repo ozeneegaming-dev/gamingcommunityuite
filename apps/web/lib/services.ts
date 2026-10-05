@@ -32,6 +32,7 @@ import {
   GcsForumPosting,
   GcsForumModerationService,
   GcsForumQueries,
+  GcsForumSearch,
   GcsForumService,
   GcsPollService,
   GcsPrefixService,
@@ -74,6 +75,7 @@ export type GcsServices = {
   prefixes: GcsPrefixService;
   reports: GcsReportService;
   moderation: GcsForumModerationService;
+  search: GcsForumSearch;
 };
 
 /** Revalidează paginile Next.js cache-uite; în afara unui request (ex. scripturi) nu e disponibil. */
@@ -215,6 +217,7 @@ function createServices(): GcsServices {
     prefixes,
     reports,
     moderation: new GcsForumModerationService(posting, { posts, reports, acp }),
+    search: new GcsForumSearch({ db, permissions, settings, rateLimiter }),
   };
 }
 

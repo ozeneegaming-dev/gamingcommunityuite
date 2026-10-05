@@ -14,17 +14,19 @@
   "devDependencies": {
     "@gcs/config": "workspace:*",
     "@types/node": "^22.0.0",
-    "eslint": "^9.30.0",
-    "typescript": "^5.9.0",
-    "vitest": "^3.2.0",
-    "embedded-postgres": "18.4.0-beta.17",
-    "pg": "^8.16.0",
     "@types/pg": "^8.23.1",
+    "@types/sanitize-html": "^2.16.2",
+    "embedded-postgres": "18.4.0-beta.17",
+    "eslint": "^9.30.0",
+    "ioredis": "^5.11.1",
+    "pg": "^8.16.0",
     "redis-memory-server": "^0.17.1",
-    "ioredis": "^5.11.1"
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
   },
   "dependencies": {
     "@gcs/core": "workspace:*",
-    "@gcs/db": "workspace:*"
+    "@gcs/db": "workspace:*",
+    "sanitize-html": "^2.18.0"
   }
 }

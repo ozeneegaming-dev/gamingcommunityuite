@@ -11,6 +11,7 @@ export { GcsPrefixService, PREFIXES_ACP_SECTION, type GcsPrefixInput } from "./f
 export { GcsPostService, type GcsEditInput, type GcsReplyInput, type GcsReplyResult, type GcsRevisionView } from "./forums/posts";
 export * from "./forums/queries";
 export { GcsReadMarkerService, UNREAD_DAYS } from "./forums/readMarkers";
+export { GcsForumSearch, type GcsSearchInput, type GcsSearchResult } from "./forums/search";
 export { DEFAULT_REACTIONS } from "./forums/seed";
 export { parseRef, slugify } from "./forums/slug";
 export { GcsTopicService, type GcsNewTopicInput, type GcsNewTopicResult } from "./forums/topics";

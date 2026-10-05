@@ -25,6 +25,7 @@ import { GcsPostService } from "../src/forums/posts";
 import { GcsPrefixService } from "../src/forums/prefixes";
 import { GcsForumQueries } from "../src/forums/queries";
 import { GcsReadMarkerService } from "../src/forums/readMarkers";
+import { GcsForumSearch } from "../src/forums/search";
 import { GcsTopicService } from "../src/forums/topics";
 
 /** Registry-ul real: modulele din producție. */
@@ -133,6 +134,7 @@ export async function createForumWorld() {
     reactions,
     reports,
     moderation,
+    search: new GcsForumSearch({ db, permissions, settings, rateLimiter }),
     root,
     member,
     guest,
