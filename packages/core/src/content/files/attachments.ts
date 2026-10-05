@@ -32,8 +32,11 @@ const MAX_IMAGE_SIDE = 4096;
 const UPLOAD_LIMIT = { window: 3600, max: 30 };
 
 export type GcsUploadedFile = { name: string; bytes: Buffer };
-/** Unde se încarcă: containerul și permisiunea cerută pe el (ex. `{ type: "forum", id: "3" }`, `forums.upload`). */
-export type GcsUploadContext = { container: GcsContainerRef; permission: string };
+/**
+ * Unde se încarcă: containerul și permisiunea cerută pe el (ex. `{ type: "forum", id: "3" }`, `forums.upload`).
+ * Fără container, permisiunea e o setare de grup (ex. `pm.send` pentru mesajele private).
+ */
+export type GcsUploadContext = { container?: GcsContainerRef; permission: string };
 
 export type GcsAttachmentInfo = {
   id: string;
@@ -100,7 +103,8 @@ export class GcsAttachmentService {
   async upload(actor: GcsActor, file: GcsUploadedFile, ctx: GcsUploadContext): Promise<GcsAttachmentInfo> {
     const { db, store, permissions, rateLimiter } = this.deps;
     if (!actor.userId) throw new GcsForbidden({ permission: ctx.permission });
-    await permissions.assert(actor, ctx.permission, ctx.container);
+    if (ctx.container) await permissions.assert(actor, ctx.permission, ctx.container);
+    else await permissions.assert(actor, ctx.permission);
 
     const maxMb = await permissions.groupValue<number | boolean>(actor, "upload.max_mb");
     if (typeof maxMb !== "number" || (maxMb !== -1 && file.bytes.length > maxMb * 1024 * 1024)) {

@@ -53,6 +53,8 @@ import { GcsProfileQueries } from "./profile/queries";
 import { GcsSocialService } from "./profile/social";
 import { createRegistry } from "./registry";
 import { GcsVipService } from "./vip/vip";
+import { GcsConversationService } from "./messages/conversations";
+import { GcsConversationQueries } from "./messages/queries";
 
 export type GcsServices = {
   db: PrismaClient;
@@ -98,6 +100,8 @@ export type GcsServices = {
   vip: GcsVipService;
   ranks: GcsRankDirectory;
   profileQueries: GcsProfileQueries;
+  conversations: GcsConversationService;
+  conversationQueries: GcsConversationQueries;
 };
 
 export type GcsServicesOptions = {
@@ -235,8 +239,22 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   achievements.onDaily((now) => promotions.dailySweep(now));
   const cosmetics = new GcsCosmeticsService({ db, bus, cache, permissions, acp, attachments, redis });
   cosmetics.listen(bus);
+  const conversations = new GcsConversationService({
+    db,
+    bus,
+    cache,
+    permissions,
+    settings,
+    rateLimiter,
+    attachments,
+    profiles,
+    social,
+    render: (content) => posting.render(content),
+  });
+  conversations.registerContent({ reports });
   const vip = new GcsVipService({ db, bus, permissions, settings, membership, mailer });
 
+  const profileQueries = new GcsProfileQueries({ db, cache, permissions, profiles, social, ranks });
   const services: GcsServices = {
     db,
     redis,
@@ -280,7 +298,9 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     cosmetics,
     vip,
     ranks,
-    profileQueries: new GcsProfileQueries({ db, cache, permissions, profiles, social, ranks }),
+    profileQueries,
+    conversations,
+    conversationQueries: new GcsConversationQueries({ db, settings, profileQueries }),
   };
   registerAppJobs(services);
   return services;

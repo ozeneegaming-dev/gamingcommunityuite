@@ -8,6 +8,8 @@ import { GcsPromotionService } from "../src/profile/promotions";
 import { GcsProfileQueries } from "../src/profile/queries";
 import { GcsSocialService } from "../src/profile/social";
 import { GcsVipService } from "../src/vip/vip";
+import { GcsConversationService } from "../src/messages/conversations";
+import { GcsConversationQueries } from "../src/messages/queries";
 import { createForumWorld } from "./world";
 
 /**
@@ -60,14 +62,33 @@ export async function createProfileWorld() {
   const vip = new GcsVipService({ db: world.db, bus: world.bus, permissions: world.permissions, settings: world.settings, membership, mailer });
   const ranks = new GcsRankDirectory({ db: world.db, cache: world.cache });
   const profileQueries = new GcsProfileQueries({ db: world.db, cache: world.cache, permissions: world.permissions, profiles, social, ranks });
+  const conversations = new GcsConversationService({
+    db: world.db,
+    bus: world.bus,
+    cache: world.cache,
+    permissions: world.permissions,
+    settings: world.settings,
+    rateLimiter: world.rateLimiter,
+    attachments: world.attachments,
+    profiles,
+    social,
+    render: (content) => world.posting.render(content),
+  });
+  conversations.registerContent({ reports: world.reports });
+  const conversationQueries = new GcsConversationQueries({ db: world.db, settings: world.settings, profileQueries });
   const moderator = await world.actorFor(await world.createUser("NeoX", "moderator"));
+
+  /** Șterge pauza de flood la mesaje private. */
+  async function clearPmFlood(actor: { userId: string | null }) {
+    await world.redis.del(`gcs:rl:pm:${actor.userId}`);
+  }
 
   /** Șterge pauza de flood pe perete. */
   async function clearWallFlood(actor: { userId: string | null }) {
     await world.redis.del(`gcs:rl:wall-post:${actor.userId}`);
   }
 
-  return { ...world, outbox, mailer, profiles, social, achievements, membership, promotions, cosmetics, vip, ranks, profileQueries, moderator, clearWallFlood };
+  return { ...world, outbox, mailer, profiles, social, achievements, membership, promotions, cosmetics, vip, ranks, profileQueries, conversations, conversationQueries, moderator, clearWallFlood, clearPmFlood };
 }
 
 export type GcsProfileWorld = Awaited<ReturnType<typeof createProfileWorld>>;
