@@ -6,7 +6,9 @@
   "exports": {
     ".": "./src/index.ts",
     "./test/redis": "./test/redis.ts",
-    "./test/redisSetup": "./test/redisSetup.ts"
+    "./test/redisSetup": "./test/redisSetup.ts",
+    "./test/world": "./test/world.ts",
+    "./test/fixtures": "./test/fixtures.ts"
   },
   "scripts": {
     "lint": "eslint .",

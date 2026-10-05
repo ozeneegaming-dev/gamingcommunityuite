@@ -5,7 +5,7 @@ import { normalizeUsername } from "../src/auth/usernames";
 import { GcsCache } from "../src/cache";
 import { GcsEventBus, type GcsEvent } from "../src/events";
 import { GcsGroupService } from "../src/groups/service";
-import type { GcsModule } from "../src/modules/registry";
+import type { GcsModule, GcsModuleRegistry } from "../src/modules/registry";
 import { seedDefaults } from "../src/install/seed";
 import { GcsBanService } from "../src/moderation/bans";
 import { GcsWarningService } from "../src/moderation/warnings";
@@ -16,15 +16,16 @@ import { testRedis } from "./redis";
 
 /**
  * Un „site” complet pentru testele de integrare din `core`: baza cu seed-ul implicit, Redis,
- * serviciile legate între ele și helperi pentru useri și actori. `extraModules` se înregistrează înainte de seed.
+ * serviciile legate între ele și helperi pentru useri și actori. `extraModules` se înregistrează înainte de seed;
+ * `makeRegistry` înlocuiește registry-ul de test (ex. `@gcs/modules` folosește modulele reale).
  */
-export async function createWorld(extraModules: GcsModule[] = []) {
+export async function createWorld(extraModules: GcsModule[] = [], makeRegistry: () => GcsModuleRegistry = testRegistry) {
   const db = testDb();
   const redis = testRedis();
   await truncateAll(db);
   await redis.flushdb();
 
-  const registry = testRegistry();
+  const registry = makeRegistry();
   for (const m of extraModules) registry.register(m);
   await seedDefaults(db, registry);
   const groups = Object.fromEntries((await db.group.findMany()).map((g) => [g.key, g.id])) as Record<string, number>;
