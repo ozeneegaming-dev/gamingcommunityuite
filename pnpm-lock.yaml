@@ -181,6 +181,9 @@ importers:
       '@prisma/client':
         specifier: ^6.16.0
         version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
+      pg:
+        specifier: ^8.16.0
+        version: 8.23.1
     devDependencies:
       '@gcs/config':
         specifier: workspace:*
@@ -197,9 +200,6 @@ importers:
       eslint:
         specifier: ^9.30.0
         version: 9.39.5(jiti@2.7.0)
-      pg:
-        specifier: ^8.16.0
-        version: 8.23.1
       prisma:
         specifier: ^6.16.0
         version: 6.19.3(typescript@5.9.3)

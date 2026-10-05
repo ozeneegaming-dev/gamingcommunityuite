@@ -1,4 +1,4 @@
-import { randomInt } from "node:crypto";
+import { createHash, randomBytes, randomInt, timingSafeEqual } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -18,7 +18,17 @@ const FILES = {
   secrets: ".env.runtime",
   runLock: "install.run.lock",
   codeHash: "install_code.hash",
+  session: "install_session.hash",
+  finish: "install_finish.json",
 } as const;
+
+const sha256 = (value: string) => createHash("sha256").update(value).digest("hex");
+
+function sameHash(a: string, b: string): boolean {
+  const x = Buffer.from(a);
+  const y = Buffer.from(b);
+  return x.length === y.length && timingSafeEqual(x, y);
+}
 
 /** Câmpurile care nu ajung niciodată în progres (parole, secrete, chei API). */
 const SECRET_FIELD = /pass(word)?|secret|token|api_?key/i;
@@ -114,6 +124,13 @@ export class GcsInstallState {
     await writeAtomic(this.file(FILES.secrets), content, 0o600);
   }
 
+  /** După instalare: șterge secretele temporare ale wizard-ului (`GCS_INSTALL_*`), păstrând restul (ex. `DATABASE_URL`). */
+  async clearInstallSecrets(): Promise<void> {
+    const kept = Object.entries(await this.readSecrets()).filter(([k]) => !k.startsWith("GCS_INSTALL_"));
+    const content = kept.map(([k, v]) => `${k}=${encodeEnv(v)}`).join("\n") + (kept.length ? "\n" : "");
+    await writeAtomic(this.file(FILES.secrets), content, 0o600);
+  }
+
   /** Lock-ul rulării instalării (creare exclusivă): o a doua rulare simultană primește `false`. */
   async acquireRunLock(): Promise<boolean> {
     await mkdir(this.configDir, { recursive: true });
@@ -128,6 +145,54 @@ export class GcsInstallState {
 
   async releaseRunLock(): Promise<void> {
     await rm(this.file(FILES.runLock), { force: true });
+  }
+
+  /**
+   * Sesiunea wizard-ului: după codul de instalare corect, browserul primește un token (cookie httpOnly);
+   * pe disc stă doar hash-ul lui. O sesiune nouă o înlocuiește pe cea veche.
+   */
+  async createInstallSession(): Promise<string> {
+    await mkdir(this.configDir, { recursive: true });
+    const token = randomBytes(32).toString("hex");
+    await writeAtomic(this.file(FILES.session), sha256(token), 0o600);
+    return token;
+  }
+
+  async verifyInstallSession(token: string | undefined): Promise<boolean> {
+    if (!token) return false;
+    try {
+      return sameHash((await readFile(this.file(FILES.session), "utf8")).trim(), sha256(token));
+    } catch {
+      return false;
+    }
+  }
+
+  /** Tokenul de unică folosință cu care browserul intră automat ca Root Admin la finalul instalării. */
+  async createFinishToken(adminEmail: string): Promise<string> {
+    const token = randomBytes(32).toString("hex");
+    await writeAtomic(this.file(FILES.finish), JSON.stringify({ hash: sha256(token), email: adminEmail }), 0o600);
+    return token;
+  }
+
+  /** Emailul adminului dacă tokenul e corect; tokenul se consumă (a doua folosire întoarce `null`). */
+  async consumeFinishToken(token: string | undefined): Promise<string | null> {
+    if (!token) return null;
+    try {
+      const saved = JSON.parse(await readFile(this.file(FILES.finish), "utf8")) as { hash: string; email: string };
+      if (!sameHash(saved.hash, sha256(token))) return null;
+      await rm(this.file(FILES.finish), { force: true });
+      return saved.email;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Mută wizard-ul la un pas (fără date noi), ex. după ce pasul anterior a fost salvat. */
+  async advance(step: GcsInstallStep): Promise<void> {
+    await mkdir(this.configDir, { recursive: true });
+    const progress = await this.progress();
+    progress.step = step;
+    await writeAtomic(this.file(FILES.progress), JSON.stringify(progress, null, 2));
   }
 
   async markInstalled(): Promise<void> {

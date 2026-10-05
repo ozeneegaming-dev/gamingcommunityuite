@@ -11,9 +11,18 @@ const text = Manrope({ subsets: ["latin", "latin-ext"], weight: ["400", "500", "
 
 export const dynamic = "force-dynamic";
 
+/** Înainte de instalare baza de date poate lipsi: layout-ul trebuie să se randeze oricum (pentru /install). */
+async function orDefault<T>(value: () => Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await value();
+  } catch {
+    return fallback;
+  }
+}
+
 /** Titlul vine din setarea `site.name` (ACP → Setări → Generale) și se schimbă fără restart. */
 export async function generateMetadata(): Promise<Metadata> {
-  const siteName = await services().settings.get<string>("site.name");
+  const siteName = await orDefault(() => services().settings.get<string>("site.name"), "RED-LINE");
   return { title: { default: siteName, template: `%s · ${siteName}` } };
 }
 
@@ -21,7 +30,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const locale = await getLocale();
   // Versiunea permisiunilor se schimbă la orice modificare de grup: browserul ia imediat CSS-ul nou,
   // deși îl poate păstra în cache 60 s.
-  const version = await services().permissions.currentVersion();
+  const version = await orDefault(() => services().permissions.currentVersion(), 0);
   return (
     <html lang={locale} className={`${display.variable} ${text.variable}`}>
       <head>

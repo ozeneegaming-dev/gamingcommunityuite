@@ -18,5 +18,13 @@ export default defineConfig({
     locale: "ro-RO",
     trace: "retain-on-failure",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    // Installer-ul rulează pe a doua instanță, proaspătă și neinstalată (pornită de e2e/run.mts).
+    {
+      name: "install",
+      testMatch: "**/install.spec.ts",
+      use: { ...devices["Desktop Chrome"], baseURL: process.env.GCS_E2E_INSTALL_URL ?? "http://localhost:3101" },
+    },
+    { name: "chromium", testIgnore: "**/install.spec.ts", use: { ...devices["Desktop Chrome"] } },
+  ],
 });

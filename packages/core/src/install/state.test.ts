@@ -66,6 +66,42 @@ describe("GcsInstallState (Review Focus #3)", () => {
   });
 });
 
+describe("sesiunea wizard-ului și tokenul de final", () => {
+  test("sesiunea: tokenul corect trece, altul sau lipsa nu; o sesiune nouă o anulează pe veche", async () => {
+    const state = new GcsInstallState(dir);
+    const token = await state.createInstallSession();
+    await expect(state.verifyInstallSession(token)).resolves.toBe(true);
+    await expect(state.verifyInstallSession("altceva")).resolves.toBe(false);
+    await expect(state.verifyInstallSession(undefined)).resolves.toBe(false);
+    const next = await state.createInstallSession();
+    await expect(state.verifyInstallSession(token)).resolves.toBe(false);
+    await expect(state.verifyInstallSession(next)).resolves.toBe(true);
+  });
+
+  test("tokenul de final se poate folosi o singură dată", async () => {
+    const state = new GcsInstallState(dir);
+    const token = await state.createFinishToken("admin@example.com");
+    await expect(state.consumeFinishToken("gresit")).resolves.toBeNull();
+    await expect(state.consumeFinishToken(token)).resolves.toBe("admin@example.com");
+    await expect(state.consumeFinishToken(token)).resolves.toBeNull();
+  });
+
+  test("clearInstallSecrets șterge doar secretele wizard-ului", async () => {
+    const state = new GcsInstallState(dir);
+    await state.saveStep("database", { password: "x" });
+    await state.writeSecrets({ DATABASE_URL: "postgresql://a:b@c/d" });
+    await state.clearInstallSecrets();
+    await expect(state.readSecrets()).resolves.toEqual({ DATABASE_URL: "postgresql://a:b@c/d" });
+  });
+
+  test("advance mută pasul curent fără să piardă datele", async () => {
+    const state = new GcsInstallState(dir);
+    await state.saveStep("site", { siteName: "X" });
+    await state.advance("email");
+    await expect(state.progress()).resolves.toEqual({ step: "email", data: { site: { siteName: "X" } } });
+  });
+});
+
 describe("codul de instalare", () => {
   test("ensureInstallCode: primul apel întoarce codul (și îl scrie în log), al doilea → null", async () => {
     const log = vi.spyOn(console, "log").mockImplementation(() => {});

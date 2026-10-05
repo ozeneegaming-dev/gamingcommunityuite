@@ -20,6 +20,7 @@ export * from "./groups/rootGuard";
 export * from "./groups/service";
 export * from "./health";
 export * from "./install/checks";
+export * from "./install/runner";
 export * from "./install/seed";
 export * from "./install/state";
 export * from "./moderation/bans";

@@ -585,5 +585,144 @@
     "title": "Maintenance",
     "body": "{site} is under maintenance. We'll be back soon.",
     "login": "Staff sign in"
+  },
+  "install": {
+    "title": "Installation",
+    "version": "Installation v{version}",
+    "footer": "Installation can resume at any time from the last completed step · once finished, /install is locked for good",
+    "stepOf": "Step {n} of {total}",
+    "stepsNav": "Installation steps",
+    "done": "completed",
+    "current": "current step",
+    "back": "Back",
+    "continue": "Continue",
+    "steps": {
+      "code": {
+        "label": "Install code",
+        "title": "Install code",
+        "body": "Enter the code shown in the server log on first start (e.g. “docker compose logs web”). This way only someone with server access can install the platform.",
+        "field": "Install code",
+        "invalid": "The code is not correct",
+        "rateLimited": "Too many attempts. Try again in 15 minutes."
+      },
+      "checks": {
+        "label": "System check",
+        "title": "System check",
+        "body": "We check the services the platform needs.",
+        "retry": "Check again",
+        "blocked": "Fix the items marked ✗ before continuing.",
+        "optional": "optional for now"
+      },
+      "database": {
+        "label": "Database",
+        "title": "Database",
+        "body": "Choose where the community data is stored. If unsure, keep the included option.",
+        "group": "Database type",
+        "included": "Included PostgreSQL (recommended)",
+        "includedHint": "Runs in Docker on the same server, already configured. Nothing to fill in.",
+        "external": "External PostgreSQL server",
+        "externalHint": "Enter the connection details; the database is created automatically if missing.",
+        "host": "Host",
+        "port": "Port",
+        "user": "User",
+        "password": "Password",
+        "name": "Database name",
+        "test": "Test connection",
+        "ok": "The connection works",
+        "okCreated": "The connection works; the database was created"
+      },
+      "site": {
+        "label": "Site",
+        "title": "Site",
+        "body": "The community basics. You can change them any time in the ACP.",
+        "name": "Site name",
+        "url": "Site address (URL)",
+        "locale": "Default language",
+        "timezone": "Time zone"
+      },
+      "email": {
+        "label": "Email (SMTP)",
+        "title": "Email (SMTP)",
+        "body": "The server used for confirmation and notification emails. You can fill this in later, in the ACP.",
+        "host": "SMTP server",
+        "port": "Port",
+        "user": "User",
+        "pass": "Password",
+        "from": "Sender address"
+      },
+      "admin": {
+        "label": "Root Admin account",
+        "title": "Root Admin account",
+        "body": "The account with full access. After installation, the ACP will ask you to enable two-step verification.",
+        "name": "Username",
+        "email": "Email",
+        "password": "Password",
+        "confirm": "Confirm password",
+        "mismatch": "The passwords do not match"
+      },
+      "data": {
+        "label": "Initial data",
+        "title": "Initial data",
+        "body": "What the community starts with.",
+        "group": "Initial data",
+        "demo": "Demo data",
+        "demoHint": "Sample categories and forums, to see how it looks (forums arrive in stage 2).",
+        "empty": "No data",
+        "emptyHint": "Start from scratch.",
+        "import": "IPS / Indungi import",
+        "importHint": "Available in a later stage."
+      },
+      "run": {
+        "label": "Install",
+        "title": "Install",
+        "body": "We create the tables, groups, settings and your account.",
+        "start": "Start installation",
+        "retry": "Retry",
+        "copyLog": "Copy log",
+        "copied": "Copied",
+        "progress": "Installation progress",
+        "failed": "The installation stopped: {error}"
+      },
+      "done": {
+        "label": "Done",
+        "title": "Installation complete",
+        "body": "The platform is ready. Enter the ACP and enable two-step verification.",
+        "enter": "Enter the ACP"
+      }
+    },
+    "runSteps": {
+      "migrate": "Creating the tables",
+      "seed": "Creating the default groups and permissions",
+      "settings": "Saving the site settings",
+      "admin": "Creating the Root Admin account",
+      "demo": "Preparing the initial data",
+      "name_styles": "Generating name styles",
+      "search_indexes": "Creating search indexes",
+      "lock": "Finishing the installation"
+    },
+    "checks": {
+      "postgres": "PostgreSQL connection",
+      "extensions": "unaccent, pg_trgm extensions",
+      "redis": "Redis",
+      "minio": "File storage (MinIO)",
+      "disk": "Disk space (at least 2 GB)",
+      "config_writable": "Configuration folder"
+    },
+    "fix": {
+      "postgres": "Start the postgres service (“docker compose up -d postgres”) and check DATABASE_URL in .env.",
+      "extensions": "The PostgreSQL image must include the contrib extensions (the official postgres:16 image does).",
+      "redis": "Start the redis service (“docker compose up -d redis”) and check REDIS_URL in .env.",
+      "minio": "Start the minio service and check S3_ENDPOINT; it is needed for uploads.",
+      "disk": "Free up disk space: the platform needs at least 2 GB free.",
+      "config_writable": "The gcsconfig volume must be mounted at /app/config and writable by the web container."
+    },
+    "errors": {
+      "db_unreachable": "The PostgreSQL server does not respond at this address.",
+      "db_auth": "The user or password is not correct.",
+      "db_no_create_privilege": "The database does not exist and the user is not allowed to create it (CREATEDB).",
+      "db_missing_extensions": "The unaccent and pg_trgm extensions cannot be enabled on this server.",
+      "session": "The installation session expired. Enter the code again.",
+      "busy": "The installation is already running."
+    }
   }
 }

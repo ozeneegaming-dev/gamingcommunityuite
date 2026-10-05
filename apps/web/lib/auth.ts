@@ -6,6 +6,7 @@ import { APIError } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { captcha } from "better-auth/plugins";
 import { twoFactor } from "better-auth/plugins/two-factor";
+import { installFinishPlugin } from "./install-plugin";
 import { services } from "./services";
 import { steamPlugin } from "./steam-plugin";
 
@@ -96,6 +97,7 @@ function createAuth(config: GcsAuthConfig) {
         ? [captcha({ provider: "cloudflare-turnstile", secretKey: config.turnstileSecret, endpoints: ["/sign-up/email"] })]
         : []),
       steamPlugin({ apiKey: () => settings.get<string>("auth.steam_api_key") }),
+      installFinishPlugin(),
       // Trebuie să fie ultimul: setează cookie-urile din Server Actions.
       nextCookies(),
     ],
@@ -112,13 +114,15 @@ const globalForAuth = globalThis as unknown as { gcsAuth?: { key: string; auth: 
  */
 export async function getAuth(): Promise<GcsAuth> {
   const { settings } = services();
+  // Înainte de instalare (sau dacă baza nu răspunde) folosim valorile implicite ale setărilor.
+  const get = <T,>(key: string, fallback: T) => settings.get<T>(key).catch(() => fallback);
   const [siteName, siteUrl, emailConfirm, discordClientId, discordClientSecret, turnstileSecret] = await Promise.all([
-    settings.get<string>("site.name"),
-    settings.get<string>("site.url"),
-    settings.get<boolean>("auth.email_confirm"),
-    settings.get<string>("auth.discord_client_id"),
-    settings.get<string>("auth.discord_client_secret"),
-    settings.get<string>("auth.turnstile_secret"),
+    get("site.name", "RED-LINE"),
+    get("site.url", ""),
+    get("auth.email_confirm", true),
+    get("auth.discord_client_id", ""),
+    get("auth.discord_client_secret", ""),
+    get("auth.turnstile_secret", ""),
   ]);
   const config: GcsAuthConfig = { siteName, siteUrl, emailConfirm, discordClientId, discordClientSecret, turnstileSecret };
   const key = JSON.stringify(config);

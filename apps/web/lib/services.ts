@@ -15,13 +15,16 @@ import {
   GcsSettingsService,
   GcsWarningService,
 } from "@gcs/core";
-import { db } from "@gcs/db";
+import { PrismaClient } from "@gcs/db";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { coreModule } from "@gcs/modules";
 import Redis from "ioredis";
 import { revalidateTag } from "next/cache";
+import { gcsConfigDir } from "./config";
 
 export type GcsServices = {
-  db: typeof db;
+  db: PrismaClient;
   redis: Redis;
   cache: GcsCache;
   bus: GcsEventBus;
@@ -48,7 +51,27 @@ function revalidate(tag: string): void {
   }
 }
 
+/**
+ * Variabilele scrise de installer în `.env.runtime` (ex. `DATABASE_URL` pentru o bază externă aleasă în wizard)
+ * au prioritate față de mediul containerului.
+ */
+function loadRuntimeEnv(): void {
+  let content: string;
+  try {
+    content = readFileSync(path.join(gcsConfigDir(), ".env.runtime"), "utf8");
+  } catch {
+    return;
+  }
+  for (const line of content.split(/\r?\n/)) {
+    const m = /^(DATABASE_URL|GCS_SECRET)=(.*)$/.exec(line);
+    if (m) process.env[m[1]!] = m[2]!.startsWith('"') ? (JSON.parse(m[2]!) as string) : m[2]!;
+  }
+}
+
 function createServices(): GcsServices {
+  loadRuntimeEnv();
+  const databaseUrl = process.env.DATABASE_URL;
+  const db = databaseUrl ? new PrismaClient({ datasourceUrl: databaseUrl }) : new PrismaClient();
   const redis = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379", { maxRetriesPerRequest: 2 });
   // Erorile de conexiune sunt raportate de /api/health; nu trebuie să oprească procesul.
   redis.on("error", () => {});
@@ -95,4 +118,18 @@ const globalForServices = globalThis as unknown as { gcsServices?: GcsServices }
 export function services(): GcsServices {
   globalForServices.gcsServices ??= createServices();
   return globalForServices.gcsServices;
+}
+
+/**
+ * Recreează serviciile la următorul apel (ex. după instalare, când baza de date s-a schimbat).
+ * Instanța Better Auth, care le folosește, se recreează și ea.
+ */
+export async function resetServices(): Promise<void> {
+  const current = globalForServices.gcsServices;
+  globalForServices.gcsServices = undefined;
+  (globalThis as unknown as { gcsAuth?: unknown }).gcsAuth = undefined;
+  if (current) {
+    await current.db.$disconnect().catch(() => {});
+    current.redis.disconnect();
+  }
 }

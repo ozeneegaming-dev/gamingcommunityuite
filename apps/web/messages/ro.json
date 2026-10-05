@@ -585,5 +585,144 @@
     "title": "Mentenanță",
     "body": "{site} e în mentenanță. Revenim în curând.",
     "login": "Autentificare staff"
+  },
+  "install": {
+    "title": "Instalare",
+    "version": "Instalare v{version}",
+    "footer": "Instalarea poate fi reluată oricând de la ultimul pas finalizat · după final, /install se blochează definitiv",
+    "stepOf": "Pasul {n} din {total}",
+    "stepsNav": "Pașii instalării",
+    "done": "finalizat",
+    "current": "pasul curent",
+    "back": "Înapoi",
+    "continue": "Continuă",
+    "steps": {
+      "code": {
+        "label": "Cod de instalare",
+        "title": "Cod de instalare",
+        "body": "Introdu codul afișat în log-ul serverului la prima pornire (ex. „docker compose logs web”). Așa doar cine are acces la server poate instala platforma.",
+        "field": "Cod de instalare",
+        "invalid": "Codul nu e corect",
+        "rateLimited": "Prea multe încercări. Încearcă din nou peste 15 minute."
+      },
+      "checks": {
+        "label": "Verificare sistem",
+        "title": "Verificare sistem",
+        "body": "Verificăm serviciile de care are nevoie platforma.",
+        "retry": "Verifică din nou",
+        "blocked": "Rezolvă problemele marcate cu ✗ înainte de a continua.",
+        "optional": "opțional deocamdată"
+      },
+      "database": {
+        "label": "Baza de date",
+        "title": "Baza de date",
+        "body": "Alege unde se salvează datele comunității. Dacă nu ești sigur, lasă varianta inclusă.",
+        "group": "Tip bază de date",
+        "included": "PostgreSQL inclus (recomandat)",
+        "includedHint": "Rulează în Docker pe același server, deja configurat. Nu trebuie completat nimic.",
+        "external": "Server PostgreSQL extern",
+        "externalHint": "Introduci datele de conexiune; baza se creează automat dacă nu există.",
+        "host": "Host",
+        "port": "Port",
+        "user": "Utilizator",
+        "password": "Parolă",
+        "name": "Numele bazei de date",
+        "test": "Testează conexiunea",
+        "ok": "Conexiunea funcționează",
+        "okCreated": "Conexiunea funcționează; baza de date a fost creată"
+      },
+      "site": {
+        "label": "Site",
+        "title": "Site",
+        "body": "Datele de bază ale comunității. Le poți schimba oricând din ACP.",
+        "name": "Numele site-ului",
+        "url": "Adresa site-ului (URL)",
+        "locale": "Limba implicită",
+        "timezone": "Fusul orar"
+      },
+      "email": {
+        "label": "Email (SMTP)",
+        "title": "Email (SMTP)",
+        "body": "Serverul folosit pentru emailurile de confirmare și notificări. Poți completa mai târziu, din ACP.",
+        "host": "Server SMTP",
+        "port": "Port",
+        "user": "Utilizator",
+        "pass": "Parolă",
+        "from": "Adresa expeditorului"
+      },
+      "admin": {
+        "label": "Cont Root Admin",
+        "title": "Cont Root Admin",
+        "body": "Contul cu acces total. După instalare, ACP-ul îți va cere să activezi autentificarea în doi pași.",
+        "name": "Nume de utilizator",
+        "email": "Email",
+        "password": "Parolă",
+        "confirm": "Confirmă parola",
+        "mismatch": "Parolele nu coincid"
+      },
+      "data": {
+        "label": "Date inițiale",
+        "title": "Date inițiale",
+        "body": "Cu ce pornește comunitatea.",
+        "group": "Date inițiale",
+        "demo": "Date demo",
+        "demoHint": "Categorii și forumuri de exemplu, ca să vezi cum arată (forumurile apar în etapa 2).",
+        "empty": "Fără date",
+        "emptyHint": "Pornești de la zero.",
+        "import": "Import IPS / Indungi",
+        "importHint": "Disponibil într-o etapă următoare."
+      },
+      "run": {
+        "label": "Instalare",
+        "title": "Instalare",
+        "body": "Creăm tabelele, grupurile, setările și contul tău.",
+        "start": "Pornește instalarea",
+        "retry": "Reîncearcă",
+        "copyLog": "Copiază log",
+        "copied": "Copiat",
+        "progress": "Progresul instalării",
+        "failed": "Instalarea s-a oprit: {error}"
+      },
+      "done": {
+        "label": "Gata",
+        "title": "Instalare finalizată",
+        "body": "Platforma e gata. Intră în ACP și activează autentificarea în doi pași.",
+        "enter": "Intră în ACP"
+      }
+    },
+    "runSteps": {
+      "migrate": "Creez tabelele",
+      "seed": "Creez grupurile și permisiunile implicite",
+      "settings": "Salvez setările site-ului",
+      "admin": "Creez contul Root Admin",
+      "demo": "Pregătesc datele inițiale",
+      "name_styles": "Generez stilurile numelor",
+      "search_indexes": "Creez indexurile de căutare",
+      "lock": "Închei instalarea"
+    },
+    "checks": {
+      "postgres": "Conexiune PostgreSQL",
+      "extensions": "Extensii unaccent, pg_trgm",
+      "redis": "Redis",
+      "minio": "Stocare fișiere (MinIO)",
+      "disk": "Spațiu pe disc (minimum 2 GB)",
+      "config_writable": "Folderul de configurare"
+    },
+    "fix": {
+      "postgres": "Pornește serviciul postgres („docker compose up -d postgres”) și verifică DATABASE_URL din .env.",
+      "extensions": "Imaginea PostgreSQL trebuie să includă extensiile contrib (imaginea oficială postgres:16 le are).",
+      "redis": "Pornește serviciul redis („docker compose up -d redis”) și verifică REDIS_URL din .env.",
+      "minio": "Pornește serviciul minio și verifică S3_ENDPOINT; e necesar pentru upload-uri.",
+      "disk": "Eliberează spațiu pe disc: platforma are nevoie de cel puțin 2 GB liberi.",
+      "config_writable": "Volumul gcsconfig trebuie montat la /app/config, cu drept de scriere pentru containerul web."
+    },
+    "errors": {
+      "db_unreachable": "Serverul PostgreSQL nu răspunde la adresa dată.",
+      "db_auth": "Utilizatorul sau parola nu sunt corecte.",
+      "db_no_create_privilege": "Baza de date nu există, iar utilizatorul nu are dreptul să o creeze (CREATEDB).",
+      "db_missing_extensions": "Extensiile unaccent și pg_trgm nu pot fi activate pe acest server.",
+      "session": "Sesiunea de instalare a expirat. Introdu din nou codul.",
+      "busy": "Instalarea rulează deja."
+    }
   }
 }

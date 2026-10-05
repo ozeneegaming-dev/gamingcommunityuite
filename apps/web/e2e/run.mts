@@ -12,7 +12,7 @@ import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { seedDefaults, GcsModuleRegistry } from "@gcs/core";
+import { ensureInstallCode, seedDefaults, GcsModuleRegistry } from "@gcs/core";
 import { coreModule } from "@gcs/modules";
 import { PrismaClient } from "@gcs/db";
 import pg from "pg";
@@ -26,6 +26,9 @@ const nextBin = path.join(webDir, "node_modules/next/dist/bin/next");
 const playwrightBin = path.join(webDir, "node_modules/@playwright/test/cli.js");
 const PORT = Number(process.env.GCS_E2E_PORT ?? 3100);
 const BASE_URL = `http://localhost:${PORT}`;
+/** A doua instanță, proaspătă și neinstalată, pentru testele installer-ului (`install.spec.ts`). */
+const INSTALL_PORT = PORT + 1;
+const INSTALL_URL = `http://localhost:${INSTALL_PORT}`;
 
 const cleanups: (() => Promise<void> | void)[] = [];
 
@@ -124,18 +127,30 @@ async function prepareDatabase(baseUrl: string): Promise<string> {
   return url.toString();
 }
 
-async function waitForHealth(timeoutMs: number): Promise<void> {
+/** O bază goală (fără migrații): installer-ul o pregătește singur. */
+async function emptyDatabase(baseUrl: string, name: string): Promise<string> {
+  const admin = new pg.Client({ connectionString: baseUrl });
+  await admin.connect();
+  await admin.query(`DROP DATABASE IF EXISTS "${name}" WITH (FORCE)`);
+  await admin.query(`CREATE DATABASE "${name}"`);
+  await admin.end();
+  const url = new URL(baseUrl);
+  url.pathname = `/${name}`;
+  return url.toString();
+}
+
+async function waitForHealth(timeoutMs: number, baseUrl = BASE_URL): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     try {
-      const res = await fetch(`${BASE_URL}/api/health`);
+      const res = await fetch(`${baseUrl}/api/health`);
       if (res.ok) return;
     } catch {
       // Încă pornește.
     }
     await new Promise((r) => setTimeout(r, 1000));
   }
-  throw new Error(`Aplicația nu a pornit în ${timeoutMs / 1000}s (${BASE_URL}/api/health)`);
+  throw new Error(`Aplicația nu a pornit în ${timeoutMs / 1000}s (${baseUrl}/api/health)`);
 }
 
 function run(bin: string, args: string[], env: NodeJS.ProcessEnv, stdio: "inherit" | "ignore" | "pipe"): ChildProcess {
@@ -171,9 +186,40 @@ async function main(): Promise<number> {
   const nextArgs = mode === "start" ? ["start", "-p", String(PORT)] : ["dev", "-p", String(PORT)];
   const next = run(nextBin, nextArgs, env, process.env.GCS_E2E_VERBOSE ? "inherit" : "ignore");
   cleanups.push(() => killTree(next));
+
+  // Instanța pentru installer: altă bază (goală), alt folder de configurare (neinstalat), altă bază Redis.
+  // Doar cu build de producție: două `next dev` nu pot rula în același proiect.
+  const installEnv: Record<string, string> = {};
+  if (mode === "start") {
+    const installConfigDir = path.join(webDir, ".e2e", `install-config-${process.pid}`);
+    mkdirSync(installConfigDir, { recursive: true });
+    const code = await ensureInstallCode(installConfigDir);
+    const installRedis = new URL(redisUrl);
+    installRedis.pathname = "/2";
+    const installServer = run(
+      nextBin,
+      ["start", "-p", String(INSTALL_PORT)],
+      {
+        ...env,
+        DATABASE_URL: await emptyDatabase(pgUrl, "redline_e2e_install"),
+        REDIS_URL: installRedis.toString(),
+        GCS_CONFIG_DIR: installConfigDir,
+        GCS_BASE_URL: INSTALL_URL,
+      },
+      process.env.GCS_E2E_VERBOSE ? "inherit" : "ignore",
+    );
+    cleanups.push(() => killTree(installServer));
+    Object.assign(installEnv, { GCS_E2E_INSTALL_URL: INSTALL_URL, GCS_E2E_INSTALL_CODE: code ?? "" });
+    await waitForHealth(180_000, INSTALL_URL);
+  }
   await waitForHealth(180_000);
 
-  const playwright = run(playwrightBin, ["test", ...process.argv.slice(2)], { ...env, GCS_E2E_BASE_URL: BASE_URL }, "inherit");
+  const playwright = run(
+    playwrightBin,
+    ["test", ...process.argv.slice(2)],
+    { ...env, ...installEnv, GCS_E2E_BASE_URL: BASE_URL },
+    "inherit",
+  );
   return new Promise((resolve) => playwright.on("exit", (code) => resolve(code ?? 1)));
 }
 
