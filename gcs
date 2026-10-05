@@ -69,24 +69,27 @@ restore() {
   [ -f "$file" ] || die "fișierul $file nu există"
   load_env
   local site answer work
-  site="$(cli site-name | tr -d '\r')"
+  # </dev/null: altfel `docker compose exec` consumă din stdin și răspunsul de confirmare.
+  site="$(cli site-name </dev/null | tr -d '\r')"
   # shellcheck disable=SC1111 # ghilimelele românești „…” sunt intenționate
   echo "Restaurarea înlocuiește TOATE datele actuale ale site-ului „$site”."
-  read -r -p "Scrie numele site-ului ca să confirmi: " answer
+  read -r -p "Scrie numele site-ului ca să confirmi: " answer || true
   [ "$answer" = "$site" ] || die "numele nu se potrivește; restaurarea a fost anulată"
 
   work="$(mktemp -d)"
   trap 'rm -rf "$work"' RETURN
   tar -C "$work" -xzf "$file"
-  cli maintenance on
+  cli maintenance on </dev/null
   echo "Restaurez baza de date…"
   docker compose exec -T postgres pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --if-exists --no-owner < "$work/db.dump"
   echo "Restaurez fișierele…"
   minio_data 'rm -rf /data/* && tar -C /data -xf -' < "$work/files.tar"
   echo "Restaurez configurarea…"
   docker compose exec -T web sh -c 'tar -C /app/config -xf -' < "$work/config.tar"
-  cli maintenance off
-  echo "Restaurare finalizată. Dacă backup-ul vine de pe alt server, compară .env cu $work/env (secretele trebuie să fie aceleași)."
+  # Cache-ul din Redis descrie datele de dinainte de restaurare.
+  docker compose exec -T redis redis-cli FLUSHALL >/dev/null
+  cli maintenance off </dev/null
+  echo "Restaurare finalizată. Dacă backup-ul vine de pe alt server, compară .env cu fișierul env din arhivă (secretele trebuie să fie aceleași)."
 }
 
 case "${1:-}" in
