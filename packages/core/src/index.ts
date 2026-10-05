@@ -13,6 +13,7 @@ export * from "./auth/steam";
 export * from "./auth/usernames";
 export * from "./cache";
 export * from "./errors";
+export * from "./email/send";
 export * from "./events";
 export * from "./groups/nameStyles";
 export * from "./groups/rootGuard";

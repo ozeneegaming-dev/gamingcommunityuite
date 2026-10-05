@@ -41,9 +41,9 @@ const notEmpty = (v: unknown) => ((v as string).trim() === "" ? "required" : nul
 const settings: GcsSettingDef[] = [
   setting("site.name", "string", "RED-LINE", "general", notEmpty),
   setting("site.url", "string", "", "general", isUrlOrEmpty),
-  setting("site.locale", "string", "ro", "general", oneOf(["ro", "en"])),
+  { ...setting("site.locale", "string", "ro", "general", oneOf(["ro", "en"])), options: ["ro", "en"] },
   setting("site.timezone", "string", "Europe/Bucharest", "general", notEmpty),
-  setting("site.theme", "string", "dark", "general", oneOf(["dark", "light", "auto"])),
+  { ...setting("site.theme", "string", "dark", "general", oneOf(["dark", "light", "auto"])), options: ["dark", "light", "auto"] },
   setting("email.smtp_host", "string", "", "email"),
   setting("email.smtp_port", "number", 587, "email", isPort),
   setting("email.smtp_user", "string", "", "email"),

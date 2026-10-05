@@ -17,6 +17,21 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@gcs/core", "@gcs/modules", "@gcs/ui"],
   // Module native: rămân `require` la runtime, nu intră în bundle.
   serverExternalPackages: ["@node-rs/argon2", "@prisma/client", ".prisma/client"],
+  // Header-e de securitate pe toate răspunsurile (spec §15). CSP-ul strict vine odată cu editorul (etapa 2).
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
+        ],
+      },
+    ];
+  },
   turbopack: {
     resolveAlias: { "next-intl/config": I18N_CONFIG },
   },

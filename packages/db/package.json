@@ -10,7 +10,7 @@
     "./test/url": "./test/url.ts"
   },
   "scripts": {
-    "generate": "prisma generate",
+    "generate": "node scripts/generate.mjs",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"

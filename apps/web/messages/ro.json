@@ -95,7 +95,11 @@
       "required": "Câmp obligatoriu",
       "unknown_permission": "Permisiune necunoscută",
       "unknown_section": "Secțiune necunoscută",
-      "invalid_order": "Ordine invalidă"
+      "invalid_order": "Ordine invalidă",
+      "invalid_port": "Port invalid (1–65535)",
+      "invalid_url": "Adresă URL invalidă",
+      "invalid_choice": "Valoare nepermisă",
+      "unknown_setting": "Setare necunoscută"
     }
   },
   "acp": {
@@ -484,6 +488,27 @@
       "before": "Înainte",
       "after": "După",
       "system": "sistem"
+    },
+    "settings": {
+      "titles": {
+        "general": "Setări generale",
+        "email": "Email",
+        "auth": "Login & Înregistrare",
+        "advanced": "Avansat"
+      },
+      "save": "Salvează setările",
+      "secretSet": "•••• salvat (lasă gol ca să păstrezi valoarea)",
+      "secretEmpty": "nesetat",
+      "on": "Activat",
+      "testEmail": {
+        "title": "Email de test",
+        "body": "Trimite un email de test către adresa ta ({email}), cu setările SMTP salvate.",
+        "submit": "Trimite email de test",
+        "sent": "Email trimis la {email}",
+        "failed": "Trimiterea a eșuat: {error}",
+        "subject": "Email de test de la {site}",
+        "html": "<p>Salut, {name}!</p><p>Acesta e un email de test trimis din panoul de administrare {site}. Dacă îl primești, setările SMTP sunt corecte.</p>"
+      }
     }
   },
   "settings": {
@@ -512,6 +537,13 @@
     },
     "system": {
       "maintenance": "Mod mentenanță"
+    },
+    "choices": {
+      "ro": "Română",
+      "en": "English",
+      "dark": "Întunecată",
+      "light": "Luminoasă",
+      "auto": "Automată (după sistem)"
     }
   },
   "permissions": {
@@ -548,5 +580,10 @@
     "memberSince": "Membru din {date}",
     "lastActive": "Ultima activitate: {date}",
     "group": "Grup"
+  },
+  "maintenance": {
+    "title": "Mentenanță",
+    "body": "{site} e în mentenanță. Revenim în curând.",
+    "login": "Autentificare staff"
   }
 }

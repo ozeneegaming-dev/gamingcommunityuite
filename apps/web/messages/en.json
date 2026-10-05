@@ -95,7 +95,11 @@
       "required": "Required field",
       "unknown_permission": "Unknown permission",
       "unknown_section": "Unknown section",
-      "invalid_order": "Invalid order"
+      "invalid_order": "Invalid order",
+      "invalid_port": "Invalid port (1–65535)",
+      "invalid_url": "Invalid URL",
+      "invalid_choice": "Value not allowed",
+      "unknown_setting": "Unknown setting"
     }
   },
   "acp": {
@@ -484,6 +488,27 @@
       "before": "Before",
       "after": "After",
       "system": "system"
+    },
+    "settings": {
+      "titles": {
+        "general": "General settings",
+        "email": "Email",
+        "auth": "Login & Registration",
+        "advanced": "Advanced"
+      },
+      "save": "Save settings",
+      "secretSet": "•••• saved (leave empty to keep the value)",
+      "secretEmpty": "not set",
+      "on": "Enabled",
+      "testEmail": {
+        "title": "Test email",
+        "body": "Send a test email to your address ({email}) with the saved SMTP settings.",
+        "submit": "Send test email",
+        "sent": "Email sent to {email}",
+        "failed": "Sending failed: {error}",
+        "subject": "Test email from {site}",
+        "html": "<p>Hi, {name}!</p><p>This is a test email sent from the {site} admin control panel. If you receive it, the SMTP settings are correct.</p>"
+      }
     }
   },
   "settings": {
@@ -512,6 +537,13 @@
     },
     "system": {
       "maintenance": "Maintenance mode"
+    },
+    "choices": {
+      "ro": "Română",
+      "en": "English",
+      "dark": "Dark",
+      "light": "Light",
+      "auto": "Automatic (system)"
     }
   },
   "permissions": {
@@ -548,5 +580,10 @@
     "memberSince": "Member since {date}",
     "lastActive": "Last active: {date}",
     "group": "Group"
+  },
+  "maintenance": {
+    "title": "Maintenance",
+    "body": "{site} is under maintenance. We'll be back soon.",
+    "login": "Staff sign in"
   }
 }

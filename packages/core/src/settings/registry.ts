@@ -7,6 +7,8 @@ export interface GcsSettingDef {
   labelKey: string;
   /** Întoarce un cod de eroare (cheie de traducere) sau `null` dacă valoarea e validă. */
   validate?: (v: unknown) => string | null;
+  /** Valorile permise (formularul din ACP afișează o listă); validarea o face `validate`. */
+  options?: string[];
 }
 
 /** Codul de eroare pentru o valoare care nu se potrivește cu tipul sau validarea setării, sau `null`. */

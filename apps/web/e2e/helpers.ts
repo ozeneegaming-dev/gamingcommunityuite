@@ -104,3 +104,19 @@ export async function groupId(key: string): Promise<number> {
   const rows = await sql<{ id: number }>(`SELECT id FROM groups WHERE key = $1`, [key]);
   return rows[0]!.id;
 }
+
+/**
+ * Readuce o setare la valoarea implicită: o șterge din baza E2E și golește cache-ul de setări din Redis
+ * (`REDIS_URL`, setat de `e2e/run.mts`), ca testele următoare să nu fie afectate.
+ */
+export async function resetSetting(key: string): Promise<void> {
+  await sql(`DELETE FROM settings WHERE key = $1`, [key]);
+  const { default: Redis } = await import("ioredis");
+  const redis = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379");
+  try {
+    const keys = await redis.keys("gcs:k:setting*");
+    if (keys.length > 0) await redis.del(...keys);
+  } finally {
+    redis.disconnect();
+  }
+}
