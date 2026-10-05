@@ -52,6 +52,9 @@ const WARNING_ACTIONS = [
 
 export const ROOT_ACP_ROLE = "Root";
 
+/** Seed-ul face multe scrieri mici într-o tranzacție; limita implicită Prisma (5 s) e prea strânsă pe un server încărcat. */
+const SEED_TX = { timeout: 30_000, maxWait: 10_000 };
+
 /**
  * Datele implicite ale unei instalări noi. E idempotentă: rulată din nou, creează doar ce lipsește
  * și nu suprascrie modificările făcute din ACP.
@@ -102,5 +105,5 @@ export async function seedDefaults(db: PrismaClient, registry: GcsModuleRegistry
     }
 
     await tx.systemState.upsert({ where: { id: 1 }, update: {}, create: { id: 1 } });
-  });
+  }, SEED_TX);
 }

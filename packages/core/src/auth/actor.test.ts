@@ -1,0 +1,85 @@
+import { testDb, truncateAll } from "@gcs/db/test/helpers";
+import { afterAll, beforeEach, describe, expect, test } from "vitest";
+import { testRegistry } from "../../test/fixtures";
+import { seedDefaults } from "../install/seed";
+import { GcsActorResolver } from "./actor";
+import { prepareNewUser } from "./registration";
+
+const db = testDb();
+const resolver = new GcsActorResolver({ db });
+let groups: Record<string, number>;
+
+beforeEach(async () => {
+  await truncateAll(db);
+  await seedDefaults(db, testRegistry());
+  groups = Object.fromEntries((await db.group.findMany()).map((g) => [g.key, g.id]));
+});
+
+afterAll(async () => {
+  await db.$disconnect();
+});
+
+async function userWithSession(name: string, expiresAt = new Date(Date.now() + 3_600_000)) {
+  const user = await db.user.create({
+    data: await prepareNewUser(db, { name, email: `${name.toLowerCase()}@mail.com` }, { emailConfirm: true }),
+  });
+  const session = await db.session.create({ data: { token: `tok-${name}`, userId: user.id, expiresAt } });
+  return { user, token: session.token };
+}
+
+describe("GcsActorResolver.getActor", () => {
+  test("fără sesiune → vizitator în grupul guest", async () => {
+    await expect(resolver.getActor({ ip: "203.0.113.5" })).resolves.toEqual({
+      userId: null,
+      groupIds: [groups.guest],
+      primaryGroupId: groups.guest,
+      isBanned: false,
+      ip: "203.0.113.5",
+    });
+  });
+
+  test("userul nou → new_member, cu grupurile secundare incluse", async () => {
+    const { user, token } = await userWithSession("Nou");
+    await db.userGroup.create({ data: { userId: user.id, groupId: groups.vip_gold! } });
+    const actor = await resolver.getActor({ sessionToken: token, ip: "203.0.113.5" });
+    expect(actor).toMatchObject({ userId: user.id, primaryGroupId: groups.new_member, isBanned: false });
+    expect(actor.groupIds.sort()).toEqual([groups.new_member, groups.vip_gold].sort());
+  });
+
+  test("un token necunoscut sau o sesiune expirată → vizitator", async () => {
+    const { token } = await userWithSession("Expirat", new Date(Date.now() - 1000));
+    await expect(resolver.getActor({ sessionToken: token, ip: "1.1.1.1" })).resolves.toMatchObject({ userId: null });
+    await expect(resolver.getActor({ sessionToken: "inexistent", ip: "1.1.1.1" })).resolves.toMatchObject({
+      userId: null,
+    });
+  });
+
+  test("ban de cont activ → vizitator banat, iar sesiunile userului sunt șterse", async () => {
+    const { user, token } = await userWithSession("Banat");
+    await db.ban.create({ data: { type: "ACCOUNT", value: user.id, userId: user.id, reason: "spam" } });
+    await expect(resolver.getActor({ sessionToken: token, ip: "1.1.1.1" })).resolves.toMatchObject({
+      userId: null,
+      groupIds: [groups.guest],
+      isBanned: true,
+    });
+    expect(await db.session.count({ where: { userId: user.id } })).toBe(0);
+  });
+
+  test("ban pe IP → și vizitatorii de pe acel IP sunt banați", async () => {
+    await db.ban.create({ data: { type: "IP", value: "198.51.100.23", reason: "abuz" } });
+    await expect(resolver.getActor({ ip: "198.51.100.23" })).resolves.toMatchObject({ isBanned: true });
+    await expect(resolver.getActor({ ip: "198.51.100.24" })).resolves.toMatchObject({ isBanned: false });
+  });
+
+  test("un ban expirat sau ridicat nu mai blochează", async () => {
+    const { user, token } = await userWithSession("Iertat");
+    await db.ban.create({
+      data: { type: "ACCOUNT", value: user.id, userId: user.id, reason: "x", expiresAt: new Date(Date.now() - 1000) },
+    });
+    await db.ban.create({ data: { type: "ACCOUNT", value: user.id, userId: user.id, reason: "y", liftedAt: new Date() } });
+    await expect(resolver.getActor({ sessionToken: token, ip: "1.1.1.1" })).resolves.toMatchObject({
+      userId: user.id,
+      isBanned: false,
+    });
+  });
+});

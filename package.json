@@ -29,9 +29,6 @@
       "prisma",
       "sharp",
       "unrs-resolver"
-    ],
-    "ignoredBuiltDependencies": [
-      "redis-memory-server"
     ]
   }
 }

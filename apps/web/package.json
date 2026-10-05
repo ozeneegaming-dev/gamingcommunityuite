@@ -8,28 +8,35 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test:e2e": "playwright test --pass-with-no-tests"
+    "test:e2e": "playwright test --pass-with-no-tests",
+    "test": "vitest run"
   },
   "dependencies": {
     "@gcs/core": "workspace:*",
+    "@gcs/db": "workspace:*",
+    "@gcs/modules": "workspace:*",
     "@gcs/ui": "workspace:*",
+    "better-auth": "^1.7.7",
     "ioredis": "^5.6.0",
     "next": "^16.0.0",
-    "pg": "^8.16.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "server-only": "^0.0.1"
+    "server-only": "^0.0.1",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@gcs/config": "workspace:*",
     "@playwright/test": "^1.55.0",
     "@tailwindcss/postcss": "^4.1.0",
     "@types/node": "^22.0.0",
-    "@types/pg": "^8.15.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "embedded-postgres": "18.4.0-beta.17",
     "eslint": "^9.30.0",
+    "pg": "^8.23.1",
+    "redis-memory-server": "^0.17.1",
     "tailwindcss": "^4.1.0",
-    "typescript": "^5.9.0"
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.7"
   }
 }
