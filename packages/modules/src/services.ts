@@ -15,7 +15,10 @@ import {
   GcsJobQueue,
   GcsLocalFileStore,
   GcsMemberDirectory,
+  GcsAppService,
+  GcsNavService,
   GcsNotificationService,
+  GcsWidgetService,
   GcsPresenceService,
   GcsRealtime,
   GcsPermissionService,
@@ -32,6 +35,7 @@ import {
   type GcsModuleRegistry,
 } from "@gcs/core";
 import { PrismaClient } from "@gcs/db";
+import { isGcsIcon } from "@gcs/ui/icon-registry";
 import Redis from "ioredis";
 import { registerForumContent } from "./forums/content";
 import { GcsForumModerationService } from "./forums/moderation";
@@ -86,6 +90,9 @@ export type GcsServices = {
   realtimeRooms: GcsRealtimeRooms;
   notificationProducers: GcsNotificationProducers;
   chat: GcsChatService;
+  apps: GcsAppService;
+  widgets: GcsWidgetService;
+  nav: GcsNavService;
   chatQueries: GcsChatQueries;
   bans: GcsBanService;
   warnings: GcsWarningService;
@@ -205,6 +212,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const acp = new GcsAcpRoleService({ db, registry });
   const acpSearch = new GcsAcpSearch({ db, registry, acp });
   const groups = new GcsGroupService({ db, bus, permissions, acp });
+  const apps = new GcsAppService({ db, cache, bus, registry, acp });
   const members = new GcsMemberDirectory({ db });
   const notifications = new GcsNotificationService({ db, bus, cache, registry });
   const bans = new GcsBanService({ db, cache, bus, acp });
@@ -338,6 +346,9 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     notificationProducers,
     chat,
     chatQueries,
+    apps,
+    widgets: new GcsWidgetService({ db, cache, bus, registry, acp, apps }),
+    nav: new GcsNavService({ db, cache, bus, registry, acp, apps, isIcon: isGcsIcon }),
     bans,
     warnings,
     actors,

@@ -4,7 +4,9 @@
     "mainNav": "Principal",
     "nav": {
       "forum": "Forum",
-      "chat": "Chat"
+      "chat": "Chat",
+      "members": "Membri",
+      "staff": "Staff"
     },
     "acp": "ACP",
     "myProfile": "Profilul meu",
@@ -273,6 +275,11 @@
         "history": "Istoric",
         "name_styles": "Stiluri de nume",
         "frames": "Avatar frames"
+      },
+      "appearance": {
+        "appearance": "Aspect",
+        "themes": "Teme",
+        "widgets": "Widget-uri"
       }
     },
     "comingSoon": {
@@ -1716,5 +1723,9 @@
     "summary": "{members} membri · {guests} vizitatori",
     "record": "Record: {count} · {date}",
     "nobody": "Niciun membru vizibil online."
+  },
+  "apps": {
+    "chat": "Chat",
+    "vip": "VIP"
   }
 }

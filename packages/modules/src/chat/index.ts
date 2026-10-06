@@ -78,6 +78,8 @@ async function seedChat({ tx, groupIds }: GcsSeedContext): Promise<void> {
 /** Modulul Chat (specul etapei 4): canale cu permisiuni, mesaje live, mute, slow mode și retenție. */
 export const chatModule: GcsModule = {
   key: "chat",
+  app: { optional: true, labelKey: "apps.chat", icon: "fa-solid fa-comment-dots" },
+  nav: [{ key: "chat", labelKey: "site.nav.chat", icon: "fa-solid fa-comment-dots", href: "/chat", position: 10 }],
   permissions,
   settings,
   acpMenu,

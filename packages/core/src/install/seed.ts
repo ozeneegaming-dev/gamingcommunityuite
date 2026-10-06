@@ -1,6 +1,7 @@
 import type { Prisma, PrismaClient } from "@gcs/db";
 import type { GcsNameStyle } from "../groups/nameStyles";
 import type { GcsModuleRegistry } from "../modules/registry";
+import { GcsNavService } from "../nav/service";
 
 type DefaultGroup = {
   key: string;
@@ -113,6 +114,9 @@ export async function seedDefaults(db: PrismaClient, registry: GcsModuleRegistry
       data: registry.notificationTypes().map((t) => ({ type: t.key, site: true, email: t.defaultEmail })),
       skipDuplicates: true,
     });
+
+    // Meniul principal implicit din itemii modulelor (etapa 5); un meniu editat de admin rămâne.
+    await GcsNavService.seedDefaults(tx, registry);
 
     await tx.systemState.upsert({ where: { id: 1 }, update: {}, create: { id: 1 } });
   }, SEED_TX);

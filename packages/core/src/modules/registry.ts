@@ -57,7 +57,34 @@ export type GcsNotificationTypeDef = {
   countEach?: boolean;
 };
 
-/** Un modul RED-LINE (spec §5). Restul câmpurilor din spec se adaugă în etapele care le folosesc. */
+/** Paginile cu zone de widget-uri și zonele lor (specul etapei 5). */
+export const GCS_WIDGET_PAGES = ["index", "forum", "topic"] as const;
+export type GcsWidgetPage = (typeof GCS_WIDGET_PAGES)[number];
+export const GCS_WIDGET_ZONES = ["top", "bottom", "sidebar"] as const;
+export type GcsWidgetZone = (typeof GCS_WIDGET_ZONES)[number];
+
+/**
+ * Un tip de widget declarat de un modul. Randarea e în web (după `key`); aici sunt doar metadatele și validarea
+ * config-ului: `config(raw)` întoarce config-ul normalizat sau `null` dacă e invalid.
+ */
+export type GcsWidgetDef = {
+  key: string;
+  labelKey: string;
+  icon: string;
+  zones: readonly GcsWidgetZone[];
+  pages?: readonly GcsWidgetPage[];
+  defaultConfig: Record<string, unknown>;
+  config: (raw: unknown) => Record<string, unknown> | null;
+};
+
+/** O placă din panoul de statistici (ex. „Topicuri: 128”), contribuită de un modul. */
+export type GcsStatTile = { key: string; labelKey: string; value: number; icon: string; href?: string; color?: string };
+export type GcsStatsContext = { db: PrismaClient };
+
+/** Un item implicit din meniul principal, declarat de un modul. */
+export type GcsNavDefault = { key: string; labelKey: string; icon: string; href: string; position: number };
+
+/** Un modul GamingCommunitySuite (spec §5). Restul câmpurilor din spec se adaugă în etapele care le folosesc. */
 export interface GcsModule {
   key: string;
   /**
@@ -74,6 +101,17 @@ export interface GcsModule {
   notificationTypes?: GcsNotificationTypeDef[];
   /** Conținutul de pornire ales în wizard (pasul „demo” al instalării). Idempotent. */
   seedDemo?: (ctx: GcsDemoContext) => Promise<void>;
+  /**
+   * Etapa 5: o aplicație opțională (se poate dezactiva din ACP → Sistem → Aplicații). Dezactivată, nu apare în meniu,
+   * widget-uri sau statistici, iar paginile ei răspund cu 404.
+   */
+  app?: { optional: boolean; labelKey: string; icon: string };
+  /** Tipurile de widget-uri ale modulului. */
+  widgets?: GcsWidgetDef[];
+  /** Plăcile modulului din panoul de statistici. */
+  stats?: (ctx: GcsStatsContext) => Promise<GcsStatTile[]>;
+  /** Itemii modulului din meniul principal implicit. */
+  nav?: GcsNavDefault[];
 }
 
 export class GcsModuleRegistry {
@@ -88,6 +126,8 @@ export class GcsModuleRegistry {
     }
     assertUnique(m.settings.map((s) => s.key), this.settings, "setarea");
     assertUnique(m.permissions.map((p) => p.key), this.permissions, "permisiunea");
+    const widgetKeys = new Map(this.widgetDefs().map((w) => [w.def.key, w]));
+    assertUnique((m.widgets ?? []).map((w) => w.key), widgetKeys, "widget-ul");
 
     this.modules.push(m);
     for (const s of m.settings) this.settings.set(s.key, s);
@@ -124,6 +164,20 @@ export class GcsModuleRegistry {
 
   acpMenu(): GcsAcpMenuSection[] {
     return this.modules.flatMap((m) => m.acpMenu);
+  }
+
+  /** Tipurile de widget-uri, cu modulul care le declară (cheile sunt unice). */
+  widgetDefs(): { module: string; def: GcsWidgetDef }[] {
+    return this.modules.flatMap((m) => (m.widgets ?? []).map((def) => ({ module: m.key, def })));
+  }
+
+  widgetDef(key: string): { module: string; def: GcsWidgetDef } | undefined {
+    return this.widgetDefs().find((w) => w.def.key === key);
+  }
+
+  /** Modulul unei chei de aplicație (ex. `chat`). */
+  module(key: string): GcsModule | undefined {
+    return this.modules.find((m) => m.key === key);
   }
 }
 

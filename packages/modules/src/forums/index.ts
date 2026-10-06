@@ -110,6 +110,11 @@ export const forumsModule: GcsModule = {
     { key: "forums.solution", labelKey: "notifications.type.forums.solution", important: false, defaultEmail: "DIGEST" },
   ],
   eventListeners: [],
+  nav: [
+    { key: "forum", labelKey: "site.nav.forum", icon: "fa-solid fa-comments", href: "/", position: 0 },
+    { key: "members", labelKey: "site.nav.members", icon: "fa-solid fa-users", href: "/members", position: 20 },
+    { key: "staff", labelKey: "site.nav.staff", icon: "fa-solid fa-shield-halved", href: "/staff", position: 30 },
+  ],
   seed: seedForums,
   seedDemo: seedForumDemo,
 };

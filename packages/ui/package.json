@@ -14,7 +14,8 @@
     "./profile.css": "./src/profile.css",
     "./realtime.css": "./src/realtime.css",
     "./controls.css": "./src/controls.css",
-    "./icons": "./src/icons/index.tsx"
+    "./icons": "./src/icons/index.tsx",
+    "./icon-registry": "./src/icons/registry.ts"
   },
   "scripts": {
     "lint": "eslint .",

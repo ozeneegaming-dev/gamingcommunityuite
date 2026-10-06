@@ -4,7 +4,9 @@
     "mainNav": "Main",
     "nav": {
       "forum": "Forum",
-      "chat": "Chat"
+      "chat": "Chat",
+      "members": "Members",
+      "staff": "Staff"
     },
     "acp": "ACP",
     "myProfile": "My profile",
@@ -273,6 +275,11 @@
         "history": "History",
         "name_styles": "Name styles",
         "frames": "Avatar frames"
+      },
+      "appearance": {
+        "appearance": "Appearance",
+        "themes": "Themes",
+        "widgets": "Widgets"
       }
     },
     "comingSoon": {
@@ -1716,5 +1723,9 @@
     "summary": "{members} members · {guests} guests",
     "record": "Record: {count} · {date}",
     "nobody": "No visible members online."
+  },
+  "apps": {
+    "chat": "Chat",
+    "vip": "VIP"
   }
 }

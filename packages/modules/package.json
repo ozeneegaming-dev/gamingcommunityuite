@@ -29,6 +29,7 @@
   "dependencies": {
     "@gcs/core": "workspace:*",
     "@gcs/db": "workspace:*",
+    "@gcs/ui": "workspace:*",
     "ioredis": "^5.11.1",
     "sanitize-html": "^2.18.0"
   }

@@ -225,6 +225,12 @@ const acpMenu: GcsAcpMenuSection[] = [
     ["staff_page", "/admin/members/staff/page"],
   ]),
   menuSection("members", "bulk_mail", [["bulk_mail", "/admin/members/bulk-mail"]]),
+
+  // Etapa 5: temele și widget-urile se editează direct pe site; aici sunt listele și linkurile spre editoare.
+  menuSection("appearance", "appearance", [
+    ["themes", "/admin/appearance/themes"],
+    ["widgets", "/admin/appearance/widgets"],
+  ]),
 ];
 
 /** Modulul „core”: setările, permisiunile de grup și meniul ACP de bază. */
