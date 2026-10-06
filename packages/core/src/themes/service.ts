@@ -85,7 +85,8 @@ export class GcsThemeService {
 
   async list(): Promise<GcsThemeView[]> {
     const cached = await this.deps.cache.get<GcsThemeView[]>("themes:all");
-    if (cached) return cached;
+    // Cache-ul poate fi scris de o versiune mai veche (setări fără câmpurile noi): îl completăm cu valorile implicite.
+    if (cached) return cached.map((v) => ({ ...v, settings: normalizeThemeSettings(v.settings) }));
     const rows = await this.deps.db.theme.findMany({ orderBy: [{ isDefault: "desc" }, { name: "asc" }] });
     const views = rows.map(toView);
     await this.deps.cache.set("themes:all", views, { ttlSec: CACHE_TTL, tags: [CACHE_TAG] });

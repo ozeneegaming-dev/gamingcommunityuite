@@ -228,6 +228,16 @@ describe("GcsThemeService", () => {
     expect(published.settings.elements.light.headerBg).toBe(DEFAULT_THEME_SETTINGS.elements.light.headerBg);
   });
 
+  test("un cache scris de o versiune veche (setări fără câmpurile noi) e completat cu valorile implicite", async () => {
+    const legacy = { dark: { accent: "#112233" }, light: {}, fontDisplay: "Inter", fontText: "Manrope", radius: 8, width: 1400 };
+    const [current] = await themes.list();
+    await w.cache.set("themes:all", [{ ...current!, settings: legacy }], { ttlSec: 60, tags: ["themes"] });
+    const [t] = await themes.list();
+    expect(t!.settings.dark.accent).toBe("#112233");
+    expect(t!.settings.logo).toEqual(DEFAULT_THEME_SETTINGS.logo);
+    expect(t!.settings.header).toEqual(DEFAULT_THEME_SETTINGS.header);
+  });
+
   test("setările imbricate invalide sunt refuzate pe căi", async () => {
     const err = await themes
       .saveDraft(root, "default", { header: { height: 999 }, elements: { dark: { headerBg: "red" } }, logo: { imageLight: "x" } } as never)
