@@ -23,7 +23,8 @@ function files(dir: string): string[] {
   }
   const out: string[] = [];
   for (const name of entries) {
-    if (SKIP.has(name)) continue;
+    // Folderele cu punct (`.pgtest` cu datele PostgreSQL ale testelor, `.turbo`) nu sunt surse și se schimbă în timpul rulării.
+    if (SKIP.has(name) || name.startsWith(".")) continue;
     const full = path.join(dir, name);
     if (statSync(full).isDirectory()) out.push(...files(full));
     else if (EXT.test(name) && !full.endsWith("branding.test.ts")) out.push(full);
