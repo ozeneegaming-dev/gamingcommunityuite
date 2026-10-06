@@ -66,6 +66,8 @@ export type GcsOpenedAttachment = {
 export type GcsAttachmentAccess = (actor: GcsActor, contentId: string) => Promise<boolean>;
 
 type Tx = Prisma.TransactionClient;
+/** Un fișier verificat (și, pentru imagini, recodat), gata de salvat. */
+type GcsPreparedFile = { bytes: Buffer; mime: string; ext: string; width: number | null; height: number | null };
 
 function cleanFilename(name: string): string {
   const base = path.basename(name.replace(/\\/g, "/"));
@@ -105,7 +107,7 @@ export class GcsAttachmentService {
   }
 
   async upload(actor: GcsActor, file: GcsUploadedFile, ctx: GcsUploadContext): Promise<GcsAttachmentInfo> {
-    const { db, store, permissions, rateLimiter } = this.deps;
+    const { permissions, rateLimiter } = this.deps;
     if (!actor.userId) throw new GcsForbidden({ permission: ctx.permission });
     if (ctx.container) await permissions.assert(actor, ctx.permission, ctx.container);
     else await permissions.assert(actor, ctx.permission);
@@ -118,14 +120,29 @@ export class GcsAttachmentService {
     if (!limit.allowed) throw new GcsRateLimited({ retryAfter: String(limit.retryAfter) });
 
     const filename = cleanFilename(file.name);
-    const prepared = await this.prepare(file.bytes, filename);
+    return this.save(actor.userId, filename, await this.prepare(file.bytes, filename));
+  }
+
+  /**
+   * Un fișier adus de importul din altă platformă: aceeași verificare ca un upload nou (tipul real din magic bytes,
+   * recodarea imaginilor), fără permisiunile și limitele de grup ale unui membru (dreptul îl verifică ACP-ul care
+   * pornește importul). Rămâne nelegat până când importul îl leagă de postare sau de mesaj.
+   */
+  async importFile(ownerId: string | null, file: GcsUploadedFile, opts: { maxBytes: number }): Promise<GcsAttachmentInfo> {
+    if (file.bytes.length > opts.maxBytes) throw new GcsValidationError({ file: "too_large" });
+    const filename = cleanFilename(file.name);
+    return this.save(ownerId, filename, await this.prepare(file.bytes, filename));
+  }
+
+  private async save(ownerId: string | null, filename: string, prepared: GcsPreparedFile): Promise<GcsAttachmentInfo> {
+    const { db, store } = this.deps;
     const now = new Date();
     const key = `${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, "0")}/${randomUUID()}.${prepared.ext}`;
 
     await store.put(key, prepared.bytes, prepared.mime);
     const row = await db.attachment.create({
       data: {
-        ownerId: actor.userId,
+        ownerId,
         storageKey: key,
         filename,
         mime: prepared.mime,
@@ -147,7 +164,7 @@ export class GcsAttachmentService {
   }
 
   /** Tipul real și, pentru imagini, recodarea. */
-  private async prepare(bytes: Buffer, filename: string) {
+  private async prepare(bytes: Buffer, filename: string): Promise<GcsPreparedFile> {
     const detected = await fileTypeFromBuffer(bytes);
 
     if (detected && detected.mime in IMAGE_FORMATS) {

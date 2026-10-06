@@ -221,3 +221,18 @@ describe("GcsAttachmentService.uploadSiteImage", () => {
     await expect(service.uploadSiteImage(guest, { name: "a.png", bytes: await png() }, { kind: "favicon", themeKey: "default" })).rejects.toBeInstanceOf(GcsForbidden);
   });
 });
+
+describe("GcsAttachmentService.importFile (importul din altă platformă)", () => {
+  test("aceeași verificare ca un upload: imaginea e recodată (fără EXIF), tipul real decide, fără limitele de grup", async () => {
+    const att = await service.importFile(member.userId, { name: "../../vechi.png", bytes: await png(40, 20, true) }, { maxBytes: 10 * 1024 * 1024 });
+    expect(att).toMatchObject({ isImage: true, width: 40, height: 20, mime: "image/png", filename: "vechi.png" });
+    const row = await world.db.attachment.findUniqueOrThrow({ where: { id: att.id } });
+    expect(row).toMatchObject({ ownerId: member.userId, contentType: null });
+    expect((await sharp(await readAll((await service.open(member, att.id)).body)).metadata()).exif).toBeUndefined();
+  });
+
+  test("un fișier periculos sau peste limită e refuzat", async () => {
+    await expect(service.importFile(null, { name: "x.html", bytes: Buffer.from("<script>alert(1)</script>") }, { maxBytes: 1000 })).rejects.toBeInstanceOf(GcsValidationError);
+    await expect(service.importFile(null, { name: "x.png", bytes: await png() }, { maxBytes: 10 })).rejects.toBeInstanceOf(GcsValidationError);
+  });
+});
