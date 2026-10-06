@@ -126,6 +126,19 @@ describe("migrateDatabase", { timeout: 120_000 }, () => {
     expect(update.applied).toEqual(ALL_MIGRATIONS.filter((m) => m >= "20261008"));
   });
 
+  test("actualizarea unui site din etapa 4 aplică migrația etapei 5", async () => {
+    await admin(async (c) => {
+      await c.query(`DROP DATABASE IF EXISTS "${DB}" WITH (FORCE)`);
+      await c.query(`CREATE DATABASE "${DB}"`);
+    });
+    const stage4 = mkdtempSync(path.join(os.tmpdir(), "gcs-stage4-"));
+    for (const name of ALL_MIGRATIONS.filter((m) => m < "20261009")) cpSync(path.join(migrationsDir, name), path.join(stage4, name), { recursive: true });
+    await migrateDatabase(url, stage4);
+    rmSync(stage4, { recursive: true, force: true });
+    const update = await migrateDatabase(url, migrationsDir);
+    expect(update.applied).toEqual(ALL_MIGRATIONS.filter((m) => m >= "20261009"));
+  });
+
   test("două rulări simultane nu aplică migrațiile de două ori (lock)", async () => {
     await admin(async (c) => {
       await c.query(`DROP DATABASE IF EXISTS "${DB}" WITH (FORCE)`);

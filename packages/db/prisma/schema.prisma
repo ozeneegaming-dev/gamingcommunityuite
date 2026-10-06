@@ -73,6 +73,17 @@ model User {
   nameStyleId       Int?
   avatarFrameId     Int?
 
+  // UI modern (etapa 5). `prefs`: { sound, toasts, theme } (specul etapei 5).
+  signatureJson Json?
+  signatureHtml String  @default("")
+  customTitle   String?
+  prefs         Json    @default("{}")
+
+  userPermissions UserPermission[]
+  chatRoomsOwned  ChatChannel[]         @relation("ChatRoomOwner")
+  chatRooms       ChatRoomMember[]      @relation("ChatRoomMember")
+  chatReactions   ChatMessageReaction[]
+
   rank             Rank?                     @relation(fields: [rankId], references: [id], onDelete: SetNull)
   nameStyle        NameStyle?                @relation(fields: [nameStyleId], references: [id], onDelete: SetNull)
   avatarFrame      AvatarFrame?              @relation(fields: [avatarFrameId], references: [id], onDelete: SetNull)
@@ -176,6 +187,10 @@ model Group {
   nameStyle   Json?
   title       String?
   position    Int     @default(0)
+  /// Etapa 5: iconița Font Awesome, banner-ul din postbit (culoare sau gradient validat) și apariția în legenda grupurilor.
+  icon        String?
+  banner      String?
+  inLegend    Boolean @default(true)
 
   primaryUsers         User[]                @relation("UserPrimaryGroup")
   members              UserGroup[]
@@ -443,6 +458,8 @@ model Forum {
   position        Int       @default(0)
   linkUrl         String?
   requireApproval Boolean   @default(false)
+  /// Etapa 5: pe câte coloane se afișează subforumurile (1–5).
+  subforumColumns Int       @default(2)
   topicsCount     Int       @default(0)
   postsCount      Int       @default(0)
   lastPostId      Int?
@@ -752,6 +769,8 @@ enum ProfileFieldType {
   URL
   NUMBER
   SELECT
+  /// Etapa 5: select cu o imagine pe opțiune (ex. „Armă favorită”).
+  IMAGE_SELECT
 }
 
 /// Tabul în care apare câmpul pe profil.
@@ -768,17 +787,21 @@ enum FieldVisibility {
 
 /// Câmp custom de profil, definit în ACP → Membri → Setări membri → Profiluri.
 model ProfileField {
-  id         Int                 @id @default(autoincrement())
-  key        String              @unique
-  label      String
-  type       ProfileFieldType    @default(TEXT)
-  options    String[]
-  section    ProfileFieldSection @default(ABOUT)
-  required   Boolean             @default(false)
-  maxLength  Int                 @default(200)
-  visibility FieldVisibility     @default(PUBLIC)
-  showOnCard Boolean             @default(false)
-  position   Int                 @default(0)
+  id            Int                 @id @default(autoincrement())
+  key           String              @unique
+  label         String
+  type          ProfileFieldType    @default(TEXT)
+  options       String[]
+  section       ProfileFieldSection @default(ABOUT)
+  required      Boolean             @default(false)
+  maxLength     Int                 @default(200)
+  visibility    FieldVisibility     @default(PUBLIC)
+  showOnCard    Boolean             @default(false)
+  position      Int                 @default(0)
+  /// Etapa 5: iconița, afișarea în postbit și imaginile opțiunilor (`IMAGE_SELECT`: opțiune → URL public).
+  icon          String?
+  showInPostbit Boolean             @default(false)
+  optionImages  Json                @default("{}")
 
   values ProfileFieldValue[]
 
@@ -1159,18 +1182,25 @@ model NotificationDefault {
  * Un canal de chat. Permisiunile sunt în matricea pe container (`containerType = "chat"`, id = cheia).
  */
 model ChatChannel {
-  id              Int     @id @default(autoincrement())
-  key             String  @unique
+  id              Int          @id @default(autoincrement())
+  key             String       @unique
   name            String
-  description     String  @default("")
-  position        Int     @default(0)
-  slowModeSeconds Int     @default(0)
-  retentionDays   Int     @default(7)
-  enabled         Boolean @default(true)
-  showOnHome      Boolean @default(false)
+  description     String       @default("")
+  position        Int          @default(0)
+  slowModeSeconds Int          @default(0)
+  retentionDays   Int          @default(7)
+  enabled         Boolean      @default(true)
+  showOnHome      Boolean      @default(false)
+  /// Etapa 5: camerele private (cu invitați) și anunțul fixat.
+  type            ChatRoomType @default(PUBLIC)
+  ownerId         String?
+  pinnedMessageId Int?
+  createdAt       DateTime     @default(now())
 
   messages ChatMessage[]
   mutes    ChatMute[]
+  members  ChatRoomMember[]
+  owner    User?            @relation("ChatRoomOwner", fields: [ownerId], references: [id], onDelete: SetNull)
 
   @@map("chat_channels")
 }
@@ -1183,9 +1213,11 @@ model ChatMessage {
   createdAt   DateTime  @default(now())
   deletedAt   DateTime?
   deletedById String?
+  editedAt    DateTime?
 
-  channel ChatChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  author  User?       @relation("ChatAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  channel   ChatChannel           @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  author    User?                 @relation("ChatAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  reactions ChatMessageReaction[]
 
   @@index([channelId, id])
   @@index([createdAt])
@@ -1209,4 +1241,139 @@ model ChatMute {
 
   @@index([userId, until])
   @@map("chat_mutes")
+}
+
+// ─── UI modern și personalizare (etapa 5, specul etapei §4) ──────────────────
+
+enum ChatRoomType {
+  PUBLIC
+  PRIVATE
+}
+
+/// Permisiuni individuale: o valoare pentru un singur membru, peste cea a grupurilor lui.
+model UserPermission {
+  userId    String
+  key       String
+  value     Json
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, key])
+  @@map("user_permissions")
+}
+
+/// Aplicațiile opționale (Chat, VIP; în etapa 6 Clanuri, Servere), activate sau dezactivate din ACP.
+model App {
+  key       String   @id
+  enabled   Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+
+  @@map("apps")
+}
+
+/// Meniul din header. `label`: { "ro": "...", "en": "..." } sau { "key": "cheie de traducere" } pentru cele implicite.
+model NavItem {
+  id       Int     @id @default(autoincrement())
+  parentId Int?
+  position Int     @default(0)
+  label    Json
+  icon     String?
+  href     String?
+  appKey   String?
+  groups   Int[]
+  newTab   Boolean @default(false)
+  enabled  Boolean @default(true)
+
+  parent   NavItem?  @relation("NavTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children NavItem[] @relation("NavTree")
+
+  @@index([parentId, position])
+  @@map("nav_items")
+}
+
+/// O temă: tokenurile (dark + light), fonturile, raza, lățimea, logo, favicon și CSS extra; `draft` = modificările nepublicate.
+model Theme {
+  id         Int      @id @default(autoincrement())
+  key        String   @unique
+  name       String
+  isDefault  Boolean  @default(false)
+  enabled    Boolean  @default(true)
+  settings   Json     @default("{}")
+  customCss  String   @default("")
+  logoUrl    String?
+  faviconUrl String?
+  draft      Json?
+  version    Int      @default(1)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("themes")
+}
+
+/// Un widget pus pe o pagină (`index`, `forum`, `topic`), într-o zonă (`top`, `bottom`, `sidebar`). `groups` gol = toți.
+model WidgetPlacement {
+  id       Int    @id @default(autoincrement())
+  page     String
+  zone     String
+  position Int    @default(0)
+  type     String
+  config   Json   @default("{}")
+  groups   Int[]
+
+  @@index([page, zone, position])
+  @@map("widget_placements")
+}
+
+/// Membrii unei camere private de chat.
+model ChatRoomMember {
+  channelId   Int
+  userId      String
+  invitedById String?
+  joinedAt    DateTime @default(now())
+
+  channel ChatChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user    User        @relation("ChatRoomMember", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([channelId, userId])
+  @@index([userId])
+  @@map("chat_room_members")
+}
+
+/// O reacție la un mesaj de chat (unică pe user și pe reacție).
+model ChatMessageReaction {
+  messageId  Int
+  userId     String
+  reactionId Int
+  createdAt  DateTime @default(now())
+
+  message ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([messageId, userId, reactionId])
+  @@map("chat_message_reactions")
+}
+
+/// Anunțurile globale din chat (în toate camerele), până la `expiresAt`.
+model ChatAnnouncement {
+  id          Int       @id @default(autoincrement())
+  body        String
+  createdById String?
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime?
+
+  @@index([expiresAt])
+  @@map("chat_announcements")
+}
+
+/// Cache-ul traducerilor de conținut: `hash` = sha256(provider + limba țintă + text).
+model TranslationCache {
+  hash      String   @id
+  target    String
+  text      String
+  provider  String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("translation_cache")
 }

@@ -1,6 +1,7 @@
-import type { PrismaClient } from "@gcs/db";
+import type { Prisma, PrismaClient } from "@gcs/db";
+import { writeAudit } from "../audit";
 import type { GcsCache } from "../cache";
-import { GcsForbidden } from "../errors";
+import { GcsForbidden, GcsNotFound, GcsValidationError } from "../errors";
 import type { GcsEventBus } from "../events";
 import type { GcsModuleRegistry, GcsPermissionDef } from "../modules/registry";
 import type { GcsActor, GcsContainerRef } from "./types";
@@ -36,6 +37,10 @@ type GcsModeratorRow = { userId: string | null; groupId: number | null; powers: 
  *
  * Cache-ul e pe combinația de grupuri: `perm:${permVersion}:${groupIds sortate}`. `bumpVersion()`
  * schimbă versiunea, deci următorul request citește permisiunile noi, fără să aștepte TTL-ul.
+ *
+ * Etapa 5: **permisiunile individuale** (`user_permissions`) se aplică după grupuri, doar pentru setările de grup:
+ * valoarea individuală o înlocuiește pe cea combinată a grupurilor (poate da sau lua un drept). Bannul și
+ * `root_admin` rămân deasupra lor.
  */
 export class GcsPermissionService {
   constructor(
@@ -65,7 +70,8 @@ export class GcsPermissionService {
       if (!effective) return false;
       return perms.containers.includes(`${effective.type}:${effective.id}:${key}`);
     }
-    return isGranted(perms.values[key]);
+    const own = await this.userOverrides(actor.userId, version);
+    return isGranted(key in own ? own[key] : perms.values[key]);
   }
 
   async assert(actor: GcsActor, key: string, container?: GcsContainerRef): Promise<void> {
@@ -78,9 +84,11 @@ export class GcsPermissionService {
    * Dacă niciun grup nu are valoare, întoarce `false`.
    */
   async groupValue<T>(actor: GcsActor, key: string): Promise<T> {
-    const perms = await this.groupSetPerms(actor.groupIds, await this.version());
+    const version = await this.version();
+    const perms = await this.groupSetPerms(actor.groupIds, version);
     const def = this.deps.registry.permissionDef(key);
-    const value = perms.values[key];
+    const own = await this.userOverrides(actor.userId, version);
+    const value = key in own ? own[key] : perms.values[key];
 
     if (actor.isBanned || perms.groupKeys.includes(BANNED)) {
       return (key === BAN_EXEMPT_KEY ? (value ?? false) : typeof value === "number" ? 0 : false) as T;
@@ -140,6 +148,52 @@ export class GcsPermissionService {
     return allowed;
   }
 
+  /** Permisiunile individuale ale unui membru (fișa membrului din ACP). */
+  async userPermissions(userId: string): Promise<Record<string, unknown>> {
+    const rows = await this.deps.db.userPermission.findMany({ where: { userId }, orderBy: { key: "asc" } });
+    return Object.fromEntries(rows.map((r) => [r.key, r.value]));
+  }
+
+  /**
+   * Setează (sau, cu `null`, șterge) permisiunea individuală a unui membru, cu jurnal. Doar pentru setările de grup;
+   * valoarea trebuie să aibă tipul valorilor implicite (boolean sau număr). Verificarea dreptului ACP o face apelantul.
+   */
+  async setUserPermission(actor: GcsActor, userId: string, key: string, value: boolean | number | null): Promise<void> {
+    const { db } = this.deps;
+    const def = this.deps.registry.permissionDef(key);
+    if (!def || def.scope !== "group") throw new GcsValidationError({ key: "unknown" });
+    if (value !== null) {
+      const sample = Object.values(def.default).find((v) => v !== undefined);
+      const expected = typeof sample === "number" ? "number" : "boolean";
+      if (typeof value !== expected || (typeof value === "number" && (!Number.isInteger(value) || value < -1))) {
+        throw new GcsValidationError({ value: "invalid_value" });
+      }
+    }
+    const user = await db.user.findUnique({ where: { id: userId }, select: { id: true } });
+    if (!user) throw new GcsNotFound();
+    await db.$transaction(async (tx) => {
+      const before = await tx.userPermission.findUnique({ where: { userId_key: { userId, key } } });
+      if (value === null) await tx.userPermission.deleteMany({ where: { userId, key } });
+      else {
+        await tx.userPermission.upsert({
+          where: { userId_key: { userId, key } },
+          create: { userId, key, value: value as Prisma.InputJsonValue },
+          update: { value: value as Prisma.InputJsonValue },
+        });
+      }
+      await writeAudit(tx, {
+        actorId: actor.userId,
+        action: "permissions.user",
+        targetType: "user",
+        targetId: userId,
+        before: before ? { [key]: before.value } : null,
+        after: { [key]: value },
+        ip: actor.ip,
+      });
+    });
+    await this.bumpVersion();
+  }
+
   /** Incrementează `permVersion` și emite `permissions.updated`. Se apelează după orice schimbare de permisiuni. */
   async bumpVersion(): Promise<void> {
     const state = await this.deps.db.systemState.upsert({
@@ -166,6 +220,18 @@ export class GcsPermissionService {
     const version = state?.permVersion ?? 0;
     await this.deps.cache.set("perm:version", version, { ttlSec: VERSION_TTL_SEC, tags: [CACHE_TAG] });
     return version;
+  }
+
+  /** Suprascrierile individuale ale userului (cache pe versiunea permisiunilor); `{}` pentru vizitatori. */
+  private async userOverrides(userId: string | null, version: number): Promise<Record<string, unknown>> {
+    if (!userId) return {};
+    const cacheKey = `perm:${version}:user:${userId}`;
+    const cached = await this.deps.cache.get<Record<string, unknown>>(cacheKey);
+    if (cached) return cached;
+    const rows = await this.deps.db.userPermission.findMany({ where: { userId }, select: { key: true, value: true } });
+    const own = Object.fromEntries(rows.map((r) => [r.key, r.value]));
+    await this.deps.cache.set(cacheKey, own, { ttlSec: CACHE_TTL_SEC, tags: [CACHE_TAG] });
+    return own;
   }
 
   private async groupSetPerms(groupIds: number[], version: number): Promise<GcsGroupSetPerms> {
