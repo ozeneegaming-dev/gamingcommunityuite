@@ -36,7 +36,7 @@ describe("coreModule", () => {
       expect(settingValueError(def, def.default), def.key).toBeNull();
     }
     const byKey = new Map(coreModule.settings.map((s) => [s.key, s]));
-    expect(byKey.get("site.name")?.default).toBe("RED-LINE");
+    expect(byKey.get("site.name")?.default).toBe("Comunitatea mea");
     expect(byKey.get("email.smtp_port")?.default).toBe(587);
     for (const secret of ["email.smtp_pass", "auth.discord_client_secret", "auth.steam_api_key", "auth.turnstile_secret"]) {
       expect(byKey.get(secret)?.type, secret).toBe("secret");

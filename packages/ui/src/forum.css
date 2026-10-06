@@ -142,7 +142,7 @@
 .gcs-postBody {
   font-size: 15px;
   line-height: 1.75;
-  color: #dadde3;
+  color: color-mix(in srgb, var(--gcs-text) 85%, var(--gcs-muted));
 }
 .gcs-postBody > :first-child,
 .gcs-editor__content > :first-child {
@@ -162,7 +162,7 @@
   background: var(--gcs-surface2);
   border-radius: 10px;
   font-size: 14px;
-  color: #c9cdd6;
+  color: color-mix(in srgb, var(--gcs-text) 85%, var(--gcs-muted));
   line-height: 1.6;
 }
 .gcs-quote__author,
@@ -322,7 +322,7 @@
   border-bottom: 0;
 }
 .gcs-forumRow:hover {
-  background: #181b22;
+  background: var(--gcs-surface2);
 }
 .gcs-forumRow__icon {
   width: 46px;
@@ -1139,7 +1139,7 @@
 }
 .gcs-searchResult__snippet {
   margin: 0;
-  color: #c9cdd6;
+  color: color-mix(in srgb, var(--gcs-text) 85%, var(--gcs-muted));
   font-size: 14px;
   line-height: 1.6;
 }

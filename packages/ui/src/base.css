@@ -20,7 +20,7 @@ body {
   text-decoration: none;
 }
 .gcs-root a:hover {
-  color: #FF9AA0;
+  color: var(--gcs-accentInk);
 }
 
 .gcs-display {
@@ -93,7 +93,7 @@ body {
   border-radius: 8px;
   border: 0;
   background: transparent;
-  color: #7D8494;
+  color: var(--gcs-muted);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -138,12 +138,12 @@ body {
   padding: 3px 8px;
   border-radius: 999px;
 }
-.gcs-badge--accent { background: rgba(214, 40, 57, 0.18); color: #FF8A91; }
+.gcs-badge--accent { background: rgba(214, 40, 57, 0.18); color: var(--gcs-accentInk); }
 .gcs-badge--ok { background: rgba(61, 220, 151, 0.14); color: var(--gcs-ok); }
 .gcs-badge--warn { background: rgba(244, 183, 64, 0.14); color: var(--gcs-warn); }
 .gcs-badge--info { background: rgba(94, 162, 255, 0.14); color: #5EA2FF; }
 .gcs-badge--vip { background: rgba(183, 148, 255, 0.16); color: #C7ADFF; }
-.gcs-badge--neutral { background: rgba(216, 223, 234, 0.12); color: #D8DFEA; }
+.gcs-badge--neutral { background: color-mix(in srgb, var(--gcs-text) 10%, transparent); color: var(--gcs-text); }
 
 .gcs-dot {
   width: 8px;
@@ -160,19 +160,19 @@ body {
   gap: 6px;
   font-size: 13px;
   font-weight: 600;
-  color: #C9CDD6;
+  color: color-mix(in srgb, var(--gcs-text) 85%, var(--gcs-muted));
 }
 .gcs-field__hint {
   margin: 0;
   font-size: 12px;
   font-weight: 500;
-  color: #7D8494;
+  color: var(--gcs-muted);
 }
 .gcs-field__error {
   margin: 0;
   font-size: 12px;
   font-weight: 600;
-  color: #FF8A91;
+  color: var(--gcs-accentInk);
 }
 
 .gcs-input {
@@ -230,7 +230,7 @@ textarea.gcs-input {
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #7D8494;
+  color: var(--gcs-muted);
   padding: 10px 16px;
   border-bottom: 1px solid var(--gcs-border);
 }
@@ -239,7 +239,7 @@ textarea.gcs-input {
   border-bottom: 1px solid var(--gcs-border);
 }
 .gcs-table__row:hover {
-  background: #181B22;
+  background: var(--gcs-surface2);
 }
 .gcs-table__empty {
   padding: 28px 16px;
@@ -274,7 +274,7 @@ textarea.gcs-input {
 }
 
 .gcs-forumRow:hover {
-  background: #181B22;
+  background: var(--gcs-surface2);
 }
 
 /* ─── Useri: link, avatar, rame ───────────────────────────────────────────── */
@@ -361,7 +361,7 @@ textarea.gcs-input {
   min-height: 36px;
   padding: 0 12px;
   border-radius: 8px;
-  color: #C9CDD6;
+  color: color-mix(in srgb, var(--gcs-text) 85%, var(--gcs-muted));
   font-size: 13.5px;
   font-weight: 500;
 }
@@ -373,7 +373,7 @@ textarea.gcs-input {
 .gcs-acpSub__link--active,
 .gcs-root a.gcs-acpSub__link--active {
   background: rgba(214, 40, 57, 0.14);
-  color: #FF8A91;
+  color: var(--gcs-accentInk);
   font-weight: 700;
 }
 .gcs-acpSub__title {
@@ -381,7 +381,7 @@ textarea.gcs-input {
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #7D8494;
+  color: var(--gcs-muted);
   padding: 14px 12px 6px;
 }
 
