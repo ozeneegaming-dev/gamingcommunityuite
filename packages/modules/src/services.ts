@@ -397,6 +397,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     database: pluginDatabase,
     jobs,
     notify: () => pluginRef.host!.notify(),
+    bus,
     trustedKeys: () => trustedPluginKeys().keys,
     unsignedPolicy: () => (process.env.GCS_PLUGINS_UNSIGNED === "deny" ? "deny" : "allow"),
   });

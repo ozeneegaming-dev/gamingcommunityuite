@@ -12,7 +12,12 @@ const ROUTE = /^\/$|^(?:\/(?:[a-z0-9][a-z0-9_-]{0,39}|:[a-z][a-zA-Z0-9]{0,29})){
 const GROUP_KEY = /^[a-z][a-z0-9_]{0,39}$/;
 
 const localKey = z.string().regex(LOCAL_KEY, "invalid_key");
-const label = z.string().trim().min(1).max(200);
+/**
+ * O etichetă: o cheie din `lang/*.json` sau text simplu. Fără `{}` și `<>`: etichetele devin mesaje next-intl (ICU), iar
+ * acolo acoladele și tagurile au sens special.
+ */
+const plainText = (max: number) => z.string().trim().min(1).max(max).refine((s) => !/[{}<>]/.test(s), "invalid_text");
+const label = plainText(200);
 const hint = z.string().trim().max(500).optional();
 const icon = z.string().regex(ICON, "invalid_icon");
 const route = z.string().regex(ROUTE, "invalid_route");
@@ -66,7 +71,7 @@ export const pluginManifestSchema = z.strictObject({
   $schema: z.string().max(300).optional(),
   manifestVersion: z.literal(1).optional(),
   key: z.string().refine(isPluginKey, "invalid_plugin_key"),
-  name: z.string().trim().min(1).max(80),
+  name: plainText(80),
   version: z.string().refine((v) => parseSemver(v) !== null, "invalid_version"),
   author: z.union([z.string().trim().min(1).max(120), z.strictObject({ name: z.string().trim().min(1).max(120), url: z.url({ protocol: /^https?$/ }).max(300).optional() })]),
   description: z.string().trim().max(1000).default(""),

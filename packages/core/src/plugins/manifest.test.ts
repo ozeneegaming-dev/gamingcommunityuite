@@ -35,6 +35,8 @@ describe("manifestul unui plugin", () => {
     expect(issues(testManifest({ version: "1.0" }))).toContain("version:invalid_version");
     expect(issues(testManifest({ icon: "fa-solid fa-x onerror=alert(1)" }))).toContain("icon:invalid_icon");
     expect(issues(testManifest({ capabilities: ["widgets", "root"] }))).toEqual(["capabilities.1:invalid_value"]);
+    expect(issues(testManifest({ name: "Demo {count, plural, other {x}}" }))).toEqual(["name:invalid_text"]);
+    expect(issues(testManifest({ widgets: [{ key: "hello", label: "<b>Salut</b>" }] }))).toEqual(["widgets.0.label:invalid_text"]);
   });
 
   test("fiecare declarație cere capabilitatea ei", () => {

@@ -3,6 +3,7 @@ import type { KeyObject } from "node:crypto";
 import type { GcsAcpRoleService } from "../acp/roles";
 import { AUDIT_REDACTED, writeAudit } from "../audit";
 import { GcsConflict, GcsForbidden, GcsNotFound, GcsValidationError } from "../errors";
+import type { GcsEventBus } from "../events";
 import type { GcsJobQueue } from "../jobs/queue";
 import type { GcsActor } from "../permissions/types";
 import { PLUGIN_DEFAULT_PRIORITY, pluginAcpSection, pluginRegistryKey } from "./catalog";
@@ -90,6 +91,8 @@ export type GcsPluginServiceDeps = {
   jobs: Pick<GcsJobQueue, "upsertScheduler" | "removeScheduler" | "schedulerIds">;
   /** Anunță toate procesele (Redis) că starea pluginurilor s-a schimbat. */
   notify: () => Promise<void>;
+  /** Pentru invalidarea cache-urilor atinse la dezinstalare (layout-ul widget-urilor). */
+  bus?: GcsEventBus;
   trustedKeys: () => ReadonlyMap<string, KeyObject>;
   unsignedPolicy: () => "allow" | "deny";
   platformVersion?: string;
@@ -440,6 +443,8 @@ export class GcsPluginService {
       await tx.plugin.delete({ where: { key } });
       await writeAudit(tx, { actorId: actor.userId, action: "plugin.uninstall", targetType: "plugin", targetId: key, before: { version: row.version }, after: { keepData: false }, ip: actor.ip });
     });
+    // Widget-urile pluginului au dispărut din layout-urile paginilor.
+    await this.deps.bus?.emit({ name: "layout.updated", payload: { plugin: key }, tags: ["layout"] });
     await this.deps.notify();
   }
 
