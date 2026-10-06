@@ -27,7 +27,8 @@ type Props = {
 /**
  * Formularul unei secțiuni de setări, generat din definițiile modulelor (spec §5): `string` → input,
  * `number` → input numeric, `boolean` → comutator, `secret` → parolă care arată „••••” și se suprascrie
- * doar când e completată, opțiuni → listă.
+ * doar când e completată, opțiuni → listă. Fiecare câmp e un rând (etapa 6 §1.1): eticheta la stânga, controlul la
+ * dreapta, ajutorul dedesubt.
  */
 export function GcsSettingsForm({ fields, action, labels }: Props) {
   const router = useRouter();
@@ -60,32 +61,35 @@ export function GcsSettingsForm({ fields, action, labels }: Props) {
   }
 
   return (
-    <form onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }} noValidate>
+    <form onSubmit={onSubmit} className="gcs-acpForm" noValidate>
       {fields.map((f) => {
         const name = `setting:${f.key}`;
         const error = errors[f.key];
         if (f.type === "boolean") {
+          const id = `gcs-setting-${f.key}`;
           return (
-            <div key={f.key} id={f.key} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              <label style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 14, minHeight: 44 }}>
-                <input
-                  type="checkbox"
-                  role="switch"
-                  name={name}
-                  defaultChecked={f.value === true}
-                  style={{ width: 20, height: 20, accentColor: "var(--gcs-accent)" }}
-                />
-                <span style={{ fontWeight: 600 }}>{f.label}</span>
+            <div key={f.key} id={f.key} className="gcs-field gcs-field--row gcs-field--switch">
+              <label className="gcs-field__label" htmlFor={id}>
+                {f.label}
               </label>
+              <input
+                id={id}
+                type="checkbox"
+                role="switch"
+                className="gcs-switch"
+                name={name}
+                defaultChecked={f.value === true}
+                {...(error ? { "aria-invalid": true, "aria-describedby": `${id}-error` } : {})}
+              />
               {error && (
-                <p className="gcs-field__error" role="alert">
+                <p id={`${id}-error`} className="gcs-field__error" role="alert">
                   {error}
                 </p>
               )}
             </div>
           );
         }
-        const props = error ? { error } : {};
+        const props = { className: "gcs-field--row", ...(error ? { error } : {}) };
         return (
           <div key={f.key} id={f.key}>
             {f.options ? (
@@ -118,7 +122,7 @@ export function GcsSettingsForm({ fields, action, labels }: Props) {
           </div>
         );
       })}
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <div className="gcs-acpForm__actions">
         <GcsButton variant="primary" type="submit" disabled={pending}>
           {labels.save}
         </GcsButton>

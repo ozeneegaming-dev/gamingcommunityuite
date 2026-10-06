@@ -179,15 +179,11 @@
       "title": "Demandes",
       "hint": "Une application désactivée disparaît du menu, des widgets et des statistiques, et ses pages répondent avec 404.",
       "enabled": "Activé",
-      "save": "Enregistrer"
+      "save": "Enregistrer",
+      "conversions": "Conversions"
     },
     "appsNav": "Demandes ACP",
-    "submenuNav": "Menu {app}",
     "home": "ACP · {site}",
-    "reorderApps": "Recommander les applications",
-    "reorderDone": "Terminé",
-    "moveUp": "Déplacez {app} vers le haut",
-    "moveDown": "Déplacez {app} vers le bas",
     "openMenu": "Menu",
     "closeMenu": "Fermer le menu",
     "header": {
@@ -208,7 +204,10 @@
         "forums": "Forums"
       },
       "twoFactorOn": "2FA sur",
-      "logout": "Se déconnecter"
+      "logout": "Se déconnecter",
+      "account": "Mon compte",
+      "profile": "Mon profil",
+      "accountSettings": "Paramètres du compte"
     },
     "menu": {
       "system": {
@@ -312,8 +311,20 @@
       "statusDegraded": "{site} · certains services ne répondent pas",
       "kpis": {
         "members": "Membres",
-        "today": "Enregistrements aujourd'hui",
-        "online": "En ligne maintenant"
+        "online": "En ligne maintenant",
+        "posts": "Messages",
+        "topics": "Sujets",
+        "vips": "VIP actifs",
+        "reports": "Rapports ouverts",
+        "change": "{change} par rapport aux 30 jours précédents",
+        "bars": {
+          "members": "{pct}% actif au cours des 30 derniers jours",
+          "posts": "{pct}% écrit dans les 30 derniers jours",
+          "topics": "{pct}% créé dans les 30 derniers jours",
+          "online": "{pct}% des membres actifs en 30 jours",
+          "vips": "{pct}% des membres ont VIP",
+          "reports": "{pct}% des rapports sont ouverts"
+        }
       },
       "move": "Déplacer le widget {title}",
       "collapse": "Réduire {title}",
@@ -336,7 +347,11 @@
           "ok": "courir",
           "down": "sans réponse",
           "worker": "Emplois de base (travailleurs)",
-          "realtime": "Temps réel"
+          "realtime": "Temps réel",
+          "disk": "Espace disque",
+          "diskValue": "{free} GB sans {total} GB",
+          "diskUnknown": "non disponible",
+          "version": "Version App"
         },
         "admin_notes": {
           "title": "Notes explicatives",
@@ -369,6 +384,31 @@
           "title": "Expiration des VIP",
           "empty": "Aucun VIP n'expire dans les 7 prochains jours.",
           "all": "Tous les abonnés expirant bientôt"
+        },
+        "latest_members": {
+          "title": "Derniers membres",
+          "empty": "Pas encore de membres",
+          "all": "Tous les membres"
+        },
+        "pending_content": {
+          "title": "Contenu en attente",
+          "empty": "Rien à approuver",
+          "topic": "Nouveau sujet",
+          "reply": "Répondre",
+          "all": "Ouvrir la file d'attente"
+        },
+        "open_reports": {
+          "title": "Rapports ouverts",
+          "empty": "Aucun rapport ouvert",
+          "reasons": "{count, plural, one {Rapport #} many {Rapports #} other {Rapports #}}",
+          "all": "Tous les rapports"
+        },
+        "acp_log": {
+          "title": "Registre ACP récent",
+          "empty": "Pas encore de mesures",
+          "noAccess": "Le journal ACP exige que le système enregistre à droite.",
+          "system": "Système",
+          "all": "Journal complet"
         }
       },
       "banners": {
@@ -381,6 +421,26 @@
           "title": "Le service en temps réel ne fonctionne pas",
           "body": "Les notifications en direct, le chat et la mise à jour en ligne de Qui est en ligne (démarrer le service en temps réel)."
         }
+      },
+      "actions": {
+        "export": "Exportation CSV",
+        "logs": "Registre ACP"
+      },
+      "chart": {
+        "title": "Activité au cours des 30 derniers jours",
+        "subtitle": "inscriptions et postes par jour",
+        "registrations": "Enregistrements",
+        "posts": "Messages",
+        "caption": "Inscriptions et envois par jour, 30 jours",
+        "day": "Jour"
+      },
+      "sparks": {
+        "active": "Membres actifs aujourd'hui",
+        "activeHint": "auteur de poste distinct par jour",
+        "topics": "Nouveaux sujets",
+        "topicsHint": "dans les 30 derniers jours",
+        "reports": "Nouveaux rapports",
+        "reportsHint": "dans les 30 derniers jours"
       }
     },
     "reauth": {
@@ -1152,7 +1212,9 @@
         "error": "sans réponse"
       },
       "save": "Enregistrer les langues"
-    }
+    },
+    "drawer": "Menu ACP",
+    "breadcrumb": "Fil d'Ariane"
   },
   "settings": {
     "site": {

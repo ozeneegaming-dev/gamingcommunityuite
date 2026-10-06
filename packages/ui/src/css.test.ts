@@ -23,9 +23,18 @@ describe("CSS-ul design system-ului", () => {
 
   test("base.css are clasele din machetă și oprește animațiile la prefers-reduced-motion", () => {
     const css = read("./base.css");
-    for (const cls of [".gcs-btn", ".gcs-card", ".gcs-badge", ".gcs-avatarFrame", ".gcs-acpApp", ".gcs-acpSub__link", ".gcs-acpWidget__header"]) {
+    for (const cls of [".gcs-btn", ".gcs-card", ".gcs-badge", ".gcs-avatarFrame"]) {
       expect(css).toContain(cls);
     }
     expect(css.match(/prefers-reduced-motion: reduce/g)).toHaveLength(1);
+  });
+
+  test("acp.css are shell-ul ACP (sidebar, bara de sus, antetul de pagină), tema luminoasă și reduced-motion", () => {
+    const css = read("./acp.css");
+    for (const cls of [".gcs-acpSide", ".gcs-acpSide--collapsed", ".gcs-acpNav__link--active", ".gcs-acpTop", ".gcs-acpPageHead", ".gcs-acpKpi", ".gcs-acpWidget__header", ".gcs-switch"]) {
+      expect(css).toContain(cls);
+    }
+    expect(css).toContain('.gcs-acp[data-theme="light"]');
+    expect(css).toContain("prefers-reduced-motion: reduce");
   });
 });

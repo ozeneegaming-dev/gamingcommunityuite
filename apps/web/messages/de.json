@@ -179,15 +179,11 @@
       "title": "Anträge",
       "hint": "Eine deaktivierte Anwendung verschwindet aus dem Menü, Widgets und Statistiken, und ihre Seiten reagieren mit 404.",
       "enabled": "Aktiviert",
-      "save": "Speichern"
+      "save": "Speichern",
+      "conversions": "Umrechnungen"
     },
     "appsNav": "AKP-Anträge",
-    "submenuNav": "{app} Menü",
     "home": "ACP · {site}",
-    "reorderApps": "Anwendungen neu ordnen",
-    "reorderDone": "Fertig",
-    "moveUp": "{app} nach oben bewegen",
-    "moveDown": "{app} nach unten bewegen",
     "openMenu": "Menü",
     "closeMenu": "Schließen des Menüs",
     "header": {
@@ -208,7 +204,10 @@
         "forums": "Foren"
       },
       "twoFactorOn": "2FA am",
-      "logout": "Abmelden"
+      "logout": "Abmelden",
+      "account": "Mein Konto",
+      "profile": "Mein Profil",
+      "accountSettings": "Kontoeinstellungen"
     },
     "menu": {
       "system": {
@@ -312,8 +311,20 @@
       "statusDegraded": "{site} · Einige Dienste reagieren nicht",
       "kpis": {
         "members": "Mitglieder",
-        "today": "Registrierungen heute",
-        "online": "Jetzt online"
+        "online": "Jetzt online",
+        "posts": "Beiträge",
+        "topics": "Themen",
+        "vips": "Aktive VIPs",
+        "reports": "Offene Berichte",
+        "change": "{change} im Vergleich zu den vorherigen 30 Tagen",
+        "bars": {
+          "members": "{pct}% aktiv in den letzten 30 Tagen",
+          "posts": "{pct}% geschrieben in den letzten 30 Tagen",
+          "topics": "{pct}% erstellt in den letzten 30 Tagen",
+          "online": "{pct}% der Mitglieder aktiv in 30 Tagen",
+          "vips": "{pct}% der Mitglieder haben VIP",
+          "reports": "{pct}% der Berichte sind offen"
+        }
       },
       "move": "Verschieben Sie Widget {title}",
       "collapse": "Zusammenbruch {title}",
@@ -336,7 +347,11 @@
           "ok": "laufen",
           "down": "nicht antworten",
           "worker": "Hintergrundjobs (Arbeitnehmer)",
-          "realtime": "Echtzeit (Echtzeit)"
+          "realtime": "Echtzeit (Echtzeit)",
+          "disk": "Scheibenraum",
+          "diskValue": "{free} GB frei von {total} GB",
+          "diskUnknown": "nicht verfügbar",
+          "version": "App Version"
         },
         "admin_notes": {
           "title": "Admin-Notizen",
@@ -369,6 +384,31 @@
           "title": "VIP-Abläufe",
           "empty": "Kein VIP läuft in den nächsten 7 Tagen ab.",
           "all": "Alle Abonnenten laufen bald aus"
+        },
+        "latest_members": {
+          "title": "Letzte Mitglieder",
+          "empty": "Noch keine Mitglieder",
+          "all": "Alle Mitglieder"
+        },
+        "pending_content": {
+          "title": "Ausstehender Inhalt",
+          "empty": "Nichts zu genehmigen",
+          "topic": "Neues Thema",
+          "reply": "Antworten",
+          "all": "Warteschlange öffnen"
+        },
+        "open_reports": {
+          "title": "Offene Berichte",
+          "empty": "Keine offenen Berichte",
+          "reasons": "{count, plural, one {#-Bericht} other {# Berichte}}",
+          "all": "Alle Berichte"
+        },
+        "acp_log": {
+          "title": "Letztes AKP-Protokoll",
+          "empty": "Noch keine Maßnahmen",
+          "noAccess": "Das ACP-Protokoll erfordert die Systemprotokolle richtig.",
+          "system": "System",
+          "all": "Vollständiges Logbuch"
         }
       },
       "banners": {
@@ -381,6 +421,26 @@
           "title": "Der Echtzeitdienst läuft nicht",
           "body": "Live-benachrichtigungen, chat und \"wer ist online\" werden nur beim erneuten laden der seite aktualisiert (starten sie den echtzeitdienst)."
         }
+      },
+      "actions": {
+        "export": "Export CSV",
+        "logs": "AKP-Protokoll"
+      },
+      "chart": {
+        "title": "Aktivität in den letzten 30 Tagen",
+        "subtitle": "anmeldungen und posts pro tag",
+        "registrations": "Registrierungen",
+        "posts": "Beiträge",
+        "caption": "Anmeldungen und Posts pro Tag, letzte 30 Tage",
+        "day": "Tag"
+      },
+      "sparks": {
+        "active": "Aktive Mitglieder heute",
+        "activeHint": "verschiedene postautoren pro tag",
+        "topics": "Neue Themen",
+        "topicsHint": "in den letzten 30 tagen",
+        "reports": "Neue Berichte",
+        "reportsHint": "in den letzten 30 tagen"
       }
     },
     "reauth": {
@@ -1152,7 +1212,9 @@
         "error": "nicht antworten"
       },
       "save": "Sprachen speichern"
-    }
+    },
+    "drawer": "AKP-Menü",
+    "breadcrumb": "Brotkrume"
   },
   "settings": {
     "site": {

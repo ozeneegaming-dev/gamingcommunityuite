@@ -179,15 +179,11 @@
       "title": "Applications",
       "hint": "A disabled application disappears from the menu, widgets and statistics, and its pages respond with 404.",
       "enabled": "Enabled",
-      "save": "Save"
+      "save": "Save",
+      "conversions": "Conversions"
     },
     "appsNav": "ACP applications",
-    "submenuNav": "{app} menu",
     "home": "ACP · {site}",
-    "reorderApps": "Reorder applications",
-    "reorderDone": "Done",
-    "moveUp": "Move {app} up",
-    "moveDown": "Move {app} down",
     "openMenu": "Menu",
     "closeMenu": "Close menu",
     "header": {
@@ -208,7 +204,10 @@
         "forums": "Forums"
       },
       "twoFactorOn": "2FA on",
-      "logout": "Sign out"
+      "logout": "Sign out",
+      "account": "My account",
+      "profile": "My profile",
+      "accountSettings": "Account settings"
     },
     "menu": {
       "system": {
@@ -312,8 +311,20 @@
       "statusDegraded": "{site} · some services are not responding",
       "kpis": {
         "members": "Members",
-        "today": "Registrations today",
-        "online": "Online now"
+        "online": "Online now",
+        "posts": "Posts",
+        "topics": "Topics",
+        "vips": "Active VIPs",
+        "reports": "Open reports",
+        "change": "{change} compared with the previous 30 days",
+        "bars": {
+          "members": "{pct}% active in the last 30 days",
+          "posts": "{pct}% written in the last 30 days",
+          "topics": "{pct}% created in the last 30 days",
+          "online": "{pct}% of members active in 30 days",
+          "vips": "{pct}% of members have VIP",
+          "reports": "{pct}% of reports are open"
+        }
       },
       "move": "Move widget {title}",
       "collapse": "Collapse {title}",
@@ -336,7 +347,11 @@
           "ok": "running",
           "down": "not responding",
           "worker": "Background jobs (worker)",
-          "realtime": "Real time (realtime)"
+          "realtime": "Real time (realtime)",
+          "disk": "Disk space",
+          "diskValue": "{free} GB free of {total} GB",
+          "diskUnknown": "unavailable",
+          "version": "App version"
         },
         "admin_notes": {
           "title": "Admin notes",
@@ -369,6 +384,31 @@
           "title": "VIP expirations",
           "empty": "No VIP expires in the next 7 days.",
           "all": "All subscribers expiring soon"
+        },
+        "latest_members": {
+          "title": "Latest members",
+          "empty": "No members yet",
+          "all": "All members"
+        },
+        "pending_content": {
+          "title": "Pending content",
+          "empty": "Nothing to approve",
+          "topic": "New topic",
+          "reply": "Reply",
+          "all": "Open the queue"
+        },
+        "open_reports": {
+          "title": "Open reports",
+          "empty": "No open reports",
+          "reasons": "{count, plural, one {# report} other {# reports}}",
+          "all": "All reports"
+        },
+        "acp_log": {
+          "title": "Recent ACP log",
+          "empty": "No actions yet",
+          "noAccess": "The ACP log requires the System logs right.",
+          "system": "System",
+          "all": "Full log"
         }
       },
       "banners": {
@@ -381,6 +421,26 @@
           "title": "The real-time service is not running",
           "body": "Live notifications, chat and “Who's online” only update on page reload (start the `realtime` service)."
         }
+      },
+      "actions": {
+        "export": "Export CSV",
+        "logs": "ACP log"
+      },
+      "chart": {
+        "title": "Activity in the last 30 days",
+        "subtitle": "registrations and posts per day",
+        "registrations": "Registrations",
+        "posts": "Posts",
+        "caption": "Registrations and posts per day, last 30 days",
+        "day": "Day"
+      },
+      "sparks": {
+        "active": "Active members today",
+        "activeHint": "distinct post authors per day",
+        "topics": "New topics",
+        "topicsHint": "in the last 30 days",
+        "reports": "New reports",
+        "reportsHint": "in the last 30 days"
       }
     },
     "reauth": {
@@ -1152,7 +1212,9 @@
         "error": "not responding"
       },
       "save": "Save languages"
-    }
+    },
+    "drawer": "ACP menu",
+    "breadcrumb": "Breadcrumb"
   },
   "settings": {
     "site": {

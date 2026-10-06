@@ -6,11 +6,12 @@ import {
   faGamepad,
   faGears,
   faPalette,
+  faRightLeft,
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
 import type { GcsAcpIconDef } from "./types";
 
-/** Iconițele Font Awesome ale aplicațiilor din bara ACP (importate individual: componentele client le folosesc direct). */
+/** Iconițele Font Awesome ale grupurilor din sidebar-ul ACP (importate individual: componentele client le folosesc direct). */
 export const ACP_APP_ICONS: Record<string, GcsAcpIconDef> = {
   system: faGears,
   community: faComments,
@@ -20,4 +21,5 @@ export const ACP_APP_ICONS: Record<string, GcsAcpIconDef> = {
   pages: faFileLines,
   stats: faChartLine,
   appearance: faPalette,
+  conversions: faRightLeft,
 };

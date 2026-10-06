@@ -250,58 +250,6 @@ span.gcs-hIcon > svg {
   font-size: 0.85em;
 }
 
-/* Submeniul ACP: iconițele aplicației, ale secțiunilor și ale intrărilor. */
-.gcs-acpSub__app {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.gcs-acpSub__appIcon {
-  flex: none;
-  font-size: 16px;
-  color: var(--gcs-accent);
-}
-.gcs-acpSub__title:has(> .gcs-acpSub__titleIcon) {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.gcs-acpSub__titleIcon {
-  flex: none;
-  font-size: 12px;
-}
-.gcs-acpSub__link:has(> .gcs-acpSub__icon) {
-  gap: 10px;
-}
-.gcs-acpSub__icon {
-  flex: none;
-  width: 16px;
-  font-size: 14px;
-  color: var(--gcs-muted);
-}
-.gcs-acpSub__link:hover > .gcs-acpSub__icon,
-.gcs-acpSub__link--active > .gcs-acpSub__icon {
-  color: var(--gcs-accent);
-}
-
-/* Bara de aplicații: iconițele aplicațiilor și butoanele de reordonare. */
-.gcs-acpApp__icon {
-  font-size: 20px;
-}
-.gcs-acpRail__toggleIcon {
-  font-size: 16px;
-}
-
-/* Căutarea din header: iconița fiecărui rezultat, după grup. */
-.gcs-acpSearch__result:has(> .gcs-acpSearch__icon) {
-  gap: 10px;
-}
-.gcs-acpSearch__icon {
-  flex: none;
-  font-size: 13px;
-  color: var(--gcs-muted);
-}
-
 /* Linkurile cu iconiță din ACP („← Înapoi”, Editează / Permisiuni / Vezi). */
 .gcs-acpBack {
   display: inline-flex;

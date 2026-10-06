@@ -13,12 +13,11 @@ test("Root Admin cu 2FA intră pe /admin și vede widgetul „Înregistrări noi
   await expect(page.getByRole("heading", { name: "Dashboard", level: 1 })).toBeVisible();
   await expect(page.getByRole("region", { name: "Înregistrări noi" })).toBeVisible();
   await expect(page.getByTestId("gcs-acp-user")).toHaveText("RootA");
-  // Meniul: aplicațiile Sistem și Membri, cu submeniul aplicației curente.
-  await expect(page.getByRole("navigation", { name: "Aplicații ACP" }).getByRole("link", { name: "Membri" })).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "Meniu Sistem" }).getByRole("link", { name: "Dashboard" })).toHaveAttribute(
-    "aria-current",
-    "page",
-  );
+  // Meniul: grupurile Sistem și Membri în sidebar, cu Dashboard-ul (pagina curentă) deasupra lor.
+  const nav = page.getByRole("navigation", { name: "Aplicații ACP" });
+  await expect(nav.getByRole("button", { name: "Membri" })).toBeVisible();
+  await expect(nav.getByRole("button", { name: "Sistem" })).toBeVisible();
+  await expect(nav.getByRole("link", { name: "Dashboard" })).toHaveAttribute("aria-current", "page");
 });
 
 test("widgetul „Notițe admin” se mută din tastatură, iar ordinea rămâne după reîncărcare", async ({ page }) => {

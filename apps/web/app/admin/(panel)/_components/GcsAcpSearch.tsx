@@ -15,7 +15,7 @@ type Props = {
   labels: { search: string; placeholder: string; noResults: string; groups: Record<GcsAcpSearchResult["group"], string> };
 };
 
-/** Căutarea live din header-ul ACP: rezultate grupate (setări, membri, grupuri, forumuri), navigabile din tastatură. */
+/** Căutarea live din bara de sus a ACP-ului (câmp „pastilă”): rezultate grupate (setări, membri, grupuri, forumuri), navigabile din tastatură. */
 export function GcsAcpSearch({ labels }: Props) {
   const id = useId();
   const [q, setQ] = useState("");
@@ -46,7 +46,7 @@ export function GcsAcpSearch({ labels }: Props) {
 
   return (
     <div className="gcs-acpSearch" role="combobox" aria-expanded={results !== null} aria-haspopup="listbox" aria-owns={listId}>
-      <span style={{ position: "absolute", left: 14, top: 13, display: "flex", fontSize: 16, color: "var(--gcs-muted)" }}>
+      <span className="gcs-acpSearch__lens">
         <GcsIconSvg icon={faMagnifyingGlass} />
       </span>
       <label htmlFor={`${id}-input`} className="gcs-srOnly">
@@ -55,7 +55,7 @@ export function GcsAcpSearch({ labels }: Props) {
       <input
         id={`${id}-input`}
         type="search"
-        className="gcs-input"
+        className="gcs-input gcs-acpSearch__input"
         placeholder={labels.placeholder}
         value={q}
         autoComplete="off"
@@ -78,15 +78,14 @@ export function GcsAcpSearch({ labels }: Props) {
             setQ("");
           }
         }}
-        style={{ height: 42, paddingLeft: 40 }}
       />
       {results !== null && (
         <div id={listId} role="listbox" className="gcs-acpSearch__results" aria-label={labels.search}>
-          {results.length === 0 && <p style={{ margin: 0, padding: "10px 12px", color: "var(--gcs-muted)", fontSize: 14 }}>{labels.noResults}</p>}
+          {results.length === 0 && <p className="gcs-acpSearch__empty">{labels.noResults}</p>}
           {groups.map((g) => (
             <div key={g} role="group" aria-label={labels.groups[g]}>
-              <span className="gcs-acpSub__title">
-                <GcsIconSvg icon={GROUP_ICONS[g]} className="gcs-acpSub__titleIcon" />
+              <span className="gcs-acpSearch__group">
+                <GcsIconSvg icon={GROUP_ICONS[g]} className="gcs-acpSearch__groupIcon" />
                 {labels.groups[g]}
               </span>
               {results.map((r, i) =>

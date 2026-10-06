@@ -19,6 +19,7 @@
     "./widgets.css": "./src/widgets.css",
     "./postbit.css": "./src/postbit.css",
     "./icons.css": "./src/icons.css",
+    "./acp.css": "./src/acp.css",
     "./icons": "./src/icons/index.tsx",
     "./icon-registry": "./src/icons/registry.ts"
   },

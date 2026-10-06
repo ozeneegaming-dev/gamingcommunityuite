@@ -100,8 +100,9 @@ test("un Admin cu rolul „Manager VIP” nu vede aplicația Membri; /admin/memb
 
   await adminPage.goto("/admin");
   await expect(adminPage.getByRole("heading", { name: "Dashboard", level: 1 })).toBeVisible();
+  // Sidebar-ul: doar Dashboard-ul (singurul drept); grupul Membri lipsește.
   const apps = adminPage.getByRole("navigation", { name: "Aplicații ACP" });
-  await expect(apps.getByRole("link", { name: "Sistem" })).toBeVisible();
-  await expect(apps.getByRole("link", { name: "Membri" })).toHaveCount(0);
+  await expect(apps.getByRole("link", { name: "Dashboard" })).toBeVisible();
+  await expect(apps.getByRole("button", { name: "Membri" })).toHaveCount(0);
   expect((await adminPage.goto("/admin/members"))?.status()).toBe(404);
 });

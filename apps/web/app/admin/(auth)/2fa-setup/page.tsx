@@ -22,7 +22,7 @@ export default async function AcpTwoFactorSetupPage() {
 
   return (
     <>
-      <GcsAcpTitle icon="fa-solid fa-shield-halved" style={{ fontSize: 24 }}>
+      <GcsAcpTitle icon="fa-solid fa-shield-halved" variant="plain" style={{ fontSize: 24 }}>
         {t("title")}
       </GcsAcpTitle>
       <p style={{ margin: "6px 0 22px", color: "var(--gcs-muted)", fontSize: 14, lineHeight: 1.6 }}>{t("subtitle")}</p>

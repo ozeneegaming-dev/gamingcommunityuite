@@ -179,15 +179,11 @@
       "title": "Aplicații",
       "hint": "O aplicație dezactivată dispare din meniu, din widget-uri și din statistici, iar paginile ei răspund cu 404.",
       "enabled": "Activă",
-      "save": "Salvează"
+      "save": "Salvează",
+      "conversions": "Conversii"
     },
     "appsNav": "Aplicații ACP",
-    "submenuNav": "Meniu {app}",
     "home": "ACP · {site}",
-    "reorderApps": "Reordonează aplicațiile",
-    "reorderDone": "Gata",
-    "moveUp": "Mută {app} mai sus",
-    "moveDown": "Mută {app} mai jos",
     "openMenu": "Meniu",
     "closeMenu": "Închide meniul",
     "header": {
@@ -208,7 +204,10 @@
         "forums": "Forumuri"
       },
       "twoFactorOn": "2FA activ",
-      "logout": "Ieșire"
+      "logout": "Ieșire",
+      "account": "Contul meu",
+      "profile": "Profilul meu",
+      "accountSettings": "Setările contului"
     },
     "menu": {
       "system": {
@@ -312,8 +311,20 @@
       "statusDegraded": "{site} · unele servicii nu răspund",
       "kpis": {
         "members": "Membri",
-        "today": "Înregistrări azi",
-        "online": "Online acum"
+        "online": "Online acum",
+        "posts": "Postări",
+        "topics": "Topicuri",
+        "vips": "VIP-uri active",
+        "reports": "Rapoarte deschise",
+        "change": "{change} față de cele 30 de zile anterioare",
+        "bars": {
+          "members": "{pct}% activi în ultimele 30 de zile",
+          "posts": "{pct}% scrise în ultimele 30 de zile",
+          "topics": "{pct}% create în ultimele 30 de zile",
+          "online": "{pct}% din membrii activi în 30 de zile",
+          "vips": "{pct}% din membri au VIP",
+          "reports": "{pct}% din rapoarte sunt deschise"
+        }
       },
       "move": "Mută widgetul {title}",
       "collapse": "Pliază {title}",
@@ -336,7 +347,11 @@
           "ok": "funcționează",
           "down": "nu răspunde",
           "worker": "Procese în fundal (worker)",
-          "realtime": "Timp real (realtime)"
+          "realtime": "Timp real (realtime)",
+          "disk": "Spațiu pe disc",
+          "diskValue": "{free} GB liberi din {total} GB",
+          "diskUnknown": "indisponibil",
+          "version": "Versiunea aplicației"
         },
         "admin_notes": {
           "title": "Notițe admin",
@@ -369,6 +384,31 @@
           "title": "Expirări VIP",
           "empty": "Niciun VIP nu expiră în următoarele 7 zile.",
           "all": "Toți abonații care expiră curând"
+        },
+        "latest_members": {
+          "title": "Ultimii membri",
+          "empty": "Niciun membru încă",
+          "all": "Toți membrii"
+        },
+        "pending_content": {
+          "title": "Conținut în așteptare",
+          "empty": "Nimic de aprobat",
+          "topic": "Topic nou",
+          "reply": "Răspuns",
+          "all": "Deschide coada"
+        },
+        "open_reports": {
+          "title": "Rapoarte deschise",
+          "empty": "Niciun raport deschis",
+          "reasons": "{count, plural, one {# raport} few {# rapoarte} other {# de rapoarte}}",
+          "all": "Toate rapoartele"
+        },
+        "acp_log": {
+          "title": "Jurnal ACP recent",
+          "empty": "Nicio acțiune încă",
+          "noAccess": "Jurnalul ACP cere dreptul pe Jurnale sistem.",
+          "system": "Sistem",
+          "all": "Tot jurnalul"
         }
       },
       "banners": {
@@ -381,6 +421,26 @@
           "title": "Serviciul de timp real nu rulează",
           "body": "Notificările live, chat-ul și „Cine e online” se actualizează doar la reîncărcarea paginii (pornește serviciul `realtime`)."
         }
+      },
+      "actions": {
+        "export": "Exportă CSV",
+        "logs": "Jurnal ACP"
+      },
+      "chart": {
+        "title": "Activitate în ultimele 30 de zile",
+        "subtitle": "înregistrări și postări pe zi",
+        "registrations": "Înregistrări",
+        "posts": "Postări",
+        "caption": "Înregistrări și postări pe zi, în ultimele 30 de zile",
+        "day": "Ziua"
+      },
+      "sparks": {
+        "active": "Membri activi azi",
+        "activeHint": "autori distincți de postări, pe zi",
+        "topics": "Topicuri noi",
+        "topicsHint": "în ultimele 30 de zile",
+        "reports": "Rapoarte noi",
+        "reportsHint": "în ultimele 30 de zile"
       }
     },
     "reauth": {
@@ -1152,7 +1212,9 @@
         "error": "nu răspunde"
       },
       "save": "Salvează limbile"
-    }
+    },
+    "drawer": "Meniul ACP",
+    "breadcrumb": "Cale de navigare"
   },
   "settings": {
     "site": {

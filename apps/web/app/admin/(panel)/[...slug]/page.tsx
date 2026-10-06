@@ -35,14 +35,14 @@ export default async function AcpComingSoonPage({ params }: Props) {
   if (!item) notFound();
   const t = await getTranslations();
   return (
-    <GcsCard as="section" style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 12, alignItems: "flex-start" }}>
-      <GcsAcpTitle icon={item.icon}>
-        {t.has(item.labelKey) ? t(item.labelKey) : item.key}
-      </GcsAcpTitle>
-      <p style={{ margin: 0, color: "var(--gcs-muted)", fontSize: 15 }}>{t("acp.comingSoon.body")}</p>
-      <GcsButton variant="ghost" asChild icon={<GcsIcon name="fa-solid fa-arrow-left" />}>
-        <Link href="/admin">{t("acp.comingSoon.back")}</Link>
-      </GcsButton>
-    </GcsCard>
+    <>
+      <GcsAcpTitle icon={item.icon}>{t.has(item.labelKey) ? t(item.labelKey) : item.key}</GcsAcpTitle>
+      <GcsCard as="section" style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 12, alignItems: "flex-start" }}>
+        <p style={{ margin: 0, color: "var(--gcs-muted)", fontSize: 15 }}>{t("acp.comingSoon.body")}</p>
+        <GcsButton variant="ghost" asChild icon={<GcsIcon name="fa-solid fa-arrow-left" />}>
+          <Link href="/admin">{t("acp.comingSoon.back")}</Link>
+        </GcsButton>
+      </GcsCard>
+    </>
   );
 }

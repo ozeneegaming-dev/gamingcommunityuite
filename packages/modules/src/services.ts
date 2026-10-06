@@ -249,7 +249,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     },
   });
   const actors = new GcsActorResolver({ db, cache, presence });
-  const acpDashboard = new GcsAcpDashboardService({ db, acp, presence });
+  const acpDashboard = new GcsAcpDashboardService({ db, acp, presence, cache });
   const rateLimiter = new GcsRedisRateLimiter(redis);
   const files = createFileStore(opts.configDir);
   const attachments = new GcsAttachmentService({ db, store: files, permissions, rateLimiter });

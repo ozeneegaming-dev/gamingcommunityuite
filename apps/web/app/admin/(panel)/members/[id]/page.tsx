@@ -62,7 +62,7 @@ export default async function AcpMemberPage({ params }: Props) {
       <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
         <GcsAvatar name={member.name} size="l" {...(member.image ? { src: member.image } : {})} />
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <GcsAcpTitle icon="fa-solid fa-user">
+          <GcsAcpTitle icon="fa-solid fa-user" variant="plain">
             <span className={`gcs-name--${member.primaryGroup.key}`}>{member.name}</span>
           </GcsAcpTitle>
           <span style={muted}>

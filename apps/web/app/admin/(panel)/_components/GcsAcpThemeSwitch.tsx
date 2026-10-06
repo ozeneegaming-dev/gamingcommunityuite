@@ -9,7 +9,10 @@ export const ACP_THEME_COOKIE = "gcs-acp-theme";
 
 const THEME_ICONS = { auto: faCircleHalfStroke, light: faSun, dark: faMoon } as const;
 
-/** Tema ACP (Auto/Light/Dark), o preferință a adminului salvată într-un cookie (spec §12). */
+/**
+ * Tema ACP (Auto/Light/Dark), o preferință a adminului salvată într-un cookie (spec §12). În bara de sus apar doar
+ * iconițele; numele temei rămâne textul butonului pentru cititoarele de ecran și apare ca tooltip.
+ */
 export function GcsAcpThemeSwitch({ initial, labels }: { initial: GcsAcpTheme; labels: { group: string } & Record<GcsAcpTheme, string> }) {
   const [theme, setTheme] = useState(initial);
 
@@ -20,15 +23,18 @@ export function GcsAcpThemeSwitch({ initial, labels }: { initial: GcsAcpTheme; l
   }
 
   return (
-    <div
-      role="group"
-      aria-label={labels.group}
-      style={{ display: "flex", background: "var(--gcs-surface2)", border: "1px solid var(--gcs-border)", borderRadius: 9, padding: 3 }}
-    >
+    <div role="group" aria-label={labels.group} className="gcs-acpTheme" data-testid="gcs-acp-theme">
       {(["auto", "light", "dark"] as const).map((v) => (
-        <button key={v} type="button" className={cx("gcs-seg", v === theme && "gcs-seg--active")} aria-pressed={v === theme} onClick={() => choose(v)}>
-          <GcsIconSvg icon={THEME_ICONS[v]} className="gcs-seg__icon" />
-          {labels[v]}
+        <button
+          key={v}
+          type="button"
+          className={cx("gcs-acpTheme__btn", v === theme && "gcs-acpTheme__btn--active")}
+          aria-pressed={v === theme}
+          title={labels[v]}
+          onClick={() => choose(v)}
+        >
+          <GcsIconSvg icon={THEME_ICONS[v]} />
+          <span className="gcs-srOnly">{labels[v]}</span>
         </button>
       ))}
     </div>

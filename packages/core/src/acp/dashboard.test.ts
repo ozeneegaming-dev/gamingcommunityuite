@@ -32,7 +32,7 @@ describe("layout-ul dashboard-ului", () => {
       appOrder: ["members", "system", "inventat"],
     });
     const layout = await dash.getLayout(user.id);
-    expect(layout.main).toEqual(["system_health", "registrations", "vip_expiring"]);
+    expect(layout.main).toEqual(["system_health", "registrations", "latest_members", "pending_content", "open_reports", "acp_log", "vip_expiring"]);
     expect(layout.side.slice(0, 2)).toEqual(["online_users", "admin_notes"]);
     // Widgeturile nemenționate sunt adăugate la final, ca niciunul să nu dispară definitiv.
     expect(new Set([...layout.main, ...layout.side])).toEqual(
@@ -57,6 +57,35 @@ describe("datele widgeturilor", () => {
       { x: "2026-10-04", y: 0 },
       { x: "2026-10-05", y: 1 },
     ]);
+  });
+
+  test("rezumatul: serii pe 30 de zile, variația față de perioada anterioară, liste și cache de 60 s", async () => {
+    const now = new Date("2026-10-05T10:00:00Z");
+    const root = await w.createUser("Root", "root_admin");
+    const recent = await w.createUser("Nou", "member");
+    const old = await w.createUser("Vechi", "member");
+    await w.db.user.update({ where: { id: root.id }, data: { createdAt: new Date("2026-01-01T08:00:00Z") } });
+    await w.db.user.update({ where: { id: recent.id }, data: { createdAt: new Date("2026-10-04T21:30:00Z") } });
+    await w.db.user.update({ where: { id: old.id }, data: { createdAt: new Date("2026-08-20T08:00:00Z") } });
+    await w.db.report.create({ data: { contentType: "post", contentId: "1", reason: "spam", createdAt: new Date("2026-10-01T08:00:00Z") } });
+    await dash.recordAcpLogin(root.id, "10.0.0.1", false);
+
+    const cached = new GcsAcpDashboardService({ db: w.db, acp: w.acp, cache: w.cache });
+    await w.cache.invalidateTags(["acp-dashboard"]);
+    const o = await cached.overview(now);
+    expect(o.days).toHaveLength(30);
+    expect(o.days.at(-1)).toBe("2026-10-05");
+    // 21:30 UTC pe 4 octombrie e deja 5 octombrie la București.
+    expect(o.series.registrations.at(-1)).toBe(1);
+    expect(o.periods.registrations).toEqual({ current: 1, previous: 1 });
+    expect(o.periods.reports.current).toBe(1);
+    expect(o.totals).toMatchObject({ members: 3, openReports: 1, reports: 1 });
+    expect(o.latestMembers[0]).toMatchObject({ name: "Nou", groupKey: "member" });
+    expect(o.audit[0]).toMatchObject({ action: "acp.login_failed", actorName: "Root" });
+
+    await w.createUser("Ulterior", "member");
+    await expect(cached.overview(now)).resolves.toMatchObject({ totals: { members: 3 } });
+    await w.cache.invalidateTags(["acp-dashboard"]);
   });
 
   test("notițele admin: salvare cu drept, citire cu autorul", async () => {

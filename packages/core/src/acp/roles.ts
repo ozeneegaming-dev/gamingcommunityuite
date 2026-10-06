@@ -76,6 +76,21 @@ export class GcsAcpRoleService {
     return rights[section]?.[right] ?? false;
   }
 
+  /** Numele rolurilor ACP ale actorului (atribuite lui sau grupurilor lui); Root Admin are mereu rolul Root. */
+  async roleNames(actor: GcsActor): Promise<string[]> {
+    const status = await this.status(actor);
+    if (status === "banned") return [];
+    const or: ({ groupId: { in: number[] } } | { userId: string })[] = [{ groupId: { in: actor.groupIds } }];
+    if (actor.userId) or.push({ userId: actor.userId });
+    const roles = await this.deps.db.acpRole.findMany({
+      where: { assignments: { some: { OR: or } } },
+      select: { name: true },
+      orderBy: { name: "asc" },
+    });
+    const names = roles.map((r) => r.name);
+    return status === "root" && !names.includes(ROOT_ROLE) ? [ROOT_ROLE, ...names] : names;
+  }
+
   /** Aruncă `GcsForbidden` dacă actorul nu are dreptul `right` pe secțiunea ACP `section`. */
   async assert(actor: GcsActor, section: string, right: GcsAcpRight): Promise<void> {
     if (!(await this.can(actor, section, right))) throw new GcsForbidden({ section, right });
