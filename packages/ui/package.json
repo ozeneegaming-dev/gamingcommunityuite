@@ -16,6 +16,9 @@
     "./controls.css": "./src/controls.css",
     "./layout.css": "./src/layout.css",
     "./edit.css": "./src/edit.css",
+    "./widgets.css": "./src/widgets.css",
+    "./postbit.css": "./src/postbit.css",
+    "./icons.css": "./src/icons.css",
     "./icons": "./src/icons/index.tsx",
     "./icon-registry": "./src/icons/registry.ts"
   },
