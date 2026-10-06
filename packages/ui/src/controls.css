@@ -246,6 +246,11 @@ select option {
   text-align: left;
   cursor: pointer;
 }
+/* Linkurile din meniu au culoarea textului, ca butoanele de lângă ele (nu culoarea generală a linkurilor). */
+.gcs-root a.gcs-dropdown__item,
+.gcs-root a.gcs-dropdown__item:hover {
+  color: var(--gcs-text);
+}
 .gcs-dropdown__item:hover,
 .gcs-dropdown__item:focus-visible {
   background: var(--gcs-surface2);
