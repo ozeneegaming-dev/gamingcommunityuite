@@ -80,6 +80,7 @@ export class GcsMemberDirectory {
         bans: { orderBy: { createdAt: "desc" } },
         warnings: { orderBy: { createdAt: "desc" }, include: { issuedBy: { select: { name: true } } } },
         sessions: { select: { ipAddress: true } },
+        registrationIp: true,
       },
     });
     if (!user) return null;
@@ -91,7 +92,8 @@ export class GcsMemberDirectory {
       take: 50,
     });
     const ips = [
-      ...new Set([...user.sessions.map((s) => s.ipAddress), ...audit.map((a) => a.ip)].filter((ip): ip is string => !!ip)),
+      // Plus IP-ul de înregistrare al unui membru importat din altă platformă.
+      ...new Set([...user.sessions.map((s) => s.ipAddress), ...audit.map((a) => a.ip), user.registrationIp].filter((ip): ip is string => !!ip)),
     ];
 
     const shared = ips.length
