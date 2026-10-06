@@ -1,0 +1,292 @@
+import * as z from "zod";
+import { isPluginKey, PLUGIN_CAPABILITIES, PLUGIN_EVENTS, PLUGIN_FILTER_POINTS, PLUGIN_HOOK_POINTS, type GcsPluginCapability } from "./catalog";
+import { isValidSemverRange, parseSemver } from "./semver";
+
+/** O cheie locală (setare, permisiune, widget, job, intrare de meniu). */
+const LOCAL_KEY = /^[a-z][a-z0-9_]{0,39}$/;
+/** O iconiță Font Awesome Free după nume. */
+const ICON = /^fa-(?:solid|regular|brands) fa-[a-z0-9-]{1,60}$/;
+/** O cale de rută: `/`, `/stats`, `/item/:id` (segmente fixe sau parametri). */
+const ROUTE = /^\/$|^(?:\/(?:[a-z0-9][a-z0-9_-]{0,39}|:[a-z][a-zA-Z0-9]{0,29})){1,6}$/;
+/** O cheie de grup (`member`, `vip_gold`, `custom_12`). */
+const GROUP_KEY = /^[a-z][a-z0-9_]{0,39}$/;
+
+const localKey = z.string().regex(LOCAL_KEY, "invalid_key");
+const label = z.string().trim().min(1).max(200);
+const hint = z.string().trim().max(500).optional();
+const icon = z.string().regex(ICON, "invalid_icon");
+const route = z.string().regex(ROUTE, "invalid_route");
+const priority = z.number().int().min(0).max(100).optional();
+
+const textField = z.strictObject({
+  type: z.enum(["text", "textarea"]),
+  key: localKey,
+  label,
+  hint,
+  default: z.string().max(5000).optional(),
+  maxLength: z.number().int().min(1).max(20000).optional(),
+});
+const numberField = z.strictObject({
+  type: z.literal("number"),
+  key: localKey,
+  label,
+  hint,
+  default: z.number().finite(),
+  min: z.number().finite(),
+  max: z.number().finite(),
+  step: z.number().positive().optional(),
+  unit: z.string().max(40).optional(),
+  /** „sau [ ] Nelimitat”: valoarea 0 înseamnă nelimitat. */
+  unlimited: z.boolean().optional(),
+});
+const toggleField = z.strictObject({ type: z.literal("toggle"), key: localKey, label, hint, default: z.boolean().optional() });
+const selectField = z.strictObject({
+  type: z.literal("select"),
+  key: localKey,
+  label,
+  hint,
+  options: z.array(z.strictObject({ value: z.string().min(0).max(100), label })).min(1).max(50),
+  default: z.string().max(100).optional(),
+});
+const secretField = z.strictObject({ type: z.literal("secret"), key: localKey, label, hint });
+const settingField = z.discriminatedUnion("type", [textField, numberField, toggleField, selectField, secretField]);
+export type GcsPluginSettingField = z.infer<typeof settingField>;
+
+const widgetField = z.discriminatedUnion("type", [
+  z.strictObject({ type: z.enum(["text", "textarea"]), key: localKey, label, maxLength: z.number().int().min(1).max(5000) }),
+  z.strictObject({ type: z.literal("number"), key: localKey, label, min: z.number().int(), max: z.number().int() }),
+  z.strictObject({ type: z.literal("select"), key: localKey, label, options: z.array(z.strictObject({ value: z.string().max(100), label })).min(1).max(50) }),
+]);
+
+const json: z.ZodType<unknown> = z.lazy(() => z.union([z.null(), z.boolean(), z.number().finite(), z.string().max(5000), z.array(json).max(100), z.record(z.string().max(100), json)]));
+
+const menuEntry = z.strictObject({ key: localKey, label, href: z.string().max(200), icon: icon.optional(), permission: localKey.optional() });
+
+export const pluginManifestSchema = z.strictObject({
+  $schema: z.string().max(300).optional(),
+  manifestVersion: z.literal(1).optional(),
+  key: z.string().refine(isPluginKey, "invalid_plugin_key"),
+  name: z.string().trim().min(1).max(80),
+  version: z.string().refine((v) => parseSemver(v) !== null, "invalid_version"),
+  author: z.union([z.string().trim().min(1).max(120), z.strictObject({ name: z.string().trim().min(1).max(120), url: z.url({ protocol: /^https?$/ }).max(300).optional() })]),
+  description: z.string().trim().max(1000).default(""),
+  icon: icon.default("fa-solid fa-puzzle-piece"),
+  homepage: z.url({ protocol: /^https?$/ }).max(300).optional(),
+  license: z.string().max(60).optional(),
+  minGcs: z.string().refine((v) => parseSemver(v) !== null, "invalid_version").optional(),
+  dependencies: z.record(z.string().refine(isPluginKey, "invalid_plugin_key"), z.string().refine(isValidSemverRange, "invalid_range")).default({}),
+  capabilities: z.array(z.enum(PLUGIN_CAPABILITIES)).max(PLUGIN_CAPABILITIES.length).default([]),
+  settings: z
+    .strictObject({
+      tabs: z.array(z.strictObject({ key: localKey, label, icon: icon.optional(), fields: z.array(settingField).min(1).max(50) })).min(1).max(10),
+    })
+    .optional(),
+  permissions: z
+    .array(
+      z.strictObject({
+        key: localKey,
+        scope: z.enum(["group", "container"]),
+        containerType: z.string().regex(/^[a-z][a-z0-9_]{0,30}$/, "invalid_key").optional(),
+        type: z.enum(["boolean", "number"]).default("boolean"),
+        label,
+        default: z.record(z.string().regex(GROUP_KEY, "invalid_key"), z.union([z.boolean(), z.number().int().min(-1)])).default({}),
+      }),
+    )
+    .max(50)
+    .default([]),
+  widgets: z
+    .array(
+      z.strictObject({
+        key: localKey,
+        label,
+        description: z.string().trim().max(300).optional(),
+        icon: icon.default("fa-solid fa-puzzle-piece"),
+        zones: z.array(z.enum(["top", "bottom", "sidebar"])).min(1).max(3).optional(),
+        pages: z.array(z.enum(["index", "forum", "topic"])).min(1).max(3).optional(),
+        fields: z.array(widgetField).max(20).default([]),
+        defaultConfig: z.record(z.string(), json).default({}),
+      }),
+    )
+    .max(20)
+    .default([]),
+  routes: z
+    .strictObject({
+      pages: z.array(z.strictObject({ path: route, title: label.optional(), permission: localKey.optional() })).max(30).default([]),
+      acp: z.array(z.strictObject({ path: route, label, icon: icon.optional() })).max(20).default([]),
+      api: z
+        .array(z.strictObject({ path: route, methods: z.array(z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"])).min(1).max(5), permission: localKey.optional() }))
+        .max(30)
+        .default([]),
+    })
+    .default({ pages: [], acp: [], api: [] }),
+  events: z.array(z.enum(PLUGIN_EVENTS)).max(PLUGIN_EVENTS.length).default([]),
+  filters: z.array(z.strictObject({ point: z.enum(PLUGIN_FILTER_POINTS), priority })).max(PLUGIN_FILTER_POINTS.length).default([]),
+  hooks: z.array(z.strictObject({ point: z.enum(PLUGIN_HOOK_POINTS), priority })).max(PLUGIN_HOOK_POINTS.length).default([]),
+  jobs: z.array(z.strictObject({ key: localKey, everyMinutes: z.number().int().min(5).max(10080).optional(), label: label.optional() })).max(20).default([]),
+  menus: z.strictObject({ site: z.array(menuEntry).max(10).default([]), user: z.array(menuEntry).max(10).default([]) }).default({ site: [], user: [] }),
+  client: z
+    .strictObject({
+      styles: z.array(z.string().regex(/^assets\/[A-Za-z0-9._/-]+\.css$/, "invalid_asset")).max(10).default([]),
+      scripts: z.array(z.string().regex(/^assets\/[A-Za-z0-9._/-]+\.js$/, "invalid_asset")).max(10).default([]),
+    })
+    .default({ styles: [], scripts: [] }),
+});
+
+export type GcsPluginManifest = z.infer<typeof pluginManifestSchema>;
+export type GcsPluginManifestIssue = { path: string; code: string };
+
+/** Ce capabilitate cere fiecare declarație din manifest. */
+function requiredCapabilities(m: GcsPluginManifest): [GcsPluginCapability, string][] {
+  const out: [GcsPluginCapability, string][] = [];
+  if (m.settings) out.push(["settings", "settings"]);
+  if (m.permissions.length) out.push(["permissions", "permissions"]);
+  if (m.widgets.length) out.push(["widgets", "widgets"]);
+  if (m.routes.pages.length) out.push(["pages", "routes.pages"]);
+  if (m.routes.acp.length) out.push(["acp", "routes.acp"]);
+  if (m.routes.api.length) out.push(["api", "routes.api"]);
+  if (m.events.length) out.push(["events", "events"]);
+  if (m.filters.length) out.push(["filters", "filters"]);
+  if (m.hooks.length) out.push(["hooks", "hooks"]);
+  if (m.jobs.length) out.push(["jobs", "jobs"]);
+  if (m.menus.site.length || m.menus.user.length) out.push(["menus", "menus"]);
+  if (m.client.styles.length) out.push(["client-css", "client.styles"]);
+  if (m.client.scripts.length) out.push(["client-js", "client.scripts"]);
+  return out;
+}
+
+function duplicates(values: string[]): string[] {
+  const seen = new Set<string>();
+  return values.filter((v) => (seen.has(v) ? true : (seen.add(v), false)));
+}
+
+/** Verificările care leagă câmpurile între ele (capabilități, chei unice, valori implicite, linkuri). */
+function crossCheck(m: GcsPluginManifest): GcsPluginManifestIssue[] {
+  const issues: GcsPluginManifestIssue[] = [];
+  const caps = new Set(m.capabilities);
+  for (const [cap, path] of requiredCapabilities(m)) if (!caps.has(cap)) issues.push({ path, code: `missing_capability:${cap}` });
+  if (m.dependencies[m.key]) issues.push({ path: "dependencies", code: "self_dependency" });
+
+  const fields = m.settings?.tabs.flatMap((t) => t.fields) ?? [];
+  for (const d of duplicates(fields.map((f) => f.key))) issues.push({ path: `settings.${d}`, code: "duplicate_key" });
+  for (const d of duplicates(m.settings?.tabs.map((t) => t.key) ?? [])) issues.push({ path: `settings.tabs.${d}`, code: "duplicate_key" });
+  for (const f of fields) {
+    if (f.type === "number") {
+      if (f.min > f.max) issues.push({ path: `settings.${f.key}`, code: "invalid_range" });
+      const inRange = f.default >= f.min && f.default <= f.max;
+      if (!inRange && !(f.unlimited && f.default === 0)) issues.push({ path: `settings.${f.key}.default`, code: "out_of_range" });
+    }
+    if (f.type === "select" && f.default !== undefined && !f.options.some((o) => o.value === f.default)) {
+      issues.push({ path: `settings.${f.key}.default`, code: "invalid_choice" });
+    }
+  }
+
+  const permKeys = new Set(m.permissions.map((p) => p.key));
+  for (const d of duplicates(m.permissions.map((p) => p.key))) issues.push({ path: `permissions.${d}`, code: "duplicate_key" });
+  for (const p of m.permissions) {
+    if (p.scope === "container" && !p.containerType) issues.push({ path: `permissions.${p.key}.containerType`, code: "required" });
+    if (p.scope === "group" && p.containerType) issues.push({ path: `permissions.${p.key}.containerType`, code: "not_allowed" });
+    if (p.scope === "container" && p.type === "number") issues.push({ path: `permissions.${p.key}.type`, code: "not_allowed" });
+    for (const [group, value] of Object.entries(p.default)) {
+      if (typeof value !== (p.type === "number" ? "number" : "boolean")) issues.push({ path: `permissions.${p.key}.default.${group}`, code: "invalid_type" });
+    }
+  }
+  const permissionRef = (path: string, key: string | undefined) => {
+    if (key !== undefined && !permKeys.has(key)) issues.push({ path, code: "unknown_permission" });
+  };
+
+  for (const d of duplicates(m.widgets.map((w) => w.key))) issues.push({ path: `widgets.${d}`, code: "duplicate_key" });
+  for (const w of m.widgets) for (const d of duplicates(w.fields.map((f) => f.key))) issues.push({ path: `widgets.${w.key}.fields.${d}`, code: "duplicate_key" });
+  for (const d of duplicates(m.routes.pages.map((r) => r.path))) issues.push({ path: `routes.pages.${d}`, code: "duplicate_key" });
+  for (const d of duplicates(m.routes.acp.map((r) => r.path))) issues.push({ path: `routes.acp.${d}`, code: "duplicate_key" });
+  for (const d of duplicates(m.routes.api.map((r) => r.path))) issues.push({ path: `routes.api.${d}`, code: "duplicate_key" });
+  for (const r of m.routes.pages) permissionRef(`routes.pages.${r.path}.permission`, r.permission);
+  for (const r of m.routes.api) permissionRef(`routes.api.${r.path}.permission`, r.permission);
+  for (const d of duplicates(m.events)) issues.push({ path: `events.${d}`, code: "duplicate_key" });
+  for (const d of duplicates(m.filters.map((f) => f.point))) issues.push({ path: `filters.${d}`, code: "duplicate_key" });
+  for (const d of duplicates(m.hooks.map((h) => h.point))) issues.push({ path: `hooks.${d}`, code: "duplicate_key" });
+  for (const d of duplicates(m.jobs.map((j) => j.key))) issues.push({ path: `jobs.${d}`, code: "duplicate_key" });
+
+  // Meniurile site-ului și ale userului duc doar spre paginile pluginului.
+  const own = `/p/${m.key}`;
+  for (const area of ["site", "user"] as const) {
+    for (const d of duplicates(m.menus[area].map((e) => e.key))) issues.push({ path: `menus.${area}.${d}`, code: "duplicate_key" });
+    for (const e of m.menus[area]) {
+      const ok = (e.href === own || e.href.startsWith(`${own}/`) || e.href.startsWith(`${own}?`)) && /^[A-Za-z0-9._~/?=&%:-]+$/.test(e.href) && !e.href.includes("..");
+      if (!ok) issues.push({ path: `menus.${area}.${e.key}.href`, code: "external_link" });
+      permissionRef(`menus.${area}.${e.key}.permission`, e.permission);
+    }
+  }
+  return issues;
+}
+
+export type GcsManifestParse = { ok: true; manifest: GcsPluginManifest } | { ok: false; issues: GcsPluginManifestIssue[] };
+
+/** Validează `plugin.json` (deja parsat din JSON): schema zod, apoi verificările încrucișate. */
+export function parsePluginManifest(raw: unknown): GcsManifestParse {
+  const parsed = pluginManifestSchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      issues: parsed.error.issues.slice(0, 20).map((i) => ({ path: i.path.map(String).join(".") || "(root)", code: /^[a-z_:-]+$/.test(i.message) ? i.message : i.code })),
+    };
+  }
+  const issues = crossCheck(parsed.data);
+  return issues.length > 0 ? { ok: false, issues: issues.slice(0, 20) } : { ok: true, manifest: parsed.data };
+}
+
+/** Câmpurile setărilor, în ordinea tab-urilor. */
+export function manifestSettingFields(m: GcsPluginManifest): GcsPluginSettingField[] {
+  return m.settings?.tabs.flatMap((t) => t.fields) ?? [];
+}
+
+/** Valorile implicite ale setărilor (secretele pornesc goale). */
+export function defaultPluginSettings(m: GcsPluginManifest): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const f of manifestSettingFields(m)) {
+    switch (f.type) {
+      case "text":
+      case "textarea":
+        out[f.key] = f.default ?? "";
+        break;
+      case "number":
+        out[f.key] = f.default;
+        break;
+      case "toggle":
+        out[f.key] = f.default ?? false;
+        break;
+      case "select":
+        out[f.key] = f.default ?? f.options[0]!.value;
+        break;
+      case "secret":
+        out[f.key] = "";
+        break;
+    }
+  }
+  return out;
+}
+
+/**
+ * Validează o valoare de setare după câmpul din manifest; întoarce valoarea normalizată sau codul erorii.
+ * Pentru numerele cu „Nelimitat”, 0 înseamnă nelimitat.
+ */
+export function validatePluginSetting(f: GcsPluginSettingField, value: unknown): { ok: true; value: unknown } | { ok: false; code: string } {
+  switch (f.type) {
+    case "text":
+    case "textarea": {
+      if (typeof value !== "string") return { ok: false, code: "invalid_type" };
+      const max = f.maxLength ?? (f.type === "text" ? 200 : 5000);
+      return value.length > max ? { ok: false, code: "too_long" } : { ok: true, value };
+    }
+    case "secret":
+      return typeof value === "string" && value.length <= 2000 ? { ok: true, value } : { ok: false, code: "invalid_type" };
+    case "number": {
+      if (typeof value !== "number" || !Number.isFinite(value)) return { ok: false, code: "invalid_type" };
+      if (f.unlimited && value === 0) return { ok: true, value };
+      return value < f.min || value > f.max ? { ok: false, code: "invalid_range" } : { ok: true, value };
+    }
+    case "toggle":
+      return typeof value === "boolean" ? { ok: true, value } : { ok: false, code: "invalid_type" };
+    case "select":
+      return typeof value === "string" && f.options.some((o) => o.value === value) ? { ok: true, value } : { ok: false, code: "invalid_choice" };
+  }
+}
