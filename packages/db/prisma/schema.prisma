@@ -1381,3 +1381,79 @@ model TranslationCache {
   @@index([createdAt])
   @@map("translation_cache")
 }
+
+// ─── Pluginuri (etapa 6 §2; designul: docs/superpowers/specs/2026-10-06-pluginuri.md) ───
+
+/// Un plugin instalat. Arhiva (`package`) e sursa de adevăr: fiecare proces o dezarhivează în `GCS_PLUGINS_DIR`.
+/// `status`: `installed` sau `removed_kept_data` (dezinstalat cu păstrarea datelor: schema, rolul DB și setările).
+/// `dbRole` / `dbPassword`: rolul PostgreSQL dedicat, cu care rulează SQL-ul pluginului (doar în schema lui).
+model Plugin {
+  key                 String              @id
+  name                String
+  version             String
+  enabled             Boolean             @default(false)
+  status              String              @default("installed")
+  signed              Boolean             @default(false)
+  signatureKeyId      String?
+  capabilities        String[]
+  manifest            Json
+  settings            Json                @default("{}")
+  package             Bytes?
+  packageSha256       String?
+  dbRole              String?
+  dbPassword          String?
+  migrations          String[]
+  /// `admin`, `auto` (eșecuri la rând) sau `cli` (dezactivare din consolă), când `enabled = false`.
+  disabledReason      String?
+  consecutiveFailures Int                 @default(0)
+  lastError           String?
+  lastErrorAt         DateTime?
+  installedAt         DateTime            @default(now())
+  installedById       String?
+  updatedAt           DateTime            @updatedAt
+  hookSettings        PluginHookSetting[]
+  logs                PluginLog[]
+
+  @@map("plugins")
+}
+
+/// O arhivă încărcată din ACP, în așteptarea confirmării (ștearsă după o oră).
+model PluginUpload {
+  id        String   @id @default(cuid())
+  actorId   String?
+  fileName  String
+  data      Bytes
+  sha256    String
+  report    Json
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("plugin_uploads")
+}
+
+/// Jurnalul unui plugin: erorile hook-urilor și mesajele lui (`ctx.log`), ultimele câteva sute.
+model PluginLog {
+  id         Int      @id @default(autoincrement())
+  pluginKey  String
+  level      String
+  hook       String?
+  message    String
+  durationMs Int?
+  createdAt  DateTime @default(now())
+  plugin     Plugin   @relation(fields: [pluginKey], references: [key], onDelete: Cascade)
+
+  @@index([pluginKey, id])
+  @@map("plugin_logs")
+}
+
+/// ACP → Sistem → Hook-uri: un hook al unui plugin oprit sau cu altă prioritate decât cea din manifest.
+model PluginHookSetting {
+  pluginKey String
+  hook      String
+  enabled   Boolean @default(true)
+  priority  Int?
+  plugin    Plugin  @relation(fields: [pluginKey], references: [key], onDelete: Cascade)
+
+  @@id([pluginKey, hook])
+  @@map("plugin_hook_settings")
+}
