@@ -164,7 +164,11 @@
       "image": "Télécharger une image pour un cadre d'image.",
       "signature_media": "La signature ne peut contenir d'images ou de vidéos.",
       "current_session": "Inscrivez-vous à cette session avec la commande .",
-      "too_many_emoticons": "Trop d'émotiques dans un seul message"
+      "too_many_emoticons": "Trop d'émotiques dans un seul message",
+      "template_syntax": "The template has a syntax error.",
+      "invalid_css_name": "File name: lower-case letters, digits, dot, dash or _, ending in .css.",
+      "too_many_files": "The theme already has the maximum number of CSS files.",
+      "locked_file": "custom.css is the visual editor file: it cannot be renamed or deleted."
     }
   },
   "acp": {
@@ -300,7 +304,9 @@
       "appearance": {
         "appearance": "Apparence",
         "themes": "Thèmes",
-        "widgets": "Widgets"
+        "widgets": "Widgets",
+        "templates": "Templates",
+        "css": "CSS"
       }
     },
     "comingSoon": {
@@ -1216,7 +1222,170 @@
       "save": "Enregistrer les langues"
     },
     "drawer": "Menu ACP",
-    "breadcrumb": "Fil d'Ariane"
+    "breadcrumb": "Fil d'Ariane",
+    "codeEditor": {
+      "theme": "Theme",
+      "save": "Save",
+      "saving": "Saving…",
+      "discard": "Discard changes",
+      "search": "Search (Ctrl+F)",
+      "cancel": "Cancel",
+      "unsaved": "Unsaved",
+      "unsavedConfirm": "You have unsaved changes. Discard them?",
+      "loading": "Loading the editor…",
+      "shortcuts": "Ctrl+S saves · Ctrl+F searches · Ctrl+Z undoes",
+      "restored": "The version was restored.",
+      "preview": "Preview",
+      "previewSize": "Preview size",
+      "sizes": {
+        "desktop": "Desktop",
+        "tablet": "Tablet",
+        "mobile": "Mobile"
+      },
+      "line": "Line {line}",
+      "column": "column {column}",
+      "history": {
+        "title": "History",
+        "empty": "No versions yet.",
+        "system": "system",
+        "compare": "Compare",
+        "previous": "With the previous version",
+        "original": "With the original",
+        "restore": "Restore"
+      },
+      "diff": {
+        "same": "No differences.",
+        "added": "lines added",
+        "removed": "lines removed",
+        "skipped": "{count} unchanged lines"
+      },
+      "actions": {
+        "create": "Created",
+        "save": "Saved",
+        "restore": "Restored",
+        "publish": "Published from the visual editor",
+        "migrate": "Taken over from the existing theme",
+        "import": "Imported",
+        "revert": "Reverted to the original"
+      }
+    },
+    "cssEditor": {
+      "title": "CSS",
+      "hint": "The theme CSS files, applied in order after the colours and settings from the visual editor. CSS is cleaned on save: no HTML, scripts or foreign @import.",
+      "files": "Files",
+      "newFile": "New file",
+      "newPlaceholder": "e.g. layout.css",
+      "orderHint": "Files apply from top to bottom. custom.css is the CSS from the visual editor dialog.",
+      "moveUp": "Move “{name}” up",
+      "moveDown": "Move “{name}” down",
+      "rename": "Rename",
+      "delete": "Delete",
+      "confirmDelete": "Delete the file “{name}” and its history?",
+      "visualEditorFile": "visual editor",
+      "editorLabel": "CSS code of {name}",
+      "saved": "Saved: visitors now get the new CSS.",
+      "unchanged": "Nothing to save.",
+      "noFiles": "The theme has no CSS files.",
+      "sidePanel": "Preview and history",
+      "previewPage": "Previewed page",
+      "pages": {
+        "home": "Home page",
+        "members": "Members",
+        "search": "Search",
+        "staff": "Staff"
+      },
+      "previewHint": "The preview uses the unsaved CSS; visitors only get it after “Save”.",
+      "report": {
+        "title": "{count, plural, one {Removed # forbidden fragment} many {Removed # forbidden fragments} other {Removed # forbidden fragments}}",
+        "html": "HTML is not allowed in CSS",
+        "escape": "the \\3c sequence (a hidden HTML character) is not allowed",
+        "expression": "expression() ran code in old browsers",
+        "script_url": "javascript: and vbscript: addresses are not allowed",
+        "binding": "-moz-binding loads code",
+        "behavior": "behavior loads code",
+        "charset": "@charset is not needed",
+        "import": "@import is only allowed from Google Fonts",
+        "url": "url() is only allowed to https: or the site files (/files/…)"
+      }
+    },
+    "templatesEditor": {
+      "title": "Templates",
+      "hint": "The markup of the important areas of the site, per theme. An unmodified template keeps the default look; the resulting HTML is cleaned when rendered.",
+      "tree": "Templates",
+      "search": "Search templates…",
+      "noResults": "No templates found.",
+      "groups": {
+        "layout": "Page",
+        "forum": "Forum",
+        "postbit": "Posts",
+        "members": "Members",
+        "widgets": "Widgets",
+        "email": "Emails"
+      },
+      "status": {
+        "default": "original",
+        "modified": "modified",
+        "review": "needs review"
+      },
+      "editorLabel": "Code of the {name} template",
+      "revert": "Revert to original",
+      "confirmRevert": "Revert to the original template? Your version stays in the history.",
+      "saved": "Saved: the site now uses your template.",
+      "reverted": "The template is back to the original.",
+      "reviewed": "Marked as reviewed.",
+      "reviewNotice": "The original of this template changed in a GCS update after you modified it. Check the differences and take what you need.",
+      "reviewDiff": "What changed in the original",
+      "markReviewed": "Mark as reviewed",
+      "usingOverride": "The theme uses the modified template.",
+      "usingDefault": "The theme uses the original template (default look).",
+      "securityHint": "Values are escaped automatically. Scripts, on* attributes and javascript: links are removed when rendering.",
+      "sidePanel": "Preview, variables and history",
+      "variables": "Variables",
+      "variablesHint": "Clicking a variable inserts it in the editor, at the cursor. They also show up in autocomplete.",
+      "slots": "Slots (the interactive parts)",
+      "slotRequired": "required",
+      "slotOptional": "optional",
+      "syntax": "Syntax",
+      "filtersList": "Filters: {filters}",
+      "previewHint": "On real data, with the unsaved template.",
+      "refreshPreview": "Reload the preview",
+      "previewTitle": "Template preview",
+      "previewWaiting": "Preparing the preview…",
+      "inTemplate": " (in the included template {template})",
+      "errors": {
+        "too_long": "the template is too long (64 KB at most)",
+        "unclosed_output": "the expression is not closed",
+        "unclosed_tag": "the tag is not closed",
+        "unclosed_block": "the {detail} block is not closed",
+        "unclosed_string": "the quoted text is not closed",
+        "unexpected_char": "unexpected character: {detail}",
+        "unexpected_token": "did not expect “{detail}” here",
+        "unexpected_end": "the expression ends too early",
+        "unknown_tag": "unknown tag: {detail}",
+        "unknown_filter": "unknown filter: {detail}",
+        "unmatched_end": "“{detail}” without its block",
+        "invalid_name": "invalid name: {detail}",
+        "break_outside_loop": "{detail} is only allowed inside a for",
+        "time_limit": "rendering took too long",
+        "iteration_limit": "too many iterations",
+        "output_limit": "the result is too large",
+        "include_depth": "too many nested includes ({detail})",
+        "include_not_found": "the included template does not exist: {detail}"
+      },
+      "sample": {
+        "forumName": "General discussion",
+        "forumDescription": "About anything",
+        "topicTitle": "Welcome!",
+        "postBody": "The post content shows up here.",
+        "slot": "Slot: {name}",
+        "widgetTitle": "Statistics",
+        "stats": "{topics} topics · {posts} posts · {members} members",
+        "emailHello": "Hi, {name}!",
+        "emailItem": "Ana replied in “Welcome!”",
+        "emailFooter": "Choose which emails you get in the notification settings.",
+        "emailSubject": "A new notification — {site}"
+      }
+    }
   },
   "settings": {
     "site": {
@@ -2481,7 +2650,8 @@
       "title": "CSS personnalisé",
       "hint": "Appliqué après le thème. Nettoyé automatiquement : pas de HTML, pas de scripts, @import uniquement depuis Google Fonts.",
       "revert": "Répandre",
-      "done": "Terminé"
+      "done": "Terminé",
+      "allFiles": "All theme CSS files, with history"
     },
     "exitDialog": {
       "title": "Changements non enregistrés",

@@ -14,14 +14,16 @@ function apply(m: GcsStudioApplyMessage) {
   // `textContent`: CSS-ul nu poate deveni HTML; e compilat din valori validate, iar CSS-ul extra e sanitizat.
   style.textContent = m.css;
   document.head.appendChild(style);
-  document.documentElement.dataset.theme = m.mode;
+  if (m.mode) document.documentElement.dataset.theme = m.mode;
+  const logo = m.logo;
+  if (!logo) return;
   document.querySelectorAll<HTMLElement>("[data-gcs-logo-text]").forEach((el) => {
-    el.textContent = m.logo.text || el.dataset.siteName || "";
+    el.textContent = logo.text || el.dataset.siteName || "";
     const mark = el.closest(".gcs-brand")?.querySelector(".gcs-brand__mark > span");
     if (mark) mark.textContent = (el.textContent ?? "").trim().charAt(0).toUpperCase() || "G";
   });
   document.querySelectorAll<HTMLElement>("[data-gcs-logo-slogan]").forEach((el) => {
-    el.textContent = m.logo.slogan;
+    el.textContent = logo.slogan;
   });
 }
 

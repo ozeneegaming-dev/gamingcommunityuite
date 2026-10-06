@@ -164,7 +164,11 @@
       "image": "Încarcă o imagine pentru rama de tip imagine.",
       "signature_media": "Semnătura nu poate conține imagini sau video.",
       "current_session": "Sesiunea curentă se închide cu „Ieșire”.",
-      "too_many_emoticons": "Prea multe emoticoane într-un mesaj"
+      "too_many_emoticons": "Prea multe emoticoane într-un mesaj",
+      "template_syntax": "Șablonul are o eroare de sintaxă.",
+      "invalid_css_name": "Numele fișierului: litere mici, cifre, punct, minus sau _, terminat în .css.",
+      "too_many_files": "Tema are deja numărul maxim de fișiere CSS.",
+      "locked_file": "custom.css e fișierul editorului vizual: nu se poate redenumi sau șterge."
     }
   },
   "acp": {
@@ -300,7 +304,9 @@
       "appearance": {
         "appearance": "Aspect",
         "themes": "Teme",
-        "widgets": "Widget-uri"
+        "widgets": "Widget-uri",
+        "templates": "Șabloane",
+        "css": "CSS"
       }
     },
     "comingSoon": {
@@ -1216,7 +1222,170 @@
       "save": "Salvează limbile"
     },
     "drawer": "Meniul ACP",
-    "breadcrumb": "Cale de navigare"
+    "breadcrumb": "Cale de navigare",
+    "codeEditor": {
+      "theme": "Tema",
+      "save": "Salvează",
+      "saving": "Se salvează…",
+      "discard": "Renunță la modificări",
+      "search": "Caută (Ctrl+F)",
+      "cancel": "Anulează",
+      "unsaved": "Nesalvat",
+      "unsavedConfirm": "Ai modificări nesalvate. Renunți la ele?",
+      "loading": "Se încarcă editorul…",
+      "shortcuts": "Ctrl+S salvează · Ctrl+F caută · Ctrl+Z anulează",
+      "restored": "Versiunea a fost restaurată.",
+      "preview": "Previzualizare",
+      "previewSize": "Mărimea previzualizării",
+      "sizes": {
+        "desktop": "Desktop",
+        "tablet": "Tabletă",
+        "mobile": "Mobil"
+      },
+      "line": "Rândul {line}",
+      "column": "coloana {column}",
+      "history": {
+        "title": "Istoric",
+        "empty": "Încă nu există versiuni.",
+        "system": "sistemul",
+        "compare": "Compară",
+        "previous": "Față de versiunea anterioară",
+        "original": "Față de original",
+        "restore": "Restaurează"
+      },
+      "diff": {
+        "same": "Nicio diferență.",
+        "added": "rânduri adăugate",
+        "removed": "rânduri șterse",
+        "skipped": "{count} rânduri nemodificate"
+      },
+      "actions": {
+        "create": "Creat",
+        "save": "Salvat",
+        "restore": "Restaurat",
+        "publish": "Publicat din editorul vizual",
+        "migrate": "Preluat din tema existentă",
+        "import": "Importat",
+        "revert": "Revenit la original"
+      }
+    },
+    "cssEditor": {
+      "title": "CSS",
+      "hint": "Fișierele CSS ale temei, aplicate în ordine după culorile și setările din editorul vizual. La salvare, CSS-ul e curățat: fără HTML, scripturi sau @import străine.",
+      "files": "Fișiere",
+      "newFile": "Fișier nou",
+      "newPlaceholder": "ex. layout.css",
+      "orderHint": "Fișierele se aplică de sus în jos. custom.css e CSS-ul din dialogul editorului vizual.",
+      "moveUp": "Mută „{name}” mai sus",
+      "moveDown": "Mută „{name}” mai jos",
+      "rename": "Redenumește",
+      "delete": "Șterge",
+      "confirmDelete": "Ștergi fișierul „{name}” și istoricul lui?",
+      "visualEditorFile": "editorul vizual",
+      "editorLabel": "Codul CSS din {name}",
+      "saved": "Salvat: vizitatorii văd noul CSS.",
+      "unchanged": "Nicio modificare de salvat.",
+      "noFiles": "Tema nu are fișiere CSS.",
+      "sidePanel": "Previzualizare și istoric",
+      "previewPage": "Pagina previzualizată",
+      "pages": {
+        "home": "Pagina principală",
+        "members": "Membri",
+        "search": "Căutare",
+        "staff": "Staff"
+      },
+      "previewHint": "Previzualizarea folosește CSS-ul nesalvat; vizitatorii îl văd doar după „Salvează”.",
+      "report": {
+        "title": "{count, plural, one {Am scos # fragment nepermis} few {Am scos # fragmente nepermise} other {Am scos # de fragmente nepermise}}",
+        "html": "HTML-ul nu e permis în CSS",
+        "escape": "secvența \\3c (un caracter HTML ascuns) nu e permisă",
+        "expression": "expression() rula cod în browserele vechi",
+        "script_url": "adresele javascript: și vbscript: nu sunt permise",
+        "binding": "-moz-binding încarcă cod",
+        "behavior": "behavior încarcă cod",
+        "charset": "@charset nu e necesar",
+        "import": "@import e permis doar de la Google Fonts",
+        "url": "url() e permis doar spre https: sau spre fișierele site-ului (/files/…)"
+      }
+    },
+    "templatesEditor": {
+      "title": "Șabloane",
+      "hint": "Markup-ul zonelor importante ale site-ului, pentru fiecare temă. Un șablon nemodificat păstrează aspectul implicit; HTML-ul rezultat e curățat la randare.",
+      "tree": "Șabloanele",
+      "search": "Caută un șablon…",
+      "noResults": "Niciun șablon găsit.",
+      "groups": {
+        "layout": "Pagina",
+        "forum": "Forum",
+        "postbit": "Postări",
+        "members": "Membri",
+        "widgets": "Widget-uri",
+        "email": "Emailuri"
+      },
+      "status": {
+        "default": "original",
+        "modified": "modificat",
+        "review": "necesită revizuire"
+      },
+      "editorLabel": "Codul șablonului {name}",
+      "revert": "Revino la original",
+      "confirmRevert": "Revii la șablonul original? Versiunea ta rămâne în istoric.",
+      "saved": "Salvat: site-ul folosește acum șablonul tău.",
+      "reverted": "Șablonul a revenit la original.",
+      "reviewed": "Marcat ca revizuit.",
+      "reviewNotice": "Originalul acestui șablon s-a schimbat într-o actualizare GCS, după ce l-ai modificat. Verifică diferențele și preia ce îți trebuie.",
+      "reviewDiff": "Ce s-a schimbat în original",
+      "markReviewed": "Marchează ca revizuit",
+      "usingOverride": "Tema folosește șablonul modificat.",
+      "usingDefault": "Tema folosește șablonul original (aspectul implicit).",
+      "securityHint": "Valorile sunt escapate automat. Scripturile, atributele on* și linkurile javascript: sunt eliminate la randare.",
+      "sidePanel": "Previzualizare, variabile și istoric",
+      "variables": "Variabile",
+      "variablesHint": "Click pe o variabilă o inserează în editor, la cursor. Tot ele apar în autocompletare.",
+      "slots": "Sloturi (părțile interactive)",
+      "slotRequired": "obligatoriu",
+      "slotOptional": "opțional",
+      "syntax": "Sintaxa",
+      "filtersList": "Filtre: {filters}",
+      "previewHint": "Pe date reale, cu șablonul nesalvat.",
+      "refreshPreview": "Reîncarcă previzualizarea",
+      "previewTitle": "Previzualizarea șablonului",
+      "previewWaiting": "Se pregătește previzualizarea…",
+      "inTemplate": " (în șablonul inclus {template})",
+      "errors": {
+        "too_long": "șablonul e prea lung (maximum 64 KB)",
+        "unclosed_output": "lipsește închiderea expresiei",
+        "unclosed_tag": "lipsește închiderea tagului",
+        "unclosed_block": "blocul {detail} nu e închis",
+        "unclosed_string": "textul dintre ghilimele nu e închis",
+        "unexpected_char": "caracter neașteptat: {detail}",
+        "unexpected_token": "nu mă așteptam la „{detail}” aici",
+        "unexpected_end": "expresia se termină prea devreme",
+        "unknown_tag": "tag necunoscut: {detail}",
+        "unknown_filter": "filtru necunoscut: {detail}",
+        "unmatched_end": "„{detail}” fără blocul lui",
+        "invalid_name": "nume invalid: {detail}",
+        "break_outside_loop": "{detail} e permis doar într-un for",
+        "time_limit": "randarea a durat prea mult",
+        "iteration_limit": "prea multe iterații",
+        "output_limit": "rezultatul e prea mare",
+        "include_depth": "prea multe includeri una în alta ({detail})",
+        "include_not_found": "șablonul inclus nu există: {detail}"
+      },
+      "sample": {
+        "forumName": "Discuții generale",
+        "forumDescription": "Despre orice",
+        "topicTitle": "Bine ați venit!",
+        "postBody": "Conținutul postării apare aici.",
+        "slot": "Slot: {name}",
+        "widgetTitle": "Statistici",
+        "stats": "{topics} topicuri · {posts} postări · {members} membri",
+        "emailHello": "Salut, {name}!",
+        "emailItem": "Ana a răspuns în „Bine ați venit!”",
+        "emailFooter": "Alege ce emailuri primești din setările notificărilor.",
+        "emailSubject": "O notificare nouă — {site}"
+      }
+    }
   },
   "settings": {
     "site": {
@@ -2481,7 +2650,8 @@
       "title": "CSS personalizat",
       "hint": "Se aplică după temă. Se curăță automat: fără HTML, fără scripturi, @import doar de la Google Fonts.",
       "revert": "Revino",
-      "done": "Gata"
+      "done": "Gata",
+      "allFiles": "Toate fișierele CSS ale temei, cu istoric"
     },
     "exitDialog": {
       "title": "Modificări nesalvate",

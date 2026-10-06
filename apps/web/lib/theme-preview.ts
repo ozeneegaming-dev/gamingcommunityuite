@@ -26,12 +26,16 @@ export function previewKeyFor(param: string | null, cookie: string | undefined, 
 export const STUDIO_MESSAGE_SOURCE = "gcs-theme-studio";
 export const PREVIEW_MESSAGE_SOURCE = "gcs-theme-preview";
 
+/**
+ * Starea trimisă previzualizării. Editorul vizual trimite tot; editorul de CSS din ACP (Aspect → CSS) trimite doar
+ * CSS-ul compilat (modul și logo-ul previzualizării rămân cum sunt).
+ */
 export type GcsStudioApplyMessage = {
   source: typeof STUDIO_MESSAGE_SOURCE;
   type: "apply";
   css: string;
-  mode: "dark" | "light";
-  logo: { text: string; slogan: string };
+  mode?: "dark" | "light";
+  logo?: { text: string; slogan: string };
 };
 
 export type GcsPreviewReadyMessage = {
@@ -43,15 +47,13 @@ export type GcsPreviewReadyMessage = {
 export const isStudioApplyMessage = (d: unknown): d is GcsStudioApplyMessage => {
   if (!d || typeof d !== "object") return false;
   const m = d as Record<string, unknown>;
-  const logo = m.logo as Record<string, unknown> | undefined;
+  const logo = m.logo as Record<string, unknown> | null | undefined;
   return (
     m.source === STUDIO_MESSAGE_SOURCE &&
     m.type === "apply" &&
     typeof m.css === "string" &&
-    (m.mode === "dark" || m.mode === "light") &&
-    !!logo &&
-    typeof logo.text === "string" &&
-    typeof logo.slogan === "string"
+    (m.mode === undefined || m.mode === "dark" || m.mode === "light") &&
+    (logo === undefined || (!!logo && typeof logo.text === "string" && typeof logo.slogan === "string"))
   );
 };
 

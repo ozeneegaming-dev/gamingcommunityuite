@@ -18,6 +18,8 @@ describe("previzualizarea editorului vizual", () => {
     expect(isStudioApplyMessage({ ...ok, mode: "sepia" })).toBe(false);
     expect(isStudioApplyMessage({ ...ok, css: 1 })).toBe(false);
     expect(isStudioApplyMessage({ ...ok, logo: null })).toBe(false);
+    // Editorul de CSS din ACP trimite doar CSS-ul.
+    expect(isStudioApplyMessage({ source: STUDIO_MESSAGE_SOURCE, type: "apply", css: "a{}" })).toBe(true);
     expect(isStudioApplyMessage("x")).toBe(false);
     expect(isPreviewReadyMessage({ source: "gcs-theme-preview", type: "ready", path: "/" })).toBe(true);
     expect(isPreviewReadyMessage({ source: "other", type: "ready" })).toBe(false);
