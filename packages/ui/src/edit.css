@@ -703,3 +703,27 @@
 body:has(.gcs-editBar) .gcs-siteFooter__inner {
   padding-bottom: 76px;
 }
+
+/* Locul unui widget care încă se încarcă (streaming): o placă discretă, cu un puls lent. */
+.gcs-widgetSkeleton {
+  min-height: 140px;
+  background: linear-gradient(90deg, var(--gcs-surface) 0%, var(--gcs-surface2) 50%, var(--gcs-surface) 100%);
+  background-size: 200% 100%;
+  animation: gcs-skeleton 1.4s ease-in-out infinite;
+}
+.gcs-widgetSkeleton--sidebar {
+  min-height: 220px;
+}
+@keyframes gcs-skeleton {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gcs-widgetSkeleton {
+    animation: none;
+  }
+}

@@ -1,7 +1,7 @@
 import { GCS_WIDGET_ZONES, type GcsActor, type GcsWidgetPage as GcsWidgetPageKey, type GcsWidgetPlacementView, type GcsWidgetZone } from "@gcs/core";
 import { GcsIcon } from "@gcs/ui/icons";
 import { getTranslations } from "next-intl/server";
-import { Fragment, type ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { currentActor } from "@/lib/actor";
 import { viewerEditing } from "@/lib/appearance";
 import { services } from "@/lib/services";
@@ -20,39 +20,50 @@ async function renderPlacement(p: GcsWidgetPlacementView, actor: GcsActor): Prom
   }
 }
 
+/** Un widget randat separat (în propriul `Suspense`): pagina nu așteaptă după el, iar o eroare îl ascunde doar pe el. */
+async function GcsWidgetSlot({ placement, actor }: { placement: GcsWidgetPlacementView; actor: GcsActor }) {
+  return <>{await renderPlacement(placement, actor)}</>;
+}
+
+/** Locul widget-ului cât timp se încarcă (aceeași lățime, o înălțime apropiată, ca pagina să nu sară). */
+function GcsWidgetSkeleton({ zone }: { zone: GcsWidgetZone }) {
+  return <div className={`gcs-card gcs-widgetSkeleton gcs-widgetSkeleton--${zone}`} aria-hidden="true" />;
+}
+
 /**
  * O pagină cu zone de widget-uri (specul etapei 5): sus, coloana din dreapta și jos, în jurul conținutului paginii.
  * Vizitatorii văd widget-urile vizibile grupurilor lor; adminii în modul „Editează pagina” primesc editorul.
+ * Conținutul paginii pleacă imediat spre browser; fiecare widget sosește separat (streaming), cu un loc rezervat.
  */
 export async function GcsWidgetPage({ page, children }: { page: GcsWidgetPageKey; children: ReactNode }) {
   const [actor, editing] = await Promise.all([currentActor(), viewerEditing()]);
   if (editing.pageEditing) return <GcsPageEditorHost page={page} actor={actor}>{children}</GcsPageEditorHost>;
 
   const layout = await services().widgets.layout(page, actor);
-  const renderZone = async (zone: GcsWidgetZone) => {
-    const nodes = await Promise.all(layout[zone].map((p) => renderPlacement(p, actor)));
-    return layout[zone].map((p, i) => ({ id: p.id, node: nodes[i] as ReactNode })).filter((x) => x.node !== null && x.node !== undefined);
-  };
-  const [top, sidebar, bottom] = await Promise.all([renderZone("top"), renderZone("sidebar"), renderZone("bottom")]);
-  const zone = (items: { id: number; node: ReactNode }[]) => items.map((x) => <Fragment key={x.id}>{x.node}</Fragment>);
+  const zone = (z: GcsWidgetZone) =>
+    layout[z].map((p) => (
+      <Suspense key={p.id} fallback={<GcsWidgetSkeleton zone={z} />}>
+        <GcsWidgetSlot placement={p} actor={actor} />
+      </Suspense>
+    ));
   return (
     <div className="gcs-widgetPage" data-page={page}>
-      {top.length > 0 && (
+      {layout.top.length > 0 && (
         <div className="gcs-widgetZone gcs-widgetZone--top" data-zone="top">
-          {zone(top)}
+          {zone("top")}
         </div>
       )}
       <div className="gcs-forumLayout">
         <div className="gcs-forumLayout__main gcs-widgetPage__content">{children}</div>
-        {sidebar.length > 0 && (
+        {layout.sidebar.length > 0 && (
           <aside className="gcs-forumSidebar gcs-widgetZone--sidebar" data-zone="sidebar">
-            {zone(sidebar)}
+            {zone("sidebar")}
           </aside>
         )}
       </div>
-      {bottom.length > 0 && (
+      {layout.bottom.length > 0 && (
         <div className="gcs-widgetZone gcs-widgetZone--bottom" data-zone="bottom">
-          {zone(bottom)}
+          {zone("bottom")}
         </div>
       )}
     </div>
