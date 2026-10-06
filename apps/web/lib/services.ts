@@ -1,4 +1,5 @@
 import "server-only";
+import { GcsInstallState } from "@gcs/core";
 import { closeGcsServices, createGcsServices, type GcsServices } from "@gcs/modules/services";
 import { revalidateTag } from "next/cache";
 import { gcsConfigDir } from "./config";
@@ -40,7 +41,16 @@ function createServices(): GcsServices {
 const globalForServices = globalThis as unknown as { gcsServices?: GcsServices };
 
 export function services(): GcsServices {
-  globalForServices.gcsServices ??= createServices();
+  if (!globalForServices.gcsServices) {
+    const created = createServices();
+    globalForServices.gcsServices = created;
+    // Pluginurile (etapa 6) se încarcă în fundal, doar pe un site instalat; paginile care le folosesc așteaptă prima
+    // încărcare (`ready`).
+    void new GcsInstallState(gcsConfigDir())
+      .isInstalled()
+      .then((installed) => (installed ? created.plugins.start() : undefined))
+      .catch((error: unknown) => console.error("[GCS] Pluginurile nu au pornit", error));
+  }
   return globalForServices.gcsServices;
 }
 

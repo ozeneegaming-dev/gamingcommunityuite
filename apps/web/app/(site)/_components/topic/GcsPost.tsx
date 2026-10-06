@@ -4,6 +4,7 @@ import { GcsAvatar, GcsTooltip, GcsUserLink } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { memberHref, postHref, tint } from "@/lib/forum-urls";
+import { GcsPluginHook } from "../GcsPluginHook";
 import { GcsTranslateButton, type GcsTranslateLabels } from "../GcsTranslateButton";
 import { GcsPostContent, type GcsPostContentProps } from "./GcsPostContent";
 
@@ -46,6 +47,7 @@ export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, 
     >
       <div className="gcs-post__author gcs-postbit" data-testid="gcs-postbit">
         {author ? <GcsPostbit author={author} data={postbit} /> : <span className="gcs-muted">—</span>}
+        {author && <GcsPluginHook point="postbit.after_fields" data={{ postId: post.id, topicId, authorId: author.id }} />}
       </div>
       <GcsPostContent
         topicId={topicId}

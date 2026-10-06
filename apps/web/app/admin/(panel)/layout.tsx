@@ -14,6 +14,7 @@ import { services } from "@/lib/services";
 import { GcsAcpAccountMenu } from "./_components/GcsAcpAccountMenu";
 import { GcsAcpSearch } from "./_components/GcsAcpSearch";
 import { GcsAcpShell } from "./_components/GcsAcpShell";
+import { GcsPluginNotice } from "./_components/GcsPluginNotice";
 import { ACP_THEME_COOKIE, GcsAcpThemeSwitch, type GcsAcpTheme } from "./_components/GcsAcpThemeSwitch";
 import type { GcsAcpIconDef, GcsAcpNavGroup, GcsAcpNavItem, GcsAcpNavSection } from "./_components/types";
 
@@ -194,6 +195,7 @@ export default async function AcpPanelLayout({ children }: { children: ReactNode
           home: dashboard?.label ?? t("acp.dashboard.title"),
         }}
       >
+        <GcsPluginNotice actor={panel.actor} />
         {children}
       </GcsAcpShell>
     </div>

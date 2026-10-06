@@ -77,6 +77,21 @@ describe("gcs (CLI)", () => {
     await expect(runCli(["maintenance", "poate"], io())).resolves.toBe(2);
   });
 
+  test("plugins:list și plugins:disable-all (recuperarea după un plugin stricat)", async () => {
+    await expect(runCli(["plugins:list"], io())).resolves.toBe(0);
+    expect(lines.out).toEqual(["Niciun plugin instalat."]);
+    const manifest = { key: "acme.cli", name: "Cli", version: "1.2.0", author: "Acme" };
+    await services().db.plugin.create({ data: { key: "acme.cli", name: "Cli", version: "1.2.0", enabled: true, manifest, capabilities: [], migrations: [] } });
+    lines.out = [];
+    await expect(runCli(["plugins:list"], io())).resolves.toBe(0);
+    expect(lines.out.join("\n")).toMatch(/acme\.cli\s+1\.2\.0\s+activ · nesemnat/);
+    lines.out = [];
+    await expect(runCli(["plugins:disable-all"], io())).resolves.toBe(0);
+    expect(lines.out).toEqual(["Dezactivate: acme.cli"]);
+    expect(await services().db.plugin.findUnique({ where: { key: "acme.cli" } })).toMatchObject({ enabled: false, disabledReason: "cli" });
+    expect(await services().db.auditLog.findFirst({ where: { action: "plugin.disable_all" } })).toMatchObject({ actorId: null, ip: "cli" });
+  });
+
   test("install --non-interactive fără variabile → exit 2, cu lista lor", async () => {
     await expect(runCli(["install", "--non-interactive"], io())).resolves.toBe(2);
     expect(lines.err.join("\n")).toContain("GCS_INSTALL_ADMIN_PASSWORD");

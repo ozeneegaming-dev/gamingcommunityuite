@@ -104,6 +104,16 @@ export async function POST(request: Request): Promise<Response> {
         return Response.json({ maintenance: args.on === true });
       }
 
+      case "plugins-list": {
+        const list = await services().pluginAdmin.list();
+        return Response.json({
+          plugins: list.map((p) => ({ key: p.key, version: p.version, enabled: p.enabled, status: p.status, signed: p.signed, disabledReason: p.disabledReason })),
+        });
+      }
+
+      case "plugins-disable-all":
+        return Response.json({ disabled: await services().pluginAdmin.disableAll(CLI_ACTOR, "cli") });
+
       case "site-name":
         return Response.json({ siteName: await services().settings.get<string>("site.name") });
 

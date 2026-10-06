@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { clientIp } from "./lib/actor";
 import { getAuth } from "./lib/auth";
 import { gcsConfigDir } from "./lib/config";
+import { isRootAdmin, SAFE_MODE_COOKIE, SAFE_MODE_PARAM } from "./lib/plugins";
 import { services } from "./lib/services";
 import { previewKeyFor, THEME_PREVIEW_COOKIE, THEME_PREVIEW_HEADER, THEME_PREVIEW_PARAM } from "./lib/theme-preview";
 
@@ -50,7 +51,32 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
       });
     }
   }
+  const safe = await withSafeMode(request);
+  if (safe) return safe;
   return withThemePreview(request);
+}
+
+/**
+ * Modul sigur al pluginurilor (etapa 6): `?safe=1` îl pornește doar pentru un Root Admin (cookie de sesiune), `?safe=0`
+ * îl oprește. Parametrul dispare din adresă. Paginile verifică la fiecare cerere că cookie-ul e al unui Root Admin.
+ */
+async function withSafeMode(request: NextRequest): Promise<NextResponse | null> {
+  const value = request.nextUrl.searchParams.get(SAFE_MODE_PARAM);
+  if (value !== "0" && value !== "1") return null;
+  const url = request.nextUrl.clone();
+  url.searchParams.delete(SAFE_MODE_PARAM);
+  const response = NextResponse.redirect(url, 303);
+  if (value === "0") {
+    response.cookies.delete(SAFE_MODE_COOKIE);
+    return response;
+  }
+  const { actors } = services();
+  const session = await (await getAuth()).api.getSession({ headers: request.headers }).catch(() => null);
+  const actor = session ? await actors.getActor({ sessionToken: session.session.token, ip: clientIp(request.headers) }) : null;
+  if (actor && (await isRootAdmin(actor))) {
+    response.cookies.set(SAFE_MODE_COOKIE, "1", { path: "/", httpOnly: true, sameSite: "strict", secure: process.env.NODE_ENV === "production" });
+  }
+  return response;
 }
 
 /**

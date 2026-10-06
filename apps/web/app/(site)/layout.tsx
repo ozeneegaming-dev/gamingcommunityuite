@@ -10,13 +10,20 @@ import { GcsNotificationToasts } from "./_components/notifications/GcsNotificati
 import { GcsRealtimeProvider } from "./_components/realtime/GcsRealtimeProvider";
 import { currentActor } from "@/lib/actor";
 import { alertPrefs } from "@/lib/appearance";
+import { safeModeActive } from "@/lib/plugins";
 import { services } from "@/lib/services";
 
 export default async function SiteLayout({ children, modal }: { children: ReactNode; modal: ReactNode }) {
   const [t, locale, actor] = await Promise.all([getTranslations("hoverCard"), getLocale(), currentActor()]);
   // Conturile create prin Steam au un email placeholder: le cerem unul real (specul etapei 3, §8).
   const email = actor.userId ? (await services().db.user.findUnique({ where: { id: actor.userId }, select: { email: true } }))?.email : null;
-  const [tb, alerts, tc] = await Promise.all([getTranslations("settings.account"), alertPrefs(actor.userId), getTranslations("site")]);
+  const [tb, alerts, tc, tp, safeMode] = await Promise.all([
+    getTranslations("settings.account"),
+    alertPrefs(actor.userId),
+    getTranslations("site"),
+    getTranslations("plugins.safeMode"),
+    safeModeActive(),
+  ]);
   return (
     <GcsRealtimeProvider>
       {/* `useSearchParams` cere un Suspense: bara nu blochează randarea paginii. */}
@@ -28,6 +35,12 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
         {email?.endsWith(STEAM_PLACEHOLDER_DOMAIN) && (
           <p role="status" className="gcs-notice gcs-notice--warn" data-testid="gcs-steam-email-banner">
             {tb("steamBanner")} <Link href="/settings/account">{tb("steamBannerLink")}</Link>
+          </p>
+        )}
+        {safeMode && (
+          // Modul sigur (etapa 6): doar Root Admin, site-ul fără pluginuri pentru el.
+          <p role="status" className="gcs-notice gcs-notice--warn" data-testid="gcs-safe-mode-banner">
+            {tp("banner")} <a href="?safe=0">{tp("exit")}</a>
           </p>
         )}
         {children}

@@ -115,7 +115,11 @@
       "poll_closed": "Sondajul s-a închis.",
       "guest": "Trebuie să fii autentificat.",
       "has_children": "Categoria mai are forumuri.",
-      "has_content": "Forumul are topicuri: alege unde se mută."
+      "has_content": "Forumul are topicuri: alege unde se mută.",
+      "unsigned_requires_root": "Pachetele nesemnate pot fi instalate doar de un Root Admin.",
+      "db_role_unavailable": "Userul bazei de date nu poate crea roluri: pluginurile cu bază de date proprie nu se pot instala sigur.",
+      "db_unavailable": "Baza de date nu e configurată.",
+      "dependency_disabled": "O dependență a pluginului nu e instalată sau e dezactivată."
     },
     "fields": {
       "invalid_color": "Culoare invalidă (#RRGGBB)",
@@ -164,7 +168,11 @@
       "image": "Încarcă o imagine pentru rama de tip imagine.",
       "signature_media": "Semnătura nu poate conține imagini sau video.",
       "current_session": "Sesiunea curentă se închide cu „Ieșire”.",
-      "too_many_emoticons": "Prea multe emoticoane într-un mesaj"
+      "too_many_emoticons": "Prea multe emoticoane într-un mesaj",
+      "invalid_code": "Codul 2FA nu e corect.",
+      "mismatch": "Textul nu se potrivește.",
+      "unknown": "Necunoscut.",
+      "migration_failed": "O migrație a bazei de date a eșuat."
     }
   },
   "acp": {
@@ -217,7 +225,7 @@
         "dashboard": "Dashboard",
         "files": "Fișiere",
         "site_features": "Funcții site",
-        "applications": "Aplicații",
+        "applications": "Aplicații și pluginuri",
         "integrations": "Integrări",
         "menu_manager": "Manager meniu",
         "api": "API",
@@ -248,7 +256,8 @@
         "cache": "Golire cache",
         "conversions": "Conversii",
         "import": "Import din altă platformă",
-        "settings_languages": "Limbi și traducere"
+        "settings_languages": "Limbi și traducere",
+        "hooks": "Hook-uri"
       },
       "members": {
         "members": "Membri",
@@ -1216,7 +1225,305 @@
       "save": "Salvează limbile"
     },
     "drawer": "Meniul ACP",
-    "breadcrumb": "Cale de navigare"
+    "breadcrumb": "Cale de navigare",
+    "plugins": {
+      "title": "Aplicații și pluginuri",
+      "description": "Aplicațiile opționale ale platformei și pluginurile instalate. Un plugin se instalează și se activează fără repornire.",
+      "appsTitle": "Aplicații",
+      "signed": "Semnat ({keyId})",
+      "unsigned": "Nesemnat",
+      "status": {
+        "enabled": "Activ",
+        "disabled": "Dezactivat",
+        "auto": "Dezactivat automat",
+        "cli": "Dezactivat din consolă",
+        "removed": "Dezinstalat, date păstrate"
+      },
+      "autoDisabled": {
+        "title": "Pluginuri dezactivate automat: {count}",
+        "body": "Au eșuat de prea multe ori la rând: {names}.",
+        "link": "Vezi pluginurile"
+      },
+      "list": {
+        "title": "Pluginuri",
+        "empty": "Niciun plugin instalat. Încarcă un pachet .zip mai jos.",
+        "disableAll": "Dezactivează toate",
+        "disableAllConfirm": "Dezactivezi toate pluginurile? Le poți reactiva pe fiecare.",
+        "toggle": "Pluginul {name} activ",
+        "manage": "Gestionează",
+        "updated": "actualizat {date}"
+      },
+      "upload": {
+        "title": "Încarcă un plugin",
+        "body": "Pachetul (.zip) e verificat înainte de orice: mărimea, căile, manifestul, compatibilitatea, dependențele, migrațiile și semnătura. Instalarea se face doar după confirmare.",
+        "file": "Alege arhiva pluginului (.zip)",
+        "hint": "Maximum 8 MB. Pentru o actualizare, încarcă versiunea nouă a aceluiași plugin.",
+        "submit": "Încarcă și verifică",
+        "uploading": "Se verifică…",
+        "network": "Încărcarea nu a reușit. Verifică conexiunea și încearcă din nou.",
+        "trusted": "Chei de semnare de încredere: {keys}.",
+        "noTrusted": "Nicio cheie de semnare de încredere configurată (GCS_PLUGIN_TRUSTED_KEYS): orice pachet e tratat ca nesemnat."
+      },
+      "risk": {
+        "low": "risc mic",
+        "medium": "risc mediu",
+        "high": "risc mare"
+      },
+      "capabilities": {
+        "none": "Pluginul nu cere nicio capabilitate.",
+        "new": "nou",
+        "db": {
+          "title": "Bază de date proprie",
+          "body": "Își creează tabele într-o schemă separată, cu un rol PostgreSQL dedicat. Nu poate citi sau modifica tabelele site-ului."
+        },
+        "events": {
+          "title": "Evenimente",
+          "body": "Află când se întâmplă ceva pe site (postare nouă, membru nou, mesaj în chat) și reacționează în fundal."
+        },
+        "filters": {
+          "title": "Filtre înainte de salvare",
+          "body": "Poate modifica sau respinge postările înainte să fie salvate."
+        },
+        "widgets": {
+          "title": "Widget-uri",
+          "body": "Adaugă widget-uri pe care le poți pune pe pagini din „Editează pagina”."
+        },
+        "pages": {
+          "title": "Pagini pe site",
+          "body": "Are pagini proprii pe site (adresele /p/…)."
+        },
+        "api": {
+          "title": "Rute API",
+          "body": "Primește cereri JSON de la browser (adresele /api/plugins/…)."
+        },
+        "acp": {
+          "title": "Pagini în ACP",
+          "body": "Are pagini proprii în panoul de administrare."
+        },
+        "menus": {
+          "title": "Meniuri",
+          "body": "Adaugă linkuri în meniul site-ului sau în meniul userului."
+        },
+        "jobs": {
+          "title": "Joburi",
+          "body": "Rulează sarcini periodice sau la cerere, în fundal."
+        },
+        "settings": {
+          "title": "Setări",
+          "body": "Are setări proprii, editabile din ACP."
+        },
+        "permissions": {
+          "title": "Permisiuni",
+          "body": "Declară permisiuni pe grupuri, care apar în ACP → Grupuri."
+        },
+        "hooks": {
+          "title": "Puncte de extensie",
+          "body": "Adaugă conținut în locuri anume ale interfeței (ex. cardul autorului)."
+        },
+        "http-out": {
+          "title": "Cereri spre alte site-uri",
+          "body": "Poate trimite cereri spre servicii externe, deci poate trimite în afară datele pe care le vede. Adresele interne sunt blocate."
+        },
+        "client-css": {
+          "title": "Stiluri CSS",
+          "body": "Aduce CSS propriu, închis în containerul pluginului (nu schimbă restul site-ului)."
+        },
+        "client-js": {
+          "title": "JavaScript în browser",
+          "body": "Rulează JavaScript în browserul vizitatorilor, pe paginile pluginului, și poate acționa în numele lor. Doar pentru pluginuri semnate."
+        },
+        "templates": {
+          "title": "Șabloane",
+          "body": "Rezervat: șabloanele pluginului, pentru motorul de șabloane."
+        }
+      },
+      "checks": {
+        "archive_ok": "Arhiva e validă ({files} fișiere, fără căi sau link-uri nesigure).",
+        "manifest_ok": "plugin.json e valid: {key} {version}.",
+        "compatible": "Compatibil cu această versiune GCS ({current}).",
+        "signed": "Semnătură validă, cheia de încredere {keyId}.",
+        "unsigned": "Pachet nesemnat: poate fi instalat doar de Root Admin, cu codul 2FA.",
+        "migrations_ok": "Migrațiile SQL ({count}) rămân în schema proprie.",
+        "dependency_disabled": "Dependența {key} e instalată, dar dezactivată.",
+        "templates_reserved": "Capabilitatea „templates” e rezervată; nu are încă efect.",
+        "archive_too_large": "Arhiva e prea mare (maximum {max} octeți).",
+        "zip_invalid": "Fișierul nu e o arhivă ZIP validă.",
+        "zip64_unsupported": "Arhivele ZIP64 nu sunt acceptate.",
+        "zip_multidisk": "Arhivele pe mai multe volume nu sunt acceptate.",
+        "too_many_files": "Prea multe fișiere (maximum {max}).",
+        "path_unsafe": "Cale nesigură în arhivă: {path}",
+        "zip_encrypted": "Fișier criptat în arhivă: {path}",
+        "symlink": "Link simbolic în arhivă: {path}",
+        "special_file": "Fișier special în arhivă: {path}",
+        "zip_method": "Metodă de compresie necunoscută: {path}",
+        "duplicate_path": "Fișier duplicat în arhivă: {path}",
+        "file_too_large": "Fișier prea mare: {path} (maximum {max} octeți).",
+        "total_too_large": "Conținutul arhivei e prea mare (maximum {max} octeți).",
+        "compression_ratio": "Compresie suspectă (posibilă bombă ZIP): {path}",
+        "zip_corrupt": "Fișier deteriorat în arhivă: {path}",
+        "zip_crc": "Suma de control nu se potrivește: {path}",
+        "unexpected_file": "Fișier nepermis în pachet: {path}",
+        "not_utf8": "Fișierul nu e text UTF-8: {path}",
+        "manifest_missing": "Lipsește plugin.json.",
+        "manifest_json": "plugin.json nu e JSON valid.",
+        "manifest_invalid": "plugin.json: {path} — {issue}",
+        "server_missing": "Lipsește server.mjs.",
+        "lang_invalid": "Fișier de limbă invalid: {path} ({issue})",
+        "missing_capability": "{path} cere capabilitatea „{capability}”.",
+        "migration_rejected": "Migrație respinsă: {path} — {issue} ({detail})",
+        "asset_missing": "Lipsește fișierul declarat: {path}",
+        "css_rejected": "CSS respins: {path} — {issue} ({detail})",
+        "incompatible_gcs": "Cere GCS {required}; această instalare are {current}.",
+        "dependency_missing": "Lipsește dependența {key} ({range}).",
+        "dependency_version": "Dependența {key} are versiunea {found}; e nevoie de {range}.",
+        "version_not_newer": "Versiunea {version} nu e mai nouă decât cea instalată ({installed}).",
+        "signature_invalid": "Semnătura nu se potrivește: pachetul a fost modificat sau semnătura e stricată ({reason}).",
+        "unsigned_denied": "Pachetele nesemnate sunt interzise pe acest server.",
+        "client_js_unsigned": "JavaScript-ul în browser e permis doar pluginurilor semnate."
+      },
+      "confirm": {
+        "pageTitle": "Confirmarea instalării",
+        "title": "Instalezi {name}?",
+        "description": "Citește raportul verificărilor și ce va putea face pluginul, apoi confirmă.",
+        "back": "Înapoi la pluginuri",
+        "package": "Pachetul",
+        "mode": {
+          "install": "Instalare nouă",
+          "reinstall": "Reinstalare (datele păstrate)"
+        },
+        "modeUpdate": "Actualizare de la {from}",
+        "name": "Plugin",
+        "version": "Versiune",
+        "author": "Autor",
+        "about": "Descriere",
+        "file": "Fișier",
+        "files": "fișiere",
+        "signature": "Semnătură",
+        "checks": "Verificări",
+        "checksOk": "Toate verificările au trecut",
+        "checksFailed": "Pachetul are erori",
+        "capabilities": "Ce va putea face pluginul",
+        "capabilitiesHint": "Pluginul rulează izolat și are acces doar la ce cere aici.",
+        "confirmTitle": "Confirmare",
+        "invalid": "Pachetul nu se poate instala: corectează erorile din raport și încarcă-l din nou.",
+        "submit": "Instalează pluginul",
+        "submitUpdate": "Actualizează pluginul",
+        "signedBody": "Pachetul e semnat de o cheie de încredere. Pluginul se activează imediat după instalare.",
+        "unsignedTitle": "Pachet nesemnat",
+        "unsignedBody": "Nimeni nu a verificat acest cod. Instalează-l doar dacă ai încredere deplină în autor: un plugin rău intenționat ar putea încerca să iasă din izolare.",
+        "code": "Codul 2FA (din aplicația de autentificare)",
+        "typeKey": "Scrie cheia pluginului ({key}) ca să confirmi",
+        "rootOnly": "Pachetele nesemnate pot fi instalate doar de un Root Admin.",
+        "cancel": "Renunță"
+      },
+      "declared": {
+        "permissions": "Permisiuni",
+        "widgets": "Widget-uri",
+        "pages": "Pagini pe site",
+        "acp": "Pagini în ACP",
+        "api": "Rute API",
+        "events": "Evenimente",
+        "filters": "Filtre",
+        "hooks": "Puncte de extensie",
+        "jobs": "Joburi",
+        "menus": "Meniuri",
+        "scopeGroup": "pe grup",
+        "scopeContainer": "pe container: {type}",
+        "jobEvery": "{name} (la {minutes} minute)"
+      },
+      "detail": {
+        "back": "Înapoi la pluginuri",
+        "save": "Salvează",
+        "noRight": "Nu ai dreptul de a schimba setările pluginurilor.",
+        "timings": "Timpi pe hook",
+        "noTimings": "Pluginul nu a fost apelat încă.",
+        "hook": "Hook",
+        "calls": "Apeluri",
+        "failures": "Eșecuri",
+        "avg": "Medie",
+        "max": "Maxim",
+        "entries": "Jurnal",
+        "noLogs": "Jurnalul e gol.",
+        "capabilities": "Capabilități",
+        "declared": "Ce declară",
+        "runtime": "Rulare",
+        "process": "În acest proces",
+        "running": "încărcat, firul pornit",
+        "loaded": "încărcat",
+        "notLoaded": "neîncărcat",
+        "database": "Baza de date",
+        "role": "rol",
+        "migrations": "migrații: {count}",
+        "installed": "Instalat",
+        "updatedAt": "actualizat",
+        "files": "Fișiere ({count})",
+        "update": "Actualizare",
+        "updateHint": "Versiunea instalată: {version}. Încarcă arhiva versiunii noi; migrațiile noi rulează la confirmare, iar setările se păstrează.",
+        "uninstall": "Dezinstalare",
+        "uninstallSubmit": "Dezinstalează",
+        "uninstallHint": "Pluginul se descarcă imediat din toate procesele. Fără „Păstrează datele”, se șterg și tabelele lui, rolul din baza de date, setările, permisiunile date grupurilor și widget-urile lui.",
+        "keepData": "Păstrează datele (pentru o reinstalare)",
+        "typeKey": "Scrie cheia pluginului ({key}) ca să confirmi",
+        "autoDisabled": "Dezactivat automat după {count} eșecuri la rând",
+        "log": "Jurnal",
+        "details": "Detalii",
+        "manage": "Actualizare și dezinstalare"
+      },
+      "hooks": {
+        "title": "Hook-uri",
+        "description": "Evenimentele și punctele de extensie, pluginurile care le folosesc și ordinea lor. Prioritatea mai mică rulează mai devreme.",
+        "save": "Salvează",
+        "priority": "Prioritate",
+        "priorityOf": "Prioritatea pentru {name}",
+        "enabled": "Activ",
+        "enabledOf": "{name} activ",
+        "users": "Pluginuri: {count}",
+        "noPlugins": "Niciun plugin instalat nu are widget-uri, pagini, rute, joburi sau meniuri.",
+        "sections": {
+          "event": "Evenimente",
+          "filter": "Filtre",
+          "hook": "Puncte de extensie",
+          "widget": "Widget-uri",
+          "page": "Pagini pe site",
+          "acp": "Pagini în ACP",
+          "api": "Rute API",
+          "job": "Joburi",
+          "menu": "Meniuri",
+          "own": "Hook-urile proprii ale pluginurilor"
+        },
+        "sectionHints": {
+          "event": "Livrate în fundal, după ce acțiunea s-a terminat; nu o pot opri. Timeout 5 s.",
+          "filter": "Rulează înainte de salvare, în ordinea priorității.",
+          "hook": "HTML inserat în interfață (sanitizat), în ordinea priorității. Timeout 3 s.",
+          "own": "Widget-urile, paginile, rutele API, joburile și intrările de meniu ale fiecărui plugin; se pot opri unul câte unul."
+        },
+        "catalog": {
+          "post_created": "O postare nouă (răspuns sau prima postare a unui topic).",
+          "post_updated": "O postare editată.",
+          "post_deleted": "O postare ștearsă.",
+          "post_approved": "O postare aprobată din coada de moderare.",
+          "topic_created": "Un topic nou.",
+          "topic_updated": "Un topic modificat (titlu, prefix, taguri).",
+          "topic_deleted": "Un topic șters.",
+          "topic_moved": "Topicuri mutate în alt forum.",
+          "topic_moderated": "O acțiune de moderare pe topicuri (fixare, blocare, ascundere…).",
+          "user_registered": "Un cont nou.",
+          "user_promoted": "Un membru nou a devenit Membru.",
+          "user_banned": "Un membru banat.",
+          "user_unbanned": "Un ban ridicat.",
+          "user_warned": "Un avertisment dat unui membru.",
+          "user_followed": "Un membru urmărește alt membru.",
+          "chat_message": "Un mesaj nou în chat.",
+          "chat_deleted": "Un mesaj șters din chat.",
+          "report_created": "Un raport nou pentru moderatori.",
+          "badge_awarded": "O insignă acordată.",
+          "vip_granted": "Un abonament VIP acordat.",
+          "vip_expired": "Un abonament VIP expirat.",
+          "post_before_save": "Înainte de salvarea unei postări (topic nou, răspuns, editare): pluginul poate modifica titlul și conținutul sau poate respinge postarea. Timeout 2 s; o eroare sare pluginul.",
+          "postbit_after_fields": "Sub cardul autorului din postări."
+        }
+      }
+    }
   },
   "settings": {
     "site": {
@@ -2656,5 +2963,16 @@
     "posts": "Postări",
     "reputation": "Reputație",
     "joined": "Membru din {date}"
+  },
+  "plugins": {
+    "page": {
+      "safeMode": "Modul sigur e pornit: pluginurile nu rulează pentru tine.",
+      "forbidden": "Nu ai acces la această pagină.",
+      "error": "Pluginul nu a putut afișa această pagină. Încearcă din nou mai târziu."
+    },
+    "safeMode": {
+      "banner": "Mod sigur: site-ul rulează fără pluginuri, doar pentru tine.",
+      "exit": "Ieși din modul sigur"
+    }
   }
 }
