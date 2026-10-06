@@ -65,7 +65,8 @@ export async function GcsSiteFooter() {
               </button>
             ))}
           </form>
-          <form action={setThemeMode} aria-label={t("theme")} className="gcs-seg__group">
+          {/* Comutatorul de mod; tema îl poate ascunde (editorul vizual: „Mod luminos/întunecat”). */}
+          <form action={setThemeMode} aria-label={t("theme")} className="gcs-seg__group gcs-siteFooter__scheme">
             {(["dark", "light", "auto"] as const).map((m) => (
               <button key={m} type="submit" name="mode" value={m} className={m === mode ? "gcs-seg gcs-seg--active" : "gcs-seg"} aria-pressed={m === mode}>
                 <GcsIcon name={THEME_ICONS[m]} />

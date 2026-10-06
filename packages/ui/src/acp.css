@@ -9,6 +9,39 @@
 
 /* ─── Tokeni ──────────────────────────────────────────────────────────────── */
 
+/*
+ * Tema site-ului (editorul vizual) nu schimbă ACP-ul: variabilele elementelor revin la „nedefinit”, deci regulile
+ * de bază folosesc rezerva lor (aspectul implicit, cu tokenurile ACP). La fel în editorul vizual.
+ */
+.gcs-acp,
+.gcs-themeStudio {
+  --gcs-body-bg: initial;
+  --gcs-heading: initial;
+  --gcs-link: initial;
+  --gcs-link-hover: initial;
+  --gcs-header-bg: initial;
+  --gcs-header-text: initial;
+  --gcs-footer-bg: initial;
+  --gcs-footer-text: initial;
+  --gcs-drawer-bg: initial;
+  --gcs-drawer-text: initial;
+  --gcs-box-bg: initial;
+  --gcs-box-border: initial;
+  --gcs-box-header-bg: initial;
+  --gcs-box-header-text: initial;
+  --gcs-widget-title: initial;
+  --gcs-widget-icon: initial;
+  --gcs-btn-primary-bg: initial;
+  --gcs-btn-primary-text: initial;
+  --gcs-btn-primary-hover: initial;
+  --gcs-btn-secondary-bg: initial;
+  --gcs-btn-secondary-text: initial;
+  --gcs-btn-radius: initial;
+  --gcs-box-border-w: initial;
+  --gcs-avatar-radius: initial;
+  --gcs-base-size: initial;
+}
+
 .gcs-acp {
   /* Sidebar (la fel în ambele teme). */
   --gcs-acp-side: #1B2A47;

@@ -1,15 +1,19 @@
-/* Etapa 5: header-ul (navbar), brand-ul, meniul userului, sertarul de pe mobil și footer-ul. */
+/*
+ * Etapa 5: header-ul (navbar), brand-ul, meniul userului, sertarul de pe mobil și footer-ul.
+ * Culorile și dimensiunile vin din temă (`--gcs-header-*`, `--gcs-logo-*`, `--gcs-drawer-*`, `--gcs-footer-*`,
+ * scrise de editorul vizual); rezerva fiecărei `var()` e aspectul implicit.
+ */
 
 .gcs-siteHeader {
   position: sticky;
   top: 0;
   z-index: 40;
-  background: var(--gcs-chrome);
+  background: var(--gcs-header-bg, var(--gcs-chrome));
   border-bottom: 1px solid var(--gcs-border);
   transition: background-color 0.2s, box-shadow 0.2s;
 }
 .gcs-siteHeader--scrolled {
-  background: color-mix(in srgb, var(--gcs-chrome) 82%, transparent);
+  background: color-mix(in srgb, var(--gcs-header-bg, var(--gcs-chrome)) 82%, transparent);
   backdrop-filter: blur(12px);
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.25);
 }
@@ -20,7 +24,13 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  min-height: 64px;
+  min-height: var(--gcs-header-h, 64px);
+  box-sizing: border-box;
+}
+/* Textul meniului și iconițele din header (hover-ul și linkul activ rămân pe culoarea textului). */
+.gcs-siteHeader .gcs-navbar__menu .gcs-nav__link:not(:hover):not(.gcs-nav__link--active),
+.gcs-siteHeader button.gcs-headerIcon:not(:hover):not(.gcs-drawer__close) {
+  color: var(--gcs-header-text, var(--gcs-muted));
 }
 .gcs-siteHeader__tools {
   margin-left: auto;
@@ -55,20 +65,93 @@
   color: #fff;
   transform: skewX(12deg);
 }
+.gcs-brand__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.15;
+}
 .gcs-brand__name {
-  font-size: 22px;
-  font-weight: 700;
+  font-family: var(--gcs-logo-font, var(--gcs-font-display));
+  font-size: var(--gcs-logo-size, 22px);
+  font-weight: var(--gcs-logo-weight, 700);
   letter-spacing: 0.04em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 280px;
 }
+.gcs-brand__slogan {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gcs-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
+}
+.gcs-brand__slogan:empty {
+  display: none;
+}
+
+/*
+ * Logo-ul imagine: varianta de bază (modul întunecat, desktop) și, dacă există, cele pentru modul luminos și pentru
+ * ecranele mici. Wrapper-ul are `data-light` / `data-mobile` / `data-mobile-light` doar când există varianta.
+ */
+.gcs-brand__logos {
+  display: flex;
+  align-items: center;
+}
 .gcs-brand__logo {
   display: block;
-  max-height: 42px;
+  max-height: var(--gcs-logo-max-h, 42px);
   max-width: 220px;
   object-fit: contain;
+}
+.gcs-brand__logo--light,
+.gcs-brand__logo--mobile,
+.gcs-brand__logo--mobileLight {
+  display: none;
+}
+html[data-theme="light"] .gcs-brand__logos[data-light] .gcs-brand__logo--base {
+  display: none;
+}
+html[data-theme="light"] .gcs-brand__logo--light {
+  display: block;
+}
+@media (prefers-color-scheme: light) {
+  html[data-theme="auto"] .gcs-brand__logos[data-light] .gcs-brand__logo--base {
+    display: none;
+  }
+  html[data-theme="auto"] .gcs-brand__logo--light {
+    display: block;
+  }
+}
+@media (max-width: 640px) {
+  .gcs-brand__logo {
+    max-height: var(--gcs-logo-max-h-mobile, 42px);
+  }
+  .gcs-brand__logos[data-mobile] .gcs-brand__logo--base,
+  .gcs-brand__logos[data-mobile] .gcs-brand__logo--light {
+    display: none;
+  }
+  .gcs-brand__logo--mobile {
+    display: block;
+  }
+  html[data-theme="light"] .gcs-brand__logos[data-mobile-light] .gcs-brand__logo:not(.gcs-brand__logo--mobileLight) {
+    display: none;
+  }
+  html[data-theme="light"] .gcs-brand__logo--mobileLight {
+    display: block;
+  }
+}
+@media (max-width: 640px) and (prefers-color-scheme: light) {
+  html[data-theme="auto"] .gcs-brand__logos[data-mobile-light] .gcs-brand__logo:not(.gcs-brand__logo--mobileLight) {
+    display: none;
+  }
+  html[data-theme="auto"] .gcs-brand__logo--mobileLight {
+    display: block;
+  }
 }
 
 /* Meniul principal. */
@@ -149,7 +232,7 @@
   inset: 0 auto 0 0;
   width: min(320px, 86vw);
   padding: 12px;
-  background: var(--gcs-surface);
+  background: var(--gcs-drawer-bg, var(--gcs-surface));
   border-right: 1px solid var(--gcs-border);
   overflow-y: auto;
   animation: gcs-drawer-in 0.18s ease-out;
@@ -157,6 +240,12 @@
 @keyframes gcs-drawer-in {
   from {
     transform: translateX(-100%);
+  }
+}
+/* Sertarul din dreapta (tema: `mobileNav.side`). */
+@keyframes gcs-drawer-in-right {
+  from {
+    transform: translateX(100%);
   }
 }
 .gcs-drawer__close {
@@ -179,6 +268,10 @@
   color: var(--gcs-text);
   font-weight: 600;
 }
+/* Linkurile sertarului au culoarea linkurilor site-ului (`.gcs-root a`); tema o poate schimba. */
+.gcs-root a.gcs-drawer__link {
+  color: var(--gcs-drawer-text, var(--gcs-link, var(--gcs-accentInk)));
+}
 .gcs-drawer__link:hover,
 .gcs-drawer__link--active {
   background: var(--gcs-surface2);
@@ -193,7 +286,7 @@
 .gcs-siteFooter {
   margin-top: 48px;
   border-top: 1px solid var(--gcs-border);
-  background: var(--gcs-chrome);
+  background: var(--gcs-footer-bg, var(--gcs-chrome));
 }
 .gcs-siteFooter__inner {
   max-width: var(--gcs-page-width, 1320px);
@@ -203,7 +296,7 @@
   grid-template-columns: 1fr auto;
   gap: 16px 24px;
   align-items: center;
-  color: var(--gcs-muted);
+  color: var(--gcs-footer-text, var(--gcs-muted));
   font-size: 13px;
 }
 .gcs-siteFooter__brand {
@@ -250,9 +343,18 @@
   .gcs-siteHeader__inner {
     padding: 8px 12px;
     gap: 8px;
+    min-height: var(--gcs-header-h-mobile, 64px);
+  }
+  /* Pe mobil apare doar marcajul (tema poate păstra textul: `logo.textMobile`). */
+  .gcs-brand__text {
+    display: none;
   }
   .gcs-brand__name {
-    display: none;
+    font-size: var(--gcs-logo-size-mobile, 18px);
+    max-width: 160px;
+  }
+  .gcs-brand__slogan {
+    max-width: 160px;
   }
   .gcs-siteHeader__auth {
     padding: 0 10px;

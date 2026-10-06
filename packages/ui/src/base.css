@@ -3,24 +3,36 @@
  * Clasele sunt API-ul public pentru teme (spec §4): nu se redenumesc fără alias.
  */
 
+/*
+ * Variabilele `--gcs-body-bg`, `--gcs-link`, `--gcs-btn-*`, `--gcs-box-*`, `--gcs-avatar-radius` … vin din tema
+ * publicată (editorul vizual, `compileThemeCss`); rezerva fiecărei `var()` e aspectul implicit.
+ */
 body {
   margin: 0;
-  background: var(--gcs-bg);
+  background: var(--gcs-body-bg, var(--gcs-bg));
 }
 
 .gcs-root {
   font-family: var(--gcs-font-text);
   color: var(--gcs-text);
-  background: var(--gcs-bg);
+  background: var(--gcs-body-bg, var(--gcs-bg));
   min-height: 100vh;
 }
 
 .gcs-root a {
-  color: var(--gcs-accentInk);
+  color: var(--gcs-link, var(--gcs-accentInk));
   text-decoration: none;
 }
 .gcs-root a:hover {
-  color: var(--gcs-accentInk);
+  color: var(--gcs-link-hover, var(--gcs-accentInk));
+}
+
+/* Conținutul paginilor site-ului: mărimea textului de bază și culoarea titlurilor din temă. */
+.gcs-siteMain {
+  font-size: var(--gcs-base-size, 1rem);
+}
+.gcs-siteMain :where(h1, h2, h3) {
+  color: var(--gcs-heading, inherit);
 }
 
 .gcs-display {
@@ -50,7 +62,7 @@ body {
   gap: 8px;
   min-height: 44px;
   padding: 0 18px;
-  border-radius: 10px;
+  border-radius: var(--gcs-btn-radius, 10px);
   border: 0;
   font: 600 14px var(--gcs-font-text);
   cursor: pointer;
@@ -59,22 +71,22 @@ body {
 }
 .gcs-btn--primary,
 .gcs-root a.gcs-btn--primary {
-  background: var(--gcs-accent);
-  color: #fff;
+  background: var(--gcs-btn-primary-bg, var(--gcs-accent));
+  color: var(--gcs-btn-primary-text, #fff);
 }
 .gcs-btn--primary:hover {
-  background: #E23446;
-  color: #fff;
+  background: var(--gcs-btn-primary-hover, #E23446);
+  color: var(--gcs-btn-primary-text, #fff);
 }
 .gcs-btn--ghost,
 .gcs-root a.gcs-btn--ghost {
-  background: var(--gcs-surface2);
-  color: var(--gcs-text);
+  background: var(--gcs-btn-secondary-bg, var(--gcs-surface2));
+  color: var(--gcs-btn-secondary-text, var(--gcs-text));
   border: 1px solid var(--gcs-border);
 }
 .gcs-btn--ghost:hover {
   background: var(--gcs-border);
-  color: var(--gcs-text);
+  color: var(--gcs-btn-secondary-text, var(--gcs-text));
 }
 /* `sm` doar în zone dense (ACP); ținta de click rămâne ≥ 44px prin padding-ul containerului. */
 .gcs-btn--sm {
@@ -122,8 +134,8 @@ body {
 /* ─── Card, badge, punct de stare ─────────────────────────────────────────── */
 
 .gcs-card {
-  background: var(--gcs-surface);
-  border: 1px solid var(--gcs-border);
+  background: var(--gcs-box-bg, var(--gcs-surface));
+  border: var(--gcs-box-border-w, 1px) solid var(--gcs-box-border, var(--gcs-border));
   border-radius: 14px;
 }
 
@@ -286,7 +298,7 @@ textarea.gcs-input {
 .gcs-avatarFrame {
   position: relative;
   display: inline-flex;
-  border-radius: 50%;
+  border-radius: var(--gcs-avatar-radius, 50%);
   flex-shrink: 0;
   box-sizing: border-box;
 }
@@ -294,7 +306,7 @@ textarea.gcs-input {
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: 50%;
+  border-radius: var(--gcs-avatar-radius, 50%);
   animation: gcsSpin 4s linear infinite;
 }
 /* Ramele concrete (`.gcs-avatarFrame--{key}`) sunt generate din ACP → VIP → Avatar frames, în `/gcs-names.css`. */
@@ -304,7 +316,7 @@ textarea.gcs-input {
   z-index: 1;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
+  border-radius: var(--gcs-avatar-radius, 50%);
   display: inline-flex;
   align-items: center;
   justify-content: center;

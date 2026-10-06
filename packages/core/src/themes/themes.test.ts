@@ -168,7 +168,7 @@ describe("compileThemeCss (setările noi)", () => {
     expect(css).toContain("--gcs-content-scale: 1;");
     expect(css).toContain("--gcs-avatar-radius: 50%;");
     expect(css).toContain("--gcs-btn-radius: 10px;");
-    for (const marker of [".gcs-forumIndex", ".gcs-siteFooter__scheme", ".gcs-forumLayout", "data-post-number", ".gcs-drawer__panel", "position: sticky"]) {
+    for (const marker of [".gcs-forumIndex", ".gcs-siteFooter__scheme", ".gcs-forumLayout", "data-post-number", ".gcs-drawer__panel", "position: sticky", "box-shadow: var("]) {
       expect(css).not.toContain(marker);
     }
   });
@@ -207,6 +207,7 @@ describe("compileThemeCss (setările noi)", () => {
     expect(css).toContain(".gcs-siteFooter__scheme {\n  display: none;");
     expect(css).toContain("animation-name: gcs-drawer-in-right;");
     expect(css).toContain("--gcs-avatar-radius: 18%;");
+    expect(compileThemeCss(withSetting("boxes.shadow", "soft"), "")).toContain("box-shadow: var(--gcs-box-shadow);");
   });
 });
 

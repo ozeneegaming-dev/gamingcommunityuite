@@ -119,6 +119,8 @@ function sizes(s: GcsThemeSettings): string {
  */
 function conditionalRules(s: GcsThemeSettings): string[] {
   const rules: string[] = [];
+  // Aceeași specificitate ca `.gcs-card` (umbrele proprii ale componentelor rămân); nu și în ACP.
+  if (s.boxes.shadow !== "none") rules.push(`.gcs-card:where(:not(.gcs-acp *)) {\n  box-shadow: var(--gcs-box-shadow);\n}`);
   if (!s.scheme.toggle) rules.push(`html:root .gcs-siteFooter__scheme {\n  display: none;\n}`);
   if (s.logo.textMobile) rules.push(`@media (max-width: 640px) {\n  html:root .gcs-brand__text {\n    display: flex;\n  }\n}`);
   if (!s.header.navIcons) rules.push(`html:root .gcs-navbar__menu .gcs-nav__link > .gcs-icon:not(.gcs-navbar__caret) {\n  display: none;\n}`);

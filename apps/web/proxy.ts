@@ -4,6 +4,7 @@ import { clientIp } from "./lib/actor";
 import { getAuth } from "./lib/auth";
 import { gcsConfigDir } from "./lib/config";
 import { services } from "./lib/services";
+import { previewKeyFor, THEME_PREVIEW_COOKIE, THEME_PREVIEW_HEADER, THEME_PREVIEW_PARAM } from "./lib/theme-preview";
 
 /** Odată instalat, rămâne instalat: nu mai verificăm fișierul la fiecare request. */
 let installedCache = false;
@@ -49,7 +50,24 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
       });
     }
   }
-  return NextResponse.next();
+  return withThemePreview(request);
+}
+
+/**
+ * Previzualizarea editorului vizual de temă: `?gcs-theme-preview=<cheie>` (sau cookie-ul lui, doar în `iframe`) devine
+ * header-ul intern citit de layout. Header-ul trimis de client e mereu șters. Layout-ul verifică apoi dreptul pe teme.
+ */
+function withThemePreview(request: NextRequest): NextResponse {
+  const headers = new Headers(request.headers);
+  headers.delete(THEME_PREVIEW_HEADER);
+  const param = request.nextUrl.searchParams.get(THEME_PREVIEW_PARAM);
+  const key = previewKeyFor(param, request.cookies.get(THEME_PREVIEW_COOKIE)?.value, request.headers.get("sec-fetch-dest"));
+  if (key) headers.set(THEME_PREVIEW_HEADER, key);
+  const response = NextResponse.next({ request: { headers } });
+  if (param !== null && key) {
+    response.cookies.set(THEME_PREVIEW_COOKIE, key, { path: "/", httpOnly: true, sameSite: "strict", secure: process.env.NODE_ENV === "production" });
+  }
+  return response;
 }
 
 export const config = {
