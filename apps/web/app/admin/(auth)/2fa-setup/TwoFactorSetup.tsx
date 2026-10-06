@@ -8,8 +8,11 @@ import { authClient } from "@/lib/auth-client";
 
 type Enrollment = { qr: string; secret: string; backupCodes: string[] };
 
-/** Activarea 2FA (TOTP) prin Better Auth: parola → cod QR + coduri de rezervă → confirmarea cu un cod. */
-export function TwoFactorSetup({ askPassword }: { askPassword: boolean }) {
+/**
+ * Activarea 2FA (TOTP) prin Better Auth: parola → cod QR + coduri de rezervă → confirmarea cu un cod.
+ * Folosită în ACP (apoi reautentificarea) și în Setări → Securitate (`doneHref`).
+ */
+export function TwoFactorSetup({ askPassword, doneHref = "/admin/reauth" }: { askPassword: boolean; doneHref?: string }) {
   const t = useTranslations("acp.twoFactorSetup");
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [error, setError] = useState<"password" | "code" | "generic" | null>(null);
@@ -38,7 +41,7 @@ export function TwoFactorSetup({ askPassword }: { askPassword: boolean }) {
     const { error } = await authClient.twoFactor.verifyTotp({ code: String(form.get("code") ?? "").replace(/\s/g, "") });
     setPending(false);
     if (error) return setError("code");
-    window.location.assign("/admin/reauth");
+    window.location.assign(doneHref);
   }
 
   const errorBox = error && (

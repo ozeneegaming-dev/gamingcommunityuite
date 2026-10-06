@@ -61,7 +61,7 @@ test("preferința Site oprită pentru răspunsuri → nicio notificare nouă", a
   await page.goto("/settings/notifications");
   const row = page.getByTestId("gcs-pref-forums.reply");
   await row.getByRole("checkbox").uncheck();
-  await page.getByRole("button", { name: "Salvează" }).click();
+  await page.getByRole("button", { name: "Salvează", exact: true }).click();
   await expect(page.getByTestId("gcs-settings-status")).toHaveText("Preferințele au fost salvate.");
 
   await fixture(request, { action: "reply", topicId: topic.topicId, text: "Nu trebuie să ajungă", authorEmail: b });

@@ -844,3 +844,50 @@
   align-items: center;
   gap: 8px;
 }
+
+/* Setările (etapa 5): meniul cu iconițe, subtitluri, sesiunile active. */
+.gcs-settingsNav__link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.gcs-settingsNav__link svg {
+  width: 16px;
+  color: var(--gcs-muted);
+}
+.gcs-settingsNav__link--active svg {
+  color: var(--gcs-accentInk);
+}
+.gcs-settingsSubtitle {
+  margin: 0 0 10px;
+  font: 700 15px var(--gcs-font-display);
+}
+.gcs-sessionList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gcs-sessionList__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-surface2);
+}
+.gcs-sessionList__item > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.gcs-sessionList__item .gcs-muted {
+  flex-basis: 100%;
+  font-size: 12px;
+}

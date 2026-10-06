@@ -1486,3 +1486,18 @@
   border-radius: 3px;
   padding: 0 2px;
 }
+
+/* Semnătura de sub postare (etapa 5): pe toată lățimea cardului, sub conținut, discretă. */
+.gcs-post__signature {
+  flex: 1 0 100%;
+  margin: 0;
+  padding: 12px 20px 14px;
+  border-top: 1px dashed var(--gcs-border);
+  font-size: 13px;
+  color: var(--gcs-muted);
+  max-height: 160px;
+  overflow: hidden;
+}
+.gcs-post__signature p {
+  margin: 0 0 4px;
+}

@@ -36,7 +36,8 @@
       "light": "Clair",
       "auto": "Automatique"
     },
-    "footerNav": "Liens utiles"
+    "footerNav": "Liens utiles",
+    "closeToast": "Notification étroite"
   },
   "auth": {
     "login": {
@@ -158,7 +159,9 @@
       "two_required": "Une liste nécessite au moins deux options.",
       "not_vip": "Le groupe choisi n'est pas un niveau VIP.",
       "permanent": "Un VIP permanent ne peut pas être prolongé.",
-      "image": "Télécharger une image pour un cadre d'image."
+      "image": "Télécharger une image pour un cadre d'image.",
+      "signature_media": "La signature ne peut contenir d'images ou de vidéos.",
+      "current_session": "Inscrivez-vous à cette session avec la commande ."
     }
   },
   "acp": {
@@ -1076,7 +1079,8 @@
       "upload": "Télécharger l'image",
       "remove": "Retirer",
       "position": "Position de la couverture verticale",
-      "coverDenied": "Votre groupe ne peut pas mettre de couverture."
+      "coverDenied": "Votre groupe ne peut pas mettre de couverture.",
+      "signature_max_chars": "Longueur maximale de la signature (caractères)"
     },
     "pm": {
       "messages_per_page": "Messages par page dans une conversation"
@@ -1091,7 +1095,10 @@
       "privacy": "Confidentialité",
       "ignored": "Ignorés",
       "account": "Compte",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "language": "Langue et fuseau horaire",
+      "signature": "Signature",
+      "security": "Sécurité"
     },
     "appearance": {
       "title": "Apparence",
@@ -1172,7 +1179,11 @@
       "email_OFF": "Désactivé",
       "email_INSTANT": "Immédiat",
       "email_DIGEST": "Résumé quotidien",
-      "digest_hour": "Digest heure quotidienne (0–23, dans le fuseau horaire du site)"
+      "digest_hour": "Digest heure quotidienne (0–23, dans le fuseau horaire du site)",
+      "alertsTitle": "Alertes sur place",
+      "toasts": "Afficher les nouvelles notifications dans le coin de l'écran",
+      "sound": "Jouer un court son pour les nouvelles notifications",
+      "alertsSave": "Enregistrer les alertes"
     },
     "chat": {
       "word_filter": "Mots de chat filtrés (remplacés par ***)"
@@ -1185,6 +1196,37 @@
     },
     "postbit": {
       "fields": "Champs postbit (commande)"
+    },
+    "language": {
+      "title": "Langue et fuseau horaire",
+      "language": "Langue d'interface",
+      "timezone": "Fuseau horaire",
+      "save": "Enregistrer",
+      "saved": "Enregistré."
+    },
+    "security": {
+      "title": "Sécurité",
+      "sessions": "Séances actives",
+      "current": "Cette session",
+      "revoke": "Se déconnecter",
+      "revokeOthers": "Supprimer toutes les autres sessions",
+      "lastSeen": "dernier {date} actif",
+      "done": "C'est fait.",
+      "twoFactor": "Authentification à deux facteurs",
+      "twoFactorOn": "L'authentification à deux facteurs est en cours.",
+      "twoFactorOff": "L'authentification à deux facteurs est désactivée. Une application (Google Authentificateur, Authy...) vous demandera un code lors de votre connexion.",
+      "enable": "Allumez",
+      "disable": "Éteignez",
+      "password": "Mot de passe du compte",
+      "wrongPassword": "Le mot de passe n'est pas correct."
+    },
+    "signature": {
+      "title": "Signature",
+      "hint": "Montré sous vos postes. Texte formaté et liens, aucune image ou vidéo, jusqu'à des caractères {max}.",
+      "save": "Enregistrer la signature",
+      "remove": "Supprimer la signature",
+      "saved": "Votre signature a été sauvegardée.",
+      "preview": "Aperçu"
     }
   },
   "permissions": {

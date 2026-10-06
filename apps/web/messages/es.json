@@ -36,7 +36,8 @@
       "light": "Claro",
       "auto": "Automático"
     },
-    "footerNav": "Enlaces útiles"
+    "footerNav": "Enlaces útiles",
+    "closeToast": "Cerrar notificación"
   },
   "auth": {
     "login": {
@@ -158,7 +159,9 @@
       "two_required": "Una lista necesita al menos dos opciones.",
       "not_vip": "El grupo elegido no es un nivel VIP.",
       "permanent": "Un VIP permanente no puede ser extendido.",
-      "image": "Sube una imagen para un marco de imagen."
+      "image": "Sube una imagen para un marco de imagen.",
+      "signature_media": "La firma no puede contener imágenes o vídeos.",
+      "current_session": "Regístrese en esta sesión con “Log out”."
     }
   },
   "acp": {
@@ -1076,7 +1079,8 @@
       "upload": "Subir imagen",
       "remove": "Quitar",
       "position": "Posición de cubierta vertical",
-      "coverDenied": "Su grupo no puede establecer una cubierta."
+      "coverDenied": "Su grupo no puede establecer una cubierta.",
+      "signature_max_chars": "Longitud máxima de firma (caractores)"
     },
     "pm": {
       "messages_per_page": "Mensajes por página en una conversación"
@@ -1091,7 +1095,10 @@
       "privacy": "Privacidad",
       "ignored": "Ignorado",
       "account": "Cuenta",
-      "notifications": "Notificaciones"
+      "notifications": "Notificaciones",
+      "language": "Idioma y zona horaria",
+      "signature": "Firma",
+      "security": "Seguridad"
     },
     "appearance": {
       "title": "Apariencia",
@@ -1172,7 +1179,11 @@
       "email_OFF": "Desactivado",
       "email_INSTANT": "Inmediato",
       "email_DIGEST": "Resumen diario",
-      "digest_hour": "Hora diaria de digestión (0–23, en la zona horaria del sitio)"
+      "digest_hour": "Hora diaria de digestión (0–23, en la zona horaria del sitio)",
+      "alertsTitle": "Alertas in situ",
+      "toasts": "Mostrar nuevas notificaciones en la esquina de la pantalla",
+      "sound": "Juega un sonido corto para nuevas notificaciones",
+      "alertsSave": "Guardar alertas"
     },
     "chat": {
       "word_filter": "Palabras filtradas de chat (sustituidas por ***)"
@@ -1185,6 +1196,37 @@
     },
     "postbit": {
       "fields": "Campos postales (orden)"
+    },
+    "language": {
+      "title": "Idioma y zona horaria",
+      "language": "Lenguaje de interfaz",
+      "timezone": "Zona horaria",
+      "save": "Guardar",
+      "saved": "Guardado."
+    },
+    "security": {
+      "title": "Seguridad",
+      "sessions": "Sesiones activas",
+      "current": "Este período de sesiones",
+      "revoke": "Cerrar sesión",
+      "revokeOthers": "Regístrate todas las demás sesiones",
+      "lastSeen": "último activo {date}",
+      "done": "Hecho.",
+      "twoFactor": "Autenticación de dos factores",
+      "twoFactorOn": "La autenticación de dos factores está encendida.",
+      "twoFactorOff": "La autenticación de dos factores está apagada. Una aplicación (Google Authenticator, Authy...) te pedirá un código cuando inicies sesión.",
+      "enable": "Enciende",
+      "disable": "Apaga",
+      "password": "Contraseña de cuenta",
+      "wrongPassword": "La contraseña no es correcta."
+    },
+    "signature": {
+      "title": "Firma",
+      "hint": "Mostrada bajo tus puestos. Texto y enlaces con formato, sin imágenes ni vídeo, hasta caracteres {max}.",
+      "save": "Guardar la firma",
+      "remove": "Eliminar la firma",
+      "saved": "Tu firma ha sido salvada.",
+      "preview": "Vista previa"
     }
   },
   "permissions": {

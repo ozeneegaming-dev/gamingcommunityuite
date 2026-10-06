@@ -69,6 +69,10 @@ export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, 
         permalink={postHref(topicId, post.id)}
         can={{ ...can, react: can.react && !own, report: can.report && !own, edit: post.canEdit, hide: post.canHide }}
       />
+      {author?.signatureHtml && post.visibility === "VISIBLE" && (
+        // Semnătura: HTML-ul produs și sanitizat de renderer la salvare (Setări → Semnătură).
+        <div className="gcs-post__signature gcs-postBody" data-testid="gcs-post-signature" dangerouslySetInnerHTML={{ __html: author.signatureHtml }} />
+      )}
       {translate && post.visibility === "VISIBLE" && !own && <GcsTranslateButton contentType="forums.post" contentId={post.id} labels={translate} />}
     </article>
   );

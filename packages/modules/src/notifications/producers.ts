@@ -200,7 +200,8 @@ export class GcsNotificationProducers {
     // Livrarea: live în camera userului; emailul imediat printr-un job (un singur email pe notificare).
     bus.on("notification.created", async (e) => {
       const userId = e.payload.userId as string;
-      await realtime.publish(`user:${userId}`, "notification", { unread: await notifications.unreadCount(userId) });
+      // `created`: clientul ia notificarea (tradusă în limba lui) și o arată ca toast (etapa 5).
+      await realtime.publish(`user:${userId}`, "notification", { unread: await notifications.unreadCount(userId), created: e.payload.notificationId });
       if (e.payload.email === "INSTANT") await this.run(NOTIFY_EMAIL_JOB, { notificationId: e.payload.notificationId }, `notif-email-${String(e.payload.notificationId)}`);
     });
     bus.on("notification.read", async (e) => {

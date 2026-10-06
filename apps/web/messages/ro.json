@@ -36,7 +36,8 @@
       "light": "Luminoasă",
       "auto": "Automată"
     },
-    "footerNav": "Linkuri utile"
+    "footerNav": "Linkuri utile",
+    "closeToast": "Închide notificarea"
   },
   "auth": {
     "login": {
@@ -158,7 +159,9 @@
       "two_required": "O listă are nevoie de cel puțin două opțiuni.",
       "not_vip": "Grupul ales nu e un nivel VIP.",
       "permanent": "Un VIP permanent nu se prelungește.",
-      "image": "Încarcă o imagine pentru rama de tip imagine."
+      "image": "Încarcă o imagine pentru rama de tip imagine.",
+      "signature_media": "Semnătura nu poate conține imagini sau video.",
+      "current_session": "Sesiunea curentă se închide cu „Ieșire”."
     }
   },
   "acp": {
@@ -1076,7 +1079,8 @@
       "upload": "Încarcă imagine",
       "remove": "Șterge",
       "position": "Poziția verticală a cover-ului",
-      "coverDenied": "Grupul tău nu poate pune cover."
+      "coverDenied": "Grupul tău nu poate pune cover.",
+      "signature_max_chars": "Lungimea maximă a semnăturii (caractere)"
     },
     "pm": {
       "messages_per_page": "Mesaje pe pagină într-o conversație"
@@ -1091,7 +1095,10 @@
       "privacy": "Confidențialitate",
       "ignored": "Ignorați",
       "account": "Cont",
-      "notifications": "Notificări"
+      "notifications": "Notificări",
+      "language": "Limbă și fus orar",
+      "signature": "Semnătură",
+      "security": "Securitate"
     },
     "appearance": {
       "title": "Aspect",
@@ -1172,7 +1179,11 @@
       "email_OFF": "Oprit",
       "email_INSTANT": "Imediat",
       "email_DIGEST": "Digest zilnic",
-      "digest_hour": "Ora digestului zilnic (0–23, în fusul orar al site-ului)"
+      "digest_hour": "Ora digestului zilnic (0–23, în fusul orar al site-ului)",
+      "alertsTitle": "Alerte pe site",
+      "toasts": "Arată notificările noi în colțul ecranului",
+      "sound": "Redă un sunet scurt la notificările noi",
+      "alertsSave": "Salvează alertele"
     },
     "chat": {
       "word_filter": "Cuvinte filtrate în chat (înlocuite cu ***)"
@@ -1185,6 +1196,37 @@
     },
     "postbit": {
       "fields": "Câmpurile din postbit (ordinea)"
+    },
+    "language": {
+      "title": "Limbă și fus orar",
+      "language": "Limba interfeței",
+      "timezone": "Fusul orar",
+      "save": "Salvează",
+      "saved": "Salvat."
+    },
+    "security": {
+      "title": "Securitate",
+      "sessions": "Sesiuni active",
+      "current": "Sesiunea curentă",
+      "revoke": "Deconectează",
+      "revokeOthers": "Deconectează toate celelalte sesiuni",
+      "lastSeen": "activ ultima dată {date}",
+      "done": "Gata.",
+      "twoFactor": "Autentificare în doi pași",
+      "twoFactorOn": "Autentificarea în doi pași este activă.",
+      "twoFactorOff": "Autentificarea în doi pași nu este activă. O aplicație (Google Authenticator, Authy…) îți va cere un cod la autentificare.",
+      "enable": "Activează",
+      "disable": "Dezactivează",
+      "password": "Parola contului",
+      "wrongPassword": "Parola nu este corectă."
+    },
+    "signature": {
+      "title": "Semnătură",
+      "hint": "Apare sub postările tale. Text formatat și linkuri, fără imagini sau video, maximum {max} de caractere.",
+      "save": "Salvează semnătura",
+      "remove": "Șterge semnătura",
+      "saved": "Semnătura a fost salvată.",
+      "preview": "Previzualizare"
     }
   },
   "permissions": {

@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { getRequestConfig } from "next-intl/server";
+import { isTimeZone, TZ_COOKIE } from "./lib/appearance";
 import { services } from "./lib/services";
 
 export const GCS_LOCALES = ["ro", "en", "de", "es", "fr", "ru"] as const;
@@ -24,5 +25,13 @@ export default getRequestConfig(async () => {
     if (isLocale(fromSettings)) locale = fromSettings;
   }
   const messages = (await import(`./messages/${locale}.json`)).default as Record<string, unknown>;
-  return { locale, messages, timeZone: "Europe/Bucharest" };
+  // Fusul orar: alegerea membrului (cookie), altfel cel al site-ului (ACP → Setări → Generale).
+  const fromTzCookie = (await cookies()).get(TZ_COOKIE)?.value;
+  const timeZone = isTimeZone(fromTzCookie)
+    ? fromTzCookie
+    : await services()
+        .settings.get<string>("site.timezone")
+        .then((tz) => (isTimeZone(tz) ? tz : "Europe/Bucharest"))
+        .catch(() => "Europe/Bucharest");
+  return { locale, messages, timeZone };
 });

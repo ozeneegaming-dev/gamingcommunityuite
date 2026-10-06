@@ -98,3 +98,25 @@ export const viewerEditing = cache(async (): Promise<GcsViewerEditing> => {
     return { canTheme: false, canWidgets: false, pageEditing: false };
   }
 });
+
+/** Fusul orar ales de membru (Setări → Limbă și fus orar); oglindit în cookie, ca să nu citim baza la fiecare request. */
+export const TZ_COOKIE = "gcs-tz";
+
+/** `true` dacă e un fus orar IANA cunoscut de runtime (ex. `Europe/Bucharest`). */
+export function isTimeZone(value: unknown): value is string {
+  if (typeof value !== "string" || value.length > 64) return false;
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: value });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Toast-urile și sunetul notificărilor (`users.prefs.toasts` / `prefs.sound`); implicit ambele pornite. */
+export async function alertPrefs(userId: string | null): Promise<{ toasts: boolean; sound: boolean }> {
+  if (!userId) return { toasts: false, sound: false };
+  const user = await services().db.user.findUnique({ where: { id: userId }, select: { prefs: true } });
+  const prefs = (user?.prefs && typeof user.prefs === "object" ? user.prefs : {}) as Record<string, unknown>;
+  return { toasts: prefs.toasts !== false, sound: prefs.sound !== false };
+}

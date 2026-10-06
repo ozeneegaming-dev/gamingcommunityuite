@@ -36,7 +36,8 @@
       "light": "Light",
       "auto": "Auto"
     },
-    "footerNav": "Useful links"
+    "footerNav": "Useful links",
+    "closeToast": "Close notification"
   },
   "auth": {
     "login": {
@@ -158,7 +159,9 @@
       "two_required": "A list needs at least two options.",
       "not_vip": "The chosen group is not a VIP tier.",
       "permanent": "A permanent VIP cannot be extended.",
-      "image": "Upload an image for an image frame."
+      "image": "Upload an image for an image frame.",
+      "signature_media": "The signature cannot contain images or video.",
+      "current_session": "Sign out of this session with “Log out”."
     }
   },
   "acp": {
@@ -1076,7 +1079,8 @@
       "upload": "Upload image",
       "remove": "Remove",
       "position": "Vertical cover position",
-      "coverDenied": "Your group cannot set a cover."
+      "coverDenied": "Your group cannot set a cover.",
+      "signature_max_chars": "Maximum signature length (characters)"
     },
     "pm": {
       "messages_per_page": "Messages per page in a conversation"
@@ -1091,7 +1095,10 @@
       "privacy": "Privacy",
       "ignored": "Ignored",
       "account": "Account",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "language": "Language and time zone",
+      "signature": "Signature",
+      "security": "Security"
     },
     "appearance": {
       "title": "Appearance",
@@ -1172,7 +1179,11 @@
       "email_OFF": "Off",
       "email_INSTANT": "Instant",
       "email_DIGEST": "Daily digest",
-      "digest_hour": "Daily digest hour (0–23, in the site's time zone)"
+      "digest_hour": "Daily digest hour (0–23, in the site's time zone)",
+      "alertsTitle": "On-site alerts",
+      "toasts": "Show new notifications in the corner of the screen",
+      "sound": "Play a short sound for new notifications",
+      "alertsSave": "Save alerts"
     },
     "chat": {
       "word_filter": "Filtered chat words (replaced with ***)"
@@ -1185,6 +1196,37 @@
     },
     "postbit": {
       "fields": "Postbit fields (order)"
+    },
+    "language": {
+      "title": "Language and time zone",
+      "language": "Interface language",
+      "timezone": "Time zone",
+      "save": "Save",
+      "saved": "Saved."
+    },
+    "security": {
+      "title": "Security",
+      "sessions": "Active sessions",
+      "current": "This session",
+      "revoke": "Sign out",
+      "revokeOthers": "Sign out all other sessions",
+      "lastSeen": "last active {date}",
+      "done": "Done.",
+      "twoFactor": "Two-factor authentication",
+      "twoFactorOn": "Two-factor authentication is on.",
+      "twoFactorOff": "Two-factor authentication is off. An app (Google Authenticator, Authy…) will ask you for a code when you sign in.",
+      "enable": "Turn on",
+      "disable": "Turn off",
+      "password": "Account password",
+      "wrongPassword": "The password is not correct."
+    },
+    "signature": {
+      "title": "Signature",
+      "hint": "Shown under your posts. Formatted text and links, no images or video, up to {max} characters.",
+      "save": "Save signature",
+      "remove": "Remove signature",
+      "saved": "Your signature has been saved.",
+      "preview": "Preview"
     }
   },
   "permissions": {

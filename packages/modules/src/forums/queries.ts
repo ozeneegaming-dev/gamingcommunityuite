@@ -99,6 +99,8 @@ export type GcsPostAuthor = GcsUserRef & {
   postsCount: number;
   reputation: number;
   joinedAt: string;
+  /** Semnătura (HTML sanitizat de renderer, etapa 5); gol = fără. */
+  signatureHtml: string;
 };
 
 export type GcsPostView = {
@@ -369,6 +371,7 @@ export class GcsForumQueries {
               postsCount: true,
               reputation: true,
               createdAt: true,
+              signatureHtml: true,
               rankId: true,
               primaryGroupId: true,
               primaryGroup: { select: { key: true, name: true, title: true, color: true } },
@@ -418,6 +421,7 @@ export class GcsForumQueries {
               postsCount: author.postsCount,
               reputation: author.reputation,
               joinedAt: author.createdAt.toISOString(),
+              signatureHtml: author.signatureHtml,
             }
           : null,
         attachments: files.filter((f) => f.contentId === String(p.id)).map(({ contentId: _c, ...f }) => f),

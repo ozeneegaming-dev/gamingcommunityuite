@@ -33,6 +33,8 @@ const between = (min: number, max: number) => (v: unknown) =>
 const settings: GcsSettingDef[] = [
   { key: "profile.cover_max_mb", type: "number", default: 2, section: "profiles", labelKey: "settings.profile.cover_max_mb", validate: between(0.1, 50) },
   { key: "profile.wall_enabled", type: "boolean", default: true, section: "profiles", labelKey: "settings.profile.wall_enabled" },
+  // Lungimea maximă a semnăturii (caractere de text), etapa 5.
+  { key: "profile.signature_max_chars", type: "number", default: 500, section: "profiles", labelKey: "settings.profile.signature_max_chars", validate: between(0, 5000) },
   // Ordinea câmpurilor din postbit (cheile câmpurilor); cele marcate „în postbit” și nelistate vin la final (etapa 5).
   {
     key: "postbit.fields",
