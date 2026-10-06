@@ -57,7 +57,9 @@ test("etapa 5: header și login în popup → widget-uri și statistici → limb
     await expect(page.locator("html")).toHaveAttribute("lang", "ro");
   });
 
-  const ana = await newUser(browser, "Ana5", "198.18.91");
+  // Nume unice pe rulare: smoke-ul rulează și pe instanțe care păstrează conturile rulărilor anterioare.
+  const run = Date.now().toString(36).slice(-5);
+  const ana = await newUser(browser, `Ana5${run}`, "198.18.91");
 
   await test.step("membrul: postbit-ul topicului de bun venit, camerele de chat demo, listele de membri și staff", async () => {
     const [welcome] = await installSql<{ id: number; slug: string }>(`SELECT id, slug FROM topics WHERE title LIKE 'Bun venit pe %' ORDER BY id LIMIT 1`);
@@ -67,23 +69,27 @@ test("etapa 5: header și login în popup → widget-uri și statistici → limb
     await expect(postbit.getByTestId("gcs-postbit-xp")).toBeVisible();
     await expect(postbit.getByTestId("gcs-postbit-fields")).toContainText("România");
 
+    // Camerele demo apar doar la o instalare nouă cu „Date demo”; pe o instanță mai veche smoke-ul folosește General.
+    const [lfg] = await installSql<{ key: string }>(`SELECT key FROM chat_channels WHERE key = 'lfg'`);
+    const room = lfg ? { key: "lfg", name: "Caut echipă" } : { key: "general", name: "General" };
     await ana.goto("/chat");
-    for (const room of ["General", "Off-topic", "Caut echipă"]) await expect(ana.getByRole("link", { name: room })).toBeVisible();
-    await ana.getByRole("link", { name: "Caut echipă" }).click();
-    await expect(ana).toHaveURL(/c=lfg/);
-    await expect(ana.getByTestId("gcs-chat-lfg")).toBeVisible();
-    await ana.getByTestId("gcs-chat-lfg").getByTestId("gcs-chat-input").fill("Caut coechipieri pentru diseară");
-    await ana.getByTestId("gcs-chat-lfg").getByTestId("gcs-chat-input").press("Enter");
+    const rooms = lfg ? ["General", "Off-topic", "Caut echipă"] : ["General"];
+    for (const r of rooms) await expect(ana.getByRole("link", { name: r })).toBeVisible();
+    await ana.getByRole("link", { name: room.name }).click();
+    await expect(ana).toHaveURL(new RegExp(`c=${room.key}`));
+    await expect(ana.getByTestId(`gcs-chat-${room.key}`)).toBeVisible();
+    await ana.getByTestId(`gcs-chat-${room.key}`).getByTestId("gcs-chat-input").fill("Caut coechipieri pentru diseară");
+    await ana.getByTestId(`gcs-chat-${room.key}`).getByTestId("gcs-chat-input").press("Enter");
     await expect(ana.getByTestId("gcs-chat-msg").filter({ hasText: "Caut coechipieri pentru diseară" })).toBeVisible();
 
-    await ana.goto("/members?q=ana5");
+    await ana.goto(`/members?q=ana5${run}`);
     await expect(ana.getByTestId("gcs-member-card")).toHaveCount(1);
     await ana.goto("/staff");
     await expect(ana.locator('[data-testid="gcs-staff-group"][data-group="root_admin"]')).toBeVisible();
   });
 
   await test.step("adminul: ACP cu 2FA, apoi editorul de temă pe site; vizitatorul vede accentul publicat", async () => {
-    const admin = await newUser(browser, "Admin5", "198.18.92", "root_admin");
+    const admin = await newUser(browser, `Admin5${run}`, "198.18.92", "root_admin");
     await admin.goto("/admin");
     await expect(admin).toHaveURL(/\/admin\/2fa-setup$/);
     await admin.getByLabel("Parola contului").fill(PASSWORD);
