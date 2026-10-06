@@ -150,6 +150,9 @@ describe("ciclul de viață al pluginurilor", () => {
       await expect(direct.query("RESET ROLE; SELECT * FROM public.users")).rejects.toThrow(/permission denied/);
       await expect(direct.query("CREATE TABLE public.evil (id int)")).rejects.toThrow(/permission denied/);
       await expect(direct.query("CREATE ROLE evil")).rejects.toThrow(/permission denied/);
+      // Alt plugin: schema lui aparține rolului lui, deci nici ea nu e accesibilă.
+      await service.install(admin, (await service.stage(admin, { fileName: "demo.zip", data: testPluginZip({ manifest: testManifest({ capabilities: ["widgets", "db"] }), files: MIGRATION_1, sign }) })).id);
+      await expect(direct.query("SELECT * FROM plugin_acme__demo.items")).rejects.toThrow(/permission denied/);
       expect((await direct.query("SELECT count(*)::int AS n FROM items")).rows[0]).toEqual({ n: 1 });
     } finally {
       await direct.end();
