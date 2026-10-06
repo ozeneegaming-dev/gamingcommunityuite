@@ -221,6 +221,15 @@ describe("hook-urile", () => {
   });
 });
 
+describe("șabloanele pluginului", () => {
+  test("`{ template, data }` trece prin motorul de șabloane (escapare implicită) și apoi prin sanitizer", async () => {
+    const server = `export default { widgets: { tpl: () => ({ template: '<p class="gcsp-x">Salut, {{ who }}!</p><script>alert(1)</script>', data: { who: "<b>Ana</b>" } }) } };`;
+    await installTestPlugin(services, root, pluginFiles({ key: "acme.probe", capabilities: ["widgets"], widgets: [{ key: "tpl", label: "Tpl" }] }, server));
+    const out = await services.plugins.renderWidget("plugin.acme.probe.tpl", { config: {}, actor: guest, locale: "ro", page: "index", zone: "sidebar" });
+    expect(out?.html).toBe('<div class="gcsp gcsp--acme--probe" data-gcs-plugin="acme.probe"><p class="gcsp-x">Salut, &lt;b&gt;Ana&lt;/b&gt;!</p></div>');
+  });
+});
+
 describe("utilitare", () => {
   test("rutele pluginului: fixe înaintea celor cu parametri", () => {
     expect(matchPluginRoute(["/", "/item/:id", "/item/new"], "/item/new")).toEqual({ pattern: "/item/new", params: {} });

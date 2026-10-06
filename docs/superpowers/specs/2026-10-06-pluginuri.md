@@ -133,7 +133,7 @@ Contextul primit de plugin e singura lui ieșire, prin mesaje validate de gazdă
 | Evenimente | lista publică: `post.created`, `post.updated`, `post.deleted`, `post.approved`, `topic.created`, `topic.updated`, `topic.deleted`, `topic.moved`, `topic.moderated`, `user.registered`, `user.promoted`, `user.banned`, `user.unbanned`, `user.warned`, `user.followed`, `chat.message`, `chat.deleted`, `report.created`, `badge.awarded`, `vip.granted`, `vip.expired`. Livrare asincronă (nu întârzie cererea), doar câmpurile simple din payload. Mesajele private nu se expun. |
 | Filtre | `post.before_save` (topic nou, răspuns, editare): primește titlul și documentul, poate întoarce o variantă modificată sau o respingere. Rulează în ordinea priorității, cu timeout de 2 s; o eroare sau un timeout sare pluginul (nu blochează postarea) și se numără ca eșec. |
 | Widget-uri | randate pe server ca HTML, trecut prin sanitizer (listă albă de taguri și atribute, fără `style`, `id`, `on*`, formulare, scripturi; clase doar `gcsp-*` și câteva clase GCS de prezentare; `<gcs-icon name="fa-solid fa-…">` devine iconița Font Awesome). Interfața `GcsPluginHtml` acceptă deja `{ template, data }`, pentru motorul de șabloane. |
-| Puncte de extensie | `postbit.after_fields` (sub câmpurile din cardul autorului). Același mecanism îl va folosi `{% hook %}` din șabloane. |
+| Puncte de extensie | `postbit.after_fields` (sub câmpurile din cardul autorului). HTML-ul se calculează o dată și ajunge atât în postbit-ul implicit (React), cât și în `{% hook "postbit.after_fields" %}` dintr-un șablon `postbit.author` modificat de temă. |
 | Pagini site | `/p/<cheie>/…`, căi declarate (`/`, `/item/:id`), randate în layout-ul site-ului. |
 | Pagini ACP | `/admin/plugins/<cheie>/…`, cu secțiunea ACP `plugin.<cheie>` (apare în rolurile ACP); doar HTML sanitizat. |
 | API | `/api/plugins/<cheie>/…`: doar JSON, corp ≤ 64 KB, CSRF (Origin) la metodele care modifică, limită de rată. |
@@ -194,8 +194,8 @@ durata măsurată (număr, eșecuri, timp total și maxim per hook, în Redis, c
 - **JS client din pachete nesemnate**: nu e posibil sigur pe aceeași origine (ar cere iframe-uri izolate, cu altă origine).
 - **Formulare interactive în paginile ACP ale pluginului**: HTML-ul e sanitizat (fără formulare și scripturi); pentru
   configurare există formularul de setări generat din manifest.
-- **Șabloanele pluginului** (`templates`): capabilitatea e rezervată; randarea `{ template, data }` se leagă de motorul
-  de șabloane când acesta există (interfața e pregătită).
+- **Șabloanele pluginului** (`templates`): capabilitatea e rezervată. Gazda are deja `setTemplateRenderer` pentru
+  `{ template, data }`; legarea de motorul de șabloane (sandbox-ul lui, cu datele pluginului) rămâne pentru pasul următor.
 - **Cotă de spațiu** pentru schema pluginului și modificarea tabelelor nucleului: nu există (intenționat, pentru tabele).
 - **Marketplace-ul** (cheia publică oficială, descărcarea din Data Center): etapa Redistribuire.
 - **Realtime**: pluginurile nu rulează în `gcs-realtime`.

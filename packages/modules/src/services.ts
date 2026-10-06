@@ -37,13 +37,14 @@ import {
   GcsPluginService,
   sendEmail,
   trustedPluginKeys,
+  renderTemplate,
   type GcsFileStore,
   type GcsMailer,
   type GcsModule,
   type GcsModuleRegistry,
 } from "@gcs/core";
 import { PrismaClient } from "@gcs/db";
-import { withEmailLayout } from "./templates/components";
+import { templateComponents, withEmailLayout } from "./templates/components";
 import { isGcsIcon, resolveIcon } from "@gcs/ui/icon-registry";
 import Redis from "ioredis";
 import { registerForumContent } from "./forums/content";
@@ -429,6 +430,11 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     subscriber: () => redis.duplicate(),
   });
   pluginRef.host = plugins;
+  // `{ template, data }` întors de un plugin: motorul de șabloane (sandbox, limite de timp și iterații); rezultatul trece
+  // apoi prin sanitizer-ul pluginurilor.
+  plugins.setTemplateRenderer(async (_plugin, template, data) =>
+    template.length > 64 * 1024 ? "" : renderTemplate(template, data, { locale: await settings.get<string>("site.locale"), components: templateComponents() }),
+  );
 
   const services: GcsServices = {
     db,
