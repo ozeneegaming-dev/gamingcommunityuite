@@ -1216,6 +1216,8 @@ model ChatMessage {
   deletedAt   DateTime?
   deletedById String?
   editedAt    DateTime?
+  /// Chat v3: imaginile și mesajele vocale încărcate (`[{ id, kind, width, height }]`); atașamentele sunt `chat.message`.
+  files       Json      @default("[]")
 
   channel   ChatChannel           @relation(fields: [channelId], references: [id], onDelete: Cascade)
   author    User?                 @relation("ChatAuthor", fields: [authorId], references: [id], onDelete: SetNull)

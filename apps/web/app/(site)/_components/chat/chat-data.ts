@@ -42,11 +42,12 @@ export async function chatRoomLabels(): Promise<GcsChatRoomLabels> {
   return Object.fromEntries(LABEL_KEYS.map((k) => [k, t.raw(k) as string])) as GcsChatRoomLabels;
 }
 
-/** Tot ce primește `GcsChatRoom` pentru un canal: mesajele, drepturile, reacțiile, mesajul fixat și anunțurile. */
+/** Tot ce primește `GcsChatRoom` pentru un canal: mesajele, drepturile, reacțiile, mesajul fixat, anunțurile, setările și ignorații. */
 export async function chatRoomProps(actor: GcsActor, channel: GcsChatChannelView): Promise<Parameters<typeof GcsChatRoom>[0]> {
-  const { chatQueries, chat, reactions, permissions } = services();
-  const [initial, canModerate, canAnnounce, mute, labels, list, pinned, announcements] = await Promise.all([
-    chatQueries.recent(actor, channel.key),
+  const { chatQueries, chat, reactions, permissions, social } = services();
+  const config = await chat.config();
+  const [initial, canModerate, canAnnounce, mute, labels, list, pinned, announcements, ignored] = await Promise.all([
+    chatQueries.recent(actor, channel.key, config.pageSize),
     chat.canModerate(actor),
     actor.userId ? permissions.can(actor, "chat.announce") : Promise.resolve(false),
     viewerMute(actor, channel.key),
@@ -54,8 +55,11 @@ export async function chatRoomProps(actor: GcsActor, channel: GcsChatChannelView
     reactions.list(),
     chatQueries.pinned(actor, channel.key),
     chatQueries.announcements(),
+    social.ignoredIds(actor.userId, "posts"),
   ]);
   return {
+    config,
+    ignored,
     channel,
     initial,
     canModerate,

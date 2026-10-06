@@ -13,16 +13,32 @@ async function assertChatEnabled(): Promise<void> {
   if (!(await services().apps.enabled("chat"))) throw new GcsNotFound();
 }
 
-/** Trimite un mesaj în chat. Întoarce mesajul salvat (cu HTML-ul randat). */
-export const sendChatMessage = gcsAction(z.object({ channel, body: z.string().min(1).max(2000) }), async ({ channel, body }, { actor }) => {
-  await assertChatEnabled();
-  return services().chat.send(actor, channel, body);
-});
+/** Trimite un mesaj în chat (text și/sau fișiere încărcate înainte). Întoarce mesajul salvat (cu HTML-ul randat). */
+export const sendChatMessage = gcsAction(
+  z.object({ channel, body: z.string().max(4000), files: z.array(z.string().min(1).max(40)).max(4).optional() }),
+  async ({ channel, body, files }, { actor }) => {
+    await assertChatEnabled();
+    return services().chat.send(actor, channel, body, { files: files ?? [] });
+  },
+);
 
 /** Ultimele mesaje ale canalului sau cele dinaintea lui `before` (derularea în sus, reîncărcarea fără live). */
-export const loadChatMessages = gcsAction(z.object({ channel, before: z.number().int().positive().optional() }), async ({ channel, before }, { actor }) => {
-  await assertChatEnabled();
-  return services().chatQueries.history(actor, channel, before ?? null);
+export const loadChatMessages = gcsAction(
+  z.object({ channel, before: z.number().int().positive().optional(), limit: z.number().int().min(10).max(100).optional() }),
+  async ({ channel, before, limit }, { actor }) => {
+    await assertChatEnabled();
+    return services().chatQueries.history(actor, channel, before ?? null, limit);
+  },
+);
+
+/**
+ * „Blochează” din chat: ignorarea membrului (la conținut), păstrând alegerea pentru mesajele private.
+ * `ignore: false` o retrage. Staff-ul nu poate fi ignorat.
+ */
+export const ignoreChatUser = gcsAction(z.object({ userId: z.string().min(8).max(40), ignore: z.boolean() }), async ({ userId, ignore }, { actor }) => {
+  const { social, db } = services();
+  const current = actor.userId ? await db.userIgnore.findUnique({ where: { userId_ignoredId: { userId: actor.userId, ignoredId: userId } } }) : null;
+  await social.ignore(actor, userId, { posts: ignore, messages: current?.messages ?? false });
 });
 
 export const deleteChatMessage = gcsAction(z.object({ id: z.number().int().positive() }), async ({ id }, { actor }) => {

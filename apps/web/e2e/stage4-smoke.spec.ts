@@ -84,7 +84,8 @@ test("etapa 4: notificări live → scrie… și postări noi → shoutbox → c
     await expect(atAna).toBeVisible({ timeout: 2_000 });
 
     const atMod = shout(mod).getByTestId("gcs-chat-msg").filter({ hasText: "Salut din shoutbox" });
-    await atMod.getByRole("button", { name: "Mute 10 min" }).click();
+    await atMod.getByRole("button", { name: "Mute", exact: true }).click();
+    await atMod.getByRole("group", { name: "Mute" }).getByRole("button", { name: "10 min" }).click();
     await atMod.getByRole("button", { name: "Șterge" }).click();
     await expect(atAna).toHaveCount(0, { timeout: 5_000 });
     await bogdan.reload();

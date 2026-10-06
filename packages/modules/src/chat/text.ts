@@ -1,13 +1,14 @@
 /**
- * Textul mesajelor de chat (specul etapei 4 §3): text simplu, max 500 de caractere, cu linkurile `http(s)` clicabile.
+ * Textul mesajelor de chat (specul etapei 4 §3): text simplu, cu linkurile `http(s)` clicabile. Limita configurabilă
+ * (`chat.max_length`) o verifică serviciul; aici e doar plafonul tehnic.
  * Fără importuri: fișierul e folosit și de clientul web (randarea mesajelor primite live).
  */
-export const CHAT_MAX_CHARS = 500;
+export const CHAT_MAX_CHARS = 2000;
 
 const ESC: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 const escape = (s: string) => s.replace(/[&<>"']/g, (c) => ESC[c]!);
 
-/** Un mesaj curat: fără caractere de control, pe un singur rând, tăiat la 500 de caractere. */
+/** Un mesaj curat: fără caractere de control, pe un singur rând, tăiat la plafonul tehnic. */
 export function cleanChatText(raw: string): string {
   return raw
     .replace(/[\r\n\t]+/g, " ")
@@ -80,3 +81,52 @@ export function applyWordFilter(text: string, words: string[]): string {
   }
   return out + text.slice(pos);
 }
+
+/** Un conținut afișat sub textul mesajului: o imagine dintr-un link sau un clip YouTube. */
+export type GcsChatEmbed = { kind: "image"; url: string } | { kind: "youtube"; id: string };
+
+const MAX_EMBEDS = 3;
+const IMAGE_URL_RE = /^https:\/\/[^\s?#]+\.(?:png|jpe?g|gif|webp)(?:\?[^\s#]*)?$/i;
+const YOUTUBE_ID = "([A-Za-z0-9_-]{11})";
+const YOUTUBE_RES = [
+  new RegExp(`^https?://(?:www\.|m\.|music\.)?youtube\.com/watch\?(?:[^\s#]*&)?v=${YOUTUBE_ID}(?:[&#]|$)`, "i"),
+  new RegExp(`^https?://(?:www\.|m\.)?youtube\.com/(?:shorts|embed|live)/${YOUTUBE_ID}(?:[?&#/]|$)`, "i"),
+  new RegExp(`^https?://youtu\.be/${YOUTUBE_ID}(?:[?&#/]|$)`, "i"),
+];
+
+/**
+ * Imaginile (doar `https:`, după extensie; GIF-urile GIPHY intră aici) și clipurile YouTube din linkurile mesajului,
+ * cel mult 3. Afișarea lor o decid setările `chat.allow_images` / `chat.allow_youtube`.
+ */
+export function chatEmbeds(text: string): GcsChatEmbed[] {
+  const out: GcsChatEmbed[] = [];
+  const seen = new Set<string>();
+  for (const m of text.matchAll(URL_RE)) {
+    if (out.length >= MAX_EMBEDS) break;
+    const url = m[0].replace(TRAILING, "");
+    let embed: GcsChatEmbed | null = null;
+    const yt = YOUTUBE_RES.map((re) => re.exec(url)).find(Boolean);
+    if (yt) embed = { kind: "youtube", id: yt[1]! };
+    else if (IMAGE_URL_RE.test(url)) embed = { kind: "image", url };
+    if (!embed) continue;
+    const key = embed.kind === "youtube" ? `yt:${embed.id}` : embed.url;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(embed);
+  }
+  return out;
+}
+
+const EMOJI_RE = /\p{Extended_Pictographic}/gu;
+
+/** Câte emoticoane (emoji) are textul; o secvență compusă (👨‍👩‍👧, 👍🏽) contează o dată. */
+export function countEmoji(text: string): number {
+  const seg = typeof Intl !== "undefined" && "Segmenter" in Intl ? new Intl.Segmenter(undefined, { granularity: "grapheme" }) : null;
+  if (!seg) return (text.match(EMOJI_RE) ?? []).length;
+  let n = 0;
+  for (const { segment } of seg.segment(text)) if (/\p{Extended_Pictographic}/u.test(segment)) n++;
+  return n;
+}
+
+/** URL-ul GIF-ului GIPHY (varianta de 200 px înălțime), din id-ul lui. */
+export const giphyUrl = (id: string) => `https://media.giphy.com/media/${id}/200.gif`;

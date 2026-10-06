@@ -161,7 +161,8 @@
       "permanent": "Ein permanenter VIP kann nicht verlängert werden.",
       "image": "Laden Sie ein Bild für ein Bildframe hoch.",
       "signature_media": "Die Signatur kann keine Bilder oder Videos enthalten.",
-      "current_session": "Melden Sie sich aus dieser Sitzung mit \"Log out\" ab."
+      "current_session": "Melden Sie sich aus dieser Sitzung mit \"Log out\" ab.",
+      "too_many_emoticons": "Zu viele Emoticons in einer Nachricht"
     }
   },
   "acp": {
@@ -1034,7 +1035,8 @@
       "owner": "erstellt von {name}",
       "announcements": "Globale Ankündigungen",
       "noAnnouncements": "Keine aktiven Ankündigungen.",
-      "noExpiry": "bis zum entfernen"
+      "noExpiry": "bis zum entfernen",
+      "display": "Anzeige, Grenzen und Inhalt"
     },
     "notifications": {
       "title": "Benachrichtigungen",
@@ -1136,7 +1138,9 @@
       "ru": "Русский",
       "libretranslate": "LibreTranslate (selbst gehostet)",
       "deepl": "DeepL",
-      "off": "Aus"
+      "off": "Aus",
+      "24h": "24 stunden (14:30)",
+      "12h": "12 Stunden (2:30 Uhr)"
     },
     "forums": {
       "posts_per_page": "Beiträge pro Seite",
@@ -1269,7 +1273,22 @@
       "alertsSave": "Warnmeldungen speichern"
     },
     "chat": {
-      "word_filter": "Gefilterte Chatwörter (ersetzt durch ***)"
+      "word_filter": "Gefilterte Chatwörter (ersetzt durch ***)",
+      "time_format": "Zeitformat",
+      "newest_on_top": "Neueste Nachrichten oben (Eingabe über der Liste)",
+      "rules": "Chat-regeln (leer = kein \"regeln\"-button)",
+      "hide_avatars": "Verstecke Avatare",
+      "min_height": "Nachrichtenlistenhöhe auf /chat (px)",
+      "hide_enter_mobile": "Verstecken Sie die Schaltfläche \"Senden\" auf dem Handy (Enter sendet)",
+      "messages_to_display": "Offene Nachrichten (10-100)",
+      "poll_interval": "Reload ohne Live-Verbindung (Sekunden)",
+      "max_length": "Maximale Nachrichtenlänge (0 = 2000)",
+      "max_emoticons": "Emoticons pro Nachricht (0 = unbegrenzt)",
+      "allow_images": "Bilder zulassen (uploaded und von Links)",
+      "allow_youtube": "YouTube-Videos zulassen",
+      "voice_enabled": "Sprachnachrichten zulassen",
+      "voice_max_seconds": "Maximale Sprachnachrichtenlänge (Sekunden)",
+      "giphy_key": "GIPHY API-Schlüssel (ohne Schlüssel, /giphy ist aus)"
     },
     "i18n": {
       "locales": "Sprachen, die den Mitgliedern angeboten werden",
@@ -1926,7 +1945,7 @@
     "empty": "Noch keine Nachrichten. Sag Hallo!",
     "older": "Ältere Nachrichten",
     "delete": "Löschen",
-    "mute": "Stumm 10 min",
+    "mute": "Mute",
     "muted": "Sie werden im chat bis {until} stummgeschaltet. Grund: {reason}",
     "slowMode": "Langsamer Modus: eine Nachricht alle {seconds} s.",
     "readOnly": "Sie können nur diesen Kanal lesen.",
@@ -1969,6 +1988,50 @@
       "hours": "Dauer (Stunden, leer = bis entfernt)",
       "submit": "Ankündigung veröffentlichen",
       "done": "Die Ankündigung ist jetzt in jedem Raum."
+    },
+    "ui": {
+      "rules": "Regeln",
+      "soundOn": "Schalten Sie den neuen Message Sound ein",
+      "soundOff": "Schalten Sie den neuen Message Sound aus",
+      "close": "Schließen",
+      "mentionHint": "Klicken Sie auf {name}",
+      "block": "Block",
+      "emoji": "Emoticons",
+      "emojiTabs": {
+        "smileys": "Smileys",
+        "gestures": "Gesten und Herzen",
+        "gaming": "Spiele und Sport",
+        "animals": "Tiere und Natur",
+        "food": "Speisen und Getränke",
+        "travel": "Reisen und Orte",
+        "objects": "Objekte",
+        "symbols": "Symbole"
+      },
+      "addImage": "Bild hinzufügen",
+      "imagesOff": "Bilder werden im Chat ausgeschaltet.",
+      "tooManyFiles": "Höchstens {max} Bilder pro Nachricht.",
+      "attached": "Beiliegende Bilder",
+      "removeFile": "{name} entfernen",
+      "gifSearch": "GIF durchsuchen",
+      "search": "Suchen",
+      "gifNone": "Keine GIFs gefunden.",
+      "gifError": "GIPHY reagiert derzeit nicht.",
+      "gifRateLimited": "Zu viele suchanfragen; versuchen sie es in einer minute erneut.",
+      "voiceStart": "Aufzeichnung einer Sprachnachricht",
+      "voiceStop": "Stop und Senden",
+      "voiceCancel": "Abbrechen",
+      "recording": "Aufzeichnung …",
+      "micDenied": "Kein Zugriff auf das Mikrofon.",
+      "image": "Bild",
+      "voiceMessage": "Sprachnachricht",
+      "playVideo": "Spielen Sie das YouTube-Video ab",
+      "video": "YouTube-Video",
+      "muteFor": {
+        "10m": "10 min",
+        "1h": "1 stunde",
+        "1d": "1 tag",
+        "forever": "Dauerhaft"
+      }
     }
   },
   "online": {

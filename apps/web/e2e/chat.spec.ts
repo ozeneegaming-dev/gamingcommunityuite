@@ -30,13 +30,15 @@ test("B scrie în shoutbox → apare la A; moderatorul șterge → dispare; mute
 
   const msgAtMod = shout(mod).getByTestId("gcs-chat-msg").filter({ hasText: text });
   await expect(msgAtMod).toBeVisible();
-  await msgAtMod.getByRole("button", { name: "Mute 10 min" }).click();
+  await msgAtMod.getByRole("button", { name: "Mute", exact: true }).click();
+  await msgAtMod.getByRole("group", { name: "Mute" }).getByRole("button", { name: "10 min" }).click();
   await msgAtMod.getByRole("button", { name: "Șterge" }).click();
   await expect(msgAtA).toHaveCount(0, { timeout: 5_000 });
 
   await b.reload();
   await expect(shout(b).getByTestId("gcs-chat-input")).toBeDisabled();
-  await expect(shout(b).getByTestId("gcs-chat-muted")).toBeVisible();
+  // Shoutbox-ul vine prin streaming: până la afișare, conținutul lui există și într-o copie ascunsă.
+  await expect(shout(b).getByTestId("gcs-chat-muted").filter({ visible: true })).toBeVisible();
   for (const p of [a, b, mod]) await p.context().close();
 });
 

@@ -161,7 +161,8 @@
       "permanent": "Un VIP permanente no puede ser extendido.",
       "image": "Sube una imagen para un marco de imagen.",
       "signature_media": "La firma no puede contener imágenes o vídeos.",
-      "current_session": "Regístrese en esta sesión con “Log out”."
+      "current_session": "Regístrese en esta sesión con “Log out”.",
+      "too_many_emoticons": "Demasiados emoticonos en un mensaje"
     }
   },
   "acp": {
@@ -1034,7 +1035,8 @@
       "owner": "creado por {name}",
       "announcements": "Anuncios mundiales",
       "noAnnouncements": "No hay anuncios activos.",
-      "noExpiry": "hasta que se retire"
+      "noExpiry": "hasta que se retire",
+      "display": "Visualización, límites y contenido"
     },
     "notifications": {
       "title": "Notificaciones",
@@ -1136,7 +1138,9 @@
       "ru": "Русский",
       "libretranslate": "LibreTranslate (auto hospedado)",
       "deepl": "DeepL",
-      "off": "Desactivado"
+      "off": "Desactivado",
+      "24h": "24 horas (14:30)",
+      "12h": "12 horas (2:30 pm)"
     },
     "forums": {
       "posts_per_page": "Puestos por página",
@@ -1269,7 +1273,22 @@
       "alertsSave": "Guardar alertas"
     },
     "chat": {
-      "word_filter": "Palabras filtradas de chat (sustituidas por ***)"
+      "word_filter": "Palabras filtradas de chat (sustituidas por ***)",
+      "time_format": "Formato del tiempo",
+      "newest_on_top": "Nuevos mensajes arriba (introducir por encima de la lista)",
+      "rules": "Reglas de chat (vacío = sin botón “Rulos”)",
+      "hide_avatars": "Ocultar avatares",
+      "min_height": "Altura de lista de mensajes en /chat (px)",
+      "hide_enter_mobile": "Ocultar el botón “Enviar” en el móvil (Enter envía)",
+      "messages_to_display": "Mensajes abiertos (10–100)",
+      "poll_interval": "Recarga sin conexión en vivo (segundos)",
+      "max_length": "Longitud máxima del mensaje (0 = 2000)",
+      "max_emoticons": "Emoticonos por mensaje (0 = ilimitado)",
+      "allow_images": "Permitir imágenes (cargadas y desde enlaces)",
+      "allow_youtube": "Permitir vídeos de YouTube",
+      "voice_enabled": "Permitir mensajes de voz",
+      "voice_max_seconds": "Longitud máxima del mensaje de voz (segundos)",
+      "giphy_key": "GIPHY API key (sin una llave, /giphy está apagado)"
     },
     "i18n": {
       "locales": "Idiomas ofrecidos a los miembros",
@@ -1926,7 +1945,7 @@
     "empty": "Aún no hay mensajes. ¡Di hola!",
     "older": "Mensajes más antiguos",
     "delete": "Eliminar",
-    "mute": "Muda 10 min",
+    "mute": "Mute",
     "muted": "Te mutilan en chat hasta {until}. Razón: {reason}",
     "slowMode": "Modo lento: un mensaje cada {seconds} s.",
     "readOnly": "Sólo puedes leer este canal.",
@@ -1969,6 +1988,50 @@
       "hours": "Duración (horas, vacías = hasta removidas)",
       "submit": "Publicar el anuncio",
       "done": "El anuncio está ahora en cada habitación."
+    },
+    "ui": {
+      "rules": "Reglas",
+      "soundOn": "Enciende el nuevo sonido del mensaje",
+      "soundOff": "Apaga el nuevo sonido del mensaje",
+      "close": "Cerrar",
+      "mentionHint": "Haga clic para mencionar {name}",
+      "block": "Bloque",
+      "emoji": "Emoticonos",
+      "emojiTabs": {
+        "smileys": "Sonrisas",
+        "gestures": "Gestos y corazones",
+        "gaming": "Juegos y deportes",
+        "animals": "Animales y naturaleza",
+        "food": "Comida y bebida",
+        "travel": "Viajes y lugares",
+        "objects": "Objetos",
+        "symbols": "Símbolos"
+      },
+      "addImage": "Agregar imagen",
+      "imagesOff": "Las imágenes se apagan en chat.",
+      "tooManyFiles": "A la mayoría de las imágenes {max} por mensaje.",
+      "attached": "Imágenes adjuntas",
+      "removeFile": "Quitar {name}",
+      "gifSearch": "Buscar GIFs",
+      "search": "Buscar",
+      "gifNone": "No encontraron GIF.",
+      "gifError": "GIPHY no está respondiendo ahora mismo.",
+      "gifRateLimited": "Demasiadas búsquedas; intenta de nuevo en un minuto.",
+      "voiceStart": "Grabar un mensaje de voz",
+      "voiceStop": "Para y envía",
+      "voiceCancel": "Cancelar",
+      "recording": "Grabando…",
+      "micDenied": "No hay acceso al micrófono.",
+      "image": "Imagen",
+      "voiceMessage": "Mensaje de voz",
+      "playVideo": "Juega el video de YouTube",
+      "video": "Video de YouTube",
+      "muteFor": {
+        "10m": "10 min",
+        "1h": "1 hora",
+        "1d": "1 día",
+        "forever": "Permanente"
+      }
     }
   },
   "online": {

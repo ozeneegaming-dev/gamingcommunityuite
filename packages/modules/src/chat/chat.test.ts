@@ -1,10 +1,12 @@
-import { GcsForbidden, GcsRateLimited, REALTIME_CHANNEL, type GcsActor } from "@gcs/core";
+import { GcsForbidden, GcsNotFound, GcsRateLimited, GcsValidationError, REALTIME_CHANNEL, type GcsActor } from "@gcs/core";
 import Redis from "ioredis";
+import sharp from "sharp";
 import { afterAll, beforeEach, describe, expect, inject, test } from "vitest";
 import { createProfileWorld, type GcsProfileWorld } from "../../test/profileWorld";
 import { GcsChatService } from "./chat";
+import { searchGiphy } from "./giphy";
 import { GcsChatQueries } from "./queries";
-import { applyWordFilter, cleanChatText, renderChatText } from "./text";
+import { applyWordFilter, chatEmbeds, cleanChatText, countEmoji, renderChatText } from "./text";
 
 let w: GcsProfileWorld;
 let chat: GcsChatService;
@@ -13,7 +15,16 @@ let staff: GcsActor;
 
 beforeEach(async () => {
   w = await createProfileWorld();
-  chat = new GcsChatService({ db: w.db, bus: w.bus, permissions: w.permissions, settings: w.settings, rateLimiter: w.rateLimiter, realtime: w.realtime, acp: w.acp });
+  chat = new GcsChatService({
+    db: w.db,
+    bus: w.bus,
+    permissions: w.permissions,
+    settings: w.settings,
+    rateLimiter: w.rateLimiter,
+    realtime: w.realtime,
+    acp: w.acp,
+    attachments: w.attachments,
+  });
   queries = new GcsChatQueries({ db: w.db, permissions: w.permissions });
   staff = w.moderator;
 });
@@ -45,9 +56,43 @@ describe("textul", () => {
     expect(applyWordFilter("nimic", [])).toBe("nimic");
   });
 
-  test("curățarea: un singur rând, fără caractere de control, max 500", () => {
+  test("curățarea: un singur rând, fără caractere de control, plafonul tehnic 2000", () => {
     expect(cleanChatText("  a\nb\u0000c‮ ")).toBe("a bc");
-    expect(cleanChatText("x".repeat(600))).toHaveLength(500);
+    expect(cleanChatText("x".repeat(2500))).toHaveLength(2000);
+  });
+
+  test("embed-urile: imagini https după extensie, GIF-uri GIPHY, YouTube (watch, youtu.be, shorts); max 3, fără dubluri", () => {
+    expect(chatEmbeds("uite https://ex.com/a.PNG și http://ex.com/b.png")).toEqual([{ kind: "image", url: "https://ex.com/a.PNG" }]);
+    expect(chatEmbeds("https://media.giphy.com/media/abc123/200.gif")).toEqual([{ kind: "image", url: "https://media.giphy.com/media/abc123/200.gif" }]);
+    expect(chatEmbeds("https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=1 https://youtu.be/dQw4w9WgXcQ")).toEqual([{ kind: "youtube", id: "dQw4w9WgXcQ" }]);
+    expect(chatEmbeds("https://youtube.com/shorts/abcdefghijk?x=1")).toEqual([{ kind: "youtube", id: "abcdefghijk" }]);
+    expect(chatEmbeds("https://ex.com/pagina https://youtube.com/watch?v=scurt")).toEqual([]);
+    expect(chatEmbeds("https://a.com/1.jpg https://a.com/2.jpg https://a.com/3.jpg https://a.com/4.jpg")).toHaveLength(3);
+    // Ghilimelele opresc linkul: nimic nu iese din atribut.
+    expect(chatEmbeds('https://ex.com/x.png"onerror="alert(1)')).toEqual([{ kind: "image", url: "https://ex.com/x.png" }]);
+  });
+
+  test("emoticoanele: o secvență compusă contează o dată", () => {
+    expect(countEmoji("salut 😀😀 👍🏽 👨‍👩‍👧 :)")).toBe(4);
+    expect(countEmoji("fără")).toBe(0);
+  });
+
+  test("GIPHY: cheia și căutarea pleacă la API; rezultatele au URL-uri reconstruite din id", async () => {
+    let called = "";
+    const fake = (async (url: string) => {
+      called = url;
+      return new Response(
+        JSON.stringify({ data: [{ id: "abc123", title: "Cat", images: { fixed_height: { width: "356", height: "200" } } }, { id: "../rău", title: "x" }] }),
+      );
+    }) as unknown as typeof fetch;
+    const gifs = await searchGiphy("CHEIE", " pisici ", { fetch: fake });
+    expect(called).toContain("api_key=CHEIE");
+    expect(called).toContain("q=pisici");
+    expect(called).toContain("rating=pg-13");
+    expect(gifs).toEqual([
+      { id: "abc123", title: "Cat", url: "https://media.giphy.com/media/abc123/200.gif", preview: "https://media.giphy.com/media/abc123/200w.gif", width: 356, height: 200 },
+    ]);
+    await expect(searchGiphy("CHEIE", "  ", { fetch: fake })).rejects.toBeInstanceOf(GcsValidationError);
   });
 });
 
@@ -118,13 +163,68 @@ describe("GcsChatService / GcsChatQueries", () => {
     expect((await chat.send(a, "general", "Ești Prost")).body).toBe("Ești ***");
   });
 
-  test("ștergerea (moderator) ascunde mesajul din recent; un membru nu poate șterge", async () => {
+  test("ștergerea (moderator) ascunde mesajul din recent; alt membru nu poate șterge", async () => {
     const a = await member("Ana");
+    const b = await member("Bogdan");
     const m = await chat.send(a, "general", "de șters");
-    await expect(chat.delete(a, m.id)).rejects.toBeInstanceOf(GcsForbidden);
+    await expect(chat.delete(b, m.id)).rejects.toBeInstanceOf(GcsForbidden);
     await chat.delete(staff, m.id);
     expect(await queries.recent(a, "general")).toEqual([]);
     expect(await w.db.auditLog.count({ where: { action: "chat.message.delete" } })).toBe(1);
+  });
+
+  test("autorul își șterge propriul mesaj", async () => {
+    const a = await member("Ana");
+    const m = await chat.send(a, "general", "greșeală");
+    await chat.delete(a, m.id);
+    expect(await queries.recent(a, "general")).toEqual([]);
+  });
+
+  test("limitele din setări: caractere și emoticoane (0 = nelimitat)", async () => {
+    const a = await member("Ana");
+    await w.settings.set("chat.max_length", 10, w.root);
+    await expect(chat.send(a, "general", "x".repeat(11))).rejects.toBeInstanceOf(GcsValidationError);
+    await w.settings.set("chat.max_emoticons", 2, w.root);
+    await clear(a);
+    await expect(chat.send(a, "general", "😀😀😀")).rejects.toMatchObject({ fields: { body: "too_many_emoticons" } });
+    await clear(a);
+    expect((await chat.send(a, "general", "😀😀 ok")).body).toBe("😀😀 ok");
+    await w.settings.set("chat.max_length", 0, w.root);
+    await w.settings.set("chat.max_emoticons", 0, w.root);
+    await clear(a);
+    expect((await chat.send(a, "general", `${"😀".repeat(20)}${"y".repeat(600)}`)).body).toHaveLength(640);
+  });
+
+  test("fișierele: imaginea încărcată se leagă de mesaj; doar ale autorului; cu imaginile oprite e refuzată", async () => {
+    const a = await member("Ana");
+    const b = await member("Bogdan");
+    const png = await sharp({ create: { width: 8, height: 8, channels: 3, background: "#123456" } }).png().toBuffer();
+    const upload = (who: GcsActor) => w.attachments.upload(who, { name: "a.png", bytes: png }, { container: { type: "chat", id: "general" }, permission: "chat.write" });
+    const mine = await upload(a);
+    const theirs = await upload(b);
+    await expect(chat.send(a, "general", "", { files: [theirs.id] })).rejects.toBeInstanceOf(GcsForbidden);
+    const m = await chat.send(a, "general", "", { files: [mine.id] });
+    expect(m.files).toEqual([{ id: mine.id, kind: "image", width: 8, height: 8 }]);
+    expect((await queries.recent(b, "general"))[0]!.files).toHaveLength(1);
+    // Cine citește camera descarcă fișierul; un vizitator nu.
+    await expect(w.attachments.open(b, mine.id)).resolves.toMatchObject({ mime: "image/png" });
+    await expect(w.attachments.open(w.guest, mine.id)).rejects.toBeInstanceOf(GcsNotFound);
+    // Același fișier nu se poate refolosi într-un alt mesaj.
+    await clear(a);
+    await expect(chat.send(a, "general", "", { files: [mine.id] })).rejects.toBeInstanceOf(GcsForbidden);
+    await w.settings.set("chat.allow_images", false, w.root);
+    const again = await upload(a);
+    await clear(a);
+    await expect(chat.send(a, "general", "", { files: [again.id] })).rejects.toMatchObject({ fields: { files: "unsupported_type" } });
+  });
+
+  test("configurația pentru client nu conține cheia GIPHY, doar dacă există", async () => {
+    expect((await chat.config()).giphy).toBe(false);
+    await w.settings.set("chat.giphy_key", "secret-cheie", w.root);
+    const config = await chat.config();
+    expect(config).toMatchObject({ giphy: true, timeFormat: "24h", pageSize: 30, maxLength: 500 });
+    expect(JSON.stringify(config)).not.toContain("secret-cheie");
+    expect(await chat.giphyKey()).toBe("secret-cheie");
   });
 
   test("istoricul cu cursor", async () => {

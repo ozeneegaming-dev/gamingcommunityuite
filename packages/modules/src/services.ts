@@ -336,7 +336,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   });
   notificationProducers.registerTargets();
   notificationProducers.listen(bus);
-  const chat = new GcsChatService({ db, bus, permissions, settings, rateLimiter, realtime, acp });
+  const chat = new GcsChatService({ db, bus, permissions, settings, rateLimiter, realtime, acp, attachments });
   const chatQueries = new GcsChatQueries({ db, permissions });
   const realtimeRooms = new GcsRealtimeRooms({ permissions, forumQueries });
   realtimeRooms.register("chat", (actor, key) => chatQueries.canRead(actor, key));

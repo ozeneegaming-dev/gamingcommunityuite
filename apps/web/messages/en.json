@@ -161,7 +161,8 @@
       "permanent": "A permanent VIP cannot be extended.",
       "image": "Upload an image for an image frame.",
       "signature_media": "The signature cannot contain images or video.",
-      "current_session": "Sign out of this session with “Log out”."
+      "current_session": "Sign out of this session with “Log out”.",
+      "too_many_emoticons": "Too many emoticons in one message"
     }
   },
   "acp": {
@@ -1034,7 +1035,8 @@
       "owner": "created by {name}",
       "announcements": "Global announcements",
       "noAnnouncements": "No active announcements.",
-      "noExpiry": "until removed"
+      "noExpiry": "until removed",
+      "display": "Display, limits and content"
     },
     "notifications": {
       "title": "Notifications",
@@ -1136,7 +1138,9 @@
       "ru": "Русский",
       "libretranslate": "LibreTranslate (self-hosted)",
       "deepl": "DeepL",
-      "off": "Off"
+      "off": "Off",
+      "24h": "24-hour (14:30)",
+      "12h": "12-hour (2:30 PM)"
     },
     "forums": {
       "posts_per_page": "Posts per page",
@@ -1269,7 +1273,22 @@
       "alertsSave": "Save alerts"
     },
     "chat": {
-      "word_filter": "Filtered chat words (replaced with ***)"
+      "word_filter": "Filtered chat words (replaced with ***)",
+      "time_format": "Time format",
+      "newest_on_top": "Newest messages on top (input above the list)",
+      "rules": "Chat rules (empty = no “Rules” button)",
+      "hide_avatars": "Hide avatars",
+      "min_height": "Message list height on /chat (px)",
+      "hide_enter_mobile": "Hide the “Send” button on mobile (Enter sends)",
+      "messages_to_display": "Messages shown on open (10–100)",
+      "poll_interval": "Reload without a live connection (seconds)",
+      "max_length": "Maximum message length (0 = 2000)",
+      "max_emoticons": "Emoticons per message (0 = unlimited)",
+      "allow_images": "Allow images (uploaded and from links)",
+      "allow_youtube": "Allow YouTube videos",
+      "voice_enabled": "Allow voice messages",
+      "voice_max_seconds": "Maximum voice message length (seconds)",
+      "giphy_key": "GIPHY API key (without a key, /giphy is off)"
     },
     "i18n": {
       "locales": "Languages offered to members",
@@ -1926,7 +1945,7 @@
     "empty": "No messages yet. Say hi!",
     "older": "Older messages",
     "delete": "Delete",
-    "mute": "Mute 10 min",
+    "mute": "Mute",
     "muted": "You are muted in chat until {until}. Reason: {reason}",
     "slowMode": "Slow mode: one message every {seconds} s.",
     "readOnly": "You can only read this channel.",
@@ -1969,6 +1988,50 @@
       "hours": "Duration (hours, empty = until removed)",
       "submit": "Publish announcement",
       "done": "The announcement is now in every room."
+    },
+    "ui": {
+      "rules": "Rules",
+      "soundOn": "Turn on the new message sound",
+      "soundOff": "Turn off the new message sound",
+      "close": "Close",
+      "mentionHint": "Click to mention {name}",
+      "block": "Block",
+      "emoji": "Emoticons",
+      "emojiTabs": {
+        "smileys": "Smileys",
+        "gestures": "Gestures and hearts",
+        "gaming": "Gaming and sports",
+        "animals": "Animals and nature",
+        "food": "Food and drink",
+        "travel": "Travel and places",
+        "objects": "Objects",
+        "symbols": "Symbols"
+      },
+      "addImage": "Add image",
+      "imagesOff": "Images are turned off in chat.",
+      "tooManyFiles": "At most {max} images per message.",
+      "attached": "Attached images",
+      "removeFile": "Remove {name}",
+      "gifSearch": "Search GIFs",
+      "search": "Search",
+      "gifNone": "No GIFs found.",
+      "gifError": "GIPHY is not responding right now.",
+      "gifRateLimited": "Too many searches; try again in a minute.",
+      "voiceStart": "Record a voice message",
+      "voiceStop": "Stop and send",
+      "voiceCancel": "Cancel",
+      "recording": "Recording…",
+      "micDenied": "No access to the microphone.",
+      "image": "Image",
+      "voiceMessage": "Voice message",
+      "playVideo": "Play the YouTube video",
+      "video": "YouTube video",
+      "muteFor": {
+        "10m": "10 min",
+        "1h": "1 hour",
+        "1d": "1 day",
+        "forever": "Permanent"
+      }
     }
   },
   "online": {

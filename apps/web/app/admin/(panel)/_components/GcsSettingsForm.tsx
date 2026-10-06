@@ -14,6 +14,8 @@ export type GcsSettingsField = {
   /** Pentru secrete: dacă există deja o valoare salvată (valoarea nu ajunge niciodată în browser). */
   secretSet?: boolean;
   options?: { value: string; label: string }[];
+  /** Text pe mai multe rânduri (ex. regulile chat-ului). */
+  multiline?: boolean;
 };
 
 type Props = {
@@ -99,6 +101,10 @@ export function GcsSettingsForm({ fields, action, labels }: Props) {
             ) : f.type === "secret" ? (
               <GcsField label={f.label} hint={f.secretSet ? labels.secretSet : labels.secretEmpty} {...props}>
                 <input name={name} type="password" autoComplete="new-password" placeholder={f.secretSet ? "••••••••" : ""} />
+              </GcsField>
+            ) : f.multiline ? (
+              <GcsField label={f.label} {...props}>
+                <textarea name={name} rows={6} defaultValue={String(f.value ?? "")} />
               </GcsField>
             ) : f.type === "json" ? (
               <GcsField label={f.label} {...props}>

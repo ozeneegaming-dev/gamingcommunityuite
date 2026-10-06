@@ -161,7 +161,8 @@
       "permanent": "Un VIP permanent nu se prelungește.",
       "image": "Încarcă o imagine pentru rama de tip imagine.",
       "signature_media": "Semnătura nu poate conține imagini sau video.",
-      "current_session": "Sesiunea curentă se închide cu „Ieșire”."
+      "current_session": "Sesiunea curentă se închide cu „Ieșire”.",
+      "too_many_emoticons": "Prea multe emoticoane într-un mesaj"
     }
   },
   "acp": {
@@ -1034,7 +1035,8 @@
       "owner": "creată de {name}",
       "announcements": "Anunțuri globale",
       "noAnnouncements": "Niciun anunț activ.",
-      "noExpiry": "până la ștergere"
+      "noExpiry": "până la ștergere",
+      "display": "Afișare, limite și conținut"
     },
     "notifications": {
       "title": "Notificări",
@@ -1136,7 +1138,9 @@
       "ru": "Русский",
       "libretranslate": "LibreTranslate (propriu)",
       "deepl": "DeepL",
-      "off": "Oprită"
+      "off": "Oprită",
+      "24h": "24 de ore (14:30)",
+      "12h": "12 ore (2:30 PM)"
     },
     "forums": {
       "posts_per_page": "Postări pe pagină",
@@ -1269,7 +1273,22 @@
       "alertsSave": "Salvează alertele"
     },
     "chat": {
-      "word_filter": "Cuvinte filtrate în chat (înlocuite cu ***)"
+      "word_filter": "Cuvinte filtrate în chat (înlocuite cu ***)",
+      "time_format": "Formatul orei",
+      "newest_on_top": "Mesajele noi sus (câmpul de scris deasupra listei)",
+      "rules": "Regulile chat-ului (gol = fără butonul „Reguli”)",
+      "hide_avatars": "Ascunde avatarele",
+      "min_height": "Înălțimea listei de mesaje pe /chat (px)",
+      "hide_enter_mobile": "Ascunde butonul „Trimite” pe mobil (Enter trimite)",
+      "messages_to_display": "Mesaje afișate la deschidere (10–100)",
+      "poll_interval": "Reîncărcare fără conexiune live (secunde)",
+      "max_length": "Lungimea maximă a unui mesaj (0 = 2000)",
+      "max_emoticons": "Emoticoane într-un mesaj (0 = nelimitat)",
+      "allow_images": "Permite imagini (încărcate și din linkuri)",
+      "allow_youtube": "Permite clipuri YouTube",
+      "voice_enabled": "Permite mesaje vocale",
+      "voice_max_seconds": "Durata maximă a unui mesaj vocal (secunde)",
+      "giphy_key": "Cheia API GIPHY (fără cheie, /giphy e oprit)"
     },
     "i18n": {
       "locales": "Limbile oferite membrilor",
@@ -1926,7 +1945,7 @@
     "empty": "Niciun mesaj încă. Spune salut!",
     "older": "Mesaje mai vechi",
     "delete": "Șterge",
-    "mute": "Mute 10 min",
+    "mute": "Mute",
     "muted": "Ai mute în chat până la {until}. Motiv: {reason}",
     "slowMode": "Slow mode: un mesaj la {seconds} s.",
     "readOnly": "Poți doar citi acest canal.",
@@ -1969,6 +1988,50 @@
       "hours": "Durata (ore, gol = până la ștergere)",
       "submit": "Publică anunțul",
       "done": "Anunțul a apărut în toate camerele."
+    },
+    "ui": {
+      "rules": "Reguli",
+      "soundOn": "Pornește sunetul la mesaje noi",
+      "soundOff": "Oprește sunetul la mesaje noi",
+      "close": "Închide",
+      "mentionHint": "Click: menționează-l pe {name}",
+      "block": "Blochează",
+      "emoji": "Emoticoane",
+      "emojiTabs": {
+        "smileys": "Fețe",
+        "gestures": "Gesturi și inimi",
+        "gaming": "Gaming și sport",
+        "animals": "Animale și natură",
+        "food": "Mâncare și băuturi",
+        "travel": "Călătorii și locuri",
+        "objects": "Obiecte",
+        "symbols": "Simboluri"
+      },
+      "addImage": "Adaugă imagine",
+      "imagesOff": "Imaginile sunt oprite în chat.",
+      "tooManyFiles": "Cel mult {max} imagini într-un mesaj.",
+      "attached": "Imagini atașate",
+      "removeFile": "Scoate {name}",
+      "gifSearch": "Caută GIF-uri",
+      "search": "Caută",
+      "gifNone": "Niciun GIF găsit.",
+      "gifError": "GIPHY nu răspunde acum.",
+      "gifRateLimited": "Prea multe căutări; încearcă peste un minut.",
+      "voiceStart": "Înregistrează un mesaj vocal",
+      "voiceStop": "Oprește și trimite",
+      "voiceCancel": "Renunță",
+      "recording": "Se înregistrează…",
+      "micDenied": "Nu am acces la microfon.",
+      "image": "Imagine",
+      "voiceMessage": "Mesaj vocal",
+      "playVideo": "Redă clipul YouTube",
+      "video": "Clip YouTube",
+      "muteFor": {
+        "10m": "10 min",
+        "1h": "1 oră",
+        "1d": "1 zi",
+        "forever": "Permanent"
+      }
     }
   },
   "online": {

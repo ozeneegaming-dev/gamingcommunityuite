@@ -1,9 +1,10 @@
 "use server";
 
 import type { GcsResult } from "@gcs/core";
-import { CHAT_ACP_CHANNELS, CHAT_ACP_SETTINGS } from "@gcs/modules";
+import { CHAT_ACP_CHANNELS, CHAT_ACP_SETTINGS, CHAT_DISPLAY_SETTINGS } from "@gcs/modules";
 import { field, intField, runAcpAction } from "@/lib/acp-actions";
 import { services } from "@/lib/services";
+import { saveSettingDefs } from "@/lib/settings-save";
 
 const channelFields = (fd: FormData) => ({
   name: field(fd, "name"),
@@ -31,6 +32,14 @@ export async function updateChatChannel(key: string, fd: FormData): Promise<GcsR
 export async function deleteChatChannel(key: string): Promise<GcsResult<null>> {
   return runAcpAction(CHAT_ACP_CHANNELS, "delete", async (actor) => {
     await services().chat.deleteChannel(actor, key);
+    return null;
+  });
+}
+
+/** Afișarea, limitele și conținutul permis în chat (formularul generic de setări). */
+export async function saveChatSettings(fd: FormData): Promise<GcsResult<null>> {
+  return runAcpAction(CHAT_ACP_SETTINGS, "edit", async (actor) => {
+    await saveSettingDefs(CHAT_DISPLAY_SETTINGS, fd, actor);
     return null;
   });
 }

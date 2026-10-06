@@ -6,6 +6,7 @@ import {
   writeAudit,
   type GcsAcpRoleService,
   type GcsActor,
+  type GcsAttachmentService,
   type GcsEventBus,
   type GcsJobQueue,
   type GcsPermissionService,
@@ -17,7 +18,7 @@ import { normalizeUsername } from "@gcs/core";
 import type { ChatChannel, ChatRoomType, PrismaClient } from "@gcs/db";
 import { toRef, userRefSelect, type GcsUserRef } from "../forums/queries";
 import { CHAT_ACP_CHANNELS, CHAT_CONTAINER, defaultChannelPermissions } from "./index";
-import { applyWordFilter, cleanChatText, renderChatText } from "./text";
+import { applyWordFilter, chatEmbeds, cleanChatText, countEmoji, renderChatText, type GcsChatEmbed } from "./text";
 
 export const CHAT_CLEANUP_JOB = "chat.cleanup";
 const KEY_RE = /^[a-z0-9][a-z0-9-]{1,31}$/;
@@ -29,8 +30,31 @@ const MAX_OWNED_ROOMS = 10;
 const MAX_INVITES = 50;
 const MAX_MENTIONS = 10;
 const MENTION_RE = /(?:^|[^\p{L}\p{N}_])@([\p{L}\p{N}_.-]{2,40})/gu;
+/** Atașamentele mesajelor de chat (imagini și mesaje vocale). */
+export const CHAT_FILE_CONTENT_TYPE = "chat.message";
+const MAX_FILES = 4;
 
 export type GcsChatReactionCount = { reactionId: number; count: number };
+/** Un fișier al mesajului: imagine sau mesaj vocal (`/files/{id}`). */
+export type GcsChatFile = { id: string; kind: "image" | "audio"; width: number | null; height: number | null };
+/** Setările de afișare și limitele chat-ului, trimise clientului (fără cheia GIPHY). */
+export type GcsChatConfig = {
+  timeFormat: "24h" | "12h";
+  newestOnTop: boolean;
+  rules: string;
+  hideAvatars: boolean;
+  minHeight: number;
+  hideEnterMobile: boolean;
+  pageSize: number;
+  pollSeconds: number;
+  maxLength: number;
+  maxEmoticons: number;
+  allowImages: boolean;
+  allowYoutube: boolean;
+  giphy: boolean;
+  voice: boolean;
+  voiceMaxSeconds: number;
+};
 export type GcsChatMessageView = {
   id: number;
   channel: string;
@@ -42,6 +66,9 @@ export type GcsChatMessageView = {
   reactions: GcsChatReactionCount[];
   /** Reacțiile viewer-ului la mesaj. */
   mine: number[];
+  files: GcsChatFile[];
+  /** Imaginile și clipurile YouTube din linkuri (afișate după setări). */
+  embeds: GcsChatEmbed[];
 };
 export type GcsChatRoomInput = { name: string; type: ChatRoomType; invite?: string[] };
 export type GcsChatChannelInput = {
@@ -63,7 +90,11 @@ type ChatMessageRow = {
   editedAt?: Date | null;
   author: Parameters<typeof toRef>[0] | null;
   reactions?: { userId: string; reactionId: number }[];
+  files?: unknown;
 };
+
+const isChatFile = (f: unknown): f is GcsChatFile =>
+  typeof f === "object" && f !== null && typeof (f as GcsChatFile).id === "string" && ((f as GcsChatFile).kind === "image" || (f as GcsChatFile).kind === "audio");
 
 /** Reacțiile unui mesaj, numărate pe tip (ordinea primei apariții). */
 function countReactions(rows: { reactionId: number }[]): GcsChatReactionCount[] {
@@ -84,6 +115,8 @@ export function toChatView(m: ChatMessageRow, channel: string, viewerId: string 
     editedAt: m.editedAt?.toISOString() ?? null,
     reactions: countReactions(reactions),
     mine: viewerId ? reactions.filter((r) => r.userId === viewerId).map((r) => r.reactionId) : [],
+    files: Array.isArray(m.files) ? m.files.filter(isChatFile) : [],
+    embeds: chatEmbeds(m.body),
   };
 }
 
@@ -110,8 +143,76 @@ export class GcsChatService {
       rateLimiter: GcsRedisRateLimiter;
       realtime: GcsRealtime;
       acp: GcsAcpRoleService;
+      /** Imaginile și mesajele vocale (opțional în testele care nu le folosesc). */
+      attachments?: GcsAttachmentService;
     },
-  ) {}
+  ) {
+    deps.attachments?.registerAccess(CHAT_FILE_CONTENT_TYPE, (actor, id) => this.canReadMessage(actor, Number(id)));
+  }
+
+  /** Fișierul unui mesaj se descarcă doar de cine poate citi camera mesajului. */
+  private async canReadMessage(actor: GcsActor, messageId: number): Promise<boolean> {
+    if (!Number.isInteger(messageId)) return false;
+    const message = await this.deps.db.chatMessage.findUnique({ where: { id: messageId }, select: { deletedAt: true, channel: { select: { key: true } } } });
+    if (!message || message.deletedAt) return false;
+    return this.accessible(actor, message.channel.key).then(
+      () => true,
+      () => false,
+    );
+  }
+
+  /** Setările chat-ului pentru client (cheia GIPHY rămâne pe server). */
+  async config(): Promise<GcsChatConfig> {
+    const s = this.deps.settings;
+    const [timeFormat, newestOnTop, rules, hideAvatars, minHeight, hideEnterMobile, pageSize, pollSeconds, maxLength, maxEmoticons, allowImages, allowYoutube, giphyKey, voice, voiceMaxSeconds] =
+      await Promise.all([
+        s.get<string>("chat.time_format"),
+        s.get<boolean>("chat.newest_on_top"),
+        s.get<string>("chat.rules"),
+        s.get<boolean>("chat.hide_avatars"),
+        s.get<number>("chat.min_height"),
+        s.get<boolean>("chat.hide_enter_mobile"),
+        s.get<number>("chat.messages_to_display"),
+        s.get<number>("chat.poll_interval"),
+        s.get<number>("chat.max_length"),
+        s.get<number>("chat.max_emoticons"),
+        s.get<boolean>("chat.allow_images"),
+        s.get<boolean>("chat.allow_youtube"),
+        s.get<string>("chat.giphy_key"),
+        s.get<boolean>("chat.voice_enabled"),
+        s.get<number>("chat.voice_max_seconds"),
+      ]);
+    return {
+      timeFormat: timeFormat === "12h" ? "12h" : "24h",
+      newestOnTop,
+      rules,
+      hideAvatars,
+      minHeight,
+      hideEnterMobile,
+      pageSize,
+      pollSeconds,
+      maxLength,
+      maxEmoticons,
+      allowImages,
+      allowYoutube,
+      giphy: typeof giphyKey === "string" && giphyKey.trim() !== "",
+      voice: voice && this.deps.attachments !== undefined,
+      voiceMaxSeconds,
+    };
+  }
+
+  /** Cheia GIPHY (secretă), sau `null` dacă nu e setată. */
+  async giphyKey(): Promise<string | null> {
+    const key = await this.deps.settings.get<string>("chat.giphy_key");
+    return typeof key === "string" && key.trim() !== "" ? key.trim() : null;
+  }
+
+  /** Limitele configurabile ale textului: numărul de caractere și de emoticoane. */
+  private async checkLimits(body: string): Promise<void> {
+    const [maxLength, maxEmoticons] = await Promise.all([this.deps.settings.get<number>("chat.max_length"), this.deps.settings.get<number>("chat.max_emoticons")]);
+    if (maxLength > 0 && [...body].length > maxLength) throw new GcsValidationError({ body: "too_long" }, { max: String(maxLength) });
+    if (maxEmoticons > 0 && countEmoji(body) > maxEmoticons) throw new GcsValidationError({ body: "too_many_emoticons" }, { max: String(maxEmoticons) });
+  }
 
   private async channel(key: string): Promise<ChatChannel> {
     const channel = typeof key === "string" ? await this.deps.db.chatChannel.findUnique({ where: { key } }) : null;
@@ -146,14 +247,24 @@ export class GcsChatService {
     });
   }
 
-  async send(actor: GcsActor, key: string, raw: unknown): Promise<GcsChatMessageView> {
+  /**
+   * Trimite un mesaj: text și/sau fișiere încărcate înainte (imagini, mesaje vocale; cel mult 4, doar ale autorului,
+   * încă nelegate). Imaginile cer `chat.allow_images`, vocea `chat.voice_enabled`.
+   */
+  async send(actor: GcsActor, key: string, raw: unknown, opts: { files?: string[] } = {}): Promise<GcsChatMessageView> {
     const { db, bus, permissions, settings, rateLimiter, realtime } = this.deps;
     const channel = await this.accessible(actor, key);
     if (!actor.userId || actor.isBanned || !(await permissions.can(actor, "chat.write", chatContainer(channel.key)))) {
       throw new GcsForbidden({ permission: "chat.write" });
     }
     const body = cleanChatText(typeof raw === "string" ? raw : "");
-    if (!body) throw new GcsValidationError({ body: "required" });
+    const fileIds = [...new Set(opts.files ?? [])];
+    if (!body && fileIds.length === 0) throw new GcsValidationError({ body: "required" });
+    if (fileIds.length > MAX_FILES) throw new GcsValidationError({ files: "too_many" }, { max: String(MAX_FILES) });
+    if (fileIds.length > 0 && !this.deps.attachments) throw new GcsValidationError({ files: "unsupported_type" });
+    await this.checkLimits(body);
+    // Fișierele se verifică înainte de flood: o încercare invalidă nu consumă mesajul permis.
+    const files = fileIds.length > 0 ? await this.chatFiles(actor.userId, fileIds) : [];
     const mute = await this.activeMute(actor.userId, channel.id);
     if (mute) throw new GcsForbidden({ reason: "muted", ...(mute.until ? { until: mute.until.toISOString() } : {}) });
 
@@ -170,15 +281,35 @@ export class GcsChatService {
 
     const words = await settings.get<string[]>("chat.word_filter");
     const filtered = applyWordFilter(body, Array.isArray(words) ? words : []);
-    const message = await db.chatMessage.create({
-      data: { channelId: channel.id, authorId: actor.userId, body: filtered },
-      include: { author: { select: userRefSelect } },
+    const authorId = actor.userId;
+    const message = await db.$transaction(async (tx) => {
+      const row = await tx.chatMessage.create({
+        data: { channelId: channel.id, authorId, body: filtered, files },
+        include: { author: { select: userRefSelect } },
+      });
+      if (files.length > 0) await this.deps.attachments!.attach(tx, fileIds, { contentType: CHAT_FILE_CONTENT_TYPE, contentId: String(row.id), ownerId: authorId });
+      return row;
     });
     const view = toChatView(message, channel.key);
     await bus.emit({ name: "chat.message", payload: { channelKey: channel.key, messageId: message.id, authorId: actor.userId }, tags: [`chat:${channel.key}`] });
     await realtime.publish(`chat:${channel.key}`, "message", view);
     await this.mentions(channel, message.id, actor.userId, filtered);
     return view;
+  }
+
+  /** Fișierele de trimis: ale autorului, încă nelegate, imagini (dacă sunt permise) sau audio (dacă vocea e pornită). */
+  private async chatFiles(ownerId: string, ids: string[]): Promise<GcsChatFile[]> {
+    const { db, settings } = this.deps;
+    const rows = await db.attachment.findMany({ where: { id: { in: ids } }, select: { id: true, ownerId: true, contentType: true, mime: true, width: true, height: true } });
+    if (rows.length !== ids.length || rows.some((r) => r.ownerId !== ownerId || r.contentType !== null)) throw new GcsForbidden({ reason: "attachment" });
+    const [images, voice] = await Promise.all([settings.get<boolean>("chat.allow_images"), settings.get<boolean>("chat.voice_enabled")]);
+    const byId = new Map(rows.map((r) => [r.id, r]));
+    return ids.map((id) => {
+      const r = byId.get(id)!;
+      const kind = r.mime.startsWith("image/") ? "image" : r.mime.startsWith("audio/") || r.mime === "video/webm" ? "audio" : null;
+      if (kind === null || (kind === "image" && !images) || (kind === "audio" && !voice)) throw new GcsValidationError({ files: "unsupported_type" });
+      return { id, kind, width: r.width, height: r.height };
+    });
   }
 
   /**
@@ -204,7 +335,8 @@ export class GcsChatService {
     const mute = await this.activeMute(actor.userId, channel.id);
     if (mute) throw new GcsForbidden({ reason: "muted" });
     const body = cleanChatText(typeof raw === "string" ? raw : "");
-    if (!body) throw new GcsValidationError({ body: "required" });
+    if (!body && !(Array.isArray(message.files) && message.files.length > 0)) throw new GcsValidationError({ body: "required" });
+    await this.checkLimits(body);
     const words = await settings.get<string[]>("chat.word_filter");
     const updated = await db.chatMessage.update({
       where: { id: messageId },
@@ -392,11 +524,12 @@ export class GcsChatService {
     await realtime.publish(`chat:${channel.key}`, "channel", { enabled: false, deleted: true });
   }
 
-  /** Ștergere (moderator): mesajul rămâne în bază, ascuns, și dispare live din canal. */
+  /** Ștergere (moderatorul sau autorul): mesajul rămâne în bază, ascuns, și dispare live din canal. */
   async delete(actor: GcsActor, messageId: number): Promise<void> {
     const { db, bus, realtime } = this.deps;
-    await this.assertModerator(actor);
-    const message = await db.chatMessage.findUnique({ where: { id: messageId }, include: { channel: { select: { key: true } } } });
+    const message = Number.isInteger(messageId) ? await db.chatMessage.findUnique({ where: { id: messageId }, include: { channel: { select: { key: true } } } }) : null;
+    const own = message !== null && actor.userId !== null && !actor.isBanned && message.authorId === actor.userId;
+    if (!own) await this.assertModerator(actor);
     if (!message || message.deletedAt) throw new GcsNotFound();
     await db.$transaction(async (tx) => {
       await tx.chatMessage.update({ where: { id: messageId }, data: { deletedAt: new Date(), deletedById: actor.userId } });

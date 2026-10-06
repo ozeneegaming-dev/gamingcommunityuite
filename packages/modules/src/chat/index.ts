@@ -48,7 +48,40 @@ const permissions: GcsPermissionDef[] = [
   },
 ];
 
+const int = (min: number, max: number) => (v: unknown) => (Number.isInteger(v) && (v as number) >= min && (v as number) <= max ? null : "invalid_range");
+const chatSetting = (key: string, type: GcsSettingDef["type"], value: unknown, extra: Partial<GcsSettingDef> = {}): GcsSettingDef => ({
+  key: `chat.${key}`,
+  type,
+  default: value,
+  section: "chat",
+  labelKey: `settings.chat.${key}`,
+  ...extra,
+});
+
+/**
+ * Setările chat-ului (ACP → Comunitate → Chat → Setări), după modelul Chatbox-ului din IPS: afișarea (ora, ordinea,
+ * avatarele, înălțimea), limitele (mesaje, caractere, emoticoane) și conținutul permis (imagini, YouTube, GIPHY, voce).
+ */
+export const CHAT_DISPLAY_SETTINGS: GcsSettingDef[] = [
+  chatSetting("time_format", "string", "24h", { options: ["24h", "12h"], validate: (v) => (v === "24h" || v === "12h" ? null : "invalid_choice") }),
+  chatSetting("newest_on_top", "boolean", false),
+  chatSetting("rules", "string", "", { multiline: true, validate: (v) => (typeof v === "string" && v.length <= 5000 ? null : "invalid_length") }),
+  chatSetting("hide_avatars", "boolean", false),
+  chatSetting("min_height", "number", 420, { validate: int(120, 1200) }),
+  chatSetting("hide_enter_mobile", "boolean", false),
+  chatSetting("messages_to_display", "number", 30, { validate: int(10, 100) }),
+  chatSetting("poll_interval", "number", 30, { validate: int(5, 600) }),
+  chatSetting("max_length", "number", 500, { validate: int(0, 2000) }),
+  chatSetting("max_emoticons", "number", 5, { validate: int(0, 100) }),
+  chatSetting("allow_images", "boolean", true),
+  chatSetting("allow_youtube", "boolean", true),
+  chatSetting("voice_enabled", "boolean", true),
+  chatSetting("voice_max_seconds", "number", 60, { validate: int(5, 300) }),
+  chatSetting("giphy_key", "secret", ""),
+];
+
 const settings: GcsSettingDef[] = [
+  ...CHAT_DISPLAY_SETTINGS,
   {
     key: "chat.word_filter",
     type: "json",

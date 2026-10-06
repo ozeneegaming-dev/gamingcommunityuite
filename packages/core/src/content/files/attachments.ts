@@ -23,6 +23,10 @@ const BINARY_MIMES = new Set([
   "video/webm",
   "audio/mpeg",
   "audio/ogg",
+  // Mesajele vocale din chat (MediaRecorder: WebM/Opus în Chrome și Firefox, MP4/AAC în Safari).
+  "audio/webm",
+  "audio/mp4",
+  "audio/x-m4a",
 ]);
 
 /** Fișierele text (configuri de joc, loguri) nu au magic bytes; se acceptă după extensie, doar dacă sunt UTF-8 valid. */

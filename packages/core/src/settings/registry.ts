@@ -9,6 +9,8 @@ export interface GcsSettingDef {
   validate?: (v: unknown) => string | null;
   /** Valorile permise (formularul din ACP afișează o listă); validarea o face `validate`. */
   options?: string[];
+  /** Text pe mai multe rânduri (ex. regulile chat-ului): formularul din ACP afișează un câmp mare. */
+  multiline?: boolean;
 }
 
 /** Codul de eroare pentru o valoare care nu se potrivește cu tipul sau validarea setării, sau `null`. */

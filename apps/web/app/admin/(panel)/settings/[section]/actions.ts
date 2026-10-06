@@ -2,9 +2,10 @@
 
 import { GcsValidationError, sendEmail, settingsAcpSection, type GcsResult } from "@gcs/core";
 import { getTranslations } from "next-intl/server";
-import { field, runAcpAction } from "@/lib/acp-actions";
+import { runAcpAction } from "@/lib/acp-actions";
 import { getAcpContext } from "@/lib/acp";
 import { services } from "@/lib/services";
+import { saveSettingDefs } from "@/lib/settings-save";
 
 /**
  * Salvează setările unei secțiuni (câmpurile `setting:<cheie>`). Un secret lăsat gol își păstrează valoarea,
@@ -12,39 +13,11 @@ import { services } from "@/lib/services";
  */
 export async function saveSettings(section: string, fd: FormData): Promise<GcsResult<null>> {
   return runAcpAction(settingsAcpSection(section), "edit", async (actor) => {
-    const { settings, registry } = services();
-    const fields: Record<string, string> = {};
-    for (const def of registry.settingDefs().filter((d) => d.section === section)) {
-      const name = `setting:${def.key}`;
-      let value: unknown;
-      if (def.type === "boolean") {
-        value = fd.get(name) === "on";
-      } else if (def.type === "number") {
-        const raw = field(fd, name).trim();
-        value = raw === "" ? Number.NaN : Number(raw);
-      } else if (def.type === "json") {
-        // Câmpurile JSON cu formular propriu (ex. limbile active) nu vin în formularul generic.
-        if (!fd.has(name)) continue;
-        try {
-          value = JSON.parse(field(fd, name));
-        } catch {
-          fields[def.key] = "invalid_type";
-          continue;
-        }
-      } else {
-        value = field(fd, name).trim();
-        if (def.type === "secret" && value === "") continue;
-      }
-      const current = await settings.get(def.key);
-      if (JSON.stringify(current) === JSON.stringify(value)) continue;
-      try {
-        await settings.set(def.key, value, actor);
-      } catch (error) {
-        if (error instanceof GcsValidationError) Object.assign(fields, error.fields);
-        else throw error;
-      }
-    }
-    if (Object.keys(fields).length > 0) throw new GcsValidationError(fields);
+    await saveSettingDefs(
+      services().registry.settingDefs().filter((d) => d.section === section),
+      fd,
+      actor,
+    );
     return null;
   });
 }
