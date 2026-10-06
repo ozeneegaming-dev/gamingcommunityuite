@@ -34,7 +34,7 @@ test("un canal nou din ACP apare în /chat; slow mode-ul, filtrul și ridicarea 
   await page.goto("/admin/community/chat/settings");
   await page.getByLabel(/Un cuvânt sau o expresie pe rând/).fill(word);
   await page.getByRole("region", { name: "Filtrul de cuvinte" }).getByRole("button", { name: "Salvează" }).click();
-  await expect(page.getByText("Salvat").first()).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "Salvat" }).first()).toBeVisible();
 
   const memberEmail = `chat-acp-${id}@example.com`;
   const m = await memberPage(browser, `Turnir${id}`, memberEmail, "100.67.1");
@@ -75,7 +75,7 @@ test("valoarea implicită de email schimbată în ACP se vede în setările unui
   const row = page.getByTestId("gcs-acp-notif-profile.badge");
   await row.getByRole("combobox").selectOption("DIGEST");
   await page.getByRole("button", { name: "Salvează" }).click();
-  await expect(page.getByText("Salvat").first()).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "Salvat" }).first()).toBeVisible();
 
   const m = await memberPage(browser, `Nou${id}`, `notif-def-${id}@example.com`, "100.67.2");
   await m.goto("/settings/notifications");
