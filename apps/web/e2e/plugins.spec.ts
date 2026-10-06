@@ -71,8 +71,11 @@ test("Root Admin instalează pluginul din ACP; widget-ul, pagina și postbit-ul 
   // 4. Listenerul `post.created` (tabelul propriu) și punctul de extensie din postbit.
   const tree = await forumTree(request);
   const topic = await topicWithReplies(request, tree.forum.id, `plgadm-${id}@example.com`, `Topic plugin ${id}`, 1);
-  await page.reload();
-  await expect(page.locator(WIDGET).filter({ visible: true })).toContainText("Postări noi văzute: 1");
+  // Listenerul rulează în fundal (după răspunsul cererii): pagina se reîncarcă până apare.
+  await expect(async () => {
+    await page.reload();
+    await expect(page.locator(WIDGET).filter({ visible: true })).toContainText("Postări noi văzute: 1", { timeout: 2000 });
+  }).toPass({ timeout: 30_000 });
   await page.goto(topic.url);
   await expect(page.getByTestId("gcs-postbit").first()).toContainText("Salutat de Hello");
 
