@@ -39,27 +39,84 @@ export const THEME_ELEMENT_VARS: Record<GcsThemeElementColor, string> = {
 
 const GOOGLE_FONTS_IMPORT = /^@import\s+url\(\s*["']?https:\/\/fonts\.googleapis\.com\/css2?\?[^"')\s]+["']?\s*\)\s*;?$/i;
 
+/** Fișierul editorului vizual (dialogul „CSS personalizat”): nu se redenumește și nu se șterge. */
+export const CUSTOM_CSS_FILE = "custom.css";
+
+/** De ce a fost scos ceva din CSS-ul unei teme (lista arătată adminului după salvare). */
+export type GcsCssRemovalReason = "html" | "escape" | "expression" | "script_url" | "binding" | "behavior" | "charset" | "import" | "url";
+export type GcsCssRemoval = { line: number; text: string; reason: GcsCssRemovalReason };
+
+const lineAt = (text: string, offset: number) => {
+  let line = 1;
+  for (let i = 0; i < offset; i++) if (text.charCodeAt(i) === 10) line++;
+  return line;
+};
+const snippet = (s: string) => (s.length > 80 ? `${s.slice(0, 79)}…` : s);
+
 /**
- * CSS-ul extra al unei teme (scris de admin), curățat înainte de a ajunge în pagină:
+ * CSS-ul extra al unei teme (scris de admin), curățat înainte de a ajunge în pagină, plus lista a ce s-a scos (rândul,
+ * fragmentul și motivul), ca editorul să-i poată spune adminului exact ce nu e permis:
  * - fără `<` (deci fără `</style>` sau HTML strecurat);
  * - fără `expression(`, `javascript:`, `vbscript:`, `-moz-binding`, `behavior:` (vectori vechi de execuție);
  * - `@import` doar de la Google Fonts; `url(...)` doar spre `https:` sau fișierele site-ului (`/files/…`);
  * - fără `@charset`.
  */
-export function sanitizeThemeCss(raw: string): string {
-  let css = raw.replace(/\r\n?/g, "\n").replace(/</g, "").replace(/\\3c/gi, "");
-  css = css.replace(/expression\s*\(/gi, "/* removed */(").replace(/(?:java|vb)script\s*:/gi, "").replace(/-moz-binding/gi, "").replace(/behavior\s*:/gi, "");
+export function sanitizeThemeCssReport(raw: string): { css: string; removed: GcsCssRemoval[] } {
+  const removed: GcsCssRemoval[] = [];
+  /** Rândurile păstrate după scoaterea `@charset`/`@import`, cu numărul lor din textul inițial. */
+  let lineMap: number[] | null = null;
+  const tracked = (text: string, re: RegExp, reason: GcsCssRemovalReason, replacement: string | ((m: string, ...groups: string[]) => string | null)) =>
+    text.replace(re, (match: string, ...rest: unknown[]) => {
+      const offset = rest[rest.length - 2] as number;
+      const whole = rest[rest.length - 1] as string;
+      const out = typeof replacement === "string" ? replacement : replacement(match, ...(rest.slice(0, -2) as string[]));
+      if (out === null) return match;
+      const line = lineAt(whole, offset);
+      removed.push({ line: lineMap?.[line - 1] ?? line, text: snippet(match), reason });
+      return out;
+    });
+
+  let css = raw.replace(/\r\n?/g, "\n");
+  css = tracked(css, /</g, "html", "");
+  css = tracked(css, /\\3c/gi, "escape", "");
+  css = tracked(css, /expression\s*\(/gi, "expression", "/* removed */(");
+  css = tracked(css, /(?:java|vb)script\s*:/gi, "script_url", "");
+  css = tracked(css, /-moz-binding/gi, "binding", "");
+  css = tracked(css, /behavior\s*:/gi, "behavior", "");
+  const kept: number[] = [];
   css = css
     .split("\n")
-    .filter((line) => {
+    .filter((line, i) => {
       const t = line.trim();
-      if (/^@charset/i.test(t)) return false;
-      if (/^@import/i.test(t)) return GOOGLE_FONTS_IMPORT.test(t);
+      if (/^@charset/i.test(t)) {
+        removed.push({ line: i + 1, text: snippet(t), reason: "charset" });
+        return false;
+      }
+      if (/^@import/i.test(t) && !GOOGLE_FONTS_IMPORT.test(t)) {
+        removed.push({ line: i + 1, text: snippet(t), reason: "import" });
+        return false;
+      }
+      kept.push(i + 1);
       return true;
     })
     .join("\n");
-  css = css.replace(/url\(\s*(["']?)([^"')]*)\1\s*\)/gi, (m, _q: string, url: string) => (/^(https:\/\/|\/files\/)/i.test(url.trim()) ? m : "none"));
-  return css.trim();
+  lineMap = kept;
+  css = tracked(css, /url\(\s*(["']?)([^"')]*)\1\s*\)/gi, "url", (_m, _q, url) => (/^(https:\/\/|\/files\/)/i.test((url ?? "").trim()) ? null : "none"));
+  removed.sort((a, b) => a.line - b.line);
+  return { css: css.trim(), removed };
+}
+
+/** CSS-ul extra curățat (vezi `sanitizeThemeCssReport`). */
+export function sanitizeThemeCss(raw: string): string {
+  return sanitizeThemeCssReport(raw).css;
+}
+
+/** Fișierele CSS ale unei teme, în ordine, ca un singur text (fiecare cu numele lui într-un comentariu). */
+export function joinThemeCssFiles(files: readonly { name: string; content: string }[]): string {
+  return files
+    .filter((f) => f.content.trim())
+    .map((f) => `/* ${f.name.replace(/\*\//g, "")} */\n${f.content}`)
+    .join("\n\n");
 }
 
 const palette = (p: GcsThemePalette) => THEME_TOKENS.map((k) => `  --gcs-${k}: ${p[k]};`).join("\n");

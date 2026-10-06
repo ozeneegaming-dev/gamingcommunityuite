@@ -247,6 +247,8 @@ const acpMenu: GcsAcpMenuSection[] = [
   // Etapa 5: temele și widget-urile se editează direct pe site; aici sunt listele și linkurile spre editoare.
   menuSection("appearance", "appearance", "fa-solid fa-palette", [
     ["themes", "/admin/appearance/themes", "fa-solid fa-brush"],
+    ["templates", "/admin/appearance/templates", "fa-solid fa-file-code"],
+    ["css", "/admin/appearance/css", "fa-brands fa-css3-alt"],
     ["widgets", "/admin/appearance/widgets", "fa-solid fa-table-cells-large"],
   ]),
 ];

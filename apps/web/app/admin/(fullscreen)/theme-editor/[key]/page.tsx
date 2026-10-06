@@ -1,4 +1,4 @@
-import { THEME_FONTS, THEMES_ACP_SECTION } from "@gcs/core";
+import { THEME_FONTS, THEMES_ACP_SECTION, themeCustomCss } from "@gcs/core";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -31,7 +31,8 @@ export default async function ThemeStudioPage({ params }: { params: Promise<{ ke
       hasDraft={theme.draft !== null}
       fonts={THEME_FONTS}
       previewUrl={`/?${THEME_PREVIEW_PARAM}=${encodeURIComponent(theme.key)}`}
-      initial={{ settings: shown.settings, customCss: shown.customCss, logoUrl: shown.logoUrl, faviconUrl: shown.faviconUrl }}
+      cssFiles={theme.cssFiles}
+      initial={{ settings: shown.settings, customCss: themeCustomCss(shown), logoUrl: shown.logoUrl, faviconUrl: shown.faviconUrl }}
     />
   );
 }

@@ -1296,7 +1296,8 @@ model NavItem {
   @@map("nav_items")
 }
 
-/// O temă: tokenurile (dark + light), fonturile, raza, lățimea, logo, favicon și CSS extra; `draft` = modificările nepublicate.
+/// O temă: tokenurile (dark + light), fonturile, raza, lățimea, logo, favicon; `draft` = modificările nepublicate.
+/// CSS-ul extra stă în fișierele temei (`theme_css_files`), iar markup-ul modificat în `theme_templates`.
 model Theme {
   id         Int      @id @default(autoincrement())
   key        String   @unique
@@ -1304,7 +1305,6 @@ model Theme {
   isDefault  Boolean  @default(false)
   enabled    Boolean  @default(true)
   settings   Json     @default("{}")
-  customCss  String   @default("")
   logoUrl    String?
   faviconUrl String?
   draft      Json?
@@ -1312,7 +1312,81 @@ model Theme {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
+  cssFiles         ThemeCssFile[]
+  templates        ThemeTemplate[]
+  templateVersions ThemeTemplateVersion[]
+
   @@map("themes")
+}
+
+/// Un fișier CSS al unei teme (ACP → Aspect → CSS), compilat după setări în ordinea `position`. `content` e deja
+/// sanitizat. `custom.css` e și CSS-ul din editorul vizual (nu se poate redenumi sau șterge).
+model ThemeCssFile {
+  id        Int      @id @default(autoincrement())
+  themeId   Int
+  name      String
+  position  Int      @default(0)
+  content   String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  theme    Theme             @relation(fields: [themeId], references: [id], onDelete: Cascade)
+  versions ThemeCssVersion[]
+
+  @@unique([themeId, name])
+  @@index([themeId, position])
+  @@map("theme_css_files")
+}
+
+/// O versiune a unui fișier CSS (`create`, `save`, `restore`, `publish`, `migrate`, `import`); prima e originalul.
+model ThemeCssVersion {
+  id         Int      @id @default(autoincrement())
+  fileId     Int
+  content    String
+  action     String
+  authorId   String?
+  authorName String   @default("")
+  createdAt  DateTime @default(now())
+
+  file ThemeCssFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@index([fileId, id])
+  @@map("theme_css_versions")
+}
+
+/// Șablonul modificat al unei teme (ACP → Aspect → Șabloane). Fără rând, se folosește șablonul implicit din cod.
+/// `baseVersion`/`baseSource`: șablonul implicit de la care a pornit (o versiune nouă în cod = „necesită revizuire”).
+model ThemeTemplate {
+  id          Int      @id @default(autoincrement())
+  themeId     Int
+  key         String
+  source      String
+  baseVersion Int
+  baseSource  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  theme Theme @relation(fields: [themeId], references: [id], onDelete: Cascade)
+
+  @@unique([themeId, key])
+  @@map("theme_templates")
+}
+
+/// Istoricul unui șablon pe o temă (`save`, `restore`, `revert`, `import`); rămâne și după „Revino la original”.
+model ThemeTemplateVersion {
+  id         Int      @id @default(autoincrement())
+  themeId    Int
+  key        String
+  source     String
+  action     String
+  authorId   String?
+  authorName String   @default("")
+  createdAt  DateTime @default(now())
+
+  theme Theme @relation(fields: [themeId], references: [id], onDelete: Cascade)
+
+  @@index([themeId, key, id])
+  @@map("theme_template_versions")
 }
 
 /// Un widget pus pe o pagină (`index`, `forum`, `topic`), într-o zonă (`top`, `bottom`, `sidebar`). `groups` gol = toți.

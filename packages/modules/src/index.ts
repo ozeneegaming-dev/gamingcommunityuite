@@ -47,3 +47,4 @@ export * from "./chat/queries";
 export * from "./chat/text";
 export * from "./chat/giphy";
 export * from "./realtime/live";
+export * from "./templates/components";
