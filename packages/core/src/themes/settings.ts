@@ -1,0 +1,375 @@
+/**
+ * Setările unei teme: tipurile, valorile implicite, câmpurile (cu intervale și enumerări), completarea cu valorile
+ * implicite și validarea. Modul e „pur” (fără Prisma sau Node): îl folosește și editorul vizual din browser
+ * (`@gcs/core/themes`), ca previzualizarea să fie compilată exact ca pe server.
+ */
+
+/** Tokenurile de culoare ale unei teme (aceleași nume ca în `tokens.css`, fără prefixul `--gcs-`). */
+export const THEME_TOKENS = ["bg", "surface", "surface2", "border", "text", "muted", "accent", "accentInk", "chrome", "chrome2", "ok", "warn"] as const;
+export type GcsThemeToken = (typeof THEME_TOKENS)[number];
+export type GcsThemePalette = Record<GcsThemeToken, string>;
+
+/** Fonturile din care se alege (Google Fonts; primele două vin deja cu aplicația). */
+export const THEME_FONTS = ["Chakra Petch", "Manrope", "Inter", "Rajdhani", "Orbitron", "Oxanium", "Exo 2", "Montserrat", "Poppins", "Roboto"] as const;
+
+/**
+ * Culorile elementelor (antet, subsol, casete, butoane…), separat pentru modul întunecat și cel luminos. Valoarea e un
+ * hex (`#RRGGBB`), o referință la un token al paletei (`@accent` → `var(--gcs-accent)`) sau `transparent`.
+ */
+export const THEME_ELEMENT_COLORS = [
+  "bodyBg",
+  "heading",
+  "link",
+  "linkHover",
+  "headerBg",
+  "headerText",
+  "footerBg",
+  "footerText",
+  "drawerBg",
+  "drawerText",
+  "boxBg",
+  "boxBorder",
+  "boxHeaderBg",
+  "boxHeaderText",
+  "widgetTitle",
+  "widgetIcon",
+  "btnPrimaryBg",
+  "btnPrimaryText",
+  "btnSecondaryBg",
+  "btnSecondaryText",
+] as const;
+export type GcsThemeElementColor = (typeof THEME_ELEMENT_COLORS)[number];
+export type GcsThemeElements = Record<GcsThemeElementColor, string>;
+
+/** Modul implicit: `site` = setarea `site.theme` din ACP (comportamentul de până acum). */
+export const THEME_SCHEMES = ["site", "auto", "light", "dark"] as const;
+export const THEME_FORUM_INDEX_LAYOUTS = ["list", "grid"] as const;
+export const THEME_TOPIC_VIEWS = ["normal", "compact"] as const;
+export const THEME_BOX_SHADOWS = ["none", "soft", "strong"] as const;
+
+export type GcsThemeSettings = {
+  dark: GcsThemePalette;
+  light: GcsThemePalette;
+  fontDisplay: string;
+  fontText: string;
+  /** Raza colțurilor casetelor (px). */
+  radius: number;
+  /** Lățimea maximă a paginii (px). */
+  width: number;
+  elements: { dark: GcsThemeElements; light: GcsThemeElements };
+  scheme: { default: (typeof THEME_SCHEMES)[number]; toggle: boolean };
+  logo: {
+    /** Textul logo-ului; gol = numele site-ului. */
+    text: string;
+    slogan: string;
+    font: "display" | "text";
+    weight: number;
+    size: number;
+    sizeMobile: number;
+    /** Textul logo-ului rămâne vizibil pe ecranele mici (implicit apare doar marcajul). */
+    textMobile: boolean;
+    /** Logo-ul imagine pentru modul luminos (cel pentru modul întunecat e `logoUrl` al temei). */
+    imageLight: string | null;
+    imageMobile: string | null;
+    imageMobileLight: string | null;
+    /** Înălțimea maximă a imaginii, în procente din înălțimea antetului. */
+    height: number;
+    heightMobile: number;
+  };
+  layout: {
+    forumIndex: (typeof THEME_FORUM_INDEX_LAYOUTS)[number];
+    topicView: (typeof THEME_TOPIC_VIEWS)[number];
+    featureFirstPost: boolean;
+  };
+  typography: {
+    /** Mărimea textului de bază (px, raportată la 16 px = mărimea aleasă de browser). */
+    baseSize: number;
+    /** Mărimea textului din postări și semnături (%). */
+    contentSize: number;
+    /** Un alt font Google pentru titluri / text (gol = cel din listă). */
+    fontDisplayCustom: string;
+    fontTextCustom: string;
+  };
+  header: { height: number; heightMobile: number; navIcons: boolean; sticky: boolean };
+  mobileNav: { side: "left" | "right"; icons: boolean };
+  boxes: { borderWidth: number; shadow: (typeof THEME_BOX_SHADOWS)[number]; clickableRows: boolean };
+  sidebar: { width: number; position: "right" | "left"; sticky: boolean };
+  avatars: { rounded: boolean };
+  buttons: { radius: number };
+};
+
+export type GcsDeepPartial<T> = { [K in keyof T]?: T[K] extends Record<string, unknown> ? GcsDeepPartial<T[K]> : T[K] };
+
+/** Culorile implicite ale elementelor: exact regulile din `layout.css` / `base.css` de până acum. */
+const DEFAULT_ELEMENTS: GcsThemeElements = {
+  bodyBg: "@bg",
+  heading: "@text",
+  link: "@accentInk",
+  linkHover: "@accentInk",
+  headerBg: "@chrome",
+  headerText: "@muted",
+  footerBg: "@chrome",
+  footerText: "@muted",
+  drawerBg: "@surface",
+  drawerText: "@accentInk",
+  boxBg: "@surface",
+  boxBorder: "@border",
+  boxHeaderBg: "transparent",
+  boxHeaderText: "@text",
+  widgetTitle: "@text",
+  widgetIcon: "@accentInk",
+  btnPrimaryBg: "@accent",
+  btnPrimaryText: "#FFFFFF",
+  btnSecondaryBg: "@surface2",
+  btnSecondaryText: "@text",
+};
+
+/** Valorile implicite: exact paleta și aspectul din machete (`tokens.css` / `themes.css` / `layout.css`). */
+export const DEFAULT_THEME_SETTINGS: GcsThemeSettings = {
+  dark: {
+    bg: "#0B0C10",
+    surface: "#14161C",
+    surface2: "#1B1E26",
+    border: "#262A34",
+    text: "#ECEDF1",
+    muted: "#A1A7B4",
+    accent: "#D62839",
+    accentInk: "#FF6B74",
+    chrome: "#0F1116",
+    chrome2: "#111319",
+    ok: "#3DDC97",
+    warn: "#F4B740",
+  },
+  light: {
+    bg: "#F4F5F7",
+    surface: "#FFFFFF",
+    surface2: "#EEF0F3",
+    border: "#D9DCE2",
+    text: "#14161C",
+    muted: "#5B6170",
+    accent: "#D62839",
+    accentInk: "#C21F31",
+    chrome: "#FFFFFF",
+    chrome2: "#F8F9FB",
+    ok: "#1F9D63",
+    warn: "#B7791F",
+  },
+  fontDisplay: "Chakra Petch",
+  fontText: "Manrope",
+  radius: 12,
+  width: 1320,
+  elements: { dark: { ...DEFAULT_ELEMENTS }, light: { ...DEFAULT_ELEMENTS } },
+  scheme: { default: "site", toggle: true },
+  logo: {
+    text: "",
+    slogan: "",
+    font: "display",
+    weight: 700,
+    size: 22,
+    sizeMobile: 18,
+    textMobile: false,
+    imageLight: null,
+    imageMobile: null,
+    imageMobileLight: null,
+    height: 66,
+    heightMobile: 66,
+  },
+  layout: { forumIndex: "list", topicView: "normal", featureFirstPost: false },
+  typography: { baseSize: 16, contentSize: 100, fontDisplayCustom: "", fontTextCustom: "" },
+  header: { height: 64, heightMobile: 64, navIcons: true, sticky: true },
+  mobileNav: { side: "left", icons: true },
+  boxes: { borderWidth: 1, shadow: "none", clickableRows: false },
+  sidebar: { width: 320, position: "right", sticky: false },
+  avatars: { rounded: true },
+  buttons: { radius: 10 },
+};
+
+// ─── Câmpurile ────────────────────────────────────────────────────────────────
+
+export type GcsThemeField =
+  /** Culoare a paletei: doar hex (tokenurile nu se referă unele la altele). */
+  | { kind: "palette" }
+  /** Culoare de element: hex, `@token` sau `transparent`. */
+  | { kind: "color" }
+  | { kind: "int"; min: number; max: number; step?: number; unit?: "px" | "%" }
+  | { kind: "enum"; options: readonly string[] }
+  | { kind: "bool" }
+  | { kind: "text"; max: number }
+  /** Un font din listă. */
+  | { kind: "font" }
+  /** Numele unui font Google (litere, cifre, spații) sau gol. */
+  | { kind: "fontName" }
+  /** Un fișier public al site-ului (`/files/<id>`) sau `null`. */
+  | { kind: "file" };
+
+const int = (min: number, max: number, unit?: "px" | "%", step?: number): GcsThemeField => ({ kind: "int", min, max, ...(unit ? { unit } : {}), ...(step ? { step } : {}) });
+const choice = (options: readonly string[]): GcsThemeField => ({ kind: "enum", options });
+const BOOL: GcsThemeField = { kind: "bool" };
+
+function buildFields(): Record<string, GcsThemeField> {
+  const fields: Record<string, GcsThemeField> = {};
+  for (const mode of ["dark", "light"] as const) {
+    for (const t of THEME_TOKENS) fields[`${mode}.${t}`] = { kind: "palette" };
+    for (const e of THEME_ELEMENT_COLORS) fields[`elements.${mode}.${e}`] = { kind: "color" };
+  }
+  return {
+    ...fields,
+    fontDisplay: { kind: "font" },
+    fontText: { kind: "font" },
+    radius: int(0, 24, "px"),
+    width: int(1000, 1920, "px", 10),
+    "scheme.default": choice(THEME_SCHEMES),
+    "scheme.toggle": BOOL,
+    "logo.text": { kind: "text", max: 40 },
+    "logo.slogan": { kind: "text", max: 80 },
+    "logo.font": choice(["display", "text"]),
+    "logo.weight": int(400, 800, undefined, 100),
+    "logo.size": int(14, 40, "px"),
+    "logo.sizeMobile": int(12, 32, "px"),
+    "logo.textMobile": BOOL,
+    "logo.imageLight": { kind: "file" },
+    "logo.imageMobile": { kind: "file" },
+    "logo.imageMobileLight": { kind: "file" },
+    "logo.height": int(30, 100, "%"),
+    "logo.heightMobile": int(30, 100, "%"),
+    "layout.forumIndex": choice(THEME_FORUM_INDEX_LAYOUTS),
+    "layout.topicView": choice(THEME_TOPIC_VIEWS),
+    "layout.featureFirstPost": BOOL,
+    "typography.baseSize": int(12, 20, "px"),
+    "typography.contentSize": int(80, 150, "%", 5),
+    "typography.fontDisplayCustom": { kind: "fontName" },
+    "typography.fontTextCustom": { kind: "fontName" },
+    "header.height": int(48, 120, "px"),
+    "header.heightMobile": int(48, 96, "px"),
+    "header.navIcons": BOOL,
+    "header.sticky": BOOL,
+    "mobileNav.side": choice(["left", "right"]),
+    "mobileNav.icons": BOOL,
+    "boxes.borderWidth": int(0, 4, "px"),
+    "boxes.shadow": choice(THEME_BOX_SHADOWS),
+    "boxes.clickableRows": BOOL,
+    "sidebar.width": int(240, 480, "px", 10),
+    "sidebar.position": choice(["right", "left"]),
+    "sidebar.sticky": BOOL,
+    "avatars.rounded": BOOL,
+    "buttons.radius": int(0, 24, "px"),
+  };
+}
+
+/** Toate setările unei teme, după calea lor (`header.height`, `elements.dark.headerBg`, `light.accent`…). */
+export const THEME_FIELDS: Readonly<Record<string, GcsThemeField>> = buildFields();
+
+const HEX_RE = /^#[0-9a-f]{6}$/i;
+const TOKEN_REF_RE = new RegExp(`^@(${THEME_TOKENS.join("|")})$`);
+const FONT_NAME_RE = /^[A-Za-z0-9][A-Za-z0-9 ]{0,39}$/;
+const FILE_RE = /^\/files\/[A-Za-z0-9_-]{1,40}$/;
+const hasControlChars = (s: string) => [...s].some((c) => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127);
+
+export const isThemeHex = (v: unknown): v is string => typeof v === "string" && HEX_RE.test(v);
+/** O culoare de element validă: hex, `@token` sau `transparent`. */
+export const isThemeColor = (v: unknown): v is string => typeof v === "string" && (HEX_RE.test(v) || TOKEN_REF_RE.test(v) || v === "transparent");
+/** `null` sau un fișier public al site-ului (`/files/<id>`). */
+export const isThemeFileUrl = (v: unknown): v is string | null => v === null || (typeof v === "string" && FILE_RE.test(v));
+
+/** Codul erorii pentru o valoare a unui câmp (cheile din `errors.fields`); `null` = validă. */
+export function themeFieldError(field: GcsThemeField, value: unknown): string | null {
+  switch (field.kind) {
+    case "palette":
+      return isThemeHex(value) ? null : "invalid_color";
+    case "color":
+      return isThemeColor(value) ? null : "invalid_color";
+    case "int":
+      if (typeof value !== "number" || !Number.isInteger(value) || value < field.min || value > field.max) return "invalid_range";
+      return field.step && (value - field.min) % field.step !== 0 ? "invalid_range" : null;
+    case "enum":
+      return typeof value === "string" && field.options.includes(value) ? null : "invalid_choice";
+    case "bool":
+      return typeof value === "boolean" ? null : "invalid_type";
+    case "text":
+      if (typeof value !== "string") return "invalid_type";
+      if (value.length > field.max) return "too_long";
+      return hasControlChars(value) ? "invalid" : null;
+    case "font":
+      return typeof value === "string" && (THEME_FONTS as readonly string[]).includes(value) ? null : "invalid_choice";
+    case "fontName":
+      return value === "" || (typeof value === "string" && FONT_NAME_RE.test(value)) ? null : "invalid";
+    case "file":
+      return isThemeFileUrl(value) ? null : "invalid";
+  }
+}
+
+// ─── Obiecte: căi, completare, îmbinare ───────────────────────────────────────
+
+export const isPlainObject = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
+
+/** Valoarea de la o cale (`a.b.c`) dintr-un obiect, sau `undefined`. */
+export function themePath(obj: unknown, path: string): unknown {
+  let cur: unknown = obj;
+  for (const part of path.split(".")) {
+    if (!isPlainObject(cur)) return undefined;
+    cur = cur[part];
+  }
+  return cur;
+}
+
+/** O copie a obiectului cu valoarea pusă la cale (creează obiectele intermediare). */
+export function withThemePath<T>(obj: T, path: string, value: unknown): T {
+  const [head, ...rest] = path.split(".");
+  const src = (isPlainObject(obj) ? obj : {}) as Record<string, unknown>;
+  return { ...src, [head!]: rest.length === 0 ? value : withThemePath(src[head!], rest.join("."), value) } as T;
+}
+
+/** Îmbină în adâncime un patch peste o bază (obiectele se îmbină, restul valorilor înlocuiesc). */
+export function mergeThemeObjects<T>(base: T, patch: unknown): T {
+  if (!isPlainObject(patch)) return base;
+  const out: Record<string, unknown> = { ...(isPlainObject(base) ? base : {}) };
+  for (const [k, v] of Object.entries(patch)) {
+    if (v === undefined) continue;
+    out[k] = isPlainObject(v) && isPlainObject(out[k]) ? mergeThemeObjects(out[k], v) : v;
+  }
+  return out as T;
+}
+
+/** Setările salvate, completate cu valorile implicite (o temă veche, incompletă sau stricată rămâne validă). */
+export function normalizeThemeSettings(raw: unknown): GcsThemeSettings {
+  let out = structuredClone(DEFAULT_THEME_SETTINGS);
+  for (const [path, field] of Object.entries(THEME_FIELDS)) {
+    const value = themePath(raw, path);
+    if (value !== undefined && themeFieldError(field, value) === null) out = withThemePath(out, path, value);
+  }
+  return out;
+}
+
+/** Căile frunzelor unui patch (`{ header: { height: 70 } }` → `header.height`). */
+function leaves(obj: Record<string, unknown>, prefix = ""): [string, unknown][] {
+  return Object.entries(obj).flatMap(([k, v]): [string, unknown][] => {
+    const path = prefix ? `${prefix}.${k}` : k;
+    if (isPlainObject(v) && !(path in THEME_FIELDS)) return leaves(v, path);
+    return [[path, v]];
+  });
+}
+
+/** Validează (strict) un patch de setări; întoarce erorile pe căi (gol = valid). */
+export function themeSettingsErrors(patch: unknown): Record<string, string> {
+  if (!isPlainObject(patch)) return { _: "invalid_type" };
+  const errors: Record<string, string> = {};
+  for (const [path, value] of leaves(patch)) {
+    const field = THEME_FIELDS[path];
+    if (!field) errors[path] = "unknown_setting";
+    else {
+      const err = themeFieldError(field, value);
+      if (err) errors[path] = err;
+    }
+  }
+  return errors;
+}
+
+/** CSS-ul unei culori de element: `@accent` → `var(--gcs-accent)`; hex și `transparent` rămân la fel. */
+export function themeColorCss(value: string): string {
+  return value.startsWith("@") ? `var(--gcs-${value.slice(1)})` : value;
+}
+
+/** Fonturile efective (cel personalizat, dacă e completat, altfel cel din listă). */
+export function themeFonts(s: GcsThemeSettings): { display: string; text: string } {
+  return { display: s.typography.fontDisplayCustom || s.fontDisplay, text: s.typography.fontTextCustom || s.fontText };
+}

@@ -6,36 +6,27 @@ import { GcsConflict, GcsNotFound, GcsValidationError } from "../errors";
 import type { GcsEventBus } from "../events";
 import type { GcsActor } from "../permissions/types";
 import { compileThemeCss, sanitizeThemeCss } from "./css";
+import {
+  DEFAULT_THEME_SETTINGS,
+  isThemeFileUrl,
+  mergeThemeObjects,
+  normalizeThemeSettings,
+  themeSettingsErrors,
+  type GcsDeepPartial,
+  type GcsThemeSettings,
+} from "./settings";
 
 export const THEMES_ACP_SECTION = "appearance.themes";
 const CACHE_TAG = "themes";
 const CACHE_TTL = 3600;
 const KEY_RE = /^[a-z0-9][a-z0-9-]{1,31}$/;
-const COLOR_RE = /^#[0-9a-f]{6}$/i;
 const MAX_CSS = 50_000;
 
-/** Tokenurile de culoare ale unei teme (aceleași nume ca în `tokens.css`, fără prefixul `--gcs-`). */
-export const THEME_TOKENS = ["bg", "surface", "surface2", "border", "text", "muted", "accent", "accentInk", "chrome", "chrome2", "ok", "warn"] as const;
-export type GcsThemeToken = (typeof THEME_TOKENS)[number];
-export type GcsThemePalette = Record<GcsThemeToken, string>;
-
-/** Fonturile din care se alege (Google Fonts; primele două vin deja cu aplicația). */
-export const THEME_FONTS = ["Chakra Petch", "Manrope", "Inter", "Rajdhani", "Orbitron", "Oxanium", "Exo 2", "Montserrat", "Poppins", "Roboto"] as const;
-
-export type GcsThemeSettings = {
-  dark: GcsThemePalette;
-  light: GcsThemePalette;
-  fontDisplay: string;
-  fontText: string;
-  /** Raza colțurilor (px). */
-  radius: number;
-  /** Lățimea maximă a paginii (px). */
-  width: number;
-};
-
-export type GcsThemeDraft = Partial<Omit<GcsThemeSettings, "dark" | "light">> & {
-  dark?: Partial<GcsThemePalette>;
-  light?: Partial<GcsThemePalette>;
+/**
+ * Draft-ul unei teme: un patch (în adâncime) peste setări, plus CSS-ul extra, logo-ul și favicon-ul.
+ * `{ header: { height: 72 } }` schimbă doar înălțimea antetului.
+ */
+export type GcsThemeDraft = GcsDeepPartial<GcsThemeSettings> & {
   customCss?: string;
   logoUrl?: string | null;
   faviconUrl?: string | null;
@@ -54,80 +45,18 @@ export type GcsThemeView = {
   draft: GcsThemeDraft | null;
 };
 
-/** Valorile implicite: exact paleta din machete (`tokens.css` / `themes.css`). */
-export const DEFAULT_THEME_SETTINGS: GcsThemeSettings = {
-  dark: {
-    bg: "#0B0C10",
-    surface: "#14161C",
-    surface2: "#1B1E26",
-    border: "#262A34",
-    text: "#ECEDF1",
-    muted: "#A1A7B4",
-    accent: "#D62839",
-    accentInk: "#FF6B74",
-    chrome: "#0F1116",
-    chrome2: "#111319",
-    ok: "#3DDC97",
-    warn: "#F4B740",
-  },
-  light: {
-    bg: "#F4F5F7",
-    surface: "#FFFFFF",
-    surface2: "#EEF0F3",
-    border: "#D9DCE2",
-    text: "#14161C",
-    muted: "#5B6170",
-    accent: "#D62839",
-    accentInk: "#C21F31",
-    chrome: "#FFFFFF",
-    chrome2: "#F8F9FB",
-    ok: "#1F9D63",
-    warn: "#B7791F",
-  },
-  fontDisplay: "Chakra Petch",
-  fontText: "Manrope",
-  radius: 12,
-  width: 1320,
-};
-
-/** Setările salvate, completate cu valorile implicite (o temă veche sau incompletă rămâne validă). */
-export function normalizeThemeSettings(raw: unknown): GcsThemeSettings {
-  const r = (raw && typeof raw === "object" ? raw : {}) as Partial<Record<keyof GcsThemeSettings, unknown>>;
-  const palette = (p: unknown, base: GcsThemePalette): GcsThemePalette => {
-    const src = (p && typeof p === "object" ? p : {}) as Record<string, unknown>;
-    return Object.fromEntries(THEME_TOKENS.map((t) => [t, typeof src[t] === "string" && COLOR_RE.test(src[t] as string) ? (src[t] as string) : base[t]])) as GcsThemePalette;
-  };
-  const font = (v: unknown, fallback: string) => (typeof v === "string" && (THEME_FONTS as readonly string[]).includes(v) ? v : fallback);
-  const num = (v: unknown, min: number, max: number, fallback: number) => (typeof v === "number" && Number.isInteger(v) && v >= min && v <= max ? v : fallback);
-  return {
-    dark: palette(r.dark, DEFAULT_THEME_SETTINGS.dark),
-    light: palette(r.light, DEFAULT_THEME_SETTINGS.light),
-    fontDisplay: font(r.fontDisplay, DEFAULT_THEME_SETTINGS.fontDisplay),
-    fontText: font(r.fontText, DEFAULT_THEME_SETTINGS.fontText),
-    radius: num(r.radius, 0, 24, DEFAULT_THEME_SETTINGS.radius),
-    width: num(r.width, 1000, 1920, DEFAULT_THEME_SETTINGS.width),
-  };
+/** Partea de setări a unui draft (fără CSS-ul extra și imaginile din coloanele temei). */
+function draftSettings(draft: GcsThemeDraft): GcsDeepPartial<GcsThemeSettings> {
+  const { customCss: _css, logoUrl: _logo, faviconUrl: _favicon, ...settings } = draft;
+  return settings;
 }
 
-const isPublicFileUrl = (v: unknown) => v === null || (typeof v === "string" && /^\/files\/[A-Za-z0-9_-]{1,40}$/.test(v));
-
 /** Validează un patch de draft; întoarce erorile pe câmpuri (gol = valid). */
-function draftErrors(patch: GcsThemeDraft): Record<string, string> {
-  const errors: Record<string, string> = {};
-  for (const mode of ["dark", "light"] as const) {
-    for (const [token, value] of Object.entries(patch[mode] ?? {})) {
-      if (!(THEME_TOKENS as readonly string[]).includes(token)) errors[`${mode}.${token}`] = "unknown";
-      else if (typeof value !== "string" || !COLOR_RE.test(value)) errors[`${mode}.${token}`] = "invalid_color";
-    }
-  }
-  for (const f of ["fontDisplay", "fontText"] as const) {
-    if (patch[f] !== undefined && !(THEME_FONTS as readonly string[]).includes(patch[f]!)) errors[f] = "invalid_choice";
-  }
-  if (patch.radius !== undefined && (!Number.isInteger(patch.radius) || patch.radius < 0 || patch.radius > 24)) errors.radius = "invalid_range";
-  if (patch.width !== undefined && (!Number.isInteger(patch.width) || patch.width < 1000 || patch.width > 1920)) errors.width = "invalid_range";
+export function themeDraftErrors(patch: GcsThemeDraft): Record<string, string> {
+  const errors = themeSettingsErrors(draftSettings(patch));
   if (patch.customCss !== undefined && (typeof patch.customCss !== "string" || patch.customCss.length > MAX_CSS)) errors.customCss = "too_long";
-  if (patch.logoUrl !== undefined && !isPublicFileUrl(patch.logoUrl)) errors.logoUrl = "invalid";
-  if (patch.faviconUrl !== undefined && !isPublicFileUrl(patch.faviconUrl)) errors.faviconUrl = "invalid";
+  if (patch.logoUrl !== undefined && !isThemeFileUrl(patch.logoUrl)) errors.logoUrl = "invalid";
+  if (patch.faviconUrl !== undefined && !isThemeFileUrl(patch.faviconUrl)) errors.faviconUrl = "invalid";
   return errors;
 }
 
@@ -202,12 +131,7 @@ export class GcsThemeService {
   }
 
   private merge(theme: GcsThemeView, draft: GcsThemeDraft) {
-    const settings = normalizeThemeSettings({
-      ...theme.settings,
-      ...draft,
-      dark: { ...theme.settings.dark, ...(draft.dark ?? {}) },
-      light: { ...theme.settings.light, ...(draft.light ?? {}) },
-    });
+    const settings = normalizeThemeSettings(mergeThemeObjects(theme.settings, draftSettings(draft)));
     return {
       settings,
       customCss: draft.customCss !== undefined ? sanitizeThemeCss(draft.customCss) : theme.customCss,
@@ -226,14 +150,11 @@ export class GcsThemeService {
     await acp.assert(actor, THEMES_ACP_SECTION, "edit");
     const theme = await db.theme.findUnique({ where: { key } });
     if (!theme) throw new GcsNotFound();
-    const errors = draftErrors(patch);
+    const errors = themeDraftErrors(patch);
     if (Object.keys(errors).length > 0) throw new GcsValidationError(errors);
     const prev = (theme.draft ?? {}) as GcsThemeDraft;
     const next: GcsThemeDraft = {
-      ...prev,
-      ...patch,
-      dark: { ...(prev.dark ?? {}), ...(patch.dark ?? {}) },
-      light: { ...(prev.light ?? {}), ...(patch.light ?? {}) },
+      ...mergeThemeObjects(prev, patch),
       ...(patch.customCss !== undefined ? { customCss: sanitizeThemeCss(patch.customCss) } : {}),
     };
     await db.theme.update({ where: { key }, data: { draft: next as Prisma.InputJsonValue } });
@@ -241,9 +162,16 @@ export class GcsThemeService {
     return next;
   }
 
+  /** Renunță la draft (tema publicată rămâne neschimbată); cu jurnal, dacă exista un draft. */
   async discardDraft(actor: GcsActor, key: string): Promise<void> {
-    await this.deps.acp.assert(actor, THEMES_ACP_SECTION, "edit");
-    await this.deps.db.theme.updateMany({ where: { key }, data: { draft: Prisma.DbNull } });
+    const { db, acp } = this.deps;
+    await acp.assert(actor, THEMES_ACP_SECTION, "edit");
+    const row = await db.theme.findUnique({ where: { key }, select: { draft: true } });
+    if (!row?.draft) return;
+    await db.$transaction(async (tx) => {
+      await tx.theme.update({ where: { key }, data: { draft: Prisma.DbNull } });
+      await writeAudit(tx, { actorId: actor.userId, action: "theme.discard", targetType: "theme", targetId: key, before: { draft: row.draft }, ip: actor.ip });
+    });
     await this.changed();
   }
 
@@ -296,7 +224,7 @@ export class GcsThemeService {
         data: {
           key: input.key,
           name,
-          settings: (source?.settings ?? DEFAULT_THEME_SETTINGS) as Prisma.InputJsonValue,
+          settings: (source?.settings ?? DEFAULT_THEME_SETTINGS) as unknown as Prisma.InputJsonValue,
           customCss: source?.customCss ?? "",
           logoUrl: source?.logoUrl ?? null,
           faviconUrl: source?.faviconUrl ?? null,

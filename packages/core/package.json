@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./themes": "./src/themes/shared.ts",
     "./test/redis": "./test/redis.ts",
     "./test/redisSetup": "./test/redisSetup.ts",
     "./test/world": "./test/world.ts",
