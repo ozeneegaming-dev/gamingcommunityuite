@@ -37,7 +37,9 @@
       "auto": "Automată"
     },
     "footerNav": "Linkuri utile",
-    "closeToast": "Închide notificarea"
+    "closeToast": "Închide notificarea",
+    "themeEditor": "Editor temă",
+    "pageEditor": "Editor pagină"
   },
   "auth": {
     "login": {

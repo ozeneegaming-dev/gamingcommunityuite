@@ -9,18 +9,22 @@ import {
   faGear,
   faLanguage,
   faMagnifyingGlass,
+  faPaintbrush,
   faRightFromBracket,
   faScrewdriverWrench,
   faShieldHalved,
+  faTableColumns,
   faUser,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
-import { GcsDropdown, GcsIconSvg, type GcsDropdownItem } from "@gcs/ui";
+import { gcsToast, GcsDropdown, GcsIconSvg, type GcsDropdownItem } from "@gcs/ui";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { authClient } from "@/lib/auth-client";
+import { useErrorMessage } from "@/lib/use-error-message";
 import { setLocale } from "../../actions";
+import { openPageEditor } from "../../edit-actions";
 
 /** Un item de meniu gata de afișat (iconița vine randată de pe server). */
 export type GcsNavEntry = { id: number; label: string; href: string; icon: ReactNode; newTab: boolean; children: GcsNavEntry[] };
@@ -118,6 +122,8 @@ export type GcsUserMenuLabels = {
   notifications: string;
   settings: string;
   acp: string;
+  themeEditor: string;
+  pageEditor: string;
   moderation: string;
   logout: string;
 };
@@ -128,21 +134,53 @@ const submit = (action: (fd: FormData) => Promise<void>, name: string, value: st
   return action(fd);
 };
 
+/** Paginile cu zone de widget-uri: indexul, forumurile și topicurile. */
+const WIDGET_PATHS = /^\/(?:$|forum\/|topic\/)/;
+
+export type GcsUserMenuLinks = {
+  profile: string;
+  acp: boolean;
+  moderation: boolean;
+  /** Editorul vizual al temei afișate (doar cu drept pe teme). */
+  themeEditor: string | null;
+  /** Modul „Editează pagina” (doar cu drept pe widget-uri). */
+  pageEditor: boolean;
+};
+
 /**
- * Meniul userului (dropdown): linkurile de bază, ACP / moderare și ieșirea, fiecare cu iconița lui. Tema și limba nu
- * mai stau aici: se schimbă din footer (pentru toată lumea).
+ * Meniul userului (dropdown): linkurile de bază, apoi uneltele staff-ului (editorul de temă, editorul de pagină,
+ * moderarea, ACP), fiecare doar cu dreptul lui, și ieșirea. Tema și limba se schimbă din footer (pentru toată lumea).
  */
-export function GcsUserMenu({ trigger, links, labels }: { trigger: ReactNode; links: { profile: string; acp: boolean; moderation: boolean }; labels: GcsUserMenuLabels }) {
+export function GcsUserMenu({ trigger, links, labels }: { trigger: ReactNode; links: GcsUserMenuLinks; labels: GcsUserMenuLabels }) {
   const [, start] = useTransition();
+  const router = useRouter();
+  const pathname = usePathname();
+  const errorMessage = useErrorMessage();
   const icon = (def: Parameters<typeof GcsIconSvg>[0]["icon"]) => <GcsIconSvg icon={def} />;
+  /** Pornește „Editează pagina” aici sau, pe o pagină fără widget-uri, pe pagina principală. */
+  const editPage = () =>
+    start(async () => {
+      const res = await openPageEditor({});
+      // Fără sesiune ACP proaspătă (2FA), adminul se reautentifică întâi.
+      if (!res.ok && res.error.params?.reason === "acp_gate") return router.push("/admin/reauth");
+      if (!res.ok) {
+        gcsToast({ title: errorMessage(res.error), icon: icon(faTableColumns) });
+        return;
+      }
+      if (WIDGET_PATHS.test(pathname)) router.refresh();
+      else router.push("/");
+    });
+  const staff = Boolean(links.themeEditor) || links.pageEditor || links.moderation || links.acp;
   const items: GcsDropdownItem[] = [
     { kind: "link", label: labels.profile, href: links.profile, icon: icon(faUser), testId: "gcs-menu-profile" },
     { kind: "link", label: labels.messages, href: "/messages", icon: icon(faEnvelope) },
     { kind: "link", label: labels.notifications, href: "/notifications", icon: icon(faBell) },
     { kind: "link", label: labels.settings, href: "/settings/profile", icon: icon(faGear), testId: "gcs-menu-settings" },
-    ...(links.acp || links.moderation ? [{ kind: "separator" } as const] : []),
+    ...(staff ? [{ kind: "separator" } as const] : []),
+    ...(links.themeEditor ? [{ kind: "link", label: labels.themeEditor, href: links.themeEditor, icon: icon(faPaintbrush), testId: "gcs-menu-theme-editor" } as const] : []),
+    ...(links.pageEditor ? [{ kind: "action", label: labels.pageEditor, onSelect: editPage, icon: icon(faTableColumns), testId: "gcs-menu-page-editor" } as const] : []),
+    ...(links.moderation ? [{ kind: "link", label: labels.moderation, href: "/admin/members/moderation/queue", icon: icon(faShieldHalved), testId: "gcs-menu-moderation" } as const] : []),
     ...(links.acp ? [{ kind: "link", label: labels.acp, href: "/admin", icon: icon(faScrewdriverWrench), testId: "gcs-menu-acp" } as const] : []),
-    ...(links.moderation ? [{ kind: "link", label: labels.moderation, href: "/admin/members/moderation/queue", icon: icon(faShieldHalved) } as const] : []),
     { kind: "separator" },
     {
       kind: "action",

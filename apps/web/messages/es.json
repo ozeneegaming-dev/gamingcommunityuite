@@ -37,7 +37,9 @@
       "auto": "Automático"
     },
     "footerNav": "Enlaces útiles",
-    "closeToast": "Cerrar notificación"
+    "closeToast": "Cerrar notificación",
+    "themeEditor": "Editor de tema",
+    "pageEditor": "Editor de página"
   },
   "auth": {
     "login": {

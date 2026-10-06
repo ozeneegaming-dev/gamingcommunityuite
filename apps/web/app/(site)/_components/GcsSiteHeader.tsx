@@ -4,7 +4,7 @@ import { GcsAvatar, GcsButton } from "@gcs/ui";
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
-import { viewerTheme } from "@/lib/appearance";
+import { viewerEditing, viewerTheme } from "@/lib/appearance";
 import { memberHref } from "@/lib/forum-urls";
 import { localeOptions } from "@/lib/locales";
 import { services } from "@/lib/services";
@@ -69,11 +69,12 @@ export async function GcsSiteHeader() {
   const { permissions, profileQueries, conversations, notifications, nav, settings } = services();
   const actor = await currentActor();
   const [siteName, siteLocale] = await Promise.all([settings.get<string>("site.name"), settings.get<string>("site.locale")]);
-  const [tree, user, locales, { shown: theme }] = await Promise.all([
+  const [tree, user, locales, { shown: theme }, editing] = await Promise.all([
     nav.tree(actor, locale, siteLocale),
     actor.userId ? profileQueries.userDisplays([actor.userId]).then((m) => m.get(actor.userId!) ?? null) : Promise.resolve(null),
     localeOptions(),
     viewerTheme(),
+    viewerEditing(),
   ]);
   const [canAcp, canModerate, unread, unreadNotifications] = user
     ? await Promise.all([
@@ -133,7 +134,13 @@ export async function GcsSiteHeader() {
                     <GcsIcon name="fa-solid fa-chevron-down" className="gcs-navbar__caret" />
                   </>
                 }
-                links={{ profile: memberHref(user), acp: canAcp, moderation: canModerate }}
+                links={{
+                  profile: memberHref(user),
+                  acp: canAcp,
+                  moderation: canModerate,
+                  themeEditor: editing.canTheme ? `/admin/theme-editor/${theme.key}` : null,
+                  pageEditor: editing.canWidgets,
+                }}
                 labels={{
                   menu: t("userMenu"),
                   profile: t("myProfile"),
@@ -141,6 +148,8 @@ export async function GcsSiteHeader() {
                   notifications: tn("title"),
                   settings: t("settings"),
                   acp: t("acp"),
+                  themeEditor: t("themeEditor"),
+                  pageEditor: t("pageEditor"),
                   moderation: t("moderation"),
                   logout: t("logout"),
                 }}
