@@ -138,9 +138,9 @@ function CssDialog({ value, onChange, onClose }: { value: string; onChange: (css
 }
 
 /**
- * Editorul vizual de temă (pe tot ecranul): bara de iconițe, panourile cu navigare în adâncime și previzualizarea
- * live a site-ului într-un `iframe`. Fiecare modificare se compilează local (aceeași funcție ca serverul) și ajunge
- * instant în previzualizare prin `postMessage`; draft-ul se salvează automat, „Salvează” îl publică.
+ * Editorul vizual de temă (pe tot ecranul): previzualizarea live a site-ului într-un `iframe` (stânga), bara de iconițe
+ * și panourile cu navigare în adâncime (dreapta). Fiecare modificare se compilează local (aceeași funcție ca serverul)
+ * și ajunge instant în previzualizare prin `postMessage`; draft-ul se salvează automat, „Salvează” îl publică.
  */
 export function GcsThemeStudio({
   themeKey,
@@ -471,6 +471,13 @@ export function GcsThemeStudio({
 
   return (
     <div className="gcs-themeStudio" data-testid="gcs-theme-studio">
+      {/* Previzualizarea în stânga (restul lățimii), bara de iconițe la mijloc, panoul în dreapta. */}
+      <main className="gcs-themeStudio__preview" aria-label={t("preview")}>
+        <div className="gcs-themeStudio__frameWrap" data-size={size}>
+          <iframe ref={frame} src={previewUrl} title={t("previewTitle", { site: siteName })} className="gcs-themeStudio__frame" style={{ width: SIZES[size] }} data-testid="gcs-studio-preview" />
+        </div>
+      </main>
+
       <div className="gcs-themeStudio__rail" role="toolbar" aria-orientation="vertical" aria-label={t("rail.label")}>
         <RailButton icon={faLightbulb} label={t("rail.light")} pressed={mode === "light"} onClick={() => setMode("light")} testId="gcs-studio-mode-light" />
         <RailButton icon={faMoon} label={t("rail.dark")} pressed={mode === "dark"} onClick={() => setMode("dark")} testId="gcs-studio-mode-dark" />
@@ -515,12 +522,6 @@ export function GcsThemeStudio({
           </p>
         </footer>
       </aside>
-
-      <main className="gcs-themeStudio__preview" aria-label={t("preview")}>
-        <div className="gcs-themeStudio__frameWrap" data-size={size}>
-          <iframe ref={frame} src={previewUrl} title={t("previewTitle", { site: siteName })} className="gcs-themeStudio__frame" style={{ width: SIZES[size] }} data-testid="gcs-studio-preview" />
-        </div>
-      </main>
 
       {cssOpen && <CssDialog value={value.customCss} onChange={(customCss) => update((cur) => ({ ...cur, customCss }))} onClose={() => setCssOpen(false)} />}
 
