@@ -2,6 +2,7 @@ import { THEMES_ACP_SECTION } from "@gcs/core";
 import { GcsButton, GcsCard } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
@@ -53,8 +54,13 @@ export default async function AcpThemesPage() {
             </div>
           </GcsActionForm>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <GcsButton asChild variant="primary" size="sm" icon={<GcsIcon name="fa-solid fa-paintbrush" />}>
+              <Link href={`/admin/theme-editor/${theme.key}`} data-testid="gcs-acp-theme-visual">
+                {t("visualEditor")}
+              </Link>
+            </GcsButton>
             <form action={editThemeOnSite.bind(null, theme.key)}>
-              <GcsButton type="submit" variant="primary" size="sm" data-testid="gcs-acp-theme-edit" icon={<GcsIcon name="fa-solid fa-pen-to-square" />}>
+              <GcsButton type="submit" variant="ghost" size="sm" data-testid="gcs-acp-theme-edit" icon={<GcsIcon name="fa-solid fa-pen-to-square" />}>
                 {t("editOnSite")}
               </GcsButton>
             </form>

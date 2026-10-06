@@ -42,6 +42,7 @@ export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, 
       className={`gcs-card gcs-post${isSolved ? " gcs-post--solved" : ""}${post.visibility !== "VISIBLE" ? " gcs-post--muted" : ""}`}
       data-testid="gcs-post"
       data-post-id={post.id}
+      data-post-number={post.number}
     >
       <div className="gcs-post__author gcs-postbit" data-testid="gcs-postbit">
         {author ? <GcsPostbit author={author} data={postbit} /> : <span className="gcs-muted">—</span>}

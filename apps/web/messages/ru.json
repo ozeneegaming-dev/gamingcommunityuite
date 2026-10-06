@@ -1169,6 +1169,7 @@
       "isDefault": "Тема по умолчанию",
       "save": "Сохранить",
       "editOnSite": "Редактировать на сайте",
+      "visualEditor": "Visual editor",
       "delete": "Удалить",
       "confirmDelete": "Удалить эту тему? Участники, которые использовали его, увидят тему по умолчанию.",
       "create": "Новая тема",
@@ -2198,6 +2199,295 @@
     "translated": "Машинный перевод",
     "failed": "Перевод провалился. Пожалуйста, попробуйте еще раз.",
     "limited": "Слишком много переводов за минуту. Пожалуйста, попробуйте еще раз в ближайшее время."
+  },
+  "themeStudio": {
+    "title": "Theme editor",
+    "draft": "Draft",
+    "back": "Back",
+    "customCss": "Custom CSS",
+    "preview": "Site preview",
+    "previewTitle": "Live preview of {site}",
+    "revert": "Revert “{name}” to the default value",
+    "transparent": "Transparent",
+    "hex": "Hex code",
+    "invalidHex": "Enter a color as #RRGGBB.",
+    "editingMode": {
+      "dark": "You are editing the colors of the dark mode.",
+      "light": "You are editing the colors of the light mode."
+    },
+    "rail": {
+      "label": "Editor tools",
+      "light": "Edit light mode colors",
+      "dark": "Edit dark mode colors",
+      "mobile": "Small preview (phone)",
+      "tablet": "Medium preview (tablet)",
+      "desktop": "Large preview (desktop)",
+      "css": "Custom CSS",
+      "exit": "Exit the editor",
+      "save": "Save and publish"
+    },
+    "panels": {
+      "palette": "Color palette",
+      "scheme": "Light / dark mode",
+      "logos": "Logos",
+      "layouts": "Page layouts",
+      "typography": "Typography",
+      "header": "Header",
+      "headerDesktop": "Desktop header",
+      "headerMobile": "Mobile header",
+      "footer": "Footer",
+      "mobileNav": "Mobile navigation",
+      "global": "Global",
+      "body": "Body",
+      "boxes": "Content boxes",
+      "sidebar": "Sidebar",
+      "avatars": "Avatars",
+      "buttons": "Buttons"
+    },
+    "tabs": {
+      "settings": "Settings",
+      "colors": "Colors",
+      "swatches": "Swatches",
+      "picker": "Color picker"
+    },
+    "headings": {
+      "textLogo": "Text logo",
+      "imageDesktop": "Image logo (desktop)",
+      "imageMobile": "Image logo (mobile)",
+      "favicon": "Favicon"
+    },
+    "images": {
+      "logo": "Logo (dark mode)",
+      "logoLight": "Logo (light mode)",
+      "logoMobile": "Mobile logo (dark mode)",
+      "logoMobileLight": "Mobile logo (light mode)",
+      "favicon": "Favicon",
+      "none": "No image",
+      "upload": "Upload",
+      "remove": "Remove"
+    },
+    "tokens": {
+      "accent": "Primary color",
+      "accentInk": "Secondary color (accent text)",
+      "bg": "Base color (page background)",
+      "surface": "Surface",
+      "surface2": "Surface 2",
+      "border": "Borders",
+      "text": "Text",
+      "muted": "Soft text",
+      "chrome": "Header and footer",
+      "chrome2": "Secondary bars",
+      "ok": "Success",
+      "warn": "Warning"
+    },
+    "colors": {
+      "bodyBg": "Body background",
+      "heading": "Hard text (headings)",
+      "link": "Links",
+      "linkHover": "Links on hover",
+      "headerBg": "Header background",
+      "headerText": "Header menu text and icons",
+      "footerBg": "Footer background",
+      "footerText": "Footer text",
+      "drawerBg": "Menu background",
+      "drawerText": "Menu links",
+      "boxBg": "Box background",
+      "boxBorder": "Box border",
+      "boxHeaderBg": "Box header background",
+      "boxHeaderText": "Box header text",
+      "widgetTitle": "Widget title",
+      "widgetIcon": "Widget title icon",
+      "btnPrimaryBg": "Primary button",
+      "btnPrimaryText": "Primary button text",
+      "btnSecondaryBg": "Secondary button",
+      "btnSecondaryText": "Secondary button text"
+    },
+    "fields": {
+      "scheme_default": {
+        "label": "Default color scheme",
+        "help": "What visitors see before choosing a mode themselves.",
+        "options": {
+          "site": "Site setting",
+          "auto": "System",
+          "light": "Light",
+          "dark": "Dark"
+        }
+      },
+      "scheme_toggle": {
+        "label": "Show the mode switch",
+        "help": "The dark / light / system buttons in the footer."
+      },
+      "logo_text": {
+        "label": "Logo text",
+        "help": "Leave empty to use the site name.",
+        "placeholder": "Site name"
+      },
+      "logo_slogan": {
+        "label": "Slogan",
+        "help": "A short line under the logo text (optional)."
+      },
+      "logo_font": {
+        "label": "Logo font",
+        "help": "The heading font or the body font of the theme.",
+        "options": {
+          "display": "Heading font",
+          "text": "Body font"
+        }
+      },
+      "logo_weight": {
+        "label": "Logo font weight",
+        "help": "400 is normal, 700 is bold."
+      },
+      "logo_size": {
+        "label": "Logo text size (desktop)"
+      },
+      "logo_sizeMobile": {
+        "label": "Logo text size (mobile)"
+      },
+      "logo_textMobile": {
+        "label": "Show the logo text on phones",
+        "help": "By default, small screens show only the mark."
+      },
+      "logo_height": {
+        "label": "Image logo maximum height",
+        "help": "Percentage of the header height."
+      },
+      "logo_heightMobile": {
+        "label": "Mobile image logo height",
+        "help": "Percentage of the mobile header height."
+      },
+      "layout_forumIndex": {
+        "label": "Forum index",
+        "help": "How the forums of each category are shown on the home page.",
+        "options": {
+          "list": "List",
+          "grid": "Grid"
+        }
+      },
+      "layout_topicView": {
+        "label": "Topic view",
+        "help": "Compact narrows the author column and hides its statistics.",
+        "options": {
+          "normal": "Normal",
+          "compact": "Compact"
+        }
+      },
+      "layout_featureFirstPost": {
+        "label": "Feature the first post",
+        "help": "Highlights the opening post of every topic."
+      },
+      "fontDisplay": {
+        "label": "Heading font"
+      },
+      "typography_fontDisplayCustom": {
+        "label": "Other heading font (Google Fonts)",
+        "help": "The exact name from Google Fonts; replaces the font above.",
+        "placeholder": "e.g. Open Sans"
+      },
+      "fontText": {
+        "label": "Body font"
+      },
+      "typography_fontTextCustom": {
+        "label": "Other body font (Google Fonts)",
+        "help": "The exact name from Google Fonts; replaces the font above.",
+        "placeholder": "e.g. Open Sans"
+      },
+      "typography_baseSize": {
+        "label": "Base font size",
+        "help": "Text in the page content that has no size of its own (16 px = the browser size)."
+      },
+      "typography_contentSize": {
+        "label": "Post text size",
+        "help": "Posts and signatures, as a percentage of the normal size."
+      },
+      "header_height": {
+        "label": "Header height (desktop)"
+      },
+      "header_heightMobile": {
+        "label": "Header height (mobile)"
+      },
+      "header_navIcons": {
+        "label": "Icons in the main menu",
+        "help": "The icons next to the menu items."
+      },
+      "header_sticky": {
+        "label": "Fixed header",
+        "help": "The header stays visible while scrolling."
+      },
+      "mobileNav_side": {
+        "label": "Menu side",
+        "help": "Where the mobile menu slides in from.",
+        "options": {
+          "left": "Left",
+          "right": "Right"
+        }
+      },
+      "mobileNav_icons": {
+        "label": "Icons in the mobile menu"
+      },
+      "width": {
+        "label": "Maximum page width"
+      },
+      "radius": {
+        "label": "Box corner radius"
+      },
+      "boxes_borderWidth": {
+        "label": "Box border width"
+      },
+      "boxes_shadow": {
+        "label": "Box shadow",
+        "options": {
+          "none": "None",
+          "soft": "Soft",
+          "strong": "Strong"
+        }
+      },
+      "boxes_clickableRows": {
+        "label": "Clickable forum rows",
+        "help": "The whole row opens the forum, not just its name."
+      },
+      "sidebar_width": {
+        "label": "Sidebar width"
+      },
+      "sidebar_position": {
+        "label": "Sidebar position",
+        "options": {
+          "right": "Right",
+          "left": "Left"
+        }
+      },
+      "sidebar_sticky": {
+        "label": "Fixed sidebar",
+        "help": "The sidebar stays visible while scrolling (large screens)."
+      },
+      "avatars_rounded": {
+        "label": "Round avatars",
+        "help": "Off: avatars with rounded corners."
+      },
+      "buttons_radius": {
+        "label": "Button corner radius"
+      }
+    },
+    "status": {
+      "saving": "Saving the draft…",
+      "saved": "Draft saved. Visitors see the changes only after you save.",
+      "uploading": "Uploading the image…",
+      "published": "Saved: the theme is published for everyone.",
+      "unpublished": "You have unsaved changes.",
+      "upToDate": "No changes."
+    },
+    "cssDialog": {
+      "title": "Custom CSS",
+      "hint": "Applied after the theme. Cleaned automatically: no HTML, no scripts, @import only from Google Fonts.",
+      "revert": "Revert",
+      "done": "Done"
+    },
+    "exitDialog": {
+      "title": "Unsaved changes",
+      "body": "The theme has changes that are not published. If you exit without saving, they are discarded.",
+      "leave": "Exit without saving",
+      "stay": "Keep editing"
+    }
   },
   "themeEditor": {
     "toolbar": "Редактирование инструментов",

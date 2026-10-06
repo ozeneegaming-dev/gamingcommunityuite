@@ -32,6 +32,13 @@ const nextConfig: NextConfig = {
           { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
         ],
       },
+      // Previzualizarea editorului vizual de temă rulează într-un iframe pe aceeași origine: doar pentru cererile ei
+      // (parametrul sau cookie-ul de previzualizare) `DENY` devine `SAMEORIGIN`. Ultima regulă potrivită câștigă.
+      ...["query", "cookie"].map((type) => ({
+        source: "/:path*",
+        has: [{ type: type as "query" | "cookie", key: "gcs-theme-preview" }],
+        headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }],
+      })),
     ];
   },
   turbopack: {

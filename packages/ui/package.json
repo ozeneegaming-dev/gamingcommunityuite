@@ -20,6 +20,7 @@
     "./postbit.css": "./src/postbit.css",
     "./icons.css": "./src/icons.css",
     "./acp.css": "./src/acp.css",
+    "./studio.css": "./src/studio.css",
     "./icons": "./src/icons/index.tsx",
     "./icon-registry": "./src/icons/registry.ts"
   },

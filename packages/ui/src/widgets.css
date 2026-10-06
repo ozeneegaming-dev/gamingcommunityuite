@@ -17,7 +17,7 @@
   border-radius: 6px;
   border: 1px solid color-mix(in srgb, var(--gcs-accent) 45%, transparent);
   background: color-mix(in srgb, var(--gcs-accent) 14%, transparent);
-  color: var(--gcs-accentInk);
+  color: var(--gcs-widget-icon, var(--gcs-accentInk));
   font-size: 13px;
   letter-spacing: 0;
 }

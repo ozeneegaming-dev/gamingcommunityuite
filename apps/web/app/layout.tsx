@@ -6,6 +6,7 @@ import { themeMode, viewerTheme } from "@/lib/appearance";
 import type { ReactNode } from "react";
 import { services } from "@/lib/services";
 import { siteBaseUrl } from "@/lib/seo";
+import { GcsThemePreviewBridge } from "./(site)/_components/edit/GcsThemePreviewBridge";
 import "./globals.css";
 
 const display = Chakra_Petch({ subsets: ["latin", "latin-ext"], weight: ["500", "600", "700"], variable: "--font-gcs-display" });
@@ -59,6 +60,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       </head>
       <body className="gcs-root">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        {/* Previzualizarea editorului vizual de temă (iframe): primește draft-ul live prin postMessage. */}
+        {theme.preview && <GcsThemePreviewBridge />}
       </body>
     </html>
   );

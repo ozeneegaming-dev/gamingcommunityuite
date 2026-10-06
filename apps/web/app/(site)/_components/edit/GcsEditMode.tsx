@@ -5,8 +5,9 @@ import { GcsThemeEditor } from "./GcsThemeEditor";
 
 /** Uneltele de editare de pe site: nimic pentru cei fără drept; altfel bara sau, în editarea temei, panoul ei. */
 export async function GcsEditMode() {
-  const [{ editing, theme, shown }, tools] = await Promise.all([viewerTheme(), viewerEditing()]);
-  if (!tools.canTheme && !tools.canWidgets) return null;
+  const [{ editing, preview, theme, shown }, tools] = await Promise.all([viewerTheme(), viewerEditing()]);
+  // În previzualizarea editorului vizual, pagina arată ca pentru vizitatori (fără bara de editare).
+  if (preview || (!tools.canTheme && !tools.canWidgets)) return null;
   if (!editing) return <GcsEditBar canTheme={tools.canTheme} canWidgets={tools.canWidgets} pageEditing={tools.pageEditing} />;
   return (
     <GcsThemeEditor

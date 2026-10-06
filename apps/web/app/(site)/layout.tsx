@@ -25,7 +25,7 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
         <GcsNavProgress />
       </Suspense>
       <GcsSiteHeader />
-      <main style={{ maxWidth: "var(--gcs-page-width, 1320px)", margin: "0 auto", padding: 24, display: "flex", flexDirection: "column", gap: 24 }}>
+      <main className="gcs-siteMain" style={{ maxWidth: "var(--gcs-page-width, 1320px)", margin: "0 auto", padding: 24, display: "flex", flexDirection: "column", gap: 24 }}>
         {email?.endsWith(STEAM_PLACEHOLDER_DOMAIN) && (
           <p role="status" className="gcs-notice gcs-notice--warn" data-testid="gcs-steam-email-banner">
             {tb("steamBanner")} <Link href="/settings/account">{tb("steamBannerLink")}</Link>

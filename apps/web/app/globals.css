@@ -13,6 +13,7 @@
 @import "@gcs/ui/postbit.css";
 @import "@gcs/ui/icons.css";
 @import "@gcs/ui/acp.css";
+@import "@gcs/ui/studio.css";
 
 /* Componentele Gcs* din @gcs/ui folosesc utilitare Tailwind; sursele lor trebuie scanate. */
 @source "../../../packages/ui/src";

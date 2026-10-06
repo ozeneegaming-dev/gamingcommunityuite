@@ -1,0 +1,693 @@
+/*
+ * Editorul vizual de temă (ACP → Aspect → Teme → „Editează vizual”): pe tot ecranul, cu bara de iconițe, panourile
+ * și previzualizarea. Are paleta lui (nu cea a temei editate), ca uneltele să rămână lizibile orice culori ar alege
+ * adminul. Variabilele elementelor din temă sunt anulate în `acp.css` (`.gcs-themeStudio`).
+ */
+
+.gcs-themeStudio {
+  --gcs-st-rail: #0a0c11;
+  --gcs-st-panel: #12151c;
+  --gcs-st-panel2: #191d26;
+  --gcs-st-line: #262b36;
+  --gcs-st-text: #e9ebf0;
+  --gcs-st-muted: #9aa1b0;
+  --gcs-st-accent: #4f8cff;
+  --gcs-st-save: #22a55b;
+  --gcs-st-danger: #d9435a;
+  --gcs-st-stage: #07080b;
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  grid-template-columns: 60px minmax(300px, 360px) minmax(0, 1fr);
+  background: var(--gcs-st-stage);
+  color: var(--gcs-st-text);
+  font: 500 14px var(--gcs-font-text);
+  color-scheme: dark;
+}
+
+/* ─── Bara de iconițe ─────────────────────────────────────────────────────── */
+.gcs-themeStudio__rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 0;
+  background: var(--gcs-st-rail);
+  border-right: 1px solid var(--gcs-st-line);
+}
+.gcs-themeStudio__railBtn {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--gcs-st-muted);
+  font-size: 17px;
+  cursor: pointer;
+}
+.gcs-themeStudio__railBtn:hover,
+.gcs-themeStudio__railBtn:focus-visible {
+  background: var(--gcs-st-panel2);
+  color: var(--gcs-st-text);
+}
+.gcs-themeStudio__railBtn--active {
+  background: color-mix(in srgb, var(--gcs-st-accent) 22%, transparent);
+  color: #fff;
+  box-shadow: inset 2px 0 0 var(--gcs-st-accent);
+}
+.gcs-themeStudio__railBtn--save {
+  background: var(--gcs-st-save);
+  color: #fff;
+}
+.gcs-themeStudio__railBtn--save:hover,
+.gcs-themeStudio__railBtn--save:focus-visible {
+  background: color-mix(in srgb, var(--gcs-st-save) 85%, #fff);
+  color: #fff;
+}
+.gcs-themeStudio__railBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+/* Tooltip-ul (textul e și `aria-label`). */
+.gcs-themeStudio__railBtn[data-tip]:hover::after,
+.gcs-themeStudio__railBtn[data-tip]:focus-visible::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #000;
+  color: #fff;
+  font: 600 12px var(--gcs-font-text);
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.4);
+}
+.gcs-themeStudio__railSep {
+  width: 28px;
+  border-top: 1px solid var(--gcs-st-line);
+  margin: 4px 0;
+}
+.gcs-themeStudio__railSpacer {
+  flex: 1;
+}
+
+/* ─── Panourile ───────────────────────────────────────────────────────────── */
+.gcs-themeStudio__panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--gcs-st-panel);
+  border-right: 1px solid var(--gcs-st-line);
+}
+.gcs-themeStudio__panelHead {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--gcs-st-line);
+}
+.gcs-themeStudio__titleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.gcs-themeStudio__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gcs-st-text);
+}
+.gcs-themeStudio__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0 10px 0 6px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gcs-st-muted);
+  font: 600 13px var(--gcs-font-text);
+  cursor: pointer;
+}
+.gcs-themeStudio__back:hover {
+  background: var(--gcs-st-panel2);
+  color: var(--gcs-st-text);
+}
+.gcs-themeStudio__panelBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 14px 20px;
+}
+.gcs-themeStudio__panelFoot {
+  padding: 10px 18px;
+  border-top: 1px solid var(--gcs-st-line);
+}
+.gcs-themeStudio__muted {
+  color: var(--gcs-st-muted);
+  font-size: 13px;
+}
+.gcs-themeStudio__badge {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, #f4b740 18%, transparent);
+  color: #f4b740;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Rândurile de navigare. */
+.gcs-themeStudio__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.gcs-themeStudio__navRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--gcs-st-text);
+  font: 600 14px var(--gcs-font-text);
+  text-align: left;
+  cursor: pointer;
+}
+.gcs-themeStudio__navRow:hover,
+.gcs-themeStudio__navRow:focus-visible {
+  background: var(--gcs-st-panel2);
+}
+.gcs-themeStudio__navIcon {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--gcs-st-panel2);
+  color: var(--gcs-st-accent);
+  flex: none;
+}
+.gcs-themeStudio__navLabel {
+  flex: 1;
+}
+.gcs-themeStudio__chevron {
+  color: var(--gcs-st-muted);
+  font-size: 12px;
+}
+.gcs-themeStudio__sep {
+  border: 0;
+  border-top: 1px solid var(--gcs-st-line);
+  margin: 8px 4px;
+}
+
+/* Tab-urile. */
+.gcs-themeStudio__tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  background: var(--gcs-st-rail);
+}
+.gcs-themeStudio__tab {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gcs-st-muted);
+  font: 600 13px var(--gcs-font-text);
+  cursor: pointer;
+}
+.gcs-themeStudio__tab--active {
+  background: var(--gcs-st-panel2);
+  color: var(--gcs-st-text);
+}
+
+/* Setările. */
+.gcs-themeStudio__settings,
+.gcs-themeStudio__colors {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.gcs-themeStudio__subhead {
+  margin: 14px 2px 4px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gcs-st-muted);
+}
+.gcs-themeStudio__setting {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 10px;
+}
+.gcs-themeStudio__setting:hover {
+  background: color-mix(in srgb, var(--gcs-st-panel2) 60%, transparent);
+}
+.gcs-themeStudio__settingHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 28px;
+}
+.gcs-themeStudio__label {
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--gcs-st-text);
+}
+.gcs-themeStudio__help {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--gcs-st-muted);
+}
+.gcs-themeStudio__revert {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 7px;
+  background: var(--gcs-st-panel2);
+  color: var(--gcs-st-accent);
+  cursor: pointer;
+  flex: none;
+}
+.gcs-themeStudio__revert:hover {
+  background: var(--gcs-st-line);
+}
+.gcs-themeStudio__revertSpacer {
+  width: 28px;
+  flex: none;
+}
+.gcs-themeStudio__range {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.gcs-themeStudio__range input {
+  flex: 1;
+  accent-color: var(--gcs-st-accent);
+}
+.gcs-themeStudio__rangeValue {
+  min-width: 52px;
+  text-align: right;
+  font: 600 12px ui-monospace, monospace;
+  color: var(--gcs-st-text);
+}
+.gcs-themeStudio__switch {
+  appearance: none;
+  position: relative;
+  width: 40px;
+  height: 22px;
+  margin: 0;
+  border-radius: 999px;
+  background: var(--gcs-st-line);
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.gcs-themeStudio__switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.15s;
+}
+.gcs-themeStudio__switch:checked {
+  background: var(--gcs-st-accent);
+}
+.gcs-themeStudio__switch:checked::after {
+  transform: translateX(18px);
+}
+.gcs-themeStudio__switch:focus-visible,
+.gcs-themeStudio__choice:focus-visible,
+.gcs-themeStudio__input:focus-visible {
+  outline: 2px solid var(--gcs-st-accent);
+  outline-offset: 2px;
+}
+.gcs-themeStudio__choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 9px;
+  background: var(--gcs-st-rail);
+}
+.gcs-themeStudio__choice {
+  flex: 1 1 auto;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--gcs-st-muted);
+  font: 600 12.5px var(--gcs-font-text);
+  cursor: pointer;
+}
+.gcs-themeStudio__choice--active {
+  background: var(--gcs-st-accent);
+  color: #fff;
+}
+.gcs-themeStudio__input {
+  width: 100%;
+  height: 38px;
+  box-sizing: border-box;
+  padding: 0 10px;
+  border: 1px solid var(--gcs-st-line);
+  border-radius: 8px;
+  background: var(--gcs-st-rail);
+  color: var(--gcs-st-text);
+  font: 500 13.5px var(--gcs-font-text);
+}
+.gcs-themeStudio__input[aria-invalid="true"] {
+  border-color: var(--gcs-st-danger);
+}
+.gcs-themeStudio__error {
+  margin: 0;
+  font-size: 12px;
+  color: #ff8a9a;
+}
+.gcs-themeStudio__modeNote {
+  margin: 0 2px 8px;
+  font-size: 12px;
+  color: var(--gcs-st-muted);
+}
+
+/* Culorile. */
+.gcs-themeStudio__colorRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.gcs-themeStudio__colorOpen {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 50px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--gcs-st-text);
+  text-align: left;
+  cursor: pointer;
+}
+.gcs-themeStudio__colorOpen:hover,
+.gcs-themeStudio__colorOpen:focus-visible {
+  background: var(--gcs-st-panel2);
+}
+.gcs-themeStudio__colorText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.gcs-themeStudio__code {
+  font: 600 11.5px ui-monospace, monospace;
+  color: var(--gcs-st-muted);
+}
+.gcs-themeStudio__swatchDot {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: 7px;
+  border: 1px solid rgb(255 255 255 / 0.18);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.25);
+}
+.gcs-themeStudio__swatchDot--none {
+  background: repeating-conic-gradient(#3a3f4b 0% 25%, #22262f 0% 50%) 50% / 10px 10px;
+}
+.gcs-themeStudio__selector {
+  display: flex;
+  flex-direction: column;
+}
+.gcs-themeStudio__swatches {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.gcs-themeStudio__swatch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 8px;
+  border: 1px solid var(--gcs-st-line);
+  border-radius: 9px;
+  background: var(--gcs-st-panel2);
+  color: var(--gcs-st-text);
+  font: 600 12px var(--gcs-font-text);
+  text-align: left;
+  cursor: pointer;
+}
+.gcs-themeStudio__swatch--active {
+  border-color: var(--gcs-st-accent);
+  box-shadow: 0 0 0 1px var(--gcs-st-accent);
+}
+.gcs-themeStudio__swatchCheck {
+  margin-left: auto;
+  color: var(--gcs-st-accent);
+}
+.gcs-themeStudio__picker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gcs-themeStudio__colorInput {
+  width: 100%;
+  height: 160px;
+  padding: 0;
+  border: 1px solid var(--gcs-st-line);
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+}
+.gcs-themeStudio__hex {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gcs-st-muted);
+}
+
+/* Imaginile. */
+.gcs-themeStudio__image {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+}
+.gcs-themeStudio__imageBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  padding: 8px;
+  border: 1px dashed var(--gcs-st-line);
+  border-radius: 10px;
+  background: repeating-conic-gradient(#1b1f28 0% 25%, #151821 0% 50%) 50% / 16px 16px;
+}
+.gcs-themeStudio__imagePreview {
+  max-width: 100%;
+  max-height: 56px;
+  object-fit: contain;
+}
+.gcs-themeStudio__imagePreview--favicon {
+  max-height: 32px;
+}
+.gcs-themeStudio__imageActions,
+.gcs-themeStudio__dialogActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.gcs-themeStudio__dialogActions {
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+.gcs-themeStudio__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--gcs-st-accent);
+  color: #fff;
+  font: 600 13px var(--gcs-font-text);
+  cursor: pointer;
+}
+.gcs-themeStudio__btn:focus-within,
+.gcs-themeStudio__btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--gcs-st-accent) 60%, #fff);
+  outline-offset: 2px;
+}
+.gcs-themeStudio__btn--ghost {
+  background: var(--gcs-st-panel2);
+  color: var(--gcs-st-text);
+  border: 1px solid var(--gcs-st-line);
+}
+.gcs-themeStudio__btn--danger {
+  background: var(--gcs-st-danger);
+}
+.gcs-themeStudio__btn--busy,
+.gcs-themeStudio__btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Starea salvării. */
+.gcs-themeStudio__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  min-height: 20px;
+  font-size: 12.5px;
+  color: var(--gcs-st-muted);
+}
+.gcs-themeStudio__status--ok {
+  color: #4fd391;
+}
+.gcs-themeStudio__status--error {
+  color: #ff8a9a;
+}
+
+/* ─── Previzualizarea ─────────────────────────────────────────────────────── */
+.gcs-themeStudio__preview {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  padding: 0;
+  background:
+    radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.05) 1px, transparent 0) 0 0 / 22px 22px,
+    var(--gcs-st-stage);
+  overflow: hidden;
+}
+.gcs-themeStudio__frameWrap {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  min-width: 0;
+}
+.gcs-themeStudio__frameWrap:not([data-size="desktop"]) {
+  padding: 20px;
+}
+.gcs-themeStudio__frame {
+  display: block;
+  align-self: stretch;
+  max-width: 100%;
+  border: 0;
+  background: #fff;
+  transition: width 0.2s ease;
+}
+.gcs-themeStudio__frameWrap:not([data-size="desktop"]) .gcs-themeStudio__frame {
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px var(--gcs-st-line), 0 24px 60px rgb(0 0 0 / 0.5);
+}
+
+/* ─── Dialogurile ─────────────────────────────────────────────────────────── */
+.gcs-themeStudio__dialogText {
+  margin: 0;
+  line-height: 1.55;
+}
+.gcs-themeStudio__codeEditor {
+  display: flex;
+  height: min(60vh, 560px);
+  margin-top: 10px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #0b0d12;
+}
+.gcs-themeStudio__gutter {
+  margin: 0;
+  padding: 12px 10px;
+  min-width: 34px;
+  overflow: hidden;
+  text-align: right;
+  font: 13px/1.6 ui-monospace, monospace;
+  color: #596173;
+  background: #0f1218;
+  border-right: 1px solid #1f2430;
+  user-select: none;
+}
+.gcs-themeStudio__codeInput {
+  flex: 1;
+  margin: 0;
+  padding: 12px 14px;
+  border: 0;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: #d6e2ff;
+  font: 13px/1.6 ui-monospace, monospace;
+  tab-size: 2;
+  white-space: pre;
+}
+
+@media (max-width: 900px) {
+  .gcs-themeStudio {
+    grid-template-columns: 56px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 55vh) minmax(0, 1fr);
+  }
+  .gcs-themeStudio__rail {
+    grid-row: 1 / -1;
+  }
+  .gcs-themeStudio__panel {
+    grid-column: 2;
+    grid-row: 2;
+    border-right: 0;
+    border-top: 1px solid var(--gcs-st-line);
+  }
+  .gcs-themeStudio__preview {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gcs-themeStudio__frame,
+  .gcs-themeStudio__switch,
+  .gcs-themeStudio__switch::after {
+    transition: none;
+  }
+}

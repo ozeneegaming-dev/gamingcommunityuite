@@ -1,20 +1,26 @@
 import "server-only";
 import { DEFAULT_THEME_SETTINGS, THEMES_ACP_SECTION, WIDGETS_ACP_SECTION, type GcsThemeView } from "@gcs/core";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { cache } from "react";
 import { getAcpContext } from "./acp";
 import { currentActor } from "./actor";
 import { services } from "./services";
+import { THEME_PREVIEW_HEADER } from "./theme-preview";
 
 export const THEME_COOKIE = "gcs-theme";
 export const THEME_MODES = ["dark", "light", "auto"] as const;
 export type GcsThemeMode = (typeof THEME_MODES)[number];
 export const isThemeMode = (v: unknown): v is GcsThemeMode => THEME_MODES.includes(v as GcsThemeMode);
 
-/** Modul temei (dark / light / auto): alegerea vizitatorului (cookie), altfel setarea `site.theme` din ACP. */
+/**
+ * Modul temei (dark / light / auto): alegerea vizitatorului (cookie), altfel modul implicit al temei (editorul
+ * vizual, „Mod luminos/întunecat”), altfel setarea `site.theme` din ACP.
+ */
 export async function themeMode(): Promise<GcsThemeMode> {
   const fromCookie = (await cookies()).get(THEME_COOKIE)?.value;
   if (isThemeMode(fromCookie)) return fromCookie;
+  const fromTheme = (await viewerTheme()).shown.settings.scheme.default;
+  if (isThemeMode(fromTheme)) return fromTheme;
   const fromSettings = await services()
     .settings.get<string>("site.theme")
     .catch(() => "dark");
@@ -49,6 +55,8 @@ export type GcsViewerTheme = {
   /** Viewerul poate edita teme (ACP → Aspect → Teme). */
   canEdit: boolean;
   editing: boolean;
+  /** Pagina e previzualizarea din editorul vizual (în `iframe`): draft-ul, fără uneltele de editare de pe site. */
+  preview: boolean;
 };
 
 /** Tema request-ului curent (o singură dată pe request). Înainte de instalare: valorile implicite. */
@@ -59,17 +67,19 @@ export const viewerTheme = cache(async (): Promise<GcsViewerTheme> => {
     const actor = await currentActor();
     const canEdit = actor.userId ? await acp.can(actor, THEMES_ACP_SECTION, "edit") : false;
     // Editorul (și draft-ul) apare doar cu poarta ACP trecută; altfel adminul vede tema publicată și butonul.
-    const editKey = canEdit ? jar.get(THEME_EDIT_COOKIE)?.value : undefined;
+    const previewKey = canEdit ? (await headers()).get(THEME_PREVIEW_HEADER) : null;
+    const editKey = previewKey ?? (canEdit ? jar.get(THEME_EDIT_COOKIE)?.value : undefined);
     const gateOk = editKey ? (await getAcpContext()).state === "ok" : false;
     const edited = editKey && gateOk ? await themes.get(editKey) : null;
     if (edited) {
       const shown = themes.withDraft(edited);
-      return { theme: edited, shown, inlineCss: themes.css(edited, { draft: true }), canEdit, editing: true };
+      const preview = previewKey === edited.key;
+      return { theme: edited, shown, inlineCss: themes.css(edited, { draft: true }), canEdit, editing: !preview, preview };
     }
     const theme = await themes.active(jar.get(SKIN_COOKIE)?.value ?? null);
-    return { theme, shown: theme, inlineCss: null, canEdit, editing: false };
+    return { theme, shown: theme, inlineCss: null, canEdit, editing: false, preview: false };
   } catch {
-    return { theme: FALLBACK_THEME, shown: FALLBACK_THEME, inlineCss: null, canEdit: false, editing: false };
+    return { theme: FALLBACK_THEME, shown: FALLBACK_THEME, inlineCss: null, canEdit: false, editing: false, preview: false };
   }
 });
 

@@ -1,3 +1,4 @@
+import type { GcsThemeView } from "@gcs/core";
 import { GcsIcon } from "@gcs/ui/icons";
 import { GcsAvatar, GcsButton } from "@gcs/ui";
 import Link from "next/link";
@@ -10,6 +11,54 @@ import { services } from "@/lib/services";
 import { GcsGuestPrefs, GcsHeaderScroll, GcsHeaderSearch, GcsMobileNav, GcsNavLinks, GcsUserMenu, type GcsNavEntry } from "./header/GcsNavClient";
 import { GcsAuthLink } from "./GcsAuthModal";
 import { GcsLiveCount, GcsNotificationBell } from "./notifications/GcsNotificationBell";
+
+/**
+ * Logo-ul temei: imaginile (varianta de bază + cele pentru modul luminos și ecranele mici, alese din CSS), altfel
+ * marcajul cu inițiala, textul logo-ului (implicit numele site-ului) și sloganul. `data-gcs-logo-*` le folosește
+ * previzualizarea editorului vizual, ca textul să se schimbe live.
+ */
+function GcsBrand({ theme, siteName }: { theme: GcsThemeView; siteName: string }) {
+  const logo = theme.settings.logo;
+  const base = theme.logoUrl ?? logo.imageLight ?? logo.imageMobile ?? logo.imageMobileLight;
+  if (base) {
+    const variants = [
+      { url: logo.imageLight, cls: "gcs-brand__logo--light" },
+      { url: logo.imageMobile, cls: "gcs-brand__logo--mobile" },
+      { url: logo.imageMobileLight, cls: "gcs-brand__logo--mobileLight" },
+    ].filter((v): v is { url: string; cls: string } => !!v.url && v.url !== base);
+    return (
+      <span
+        className="gcs-brand__logos"
+        data-testid="gcs-brand-logo"
+        {...(logo.imageLight && logo.imageLight !== base ? { "data-light": "" } : {})}
+        {...(logo.imageMobile && logo.imageMobile !== base ? { "data-mobile": "" } : {})}
+        {...(logo.imageMobileLight && logo.imageMobileLight !== base ? { "data-mobile-light": "" } : {})}
+      >
+        {/* Logo-ul temei (încărcat din editor), în locul inițialei și al numelui. */}
+        <img src={base} alt={logo.text || siteName} className="gcs-brand__logo gcs-brand__logo--base" />
+        {variants.map((v) => (
+          <img key={v.cls} src={v.url} alt="" aria-hidden="true" className={`gcs-brand__logo ${v.cls}`} />
+        ))}
+      </span>
+    );
+  }
+  const text = logo.text || siteName;
+  return (
+    <>
+      <span aria-hidden="true" className="gcs-brand__mark">
+        <span>{text.trim().charAt(0).toUpperCase() || "G"}</span>
+      </span>
+      <span className="gcs-brand__text">
+        <span className="gcs-brand__name gcs-display" data-gcs-logo-text="" data-site-name={siteName}>
+          {text}
+        </span>
+        <span className="gcs-brand__slogan" data-gcs-logo-slogan="">
+          {logo.slogan}
+        </span>
+      </span>
+    </>
+  );
+}
 
 /**
  * Header-ul site-ului (specul etapei 5): logo-ul temei sau numele site-ului, meniul principal configurabil (cu iconițe
@@ -57,17 +106,7 @@ export async function GcsSiteHeader() {
           labels={{ open: t("openMenu"), close: t("closeMenu"), menu: t("mainNav") }}
         />
         <Link href="/" aria-label={t("home")} className="gcs-brand" data-testid="gcs-brand">
-          {theme.logoUrl ? (
-            // Logo-ul temei (încărcat din editorul de pe site), în locul inițialei și al numelui.
-            <img src={theme.logoUrl} alt={siteName} className="gcs-brand__logo" data-testid="gcs-brand-logo" />
-          ) : (
-            <>
-              <span aria-hidden="true" className="gcs-brand__mark">
-                <span>{siteName.trim().charAt(0).toUpperCase() || "G"}</span>
-              </span>
-              <span className="gcs-brand__name gcs-display">{siteName}</span>
-            </>
-          )}
+          <GcsBrand theme={theme} siteName={siteName} />
         </Link>
 
         <GcsNavLinks items={menu} label={t("mainNav")} />
