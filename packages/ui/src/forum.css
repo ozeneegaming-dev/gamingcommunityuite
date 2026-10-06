@@ -19,8 +19,11 @@
   background: var(--gcs-chrome2);
 }
 .gcs-tool {
-  min-width: 40px;
-  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
   border-radius: 8px;
   background: transparent;
   border: 0;
@@ -1364,4 +1367,122 @@
 .gcs-postbit__joined {
   font-size: 11px;
   color: var(--gcs-muted);
+}
+
+/* Editorul (etapa 5): separatoare, mărimea, culori, emoji, progres, contor, tot ecranul. */
+.gcs-editor__toolbar {
+  align-items: center;
+}
+.gcs-editor__sep {
+  width: 1px;
+  height: 22px;
+  margin: 0 4px;
+  background: var(--gcs-border);
+}
+.gcs-editor__spacer {
+  flex: 1;
+}
+.gcs-editor__size {
+  height: 32px;
+  width: auto;
+  padding: 0 6px;
+  font-size: 12px;
+}
+.gcs-editor__swatches {
+  gap: 6px;
+}
+.gcs-editor__swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid var(--gcs-border);
+  cursor: pointer;
+}
+.gcs-editor__swatch:focus-visible {
+  outline: 2px solid var(--gcs-accent);
+  outline-offset: 2px;
+}
+.gcs-editor__custom input {
+  width: 32px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--gcs-border);
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+}
+.gcs-editor__emoji {
+  flex-direction: column;
+  align-items: stretch;
+}
+.gcs-editor__emojiQuick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+.gcs-editor__emojiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
+  gap: 2px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.gcs-editor__emojiBtn {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.gcs-editor__emojiBtn:hover,
+.gcs-editor__emojiBtn:focus-visible {
+  background: var(--gcs-surface2);
+}
+.gcs-editor__progress {
+  flex: 0 0 140px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--gcs-surface2);
+  overflow: hidden;
+}
+.gcs-editor__progress > span {
+  display: block;
+  height: 100%;
+  background: var(--gcs-accent);
+  transition: width 0.15s;
+}
+.gcs-editor__count {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--gcs-muted);
+  font-variant-numeric: tabular-nums;
+}
+.gcs-editor--fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  display: flex;
+  flex-direction: column;
+  border-radius: 0;
+}
+.gcs-editor--fullscreen .tiptap,
+.gcs-editor--fullscreen .gcs-editor__content {
+  flex: 1;
+  overflow-y: auto;
+}
+.gcs-editor--fullscreen > div:has(> .gcs-editor__content) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+/* Formatarea în postări și în editor: textul evidențiat rămâne lizibil pe orice temă. */
+.gcs-editor__content mark,
+.gcs-postBody mark {
+  color: #14161c;
+  border-radius: 3px;
+  padding: 0 2px;
 }

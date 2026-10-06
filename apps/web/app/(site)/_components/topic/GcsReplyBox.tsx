@@ -10,7 +10,7 @@ import { useRealtime } from "../realtime/GcsRealtimeProvider";
 import { QUOTE_EVENT, useEditorLabels, type GcsQuoteDetail } from "./useEditorLabels";
 
 /** Caseta de răspuns din macheta Topic: editorul, ciorna și trimiterea. Primește citatele de la butoanele „Citează”. */
-export function GcsReplyBox({ topicId, forumId, maxUploadMb }: { topicId: number; forumId: number; maxUploadMb: number }) {
+export function GcsReplyBox({ topicId, forumId, maxUploadMb, maxLength }: { topicId: number; forumId: number; maxUploadMb: number; maxLength?: number }) {
   const t = useTranslations("topic");
   const labels = useEditorLabels();
   const errorMessage = useErrorMessage();
@@ -60,6 +60,7 @@ export function GcsReplyBox({ topicId, forumId, maxUploadMb }: { topicId: number
         ref={editor}
         id="gcs-reply-editor"
         labels={labels}
+        {...(maxLength ? { maxLength } : {})}
         forumId={forumId}
         uploadUrl="/api/forums/uploads"
         mentionUrl="/api/forums/mentions"

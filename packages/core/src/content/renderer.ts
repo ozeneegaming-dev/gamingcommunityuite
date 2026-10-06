@@ -42,6 +42,15 @@ const isInt = (min: number, max: number): AttrRule => (v) => Number.isInteger(v)
 const isText = (max: number, min = 0): AttrRule => (v) => typeof v === "string" && v.length >= min && v.length <= max;
 const isId: AttrRule = (v) => typeof v === "string" && ID.test(v);
 const any: AttrRule = () => true;
+const oneOf = (values: readonly string[]): AttrRule => (v) => typeof v === "string" && values.includes(v);
+
+/** Formatarea din editor (etapa 5): doar aceste valori ajung în `style`, verificate aici și de sanitizer. */
+export const GCS_TEXT_ALIGNS = ["left", "center", "right", "justify"] as const;
+export const GCS_FONT_SIZES = ["12px", "14px", "18px", "24px", "32px"] as const;
+export const GCS_HIGHLIGHTS = ["#FDE68A", "#BBF7D0", "#BFDBFE", "#FBCFE8", "#FECACA"] as const;
+const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
+const isColor: AttrRule = (v) => typeof v === "string" && HEX_COLOR.test(v);
+const textAlign = optional(oneOf(GCS_TEXT_ALIGNS));
 
 type NodeSpec = {
   group: "block" | "inline" | "listItem";
@@ -54,8 +63,8 @@ type NodeSpec = {
 
 /** Nodurile permise. Editorul (`GcsEditor`) definește exact aceleași noduri și atribute. */
 export const GCS_DOC_NODES: Record<string, NodeSpec> = {
-  paragraph: { group: "block", content: "inline" },
-  heading: { group: "block", content: "inline", attrs: { level: isInt(2, 4) }, required: ["level"] },
+  paragraph: { group: "block", content: "inline", attrs: { textAlign } },
+  heading: { group: "block", content: "inline", attrs: { level: isInt(2, 4), textAlign }, required: ["level"] },
   bulletList: { group: "block", content: "listItem" },
   orderedList: { group: "block", content: "listItem", attrs: { start: optional(isInt(1, 100_000)), type: optional((v) => v === "1") } },
   listItem: { group: "listItem", content: "block" },
@@ -97,6 +106,10 @@ export const GCS_DOC_MARKS: Record<string, Record<string, AttrRule>> = {
   strike: {},
   code: {},
   link: { href: (v) => typeof v === "string" && isSafeHref(v), target: any, rel: any, class: any, title: any },
+  subscript: {},
+  superscript: {},
+  highlight: { color: optional(oneOf(GCS_HIGHLIGHTS)) },
+  textStyle: { color: optional(isColor), fontSize: optional(oneOf(GCS_FONT_SIZES)) },
 };
 
 function isSafeHref(href: string): boolean {
@@ -162,6 +175,7 @@ function validate(raw: unknown): GcsDoc {
           if (!rules) invalid();
           const attrs = validateAttrs(m.attrs, rules, m.type === "link" ? ["href"] : []);
           if (m.type === "link") return { type: "link", attrs: { href: attrs!.href as string } };
+          if (attrs && (m.type === "highlight" || m.type === "textStyle")) return { type: m.type, attrs: attrs as Record<string, string> };
           return { type: m.type };
         });
         if (marks.length > 0) out.marks = marks;
@@ -216,6 +230,8 @@ function toHtml(doc: GcsDoc, opts: GcsRenderOptions) {
   const quotes = new Set<number>();
 
   const children = (n: GcsDocNode) => (n.content ?? []).map(render).join("");
+  // Alinierea implicită (stânga) nu are nevoie de `style`.
+  const align = (a: Record<string, string | number | null>) => (a.textAlign && a.textAlign !== "left" ? ` style="text-align:${a.textAlign}"` : "");
   const link = (href: string, label: string) => `<a href="${esc(href)}" ${LINK_ATTRS}>${label}</a>`;
 
   function render(n: GcsDocNode): string {
@@ -230,6 +246,15 @@ function toHtml(doc: GcsDoc, opts: GcsRenderOptions) {
           else if (mark.type === "underline") html = `<u>${html}</u>`;
           else if (mark.type === "strike") html = `<s>${html}</s>`;
           else if (mark.type === "code") html = `<code>${html}</code>`;
+          else if (mark.type === "subscript") html = `<sub>${html}</sub>`;
+          else if (mark.type === "superscript") html = `<sup>${html}</sup>`;
+          else if (mark.type === "highlight") {
+            const color = mark.attrs?.color;
+            html = color ? `<mark style="background-color:${color}">${html}</mark>` : `<mark>${html}</mark>`;
+          } else if (mark.type === "textStyle") {
+            const styles = [mark.attrs?.color ? `color:${mark.attrs.color}` : "", mark.attrs?.fontSize ? `font-size:${mark.attrs.fontSize}` : ""].filter(Boolean);
+            if (styles.length > 0) html = `<span style="${styles.join(";")}">${html}</span>`;
+          }
           else if (mark.type === "link") {
             const href = mark.attrs!.href!;
             // Un fișier atașat (non-imagine) apare în postare ca link spre `/files/{id}`.
@@ -242,10 +267,10 @@ function toHtml(doc: GcsDoc, opts: GcsRenderOptions) {
       }
       case "paragraph":
         text.push("\n");
-        return `<p>${children(n)}</p>`;
+        return `<p${align(a)}>${children(n)}</p>`;
       case "heading":
         text.push("\n");
-        return `<h${a.level}>${children(n)}</h${a.level}>`;
+        return `<h${a.level}${align(a)}>${children(n)}</h${a.level}>`;
       case "bulletList":
         return `<ul>${children(n)}</ul>`;
       case "orderedList":
@@ -319,7 +344,7 @@ function toHtml(doc: GcsDoc, opts: GcsRenderOptions) {
 const SANITIZE: sanitizeHtml.IOptions & { allowedEmptyAttributes: string[] } = {
   allowedTags: [
     "p", "br", "hr", "h2", "h3", "h4", "strong", "em", "u", "s", "code", "pre", "a", "ul", "ol", "li",
-    "blockquote", "span", "details", "summary", "img", "div", "iframe",
+    "blockquote", "span", "details", "summary", "img", "div", "iframe", "sub", "sup", "mark",
   ],
   allowedAttributes: {
     a: ["href", "rel", "target", "class", "data-user"],
@@ -328,11 +353,25 @@ const SANITIZE: sanitizeHtml.IOptions & { allowedEmptyAttributes: string[] } = {
     blockquote: ["class", "data-post"],
     ol: ["start"],
     code: ["class"],
-    span: ["class"],
+    span: ["class", "style"],
+    p: ["style"],
+    h2: ["style"],
+    h3: ["style"],
+    h4: ["style"],
+    mark: ["style"],
     div: ["class"],
     details: ["class"],
   },
   allowedClasses: { "*": ["gcs-*", "language-*"] },
+  // Doar proprietățile și valorile din editor; orice altceva (url(), expression(), alte proprietăți) dispare.
+  allowedStyles: {
+    "*": {
+      color: [/^#[0-9a-fA-F]{6}$/],
+      "background-color": [/^#[0-9a-fA-F]{6}$/],
+      "font-size": [/^(?:12|14|18|24|32)px$/],
+      "text-align": [/^(?:left|center|right|justify)$/],
+    },
+  },
   allowedSchemes: ["http", "https", "mailto"],
   allowedSchemesByTag: { img: ["https"] },
   allowProtocolRelative: false,

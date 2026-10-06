@@ -198,7 +198,12 @@ export default async function TopicPage({ params, searchParams }: Props) {
       <GcsPagination pagination={data.pagination} href={(p) => topicHref(topic, p)} />
 
       {data.canReply ? (
-        <GcsReplyBox topicId={topic.id} forumId={forum.id} maxUploadMb={typeof maxUploadMb === "number" ? maxUploadMb : 0} />
+        <GcsReplyBox
+          topicId={topic.id}
+          forumId={forum.id}
+          maxUploadMb={typeof maxUploadMb === "number" ? maxUploadMb : 0}
+          maxLength={await services().settings.get<number>("forums.post_max_chars")}
+        />
       ) : (
         <GcsCard style={{ padding: 18, color: "var(--gcs-muted)" }} data-testid="gcs-no-reply">
           {topic.locked ? (

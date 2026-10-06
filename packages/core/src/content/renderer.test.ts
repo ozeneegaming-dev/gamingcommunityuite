@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { GcsValidationError } from "../errors";
-import { contentRefs, GcsContentRenderer, type GcsRenderOptions } from "./renderer";
+import { contentRefs, GcsContentRenderer, sanitizeContentHtml, type GcsRenderOptions } from "./renderer";
 
 const renderer = new GcsContentRenderer();
 const opts: GcsRenderOptions = {
@@ -177,6 +177,50 @@ describe("GcsContentRenderer — XSS (Review Focus #4)", () => {
     expectInvalid(null);
     expectInvalid("<p>html</p>");
     expectInvalid({ type: "paragraph" });
+  });
+});
+
+describe("GcsContentRenderer — formatarea din etapa 5", () => {
+  test("culoarea, mărimea, evidențierea, indicii și alinierea devin HTML cu stiluri permise", () => {
+    const out = render(
+      doc(
+        { type: "paragraph", attrs: { textAlign: "center" }, content: [text("roșu", [{ type: "textStyle", attrs: { color: "#D62839", fontSize: "18px" } }])] },
+        { type: "heading", attrs: { level: 2, textAlign: "right" }, content: [text("titlu")] },
+        p(text("x", [{ type: "highlight", attrs: { color: "#FDE68A" } }]), text("2", [{ type: "superscript" }]), text("i", [{ type: "subscript" }])),
+        { type: "paragraph", attrs: { textAlign: null }, content: [text("implicit")] },
+      ),
+    );
+    expect(out.html).toBe(
+      '<p style="text-align:center"><span style="color:#D62839;font-size:18px">roșu</span></p>' +
+        '<h2 style="text-align:right">titlu</h2>' +
+        '<p><mark style="background-color:#FDE68A">x</mark><sup>2</sup><sub>i</sub></p>' +
+        "<p>implicit</p>",
+    );
+  });
+
+  test.each([
+    ["culoare cu nume", { type: "textStyle", attrs: { color: "red" } }],
+    ["culoare cu CSS strecurat", { type: "textStyle", attrs: { color: "#fff;background:url(https://x.example/a.png)" } }],
+    ["culoare cu url(", { type: "textStyle", attrs: { color: "url(javascript:alert(1))" } }],
+    ["mărime în afara listei", { type: "textStyle", attrs: { fontSize: "200px" } }],
+    ["mărime cu expresie", { type: "textStyle", attrs: { fontSize: "expression(alert(1))" } }],
+    ["evidențiere în afara paletei", { type: "highlight", attrs: { color: "#000000" } }],
+    ["atribut style injectat", { type: "textStyle", attrs: { style: "background:url(x)" } }],
+  ])("%s → refuzat", (_name, mark) => {
+    expectInvalid(doc(p(text("x", [mark]))));
+  });
+
+  test("alinierea acceptă doar cele 4 valori; `style` pe paragraf e refuzat", () => {
+    expectInvalid(doc({ type: "paragraph", attrs: { textAlign: "left;position:fixed" }, content: [text("x")] }));
+    expectInvalid(doc({ type: "paragraph", attrs: { style: "color:red" }, content: [text("x")] }));
+  });
+
+  test("sanitizer-ul păstrează doar proprietățile și valorile permise din `style`", () => {
+    const html = sanitizeContentHtml(
+      '<p style="text-align:center;position:fixed"><span style="color:#D62839;background-image:url(https://x.example/a.png)">a</span>' +
+        '<span style="font-size:999px">b</span><mark style="background-color:javascript:alert(1)">c</mark></p>',
+    );
+    expect(html).toBe('<p style="text-align:center"><span style="color:#D62839">a</span><span>b</span><mark>c</mark></p>');
   });
 });
 

@@ -10,6 +10,35 @@ const labels: GcsEditorLabels = {
   bold: "Bold",
   italic: "Italic",
   underline: "Subliniat",
+  strike: "Tăiat",
+  superscript: "Exponent",
+  subscript: "Indice",
+  alignLeft: "Stânga",
+  alignCenter: "Centru",
+  alignRight: "Dreapta",
+  alignJustify: "Justify",
+  fontSize: "Mărime",
+  sizeDefault: "Normal",
+  color: "Culoare",
+  colorCustom: "Altă culoare",
+  highlight: "Evidențiere",
+  removeColor: "Fără culoare",
+  clearFormatting: "Șterge formatarea",
+  bulletList: "Listă",
+  orderedList: "Listă numerotată",
+  horizontalRule: "Linie",
+  link: "Link",
+  linkUrl: "Adresa linkului",
+  removeLink: "Scoate linkul",
+  emoji: "Emoji",
+  emojiSmileys: "Fețe",
+  emojiPeople: "Oameni",
+  emojiGaming: "Gaming",
+  emojiSymbols: "Simboluri",
+  fullscreen: "Tot ecranul",
+  exitFullscreen: "Ieși din tot ecranul",
+  characters: "{count} caractere",
+  charactersMax: "{count} / {max} caractere",
   quote: "Citat",
   code: "Cod",
   spoiler: "Spoiler",
@@ -78,6 +107,22 @@ describe("extensiile editorului", () => {
     editor.destroy();
   });
 
+  test("culoarea, mărimea, evidențierea, alinierea și indicii produc exact mărcile acceptate de server", () => {
+    const editor = headless("<p>abc</p>");
+    editor.chain().selectAll().setColor("#5EA2FF").setFontSize("18px").setHighlight({ color: "#FDE68A" }).toggleSuperscript().setTextAlign("center").run();
+    const p = editor.getJSON().content![0]!;
+    expect(p.attrs).toMatchObject({ textAlign: "center" });
+    const marks = p.content![0]!.marks!;
+    expect(marks).toEqual(
+      expect.arrayContaining([
+        { type: "textStyle", attrs: expect.objectContaining({ color: "#5EA2FF", fontSize: "18px" }) },
+        { type: "highlight", attrs: { color: "#FDE68A" } },
+        { type: "superscript" },
+      ]),
+    );
+    editor.destroy();
+  });
+
   test.each([
     ["https://youtu.be/dQw4w9WgXcQ", true],
     ["https://www.twitch.tv/videos/123", true],
@@ -102,7 +147,14 @@ describe("GcsEditor", () => {
     await mount({ uploadUrl: "/api/forums/uploads", mentionUrl: "/api/forums/mentions" });
     const toolbar = screen.getByRole("toolbar", { name: "Formatare" });
     const names = [...toolbar.querySelectorAll("button")].map((b) => b.getAttribute("aria-label"));
-    expect(names).toEqual(["Bold", "Italic", "Subliniat", "Citat", "Cod", "Spoiler", "Mențiune", "Imagine", "Video"]);
+    expect(names).toEqual([
+      "Bold", "Italic", "Subliniat", "Tăiat", "Exponent", "Indice",
+      "Stânga", "Centru", "Dreapta", "Justify",
+      "Culoare", "Evidențiere", "Șterge formatarea",
+      "Listă", "Listă numerotată", "Linie", "Link", "Citat", "Cod", "Spoiler",
+      "Mențiune", "Imagine", "Video", "Emoji", "Tot ecranul",
+    ]);
+    expect(screen.getByLabelText("Mărime")).toBeTruthy();
   });
 
   test("insertQuote adaugă un citat cu autorul și id-ul postării", async () => {
@@ -117,10 +169,30 @@ describe("GcsEditor", () => {
     const draft = { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "ciorna mea" }] }] };
     window.localStorage.setItem("gcs-draft:topic-1", JSON.stringify(draft));
     const ref = await mount({ draftKey: "topic-1" });
-    expect(ref.current!.getJSON()).toEqual(draft);
+    // Paragrafele au acum și `textAlign` (null = implicit), acceptat de server.
+    expect(ref.current!.getJSON()).toMatchObject(draft);
     act(() => ref.current!.clear());
     expect(window.localStorage.getItem("gcs-draft:topic-1")).toBeNull();
     expect(ref.current!.isEmpty()).toBe(true);
+  });
+
+  test("emoji-ul ales din selector se inserează în text; contorul de caractere se actualizează", async () => {
+    const ref = await mount({ maxLength: 500 });
+    act(() => screen.getByRole("button", { name: "Emoji" }).click());
+    act(() => screen.getByRole("button", { name: "🔥" }).click());
+    const text = ref.current!.getJSON().content![0]!.content![0]!.text;
+    expect(text).toContain("🔥");
+    await waitFor(() => expect(screen.getByTestId("gcs-editor-count").textContent).toMatch(/^[12] \/ 500 caractere$/));
+  });
+
+  test("tot ecranul se pornește și se oprește cu Escape", async () => {
+    await mount();
+    act(() => screen.getByRole("button", { name: "Tot ecranul" }).click());
+    expect(document.querySelector(".gcs-editor--fullscreen")).not.toBeNull();
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    });
+    expect(document.querySelector(".gcs-editor--fullscreen")).toBeNull();
   });
 
   test("butonul Video cu un link nerecunoscut afișează eroarea", async () => {

@@ -146,3 +146,49 @@ test("postbit-ul: grupul, bara de XP, câmpurile cu iconiță și imagine; un c�
   await expect(fields).not.toContainText(`Secret ${id}`);
   await visitor.close();
 });
+
+test("editorul: formatare (bold, centrat, culoare), emoji și o imagine trasă în editor ajung în postare", async ({ page, request }) => {
+  const t = await forumTree(request);
+  const id = uid();
+  await member(page, `Ed${id}`, `ed-${id}@example.com`);
+  const topic = await topicWithReplies(request, t.forum.id, `ed-${id}@example.com`, `Editor ${id}`);
+  await page.goto(topic.url);
+  const reply = page.locator("#reply");
+
+  await typeInEditor(page, "Text formatat");
+  await page.keyboard.press("ControlOrMeta+a");
+  await reply.getByRole("button", { name: "Bold", exact: true }).click();
+  await reply.getByRole("button", { name: "Centrează" }).click();
+  await reply.getByRole("button", { name: "Culoarea textului" }).click();
+  await reply.getByRole("button", { name: "#5EA2FF" }).click();
+  await page.keyboard.press("End");
+
+  // Emoji din selector.
+  await reply.getByRole("button", { name: "Emoji" }).click();
+  await reply.getByRole("tab", { name: "Gaming" }).click();
+  await reply.getByRole("button", { name: "🎮" }).click();
+  await expect(reply.getByTestId("gcs-editor-count")).toContainText("caractere");
+
+  // O imagine trasă (drag & drop) peste editor.
+  const png = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAACgAAAAUCAIAAABwJOjsAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAMElEQVRIiWO4pmE5IIhh1GKN0aC+Npq4LEezk8ZoAXJttMi0HK0kNEarRcvhXy0CAKIgzA6emNzPAAAAAElFTkSuQmCC",
+    "base64",
+  ).toString("base64");
+  const drop = await page.evaluateHandle((b64) => {
+    const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    const dt = new DataTransfer();
+    dt.items.add(new File([bytes], "drop.png", { type: "image/png" }));
+    return dt;
+  }, png);
+  // ProseMirror ia poziția din coordonatele evenimentului: îl lăsăm în mijlocul editorului.
+  const box = (await reply.locator(".gcs-editor__content").boundingBox())!;
+  await reply.locator(".gcs-editor__content").dispatchEvent("drop", { dataTransfer: drop, clientX: box.x + box.width / 2, clientY: box.y + box.height / 2 });
+  await expect(reply.locator(".gcs-editor__content img")).toBeVisible();
+
+  await page.getByRole("button", { name: "Trimite răspunsul" }).click();
+  const post = page.getByTestId("gcs-post").last();
+  await expect(post.locator('.gcs-postBody p[style="text-align:center"] strong')).toContainText("Text formatat");
+  await expect(post.locator('.gcs-postBody span[style="color:#5EA2FF"]')).toBeVisible();
+  await expect(post.locator(".gcs-postBody")).toContainText("🎮");
+  await expect(post.locator(".gcs-postBody img.gcs-postImage")).toBeVisible();
+});

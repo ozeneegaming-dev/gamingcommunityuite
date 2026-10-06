@@ -1,7 +1,12 @@
 import { mergeAttributes, Node, type Extensions } from "@tiptap/core";
 import Image from "@tiptap/extension-image";
+import Highlight from "@tiptap/extension-highlight";
 import Mention, { type MentionOptions } from "@tiptap/extension-mention";
-import { Placeholder } from "@tiptap/extensions";
+import Subscript from "@tiptap/extension-subscript";
+import Superscript from "@tiptap/extension-superscript";
+import TextAlign from "@tiptap/extension-text-align";
+import { Color, FontSize, TextStyle } from "@tiptap/extension-text-style";
+import { CharacterCount, Placeholder } from "@tiptap/extensions";
 import StarterKit from "@tiptap/starter-kit";
 
 /**
@@ -26,7 +31,13 @@ export const GCS_EDITOR_NODES = [
   "embed",
   "mention",
 ] as const;
-export const GCS_EDITOR_MARKS = ["bold", "italic", "underline", "strike", "code", "link"] as const;
+export const GCS_EDITOR_MARKS = ["bold", "italic", "underline", "strike", "code", "link", "subscript", "superscript", "highlight", "textStyle"] as const;
+
+/** Valorile oferite de bara de unelte; serverul (`GcsContentRenderer`) acceptă exact aceleași. */
+export const GCS_EDITOR_FONT_SIZES = ["12px", "14px", "18px", "24px", "32px"] as const;
+export const GCS_EDITOR_HIGHLIGHTS = ["#FDE68A", "#BBF7D0", "#BFDBFE", "#FBCFE8", "#FECACA"] as const;
+export const GCS_EDITOR_COLORS = ["#D62839", "#FF6B74", "#F4B740", "#3DDC97", "#5EA2FF", "#A78BFA", "#F472B6", "#A1A7B4", "#ECEDF1", "#14161C"] as const;
+export const GCS_EDITOR_ALIGNS = ["left", "center", "right", "justify"] as const;
 
 /** Citatul unei postări: autorul și id-ul postării, cu conținutul citat. */
 export const GcsQuote = Node.create({
@@ -94,7 +105,7 @@ export const GcsImage = Image.extend({
 });
 
 /** Extensiile editorului. `mention` primește sugestiile (vezi `mentions.tsx`). */
-export function gcsEditorExtensions(opts: { placeholder: string; mention?: Partial<MentionOptions>["suggestion"] }): Extensions {
+export function gcsEditorExtensions(opts: { placeholder: string; mention?: Partial<MentionOptions>["suggestion"]; maxLength?: number }): Extensions {
   return [
     StarterKit.configure({
       heading: { levels: [2, 3, 4] },
@@ -110,6 +121,15 @@ export function gcsEditorExtensions(opts: { placeholder: string; mention?: Parti
       ...(opts.mention ? { suggestion: opts.mention } : {}),
     }),
     Placeholder.configure({ placeholder: opts.placeholder }),
+    // Formatarea din etapa 5: culoare și mărime (textStyle), evidențiere, indice / exponent, aliniere.
+    TextStyle,
+    Color,
+    FontSize,
+    Highlight.configure({ multicolor: true }),
+    Subscript,
+    Superscript,
+    TextAlign.configure({ types: ["heading", "paragraph"], alignments: [...GCS_EDITOR_ALIGNS] }),
+    CharacterCount.configure(opts.maxLength ? { limit: opts.maxLength } : {}),
   ];
 }
 

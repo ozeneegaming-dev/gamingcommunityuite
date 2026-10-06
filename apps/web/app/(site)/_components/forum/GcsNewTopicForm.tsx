@@ -13,11 +13,13 @@ type Props = {
   forum: { id: number; href: string };
   prefixes: { id: number; name: string; color: string }[];
   tagsMax: number;
+  /** Limita de caractere a postării (`forums.post_max_chars`). */
+  maxLength?: number;
   canPoll: boolean;
 };
 
 /** Formularul pentru un topic nou: titlu, prefix, tag-uri, mesaj și sondaj opțional. */
-export function GcsNewTopicForm({ forum, prefixes, tagsMax, canPoll }: Props) {
+export function GcsNewTopicForm({ forum, prefixes, tagsMax, canPoll, maxLength }: Props) {
   const t = useTranslations("newTopic");
   const labels = useEditorLabels();
   const errorMessage = useErrorMessage();
@@ -146,6 +148,7 @@ export function GcsNewTopicForm({ forum, prefixes, tagsMax, canPoll }: Props) {
           ref={editor}
           id="gcs-new-topic-editor"
           labels={labels}
+          {...(maxLength ? { maxLength } : {})}
           forumId={forum.id}
           uploadUrl="/api/forums/uploads"
           mentionUrl="/api/forums/mentions"

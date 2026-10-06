@@ -43,6 +43,7 @@ export default async function NewTopicPage({ params }: Props) {
           prefixes={allowed.map((p) => ({ id: p.id, name: p.name, color: p.color }))}
           tagsMax={tagsMax === -1 ? 20 : typeof tagsMax === "number" ? tagsMax : 0}
           canPoll={canPoll === true}
+          maxLength={await services().settings.get<number>("forums.post_max_chars")}
         />
       ) : (
         <GcsCard style={{ padding: 24 }}>{t("forum.empty")}</GcsCard>
