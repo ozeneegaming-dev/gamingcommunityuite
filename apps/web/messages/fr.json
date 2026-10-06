@@ -316,7 +316,7 @@
       },
       "move": "Déplacer le widget {title}",
       "collapse": "Réduire {title}",
-      "expand": "Expand {title}",
+      "expand": "Élargir {title}",
       "moveToOther": "Déplacez {title} dans l'autre colonne",
       "widgets": {
         "registrations": {
@@ -1926,7 +1926,7 @@
     "empty": "Pas encore de messages. Dis bonjour !",
     "older": "Messages plus anciens",
     "delete": "Supprimer",
-    "mute": "Mute 10 min",
+    "mute": "Muet 10 min",
     "muted": "Vous êtes muet dans le chat jusqu'à {until}. Motif : {reason}",
     "slowMode": "Mode lent : un message chaque {seconds} s.",
     "readOnly": "Vous pouvez seulement lire cette chaîne.",

@@ -137,7 +137,7 @@
       "too_many": "Demasiados",
       "too_large": "Archivo demasiado grande",
       "unsupported_type": "Tipo de archivo no permitido",
-      "invalid_parent": "Parent not allowed",
+      "invalid_parent": "Padres no autorizados",
       "cycle": "Un foro no se puede mover bajo su propio subforum",
       "invalid_image": "Imagen inválida o dañada",
       "invalid_number": "El valor debe ser un número.",
@@ -308,14 +308,14 @@
     "dashboard": {
       "title": "Panel",
       "statusOk": "{site} · todos los servicios están funcionando",
-      "statusDegraded": "{site} · algunos servicios no responden",
+      "statusDegraded": "{site} · algunos servicios no están respondiendo",
       "kpis": {
         "members": "Miembros",
         "today": "Inscripciones hoy",
         "online": "En línea"
       },
       "move": "Mover widget {title}",
-      "collapse": "Collapse {title}",
+      "collapse": "Colapso {title}",
       "expand": "Ampliar {title}",
       "moveToOther": "Mover {title} a la otra columna",
       "widgets": {
@@ -354,7 +354,7 @@
           "empty": "Ningún administrador está activo ahora mismo"
         },
         "failed_acp_logins": {
-          "title": "Failed ACP logins",
+          "title": "Falló ACP logins",
           "empty": "No falló logins",
           "unknown": "desconocida"
         },
@@ -447,7 +447,7 @@
         "primary": "Grupo primario",
         "secondary": "Grupos secundarios",
         "none": "No hay grupos secundarios",
-        "add": "Add secondary group",
+        "add": "Añadir grupo secundario",
         "addSubmit": "Añadir",
         "remove": "Quitar {group}",
         "save": "Guardar el grupo primario"
@@ -478,7 +478,7 @@
         "title": "Advertencia",
         "points": "Puntos",
         "reason": "Motivo",
-        "expiresDays": "Expires after (days, 0 = never)",
+        "expiresDays": "Expira después (días, 0 = nunca)",
         "submit": "Advertir",
         "history": "Historia de la advertencia",
         "none": "No hay advertencias",
@@ -534,7 +534,7 @@
         "color": "Color",
         "useGradient": "Degradado",
         "gradientColor": "Color de gradiente {n}",
-        "animated": "Animated (shimmer)",
+        "animated": "Animado (shimmer)",
         "glow": "Brillo",
         "bold": "Negrita",
         "italic": "Cursiva",
@@ -559,9 +559,9 @@
         "iconSearch": "Buscar un icono",
         "iconNone": "No hay icono",
         "iconNoResults": "No hay iconos encontrados.",
-        "banner": "Postbit banner",
+        "banner": "Banner postal",
         "bannerHint": "Un color (#D62839) o un gradiente entre dos colores.",
-        "inLegend": "Shown in the group legend",
+        "inLegend": "Mostrado en la leyenda del grupo",
         "save": "Guardar"
       }
     },
@@ -590,7 +590,7 @@
         "title": "Derechos por sección"
       },
       "assignments": {
-        "title": "Assigned to",
+        "title": "Asignados",
         "none": "No asignado",
         "group": "Grupo",
         "user": "Nombre de usuario",
@@ -885,7 +885,7 @@
       "options": "Opciones (para listas)",
       "optionsHint": "Comma separado: PC, PlayStation, Xbox",
       "required": "Necesario",
-      "showOnCard": "Shown on the hover card",
+      "showOnCard": "Mostrada en la tarjeta de hover",
       "save": "Guardar",
       "delete": "Eliminar",
       "add": "Nuevo campo",
@@ -1055,7 +1055,7 @@
       "delete": "Eliminar",
       "confirmDelete": "Eliminar este tema? Los miembros que lo utilizaron verán el tema predeterminado.",
       "create": "Nuevo tema",
-      "copyFrom": "Copied from",
+      "copyFrom": "Copiado de",
       "fromDefaults": "Valores predeterminados"
     },
     "widgetsAdmin": {
@@ -1066,8 +1066,8 @@
     "menuManager": {
       "title": "Menu manager",
       "hint": "El menú principal del sitio: orden, etiquetas por idioma, iconos y quién puede ver cada artículo.",
-      "add": "Add item",
-      "addChild": "Add sub-item",
+      "add": "Añadir el tema",
+      "addChild": "Añádase el subtema",
       "label": "Etiqueta",
       "autoLabel": "Automático: {label} (llene sólo si desea texto diferente)",
       "href": "Enlace",
@@ -1257,7 +1257,7 @@
       "saved": "Preferencias salvadas.",
       "save": "Guardar",
       "type": "Tipo",
-      "site": "On site",
+      "site": "En el sitio",
       "email": "Correo electrónico",
       "email_OFF": "Desactivado",
       "email_INSTANT": "Inmediato",
@@ -1607,7 +1607,7 @@
     "pinned": "Pinned",
     "locked": "Cerrado",
     "solved": "Resueltos",
-    "pending": "Awaiting approval",
+    "pending": "En espera de aprobación",
     "hidden": "Oculto",
     "featured": "Destacado",
     "replies": "{count, plural, one {# Respuesta} many {# replies} other {# replies}}",
@@ -1729,9 +1729,9 @@
       "strike": "Strikethrough",
       "superscript": "Superscript",
       "subscript": "Subscript",
-      "alignLeft": "Align left",
+      "alignLeft": "Alinear a la izquierda",
       "alignCenter": "Center",
-      "alignRight": "Align right",
+      "alignRight": "Derecho",
       "alignJustify": "Justificar",
       "fontSize": "Tamaño del texto",
       "sizeDefault": "Normal",
@@ -1774,7 +1774,7 @@
     "noPrefix": "No prefijo",
     "tags": "Etiquetas",
     "tagsHelp": "Pulse Enter o coma después de cada etiqueta (hasta {max}).",
-    "removeTag": "Remove tag {tag}",
+    "removeTag": "Eliminar etiqueta {tag}",
     "content": "Mensaje",
     "addPoll": "Añadir una encuesta",
     "removePoll": "No hay votación",
@@ -1896,7 +1896,7 @@
       },
       "profile": {
         "follower": "Nuevos seguidores",
-        "wall": "Posts on your wall",
+        "wall": "Postes en su pared",
         "badge": "Nuevas placas y filas"
       },
       "pm": {
@@ -1926,7 +1926,7 @@
     "empty": "Aún no hay mensajes. ¡Di hola!",
     "older": "Mensajes más antiguos",
     "delete": "Eliminar",
-    "mute": "Mute 10 min",
+    "mute": "Muda 10 min",
     "muted": "Te mutilan en chat hasta {until}. Razón: {reason}",
     "slowMode": "Modo lento: un mensaje cada {seconds} s.",
     "readOnly": "Sólo puedes leer este canal.",
@@ -1992,7 +1992,7 @@
   "themeEditor": {
     "toolbar": "Herramientas de edición",
     "open": "Editar el tema",
-    "title": "Theme editor",
+    "title": "Editor de temas",
     "close": "Close editor",
     "draft": "Proyecto",
     "colors": "Colores",
@@ -2009,7 +2009,7 @@
       "muted": "Texto secundario",
       "accent": "Accent",
       "accentInk": "Texto del acento",
-      "chrome": "Header and footer",
+      "chrome": "Cabecera y pie",
       "chrome2": "Barras secundarias",
       "ok": "Éxito",
       "warn": "Advertencia"
@@ -2027,7 +2027,7 @@
     "upload": "Subir",
     "remove": "Quitar",
     "imageHint": "PNG, JPG, WebP o GIF, hasta 2 MB. El logotipo reemplaza el nombre del sitio en el encabezado.",
-    "customCss": "Custom CSS",
+    "customCss": "CSS personalizado",
     "cssHint": "Limpiado automáticamente: sin HTML, sin scripts, @import sólo de Google Fonts.",
     "saving": "Ahorro de borrador…",
     "uploading": "Subiendo…",
@@ -2055,7 +2055,7 @@
       "stats": "Estadísticas",
       "recentTopics": "Temas recientes",
       "recentPosts": "Puestos recientes",
-      "topPosters": "Top posters",
+      "topPosters": "Carteles superiores",
       "featuredTopics": "Temas destacados"
     },
     "chat": {

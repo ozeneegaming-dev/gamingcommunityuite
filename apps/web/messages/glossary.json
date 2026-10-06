@@ -1229,5 +1229,11 @@
     "es": "Servidor SMTP",
     "fr": "Serveur SMTP",
     "ru": "SMTP-сервер"
+  },
+  "ACP · {site}": {
+    "de": "ACP · {site}",
+    "es": "ACP · {site}",
+    "fr": "ACP · {site}",
+    "ru": "ACP · {site}"
   }
 }

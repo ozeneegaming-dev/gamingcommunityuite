@@ -182,7 +182,7 @@
     },
     "appsNav": "AKP-Anträge",
     "submenuNav": "{app} Menü",
-    "home": "REDLINE AKP",
+    "home": "ACP · {site}",
     "reorderApps": "Anwendungen neu ordnen",
     "reorderDone": "Fertig",
     "moveUp": "{app} nach oben bewegen",
@@ -307,7 +307,7 @@
     },
     "dashboard": {
       "title": "Dashboard",
-      "statusOk": "{site} · alle Dienste laufen",
+      "statusOk": "{site} · Alle Dienste laufen",
       "statusDegraded": "{site} · Einige Dienste reagieren nicht",
       "kpis": {
         "members": "Mitglieder",

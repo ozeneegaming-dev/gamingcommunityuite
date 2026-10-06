@@ -182,7 +182,7 @@
     },
     "appsNav": "ACP приложения",
     "submenuNav": "Меню {app}",
-    "home": "КРАСНАЯ ЛИНИЯ ACP",
+    "home": "ACP · {site}",
     "reorderApps": "Заказать приложения",
     "reorderDone": "Готово",
     "moveUp": "Скачать {app} Up",
@@ -307,7 +307,7 @@
     },
     "dashboard": {
       "title": "Панель",
-      "statusOk": "{site} – все сервисы работают",
+      "statusOk": "{site} - все сервисы работают",
       "statusDegraded": "{site} - некоторые сервисы не отвечают",
       "kpis": {
         "members": "Участники",
@@ -2003,7 +2003,7 @@
     "tokens": {
       "bg": "Предыстория",
       "surface": "Поверхность",
-      "surface2": "Surface 2",
+      "surface2": "Поверхность 2",
       "border": "Границы",
       "text": "Текст",
       "muted": "Второй текст",

@@ -11,7 +11,8 @@
     "test:e2e": "tsx e2e/run.mts",
     "test": "vitest run",
     "build:cli": "node cli/build.mjs",
-    "i18n:translate": "tsx scripts/i18n-translate.ts"
+    "i18n:translate": "tsx scripts/i18n-translate.ts",
+    "i18n:retry": "tsx scripts/i18n-retry.ts"
   },
   "dependencies": {
     "@better-auth/utils": "0.4.2",
