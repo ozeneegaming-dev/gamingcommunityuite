@@ -2,7 +2,7 @@ import type { GcsActor } from "@gcs/core";
 import type { PrismaClient } from "@gcs/db";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createProfileWorld, type GcsProfileWorld } from "../../test/profileWorld";
-import { GcsPostbitService, xpProgress } from "./postbit";
+import { GcsPostbitService, mottoText, xpProgress } from "./postbit";
 
 let w: GcsProfileWorld;
 let postbit: GcsPostbitService;
@@ -109,5 +109,31 @@ describe("postbit", () => {
     await w.db.user.update({ where: { id: a.id }, data: { lastActiveAt: new Date() } });
     const data = (await postbit.forAuthors(w.member, [a.id])).get(a.id)!;
     expect(data).toMatchObject({ vip: true, online: true, group: { key: "vip_gold" } });
+    expect(data.vipName).toBeTruthy();
+  });
+
+  test("topicurile, nivelul rangului și motto-ul (ultimul status propriu, ca text) vin pentru toți autorii deodată", async () => {
+    const [a, b] = await Promise.all([author("Topa"), author("Topb")]);
+    const forum = await w.db.forum.create({ data: { name: "Postbit", slug: "postbit" } });
+    for (const [user, n] of [[a, 2], [b, 1]] as const) {
+      for (let i = 0; i < n; i++) await w.db.topic.create({ data: { forumId: forum.id, title: `T${i}`, slug: `t${i}`, authorId: user.id } });
+    }
+    // Un topic ascuns nu se numără.
+    await w.db.topic.create({ data: { forumId: forum.id, title: "Ascuns", slug: "ascuns", authorId: b.id, visibility: "HIDDEN" } });
+    const ranks = await w.db.rank.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] });
+    await w.db.user.update({ where: { id: a.id }, data: { rankId: ranks[1]!.id } });
+    await w.db.statusUpdate.create({ data: { profileUserId: a.id, authorId: a.id, contentJson: {}, contentHtml: "<p>Vechiul motto</p>", createdAt: new Date(Date.now() - 60_000) } });
+    await w.db.statusUpdate.create({ data: { profileUserId: a.id, authorId: a.id, contentJson: {}, contentHtml: "<p>Noul <strong>motto</strong> &amp; atât</p>" } });
+    // Statusul scris de altcineva pe peretele lui B nu e motto-ul lui B.
+    await w.db.statusUpdate.create({ data: { profileUserId: b.id, authorId: a.id, contentJson: {}, contentHtml: "<p>Salut, B!</p>" } });
+
+    const data = await postbit.forAuthors(w.member, [a.id, b.id]);
+    expect(data.get(a.id)).toMatchObject({ topicsCount: 2, rankLevel: 2, motto: "Noul motto & atât" });
+    expect(data.get(b.id)).toMatchObject({ topicsCount: 1, motto: null });
+  });
+
+  test("motto-ul e scurtat cu „…”", () => {
+    expect(mottoText(`<p>${"a".repeat(200)}</p>`, 10)).toBe(`${"a".repeat(9)}…`);
+    expect(mottoText("<p> </p>")).toBeNull();
   });
 });

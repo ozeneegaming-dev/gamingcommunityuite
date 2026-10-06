@@ -1,6 +1,7 @@
 "use client";
 
-import { GcsButton, GcsField } from "@gcs/ui";
+import { faRightToBracket } from "@fortawesome/free-solid-svg-icons";
+import { GcsButton, GcsField, GcsIconSvg } from "@gcs/ui";
 import { useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
 import { acpReauth } from "../actions";
@@ -36,7 +37,7 @@ export function ReauthForm({ askPassword }: { askPassword: boolean }) {
           {t(`errors.${error}`)}
         </p>
       )}
-      <GcsButton variant="primary" type="submit" disabled={pending}>
+      <GcsButton variant="primary" type="submit" disabled={pending} icon={<GcsIconSvg icon={faRightToBracket} />}>
         {t("submit")}
       </GcsButton>
     </form>

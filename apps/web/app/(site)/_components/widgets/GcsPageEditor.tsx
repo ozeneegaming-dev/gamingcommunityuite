@@ -15,7 +15,21 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, v
 import { CSS } from "@dnd-kit/utilities";
 import type { GcsWidgetPage, GcsWidgetZone } from "@gcs/core";
 import { GcsButton, GcsIconSvg } from "@gcs/ui";
-import { faArrowDown, faArrowUp, faGear, faGripVertical, faPlus, faTrashCan } from "@fortawesome/free-solid-svg-icons";
+import {
+  faArrowDown,
+  faArrowRotateLeft,
+  faArrowUp,
+  faArrowsRotate,
+  faEye,
+  faFloppyDisk,
+  faGear,
+  faGripVertical,
+  faPlus,
+  faRightFromBracket,
+  faTableColumns,
+  faTrashCan,
+  faXmark,
+} from "@fortawesome/free-solid-svg-icons";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
@@ -191,7 +205,7 @@ export function GcsPageEditor({ page, pageLabel, initial, catalog, groups, child
                 <span>{w.label}</span>
               </button>
             ))}
-          <GcsButton variant="ghost" size="sm" onClick={() => setAdding(null)}>
+          <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faXmark} />} onClick={() => setAdding(null)}>
             {t("cancel")}
           </GcsButton>
         </div>
@@ -206,27 +220,30 @@ export function GcsPageEditor({ page, pageLabel, initial, catalog, groups, child
   return (
     <div className="gcs-widgetPage gcs-widgetPage--editing" data-page={page} data-testid="gcs-page-editor">
       <div className="gcs-pageEditorBar" role="toolbar" aria-label={t("title")}>
-        <strong>{t("editing", { page: pageLabel })}</strong>
+        <strong>
+          <GcsIconSvg icon={faTableColumns} className="gcs-hIcon" />
+          {t("editing", { page: pageLabel })}
+        </strong>
         <span role="status" className={`gcs-pageEditorBar__status gcs-pageEditorBar__status--${status?.tone ?? "muted"}`} data-testid="gcs-page-editor-status">
           {status?.text ?? (dirty ? t("unsaved") : "")}
         </span>
         <div className="gcs-pageEditorBar__buttons">
           {confirmDefault ? (
-            <GcsButton variant="ghost" size="sm" onClick={restoreDefault} disabled={pending} data-testid="gcs-page-editor-default-confirm">
+            <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faArrowRotateLeft} />} onClick={restoreDefault} disabled={pending} data-testid="gcs-page-editor-default-confirm">
               {t("confirmDefault")}
             </GcsButton>
           ) : (
-            <GcsButton variant="ghost" size="sm" onClick={() => setConfirmDefault(true)} disabled={pending} data-testid="gcs-page-editor-default">
+            <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faArrowRotateLeft} />} onClick={() => setConfirmDefault(true)} disabled={pending} data-testid="gcs-page-editor-default">
               {t("restoreDefault")}
             </GcsButton>
           )}
-          <GcsButton variant="ghost" size="sm" onClick={() => setZones(initial)} disabled={!dirty || pending}>
+          <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faArrowsRotate} />} onClick={() => setZones(initial)} disabled={!dirty || pending}>
             {t("reset")}
           </GcsButton>
-          <GcsButton variant="ghost" size="sm" onClick={exit} disabled={pending} data-testid="gcs-page-editor-exit">
+          <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={dirty ? faXmark : faRightFromBracket} />} onClick={exit} disabled={pending} data-testid="gcs-page-editor-exit">
             {dirty ? t("exitWithoutSaving") : t("exit")}
           </GcsButton>
-          <GcsButton variant="primary" size="sm" onClick={save} disabled={!dirty || pending} data-testid="gcs-page-editor-save">
+          <GcsButton variant="primary" size="sm" icon={<GcsIconSvg icon={faFloppyDisk} />} onClick={save} disabled={!dirty || pending} data-testid="gcs-page-editor-save">
             {t("save")}
           </GcsButton>
         </div>
@@ -376,7 +393,10 @@ function EditItem({ item, widget, index, count, zone, open, groups, onToggle, on
             );
           })}
           <fieldset className="gcs-editItem__groups">
-            <legend>{t("visibility")}</legend>
+            <legend>
+              <GcsIconSvg icon={faEye} className="gcs-hIcon" />
+              {t("visibility")}
+            </legend>
             <p className="gcs-muted">{t("visibilityHint")}</p>
             {groups.map((g) => (
               <label key={g.id} className="gcs-check">

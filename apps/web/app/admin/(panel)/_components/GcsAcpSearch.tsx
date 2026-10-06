@@ -1,15 +1,21 @@
 "use client";
 
+import { faComments, faGear, faMagnifyingGlass, faUser, faUsers } from "@fortawesome/free-solid-svg-icons";
 import type { GcsAcpSearchResult } from "@gcs/core";
+import { GcsIconSvg } from "@gcs/ui";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { searchAcp } from "../actions";
+
+/** Iconițele grupurilor de rezultate (aceleași ca intrările din meniu: setări, membri, grupuri, forumuri). */
+const GROUP_ICONS = { settings: faGear, members: faUser, groups: faUsers, forums: faComments } as const;
+const GROUPS = ["settings", "members", "groups", "forums"] as const satisfies readonly GcsAcpSearchResult["group"][];
 
 type Props = {
   labels: { search: string; placeholder: string; noResults: string; groups: Record<GcsAcpSearchResult["group"], string> };
 };
 
-/** Căutarea live din header-ul ACP: rezultate grupate (setări, membri, grupuri), navigabile din tastatură. */
+/** Căutarea live din header-ul ACP: rezultate grupate (setări, membri, grupuri, forumuri), navigabile din tastatură. */
 export function GcsAcpSearch({ labels }: Props) {
   const id = useId();
   const [q, setQ] = useState("");
@@ -36,14 +42,13 @@ export function GcsAcpSearch({ labels }: Props) {
 
   const listId = `${id}-results`;
   const optionId = (i: number) => `${id}-opt-${i}`;
-  const groups = results ? (["settings", "members", "groups"] as const).filter((g) => results.some((r) => r.group === g)) : [];
+  const groups = results ? GROUPS.filter((g) => results.some((r) => r.group === g)) : [];
 
   return (
     <div className="gcs-acpSearch" role="combobox" aria-expanded={results !== null} aria-haspopup="listbox" aria-owns={listId}>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7D8494" strokeWidth="2" strokeLinecap="round" aria-hidden="true" style={{ position: "absolute", left: 14, top: 13 }}>
-        <circle cx="11" cy="11" r="7" />
-        <path d="m20 20-3.5-3.5" />
-      </svg>
+      <span style={{ position: "absolute", left: 14, top: 13, display: "flex", fontSize: 16, color: "var(--gcs-muted)" }}>
+        <GcsIconSvg icon={faMagnifyingGlass} />
+      </span>
       <label htmlFor={`${id}-input`} className="gcs-srOnly">
         {labels.search}
       </label>
@@ -80,7 +85,8 @@ export function GcsAcpSearch({ labels }: Props) {
           {results.length === 0 && <p style={{ margin: 0, padding: "10px 12px", color: "var(--gcs-muted)", fontSize: 14 }}>{labels.noResults}</p>}
           {groups.map((g) => (
             <div key={g} role="group" aria-label={labels.groups[g]}>
-              <span className="gcs-acpSub__title" style={{ display: "block" }}>
+              <span className="gcs-acpSub__title">
+                <GcsIconSvg icon={GROUP_ICONS[g]} className="gcs-acpSub__titleIcon" />
                 {labels.groups[g]}
               </span>
               {results.map((r, i) =>
@@ -94,6 +100,7 @@ export function GcsAcpSearch({ labels }: Props) {
                     className="gcs-acpSearch__result"
                     onClick={() => setQ("")}
                   >
+                    <GcsIconSvg icon={GROUP_ICONS[r.group]} className="gcs-acpSearch__icon" />
                     {r.label}
                   </Link>
                 ) : null,

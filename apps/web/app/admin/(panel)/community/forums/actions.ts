@@ -17,7 +17,13 @@ export async function createForum(fd: FormData): Promise<GcsResult<{ id: number 
     const parent = intField(fd, "parentId");
     const type = forumType(field(fd, "type"));
     const forum = await services().forums.create(
-      { parentId: Number.isNaN(parent) ? null : parent, type, name: field(fd, "name"), ...(type === "LINK" ? { linkUrl: field(fd, "linkUrl") } : {}) },
+      {
+        parentId: Number.isNaN(parent) ? null : parent,
+        type,
+        name: field(fd, "name"),
+        icon: field(fd, "icon") || null,
+        ...(type === "LINK" ? { linkUrl: field(fd, "linkUrl") } : {}),
+      },
       actor,
     );
     return { id: forum.id };

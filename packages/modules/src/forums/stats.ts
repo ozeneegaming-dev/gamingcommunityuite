@@ -3,7 +3,7 @@ import type { PrismaClient } from "@gcs/db";
 import { normalizePrivacy } from "../profile/privacy";
 import { toRef, userRefSelect, type GcsUserRef } from "./queries";
 
-/** Plăcile forumurilor din panoul de statistici: topicuri, postări (vizibile) și membri. */
+/** Plăcile forumurilor din panoul de statistici: topicuri, postări (vizibile) și membri, fiecare cu culoarea ei. */
 export async function forumStatTiles({ db }: GcsStatsContext): Promise<GcsStatTile[]> {
   const [topics, posts, members] = await Promise.all([
     db.topic.count({ where: { visibility: "VISIBLE" } }),
@@ -11,9 +11,9 @@ export async function forumStatTiles({ db }: GcsStatsContext): Promise<GcsStatTi
     db.user.count(),
   ]);
   return [
-    { key: "forums.topics", labelKey: "stats.tiles.topics", value: topics, icon: "fa-solid fa-comments" },
-    { key: "forums.posts", labelKey: "stats.tiles.posts", value: posts, icon: "fa-solid fa-comment-dots" },
-    { key: "forums.members", labelKey: "stats.tiles.members", value: members, icon: "fa-solid fa-users", href: "/members" },
+    { key: "forums.topics", labelKey: "stats.tiles.topics", value: topics, icon: "fa-solid fa-layer-group", color: "#F97316" },
+    { key: "forums.posts", labelKey: "stats.tiles.posts", value: posts, icon: "fa-solid fa-comments", color: "#22C55E" },
+    { key: "forums.members", labelKey: "stats.tiles.members", value: members, icon: "fa-solid fa-users", color: "#A855F7", href: "/members" },
   ];
 }
 

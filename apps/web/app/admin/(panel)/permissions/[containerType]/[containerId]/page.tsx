@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { PermissionMatrix } from "./PermissionMatrix";
+import { GcsAcpTitle } from "../../../_components/GcsAcpTitle";
 
 type Props = { params: Promise<{ containerType: string; containerId: string }> };
 
@@ -46,9 +47,9 @@ export default async function AcpPermissionsPage({ params }: Props) {
 
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-key">
         {t("title", { type: containerType, id: containerId })}
-      </h1>
+      </GcsAcpTitle>
       <GcsCard style={{ padding: 16 }}>
         <PermissionMatrix
           containerType={containerType}

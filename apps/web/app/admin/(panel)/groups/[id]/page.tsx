@@ -1,5 +1,7 @@
 import type { GcsNameStyle } from "@gcs/core";
 import { GcsCard, GcsIconPicker } from "@gcs/ui";
+import { isGcsIcon } from "@gcs/ui/icon-registry";
+import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -10,6 +12,7 @@ import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { deleteGroup, updateGroupDetails, updateGroupLook, updateGroupSettings, updateGroupStyle } from "../actions";
 import { NameStyleEditor } from "./NameStyleEditor";
+import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -18,11 +21,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: group?.name };
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({ title, icon, children }: { title: string; icon: string; children: ReactNode }) {
   return (
     <GcsCard as="section" aria-label={title}>
       <div className="gcs-acpWidget__header">
-        <h2 className="gcs-acpWidget__title">{title}</h2>
+        <h2 className="gcs-acpWidget__title">
+          <GcsAcpTitleIcon name={icon} />
+          {title}
+        </h2>
       </div>
       <div style={{ padding: 16 }}>{children}</div>
     </GcsCard>
@@ -57,17 +63,18 @@ export default async function AcpGroupPage({ params }: Props) {
 
   return (
     <>
-      <Link href="/admin/groups" style={{ fontSize: 13 }}>
-        ← {t("back")}
+      <Link href="/admin/groups" className="gcs-acpBack">
+        <GcsIcon name="fa-solid fa-arrow-left" />
+        {t("back")}
       </Link>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon={isGcsIcon(group.icon) ? group.icon : "fa-solid fa-users"}>
         <span className={`gcs-name--${group.key}`}>{group.name}</span>
-      </h1>
+      </GcsAcpTitle>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20, alignItems: "start" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          <Section title={t("details.title")}>
-            <GcsActionForm action={updateGroupDetails.bind(null, group.id)} submitLabel={t("details.save")}>
+          <Section title={t("details.title")} icon="fa-solid fa-circle-info">
+            <GcsActionForm action={updateGroupDetails.bind(null, group.id)} submitLabel={t("details.save")} submitKind="save">
               <label className="gcs-field">
                 {t("details.name")}
                 <input className="gcs-input" name="name" defaultValue={group.name} required maxLength={64} />
@@ -83,8 +90,8 @@ export default async function AcpGroupPage({ params }: Props) {
             </GcsActionForm>
           </Section>
 
-          <Section title={t("look.title")}>
-            <GcsActionForm action={updateGroupLook.bind(null, group.id)} submitLabel={t("look.save")}>
+          <Section title={t("look.title")} icon="fa-solid fa-image">
+            <GcsActionForm action={updateGroupLook.bind(null, group.id)} submitLabel={t("look.save")} submitKind="save">
               <div className="gcs-field" role="group" aria-label={t("look.icon")}>
                 <span>{t("look.icon")}</span>
                 <GcsIconPicker name="icon" value={group.icon} searchUrl="/api/icons/search" labels={{ search: t("look.iconSearch"), none: t("look.iconNone"), noResults: t("look.iconNoResults") }} />
@@ -101,7 +108,7 @@ export default async function AcpGroupPage({ params }: Props) {
             </GcsActionForm>
           </Section>
 
-          <Section title={t("style.title")}>
+          <Section title={t("style.title")} icon="fa-solid fa-signature">
             <NameStyleEditor
               onSave={updateGroupStyle.bind(null, group.id)}
               name={group.name}
@@ -123,13 +130,13 @@ export default async function AcpGroupPage({ params }: Props) {
             />
           </Section>
 
-          <Section title={t("delete.title")}>
+          <Section title={t("delete.title")} icon="fa-solid fa-trash">
             {group.isProtected ? (
               <p style={{ margin: 0, color: "var(--gcs-muted)", fontSize: 14 }}>{t("delete.protected")}</p>
             ) : (
               <GcsActionForm
                 action={deleteGroup.bind(null, group.id)}
-                submitLabel={t("delete.submit")}
+                submitLabel={t("delete.submit")} submitKind="delete"
                 variant="ghost"
                 redirectTo="/admin/groups"
                 confirm={t("delete.body")}
@@ -140,8 +147,8 @@ export default async function AcpGroupPage({ params }: Props) {
           </Section>
         </div>
 
-        <Section title={t("settings.title")}>
-          <GcsActionForm action={updateGroupSettings.bind(null, group.id)} submitLabel={t("settings.save")}>
+        <Section title={t("settings.title")} icon="fa-solid fa-sliders">
+          <GcsActionForm action={updateGroupSettings.bind(null, group.id)} submitLabel={t("settings.save")} submitKind="save">
             <p style={{ margin: 0, color: "var(--gcs-muted)", fontSize: 13 }}>{t("settings.unlimited")}</p>
             {settings.map(({ def, kind, value }) => (
               <div key={def.key}>

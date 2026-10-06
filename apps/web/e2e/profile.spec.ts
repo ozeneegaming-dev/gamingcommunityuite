@@ -28,7 +28,7 @@ test.describe("blocul autorului pe topic", () => {
     await page.goto(topic.url);
     const author = page.getByTestId("gcs-post").first().locator(".gcs-post__author");
     await expect(author.locator(".gcs-avatarFrame--gold")).toBeVisible();
-    await expect(author.getByText("VIP Gold")).toBeVisible();
+    await expect(author.getByTestId("gcs-postbit-group")).toContainText("VIP Gold");
     await expect(author.getByTestId("gcs-post-rank")).toHaveText("Recrut");
     await expect(author.locator(".gcs-name--vip_gold")).toHaveText(`Shadow${id}`);
   });

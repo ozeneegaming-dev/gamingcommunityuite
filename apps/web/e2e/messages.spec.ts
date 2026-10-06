@@ -32,7 +32,7 @@ test("A scrie lui B și C; B citește și răspunde; C pleacă; A îl invită pe
 
   // A → B (din profil: destinatarul precompletat) + C (din sugestii).
   await page.goto(`/messages/new?to=${await idOf(`b-${id}@example.com`)}`);
-  await expect(page.getByTestId("gcs-recipient")).toHaveText([`Bogdan${id}×`]);
+  await expect(page.getByTestId("gcs-recipient")).toHaveText([`Bogdan${id}`]);
   await pick(page, `Cristi${id}`);
   await page.getByLabel("Titlu").fill(`Echipa ${id}`);
   await typeInEditor(page, "Intrați la turneu?", page.locator("form"));

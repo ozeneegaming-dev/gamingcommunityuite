@@ -1,7 +1,8 @@
 "use client";
 
+import { faBell, faFloppyDisk, faLockOpen, faRightFromBracket, faShieldHalved, faTrash } from "@fortawesome/free-solid-svg-icons";
 import type { GcsResult } from "@gcs/core";
-import { GcsButton } from "@gcs/ui";
+import { GcsButton, GcsIconSvg } from "@gcs/ui";
 import { GcsEditor, type GcsEditorHandle } from "@gcs/ui/editor";
 import type { JSONContent } from "@tiptap/core";
 import { useRouter } from "next/navigation";
@@ -54,7 +55,7 @@ export function GcsTimezoneForm({ current, zones, labels }: { current: string; z
           ))}
         </select>
       </label>
-      <GcsButton type="submit" variant="primary" disabled={pending}>
+      <GcsButton icon={<GcsIconSvg icon={faFloppyDisk} />} type="submit" variant="primary" disabled={pending}>
         {labels.save}
       </GcsButton>
       {message}
@@ -77,7 +78,10 @@ export function GcsAlertPrefsForm({ toasts, sound, labels }: { toasts: boolean; 
       }}
       data-testid="gcs-alert-prefs"
     >
-      <h3 className="gcs-settingsSubtitle">{labels.title}</h3>
+      <h3 className="gcs-settingsSubtitle">
+        <GcsIconSvg icon={faBell} className="gcs-hIcon" />
+        {labels.title}
+      </h3>
       <label className="gcs-check">
         <input type="checkbox" checked={t} onChange={(e) => setT(e.target.checked)} />
         {labels.toasts}
@@ -86,7 +90,7 @@ export function GcsAlertPrefsForm({ toasts, sound, labels }: { toasts: boolean; 
         <input type="checkbox" checked={s} onChange={(e) => setS(e.target.checked)} />
         {labels.sound}
       </label>
-      <GcsButton type="submit" variant="primary" disabled={pending}>
+      <GcsButton icon={<GcsIconSvg icon={faFloppyDisk} />} type="submit" variant="primary" disabled={pending}>
         {labels.save}
       </GcsButton>
       {message}
@@ -119,7 +123,7 @@ export function GcsSessionsList({
               </span>
             </div>
             {!s.current && (
-              <GcsButton variant="ghost" size="sm" disabled={pending} onClick={() => run(() => revokeSession({ id: s.id }), () => router.refresh())}>
+              <GcsButton icon={<GcsIconSvg icon={faRightFromBracket} />} variant="ghost" size="sm" disabled={pending} onClick={() => run(() => revokeSession({ id: s.id }), () => router.refresh())}>
                 {labels.revoke}
               </GcsButton>
             )}
@@ -127,7 +131,7 @@ export function GcsSessionsList({
         ))}
       </ul>
       {sessions.length > 1 && (
-        <GcsButton variant="ghost" disabled={pending} onClick={() => run(() => revokeOtherSessions({}), () => router.refresh())}>
+        <GcsButton icon={<GcsIconSvg icon={faRightFromBracket} />} variant="ghost" disabled={pending} onClick={() => run(() => revokeOtherSessions({}), () => router.refresh())}>
           {labels.revokeOthers}
         </GcsButton>
       )}
@@ -177,7 +181,7 @@ export function GcsTwoFactorSettings({
             {error}
           </p>
         )}
-        <GcsButton type="submit" variant="ghost" disabled={pending}>
+        <GcsButton icon={<GcsIconSvg icon={faLockOpen} />} type="submit" variant="ghost" disabled={pending}>
           {labels.disable}
         </GcsButton>
       </form>
@@ -191,7 +195,7 @@ export function GcsTwoFactorSettings({
       {setup ? (
         <TwoFactorSetup askPassword={hasPassword} doneHref="/settings/security" />
       ) : (
-        <GcsButton variant="primary" onClick={() => setSetup(true)} data-testid="gcs-2fa-enable">
+        <GcsButton icon={<GcsIconSvg icon={faShieldHalved} />} variant="primary" onClick={() => setSetup(true)} data-testid="gcs-2fa-enable">
           {labels.enable}
         </GcsButton>
       )}
@@ -212,14 +216,14 @@ export function GcsSignatureForm({ initial, maxLength, labels }: { initial: JSON
       </p>
       <GcsEditor ref={editor} id="gcs-signature-editor" labels={editorLabels} forumId={0} initialContent={initial} maxLength={maxLength} />
       <div style={{ display: "flex", gap: 8 }}>
-        <GcsButton
+        <GcsButton icon={<GcsIconSvg icon={faFloppyDisk} />}
           variant="primary"
           disabled={pending}
           onClick={() => run(() => saveSignature({ content: editor.current?.isEmpty() ? null : (editor.current?.getJSON() ?? null) }), () => router.refresh())}
         >
           {labels.save}
         </GcsButton>
-        <GcsButton
+        <GcsButton icon={<GcsIconSvg icon={faTrash} />}
           variant="ghost"
           disabled={pending}
           onClick={() =>

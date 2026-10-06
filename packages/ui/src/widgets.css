@@ -1,1 +1,500 @@
 /* Corecturi UI (2026-10-06): widget-urile, panoul de statistici și listele cu avatare. */
+
+/* ─── Titlul comun al widget-urilor: iconița într-un pătrat cu accent + textul ─────────────────────── */
+.gcs-widgetTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.gcs-widgetTitle__icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--gcs-accent) 45%, transparent);
+  background: color-mix(in srgb, var(--gcs-accent) 14%, transparent);
+  color: var(--gcs-accentInk);
+  font-size: 13px;
+  letter-spacing: 0;
+}
+.gcs-widgetTitle__text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.gcs-widgetTitle__extra {
+  flex: none;
+  font: 600 11px var(--gcs-font-text);
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--gcs-muted);
+}
+.gcs-widgetTitle--hero {
+  align-items: center;
+  gap: 14px;
+}
+.gcs-widgetTitle--hero .gcs-widgetTitle__icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  font-size: 20px;
+}
+
+/* ─── Listele widget-urilor (ca în referință): avatar, titlu, meta cu autorul și data ─────────────────────── */
+.gcs-widgetList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.gcs-widgetRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 0;
+  border-top: 1px solid var(--gcs-border);
+  min-width: 0;
+}
+.gcs-widgetList > .gcs-widgetRow:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.gcs-widgetList > .gcs-widgetRow:last-child {
+  padding-bottom: 0;
+}
+.gcs-widgetRow__avatar {
+  flex: none;
+  display: inline-flex;
+  line-height: 0;
+}
+span.gcs-widgetRow__avatar.gcs-avatar {
+  width: 34px;
+  height: 34px;
+  background: var(--gcs-surface2);
+}
+.gcs-widgetRow__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.gcs-widgetRow__title {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--gcs-text);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+a.gcs-widgetRow__title:hover,
+a.gcs-widgetRow__title:focus-visible {
+  color: var(--gcs-accentInk);
+}
+.gcs-widgetRow__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 5px;
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-widgetRow__meta .gcs-userLink {
+  font-weight: 700;
+}
+.gcs-widgetRow__rank {
+  flex: none;
+  width: 18px;
+  line-height: 34px;
+  text-align: center;
+  font: 700 13px var(--gcs-font-display);
+  color: var(--gcs-accentInk);
+}
+.gcs-widgetRow--newest {
+  padding: 10px 0 0;
+}
+
+/* ─── Panoul de statistici (widget-ul `core.statsPanel`) ──────────────────────────────────────────── */
+.gcs-statsPanel {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.gcs-statsPanel__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px 14px 18px;
+  border-left: 3px solid var(--gcs-accent);
+  border-bottom: 1px solid var(--gcs-border);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--gcs-accent) 16%, transparent), color-mix(in srgb, var(--gcs-accent) 3%, transparent) 55%, transparent);
+}
+.gcs-statsPanel[data-collapsed] .gcs-statsPanel__head {
+  border-bottom: 0;
+}
+.gcs-statsPanel__title {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.gcs-statsPanel__title .gcs-widgetTitle__icon {
+  width: 34px;
+  height: 34px;
+  font-size: 15px;
+  color: #fb923c;
+  background: var(--gcs-surface2);
+  border-color: var(--gcs-border);
+}
+.gcs-statsPanel__toggle {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 4px;
+  border: 1px solid var(--gcs-border);
+  background: var(--gcs-surface2);
+  color: var(--gcs-text);
+  font-size: 12px;
+  cursor: pointer;
+}
+.gcs-statsPanel__toggle:hover,
+.gcs-statsPanel__toggle:focus-visible {
+  border-color: var(--gcs-accent);
+  color: var(--gcs-accentInk);
+}
+.gcs-statsPanel__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+}
+.gcs-statsPanel__body[hidden] {
+  display: none;
+}
+
+/* Plăcile: iconița colorată într-un pătrat rotunjit, numărul mare și eticheta. */
+.gcs-statsPanel__tiles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
+}
+.gcs-statsTile {
+  --gcs-tile: #3b82f6;
+  min-width: 0;
+  border: 1px solid var(--gcs-border);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--gcs-bg) 45%, var(--gcs-surface));
+}
+.gcs-statsTile__inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 14px;
+  color: var(--gcs-text);
+  text-decoration: none;
+  border-radius: inherit;
+}
+a.gcs-statsTile__inner:hover,
+a.gcs-statsTile__inner:focus-visible {
+  background: color-mix(in srgb, var(--gcs-tile) 7%, transparent);
+}
+.gcs-statsTile__icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--gcs-tile) 45%, transparent);
+  background: color-mix(in srgb, var(--gcs-tile) 16%, transparent);
+  color: var(--gcs-tile);
+  font-size: 17px;
+}
+.gcs-statsTile__text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.gcs-statsTile__value {
+  font: 700 19px var(--gcs-font-display);
+  line-height: 1.1;
+}
+.gcs-statsTile__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gcs-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-statsTile__avatar {
+  flex: none;
+  display: inline-flex;
+  line-height: 0;
+}
+.gcs-statsTile__avatar .gcs-avatar {
+  border-radius: 6px;
+}
+.gcs-statsTile__kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: 700 11px var(--gcs-font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #f97316;
+}
+.gcs-statsTile__name {
+  font: 700 15px var(--gcs-font-display);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-statsTile__date {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--gcs-muted);
+}
+
+/* „Cine e online” / „Cine a fost online”: sumarul, lista și butonul, cu bordura colorată în stânga. */
+.gcs-onlineBlock {
+  --gcs-block: #3b82f6;
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(0, 2fr) auto;
+  align-items: center;
+  gap: 12px 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--gcs-border);
+  border-left: 3px solid var(--gcs-block);
+  border-radius: 4px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--gcs-block) 7%, transparent), transparent 45%), color-mix(in srgb, var(--gcs-bg) 45%, var(--gcs-surface));
+}
+.gcs-onlineBlock--day {
+  --gcs-block: #f97316;
+}
+.gcs-onlineBlock__info,
+.gcs-onlineBlock__list {
+  min-width: 0;
+}
+.gcs-onlineBlock__title {
+  margin: 0;
+  font: 700 15px var(--gcs-font-display);
+  letter-spacing: 0.02em;
+}
+.gcs-onlineBlock__summary {
+  margin: 4px 0 2px;
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-onlineBlock__dots {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-onlineBlock__dots li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.gcs-onlineBlock__dots li::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  background: var(--gcs-muted);
+}
+.gcs-onlineBlock__dots li[data-dot="anonymous"]::before {
+  background: #22d3ee;
+}
+.gcs-onlineBlock__dots li[data-dot="guests"]::before {
+  background: #22c55e;
+}
+.gcs-onlineBlock--day .gcs-onlineBlock__dots li[data-dot="members"]::before,
+.gcs-dayCard .gcs-onlineBlock__dots li[data-dot="members"]::before {
+  background: #f97316;
+}
+.gcs-onlineBlock--day .gcs-onlineBlock__dots li[data-dot="anonymous"]::before,
+.gcs-dayCard .gcs-onlineBlock__dots li[data-dot="anonymous"]::before {
+  background: #fdba74;
+}
+.gcs-onlineBlock__listTitle {
+  margin: 0 0 4px;
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-onlineBlock__names {
+  margin: 0;
+  font: 700 15px var(--gcs-font-display);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.gcs-onlineBlock__empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--gcs-muted);
+}
+.gcs-onlineBlock__action {
+  padding: 8px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--gcs-bg) 50%, transparent);
+}
+.gcs-onlineBlock__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 156px;
+  min-height: 34px;
+  box-sizing: border-box;
+  padding: 6px 18px;
+  border-radius: 3px;
+  border: 1px solid;
+  font: 700 12px var(--gcs-font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: #fff;
+}
+.gcs-onlineBlock__btn--now {
+  background: #2e7d32;
+  border-color: #43a047;
+}
+.gcs-onlineBlock__btn--day {
+  background: #7a4a26;
+  border-color: #c77a3a;
+}
+.gcs-onlineBlock__btn:hover,
+.gcs-onlineBlock__btn:focus-visible {
+  color: #fff;
+  filter: brightness(1.15);
+}
+
+/* Legenda grupurilor: pastile cu conturul și textul în culoarea grupului. */
+.gcs-legendBlock {
+  padding: 12px 16px 14px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--gcs-bg) 45%, var(--gcs-surface));
+}
+.gcs-legendBlock__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font: 600 12px var(--gcs-font-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gcs-muted);
+}
+.gcs-legendBlock__title .gcs-icon {
+  color: #3b82f6;
+  font-size: 14px;
+}
+.gcs-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.gcs-legend__pill {
+  --gcs-group: var(--gcs-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 1px solid var(--gcs-group);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--gcs-group) 10%, transparent);
+  color: var(--gcs-group);
+  font: 700 11px var(--gcs-font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.gcs-legend__icon {
+  display: inline-flex;
+  font-size: 11px;
+}
+
+/* Widget-urile separate „Cine e online” / „Cine a fost online”, în coloană. */
+.gcs-onlineRecord {
+  font-size: 12px;
+}
+.gcs-dayCard .gcs-onlineBlock__dots {
+  margin: 0;
+}
+.gcs-dayCard .gcs-onlineBlock__names {
+  font: 600 13px var(--gcs-font-text);
+  line-height: 1.7;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .gcs-statsPanel__toggle,
+  .gcs-onlineBlock__btn,
+  a.gcs-statsTile__inner,
+  a.gcs-widgetRow__title {
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, filter 0.15s ease;
+  }
+}
+
+/* Mobil: plăcile pe două coloane (cel mai nou membru pe tot rândul), blocurile online unul sub altul. */
+@media (max-width: 760px) {
+  .gcs-onlineBlock {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .gcs-onlineBlock__action {
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+  .gcs-onlineBlock__btn {
+    width: 100%;
+  }
+}
+@media (max-width: 600px) {
+  .gcs-statsPanel__tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .gcs-statsTile--newest {
+    grid-column: 1 / -1;
+  }
+  .gcs-statsTile__inner {
+    padding: 12px;
+    gap: 10px;
+  }
+  .gcs-statsPanel__title {
+    font-size: 13px;
+  }
+}

@@ -1,4 +1,5 @@
 import { GcsButton } from "@gcs/ui";
+import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -28,17 +29,21 @@ export default async function NotificationsPage({ searchParams }: { searchParams
     <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <h1 className="gcs-display" style={{ margin: 0, fontSize: 30 }}>
+          <GcsIcon name="fa-solid fa-bell" className="gcs-hIcon" />
           {t("title")}
         </h1>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <GcsMarkAllRead label={t("markAll")} />
-          <GcsButton variant="ghost" asChild>
+          <GcsButton variant="ghost" asChild icon={<GcsIcon name="fa-solid fa-sliders" />}>
             <Link href="/settings/notifications">{t("preferences")}</Link>
           </GcsButton>
         </div>
       </div>
       {shown.length === 0 ? (
-        <p className="gcs-muted">{t("empty")}</p>
+        <p className="gcs-muted">
+          <GcsIcon name="fa-regular fa-bell-slash" className="gcs-emptyIcon" />
+          {t("empty")}
+        </p>
       ) : (
         <ul className="gcs-notifList" data-testid="gcs-notif-list">
           {shown.map((n) => (
@@ -55,7 +60,7 @@ export default async function NotificationsPage({ searchParams }: { searchParams
         </ul>
       )}
       {more && (
-        <GcsButton variant="ghost" asChild>
+        <GcsButton variant="ghost" asChild icon={<GcsIcon name="fa-solid fa-clock-rotate-left" />}>
           <Link href={`/notifications?before=${shown[shown.length - 1]!.id}`}>{t("older")}</Link>
         </GcsButton>
       )}

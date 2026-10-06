@@ -1,9 +1,18 @@
+import type { GcsIconSvgProps } from "@gcs/ui";
+
+/**
+ * Iconița unei intrări din meniu, rezolvată pe server din numele Font Awesome (`resolveIcon`): doar date simple
+ * (prefix, nume, path-ul SVG), ca pachetele complete de iconițe să nu ajungă în browser.
+ */
+export type GcsAcpIconDef = GcsIconSvgProps["icon"];
+
 /** Meniul ACP cu etichetele deja traduse pe server (componentele client nu conțin texte proprii). */
 export type GcsAcpNavApp = { app: string; label: string; href: string };
 export type GcsAcpNavSection = {
   app: string;
   title: string;
-  items: { key: string; label: string; href: string }[];
+  icon?: GcsAcpIconDef;
+  items: { key: string; label: string; href: string; icon?: GcsAcpIconDef }[];
 };
 
 /** Aplicația ACP a unei căi: intrarea cu cel mai lung `href` care se potrivește. */

@@ -2,7 +2,7 @@ import { expect, test, type Browser, type Page } from "@playwright/test";
 import { member, uid } from "./forum-fixtures";
 import { enterAcpAsRoot, resetSetting, useFreshIp } from "./helpers";
 
-/** Chat v3 (după Chatbox-ul IPS): avatare, culorile grupului, mențiuni, emoticoane, media și setările din ACP. */
+/** Chat v3 (după chatbox-ul de referință): avatare, culorile grupului, mențiuni, emoticoane, media și setările din ACP. */
 async function chatPage(browser: Browser, name: string, email: string, ip: string, group = "member"): Promise<Page> {
   const context = await browser.newContext();
   await useFreshIp(context, ip);
@@ -44,11 +44,25 @@ test("avatarul și numele în culoarea grupului; click pe nume → mențiune; em
   // Click pe nume → @nume în câmp; apoi un emoticon din tab-ul „Gaming și sport”.
   await fromB.getByTestId("gcs-chat-name").click();
   await expect(room(a).getByTestId("gcs-chat-input")).toHaveValue(`@Mem${id} `);
+  // Uneltele sunt iconițe Font Awesome (nu emoji); rotița unui membru deschide preferințele lui, Escape le închide.
+  for (const name of ["Emoticoane", "Adaugă imagine", "Trimite"]) {
+    await expect(room(a).getByRole("button", { name, exact: true }).locator("svg[data-icon]")).toBeVisible();
+  }
+  await expect(room(a).getByTestId("gcs-chat-sound").locator("svg[data-icon]")).toBeVisible();
+  await room(a).getByTestId("gcs-chat-settings").click();
+  await expect(room(a).getByTestId("gcs-chat-prefs").getByRole("switch")).toHaveCount(2);
+  await a.keyboard.press("Escape");
+  await expect(room(a).getByTestId("gcs-chat-prefs")).toHaveCount(0);
+
+  // Selectorul flotant: tab-urile „Emoticoane” / „Emoji”, categoriile ca listă derulabilă; Escape îl închide.
   await room(a).getByRole("button", { name: "Emoticoane" }).first().click();
   const emoji = room(a).getByTestId("gcs-chat-emoji");
+  await expect(emoji.getByRole("tab", { name: "Emoji", exact: true })).toHaveAttribute("aria-selected", "true");
   await emoji.getByRole("tab", { name: "Gaming și sport" }).click();
   await emoji.getByRole("button", { name: "🎮" }).click();
   await expect(room(a).getByTestId("gcs-chat-input")).toHaveValue(`@Mem${id} 🎮`);
+  await a.keyboard.press("Escape");
+  await expect(emoji).toHaveCount(0);
   await room(a).getByTestId("gcs-chat-input").press("Enter");
   const mention = room(b).getByTestId("gcs-chat-msg").filter({ hasText: `@Mem${id} 🎮` });
   await expect(mention).toBeVisible({ timeout: 5_000 });
@@ -80,19 +94,33 @@ test("avatarul și numele în culoarea grupului; click pe nume → mențiune; em
 
 test("setările din ACP: regulile, mesajele noi sus, ora pe 12 h și limita de emoticoane", async ({ page, context, browser }) => {
   test.setTimeout(120_000);
-  const keys = ["chat.rules", "chat.newest_on_top", "chat.time_format", "chat.max_emoticons"];
+  const keys = ["chat.rules", "chat.show_rules", "chat.newest_on_top", "chat.time_format", "chat.max_emoticons"];
   const id = uid();
   await useFreshIp(context, "198.18.32");
   await enterAcpAsRoot(page, `RootC${id}`, `c3-root-${id}@example.com`);
   try {
     await page.goto("/admin/community/chat/settings");
     const form = page.getByTestId("gcs-acp-chat-settings");
-    await form.getByLabel("Regulile chat-ului (gol = fără butonul „Reguli”)").fill(`Fără spam ${id}.\nRespect.`);
-    await form.getByLabel("Mesajele noi sus (câmpul de scris deasupra listei)").check();
-    await form.getByLabel("Formatul orei").selectOption("12h");
-    await form.getByLabel("Emoticoane într-un mesaj (0 = nelimitat)").fill("1");
-    await form.getByRole("button", { name: "Salvează" }).click();
-    await expect(form.getByRole("status")).toBeVisible();
+    // Tab-ul General: comutatoare (nu bife), regulile, ordinea și ora.
+    await form.getByRole("tab", { name: "General" }).click();
+    const general = form.getByRole("tabpanel", { name: "General" });
+    await expect(general.getByRole("switch", { name: "Activează chatbox-ul" })).toBeChecked();
+    await general.getByRole("switch", { name: "Arată linkul spre reguli" }).check();
+    await general.getByLabel("Textul regulilor").fill(`Fără spam ${id}.\nRespect.`);
+    await general.getByRole("switch", { name: "Mesajele noi sus" }).check();
+    await general.getByLabel("Formatul orei").selectOption("12h");
+    await general.getByRole("button", { name: "Salvează" }).click();
+    await expect(general.getByRole("status")).toBeVisible();
+
+    // Tab-ul Avansat: intervalul în milisecunde, flood control-ul „Niciunul” implicit, emoticoanele maxime.
+    await form.getByRole("tab", { name: "Avansat" }).click();
+    const advanced = form.getByRole("tabpanel", { name: "Avansat" });
+    await expect(advanced.getByLabel("Interval de actualizare")).toHaveValue("30000");
+    await expect(advanced.getByRole("checkbox", { name: "Flood control: Niciunul" })).toBeChecked();
+    await expect(advanced.getByLabel("Emoticoane maxime", { exact: true })).toHaveValue("5");
+    await advanced.getByLabel("Emoticoane maxime", { exact: true }).fill("1");
+    await advanced.getByRole("button", { name: "Salvează" }).click();
+    await expect(advanced.getByRole("status")).toBeVisible();
 
     const m = await chatPage(browser, `Mc${id}`, `c3-m-${id}@example.com`, "198.18.33");
     await room(m).getByTestId("gcs-chat-rules-open").click();

@@ -246,7 +246,7 @@
         "logs": "System logs",
         "cache": "Clear cache",
         "conversions": "Conversions",
-        "import": "IPS / Indungi import",
+        "import": "Import from another platform",
         "settings_languages": "Languages & translation"
       },
       "members": {
@@ -1036,7 +1036,62 @@
       "announcements": "Global announcements",
       "noAnnouncements": "No active announcements.",
       "noExpiry": "until removed",
-      "display": "Display, limits and content"
+      "display": "Display, limits and content",
+      "form": {
+        "tabGeneral": "General",
+        "tabAdvanced": "Advanced",
+        "tabPermissions": "Permissions",
+        "enabled": "Enable chatbox",
+        "enabledHint": "The same switch as in ACP → System → Applications: when off, the chat disappears from the menu, the home page and /chat.",
+        "enabledNoRight": "Only staff with the ACP → System → Applications right can turn the chat on or off.",
+        "timeFormat": "Time format",
+        "required": "REQUIRED",
+        "newestOnTop": "Newer messages on top",
+        "newestOnTopHint": "The input is shown above the list and the newest messages come first.",
+        "showRules": "Show link to rules",
+        "showRulesHint": "The rules open in a window from the “Rules” button in the chat header (only if the text below is not empty).",
+        "rules": "Rules text",
+        "rulesHint": "Empty = no “Rules” button.",
+        "hideAvatars": "Hide avatars",
+        "minHeight": "Default min-height",
+        "minHeightHint": "Height of the message list on /chat, in pixels (120–1200).",
+        "hideEnterMobile": "Hide the Enter button on mobile",
+        "hideEnterMobileHint": "On phones, the message is sent with the keyboard's Enter key.",
+        "chatting": "Chatting",
+        "media": "Media",
+        "messages": "Messages to display",
+        "messagesHint": "Number of messages shown when the chat opens (10–100).",
+        "interval": "Update interval",
+        "intervalHint": "In milliseconds, used when the live connection is missing.\nE.g. 10000 = 10 seconds",
+        "flood": "Flood control",
+        "floodHint": "Pause between two messages of the same member, in seconds. The stricter of this and the group's value applies; moderators bypass flood control.",
+        "seconds": "seconds",
+        "or": "or",
+        "none": "None",
+        "unlimited": "Unlimited",
+        "maxLength": "Max chat length",
+        "maxLengthHint": "The maximum characters of a message (unlimited = 2000, the technical cap).",
+        "maxEmoticons": "Max emoticons",
+        "maxEmoticonsHint": "The maximum number of emoticons in a message.",
+        "allowImages": "Allow images",
+        "allowImagesHint": "Uploaded images and images from links.",
+        "allowYoutube": "Allow YouTube",
+        "voice": "Allow voice messages",
+        "voiceMax": "Maximum voice message length",
+        "giphy": "GIPHY API key",
+        "giphyHint": "Without a key, the GIF button and the /giphy command are off.",
+        "permTitle": "{name} channel",
+        "permIntro": "Who reads and who writes in the channel. “Moderate” is the chat.moderate group right (delete messages, mute, change slow mode) and bypasses flood control.",
+        "permCaption": "Chat permissions per group",
+        "permGroup": "Group",
+        "permRead": "Read",
+        "permWrite": "Write",
+        "permModerate": "Moderate",
+        "permNoRight": "Only staff who can edit groups (ACP → Members → Groups) can change these permissions.",
+        "permNoGeneral": "The General channel does not exist; the other channels' permissions are in the channel list.",
+        "permFull": "The channel's full matrix (with inheritance)",
+        "permChannels": "Channels and their permissions"
+      }
     },
     "notifications": {
       "title": "Notifications",
@@ -1288,7 +1343,9 @@
       "allow_youtube": "Allow YouTube videos",
       "voice_enabled": "Allow voice messages",
       "voice_max_seconds": "Maximum voice message length (seconds)",
-      "giphy_key": "GIPHY API key (without a key, /giphy is off)"
+      "giphy_key": "GIPHY API key (without a key, /giphy is off)",
+      "show_rules": "Show the rules link in the chat header",
+      "flood_seconds": "Flood control (seconds between messages, 0 = none)"
     },
     "i18n": {
       "locales": "Languages offered to members",
@@ -1547,7 +1604,7 @@
         "demoHint": "Sample categories and forums, to see how it looks (forums arrive in stage 2).",
         "empty": "No data",
         "emptyHint": "Start from scratch.",
-        "import": "IPS / Indungi import",
+        "import": "Import from another platform",
         "importHint": "Available in a later stage."
       },
       "run": {
@@ -1715,7 +1772,15 @@
       "xpTo": "{points} of {next} XP to the {rank} rank",
       "xpMax": "{points} XP, top rank",
       "badges": "{count, plural, one {# badge} other {# badges}}",
-      "joined": "Member since {date}"
+      "joined": "Member since {date}",
+      "statusOnline": "Online",
+      "statusOffline": "Offline",
+      "rankLevel": "Rank level: {level}",
+      "topics": "topics",
+      "likes": "likes",
+      "memberSince": "Member since:",
+      "status": "Status:",
+      "motto": "Motto"
     },
     "poll": {
       "votes": "{count, plural, one {# vote} other {# votes}}",
@@ -1784,7 +1849,16 @@
       "newPosts": "{count} new posts",
       "newPost": "1 new post",
       "show": "show"
-    }
+    },
+    "quoteShort": "Quote",
+    "quickEdit": "Quick edit",
+    "like": "Like",
+    "liked": "Liked",
+    "moreShort": "More…",
+    "reactedYou": "You liked this post.",
+    "reactedYouAndOthers": "You and {count, plural, one {# other person} other {# others}} liked this post.",
+    "reactedCount": "{count, plural, one {# person} other {# people}} liked this post.",
+    "quickReply": "Quick reply"
   },
   "newTopic": {
     "title": "New topic in {forum}",
@@ -2031,6 +2105,17 @@
         "1h": "1 hour",
         "1d": "1 day",
         "forever": "Permanent"
+      },
+      "settings": "Chat settings",
+      "settingsAcp": "Chat settings (ACP)",
+      "prefSound": "Sound for new messages",
+      "prefAvatars": "Show avatars",
+      "picker": {
+        "emoticons": "Emoticons",
+        "emoji": "Emoji",
+        "recent": "Recently used",
+        "popular": "Popular",
+        "categories": "Emoji categories"
       }
     }
   },
@@ -2129,7 +2214,8 @@
       "title": "Title",
       "body": "Text",
       "period": "Period",
-      "channel": "Chat room"
+      "channel": "Chat room",
+      "icon": "Icon (e.g. fa-solid fa-star; empty = default)"
     },
     "periods": {
       "week": "this week",
@@ -2196,7 +2282,23 @@
       "members": "Members",
       "vip": "VIP members"
     },
-    "allOnline": "See all online members →"
+    "allOnline": "See all online members →",
+    "panel": {
+      "title": "Forum statistics and group legend",
+      "collapse": "Collapse panel",
+      "expand": "Expand panel",
+      "newMember": "New member",
+      "onlineTotal": "{count, plural, one {# user in total:} other {# users in total, including:}}",
+      "members": "{count, plural, one {# member} other {# members}}",
+      "anonymous": "{count} anonymous",
+      "guests": "{count, plural, one {# guest} other {# guests}}",
+      "onlineList": "List of logged-in users",
+      "seeAll": "See the full list",
+      "daySummary": "Members active in the last 24 hours",
+      "dayList": "List of recently active users",
+      "dayNobody": "No visible members active in the last 24 hours.",
+      "legendTitle": "Member group legend"
+    }
   },
   "members": {
     "title": "Members",

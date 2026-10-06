@@ -25,11 +25,24 @@ export interface GcsPermissionDef {
 
 export type GcsAcpApp = "system" | "community" | "members" | "vip" | "gaming" | "pages" | "stats" | "appearance";
 
-/** O secțiune din meniul ACP (spec §12.1). `section` din fiecare item e cheia folosită de rolurile ACP. */
+/**
+ * O intrare din meniul ACP. `section` e cheia folosită de rolurile ACP; `icon` e o iconiță Font Awesome Free
+ * după nume (`fa-solid fa-users`), randată în submeniu, în căutare și în titlul paginii.
+ */
+export interface GcsAcpMenuItem {
+  key: string;
+  labelKey: string;
+  href: string;
+  section: string;
+  icon?: string;
+}
+
+/** O secțiune din meniul ACP (spec §12.1), cu iconița opțională a titlului. */
 export interface GcsAcpMenuSection {
   app: GcsAcpApp;
   title: string;
-  items: { key: string; labelKey: string; href: string; section: string }[];
+  icon?: string;
+  items: GcsAcpMenuItem[];
 }
 
 /** Contextul primit de hook-ul `seed` al unui modul: tranzacția seed-ului și id-urile grupurilor implicite. */

@@ -1,6 +1,7 @@
 "use client";
 
-import { GcsButton } from "@gcs/ui";
+import { faPaperPlane, faPlus, faSquarePollVertical, faTrash, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { GcsButton, GcsIconSvg } from "@gcs/ui";
 import { GcsEditor, type GcsEditorHandle } from "@gcs/ui/editor";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -120,7 +121,7 @@ export function GcsNewTopicForm({ forum, prefixes, tagsMax, canPoll, maxLength }
               <span key={tag} className="gcs-tag">
                 #{tag}
                 <button type="button" aria-label={t("removeTag", { tag })} onClick={() => setTags(tags.filter((x) => x !== tag))}>
-                  ×
+                  <GcsIconSvg icon={faXmark} />
                 </button>
               </span>
             ))}
@@ -159,7 +160,10 @@ export function GcsNewTopicForm({ forum, prefixes, tagsMax, canPoll, maxLength }
       {canPoll &&
         (poll ? (
           <fieldset className="gcs-pollEditor">
-            <legend>{t("pollQuestion")}</legend>
+            <legend>
+              <GcsIconSvg icon={faSquarePollVertical} className="gcs-hIcon" />
+              {t("pollQuestion")}
+            </legend>
             <label className="gcs-field">
               <span className="gcs-srOnly">{t("pollQuestion")}</span>
               <input className="gcs-input" value={poll.question} onChange={(e) => setPoll({ ...poll, question: e.target.value })} maxLength={200} />
@@ -182,13 +186,13 @@ export function GcsNewTopicForm({ forum, prefixes, tagsMax, canPoll, maxLength }
                     aria-label={t("removeOption", { n: i + 1 })}
                     onClick={() => setPoll({ ...poll, options: poll.options.filter((_, j) => j !== i) })}
                   >
-                    ×
+                    <GcsIconSvg icon={faXmark} />
                   </GcsButton>
                 )}
               </div>
             ))}
             {poll.options.length < 10 && (
-              <GcsButton variant="ghost" size="sm" onClick={() => setPoll({ ...poll, options: [...poll.options, ""] })}>
+              <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faPlus} />} onClick={() => setPoll({ ...poll, options: [...poll.options, ""] })}>
                 {t("addOption")}
               </GcsButton>
             )}
@@ -200,12 +204,16 @@ export function GcsNewTopicForm({ forum, prefixes, tagsMax, canPoll, maxLength }
               <span className="gcs-field__label">{t("pollCloses")}</span>
               <input className="gcs-input" type="datetime-local" value={poll.closesAt} onChange={(e) => setPoll({ ...poll, closesAt: e.target.value })} />
             </label>
-            <GcsButton variant="ghost" size="sm" onClick={() => setPoll(null)}>
+            <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faTrash} />} onClick={() => setPoll(null)}>
               {t("removePoll")}
             </GcsButton>
           </fieldset>
         ) : (
-          <GcsButton variant="ghost" onClick={() => setPoll({ question: "", options: ["", ""], multiple: false, closesAt: "" })}>
+          <GcsButton
+            variant="ghost"
+            icon={<GcsIconSvg icon={faSquarePollVertical} />}
+            onClick={() => setPoll({ question: "", options: ["", ""], multiple: false, closesAt: "" })}
+          >
             {t("addPoll")}
           </GcsButton>
         ))}
@@ -216,7 +224,7 @@ export function GcsNewTopicForm({ forum, prefixes, tagsMax, canPoll, maxLength }
         </p>
       )}
       <div>
-        <GcsButton variant="primary" type="submit" disabled={sending}>
+        <GcsButton variant="primary" type="submit" disabled={sending} icon={<GcsIconSvg icon={faPaperPlane} />}>
           {sending ? t("sending") : t("submit")}
         </GcsButton>
       </div>

@@ -6,6 +6,7 @@ import { services } from "@/lib/services";
 import { GcsActionForm } from "../_components/GcsActionForm";
 import { createGroup } from "./actions";
 import { GroupOrder } from "./GroupOrder";
+import { GcsAcpTitle, GcsAcpTitleIcon } from "../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.groups"))("title") };
@@ -30,9 +31,9 @@ export default async function AcpGroupsPage() {
 
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-users">
         {t("title")}
-      </h1>
+      </GcsAcpTitle>
       <GcsCard as="section" aria-label={t("order")}>
         <GroupOrder
           // Lista se reinițializează când se schimbă grupurile (ex. după „Creează grupul”).
@@ -51,9 +52,10 @@ export default async function AcpGroupsPage() {
       </GcsCard>
       <GcsCard as="section" aria-label={t("create.title")} style={{ padding: 16, maxWidth: 520 }}>
         <h2 className="gcs-acpWidget__title" style={{ marginBottom: 12 }}>
+          <GcsAcpTitleIcon name="fa-solid fa-plus" />
           {t("create.title")}
         </h2>
-        <GcsActionForm action={createGroup} submitLabel={t("create.submit")}>
+        <GcsActionForm action={createGroup} submitLabel={t("create.submit")} submitKind="create">
           <label className="gcs-field">
             {t("create.name")}
             <input className="gcs-input" name="name" required maxLength={64} />

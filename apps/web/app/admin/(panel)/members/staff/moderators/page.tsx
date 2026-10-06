@@ -6,6 +6,7 @@ import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../../_components/GcsActionForm";
 import { addModerators, removeModerator } from "../../../moderation-actions";
+import { GcsAcpTitle, GcsAcpTitleIcon } from "../../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.moderators"))("title") };
@@ -24,9 +25,9 @@ export default async function AcpModeratorsPage() {
 
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-user-shield">
         {t("title")}
-      </h1>
+      </GcsAcpTitle>
       <GcsCard style={{ padding: 0 }}>
         {rows.length === 0 ? (
           <p className="gcs-muted" style={{ margin: 0, padding: 16 }}>
@@ -49,7 +50,7 @@ export default async function AcpModeratorsPage() {
                   <td className="gcs-table__td">{r.userName ?? r.groupName}</td>
                   <td className="gcs-table__td">{r.powers.map((p) => t(`power.${p}`)).join(", ")}</td>
                   <td className="gcs-table__td">
-                    <GcsActionForm action={removeModerator.bind(null, r.id)} submitLabel={t("remove")} variant="ghost" compact />
+                    <GcsActionForm action={removeModerator.bind(null, r.id)} submitLabel={t("remove")} submitKind="remove" variant="ghost" compact />
                   </td>
                 </tr>
               ))}
@@ -59,9 +60,10 @@ export default async function AcpModeratorsPage() {
       </GcsCard>
       <GcsCard as="section" aria-labelledby="gcs-mod-add" style={{ padding: 16, maxWidth: 720 }}>
         <h2 id="gcs-mod-add" className="gcs-acpWidget__title" style={{ marginBottom: 12 }}>
+          <GcsAcpTitleIcon name="fa-solid fa-user-plus" />
           {t("add")}
         </h2>
-        <GcsActionForm action={addModerators} submitLabel={t("submit")}>
+        <GcsActionForm action={addModerators} submitLabel={t("submit")} submitKind="create">
           <fieldset style={{ border: 0, padding: 0, margin: 0, display: "flex", flexWrap: "wrap", gap: "4px 16px" }}>
             <legend style={{ marginBottom: 6 }}>{t("forums")}</legend>
             {forums.map((f) => (

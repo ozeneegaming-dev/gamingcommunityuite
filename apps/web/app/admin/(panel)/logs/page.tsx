@@ -1,10 +1,12 @@
 import { normalizeUsername, queryAudit } from "@gcs/core";
 import { GcsButton, GcsCard } from "@gcs/ui";
+import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
+import { GcsAcpTitle } from "../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.logs"))("title") };
@@ -28,6 +30,7 @@ const json = (v: unknown) => (v === null || v === undefined ? "—" : JSON.strin
 export default async function AcpLogsPage({ searchParams }: Props) {
   await requireAcpSection("system.logs");
   const t = await getTranslations("acp.logs");
+  const tp = await getTranslations("acp.members");
   const format = await getFormatter();
   const sp = await searchParams;
   const { db } = services();
@@ -54,9 +57,9 @@ export default async function AcpLogsPage({ searchParams }: Props) {
 
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-clipboard-list">
         {t("title")}
-      </h1>
+      </GcsAcpTitle>
       <GcsCard style={{ padding: 16 }}>
         <form method="get" style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
           <label className="gcs-field" style={{ flex: "1 1 180px" }}>
@@ -75,7 +78,7 @@ export default async function AcpLogsPage({ searchParams }: Props) {
             {t("filters.to")}
             <input className="gcs-input" type="date" name="to" defaultValue={sp.to ?? ""} />
           </label>
-          <GcsButton variant="primary" type="submit">
+          <GcsButton variant="primary" type="submit" icon={<GcsIcon name="fa-solid fa-filter" />}>
             {t("filters.apply")}
           </GcsButton>
         </form>
@@ -116,7 +119,9 @@ export default async function AcpLogsPage({ searchParams }: Props) {
           <nav style={{ display: "flex", gap: 8, justifyContent: "flex-end", padding: 12 }}>
             {result.page > 1 && (
               <GcsButton variant="ghost" size="sm" asChild>
-                <Link href={pageHref(result.page - 1)}>←</Link>
+                <Link href={pageHref(result.page - 1)} aria-label={tp("prev")} title={tp("prev")}>
+                  <GcsIcon name="fa-solid fa-chevron-left" />
+                </Link>
               </GcsButton>
             )}
             <span style={{ fontSize: 13, color: "var(--gcs-muted)", alignSelf: "center" }}>
@@ -124,7 +129,9 @@ export default async function AcpLogsPage({ searchParams }: Props) {
             </span>
             {result.page < result.pages && (
               <GcsButton variant="ghost" size="sm" asChild>
-                <Link href={pageHref(result.page + 1)}>→</Link>
+                <Link href={pageHref(result.page + 1)} aria-label={tp("next")} title={tp("next")}>
+                  <GcsIcon name="fa-solid fa-chevron-right" />
+                </Link>
               </GcsButton>
             )}
           </nav>

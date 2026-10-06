@@ -7,16 +7,22 @@ import {
   faAlignRight,
   faAt,
   faBold,
+  faCheck,
   faCode,
   faCompress,
   faExpand,
   faEyeSlash,
+  faEraser,
   faFaceSmile,
+  faGamepad,
   faGripLines,
+  faHandPeace,
   faHighlighter,
   faImage,
   faItalic,
+  faHeart,
   faLink,
+  faLinkSlash,
   faListOl,
   faListUl,
   faPalette,
@@ -27,6 +33,7 @@ import {
   faTextSlash,
   faUnderline,
   faVideo,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import type { Editor, JSONContent } from "@tiptap/core";
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
@@ -124,6 +131,8 @@ type Popover = "video" | "link" | "color" | "highlight" | "emoji" | null;
 
 const DRAFT_DELAY_MS = 2000;
 const EMOJI_TABS: GcsEmojiCategory[] = ["smileys", "people", "gaming", "symbols"];
+/** Iconițele taburilor de emoji (textul rămâne în `aria-label` și `title`). */
+const EMOJI_TAB_ICONS = { smileys: faFaceSmile, people: faHandPeace, gaming: faGamepad, symbols: faHeart } as const;
 
 /** Paragrafele unui text simplu (blocurile despărțite de un rând gol). */
 function paragraphs(text: string): JSONContent[] {
@@ -288,6 +297,7 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
     </button>
   );
   const icon = (def: Parameters<typeof GcsIconSvg>[0]["icon"]) => <GcsIconSvg icon={def} />;
+  const emojiTabLabels: Record<GcsEmojiCategory, string> = { smileys: labels.emojiSmileys, people: labels.emojiPeople, gaming: labels.emojiGaming, symbols: labels.emojiSymbols };
   const sep = (key: string) => <span key={key} className="gcs-editor__sep" aria-hidden="true" />;
 
   function insertVideo() {
@@ -414,9 +424,15 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
             }}
           />
           <button type="button" className="gcs-btn gcs-btn--primary gcs-btn--sm" onClick={insertVideo}>
+            <span className="gcs-btn__icon" aria-hidden="true">
+              <GcsIconSvg icon={faCheck} />
+            </span>
             {labels.insert}
           </button>
           <button type="button" className="gcs-btn gcs-btn--ghost gcs-btn--sm" onClick={() => setPopover(null)}>
+            <span className="gcs-btn__icon" aria-hidden="true">
+              <GcsIconSvg icon={faXmark} />
+            </span>
             {labels.cancel}
           </button>
           {videoError && (
@@ -447,6 +463,9 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
             }}
           />
           <button type="button" className="gcs-btn gcs-btn--primary gcs-btn--sm" onClick={applyLink}>
+            <span className="gcs-btn__icon" aria-hidden="true">
+              <GcsIconSvg icon={faCheck} />
+            </span>
             {labels.insert}
           </button>
           {active("link") && (
@@ -458,6 +477,9 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
                 setPopover(null);
               }}
             >
+              <span className="gcs-btn__icon" aria-hidden="true">
+                <GcsIconSvg icon={faLinkSlash} />
+              </span>
               {labels.removeLink}
             </button>
           )}
@@ -502,6 +524,9 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
               setPopover(null);
             }}
           >
+            <span className="gcs-btn__icon" aria-hidden="true">
+              <GcsIconSvg icon={faEraser} />
+            </span>
             {labels.removeColor}
           </button>
         </div>
@@ -516,7 +541,7 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
               </button>
             ))}
           </div>
-          <div className="gcs-seg__group" role="tablist" aria-label={labels.emoji}>
+          <div className="gcs-seg__group gcs-editor__emojiTabs" role="tablist" aria-label={labels.emoji}>
             {EMOJI_TABS.map((tab) => (
               <button
                 key={tab}
@@ -525,8 +550,10 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
                 aria-selected={emojiTab === tab}
                 className={emojiTab === tab ? "gcs-seg gcs-seg--active" : "gcs-seg"}
                 onClick={() => setEmojiTab(tab)}
+                aria-label={emojiTabLabels[tab]}
+                title={emojiTabLabels[tab]}
               >
-                {{ smileys: labels.emojiSmileys, people: labels.emojiPeople, gaming: labels.emojiGaming, symbols: labels.emojiSymbols }[tab]}
+                <GcsIconSvg icon={EMOJI_TAB_ICONS[tab]} />
               </button>
             ))}
           </div>

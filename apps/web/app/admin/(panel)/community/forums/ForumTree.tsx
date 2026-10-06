@@ -3,14 +3,39 @@
 import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GcsBadge } from "@gcs/ui";
+import {
+  faArrowDown,
+  faArrowUp,
+  faArrowUpRightFromSquare,
+  faCircleQuestion,
+  faComments,
+  faFolder,
+  faGripVertical,
+  faKey,
+  faLink,
+  faPen,
+} from "@fortawesome/free-solid-svg-icons";
+import { GcsBadge, GcsIconSvg } from "@gcs/ui";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useErrorMessage } from "@/lib/use-error-message";
+import type { GcsAcpIconDef } from "../../_components/types";
 import { reorderForums } from "./actions";
 
-export type ForumNode = { id: number; parentId: number | null; type: "CATEGORY" | "FORUM" | "QA" | "LINK"; name: string; slug: string; position: number };
+/** `icon`: iconița aleasă pentru forum, rezolvată pe server (lipsă → iconița tipului). */
+export type ForumNode = {
+  id: number;
+  parentId: number | null;
+  type: "CATEGORY" | "FORUM" | "QA" | "LINK";
+  name: string;
+  slug: string;
+  position: number;
+  icon?: GcsAcpIconDef | null;
+};
+
+/** Iconița implicită după tipul forumului, când adminul nu a ales una. */
+const TYPE_ICONS: Record<ForumNode["type"], GcsAcpIconDef> = { CATEGORY: faFolder, FORUM: faComments, QA: faCircleQuestion, LINK: faLink };
 
 /** Copiii fiecărui nod, ordonați după poziție. */
 function childrenOf(nodes: ForumNode[], parentId: number | null): ForumNode[] {
@@ -130,16 +155,17 @@ function TreeRow({ node, index, count, parents, onMove, onParent, children }: Ro
     <li ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition }} className="gcs-forumTree__item">
       <div className="gcs-forumTree__row" data-testid="gcs-acp-forum" data-forum-name={node.name}>
         <button type="button" className="gcs-iconBtn gcs-forumTree__handle" aria-label={t("drag", { name: node.name })} {...attributes} {...listeners}>
-          ⠿
+          <GcsIconSvg icon={faGripVertical} />
         </button>
+        <GcsIconSvg icon={node.icon ?? TYPE_ICONS[node.type]} className="gcs-forumTree__icon" />
         <span className="gcs-forumTree__name">{node.name}</span>
         <GcsBadge tone={isCategory ? "accent" : node.type === "QA" ? "ok" : node.type === "LINK" ? "neutral" : "info"}>{t(`types.${node.type}`)}</GcsBadge>
         <span className="gcs-forumTree__actions">
           <button type="button" className="gcs-iconBtn" disabled={index === 0} aria-label={t("moveUp", { name: node.name })} onClick={() => onMove(index - 1)}>
-            ↑
+            <GcsIconSvg icon={faArrowUp} />
           </button>
           <button type="button" className="gcs-iconBtn" disabled={index === count - 1} aria-label={t("moveDown", { name: node.name })} onClick={() => onMove(index + 1)}>
-            ↓
+            <GcsIconSvg icon={faArrowDown} />
           </button>
           {!isCategory && (
             <select
@@ -155,9 +181,18 @@ function TreeRow({ node, index, count, parents, onMove, onParent, children }: Ro
               ))}
             </select>
           )}
-          <Link href={`/admin/community/forums/${node.id}`}>{t("edit")}</Link>
-          <Link href={`/admin/permissions/forum/${node.id}`}>{t("permissions")}</Link>
-          <Link href={`/forum/${node.id}-${node.slug}`}>{t("view")}</Link>
+          <Link href={`/admin/community/forums/${node.id}`} className="gcs-acpBack">
+            <GcsIconSvg icon={faPen} />
+            {t("edit")}
+          </Link>
+          <Link href={`/admin/permissions/forum/${node.id}`} className="gcs-acpBack">
+            <GcsIconSvg icon={faKey} />
+            {t("permissions")}
+          </Link>
+          <Link href={`/forum/${node.id}-${node.slug}`} className="gcs-acpBack">
+            <GcsIconSvg icon={faArrowUpRightFromSquare} />
+            {t("view")}
+          </Link>
         </span>
       </div>
       {children}

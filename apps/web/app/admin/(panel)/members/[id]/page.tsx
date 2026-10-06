@@ -1,4 +1,5 @@
 import { GcsAvatar, GcsBadge, GcsCard, GcsUserLink } from "@gcs/ui";
+import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -10,6 +11,7 @@ import { GcsActionForm } from "../../_components/GcsActionForm";
 import { MemberProfileSections } from "./MemberProfileSections";
 import { addSecondaryGroup, banMember, liftBan, removeSecondaryGroup, setPrimaryGroup, warnMember } from "../actions";
 import { saveMemberPermissions } from "./actions";
+import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -18,11 +20,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: user?.name };
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({ title, icon, children }: { title: string; icon: string; children: ReactNode }) {
   return (
     <GcsCard as="section" aria-label={title}>
       <div className="gcs-acpWidget__header">
-        <h2 className="gcs-acpWidget__title">{title}</h2>
+        <h2 className="gcs-acpWidget__title">
+          <GcsAcpTitleIcon name={icon} />
+          {title}
+        </h2>
       </div>
       <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>{children}</div>
     </GcsCard>
@@ -50,15 +55,16 @@ export default async function AcpMemberPage({ params }: Props) {
 
   return (
     <>
-      <Link href="/admin/members" style={{ fontSize: 13 }}>
-        ← {t("back")}
+      <Link href="/admin/members" className="gcs-acpBack">
+        <GcsIcon name="fa-solid fa-arrow-left" />
+        {t("back")}
       </Link>
       <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
         <GcsAvatar name={member.name} size="l" {...(member.image ? { src: member.image } : {})} />
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+          <GcsAcpTitle icon="fa-solid fa-user">
             <span className={`gcs-name--${member.primaryGroup.key}`}>{member.name}</span>
-          </h1>
+          </GcsAcpTitle>
           <span style={muted}>
             {member.primaryGroup.name} · {t("info.email")}: {member.email} · {t("info.twoFactor")}: {member.twoFactorEnabled ? t("info.yes") : t("info.no")}
           </span>
@@ -70,8 +76,8 @@ export default async function AcpMemberPage({ params }: Props) {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20, alignItems: "start" }}>
-        <Section title={t("groups.title")}>
-          <GcsActionForm action={setPrimaryGroup.bind(null, member.id)} submitLabel={t("groups.save")}>
+        <Section title={t("groups.title")} icon="fa-solid fa-users">
+          <GcsActionForm action={setPrimaryGroup.bind(null, member.id)} submitLabel={t("groups.save")} submitKind="save">
             <label className="gcs-field">
               {t("groups.primary")}
               <select className="gcs-input" name="groupId" defaultValue={member.primaryGroup.id}>
@@ -93,13 +99,13 @@ export default async function AcpMemberPage({ params }: Props) {
                   compact
                   variant="ghost"
                   action={removeSecondaryGroup.bind(null, member.id, g.id)}
-                  submitLabel={t("groups.remove", { group: g.name })}
+                  submitLabel={t("groups.remove", { group: g.name })} submitKind="remove"
                 />
               </div>
             ))}
           </div>
           {addable.length > 0 && (
-            <GcsActionForm action={addSecondaryGroup.bind(null, member.id)} submitLabel={t("groups.addSubmit")} variant="ghost">
+            <GcsActionForm action={addSecondaryGroup.bind(null, member.id)} submitLabel={t("groups.addSubmit")} submitKind="create" variant="ghost">
               <label className="gcs-field">
                 {t("groups.add")}
                 <select className="gcs-input" name="groupId">
@@ -114,8 +120,8 @@ export default async function AcpMemberPage({ params }: Props) {
           )}
         </Section>
 
-        <Section title={t("ban.title")}>
-          <GcsActionForm action={banMember.bind(null, member.id)} submitLabel={t("ban.submit")}>
+        <Section title={t("ban.title")} icon="fa-solid fa-ban">
+          <GcsActionForm action={banMember.bind(null, member.id)} submitLabel={t("ban.submit")} submitKind="ban">
             <label className="gcs-field">
               {t("ban.reason")}
               <input className="gcs-input" name="reason" required maxLength={500} />
@@ -147,7 +153,7 @@ export default async function AcpMemberPage({ params }: Props) {
                   <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     <GcsBadge tone={status === "active" ? "accent" : "neutral"}>{t(`ban.status.${status}`)}</GcsBadge>
                     {status === "active" && (
-                      <GcsActionForm compact variant="ghost" action={liftBan.bind(null, b.id)} submitLabel={t("ban.lift")} />
+                      <GcsActionForm compact variant="ghost" action={liftBan.bind(null, b.id)} submitLabel={t("ban.lift")} submitKind="lift" />
                     )}
                   </span>
                 </div>
@@ -156,8 +162,8 @@ export default async function AcpMemberPage({ params }: Props) {
           </div>
         </Section>
 
-        <Section title={t("warn.title")}>
-          <GcsActionForm action={warnMember.bind(null, member.id)} submitLabel={t("warn.submit")}>
+        <Section title={t("warn.title")} icon="fa-solid fa-triangle-exclamation">
+          <GcsActionForm action={warnMember.bind(null, member.id)} submitLabel={t("warn.submit")} submitKind="warn">
             <label className="gcs-field">
               {t("warn.points")}
               <input className="gcs-input" name="points" type="number" min={1} max={100} defaultValue={1} required />
@@ -188,7 +194,7 @@ export default async function AcpMemberPage({ params }: Props) {
           </div>
         </Section>
 
-        <Section title={t("ips.title")}>
+        <Section title={t("ips.title")} icon="fa-solid fa-network-wired">
           {member.ips.length === 0 ? (
             <p style={muted}>{t("ips.none")}</p>
           ) : (
@@ -207,9 +213,9 @@ export default async function AcpMemberPage({ params }: Props) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(380px, 1fr))", gap: 16, alignItems: "start" }}>
         <MemberProfileSections userId={member.id} />
       </div>
-      <Section title={t("perms.title")}>
+      <Section title={t("perms.title")} icon="fa-solid fa-key">
         <p style={muted}>{t("perms.hint")}</p>
-        <GcsActionForm action={saveMemberPermissions.bind(null, member.id)} submitLabel={t("perms.save")}>
+        <GcsActionForm action={saveMemberPermissions.bind(null, member.id)} submitLabel={t("perms.save")} submitKind="save">
           <div className="gcs-permGrid" data-testid="gcs-member-permissions">
             {permDefs.map((def) => {
               const value = overrides[def.key];

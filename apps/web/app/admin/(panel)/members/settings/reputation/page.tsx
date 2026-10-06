@@ -7,6 +7,7 @@ import { services } from "@/lib/services";
 import { GcsActionForm } from "../../../_components/GcsActionForm";
 import { saveReaction } from "../../../moderation-actions";
 import { ReactionOrder } from "./ReactionOrder";
+import { GcsAcpTitle, GcsAcpTitleIcon } from "../../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.reactions"))("title") };
@@ -49,9 +50,9 @@ export default async function AcpReactionsPage() {
 
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-thumbs-up">
         {t("title")}
-      </h1>
+      </GcsAcpTitle>
       <p className="gcs-muted" style={{ margin: 0 }}>
         {t("help")}
       </p>
@@ -60,16 +61,17 @@ export default async function AcpReactionsPage() {
       </GcsCard>
       {reactions.map((r) => (
         <GcsCard key={r.id} as="section" aria-label={r.label} style={{ padding: 16 }} data-testid="gcs-acp-reaction">
-          <GcsActionForm action={saveReaction.bind(null, r.id)} submitLabel={t("save")}>
+          <GcsActionForm action={saveReaction.bind(null, r.id)} submitLabel={t("save")} submitKind="save">
             {fields(r)}
           </GcsActionForm>
         </GcsCard>
       ))}
       <GcsCard as="section" aria-labelledby="gcs-reaction-new" style={{ padding: 16 }}>
         <h2 id="gcs-reaction-new" className="gcs-acpWidget__title" style={{ marginBottom: 12 }}>
+          <GcsAcpTitleIcon name="fa-solid fa-plus" />
           {t("add")}
         </h2>
-        <GcsActionForm action={saveReaction.bind(null, null)} submitLabel={t("add")}>
+        <GcsActionForm action={saveReaction.bind(null, null)} submitLabel={t("add")} submitKind="create">
           {fields()}
         </GcsActionForm>
       </GcsCard>

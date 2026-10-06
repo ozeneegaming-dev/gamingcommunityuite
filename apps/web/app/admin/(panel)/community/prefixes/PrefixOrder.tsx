@@ -1,5 +1,7 @@
 "use client";
 
+import { faArrowDown, faArrowUp } from "@fortawesome/free-solid-svg-icons";
+import { GcsIconSvg } from "@gcs/ui";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useErrorMessage } from "@/lib/use-error-message";
@@ -34,10 +36,10 @@ export function PrefixOrder({ prefixes }: { prefixes: Prefix[] }) {
             {p.name}
           </span>
           <button type="button" className="gcs-iconBtn" disabled={i === 0} aria-label={t("moveUp", { name: p.name })} onClick={() => move(i, -1)}>
-            ↑
+            <GcsIconSvg icon={faArrowUp} />
           </button>
           <button type="button" className="gcs-iconBtn" disabled={i === rows.length - 1} aria-label={t("moveDown", { name: p.name })} onClick={() => move(i, 1)}>
-            ↓
+            <GcsIconSvg icon={faArrowDown} />
           </button>
         </li>
       ))}

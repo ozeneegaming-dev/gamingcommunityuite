@@ -1,6 +1,7 @@
 import { GcsError } from "@gcs/core";
 import { GCS_MEMBER_SORTS, type GcsMemberSort } from "@gcs/modules";
 import { GcsButton, GcsCard } from "@gcs/ui";
+import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
@@ -31,6 +32,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
   if (!result) {
     return (
       <GcsCard style={{ padding: 24 }} role="alert" data-testid="gcs-members-forbidden">
+        <GcsIcon name="fa-solid fa-lock" className="gcs-emptyIcon" />
         {t("forbidden")}
       </GcsCard>
     );
@@ -50,6 +52,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
   return (
     <>
       <h1 className="gcs-display" style={{ margin: 0, fontSize: 30 }}>
+        <GcsIcon name="fa-solid fa-users" className="gcs-hIcon" />
         {t("title")} <span className="gcs-muted" style={{ fontSize: 18 }}>({result.pagination.total})</span>
       </h1>
       <form className="gcs-card gcs-memberFilters" action="/members" role="search" aria-label={t("filters")}>
@@ -82,12 +85,15 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
           <input type="checkbox" name="online" value="1" defaultChecked={online} />
           {t("onlineOnly")}
         </label>
-        <GcsButton type="submit" variant="primary">
+        <GcsButton type="submit" variant="primary" icon={<GcsIcon name="fa-solid fa-filter" />}>
           {t("apply")}
         </GcsButton>
       </form>
       {result.members.length === 0 ? (
-        <GcsCard style={{ padding: 24, color: "var(--gcs-muted)" }}>{t("empty")}</GcsCard>
+        <GcsCard style={{ padding: 24, color: "var(--gcs-muted)" }}>
+          <GcsIcon name="fa-solid fa-user-slash" className="gcs-emptyIcon" />
+          {t("empty")}
+        </GcsCard>
       ) : (
         <div className="gcs-memberGrid" data-testid="gcs-member-grid">
           {result.members.map((m) => (

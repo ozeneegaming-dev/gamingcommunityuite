@@ -1,5 +1,6 @@
 import { GcsNotFound } from "@gcs/core";
 import { GcsAvatar, GcsCard, GcsUserLink } from "@gcs/ui";
+import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -42,7 +43,8 @@ export default async function ConversationPage({ params, searchParams }: Props) 
       <GcsRefreshAfterRead wasUnread={wasUnread} />
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
         <Link href="/messages" style={{ fontSize: 13 }}>
-          ← {t("title")}
+          <GcsIcon name="fa-solid fa-arrow-left" className="gcs-hIcon" />
+          {t("title")}
         </Link>
         <h1 className="gcs-display" style={{ margin: 0, fontSize: 28 }} data-testid="gcs-conversation-title">
           {view.title}
@@ -81,7 +83,10 @@ export default async function ConversationPage({ params, searchParams }: Props) 
                 <ul className="gcs-attachments">
                   {m.attachments.map((a) => (
                     <li key={a.id}>
-                      <a href={`/files/${a.id}`}>{a.filename}</a>
+                      <a href={`/files/${a.id}`}>
+                        <GcsIcon name="fa-solid fa-paperclip" className="gcs-hIcon" />
+                        {a.filename}
+                      </a>
                     </li>
                   ))}
                 </ul>
@@ -90,6 +95,7 @@ export default async function ConversationPage({ params, searchParams }: Props) 
           ))}
           {view.readBy.length > 0 && (
             <p className="gcs-muted" style={{ margin: 0, fontSize: 13 }} data-testid="gcs-read-by">
+              <GcsIcon name="fa-solid fa-check-double" className="gcs-hIcon" />
               {t("readBy", { names: view.readBy.map((u) => u.name).join(", ") })}
             </p>
           )}
@@ -98,6 +104,7 @@ export default async function ConversationPage({ params, searchParams }: Props) 
         <aside style={{ flex: "1 1 280px", minWidth: 0 }}>
           <GcsCard as="section" style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
             <h2 className="gcs-display" style={{ margin: 0, fontSize: 15, letterSpacing: ".08em", textTransform: "uppercase" }}>
+              <GcsIcon name="fa-solid fa-user-group" className="gcs-hIcon" />
               {t("participants", { count: view.participants.length })}
             </h2>
             <ul className="gcs-userGrid" style={{ gridTemplateColumns: "1fr" }} data-testid="gcs-participants">

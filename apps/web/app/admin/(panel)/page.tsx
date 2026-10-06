@@ -1,5 +1,6 @@
 import { ACP_WIDGETS, checkHealth, serviceStatus, type GcsAcpWidget } from "@gcs/core";
 import { GcsCard, GcsUserLink } from "@gcs/ui";
+import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -9,6 +10,7 @@ import { requireAcpPanel } from "@/lib/acp";
 import { getHealthDeps } from "@/lib/health-deps";
 import { services } from "@/lib/services";
 import { GcsAcpDashboard } from "./_components/GcsAcpDashboard";
+import { GcsAcpTitle } from "./_components/GcsAcpTitle";
 import { AdminNotesWidget } from "./_components/widgets/AdminNotesWidget";
 import { RegistrationsWidget } from "./_components/widgets/RegistrationsWidget";
 
@@ -18,6 +20,18 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const muted = { color: "var(--gcs-muted)", fontSize: 13 } as const;
+/** Iconițele titlurilor widgeturilor de pe dashboard. */
+const WIDGET_ICONS: Record<GcsAcpWidget, string> = {
+  registrations: "fa-solid fa-user-plus",
+  moderation_queue: "fa-solid fa-inbox",
+  vip_expiring: "fa-solid fa-hourglass-half",
+  system_health: "fa-solid fa-heart-pulse",
+  admin_notes: "fa-solid fa-note-sticky",
+  online_users: "fa-solid fa-signal",
+  online_admins: "fa-solid fa-user-shield",
+  failed_acp_logins: "fa-solid fa-user-lock",
+};
+
 const row = { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: "1px solid var(--gcs-border)", fontSize: 13 } as const;
 
 export default async function AcpDashboardPage() {
@@ -198,27 +212,32 @@ export default async function AcpDashboardPage() {
     },
   };
 
+  const withIcons = Object.fromEntries(
+    ACP_WIDGETS.map((id) => [id, { ...widgets[id], icon: <GcsIcon name={WIDGET_ICONS[id]} /> }]),
+  ) as Record<GcsAcpWidget, { title: string; icon: ReactNode; body: ReactNode }>;
+
   const per = (key: string) =>
     Object.fromEntries(ACP_WIDGETS.map((id) => [id, t(key, { title: widgets[id].title })])) as Record<string, string>;
   const allOk = health.db && health.redis;
   const kpis = [
-    { label: t("kpis.members"), value: totals.members },
-    { label: t("kpis.today"), value: totals.today },
-    { label: t("kpis.online"), value: totals.online },
+    { label: t("kpis.members"), value: totals.members, icon: "fa-solid fa-users" },
+    { label: t("kpis.today"), value: totals.today, icon: "fa-solid fa-user-plus" },
+    { label: t("kpis.online"), value: totals.online, icon: "fa-solid fa-signal" },
   ];
 
   return (
     <>
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
-          {t("title")}
-        </h1>
+        <GcsAcpTitle icon="fa-solid fa-gauge-high">{t("title")}</GcsAcpTitle>
         <span style={muted}>{allOk ? t("statusOk", { site: siteName }) : t("statusDegraded", { site: siteName })}</span>
       </div>
 
       {!worker.up && (
         <GcsCard role="alert" data-testid="gcs-banner-worker" style={{ padding: "14px 18px", borderColor: "#FF4D57", display: "flex", flexDirection: "column", gap: 4 }}>
-          <strong>{t("banners.workerDown.title")}</strong>
+          <strong style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <GcsIcon name="fa-solid fa-triangle-exclamation" className="gcs-acpTitle__icon" />
+            {t("banners.workerDown.title")}
+          </strong>
           <span style={muted}>
             {worker.lastBeatAt
               ? t("banners.workerDown.since", { time: format.relativeTime(worker.lastBeatAt) })
@@ -229,7 +248,10 @@ export default async function AcpDashboardPage() {
 
       {!realtime.up && (
         <GcsCard role="alert" data-testid="gcs-banner-realtime" style={{ padding: "14px 18px", borderColor: "#FF4D57", display: "flex", flexDirection: "column", gap: 4 }}>
-          <strong>{t("banners.realtimeDown.title")}</strong>
+          <strong style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <GcsIcon name="fa-solid fa-triangle-exclamation" className="gcs-acpTitle__icon" />
+            {t("banners.realtimeDown.title")}
+          </strong>
           <span style={muted}>{t("banners.realtimeDown.body")}</span>
         </GcsCard>
       )}
@@ -237,7 +259,10 @@ export default async function AcpDashboardPage() {
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 14 }}>
         {kpis.map((k) => (
           <GcsCard key={k.label} style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontSize: 12, color: "var(--gcs-muted)", textTransform: "uppercase", letterSpacing: ".06em", fontWeight: 700 }}>
+            <span
+              style={{ fontSize: 12, color: "var(--gcs-muted)", textTransform: "uppercase", letterSpacing: ".06em", fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}
+            >
+              <GcsIcon name={k.icon} className="gcs-acpTitle__icon" />
               {k.label}
             </span>
             <span className="gcs-display" style={{ fontSize: 30, fontWeight: 700 }}>
@@ -249,7 +274,7 @@ export default async function AcpDashboardPage() {
 
       <GcsAcpDashboard
         layout={{ main: layout.main, side: layout.side, collapsed: layout.collapsed }}
-        widgets={widgets}
+        widgets={withIcons}
         labels={{ move: per("move"), collapse: per("collapse"), expand: per("expand"), moveToOther: per("moveToOther") }}
       />
     </>

@@ -7,6 +7,7 @@ import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { createPrefix, deletePrefix, updatePrefix } from "../forums/actions";
 import { PrefixOrder } from "./PrefixOrder";
+import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.prefixes"))("title") };
@@ -20,9 +21,9 @@ export default async function AcpPrefixesPage() {
 
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-tag">
         {t("title")}
-      </h1>
+      </GcsAcpTitle>
       <GcsCard as="section" aria-label={t("title")} style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
         {prefixes.length === 0 ? (
           <p className="gcs-muted">{t("empty")}</p>
@@ -31,7 +32,7 @@ export default async function AcpPrefixesPage() {
         )}
         {prefixes.map((p) => (
           <div key={p.id} style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
-            <GcsActionForm action={updatePrefix.bind(null, p.id)} submitLabel={t("save")} compact>
+            <GcsActionForm action={updatePrefix.bind(null, p.id)} submitLabel={t("save")} submitKind="save" compact>
               <label className="gcs-field">
                 <span className="gcs-srOnly">{t("name")}</span>
                 <input className="gcs-input" name="name" defaultValue={p.name} required maxLength={30} aria-label={`${t("name")}: ${p.name}`} />
@@ -41,15 +42,16 @@ export default async function AcpPrefixesPage() {
                 <input className="gcs-input" name="color" defaultValue={p.color} pattern="#[0-9A-Fa-f]{6}" aria-label={`${t("color")}: ${p.name}`} style={{ width: 110 }} />
               </label>
             </GcsActionForm>
-            <GcsActionForm action={deletePrefix.bind(null, p.id)} submitLabel={t("delete")} variant="ghost" compact />
+            <GcsActionForm action={deletePrefix.bind(null, p.id)} submitLabel={t("delete")} submitKind="delete" variant="ghost" compact />
           </div>
         ))}
       </GcsCard>
       <GcsCard as="section" aria-labelledby="gcs-prefix-create" style={{ padding: 16, maxWidth: 520 }}>
         <h2 id="gcs-prefix-create" className="gcs-acpWidget__title" style={{ marginBottom: 12 }}>
+          <GcsAcpTitleIcon name="fa-solid fa-plus" />
           {t("create")}
         </h2>
-        <GcsActionForm action={createPrefix} submitLabel={t("create")}>
+        <GcsActionForm action={createPrefix} submitLabel={t("create")} submitKind="create">
           <label className="gcs-field">
             {t("name")}
             <input className="gcs-input" name="name" required maxLength={30} />

@@ -1,16 +1,15 @@
 /**
- * Emoticoanele din selectorul chat-ului, pe categorii (emoji Unicode: nu au nevoie de imagini și se văd în orice
- * browser). Cheia categoriei e și cheia de traducere (`chat.emojiTabs.{key}`).
+ * Emoji-urile din selectorul chat-ului, pe categorii (Unicode: nu au nevoie de imagini și se văd în orice browser).
+ * Cheia categoriei e și cheia de traducere (`chat.ui.emojiTabs.{key}`); iconița categoriei (Font Awesome) e în
+ * `GcsChatEmojiPicker`.
  */
-const CATEGORIES: { key: string; icon: string; items: string[] }[] = [
+const CATEGORIES: { key: string; items: string[] }[] = [
   {
     key: "smileys",
-    icon: "😀",
     items: [..."😀😃😄😁😆😅🤣😂🙂🙃😉😊😇🥰😍🤩😘😗😚😙😋😛😜🤪😝🤑🤗🤭🤫🤔🤐🤨😐😑😶😏😒🙄😬🤥😌😔😪🤤😴😷🤒🤕🤢🤮🥵🥶🥴😵🤯🤠🥳😎🤓🧐😕😟🙁😮😯😲😳🥺😦😧😨😰😥😢😭😱😖😣😞😓😩😫🥱😤😡😠🤬😈👿💀💩🤡👻👽🤖"],
   },
   {
     key: "gestures",
-    icon: "👍",
     items: [
       ..."👍👎👊✊🤛🤜👏🙌👐🤲🤝🙏💪👋🤚🖐🤞🤟🤘🤙👈👉👆👇👌🤌🤏",
       "✌️",
@@ -20,32 +19,26 @@ const CATEGORIES: { key: string; icon: string; items: string[] }[] = [
   },
   {
     key: "gaming",
-    icon: "🎮",
     items: [..."🎮🕹👾🎯🎲🧩♟🏆🥇🥈🥉🏅🎖⚔🛡🏹🔫💣🧨🪓🗡⚽🏀🏈⚾🎾🏐🏉🎱🏓🏸🥊🥋⛳🏎🏁🚩🎳🎰🃏🀄🎴"],
   },
   {
     key: "animals",
-    icon: "🐶",
     items: [..."🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐸🐵🙈🙉🙊🐔🐧🐦🐤🦆🦅🦉🦇🐺🐗🐴🦄🐝🐛🦋🐌🐞🐜🐢🐍🦎🦖🦕🐙🦑🦀🐡🐠🐟🐬🐳🐋🦈🐊🐅🐆🦓🦍🐘🦒🐪🐄🐎🐖🐑🐐🦌🐕🐈🐓🦃🦚🦜🐇🐁🐀🐿🦔🐉🐲🌵🌲🌳🌴🌱🌿🍀🍁🍂🌷🌹🌺🌸🌼🌻"],
   },
   {
     key: "food",
-    icon: "🍕",
     items: [..."🍏🍎🍐🍊🍋🍌🍉🍇🍓🫐🍈🍒🍑🥭🍍🥥🥝🍅🥑🍆🥔🥕🌽🌶🥒🥦🧄🧅🍄🥜🍞🥐🥖🥨🧀🥚🍳🥞🧇🥓🥩🍗🍖🌭🍔🍟🍕🥪🌮🌯🥗🍝🍜🍲🍛🍣🍱🥟🍤🍙🍚🍘🍦🍰🎂🧁🍫🍬🍭🍩🍪☕🍵🥤🧋🍺🍻🥂🍷🥃🍸🍹🧉🍾🧊"],
   },
   {
     key: "travel",
-    icon: "🚗",
     items: [..."🚗🚕🚙🚌🏎🚓🚑🚒🚐🛻🚚🏍🛵🚲🛴🚨✈🚀🛸🚁⛵🚤🛳🚂🚆🚇🗺🗽🗼🏰🏯🏟🎡🎢🎠⛲🏖🏝🏜🌋⛰🏔🗻🏕🏠🏡🏢🏥🏦🏨🏪🏫⛪🕌🌍🌎🌏🌙🌞🌝🌛⭐🌈☀⛅☁🌧⛈🌩❄☃⛄🌊"],
   },
   {
     key: "objects",
-    icon: "💡",
     items: [..."⌚📱💻⌨🖥🖨🖱💽💾💿📀📷📸📹🎥📞☎📺📻🎙🎚🎛🧭⏱⏰⌛⏳📡🔋🔌💡🔦🕯💸💵💰💳💎⚖🔧🔨⚒🛠⛏🔩⚙🔑🗝🔒🔓🎁🎈🎉🎊🎀📦📫📝📌📍✂📎📏📐📚📖🔖🎧🎤🎬🎨🎸🎹🥁🎺🎷🎻"],
   },
   {
     key: "symbols",
-    icon: "❤️",
     items: [
       "❤️",
       ..."💖💗💓💞💕💘💝💟❣☮✝☪🕉☸✡🔯☯☦⛎♈♉♊♋♌♍♎♏♐♑♒♓🆔⚛✅☑✔❌❎➕➖➗➰➿〽✳✴❇‼⁉❓❔❕❗⚠🚫⛔📛🔞🔅🔆🔱⚜🔰♻🆗🆒🆕🆓🆙🔝🔜🔛🔚🔙🎵🎶💲💱©®™🔴🟠🟡🟢🔵🟣⚫⚪🟥🟧🟨🟩🟦🟪⬛⬜",
@@ -55,3 +48,9 @@ const CATEGORIES: { key: string; icon: string; items: string[] }[] = [
 
 /** Fără selectoarele de variantă rămase singure după despărțirea pe caractere; fără dubluri. */
 export const GCS_EMOJI = CATEGORIES.map((c) => ({ ...c, items: [...new Set(c.items.filter((e) => e !== "\uFE0F" && e !== "\u200D"))] }));
+
+/**
+ * Tab-ul „Emoticoane”: setul de bază, cele mai folosite (proiectul nu are emoticoane proprii, în imagini). Cele folosite
+ * recent de viewer se adaugă înaintea lor, din browser.
+ */
+export const GCS_EMOTICONS = [..."🙂😀😃😄😁😆😅😂🤣😊😉😍😘😋😎🤩🥳🤔😐🙄😏😴😮😲😳🥺😢😭😤😡🤬😱🤯🤗🤭👍👎👏🙌🙏💪👋🤝🔥💯✨🎉🏆"];

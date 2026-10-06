@@ -1,10 +1,12 @@
 import { FORUMS_ACP_SECTION } from "@gcs/modules";
-import { GcsCard } from "@gcs/ui";
+import { GcsCard, GcsIconPicker } from "@gcs/ui";
+import { resolveIcon } from "@gcs/ui/icon-registry";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
+import { GcsAcpTitle } from "../../_components/GcsAcpTitle";
 import { createForum } from "./actions";
 import { ForumTree } from "./ForumTree";
 
@@ -18,18 +20,21 @@ export default async function AcpForumsPage() {
   const t = await getTranslations("acp.forums");
   const forums = await services().db.forum.findMany({
     orderBy: [{ position: "asc" }, { id: "asc" }],
-    select: { id: true, parentId: true, type: true, name: true, slug: true, position: true },
+    select: { id: true, parentId: true, type: true, name: true, slug: true, position: true, icon: true },
   });
   const parents = forums.filter((f) => f.type !== "LINK");
+  // Iconița fiecărui forum se rezolvă aici: la client ajung doar datele SVG (fără pachetele Font Awesome).
+  const nodes = forums.map(({ icon, ...f }) => {
+    const def = resolveIcon(icon);
+    return { ...f, icon: def ? { prefix: def.prefix, iconName: def.iconName, icon: def.icon } : null };
+  });
 
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
-        {t("title")}
-      </h1>
+      <GcsAcpTitle icon="fa-solid fa-comments">{t("title")}</GcsAcpTitle>
       <GcsCard as="section" aria-label={t("tree")} style={{ padding: 16 }}>
         {/* Lista se reinițializează când se schimbă structura (ex. după „Creează”). */}
-        <ForumTree key={forums.map((f) => `${f.id}:${f.parentId}:${f.position}:${f.name}`).join(",")} forums={forums} />
+        <ForumTree key={forums.map((f) => `${f.id}:${f.parentId}:${f.position}:${f.name}:${f.icon ?? ""}`).join(",")} forums={nodes} />
       </GcsCard>
       <GcsCard as="section" aria-labelledby="gcs-forum-create" style={{ padding: 16, maxWidth: 560 }}>
         <h2 id="gcs-forum-create" className="gcs-acpWidget__title" style={{ marginBottom: 12 }}>
@@ -60,6 +65,15 @@ export default async function AcpForumsPage() {
                 </option>
               ))}
             </select>
+          </div>
+          <div className="gcs-field" role="group" aria-label={t("form.icon")}>
+            <span>{t("form.icon")}</span>
+            <GcsIconPicker
+              name="icon"
+              value={null}
+              searchUrl="/api/icons/search"
+              labels={{ search: t("form.iconSearch"), none: t("form.iconNone"), noResults: t("form.iconNoResults") }}
+            />
           </div>
           <label className="gcs-field">
             {t("form.linkUrl")}

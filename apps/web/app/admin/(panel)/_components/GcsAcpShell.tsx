@@ -1,10 +1,12 @@
 "use client";
 
-import { cx } from "@gcs/ui";
+import { faBars } from "@fortawesome/free-solid-svg-icons";
+import { cx, GcsIconSvg } from "@gcs/ui";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { GcsAcpAppRail } from "./GcsAcpAppRail";
 import { GcsAcpSubmenu } from "./GcsAcpSubmenu";
+import { ACP_APP_ICONS } from "./icons";
 import { activeApp, type GcsAcpNavApp, type GcsAcpNavSection } from "./types";
 
 type Props = {
@@ -49,6 +51,7 @@ export function GcsAcpShell({ apps, sections, labels, header, children }: Props)
         {currentSections.length > 0 && (
           <GcsAcpSubmenu
             title={currentLabel}
+            icon={current ? ACP_APP_ICONS[current] : undefined}
             navLabel={current ? (labels.submenuNav[current] ?? currentLabel) : currentLabel}
             sections={currentSections}
             pathname={pathname}
@@ -65,6 +68,7 @@ export function GcsAcpShell({ apps, sections, labels, header, children }: Props)
             onClick={() => setOpen((v) => !v)}
             style={{ margin: "12px 0 12px 16px" }}
           >
+            <GcsIconSvg icon={faBars} className="gcs-btn__icon" />
             {labels.openMenu}
           </button>
           <div style={{ flex: 1, minWidth: 0 }}>{header}</div>

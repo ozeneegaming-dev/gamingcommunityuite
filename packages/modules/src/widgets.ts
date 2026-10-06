@@ -1,12 +1,30 @@
 import { fieldsConfig, type GcsWidgetDef, type GcsWidgetField } from "@gcs/core";
+import { isGcsIcon } from "@gcs/ui/icon-registry";
 
 const ALL_ZONES = ["top", "bottom", "sidebar"] as const;
 const limitField = (max = 20): GcsWidgetField => ({ key: "limit", labelKey: "widgets.fields.limit", type: "number", min: 1, max });
+/** Iconița din titlul widget-ului, pe amplasare (gol = iconița widget-ului); validată cu registrul Font Awesome. */
+const iconField: GcsWidgetField = { key: "icon", labelKey: "widgets.fields.icon", type: "text", maxLength: 80 };
 
-/** Un widget cu config validat din câmpuri (vezi `fieldsConfig`). */
-export function widget(def: Omit<GcsWidgetDef, "config" | "zones"> & { zones?: GcsWidgetDef["zones"] }): GcsWidgetDef {
-  const fields = def.fields ?? [];
-  return { zones: ALL_ZONES, ...def, config: fieldsConfig(fields, def.defaultConfig) };
+/**
+ * Un widget cu config validat din câmpuri (vezi `fieldsConfig`). Implicit primește și câmpul `icon` (iconița din
+ * titlu, suprascrisă pe amplasare); `iconOverride: false` îl omite (widget-urile fără titlu de card).
+ */
+export function widget(def: Omit<GcsWidgetDef, "config" | "zones"> & { zones?: GcsWidgetDef["zones"]; iconOverride?: boolean }): GcsWidgetDef {
+  const { iconOverride = true, ...rest } = def;
+  const fields = [...(rest.fields ?? []), ...(iconOverride ? [iconField] : [])];
+  const defaultConfig = iconOverride ? { ...rest.defaultConfig, icon: "" } : rest.defaultConfig;
+  const base = fieldsConfig(fields, defaultConfig);
+  const config = iconOverride
+    ? (raw: unknown) => {
+        const out = base(raw);
+        if (!out) return null;
+        const icon = typeof out.icon === "string" ? out.icon.trim() : "";
+        if (icon && !isGcsIcon(icon)) return null;
+        return { ...out, icon };
+      }
+    : base;
+  return { zones: ALL_ZONES, ...rest, fields, defaultConfig, config };
 }
 
 /** Widget-urile de bază ale nucleului: anunțul, „Cine e online” și membrii noi. */
@@ -23,7 +41,7 @@ export const coreWidgets: GcsWidgetDef[] = [
     ],
   }),
   widget({ key: "core.online", labelKey: "widgets.core.online", icon: "fa-solid fa-signal", defaultConfig: {} }),
-  widget({ key: "core.statsPanel", labelKey: "widgets.core.statsPanel", icon: "fa-solid fa-chart-column", zones: ["top", "bottom"], defaultConfig: {} }),
+  widget({ key: "core.statsPanel", labelKey: "widgets.core.statsPanel", icon: "fa-solid fa-rocket", zones: ["top", "bottom"], defaultConfig: {} }),
   widget({ key: "core.onlineDay", labelKey: "widgets.core.onlineDay", icon: "fa-solid fa-clock", defaultConfig: {} }),
   widget({ key: "core.groupLegend", labelKey: "widgets.core.groupLegend", icon: "fa-solid fa-users-rectangle", defaultConfig: {} }),
   widget({ key: "core.newMembers", labelKey: "widgets.core.newMembers", icon: "fa-solid fa-user-plus", defaultConfig: { limit: 5 }, fields: [limitField()] }),
@@ -62,6 +80,8 @@ export const chatWidgets: GcsWidgetDef[] = [
     key: "chat.shoutbox",
     labelKey: "widgets.chat.shoutbox",
     icon: "fa-solid fa-comment-dots",
+    // Shoutbox-ul își randează singur antetul (camera de chat), fără titlul comun al widget-urilor.
+    iconOverride: false,
     defaultConfig: { channel: "" },
     fields: [{ key: "channel", labelKey: "widgets.fields.channel", type: "select", optionsFrom: "chat.channels" }],
   }),

@@ -246,7 +246,7 @@
         "logs": "Systemprotokolle",
         "cache": "Cache leeren",
         "conversions": "Umrechnungen",
-        "import": "IPS/Indungi import",
+        "import": "Import von einer anderen Plattform",
         "settings_languages": "Sprachen & Übersetzungen"
       },
       "members": {
@@ -1036,7 +1036,62 @@
       "announcements": "Globale Ankündigungen",
       "noAnnouncements": "Keine aktiven Ankündigungen.",
       "noExpiry": "bis zum entfernen",
-      "display": "Anzeige, Grenzen und Inhalt"
+      "display": "Anzeige, Grenzen und Inhalt",
+      "form": {
+        "tabGeneral": "Allgemein",
+        "tabAdvanced": "Erweitert",
+        "tabPermissions": "Berechtigungen",
+        "enabled": "Chatbox aktivieren",
+        "enabledHint": "Der gleiche Schalter wie in ACP → System → Anwendungen: Beim Ausschalten verschwindet der Chat aus dem Menü, der Startseite und /chat.",
+        "enabledNoRight": "Nur mitarbeiter mit ACP → System → Anwendungen können den Chat ein- oder ausschalten.",
+        "timeFormat": "Zeitformat",
+        "required": "ERFORDERLICH",
+        "newestOnTop": "Neuere Nachrichten oben",
+        "newestOnTopHint": "Die Eingabe wird über der Liste angezeigt und die neuesten Nachrichten kommen zuerst.",
+        "showRules": "Link zu Regeln anzeigen",
+        "showRulesHint": "Die regeln werden in einem fenster über die schaltfläche \"regeln\" im chat-header geöffnet (nur wenn der text unten nicht leer ist).",
+        "rules": "Regeltext",
+        "rulesHint": "Leere = kein \"Regeln\"-Button.",
+        "hideAvatars": "Verstecke Avatare",
+        "minHeight": "Standardmindesthöhe",
+        "minHeightHint": "Höhe der Nachrichtenliste auf /chat, in Pixeln (120-1200).",
+        "hideEnterMobile": "Verstecken Sie den Enter-Button auf dem Handy",
+        "hideEnterMobileHint": "Auf Telefonen wird die Nachricht mit der Eingabetaste der Tastatur gesendet.",
+        "chatting": "Chatten",
+        "media": "Medien",
+        "messages": "Anzeigen von Meldungen",
+        "messagesHint": "Anzahl der Nachrichten, die beim Öffnen des Chats angezeigt werden (10-100).",
+        "interval": "Aktualisierungsintervall",
+        "intervalHint": "In Millisekunden, wenn die Live-Verbindung fehlt.\nZ. B. 10000 = 10 Sekunden",
+        "flood": "Hochwasserkontrolle",
+        "floodHint": "Pause zwischen zwei Nachrichten des gleichen Mitglieds, in Sekunden. Der strengere von diesem und dem Wert der Gruppe gilt; Moderatoren umgehen den Hochwasserschutz.",
+        "seconds": "sekunden",
+        "or": "oder",
+        "none": "Keine",
+        "unlimited": "Unbegrenzt",
+        "maxLength": "Max Chat Länge",
+        "maxLengthHint": "Die maximalen Zeichen einer Nachricht (unbegrenzt = 2000, der technische Cap).",
+        "maxEmoticons": "Max-Emoticons",
+        "maxEmoticonsHint": "Die maximale Anzahl von Emoticons in einer Nachricht.",
+        "allowImages": "Bilder erlauben",
+        "allowImagesHint": "Hochgeladene Bilder und Bilder von Links.",
+        "allowYoutube": "YouTube erlauben",
+        "voice": "Sprachnachrichten zulassen",
+        "voiceMax": "Maximale Sprachnachrichtenlänge",
+        "giphy": "GIPHY API-Schlüssel",
+        "giphyHint": "Ohne Taste sind die GIF-Taste und der Befehl /giphy ausgeschaltet.",
+        "permTitle": "{name}-Kanal",
+        "permIntro": "Wer liest und wer schreibt im Kanal. \"Moderate\" ist die chat.moderate Gruppe rechts (Nachrichten löschen, stummschalten, langsamen Modus ändern) und umgeht den Hochwasserschutz.",
+        "permCaption": "Chat Berechtigungen pro Gruppe",
+        "permGroup": "Gruppe",
+        "permRead": "Lesen",
+        "permWrite": "Schreiben",
+        "permModerate": "Moderat",
+        "permNoRight": "Nur Mitarbeiter, die Gruppen bearbeiten können (ACP → Mitglieder → Gruppen), können diese Berechtigungen ändern.",
+        "permNoGeneral": "Der allgemeine Kanal existiert nicht; die Berechtigungen der anderen Kanäle befinden sich in der Kanalliste.",
+        "permFull": "Die vollständige Matrix des Kanals (mit Vererbung)",
+        "permChannels": "Kanäle und deren Berechtigungen"
+      }
     },
     "notifications": {
       "title": "Benachrichtigungen",
@@ -1288,7 +1343,9 @@
       "allow_youtube": "YouTube-Videos zulassen",
       "voice_enabled": "Sprachnachrichten zulassen",
       "voice_max_seconds": "Maximale Sprachnachrichtenlänge (Sekunden)",
-      "giphy_key": "GIPHY API-Schlüssel (ohne Schlüssel, /giphy ist aus)"
+      "giphy_key": "GIPHY API-Schlüssel (ohne Schlüssel, /giphy ist aus)",
+      "show_rules": "Zeigen Sie den Regellink im Chat-Header an",
+      "flood_seconds": "Hochwassersteuerung (Sekunden zwischen Nachrichten, 0 = keine)"
     },
     "i18n": {
       "locales": "Sprachen, die den Mitgliedern angeboten werden",
@@ -1547,7 +1604,7 @@
         "demoHint": "Beispielkategorien und Foren, um zu sehen, wie es aussieht (Foren kommen in Stufe 2).",
         "empty": "Keine Daten",
         "emptyHint": "Fangen Sie bei Null an.",
-        "import": "IPS/Indungi import",
+        "import": "Import von einer anderen Plattform",
         "importHint": "Verfügbar in einem späteren Stadium."
       },
       "run": {
@@ -1715,7 +1772,15 @@
       "xpTo": "{points} von {next} XP zum {rank}-Rang",
       "xpMax": "{points} XP, oberster Rang",
       "badges": "{count, plural, one {# Abzeichen} other {# Abzeichen}}",
-      "joined": "Mitglied seit {date}"
+      "joined": "Mitglied seit {date}",
+      "statusOnline": "Online",
+      "statusOffline": "Offline",
+      "rankLevel": "Rangstufe: {level}",
+      "topics": "themen",
+      "likes": "likes",
+      "memberSince": "Mitglied seit:",
+      "status": "Status:",
+      "motto": "Motto"
     },
     "poll": {
       "votes": "{count, plural, one {# Abstimmung} other {# Stimmen}}",
@@ -1784,7 +1849,16 @@
       "newPosts": "{count} neue Posts",
       "newPost": "1 neue stelle",
       "show": "show"
-    }
+    },
+    "quoteShort": "Zitieren",
+    "quickEdit": "Quick Edit",
+    "like": "Wie",
+    "liked": "Gefällt mir",
+    "moreShort": "Mehr…",
+    "reactedYou": "Dir gefiel dieser Post.",
+    "reactedYouAndOthers": "Ihnen und {count, plural, one {# andere Person} other {# andere}} hat dieser Beitrag gefallen.",
+    "reactedCount": "{count, plural, one {# Person} other {# Menschen}} mochte diesen Beitrag.",
+    "quickReply": "Schnelle Antwort"
   },
   "newTopic": {
     "title": "Neues Thema in {forum}",
@@ -2031,6 +2105,17 @@
         "1h": "1 stunde",
         "1d": "1 tag",
         "forever": "Dauerhaft"
+      },
+      "settings": "Chat-Einstellungen",
+      "settingsAcp": "Chat-Einstellungen (ACP)",
+      "prefSound": "Sound für neue Nachrichten",
+      "prefAvatars": "Avatare anzeigen",
+      "picker": {
+        "emoticons": "Emoticons",
+        "emoji": "Emoji",
+        "recent": "Kürzlich verwendet",
+        "popular": "Populär",
+        "categories": "Emojikategorien"
       }
     }
   },
@@ -2129,7 +2214,8 @@
       "title": "Titel",
       "body": "Text",
       "period": "Zeitraum",
-      "channel": "Chat-Raum"
+      "channel": "Chat-Raum",
+      "icon": "Icon (z. B. fa-solid fa-star; leer = standard)"
     },
     "periods": {
       "week": "diese woche",
@@ -2196,7 +2282,23 @@
       "members": "Mitglieder",
       "vip": "VIP-Mitglieder"
     },
-    "allOnline": "Alle Online-Mitglieder ansehen"
+    "allOnline": "Alle Online-Mitglieder ansehen",
+    "panel": {
+      "title": "Forenstatistik und Gruppenlegende",
+      "collapse": "Kollapstafel",
+      "expand": "Erweiterungspanel",
+      "newMember": "Neues Mitglied",
+      "onlineTotal": "{count, plural, one {# Benutzer insgesamt:} other {#-Benutzer insgesamt, einschließlich:}}",
+      "members": "{count, plural, one {# Mitglied} other {# Mitglieder}}",
+      "anonymous": "{count} anonym",
+      "guests": "{count, plural, one {# Gast} other {# Gäste}}",
+      "onlineList": "Liste der angemeldeten Benutzer",
+      "seeAll": "Siehe vollständige Liste",
+      "daySummary": "Aktive Mitglieder in den letzten 24 Stunden",
+      "dayList": "Liste der kürzlich aktiven Benutzer",
+      "dayNobody": "Keine sichtbaren Mitglieder in den letzten 24 Stunden aktiv.",
+      "legendTitle": "Legende der Mitgliedsgruppe"
+    }
   },
   "members": {
     "title": "Mitglieder",

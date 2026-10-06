@@ -1,5 +1,6 @@
 import { sanitizeContentHtml, type GcsActor } from "@gcs/core";
-import { GcsBadge, GcsButton, GcsCard, GcsUserLink } from "@gcs/ui";
+import type { GcsUserRef } from "@gcs/modules";
+import { GcsAvatar, GcsBadge, GcsButton, GcsCard, GcsUserLink } from "@gcs/ui";
 import Link from "next/link";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
@@ -10,22 +11,53 @@ import { GcsShoutbox } from "../chat/GcsShoutbox";
 import { GcsRelTime } from "../forum/GcsRelTime";
 import { GcsWhoIsOnline } from "../forum/GcsWhoIsOnline";
 import { GcsGroupLegend, GcsStatsPanel, GcsWhoWasOnline } from "./GcsStatsPanel";
+import { GcsWidgetTitle, widgetIcon } from "./GcsWidgetTitle";
 
 export type GcsWidgetRenderProps = { id: string; config: Record<string, unknown>; actor: GcsActor };
 type Renderer = (p: GcsWidgetRenderProps) => Promise<ReactNode>;
 
 const limitOf = (config: Record<string, unknown>, fallback: number) => (typeof config.limit === "number" ? config.limit : fallback);
 
-/** Cardul comun al widget-urilor (titlu + conținut), ca în coloana din dreapta a machetei Main. */
-function GcsWidgetCard({ id, type, title, children, testId }: { id: string; type: string; title: string; children: ReactNode; testId?: string }) {
+type CardProps = { id: string; type: string; config: Record<string, unknown>; title: string; extra?: ReactNode; children: ReactNode; testId?: string };
+
+/**
+ * Cardul comun al widget-urilor (titlul cu iconița + conținut), ca în coloana din dreapta a machetei Main.
+ * Iconița: cea aleasă pe amplasare (`config.icon`), altfel cea a widget-ului.
+ */
+function GcsWidgetCard({ id, type, config, title, extra, children, testId }: CardProps) {
   const headingId = `gcs-widget-${id}`;
   return (
     <section className="gcs-card gcs-sideCard gcs-widget" aria-labelledby={headingId} data-widget={type} data-testid={testId}>
-      <h2 id={headingId} className="gcs-display gcs-sideCard__title">
+      <GcsWidgetTitle id={headingId} icon={widgetIcon(type, config)} extra={extra}>
         {title}
-      </h2>
+      </GcsWidgetTitle>
       {children}
     </section>
+  );
+}
+
+/** Avatarul unui rând din liste (ca în referință): rama membrului, link spre profil; autorul șters = avatar gol. */
+function RowAvatar({ user }: { user: GcsUserRef | null }) {
+  if (!user) return <span className="gcs-avatar gcs-avatar--s gcs-widgetRow__avatar" aria-hidden="true" />;
+  return (
+    <a href={memberHref(user)} className="gcs-widgetRow__avatar" tabIndex={-1} aria-hidden="true">
+      <GcsAvatar name={user.name} size="s" {...(user.image ? { src: user.image } : {})} {...(user.frameKey ? { frame: user.frameKey } : {})} />
+    </a>
+  );
+}
+
+/** Rândul de meta: autorul în stilul grupului · data relativă (sau alt text). */
+function RowMeta({ user, children }: { user: GcsUserRef | null; children: ReactNode }) {
+  return (
+    <span className="gcs-widgetRow__meta">
+      {user && (
+        <>
+          <GcsUserLink userId={user.id} name={user.name} nameKey={user.nameKey} href={memberHref(user)} />
+          <span aria-hidden="true">·</span>
+        </>
+      )}
+      {children}
+    </span>
   );
 }
 
@@ -55,7 +87,9 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
           <GcsBadge tone="accent" style={{ alignSelf: "flex-start" }}>
             {t("announcement.badge")}
           </GcsBadge>
-          <h1 className="gcs-display gcs-announcement__title">{title}</h1>
+          <GcsWidgetTitle as="h1" icon={widgetIcon("core.announcement", config)} variant="hero" className="gcs-announcement__title">
+            {title}
+          </GcsWidgetTitle>
           {body ? (
             <div className="gcs-announcement__body gcs-prose" dangerouslySetInnerHTML={{ __html: announcementHtml(body) }} />
           ) : (
@@ -71,44 +105,61 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
     );
   },
 
-  "core.online": async () => {
+  "core.online": async ({ id, config }) => {
     const [view, t, locale] = await Promise.all([onlineView(), getTranslations("online"), getLocale()]);
+    const headingId = `gcs-widget-${id}`;
     return (
       <GcsWhoIsOnline
         initial={view}
         locale={locale}
+        headingId={headingId}
+        heading={
+          <GcsWidgetTitle id={headingId} icon={widgetIcon("core.online", config)}>
+            {t("title")}
+          </GcsWidgetTitle>
+        }
         labels={{ title: t("title"), summary: t.raw("summary") as string, record: t.raw("record") as string, nobody: t("nobody") }}
       />
     );
   },
 
-  "core.statsPanel": async ({ id }) => <GcsStatsPanel id={id} />,
-  "core.onlineDay": async ({ id }) => <GcsWhoWasOnline id={id} />,
-  "core.groupLegend": async ({ id }) => <GcsGroupLegend id={id} />,
+  "core.statsPanel": async ({ id, config }) => <GcsStatsPanel id={id} config={config} />,
+  "core.onlineDay": async ({ id, config }) => <GcsWhoWasOnline id={id} config={config} />,
+  "core.groupLegend": async ({ id, config }) => <GcsGroupLegend id={id} config={config} />,
 
   "core.newMembers": async ({ id, config }) => {
     const [t, list] = await Promise.all([getTranslations("widgets"), services().forumQueries.newMembers(limitOf(config, 5))]);
     return (
-      <GcsWidgetCard id={id} type="core.newMembers" title={t("core.newMembers")} testId="gcs-widget-new-members">
-        <ul className="gcs-recentList">
-          {list.map((m) => (
-            <li key={m.user.id}>
-              <GcsUserLink userId={m.user.id} name={m.user.name} nameKey={m.user.nameKey} href={memberHref(m.user)} />
-              <span>
-                <GcsRelTime at={m.joinedAt} />
-              </span>
-            </li>
-          ))}
-        </ul>
+      <GcsWidgetCard id={id} type="core.newMembers" config={config} title={t("core.newMembers")} testId="gcs-widget-new-members">
+        {list.length === 0 ? (
+          <p className="gcs-sideCard__line">{t("empty")}</p>
+        ) : (
+          <ul className="gcs-widgetList">
+            {list.map((m) => (
+              <li key={m.user.id} className="gcs-widgetRow">
+                <RowAvatar user={m.user} />
+                <span className="gcs-widgetRow__body">
+                  <span className="gcs-widgetRow__title">
+                    <GcsUserLink userId={m.user.id} name={m.user.name} nameKey={m.user.nameKey} href={memberHref(m.user)} />
+                  </span>
+                  <RowMeta user={null}>
+                    <GcsRelTime at={m.joinedAt} />
+                  </RowMeta>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </GcsWidgetCard>
     );
   },
 
-  "forums.stats": async ({ id }) => {
+  "forums.stats": async ({ id, config }) => {
     const [t, format, stats] = await Promise.all([getTranslations("forum.sidebar"), getFormatter(), services().forumQueries.stats()]);
     const n = (v: number) => format.number(v);
+    const newest = stats.newestMember;
     return (
-      <GcsWidgetCard id={id} type="forums.stats" title={t("stats")}>
+      <GcsWidgetCard id={id} type="forums.stats" config={config} title={t("stats")}>
         <dl className="gcs-statGrid">
           <div>
             <dt>{t("topics")}</dt>
@@ -123,11 +174,16 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
             <dd>{n(stats.members)}</dd>
           </div>
         </dl>
-        {stats.newestMember && (
-          <p className="gcs-sideCard__line">
-            {t("newest")}:{" "}
-            <GcsUserLink userId={stats.newestMember.id} name={stats.newestMember.name} nameKey={stats.newestMember.nameKey} href={memberHref(stats.newestMember)} />
-          </p>
+        {newest && (
+          <div className="gcs-widgetRow gcs-widgetRow--newest">
+            <RowAvatar user={newest} />
+            <span className="gcs-widgetRow__body">
+              <span className="gcs-widgetRow__meta">{t("newest")}</span>
+              <span className="gcs-widgetRow__title">
+                <GcsUserLink userId={newest.id} name={newest.name} nameKey={newest.nameKey} href={memberHref(newest)} />
+              </span>
+            </span>
+          </div>
         )}
       </GcsWidgetCard>
     );
@@ -136,22 +192,21 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
   "forums.recentTopics": async ({ id, config, actor }) => {
     const [t, recent] = await Promise.all([getTranslations("forum.sidebar"), services().forumQueries.recentTopics(actor, limitOf(config, 6))]);
     return (
-      <GcsWidgetCard id={id} type="forums.recentTopics" title={t("recent")}>
+      <GcsWidgetCard id={id} type="forums.recentTopics" config={config} title={t("recent")}>
         {recent.length === 0 ? (
           <p className="gcs-sideCard__line">{t("noRecent")}</p>
         ) : (
-          <ul className="gcs-recentList">
+          <ul className="gcs-widgetList">
             {recent.map((r) => (
-              <li key={r.id}>
-                <Link href={topicHref(r)}>{r.title}</Link>
-                <span>
-                  {r.user && (
-                    <>
-                      <GcsUserLink userId={r.user.id} name={r.user.name} nameKey={r.user.nameKey} href={memberHref(r.user)} />
-                      {" · "}
-                    </>
-                  )}
-                  <GcsRelTime at={r.lastPostAt} />
+              <li key={r.id} className="gcs-widgetRow">
+                <RowAvatar user={r.user} />
+                <span className="gcs-widgetRow__body">
+                  <Link href={topicHref(r)} className="gcs-widgetRow__title">
+                    {r.title}
+                  </Link>
+                  <RowMeta user={r.user}>
+                    <GcsRelTime at={r.lastPostAt} />
+                  </RowMeta>
                 </span>
               </li>
             ))}
@@ -164,23 +219,22 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
   "forums.recentPosts": async ({ id, config, actor }) => {
     const [t, posts] = await Promise.all([getTranslations("widgets"), services().forumQueries.recentPosts(actor, limitOf(config, 5))]);
     return (
-      <GcsWidgetCard id={id} type="forums.recentPosts" title={t("forums.recentPosts")}>
+      <GcsWidgetCard id={id} type="forums.recentPosts" config={config} title={t("forums.recentPosts")}>
         {posts.length === 0 ? (
           <p className="gcs-sideCard__line">{t("empty")}</p>
         ) : (
-          <ul className="gcs-recentList">
+          <ul className="gcs-widgetList">
             {posts.map((p) => (
-              <li key={p.id}>
-                <Link href={postHref(p.topicId, p.id)}>{p.topicTitle}</Link>
-                {p.excerpt && <span className="gcs-widget__excerpt">{p.excerpt}</span>}
-                <span>
-                  {p.user && (
-                    <>
-                      <GcsUserLink userId={p.user.id} name={p.user.name} nameKey={p.user.nameKey} href={memberHref(p.user)} />
-                      {" · "}
-                    </>
-                  )}
-                  <GcsRelTime at={p.at} />
+              <li key={p.id} className="gcs-widgetRow">
+                <RowAvatar user={p.user} />
+                <span className="gcs-widgetRow__body">
+                  <Link href={postHref(p.topicId, p.id)} className="gcs-widgetRow__title">
+                    {p.topicTitle}
+                  </Link>
+                  {p.excerpt && <span className="gcs-widget__excerpt">{p.excerpt}</span>}
+                  <RowMeta user={p.user}>
+                    <GcsRelTime at={p.at} />
+                  </RowMeta>
                 </span>
               </li>
             ))}
@@ -194,15 +248,23 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
     const period = config.period === "week" || config.period === "all" ? config.period : "month";
     const [t, list] = await Promise.all([getTranslations("widgets"), services().forumQueries.topPosters(period, limitOf(config, 5))]);
     return (
-      <GcsWidgetCard id={id} type="forums.topPosters" title={`${t("forums.topPosters")} · ${t(`periods.${period}`)}`}>
+      <GcsWidgetCard id={id} type="forums.topPosters" config={config} title={t("forums.topPosters")} extra={t(`periods.${period}`)}>
         {list.length === 0 ? (
           <p className="gcs-sideCard__line">{t("empty")}</p>
         ) : (
-          <ol className="gcs-rankList">
-            {list.map((r) => (
-              <li key={r.user.id}>
-                <GcsUserLink userId={r.user.id} name={r.user.name} nameKey={r.user.nameKey} href={memberHref(r.user)} />
-                <span>{t("posts", { count: r.posts })}</span>
+          <ol className="gcs-widgetList gcs-widgetList--rank">
+            {list.map((r, i) => (
+              <li key={r.user.id} className="gcs-widgetRow">
+                <span className="gcs-widgetRow__rank" aria-hidden="true">
+                  {i + 1}
+                </span>
+                <RowAvatar user={r.user} />
+                <span className="gcs-widgetRow__body">
+                  <span className="gcs-widgetRow__title">
+                    <GcsUserLink userId={r.user.id} name={r.user.name} nameKey={r.user.nameKey} href={memberHref(r.user)} />
+                  </span>
+                  <span className="gcs-widgetRow__meta">{t("posts", { count: r.posts })}</span>
+                </span>
               </li>
             ))}
           </ol>
@@ -214,22 +276,21 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
   "forums.featuredTopics": async ({ id, config, actor }) => {
     const [t, topics] = await Promise.all([getTranslations("widgets"), services().forumQueries.featuredTopics(actor, limitOf(config, 5))]);
     return (
-      <GcsWidgetCard id={id} type="forums.featuredTopics" title={t("forums.featuredTopics")}>
+      <GcsWidgetCard id={id} type="forums.featuredTopics" config={config} title={t("forums.featuredTopics")}>
         {topics.length === 0 ? (
           <p className="gcs-sideCard__line">{t("empty")}</p>
         ) : (
-          <ul className="gcs-recentList">
+          <ul className="gcs-widgetList">
             {topics.map((tp) => (
-              <li key={tp.id}>
-                <Link href={topicHref(tp)}>{tp.title}</Link>
-                <span>
-                  {tp.user && (
-                    <>
-                      <GcsUserLink userId={tp.user.id} name={tp.user.name} nameKey={tp.user.nameKey} href={memberHref(tp.user)} />
-                      {" · "}
-                    </>
-                  )}
-                  <GcsRelTime at={tp.createdAt} />
+              <li key={tp.id} className="gcs-widgetRow">
+                <RowAvatar user={tp.user} />
+                <span className="gcs-widgetRow__body">
+                  <Link href={topicHref(tp)} className="gcs-widgetRow__title">
+                    {tp.title}
+                  </Link>
+                  <RowMeta user={tp.user}>
+                    <GcsRelTime at={tp.createdAt} />
+                  </RowMeta>
                 </span>
               </li>
             ))}

@@ -5,6 +5,7 @@ import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { assignRoleToGroup, assignRoleToUser, createRole, deleteRole, saveRolePermissions, unassignRole } from "./actions";
+import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.roles"))("title") };
@@ -32,11 +33,11 @@ export default async function AcpRolesPage() {
 
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-user-lock">
         {t("title")}
-      </h1>
+      </GcsAcpTitle>
       <GcsCard style={{ padding: 16, maxWidth: 520 }}>
-        <GcsActionForm action={createRole} submitLabel={t("create.submit")}>
+        <GcsActionForm action={createRole} submitLabel={t("create.submit")} submitKind="create">
           <label className="gcs-field">
             {t("create.name")}
             <input className="gcs-input" name="name" required maxLength={64} />
@@ -47,9 +48,9 @@ export default async function AcpRolesPage() {
       {roles.map((role) => (
         <GcsCard key={role.id} as="section" aria-label={role.name}>
           <div className="gcs-acpWidget__header">
-            <h2 className="gcs-acpWidget__title">{role.name}</h2>
+            <h2 className="gcs-acpWidget__title"><GcsAcpTitleIcon name="fa-solid fa-id-badge" />{role.name}</h2>
             {!role.isRoot && (
-              <GcsActionForm compact variant="ghost" action={deleteRole.bind(null, role.id)} submitLabel={t("delete")} confirm={t("delete")} />
+              <GcsActionForm compact variant="ghost" action={deleteRole.bind(null, role.id)} submitLabel={t("delete")} submitKind="delete" confirm={t("delete")} />
             )}
           </div>
           <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 16 }}>
@@ -58,7 +59,7 @@ export default async function AcpRolesPage() {
             ) : (
               <details>
                 <summary style={{ cursor: "pointer", fontWeight: 600, minHeight: 32 }}>{t("matrix.title")}</summary>
-                <GcsActionForm action={saveRolePermissions.bind(null, role.id)} submitLabel={t("matrix.save")} style={{ marginTop: 12 }}>
+                <GcsActionForm action={saveRolePermissions.bind(null, role.id)} submitLabel={t("matrix.save")} submitKind="save" style={{ marginTop: 12 }}>
                   <div className="gcs-table">
                     <table className="gcs-table__table">
                       <thead>
@@ -121,7 +122,7 @@ export default async function AcpRolesPage() {
                       <strong>{target}</strong>
                     </span>
                     {!role.isRoot && (
-                      <GcsActionForm compact variant="ghost" action={unassignRole.bind(null, a.id)} submitLabel={t("assignments.remove", { target })} />
+                      <GcsActionForm compact variant="ghost" action={unassignRole.bind(null, a.id)} submitLabel={t("assignments.remove", { target })} submitKind="remove" />
                     )}
                   </div>
                 );
@@ -130,7 +131,7 @@ export default async function AcpRolesPage() {
 
             {!role.isRoot && (
               <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-                <GcsActionForm action={assignRoleToGroup.bind(null, role.id)} submitLabel={t("assignments.addGroup")} variant="ghost">
+                <GcsActionForm action={assignRoleToGroup.bind(null, role.id)} submitLabel={t("assignments.addGroup")} submitKind="create" variant="ghost">
                   <label className="gcs-field">
                     {t("assignments.group")}
                     <select className="gcs-input" name="groupId">
@@ -142,7 +143,7 @@ export default async function AcpRolesPage() {
                     </select>
                   </label>
                 </GcsActionForm>
-                <GcsActionForm action={assignRoleToUser.bind(null, role.id)} submitLabel={t("assignments.addUser")} variant="ghost">
+                <GcsActionForm action={assignRoleToUser.bind(null, role.id)} submitLabel={t("assignments.addUser")} submitKind="create" variant="ghost">
                   <label className="gcs-field">
                     {t("assignments.user")}
                     <input className="gcs-input" name="username" required />

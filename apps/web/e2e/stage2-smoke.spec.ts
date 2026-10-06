@@ -86,7 +86,7 @@ test("etapa 2: topic cu sondaj → aprobare → răspuns cu citat, imagine și m
   let replyId = 0;
   await test.step("alt membru răspunde cu citat, o imagine atașată și o mențiune", async () => {
     await helper.goto(topicUrl);
-    await helper.getByTestId("gcs-post").first().getByRole("button", { name: "Citează" }).click();
+    await helper.getByTestId("gcs-post").first().getByRole("button", { name: "Citat", exact: true }).click();
     await helper.locator("#reply .gcs-editor__content").click();
     await helper.keyboard.press("Control+End");
     await helper.keyboard.type("Reinstalează driverele, ");
@@ -114,7 +114,8 @@ test("etapa 2: topic cu sondaj → aprobare → răspuns cu citat, imagine și m
   await test.step("autorul dă Like (+1 reputație) și marchează răspunsul drept rezolvare", async () => {
     await newbie.goto(topicUrl);
     const reply = newbie.locator(`#post-${replyId}`);
-    await reply.getByRole("button", { name: "Reacționează", exact: true }).click();
+    await reply.getByTestId("gcs-post-more").click();
+    await reply.getByRole("menuitem", { name: "Reacționează", exact: true }).click();
     await reply.getByRole("button", { name: "Reacționează cu Like" }).click();
     await expect(reply.getByRole("button", { name: "Like: 1" })).toBeVisible();
     await reply.getByRole("button", { name: "Marchează ca rezolvare" }).click();

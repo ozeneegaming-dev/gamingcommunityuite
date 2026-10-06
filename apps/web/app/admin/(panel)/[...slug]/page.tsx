@@ -1,9 +1,11 @@
 import { GcsButton, GcsCard } from "@gcs/ui";
+import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { requireAcpPanel } from "@/lib/acp";
+import { GcsAcpTitle } from "../_components/GcsAcpTitle";
 
 type Props = { params: Promise<{ slug: string[] }> };
 
@@ -34,11 +36,11 @@ export default async function AcpComingSoonPage({ params }: Props) {
   const t = await getTranslations();
   return (
     <GcsCard as="section" style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 12, alignItems: "flex-start" }}>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon={item.icon}>
         {t.has(item.labelKey) ? t(item.labelKey) : item.key}
-      </h1>
+      </GcsAcpTitle>
       <p style={{ margin: 0, color: "var(--gcs-muted)", fontSize: 15 }}>{t("acp.comingSoon.body")}</p>
-      <GcsButton variant="ghost" asChild>
+      <GcsButton variant="ghost" asChild icon={<GcsIcon name="fa-solid fa-arrow-left" />}>
         <Link href="/admin">{t("acp.comingSoon.back")}</Link>
       </GcsButton>
     </GcsCard>

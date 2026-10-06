@@ -59,18 +59,23 @@ const chatSetting = (key: string, type: GcsSettingDef["type"], value: unknown, e
 });
 
 /**
- * Setările chat-ului (ACP → Comunitate → Chat → Setări), după modelul Chatbox-ului din IPS: afișarea (ora, ordinea,
- * avatarele, înălțimea), limitele (mesaje, caractere, emoticoane) și conținutul permis (imagini, YouTube, GIPHY, voce).
+ * Setările chat-ului (ACP → Comunitate → Chat → Setări), după chatbox-ul de referință: afișarea (ora, ordinea,
+ * regulile, avatarele, înălțimea), limitele (mesaje, flood, caractere, emoticoane) și conținutul permis (imagini,
+ * YouTube, GIPHY, voce).
  */
 export const CHAT_DISPLAY_SETTINGS: GcsSettingDef[] = [
   chatSetting("time_format", "string", "24h", { options: ["24h", "12h"], validate: (v) => (v === "24h" || v === "12h" ? null : "invalid_choice") }),
   chatSetting("newest_on_top", "boolean", false),
+  // Linkul „Reguli” din antetul chat-ului (apare doar dacă textul regulilor nu e gol).
+  chatSetting("show_rules", "boolean", true),
   chatSetting("rules", "string", "", { multiline: true, validate: (v) => (typeof v === "string" && v.length <= 5000 ? null : "invalid_length") }),
   chatSetting("hide_avatars", "boolean", false),
   chatSetting("min_height", "number", 420, { validate: int(120, 1200) }),
   chatSetting("hide_enter_mobile", "boolean", false),
   chatSetting("messages_to_display", "number", 30, { validate: int(10, 100) }),
   chatSetting("poll_interval", "number", 30, { validate: int(5, 600) }),
+  // Flood control global (secunde, 0 = niciunul): se aplică valoarea mai strictă dintre el și `chat.flood_seconds` al grupului.
+  chatSetting("flood_seconds", "number", 0, { validate: int(0, 3600) }),
   chatSetting("max_length", "number", 500, { validate: int(0, 2000) }),
   chatSetting("max_emoticons", "number", 5, { validate: int(0, 100) }),
   chatSetting("allow_images", "boolean", true),
@@ -98,9 +103,22 @@ const acpMenu: GcsAcpMenuSection[] = [
   {
     app: "community",
     title: "acp.menu.community.chat_group",
+    icon: "fa-solid fa-comment-dots",
     items: [
-      { key: CHAT_ACP_CHANNELS, labelKey: "acp.menu.community.chat_channels", href: "/admin/community/chat", section: CHAT_ACP_CHANNELS },
-      { key: CHAT_ACP_SETTINGS, labelKey: "acp.menu.community.chat_settings", href: "/admin/community/chat/settings", section: CHAT_ACP_SETTINGS },
+      {
+        key: CHAT_ACP_CHANNELS,
+        labelKey: "acp.menu.community.chat_channels",
+        href: "/admin/community/chat",
+        section: CHAT_ACP_CHANNELS,
+        icon: "fa-solid fa-hashtag",
+      },
+      {
+        key: CHAT_ACP_SETTINGS,
+        labelKey: "acp.menu.community.chat_settings",
+        href: "/admin/community/chat/settings",
+        section: CHAT_ACP_SETTINGS,
+        icon: "fa-solid fa-gear",
+      },
     ],
   },
 ];

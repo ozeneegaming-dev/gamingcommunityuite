@@ -1,3 +1,4 @@
+import { GcsIcon } from "@gcs/ui/icons";
 import { getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
 import { services } from "@/lib/services";
@@ -11,7 +12,7 @@ export default async function LoginModal() {
   const { settings } = services();
   const [siteName, discordClientId] = await Promise.all([settings.get<string>("site.name"), settings.get<string>("auth.discord_client_id")]);
   return (
-    <GcsAuthModal title={t("title")} subtitle={t("subtitle", { site: siteName })} closeLabel={tc("closeMenu")}>
+    <GcsAuthModal title={t("title")} subtitle={t("subtitle", { site: siteName })} closeLabel={tc("closeMenu")} icon={<GcsIcon name="fa-solid fa-right-to-bracket" />}>
       <LoginForm discordEnabled={discordClientId !== ""} initialError={null} />
     </GcsAuthModal>
   );

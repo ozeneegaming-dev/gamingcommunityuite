@@ -1,5 +1,6 @@
 import { GcsRateLimited, GcsValidationError } from "@gcs/core";
 import { GcsButton, GcsCard, GcsUserLink } from "@gcs/ui";
+import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
@@ -59,7 +60,10 @@ export default async function SearchPage({ searchParams }: Props) {
 
   return (
     <>
-      <h1 className="gcs-display gcs-pageHeader__title">{t("title")}</h1>
+      <h1 className="gcs-display gcs-pageHeader__title">
+        <GcsIcon name="fa-solid fa-magnifying-glass" className="gcs-hIcon" />
+        {t("title")}
+      </h1>
       <form className="gcs-card gcs-formCard gcs-searchForm" method="get" role="search">
         <div className="gcs-field gcs-searchForm__q">
           <label className="gcs-field__label" htmlFor="gcs-search-q">
@@ -102,7 +106,7 @@ export default async function SearchPage({ searchParams }: Props) {
           <input id="gcs-search-since" className="gcs-input" name="since" type="date" defaultValue={since} />
         </div>
         <div>
-          <GcsButton variant="primary" type="submit">
+          <GcsButton variant="primary" type="submit" icon={<GcsIcon name="fa-solid fa-magnifying-glass" />}>
             {t("submit")}
           </GcsButton>
         </div>
@@ -115,10 +119,14 @@ export default async function SearchPage({ searchParams }: Props) {
       )}
       {result && (
         <section aria-live="polite" className="gcs-searchResults">
-          <p className="gcs-muted">{result.pagination.total === 0 ? t("none", { q }) : t("results", { count: result.pagination.total, q })}</p>
+          <p className="gcs-muted">
+            {result.pagination.total === 0 && <GcsIcon name="fa-regular fa-face-frown" className="gcs-emptyIcon" />}
+            {result.pagination.total === 0 ? t("none", { q }) : t("results", { count: result.pagination.total, q })}
+          </p>
           {result.results.map((r) => (
             <GcsCard key={`${r.topicId}-${r.postId}`} as="article" className="gcs-searchResult" data-testid="gcs-search-result">
               <h2 className="gcs-searchResult__title">
+                <GcsIcon name="fa-regular fa-file-lines" className="gcs-hIcon" />
                 <Link href={postHref(r.topicId, r.postId)}>{r.topicTitle}</Link>
               </h2>
               {/* Fragmentul vine sanitizat de server: doar <mark> e permis. */}

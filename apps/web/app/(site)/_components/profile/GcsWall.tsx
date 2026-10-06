@@ -1,7 +1,8 @@
 "use client";
 
 import type { GcsResult } from "@gcs/core";
-import { GcsButton } from "@gcs/ui";
+import { faEye, faEyeSlash, faFlag, faPaperPlane, faReply, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { GcsButton, GcsIconSvg } from "@gcs/ui";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useErrorMessage } from "@/lib/use-error-message";
@@ -66,7 +67,12 @@ export function GcsWallComposer({ profileUserId, parentId, labels, compact = fal
         onChange={(e) => setText(e.target.value)}
         data-testid={parentId ? "gcs-wall-reply-input" : "gcs-wall-input"}
       />
-      <GcsButton type="submit" variant={compact ? "ghost" : "primary"} disabled={pending || !text.trim()}>
+      <GcsButton
+        type="submit"
+        variant={compact ? "ghost" : "primary"}
+        icon={<GcsIconSvg icon={parentId ? faReply : faPaperPlane} />}
+        disabled={pending || !text.trim()}
+      >
         {parentId ? labels.reply : labels.post}
       </GcsButton>
       {error && (
@@ -109,11 +115,13 @@ export function GcsWallItemActions({
     <span className="gcs-wallItem__actions">
       {canManage && !hidden && (
         <button type="button" className="gcs-linkButton" disabled={pending} onClick={() => run(() => manageStatus({ statusId, action: "hide" }))}>
+          <GcsIconSvg icon={faEyeSlash} className="gcs-linkButton__icon" />
           {labels.hide}
         </button>
       )}
       {canModerate && hidden && (
         <button type="button" className="gcs-linkButton" disabled={pending} onClick={() => run(() => manageStatus({ statusId, action: "restore" }))}>
+          <GcsIconSvg icon={faEye} className="gcs-linkButton__icon" />
           {labels.restore}
         </button>
       )}
@@ -126,6 +134,7 @@ export function GcsWallItemActions({
             if (window.confirm(labels.confirmDelete)) run(() => manageStatus({ statusId, action: "delete" }));
           }}
         >
+          <GcsIconSvg icon={faTrash} className="gcs-linkButton__icon" />
           {labels.delete}
         </button>
       )}
@@ -139,6 +148,7 @@ export function GcsWallItemActions({
             if (reason && reason.trim().length >= 3) run(() => reportStatus({ statusId, reason: reason.trim() }));
           }}
         >
+          <GcsIconSvg icon={faFlag} className="gcs-linkButton__icon" />
           {labels.report}
         </button>
       )}

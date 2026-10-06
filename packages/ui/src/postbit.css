@@ -1,1 +1,661 @@
 /* Corecturi UI (2026-10-06): postbit-ul și acțiunile postării, după referința proprietarului. */
+/* Suprascrie regulile din forum.css (importat înainte); doar tokenuri de temă, ca tema deschisă să meargă. */
+
+/* ─── Postarea: două coloane (autorul, conținutul), fiecare un card propriu ──────────────────────────────── */
+
+.gcs-post {
+  gap: 10px;
+  padding: 10px;
+  align-items: stretch;
+}
+
+/* ─── Coloana autorului (postbit) ─────────────────────────────────────────────────────────────────────── */
+
+.gcs-post__author.gcs-postbit {
+  flex: 0 0 262px;
+  max-width: 262px;
+  box-sizing: border-box;
+  padding: 12px;
+  gap: 10px;
+  align-items: stretch;
+  text-align: left;
+  background: var(--gcs-surface2);
+  border: 1px solid var(--gcs-border);
+  border-radius: 12px;
+  min-width: 0;
+}
+
+.gcs-postbit__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 2px 0;
+  min-width: 0;
+}
+.gcs-postbit__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font: 800 12px var(--gcs-font-text);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gcs-muted);
+}
+.gcs-postbit__status--on {
+  color: var(--gcs-text);
+}
+.gcs-postbit__dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gcs-muted);
+  flex-shrink: 0;
+}
+.gcs-postbit__status--on .gcs-postbit__dot,
+.gcs-postbit__footStatus--on .gcs-postbit__dot {
+  background: var(--gcs-ok);
+  box-shadow: 0 0 8px var(--gcs-ok);
+}
+.gcs-postbit__handle {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gcs-text);
+}
+
+/* Avatarul pătrat cu rama (rama rămâne fixă aici: un pătrat rotit ar ieși din cadru; strălucirea se păstrează). */
+.gcs-postbit__profile {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 10px;
+  background: var(--gcs-bg);
+  border: 1px solid var(--gcs-border);
+  min-width: 0;
+}
+.gcs-postbit__avatar {
+  position: relative;
+  display: inline-flex;
+  width: 84px;
+  height: 84px;
+}
+.gcs-postbit__avatar > .gcs-avatarFrame,
+.gcs-postbit__avatar > .gcs-avatar {
+  width: 84px !important;
+  height: 84px !important;
+  border-radius: 10px;
+}
+.gcs-postbit__avatar .gcs-avatarFrame::before {
+  border-radius: 10px;
+  animation: none;
+}
+.gcs-postbit__avatar .gcs-avatar {
+  border-radius: 8px;
+}
+.gcs-postbit__avatar .gcs-avatar__img {
+  border-radius: inherit;
+  object-fit: cover;
+}
+
+.gcs-postbit__identity {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  min-width: 0;
+}
+.gcs-postbit .gcs-post__authorName {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 800 15px var(--gcs-font-display);
+  letter-spacing: 0.04em;
+}
+.gcs-postbit__secondary {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 800 13px var(--gcs-font-text);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gcs-text);
+}
+.gcs-postbit__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 4px 8px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 6px;
+  background: var(--gcs-surface);
+  font: 800 11px var(--gcs-font-text);
+  font-style: normal;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gcs-text);
+}
+.gcs-postbit__title > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-postbit__title svg {
+  flex-shrink: 0;
+  color: var(--gcs-muted);
+}
+.gcs-postbit__pips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  font-size: 10px;
+  color: var(--gcs-text);
+}
+
+/* Bara grupului: culoarea grupului (sau banner-ul validat), iconița și numele. */
+.gcs-postbit__group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 10px;
+  border-radius: 8px;
+  background: var(--gcs-surface);
+  border: 1px solid var(--gcs-border);
+  color: var(--gcs-text);
+  font: 800 13px var(--gcs-font-text);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: center;
+}
+.gcs-postbit__group > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-postbit__group--colored {
+  border-color: transparent;
+  color: #fff;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.25);
+}
+
+/* Rangul: iconița, numele, XP-ul, insignele (link spre tab-ul lor), bara de progres și ultimele 5 insigne. */
+.gcs-postbit__rankBox {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-surface);
+  min-width: 0;
+}
+.gcs-postbit__rankRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+.gcs-postbit__rankIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: var(--gcs-accent);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1;
+}
+.gcs-postbit__rankText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+.gcs-postbit .gcs-post__rank {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 800 11px var(--gcs-font-text);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gcs-text);
+}
+.gcs-postbit__rankText .gcs-postbit__xpText {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--gcs-muted);
+  font-variant-numeric: tabular-nums;
+}
+.gcs-root .gcs-postbit__badgeLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border: 1px solid var(--gcs-warn);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--gcs-warn) 10%, transparent);
+  color: var(--gcs-text);
+  font: 800 11px var(--gcs-font-text);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.gcs-postbit__badgeLink svg {
+  color: var(--gcs-warn);
+}
+.gcs-root .gcs-postbit__badgeLink:hover,
+.gcs-root .gcs-postbit__badgeLink:focus-visible {
+  background: color-mix(in srgb, var(--gcs-warn) 20%, transparent);
+}
+.gcs-postbit__rankBox .gcs-postbit__xpBar {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--gcs-surface2);
+  overflow: hidden;
+}
+.gcs-postbit__rankBox .gcs-postbit__xpBar > span {
+  background: linear-gradient(90deg, var(--gcs-accent), var(--gcs-warn));
+}
+.gcs-postbit__rankBox .gcs-postbit__badges {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+.gcs-postbit__rankBox .gcs-postbit__badge {
+  width: 30px;
+  height: 30px;
+  box-sizing: border-box;
+  border: 2px solid var(--gcs-border);
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+/* Rândurile: iconiță rotundă în culoarea de accent, eticheta, valoarea la dreapta. */
+.gcs-postbit__rows {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  text-align: left;
+  font-size: 12px;
+  min-width: 0;
+}
+.gcs-postbit__rows > .gcs-postbit__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 2px;
+  border-top: 1px solid var(--gcs-border);
+  min-width: 0;
+}
+.gcs-postbit__rows > .gcs-postbit__row:first-child {
+  border-top: 0;
+}
+.gcs-postbit__row dt {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: var(--gcs-text);
+  font: 700 11px var(--gcs-font-text);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.gcs-postbit__rowIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--gcs-accent);
+  color: #fff;
+  font-size: 11px;
+}
+.gcs-postbit__row dd {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+  font: 800 13px var(--gcs-font-text);
+  text-align: right;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.gcs-root .gcs-postbit__fieldLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--gcs-text);
+  text-decoration: underline;
+}
+.gcs-postbit__fieldLink > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-postbit__fieldLink svg {
+  flex-shrink: 0;
+  color: var(--gcs-accentInk);
+}
+.gcs-postbit__row .gcs-postbit__fieldImage {
+  width: 72px;
+  height: 24px;
+  object-fit: contain;
+}
+
+/* Subsolul: data înscrierii | statusul; apoi motto-ul (ultimul status), pe un rând, cu „…”. */
+.gcs-postbit__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-surface);
+  font: 600 11px var(--gcs-font-text);
+  color: var(--gcs-muted);
+}
+.gcs-postbit__foot .gcs-postbit__joined {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+.gcs-postbit__joined svg {
+  color: var(--gcs-accentInk);
+}
+.gcs-postbit__joined strong {
+  color: var(--gcs-accentInk);
+}
+.gcs-postbit__footStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 10px;
+  border-left: 1px solid var(--gcs-border);
+}
+.gcs-postbit__footStatus--on strong {
+  color: var(--gcs-ok);
+}
+.gcs-postbit__motto {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-surface);
+}
+.gcs-postbit__motto p {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: italic 800 12px var(--gcs-font-text);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gcs-text);
+}
+
+/* ─── Coloana conținutului ────────────────────────────────────────────────────────────────────────────── */
+
+.gcs-post__content {
+  flex: 999 1 420px;
+  padding: 0 0 12px;
+  gap: 12px;
+  background: var(--gcs-surface);
+  border: 1px solid var(--gcs-border);
+  border-radius: 12px;
+}
+.gcs-post__head {
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--gcs-border);
+  background: var(--gcs-surface2);
+  border-radius: 12px 12px 0 0;
+  font-size: 13px;
+  color: var(--gcs-text);
+}
+.gcs-post__date {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.gcs-root .gcs-post__headRight a {
+  color: var(--gcs-accentInk);
+  font-weight: 700;
+  text-decoration: underline;
+}
+.gcs-post__content > .gcs-postBody,
+.gcs-post__content > .gcs-post__notice,
+.gcs-post__content > .gcs-post__edit,
+.gcs-post__content > .gcs-attachments,
+.gcs-post__content > .gcs-translate,
+.gcs-post__content > .gcs-post__edited,
+.gcs-post__content > .gcs-post__signature,
+.gcs-post__content > .gcs-post__reactionBar,
+.gcs-post__content > .gcs-post__reported,
+.gcs-post__content > .gcs-notice,
+.gcs-post__content > .gcs-post__foot {
+  margin-inline: 16px;
+}
+/* Conținutul ocupă înălțimea rămasă: bara de reacții și acțiunile stau jos, aliniate cu postbit-ul. */
+.gcs-post__content > .gcs-postBody {
+  flex: 1 0 auto;
+  min-height: 80px;
+}
+.gcs-post__content > .gcs-post__signature {
+  flex: none;
+  padding: 12px 0 0;
+  border-top: 1px dashed var(--gcs-border);
+  max-height: 160px;
+}
+
+/* Sumarul reacțiilor: bară cu accent în stânga, textul și contoarele pe reacții. */
+.gcs-post__reactionBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--gcs-border);
+  border-left: 3px solid var(--gcs-accent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--gcs-accent) 7%, var(--gcs-surface));
+}
+.gcs-post__reactionText {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--gcs-text);
+}
+.gcs-post__reactionBar .gcs-reaction {
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+.gcs-post__reported {
+  margin-top: 0;
+  margin-bottom: 0;
+  font-size: 13px;
+  color: var(--gcs-ok);
+}
+
+/* Acțiunile: aliniate la dreapta, conturate, cu majuscule și iconițe. */
+.gcs-post__foot {
+  justify-content: flex-end;
+  padding-top: 12px;
+}
+.gcs-post__actions {
+  position: relative;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.gcs-post__actions .gcs-post__action,
+.gcs-post__actions .gcs-dropdown__trigger.gcs-post__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 6px;
+  background: var(--gcs-surface2);
+  color: var(--gcs-text);
+  font: 800 12.5px var(--gcs-font-text);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.gcs-post__actions .gcs-post__action:hover:not(:disabled),
+.gcs-post__actions .gcs-dropdown__trigger.gcs-post__action[aria-expanded="true"] {
+  border-color: var(--gcs-muted);
+  background: var(--gcs-surface);
+}
+.gcs-post__actions .gcs-btn--primary.gcs-post__action {
+  border-color: var(--gcs-accent);
+  background: var(--gcs-accent);
+  color: #fff;
+}
+.gcs-post__like svg {
+  color: var(--gcs-accentInk);
+}
+.gcs-post__actions .gcs-post__like--on {
+  border-color: var(--gcs-accent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--gcs-accent) 35%, transparent);
+}
+.gcs-post__likeCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  box-sizing: border-box;
+  border: 1px solid var(--gcs-accent);
+  border-radius: 999px;
+  font-size: 10.5px;
+  letter-spacing: 0;
+  color: var(--gcs-text);
+  background: color-mix(in srgb, var(--gcs-accent) 18%, transparent);
+}
+/* Meniul „Mai mult…” se deschide în sus (acțiunile stau la baza cardului). */
+.gcs-post__more .gcs-dropdown__menu {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+.gcs-post__actions > .gcs-reactionPicker {
+  bottom: calc(100% + 8px);
+  right: 0;
+  flex-wrap: wrap;
+  max-width: min(360px, 90vw);
+}
+
+/* ─── Mobil: postbit-ul devine un antet compact deasupra conținutului ──────────────────────────────────── */
+
+@media (max-width: 720px) {
+  .gcs-post {
+    padding: 8px;
+    gap: 8px;
+  }
+  .gcs-post__author.gcs-postbit {
+    flex: 1 1 100%;
+    max-width: none;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 8px;
+  }
+  .gcs-postbit__top,
+  .gcs-postbit__group,
+  .gcs-postbit__rows,
+  .gcs-postbit__foot,
+  .gcs-postbit__motto {
+    grid-column: 1 / -1;
+  }
+  .gcs-postbit__profile {
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: 8px;
+    padding: 6px;
+  }
+  .gcs-postbit__avatar,
+  .gcs-postbit__avatar > .gcs-avatarFrame,
+  .gcs-postbit__avatar > .gcs-avatar {
+    width: 56px !important;
+    height: 56px !important;
+  }
+  .gcs-postbit__rows {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 14px;
+  }
+  .gcs-postbit__rows > .gcs-postbit__row:nth-child(2) {
+    border-top: 0;
+  }
+  .gcs-post__content {
+    flex-basis: 100%;
+  }
+  .gcs-post__head {
+    padding: 8px 12px;
+  }
+  .gcs-post__content > .gcs-postBody,
+  .gcs-post__content > .gcs-post__notice,
+  .gcs-post__content > .gcs-post__edit,
+  .gcs-post__content > .gcs-attachments,
+  .gcs-post__content > .gcs-translate,
+  .gcs-post__content > .gcs-post__edited,
+  .gcs-post__content > .gcs-post__signature,
+  .gcs-post__content > .gcs-post__reactionBar,
+  .gcs-post__content > .gcs-post__reported,
+  .gcs-post__content > .gcs-notice,
+  .gcs-post__content > .gcs-post__foot {
+    margin-inline: 12px;
+  }
+  .gcs-post__actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .gcs-post__author.gcs-postbit {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .gcs-postbit__rows {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .gcs-postbit__rows > .gcs-postbit__row:nth-child(2) {
+    border-top: 1px solid var(--gcs-border);
+  }
+}

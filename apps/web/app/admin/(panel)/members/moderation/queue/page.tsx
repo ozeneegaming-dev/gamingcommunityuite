@@ -7,6 +7,7 @@ import { postHref } from "@/lib/forum-urls";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../../_components/GcsActionForm";
 import { moderateQueue } from "../../../moderation-actions";
+import { GcsAcpTitle } from "../../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.queue"))("title") };
@@ -21,9 +22,9 @@ export default async function AcpQueuePage() {
 
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-inbox">
         {t("title")}
-      </h1>
+      </GcsAcpTitle>
       <p style={{ margin: 0 }}>
         <Link href="/admin/members/moderation/reports">{t("reportsLink", { count: reports.length })}</Link>
       </p>
@@ -36,7 +37,7 @@ export default async function AcpQueuePage() {
       ) : (
         <>
           <GcsCard style={{ padding: 16 }}>
-            <GcsActionForm action={moderateQueue} submitLabel={t("approveSelected")}>
+            <GcsActionForm action={moderateQueue} submitLabel={t("approveSelected")} submitKind="approve">
               <input type="hidden" name="decision" value="approve" />
               {pending.map((p) => (
                 <label key={p.postId} className="gcs-check">
@@ -57,11 +58,11 @@ export default async function AcpQueuePage() {
               </div>
               <div className="gcs-postBody" dangerouslySetInnerHTML={{ __html: p.html }} />
               <div style={{ display: "flex", gap: 8 }}>
-                <GcsActionForm action={moderateQueue} submitLabel={t("approve")} compact>
+                <GcsActionForm action={moderateQueue} submitLabel={t("approve")} submitKind="approve" compact>
                   <input type="hidden" name="postId" value={p.postId} />
                   <input type="hidden" name="decision" value="approve" />
                 </GcsActionForm>
-                <GcsActionForm action={moderateQueue} submitLabel={t("reject")} variant="ghost" compact>
+                <GcsActionForm action={moderateQueue} submitLabel={t("reject")} submitKind="reject" variant="ghost" compact>
                   <input type="hidden" name="postId" value={p.postId} />
                   <input type="hidden" name="decision" value="reject" />
                   <input type="hidden" name="reason" value={t("rejectReason")} />

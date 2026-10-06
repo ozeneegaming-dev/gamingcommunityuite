@@ -1,6 +1,6 @@
 import { isSafeBanner, type GcsReactionView } from "@gcs/core";
 import type { GcsPostbitData, GcsPostView } from "@gcs/modules";
-import { GcsAvatar, GcsBadge, GcsTooltip, GcsUserLink } from "@gcs/ui";
+import { GcsAvatar, GcsTooltip, GcsUserLink } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { memberHref, postHref, tint } from "@/lib/forum-urls";
@@ -68,12 +68,14 @@ export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, 
         reactionList={reactionList}
         permalink={postHref(topicId, post.id)}
         can={{ ...can, react: can.react && !own, report: can.report && !own, edit: post.canEdit, hide: post.canHide }}
+        extras={translate && post.visibility === "VISIBLE" && !own ? <GcsTranslateButton contentType="forums.post" contentId={post.id} labels={translate} /> : null}
+        signature={
+          author?.signatureHtml && post.visibility === "VISIBLE" ? (
+            // Semnătura: HTML-ul produs și sanitizat de renderer la salvare (Setări → Semnătură).
+            <div className="gcs-post__signature gcs-postBody" data-testid="gcs-post-signature" dangerouslySetInnerHTML={{ __html: author.signatureHtml }} />
+          ) : null
+        }
       />
-      {author?.signatureHtml && post.visibility === "VISIBLE" && (
-        // Semnătura: HTML-ul produs și sanitizat de renderer la salvare (Setări → Semnătură).
-        <div className="gcs-post__signature gcs-postBody" data-testid="gcs-post-signature" dangerouslySetInnerHTML={{ __html: author.signatureHtml }} />
-      )}
-      {translate && post.visibility === "VISIBLE" && !own && <GcsTranslateButton contentType="forums.post" contentId={post.id} labels={translate} />}
     </article>
   );
   if (!ignored || !author) return article;
@@ -85,101 +87,186 @@ export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, 
   );
 }
 
+/** Câte coroane arată postbit-ul pentru nivelul rangului (rangurile de peste plafon rămân la plafon). */
+const MAX_PIPS = 8;
+
+/** Iconița rangului: un nume Font Awesome (`fa-…`) devine SVG, altfel e un emoji/text; fără iconiță, un scut. */
+function GcsRankIcon({ icon }: { icon: string | null }) {
+  if (!icon) return <GcsIcon name="fa-solid fa-shield-halved" />;
+  if (!icon.startsWith("fa-")) return <span aria-hidden="true">{icon}</span>;
+  // `fa-crown` fără stil → `fa-solid fa-crown`.
+  return <GcsIcon name={/^fa-(solid|regular|brands) /.test(icon) ? icon : `fa-solid ${icon}`} />;
+}
+
 /**
- * Cardul autorului (specul etapei 5, „Postbit”): avatarul cu rama și statusul online, numele stilizat, titlul custom,
- * grupul ca banner cu iconiță, VIP, rangul cu bara de XP, insignele (numărul și ultimele 5), contoarele, data înscrierii
- * și câmpurile alese din ACP (cu iconițe; „Select cu imagini” arată imaginea).
+ * Cardul autorului (specul etapei 5, „Postbit”, refăcut după referința proprietarului): statusul online și @handle-ul,
+ * avatarul pătrat cu rama, numele stilizat, planul VIP / grupul, titlul custom și coroanele rangului; bara grupului
+ * (culoarea sau banner-ul validat); rangul cu XP-ul, insignele (numărul și ultimele 5); contoarele (postări, topicuri,
+ * aprecieri) și câmpurile alese din ACP (cu iconițe; „Select cu imagini” arată imaginea); data înscrierii, statusul și
+ * motto-ul (ultimul status de pe peretele membrului).
  */
 async function GcsPostbit({ author, data }: { author: NonNullable<GcsPostView["author"]>; data: GcsPostbitData | null }) {
   const t = await getTranslations("topic.author");
   const format = await getFormatter();
   const groupColor = data?.group.color ?? author.groupColor;
-  const banner = data?.group.banner && isSafeBanner(data.group.banner) ? data.group.banner : groupColor ? tint(groupColor, 0.22) : undefined;
+  const groupLabel = data?.group.name ?? author.groupTitle ?? author.groupName;
+  const banner = data?.group.banner && isSafeBanner(data.group.banner) ? data.group.banner : (groupColor ?? null);
+  // Linia a doua: planul VIP (dacă diferă de grupul din bară), altfel un grup secundar, altfel grupul.
+  const secondary = data?.vipName && data.vipName !== groupLabel ? data.vipName : (data?.secondaryGroup ?? data?.vipName ?? groupLabel);
+  const pips = data?.rankLevel ? Math.min(data.rankLevel, MAX_PIPS) : 0;
+  const profile = memberHref(author);
+  const stats: { key: string; icon: string; label: string; value: string }[] = [
+    { key: "posts", icon: "fa-solid fa-pen", label: t("posts"), value: format.number(author.postsCount) },
+    ...(data ? [{ key: "topics", icon: "fa-solid fa-folder-open", label: t("topics"), value: format.number(data.topicsCount) }] : []),
+    { key: "likes", icon: "fa-solid fa-heart", label: t("likes"), value: format.number(author.reputation) },
+  ];
+  const status = data ? (data.online ? t("statusOnline") : t("statusOffline")) : null;
+
   return (
     <>
-      <span className="gcs-postbit__avatar">
-        <GcsAvatar name={author.name} size="l" {...(author.image ? { src: author.image } : {})} {...(author.frameKey ? { frame: author.frameKey } : {})} />
-        {data?.online && <span className="gcs-postbit__online" role="img" aria-label={t("online")} title={t("online")} data-testid="gcs-postbit-online" />}
-      </span>
-      <span className="gcs-post__authorName">
-        <GcsUserLink userId={author.id} name={author.name} nameKey={author.nameKey} href={memberHref(author)} />
-      </span>
-      {data?.customTitle && <span className="gcs-postbit__title">{data.customTitle}</span>}
-      <span className="gcs-postbit__group" style={{ background: banner, color: groupColor ?? undefined }} data-testid="gcs-postbit-group">
-        {data?.group.icon && <GcsIcon name={data.group.icon} />}
-        {data?.group.name ?? author.groupTitle ?? author.groupName}
-      </span>
-      {data?.vip && (
-        <GcsBadge tone="accent" data-testid="gcs-postbit-vip">
-          <GcsIcon name="fa-solid fa-crown" /> VIP
-        </GcsBadge>
-      )}
-      {author.rank && (
-        <span className="gcs-post__rank" data-testid="gcs-post-rank">
-          {author.rank.icon && <span aria-hidden="true">{author.rank.icon} </span>}
-          {author.rank.name}
+      <div className="gcs-postbit__top">
+        {data &&
+          (data.online ? (
+            <span className="gcs-postbit__status gcs-postbit__status--on" data-testid="gcs-postbit-online" title={t("online")}>
+              <span className="gcs-postbit__dot" aria-hidden="true" />
+              {status}
+            </span>
+          ) : (
+            <span className="gcs-postbit__status">
+              <span className="gcs-postbit__dot" aria-hidden="true" />
+              {status}
+            </span>
+          ))}
+        <span className="gcs-postbit__handle">@{author.name.toLowerCase()}</span>
+      </div>
+
+      <div className="gcs-postbit__profile">
+        <span className="gcs-postbit__avatar">
+          <GcsAvatar name={author.name} size="l" {...(author.image ? { src: author.image } : {})} {...(author.frameKey ? { frame: author.frameKey } : {})} />
         </span>
-      )}
-      {data && (
-        <div className="gcs-postbit__xp" data-testid="gcs-postbit-xp">
-          <div
-            className="gcs-postbit__xpBar"
-            role="progressbar"
-            aria-label={t("xp")}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={data.xp.percent}
-            aria-valuetext={data.xp.next !== null ? t("xpTo", { points: data.xp.points, next: data.xp.next, rank: data.xp.nextRank ?? "" }) : t("xpMax", { points: data.xp.points })}
-          >
-            <span style={{ width: `${data.xp.percent}%` }} />
-          </div>
-          <span className="gcs-postbit__xpText">
-            {data.xp.next !== null ? `${format.number(data.xp.points)} / ${format.number(data.xp.next)} XP` : `${format.number(data.xp.points)} XP`}
+        <div className="gcs-postbit__identity">
+          <span className="gcs-post__authorName">
+            <GcsUserLink userId={author.id} name={author.name} nameKey={author.nameKey} href={profile} />
           </span>
-        </div>
-      )}
-      {data && data.badges.count > 0 && (
-        <div className="gcs-postbit__badges" data-testid="gcs-postbit-badges">
-          <span className="gcs-postbit__badgeCount">{t("badges", { count: data.badges.count })}</span>
-          <ul>
-            {data.badges.recent.map((b) => (
-              <li key={b.key}>
-                <GcsTooltip content={b.name}>
-                  <span className="gcs-postbit__badge" style={{ background: tint(b.color, 0.2), color: b.color }} aria-label={b.name} role="img" tabIndex={0}>
-                    {b.image ? <img src={b.image} alt="" /> : b.symbol?.startsWith("fa-") ? <GcsIcon name={b.symbol} /> : (b.symbol ?? b.name.charAt(0))}
-                  </span>
-                </GcsTooltip>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      <div className="gcs-post__authorStats">
-        <div>
-          <strong>{format.number(author.postsCount)}</strong>
-          {t("posts")}
-        </div>
-        <div>
-          <strong className={author.reputation >= 0 ? "gcs-rep--pos" : "gcs-rep--neg"}>
-            {author.reputation > 0 ? `+${format.number(author.reputation)}` : format.number(author.reputation)}
-          </strong>
-          {t("reputation")}
+          <span className="gcs-postbit__secondary" {...(data?.vip ? { "data-testid": "gcs-postbit-vip" } : {})}>
+            {secondary}
+          </span>
+          {data?.customTitle && (
+            <span className="gcs-postbit__title" title={data.customTitle}>
+              <GcsIcon name="fa-solid fa-id-badge" />
+              <span>{data.customTitle}</span>
+            </span>
+          )}
+          {pips > 0 && (
+            <span className="gcs-postbit__pips" role="img" aria-label={t("rankLevel", { level: data?.rankLevel ?? pips })}>
+              {Array.from({ length: pips }, (_, i) => (
+                <GcsIcon key={i} name="fa-solid fa-crown" />
+              ))}
+            </span>
+          )}
         </div>
       </div>
+
+      <span
+        className={`gcs-postbit__group${banner ? " gcs-postbit__group--colored" : ""}`}
+        style={banner ? { background: banner } : undefined}
+        data-testid="gcs-postbit-group"
+      >
+        {data?.group.icon && <GcsIcon name={data.group.icon} />}
+        <span>{groupLabel}</span>
+      </span>
+
+      {(data || author.rank) && (
+        <div className="gcs-postbit__rankBox" data-testid="gcs-postbit-xp">
+          <div className="gcs-postbit__rankRow">
+            <span className="gcs-postbit__rankIcon">
+              <GcsRankIcon icon={author.rank?.icon ?? null} />
+            </span>
+            <span className="gcs-postbit__rankText">
+              {author.rank && (
+                <span className="gcs-post__rank" data-testid="gcs-post-rank">
+                  {author.rank.name}
+                </span>
+              )}
+              {data && <span className="gcs-postbit__xpText">{format.number(data.xp.points)} XP</span>}
+            </span>
+            {data && (
+              <a className="gcs-postbit__badgeLink" href={`${profile}?tab=badges`}>
+                <GcsIcon name="fa-solid fa-trophy" />
+                <span>{t("badges", { count: data.badges.count })}</span>
+              </a>
+            )}
+          </div>
+          {data && (
+            <div
+              className="gcs-postbit__xpBar"
+              role="progressbar"
+              aria-label={t("xp")}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={data.xp.percent}
+              aria-valuetext={
+                data.xp.next !== null ? t("xpTo", { points: data.xp.points, next: data.xp.next, rank: data.xp.nextRank ?? "" }) : t("xpMax", { points: data.xp.points })
+              }
+              title={data.xp.next !== null ? `${format.number(data.xp.points)} / ${format.number(data.xp.next)} XP` : undefined}
+            >
+              <span style={{ width: `${data.xp.percent}%` }} />
+            </div>
+          )}
+          {data && data.badges.recent.length > 0 && (
+            <ul className="gcs-postbit__badges" data-testid="gcs-postbit-badges">
+              {data.badges.recent.map((b) => (
+                <li key={b.key}>
+                  <GcsTooltip content={b.name}>
+                    <span
+                      className="gcs-postbit__badge"
+                      style={{ background: tint(b.color, 0.16), color: b.color, borderColor: b.color }}
+                      aria-label={b.name}
+                      role="img"
+                      tabIndex={0}
+                    >
+                      {b.image ? <img src={b.image} alt="" /> : b.symbol?.startsWith("fa-") ? <GcsIcon name={b.symbol} /> : (b.symbol ?? b.name.charAt(0))}
+                    </span>
+                  </GcsTooltip>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      <dl className="gcs-postbit__rows">
+        {stats.map((s) => (
+          <div key={s.key} className="gcs-postbit__row" data-stat={s.key}>
+            <dt>
+              <span className="gcs-postbit__rowIcon">
+                <GcsIcon name={s.icon} />
+              </span>
+              {s.label}
+            </dt>
+            <dd>{s.value}</dd>
+          </div>
+        ))}
+      </dl>
       {data && data.fields.length > 0 && (
-        <dl className="gcs-postbit__fields" data-testid="gcs-postbit-fields">
+        <dl className="gcs-postbit__rows gcs-postbit__fields" data-testid="gcs-postbit-fields">
           {data.fields.map((f) => (
-            <div key={f.key} data-field={f.key}>
+            <div key={f.key} className="gcs-postbit__row" data-field={f.key}>
               <dt>
-                {f.icon && <GcsIcon name={f.icon} />}
+                <span className="gcs-postbit__rowIcon">
+                  <GcsIcon name={f.icon ?? (f.type === "URL" ? "fa-solid fa-link" : "fa-solid fa-circle-info")} />
+                </span>
                 {f.label}
               </dt>
               <dd>
                 {f.image && <img src={f.image} alt="" className="gcs-postbit__fieldImage" />}
                 {f.type === "URL" ? (
-                  <a href={f.value} rel="noopener nofollow ugc" target="_blank">
-                    {f.value.replace(/^https?:\/\//, "")}
+                  <a href={f.value} rel="noopener nofollow ugc" target="_blank" className="gcs-postbit__fieldLink">
+                    <span>{f.value.replace(/^https?:\/\//, "")}</span>
+                    <GcsIcon name="fa-solid fa-arrow-up-right-from-square" />
                   </a>
+                ) : f.image ? (
+                  <span className="gcs-srOnly">{f.value}</span>
                 ) : (
                   f.value
                 )}
@@ -188,7 +275,25 @@ async function GcsPostbit({ author, data }: { author: NonNullable<GcsPostView["a
           ))}
         </dl>
       )}
-      <span className="gcs-postbit__joined">{t("joined", { date: format.dateTime(new Date(author.joinedAt), { dateStyle: "medium" }) })}</span>
+
+      <div className="gcs-postbit__foot">
+        <span className="gcs-postbit__joined">
+          <GcsIcon name="fa-regular fa-clock" />
+          {t("memberSince")} <strong>{format.dateTime(new Date(author.joinedAt), { dateStyle: "medium" })}</strong>
+        </span>
+        {status && (
+          <span className={`gcs-postbit__footStatus${data?.online ? " gcs-postbit__footStatus--on" : ""}`}>
+            <span className="gcs-postbit__dot" aria-hidden="true" />
+            {t("status")} <strong>{status}</strong>
+          </span>
+        )}
+      </div>
+
+      {data?.motto && (
+        <blockquote className="gcs-postbit__motto" title={data.motto} aria-label={t("motto")}>
+          <p>“{data.motto}”</p>
+        </blockquote>
+      )}
     </>
   );
 }

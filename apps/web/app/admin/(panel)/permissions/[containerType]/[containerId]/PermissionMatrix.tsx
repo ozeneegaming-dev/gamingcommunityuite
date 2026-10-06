@@ -19,7 +19,7 @@ export function PermissionMatrix({ containerType, containerId, groups, actions, 
   const [inherits, setInherits] = useState(inherit.inherits);
   const allowedSet = new Set(allowed);
   return (
-    <GcsActionForm action={saveContainerPermissions.bind(null, containerType, containerId)} submitLabel={labels.save}>
+    <GcsActionForm action={saveContainerPermissions.bind(null, containerType, containerId)} submitLabel={labels.save} submitKind="save">
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-end" }}>
         <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, minHeight: 44 }}>
           <input

@@ -1,4 +1,5 @@
 import { GcsCard, GcsUserLink } from "@gcs/ui";
+import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
@@ -7,6 +8,7 @@ import { pageParam } from "@/lib/forum-page";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { extendSubscription, revokeSubscription } from "../actions";
+import { GcsAcpTitle } from "../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.vip"))("subscribersTitle") };
@@ -19,6 +21,7 @@ export default async function AcpVipSubscribersPage({ searchParams }: Props) {
   await requireAcpSection("vip.subscribers");
   const q = await searchParams;
   const t = await getTranslations("acp.vip");
+  const tp = await getTranslations("acp.members");
   const format = await getFormatter();
   const { vip, db } = services();
   const tier = Number(q.tier);
@@ -35,9 +38,9 @@ export default async function AcpVipSubscribersPage({ searchParams }: Props) {
 
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-user-check">
         {t("subscribersTitle")}
-      </h1>
+      </GcsAcpTitle>
       <form method="get" style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
         <label className="gcs-field" style={{ width: 200 }}>
           {t("tier")}
@@ -74,11 +77,11 @@ export default async function AcpVipSubscribersPage({ searchParams }: Props) {
             </span>
             <span style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {s.expiresAt && (
-                <GcsActionForm action={extendSubscription.bind(null, s.id)} submitLabel={t("extend")} variant="ghost" compact>
+                <GcsActionForm action={extendSubscription.bind(null, s.id)} submitLabel={t("extend")} submitKind="extend" variant="ghost" compact>
                   <input className="gcs-input" name="days" type="number" min={1} max={3650} defaultValue={30} aria-label={t("days")} style={{ width: 80 }} />
                 </GcsActionForm>
               )}
-              <GcsActionForm action={revokeSubscription.bind(null, s.id)} submitLabel={t("revoke")} variant="ghost" compact confirm={t("confirmRevoke")}>
+              <GcsActionForm action={revokeSubscription.bind(null, s.id)} submitLabel={t("revoke")} submitKind="revoke" variant="ghost" compact confirm={t("confirmRevoke")}>
                 {null}
               </GcsActionForm>
             </span>
@@ -86,12 +89,20 @@ export default async function AcpVipSubscribersPage({ searchParams }: Props) {
         ))}
       </GcsCard>
       {pages > 1 && (
-        <nav style={{ display: "flex", gap: 10 }}>
-          {page > 1 && <Link href={qs({ page: String(page - 1) })}>←</Link>}
+        <nav className="gcs-acpPager">
+          {page > 1 && (
+            <Link href={qs({ page: String(page - 1) })} aria-label={tp("prev")} title={tp("prev")}>
+              <GcsIcon name="fa-solid fa-chevron-left" />
+            </Link>
+          )}
           <span>
             {page} / {pages}
           </span>
-          {page < pages && <Link href={qs({ page: String(page + 1) })}>→</Link>}
+          {page < pages && (
+            <Link href={qs({ page: String(page + 1) })} aria-label={tp("next")} title={tp("next")}>
+              <GcsIcon name="fa-solid fa-chevron-right" />
+            </Link>
+          )}
         </nav>
       )}
     </>

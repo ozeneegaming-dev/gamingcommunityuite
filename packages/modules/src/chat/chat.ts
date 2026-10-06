@@ -164,10 +164,11 @@ export class GcsChatService {
   /** Setările chat-ului pentru client (cheia GIPHY rămâne pe server). */
   async config(): Promise<GcsChatConfig> {
     const s = this.deps.settings;
-    const [timeFormat, newestOnTop, rules, hideAvatars, minHeight, hideEnterMobile, pageSize, pollSeconds, maxLength, maxEmoticons, allowImages, allowYoutube, giphyKey, voice, voiceMaxSeconds] =
+    const [timeFormat, newestOnTop, showRules, rules, hideAvatars, minHeight, hideEnterMobile, pageSize, pollSeconds, maxLength, maxEmoticons, allowImages, allowYoutube, giphyKey, voice, voiceMaxSeconds] =
       await Promise.all([
         s.get<string>("chat.time_format"),
         s.get<boolean>("chat.newest_on_top"),
+        s.get<boolean>("chat.show_rules"),
         s.get<string>("chat.rules"),
         s.get<boolean>("chat.hide_avatars"),
         s.get<number>("chat.min_height"),
@@ -185,7 +186,8 @@ export class GcsChatService {
     return {
       timeFormat: timeFormat === "12h" ? "12h" : "24h",
       newestOnTop,
-      rules,
+      // Linkul „Reguli” se poate ascunde din ACP fără să se piardă textul.
+      rules: showRules === false ? "" : rules,
       hideAvatars,
       minHeight,
       hideEnterMobile,
@@ -273,10 +275,14 @@ export class GcsChatService {
       const res = await rateLimiter.consume(`chat-slow:${channel.id}:${actor.userId}`, { window: channel.slowModeSeconds, max: 1 });
       if (!res.allowed) throw new GcsRateLimited({ retryAfter: String(res.retryAfter), reason: "slow_mode" });
     }
-    const flood = await permissions.groupValue<number | boolean>(actor, "chat.flood_seconds");
-    if (typeof flood === "number" && flood > 0) {
-      const res = await rateLimiter.consume(`chat:${actor.userId}`, { window: flood, max: 1 });
-      if (!res.allowed) throw new GcsRateLimited({ retryAfter: String(res.retryAfter) });
+    // Flood control: valoarea mai strictă dintre setarea din ACP și permisiunea grupului; moderatorii trec peste.
+    if (!moderator) {
+      const [group, global] = await Promise.all([permissions.groupValue<number | boolean>(actor, "chat.flood_seconds"), settings.get<number>("chat.flood_seconds")]);
+      const flood = Math.max(typeof group === "number" ? group : 0, typeof global === "number" ? global : 0);
+      if (flood > 0) {
+        const res = await rateLimiter.consume(`chat:${actor.userId}`, { window: flood, max: 1 });
+        if (!res.allowed) throw new GcsRateLimited({ retryAfter: String(res.retryAfter) });
+      }
     }
 
     const words = await settings.get<string[]>("chat.word_filter");

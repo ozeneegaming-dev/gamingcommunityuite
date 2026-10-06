@@ -5,6 +5,8 @@ import { currentActor } from "@/lib/actor";
 import { getAuth } from "@/lib/auth";
 import { services } from "@/lib/services";
 import { GcsSessionsList, GcsTwoFactorSettings } from "../../_components/settings/GcsSettingsExtra";
+import { GcsIcon } from "@gcs/ui/icons";
+import { SETTINGS_ICONS } from "../../_components/settings/sections";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("settings"))("nav.security") };
@@ -30,9 +32,13 @@ export default async function SecuritySettingsPage() {
   ]);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <h2 className="gcs-settingsTitle">{t("title")}</h2>
+      <h2 className="gcs-settingsTitle">
+        <GcsIcon name={SETTINGS_ICONS.security} className="gcs-hIcon" />
+        {t("title")}
+      </h2>
       <section aria-labelledby="gcs-sec-sessions">
         <h3 id="gcs-sec-sessions" className="gcs-settingsSubtitle">
+          <GcsIcon name="fa-solid fa-desktop" className="gcs-hIcon" />
           {t("sessions")}
         </h3>
         <GcsSessionsList
@@ -48,6 +54,7 @@ export default async function SecuritySettingsPage() {
       </section>
       <section aria-labelledby="gcs-sec-2fa">
         <h3 id="gcs-sec-2fa" className="gcs-settingsSubtitle">
+          <GcsIcon name="fa-solid fa-shield-halved" className="gcs-hIcon" />
           {t("twoFactor")}
         </h3>
         <GcsTwoFactorSettings

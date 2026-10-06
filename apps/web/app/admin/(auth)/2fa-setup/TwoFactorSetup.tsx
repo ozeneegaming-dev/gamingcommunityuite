@@ -1,6 +1,7 @@
 "use client";
 
-import { GcsButton, GcsField } from "@gcs/ui";
+import { faCircleCheck, faQrcode } from "@fortawesome/free-solid-svg-icons";
+import { GcsButton, GcsField, GcsIconSvg } from "@gcs/ui";
 import { useTranslations } from "next-intl";
 import QRCode from "qrcode";
 import { useState, type FormEvent } from "react";
@@ -59,7 +60,7 @@ export function TwoFactorSetup({ askPassword, doneHref = "/admin/reauth" }: { as
           </GcsField>
         )}
         {errorBox}
-        <GcsButton variant="primary" type="submit" disabled={pending}>
+        <GcsButton variant="primary" type="submit" disabled={pending} icon={<GcsIconSvg icon={faQrcode} />}>
           {t("start")}
         </GcsButton>
       </form>
@@ -87,7 +88,7 @@ export function TwoFactorSetup({ askPassword, doneHref = "/admin/reauth" }: { as
         <input name="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9 ]{6,7}" required autoFocus />
       </GcsField>
       {errorBox}
-      <GcsButton variant="primary" type="submit" disabled={pending}>
+      <GcsButton variant="primary" type="submit" disabled={pending} icon={<GcsIconSvg icon={faCircleCheck} />}>
         {t("verify")}
       </GcsButton>
     </form>

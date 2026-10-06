@@ -1,4 +1,5 @@
 import { GcsModuleRegistry, settingValueError } from "@gcs/core";
+import { isGcsIcon } from "@gcs/ui/icon-registry";
 import { describe, expect, test } from "vitest";
 import { coreModule, DEFAULT_GROUP_KEYS } from "./index";
 
@@ -58,5 +59,12 @@ describe("coreModule", () => {
     const items = coreModule.acpMenu.flatMap((s) => s.items);
     expect(new Set(items.map((i) => i.key)).size).toBe(items.length);
     for (const item of items) expect(item.href.startsWith("/admin")).toBe(true);
+  });
+
+  test("fiecare secțiune și intrare din meniul ACP are o iconiță Font Awesome validă", () => {
+    for (const section of coreModule.acpMenu) {
+      expect(isGcsIcon(section.icon), section.title).toBe(true);
+      for (const item of section.items) expect(isGcsIcon(item.icon), item.key).toBe(true);
+    }
   });
 });

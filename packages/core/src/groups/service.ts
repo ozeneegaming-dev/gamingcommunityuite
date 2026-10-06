@@ -60,7 +60,7 @@ export class GcsGroupService {
         },
       });
       const group = await tx.group.update({ where: { id: created.id }, data: { key: `custom_${created.id}` } });
-      // Ca în Invision: un grup nou pornește cu drepturile unui membru obișnuit (setările de grup și
+      // Un grup nou pornește cu drepturile unui membru obișnuit (setările de grup și
       // permisiunile pe containere ale grupului „member”), apoi adminul le ajustează.
       const template = await tx.group.findUnique({ where: { key: "member" }, select: { id: true } });
       if (template) {

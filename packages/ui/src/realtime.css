@@ -120,11 +120,11 @@
   color: var(--gcs-muted);
 }
 
-/* Chat-ul: shoutbox-ul și pagina /chat. */
+/* Chat-ul: shoutbox-ul și pagina /chat (cadrul; restul e în blocul „Chat v3”). */
 .gcs-chat {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  min-width: 0;
 }
 .gcs-chat__list {
   list-style: none;
@@ -134,14 +134,13 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 6px;
 }
 .gcs-chat--compact .gcs-chat__list {
-  height: 260px;
+  height: 300px;
 }
 .gcs-chat__msg {
   font-size: 14px;
-  line-height: 1.4;
+  line-height: 1.45;
   overflow-wrap: anywhere;
 }
 .gcs-chat__body {
@@ -153,28 +152,14 @@
   font-size: 11px;
   color: var(--gcs-muted);
 }
-.gcs-chat__tools {
-  margin-left: 8px;
-  display: inline-flex;
-  gap: 8px;
-}
-.gcs-chat__tools .gcs-linkButton {
-  font-size: 12px;
-}
 .gcs-chat__empty {
+  padding: 16px;
   color: var(--gcs-muted);
   font-size: 14px;
 }
-.gcs-chat__form {
-  display: flex;
-  gap: 8px;
-}
-.gcs-chat__form .gcs-input {
-  flex: 1;
-  min-width: 0;
-}
 .gcs-chat__note {
   margin: 0;
+  padding: 6px 16px;
   font-size: 13px;
   color: var(--gcs-muted);
 }
@@ -336,25 +321,6 @@
   flex-wrap: wrap;
   gap: 6px;
 }
-.gcs-chat__announcement,
-.gcs-chat__pinned {
-  margin: 0;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 6px;
-  padding: 8px 12px;
-  border-radius: 10px;
-  font-size: 13px;
-}
-.gcs-chat__announcement {
-  background: color-mix(in srgb, var(--gcs-warn) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--gcs-warn) 40%, transparent);
-}
-.gcs-chat__pinned {
-  background: var(--gcs-surface2);
-  border: 1px solid var(--gcs-border);
-}
 .gcs-chat__edited {
   font-size: 11px;
   color: var(--gcs-muted);
@@ -388,11 +354,13 @@
 .gcs-chat__picker {
   position: relative;
 }
-/* Inline (nu suspendat): lista de mesaje derulează și ar tăia un popup deasupra primului mesaj. */
+/* Meniurile unui mesaj (reacții, mute) apar sub text, nu suspendate: lista derulează și ar tăia un popup. */
 .gcs-chat__pickerList {
-  display: inline-flex;
-  margin-left: 6px;
-  vertical-align: middle;
+  display: flex;
+  flex-wrap: wrap;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 4px;
   gap: 2px;
   padding: 4px;
   border: 1px solid var(--gcs-border);
@@ -419,48 +387,213 @@
   }
 }
 
-/* Chat v3 (după Chatbox-ul IPS): avatarul, numele în culoarea grupului, media, emoticoane, GIF-uri și voce. */
-.gcs-chat__bar {
-  display: flex;
-  justify-content: flex-end;
-  gap: 4px;
-  margin-bottom: -4px;
+/*
+ * Chat v3 (după chatbox-ul de referință, 4.png): antetul cu titlul și butoanele pătrate, bara galbenă de anunț,
+ * rândurile separate de linii (avatar rotund, nume, text, ora discret, unelte-iconițe la hover), câmpul pe toată
+ * lățimea cu uneltele în dreapta și butonul albastru Enter, selectorul flotant de emoticoane și GIF-uri.
+ */
+.gcs-sideCard.gcs-chatCard,
+.gcs-chatPage__main.gcs-chatCard {
+  padding: 0;
+  gap: 0;
 }
-.gcs-chat__barButton {
-  min-height: 30px;
-  padding: 2px 10px;
+.gcs-chat__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 60px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-chat__title {
+  min-width: 0;
+}
+.gcs-chat__heading {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+.gcs-chat__heading.gcs-sideCard__title {
+  font-size: 15px;
+}
+.gcs-chat__headingIcon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--gcs-accent);
+  color: #fff;
+  font-size: 15px;
+  letter-spacing: 0;
+}
+.gcs-chat__headTools {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.gcs-chat__headButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 38px;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 8px;
+  background: var(--gcs-surface2);
+  color: var(--gcs-text);
+  font-size: 15px;
+  text-decoration: none;
+  cursor: pointer;
+}
+.gcs-chat__headButton--text {
+  font-size: 13px;
+  font-weight: 600;
+}
+.gcs-chat__headButton:hover,
+.gcs-chat__headButton[aria-expanded="true"] {
+  border-color: var(--gcs-accent);
+  color: var(--gcs-text);
+}
+.gcs-chat__headButton:focus-visible,
+.gcs-chat__toolBtn:focus-visible,
+.gcs-chat__tool:focus-visible,
+.gcs-chat__send:focus-visible,
+.gcs-chat__switch:focus-visible,
+.gcs-chat__pickerTab:focus-visible,
+.gcs-chat__cats button:focus-visible,
+.gcs-chat__emojiGrid button:focus-visible {
+  outline: 2px solid var(--gcs-accent);
+  outline-offset: 1px;
+}
+.gcs-chat__prefsWrap {
+  position: relative;
+}
+.gcs-chat__prefs {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 40;
+  min-width: 250px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--gcs-border);
+  border-radius: 12px;
+  background: var(--gcs-surface);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.35);
+}
+.gcs-chat__switchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 40px;
+  font-size: 14px;
+  cursor: pointer;
+}
+/* Comutatorul (folosit și în ACP → Chat → Setări). */
+.gcs-chat__switch {
+  appearance: none;
+  position: relative;
+  flex: none;
+  width: 44px;
+  height: 24px;
+  margin: 0;
   border: 1px solid var(--gcs-border);
   border-radius: 999px;
   background: var(--gcs-surface2);
-  color: var(--gcs-text);
-  font-size: 12px;
-  font-weight: 600;
   cursor: pointer;
+  transition: background 0.15s;
 }
-.gcs-chat__barButton:hover,
-.gcs-chat__barButton:focus-visible {
-  border-color: var(--gcs-accent);
+.gcs-chat__switch::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--gcs-muted);
+  transition: transform 0.15s, background 0.15s;
+}
+.gcs-chat__switch:checked {
+  border-color: var(--gcs-ok);
+  background: var(--gcs-ok);
+}
+.gcs-chat__switch:checked::before {
+  background: #fff;
+  transform: translateX(20px);
+}
+.gcs-chat__switch:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.gcs-chat__toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-chat__announcement,
+.gcs-chat__pinned {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  padding: 10px 16px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-chat__announcement {
+  background: color-mix(in srgb, var(--gcs-warn) 16%, var(--gcs-surface));
+  border-bottom-color: color-mix(in srgb, var(--gcs-warn) 35%, transparent);
+}
+.gcs-chat__pinned {
+  background: var(--gcs-surface2);
+}
+.gcs-chat__barIcon {
+  flex: none;
+  color: var(--gcs-warn);
+}
+.gcs-chat__pinned .gcs-chat__barIcon {
+  color: var(--gcs-accentInk);
 }
 .gcs-chat__msg {
+  position: relative;
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) auto;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
   align-items: start;
-  gap: 2px 10px;
-  padding: 6px 8px;
-  border-radius: 10px;
+  gap: 2px 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--gcs-border);
 }
 .gcs-chat__msg:hover,
 .gcs-chat__msg:focus-within {
-  background: var(--gcs-surface2);
+  background: color-mix(in srgb, var(--gcs-surface2) 60%, transparent);
 }
 .gcs-chat--noAvatars .gcs-chat__msg {
   grid-template-columns: minmax(0, 1fr) auto;
 }
 .gcs-chat__avatar {
   display: block;
+  width: 40px;
+  height: 40px;
+  line-height: 0;
+}
+.gcs-chat--compact .gcs-chat__avatar {
   width: 34px;
   height: 34px;
-  line-height: 0;
 }
 .gcs-chat__main {
   min-width: 0;
@@ -472,7 +605,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 6px;
+  gap: 8px;
 }
 .gcs-chat__name {
   padding: 0;
@@ -480,7 +613,7 @@
   background: none;
   font: inherit;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
 }
 .gcs-chat__name:hover,
@@ -497,30 +630,73 @@
 }
 .gcs-chat__msg > .gcs-chat__tools {
   margin-left: 0;
+  display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
+  gap: 2px;
   opacity: 0;
   transition: opacity 0.12s;
 }
 .gcs-chat__msg:hover > .gcs-chat__tools,
-.gcs-chat__msg:focus-within > .gcs-chat__tools {
+.gcs-chat__msg:focus-within > .gcs-chat__tools,
+.gcs-chat__msg > .gcs-chat__tools--open {
   opacity: 1;
+}
+.gcs-chat__toolBtn {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: var(--gcs-muted);
+  font-size: 14px;
+  cursor: pointer;
+}
+.gcs-chat__toolBtn:hover,
+.gcs-chat__toolBtn[aria-expanded="true"] {
+  border-color: var(--gcs-border);
+  background: var(--gcs-surface);
+  color: var(--gcs-text);
+}
+.gcs-chat__toolBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 @media (hover: none) {
   .gcs-chat__msg > .gcs-chat__tools {
     opacity: 1;
   }
 }
-/* Shoutbox-ul e îngust: uneltele trec sub mesaj. */
+/* Shoutbox-ul e îngust: uneltele plutesc peste colțul mesajului, la hover (pe ecranele tactile trec sub mesaj). */
 .gcs-chat--compact .gcs-chat__msg {
   grid-template-columns: 34px minmax(0, 1fr);
+  padding: 8px 14px;
 }
 .gcs-chat--compact.gcs-chat--noAvatars .gcs-chat__msg {
   grid-template-columns: minmax(0, 1fr);
 }
 .gcs-chat--compact .gcs-chat__msg > .gcs-chat__tools {
-  grid-column: -2;
-  justify-content: flex-start;
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  padding: 2px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 8px;
+  background: var(--gcs-surface);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.25);
+}
+@media (hover: none) {
+  .gcs-chat--compact .gcs-chat__msg > .gcs-chat__tools {
+    position: static;
+    grid-column: -2;
+    justify-content: flex-start;
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+  }
 }
 .gcs-chat__media {
   display: flex;
@@ -624,16 +800,61 @@
   color: var(--gcs-text);
   cursor: pointer;
 }
+
+/* Câmpul de scris: pe toată lățimea, cu uneltele în dreapta și butonul Enter. */
 .gcs-chat__composer {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--gcs-border);
 }
-.gcs-chat__composer .gcs-chat__form {
+.gcs-chat--newestTop .gcs-chat__composer {
+  border-top: 0;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-chat__form {
+  display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+}
+.gcs-chat__field {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  padding: 0 4px 0 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-bg);
+}
+.gcs-chat__field:focus-within {
+  border-color: var(--gcs-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--gcs-accent) 30%, transparent);
+}
+.gcs-chat__input {
+  flex: 1;
+  min-width: 0;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--gcs-text);
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+}
+.gcs-chat__input::placeholder {
+  color: var(--gcs-muted);
+}
+.gcs-chat__input:disabled {
+  cursor: not-allowed;
 }
 .gcs-chat__buttons {
+  flex: none;
   display: flex;
   align-items: center;
   gap: 2px;
@@ -647,73 +868,154 @@
   border: 0;
   border-radius: 8px;
   background: none;
-  color: var(--gcs-text);
-  font-size: 18px;
+  color: var(--gcs-muted);
+  font-size: 17px;
   cursor: pointer;
 }
 .gcs-chat__tool:hover,
-.gcs-chat__tool:focus-visible,
 .gcs-chat__tool[aria-expanded="true"] {
   background: var(--gcs-surface2);
+  color: var(--gcs-text);
 }
 .gcs-chat__tool:disabled {
   opacity: 0.4;
   cursor: default;
 }
+.gcs-chat__tool--emoji {
+  color: var(--gcs-warn);
+  font-size: 21px;
+}
+.gcs-chat__tool--emoji:hover,
+.gcs-chat__tool--emoji[aria-expanded="true"] {
+  color: var(--gcs-warn);
+}
 .gcs-chat__tool--gif {
+  min-width: 0;
+  height: 24px;
+  padding: 0 6px;
+  border: 1px solid currentColor;
+  border-radius: 6px;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.04em;
-  border: 1px solid var(--gcs-border);
-  height: 26px;
 }
 .gcs-chat__tool--rec {
   color: var(--gcs-warn);
+}
+.gcs-chat__send {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 44px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--gcs-accent);
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+}
+.gcs-chat__send:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+.gcs-chat__send:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.gcs-chat__sendIcon {
+  transform: rotate(90deg);
+}
+@media (max-width: 640px) {
+  .gcs-chat__composer--noEnterMobile .gcs-chat__send {
+    display: none;
+  }
+}
+.gcs-chat__recording {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--gcs-warn);
+}
+.gcs-chat__recDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--gcs-warn);
   animation: gcs-rec 1s ease-in-out infinite alternate;
 }
 @keyframes gcs-rec {
   to {
-    opacity: 0.5;
+    opacity: 0.35;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .gcs-chat__tool--rec {
+  .gcs-chat__recDot {
     animation: none;
+  }
+  .gcs-chat__switch,
+  .gcs-chat__switch::before,
+  .gcs-chat__msg > .gcs-chat__tools {
+    transition: none;
   }
 }
 .gcs-chat__recTime {
-  font-size: 13px;
   font-variant-numeric: tabular-nums;
-  color: var(--gcs-warn);
 }
-@media (max-width: 640px) {
-  .gcs-chat__form--noEnterMobile .gcs-chat__send {
-    display: none;
-  }
-  .gcs-chat__composer .gcs-chat__form {
-    flex-wrap: wrap;
-  }
-  .gcs-chat__composer .gcs-chat__form .gcs-input {
-    flex: 1 1 100%;
-    order: -1;
-  }
-}
+
+/* Selectorul flotant (emoticoane, GIF-uri), ancorat de butoanele câmpului. */
 .gcs-chat__panel {
-  padding: 8px;
+  position: absolute;
+  right: 12px;
+  z-index: 40;
+  width: min(380px, calc(100% - 24px));
   border: 1px solid var(--gcs-border);
   border-radius: 12px;
   background: var(--gcs-surface);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.25);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.35);
+  overflow: hidden;
 }
-.gcs-chat__tabs {
+.gcs-chat__panel--above {
+  bottom: calc(100% - 4px);
+}
+.gcs-chat__panel--below {
+  top: calc(100% - 4px);
+}
+.gcs-chat__gifs {
+  padding: 8px;
+}
+.gcs-chat__pickerTabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 8px;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-chat__pickerTab {
+  min-height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--gcs-muted);
+  font: 700 14px var(--gcs-font-text);
+  cursor: pointer;
+}
+.gcs-chat__pickerTab:hover {
+  color: var(--gcs-text);
+}
+.gcs-chat__pickerTab[aria-selected="true"] {
+  background: var(--gcs-text);
+  color: var(--gcs-surface);
+}
+.gcs-chat__cats {
   display: flex;
   gap: 2px;
-  padding-bottom: 6px;
-  margin-bottom: 6px;
+  padding: 4px 6px 0;
   border-bottom: 1px solid var(--gcs-border);
   overflow-x: auto;
 }
-.gcs-chat__tabs button {
+.gcs-chat__cats button {
   flex: none;
   width: 36px;
   height: 32px;
@@ -721,29 +1023,51 @@
   border-bottom: 2px solid transparent;
   border-radius: 6px 6px 0 0;
   background: none;
-  font-size: 18px;
+  color: var(--gcs-muted);
+  font-size: 15px;
   cursor: pointer;
 }
-.gcs-chat__tabs button[aria-selected="true"] {
+.gcs-chat__cats button:hover,
+.gcs-chat__cats button[aria-selected="true"] {
+  color: var(--gcs-text);
+}
+.gcs-chat__cats button[aria-selected="true"] {
   border-bottom-color: var(--gcs-accent);
+}
+.gcs-chat__emojiScroll {
+  position: relative;
+  height: 280px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.gcs-chat--compact .gcs-chat__emojiScroll {
+  height: 200px;
+}
+.gcs-chat__emojiHead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 8px 12px;
   background: var(--gcs-surface2);
+  color: var(--gcs-muted);
+  font: 600 13px var(--gcs-font-text);
 }
 .gcs-chat__emojiGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
-  max-height: 200px;
-  overflow-y: auto;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  padding: 4px 6px;
 }
 .gcs-chat__emojiGrid button {
-  height: 36px;
+  height: 40px;
   border: 0;
   border-radius: 8px;
   background: none;
-  font-size: 22px;
+  font-size: 24px;
+  line-height: 1;
   cursor: pointer;
 }
-.gcs-chat__emojiGrid button:hover,
-.gcs-chat__emojiGrid button:focus-visible {
+.gcs-chat__emojiGrid button:hover {
   background: var(--gcs-surface2);
 }
 .gcs-chat__gifSearch {
@@ -804,18 +1128,20 @@
   position: absolute;
   top: -6px;
   right: -6px;
+  display: grid;
+  place-items: center;
   width: 22px;
   height: 22px;
   border: 0;
   border-radius: 50%;
   background: var(--gcs-warn);
-  color: #fff;
-  font-size: 14px;
-  line-height: 1;
+  color: #000;
+  font-size: 12px;
   cursor: pointer;
 }
 .gcs-chat__older {
   align-self: center;
+  margin: 6px 0;
 }
 .gcs-chat__olderRow {
   display: flex;
@@ -827,4 +1153,162 @@
   padding: 0 10px;
   font-size: 12px;
   color: var(--gcs-text);
+}
+
+/* ACP → Chat → Setări (referințele 5.png–7.png): tab-uri, rânduri cu eticheta în stânga, comutatoare. */
+.gcs-chatAcp {
+  padding: 0;
+  overflow: hidden;
+}
+.gcs-chatAcp__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-chatAcp__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--gcs-muted);
+  font: 700 14px var(--gcs-font-text);
+  cursor: pointer;
+}
+.gcs-chatAcp__tab:hover {
+  color: var(--gcs-text);
+}
+.gcs-chatAcp__tab[aria-selected="true"] {
+  background: var(--gcs-text);
+  color: var(--gcs-surface);
+}
+.gcs-chatAcp__tab:focus-visible {
+  outline: 2px solid var(--gcs-accent);
+  outline-offset: 2px;
+}
+.gcs-chatAcp__panel[hidden] {
+  display: none;
+}
+.gcs-chatAcp__section {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--gcs-border);
+  background: var(--gcs-surface2);
+  color: var(--gcs-muted);
+  font: 600 14px var(--gcs-font-text);
+}
+.gcs-chatAcp__row {
+  display: grid;
+  grid-template-columns: minmax(160px, 300px) minmax(0, 1fr);
+  align-items: start;
+  gap: 6px 24px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-chatAcp__row--switch {
+  align-items: center;
+}
+.gcs-chatAcp__label {
+  padding-top: 9px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: right;
+}
+.gcs-chatAcp__row--switch .gcs-chatAcp__label {
+  padding-top: 0;
+}
+.gcs-chatAcp__control {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gcs-chatAcp__inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+.gcs-chatAcp__inline .gcs-input,
+.gcs-chatAcp__number {
+  width: 150px;
+}
+.gcs-chatAcp__control select,
+.gcs-chatAcp__control textarea,
+.gcs-chatAcp__control .gcs-input {
+  max-width: 420px;
+}
+.gcs-chatAcp__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  cursor: pointer;
+}
+.gcs-chatAcp__check input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--gcs-accent);
+}
+.gcs-chatAcp__hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--gcs-muted);
+  white-space: pre-line;
+}
+.gcs-chatAcp__error {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gcs-warn);
+}
+.gcs-chatAcp__saved {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gcs-ok);
+}
+.gcs-chatAcp__required {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--gcs-accentInk);
+}
+.gcs-chatAcp__footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: var(--gcs-surface2);
+}
+.gcs-chatAcp__body {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gcs-chatAcp__matrix th,
+.gcs-chatAcp__matrix td {
+  text-align: center;
+}
+.gcs-chatAcp__matrix th:first-child {
+  text-align: left;
+}
+@media (max-width: 720px) {
+  .gcs-chatAcp__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .gcs-chatAcp__label {
+    padding-top: 0;
+    text-align: left;
+  }
 }

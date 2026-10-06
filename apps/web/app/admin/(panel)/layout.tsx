@@ -1,5 +1,7 @@
 import { acpAppEntries } from "@gcs/core";
 import { GcsAvatar, GcsButton } from "@gcs/ui";
+import { resolveIcon } from "@gcs/ui/icon-registry";
+import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Link from "next/link";
@@ -11,7 +13,7 @@ import { services } from "@/lib/services";
 import { GcsAcpSearch } from "./_components/GcsAcpSearch";
 import { GcsAcpShell } from "./_components/GcsAcpShell";
 import { ACP_THEME_COOKIE, GcsAcpThemeSwitch, type GcsAcpTheme } from "./_components/GcsAcpThemeSwitch";
-import type { GcsAcpNavApp, GcsAcpNavSection } from "./_components/types";
+import type { GcsAcpIconDef, GcsAcpNavApp, GcsAcpNavSection } from "./_components/types";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("acp");
@@ -19,6 +21,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const THEMES: GcsAcpTheme[] = ["auto", "light", "dark"];
+
+/** Iconița unei intrări din meniu, rezolvată aici: la client ajung doar datele SVG ale iconițelor folosite. */
+function navIcon(name: string | undefined): { icon?: GcsAcpIconDef } {
+  const def = resolveIcon(name);
+  return def ? { icon: { prefix: def.prefix, iconName: def.iconName, icon: def.icon } } : {};
+}
 
 /** Layout-ul ACP (macheta Admin). Garda de acces rulează înaintea oricărei randări: fără acces → 404. */
 export default async function AcpPanelLayout({ children }: { children: ReactNode }) {
@@ -35,7 +43,8 @@ export default async function AcpPanelLayout({ children }: { children: ReactNode
   const sections: GcsAcpNavSection[] = panel.menu.map((s) => ({
     app: s.app,
     title: tr(s.title),
-    items: s.items.map((i) => ({ key: i.key, href: i.href, label: tr(i.labelKey) })),
+    ...navIcon(s.icon),
+    items: s.items.map((i) => ({ key: i.key, href: i.href, label: tr(i.labelKey), ...navIcon(i.icon) })),
   }));
   const perApp = (key: string) => Object.fromEntries(apps.map((a) => [a.app, t(key, { app: a.label })]));
 
@@ -57,7 +66,7 @@ export default async function AcpPanelLayout({ children }: { children: ReactNode
           },
         }}
       />
-      <GcsButton variant="ghost" asChild>
+      <GcsButton variant="ghost" asChild icon={<GcsIcon name="fa-solid fa-arrow-up-right-from-square" />}>
         <Link href="/">{t("acp.header.viewSite")}</Link>
       </GcsButton>
       <GcsAcpThemeSwitch

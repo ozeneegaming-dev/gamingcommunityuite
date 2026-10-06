@@ -7,6 +7,7 @@ import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { deleteFrame, saveFrame } from "../actions";
 import { Availability } from "../Availability";
+import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.vip"))("framesTitle") };
@@ -74,9 +75,9 @@ export default async function AcpFramesPage() {
 
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-circle-user">
         {t("framesTitle")}
-      </h1>
+      </GcsAcpTitle>
       <p className="gcs-muted" style={{ margin: 0 }}>
         {t("framesHelp")}
       </p>
@@ -87,19 +88,20 @@ export default async function AcpFramesPage() {
               <GcsAvatar key={size} name={f.name} size={size} frame={f.key} />
             ))}
           </div>
-          <GcsActionForm action={saveFrame.bind(null, f.id)} submitLabel={t("save")}>
+          <GcsActionForm action={saveFrame.bind(null, f.id)} submitLabel={t("save")} submitKind="save">
             {fields(f)}
           </GcsActionForm>
-          <GcsActionForm action={deleteFrame.bind(null, f.id)} submitLabel={t("delete")} variant="ghost" compact confirm={t("confirmDelete")}>
+          <GcsActionForm action={deleteFrame.bind(null, f.id)} submitLabel={t("delete")} submitKind="delete" variant="ghost" compact confirm={t("confirmDelete")}>
             {null}
           </GcsActionForm>
         </GcsCard>
       ))}
       <GcsCard as="section" aria-labelledby="gcs-frame-new" style={{ padding: 16 }}>
         <h2 id="gcs-frame-new" className="gcs-acpWidget__title" style={{ marginBottom: 12 }}>
+          <GcsAcpTitleIcon name="fa-solid fa-plus" />
           {t("addFrame")}
         </h2>
-        <GcsActionForm action={saveFrame.bind(null, null)} submitLabel={t("addFrame")}>
+        <GcsActionForm action={saveFrame.bind(null, null)} submitLabel={t("addFrame")} submitKind="create">
           {fields()}
         </GcsActionForm>
       </GcsCard>

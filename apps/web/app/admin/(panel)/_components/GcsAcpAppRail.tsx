@@ -1,6 +1,7 @@
 "use client";
 
-import { cx } from "@gcs/ui";
+import { faArrowDown, faArrowsUpDown, faArrowUp, faCheck, faShieldHalved } from "@fortawesome/free-solid-svg-icons";
+import { cx, GcsIconSvg } from "@gcs/ui";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { saveAppOrder } from "../actions";
@@ -48,8 +49,8 @@ export function GcsAcpAppRail({ apps, current, homeHref, labels }: Props) {
           flexShrink: 0,
         }}
       >
-        <span className="gcs-display" style={{ fontWeight: 700, fontSize: 22, color: "#fff", transform: "skewX(12deg)" }}>
-          R
+        <span style={{ display: "flex", fontSize: 22, color: "#fff", transform: "skewX(12deg)" }}>
+          <GcsIconSvg icon={faShieldHalved} />
         </span>
       </Link>
       {order.map((a, i) => (
@@ -59,15 +60,13 @@ export function GcsAcpAppRail({ apps, current, homeHref, labels }: Props) {
             className={cx("gcs-acpApp", a.app === current && "gcs-acpApp--active")}
             aria-current={a.app === current ? "page" : undefined}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d={ACP_APP_ICONS[a.app] ?? ACP_APP_ICONS.system} />
-            </svg>
+            <GcsIconSvg icon={ACP_APP_ICONS[a.app] ?? ACP_APP_ICONS.system!} className="gcs-acpApp__icon" />
             <span>{a.label}</span>
           </Link>
           {editing && (
             <div style={{ display: "flex", gap: 2 }}>
               <button type="button" className="gcs-iconBtn" disabled={i === 0} aria-label={labels.moveUp[a.app]} onClick={() => move(i, -1)}>
-                ↑
+                <GcsIconSvg icon={faArrowUp} />
               </button>
               <button
                 type="button"
@@ -76,7 +75,7 @@ export function GcsAcpAppRail({ apps, current, homeHref, labels }: Props) {
                 aria-label={labels.moveDown[a.app]}
                 onClick={() => move(i, 1)}
               >
-                ↓
+                <GcsIconSvg icon={faArrowDown} />
               </button>
             </div>
           )}
@@ -90,13 +89,7 @@ export function GcsAcpAppRail({ apps, current, homeHref, labels }: Props) {
         onClick={() => setEditing((v) => !v)}
         style={{ marginTop: "auto", width: 44, height: 44, flexShrink: 0 }}
       >
-        {editing ? (
-          "✓"
-        ) : (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-            <path d="M4 6h16M8 12h12M4 18h16" />
-          </svg>
-        )}
+        <GcsIconSvg icon={editing ? faCheck : faArrowsUpDown} className="gcs-acpRail__toggleIcon" />
       </button>
     </nav>
   );

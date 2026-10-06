@@ -1,7 +1,8 @@
 "use client";
 
 import type { GcsPollView } from "@gcs/modules";
-import { GcsButton, GcsCard } from "@gcs/ui";
+import { faCheckToSlot, faSquarePollVertical } from "@fortawesome/free-solid-svg-icons";
+import { GcsButton, GcsCard, GcsIconSvg } from "@gcs/ui";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
@@ -31,6 +32,7 @@ export function GcsPollCard({ poll, loggedIn, closesLabel }: { poll: GcsPollView
   return (
     <GcsCard as="section" className="gcs-poll" aria-labelledby={`poll-${poll.id}`}>
       <h2 id={`poll-${poll.id}`} className="gcs-display gcs-poll__question">
+        <GcsIconSvg icon={faSquarePollVertical} className="gcs-hIcon" />
         {poll.question}
       </h2>
       {showForm ? (
@@ -50,7 +52,7 @@ export function GcsPollCard({ poll, loggedIn, closesLabel }: { poll: GcsPollView
               {o.text}
             </label>
           ))}
-          <GcsButton variant="primary" onClick={vote} disabled={pending || chosen.length === 0}>
+          <GcsButton variant="primary" onClick={vote} disabled={pending || chosen.length === 0} icon={<GcsIconSvg icon={faCheckToSlot} />}>
             {t("vote")}
           </GcsButton>
         </fieldset>

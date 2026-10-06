@@ -1,5 +1,6 @@
 import { parseRef } from "@gcs/modules";
 import { GcsCard } from "@gcs/ui";
+import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -36,7 +37,10 @@ export default async function NewTopicPage({ params }: Props) {
   return (
     <>
       <GcsBreadcrumb crumbs={data.breadcrumb} />
-      <h1 className="gcs-display gcs-pageHeader__title">{t("newTopic.title", { forum: data.forum.name })}</h1>
+      <h1 className="gcs-display gcs-pageHeader__title">
+        <GcsIcon name="fa-solid fa-pen-to-square" className="gcs-hIcon" />
+        {t("newTopic.title", { forum: data.forum.name })}
+      </h1>
       {data.forum.type === "FORUM" || data.forum.type === "QA" ? (
         <GcsNewTopicForm
           forum={{ id: data.forum.id, href: forumHref(data.forum) }}
@@ -46,7 +50,10 @@ export default async function NewTopicPage({ params }: Props) {
           maxLength={await services().settings.get<number>("forums.post_max_chars")}
         />
       ) : (
-        <GcsCard style={{ padding: 24 }}>{t("forum.empty")}</GcsCard>
+        <GcsCard style={{ padding: 24 }}>
+          <GcsIcon name="fa-regular fa-comments" className="gcs-emptyIcon" />
+          {t("forum.empty")}
+        </GcsCard>
       )}
     </>
   );

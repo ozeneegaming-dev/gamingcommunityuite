@@ -159,7 +159,7 @@ export async function runInstall(
           await tx.account.create({ data: { userId: user.id, accountId: user.id, providerId: "credential", password: input.admin.passwordHash } });
         });
       },
-      // Conținutul de pornire ales în wizard; importul IPS (etapa 6) pornește deocamdată de la un site gol.
+      // Conținutul de pornire ales în wizard; importul din altă platformă (etapa de migrare) pornește deocamdată de la un site gol.
       demo: async () => {
         const variant = input.data === "demo" ? "demo" : "empty";
         for (const m of deps.registry.all()) {

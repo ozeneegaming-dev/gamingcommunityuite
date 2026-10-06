@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { getAcpContext } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { ReauthForm } from "./ReauthForm";
+import { GcsAcpTitle } from "../../(panel)/_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("acp.reauth");
@@ -21,9 +22,9 @@ export default async function AcpReauthPage() {
 
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-lock" style={{ fontSize: 24 }}>
         {t("title")}
-      </h1>
+      </GcsAcpTitle>
       <p style={{ margin: "6px 0 22px", color: "var(--gcs-muted)", fontSize: 14, lineHeight: 1.6 }}>{t("subtitle")}</p>
       <ReauthForm askPassword={hasPassword} />
     </>

@@ -1,7 +1,8 @@
 "use client";
 
+import { faFloppyDisk } from "@fortawesome/free-solid-svg-icons";
 import type { GcsNameStyle, GcsResult } from "@gcs/core";
-import { GcsButton } from "@gcs/ui";
+import { GcsButton, GcsIconSvg } from "@gcs/ui";
 import { useRouter } from "next/navigation";
 import { useState, type CSSProperties } from "react";
 import { useErrorMessage } from "../../_components/GcsActionForm";
@@ -141,7 +142,7 @@ export function NameStyleEditor({ onSave, name, initial, fallbackColor, labels }
         <input className="gcs-input" value={icon} maxLength={4} onChange={(e) => setIcon(e.target.value)} style={{ maxWidth: 120 }} />
       </label>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <GcsButton variant="primary" onClick={save} disabled={pending}>
+        <GcsButton variant="primary" onClick={save} disabled={pending} icon={<GcsIconSvg icon={faFloppyDisk} />}>
           {labels.save}
         </GcsButton>
         {status && (

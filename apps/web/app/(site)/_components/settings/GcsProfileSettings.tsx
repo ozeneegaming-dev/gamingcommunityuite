@@ -1,7 +1,8 @@
 "use client";
 
+import { faFloppyDisk, faTrash } from "@fortawesome/free-solid-svg-icons";
 import type { GcsResult } from "@gcs/core";
-import { GcsAvatar, GcsButton } from "@gcs/ui";
+import { GcsAvatar, GcsButton, GcsIconSvg } from "@gcs/ui";
 import { useState } from "react";
 import { removeImage, saveProfile, setCoverPosition } from "../../settings-actions";
 import { GcsStatus } from "./GcsStatus";
@@ -103,7 +104,7 @@ export function GcsProfileFieldsForm({ fields, values, bio, labels }: { fields: 
       {section("ABOUT", labels.about)}
       {section("GAMES", labels.games)}
       <div>
-        <GcsButton type="submit" variant="primary" disabled={pending}>
+        <GcsButton icon={<GcsIconSvg icon={faFloppyDisk} />} type="submit" variant="primary" disabled={pending}>
           {labels.save}
         </GcsButton>
       </div>
@@ -178,7 +179,7 @@ export function GcsImageSetting({
             />
           </label>
           {url && (
-            <GcsButton variant="ghost" disabled={pending} onClick={() => run(() => removeImage({ kind }))}>
+            <GcsButton icon={<GcsIconSvg icon={faTrash} />} variant="ghost" disabled={pending} onClick={() => run(() => removeImage({ kind }))}>
               {labels.remove}
             </GcsButton>
           )}

@@ -1,5 +1,6 @@
 import type { GcsTopicRow as Row } from "@gcs/modules";
 import { GcsAvatar, GcsBadge, GcsUserLink } from "@gcs/ui";
+import { GcsIcon } from "@gcs/ui/icons";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { memberHref, tagHref, tint, topicHref, unreadHref } from "@/lib/forum-urls";
@@ -16,12 +17,12 @@ export async function GcsTopicRow({ topic, select }: { topic: Row; select?: Reac
       </span>
       <div className="gcs-topicRow__main">
         <div className="gcs-topicRow__badges">
-          {topic.pinned && <GcsBadge tone="accent">{t("pinned")}</GcsBadge>}
-          {topic.featured && <GcsBadge tone="warn">{t("featured")}</GcsBadge>}
-          {topic.solved && <GcsBadge tone="ok">{t("solved")}</GcsBadge>}
-          {topic.locked && <GcsBadge tone="neutral">{t("locked")}</GcsBadge>}
-          {topic.visibility === "PENDING" && <GcsBadge tone="warn">{t("pending")}</GcsBadge>}
-          {topic.visibility === "HIDDEN" && <GcsBadge tone="neutral">{t("hidden")}</GcsBadge>}
+          {topic.pinned && <GcsBadge tone="accent" icon={<GcsIcon name="fa-solid fa-thumbtack" />}>{t("pinned")}</GcsBadge>}
+          {topic.featured && <GcsBadge tone="warn" icon={<GcsIcon name="fa-solid fa-star" />}>{t("featured")}</GcsBadge>}
+          {topic.solved && <GcsBadge tone="ok" icon={<GcsIcon name="fa-solid fa-circle-check" />}>{t("solved")}</GcsBadge>}
+          {topic.locked && <GcsBadge tone="neutral" icon={<GcsIcon name="fa-solid fa-lock" />}>{t("locked")}</GcsBadge>}
+          {topic.visibility === "PENDING" && <GcsBadge tone="warn" icon={<GcsIcon name="fa-solid fa-hourglass-half" />}>{t("pending")}</GcsBadge>}
+          {topic.visibility === "HIDDEN" && <GcsBadge tone="neutral" icon={<GcsIcon name="fa-solid fa-eye-slash" />}>{t("hidden")}</GcsBadge>}
           {topic.prefix && (
             <span className="gcs-badge" style={{ background: tint(topic.prefix.color, 0.16), color: topic.prefix.color }}>
               {topic.prefix.name}
@@ -54,8 +55,14 @@ export async function GcsTopicRow({ topic, select }: { topic: Row; select?: Reac
         </span>
       </div>
       <div className="gcs-topicRow__stats">
-        <span>{t("replies", { count: topic.repliesCount })}</span>
-        <span>{t("views", { count: topic.viewsCount })}</span>
+        <span>
+          <GcsIcon name="fa-regular fa-comment" className="gcs-metaIcon" />
+          {t("replies", { count: topic.repliesCount })}
+        </span>
+        <span>
+          <GcsIcon name="fa-regular fa-eye" className="gcs-metaIcon" />
+          {t("views", { count: topic.viewsCount })}
+        </span>
       </div>
       <div className="gcs-topicRow__last">
         {topic.last.user && (

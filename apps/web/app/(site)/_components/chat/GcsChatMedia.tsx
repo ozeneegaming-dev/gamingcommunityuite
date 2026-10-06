@@ -1,6 +1,8 @@
 "use client";
 
+import { faPlay } from "@fortawesome/free-solid-svg-icons";
 import type { GcsChatEmbed, GcsChatFile } from "@gcs/modules";
+import { GcsIconSvg } from "@gcs/ui";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
@@ -48,7 +50,7 @@ export function GcsChatMedia({ files, embeds, allowImages, allowYoutube }: Props
           >
             <img src={`https://i.ytimg.com/vi/${e.id}/mqdefault.jpg`} alt="" loading="lazy" referrerPolicy="no-referrer" />
             <span className="gcs-chat__play" aria-hidden="true">
-              ▶
+              <GcsIconSvg icon={faPlay} />
             </span>
           </button>
         ),

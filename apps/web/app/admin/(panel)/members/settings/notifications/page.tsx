@@ -6,6 +6,7 @@ import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../../_components/GcsActionForm";
 import { saveNotificationDefaults } from "./actions";
+import { GcsAcpTitle } from "../../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.notifications"))("title") };
@@ -20,11 +21,11 @@ export default async function AcpNotificationDefaultsPage() {
 
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-bell">
         {t("title")}
-      </h1>
+      </GcsAcpTitle>
       <GcsCard as="section" aria-label={t("title")} style={{ padding: 16, maxWidth: 820 }}>
-        <GcsActionForm action={saveNotificationDefaults} submitLabel={t("save")}>
+        <GcsActionForm action={saveNotificationDefaults} submitLabel={t("save")} submitKind="save">
           <p className="gcs-muted" style={{ margin: 0 }}>
             {t("hint")}
           </p>

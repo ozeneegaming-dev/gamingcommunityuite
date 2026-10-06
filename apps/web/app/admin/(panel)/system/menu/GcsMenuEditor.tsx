@@ -1,7 +1,8 @@
 "use client";
 
+import { faArrowDown, faArrowUp, faFloppyDisk, faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
 import type { GcsNavItemEdit, GcsNavItemInput, GcsNavLabel } from "@gcs/core";
-import { GcsButton, GcsIconPicker } from "@gcs/ui";
+import { GcsButton, GcsIconPicker, GcsIconSvg } from "@gcs/ui";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useErrorMessage } from "@/lib/use-error-message";
@@ -178,18 +179,18 @@ export function GcsMenuEditor({
         </fieldset>
       </div>
       <div className="gcs-menuEditor__tools">
-        <GcsButton variant="ghost" size="sm" onClick={() => move(it.uid, -1)}>
+        <GcsButton variant="ghost" size="sm" onClick={() => move(it.uid, -1)} icon={<GcsIconSvg icon={faArrowUp} />}>
           {labels.up}
         </GcsButton>
-        <GcsButton variant="ghost" size="sm" onClick={() => move(it.uid, 1)}>
+        <GcsButton variant="ghost" size="sm" onClick={() => move(it.uid, 1)} icon={<GcsIconSvg icon={faArrowDown} />}>
           {labels.down}
         </GcsButton>
         {depth === 0 && (
-          <GcsButton variant="ghost" size="sm" onClick={() => patch(it.uid, { children: [...it.children, blank()] })}>
+          <GcsButton variant="ghost" size="sm" onClick={() => patch(it.uid, { children: [...it.children, blank()] })} icon={<GcsIconSvg icon={faPlus} />}>
             {labels.addChild}
           </GcsButton>
         )}
-        <GcsButton variant="ghost" size="sm" onClick={() => remove(it.uid)}>
+        <GcsButton variant="ghost" size="sm" onClick={() => remove(it.uid)} icon={<GcsIconSvg icon={faTrash} />}>
           {labels.remove}
         </GcsButton>
       </div>
@@ -201,10 +202,10 @@ export function GcsMenuEditor({
     <div className="gcs-menuEditor" data-testid="gcs-menu-editor">
       <ul className="gcs-menuEditor__list">{items.map((it) => row(it, 0))}</ul>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-        <GcsButton variant="ghost" onClick={() => setItems((list) => [...list, blank()])}>
+        <GcsButton variant="ghost" onClick={() => setItems((list) => [...list, blank()])} icon={<GcsIconSvg icon={faPlus} />}>
           {labels.add}
         </GcsButton>
-        <GcsButton variant="primary" onClick={save} disabled={pending} data-testid="gcs-menu-save">
+        <GcsButton variant="primary" onClick={save} disabled={pending} data-testid="gcs-menu-save" icon={<GcsIconSvg icon={faFloppyDisk} />}>
           {labels.save}
         </GcsButton>
         {status && (

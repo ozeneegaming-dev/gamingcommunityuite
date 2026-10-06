@@ -6,6 +6,7 @@ import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { deletePromotion, savePromotion } from "../achievements/actions";
+import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.promotions"))("title") };
@@ -74,27 +75,28 @@ export default async function AcpPromotionsPage() {
 
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-arrow-trend-up">
         {t("title")}
-      </h1>
+      </GcsAcpTitle>
       <p className="gcs-muted" style={{ margin: 0 }}>
         {t("help")}
       </p>
       {rules.map((r) => (
         <GcsCard key={r.id} as="section" aria-label={r.name} style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }} data-testid="gcs-acp-promotion">
-          <GcsActionForm action={savePromotion.bind(null, r.id)} submitLabel={t("save")}>
+          <GcsActionForm action={savePromotion.bind(null, r.id)} submitLabel={t("save")} submitKind="save">
             {fields(r)}
           </GcsActionForm>
-          <GcsActionForm action={deletePromotion.bind(null, r.id)} submitLabel={t("delete")} variant="ghost" compact confirm={t("confirmDelete")}>
+          <GcsActionForm action={deletePromotion.bind(null, r.id)} submitLabel={t("delete")} submitKind="delete" variant="ghost" compact confirm={t("confirmDelete")}>
             {null}
           </GcsActionForm>
         </GcsCard>
       ))}
       <GcsCard as="section" aria-labelledby="gcs-promotion-new" style={{ padding: 16 }}>
         <h2 id="gcs-promotion-new" className="gcs-acpWidget__title" style={{ marginBottom: 12 }}>
+          <GcsAcpTitleIcon name="fa-solid fa-plus" />
           {t("add")}
         </h2>
-        <GcsActionForm action={savePromotion.bind(null, null)} submitLabel={t("add")}>
+        <GcsActionForm action={savePromotion.bind(null, null)} submitLabel={t("add")} submitKind="create">
           {fields()}
         </GcsActionForm>
       </GcsCard>

@@ -1,3 +1,4 @@
+import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
@@ -24,9 +25,19 @@ export default async function TagPage({ params, searchParams }: Props) {
 
   return (
     <>
-      <h1 className="gcs-display gcs-pageHeader__title">{t("title", { tag: data.tag.name })}</h1>
+      <h1 className="gcs-display gcs-pageHeader__title">
+        <GcsIcon name="fa-solid fa-tags" className="gcs-hIcon" />
+        {t("title", { tag: data.tag.name })}
+      </h1>
       <section className="gcs-card gcs-topicList">
-        {data.topics.length === 0 ? <p className="gcs-topicList__empty">{t("empty")}</p> : data.topics.map((topic) => <GcsTopicRow key={topic.id} topic={topic} />)}
+        {data.topics.length === 0 ? (
+          <p className="gcs-topicList__empty">
+            <GcsIcon name="fa-solid fa-tag" className="gcs-emptyIcon" />
+            {t("empty")}
+          </p>
+        ) : (
+          data.topics.map((topic) => <GcsTopicRow key={topic.id} topic={topic} />)
+        )}
       </section>
       <GcsPagination pagination={data.pagination} href={(p) => (p > 1 ? `${tagHref(slug)}?page=${p}` : tagHref(slug))} />
     </>

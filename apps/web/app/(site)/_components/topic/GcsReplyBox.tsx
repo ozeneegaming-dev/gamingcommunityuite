@@ -1,6 +1,7 @@
 "use client";
 
-import { GcsButton } from "@gcs/ui";
+import { faPaperPlane, faReply } from "@fortawesome/free-solid-svg-icons";
+import { GcsButton, GcsIconSvg } from "@gcs/ui";
 import { GcsEditor, type GcsEditorHandle } from "@gcs/ui/editor";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
@@ -9,7 +10,10 @@ import { replyAction } from "../../topic-actions";
 import { useRealtime } from "../realtime/GcsRealtimeProvider";
 import { QUOTE_EVENT, useEditorLabels, type GcsQuoteDetail } from "./useEditorLabels";
 
-/** Caseta de răspuns din macheta Topic: editorul, ciorna și trimiterea. Primește citatele de la butoanele „Citează”. */
+/**
+ * Caseta de răspuns din macheta Topic („Răspuns rapid”): titlul cu iconiță, editorul, ciorna și butonul de trimitere
+ * din dreapta-jos. Primește citatele de la butoanele „Citează”.
+ */
 export function GcsReplyBox({ topicId, forumId, maxUploadMb, maxLength }: { topicId: number; forumId: number; maxUploadMb: number; maxLength?: number }) {
   const t = useTranslations("topic");
   const labels = useEditorLabels();
@@ -52,9 +56,10 @@ export function GcsReplyBox({ topicId, forumId, maxUploadMb, maxLength }: { topi
   }
 
   return (
-    <section id="reply" ref={box} aria-labelledby="gcs-reply-label" className="gcs-replyBox">
-      <h2 id="gcs-reply-label" className="gcs-srOnly">
-        {t("replyLabel")}
+    <section id="reply" ref={box} aria-labelledby="gcs-reply-label" className="gcs-replyBox gcs-replyBox--quick">
+      <h2 id="gcs-reply-label" className="gcs-display gcs-replyBox__title">
+        <GcsIconSvg icon={faReply} className="gcs-hIcon" />
+        {t("quickReply")}
       </h2>
       <GcsEditor
         ref={editor}
@@ -66,15 +71,13 @@ export function GcsReplyBox({ topicId, forumId, maxUploadMb, maxLength }: { topi
         mentionUrl="/api/forums/mentions"
         draftKey={`topic-${topicId}`}
         onChange={onTyping}
-        footer={
-          <>
-            <span>{maxUploadMb === -1 ? t("footerUnlimited") : t("footer", { mb: maxUploadMb })}</span>
-            <GcsButton variant="primary" onClick={send} disabled={sending}>
-              {sending ? t("sending") : t("send")}
-            </GcsButton>
-          </>
-        }
+        footer={<span>{maxUploadMb === -1 ? t("footerUnlimited") : t("footer", { mb: maxUploadMb })}</span>}
       />
+      <div className="gcs-replyBox__actions">
+        <GcsButton variant="primary" className="gcs-replyBox__send" onClick={send} disabled={sending} icon={<GcsIconSvg icon={faPaperPlane} />}>
+          {sending ? t("sending") : t("send")}
+        </GcsButton>
+      </div>
       {notice && (
         <p role={notice.ok ? "status" : "alert"} className={notice.ok ? "gcs-notice" : "gcs-notice gcs-notice--error"}>
           {notice.text}

@@ -1,12 +1,26 @@
 "use client";
 
-import { faBars, faChevronDown, faMagnifyingGlass, faXmark } from "@fortawesome/free-solid-svg-icons";
+import {
+  faBars,
+  faBell,
+  faCheck,
+  faChevronDown,
+  faEnvelope,
+  faGear,
+  faLanguage,
+  faMagnifyingGlass,
+  faRightFromBracket,
+  faScrewdriverWrench,
+  faShieldHalved,
+  faUser,
+  faXmark,
+} from "@fortawesome/free-solid-svg-icons";
 import { GcsDropdown, GcsIconSvg, type GcsDropdownItem } from "@gcs/ui";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { authClient } from "@/lib/auth-client";
-import { setLocale, setThemeMode } from "../../actions";
+import { setLocale } from "../../actions";
 
 /** Un item de meniu gata de afișat (iconița vine randată de pe server). */
 export type GcsNavEntry = { id: number; label: string; href: string; icon: ReactNode; newTab: boolean; children: GcsNavEntry[] };
@@ -105,9 +119,6 @@ export type GcsUserMenuLabels = {
   settings: string;
   acp: string;
   moderation: string;
-  theme: string;
-  themes: Record<"dark" | "light" | "auto", string>;
-  language: string;
   logout: string;
 };
 
@@ -117,56 +128,26 @@ const submit = (action: (fd: FormData) => Promise<void>, name: string, value: st
   return action(fd);
 };
 
-/** Meniul userului (dropdown): linkurile de bază, ACP / moderare, tema, limba și ieșirea. */
-export function GcsUserMenu({
-  trigger,
-  links,
-  labels,
-  locales,
-  currentTheme,
-  currentLocale,
-}: {
-  trigger: ReactNode;
-  links: { profile: string; acp: boolean; moderation: boolean };
-  labels: GcsUserMenuLabels;
-  locales: { code: string; label: string }[];
-  currentTheme: string;
-  currentLocale: string;
-}) {
-  const router = useRouter();
+/**
+ * Meniul userului (dropdown): linkurile de bază, ACP / moderare și ieșirea, fiecare cu iconița lui. Tema și limba nu
+ * mai stau aici: se schimbă din footer (pentru toată lumea).
+ */
+export function GcsUserMenu({ trigger, links, labels }: { trigger: ReactNode; links: { profile: string; acp: boolean; moderation: boolean }; labels: GcsUserMenuLabels }) {
   const [, start] = useTransition();
-  const apply = (action: (fd: FormData) => Promise<void>, name: string, value: string) =>
-    start(async () => {
-      await submit(action, name, value);
-      router.refresh();
-    });
+  const icon = (def: Parameters<typeof GcsIconSvg>[0]["icon"]) => <GcsIconSvg icon={def} />;
   const items: GcsDropdownItem[] = [
-    { kind: "link", label: labels.profile, href: links.profile, testId: "gcs-menu-profile" },
-    { kind: "link", label: labels.messages, href: "/messages" },
-    { kind: "link", label: labels.notifications, href: "/notifications" },
-    { kind: "link", label: labels.settings, href: "/settings/profile", testId: "gcs-menu-settings" },
+    { kind: "link", label: labels.profile, href: links.profile, icon: icon(faUser), testId: "gcs-menu-profile" },
+    { kind: "link", label: labels.messages, href: "/messages", icon: icon(faEnvelope) },
+    { kind: "link", label: labels.notifications, href: "/notifications", icon: icon(faBell) },
+    { kind: "link", label: labels.settings, href: "/settings/profile", icon: icon(faGear), testId: "gcs-menu-settings" },
     ...(links.acp || links.moderation ? [{ kind: "separator" } as const] : []),
-    ...(links.acp ? [{ kind: "link", label: labels.acp, href: "/admin", testId: "gcs-menu-acp" } as const] : []),
-    ...(links.moderation ? [{ kind: "link", label: labels.moderation, href: "/admin/members/moderation/queue" } as const] : []),
-    { kind: "separator" },
-    { kind: "heading", label: labels.theme },
-    ...(["dark", "light", "auto"] as const).map<GcsDropdownItem>((mode) => ({
-      kind: "action",
-      label: `${currentTheme === mode ? "✓ " : ""}${labels.themes[mode]}`,
-      onSelect: () => apply(setThemeMode, "mode", mode),
-      testId: `gcs-menu-theme-${mode}`,
-    })),
-    { kind: "heading", label: labels.language },
-    ...locales.map<GcsDropdownItem>((l) => ({
-      kind: "action",
-      label: `${currentLocale === l.code ? "✓ " : ""}${l.label}`,
-      onSelect: () => apply(setLocale, "locale", l.code),
-      testId: `gcs-menu-locale-${l.code}`,
-    })),
+    ...(links.acp ? [{ kind: "link", label: labels.acp, href: "/admin", icon: icon(faScrewdriverWrench), testId: "gcs-menu-acp" } as const] : []),
+    ...(links.moderation ? [{ kind: "link", label: labels.moderation, href: "/admin/members/moderation/queue", icon: icon(faShieldHalved) } as const] : []),
     { kind: "separator" },
     {
       kind: "action",
       label: labels.logout,
+      icon: icon(faRightFromBracket),
       onSelect: () =>
         start(async () => {
           await authClient.signOut();
@@ -185,10 +166,16 @@ export function GcsGuestPrefs({ locales, currentLocale, labels }: { locales: { c
   return (
     <GcsDropdown
       label={labels.language}
-      trigger={<span className="gcs-guestLocale">{currentLocale.toUpperCase()}</span>}
+      trigger={
+        <span className="gcs-guestLocale">
+          <GcsIconSvg icon={faLanguage} />
+          {currentLocale.toUpperCase()}
+        </span>
+      }
       items={locales.map((l) => ({
         kind: "action",
-        label: `${currentLocale === l.code ? "✓ " : ""}${l.label}`,
+        label: l.label,
+        icon: currentLocale === l.code ? <GcsIconSvg icon={faCheck} /> : <GcsIconSvg icon={faLanguage} />,
         onSelect: () =>
           start(async () => {
             await submit(setLocale, "locale", l.code);
@@ -202,7 +189,15 @@ export function GcsGuestPrefs({ locales, currentLocale, labels }: { locales: { c
 }
 
 /** Meniul de pe mobil: un sertar lateral cu meniul principal și linkurile contului. */
-export function GcsMobileNav({ items, extra, labels }: { items: GcsNavEntry[]; extra: { href: string; label: string }[]; labels: { open: string; close: string; menu: string } }) {
+export function GcsMobileNav({
+  items,
+  extra,
+  labels,
+}: {
+  items: GcsNavEntry[];
+  extra: { href: string; label: string; icon?: ReactNode }[];
+  labels: { open: string; close: string; menu: string };
+}) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const panel = useRef<HTMLDivElement>(null);
@@ -236,6 +231,7 @@ export function GcsMobileNav({ items, extra, labels }: { items: GcsNavEntry[]; e
               {extra.length > 0 && <hr className="gcs-drawer__sep" />}
               {extra.map((e) => (
                 <Link key={e.href} href={e.href} className="gcs-drawer__link">
+                  {e.icon}
                   <span>{e.label}</span>
                 </Link>
               ))}

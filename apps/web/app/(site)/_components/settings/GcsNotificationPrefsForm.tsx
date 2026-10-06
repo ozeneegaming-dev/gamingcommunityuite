@@ -1,6 +1,7 @@
 "use client";
 
-import { GcsButton } from "@gcs/ui";
+import { faFloppyDisk } from "@fortawesome/free-solid-svg-icons";
+import { GcsButton, GcsIconSvg } from "@gcs/ui";
 import { useState } from "react";
 import { saveNotificationPreferences } from "../../notification-actions";
 import { GcsStatus } from "./GcsStatus";
@@ -65,7 +66,7 @@ export function GcsNotificationPrefsForm({ rows, labels }: { rows: GcsNotificati
         </table>
       </div>
       <div>
-        <GcsButton type="submit" variant="primary" disabled={pending}>
+        <GcsButton icon={<GcsIconSvg icon={faFloppyDisk} />} type="submit" variant="primary" disabled={pending}>
           {labels.save}
         </GcsButton>
       </div>

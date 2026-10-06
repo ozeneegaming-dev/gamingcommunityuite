@@ -7,6 +7,7 @@ import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../../_components/GcsActionForm";
 import { recomputeRanks } from "../actions";
+import { GcsAcpTitle, GcsAcpTitleIcon } from "../../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.achievements"))("settingsTitle") };
@@ -22,11 +23,11 @@ export default async function AcpAchievementSettingsPage() {
   const rules = await services().db.achievementRule.findMany({ where: { trigger: { in: ["EACH_POST", "EACH_REACTION_RECEIVED", "EACH_SOLUTION"] } }, orderBy: { position: "asc" } });
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-sliders">
         {t("settingsTitle")}
-      </h1>
+      </GcsAcpTitle>
       <GcsCard as="section" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-        <h2 className="gcs-acpWidget__title">{t("pointsTitle")}</h2>
+        <h2 className="gcs-acpWidget__title"><GcsAcpTitleIcon name="fa-solid fa-coins" />{t("pointsTitle")}</h2>
         <ul style={{ margin: 0, paddingLeft: 18 }}>
           {rules.map((r) => (
             <li key={r.id}>
@@ -38,11 +39,11 @@ export default async function AcpAchievementSettingsPage() {
         <Link href="/admin/members/achievements/rules">{t("editRules")}</Link>
       </GcsCard>
       <GcsCard as="section" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-        <h2 className="gcs-acpWidget__title">{t("recomputeTitle")}</h2>
+        <h2 className="gcs-acpWidget__title"><GcsAcpTitleIcon name="fa-solid fa-rotate" />{t("recomputeTitle")}</h2>
         <p className="gcs-muted" style={{ margin: 0 }}>
           {t("recomputeHelp")}
         </p>
-        <GcsActionForm action={recomputeRanks} submitLabel={t("recompute")} variant="ghost">
+        <GcsActionForm action={recomputeRanks} submitLabel={t("recompute")} submitKind="recompute" variant="ghost">
           {null}
         </GcsActionForm>
       </GcsCard>

@@ -1,10 +1,13 @@
 "use client";
 
-import { cx } from "@gcs/ui";
+import { faCircleHalfStroke, faMoon, faSun } from "@fortawesome/free-solid-svg-icons";
+import { cx, GcsIconSvg } from "@gcs/ui";
 import { useState } from "react";
 
 export type GcsAcpTheme = "auto" | "light" | "dark";
 export const ACP_THEME_COOKIE = "gcs-acp-theme";
+
+const THEME_ICONS = { auto: faCircleHalfStroke, light: faSun, dark: faMoon } as const;
 
 /** Tema ACP (Auto/Light/Dark), o preferință a adminului salvată într-un cookie (spec §12). */
 export function GcsAcpThemeSwitch({ initial, labels }: { initial: GcsAcpTheme; labels: { group: string } & Record<GcsAcpTheme, string> }) {
@@ -24,6 +27,7 @@ export function GcsAcpThemeSwitch({ initial, labels }: { initial: GcsAcpTheme; l
     >
       {(["auto", "light", "dark"] as const).map((v) => (
         <button key={v} type="button" className={cx("gcs-seg", v === theme && "gcs-seg--active")} aria-pressed={v === theme} onClick={() => choose(v)}>
+          <GcsIconSvg icon={THEME_ICONS[v]} className="gcs-seg__icon" />
           {labels[v]}
         </button>
       ))}

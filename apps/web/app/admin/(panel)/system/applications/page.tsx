@@ -7,6 +7,7 @@ import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { setAppEnabled } from "../../appearance/actions";
+import { GcsAcpTitle } from "../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.apps"))("title") };
@@ -21,9 +22,9 @@ export default async function AcpApplicationsPage() {
   const [t, tAll, apps] = await Promise.all([getTranslations("acp.apps"), getTranslations(), services().apps.list()]);
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-cubes">
         {t("title")}
-      </h1>
+      </GcsAcpTitle>
       <p className="gcs-muted" style={{ margin: 0 }}>
         {t("hint")}
       </p>
@@ -33,7 +34,7 @@ export default async function AcpApplicationsPage() {
             <h2 className="gcs-acpWidget__title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <GcsIcon name={app.icon} /> {tAll.has(app.labelKey) ? tAll(app.labelKey) : app.key}
             </h2>
-            <GcsActionForm action={setAppEnabled.bind(null, app.key)} submitLabel={t("save")}>
+            <GcsActionForm action={setAppEnabled.bind(null, app.key)} submitLabel={t("save")} submitKind="save">
               <label className="gcs-checkRow">
                 <input type="checkbox" name="enabled" defaultChecked={app.enabled} />
                 {t("enabled")}

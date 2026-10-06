@@ -148,103 +148,106 @@ const permissions: GcsPermissionDef[] = [
   groupPermission("new_member.post_threshold", { new_member: 5 }),
 ];
 
-type MenuItem = [key: string, href: string];
+type MenuItem = [key: string, href: string, icon: string];
 
-function menuSection(app: GcsAcpApp, group: string, items: MenuItem[]): GcsAcpMenuSection {
+/** O secțiune a meniului ACP: titlul și intrările, fiecare cu iconița ei Font Awesome. */
+function menuSection(app: GcsAcpApp, group: string, icon: string, items: MenuItem[]): GcsAcpMenuSection {
   return {
     app,
     title: `acp.menu.${app}.${group}`,
-    items: items.map(([key, href]) => ({
+    icon,
+    items: items.map(([key, href, itemIcon]) => ({
       key: `${app}.${key}`,
       labelKey: `acp.menu.${app}.${key}`,
       href,
       section: `${app}.${key}`,
+      icon: itemIcon,
     })),
   };
 }
 
 /** Meniul ACP din spec §12.1, pentru aplicațiile Sistem și Membri. */
 const acpMenu: GcsAcpMenuSection[] = [
-  menuSection("system", "overview", [
-    ["dashboard", "/admin"],
-    ["files", "/admin/system/files"],
+  menuSection("system", "overview", "fa-solid fa-gauge", [
+    ["dashboard", "/admin", "fa-solid fa-gauge-high"],
+    ["files", "/admin/system/files", "fa-solid fa-folder-open"],
   ]),
-  menuSection("system", "site_features", [
-    ["applications", "/admin/system/applications"],
-    ["integrations", "/admin/system/integrations"],
-    ["menu_manager", "/admin/system/menu"],
-    ["api", "/admin/system/api"],
-    ["webhooks", "/admin/system/webhooks"],
-    ["rss_import", "/admin/system/rss-import"],
+  menuSection("system", "site_features", "fa-solid fa-puzzle-piece", [
+    ["applications", "/admin/system/applications", "fa-solid fa-cubes"],
+    ["integrations", "/admin/system/integrations", "fa-solid fa-plug"],
+    ["menu_manager", "/admin/system/menu", "fa-solid fa-bars-staggered"],
+    ["api", "/admin/system/api", "fa-solid fa-code"],
+    ["webhooks", "/admin/system/webhooks", "fa-solid fa-satellite-dish"],
+    ["rss_import", "/admin/system/rss-import", "fa-solid fa-square-rss"],
   ]),
-  menuSection("system", "settings", [
-    ["settings_general", "/admin/settings/general"],
-    ["settings_terms", "/admin/settings/terms"],
-    ["settings_posting", "/admin/settings/posting"],
-    ["settings_email", "/admin/settings/email"],
-    ["settings_languages", "/admin/settings/languages"],
-    ["settings_auth", "/admin/settings/auth"],
-    ["settings_contact", "/admin/settings/contact"],
-    ["settings_2fa", "/admin/settings/2fa"],
-    ["settings_advanced", "/admin/settings/advanced"],
-    ["settings_pwa", "/admin/settings/pwa"],
+  menuSection("system", "settings", "fa-solid fa-sliders", [
+    ["settings_general", "/admin/settings/general", "fa-solid fa-gear"],
+    ["settings_terms", "/admin/settings/terms", "fa-solid fa-file-contract"],
+    ["settings_posting", "/admin/settings/posting", "fa-solid fa-pen-to-square"],
+    ["settings_email", "/admin/settings/email", "fa-solid fa-envelope"],
+    ["settings_languages", "/admin/settings/languages", "fa-solid fa-language"],
+    ["settings_auth", "/admin/settings/auth", "fa-solid fa-right-to-bracket"],
+    ["settings_contact", "/admin/settings/contact", "fa-solid fa-address-card"],
+    ["settings_2fa", "/admin/settings/2fa", "fa-solid fa-shield-halved"],
+    ["settings_advanced", "/admin/settings/advanced", "fa-solid fa-screwdriver-wrench"],
+    ["settings_pwa", "/admin/settings/pwa", "fa-solid fa-mobile-screen"],
   ]),
-  menuSection("system", "discovery", [
-    ["search", "/admin/system/search"],
-    ["streams", "/admin/system/streams"],
-    ["rss", "/admin/system/rss"],
-    ["tags", "/admin/system/tags"],
+  menuSection("system", "discovery", "fa-solid fa-compass", [
+    ["search", "/admin/system/search", "fa-solid fa-magnifying-glass"],
+    ["streams", "/admin/system/streams", "fa-solid fa-list-ul"],
+    ["rss", "/admin/system/rss", "fa-solid fa-rss"],
+    ["tags", "/admin/system/tags", "fa-solid fa-tags"],
   ]),
-  menuSection("system", "promotion", [
-    ["ads", "/admin/system/ads"],
-    ["seo", "/admin/system/seo"],
-    ["share", "/admin/system/share"],
+  menuSection("system", "promotion", "fa-solid fa-bullhorn", [
+    ["ads", "/admin/system/ads", "fa-solid fa-rectangle-ad"],
+    ["seo", "/admin/system/seo", "fa-solid fa-magnifying-glass-chart"],
+    ["share", "/admin/system/share", "fa-solid fa-share-nodes"],
   ]),
-  menuSection("system", "support", [
-    ["status", "/admin/system/status"],
-    ["logs", "/admin/logs"],
-    ["cache", "/admin/system/cache"],
+  menuSection("system", "support", "fa-solid fa-life-ring", [
+    ["status", "/admin/system/status", "fa-solid fa-heart-pulse"],
+    ["logs", "/admin/logs", "fa-solid fa-clipboard-list"],
+    ["cache", "/admin/system/cache", "fa-solid fa-bolt"],
   ]),
-  menuSection("system", "conversions", [["import", "/admin/system/import"]]),
+  menuSection("system", "conversions", "fa-solid fa-right-left", [["import", "/admin/system/import", "fa-solid fa-file-import"]]),
 
-  menuSection("members", "members", [
-    ["members", "/admin/members"],
-    ["groups", "/admin/groups"],
-    ["promotions", "/admin/members/promotions"],
-    ["ip_tools", "/admin/members/ip-tools"],
-    ["gdpr", "/admin/members/gdpr"],
+  menuSection("members", "members", "fa-solid fa-users", [
+    ["members", "/admin/members", "fa-solid fa-user"],
+    ["groups", "/admin/groups", "fa-solid fa-users"],
+    ["promotions", "/admin/members/promotions", "fa-solid fa-arrow-trend-up"],
+    ["ip_tools", "/admin/members/ip-tools", "fa-solid fa-network-wired"],
+    ["gdpr", "/admin/members/gdpr", "fa-solid fa-scale-balanced"],
   ]),
-  menuSection("members", "achievements", [
-    ["achievement_rules", "/admin/members/achievements/rules"],
-    ["ranks", "/admin/members/achievements/ranks"],
-    ["badges", "/admin/members/achievements/badges"],
-    ["achievement_settings", "/admin/members/achievements/settings"],
+  menuSection("members", "achievements", "fa-solid fa-trophy", [
+    ["achievement_rules", "/admin/members/achievements/rules", "fa-solid fa-list-check"],
+    ["ranks", "/admin/members/achievements/ranks", "fa-solid fa-ranking-star"],
+    ["badges", "/admin/members/achievements/badges", "fa-solid fa-award"],
+    ["achievement_settings", "/admin/members/achievements/settings", "fa-solid fa-sliders"],
   ]),
-  menuSection("members", "member_settings", [
-    ["profiles", "/admin/members/settings/profiles"],
-    ["reputation", "/admin/members/settings/reputation"],
-    ["notifications", "/admin/members/settings/notifications"],
-    ["bans", "/admin/members/settings/bans"],
-    ["referral", "/admin/members/settings/referral"],
+  menuSection("members", "member_settings", "fa-solid fa-user-gear", [
+    ["profiles", "/admin/members/settings/profiles", "fa-solid fa-id-card"],
+    ["reputation", "/admin/members/settings/reputation", "fa-solid fa-thumbs-up"],
+    ["notifications", "/admin/members/settings/notifications", "fa-solid fa-bell"],
+    ["bans", "/admin/members/settings/bans", "fa-solid fa-ban"],
+    ["referral", "/admin/members/settings/referral", "fa-solid fa-user-plus"],
   ]),
-  menuSection("members", "moderation", [
-    ["queue", "/admin/members/moderation/queue"],
-    ["reports", "/admin/members/moderation/reports"],
-    ["antispam", "/admin/members/moderation/antispam"],
-    ["warnings", "/admin/members/moderation/warnings"],
-    ["tickets", "/admin/members/moderation/tickets"],
+  menuSection("members", "moderation", "fa-solid fa-gavel", [
+    ["queue", "/admin/members/moderation/queue", "fa-solid fa-inbox"],
+    ["reports", "/admin/members/moderation/reports", "fa-solid fa-flag"],
+    ["antispam", "/admin/members/moderation/antispam", "fa-solid fa-shield-virus"],
+    ["warnings", "/admin/members/moderation/warnings", "fa-solid fa-triangle-exclamation"],
+    ["tickets", "/admin/members/moderation/tickets", "fa-solid fa-ticket"],
   ]),
-  menuSection("members", "staff", [
-    ["moderators", "/admin/members/staff/moderators"],
-    ["acp_roles", "/admin/staff/roles"],
-    ["staff_page", "/admin/members/staff/page"],
+  menuSection("members", "staff", "fa-solid fa-user-tie", [
+    ["moderators", "/admin/members/staff/moderators", "fa-solid fa-user-shield"],
+    ["acp_roles", "/admin/staff/roles", "fa-solid fa-user-lock"],
+    ["staff_page", "/admin/members/staff/page", "fa-solid fa-address-book"],
   ]),
-  menuSection("members", "bulk_mail", [["bulk_mail", "/admin/members/bulk-mail"]]),
+  menuSection("members", "bulk_mail", "fa-solid fa-envelopes-bulk", [["bulk_mail", "/admin/members/bulk-mail", "fa-solid fa-envelopes-bulk"]]),
 
   // Etapa 5: temele și widget-urile se editează direct pe site; aici sunt listele și linkurile spre editoare.
-  menuSection("appearance", "appearance", [
-    ["themes", "/admin/appearance/themes"],
-    ["widgets", "/admin/appearance/widgets"],
+  menuSection("appearance", "appearance", "fa-solid fa-palette", [
+    ["themes", "/admin/appearance/themes", "fa-solid fa-brush"],
+    ["widgets", "/admin/appearance/widgets", "fa-solid fa-table-cells-large"],
   ]),
 ];
 

@@ -1,12 +1,27 @@
 "use client";
 
+import { faClock } from "@fortawesome/free-regular-svg-icons";
+import {
+  faCheck,
+  faCircleCheck,
+  faClockRotateLeft,
+  faEllipsis,
+  faEyeSlash,
+  faFaceSmile,
+  faFlag,
+  faHeart,
+  faPenToSquare,
+  faQuoteLeft,
+  faRotateLeft,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
 import type { GcsReactionCount, GcsReactionView } from "@gcs/core";
-import { GcsBadge, GcsButton } from "@gcs/ui";
+import { GcsBadge, GcsButton, GcsDropdown, GcsIconSvg, type GcsDropdownItem } from "@gcs/ui";
 import { GcsEditor, type GcsEditorHandle } from "@gcs/ui/editor";
 import type { JSONContent } from "@tiptap/core";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { useErrorMessage } from "@/lib/use-error-message";
 import { approvePostsAction } from "../../mod-actions";
 import {
@@ -58,7 +73,16 @@ export type GcsPostContentProps = {
     /** Checkbox pentru despărțirea postărilor (moderatori cu puterea `split`). */
     split: boolean;
   };
+  /** Sub conținut (randate pe server): butonul „Traduce”. */
+  extras?: ReactNode;
+  /** Semnătura autorului (randată pe server), sub conținut, după separatorul punctat. */
+  signature?: ReactNode;
 };
+
+/** Reacția butonului „Apreciază”: `like`, altfel prima reacție activă. */
+function likeReaction(list: GcsReactionView[]): GcsReactionView | undefined {
+  return list.find((r) => r.key === "like") ?? list[0];
+}
 
 type Revision = { id: number; html: string; createdAt: string; editor: string | null };
 
@@ -83,7 +107,29 @@ export function GcsPostContent(props: GcsPostContentProps) {
   const reportDialog = useRef<HTMLDialogElement>(null);
   const historyDialog = useRef<HTMLDialogElement>(null);
   const body = useRef<HTMLDivElement>(null);
+  const actions = useRef<HTMLDivElement>(null);
+  const pickerRef = useRef<HTMLSpanElement>(null);
   const byId = new Map(props.reactionList.map((r) => [r.id, r]));
+  const like = likeReaction(props.reactionList);
+  const likeCount = like ? (reactions.find((r) => r.reactionId === like.id)?.count ?? 0) : 0;
+  const liked = like !== undefined && mine === like.id;
+  const total = reactions.reduce((n, r) => n + r.count, 0);
+
+  // Selectorul de reacții (deschis din „Mai mult…”): focusul pe prima reacție; Escape/click în afară îl închid.
+  useEffect(() => {
+    if (!picker) return;
+    pickerRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
+    const onDown = (e: MouseEvent) => {
+      if (!pickerRef.current?.contains(e.target as Node)) setPicker(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [picker]);
+
+  function closePicker() {
+    setPicker(false);
+    actions.current?.querySelector<HTMLButtonElement>(".gcs-dropdown__trigger")?.focus();
+  }
 
   /** Rulează o acțiune; la succes, reîncarcă datele paginii. */
   function run<T>(action: () => Promise<{ ok: true; data: T } | { ok: false; error: Parameters<typeof errorMessage>[0] }>, after?: (data: T) => void) {
@@ -134,10 +180,50 @@ export function GcsPostContent(props: GcsPostContentProps) {
     historyDialog.current?.showModal();
   }
 
+  // „Mai mult…”: acțiunile membrului (altă reacție, raportare), apoi cele de autor/moderare.
+  const userItems: GcsDropdownItem[] = [
+    ...(can.react && props.reactionList.length > 0
+      ? [{ kind: "action" as const, label: t("react"), icon: <GcsIconSvg icon={faFaceSmile} />, onSelect: () => setPicker(true) }]
+      : []),
+    ...(can.report && !reported
+      ? [{ kind: "action" as const, label: t("report"), icon: <GcsIconSvg icon={faFlag} />, onSelect: () => reportDialog.current?.showModal() }]
+      : []),
+  ];
+  const modItems: GcsDropdownItem[] = [
+    ...(can.edit && post.edited ? [{ kind: "action" as const, label: t("history"), icon: <GcsIconSvg icon={faClockRotateLeft} />, onSelect: () => void openHistory() }] : []),
+    ...(can.hide && post.visibility !== "HIDDEN"
+      ? [
+          {
+            kind: "action" as const,
+            label: t("hide"),
+            icon: <GcsIconSvg icon={faEyeSlash} />,
+            onSelect: () => window.confirm(t("confirmHide")) && run(() => hidePostAction({ postId: post.id })),
+          },
+        ]
+      : []),
+    ...(can.restore && post.visibility === "HIDDEN"
+      ? [{ kind: "action" as const, label: t("restore"), icon: <GcsIconSvg icon={faRotateLeft} />, onSelect: () => run(() => restorePostAction({ postId: post.id })) }]
+      : []),
+    ...(can.delete
+      ? [
+          {
+            kind: "action" as const,
+            label: t("delete"),
+            icon: <GcsIconSvg icon={faTrash} />,
+            onSelect: () => window.confirm(t("confirmDelete")) && run(() => deletePostAction({ postId: post.id })),
+          },
+        ]
+      : []),
+  ];
+  const moreItems: GcsDropdownItem[] = [...userItems, ...(userItems.length > 0 && modItems.length > 0 ? [{ kind: "separator" as const }] : []), ...modItems];
+
   return (
     <div className="gcs-post__content">
       <div className="gcs-post__head">
-        <time dateTime={post.dateIso}>{post.date}</time>
+        <time dateTime={post.dateIso} className="gcs-post__date">
+          <GcsIconSvg icon={faClock} />
+          {post.date}
+        </time>
         <span className="gcs-post__headRight">
           {can.split && (
             <input
@@ -207,110 +293,143 @@ export function GcsPostContent(props: GcsPostContentProps) {
           ))}
         </ul>
       )}
+      {props.extras}
       {post.edited && <p className="gcs-post__edited">{post.edited}</p>}
+      {props.signature}
 
-      <div className="gcs-post__foot">
-        <div className="gcs-post__reactions" aria-label={t("reactions")}>
-          {reactions.map((r) => {
-            const def = byId.get(r.reactionId);
-            if (!def) return null;
-            return (
-              <button
-                key={r.reactionId}
-                type="button"
-                className="gcs-reaction"
-                aria-label={`${def.label}: ${r.count}`}
-                aria-pressed={mine === r.reactionId}
-                disabled={!can.react || pending}
-                onClick={() => react(r.reactionId)}
-              >
-                <span style={{ color: def.color, fontWeight: 800 }} aria-hidden="true">
-                  {def.symbol}
-                </span>
-                {r.count}
-              </button>
-            );
-          })}
+      {total > 0 && (
+        // Sumarul reacțiilor (bara cu accent): textul, apoi contoarele pe reacții (apăsabile, ca înainte).
+        <div className="gcs-post__reactionBar">
+          <span className="gcs-post__reactionText">
+            <GcsIconSvg icon={faHeart} />
+            {mine !== null ? (total > 1 ? t("reactedYouAndOthers", { count: total - 1 }) : t("reactedYou")) : t("reactedCount", { count: total })}
+          </span>
+          <div className="gcs-post__reactions" role="group" aria-label={t("reactions")}>
+            {reactions.map((r) => {
+              const def = byId.get(r.reactionId);
+              if (!def) return null;
+              return (
+                <button
+                  key={r.reactionId}
+                  type="button"
+                  className="gcs-reaction"
+                  aria-label={`${def.label}: ${r.count}`}
+                  aria-pressed={mine === r.reactionId}
+                  disabled={!can.react || pending}
+                  onClick={() => react(r.reactionId)}
+                >
+                  <span style={{ color: def.color, fontWeight: 800 }} aria-hidden="true">
+                    {def.symbol}
+                  </span>
+                  {r.count}
+                </button>
+              );
+            })}
+          </div>
         </div>
-        <div className="gcs-post__actions">
-          {can.approve && post.visibility === "PENDING" && (
-            <GcsButton variant="primary" size="sm" onClick={() => run(() => approvePostsAction({ postIds: [post.id] }))}>
-              {tm("approve")}
-            </GcsButton>
-          )}
-          {can.quote && (
-            <GcsButton variant="ghost" size="sm" onClick={quote}>
-              {t("quote")}
-            </GcsButton>
-          )}
-          {can.react && (
-            <span className="gcs-post__pickerWrap">
-              <GcsButton variant="ghost" size="sm" aria-expanded={picker} onClick={() => setPicker((v) => !v)}>
-                {t("react")}
-              </GcsButton>
-              {picker && (
-                <span className="gcs-reactionPicker" role="group" aria-label={t("reactions")}>
-                  {props.reactionList.map((r) => (
-                    <button key={r.id} type="button" className="gcs-reaction" aria-label={t("reactWith", { label: r.label })} onClick={() => react(r.id)}>
-                      <span style={{ color: r.color, fontWeight: 800 }} aria-hidden="true">
-                        {r.symbol}
-                      </span>
-                    </button>
-                  ))}
-                </span>
-              )}
-            </span>
-          )}
-          {can.report && (
-            <GcsButton variant="ghost" size="sm" onClick={() => reportDialog.current?.showModal()} disabled={reported}>
-              {reported ? t("reported") : t("report")}
-            </GcsButton>
-          )}
-          {can.solve && (
-            <GcsButton variant="ghost" size="sm" onClick={() => run(() => markSolvedAction({ topicId, postId: props.isSolved ? null : post.id }))}>
-              {props.isSolved ? t("unmarkSolved") : t("markSolved")}
-            </GcsButton>
-          )}
-          {can.edit && !editing && (
-            <GcsButton variant="ghost" size="sm" onClick={startEdit}>
-              {t("edit")}
-            </GcsButton>
-          )}
-          {can.edit && post.edited && (
-            <GcsButton variant="ghost" size="sm" onClick={openHistory}>
-              {t("history")}
-            </GcsButton>
-          )}
-          {can.hide && post.visibility !== "HIDDEN" && (
-            <GcsButton
-              variant="ghost"
-              size="sm"
-              onClick={() => window.confirm(t("confirmHide")) && run(() => hidePostAction({ postId: post.id }))}
-            >
-              {t("hide")}
-            </GcsButton>
-          )}
-          {can.restore && post.visibility === "HIDDEN" && (
-            <GcsButton variant="ghost" size="sm" onClick={() => run(() => restorePostAction({ postId: post.id }))}>
-              {t("restore")}
-            </GcsButton>
-          )}
-          {can.delete && (
-            <GcsButton
-              variant="ghost"
-              size="sm"
-              onClick={() => window.confirm(t("confirmDelete")) && run(() => deletePostAction({ postId: post.id }))}
-            >
-              {t("delete")}
-            </GcsButton>
-          )}
-        </div>
-      </div>
+      )}
+      {reported && (
+        <p className="gcs-post__reported" role="status">
+          {t("reported")}
+        </p>
+      )}
       {error && (
         <p role="alert" className="gcs-notice gcs-notice--error">
           {error}
         </p>
       )}
+
+      <div className="gcs-post__foot">
+        <div className="gcs-post__actions" ref={actions}>
+          {can.approve && post.visibility === "PENDING" && (
+            <GcsButton
+              variant="primary"
+              size="sm"
+              className="gcs-post__action"
+              icon={<GcsIconSvg icon={faCircleCheck} />}
+              onClick={() => run(() => approvePostsAction({ postIds: [post.id] }))}
+            >
+              {tm("approve")}
+            </GcsButton>
+          )}
+          {can.solve && (
+            <GcsButton
+              variant="ghost"
+              size="sm"
+              className="gcs-post__action"
+              icon={<GcsIconSvg icon={faCheck} />}
+              onClick={() => run(() => markSolvedAction({ topicId, postId: props.isSolved ? null : post.id }))}
+            >
+              {props.isSolved ? t("unmarkSolved") : t("markSolved")}
+            </GcsButton>
+          )}
+          {can.react && like && (
+            <GcsButton
+              variant="ghost"
+              size="sm"
+              className={`gcs-post__action gcs-post__like${liked ? " gcs-post__like--on" : ""}`}
+              icon={<GcsIconSvg icon={faHeart} />}
+              aria-pressed={liked}
+              disabled={pending}
+              onClick={() => react(like.id)}
+            >
+              {liked ? t("liked") : t("like")}
+              {likeCount > 0 && (
+                <span className="gcs-post__likeCount" aria-hidden="true">
+                  {likeCount}
+                </span>
+              )}
+            </GcsButton>
+          )}
+          {can.quote && (
+            <GcsButton variant="ghost" size="sm" className="gcs-post__action" icon={<GcsIconSvg icon={faQuoteLeft} />} onClick={quote}>
+              {t("quoteShort")}
+            </GcsButton>
+          )}
+          {can.edit && !editing && (
+            <GcsButton variant="ghost" size="sm" className="gcs-post__action" icon={<GcsIconSvg icon={faPenToSquare} />} onClick={startEdit}>
+              {t("quickEdit")}
+            </GcsButton>
+          )}
+          {moreItems.length > 0 && (
+            <GcsDropdown
+              label={t("moreShort")}
+              className="gcs-post__more"
+              triggerClassName="gcs-post__action"
+              testId="gcs-post-more"
+              trigger={
+                <>
+                  <GcsIconSvg icon={faEllipsis} />
+                  <span>{t("moreShort")}</span>
+                </>
+              }
+              items={moreItems}
+            />
+          )}
+          {picker && (
+            <span
+              ref={pickerRef}
+              className="gcs-reactionPicker"
+              role="group"
+              aria-label={t("reactions")}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  e.preventDefault();
+                  closePicker();
+                }
+              }}
+            >
+              {props.reactionList.map((r) => (
+                <button key={r.id} type="button" className="gcs-reaction" aria-label={t("reactWith", { label: r.label })} onClick={() => react(r.id)}>
+                  <span style={{ color: r.color, fontWeight: 800 }} aria-hidden="true">
+                    {r.symbol}
+                  </span>
+                </button>
+              ))}
+            </span>
+          )}
+        </div>
+      </div>
 
       <dialog ref={reportDialog} className="gcs-dialog" aria-labelledby={`report-${post.id}`}>
         <form

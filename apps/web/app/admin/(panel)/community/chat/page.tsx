@@ -7,6 +7,7 @@ import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { createChatChannel, deleteChatChannel, removeAnnouncement, updateChatChannel } from "./actions";
+import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.chat"))("title") };
@@ -57,9 +58,9 @@ export default async function AcpChatChannelsPage() {
 
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-hashtag">
         {t("title")}
-      </h1>
+      </GcsAcpTitle>
       <GcsCard as="section" aria-label={t("title")} style={{ padding: 16, display: "flex", flexDirection: "column", gap: 16 }}>
         {channels.map((c) => (
           <div
@@ -74,16 +75,17 @@ export default async function AcpChatChannelsPage() {
               <Link href={`/admin/permissions/chat/${c.key}`}>{t("permissions")}</Link>
             </div>
             <div style={ROW}>
-              <GcsActionForm action={updateChatChannel.bind(null, c.key)} submitLabel={t("save")} style={ROW}>
+              <GcsActionForm action={updateChatChannel.bind(null, c.key)} submitLabel={t("save")} submitKind="save" style={ROW}>
                 {fields(c)}
               </GcsActionForm>
-              <GcsActionForm action={deleteChatChannel.bind(null, c.key)} submitLabel={t("delete")} variant="ghost" compact confirm={t("confirmDelete", { name: c.name })} />
+              <GcsActionForm action={deleteChatChannel.bind(null, c.key)} submitLabel={t("delete")} submitKind="delete" variant="ghost" compact confirm={t("confirmDelete", { name: c.name })} />
             </div>
           </div>
         ))}
       </GcsCard>
       <GcsCard as="section" aria-labelledby="gcs-chat-announcements" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
         <h2 id="gcs-chat-announcements" className="gcs-acpWidget__title">
+          <GcsAcpTitleIcon name="fa-solid fa-bullhorn" />
           {t("announcements")}
         </h2>
         {announcements.length === 0 && <p className="gcs-muted" style={{ margin: 0 }}>{t("noAnnouncements")}</p>}
@@ -91,15 +93,16 @@ export default async function AcpChatChannelsPage() {
           <div key={a.id} style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }} data-testid="gcs-acp-announcement">
             <span style={{ flex: 1 }}>{a.body}</span>
             <span className="gcs-muted">{a.expiresAt ? t("until", { date: new Date(a.expiresAt).toLocaleString() }) : t("noExpiry")}</span>
-            <GcsActionForm action={removeAnnouncement.bind(null, a.id)} submitLabel={t("delete")} variant="ghost" compact />
+            <GcsActionForm action={removeAnnouncement.bind(null, a.id)} submitLabel={t("delete")} submitKind="delete" variant="ghost" compact />
           </div>
         ))}
       </GcsCard>
       <GcsCard as="section" aria-labelledby="gcs-chat-create" style={{ padding: 16 }}>
         <h2 id="gcs-chat-create" className="gcs-acpWidget__title" style={{ marginBottom: 12 }}>
+          <GcsAcpTitleIcon name="fa-solid fa-plus" />
           {t("create")}
         </h2>
-        <GcsActionForm action={createChatChannel} submitLabel={t("create")} style={ROW}>
+        <GcsActionForm action={createChatChannel} submitLabel={t("create")} submitKind="create" style={ROW}>
           <label className="gcs-field" style={{ width: 140 }}>
             {t("key")}
             <input className="gcs-input" name="key" required pattern="[a-z0-9][a-z0-9\-]{1,31}" />

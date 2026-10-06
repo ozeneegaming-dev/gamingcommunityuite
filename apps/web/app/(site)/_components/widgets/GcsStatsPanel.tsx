@@ -1,12 +1,15 @@
 import { groupLegend, whoWasOnline, type GcsLegendGroup, type GcsWhoWasOnline } from "@gcs/modules";
-import { GcsUserLink } from "@gcs/ui";
+import { GcsAvatar, GcsUserLink } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import Link from "next/link";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
+import type { CSSProperties } from "react";
 import { memberHref } from "@/lib/forum-urls";
 import { onlineView } from "@/lib/online";
 import { services } from "@/lib/services";
 import { GcsWhoIsOnline } from "../forum/GcsWhoIsOnline";
+import { GcsStatsPanelFrame } from "./GcsStatsPanelFrame";
+import { GcsWidgetTitle, widgetIcon } from "./GcsWidgetTitle";
 
 /** „Cine a fost online” (24 h): lista e aceeași pentru toți vizitatorii, deci se calculează cel mult o dată pe minut. */
 async function cachedWhoWasOnline(): Promise<GcsWhoWasOnline> {
@@ -28,57 +31,91 @@ async function cachedLegend(): Promise<GcsLegendGroup[]> {
   return legend;
 }
 
-/** „Cine a fost online” (24 h), lista cu numele stilizate. */
-export async function GcsWhoWasOnline({ id }: { id: string }) {
-  const [t, view] = await Promise.all([getTranslations("stats"), cachedWhoWasOnline()]);
+/** O variabilă CSS pe element (culoarea plăcii / a grupului); fără valoare, CSS-ul folosește culoarea implicită. */
+const cssVar = (name: string, value: string | null | undefined): CSSProperties | undefined => (value ? ({ [name]: value } as CSSProperties) : undefined);
+
+/** Numele membrilor activi în ultimele 24 h, în stilul grupului fiecăruia. */
+function DayNames({ view, nobody, testId }: { view: GcsWhoWasOnline; nobody: string; testId?: string }) {
+  if (view.members.length === 0) return <p className="gcs-onlineBlock__empty">{nobody}</p>;
   return (
-    <section className="gcs-card gcs-sideCard gcs-widget" aria-labelledby={`gcs-widget-${id}`} data-widget="core.onlineDay" data-testid="gcs-who-was-online">
-      <h2 id={`gcs-widget-${id}`} className="gcs-display gcs-sideCard__title">
-        {t("onlineDay")}
-      </h2>
-      <p className="gcs-sideCard__line">{t("onlineDaySummary", { members: view.total })}</p>
-      {view.members.length > 0 && (
-        <p className="gcs-nameList">
-          {view.members.map((m, i) => (
-            <span key={m.id}>
-              <GcsUserLink userId={m.id} name={m.name} nameKey={m.nameKey} href={memberHref(m)} />
-              {i < view.members.length - 1 ? ", " : ""}
+    <p className="gcs-onlineBlock__names" data-testid={testId}>
+      {view.members.map((m, i) => (
+        <span key={m.id}>
+          <GcsUserLink userId={m.id} name={m.name} nameKey={m.nameKey} href={memberHref(m)} />
+          {i < view.members.length - 1 ? ", " : ""}
+        </span>
+      ))}
+    </p>
+  );
+}
+
+/** Sumarul „Cine a fost online”: membrii vizibili și cei anonimi (statusul ascuns), cu puncte colorate. */
+async function DayDots({ view }: { view: GcsWhoWasOnline }) {
+  const t = await getTranslations("stats.panel");
+  return (
+    <ul className="gcs-onlineBlock__dots">
+      <li data-dot="members">{t("members", { count: Math.max(0, view.total - view.hidden) })}</li>
+      <li data-dot="anonymous">{t("anonymous", { count: view.hidden })}</li>
+    </ul>
+  );
+}
+
+/** Pastilele legendei: conturul și textul în culoarea grupului, cu iconița și numele (stilul grupului). */
+function LegendPills({ groups, testId }: { groups: GcsLegendGroup[]; testId?: string }) {
+  return (
+    <ul className="gcs-legend" data-testid={testId}>
+      {groups.map((g) => (
+        <li key={g.id} className="gcs-legend__pill" style={cssVar("--gcs-group", g.color)}>
+          {g.icon && (
+            <span className="gcs-legend__icon" aria-hidden="true">
+              <GcsIcon name={g.icon} />
             </span>
-          ))}
-        </p>
-      )}
+          )}
+          <span className={`gcs-legend__name gcs-name--${g.key}`}>{g.name}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** „Cine a fost online” (24 h), widget-ul separat: sumarul cu puncte și lista cu numele stilizate. */
+export async function GcsWhoWasOnline({ id, config }: { id: string; config?: Record<string, unknown> }) {
+  const [t, tp, view] = await Promise.all([getTranslations("stats"), getTranslations("stats.panel"), cachedWhoWasOnline()]);
+  return (
+    <section className="gcs-card gcs-sideCard gcs-widget gcs-dayCard" aria-labelledby={`gcs-widget-${id}`} data-widget="core.onlineDay" data-testid="gcs-who-was-online">
+      <GcsWidgetTitle id={`gcs-widget-${id}`} icon={widgetIcon("core.onlineDay", config)}>
+        {t("onlineDay")}
+      </GcsWidgetTitle>
+      <p className="gcs-sideCard__line">{t("onlineDaySummary", { members: view.total })}</p>
+      <DayDots view={view} />
+      <DayNames view={view} nobody={tp("dayNobody")} />
     </section>
   );
 }
 
-/** Legenda grupurilor: numele în stilul grupului, cu iconița lui. */
-export async function GcsGroupLegend({ id }: { id: string }) {
+/** Legenda grupurilor, widget-ul separat: pastilele în culoarea grupurilor, cu iconițele lor. */
+export async function GcsGroupLegend({ id, config }: { id: string; config?: Record<string, unknown> }) {
   const [t, groups] = await Promise.all([getTranslations("stats"), cachedLegend()]);
   return (
     <section className="gcs-card gcs-sideCard gcs-widget" aria-labelledby={`gcs-widget-${id}`} data-widget="core.groupLegend" data-testid="gcs-group-legend">
-      <h2 id={`gcs-widget-${id}`} className="gcs-display gcs-sideCard__title">
+      <GcsWidgetTitle id={`gcs-widget-${id}`} icon={widgetIcon("core.groupLegend", config)}>
         {t("legend")}
-      </h2>
-      <ul className="gcs-legend">
-        {groups.map((g) => (
-          <li key={g.id} className={`gcs-name--${g.key}`}>
-            {g.icon && <GcsIcon name={g.icon} />}
-            {g.name}
-          </li>
-        ))}
-      </ul>
+      </GcsWidgetTitle>
+      <LegendPills groups={groups} />
     </section>
   );
 }
 
 /**
- * Panoul de statistici (specul etapei 5, imaginea de referință): plăcile (topicuri, postări, membri, cel mai nou membru
- * și plăcile aplicațiilor active), „Cine e online”, „Cine a fost online” (24 h) și legenda grupurilor.
+ * Panoul de statistici (imaginile de referință): bara de titlu cu iconița și butonul de restrângere, plăcile
+ * (topicuri, postări, membri, plăcile aplicațiilor active și cel mai nou membru), „Cine e online” (live),
+ * „Cine a fost online” (24 h) și legenda grupurilor.
  */
-export async function GcsStatsPanel({ id }: { id: string }) {
+export async function GcsStatsPanel({ id, config }: { id: string; config?: Record<string, unknown> }) {
   const { stats, forumQueries } = services();
-  const [t, tAll, format, locale, tiles, community, online, day, legend, tOnline] = await Promise.all([
+  const [t, tp, tAll, format, locale, tiles, community, online, day, legend, tOnline] = await Promise.all([
     getTranslations("stats"),
+    getTranslations("stats.panel"),
     getTranslations(),
     getFormatter(),
     getLocale(),
@@ -90,79 +127,111 @@ export async function GcsStatsPanel({ id }: { id: string }) {
     getTranslations("online"),
   ]);
   const label = (key: string) => (tAll.has(key) ? tAll(key) : key);
+  const newest = community.newestMember;
+  const headingId = `gcs-widget-${id}`;
+
   return (
-    <section className="gcs-card gcs-statsPanel gcs-widget" aria-labelledby={`gcs-widget-${id}`} data-widget="core.statsPanel" data-testid="gcs-stats-panel">
-      <h2 id={`gcs-widget-${id}`} className="gcs-display gcs-sideCard__title">
-        {t("title")}
-      </h2>
+    <GcsStatsPanelFrame
+      id={id}
+      labels={{ collapse: tp("collapse"), expand: tp("expand") }}
+      heading={
+        <GcsWidgetTitle id={headingId} icon={widgetIcon("core.statsPanel", config)} className="gcs-statsPanel__title">
+          {tp("title")}
+        </GcsWidgetTitle>
+      }
+    >
       <ul className="gcs-statsPanel__tiles">
         {tiles.map((tile) => {
           const body = (
             <>
-              <span className="gcs-statsPanel__icon" style={tile.color ? { color: tile.color } : undefined}>
+              <span className="gcs-statsTile__icon" aria-hidden="true">
                 <GcsIcon name={tile.icon} />
               </span>
-              <span className="gcs-statsPanel__value">{format.number(tile.value)}</span>
-              <span className="gcs-statsPanel__label">{label(tile.labelKey)}</span>
+              <span className="gcs-statsTile__text">
+                <span className="gcs-statsTile__value">{format.number(tile.value)}</span>
+                <span className="gcs-statsTile__label">{label(tile.labelKey)}</span>
+              </span>
             </>
           );
           return (
-            <li key={tile.key} className="gcs-statsPanel__tile" data-tile={tile.key}>
-              {tile.href ? <Link href={tile.href}>{body}</Link> : body}
+            <li key={tile.key} className="gcs-statsTile" data-tile={tile.key} style={cssVar("--gcs-tile", tile.color)}>
+              {tile.href ? (
+                <Link href={tile.href} className="gcs-statsTile__inner">
+                  {body}
+                </Link>
+              ) : (
+                <div className="gcs-statsTile__inner">{body}</div>
+              )}
             </li>
           );
         })}
-        {community.newestMember && (
-          <li className="gcs-statsPanel__tile gcs-statsPanel__tile--newest" data-tile="newest">
-            <span className="gcs-statsPanel__icon">
-              <GcsIcon name="fa-solid fa-user-plus" />
-            </span>
-            <span className="gcs-statsPanel__value gcs-statsPanel__value--name">
-              <GcsUserLink userId={community.newestMember.id} name={community.newestMember.name} nameKey={community.newestMember.nameKey} href={memberHref(community.newestMember)} />
-            </span>
-            <span className="gcs-statsPanel__label">{t("newest")}</span>
+        {newest && (
+          <li className="gcs-statsTile gcs-statsTile--newest" data-tile="newest">
+            <div className="gcs-statsTile__inner">
+              <a href={memberHref(newest)} className="gcs-statsTile__avatar" tabIndex={-1} aria-hidden="true">
+                <GcsAvatar name={newest.name} size="m" {...(newest.image ? { src: newest.image } : {})} {...(newest.frameKey ? { frame: newest.frameKey } : {})} />
+              </a>
+              <span className="gcs-statsTile__text">
+                <span className="gcs-statsTile__kicker">
+                  <GcsIcon name="fa-solid fa-user-plus" />
+                  {tp("newMember")}
+                </span>
+                <span className="gcs-statsTile__name">
+                  <GcsUserLink userId={newest.id} name={newest.name} nameKey={newest.nameKey} href={memberHref(newest)} />
+                </span>
+                {newest.joinedAt && (
+                  <span className="gcs-statsTile__date">
+                    <GcsIcon name="fa-solid fa-calendar-days" />
+                    <time dateTime={newest.joinedAt}>{format.dateTime(new Date(newest.joinedAt), { day: "numeric", month: "short", year: "numeric" })}</time>
+                  </span>
+                )}
+              </span>
+            </div>
           </li>
         )}
       </ul>
-      <div className="gcs-statsPanel__sections">
-        <div className="gcs-statsPanel__section">
-          <GcsWhoIsOnline
-            initial={online}
-            locale={locale}
-            labels={{ title: tOnline("title"), summary: tOnline.raw("summary") as string, record: tOnline.raw("record") as string, nobody: tOnline("nobody") }}
-          />
-          <Link href="/members?online=1" className="gcs-statsPanel__more" data-testid="gcs-stats-all-online">
-            {t("allOnline")}
+
+      <GcsWhoIsOnline
+        variant="panel"
+        initial={online}
+        locale={locale}
+        headingId={`${headingId}-online`}
+        labels={{ title: tOnline("title"), summary: tOnline.raw("summary") as string, record: tOnline.raw("record") as string, nobody: tOnline("nobody") }}
+        action={
+          <Link href="/members?online=1" className="gcs-onlineBlock__btn gcs-onlineBlock__btn--now" data-testid="gcs-stats-all-online">
+            {tp("seeAll")}
+          </Link>
+        }
+      />
+
+      <section className="gcs-onlineBlock gcs-onlineBlock--day" aria-labelledby={`${headingId}-day`} data-testid="gcs-stats-online-day">
+        <div className="gcs-onlineBlock__info">
+          <h3 id={`${headingId}-day`} className="gcs-onlineBlock__title">
+            {t("onlineDay")}
+          </h3>
+          <p className="gcs-onlineBlock__summary">{tp("daySummary")}</p>
+          <DayDots view={day} />
+        </div>
+        <div className="gcs-onlineBlock__list">
+          <p className="gcs-onlineBlock__listTitle">{tp("dayList")}</p>
+          <DayNames view={day} nobody={tp("dayNobody")} testId="gcs-online-day-members" />
+        </div>
+        <div className="gcs-onlineBlock__action">
+          <Link href="/members" className="gcs-onlineBlock__btn gcs-onlineBlock__btn--day" data-testid="gcs-stats-all-day">
+            {tp("seeAll")}
           </Link>
         </div>
-        <div className="gcs-statsPanel__section">
-          <h3>{t("onlineDay")}</h3>
-          <p className="gcs-sideCard__line">{t("onlineDaySummary", { members: day.total })}</p>
-          {day.members.length > 0 && (
-            <p className="gcs-nameList" data-testid="gcs-online-day-members">
-              {day.members.map((m, i) => (
-                <span key={m.id}>
-                  <GcsUserLink userId={m.id} name={m.name} nameKey={m.nameKey} href={memberHref(m)} />
-                  {i < day.members.length - 1 ? ", " : ""}
-                </span>
-              ))}
-            </p>
-          )}
-        </div>
-        {legend.length > 0 && (
-          <div className="gcs-statsPanel__section">
-            <h3>{t("legend")}</h3>
-            <ul className="gcs-legend" data-testid="gcs-legend">
-              {legend.map((g) => (
-                <li key={g.id} className={`gcs-name--${g.key}`}>
-                  {g.icon && <GcsIcon name={g.icon} />}
-                  {g.name}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-    </section>
+      </section>
+
+      {legend.length > 0 && (
+        <section className="gcs-legendBlock" aria-labelledby={`${headingId}-legend`}>
+          <h3 id={`${headingId}-legend`} className="gcs-legendBlock__title">
+            <GcsIcon name="fa-solid fa-users" />
+            {tp("legendTitle")}
+          </h3>
+          <LegendPills groups={legend} testId="gcs-legend" />
+        </section>
+      )}
+    </GcsStatsPanelFrame>
   );
 }

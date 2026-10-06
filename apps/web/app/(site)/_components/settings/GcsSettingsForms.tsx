@@ -1,6 +1,8 @@
 "use client";
 
-import { GcsAvatar, GcsButton } from "@gcs/ui";
+import { faDiscord, faSteam } from "@fortawesome/free-brands-svg-icons";
+import { faEnvelope, faFloppyDisk, faKey, faLink, faLinkSlash, faPaperPlane, faRotateLeft, faUserCheck, faUserPlus } from "@fortawesome/free-solid-svg-icons";
+import { GcsAvatar, GcsButton, GcsIconSvg } from "@gcs/ui";
 import { useEffect, useState } from "react";
 import {
   changePassword,
@@ -110,13 +112,13 @@ export function GcsAppearanceForm({
             />
           ))}
           <input type="color" aria-label={labels.accent} value={accent ?? "#D62839"} onChange={(e) => setAccent(e.target.value.toUpperCase())} className="gcs-swatchInput" data-testid="gcs-accent-input" />
-          <GcsButton variant="ghost" onClick={() => setAccent(null)}>
+          <GcsButton icon={<GcsIconSvg icon={faRotateLeft} />} variant="ghost" onClick={() => setAccent(null)}>
             {labels.defaultAccent}
           </GcsButton>
         </div>
       </fieldset>
       <div>
-        <GcsButton type="submit" variant="primary" disabled={pending}>
+        <GcsButton icon={<GcsIconSvg icon={faFloppyDisk} />} type="submit" variant="primary" disabled={pending}>
           {labels.save}
         </GcsButton>
       </div>
@@ -160,7 +162,7 @@ export function GcsPrivacyForm({ privacy, labels }: { privacy: Privacy; labels: 
       </label>
       <p className="gcs-field__hint">{labels.followedHint}</p>
       <div>
-        <GcsButton type="submit" variant="primary" disabled={pending}>
+        <GcsButton icon={<GcsIconSvg icon={faFloppyDisk} />} type="submit" variant="primary" disabled={pending}>
           {labels.save}
         </GcsButton>
       </div>
@@ -218,7 +220,7 @@ export function GcsIgnoredForm({ ignored, labels }: { ignored: { id: string; nam
           {labels.messages}
         </label>
         <div>
-          <GcsButton type="submit" variant="primary" disabled={pending || !name.trim()}>
+          <GcsButton icon={<GcsIconSvg icon={faUserPlus} />} type="submit" variant="primary" disabled={pending || !name.trim()}>
             {labels.add}
           </GcsButton>
         </div>
@@ -236,7 +238,7 @@ export function GcsIgnoredForm({ ignored, labels }: { ignored: { id: string; nam
                   · {[u.posts ? labels.posts : null, u.messages ? labels.messages : null].filter(Boolean).join(", ")}
                 </span>
               </span>
-              <GcsButton variant="ghost" disabled={pending} onClick={() => run(() => unignore({ userId: u.id }))}>
+              <GcsButton icon={<GcsIconSvg icon={faUserCheck} />} variant="ghost" disabled={pending} onClick={() => run(() => unignore({ userId: u.id }))}>
                 {labels.remove}
               </GcsButton>
             </li>
@@ -274,7 +276,10 @@ export function GcsAccountForms({
           emailAction.run(() => requestEmailChange({ email: newEmail }), () => setNewEmail(""));
         }}
       >
-        <h2 className="gcs-settingsTitle">{labels.emailTitle}</h2>
+        <h2 className="gcs-settingsTitle">
+          <GcsIconSvg icon={faEnvelope} className="gcs-hIcon" />
+          {labels.emailTitle}
+        </h2>
         <p className="gcs-muted" style={{ margin: 0 }}>
           {email ? labels.currentEmail : labels.noEmail}
         </p>
@@ -283,7 +288,7 @@ export function GcsAccountForms({
           <input id="new-email" type="email" className="gcs-input" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required />
         </div>
         <div>
-          <GcsButton type="submit" variant="primary" disabled={emailAction.pending}>
+          <GcsButton icon={<GcsIconSvg icon={faPaperPlane} />} type="submit" variant="primary" disabled={emailAction.pending}>
             {labels.sendLink}
           </GcsButton>
         </div>
@@ -301,7 +306,10 @@ export function GcsAccountForms({
             });
           }}
         >
-          <h2 className="gcs-settingsTitle">{labels.passwordTitle}</h2>
+          <h2 className="gcs-settingsTitle">
+            <GcsIconSvg icon={faKey} className="gcs-hIcon" />
+            {labels.passwordTitle}
+          </h2>
           <div className="gcs-field">
             <label htmlFor="current-password">{labels.currentPassword}</label>
             <input id="current-password" type="password" autoComplete="current-password" className="gcs-input" value={current} onChange={(e) => setCurrent(e.target.value)} required />
@@ -311,7 +319,7 @@ export function GcsAccountForms({
             <input id="new-password" type="password" autoComplete="new-password" minLength={8} className="gcs-input" value={next} onChange={(e) => setNext(e.target.value)} required />
           </div>
           <div>
-            <GcsButton type="submit" variant="primary" disabled={passwordAction.pending}>
+            <GcsButton icon={<GcsIconSvg icon={faKey} />} type="submit" variant="primary" disabled={passwordAction.pending}>
               {labels.changePassword}
             </GcsButton>
           </div>
@@ -320,16 +328,20 @@ export function GcsAccountForms({
       )}
 
       <section className="gcs-settingsFieldset">
-        <h2 className="gcs-settingsTitle">{labels.linkedTitle}</h2>
+        <h2 className="gcs-settingsTitle">
+          <GcsIconSvg icon={faLink} className="gcs-hIcon" />
+          {labels.linkedTitle}
+        </h2>
         {(["discord", "steam"] as const).map((p) => {
           const linked = accounts.some((a) => a.providerId === p);
           return (
             <div key={p} className="gcs-settingsList__row">
               <span>
+                <GcsIconSvg icon={p === "discord" ? faDiscord : faSteam} className="gcs-hIcon" />
                 <strong>{p === "discord" ? "Discord" : "Steam"}</strong> <span className="gcs-muted">· {linked ? labels.linked : labels.notLinked}</span>
               </span>
               {linked && (
-                <GcsButton variant="ghost" disabled={linkAction.pending} onClick={() => linkAction.run(() => unlinkAccount({ providerId: p }))}>
+                <GcsButton icon={<GcsIconSvg icon={faLinkSlash} />} variant="ghost" disabled={linkAction.pending} onClick={() => linkAction.run(() => unlinkAccount({ providerId: p }))}>
                   {labels.unlink}
                 </GcsButton>
               )}

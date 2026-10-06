@@ -1,6 +1,6 @@
 import "server-only";
 import type { GcsActor } from "@gcs/core";
-import type { GcsChatChannelView } from "@gcs/modules";
+import { CHAT_ACP_SETTINGS, type GcsChatChannelView } from "@gcs/modules";
 import { getTranslations } from "next-intl/server";
 import { services } from "@/lib/services";
 import type { GcsChatRoom, GcsChatRoomLabels } from "./GcsChatRoom";
@@ -42,11 +42,21 @@ export async function chatRoomLabels(): Promise<GcsChatRoomLabels> {
   return Object.fromEntries(LABEL_KEYS.map((k) => [k, t.raw(k) as string])) as GcsChatRoomLabels;
 }
 
-/** Tot ce primește `GcsChatRoom` pentru un canal: mesajele, drepturile, reacțiile, mesajul fixat, anunțurile, setările și ignorații. */
+/** Staff-ul cu acces la ACP → Chat → Setări primește linkul rotiței din antetul chat-ului. */
+async function canOpenChatSettings(actor: GcsActor): Promise<boolean> {
+  if (!actor.userId || actor.isBanned) return false;
+  const { permissions, acp } = services();
+  return (await permissions.can(actor, "acp.access")) && (await acp.can(actor, CHAT_ACP_SETTINGS, "view"));
+}
+
+/**
+ * Tot ce primește `GcsChatRoom` pentru un canal: mesajele, drepturile, reacțiile, mesajul fixat, anunțurile, setările,
+ * ignorații și linkul spre setările din ACP.
+ */
 export async function chatRoomProps(actor: GcsActor, channel: GcsChatChannelView): Promise<Parameters<typeof GcsChatRoom>[0]> {
   const { chatQueries, chat, reactions, permissions, social } = services();
   const config = await chat.config();
-  const [initial, canModerate, canAnnounce, mute, labels, list, pinned, announcements, ignored] = await Promise.all([
+  const [initial, canModerate, canAnnounce, mute, labels, list, pinned, announcements, ignored, acpSettings] = await Promise.all([
     chatQueries.recent(actor, channel.key, config.pageSize),
     chat.canModerate(actor),
     actor.userId ? permissions.can(actor, "chat.announce") : Promise.resolve(false),
@@ -56,6 +66,7 @@ export async function chatRoomProps(actor: GcsActor, channel: GcsChatChannelView
     chatQueries.pinned(actor, channel.key),
     chatQueries.announcements(),
     social.ignoredIds(actor.userId, "posts"),
+    canOpenChatSettings(actor),
   ]);
   return {
     config,
@@ -70,5 +81,6 @@ export async function chatRoomProps(actor: GcsActor, channel: GcsChatChannelView
     announcements,
     mute,
     labels,
+    settingsHref: acpSettings ? "/admin/community/chat/settings" : null,
   };
 }

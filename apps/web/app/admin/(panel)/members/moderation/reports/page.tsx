@@ -7,6 +7,7 @@ import { postHref } from "@/lib/forum-urls";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../../_components/GcsActionForm";
 import { closeReport } from "../../../moderation-actions";
+import { GcsAcpTitle } from "../../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.reports"))("title") };
@@ -21,9 +22,9 @@ export default async function AcpReportsPage() {
 
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-flag">
         {t("title")}
-      </h1>
+      </GcsAcpTitle>
       {reports.length === 0 ? (
         <GcsCard style={{ padding: 16 }}>
           <p className="gcs-muted" style={{ margin: 0 }}>
@@ -51,9 +52,9 @@ export default async function AcpReportsPage() {
               </ul>
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <GcsActionForm action={closeReport.bind(null, r.reasons[0]!.id, "hide")} submitLabel={t("hide")} compact />
+              <GcsActionForm action={closeReport.bind(null, r.reasons[0]!.id, "hide")} submitLabel={t("hide")} submitKind="hide" compact />
               {r.reasons.map((reason) => (
-                <GcsActionForm key={reason.id} action={closeReport.bind(null, reason.id, "none")} submitLabel={t("close")} variant="ghost" compact />
+                <GcsActionForm key={reason.id} action={closeReport.bind(null, reason.id, "none")} submitLabel={t("close")} submitKind="close" variant="ghost" compact />
               ))}
             </div>
           </GcsCard>

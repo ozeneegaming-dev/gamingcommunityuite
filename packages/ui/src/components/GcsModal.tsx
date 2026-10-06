@@ -2,11 +2,15 @@
 
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { cx } from "../cx";
+import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import { GcsIconSvg } from "../icons/svg";
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 export type GcsModalProps = {
   title: string;
+  /** Iconița din fața titlului (`<GcsIconSvg icon={faX} />`; componenta e client). */
+  icon?: ReactNode;
   onClose: () => void;
   children: ReactNode;
   /** Textul butonului de închidere (pentru cititoarele de ecran). */
@@ -19,7 +23,7 @@ export type GcsModalProps = {
  * Dialog modal accesibil: focusul intră în dialog și nu iese cu Tab, Escape sau click pe fundal îl închide,
  * iar la închidere focusul revine pe elementul care l-a deschis. Pagina din spate nu se derulează cât e deschis.
  */
-export function GcsModal({ title, onClose, children, closeLabel, size = "md", className }: GcsModalProps) {
+export function GcsModal({ title, icon, onClose, children, closeLabel, size = "md", className }: GcsModalProps) {
   const titleId = useId();
   const dialog = useRef<HTMLDivElement>(null);
   const close = useRef(onClose);
@@ -73,12 +77,15 @@ export function GcsModal({ title, onClose, children, closeLabel, size = "md", cl
       <div ref={dialog} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} className={cx("gcs-modal__dialog", `gcs-modal__dialog--${size}`, className)}>
         <div className="gcs-modal__header">
           <h2 id={titleId} className="gcs-modal__title gcs-display">
+            {icon && (
+              <span className="gcs-modal__icon" aria-hidden="true">
+                {icon}
+              </span>
+            )}
             {title}
           </h2>
           <button type="button" className="gcs-modal__close" aria-label={closeLabel} onClick={() => close.current()}>
-            <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M6 6l12 12M18 6 6 18" />
-            </svg>
+            <GcsIconSvg icon={faXmark} />
           </button>
         </div>
         <div className="gcs-modal__body">{children}</div>

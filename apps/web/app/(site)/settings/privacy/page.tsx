@@ -3,6 +3,8 @@ import { getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
 import { services } from "@/lib/services";
 import { GcsPrivacyForm } from "../../_components/settings/GcsSettingsForms";
+import { GcsIcon } from "@gcs/ui/icons";
+import { SETTINGS_ICONS } from "../../_components/settings/sections";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("settings"))("nav.privacy") };
@@ -33,7 +35,10 @@ export default async function PrivacySettingsPage() {
   const privacy = await services().profiles.privacyOf(actor.userId!);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <h2 className="gcs-settingsTitle">{t("title")}</h2>
+      <h2 className="gcs-settingsTitle">
+        <GcsIcon name={SETTINGS_ICONS.privacy} className="gcs-hIcon" />
+        {t("title")}
+      </h2>
       <GcsPrivacyForm privacy={privacy} labels={Object.fromEntries(KEYS.map((k) => [k, t(k)]))} />
     </div>
   );

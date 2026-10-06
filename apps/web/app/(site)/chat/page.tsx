@@ -98,33 +98,43 @@ export default async function ChatPage({ searchParams }: { searchParams: Promise
         <GcsCreateRoom canPublic={canPublic} canPrivate={canPrivate} labels={createLabels} />
       </aside>
 
-      <section className="gcs-card gcs-chatPage__main" aria-label={channel.name}>
-        <header className="gcs-chatPage__head">
-          <h2 className="gcs-display" style={{ margin: 0, fontSize: 20 }}>
-            {isPrivate && <GcsIcon name="fa-solid fa-lock" />} {channel.name}
-          </h2>
-          {channel.description && <p className="gcs-muted" style={{ margin: 0 }}>{channel.description}</p>}
-          <GcsRoomTools
-            channel={channel.key}
-            name={channel.name}
-            isPrivate={isPrivate}
-            canManage={canManage}
-            canLeave={isPrivate && !owner}
-            labels={{
-              rename: t("rooms.rename"),
-              invite: t("rooms.inviteMore"),
-              inviteHint: t("rooms.inviteHint"),
-              leave: t("rooms.leave"),
-              delete: t("rooms.delete"),
-              confirmDelete: t("rooms.confirmDelete"),
-              save: t("save"),
-              cancel: t("cancel"),
-              done: t("rooms.done"),
-            }}
-          />
-          {canModerate && <GcsSlowModeControl channel={channel.key} seconds={channel.slowModeSeconds} label={t("slowModeLabel")} off={t("slowModeOff")} />}
-        </header>
-        <GcsChatRoom key={channel.key} {...props} />
+      <section className="gcs-card gcs-chatPage__main gcs-chatCard" aria-label={channel.name}>
+        <GcsChatRoom
+          key={channel.key}
+          {...props}
+          title={
+            <h2 className="gcs-display gcs-chat__heading">
+              <span className="gcs-chat__headingIcon" aria-hidden="true">
+                <GcsIcon name={isPrivate ? "fa-solid fa-lock" : "fa-solid fa-comments"} />
+              </span>
+              {channel.name}
+            </h2>
+          }
+          toolbar={
+            <>
+              {channel.description && <p className="gcs-muted" style={{ margin: 0 }}>{channel.description}</p>}
+              <GcsRoomTools
+                channel={channel.key}
+                name={channel.name}
+                isPrivate={isPrivate}
+                canManage={canManage}
+                canLeave={isPrivate && !owner}
+                labels={{
+                  rename: t("rooms.rename"),
+                  invite: t("rooms.inviteMore"),
+                  inviteHint: t("rooms.inviteHint"),
+                  leave: t("rooms.leave"),
+                  delete: t("rooms.delete"),
+                  confirmDelete: t("rooms.confirmDelete"),
+                  save: t("save"),
+                  cancel: t("cancel"),
+                  done: t("rooms.done"),
+                }}
+              />
+              {canModerate && <GcsSlowModeControl channel={channel.key} seconds={channel.slowModeSeconds} label={t("slowModeLabel")} off={t("slowModeOff")} />}
+            </>
+          }
+        />
       </section>
 
       <aside className="gcs-chatPage__side">

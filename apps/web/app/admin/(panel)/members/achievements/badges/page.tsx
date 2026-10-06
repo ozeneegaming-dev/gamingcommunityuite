@@ -6,6 +6,7 @@ import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../../_components/GcsActionForm";
 import { deleteBadge, saveBadge } from "../actions";
+import { GcsAcpTitle, GcsAcpTitleIcon } from "../../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.achievements"))("badgesTitle") };
@@ -52,9 +53,9 @@ export default async function AcpBadgesPage() {
 
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-award">
         {t("badgesTitle")}
-      </h1>
+      </GcsAcpTitle>
       <p className="gcs-muted" style={{ margin: 0 }}>
         {t("badgesHelp")}
       </p>
@@ -62,10 +63,10 @@ export default async function AcpBadgesPage() {
         <GcsCard key={b.id} as="section" aria-label={b.name} style={{ padding: 16, display: "flex", gap: 14, alignItems: "flex-start", flexWrap: "wrap" }} data-testid="gcs-acp-badge">
           <GcsProfileBadge badge={{ name: b.name, symbol: b.symbol, image: null, color: b.color }} />
           <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 10 }}>
-            <GcsActionForm action={saveBadge.bind(null, b.id)} submitLabel={t("save")}>
+            <GcsActionForm action={saveBadge.bind(null, b.id)} submitLabel={t("save")} submitKind="save">
               {fields(b)}
             </GcsActionForm>
-            <GcsActionForm action={deleteBadge.bind(null, b.id)} submitLabel={t("delete")} variant="ghost" compact confirm={t("confirmDelete")}>
+            <GcsActionForm action={deleteBadge.bind(null, b.id)} submitLabel={t("delete")} submitKind="delete" variant="ghost" compact confirm={t("confirmDelete")}>
               {null}
             </GcsActionForm>
           </div>
@@ -73,9 +74,10 @@ export default async function AcpBadgesPage() {
       ))}
       <GcsCard as="section" aria-labelledby="gcs-badge-new" style={{ padding: 16 }}>
         <h2 id="gcs-badge-new" className="gcs-acpWidget__title" style={{ marginBottom: 12 }}>
+          <GcsAcpTitleIcon name="fa-solid fa-plus" />
           {t("addBadge")}
         </h2>
-        <GcsActionForm action={saveBadge.bind(null, null)} submitLabel={t("add")}>
+        <GcsActionForm action={saveBadge.bind(null, null)} submitLabel={t("add")} submitKind="create">
           {fields()}
         </GcsActionForm>
       </GcsCard>

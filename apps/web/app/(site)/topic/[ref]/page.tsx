@@ -1,5 +1,6 @@
 import { parseRef } from "@gcs/modules";
 import { GcsBadge, GcsButton, GcsCard, GcsUserLink } from "@gcs/ui";
+import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -65,6 +66,7 @@ export default async function TopicPage({ params, searchParams }: Props) {
   if (data === "forbidden") {
     return (
       <GcsCard style={{ padding: 24 }} role="alert">
+        <GcsIcon name="fa-solid fa-lock" className="gcs-emptyIcon" />
         {tf("forbidden")}
       </GcsCard>
     );
@@ -101,11 +103,11 @@ export default async function TopicPage({ params, searchParams }: Props) {
                 {topic.prefix.name}
               </span>
             )}
-            {topic.solvedPostId !== null && <GcsBadge tone="ok">{tf("solved")}</GcsBadge>}
-            {topic.pinned && <GcsBadge tone="accent">{tf("pinned")}</GcsBadge>}
-            {topic.locked && <GcsBadge tone="neutral">{tf("locked")}</GcsBadge>}
-            {topic.visibility === "PENDING" && <GcsBadge tone="warn">{tf("pending")}</GcsBadge>}
-            {topic.visibility === "HIDDEN" && <GcsBadge tone="neutral">{tf("hidden")}</GcsBadge>}
+            {topic.solvedPostId !== null && <GcsBadge tone="ok" icon={<GcsIcon name="fa-solid fa-circle-check" />}>{tf("solved")}</GcsBadge>}
+            {topic.pinned && <GcsBadge tone="accent" icon={<GcsIcon name="fa-solid fa-thumbtack" />}>{tf("pinned")}</GcsBadge>}
+            {topic.locked && <GcsBadge tone="neutral" icon={<GcsIcon name="fa-solid fa-lock" />}>{tf("locked")}</GcsBadge>}
+            {topic.visibility === "PENDING" && <GcsBadge tone="warn" icon={<GcsIcon name="fa-solid fa-hourglass-half" />}>{tf("pending")}</GcsBadge>}
+            {topic.visibility === "HIDDEN" && <GcsBadge tone="neutral" icon={<GcsIcon name="fa-solid fa-eye-slash" />}>{tf("hidden")}</GcsBadge>}
           </div>
           <h1 className="gcs-display gcs-pageHeader__title">{topic.title}</h1>
           <div className="gcs-topicMeta">
@@ -116,8 +118,14 @@ export default async function TopicPage({ params, searchParams }: Props) {
                 {format.dateTime(new Date(topic.createdAt), { dateStyle: "medium" })}
               </span>
             )}
-            <span>{tf("replies", { count: topic.repliesCount })}</span>
-            <span>{tf("views", { count: topic.viewsCount })}</span>
+            <span>
+              <GcsIcon name="fa-regular fa-comment" className="gcs-metaIcon" />
+              {tf("replies", { count: topic.repliesCount })}
+            </span>
+            <span>
+              <GcsIcon name="fa-regular fa-eye" className="gcs-metaIcon" />
+              {tf("views", { count: topic.viewsCount })}
+            </span>
             {topic.tags.length > 0 && (
               <span className="gcs-topicMeta__tags">
                 {topic.tags.map((tag) => (
@@ -132,7 +140,7 @@ export default async function TopicPage({ params, searchParams }: Props) {
         <div className="gcs-pageHeader__actions">
           {actor.userId && <GcsFollowButton contentType="topic" contentId={topic.id} following={data.follow.following} count={data.follow.count} />}
           {data.canReply && (
-            <GcsButton variant="primary" asChild>
+            <GcsButton variant="primary" asChild icon={<GcsIcon name="fa-solid fa-reply" />}>
               <a href="#reply">{t("reply")}</a>
             </GcsButton>
           )}
@@ -207,9 +215,13 @@ export default async function TopicPage({ params, searchParams }: Props) {
       ) : (
         <GcsCard style={{ padding: 18, color: "var(--gcs-muted)" }} data-testid="gcs-no-reply">
           {topic.locked ? (
-            t("lockedNotice")
+            <>
+              <GcsIcon name="fa-solid fa-lock" className="gcs-emptyIcon" />
+              {t("lockedNotice")}
+            </>
           ) : !actor.userId ? (
             <>
+              <GcsIcon name="fa-solid fa-right-to-bracket" className="gcs-emptyIcon" />
               {t("loginToReply")}{" "}
               <Link href="/login">{t("login")}</Link>
             </>

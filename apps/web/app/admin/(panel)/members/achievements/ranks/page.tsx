@@ -7,6 +7,7 @@ import { services } from "@/lib/services";
 import { GcsActionForm } from "../../../_components/GcsActionForm";
 import { deleteRank, saveRank } from "../actions";
 import { RankOrder } from "../RankOrder";
+import { GcsAcpTitle, GcsAcpTitleIcon } from "../../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.achievements"))("ranksTitle") };
@@ -39,9 +40,9 @@ export default async function AcpRanksPage() {
 
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-ranking-star">
         {t("ranksTitle")}
-      </h1>
+      </GcsAcpTitle>
       <p className="gcs-muted" style={{ margin: 0 }}>
         {t("ranksHelp")}
       </p>
@@ -50,19 +51,20 @@ export default async function AcpRanksPage() {
       </GcsCard>
       {ranks.map((r) => (
         <GcsCard key={r.id} as="section" aria-label={r.name} style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }} data-testid="gcs-acp-rank">
-          <GcsActionForm action={saveRank.bind(null, r.id)} submitLabel={t("save")}>
+          <GcsActionForm action={saveRank.bind(null, r.id)} submitLabel={t("save")} submitKind="save">
             {fields(r)}
           </GcsActionForm>
-          <GcsActionForm action={deleteRank.bind(null, r.id)} submitLabel={t("delete")} variant="ghost" compact confirm={t("confirmDelete")}>
+          <GcsActionForm action={deleteRank.bind(null, r.id)} submitLabel={t("delete")} submitKind="delete" variant="ghost" compact confirm={t("confirmDelete")}>
             {null}
           </GcsActionForm>
         </GcsCard>
       ))}
       <GcsCard as="section" aria-labelledby="gcs-rank-new" style={{ padding: 16 }}>
         <h2 id="gcs-rank-new" className="gcs-acpWidget__title" style={{ marginBottom: 12 }}>
+          <GcsAcpTitleIcon name="fa-solid fa-plus" />
           {t("addRank")}
         </h2>
-        <GcsActionForm action={saveRank.bind(null, null)} submitLabel={t("add")}>
+        <GcsActionForm action={saveRank.bind(null, null)} submitLabel={t("add")} submitKind="create">
           {fields()}
         </GcsActionForm>
       </GcsCard>

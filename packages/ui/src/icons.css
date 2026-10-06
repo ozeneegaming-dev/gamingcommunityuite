@@ -1,1 +1,338 @@
 /* Corecturi UI (2026-10-06): iconițele Font Awesome din titluri, categorii, meniul userului și paginile site-ului/ACP. */
+
+/* Iconițele din butoane, insigne și titlurile modalelor. */
+.gcs-btn__icon,
+.gcs-badge__icon,
+.gcs-modal__icon {
+  flex: none;
+}
+.gcs-btn:has(> .gcs-btn__icon) {
+  gap: 8px;
+}
+.gcs-badge:has(> .gcs-badge__icon) {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.gcs-modal__title:has(> .gcs-modal__icon) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.gcs-modal__icon {
+  color: var(--gcs-accent);
+}
+
+/* ─── Site-ul public (D1): titluri, stări goale, meta, categorii, footer, caseta de răspuns ─────────────────── */
+
+/* Iconița din fața unui titlu / text (h1–h3, legend, summary, linkuri). */
+.gcs-hIcon {
+  display: inline-block;
+  flex: none;
+  margin-right: 0.45em;
+  color: var(--gcs-accent);
+  vertical-align: -0.125em;
+}
+svg.gcs-hIcon {
+  width: 0.95em;
+  height: 0.95em;
+}
+span.gcs-hIcon > svg {
+  display: block;
+}
+
+/* Iconița stărilor goale („Niciun topic încă…”). */
+.gcs-emptyIcon {
+  display: inline-block;
+  margin-right: 0.55em;
+  font-size: 1.2em;
+  color: var(--gcs-muted);
+  opacity: 0.8;
+  vertical-align: -0.2em;
+}
+
+/* Contoarele (răspunsuri, vizualizări) din lista de topicuri și din antetul topicului. */
+.gcs-metaIcon {
+  margin-right: 0.35em;
+  color: var(--gcs-muted);
+  opacity: 0.85;
+  vertical-align: -0.125em;
+}
+
+/* Categoriile de pe index: iconița într-un pătrat de accent, înaintea titlului. */
+.gcs-category__icon {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  font-size: 16px;
+  color: var(--gcs-accent);
+  background: color-mix(in srgb, currentColor 14%, var(--gcs-surface2));
+  border: 1px solid color-mix(in srgb, currentColor 28%, var(--gcs-border));
+}
+
+/* Antetul unui forum: iconița forumului lângă titlu. */
+.gcs-pageHeader__title:has(> .gcs-forumIcon) {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Breadcrumb, paginare, taburile profilului, meniurile simple, linkurile-buton. */
+.gcs-breadcrumb__home {
+  margin-right: 6px;
+  vertical-align: -0.125em;
+}
+.gcs-breadcrumb a {
+  display: inline-flex;
+  align-items: center;
+}
+.gcs-pagination__link:has(> .gcs-pagination__icon) {
+  gap: 8px;
+}
+.gcs-pagination__icon {
+  font-size: 12px;
+}
+.gcs-tab {
+  gap: 8px;
+}
+.gcs-tab__icon {
+  font-size: 13px;
+  opacity: 0.85;
+}
+.gcs-tab--active .gcs-tab__icon {
+  color: var(--gcs-accent);
+  opacity: 1;
+}
+.gcs-menu__item {
+  gap: 10px;
+}
+.gcs-menu__icon {
+  width: 16px;
+  color: var(--gcs-muted);
+}
+.gcs-linkButton:has(> .gcs-linkButton__icon) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.gcs-linkButton__icon {
+  flex: none;
+  font-size: 0.9em;
+}
+.gcs-notifPanel__all:has(> .gcs-linkButton__icon) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.gcs-notifPanel__head strong {
+  display: inline-flex;
+  align-items: center;
+}
+.gcs-spin {
+  animation: gcsSpin 1s linear infinite;
+}
+
+/* Iconițele activității de pe profil și ale conturilor legate. */
+.gcs-activity__icon .gcs-icon,
+.gcs-linkedAccount__tag .gcs-icon {
+  font-size: 16px;
+}
+.gcs-linkedAccount__tag .gcs-icon {
+  font-size: 18px;
+}
+
+/* Header: selectorul de limbă al vizitatorilor; footer: linkurile, limba și tema. */
+.gcs-guestLocale {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.gcs-siteFooter__links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.gcs-siteFooter__links .gcs-icon {
+  color: var(--gcs-muted);
+}
+.gcs-seg:has(> .gcs-icon) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.gcs-seg__lead {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 4px;
+  font-size: 15px;
+  color: var(--gcs-muted);
+}
+.gcs-seg--active > .gcs-icon {
+  color: var(--gcs-accent);
+}
+
+/* Butoanele Discord și Steam din login. */
+.gcs-btn--discord .gcs-btn__icon {
+  color: #5865f2;
+}
+.gcs-btn--steam .gcs-btn__icon {
+  color: #66c0f4;
+}
+
+/* Taburile de emoji ale editorului: doar iconițe (textul e în `aria-label` / `title`). */
+.gcs-editor__emojiTabs .gcs-seg {
+  min-width: 36px;
+  justify-content: center;
+  font-size: 15px;
+}
+.gcs-editor__popover .gcs-btn {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* „Răspuns rapid” (macheta Topic): titlu pe bandă, toolbar încadrat, butonul de trimitere în dreapta-jos. */
+.gcs-replyBox--quick {
+  gap: 0;
+  background: var(--gcs-surface);
+  border: 1px solid var(--gcs-border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.gcs-replyBox__title {
+  margin: 0;
+  padding: 14px 18px;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  background: var(--gcs-surface2);
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-replyBox--quick .gcs-editor {
+  margin: 14px 14px 0;
+}
+.gcs-replyBox--quick .gcs-editor__toolbar {
+  margin: 8px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+}
+.gcs-replyBox__actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 14px 14px;
+}
+.gcs-replyBox__send {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.gcs-replyBox--quick > .gcs-notice {
+  margin: 0 14px 14px;
+}
+
+/* ACP */
+
+/* Titlurile paginilor și ale secțiunilor: iconița intrării din meniu, în culoarea de accent. */
+.gcs-acpTitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.gcs-acpTitle__icon {
+  flex: none;
+  color: var(--gcs-accent);
+}
+.gcs-acpTitle > .gcs-acpTitle__icon {
+  font-size: 0.85em;
+}
+
+/* Submeniul ACP: iconițele aplicației, ale secțiunilor și ale intrărilor. */
+.gcs-acpSub__app {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.gcs-acpSub__appIcon {
+  flex: none;
+  font-size: 16px;
+  color: var(--gcs-accent);
+}
+.gcs-acpSub__title:has(> .gcs-acpSub__titleIcon) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.gcs-acpSub__titleIcon {
+  flex: none;
+  font-size: 12px;
+}
+.gcs-acpSub__link:has(> .gcs-acpSub__icon) {
+  gap: 10px;
+}
+.gcs-acpSub__icon {
+  flex: none;
+  width: 16px;
+  font-size: 14px;
+  color: var(--gcs-muted);
+}
+.gcs-acpSub__link:hover > .gcs-acpSub__icon,
+.gcs-acpSub__link--active > .gcs-acpSub__icon {
+  color: var(--gcs-accent);
+}
+
+/* Bara de aplicații: iconițele aplicațiilor și butoanele de reordonare. */
+.gcs-acpApp__icon {
+  font-size: 20px;
+}
+.gcs-acpRail__toggleIcon {
+  font-size: 16px;
+}
+
+/* Căutarea din header: iconița fiecărui rezultat, după grup. */
+.gcs-acpSearch__result:has(> .gcs-acpSearch__icon) {
+  gap: 10px;
+}
+.gcs-acpSearch__icon {
+  flex: none;
+  font-size: 13px;
+  color: var(--gcs-muted);
+}
+
+/* Linkurile cu iconiță din ACP („← Înapoi”, Editează / Permisiuni / Vezi). */
+.gcs-acpBack {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+.gcs-acpBack > .gcs-icon {
+  flex: none;
+  font-size: 12px;
+}
+
+/* Paginarea din listele ACP (istoric VIP, abonați). */
+.gcs-acpPager {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.gcs-acpPager a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--gcs-border);
+}
+
+/* Arborele forumurilor: iconița fiecărui forum lângă nume. */
+.gcs-forumTree__icon {
+  flex: none;
+  font-size: 15px;
+  color: var(--gcs-accent);
+}

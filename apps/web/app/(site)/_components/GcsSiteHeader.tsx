@@ -3,7 +3,7 @@ import { GcsAvatar, GcsButton } from "@gcs/ui";
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
-import { themeMode, viewerTheme } from "@/lib/appearance";
+import { viewerTheme } from "@/lib/appearance";
 import { memberHref } from "@/lib/forum-urls";
 import { localeOptions } from "@/lib/locales";
 import { services } from "@/lib/services";
@@ -20,10 +20,9 @@ export async function GcsSiteHeader() {
   const { permissions, profileQueries, conversations, notifications, nav, settings } = services();
   const actor = await currentActor();
   const [siteName, siteLocale] = await Promise.all([settings.get<string>("site.name"), settings.get<string>("site.locale")]);
-  const [tree, user, mode, locales, { shown: theme }] = await Promise.all([
+  const [tree, user, locales, { shown: theme }] = await Promise.all([
     nav.tree(actor, locale, siteLocale),
     actor.userId ? profileQueries.userDisplays([actor.userId]).then((m) => m.get(actor.userId!) ?? null) : Promise.resolve(null),
-    themeMode(),
     localeOptions(),
     viewerTheme(),
   ]);
@@ -47,7 +46,14 @@ export async function GcsSiteHeader() {
       <div className="gcs-siteHeader__inner">
         <GcsMobileNav
           items={menu}
-          extra={user ? [] : [{ href: "/login", label: t("login") }, { href: "/register", label: t("register") }]}
+          extra={
+            user
+              ? []
+              : [
+                  { href: "/login", label: t("login"), icon: <GcsIcon name="fa-solid fa-right-to-bracket" /> },
+                  { href: "/register", label: t("register"), icon: <GcsIcon name="fa-solid fa-user-plus" /> },
+                ]
+          }
           labels={{ open: t("openMenu"), close: t("closeMenu"), menu: t("mainNav") }}
         />
         <Link href="/" aria-label={t("home")} className="gcs-brand" data-testid="gcs-brand">
@@ -97,25 +103,19 @@ export async function GcsSiteHeader() {
                   settings: t("settings"),
                   acp: t("acp"),
                   moderation: t("moderation"),
-                  theme: t("theme"),
-                  themes: { dark: t("themes.dark"), light: t("themes.light"), auto: t("themes.auto") },
-                  language: t("language"),
                   logout: t("logout"),
                 }}
-                locales={locales}
-                currentTheme={mode}
-                currentLocale={locale}
               />
             </>
           ) : (
             <>
               <GcsGuestPrefs locales={locales} currentLocale={locale} labels={{ language: t("language") }} />
-              <GcsButton variant="ghost" asChild className="gcs-siteHeader__auth">
+              <GcsButton variant="ghost" asChild className="gcs-siteHeader__auth" icon={<GcsIcon name="fa-solid fa-right-to-bracket" />}>
                 <GcsAuthLink href="/login" data-testid="gcs-header-login">
                   {t("login")}
                 </GcsAuthLink>
               </GcsButton>
-              <GcsButton variant="primary" asChild className="gcs-siteHeader__auth">
+              <GcsButton variant="primary" asChild className="gcs-siteHeader__auth" icon={<GcsIcon name="fa-solid fa-user-plus" />}>
                 <GcsAuthLink href="/register" data-testid="gcs-header-register">
                   {t("register")}
                 </GcsAuthLink>

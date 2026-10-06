@@ -1,6 +1,7 @@
 "use client";
 
-import { GcsBadge } from "@gcs/ui";
+import { faArrowDown, faArrowUp } from "@fortawesome/free-solid-svg-icons";
+import { GcsBadge, GcsIconSvg } from "@gcs/ui";
 import Link from "next/link";
 import { useState } from "react";
 import { useErrorMessage } from "../_components/GcsActionForm";
@@ -61,10 +62,10 @@ export function GroupOrder({ groups, labels }: Props) {
               </td>
               <td className="gcs-table__td" style={{ whiteSpace: "nowrap", textAlign: "right" }}>
                 <button type="button" className="gcs-iconBtn" disabled={i === 0} aria-label={labels.moveUp[g.id]} onClick={() => move(i, -1)}>
-                  ↑
+                  <GcsIconSvg icon={faArrowUp} />
                 </button>
                 <button type="button" className="gcs-iconBtn" disabled={i === rows.length - 1} aria-label={labels.moveDown[g.id]} onClick={() => move(i, 1)}>
-                  ↓
+                  <GcsIconSvg icon={faArrowDown} />
                 </button>{" "}
                 <Link href={`/admin/groups/${g.id}`} aria-label={`${labels.edit}: ${g.name}`} style={{ marginLeft: 8 }}>
                   {labels.edit}

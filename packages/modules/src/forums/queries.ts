@@ -58,8 +58,10 @@ export type GcsForumRow = {
   unread: boolean;
 };
 /** O postare în widget-ul „Postări recente”. */
+/** Cel mai nou membru (panoul de statistici): referința, cu data înscrierii. */
+export type GcsNewestMember = GcsUserRef & { joinedAt: string };
 export type GcsWidgetPost = { id: number; topicId: number; topicTitle: string; topicSlug: string; excerpt: string; at: string; user: GcsUserRef | null };
-export type GcsIndexCategory = { id: number; name: string; slug: string; color: string | null; forums: GcsForumRow[] };
+export type GcsIndexCategory = { id: number; name: string; slug: string; color: string | null; icon: string | null; forums: GcsForumRow[] };
 
 export type GcsTopicRow = {
   id: number;
@@ -81,7 +83,7 @@ export type GcsTopicRow = {
 };
 
 export type GcsForumPage = {
-  forum: { id: number; type: ForumType; name: string; slug: string; description: string; linkUrl: string | null };
+  forum: { id: number; type: ForumType; name: string; slug: string; description: string; linkUrl: string | null; icon: string | null; color: string | null };
   breadcrumb: GcsCrumb[];
   subforums: GcsForumRow[];
   topics: GcsTopicRow[];
@@ -252,7 +254,7 @@ export class GcsForumQueries {
     for (const cat of tree.childrenOf(null)) {
       if (cat.type !== "CATEGORY" || !viewable.has(cat.id)) continue;
       const forums = tree.childrenOf(cat.id).filter((f) => viewable.has(f.id)).map((f) => this.row(tree, f, viewable, readable, unread));
-      if (forums.length > 0) categories.push({ id: cat.id, name: cat.name, slug: cat.slug, color: cat.color, forums });
+      if (forums.length > 0) categories.push({ id: cat.id, name: cat.name, slug: cat.slug, color: cat.color, icon: cat.icon, forums });
     }
     return categories;
   }
@@ -294,7 +296,7 @@ export class GcsForumQueries {
     ]);
 
     return {
-      forum: { id: node.id, type: node.type, name: node.name, slug: node.slug, description: node.description, linkUrl: node.linkUrl },
+      forum: { id: node.id, type: node.type, name: node.name, slug: node.slug, description: node.description, linkUrl: node.linkUrl, icon: node.icon, color: node.color },
       breadcrumb: this.crumbs(tree, forumId, viewable),
       subforums: tree.childrenOf(forumId).filter((f) => viewable.has(f.id)).map((f) => this.row(tree, f, viewable, readable, unreadForums)),
       topics: rows.map((t) => topicRow(t, posters, unreadTopics)),
@@ -626,21 +628,21 @@ export class GcsForumQueries {
     return list;
   }
 
-  /** Statisticile comunității (coloana din dreapta), cache-uite 5 minute. */
-  async stats(): Promise<{ topics: number; posts: number; members: number; newestMember: GcsUserRef | null }> {
+  /** Statisticile comunității (coloana din dreapta și panoul de statistici), cache-uite 5 minute. */
+  async stats(): Promise<{ topics: number; posts: number; members: number; newestMember: GcsNewestMember | null }> {
     const { cache, db } = this.deps;
     const cached = await cache.get<Awaited<ReturnType<GcsForumQueries["stats"]>>>("forums:stats");
     if (cached) return cached;
     const tree = await this.tree();
     const [members, newest] = await Promise.all([
       db.user.count(),
-      db.user.findFirst({ orderBy: [{ createdAt: "desc" }, { id: "desc" }], select: userRefSelect }),
+      db.user.findFirst({ orderBy: [{ createdAt: "desc" }, { id: "desc" }], select: { ...userRefSelect, createdAt: true } }),
     ]);
     const stats = {
       topics: tree.data.forums.reduce((n, f) => n + f.topicsCount, 0),
       posts: tree.data.forums.reduce((n, f) => n + f.postsCount, 0),
       members,
-      newestMember: newest ? toRef(newest) : null,
+      newestMember: newest ? { ...toRef(newest), joinedAt: newest.createdAt.toISOString() } : null,
     };
     await cache.set("forums:stats", stats, { ttlSec: STATS_TTL, tags: ["forums-tree"] });
     return stats;

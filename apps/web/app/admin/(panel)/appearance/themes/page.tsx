@@ -1,11 +1,13 @@
 import { THEMES_ACP_SECTION } from "@gcs/core";
 import { GcsButton, GcsCard } from "@gcs/ui";
+import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { createTheme, deleteTheme, editThemeOnSite, updateTheme } from "../actions";
+import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.themes"))("title") };
@@ -20,9 +22,9 @@ export default async function AcpThemesPage() {
   const [t, themes] = await Promise.all([getTranslations("acp.themes"), services().themes.list()]);
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-brush">
         {t("title")}
-      </h1>
+      </GcsAcpTitle>
       <p className="gcs-muted" style={{ margin: 0 }}>
         {t("hint")}
       </p>
@@ -34,7 +36,7 @@ export default async function AcpThemesPage() {
             {theme.isDefault && <span className="gcs-badge gcs-badge--accent">{t("default")}</span>}
             {theme.draft && <span className="gcs-badge">{t("draft")}</span>}
           </h2>
-          <GcsActionForm action={updateTheme.bind(null, theme.key)} submitLabel={t("save")}>
+          <GcsActionForm action={updateTheme.bind(null, theme.key)} submitLabel={t("save")} submitKind="save">
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
               <label className="gcs-field" style={{ width: 220 }}>
                 {t("name")}
@@ -52,12 +54,12 @@ export default async function AcpThemesPage() {
           </GcsActionForm>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <form action={editThemeOnSite.bind(null, theme.key)}>
-              <GcsButton type="submit" variant="primary" size="sm" data-testid="gcs-acp-theme-edit">
+              <GcsButton type="submit" variant="primary" size="sm" data-testid="gcs-acp-theme-edit" icon={<GcsIcon name="fa-solid fa-pen-to-square" />}>
                 {t("editOnSite")}
               </GcsButton>
             </form>
             {!theme.isDefault && (
-              <GcsActionForm action={deleteTheme.bind(null, theme.key)} submitLabel={t("delete")} variant="ghost" compact confirm={t("confirmDelete")}>
+              <GcsActionForm action={deleteTheme.bind(null, theme.key)} submitLabel={t("delete")} submitKind="delete" variant="ghost" compact confirm={t("confirmDelete")}>
                 {null}
               </GcsActionForm>
             )}
@@ -66,9 +68,10 @@ export default async function AcpThemesPage() {
       ))}
       <GcsCard as="section" aria-labelledby="gcs-theme-new" style={{ padding: 16 }}>
         <h2 id="gcs-theme-new" className="gcs-acpWidget__title" style={{ marginBottom: 12 }}>
+          <GcsAcpTitleIcon name="fa-solid fa-plus" />
           {t("create")}
         </h2>
-        <GcsActionForm action={createTheme} submitLabel={t("create")}>
+        <GcsActionForm action={createTheme} submitLabel={t("create")} submitKind="create">
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
             <label className="gcs-field" style={{ width: 160 }}>
               {t("key")}

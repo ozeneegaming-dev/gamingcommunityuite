@@ -1,6 +1,7 @@
 "use client";
 
-import { GcsButton } from "@gcs/ui";
+import { faCheckDouble } from "@fortawesome/free-solid-svg-icons";
+import { GcsButton, GcsIconSvg } from "@gcs/ui";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { markNotificationsRead } from "../../notification-actions";
@@ -12,6 +13,7 @@ export function GcsMarkAllRead({ label }: { label: string }) {
   return (
     <GcsButton
       variant="ghost"
+      icon={<GcsIconSvg icon={faCheckDouble} />}
       disabled={pending}
       onClick={() =>
         start(async () => {

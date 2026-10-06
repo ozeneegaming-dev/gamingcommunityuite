@@ -1,6 +1,7 @@
 import type { GcsProfileView } from "@gcs/modules";
 import { parseUserRef, slugify } from "@gcs/modules/slug";
 import { GcsAvatar, GcsCard, GcsProfileBadge, GcsUserLink } from "@gcs/ui";
+import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -17,6 +18,16 @@ import { translateLabels } from "@/lib/translate";
 
 const TABS = ["activity", "about", "games", "followers", "badges", "warnings"] as const;
 type Tab = (typeof TABS)[number];
+
+/** Iconițele taburilor profilului (și ale titlurilor secțiunilor lor). */
+const TAB_ICONS: Record<Tab, string> = {
+  activity: "fa-solid fa-chart-line",
+  about: "fa-solid fa-circle-info",
+  games: "fa-solid fa-gamepad",
+  followers: "fa-solid fa-user-group",
+  badges: "fa-solid fa-award",
+  warnings: "fa-solid fa-triangle-exclamation",
+};
 
 type Props = { params: Promise<{ ref: string }>; searchParams: Promise<{ tab?: string; page?: string; before?: string }> };
 
@@ -98,7 +109,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
             </span>
             {user.rank && (
               <span className="gcs-badge" style={{ background: "rgba(61,220,151,.14)", color: "#3DDC97" }} data-testid="gcs-profile-rank">
-                {user.rank.icon ? `${user.rank.icon} ` : ""}
+                {user.rank.icon?.startsWith("fa-") ? <GcsIcon name={user.rank.icon} /> : user.rank.icon ? `${user.rank.icon} ` : ""}
                 {user.rank.name}
               </span>
             )}
@@ -151,6 +162,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
       <nav aria-label={t("tabsLabel")} className="gcs-tabs">
         {TABS.filter((k) => k !== "warnings" || viewer.canSeeWarnings).map((k) => (
           <Link key={k} href={tabHref(k)} className={`gcs-tab${k === tab ? " gcs-tab--active" : ""}`} aria-current={k === tab ? "page" : undefined}>
+            <GcsIcon name={TAB_ICONS[k]} className="gcs-tab__icon" />
             {t(`tabs.${k}`)}
           </Link>
         ))}
@@ -161,9 +173,15 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
   const aboutCard = (
     <GcsCard as="section" style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
       <h2 className="gcs-display" style={sectionTitle}>
+        <GcsIcon name={TAB_ICONS.about} className="gcs-hIcon" />
         {t("tabs.about")}
       </h2>
-      {about.length === 0 && <span className="gcs-muted">{t("noFields")}</span>}
+      {about.length === 0 && (
+        <span className="gcs-muted">
+          <GcsIcon name="fa-regular fa-rectangle-list" className="gcs-emptyIcon" />
+          {t("noFields")}
+        </span>
+      )}
       {about.map((f) => (
         <div key={f.key} className="gcs-profileField">
           <span>{f.label}</span>
@@ -180,13 +198,19 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
   const accountsCard = (
     <GcsCard as="section" style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
       <h2 className="gcs-display" style={sectionTitle}>
+        <GcsIcon name={TAB_ICONS.games} className="gcs-hIcon" />
         {t("linkedAccounts")}
       </h2>
-      {profile.accounts.length === 0 && games.length === 0 && <span className="gcs-muted">{t("noAccounts")}</span>}
+      {profile.accounts.length === 0 && games.length === 0 && (
+        <span className="gcs-muted">
+          <GcsIcon name="fa-solid fa-link-slash" className="gcs-emptyIcon" />
+          {t("noAccounts")}
+        </span>
+      )}
       {profile.accounts.map((a) => (
         <div key={a.provider} className="gcs-linkedAccount">
           <span className="gcs-display gcs-linkedAccount__tag" style={{ background: a.provider === "discord" ? "#4752C4" : "#1B2838" }}>
-            {a.provider === "discord" ? "DC" : "ST"}
+            <GcsIcon name={a.provider === "discord" ? "fa-brands fa-discord" : "fa-brands fa-steam"} />
           </span>
           <div style={{ display: "flex", flexDirection: "column", fontSize: 13 }}>
             <span style={{ fontWeight: 700 }}>{a.provider === "discord" ? "Discord" : "Steam"}</span>
@@ -214,9 +238,15 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
   const badgesGrid = (all: boolean) => (
     <GcsCard as="section" style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
       <h2 className="gcs-display" style={sectionTitle}>
+        <GcsIcon name={TAB_ICONS.badges} className="gcs-hIcon" />
         {t("badgesCount", { count: profile.badges.length })}
       </h2>
-      {profile.badges.length === 0 && <span className="gcs-muted">{t("noBadges")}</span>}
+      {profile.badges.length === 0 && (
+        <span className="gcs-muted">
+          <GcsIcon name="fa-regular fa-star" className="gcs-emptyIcon" />
+          {t("noBadges")}
+        </span>
+      )}
       <div className="gcs-badgeGrid" data-testid="gcs-profile-badges">
         {(all ? profile.badges : profile.badges.slice(0, 6)).map((b) => (
           <div key={b.key} className="gcs-badgeGrid__item" title={all ? format.dateTime(new Date(b.awardedAt), { dateStyle: "medium" }) : undefined}>
@@ -234,9 +264,15 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
     main = (
       <GcsCard as="section" style={{ overflow: "hidden" }}>
         <h2 className="gcs-display" style={{ ...sectionTitle, padding: "16px 20px", borderBottom: "1px solid var(--gcs-border)" }}>
+          <GcsIcon name={TAB_ICONS.activity} className="gcs-hIcon" />
           {t("recentActivity")}
         </h2>
-        {activity.items.length === 0 && <p className="gcs-muted" style={{ padding: "16px 20px", margin: 0 }}>{t("noActivity")}</p>}
+        {activity.items.length === 0 && (
+          <p className="gcs-muted" style={{ padding: "16px 20px", margin: 0 }}>
+            <GcsIcon name="fa-regular fa-clock" className="gcs-emptyIcon" />
+            {t("noActivity")}
+          </p>
+        )}
         <ul className="gcs-activity" data-testid="gcs-profile-activity">
           {activity.items.map((item) => (
             <li key={item.kind === "badge" ? `b-${item.badge.key}` : `p-${item.postId}`} className="gcs-activity__item">
@@ -253,7 +289,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
               ) : (
                 <>
                   <span className={`gcs-activity__icon gcs-activity__icon--${item.kind}`} aria-hidden="true">
-                    {item.kind === "topic" ? "+" : "✎"}
+                    <GcsIcon name={item.kind === "topic" ? "fa-solid fa-plus" : "fa-solid fa-pen"} />
                   </span>
                   <div className="gcs-activity__text">
                     <span>
@@ -272,7 +308,10 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         </ul>
         {activity.next && (
           <div style={{ padding: "12px 20px" }}>
-            <Link href={`${tabHref("activity")}?before=${encodeURIComponent(activity.next)}`}>{t("older")}</Link>
+            <Link href={`${tabHref("activity")}?before=${encodeURIComponent(activity.next)}`}>
+              <GcsIcon name="fa-solid fa-clock-rotate-left" className="gcs-hIcon" />
+              {t("older")}
+            </Link>
           </div>
         )}
       </GcsCard>
@@ -297,9 +336,15 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         )}
         <GcsCard as="section" style={{ overflow: "hidden" }}>
           <h2 className="gcs-display" style={{ ...sectionTitle, padding: "16px 20px", borderBottom: "1px solid var(--gcs-border)" }}>
+            <GcsIcon name="fa-solid fa-comments" className="gcs-hIcon" />
             {t("wall.title")}
           </h2>
-          {wall?.items.length === 0 && <p className="gcs-muted" style={{ padding: "16px 20px", margin: 0 }}>{t("wall.empty")}</p>}
+          {wall?.items.length === 0 && (
+            <p className="gcs-muted" style={{ padding: "16px 20px", margin: 0 }}>
+              <GcsIcon name="fa-regular fa-comment-dots" className="gcs-emptyIcon" />
+              {t("wall.empty")}
+            </p>
+          )}
           <ul className="gcs-wall" data-testid="gcs-wall">
             {wall?.items.map((s) => (
               <li key={s.id} className={`gcs-wallItem${s.visibility !== "VISIBLE" ? " gcs-wallItem--hidden" : ""}`} data-testid="gcs-wall-item">
@@ -330,9 +375,15 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
     main = (
       <GcsCard as="section" style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
         <h2 className="gcs-display" style={sectionTitle}>
+          <GcsIcon name={TAB_ICONS.followers} className="gcs-hIcon" />
           {t("followersCount", { count: followers?.total ?? 0 })}
         </h2>
-        {followers?.users.length === 0 && <span className="gcs-muted">{t("noFollowers")}</span>}
+        {followers?.users.length === 0 && (
+          <span className="gcs-muted">
+            <GcsIcon name="fa-solid fa-user-group" className="gcs-emptyIcon" />
+            {t("noFollowers")}
+          </span>
+        )}
         <ul className="gcs-userGrid" data-testid="gcs-profile-followers-list">
           {followers?.users.map((u) => (
             <li key={u.id}>
@@ -350,9 +401,15 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
     main = (
       <GcsCard as="section" style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 12 }} data-testid="gcs-profile-warnings">
         <h2 className="gcs-display" style={sectionTitle}>
+          <GcsIcon name={TAB_ICONS.warnings} className="gcs-hIcon" />
           {t("tabs.warnings")}
         </h2>
-        {warnings.length === 0 && <span className="gcs-muted">{t("noWarnings")}</span>}
+        {warnings.length === 0 && (
+          <span className="gcs-muted">
+            <GcsIcon name="fa-regular fa-circle-check" className="gcs-emptyIcon" />
+            {t("noWarnings")}
+          </span>
+        )}
         {warnings.map((w) => (
           <div key={w.id} className="gcs-profileField">
             <span>

@@ -1,3 +1,4 @@
+import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -24,7 +25,7 @@ export default async function RegisterPage() {
   const turnstile = turnstileSiteKey && turnstileSecret ? turnstileSiteKey : null;
 
   return (
-    <GcsAuthCard title={t("title")} subtitle={t("subtitle", { site: siteName })}>
+    <GcsAuthCard title={t("title")} subtitle={t("subtitle", { site: siteName })} icon={<GcsIcon name="fa-solid fa-user-plus" />}>
       <RegisterForm turnstileSiteKey={turnstile} />
     </GcsAuthCard>
   );

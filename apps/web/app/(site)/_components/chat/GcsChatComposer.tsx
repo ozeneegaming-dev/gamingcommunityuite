@@ -1,11 +1,14 @@
 "use client";
 
+import { faFaceSmile, faImage } from "@fortawesome/free-regular-svg-icons";
+import { faArrowTurnDown, faMagnifyingGlass, faMicrophone, faStop, faXmark } from "@fortawesome/free-solid-svg-icons";
 import type { GcsAttachmentInfo, GcsErrorPayload, GcsResult } from "@gcs/core";
 import type { GcsChatConfig, GcsGif } from "@gcs/modules";
-import { GcsButton } from "@gcs/ui";
+import { GcsIconSvg } from "@gcs/ui";
 import { useTranslations } from "next-intl";
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type FormEvent } from "react";
-import { GCS_EMOJI } from "./emoji-data";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState, type FormEvent } from "react";
+import { GcsChatEmojiPicker } from "./GcsChatEmojiPicker";
+import { useDismiss } from "./use-dismiss";
 
 const MAX_FILES = 4;
 const VOICE_TYPES = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/mp4"];
@@ -21,6 +24,8 @@ type Props = {
   busy: boolean;
   config: Pick<GcsChatConfig, "maxLength" | "giphy" | "voice" | "voiceMaxSeconds" | "allowImages" | "hideEnterMobile">;
   labels: { placeholder: string; send: string; input: string };
+  /** Unde se deschid selectoarele: deasupra câmpului (implicit) sau dedesubt (câmpul e deasupra listei). */
+  placement?: "above" | "below";
   /** Trimite mesajul; `true` dacă a plecat (câmpul se golește). */
   onSend: (body: string, files: string[]) => Promise<boolean>;
   onError: (error: GcsErrorPayload | string | null) => void;
@@ -41,21 +46,27 @@ async function uploadChatFile(channel: string, file: Blob, name: string): Promis
 }
 
 /**
- * Câmpul de mesaj al chat-ului: emoticoane pe categorii, imagini (buton, lipire, tragere), mesaje vocale
- * (înregistrate în browser), GIF-uri GIPHY (`/giphy cuvânt` sau butonul GIF) și butonul de trimitere (opțional ascuns
- * pe mobil, unde Enter trimite oricum).
+ * Câmpul de mesaj al chat-ului (după chatbox-ul de referință): câmpul pe toată lățimea, cu uneltele în dreapta lui (imagine,
+ * GIF, voce, emoticoane) și butonul albastru Enter. Imaginile se adaugă și prin lipire sau tragere, mesajele vocale se
+ * înregistrează în browser, GIF-urile vin din GIPHY (`/giphy cuvânt` sau butonul GIF). Selectoarele sunt flotante,
+ * ancorate de butoane, și se închid la click în afară sau la Escape. Butonul Enter se poate ascunde pe mobil (Enter
+ * trimite oricum).
  */
 export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function GcsChatComposer(props, ref) {
-  const { channel, disabled, busy, config, labels, onSend, onError } = props;
+  const { channel, disabled, busy, config, labels, onSend, onError, placement = "above" } = props;
   const t = useTranslations("chat.ui");
   const [text, setText] = useState("");
   const [files, setFiles] = useState<Pending[]>([]);
   const [panel, setPanel] = useState<"emoji" | "gif" | null>(null);
-  const [tab, setTab] = useState(GCS_EMOJI[0]!.key);
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const emojiButton = useRef<HTMLButtonElement>(null);
+  const gifButton = useRef<HTMLButtonElement>(null);
+  const closePanel = useCallback(() => setPanel(null), []);
+  useDismiss(panel !== null, panelRef, closePanel, panel === "gif" ? gifButton : emojiButton);
   const [gifQuery, setGifQuery] = useState("");
   const [gifs, setGifs] = useState<GcsGif[] | null>(null);
   const [gifLoading, setGifLoading] = useState(false);
@@ -229,39 +240,27 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
   const off = disabled || busy || uploading;
   const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
   return (
-    <div className="gcs-chat__composer">
+    <div className={`gcs-chat__composer${config.hideEnterMobile ? " gcs-chat__composer--noEnterMobile" : ""}`}>
       {files.length > 0 && (
         <ul className="gcs-chat__pending" aria-label={t("attached")}>
           {files.map((f) => (
             <li key={f.id}>
               <img src={f.url} alt={f.name} />
-              <button type="button" aria-label={t("removeFile", { name: f.name })} onClick={() => setFiles((list) => list.filter((x) => x.id !== f.id))}>
-                ×
+              <button
+                type="button"
+                aria-label={t("removeFile", { name: f.name })}
+                title={t("removeFile", { name: f.name })}
+                onClick={() => setFiles((list) => list.filter((x) => x.id !== f.id))}
+              >
+                <GcsIconSvg icon={faXmark} />
               </button>
             </li>
           ))}
         </ul>
       )}
-      {panel === "emoji" && (
-        <div className="gcs-chat__panel gcs-chat__emoji" role="dialog" aria-label={t("emoji")} data-testid="gcs-chat-emoji">
-          <div className="gcs-chat__tabs" role="tablist" aria-label={t("emoji")}>
-            {GCS_EMOJI.map((c) => (
-              <button key={c.key} type="button" role="tab" aria-selected={tab === c.key} title={t(`emojiTabs.${c.key}`)} aria-label={t(`emojiTabs.${c.key}`)} onClick={() => setTab(c.key)}>
-                {c.icon}
-              </button>
-            ))}
-          </div>
-          <div className="gcs-chat__emojiGrid" role="tabpanel" aria-label={t(`emojiTabs.${tab}`)}>
-            {GCS_EMOJI.find((c) => c.key === tab)!.items.map((e) => (
-              <button key={e} type="button" onClick={() => insert(e)} aria-label={e}>
-                {e}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      {panel === "emoji" && <GcsChatEmojiPicker ref={panelRef} placement={placement} onPick={insert} />}
       {panel === "gif" && (
-        <div className="gcs-chat__panel gcs-chat__gifs" role="dialog" aria-label="GIPHY" data-testid="gcs-chat-gifs">
+        <div ref={panelRef} className={`gcs-chat__panel gcs-chat__gifs gcs-chat__panel--${placement}`} role="dialog" aria-label="GIPHY" data-testid="gcs-chat-gifs">
           <form
             className="gcs-chat__gifSearch"
             onSubmit={(e) => {
@@ -270,9 +269,9 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
             }}
           >
             <input className="gcs-input" aria-label={t("gifSearch")} placeholder={t("gifSearch")} value={gifQuery} onChange={(e) => setGifQuery(e.target.value)} autoFocus maxLength={50} />
-            <GcsButton type="submit" size="sm" variant="ghost" disabled={gifLoading || !gifQuery.trim()}>
-              {t("search")}
-            </GcsButton>
+            <button type="submit" className="gcs-chat__tool" aria-label={t("search")} title={t("search")} disabled={gifLoading || !gifQuery.trim()}>
+              <GcsIconSvg icon={faMagnifyingGlass} />
+            </button>
           </form>
           {gifs && gifs.length === 0 && !gifLoading && <p className="gcs-chat__note">{t("gifNone")}</p>}
           <div className="gcs-chat__gifGrid">
@@ -285,78 +284,106 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
           <p className="gcs-chat__attribution">Powered by GIPHY</p>
         </div>
       )}
-      <form ref={formRef} className={`gcs-chat__form${config.hideEnterMobile ? " gcs-chat__form--noEnterMobile" : ""}`} onSubmit={(e) => void submit(e)}>
-        <div className="gcs-chat__buttons">
-          <button type="button" className="gcs-chat__tool" aria-label={t("emoji")} title={t("emoji")} aria-expanded={panel === "emoji"} disabled={disabled} onClick={() => setPanel(panel === "emoji" ? null : "emoji")}>
-            😊
+      {recording && (
+        <p className="gcs-chat__recording">
+          <span className="gcs-chat__recDot" aria-hidden="true" />
+          <span className="gcs-chat__recTime" role="timer" aria-live="off">
+            {mmss(recording.seconds)} / {mmss(config.voiceMaxSeconds)}
+          </span>
+          <button type="button" className="gcs-linkButton" onClick={() => stopVoice(true)}>
+            {t("voiceCancel")}
           </button>
-          {config.allowImages && (
-            <>
-              <button type="button" className="gcs-chat__tool" aria-label={t("addImage")} title={t("addImage")} disabled={off} onClick={() => fileRef.current?.click()}>
-                🖼
-              </button>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/png,image/jpeg,image/gif,image/webp"
-                multiple
-                hidden
-                data-testid="gcs-chat-file"
-                onChange={(e) => {
-                  void addFiles([...(e.target.files ?? [])]);
-                  e.target.value = "";
-                }}
-              />
-            </>
-          )}
-          {config.giphy && (
-            <button type="button" className="gcs-chat__tool gcs-chat__tool--gif" aria-label="GIF" title="GIPHY" aria-expanded={panel === "gif"} disabled={disabled} onClick={() => setPanel(panel === "gif" ? null : "gif")}>
-              GIF
-            </button>
-          )}
-          {canRecord &&
-            (recording ? (
+        </p>
+      )}
+      <form ref={formRef} className="gcs-chat__form" onSubmit={(e) => void submit(e)}>
+        <div className="gcs-chat__field">
+          <input
+            ref={inputRef}
+            className="gcs-chat__input"
+            aria-label={labels.input}
+            placeholder={recording ? t("recording") : labels.placeholder}
+            maxLength={config.maxLength > 0 ? config.maxLength : 2000}
+            value={text}
+            disabled={disabled || recording !== null}
+            onChange={(e) => setText(e.target.value)}
+            onPaste={(e) => {
+              const pasted = [...e.clipboardData.files];
+              if (pasted.some((f) => f.type.startsWith("image/"))) {
+                e.preventDefault();
+                void addFiles(pasted);
+              }
+            }}
+            data-testid="gcs-chat-input"
+          />
+          <div className="gcs-chat__buttons">
+            {config.allowImages && (
               <>
-                <button type="button" className="gcs-chat__tool gcs-chat__tool--rec" aria-label={t("voiceStop")} title={t("voiceStop")} onClick={() => stopVoice(false)}>
-                  ⏹
+                <button type="button" className="gcs-chat__tool" aria-label={t("addImage")} title={t("addImage")} disabled={off} onClick={() => fileRef.current?.click()}>
+                  <GcsIconSvg icon={faImage} />
                 </button>
-                <span className="gcs-chat__recTime" role="timer" aria-live="off">
-                  {mmss(recording.seconds)} / {mmss(config.voiceMaxSeconds)}
-                </span>
-                <button type="button" className="gcs-linkButton" onClick={() => stopVoice(true)}>
-                  {t("voiceCancel")}
-                </button>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/gif,image/webp"
+                  multiple
+                  hidden
+                  data-testid="gcs-chat-file"
+                  onChange={(e) => {
+                    void addFiles([...(e.target.files ?? [])]);
+                    e.target.value = "";
+                  }}
+                />
               </>
-            ) : (
-              <button type="button" className="gcs-chat__tool" aria-label={t("voiceStart")} title={t("voiceStart")} disabled={off} onClick={() => void startVoice()}>
-                🎤
+            )}
+            {config.giphy && (
+              <button
+                ref={gifButton}
+                type="button"
+                className="gcs-chat__tool gcs-chat__tool--gif"
+                aria-label="GIF"
+                title="GIPHY"
+                aria-haspopup="dialog"
+                aria-expanded={panel === "gif"}
+                disabled={disabled}
+                onClick={() => setPanel(panel === "gif" ? null : "gif")}
+              >
+                GIF
               </button>
-            ))}
+            )}
+            {canRecord &&
+              (recording ? (
+                <button type="button" className="gcs-chat__tool gcs-chat__tool--rec" aria-label={t("voiceStop")} title={t("voiceStop")} onClick={() => stopVoice(false)}>
+                  <GcsIconSvg icon={faStop} />
+                </button>
+              ) : (
+                <button type="button" className="gcs-chat__tool" aria-label={t("voiceStart")} title={t("voiceStart")} disabled={off} onClick={() => void startVoice()}>
+                  <GcsIconSvg icon={faMicrophone} />
+                </button>
+              ))}
+            <button
+              ref={emojiButton}
+              type="button"
+              className="gcs-chat__tool gcs-chat__tool--emoji"
+              aria-label={t("emoji")}
+              title={t("emoji")}
+              aria-haspopup="dialog"
+              aria-expanded={panel === "emoji"}
+              disabled={disabled}
+              onClick={() => setPanel(panel === "emoji" ? null : "emoji")}
+            >
+              <GcsIconSvg icon={faFaceSmile} />
+            </button>
+          </div>
         </div>
-        <input
-          ref={inputRef}
-          className="gcs-input"
-          aria-label={labels.input}
-          placeholder={recording ? t("recording") : labels.placeholder}
-          maxLength={config.maxLength > 0 ? config.maxLength : 2000}
-          value={text}
-          disabled={disabled || recording !== null}
-          onChange={(e) => setText(e.target.value)}
-          onPaste={(e) => {
-            const pasted = [...e.clipboardData.files];
-            if (pasted.some((f) => f.type.startsWith("image/"))) {
-              e.preventDefault();
-              void addFiles(pasted);
-            }
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") setPanel(null);
-          }}
-          data-testid="gcs-chat-input"
-        />
-        <GcsButton type="submit" variant="primary" className="gcs-chat__send" disabled={off || recording !== null || (!text.trim() && files.length === 0)}>
-          {labels.send}
-        </GcsButton>
+        <button
+          type="submit"
+          className="gcs-chat__send"
+          aria-label={labels.send}
+          title={labels.send}
+          disabled={off || recording !== null || (!text.trim() && files.length === 0)}
+        >
+          <GcsIconSvg icon={faArrowTurnDown} className="gcs-chat__sendIcon" />
+        </button>
       </form>
     </div>
   );

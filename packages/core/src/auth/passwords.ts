@@ -15,7 +15,7 @@ export function hashPassword(pw: string): Promise<string> {
   return hash(pw, OPTIONS);
 }
 
-/** `false` și pentru un hash invalid sau într-un alt format (ex. bcrypt, importat din IPS). */
+/** `false` și pentru un hash invalid sau într-un alt format (ex. bcrypt, importat din altă platformă). */
 export async function verifyPassword(passwordHash: string, pw: string): Promise<boolean> {
   try {
     return await verify(passwordHash, pw);

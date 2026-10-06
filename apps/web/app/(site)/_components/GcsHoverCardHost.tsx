@@ -1,6 +1,7 @@
 "use client";
 
-import { GcsButton, GcsHoverCard, type GcsHoverCardData, type GcsHoverCardLabels } from "@gcs/ui";
+import { faEnvelope, faUserMinus, faUserPlus } from "@fortawesome/free-solid-svg-icons";
+import { GcsButton, GcsHoverCard, GcsIconSvg, type GcsHoverCardData, type GcsHoverCardLabels } from "@gcs/ui";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { followUser } from "../profile-actions";
@@ -168,12 +169,18 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
     data.viewer.canFollow || data.viewer.canMessage ? (
       <>
         {data.viewer.canFollow && (
-          <GcsButton variant={data.viewer.isFollowing ? "ghost" : "primary"} onClick={toggleFollow} disabled={pending} data-testid="gcs-hover-follow">
+          <GcsButton
+            variant={data.viewer.isFollowing ? "ghost" : "primary"}
+            icon={<GcsIconSvg icon={data.viewer.isFollowing ? faUserMinus : faUserPlus} />}
+            onClick={toggleFollow}
+            disabled={pending}
+            data-testid="gcs-hover-follow"
+          >
             {data.viewer.isFollowing ? labels.unfollow : labels.follow}
           </GcsButton>
         )}
         {data.viewer.canMessage && (
-          <GcsButton variant="ghost" asChild>
+          <GcsButton variant="ghost" asChild icon={<GcsIconSvg icon={faEnvelope} />}>
             <Link href={`/messages/new?to=${encodeURIComponent(open.userId)}`}>{labels.message}</Link>
           </GcsButton>
         )}

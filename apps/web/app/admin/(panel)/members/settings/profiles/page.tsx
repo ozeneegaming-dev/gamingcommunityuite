@@ -6,6 +6,7 @@ import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../../_components/GcsActionForm";
 import { deleteProfileField, savePostbitOrder, saveProfileField, saveProfileSettings } from "./actions";
+import { GcsAcpTitle, GcsAcpTitleIcon } from "../../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.profiles"))("title") };
@@ -111,12 +112,12 @@ export default async function AcpProfilesPage() {
 
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-id-card">
         {t("title")}
-      </h1>
+      </GcsAcpTitle>
       <GcsCard as="section" aria-label={t("settingsTitle")} style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-        <h2 className="gcs-acpWidget__title">{t("settingsTitle")}</h2>
-        <GcsActionForm action={saveProfileSettings} submitLabel={t("save")}>
+        <h2 className="gcs-acpWidget__title"><GcsAcpTitleIcon name="fa-solid fa-sliders" />{t("settingsTitle")}</h2>
+        <GcsActionForm action={saveProfileSettings} submitLabel={t("save")} submitKind="save">
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-end" }}>
             <label className="gcs-field" style={{ width: 200 }}>
               {t("coverMaxMb")}
@@ -131,13 +132,14 @@ export default async function AcpProfilesPage() {
       </GcsCard>
       <GcsCard as="section" aria-labelledby="gcs-postbit-order" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }} data-testid="gcs-acp-postbit">
         <h2 id="gcs-postbit-order" className="gcs-acpWidget__title">
+          <GcsAcpTitleIcon name="fa-solid fa-arrow-down-1-9" />
           {t("postbitTitle")}
         </h2>
         <p className="gcs-muted" style={{ margin: 0 }}>
           {t("postbitHint")}
         </p>
         {postbitFields.length > 0 && (
-          <GcsActionForm action={savePostbitOrder} submitLabel={t("postbitSave")}>
+          <GcsActionForm action={savePostbitOrder} submitLabel={t("postbitSave")} submitKind="save">
             <ol style={{ margin: 0, paddingLeft: 20, display: "flex", flexDirection: "column", gap: 6 }}>
               {postbitFields.map((f, i) => (
                 <li key={f.key}>
@@ -153,19 +155,20 @@ export default async function AcpProfilesPage() {
       </GcsCard>
       {fields.map((f) => (
         <GcsCard key={f.id} as="section" aria-label={f.label} style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }} data-testid="gcs-acp-profile-field">
-          <GcsActionForm action={saveProfileField.bind(null, f.id)} submitLabel={t("save")}>
+          <GcsActionForm action={saveProfileField.bind(null, f.id)} submitLabel={t("save")} submitKind="save">
             {form(f)}
           </GcsActionForm>
-          <GcsActionForm action={deleteProfileField.bind(null, f.id)} submitLabel={t("delete")} variant="ghost" compact confirm={t("confirmDelete")}>
+          <GcsActionForm action={deleteProfileField.bind(null, f.id)} submitLabel={t("delete")} submitKind="delete" variant="ghost" compact confirm={t("confirmDelete")}>
             {null}
           </GcsActionForm>
         </GcsCard>
       ))}
       <GcsCard as="section" aria-labelledby="gcs-field-new" style={{ padding: 16 }}>
         <h2 id="gcs-field-new" className="gcs-acpWidget__title" style={{ marginBottom: 12 }}>
+          <GcsAcpTitleIcon name="fa-solid fa-plus" />
           {t("add")}
         </h2>
-        <GcsActionForm action={saveProfileField.bind(null, null)} submitLabel={t("add")}>
+        <GcsActionForm action={saveProfileField.bind(null, null)} submitLabel={t("add")} submitKind="create">
           {form()}
         </GcsActionForm>
       </GcsCard>

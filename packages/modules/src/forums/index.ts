@@ -88,12 +88,19 @@ const acpMenu: GcsAcpMenuSection[] = [
   {
     app: "community",
     title: "acp.menu.community.forums_group",
+    icon: "fa-solid fa-comments",
     items: [
-      ["forums", "/admin/community/forums"],
-      ["prefixes", "/admin/community/prefixes"],
-      ["saved_actions", "/admin/community/saved-actions"],
-      ["forum_settings", "/admin/settings/posting"],
-    ].map(([key, href]) => ({ key: `community.${key}`, labelKey: `acp.menu.community.${key}`, href: href!, section: `community.${key}` })),
+      ["forums", "/admin/community/forums", "fa-solid fa-comments"],
+      ["prefixes", "/admin/community/prefixes", "fa-solid fa-tag"],
+      ["saved_actions", "/admin/community/saved-actions", "fa-solid fa-wand-magic-sparkles"],
+      ["forum_settings", "/admin/settings/posting", "fa-solid fa-sliders"],
+    ].map(([key, href, icon]) => ({
+      key: `community.${key}`,
+      labelKey: `acp.menu.community.${key}`,
+      href: href!,
+      section: `community.${key}`,
+      icon: icon!,
+    })),
   },
 ];
 

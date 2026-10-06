@@ -1,4 +1,5 @@
 import type { GcsPagination as Pagination } from "@gcs/modules";
+import { GcsIcon } from "@gcs/ui/icons";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
@@ -23,6 +24,7 @@ export async function GcsPagination({ pagination, href }: { pagination: Paginati
     <nav className="gcs-pagination" aria-label={t("label")}>
       {page > 1 && (
         <Link href={href(page - 1)} className="gcs-pagination__link" rel="prev">
+          <GcsIcon name="fa-solid fa-chevron-left" className="gcs-pagination__icon" />
           {t("prev")}
         </Link>
       )}
@@ -46,6 +48,7 @@ export async function GcsPagination({ pagination, href }: { pagination: Paginati
       {page < pages && (
         <Link href={href(page + 1)} className="gcs-pagination__link" rel="next">
           {t("next")}
+          <GcsIcon name="fa-solid fa-chevron-right" className="gcs-pagination__icon" />
         </Link>
       )}
     </nav>

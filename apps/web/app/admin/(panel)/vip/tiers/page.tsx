@@ -6,6 +6,7 @@ import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { createTier } from "../actions";
+import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.vip"))("tiersTitle") };
@@ -23,9 +24,9 @@ export default async function AcpVipTiersPage() {
   });
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-layer-group">
         {t("tiersTitle")}
-      </h1>
+      </GcsAcpTitle>
       <p className="gcs-muted" style={{ margin: 0 }}>
         {t("tiersHelp")}
       </p>
@@ -47,9 +48,10 @@ export default async function AcpVipTiersPage() {
       </GcsCard>
       <GcsCard as="section" aria-labelledby="gcs-tier-new" style={{ padding: 16 }}>
         <h2 id="gcs-tier-new" className="gcs-acpWidget__title" style={{ marginBottom: 12 }}>
+          <GcsAcpTitleIcon name="fa-solid fa-plus" />
           {t("addTier")}
         </h2>
-        <GcsActionForm action={createTier} submitLabel={t("addTier")}>
+        <GcsActionForm action={createTier} submitLabel={t("addTier")} submitKind="create">
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
             <label className="gcs-field" style={{ width: 200 }}>
               {t("name")}

@@ -1,9 +1,11 @@
 import { GcsButton, GcsCard, GcsTable, GcsUserLink } from "@gcs/ui";
+import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
+import { GcsAcpTitle } from "../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.members"))("title") };
@@ -33,9 +35,9 @@ export default async function AcpMembersPage({ searchParams }: Props) {
 
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-user">
         {t("title")}
-      </h1>
+      </GcsAcpTitle>
       <GcsCard style={{ padding: 16 }}>
         <form method="get" role="search" style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
           <label className="gcs-field" style={{ flex: "1 1 260px" }}>
@@ -53,7 +55,7 @@ export default async function AcpMembersPage({ searchParams }: Props) {
               ))}
             </select>
           </label>
-          <GcsButton variant="primary" type="submit">
+          <GcsButton variant="primary" type="submit" icon={<GcsIcon name="fa-solid fa-filter" />}>
             {t("filter")}
           </GcsButton>
         </form>
@@ -86,13 +88,19 @@ export default async function AcpMembersPage({ searchParams }: Props) {
           <nav style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "flex-end", padding: 12 }}>
             {result.page > 1 && (
               <GcsButton variant="ghost" size="sm" asChild>
-                <Link href={pageHref(result.page - 1)}>{t("prev")}</Link>
+                <Link href={pageHref(result.page - 1)}>
+                  <GcsIcon name="fa-solid fa-chevron-left" className="gcs-btn__icon" />
+                  {t("prev")}
+                </Link>
               </GcsButton>
             )}
             <span style={{ fontSize: 13, color: "var(--gcs-muted)" }}>{t("page", { page: result.page, pages: result.pages })}</span>
             {result.page < result.pages && (
               <GcsButton variant="ghost" size="sm" asChild>
-                <Link href={pageHref(result.page + 1)}>{t("next")}</Link>
+                <Link href={pageHref(result.page + 1)}>
+                  {t("next")}
+                  <GcsIcon name="fa-solid fa-chevron-right" className="gcs-btn__icon" />
+                </Link>
               </GcsButton>
             )}
           </nav>

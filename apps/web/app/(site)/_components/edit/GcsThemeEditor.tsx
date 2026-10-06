@@ -2,7 +2,20 @@
 
 import { GcsButton, GcsIconSvg } from "@gcs/ui";
 import type { GcsResult } from "@gcs/core";
-import { faArrowUpFromBracket, faXmark } from "@fortawesome/free-solid-svg-icons";
+import {
+  faArrowUpFromBracket,
+  faCode,
+  faFont,
+  faImage,
+  faMoon,
+  faPalette,
+  faRotateLeft,
+  faSun,
+  faTableColumns,
+  faTrash,
+  faUpload,
+  faXmark,
+} from "@fortawesome/free-solid-svg-icons";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
@@ -156,7 +169,10 @@ export function GcsThemeEditor({ themeKey, themeName, hasDraft: initialDraft, va
     <aside className="gcs-themeEditor" aria-label={t("title")} data-testid="gcs-theme-editor">
       <header className="gcs-themeEditor__head">
         <div>
-          <strong className="gcs-display">{t("title")}</strong>
+          <strong className="gcs-display">
+            <GcsIconSvg icon={faPalette} className="gcs-hIcon" />
+            {t("title")}
+          </strong>
           <span className="gcs-muted">
             {themeName}
             {hasDraft && (
@@ -173,10 +189,14 @@ export function GcsThemeEditor({ themeKey, themeName, hasDraft: initialDraft, va
 
       <div className="gcs-themeEditor__body">
         <section className="gcs-themeEditor__section">
-          <h3>{t("colors")}</h3>
+          <h3>
+            <GcsIconSvg icon={faPalette} className="gcs-hIcon" />
+            {t("colors")}
+          </h3>
           <div className="gcs-seg__group" role="tablist" aria-label={t("colors")}>
             {(["dark", "light"] as const).map((m) => (
               <button key={m} type="button" role="tab" aria-selected={mode === m} className={mode === m ? "gcs-seg gcs-seg--active" : "gcs-seg"} onClick={() => setMode(m)}>
+                <GcsIconSvg icon={m === "dark" ? faMoon : faSun} />
                 {t(`modes.${m}`)}
               </button>
             ))}
@@ -198,7 +218,10 @@ export function GcsThemeEditor({ themeKey, themeName, hasDraft: initialDraft, va
         </section>
 
         <section className="gcs-themeEditor__section">
-          <h3>{t("typography")}</h3>
+          <h3>
+            <GcsIconSvg icon={faFont} className="gcs-hIcon" />
+            {t("typography")}
+          </h3>
           {(["fontDisplay", "fontText"] as const).map((f) => (
             <label key={f} className="gcs-themeEditor__row">
               <span>{t(f)}</span>
@@ -214,7 +237,10 @@ export function GcsThemeEditor({ themeKey, themeName, hasDraft: initialDraft, va
         </section>
 
         <section className="gcs-themeEditor__section">
-          <h3>{t("layout")}</h3>
+          <h3>
+            <GcsIconSvg icon={faTableColumns} className="gcs-hIcon" />
+            {t("layout")}
+          </h3>
           <label className="gcs-themeEditor__row">
             <span>
               {t("radius")} <code>{value.radius}px</code>
@@ -230,7 +256,10 @@ export function GcsThemeEditor({ themeKey, themeName, hasDraft: initialDraft, va
         </section>
 
         <section className="gcs-themeEditor__section">
-          <h3>{t("branding")}</h3>
+          <h3>
+            <GcsIconSvg icon={faImage} className="gcs-hIcon" />
+            {t("branding")}
+          </h3>
           {(["logo", "favicon"] as const).map((kind) => {
             const url = kind === "logo" ? value.logoUrl : value.faviconUrl;
             return (
@@ -255,7 +284,7 @@ export function GcsThemeEditor({ themeKey, themeName, hasDraft: initialDraft, va
                     />
                   </label>
                   {url && (
-                    <GcsButton variant="ghost" size="sm" onClick={() => removeImage(kind === "logo" ? "logoUrl" : "faviconUrl")}>
+                    <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faTrash} />} onClick={() => removeImage(kind === "logo" ? "logoUrl" : "faviconUrl")}>
                       {t("remove")}
                     </GcsButton>
                   )}
@@ -267,7 +296,10 @@ export function GcsThemeEditor({ themeKey, themeName, hasDraft: initialDraft, va
         </section>
 
         <section className="gcs-themeEditor__section">
-          <h3>{t("customCss")}</h3>
+          <h3>
+            <GcsIconSvg icon={faCode} className="gcs-hIcon" />
+            {t("customCss")}
+          </h3>
           <textarea
             className="gcs-input gcs-themeEditor__css"
             spellCheck={false}
@@ -289,19 +321,19 @@ export function GcsThemeEditor({ themeKey, themeName, hasDraft: initialDraft, va
         <div className="gcs-themeEditor__buttons">
           {confirmDiscard ? (
             <>
-              <GcsButton variant="ghost" size="sm" onClick={() => setConfirmDiscard(false)}>
+              <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faXmark} />} onClick={() => setConfirmDiscard(false)}>
                 {t("cancel")}
               </GcsButton>
-              <GcsButton variant="primary" size="sm" onClick={discard} disabled={pending} data-testid="gcs-theme-discard-confirm">
+              <GcsButton variant="primary" size="sm" icon={<GcsIconSvg icon={faRotateLeft} />} onClick={discard} disabled={pending} data-testid="gcs-theme-discard-confirm">
                 {t("confirmDiscard")}
               </GcsButton>
             </>
           ) : (
             <>
-              <GcsButton variant="ghost" size="sm" onClick={() => setConfirmDiscard(true)} disabled={pending || !hasDraft}>
+              <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faRotateLeft} />} onClick={() => setConfirmDiscard(true)} disabled={pending || !hasDraft}>
                 {t("discard")}
               </GcsButton>
-              <GcsButton variant="primary" size="sm" onClick={publish} disabled={pending || !hasDraft} data-testid="gcs-theme-publish">
+              <GcsButton variant="primary" size="sm" icon={<GcsIconSvg icon={faUpload} />} onClick={publish} disabled={pending || !hasDraft} data-testid="gcs-theme-publish">
                 {t("publish")}
               </GcsButton>
             </>

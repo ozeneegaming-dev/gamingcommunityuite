@@ -9,6 +9,7 @@ import { GcsActionForm } from "../../_components/GcsActionForm";
 import { NameStyleEditor } from "../../groups/[id]/NameStyleEditor";
 import { createNameStyle, deleteNameStyle, saveNameStyleLook, saveNameStyleMeta } from "../actions";
 import { Availability } from "../Availability";
+import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.vip"))("stylesTitle") };
@@ -42,9 +43,9 @@ export default async function AcpNameStylesPage() {
 
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-signature">
         {t("stylesTitle")}
-      </h1>
+      </GcsAcpTitle>
       <p className="gcs-muted" style={{ margin: 0 }}>
         {t("stylesHelp")}
       </p>
@@ -53,14 +54,14 @@ export default async function AcpNameStylesPage() {
           <NameStyleEditor onSave={saveNameStyleLook.bind(null, s.id)} name={s.name} initial={(s.style as GcsNameStyle | null) ?? {}} fallbackColor="#ECEDF1" labels={editorLabels} />
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <code className="gcs-muted">gcs-name--{s.key}</code>
-            <GcsActionForm action={saveNameStyleMeta.bind(null, s.id)} submitLabel={t("save")}>
+            <GcsActionForm action={saveNameStyleMeta.bind(null, s.id)} submitLabel={t("save")} submitKind="save">
               <label className="gcs-field">
                 {t("name")}
                 <input className="gcs-input" name="name" defaultValue={s.name} required maxLength={40} />
               </label>
               <Availability value={s} groups={groups} badges={badges} labels={availabilityLabels} />
             </GcsActionForm>
-            <GcsActionForm action={deleteNameStyle.bind(null, s.id)} submitLabel={t("delete")} variant="ghost" compact confirm={t("confirmDelete")}>
+            <GcsActionForm action={deleteNameStyle.bind(null, s.id)} submitLabel={t("delete")} submitKind="delete" variant="ghost" compact confirm={t("confirmDelete")}>
               {null}
             </GcsActionForm>
           </div>
@@ -68,9 +69,10 @@ export default async function AcpNameStylesPage() {
       ))}
       <GcsCard as="section" aria-labelledby="gcs-style-new" style={{ padding: 16 }}>
         <h2 id="gcs-style-new" className="gcs-acpWidget__title" style={{ marginBottom: 12 }}>
+          <GcsAcpTitleIcon name="fa-solid fa-plus" />
           {t("addStyle")}
         </h2>
-        <GcsActionForm action={createNameStyle} submitLabel={t("addStyle")}>
+        <GcsActionForm action={createNameStyle} submitLabel={t("addStyle")} submitKind="create">
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
             <label className="gcs-field" style={{ width: 180 }}>
               {t("key")}

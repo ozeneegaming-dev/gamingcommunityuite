@@ -5,6 +5,8 @@ import { localeOptions } from "@/lib/locales";
 import { services } from "@/lib/services";
 import { setLocale } from "../../actions";
 import { GcsTimezoneForm } from "../../_components/settings/GcsSettingsExtra";
+import { GcsIcon } from "@gcs/ui/icons";
+import { SETTINGS_ICONS } from "../../_components/settings/sections";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("settings"))("nav.language") };
@@ -22,9 +24,15 @@ export default async function LanguageSettingsPage() {
   const zones = Intl.supportedValuesOf("timeZone");
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <h2 className="gcs-settingsTitle">{t("title")}</h2>
+      <h2 className="gcs-settingsTitle">
+        <GcsIcon name={SETTINGS_ICONS.language} className="gcs-hIcon" />
+        {t("title")}
+      </h2>
       <form action={setLocale} className="gcs-settingsForm" aria-label={t("language")}>
-        <h3 className="gcs-settingsSubtitle">{t("language")}</h3>
+        <h3 className="gcs-settingsSubtitle">
+          <GcsIcon name="fa-solid fa-language" className="gcs-hIcon" />
+          {t("language")}
+        </h3>
         <div className="gcs-seg__group" style={{ flexWrap: "wrap" }}>
           {locales.map((l) => (
             <button key={l.code} type="submit" name="locale" value={l.code} className={l.code === locale ? "gcs-seg gcs-seg--active" : "gcs-seg"} aria-pressed={l.code === locale} lang={l.code}>
@@ -34,7 +42,10 @@ export default async function LanguageSettingsPage() {
         </div>
       </form>
       <div>
-        <h3 className="gcs-settingsSubtitle">{t("timezone")}</h3>
+        <h3 className="gcs-settingsSubtitle">
+          <GcsIcon name="fa-solid fa-clock" className="gcs-hIcon" />
+          {t("timezone")}
+        </h3>
         <GcsTimezoneForm current={zones.includes(user.timezone) ? user.timezone : "Europe/Bucharest"} zones={zones} labels={{ timezone: t("timezone"), save: t("save"), saved: t("saved") }} />
       </div>
     </div>

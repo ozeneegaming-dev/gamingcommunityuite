@@ -1,6 +1,7 @@
 "use client";
 
-import { GcsButton, GcsField } from "@gcs/ui";
+import { faUserPlus } from "@fortawesome/free-solid-svg-icons";
+import { GcsButton, GcsField, GcsIconSvg } from "@gcs/ui";
 import Link from "next/link";
 import Script from "next/script";
 import { useTranslations } from "next-intl";
@@ -72,7 +73,7 @@ export function RegisterForm({ turnstileSiteKey }: { turnstileSiteKey: string | 
           {t(`errors.${error}`)}
         </p>
       )}
-      <GcsButton variant="primary" type="submit" disabled={pending}>
+      <GcsButton variant="primary" type="submit" disabled={pending} icon={<GcsIconSvg icon={faUserPlus} />}>
         {t("register.submit")}
       </GcsButton>
       <p style={{ margin: 0, fontSize: 14, color: "var(--gcs-muted)", textAlign: "center" }}>

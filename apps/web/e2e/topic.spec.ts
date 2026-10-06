@@ -30,7 +30,7 @@ test("„Citează” inserează citatul cu autorul în răspuns", async ({ page,
   const topic = await topicWithReplies(request, t.forum.id, `bogdan-${id}@example.com`, "Topic cu citat");
 
   await page.goto(topic.url);
-  await page.getByTestId("gcs-post").first().getByRole("button", { name: "Citează" }).click();
+  await page.getByTestId("gcs-post").first().getByRole("button", { name: "Citat", exact: true }).click();
   await expect(page.locator("#reply .gcs-quote")).toContainText("Primul mesaj din Topic cu citat");
   await typeInEditor(page, "Sunt de acord.");
   await page.getByRole("button", { name: "Trimite răspunsul" }).click();
@@ -50,7 +50,8 @@ test("reacția „Like” crește contorul, iar a doua apăsare o retrage; rapor
   await member(page, `Fan${id}`, `fan-${id}@example.com`);
   await page.goto(topic.url);
   const post = page.getByTestId("gcs-post").first();
-  await post.getByRole("button", { name: "Reacționează", exact: true }).click();
+  await post.getByTestId("gcs-post-more").click();
+  await post.getByRole("menuitem", { name: "Reacționează", exact: true }).click();
   await post.getByRole("button", { name: "Reacționează cu Like" }).click();
   await expect(post.getByRole("button", { name: "Like: 1" })).toHaveAttribute("aria-pressed", "true");
   const [rep] = await sql<{ reputation: number }>(`SELECT reputation FROM users WHERE email = $1`, [`autor-${id}@example.com`]);
@@ -59,10 +60,11 @@ test("reacția „Like” crește contorul, iar a doua apăsare o retrage; rapor
   await post.getByRole("button", { name: "Like: 1" }).click();
   await expect(post.getByRole("button", { name: /^Like:/ })).toHaveCount(0);
 
-  await post.getByRole("button", { name: "Raportează" }).click();
+  await post.getByTestId("gcs-post-more").click();
+  await post.getByRole("menuitem", { name: "Raportează" }).click();
   await page.getByLabel("Motivul raportului").fill("Conținut nepotrivit");
   await page.getByRole("button", { name: "Trimite raportul" }).click();
-  await expect(post.getByRole("button", { name: "Raport trimis. Mulțumim!" })).toBeVisible();
+  await expect(post.getByRole("status").filter({ hasText: "Raport trimis. Mulțumim!" })).toBeVisible();
 });
 
 test("autorul își editează postarea („Editat”) și și-o ascunde; alt membru nu o mai vede", async ({ page, browser, request }) => {
@@ -73,7 +75,7 @@ test("autorul își editează postarea („Editat”) și și-o ascunde; alt mem
 
   await page.goto(topic.url);
   const reply = page.getByTestId("gcs-post").nth(1);
-  await reply.getByRole("button", { name: "Editează" }).click();
+  await reply.getByRole("button", { name: "Editare rapidă" }).click();
   await reply.locator(".gcs-editor__content").click();
   await page.keyboard.press("End");
   await page.keyboard.type(" (corectat)");
@@ -82,7 +84,8 @@ test("autorul își editează postarea („Editat”) și și-o ascunde; alt mem
   await expect(reply.getByText(/^Editat /)).toBeVisible();
 
   page.once("dialog", (d) => void d.accept());
-  await reply.getByRole("button", { name: "Ascunde" }).click();
+  await reply.getByTestId("gcs-post-more").click();
+  await reply.getByRole("menuitem", { name: "Ascunde" }).click();
   // O postare ascunsă o mai văd doar moderatorii (nici autorul).
   await expect(page.getByTestId("gcs-post")).toHaveCount(1);
 

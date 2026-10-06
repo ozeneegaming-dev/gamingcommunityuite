@@ -11,12 +11,15 @@ import {
 } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { faChevronDown, faChevronRight, faGripVertical, faRightLeft } from "@fortawesome/free-solid-svg-icons";
 import type { GcsAcpLayout, GcsAcpWidget } from "@gcs/core";
+import { GcsIconSvg } from "@gcs/ui";
 import { useState, useTransition, type CSSProperties, type ReactNode } from "react";
 import { saveAcpLayout } from "../actions";
 
 type Column = "main" | "side";
-type WidgetView = { title: string; body: ReactNode; extra?: ReactNode };
+/** `icon`: iconița titlului, randată pe server (`<GcsIcon name="fa-solid fa-…" />`). */
+type WidgetView = { title: string; icon?: ReactNode; body: ReactNode; extra?: ReactNode };
 
 type Props = {
   layout: Omit<GcsAcpLayout, "appOrder">;
@@ -142,14 +145,19 @@ function SortableWidget({
             onClick={onToggle}
             style={{ width: 24, height: 24 }}
           >
-            {collapsed ? "▸" : "▾"}
+            <GcsIconSvg icon={collapsed ? faChevronRight : faChevronDown} />
           </button>
+          {view.icon && (
+            <span className="gcs-acpTitle__icon" aria-hidden="true" style={{ display: "inline-flex" }}>
+              {view.icon}
+            </span>
+          )}
           {view.title}
         </h2>
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
           {view.extra}
           <button type="button" className="gcs-iconBtn" aria-label={labels.moveToOther} onClick={onMoveToOther}>
-            ⇄
+            <GcsIconSvg icon={faRightLeft} />
           </button>
           <button
             type="button"
@@ -160,7 +168,7 @@ function SortableWidget({
             {...attributes}
             {...listeners}
           >
-            ⠿
+            <GcsIconSvg icon={faGripVertical} />
           </button>
         </div>
       </div>

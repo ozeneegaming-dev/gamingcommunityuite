@@ -120,6 +120,38 @@ describe("GcsChatService / GcsChatQueries", () => {
     await expect(chat.send(a, "general", "   ")).rejects.toThrow();
   });
 
+  test("flood control din ACP: câștigă valoarea mai strictă (setarea sau grupul); moderatorii trec peste", async () => {
+    const vip = await member("Vip", "vip_gold"); // grupul: 1 s
+    const a = await member("Ana"); // grupul: 3 s
+    const refused = async (who: GcsActor) => {
+      const error = await chat.send(who, "general", "prea repede").then(
+        () => null,
+        (e: unknown) => e,
+      );
+      expect(error).toBeInstanceOf(GcsRateLimited);
+      return Number((error as GcsRateLimited).params?.retryAfter);
+    };
+
+    // Setarea (30 s) e mai strictă decât grupul VIP (1 s).
+    await w.settings.set("chat.flood_seconds", 30, w.root);
+    await chat.send(vip, "general", "unu");
+    expect(await refused(vip)).toBeGreaterThan(5);
+    // Moderatorii nu au flood control.
+    await chat.send(staff, "general", "mod 1");
+    await chat.send(staff, "general", "mod 2");
+
+    // Setarea (1 s) e mai permisivă decât grupul membrilor (3 s): rămâne pauza grupului.
+    await w.settings.set("chat.flood_seconds", 1, w.root);
+    await chat.send(a, "general", "unu");
+    expect(await refused(a)).toBeGreaterThan(1);
+
+    // 0 = niciunul: doar grupul.
+    await w.settings.set("chat.flood_seconds", 0, w.root);
+    await clear(vip);
+    await chat.send(vip, "general", "din nou");
+    expect(await refused(vip)).toBeLessThanOrEqual(1);
+  });
+
   test("slow mode 10 s → al doilea mesaj în 5 s e refuzat; staff-ul nu", async () => {
     const a = await member("Ana");
     await chat.setSlowMode(staff, "general", 10);
@@ -225,6 +257,11 @@ describe("GcsChatService / GcsChatQueries", () => {
     expect(config).toMatchObject({ giphy: true, timeFormat: "24h", pageSize: 30, maxLength: 500 });
     expect(JSON.stringify(config)).not.toContain("secret-cheie");
     expect(await chat.giphyKey()).toBe("secret-cheie");
+    // Linkul „Reguli” oprit din ACP: clientul nu mai primește textul (care rămâne salvat).
+    await w.settings.set("chat.rules", "Fără spam.", w.root);
+    expect((await chat.config()).rules).toBe("Fără spam.");
+    await w.settings.set("chat.show_rules", false, w.root);
+    expect((await chat.config()).rules).toBe("");
   });
 
   test("istoricul cu cursor", async () => {

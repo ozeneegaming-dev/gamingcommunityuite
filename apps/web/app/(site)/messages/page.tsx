@@ -1,4 +1,5 @@
 import { GcsAvatar, GcsButton, GcsCard } from "@gcs/ui";
+import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -17,6 +18,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
   if (!actor.userId) redirect("/login");
   const page = pageParam((await searchParams).page);
   const t = await getTranslations("messages");
+  const tp = await getTranslations("forum.pagination");
   const format = await getFormatter();
   const inbox = await services().conversationQueries.inbox(actor, page);
 
@@ -24,15 +26,17 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
     <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <h1 className="gcs-display" style={{ margin: 0, fontSize: 30 }}>
+          <GcsIcon name="fa-solid fa-envelope" className="gcs-hIcon" />
           {t("title")}
         </h1>
-        <GcsButton variant="primary" asChild>
+        <GcsButton variant="primary" asChild icon={<GcsIcon name="fa-solid fa-pen" />}>
           <Link href="/messages/new">{t("new")}</Link>
         </GcsButton>
       </div>
       <GcsCard as="section" style={{ overflow: "hidden" }}>
         {inbox.items.length === 0 && (
           <p className="gcs-muted" style={{ padding: "20px 24px", margin: 0 }}>
+            <GcsIcon name="fa-regular fa-envelope-open" className="gcs-emptyIcon" />
             {t("empty")}
           </p>
         )}
@@ -66,12 +70,20 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
         </ul>
       </GcsCard>
       {inbox.pages > 1 && (
-        <nav aria-label={t("pages")} style={{ display: "flex", gap: 8 }}>
-          {page > 1 && <Link href={`/messages?page=${page - 1}`}>←</Link>}
+        <nav aria-label={t("pages")} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {page > 1 && (
+            <Link href={`/messages?page=${page - 1}`} aria-label={tp("prev")} title={tp("prev")}>
+              <GcsIcon name="fa-solid fa-chevron-left" />
+            </Link>
+          )}
           <span>
             {page} / {inbox.pages}
           </span>
-          {page < inbox.pages && <Link href={`/messages?page=${page + 1}`}>→</Link>}
+          {page < inbox.pages && (
+            <Link href={`/messages?page=${page + 1}`} aria-label={tp("next")} title={tp("next")}>
+              <GcsIcon name="fa-solid fa-chevron-right" />
+            </Link>
+          )}
         </nav>
       )}
     </>

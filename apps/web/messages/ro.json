@@ -246,7 +246,7 @@
         "logs": "Jurnale sistem",
         "cache": "Golire cache",
         "conversions": "Conversii",
-        "import": "Import IPS / Indungi",
+        "import": "Import din altă platformă",
         "settings_languages": "Limbi și traducere"
       },
       "members": {
@@ -1036,7 +1036,62 @@
       "announcements": "Anunțuri globale",
       "noAnnouncements": "Niciun anunț activ.",
       "noExpiry": "până la ștergere",
-      "display": "Afișare, limite și conținut"
+      "display": "Afișare, limite și conținut",
+      "form": {
+        "tabGeneral": "General",
+        "tabAdvanced": "Avansat",
+        "tabPermissions": "Permisiuni",
+        "enabled": "Activează chatbox-ul",
+        "enabledHint": "Aceeași comutare ca în ACP → Sistem → Aplicații: oprit, chat-ul dispare din meniu, de pe pagina principală și de la /chat.",
+        "enabledNoRight": "Doar cine are dreptul pe ACP → Sistem → Aplicații poate porni sau opri chat-ul.",
+        "timeFormat": "Formatul orei",
+        "required": "OBLIGATORIU",
+        "newestOnTop": "Mesajele noi sus",
+        "newestOnTopHint": "Câmpul de scris apare deasupra listei, iar mesajele noi primele.",
+        "showRules": "Arată linkul spre reguli",
+        "showRulesHint": "Regulile se deschid într-o fereastră, din butonul „Reguli” din antetul chat-ului (doar dacă textul de mai jos nu e gol).",
+        "rules": "Textul regulilor",
+        "rulesHint": "Gol = fără butonul „Reguli”.",
+        "hideAvatars": "Ascunde avatarele",
+        "minHeight": "Înălțimea minimă",
+        "minHeightHint": "Înălțimea listei de mesaje pe /chat, în pixeli (120–1200).",
+        "hideEnterMobile": "Ascunde butonul Enter pe mobil",
+        "hideEnterMobileHint": "Pe telefon, mesajul se trimite cu Enter de pe tastatură.",
+        "chatting": "Chat",
+        "media": "Media",
+        "messages": "Mesaje afișate",
+        "messagesHint": "Numărul de mesaje afișate la deschidere (10–100).",
+        "interval": "Interval de actualizare",
+        "intervalHint": "În milisecunde, când conexiunea live lipsește.\nEx.: 10000 = 10 secunde",
+        "flood": "Flood control",
+        "floodHint": "Pauza dintre două mesaje ale aceluiași membru, în secunde. Se aplică valoarea mai strictă dintre aceasta și cea a grupului; moderatorii trec peste flood control.",
+        "seconds": "secunde",
+        "or": "sau",
+        "none": "Niciunul",
+        "unlimited": "Nelimitat",
+        "maxLength": "Lungimea maximă",
+        "maxLengthHint": "Numărul maxim de caractere dintr-un mesaj (nelimitat = 2000, plafonul tehnic).",
+        "maxEmoticons": "Emoticoane maxime",
+        "maxEmoticonsHint": "Numărul maxim de emoticoane dintr-un mesaj.",
+        "allowImages": "Permite imagini",
+        "allowImagesHint": "Imaginile încărcate și cele din linkuri.",
+        "allowYoutube": "Permite YouTube",
+        "voice": "Permite mesaje vocale",
+        "voiceMax": "Durata maximă a unui mesaj vocal",
+        "giphy": "Cheia API GIPHY",
+        "giphyHint": "Fără cheie, butonul GIF și comanda /giphy sunt oprite.",
+        "permTitle": "Canalul {name}",
+        "permIntro": "Cine citește și cine scrie în canal. „Moderează” e dreptul de grup chat.moderate (șterge mesaje, dă mute, schimbă slow mode-ul) și scutește de flood control.",
+        "permCaption": "Permisiunile chat-ului pe grupuri",
+        "permGroup": "Grup",
+        "permRead": "Citește",
+        "permWrite": "Scrie",
+        "permModerate": "Moderează",
+        "permNoRight": "Doar cine are dreptul de a edita grupurile (ACP → Membri → Grupuri) poate schimba permisiunile.",
+        "permNoGeneral": "Canalul General nu există; permisiunile celorlalte canale sunt în lista canalelor.",
+        "permFull": "Matricea completă a canalului (cu moștenire)",
+        "permChannels": "Canalele și permisiunile lor"
+      }
     },
     "notifications": {
       "title": "Notificări",
@@ -1288,7 +1343,9 @@
       "allow_youtube": "Permite clipuri YouTube",
       "voice_enabled": "Permite mesaje vocale",
       "voice_max_seconds": "Durata maximă a unui mesaj vocal (secunde)",
-      "giphy_key": "Cheia API GIPHY (fără cheie, /giphy e oprit)"
+      "giphy_key": "Cheia API GIPHY (fără cheie, /giphy e oprit)",
+      "show_rules": "Arată linkul spre reguli în antetul chat-ului",
+      "flood_seconds": "Flood control (secunde între mesaje, 0 = niciunul)"
     },
     "i18n": {
       "locales": "Limbile oferite membrilor",
@@ -1547,7 +1604,7 @@
         "demoHint": "Categorii și forumuri de exemplu, ca să vezi cum arată (forumurile apar în etapa 2).",
         "empty": "Fără date",
         "emptyHint": "Pornești de la zero.",
-        "import": "Import IPS / Indungi",
+        "import": "Import din altă platformă",
         "importHint": "Disponibil într-o etapă următoare."
       },
       "run": {
@@ -1715,7 +1772,15 @@
       "xpTo": "{points} XP din {next} până la rangul {rank}",
       "xpMax": "{points} XP, rangul maxim",
       "badges": "{count, plural, one {# insignă} few {# insigne} other {# de insigne}}",
-      "joined": "Membru din {date}"
+      "joined": "Membru din {date}",
+      "statusOnline": "Online",
+      "statusOffline": "Offline",
+      "rankLevel": "Nivelul rangului: {level}",
+      "topics": "topicuri",
+      "likes": "aprecieri",
+      "memberSince": "Membru din:",
+      "status": "Status:",
+      "motto": "Motto"
     },
     "poll": {
       "votes": "{count, plural, one {# vot} few {# voturi} other {# de voturi}}",
@@ -1784,7 +1849,16 @@
       "newPosts": "{count} postări noi",
       "newPost": "1 postare nouă",
       "show": "arată"
-    }
+    },
+    "quoteShort": "Citat",
+    "quickEdit": "Editare rapidă",
+    "like": "Apreciază",
+    "liked": "Apreciat",
+    "moreShort": "Mai mult…",
+    "reactedYou": "Tu ai apreciat acest mesaj.",
+    "reactedYouAndOthers": "Tu și {count, plural, one {încă o persoană} few {alte # persoane} other {alte # de persoane}} ați apreciat acest mesaj.",
+    "reactedCount": "{count, plural, one {O persoană a apreciat} few {# persoane au apreciat} other {# de persoane au apreciat}} acest mesaj.",
+    "quickReply": "Răspuns rapid"
   },
   "newTopic": {
     "title": "Topic nou în {forum}",
@@ -2031,6 +2105,17 @@
         "1h": "1 oră",
         "1d": "1 zi",
         "forever": "Permanent"
+      },
+      "settings": "Setările chat-ului",
+      "settingsAcp": "Setările chat-ului (ACP)",
+      "prefSound": "Sunet la mesaje noi",
+      "prefAvatars": "Arată avatarele",
+      "picker": {
+        "emoticons": "Emoticoane",
+        "emoji": "Emoji",
+        "recent": "Folosite recent",
+        "popular": "Populare",
+        "categories": "Categorii de emoji"
       }
     }
   },
@@ -2129,7 +2214,8 @@
       "title": "Titlu",
       "body": "Text",
       "period": "Perioada",
-      "channel": "Camera de chat"
+      "channel": "Camera de chat",
+      "icon": "Iconiță (ex. fa-solid fa-star; gol = cea implicită)"
     },
     "periods": {
       "week": "săptămâna aceasta",
@@ -2196,7 +2282,23 @@
       "members": "Membri",
       "vip": "Membri VIP"
     },
-    "allOnline": "Vezi toți membrii online →"
+    "allOnline": "Vezi toți membrii online →",
+    "panel": {
+      "title": "Statisticile forumului și legenda grupurilor",
+      "collapse": "Restrânge panoul",
+      "expand": "Extinde panoul",
+      "newMember": "Nou membru",
+      "onlineTotal": "{count, plural, one {# utilizator în total:} few {# utilizatori în total, dintre care:} other {# de utilizatori în total, dintre care:}}",
+      "members": "{count, plural, one {# membru} few {# membri} other {# de membri}}",
+      "anonymous": "{count, plural, one {# anonim} few {# anonimi} other {# de anonimi}}",
+      "guests": "{count, plural, one {# vizitator} few {# vizitatori} other {# de vizitatori}}",
+      "onlineList": "Lista utilizatorilor conectați",
+      "seeAll": "Vezi lista completă",
+      "daySummary": "Membri activi în ultimele 24 de ore",
+      "dayList": "Lista utilizatorilor activi recent",
+      "dayNobody": "Niciun membru vizibil activ în ultimele 24 de ore.",
+      "legendTitle": "Legendă grupuri membri"
+    }
   },
   "members": {
     "title": "Membri",

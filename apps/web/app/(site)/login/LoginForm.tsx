@@ -1,6 +1,8 @@
 "use client";
 
-import { GcsButton, GcsField } from "@gcs/ui";
+import { faDiscord, faSteam } from "@fortawesome/free-brands-svg-icons";
+import { faRightToBracket, faShieldHalved } from "@fortawesome/free-solid-svg-icons";
+import { GcsButton, GcsField, GcsIconSvg } from "@gcs/ui";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
@@ -60,6 +62,7 @@ export function LoginForm({ discordEnabled, initialError }: Props) {
     return (
       <form onSubmit={onTwoFactor} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <h2 className="gcs-display" style={{ margin: 0, fontSize: 18 }}>
+          <GcsIconSvg icon={faShieldHalved} className="gcs-hIcon" />
           {t("twoFactor.title")}
         </h2>
         <p style={{ margin: 0, color: "var(--gcs-muted)", fontSize: 14 }}>{t("twoFactor.subtitle")}</p>
@@ -71,7 +74,7 @@ export function LoginForm({ discordEnabled, initialError }: Props) {
           {t("twoFactor.trustDevice")}
         </label>
         {errorBox}
-        <GcsButton variant="primary" type="submit" disabled={pending}>
+        <GcsButton variant="primary" type="submit" disabled={pending} icon={<GcsIconSvg icon={faShieldHalved} />}>
           {t("twoFactor.submit")}
         </GcsButton>
       </form>
@@ -88,7 +91,7 @@ export function LoginForm({ discordEnabled, initialError }: Props) {
           <input name="password" type="password" autoComplete="current-password" required />
         </GcsField>
         {errorBox}
-        <GcsButton variant="primary" type="submit" disabled={pending}>
+        <GcsButton variant="primary" type="submit" disabled={pending} icon={<GcsIconSvg icon={faRightToBracket} />}>
           {t("login.submit")}
         </GcsButton>
       </form>
@@ -102,12 +105,14 @@ export function LoginForm({ discordEnabled, initialError }: Props) {
       {discordEnabled && (
         <GcsButton
           variant="ghost"
+          className="gcs-btn--discord"
+          icon={<GcsIconSvg icon={faDiscord} />}
           onClick={() => authClient.signIn.social({ provider: "discord", callbackURL: "/" })}
         >
           {t("login.discord")}
         </GcsButton>
       )}
-      <GcsButton variant="ghost" asChild>
+      <GcsButton variant="ghost" asChild className="gcs-btn--steam" icon={<GcsIconSvg icon={faSteam} />}>
         <a href="/api/auth/steam/sign-in?callbackURL=/">{t("login.steam")}</a>
       </GcsButton>
 

@@ -1,7 +1,22 @@
 "use client";
 
 import type { GcsErrorPayload } from "@gcs/core";
-import { GcsButton } from "@gcs/ui";
+import {
+  type IconDefinition,
+  faCodeMerge,
+  faEye,
+  faEyeSlash,
+  faLock,
+  faLockOpen,
+  faRightLeft,
+  faScissors,
+  faShieldHalved,
+  faStar,
+  faThumbtack,
+  faThumbtackSlash,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
+import { GcsButton, GcsIconSvg } from "@gcs/ui";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
@@ -51,9 +66,21 @@ export function GcsTopicModMenu({ topicId, forumId, forumHref, powers, flags, fo
     });
   }
 
+  /** Iconițele butoanelor de stare: [pornește, oprește]. */
+  const flagIcons: Record<"pinned" | "locked" | "featured", [IconDefinition, IconDefinition]> = {
+    pinned: [faThumbtack, faThumbtackSlash],
+    locked: [faLock, faLockOpen],
+    featured: [faStar, faStar],
+  };
   const flag = (name: "pinned" | "locked" | "featured", on: string, off: string, power: string) =>
     has(powers, power) && (
-      <GcsButton variant="ghost" size="sm" disabled={pending} onClick={() => run(() => setTopicFlagAction({ topicIds: [topicId], flag: name, value: !flags[name] }))}>
+      <GcsButton
+        variant="ghost"
+        size="sm"
+        icon={<GcsIconSvg icon={flagIcons[name][flags[name] ? 1 : 0]} />}
+        disabled={pending}
+        onClick={() => run(() => setTopicFlagAction({ topicIds: [topicId], flag: name, value: !flags[name] }))}
+      >
         {flags[name] ? off : on}
       </GcsButton>
     );
@@ -63,14 +90,23 @@ export function GcsTopicModMenu({ topicId, forumId, forumHref, powers, flags, fo
 
   return (
     <details className="gcs-card gcs-modMenu">
-      <summary className="gcs-modMenu__summary">{t("menu")}</summary>
+      <summary className="gcs-modMenu__summary">
+        <GcsIconSvg icon={faShieldHalved} className="gcs-hIcon" />
+        {t("menu")}
+      </summary>
       <div className="gcs-modMenu__body">
         <div className="gcs-modMenu__row">
           {flag("pinned", t("pin"), t("unpin"), "pin")}
           {flag("locked", t("lock"), t("unlock"), "lock")}
           {flag("featured", t("feature"), t("unfeature"), "feature")}
           {has(powers, "hide") && (
-            <GcsButton variant="ghost" size="sm" disabled={pending} onClick={() => run(() => setTopicsHiddenAction({ topicIds: [topicId], hidden: !flags.hidden }))}>
+            <GcsButton
+              variant="ghost"
+              size="sm"
+              icon={<GcsIconSvg icon={flags.hidden ? faEye : faEyeSlash} />}
+              disabled={pending}
+              onClick={() => run(() => setTopicsHiddenAction({ topicIds: [topicId], hidden: !flags.hidden }))}
+            >
               {flags.hidden ? t("restore") : t("hide")}
             </GcsButton>
           )}
@@ -78,6 +114,7 @@ export function GcsTopicModMenu({ topicId, forumId, forumHref, powers, flags, fo
             <GcsButton
               variant="ghost"
               size="sm"
+              icon={<GcsIconSvg icon={faTrash} />}
               disabled={pending}
               onClick={() => window.confirm(t("confirmDelete")) && run(() => deleteTopicAction({ topicId }), () => window.location.assign(forumHref))}
             >
@@ -101,7 +138,7 @@ export function GcsTopicModMenu({ topicId, forumId, forumHref, powers, flags, fo
                   </option>
                 ))}
             </select>
-            <GcsButton variant="ghost" size="sm" disabled={!moveTo || pending} onClick={() => run(() => moveTopicsAction({ topicIds: [topicId], forumId: Number(moveTo) }))}>
+            <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faRightLeft} />} disabled={!moveTo || pending} onClick={() => run(() => moveTopicsAction({ topicIds: [topicId], forumId: Number(moveTo) }))}>
               {t("move")}
             </GcsButton>
           </div>
@@ -122,6 +159,7 @@ export function GcsTopicModMenu({ topicId, forumId, forumHref, powers, flags, fo
             <GcsButton
               variant="ghost"
               size="sm"
+              icon={<GcsIconSvg icon={faCodeMerge} />}
               disabled={!mergeTarget || pending}
               onClick={() => run(() => mergeTopicAction({ topicId, target: mergeTarget }), (d) => window.location.assign(d.href))}
             >
@@ -155,6 +193,7 @@ export function GcsTopicModMenu({ topicId, forumId, forumHref, powers, flags, fo
             <GcsButton
               variant="ghost"
               size="sm"
+              icon={<GcsIconSvg icon={faScissors} />}
               disabled={!splitTitle || pending}
               onClick={() =>
                 run(

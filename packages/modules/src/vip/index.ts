@@ -22,13 +22,14 @@ const acpMenu: GcsAcpMenuSection[] = [
   {
     app: "vip",
     title: "acp.menu.vip.vip_group",
+    icon: "fa-solid fa-crown",
     items: [
-      ["tiers", "/admin/vip/tiers"],
-      ["subscribers", "/admin/vip/subscribers"],
-      ["history", "/admin/vip/history"],
-      ["name_styles", "/admin/vip/name-styles"],
-      ["frames", "/admin/vip/frames"],
-    ].map(([key, href]) => ({ key: `vip.${key}`, labelKey: `acp.menu.vip.${key}`, href: href!, section: `vip.${key}` })),
+      ["tiers", "/admin/vip/tiers", "fa-solid fa-layer-group"],
+      ["subscribers", "/admin/vip/subscribers", "fa-solid fa-user-check"],
+      ["history", "/admin/vip/history", "fa-solid fa-clock-rotate-left"],
+      ["name_styles", "/admin/vip/name-styles", "fa-solid fa-signature"],
+      ["frames", "/admin/vip/frames", "fa-solid fa-circle-user"],
+    ].map(([key, href, icon]) => ({ key: `vip.${key}`, labelKey: `acp.menu.vip.${key}`, href: href!, section: `vip.${key}`, icon: icon! })),
   },
 ];
 

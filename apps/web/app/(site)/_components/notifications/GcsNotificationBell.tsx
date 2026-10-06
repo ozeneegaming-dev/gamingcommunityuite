@@ -1,5 +1,8 @@
 "use client";
 
+import { faBellSlash } from "@fortawesome/free-regular-svg-icons";
+import { faArrowRight, faBell, faCheckDouble, faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { GcsIconSvg } from "@gcs/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
@@ -90,10 +93,7 @@ export function GcsNotificationBell({ initialUnread, labels }: { initialUnread: 
         onClick={() => setOpen((v) => !v)}
         data-testid="gcs-header-bell"
       >
-        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-          <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-        </svg>
+        <GcsIconSvg icon={faBell} />
         {unread > 0 && (
           <span className="gcs-headerIcon__count" data-testid="gcs-header-bell-count">
             {badge(unread)}
@@ -103,19 +103,26 @@ export function GcsNotificationBell({ initialUnread, labels }: { initialUnread: 
       {open && (
         <div id={panelId} role="dialog" aria-label={labels.title} className="gcs-notifPanel" data-testid="gcs-notif-panel">
           <div className="gcs-notifPanel__head">
-            <strong>{labels.title}</strong>
+            <strong>
+              <GcsIconSvg icon={faBell} className="gcs-hIcon" />
+              {labels.title}
+            </strong>
             {unread > 0 && (
               <button type="button" className="gcs-linkButton" onClick={() => void markAll()}>
+                <GcsIconSvg icon={faCheckDouble} className="gcs-linkButton__icon" />
                 {labels.markAll}
               </button>
             )}
           </div>
           {items === null ? (
             <p className="gcs-notifPanel__empty" aria-busy="true">
-              …
+              <GcsIconSvg icon={faSpinner} className="gcs-spin" />
             </p>
           ) : items.length === 0 ? (
-            <p className="gcs-notifPanel__empty">{labels.empty}</p>
+            <p className="gcs-notifPanel__empty">
+              <GcsIconSvg icon={faBellSlash} className="gcs-emptyIcon" />
+              {labels.empty}
+            </p>
           ) : (
             <ul className="gcs-notifPanel__list">
               {items.map((item) => (
@@ -140,6 +147,7 @@ export function GcsNotificationBell({ initialUnread, labels }: { initialUnread: 
           )}
           <Link href="/notifications" className="gcs-notifPanel__all" onClick={() => setOpen(false)}>
             {labels.seeAll}
+            <GcsIconSvg icon={faArrowRight} className="gcs-linkButton__icon gcs-linkButton__icon--end" />
           </Link>
         </div>
       )}

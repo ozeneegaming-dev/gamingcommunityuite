@@ -1,11 +1,13 @@
 import { GCS_WIDGET_PAGES, WIDGETS_ACP_SECTION } from "@gcs/core";
 import { GcsButton, GcsCard } from "@gcs/ui";
+import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { editWidgetsOnSite, resetWidgets } from "../actions";
+import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.widgetsAdmin"))("title") };
@@ -22,25 +24,25 @@ export default async function AcpWidgetsPage() {
   const layouts = await Promise.all(GCS_WIDGET_PAGES.map(async (page) => ({ page, layout: await widgets.layout(page, panel.actor, { all: true }) })));
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-table-cells-large">
         {t("title")}
-      </h1>
+      </GcsAcpTitle>
       <p className="gcs-muted" style={{ margin: 0 }}>
         {t("hint")}
       </p>
       {layouts.map(({ page, layout }) => (
         <GcsCard key={page} as="section" aria-label={tp(`pages.${page}`)} style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-          <h2 className="gcs-acpWidget__title">{tp(`pages.${page}`)}</h2>
+          <h2 className="gcs-acpWidget__title"><GcsAcpTitleIcon name="fa-solid fa-file-lines" />{tp(`pages.${page}`)}</h2>
           <p className="gcs-muted" style={{ margin: 0 }}>
             {(["top", "sidebar", "bottom"] as const).map((z) => `${tp(`zones.${z}`)}: ${layout[z].length}`).join(" · ")}
           </p>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <form action={editWidgetsOnSite.bind(null, page)}>
-              <GcsButton type="submit" variant="primary" size="sm">
+              <GcsButton type="submit" variant="primary" size="sm" icon={<GcsIcon name="fa-solid fa-pen-to-square" />}>
                 {t("editOnSite")}
               </GcsButton>
             </form>
-            <GcsActionForm action={resetWidgets.bind(null, page)} submitLabel={tp("restoreDefault")} variant="ghost" compact confirm={tp("confirmDefault")}>
+            <GcsActionForm action={resetWidgets.bind(null, page)} submitLabel={tp("restoreDefault")} submitKind="reset" variant="ghost" compact confirm={tp("confirmDefault")}>
               {null}
             </GcsActionForm>
           </div>

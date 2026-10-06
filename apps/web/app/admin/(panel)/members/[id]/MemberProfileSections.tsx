@@ -3,13 +3,17 @@ import { getFormatter, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
+import { GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 import { awardBadge, extendVip, grantVip, revokeBadge, revokeVip, staffResetImage, staffSaveProfile } from "./actions";
 
-function Section({ title, children, testId }: { title: string; children: ReactNode; testId: string }) {
+function Section({ title, icon, children, testId }: { title: string; icon: string; children: ReactNode; testId: string }) {
   return (
     <GcsCard as="section" aria-label={title} data-testid={testId}>
       <div className="gcs-acpWidget__header">
-        <h2 className="gcs-acpWidget__title">{title}</h2>
+        <h2 className="gcs-acpWidget__title">
+          <GcsAcpTitleIcon name={icon} />
+          {title}
+        </h2>
       </div>
       <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>{children}</div>
     </GcsCard>
@@ -38,8 +42,8 @@ export async function MemberProfileSections({ userId }: { userId: string }) {
 
   return (
     <>
-      <Section title={t("profileTitle")} testId="gcs-acp-member-profile">
-        <GcsActionForm action={staffSaveProfile.bind(null, userId)} submitLabel={t("save")}>
+      <Section title={t("profileTitle")} icon="fa-solid fa-id-card" testId="gcs-acp-member-profile">
+        <GcsActionForm action={staffSaveProfile.bind(null, userId)} submitLabel={t("save")} submitKind="save">
           <label className="gcs-field">
             {t("bio")}
             <input className="gcs-input" name="bio" defaultValue={user.bio} maxLength={160} />
@@ -64,19 +68,19 @@ export async function MemberProfileSections({ userId }: { userId: string }) {
         </GcsActionForm>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           {user.image && (
-            <GcsActionForm action={staffResetImage.bind(null, userId, "avatar")} submitLabel={t("resetAvatar")} variant="ghost" compact confirm={t("confirmReset")}>
+            <GcsActionForm action={staffResetImage.bind(null, userId, "avatar")} submitLabel={t("resetAvatar")} submitKind="reset" variant="ghost" compact confirm={t("confirmReset")}>
               {null}
             </GcsActionForm>
           )}
           {user.coverAttachmentId && (
-            <GcsActionForm action={staffResetImage.bind(null, userId, "cover")} submitLabel={t("resetCover")} variant="ghost" compact confirm={t("confirmReset")}>
+            <GcsActionForm action={staffResetImage.bind(null, userId, "cover")} submitLabel={t("resetCover")} submitKind="reset" variant="ghost" compact confirm={t("confirmReset")}>
               {null}
             </GcsActionForm>
           )}
         </div>
       </Section>
 
-      <Section title={t("badgesTitle")} testId="gcs-acp-member-badges">
+      <Section title={t("badgesTitle")} icon="fa-solid fa-award" testId="gcs-acp-member-badges">
         {userBadges.length === 0 && <span className="gcs-muted">{t("noBadges")}</span>}
         {userBadges.map((b) => (
           <div key={b.id} style={row}>
@@ -88,12 +92,12 @@ export async function MemberProfileSections({ userId }: { userId: string }) {
                 {b.reason ? ` · ${b.reason}` : ""}
               </span>
             </span>
-            <GcsActionForm action={revokeBadge.bind(null, userId, b.badgeId)} submitLabel={t("revoke")} variant="ghost" compact confirm={t("confirmRevoke")}>
+            <GcsActionForm action={revokeBadge.bind(null, userId, b.badgeId)} submitLabel={t("revoke")} submitKind="revoke" variant="ghost" compact confirm={t("confirmRevoke")}>
               {null}
             </GcsActionForm>
           </div>
         ))}
-        <GcsActionForm action={awardBadge.bind(null, userId)} submitLabel={t("award")}>
+        <GcsActionForm action={awardBadge.bind(null, userId)} submitLabel={t("award")} submitKind="award">
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
             <label className="gcs-field" style={{ width: 220 }}>
               {t("badge")}
@@ -116,7 +120,7 @@ export async function MemberProfileSections({ userId }: { userId: string }) {
         </GcsActionForm>
       </Section>
 
-      <Section title={t("vipTitle")} testId="gcs-acp-member-vip">
+      <Section title={t("vipTitle")} icon="fa-solid fa-crown" testId="gcs-acp-member-vip">
         {active ? (
           <div style={row} data-testid="gcs-acp-vip-active">
             <span>
@@ -128,11 +132,11 @@ export async function MemberProfileSections({ userId }: { userId: string }) {
             </span>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {active.expiresAt && (
-                <GcsActionForm action={extendVip.bind(null, active.id)} submitLabel={t("extend")} variant="ghost" compact>
+                <GcsActionForm action={extendVip.bind(null, active.id)} submitLabel={t("extend")} submitKind="extend" variant="ghost" compact>
                   <input className="gcs-input" name="days" type="number" min={1} max={3650} defaultValue={30} aria-label={t("days")} style={{ width: 90 }} />
                 </GcsActionForm>
               )}
-              <GcsActionForm action={revokeVip.bind(null, active.id)} submitLabel={t("revokeVip")} variant="ghost" compact confirm={t("confirmRevokeVip")}>
+              <GcsActionForm action={revokeVip.bind(null, active.id)} submitLabel={t("revokeVip")} submitKind="revoke" variant="ghost" compact confirm={t("confirmRevokeVip")}>
                 {null}
               </GcsActionForm>
             </div>
@@ -140,7 +144,7 @@ export async function MemberProfileSections({ userId }: { userId: string }) {
         ) : (
           <span className="gcs-muted">{t("noVip")}</span>
         )}
-        <GcsActionForm action={grantVip.bind(null, userId)} submitLabel={t("grant")}>
+        <GcsActionForm action={grantVip.bind(null, userId)} submitLabel={t("grant")} submitKind="grant">
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
             <label className="gcs-field" style={{ width: 180 }}>
               {t("tier")}
@@ -173,6 +177,7 @@ export async function MemberProfileSections({ userId }: { userId: string }) {
         {history.length > 0 && (
           <div>
             <h3 className="gcs-acpWidget__title" style={{ fontSize: 13, margin: "8px 0" }}>
+              <GcsAcpTitleIcon name="fa-solid fa-clock-rotate-left" />
               {t("history")}
             </h3>
             {history.map((h) => (

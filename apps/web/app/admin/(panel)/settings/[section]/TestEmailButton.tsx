@@ -1,6 +1,7 @@
 "use client";
 
-import { GcsButton } from "@gcs/ui";
+import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
+import { GcsButton, GcsIconSvg } from "@gcs/ui";
 import { useState } from "react";
 import { sendTestEmail } from "./actions";
 
@@ -21,7 +22,7 @@ export function TestEmailButton({ labels }: Props) {
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-      <GcsButton variant="ghost" onClick={send} disabled={pending}>
+      <GcsButton variant="ghost" onClick={send} disabled={pending} icon={<GcsIconSvg icon={faPaperPlane} />}>
         {labels.submit}
       </GcsButton>
       {status && (

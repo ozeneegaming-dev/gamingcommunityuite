@@ -1,7 +1,8 @@
 "use client";
 
 import type { GcsResult } from "@gcs/core";
-import { GcsButton } from "@gcs/ui";
+import { faBan, faEllipsis, faEnvelope, faScrewdriverWrench, faUserCheck, faUserMinus, faUserPlus } from "@fortawesome/free-solid-svg-icons";
+import { GcsButton, GcsIconSvg } from "@gcs/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -44,6 +45,7 @@ export function GcsProfileActions({ userId, isFollowing, isIgnored, canFollow, c
       {canFollow && (
         <GcsButton
           variant={following ? "ghost" : "primary"}
+          icon={<GcsIconSvg icon={following ? faUserMinus : faUserPlus} />}
           disabled={pending}
           data-testid="gcs-profile-follow"
           onClick={() => run(() => followUser({ userId, follow: !following }), () => setFollowing(!following))}
@@ -52,7 +54,7 @@ export function GcsProfileActions({ userId, isFollowing, isIgnored, canFollow, c
         </GcsButton>
       )}
       {canMessage && (
-        <GcsButton variant="ghost" asChild>
+        <GcsButton variant="ghost" asChild icon={<GcsIconSvg icon={faEnvelope} />}>
           <Link href={`/messages/new?to=${encodeURIComponent(userId)}`} data-testid="gcs-profile-message">
             {labels.message}
           </Link>
@@ -61,7 +63,7 @@ export function GcsProfileActions({ userId, isFollowing, isIgnored, canFollow, c
       {(canIgnore || acpHref) && (
         <details className="gcs-menu">
           <summary className="gcs-btn gcs-btn--ghost gcs-menu__toggle" aria-label={labels.more}>
-            ···
+            <GcsIconSvg icon={faEllipsis} />
           </summary>
           <div className="gcs-menu__list" role="menu">
             {canIgnore && (
@@ -73,11 +75,13 @@ export function GcsProfileActions({ userId, isFollowing, isIgnored, canFollow, c
                 data-testid="gcs-profile-ignore"
                 onClick={() => run(() => ignoreUser({ userId, posts: !isIgnored, messages: !isIgnored }))}
               >
+                <GcsIconSvg icon={isIgnored ? faUserCheck : faBan} className="gcs-menu__icon" />
                 {isIgnored ? labels.unignore : labels.ignore}
               </button>
             )}
             {acpHref && (
               <a role="menuitem" className="gcs-menu__item" href={acpHref}>
+                <GcsIconSvg icon={faScrewdriverWrench} className="gcs-menu__icon" />
                 {labels.editAcp}
               </a>
             )}

@@ -5,6 +5,8 @@ import { viewerTheme } from "@/lib/appearance";
 import { services } from "@/lib/services";
 import { GcsSkinPicker } from "../../_components/settings/GcsSkinPicker";
 import { GcsAppearanceForm } from "../../_components/settings/GcsSettingsForms";
+import { GcsIcon } from "@gcs/ui/icons";
+import { SETTINGS_ICONS } from "../../_components/settings/sections";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("settings"))("nav.appearance") };
@@ -26,7 +28,10 @@ export default async function AppearanceSettingsPage() {
   const activeThemes = allThemes.filter((th) => th.enabled);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <h2 className="gcs-settingsTitle">{t("title")}</h2>
+      <h2 className="gcs-settingsTitle">
+        <GcsIcon name={SETTINGS_ICONS.appearance} className="gcs-hIcon" />
+        {t("title")}
+      </h2>
       {activeThemes.length > 1 && (
         <GcsSkinPicker
           themes={activeThemes.map((th) => ({ key: th.key, name: th.name }))}

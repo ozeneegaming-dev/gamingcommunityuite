@@ -1,3 +1,4 @@
+import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -23,7 +24,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const initialError = error === "steam" || error === "steam_linked" ? error : null;
 
   return (
-    <GcsAuthCard title={t("title")} subtitle={t("subtitle", { site: siteName })}>
+    <GcsAuthCard title={t("title")} subtitle={t("subtitle", { site: siteName })} icon={<GcsIcon name="fa-solid fa-right-to-bracket" />}>
       <LoginForm discordEnabled={discordClientId !== ""} initialError={initialError} />
     </GcsAuthCard>
   );

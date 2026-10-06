@@ -1,6 +1,8 @@
 "use client";
 
-import { GcsButton } from "@gcs/ui";
+import { faBell as faBellRegular } from "@fortawesome/free-regular-svg-icons";
+import { faBell, faCheckDouble } from "@fortawesome/free-solid-svg-icons";
+import { GcsButton, GcsIconSvg } from "@gcs/ui";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
@@ -15,6 +17,7 @@ export function GcsMarkReadButton({ forumId }: { forumId: number }) {
   return (
     <GcsButton
       variant="ghost"
+      icon={<GcsIconSvg icon={faCheckDouble} />}
       disabled={pending || done}
       onClick={() =>
         start(async () => {
@@ -40,6 +43,7 @@ export function GcsFollowButton(props: { contentType: "forum" | "topic"; content
   return (
     <GcsButton
       variant="ghost"
+      icon={<GcsIconSvg icon={following ? faBell : faBellRegular} />}
       aria-pressed={following}
       disabled={pending}
       onClick={() =>

@@ -6,6 +6,7 @@ import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { deleteSavedAction, saveSavedAction } from "../../moderation-actions";
+import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.savedActions"))("title") };
@@ -34,9 +35,9 @@ export default async function AcpSavedActionsPage() {
 
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-wand-magic-sparkles">
         {t("title")}
-      </h1>
+      </GcsAcpTitle>
       {actions.length === 0 ? (
         <GcsCard style={{ padding: 16 }}>
           <p className="gcs-muted" style={{ margin: 0 }}>
@@ -52,15 +53,16 @@ export default async function AcpSavedActionsPage() {
                 {describe(a.actions as GcsSavedActionSteps)}
               </p>
             </div>
-            <GcsActionForm action={deleteSavedAction.bind(null, a.id)} submitLabel={t("delete")} variant="ghost" compact />
+            <GcsActionForm action={deleteSavedAction.bind(null, a.id)} submitLabel={t("delete")} submitKind="delete" variant="ghost" compact />
           </GcsCard>
         ))
       )}
       <GcsCard as="section" aria-labelledby="gcs-saved-new" style={{ padding: 16, maxWidth: 720 }}>
         <h2 id="gcs-saved-new" className="gcs-acpWidget__title" style={{ marginBottom: 12 }}>
+          <GcsAcpTitleIcon name="fa-solid fa-plus" />
           {t("save")}
         </h2>
-        <GcsActionForm action={saveSavedAction} submitLabel={t("save")}>
+        <GcsActionForm action={saveSavedAction} submitLabel={t("save")} submitKind="save">
           <label className="gcs-field">
             {t("name")}
             <input className="gcs-input" name="name" required maxLength={60} />

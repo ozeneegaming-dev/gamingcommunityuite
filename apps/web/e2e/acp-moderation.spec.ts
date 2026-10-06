@@ -77,7 +77,8 @@ test("o reacție nouă „Fire” (+2) apare pe postări", async ({ page, browse
   const topic = await topicWithReplies(request, t.forum.id, authorEmail, `Reacții ${id}`);
   const fan = await memberInNewContext(browser, `Fan${id}`, `fan-${id}@example.com`, "100.67.1");
   await fan.goto(topic.url);
-  await fan.getByTestId("gcs-post").first().getByRole("button", { name: "Reacționează", exact: true }).click();
+  await fan.getByTestId("gcs-post").first().getByTestId("gcs-post-more").click();
+  await fan.getByTestId("gcs-post").first().getByRole("menuitem", { name: "Reacționează", exact: true }).click();
   await fan.getByRole("button", { name: `Reacționează cu Fire ${id}` }).click();
   await expect(fan.getByRole("button", { name: `Fire ${id}: 1` })).toBeVisible();
   const [rep] = await sql<{ reputation: number }>(`SELECT reputation FROM users WHERE email = $1`, [authorEmail]);

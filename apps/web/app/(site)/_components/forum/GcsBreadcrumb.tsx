@@ -1,4 +1,5 @@
 import type { GcsCrumb } from "@gcs/modules";
+import { GcsIcon } from "@gcs/ui/icons";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { forumHref } from "@/lib/forum-urls";
@@ -10,7 +11,10 @@ export async function GcsBreadcrumb({ crumbs }: { crumbs: GcsCrumb[] }) {
     <nav aria-label={t("breadcrumb")} className="gcs-breadcrumb">
       <ol>
         <li>
-          <Link href="/">{t("home")}</Link>
+          <Link href="/">
+            <GcsIcon name="fa-solid fa-house" className="gcs-breadcrumb__home" />
+            {t("home")}
+          </Link>
         </li>
         {crumbs.map((c) => (
           <li key={c.id}>

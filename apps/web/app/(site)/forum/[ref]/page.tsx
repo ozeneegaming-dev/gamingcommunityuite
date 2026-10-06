@@ -1,6 +1,7 @@
 import { parseRef } from "@gcs/modules";
 import { GcsButton, GcsCard } from "@gcs/ui";
 import type { Metadata } from "next";
+import { GcsIcon } from "@gcs/ui/icons";
 import Link from "next/link";
 import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -10,6 +11,7 @@ import { forumHref, newTopicHref } from "@/lib/forum-urls";
 import { services } from "@/lib/services";
 import { GcsBreadcrumb } from "../../_components/forum/GcsBreadcrumb";
 import { GcsFollowButton, GcsMarkReadButton } from "../../_components/forum/GcsForumButtons";
+import { GcsForumIcon } from "../../_components/forum/GcsForumIcon";
 import { GcsForumRow } from "../../_components/forum/GcsForumRow";
 import { GcsModBar } from "../../_components/forum/GcsModBar";
 import { GcsPagination } from "../../_components/forum/GcsPagination";
@@ -46,6 +48,7 @@ export default async function ForumPage({ params, searchParams }: Props) {
   if (data === "forbidden") {
     return (
       <GcsCard style={{ padding: 24 }} role="alert">
+        <GcsIcon name="fa-solid fa-lock" className="gcs-emptyIcon" />
         {t("forbidden")}
       </GcsCard>
     );
@@ -69,14 +72,17 @@ export default async function ForumPage({ params, searchParams }: Props) {
       <GcsBreadcrumb crumbs={data.breadcrumb.slice(0, -1)} />
       <section className="gcs-pageHeader">
         <div className="gcs-pageHeader__text">
-          <h1 className="gcs-display gcs-pageHeader__title">{forum.name}</h1>
+          <h1 className="gcs-display gcs-pageHeader__title">
+            <GcsForumIcon icon={forum.icon} color={forum.color ?? "var(--gcs-accent)"} size={24} />
+            {forum.name}
+          </h1>
           {forum.description && <p className="gcs-pageHeader__desc">{forum.description}</p>}
         </div>
         <div className="gcs-pageHeader__actions">
           {actor.userId && <GcsFollowButton contentType="forum" contentId={forum.id} following={following} count={followers} />}
           {actor.userId && <GcsMarkReadButton forumId={forum.id} />}
           {data.canCreate && (
-            <GcsButton variant="primary" asChild>
+            <GcsButton variant="primary" asChild icon={<GcsIcon name="fa-solid fa-plus" />}>
               <Link href={newTopicHref(forum)}>{t("newTopic")}</Link>
             </GcsButton>
           )}
@@ -95,6 +101,7 @@ export default async function ForumPage({ params, searchParams }: Props) {
         <section className="gcs-card gcs-topicList" aria-labelledby="gcs-topics-title">
           <header className="gcs-topicList__header">
             <h2 id="gcs-topics-title" className="gcs-display gcs-category__title">
+              <GcsIcon name="fa-solid fa-list-ul" className="gcs-hIcon" />
               {t("topicsTitle")}
             </h2>
             {allowedPrefixes.length > 0 && (
@@ -108,7 +115,7 @@ export default async function ForumPage({ params, searchParams }: Props) {
                     </option>
                   ))}
                 </select>
-                <GcsButton type="submit" variant="ghost" size="sm">
+                <GcsButton type="submit" variant="ghost" size="sm" icon={<GcsIcon name="fa-solid fa-filter" />}>
                   {t("filter")}
                 </GcsButton>
               </form>
@@ -128,7 +135,10 @@ export default async function ForumPage({ params, searchParams }: Props) {
             </>
           )}
           {data.topics.length === 0 ? (
-            <p className="gcs-topicList__empty">{t("empty")}</p>
+            <p className="gcs-topicList__empty">
+              <GcsIcon name="fa-regular fa-comments" className="gcs-emptyIcon" />
+              {t("empty")}
+            </p>
           ) : (
             data.topics.map((topic) => (
               <GcsTopicRow

@@ -1,3 +1,4 @@
+import { GcsIcon } from "@gcs/ui/icons";
 import { getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
 import { services } from "@/lib/services";
@@ -15,7 +16,7 @@ export default async function RegisterModal() {
     settings.get<string>("auth.turnstile_secret"),
   ]);
   return (
-    <GcsAuthModal title={t("title")} subtitle={t("subtitle", { site: siteName })} closeLabel={tc("closeMenu")}>
+    <GcsAuthModal title={t("title")} subtitle={t("subtitle", { site: siteName })} closeLabel={tc("closeMenu")} icon={<GcsIcon name="fa-solid fa-user-plus" />}>
       <RegisterForm turnstileSiteKey={turnstileSiteKey && turnstileSecret ? turnstileSiteKey : null} />
     </GcsAuthModal>
   );

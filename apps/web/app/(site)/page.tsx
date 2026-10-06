@@ -1,4 +1,5 @@
 import { GcsCard } from "@gcs/ui";
+import { GcsIcon } from "@gcs/ui/icons";
 import { getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
 import { services } from "@/lib/services";
@@ -16,7 +17,10 @@ export default async function HomePage() {
     <GcsWidgetPage page="index">
       <div className="gcs-forumIndex" data-testid="gcs-forum-index">
         {categories.length === 0 ? (
-          <GcsCard style={{ padding: 24, color: "var(--gcs-muted)" }}>{t("emptyForums")}</GcsCard>
+          <GcsCard style={{ padding: 24, color: "var(--gcs-muted)" }}>
+            <GcsIcon name="fa-regular fa-folder-open" className="gcs-emptyIcon" />
+            {t("emptyForums")}
+          </GcsCard>
         ) : (
           categories.map((c) => <GcsCategoryCard key={c.id} category={c} />)
         )}

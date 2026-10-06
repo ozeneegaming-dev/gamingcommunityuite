@@ -6,6 +6,7 @@ import { requireAcpSection } from "@/lib/acp";
 import { localeOptions } from "@/lib/locales";
 import { services } from "@/lib/services";
 import { GcsMenuEditor } from "./GcsMenuEditor";
+import { GcsAcpTitle } from "../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.menuManager"))("title") };
@@ -36,9 +37,9 @@ export default async function AcpMenuManagerPage() {
   const keysOf = ["add", "addChild", "label", "autoLabel", "href", "icon", "iconSearch", "iconNone", "iconNoResults", "groups", "groupsHint", "newTab", "enabled", "up", "down", "remove", "save", "saved", "newItem"] as const;
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+      <GcsAcpTitle icon="fa-solid fa-bars-staggered">
         {t("title")}
-      </h1>
+      </GcsAcpTitle>
       <p className="gcs-muted" style={{ margin: 0 }}>
         {t("hint")}
       </p>

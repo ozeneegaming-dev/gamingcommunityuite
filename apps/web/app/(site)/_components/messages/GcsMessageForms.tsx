@@ -1,6 +1,7 @@
 "use client";
 
-import { GcsButton } from "@gcs/ui";
+import { faFlag, faPaperPlane, faRightFromBracket, faUserPlus, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { GcsButton, GcsIconSvg } from "@gcs/ui";
 import { GcsEditor, type GcsEditorHandle } from "@gcs/ui/editor";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
@@ -42,7 +43,7 @@ export function GcsUserPicker({ value, onChange, label, placeholder, removeLabel
           <span key={u.id} className="gcs-chip" data-testid="gcs-recipient">
             {u.name}
             <button type="button" aria-label={`${removeLabel} ${u.name}`} onClick={() => onChange(value.filter((v) => v.id !== u.id))}>
-              ×
+              <GcsIconSvg icon={faXmark} />
             </button>
           </span>
         ))}
@@ -126,7 +127,7 @@ export function GcsNewConversationForm({ initial, labels }: { initial: Picked[];
         mentionUrl="/api/forums/mentions"
         draftKey="pm-new"
         footer={
-          <GcsButton type="submit" variant="primary" disabled={pending || to.length === 0}>
+          <GcsButton type="submit" variant="primary" disabled={pending || to.length === 0} icon={<GcsIconSvg icon={faPaperPlane} />}>
             {pending ? labels.sending : labels.send}
           </GcsButton>
         }
@@ -170,7 +171,7 @@ export function GcsConversationReply({ conversationId, labels }: { conversationI
         mentionUrl="/api/forums/mentions"
         draftKey={`pm-${conversationId}`}
         footer={
-          <GcsButton variant="primary" onClick={send} disabled={pending}>
+          <GcsButton variant="primary" onClick={send} disabled={pending} icon={<GcsIconSvg icon={faPaperPlane} />}>
             {pending ? labels.sending : labels.send}
           </GcsButton>
         }
@@ -213,7 +214,7 @@ export function GcsConversationTools({ conversationId, labels }: { conversationI
         style={{ display: "flex", flexDirection: "column", gap: 8 }}
       >
         <GcsUserPicker value={picked} onChange={setPicked} label={labels.inviteTo} placeholder={labels.invitePlaceholder} removeLabel={labels.remove} />
-        <GcsButton type="submit" variant="ghost" disabled={pending || picked.length === 0}>
+        <GcsButton type="submit" variant="ghost" disabled={pending || picked.length === 0} icon={<GcsIconSvg icon={faUserPlus} />}>
           {labels.invite}
         </GcsButton>
       </form>
@@ -224,6 +225,7 @@ export function GcsConversationTools({ conversationId, labels }: { conversationI
       )}
       <GcsButton
         variant="ghost"
+        icon={<GcsIconSvg icon={faRightFromBracket} />}
         disabled={pending}
         data-testid="gcs-conversation-leave"
         onClick={() => {
@@ -259,6 +261,7 @@ export function GcsReportMessageButton({ messageId, labels }: { messageId: numbe
         });
       }}
     >
+      <GcsIconSvg icon={faFlag} className="gcs-linkButton__icon" />
       {labels.report}
     </button>
   );

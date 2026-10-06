@@ -246,7 +246,7 @@
         "logs": "Registros de sistemas",
         "cache": "Vaciar caché",
         "conversions": "Conversiones",
-        "import": "Importación de IPS / Indungi",
+        "import": "Importación de otra plataforma",
         "settings_languages": "Idiomas: traducción"
       },
       "members": {
@@ -1036,7 +1036,62 @@
       "announcements": "Anuncios mundiales",
       "noAnnouncements": "No hay anuncios activos.",
       "noExpiry": "hasta que se retire",
-      "display": "Visualización, límites y contenido"
+      "display": "Visualización, límites y contenido",
+      "form": {
+        "tabGeneral": "General",
+        "tabAdvanced": "Avanzado",
+        "tabPermissions": "Permisos",
+        "enabled": "Activar chatbox",
+        "enabledHint": "El mismo interruptor que en ACP → Sistema → Aplicaciones: cuando se apaga, el chat desaparece del menú, la página principal y /chat.",
+        "enabledNoRight": "Sólo el personal con el ACP → Sistema → Aplicaciones derecha puede activar o apagar el chat.",
+        "timeFormat": "Formato del tiempo",
+        "required": "NECESITA",
+        "newestOnTop": "Nuevos mensajes arriba",
+        "newestOnTopHint": "La entrada se muestra por encima de la lista y los mensajes más recientes vienen primero.",
+        "showRules": "Mostrar enlace a las reglas",
+        "showRulesHint": "Las reglas se abren en una ventana desde el botón \"Reglas\" en el encabezado del chat (sólo si el texto de abajo no está vacío).",
+        "rules": "Texto del Reglamento",
+        "rulesHint": "Vacío = sin botón “Rulos”.",
+        "hideAvatars": "Ocultar avatares",
+        "minHeight": "Default min-height",
+        "minHeightHint": "Altura de la lista de mensajes en /chat, en píxeles (120–1200).",
+        "hideEnterMobile": "Ocultar el botón Enter en el móvil",
+        "hideEnterMobileHint": "En los teléfonos, el mensaje se envía con la tecla Enter del teclado.",
+        "chatting": "Chatear",
+        "media": "Medios de comunicación",
+        "messages": "Mensajes para mostrar",
+        "messagesHint": "Número de mensajes mostrados cuando se abre el chat (10–100).",
+        "interval": "Intervalo de actualización",
+        "intervalHint": "En milisegundos, utilizados cuando falta la conexión en vivo.\nE.g. 10000 = 10 segundos",
+        "flood": "Control de inundaciones",
+        "floodHint": "Pausa entre dos mensajes del mismo miembro, en segundos. El más estricto de esto y el valor del grupo se aplica; los moderadores evitan el control de inundaciones.",
+        "seconds": "segundos",
+        "or": "o",
+        "none": "Ninguno",
+        "unlimited": "Ilimitados",
+        "maxLength": "Longitud máxima del chat",
+        "maxLengthHint": "Los caracteres máximos de un mensaje (ilimitado = 2000, la tapa técnica).",
+        "maxEmoticons": "Max emoticonos",
+        "maxEmoticonsHint": "El número máximo de emoticonos en un mensaje.",
+        "allowImages": "Permitir imágenes",
+        "allowImagesHint": "Subir imágenes e imágenes de enlaces.",
+        "allowYoutube": "Permitir YouTube",
+        "voice": "Permitir mensajes de voz",
+        "voiceMax": "Longitud máxima del mensaje de voz",
+        "giphy": "GIPHY API key",
+        "giphyHint": "Sin una llave, el botón GIF y el comando /giphy están apagados.",
+        "permTitle": "Canal {name}",
+        "permIntro": "Quien lee y escribe en el canal. “Moderado” es el chat.moderate group right (deleite mensajes, mudo, cambio de modo lento) y evita el control de inundaciones.",
+        "permCaption": "Autorizaciones de chat por grupo",
+        "permGroup": "Grupo",
+        "permRead": "Leer",
+        "permWrite": "Escriba",
+        "permModerate": "Moderado",
+        "permNoRight": "Sólo el personal que puede editar grupos (ACP → Miembros → Grupos) puede cambiar estos permisos.",
+        "permNoGeneral": "El canal general no existe; los permisos de los otros canales están en la lista de canales.",
+        "permFull": "La matriz completa del canal (con herencia)",
+        "permChannels": "Canales y sus permisos"
+      }
     },
     "notifications": {
       "title": "Notificaciones",
@@ -1288,7 +1343,9 @@
       "allow_youtube": "Permitir vídeos de YouTube",
       "voice_enabled": "Permitir mensajes de voz",
       "voice_max_seconds": "Longitud máxima del mensaje de voz (segundos)",
-      "giphy_key": "GIPHY API key (sin una llave, /giphy está apagado)"
+      "giphy_key": "GIPHY API key (sin una llave, /giphy está apagado)",
+      "show_rules": "Mostrar el enlace de reglas en el encabezado de chat",
+      "flood_seconds": "Control de inundaciones (segundos entre mensajes, 0 = ninguno)"
     },
     "i18n": {
       "locales": "Idiomas ofrecidos a los miembros",
@@ -1547,7 +1604,7 @@
         "demoHint": "Muestra categorías y foros, para ver cómo se ve (los foros llegan al estadio 2).",
         "empty": "No hay datos",
         "emptyHint": "Empieza desde cero.",
-        "import": "Importación de IPS / Indungi",
+        "import": "Importación de otra plataforma",
         "importHint": "Disponible en una etapa posterior."
       },
       "run": {
@@ -1715,7 +1772,15 @@
       "xpTo": "{points} de {next} XP al rango {rank}",
       "xpMax": "{points} XP, top rank",
       "badges": "{count, plural, one {Insignia #} many {Insignias #} other {Insignias #}}",
-      "joined": "Miembro desde {date}"
+      "joined": "Miembro desde {date}",
+      "statusOnline": "En línea",
+      "statusOffline": "Sin conexión",
+      "rankLevel": "Nivel de carrera: {level}",
+      "topics": "temas",
+      "likes": "como",
+      "memberSince": "Miembro desde:",
+      "status": "Situación:",
+      "motto": "Motto"
     },
     "poll": {
       "votes": "{count, plural, one {# vote} many {# votos} other {# votos}}",
@@ -1784,7 +1849,16 @@
       "newPosts": "Puestos nuevos {count}",
       "newPost": "1 nuevo puesto",
       "show": "show"
-    }
+    },
+    "quoteShort": "Citar",
+    "quickEdit": "Edición rápida",
+    "like": "Como",
+    "liked": "Me gusta",
+    "moreShort": "Más…",
+    "reactedYou": "Te gustó este post.",
+    "reactedYouAndOthers": "A ti y a {count, plural, one {# otra persona} many {# otros} other {# otros}} les gustó este post.",
+    "reactedCount": "{count, plural, one {# person} many {# people} other {# people}} le gustó este post.",
+    "quickReply": "Respuesta rápida"
   },
   "newTopic": {
     "title": "Nuevo tema en {forum}",
@@ -2031,6 +2105,17 @@
         "1h": "1 hora",
         "1d": "1 día",
         "forever": "Permanente"
+      },
+      "settings": "Configuración de chat",
+      "settingsAcp": "Ajustes de chat (ACP)",
+      "prefSound": "Sonido para nuevos mensajes",
+      "prefAvatars": "Mostrar avatares",
+      "picker": {
+        "emoticons": "Emoticonos",
+        "emoji": "Emoji",
+        "recent": "Recientemente utilizado",
+        "popular": "Popular",
+        "categories": "Emoji categories"
       }
     }
   },
@@ -2129,7 +2214,8 @@
       "title": "Título",
       "body": "Texto",
       "period": "Período",
-      "channel": "Sala de chat"
+      "channel": "Sala de chat",
+      "icon": "Icon (por ejemplo, fa-solid fa-star; vacío = predeterminado)"
     },
     "periods": {
       "week": "esta semana",
@@ -2196,7 +2282,23 @@
       "members": "Miembros",
       "vip": "Miembros VIP"
     },
-    "allOnline": "Ver todos los miembros en línea →"
+    "allOnline": "Ver todos los miembros en línea →",
+    "panel": {
+      "title": "Estadísticas del foro y leyenda del grupo",
+      "collapse": "Panel de colapso",
+      "expand": "Panel de expansión",
+      "newMember": "Nuevo miembro",
+      "onlineTotal": "{count, plural, one {Usuario # en total:} many {Usuarios # en total, incluyendo:} other {Usuarios # en total, incluyendo:}}",
+      "members": "{count, plural, one {# member} many {Miembros de #} other {Miembros de #}}",
+      "anonymous": "{count} anónimo",
+      "guests": "{count, plural, one {Invitado #} many {Huéspedes #} other {Huéspedes #}}",
+      "onlineList": "Lista de usuarios registrados",
+      "seeAll": "Ver la lista completa",
+      "daySummary": "Miembros activos en las últimas 24 horas",
+      "dayList": "Lista de usuarios activos recientemente",
+      "dayNobody": "No hay miembros visibles activos en las últimas 24 horas.",
+      "legendTitle": "Miembros leyenda del grupo"
+    }
   },
   "members": {
     "title": "Miembros",

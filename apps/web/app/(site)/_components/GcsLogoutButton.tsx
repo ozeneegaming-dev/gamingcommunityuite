@@ -1,6 +1,7 @@
 "use client";
 
-import { GcsButton } from "@gcs/ui";
+import { faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
+import { GcsButton, GcsIconSvg } from "@gcs/ui";
 import { useTransition } from "react";
 import { authClient } from "@/lib/auth-client";
 
@@ -9,6 +10,7 @@ export function GcsLogoutButton({ label }: { label: string }) {
   return (
     <GcsButton
       variant="ghost"
+      icon={<GcsIconSvg icon={faRightFromBracket} />}
       disabled={pending}
       onClick={() =>
         startTransition(async () => {

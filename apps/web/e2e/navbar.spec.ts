@@ -2,8 +2,8 @@ import { expect, test } from "@playwright/test";
 import { member, uid } from "./forum-fixtures";
 import { sql, useFreshIp } from "./helpers";
 
-/** Header-ul nou (specul etapei 5): meniul principal, meniul userului, limba, tema și sertarul de pe mobil. */
-test("meniul userului se folosește din tastatură; tema și limba se schimbă și rămân", async ({ page, context }) => {
+/** Header-ul nou (specul etapei 5): meniul principal, meniul userului, limba și tema (din footer) și sertarul de pe mobil. */
+test("meniul userului se folosește din tastatură; tema și limba se schimbă din footer și rămân", async ({ page, context }) => {
   await useFreshIp(context, "100.69.0");
   const id = uid();
   await member(page, `Nav${id}`, `nav-${id}@example.com`);
@@ -19,14 +19,18 @@ test("meniul userului se folosește din tastatură; tema și limba se schimbă �
   await expect(menu).toBeHidden();
   await expect(trigger).toBeFocused();
 
+  // Tema și limba nu mai sunt în meniul userului, ci în footer.
   await trigger.click();
-  await page.getByTestId("gcs-menu-theme-light").click();
+  await expect(menu.getByRole("menuitem", { name: "Ieșire" })).toBeVisible();
+  await expect(menu.getByText("Luminoasă")).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  const footer = page.locator(".gcs-siteFooter");
+  await footer.getByRole("button", { name: "Luminoasă" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
 
-  await trigger.click();
-  await page.getByTestId("gcs-menu-locale-en").click();
+  await footer.getByRole("button", { name: "EN" }).click();
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Members" })).toBeVisible();
   const [row] = await sql<{ prefs: { locale?: string; theme?: string } }>(`SELECT prefs FROM users WHERE email = $1`, [`nav-${id}@example.com`]);
