@@ -181,7 +181,7 @@ describe("ciclul de viață al pluginurilor", () => {
   test("o migrație care eșuează nu lasă nimic în urmă", async () => {
     const files = { ...MIGRATION_1, "migrations/002_bad.sql": "CREATE TABLE items (id int);" };
     const { id } = await service.stage(admin, { fileName: "db.zip", data: testPluginZip({ manifest: dbManifest(), files, sign }) });
-    expect(await errorOf(service.install(admin, id))).toMatchObject({ fields: { migration: "failed" }, params: { name: "002_bad.sql" } });
+    expect(await errorOf(service.install(admin, id))).toMatchObject({ fields: { migration: "migration_failed" }, params: { name: "002_bad.sql" } });
     expect(await service.get("acme.db")).toBeNull();
   });
 

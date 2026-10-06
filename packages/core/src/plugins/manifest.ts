@@ -3,7 +3,7 @@ import { isPluginKey, PLUGIN_CAPABILITIES, PLUGIN_EVENTS, PLUGIN_FILTER_POINTS, 
 import { isValidSemverRange, parseSemver } from "./semver";
 
 /** O cheie locală (setare, permisiune, widget, job, intrare de meniu). */
-const LOCAL_KEY = /^[a-z][a-z0-9_]{0,39}$/;
+const LOCAL_KEY = /^[a-z][a-zA-Z0-9_]{0,39}$/;
 /** O iconiță Font Awesome Free după nume. */
 const ICON = /^fa-(?:solid|regular|brands) fa-[a-z0-9-]{1,60}$/;
 /** O cale de rută: `/`, `/stats`, `/item/:id` (segmente fixe sau parametri). */

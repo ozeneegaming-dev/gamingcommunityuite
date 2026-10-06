@@ -122,9 +122,12 @@ export class GcsPluginService {
     return row ? toRow(row) : null;
   }
 
-  /** Pluginurile active, cu arhiva (pentru încărcarea în procese). */
-  async loadable(): Promise<GcsPluginLoadable[]> {
-    const rows = await this.deps.db.plugin.findMany({ where: { enabled: true, status: "installed", package: { not: null } }, select: { ...ROW_SELECT, package: true } });
+  /** Pluginurile active, cu arhiva (pentru încărcarea în procese); `keys` le restrânge. */
+  async loadable(keys?: string[]): Promise<GcsPluginLoadable[]> {
+    const rows = await this.deps.db.plugin.findMany({
+      where: { enabled: true, status: "installed", package: { not: null }, ...(keys ? { key: { in: keys } } : {}) },
+      select: { ...ROW_SELECT, package: true },
+    });
     return rows.map((r) => ({ ...toRow(r), package: Buffer.from(r.package!) }));
   }
 
@@ -189,12 +192,15 @@ export class GcsPluginService {
   }
 
   /** O încărcare în așteptare, cu raportul recalculat (pluginurile instalate se pot fi schimbat între timp). */
-  async staged(actor: GcsActor, id: string): Promise<{ id: string; fileName: string; createdAt: Date; report: GcsPluginReport } | null> {
+  async staged(
+    actor: GcsActor,
+    id: string,
+  ): Promise<{ id: string; fileName: string; createdAt: Date; report: GcsPluginReport; langs: Record<string, Record<string, unknown>> } | null> {
     await this.deps.acp.assert(actor, PLUGINS_ACP_SECTION, "view");
     const upload = await this.deps.db.pluginUpload.findUnique({ where: { id } });
     if (!upload || upload.createdAt.getTime() < Date.now() - UPLOAD_TTL_MS) return null;
-    const { report } = await this.validate(Buffer.from(upload.data));
-    return { id: upload.id, fileName: upload.fileName, createdAt: upload.createdAt, report };
+    const { report, files } = await this.validate(Buffer.from(upload.data));
+    return { id: upload.id, fileName: upload.fileName, createdAt: upload.createdAt, report, langs: files ? langsOf(files) : {} };
   }
 
   async discard(actor: GcsActor, id: string): Promise<void> {
@@ -465,12 +471,33 @@ export class GcsPluginService {
     }
   }
 
+  /** Textele pluginului (`lang/*.json` din arhiva instalată), pentru paginile ACP ale unui plugin neîncărcat. */
+  async langs(key: string): Promise<Record<string, Record<string, unknown>>> {
+    const row = await this.deps.db.plugin.findUnique({ where: { key }, select: { package: true } });
+    return row?.package ? langsOf(readPluginZip(Buffer.from(row.package))) : {};
+  }
+
   /** Arhiva instalată a unui plugin, citită (pentru pagina lui: fișierele). */
   async packageFiles(key: string): Promise<{ path: string; size: number }[]> {
     const row = await this.deps.db.plugin.findUnique({ where: { key }, select: { package: true } });
     if (!row?.package) return [];
     return [...readPluginZip(Buffer.from(row.package))].map(([path, d]) => ({ path, size: d.length })).sort((a, b) => a.path.localeCompare(b.path));
   }
+}
+
+/** Fișierele de limbă dintr-o arhivă citită (validate la încărcare; unul stricat se ignoră). */
+function langsOf(files: ReadonlyMap<string, Buffer>): Record<string, Record<string, unknown>> {
+  const out: Record<string, Record<string, unknown>> = {};
+  for (const [path, data] of files) {
+    const m = /^lang\/([a-z]{2})\.json$/.exec(path);
+    if (!m) continue;
+    try {
+      out[m[1]!] = JSON.parse(data.toString("utf8")) as Record<string, unknown>;
+    } catch {
+      // Ignorat.
+    }
+  }
+  return out;
 }
 
 export type GcsPluginHookKind = "event" | "filter" | "hook" | "widget" | "page" | "acp" | "api" | "job" | "menu";

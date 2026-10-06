@@ -1,0 +1,34 @@
+{
+  "name": "Hello",
+  "settings": {
+    "tabs": { "general": "General", "advanced": "Avansat" },
+    "greeting": "Mesajul de salut",
+    "greetingHint": "Apare în widget și pe pagina pluginului.",
+    "showCount": "Arată numărul de postări noi",
+    "pageSize": "Postări pe pagina pluginului",
+    "pageSizeHint": "Câte postări recente apar pe /p/gcs.hello.",
+    "keepDays": "Păstrează jurnalul",
+    "days": "zile"
+  },
+  "permissions": { "view": "Poate vedea pagina pluginului Hello" },
+  "widget": {
+    "title": "Hello",
+    "description": "Un salut și numărul de postări noi văzute de plugin.",
+    "count": "Postări noi văzute: {count}",
+    "open": "Deschide pagina Hello"
+  },
+  "page": {
+    "title": "Hello",
+    "intro": "Ultimele postări văzute de plugin (din tabelul lui propriu):",
+    "empty": "Nicio postare încă."
+  },
+  "acp": {
+    "menu": "Hello",
+    "total": "Postări văzute",
+    "today": "Azi",
+    "settings": "Setările se schimbă din pagina pluginului: Sistem → Aplicații și pluginuri."
+  },
+  "postbit": { "badge": "Salutat de Hello" },
+  "menu": { "user": "Hello" },
+  "jobs": { "cleanup": "Curăță jurnalul vechi" }
+}

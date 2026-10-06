@@ -1,0 +1,857 @@
+import { randomBytes } from "node:crypto";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import {
+  GcsError,
+  GcsValidationError,
+  isSafeArchivePath,
+  PLUGIN_DEFAULT_PRIORITY,
+  PLUGIN_EVENTS,
+  PLUGIN_JOB,
+  PLUGIN_LOCALES,
+  PLUGIN_MAX_FAILURES_DEFAULT,
+  PLUGIN_TIMEOUTS,
+  pluginCssScope,
+  pluginRegistryKey,
+  sanitizePluginHtml,
+  scopePluginCss,
+  type GcsActor,
+  type GcsEvent,
+  type GcsEventBus,
+  type GcsJobQueue,
+  type GcsModule,
+  type GcsModuleRegistry,
+  type GcsPermissionService,
+  type GcsPluginDatabase,
+  type GcsPluginDbCredentials,
+  type GcsPluginLoadable,
+  type GcsPluginManifest,
+  type GcsPluginRow,
+  type GcsPluginService,
+} from "@gcs/core";
+import type { PrismaClient } from "@gcs/db";
+import type Redis from "ioredis";
+import type { GcsPluginPublicApi } from "./api";
+import { extractPlugin } from "./files";
+import { pluginFetch } from "./http";
+import { GcsPluginTexts, pluginIcon, pluginModule, type GcsPluginLangs } from "./module";
+import { GcsPluginSandbox, type GcsSandboxCall } from "./sandbox";
+
+/** Canalul Redis pe care procesele află că starea pluginurilor s-a schimbat. */
+export const PLUGINS_CHANNEL = "gcs:plugins";
+const RECONCILE_EVERY_MS = 60_000;
+const METRICS_EVERY_MS = 10_000;
+const LOGS_PER_MINUTE = 60;
+const CACHE_MAX_BYTES = 64 * 1024;
+
+type CallKind = GcsSandboxCall["kind"];
+
+type Loaded = {
+  row: GcsPluginRow;
+  sha: string;
+  settingsHash: string;
+  dir: string;
+  texts: GcsPluginTexts;
+  module: GcsModule;
+  sandbox: GcsPluginSandbox;
+  /** CSS-ul declarat, deja închis în containerul pluginului (cale → CSS). */
+  css: Map<string, string>;
+  creds: GcsPluginDbCredentials | null | undefined;
+  failing: boolean;
+  logWindow: number;
+  logCount: number;
+};
+
+type Metric = { count: number; failures: number; totalMs: number; maxMs: number };
+
+export type GcsPluginHookMetrics = Record<string, Metric>;
+
+export type GcsPluginRenderedHtml = { html: string; styles: string[] };
+
+export type GcsPluginPageResult =
+  | { status: 200; title: string; icon: string; html: string; styles: string[]; scripts: string[] }
+  | { status: 403 | 404 | 500 }
+  | { status: 302; redirect: string };
+
+export type GcsPluginMenuEntry = { key: string; label: string; href: string; icon: string };
+
+/** Randarea unui șablon de plugin (`{ template, data }`); o furnizează motorul de șabloane, când există. */
+export type GcsPluginTemplateRenderer = (plugin: string, template: string, data: Record<string, unknown>) => Promise<string>;
+
+export type GcsPluginHostDeps = {
+  db: PrismaClient;
+  redis: Redis;
+  bus: GcsEventBus;
+  registry: GcsModuleRegistry;
+  permissions: GcsPermissionService;
+  jobs: Pick<GcsJobQueue, "enqueue">;
+  plugins: GcsPluginService;
+  database: GcsPluginDatabase;
+  api: GcsPluginPublicApi;
+  /** Folderul în care se dezarhivează pluginurile (în afara codului aplicației). */
+  dataDir: string;
+  /** SVG-ul unei iconițe Font Awesome (pentru `<gcs-icon>` din HTML-ul pluginurilor). */
+  iconSvg: (name: string) => string | null;
+  /** Limba site-ului (evenimente, joburi). */
+  siteLocale: () => Promise<string>;
+  /** `GCS_PLUGINS_SAFE_MODE=1`: procesul nu încarcă niciun plugin. */
+  safeMode?: boolean;
+  maxFailures?: number;
+  /** Conexiunea Redis pentru abonare (lipsă = fără anunțuri între procese, ex. în teste). */
+  subscriber?: () => Redis;
+};
+
+const errorText = (error: unknown): string => {
+  if (error instanceof GcsValidationError) return Object.values(error.fields).join(", ") || error.code;
+  if (error instanceof GcsError) return error.params?.reason ?? error.code;
+  return error instanceof Error ? error.message : String(error);
+};
+
+/** Doar câmpurile simple din payload-ul unui eveniment (fără obiecte imbricate). */
+function plainPayload(payload: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  const simple = (v: unknown) => v === null || typeof v === "string" || typeof v === "boolean" || (typeof v === "number" && Number.isFinite(v));
+  for (const [k, v] of Object.entries(payload)) {
+    if (simple(v)) out[k] = typeof v === "string" ? v.slice(0, 500) : v;
+    else if (Array.isArray(v) && v.length <= 100 && v.every(simple)) out[k] = v;
+  }
+  return out;
+}
+
+/** Potrivește o cale cu rutele declarate (`/`, `/stats`, `/item/:id`); rutele fixe au prioritate. */
+export function matchPluginRoute(patterns: string[], rawPath: string): { pattern: string; params: Record<string, string> } | null {
+  const segments = rawPath.split("/").filter(Boolean);
+  if (segments.some((s) => s.length > 100)) return null;
+  const sorted = [...patterns].sort((a, b) => (a.match(/:/g)?.length ?? 0) - (b.match(/:/g)?.length ?? 0));
+  for (const pattern of sorted) {
+    const parts = pattern.split("/").filter(Boolean);
+    if (parts.length !== segments.length) continue;
+    const params: Record<string, string> = {};
+    let ok = true;
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i]!;
+      const seg = segments[i]!;
+      if (part.startsWith(":")) {
+        if (!/^[A-Za-z0-9_.~-]+$/.test(seg)) {
+          ok = false;
+          break;
+        }
+        params[part.slice(1)] = seg;
+      } else if (part !== seg) {
+        ok = false;
+        break;
+      }
+    }
+    if (ok) return { pattern, params };
+  }
+  return null;
+}
+
+/** Handler-ele cerute de manifest (verificate în fir la pornire). */
+function requiredHandlers(m: GcsPluginManifest): { kind: string; name: string }[] {
+  return [
+    ...m.widgets.map((w) => ({ kind: "widget", name: w.key })),
+    ...m.routes.pages.map((r) => ({ kind: "page", name: r.path })),
+    ...m.routes.acp.map((r) => ({ kind: "acp", name: r.path })),
+    ...m.routes.api.map((r) => ({ kind: "api", name: r.path })),
+    ...m.events.map((e) => ({ kind: "event", name: e })),
+    ...m.filters.map((f) => ({ kind: "filter", name: f.point })),
+    ...m.hooks.map((h) => ({ kind: "hook", name: h.point })),
+    ...m.jobs.map((j) => ({ kind: "job", name: j.key })),
+  ];
+}
+
+/** Id-ul hook-ului (pagina Hook-uri, comutatoarele, metricile) pentru un apel. */
+function hookId(kind: CallKind, name: string): string {
+  switch (kind) {
+    case "event":
+    case "filter":
+    case "hook":
+      return name;
+    default:
+      return `${kind}:${name}`;
+  }
+}
+
+const JS_FILE = /\.js$/;
+const CONTENT_TYPES: Record<string, string> = {
+  css: "text/css; charset=utf-8",
+  js: "text/javascript; charset=utf-8",
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  gif: "image/gif",
+  webp: "image/webp",
+  woff: "font/woff",
+  woff2: "font/woff2",
+};
+
+/**
+ * Gazda pluginurilor într-un proces (web sau `gcs-worker`), designul pluginurilor §3: încarcă pluginurile active
+ * (registry + fir izolat), le ține la zi cu baza de date (anunțuri Redis + reconciliere periodică) și rulează hook-urile
+ * cu timeout, metrici și dezactivare automată după prea multe eșecuri la rând.
+ */
+export class GcsPluginHost {
+  private readonly loaded = new Map<string, Loaded>();
+  private hookSettings = new Map<string, { enabled: boolean; priority: number | null }>();
+  private readonly tokens = new Map<string, { key: string; actor: GcsActor; expires: number }>();
+  private readonly tasks = new Set<Promise<unknown>>();
+  private readonly metrics = new Map<string, Map<string, Metric>>();
+  private reconciling: Promise<void> | null = null;
+  private reconcileAgain = false;
+  private started: Promise<void> | null = null;
+  private timers: NodeJS.Timeout[] = [];
+  private subscriber: Redis | null = null;
+  private guest: GcsActor | null = null;
+  private templateRenderer: GcsPluginTemplateRenderer | null = null;
+
+  constructor(private readonly deps: GcsPluginHostDeps) {
+    // Evenimentele publice ajung la pluginuri asincron: emiterea (și cererea care a produs-o) nu le așteaptă.
+    for (const name of PLUGIN_EVENTS) {
+      deps.bus.on(name, async (e) => {
+        this.dispatchEvent(e);
+      });
+    }
+  }
+
+  // ─── Pornire, oprire, reconciliere ───
+
+  /** Pornește gazda: abonarea Redis, prima reconciliere și cea periodică. Idempotent. */
+  start(): Promise<void> {
+    this.started ??= (async () => {
+      if (this.deps.subscriber) {
+        try {
+          const sub = this.deps.subscriber();
+          sub.on("error", () => {});
+          sub.on("message", (channel: string) => {
+            if (channel === PLUGINS_CHANNEL) void this.reconcile();
+          });
+          await sub.subscribe(PLUGINS_CHANNEL);
+          this.subscriber = sub;
+        } catch (error) {
+          console.error("[GCS] Pluginuri: abonarea Redis a eșuat", error);
+        }
+      }
+      this.timers.push(setInterval(() => void this.reconcile(), RECONCILE_EVERY_MS).unref());
+      this.timers.push(setInterval(() => void this.flushMetrics(), METRICS_EVERY_MS).unref());
+      await this.reconcile();
+    })();
+    return this.started;
+  }
+
+  /** Așteaptă prima încărcare (cel mult `timeoutMs`), ca primele cereri să vadă pluginurile. */
+  async ready(timeoutMs = 3000): Promise<void> {
+    if (!this.started) return;
+    await Promise.race([this.started.catch(() => {}), new Promise((r) => setTimeout(r, timeoutMs).unref())]);
+  }
+
+  async stop(): Promise<void> {
+    for (const t of this.timers) clearInterval(t);
+    this.timers = [];
+    await this.subscriber?.quit().catch(() => {});
+    this.subscriber = null;
+    await this.flushMetrics();
+    for (const key of [...this.loaded.keys()]) await this.unload(key);
+    await this.deps.database.close();
+    this.started = null;
+  }
+
+  /** Anunță toate procesele (și pe acesta) că starea pluginurilor s-a schimbat. */
+  async notify(): Promise<void> {
+    await this.deps.redis.publish(PLUGINS_CHANNEL, String(Date.now())).catch(() => 0);
+    await this.reconcile();
+  }
+
+  /** Aduce pluginurile încărcate la starea din baza de date. Apelurile simultane se comasează. */
+  reconcile(): Promise<void> {
+    if (this.reconciling) {
+      this.reconcileAgain = true;
+      return this.reconciling;
+    }
+    this.reconciling = (async () => {
+      do {
+        this.reconcileAgain = false;
+        try {
+          await this.doReconcile();
+        } catch (error) {
+          console.error("[GCS] Pluginuri: reconcilierea a eșuat", error);
+        }
+      } while (this.reconcileAgain);
+    })().finally(() => {
+      this.reconciling = null;
+    });
+    return this.reconciling;
+  }
+
+  private async doReconcile(): Promise<void> {
+    const { plugins } = this.deps;
+    if (this.deps.safeMode) {
+      for (const key of [...this.loaded.keys()]) await this.unload(key);
+      return;
+    }
+    const [states, hooks] = await Promise.all([plugins.states(), plugins.hookSettings()]);
+    this.hookSettings = new Map(hooks.map((h) => [`${h.pluginKey}|${h.hook}`, { enabled: h.enabled, priority: h.priority }]));
+    const desired = new Map(states.filter((s) => s.enabled && s.status === "installed" && s.sha).map((s) => [s.key, s]));
+    for (const [key, l] of [...this.loaded]) {
+      const want = desired.get(key);
+      if (!want || want.sha !== l.sha) await this.unload(key);
+      else if (want.settingsHash !== l.settingsHash) {
+        const row = await plugins.get(key);
+        if (row) {
+          l.row = { ...l.row, settings: row.settings };
+          l.settingsHash = want.settingsHash;
+          l.sandbox.updateSettings(row.settings);
+        }
+      }
+    }
+    const missing = [...desired.keys()].filter((k) => !this.loaded.has(k));
+    if (missing.length === 0) return;
+    for (const row of await plugins.loadable(missing)) {
+      try {
+        await this.load(row, desired.get(row.key)!.settingsHash);
+      } catch (error) {
+        await plugins.log(row.key, "error", `load failed: ${errorText(error)}`, "init");
+      }
+    }
+  }
+
+  private async readLangs(dir: string): Promise<GcsPluginLangs> {
+    const langs: GcsPluginLangs = {};
+    for (const locale of PLUGIN_LOCALES) {
+      try {
+        langs[locale] = JSON.parse(await readFile(path.join(dir, "lang", `${locale}.json`), "utf8")) as Record<string, unknown>;
+      } catch {
+        // Limba lipsește: se folosesc engleza, apoi româna.
+      }
+    }
+    return langs;
+  }
+
+  private async load(row: GcsPluginLoadable, settingsHash: string): Promise<void> {
+    const key = row.key;
+    const dir = await extractPlugin(this.deps.dataDir, key, row.packageSha256!, row.package);
+    const langs = await this.readLangs(dir);
+    const texts = new GcsPluginTexts(key, row.manifest, langs);
+    const module = pluginModule(key, row.manifest, texts);
+    const css = new Map<string, string>();
+    for (const style of row.manifest.client.styles) {
+      const scoped = scopePluginCss(await readFile(path.join(dir, ...style.split("/")), "utf8"), { pluginKey: key, file: style });
+      if (scoped.ok) css.set(style, scoped.css);
+    }
+    const sandbox = new GcsPluginSandbox({
+      key,
+      version: row.version,
+      dir,
+      settings: row.settings,
+      langs,
+      required: requiredHandlers(row.manifest),
+      onRpc: (method, args, token) => this.rpc(key, method, args, token),
+      onLog: (level, message) => this.pluginLog(key, level, message),
+      onExit: (reason) => void this.recordFailure(key, "worker", reason, null),
+    });
+    this.deps.registry.unregister(module.key);
+    this.deps.registry.register(module);
+    this.loaded.set(key, { row, sha: row.packageSha256!, settingsHash, dir, texts, module, sandbox, css, creds: undefined, failing: false, logWindow: 0, logCount: 0 });
+    await this.deps.redis.del(this.failKey(key)).catch(() => 0);
+    // Firul pornește acum; o eroare de pornire se numără ca eșec (și apare în jurnalul pluginului).
+    this.track(sandbox.start().catch((error: unknown) => this.recordFailure(key, "init", errorText(error), null)));
+  }
+
+  private async unload(key: string): Promise<void> {
+    const l = this.loaded.get(key);
+    if (!l) return;
+    this.loaded.delete(key);
+    this.deps.registry.unregister(l.module.key);
+    for (const [token, t] of this.tokens) if (t.key === key) this.tokens.delete(token);
+    await l.sandbox.stop();
+    await this.deps.database.closePool(key);
+  }
+
+  // ─── Apelurile ───
+
+  private failKey(key: string): string {
+    return `gcs:plugin:fail:${key}`;
+  }
+
+  private hookEnabled(key: string, hook: string): boolean {
+    return this.hookSettings.get(`${key}|${hook}`)?.enabled ?? true;
+  }
+
+  private priority(key: string, hook: string, fallback = PLUGIN_DEFAULT_PRIORITY): number {
+    return this.hookSettings.get(`${key}|${hook}`)?.priority ?? fallback;
+  }
+
+  private async guestActor(): Promise<GcsActor> {
+    if (!this.guest) {
+      const group = await this.deps.db.group.findUnique({ where: { key: "guest" }, select: { id: true } });
+      this.guest = { userId: null, groupIds: group ? [group.id] : [], primaryGroupId: group?.id ?? 0, isBanned: false, ip: "plugin" };
+    }
+    return this.guest;
+  }
+
+  private issueToken(key: string, actor: GcsActor): string {
+    const token = randomBytes(16).toString("hex");
+    this.tokens.set(token, { key, actor, expires: Date.now() + 90_000 });
+    return token;
+  }
+
+  private async actorFor(key: string, token: string | null): Promise<GcsActor> {
+    const entry = token ? this.tokens.get(token) : undefined;
+    if (entry && entry.key === key && entry.expires > Date.now()) return entry.actor;
+    return this.guestActor();
+  }
+
+  private record(key: string, hook: string, ms: number, ok: boolean): void {
+    let byHook = this.metrics.get(key);
+    if (!byHook) this.metrics.set(key, (byHook = new Map()));
+    const m = byHook.get(hook) ?? { count: 0, failures: 0, totalMs: 0, maxMs: 0 };
+    m.count++;
+    if (!ok) m.failures++;
+    m.totalMs += ms;
+    m.maxMs = Math.max(m.maxMs, ms);
+    byHook.set(hook, m);
+  }
+
+  /**
+   * Un apel al unui handler, cu timeout, metrici și numărarea eșecurilor. Vizitatorul (dacă există) primește un jeton
+   * opac, valabil doar pe durata apelului: cu el, `ctx.api` și `ctx.permissions` citesc cu drepturile lui.
+   */
+  private async invoke(l: Loaded, kind: CallKind, name: string, input: unknown, opts: { actor: GcsActor | null; locale: string; timeoutMs?: number }): Promise<unknown> {
+    const hook = hookId(kind, name);
+    const token = opts.actor ? this.issueToken(l.row.key, opts.actor) : null;
+    const started = performance.now();
+    try {
+      const value = await l.sandbox.call({
+        kind,
+        name,
+        input,
+        viewer: opts.actor ? { userId: opts.actor.userId } : null,
+        token,
+        locale: opts.locale,
+        ...(opts.timeoutMs ? { timeoutMs: opts.timeoutMs } : {}),
+      });
+      this.record(l.row.key, hook, performance.now() - started, true);
+      if (l.failing) {
+        l.failing = false;
+        await this.deps.redis.del(this.failKey(l.row.key)).catch(() => 0);
+      }
+      return value;
+    } catch (error) {
+      const ms = performance.now() - started;
+      this.record(l.row.key, hook, ms, false);
+      await this.recordFailure(l.row.key, hook, errorText(error), ms);
+      throw error;
+    } finally {
+      if (token) this.tokens.delete(token);
+    }
+  }
+
+  /** Un eșec: în jurnalul pluginului și în numărătoarea comună (Redis); la prag, pluginul se dezactivează automat. */
+  private async recordFailure(key: string, hook: string, message: string, ms: number | null): Promise<void> {
+    const l = this.loaded.get(key);
+    if (l) l.failing = true;
+    await this.deps.plugins.log(key, "error", message, hook, ms === null ? null : Math.round(ms));
+    const count = await this.deps.redis.incr(this.failKey(key)).catch(() => 0);
+    await this.deps.redis.expire(this.failKey(key), 86_400).catch(() => 0);
+    const max = this.deps.maxFailures ?? PLUGIN_MAX_FAILURES_DEFAULT;
+    if (count >= max) {
+      await this.deps.redis.del(this.failKey(key)).catch(() => 0);
+      if (await this.deps.plugins.autoDisable(key, count, `${hook}: ${message}`)) {
+        console.error(`[GCS] Pluginul ${key} a fost dezactivat automat după ${count} eșecuri la rând (${hook}: ${message})`);
+      }
+    }
+  }
+
+  private pluginLog(key: string, level: "info" | "warn" | "error", message: string): void {
+    const l = this.loaded.get(key);
+    if (!l) return;
+    const now = Date.now();
+    if (now - l.logWindow > 60_000) {
+      l.logWindow = now;
+      l.logCount = 0;
+    }
+    if (++l.logCount > LOGS_PER_MINUTE) return;
+    this.track(this.deps.plugins.log(key, level, message, "log"));
+  }
+
+  private track<T>(p: Promise<T>): void {
+    const tracked = p.catch(() => {}).finally(() => this.tasks.delete(tracked));
+    this.tasks.add(tracked);
+  }
+
+  /** Așteaptă livrările asincrone în curs (evenimente, jurnal); pentru teste și oprire. */
+  async idle(): Promise<void> {
+    while (this.tasks.size > 0) await Promise.allSettled([...this.tasks]);
+  }
+
+  // ─── Contextul pluginului (apelurile venite din fir) ───
+
+  private async credsFor(l: Loaded): Promise<GcsPluginDbCredentials> {
+    if (l.creds === undefined) l.creds = await this.deps.plugins.credentials(l.row.key);
+    if (!l.creds) throw new Error("db_unavailable");
+    return l.creds;
+  }
+
+  private async rpc(key: string, method: string, args: unknown[], token: string | null): Promise<unknown> {
+    const l = this.loaded.get(key);
+    if (!l) throw new Error("plugin_unloaded");
+    const caps = new Set(l.row.capabilities);
+    const need = (cap: string) => {
+      if (!caps.has(cap as never)) throw new Error(`capability_required: ${cap}`);
+    };
+    try {
+      switch (method) {
+        case "db.query":
+          need("db");
+          return await this.deps.database.query(key, await this.credsFor(l), args[0] as string, (args[1] ?? []) as unknown[]);
+        case "db.batch":
+          need("db");
+          return await this.deps.database.batch(key, await this.credsFor(l), args[0] as { sql: string; params?: unknown[] }[]);
+        case "permissions.can": {
+          const perm = String(args[0] ?? "");
+          if (!l.row.manifest.permissions.some((p) => p.key === perm && p.scope === "group")) return false;
+          return await this.deps.permissions.can(await this.actorFor(key, token), `${pluginRegistryKey(key)}.${perm}`);
+        }
+        case "api.users.get":
+        case "api.topics.get":
+        case "api.topics.recent":
+        case "api.posts.get":
+        case "api.posts.recent":
+        case "api.forums.list":
+        case "api.stats":
+          return await this.deps.api.call(method, args, await this.actorFor(key, token));
+        case "cache.get":
+        case "cache.set":
+        case "cache.delete":
+          return await this.cache(key, method, args);
+        case "jobs.enqueue": {
+          need("jobs");
+          const job = String(args[0] ?? "");
+          if (!l.row.manifest.jobs.some((j) => j.key === job)) throw new Error("unknown_job");
+          const data = args[1] && typeof args[1] === "object" ? args[1] : {};
+          if (JSON.stringify(data).length > 16_384) throw new Error("data_too_large");
+          await this.deps.jobs.enqueue(PLUGIN_JOB, { plugin: key, job, data: data as Record<string, unknown> });
+          return null;
+        }
+        case "http.fetch":
+          need("http-out");
+          return await pluginFetch(args[0], args[1]);
+        default:
+          throw new Error("unknown_method");
+      }
+    } catch (error) {
+      throw new Error(errorText(error));
+    }
+  }
+
+  private async cache(key: string, method: string, args: unknown[]): Promise<unknown> {
+    const name = String(args[0] ?? "");
+    if (!/^[A-Za-z0-9_.:-]{1,200}$/.test(name)) throw new Error("invalid_key");
+    const redisKey = `gcs:plugin:cache:${key}:${name}`;
+    if (method === "cache.get") {
+      const raw = await this.deps.redis.get(redisKey);
+      return raw === null ? null : (JSON.parse(raw) as unknown);
+    }
+    if (method === "cache.delete") {
+      await this.deps.redis.del(redisKey);
+      return null;
+    }
+    const json = JSON.stringify(args[1] ?? null);
+    if (json.length > CACHE_MAX_BYTES) throw new Error("value_too_large");
+    const ttl = Number.isInteger(args[2]) ? Math.min(Math.max(args[2] as number, 1), 86_400) : 300;
+    await this.deps.redis.set(redisKey, json, "EX", ttl);
+    return null;
+  }
+
+  // ─── HTML ───
+
+  /** Pentru motorul de șabloane: randarea `{ template, data }` a pluginurilor. */
+  setTemplateRenderer(renderer: GcsPluginTemplateRenderer | null): void {
+    this.templateRenderer = renderer;
+  }
+
+  /** HTML-ul unui plugin: normalizat, sanitizat și închis în containerul lui (`contain: paint`, clasa pluginului). */
+  private async html(l: Loaded, value: unknown): Promise<string> {
+    let raw = "";
+    if (typeof value === "string") raw = value;
+    else if (value && typeof value === "object" && typeof (value as { html?: unknown }).html === "string") raw = (value as { html: string }).html;
+    else if (value && typeof value === "object" && typeof (value as { template?: unknown }).template === "string") {
+      const v = value as { template: string; data?: unknown };
+      if (!this.templateRenderer) {
+        this.pluginLog(l.row.key, "warn", "templates are not available yet");
+        return "";
+      }
+      raw = await this.templateRenderer(l.row.key, v.template, v.data && typeof v.data === "object" ? (v.data as Record<string, unknown>) : {});
+    }
+    const clean = sanitizePluginHtml(raw, { icon: this.deps.iconSvg });
+    if (!clean.trim()) return "";
+    return `<div class="gcsp ${pluginCssScope(l.row.key)}" data-gcs-plugin="${l.row.key}">${clean}</div>`;
+  }
+
+  private styleUrls(l: Loaded): string[] {
+    return [...l.css.keys()].map((p) => `/plugins/${l.row.key}/${p}?v=${l.sha.slice(0, 10)}`);
+  }
+
+  // ─── Hook-urile, pentru restul aplicației ───
+
+  /** Livrează un eveniment public pluginurilor abonate (asincron, fără să întârzie emiterea). */
+  dispatchEvent(e: GcsEvent): void {
+    if (!(PLUGIN_EVENTS as readonly string[]).includes(e.name) || this.loaded.size === 0) return;
+    const payload = plainPayload(e.payload);
+    const targets = [...this.loaded.values()].filter((l) => (l.row.manifest.events as string[]).includes(e.name) && this.hookEnabled(l.row.key, e.name));
+    if (targets.length === 0) return;
+    this.track(
+      (async () => {
+        const locale = await this.deps.siteLocale().catch(() => "ro");
+        targets.sort((a, b) => this.priority(a.row.key, e.name) - this.priority(b.row.key, e.name));
+        await Promise.allSettled(targets.map((l) => this.invoke(l, "event", e.name, { name: e.name, payload }, { actor: null, locale })));
+      })(),
+    );
+  }
+
+  /**
+   * Filtrul `post.before_save`: pluginurile, în ordinea priorității, pot modifica titlul și conținutul sau pot respinge
+   * postarea (`GcsValidationError` pe `content`). O eroare sau un timeout sare pluginul (postarea nu se blochează).
+   */
+  async filterPost<T extends { title: string | null; content: unknown }>(data: T & { kind: string; forumId: number; topicId: number | null; authorId: string | null }, actor: GcsActor): Promise<T> {
+    const point = "post.before_save";
+    const targets = [...this.loaded.values()]
+      .filter((l) => l.row.manifest.filters.some((f) => f.point === point) && this.hookEnabled(l.row.key, point))
+      .sort((a, b) => this.priority(a.row.key, point, a.row.manifest.filters.find((f) => f.point === point)?.priority) - this.priority(b.row.key, point, b.row.manifest.filters.find((f) => f.point === point)?.priority));
+    let current = data;
+    for (const l of targets) {
+      let result: unknown;
+      try {
+        result = await this.invoke(l, "filter", point, current, { actor, locale: await this.deps.siteLocale().catch(() => "ro") });
+      } catch {
+        continue;
+      }
+      if (result === null || result === undefined) continue;
+      if (typeof result !== "object") continue;
+      const r = result as { reject?: unknown; title?: unknown; content?: unknown };
+      if (typeof r.reject === "string") {
+        // Mesajul (tradus de plugin) apare ca atare lângă câmpul conținutului.
+        throw new GcsValidationError({ content: `${l.row.manifest.name}: ${r.reject.slice(0, 300)}` }, { plugin: l.row.key });
+      }
+      const title = typeof r.title === "string" ? r.title : current.title;
+      const content = r.content && typeof r.content === "object" ? r.content : current.content;
+      // Câmpurile de context nu se pot schimba.
+      current = { ...current, title: current.title === null ? null : title, content };
+    }
+    return current;
+  }
+
+  private parseWidget(type: string): { l: Loaded; widget: string } | null {
+    for (const l of this.loaded.values()) {
+      const prefix = `${pluginRegistryKey(l.row.key)}.`;
+      if (type.startsWith(prefix)) {
+        const widget = type.slice(prefix.length);
+        return l.row.manifest.widgets.some((w) => w.key === widget) ? { l, widget } : null;
+      }
+    }
+    return null;
+  }
+
+  /** Titlul unui widget al pluginului, în limba cerută. */
+  widgetTitle(type: string, locale: string): string | null {
+    const found = this.parseWidget(type);
+    if (!found) return null;
+    const w = found.l.row.manifest.widgets.find((x) => x.key === found.widget)!;
+    return found.l.texts.text(w.label, locale);
+  }
+
+  /** Randează un widget de plugin; `null` dacă pluginul nu e încărcat, hook-ul e oprit sau apelul eșuează. */
+  async renderWidget(type: string, input: { config: Record<string, unknown>; actor: GcsActor; locale: string; page: string; zone: string }): Promise<GcsPluginRenderedHtml | null> {
+    const found = this.parseWidget(type);
+    if (!found || !this.hookEnabled(found.l.row.key, `widget:${found.widget}`)) return null;
+    try {
+      const value = await this.invoke(found.l, "widget", found.widget, { config: input.config, page: input.page, zone: input.zone }, { actor: input.actor, locale: input.locale });
+      return { html: await this.html(found.l, value), styles: this.styleUrls(found.l) };
+    } catch {
+      return null;
+    }
+  }
+
+  /** O pagină a pluginului pe site (`/p/<cheie>/…`) sau în ACP (`/admin/plugins/<cheie>/…`). */
+  async renderPage(key: string, rawPath: string, input: { actor: GcsActor; locale: string; query: Record<string, string>; area: "site" | "acp" }): Promise<GcsPluginPageResult> {
+    const l = this.loaded.get(key);
+    if (!l) return { status: 404 };
+    const routes = input.area === "site" ? l.row.manifest.routes.pages : l.row.manifest.routes.acp;
+    const match = matchPluginRoute(routes.map((r) => r.path), rawPath);
+    if (!match) return { status: 404 };
+    const kind: CallKind = input.area === "site" ? "page" : "acp";
+    if (!this.hookEnabled(key, `${kind}:${match.pattern}`)) return { status: 404 };
+    const route = routes.find((r) => r.path === match.pattern)!;
+    const permission = "permission" in route ? route.permission : undefined;
+    if (permission && !(await this.deps.permissions.can(input.actor, `${pluginRegistryKey(key)}.${permission}`))) return { status: 403 };
+    let value: unknown;
+    try {
+      value = await this.invoke(l, kind, match.pattern, { path: rawPath, params: match.params, query: input.query }, { actor: input.actor, locale: input.locale });
+    } catch {
+      return { status: 500 };
+    }
+    const r = (value && typeof value === "object" ? value : {}) as { title?: unknown; html?: unknown; status?: unknown; redirect?: unknown };
+    if (typeof r.redirect === "string") {
+      const prefix = input.area === "site" ? `/p/${key}` : `/admin/plugins/${key}`;
+      const ok = (r.redirect === prefix || r.redirect.startsWith(`${prefix}/`) || r.redirect.startsWith(`${prefix}?`)) && /^[A-Za-z0-9._~/?=&%:-]+$/.test(r.redirect) && !r.redirect.includes("..");
+      if (ok) return { status: 302, redirect: r.redirect };
+    }
+    if (r.status === 403 || r.status === 404) return { status: r.status };
+    const fallbackTitle = "title" in route && typeof route.title === "string" ? l.texts.text(route.title, input.locale) : "label" in route ? l.texts.text(route.label, input.locale) : l.row.name;
+    const title = typeof r.title === "string" && r.title.trim() ? r.title.trim().slice(0, 200) : fallbackTitle;
+    const scripts = input.area === "site" && l.row.signed && l.row.capabilities.includes("client-js") ? l.row.manifest.client.scripts.map((p) => `/plugins/${key}/${p}?v=${l.sha.slice(0, 10)}`) : [];
+    const icon = pluginIcon("icon" in route && typeof route.icon === "string" ? route.icon : l.row.manifest.icon);
+    return { status: 200, title, icon, html: await this.html(l, r.html ?? ""), styles: this.styleUrls(l), scripts };
+  }
+
+  /** O rută API a pluginului: doar JSON; statusul și corpul vin de la plugin (validate). */
+  async handleApi(key: string, input: { method: string; path: string; query: Record<string, string>; body: unknown; actor: GcsActor; locale: string }): Promise<{ status: number; body: unknown }> {
+    const l = this.loaded.get(key);
+    if (!l) return { status: 404, body: { error: "not_found" } };
+    const match = matchPluginRoute(l.row.manifest.routes.api.map((r) => r.path), input.path);
+    if (!match || !this.hookEnabled(key, `api:${match.pattern}`)) return { status: 404, body: { error: "not_found" } };
+    const route = l.row.manifest.routes.api.find((r) => r.path === match.pattern)!;
+    if (!(route.methods as string[]).includes(input.method)) return { status: 405, body: { error: "method_not_allowed" } };
+    if (route.permission && !(await this.deps.permissions.can(input.actor, `${pluginRegistryKey(key)}.${route.permission}`))) return { status: 403, body: { error: "forbidden" } };
+    let value: unknown;
+    try {
+      value = await this.invoke(l, "api", match.pattern, { method: input.method, path: input.path, params: match.params, query: input.query, body: input.body ?? null }, { actor: input.actor, locale: input.locale });
+    } catch {
+      return { status: 500, body: { error: "plugin_error" } };
+    }
+    const r = (value && typeof value === "object" ? value : {}) as { status?: unknown; body?: unknown };
+    const status = Number.isInteger(r.status) && (r.status as number) >= 200 && (r.status as number) <= 599 ? (r.status as number) : 200;
+    return { status, body: r.body ?? null };
+  }
+
+  /** Punctele de extensie (ex. `postbit.after_fields`): HTML-ul pluginurilor, în ordinea priorității. */
+  async renderHook(point: string, data: Record<string, unknown>, input: { actor: GcsActor; locale: string }): Promise<{ key: string; html: string }[]> {
+    const targets = [...this.loaded.values()]
+      .filter((l) => l.row.manifest.hooks.some((h) => h.point === point) && this.hookEnabled(l.row.key, point))
+      .sort((a, b) => this.priority(a.row.key, point, a.row.manifest.hooks.find((h) => h.point === point)?.priority) - this.priority(b.row.key, point, b.row.manifest.hooks.find((h) => h.point === point)?.priority));
+    const out = await Promise.all(
+      targets.map(async (l) => {
+        try {
+          return { key: l.row.key, html: await this.html(l, await this.invoke(l, "hook", point, data, { actor: input.actor, locale: input.locale })) };
+        } catch {
+          return { key: l.row.key, html: "" };
+        }
+      }),
+    );
+    return out.filter((h) => h.html !== "");
+  }
+
+  /** Are vreun plugin încărcat acest punct de extensie? (paginile nu fac apeluri inutile) */
+  hasHook(point: string): boolean {
+    return [...this.loaded.values()].some((l) => l.row.manifest.hooks.some((h) => h.point === point) && this.hookEnabled(l.row.key, point));
+  }
+
+  /** Intrările pluginurilor în meniul site-ului sau al userului, vizibile pentru actor. */
+  async menus(area: "site" | "user", actor: GcsActor, locale: string): Promise<GcsPluginMenuEntry[]> {
+    const out: GcsPluginMenuEntry[] = [];
+    for (const l of this.loaded.values()) {
+      for (const e of l.row.manifest.menus[area]) {
+        if (!this.hookEnabled(l.row.key, `menu.${area}:${e.key}`)) continue;
+        if (e.permission && !(await this.deps.permissions.can(actor, `${pluginRegistryKey(l.row.key)}.${e.permission}`))) continue;
+        out.push({ key: `${l.row.key}.${e.key}`, label: l.texts.text(e.label, locale), href: e.href, icon: pluginIcon(e.icon ?? l.row.manifest.icon) });
+      }
+    }
+    return out;
+  }
+
+  /** Jobul generic `plugin.job` (în `gcs-worker`): rulează jobul pluginului, dacă e încărcat și jobul e pornit. */
+  async runJob(data: Record<string, unknown>): Promise<void> {
+    const key = typeof data.plugin === "string" ? data.plugin : "";
+    const job = typeof data.job === "string" ? data.job : "";
+    const l = this.loaded.get(key);
+    if (!l || !l.row.manifest.jobs.some((j) => j.key === job) || !this.hookEnabled(key, `job:${job}`)) return;
+    const payload = data.data && typeof data.data === "object" ? data.data : {};
+    await this.invoke(l, "job", job, payload, { actor: null, locale: await this.deps.siteLocale().catch(() => "ro"), timeoutMs: PLUGIN_TIMEOUTS.job }).catch(() => {});
+  }
+
+  /** Un fișier client al pluginului (`/plugins/<cheie>/assets/…`): CSS-ul închis în container, JS doar semnat. */
+  async asset(key: string, rawPath: string): Promise<{ body: Buffer | string; contentType: string } | null> {
+    const l = this.loaded.get(key);
+    if (!l || !isSafeArchivePath(rawPath) || !rawPath.startsWith("assets/")) return null;
+    const ext = rawPath.slice(rawPath.lastIndexOf(".") + 1).toLowerCase();
+    const contentType = CONTENT_TYPES[ext];
+    if (!contentType) return null;
+    if (ext === "css") {
+      const css = l.css.get(rawPath);
+      return css === undefined ? null : { body: css, contentType };
+    }
+    if (JS_FILE.test(rawPath)) {
+      if (!l.row.signed || !l.row.capabilities.includes("client-js") || !l.row.manifest.client.scripts.includes(rawPath)) return null;
+    }
+    try {
+      return { body: await readFile(path.join(l.dir, ...rawPath.split("/"))), contentType };
+    } catch {
+      return null;
+    }
+  }
+
+  /** Textele pluginurilor încărcate, pentru mesajele next-intl (`pluginText.<vendor>.<nume>.*`). */
+  messages(locale: string): Record<string, unknown> {
+    const out: Record<string, Record<string, unknown>> = {};
+    for (const l of this.loaded.values()) {
+      const [vendor, name] = l.row.key.split(".") as [string, string];
+      (out[vendor] ??= {})[name] = l.texts.messages(locale);
+    }
+    return out;
+  }
+
+  /** Starea în acest proces (pagina pluginului din ACP). */
+  status(key: string): { loaded: boolean; running: boolean; startError: string | null } {
+    const l = this.loaded.get(key);
+    return { loaded: Boolean(l), running: Boolean(l?.sandbox.running), startError: l?.sandbox.lastStartError ?? null };
+  }
+
+  loadedKeys(): string[] {
+    return [...this.loaded.keys()];
+  }
+
+  // ─── Metricile (comune proceselor, în Redis) ───
+
+  private async flushMetrics(): Promise<void> {
+    if (this.metrics.size === 0) return;
+    const snapshot = [...this.metrics];
+    this.metrics.clear();
+    for (const [key, byHook] of snapshot) {
+      const redisKey = `gcs:plugin:metrics:${key}`;
+      const multi = this.deps.redis.multi();
+      for (const [hook, m] of byHook) {
+        multi.hincrby(redisKey, `${hook}|count`, m.count);
+        multi.hincrby(redisKey, `${hook}|fail`, m.failures);
+        multi.hincrby(redisKey, `${hook}|ms`, Math.round(m.totalMs));
+        multi.eval(
+          "local c = tonumber(redis.call('HGET', KEYS[1], ARGV[1]) or '0'); if tonumber(ARGV[2]) > c then redis.call('HSET', KEYS[1], ARGV[1], ARGV[2]) end; return 1",
+          1,
+          redisKey,
+          `${hook}|max`,
+          String(Math.round(m.maxMs)),
+        );
+      }
+      multi.expire(redisKey, 30 * 86_400);
+      await multi.exec().catch(() => null);
+    }
+  }
+
+  /** Metricile pe hook ale unui plugin, din toate procesele (inclusiv cele încă neîmpinse de acest proces). */
+  async hookMetrics(key: string): Promise<GcsPluginHookMetrics> {
+    await this.flushMetrics();
+    const raw = await this.deps.redis.hgetall(`gcs:plugin:metrics:${key}`).catch(() => ({}) as Record<string, string>);
+    const out: GcsPluginHookMetrics = {};
+    for (const [field, value] of Object.entries(raw)) {
+      const at = field.lastIndexOf("|");
+      const hook = field.slice(0, at);
+      const m = (out[hook] ??= { count: 0, failures: 0, totalMs: 0, maxMs: 0 });
+      const n = Number(value);
+      const kind = field.slice(at + 1);
+      if (kind === "count") m.count = n;
+      else if (kind === "fail") m.failures = n;
+      else if (kind === "ms") m.totalMs = n;
+      else if (kind === "max") m.maxMs = n;
+    }
+    return out;
+  }
+}

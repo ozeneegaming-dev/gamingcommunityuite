@@ -138,7 +138,7 @@ export class GcsPluginDatabase {
         try {
           await client.query(m.sql);
         } catch (error) {
-          throw new GcsValidationError({ migration: "failed" }, { name: m.name, detail: String((error as Error).message).slice(0, 200) });
+          throw new GcsValidationError({ migration: "migration_failed" }, { name: m.name, detail: String((error as Error).message).slice(0, 200) });
         }
         await client.query("INSERT INTO _gcs_migrations (name) VALUES ($1)", [m.name]);
         done.add(m.name);

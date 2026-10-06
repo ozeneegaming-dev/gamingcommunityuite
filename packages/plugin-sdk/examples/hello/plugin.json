@@ -1,0 +1,68 @@
+{
+  "manifestVersion": 1,
+  "key": "gcs.hello",
+  "name": "Hello",
+  "version": "1.0.0",
+  "author": { "name": "GamingCommunitySuite", "url": "https://gamingcommunitysuite.com" },
+  "description": "Pluginul de exemplu al GamingCommunitySuite: un widget, o pagină pe site și în ACP, o setare, o permisiune și un tabel propriu.",
+  "icon": "fa-solid fa-hand",
+  "license": "MIT",
+  "minGcs": "0.6.0",
+  "capabilities": ["db", "events", "widgets", "pages", "acp", "api", "menus", "jobs", "settings", "permissions", "hooks", "client-css"],
+  "settings": {
+    "tabs": [
+      {
+        "key": "general",
+        "label": "settings.tabs.general",
+        "icon": "fa-solid fa-sliders",
+        "fields": [
+          { "type": "text", "key": "greeting", "label": "settings.greeting", "hint": "settings.greetingHint", "default": "Salut din pluginul Hello!", "maxLength": 120 },
+          { "type": "toggle", "key": "showCount", "label": "settings.showCount", "default": true }
+        ]
+      },
+      {
+        "key": "advanced",
+        "label": "settings.tabs.advanced",
+        "icon": "fa-solid fa-gears",
+        "fields": [
+          { "type": "number", "key": "pageSize", "label": "settings.pageSize", "hint": "settings.pageSizeHint", "default": 10, "min": 1, "max": 100, "unlimited": true },
+          { "type": "number", "key": "keepDays", "label": "settings.keepDays", "default": 30, "min": 1, "max": 365, "unit": "settings.days" }
+        ]
+      }
+    ]
+  },
+  "permissions": [
+    {
+      "key": "view",
+      "scope": "group",
+      "label": "permissions.view",
+      "default": {
+        "root_admin": true,
+        "admin": true,
+        "super_moderator": true,
+        "moderator": true,
+        "member": true,
+        "new_member": true,
+        "vip_bronze": true,
+        "vip_silver": true,
+        "vip_gold": true,
+        "vip_legend": true
+      }
+    }
+  ],
+  "widgets": [
+    { "key": "greeting", "label": "widget.title", "description": "widget.description", "icon": "fa-solid fa-hand", "zones": ["sidebar", "top", "bottom"] }
+  ],
+  "routes": {
+    "pages": [{ "path": "/", "title": "page.title", "permission": "view" }],
+    "acp": [{ "path": "/", "label": "acp.menu", "icon": "fa-solid fa-hand" }],
+    "api": [{ "path": "/stats", "methods": ["GET"] }]
+  },
+  "events": ["post.created"],
+  "hooks": [{ "point": "postbit.after_fields" }],
+  "jobs": [{ "key": "cleanup", "everyMinutes": 1440, "label": "jobs.cleanup" }],
+  "menus": {
+    "user": [{ "key": "hello", "label": "menu.user", "href": "/p/gcs.hello", "icon": "fa-solid fa-hand", "permission": "view" }]
+  },
+  "client": { "styles": ["assets/hello.css"] }
+}

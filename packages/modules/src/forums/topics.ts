@@ -33,8 +33,9 @@ export class GcsTopicService {
     if (!actor.userId || !(await posting.canOnForum(actor, "forums.create", forum.id))) throw new GcsForbidden({ permission: "forums.create" });
     if (forum.type !== "FORUM" && forum.type !== "QA") throw new GcsValidationError({ forumId: "invalid_choice" });
 
-    const title = posting.cleanTitle(input.title);
-    const rendered = await posting.render(input.content);
+    const filtered = await posting.filterContent(actor, { kind: "topic", title: input.title, content: input.content, forumId: forum.id, topicId: null, authorId: actor.userId });
+    const title = posting.cleanTitle(filtered.title ?? input.title);
+    const rendered = await posting.render(filtered.content);
     if (input.prefixId != null && !(await this.extras.prefixes.allowedFor(forum.id)).some((p) => p.id === input.prefixId)) {
       throw new GcsValidationError({ prefixId: "invalid_choice" });
     }

@@ -1,4 +1,4 @@
-import { writeWorkerHeartbeat } from "@gcs/core";
+import { PLUGIN_JOB, writeWorkerHeartbeat } from "@gcs/core";
 import type { GcsServices } from "./services";
 
 /** Jobul care dovedește că worker-ul procesează coada (nu doar că procesul trăiește). */
@@ -15,4 +15,6 @@ export function registerAppJobs(s: GcsServices): void {
   s.notificationProducers.registerJobs(s.jobs);
   s.chat.registerJobs(s.jobs);
   s.jobs.register({ name: "translate.cleanup", everyMs: 24 * 3600_000, handler: async () => void (await s.translation.cleanup()) });
+  // Joburile pluginurilor (etapa 6): un singur job generic, rulat de gazda pluginurilor din worker.
+  s.jobs.register({ name: PLUGIN_JOB, handler: (data) => s.plugins.runJob(data) });
 }

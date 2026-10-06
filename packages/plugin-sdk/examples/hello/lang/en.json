@@ -1,0 +1,34 @@
+{
+  "name": "Hello",
+  "settings": {
+    "tabs": { "general": "General", "advanced": "Advanced" },
+    "greeting": "Greeting message",
+    "greetingHint": "Shown in the widget and on the plugin page.",
+    "showCount": "Show the number of new posts",
+    "pageSize": "Posts on the plugin page",
+    "pageSizeHint": "How many recent posts appear on /p/gcs.hello.",
+    "keepDays": "Keep the log for",
+    "days": "days"
+  },
+  "permissions": { "view": "Can view the Hello plugin page" },
+  "widget": {
+    "title": "Hello",
+    "description": "A greeting and the number of new posts seen by the plugin.",
+    "count": "New posts seen: {count}",
+    "open": "Open the Hello page"
+  },
+  "page": {
+    "title": "Hello",
+    "intro": "The latest posts seen by the plugin (from its own table):",
+    "empty": "No posts yet."
+  },
+  "acp": {
+    "menu": "Hello",
+    "total": "Posts seen",
+    "today": "Today",
+    "settings": "Settings are changed from the plugin page: System → Applications and plugins."
+  },
+  "postbit": { "badge": "Greeted by Hello" },
+  "menu": { "user": "Hello" },
+  "jobs": { "cleanup": "Clean up the old log" }
+}

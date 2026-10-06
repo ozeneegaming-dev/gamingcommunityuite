@@ -29,6 +29,21 @@ export type GcsForumDeps = {
   attachments: GcsAttachmentService;
   /** Host-ul public al site-ului (pentru embed-urile Twitch). */
   siteHost: () => Promise<string>;
+  /**
+   * Filtrele pluginurilor înainte de salvare (`post.before_save`, etapa 6): pot modifica titlul și conținutul sau pot
+   * respinge postarea. Lipsă = fără filtre.
+   */
+  contentFilter?: <T extends GcsPostFilterInput>(data: T, actor: GcsActor) => Promise<T>;
+};
+
+/** Datele trimise filtrelor de conținut: topic nou, răspuns sau editare. */
+export type GcsPostFilterInput = {
+  kind: "topic" | "reply" | "edit";
+  title: string | null;
+  content: unknown;
+  forumId: number;
+  topicId: number | null;
+  authorId: string | null;
 };
 
 /** Tranzacțiile de scriere: mai lungi decât implicitul Prisma (5 s), pentru vârfuri de trafic. */
@@ -74,6 +89,11 @@ export class GcsForumPosting {
     if (typeof seconds !== "number" || seconds <= 0) return;
     const res = await this.deps.rateLimiter.consume(`forum-post:${actor.userId}`, { window: seconds, max: 1 });
     if (!res.allowed) throw new GcsRateLimited({ retryAfter: String(res.retryAfter) });
+  }
+
+  /** Trece datele unei postări prin filtrele pluginurilor (dacă există), înainte de validare și randare. */
+  async filterContent<T extends GcsPostFilterInput>(actor: GcsActor, data: T): Promise<T> {
+    return this.deps.contentFilter ? this.deps.contentFilter(data, actor) : data;
   }
 
   /** Conținutul trimis de editor → JSON validat + HTML sanitizat, cu lungimea maximă din setări. */
