@@ -1169,7 +1169,7 @@
       "isDefault": "Тема по умолчанию",
       "save": "Сохранить",
       "editOnSite": "Редактировать на сайте",
-      "visualEditor": "Visual editor",
+      "visualEditor": "Визуальный редактор",
       "delete": "Удалить",
       "confirmDelete": "Удалить эту тему? Участники, которые использовали его, увидят тему по умолчанию.",
       "create": "Новая тема",
@@ -2201,292 +2201,292 @@
     "limited": "Слишком много переводов за минуту. Пожалуйста, попробуйте еще раз в ближайшее время."
   },
   "themeStudio": {
-    "title": "Theme editor",
-    "draft": "Draft",
-    "back": "Back",
-    "customCss": "Custom CSS",
-    "preview": "Site preview",
-    "previewTitle": "Live preview of {site}",
-    "revert": "Revert “{name}” to the default value",
-    "transparent": "Transparent",
-    "hex": "Hex code",
-    "invalidHex": "Enter a color as #RRGGBB.",
+    "title": "Тематический редактор",
+    "draft": "Проект",
+    "back": "Назад",
+    "customCss": "Пользовательский CSS",
+    "preview": "Предварительный просмотр сайта",
+    "previewTitle": "Превью в прямом эфире {site}",
+    "revert": "Обратить «{name}» в значение по умолчанию",
+    "transparent": "Прозрачный",
+    "hex": "Шеф-код",
+    "invalidHex": "Введите цвет как #RRGGBB.",
     "editingMode": {
-      "dark": "You are editing the colors of the dark mode.",
-      "light": "You are editing the colors of the light mode."
+      "dark": "Вы редактируете цвета темного режима.",
+      "light": "Вы редактируете цвета светового режима."
     },
     "rail": {
-      "label": "Editor tools",
-      "light": "Edit light mode colors",
-      "dark": "Edit dark mode colors",
-      "mobile": "Small preview (phone)",
-      "tablet": "Medium preview (tablet)",
-      "desktop": "Large preview (desktop)",
-      "css": "Custom CSS",
-      "exit": "Exit the editor",
-      "save": "Save and publish"
+      "label": "Инструменты редактора",
+      "light": "Редактировать цвета Light Mode",
+      "dark": "Редактировать темные цвета режима",
+      "mobile": "Небольшой предварительный просмотр (телефон)",
+      "tablet": "Средний предварительный просмотр (планшет)",
+      "desktop": "Большой предварительный просмотр (Desktop)",
+      "css": "Пользовательский CSS",
+      "exit": "Выход редактора",
+      "save": "Сохранить и опубликовать"
     },
     "panels": {
-      "palette": "Color palette",
-      "scheme": "Light / dark mode",
-      "logos": "Logos",
-      "layouts": "Page layouts",
-      "typography": "Typography",
-      "header": "Header",
-      "headerDesktop": "Desktop header",
-      "headerMobile": "Mobile header",
-      "footer": "Footer",
-      "mobileNav": "Mobile navigation",
-      "global": "Global",
-      "body": "Body",
-      "boxes": "Content boxes",
-      "sidebar": "Sidebar",
-      "avatars": "Avatars",
-      "buttons": "Buttons"
+      "palette": "Цветовая палитра",
+      "scheme": "Световой/темный режим",
+      "logos": "Логотип",
+      "layouts": "Макеты страниц",
+      "typography": "Типография",
+      "header": "Заголовок",
+      "headerDesktop": "Заголовок рабочего стола",
+      "headerMobile": "Мобильная головка",
+      "footer": "Флюгер",
+      "mobileNav": "Мобильная навигация",
+      "global": "Глобальный",
+      "body": "Тело",
+      "boxes": "Содержимое",
+      "sidebar": "Боковая панель",
+      "avatars": "Аватары",
+      "buttons": "Кнопки"
     },
     "tabs": {
-      "settings": "Settings",
-      "colors": "Colors",
-      "swatches": "Swatches",
-      "picker": "Color picker"
+      "settings": "Настройки",
+      "colors": "Цвета",
+      "swatches": "Часы",
+      "picker": "Сборщик цветов"
     },
     "headings": {
-      "textLogo": "Text logo",
-      "imageDesktop": "Image logo (desktop)",
-      "imageMobile": "Image logo (mobile)",
-      "favicon": "Favicon"
+      "textLogo": "Текстовый логотип",
+      "imageDesktop": "Логотип изображения (Desktop)",
+      "imageMobile": "Логотип изображения (мобильный)",
+      "favicon": "Фавикон"
     },
     "images": {
-      "logo": "Logo (dark mode)",
-      "logoLight": "Logo (light mode)",
-      "logoMobile": "Mobile logo (dark mode)",
-      "logoMobileLight": "Mobile logo (light mode)",
-      "favicon": "Favicon",
-      "none": "No image",
-      "upload": "Upload",
-      "remove": "Remove"
+      "logo": "Логотип (темный режим)",
+      "logoLight": "Логотип (световой режим)",
+      "logoMobile": "Мобильный логотип (темный режим)",
+      "logoMobileLight": "Мобильный логотип (световой режим)",
+      "favicon": "Фавикон",
+      "none": "Нет изображения",
+      "upload": "Загрузить",
+      "remove": "Убрать"
     },
     "tokens": {
-      "accent": "Primary color",
-      "accentInk": "Secondary color (accent text)",
-      "bg": "Base color (page background)",
-      "surface": "Surface",
+      "accent": "Первичный цвет",
+      "accentInk": "Вторичный цвет (акцентный текст)",
+      "bg": "Базовый цвет (фон страницы)",
+      "surface": "Поверхность",
       "surface2": "Surface 2",
-      "border": "Borders",
-      "text": "Text",
-      "muted": "Soft text",
-      "chrome": "Header and footer",
-      "chrome2": "Secondary bars",
-      "ok": "Success",
-      "warn": "Warning"
+      "border": "Границы",
+      "text": "Текст",
+      "muted": "Мягкий текст",
+      "chrome": "Заголовок и футер",
+      "chrome2": "Вторичные бары",
+      "ok": "Успех",
+      "warn": "Предупреждение"
     },
     "colors": {
-      "bodyBg": "Body background",
-      "heading": "Hard text (headings)",
-      "link": "Links",
-      "linkHover": "Links on hover",
-      "headerBg": "Header background",
-      "headerText": "Header menu text and icons",
-      "footerBg": "Footer background",
-      "footerText": "Footer text",
-      "drawerBg": "Menu background",
-      "drawerText": "Menu links",
-      "boxBg": "Box background",
-      "boxBorder": "Box border",
-      "boxHeaderBg": "Box header background",
-      "boxHeaderText": "Box header text",
-      "widgetTitle": "Widget title",
-      "widgetIcon": "Widget title icon",
-      "btnPrimaryBg": "Primary button",
-      "btnPrimaryText": "Primary button text",
-      "btnSecondaryBg": "Secondary button",
-      "btnSecondaryText": "Secondary button text"
+      "bodyBg": "Фон тела",
+      "heading": "Жесткий текст (заголовки)",
+      "link": "Ссылки",
+      "linkHover": "Ссылки на Hover",
+      "headerBg": "Заголовок фона",
+      "headerText": "Текст меню заголовка и значки",
+      "footerBg": "Фон петуха",
+      "footerText": "Фостерский текст",
+      "drawerBg": "Фон меню",
+      "drawerText": "Ссылки на меню",
+      "boxBg": "Коробка фона",
+      "boxBorder": "Коробка",
+      "boxHeaderBg": "Заголовок бокса",
+      "boxHeaderText": "Заголовок сообщения",
+      "widgetTitle": "Название Виджет",
+      "widgetIcon": "Иконка названия виджета",
+      "btnPrimaryBg": "Главная Кнопка",
+      "btnPrimaryText": "Основной текст кнопки",
+      "btnSecondaryBg": "Вторичная кнопка",
+      "btnSecondaryText": "Текст второй кнопки"
     },
     "fields": {
       "scheme_default": {
-        "label": "Default color scheme",
-        "help": "What visitors see before choosing a mode themselves.",
+        "label": "Цветовая схема Default",
+        "help": "Что видят посетители, прежде чем выбрать режим самостоятельно.",
         "options": {
-          "site": "Site setting",
-          "auto": "System",
-          "light": "Light",
-          "dark": "Dark"
+          "site": "Настройка сайта",
+          "auto": "Система",
+          "light": "Светлая",
+          "dark": "Тёмная"
         }
       },
       "scheme_toggle": {
-        "label": "Show the mode switch",
-        "help": "The dark / light / system buttons in the footer."
+        "label": "Показать переключатель режима",
+        "help": "Темные / светлые / системные кнопки в нижнем колонтитуле."
       },
       "logo_text": {
-        "label": "Logo text",
-        "help": "Leave empty to use the site name.",
-        "placeholder": "Site name"
+        "label": "Логотип",
+        "help": "Оставьте пустой, чтобы использовать название сайта.",
+        "placeholder": "Название сайта"
       },
       "logo_slogan": {
-        "label": "Slogan",
-        "help": "A short line under the logo text (optional)."
+        "label": "Слоган",
+        "help": "Короткая строка под текстом логотипа (факультативно)."
       },
       "logo_font": {
-        "label": "Logo font",
-        "help": "The heading font or the body font of the theme.",
+        "label": "Шрифт логотипа",
+        "help": "Шрифт заголовка или шрифт тела темы.",
         "options": {
-          "display": "Heading font",
-          "text": "Body font"
+          "display": "Заголовочный шрифт",
+          "text": "Шрифт для тела"
         }
       },
       "logo_weight": {
-        "label": "Logo font weight",
-        "help": "400 is normal, 700 is bold."
+        "label": "Вес шрифта логотипа",
+        "help": "400 - это нормально, 700 - смело."
       },
       "logo_size": {
-        "label": "Logo text size (desktop)"
+        "label": "Размер текста логотипа (на рабочем столе)"
       },
       "logo_sizeMobile": {
-        "label": "Logo text size (mobile)"
+        "label": "Размер текста логотипа (мобильный)"
       },
       "logo_textMobile": {
-        "label": "Show the logo text on phones",
-        "help": "By default, small screens show only the mark."
+        "label": "Показать текст логотипа на телефонах",
+        "help": "По умолчанию маленькие экраны показывают только отметку."
       },
       "logo_height": {
-        "label": "Image logo maximum height",
-        "help": "Percentage of the header height."
+        "label": "Максимальная высота логотипа",
+        "help": "Процент высоты заголовка."
       },
       "logo_heightMobile": {
-        "label": "Mobile image logo height",
-        "help": "Percentage of the mobile header height."
+        "label": "Мобильный логотип высота",
+        "help": "Процент высоты мобильного заголовка."
       },
       "layout_forumIndex": {
-        "label": "Forum index",
-        "help": "How the forums of each category are shown on the home page.",
+        "label": "Индекс Форума",
+        "help": "Как отображаются форумы каждой категории на главной странице.",
         "options": {
-          "list": "List",
-          "grid": "Grid"
+          "list": "Список",
+          "grid": "Сетка"
         }
       },
       "layout_topicView": {
-        "label": "Topic view",
-        "help": "Compact narrows the author column and hides its statistics.",
+        "label": "Тематический взгляд",
+        "help": "Компакт сужает авторскую колонку и скрывает ее статистику.",
         "options": {
-          "normal": "Normal",
-          "compact": "Compact"
+          "normal": "Нормальный",
+          "compact": "Компактный"
         }
       },
       "layout_featureFirstPost": {
-        "label": "Feature the first post",
-        "help": "Highlights the opening post of every topic."
+        "label": "Показать первый пост",
+        "help": "Выделяет вступительный пост каждой темы."
       },
       "fontDisplay": {
-        "label": "Heading font"
+        "label": "Заголовочный шрифт"
       },
       "typography_fontDisplayCustom": {
-        "label": "Other heading font (Google Fonts)",
-        "help": "The exact name from Google Fonts; replaces the font above.",
-        "placeholder": "e.g. Open Sans"
+        "label": "Другой шрифт заголовка (Google Fonts)",
+        "help": "Точное название от Google Fonts; заменяет шрифт выше.",
+        "placeholder": "например, Open Sans"
       },
       "fontText": {
-        "label": "Body font"
+        "label": "Шрифт для тела"
       },
       "typography_fontTextCustom": {
-        "label": "Other body font (Google Fonts)",
-        "help": "The exact name from Google Fonts; replaces the font above.",
-        "placeholder": "e.g. Open Sans"
+        "label": "Другие шрифты тела (Google Fonts)",
+        "help": "Точное название от Google Fonts; заменяет шрифт выше.",
+        "placeholder": "например, Open Sans"
       },
       "typography_baseSize": {
-        "label": "Base font size",
-        "help": "Text in the page content that has no size of its own (16 px = the browser size)."
+        "label": "Размер базового шрифта",
+        "help": "Текст в содержании страницы, который не имеет собственного размера (16 px = размер браузера)."
       },
       "typography_contentSize": {
-        "label": "Post text size",
-        "help": "Posts and signatures, as a percentage of the normal size."
+        "label": "Размер текста",
+        "help": "Посты и подписи, в процентах от нормального размера."
       },
       "header_height": {
-        "label": "Header height (desktop)"
+        "label": "Высота заголовка (на рабочем столе)"
       },
       "header_heightMobile": {
-        "label": "Header height (mobile)"
+        "label": "Высота заголовка (мобильный)"
       },
       "header_navIcons": {
-        "label": "Icons in the main menu",
-        "help": "The icons next to the menu items."
+        "label": "Иконки в главном меню",
+        "help": "Иконки рядом с пунктами меню."
       },
       "header_sticky": {
-        "label": "Fixed header",
-        "help": "The header stays visible while scrolling."
+        "label": "Фиксированный заголовок",
+        "help": "Заголовок остается видимым во время прокрутки."
       },
       "mobileNav_side": {
-        "label": "Menu side",
-        "help": "Where the mobile menu slides in from.",
+        "label": "Сторона меню",
+        "help": "Откуда приходит мобильное меню.",
         "options": {
-          "left": "Left",
-          "right": "Right"
+          "left": "Левый",
+          "right": "Правильно"
         }
       },
       "mobileNav_icons": {
-        "label": "Icons in the mobile menu"
+        "label": "Иконки в мобильном меню"
       },
       "width": {
-        "label": "Maximum page width"
+        "label": "Максимальная ширина страницы"
       },
       "radius": {
-        "label": "Box corner radius"
+        "label": "Угол коробки"
       },
       "boxes_borderWidth": {
-        "label": "Box border width"
+        "label": "Ширина боковой границы"
       },
       "boxes_shadow": {
-        "label": "Box shadow",
+        "label": "Коробка теней",
         "options": {
-          "none": "None",
-          "soft": "Soft",
-          "strong": "Strong"
+          "none": "Никто",
+          "soft": "Мягкий",
+          "strong": "Сильный"
         }
       },
       "boxes_clickableRows": {
-        "label": "Clickable forum rows",
-        "help": "The whole row opens the forum, not just its name."
+        "label": "Кликабельные строки форума",
+        "help": "Весь ряд открывает форум, а не только его название."
       },
       "sidebar_width": {
-        "label": "Sidebar width"
+        "label": "Ширина боковой панели"
       },
       "sidebar_position": {
-        "label": "Sidebar position",
+        "label": "Расположение боковины",
         "options": {
-          "right": "Right",
-          "left": "Left"
+          "right": "Правильно",
+          "left": "Левый"
         }
       },
       "sidebar_sticky": {
-        "label": "Fixed sidebar",
-        "help": "The sidebar stays visible while scrolling (large screens)."
+        "label": "Фиксированная боковая панель",
+        "help": "Боковая панель остается видимой при прокрутке (большие экраны)."
       },
       "avatars_rounded": {
-        "label": "Round avatars",
-        "help": "Off: avatars with rounded corners."
+        "label": "Круглые аватары",
+        "help": "Off: аватары с закругленными углами."
       },
       "buttons_radius": {
-        "label": "Button corner radius"
+        "label": "Радиус поворота кнопки"
       }
     },
     "status": {
-      "saving": "Saving the draft…",
-      "saved": "Draft saved. Visitors see the changes only after you save.",
-      "uploading": "Uploading the image…",
-      "published": "Saved: the theme is published for everyone.",
-      "unpublished": "You have unsaved changes.",
-      "upToDate": "No changes."
+      "saving": "Спасти проект…",
+      "saved": "Драфт спасен. Посетители видят изменения только после сохранения.",
+      "uploading": "Загрузить изображение…",
+      "published": "Сохранено: тема опубликована для всех.",
+      "unpublished": "У вас есть неспасенные изменения.",
+      "upToDate": "Никаких изменений."
     },
     "cssDialog": {
-      "title": "Custom CSS",
-      "hint": "Applied after the theme. Cleaned automatically: no HTML, no scripts, @import only from Google Fonts.",
-      "revert": "Revert",
-      "done": "Done"
+      "title": "Пользовательский CSS",
+      "hint": "Применяется после темы. Очищено автоматически: нет HTML, нет скриптов, @import только от Google Fonts.",
+      "revert": "Вернуться",
+      "done": "Готово"
     },
     "exitDialog": {
-      "title": "Unsaved changes",
-      "body": "The theme has changes that are not published. If you exit without saving, they are discarded.",
-      "leave": "Exit without saving",
-      "stay": "Keep editing"
+      "title": "Неспасенные изменения",
+      "body": "Тема содержит изменения, которые не публикуются. Если вы выходите без сохранения, они выбрасываются.",
+      "leave": "Выход без экономии",
+      "stay": "Продолжайте редактировать"
     }
   },
   "themeEditor": {

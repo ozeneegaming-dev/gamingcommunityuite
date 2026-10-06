@@ -1169,7 +1169,7 @@
       "isDefault": "Thème par défaut",
       "save": "Enregistrer",
       "editOnSite": "Modifier sur le site",
-      "visualEditor": "Visual editor",
+      "visualEditor": "Éditeur visuel",
       "delete": "Supprimer",
       "confirmDelete": "Supprimer ce thème ? Les membres qui l'ont utilisé verront le thème par défaut.",
       "create": "Nouveau thème",
@@ -2201,292 +2201,292 @@
     "limited": "Trop de traductions en une minute. Veuillez réessayer rapidement."
   },
   "themeStudio": {
-    "title": "Theme editor",
-    "draft": "Draft",
-    "back": "Back",
-    "customCss": "Custom CSS",
-    "preview": "Site preview",
-    "previewTitle": "Live preview of {site}",
+    "title": "Éditeur de thème",
+    "draft": "Projet",
+    "back": "Retour",
+    "customCss": "CSS personnalisé",
+    "preview": "Aperçu du site",
+    "previewTitle": "Aperçu en direct de {site}",
     "revert": "Revert “{name}” to the default value",
     "transparent": "Transparent",
-    "hex": "Hex code",
-    "invalidHex": "Enter a color as #RRGGBB.",
+    "hex": "Code Hex",
+    "invalidHex": "Saisissez une couleur comme #RRGBB.",
     "editingMode": {
-      "dark": "You are editing the colors of the dark mode.",
-      "light": "You are editing the colors of the light mode."
+      "dark": "Vous modifiez les couleurs du mode sombre.",
+      "light": "Vous modifiez les couleurs du mode lumière."
     },
     "rail": {
-      "label": "Editor tools",
-      "light": "Edit light mode colors",
-      "dark": "Edit dark mode colors",
-      "mobile": "Small preview (phone)",
-      "tablet": "Medium preview (tablet)",
-      "desktop": "Large preview (desktop)",
-      "css": "Custom CSS",
-      "exit": "Exit the editor",
-      "save": "Save and publish"
+      "label": "Outils de l'éditeur",
+      "light": "Modifier les couleurs du mode lumière",
+      "dark": "Modifier les couleurs du mode sombre",
+      "mobile": "Petit aperçu (téléphone)",
+      "tablet": "Aperçu moyen (tablet)",
+      "desktop": "Grand aperçu (top de bureau)",
+      "css": "CSS personnalisé",
+      "exit": "Quitter l'éditeur",
+      "save": "Enregistrer et publier"
     },
     "panels": {
-      "palette": "Color palette",
-      "scheme": "Light / dark mode",
+      "palette": "Palette de couleurs",
+      "scheme": "Mode lumineux / foncé",
       "logos": "Logos",
-      "layouts": "Page layouts",
-      "typography": "Typography",
-      "header": "Header",
-      "headerDesktop": "Desktop header",
-      "headerMobile": "Mobile header",
-      "footer": "Footer",
-      "mobileNav": "Mobile navigation",
-      "global": "Global",
-      "body": "Body",
-      "boxes": "Content boxes",
-      "sidebar": "Sidebar",
+      "layouts": "Mise en page",
+      "typography": "Typographie",
+      "header": "En-tête",
+      "headerDesktop": "En-tête du bureau",
+      "headerMobile": "En-tête mobile",
+      "footer": "Pied de page",
+      "mobileNav": "Navigation mobile",
+      "global": "À l ' échelle mondiale",
+      "body": "Corps",
+      "boxes": "Boîtes de teneur",
+      "sidebar": "Barre latérale",
       "avatars": "Avatars",
-      "buttons": "Buttons"
+      "buttons": "Boutons"
     },
     "tabs": {
-      "settings": "Settings",
-      "colors": "Colors",
-      "swatches": "Swatches",
-      "picker": "Color picker"
+      "settings": "Paramètres",
+      "colors": "Couleurs",
+      "swatches": "Montres",
+      "picker": "Cueillette de couleurs"
     },
     "headings": {
-      "textLogo": "Text logo",
-      "imageDesktop": "Image logo (desktop)",
-      "imageMobile": "Image logo (mobile)",
+      "textLogo": "Logo du texte",
+      "imageDesktop": "Logo d'image (desktop)",
+      "imageMobile": "Logo d'image (mobile)",
       "favicon": "Favicon"
     },
     "images": {
-      "logo": "Logo (dark mode)",
-      "logoLight": "Logo (light mode)",
-      "logoMobile": "Mobile logo (dark mode)",
-      "logoMobileLight": "Mobile logo (light mode)",
+      "logo": "Logo (mode noir)",
+      "logoLight": "Logo (mode lumière)",
+      "logoMobile": "Logo mobile (mode noir)",
+      "logoMobileLight": "Logo mobile (mode léger)",
       "favicon": "Favicon",
-      "none": "No image",
-      "upload": "Upload",
-      "remove": "Remove"
+      "none": "Aucune image",
+      "upload": "Envoi",
+      "remove": "Retirer"
     },
     "tokens": {
-      "accent": "Primary color",
-      "accentInk": "Secondary color (accent text)",
-      "bg": "Base color (page background)",
+      "accent": "Couleur primaire",
+      "accentInk": "Couleur secondaire (texte actuel)",
+      "bg": "Couleur de base (arrière-plan de la page)",
       "surface": "Surface",
       "surface2": "Surface 2",
-      "border": "Borders",
-      "text": "Text",
-      "muted": "Soft text",
-      "chrome": "Header and footer",
-      "chrome2": "Secondary bars",
-      "ok": "Success",
-      "warn": "Warning"
+      "border": "Frontières",
+      "text": "Texte",
+      "muted": "Texte souple",
+      "chrome": "En-tête et pied de page",
+      "chrome2": "Barres secondaires",
+      "ok": "Succès",
+      "warn": "Avertissement"
     },
     "colors": {
-      "bodyBg": "Body background",
-      "heading": "Hard text (headings)",
-      "link": "Links",
-      "linkHover": "Links on hover",
-      "headerBg": "Header background",
-      "headerText": "Header menu text and icons",
-      "footerBg": "Footer background",
-      "footerText": "Footer text",
-      "drawerBg": "Menu background",
-      "drawerText": "Menu links",
-      "boxBg": "Box background",
-      "boxBorder": "Box border",
-      "boxHeaderBg": "Box header background",
-      "boxHeaderText": "Box header text",
-      "widgetTitle": "Widget title",
-      "widgetIcon": "Widget title icon",
-      "btnPrimaryBg": "Primary button",
-      "btnPrimaryText": "Primary button text",
-      "btnSecondaryBg": "Secondary button",
-      "btnSecondaryText": "Secondary button text"
+      "bodyBg": "Contexte corporel",
+      "heading": "Texte dur (en-têtes)",
+      "link": "Liens",
+      "linkHover": "Liens sur hover",
+      "headerBg": "En-tête",
+      "headerText": "En-tête texte et icônes du menu",
+      "footerBg": "Fond du pied de page",
+      "footerText": "Texte du pied de page",
+      "drawerBg": "Fond du menu",
+      "drawerText": "Liens de menu",
+      "boxBg": "Fond de la boîte",
+      "boxBorder": "Frontière de boîte",
+      "boxHeaderBg": "Fond de l'en-tête de la boîte",
+      "boxHeaderText": "Texte de l'en-tête de la case",
+      "widgetTitle": "Titre du widget",
+      "widgetIcon": "Icône de titre du widget",
+      "btnPrimaryBg": "Bouton primaire",
+      "btnPrimaryText": "Texte du bouton principal",
+      "btnSecondaryBg": "Bouton secondaire",
+      "btnSecondaryText": "Texte du bouton secondaire"
     },
     "fields": {
       "scheme_default": {
-        "label": "Default color scheme",
-        "help": "What visitors see before choosing a mode themselves.",
+        "label": "Schéma de couleur par défaut",
+        "help": "Ce que les visiteurs voient avant de choisir un mode eux-mêmes.",
         "options": {
-          "site": "Site setting",
-          "auto": "System",
-          "light": "Light",
-          "dark": "Dark"
+          "site": "Configuration du site",
+          "auto": "Système",
+          "light": "Clair",
+          "dark": "Sombre"
         }
       },
       "scheme_toggle": {
-        "label": "Show the mode switch",
-        "help": "The dark / light / system buttons in the footer."
+        "label": "Afficher le commutateur de mode",
+        "help": "Les boutons sombres / lumineux / système dans le pied de page."
       },
       "logo_text": {
-        "label": "Logo text",
-        "help": "Leave empty to use the site name.",
-        "placeholder": "Site name"
+        "label": "Texte du logo",
+        "help": "Laissez vide pour utiliser le nom du site.",
+        "placeholder": "Nom du site"
       },
       "logo_slogan": {
         "label": "Slogan",
-        "help": "A short line under the logo text (optional)."
+        "help": "Une courte ligne sous le texte du logo (facultatif)."
       },
       "logo_font": {
-        "label": "Logo font",
-        "help": "The heading font or the body font of the theme.",
+        "label": "Police du logo",
+        "help": "La police du titre ou la police du corps du thème.",
         "options": {
-          "display": "Heading font",
-          "text": "Body font"
+          "display": "Police du titre",
+          "text": "Police du corps"
         }
       },
       "logo_weight": {
-        "label": "Logo font weight",
-        "help": "400 is normal, 700 is bold."
+        "label": "Poids de la police du logo",
+        "help": "400 est normal, 700 est audacieux."
       },
       "logo_size": {
-        "label": "Logo text size (desktop)"
+        "label": "Taille du texte du logo (top de bureau)"
       },
       "logo_sizeMobile": {
-        "label": "Logo text size (mobile)"
+        "label": "Taille du texte du logo (mobile)"
       },
       "logo_textMobile": {
-        "label": "Show the logo text on phones",
-        "help": "By default, small screens show only the mark."
+        "label": "Afficher le texte du logo sur les téléphones",
+        "help": "Par défaut, les petits écrans n'affichent que la marque."
       },
       "logo_height": {
-        "label": "Image logo maximum height",
-        "help": "Percentage of the header height."
+        "label": "Image logo hauteur maximale",
+        "help": "Pourcentage de la hauteur d'en-tête."
       },
       "logo_heightMobile": {
-        "label": "Mobile image logo height",
-        "help": "Percentage of the mobile header height."
+        "label": "Hauteur du logo d'image mobile",
+        "help": "Pourcentage de la hauteur d'en-tête mobile."
       },
       "layout_forumIndex": {
-        "label": "Forum index",
-        "help": "How the forums of each category are shown on the home page.",
+        "label": "Index des forums",
+        "help": "Comment les forums de chaque catégorie sont affichés sur la page d'accueil.",
         "options": {
-          "list": "List",
-          "grid": "Grid"
+          "list": "Liste",
+          "grid": "Grille"
         }
       },
       "layout_topicView": {
-        "label": "Topic view",
-        "help": "Compact narrows the author column and hides its statistics.",
+        "label": "Vue thématique",
+        "help": "Compact rétrécit la colonne d'auteur et cache ses statistiques.",
         "options": {
           "normal": "Normal",
           "compact": "Compact"
         }
       },
       "layout_featureFirstPost": {
-        "label": "Feature the first post",
-        "help": "Highlights the opening post of every topic."
+        "label": "Fonctionne le premier post",
+        "help": "Souligne le poste d'ouverture de chaque sujet."
       },
       "fontDisplay": {
-        "label": "Heading font"
+        "label": "Police du titre"
       },
       "typography_fontDisplayCustom": {
-        "label": "Other heading font (Google Fonts)",
-        "help": "The exact name from Google Fonts; replaces the font above.",
-        "placeholder": "e.g. Open Sans"
+        "label": "Autres polices de position (Google Fonts)",
+        "help": "Le nom exact de Google Fonts; remplace la police ci-dessus.",
+        "placeholder": "par exemple, le Sans ouvert"
       },
       "fontText": {
-        "label": "Body font"
+        "label": "Police du corps"
       },
       "typography_fontTextCustom": {
-        "label": "Other body font (Google Fonts)",
-        "help": "The exact name from Google Fonts; replaces the font above.",
-        "placeholder": "e.g. Open Sans"
+        "label": "Autre police de corps (Google Fonts)",
+        "help": "Le nom exact de Google Fonts; remplace la police ci-dessus.",
+        "placeholder": "par exemple, le Sans ouvert"
       },
       "typography_baseSize": {
-        "label": "Base font size",
-        "help": "Text in the page content that has no size of its own (16 px = the browser size)."
+        "label": "Taille de la police de base",
+        "help": "Texte dans le contenu de la page qui n'a pas de taille propre (16 px = la taille du navigateur)."
       },
       "typography_contentSize": {
-        "label": "Post text size",
-        "help": "Posts and signatures, as a percentage of the normal size."
+        "label": "Taille du texte",
+        "help": "Postes et signatures, en pourcentage de la taille normale."
       },
       "header_height": {
-        "label": "Header height (desktop)"
+        "label": "Hauteur de l'en-tête (desktop)"
       },
       "header_heightMobile": {
-        "label": "Header height (mobile)"
+        "label": "Hauteur de l'en-tête (mobile)"
       },
       "header_navIcons": {
-        "label": "Icons in the main menu",
-        "help": "The icons next to the menu items."
+        "label": "Icônes dans le menu principal",
+        "help": "Les icônes à côté des éléments du menu."
       },
       "header_sticky": {
-        "label": "Fixed header",
-        "help": "The header stays visible while scrolling."
+        "label": "En-tête fixe",
+        "help": "L'en-tête reste visible tout en défilant."
       },
       "mobileNav_side": {
-        "label": "Menu side",
-        "help": "Where the mobile menu slides in from.",
+        "label": "Côté menu",
+        "help": "Où le menu mobile se glisse.",
         "options": {
-          "left": "Left",
-          "right": "Right"
+          "left": "Gauche",
+          "right": "Droite"
         }
       },
       "mobileNav_icons": {
-        "label": "Icons in the mobile menu"
+        "label": "Icônes dans le menu mobile"
       },
       "width": {
-        "label": "Maximum page width"
+        "label": "Largeur maximale de la page"
       },
       "radius": {
-        "label": "Box corner radius"
+        "label": "Rayon du coin de la boîte"
       },
       "boxes_borderWidth": {
-        "label": "Box border width"
+        "label": "Largeur de la bordure de la boîte"
       },
       "boxes_shadow": {
-        "label": "Box shadow",
+        "label": "Ombre de boîte",
         "options": {
-          "none": "None",
-          "soft": "Soft",
-          "strong": "Strong"
+          "none": "Aucune",
+          "soft": "Doucement",
+          "strong": "Fort"
         }
       },
       "boxes_clickableRows": {
-        "label": "Clickable forum rows",
-        "help": "The whole row opens the forum, not just its name."
+        "label": "Lignes de forum cliquables",
+        "help": "Toute la ligne ouvre le forum, pas seulement son nom."
       },
       "sidebar_width": {
-        "label": "Sidebar width"
+        "label": "Largeur de la barre latérale"
       },
       "sidebar_position": {
-        "label": "Sidebar position",
+        "label": "Position de la barre latérale",
         "options": {
-          "right": "Right",
-          "left": "Left"
+          "right": "Droite",
+          "left": "Gauche"
         }
       },
       "sidebar_sticky": {
-        "label": "Fixed sidebar",
-        "help": "The sidebar stays visible while scrolling (large screens)."
+        "label": "Barre latérale fixe",
+        "help": "La barre latérale reste visible tout en défilant (grands écrans)."
       },
       "avatars_rounded": {
-        "label": "Round avatars",
-        "help": "Off: avatars with rounded corners."
+        "label": "Avatars ronds",
+        "help": "Arrêt : avatars aux coins arrondis."
       },
       "buttons_radius": {
-        "label": "Button corner radius"
+        "label": "Rayon du coin du bouton"
       }
     },
     "status": {
-      "saving": "Saving the draft…",
-      "saved": "Draft saved. Visitors see the changes only after you save.",
-      "uploading": "Uploading the image…",
-      "published": "Saved: the theme is published for everyone.",
-      "unpublished": "You have unsaved changes.",
-      "upToDate": "No changes."
+      "saving": "Sauver le projet…",
+      "saved": "Projet sauvé. Les visiteurs ne voient les changements qu'après l'enregistrement.",
+      "uploading": "Télécharger l'image…",
+      "published": "Sauvé : le thème est publié pour tous.",
+      "unpublished": "Vous avez des changements non sauvés.",
+      "upToDate": "Pas de changement."
     },
     "cssDialog": {
-      "title": "Custom CSS",
-      "hint": "Applied after the theme. Cleaned automatically: no HTML, no scripts, @import only from Google Fonts.",
-      "revert": "Revert",
-      "done": "Done"
+      "title": "CSS personnalisé",
+      "hint": "Appliqué après le thème. Nettoyé automatiquement : pas de HTML, pas de scripts, @import uniquement depuis Google Fonts.",
+      "revert": "Répandre",
+      "done": "Terminé"
     },
     "exitDialog": {
-      "title": "Unsaved changes",
-      "body": "The theme has changes that are not published. If you exit without saving, they are discarded.",
-      "leave": "Exit without saving",
-      "stay": "Keep editing"
+      "title": "Changements non enregistrés",
+      "body": "Le thème a des changements qui ne sont pas publiés. Si vous sortez sans enregistrer, ils sont jetés.",
+      "leave": "Sortie sans enregistrement",
+      "stay": "Continuer à éditer"
     }
   },
   "themeEditor": {
