@@ -15,6 +15,7 @@
 @import "@gcs/ui/acp.css";
 @import "@gcs/ui/studio.css";
 @import "@gcs/ui/code.css";
+@import "@gcs/ui/importer.css";
 
 /* Componentele Gcs* din @gcs/ui folosesc utilitare Tailwind; sursele lor trebuie scanate. */
 @source "../../../packages/ui/src";

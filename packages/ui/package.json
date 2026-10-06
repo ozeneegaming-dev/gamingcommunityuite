@@ -22,6 +22,7 @@
     "./acp.css": "./src/acp.css",
     "./studio.css": "./src/studio.css",
     "./code.css": "./src/code.css",
+    "./importer.css": "./src/importer.css",
     "./icons": "./src/icons/index.tsx",
     "./icon-registry": "./src/icons/registry.ts"
   },

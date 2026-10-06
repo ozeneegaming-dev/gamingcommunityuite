@@ -45,6 +45,8 @@ export type GcsImportView = {
   id: string;
   status: ImportStatus;
   dryRun: boolean;
+  /** Cheia hărții de id-uri (și a regulii de redirect) a acestei surse. */
+  mapKey: string;
   config: GcsImportConfig;
   hasPassword: boolean;
   detected: GcsImportDetected | null;
@@ -203,6 +205,7 @@ export class GcsImportService {
       id: job.id,
       status: job.status,
       dryRun: job.dryRun,
+      mapKey: job.mapKey,
       config: job.config as unknown as GcsImportConfig,
       hasPassword: job.secret !== null,
       detected: job.detected as unknown as GcsImportDetected | null,

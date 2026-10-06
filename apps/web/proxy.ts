@@ -50,7 +50,24 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
       });
     }
   }
+  const legacy = await legacyRedirect(request);
+  if (legacy) return legacy;
   return withThemePreview(request);
+}
+
+/**
+ * Redirecturile 301 de la adresele site-ului vechi, după importul din altă platformă (ACP → Sistem → Conversii).
+ * Oprite (implicit), costă o citire din cache-ul Redis; baza de date se întreabă doar pentru o adresă care arată ca
+ * una veche. `Location` e relativ (în build-ul standalone, host-ul din `request.url` e cel intern).
+ */
+async function legacyRedirect(request: NextRequest): Promise<NextResponse | null> {
+  const path = request.nextUrl.pathname;
+  if (path.startsWith("/api/") || path.startsWith("/admin") || path.startsWith("/_next/")) return null;
+  const target = await services()
+    .importer.resolveLegacy(path, request.nextUrl.search)
+    .catch(() => null);
+  if (!target) return null;
+  return new NextResponse(null, { status: 301, headers: { Location: target } });
 }
 
 /**

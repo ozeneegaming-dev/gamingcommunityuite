@@ -1,5 +1,5 @@
 import "server-only";
-import { GcsValidationError, hashPassword, prepareNewUser, verifyPassword } from "@gcs/core";
+import { GcsValidationError, hashPassword, isLegacyPasswordHash, prepareNewUser, upgradeLegacyPassword, verifyPassword } from "@gcs/core";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { APIError } from "better-auth/api";
@@ -40,7 +40,12 @@ function createAuth(config: GcsAuthConfig) {
       requireEmailVerification: false,
       password: {
         hash: hashPassword,
-        verify: ({ hash, password }) => verifyPassword(hash, password),
+        // Parolele importate din altă platformă (hash marcat `legacy-…`) se rescriu în Argon2id la prima autentificare.
+        verify: async ({ hash, password }) => {
+          const ok = await verifyPassword(hash, password);
+          if (ok && isLegacyPasswordHash(hash)) await upgradeLegacyPassword(db, hash, password).catch(() => 0);
+          return ok;
+        },
       },
     },
     socialProviders: config.discordClientId

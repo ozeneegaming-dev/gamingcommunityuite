@@ -1,0 +1,472 @@
+/* ACP → Sistem → Conversii → Import din altă platformă: asistentul în pași, progresul live și raportul. */
+
+.gcs-import {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* Pașii asistentului */
+.gcs-import__stepper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-import__stepperItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px 7px 8px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 999px;
+  background: var(--gcs-surface);
+  color: var(--gcs-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.gcs-import__stepperItem.is-current {
+  border-color: var(--gcs-acp-c1);
+  color: var(--gcs-text);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gcs-acp-c1) 18%, transparent);
+}
+.gcs-import__stepperItem.is-done {
+  color: var(--gcs-text);
+}
+.gcs-import__stepperDot {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--gcs-text) 10%, transparent);
+  font-size: 12px;
+}
+.gcs-import__stepperItem.is-current .gcs-import__stepperDot {
+  background: var(--gcs-acp-c1);
+  color: #fff;
+}
+.gcs-import__stepperItem.is-done .gcs-import__stepperDot {
+  background: color-mix(in srgb, var(--gcs-acp-good) 20%, transparent);
+  color: var(--gcs-acp-good);
+}
+
+.gcs-import__panelHead {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-import__headActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Formularul conexiunii */
+.gcs-import__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.gcs-import__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px 16px;
+}
+.gcs-import__fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.gcs-import__choices,
+.gcs-import__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.gcs-import__choice,
+.gcs-import__option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-surface2);
+  font-size: 13.5px;
+  cursor: pointer;
+}
+.gcs-import__choice.is-selected,
+.gcs-import__option.is-selected {
+  border-color: var(--gcs-acp-c1);
+  background: color-mix(in srgb, var(--gcs-acp-c1) 10%, var(--gcs-surface2));
+}
+.gcs-import__option.is-locked {
+  cursor: default;
+  opacity: 0.8;
+}
+.gcs-import__choice input,
+.gcs-import__option input {
+  accent-color: var(--gcs-acp-c1);
+}
+
+.gcs-import__label {
+  margin: 4px 0 10px;
+  color: var(--gcs-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.gcs-import__hint {
+  margin: 10px 0 0;
+  color: var(--gcs-muted);
+  font-size: 12.5px;
+}
+
+/* Numerele din sursă */
+.gcs-import__counts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-import__count {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-surface2);
+}
+.gcs-import__countIcon {
+  display: grid;
+  grid-row: span 2;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--gcs-acp-c3) 16%, transparent);
+  color: var(--gcs-acp-c3);
+}
+.gcs-import__countValue {
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.gcs-import__countLabel {
+  color: var(--gcs-muted);
+  font-size: 12px;
+}
+
+/* Comutatoarele (rulare de probă, redirecturi) */
+.gcs-import__switches {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+.gcs-import__switch {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  cursor: pointer;
+}
+.gcs-import__switch input {
+  margin-top: 3px;
+  accent-color: var(--gcs-acp-c1);
+}
+.gcs-import__switch span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.gcs-import__switch small {
+  color: var(--gcs-muted);
+  font-size: 12.5px;
+}
+
+/* Progresul pe pași */
+.gcs-import__steps {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-import__step {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 9px 10px;
+  border-radius: 10px;
+}
+.gcs-import__step.is-current {
+  background: color-mix(in srgb, var(--gcs-acp-c1) 8%, transparent);
+}
+.gcs-import__step.is-skipped {
+  opacity: 0.55;
+}
+.gcs-import__stepIcon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--gcs-text) 8%, transparent);
+  color: var(--gcs-muted);
+}
+.gcs-import__step.is-done .gcs-import__stepIcon {
+  background: color-mix(in srgb, var(--gcs-acp-good) 16%, transparent);
+  color: var(--gcs-acp-good);
+}
+.gcs-import__step.is-running .gcs-import__stepIcon {
+  background: color-mix(in srgb, var(--gcs-acp-c1) 18%, transparent);
+  color: var(--gcs-acp-c1);
+}
+.gcs-import__step.is-failed .gcs-import__stepIcon {
+  background: color-mix(in srgb, var(--gcs-acp-bad) 16%, transparent);
+  color: var(--gcs-acp-bad);
+}
+.gcs-import__stepMain {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.gcs-import__stepName {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.gcs-import__stepStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--gcs-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+.gcs-import__bar {
+  --tone: var(--gcs-acp-c1);
+}
+.gcs-import__step.is-done .gcs-import__bar {
+  --tone: var(--gcs-acp-good);
+}
+.gcs-import__step.is-failed .gcs-import__bar {
+  --tone: var(--gcs-acp-bad);
+}
+.gcs-import__stepNums {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 90px;
+  justify-content: flex-end;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+.gcs-import__spin {
+  animation: gcs-import-spin 0.9s linear infinite;
+}
+@keyframes gcs-import-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gcs-import__spin {
+    animation: none;
+  }
+}
+
+.gcs-import__columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+/* Jurnalul */
+.gcs-import__logs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 320px;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+.gcs-import__log {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 12.5px;
+}
+.gcs-import__log > svg {
+  flex: none;
+  transform: translateY(2px);
+  color: var(--gcs-acp-good);
+}
+.gcs-import__log.is-warn > svg {
+  color: var(--gcs-acp-c4);
+}
+.gcs-import__log.is-error {
+  background: color-mix(in srgb, var(--gcs-acp-bad) 8%, transparent);
+}
+.gcs-import__log.is-error > svg {
+  color: var(--gcs-acp-bad);
+}
+.gcs-import__logStep {
+  font-weight: 600;
+}
+.gcs-import__log code,
+.gcs-import__samples code,
+.gcs-import__ok code,
+.gcs-import__error code {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--gcs-text) 9%, transparent);
+  font-size: 12px;
+}
+
+/* Mesajele */
+.gcs-import__error,
+.gcs-import__ok {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13.5px;
+}
+.gcs-import__error {
+  background: color-mix(in srgb, var(--gcs-acp-bad) 12%, transparent);
+  color: var(--gcs-acp-bad);
+}
+.gcs-import__ok {
+  background: color-mix(in srgb, var(--gcs-acp-good) 12%, transparent);
+  color: var(--gcs-acp-good);
+}
+.gcs-import__ok a {
+  color: inherit;
+  font-weight: 600;
+}
+
+/* Raportul */
+.gcs-import__dry {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+  font-size: 13.5px;
+}
+.gcs-import__dry li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.gcs-import__tableWrap {
+  overflow-x: auto;
+}
+.gcs-import__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+}
+.gcs-import__table th,
+.gcs-import__table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--gcs-border);
+  text-align: right;
+  white-space: nowrap;
+}
+.gcs-import__table th:first-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+}
+.gcs-import__table thead th {
+  color: var(--gcs-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.gcs-import__table tbody th {
+  font-weight: 600;
+}
+.gcs-import__table .is-good {
+  color: var(--gcs-acp-good);
+  font-weight: 700;
+}
+.gcs-import__table .is-bad {
+  color: var(--gcs-acp-bad);
+  font-weight: 700;
+}
+.gcs-import__table .is-warn {
+  color: var(--gcs-acp-c4);
+}
+.gcs-import__actions {
+  flex-wrap: wrap;
+}
+
+/* Redirecturile */
+.gcs-import__redirectRow,
+.gcs-import__check {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.gcs-import__redirectRow .gcs-field,
+.gcs-import__check .gcs-field {
+  flex: 1 1 260px;
+}
+.gcs-import__samples {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+.gcs-import__samples li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.gcs-import__samples svg {
+  color: var(--gcs-muted);
+}

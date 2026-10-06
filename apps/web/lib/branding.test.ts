@@ -7,7 +7,7 @@ import { describe, expect, test } from "vitest";
  * legătură spre alte platforme de comunitate în texte, cod, comentarii sau stiluri.
  * „IPS” se caută doar cu majuscule: `ips` / „IPs” înseamnă adrese IP și e permis.
  */
-const BRANDS = [/\bIPS\b/, /invision/i, /indungi/i, /ipsappzone/i];
+const BRANDS = [/\bIPS\b/, /invision/i, /indungi/i, /ipsappzone/i, /xenforo/i, /vbulletin/i, /phpbb/i];
 
 const root = path.resolve(__dirname, "../../..");
 const SCAN = ["apps/web/app", "apps/web/lib", "apps/web/messages", "apps/web/e2e", "apps/realtime/src", "apps/worker/src", "packages"];
