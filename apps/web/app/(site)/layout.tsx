@@ -9,14 +9,14 @@ import { GcsSiteHeader } from "./_components/GcsSiteHeader";
 import { GcsNotificationToasts } from "./_components/notifications/GcsNotificationToasts";
 import { GcsRealtimeProvider } from "./_components/realtime/GcsRealtimeProvider";
 import { currentActor } from "@/lib/actor";
-import { alertPrefs } from "@/lib/appearance";
+import { alertPrefs, viewerTheme } from "@/lib/appearance";
 import { services } from "@/lib/services";
 
 export default async function SiteLayout({ children, modal }: { children: ReactNode; modal: ReactNode }) {
   const [t, locale, actor] = await Promise.all([getTranslations("hoverCard"), getLocale(), currentActor()]);
   // Conturile create prin Steam au un email placeholder: le cerem unul real (specul etapei 3, §8).
   const email = actor.userId ? (await services().db.user.findUnique({ where: { id: actor.userId }, select: { email: true } }))?.email : null;
-  const [tb, alerts, tc] = await Promise.all([getTranslations("settings.account"), alertPrefs(actor.userId), getTranslations("site")]);
+  const [tb, alerts, tc, { preview }] = await Promise.all([getTranslations("settings.account"), alertPrefs(actor.userId), getTranslations("site"), viewerTheme()]);
   return (
     <GcsRealtimeProvider>
       {/* `useSearchParams` cere un Suspense: bara nu blochează randarea paginii. */}
@@ -34,7 +34,8 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
       </main>
       <GcsSiteFooter />
       {modal}
-      {actor.userId && <GcsNotificationToasts toasts={alerts.toasts} sound={alerts.sound} closeLabel={tc("closeToast")} />}
+      {/* În previzualizarea editoarelor (iframe) nu apar notificările adminului. */}
+      {actor.userId && !preview && <GcsNotificationToasts toasts={alerts.toasts} sound={alerts.sound} closeLabel={tc("closeToast")} />}
       <GcsHoverCardHost
         locale={locale}
         labels={{
