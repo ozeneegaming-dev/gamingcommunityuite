@@ -1245,7 +1245,10 @@
       "read": "Lesen Sie den Kanal",
       "write": "Schreibt im Kanal",
       "moderate": "Moderierter Chat (Löschen, Stummschalten, Slow Mode)",
-      "flood_seconds": "Pause zwischen Chat-Nachrichten (Sekunden)"
+      "flood_seconds": "Pause zwischen Chat-Nachrichten (Sekunden)",
+      "create_public": "Öffentliche chat-räume erstellen",
+      "create_private": "Erstellen Sie private Chat-Räume (mit Einladungen)",
+      "announce": "Pin Nachrichten und veröffentlichen Chat-Ankündigungen"
     }
   },
   "profile": {
@@ -1781,6 +1784,9 @@
       },
       "core": {
         "warning": "Verwarnungen"
+      },
+      "chat": {
+        "mention": "Chat Erwähnungen"
       }
     }
   },
@@ -1800,7 +1806,45 @@
     "slowMode": "Langsamer Modus: eine Nachricht alle {seconds} s.",
     "readOnly": "Sie können nur diesen Kanal lesen.",
     "slowModeLabel": "Langsambetrieb",
-    "slowModeOff": "Aus"
+    "slowModeOff": "Aus",
+    "edit": "Bearbeiten",
+    "editInput": "Nachricht bearbeiten",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "edited": "editiert",
+    "react": "Reaktion",
+    "pin": "Anheften",
+    "unpin": "Stachel",
+    "pinned": "Gepinnt:",
+    "announcement": "Ankündigung:",
+    "online": "Online in diesem Raum",
+    "nobodyOnline": "Niemand sonst im Moment.",
+    "rooms": {
+      "create": "Raum schaffen",
+      "name": "Zimmername",
+      "type": "Typ",
+      "public": "Öffentlich (jeder kann es sehen)",
+      "private": "Privat (nur eingeladen)",
+      "invite": "Einladen",
+      "inviteHint": "Namen durch Kommas getrennt",
+      "submit": "Erstellen",
+      "publicTitle": "Zimmer",
+      "privateTitle": "Privatzimmer",
+      "rename": "Name",
+      "inviteMore": "Einladen",
+      "leave": "Ausstiegsraum",
+      "delete": "Löschraum",
+      "confirmDelete": "Der Raum und seine Nachrichten werden dauerhaft gelöscht.",
+      "done": "Geschehen.",
+      "members": "Zimmermitglieder"
+    },
+    "announce": {
+      "title": "Globale Ankündigung",
+      "body": "Ankündigungstext",
+      "hours": "Dauer (Stunden, leer = bis entfernt)",
+      "submit": "Ankündigung veröffentlichen",
+      "done": "Die Ankündigung ist jetzt in jedem Raum."
+    }
   },
   "online": {
     "title": "Wer ist online",
@@ -1963,6 +2007,30 @@
       "posts": "Beiträge",
       "members": "Mitglieder",
       "vip": "VIP-Mitglieder"
-    }
+    },
+    "allOnline": "Alle Online-Mitglieder ansehen"
+  },
+  "members": {
+    "title": "Mitglieder",
+    "staffTitle": "Team",
+    "filters": "Filter",
+    "search": "Suche nach Namen",
+    "group": "Gruppe",
+    "allGroups": "Alle Gruppen",
+    "sort": "Sortieren nach",
+    "sorts": {
+      "joined": "Neueste",
+      "posts": "Beiträge",
+      "reputation": "Ansehen",
+      "name": "Name"
+    },
+    "onlineOnly": "Nur online",
+    "apply": "Anwenden",
+    "empty": "Keine Mitglieder gefunden.",
+    "forbidden": "Sie haben keinen Zugriff auf die Mitgliederliste.",
+    "online": "Jetzt online",
+    "posts": "Beiträge",
+    "reputation": "Ansehen",
+    "joined": "Mitglied seit {date}"
   }
 }

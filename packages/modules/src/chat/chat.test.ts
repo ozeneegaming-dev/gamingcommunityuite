@@ -169,3 +169,104 @@ describe("GcsChatService / GcsChatQueries", () => {
     }
   });
 });
+
+describe("chat v2 (etapa 5)", () => {
+  test("un membru fără drept nu creează camere; cu permisiune individuală poate", async () => {
+    const a = await member("Ana");
+    await expect(chat.createRoom(a, { name: "Echipa mea", type: "PUBLIC" })).rejects.toBeInstanceOf(GcsForbidden);
+    await expect(chat.createRoom(a, { name: "Echipa mea", type: "PRIVATE" })).rejects.toBeInstanceOf(GcsForbidden);
+    await w.permissions.setUserPermission(w.root, a.userId!, "chat.create_public", true);
+    const room = await chat.createRoom(await w.actorFor({ id: a.userId! }), { name: "Echipa mea", type: "PUBLIC" });
+    expect(room).toMatchObject({ name: "Echipa mea", type: "PUBLIC", ownerId: a.userId });
+    expect(room.key).toMatch(/^echipa-mea-[a-z0-9]{6}$/);
+    expect((await queries.channels(await member("Bogdan"))).map((c) => c.key)).toContain(room.key);
+  });
+
+  test("o cameră privată: un necunoscut nu o vede și nu intră; invitatul da; proprietarul o redenumește și o șterge", async () => {
+    const vip = await member("Vip", "vip_gold");
+    const guest = await member("Invitat");
+    const stranger = await member("Strain");
+    const room = await chat.createRoom(vip, { name: "Secret", type: "PRIVATE", invite: ["Invitat"] });
+    expect(room.type).toBe("PRIVATE");
+
+    expect((await queries.channels(stranger)).map((c) => c.key)).not.toContain(room.key);
+    expect(await queries.canRead(stranger, room.key)).toBe(false);
+    await expect(queries.recent(stranger, room.key)).rejects.toThrow();
+    await expect(chat.send(stranger, room.key, "intru")).rejects.toThrow();
+
+    expect(await queries.canRead(guest, room.key)).toBe(true);
+    await chat.send(guest, room.key, "salut");
+    expect((await queries.roomMembers(vip, room.key)).map((u) => u.name).sort()).toEqual(["Invitat", "Vip"]);
+
+    await expect(chat.rename(guest, room.key, "Furat")).rejects.toBeInstanceOf(GcsForbidden);
+    await chat.rename(vip, room.key, "Secret 2");
+    await chat.invite(vip, room.key, [stranger.userId!]);
+    expect(await queries.canRead(stranger, room.key)).toBe(true);
+    await chat.leave(stranger, room.key);
+    expect(await queries.canRead(stranger, room.key)).toBe(false);
+    await chat.deleteRoom(vip, room.key);
+    expect(await w.db.chatChannel.findUnique({ where: { key: room.key } })).toBeNull();
+  });
+
+  test("editarea: doar autorul, doar în 5 minute; mesajul e marcat „editat”", async () => {
+    const a = await member("Ana");
+    const b = await member("Bogdan");
+    const m = await chat.send(a, "general", "greseala");
+    await expect(chat.edit(b, m.id, "alt text")).rejects.toBeInstanceOf(GcsForbidden);
+    const edited = await chat.edit(a, m.id, "corect");
+    expect(edited).toMatchObject({ body: "corect" });
+    expect(edited.editedAt).not.toBeNull();
+    await expect(chat.edit(a, m.id, "tarziu", Date.now() + 6 * 60_000)).rejects.toMatchObject({ params: { reason: "edit_window" } });
+  });
+
+  test("reacțiile sunt unice pe user și pe reacție; a doua apăsare o retrage", async () => {
+    const a = await member("Ana");
+    const b = await member("Bogdan");
+    const m = await chat.send(a, "general", "gg");
+    const [like, other] = await w.db.reaction.findMany({ where: { enabled: true }, orderBy: { id: "asc" }, take: 2 });
+    await chat.react(b, m.id, like!.id);
+    await chat.react(a, m.id, like!.id);
+    expect(await chat.react(b, m.id, other!.id)).toEqual([
+      { reactionId: like!.id, count: 2 },
+      { reactionId: other!.id, count: 1 },
+    ]);
+    expect(await chat.react(b, m.id, like!.id)).toEqual([
+      { reactionId: like!.id, count: 1 },
+      { reactionId: other!.id, count: 1 },
+    ]);
+    await expect(chat.react(b, m.id, 999_999)).rejects.toThrow();
+    const [view] = await queries.recent(b, "general");
+    expect(view).toMatchObject({ mine: [other!.id] });
+  });
+
+  test("anunțul global apare în toate camerele; fixarea și anunțurile cer `chat.announce`", async () => {
+    const a = await member("Ana");
+    await chat.createChannel(w.root, { key: "offtopic", name: "Offtopic" });
+    await expect(chat.announce(a, "nu am voie", 60)).rejects.toBeInstanceOf(GcsForbidden);
+
+    const sub = new Redis(inject("redisUrl"));
+    const events: { room: string; event: string }[] = [];
+    await sub.subscribe(REALTIME_CHANNEL);
+    sub.on("message", (_c, raw: string) => events.push(JSON.parse(raw) as { room: string; event: string }));
+    await chat.announce(staff, "Turneu sâmbătă la 20:00!", 120);
+    await new Promise((r) => setTimeout(r, 150));
+    sub.disconnect();
+    expect(events.filter((e) => e.event === "announcement").map((e) => e.room).sort()).toEqual(["chat:general", "chat:offtopic"]);
+    expect((await queries.announcements()).map((x) => x.body)).toEqual(["Turneu sâmbătă la 20:00!"]);
+
+    const m = await chat.send(a, "general", "regulament");
+    await expect(chat.pin(a, "general", m.id)).rejects.toBeInstanceOf(GcsForbidden);
+    await chat.pin(staff, "general", m.id);
+    expect(await queries.pinned(a, "general")).toMatchObject({ id: m.id });
+  });
+
+  test("mențiunea @nume produce o notificare `chat.mention` pentru cel menționat", async () => {
+    const { registerChatNotifications } = await import("./notify");
+    registerChatNotifications({ db: w.db, bus: w.bus, notifications: w.notifications, chatQueries: queries, actors: w.actors });
+    const a = await member("Ana");
+    const b = await member("Bogdan");
+    await chat.send(a, "general", "@Bogdan vino în joc");
+    const rows = await w.db.notification.findMany({ where: { userId: b.userId!, type: "chat.mention" } });
+    expect(rows).toHaveLength(1);
+  });
+});

@@ -74,7 +74,9 @@ import { createRegistry } from "./registry";
 import { GcsVipService } from "./vip/vip";
 import { GcsConversationService } from "./messages/conversations";
 import { GcsConversationQueries } from "./messages/queries";
+import { GcsMemberList } from "./profile/members";
 import { GcsPostbitService } from "./profile/postbit";
+import { registerChatNotifications } from "./chat/notify";
 
 export type GcsServices = {
   db: PrismaClient;
@@ -103,6 +105,7 @@ export type GcsServices = {
   themes: GcsThemeService;
   stats: GcsStatsService;
   postbit: GcsPostbitService;
+  memberList: GcsMemberList;
   chatQueries: GcsChatQueries;
   bans: GcsBanService;
   warnings: GcsWarningService;
@@ -337,6 +340,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const chatQueries = new GcsChatQueries({ db, permissions });
   const realtimeRooms = new GcsRealtimeRooms({ permissions, forumQueries });
   realtimeRooms.register("chat", (actor, key) => chatQueries.canRead(actor, key));
+  registerChatNotifications({ db, bus, notifications, chatQueries, actors });
   registerLiveEvents(bus, { db, realtime });
 
   // Butonul „Traduce” (etapa 5): conținutul membrilor, cu verificarea accesului fiecărui tip.
@@ -391,6 +395,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     themes: new GcsThemeService({ db, cache, bus, acp }),
     stats: new GcsStatsService({ db, cache, registry, apps }),
     postbit: new GcsPostbitService({ db, cache, permissions, settings }),
+    memberList: new GcsMemberList({ db, permissions, ranks }),
     bans,
     warnings,
     actors,

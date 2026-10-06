@@ -105,11 +105,16 @@ export async function GcsStatsPanel({ id }: { id: string }) {
         )}
       </ul>
       <div className="gcs-statsPanel__sections">
-        <GcsWhoIsOnline
-          initial={online}
-          locale={locale}
-          labels={{ title: tOnline("title"), summary: tOnline.raw("summary") as string, record: tOnline.raw("record") as string, nobody: tOnline("nobody") }}
-        />
+        <div className="gcs-statsPanel__section">
+          <GcsWhoIsOnline
+            initial={online}
+            locale={locale}
+            labels={{ title: tOnline("title"), summary: tOnline.raw("summary") as string, record: tOnline.raw("record") as string, nobody: tOnline("nobody") }}
+          />
+          <Link href="/members?online=1" className="gcs-statsPanel__more" data-testid="gcs-stats-all-online">
+            {t("allOnline")}
+          </Link>
+        </div>
         <div className="gcs-statsPanel__section">
           <h3>{t("onlineDay")}</h3>
           <p className="gcs-sideCard__line">{t("onlineDaySummary", { members: day.total })}</p>

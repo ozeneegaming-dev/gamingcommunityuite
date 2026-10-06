@@ -6,7 +6,7 @@ export const PRESENCE_WINDOW_MS = 5 * 60_000;
 const USERS_KEY = "gcs:presence:users";
 const GUESTS_KEY = "gcs:presence:guests";
 const RECORD_KEY = "gcs:presence:record";
-const topicKey = (topicId: number) => `gcs:presence:topic:${topicId}`;
+const roomKey = (room: string) => `gcs:presence:${room}`;
 
 export type GcsPresenceViewer = { userId: string } | { guestId: string };
 export type GcsPresenceRecord = { count: number; at: Date };
@@ -69,7 +69,12 @@ export class GcsPresenceService {
   }
 
   async touchTopic(topicId: number, viewer: GcsPresenceViewer, now = Date.now()): Promise<void> {
-    const key = topicKey(topicId);
+    await this.touchRoom(`topic:${topicId}`, viewer, now);
+  }
+
+  /** Prezența într-o cameră (topic sau cameră de chat): cine e în ea în ultimele 5 minute. */
+  async touchRoom(room: string, viewer: GcsPresenceViewer, now = Date.now()): Promise<void> {
+    const key = roomKey(room);
     const member = "userId" in viewer ? `u:${viewer.userId}` : `g:${viewer.guestId}`;
     await this.deps.redis
       .multi()
@@ -80,7 +85,11 @@ export class GcsPresenceService {
   }
 
   async leaveTopic(topicId: number, viewer: GcsPresenceViewer): Promise<void> {
-    await this.deps.redis.zrem(topicKey(topicId), "userId" in viewer ? `u:${viewer.userId}` : `g:${viewer.guestId}`);
+    await this.leaveRoom(`topic:${topicId}`, viewer);
+  }
+
+  async leaveRoom(room: string, viewer: GcsPresenceViewer): Promise<void> {
+    await this.deps.redis.zrem(roomKey(room), "userId" in viewer ? `u:${viewer.userId}` : `g:${viewer.guestId}`);
   }
 
   /** Membrii online (cei mai recenți întâi; filtrarea celor ascunși o face cine afișează), vizitatorii și recordul. */
@@ -97,7 +106,12 @@ export class GcsPresenceService {
   }
 
   async topicReaders(topicId: number, now = Date.now()): Promise<{ users: string[]; guests: number }> {
-    const members = await this.deps.redis.zrevrangebyscore(topicKey(topicId), "+inf", now - PRESENCE_WINDOW_MS);
+    return this.roomMembers(`topic:${topicId}`, now);
+  }
+
+  /** Cine e într-o cameră (cei mai recenți întâi) și câți vizitatori. */
+  async roomMembers(room: string, now = Date.now()): Promise<{ users: string[]; guests: number }> {
+    const members = await this.deps.redis.zrevrangebyscore(roomKey(room), "+inf", now - PRESENCE_WINDOW_MS);
     return {
       users: members.filter((m) => m.startsWith("u:")).map((m) => m.slice(2)),
       guests: members.filter((m) => m.startsWith("g:")).length,

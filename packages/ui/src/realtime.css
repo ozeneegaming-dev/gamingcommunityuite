@@ -245,3 +245,176 @@
   font-size: 13px;
   color: var(--gcs-warn);
 }
+
+/* Chat v2 (etapa 5): pagina cu camere, reacții, editare, mesajul fixat, anunțuri, lista celor online. */
+.gcs-chatPage {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr) 280px;
+  gap: 20px;
+  align-items: start;
+}
+.gcs-chatRooms {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gcs-chatRooms__title {
+  margin: 8px 0 4px;
+  font: 700 11px var(--gcs-font-text);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gcs-muted);
+}
+.gcs-chatRooms__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.gcs-chatRooms__link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 10px;
+  border-radius: 8px;
+  color: var(--gcs-text);
+  font-weight: 600;
+  font-size: 14px;
+}
+.gcs-chatRooms__link:hover,
+.gcs-chatRooms__link--active {
+  background: var(--gcs-surface2);
+}
+.gcs-chatRooms__link svg {
+  color: var(--gcs-muted);
+}
+.gcs-chatRooms__create {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-surface);
+}
+.gcs-chatRooms__types {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 13px;
+}
+.gcs-chatPage__main {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.gcs-chatPage__head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gcs-chatPage__side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.gcs-chatRoomTools {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gcs-chatRoomTools__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.gcs-chat__announcement,
+.gcs-chat__pinned {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+.gcs-chat__announcement {
+  background: color-mix(in srgb, var(--gcs-warn) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gcs-warn) 40%, transparent);
+}
+.gcs-chat__pinned {
+  background: var(--gcs-surface2);
+  border: 1px solid var(--gcs-border);
+}
+.gcs-chat__edited {
+  font-size: 11px;
+  color: var(--gcs-muted);
+}
+.gcs-chat__edit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1 1 240px;
+}
+.gcs-chat__edit .gcs-input {
+  flex: 1 1 160px;
+}
+.gcs-chat__reactions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.gcs-chat__reaction {
+  padding: 1px 8px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 999px;
+  background: var(--gcs-surface2);
+  color: var(--gcs-text);
+  font-size: 12px;
+  cursor: pointer;
+}
+.gcs-chat__reaction--mine {
+  border-color: var(--gcs-accent);
+}
+.gcs-chat__picker {
+  position: relative;
+}
+/* Inline (nu suspendat): lista de mesaje derulează și ar tăia un popup deasupra primului mesaj. */
+.gcs-chat__pickerList {
+  display: inline-flex;
+  margin-left: 6px;
+  vertical-align: middle;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-surface);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.3);
+}
+.gcs-chat__pickerList button {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font-size: 18px;
+  cursor: pointer;
+}
+.gcs-chat__pickerList button:hover,
+.gcs-chat__pickerList button:focus-visible {
+  background: var(--gcs-surface2);
+}
+@media (max-width: 1100px) {
+  .gcs-chatPage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

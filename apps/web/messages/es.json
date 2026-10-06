@@ -1245,7 +1245,10 @@
       "read": "Lee el canal",
       "write": "Escribe en el canal",
       "moderate": "Moderados chat (delete, mudo, modo lento)",
-      "flood_seconds": "Pausa entre mensajes de chat (segundos)"
+      "flood_seconds": "Pausa entre mensajes de chat (segundos)",
+      "create_public": "Crear salas de chat públicos",
+      "create_private": "Crear salas de chat privadas (con invitaciones)",
+      "announce": "Pin mensajes y publicar anuncios de chat"
     }
   },
   "profile": {
@@ -1781,6 +1784,9 @@
       },
       "core": {
         "warning": "Advertencias"
+      },
+      "chat": {
+        "mention": "Menciones de chat"
       }
     }
   },
@@ -1800,7 +1806,45 @@
     "slowMode": "Modo lento: un mensaje cada {seconds} s.",
     "readOnly": "Sólo puedes leer este canal.",
     "slowModeLabel": "Modo lento",
-    "slowModeOff": "Desactivado"
+    "slowModeOff": "Desactivado",
+    "edit": "Editar",
+    "editInput": "Editar mensaje",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "edited": "editado",
+    "react": "Reacción",
+    "pin": "Fijar",
+    "unpin": "Unpin",
+    "pinned": "Pinned:",
+    "announcement": "Anuncio:",
+    "online": "Online en esta habitación",
+    "nobodyOnline": "Nadie más ahora.",
+    "rooms": {
+      "create": "Crear habitación",
+      "name": "Nombre de la habitación",
+      "type": "Tipo",
+      "public": "Público (todo el mundo puede verlo)",
+      "private": "Privado (invitado únicamente)",
+      "invite": "Invitar",
+      "inviteHint": "Nombres separados por comas",
+      "submit": "Crear",
+      "publicTitle": "Habitaciones",
+      "privateTitle": "Habitaciones privadas",
+      "rename": "Rename",
+      "inviteMore": "Invitar",
+      "leave": "Sala de descanso",
+      "delete": "Borrar la habitación",
+      "confirmDelete": "La habitación y sus mensajes se eliminan permanentemente.",
+      "done": "Hecho.",
+      "members": "Miembros de las habitaciones"
+    },
+    "announce": {
+      "title": "Anuncio mundial",
+      "body": "Texto del anuncio",
+      "hours": "Duración (horas, vacías = hasta removidas)",
+      "submit": "Publicar el anuncio",
+      "done": "El anuncio está ahora en cada habitación."
+    }
   },
   "online": {
     "title": "Quién está en línea",
@@ -1963,6 +2007,30 @@
       "posts": "Mensajes",
       "members": "Miembros",
       "vip": "Miembros VIP"
-    }
+    },
+    "allOnline": "Ver todos los miembros en línea →"
+  },
+  "members": {
+    "title": "Miembros",
+    "staffTitle": "Equipo",
+    "filters": "Filtros",
+    "search": "Búsqueda por nombre",
+    "group": "Grupo",
+    "allGroups": "Todos los grupos",
+    "sort": "Ordenar por",
+    "sorts": {
+      "joined": "Más reciente",
+      "posts": "Mensajes",
+      "reputation": "Reputación",
+      "name": "Nombre"
+    },
+    "onlineOnly": "Sólo en línea",
+    "apply": "Aplicar",
+    "empty": "No hay miembros encontrados.",
+    "forbidden": "Usted no tiene acceso a la lista de miembros.",
+    "online": "En línea",
+    "posts": "Mensajes",
+    "reputation": "Reputación",
+    "joined": "Miembro desde {date}"
   }
 }

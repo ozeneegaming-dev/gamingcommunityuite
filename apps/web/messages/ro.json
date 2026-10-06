@@ -1245,7 +1245,10 @@
       "read": "Citește canalul",
       "write": "Scrie în canal",
       "moderate": "Moderează chat-ul (șterge, mute, slow mode)",
-      "flood_seconds": "Pauză între mesajele de chat (secunde)"
+      "flood_seconds": "Pauză între mesajele de chat (secunde)",
+      "create_public": "Creează camere de chat publice",
+      "create_private": "Creează camere de chat private (cu invitați)",
+      "announce": "Fixează mesaje și publică anunțuri în chat"
     }
   },
   "profile": {
@@ -1781,6 +1784,9 @@
       },
       "core": {
         "warning": "Avertismente"
+      },
+      "chat": {
+        "mention": "Mențiuni în chat"
       }
     }
   },
@@ -1800,7 +1806,45 @@
     "slowMode": "Slow mode: un mesaj la {seconds} s.",
     "readOnly": "Poți doar citi acest canal.",
     "slowModeLabel": "Slow mode",
-    "slowModeOff": "Oprit"
+    "slowModeOff": "Oprit",
+    "edit": "Editează",
+    "editInput": "Editează mesajul",
+    "save": "Salvează",
+    "cancel": "Anulează",
+    "edited": "editat",
+    "react": "Reacție",
+    "pin": "Fixează",
+    "unpin": "Scoate fixarea",
+    "pinned": "Fixat:",
+    "announcement": "Anunț:",
+    "online": "Online în cameră",
+    "nobodyOnline": "Nimeni altcineva acum.",
+    "rooms": {
+      "create": "Creează cameră",
+      "name": "Numele camerei",
+      "type": "Tipul",
+      "public": "Publică (oricine o vede)",
+      "private": "Privată (doar invitații)",
+      "invite": "Invitați",
+      "inviteHint": "Nume separate prin virgulă",
+      "submit": "Creează",
+      "publicTitle": "Camere",
+      "privateTitle": "Camere private",
+      "rename": "Redenumește",
+      "inviteMore": "Invită",
+      "leave": "Ieși din cameră",
+      "delete": "Șterge camera",
+      "confirmDelete": "Camera și mesajele ei se șterg definitiv.",
+      "done": "Gata.",
+      "members": "Membrii camerei"
+    },
+    "announce": {
+      "title": "Anunț global",
+      "body": "Textul anunțului",
+      "hours": "Durata (ore, gol = până la ștergere)",
+      "submit": "Publică anunțul",
+      "done": "Anunțul a apărut în toate camerele."
+    }
   },
   "online": {
     "title": "Cine e online",
@@ -1963,6 +2007,30 @@
       "posts": "Postări",
       "members": "Membri",
       "vip": "Membri VIP"
-    }
+    },
+    "allOnline": "Vezi toți membrii online →"
+  },
+  "members": {
+    "title": "Membri",
+    "staffTitle": "Echipa",
+    "filters": "Filtre",
+    "search": "Caută după nume",
+    "group": "Grup",
+    "allGroups": "Toate grupurile",
+    "sort": "Ordonează după",
+    "sorts": {
+      "joined": "Cei mai noi",
+      "posts": "Postări",
+      "reputation": "Reputație",
+      "name": "Nume"
+    },
+    "onlineOnly": "Doar cei online",
+    "apply": "Aplică",
+    "empty": "Niciun membru găsit.",
+    "forbidden": "Nu ai acces la lista de membri.",
+    "online": "Online acum",
+    "posts": "Postări",
+    "reputation": "Reputație",
+    "joined": "Membru din {date}"
   }
 }

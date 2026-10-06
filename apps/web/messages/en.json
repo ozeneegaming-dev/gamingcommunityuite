@@ -1245,7 +1245,10 @@
       "read": "Reads the channel",
       "write": "Writes in the channel",
       "moderate": "Moderates chat (delete, mute, slow mode)",
-      "flood_seconds": "Pause between chat messages (seconds)"
+      "flood_seconds": "Pause between chat messages (seconds)",
+      "create_public": "Create public chat rooms",
+      "create_private": "Create private chat rooms (with invites)",
+      "announce": "Pin messages and publish chat announcements"
     }
   },
   "profile": {
@@ -1781,6 +1784,9 @@
       },
       "core": {
         "warning": "Warnings"
+      },
+      "chat": {
+        "mention": "Chat mentions"
       }
     }
   },
@@ -1800,7 +1806,45 @@
     "slowMode": "Slow mode: one message every {seconds} s.",
     "readOnly": "You can only read this channel.",
     "slowModeLabel": "Slow mode",
-    "slowModeOff": "Off"
+    "slowModeOff": "Off",
+    "edit": "Edit",
+    "editInput": "Edit message",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edited": "edited",
+    "react": "React",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "pinned": "Pinned:",
+    "announcement": "Announcement:",
+    "online": "Online in this room",
+    "nobodyOnline": "Nobody else right now.",
+    "rooms": {
+      "create": "Create room",
+      "name": "Room name",
+      "type": "Type",
+      "public": "Public (everyone can see it)",
+      "private": "Private (invited only)",
+      "invite": "Invite",
+      "inviteHint": "Names separated by commas",
+      "submit": "Create",
+      "publicTitle": "Rooms",
+      "privateTitle": "Private rooms",
+      "rename": "Rename",
+      "inviteMore": "Invite",
+      "leave": "Leave room",
+      "delete": "Delete room",
+      "confirmDelete": "The room and its messages are deleted permanently.",
+      "done": "Done.",
+      "members": "Room members"
+    },
+    "announce": {
+      "title": "Global announcement",
+      "body": "Announcement text",
+      "hours": "Duration (hours, empty = until removed)",
+      "submit": "Publish announcement",
+      "done": "The announcement is now in every room."
+    }
   },
   "online": {
     "title": "Who's online",
@@ -1963,6 +2007,30 @@
       "posts": "Posts",
       "members": "Members",
       "vip": "VIP members"
-    }
+    },
+    "allOnline": "See all online members →"
+  },
+  "members": {
+    "title": "Members",
+    "staffTitle": "Staff",
+    "filters": "Filters",
+    "search": "Search by name",
+    "group": "Group",
+    "allGroups": "All groups",
+    "sort": "Sort by",
+    "sorts": {
+      "joined": "Newest",
+      "posts": "Posts",
+      "reputation": "Reputation",
+      "name": "Name"
+    },
+    "onlineOnly": "Online only",
+    "apply": "Apply",
+    "empty": "No members found.",
+    "forbidden": "You do not have access to the member list.",
+    "online": "Online now",
+    "posts": "Posts",
+    "reputation": "Reputation",
+    "joined": "Member since {date}"
   }
 }

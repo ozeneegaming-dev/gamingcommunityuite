@@ -597,3 +597,15 @@
   align-items: center;
   gap: 6px;
 }
+.gcs-statsPanel__sections > .gcs-statsPanel__section > .gcs-sideCard {
+  background: none;
+  border: 0;
+  padding: 0;
+  box-shadow: none;
+}
+.gcs-statsPanel__more {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}

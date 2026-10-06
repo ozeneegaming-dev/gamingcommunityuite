@@ -1245,7 +1245,10 @@
       "read": "Lit le canal",
       "write": "Écrit dans le canal",
       "moderate": "Chats modérés (supprimer, muet, lent)",
-      "flood_seconds": "Pause entre les messages de chat (secondes)"
+      "flood_seconds": "Pause entre les messages de chat (secondes)",
+      "create_public": "Créer des salles de chat public",
+      "create_private": "Créer des salons de chat privés (avec invitations)",
+      "announce": "Épingler les messages et publier les annonces de chat"
     }
   },
   "profile": {
@@ -1781,6 +1784,9 @@
       },
       "core": {
         "warning": "Avertissements"
+      },
+      "chat": {
+        "mention": "Discussion mentions"
       }
     }
   },
@@ -1800,7 +1806,45 @@
     "slowMode": "Mode lent : un message chaque {seconds} s.",
     "readOnly": "Vous pouvez seulement lire cette chaîne.",
     "slowModeLabel": "Mode lent",
-    "slowModeOff": "Désactivé"
+    "slowModeOff": "Désactivé",
+    "edit": "Modifier",
+    "editInput": "Modifier le message",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "edited": "édité",
+    "react": "Réagir",
+    "pin": "Épingler",
+    "unpin": "Débrancher",
+    "pinned": "Pinnés :",
+    "announcement": "Avis :",
+    "online": "En ligne dans cette pièce",
+    "nobodyOnline": "Personne d'autre.",
+    "rooms": {
+      "create": "Créer une pièce",
+      "name": "Nom de la chambre",
+      "type": "Type",
+      "public": "Public (tout le monde peut le voir)",
+      "private": "Privé (invité seulement)",
+      "invite": "Inviter",
+      "inviteHint": "Noms séparés par des virgules",
+      "submit": "Créer",
+      "publicTitle": "Chambres",
+      "privateTitle": "Chambres privées",
+      "rename": "Renommer",
+      "inviteMore": "Inviter",
+      "leave": "Laissez la place",
+      "delete": "Supprimer la pièce",
+      "confirmDelete": "La salle et ses messages sont supprimés en permanence.",
+      "done": "C'est fait.",
+      "members": "Membres de la salle"
+    },
+    "announce": {
+      "title": "Annonce mondiale",
+      "body": "Texte annoncé",
+      "hours": "Durée (heures, vide = jusqu'à suppression)",
+      "submit": "Publier une annonce",
+      "done": "L'annonce est maintenant dans toutes les salles."
+    }
   },
   "online": {
     "title": "Qui est en ligne ",
@@ -1963,6 +2007,30 @@
       "posts": "Messages",
       "members": "Membres",
       "vip": "Membres VIP"
-    }
+    },
+    "allOnline": "Voir tous les membres en ligne →"
+  },
+  "members": {
+    "title": "Membres",
+    "staffTitle": "Équipe",
+    "filters": "Filtres",
+    "search": "Recherche par nom",
+    "group": "Groupe",
+    "allGroups": "Tous les groupes",
+    "sort": "Trier par",
+    "sorts": {
+      "joined": "Plus récent",
+      "posts": "Messages",
+      "reputation": "Réputation",
+      "name": "Nom"
+    },
+    "onlineOnly": "En ligne seulement",
+    "apply": "Appliquer",
+    "empty": "Aucun membre trouvé.",
+    "forbidden": "Vous n'avez pas accès à la liste des membres.",
+    "online": "En ligne maintenant",
+    "posts": "Messages",
+    "reputation": "Réputation",
+    "joined": "Membre depuis {date}"
   }
 }

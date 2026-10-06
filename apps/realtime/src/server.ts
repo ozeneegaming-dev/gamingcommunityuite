@@ -16,6 +16,8 @@ import { Server, type Socket } from "socket.io";
 const HEARTBEAT_MS = 30_000;
 const TYPING_THROTTLE_MS = 3_000;
 const TOPIC_ROOM = /^topic:(\d+)$/;
+/** Camerele cu listă de prezență: topicurile („Citesc acum”) și camerele de chat (lista celor online). */
+const TRACKED_ROOM = /^(?:topic:\d+|chat:[a-z0-9][a-z0-9-]{1,40})$/;
 /** Lista „Citesc acum” se trimite cel mult o dată pe secundă pe topic. */
 const READERS_DEBOUNCE_MS = 1_000;
 
@@ -70,21 +72,24 @@ export function createRealtimeServer(opts: { services: GcsServices; secret: stri
     if (msg) io.local.to(msg.room).emit(msg.event, msg.data);
   });
 
-  // „Citesc acum”: după intrări și ieșiri, camera topicului primește lista cititorilor (fără cei cu statusul ascuns).
-  const readerTimers = new Map<number, NodeJS.Timeout>();
-  const broadcastReaders = (topicId: number) => {
-    if (readerTimers.has(topicId)) return;
+  // Prezența în cameră: după intrări și ieșiri, camera primește lista celor prezenți (fără cei cu statusul ascuns).
+  // Topicurile o primesc ca „Citesc acum” (`topicId`), camerele de chat ca lista celor online (`channel`).
+  const readerTimers = new Map<string, NodeJS.Timeout>();
+  const broadcastReaders = (room: string) => {
+    if (readerTimers.has(room)) return;
     const timer = setTimeout(() => {
-      readerTimers.delete(topicId);
+      readerTimers.delete(room);
       void (async () => {
-        const readers = await services.presence.topicReaders(topicId);
+        const readers = await services.presence.roomMembers(room);
         const rows = await services.db.user.findMany({ where: { id: { in: readers.users } }, select: { ...userRefSelect, privacy: true } });
         const users = rows.filter((r) => normalizePrivacy(r.privacy).showOnline).map((r) => toRef(r));
-        io.to(`topic:${topicId}`).emit("readers", { topicId, users, guests: readers.guests });
-      })().catch((error: unknown) => log("Lista cititorilor nu a putut fi trimisă", error));
+        const topic = TOPIC_ROOM.exec(room);
+        const payload = topic ? { topicId: Number(topic[1]), users, guests: readers.guests } : { channel: room.slice(5), users, guests: readers.guests };
+        io.to(room).emit("readers", payload);
+      })().catch((error: unknown) => log("Lista celor prezenți nu a putut fi trimisă", error));
     }, READERS_DEBOUNCE_MS);
     timer.unref();
-    readerTimers.set(topicId, timer);
+    readerTimers.set(room, timer);
   };
 
   io.use((socket: GcsSocket, next) => {
@@ -119,10 +124,9 @@ export function createRealtimeServer(opts: { services: GcsServices; secret: stri
         .then(async (ok) => {
           if (ok) {
             await socket.join(room);
-            const topic = TOPIC_ROOM.exec(room);
-            if (topic) {
-              await services.presence.touchTopic(Number(topic[1]), viewer);
-              broadcastReaders(Number(topic[1]));
+            if (TRACKED_ROOM.test(room)) {
+              await services.presence.touchRoom(room, viewer);
+              broadcastReaders(room);
             }
           }
           reply({ ok });
@@ -136,8 +140,7 @@ export function createRealtimeServer(opts: { services: GcsServices; secret: stri
     socket.on("leave", (room: unknown) => {
       if (typeof room !== "string" || room.startsWith("user:") || room === "presence") return;
       void socket.leave(room);
-      const topic = TOPIC_ROOM.exec(room);
-      if (topic) void services.presence.leaveTopic(Number(topic[1]), viewer).then(() => broadcastReaders(Number(topic[1])), () => {});
+      if (TRACKED_ROOM.test(room)) void services.presence.leaveRoom(room, viewer).then(() => broadcastReaders(room), () => {});
     });
 
     socket.on("typing", (topicId: unknown) => {
@@ -158,15 +161,13 @@ export function createRealtimeServer(opts: { services: GcsServices; secret: stri
     socket.on("presence:ping", () => {
       void services.presence.touch(viewer).catch(() => {});
       for (const room of socket.rooms) {
-        const topic = TOPIC_ROOM.exec(room);
-        if (topic) void services.presence.touchTopic(Number(topic[1]), viewer).catch(() => {});
+        if (TRACKED_ROOM.test(room)) void services.presence.touchRoom(room, viewer).catch(() => {});
       }
     });
 
     socket.on("disconnecting", () => {
       for (const room of socket.rooms) {
-        const topic = TOPIC_ROOM.exec(room);
-        if (topic) void services.presence.leaveTopic(Number(topic[1]), viewer).then(() => broadcastReaders(Number(topic[1])), () => {});
+        if (TRACKED_ROOM.test(room)) void services.presence.leaveRoom(room, viewer).then(() => broadcastReaders(room), () => {});
       }
     });
   });

@@ -178,4 +178,17 @@ describe("gcs-realtime", () => {
     expect(await serviceStatus(services.redis, "realtime")).toMatchObject({ up: true });
     await second.close();
   });
+
+  test("o cameră de chat privată: un străin nu intră; membrii intră și primesc lista celor online", async () => {
+    const root = await services.actors.forUser(users.Root!, "127.0.0.1");
+    const room = await services.chat.createRoom(root, { name: "Privat", type: "PRIVATE", invite: [users.Ana!] });
+    const ana = await member("Ana");
+    const bogdan = await member("Bogdan");
+    expect(await join(bogdan, `chat:${room.key}`)).toEqual({ ok: false });
+    const readers = next<{ channel: string; users: { name: string }[] }>(ana, "readers", 3000);
+    expect(await join(ana, `chat:${room.key}`)).toEqual({ ok: true });
+    const list = await readers;
+    expect(list?.channel).toBe(room.key);
+    expect(list?.users.map((u) => u.name)).toEqual(["Ana"]);
+  });
 });

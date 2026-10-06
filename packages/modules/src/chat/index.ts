@@ -23,6 +23,10 @@ const permissions: GcsPermissionDef[] = [
   containerPermission("write", { ...MEMBERS }),
   // Șterge mesaje, dă mute, schimbă slow mode-ul.
   { key: "chat.moderate", scope: "group", labelKey: "permissions.chat.moderate", default: { ...STAFF } },
+  // Etapa 5: camerele create de membri (pe grup sau individual, din fișa membrului) și anunțurile.
+  { key: "chat.create_public", scope: "group", labelKey: "permissions.chat.create_public", default: { ...ADMINS } },
+  { key: "chat.create_private", scope: "group", labelKey: "permissions.chat.create_private", default: { ...STAFF, ...VIPS } },
+  { key: "chat.announce", scope: "group", labelKey: "permissions.chat.announce", default: { ...STAFF } },
   // Secunde între două mesaje. Mai puțin e mai permisiv, deci câștigă minimul.
   {
     key: "chat.flood_seconds",
@@ -85,6 +89,7 @@ export const chatModule: GcsModule = {
   settings,
   acpMenu,
   eventListeners: [],
+  notificationTypes: [{ key: "chat.mention", labelKey: "notifications.type.chat.mention", important: false, defaultEmail: "OFF" }],
   widgets: chatWidgets,
   seed: seedChat,
   seedDemo: seedChatDemo,

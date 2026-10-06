@@ -13,7 +13,8 @@ import {
   type GcsRedisRateLimiter,
   type GcsSettingsService,
 } from "@gcs/core";
-import type { ChatChannel, PrismaClient } from "@gcs/db";
+import { normalizeUsername } from "@gcs/core";
+import type { ChatChannel, ChatRoomType, PrismaClient } from "@gcs/db";
 import { toRef, userRefSelect, type GcsUserRef } from "../forums/queries";
 import { CHAT_ACP_CHANNELS, CHAT_CONTAINER, defaultChannelPermissions } from "./index";
 import { applyWordFilter, cleanChatText, renderChatText } from "./text";
@@ -22,8 +23,27 @@ export const CHAT_CLEANUP_JOB = "chat.cleanup";
 const KEY_RE = /^[a-z0-9][a-z0-9-]{1,31}$/;
 const MAX_SLOW_MODE = 3600;
 const MAX_RETENTION = 365;
+/** Autorul își poate edita mesajul 5 minute (specul etapei 5). */
+export const CHAT_EDIT_WINDOW_MS = 5 * 60_000;
+const MAX_OWNED_ROOMS = 10;
+const MAX_INVITES = 50;
+const MAX_MENTIONS = 10;
+const MENTION_RE = /(?:^|[^\p{L}\p{N}_])@([\p{L}\p{N}_.-]{2,40})/gu;
 
-export type GcsChatMessageView = { id: number; channel: string; author: GcsUserRef | null; body: string; html: string; createdAt: string };
+export type GcsChatReactionCount = { reactionId: number; count: number };
+export type GcsChatMessageView = {
+  id: number;
+  channel: string;
+  author: GcsUserRef | null;
+  body: string;
+  html: string;
+  createdAt: string;
+  editedAt: string | null;
+  reactions: GcsChatReactionCount[];
+  /** Reacțiile viewer-ului la mesaj. */
+  mine: number[];
+};
+export type GcsChatRoomInput = { name: string; type: ChatRoomType; invite?: string[] };
 export type GcsChatChannelInput = {
   key: string;
   name: string;
@@ -36,8 +56,44 @@ export type GcsChatChannelInput = {
 
 export const chatContainer = (key: string) => ({ type: CHAT_CONTAINER, id: key });
 
-export function toChatView(m: { id: number; body: string; createdAt: Date; author: Parameters<typeof toRef>[0] | null }, channel: string): GcsChatMessageView {
-  return { id: m.id, channel, author: m.author ? toRef(m.author) : null, body: m.body, html: renderChatText(m.body), createdAt: m.createdAt.toISOString() };
+type ChatMessageRow = {
+  id: number;
+  body: string;
+  createdAt: Date;
+  editedAt?: Date | null;
+  author: Parameters<typeof toRef>[0] | null;
+  reactions?: { userId: string; reactionId: number }[];
+};
+
+/** Reacțiile unui mesaj, numărate pe tip (ordinea primei apariții). */
+function countReactions(rows: { reactionId: number }[]): GcsChatReactionCount[] {
+  const counts = new Map<number, number>();
+  for (const r of rows) counts.set(r.reactionId, (counts.get(r.reactionId) ?? 0) + 1);
+  return [...counts].map(([reactionId, count]) => ({ reactionId, count }));
+}
+
+export function toChatView(m: ChatMessageRow, channel: string, viewerId: string | null = null): GcsChatMessageView {
+  const reactions = m.reactions ?? [];
+  return {
+    id: m.id,
+    channel,
+    author: m.author ? toRef(m.author) : null,
+    body: m.body,
+    html: renderChatText(m.body),
+    createdAt: m.createdAt.toISOString(),
+    editedAt: m.editedAt?.toISOString() ?? null,
+    reactions: countReactions(reactions),
+    mine: viewerId ? reactions.filter((r) => r.userId === viewerId).map((r) => r.reactionId) : [],
+  };
+}
+
+/** Cheia unei camere create de un membru: din nume, plus un sufix aleator (unică). */
+function roomKey(name: string): string {
+  const base = normalizeUsername(name)
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 20);
+  return `${base || "camera"}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 /**
@@ -63,6 +119,17 @@ export class GcsChatService {
     return channel;
   }
 
+  /** Camera e accesibilă actorului (la cele private: doar membrii); altfel „nu există”. */
+  private async accessible(actor: GcsActor, key: string): Promise<ChatChannel> {
+    const channel = await this.channel(key);
+    if (channel.type === "PRIVATE") {
+      const member = actor.userId ? await this.deps.db.chatRoomMember.findUnique({ where: { channelId_userId: { channelId: channel.id, userId: actor.userId } } }) : null;
+      if (!member) throw new GcsNotFound();
+    }
+    if (actor.isBanned || !(await this.deps.permissions.can(actor, "chat.read", chatContainer(channel.key)))) throw new GcsForbidden({ permission: "chat.read" });
+    return channel;
+  }
+
   async canModerate(actor: GcsActor): Promise<boolean> {
     return actor.userId !== null && !actor.isBanned && (await this.deps.permissions.can(actor, "chat.moderate"));
   }
@@ -81,7 +148,7 @@ export class GcsChatService {
 
   async send(actor: GcsActor, key: string, raw: unknown): Promise<GcsChatMessageView> {
     const { db, bus, permissions, settings, rateLimiter, realtime } = this.deps;
-    const channel = await this.channel(key);
+    const channel = await this.accessible(actor, key);
     if (!actor.userId || actor.isBanned || !(await permissions.can(actor, "chat.write", chatContainer(channel.key)))) {
       throw new GcsForbidden({ permission: "chat.write" });
     }
@@ -110,7 +177,219 @@ export class GcsChatService {
     const view = toChatView(message, channel.key);
     await bus.emit({ name: "chat.message", payload: { channelKey: channel.key, messageId: message.id, authorId: actor.userId }, tags: [`chat:${channel.key}`] });
     await realtime.publish(`chat:${channel.key}`, "message", view);
+    await this.mentions(channel, message.id, actor.userId, filtered);
     return view;
+  }
+
+  /**
+   * Mențiunile `@nume` dintr-un mesaj: cei menționați care pot citi camera primesc notificarea `chat.mention`
+   * (evenimentul îl transformă în notificare `registerChatNotifications`). Cel mult 10 pe mesaj.
+   */
+  private async mentions(channel: ChatChannel, messageId: number, authorId: string, body: string): Promise<void> {
+    const names = [...new Set([...body.matchAll(MENTION_RE)].map((m) => normalizeUsername(m[1]!)))].slice(0, MAX_MENTIONS);
+    if (names.length === 0) return;
+    const users = await this.deps.db.user.findMany({ where: { nameNormalized: { in: names }, id: { not: authorId } }, select: { id: true } });
+    if (users.length === 0) return;
+    await this.deps.bus.emit({ name: "chat.mention", payload: { channelKey: channel.key, messageId, authorId, userIds: users.map((u) => u.id) }, tags: [] });
+  }
+
+  /** Editarea propriului mesaj, în 5 minute; mesajul e marcat „editat”. */
+  async edit(actor: GcsActor, messageId: number, raw: unknown, now = Date.now()): Promise<GcsChatMessageView> {
+    const { db, settings, realtime } = this.deps;
+    const message = await db.chatMessage.findUnique({ where: { id: messageId }, include: { channel: { select: { key: true } } } });
+    if (!message || message.deletedAt) throw new GcsNotFound();
+    if (!actor.userId || message.authorId !== actor.userId || actor.isBanned) throw new GcsForbidden({ reason: "not_author" });
+    if (now - message.createdAt.getTime() > CHAT_EDIT_WINDOW_MS) throw new GcsForbidden({ reason: "edit_window" });
+    const channel = await this.accessible(actor, message.channel.key);
+    const mute = await this.activeMute(actor.userId, channel.id);
+    if (mute) throw new GcsForbidden({ reason: "muted" });
+    const body = cleanChatText(typeof raw === "string" ? raw : "");
+    if (!body) throw new GcsValidationError({ body: "required" });
+    const words = await settings.get<string[]>("chat.word_filter");
+    const updated = await db.chatMessage.update({
+      where: { id: messageId },
+      data: { body: applyWordFilter(body, Array.isArray(words) ? words : []), editedAt: new Date(now) },
+      include: { author: { select: userRefSelect }, reactions: { select: { userId: true, reactionId: true } } },
+    });
+    const view = toChatView(updated, channel.key);
+    await realtime.publish(`chat:${channel.key}`, "edited", view);
+    return view;
+  }
+
+  /** Reacție la un mesaj (setul de reacții al forumului): a doua apăsare o retrage; unică pe user și reacție. */
+  async react(actor: GcsActor, messageId: number, reactionId: number): Promise<GcsChatReactionCount[]> {
+    const { db, realtime } = this.deps;
+    if (!actor.userId || actor.isBanned) throw new GcsForbidden({ reason: "guest" });
+    const message = await db.chatMessage.findUnique({ where: { id: messageId }, include: { channel: { select: { key: true } } } });
+    if (!message || message.deletedAt) throw new GcsNotFound();
+    await this.accessible(actor, message.channel.key);
+    const reaction = Number.isInteger(reactionId) ? await db.reaction.findFirst({ where: { id: reactionId, enabled: true }, select: { id: true } }) : null;
+    if (!reaction) throw new GcsValidationError({ reactionId: "invalid_choice" });
+    const where = { messageId_userId_reactionId: { messageId, userId: actor.userId, reactionId } };
+    const existing = await db.chatMessageReaction.findUnique({ where });
+    if (existing) await db.chatMessageReaction.delete({ where });
+    else await db.chatMessageReaction.create({ data: { messageId, userId: actor.userId, reactionId } }).catch(() => undefined);
+    const reactions = countReactions(await db.chatMessageReaction.findMany({ where: { messageId }, orderBy: { createdAt: "asc" }, select: { reactionId: true } }));
+    await realtime.publish(`chat:${message.channel.key}`, "reactions", { id: messageId, reactions });
+    return reactions;
+  }
+
+  // ─── Anunțuri (staff: `chat.announce`) ─────────────────────────────────────
+
+  private async assertAnnouncer(actor: GcsActor): Promise<void> {
+    if (!actor.userId || actor.isBanned || !(await this.deps.permissions.can(actor, "chat.announce"))) throw new GcsForbidden({ permission: "chat.announce" });
+  }
+
+  /** Fixează un mesaj al camerei (sau scoate fixarea cu `null`). */
+  async pin(actor: GcsActor, key: string, messageId: number | null): Promise<void> {
+    const { db, realtime } = this.deps;
+    await this.assertAnnouncer(actor);
+    const channel = await this.accessible(actor, key);
+    let pinned: GcsChatMessageView | null = null;
+    if (messageId !== null) {
+      const message = await db.chatMessage.findUnique({ where: { id: messageId }, include: { author: { select: userRefSelect } } });
+      if (!message || message.deletedAt || message.channelId !== channel.id) throw new GcsNotFound();
+      pinned = toChatView(message, channel.key);
+    }
+    await db.$transaction(async (tx) => {
+      await tx.chatChannel.update({ where: { id: channel.id }, data: { pinnedMessageId: messageId } });
+      await writeAudit(tx, { actorId: actor.userId, action: "chat.pin", targetType: "chat_channel", targetId: channel.key, after: { messageId }, ip: actor.ip });
+    });
+    await realtime.publish(`chat:${channel.key}`, "pinned", { channel: channel.key, message: pinned });
+  }
+
+  /** Anunț global, afișat în toate camerele (`minutes: null` = până la ștergere). */
+  async announce(actor: GcsActor, raw: unknown, minutes: number | null): Promise<{ id: number }> {
+    const { db, realtime } = this.deps;
+    await this.assertAnnouncer(actor);
+    const body = cleanChatText(typeof raw === "string" ? raw : "");
+    if (!body) throw new GcsValidationError({ body: "required" });
+    if (minutes !== null && (!Number.isInteger(minutes) || minutes < 1 || minutes > 525_600)) throw new GcsValidationError({ minutes: "invalid_range" });
+    const expiresAt = minutes === null ? null : new Date(Date.now() + minutes * 60_000);
+    const row = await db.$transaction(async (tx) => {
+      const a = await tx.chatAnnouncement.create({ data: { body, createdById: actor.userId, expiresAt } });
+      await writeAudit(tx, { actorId: actor.userId, action: "chat.announce", targetType: "chat_announcement", targetId: String(a.id), after: { body, expiresAt }, ip: actor.ip });
+      return a;
+    });
+    const view = { id: row.id, body: row.body, expiresAt: row.expiresAt?.toISOString() ?? null, createdAt: row.createdAt.toISOString() };
+    for (const c of await db.chatChannel.findMany({ where: { enabled: true }, select: { key: true } })) {
+      await realtime.publish(`chat:${c.key}`, "announcement", view);
+    }
+    return { id: row.id };
+  }
+
+  async removeAnnouncement(actor: GcsActor, id: number): Promise<void> {
+    const { db, realtime } = this.deps;
+    await this.assertAnnouncer(actor);
+    const before = await db.chatAnnouncement.findUnique({ where: { id } });
+    if (!before) throw new GcsNotFound();
+    await db.$transaction(async (tx) => {
+      await tx.chatAnnouncement.delete({ where: { id } });
+      await writeAudit(tx, { actorId: actor.userId, action: "chat.announcement.delete", targetType: "chat_announcement", targetId: String(id), before, ip: actor.ip });
+    });
+    for (const c of await db.chatChannel.findMany({ where: { enabled: true }, select: { key: true } })) {
+      await realtime.publish(`chat:${c.key}`, "announcement:removed", { id });
+    }
+  }
+
+  // ─── Camerele membrilor (etapa 5) ──────────────────────────────────────────
+
+  /**
+   * O cameră nouă: publică cere `chat.create_public`, privată `chat.create_private` (pe grup sau individual).
+   * Creatorul e proprietarul; la o cameră privată, el și invitații sunt singurii membri.
+   */
+  async createRoom(actor: GcsActor, input: GcsChatRoomInput): Promise<ChatChannel> {
+    const { db, permissions } = this.deps;
+    if (input.type !== "PUBLIC" && input.type !== "PRIVATE") throw new GcsValidationError({ type: "invalid_choice" });
+    const permission = input.type === "PUBLIC" ? "chat.create_public" : "chat.create_private";
+    if (!actor.userId || actor.isBanned || !(await permissions.can(actor, permission))) throw new GcsForbidden({ permission });
+    const name = typeof input.name === "string" ? input.name.trim() : "";
+    if (name.length < 2 || name.length > 50) throw new GcsValidationError({ name: "invalid_length" });
+    if ((await db.chatChannel.count({ where: { ownerId: actor.userId } })) >= MAX_OWNED_ROOMS) throw new GcsValidationError({ name: "too_many" });
+    const invited = await this.inviteIds(actor.userId, input.invite ?? []);
+    const channel = await db.$transaction(async (tx) => {
+      const last = await tx.chatChannel.findFirst({ orderBy: { position: "desc" } });
+      const row = await tx.chatChannel.create({
+        data: { key: roomKey(name), name, type: input.type, ownerId: actor.userId, position: last ? last.position + 1 : 0, retentionDays: 30 },
+      });
+      const groups = new Map((await tx.group.findMany({ select: { id: true, key: true } })).map((g) => [g.key, g.id]));
+      await tx.containerPermission.createMany({ data: defaultChannelPermissions(groups, row.key), skipDuplicates: true });
+      if (input.type === "PRIVATE") {
+        await tx.chatRoomMember.createMany({
+          data: [{ channelId: row.id, userId: actor.userId! }, ...invited.map((userId) => ({ channelId: row.id, userId, invitedById: actor.userId }))],
+          skipDuplicates: true,
+        });
+      }
+      await writeAudit(tx, { actorId: actor.userId, action: "chat.room.create", targetType: "chat_channel", targetId: row.key, after: { name, type: input.type, invited }, ip: actor.ip });
+      return row;
+    });
+    await permissions.bumpVersion();
+    return channel;
+  }
+
+  /** Id-urile invitaților (după id sau nume), fără creator și fără conturi inexistente. */
+  private async inviteIds(ownerId: string, raw: string[]): Promise<string[]> {
+    const wanted = [...new Set(raw.filter((v) => typeof v === "string" && v.trim()).map((v) => v.trim()))].slice(0, MAX_INVITES);
+    if (wanted.length === 0) return [];
+    const rows = await this.deps.db.user.findMany({
+      where: { OR: [{ id: { in: wanted } }, { nameNormalized: { in: wanted.map(normalizeUsername) } }], NOT: { id: ownerId } },
+      select: { id: true },
+    });
+    return rows.map((r) => r.id);
+  }
+
+  /** Proprietarul camerei sau staff-ul de chat. Camerele din ACP (fără proprietar) se administrează doar din ACP. */
+  private async assertRoomManager(actor: GcsActor, key: string): Promise<ChatChannel> {
+    const channel = await this.accessible(actor, key);
+    if (!channel.ownerId) throw new GcsForbidden({ reason: "acp_channel" });
+    if (channel.ownerId !== actor.userId && !(await this.canModerate(actor))) throw new GcsForbidden({ reason: "not_owner" });
+    return channel;
+  }
+
+  async invite(actor: GcsActor, key: string, users: string[]): Promise<number> {
+    const { db, realtime } = this.deps;
+    const channel = await this.assertRoomManager(actor, key);
+    if (channel.type !== "PRIVATE") throw new GcsValidationError({ type: "not_private" });
+    const ids = await this.inviteIds(channel.ownerId!, users);
+    const { count } = await db.chatRoomMember.createMany({ data: ids.map((userId) => ({ channelId: channel.id, userId, invitedById: actor.userId })), skipDuplicates: true });
+    await writeAudit(db, { actorId: actor.userId, action: "chat.room.invite", targetType: "chat_channel", targetId: channel.key, after: { users: ids }, ip: actor.ip });
+    await realtime.publish(`chat:${channel.key}`, "members", { channel: channel.key });
+    return count;
+  }
+
+  /** Un membru iese dintr-o cameră privată (proprietarul o șterge, nu iese). */
+  async leave(actor: GcsActor, key: string): Promise<void> {
+    const { db, realtime } = this.deps;
+    const channel = await this.accessible(actor, key);
+    if (channel.type !== "PRIVATE") throw new GcsValidationError({ type: "not_private" });
+    if (channel.ownerId === actor.userId) throw new GcsValidationError({ owner: "delete_instead" });
+    await db.chatRoomMember.deleteMany({ where: { channelId: channel.id, userId: actor.userId! } });
+    await realtime.publish(`chat:${channel.key}`, "members", { channel: channel.key });
+  }
+
+  async rename(actor: GcsActor, key: string, rawName: string): Promise<void> {
+    const { db, realtime } = this.deps;
+    const channel = await this.assertRoomManager(actor, key);
+    const name = typeof rawName === "string" ? rawName.trim() : "";
+    if (name.length < 2 || name.length > 50) throw new GcsValidationError({ name: "invalid_length" });
+    await db.$transaction(async (tx) => {
+      await tx.chatChannel.update({ where: { id: channel.id }, data: { name } });
+      await writeAudit(tx, { actorId: actor.userId, action: "chat.room.rename", targetType: "chat_channel", targetId: channel.key, before: { name: channel.name }, after: { name }, ip: actor.ip });
+    });
+    await realtime.publish(`chat:${channel.key}`, "channel", { name });
+  }
+
+  async deleteRoom(actor: GcsActor, key: string): Promise<void> {
+    const { db, permissions, realtime } = this.deps;
+    const channel = await this.assertRoomManager(actor, key);
+    await db.$transaction(async (tx) => {
+      await tx.chatChannel.delete({ where: { id: channel.id } });
+      await tx.containerPermission.deleteMany({ where: { containerType: CHAT_CONTAINER, containerId: channel.key } });
+      await tx.containerInherit.deleteMany({ where: { containerType: CHAT_CONTAINER, containerId: channel.key } });
+      await writeAudit(tx, { actorId: actor.userId, action: "chat.room.delete", targetType: "chat_channel", targetId: channel.key, before: channel, ip: actor.ip });
+    });
+    await permissions.bumpVersion();
+    await realtime.publish(`chat:${channel.key}`, "channel", { enabled: false, deleted: true });
   }
 
   /** Ștergere (moderator): mesajul rămâne în bază, ascuns, și dispare live din canal. */

@@ -38,3 +38,11 @@ export async function topicReadersView(topicId: number): Promise<{ users: GcsUse
   const rows = await db.user.findMany({ where: { id: { in: readers.users } }, select: { ...userRefSelect, privacy: true } });
   return { users: rows.filter((r) => normalizePrivacy(r.privacy).showOnline).map((r) => toRef(r)), guests: readers.guests };
 }
+
+/** Cine e într-o cameră de chat la încărcarea paginii (apoi live, din evenimentul `readers`). */
+export async function roomOnlineView(room: string): Promise<GcsUserRef[]> {
+  const { presence, db } = services();
+  const members = await presence.roomMembers(room);
+  const rows = await db.user.findMany({ where: { id: { in: members.users } }, select: { ...userRefSelect, privacy: true } });
+  return rows.filter((r) => normalizePrivacy(r.privacy).showOnline).map((r) => toRef(r));
+}

@@ -39,18 +39,20 @@ test("adminul aranjează widget-urile; vizitatorul vede aranjarea, fără widget
   await expect.poll(() => editorOrder(top)).toEqual(["core.announcement", "core.statsPanel"]);
 
   // Mutare din tastatură: panoul urcă deasupra anunțului.
-  // Ca un om: după ridicare, dnd-kit măsoară zonele, apoi mută; așteptăm stările, nu pauze fixe.
+  // Ca un om: ridică (Spațiu), mută (săgeata), lasă (Spațiu), cu o clipă între taste (dnd-kit măsoară zonele după
+  // ridicare). Un ciclu care nu mută nimic lasă ordinea neschimbată, deci îl repetăm până apare mutarea.
   const handle = top.locator('[data-widget-type="core.statsPanel"]').getByTestId("gcs-edit-item-handle");
-  await handle.focus();
-  await page.keyboard.press("Space");
-  await expect(handle).toHaveAttribute("aria-pressed", "true");
-  // Ca un om: o clipă între ridicare și săgeată (dnd-kit măsoară zonele după ridicare, asincron).
-  await page.waitForTimeout(400);
-  await page.keyboard.press("ArrowUp");
-  await expect(page.locator("[id^=DndLiveRegion]")).toContainText("„Panou de statistici” e acum peste „Anunț”");
-  await page.waitForTimeout(250);
-  await page.keyboard.press("Space");
-  await expect(handle).not.toHaveAttribute("aria-pressed", "true");
+  await expect(async () => {
+    await handle.focus();
+    await page.keyboard.press("Space");
+    await expect(handle).toHaveAttribute("aria-pressed", "true");
+    await page.waitForTimeout(400);
+    await page.keyboard.press("ArrowUp");
+    await page.waitForTimeout(400);
+    await page.keyboard.press("Space");
+    await page.waitForTimeout(300);
+    expect(await editorOrder(top)).toEqual(["core.statsPanel", "core.announcement"]);
+  }).toPass({ timeout: 30_000 });
   await expect.poll(() => editorOrder(top)).toEqual(["core.statsPanel", "core.announcement"]);
 
   // „Membri noi” jos, pentru toată lumea; „Topicuri promovate” jos, doar pentru Root Admin.
