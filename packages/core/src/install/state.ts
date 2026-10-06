@@ -221,7 +221,7 @@ export async function ensureInstallCode(configDir: string): Promise<string | nul
     throw error;
   }
   const code = raw.match(/.{4}/g)!.join("-");
-  console.log(`[RED-LINE] Cod de instalare: ${code}`);
+  console.log(`[GCS] Cod de instalare: ${code}`);
   return code;
 }
 

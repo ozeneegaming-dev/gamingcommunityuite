@@ -36,7 +36,7 @@ type DemoCategory = { name: string; color: string; forums: DemoForum[] };
 /** Structura din macheta Main (pagina principală). */
 const DEMO: DemoCategory[] = [
   {
-    name: "RED-LINE",
+    name: "Noutăți",
     color: "#D62839",
     forums: [
       { name: "Anunțuri", icon: "fa-solid fa-bullhorn", description: "Noutăți oficiale despre comunitate și servere." },
@@ -132,7 +132,7 @@ export async function seedForumDemo(ctx: GcsDemoContext): Promise<void> {
 /** Topicul de bun venit, scris direct (instalarea nu are Redis pentru flood control), cu contoare și index de căutare. */
 async function welcomeTopic(db: GcsDemoContext["db"], authorId: string, forumId: number): Promise<void> {
   const siteName = await db.setting.findUnique({ where: { key: "site.name" } });
-  const name = typeof siteName?.value === "string" ? siteName.value : "RED-LINE";
+  const name = typeof siteName?.value === "string" ? siteName.value : "Comunitatea mea";
   const title = `Bun venit pe ${name}!`;
   const rendered = new GcsContentRenderer().render(
     {

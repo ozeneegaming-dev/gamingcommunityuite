@@ -21,7 +21,7 @@ export type GcsCliIo = {
   prompt?: GcsCliPrompt;
 };
 
-export const HELP = `RED-LINE — consola de administrare
+export const HELP = `GamingCommunitySuite — consola de administrare
 
 Folosire: gcs <comandă> [opțiuni]
 
@@ -87,7 +87,7 @@ function reportError(io: GcsCliIo, res: GcsCliResponse): number {
 
 async function interactiveInstall(prompt: GcsCliPrompt): Promise<Record<string, string>> {
   const values: Record<string, string> = {};
-  values.siteName = await prompt.input("Numele site-ului", { default: "RED-LINE" });
+  values.siteName = await prompt.input("Numele site-ului", { default: "Comunitatea mea" });
   values.siteUrl = await prompt.input("Adresa site-ului (ex. https://forum.exemplu.ro)");
   values.locale = await prompt.select("Limba implicită", [
     { name: "Română", value: "ro" },

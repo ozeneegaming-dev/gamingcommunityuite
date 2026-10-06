@@ -89,7 +89,7 @@ function connectionFrom(fd: FormData): { mode: "included" | "external"; conn: Gc
       port: Number(field(fd, "port")) || 5432,
       user: field(fd, "user"),
       password: typeof fd.get("password") === "string" ? (fd.get("password") as string) : "",
-      database: field(fd, "database") || "redline",
+      database: field(fd, "database") || "gcs",
     },
   };
 }

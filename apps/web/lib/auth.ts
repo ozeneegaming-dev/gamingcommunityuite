@@ -117,7 +117,7 @@ export async function getAuth(): Promise<GcsAuth> {
   // Înainte de instalare (sau dacă baza nu răspunde) folosim valorile implicite ale setărilor.
   const get = <T,>(key: string, fallback: T) => settings.get<T>(key).catch(() => fallback);
   const [siteName, siteUrl, emailConfirm, discordClientId, discordClientSecret, turnstileSecret] = await Promise.all([
-    get("site.name", "RED-LINE"),
+    get("site.name", "GamingCommunitySuite"),
     get("site.url", ""),
     get("auth.email_confirm", true),
     get("auth.discord_client_id", ""),

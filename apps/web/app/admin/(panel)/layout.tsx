@@ -25,7 +25,7 @@ export default async function AcpPanelLayout({ children }: { children: ReactNode
   const panel = await requireAcpPanel();
   const t = await getTranslations();
   const tr = (key: string) => (t.has(key) ? t(key) : key);
-  const layout = await services().acpDashboard.getLayout(panel.user.id);
+  const [layout, siteName] = await Promise.all([services().acpDashboard.getLayout(panel.user.id), services().settings.get<string>("site.name")]);
 
   const apps: GcsAcpNavApp[] = acpAppEntries(panel.menu, layout.appOrder).map((a) => ({
     app: a.app,
@@ -93,7 +93,7 @@ export default async function AcpPanelLayout({ children }: { children: ReactNode
         labels={{
           appsNav: t("acp.appsNav"),
           submenuNav: perApp("acp.submenuNav"),
-          home: t("acp.home"),
+          home: t("acp.home", { site: siteName }),
           reorderApps: t("acp.reorderApps"),
           reorderDone: t("acp.reorderDone"),
           moveUp: perApp("acp.moveUp"),

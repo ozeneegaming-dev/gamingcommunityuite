@@ -469,9 +469,21 @@
   margin: 0;
   font-size: 12px;
 }
+/* Previzualizarea e plafonată: widget-urile foarte înalte (ex. panoul de statistici pe un site mare) ar face
+   editorul greu de folosit și ar strica detectarea vecinului la mutarea din tastatură. */
 .gcs-editItem__preview {
+  position: relative;
+  max-height: 220px;
+  overflow: hidden;
   padding: 10px;
   pointer-events: none;
+}
+.gcs-editItem__preview::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 48px;
+  background: linear-gradient(transparent, var(--gcs-chrome2));
 }
 .gcs-editItem__placeholder {
   display: flex;

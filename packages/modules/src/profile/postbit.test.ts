@@ -75,12 +75,14 @@ describe("postbit", () => {
     await fields();
     const a = await author("Ana");
     const forMember = (await postbit.forAuthors(w.member, [a.id])).get(a.id)!;
-    expect(forMember.fields.map((f) => f.key)).toEqual(["pb_country", "pb_weapon"]);
-    const own: GcsActor = await w.actorFor(a);
-    expect((await postbit.forAuthors(own, [a.id])).get(a.id)!.fields.map((f) => f.key)).toEqual(["pb_secret", "pb_country", "pb_weapon"]);
+    // Doar câmpurile testului (cele implicite ale site-ului apar și ele în postbit, dar fără valori aici).
+    const own = (fields: { key: string }[]) => fields.map((f) => f.key).filter((k) => k.startsWith("pb_"));
+    expect(own(forMember.fields)).toEqual(["pb_country", "pb_weapon"]);
+    const ownActor: GcsActor = await w.actorFor(a);
+    expect(own((await postbit.forAuthors(ownActor, [a.id])).get(a.id)!.fields)).toEqual(["pb_secret", "pb_country", "pb_weapon"]);
 
     await w.settings.set("postbit.fields", ["pb_weapon", "pb_country"], w.root);
-    expect((await postbit.forAuthors(w.member, [a.id])).get(a.id)!.fields.map((f) => f.key)).toEqual(["pb_weapon", "pb_country"]);
+    expect(own((await postbit.forAuthors(w.member, [a.id])).get(a.id)!.fields)).toEqual(["pb_weapon", "pb_country"]);
   });
 
   test("opțiunea `IMAGE_SELECT` vine cu imaginea ei; iconița câmpului e păstrată", async () => {

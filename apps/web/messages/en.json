@@ -182,7 +182,7 @@
     },
     "appsNav": "ACP applications",
     "submenuNav": "{app} menu",
-    "home": "RED-LINE ACP",
+    "home": "ACP · {site}",
     "reorderApps": "Reorder applications",
     "reorderDone": "Done",
     "moveUp": "Move {app} up",
@@ -307,8 +307,8 @@
     },
     "dashboard": {
       "title": "Dashboard",
-      "statusOk": "RED-LINE · all services are running",
-      "statusDegraded": "RED-LINE · some services are not responding",
+      "statusOk": "{site} · all services are running",
+      "statusDegraded": "{site} · some services are not responding",
       "kpis": {
         "members": "Members",
         "today": "Registrations today",

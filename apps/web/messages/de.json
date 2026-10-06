@@ -307,8 +307,8 @@
     },
     "dashboard": {
       "title": "Dashboard",
-      "statusOk": "RED-LINE · alle Dienste laufen",
-      "statusDegraded": "RED-LINE · Einige Dienste reagieren nicht",
+      "statusOk": "{site} · alle Dienste laufen",
+      "statusDegraded": "{site} · Einige Dienste reagieren nicht",
       "kpis": {
         "members": "Mitglieder",
         "today": "Registrierungen heute",

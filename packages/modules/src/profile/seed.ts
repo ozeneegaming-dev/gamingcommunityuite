@@ -43,9 +43,10 @@ export const DEFAULT_RULES: DefaultRule[] = [
 ];
 
 export const DEFAULT_PROFILE_FIELDS: Prisma.ProfileFieldCreateManyInput[] = [
-  { key: "country", label: "Țară", type: "TEXT", section: "ABOUT", maxLength: 60, showOnCard: true, position: 0 },
-  { key: "platform", label: "Platformă", type: "SELECT", options: ["PC", "PlayStation", "Xbox", "Mobil"], section: "ABOUT", position: 1 },
-  { key: "twitch", label: "Twitch", type: "URL", section: "GAMES", maxLength: 200, position: 2 },
+  // Etapa 5: iconițele (Font Awesome) și afișarea în postbit.
+  { key: "country", label: "Țară", type: "TEXT", section: "ABOUT", maxLength: 60, showOnCard: true, position: 0, icon: "fa-solid fa-flag", showInPostbit: true },
+  { key: "platform", label: "Platformă", type: "SELECT", options: ["PC", "PlayStation", "Xbox", "Mobil"], section: "ABOUT", position: 1, icon: "fa-solid fa-gamepad", showInPostbit: true },
+  { key: "twitch", label: "Twitch", type: "URL", section: "GAMES", maxLength: 200, position: 2, icon: "fa-brands fa-twitch" },
 ];
 
 const ADMIN_GROUPS = ["root_admin", "admin"];

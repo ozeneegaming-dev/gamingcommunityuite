@@ -33,6 +33,7 @@ export default async function AcpDashboardPage() {
 
   const t = await getTranslations("acp.dashboard");
   const format = await getFormatter();
+  const siteName = await services().settings.get<string>("site.name");
   const [layout, totals, registrations, health, note, online, admins, failed, canEditNote, queue, worker, [expiring], realtime] = await Promise.all([
     acpDashboard.getLayout(panel.user.id),
     acpDashboard.totals(),
@@ -212,7 +213,7 @@ export default async function AcpDashboardPage() {
         <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
           {t("title")}
         </h1>
-        <span style={muted}>{allOk ? t("statusOk") : t("statusDegraded")}</span>
+        <span style={muted}>{allOk ? t("statusOk", { site: siteName }) : t("statusDegraded", { site: siteName })}</span>
       </div>
 
       {!worker.up && (

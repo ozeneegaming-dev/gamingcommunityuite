@@ -33,7 +33,7 @@ export async function POST(request: NextRequest): Promise<Response> {
         const { finishToken } = await performInstall({ input, databaseUrl, external, onProgress: (e) => send("progress", e) });
         send("done", { finishUrl: `/api/auth/gcs-install/finish?token=${finishToken}` });
       } catch (error) {
-        console.error("[RED-LINE] Instalarea a eșuat", error);
+        console.error("[GCS] Instalarea a eșuat", error);
         send("error", { message: error instanceof Error ? error.message : String(error) });
       } finally {
         await state.releaseRunLock();

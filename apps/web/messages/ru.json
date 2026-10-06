@@ -307,8 +307,8 @@
     },
     "dashboard": {
       "title": "Панель",
-      "statusOk": "RED-LINE – все сервисы работают",
-      "statusDegraded": "RED-LINE - некоторые сервисы не отвечают",
+      "statusOk": "{site} – все сервисы работают",
+      "statusDegraded": "{site} - некоторые сервисы не отвечают",
       "kpis": {
         "members": "Участники",
         "today": "Регистрация сегодня",

@@ -43,7 +43,7 @@ export function includedConnection(): GcsDbConnection | null {
     port: Number(url.port || 5432),
     user: decodeURIComponent(url.username),
     password: decodeURIComponent(url.password),
-    database: url.pathname.replace(/^\//, "") || "redline",
+    database: url.pathname.replace(/^\//, "") || "gcs",
   };
 }
 
@@ -60,7 +60,7 @@ export async function targetDatabaseUrl(data: Data): Promise<string | null> {
       port: Number(db.port) || 5432,
       user: str(db.user),
       password,
-      database: str(db.database, "redline"),
+      database: str(db.database, "gcs"),
     });
   }
   return process.env.DATABASE_URL ?? null;

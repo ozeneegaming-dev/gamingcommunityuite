@@ -16,7 +16,7 @@ const DEMO_MEMBERS = [
     frame: "neon",
     bio: "Nu există lag, doar skill issue.",
     accent: "#B794FF",
-    fields: { country: "România", platform: "PC", rank_cs2: "Premier 18.400", server: "RED-LINE RolePlay" },
+    fields: { country: "România", platform: "PC", rank_cs2: "Premier 18.400", server: "Serverul RolePlay" },
     badges: [
       { key: "tournament_champion", reason: "Turneu CS2 2v2 — Septembrie" },
       { key: "rp_veteran", reason: "Doi ani de RolePlay pe server" },
@@ -38,8 +38,8 @@ const DEMO_MEMBERS = [
 ] as const;
 
 const DEMO_FIELDS: Prisma.ProfileFieldCreateManyInput[] = [
-  { key: "rank_cs2", label: "Rank CS2", type: "TEXT", section: "GAMES", maxLength: 40, showOnCard: true, position: 3 },
-  { key: "server", label: "Server preferat", type: "TEXT", section: "ABOUT", maxLength: 60, position: 4 },
+  { key: "rank_cs2", label: "Rank CS2", type: "TEXT", section: "GAMES", maxLength: 40, showOnCard: true, position: 3, icon: "fa-solid fa-ranking-star", showInPostbit: true },
+  { key: "server", label: "Server preferat", type: "TEXT", section: "ABOUT", maxLength: 60, position: 4, icon: "fa-solid fa-server" },
 ];
 
 const doc = (text: string) => ({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
@@ -73,7 +73,7 @@ export async function seedProfileDemo(ctx: GcsDemoContext): Promise<void> {
         where: { id: admin.id },
         data: { bio: admin.bio || "Fondatorul comunității.", accentColor: admin.accentColor ?? "#D62839", avatarFrameId: admin.avatarFrameId ?? fire?.id ?? null },
       });
-      await setFields(tx, admin.id, { country: "România", platform: "PC", server: "RED-LINE RolePlay" });
+      await setFields(tx, admin.id, { country: "România", platform: "PC", server: "Serverul RolePlay" });
     });
   }
 

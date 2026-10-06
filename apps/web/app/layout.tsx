@@ -24,7 +24,7 @@ async function orDefault<T>(value: () => Promise<T>, fallback: T): Promise<T> {
 
 /** Titlul vine din setarea `site.name` (ACP → Setări → Generale) și se schimbă fără restart. */
 export async function generateMetadata(): Promise<Metadata> {
-  const siteName = await orDefault(() => services().settings.get<string>("site.name"), "RED-LINE");
+  const siteName = await orDefault(() => services().settings.get<string>("site.name"), "GamingCommunitySuite");
   const base = await siteBaseUrl();
   const { shown } = await viewerTheme();
   return {

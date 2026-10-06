@@ -1,5 +1,5 @@
 /**
- * Tokenurile vizuale RED-LINE ca valori TypeScript (ex. pentru grafice sau OG images).
+ * Tokenurile vizuale GamingCommunitySuite ca valori TypeScript (ex. pentru grafice sau OG images).
  *
  * Tailwind v4 se configurează din CSS: tema efectivă e în `@gcs/ui/theme.css` (`@theme inline`),
  * iar variabilele în `@gcs/ui/tokens.css`. Valorile de aici trebuie să rămână identice cu cele din `tokens.css`.

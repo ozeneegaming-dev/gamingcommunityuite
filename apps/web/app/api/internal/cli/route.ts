@@ -112,7 +112,7 @@ export async function POST(request: Request): Promise<Response> {
     }
   } catch (error) {
     if (error instanceof GcsError) return fail(error.status, error.code, { params: error.params ?? {} });
-    console.error("[RED-LINE] Comanda CLI a eșuat", error);
+    console.error("[GCS] Comanda CLI a eșuat", error);
     return fail(500, "internal", { message: error instanceof Error ? error.message : String(error) });
   }
 }

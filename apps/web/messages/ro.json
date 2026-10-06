@@ -182,7 +182,7 @@
     },
     "appsNav": "Aplicații ACP",
     "submenuNav": "Meniu {app}",
-    "home": "ACP RED-LINE",
+    "home": "ACP · {site}",
     "reorderApps": "Reordonează aplicațiile",
     "reorderDone": "Gata",
     "moveUp": "Mută {app} mai sus",
@@ -307,8 +307,8 @@
     },
     "dashboard": {
       "title": "Dashboard",
-      "statusOk": "RED-LINE · toate serviciile funcționează",
-      "statusDegraded": "RED-LINE · unele servicii nu răspund",
+      "statusOk": "{site} · toate serviciile funcționează",
+      "statusDegraded": "{site} · unele servicii nu răspund",
       "kpis": {
         "members": "Membri",
         "today": "Înregistrări azi",

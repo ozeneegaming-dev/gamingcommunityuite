@@ -43,7 +43,7 @@ const oneOf = (values: string[]) => (v: unknown) => (values.includes(v as string
 const notEmpty = (v: unknown) => ((v as string).trim() === "" ? "required" : null);
 
 const settings: GcsSettingDef[] = [
-  setting("site.name", "string", "RED-LINE", "general", notEmpty),
+  setting("site.name", "string", "Comunitatea mea", "general", notEmpty),
   setting("site.url", "string", "", "general", isUrlOrEmpty),
   { ...setting("site.locale", "string", "ro", "general", oneOf([...GCS_LOCALE_KEYS])), options: [...GCS_LOCALE_KEYS] },
   setting("site.timezone", "string", "Europe/Bucharest", "general", notEmpty),

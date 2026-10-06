@@ -182,7 +182,7 @@
     },
     "appsNav": "Demandes ACP",
     "submenuNav": "Menu {app}",
-    "home": "RED-LINE ACP",
+    "home": "ACP · {site}",
     "reorderApps": "Recommander les applications",
     "reorderDone": "Terminé",
     "moveUp": "Déplacez {app} vers le haut",
@@ -307,8 +307,8 @@
     },
     "dashboard": {
       "title": "Tableau de bord",
-      "statusOk": "RED-LINE · tous les services fonctionnent",
-      "statusDegraded": "RED-LINE · certains services ne répondent pas",
+      "statusOk": "{site} · tous les services fonctionnent",
+      "statusDegraded": "{site} · certains services ne répondent pas",
       "kpis": {
         "members": "Membres",
         "today": "Enregistrements aujourd'hui",

@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { member, uid } from "./forum-fixtures";
-import { enterAcpAsRoot, useFreshIp } from "./helpers";
+import { enterAcpAsRoot, sql, useFreshIp } from "./helpers";
 
 /** Tipurile widget-urilor dintr-o zonă a editorului, în ordine. */
 const editorOrder = (zone: Locator) => zone.getByTestId("gcs-edit-item").evaluateAll((els) => els.map((e) => e.getAttribute("data-widget-type")));
@@ -79,7 +79,9 @@ test("adminul aranjează widget-urile; vizitatorul vede aranjarea, fără widget
   await expect(panel).toBeVisible();
   expect(await before(visitor, '[data-widget="core.statsPanel"]', '[data-widget="core.announcement"]')).toBe(true);
   await expect(visitor.locator('[data-zone="bottom"] [data-widget="core.newMembers"]')).toBeVisible();
-  await expect(visitor.locator('[data-widget="core.newMembers"] li')).toHaveCount(3);
+  // Limita aleasă (3), sau câți membri are baza, dacă sunt mai puțini.
+  const [users] = await sql<{ n: string }>(`SELECT count(*)::text AS n FROM users`);
+  await expect(visitor.locator('[data-widget="core.newMembers"] li')).toHaveCount(Math.min(3, Number(users!.n)));
   await expect(visitor.locator('[data-widget="forums.featuredTopics"]')).toHaveCount(0);
   // Panoul: plăcile (cu VIP), „Cine e online”, „Cine a fost online” (adminul tocmai a fost activ) și legenda.
   await expect(panel.locator('[data-tile="forums.topics"]')).toBeVisible();

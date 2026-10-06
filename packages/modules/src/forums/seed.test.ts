@@ -24,10 +24,10 @@ describe("seedForumDemo", () => {
     const forums = await w.db.forum.findMany({ select: { name: true, type: true, parentId: true } });
     const names = forums.map((f) => f.name);
     expect(names).toEqual(
-      expect.arrayContaining(["RED-LINE", "Anunțuri", "Regulament", "Cereri & reclamații", "Cereri unban", "Servere de joc", "Counter-Strike 2", "FiveM RolePlay", "Minecraft", "Ajutor tehnic", "Comunitate", "Recrutări clan", "Off-topic"]),
+      expect.arrayContaining(["Noutăți", "Anunțuri", "Regulament", "Cereri & reclamații", "Cereri unban", "Servere de joc", "Counter-Strike 2", "FiveM RolePlay", "Minecraft", "Ajutor tehnic", "Comunitate", "Recrutări clan", "Off-topic"]),
     );
     expect(forums.find((f) => f.name === "Ajutor tehnic")?.type).toBe("QA");
-    expect(forums.filter((f) => f.type === "CATEGORY").map((f) => f.name).sort()).toEqual(["Comunitate", "RED-LINE", "Servere de joc"]);
+    expect(forums.filter((f) => f.type === "CATEGORY").map((f) => f.name).sort()).toEqual(["Comunitate", "Noutăți", "Servere de joc"]);
     expect((await w.db.topicPrefix.findMany()).map((p) => p.name)).toEqual(["Anunț", "Ajutor", "Rezolvat"]);
 
     const welcome = await w.db.topic.findFirstOrThrow({ include: { forum: true } });
@@ -35,7 +35,7 @@ describe("seedForumDemo", () => {
 
     // Vizitatorii văd forumurile demo (permisiunile implicite + moștenirea).
     const index = await w.queries.index(w.guest);
-    expect(index.map((c) => c.name)).toEqual(["RED-LINE", "Servere de joc", "Comunitate"]);
+    expect(index.map((c) => c.name)).toEqual(["Noutăți", "Servere de joc", "Comunitate"]);
 
     // Contoarele sunt corecte.
     const before = await snapshotCounters(w.db);

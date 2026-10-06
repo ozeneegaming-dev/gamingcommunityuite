@@ -94,8 +94,8 @@ export default async function InstallStepPage({ params }: { params: Promise<{ st
             mode: db.mode === "external" ? "external" : "included",
             host: str(db.host, "localhost"),
             port: str(db.port, "5432"),
-            user: str(db.user, "redline"),
-            database: str(db.database, "redline"),
+            user: str(db.user, "gcs"),
+            database: str(db.database, "gcs"),
           }}
           included={inc ? { host: inc.host, port: String(inc.port), user: inc.user, database: inc.database } : null}
           labels={{
@@ -123,7 +123,7 @@ export default async function InstallStepPage({ params }: { params: Promise<{ st
       content = (
         <InstallStepForm action={saveSite} backHref={back("database")} labels={nav}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
-            <InstallField name="name" label={t("steps.site.name")} defaultValue={str(site.name, "RED-LINE")} span />
+            <InstallField name="name" label={t("steps.site.name")} defaultValue={str(site.name, "Comunitatea mea")} span />
             <InstallField name="url" label={t("steps.site.url")} type="url" defaultValue={str(site.url, process.env.GCS_BASE_URL ?? "")} span />
             <InstallField name="locale" label={t("steps.site.locale")} defaultValue={str(site.locale, "ro")} options={[{ value: "ro", label: tc("ro") }, { value: "en", label: tc("en") }]} />
             <InstallField name="timezone" label={t("steps.site.timezone")} defaultValue={str(site.timezone, "Europe/Bucharest")} />

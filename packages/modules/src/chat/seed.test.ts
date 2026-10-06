@@ -37,8 +37,32 @@ describe("seedChatDemo", () => {
     expect(messages.map((m) => m.createdAt.getTime())).toEqual([...messages.map((m) => m.createdAt.getTime())].sort((a, b) => a - b));
   });
 
-  test("varianta „site gol” nu creează mesaje", async () => {
+  test("varianta „site gol” nu creează mesaje și nici camere demo", async () => {
     await demo("empty");
     expect(await w.db.chatMessage.count()).toBe(0);
+    expect((await w.db.chatChannel.findMany()).map((c) => c.key)).toEqual(["general"]);
+  });
+
+  test("etapa 5: camerele publice demo (Off-topic, Caut echipă) se creează o singură dată, cu permisiuni", async () => {
+    await demo("demo");
+    await demo("demo");
+    const keys = (await w.db.chatChannel.findMany({ orderBy: { position: "asc" } })).map((c) => c.key);
+    expect(keys).toEqual(["general", "offtopic", "lfg"]);
+    expect(await w.db.containerPermission.count({ where: { containerType: "chat", containerId: "lfg" } })).toBeGreaterThan(0);
+  });
+
+  test("etapa 5: câmpurile de profil au iconițe și apar în postbit; layout-ul paginii principale există în ambele variante", async () => {
+    await demo("demo");
+    const fields = await w.db.profileField.findMany({ where: { key: { in: ["country", "platform", "rank_cs2"] } } });
+    expect(fields.every((f) => f.icon?.startsWith("fa-"))).toBe(true);
+    expect(fields.every((f) => f.showInPostbit)).toBe(true);
+    expect(await w.db.widgetPlacement.count({ where: { page: "index" } })).toBeGreaterThan(0);
+    // Fără „RED-LINE” în datele demo.
+    const texts = [
+      ...(await w.db.forum.findMany({ select: { name: true } })).map((f) => f.name),
+      ...(await w.db.chatMessage.findMany({ select: { body: true } })).map((m) => m.body),
+      ...(await w.db.profileFieldValue.findMany({ select: { value: true } })).map((v) => v.value),
+    ];
+    expect(texts.some((x) => x.includes("RED-LINE"))).toBe(false);
   });
 });

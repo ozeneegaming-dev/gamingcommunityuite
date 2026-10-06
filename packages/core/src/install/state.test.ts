@@ -107,7 +107,7 @@ describe("codul de instalare", () => {
     const log = vi.spyOn(console, "log").mockImplementation(() => {});
     const code = await ensureInstallCode(dir);
     expect(code).toMatch(/^[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}$/);
-    expect(log).toHaveBeenCalledWith(`[RED-LINE] Cod de instalare: ${code}`);
+    expect(log).toHaveBeenCalledWith(`[GCS] Cod de instalare: ${code}`);
     await expect(ensureInstallCode(dir)).resolves.toBeNull();
     expect(readFileSync(path.join(dir, "install_code.hash"), "utf8")).toMatch(/^\$argon2id\$/);
   });

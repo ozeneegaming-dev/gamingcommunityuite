@@ -18,7 +18,7 @@ export class GcsError extends Error {
   readonly status: number;
   readonly params?: Record<string, string>;
 
-  /** Marca erorilor RED-LINE, comună tuturor copiilor modulului (vezi `Symbol.hasInstance`). */
+  /** Marca erorilor GamingCommunitySuite, comună tuturor copiilor modulului (vezi `Symbol.hasInstance`). */
   readonly [GCS_ERROR_BRAND] = true;
 
   constructor(code: string, status: number, params?: Record<string, string>) {

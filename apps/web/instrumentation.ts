@@ -12,15 +12,15 @@ export async function register(): Promise<void> {
 
   const configDir = gcsConfigDir();
   if (!(await new GcsInstallState(configDir).isInstalled())) {
-    await ensureInstallCode(configDir).catch((error: unknown) => console.error("[RED-LINE] Codul de instalare nu a putut fi generat", error));
+    await ensureInstallCode(configDir).catch((error: unknown) => console.error("[GCS] Codul de instalare nu a putut fi generat", error));
     return;
   }
   if (!process.env.DATABASE_URL) return;
   try {
     const { applied } = await migrateDatabase(process.env.DATABASE_URL, migrationsDir());
-    if (applied.length > 0) console.log(`[RED-LINE] Migrații aplicate: ${applied.join(", ")}`);
+    if (applied.length > 0) console.log(`[GCS] Migrații aplicate: ${applied.join(", ")}`);
   } catch (error) {
-    console.error("[RED-LINE] Migrarea bazei de date a eșuat", error);
+    console.error("[GCS] Migrarea bazei de date a eșuat", error);
     return;
   }
   // Datele implicite ale modulelor (ex. reacțiile și setările de grup ale forumului) pentru site-urile instalate
@@ -31,6 +31,6 @@ export async function register(): Promise<void> {
     const { db, registry } = services();
     await seedDefaults(db, registry);
   } catch (error) {
-    console.error("[RED-LINE] Seed-ul modulelor a eșuat", error);
+    console.error("[GCS] Seed-ul modulelor a eșuat", error);
   }
 }
