@@ -1169,6 +1169,7 @@
       "isDefault": "Tema implicită",
       "save": "Salvează",
       "editOnSite": "Editează pe site",
+      "visualEditor": "Editează vizual",
       "delete": "Șterge",
       "confirmDelete": "Ștergi tema? Membrii care o foloseau vor vedea tema implicită.",
       "create": "Temă nouă",
@@ -2198,6 +2199,295 @@
     "translated": "Traducere automată",
     "failed": "Traducerea nu a reușit. Încearcă din nou.",
     "limited": "Prea multe traduceri într-un minut. Încearcă puțin mai târziu."
+  },
+  "themeStudio": {
+    "title": "Editor temă",
+    "draft": "Draft",
+    "back": "Înapoi",
+    "customCss": "CSS personalizat",
+    "preview": "Previzualizarea site-ului",
+    "previewTitle": "Previzualizare live pentru {site}",
+    "revert": "Readu „{name}” la valoarea implicită",
+    "transparent": "Transparent",
+    "hex": "Cod hex",
+    "invalidHex": "Scrie culoarea ca #RRGGBB.",
+    "editingMode": {
+      "dark": "Editezi culorile modului întunecat.",
+      "light": "Editezi culorile modului luminos."
+    },
+    "rail": {
+      "label": "Uneltele editorului",
+      "light": "Editează culorile modului luminos",
+      "dark": "Editează culorile modului întunecat",
+      "mobile": "Previzualizare mică (telefon)",
+      "tablet": "Previzualizare medie (tabletă)",
+      "desktop": "Previzualizare mare (desktop)",
+      "css": "CSS personalizat",
+      "exit": "Ieși din editor",
+      "save": "Salvează și publică"
+    },
+    "panels": {
+      "palette": "Paletă de culori",
+      "scheme": "Mod luminos/întunecat",
+      "logos": "Logo-uri",
+      "layouts": "Aspect pagini",
+      "typography": "Tipografie",
+      "header": "Antet",
+      "headerDesktop": "Antet desktop",
+      "headerMobile": "Antet mobil",
+      "footer": "Subsol",
+      "mobileNav": "Navigare mobilă",
+      "global": "Global",
+      "body": "Body",
+      "boxes": "Casete conținut",
+      "sidebar": "Bară laterală",
+      "avatars": "Avatare",
+      "buttons": "Butoane"
+    },
+    "tabs": {
+      "settings": "Setări",
+      "colors": "Culori",
+      "swatches": "Mostre",
+      "picker": "Selector de culoare"
+    },
+    "headings": {
+      "textLogo": "Logo text",
+      "imageDesktop": "Logo imagine (desktop)",
+      "imageMobile": "Logo imagine (mobil)",
+      "favicon": "Favicon"
+    },
+    "images": {
+      "logo": "Logo (mod întunecat)",
+      "logoLight": "Logo (mod luminos)",
+      "logoMobile": "Logo mobil (mod întunecat)",
+      "logoMobileLight": "Logo mobil (mod luminos)",
+      "favicon": "Favicon",
+      "none": "Nicio imagine",
+      "upload": "Încarcă",
+      "remove": "Șterge"
+    },
+    "tokens": {
+      "accent": "Culoarea primară",
+      "accentInk": "Culoarea secundară (text accent)",
+      "bg": "Culoarea de bază (fundalul paginii)",
+      "surface": "Suprafață",
+      "surface2": "Suprafață 2",
+      "border": "Chenare",
+      "text": "Text",
+      "muted": "Text estompat",
+      "chrome": "Antet și subsol",
+      "chrome2": "Bare secundare",
+      "ok": "Succes",
+      "warn": "Avertisment"
+    },
+    "colors": {
+      "bodyBg": "Fundalul paginii",
+      "heading": "Text puternic (titluri)",
+      "link": "Linkuri",
+      "linkHover": "Linkuri la hover",
+      "headerBg": "Fundalul antetului",
+      "headerText": "Textul și iconițele meniului din antet",
+      "footerBg": "Fundalul subsolului",
+      "footerText": "Textul subsolului",
+      "drawerBg": "Fundalul meniului",
+      "drawerText": "Linkurile meniului",
+      "boxBg": "Fundalul casetelor",
+      "boxBorder": "Chenarul casetelor",
+      "boxHeaderBg": "Fundalul antetului casetelor",
+      "boxHeaderText": "Textul antetului casetelor",
+      "widgetTitle": "Titlul widget-urilor",
+      "widgetIcon": "Iconița titlului widget-urilor",
+      "btnPrimaryBg": "Butonul principal",
+      "btnPrimaryText": "Textul butonului principal",
+      "btnSecondaryBg": "Butonul secundar",
+      "btnSecondaryText": "Textul butonului secundar"
+    },
+    "fields": {
+      "scheme_default": {
+        "label": "Modul de culori implicit",
+        "help": "Ce văd vizitatorii până își aleg singuri un mod.",
+        "options": {
+          "site": "Setarea site-ului",
+          "auto": "Sistem",
+          "light": "Luminos",
+          "dark": "Întunecat"
+        }
+      },
+      "scheme_toggle": {
+        "label": "Arată comutatorul de mod",
+        "help": "Butoanele întunecat / luminos / sistem din subsol."
+      },
+      "logo_text": {
+        "label": "Textul logo-ului",
+        "help": "Gol = numele site-ului.",
+        "placeholder": "Numele site-ului"
+      },
+      "logo_slogan": {
+        "label": "Slogan",
+        "help": "Un rând scurt sub textul logo-ului (opțional)."
+      },
+      "logo_font": {
+        "label": "Fontul logo-ului",
+        "help": "Fontul titlurilor sau fontul textului din temă.",
+        "options": {
+          "display": "Fontul titlurilor",
+          "text": "Fontul textului"
+        }
+      },
+      "logo_weight": {
+        "label": "Grosimea fontului logo-ului",
+        "help": "400 e normal, 700 e îngroșat."
+      },
+      "logo_size": {
+        "label": "Mărimea textului logo-ului (desktop)"
+      },
+      "logo_sizeMobile": {
+        "label": "Mărimea textului logo-ului (mobil)"
+      },
+      "logo_textMobile": {
+        "label": "Arată textul logo-ului pe telefon",
+        "help": "Implicit, pe ecranele mici apare doar marcajul."
+      },
+      "logo_height": {
+        "label": "Înălțimea maximă a logo-ului imagine",
+        "help": "Procent din înălțimea antetului."
+      },
+      "logo_heightMobile": {
+        "label": "Înălțimea logo-ului imagine pe mobil",
+        "help": "Procent din înălțimea antetului de pe mobil."
+      },
+      "layout_forumIndex": {
+        "label": "Indexul forumului",
+        "help": "Cum apar forumurile fiecărei categorii pe pagina principală.",
+        "options": {
+          "list": "Listă",
+          "grid": "Grilă"
+        }
+      },
+      "layout_topicView": {
+        "label": "Afișarea topicului",
+        "help": "Compact îngustează coloana autorului și îi ascunde statisticile.",
+        "options": {
+          "normal": "Normal",
+          "compact": "Compact"
+        }
+      },
+      "layout_featureFirstPost": {
+        "label": "Evidențiază prima postare",
+        "help": "Scoate în evidență postarea care deschide fiecare topic."
+      },
+      "fontDisplay": {
+        "label": "Fontul titlurilor"
+      },
+      "typography_fontDisplayCustom": {
+        "label": "Alt font pentru titluri (Google Fonts)",
+        "help": "Numele exact din Google Fonts; înlocuiește fontul de mai sus.",
+        "placeholder": "ex. Open Sans"
+      },
+      "fontText": {
+        "label": "Fontul textului"
+      },
+      "typography_fontTextCustom": {
+        "label": "Alt font pentru text (Google Fonts)",
+        "help": "Numele exact din Google Fonts; înlocuiește fontul de mai sus.",
+        "placeholder": "ex. Open Sans"
+      },
+      "typography_baseSize": {
+        "label": "Mărimea textului de bază",
+        "help": "Textul din conținutul paginilor care nu are o mărime proprie (16 px = mărimea browserului)."
+      },
+      "typography_contentSize": {
+        "label": "Mărimea textului din postări",
+        "help": "Postările și semnăturile, în procente din mărimea normală."
+      },
+      "header_height": {
+        "label": "Înălțimea antetului (desktop)"
+      },
+      "header_heightMobile": {
+        "label": "Înălțimea antetului (mobil)"
+      },
+      "header_navIcons": {
+        "label": "Iconițe în meniul principal",
+        "help": "Iconițele de lângă elementele meniului."
+      },
+      "header_sticky": {
+        "label": "Antet fix",
+        "help": "Antetul rămâne vizibil la derulare."
+      },
+      "mobileNav_side": {
+        "label": "Partea meniului",
+        "help": "De unde intră meniul de pe mobil.",
+        "options": {
+          "left": "Stânga",
+          "right": "Dreapta"
+        }
+      },
+      "mobileNav_icons": {
+        "label": "Iconițe în meniul de pe mobil"
+      },
+      "width": {
+        "label": "Lățimea maximă a paginii"
+      },
+      "radius": {
+        "label": "Raza colțurilor casetelor"
+      },
+      "boxes_borderWidth": {
+        "label": "Grosimea chenarului casetelor"
+      },
+      "boxes_shadow": {
+        "label": "Umbra casetelor",
+        "options": {
+          "none": "Fără",
+          "soft": "Discretă",
+          "strong": "Puternică"
+        }
+      },
+      "boxes_clickableRows": {
+        "label": "Rânduri de forum clicabile",
+        "help": "Tot rândul deschide forumul, nu doar numele lui."
+      },
+      "sidebar_width": {
+        "label": "Lățimea barei laterale"
+      },
+      "sidebar_position": {
+        "label": "Poziția barei laterale",
+        "options": {
+          "right": "Dreapta",
+          "left": "Stânga"
+        }
+      },
+      "sidebar_sticky": {
+        "label": "Bară laterală fixă",
+        "help": "Bara laterală rămâne vizibilă la derulare (ecrane mari)."
+      },
+      "avatars_rounded": {
+        "label": "Avatare rotunde",
+        "help": "Oprit: avatare cu colțuri rotunjite."
+      },
+      "buttons_radius": {
+        "label": "Raza colțurilor butoanelor"
+      }
+    },
+    "status": {
+      "saving": "Se salvează draft-ul…",
+      "saved": "Draft salvat. Vizitatorii văd modificările doar după ce salvezi.",
+      "uploading": "Se încarcă imaginea…",
+      "published": "Salvat: tema e publicată pentru toți.",
+      "unpublished": "Ai modificări nesalvate.",
+      "upToDate": "Nicio modificare."
+    },
+    "cssDialog": {
+      "title": "CSS personalizat",
+      "hint": "Se aplică după temă. Se curăță automat: fără HTML, fără scripturi, @import doar de la Google Fonts.",
+      "revert": "Revino",
+      "done": "Gata"
+    },
+    "exitDialog": {
+      "title": "Modificări nesalvate",
+      "body": "Tema are modificări nepublicate. Dacă ieși fără salvare, ele se pierd.",
+      "leave": "Ieși fără salvare",
+      "stay": "Continuă editarea"
+    }
   },
   "themeEditor": {
     "toolbar": "Unelte de editare",

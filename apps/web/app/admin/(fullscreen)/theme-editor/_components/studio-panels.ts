@@ -1,0 +1,152 @@
+import type { GcsThemeElementColor, GcsThemeToken } from "@gcs/core/themes";
+import {
+  type IconDefinition,
+  faBorderAll,
+  faCircleHalfStroke,
+  faCircleUser,
+  faCode,
+  faDesktop,
+  faGripLines,
+  faHandPointer,
+  faImage,
+  faMobileScreen,
+  faPalette,
+  faRectangleList,
+  faTableColumns,
+  faTextHeight,
+  faWindowMaximize,
+  faTableCellsLarge,
+  faTableList,
+} from "@fortawesome/free-solid-svg-icons";
+
+/** Locurile imaginilor din temă (același nume ca `kind` din `/api/themes/images`). */
+export type GcsStudioImageSlot = "logo" | "logoLight" | "logoMobile" | "logoMobileLight" | "favicon";
+
+/** O culoare editabilă: un token al paletei (doar hex) sau o culoare de element (hex, token sau transparent). */
+export type GcsStudioColorRef = { kind: "token"; token: GcsThemeToken } | { kind: "element"; key: GcsThemeElementColor };
+
+/** Un rând din tab-ul „Setări”: o setare (calea ei), o imagine sau un subtitlu. */
+export type GcsStudioSettingItem = string | { image: GcsStudioImageSlot } | { heading: string };
+
+export type GcsStudioPanelId =
+  | "start"
+  | "palette"
+  | "scheme"
+  | "logos"
+  | "layouts"
+  | "typography"
+  | "header"
+  | "headerDesktop"
+  | "headerMobile"
+  | "footer"
+  | "mobileNav"
+  | "global"
+  | "body"
+  | "boxes"
+  | "sidebar"
+  | "avatars"
+  | "buttons";
+
+export type GcsStudioNavRow = { type: "nav"; panel: GcsStudioPanelId } | { type: "css" } | { type: "separator" };
+
+export type GcsStudioPanel = {
+  icon: IconDefinition;
+  /** Panourile de navigare au rânduri spre alte panouri; celelalte au setări și/sau culori. */
+  rows?: GcsStudioNavRow[];
+  settings?: GcsStudioSettingItem[];
+  colors?: GcsStudioColorRef[];
+};
+
+const token = (t: GcsThemeToken): GcsStudioColorRef => ({ kind: "token", token: t });
+const element = (key: GcsThemeElementColor): GcsStudioColorRef => ({ kind: "element", key });
+const nav = (panel: GcsStudioPanelId): GcsStudioNavRow => ({ type: "nav", panel });
+
+/**
+ * Panourile editorului vizual. Fiecare setare de aici schimbă ceva real pe site (vezi specul
+ * `docs/superpowers/specs/2026-10-06-editor-tema.md`); nu există opțiuni „moarte”.
+ */
+export const STUDIO_PANELS: Record<GcsStudioPanelId, GcsStudioPanel> = {
+  start: {
+    icon: faPalette,
+    rows: [
+      { type: "css" },
+      { type: "separator" },
+      nav("palette"),
+      nav("scheme"),
+      nav("logos"),
+      nav("layouts"),
+      nav("typography"),
+      nav("header"),
+      nav("footer"),
+      nav("mobileNav"),
+      nav("global"),
+    ],
+  },
+  palette: {
+    icon: faPalette,
+    colors: [token("accent"), token("accentInk"), token("bg"), token("surface"), token("surface2"), token("border"), token("text"), token("muted"), token("chrome"), token("chrome2"), token("ok"), token("warn")],
+  },
+  scheme: { icon: faCircleHalfStroke, settings: ["scheme.default", "scheme.toggle"] },
+  logos: {
+    icon: faImage,
+    settings: [
+      { heading: "textLogo" },
+      "logo.text",
+      "logo.slogan",
+      "logo.font",
+      "logo.weight",
+      "logo.size",
+      "logo.sizeMobile",
+      "logo.textMobile",
+      { heading: "imageDesktop" },
+      { image: "logo" },
+      { image: "logoLight" },
+      "logo.height",
+      { heading: "imageMobile" },
+      { image: "logoMobile" },
+      { image: "logoMobileLight" },
+      "logo.heightMobile",
+      { heading: "favicon" },
+      { image: "favicon" },
+    ],
+  },
+  layouts: { icon: faTableColumns, settings: ["layout.forumIndex", "layout.topicView", "layout.featureFirstPost"] },
+  typography: {
+    icon: faTextHeight,
+    settings: ["fontDisplay", "typography.fontDisplayCustom", "fontText", "typography.fontTextCustom", "typography.baseSize", "typography.contentSize"],
+    colors: [token("text"), token("muted"), element("heading"), element("link"), element("linkHover")],
+  },
+  header: { icon: faWindowMaximize, rows: [nav("headerDesktop"), nav("headerMobile")] },
+  headerDesktop: { icon: faDesktop, settings: ["header.height", "header.navIcons", "header.sticky"], colors: [element("headerBg"), element("headerText")] },
+  headerMobile: { icon: faMobileScreen, settings: ["header.heightMobile", "logo.sizeMobile", "logo.textMobile", "logo.heightMobile"], colors: [element("headerBg"), element("headerText")] },
+  footer: { icon: faGripLines, settings: ["scheme.toggle"], colors: [element("footerBg"), element("footerText")] },
+  mobileNav: { icon: faMobileScreen, settings: ["mobileNav.side", "mobileNav.icons"], colors: [element("drawerBg"), element("drawerText")] },
+  global: { icon: faRectangleList, rows: [nav("body"), nav("boxes"), nav("sidebar"), nav("avatars"), nav("buttons")] },
+  body: { icon: faTableList, settings: ["width"], colors: [element("bodyBg")] },
+  boxes: {
+    icon: faBorderAll,
+    settings: ["radius", "boxes.borderWidth", "boxes.shadow", "boxes.clickableRows"],
+    colors: [element("boxBg"), element("boxBorder"), element("boxHeaderBg"), element("boxHeaderText"), element("widgetTitle"), element("widgetIcon")],
+  },
+  sidebar: { icon: faTableCellsLarge, settings: ["sidebar.width", "sidebar.position", "sidebar.sticky"] },
+  avatars: { icon: faCircleUser, settings: ["avatars.rounded"] },
+  buttons: { icon: faHandPointer, settings: ["buttons.radius"], colors: [element("btnPrimaryBg"), element("btnPrimaryText"), element("btnSecondaryBg"), element("btnSecondaryText")] },
+};
+
+/** Iconița rândului „CSS personalizat”. */
+export const CSS_ROW_ICON = faCode;
+
+/** Panoul părinte (pentru „Înapoi”). */
+export function parentPanel(id: GcsStudioPanelId): GcsStudioPanelId | null {
+  if (id === "start") return null;
+  for (const [pid, p] of Object.entries(STUDIO_PANELS) as [GcsStudioPanelId, GcsStudioPanel][]) {
+    if (p.rows?.some((r) => r.type === "nav" && r.panel === id)) return pid;
+  }
+  return "start";
+}
+
+/** Calea în setări a unei culori, pentru modul editat. */
+export const colorPath = (ref: GcsStudioColorRef, mode: "dark" | "light") => (ref.kind === "token" ? `${mode}.${ref.token}` : `elements.${mode}.${ref.key}`);
+
+/** Cheia de traducere a unei setări (`header.height` → `header_height`). */
+export const fieldKey = (path: string) => path.replace(/\./g, "_");
