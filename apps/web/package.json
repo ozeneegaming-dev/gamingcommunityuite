@@ -10,13 +10,17 @@
     "typecheck": "tsc --noEmit",
     "test:e2e": "tsx e2e/run.mts",
     "test": "vitest run",
-    "build:cli": "node cli/build.mjs"
+    "build:cli": "node cli/build.mjs",
+    "i18n:translate": "tsx scripts/i18n-translate.ts"
   },
   "dependencies": {
     "@better-auth/utils": "0.4.2",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@fortawesome/free-brands-svg-icons": "^7.3.1",
+    "@fortawesome/free-regular-svg-icons": "^7.3.1",
+    "@fortawesome/free-solid-svg-icons": "^7.3.1",
     "@gcs/core": "workspace:*",
     "@gcs/db": "workspace:*",
     "@gcs/modules": "workspace:*",
@@ -34,6 +38,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@formatjs/icu-messageformat-parser": "^3.5.20",
     "@gcs/config": "workspace:*",
     "@playwright/test": "^1.55.0",
     "@tailwindcss/postcss": "^4.1.0",
@@ -46,6 +51,7 @@
     "embedded-postgres": "18.4.0-beta.17",
     "esbuild": "^0.28.2",
     "eslint": "^9.30.0",
+    "intl-messageformat": "^11.2.15",
     "jsdom": "^30.1.2",
     "otplib": "^13.5.0",
     "pg": "^8.23.1",

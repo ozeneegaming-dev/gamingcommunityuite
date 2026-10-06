@@ -18,6 +18,7 @@ import {
   GcsAppService,
   GcsNavService,
   GcsNotificationService,
+  GcsTranslationService,
   GcsWidgetService,
   GcsPresenceService,
   GcsRealtime,
@@ -62,6 +63,8 @@ import { GcsProfileQueries } from "./profile/queries";
 import { GcsSocialService } from "./profile/social";
 import { GcsChatService } from "./chat/chat";
 import { GcsChatQueries } from "./chat/queries";
+import { renderChatText } from "./chat/text";
+import { canViewPost } from "./forums/content";
 import { GcsNotificationProducers } from "./notifications/producers";
 import { registerLiveEvents } from "./realtime/live";
 import { GcsRealtimeRooms } from "./realtime/rooms";
@@ -91,6 +94,7 @@ export type GcsServices = {
   notificationProducers: GcsNotificationProducers;
   chat: GcsChatService;
   apps: GcsAppService;
+  translation: GcsTranslationService;
   widgets: GcsWidgetService;
   nav: GcsNavService;
   chatQueries: GcsChatQueries;
@@ -325,6 +329,31 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const realtimeRooms = new GcsRealtimeRooms({ permissions, forumQueries });
   realtimeRooms.register("chat", (actor, key) => chatQueries.canRead(actor, key));
   registerLiveEvents(bus, { db, realtime });
+
+  // Butonul „Traduce” (etapa 5): conținutul membrilor, cu verificarea accesului fiecărui tip.
+  const translation = new GcsTranslationService({ db, cache, settings, permissions, rateLimiter });
+  translation.registerContent("forums.post", {
+    canView: (actor, id) => canViewPost(posting, actor, Number(id)),
+    html: async (id) => (await db.post.findUnique({ where: { id: Number(id) }, select: { contentHtml: true } }))?.contentHtml ?? null,
+  });
+  translation.registerContent("pm.message", {
+    canView: (actor, id) => conversations.canViewMessage(actor, Number(id)),
+    html: async (id) => (await db.conversationMessage.findUnique({ where: { id: Number(id) }, select: { contentHtml: true } }))?.contentHtml ?? null,
+  });
+  translation.registerContent("profile.status", {
+    canView: (actor, id) => social.canViewStatus(actor, Number(id)),
+    html: async (id) => (await db.statusUpdate.findUnique({ where: { id: Number(id) }, select: { contentHtml: true } }))?.contentHtml ?? null,
+  });
+  translation.registerContent("chat.message", {
+    canView: async (actor, id) => {
+      const m = await db.chatMessage.findUnique({ where: { id: Number(id) }, select: { deletedAt: true, channel: { select: { key: true } } } });
+      return m !== null && m.deletedAt === null && (await chatQueries.canRead(actor, m.channel.key));
+    },
+    html: async (id) => {
+      const m = await db.chatMessage.findUnique({ where: { id: Number(id) }, select: { body: true } });
+      return m ? renderChatText(m.body) : null;
+    },
+  });
   const services: GcsServices = {
     db,
     redis,
@@ -347,6 +376,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     chat,
     chatQueries,
     apps,
+    translation,
     widgets: new GcsWidgetService({ db, cache, bus, registry, acp, apps }),
     nav: new GcsNavService({ db, cache, bus, registry, acp, apps, isIcon: isGcsIcon }),
     bans,

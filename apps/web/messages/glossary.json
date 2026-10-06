@@ -1,0 +1,1233 @@
+{
+  "_comment": "Glosarul interfeței pentru traducerea automată (scripts/i18n-translate.ts): etichetele scurte, fără context, pe care un traducător automat le greșește (verbe traduse ca substantive). Se aplică automat, la potrivire exactă cu textul englez.",
+  "Save": {
+    "de": "Speichern",
+    "es": "Guardar",
+    "fr": "Enregistrer",
+    "ru": "Сохранить"
+  },
+  "Save settings": {
+    "de": "Einstellungen speichern",
+    "es": "Guardar ajustes",
+    "fr": "Enregistrer les paramètres",
+    "ru": "Сохранить настройки"
+  },
+  "Saved": {
+    "de": "Gespeichert",
+    "es": "Guardado",
+    "fr": "Enregistré",
+    "ru": "Сохранено"
+  },
+  "Saved.": {
+    "de": "Gespeichert.",
+    "es": "Guardado.",
+    "fr": "Enregistré.",
+    "ru": "Сохранено."
+  },
+  "Delete": {
+    "de": "Löschen",
+    "es": "Eliminar",
+    "fr": "Supprimer",
+    "ru": "Удалить"
+  },
+  "Edit": {
+    "de": "Bearbeiten",
+    "es": "Editar",
+    "fr": "Modifier",
+    "ru": "Изменить"
+  },
+  "Add": {
+    "de": "Hinzufügen",
+    "es": "Añadir",
+    "fr": "Ajouter",
+    "ru": "Добавить"
+  },
+  "Remove": {
+    "de": "Entfernen",
+    "es": "Quitar",
+    "fr": "Retirer",
+    "ru": "Убрать"
+  },
+  "Create": {
+    "de": "Erstellen",
+    "es": "Crear",
+    "fr": "Créer",
+    "ru": "Создать"
+  },
+  "Cancel": {
+    "de": "Abbrechen",
+    "es": "Cancelar",
+    "fr": "Annuler",
+    "ru": "Отмена"
+  },
+  "Close": {
+    "de": "Schließen",
+    "es": "Cerrar",
+    "fr": "Fermer",
+    "ru": "Закрыть"
+  },
+  "Continue": {
+    "de": "Weiter",
+    "es": "Continuar",
+    "fr": "Continuer",
+    "ru": "Продолжить"
+  },
+  "Back": {
+    "de": "Zurück",
+    "es": "Atrás",
+    "fr": "Retour",
+    "ru": "Назад"
+  },
+  "Done": {
+    "de": "Fertig",
+    "es": "Listo",
+    "fr": "Terminé",
+    "ru": "Готово"
+  },
+  "Apply": {
+    "de": "Anwenden",
+    "es": "Aplicar",
+    "fr": "Appliquer",
+    "ru": "Применить"
+  },
+  "Send": {
+    "de": "Senden",
+    "es": "Enviar",
+    "fr": "Envoyer",
+    "ru": "Отправить"
+  },
+  "Sending…": {
+    "de": "Wird gesendet…",
+    "es": "Enviando…",
+    "fr": "Envoi…",
+    "ru": "Отправка…"
+  },
+  "Search": {
+    "de": "Suchen",
+    "es": "Buscar",
+    "fr": "Rechercher",
+    "ru": "Поиск"
+  },
+  "Filter": {
+    "de": "Filtern",
+    "es": "Filtrar",
+    "fr": "Filtrer",
+    "ru": "Фильтр"
+  },
+  "Preview": {
+    "de": "Vorschau",
+    "es": "Vista previa",
+    "fr": "Aperçu",
+    "ru": "Предпросмотр"
+  },
+  "Insert": {
+    "de": "Einfügen",
+    "es": "Insertar",
+    "fr": "Insérer",
+    "ru": "Вставить"
+  },
+  "Copied": {
+    "de": "Kopiert",
+    "es": "Copiado",
+    "fr": "Copié",
+    "ru": "Скопировано"
+  },
+  "Sign in": {
+    "de": "Anmelden",
+    "es": "Iniciar sesión",
+    "fr": "Se connecter",
+    "ru": "Войти"
+  },
+  "Sign out": {
+    "de": "Abmelden",
+    "es": "Cerrar sesión",
+    "fr": "Se déconnecter",
+    "ru": "Выйти"
+  },
+  "Register": {
+    "de": "Registrieren",
+    "es": "Registrarse",
+    "fr": "S'inscrire",
+    "ru": "Регистрация"
+  },
+  "Create account": {
+    "de": "Konto erstellen",
+    "es": "Crear cuenta",
+    "fr": "Créer un compte",
+    "ru": "Создать аккаунт"
+  },
+  "Reply": {
+    "de": "Antworten",
+    "es": "Responder",
+    "fr": "Répondre",
+    "ru": "Ответить"
+  },
+  "Quote": {
+    "de": "Zitieren",
+    "es": "Citar",
+    "fr": "Citer",
+    "ru": "Цитировать"
+  },
+  "Report": {
+    "de": "Melden",
+    "es": "Reportar",
+    "fr": "Signaler",
+    "ru": "Пожаловаться"
+  },
+  "Follow": {
+    "de": "Folgen",
+    "es": "Seguir",
+    "fr": "Suivre",
+    "ru": "Подписаться"
+  },
+  "Unfollow": {
+    "de": "Nicht mehr folgen",
+    "es": "Dejar de seguir",
+    "fr": "Ne plus suivre",
+    "ru": "Отписаться"
+  },
+  "Following": {
+    "de": "Folge ich",
+    "es": "Siguiendo",
+    "fr": "Abonné",
+    "ru": "Вы подписаны"
+  },
+  "Ignore": {
+    "de": "Ignorieren",
+    "es": "Ignorar",
+    "fr": "Ignorer",
+    "ru": "Игнорировать"
+  },
+  "Stop ignoring": {
+    "de": "Nicht mehr ignorieren",
+    "es": "Dejar de ignorar",
+    "fr": "Ne plus ignorer",
+    "ru": "Перестать игнорировать"
+  },
+  "Message": {
+    "de": "Nachricht",
+    "es": "Mensaje",
+    "fr": "Message",
+    "ru": "Сообщение"
+  },
+  "Invite": {
+    "de": "Einladen",
+    "es": "Invitar",
+    "fr": "Inviter",
+    "ru": "Пригласить"
+  },
+  "Approve": {
+    "de": "Freigeben",
+    "es": "Aprobar",
+    "fr": "Approuver",
+    "ru": "Одобрить"
+  },
+  "Approve selected": {
+    "de": "Ausgewählte freigeben",
+    "es": "Aprobar seleccionados",
+    "fr": "Approuver la sélection",
+    "ru": "Одобрить выбранные"
+  },
+  "Hide": {
+    "de": "Ausblenden",
+    "es": "Ocultar",
+    "fr": "Masquer",
+    "ru": "Скрыть"
+  },
+  "Restore": {
+    "de": "Wiederherstellen",
+    "es": "Restaurar",
+    "fr": "Restaurer",
+    "ru": "Восстановить"
+  },
+  "Move": {
+    "de": "Verschieben",
+    "es": "Mover",
+    "fr": "Déplacer",
+    "ru": "Переместить"
+  },
+  "Move to": {
+    "de": "Verschieben nach",
+    "es": "Mover a",
+    "fr": "Déplacer vers",
+    "ru": "Переместить в"
+  },
+  "Merge": {
+    "de": "Zusammenführen",
+    "es": "Fusionar",
+    "fr": "Fusionner",
+    "ru": "Объединить"
+  },
+  "Pin": {
+    "de": "Anheften",
+    "es": "Fijar",
+    "fr": "Épingler",
+    "ru": "Закрепить"
+  },
+  "Lock": {
+    "de": "Sperren",
+    "es": "Cerrar",
+    "fr": "Verrouiller",
+    "ru": "Закрыть"
+  },
+  "Feature": {
+    "de": "Hervorheben",
+    "es": "Destacar",
+    "fr": "Mettre en avant",
+    "ru": "Выделить"
+  },
+  "Warn": {
+    "de": "Verwarnen",
+    "es": "Advertir",
+    "fr": "Avertir",
+    "ru": "Предупредить"
+  },
+  "Ban": {
+    "de": "Sperren",
+    "es": "Banear",
+    "fr": "Bannir",
+    "ru": "Забанить"
+  },
+  "Lift": {
+    "de": "Aufheben",
+    "es": "Levantar",
+    "fr": "Lever",
+    "ru": "Снять"
+  },
+  "Lift ban": {
+    "de": "Sperre aufheben",
+    "es": "Levantar el baneo",
+    "fr": "Lever le bannissement",
+    "ru": "Снять бан"
+  },
+  "Revoke": {
+    "de": "Widerrufen",
+    "es": "Revocar",
+    "fr": "Révoquer",
+    "ru": "Отозвать"
+  },
+  "Extend": {
+    "de": "Verlängern",
+    "es": "Extender",
+    "fr": "Prolonger",
+    "ru": "Продлить"
+  },
+  "Grant VIP": {
+    "de": "VIP vergeben",
+    "es": "Otorgar VIP",
+    "fr": "Accorder le VIP",
+    "ru": "Выдать VIP"
+  },
+  "Mark read": {
+    "de": "Als gelesen markieren",
+    "es": "Marcar como leído",
+    "fr": "Marquer comme lu",
+    "ru": "Отметить прочитанным"
+  },
+  "Mark all as read": {
+    "de": "Alle als gelesen markieren",
+    "es": "Marcar todo como leído",
+    "fr": "Tout marquer comme lu",
+    "ru": "Отметить все прочитанными"
+  },
+  "Mark as solution": {
+    "de": "Als Lösung markieren",
+    "es": "Marcar como solución",
+    "fr": "Marquer comme solution",
+    "ru": "Отметить как решение"
+  },
+  "Install": {
+    "de": "Installieren",
+    "es": "Instalar",
+    "fr": "Installer",
+    "ru": "Установить"
+  },
+  "Enable 2FA": {
+    "de": "2FA aktivieren",
+    "es": "Activar 2FA",
+    "fr": "Activer la 2FA",
+    "ru": "Включить 2FA"
+  },
+  "Check again": {
+    "de": "Erneut prüfen",
+    "es": "Comprobar de nuevo",
+    "fr": "Vérifier à nouveau",
+    "ru": "Проверить снова"
+  },
+  "Clear cache": {
+    "de": "Cache leeren",
+    "es": "Vaciar caché",
+    "fr": "Vider le cache",
+    "ru": "Очистить кэш"
+  },
+  "Change password": {
+    "de": "Passwort ändern",
+    "es": "Cambiar contraseña",
+    "fr": "Changer le mot de passe",
+    "ru": "Сменить пароль"
+  },
+  "Older": {
+    "de": "Ältere",
+    "es": "Anteriores",
+    "fr": "Plus anciens",
+    "ru": "Старее"
+  },
+  "Newer": {
+    "de": "Neuere",
+    "es": "Más recientes",
+    "fr": "Plus récents",
+    "ru": "Новее"
+  },
+  "Home": {
+    "de": "Startseite",
+    "es": "Inicio",
+    "fr": "Accueil",
+    "ru": "Главная"
+  },
+  "Main": {
+    "de": "Allgemein",
+    "es": "General",
+    "fr": "Général",
+    "ru": "Главное"
+  },
+  "General": {
+    "de": "Allgemein",
+    "es": "General",
+    "fr": "Général",
+    "ru": "Общее"
+  },
+  "Forum": {
+    "de": "Forum",
+    "es": "Foro",
+    "fr": "Forum",
+    "ru": "Форум"
+  },
+  "Forums": {
+    "de": "Foren",
+    "es": "Foros",
+    "fr": "Forums",
+    "ru": "Форумы"
+  },
+  "Chat": {
+    "de": "Chat",
+    "es": "Chat",
+    "fr": "Chat",
+    "ru": "Чат"
+  },
+  "Members": {
+    "de": "Mitglieder",
+    "es": "Miembros",
+    "fr": "Membres",
+    "ru": "Участники"
+  },
+  "Staff": {
+    "de": "Team",
+    "es": "Equipo",
+    "fr": "Équipe",
+    "ru": "Команда"
+  },
+  "Rules": {
+    "de": "Regeln",
+    "es": "Reglas",
+    "fr": "Règles",
+    "ru": "Правила"
+  },
+  "Profile": {
+    "de": "Profil",
+    "es": "Perfil",
+    "fr": "Profil",
+    "ru": "Профиль"
+  },
+  "Settings": {
+    "de": "Einstellungen",
+    "es": "Ajustes",
+    "fr": "Paramètres",
+    "ru": "Настройки"
+  },
+  "Messages": {
+    "de": "Nachrichten",
+    "es": "Mensajes",
+    "fr": "Messages",
+    "ru": "Сообщения"
+  },
+  "Notifications": {
+    "de": "Benachrichtigungen",
+    "es": "Notificaciones",
+    "fr": "Notifications",
+    "ru": "Уведомления"
+  },
+  "Posts": {
+    "de": "Beiträge",
+    "es": "Mensajes",
+    "fr": "Messages",
+    "ru": "Сообщения"
+  },
+  "posts": {
+    "de": "Beiträge",
+    "es": "mensajes",
+    "fr": "messages",
+    "ru": "сообщения"
+  },
+  "Topics": {
+    "de": "Themen",
+    "es": "Temas",
+    "fr": "Sujets",
+    "ru": "Темы"
+  },
+  "New topic": {
+    "de": "Neues Thema",
+    "es": "Nuevo tema",
+    "fr": "Nouveau sujet",
+    "ru": "Новая тема"
+  },
+  "Unread": {
+    "de": "Ungelesen",
+    "es": "No leído",
+    "fr": "Non lu",
+    "ru": "Непрочитанное"
+  },
+  "Online": {
+    "de": "Online",
+    "es": "En línea",
+    "fr": "En ligne",
+    "ru": "В сети"
+  },
+  "Statistics": {
+    "de": "Statistiken",
+    "es": "Estadísticas",
+    "fr": "Statistiques",
+    "ru": "Статистика"
+  },
+  "Dashboard": {
+    "de": "Dashboard",
+    "es": "Panel",
+    "fr": "Tableau de bord",
+    "ru": "Панель"
+  },
+  "Moderation": {
+    "de": "Moderation",
+    "es": "Moderación",
+    "fr": "Modération",
+    "ru": "Модерация"
+  },
+  "Moderators": {
+    "de": "Moderatoren",
+    "es": "Moderadores",
+    "fr": "Modérateurs",
+    "ru": "Модераторы"
+  },
+  "Moderator": {
+    "de": "Moderator",
+    "es": "Moderador",
+    "fr": "Modérateur",
+    "ru": "Модератор"
+  },
+  "Permissions": {
+    "de": "Berechtigungen",
+    "es": "Permisos",
+    "fr": "Permissions",
+    "ru": "Права доступа"
+  },
+  "Privacy": {
+    "de": "Privatsphäre",
+    "es": "Privacidad",
+    "fr": "Confidentialité",
+    "ru": "Конфиденциальность"
+  },
+  "Appearance": {
+    "de": "Darstellung",
+    "es": "Apariencia",
+    "fr": "Apparence",
+    "ru": "Оформление"
+  },
+  "Account": {
+    "de": "Konto",
+    "es": "Cuenta",
+    "fr": "Compte",
+    "ru": "Аккаунт"
+  },
+  "Account settings": {
+    "de": "Kontoeinstellungen",
+    "es": "Ajustes de la cuenta",
+    "fr": "Paramètres du compte",
+    "ru": "Настройки аккаунта"
+  },
+  "Name": {
+    "de": "Name",
+    "es": "Nombre",
+    "fr": "Nom",
+    "ru": "Имя"
+  },
+  "Username": {
+    "de": "Benutzername",
+    "es": "Nombre de usuario",
+    "fr": "Nom d'utilisateur",
+    "ru": "Имя пользователя"
+  },
+  "Email": {
+    "de": "E-Mail",
+    "es": "Correo electrónico",
+    "fr": "E-mail",
+    "ru": "Эл. почта"
+  },
+  "Password": {
+    "de": "Passwort",
+    "es": "Contraseña",
+    "fr": "Mot de passe",
+    "ru": "Пароль"
+  },
+  "Group": {
+    "de": "Gruppe",
+    "es": "Grupo",
+    "fr": "Groupe",
+    "ru": "Группа"
+  },
+  "Groups": {
+    "de": "Gruppen",
+    "es": "Grupos",
+    "fr": "Groupes",
+    "ru": "Группы"
+  },
+  "Title": {
+    "de": "Titel",
+    "es": "Título",
+    "fr": "Titre",
+    "ru": "Заголовок"
+  },
+  "Description": {
+    "de": "Beschreibung",
+    "es": "Descripción",
+    "fr": "Description",
+    "ru": "Описание"
+  },
+  "Type": {
+    "de": "Typ",
+    "es": "Tipo",
+    "fr": "Type",
+    "ru": "Тип"
+  },
+  "Kind": {
+    "de": "Art",
+    "es": "Tipo",
+    "fr": "Type",
+    "ru": "Вид"
+  },
+  "Key": {
+    "de": "Schlüssel",
+    "es": "Clave",
+    "fr": "Clé",
+    "ru": "Ключ"
+  },
+  "Color": {
+    "de": "Farbe",
+    "es": "Color",
+    "fr": "Couleur",
+    "ru": "Цвет"
+  },
+  "Icon": {
+    "de": "Symbol",
+    "es": "Icono",
+    "fr": "Icône",
+    "ru": "Иконка"
+  },
+  "Image": {
+    "de": "Bild",
+    "es": "Imagen",
+    "fr": "Image",
+    "ru": "Изображение"
+  },
+  "Link": {
+    "de": "Link",
+    "es": "Enlace",
+    "fr": "Lien",
+    "ru": "Ссылка"
+  },
+  "Label": {
+    "de": "Bezeichnung",
+    "es": "Etiqueta",
+    "fr": "Libellé",
+    "ru": "Подпись"
+  },
+  "Reason": {
+    "de": "Grund",
+    "es": "Motivo",
+    "fr": "Raison",
+    "ru": "Причина"
+  },
+  "Duration": {
+    "de": "Dauer",
+    "es": "Duración",
+    "fr": "Durée",
+    "ru": "Длительность"
+  },
+  "Date": {
+    "de": "Datum",
+    "es": "Fecha",
+    "fr": "Date",
+    "ru": "Дата"
+  },
+  "From": {
+    "de": "Von",
+    "es": "De",
+    "fr": "De",
+    "ru": "От"
+  },
+  "To": {
+    "de": "An",
+    "es": "Para",
+    "fr": "À",
+    "ru": "Кому"
+  },
+  "Author": {
+    "de": "Autor",
+    "es": "Autor",
+    "fr": "Auteur",
+    "ru": "Автор"
+  },
+  "Enabled": {
+    "de": "Aktiviert",
+    "es": "Activado",
+    "fr": "Activé",
+    "ru": "Включено"
+  },
+  "Off": {
+    "de": "Aus",
+    "es": "Desactivado",
+    "fr": "Désactivé",
+    "ru": "Выкл."
+  },
+  "Instant": {
+    "de": "Sofort",
+    "es": "Inmediato",
+    "fr": "Immédiat",
+    "ru": "Сразу"
+  },
+  "Daily digest": {
+    "de": "Tägliche Zusammenfassung",
+    "es": "Resumen diario",
+    "fr": "Résumé quotidien",
+    "ru": "Ежедневная сводка"
+  },
+  "Default": {
+    "de": "Standard",
+    "es": "Predeterminado",
+    "fr": "Par défaut",
+    "ru": "По умолчанию"
+  },
+  "Custom": {
+    "de": "Benutzerdefiniert",
+    "es": "Personalizado",
+    "fr": "Personnalisé",
+    "ru": "Свой"
+  },
+  "Auto": {
+    "de": "Automatisch",
+    "es": "Automático",
+    "fr": "Automatique",
+    "ru": "Авто"
+  },
+  "Light": {
+    "de": "Hell",
+    "es": "Claro",
+    "fr": "Clair",
+    "ru": "Светлая"
+  },
+  "Dark": {
+    "de": "Dunkel",
+    "es": "Oscuro",
+    "fr": "Sombre",
+    "ru": "Тёмная"
+  },
+  "Hidden": {
+    "de": "Ausgeblendet",
+    "es": "Oculto",
+    "fr": "Masqué",
+    "ru": "Скрыто"
+  },
+  "hidden": {
+    "de": "ausgeblendet",
+    "es": "oculto",
+    "fr": "masqué",
+    "ru": "скрыто"
+  },
+  "Locked": {
+    "de": "Gesperrt",
+    "es": "Cerrado",
+    "fr": "Verrouillé",
+    "ru": "Закрыто"
+  },
+  "Featured": {
+    "de": "Hervorgehoben",
+    "es": "Destacado",
+    "fr": "En vedette",
+    "ru": "Избранное"
+  },
+  "Expired": {
+    "de": "Abgelaufen",
+    "es": "Caducado",
+    "fr": "Expiré",
+    "ru": "Истёк"
+  },
+  "expired": {
+    "de": "abgelaufen",
+    "es": "caducado",
+    "fr": "expiré",
+    "ru": "истёк"
+  },
+  "Permanent": {
+    "de": "Dauerhaft",
+    "es": "Permanente",
+    "fr": "Permanent",
+    "ru": "Навсегда"
+  },
+  "permanent": {
+    "de": "dauerhaft",
+    "es": "permanente",
+    "fr": "permanent",
+    "ru": "навсегда"
+  },
+  "automatic": {
+    "de": "automatisch",
+    "es": "automático",
+    "fr": "automatique",
+    "ru": "автоматически"
+  },
+  "Anyone": {
+    "de": "Jeder",
+    "es": "Cualquiera",
+    "fr": "Tout le monde",
+    "ru": "Все"
+  },
+  "Nobody": {
+    "de": "Niemand",
+    "es": "Nadie",
+    "fr": "Personne",
+    "ru": "Никто"
+  },
+  "Members only": {
+    "de": "Nur Mitglieder",
+    "es": "Solo miembros",
+    "fr": "Membres uniquement",
+    "ru": "Только участники"
+  },
+  "Any member": {
+    "de": "Jedes Mitglied",
+    "es": "Cualquier miembro",
+    "fr": "Tout membre",
+    "ru": "Любой участник"
+  },
+  "All": {
+    "de": "Alle",
+    "es": "Todos",
+    "fr": "Tous",
+    "ru": "Все"
+  },
+  "Points": {
+    "de": "Punkte",
+    "es": "Puntos",
+    "fr": "Points",
+    "ru": "Очки"
+  },
+  "Reputation": {
+    "de": "Ansehen",
+    "es": "Reputación",
+    "fr": "Réputation",
+    "ru": "Репутация"
+  },
+  "Badge": {
+    "de": "Abzeichen",
+    "es": "Insignia",
+    "fr": "Badge",
+    "ru": "Значок"
+  },
+  "Badges": {
+    "de": "Abzeichen",
+    "es": "Insignias",
+    "fr": "Badges",
+    "ru": "Значки"
+  },
+  "Ranks": {
+    "de": "Ränge",
+    "es": "Rangos",
+    "fr": "Rangs",
+    "ru": "Ранги"
+  },
+  "Tier": {
+    "de": "Stufe",
+    "es": "Nivel",
+    "fr": "Niveau",
+    "ru": "Уровень"
+  },
+  "Followers": {
+    "de": "Follower",
+    "es": "Seguidores",
+    "fr": "Abonnés",
+    "ru": "Подписчики"
+  },
+  "Joined": {
+    "de": "Beigetreten",
+    "es": "Registrado",
+    "fr": "Inscrit",
+    "ru": "Зарегистрирован"
+  },
+  "Member since": {
+    "de": "Mitglied seit",
+    "es": "Miembro desde",
+    "fr": "Membre depuis",
+    "ru": "Участник с"
+  },
+  "Last active": {
+    "de": "Zuletzt aktiv",
+    "es": "Última actividad",
+    "fr": "Dernière activité",
+    "ru": "Последняя активность"
+  },
+  "Warnings": {
+    "de": "Verwarnungen",
+    "es": "Advertencias",
+    "fr": "Avertissements",
+    "ru": "Предупреждения"
+  },
+  "Reports": {
+    "de": "Meldungen",
+    "es": "Reportes",
+    "fr": "Signalements",
+    "ru": "Жалобы"
+  },
+  "Prefix": {
+    "de": "Präfix",
+    "es": "Prefijo",
+    "fr": "Préfixe",
+    "ru": "Префикс"
+  },
+  "Prefixes": {
+    "de": "Präfixe",
+    "es": "Prefijos",
+    "fr": "Préfixes",
+    "ru": "Префиксы"
+  },
+  "Tags": {
+    "de": "Tags",
+    "es": "Etiquetas",
+    "fr": "Tags",
+    "ru": "Теги"
+  },
+  "Category": {
+    "de": "Kategorie",
+    "es": "Categoría",
+    "fr": "Catégorie",
+    "ru": "Категория"
+  },
+  "Columns": {
+    "de": "Spalten",
+    "es": "Columnas",
+    "fr": "Colonnes",
+    "ru": "Столбцы"
+  },
+  "Language": {
+    "de": "Sprache",
+    "es": "Idioma",
+    "fr": "Langue",
+    "ru": "Язык"
+  },
+  "Time zone": {
+    "de": "Zeitzone",
+    "es": "Zona horaria",
+    "fr": "Fuseau horaire",
+    "ru": "Часовой пояс"
+  },
+  "Bold": {
+    "de": "Fett",
+    "es": "Negrita",
+    "fr": "Gras",
+    "ru": "Жирный"
+  },
+  "Italic": {
+    "de": "Kursiv",
+    "es": "Cursiva",
+    "fr": "Italique",
+    "ru": "Курсив"
+  },
+  "Code": {
+    "de": "Code",
+    "es": "Código",
+    "fr": "Code",
+    "ru": "Код"
+  },
+  "Glow": {
+    "de": "Leuchten",
+    "es": "Brillo",
+    "fr": "Lueur",
+    "ru": "Свечение"
+  },
+  "Gradient": {
+    "de": "Verlauf",
+    "es": "Degradado",
+    "fr": "Dégradé",
+    "ru": "Градиент"
+  },
+  "Bars": {
+    "de": "Balken",
+    "es": "Barras",
+    "fr": "Barres",
+    "ru": "Столбцы"
+  },
+  "Area": {
+    "de": "Fläche",
+    "es": "Área",
+    "fr": "Aires",
+    "ru": "Область"
+  },
+  "List": {
+    "de": "Liste",
+    "es": "Lista",
+    "fr": "Liste",
+    "ru": "Список"
+  },
+  "Mention": {
+    "de": "Erwähnung",
+    "es": "Mención",
+    "fr": "Mention",
+    "ru": "Упоминание"
+  },
+  "Mentions": {
+    "de": "Erwähnungen",
+    "es": "Menciones",
+    "fr": "Mentions",
+    "ru": "Упоминания"
+  },
+  "Announcement": {
+    "de": "Ankündigung",
+    "es": "Anuncio",
+    "fr": "Annonce",
+    "ru": "Объявление"
+  },
+  "Announcements": {
+    "de": "Ankündigungen",
+    "es": "Anuncios",
+    "fr": "Annonces",
+    "ru": "Объявления"
+  },
+  "Maintenance": {
+    "de": "Wartung",
+    "es": "Mantenimiento",
+    "fr": "Maintenance",
+    "ru": "Техобслуживание"
+  },
+  "Installation": {
+    "de": "Installation",
+    "es": "Instalación",
+    "fr": "Installation",
+    "ru": "Установка"
+  },
+  "Database": {
+    "de": "Datenbank",
+    "es": "Base de datos",
+    "fr": "Base de données",
+    "ru": "База данных"
+  },
+  "Advanced": {
+    "de": "Erweitert",
+    "es": "Avanzado",
+    "fr": "Avancé",
+    "ru": "Дополнительно"
+  },
+  "Community": {
+    "de": "Community",
+    "es": "Comunidad",
+    "fr": "Communauté",
+    "ru": "Сообщество"
+  },
+  "Games": {
+    "de": "Spiele",
+    "es": "Juegos",
+    "fr": "Jeux",
+    "ru": "Игры"
+  },
+  "Gaming": {
+    "de": "Gaming",
+    "es": "Gaming",
+    "fr": "Gaming",
+    "ru": "Гейминг"
+  },
+  "Files": {
+    "de": "Dateien",
+    "es": "Archivos",
+    "fr": "Fichiers",
+    "ru": "Файлы"
+  },
+  "Help": {
+    "de": "Hilfe",
+    "es": "Ayuda",
+    "fr": "Aide",
+    "ru": "Помощь"
+  },
+  "Contact": {
+    "de": "Kontakt",
+    "es": "Contacto",
+    "fr": "Contact",
+    "ru": "Контакты"
+  },
+  "History": {
+    "de": "Verlauf",
+    "es": "Historial",
+    "fr": "Historique",
+    "ru": "История"
+  },
+  "Details": {
+    "de": "Details",
+    "es": "Detalles",
+    "fr": "Détails",
+    "ru": "Подробности"
+  },
+  "Activity": {
+    "de": "Aktivität",
+    "es": "Actividad",
+    "fr": "Activité",
+    "ru": "Активность"
+  },
+  "About": {
+    "de": "Über",
+    "es": "Acerca de",
+    "fr": "À propos",
+    "ru": "О себе"
+  },
+  "Menu": {
+    "de": "Menü",
+    "es": "Menú",
+    "fr": "Menu",
+    "ru": "Меню"
+  },
+  "User": {
+    "de": "Benutzer",
+    "es": "Usuario",
+    "fr": "Utilisateur",
+    "ru": "Пользователь"
+  },
+  "Action": {
+    "de": "Aktion",
+    "es": "Acción",
+    "fr": "Action",
+    "ru": "Действие"
+  },
+  "Site": {
+    "de": "Website",
+    "es": "Sitio",
+    "fr": "Site",
+    "ru": "Сайт"
+  },
+  "Site name": {
+    "de": "Name der Website",
+    "es": "Nombre del sitio",
+    "fr": "Nom du site",
+    "ru": "Название сайта"
+  },
+  "Channels": {
+    "de": "Kanäle",
+    "es": "Canales",
+    "fr": "Salons",
+    "ru": "Каналы"
+  },
+  "Subscribers": {
+    "de": "Abonnenten",
+    "es": "Suscriptores",
+    "fr": "Abonnés",
+    "ru": "Подписчики"
+  },
+  "Subscriptions": {
+    "de": "Abonnements",
+    "es": "Suscripciones",
+    "fr": "Abonnements",
+    "ru": "Подписки"
+  },
+  "Română": {
+    "de": "Română",
+    "es": "Română",
+    "fr": "Română",
+    "ru": "Română"
+  },
+  "English": {
+    "de": "English",
+    "es": "English",
+    "fr": "English",
+    "ru": "English"
+  },
+  "Deutsch": {
+    "de": "Deutsch",
+    "es": "Deutsch",
+    "fr": "Deutsch",
+    "ru": "Deutsch"
+  },
+  "Español": {
+    "de": "Español",
+    "es": "Español",
+    "fr": "Español",
+    "ru": "Español"
+  },
+  "Français": {
+    "de": "Français",
+    "es": "Français",
+    "fr": "Français",
+    "ru": "Français"
+  },
+  "Русский": {
+    "de": "Русский",
+    "es": "Русский",
+    "fr": "Русский",
+    "ru": "Русский"
+  },
+  "DeepL": {
+    "de": "DeepL",
+    "es": "DeepL",
+    "fr": "DeepL",
+    "ru": "DeepL"
+  },
+  "Redis": {
+    "de": "Redis",
+    "es": "Redis",
+    "fr": "Redis",
+    "ru": "Redis"
+  },
+  "IP": {
+    "de": "IP",
+    "es": "IP",
+    "fr": "IP",
+    "ru": "IP"
+  },
+  "API": {
+    "de": "API",
+    "es": "API",
+    "fr": "API",
+    "ru": "API"
+  },
+  "CSV": {
+    "de": "CSV",
+    "es": "CSV",
+    "fr": "CSV",
+    "ru": "CSV"
+  },
+  "2FA": {
+    "de": "2FA",
+    "es": "2FA",
+    "fr": "2FA",
+    "ru": "2FA"
+  },
+  "VIP": {
+    "de": "VIP",
+    "es": "VIP",
+    "fr": "VIP",
+    "ru": "VIP"
+  },
+  "ACP": {
+    "de": "ACP",
+    "es": "ACP",
+    "fr": "ACP",
+    "ru": "ACP"
+  },
+  "SMTP server": {
+    "de": "SMTP-Server",
+    "es": "Servidor SMTP",
+    "fr": "Serveur SMTP",
+    "ru": "SMTP-сервер"
+  }
+}

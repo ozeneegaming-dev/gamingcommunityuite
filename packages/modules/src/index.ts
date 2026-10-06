@@ -1,5 +1,5 @@
 // @gcs/modules — câte un folder pe modul.
-export { coreModule, DEFAULT_GROUP_KEYS } from "./core-module";
+export { coreModule, DEFAULT_GROUP_KEYS, GCS_LOCALE_KEYS } from "./core-module";
 export { forumsModule } from "./forums";
 export { canViewPost, registerForumContent } from "./forums/content";
 export { GcsForumCounters } from "./forums/counters";

@@ -10,6 +10,7 @@
 import { execFileSync, spawn, type ChildProcess } from "node:child_process";
 import { mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import http from "node:http";
 import net from "node:net";
 import os from "node:os";
 import path from "node:path";
@@ -119,7 +120,28 @@ async function startRedis(): Promise<string> {
   return `redis://${await server.getHost()}:${await server.getPort()}`;
 }
 
-async function prepareDatabase(baseUrl: string): Promise<string> {
+/**
+ * Un LibreTranslate fals (fără modele): `/translate` întoarce textul cu prefixul limbii, ex. `[de] <p>salut</p>`.
+ * Ajunge pentru testele butonului „Traduce”; instanțele E2E îl primesc prin setarea `i18n.libretranslate_url`.
+ */
+async function startFakeTranslator(): Promise<string> {
+  const port = await freePort();
+  const server = http.createServer((req, res) => {
+    let raw = "";
+    req.on("data", (c: Buffer) => (raw += c.toString()));
+    req.on("end", () => {
+      const body = (raw ? JSON.parse(raw) : {}) as { q?: string | string[]; target?: string };
+      const tr = (q: string) => `[${body.target ?? "?"}] ${q}`;
+      res.setHeader("content-type", "application/json");
+      res.end(JSON.stringify({ translatedText: Array.isArray(body.q) ? body.q.map(tr) : tr(body.q ?? "") }));
+    });
+  });
+  await new Promise<void>((resolve) => server.listen(port, "127.0.0.1", () => resolve()));
+  cleanups.push(() => new Promise<void>((resolve) => server.close(() => resolve())));
+  return `http://127.0.0.1:${port}`;
+}
+
+async function prepareDatabase(baseUrl: string, translatorUrl: string): Promise<string> {
   const admin = new pg.Client({ connectionString: baseUrl });
   await admin.connect();
   await admin.query(`DROP DATABASE IF EXISTS "redline_e2e" WITH (FORCE)`);
@@ -133,6 +155,11 @@ async function prepareDatabase(baseUrl: string): Promise<string> {
   });
   const db = new PrismaClient({ datasourceUrl: url.toString() });
   await seedDefaults(db, createRegistry());
+  await db.setting.upsert({
+    where: { key: "i18n.libretranslate_url" },
+    create: { key: "i18n.libretranslate_url", value: translatorUrl },
+    update: { value: translatorUrl },
+  });
   await db.$disconnect();
   return url.toString();
 }
@@ -191,7 +218,7 @@ async function startRealtime(env: NodeJS.ProcessEnv): Promise<string> {
 
 async function main(): Promise<number> {
   const [pgUrl, redisUrl] = await Promise.all([startPostgres(), startRedis()]);
-  const databaseUrl = await prepareDatabase(pgUrl);
+  const databaseUrl = await prepareDatabase(pgUrl, await startFakeTranslator());
   // Un folder de configurare „deja instalat”: testele (în afară de cele ale installer-ului) pornesc de pe un site instalat.
   const configDir = path.join(webDir, ".e2e", `config-${process.pid}`);
   mkdirSync(configDir, { recursive: true });

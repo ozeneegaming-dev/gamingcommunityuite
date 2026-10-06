@@ -14,4 +14,5 @@ export function registerAppJobs(s: GcsServices): void {
   s.vip.registerJobs(s.jobs);
   s.notificationProducers.registerJobs(s.jobs);
   s.chat.registerJobs(s.jobs);
+  s.jobs.register({ name: "translate.cleanup", everyMs: 24 * 3600_000, handler: async () => void (await s.translation.cleanup()) });
 }

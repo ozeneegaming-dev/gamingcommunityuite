@@ -342,6 +342,11 @@ const SANITIZE: sanitizeHtml.IOptions & { allowedEmptyAttributes: string[] } = {
   disallowedTagsMode: "discard",
 };
 
+/** Re-sanitizează HTML de conținut venit din afara renderer-ului (ex. traducerea unei postări), cu aceleași reguli. */
+export function sanitizeContentHtml(html: string): string {
+  return sanitizeHtml(html, SANITIZE);
+}
+
 /**
  * JSON Tiptap → HTML sanitizat (specul etapei 2, §5). Singurul loc în care se produce HTML din conținutul userilor:
  * clientul trimite doar JSON, validat strict aici (orice nod sau atribut necunoscut → `GcsValidationError`).

@@ -212,3 +212,36 @@
   border-radius: 10px;
   background: rgb(214 40 57 / 0.08);
 }
+
+/* Butonul „Traduce” și traducerea afișată sub original (etapa 5). */
+.gcs-translate {
+  padding: 0 20px 14px;
+}
+.gcs-translate__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  font-size: 13px;
+}
+.gcs-translate__result {
+  margin-top: 8px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--gcs-accent);
+  border-radius: 8px;
+  background: var(--gcs-surface2);
+}
+.gcs-translate__label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gcs-muted);
+}
+.gcs-translate__error {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--gcs-warn);
+}

@@ -3,6 +3,7 @@ import type { GcsPostView } from "@gcs/modules";
 import { GcsAvatar, GcsBadge, GcsUserLink } from "@gcs/ui";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { memberHref, postHref, tint } from "@/lib/forum-urls";
+import { GcsTranslateButton, type GcsTranslateLabels } from "../GcsTranslateButton";
 import { GcsPostContent, type GcsPostContentProps } from "./GcsPostContent";
 
 type Props = {
@@ -15,10 +16,12 @@ type Props = {
   actorId: string | null;
   /** Autorul e ignorat de viewer: postarea apare pliată, cu „arată” (specul etapei 3, §8). */
   ignored?: boolean;
+  /** Etichetele butonului „Traduce” (etapa 5), dacă viewer-ul îl are. */
+  translate?: GcsTranslateLabels | null;
 };
 
 /** O postare (macheta Topic): coloana autorului (server) și conținutul cu acțiunile (client). */
-export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, can, actorId, ignored = false }: Props) {
+export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, can, actorId, ignored = false, translate = null }: Props) {
   const t = await getTranslations("topic");
   const format = await getFormatter();
   const author = post.author;
@@ -97,6 +100,7 @@ export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, 
         permalink={postHref(topicId, post.id)}
         can={{ ...can, react: can.react && !own, report: can.report && !own, edit: post.canEdit, hide: post.canHide }}
       />
+      {translate && post.visibility === "VISIBLE" && !own && <GcsTranslateButton contentType="forums.post" contentId={post.id} labels={translate} />}
     </article>
   );
   if (!ignored || !author) return article;

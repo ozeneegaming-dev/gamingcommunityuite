@@ -52,3 +52,5 @@ export * from "./realtime/token";
 export * from "./settings/registry";
 export * from "./settings/service";
 export * from "./widgets/service";
+export * from "./translate/providers";
+export * from "./translate/service";

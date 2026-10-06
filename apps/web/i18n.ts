@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { getRequestConfig } from "next-intl/server";
 import { services } from "./lib/services";
 
-export const GCS_LOCALES = ["ro", "en"] as const;
+export const GCS_LOCALES = ["ro", "en", "de", "es", "fr", "ru"] as const;
 export type GcsLocale = (typeof GCS_LOCALES)[number];
 export const LOCALE_COOKIE = "gcs-locale";
 

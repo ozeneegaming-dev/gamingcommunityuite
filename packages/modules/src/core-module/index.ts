@@ -32,6 +32,9 @@ function setting(
   return def;
 }
 
+/** Limbile interfeței (specul etapei 5): pachetele `de`, `es`, `fr`, `ru` sunt generate automat. */
+export const GCS_LOCALE_KEYS = ["ro", "en", "de", "es", "fr", "ru"] as const;
+
 const isPort = (v: unknown) => (Number.isInteger(v) && (v as number) > 0 && (v as number) < 65536 ? null : "invalid_port");
 const isUrlOrEmpty = (v: unknown) => (v === "" || URL.canParse(v as string) ? null : "invalid_url");
 const isEmailOrEmpty = (v: unknown) => (v === "" || /^[^\s@]+@[^\s@]+$/.test(v as string) ? null : "invalid_email");
@@ -41,7 +44,7 @@ const notEmpty = (v: unknown) => ((v as string).trim() === "" ? "required" : nul
 const settings: GcsSettingDef[] = [
   setting("site.name", "string", "RED-LINE", "general", notEmpty),
   setting("site.url", "string", "", "general", isUrlOrEmpty),
-  { ...setting("site.locale", "string", "ro", "general", oneOf(["ro", "en"])), options: ["ro", "en"] },
+  { ...setting("site.locale", "string", "ro", "general", oneOf([...GCS_LOCALE_KEYS])), options: [...GCS_LOCALE_KEYS] },
   setting("site.timezone", "string", "Europe/Bucharest", "general", notEmpty),
   { ...setting("site.theme", "string", "dark", "general", oneOf(["dark", "light", "auto"])), options: ["dark", "light", "auto"] },
   setting("email.smtp_host", "string", "", "email"),
@@ -57,6 +60,13 @@ const settings: GcsSettingDef[] = [
   setting("auth.turnstile_site_key", "string", "", "auth"),
   setting("auth.turnstile_secret", "secret", "", "auth"),
   setting("system.maintenance", "boolean", false, "advanced"),
+  // Limbile și traducerea automată (etapa 5): limbile oferite membrilor și providerul butonului „Traduce”.
+  setting("i18n.locales", "json", [...GCS_LOCALE_KEYS], "languages", (v) =>
+    Array.isArray(v) && v.length > 0 && v.every((l) => GCS_LOCALE_KEYS.includes(l as (typeof GCS_LOCALE_KEYS)[number])) ? null : "invalid_choice",
+  ),
+  { ...setting("i18n.translate_provider", "string", "libretranslate", "languages", oneOf(["libretranslate", "deepl", "off"])), options: ["libretranslate", "deepl", "off"] },
+  setting("i18n.libretranslate_url", "string", "http://translate:5000", "languages", isUrlOrEmpty),
+  setting("i18n.deepl_key", "secret", "", "languages"),
   // Ora (în fusul site-ului) la care pleacă digestul zilnic al notificărilor (etapa 4).
   setting("notifications.digest_hour", "number", 8, "notifications", (v) => (Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 23 ? null : "invalid_range")),
 ];
@@ -73,6 +83,9 @@ function groupPermission(key: string, defaults: GcsPermissionDef["default"], mer
  */
 const permissions: GcsPermissionDef[] = [
   groupPermission("core.view_public", Object.fromEntries(DEFAULT_GROUP_KEYS.map((g) => [g, true]))),
+  // Etapa 5: butonul „Traduce” la conținut (membrii) și listele de membri / staff (toți, inclusiv vizitatorii).
+  groupPermission("core.translate", { ...STAFF, ...VIPS, member: true, new_member: true }),
+  groupPermission("core.members_list", Object.fromEntries(DEFAULT_GROUP_KEYS.filter((g) => g !== "banned").map((g) => [g, true]))),
   groupPermission("acp.access", { ...ADMINS }),
   groupPermission("mod.access", { ...STAFF }),
   groupPermission("pm.max_conversations", {
@@ -168,6 +181,7 @@ const acpMenu: GcsAcpMenuSection[] = [
     ["settings_terms", "/admin/settings/terms"],
     ["settings_posting", "/admin/settings/posting"],
     ["settings_email", "/admin/settings/email"],
+    ["settings_languages", "/admin/settings/languages"],
     ["settings_auth", "/admin/settings/auth"],
     ["settings_contact", "/admin/settings/contact"],
     ["settings_2fa", "/admin/settings/2fa"],

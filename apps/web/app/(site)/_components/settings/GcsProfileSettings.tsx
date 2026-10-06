@@ -7,7 +7,7 @@ import { removeImage, saveProfile, setCoverPosition } from "../../settings-actio
 import { GcsStatus } from "./GcsStatus";
 import { useSettingsAction } from "./useSettingsAction";
 
-export type GcsFieldDef = { key: string; label: string; type: "TEXT" | "TEXTAREA" | "URL" | "NUMBER" | "SELECT"; options: string[]; required: boolean; maxLength: number; section: "ABOUT" | "GAMES" };
+export type GcsFieldDef = { key: string; label: string; type: "TEXT" | "TEXTAREA" | "URL" | "NUMBER" | "SELECT" | "IMAGE_SELECT"; options: string[]; required: boolean; maxLength: number; section: "ABOUT" | "GAMES" };
 
 type Labels = {
   bio: string;
@@ -33,7 +33,7 @@ export function GcsProfileFieldsForm({ fields, values, bio, labels }: { fields: 
   const input = (f: GcsFieldDef) => {
     const common = { id: `field-${f.key}`, name: f.key, value: form[f.key] ?? "", required: f.required, className: "gcs-input" };
     const onChange = (e: { target: { value: string } }) => setForm((s) => ({ ...s, [f.key]: e.target.value }));
-    if (f.type === "SELECT") {
+    if ((f.type === "SELECT" || f.type === "IMAGE_SELECT")) {
       return (
         <select {...common} onChange={onChange}>
           <option value="">{labels.choose}</option>

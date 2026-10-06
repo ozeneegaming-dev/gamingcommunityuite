@@ -12,6 +12,8 @@ import { pageParam } from "@/lib/forum-page";
 import { services } from "@/lib/services";
 import { GcsProfileActions } from "../../_components/profile/GcsProfileActions";
 import { GcsWallComposer, GcsWallItemActions } from "../../_components/profile/GcsWall";
+import { GcsTranslateButton } from "../../_components/GcsTranslateButton";
+import { translateLabels } from "@/lib/translate";
 
 const TABS = ["activity", "about", "games", "followers", "badges", "warnings"] as const;
 type Tab = (typeof TABS)[number];
@@ -50,6 +52,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
   const data = await loadProfile(ref);
   if (!data) notFound();
   const { parsed, actor, profile } = data;
+  const translate = await translateLabels(actor);
   const { user, stats, viewer } = profile;
   const tab: Tab = TABS.includes(query.tab as Tab) && (query.tab !== "warnings" || viewer.canSeeWarnings) ? (query.tab as Tab) : "activity";
   if (parsed.slug !== user.slug) permanentRedirect(`/members/${user.id}-${user.slug}${tab !== "activity" ? `?tab=${tab}` : ""}`);
@@ -301,6 +304,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
             {wall?.items.map((s) => (
               <li key={s.id} className={`gcs-wallItem${s.visibility !== "VISIBLE" ? " gcs-wallItem--hidden" : ""}`} data-testid="gcs-wall-item">
                 <WallEntry entry={s} />
+                {translate && s.visibility === "VISIBLE" && s.author?.id !== actor.userId && <GcsTranslateButton contentType="profile.status" contentId={s.id} labels={translate} />}
                 <GcsWallItemActions statusId={s.id} hidden={s.visibility !== "VISIBLE"} canManage={s.canManage} canModerate={viewer.canModerate} canReport={actor.userId !== null && s.author?.id !== actor.userId} labels={itemLabels} />
                 {s.replies.length > 0 && (
                   <ul className="gcs-wall gcs-wall--replies">

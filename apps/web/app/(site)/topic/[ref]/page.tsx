@@ -18,6 +18,7 @@ import { GcsPost } from "../../_components/topic/GcsPost";
 import { GcsReplyBox } from "../../_components/topic/GcsReplyBox";
 import { GcsTopicLive } from "../../_components/topic/GcsTopicLive";
 import { topicReadersView } from "@/lib/online";
+import { translateLabels } from "@/lib/translate";
 import { GcsTopicModMenu, SPLIT_FORM_ID } from "../../_components/topic/GcsTopicModMenu";
 
 type Props = { params: Promise<{ ref: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
@@ -73,13 +74,14 @@ export default async function TopicPage({ params, searchParams }: Props) {
   const visibleIds = data.posts.filter((p) => p.visibility === "VISIBLE").map((p) => p.id);
   const ignored = new Set(await social.ignoredIds(actor.userId, "posts"));
   const isMod = data.modPowers.length > 0;
-  const [maxUploadMb, , targets, , readers, tl] = await Promise.all([
+  const [maxUploadMb, , targets, , readers, tl, translate] = await Promise.all([
     actor.userId ? permissions.groupValue<number | boolean>(actor, "upload.max_mb") : Promise.resolve(0),
     registerTopicView(actor, topic.id),
     isMod ? moveTargets(actor) : Promise.resolve([]),
     actor.userId && visibleIds.length > 0 ? readMarkers.markRead(actor.userId, topic.id, Math.max(...visibleIds)) : Promise.resolve(),
     topicReadersView(topic.id),
     getTranslations("topic.live"),
+    translateLabels(actor),
   ]);
   const isTopicAuthor = actor.userId !== null && actor.userId === topic.author?.id;
   const canSolve = forum.type === "QA" && (isTopicAuthor || has(data.modPowers, "edit"));
@@ -174,6 +176,7 @@ export default async function TopicPage({ params, searchParams }: Props) {
             reactionList={data.reactions}
             actorId={actor.userId}
             ignored={post.author !== null && ignored.has(post.author.id)}
+            translate={translate}
             can={{
               react: actor.userId !== null && post.visibility === "VISIBLE",
               quote: data.canReply,

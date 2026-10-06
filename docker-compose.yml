@@ -50,6 +50,16 @@ services:
     volumes:
       - gcsconfig:/app/config
 
+  # Traducerea automată (LibreTranslate), doar intern, fără port public: butonul „Traduce” de la conținut.
+  # Modelele (≈1–2 GB) se descarcă la prima pornire, în volumul `ltdata`.
+  translate:
+    image: libretranslate/libretranslate:latest
+    restart: unless-stopped
+    environment:
+      LT_LOAD_ONLY: en,ro,de,es,fr,ru
+    volumes:
+      - ltdata:/home/libretranslate/.local
+
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -106,6 +116,7 @@ services:
       - caddyconfig:/config
 
 volumes:
+  ltdata:
   pgdata:
   redisdata:
   miniodata:

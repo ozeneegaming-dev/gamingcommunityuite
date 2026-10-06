@@ -227,7 +227,8 @@
         "logs": "Jurnale sistem",
         "cache": "Golire cache",
         "conversions": "Conversii",
-        "import": "Import IPS / Indungi"
+        "import": "Import IPS / Indungi",
+        "settings_languages": "Limbi și traducere"
       },
       "members": {
         "members": "Membri",
@@ -593,7 +594,8 @@
         "advanced": "Avansat",
         "posting": "Postare & Editor",
         "notifications": "Notificări",
-        "chat": "Chat"
+        "chat": "Chat",
+        "languages": "Limbi și traducere"
       },
       "save": "Salvează setările",
       "secretSet": "•••• salvat (lasă gol ca să păstrezi valoarea)",
@@ -1013,7 +1015,14 @@
       "en": "English",
       "dark": "Întunecată",
       "light": "Luminoasă",
-      "auto": "Automată (după sistem)"
+      "auto": "Automată (după sistem)",
+      "de": "Deutsch",
+      "es": "Español",
+      "fr": "Français",
+      "ru": "Русский",
+      "libretranslate": "LibreTranslate (propriu)",
+      "deepl": "DeepL",
+      "off": "Oprită"
     },
     "forums": {
       "posts_per_page": "Postări pe pagină",
@@ -1137,6 +1146,12 @@
     },
     "chat": {
       "word_filter": "Cuvinte filtrate în chat (înlocuite cu ***)"
+    },
+    "i18n": {
+      "locales": "Limbile oferite membrilor",
+      "translate_provider": "Traducerea conținutului (butonul „Traduce”)",
+      "libretranslate_url": "Adresa serviciului LibreTranslate",
+      "deepl_key": "Cheia API DeepL (opțional)"
     }
   },
   "permissions": {
@@ -1727,5 +1742,13 @@
   "apps": {
     "chat": "Chat",
     "vip": "VIP"
+  },
+  "translate": {
+    "translate": "Traduce",
+    "translating": "Se traduce…",
+    "hide": "Ascunde traducerea",
+    "translated": "Traducere automată",
+    "failed": "Traducerea nu a reușit. Încearcă din nou.",
+    "limited": "Prea multe traduceri într-un minut. Încearcă puțin mai târziu."
   }
 }

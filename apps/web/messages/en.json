@@ -227,7 +227,8 @@
         "logs": "System logs",
         "cache": "Clear cache",
         "conversions": "Conversions",
-        "import": "IPS / Indungi import"
+        "import": "IPS / Indungi import",
+        "settings_languages": "Languages & translation"
       },
       "members": {
         "members": "Members",
@@ -593,7 +594,8 @@
         "advanced": "Advanced",
         "posting": "Posting & Editor",
         "notifications": "Notifications",
-        "chat": "Chat"
+        "chat": "Chat",
+        "languages": "Languages & translation"
       },
       "save": "Save settings",
       "secretSet": "•••• saved (leave empty to keep the value)",
@@ -1013,7 +1015,14 @@
       "en": "English",
       "dark": "Dark",
       "light": "Light",
-      "auto": "Automatic (system)"
+      "auto": "Automatic (system)",
+      "de": "Deutsch",
+      "es": "Español",
+      "fr": "Français",
+      "ru": "Русский",
+      "libretranslate": "LibreTranslate (self-hosted)",
+      "deepl": "DeepL",
+      "off": "Off"
     },
     "forums": {
       "posts_per_page": "Posts per page",
@@ -1137,6 +1146,12 @@
     },
     "chat": {
       "word_filter": "Filtered chat words (replaced with ***)"
+    },
+    "i18n": {
+      "locales": "Languages offered to members",
+      "translate_provider": "Content translation (the “Translate” button)",
+      "libretranslate_url": "LibreTranslate service address",
+      "deepl_key": "DeepL API key (optional)"
     }
   },
   "permissions": {
@@ -1727,5 +1742,13 @@
   "apps": {
     "chat": "Chat",
     "vip": "VIP"
+  },
+  "translate": {
+    "translate": "Translate",
+    "translating": "Translating…",
+    "hide": "Hide translation",
+    "translated": "Machine translation",
+    "failed": "The translation failed. Please try again.",
+    "limited": "Too many translations in a minute. Please try again shortly."
   }
 }

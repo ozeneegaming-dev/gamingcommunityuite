@@ -8,6 +8,8 @@ import { currentActor } from "@/lib/actor";
 import { memberHref } from "@/lib/forum-urls";
 import { pageParam } from "@/lib/forum-page";
 import { services } from "@/lib/services";
+import { translateLabels } from "@/lib/translate";
+import { GcsTranslateButton } from "../../_components/GcsTranslateButton";
 import { GcsConversationReply, GcsConversationTools, GcsRefreshAfterRead, GcsReportMessageButton } from "../../_components/messages/GcsMessageForms";
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ page?: string }> };
@@ -34,6 +36,7 @@ export default async function ConversationPage({ params, searchParams }: Props) 
 
   const t = await getTranslations("messages");
   const format = await getFormatter();
+  const translate = await translateLabels(actor);
   return (
     <>
       <GcsRefreshAfterRead wasUnread={wasUnread} />
@@ -73,6 +76,7 @@ export default async function ConversationPage({ params, searchParams }: Props) 
                 {!m.mine && <GcsReportMessageButton messageId={m.id} labels={{ report: t("report"), reason: t("reportReason"), done: t("reported") }} />}
               </header>
               <div className="gcs-postBody" dangerouslySetInnerHTML={{ __html: m.html }} />
+              {translate && !m.mine && <GcsTranslateButton contentType="pm.message" contentId={m.id} labels={translate} />}
               {m.attachments.length > 0 && (
                 <ul className="gcs-attachments">
                   {m.attachments.map((a) => (
