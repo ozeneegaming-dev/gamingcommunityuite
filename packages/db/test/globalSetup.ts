@@ -1,9 +1,9 @@
 import { execFileSync } from "node:child_process";
-import type { ChildProcess } from "node:child_process";
 import { readdirSync, rmSync } from "node:fs";
+import { createRequire } from "node:module";
 import net from "node:net";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import pg from "pg";
 import type { TestProject } from "vitest/node";
 import { TEST_DB_COUNT, withDatabase } from "./url";
@@ -47,6 +47,16 @@ async function importEmbeddedPostgres() {
   return mod.default;
 }
 
+/**
+ * `pg_ctl` din binarele folosite de `embedded-postgres`. Pe Windows, `postgres.exe` refuză să pornească direct dintr-un
+ * proces cu drepturi de administrator; `pg_ctl` renunță singur la ele (restricted token), deci pornim prin el.
+ */
+async function pgCtlPath(): Promise<string> {
+  const embedded = createRequire(import.meta.url).resolve("embedded-postgres");
+  const binaries = createRequire(embedded).resolve(`@embedded-postgres/${process.platform === "win32" ? "windows" : process.platform}-${process.arch}`);
+  return ((await import(pathToFileURL(binaries).href)) as { pg_ctl: string }).pg_ctl;
+}
+
 /** Șterge folderele rămase de la rulările anterioare; un folder încă blocat de Windows e lăsat pe data viitoare. */
 function cleanOldRuns(root: string): void {
   let entries: string[] = [];
@@ -82,6 +92,8 @@ export default async function setup(project: TestProject): Promise<() => Promise
     cleanOldRuns(root);
     const databaseDir = path.join(root, `run-${process.pid}`);
     const port = process.env.TEST_PG_PORT ? Number(process.env.TEST_PG_PORT) : await freePort();
+    // Fiecare worker are propriul pool Prisma; serverul de test e local, fără nevoie de durabilitate.
+    const postgresFlags = ["-c", "max_connections=200", "-c", "fsync=off", "-c", "synchronous_commit=off", "-c", "full_page_writes=off"];
     const server = new EmbeddedPostgres({
       databaseDir,
       user: "postgres",
@@ -89,21 +101,25 @@ export default async function setup(project: TestProject): Promise<() => Promise
       port,
       persistent: true,
       initdbFlags: ["--encoding=UTF8", "--locale=C"],
-      // Fiecare worker are propriul pool Prisma; serverul de test e local, fără nevoie de durabilitate.
-      postgresFlags: ["-c", "max_connections=200", "-c", "fsync=off", "-c", "synchronous_commit=off", "-c", "full_page_writes=off"],
+      postgresFlags,
       onLog: () => {},
     });
     await server.initialise();
-    await server.start();
+    const pgCtl = await pgCtlPath();
+    if (process.platform === "win32") {
+      execFileSync(pgCtl, ["start", "-D", databaseDir, "-o", `-p ${port} ${postgresFlags.join(" ")}`, "-w", "-t", "60", "-l", path.join(databaseDir, "server.log")], {
+        // Serverul pornit moștenește handle-urile: cu `pipe`, apelul ar aștepta până la oprirea lui.
+        stdio: "ignore",
+      });
+    } else {
+      await server.start();
+    }
     baseUrl = `postgresql://postgres:postgres@localhost:${port}/postgres`;
 
     stopServer = async () => {
       // `server.stop()` folosește pe Windows `taskkill /f` și poate lăsa procese copil orfane;
       // `pg_ctl stop` oprește curat serverul cu toate procesele lui și așteaptă să termine.
-      const postgresBin = (server as unknown as { process?: ChildProcess }).process?.spawnfile;
       try {
-        if (!postgresBin) throw new Error("binarul postgres nu e cunoscut");
-        const pgCtl = path.join(path.dirname(postgresBin), process.platform === "win32" ? "pg_ctl.exe" : "pg_ctl");
         execFileSync(pgCtl, ["stop", "-D", databaseDir, "-m", "fast", "-w", "-t", "30"], { stdio: "pipe" });
       } catch (error) {
         console.warn("[gcs] pg_ctl stop a eșuat, opresc forțat PostgreSQL de test", error);
