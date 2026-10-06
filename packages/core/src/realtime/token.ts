@@ -5,7 +5,14 @@ export const REALTIME_AUDIENCE = "gcs-realtime";
 /** Cine se conectează la `gcs-realtime`: un membru (`userId`) sau un vizitator (`guestId`, pentru prezență). */
 export type GcsRealtimeClaims = { userId: string | null; guestId: string };
 
-const key = (secret: string) => new TextEncoder().encode(secret);
+const key = (secret: string) => new TextEncoder().encode(`gcs-realtime:${secret}`);
+
+/** Secretul aplicației (`GCS_SECRET`); în dezvoltare există o valoare implicită, în producție lipsa lui e o eroare. */
+export function realtimeSecret(env: Record<string, string | undefined> = process.env): string {
+  if (env.GCS_SECRET) return env.GCS_SECRET;
+  if (env.NODE_ENV === "production") throw new Error("GCS_SECRET lipsește");
+  return "gcs-dev-secret-not-for-production-use";
+}
 
 /** Tokenul de conectare (JWT HS256, 5 minute), emis de web din sesiune. */
 export async function signRealtimeToken(claims: GcsRealtimeClaims, secret: string, ttlSec = 300, now = Date.now()): Promise<string> {

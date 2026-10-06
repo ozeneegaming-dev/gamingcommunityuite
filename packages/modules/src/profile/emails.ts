@@ -25,23 +25,3 @@ export function emailChangeMail(opts: { to: string; name: string; site: string; 
         text: `Confirmă noua adresă de email pentru ${opts.site}: ${opts.link}`,
       };
 }
-
-export function vipExpiringMail(opts: { to: string; name: string; site: string; tier: string; expiresAt: Date; locale: string }): GcsMail {
-  const l = pick(opts.locale);
-  const date = new Intl.DateTimeFormat(l === "en" ? "en-GB" : "ro-RO", { dateStyle: "long", timeStyle: "short", timeZone: "Europe/Bucharest" }).format(opts.expiresAt);
-  const name = escape(opts.name);
-  const tier = escape(opts.tier);
-  return l === "en"
-    ? {
-        to: opts.to,
-        subject: `Your ${opts.tier} expires soon — ${opts.site}`,
-        html: `<p>Hi ${name},</p><p>Your <strong>${tier}</strong> on ${escape(opts.site)} expires on ${escape(date)}.</p>`,
-        text: `Your ${opts.tier} expires on ${date}.`,
-      }
-    : {
-        to: opts.to,
-        subject: `${opts.tier} expiră în curând — ${opts.site}`,
-        html: `<p>Salut, ${name}!</p><p><strong>${tier}</strong> pe ${escape(opts.site)} expiră pe ${escape(date)}.</p>`,
-        text: `${opts.tier} expiră pe ${date}.`,
-      };
-}

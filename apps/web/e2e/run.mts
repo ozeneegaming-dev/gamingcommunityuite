@@ -1,18 +1,19 @@
 /**
  * Rulează testele E2E (modul ES: top-level await) pe o instanță completă, pornită și oprită automat:
  * PostgreSQL (embedded sau `TEST_PG_URL`), Redis (`redis-memory-server` sau `TEST_REDIS_URL`),
- * migrații + seed, apoi aplicația Next.js pe portul 3100 (build de producție + `next start`), `gcs-worker` pentru fiecare
- * instanță și, la final, Playwright.
+ * migrații + seed, apoi aplicația Next.js pe portul 3100 (build de producție + `next start`), `gcs-worker` și `gcs-realtime`
+ * pentru fiecare instanță și, la final, Playwright.
  *
  * Folosire: `pnpm --filter @gcs/web test:e2e [argumente playwright]`, ex. `test:e2e auth`.
  * Codul de ieșire e cel al Playwright. La final, toate procesele pornite sunt oprite curat.
  */
 import { execFileSync, spawn, type ChildProcess } from "node:child_process";
 import { mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import net from "node:net";
 import os from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { ensureInstallCode, seedDefaults } from "@gcs/core";
 import { createRegistry } from "@gcs/modules";
 import { PrismaClient } from "@gcs/db";
@@ -26,6 +27,7 @@ const schemaPath = path.join(dbDir, "prisma/schema.prisma");
 const nextBin = path.join(webDir, "node_modules/next/dist/bin/next");
 const playwrightBin = path.join(webDir, "node_modules/@playwright/test/cli.js");
 const workerDir = path.resolve(webDir, "../worker");
+const realtimeDir = path.resolve(webDir, "../realtime");
 const PORT = Number(process.env.GCS_E2E_PORT ?? 3100);
 const BASE_URL = `http://localhost:${PORT}`;
 /** A doua instanță, proaspătă și neinstalată, pentru testele installer-ului (`install.spec.ts`). */
@@ -84,12 +86,20 @@ async function startPostgres(): Promise<string> {
     onLog: () => {},
   });
   await server.initialise();
-  await server.start();
+  // Pe Windows, `postgres.exe` nu pornește direct dintr-un proces cu drepturi de administrator; `pg_ctl` renunță
+  // singur la ele, deci pornim prin el (cu `stdio: "ignore"`: serverul moștenește handle-urile).
+  const embedded = createRequire(import.meta.url).resolve("embedded-postgres");
+  const binaries = createRequire(embedded).resolve(`@embedded-postgres/${process.platform === "win32" ? "windows" : process.platform}-${process.arch}`);
+  const { pg_ctl: pgCtl } = (await import(pathToFileURL(binaries).href)) as { pg_ctl: string };
+  if (process.platform === "win32") {
+    execFileSync(pgCtl, ["start", "-D", databaseDir, "-o", `-p ${port} -c fsync=off -c synchronous_commit=off`, "-w", "-t", "60", "-l", path.join(databaseDir, "server.log")], {
+      stdio: "ignore",
+    });
+  } else {
+    await server.start();
+  }
   cleanups.push(() => {
-    const bin = (server as unknown as { process?: ChildProcess }).process?.spawnfile;
     try {
-      if (!bin) throw new Error("binar necunoscut");
-      const pgCtl = path.join(path.dirname(bin), process.platform === "win32" ? "pg_ctl.exe" : "pg_ctl");
       execFileSync(pgCtl, ["stop", "-D", databaseDir, "-m", "fast", "-w", "-t", "30"], { stdio: "ignore" });
     } catch {
       void server.stop();
@@ -167,6 +177,18 @@ function startWorker(env: NodeJS.ProcessEnv): void {
   cleanups.push(() => killTree(worker));
 }
 
+/** `gcs-realtime` pe un port liber; întoarce adresa pentru browser (`GCS_REALTIME_URL`). */
+async function startRealtime(env: NodeJS.ProcessEnv): Promise<string> {
+  const port = await freePort();
+  const realtime = spawn(process.execPath, ["--import", "tsx", "src/main.ts"], {
+    cwd: realtimeDir,
+    env: { ...env, PORT: String(port) },
+    stdio: process.env.GCS_E2E_VERBOSE ? "inherit" : "ignore",
+  });
+  cleanups.push(() => killTree(realtime));
+  return `http://localhost:${port}`;
+}
+
 async function main(): Promise<number> {
   const [pgUrl, redisUrl] = await Promise.all([startPostgres(), startRedis()]);
   const databaseUrl = await prepareDatabase(pgUrl);
@@ -185,6 +207,7 @@ async function main(): Promise<number> {
     GCS_TEST_ROUTES: "1",
     NEXT_TELEMETRY_DISABLED: "1",
   };
+  env.GCS_REALTIME_URL = await startRealtime(env);
 
   // Implicit: build de producție + `next start` (stabil, ca în producție). `GCS_E2E_MODE=dev` folosește `next dev`;
   // `GCS_E2E_SKIP_BUILD=1` refolosește un build existent.
@@ -214,6 +237,7 @@ async function main(): Promise<number> {
       GCS_CONFIG_DIR: installConfigDir,
       GCS_BASE_URL: INSTALL_URL,
     };
+    installInstanceEnv.GCS_REALTIME_URL = await startRealtime(installInstanceEnv);
     const installServer = run(nextBin, ["start", "-p", String(INSTALL_PORT)], installInstanceEnv, process.env.GCS_E2E_VERBOSE ? "inherit" : "ignore");
     cleanups.push(() => killTree(installServer));
     // Worker-ul așteaptă `installed.lock`, apoi pornește singur (ca în Docker, pe un site proaspăt).

@@ -353,3 +353,25 @@ export class GcsContentRenderer {
     return { json, ...out, html: sanitizeHtml(out.html, SANITIZE) };
   }
 }
+
+/**
+ * Mențiunile și citatele dintr-un document salvat, pentru notificări. Ce e în interiorul unui citat nu contează
+ * (cine e menționat în textul citat a fost deja notificat de postarea originală).
+ */
+export function contentRefs(json: unknown): { mentions: string[]; quotes: number[] } {
+  const mentions = new Set<string>();
+  const quotes = new Set<number>();
+  const walk = (n: unknown, depth: number) => {
+    if (depth > 50 || typeof n !== "object" || n === null) return;
+    const node = n as GcsDocNode;
+    if (node.type === "mention" && typeof node.attrs?.id === "string") mentions.add(node.attrs.id);
+    if (node.type === "quote") {
+      const postId = Number(node.attrs?.postId);
+      if (Number.isSafeInteger(postId) && postId > 0) quotes.add(postId);
+      return;
+    }
+    if (Array.isArray(node.content)) for (const c of node.content) walk(c, depth + 1);
+  };
+  walk(json, 0);
+  return { mentions: [...mentions], quotes: [...quotes] };
+}

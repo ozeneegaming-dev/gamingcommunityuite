@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# Imaginile serviciilor `web` (Next.js standalone, ținta implicită `runner`) și `worker` (ținta `worker`).
+# Imaginile serviciilor `web` (Next.js standalone, ținta implicită `runner`), `worker` (ținta `worker`) și `realtime` (ținta `realtime`).
 # Build din rădăcina monorepo-ului: docker compose build
 
 FROM node:22-alpine AS base
@@ -21,6 +21,16 @@ RUN addgroup -S gcs && adduser -S gcs -G gcs \
  && mkdir -p /app/config && chown gcs:gcs /app/config
 USER gcs
 WORKDIR /app/apps/worker
+CMD ["node", "--import", "tsx", "src/main.ts"]
+
+# `gcs-realtime`: Socket.io (notificări, chat, prezență), tot din surse, cu același user `gcs`.
+FROM build AS realtime
+ENV NODE_ENV=production     PORT=4000
+RUN addgroup -S gcs && adduser -S gcs -G gcs  && mkdir -p /app/config && chown gcs:gcs /app/config
+USER gcs
+WORKDIR /app/apps/realtime
+EXPOSE 4000
+HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=5   CMD wget -qO- http://127.0.0.1:4000/health >/dev/null || exit 1
 CMD ["node", "--import", "tsx", "src/main.ts"]
 
 FROM node:22-alpine AS runner

@@ -5,12 +5,10 @@ import {
   type GcsActor,
   type GcsEventBus,
   type GcsJobQueue,
-  type GcsMailer,
   type GcsPermissionService,
   type GcsSettingsService,
 } from "@gcs/core";
 import type { Prisma, PrismaClient, VipAction, VipStatus, VipSubscription } from "@gcs/db";
-import { vipExpiringMail } from "../profile/emails";
 import type { GcsMembership } from "../profile/membership";
 
 export const VIP_SWEEP_JOB = "vip.sweep";
@@ -35,7 +33,6 @@ export class GcsVipService {
       permissions: GcsPermissionService;
       settings: GcsSettingsService;
       membership: GcsMembership;
-      mailer: GcsMailer;
     },
   ) {}
 
@@ -180,7 +177,8 @@ export class GcsVipService {
 
   /**
    * Jobul de la 5 minute: (a) expiră abonamentele trecute (fiecare revendicat atomic, deci rulările paralele nu dublează);
-   * (b) trimite o singură dată avertizarea cu `vip.warn_days` înainte.
+   * (b) emite o singură dată avertizarea (`vip.expiring`) cu `vip.warn_days` înainte; notificarea și emailul ei pleacă din
+   * producătorii de notificări (etapa 4).
    */
   async sweep(now = new Date()): Promise<{ expired: number; warned: number }> {
     const { db, bus, membership } = this.deps;
@@ -191,7 +189,7 @@ export class GcsVipService {
       if (!changed) continue;
       expired++;
       await membership.notify(sub.userId, changed);
-      await bus.emit({ name: "vip.expired", payload: { userId: sub.userId, groupId: sub.groupId }, tags: userTags(sub.userId) });
+      await bus.emit({ name: "vip.expired", payload: { userId: sub.userId, groupId: sub.groupId, subscriptionId: sub.id }, tags: userTags(sub.userId) });
     }
 
     let warned = 0;
@@ -199,19 +197,12 @@ export class GcsVipService {
     if (warnDays > 0) {
       const soon = await db.vipSubscription.findMany({
         where: { status: "ACTIVE", warnedAt: null, expiresAt: { gt: now, lte: new Date(now.getTime() + warnDays * 86_400_000) } },
-        include: { user: { select: { name: true, email: true } }, group: { select: { name: true } } },
       });
-      const [site, locale] = await Promise.all([this.deps.settings.get<string>("site.name"), this.deps.settings.get<string>("site.locale")]);
       for (const sub of soon) {
         const { count } = await db.vipSubscription.updateMany({ where: { id: sub.id, warnedAt: null }, data: { warnedAt: now } });
         if (count === 0) continue;
         warned++;
-        await bus.emit({ name: "vip.expiring", payload: { userId: sub.userId, groupId: sub.groupId, expiresAt: sub.expiresAt!.toISOString() }, tags: userTags(sub.userId) });
-        if (!sub.user.email.endsWith("@steam.invalid")) {
-          await this.deps
-            .mailer(vipExpiringMail({ to: sub.user.email, name: sub.user.name, site, tier: sub.group.name, expiresAt: sub.expiresAt!, locale }))
-            .catch((error: unknown) => console.error("[gcs] emailul de expirare VIP nu a putut fi trimis", error));
-        }
+        await bus.emit({ name: "vip.expiring", payload: { userId: sub.userId, groupId: sub.groupId, subscriptionId: sub.id, expiresAt: sub.expiresAt!.toISOString() }, tags: userTags(sub.userId) });
       }
     }
     return { expired, warned };

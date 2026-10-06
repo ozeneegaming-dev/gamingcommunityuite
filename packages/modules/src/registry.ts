@@ -1,4 +1,5 @@
 import { GcsModuleRegistry, type GcsModule } from "@gcs/core";
+import { chatModule } from "./chat";
 import { coreModule } from "./core-module";
 import { forumsModule } from "./forums";
 import { messagesModule } from "./messages";
@@ -7,7 +8,7 @@ import { vipModule } from "./vip";
 
 /** Modulele aplicației, în ordinea înregistrării. */
 export function appModules(): GcsModule[] {
-  return [coreModule, forumsModule, profileModule, messagesModule, vipModule];
+  return [coreModule, forumsModule, profileModule, messagesModule, vipModule, chatModule];
 }
 
 /** Registry-ul cu modulele aplicației (folosit de servicii, worker, seed, teste și E2E). */

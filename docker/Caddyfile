@@ -2,5 +2,7 @@
 	encode zstd gzip
 	# Endpoint-ul intern al CLI-ului `gcs` e doar pentru consola serverului.
 	respond /api/internal/* 404
+	# WebSocket-urile serviciului `gcs-realtime`.
+	reverse_proxy /socket.io/* realtime:4000
 	reverse_proxy web:3000
 }

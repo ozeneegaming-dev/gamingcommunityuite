@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { GcsValidationError } from "../errors";
-import { GcsContentRenderer, type GcsRenderOptions } from "./renderer";
+import { contentRefs, GcsContentRenderer, type GcsRenderOptions } from "./renderer";
 
 const renderer = new GcsContentRenderer();
 const opts: GcsRenderOptions = {
@@ -177,5 +177,25 @@ describe("GcsContentRenderer — XSS (Review Focus #4)", () => {
     expectInvalid(null);
     expectInvalid("<p>html</p>");
     expectInvalid({ type: "paragraph" });
+  });
+});
+
+describe("contentRefs", () => {
+  test("mențiunile și citatele de pe primul nivel; ce e în citat se ignoră", () => {
+    const mention = (id: string) => ({ type: "mention", attrs: { id, label: id } });
+    const doc = {
+      type: "doc",
+      content: [
+        { type: "paragraph", content: [mention("u1"), { type: "text", text: " salut " }, mention("u2"), mention("u1")] },
+        {
+          type: "quote",
+          attrs: { postId: 7, authorName: "Ana" },
+          content: [{ type: "paragraph", content: [mention("u3")] }, { type: "quote", attrs: { postId: 3, authorName: "B" }, content: [] }],
+        },
+        { type: "quote", attrs: { postId: "x", authorName: "C" }, content: [] },
+      ],
+    };
+    expect(contentRefs(doc)).toEqual({ mentions: ["u1", "u2"], quotes: [7] });
+    expect(contentRefs(null)).toEqual({ mentions: [], quotes: [] });
   });
 });

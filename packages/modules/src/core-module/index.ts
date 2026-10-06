@@ -57,6 +57,8 @@ const settings: GcsSettingDef[] = [
   setting("auth.turnstile_site_key", "string", "", "auth"),
   setting("auth.turnstile_secret", "secret", "", "auth"),
   setting("system.maintenance", "boolean", false, "advanced"),
+  // Ora (în fusul site-ului) la care pleacă digestul zilnic al notificărilor (etapa 4).
+  setting("notifications.digest_hour", "number", 8, "notifications", (v) => (Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 23 ? null : "invalid_range")),
 ];
 
 function groupPermission(key: string, defaults: GcsPermissionDef["default"], merge?: "max" | "min"): GcsPermissionDef {

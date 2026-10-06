@@ -117,4 +117,12 @@ describe("GcsActorResolver.getActor", () => {
     const failing = new GcsActorResolver({ db, presence: { touch: async () => Promise.reject(new Error("redis down")) } });
     await expect(failing.getActor({ ip: "203.0.113.5" })).resolves.toMatchObject({ userId: null });
   });
+
+  test("forUser: actorul după id, fără sesiune; banat sau inexistent → vizitator", async () => {
+    const { user } = await userWithSession("Sock");
+    await expect(resolver.forUser(user.id, "203.0.113.5")).resolves.toMatchObject({ userId: user.id, groupIds: [groups.new_member], isBanned: false });
+    await expect(resolver.forUser("nu-exista", "203.0.113.5")).resolves.toMatchObject({ userId: null, isBanned: false });
+    await db.ban.create({ data: { type: "ACCOUNT", value: user.id, userId: user.id, reason: "x" } });
+    await expect(resolver.forUser(user.id, "203.0.113.5")).resolves.toMatchObject({ userId: null, isBanned: true });
+  });
 });

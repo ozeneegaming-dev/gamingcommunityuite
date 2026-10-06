@@ -104,7 +104,7 @@ export const forumsModule: GcsModule = {
   notificationTypes: [
     { key: "forums.mention", labelKey: "notifications.type.forums.mention", important: false, defaultEmail: "DIGEST" },
     { key: "forums.quote", labelKey: "notifications.type.forums.quote", important: false, defaultEmail: "DIGEST" },
-    { key: "forums.reply", labelKey: "notifications.type.forums.reply", important: false, defaultEmail: "DIGEST" },
+    { key: "forums.reply", labelKey: "notifications.type.forums.reply", important: false, defaultEmail: "DIGEST", countEach: true },
     { key: "forums.topic", labelKey: "notifications.type.forums.topic", important: false, defaultEmail: "DIGEST" },
     { key: "forums.reaction", labelKey: "notifications.type.forums.reaction", important: false, defaultEmail: "OFF" },
     { key: "forums.solution", labelKey: "notifications.type.forums.solution", important: false, defaultEmail: "DIGEST" },

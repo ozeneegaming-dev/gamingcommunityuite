@@ -13,7 +13,7 @@ const notifModule: GcsModule = {
   notificationTypes: [
     { key: "forums.reaction", labelKey: "n.reaction", important: false, defaultEmail: "OFF" },
     { key: "forums.reply", labelKey: "n.reply", important: false, defaultEmail: "DIGEST" },
-    { key: "pm.message", labelKey: "n.pm", important: true, defaultEmail: "INSTANT" },
+    { key: "pm.message", labelKey: "n.pm", important: true, defaultEmail: "INSTANT", countEach: true },
   ],
 };
 
@@ -65,6 +65,13 @@ describe("GcsNotificationService", () => {
     expect(created).toHaveLength(4);
     expect(created[0]!.payload).toMatchObject({ userId: owner.id, inserted: true, important: false, email: "OFF" });
     expect(created[1]!.payload).toMatchObject({ inserted: false });
+  });
+
+  test("countEach: fiecare mesaj crește numărul, chiar de la același actor", async () => {
+    const owner = await w.createUser("Owner", "member");
+    const a = await w.createUser("A1", "member");
+    for (let i = 0; i < 3; i++) await svc.notify({ userIds: [owner.id], type: "pm.message", targetType: "post", targetId: "9", actorId: a.id });
+    expect(await svc.list(owner.id)).toMatchObject([{ type: "pm.message", count: 3, actorIds: [a.id] }]);
   });
 
   test("după citire, o nouă reacție începe un grup nou", async () => {

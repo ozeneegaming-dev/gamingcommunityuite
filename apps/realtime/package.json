@@ -1,0 +1,32 @@
+{
+  "name": "@gcs/realtime",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "tsx src/main.ts",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@gcs/core": "workspace:*",
+    "@gcs/db": "workspace:*",
+    "@gcs/modules": "workspace:*",
+    "@socket.io/redis-adapter": "^8.3.0",
+    "socket.io": "^4.8.4",
+    "tsx": "^4.23.15"
+  },
+  "devDependencies": {
+    "@gcs/config": "workspace:*",
+    "@types/node": "^22.0.0",
+    "embedded-postgres": "18.4.0-beta.17",
+    "eslint": "^9.30.0",
+    "pg": "^8.23.1",
+    "redis-memory-server": "^0.17.1",
+    "socket.io-client": "^4.8.4",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}

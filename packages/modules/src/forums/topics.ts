@@ -147,7 +147,7 @@ export class GcsTopicService {
     if (topic.solvedPostId !== postId) {
       await bus.emit({
         name: "topic.solved",
-        payload: { topicId, postId, solverId: solverOf(postId), previousSolverId: solverOf(topic.solvedPostId) },
+        payload: { topicId, postId, solverId: solverOf(postId), previousSolverId: solverOf(topic.solvedPostId), actorId: actor.userId },
         tags: [`topic:${topicId}`],
       });
     }

@@ -456,6 +456,32 @@ export class GcsForumQueries {
   }
 
   /** Topicurile vizibile cu un tag, din forumurile pe care actorul le poate citi. */
+  /**
+   * Poate actorul citi topicul (forum vizibil și citibil, topic vizibil pentru el) și răspunde în el?
+   * Folosit de camerele `gcs-realtime` și de notificări (fără să încarce pagina topicului).
+   */
+  async topicAccess(actor: GcsActor, topicId: number): Promise<{ canRead: boolean; canReply: boolean }> {
+    const none = { canRead: false, canReply: false };
+    const topic = await this.deps.db.topic.findUnique({ where: { id: topicId }, select: { forumId: true, authorId: true, visibility: true, locked: true } });
+    if (!topic) return none;
+    const ref = forumContainer(topic.forumId);
+    const [view, read] = await Promise.all([this.deps.permissions.can(actor, "forums.view", ref), this.deps.permissions.can(actor, "forums.read", ref)]);
+    if (!view || !read) return none;
+    const modPowers = topic.visibility === "VISIBLE" && !topic.locked ? [] : await this.modPowers(actor, topic.forumId);
+    const isAuthor = actor.userId !== null && actor.userId === topic.authorId;
+    const visible =
+      topic.visibility === "VISIBLE" ||
+      (topic.visibility === "PENDING" && (isAuthor || has(modPowers, "approve"))) ||
+      (topic.visibility === "HIDDEN" && has(modPowers, "hide"));
+    if (!visible) return none;
+    const canReply =
+      actor.userId !== null &&
+      (topic.visibility === "VISIBLE" || has(modPowers, "approve")) &&
+      (!topic.locked || has(modPowers, "lock")) &&
+      (await this.deps.permissions.can(actor, "forums.reply", ref));
+    return { canRead: true, canReply };
+  }
+
   async topicsByTag(actor: GcsActor, slug: string, opts: { page: number }): Promise<GcsTagPage> {
     const { db, settings } = this.deps;
     const tag = await db.tag.findUnique({ where: { slug }, select: { id: true, name: true, slug: true } });

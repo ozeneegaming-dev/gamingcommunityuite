@@ -35,7 +35,7 @@ describe("tokenul realtime", () => {
       .setSubject("u1")
       .setAudience("altceva")
       .setExpirationTime("5m")
-      .sign(new TextEncoder().encode(SECRET));
+      .sign(new TextEncoder().encode(`gcs-realtime:${SECRET}`));
     expect(await verifyRealtimeToken(other, SECRET)).toBeNull();
   });
 });

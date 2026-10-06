@@ -78,8 +78,40 @@ export class GcsActorResolver {
     };
   }
 
+  /**
+   * Actorul unui user cunoscut după id (ex. din tokenul `gcs-realtime`), fără sesiune: grupurile și bannurile active.
+   * Un user banat sau inexistent → vizitator (banat, respectiv nu). Nu notează prezența.
+   */
+  async forUser(userId: string, ip: string, now = new Date()): Promise<GcsActor> {
+    const { db } = this.deps;
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, primaryGroupId: true, groups: { select: { groupId: true } } },
+    });
+    if (!user) return this.guestActor(ip, false);
+    const banned =
+      (await findActiveBan(db, { userId: user.id, email: user.email }, now)) !== null || (await findActiveBan(db, { ip }, now)) !== null;
+    if (banned) return this.guestActor(ip, true);
+    return {
+      userId: user.id,
+      groupIds: [user.primaryGroupId, ...user.groups.map((g) => g.groupId).filter((id) => id !== user.primaryGroupId)],
+      primaryGroupId: user.primaryGroupId,
+      isBanned: false,
+      ip,
+    };
+  }
+
+  /** Un vizitator (fără sesiune), banat dacă IP-ul are un ban activ. Nu notează prezența. */
+  async forGuest(ip: string, now = new Date()): Promise<GcsActor> {
+    return this.guestActor(ip, (await findActiveBan(this.deps.db, { ip }, now)) !== null);
+  }
+
   private async guest(ip: string, isBanned: boolean, now: Date): Promise<GcsActor> {
     if (!isBanned) await this.touchPresence({ guestId: guestPresenceId(ip) }, now);
+    return this.guestActor(ip, isBanned);
+  }
+
+  private async guestActor(ip: string, isBanned: boolean): Promise<GcsActor> {
     this.guestGroupId ??= (
       await this.deps.db.group.findUniqueOrThrow({ where: { key: "guest" }, select: { id: true } })
     ).id;

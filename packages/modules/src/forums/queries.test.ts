@@ -174,6 +174,25 @@ describe("topic", () => {
     await expect(q.topic(w.root, t.topicId, { page: 1 })).resolves.toMatchObject({ topic: { visibility: "HIDDEN" } });
   });
 
+  test("topicAccess: citire și răspuns, după permisiuni, vizibilitate și închidere", async () => {
+    const t = await w.topics.create(w.member, { forumId: tree.forum.id, title: "Acces", content: doc("x") });
+    expect(await q.topicAccess(w.member, t.topicId)).toEqual({ canRead: true, canReply: true });
+    expect(await q.topicAccess(w.guest, t.topicId)).toEqual({ canRead: true, canReply: false });
+    expect(await q.topicAccess(w.member, 99999)).toEqual({ canRead: false, canReply: false });
+
+    await w.db.topic.update({ where: { id: t.topicId }, data: { locked: true } });
+    expect(await q.topicAccess(w.member, t.topicId)).toEqual({ canRead: true, canReply: false });
+    expect(await q.topicAccess(w.root, t.topicId)).toEqual({ canRead: true, canReply: true });
+
+    await w.posts.hide(w.root, t.postId);
+    expect(await q.topicAccess(w.member, t.topicId)).toEqual({ canRead: false, canReply: false });
+    expect((await q.topicAccess(w.root, t.topicId)).canRead).toBe(true);
+
+    const other = await w.topics.create(w.root, { forumId: tree.forum.id, title: "Fără citire", content: doc("x") });
+    await revoke(tree.forum.id, "guest", ["forums.read"]);
+    expect(await q.topicAccess(w.guest, other.topicId)).toEqual({ canRead: false, canReply: false });
+  });
+
   test("numărul de interogări nu crește cu numărul de postări sau de autori (fără N+1)", async () => {
     let count = 0;
     const counting = w.db.$extends({

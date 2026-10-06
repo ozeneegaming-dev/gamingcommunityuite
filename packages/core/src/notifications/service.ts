@@ -134,14 +134,17 @@ export class GcsNotificationService {
     for (const userId of visible) {
       const pref = prefs.get(userId) ?? base;
       if (!pref.site) continue;
-      // Upsert pe indexul parțial (necitite): grupare cu ultimii 3 actori; un actor repetat nu crește numărul.
+      // Upsert pe indexul parțial (necitite): grupare cu ultimii 3 actori; un actor repetat nu crește numărul
+      // (în afară de tipurile `countEach`, unde fiecare eveniment contează).
       const actor = input.actorId;
+      const countEach = def.countEach === true;
       const rows = await db.$queryRaw<{ id: number; inserted: boolean }[]>`
         INSERT INTO notifications ("userId", type, "targetType", "targetId", "groupKey", "actorIds", count, data, "createdAt", "updatedAt")
         VALUES (${userId}, ${input.type}, ${input.targetType}, ${input.targetId}, ${groupKey},
                 ${actor ? [actor] : []}::text[], 1, ${data}::jsonb, ${now}::timestamp, ${now}::timestamp)
         ON CONFLICT ("userId", "groupKey") WHERE "readAt" IS NULL DO UPDATE SET
-          count = CASE WHEN ${actor}::text IS NOT NULL AND ${actor}::text = ANY(notifications."actorIds") THEN notifications.count ELSE notifications.count + 1 END,
+          count = CASE WHEN NOT ${countEach}::boolean AND ${actor}::text IS NOT NULL AND ${actor}::text = ANY(notifications."actorIds")
+                       THEN notifications.count ELSE notifications.count + 1 END,
           "actorIds" = CASE WHEN ${actor}::text IS NULL THEN notifications."actorIds"
                             ELSE (ARRAY[${actor}::text] || array_remove(notifications."actorIds", ${actor}::text))[1:3] END,
           data = EXCLUDED.data,

@@ -45,8 +45,17 @@ export type GcsDemoContext = {
   adminEmail: string;
 };
 
-/** Un tip de notificare. `important` = emailul implicit e imediat (ex. mesaj privat). */
-export type GcsNotificationTypeDef = { key: string; labelKey: string; important: boolean; defaultEmail: "OFF" | "INSTANT" | "DIGEST" };
+/**
+ * Un tip de notificare. `important` = emailul implicit e imediat (ex. mesaj privat). `countEach`: grupul numără fiecare
+ * eveniment (mesaje, răspunsuri), nu doar actorii distincți (reacții, urmăritori).
+ */
+export type GcsNotificationTypeDef = {
+  key: string;
+  labelKey: string;
+  important: boolean;
+  defaultEmail: "OFF" | "INSTANT" | "DIGEST";
+  countEach?: boolean;
+};
 
 /** Un modul RED-LINE (spec §5). Restul câmpurilor din spec se adaugă în etapele care le folosesc. */
 export interface GcsModule {

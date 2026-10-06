@@ -34,6 +34,22 @@ services:
     volumes:
       - gcsconfig:/app/config
 
+  # Socket.io (notificări, chat, prezență, topicuri live), pe portul intern 4000; Caddy trimite `/socket.io/*` aici.
+  realtime:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+      target: realtime
+    env_file: .env
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - gcsconfig:/app/config
+
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -77,6 +93,7 @@ services:
     restart: unless-stopped
     depends_on:
       - web
+      - realtime
     ports:
       - "80:80"
       - "443:443"

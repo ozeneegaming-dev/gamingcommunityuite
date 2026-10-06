@@ -83,3 +83,9 @@ test("worker-ul pornit: /api/health raportează `worker: up`, iar dashboard-ul n
   await expect(page.getByTestId("gcs-health-worker")).toContainText("funcționează");
   await expect(page.getByTestId("gcs-banner-worker")).toHaveCount(0);
 });
+
+test("gcs-realtime pornit: /api/health raportează `realtime: up`", async ({ request }) => {
+  await expect
+    .poll(async () => ((await (await request.get("/api/health")).json()) as { realtime?: string }).realtime, { timeout: 60_000 })
+    .toBe("up");
+});

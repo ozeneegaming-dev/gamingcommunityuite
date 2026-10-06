@@ -12,4 +12,6 @@ export function registerAppJobs(s: GcsServices): void {
   s.jobs.register({ name: HEARTBEAT_JOB, everyMs: 60_000, handler: () => writeWorkerHeartbeat(s.redis) });
   s.achievements.registerJobs(s.jobs);
   s.vip.registerJobs(s.jobs);
+  s.notificationProducers.registerJobs(s.jobs);
+  s.chat.registerJobs(s.jobs);
 }

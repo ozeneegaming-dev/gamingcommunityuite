@@ -56,6 +56,11 @@ import { GcsProfileService } from "./profile/profile";
 import { GcsPromotionService } from "./profile/promotions";
 import { GcsProfileQueries } from "./profile/queries";
 import { GcsSocialService } from "./profile/social";
+import { GcsChatService } from "./chat/chat";
+import { GcsChatQueries } from "./chat/queries";
+import { GcsNotificationProducers } from "./notifications/producers";
+import { registerLiveEvents } from "./realtime/live";
+import { GcsRealtimeRooms } from "./realtime/rooms";
 import { createRegistry } from "./registry";
 import { GcsVipService } from "./vip/vip";
 import { GcsConversationService } from "./messages/conversations";
@@ -78,6 +83,10 @@ export type GcsServices = {
   notifications: GcsNotificationService;
   realtime: GcsRealtime;
   presence: GcsPresenceService;
+  realtimeRooms: GcsRealtimeRooms;
+  notificationProducers: GcsNotificationProducers;
+  chat: GcsChatService;
+  chatQueries: GcsChatQueries;
   bans: GcsBanService;
   warnings: GcsWarningService;
   actors: GcsActorResolver;
@@ -283,9 +292,31 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     render: (content) => posting.render(content),
   });
   conversations.registerContent({ reports });
-  const vip = new GcsVipService({ db, bus, permissions, settings, membership, mailer });
+  const vip = new GcsVipService({ db, bus, permissions, settings, membership });
 
   const profileQueries = new GcsProfileQueries({ db, cache, permissions, profiles, social, ranks });
+  const forumQueries = new GcsForumQueries({ db, cache, permissions, settings, readMarkers, follows, reactions, polls, ranks });
+  const notificationProducers = new GcsNotificationProducers({
+    db,
+    redis,
+    notifications,
+    actors,
+    posting,
+    forumQueries,
+    conversations,
+    settings,
+    mailer,
+    realtime,
+    jobs,
+    baseUrl: async () => baseUrl(await settings.get<string>("site.url")),
+  });
+  notificationProducers.registerTargets();
+  notificationProducers.listen(bus);
+  const chat = new GcsChatService({ db, bus, permissions, settings, rateLimiter, realtime, acp });
+  const chatQueries = new GcsChatQueries({ db, permissions });
+  const realtimeRooms = new GcsRealtimeRooms({ permissions, forumQueries });
+  realtimeRooms.register("chat", (actor, key) => chatQueries.canRead(actor, key));
+  registerLiveEvents(bus, { db, realtime });
   const services: GcsServices = {
     db,
     redis,
@@ -303,6 +334,10 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     notifications,
     realtime,
     presence,
+    realtimeRooms,
+    notificationProducers,
+    chat,
+    chatQueries,
     bans,
     warnings,
     actors,
@@ -312,7 +347,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     forums,
     topics: new GcsTopicService(posting, { polls, prefixes }),
     posts,
-    forumQueries: new GcsForumQueries({ db, cache, permissions, settings, readMarkers, follows, reactions, polls, ranks }),
+    forumQueries,
     readMarkers,
     follows,
     reactions,
