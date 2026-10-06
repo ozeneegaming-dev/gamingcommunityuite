@@ -1,4 +1,5 @@
 import type { GcsAcpMenuSection, GcsModule, GcsPermissionDef, GcsSettingDef, GcsSeedContext } from "@gcs/core";
+import { seedChatDemo } from "./seed";
 
 export const CHAT_CONTAINER = "chat";
 export const CHAT_ACP_CHANNELS = "community.chat_channels";
@@ -61,7 +62,7 @@ const acpMenu: GcsAcpMenuSection[] = [
     title: "acp.menu.community.chat_group",
     items: [
       { key: CHAT_ACP_CHANNELS, labelKey: "acp.menu.community.chat_channels", href: "/admin/community/chat", section: CHAT_ACP_CHANNELS },
-      { key: CHAT_ACP_SETTINGS, labelKey: "acp.menu.community.chat_settings", href: "/admin/settings/chat", section: CHAT_ACP_SETTINGS },
+      { key: CHAT_ACP_SETTINGS, labelKey: "acp.menu.community.chat_settings", href: "/admin/community/chat/settings", section: CHAT_ACP_SETTINGS },
     ],
   },
 ];
@@ -82,6 +83,7 @@ export const chatModule: GcsModule = {
   acpMenu,
   eventListeners: [],
   seed: seedChat,
+  seedDemo: seedChatDemo,
 };
 
 /** Permisiunile implicite ale unui canal nou (din `default` al permisiunilor pe container). */
