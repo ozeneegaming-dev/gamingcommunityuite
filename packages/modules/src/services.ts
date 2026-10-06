@@ -203,7 +203,6 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const settings = new GcsSettingsService({ db, cache, bus, registry });
   const permissions = new GcsPermissionService({ db, cache, bus, registry });
   const acp = new GcsAcpRoleService({ db, registry });
-  const acpDashboard = new GcsAcpDashboardService({ db, acp });
   const acpSearch = new GcsAcpSearch({ db, registry, acp });
   const groups = new GcsGroupService({ db, bus, permissions, acp });
   const members = new GcsMemberDirectory({ db });
@@ -229,6 +228,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     },
   });
   const actors = new GcsActorResolver({ db, cache, presence });
+  const acpDashboard = new GcsAcpDashboardService({ db, acp, presence });
   const rateLimiter = new GcsRedisRateLimiter(redis);
   const files = createFileStore(opts.configDir);
   const attachments = new GcsAttachmentService({ db, store: files, permissions, rateLimiter });

@@ -1,6 +1,7 @@
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createWorld, type GcsTestWorld } from "../../test/world";
 import { GcsForbidden } from "../errors";
+import { GcsPresenceService } from "../presence/presence";
 import { DEFAULT_ACP_LAYOUT, GcsAcpDashboardService } from "./dashboard";
 
 let w: GcsTestWorld;
@@ -94,5 +95,18 @@ describe("datele widgeturilor", () => {
 
     await expect(dash.onlineCount(now)).resolves.toBe(2);
     await expect(dash.onlineAdmins(now)).resolves.toEqual([{ id: admin.id, name: "Admin", groupKey: "admin" }]);
+  });
+
+  test("cu prezența din Redis (etapa 4), numărul de online vine de acolo; o eroare Redis revine la lastActiveAt", async () => {
+    const now = new Date("2026-10-05T10:00:00Z");
+    const presence = new GcsPresenceService({ redis: w.redis });
+    await presence.touch({ userId: "u1" }, now.getTime());
+    await presence.touch({ userId: "u2" }, now.getTime());
+    await presence.touch({ guestId: "g1" }, now.getTime());
+    const live = new GcsAcpDashboardService({ db: w.db, acp: w.acp, presence });
+    await expect(live.onlineCount(now)).resolves.toBe(2);
+
+    const broken = new GcsAcpDashboardService({ db: w.db, acp: w.acp, presence: { online: async () => Promise.reject(new Error("down")) } });
+    await expect(broken.onlineCount(now)).resolves.toBe(0);
   });
 });

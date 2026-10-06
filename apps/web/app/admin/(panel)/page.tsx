@@ -1,4 +1,4 @@
-import { ACP_WIDGETS, checkHealth, workerStatus, type GcsAcpWidget } from "@gcs/core";
+import { ACP_WIDGETS, checkHealth, serviceStatus, type GcsAcpWidget } from "@gcs/core";
 import { GcsCard, GcsUserLink } from "@gcs/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -33,7 +33,7 @@ export default async function AcpDashboardPage() {
 
   const t = await getTranslations("acp.dashboard");
   const format = await getFormatter();
-  const [layout, totals, registrations, health, note, online, admins, failed, canEditNote, queue, worker, [expiring]] = await Promise.all([
+  const [layout, totals, registrations, health, note, online, admins, failed, canEditNote, queue, worker, [expiring], realtime] = await Promise.all([
     acpDashboard.getLayout(panel.user.id),
     acpDashboard.totals(),
     acpDashboard.registrations(14),
@@ -44,8 +44,9 @@ export default async function AcpDashboardPage() {
     acpDashboard.failedAcpLogins(5),
     acp.can(panel.actor, "system.dashboard", "edit"),
     moderation.queueCount(panel.actor),
-    workerStatus(redis).catch(() => ({ up: false, lastBeatAt: null })),
+    serviceStatus(redis, "worker").catch(() => ({ up: false, lastBeatAt: null })),
     vip.subscribers({ expiringDays: 7, page: 1, perPage: 8 }),
+    serviceStatus(redis, "realtime").catch(() => ({ up: false, lastBeatAt: null })),
   ]);
 
   const w = (key: GcsAcpWidget, k: string, values?: Record<string, string | number>) => t(`widgets.${key}.${k}`, values);
@@ -124,9 +125,13 @@ export default async function AcpDashboardPage() {
             <span>{w("system_health", "redis")}</span>
             {status(health.redis)}
           </div>
-          <div style={{ ...row, borderBottom: 0 }} data-testid="gcs-health-worker">
+          <div style={row} data-testid="gcs-health-worker">
             <span>{w("system_health", "worker")}</span>
             {status(worker.up)}
+          </div>
+          <div style={{ ...row, borderBottom: 0 }} data-testid="gcs-health-realtime">
+            <span>{w("system_health", "realtime")}</span>
+            {status(realtime.up)}
           </div>
         </div>
       ),
@@ -150,7 +155,7 @@ export default async function AcpDashboardPage() {
       title: w("online_users", "title"),
       body: (
         <p style={{ margin: 0, padding: "14px 16px", fontSize: 14 }}>
-          <strong className="gcs-display" style={{ fontSize: 26, marginRight: 8 }}>
+          <strong className="gcs-display" style={{ fontSize: 26, marginRight: 8 }} data-testid="gcs-online-users-count">
             {online}
           </strong>
           <span style={muted}>{w("online_users", "body", { count: online })}</span>
@@ -218,6 +223,13 @@ export default async function AcpDashboardPage() {
               ? t("banners.workerDown.since", { time: format.relativeTime(worker.lastBeatAt) })
               : t("banners.workerDown.never")}
           </span>
+        </GcsCard>
+      )}
+
+      {!realtime.up && (
+        <GcsCard role="alert" data-testid="gcs-banner-realtime" style={{ padding: "14px 18px", borderColor: "#FF4D57", display: "flex", flexDirection: "column", gap: 4 }}>
+          <strong>{t("banners.realtimeDown.title")}</strong>
+          <span style={muted}>{t("banners.realtimeDown.body")}</span>
         </GcsCard>
       )}
 

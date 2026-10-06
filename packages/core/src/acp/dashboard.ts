@@ -3,6 +3,7 @@ import { writeAudit } from "../audit";
 import { GcsValidationError } from "../errors";
 import type { GcsActor } from "../permissions/types";
 import type { GcsAcpRoleService } from "./roles";
+import type { GcsPresenceService } from "../presence/presence";
 
 /** Widgeturile dashboard-ului ACP (spec §12.2): cele din etapa 1, coada de moderare (etapa 2) și expirările VIP (etapa 3). */
 export const ACP_WIDGETS = [
@@ -70,7 +71,7 @@ export function normalizeAcpLayout(input: unknown): GcsAcpLayout {
 
 /** Datele dashboard-ului ACP: layout-ul fiecărui admin și conținutul widgeturilor. */
 export class GcsAcpDashboardService {
-  constructor(private readonly deps: { db: PrismaClient; acp: GcsAcpRoleService }) {}
+  constructor(private readonly deps: { db: PrismaClient; acp: GcsAcpRoleService; presence?: Pick<GcsPresenceService, "online"> }) {}
 
   async getLayout(userId: string): Promise<GcsAcpLayout> {
     const row = await this.deps.db.acpDashboardLayout.findUnique({ where: { userId } });
@@ -170,7 +171,12 @@ export class GcsAcpDashboardService {
     return rows.map((r) => ({ userName: r.actorId ? (names.get(r.actorId) ?? null) : null, ip: r.ip, at: r.createdAt }));
   }
 
+  /** Membrii online: din prezența Redis (etapa 4), altfel după `lastActiveAt`. */
   async onlineCount(now = new Date()): Promise<number> {
+    if (this.deps.presence) {
+      const online = await this.deps.presence.online(now.getTime()).catch(() => null);
+      if (online) return online.users.length;
+    }
     return this.deps.db.user.count({ where: { lastActiveAt: { gte: new Date(now.getTime() - ONLINE_MINUTES * 60_000) } } });
   }
 
