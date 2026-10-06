@@ -29,8 +29,6 @@ export async function themeMode(): Promise<GcsThemeMode> {
 
 /** Tema aleasă de vizitator (Setări → Aspect); dacă lipsește sau nu mai e activă, tema implicită. */
 export const SKIN_COOKIE = "gcs-skin";
-/** Cheia temei pe care adminul o editează pe site (previzualizarea draft-ului). */
-export const THEME_EDIT_COOKIE = "gcs-theme-edit";
 
 const FALLBACK_THEME: GcsThemeView = {
   key: "default",
@@ -48,14 +46,13 @@ const FALLBACK_THEME: GcsThemeView = {
 export type GcsViewerTheme = {
   /** Tema publicată pe care o vede viewerul. */
   theme: GcsThemeView;
-  /** Ce se afișează: tema cu draft-ul aplicat când adminul e în editor, altfel tema publicată. */
+  /** Ce se afișează: tema cu draft-ul aplicat în previzualizarea editorului vizual, altfel tema publicată. */
   shown: GcsThemeView;
-  /** În editor: CSS-ul temei editate cu draft-ul aplicat, pus inline (tema editată poate fi și una inactivă). */
+  /** În previzualizare: CSS-ul temei editate cu draft-ul aplicat, pus inline (tema editată poate fi și una inactivă). */
   inlineCss: string | null;
   /** Viewerul poate edita teme (ACP → Aspect → Teme). */
   canEdit: boolean;
-  editing: boolean;
-  /** Pagina e previzualizarea din editorul vizual (în `iframe`): draft-ul, fără uneltele de editare de pe site. */
+  /** Pagina e previzualizarea din editorul vizual (în `iframe`): draft-ul temei editate. */
   preview: boolean;
 };
 
@@ -66,20 +63,17 @@ export const viewerTheme = cache(async (): Promise<GcsViewerTheme> => {
     const { themes, acp } = services();
     const actor = await currentActor();
     const canEdit = actor.userId ? await acp.can(actor, THEMES_ACP_SECTION, "edit") : false;
-    // Editorul (și draft-ul) apare doar cu poarta ACP trecută; altfel adminul vede tema publicată și butonul.
+    // Draft-ul apare doar în previzualizarea editorului vizual, cu poarta ACP trecută; altfel tema publicată.
     const previewKey = canEdit ? (await headers()).get(THEME_PREVIEW_HEADER) : null;
-    const editKey = previewKey ?? (canEdit ? jar.get(THEME_EDIT_COOKIE)?.value : undefined);
-    const gateOk = editKey ? (await getAcpContext()).state === "ok" : false;
-    const edited = editKey && gateOk ? await themes.get(editKey) : null;
+    const gateOk = previewKey ? (await getAcpContext()).state === "ok" : false;
+    const edited = previewKey && gateOk ? await themes.get(previewKey) : null;
     if (edited) {
-      const shown = themes.withDraft(edited);
-      const preview = previewKey === edited.key;
-      return { theme: edited, shown, inlineCss: themes.css(edited, { draft: true }), canEdit, editing: !preview, preview };
+      return { theme: edited, shown: themes.withDraft(edited), inlineCss: themes.css(edited, { draft: true }), canEdit, preview: true };
     }
     const theme = await themes.active(jar.get(SKIN_COOKIE)?.value ?? null);
-    return { theme, shown: theme, inlineCss: null, canEdit, editing: false, preview: false };
+    return { theme, shown: theme, inlineCss: null, canEdit, preview: false };
   } catch {
-    return { theme: FALLBACK_THEME, shown: FALLBACK_THEME, inlineCss: null, canEdit: false, editing: false, preview: false };
+    return { theme: FALLBACK_THEME, shown: FALLBACK_THEME, inlineCss: null, canEdit: false, preview: false };
   }
 });
 

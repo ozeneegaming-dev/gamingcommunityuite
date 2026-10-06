@@ -7,7 +7,7 @@ import { getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
-import { createTheme, deleteTheme, editThemeOnSite, updateTheme } from "../actions";
+import { createTheme, deleteTheme, updateTheme } from "../actions";
 import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -16,7 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /**
  * ACP → Aspect → Teme (specul etapei 5): lista temelor (implicită, activă), duplicarea, ștergerea și linkul spre
- * editorul de pe site (culorile, fonturile, logo-ul și restul se editează direct pe site, cu previzualizare).
+ * editorul vizual (culorile, fonturile, logo-ul și restul se editează acolo, cu previzualizare live).
  */
 export default async function AcpThemesPage() {
   await requireAcpSection(THEMES_ACP_SECTION);
@@ -59,11 +59,6 @@ export default async function AcpThemesPage() {
                 {t("visualEditor")}
               </Link>
             </GcsButton>
-            <form action={editThemeOnSite.bind(null, theme.key)}>
-              <GcsButton type="submit" variant="ghost" size="sm" data-testid="gcs-acp-theme-edit" icon={<GcsIcon name="fa-solid fa-pen-to-square" />}>
-                {t("editOnSite")}
-              </GcsButton>
-            </form>
             {!theme.isDefault && (
               <GcsActionForm action={deleteTheme.bind(null, theme.key)} submitLabel={t("delete")} submitKind="delete" variant="ghost" compact confirm={t("confirmDelete")}>
                 {null}

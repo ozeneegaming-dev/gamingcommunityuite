@@ -13,6 +13,12 @@ const before = (page: Page, a: string, b: string) =>
     return !!ea && !!eb && (ea.compareDocumentPosition(eb) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
   }, [a, b]);
 
+/** „Editor pagină” din meniul contului: pornește modul „Editează pagina” pe pagina curentă. */
+async function openPageEditor(page: Page) {
+  await page.getByTestId("gcs-user-menu").click();
+  await page.getByTestId("gcs-menu-page-editor").click();
+}
+
 /**
  * Widget-urile paginii principale și modul „Editează pagina” (specul etapei 5): mutare între zone, mutare din
  * tastatură, adăugare, vizibilitate pe grup; vizitatorul vede aranjarea salvată și panoul de statistici.
@@ -25,7 +31,7 @@ test("adminul aranjează widget-urile; vizitatorul vede aranjarea, fără widget
   await enterAcpAsRoot(page, `Wid${id}`, `wid-${id}@example.com`);
 
   await page.goto("/");
-  await page.getByTestId("gcs-edit-page").click();
+  await openPageEditor(page);
   const editor = page.getByTestId("gcs-page-editor");
   await expect(editor).toBeVisible();
   const top = page.getByTestId("gcs-zone-top");
@@ -93,7 +99,7 @@ test("adminul aranjează widget-urile; vizitatorul vede aranjarea, fără widget
   await visitorContext.close();
 
   // Layout-ul implicit înapoi (alte teste se bazează pe pagina principală implicită).
-  await page.getByTestId("gcs-edit-page").click();
+  await openPageEditor(page);
   await page.getByTestId("gcs-page-editor-default").click();
   await page.getByTestId("gcs-page-editor-default-confirm").click();
   await expect(page.getByTestId("gcs-page-editor-status")).toHaveText("Pagina a revenit la widget-urile implicite.");
@@ -103,11 +109,12 @@ test("adminul aranjează widget-urile; vizitatorul vede aranjarea, fără widget
   await expect(editor).toHaveCount(0);
 });
 
-test("un membru nu vede „Editează pagina”", async ({ page, context }) => {
+test("un membru nu vede „Editor pagină” în meniu", async ({ page, context }) => {
   await useFreshIp(context, "100.71.2");
   const id = uid();
   await member(page, `Mw${id}`, `mw-${id}@example.com`);
   await page.goto("/");
-  await expect(page.getByTestId("gcs-header-user")).toBeVisible();
-  await expect(page.getByTestId("gcs-edit-page")).toHaveCount(0);
+  await page.getByTestId("gcs-user-menu").click();
+  await expect(page.getByTestId("gcs-menu-settings")).toBeVisible();
+  await expect(page.getByTestId("gcs-menu-page-editor")).toHaveCount(0);
 });

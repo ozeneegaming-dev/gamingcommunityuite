@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { assertAcpAction } from "@/lib/acp";
 import { field, runAcpAction } from "@/lib/acp-actions";
-import { PAGE_EDIT_COOKIE, THEME_EDIT_COOKIE } from "@/lib/appearance";
+import { PAGE_EDIT_COOKIE } from "@/lib/appearance";
 import { services } from "@/lib/services";
 
 const cookieOpts = { path: "/", sameSite: "lax" as const, httpOnly: true, secure: process.env.NODE_ENV === "production", maxAge: 60 * 60 * 12 };
@@ -42,14 +42,6 @@ export async function deleteTheme(key: string): Promise<GcsResult<null>> {
     await services().themes.remove(actor, key);
     return null;
   });
-}
-
-/** „Editează pe site”: deschide editorul de temă pe pagina principală, pentru tema aleasă (chiar și una inactivă). */
-export async function editThemeOnSite(key: string): Promise<void> {
-  await assertAcpAction(THEMES_ACP_SECTION, "edit");
-  if (!(await services().themes.get(key))) return;
-  (await cookies()).set(THEME_EDIT_COOKIE, key, cookieOpts);
-  redirect("/");
 }
 
 // ─── Widget-uri ──────────────────────────────────────────────────────────────

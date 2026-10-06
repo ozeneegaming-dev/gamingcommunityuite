@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Frame, type Page } from "@playwright/test";
 import { member, uid } from "./forum-fixtures";
 import { enterAcpAsRoot, useFreshIp } from "./helpers";
 
@@ -8,14 +8,24 @@ const PNG = Buffer.from(
   "base64",
 );
 
-const accent = (page: Page) => page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--gcs-accent").trim().toUpperCase());
+const SAVED = "Draft salvat. Vizitatorii văd modificările doar după ce salvezi.";
+const PUBLISHED = "Salvat: tema e publicată pentru toți.";
+
+/** Documentul din iframe-ul previzualizării. */
+async function previewFrame(page: Page): Promise<Frame> {
+  const handle = await page.getByTestId("gcs-studio-preview").elementHandle();
+  const frame = await handle?.contentFrame();
+  if (!frame) throw new Error("previzualizarea nu are document");
+  return frame;
+}
 
 /**
- * Editorul de temă de pe site (specul etapei 5): adminul schimbă accentul și logo-ul în draft, vizitatorul nu vede
- * nimic până la „Publică”, apoi le vede; la final tema revine la valorile inițiale.
+ * Logo-ul temei (specul etapei 5), din editorul vizual deschis din meniul contului („Editor temă”): adminul îl încarcă
+ * în draft și îl vede în previzualizare, vizitatorul nu vede nimic până la „Salvează”, apoi îl vede; la final logo-ul
+ * e șters și tema revine la starea inițială.
  */
-test("adminul schimbă accentul și logo-ul pe site; vizitatorul le vede doar după publicare", async ({ page, context, browser }) => {
-  test.setTimeout(90_000);
+test("adminul încarcă logo-ul din editorul vizual deschis din meniu; vizitatorul îl vede doar după salvare", async ({ page, context, browser }) => {
+  test.setTimeout(120_000);
   await useFreshIp(context, "100.70.0");
   const id = uid();
   await enterAcpAsRoot(page, `Tema${id}`, `tema-${id}@example.com`);
@@ -24,56 +34,58 @@ test("adminul schimbă accentul și logo-ul pe site; vizitatorul le vede doar du
   await useFreshIp(visitorContext, "100.70.1");
   const visitor = await visitorContext.newPage();
   await visitor.goto("/");
-  const original = await accent(visitor);
-  expect(original).toMatch(/^#[0-9A-F]{6}$/);
-
-  await page.goto("/");
-  await page.getByTestId("gcs-edit-theme").click();
-  const editor = page.getByTestId("gcs-theme-editor");
-  await expect(editor).toBeVisible();
-  const status = page.getByTestId("gcs-theme-status");
-
-  // Draft: accentul nou și logo-ul (previzualizare doar pentru admin).
-  await page.getByTestId("gcs-theme-color-dark-accent").fill("#123456");
-  await expect(status).toHaveText("Draft salvat. Doar tu vezi modificările până la publicare.");
-  await expect.poll(() => accent(page)).toBe("#123456");
-  await page.getByTestId("gcs-theme-upload-logo").setInputFiles({ name: "logo.png", mimeType: "image/png", buffer: PNG });
-  await expect(page.getByTestId("gcs-brand-logo")).toBeVisible();
-  await expect(page.getByTestId("gcs-theme-draft-badge")).toBeVisible();
-
-  await visitor.reload();
-  expect(await accent(visitor)).toBe(original);
+  await expect(visitor.getByTestId("gcs-brand")).toBeVisible();
   await expect(visitor.getByTestId("gcs-brand-logo")).toHaveCount(0);
 
-  // Publicare: vizitatorul vede tema nouă (URL-ul CSS-ului are versiunea nouă).
-  await page.getByTestId("gcs-theme-publish").click();
-  await expect(status).toHaveText("Tema a fost publicată pentru toți.");
+  // Meniul contului: „Editor temă” deschide editorul vizual al temei afișate.
+  await page.goto("/");
+  await page.getByTestId("gcs-user-menu").click();
+  await page.getByTestId("gcs-menu-theme-editor").click();
+  await expect(page).toHaveURL(/\/admin\/theme-editor\/default$/);
+  await expect(page.getByTestId("gcs-theme-studio")).toBeVisible();
+  const status = page.getByTestId("gcs-studio-status");
+
+  // Draft: logo-ul apare în previzualizare (doar pentru admin).
+  await page.getByTestId("gcs-studio-nav-logos").click();
+  await page.getByTestId("gcs-studio-upload-logo").setInputFiles({ name: "logo.png", mimeType: "image/png", buffer: PNG });
+  await expect(status).toHaveText(SAVED);
+  await expect(page.getByTestId("gcs-studio-image-logo").locator("img")).toBeVisible();
+  await expect.poll(async () => (await previewFrame(page)).getByTestId("gcs-brand-logo").count()).toBe(1);
+
   await visitor.reload();
-  expect(await accent(visitor)).toBe("#123456");
+  await expect(visitor.getByTestId("gcs-brand")).toBeVisible();
+  await expect(visitor.getByTestId("gcs-brand-logo")).toHaveCount(0);
+
+  // „Salvează” publică tema: vizitatorul vede logo-ul (URL-ul CSS-ului are versiunea nouă).
+  await page.getByTestId("gcs-studio-save").click();
+  await expect(status).toHaveText(PUBLISHED);
+  await visitor.reload();
   await expect(visitor.getByTestId("gcs-brand-logo")).toBeVisible();
   await expect(visitor.locator('link[rel="stylesheet"][href^="/gcs-theme.css"]')).toHaveAttribute("href", /v=\d+/);
 
-  // Revenire la valorile inițiale (alte teste se bazează pe numele site-ului din header).
-  await page.getByTestId("gcs-theme-color-dark-accent").fill(original.toLowerCase());
-  await expect(status).toHaveText("Draft salvat. Doar tu vezi modificările până la publicare.");
-  await editor.getByRole("button", { name: "Șterge" }).first().click();
-  await expect(page.getByTestId("gcs-brand-logo")).toHaveCount(0);
-  await page.getByTestId("gcs-theme-publish").click();
-  await expect(status).toHaveText("Tema a fost publicată pentru toți.");
-  await page.getByTestId("gcs-theme-editor-close").click();
-  await expect(page.getByTestId("gcs-edit-theme")).toBeVisible();
+  // Revenire: logo-ul șters și salvat (alte teste se bazează pe numele site-ului din header).
+  await page.getByTestId("gcs-studio-remove-logo").click();
+  await expect(status).toHaveText(SAVED);
+  await expect.poll(async () => (await previewFrame(page)).getByTestId("gcs-brand-logo").count()).toBe(0);
+  await page.getByTestId("gcs-studio-save").click();
+  await expect(status).toHaveText(PUBLISHED);
+  await page.getByTestId("gcs-studio-exit").click();
+  await expect(page).toHaveURL(/\/admin\/appearance\/themes$/);
 
   await visitor.reload();
-  expect(await accent(visitor)).toBe(original);
+  await expect(visitor.getByTestId("gcs-brand")).toBeVisible();
   await expect(visitor.getByTestId("gcs-brand-logo")).toHaveCount(0);
   await visitorContext.close();
 });
 
-test("un membru fără drept ACP nu vede bara de editare", async ({ page, context }) => {
+test("un membru fără drept ACP nu vede uneltele de editare în meniu", async ({ page, context }) => {
   await useFreshIp(context, "100.70.2");
   const id = uid();
   await member(page, `Fara${id}`, `fara-${id}@example.com`);
   await page.goto("/");
-  await expect(page.getByTestId("gcs-header-user")).toBeVisible();
-  await expect(page.getByTestId("gcs-edit-theme")).toHaveCount(0);
+  await page.getByTestId("gcs-user-menu").click();
+  await expect(page.getByTestId("gcs-menu-settings")).toBeVisible();
+  await expect(page.getByTestId("gcs-menu-theme-editor")).toHaveCount(0);
+  await expect(page.getByTestId("gcs-menu-page-editor")).toHaveCount(0);
+  await expect(page.getByTestId("gcs-menu-acp")).toHaveCount(0);
 });

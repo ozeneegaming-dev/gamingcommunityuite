@@ -5,7 +5,7 @@ import { PASSWORD, register, totp, useFreshIp } from "./helpers";
 /**
  * Smoke test-ul etapei 5 (specul etapei, §1), pe instanța instalată de `install.spec.ts` cu „Date demo”:
  * header și popup de login, pagina compusă din widget-uri (panoul de statistici), iconițele forumurilor, 6 limbi,
- * „Powered by”, postbit-ul, camerele de chat demo, listele de membri, apoi editorul de temă al adminului.
+ * „Powered by”, postbit-ul, camerele de chat demo, listele de membri, apoi editorul vizual de temă al adminului (din meniul contului).
  */
 test.skip(!process.env.GCS_E2E_INSTALL_URL, "Rulează doar pe instanța de instalare (e2e/run.mts, build de producție).");
 
@@ -88,7 +88,7 @@ test("etapa 5: header și login în popup → widget-uri și statistici → limb
     await expect(ana.locator('[data-testid="gcs-staff-group"][data-group="root_admin"]')).toBeVisible();
   });
 
-  await test.step("adminul: ACP cu 2FA, apoi editorul de temă pe site; vizitatorul vede accentul publicat", async () => {
+  await test.step("adminul: ACP cu 2FA, apoi editorul vizual din meniu; vizitatorul vede accentul publicat", async () => {
     const admin = await newUser(browser, `Admin5${run}`, "198.18.92", "root_admin");
     await admin.goto("/admin");
     await expect(admin).toHaveURL(/\/admin\/2fa-setup$/);
@@ -110,21 +110,31 @@ test("etapa 5: header și login în popup → widget-uri și statistici → limb
     const original = await admin.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--gcs-accent").trim().toLowerCase());
     // O culoare diferită de cea curentă (altfel câmpul nu se schimbă și nu apare niciun draft).
     const test = original === "#3355ee" ? "#33aa55" : "#3355ee";
-    await admin.getByTestId("gcs-edit-theme").click();
-    await admin.getByTestId("gcs-theme-color-dark-accent").fill(test);
-    await expect(admin.getByTestId("gcs-theme-status")).toHaveText("Draft salvat. Doar tu vezi modificările până la publicare.");
-    await admin.getByTestId("gcs-theme-publish").click();
-    await expect(admin.getByTestId("gcs-theme-status")).toHaveText("Tema a fost publicată pentru toți.");
+    // Editorul vizual, din meniul contului („Editor temă”), pe tema afișată.
+    await admin.getByTestId("gcs-user-menu").click();
+    await admin.getByTestId("gcs-menu-theme-editor").click();
+    await expect(admin).toHaveURL(/\/admin\/theme-editor\/[a-z0-9-]+$/);
+    await expect(admin.getByTestId("gcs-theme-studio")).toBeVisible();
+    const status = admin.getByTestId("gcs-studio-status");
+    await admin.getByTestId("gcs-studio-mode-dark").click();
+    await admin.getByTestId("gcs-studio-nav-palette").click();
+    await admin.getByTestId("gcs-studio-color-accent").click();
+    await admin.getByTestId("gcs-studio-tab-picker").click();
+    await admin.getByTestId("gcs-studio-hex").fill(test);
+    await expect(status).toHaveText("Draft salvat. Vizitatorii văd modificările doar după ce salvezi.");
+    await admin.getByTestId("gcs-studio-save").click();
+    await expect(status).toHaveText("Salvat: tema e publicată pentru toți.");
 
     await page.reload();
     const accent = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--gcs-accent").trim().toUpperCase());
     expect(accent).toBe(test.toUpperCase());
 
     // Tema revine la culoarea inițială (smoke-ul rulează și pe instanțe reale).
-    await admin.getByTestId("gcs-theme-color-dark-accent").fill(original);
-    await expect(admin.getByTestId("gcs-theme-status")).toHaveText("Draft salvat. Doar tu vezi modificările până la publicare.");
-    await admin.getByTestId("gcs-theme-publish").click();
-    await expect(admin.getByTestId("gcs-theme-status")).toHaveText("Tema a fost publicată pentru toți.");
-    await admin.getByTestId("gcs-theme-editor-close").click();
+    await admin.getByTestId("gcs-studio-hex").fill(original);
+    await expect(status).toHaveText("Draft salvat. Vizitatorii văd modificările doar după ce salvezi.");
+    await admin.getByTestId("gcs-studio-save").click();
+    await expect(status).toHaveText("Salvat: tema e publicată pentru toți.");
+    await admin.getByTestId("gcs-studio-exit").click();
+    await expect(admin).toHaveURL(/\/admin\/appearance\/themes$/);
   });
 });

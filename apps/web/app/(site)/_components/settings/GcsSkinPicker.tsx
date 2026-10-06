@@ -21,7 +21,7 @@ export function GcsSkinPicker({ themes, current, labels }: { themes: { key: stri
     });
   };
   return (
-    <label className="gcs-themeEditor__row" style={{ maxWidth: 360 }}>
+    <label className="gcs-fieldRow" style={{ maxWidth: 360 }}>
       <span style={{ fontWeight: 600 }}>{labels.skin}</span>
       <select className="gcs-input" value={value} onChange={(e) => choose(e.target.value)} disabled={pending} data-testid="gcs-skin-select">
         {themes.map((t) => (

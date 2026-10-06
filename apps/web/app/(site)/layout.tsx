@@ -2,7 +2,6 @@ import { STEAM_PLACEHOLDER_DOMAIN } from "@gcs/modules";
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Suspense, type ReactNode } from "react";
-import { GcsEditMode } from "./_components/edit/GcsEditMode";
 import { GcsNavProgress } from "./_components/GcsNavProgress";
 import { GcsHoverCardHost } from "./_components/GcsHoverCardHost";
 import { GcsSiteFooter } from "./_components/GcsSiteFooter";
@@ -35,7 +34,6 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
       </main>
       <GcsSiteFooter />
       {modal}
-      <GcsEditMode />
       {actor.userId && <GcsNotificationToasts toasts={alerts.toasts} sound={alerts.sound} closeLabel={tc("closeToast")} />}
       <GcsHoverCardHost
         locale={locale}

@@ -372,7 +372,7 @@ function EditItem({ item, widget, index, count, zone, open, groups, onToggle, on
             const id = `${fieldId}-${f.key}`;
             const value = item.config[f.key];
             return (
-              <label key={f.key} htmlFor={id} className="gcs-themeEditor__row">
+              <label key={f.key} htmlFor={id} className="gcs-fieldRow">
                 <span>{f.label}</span>
                 {f.type === "number" ? (
                   <input id={id} className="gcs-input" type="number" min={f.min} max={f.max} value={typeof value === "number" ? value : ""} onChange={(e) => setConfig(f.key, Number(e.target.value))} />

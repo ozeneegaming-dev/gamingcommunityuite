@@ -50,7 +50,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <head>
         {/* Stilurile de nume și ramele de avatar, generate din ACP (spec §9). */}
         <link rel="stylesheet" href={`/gcs-names.css?v=${version}`} />
-        {/* Tema (specul etapei 5): CSS-ul publicat; în editorul de pe site, adminul vede draft-ul, inline. */}
+        {/* Tema (specul etapei 5): CSS-ul publicat; în previzualizarea editorului vizual, draft-ul, inline. */}
         {theme.inlineCss === null ? (
           <link rel="stylesheet" href={`/gcs-theme.css?t=${encodeURIComponent(theme.theme.key)}&v=${theme.theme.version}`} />
         ) : (
