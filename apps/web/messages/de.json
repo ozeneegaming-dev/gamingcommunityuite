@@ -2523,7 +2523,27 @@
       "all": "alle zeiten"
     },
     "empty": "Noch nichts.",
-    "posts": "{count, plural, one {# Post} other {#-Stellen}}"
+    "posts": "{count, plural, one {# Post} other {#-Stellen}}",
+    "desc": {
+      "core": {
+        "announcement": "Eine Nachricht mit Titel und Text, z. B. eine Begrüßung oder ein wichtiger Hinweis.",
+        "online": "Mitglieder und Gäste, die gerade aktiv sind.",
+        "statsPanel": "Kennzahlen der Community, wer online ist und die Gruppenlegende.",
+        "onlineDay": "Mitglieder, die in den letzten 24 Stunden aktiv waren.",
+        "groupLegend": "Die Gruppen der Community mit ihren Namensstilen.",
+        "newMembers": "Die neuesten registrierten Mitglieder."
+      },
+      "forums": {
+        "stats": "Die Anzahl der Themen, Beiträge und Mitglieder.",
+        "recentTopics": "Die zuletzt gestarteten Themen im Forum.",
+        "recentPosts": "Die neuesten Antworten mit einem Auszug.",
+        "topPosters": "Mitglieder mit den meisten Beiträgen im gewählten Zeitraum.",
+        "featuredTopics": "Vom Team hervorgehobene Themen."
+      },
+      "chat": {
+        "shoutbox": "Ein Chatraum direkt auf der Seite."
+      }
+    }
   },
   "pageEditor": {
     "title": "Seite bearbeiten",
@@ -2538,14 +2558,12 @@
       "sidebar": "Rechte Spalte",
       "bottom": "Boden"
     },
-    "emptyZone": "Keine Widgets hier. Ziehen Sie einen hinein oder fügen Sie einen neuen hinzu.",
     "add": "Hinzufügen von Widget",
     "catalog": "Verfügbare Widgets",
     "cancel": "Abbrechen",
     "save": "Speichern",
     "saved": "Die Seite wurde gespeichert.",
     "reset": "Discard-Änderungen",
-    "exit": "Exit Edited",
     "exitWithoutSaving": "Ausstieg ohne Sparen",
     "unsaved": "Sie haben unerrettete Veränderungen.",
     "drag": "Bewegen Sie „{name}",
@@ -2568,7 +2586,23 @@
       "over": "\"{name}\" ist jetzt über \"{over}\".",
       "end": "\"{name}\" über \"{over}\" fallen gelassen.",
       "cancel": "Der Umzug \"{name}\" wurde abgesagt."
-    }
+    },
+    "categories": {
+      "core": "Community",
+      "forums": "Foren",
+      "chat": "Chat"
+    },
+    "search": "Widget suchen",
+    "noResults": "Kein Widget passt zu deiner Suche.",
+    "favorites": "Favoriten",
+    "favoritesEmpty": "Klicke auf den Stern eines Widgets, um es hier zu behalten.",
+    "favorite": "„{name}“ zu den Favoriten hinzufügen",
+    "unfavorite": "„{name}“ aus den Favoriten entfernen",
+    "addWidget": "„{name}“ zur Seite hinzufügen",
+    "addTo": "Zum Bereich hinzufügen:",
+    "dragHint": "Ziehe ein Widget auf die Seite oder nutze die Schaltfläche +.",
+    "dropHere": "Widgets hierher ziehen",
+    "done": "Bearbeitung beenden"
   },
   "stats": {
     "title": "Gemeinschaftsstatistiken",

@@ -74,13 +74,21 @@ export class GcsWidgetService {
     return out;
   }
 
-  /** Catalogul widget-urilor disponibile pe o pagină (aplicațiile dezactivate lipsesc). */
+  /** Catalogul widget-urilor disponibile pe o pagină (aplicațiile dezactivate lipsesc), cu modulul fiecăruia (categoria). */
   async catalog(page: GcsWidgetPage) {
     const enabled = await this.deps.apps.enabledFilter();
     return this.deps.registry
       .widgetDefs()
       .filter((w) => enabled(w.module) && (!w.def.pages || w.def.pages.includes(page)))
-      .map((w) => ({ key: w.def.key, labelKey: w.def.labelKey, icon: w.def.icon, zones: [...w.def.zones], defaultConfig: w.def.defaultConfig }));
+      .map((w) => ({
+        key: w.def.key,
+        module: w.module,
+        labelKey: w.def.labelKey,
+        descriptionKey: w.def.descriptionKey ?? null,
+        icon: w.def.icon,
+        zones: [...w.def.zones],
+        defaultConfig: w.def.defaultConfig,
+      }));
   }
 
   /** Înlocuiește layout-ul unei pagini (ordinea din listă = ordinea din zonă). */

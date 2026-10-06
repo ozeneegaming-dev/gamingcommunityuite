@@ -83,6 +83,8 @@ export type GcsWidgetZone = (typeof GCS_WIDGET_ZONES)[number];
 export type GcsWidgetDef = {
   key: string;
   labelKey: string;
+  /** O descriere scurtă (lista „Widget-uri disponibile” din „Editează pagina”). */
+  descriptionKey?: string;
   icon: string;
   zones: readonly GcsWidgetZone[];
   pages?: readonly GcsWidgetPage[];

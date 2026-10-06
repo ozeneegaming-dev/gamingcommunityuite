@@ -70,18 +70,37 @@ export async function GcsWidgetPage({ page, children }: { page: GcsWidgetPageKey
   );
 }
 
-/** Datele editorului: toate widget-urile paginii (cu previzualizarea randată pe server), catalogul și grupurile. */
+/** Favoritele adminului din `users.prefs.widgetFavorites` (lista „Widget-uri disponibile”). */
+async function widgetFavorites(userId: string | null): Promise<string[]> {
+  if (!userId) return [];
+  const user = await services().db.user.findUnique({ where: { id: userId }, select: { prefs: true } });
+  const prefs = (user?.prefs && typeof user.prefs === "object" ? user.prefs : {}) as Record<string, unknown>;
+  return Array.isArray(prefs.widgetFavorites) ? prefs.widgetFavorites.filter((k): k is string => typeof k === "string") : [];
+}
+
+/**
+ * Datele editorului: toate widget-urile paginii (cu previzualizarea randată pe server), catalogul (cu categoria și
+ * descrierea fiecărui widget), favoritele adminului și grupurile.
+ */
 async function GcsPageEditorHost({ page, actor, children }: { page: GcsWidgetPageKey; actor: GcsActor; children: ReactNode }) {
   const { widgets, registry, db, chatQueries, apps } = services();
-  const [t, tAll, layout, catalog, groups, enabled] = await Promise.all([
+  const [t, tAll, layout, catalog, groups, enabled, favorites] = await Promise.all([
     getTranslations("pageEditor"),
     getTranslations(),
     widgets.layout(page, actor, { all: true }),
     widgets.catalog(page),
     db.group.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }], select: { id: true, name: true } }),
     apps.enabledFilter(),
+    widgetFavorites(actor.userId),
   ]);
   const label = (key: string) => (tAll.has(key) ? tAll(key) : key);
+  /** Categoria = modulul widget-ului (eticheta din `pageEditor.categories`, altfel numele aplicației sau cheia). */
+  const category = (module: string) => {
+    const key = `pageEditor.categories.${module}`;
+    if (tAll.has(key)) return tAll(key);
+    const app = registry.all().find((m) => m.key === module)?.app;
+    return app ? label(app.labelKey) : module;
+  };
   const placements = GCS_WIDGET_ZONES.flatMap((z) => layout[z]);
   const previews = await Promise.all(placements.map((p) => renderPlacement(p, actor)));
   const channels = enabled("chat") ? await chatQueries.channels(actor) : [];
@@ -100,6 +119,9 @@ async function GcsPageEditorHost({ page, actor, children }: { page: GcsWidgetPag
         return {
           key: c.key,
           label: label(c.labelKey),
+          description: c.descriptionKey ? label(c.descriptionKey) : "",
+          category: c.module,
+          categoryLabel: category(c.module),
           icon: <GcsIcon name={c.icon} />,
           zones: c.zones,
           defaultConfig: c.defaultConfig,
@@ -116,6 +138,7 @@ async function GcsPageEditorHost({ page, actor, children }: { page: GcsWidgetPag
         };
       })}
       groups={groups}
+      favorites={favorites}
       pageLabel={t(`pages.${page}`)}
     >
       {children}

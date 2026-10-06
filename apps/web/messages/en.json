@@ -2523,7 +2523,27 @@
       "all": "all time"
     },
     "empty": "Nothing yet.",
-    "posts": "{count, plural, one {# post} other {# posts}}"
+    "posts": "{count, plural, one {# post} other {# posts}}",
+    "desc": {
+      "core": {
+        "announcement": "A message with a title and text, e.g. a welcome or an important notice.",
+        "online": "Members and guests active right now.",
+        "statsPanel": "Community figures, who is online and the group legend.",
+        "onlineDay": "Members who were active in the last 24 hours.",
+        "groupLegend": "The community groups, with their name styles.",
+        "newMembers": "The newest registered members."
+      },
+      "forums": {
+        "stats": "The number of topics, posts and members.",
+        "recentTopics": "The latest topics started on the forum.",
+        "recentPosts": "The latest replies, with an excerpt.",
+        "topPosters": "Members with the most posts over the chosen period.",
+        "featuredTopics": "Topics featured by the staff."
+      },
+      "chat": {
+        "shoutbox": "A chat room, right on the page."
+      }
+    }
   },
   "pageEditor": {
     "title": "Edit page",
@@ -2538,14 +2558,12 @@
       "sidebar": "Right column",
       "bottom": "Bottom"
     },
-    "emptyZone": "No widgets here. Drag one in or add a new one.",
     "add": "Add widget",
     "catalog": "Available widgets",
     "cancel": "Cancel",
     "save": "Save",
     "saved": "The page has been saved.",
     "reset": "Discard changes",
-    "exit": "Exit editing",
     "exitWithoutSaving": "Exit without saving",
     "unsaved": "You have unsaved changes.",
     "drag": "Move “{name}”",
@@ -2568,7 +2586,23 @@
       "over": "“{name}” is now over “{over}”.",
       "end": "Dropped “{name}” over “{over}”.",
       "cancel": "Moving “{name}” was cancelled."
-    }
+    },
+    "categories": {
+      "core": "Community",
+      "forums": "Forums",
+      "chat": "Chat"
+    },
+    "search": "Search for a widget",
+    "noResults": "No widget matches your search.",
+    "favorites": "Favorites",
+    "favoritesEmpty": "Click a widget's star to keep it here.",
+    "favorite": "Add “{name}” to favorites",
+    "unfavorite": "Remove “{name}” from favorites",
+    "addWidget": "Add “{name}” to the page",
+    "addTo": "Add to zone:",
+    "dragHint": "Drag a widget onto the page or use the + button.",
+    "dropHere": "Drag widgets here",
+    "done": "Finish editing"
   },
   "stats": {
     "title": "Community statistics",

@@ -2523,7 +2523,27 @@
       "all": "tout le temps"
     },
     "empty": "Rien encore.",
-    "posts": "{count, plural, one {# poste} many {Postes #} other {Postes #}}"
+    "posts": "{count, plural, one {# poste} many {Postes #} other {Postes #}}",
+    "desc": {
+      "core": {
+        "announcement": "Un message avec un titre et un texte, p. ex. un mot de bienvenue ou une annonce importante.",
+        "online": "Membres et invités actifs en ce moment.",
+        "statsPanel": "Chiffres de la communauté, qui est en ligne et la légende des groupes.",
+        "onlineDay": "Membres actifs au cours des dernières 24 heures.",
+        "groupLegend": "Les groupes de la communauté, avec le style de leurs noms.",
+        "newMembers": "Les derniers membres inscrits."
+      },
+      "forums": {
+        "stats": "Le nombre de sujets, de messages et de membres.",
+        "recentTopics": "Les derniers sujets lancés sur le forum.",
+        "recentPosts": "Les dernières réponses, avec un extrait.",
+        "topPosters": "Les membres ayant le plus de messages sur la période choisie.",
+        "featuredTopics": "Les sujets mis en avant par l’équipe."
+      },
+      "chat": {
+        "shoutbox": "Un salon de discussion, directement sur la page."
+      }
+    }
   },
   "pageEditor": {
     "title": "Modifier la page",
@@ -2538,14 +2558,12 @@
       "sidebar": "Colonne droite",
       "bottom": "Bas"
     },
-    "emptyZone": "Pas de widgets ici. Faites glisser un ou ajoutez un nouveau.",
     "add": "Ajouter un widget",
     "catalog": "Widgets disponibles",
     "cancel": "Annuler",
     "save": "Enregistrer",
     "saved": "La page a été enregistrée.",
     "reset": "Éliminer les modifications",
-    "exit": "Édition de sortie",
     "exitWithoutSaving": "Sortie sans enregistrement",
     "unsaved": "Vous avez des changements non sauvés.",
     "drag": "Move “{name}”",
@@ -2568,7 +2586,23 @@
       "over": "{name} est maintenant au-dessus de {over}.",
       "end": "Dropped “{name}” over “{over}”.",
       "cancel": "Déplacement de {name}."
-    }
+    },
+    "categories": {
+      "core": "Communauté",
+      "forums": "Forums",
+      "chat": "Chat"
+    },
+    "search": "Rechercher un widget",
+    "noResults": "Aucun widget ne correspond à votre recherche.",
+    "favorites": "Favoris",
+    "favoritesEmpty": "Cliquez sur l’étoile d’un widget pour le garder ici.",
+    "favorite": "Ajouter « {name} » aux favoris",
+    "unfavorite": "Retirer « {name} » des favoris",
+    "addWidget": "Ajouter « {name} » à la page",
+    "addTo": "Ajouter dans la zone :",
+    "dragHint": "Faites glisser un widget sur la page ou utilisez le bouton +.",
+    "dropHere": "Faites glisser les widgets ici",
+    "done": "Terminer l’édition"
   },
   "stats": {
     "title": "Statistiques communautaires",

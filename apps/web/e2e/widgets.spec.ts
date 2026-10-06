@@ -72,7 +72,7 @@ test("adminul aranjează widget-urile; vizitatorul vede aranjarea, fără widget
 
   await page.getByTestId("gcs-page-editor-save").click();
   await expect(page.getByTestId("gcs-page-editor-status")).toHaveText("Pagina a fost salvată.");
-  await page.getByTestId("gcs-page-editor-exit").click();
+  await page.getByTestId("gcs-page-editor-done").click();
   await expect(editor).toHaveCount(0);
   await expect(page.locator('[data-zone="bottom"] [data-widget="forums.featuredTopics"]')).toBeVisible();
 
@@ -105,7 +105,87 @@ test("adminul aranjează widget-urile; vizitatorul vede aranjarea, fără widget
   await expect(page.getByTestId("gcs-page-editor-status")).toHaveText("Pagina a revenit la widget-urile implicite.");
   await expect.poll(() => editorOrder(sidebar)).toEqual(["chat.shoutbox", "forums.recentTopics"]);
   await expect.poll(() => editorOrder(bottom)).toEqual(["core.statsPanel"]);
-  await page.getByTestId("gcs-page-editor-exit").click();
+  await page.getByTestId("gcs-page-editor-done").click();
+  await expect(editor).toHaveCount(0);
+});
+
+/**
+ * Lista „Widget-uri disponibile” (fixată în stânga): pornită din meniu de pe o pagină fără widget-uri (editorul se
+ * deschide pe pagina principală), căutare, favorite păstrate pe server, adăugare cu „+” și prin tragere, apoi
+ * „Termină editarea” salvează și închide. La final, layout-ul implicit revine.
+ */
+test("lista de widget-uri: căutare, favorite, adăugare cu „+” și prin tragere, „Termină editarea”", async ({ page, context }) => {
+  test.setTimeout(120_000);
+  await useFreshIp(context, "100.71.5");
+  const id = uid();
+  await enterAcpAsRoot(page, `Wl${id}`, `wl-${id}@example.com`);
+
+  // De pe o pagină fără zone de widget-uri, „Editor pagină” duce pe pagina principală, cu editorul pornit.
+  await page.goto("/members");
+  await openPageEditor(page);
+  await expect(page).toHaveURL(/\/$/);
+  const editor = page.getByTestId("gcs-page-editor");
+  await expect(editor).toBeVisible();
+  const list = page.getByTestId("gcs-widget-sidebar");
+  await expect(list).toBeVisible();
+  // Conținutul paginii se mută la dreapta listei.
+  const listBox = (await list.boundingBox())!;
+  expect((await editor.boundingBox())!.x).toBeGreaterThanOrEqual(listBox.x + listBox.width);
+  for (const zone of ["top", "sidebar", "bottom"]) await expect(page.getByTestId(`gcs-widget-add-${zone}`)).toContainText("Trage widget-urile aici");
+
+  // Căutarea filtrează pe loc (fără diacritice, și în descrieri).
+  const card = (key: string, section = "core") => list.locator(`[data-category="${section}"] [data-widget-key="${key}"]`);
+  await page.getByTestId("gcs-widget-search").fill("membri");
+  await expect(card("core.newMembers")).toBeVisible();
+  await expect(list.locator('[data-widget-key="chat.shoutbox"]')).toHaveCount(0);
+  await page.getByTestId("gcs-widget-search").fill("zzzz");
+  await expect(page.getByTestId("gcs-widget-search-empty")).toBeVisible();
+  await page.getByTestId("gcs-widget-search").fill("");
+  await expect(list.locator('[data-widget-key="chat.shoutbox"]')).toHaveCount(1);
+
+  // Favorite: steluța pune widget-ul la „Favorite”, iar alegerea rămâne după reîncărcare (salvată pe server).
+  const favorites = page.getByTestId("gcs-widget-favorites");
+  await card("core.newMembers").getByTestId("gcs-widget-favorite").click();
+  await expect(favorites.locator('[data-widget-key="core.newMembers"]')).toBeVisible();
+  await expect(card("core.newMembers").getByTestId("gcs-widget-favorite")).toHaveAttribute("aria-pressed", "true");
+  await expect.poll(async () => (await page.reload(), await favorites.locator('[data-widget-key="core.newMembers"]').count()), { timeout: 20_000 }).toBe(1);
+  await favorites.locator('[data-widget-key="core.newMembers"]').getByTestId("gcs-widget-favorite").click();
+  await expect(favorites.locator('[data-widget-key="core.newMembers"]')).toHaveCount(0);
+
+  // Adăugare din tastatură / cu un clic: „+” și zona.
+  const top = page.getByTestId("gcs-zone-top");
+  const bottom = page.getByTestId("gcs-zone-bottom");
+  await card("core.groupLegend").getByTestId("gcs-widget-card-add").click();
+  await card("core.groupLegend").getByTestId("gcs-widget-card-add-bottom").click();
+  await expect.poll(() => editorOrder(bottom)).toEqual(["core.statsPanel", "core.groupLegend"]);
+
+  // Prin tragere: din listă pe zona de drop de sus.
+  const source = card("core.onlineDay").locator(".gcs-widgetCard__drag");
+  const target = page.getByTestId("gcs-widget-add-top");
+  await target.scrollIntoViewIfNeeded();
+  const from = (await source.boundingBox())!;
+  await page.mouse.move(from.x + 20, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(from.x + 40, from.y + from.height / 2 + 10, { steps: 5 });
+  const to = (await target.boundingBox())!;
+  await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 15 });
+  await expect(target).toHaveAttribute("data-state", "over");
+  await page.mouse.up();
+  await expect.poll(() => editorOrder(top)).toEqual(["core.announcement", "core.onlineDay"]);
+
+  // „Termină editarea” salvează și închide editorul.
+  await page.getByTestId("gcs-page-editor-done").click();
+  await expect(editor).toHaveCount(0);
+  await expect(page.locator('[data-zone="bottom"] [data-widget="core.groupLegend"]')).toBeVisible();
+  await expect(page.locator('[data-zone="top"] [data-widget="core.onlineDay"]')).toBeVisible();
+
+  // Layout-ul implicit înapoi.
+  await openPageEditor(page);
+  await page.getByTestId("gcs-page-editor-default").click();
+  await page.getByTestId("gcs-page-editor-default-confirm").click();
+  await expect(page.getByTestId("gcs-page-editor-status")).toHaveText("Pagina a revenit la widget-urile implicite.");
+  await expect.poll(() => editorOrder(bottom)).toEqual(["core.statsPanel"]);
+  await page.getByTestId("gcs-page-editor-done").click();
   await expect(editor).toHaveCount(0);
 });
 

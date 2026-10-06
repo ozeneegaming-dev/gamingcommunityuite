@@ -76,36 +76,271 @@
   margin-bottom: 0;
 }
 
-/* Modul „Editează pagina”. */
-.gcs-pageEditorBar {
-  position: sticky;
-  top: 72px;
-  z-index: 30;
+/*
+ * Modul „Editează pagina”: lista „Widget-uri disponibile” fixată în stânga (pagina se mută spre dreapta), zonele
+ * paginii cu chenar punctat și zona de drop „Trage widget-urile aici” la finalul fiecăreia.
+ */
+body:has(.gcs-pageSidebar) {
+  --gcs-pageSidebar-w: 320px;
+  padding-left: var(--gcs-pageSidebar-w);
+}
+.gcs-pageSidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 45;
+  width: var(--gcs-pageSidebar-w, 320px);
+  display: flex;
+  flex-direction: column;
+  background: var(--gcs-surface);
+  border-right: 1px solid var(--gcs-border);
+  box-shadow: 12px 0 32px rgb(0 0 0 / 0.25);
+  color: var(--gcs-text);
+}
+.gcs-pageSidebar__head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-pageSidebar__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 18px;
+}
+.gcs-pageSidebar__title svg {
+  color: var(--gcs-accent);
+}
+.gcs-pageSidebar__page {
+  margin: 0;
+  color: var(--gcs-muted);
+  font-size: 12px;
+}
+.gcs-pageSidebar__search {
+  position: relative;
+  display: block;
+}
+.gcs-pageSidebar__search > svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gcs-muted);
+  pointer-events: none;
+}
+.gcs-pageSidebar__search .gcs-input {
+  width: 100%;
+  padding-left: 36px;
+}
+.gcs-pageSidebar__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.gcs-pageSidebar__hint,
+.gcs-pageSidebar__empty {
+  margin: 0;
+  color: var(--gcs-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.gcs-pageSidebar__section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gcs-pageSidebar__heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font: 700 11px var(--gcs-font-text);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gcs-muted);
+}
+.gcs-pageSidebar__favIcon {
+  color: #f4b740;
+}
+.gcs-pageSidebar__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gcs-pageSidebar__foot {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--gcs-border);
+  background: var(--gcs-chrome);
+}
+.gcs-pageSidebar__status {
+  margin: 0;
+  min-height: 1.2em;
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-pageSidebar__status:empty {
+  display: none;
+}
+.gcs-pageSidebar__status--ok {
+  color: var(--gcs-ok);
+}
+.gcs-pageSidebar__status--error {
+  color: var(--gcs-accentInk);
+}
+/* Acțiunile secundare, compacte (două pe rând), deasupra butonului principal. */
+.gcs-pageSidebar__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.gcs-pageSidebar__actions .gcs-btn {
+  justify-content: flex-start;
+  min-width: 0;
+  padding: 4px 8px;
+  font-size: 12px;
+  line-height: 1.25;
+  text-align: left;
+  white-space: normal;
+}
+.gcs-pageSidebar__done {
+  width: 100%;
+  min-height: 46px;
+  justify-content: center;
+  font-size: 15px;
+}
+
+/* Un widget din listă: partea cu iconița și textul se trage, butoanele (steluța, „+”) stau în dreapta. */
+.gcs-widgetCard {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-surface2);
+  transition: border-color 0.15s, opacity 0.15s;
+}
+.gcs-widgetCard:hover {
+  border-color: color-mix(in srgb, var(--gcs-accent) 60%, var(--gcs-border));
+}
+.gcs-widgetCard--dragging {
+  opacity: 0.45;
+}
+.gcs-widgetCard__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+.gcs-widgetCard__drag {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 4px 10px 10px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.gcs-widgetCard__icon {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--gcs-accent) 16%, transparent);
+  color: var(--gcs-accent);
+}
+.gcs-widgetCard__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.gcs-widgetCard__text strong {
+  font-size: 13px;
+}
+.gcs-widgetCard__text small {
+  color: var(--gcs-muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+.gcs-widgetCard__tools {
+  display: flex;
+  gap: 2px;
+  padding: 6px 6px 0 0;
+}
+.gcs-widgetCard__btn {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--gcs-muted);
+  cursor: pointer;
+}
+.gcs-widgetCard__btn:hover,
+.gcs-widgetCard__btn:focus-visible,
+.gcs-widgetCard__btn[aria-expanded="true"] {
+  background: var(--gcs-surface);
+  color: var(--gcs-text);
+}
+.gcs-widgetCard__star--on,
+.gcs-widgetCard__star--on:hover {
+  color: #f4b740;
+}
+.gcs-widgetCard__zones {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  border: 1px solid var(--gcs-accent);
-  border-radius: var(--gcs-radius, 12px);
-  background: var(--gcs-surface);
-  box-shadow: 0 10px 30px rgb(0 0 0 / 0.3);
-}
-.gcs-pageEditorBar__status {
-  font-size: 13px;
+  gap: 6px;
+  padding: 0 10px 10px;
+  font-size: 12px;
   color: var(--gcs-muted);
 }
-.gcs-pageEditorBar__status--ok {
-  color: var(--gcs-ok);
+.gcs-widgetCard__zone {
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 999px;
+  background: var(--gcs-surface);
+  color: var(--gcs-text);
+  font: 600 12px var(--gcs-font-text);
+  cursor: pointer;
 }
-.gcs-pageEditorBar__status--error {
-  color: var(--gcs-accentInk);
+.gcs-widgetCard__zone:hover,
+.gcs-widgetCard__zone:focus-visible {
+  border-color: var(--gcs-accent);
 }
-.gcs-pageEditorBar__buttons {
-  margin-left: auto;
-  display: flex;
-  gap: 8px;
+.gcs-widgetCard--overlay {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  width: 260px;
+  padding: 10px;
+  border-color: var(--gcs-accent);
+  box-shadow: 0 18px 40px rgb(0 0 0 / 0.45);
+  cursor: grabbing;
+  font-size: 13px;
 }
+
 .gcs-editZone {
   display: flex;
   flex-direction: column;
@@ -132,28 +367,37 @@
   gap: 12px;
   min-height: 24px;
 }
-.gcs-editZone__list:empty::before {
-  content: attr(data-empty);
-  color: var(--gcs-muted);
-  font-size: 13px;
-}
-.gcs-editZone__add {
-  display: inline-flex;
+.gcs-editZone__drop {
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-height: 40px;
-  border: 1px dashed var(--gcs-border);
+  gap: 10px;
+  min-height: 64px;
+  padding: 12px;
+  border: 2px dashed color-mix(in srgb, var(--gcs-muted) 45%, transparent);
   border-radius: 10px;
   background: none;
   color: var(--gcs-muted);
   font: 600 13px var(--gcs-font-text);
   cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s, color 0.15s;
 }
-.gcs-editZone__add:hover,
-.gcs-editZone__add:focus-visible {
+.gcs-editZone__drop:hover,
+.gcs-editZone__drop:focus-visible,
+.gcs-editZone__drop[aria-expanded="true"],
+.gcs-editZone__drop[data-state="ready"] {
   border-color: var(--gcs-accent);
   color: var(--gcs-text);
+}
+.gcs-editZone__drop[data-state="over"] {
+  border-color: var(--gcs-accent);
+  border-style: solid;
+  background: color-mix(in srgb, var(--gcs-accent) 10%, transparent);
+  color: var(--gcs-text);
+}
+.gcs-editZone__drop[data-state="blocked"] {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 .gcs-editZone__catalog {
   display: grid;
@@ -193,6 +437,7 @@
 }
 .gcs-editItem__bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   padding: 6px 8px;
@@ -216,6 +461,7 @@
   outline: 2px solid var(--gcs-accent);
 }
 .gcs-editItem__name {
+  flex: 1 1 120px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -295,16 +541,41 @@
   font-size: 13px;
 }
 
-@media (max-width: 640px) {
-  .gcs-pageEditorBar {
-    top: 64px;
+/* Ecranele înguste: lista de widget-uri devine un panou jos, pe toată lățimea; pagina lasă loc dedesubt. */
+@media (max-width: 900px) {
+  body:has(.gcs-pageSidebar) {
+    padding-left: 0;
+    padding-bottom: 46vh;
   }
+  .gcs-pageSidebar {
+    top: auto;
+    right: 0;
+    width: auto;
+    height: 46vh;
+    border-right: 0;
+    border-top: 1px solid var(--gcs-border);
+    box-shadow: 0 -12px 32px rgb(0 0 0 / 0.3);
+  }
+  .gcs-pageSidebar__head {
+    padding: 10px 12px 8px;
+  }
+  .gcs-pageSidebar__page,
+  .gcs-pageSidebar__hint {
+    display: none;
+  }
+  .gcs-pageSidebar__foot {
+    padding: 8px 12px 10px;
+  }
+}
+@media (max-width: 640px) {
   .gcs-editItem__zone {
     display: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .gcs-editZone {
+  .gcs-editZone,
+  .gcs-editZone__drop,
+  .gcs-widgetCard {
     transition: none;
   }
 }

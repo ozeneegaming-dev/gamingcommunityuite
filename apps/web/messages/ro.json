@@ -2523,7 +2523,27 @@
       "all": "total"
     },
     "empty": "Nimic deocamdată.",
-    "posts": "{count, plural, one {# postare} few {# postări} other {# de postări}}"
+    "posts": "{count, plural, one {# postare} few {# postări} other {# de postări}}",
+    "desc": {
+      "core": {
+        "announcement": "Un mesaj cu titlu și text, ex. bun venit sau o veste importantă.",
+        "online": "Membrii și vizitatorii activi acum.",
+        "statsPanel": "Plăcile cu cifrele comunității, cine e online și legenda grupurilor.",
+        "onlineDay": "Membrii care au fost activi în ultimele 24 de ore.",
+        "groupLegend": "Grupurile comunității, cu stilul numelor lor.",
+        "newMembers": "Cei mai noi membri înregistrați."
+      },
+      "forums": {
+        "stats": "Numărul de topicuri, postări și membri.",
+        "recentTopics": "Ultimele topicuri pornite pe forum.",
+        "recentPosts": "Ultimele răspunsuri, cu un fragment din text.",
+        "topPosters": "Membrii cu cele mai multe postări, pe perioada aleasă.",
+        "featuredTopics": "Topicurile promovate de staff."
+      },
+      "chat": {
+        "shoutbox": "O cameră de chat, direct pe pagină."
+      }
+    }
   },
   "pageEditor": {
     "title": "Editează pagina",
@@ -2538,14 +2558,12 @@
       "sidebar": "Coloana din dreapta",
       "bottom": "Jos"
     },
-    "emptyZone": "Nicio componentă aici. Trage una sau adaugă una nouă.",
     "add": "Adaugă widget",
     "catalog": "Widget-uri disponibile",
     "cancel": "Anulează",
     "save": "Salvează",
     "saved": "Pagina a fost salvată.",
     "reset": "Renunță la modificări",
-    "exit": "Ieși din editare",
     "exitWithoutSaving": "Ieși fără salvare",
     "unsaved": "Ai modificări nesalvate.",
     "drag": "Mută „{name}”",
@@ -2568,7 +2586,23 @@
       "over": "„{name}” e acum peste „{over}”.",
       "end": "Ai lăsat „{name}” peste „{over}”.",
       "cancel": "Mutarea lui „{name}” a fost anulată."
-    }
+    },
+    "categories": {
+      "core": "Comunitate",
+      "forums": "Forumuri",
+      "chat": "Chat"
+    },
+    "search": "Caută un widget",
+    "noResults": "Niciun widget nu se potrivește căutării.",
+    "favorites": "Favorite",
+    "favoritesEmpty": "Apasă steluța unui widget ca să-l ai mereu aici.",
+    "favorite": "Adaugă „{name}” la favorite",
+    "unfavorite": "Scoate „{name}” din favorite",
+    "addWidget": "Adaugă „{name}” pe pagină",
+    "addTo": "Adaugă în zona:",
+    "dragHint": "Trage un widget pe pagină sau folosește butonul +.",
+    "dropHere": "Trage widget-urile aici",
+    "done": "Termină editarea"
   },
   "stats": {
     "title": "Statisticile comunității",

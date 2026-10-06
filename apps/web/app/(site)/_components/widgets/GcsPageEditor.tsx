@@ -3,13 +3,18 @@
 import {
   closestCorners,
   DndContext,
+  DragOverlay,
   KeyboardSensor,
   PointerSensor,
+  pointerWithin,
+  rectIntersection,
   useDroppable,
   useSensor,
   useSensors,
+  type CollisionDetection,
   type DragEndEvent,
   type DragOverEvent,
+  type DragStartEvent,
 } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -25,8 +30,6 @@ import {
   faGear,
   faGripVertical,
   faPlus,
-  faRightFromBracket,
-  faTableColumns,
   faTrashCan,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
@@ -34,9 +37,12 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
 import { useErrorMessage } from "@/lib/use-error-message";
-import { closePageEditor, resetPageLayout, savePageLayout } from "../../edit-actions";
+import { closePageEditor, resetPageLayout, savePageLayout, saveWidgetFavorites } from "../../edit-actions";
+import { GcsWidgetSidebar } from "./GcsWidgetSidebar";
 
 const ZONES: GcsWidgetZone[] = ["top", "sidebar", "bottom"];
+/** Id-urile dnd-kit ale zonelor de drop pentru widget-urile noi („Trage widget-urile aici”). */
+const DROP_PREFIX = "drop:";
 
 export type GcsPageEditorItem = {
   uid: string;
@@ -50,7 +56,18 @@ type Field =
   | { key: string; label: string; type: "number"; min: number; max: number }
   | { key: string; label: string; type: "text" | "textarea"; maxLength: number }
   | { key: string; label: string; type: "select"; options?: { value: string; label: string }[] };
-export type GcsPageEditorWidget = { key: string; label: string; icon: ReactNode; zones: readonly GcsWidgetZone[]; defaultConfig: Record<string, unknown>; fields: Field[] };
+export type GcsPageEditorWidget = {
+  key: string;
+  label: string;
+  description: string;
+  /** Categoria din lista „Widget-uri disponibile” (modulul widget-ului) și eticheta ei. */
+  category: string;
+  categoryLabel: string;
+  icon: ReactNode;
+  zones: readonly GcsWidgetZone[];
+  defaultConfig: Record<string, unknown>;
+  fields: Field[];
+};
 type Zones = Record<GcsWidgetZone, GcsPageEditorItem[]>;
 
 type Props = {
@@ -59,21 +76,41 @@ type Props = {
   initial: Zones;
   catalog: GcsPageEditorWidget[];
   groups: { id: number; name: string }[];
+  /** Widget-urile favorite ale adminului (`users.prefs.widgetFavorites`). */
+  favorites: string[];
   children: ReactNode;
 };
 
+/** Cheia widget-ului nou tras din listă (lipsește pentru widget-urile deja pe pagină). */
+const newWidgetKey = (data: { current?: Record<string, unknown> | undefined }): string | undefined =>
+  typeof data.current?.newWidget === "string" ? data.current.newWidget : undefined;
+
 /**
- * Modul „Editează pagina” (specul etapei 5): zonele (sus, coloana din dreapta, jos) devin liste sortabile cu
- * `@dnd-kit` (mouse, atingere și tastatură: Spațiu ridică, săgețile mută, Spațiu lasă). Fiecare widget se poate muta
- * și cu butoanele ↑ ↓ sau în altă zonă, configura, restrânge la anumite grupuri sau șterge; „Salvează” aplică layout-ul.
+ * Widget-urile noi se lasă unde e indicatorul (lista e fixată, iar pagina se poate derula); mutările din pagină
+ * rămân pe colțurile cele mai apropiate (merg și din tastatură).
  */
-export function GcsPageEditor({ page, pageLabel, initial, catalog, groups, children }: Props) {
+const collision: CollisionDetection = (args) => {
+  if (!newWidgetKey(args.active.data)) return closestCorners(args);
+  const hits = pointerWithin(args);
+  return hits.length > 0 ? hits : rectIntersection(args);
+};
+
+/**
+ * Modul „Editează pagina” (specul etapei 5): în stânga, lista „Widget-uri disponibile” (căutare, favorite, categorii),
+ * din care widget-urile se trag pe pagină sau se adaugă cu „+”; zonele paginii (sus, coloana din dreapta, jos) devin
+ * liste sortabile cu `@dnd-kit` (mouse, atingere și tastatură: Spațiu ridică, săgețile mută, Spațiu lasă), fiecare
+ * cu zona de drop „Trage widget-urile aici”. Un widget se poate muta și cu butoanele ↑ ↓ sau în altă zonă, configura,
+ * restrânge la anumite grupuri sau șterge; „Termină editarea” salvează layout-ul și închide editorul.
+ */
+export function GcsPageEditor({ page, pageLabel, initial, catalog, groups, favorites: initialFavorites, children }: Props) {
   const t = useTranslations("pageEditor");
   const errorMessage = useErrorMessage();
   const router = useRouter();
   const [zones, setZones] = useState<Zones>(initial);
   const [open, setOpen] = useState<string | null>(null);
   const [adding, setAdding] = useState<GcsWidgetZone | null>(null);
+  const [dragging, setDragging] = useState<GcsPageEditorWidget | null>(null);
+  const [favorites, setFavorites] = useState(initialFavorites);
   const [status, setStatus] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
   const [confirmDefault, setConfirmDefault] = useState(false);
@@ -86,18 +123,40 @@ export function GcsPageEditor({ page, pageLabel, initial, catalog, groups, child
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
 
-  const zoneOf = (id: string): GcsWidgetZone | undefined =>
-    (ZONES as string[]).includes(id) ? (id as GcsWidgetZone) : ZONES.find((z) => zones[z].some((i) => i.uid === id));
+  const zoneOf = (id: string): GcsWidgetZone | undefined => {
+    if (id.startsWith(DROP_PREFIX)) id = id.slice(DROP_PREFIX.length);
+    return (ZONES as string[]).includes(id) ? (id as GcsWidgetZone) : ZONES.find((z) => zones[z].some((i) => i.uid === id));
+  };
   /** Numele unui widget sau al unei zone (pentru anunțurile cititorului de ecran). */
   const nameOf = (id: string) => {
-    if ((ZONES as string[]).includes(id)) return t(`zones.${id as GcsWidgetZone}`);
+    if (id.startsWith("new:")) return byKey.get(id.split(":").slice(2).join(":"))?.label ?? id;
+    const zone = id.startsWith(DROP_PREFIX) ? id.slice(DROP_PREFIX.length) : id;
+    if ((ZONES as string[]).includes(zone)) return t(`zones.${zone as GcsWidgetZone}`);
     const item = ZONES.flatMap((z) => zones[z]).find((i) => i.uid === id);
     return item ? (byKey.get(item.type)?.label ?? item.type) : id;
   };
   const allowed = (item: GcsPageEditorItem, zone: GcsWidgetZone) => byKey.get(item.type)?.zones.includes(zone) ?? false;
 
+  const add = (zone: GcsWidgetZone, w: GcsPageEditorWidget, index?: number) => {
+    const uid = `n${++counter.current}`;
+    setZones((z) => {
+      const list = [...z[zone]];
+      list.splice(index ?? list.length, 0, { uid, type: w.key, config: { ...w.defaultConfig }, groups: [], preview: null });
+      return { ...z, [zone]: list };
+    });
+    setAdding(null);
+    setStatus(null);
+    setOpen(w.fields.length > 0 ? uid : null);
+  };
+
+  const onDragStart = ({ active }: DragStartEvent) => {
+    const key = newWidgetKey(active.data);
+    setDragging(key ? (byKey.get(key) ?? null) : null);
+  };
+
   const onDragOver = ({ active, over }: DragOverEvent) => {
-    if (!over) return;
+    // Un widget nou intră în pagină doar la final (unde e lăsat); cele existente se mută între zone pe loc.
+    if (!over || newWidgetKey(active.data)) return;
     const from = zoneOf(String(active.id));
     const to = zoneOf(String(over.id));
     if (!from || !to || from === to) return;
@@ -112,6 +171,15 @@ export function GcsPageEditor({ page, pageLabel, initial, catalog, groups, child
   };
 
   const onDragEnd = ({ active, over }: DragEndEvent) => {
+    const key = newWidgetKey(active.data);
+    if (key) {
+      setDragging(null);
+      const w = byKey.get(key);
+      const zone = over ? zoneOf(String(over.id)) : undefined;
+      if (!w || !zone || !w.zones.includes(zone)) return;
+      const index = zones[zone].findIndex((i) => i.uid === over!.id);
+      return add(zone, w, index < 0 ? undefined : index);
+    }
     if (!over) return;
     const zone = zoneOf(String(active.id));
     if (!zone || zone !== zoneOf(String(over.id))) return;
@@ -137,19 +205,27 @@ export function GcsPageEditor({ page, pageLabel, initial, catalog, groups, child
       if (!from || !item || from === to) return z;
       return { ...z, [from]: z[from].filter((i) => i.uid !== uid), [to]: [...z[to], item] };
     });
-  const add = (zone: GcsWidgetZone, w: GcsPageEditorWidget) => {
-    const uid = `n${++counter.current}`;
-    setZones((z) => ({ ...z, [zone]: [...z[zone], { uid, type: w.key, config: { ...w.defaultConfig }, groups: [], preview: null }] }));
-    setAdding(null);
-    setOpen(w.fields.length > 0 ? uid : null);
+
+  const toggleFavorite = (key: string) => {
+    const next = favorites.includes(key) ? favorites.filter((k) => k !== key) : [...favorites, key];
+    setFavorites(next);
+    void saveWidgetFavorites({ keys: next }).then((res) => {
+      if (!res.ok) setStatus({ tone: "error", text: errorMessage(res.error) });
+    });
+  };
+
+  /** Salvează layout-ul (validarea completă e pe server); `false` dacă n-a mers (mesajul e deja afișat). */
+  const persist = async () => {
+    const placements = ZONES.flatMap((zone) => zones[zone].map((i) => ({ zone, type: i.type, config: i.config, groups: i.groups })));
+    const res = await savePageLayout({ page, placements });
+    if (!res.ok) setStatus({ tone: "error", text: errorMessage(res.error) });
+    return res.ok;
   };
 
   const save = () =>
     startTransition(async () => {
       setStatus(null);
-      const placements = ZONES.flatMap((zone) => zones[zone].map((i) => ({ zone, type: i.type, config: i.config, groups: i.groups })));
-      const res = await savePageLayout({ page, placements });
-      if (!res.ok) return setStatus({ tone: "error", text: errorMessage(res.error) });
+      if (!(await persist())) return;
       setStatus({ tone: "ok", text: t("saved") });
       setOpen(null);
       router.refresh();
@@ -165,14 +241,23 @@ export function GcsPageEditor({ page, pageLabel, initial, catalog, groups, child
       router.refresh();
     });
 
-  const exit = () =>
+  /** „Termină editarea”: salvează ce e nesalvat, apoi închide modul de editare. */
+  const done = () =>
+    startTransition(async () => {
+      setStatus(null);
+      if (dirty && !(await persist())) return;
+      await closePageEditor();
+      router.refresh();
+    });
+
+  const exitWithoutSaving = () =>
     startTransition(async () => {
       await closePageEditor();
       router.refresh();
     });
 
   const zoneBox = (zone: GcsWidgetZone) => (
-    <EditZone key={zone} zone={zone} label={t(`zones.${zone}`)} empty={t("emptyZone")} count={zones[zone].length}>
+    <EditZone key={zone} zone={zone} label={t(`zones.${zone}`)} count={zones[zone].length}>
       <SortableContext id={zone} items={zones[zone].map((i) => i.uid)} strategy={verticalListSortingStrategy}>
         {zones[zone].map((item, index) => {
           const w = byKey.get(item.type);
@@ -195,7 +280,7 @@ export function GcsPageEditor({ page, pageLabel, initial, catalog, groups, child
           );
         })}
       </SortableContext>
-      {adding === zone ? (
+      {adding === zone && (
         <div className="gcs-editZone__catalog" role="list" aria-label={t("catalog")} data-testid={`gcs-widget-catalog-${zone}`}>
           {catalog
             .filter((w) => w.zones.includes(zone))
@@ -209,50 +294,53 @@ export function GcsPageEditor({ page, pageLabel, initial, catalog, groups, child
             {t("cancel")}
           </GcsButton>
         </div>
-      ) : (
-        <button type="button" className="gcs-editZone__add" onClick={() => setAdding(zone)} data-testid={`gcs-widget-add-${zone}`}>
-          <GcsIconSvg icon={faPlus} /> {t("add")}
-        </button>
       )}
+      <DropArea zone={zone} dragging={dragging} open={adding === zone} onClick={() => setAdding(adding === zone ? null : zone)} />
     </EditZone>
+  );
+
+  const footer = (
+    <>
+      <p role="status" className={`gcs-pageSidebar__status gcs-pageSidebar__status--${status?.tone ?? "muted"}`} data-testid="gcs-page-editor-status">
+        {status?.text ?? (dirty ? t("unsaved") : "")}
+      </p>
+      <div className="gcs-pageSidebar__actions">
+        <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faFloppyDisk} />} onClick={save} disabled={!dirty || pending} data-testid="gcs-page-editor-save">
+          {t("save")}
+        </GcsButton>
+        <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faArrowsRotate} />} onClick={() => setZones(initial)} disabled={!dirty || pending}>
+          {t("reset")}
+        </GcsButton>
+        {confirmDefault ? (
+          <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faArrowRotateLeft} />} onClick={restoreDefault} disabled={pending} data-testid="gcs-page-editor-default-confirm">
+            {t("confirmDefault")}
+          </GcsButton>
+        ) : (
+          <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faArrowRotateLeft} />} onClick={() => setConfirmDefault(true)} disabled={pending} data-testid="gcs-page-editor-default">
+            {t("restoreDefault")}
+          </GcsButton>
+        )}
+        {dirty && (
+          <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faXmark} />} onClick={exitWithoutSaving} disabled={pending} data-testid="gcs-page-editor-discard">
+            {t("exitWithoutSaving")}
+          </GcsButton>
+        )}
+      </div>
+      <GcsButton variant="primary" className="gcs-pageSidebar__done" icon={<GcsIconSvg icon={faFloppyDisk} />} onClick={done} disabled={pending} data-testid="gcs-page-editor-done">
+        {t("done")}
+      </GcsButton>
+    </>
   );
 
   return (
     <div className="gcs-widgetPage gcs-widgetPage--editing" data-page={page} data-testid="gcs-page-editor">
-      <div className="gcs-pageEditorBar" role="toolbar" aria-label={t("title")}>
-        <strong>
-          <GcsIconSvg icon={faTableColumns} className="gcs-hIcon" />
-          {t("editing", { page: pageLabel })}
-        </strong>
-        <span role="status" className={`gcs-pageEditorBar__status gcs-pageEditorBar__status--${status?.tone ?? "muted"}`} data-testid="gcs-page-editor-status">
-          {status?.text ?? (dirty ? t("unsaved") : "")}
-        </span>
-        <div className="gcs-pageEditorBar__buttons">
-          {confirmDefault ? (
-            <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faArrowRotateLeft} />} onClick={restoreDefault} disabled={pending} data-testid="gcs-page-editor-default-confirm">
-              {t("confirmDefault")}
-            </GcsButton>
-          ) : (
-            <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faArrowRotateLeft} />} onClick={() => setConfirmDefault(true)} disabled={pending} data-testid="gcs-page-editor-default">
-              {t("restoreDefault")}
-            </GcsButton>
-          )}
-          <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faArrowsRotate} />} onClick={() => setZones(initial)} disabled={!dirty || pending}>
-            {t("reset")}
-          </GcsButton>
-          <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={dirty ? faXmark : faRightFromBracket} />} onClick={exit} disabled={pending} data-testid="gcs-page-editor-exit">
-            {dirty ? t("exitWithoutSaving") : t("exit")}
-          </GcsButton>
-          <GcsButton variant="primary" size="sm" icon={<GcsIconSvg icon={faFloppyDisk} />} onClick={save} disabled={!dirty || pending} data-testid="gcs-page-editor-save">
-            {t("save")}
-          </GcsButton>
-        </div>
-      </div>
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCorners}
+        collisionDetection={collision}
+        onDragStart={onDragStart}
         onDragOver={onDragOver}
         onDragEnd={onDragEnd}
+        onDragCancel={() => setDragging(null)}
         accessibility={{
           screenReaderInstructions: { draggable: t("dragInstructions") },
           announcements: {
@@ -263,12 +351,21 @@ export function GcsPageEditor({ page, pageLabel, initial, catalog, groups, child
           },
         }}
       >
+        <GcsWidgetSidebar catalog={catalog} favorites={favorites} pageLabel={pageLabel} onToggleFavorite={toggleFavorite} onAdd={(zone, w) => add(zone, w)} footer={footer} />
         {zoneBox("top")}
         <div className="gcs-forumLayout">
           <div className="gcs-forumLayout__main gcs-widgetPage__content">{children}</div>
           <div className="gcs-forumSidebar">{zoneBox("sidebar")}</div>
         </div>
         {zoneBox("bottom")}
+        <DragOverlay dropAnimation={null}>
+          {dragging && (
+            <div className="gcs-widgetCard gcs-widgetCard--overlay">
+              <span className="gcs-widgetCard__icon">{dragging.icon}</span>
+              <strong>{dragging.label}</strong>
+            </div>
+          )}
+        </DragOverlay>
       </DndContext>
     </div>
   );
@@ -283,15 +380,31 @@ function strip(z: Zones) {
  * O zonă e țintă de drop doar cât e goală; una cu widget-uri primește widget-uri prin ele. Altfel, din tastatură,
  * `sortableKeyboardCoordinates` ar putea alege containerul în locul vecinului (mutarea s-ar pierde).
  */
-function EditZone({ zone, label, empty, count, children }: { zone: GcsWidgetZone; label: string; empty: string; count: number; children: ReactNode }) {
+function EditZone({ zone, label, count, children }: { zone: GcsWidgetZone; label: string; count: number; children: ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id: zone, disabled: count > 0 });
   return (
     <section ref={setNodeRef} className={`gcs-editZone gcs-editZone--${zone}${isOver ? " gcs-editZone--over" : ""}`} aria-label={label} data-zone={zone} data-testid={`gcs-zone-${zone}`}>
       <header className="gcs-editZone__label">{label}</header>
-      <div className="gcs-editZone__list" data-empty={empty}>
-        {children}
-      </div>
+      <div className="gcs-editZone__list">{children}</div>
     </section>
+  );
+}
+
+/**
+ * „Trage widget-urile aici”: mereu vizibilă, chiar și într-o zonă goală. E țintă de drop doar cât se trage un widget
+ * nou care are voie în zonă (mutările widget-urilor existente nu o văd); clic / Enter deschide lista zonei.
+ */
+function DropArea({ zone, dragging, open, onClick }: { zone: GcsWidgetZone; dragging: GcsPageEditorWidget | null; open: boolean; onClick: () => void }) {
+  const t = useTranslations("pageEditor");
+  const accepts = dragging?.zones.includes(zone) ?? false;
+  const { setNodeRef, isOver } = useDroppable({ id: `${DROP_PREFIX}${zone}`, disabled: !accepts });
+  const state = !dragging ? undefined : !accepts ? "blocked" : isOver ? "over" : "ready";
+  return (
+    <button ref={setNodeRef} type="button" className="gcs-editZone__drop" data-state={state} onClick={onClick} aria-expanded={open} data-testid={`gcs-widget-add-${zone}`}>
+      <GcsIconSvg icon={faPlus} />
+      <span>{t("dropHere")}</span>
+      <span className="gcs-visuallyHidden"> — {t("add")}</span>
+    </button>
   );
 }
 

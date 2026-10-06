@@ -60,6 +60,19 @@ export const savePageLayout = gcsAction(
   },
 );
 
+/**
+ * Widget-urile favorite ale adminului (secțiunea „Favorite” din „Editează pagina”), în `users.prefs.widgetFavorites`.
+ * Doar chei de widget-uri cunoscute, fără dubluri.
+ */
+export const saveWidgetFavorites = gcsAction(z.object({ keys: z.array(z.string().max(80)).max(50) }), async ({ keys }) => {
+  const actor = await assertAcpAction(WIDGETS_ACP_SECTION, "edit");
+  const { db, registry } = services();
+  const known = new Set(registry.widgetDefs().map((w) => w.def.key));
+  const clean = [...new Set(keys)].filter((k) => known.has(k));
+  await db.$executeRaw`UPDATE users SET prefs = prefs || jsonb_build_object('widgetFavorites', ${JSON.stringify(clean)}::jsonb) WHERE id = ${actor.userId}`;
+  return { keys: clean };
+});
+
 /** Readuce pagina la widget-urile implicite ale modulelor. */
 export const resetPageLayout = gcsAction(z.object({ page: z.enum(GCS_WIDGET_PAGES) }), async ({ page }) => {
   const actor = await assertAcpAction(WIDGETS_ACP_SECTION, "edit");

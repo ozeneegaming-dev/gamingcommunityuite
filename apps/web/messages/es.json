@@ -2523,7 +2523,27 @@
       "all": "todo el tiempo"
     },
     "empty": "Nada todavía.",
-    "posts": "{count, plural, one {Post #} many {Puestos #} other {Puestos #}}"
+    "posts": "{count, plural, one {Post #} many {Puestos #} other {Puestos #}}",
+    "desc": {
+      "core": {
+        "announcement": "Un mensaje con título y texto, p. ej. una bienvenida o un aviso importante.",
+        "online": "Miembros e invitados activos ahora mismo.",
+        "statsPanel": "Cifras de la comunidad, quién está en línea y la leyenda de grupos.",
+        "onlineDay": "Miembros que estuvieron activos en las últimas 24 horas.",
+        "groupLegend": "Los grupos de la comunidad, con el estilo de sus nombres.",
+        "newMembers": "Los miembros registrados más recientes."
+      },
+      "forums": {
+        "stats": "El número de temas, mensajes y miembros.",
+        "recentTopics": "Los últimos temas iniciados en el foro.",
+        "recentPosts": "Las últimas respuestas, con un extracto.",
+        "topPosters": "Miembros con más mensajes en el periodo elegido.",
+        "featuredTopics": "Temas destacados por el equipo."
+      },
+      "chat": {
+        "shoutbox": "Una sala de chat, directamente en la página."
+      }
+    }
   },
   "pageEditor": {
     "title": "Editar página",
@@ -2538,14 +2558,12 @@
       "sidebar": "Columna derecha",
       "bottom": "Bottom"
     },
-    "emptyZone": "No hay widgets aquí. Arrastre uno o agregue uno nuevo.",
     "add": "Añadir widget",
     "catalog": "Widgets disponibles",
     "cancel": "Cancelar",
     "save": "Guardar",
     "saved": "La página ha sido guardada.",
     "reset": "Cambios discrecionales",
-    "exit": "Edición de salida",
     "exitWithoutSaving": "Salir sin salvar",
     "unsaved": "Tienes cambios sin salvar.",
     "drag": "Mover “{name}”",
@@ -2568,7 +2586,23 @@
       "over": "“{name}” está ahora sobre “{over}”.",
       "end": "Bajó “{name}” sobre “{over}”.",
       "cancel": "Se canceló el movimiento “{name}”."
-    }
+    },
+    "categories": {
+      "core": "Comunidad",
+      "forums": "Foros",
+      "chat": "Chat"
+    },
+    "search": "Buscar un widget",
+    "noResults": "Ningún widget coincide con tu búsqueda.",
+    "favorites": "Favoritos",
+    "favoritesEmpty": "Pulsa la estrella de un widget para tenerlo siempre aquí.",
+    "favorite": "Añadir «{name}» a favoritos",
+    "unfavorite": "Quitar «{name}» de favoritos",
+    "addWidget": "Añadir «{name}» a la página",
+    "addTo": "Añadir a la zona:",
+    "dragHint": "Arrastra un widget a la página o usa el botón +.",
+    "dropHere": "Arrastra los widgets aquí",
+    "done": "Terminar la edición"
   },
   "stats": {
     "title": "Estadísticas comunitarias",
