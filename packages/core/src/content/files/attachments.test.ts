@@ -203,3 +203,21 @@ describe("GcsAttachmentService.uploadProfileImage", () => {
     await expect(service.uploadProfileImage(guest, { name: "a.png", bytes: await png() }, { kind: "avatar", maxMb: 2, animated: false })).rejects.toBeInstanceOf(GcsForbidden);
   });
 });
+
+describe("GcsAttachmentService.uploadSiteImage", () => {
+  test("logo-ul devine WebP (max 800×240), favicon-ul PNG 64×64; ambele publice prin tema lor", async () => {
+    const logo = await service.uploadSiteImage(member, { name: "logo.png", bytes: await png(1600, 400) }, { kind: "logo", themeKey: "default" });
+    expect(logo).toMatchObject({ mime: "image/webp", width: 800, height: 200 });
+    const icon = await service.uploadSiteImage(member, { name: "icon.png", bytes: await png(100, 50) }, { kind: "favicon", themeKey: "default" });
+    expect(icon).toMatchObject({ mime: "image/png", width: 64, height: 64 });
+    expect(await world.db.attachment.findUniqueOrThrow({ where: { id: icon.id } })).toMatchObject({ contentType: "theme.favicon", contentId: "default" });
+    service.registerAccess("theme.logo", async () => true);
+    await expect(service.open(guest, logo.id)).resolves.toMatchObject({ inline: true });
+  });
+
+  test("un fișier care nu e imagine sau peste 2 MB e refuzat; vizitatorul → GcsForbidden", async () => {
+    await expect(service.uploadSiteImage(member, { name: "a.svg", bytes: Buffer.from("<svg onload=alert(1)/>") }, { kind: "logo", themeKey: "default" })).rejects.toBeInstanceOf(GcsValidationError);
+    await expect(service.uploadSiteImage(member, { name: "a.png", bytes: Buffer.alloc(3 * 1024 * 1024) }, { kind: "logo", themeKey: "default" })).rejects.toBeInstanceOf(GcsValidationError);
+    await expect(service.uploadSiteImage(guest, { name: "a.png", bytes: await png() }, { kind: "favicon", themeKey: "default" })).rejects.toBeInstanceOf(GcsForbidden);
+  });
+});

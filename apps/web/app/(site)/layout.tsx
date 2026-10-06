@@ -2,6 +2,7 @@ import { STEAM_PLACEHOLDER_DOMAIN } from "@gcs/modules";
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
+import { GcsEditMode } from "./_components/edit/GcsEditMode";
 import { GcsHoverCardHost } from "./_components/GcsHoverCardHost";
 import { GcsSiteFooter } from "./_components/GcsSiteFooter";
 import { GcsSiteHeader } from "./_components/GcsSiteHeader";
@@ -17,7 +18,7 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
   return (
     <GcsRealtimeProvider>
       <GcsSiteHeader />
-      <main style={{ maxWidth: 1320, margin: "0 auto", padding: 24, display: "flex", flexDirection: "column", gap: 24 }}>
+      <main style={{ maxWidth: "var(--gcs-page-width, 1320px)", margin: "0 auto", padding: 24, display: "flex", flexDirection: "column", gap: 24 }}>
         {email?.endsWith(STEAM_PLACEHOLDER_DOMAIN) && (
           <p role="status" className="gcs-notice gcs-notice--warn" data-testid="gcs-steam-email-banner">
             {tb("steamBanner")} <Link href="/settings/account">{tb("steamBannerLink")}</Link>
@@ -27,6 +28,7 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
       </main>
       <GcsSiteFooter />
       {modal}
+      <GcsEditMode />
       <GcsHoverCardHost
         locale={locale}
         labels={{

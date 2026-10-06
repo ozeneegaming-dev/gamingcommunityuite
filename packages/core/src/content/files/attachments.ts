@@ -235,6 +235,48 @@ export class GcsAttachmentService {
   }
 
   /**
+   * Logo-ul sau favicon-ul unei teme (specul etapei 5): doar imagini, recodate, fără animație. Logo-ul devine WebP
+   * (max 800×240, transparența se păstrează), favicon-ul PNG 64×64 (încadrat, fundal transparent). Fișierul e public
+   * (`theme.logo` / `theme.favicon`, legat de cheia temei); dreptul ACP îl verifică apelantul.
+   */
+  async uploadSiteImage(actor: GcsActor, file: GcsUploadedFile, opts: { kind: "logo" | "favicon"; themeKey: string }): Promise<GcsAttachmentInfo> {
+    const { db, store } = this.deps;
+    if (!actor.userId) throw new GcsForbidden({ reason: "guest" });
+    if (file.bytes.length > 2 * 1024 * 1024) throw new GcsValidationError({ file: "too_large" }, { maxMb: "2" });
+    const detected = await fileTypeFromBuffer(file.bytes);
+    if (!detected || !(detected.mime in IMAGE_FORMATS)) throw new GcsValidationError({ file: "unsupported_type" });
+    const favicon = opts.kind === "favicon";
+    let out: Buffer;
+    try {
+      const img = sharp(file.bytes, { limitInputPixels: 100_000_000 }).rotate();
+      out = favicon
+        ? await img.resize({ width: 64, height: 64, fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer()
+        : await img.resize({ width: 800, height: 240, fit: "inside", withoutEnlargement: true }).webp({ quality: 90 }).toBuffer();
+    } catch {
+      throw new GcsValidationError({ file: "invalid_image" });
+    }
+    const meta = await sharp(out).metadata();
+    const [mime, ext] = favicon ? (["image/png", "png"] as const) : (["image/webp", "webp"] as const);
+    const now = new Date();
+    const key = `${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, "0")}/${randomUUID()}.${ext}`;
+    await store.put(key, out, mime);
+    const row = await db.attachment.create({
+      data: {
+        ownerId: actor.userId,
+        storageKey: key,
+        filename: `${opts.kind}.${ext}`,
+        mime,
+        size: out.length,
+        width: meta.width ?? null,
+        height: meta.height ?? null,
+        contentType: `theme.${opts.kind}`,
+        contentId: opts.themeKey,
+      },
+    });
+    return { id: row.id, url: `/files/${row.id}`, filename: row.filename, mime, size: row.size, isImage: true, width: row.width, height: row.height };
+  }
+
+  /**
    * Dacă imaginea de profil e animată, o înlocuiește cu primul cadru (ex. cover-ul unui VIP expirat).
    * Întoarce noul atașament, sau `null` dacă nu era nimic de schimbat.
    */

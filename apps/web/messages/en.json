@@ -1087,7 +1087,9 @@
       "defaultAccent": "Default",
       "save": "Save",
       "saved": "Saved.",
-      "preview": "Preview"
+      "preview": "Preview",
+      "skin": "Site theme",
+      "skinSaved": "Theme changed."
     },
     "privacy": {
       "title": "Privacy",
@@ -1761,5 +1763,57 @@
     "translated": "Machine translation",
     "failed": "The translation failed. Please try again.",
     "limited": "Too many translations in a minute. Please try again shortly."
+  },
+  "themeEditor": {
+    "toolbar": "Editing tools",
+    "open": "Edit theme",
+    "title": "Theme editor",
+    "close": "Close editor",
+    "draft": "Draft",
+    "colors": "Colors",
+    "modes": {
+      "dark": "Dark",
+      "light": "Light"
+    },
+    "tokens": {
+      "bg": "Background",
+      "surface": "Surface",
+      "surface2": "Surface 2",
+      "border": "Borders",
+      "text": "Text",
+      "muted": "Secondary text",
+      "accent": "Accent",
+      "accentInk": "Accent text",
+      "chrome": "Header and footer",
+      "chrome2": "Secondary bars",
+      "ok": "Success",
+      "warn": "Warning"
+    },
+    "typography": "Fonts",
+    "fontDisplay": "Heading font",
+    "fontText": "Body font",
+    "layout": "Layout",
+    "radius": "Corner radius",
+    "width": "Page width",
+    "branding": "Logo and favicon",
+    "logo": "Logo",
+    "favicon": "Favicon",
+    "none": "None",
+    "upload": "Upload",
+    "remove": "Remove",
+    "imageHint": "PNG, JPG, WebP or GIF, up to 2 MB. The logo replaces the site name in the header.",
+    "customCss": "Custom CSS",
+    "cssHint": "Cleaned automatically: no HTML, no scripts, @import only from Google Fonts.",
+    "saving": "Saving draft…",
+    "uploading": "Uploading…",
+    "draftSaved": "Draft saved. Only you see the changes until you publish.",
+    "unpublished": "You have unpublished changes.",
+    "upToDate": "The theme is published.",
+    "published": "The theme has been published for everyone.",
+    "discarded": "Changes discarded.",
+    "discard": "Discard",
+    "confirmDiscard": "Yes, discard the draft",
+    "cancel": "Cancel",
+    "publish": "Publish"
   }
 }

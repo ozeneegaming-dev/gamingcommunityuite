@@ -3,7 +3,7 @@ import { GcsAvatar, GcsButton } from "@gcs/ui";
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
-import { themeMode } from "@/lib/appearance";
+import { themeMode, viewerTheme } from "@/lib/appearance";
 import { memberHref } from "@/lib/forum-urls";
 import { localeOptions } from "@/lib/locales";
 import { services } from "@/lib/services";
@@ -20,11 +20,12 @@ export async function GcsSiteHeader() {
   const { permissions, profileQueries, conversations, notifications, nav, settings } = services();
   const actor = await currentActor();
   const [siteName, siteLocale] = await Promise.all([settings.get<string>("site.name"), settings.get<string>("site.locale")]);
-  const [tree, user, mode, locales] = await Promise.all([
+  const [tree, user, mode, locales, { shown: theme }] = await Promise.all([
     nav.tree(actor, locale, siteLocale),
     actor.userId ? profileQueries.userDisplays([actor.userId]).then((m) => m.get(actor.userId!) ?? null) : Promise.resolve(null),
     themeMode(),
     localeOptions(),
+    viewerTheme(),
   ]);
   const [canAcp, canModerate, unread, unreadNotifications] = user
     ? await Promise.all([
@@ -49,11 +50,18 @@ export async function GcsSiteHeader() {
           extra={user ? [] : [{ href: "/login", label: t("login") }, { href: "/register", label: t("register") }]}
           labels={{ open: t("openMenu"), close: t("closeMenu"), menu: t("mainNav") }}
         />
-        <Link href="/" aria-label={t("home")} className="gcs-brand">
-          <span aria-hidden="true" className="gcs-brand__mark">
-            <span>{siteName.trim().charAt(0).toUpperCase() || "G"}</span>
-          </span>
-          <span className="gcs-brand__name gcs-display">{siteName}</span>
+        <Link href="/" aria-label={t("home")} className="gcs-brand" data-testid="gcs-brand">
+          {theme.logoUrl ? (
+            // Logo-ul temei (încărcat din editorul de pe site), în locul inițialei și al numelui.
+            <img src={theme.logoUrl} alt={siteName} className="gcs-brand__logo" data-testid="gcs-brand-logo" />
+          ) : (
+            <>
+              <span aria-hidden="true" className="gcs-brand__mark">
+                <span>{siteName.trim().charAt(0).toUpperCase() || "G"}</span>
+              </span>
+              <span className="gcs-brand__name gcs-display">{siteName}</span>
+            </>
+          )}
         </Link>
 
         <GcsNavLinks items={menu} label={t("mainNav")} />

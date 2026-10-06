@@ -54,3 +54,5 @@ export * from "./settings/service";
 export * from "./widgets/service";
 export * from "./translate/providers";
 export * from "./translate/service";
+export * from "./themes/css";
+export * from "./themes/service";

@@ -1087,7 +1087,9 @@
       "defaultAccent": "Implicită",
       "save": "Salvează",
       "saved": "Salvat.",
-      "preview": "Previzualizare"
+      "preview": "Previzualizare",
+      "skin": "Tema site-ului",
+      "skinSaved": "Tema a fost schimbată."
     },
     "privacy": {
       "title": "Confidențialitate",
@@ -1761,5 +1763,57 @@
     "translated": "Traducere automată",
     "failed": "Traducerea nu a reușit. Încearcă din nou.",
     "limited": "Prea multe traduceri într-un minut. Încearcă puțin mai târziu."
+  },
+  "themeEditor": {
+    "toolbar": "Unelte de editare",
+    "open": "Editează tema",
+    "title": "Editor de temă",
+    "close": "Închide editorul",
+    "draft": "Draft",
+    "colors": "Culori",
+    "modes": {
+      "dark": "Întunecat",
+      "light": "Luminos"
+    },
+    "tokens": {
+      "bg": "Fundal",
+      "surface": "Suprafață",
+      "surface2": "Suprafață 2",
+      "border": "Margini",
+      "text": "Text",
+      "muted": "Text secundar",
+      "accent": "Accent",
+      "accentInk": "Text accent",
+      "chrome": "Header și footer",
+      "chrome2": "Bare secundare",
+      "ok": "Succes",
+      "warn": "Avertizare"
+    },
+    "typography": "Fonturi",
+    "fontDisplay": "Fontul titlurilor",
+    "fontText": "Fontul textului",
+    "layout": "Așezare",
+    "radius": "Raza colțurilor",
+    "width": "Lățimea paginii",
+    "branding": "Logo și favicon",
+    "logo": "Logo",
+    "favicon": "Favicon",
+    "none": "Niciunul",
+    "upload": "Încarcă",
+    "remove": "Șterge",
+    "imageHint": "PNG, JPG, WebP sau GIF, maximum 2 MB. Logo-ul înlocuiește numele site-ului din header.",
+    "customCss": "CSS extra",
+    "cssHint": "Se curăță automat: fără HTML, fără scripturi, @import doar de la Google Fonts.",
+    "saving": "Se salvează draft-ul…",
+    "uploading": "Se încarcă…",
+    "draftSaved": "Draft salvat. Doar tu vezi modificările până la publicare.",
+    "unpublished": "Ai modificări nepublicate.",
+    "upToDate": "Tema e publicată.",
+    "published": "Tema a fost publicată pentru toți.",
+    "discarded": "Modificările au fost anulate.",
+    "discard": "Renunță",
+    "confirmDiscard": "Da, renunță la draft",
+    "cancel": "Anulează",
+    "publish": "Publică"
   }
 }

@@ -1087,7 +1087,9 @@
       "defaultAccent": "Par défaut",
       "save": "Enregistrer",
       "saved": "Enregistré.",
-      "preview": "Aperçu"
+      "preview": "Aperçu",
+      "skin": "Thème du site",
+      "skinSaved": "Le thème a changé."
     },
     "privacy": {
       "title": "Confidentialité",
@@ -1761,5 +1763,57 @@
     "translated": "Traduction automatique",
     "failed": "La traduction a échoué. Veuillez réessayer.",
     "limited": "Trop de traductions en une minute. Veuillez réessayer rapidement."
+  },
+  "themeEditor": {
+    "toolbar": "Outils d'édition",
+    "open": "Modifier le thème",
+    "title": "Éditeur de thème",
+    "close": "Fermer l'éditeur",
+    "draft": "Projet",
+    "colors": "Couleurs",
+    "modes": {
+      "dark": "Sombre",
+      "light": "Clair"
+    },
+    "tokens": {
+      "bg": "Historique",
+      "surface": "Surface",
+      "surface2": "Surface 2",
+      "border": "Frontières",
+      "text": "Texte",
+      "muted": "Texte secondaire",
+      "accent": "Accent",
+      "accentInk": "Texte courant",
+      "chrome": "En-tête et pied de page",
+      "chrome2": "Barres secondaires",
+      "ok": "Succès",
+      "warn": "Avertissement"
+    },
+    "typography": "Polices",
+    "fontDisplay": "Police du titre",
+    "fontText": "Police du corps",
+    "layout": "Mise en page",
+    "radius": "Rayon du coin",
+    "width": "Largeur de la page",
+    "branding": "Logo et favicon",
+    "logo": "Logo",
+    "favicon": "Favicon",
+    "none": "Aucune",
+    "upload": "Envoi",
+    "remove": "Retirer",
+    "imageHint": "PNG, JPG, WebP ou GIF, jusqu'à 2 Mo. Le logo remplace le nom du site dans l'en-tête.",
+    "customCss": "CSS personnalisé",
+    "cssHint": "Nettoyé automatiquement : pas de HTML, pas de scripts, @import uniquement depuis Google Fonts.",
+    "saving": "Sauver le brouillon…",
+    "uploading": "Envoi…",
+    "draftSaved": "Projet sauvé. Seulement vous voyez les changements jusqu'à ce que vous publiiez.",
+    "unpublished": "Vous avez des changements inédits.",
+    "upToDate": "Le thème est publié.",
+    "published": "Le thème a été publié pour tous.",
+    "discarded": "Changements rejetés.",
+    "discard": "Éliminer",
+    "confirmDiscard": "Oui, écartez le projet",
+    "cancel": "Annuler",
+    "publish": "Publier"
   }
 }

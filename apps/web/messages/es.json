@@ -1087,7 +1087,9 @@
       "defaultAccent": "Predeterminado",
       "save": "Guardar",
       "saved": "Guardado.",
-      "preview": "Vista previa"
+      "preview": "Vista previa",
+      "skin": "Tema del sitio",
+      "skinSaved": "El tema cambió."
     },
     "privacy": {
       "title": "Privacidad",
@@ -1761,5 +1763,57 @@
     "translated": "Traducción automática",
     "failed": "La traducción falló. Por favor, inténtalo de nuevo.",
     "limited": "Demasiados traducciones en un minuto. Por favor, inténtelo pronto."
+  },
+  "themeEditor": {
+    "toolbar": "Herramientas de edición",
+    "open": "Editar el tema",
+    "title": "Theme editor",
+    "close": "Close editor",
+    "draft": "Proyecto",
+    "colors": "Colores",
+    "modes": {
+      "dark": "Oscuro",
+      "light": "Claro"
+    },
+    "tokens": {
+      "bg": "Antecedentes",
+      "surface": "Superficie",
+      "surface2": "Superficie 2",
+      "border": "Fronteras",
+      "text": "Texto",
+      "muted": "Texto secundario",
+      "accent": "Accent",
+      "accentInk": "Texto del acento",
+      "chrome": "Header and footer",
+      "chrome2": "Barras secundarias",
+      "ok": "Éxito",
+      "warn": "Advertencia"
+    },
+    "typography": "Fuentes",
+    "fontDisplay": "Fuente de encabezado",
+    "fontText": "Fuente corporal",
+    "layout": "- No",
+    "radius": "Radio de esquina",
+    "width": "Ancho de página",
+    "branding": "Logo y favicon",
+    "logo": "Logotipos",
+    "favicon": "Favicon",
+    "none": "Ninguno",
+    "upload": "Subir",
+    "remove": "Quitar",
+    "imageHint": "PNG, JPG, WebP o GIF, hasta 2 MB. El logotipo reemplaza el nombre del sitio en el encabezado.",
+    "customCss": "Custom CSS",
+    "cssHint": "Limpiado automáticamente: sin HTML, sin scripts, @import sólo de Google Fonts.",
+    "saving": "Ahorro de borrador…",
+    "uploading": "Subiendo…",
+    "draftSaved": "Borrador salvado. Sólo ves los cambios hasta que publicas.",
+    "unpublished": "Tienes cambios inéditos.",
+    "upToDate": "El tema es publicado.",
+    "published": "El tema ha sido publicado para todos.",
+    "discarded": "Cambios descartados.",
+    "discard": "Discard",
+    "confirmDiscard": "Sí, descarta el proyecto",
+    "cancel": "Cancelar",
+    "publish": "Publish"
   }
 }

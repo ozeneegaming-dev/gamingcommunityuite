@@ -20,6 +20,7 @@ import {
   GcsNotificationService,
   GcsTranslationService,
   GcsWidgetService,
+  GcsThemeService,
   GcsPresenceService,
   GcsRealtime,
   GcsPermissionService,
@@ -97,6 +98,7 @@ export type GcsServices = {
   translation: GcsTranslationService;
   widgets: GcsWidgetService;
   nav: GcsNavService;
+  themes: GcsThemeService;
   chatQueries: GcsChatQueries;
   bans: GcsBanService;
   warnings: GcsWarningService;
@@ -244,6 +246,9 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const rateLimiter = new GcsRedisRateLimiter(redis);
   const files = createFileStore(opts.configDir);
   const attachments = new GcsAttachmentService({ db, store: files, permissions, rateLimiter });
+  // Logo-ul și favicon-ul temelor sunt publice (etapa 5).
+  attachments.registerAccess("theme.logo", async () => true);
+  attachments.registerAccess("theme.favicon", async () => true);
   const forums = new GcsForumService({ db, bus, permissions, acp, registry });
   const readMarkers = new GcsReadMarkerService({ db, settings });
   const follows = new GcsFollowService({ db });
@@ -379,6 +384,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     translation,
     widgets: new GcsWidgetService({ db, cache, bus, registry, acp, apps }),
     nav: new GcsNavService({ db, cache, bus, registry, acp, apps, isIcon: isGcsIcon }),
+    themes: new GcsThemeService({ db, cache, bus, acp }),
     bans,
     warnings,
     actors,
