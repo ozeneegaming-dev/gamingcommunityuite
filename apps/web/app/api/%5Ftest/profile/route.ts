@@ -12,7 +12,8 @@ type Body =
   | { action: "evaluate"; email: string }
   | { action: "expire"; email: string }
   | { action: "sweep" }
-  | { action: "outbox" };
+  | { action: "outbox" }
+  | { action: "digest" };
 
 const doc = (text: string) => ({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
 
@@ -74,6 +75,8 @@ export async function POST(req: Request): Promise<Response> {
     }
     case "sweep":
       return Response.json(await s.vip.sweep());
+    case "digest":
+      return Response.json({ sent: await s.notificationProducers.digest() });
     case "outbox": {
       const mails = await s.redis.lrange(TEST_OUTBOX_KEY, 0, 49);
       return Response.json(mails.map((m) => JSON.parse(m) as unknown));

@@ -1,6 +1,6 @@
 import { GcsForbidden, GcsRateLimited, REALTIME_CHANNEL, type GcsActor } from "@gcs/core";
 import Redis from "ioredis";
-import { afterAll, beforeEach, describe, expect, inject, test, vi } from "vitest";
+import { afterAll, beforeEach, describe, expect, inject, test } from "vitest";
 import { createProfileWorld, type GcsProfileWorld } from "../../test/profileWorld";
 import { GcsChatService } from "./chat";
 import { GcsChatQueries } from "./queries";
@@ -155,16 +155,15 @@ describe("GcsChatService / GcsChatQueries", () => {
     const sub = new Redis(inject("redisUrl"), { db: Number(process.env.VITEST_POOL_ID ?? "1") });
     try {
       await sub.subscribe(REALTIME_CHANNEL);
-      const onMessage = vi.fn();
-      const got = new Promise<void>((resolve) =>
+      // Pe canal ajung și alte mesaje (ex. notificări); așteptăm doar mesajul din camera chat-ului.
+      const got = new Promise<unknown>((resolve) =>
         sub.on("message", (_c, raw: string) => {
-          onMessage(JSON.parse(raw));
-          resolve();
+          const m = JSON.parse(raw) as { room: string };
+          if (m.room === "chat:general") resolve(m);
         }),
       );
       await chat.send(w.root, "general", "live");
-      await got;
-      expect(onMessage).toHaveBeenCalledWith(expect.objectContaining({ room: "chat:general", event: "message", data: expect.objectContaining({ body: "live" }) }));
+      expect(await got).toEqual(expect.objectContaining({ room: "chat:general", event: "message", data: expect.objectContaining({ body: "live" }) }));
     } finally {
       sub.disconnect();
     }
