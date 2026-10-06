@@ -1,4 +1,6 @@
 import type { GcsAcpMenuSection, GcsModule, GcsPermissionDef, GcsSettingDef } from "@gcs/core";
+import { forumWidgets } from "../widgets";
+import { forumStatTiles } from "./stats";
 import { seedForumDemo, seedForums } from "./seed";
 
 const ADMINS = { root_admin: true, admin: true } as const;
@@ -115,6 +117,19 @@ export const forumsModule: GcsModule = {
     { key: "members", labelKey: "site.nav.members", icon: "fa-solid fa-users", href: "/members", position: 20 },
     { key: "staff", labelKey: "site.nav.staff", icon: "fa-solid fa-shield-halved", href: "/staff", position: 30 },
   ],
+  widgets: forumWidgets,
+  stats: forumStatTiles,
+  // Pagina principală implicită (specul etapei 5): anunțul sus, shoutbox-ul și topicurile recente în dreapta,
+  // panoul de statistici (cu „Cine e online”) jos.
+  // Tipurile aplicațiilor lipsă (ex. fără Chat) se sar la seed.
+  widgetLayout: {
+    index: [
+      { zone: "top", type: "core.announcement" },
+      { zone: "sidebar", type: "chat.shoutbox" },
+      { zone: "sidebar", type: "forums.recentTopics" },
+      { zone: "bottom", type: "core.statsPanel" },
+    ],
+  },
   seed: seedForums,
   seedDemo: seedForumDemo,
 };

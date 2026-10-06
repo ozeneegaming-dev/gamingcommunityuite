@@ -5,11 +5,21 @@ import { services } from "@/lib/services";
 export const dynamic = "force-dynamic";
 
 type Body =
-  | { action: "forum"; parentId: number | null; type: ForumType; name: string }
+  | { action: "forum"; parentId: number | null; type: ForumType; name: string; icon?: string; subforumColumns?: number }
   | { action: "topic"; forumId: number; title: string; text: string; authorEmail: string; tags?: string[] }
   | { action: "reply"; topicId: number; text: string; authorEmail: string; mentionEmail?: string }
   | { action: "permissions"; forumId: number; groupKey: string; actions: string[] }
-  | { action: "pm"; fromEmail: string; toEmail: string; title: string; text: string };
+  | { action: "pm"; fromEmail: string; toEmail: string; title: string; text: string }
+  | {
+      action: "profileField";
+      key: string;
+      label: string;
+      type?: "TEXT" | "IMAGE_SELECT";
+      options?: string[];
+      optionImages?: Record<string, string>;
+      icon?: string;
+      visibility?: "PUBLIC" | "MEMBERS" | "STAFF";
+    };
 
 const doc = (text: string) => ({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
 
@@ -41,7 +51,16 @@ export async function POST(req: Request): Promise<Response> {
   const s = services();
   switch (body.action) {
     case "forum": {
-      const forum = await s.forums.create({ parentId: body.parentId, type: body.type, name: body.name }, await rootActor());
+      const forum = await s.forums.create(
+        {
+          parentId: body.parentId,
+          type: body.type,
+          name: body.name,
+          ...(body.icon ? { icon: body.icon } : {}),
+          ...(body.subforumColumns ? { subforumColumns: body.subforumColumns } : {}),
+        },
+        await rootActor(),
+      );
       return Response.json({ id: forum.id, slug: forum.slug });
     }
     case "topic": {
@@ -65,6 +84,25 @@ export async function POST(req: Request): Promise<Response> {
       const res = await s.posts.reply(actor, { topicId: body.topicId, content });
       await clearFlood(actor);
       return Response.json(res);
+    }
+    case "profileField": {
+      // Prin serviciul ACP, ca invalidarea cache-ului (câmpurile din postbit) să fie cea reală.
+      const row = await s.profileFields.save(await rootActor(), null, {
+        key: body.key,
+        label: body.label,
+        type: body.type ?? "TEXT",
+        options: body.options ?? [],
+        section: "ABOUT",
+        required: false,
+        maxLength: 200,
+        visibility: body.visibility ?? "PUBLIC",
+        showOnCard: false,
+        position: 0,
+        icon: body.icon ?? null,
+        showInPostbit: true,
+        optionImages: body.optionImages ?? {},
+      });
+      return Response.json({ id: row.id });
     }
     case "pm": {
       const actor = await actorFor(body.fromEmail);

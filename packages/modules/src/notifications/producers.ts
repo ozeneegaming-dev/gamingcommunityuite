@@ -17,6 +17,7 @@ import { POST_CONTENT_TYPE, type GcsForumPosting } from "../forums/posting";
 import type { GcsForumQueries } from "../forums/queries";
 import { slugify } from "../forums/slug";
 import type { GcsConversationService } from "../messages/conversations";
+import { docSnippet } from "../content-text";
 import { STEAM_PLACEHOLDER_DOMAIN } from "../profile/profile";
 import { digestMail, notificationMail, type GcsNotificationMailItem } from "./emails";
 
@@ -37,22 +38,7 @@ type FanoutKind = "reply" | "topic";
 const memberHref = (u: { id: string; name: string }) => `/members/${u.id}-${slugify(u.name)}`;
 const topicHref = (t: { id: number; title: string }) => `/topic/${t.id}-${slugify(t.title)}`;
 
-/** Textul simplu al unui document (fără citate), pentru fragmentul din notificare. */
-function snippetOf(json: unknown): string {
-  const parts: string[] = [];
-  const walk = (n: unknown, depth: number) => {
-    if (depth > 50 || typeof n !== "object" || n === null) return;
-    const node = n as { type?: string; text?: string; attrs?: Record<string, unknown>; content?: unknown[] };
-    if (node.type === "quote") return;
-    if (node.type === "text" && typeof node.text === "string") parts.push(node.text);
-    if (node.type === "mention" && typeof node.attrs?.label === "string") parts.push(`@${node.attrs.label}`);
-    if (Array.isArray(node.content)) for (const c of node.content) walk(c, depth + 1);
-    if (node.type === "paragraph" || node.type === "heading") parts.push(" ");
-  };
-  walk(json, 0);
-  const text = parts.join("").replace(/\s+/g, " ").trim();
-  return text.length > SNIPPET_MAX ? `${text.slice(0, SNIPPET_MAX - 1)}…` : text;
-}
+const snippetOf = (json: unknown) => docSnippet(json, SNIPPET_MAX);
 
 /**
  * Producătorii de notificări (specul etapei 4 §6): ascultătorii care transformă evenimentele modulelor în notificări,

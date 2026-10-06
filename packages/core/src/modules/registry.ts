@@ -75,7 +75,21 @@ export type GcsWidgetDef = {
   pages?: readonly GcsWidgetPage[];
   defaultConfig: Record<string, unknown>;
   config: (raw: unknown) => Record<string, unknown> | null;
+  /** Câmpurile formularului de configurare din „Editează pagina” (lipsă = widget fără setări). */
+  fields?: readonly GcsWidgetField[];
 };
+
+/**
+ * Un câmp de configurare al unui widget. `select` are opțiuni fixe sau, cu `optionsFrom`, opțiuni date de site
+ * la editare (ex. `chat.channels`); valoarea goală înseamnă „implicit”.
+ */
+export type GcsWidgetField =
+  | { key: string; labelKey: string; type: "number"; min: number; max: number }
+  | { key: string; labelKey: string; type: "text" | "textarea"; maxLength: number }
+  | { key: string; labelKey: string; type: "select"; options?: readonly { value: string; labelKey: string }[]; optionsFrom?: string };
+
+/** Layout-ul implicit al paginilor, contribuit de module (seed; doar pe paginile fără widget-uri). */
+export type GcsWidgetLayoutDefaults = Partial<Record<GcsWidgetPage, { zone: GcsWidgetZone; type: string; config?: Record<string, unknown> }[]>>;
 
 /** O placă din panoul de statistici (ex. „Topicuri: 128”), contribuită de un modul. */
 export type GcsStatTile = { key: string; labelKey: string; value: number; icon: string; href?: string; color?: string };
@@ -108,6 +122,8 @@ export interface GcsModule {
   app?: { optional: boolean; labelKey: string; icon: string };
   /** Tipurile de widget-uri ale modulului. */
   widgets?: GcsWidgetDef[];
+  /** Widget-urile puse implicit pe pagini la instalare (în ordinea modulelor). */
+  widgetLayout?: GcsWidgetLayoutDefaults;
   /** Plăcile modulului din panoul de statistici. */
   stats?: (ctx: GcsStatsContext) => Promise<GcsStatTile[]>;
   /** Itemii modulului din meniul principal implicit. */

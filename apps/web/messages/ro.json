@@ -606,7 +606,8 @@
         "posting": "Postare & Editor",
         "notifications": "Notificări",
         "chat": "Chat",
-        "languages": "Limbi și traducere"
+        "languages": "Limbi și traducere",
+        "postbit": "Postbit"
       },
       "save": "Salvează setările",
       "secretSet": "•••• salvat (lasă gol ca să păstrezi valoarea)",
@@ -665,7 +666,11 @@
         "deleteHelp": "Topicurile se mută în forumul ales; subforumurile urcă la părinte.",
         "moveContentTo": "Mută topicurile în",
         "noMove": "(forumul nu are topicuri)",
-        "confirmDelete": "Ștergi forumul?"
+        "confirmDelete": "Ștergi forumul?",
+        "iconSearch": "Caută o iconiță (ex. gamepad, shield)",
+        "iconNone": "Fără iconiță",
+        "iconNoResults": "Nicio iconiță găsită.",
+        "subforumColumns": "Coloane pentru subforumuri"
       },
       "icons": {
         "chat": "Discuții",
@@ -864,7 +869,8 @@
         "TEXTAREA": "Text lung",
         "URL": "Link",
         "NUMBER": "Număr",
-        "SELECT": "Listă"
+        "SELECT": "Listă",
+        "IMAGE_SELECT": "Select cu imagini"
       },
       "sections": {
         "ABOUT": "Despre",
@@ -874,7 +880,18 @@
         "PUBLIC": "Oricine",
         "MEMBERS": "Doar membrii",
         "STAFF": "Doar staff-ul"
-      }
+      },
+      "optionImages": "Imaginile opțiunilor (Select cu imagini)",
+      "optionImagesHint": "Câte un rând: Opțiune = adresa imaginii (https://… sau /files/…)",
+      "icon": "Iconiță",
+      "iconSearch": "Caută o iconiță",
+      "iconNone": "Fără iconiță",
+      "iconNoResults": "Nicio iconiță găsită.",
+      "showInPostbit": "Afișează în postbit",
+      "postbitTitle": "Postbit",
+      "postbitHint": "Câmpurile marcate „Afișează în postbit” apar pe cardul autorului din topicuri, în ordinea de mai jos.",
+      "postbitSave": "Salvează ordinea",
+      "postbitPosition": "Poziția pentru {field}"
     },
     "memberProfile": {
       "profileTitle": "Profil",
@@ -1165,6 +1182,9 @@
       "translate_provider": "Traducerea conținutului (butonul „Traduce”)",
       "libretranslate_url": "Adresa serviciului LibreTranslate",
       "deepl_key": "Cheia API DeepL (opțional)"
+    },
+    "postbit": {
+      "fields": "Câmpurile din postbit (ordinea)"
     }
   },
   "permissions": {
@@ -1441,7 +1461,7 @@
     "breadcrumb": "Breadcrumb",
     "topics": "topicuri",
     "posts": "postări",
-    "subforums": "Subforumuri:",
+    "subforums": "Subforumuri",
     "by": "de {name}",
     "noPosts": "Niciun mesaj încă",
     "unread": "Necitit",
@@ -1492,7 +1512,8 @@
       "body": "Comunitatea ta de gaming: forum, servere, clanuri, turnee și VIP — totul într-un singur loc.",
       "cta": "Creează cont"
     },
-    "byWord": "de"
+    "byWord": "de",
+    "topicsCount": "{count, plural, one {# topic} few {# topicuri} other {# de topicuri}}"
   },
   "topic": {
     "reply": "Răspunde",
@@ -1541,7 +1562,13 @@
     "startedBy": "Început de",
     "author": {
       "posts": "postări",
-      "reputation": "reputație"
+      "reputation": "reputație",
+      "online": "Online acum",
+      "xp": "Progres XP",
+      "xpTo": "{points} XP din {next} până la rangul {rank}",
+      "xpMax": "{points} XP, rangul maxim",
+      "badges": "{count, plural, one {# insignă} few {# insigne} other {# de insigne}}",
+      "joined": "Membru din {date}"
     },
     "poll": {
       "votes": "{count, plural, one {# vot} few {# voturi} other {# de voturi}}",
@@ -1814,6 +1841,99 @@
     "discard": "Renunță",
     "confirmDiscard": "Da, renunță la draft",
     "cancel": "Anulează",
-    "publish": "Publică"
+    "publish": "Publică",
+    "editPage": "Editează pagina"
+  },
+  "widgets": {
+    "core": {
+      "announcement": "Anunț",
+      "online": "Cine e online",
+      "newMembers": "Membri noi",
+      "statsPanel": "Panou de statistici",
+      "onlineDay": "Cine a fost online (24 h)",
+      "groupLegend": "Legenda grupurilor"
+    },
+    "forums": {
+      "stats": "Statistici",
+      "recentTopics": "Topicuri recente",
+      "recentPosts": "Postări recente",
+      "topPosters": "Top posteri",
+      "featuredTopics": "Topicuri promovate"
+    },
+    "chat": {
+      "shoutbox": "Shoutbox"
+    },
+    "fields": {
+      "limit": "Câte elemente",
+      "title": "Titlu",
+      "body": "Text",
+      "period": "Perioada",
+      "channel": "Camera de chat"
+    },
+    "periods": {
+      "week": "săptămâna aceasta",
+      "month": "luna aceasta",
+      "all": "total"
+    },
+    "empty": "Nimic deocamdată.",
+    "posts": "{count, plural, one {# postare} few {# postări} other {# de postări}}"
+  },
+  "pageEditor": {
+    "title": "Editează pagina",
+    "editing": "Editezi pagina: {page}",
+    "pages": {
+      "index": "Pagina principală",
+      "forum": "Forumuri",
+      "topic": "Topicuri"
+    },
+    "zones": {
+      "top": "Sus",
+      "sidebar": "Coloana din dreapta",
+      "bottom": "Jos"
+    },
+    "emptyZone": "Nicio componentă aici. Trage una sau adaugă una nouă.",
+    "add": "Adaugă widget",
+    "catalog": "Widget-uri disponibile",
+    "cancel": "Anulează",
+    "save": "Salvează",
+    "saved": "Pagina a fost salvată.",
+    "reset": "Renunță la modificări",
+    "exit": "Ieși din editare",
+    "exitWithoutSaving": "Ieși fără salvare",
+    "unsaved": "Ai modificări nesalvate.",
+    "drag": "Mută „{name}”",
+    "dragInstructions": "Apasă Spațiu sau Enter ca să ridici widget-ul, mută-l cu săgețile, apoi apasă din nou Spațiu sau Enter ca să-l lași. Escape anulează.",
+    "moveUp": "Mută „{name}” mai sus",
+    "moveDown": "Mută „{name}” mai jos",
+    "zone": "Zona pentru „{name}”",
+    "configure": "Setările pentru „{name}”",
+    "remove": "Șterge „{name}”",
+    "restricted": "Doar unele grupuri",
+    "visibility": "Vizibil pentru",
+    "visibilityHint": "Nicio bifă = toată lumea, inclusiv vizitatorii.",
+    "previewAfterSave": "Previzualizarea apare după salvare.",
+    "defaultChannel": "Implicit (primul canal de pe pagina principală)",
+    "restoreDefault": "Restabilește implicit",
+    "confirmDefault": "Sigur? Layout-ul implicit înlocuiește tot",
+    "defaultRestored": "Pagina a revenit la widget-urile implicite.",
+    "announce": {
+      "start": "Ai ridicat „{name}”.",
+      "over": "„{name}” e acum peste „{over}”.",
+      "end": "Ai lăsat „{name}” peste „{over}”.",
+      "cancel": "Mutarea lui „{name}” a fost anulată."
+    }
+  },
+  "stats": {
+    "title": "Statisticile comunității",
+    "newest": "Cel mai nou membru",
+    "onlineDay": "Cine a fost online",
+    "onlineDaySummary": "{members, plural, one {# membru activ} few {# membri activi} other {# de membri activi}} în ultimele 24 de ore",
+    "legend": "Legenda grupurilor",
+    "tiles": {
+      "topics": "Topicuri",
+      "posts": "Postări",
+      "members": "Membri",
+      "vip": "Membri VIP"
+    }
   }
 }

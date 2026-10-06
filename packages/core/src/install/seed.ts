@@ -1,8 +1,9 @@
 import type { Prisma, PrismaClient } from "@gcs/db";
 import type { GcsNameStyle } from "../groups/nameStyles";
-import type { GcsModuleRegistry } from "../modules/registry";
+import { GCS_WIDGET_PAGES, type GcsModuleRegistry, type GcsWidgetPage } from "../modules/registry";
 import { GcsNavService } from "../nav/service";
 import { GcsThemeService } from "../themes/service";
+import { defaultWidgetLayout, GcsWidgetService, type GcsWidgetPlacementInput } from "../widgets/service";
 
 type DefaultGroup = {
   key: string;
@@ -120,6 +121,16 @@ export async function seedDefaults(db: PrismaClient, registry: GcsModuleRegistry
     await GcsNavService.seedDefaults(tx, registry);
     // Tema implicită (etapa 5), doar dacă nu există încă nicio temă.
     await GcsThemeService.seedDefault(tx);
+    // Widget-urile implicite ale paginilor (etapa 5), din modulele înregistrate; o pagină aranjată de admin rămâne.
+    const layouts: Partial<Record<GcsWidgetPage, GcsWidgetPlacementInput[]>> = {};
+    for (const page of GCS_WIDGET_PAGES) {
+      const list = defaultWidgetLayout(registry, page);
+      if (list.length > 0) layouts[page] = list;
+    }
+    const state = await tx.systemState.upsert({ where: { id: 1 }, update: {}, create: { id: 1 } });
+    const pending = (Object.keys(layouts) as GcsWidgetPage[]).filter((page) => !state.seedMarks.includes(`layout:${page}`));
+    await GcsWidgetService.seedDefaults(tx, Object.fromEntries(pending.map((page) => [page, layouts[page]!])));
+    if (pending.length > 0) await tx.systemState.update({ where: { id: 1 }, data: { seedMarks: { push: pending.map((page) => `layout:${page}`) } } });
 
     await tx.systemState.upsert({ where: { id: 1 }, update: {}, create: { id: 1 } });
   }, SEED_TX);

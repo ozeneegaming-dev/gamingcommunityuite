@@ -1,6 +1,7 @@
 // @gcs/modules — câte un folder pe modul.
 export { coreModule, DEFAULT_GROUP_KEYS, GCS_LOCALE_KEYS } from "./core-module";
 export { forumsModule } from "./forums";
+export * from "./forums/stats";
 export { canViewPost, registerForumContent } from "./forums/content";
 export { GcsForumCounters } from "./forums/counters";
 export { FORUMS_ACP_SECTION, GcsForumService, type GcsForumInput, type GcsForumOrderItem, type GcsForumPatch } from "./forums/forums";
@@ -22,6 +23,7 @@ export { profileModule } from "./profile";
 export { DEFAULT_BADGES, DEFAULT_FRAMES, DEFAULT_NAME_STYLES, DEFAULT_RANKS, DEFAULT_RULES } from "./profile/seed";
 export { vipModule } from "./vip";
 export * from "./profile/privacy";
+export * from "./profile/postbit";
 export { GcsProfileService, STEAM_PLACEHOLDER_DOMAIN, USER_AVATAR, USER_COVER, type GcsVisibleField } from "./profile/profile";
 export { actorOf, GcsSocialService, STATUS_CONTENT_TYPE, USER_FOLLOW } from "./profile/social";
 export * from "./profile/achievements";

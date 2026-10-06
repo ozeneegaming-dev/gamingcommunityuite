@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { GcsConflict, GcsForbidden, GcsValidationError } from "@gcs/core";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createForumWorld, type GcsForumWorld } from "../../test/world";
@@ -173,5 +175,31 @@ describe("GcsForumService.delete", () => {
     await addTopic(forum.id, w.member.userId!);
     await expect(w.forums.delete(forum.id, { moveContentTo: forum.id }, w.root)).rejects.toBeInstanceOf(GcsValidationError);
     await expect(w.forums.delete(forum.id, { moveContentTo: category.id }, w.root)).rejects.toBeInstanceOf(GcsValidationError);
+  });
+});
+
+describe("iconițe și coloanele subforumurilor (etapa 5)", () => {
+  test("doar iconițe Font Awesome valide; coloanele subforumurilor între 1 și 4 ajung în listă", async () => {
+    const category = await w.forums.create({ parentId: null, type: "CATEGORY", name: "Jocuri" }, w.root);
+    await expect(w.forums.create({ parentId: category.id, type: "FORUM", name: "X", icon: "megaphone" }, w.root)).rejects.toBeInstanceOf(GcsValidationError);
+    await expect(w.forums.create({ parentId: category.id, type: "FORUM", name: "X", icon: "fa-solid fa-nu-exista" }, w.root)).rejects.toBeInstanceOf(GcsValidationError);
+    const forum = await w.forums.create({ parentId: category.id, type: "FORUM", name: "CS2", icon: "fa-solid fa-gamepad", subforumColumns: 3 }, w.root);
+    await w.forums.create({ parentId: forum.id, type: "FORUM", name: "Configuri", icon: "fa-solid fa-gear" }, w.root);
+    await expect(w.forums.update(forum.id, { subforumColumns: 6 }, w.root)).rejects.toBeInstanceOf(GcsValidationError);
+
+    const index = await w.queries.index(w.root);
+    const row = index.find((c) => c.id === category.id)!.forums[0]!;
+    expect(row).toMatchObject({ icon: "fa-solid fa-gamepad", subforumColumns: 3, subforums: [{ name: "Configuri", icon: "fa-solid fa-gear", topicsCount: 0 }] });
+  });
+
+  test("migrația etapei 5 transformă iconițele vechi în iconițe Font Awesome", async () => {
+    const category = await w.forums.create({ parentId: null, type: "CATEGORY", name: "Vechi" }, w.root);
+    const legacy = await w.db.forum.create({ data: { parentId: category.id, type: "FORUM", name: "Anunțuri", slug: "anunturi", icon: "megaphone", position: 9 } });
+    const custom = await w.db.forum.create({ data: { parentId: category.id, type: "FORUM", name: "Altul", slug: "altul", icon: "fa-solid fa-star", position: 10 } });
+    const sql = readFileSync(path.resolve(__dirname, "../../../db/prisma/migrations/20261009000000_ui_modern/migration.sql"), "utf8");
+    const update = sql.slice(sql.indexOf('UPDATE "forums" SET "icon"'));
+    await w.db.$executeRawUnsafe(update.slice(0, update.indexOf(";") + 1));
+    expect((await w.db.forum.findUniqueOrThrow({ where: { id: legacy.id } })).icon).toBe("fa-solid fa-bullhorn");
+    expect((await w.db.forum.findUniqueOrThrow({ where: { id: custom.id } })).icon).toBe("fa-solid fa-star");
   });
 });

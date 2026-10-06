@@ -33,6 +33,15 @@ const between = (min: number, max: number) => (v: unknown) =>
 const settings: GcsSettingDef[] = [
   { key: "profile.cover_max_mb", type: "number", default: 2, section: "profiles", labelKey: "settings.profile.cover_max_mb", validate: between(0.1, 50) },
   { key: "profile.wall_enabled", type: "boolean", default: true, section: "profiles", labelKey: "settings.profile.wall_enabled" },
+  // Ordinea câmpurilor din postbit (cheile câmpurilor); cele marcate „în postbit” și nelistate vin la final (etapa 5).
+  {
+    key: "postbit.fields",
+    type: "json",
+    default: [],
+    section: "postbit",
+    labelKey: "settings.postbit.fields",
+    validate: (v) => (Array.isArray(v) && v.length <= 50 && v.every((k) => typeof k === "string" && /^[a-z0-9_]{1,40}$/.test(k)) ? null : "invalid_choice"),
+  },
 ];
 
 /**

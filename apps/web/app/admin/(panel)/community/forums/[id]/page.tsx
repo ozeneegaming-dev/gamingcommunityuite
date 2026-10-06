@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
-import { GCS_FORUM_ICONS } from "../../../../../(site)/_components/forum/GcsForumIcon";
+import { GcsIconPicker } from "@gcs/ui";
 import { GcsActionForm } from "../../../_components/GcsActionForm";
 import { deleteForum, setForumPrefixes, updateForum } from "../actions";
 
@@ -71,17 +71,27 @@ export default async function AcpForumPage({ params }: Props) {
               </select>
             </div>
           )}
-          <div className="gcs-field">
-            <label htmlFor="gcs-acp-icon">{t("form.icon")}</label>
-            <select id="gcs-acp-icon" className="gcs-input" name="icon" defaultValue={forum.icon ?? ""}>
-              <option value="">—</option>
-              {GCS_FORUM_ICONS.map((icon) => (
-                <option key={icon} value={icon}>
-                  {t(`icons.${icon}`)}
-                </option>
-              ))}
-            </select>
+          <div className="gcs-field" role="group" aria-label={t("form.icon")}>
+            <span>{t("form.icon")}</span>
+            <GcsIconPicker
+              name="icon"
+              value={forum.icon}
+              searchUrl="/api/icons/search"
+              labels={{ search: t("form.iconSearch"), none: t("form.iconNone"), noResults: t("form.iconNoResults") }}
+            />
           </div>
+          {!isCategory && (
+            <div className="gcs-field">
+              <label htmlFor="gcs-acp-subcols">{t("form.subforumColumns")}</label>
+              <select id="gcs-acp-subcols" className="gcs-input" name="subforumColumns" defaultValue={String(forum.subforumColumns)}>
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <label className="gcs-field">
             {t("form.color")}
             <input className="gcs-input" name="color" defaultValue={forum.color ?? ""} placeholder="#D62839" pattern="#[0-9A-Fa-f]{6}" />

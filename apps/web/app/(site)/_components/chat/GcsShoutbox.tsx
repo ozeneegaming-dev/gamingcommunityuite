@@ -4,10 +4,15 @@ import { services } from "@/lib/services";
 import { GcsChatRoom } from "./GcsChatRoom";
 import { chatRoomLabels, viewerMute } from "./chat-data";
 
-/** Shoutbox-ul paginii principale (macheta Main): primul canal marcat „pe pagina principală”. Vizitatorii nu-l văd. */
-export async function GcsShoutbox({ actor }: { actor: GcsActor }) {
+/**
+ * Shoutbox-ul (widget, macheta Main): canalul ales în configurarea widget-ului sau, implicit, primul canal marcat
+ * „pe pagina principală”. Cine nu poate citi canalul nu vede widget-ul.
+ */
+export async function GcsShoutbox({ actor, channelKey = null }: { actor: GcsActor; channelKey?: string | null }) {
   const { chatQueries, chat } = services();
-  const [channel] = await chatQueries.channels(actor, { homeOnly: true });
+  const channel = channelKey
+    ? (await chatQueries.channels(actor)).find((c) => c.key === channelKey)
+    : (await chatQueries.channels(actor, { homeOnly: true }))[0];
   if (!channel) return null;
   const [t, initial, canModerate, mute, labels] = await Promise.all([
     getTranslations("chat"),

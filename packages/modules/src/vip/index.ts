@@ -1,4 +1,5 @@
 import type { GcsAcpMenuSection, GcsModule, GcsPermissionDef, GcsSettingDef } from "@gcs/core";
+import { vipStatTiles } from "./stats";
 
 const permissions: GcsPermissionDef[] = [
   // Acordarea, prelungirea și retragerea VIP-ului (fișa membrului și ACP → VIP).
@@ -44,4 +45,5 @@ export const vipModule: GcsModule = {
     { key: "vip.expired", labelKey: "notifications.type.vip.expired", important: false, defaultEmail: "DIGEST" },
   ],
   eventListeners: [],
+  stats: vipStatTiles,
 };

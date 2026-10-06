@@ -16,7 +16,7 @@
   gap: 2px;
   padding: 6px 10px;
   border-bottom: 1px solid var(--gcs-border);
-  background: #12141a;
+  background: var(--gcs-chrome2);
 }
 .gcs-tool {
   min-width: 40px;
@@ -351,11 +351,36 @@
   font-size: 13px;
 }
 .gcs-forumRow__subs {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px 16px;
   font-size: 12px;
   color: var(--gcs-muted);
 }
+.gcs-forumRow__subs li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
 .gcs-root .gcs-forumRow__subs a {
-  color: #c9cdd6;
+  color: color-mix(in srgb, var(--gcs-text) 80%, var(--gcs-muted));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-forumIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+@media (max-width: 640px) {
+  .gcs-forumRow__subs {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
 }
 .gcs-forumRow__stats {
   display: flex;
@@ -677,7 +702,7 @@
   align-items: center;
   gap: 10px;
   text-align: center;
-  background: #12141a;
+  background: var(--gcs-chrome2);
   border-radius: 14px 0 0 14px;
 }
 .gcs-post__authorName {
@@ -1046,7 +1071,7 @@
   align-items: center;
   padding: 10px 20px;
   border-bottom: 1px solid var(--gcs-border);
-  background: #12141a;
+  background: var(--gcs-chrome2);
 }
 .gcs-modBar__count {
   font-size: 13px;
@@ -1198,4 +1223,145 @@
 }
 .gcs-attachments li::before {
   content: "📎 ";
+}
+.gcs-forumRow__subCount {
+  margin-left: auto;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--gcs-surface2);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Postbit-ul modern (etapa 5). */
+.gcs-postbit {
+  background: var(--gcs-chrome2);
+}
+.gcs-postbit__avatar {
+  position: relative;
+  display: inline-flex;
+}
+.gcs-postbit__online {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--gcs-ok);
+  border: 3px solid var(--gcs-chrome2);
+}
+.gcs-postbit__title {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--gcs-muted);
+}
+.gcs-postbit__group {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font: 700 12px var(--gcs-font-text);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--gcs-surface2);
+}
+.gcs-postbit__xp {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.gcs-postbit__xpBar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--gcs-surface2);
+  overflow: hidden;
+}
+.gcs-postbit__xpBar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--gcs-accent), var(--gcs-accentInk));
+}
+.gcs-postbit__xpText {
+  font-size: 11px;
+  color: var(--gcs-muted);
+  font-variant-numeric: tabular-nums;
+}
+.gcs-postbit__badges {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--gcs-muted);
+}
+.gcs-postbit__badges ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+}
+.gcs-postbit__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  font: 700 10px var(--gcs-font-text);
+  overflow: hidden;
+}
+.gcs-postbit__badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.gcs-postbit__fields {
+  width: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  font-size: 12px;
+}
+.gcs-postbit__fields > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--gcs-border);
+}
+.gcs-postbit__fields dt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gcs-muted);
+}
+.gcs-postbit__fields dd {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+.gcs-postbit__fieldImage {
+  width: 28px;
+  height: 20px;
+  object-fit: contain;
+}
+.gcs-postbit__joined {
+  font-size: 11px;
+  color: var(--gcs-muted);
 }

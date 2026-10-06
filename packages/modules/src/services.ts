@@ -21,6 +21,7 @@ import {
   GcsTranslationService,
   GcsWidgetService,
   GcsThemeService,
+  GcsStatsService,
   GcsPresenceService,
   GcsRealtime,
   GcsPermissionService,
@@ -73,6 +74,7 @@ import { createRegistry } from "./registry";
 import { GcsVipService } from "./vip/vip";
 import { GcsConversationService } from "./messages/conversations";
 import { GcsConversationQueries } from "./messages/queries";
+import { GcsPostbitService } from "./profile/postbit";
 
 export type GcsServices = {
   db: PrismaClient;
@@ -99,6 +101,8 @@ export type GcsServices = {
   widgets: GcsWidgetService;
   nav: GcsNavService;
   themes: GcsThemeService;
+  stats: GcsStatsService;
+  postbit: GcsPostbitService;
   chatQueries: GcsChatQueries;
   bans: GcsBanService;
   warnings: GcsWarningService;
@@ -385,6 +389,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     widgets: new GcsWidgetService({ db, cache, bus, registry, acp, apps }),
     nav: new GcsNavService({ db, cache, bus, registry, acp, apps, isIcon: isGcsIcon }),
     themes: new GcsThemeService({ db, cache, bus, acp }),
+    stats: new GcsStatsService({ db, cache, registry, apps }),
+    postbit: new GcsPostbitService({ db, cache, permissions, settings }),
     bans,
     warnings,
     actors,

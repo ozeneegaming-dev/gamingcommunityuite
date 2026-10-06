@@ -606,7 +606,8 @@
         "posting": "Posting & Editor",
         "notifications": "Benachrichtigungen",
         "chat": "Chat",
-        "languages": "Sprachen & Übersetzungen"
+        "languages": "Sprachen & Übersetzungen",
+        "postbit": "Postbit"
       },
       "save": "Einstellungen speichern",
       "secretSet": "•••• gespeichert (leave empty, um den wert zu behalten)",
@@ -665,7 +666,11 @@
         "deleteHelp": "Themen bewegen sich in das gewählte Forum; Unterforen bewegen sich bis zum Elternteil.",
         "moveContentTo": "Themen verschieben zu",
         "noMove": "(das forum hat keine themen)",
-        "confirmDelete": "Das Forum löschen?"
+        "confirmDelete": "Das Forum löschen?",
+        "iconSearch": "Suche nach einem Icon (z.B. Gamepad, Shield)",
+        "iconNone": "Kein Icon",
+        "iconNoResults": "Keine Icons gefunden.",
+        "subforumColumns": "Spalten des Unterforums"
       },
       "icons": {
         "chat": "Diskussionen",
@@ -864,7 +869,8 @@
         "TEXTAREA": "Langer Text",
         "URL": "Link",
         "NUMBER": "Nummer",
-        "SELECT": "Liste"
+        "SELECT": "Liste",
+        "IMAGE_SELECT": "Auswählen mit Bildern"
       },
       "sections": {
         "ABOUT": "Über",
@@ -874,7 +880,18 @@
         "PUBLIC": "Jeder",
         "MEMBERS": "Nur Mitglieder",
         "STAFF": "Nur Personal"
-      }
+      },
+      "optionImages": "Option Bilder (Auswählen mit Bildern)",
+      "optionImagesHint": "Jeweils eine Zeile: Option = Bildadresse (https://... oder /files/...)",
+      "icon": "Symbol",
+      "iconSearch": "Suche nach einem Icon",
+      "iconNone": "Kein Icon",
+      "iconNoResults": "Keine Icons gefunden.",
+      "showInPostbit": "Postbit anzeigen",
+      "postbitTitle": "Postbit",
+      "postbitHint": "Felder mit der Aufschrift \"In Postbit anzeigen\" erscheinen auf der Autorenkarte in Themen in der Reihenfolge unten.",
+      "postbitSave": "Speicherauftrag",
+      "postbitPosition": "Position für {field}"
     },
     "memberProfile": {
       "profileTitle": "Profil",
@@ -1165,6 +1182,9 @@
       "translate_provider": "Inhaltsübersetzung (Button „Übersetzen)",
       "libretranslate_url": "LibreTranslate Serviceadresse",
       "deepl_key": "DeepL API-Schlüssel (optional)"
+    },
+    "postbit": {
+      "fields": "Postbitfelder (Ordnung)"
     }
   },
   "permissions": {
@@ -1441,7 +1461,7 @@
     "breadcrumb": "Brotkrume",
     "topics": "themen",
     "posts": "Beiträge",
-    "subforums": "Unterforen:",
+    "subforums": "Unterforen",
     "by": "von {name}",
     "noPosts": "Noch keine Posts",
     "unread": "Ungelesen",
@@ -1492,7 +1512,8 @@
       "body": "Ihre Gaming-Community: Forum, Server, Clans, Turniere und VIP - alles an einem Ort.",
       "cta": "Konto erstellen"
     },
-    "byWord": "durch"
+    "byWord": "durch",
+    "topicsCount": "{count, plural, one {# Thema} other {# Themen}}"
   },
   "topic": {
     "reply": "Antworten",
@@ -1541,7 +1562,13 @@
     "startedBy": "Begonnen von",
     "author": {
       "posts": "Beiträge",
-      "reputation": "reputation"
+      "reputation": "reputation",
+      "online": "Jetzt online",
+      "xp": "XP Fortschritte",
+      "xpTo": "{points} von {next} XP zum {rank}-Rang",
+      "xpMax": "{points} XP, oberster Rang",
+      "badges": "{count, plural, one {# Abzeichen} other {# Abzeichen}}",
+      "joined": "Mitglied seit {date}"
     },
     "poll": {
       "votes": "{count, plural, one {# Abstimmung} other {# Stimmen}}",
@@ -1814,6 +1841,99 @@
     "discard": "Rückwurf",
     "confirmDiscard": "Ja, verwerfen Sie den Entwurf",
     "cancel": "Abbrechen",
-    "publish": "Veröffentlichen"
+    "publish": "Veröffentlichen",
+    "editPage": "Seite bearbeiten"
+  },
+  "widgets": {
+    "core": {
+      "announcement": "Ankündigung",
+      "online": "Wer ist online",
+      "newMembers": "Neue Mitglieder",
+      "statsPanel": "Statistisches Gremium",
+      "onlineDay": "Wer war online (24 h)",
+      "groupLegend": "Gruppenlegende"
+    },
+    "forums": {
+      "stats": "Statistiken",
+      "recentTopics": "Aktuelle Themen",
+      "recentPosts": "Aktuelle Stellen",
+      "topPosters": "Top-Poster",
+      "featuredTopics": "Ausgewählte Themen"
+    },
+    "chat": {
+      "shoutbox": "Shoutbox"
+    },
+    "fields": {
+      "limit": "Anzahl der Posten",
+      "title": "Titel",
+      "body": "Text",
+      "period": "Zeitraum",
+      "channel": "Chat-Raum"
+    },
+    "periods": {
+      "week": "diese woche",
+      "month": "diesen monat",
+      "all": "alle zeiten"
+    },
+    "empty": "Noch nichts.",
+    "posts": "{count, plural, one {# Post} other {#-Stellen}}"
+  },
+  "pageEditor": {
+    "title": "Seite bearbeiten",
+    "editing": "Bearbeitungsseite: {page}",
+    "pages": {
+      "index": "Startseite",
+      "forum": "Foren",
+      "topic": "Themen"
+    },
+    "zones": {
+      "top": "Oben",
+      "sidebar": "Rechte Spalte",
+      "bottom": "Boden"
+    },
+    "emptyZone": "Keine Widgets hier. Ziehen Sie einen hinein oder fügen Sie einen neuen hinzu.",
+    "add": "Hinzufügen von Widget",
+    "catalog": "Verfügbare Widgets",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "saved": "Die Seite wurde gespeichert.",
+    "reset": "Discard-Änderungen",
+    "exit": "Exit Edited",
+    "exitWithoutSaving": "Ausstieg ohne Sparen",
+    "unsaved": "Sie haben unerrettete Veränderungen.",
+    "drag": "Bewegen Sie „{name}",
+    "dragInstructions": "Drücken Sie Space oder Enter, um das Widget aufzunehmen, verschieben Sie es mit den Pfeiltasten und drücken Sie dann Space oder Enter erneut, um es fallen zu lassen. Escape bricht ab.",
+    "moveUp": "Bewegen Sie \"{name}\" nach oben",
+    "moveDown": "Bewegen Sie \"{name}\" nach unten",
+    "zone": "Zone für „{name}",
+    "configure": "Einstellungen für \"{name}\"",
+    "remove": "Entfernen Sie „{name}",
+    "restricted": "Nur einige Gruppen",
+    "visibility": "Sichtbar für",
+    "visibilityHint": "Nichts angekreuzt = alle, auch die Gäste.",
+    "previewAfterSave": "Die Vorschau erscheint nach dem Speichern.",
+    "defaultChannel": "Standard (erster Homepage-Kanal)",
+    "restoreDefault": "Standardwiederherstellung",
+    "confirmDefault": "Sicher? Das Standardlayout ersetzt alles",
+    "defaultRestored": "Die Seite ist zurück zu den Standard-Widgets.",
+    "announce": {
+      "start": "Abgeholt \"{name}\".",
+      "over": "\"{name}\" ist jetzt über \"{over}\".",
+      "end": "\"{name}\" über \"{over}\" fallen gelassen.",
+      "cancel": "Der Umzug \"{name}\" wurde abgesagt."
+    }
+  },
+  "stats": {
+    "title": "Gemeinschaftsstatistiken",
+    "newest": "Neues Mitglied",
+    "onlineDay": "Wer war online",
+    "onlineDaySummary": "{members, plural, one {# aktives Mitglied} other {# aktive Mitglieder}} in den letzten 24 Stunden",
+    "legend": "Gruppenlegende",
+    "tiles": {
+      "topics": "Themen",
+      "posts": "Beiträge",
+      "members": "Mitglieder",
+      "vip": "VIP-Mitglieder"
+    }
   }
 }

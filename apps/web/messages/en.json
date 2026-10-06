@@ -606,7 +606,8 @@
         "posting": "Posting & Editor",
         "notifications": "Notifications",
         "chat": "Chat",
-        "languages": "Languages & translation"
+        "languages": "Languages & translation",
+        "postbit": "Postbit"
       },
       "save": "Save settings",
       "secretSet": "•••• saved (leave empty to keep the value)",
@@ -665,7 +666,11 @@
         "deleteHelp": "Topics move to the chosen forum; subforums move up to the parent.",
         "moveContentTo": "Move topics to",
         "noMove": "(the forum has no topics)",
-        "confirmDelete": "Delete the forum?"
+        "confirmDelete": "Delete the forum?",
+        "iconSearch": "Search for an icon (e.g. gamepad, shield)",
+        "iconNone": "No icon",
+        "iconNoResults": "No icons found.",
+        "subforumColumns": "Subforum columns"
       },
       "icons": {
         "chat": "Discussions",
@@ -864,7 +869,8 @@
         "TEXTAREA": "Long text",
         "URL": "Link",
         "NUMBER": "Number",
-        "SELECT": "List"
+        "SELECT": "List",
+        "IMAGE_SELECT": "Select with images"
       },
       "sections": {
         "ABOUT": "About",
@@ -874,7 +880,18 @@
         "PUBLIC": "Anyone",
         "MEMBERS": "Members only",
         "STAFF": "Staff only"
-      }
+      },
+      "optionImages": "Option images (Select with images)",
+      "optionImagesHint": "One line each: Option = image address (https://… or /files/…)",
+      "icon": "Icon",
+      "iconSearch": "Search for an icon",
+      "iconNone": "No icon",
+      "iconNoResults": "No icons found.",
+      "showInPostbit": "Show in postbit",
+      "postbitTitle": "Postbit",
+      "postbitHint": "Fields marked “Show in postbit” appear on the author card in topics, in the order below.",
+      "postbitSave": "Save order",
+      "postbitPosition": "Position for {field}"
     },
     "memberProfile": {
       "profileTitle": "Profile",
@@ -1165,6 +1182,9 @@
       "translate_provider": "Content translation (the “Translate” button)",
       "libretranslate_url": "LibreTranslate service address",
       "deepl_key": "DeepL API key (optional)"
+    },
+    "postbit": {
+      "fields": "Postbit fields (order)"
     }
   },
   "permissions": {
@@ -1441,7 +1461,7 @@
     "breadcrumb": "Breadcrumb",
     "topics": "topics",
     "posts": "posts",
-    "subforums": "Subforums:",
+    "subforums": "Subforums",
     "by": "by {name}",
     "noPosts": "No posts yet",
     "unread": "Unread",
@@ -1492,7 +1512,8 @@
       "body": "Your gaming community: forum, servers, clans, tournaments and VIP — all in one place.",
       "cta": "Create account"
     },
-    "byWord": "by"
+    "byWord": "by",
+    "topicsCount": "{count, plural, one {# topic} other {# topics}}"
   },
   "topic": {
     "reply": "Reply",
@@ -1541,7 +1562,13 @@
     "startedBy": "Started by",
     "author": {
       "posts": "posts",
-      "reputation": "reputation"
+      "reputation": "reputation",
+      "online": "Online now",
+      "xp": "XP progress",
+      "xpTo": "{points} of {next} XP to the {rank} rank",
+      "xpMax": "{points} XP, top rank",
+      "badges": "{count, plural, one {# badge} other {# badges}}",
+      "joined": "Member since {date}"
     },
     "poll": {
       "votes": "{count, plural, one {# vote} other {# votes}}",
@@ -1814,6 +1841,99 @@
     "discard": "Discard",
     "confirmDiscard": "Yes, discard the draft",
     "cancel": "Cancel",
-    "publish": "Publish"
+    "publish": "Publish",
+    "editPage": "Edit page"
+  },
+  "widgets": {
+    "core": {
+      "announcement": "Announcement",
+      "online": "Who's online",
+      "newMembers": "New members",
+      "statsPanel": "Statistics panel",
+      "onlineDay": "Who was online (24 h)",
+      "groupLegend": "Group legend"
+    },
+    "forums": {
+      "stats": "Statistics",
+      "recentTopics": "Recent topics",
+      "recentPosts": "Recent posts",
+      "topPosters": "Top posters",
+      "featuredTopics": "Featured topics"
+    },
+    "chat": {
+      "shoutbox": "Shoutbox"
+    },
+    "fields": {
+      "limit": "Number of items",
+      "title": "Title",
+      "body": "Text",
+      "period": "Period",
+      "channel": "Chat room"
+    },
+    "periods": {
+      "week": "this week",
+      "month": "this month",
+      "all": "all time"
+    },
+    "empty": "Nothing yet.",
+    "posts": "{count, plural, one {# post} other {# posts}}"
+  },
+  "pageEditor": {
+    "title": "Edit page",
+    "editing": "Editing page: {page}",
+    "pages": {
+      "index": "Home page",
+      "forum": "Forums",
+      "topic": "Topics"
+    },
+    "zones": {
+      "top": "Top",
+      "sidebar": "Right column",
+      "bottom": "Bottom"
+    },
+    "emptyZone": "No widgets here. Drag one in or add a new one.",
+    "add": "Add widget",
+    "catalog": "Available widgets",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saved": "The page has been saved.",
+    "reset": "Discard changes",
+    "exit": "Exit editing",
+    "exitWithoutSaving": "Exit without saving",
+    "unsaved": "You have unsaved changes.",
+    "drag": "Move “{name}”",
+    "dragInstructions": "Press Space or Enter to pick up the widget, move it with the arrow keys, then press Space or Enter again to drop it. Escape cancels.",
+    "moveUp": "Move “{name}” up",
+    "moveDown": "Move “{name}” down",
+    "zone": "Zone for “{name}”",
+    "configure": "Settings for “{name}”",
+    "remove": "Remove “{name}”",
+    "restricted": "Some groups only",
+    "visibility": "Visible to",
+    "visibilityHint": "Nothing ticked = everyone, including guests.",
+    "previewAfterSave": "The preview appears after saving.",
+    "defaultChannel": "Default (first home page channel)",
+    "restoreDefault": "Restore default",
+    "confirmDefault": "Sure? The default layout replaces everything",
+    "defaultRestored": "The page is back to the default widgets.",
+    "announce": {
+      "start": "Picked up “{name}”.",
+      "over": "“{name}” is now over “{over}”.",
+      "end": "Dropped “{name}” over “{over}”.",
+      "cancel": "Moving “{name}” was cancelled."
+    }
+  },
+  "stats": {
+    "title": "Community statistics",
+    "newest": "Newest member",
+    "onlineDay": "Who was online",
+    "onlineDaySummary": "{members, plural, one {# active member} other {# active members}} in the last 24 hours",
+    "legend": "Group legend",
+    "tiles": {
+      "topics": "Topics",
+      "posts": "Posts",
+      "members": "Members",
+      "vip": "VIP members"
+    }
   }
 }

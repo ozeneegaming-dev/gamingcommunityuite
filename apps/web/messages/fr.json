@@ -606,7 +606,8 @@
         "posting": "Affichage & Éditeur",
         "notifications": "Notifications",
         "chat": "Chat",
-        "languages": "Langues & traduction"
+        "languages": "Langues & traduction",
+        "postbit": "Postbit"
       },
       "save": "Enregistrer les paramètres",
       "secretSet": "•••• enregistré (laissez vide pour conserver la valeur)",
@@ -665,7 +666,11 @@
         "deleteHelp": "Les sujets passent au forum choisi; les sous-forums passent au parent.",
         "moveContentTo": "Déplacer les sujets vers",
         "noMove": "(le forum n'a pas de sujets)",
-        "confirmDelete": "Supprimer le forum?"
+        "confirmDelete": "Supprimer le forum?",
+        "iconSearch": "Recherche d'une icône (p. ex. gamepad, shield)",
+        "iconNone": "Aucune icône",
+        "iconNoResults": "Aucune icône trouvée.",
+        "subforumColumns": "Colonnes du sous-Forum"
       },
       "icons": {
         "chat": "Débat",
@@ -864,7 +869,8 @@
         "TEXTAREA": "Texte long",
         "URL": "Lien",
         "NUMBER": "Numéro",
-        "SELECT": "Liste"
+        "SELECT": "Liste",
+        "IMAGE_SELECT": "Sélectionner avec les images"
       },
       "sections": {
         "ABOUT": "À propos",
@@ -874,7 +880,18 @@
         "PUBLIC": "Tout le monde",
         "MEMBERS": "Membres uniquement",
         "STAFF": "Personnel uniquement"
-      }
+      },
+      "optionImages": "Option images (Sélectionner avec des images)",
+      "optionImagesHint": "Une ligne chacune : Option = adresse d'image (https://... ou /files/...)",
+      "icon": "Icône",
+      "iconSearch": "Rechercher une icône",
+      "iconNone": "Aucune icône",
+      "iconNoResults": "Aucune icône trouvée.",
+      "showInPostbit": "Afficher dans postbit",
+      "postbitTitle": "Postbit",
+      "postbitHint": "Les champs marqués « Afficher dans postbit» apparaissent sur la carte d'auteur dans les sujets, dans l'ordre ci-dessous.",
+      "postbitSave": "Enregistrer l'ordre",
+      "postbitPosition": "Position pour {field}"
     },
     "memberProfile": {
       "profileTitle": "Profil",
@@ -1165,6 +1182,9 @@
       "translate_provider": "Traduire le contenu (le bouton )",
       "libretranslate_url": "LibreAdresse de service",
       "deepl_key": "Clé API DeepL (optionnelle)"
+    },
+    "postbit": {
+      "fields": "Champs postbit (commande)"
     }
   },
   "permissions": {
@@ -1441,7 +1461,7 @@
     "breadcrumb": "Fil d'Ariane",
     "topics": "thèmes",
     "posts": "messages",
-    "subforums": "Sous-Forums:",
+    "subforums": "Sous-Forums",
     "by": "par {name}",
     "noPosts": "Pas encore de postes",
     "unread": "Non lu",
@@ -1492,7 +1512,8 @@
       "body": "Votre communauté de jeu: forum, serveurs, clans, tournois et VIP — tous en un seul endroit.",
       "cta": "Créer un compte"
     },
-    "byWord": "par"
+    "byWord": "par",
+    "topicsCount": "{count, plural, one {Sujet #} many {Sujets #} other {Sujets #}}"
   },
   "topic": {
     "reply": "Répondre",
@@ -1541,7 +1562,13 @@
     "startedBy": "Commencé par",
     "author": {
       "posts": "messages",
-      "reputation": "réputation"
+      "reputation": "réputation",
+      "online": "En ligne maintenant",
+      "xp": "État d ' avancement de XP",
+      "xpTo": "{points} de {next} XP au rang {rank}",
+      "xpMax": "{points} XP, rang supérieur",
+      "badges": "{count, plural, one {Insigne #} many {Badges #} other {Badges #}}",
+      "joined": "Membre depuis {date}"
     },
     "poll": {
       "votes": "{count, plural, one {# vote} many {# voix} other {# voix}}",
@@ -1814,6 +1841,99 @@
     "discard": "Éliminer",
     "confirmDiscard": "Oui, écartez le projet",
     "cancel": "Annuler",
-    "publish": "Publier"
+    "publish": "Publier",
+    "editPage": "Modifier la page"
+  },
+  "widgets": {
+    "core": {
+      "announcement": "Annonce",
+      "online": "Qui est en ligne ",
+      "newMembers": "Nouveaux membres",
+      "statsPanel": "Groupe statistique",
+      "onlineDay": "Qui était en ligne (24 h)",
+      "groupLegend": "Légende du groupe"
+    },
+    "forums": {
+      "stats": "Statistiques",
+      "recentTopics": "Thèmes récents",
+      "recentPosts": "Postes récents",
+      "topPosters": "Meilleures affiches",
+      "featuredTopics": "Thèmes en vedette"
+    },
+    "chat": {
+      "shoutbox": "Boîte à déchets"
+    },
+    "fields": {
+      "limit": "Nombre de pièces",
+      "title": "Titre",
+      "body": "Texte",
+      "period": "Période",
+      "channel": "Salle de discussion"
+    },
+    "periods": {
+      "week": "cette semaine",
+      "month": "ce mois-ci",
+      "all": "tout le temps"
+    },
+    "empty": "Rien encore.",
+    "posts": "{count, plural, one {# poste} many {Postes #} other {Postes #}}"
+  },
+  "pageEditor": {
+    "title": "Modifier la page",
+    "editing": "Page d'édition : {page}",
+    "pages": {
+      "index": "Page d'accueil",
+      "forum": "Forums",
+      "topic": "Sujets"
+    },
+    "zones": {
+      "top": "Haut",
+      "sidebar": "Colonne droite",
+      "bottom": "Bas"
+    },
+    "emptyZone": "Pas de widgets ici. Faites glisser un ou ajoutez un nouveau.",
+    "add": "Ajouter un widget",
+    "catalog": "Widgets disponibles",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "saved": "La page a été enregistrée.",
+    "reset": "Éliminer les modifications",
+    "exit": "Édition de sortie",
+    "exitWithoutSaving": "Sortie sans enregistrement",
+    "unsaved": "Vous avez des changements non sauvés.",
+    "drag": "Move “{name}”",
+    "dragInstructions": "Appuyez sur Espace ou Entrée pour récupérer le widget, le déplacer avec les touches fléchées, puis appuyez sur Espace ou Entrée de nouveau pour le déposer. L'évasion s'annule.",
+    "moveUp": "Move “{name}” up",
+    "moveDown": "Move “{name}” down",
+    "zone": "Zone pour {name}",
+    "configure": "Settings for “{name}”",
+    "remove": "Supprimer {name}",
+    "restricted": "Certains groupes seulement",
+    "visibility": "Visible à",
+    "visibilityHint": "Rien n'a coché = tout le monde, y compris les invités.",
+    "previewAfterSave": "L'aperçu apparaît après l'enregistrement.",
+    "defaultChannel": "Par défaut (première page d'accueil)",
+    "restoreDefault": "Restaurer par défaut",
+    "confirmDefault": "Sûr ? La mise en page par défaut remplace tout",
+    "defaultRestored": "La page est de retour aux widgets par défaut.",
+    "announce": {
+      "start": "J'ai récupéré {name}.",
+      "over": "{name} est maintenant au-dessus de {over}.",
+      "end": "Dropped “{name}” over “{over}”.",
+      "cancel": "Déplacement de {name}."
+    }
+  },
+  "stats": {
+    "title": "Statistiques communautaires",
+    "newest": "Membre le plus récent",
+    "onlineDay": "Qui était en ligne",
+    "onlineDaySummary": "{members, plural, one {Membre actif de #} many {Membres actifs de #} other {Membres actifs de #}} dans les dernières 24 heures",
+    "legend": "Légende du groupe",
+    "tiles": {
+      "topics": "Sujets",
+      "posts": "Messages",
+      "members": "Membres",
+      "vip": "Membres VIP"
+    }
   }
 }

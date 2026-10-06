@@ -108,3 +108,41 @@ test("permalink-ul duce la pagina și ancora corectă; un topic blocat nu are ca
   await expect(page.locator("#reply")).toHaveCount(0);
   await expect(page.getByTestId("gcs-no-reply")).toContainText("Topicul este blocat");
 });
+
+test("postbit-ul: grupul, bara de XP, câmpurile cu iconiță și imagine; un câmp doar pentru staff lipsește vizitatorului", async ({ page, request }) => {
+  const t = await forumTree(request);
+  const id = uid();
+  const field = (body: Record<string, unknown>) => request.post("/api/_test/forum", { data: { action: "profileField", ...body } }).then((r) => r.json() as Promise<{ id: number }>);
+  const country = await field({ key: `pb_c_${id}`, label: `Țară ${id}`, icon: "fa-solid fa-flag" });
+  const weapon = await field({ key: `pb_w_${id}`, label: `Armă ${id}`, type: "IMAGE_SELECT", options: ["AWP", "AK-47"], optionImages: { AWP: "/files/awp-test" } });
+  const secret = await field({ key: `pb_s_${id}`, label: `Secret ${id}`, visibility: "STAFF" });
+
+  await member(page, `Post${id}`, `post-${id}@example.com`);
+  const [user] = await sql<{ id: string }>(`UPDATE users SET points = 150, "customTitle" = $2 WHERE email = $1 RETURNING id`, [`post-${id}@example.com`, `Sniperul ${id}`]);
+  for (const [fieldId, value] of [[country.id, "România"], [weapon.id, "AWP"], [secret.id, "ascuns"]] as const) {
+    await sql(`INSERT INTO profile_field_values ("userId", "fieldId", value) VALUES ($1, $2, $3)`, [user!.id, fieldId, value]);
+  }
+  const topic = await topicWithReplies(request, t.forum.id, `post-${id}@example.com`, `Postbit ${id}`);
+
+  // Autorul își vede și câmpul doar pentru staff.
+  await page.goto(topic.url);
+  const own = page.getByTestId("gcs-post").first().getByTestId("gcs-postbit");
+  await expect(own).toContainText(`Sniperul ${id}`);
+  await expect(own.getByTestId("gcs-postbit-fields")).toContainText(`Secret ${id}`);
+
+  // Vizitatorul: titlul, grupul, XP-ul, câmpurile publice cu iconiță și imagine; fără câmpul de staff.
+  const visitor = await page.context().browser()!.newContext();
+  await useFreshIp(visitor, "198.18.31");
+  const guest = await visitor.newPage();
+  await guest.goto(topic.url);
+  const card = guest.getByTestId("gcs-post").first().getByTestId("gcs-postbit");
+  await expect(card.getByTestId("gcs-postbit-group")).toBeVisible();
+  await expect(card.getByRole("progressbar")).toHaveAttribute("aria-valuenow", /^\d+$/);
+  await expect(card.getByTestId("gcs-postbit-xp")).toContainText(/15\d/); // 150 + punctele primei postări
+  const fields = card.getByTestId("gcs-postbit-fields");
+  await expect(fields.locator(`[data-field="pb_c_${id}"]`)).toContainText("România");
+  await expect(fields.locator(`[data-field="pb_c_${id}"] svg`)).toBeVisible();
+  await expect(fields.locator(`[data-field="pb_w_${id}"] img`)).toHaveAttribute("src", "/files/awp-test");
+  await expect(fields).not.toContainText(`Secret ${id}`);
+  await visitor.close();
+});

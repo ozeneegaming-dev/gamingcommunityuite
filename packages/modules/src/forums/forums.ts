@@ -10,6 +10,7 @@ import {
   type GcsPermissionService,
 } from "@gcs/core";
 import type { Forum, ForumType, Prisma, PrismaClient } from "@gcs/db";
+import { isGcsIcon } from "@gcs/ui/icon-registry";
 import { GcsForumCounters } from "./counters";
 import { slugify } from "./slug";
 
@@ -17,7 +18,6 @@ import { slugify } from "./slug";
 export const FORUMS_ACP_SECTION = "community.forums";
 const CONTAINER = "forum";
 const COLOR = /^#[0-9A-Fa-f]{6}$/;
-const ICON = /^[a-z0-9-]{1,40}$/;
 
 export type GcsForumInput = {
   parentId: number | null;
@@ -28,6 +28,8 @@ export type GcsForumInput = {
   color?: string | null;
   linkUrl?: string | null;
   requireApproval?: boolean;
+  /** Pe câte coloane apar subforumurile în listă (1–5). */
+  subforumColumns?: number;
 };
 export type GcsForumPatch = Partial<Omit<GcsForumInput, "parentId">>;
 export type GcsForumOrderItem = { id: number; parentId: number | null; position: number };
@@ -45,7 +47,11 @@ function validateFields(input: GcsForumPatch, type: ForumType): Record<string, s
   }
   if (input.description !== undefined && input.description.length > 500) errors.description = "too_long";
   if (input.color && !COLOR.test(input.color)) errors.color = "invalid_color";
-  if (input.icon && !ICON.test(input.icon)) errors.icon = "invalid_choice";
+  // Iconițele sunt din Font Awesome Free (ex. `fa-solid fa-gamepad`), alese din selectorul ACP.
+  if (input.icon && !isGcsIcon(input.icon)) errors.icon = "invalid_choice";
+  if (input.subforumColumns !== undefined && (!Number.isInteger(input.subforumColumns) || input.subforumColumns < 1 || input.subforumColumns > 5)) {
+    errors.subforumColumns = "invalid_range";
+  }
   if (type === "LINK") {
     const url = input.linkUrl ?? "";
     if (!URL.canParse(url) || !["http:", "https:"].includes(new URL(url).protocol)) errors.linkUrl = "invalid_url";
@@ -102,6 +108,7 @@ export class GcsForumService {
           color: input.color ?? null,
           linkUrl: input.type === "LINK" ? input.linkUrl! : null,
           requireApproval: input.requireApproval ?? false,
+          ...(input.subforumColumns !== undefined ? { subforumColumns: input.subforumColumns } : {}),
           position: last ? last.position + 1 : 0,
         },
       });
@@ -142,6 +149,7 @@ export class GcsForumService {
     if (patch.icon !== undefined) data.icon = patch.icon;
     if (patch.color !== undefined) data.color = patch.color;
     if (patch.requireApproval !== undefined) data.requireApproval = patch.requireApproval;
+    if (patch.subforumColumns !== undefined) data.subforumColumns = patch.subforumColumns;
     data.linkUrl = type === "LINK" ? (patch.linkUrl ?? before.linkUrl) : null;
 
     const forum = await db.$transaction(async (tx) => {

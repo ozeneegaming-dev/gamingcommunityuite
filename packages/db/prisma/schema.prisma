@@ -402,6 +402,8 @@ model SystemState {
   installedAt DateTime?
   permVersion Int       @default(0)
   appVersion  String    @default("1.0.0")
+  /// Seed-urile făcute o singură dată (ex. `layout:index`), ca alegerile adminului să nu fie refăcute la repornire.
+  seedMarks   String[]  @default([])
 
   @@map("system_state")
 }

@@ -1,3 +1,4 @@
+import { coreWidgets } from "../widgets";
 import type { GcsAcpApp, GcsAcpMenuSection, GcsModule, GcsPermissionDef, GcsSettingDef } from "@gcs/core";
 
 /** Grupurile create la instalare (spec §6.1). */
@@ -257,4 +258,5 @@ export const coreModule: GcsModule = {
     { key: "core.warning", labelKey: "notifications.type.core.warning", important: true, defaultEmail: "INSTANT" },
   ],
   eventListeners: [],
+  widgets: coreWidgets,
 };

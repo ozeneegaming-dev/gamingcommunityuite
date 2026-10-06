@@ -39,11 +39,11 @@ const DEMO: DemoCategory[] = [
     name: "RED-LINE",
     color: "#D62839",
     forums: [
-      { name: "Anunțuri", icon: "megaphone", description: "Noutăți oficiale despre comunitate și servere." },
-      { name: "Regulament", icon: "shield", description: "Regulile forumului și ale serverelor." },
+      { name: "Anunțuri", icon: "fa-solid fa-bullhorn", description: "Noutăți oficiale despre comunitate și servere." },
+      { name: "Regulament", icon: "fa-solid fa-shield-halved", description: "Regulile forumului și ale serverelor." },
       {
         name: "Cereri & reclamații",
-        icon: "chat",
+        icon: "fa-solid fa-comments",
         description: "Cereri unban, reclamații jucători sau admini.",
         children: [{ name: "Cereri unban" }, { name: "Reclamații" }, { name: "Cereri admin" }],
       },
@@ -55,31 +55,31 @@ const DEMO: DemoCategory[] = [
     forums: [
       {
         name: "Counter-Strike 2",
-        icon: "gamepad",
+        icon: "fa-solid fa-gamepad",
         description: "Discuții, configuri, highlight-uri.",
         children: [{ name: "Configuri" }, { name: "Highlights" }, { name: "Turnee" }],
       },
       {
         name: "FiveM RolePlay",
-        icon: "gamepad",
+        icon: "fa-solid fa-gamepad",
         description: "Facțiuni, joburi, povești RP.",
         children: [{ name: "Facțiuni" }, { name: "Joburi" }],
       },
-      { name: "Minecraft", icon: "gamepad", description: "Survival, construcții, evenimente." },
-      { name: "Ajutor tehnic", type: "QA", icon: "help", description: "Întrebări cu răspuns: marchează cel mai bun răspuns." },
+      { name: "Minecraft", icon: "fa-solid fa-gamepad", description: "Survival, construcții, evenimente." },
+      { name: "Ajutor tehnic", type: "QA", icon: "fa-solid fa-circle-question", description: "Întrebări cu răspuns: marchează cel mai bun răspuns." },
     ],
   },
   {
     name: "Comunitate",
     color: "#5EA2FF",
     forums: [
-      { name: "Recrutări clan", icon: "users", description: "Caută-ți echipa sau recrutează jucători." },
-      { name: "Off-topic", icon: "chat", description: "Orice altceva: muzică, filme, hardware." },
+      { name: "Recrutări clan", icon: "fa-solid fa-users", description: "Caută-ți echipa sau recrutează jucători." },
+      { name: "Off-topic", icon: "fa-solid fa-comments", description: "Orice altceva: muzică, filme, hardware." },
     ],
   },
 ];
 
-const EMPTY: DemoCategory[] = [{ name: "General", color: "#D62839", forums: [{ name: "Discuții", icon: "chat" }] }];
+const EMPTY: DemoCategory[] = [{ name: "General", color: "#D62839", forums: [{ name: "Discuții", icon: "fa-solid fa-comments" }] }];
 
 const DEMO_PREFIXES = [
   { name: "Anunț", color: "#D62839" },

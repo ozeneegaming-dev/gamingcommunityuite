@@ -51,7 +51,7 @@ export default async function ProfileSettingsPage() {
         />
       </div>
       <GcsProfileFieldsForm
-        fields={fields.map((f) => ({ key: f.key, label: f.label, type: f.type, options: f.options, required: f.required, maxLength: f.maxLength, section: f.section }))}
+        fields={fields.map((f) => ({ key: f.key, label: f.label, type: f.type, options: f.options, required: f.required, maxLength: f.maxLength, section: f.section, optionImages: (f.optionImages ?? {}) as Record<string, string> }))}
         values={Object.fromEntries(values.map((v) => [v.field.key, v.value]))}
         bio={user.bio}
         labels={labels}

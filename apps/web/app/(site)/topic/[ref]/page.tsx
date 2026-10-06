@@ -20,6 +20,7 @@ import { GcsTopicLive } from "../../_components/topic/GcsTopicLive";
 import { topicReadersView } from "@/lib/online";
 import { translateLabels } from "@/lib/translate";
 import { GcsTopicModMenu, SPLIT_FORM_ID } from "../../_components/topic/GcsTopicModMenu";
+import { GcsWidgetPage } from "../../_components/widgets/GcsWidgetPage";
 
 type Props = { params: Promise<{ ref: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -74,7 +75,8 @@ export default async function TopicPage({ params, searchParams }: Props) {
   const visibleIds = data.posts.filter((p) => p.visibility === "VISIBLE").map((p) => p.id);
   const ignored = new Set(await social.ignoredIds(actor.userId, "posts"));
   const isMod = data.modPowers.length > 0;
-  const [maxUploadMb, , targets, , readers, tl, translate] = await Promise.all([
+  const authorIds = data.posts.flatMap((p) => (p.author ? [p.author.id] : []));
+  const [maxUploadMb, , targets, , readers, tl, translate, postbits] = await Promise.all([
     actor.userId ? permissions.groupValue<number | boolean>(actor, "upload.max_mb") : Promise.resolve(0),
     registerTopicView(actor, topic.id),
     isMod ? moveTargets(actor) : Promise.resolve([]),
@@ -82,12 +84,14 @@ export default async function TopicPage({ params, searchParams }: Props) {
     topicReadersView(topic.id),
     getTranslations("topic.live"),
     translateLabels(actor),
+    // Cardul autorilor (etapa 5): o singură rundă de interogări pentru toată pagina.
+    services().postbit.forAuthors(actor, authorIds),
   ]);
   const isTopicAuthor = actor.userId !== null && actor.userId === topic.author?.id;
   const canSolve = forum.type === "QA" && (isTopicAuthor || has(data.modPowers, "edit"));
 
   return (
-    <>
+    <GcsWidgetPage page="topic">
       <GcsBreadcrumb crumbs={data.breadcrumb} />
       <section className="gcs-pageHeader">
         <div className="gcs-pageHeader__text">
@@ -177,6 +181,7 @@ export default async function TopicPage({ params, searchParams }: Props) {
             actorId={actor.userId}
             ignored={post.author !== null && ignored.has(post.author.id)}
             translate={translate}
+            postbit={post.author ? (postbits.get(post.author.id) ?? null) : null}
             can={{
               react: actor.userId !== null && post.visibility === "VISIBLE",
               quote: data.canReply,
@@ -206,6 +211,6 @@ export default async function TopicPage({ params, searchParams }: Props) {
           ) : null}
         </GcsCard>
       )}
-    </>
+    </GcsWidgetPage>
   );
 }

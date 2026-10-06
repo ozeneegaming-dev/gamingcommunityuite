@@ -14,6 +14,7 @@ import { GcsForumRow } from "../../_components/forum/GcsForumRow";
 import { GcsModBar } from "../../_components/forum/GcsModBar";
 import { GcsPagination } from "../../_components/forum/GcsPagination";
 import { GcsTopicRow } from "../../_components/forum/GcsTopicRow";
+import { GcsWidgetPage } from "../../_components/widgets/GcsWidgetPage";
 
 type Props = { params: Promise<{ ref: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -64,7 +65,7 @@ export default async function ForumPage({ params, searchParams }: Props) {
   const tm = await getTranslations("mod");
 
   return (
-    <>
+    <GcsWidgetPage page="forum">
       <GcsBreadcrumb crumbs={data.breadcrumb.slice(0, -1)} />
       <section className="gcs-pageHeader">
         <div className="gcs-pageHeader__text">
@@ -157,6 +158,6 @@ export default async function ForumPage({ params, searchParams }: Props) {
         pagination={data.pagination}
         href={(p) => `${forumHref(forum, p)}${sp.prefix ? `${p > 1 ? "&" : "?"}prefix=${prefixId}` : ""}`}
       />
-    </>
+    </GcsWidgetPage>
   );
 }

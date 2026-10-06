@@ -45,6 +45,7 @@ export async function updateForum(id: number, fd: FormData): Promise<GcsResult<n
         icon: field(fd, "icon") || null,
         color: field(fd, "color") || null,
         requireApproval: fd.get("requireApproval") === "on",
+        ...(fd.has("subforumColumns") ? { subforumColumns: Number(field(fd, "subforumColumns")) } : {}),
         ...(type ? { type: forumType(type) } : {}),
         ...(fd.has("linkUrl") ? { linkUrl: field(fd, "linkUrl") } : {}),
       },

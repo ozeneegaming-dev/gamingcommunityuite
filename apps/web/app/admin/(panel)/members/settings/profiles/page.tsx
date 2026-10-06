@@ -1,11 +1,11 @@
 import { PROFILES_ACP_SECTION } from "@gcs/modules";
-import { GcsCard } from "@gcs/ui";
+import { GcsCard, GcsIconPicker } from "@gcs/ui";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../../_components/GcsActionForm";
-import { deleteProfileField, saveProfileField, saveProfileSettings } from "./actions";
+import { deleteProfileField, savePostbitOrder, saveProfileField, saveProfileSettings } from "./actions";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.profiles"))("title") };
@@ -16,7 +16,22 @@ export default async function AcpProfilesPage() {
   await requireAcpSection(PROFILES_ACP_SECTION);
   const t = await getTranslations("acp.profiles");
   const { profiles, settings } = services();
-  const [fields, coverMaxMb, wallEnabled] = await Promise.all([profiles.fields(), settings.get<number>("profile.cover_max_mb"), settings.get<boolean>("profile.wall_enabled")]);
+  const [fields, coverMaxMb, wallEnabled, postbitOrder] = await Promise.all([
+    profiles.fields(),
+    settings.get<number>("profile.cover_max_mb"),
+    settings.get<boolean>("profile.wall_enabled"),
+    settings.get<string[]>("postbit.fields"),
+  ]);
+  const postbitFields = fields
+    .filter((f) => f.showInPostbit)
+    .sort((a, b) => {
+      const pos = (k: string) => (postbitOrder.indexOf(k) < 0 ? Number.MAX_SAFE_INTEGER : postbitOrder.indexOf(k));
+      return pos(a.key) - pos(b.key) || a.position - b.position;
+    });
+  const imageLines = (f?: (typeof fields)[number]) =>
+    Object.entries((f?.optionImages ?? {}) as Record<string, string>)
+      .map(([o, url]) => `${o} = ${url}`)
+      .join("\n");
 
   const form = (f?: (typeof fields)[number]) => (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -32,7 +47,7 @@ export default async function AcpProfilesPage() {
         <label className="gcs-field" style={{ width: 150 }}>
           {t("type")}
           <select className="gcs-input" name="type" defaultValue={f?.type ?? "TEXT"}>
-            {(["TEXT", "TEXTAREA", "URL", "NUMBER", "SELECT"] as const).map((k) => (
+            {(["TEXT", "TEXTAREA", "URL", "NUMBER", "SELECT", "IMAGE_SELECT"] as const).map((k) => (
               <option key={k} value={k}>
                 {t(`types.${k}`)}
               </option>
@@ -69,6 +84,14 @@ export default async function AcpProfilesPage() {
         {t("options")}
         <input className="gcs-input" name="options" defaultValue={f?.options.join(", ") ?? ""} placeholder={t("optionsHint")} />
       </label>
+      <label className="gcs-field">
+        {t("optionImages")}
+        <textarea className="gcs-input" name="optionImages" rows={3} defaultValue={imageLines(f)} placeholder={t("optionImagesHint")} />
+      </label>
+      <div className="gcs-field" role="group" aria-label={t("icon")}>
+        <span>{t("icon")}</span>
+        <GcsIconPicker name="icon" value={f?.icon ?? null} searchUrl="/api/icons/search" labels={{ search: t("iconSearch"), none: t("iconNone"), noResults: t("iconNoResults") }} />
+      </div>
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         <label className="gcs-check">
           <input type="checkbox" name="required" defaultChecked={f?.required ?? false} />
@@ -77,6 +100,10 @@ export default async function AcpProfilesPage() {
         <label className="gcs-check">
           <input type="checkbox" name="showOnCard" defaultChecked={f?.showOnCard ?? false} />
           {t("showOnCard")}
+        </label>
+        <label className="gcs-check">
+          <input type="checkbox" name="showInPostbit" defaultChecked={f?.showInPostbit ?? false} />
+          {t("showInPostbit")}
         </label>
       </div>
     </div>
@@ -101,6 +128,28 @@ export default async function AcpProfilesPage() {
             </label>
           </div>
         </GcsActionForm>
+      </GcsCard>
+      <GcsCard as="section" aria-labelledby="gcs-postbit-order" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }} data-testid="gcs-acp-postbit">
+        <h2 id="gcs-postbit-order" className="gcs-acpWidget__title">
+          {t("postbitTitle")}
+        </h2>
+        <p className="gcs-muted" style={{ margin: 0 }}>
+          {t("postbitHint")}
+        </p>
+        {postbitFields.length > 0 && (
+          <GcsActionForm action={savePostbitOrder} submitLabel={t("postbitSave")}>
+            <ol style={{ margin: 0, paddingLeft: 20, display: "flex", flexDirection: "column", gap: 6 }}>
+              {postbitFields.map((f, i) => (
+                <li key={f.key}>
+                  <label style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <input className="gcs-input" type="number" name={`order.${f.key}`} defaultValue={i + 1} min={1} max={99} style={{ width: 80 }} aria-label={t("postbitPosition", { field: f.label })} />
+                    {f.label}
+                  </label>
+                </li>
+              ))}
+            </ol>
+          </GcsActionForm>
+        )}
       </GcsCard>
       {fields.map((f) => (
         <GcsCard key={f.id} as="section" aria-label={f.label} style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }} data-testid="gcs-acp-profile-field">

@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
-import { register as registerOnly, setPrimaryGroup, useFreshIp } from "./helpers";
+import { enterAcpAsRoot, register as registerOnly, setPrimaryGroup, useFreshIp } from "./helpers";
 
 /** Datele forumului prin ruta de test (`/api/_test/forum`, doar cu `GCS_TEST_ROUTES=1`). */
 async function fixture<T>(request: APIRequestContext, data: Record<string, unknown>): Promise<T> {
@@ -92,4 +92,50 @@ test("după „Marchează citit”, punctul de necitit dispare", async ({ page, 
 
   await page.goto("/");
   await expect(page.getByTestId("gcs-forum-row").filter({ hasText: t.forumName }).getByTestId("gcs-unread-dot")).toHaveCount(0);
+});
+
+test("subforumurile apar pe coloanele alese, cu iconițe Font Awesome, fără eticheta „Subforumuri”", async ({ page, request }) => {
+  const id = uid();
+  const category = await fixture<{ id: number }>(request, { action: "forum", parentId: null, type: "CATEGORY", name: `Jocuri ${id}` });
+  const forum = await fixture<{ id: number }>(request, {
+    action: "forum",
+    parentId: category.id,
+    type: "FORUM",
+    name: `CS2 ${id}`,
+    icon: "fa-solid fa-gamepad",
+    subforumColumns: 3,
+  });
+  for (const name of ["Configuri", "Highlights", "Turnee"]) {
+    await fixture(request, { action: "forum", parentId: forum.id, type: "FORUM", name: `${name} ${id}`, icon: "fa-solid fa-gear" });
+  }
+  await page.goto("/");
+  const row = page.getByTestId("gcs-forum-row").filter({ hasText: `CS2 ${id}` });
+  await expect(row.locator('.gcs-forumRow__icon [data-icon="fa-solid fa-gamepad"] svg')).toBeVisible();
+  const subs = row.getByTestId("gcs-subforums");
+  await expect(subs).toHaveAttribute("data-columns", "3");
+  await expect(subs.getByRole("listitem")).toHaveCount(3);
+  await expect(subs.locator('[data-icon="fa-solid fa-gear"]')).toHaveCount(3);
+  await expect(row).not.toContainText("Subforumuri");
+  // Trei coloane: cele trei subforumuri stau pe același rând.
+  const tops = await subs.getByRole("listitem").evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
+  expect(new Set(tops).size).toBe(1);
+});
+
+test("în ACP, o iconiță invalidă e refuzată, iar una aleasă din selector apare pe site", async ({ page, request }) => {
+  const id = uid();
+  const t = await tree(request);
+  await enterAcpAsRoot(page, `Ic${id}`, `ic-${id}@example.com`);
+  await page.goto(`/admin/community/forums/${t.forum.id}`);
+  // Valoare falsificată în câmpul ascuns → refuzată de server.
+  await page.locator('input[type="hidden"][name="icon"]').evaluate((el) => ((el as HTMLInputElement).value = "fa-solid fa-nu-exista"));
+  await page.getByRole("button", { name: "Salvează forumul" }).click();
+  await expect(page.getByRole("alert").first()).toBeVisible();
+
+  await page.reload();
+  await page.getByRole("searchbox", { name: "Caută o iconiță (ex. gamepad, shield)" }).fill("gamepad");
+  await page.getByRole("option", { name: "fa-solid fa-gamepad" }).click();
+  await page.getByRole("button", { name: "Salvează forumul" }).click();
+  await expect(page.getByRole("status").first()).toBeVisible();
+  await page.goto("/");
+  await expect(page.getByTestId("gcs-forum-row").filter({ hasText: t.forumName }).locator('[data-icon="fa-solid fa-gamepad"]')).toBeVisible();
 });

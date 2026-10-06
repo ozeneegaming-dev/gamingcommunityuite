@@ -143,6 +143,7 @@ export class GcsProfileService {
       case "NUMBER":
         return /^-?\d{1,12}(\.\d{1,4})?$/.test(value) ? { value } : { error: "invalid_number" };
       case "SELECT":
+      case "IMAGE_SELECT":
         return field.options.includes(value) ? { value } : { error: "invalid_choice" };
       default:
         return { value };

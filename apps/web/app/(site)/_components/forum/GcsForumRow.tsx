@@ -16,7 +16,7 @@ export async function GcsForumRow({ forum, accent }: { forum: Row; accent: strin
   return (
     <div className="gcs-forumRow" data-testid="gcs-forum-row">
       <span className="gcs-forumRow__icon" style={{ background: tint(color) }}>
-        <GcsForumIcon icon={external ? "link" : forum.icon} color={color} />
+        <GcsForumIcon icon={external ? "fa-solid fa-link" : forum.icon} color={color} />
       </span>
       <div className="gcs-forumRow__main">
         <span className="gcs-forumRow__title">
@@ -32,15 +32,18 @@ export async function GcsForumRow({ forum, accent }: { forum: Row; accent: strin
         </span>
         {forum.description && <span className="gcs-forumRow__desc">{forum.description}</span>}
         {forum.subforums.length > 0 && (
-          <span className="gcs-forumRow__subs">
-            {t("subforums")}{" "}
-            {forum.subforums.map((s, i) => (
-              <span key={s.id}>
-                {i > 0 && " · "}
+          // Subforumurile pe coloane (setarea forumului din ACP), fiecare cu iconița lui.
+          <ul className="gcs-forumRow__subs" aria-label={t("subforums")} style={{ gridTemplateColumns: `repeat(${forum.subforumColumns}, minmax(0, 1fr))` }} data-columns={forum.subforumColumns} data-testid="gcs-subforums">
+            {forum.subforums.map((s) => (
+              <li key={s.id}>
+                <GcsForumIcon icon={s.icon ?? "fa-regular fa-comment"} color="var(--gcs-muted)" size={12} />
                 <Link href={forumHref(s)}>{s.name}</Link>
-              </span>
+                <span className="gcs-forumRow__subCount" title={t("topicsCount", { count: s.topicsCount })}>
+                  {s.topicsCount}
+                </span>
+              </li>
             ))}
-          </span>
+          </ul>
         )}
       </div>
       {!external && (

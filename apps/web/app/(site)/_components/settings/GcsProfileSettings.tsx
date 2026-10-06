@@ -7,7 +7,7 @@ import { removeImage, saveProfile, setCoverPosition } from "../../settings-actio
 import { GcsStatus } from "./GcsStatus";
 import { useSettingsAction } from "./useSettingsAction";
 
-export type GcsFieldDef = { key: string; label: string; type: "TEXT" | "TEXTAREA" | "URL" | "NUMBER" | "SELECT" | "IMAGE_SELECT"; options: string[]; required: boolean; maxLength: number; section: "ABOUT" | "GAMES" };
+export type GcsFieldDef = { key: string; label: string; type: "TEXT" | "TEXTAREA" | "URL" | "NUMBER" | "SELECT" | "IMAGE_SELECT"; options: string[]; required: boolean; maxLength: number; section: "ABOUT" | "GAMES"; optionImages?: Record<string, string> };
 
 type Labels = {
   bio: string;
@@ -33,7 +33,27 @@ export function GcsProfileFieldsForm({ fields, values, bio, labels }: { fields: 
   const input = (f: GcsFieldDef) => {
     const common = { id: `field-${f.key}`, name: f.key, value: form[f.key] ?? "", required: f.required, className: "gcs-input" };
     const onChange = (e: { target: { value: string } }) => setForm((s) => ({ ...s, [f.key]: e.target.value }));
-    if ((f.type === "SELECT" || f.type === "IMAGE_SELECT")) {
+    if (f.type === "IMAGE_SELECT") {
+      // „Select cu imagini” (etapa 5): opțiunile ca niște carduri cu imagine (radio, merg și din tastatură).
+      return (
+        <div role="radiogroup" aria-labelledby={`field-${f.key}-label`} className="gcs-imageSelect" id={`field-${f.key}`}>
+          {!f.required && (
+            <label className="gcs-imageSelect__option">
+              <input type="radio" name={f.key} value="" checked={!form[f.key]} onChange={onChange} />
+              <span>{labels.choose}</span>
+            </label>
+          )}
+          {f.options.map((o) => (
+            <label key={o} className="gcs-imageSelect__option">
+              <input type="radio" name={f.key} value={o} checked={form[f.key] === o} onChange={onChange} />
+              {f.optionImages?.[o] && <img src={f.optionImages[o]} alt="" />}
+              <span>{o}</span>
+            </label>
+          ))}
+        </div>
+      );
+    }
+    if (f.type === "SELECT") {
       return (
         <select {...common} onChange={onChange}>
           <option value="">{labels.choose}</option>
@@ -56,7 +76,7 @@ export function GcsProfileFieldsForm({ fields, values, bio, labels }: { fields: 
         <legend>{title}</legend>
         {list.map((f) => (
           <div key={f.key} className="gcs-field">
-            <label htmlFor={`field-${f.key}`}>
+            <label htmlFor={`field-${f.key}`} id={`field-${f.key}-label`}>
               {f.label}
               {f.required && " *"}
             </label>

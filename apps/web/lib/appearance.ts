@@ -1,5 +1,5 @@
 import "server-only";
-import { DEFAULT_THEME_SETTINGS, THEMES_ACP_SECTION, type GcsThemeView } from "@gcs/core";
+import { DEFAULT_THEME_SETTINGS, THEMES_ACP_SECTION, WIDGETS_ACP_SECTION, type GcsThemeView } from "@gcs/core";
 import { cookies } from "next/headers";
 import { cache } from "react";
 import { getAcpContext } from "./acp";
@@ -70,5 +70,31 @@ export const viewerTheme = cache(async (): Promise<GcsViewerTheme> => {
     return { theme, shown: theme, inlineCss: null, canEdit, editing: false };
   } catch {
     return { theme: FALLBACK_THEME, shown: FALLBACK_THEME, inlineCss: null, canEdit: false, editing: false };
+  }
+});
+
+/** Cookie-ul modului „Editează pagina” (widget-urile paginilor index / forum / topic). */
+export const PAGE_EDIT_COOKIE = "gcs-page-edit";
+
+export type GcsViewerEditing = {
+  /** Poate edita teme / widget-uri (drepturile ACP; butoanele apar și fără poarta ACP trecută). */
+  canTheme: boolean;
+  canWidgets: boolean;
+  /** Modul „Editează pagina” e activ (cookie + poarta ACP trecută). */
+  pageEditing: boolean;
+};
+
+/** Uneltele de editare ale viewerului (o singură dată pe request). */
+export const viewerEditing = cache(async (): Promise<GcsViewerEditing> => {
+  try {
+    const actor = await currentActor();
+    if (!actor.userId) return { canTheme: false, canWidgets: false, pageEditing: false };
+    const { acp } = services();
+    const [canTheme, canWidgets] = await Promise.all([acp.can(actor, THEMES_ACP_SECTION, "edit"), acp.can(actor, WIDGETS_ACP_SECTION, "edit")]);
+    const wantsPage = canWidgets && (await cookies()).get(PAGE_EDIT_COOKIE)?.value === "1";
+    const pageEditing = wantsPage && (await getAcpContext()).state === "ok";
+    return { canTheme, canWidgets, pageEditing };
+  } catch {
+    return { canTheme: false, canWidgets: false, pageEditing: false };
   }
 });

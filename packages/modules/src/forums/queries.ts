@@ -1,3 +1,4 @@
+import { docSnippet } from "../content-text";
 import { rankLabel, type GcsRankDirectory, type GcsRankLabel } from "../profile/display";
 import {
   GcsForbidden,
@@ -50,10 +51,14 @@ export type GcsForumRow = {
   linkUrl: string | null;
   topicsCount: number;
   postsCount: number;
-  subforums: { id: number; name: string; slug: string }[];
+  subforums: { id: number; name: string; slug: string; icon: string | null; topicsCount: number }[];
+  /** Pe câte coloane apar subforumurile (setarea forumului, 1–5). */
+  subforumColumns: number;
   last: GcsLastPost | null;
   unread: boolean;
 };
+/** O postare în widget-ul „Postări recente”. */
+export type GcsWidgetPost = { id: number; topicId: number; topicTitle: string; topicSlug: string; excerpt: string; at: string; user: GcsUserRef | null };
 export type GcsIndexCategory = { id: number; name: string; slug: string; color: string | null; forums: GcsForumRow[] };
 
 export type GcsTopicRow = {
@@ -158,6 +163,8 @@ type TreeForum = {
   color: string | null;
   position: number;
   linkUrl: string | null;
+  /** Coloanele subforumurilor din listă (1–5); lipsește în arborii cache-uiți înainte de etapa 5. */
+  subforumColumns?: number;
   topicsCount: number;
   postsCount: number;
   lastPostId: number | null;
@@ -525,6 +532,96 @@ export class GcsForumQueries {
     }));
   }
 
+  /** Ultimele postări vizibile din forumurile citibile (widget-ul „Postări recente”), cu un extras de text. */
+  async recentPosts(actor: GcsActor, limit: number): Promise<GcsWidgetPost[]> {
+    const tree = await this.tree();
+    const { readable } = await this.access(actor, tree);
+    if (readable.size === 0) return [];
+    const rows = await this.deps.db.post.findMany({
+      where: { visibility: "VISIBLE", topic: { forumId: { in: [...readable] }, visibility: "VISIBLE" } },
+      orderBy: { id: "desc" },
+      take: limit,
+      select: { id: true, contentJson: true, createdAt: true, authorId: true, topic: { select: { id: true, title: true, slug: true } } },
+    });
+    const users = await this.users(rows.map((r) => r.authorId));
+    return rows.map((r) => ({
+      id: r.id,
+      topicId: r.topic.id,
+      topicTitle: r.topic.title,
+      topicSlug: r.topic.slug,
+      excerpt: docSnippet(r.contentJson, 120),
+      at: r.createdAt.toISOString(),
+      user: r.authorId ? (users.get(r.authorId) ?? null) : null,
+    }));
+  }
+
+  /** Topicurile promovate (`featured`) din forumurile citibile, cele mai noi primele. */
+  async featuredTopics(actor: GcsActor, limit: number): Promise<{ id: number; title: string; slug: string; repliesCount: number; createdAt: string; user: GcsUserRef | null }[]> {
+    const tree = await this.tree();
+    const { readable } = await this.access(actor, tree);
+    if (readable.size === 0) return [];
+    const rows = await this.deps.db.topic.findMany({
+      where: { forumId: { in: [...readable] }, visibility: "VISIBLE", featured: true },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: limit,
+      select: { id: true, title: true, slug: true, repliesCount: true, createdAt: true, authorId: true },
+    });
+    const users = await this.users(rows.map((r) => r.authorId));
+    return rows.map((r) => ({
+      id: r.id,
+      title: r.title,
+      slug: r.slug,
+      repliesCount: r.repliesCount,
+      createdAt: r.createdAt.toISOString(),
+      user: r.authorId ? (users.get(r.authorId) ?? null) : null,
+    }));
+  }
+
+  /**
+   * Cei mai activi membri (widget-ul „Top posteri”): pe săptămână / lună numără postările vizibile din perioadă,
+   * pe „total” folosește contorul userului. Cache 10 minute.
+   */
+  async topPosters(period: "week" | "month" | "all", limit: number): Promise<{ user: GcsUserRef; posts: number }[]> {
+    const { cache, db } = this.deps;
+    const key = `forums:topPosters:${period}:${limit}`;
+    const cached = await cache.get<{ user: GcsUserRef; posts: number }[]>(key);
+    if (cached) return cached;
+    let counts: { id: string; posts: number }[];
+    if (period === "all") {
+      const rows = await db.user.findMany({ where: { postsCount: { gt: 0 } }, orderBy: [{ postsCount: "desc" }, { createdAt: "asc" }], take: limit, select: { id: true, postsCount: true } });
+      counts = rows.map((r) => ({ id: r.id, posts: r.postsCount }));
+    } else {
+      const since = new Date(Date.now() - (period === "week" ? 7 : 30) * 86_400_000);
+      const rows = await db.post.groupBy({
+        by: ["authorId"],
+        where: { createdAt: { gte: since }, visibility: "VISIBLE", authorId: { not: null } },
+        _count: { _all: true },
+        orderBy: { _count: { authorId: "desc" } },
+        take: limit,
+      });
+      counts = rows.map((r) => ({ id: r.authorId!, posts: r._count._all }));
+    }
+    const users = await this.users(counts.map((c) => c.id));
+    const list = counts.flatMap((c) => {
+      const user = users.get(c.id);
+      return user ? [{ user, posts: c.posts }] : [];
+    });
+    await cache.set(key, list, { ttlSec: 600, tags: ["forums-tree"] });
+    return list;
+  }
+
+  /** Cei mai noi membri (widget-ul „Membri noi”). Cache 5 minute. */
+  async newMembers(limit: number): Promise<{ user: GcsUserRef; joinedAt: string }[]> {
+    const { cache, db } = this.deps;
+    const key = `forums:newMembers:${limit}`;
+    const cached = await cache.get<{ user: GcsUserRef; joinedAt: string }[]>(key);
+    if (cached) return cached;
+    const rows = await db.user.findMany({ orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: limit, select: { ...userRefSelect, createdAt: true } });
+    const list = rows.map((r) => ({ user: toRef(r), joinedAt: r.createdAt.toISOString() }));
+    await cache.set(key, list, { ttlSec: STATS_TTL, tags: ["forums-tree"] });
+    return list;
+  }
+
   /** Statisticile comunității (coloana din dreapta), cache-uite 5 minute. */
   async stats(): Promise<{ topics: number; posts: number; members: number; newestMember: GcsUserRef | null }> {
     const { cache, db } = this.deps;
@@ -569,6 +666,7 @@ export class GcsForumQueries {
         color: f.color,
         position: f.position,
         linkUrl: f.linkUrl,
+        subforumColumns: f.subforumColumns,
         topicsCount: f.topicsCount,
         postsCount: f.postsCount,
         lastPostId: f.lastPostId,
@@ -624,7 +722,8 @@ export class GcsForumQueries {
       linkUrl: f.linkUrl,
       topicsCount: nodes.reduce((n, x) => n + x.topicsCount, 0),
       postsCount: nodes.reduce((n, x) => n + x.postsCount, 0),
-      subforums: tree.childrenOf(f.id).filter((c) => viewable.has(c.id)).map((c) => ({ id: c.id, name: c.name, slug: c.slug })),
+      subforums: tree.childrenOf(f.id).filter((c) => viewable.has(c.id)).map((c) => ({ id: c.id, name: c.name, slug: c.slug, icon: c.icon, topicsCount: tree.subtree(c.id).filter((n) => readable.has(n.id)).reduce((n, x) => n + x.topicsCount, 0) })),
+      subforumColumns: f.subforumColumns ?? 2,
       last:
         latest && topic
           ? {

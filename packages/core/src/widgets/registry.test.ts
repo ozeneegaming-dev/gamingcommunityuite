@@ -5,6 +5,8 @@ import { GcsForbidden, GcsNotFound } from "../errors";
 import type { GcsModule, GcsWidgetDef } from "../modules/registry";
 import { GcsNavService, isSafeHref } from "../nav/service";
 import type { GcsActor } from "../permissions/types";
+import { seedDefaults } from "../install/seed";
+import { fieldsConfig } from "./fields";
 import { GcsWidgetService } from "./service";
 
 const limited = (key: string, extra: Partial<GcsWidgetDef> = {}): GcsWidgetDef => ({
@@ -169,5 +171,44 @@ describe("meniu", () => {
     expect(isSafeHref("/members")).toBe(true);
     expect(isSafeHref("https://x.ro/a")).toBe(true);
     for (const bad of ["data:text/html,x", "/\\evil", "", "ftp://x"]) expect(isSafeHref(bad)).toBe(false);
+  });
+});
+
+describe("câmpurile și layout-ul implicit", () => {
+  test("fieldsConfig completează valorile implicite și refuză valorile din afara câmpurilor", () => {
+    const config = fieldsConfig(
+      [
+        { key: "limit", labelKey: "l", type: "number", min: 1, max: 20 },
+        { key: "period", labelKey: "p", type: "select", options: [{ value: "week", labelKey: "w" }, { value: "all", labelKey: "a" }] },
+        { key: "channel", labelKey: "c", type: "select", optionsFrom: "chat.channels" },
+        { key: "title", labelKey: "t", type: "text", maxLength: 5 },
+      ],
+      { limit: 5, period: "week", channel: "", title: "" },
+    );
+    expect(config({})).toEqual({ limit: 5, period: "week", channel: "", title: "" });
+    expect(config({ limit: 7, period: "all", channel: "general", title: "Salut", extra: 1 })).toEqual({ limit: 7, period: "all", channel: "general", title: "Salut" });
+    expect(config({ limit: 0 })).toBeNull();
+    expect(config({ limit: 2.5 })).toBeNull();
+    expect(config({ period: "year" })).toBeNull();
+    expect(config({ channel: "../x" })).toBeNull();
+    expect(config({ title: "prea lung" })).toBeNull();
+  });
+
+  test("layout-ul implicit se pune o singură dată; o pagină golită de admin rămâne goală; „reset” îl readuce", async () => {
+    const withDefaults: GcsModule = { ...base, key: "defaults", widgets: [], nav: [], widgetLayout: { index: [{ zone: "sidebar", type: "base.recent" }, { zone: "top", type: "base.sidebarOnly" }] } };
+    const world = await createWorld([base, withDefaults]);
+    const ws = new GcsWidgetService({ db: world.db, cache: world.cache, bus: world.bus, registry: world.registry, acp: world.acp, apps: new GcsAppService({ db: world.db, cache: world.cache, bus: world.bus, registry: world.registry, acp: world.acp }) });
+    const admin = await world.actorFor(await world.createUser("Root2", "root_admin"));
+    // `base.sidebarOnly` nu e permis sus: se sare.
+    expect((await ws.layout("index", admin)).sidebar.map((p) => p.type)).toEqual(["base.recent"]);
+    expect((await ws.layout("index", admin)).top).toEqual([]);
+
+    await ws.save(admin, "index", []);
+    await seedDefaults(world.db, world.registry);
+    expect((await ws.layout("index", admin)).sidebar).toEqual([]);
+
+    await ws.reset(admin, "index");
+    expect((await ws.layout("index", admin)).sidebar.map((p) => p.type)).toEqual(["base.recent"]);
+    await expect(ws.reset(await world.actorFor(await world.createUser("Ion2", "member")), "index")).rejects.toBeInstanceOf(GcsForbidden);
   });
 });

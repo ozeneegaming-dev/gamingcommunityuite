@@ -1,13 +1,13 @@
 import { THEME_FONTS, THEME_TOKENS } from "@gcs/core";
-import { viewerTheme } from "@/lib/appearance";
+import { viewerEditing, viewerTheme } from "@/lib/appearance";
 import { GcsEditBar } from "./GcsEditBar";
 import { GcsThemeEditor } from "./GcsThemeEditor";
 
-/** Uneltele de editare de pe site: nimic pentru cei fără drept; altfel bara sau, în editare, panoul temei. */
+/** Uneltele de editare de pe site: nimic pentru cei fără drept; altfel bara sau, în editarea temei, panoul ei. */
 export async function GcsEditMode() {
-  const { canEdit, editing, theme, shown } = await viewerTheme();
-  if (!canEdit) return null;
-  if (!editing) return <GcsEditBar />;
+  const [{ editing, theme, shown }, tools] = await Promise.all([viewerTheme(), viewerEditing()]);
+  if (!tools.canTheme && !tools.canWidgets) return null;
+  if (!editing) return <GcsEditBar canTheme={tools.canTheme} canWidgets={tools.canWidgets} pageEditing={tools.pageEditing} />;
   return (
     <GcsThemeEditor
       themeKey={theme.key}

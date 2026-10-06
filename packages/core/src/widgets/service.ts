@@ -21,6 +21,14 @@ const isPage = (v: unknown): v is GcsWidgetPage => GCS_WIDGET_PAGES.includes(v a
 const isZone = (v: unknown): v is GcsWidgetZone => GCS_WIDGET_ZONES.includes(v as GcsWidgetZone);
 const emptyLayout = (): GcsPageLayout => ({ top: [], bottom: [], sidebar: [] });
 
+/** Layout-ul implicit al unei pagini, din modulele înregistrate (în ordinea lor); tipurile necunoscute se sar. */
+export function defaultWidgetLayout(registry: GcsModuleRegistry, page: GcsWidgetPage): GcsWidgetPlacementInput[] {
+  return registry
+    .all()
+    .flatMap((m) => m.widgetLayout?.[page] ?? [])
+    .filter((p) => registry.widgetDef(p.type)?.def.zones.includes(p.zone));
+}
+
 /**
  * Widget-urile paginilor (specul etapei 5): fiecare pagină (`index`, `forum`, `topic`) are trei zone. Adminii le aranjează
  * direct pe site; aici sunt layout-ul (cu vizibilitatea pe grup și aplicațiile dezactivate filtrate) și salvarea.
@@ -112,6 +120,12 @@ export class GcsWidgetService {
       });
     });
     await bus.emit({ name: "layout.updated", payload: { page }, tags: [CACHE_TAG] });
+  }
+
+  /** Readuce pagina la layout-ul implicit al modulelor (butonul „Restabilește implicit” din editor). */
+  async reset(actor: GcsActor, page: unknown): Promise<void> {
+    if (!isPage(page)) throw new GcsValidationError({ page: "invalid" });
+    await this.save(actor, page, defaultWidgetLayout(this.deps.registry, page));
   }
 
   /** Layout-ul implicit al unei pagini, dacă pagina nu are încă niciun widget (seed; idempotent). */

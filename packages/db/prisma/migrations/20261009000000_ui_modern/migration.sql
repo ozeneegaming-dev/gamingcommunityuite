@@ -180,3 +180,19 @@ ALTER TABLE "chat_message_reactions" ADD CONSTRAINT "chat_message_reactions_mess
 -- AddForeignKey
 ALTER TABLE "chat_message_reactions" ADD CONSTRAINT "chat_message_reactions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+
+-- Seed-urile făcute o singură dată (layout-ul implicit al paginilor).
+ALTER TABLE "system_state" ADD COLUMN "seedMarks" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
+
+-- Iconițele vechi ale forumurilor (setul propriu din etapele 1–4) devin iconițe Font Awesome.
+UPDATE "forums" SET "icon" = CASE "icon"
+  WHEN 'chat' THEN 'fa-solid fa-comments'
+  WHEN 'megaphone' THEN 'fa-solid fa-bullhorn'
+  WHEN 'book' THEN 'fa-solid fa-book'
+  WHEN 'shield' THEN 'fa-solid fa-shield-halved'
+  WHEN 'gamepad' THEN 'fa-solid fa-gamepad'
+  WHEN 'users' THEN 'fa-solid fa-users'
+  WHEN 'help' THEN 'fa-solid fa-circle-question'
+  WHEN 'link' THEN 'fa-solid fa-link'
+  ELSE "icon" END
+WHERE "icon" IN ('chat', 'megaphone', 'book', 'shield', 'gamepad', 'users', 'help', 'link');

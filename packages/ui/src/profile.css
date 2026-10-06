@@ -750,3 +750,41 @@
   color: inherit;
   cursor: pointer;
 }
+
+/* „Select cu imagini” (câmpurile de profil `IMAGE_SELECT`, etapa 5). */
+.gcs-imageSelect {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 8px;
+}
+.gcs-imageSelect__option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-surface2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.gcs-imageSelect__option img {
+  width: 72px;
+  height: 48px;
+  object-fit: contain;
+}
+.gcs-imageSelect__option input {
+  position: absolute;
+  opacity: 0;
+}
+.gcs-imageSelect__option:has(input:checked) {
+  border-color: var(--gcs-accent);
+  box-shadow: 0 0 0 1px var(--gcs-accent);
+}
+.gcs-imageSelect__option:has(input:focus-visible) {
+  outline: 2px solid var(--gcs-accent);
+  outline-offset: 2px;
+}

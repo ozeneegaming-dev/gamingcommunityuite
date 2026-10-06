@@ -1,4 +1,5 @@
 import type { GcsAcpMenuSection, GcsModule, GcsPermissionDef, GcsSettingDef, GcsSeedContext } from "@gcs/core";
+import { chatWidgets } from "../widgets";
 import { seedChatDemo } from "./seed";
 
 export const CHAT_CONTAINER = "chat";
@@ -84,6 +85,7 @@ export const chatModule: GcsModule = {
   settings,
   acpMenu,
   eventListeners: [],
+  widgets: chatWidgets,
   seed: seedChat,
   seedDemo: seedChatDemo,
 };
