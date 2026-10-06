@@ -98,6 +98,7 @@ test("etapa 5: header și login în popup → widget-uri și statistici → limb
     await expect(admin).toHaveURL(/\/admin$/);
 
     await admin.goto("/");
+    const original = await admin.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--gcs-accent").trim().toLowerCase());
     await admin.getByTestId("gcs-edit-theme").click();
     await admin.getByTestId("gcs-theme-color-dark-accent").fill("#3355ee");
     await expect(admin.getByTestId("gcs-theme-status")).toHaveText("Draft salvat. Doar tu vezi modificările până la publicare.");
@@ -107,5 +108,12 @@ test("etapa 5: header și login în popup → widget-uri și statistici → limb
     await page.reload();
     const accent = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--gcs-accent").trim().toUpperCase());
     expect(accent).toBe("#3355EE");
+
+    // Tema revine la culoarea inițială (smoke-ul rulează și pe instanțe reale).
+    await admin.getByTestId("gcs-theme-color-dark-accent").fill(original);
+    await expect(admin.getByTestId("gcs-theme-status")).toHaveText("Draft salvat. Doar tu vezi modificările până la publicare.");
+    await admin.getByTestId("gcs-theme-publish").click();
+    await expect(admin.getByTestId("gcs-theme-status")).toHaveText("Tema a fost publicată pentru toți.");
+    await admin.getByTestId("gcs-theme-editor-close").click();
   });
 });
