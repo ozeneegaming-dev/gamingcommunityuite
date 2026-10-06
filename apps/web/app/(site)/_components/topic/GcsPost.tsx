@@ -4,6 +4,8 @@ import { GcsAvatar, GcsTooltip, GcsUserLink } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { memberHref, postHref, tint } from "@/lib/forum-urls";
+import { postbitVars } from "@/lib/template-data";
+import { siteTemplate } from "@/lib/templates";
 import { GcsTranslateButton, type GcsTranslateLabels } from "../GcsTranslateButton";
 import { GcsPostContent, type GcsPostContentProps } from "./GcsPostContent";
 
@@ -45,7 +47,7 @@ export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, 
       data-post-number={post.number}
     >
       <div className="gcs-post__author gcs-postbit" data-testid="gcs-postbit">
-        {author ? <GcsPostbit author={author} data={postbit} /> : <span className="gcs-muted">—</span>}
+        {author ? <GcsPostbit author={author} data={postbit} post={{ id: post.id, number: post.number }} /> : <span className="gcs-muted">—</span>}
       </div>
       <GcsPostContent
         topicId={topicId}
@@ -106,7 +108,10 @@ function GcsRankIcon({ icon }: { icon: string | null }) {
  * aprecieri) și câmpurile alese din ACP (cu iconițe; „Select cu imagini” arată imaginea); data înscrierii, statusul și
  * motto-ul (ultimul status de pe peretele membrului).
  */
-async function GcsPostbit({ author, data }: { author: NonNullable<GcsPostView["author"]>; data: GcsPostbitData | null }) {
+async function GcsPostbit({ author, data, post }: { author: NonNullable<GcsPostView["author"]>; data: GcsPostbitData | null; post: { id: number; number: number } }) {
+  // Șablonul `postbit.author` (cu `postbit.fields` inclus), dacă tema l-a modificat.
+  const custom = await siteTemplate("postbit.author", postbitVars(author, data, post));
+  if (custom) return custom;
   const t = await getTranslations("topic.author");
   const format = await getFormatter();
   const groupColor = data?.group.color ?? author.groupColor;

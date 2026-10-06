@@ -160,7 +160,8 @@ export function sanitizeStyleAttribute(style: string): string {
   for (const decl of declarations(style)) {
     const colon = decl.indexOf(":");
     if (colon <= 0) continue;
-    const prop = decl.slice(0, colon).trim().toLowerCase();
+    const name = decl.slice(0, colon).trim();
+    const prop = name.startsWith("--") ? name : name.toLowerCase();
     const value = decl.slice(colon + 1).trim();
     if (!PROPERTY_RE.test(prop) || !value || value.length > 500 || FORBIDDEN_STYLE.test(value)) continue;
     // Fiecare `url(` trebuie să fie un `url(...)` complet, spre `https:` sau `/files/`.
@@ -222,6 +223,18 @@ const EMAIL_OPTIONS = options("email");
 /** HTML-ul unui șablon, gata de pus în pagină (`site`) sau într-un email (`email`: plus atributele tabelelor). */
 export function sanitizeTemplateHtml(html: string, mode: "site" | "email" = "site"): string {
   return sanitizeHtml(html, mode === "site" ? SITE_OPTIONS : EMAIL_OPTIONS);
+}
+
+/** Un atribut `style` deja sanitizat → obiect (proprietățile cu numele din CSS: `font-size`, `--gcs-x`). */
+export function parseStyleAttribute(style: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const decl of declarations(style)) {
+    const colon = decl.indexOf(":");
+    if (colon <= 0) continue;
+    const name = decl.slice(0, colon).trim();
+    out[name.startsWith("--") ? name : name.toLowerCase()] = decl.slice(colon + 1).trim();
+  }
+  return out;
 }
 
 // ─── HTML → arbore (pentru React) ────────────────────────────────────────────

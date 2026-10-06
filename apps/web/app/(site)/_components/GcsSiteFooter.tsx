@@ -4,6 +4,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { themeMode } from "@/lib/appearance";
 import { localeOptions } from "@/lib/locales";
 import { services } from "@/lib/services";
+import { siteTemplate } from "@/lib/templates";
 import { setLocale, setThemeMode } from "../actions";
 
 /** Iconițele modurilor temei din footer. */
@@ -11,7 +12,8 @@ const THEME_ICONS = { dark: "fa-solid fa-moon", light: "fa-solid fa-sun", auto: 
 
 /**
  * Footer-ul (specul etapei 5): numele site-ului, linkurile utile, limba și tema (formulare simple, merg și fără
- * JavaScript) și mențiunea produsului, „Powered by GamingCommunitySuite” (specul principal §1.1).
+ * JavaScript) și mențiunea produsului, „Powered by GamingCommunitySuite” (specul principal §1.1). Șablonul
+ * `layout.footer` (ACP → Aspect → Șabloane) poate schimba markup-ul; mențiunea produsului apare oricum.
  */
 export async function GcsSiteFooter() {
   const [t, locale, mode, locales, siteName] = await Promise.all([
@@ -22,6 +24,49 @@ export async function GcsSiteFooter() {
     services().settings.get<string>("site.name"),
   ]);
   const year = new Date().getFullYear();
+  // Formularele (limba, modul) și mențiunea produsului rămân componente React: șablonul le pune prin sloturi.
+  const language = (
+    <form action={setLocale} aria-label={t("language")} className="gcs-seg__group">
+      <span className="gcs-seg__lead" aria-hidden="true">
+        <GcsIcon name="fa-solid fa-language" />
+      </span>
+      {locales.map((l) => (
+        <button
+          key={l.code}
+          type="submit"
+          name="locale"
+          value={l.code}
+          className={l.code === locale ? "gcs-seg gcs-seg--active" : "gcs-seg"}
+          aria-pressed={l.code === locale}
+          lang={l.code}
+          title={l.label}
+        >
+          {l.code.toUpperCase()}
+        </button>
+      ))}
+    </form>
+  );
+  // Comutatorul de mod; tema îl poate ascunde (editorul vizual: „Mod luminos/întunecat”).
+  const scheme = (
+    <form action={setThemeMode} aria-label={t("theme")} className="gcs-seg__group gcs-siteFooter__scheme">
+      {(["dark", "light", "auto"] as const).map((m) => (
+        <button key={m} type="submit" name="mode" value={m} className={m === mode ? "gcs-seg gcs-seg--active" : "gcs-seg"} aria-pressed={m === mode}>
+          <GcsIcon name={THEME_ICONS[m]} />
+          {t(`themes.${m}`)}
+        </button>
+      ))}
+    </form>
+  );
+  const powered = (
+    <p className="gcs-siteFooter__powered">
+      Powered by{" "}
+      <a href="https://gamingcommunitysuite.com" rel="noopener" target="_blank">
+        GamingCommunitySuite
+      </a>
+    </p>
+  );
+  const custom = await siteTemplate("layout.footer", { year }, { language, scheme, powered });
+  if (custom) return custom;
   return (
     <footer className="gcs-siteFooter">
       <div className="gcs-siteFooter__inner">
@@ -46,41 +91,10 @@ export async function GcsSiteFooter() {
           </Link>
         </nav>
         <div className="gcs-siteFooter__prefs">
-          <form action={setLocale} aria-label={t("language")} className="gcs-seg__group">
-            <span className="gcs-seg__lead" aria-hidden="true">
-              <GcsIcon name="fa-solid fa-language" />
-            </span>
-            {locales.map((l) => (
-              <button
-                key={l.code}
-                type="submit"
-                name="locale"
-                value={l.code}
-                className={l.code === locale ? "gcs-seg gcs-seg--active" : "gcs-seg"}
-                aria-pressed={l.code === locale}
-                lang={l.code}
-                title={l.label}
-              >
-                {l.code.toUpperCase()}
-              </button>
-            ))}
-          </form>
-          {/* Comutatorul de mod; tema îl poate ascunde (editorul vizual: „Mod luminos/întunecat”). */}
-          <form action={setThemeMode} aria-label={t("theme")} className="gcs-seg__group gcs-siteFooter__scheme">
-            {(["dark", "light", "auto"] as const).map((m) => (
-              <button key={m} type="submit" name="mode" value={m} className={m === mode ? "gcs-seg gcs-seg--active" : "gcs-seg"} aria-pressed={m === mode}>
-                <GcsIcon name={THEME_ICONS[m]} />
-                {t(`themes.${m}`)}
-              </button>
-            ))}
-          </form>
+          {language}
+          {scheme}
         </div>
-        <p className="gcs-siteFooter__powered">
-          Powered by{" "}
-          <a href="https://gamingcommunitysuite.com" rel="noopener" target="_blank">
-            GamingCommunitySuite
-          </a>
-        </p>
+        {powered}
       </div>
     </footer>
   );

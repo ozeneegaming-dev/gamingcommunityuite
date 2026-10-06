@@ -3,11 +3,18 @@ import { GcsAvatar, GcsUserLink } from "@gcs/ui";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { forumHref, memberHref, tint, topicHref } from "@/lib/forum-urls";
+import { forumRowVars } from "@/lib/template-data";
+import { siteTemplate } from "@/lib/templates";
 import { GcsForumIcon } from "./GcsForumIcon";
 import { GcsRelTime } from "./GcsRelTime";
 
-/** Un forum în listă (macheta Main): icon, nume, descriere, subforumuri, contoare și ultimul mesaj. */
+/**
+ * Un forum în listă (macheta Main): icon, nume, descriere, subforumuri, contoare și ultimul mesaj. Dacă tema a
+ * modificat șablonul `forum.row` (ACP → Aspect → Șabloane), markup-ul vine din el.
+ */
 export async function GcsForumRow({ forum, accent }: { forum: Row; accent: string | null }) {
+  const custom = await siteTemplate("forum.row", forumRowVars(forum, accent));
+  if (custom) return custom;
   const t = await getTranslations("forum");
   const color = forum.color ?? accent ?? "#FF6B74";
   const href = forum.type === "LINK" ? (forum.linkUrl ?? "#") : forumHref(forum);

@@ -4,10 +4,17 @@ import { GcsIcon } from "@gcs/ui/icons";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { memberHref, tagHref, tint, topicHref, unreadHref } from "@/lib/forum-urls";
+import { topicRowVars } from "@/lib/template-data";
+import { siteTemplate } from "@/lib/templates";
 import { GcsRelTime } from "./GcsRelTime";
 
-/** Un topic în listă: prefix, titlu, stări, tag-uri, autor, contoare și ultimul mesaj. */
+/**
+ * Un topic în listă: prefix, titlu, stări, tag-uri, autor, contoare și ultimul mesaj. Cu șablonul `forum.topic_row`
+ * modificat de temă, markup-ul vine din el (bifa moderatorului intră în slotul `select`).
+ */
 export async function GcsTopicRow({ topic, select }: { topic: Row; select?: React.ReactNode }) {
+  const custom = await siteTemplate("forum.topic_row", topicRowVars(topic), { select });
+  if (custom) return custom;
   const t = await getTranslations("forum");
   return (
     <div className="gcs-topicRow" data-testid="gcs-topic-row" data-topic-id={topic.id}>
