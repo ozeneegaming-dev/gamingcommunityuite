@@ -78,9 +78,9 @@ test("etapa 5: header și login în popup → widget-uri și statistici → limb
     await ana.getByRole("link", { name: room.name }).click();
     await expect(ana).toHaveURL(new RegExp(`c=${room.key}`));
     await expect(ana.getByTestId(`gcs-chat-${room.key}`)).toBeVisible();
-    await ana.getByTestId(`gcs-chat-${room.key}`).getByTestId("gcs-chat-input").fill("Caut coechipieri pentru diseară");
+    await ana.getByTestId(`gcs-chat-${room.key}`).getByTestId("gcs-chat-input").fill(`Caut coechipieri pentru diseară ${run}`);
     await ana.getByTestId(`gcs-chat-${room.key}`).getByTestId("gcs-chat-input").press("Enter");
-    await expect(ana.getByTestId("gcs-chat-msg").filter({ hasText: "Caut coechipieri pentru diseară" })).toBeVisible();
+    await expect(ana.getByTestId("gcs-chat-msg").filter({ hasText: `Caut coechipieri pentru diseară ${run}` })).toBeVisible();
 
     await ana.goto(`/members?q=ana5${run}`);
     await expect(ana.getByTestId("gcs-member-card")).toHaveCount(1);
@@ -103,17 +103,22 @@ test("etapa 5: header și login în popup → widget-uri și statistici → limb
     await admin.getByRole("button", { name: "Intră în ACP" }).click();
     await expect(admin).toHaveURL(/\/admin$/);
 
+    // Smoke-ul schimbă accentul paletei întunecate: ambele browsere o folosesc (site-ul poate fi pe „auto” sau luminos).
+    const dark = (p: Page) => p.context().addCookies([{ name: "gcs-theme", value: "dark", url: process.env.GCS_E2E_INSTALL_URL! }]);
+    await Promise.all([dark(admin), dark(page)]);
     await admin.goto("/");
     const original = await admin.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--gcs-accent").trim().toLowerCase());
+    // O culoare diferită de cea curentă (altfel câmpul nu se schimbă și nu apare niciun draft).
+    const test = original === "#3355ee" ? "#33aa55" : "#3355ee";
     await admin.getByTestId("gcs-edit-theme").click();
-    await admin.getByTestId("gcs-theme-color-dark-accent").fill("#3355ee");
+    await admin.getByTestId("gcs-theme-color-dark-accent").fill(test);
     await expect(admin.getByTestId("gcs-theme-status")).toHaveText("Draft salvat. Doar tu vezi modificările până la publicare.");
     await admin.getByTestId("gcs-theme-publish").click();
     await expect(admin.getByTestId("gcs-theme-status")).toHaveText("Tema a fost publicată pentru toți.");
 
     await page.reload();
     const accent = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--gcs-accent").trim().toUpperCase());
-    expect(accent).toBe("#3355EE");
+    expect(accent).toBe(test.toUpperCase());
 
     // Tema revine la culoarea inițială (smoke-ul rulează și pe instanțe reale).
     await admin.getByTestId("gcs-theme-color-dark-accent").fill(original);

@@ -698,3 +698,8 @@
 .gcs-permGrid__row span {
   font-size: 13px;
 }
+
+/* Bara de editare plutește peste colțul din stânga jos: footer-ul lasă loc sub ea, ca nimic să nu fie acoperit. */
+body:has(.gcs-editBar) .gcs-siteFooter__inner {
+  padding-bottom: 76px;
+}
