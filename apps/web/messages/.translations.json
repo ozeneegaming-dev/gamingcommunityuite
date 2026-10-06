@@ -934,7 +934,13 @@
     "translate.hide": "ff628061ddea840c",
     "translate.translated": "6642e6e77e79130e",
     "translate.failed": "9d8fea4169e9e76d",
-    "translate.limited": "0d85ebe10f04be69"
+    "translate.limited": "0d85ebe10f04be69",
+    "site.openMenu": "197101e9db29b481",
+    "site.closeMenu": "6c9fc99089847802",
+    "site.userMenu": "60f5a30c306c0377",
+    "site.moderation": "b4f0dace63ecf0c3",
+    "site.theme": "a797e30923ac1be5",
+    "site.footerNav": "e78050d531fd0de6"
   },
   "es": {
     "site.myProfile": "2f3df0a939fdd38f",
@@ -1870,7 +1876,13 @@
     "translate.hide": "ff628061ddea840c",
     "translate.translated": "6642e6e77e79130e",
     "translate.failed": "9d8fea4169e9e76d",
-    "translate.limited": "0d85ebe10f04be69"
+    "translate.limited": "0d85ebe10f04be69",
+    "site.openMenu": "197101e9db29b481",
+    "site.closeMenu": "6c9fc99089847802",
+    "site.userMenu": "60f5a30c306c0377",
+    "site.moderation": "b4f0dace63ecf0c3",
+    "site.theme": "a797e30923ac1be5",
+    "site.footerNav": "e78050d531fd0de6"
   },
   "fr": {
     "site.myProfile": "2f3df0a939fdd38f",
@@ -2805,7 +2817,13 @@
     "translate.hide": "ff628061ddea840c",
     "translate.translated": "6642e6e77e79130e",
     "translate.failed": "9d8fea4169e9e76d",
-    "translate.limited": "0d85ebe10f04be69"
+    "translate.limited": "0d85ebe10f04be69",
+    "site.openMenu": "197101e9db29b481",
+    "site.closeMenu": "6c9fc99089847802",
+    "site.userMenu": "60f5a30c306c0377",
+    "site.moderation": "b4f0dace63ecf0c3",
+    "site.theme": "a797e30923ac1be5",
+    "site.footerNav": "e78050d531fd0de6"
   },
   "ru": {
     "site.myProfile": "2f3df0a939fdd38f",
@@ -3742,6 +3760,12 @@
     "translate.hide": "ff628061ddea840c",
     "translate.translated": "6642e6e77e79130e",
     "translate.failed": "9d8fea4169e9e76d",
-    "translate.limited": "0d85ebe10f04be69"
+    "translate.limited": "0d85ebe10f04be69",
+    "site.openMenu": "197101e9db29b481",
+    "site.closeMenu": "6c9fc99089847802",
+    "site.userMenu": "60f5a30c306c0377",
+    "site.moderation": "b4f0dace63ecf0c3",
+    "site.theme": "a797e30923ac1be5",
+    "site.footerNav": "e78050d531fd0de6"
   }
 }

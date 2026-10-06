@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
 import { authClient, authErrorKey } from "@/lib/auth-client";
+import { authReturnPath } from "@/lib/auth-return";
 
 type Props = { discordEnabled: boolean; initialError: string | null };
 
@@ -14,9 +15,10 @@ export function LoginForm({ discordEnabled, initialError }: Props) {
   const [error, setError] = useState<string | null>(initialError);
   const [pending, setPending] = useState(false);
 
-  // Navigare completă: header-ul (în layout-ul comun) trebuie randat din nou cu noua sesiune.
+  // Navigare completă: header-ul (în layout-ul comun) trebuie randat din nou cu noua sesiune. Din popup, userul
+  // revine pe pagina de unde l-a deschis.
   function done() {
-    window.location.assign("/");
+    window.location.assign(authReturnPath());
   }
 
   async function onCredentials(e: FormEvent<HTMLFormElement>) {

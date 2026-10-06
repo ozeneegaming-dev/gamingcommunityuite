@@ -25,7 +25,18 @@
     "searchPlaceholder": "Thèmes de recherche, publications…",
     "messages": "Messages",
     "messagesUnread": "{count, plural, one {Messages (conversation sans lecture de #)} many {Messages (conversations sans lecture de #)} other {Messages (conversations sans lecture de #)}}",
-    "settings": "Paramètres du compte"
+    "settings": "Paramètres du compte",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu",
+    "userMenu": "Menu du compte",
+    "moderation": "La file d'attente de la modération",
+    "theme": "Thème",
+    "themes": {
+      "dark": "Sombre",
+      "light": "Clair",
+      "auto": "Automatique"
+    },
+    "footerNav": "Liens utiles"
   },
   "auth": {
     "login": {

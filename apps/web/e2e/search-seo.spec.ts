@@ -22,7 +22,7 @@ test("căutarea fără diacritice, cu fragmente evidențiate și filtrul pe foru
   await expect(results.first().locator("mark").first()).toBeVisible();
 
   await page.getByLabel("Forum", { exact: true }).selectOption({ label: t.forumName });
-  await page.getByRole("button", { name: "Caută", exact: true }).click();
+  await page.getByRole("main").getByRole("button", { name: "Caută", exact: true }).click();
   await expect(results).toHaveCount(1);
   await expect(results.first()).toContainText(`${word} cea nouă`);
   await results.first().getByRole("link", { name: `${word} cea nouă` }).click();

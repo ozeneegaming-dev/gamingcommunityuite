@@ -28,7 +28,8 @@ test("câmpul Țară și accentul ales apar pe profil", async ({ page }) => {
   await page.getByRole("button", { name: "Salvează" }).click();
   await expect(page.getByTestId("gcs-settings-status")).toHaveText("Salvat.");
 
-  await page.getByTestId("gcs-header-user").click();
+  await page.getByTestId("gcs-user-menu").click();
+  await page.getByTestId("gcs-menu-profile").click();
   await expect(page.locator(".gcs-profileField", { hasText: "Țară" })).toContainText("România");
   await expect(page.getByText("„Nu există lag, doar skill issue.”")).toBeVisible();
   expect(await page.getByTestId("gcs-profile-cover").getAttribute("style")).toContain("rgba(61, 220, 151");

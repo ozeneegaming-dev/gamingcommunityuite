@@ -1,0 +1,277 @@
+/* Etapa 5: header-ul (navbar), brand-ul, meniul userului, sertarul de pe mobil și footer-ul. */
+
+.gcs-siteHeader {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--gcs-chrome);
+  border-bottom: 1px solid var(--gcs-border);
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+.gcs-siteHeader--scrolled {
+  background: color-mix(in srgb, var(--gcs-chrome) 82%, transparent);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.25);
+}
+.gcs-siteHeader__inner {
+  max-width: var(--gcs-page-width, 1320px);
+  margin: 0 auto;
+  padding: 8px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 64px;
+}
+.gcs-siteHeader__tools {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Brand: logo-ul temei sau inițiala + numele site-ului. */
+.gcs-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--gcs-text);
+  text-decoration: none;
+  flex: none;
+}
+.gcs-brand__mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--gcs-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: skewX(-12deg);
+}
+.gcs-brand__mark > span {
+  font-family: var(--gcs-font-display);
+  font-weight: 700;
+  font-size: 18px;
+  color: #fff;
+  transform: skewX(12deg);
+}
+.gcs-brand__name {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
+}
+.gcs-brand__logo {
+  display: block;
+  max-height: 42px;
+  max-width: 220px;
+  object-fit: contain;
+}
+
+/* Meniul principal. */
+.gcs-navbar__menu {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+.gcs-navbar__menu .gcs-nav__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+.gcs-navbar__caret {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+/* Căutarea extensibilă. */
+.gcs-headerSearch {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+.gcs-headerSearch__input {
+  width: 0;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--gcs-surface2);
+  color: var(--gcs-text);
+  font: inherit;
+  font-size: 14px;
+  height: 38px;
+  opacity: 0;
+  transition: width 0.2s, opacity 0.2s, padding 0.2s;
+}
+.gcs-headerSearch--open .gcs-headerSearch__input {
+  width: min(260px, 50vw);
+  padding: 0 12px;
+  border-color: var(--gcs-border);
+  opacity: 1;
+}
+
+/* Meniul userului. */
+.gcs-userMenu__trigger {
+  padding-right: 10px !important;
+}
+.gcs-userMenu__name {
+  font-weight: 700;
+  font-size: 14px;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-guestLocale {
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+/* Sertarul de pe mobil. */
+.gcs-mobileNav__open {
+  display: none !important;
+}
+.gcs-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 85;
+  background: rgb(5 6 10 / 0.6);
+}
+.gcs-drawer__panel {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: min(320px, 86vw);
+  padding: 12px;
+  background: var(--gcs-surface);
+  border-right: 1px solid var(--gcs-border);
+  overflow-y: auto;
+  animation: gcs-drawer-in 0.18s ease-out;
+}
+@keyframes gcs-drawer-in {
+  from {
+    transform: translateX(-100%);
+  }
+}
+.gcs-drawer__close {
+  margin-left: auto;
+  display: flex !important;
+}
+.gcs-drawer__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 8px;
+}
+.gcs-drawer__link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  padding: 0 12px;
+  border-radius: 10px;
+  color: var(--gcs-text);
+  font-weight: 600;
+}
+.gcs-drawer__link:hover,
+.gcs-drawer__link--active {
+  background: var(--gcs-surface2);
+}
+.gcs-drawer__sep {
+  border: 0;
+  border-top: 1px solid var(--gcs-border);
+  margin: 8px 0;
+}
+
+/* Footer. */
+.gcs-siteFooter {
+  margin-top: 48px;
+  border-top: 1px solid var(--gcs-border);
+  background: var(--gcs-chrome);
+}
+.gcs-siteFooter__inner {
+  max-width: var(--gcs-page-width, 1320px);
+  margin: 0 auto;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px 24px;
+  align-items: center;
+  color: var(--gcs-muted);
+  font-size: 13px;
+}
+.gcs-siteFooter__brand {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.gcs-siteFooter__brand strong {
+  color: var(--gcs-text);
+  font-size: 18px;
+}
+.gcs-siteFooter__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.gcs-siteFooter__prefs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.gcs-seg__group {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.gcs-siteFooter__powered {
+  margin: 0;
+  justify-self: end;
+}
+.gcs-siteFooter__powered a {
+  font-weight: 700;
+}
+
+@media (max-width: 1024px) {
+  .gcs-navbar__menu {
+    display: none;
+  }
+  .gcs-mobileNav__open {
+    display: inline-flex !important;
+  }
+}
+@media (max-width: 640px) {
+  .gcs-siteHeader__inner {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+  .gcs-brand__name {
+    display: none;
+  }
+  .gcs-siteHeader__auth {
+    padding: 0 10px;
+  }
+  .gcs-userMenu__name {
+    display: none;
+  }
+  .gcs-siteFooter__inner {
+    grid-template-columns: 1fr;
+  }
+  .gcs-siteFooter__powered {
+    justify-self: start;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gcs-drawer__panel {
+    animation: none;
+  }
+  .gcs-headerSearch__input {
+    transition: none;
+  }
+}

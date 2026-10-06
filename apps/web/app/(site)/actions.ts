@@ -4,6 +4,7 @@ import { cookies, headers } from "next/headers";
 import { GCS_LOCALES, LOCALE_COOKIE, type GcsLocale } from "@/i18n";
 import { currentActor } from "@/lib/actor";
 import { isSameOrigin } from "@/lib/actions";
+import { isThemeMode, THEME_COOKIE } from "@/lib/appearance";
 import { services } from "@/lib/services";
 
 /**
@@ -27,5 +28,23 @@ export async function setLocale(formData: FormData): Promise<void> {
   const actor = await currentActor();
   if (actor.userId) {
     await db.$executeRaw`UPDATE users SET prefs = prefs || jsonb_build_object('locale', ${locale as string}::text) WHERE id = ${actor.userId}`;
+  }
+}
+
+/** Schimbă modul temei (dark / light / auto): cookie pentru oricine, plus preferința membrului. */
+export async function setThemeMode(formData: FormData): Promise<void> {
+  if (!isSameOrigin(await headers())) return;
+  const mode = formData.get("mode");
+  if (!isThemeMode(mode)) return;
+  (await cookies()).set(THEME_COOKIE, mode, {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: "lax",
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+  });
+  const actor = await currentActor();
+  if (actor.userId) {
+    await services().db.$executeRaw`UPDATE users SET prefs = prefs || jsonb_build_object('theme', ${mode}::text) WHERE id = ${actor.userId}`;
   }
 }

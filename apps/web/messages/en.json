@@ -25,7 +25,18 @@
     "searchPlaceholder": "Search topics, posts…",
     "messages": "Messages",
     "messagesUnread": "{count, plural, one {Messages (# unread conversation)} other {Messages (# unread conversations)}}",
-    "settings": "Account settings"
+    "settings": "Account settings",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "userMenu": "Account menu",
+    "moderation": "Moderation queue",
+    "theme": "Theme",
+    "themes": {
+      "dark": "Dark",
+      "light": "Light",
+      "auto": "Auto"
+    },
+    "footerNav": "Useful links"
   },
   "auth": {
     "login": {

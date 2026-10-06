@@ -14,6 +14,7 @@
     "./profile.css": "./src/profile.css",
     "./realtime.css": "./src/realtime.css",
     "./controls.css": "./src/controls.css",
+    "./layout.css": "./src/layout.css",
     "./icons": "./src/icons/index.tsx",
     "./icon-registry": "./src/icons/registry.ts"
   },

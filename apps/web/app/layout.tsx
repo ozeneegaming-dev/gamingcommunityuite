@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Chakra_Petch, Manrope } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
+import { themeMode } from "@/lib/appearance";
 import type { ReactNode } from "react";
 import { services } from "@/lib/services";
 import { siteBaseUrl } from "@/lib/seo";
@@ -41,7 +42,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     "0",
   );
   return (
-    <html lang={locale} className={`${display.variable} ${text.variable}`}>
+    <html lang={locale} data-theme={await themeMode()} className={`${display.variable} ${text.variable}`}>
       <head>
         {/* Stilurile de nume și ramele de avatar, generate din ACP (spec §9). */}
         <link rel="stylesheet" href={`/gcs-names.css?v=${version}`} />

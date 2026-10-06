@@ -25,7 +25,18 @@
     "searchPlaceholder": "Caută topicuri, postări…",
     "messages": "Mesaje",
     "messagesUnread": "{count, plural, one {Mesaje (# conversație necitită)} few {Mesaje (# conversații necitite)} other {Mesaje (# de conversații necitite)}}",
-    "settings": "Setări cont"
+    "settings": "Setări cont",
+    "openMenu": "Deschide meniul",
+    "closeMenu": "Închide meniul",
+    "userMenu": "Meniul contului",
+    "moderation": "Coada de moderare",
+    "theme": "Tema",
+    "themes": {
+      "dark": "Întunecată",
+      "light": "Luminoasă",
+      "auto": "Automată"
+    },
+    "footerNav": "Linkuri utile"
   },
   "auth": {
     "login": {

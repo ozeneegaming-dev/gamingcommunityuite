@@ -9,7 +9,7 @@ import { GcsRealtimeProvider } from "./_components/realtime/GcsRealtimeProvider"
 import { currentActor } from "@/lib/actor";
 import { services } from "@/lib/services";
 
-export default async function SiteLayout({ children }: { children: ReactNode }) {
+export default async function SiteLayout({ children, modal }: { children: ReactNode; modal: ReactNode }) {
   const [t, locale, actor] = await Promise.all([getTranslations("hoverCard"), getLocale(), currentActor()]);
   // Conturile create prin Steam au un email placeholder: le cerem unul real (specul etapei 3, §8).
   const email = actor.userId ? (await services().db.user.findUnique({ where: { id: actor.userId }, select: { email: true } }))?.email : null;
@@ -26,6 +26,7 @@ export default async function SiteLayout({ children }: { children: ReactNode }) 
         {children}
       </main>
       <GcsSiteFooter />
+      {modal}
       <GcsHoverCardHost
         locale={locale}
         labels={{

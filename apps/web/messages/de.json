@@ -25,7 +25,18 @@
     "searchPlaceholder": "Suchthemen, Posts…",
     "messages": "Nachrichten",
     "messagesUnread": "{count, plural, one {Nachrichten (# ungelesene Konversation)} other {Nachrichten (# ungelesene Gespräche)}}",
-    "settings": "Kontoeinstellungen"
+    "settings": "Kontoeinstellungen",
+    "openMenu": "Offenes Menü",
+    "closeMenu": "Schließen des Menüs",
+    "userMenu": "Kontostand",
+    "moderation": "Moderationswarteschlange",
+    "theme": "Thema",
+    "themes": {
+      "dark": "Dunkel",
+      "light": "Hell",
+      "auto": "Automatisch"
+    },
+    "footerNav": "Nützliche Links"
   },
   "auth": {
     "login": {

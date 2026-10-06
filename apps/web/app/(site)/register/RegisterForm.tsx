@@ -6,6 +6,7 @@ import Script from "next/script";
 import { useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
 import { authClient, authErrorKey, registerErrorField } from "@/lib/auth-client";
+import { authReturnPath } from "@/lib/auth-return";
 
 type Field = "name" | "email" | "password";
 
@@ -40,7 +41,7 @@ export function RegisterForm({ turnstileSiteKey }: { turnstileSiteKey: string | 
       return;
     }
     // Navigare completă: header-ul (în layout-ul comun) trebuie randat din nou cu noua sesiune.
-    window.location.assign("/");
+    window.location.assign(authReturnPath());
   }
 
   return (

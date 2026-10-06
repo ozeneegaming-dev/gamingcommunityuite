@@ -1,0 +1,248 @@
+"use client";
+
+import { faBars, faChevronDown, faMagnifyingGlass, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { GcsDropdown, GcsIconSvg, type GcsDropdownItem } from "@gcs/ui";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
+import { authClient } from "@/lib/auth-client";
+import { setLocale, setThemeMode } from "../../actions";
+
+/** Un item de meniu gata de afișat (iconița vine randată de pe server). */
+export type GcsNavEntry = { id: number; label: string; href: string; icon: ReactNode; newTab: boolean; children: GcsNavEntry[] };
+
+const isActive = (pathname: string, href: string) => (href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`));
+
+/** Header-ul devine compact și estompat (blur) după primii pixeli de derulare. */
+export function GcsHeaderScroll() {
+  useEffect(() => {
+    const header = document.querySelector<HTMLElement>(".gcs-siteHeader");
+    if (!header) return;
+    const onScroll = () => header.classList.toggle("gcs-siteHeader--scrolled", window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  return null;
+}
+
+/** Meniul principal (desktop): itemii cu submeniu devin dropdown-uri. */
+export function GcsNavLinks({ items, label }: { items: GcsNavEntry[]; label: string }) {
+  const pathname = usePathname();
+  return (
+    <nav aria-label={label} className="gcs-navbar__menu">
+      {items.map((item) =>
+        item.children.length > 0 ? (
+          <GcsDropdown
+            key={item.id}
+            label={item.label}
+            align="start"
+            triggerClassName="gcs-nav__link"
+            trigger={
+              <>
+                {item.icon}
+                <span>{item.label}</span>
+                <GcsIconSvg icon={faChevronDown} className="gcs-navbar__caret" />
+              </>
+            }
+            items={item.children.map<GcsDropdownItem>((c) => ({ kind: "link", label: c.label, href: c.href, icon: c.icon }))}
+          />
+        ) : (
+          <Link
+            key={item.id}
+            href={item.href}
+            className={`gcs-nav__link${isActive(pathname, item.href) ? " gcs-nav__link--active" : ""}`}
+            aria-current={isActive(pathname, item.href) ? "page" : undefined}
+            {...(item.newTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+          >
+            {item.icon}
+            <span>{item.label}</span>
+          </Link>
+        ),
+      )}
+    </nav>
+  );
+}
+
+/** Căutarea din header: o iconiță care se deschide într-un câmp (pe ecranele mici). */
+export function GcsHeaderSearch({ label, placeholder }: { label: string; placeholder: string }) {
+  const [open, setOpen] = useState(false);
+  const input = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (open) input.current?.focus();
+  }, [open]);
+  return (
+    <form action="/search" method="get" role="search" className={`gcs-headerSearch${open ? " gcs-headerSearch--open" : ""}`}>
+      <label htmlFor="gcs-site-search" className="gcs-srOnly">
+        {label}
+      </label>
+      <input
+        ref={input}
+        id="gcs-site-search"
+        name="q"
+        type="search"
+        placeholder={placeholder}
+        className="gcs-headerSearch__input"
+        onBlur={(e) => {
+          if (!e.currentTarget.value) setOpen(false);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") setOpen(false);
+        }}
+      />
+      <button type={open ? "submit" : "button"} className="gcs-headerIcon gcs-headerSearch__button" aria-label={label} onClick={() => !open && setOpen(true)}>
+        <GcsIconSvg icon={faMagnifyingGlass} />
+      </button>
+    </form>
+  );
+}
+
+export type GcsUserMenuLabels = {
+  menu: string;
+  profile: string;
+  messages: string;
+  notifications: string;
+  settings: string;
+  acp: string;
+  moderation: string;
+  theme: string;
+  themes: Record<"dark" | "light" | "auto", string>;
+  language: string;
+  logout: string;
+};
+
+const submit = (action: (fd: FormData) => Promise<void>, name: string, value: string) => {
+  const fd = new FormData();
+  fd.set(name, value);
+  return action(fd);
+};
+
+/** Meniul userului (dropdown): linkurile de bază, ACP / moderare, tema, limba și ieșirea. */
+export function GcsUserMenu({
+  trigger,
+  links,
+  labels,
+  locales,
+  currentTheme,
+  currentLocale,
+}: {
+  trigger: ReactNode;
+  links: { profile: string; acp: boolean; moderation: boolean };
+  labels: GcsUserMenuLabels;
+  locales: { code: string; label: string }[];
+  currentTheme: string;
+  currentLocale: string;
+}) {
+  const router = useRouter();
+  const [, start] = useTransition();
+  const apply = (action: (fd: FormData) => Promise<void>, name: string, value: string) =>
+    start(async () => {
+      await submit(action, name, value);
+      router.refresh();
+    });
+  const items: GcsDropdownItem[] = [
+    { kind: "link", label: labels.profile, href: links.profile, testId: "gcs-menu-profile" },
+    { kind: "link", label: labels.messages, href: "/messages" },
+    { kind: "link", label: labels.notifications, href: "/notifications" },
+    { kind: "link", label: labels.settings, href: "/settings/profile", testId: "gcs-menu-settings" },
+    ...(links.acp || links.moderation ? [{ kind: "separator" } as const] : []),
+    ...(links.acp ? [{ kind: "link", label: labels.acp, href: "/admin", testId: "gcs-menu-acp" } as const] : []),
+    ...(links.moderation ? [{ kind: "link", label: labels.moderation, href: "/admin/members/moderation/queue" } as const] : []),
+    { kind: "separator" },
+    { kind: "heading", label: labels.theme },
+    ...(["dark", "light", "auto"] as const).map<GcsDropdownItem>((mode) => ({
+      kind: "action",
+      label: `${currentTheme === mode ? "✓ " : ""}${labels.themes[mode]}`,
+      onSelect: () => apply(setThemeMode, "mode", mode),
+      testId: `gcs-menu-theme-${mode}`,
+    })),
+    { kind: "heading", label: labels.language },
+    ...locales.map<GcsDropdownItem>((l) => ({
+      kind: "action",
+      label: `${currentLocale === l.code ? "✓ " : ""}${l.label}`,
+      onSelect: () => apply(setLocale, "locale", l.code),
+      testId: `gcs-menu-locale-${l.code}`,
+    })),
+    { kind: "separator" },
+    {
+      kind: "action",
+      label: labels.logout,
+      onSelect: () =>
+        start(async () => {
+          await authClient.signOut();
+          window.location.assign("/");
+        }),
+      testId: "gcs-menu-logout",
+    },
+  ];
+  return <GcsDropdown label={labels.menu} trigger={trigger} items={items} triggerClassName="gcs-userMenu__trigger" testId="gcs-user-menu" />;
+}
+
+/** Selectorul de limbă și temă pentru vizitatori (în header și în footer). */
+export function GcsGuestPrefs({ locales, currentLocale, labels }: { locales: { code: string; label: string }[]; currentLocale: string; labels: { language: string } }) {
+  const router = useRouter();
+  const [, start] = useTransition();
+  return (
+    <GcsDropdown
+      label={labels.language}
+      trigger={<span className="gcs-guestLocale">{currentLocale.toUpperCase()}</span>}
+      items={locales.map((l) => ({
+        kind: "action",
+        label: `${currentLocale === l.code ? "✓ " : ""}${l.label}`,
+        onSelect: () =>
+          start(async () => {
+            await submit(setLocale, "locale", l.code);
+            router.refresh();
+          }),
+        testId: `gcs-guest-locale-${l.code}`,
+      }))}
+      testId="gcs-guest-locale"
+    />
+  );
+}
+
+/** Meniul de pe mobil: un sertar lateral cu meniul principal și linkurile contului. */
+export function GcsMobileNav({ items, extra, labels }: { items: GcsNavEntry[]; extra: { href: string; label: string }[]; labels: { open: string; close: string; menu: string } }) {
+  const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const panel = useRef<HTMLDivElement>(null);
+  useEffect(() => setOpen(false), [pathname]);
+  useEffect(() => {
+    if (!open) return;
+    panel.current?.querySelector<HTMLElement>("a, button")?.focus();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+  const flat = items.flatMap((i) => (i.children.length > 0 ? i.children : [i]));
+  return (
+    <>
+      <button type="button" className="gcs-headerIcon gcs-mobileNav__open" aria-label={labels.open} aria-expanded={open} onClick={() => setOpen(true)} data-testid="gcs-mobile-nav">
+        <GcsIconSvg icon={faBars} />
+      </button>
+      {open && (
+        <div className="gcs-drawer" onMouseDown={(e) => e.target === e.currentTarget && setOpen(false)}>
+          <div ref={panel} className="gcs-drawer__panel" role="dialog" aria-modal="true" aria-label={labels.menu}>
+            <button type="button" className="gcs-headerIcon gcs-drawer__close" aria-label={labels.close} onClick={() => setOpen(false)}>
+              <GcsIconSvg icon={faXmark} />
+            </button>
+            <nav aria-label={labels.menu} className="gcs-drawer__nav">
+              {flat.map((i) => (
+                <Link key={i.id} href={i.href} className={`gcs-drawer__link${isActive(pathname, i.href) ? " gcs-drawer__link--active" : ""}`}>
+                  {i.icon}
+                  <span>{i.label}</span>
+                </Link>
+              ))}
+              {extra.length > 0 && <hr className="gcs-drawer__sep" />}
+              {extra.map((e) => (
+                <Link key={e.href} href={e.href} className="gcs-drawer__link">
+                  <span>{e.label}</span>
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
