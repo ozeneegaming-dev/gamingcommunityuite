@@ -1,8 +1,9 @@
 import { STEAM_PLACEHOLDER_DOMAIN } from "@gcs/modules";
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { GcsEditMode } from "./_components/edit/GcsEditMode";
+import { GcsNavProgress } from "./_components/GcsNavProgress";
 import { GcsHoverCardHost } from "./_components/GcsHoverCardHost";
 import { GcsSiteFooter } from "./_components/GcsSiteFooter";
 import { GcsSiteHeader } from "./_components/GcsSiteHeader";
@@ -19,6 +20,10 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
   const [tb, alerts, tc] = await Promise.all([getTranslations("settings.account"), alertPrefs(actor.userId), getTranslations("site")]);
   return (
     <GcsRealtimeProvider>
+      {/* `useSearchParams` cere un Suspense: bara nu blochează randarea paginii. */}
+      <Suspense fallback={null}>
+        <GcsNavProgress />
+      </Suspense>
       <GcsSiteHeader />
       <main style={{ maxWidth: "var(--gcs-page-width, 1320px)", margin: "0 auto", padding: 24, display: "flex", flexDirection: "column", gap: 24 }}>
         {email?.endsWith(STEAM_PLACEHOLDER_DOMAIN) && (

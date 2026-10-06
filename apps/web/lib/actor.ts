@@ -1,6 +1,7 @@
 import "server-only";
 import type { GcsActor } from "@gcs/core";
 import { headers } from "next/headers";
+import { cache } from "react";
 import { getAuth } from "./auth";
 import { services } from "./services";
 
@@ -27,8 +28,12 @@ function rawSessionToken(cookieHeader: string | null): string | undefined {
   return undefined;
 }
 
-/** Actorul request-ului curent: sesiunea validată de Better Auth, apoi grupurile și bannurile (`getActor`). */
-export async function currentActor(): Promise<GcsActor> {
+/**
+ * Actorul request-ului curent: sesiunea validată de Better Auth, apoi grupurile și bannurile (`getActor`).
+ * Calculat o singură dată pe request (`cache`): layout-ul, header-ul, pagina și widget-urile îl cer fiecare, iar
+ * fiecare calcul înseamnă sesiunea, două verificări de ban și prezența (zeci de interogări repetate altfel).
+ */
+export const currentActor = cache(async (): Promise<GcsActor> => {
   const h = await headers();
   const auth = await getAuth();
   const session = await auth.api.getSession({ headers: h });
@@ -40,4 +45,4 @@ export async function currentActor(): Promise<GcsActor> {
     if (stale) req.staleSessionToken = stale;
   }
   return services().actors.getActor(req);
-}
+});

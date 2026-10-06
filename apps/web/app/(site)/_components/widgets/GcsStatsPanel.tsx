@@ -1,4 +1,4 @@
-import { groupLegend, whoWasOnline } from "@gcs/modules";
+import { groupLegend, whoWasOnline, type GcsLegendGroup, type GcsWhoWasOnline } from "@gcs/modules";
 import { GcsUserLink } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import Link from "next/link";
@@ -8,9 +8,29 @@ import { onlineView } from "@/lib/online";
 import { services } from "@/lib/services";
 import { GcsWhoIsOnline } from "../forum/GcsWhoIsOnline";
 
+/** „Cine a fost online” (24 h): lista e aceeași pentru toți vizitatorii, deci se calculează cel mult o dată pe minut. */
+async function cachedWhoWasOnline(): Promise<GcsWhoWasOnline> {
+  const { cache, db } = services();
+  const hit = await cache.get<GcsWhoWasOnline>("stats:who-was-online");
+  if (hit) return hit;
+  const view = await whoWasOnline(db);
+  await cache.set("stats:who-was-online", view, { ttlSec: 60, tags: ["stats"] });
+  return view;
+}
+
+/** Legenda grupurilor (se schimbă doar din ACP: tag-ul `name-styles` o invalidează la orice schimbare de grup). */
+async function cachedLegend(): Promise<GcsLegendGroup[]> {
+  const { cache, db } = services();
+  const hit = await cache.get<GcsLegendGroup[]>("stats:group-legend");
+  if (hit) return hit;
+  const legend = await groupLegend(db);
+  await cache.set("stats:group-legend", legend, { ttlSec: 600, tags: ["name-styles"] });
+  return legend;
+}
+
 /** „Cine a fost online” (24 h), lista cu numele stilizate. */
 export async function GcsWhoWasOnline({ id }: { id: string }) {
-  const [t, view] = await Promise.all([getTranslations("stats"), whoWasOnline(services().db)]);
+  const [t, view] = await Promise.all([getTranslations("stats"), cachedWhoWasOnline()]);
   return (
     <section className="gcs-card gcs-sideCard gcs-widget" aria-labelledby={`gcs-widget-${id}`} data-widget="core.onlineDay" data-testid="gcs-who-was-online">
       <h2 id={`gcs-widget-${id}`} className="gcs-display gcs-sideCard__title">
@@ -33,7 +53,7 @@ export async function GcsWhoWasOnline({ id }: { id: string }) {
 
 /** Legenda grupurilor: numele în stilul grupului, cu iconița lui. */
 export async function GcsGroupLegend({ id }: { id: string }) {
-  const [t, groups] = await Promise.all([getTranslations("stats"), groupLegend(services().db)]);
+  const [t, groups] = await Promise.all([getTranslations("stats"), cachedLegend()]);
   return (
     <section className="gcs-card gcs-sideCard gcs-widget" aria-labelledby={`gcs-widget-${id}`} data-widget="core.groupLegend" data-testid="gcs-group-legend">
       <h2 id={`gcs-widget-${id}`} className="gcs-display gcs-sideCard__title">
@@ -56,7 +76,7 @@ export async function GcsGroupLegend({ id }: { id: string }) {
  * și plăcile aplicațiilor active), „Cine e online”, „Cine a fost online” (24 h) și legenda grupurilor.
  */
 export async function GcsStatsPanel({ id }: { id: string }) {
-  const { stats, forumQueries, db } = services();
+  const { stats, forumQueries } = services();
   const [t, tAll, format, locale, tiles, community, online, day, legend, tOnline] = await Promise.all([
     getTranslations("stats"),
     getTranslations(),
@@ -65,8 +85,8 @@ export async function GcsStatsPanel({ id }: { id: string }) {
     stats.tiles(),
     forumQueries.stats(),
     onlineView(),
-    whoWasOnline(db),
-    groupLegend(db),
+    cachedWhoWasOnline(),
+    cachedLegend(),
     getTranslations("online"),
   ]);
   const label = (key: string) => (tAll.has(key) ? tAll(key) : key);
