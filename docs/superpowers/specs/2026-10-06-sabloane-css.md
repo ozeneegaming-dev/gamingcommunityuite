@@ -139,9 +139,10 @@ primește HTML-ul sanitizat din API și pune acțiunile în slot printr-un porta
 
 ### Export / import
 
-Exportul unei teme: un `.zip` cu `theme.json` (cheie, nume, setări, logo/favicon ca URL-uri), `css/<nume>.css` și
-`templates/<cheie>.liquid`. Importul creează o temă nouă (cheie nouă) din arhivă, cu aceleași validări (setări,
-CSS sanitizat, șabloane parsate, limite de mărime și de căi).
+Lăsat pentru o etapă următoare (prioritatea proprietarului: viteza). Forma propusă: un `.zip` cu `theme.json`
+(nume, setări, logo/favicon, ordinea CSS-ului, versiunile originalelor șabloanelor), `css/<nume>.css` și
+`templates/<cheie>.liquid`; importul creează o temă nouă, cu aceleași validări ca editoarele și limite de mărime,
+număr de fișiere și căi verificate înainte de decompresie.
 
 ### Teme copil
 
