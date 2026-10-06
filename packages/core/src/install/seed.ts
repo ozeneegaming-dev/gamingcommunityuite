@@ -11,6 +11,8 @@ type DefaultGroup = {
   isProtected: boolean;
   isVip?: boolean;
   color?: string;
+  /** Iconița Font Awesome a grupului (legenda, postbit-ul, lista staff-ului). */
+  icon?: string;
   nameStyle?: GcsNameStyle;
 };
 
@@ -19,18 +21,19 @@ type DefaultGroup = {
  * Grupurile implicite sunt protejate (nu se pot șterge); VIP-urile pot fi șterse din ACP.
  */
 export const DEFAULT_GROUPS: DefaultGroup[] = [
-  { key: "root_admin", name: "Root Admin", isProtected: true, color: "#FF4D57", nameStyle: { color: "#FF4D57", glow: "#FF4D57", bold: true } },
-  { key: "admin", name: "Admin", isProtected: true, color: "#FF4D57", nameStyle: { color: "#FF4D57", glow: "#FF4D57", bold: true } },
-  { key: "super_moderator", name: "Super Moderator", isProtected: true, color: "#5EA2FF", nameStyle: { color: "#5EA2FF", bold: true } },
-  { key: "moderator", name: "Moderator", isProtected: true, color: "#5EA2FF", nameStyle: { color: "#5EA2FF", bold: true } },
-  { key: "member", name: "Membru", isProtected: true, color: "#ECEDF1", nameStyle: { color: "#ECEDF1" } },
-  { key: "new_member", name: "Membru nou", isProtected: true, color: "#A1A7B4", nameStyle: { color: "#A1A7B4" } },
-  { key: "banned", name: "Banat", isProtected: true, color: "#6B7280", nameStyle: { color: "#6B7280" } },
-  { key: "guest", name: "Vizitator", isProtected: true, color: "#A1A7B4", nameStyle: { color: "#A1A7B4" } },
-  { key: "vip_bronze", name: "VIP Bronze", isProtected: false, isVip: true, color: "#CD7F32", nameStyle: { color: "#CD7F32", bold: true } },
-  { key: "vip_silver", name: "VIP Silver", isProtected: false, isVip: true, color: "#D8DFEA", nameStyle: { color: "#D8DFEA", glow: "#D8DFEA", bold: true } },
+  { key: "root_admin", name: "Root Admin", icon: "fa-solid fa-crown", isProtected: true, color: "#FF4D57", nameStyle: { color: "#FF4D57", glow: "#FF4D57", bold: true } },
+  { key: "admin", name: "Admin", icon: "fa-solid fa-shield-halved", isProtected: true, color: "#FF4D57", nameStyle: { color: "#FF4D57", glow: "#FF4D57", bold: true } },
+  { key: "super_moderator", name: "Super Moderator", icon: "fa-solid fa-user-shield", isProtected: true, color: "#5EA2FF", nameStyle: { color: "#5EA2FF", bold: true } },
+  { key: "moderator", name: "Moderator", icon: "fa-solid fa-shield", isProtected: true, color: "#5EA2FF", nameStyle: { color: "#5EA2FF", bold: true } },
+  { key: "member", name: "Membru", icon: "fa-solid fa-user", isProtected: true, color: "#ECEDF1", nameStyle: { color: "#ECEDF1" } },
+  { key: "new_member", name: "Membru nou", icon: "fa-solid fa-seedling", isProtected: true, color: "#A1A7B4", nameStyle: { color: "#A1A7B4" } },
+  { key: "banned", name: "Banat", icon: "fa-solid fa-ban", isProtected: true, color: "#6B7280", nameStyle: { color: "#6B7280" } },
+  { key: "guest", name: "Vizitator", icon: "fa-solid fa-user-secret", isProtected: true, color: "#A1A7B4", nameStyle: { color: "#A1A7B4" } },
+  { key: "vip_bronze", name: "VIP Bronze", icon: "fa-solid fa-medal", isProtected: false, isVip: true, color: "#CD7F32", nameStyle: { color: "#CD7F32", bold: true } },
+  { key: "vip_silver", name: "VIP Silver", icon: "fa-solid fa-gem", isProtected: false, isVip: true, color: "#D8DFEA", nameStyle: { color: "#D8DFEA", glow: "#D8DFEA", bold: true } },
   {
     key: "vip_gold",
+    icon: "fa-solid fa-crown",
     name: "VIP Gold",
     isProtected: false,
     isVip: true,
@@ -39,6 +42,7 @@ export const DEFAULT_GROUPS: DefaultGroup[] = [
   },
   {
     key: "vip_legend",
+    icon: "fa-solid fa-dragon",
     name: "VIP Legend",
     isProtected: false,
     isVip: true,
@@ -75,6 +79,7 @@ export async function seedDefaults(db: PrismaClient, registry: GcsModuleRegistry
           isProtected: g.isProtected,
           isVip: g.isVip ?? false,
           color: g.color ?? null,
+          icon: g.icon ?? null,
           nameStyle: (g.nameStyle ?? undefined) as Prisma.InputJsonValue | undefined,
           position,
         },

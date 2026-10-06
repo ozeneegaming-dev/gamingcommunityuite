@@ -239,6 +239,7 @@ a.gcs-statsTile__inner:focus-visible {
 .gcs-statsTile__value {
   font: 700 19px var(--gcs-font-display);
   line-height: 1.1;
+  color: var(--gcs-text);
 }
 .gcs-statsTile__label {
   font-size: 11px;
