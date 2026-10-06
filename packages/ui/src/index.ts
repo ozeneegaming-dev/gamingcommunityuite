@@ -9,3 +9,9 @@ export { GcsHoverCard, GcsProfileBadge, type GcsHoverCardData, type GcsHoverCard
 export { GcsField, type GcsFieldProps } from "./components/GcsField";
 export { GcsTable, type GcsTableColumn, type GcsTableProps } from "./components/GcsTable";
 export { GcsUserLink, type GcsUserLinkProps } from "./components/GcsUserLink";
+export { GcsDropdown, type GcsDropdownItem, type GcsDropdownProps } from "./components/GcsDropdown";
+export { GcsIconPicker, type GcsIconPickerMatch, type GcsIconPickerProps } from "./components/GcsIconPicker";
+export { GcsModal, type GcsModalProps } from "./components/GcsModal";
+export { dismissToast, gcsToast, GcsToastHost, playNotificationSound, type GcsToastInput } from "./components/GcsToast";
+export { GcsTooltip, type GcsTooltipProps } from "./components/GcsTooltip";
+export { GcsIconSvg, type GcsIconSvgProps } from "./icons/svg";

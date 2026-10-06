@@ -1,0 +1,381 @@
+/*
+ * Etapa 5: controalele formularelor pe tema închisă (fără alb pe dark), tooltip-uri, modal, dropdown, toast-uri,
+ * iconițe și selectorul de iconițe.
+ */
+
+:root {
+  color-scheme: dark;
+  accent-color: var(--gcs-accent);
+}
+[data-theme="light"] {
+  color-scheme: light;
+}
+@media (prefers-color-scheme: light) {
+  [data-theme="auto"] {
+    color-scheme: light;
+  }
+}
+
+/* Checkbox și radio în culorile temei. */
+input[type="checkbox"],
+input[type="radio"] {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex: none;
+  display: inline-grid;
+  place-content: center;
+  border: 1.5px solid var(--gcs-border);
+  background: var(--gcs-surface2);
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+input[type="checkbox"] {
+  border-radius: 5px;
+}
+input[type="radio"] {
+  border-radius: 50%;
+}
+input[type="checkbox"]::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  background: #fff;
+  transform: scale(0);
+  transition: transform 0.12s;
+}
+input[type="radio"]::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  transform: scale(0);
+  transition: transform 0.12s;
+}
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+  background: var(--gcs-accent);
+  border-color: var(--gcs-accent);
+}
+input[type="checkbox"]:checked::before,
+input[type="radio"]:checked::before {
+  transform: scale(1);
+}
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible {
+  outline: 2px solid var(--gcs-accentInk);
+  outline-offset: 2px;
+}
+input[type="checkbox"]:disabled,
+input[type="radio"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+select,
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="number"],
+input[type="search"] {
+  color-scheme: inherit;
+}
+select option {
+  background: var(--gcs-surface);
+  color: var(--gcs-text);
+}
+
+/* Scrollbar-uri discrete. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--gcs-border) transparent;
+}
+
+/* Iconițele Font Awesome inline. */
+.gcs-icon {
+  display: inline-block;
+  vertical-align: -0.125em;
+  flex: none;
+}
+
+/* Tooltip. */
+.gcs-tooltipWrap {
+  position: relative;
+  display: inline-flex;
+}
+.gcs-tooltip {
+  position: absolute;
+  left: 50%;
+  z-index: 70;
+  transform: translateX(-50%);
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #05060a;
+  color: #f2f3f6;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.4);
+}
+.gcs-tooltip--top {
+  bottom: calc(100% + 8px);
+}
+.gcs-tooltip--bottom {
+  top: calc(100% + 8px);
+}
+
+/* Modal. */
+.gcs-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgb(5 6 10 / 0.72);
+  backdrop-filter: blur(4px);
+}
+.gcs-modal__dialog {
+  width: 100%;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  background: var(--gcs-surface);
+  border: 1px solid var(--gcs-border);
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.5);
+  outline: none;
+}
+.gcs-modal__dialog--sm {
+  max-width: 420px;
+}
+.gcs-modal__dialog--md {
+  max-width: 560px;
+}
+.gcs-modal__dialog--lg {
+  max-width: 860px;
+}
+.gcs-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px 0;
+}
+.gcs-modal__title {
+  margin: 0;
+  font-size: 22px;
+}
+.gcs-modal__close {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--gcs-muted);
+  cursor: pointer;
+}
+.gcs-modal__close:hover {
+  background: var(--gcs-surface2);
+  color: var(--gcs-text);
+}
+.gcs-modal__body {
+  padding: 16px 20px 20px;
+}
+
+/* Dropdown. */
+.gcs-dropdown {
+  position: relative;
+  display: inline-flex;
+}
+.gcs-dropdown__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--gcs-text);
+  font: inherit;
+  cursor: pointer;
+}
+.gcs-dropdown__trigger:hover,
+.gcs-dropdown__trigger[aria-expanded="true"] {
+  background: var(--gcs-surface2);
+}
+.gcs-dropdown__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  z-index: 60;
+  min-width: 230px;
+  padding: 6px;
+  background: var(--gcs-surface);
+  border: 1px solid var(--gcs-border);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgb(0 0 0 / 0.45);
+}
+.gcs-dropdown__menu--end {
+  right: 0;
+}
+.gcs-dropdown__menu--start {
+  left: 0;
+}
+.gcs-dropdown__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gcs-text);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+.gcs-dropdown__item:hover,
+.gcs-dropdown__item:focus-visible {
+  background: var(--gcs-surface2);
+  outline: none;
+}
+.gcs-dropdown__icon {
+  width: 18px;
+  display: inline-flex;
+  justify-content: center;
+  color: var(--gcs-muted);
+}
+.gcs-dropdown__separator {
+  height: 1px;
+  margin: 6px 4px;
+  background: var(--gcs-border);
+}
+.gcs-dropdown__heading {
+  padding: 8px 10px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gcs-muted);
+}
+
+/* Toast-uri. */
+.gcs-toastHost {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(360px, calc(100vw - 32px));
+}
+.gcs-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  background: var(--gcs-surface);
+  border: 1px solid var(--gcs-border);
+  border-left: 3px solid var(--gcs-accent);
+  border-radius: 12px;
+  box-shadow: 0 14px 36px rgb(0 0 0 / 0.45);
+  animation: gcs-toast-in 0.2s ease-out;
+}
+@keyframes gcs-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.gcs-toast__main {
+  flex: 1;
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px 4px 12px 14px;
+  color: var(--gcs-text);
+}
+.gcs-toast__icon {
+  flex: none;
+}
+.gcs-toast__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.gcs-toast__title {
+  font-size: 14px;
+}
+.gcs-toast__body {
+  font-size: 13px;
+  color: var(--gcs-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-toast__close {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  margin: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gcs-muted);
+  cursor: pointer;
+}
+
+/* Selectorul de iconițe. */
+.gcs-iconPicker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gcs-iconPicker__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.gcs-iconPicker__item {
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--gcs-border);
+  border-radius: 8px;
+  background: var(--gcs-surface2);
+  color: var(--gcs-text);
+  cursor: pointer;
+}
+.gcs-iconPicker__item[aria-selected="true"] {
+  border-color: var(--gcs-accent);
+  background: rgb(214 40 57 / 0.15);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gcs-toast {
+    animation: none;
+  }
+  input[type="checkbox"]::before,
+  input[type="radio"]::before {
+    transition: none;
+  }
+}
