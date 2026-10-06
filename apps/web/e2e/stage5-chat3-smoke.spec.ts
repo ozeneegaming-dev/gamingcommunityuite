@@ -31,6 +31,8 @@ async function chatUser(browser: Browser, name: string, ip: string, group: strin
   await useFreshIp(context, ip);
   const page = await context.newPage();
   await register(page, name, `${name.toLowerCase()}@example.com`);
+  // Înregistrarea se termină cu o redirecționare: așteptăm header-ul logat înainte de altă navigare.
+  await expect(page.getByTestId("gcs-header-user")).toHaveText(name);
   await installSql(`UPDATE users SET "primaryGroupId" = (SELECT id FROM groups WHERE key = $2) WHERE name = $1`, [name, group]);
   await installSql(`UPDATE system_state SET "permVersion" = "permVersion" + 1 WHERE id = 1`);
   await page.goto("/chat");
