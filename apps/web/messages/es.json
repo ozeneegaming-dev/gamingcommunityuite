@@ -174,7 +174,11 @@
       "gaming": "Gaming",
       "pages": "Páginas",
       "stats": "Estadísticas",
-      "appearance": "Apariencia"
+      "appearance": "Apariencia",
+      "title": "Aplicaciones",
+      "hint": "Una aplicación discapacitada desaparece del menú, widgets y estadísticas, y sus páginas responden con 404.",
+      "enabled": "Activado",
+      "save": "Guardar"
     },
     "appsNav": "Aplicaciones ACP",
     "submenuNav": "Menú {app}",
@@ -486,6 +490,14 @@
         "none": "No conocidos IPs",
         "shared": "Cuentas que comparten la misma IP",
         "sharedNone": "No hay otras cuentas en estos IPs"
+      },
+      "perms": {
+        "title": "Autorizaciones individuales",
+        "hint": "Reemplazan los valores del grupo únicamente para este miembro (por ejemplo, “Crear salas de chat privados”). “Inhered” = el valor del grupo.",
+        "save": "Guardar permisos",
+        "inherit": "Heredado",
+        "allow": "Sí",
+        "deny": "No"
       }
     },
     "groups": {
@@ -540,6 +552,17 @@
         "body": "Los miembros con este grupo primario se trasladan a “Member”.",
         "submit": "Grupo Suprímase",
         "protected": "No se pueden eliminar los grupos por defecto."
+      },
+      "look": {
+        "title": "Postbit y leyenda",
+        "icon": "Icono de grupo",
+        "iconSearch": "Buscar un icono",
+        "iconNone": "No hay icono",
+        "iconNoResults": "No hay iconos encontrados.",
+        "banner": "Postbit banner",
+        "bannerHint": "Un color (#D62839) o un gradiente entre dos colores.",
+        "inLegend": "Shown in the group legend",
+        "save": "Guardar"
       }
     },
     "permissions": {
@@ -1006,12 +1029,72 @@
       "allChannels": "todos los canales",
       "until": "hasta {date}",
       "permanent": "permanente",
-      "lift": "Levantar"
+      "lift": "Levantar",
+      "private": "Privado",
+      "owner": "creado por {name}",
+      "announcements": "Anuncios mundiales",
+      "noAnnouncements": "No hay anuncios activos.",
+      "noExpiry": "hasta que se retire"
     },
     "notifications": {
       "title": "Notificaciones",
       "hint": "Valores predeterminados para cada tipo de notificación. Los miembros pueden cambiarlos en Ajustes → Notificaciones.",
       "save": "Guardar"
+    },
+    "themes": {
+      "title": "Temas",
+      "hint": "Colores, fuentes, logotipo y el resto se editan directamente en el sitio, con una vista previa; aquí usted maneja los temas, el predeterminado y los activos.",
+      "default": "Predeterminado",
+      "draft": "Cambios no publicados",
+      "name": "Nombre",
+      "key": "Clave",
+      "enabled": "Activo (los miembros pueden elegirlo)",
+      "isDefault": "Tema predeterminado",
+      "save": "Guardar",
+      "editOnSite": "Editar en el sitio",
+      "delete": "Eliminar",
+      "confirmDelete": "Eliminar este tema? Los miembros que lo utilizaron verán el tema predeterminado.",
+      "create": "Nuevo tema",
+      "copyFrom": "Copied from",
+      "fromDefaults": "Valores predeterminados"
+    },
+    "widgetsAdmin": {
+      "title": "Widgets",
+      "hint": "Los Widgets se organizan directamente en el sitio con “Editar página”. Aquí usted ve cuántos cada página tiene y puede volver a los predeterminados.",
+      "editOnSite": "Editar en el sitio"
+    },
+    "menuManager": {
+      "title": "Menu manager",
+      "hint": "El menú principal del sitio: orden, etiquetas por idioma, iconos y quién puede ver cada artículo.",
+      "add": "Add item",
+      "addChild": "Add sub-item",
+      "label": "Etiqueta",
+      "autoLabel": "Automático: {label} (llene sólo si desea texto diferente)",
+      "href": "Enlace",
+      "icon": "Icono",
+      "iconSearch": "Buscar un icono",
+      "iconNone": "No hay icono",
+      "iconNoResults": "No hay iconos encontrados.",
+      "groups": "Visible a",
+      "groupsHint": "Nada cosquillado = todos.",
+      "newTab": "Se abre en una nueva pestaña",
+      "enabled": "Activado",
+      "up": "Arriba",
+      "down": "Abajo",
+      "remove": "Quitar",
+      "save": "Guardar el menú",
+      "saved": "El menú ha sido guardado.",
+      "newItem": "Nuevo artículo"
+    },
+    "languages": {
+      "title": "Idiomas activos",
+      "status": "Servicio de traducción",
+      "statuses": {
+        "off": "apagado",
+        "ok": "de trabajo",
+        "error": "no responder"
+      },
+      "save": "Guardar idiomas"
     }
   },
   "settings": {

@@ -1,5 +1,6 @@
 "use server";
 
+import { GcsNotFound } from "@gcs/core";
 import * as z from "zod";
 import { gcsAction } from "@/lib/actions";
 import { services } from "@/lib/services";
@@ -7,15 +8,22 @@ import { services } from "@/lib/services";
 // Cheile camerelor create de membri au un sufix aleator (până la 27 de caractere).
 const channel = z.string().min(2).max(40);
 
+/** Aplicația Chat dezactivată din ACP: acțiunile chat-ului nu mai funcționează („nu există”). */
+async function assertChatEnabled(): Promise<void> {
+  if (!(await services().apps.enabled("chat"))) throw new GcsNotFound();
+}
+
 /** Trimite un mesaj în chat. Întoarce mesajul salvat (cu HTML-ul randat). */
-export const sendChatMessage = gcsAction(z.object({ channel, body: z.string().min(1).max(2000) }), async ({ channel, body }, { actor }) =>
-  services().chat.send(actor, channel, body),
-);
+export const sendChatMessage = gcsAction(z.object({ channel, body: z.string().min(1).max(2000) }), async ({ channel, body }, { actor }) => {
+  await assertChatEnabled();
+  return services().chat.send(actor, channel, body);
+});
 
 /** Ultimele mesaje ale canalului sau cele dinaintea lui `before` (derularea în sus, reîncărcarea fără live). */
-export const loadChatMessages = gcsAction(z.object({ channel, before: z.number().int().positive().optional() }), async ({ channel, before }, { actor }) =>
-  services().chatQueries.history(actor, channel, before ?? null),
-);
+export const loadChatMessages = gcsAction(z.object({ channel, before: z.number().int().positive().optional() }), async ({ channel, before }, { actor }) => {
+  await assertChatEnabled();
+  return services().chatQueries.history(actor, channel, before ?? null);
+});
 
 export const deleteChatMessage = gcsAction(z.object({ id: z.number().int().positive() }), async ({ id }, { actor }) => {
   await services().chat.delete(actor, id);
@@ -65,6 +73,7 @@ export const removeChatAnnouncement = gcsAction(z.object({ id: z.number().int().
 export const createChatRoom = gcsAction(
   z.object({ name: z.string().min(2).max(50), type: z.enum(["PUBLIC", "PRIVATE"]), invite: z.array(z.string().min(1).max(40)).max(50) }),
   async ({ name, type, invite }, { actor }) => {
+    await assertChatEnabled();
     const room = await services().chat.createRoom(actor, { name, type, invite });
     return { key: room.key };
   },

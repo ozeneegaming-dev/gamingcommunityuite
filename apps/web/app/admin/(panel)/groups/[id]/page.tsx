@@ -1,5 +1,5 @@
 import type { GcsNameStyle } from "@gcs/core";
-import { GcsCard } from "@gcs/ui";
+import { GcsCard, GcsIconPicker } from "@gcs/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -8,7 +8,7 @@ import type { ReactNode } from "react";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
-import { deleteGroup, updateGroupDetails, updateGroupSettings, updateGroupStyle } from "../actions";
+import { deleteGroup, updateGroupDetails, updateGroupLook, updateGroupSettings, updateGroupStyle } from "../actions";
 import { NameStyleEditor } from "./NameStyleEditor";
 
 type Props = { params: Promise<{ id: string }> };
@@ -79,6 +79,24 @@ export default async function AcpGroupPage({ params }: Props) {
               <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, minHeight: 36 }}>
                 <input type="checkbox" name="isVip" defaultChecked={group.isVip} style={checkbox} />
                 {t("details.isVip")}
+              </label>
+            </GcsActionForm>
+          </Section>
+
+          <Section title={t("look.title")}>
+            <GcsActionForm action={updateGroupLook.bind(null, group.id)} submitLabel={t("look.save")}>
+              <div className="gcs-field" role="group" aria-label={t("look.icon")}>
+                <span>{t("look.icon")}</span>
+                <GcsIconPicker name="icon" value={group.icon} searchUrl="/api/icons/search" labels={{ search: t("look.iconSearch"), none: t("look.iconNone"), noResults: t("look.iconNoResults") }} />
+              </div>
+              <label className="gcs-field">
+                {t("look.banner")}
+                <input className="gcs-input" name="banner" defaultValue={group.banner ?? ""} maxLength={80} placeholder="linear-gradient(135deg, #D62839, #8B0F1C)" />
+                <span className="gcs-field__hint">{t("look.bannerHint")}</span>
+              </label>
+              <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, minHeight: 36 }}>
+                <input type="checkbox" name="inLegend" defaultChecked={group.inLegend} style={checkbox} />
+                {t("look.inLegend")}
               </label>
             </GcsActionForm>
           </Section>

@@ -9,6 +9,7 @@ import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { MemberProfileSections } from "./MemberProfileSections";
 import { addSecondaryGroup, banMember, liftBan, removeSecondaryGroup, setPrimaryGroup, warnMember } from "../actions";
+import { saveMemberPermissions } from "./actions";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -40,6 +41,9 @@ export default async function AcpMemberPage({ params }: Props) {
   const t = await getTranslations("acp.member");
   const format = await getFormatter();
   const groups = await db.group.findMany({ orderBy: { position: "asc" }, select: { id: true, name: true } });
+  const { permissions, registry } = services();
+  const [overrides, tAll] = await Promise.all([permissions.userPermissions(member.id), getTranslations()]);
+  const permDefs = registry.permissionDefs().filter((d) => d.scope === "group");
   const now = new Date();
   const secondaryIds = new Set(member.secondaryGroups.map((g) => g.id));
   const addable = groups.filter((g) => g.id !== member.primaryGroup.id && !secondaryIds.has(g.id));
@@ -203,6 +207,34 @@ export default async function AcpMemberPage({ params }: Props) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(380px, 1fr))", gap: 16, alignItems: "start" }}>
         <MemberProfileSections userId={member.id} />
       </div>
+      <Section title={t("perms.title")}>
+        <p style={muted}>{t("perms.hint")}</p>
+        <GcsActionForm action={saveMemberPermissions.bind(null, member.id)} submitLabel={t("perms.save")}>
+          <div className="gcs-permGrid" data-testid="gcs-member-permissions">
+            {permDefs.map((def) => {
+              const value = overrides[def.key];
+              const numeric = typeof Object.values(def.default).find((v) => v !== undefined) === "number";
+              const label = tAll.has(def.labelKey) ? tAll(def.labelKey) : def.key;
+              return (
+                <label key={def.key} className="gcs-field gcs-permGrid__row">
+                  <span>
+                    {label} <code style={muted}>{def.key}</code>
+                  </span>
+                  {numeric ? (
+                    <input className="gcs-input" type="number" min={-1} name={`perm:${def.key}`} defaultValue={typeof value === "number" ? value : ""} placeholder={t("perms.inherit")} />
+                  ) : (
+                    <select className="gcs-input" name={`perm:${def.key}`} defaultValue={value === true ? "true" : value === false ? "false" : ""}>
+                      <option value="">{t("perms.inherit")}</option>
+                      <option value="true">{t("perms.allow")}</option>
+                      <option value="false">{t("perms.deny")}</option>
+                    </select>
+                  )}
+                </label>
+              );
+            })}
+          </div>
+        </GcsActionForm>
+      </Section>
     </>
   );
 }

@@ -6,7 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
-import { createChatChannel, deleteChatChannel, updateChatChannel } from "./actions";
+import { createChatChannel, deleteChatChannel, removeAnnouncement, updateChatChannel } from "./actions";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.chat"))("title") };
@@ -20,7 +20,11 @@ const ROW = { display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end"
 export default async function AcpChatChannelsPage() {
   await requireAcpSection(CHAT_ACP_CHANNELS);
   const t = await getTranslations("acp.chat");
-  const channels = await services().db.chatChannel.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] });
+  const { db, chatQueries } = services();
+  const [channels, announcements] = await Promise.all([
+    db.chatChannel.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }], include: { owner: { select: { name: true } } } }),
+    chatQueries.announcements(),
+  ]);
 
   const fields = (c?: Channel) => (
     <>
@@ -65,6 +69,8 @@ export default async function AcpChatChannelsPage() {
           >
             <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
               <strong>#{c.key}</strong>
+              {c.type === "PRIVATE" && <span className="gcs-badge">{t("private")}</span>}
+              {c.owner && <span className="gcs-muted">{t("owner", { name: c.owner.name })}</span>}
               <Link href={`/admin/permissions/chat/${c.key}`}>{t("permissions")}</Link>
             </div>
             <div style={ROW}>
@@ -73,6 +79,19 @@ export default async function AcpChatChannelsPage() {
               </GcsActionForm>
               <GcsActionForm action={deleteChatChannel.bind(null, c.key)} submitLabel={t("delete")} variant="ghost" compact confirm={t("confirmDelete", { name: c.name })} />
             </div>
+          </div>
+        ))}
+      </GcsCard>
+      <GcsCard as="section" aria-labelledby="gcs-chat-announcements" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+        <h2 id="gcs-chat-announcements" className="gcs-acpWidget__title">
+          {t("announcements")}
+        </h2>
+        {announcements.length === 0 && <p className="gcs-muted" style={{ margin: 0 }}>{t("noAnnouncements")}</p>}
+        {announcements.map((a) => (
+          <div key={a.id} style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }} data-testid="gcs-acp-announcement">
+            <span style={{ flex: 1 }}>{a.body}</span>
+            <span className="gcs-muted">{a.expiresAt ? t("until", { date: new Date(a.expiresAt).toLocaleString() }) : t("noExpiry")}</span>
+            <GcsActionForm action={removeAnnouncement.bind(null, a.id)} submitLabel={t("delete")} variant="ghost" compact />
           </div>
         ))}
       </GcsCard>

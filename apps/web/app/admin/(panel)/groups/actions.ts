@@ -1,6 +1,7 @@
 "use server";
 
 import { GcsValidationError, type GcsNameStyle, type GcsResult } from "@gcs/core";
+import { isGcsIcon } from "@gcs/ui/icon-registry";
 import { field, intField, runAcpAction } from "@/lib/acp-actions";
 import { services } from "@/lib/services";
 
@@ -27,6 +28,16 @@ export async function updateGroupDetails(groupId: number, fd: FormData): Promise
       { name: field(fd, "name"), title: field(fd, "title"), isVip: fd.get("isVip") === "on" },
       actor,
     );
+    return null;
+  });
+}
+
+/** Postbit-ul și legenda (etapa 5): iconița Font Awesome, banner-ul (culoare sau gradient) și apariția în legendă. */
+export async function updateGroupLook(groupId: number, fd: FormData): Promise<GcsResult<null>> {
+  return runAcpAction(SECTION, "edit", async (actor) => {
+    const icon = field(fd, "icon") || null;
+    if (icon && !isGcsIcon(icon)) throw new GcsValidationError({ icon: "invalid_choice" });
+    await services().groups.update(groupId, { icon, banner: field(fd, "banner").trim() || null, inLegend: fd.get("inLegend") === "on" }, actor);
     return null;
   });
 }

@@ -60,6 +60,21 @@ export class GcsTranslationService {
     return null;
   }
 
+  /** Starea serviciului (ACP → Limbi și traducere): oprit, funcțional (o traducere de probă) sau eroare. */
+  async status(): Promise<"off" | "ok" | "error"> {
+    const provider = await this.provider();
+    if (!provider) return "off";
+    try {
+      const out = await Promise.race([
+        provider.translateHtml("<p>Salut</p>", "en"),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), 5000).unref?.()),
+      ]);
+      return typeof out === "string" && out.length > 0 ? "ok" : "error";
+    } catch {
+      return "error";
+    }
+  }
+
   /** Dacă actorul vede butonul „Traduce” (provider configurat + permisiunea `core.translate`). */
   async available(actor: GcsActor): Promise<boolean> {
     return (await this.provider()) !== null && (await this.deps.permissions.can(actor, "core.translate"));

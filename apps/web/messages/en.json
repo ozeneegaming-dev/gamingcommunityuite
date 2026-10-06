@@ -174,7 +174,11 @@
       "gaming": "Gaming",
       "pages": "Pages",
       "stats": "Statistics",
-      "appearance": "Appearance"
+      "appearance": "Appearance",
+      "title": "Applications",
+      "hint": "A disabled application disappears from the menu, widgets and statistics, and its pages respond with 404.",
+      "enabled": "Enabled",
+      "save": "Save"
     },
     "appsNav": "ACP applications",
     "submenuNav": "{app} menu",
@@ -486,6 +490,14 @@
         "none": "No known IPs",
         "shared": "Accounts sharing the same IP",
         "sharedNone": "No other accounts on these IPs"
+      },
+      "perms": {
+        "title": "Individual permissions",
+        "hint": "They replace the group values for this member only (e.g. “Create private chat rooms”). “Inherited” = the group value.",
+        "save": "Save permissions",
+        "inherit": "Inherited",
+        "allow": "Yes",
+        "deny": "No"
       }
     },
     "groups": {
@@ -540,6 +552,17 @@
         "body": "Members with this primary group move to “Member”.",
         "submit": "Delete group",
         "protected": "Default groups cannot be deleted."
+      },
+      "look": {
+        "title": "Postbit and legend",
+        "icon": "Group icon",
+        "iconSearch": "Search for an icon",
+        "iconNone": "No icon",
+        "iconNoResults": "No icons found.",
+        "banner": "Postbit banner",
+        "bannerHint": "A color (#D62839) or a gradient between two colors.",
+        "inLegend": "Shown in the group legend",
+        "save": "Save"
       }
     },
     "permissions": {
@@ -1006,12 +1029,72 @@
       "allChannels": "all channels",
       "until": "until {date}",
       "permanent": "permanent",
-      "lift": "Lift"
+      "lift": "Lift",
+      "private": "Private",
+      "owner": "created by {name}",
+      "announcements": "Global announcements",
+      "noAnnouncements": "No active announcements.",
+      "noExpiry": "until removed"
     },
     "notifications": {
       "title": "Notifications",
       "hint": "Default values for each notification type. Members can change them in Settings → Notifications.",
       "save": "Save"
+    },
+    "themes": {
+      "title": "Themes",
+      "hint": "Colors, fonts, logo and the rest are edited directly on the site, with a preview; here you manage the themes, the default one and the active ones.",
+      "default": "Default",
+      "draft": "Unpublished changes",
+      "name": "Name",
+      "key": "Key",
+      "enabled": "Active (members can choose it)",
+      "isDefault": "Default theme",
+      "save": "Save",
+      "editOnSite": "Edit on site",
+      "delete": "Delete",
+      "confirmDelete": "Delete this theme? Members who used it will see the default theme.",
+      "create": "New theme",
+      "copyFrom": "Copied from",
+      "fromDefaults": "Default values"
+    },
+    "widgetsAdmin": {
+      "title": "Widgets",
+      "hint": "Widgets are arranged directly on the site with “Edit page”. Here you see how many each page has and can go back to the defaults.",
+      "editOnSite": "Edit on site"
+    },
+    "menuManager": {
+      "title": "Menu manager",
+      "hint": "The site's main menu: order, labels per language, icons and who can see each item.",
+      "add": "Add item",
+      "addChild": "Add sub-item",
+      "label": "Label",
+      "autoLabel": "Automatic: {label} (fill in only if you want different text)",
+      "href": "Link",
+      "icon": "Icon",
+      "iconSearch": "Search for an icon",
+      "iconNone": "No icon",
+      "iconNoResults": "No icons found.",
+      "groups": "Visible to",
+      "groupsHint": "Nothing ticked = everyone.",
+      "newTab": "Opens in a new tab",
+      "enabled": "Enabled",
+      "up": "Up",
+      "down": "Down",
+      "remove": "Remove",
+      "save": "Save menu",
+      "saved": "The menu has been saved.",
+      "newItem": "New item"
+    },
+    "languages": {
+      "title": "Active languages",
+      "status": "Translation service",
+      "statuses": {
+        "off": "off",
+        "ok": "working",
+        "error": "not responding"
+      },
+      "save": "Save languages"
     }
   },
   "settings": {

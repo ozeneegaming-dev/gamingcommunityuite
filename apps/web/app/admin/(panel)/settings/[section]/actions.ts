@@ -23,6 +23,8 @@ export async function saveSettings(section: string, fd: FormData): Promise<GcsRe
         const raw = field(fd, name).trim();
         value = raw === "" ? Number.NaN : Number(raw);
       } else if (def.type === "json") {
+        // Câmpurile JSON cu formular propriu (ex. limbile active) nu vin în formularul generic.
+        if (!fd.has(name)) continue;
         try {
           value = JSON.parse(field(fd, name));
         } catch {
@@ -66,4 +68,13 @@ export async function sendTestEmail(): Promise<{ ok: true; to: string } | { ok: 
   });
   if (!result.ok) return { ok: false, error: Object.keys(result.error.fields ?? {}).join(", ") || result.error.code };
   return result.data;
+}
+
+/** Limbile active ale site-ului (cel puțin una); limba implicită rămâne în setările de mai sus. */
+export async function saveActiveLocales(fd: FormData): Promise<GcsResult<null>> {
+  return runAcpAction(settingsAcpSection("languages"), "edit", async (actor) => {
+    const locales = fd.getAll("locale").filter((v): v is string => typeof v === "string");
+    await services().settings.set("i18n.locales", locales, actor);
+    return null;
+  });
 }

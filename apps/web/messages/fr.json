@@ -174,7 +174,11 @@
       "gaming": "Gaming",
       "pages": "Pages",
       "stats": "Statistiques",
-      "appearance": "Apparence"
+      "appearance": "Apparence",
+      "title": "Demandes",
+      "hint": "Une application désactivée disparaît du menu, des widgets et des statistiques, et ses pages répondent avec 404.",
+      "enabled": "Activé",
+      "save": "Enregistrer"
     },
     "appsNav": "Demandes ACP",
     "submenuNav": "Menu {app}",
@@ -486,6 +490,14 @@
         "none": "Aucune IP connue",
         "shared": "Comptes partageant la même PI",
         "sharedNone": "Aucun autre compte sur ces PI"
+      },
+      "perms": {
+        "title": "Autorisations individuelles",
+        "hint": "Ils remplacent les valeurs de groupe pour ce membre uniquement (par exemple, -Créer des salles de chat privées). = valeur du groupe.",
+        "save": "Enregistrer les autorisations",
+        "inherit": "Hérité",
+        "allow": "Oui",
+        "deny": "Numéro"
       }
     },
     "groups": {
@@ -540,6 +552,17 @@
         "body": "Les membres de ce groupe primaire se déplacent vers le groupe \"Membre\".",
         "submit": "Supprimer le groupe",
         "protected": "Les groupes par défaut ne peuvent pas être supprimés."
+      },
+      "look": {
+        "title": "Postbit et légende",
+        "icon": "Icône de groupe",
+        "iconSearch": "Rechercher une icône",
+        "iconNone": "Aucune icône",
+        "iconNoResults": "Aucune icône trouvée.",
+        "banner": "Bannière Postbit",
+        "bannerHint": "Une couleur (#D62839) ou un gradient entre deux couleurs.",
+        "inLegend": "Montré dans la légende du groupe",
+        "save": "Enregistrer"
       }
     },
     "permissions": {
@@ -1006,12 +1029,72 @@
       "allChannels": "toutes les chaînes",
       "until": "jusqu'à {date}",
       "permanent": "permanent",
-      "lift": "Lever"
+      "lift": "Lever",
+      "private": "Privé",
+      "owner": "créé par {name}",
+      "announcements": "Annonces mondiales",
+      "noAnnouncements": "Aucune annonce active.",
+      "noExpiry": "jusqu ' à enlèvement"
     },
     "notifications": {
       "title": "Notifications",
       "hint": "Valeurs par défaut pour chaque type de notification. Les membres peuvent les modifier dans Paramètres → Notifications.",
       "save": "Enregistrer"
+    },
+    "themes": {
+      "title": "Thèmes",
+      "hint": "Les couleurs, les polices, le logo et les autres sont édités directement sur le site, avec un aperçu ; ici vous gérez les thèmes, le par défaut et les actifs.",
+      "default": "Par défaut",
+      "draft": "Modifications non publiées",
+      "name": "Nom",
+      "key": "Clé",
+      "enabled": "Active (les membres peuvent le choisir)",
+      "isDefault": "Thème par défaut",
+      "save": "Enregistrer",
+      "editOnSite": "Modifier sur le site",
+      "delete": "Supprimer",
+      "confirmDelete": "Supprimer ce thème ? Les membres qui l'ont utilisé verront le thème par défaut.",
+      "create": "Nouveau thème",
+      "copyFrom": "Copie de",
+      "fromDefaults": "Valeurs par défaut"
+    },
+    "widgetsAdmin": {
+      "title": "Widgets",
+      "hint": "Les widgets sont disposés directement sur le site avec la page d'édition. Ici vous voyez combien chaque page a et peut revenir aux par défaut.",
+      "editOnSite": "Modifier sur le site"
+    },
+    "menuManager": {
+      "title": "Gestionnaire de menus",
+      "hint": "Le menu principal du site : commande, étiquettes par langue, icônes et qui peut voir chaque élément.",
+      "add": "Ajouter un élément",
+      "addChild": "Ajouter un point subsidiaire",
+      "label": "Libellé",
+      "autoLabel": "Automatique : {label} (remplir seulement si vous voulez un texte différent)",
+      "href": "Lien",
+      "icon": "Icône",
+      "iconSearch": "Rechercher une icône",
+      "iconNone": "Aucune icône",
+      "iconNoResults": "Aucune icône trouvée.",
+      "groups": "Visible à",
+      "groupsHint": "Rien n'a coché = tout le monde.",
+      "newTab": "Ouvre dans un nouvel onglet",
+      "enabled": "Activé",
+      "up": "En haut",
+      "down": "Baisse",
+      "remove": "Retirer",
+      "save": "Enregistrer le menu",
+      "saved": "Le menu a été enregistré.",
+      "newItem": "Nouveau poste"
+    },
+    "languages": {
+      "title": "Langues actives",
+      "status": "Service de traduction",
+      "statuses": {
+        "off": "départ",
+        "ok": "travail",
+        "error": "sans réponse"
+      },
+      "save": "Enregistrer les langues"
     }
   },
   "settings": {

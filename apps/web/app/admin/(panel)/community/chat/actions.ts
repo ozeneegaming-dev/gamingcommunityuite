@@ -57,3 +57,11 @@ export async function liftChatMute(id: number): Promise<GcsResult<null>> {
     return null;
   });
 }
+
+/** Șterge un anunț global al chat-ului (dispare live din toate camerele). */
+export async function removeAnnouncement(id: number): Promise<GcsResult<null>> {
+  return runAcpAction(CHAT_ACP_CHANNELS, "delete", async (actor) => {
+    await services().chat.removeAnnouncement(actor, id);
+    return null;
+  });
+}

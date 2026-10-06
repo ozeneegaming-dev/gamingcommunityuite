@@ -1,3 +1,4 @@
+import { isSafeBanner } from "./banner";
 import { Prisma, type Group, type PrismaClient } from "@gcs/db";
 import type { GcsAcpRoleService } from "../acp/roles";
 import { writeAudit } from "../audit";
@@ -15,7 +16,14 @@ export type GcsGroupInput = {
   nameStyle?: GcsNameStyle | null;
   isVip?: boolean;
   position?: number;
+  /** Etapa 5: iconița Font Awesome (postbit, legenda), banner-ul din postbit și apariția în legendă. */
+  icon?: string | null;
+  banner?: string | null;
+  inLegend?: boolean;
 };
+
+/** Forma unei iconițe Font Awesome (`fa-solid fa-crown`); existența ei o verifică ACP-ul cu registrul de iconițe. */
+const ICON_NAME = /^fa-(?:solid|regular|brands) fa-[a-z0-9-]{1,50}$/;
 
 /** Secțiunea ACP care dă dreptul de a modifica grupuri (`acp.members.groups.edit`). */
 const ACP_SECTION = "members.groups";
@@ -294,6 +302,9 @@ type GcsGroupData = {
   nameStyle?: Prisma.InputJsonValue | Prisma.NullTypes.DbNull;
   isVip?: boolean;
   position?: number;
+  icon?: string | null;
+  banner?: string | null;
+  inLegend?: boolean;
 };
 
 function validateInput(input: GcsGroupInput): GcsGroupData {
@@ -319,6 +330,15 @@ function validateInput(input: GcsGroupInput): GcsGroupData {
     data.nameStyle = s === null ? Prisma.DbNull : (s as Prisma.InputJsonValue);
   }
   if (input.isVip !== undefined) data.isVip = input.isVip;
+  if (input.icon !== undefined) {
+    if (input.icon !== null && !ICON_NAME.test(input.icon)) errors.icon = "invalid_choice";
+    data.icon = input.icon;
+  }
+  if (input.banner !== undefined) {
+    if (input.banner !== null && !isSafeBanner(input.banner)) errors.banner = "invalid_color";
+    data.banner = input.banner;
+  }
+  if (input.inLegend !== undefined) data.inLegend = input.inLegend;
   if (input.position !== undefined) {
     if (!Number.isInteger(input.position)) errors.position = "invalid_type";
     data.position = input.position;
@@ -342,6 +362,9 @@ function snapshot(g: Group) {
     color: g.color,
     nameStyle: g.nameStyle,
     isVip: g.isVip,
+    icon: g.icon,
+    banner: g.banner,
+    inLegend: g.inLegend,
     position: g.position,
   };
 }

@@ -23,7 +23,9 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function ChatPage({ searchParams }: { searchParams: Promise<{ c?: string }> }) {
   const actor = await currentActor();
   if (!actor.userId) redirect("/login");
-  const { chatQueries, chat, permissions } = services();
+  const { chatQueries, chat, permissions, apps } = services();
+  // Aplicația Chat dezactivată din ACP → pagina nu există.
+  if (!(await apps.enabled("chat"))) notFound();
   const [channels, t, canPublic, canPrivate, canAnnounce] = await Promise.all([
     chatQueries.channels(actor),
     getTranslations("chat"),

@@ -174,7 +174,11 @@
       "gaming": "Gaming",
       "pages": "Pages",
       "stats": "Statistici",
-      "appearance": "Aspect"
+      "appearance": "Aspect",
+      "title": "Aplicații",
+      "hint": "O aplicație dezactivată dispare din meniu, din widget-uri și din statistici, iar paginile ei răspund cu 404.",
+      "enabled": "Activă",
+      "save": "Salvează"
     },
     "appsNav": "Aplicații ACP",
     "submenuNav": "Meniu {app}",
@@ -486,6 +490,14 @@
         "none": "Niciun IP cunoscut",
         "shared": "Conturi care împart același IP",
         "sharedNone": "Niciun alt cont pe aceste IP-uri"
+      },
+      "perms": {
+        "title": "Permisiuni individuale",
+        "hint": "Înlocuiesc valorile grupurilor doar pentru acest membru (ex. „Creează camere de chat private”). „Moștenit” = valoarea grupului.",
+        "save": "Salvează permisiunile",
+        "inherit": "Moștenit",
+        "allow": "Da",
+        "deny": "Nu"
       }
     },
     "groups": {
@@ -540,6 +552,17 @@
         "body": "Membrii care au acest grup ca grup principal trec în „Membru”.",
         "submit": "Șterge grupul",
         "protected": "Grupurile implicite nu se pot șterge."
+      },
+      "look": {
+        "title": "Postbit și legendă",
+        "icon": "Iconița grupului",
+        "iconSearch": "Caută o iconiță",
+        "iconNone": "Fără iconiță",
+        "iconNoResults": "Nicio iconiță găsită.",
+        "banner": "Banner-ul din postbit",
+        "bannerHint": "O culoare (#D62839) sau un gradient între două culori.",
+        "inLegend": "Apare în legenda grupurilor",
+        "save": "Salvează"
       }
     },
     "permissions": {
@@ -1006,12 +1029,72 @@
       "allChannels": "toate canalele",
       "until": "până la {date}",
       "permanent": "permanent",
-      "lift": "Ridică"
+      "lift": "Ridică",
+      "private": "Privată",
+      "owner": "creată de {name}",
+      "announcements": "Anunțuri globale",
+      "noAnnouncements": "Niciun anunț activ.",
+      "noExpiry": "până la ștergere"
     },
     "notifications": {
       "title": "Notificări",
       "hint": "Valorile implicite pentru fiecare tip de notificare. Membrii le pot schimba din Setări → Notificări.",
       "save": "Salvează"
+    },
+    "themes": {
+      "title": "Teme",
+      "hint": "Culorile, fonturile, logo-ul și restul se editează direct pe site, cu previzualizare; aici sunt temele, cea implicită și cele active.",
+      "default": "Implicită",
+      "draft": "Modificări nepublicate",
+      "name": "Nume",
+      "key": "Cheie",
+      "enabled": "Activă (membrii o pot alege)",
+      "isDefault": "Tema implicită",
+      "save": "Salvează",
+      "editOnSite": "Editează pe site",
+      "delete": "Șterge",
+      "confirmDelete": "Ștergi tema? Membrii care o foloseau vor vedea tema implicită.",
+      "create": "Temă nouă",
+      "copyFrom": "Copiată din",
+      "fromDefaults": "Valorile implicite"
+    },
+    "widgetsAdmin": {
+      "title": "Widget-uri",
+      "hint": "Widget-urile se aranjează direct pe site, cu „Editează pagina”. Aici vezi câte are fiecare pagină și poți reveni la cele implicite.",
+      "editOnSite": "Editează pe site"
+    },
+    "menuManager": {
+      "title": "Manager meniu",
+      "hint": "Meniul principal al site-ului: ordinea, etichetele pe limbi, iconițele și cine vede fiecare item.",
+      "add": "Adaugă item",
+      "addChild": "Adaugă subitem",
+      "label": "Eticheta",
+      "autoLabel": "Automată: {label} (completează doar dacă vrei alt text)",
+      "href": "Link",
+      "icon": "Iconiță",
+      "iconSearch": "Caută o iconiță",
+      "iconNone": "Fără iconiță",
+      "iconNoResults": "Nicio iconiță găsită.",
+      "groups": "Vizibil pentru",
+      "groupsHint": "Nicio bifă = toată lumea.",
+      "newTab": "Se deschide în tab nou",
+      "enabled": "Activ",
+      "up": "Mai sus",
+      "down": "Mai jos",
+      "remove": "Șterge",
+      "save": "Salvează meniul",
+      "saved": "Meniul a fost salvat.",
+      "newItem": "Item nou"
+    },
+    "languages": {
+      "title": "Limbile active",
+      "status": "Serviciul de traducere",
+      "statuses": {
+        "off": "oprit",
+        "ok": "funcționează",
+        "error": "nu răspunde"
+      },
+      "save": "Salvează limbile"
     }
   },
   "settings": {

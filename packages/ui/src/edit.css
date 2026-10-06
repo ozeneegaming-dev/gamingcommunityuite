@@ -609,3 +609,80 @@
   font-size: 13px;
   font-weight: 600;
 }
+
+/* ACP (etapa 5): aplicații, teme, managerul meniului, permisiunile individuale. */
+.gcs-acpGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+.gcs-themeSwatch {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid var(--gcs-border);
+}
+.gcs-menuEditor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gcs-menuEditor__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gcs-menuEditor__list--children {
+  margin-top: 10px;
+  padding-left: 24px;
+  border-left: 2px solid var(--gcs-border);
+}
+.gcs-menuEditor__item {
+  padding: 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-surface2);
+}
+.gcs-menuEditor__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.gcs-menuEditor__labels,
+.gcs-menuEditor__groups {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gcs-menuEditor__labels legend,
+.gcs-menuEditor__groups legend {
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+.gcs-menuEditor__col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gcs-menuEditor__tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.gcs-permGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px 16px;
+}
+.gcs-permGrid__row span {
+  font-size: 13px;
+}

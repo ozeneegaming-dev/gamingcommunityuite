@@ -118,7 +118,12 @@ export async function seedDefaults(db: PrismaClient, registry: GcsModuleRegistry
     });
 
     // Meniul principal implicit din itemii modulelor (etapa 5); un meniu editat de admin rămâne.
-    await GcsNavService.seedDefaults(tx, registry);
+    // O singură dată (marcajul `nav`): un meniu golit de admin nu e refăcut la repornire.
+    const navState = await tx.systemState.upsert({ where: { id: 1 }, update: {}, create: { id: 1 } });
+    if (!navState.seedMarks.includes("nav")) {
+      await GcsNavService.seedDefaults(tx, registry);
+      await tx.systemState.update({ where: { id: 1 }, data: { seedMarks: { push: "nav" } } });
+    }
     // Tema implicită (etapa 5), doar dacă nu există încă nicio temă.
     await GcsThemeService.seedDefault(tx);
     // Widget-urile implicite ale paginilor (etapa 5), din modulele înregistrate; o pagină aranjată de admin rămâne.

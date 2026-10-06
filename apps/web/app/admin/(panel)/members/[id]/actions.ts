@@ -69,3 +69,24 @@ export async function revokeVip(subscriptionId: number, fd: FormData): Promise<G
     return null;
   });
 }
+
+/**
+ * Permisiunile individuale ale membrului (specul etapei 5): pentru fiecare permisiune de grup, „moștenit” (fără
+ * valoare), da / nu sau un număr. Se scriu doar cele schimbate (fiecare intră în jurnal).
+ */
+export async function saveMemberPermissions(userId: string, fd: FormData): Promise<GcsResult<null>> {
+  return runAcpAction(SECTION, "edit", async (actor) => {
+    const { permissions, registry } = services();
+    const current = await permissions.userPermissions(userId);
+    for (const def of registry.permissionDefs().filter((d) => d.scope === "group")) {
+      const raw = fd.get(`perm:${def.key}`);
+      if (typeof raw !== "string") continue;
+      const value: boolean | number | null = raw === "" ? null : raw === "true" ? true : raw === "false" ? false : Number(raw);
+      if (typeof value === "number" && !Number.isFinite(value)) continue;
+      const before = current[def.key] ?? null;
+      if (before === value) continue;
+      await permissions.setUserPermission(actor, userId, def.key, value);
+    }
+    return null;
+  });
+}

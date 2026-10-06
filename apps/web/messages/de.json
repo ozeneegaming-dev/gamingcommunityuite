@@ -174,7 +174,11 @@
       "gaming": "Gaming",
       "pages": "Seiten",
       "stats": "Statistiken",
-      "appearance": "Darstellung"
+      "appearance": "Darstellung",
+      "title": "Anträge",
+      "hint": "Eine deaktivierte Anwendung verschwindet aus dem Menü, Widgets und Statistiken, und ihre Seiten reagieren mit 404.",
+      "enabled": "Aktiviert",
+      "save": "Speichern"
     },
     "appsNav": "AKP-Anträge",
     "submenuNav": "{app} Menü",
@@ -486,6 +490,14 @@
         "none": "Keine bekannten IPs",
         "shared": "Konten mit derselben IP",
         "sharedNone": "Keine anderen Konten auf diesen IPs"
+      },
+      "perms": {
+        "title": "Einzelgenehmigungen",
+        "hint": "Sie ersetzen die gruppenwerte nur für dieses mitglied (z b \"private chatrooms erstellen\"). „Geerbt = Gruppenwert.",
+        "save": "Speicherberechtigungen",
+        "inherit": "Vererbt",
+        "allow": "Ja",
+        "deny": "Nein"
       }
     },
     "groups": {
@@ -540,6 +552,17 @@
         "body": "Mitglieder mit dieser primären gruppe wechseln zu \"mitglied\".",
         "submit": "Gruppe löschen",
         "protected": "Standardgruppen können nicht gelöscht werden."
+      },
+      "look": {
+        "title": "Postbit und Legende",
+        "icon": "Gruppensymbol",
+        "iconSearch": "Suche nach einem Icon",
+        "iconNone": "Kein Icon",
+        "iconNoResults": "Keine Icons gefunden.",
+        "banner": "Postbit-Banner",
+        "bannerHint": "Eine Farbe (#D62839) oder ein Gradient zwischen zwei Farben.",
+        "inLegend": "Gezeigt in der Gruppenlegende",
+        "save": "Speichern"
       }
     },
     "permissions": {
@@ -1006,12 +1029,72 @@
       "allChannels": "alle kanäle",
       "until": "bis {date}",
       "permanent": "dauerhaft",
-      "lift": "Aufheben"
+      "lift": "Aufheben",
+      "private": "Privat",
+      "owner": "erstellt von {name}",
+      "announcements": "Globale Ankündigungen",
+      "noAnnouncements": "Keine aktiven Ankündigungen.",
+      "noExpiry": "bis zum entfernen"
     },
     "notifications": {
       "title": "Benachrichtigungen",
       "hint": "Standardwerte für jeden Benachrichtigungstyp. Mitglieder können sie in Einstellungen → Benachrichtigungen ändern.",
       "save": "Speichern"
+    },
+    "themes": {
+      "title": "Themen",
+      "hint": "Farben, Schriftarten, Logo und der Rest werden direkt auf der Website mit einer Vorschau bearbeitet; hier verwalten Sie die Themen, die Standard- und die aktiven.",
+      "default": "Standard",
+      "draft": "Unveröffentlichte Änderungen",
+      "name": "Name",
+      "key": "Schlüssel",
+      "enabled": "Aktiv (Mitglieder können es wählen)",
+      "isDefault": "Ausfallthema",
+      "save": "Speichern",
+      "editOnSite": "Bearbeitung vor Ort",
+      "delete": "Löschen",
+      "confirmDelete": "Löschen Sie dieses Thema? Mitglieder, die es verwendet haben, sehen das standardthema.",
+      "create": "Neues Thema",
+      "copyFrom": "Kopiert von",
+      "fromDefaults": "Standardwerte"
+    },
+    "widgetsAdmin": {
+      "title": "Widgets",
+      "hint": "Widgets sind direkt auf der Website mit \"Bearbeitungsseite\" angeordnet. Hier sehen Sie, wie viele jede Seite hat und können zu den Standardeinstellungen zurückkehren.",
+      "editOnSite": "Bearbeitung vor Ort"
+    },
+    "menuManager": {
+      "title": "Menümanager",
+      "hint": "Das Hauptmenü der Website: Bestellung, Etiketten pro Sprache, Symbole und wer kann jeden Artikel sehen.",
+      "add": "Artikel hinzufügen",
+      "addChild": "Unterpunkt hinzufügen",
+      "label": "Bezeichnung",
+      "autoLabel": "Automatisch: {label} (nur ausfüllen, wenn Sie einen anderen Text wünschen)",
+      "href": "Link",
+      "icon": "Symbol",
+      "iconSearch": "Suche nach einem Icon",
+      "iconNone": "Kein Icon",
+      "iconNoResults": "Keine Icons gefunden.",
+      "groups": "Sichtbar für",
+      "groupsHint": "Nichts angekreuzt = alle.",
+      "newTab": "Öffnet sich in einem neuen Tab",
+      "enabled": "Aktiviert",
+      "up": "Aufwärts",
+      "down": "Nach unten",
+      "remove": "Entfernen",
+      "save": "Speichermenü",
+      "saved": "Das Menü wurde gespeichert.",
+      "newItem": "Neuer Posten"
+    },
+    "languages": {
+      "title": "Aktive Sprachen",
+      "status": "Übersetzungsdienst",
+      "statuses": {
+        "off": "ausgeschaltet",
+        "ok": "arbeiten",
+        "error": "nicht antworten"
+      },
+      "save": "Sprachen speichern"
     }
   },
   "settings": {

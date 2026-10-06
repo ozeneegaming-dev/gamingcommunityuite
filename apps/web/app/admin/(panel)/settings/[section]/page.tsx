@@ -1,13 +1,16 @@
 import { settingsAcpSection } from "@gcs/core";
+import { GCS_LOCALE_KEYS } from "@gcs/modules";
 import { GcsButton, GcsCard } from "@gcs/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { requireAcpPanel, requireAcpSection } from "@/lib/acp";
+import { LOCALE_NAMES } from "@/lib/locales";
 import { services } from "@/lib/services";
+import { GcsActionForm } from "../../_components/GcsActionForm";
 import { GcsSettingsForm, type GcsSettingsField } from "../../_components/GcsSettingsForm";
-import { saveSettings } from "./actions";
+import { saveActiveLocales, saveSettings } from "./actions";
 import { TestEmailButton } from "./TestEmailButton";
 
 type Props = { params: Promise<{ section: string }> };
@@ -50,8 +53,10 @@ export default async function AcpSettingsPage({ params }: Props) {
   const tAll = await getTranslations();
   const label = (key: string) => (tAll.has(key) ? tAll(key) : key);
 
+  // Limbile active au formularul lor (căsuțe), nu câmpul JSON generic.
+  const shown = section === "languages" ? defs.filter((d) => d.key !== "i18n.locales") : defs;
   const fields: GcsSettingsField[] = await Promise.all(
-    defs.map(async (def) => {
+    shown.map(async (def) => {
       const value = await settings.get(def.key);
       const f: GcsSettingsField = { key: def.key, label: label(def.labelKey), type: def.type, value: def.type === "secret" ? "" : value };
       if (def.type === "secret") f.secretSet = typeof value === "string" && value !== "";
@@ -73,6 +78,7 @@ export default async function AcpSettingsPage({ params }: Props) {
           labels={{ save: t("save"), saved: tAll("acp.saved"), secretSet: t("secretSet"), secretEmpty: t("secretEmpty"), on: t("on") }}
         />
       </GcsCard>
+      {section === "languages" && <LanguagesCard />}
       {section === "email" && (
         <GcsCard as="section" aria-label={t("testEmail.title")} style={{ padding: 20, maxWidth: 720, display: "flex", flexDirection: "column", gap: 12 }}>
           <h2 className="gcs-acpWidget__title">{t("testEmail.title")}</h2>
@@ -81,5 +87,29 @@ export default async function AcpSettingsPage({ params }: Props) {
         </GcsCard>
       )}
     </>
+  );
+}
+
+/** Limbile active (căsuțe) și starea serviciului de traducere (o traducere de probă). */
+async function LanguagesCard() {
+  const { settings, translation } = services();
+  const [t, active, status] = await Promise.all([getTranslations("acp.languages"), settings.get<string[]>("i18n.locales"), translation.status()]);
+  return (
+    <GcsCard as="section" aria-label={t("title")} style={{ padding: 20, maxWidth: 720, display: "flex", flexDirection: "column", gap: 12 }}>
+      <h2 className="gcs-acpWidget__title">{t("title")}</h2>
+      <p style={{ margin: 0 }} data-testid="gcs-translate-status">
+        {t("status")}: <strong className={status === "ok" ? "gcs-rep--pos" : status === "error" ? "gcs-rep--neg" : "gcs-muted"}>{t(`statuses.${status}`)}</strong>
+      </p>
+      <GcsActionForm action={saveActiveLocales} submitLabel={t("save")}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }} data-testid="gcs-acp-locales">
+          {GCS_LOCALE_KEYS.map((code) => (
+            <label key={code} className="gcs-checkRow">
+              <input type="checkbox" name="locale" value={code} defaultChecked={active.includes(code)} />
+              {LOCALE_NAMES[code] ?? code}
+            </label>
+          ))}
+        </div>
+      </GcsActionForm>
+    </GcsCard>
   );
 }
