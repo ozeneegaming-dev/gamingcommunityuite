@@ -1,7 +1,7 @@
 "use client";
 
 import type { GcsResult } from "@gcs/core";
-import { DEFAULT_THEME_SETTINGS, compileThemeCss, themePath, withThemePath, type GcsThemeSettings } from "@gcs/core/themes";
+import { CUSTOM_CSS_FILE, DEFAULT_THEME_SETTINGS, compileThemeCss, joinThemeCssFiles, themePath, withThemePath, type GcsThemeSettings } from "@gcs/core/themes";
 import { GcsIconSvg, GcsModal } from "@gcs/ui";
 import {
   faArrowRightFromBracket,
@@ -19,6 +19,7 @@ import {
   faTabletScreenButton,
   faCheck,
   faTriangleExclamation,
+  faUpRightFromSquare,
 } from "@fortawesome/free-solid-svg-icons";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -96,15 +97,32 @@ function RailButton({
   );
 }
 
-/** Editorul de CSS: un `textarea` monospațiat cu numerele liniilor (fără un editor greu). */
-function CssDialog({ value, onChange, onClose }: { value: string; onChange: (css: string) => void; onClose: () => void }) {
+/**
+ * Fișierele CSS ale temei cu `custom.css` înlocuit de valoarea din editor (aceeași ordine ca la compilarea de pe
+ * server; fără fișierul lui, `custom.css` vine primul).
+ */
+function filesWithCustom(files: readonly { name: string; content: string }[], customCss: string) {
+  if (!files.some((f) => f.name === CUSTOM_CSS_FILE)) return [{ name: CUSTOM_CSS_FILE, content: customCss }, ...files];
+  return files.map((f) => (f.name === CUSTOM_CSS_FILE ? { name: f.name, content: customCss } : f));
+}
+
+/**
+ * Editorul lui `custom.css`: un `textarea` monospațiat cu numerele liniilor (fără un editor greu). Toate fișierele CSS
+ * ale temei, cu istoric, se editează în ACP → Aspect → CSS (linkul din dialog).
+ */
+function CssDialog({ value, onChange, onClose, filesHref }: { value: string; onChange: (css: string) => void; onClose: () => void; filesHref: string }) {
   const t = useTranslations("themeStudio");
   const [atOpen] = useState(value);
   const gutter = useRef<HTMLPreElement>(null);
   const lines = Math.max(1, value.split("\n").length);
   return (
     <GcsModal title={t("cssDialog.title")} icon={<GcsIconSvg icon={faCode} />} onClose={onClose} closeLabel={t("cssDialog.done")} size="lg" className="gcs-themeStudio__cssModal">
-      <p className="gcs-themeStudio__help">{t("cssDialog.hint")}</p>
+      <p className="gcs-themeStudio__help">
+        {t("cssDialog.hint")}{" "}
+        <a href={filesHref} target="_blank" rel="noopener" data-testid="gcs-studio-css-files">
+          {t("cssDialog.allFiles")} <GcsIconSvg icon={faUpRightFromSquare} />
+        </a>
+      </p>
       <div className="gcs-themeStudio__codeEditor">
         <pre ref={gutter} className="gcs-themeStudio__gutter" aria-hidden="true">
           {Array.from({ length: lines }, (_, i) => i + 1).join("\n")}
@@ -149,6 +167,7 @@ export function GcsThemeStudio({
   hasDraft: initialDraft,
   fonts,
   previewUrl,
+  cssFiles,
   initial,
 }: {
   themeKey: string;
@@ -157,6 +176,8 @@ export function GcsThemeStudio({
   hasDraft: boolean;
   fonts: readonly string[];
   previewUrl: string;
+  /** Fișierele CSS publicate ale temei (`custom.css` e înlocuit de valoarea din dialog). */
+  cssFiles: { name: string; content: string }[];
   initial: GcsThemeStudioValue;
 }) {
   const t = useTranslations("themeStudio");
@@ -183,7 +204,7 @@ export function GcsThemeStudio({
   const chain = useRef<Promise<unknown>>(Promise.resolve());
   const reloadAfterSave = useRef(false);
 
-  const css = useMemo(() => compileThemeCss(value.settings, value.customCss), [value.settings, value.customCss]);
+  const css = useMemo(() => compileThemeCss(value.settings, joinThemeCssFiles(filesWithCustom(cssFiles, value.customCss))), [value.settings, value.customCss, cssFiles]);
 
   // ─── Previzualizarea ───────────────────────────────────────────────────────
   const postPreview = useCallback(() => {
@@ -523,7 +544,14 @@ export function GcsThemeStudio({
         </footer>
       </aside>
 
-      {cssOpen && <CssDialog value={value.customCss} onChange={(customCss) => update((cur) => ({ ...cur, customCss }))} onClose={() => setCssOpen(false)} />}
+      {cssOpen && (
+        <CssDialog
+          value={value.customCss}
+          onChange={(customCss) => update((cur) => ({ ...cur, customCss }))}
+          onClose={() => setCssOpen(false)}
+          filesHref={`/admin/appearance/css?theme=${encodeURIComponent(themeKey)}`}
+        />
+      )}
 
       {exitOpen && (
         <GcsModal title={t("exitDialog.title")} icon={<GcsIconSvg icon={faTriangleExclamation} />} onClose={() => setExitOpen(false)} closeLabel={t("exitDialog.stay")} size="sm">

@@ -36,7 +36,7 @@ const FALLBACK_THEME: GcsThemeView = {
   isDefault: true,
   enabled: true,
   settings: DEFAULT_THEME_SETTINGS,
-  customCss: "",
+  cssFiles: [],
   logoUrl: null,
   faviconUrl: null,
   version: 0,

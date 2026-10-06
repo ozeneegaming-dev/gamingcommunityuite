@@ -3,10 +3,12 @@
 import { faEnvelope, faUserMinus, faUserPlus } from "@fortawesome/free-solid-svg-icons";
 import { GcsButton, GcsHoverCard, GcsIconSvg, type GcsHoverCardData, type GcsHoverCardLabels } from "@gcs/ui";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransition, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { followUser } from "../profile-actions";
 
-type CardData = GcsHoverCardData & { viewer: { isSelf: boolean; isFollowing: boolean; canMessage: boolean; canFollow: boolean } };
+/** `html`: markup-ul din șablonul `members.hover_card` al temei (deja sanitizat pe server), dacă tema l-a modificat. */
+type CardData = GcsHoverCardData & { viewer: { isSelf: boolean; isFollowing: boolean; canMessage: boolean; canFollow: boolean }; html?: string | null };
 type Labels = GcsHoverCardLabels & { follow: string; unfollow: string; message: string };
 
 const OPEN_DELAY = 300;
@@ -18,9 +20,9 @@ const WIDTH = 340;
 /** Cache-ul din client (5 minute), comun tuturor cardurilor din pagină. `null` = profil invizibil. */
 const cache = new Map<string, { at: number; data: CardData | null }>();
 
-async function load(userId: string): Promise<CardData | null> {
+async function load(userId: string, fresh = false): Promise<CardData | null> {
   const hit = cache.get(userId);
-  if (hit && Date.now() - hit.at < CLIENT_TTL) return hit.data;
+  if (!fresh && hit && Date.now() - hit.at < CLIENT_TTL) return hit.data;
   const res = await fetch(`/api/users/${encodeURIComponent(userId)}/card`, { credentials: "same-origin" });
   const data = res.ok ? ((await res.json()) as CardData) : null;
   cache.set(userId, { at: Date.now(), data });
@@ -28,6 +30,24 @@ async function load(userId: string): Promise<CardData | null> {
 }
 
 type Open = { userId: string; anchor: HTMLElement; data: CardData; top: number; left: number };
+
+/**
+ * Cardul din șablonul temei: HTML-ul sanitizat pe server (fără scripturi sau atribute `on*`), cu butoanele React puse
+ * în slotul `actions` printr-un portal (sau sub card, dacă șablonul nu are slotul).
+ */
+function TemplatedCard({ html, actions }: { html: string; actions: ReactNode }) {
+  const box = useRef<HTMLDivElement>(null);
+  const [slot, setSlot] = useState<Element | null>(null);
+  useLayoutEffect(() => {
+    setSlot(box.current?.querySelector('gcs-slot[data-name="actions"]') ?? null);
+  }, [html]);
+  return (
+    <>
+      <div ref={box} style={{ display: "contents" }} dangerouslySetInnerHTML={{ __html: html }} />
+      {actions && (slot ? createPortal(actions, slot) : <div className="gcs-hoverCard__actions">{actions}</div>)}
+    </>
+  );
+}
 
 function position(anchor: HTMLElement): { top: number; left: number } {
   const r = anchor.getBoundingClientRect();
@@ -160,7 +180,9 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
     startTransition(async () => {
       const res = await followUser({ userId: open.userId, follow: !data.viewer.isFollowing });
       if (!res.ok) return;
-      const next: CardData = { ...data, stats: { ...data.stats, followers: res.data.followers }, viewer: { ...data.viewer, isFollowing: res.data.following } };
+      let next: CardData = { ...data, stats: { ...data.stats, followers: res.data.followers }, viewer: { ...data.viewer, isFollowing: res.data.following } };
+      // Cardul din șablon e randat pe server: îl cerem din nou, cu numărul nou de urmăritori.
+      if (data.html) next = (await load(open.userId, true).catch(() => null)) ?? next;
       cache.set(open.userId, { at: Date.now(), data: next });
       setOpen((o) => (o ? { ...o, data: next } : o));
     });
@@ -189,7 +211,7 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
 
   return (
     <div className="gcs-hoverCardLayer" style={{ top: open.top, left: open.left }} onPointerEnter={keepOpen} onPointerLeave={scheduleClose}>
-      <GcsHoverCard data={data} labels={labels} format={{ number, year }} actions={actions} />
+      {data.html ? <TemplatedCard html={data.html} actions={actions} /> : <GcsHoverCard data={data} labels={labels} format={{ number, year }} actions={actions} />}
     </div>
   );
 }

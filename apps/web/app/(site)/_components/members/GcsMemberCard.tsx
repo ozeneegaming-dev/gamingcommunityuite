@@ -2,9 +2,14 @@ import type { GcsMemberCard as Card } from "@gcs/modules";
 import { GcsAvatar, GcsUserLink } from "@gcs/ui";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { memberHref, tint } from "@/lib/forum-urls";
+import { memberCardVars } from "@/lib/template-data";
+import { siteTemplate } from "@/lib/templates";
 
 /** Cardul unui membru (listele `/members` și `/staff`): avatar cu ramă și online, grup, rang, contoare, înscriere. */
 export async function GcsMemberCard({ member }: { member: Card }) {
+  // Șablonul `members.card`, dacă tema l-a modificat.
+  const custom = await siteTemplate("members.card", memberCardVars(member));
+  if (custom) return custom;
   const [t, format] = await Promise.all([getTranslations("members"), getFormatter()]);
   return (
     <article className="gcs-card gcs-memberCard" data-testid="gcs-member-card">

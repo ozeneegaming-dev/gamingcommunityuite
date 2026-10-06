@@ -1,0 +1,948 @@
+/*
+ * Editoarele de cod din ACP (etapa 6 §3.3): ACP → Aspect → CSS și ACP → Aspect → Șabloane. Spațiul de lucru are trei
+ * coloane (lista fișierelor / arborele șabloanelor, editorul CodeMirror, panoul cu previzualizarea, variabilele și
+ * istoricul), fiecare cu derulare proprie. Culorile vin din tokenurile ACP, deci merg în ambele teme.
+ */
+
+/* ─── Sloturile șabloanelor pe site ───────────────────────────────────────── */
+
+gcs-slot {
+  display: contents;
+}
+
+/* ─── Alegerea temei (în antetul paginii) ─────────────────────────────────── */
+
+.gcs-themePicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--gcs-muted);
+}
+
+.gcs-themePicker__icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--gcs-acp-c2) 18%, transparent);
+  color: var(--gcs-acp-c2);
+}
+
+.gcs-themePicker__select {
+  min-width: 180px;
+}
+
+/* ─── Spațiul de lucru ────────────────────────────────────────────────────── */
+
+.gcs-codeWs {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr) minmax(380px, 40%);
+  height: calc(100vh - 250px);
+  min-height: 540px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.gcs-codeWs--templates {
+  grid-template-columns: 270px minmax(0, 1fr) minmax(400px, 40%);
+}
+
+.gcs-codeWs__nav,
+.gcs-codeWs__main,
+.gcs-codeWs__side {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.gcs-codeWs__nav {
+  gap: 10px;
+  padding: 14px 12px;
+  border-right: 1px solid var(--gcs-border);
+  background: color-mix(in srgb, var(--gcs-surface2) 45%, transparent);
+  overflow-y: auto;
+}
+
+.gcs-codeWs__main {
+  gap: 10px;
+  padding: 14px 16px;
+}
+
+.gcs-codeWs__side {
+  border-left: 1px solid var(--gcs-border);
+  background: color-mix(in srgb, var(--gcs-surface2) 35%, transparent);
+}
+
+.gcs-codeWs__heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 2px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gcs-muted);
+}
+
+.gcs-codeWs__help {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--gcs-muted);
+}
+
+.gcs-codeWs__help .gcs-icon {
+  color: var(--gcs-acp-c4);
+}
+
+/* Lista fișierelor CSS. */
+.gcs-codeWs__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gcs-codeWs__item {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border-radius: 8px;
+}
+
+.gcs-codeWs__item:hover,
+.gcs-codeWs__item--active {
+  background: var(--gcs-surface2);
+}
+
+.gcs-acp a.gcs-codeWs__itemLink {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 7px 8px;
+  border-radius: 8px;
+  color: var(--gcs-text);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.gcs-codeWs__item--active .gcs-codeWs__itemLink {
+  box-shadow: inset 3px 0 0 var(--gcs-acp-c3);
+  font-weight: 600;
+}
+
+.gcs-codeWs__itemIcon {
+  flex: none;
+  color: var(--gcs-acp-c3);
+}
+
+.gcs-codeWs__itemName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.gcs-codeWs__itemTools {
+  display: none;
+  gap: 2px;
+  padding-right: 4px;
+}
+
+.gcs-codeWs__item:hover .gcs-codeWs__itemTools,
+.gcs-codeWs__item--active .gcs-codeWs__itemTools,
+.gcs-codeWs__item:focus-within .gcs-codeWs__itemTools {
+  display: flex;
+}
+
+.gcs-codeWs__dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-left: auto;
+  border-radius: 50%;
+  background: var(--gcs-acp-c4);
+}
+
+.gcs-codeWs__new {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--gcs-border);
+}
+
+/* Bara editorului. */
+.gcs-codeWs__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.gcs-codeWs__titleBlock {
+  min-width: 0;
+}
+
+.gcs-codeWs__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.gcs-codeWs__title > .gcs-icon {
+  color: var(--gcs-acp-c3);
+}
+
+.gcs-codeWs__sub {
+  margin: 3px 0 0;
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+
+.gcs-codeWs__badge {
+  font-size: 11px;
+}
+
+.gcs-codeWs__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.gcs-codeWs__rename {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gcs-codeWs__iconBtn {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gcs-muted);
+  cursor: pointer;
+}
+
+.gcs-codeWs__iconBtn:hover:not(:disabled) {
+  border-color: var(--gcs-border);
+  background: var(--gcs-surface2);
+  color: var(--gcs-text);
+}
+
+.gcs-codeWs__iconBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.gcs-codeWs__iconBtn--danger:hover:not(:disabled) {
+  color: var(--gcs-acp-bad);
+}
+
+.gcs-codeWs__iconBtn:focus-visible,
+.gcs-codeWs__tab:focus-visible,
+.gcs-codeWs__segBtn:focus-visible,
+.gcs-tree__item:focus-visible,
+.gcs-varList__item:focus-visible,
+.gcs-history__item:focus-visible {
+  outline: 2px solid var(--gcs-acp-c3);
+  outline-offset: 1px;
+}
+
+.gcs-codeWs__foot {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gcs-codeWs__status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--gcs-muted);
+}
+
+.gcs-codeWs__status--ok {
+  color: var(--gcs-acp-good);
+}
+
+.gcs-codeWs__status--error {
+  color: var(--gcs-acp-bad);
+}
+
+.gcs-codeWs__notice {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.gcs-codeWs__notice p {
+  margin: 0;
+}
+
+.gcs-codeWs__notice ul {
+  margin: 0;
+  padding-left: 18px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.gcs-codeWs__notice--warn {
+  border-color: color-mix(in srgb, var(--gcs-acp-c4) 55%, var(--gcs-border));
+  background: color-mix(in srgb, var(--gcs-acp-c4) 10%, transparent);
+}
+
+.gcs-codeWs__notice--warn > p .gcs-icon,
+.gcs-codeWs__notice--warn > strong .gcs-icon {
+  color: var(--gcs-acp-c4);
+}
+
+.gcs-codeWs__notice--error {
+  flex-direction: row;
+  align-items: flex-start;
+  border-color: color-mix(in srgb, var(--gcs-acp-bad) 55%, var(--gcs-border));
+  background: color-mix(in srgb, var(--gcs-acp-bad) 10%, transparent);
+}
+
+.gcs-codeWs__notice--error > .gcs-icon {
+  flex: none;
+  margin-top: 2px;
+  color: var(--gcs-acp-bad);
+}
+
+.gcs-codeWs__noticeActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.gcs-codeWs__line {
+  font-weight: 600;
+}
+
+/* Panoul din dreapta: tab-uri, previzualizare, istoric. */
+.gcs-codeWs__tabs {
+  display: flex;
+  gap: 2px;
+  padding: 8px 10px 0;
+  border-bottom: 1px solid var(--gcs-border);
+}
+
+.gcs-codeWs__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--gcs-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gcs-codeWs__tab:hover {
+  color: var(--gcs-text);
+}
+
+.gcs-codeWs__tab--active {
+  border-bottom-color: var(--gcs-acp-c3);
+  color: var(--gcs-text);
+}
+
+.gcs-codeWs__tab--active .gcs-icon {
+  color: var(--gcs-acp-c3);
+}
+
+.gcs-codeWs__count {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: var(--gcs-surface2);
+  color: var(--gcs-muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+.gcs-codeWs__panel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.gcs-codeWs__panel[hidden] {
+  display: none;
+}
+
+.gcs-codeWs__previewBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.gcs-codeWs__pageSelect {
+  max-width: 220px;
+}
+
+.gcs-codeWs__seg {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 9px;
+  background: var(--gcs-surface);
+}
+
+.gcs-codeWs__segIcon {
+  margin: 0 6px;
+  color: var(--gcs-muted);
+}
+
+.gcs-codeWs__segBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 9px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--gcs-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.gcs-codeWs__segBtn--active {
+  background: var(--gcs-surface2);
+  color: var(--gcs-text);
+  font-weight: 600;
+}
+
+.gcs-codeWs__frameWrap {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  min-height: 320px;
+  overflow: hidden;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-bg);
+}
+
+.gcs-codeWs__frame {
+  max-width: 100%;
+  height: 100%;
+  min-height: 320px;
+  border: 0;
+  background: #0b0c10;
+}
+
+.gcs-codeWs__search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--gcs-muted);
+}
+
+.gcs-codeWs__search .gcs-input {
+  flex: 1;
+}
+
+/* ─── Editorul CodeMirror ─────────────────────────────────────────────────── */
+
+.gcs-codeEditor {
+  position: relative;
+  flex: 1;
+  min-height: 260px;
+  overflow: hidden;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-bg);
+}
+
+.gcs-codeEditor__host,
+.gcs-codeEditor__host > .cm-editor {
+  height: 100%;
+}
+
+.gcs-codeEditor__host > .cm-editor.cm-focused {
+  outline: none;
+}
+
+.gcs-codeEditor:focus-within {
+  border-color: var(--gcs-acp-c3);
+}
+
+.gcs-codeEditor__fallback {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 8px 12px 8px 52px;
+  overflow: auto;
+  color: var(--gcs-muted);
+  font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  white-space: pre;
+}
+
+/* ─── Diferențele ─────────────────────────────────────────────────────────── */
+
+.gcs-diff {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gcs-diff__stats,
+.gcs-diff__same {
+  margin: 0;
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+
+.gcs-diff__statAdd {
+  color: var(--gcs-acp-good);
+  font-weight: 700;
+}
+
+.gcs-diff__statDel {
+  color: var(--gcs-acp-bad);
+  font-weight: 700;
+}
+
+.gcs-diff__lines {
+  overflow: auto;
+  max-height: 420px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 8px;
+  background: var(--gcs-bg);
+  font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.gcs-diff__line {
+  display: grid;
+  grid-template-columns: 36px 36px 16px minmax(0, 1fr);
+}
+
+.gcs-diff__line--add {
+  background: color-mix(in srgb, var(--gcs-acp-good) 14%, transparent);
+}
+
+.gcs-diff__line--del {
+  background: color-mix(in srgb, var(--gcs-acp-bad) 14%, transparent);
+}
+
+.gcs-diff__no {
+  padding-right: 6px;
+  color: var(--gcs-muted);
+  text-align: right;
+  user-select: none;
+}
+
+.gcs-diff__sign {
+  color: var(--gcs-muted);
+  user-select: none;
+}
+
+.gcs-diff__line--add .gcs-diff__sign {
+  color: var(--gcs-acp-good);
+}
+
+.gcs-diff__line--del .gcs-diff__sign {
+  color: var(--gcs-acp-bad);
+}
+
+.gcs-diff__text {
+  padding-right: 8px;
+  white-space: pre;
+  background: none;
+  font: inherit;
+}
+
+.gcs-diff__skip {
+  padding: 2px 10px;
+  border-block: 1px dashed var(--gcs-border);
+  background: var(--gcs-surface);
+  color: var(--gcs-muted);
+  font-size: 11px;
+}
+
+/* ─── Istoricul ───────────────────────────────────────────────────────────── */
+
+.gcs-history {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gcs-history__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 220px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.gcs-history__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gcs-text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gcs-history__item:hover {
+  background: var(--gcs-surface2);
+}
+
+.gcs-history__item--active {
+  border-color: color-mix(in srgb, var(--gcs-acp-c3) 50%, var(--gcs-border));
+  background: color-mix(in srgb, var(--gcs-acp-c3) 10%, transparent);
+}
+
+.gcs-history__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--gcs-acp-c3) 16%, transparent);
+  color: var(--gcs-acp-c3);
+}
+
+.gcs-history__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.gcs-history__meta {
+  color: var(--gcs-muted);
+  font-size: 12px;
+}
+
+.gcs-history__detail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gcs-history__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* ─── Arborele șabloanelor ────────────────────────────────────────────────── */
+
+.gcs-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gcs-tree__groupTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gcs-muted);
+}
+
+.gcs-tree__groupTitle .gcs-icon {
+  color: var(--gcs-acp-c2);
+}
+
+.gcs-tree__items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gcs-acp a.gcs-tree__item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 8px;
+  border-radius: 8px;
+  color: var(--gcs-text);
+  text-decoration: none;
+}
+
+.gcs-acp a.gcs-tree__item:hover {
+  background: var(--gcs-surface2);
+}
+
+.gcs-acp a.gcs-tree__item--active {
+  background: var(--gcs-surface2);
+  box-shadow: inset 3px 0 0 var(--gcs-acp-c3);
+}
+
+.gcs-tree__icon {
+  flex: none;
+  width: 16px;
+  color: var(--gcs-acp-c3);
+}
+
+.gcs-tree__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.gcs-tree__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.gcs-tree__key {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--gcs-muted);
+  font-size: 11px;
+  background: none;
+}
+
+.gcs-tree__badge {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.gcs-tree__badge--modified {
+  background: color-mix(in srgb, var(--gcs-acp-c3) 18%, transparent);
+  color: var(--gcs-acp-c3);
+}
+
+.gcs-tree__badge--review {
+  background: color-mix(in srgb, var(--gcs-acp-c4) 22%, transparent);
+  color: var(--gcs-acp-c4);
+}
+
+.gcs-tree__empty {
+  margin: 0;
+  font-size: 13px;
+}
+
+/* ─── Variabilele ─────────────────────────────────────────────────────────── */
+
+.gcs-varList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gcs-varList__group {
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-surface);
+}
+
+.gcs-varList__group > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gcs-varList__group > summary .gcs-icon {
+  color: var(--gcs-acp-c2);
+}
+
+.gcs-varList__group ul {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0 6px 6px;
+  list-style: none;
+}
+
+.gcs-varList__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--gcs-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gcs-varList__item:hover:not(:disabled) {
+  background: var(--gcs-surface2);
+}
+
+.gcs-varList__item:disabled {
+  cursor: default;
+}
+
+.gcs-varList__name {
+  overflow: hidden;
+  color: var(--gcs-acp-c1);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: none;
+}
+
+.gcs-varList__type {
+  color: var(--gcs-acp-c4);
+  font-size: 11px;
+}
+
+.gcs-varList__text {
+  grid-column: 1 / -1;
+  color: var(--gcs-muted);
+  font-size: 12px;
+}
+
+.gcs-varList__syntax .gcs-varList__name {
+  white-space: normal;
+}
+
+/* ─── Previzualizarea șabloanelor (pagina din iframe) ─────────────────────── */
+
+.gcs-tplPreview {
+  min-height: 100vh;
+  padding: 24px;
+  background: var(--gcs-body-bg, var(--gcs-bg));
+}
+
+.gcs-tplPreview--email {
+  background: #f3f4f6;
+}
+
+.gcs-tplPreview__email {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #222222;
+  font-family: Arial, Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+.gcs-tplPreview__email a {
+  color: #1a5fd0;
+}
+
+.gcs-tplPreview__hover {
+  max-width: 340px;
+}
+
+.gcs-tplSlot {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px dashed color-mix(in srgb, var(--gcs-accent) 60%, transparent);
+  border-radius: 8px;
+  color: var(--gcs-muted);
+  font-size: 12px;
+}
+
+.gcs-tplSlot__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.gcs-tplSlot__label .gcs-icon {
+  color: var(--gcs-accent);
+}
+
+/* ─── Ecrane înguste: coloanele una sub alta ──────────────────────────────── */
+
+@media (max-width: 1200px) {
+  .gcs-codeWs,
+  .gcs-codeWs--templates {
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+  }
+
+  .gcs-codeWs__nav {
+    max-height: 260px;
+    border-right: 0;
+    border-bottom: 1px solid var(--gcs-border);
+  }
+
+  .gcs-codeWs__main .gcs-codeEditor {
+    min-height: 420px;
+  }
+
+  .gcs-codeWs__side {
+    min-height: 520px;
+    border-left: 0;
+    border-top: 1px solid var(--gcs-border);
+  }
+}

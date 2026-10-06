@@ -21,6 +21,8 @@ import {
   GcsTranslationService,
   GcsWidgetService,
   GcsThemeService,
+  GcsThemeCssService,
+  GcsTemplateService,
   GcsStatsService,
   GcsPresenceService,
   GcsRealtime,
@@ -41,6 +43,7 @@ import {
   type GcsModuleRegistry,
 } from "@gcs/core";
 import { PrismaClient } from "@gcs/db";
+import { withEmailLayout } from "./templates/components";
 import { isGcsIcon, resolveIcon } from "@gcs/ui/icon-registry";
 import Redis from "ioredis";
 import { registerForumContent } from "./forums/content";
@@ -108,6 +111,10 @@ export type GcsServices = {
   widgets: GcsWidgetService;
   nav: GcsNavService;
   themes: GcsThemeService;
+  /** Fișierele CSS ale temelor (ACP → Aspect → CSS). */
+  themeCss: GcsThemeCssService;
+  /** Șabloanele editabile (ACP → Aspect → Șabloane). */
+  templates: GcsTemplateService;
   stats: GcsStatsService;
   postbit: GcsPostbitService;
   memberList: GcsMemberList;
@@ -297,13 +304,16 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const posts = new GcsPostService(posting);
   const ranks = new GcsRankDirectory({ db, cache });
   registerForumContent(posting, { reactions, attachments, reports, posts });
-  const mailer: GcsMailer =
+  const templates = new GcsTemplateService({ db, cache, bus, acp });
+  // Emailurile trec prin șablonul `email.layout` al temei implicite, dacă a fost modificat.
+  const rawMailer: GcsMailer =
     process.env.GCS_TEST_ROUTES === "1"
       ? async (mail) => {
           await redis.lpush(TEST_OUTBOX_KEY, JSON.stringify(mail));
           await redis.ltrim(TEST_OUTBOX_KEY, 0, 49);
         }
       : (mail) => sendEmail(mail, settings);
+  const mailer = withEmailLayout(rawMailer, { db, templates, settings });
   const profiles = new GcsProfileService({
     db,
     bus,
@@ -446,6 +456,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     widgets: new GcsWidgetService({ db, cache, bus, registry, acp, apps }),
     nav: new GcsNavService({ db, cache, bus, registry, acp, apps, isIcon: isGcsIcon }),
     themes: new GcsThemeService({ db, cache, bus, acp }),
+    themeCss: new GcsThemeCssService({ db, bus, acp }),
+    templates,
     stats: new GcsStatsService({ db, cache, registry, apps }),
     postbit: new GcsPostbitService({ db, cache, permissions, settings }),
     memberList: new GcsMemberList({ db, permissions, ranks }),

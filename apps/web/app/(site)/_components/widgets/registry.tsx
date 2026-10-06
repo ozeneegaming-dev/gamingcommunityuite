@@ -6,6 +6,8 @@ import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { memberHref, postHref, topicHref } from "@/lib/forum-urls";
 import { onlineView } from "@/lib/online";
+import { widgetCardVars } from "@/lib/template-data";
+import { siteTemplate } from "@/lib/templates";
 import { services } from "@/lib/services";
 import { GcsShoutbox } from "../chat/GcsShoutbox";
 import { GcsRelTime } from "../forum/GcsRelTime";
@@ -22,10 +24,16 @@ type CardProps = { id: string; type: string; config: Record<string, unknown>; ti
 
 /**
  * Cardul comun al widget-urilor (titlul cu iconița + conținut), ca în coloana din dreapta a machetei Main.
- * Iconița: cea aleasă pe amplasare (`config.icon`), altfel cea a widget-ului.
+ * Iconița: cea aleasă pe amplasare (`config.icon`), altfel cea a widget-ului. Șablonul `widgets.card` (ACP → Aspect →
+ * Șabloane) poate schimba markup-ul; conținutul și elementele de lângă titlu intră prin sloturi.
  */
-function GcsWidgetCard({ id, type, config, title, extra, children, testId }: CardProps) {
+async function GcsWidgetCard({ id, type, config, title, extra, children, testId }: CardProps) {
   const headingId = `gcs-widget-${id}`;
+  const custom = await siteTemplate("widgets.card", widgetCardVars({ id, type, title, icon: widgetIcon(type, config), hasExtra: extra !== undefined && extra !== null, testId }), {
+    content: children,
+    extra,
+  });
+  if (custom) return custom;
   return (
     <section className="gcs-card gcs-sideCard gcs-widget" aria-labelledby={headingId} data-widget={type} data-testid={testId}>
       <GcsWidgetTitle id={headingId} icon={widgetIcon(type, config)} extra={extra}>

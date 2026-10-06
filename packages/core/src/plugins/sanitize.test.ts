@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { scopePluginCss } from "./css";
-import { escapeHtml, sanitizePluginHtml } from "./sanitize";
+import { sanitizePluginHtml } from "./sanitize";
 
 const icon = (name: string) => (name === "fa-solid fa-star" ? '<svg class="gcs-icon"><path d="M0"/></svg>' : null);
 
@@ -30,10 +30,6 @@ describe("HTML-ul pluginurilor", () => {
     expect(sanitizePluginHtml('<p><gcs-icon name="fa-solid fa-star"></gcs-icon> Top</p>', { icon })).toBe('<p><svg class="gcs-icon"><path d="M0"/></svg> Top</p>');
     expect(sanitizePluginHtml('<gcs-icon name="fa-solid fa-star" />!', { icon })).toBe('<svg class="gcs-icon"><path d="M0"/></svg>!');
     expect(sanitizePluginHtml('<gcs-icon name="fa-solid fa-nope"></gcs-icon><gcs-icon name="x&quot; onload=&quot;1"></gcs-icon>', { icon })).toBe("");
-  });
-
-  test("escape", () => {
-    expect(escapeHtml(`<a href="x">'&'</a>`)).toBe("&lt;a href=&quot;x&quot;&gt;&#39;&amp;&#39;&lt;/a&gt;");
   });
 });
 

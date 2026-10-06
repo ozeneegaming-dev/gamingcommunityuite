@@ -21,6 +21,7 @@
     "./icons.css": "./src/icons.css",
     "./acp.css": "./src/acp.css",
     "./studio.css": "./src/studio.css",
+    "./code.css": "./src/code.css",
     "./plugins.css": "./src/plugins.css",
     "./icons": "./src/icons/index.tsx",
     "./icon-registry": "./src/icons/registry.ts"

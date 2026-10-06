@@ -60,7 +60,7 @@ Cititorul ZIP e scris de noi (directorul central + `inflateRaw` din `node:zlib`)
 
 ## 2. Stocare și ciclul de viață
 
-### 2.1 Tabele (Prisma, migrația `20261013000000_plugins`)
+### 2.1 Tabele (Prisma, migrația `20261014000000_plugins`)
 - `plugins`: cheia, numele, versiunea, `enabled`, `status` (`installed` / `removed_kept_data`), `signed`, `signatureKeyId`,
   capabilitățile acordate, manifestul, setările (JSON), arhiva (`bytea`) + `sha256`, rolul DB și parola lui,
   migrațiile aplicate, `consecutiveFailures`, `disabledReason` (`admin` / `auto` / `safe_mode`), ultima eroare,

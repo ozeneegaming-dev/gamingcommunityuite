@@ -1,6 +1,7 @@
 import "server-only";
 import { isPluginKey } from "@gcs/core";
 import { cookies } from "next/headers";
+import { getLocale } from "next-intl/server";
 import { cache } from "react";
 import { currentActor } from "./actor";
 import { services } from "./services";
@@ -30,6 +31,17 @@ export async function pluginHost() {
   const { plugins } = services();
   await plugins.ready();
   return plugins;
+}
+
+/**
+ * HTML-ul pluginurilor pentru un punct de extensie (ex. `postbit.after_fields`), sanitizat și în ordinea priorității;
+ * gol în modul sigur sau fără pluginuri pe punct (fără niciun apel). Folosit de componente și de `{% hook %}` din șabloane.
+ */
+export async function pluginHookHtml(point: string, data: Record<string, string | number | null>): Promise<string[]> {
+  const plugins = await pluginHost();
+  if (!plugins.hasHook(point) || (await safeModeActive())) return [];
+  const [actor, locale] = await Promise.all([currentActor(), getLocale()]);
+  return (await plugins.renderHook(point, data, { actor, locale })).map((p) => p.html);
 }
 
 /** Cheia unui plugin din URL (`/p/<cheie>`, `/api/plugins/<cheie>`), sau `null`. */

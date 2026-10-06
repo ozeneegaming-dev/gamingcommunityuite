@@ -5,7 +5,9 @@ import type { GcsCache } from "../cache";
 import { GcsConflict, GcsNotFound, GcsValidationError } from "../errors";
 import type { GcsEventBus } from "../events";
 import type { GcsActor } from "../permissions/types";
-import { compileThemeCss, sanitizeThemeCss } from "./css";
+import { compileThemeCss, CUSTOM_CSS_FILE, joinThemeCssFiles, sanitizeThemeCss } from "./css";
+import { GcsThemeCssService } from "./files";
+import { GcsTemplateService } from "../templates/service";
 import {
   DEFAULT_THEME_SETTINGS,
   isThemeFileUrl,
@@ -38,7 +40,8 @@ export type GcsThemeView = {
   isDefault: boolean;
   enabled: boolean;
   settings: GcsThemeSettings;
-  customCss: string;
+  /** Fișierele CSS ale temei, în ordinea compilării (ACP → Aspect → CSS); `custom.css` e CSS-ul editorului vizual. */
+  cssFiles: { name: string; content: string }[];
   logoUrl: string | null;
   faviconUrl: string | null;
   version: number;
@@ -60,14 +63,27 @@ export function themeDraftErrors(patch: GcsThemeDraft): Record<string, string> {
   return errors;
 }
 
-function toView(t: Theme): GcsThemeView {
+/** Conținutul lui `custom.css` (CSS-ul din dialogul editorului vizual). */
+export function themeCustomCss(theme: Pick<GcsThemeView, "cssFiles">): string {
+  return theme.cssFiles.find((f) => f.name === CUSTOM_CSS_FILE)?.content ?? "";
+}
+
+/** Fișierele temei cu `custom.css` înlocuit (draft-ul editorului vizual); fără fișierul lui, `custom.css` se adaugă primul. */
+function withCustomCss(files: GcsThemeView["cssFiles"], customCss: string): GcsThemeView["cssFiles"] {
+  if (!files.some((f) => f.name === CUSTOM_CSS_FILE)) return [{ name: CUSTOM_CSS_FILE, content: customCss }, ...files];
+  return files.map((f) => (f.name === CUSTOM_CSS_FILE ? { ...f, content: customCss } : f));
+}
+
+type ThemeRow = Theme & { cssFiles?: { name: string; content: string }[] };
+
+function toView(t: ThemeRow): GcsThemeView {
   return {
     key: t.key,
     name: t.name,
     isDefault: t.isDefault,
     enabled: t.enabled,
     settings: normalizeThemeSettings(t.settings),
-    customCss: t.customCss,
+    cssFiles: (t.cssFiles ?? []).map((f) => ({ name: f.name, content: f.content })),
     logoUrl: t.logoUrl,
     faviconUrl: t.faviconUrl,
     version: t.version,
@@ -86,8 +102,11 @@ export class GcsThemeService {
   async list(): Promise<GcsThemeView[]> {
     const cached = await this.deps.cache.get<GcsThemeView[]>("themes:all");
     // Cache-ul poate fi scris de o versiune mai veche (setări fără câmpurile noi): îl completăm cu valorile implicite.
-    if (cached) return cached.map((v) => ({ ...v, settings: normalizeThemeSettings(v.settings) }));
-    const rows = await this.deps.db.theme.findMany({ orderBy: [{ isDefault: "desc" }, { name: "asc" }] });
+    if (cached) return cached.map((v) => ({ ...v, settings: normalizeThemeSettings(v.settings), cssFiles: Array.isArray(v.cssFiles) ? v.cssFiles : [] }));
+    const rows = await this.deps.db.theme.findMany({
+      orderBy: [{ isDefault: "desc" }, { name: "asc" }],
+      include: { cssFiles: { select: { name: true, content: true }, orderBy: [{ position: "asc" }, { id: "asc" }] } },
+    });
     const views = rows.map(toView);
     await this.deps.cache.set("themes:all", views, { ttlSec: CACHE_TTL, tags: [CACHE_TAG] });
     return views;
@@ -108,7 +127,7 @@ export class GcsThemeService {
         isDefault: true,
         enabled: true,
         settings: DEFAULT_THEME_SETTINGS,
-        customCss: "",
+        cssFiles: [],
         logoUrl: null,
         faviconUrl: null,
         version: 0,
@@ -117,25 +136,27 @@ export class GcsThemeService {
     );
   }
 
-  /** CSS-ul publicat al temei (sau al draft-ului, pentru previzualizarea adminului). */
+  /**
+   * CSS-ul publicat al temei (sau al draft-ului, pentru previzualizarea adminului): CSS-ul generat din setări, apoi
+   * fișierele CSS ale temei, în ordine.
+   */
   css(theme: GcsThemeView, opts: { draft?: boolean } = {}): string {
-    if (opts.draft && theme.draft) {
-      const merged = this.merge(theme, theme.draft);
-      return compileThemeCss(merged.settings, merged.customCss);
-    }
-    return compileThemeCss(theme.settings, theme.customCss);
+    const shown = opts.draft ? this.withDraft(theme) : theme;
+    return compileThemeCss(shown.settings, joinThemeCssFiles(shown.cssFiles));
   }
 
   /** Tema cu draft-ul aplicat (ce vede adminul în previzualizare); fără draft, tema publicată. */
   withDraft(theme: GcsThemeView): GcsThemeView {
-    return theme.draft ? { ...theme, ...this.merge(theme, theme.draft) } : theme;
+    if (!theme.draft) return theme;
+    const { customCss, ...merged } = this.merge(theme, theme.draft);
+    return { ...theme, ...merged, cssFiles: withCustomCss(theme.cssFiles, customCss) };
   }
 
   private merge(theme: GcsThemeView, draft: GcsThemeDraft) {
     const settings = normalizeThemeSettings(mergeThemeObjects(theme.settings, draftSettings(draft)));
     return {
       settings,
-      customCss: draft.customCss !== undefined ? sanitizeThemeCss(draft.customCss) : theme.customCss,
+      customCss: draft.customCss !== undefined ? sanitizeThemeCss(draft.customCss) : themeCustomCss(theme),
       logoUrl: draft.logoUrl !== undefined ? draft.logoUrl : theme.logoUrl,
       faviconUrl: draft.faviconUrl !== undefined ? draft.faviconUrl : theme.faviconUrl,
     };
@@ -176,40 +197,45 @@ export class GcsThemeService {
     await this.changed();
   }
 
-  /** Mută draft-ul în temă și crește versiunea (cu jurnal). */
+  /**
+   * Mută draft-ul în temă și crește versiunea (cu jurnal). CSS-ul din dialogul editorului vizual devine o versiune
+   * nouă a fișierului `custom.css` (aceeași sursă ca ACP → Aspect → CSS).
+   */
   async publish(actor: GcsActor, key: string): Promise<GcsThemeView> {
     const { db, acp } = this.deps;
     await acp.assert(actor, THEMES_ACP_SECTION, "edit");
-    const row = await db.theme.findUnique({ where: { key } });
+    const withFiles = { cssFiles: { orderBy: [{ position: "asc" as const }, { id: "asc" as const }] } };
+    const row = await db.theme.findUnique({ where: { key }, include: withFiles });
     if (!row) throw new GcsNotFound();
     const theme = toView(row);
     if (!theme.draft) throw new GcsConflict({ reason: "no_draft" });
     const merged = this.merge(theme, theme.draft);
-    const updated = await db.$transaction(async (tx) => {
-      const u = await tx.theme.update({
+    const cssChanged = theme.draft.customCss !== undefined && merged.customCss !== themeCustomCss(theme);
+    const authorName = cssChanged && actor.userId ? ((await db.user.findUnique({ where: { id: actor.userId }, select: { name: true } }))?.name ?? "") : "";
+    await db.$transaction(async (tx) => {
+      await tx.theme.update({
         where: { key },
         data: {
           settings: merged.settings as unknown as Prisma.InputJsonValue,
-          customCss: merged.customCss,
           logoUrl: merged.logoUrl,
           faviconUrl: merged.faviconUrl,
           draft: Prisma.DbNull,
           version: { increment: 1 },
         },
       });
+      if (cssChanged) await GcsThemeCssService.writeCustomCss(tx, row.id, merged.customCss, { authorId: actor.userId, authorName, action: "publish" });
       await writeAudit(tx, {
         actorId: actor.userId,
         action: "theme.publish",
         targetType: "theme",
         targetId: key,
-        before: { settings: theme.settings, customCss: theme.customCss, logoUrl: theme.logoUrl, faviconUrl: theme.faviconUrl },
+        before: { settings: theme.settings, customCss: themeCustomCss(theme), logoUrl: theme.logoUrl, faviconUrl: theme.faviconUrl },
         after: merged,
         ip: actor.ip,
       });
-      return u;
     });
     await this.changed();
-    return toView(updated);
+    return toView(await db.theme.findUniqueOrThrow({ where: { key }, include: withFiles }));
   }
 
   async create(actor: GcsActor, input: { key: string; name: string; from?: string }): Promise<GcsThemeView> {
@@ -220,17 +246,24 @@ export class GcsThemeService {
     if (name.length < 1 || name.length > 40) throw new GcsValidationError({ name: "invalid_length" });
     if (await db.theme.findUnique({ where: { key: input.key } })) throw new GcsValidationError({ key: "taken" });
     const source = input.from ? await db.theme.findUnique({ where: { key: input.from } }) : null;
+    const authorName = actor.userId ? ((await db.user.findUnique({ where: { id: actor.userId }, select: { name: true } }))?.name ?? "") : "";
     const row = await db.$transaction(async (tx) => {
       const r = await tx.theme.create({
         data: {
           key: input.key,
           name,
           settings: (source?.settings ?? DEFAULT_THEME_SETTINGS) as unknown as Prisma.InputJsonValue,
-          customCss: source?.customCss ?? "",
           logoUrl: source?.logoUrl ?? null,
           faviconUrl: source?.faviconUrl ?? null,
         },
       });
+      // Tema nouă pornește cu fișierele CSS și șabloanele modificate ale temei sursă (altfel doar cu `custom.css`).
+      if (source) {
+        await GcsThemeCssService.copy(tx, source.id, r.id, { authorId: actor.userId, authorName });
+        await GcsTemplateService.copy(tx, source.id, r.id);
+      } else {
+        await GcsThemeCssService.seed(tx, r.id, "", { authorId: actor.userId, authorName });
+      }
       await writeAudit(tx, { actorId: actor.userId, action: "theme.create", targetType: "theme", targetId: input.key, after: { name, from: input.from ?? null }, ip: actor.ip });
       return r;
     });
@@ -277,6 +310,7 @@ export class GcsThemeService {
   /** Tema implicită, dacă nu există încă nicio temă (seed; idempotent). */
   static async seedDefault(tx: Prisma.TransactionClient): Promise<void> {
     if ((await tx.theme.count()) > 0) return;
-    await tx.theme.create({ data: { key: "default", name: "Default", isDefault: true, settings: DEFAULT_THEME_SETTINGS as unknown as Prisma.InputJsonValue } });
+    const theme = await tx.theme.create({ data: { key: "default", name: "Default", isDefault: true, settings: DEFAULT_THEME_SETTINGS as unknown as Prisma.InputJsonValue } });
+    await GcsThemeCssService.seed(tx, theme.id, "", { authorId: null, authorName: "" });
   }
 }
