@@ -174,6 +174,7 @@ const acpMenu: GcsAcpMenuSection[] = [
   ]),
   menuSection("system", "site_features", "fa-solid fa-puzzle-piece", [
     ["applications", "/admin/system/applications", "fa-solid fa-cubes"],
+    ["hooks", "/admin/system/hooks", "fa-solid fa-code-branch"],
     ["integrations", "/admin/system/integrations", "fa-solid fa-plug"],
     ["menu_manager", "/admin/system/menu", "fa-solid fa-bars-staggered"],
     ["api", "/admin/system/api", "fa-solid fa-code"],

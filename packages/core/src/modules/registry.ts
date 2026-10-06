@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { Prisma, PrismaClient } from "@gcs/db";
 import type { GcsCache } from "../cache";
 import type { GcsEvent, GcsEventBus } from "../events";
@@ -149,6 +150,7 @@ export class GcsModuleRegistry {
   private readonly modules: GcsModule[] = [];
   private readonly settings = new Map<string, GcsSettingDef>();
   private readonly permissions = new Map<string, GcsPermissionDef>();
+  private fingerprint: string | null = null;
 
   /** Înregistrează un modul. Aruncă eroare la o cheie duplicată de modul, setare sau permisiune. */
   register(m: GcsModule): void {
@@ -163,6 +165,33 @@ export class GcsModuleRegistry {
     this.modules.push(m);
     for (const s of m.settings) this.settings.set(s.key, s);
     for (const p of m.permissions) this.permissions.set(p.key, p);
+    this.fingerprint = null;
+  }
+
+  /**
+   * Scoate un modul înregistrat la rulare (pluginurile, etapa 6): setările, permisiunile, widget-urile și meniul lui
+   * dispar din registry. Întoarce `false` dacă modulul nu era înregistrat.
+   */
+  unregister(key: string): boolean {
+    const index = this.modules.findIndex((m) => m.key === key);
+    if (index === -1) return false;
+    const [m] = this.modules.splice(index, 1);
+    for (const s of m!.settings) this.settings.delete(s.key);
+    for (const p of m!.permissions) this.permissions.delete(p.key);
+    this.fingerprint = null;
+    return true;
+  }
+
+  /**
+   * Amprenta permisiunilor declarate (chei + valori implicite). Intră în cheile de cache ale permisiunilor, ca procesele
+   * cu alte module încărcate (ex. un plugin abia activat) să nu-și folosească una alteia valorile calculate.
+   */
+  permissionsFingerprint(): string {
+    this.fingerprint ??= createHash("sha256")
+      .update(JSON.stringify([...this.permissions.values()].map((p) => [p.key, p.scope, p.default, p.merge ?? null]).sort((a, b) => String(a[0]).localeCompare(String(b[0])))))
+      .digest("hex")
+      .slice(0, 10);
+    return this.fingerprint;
   }
 
   all(): GcsModule[] {

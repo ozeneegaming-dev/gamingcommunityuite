@@ -35,7 +35,7 @@ type GcsModeratorRow = { userId: string | null; groupId: number | null; powers: 
  * - `root_admin` primește true pentru orice cheie.
  * - În matricea pe container, `action` e cheia completă a permisiunii (ex. `forums.view`).
  *
- * Cache-ul e pe combinația de grupuri: `perm:${permVersion}:${groupIds sortate}`. `bumpVersion()`
+ * Cache-ul e pe combinația de grupuri: `perm:${permVersion}:${amprenta}:${groupIds sortate}`. `bumpVersion()`
  * schimbă versiunea, deci următorul request citește permisiunile noi, fără să aștepte TTL-ul.
  *
  * Etapa 5: **permisiunile individuale** (`user_permissions`) se aplică după grupuri, doar pentru setările de grup:
@@ -236,7 +236,8 @@ export class GcsPermissionService {
 
   private async groupSetPerms(groupIds: number[], version: number): Promise<GcsGroupSetPerms> {
     const ids = [...new Set(groupIds)].sort((a, b) => a - b);
-    const cacheKey = `perm:${version}:${ids.join(",")}`;
+    // Amprenta permisiunilor declarate: un proces cu alt set de module (ex. un plugin încărcat) are alt cache.
+    const cacheKey = `perm:${version}:${this.deps.registry.permissionsFingerprint()}:${ids.join(",")}`;
     const cached = await this.deps.cache.get<GcsGroupSetPerms>(cacheKey);
     if (cached) return cached;
 

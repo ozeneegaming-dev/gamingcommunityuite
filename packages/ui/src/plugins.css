@@ -1,0 +1,483 @@
+/* ─── Pluginuri (etapa 6 §2): conținutul pluginurilor pe site și paginile lor din ACP ─────────────────────────────── */
+
+/*
+ * Containerul a tot ce randează un plugin (widget, pagină, punct de extensie). `contain: paint` îl face bloc de
+ * conținere și pentru elementele `position: fixed`, deci nimic din plugin nu poate acoperi restul paginii.
+ */
+.gcsp {
+  position: relative;
+  contain: paint;
+  isolation: isolate;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.gcsp img {
+  max-width: 100%;
+  height: auto;
+}
+.gcs-pluginWidget__body {
+  padding: 0 16px 16px;
+}
+.gcs-pluginPage .gcsp h2,
+.gcs-pluginPage .gcsp h3 {
+  margin: 0 0 8px;
+}
+.gcs-pluginHook {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+/* ─── ACP: lista pluginurilor ─────────────────────────────────────────────────────────────────────────────────── */
+.gcs-pluginCount {
+  display: inline-flex;
+  min-width: 22px;
+  justify-content: center;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--gcs-surface2);
+  color: var(--gcs-muted);
+  font-size: 12px;
+}
+.gcs-pluginList {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-pluginRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: start;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-pluginRow:last-child {
+  border-bottom: 0;
+}
+.gcs-pluginRow__icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--gcs-accent) 14%, transparent);
+  color: var(--gcs-accent);
+  font-size: 19px;
+}
+.gcs-pluginRow__main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.gcs-pluginRow__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  font-weight: 700;
+}
+.gcs-pluginRow__name a {
+  color: var(--gcs-text);
+  font-size: 15px;
+}
+.gcs-pluginRow__name code,
+.gcs-pluginRow__badges code {
+  color: var(--gcs-muted);
+  font-size: 12px;
+}
+.gcs-pluginRow__badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.gcs-pluginRow__author {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+}
+.gcs-pluginRow__desc {
+  margin: 0;
+  color: var(--gcs-muted);
+  font-size: 13.5px;
+}
+.gcs-pluginRow__error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--gcs-acp-bad, #ff8a91);
+  font-size: 12.5px;
+}
+.gcs-pluginRow__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.gcs-pluginToggle {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.gcs-pluginToggle__error {
+  max-width: 220px;
+  color: #ff8a91;
+  font-size: 12px;
+  text-align: right;
+}
+
+/* Încărcarea unei arhive. */
+.gcs-pluginUpload {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gcs-pluginUpload__drop {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  border: 1.5px dashed var(--gcs-border);
+  border-radius: 12px;
+  background: var(--gcs-surface2);
+  cursor: pointer;
+}
+.gcs-pluginUpload__drop:hover,
+.gcs-pluginUpload__drop:focus-within {
+  border-color: var(--gcs-accent);
+}
+.gcs-pluginUpload__icon {
+  color: var(--gcs-accent);
+  font-size: 26px;
+}
+.gcs-pluginUpload__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.gcs-pluginUpload__text small {
+  color: var(--gcs-muted);
+}
+.gcs-pluginUpload__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.gcs-pluginUpload__error {
+  color: #ff8a91;
+  font-size: 13px;
+  font-weight: 600;
+}
+.gcs-pluginKeys {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 12.5px;
+}
+.gcs-pluginNotice.gcs-card {
+  border-color: var(--gcs-warn);
+}
+.gcs-pluginNotice strong .gcs-icon {
+  color: var(--gcs-warn);
+}
+
+/* ─── ACP: confirmarea instalării ─────────────────────────────────────────────────────────────────────────────── */
+.gcs-pluginConfirm {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+.gcs-pluginConfirm__col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+.gcs-pluginFacts {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 4px 18px 12px;
+}
+.gcs-pluginFacts > div {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-pluginFacts > div:last-child {
+  border-bottom: 0;
+}
+.gcs-pluginFacts dt {
+  color: var(--gcs-muted);
+  font-size: 13px;
+}
+.gcs-pluginFacts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.gcs-pluginChecks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-pluginChecks__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 13.5px;
+  overflow-wrap: anywhere;
+}
+.gcs-pluginChecks__item .gcs-icon {
+  flex: none;
+  margin-top: 2px;
+}
+.gcs-pluginChecks__item--ok .gcs-icon {
+  color: var(--gcs-ok);
+}
+.gcs-pluginChecks__item--warn .gcs-icon {
+  color: var(--gcs-warn);
+}
+.gcs-pluginChecks__item--error {
+  color: #ff8a91;
+}
+.gcs-pluginCaps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-pluginCaps__item {
+  display: flex;
+  gap: 12px;
+}
+.gcs-pluginCaps__icon {
+  display: grid;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--gcs-surface2);
+  color: var(--gcs-accent);
+}
+.gcs-pluginCaps__text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.gcs-pluginCaps__text strong {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.gcs-pluginCaps__text small {
+  color: var(--gcs-muted);
+  font-size: 13px;
+}
+.gcs-pluginDecl {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+}
+.gcs-pluginDecl__row {
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr);
+  gap: 10px;
+}
+.gcs-pluginDecl__row dt {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--gcs-muted);
+  font-size: 13px;
+}
+.gcs-pluginDecl__row dd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+}
+.gcs-pluginDecl__row code {
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--gcs-surface2);
+  font-size: 12px;
+}
+.gcs-pluginWarn {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--gcs-warn);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--gcs-warn) 10%, transparent);
+  font-size: 13.5px;
+}
+.gcs-pluginWarn strong {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.gcs-pluginWarn--error {
+  border-color: #ff8a91;
+  background: color-mix(in srgb, #ff8a91 10%, transparent);
+}
+
+/* ─── ACP: pagina pluginului ───────────────────────────────────────────────────────────────────────────────────── */
+.gcs-pluginLog {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-pluginLog__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--gcs-border);
+  font-size: 13px;
+}
+.gcs-pluginLog__row time {
+  color: var(--gcs-muted);
+  font-size: 12px;
+}
+.gcs-pluginLog__row--error .gcs-icon {
+  color: #ff8a91;
+}
+.gcs-pluginLog__row--warn .gcs-icon {
+  color: var(--gcs-warn);
+}
+.gcs-pluginLog__row--info .gcs-icon {
+  color: var(--gcs-muted);
+}
+.gcs-pluginLog__msg {
+  flex: 1 1 260px;
+  overflow-wrap: anywhere;
+}
+.gcs-pluginFiles {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+
+/* ─── ACP: Hook-uri ───────────────────────────────────────────────────────────────────────────────────────────── */
+.gcs-hookPoints {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 8px 0;
+  list-style: none;
+}
+.gcs-hookPoint {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-hookPoint:last-child {
+  border-bottom: 0;
+}
+.gcs-hookPoint__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.gcs-hookPoint__name {
+  font-weight: 700;
+}
+.gcs-hookPoint__head .gcs-muted {
+  flex: 1 1 240px;
+  font-size: 13px;
+}
+.gcs-hookPoint__uses {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0 0 0 14px;
+  list-style: none;
+  border-left: 2px solid var(--gcs-border);
+}
+.gcs-hookUse {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.gcs-hookUse__plugin {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.gcs-hookUse__controls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.gcs-hookUse__priority {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gcs-muted);
+  font-size: 12.5px;
+}
+.gcs-hookUse__priority .gcs-input {
+  width: 72px;
+}
+.gcs-hookUse__switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+@media (max-width: 720px) {
+  .gcs-pluginRow {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .gcs-pluginRow__actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+  .gcs-pluginFacts > div,
+  .gcs-pluginDecl__row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+}

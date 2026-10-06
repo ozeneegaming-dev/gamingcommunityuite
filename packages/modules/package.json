@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "@gcs/config": "workspace:*",
+    "@gcs/plugin-sdk": "workspace:*",
     "@types/node": "^22.0.0",
     "@types/pg": "^8.23.1",
     "@types/sanitize-html": "^2.16.2",

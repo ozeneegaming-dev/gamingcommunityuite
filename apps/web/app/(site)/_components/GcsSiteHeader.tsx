@@ -7,6 +7,7 @@ import { currentActor } from "@/lib/actor";
 import { viewerEditing, viewerTheme } from "@/lib/appearance";
 import { memberHref } from "@/lib/forum-urls";
 import { localeOptions } from "@/lib/locales";
+import { pluginHost, safeModeActive } from "@/lib/plugins";
 import { services } from "@/lib/services";
 import { GcsGuestPrefs, GcsHeaderScroll, GcsHeaderSearch, GcsMobileNav, GcsNavLinks, GcsUserMenu, type GcsNavEntry } from "./header/GcsNavClient";
 import { GcsAuthLink } from "./GcsAuthModal";
@@ -88,7 +89,14 @@ export async function GcsSiteHeader() {
   const label = (l: { key: string } | { text: string }) => ("key" in l ? (tAll.has(l.key) ? tAll(l.key) : l.key) : l.text);
   const entries = (items: typeof tree): GcsNavEntry[] =>
     items.map((i) => ({ id: i.id, label: label(i.label), href: i.href, newTab: i.newTab, icon: i.icon ? <GcsIcon name={i.icon} /> : null, children: entries(i.children) }));
-  const menu = entries(tree);
+  // Intrările pluginurilor (etapa 6): în meniul principal și în meniul userului; nu în modul sigur.
+  const pluginMenus = (await safeModeActive())
+    ? { site: [], user: [] }
+    : await pluginHost().then(async (host) => ({ site: await host.menus("site", actor, locale), user: user ? await host.menus("user", actor, locale) : [] }));
+  const menu = [
+    ...entries(tree),
+    ...pluginMenus.site.map((m, i): GcsNavEntry => ({ id: -1000 - i, label: m.label, href: m.href, newTab: false, icon: <GcsIcon name={m.icon} />, children: [] })),
+  ];
 
   return (
     <header className="gcs-siteHeader">
@@ -141,6 +149,7 @@ export async function GcsSiteHeader() {
                   themeEditor: editing.canTheme ? `/admin/theme-editor/${theme.key}` : null,
                   pageEditor: editing.canWidgets,
                 }}
+                extra={pluginMenus.user.map((m) => ({ key: m.key, label: m.label, href: m.href, icon: <GcsIcon name={m.icon} /> }))}
                 labels={{
                   menu: t("userMenu"),
                   profile: t("myProfile"),

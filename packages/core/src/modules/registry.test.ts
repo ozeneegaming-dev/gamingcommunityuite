@@ -59,4 +59,24 @@ describe("GcsModuleRegistry", () => {
     expect(registry.settingDef("a.x")?.key).toBe("a.x");
     expect(registry.settingDef("lipsa")).toBeUndefined();
   });
+
+  test("unregister scoate modulul (pluginurile la dezactivare), iar amprenta permisiunilor se schimbă", () => {
+    const registry = new GcsModuleRegistry();
+    registry.register(mod("core", { permissions: [permission("acp.access")] }));
+    const before = registry.permissionsFingerprint();
+    registry.register(mod("plugin.acme.demo", { settings: [setting("plugin.acme.demo.x")], permissions: [permission("plugin.acme.demo.view")] }));
+    const loaded = registry.permissionsFingerprint();
+    expect(loaded).not.toBe(before);
+    expect(registry.permissionDef("plugin.acme.demo.view")).toBeDefined();
+
+    expect(registry.unregister("plugin.acme.demo")).toBe(true);
+    expect(registry.unregister("plugin.acme.demo")).toBe(false);
+    expect(registry.module("plugin.acme.demo")).toBeUndefined();
+    expect(registry.permissionDef("plugin.acme.demo.view")).toBeUndefined();
+    expect(registry.settingDef("plugin.acme.demo.x")).toBeUndefined();
+    expect(registry.permissionsFingerprint()).toBe(before);
+    // Se poate înregistra din nou (activare după dezactivare).
+    registry.register(mod("plugin.acme.demo", { permissions: [permission("plugin.acme.demo.view")] }));
+    expect(registry.permissionsFingerprint()).toBe(loaded);
+  });
 });

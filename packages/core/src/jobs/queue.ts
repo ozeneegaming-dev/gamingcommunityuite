@@ -70,6 +70,25 @@ export class GcsJobQueue {
   }
 
   /**
+   * Programează (sau reprogramează) un job repetabil adăugat la rulare (ex. jobul periodic al unui plugin): `id` e
+   * cheia programării, `name` jobul înregistrat care rulează, cu `data`. Idempotent.
+   */
+  async upsertScheduler(id: string, everyMs: number, job: { name: string; data: GcsJobData }): Promise<void> {
+    await this.getQueue().upsertJobScheduler(id, { every: everyMs }, { name: job.name, data: job.data });
+  }
+
+  /** Șterge o programare adăugată cu `upsertScheduler` (lipsa ei nu e o eroare). */
+  async removeScheduler(id: string): Promise<void> {
+    await this.getQueue().removeJobScheduler(id);
+  }
+
+  /** Programările existente al căror id începe cu `prefix`. */
+  async schedulerIds(prefix: string): Promise<string[]> {
+    const list = await this.getQueue().getJobSchedulers(0, 999);
+    return list.map((s) => s.key).filter((key): key is string => typeof key === "string" && key.startsWith(prefix));
+  }
+
+  /**
    * Pornește procesarea (doar în `gcs-worker`): programează joburile repetabile și rulează handler-ele.
    * Întoarce funcția de oprire.
    */

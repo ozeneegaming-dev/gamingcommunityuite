@@ -79,7 +79,7 @@ function partialsOf(key: string): string[] {
  * HTML-ul sanitizat al unui șablon pe care tema viewer-ului l-a modificat (el sau un șablon parțial inclus de el),
  * sau `null` (nemodificat sau eroare).
  */
-export async function siteTemplateHtml(key: string, data: Record<string, unknown>): Promise<string | null> {
+export async function siteTemplateHtml(key: string, data: Record<string, unknown>, hooks: Record<string, string> = {}): Promise<string | null> {
   const ctx = await viewerOverrides();
   if (!ctx) return null;
   const own = ctx.overrides[key]?.source;
@@ -88,7 +88,8 @@ export async function siteTemplateHtml(key: string, data: Record<string, unknown
   if (source === undefined) return null;
   try {
     const opts = await siteRenderOptions();
-    return await services().templates.render(ctx.themeKey, key, { ...opts.common, ...data }, { ...opts.render, source });
+    // `{% hook "…" %}`: HTML-ul pluginurilor pentru punctul de extensie, deja sanitizat (calculat de componentă).
+    return await services().templates.render(ctx.themeKey, key, { ...opts.common, ...data }, { ...opts.render, source, hook: (name) => hooks[name] ?? "" });
   } catch (error) {
     console.error(`[GCS] șablonul ${key} (tema ${ctx.themeKey}):`, error instanceof GcsTemplateError ? error.message : error);
     return null;
@@ -99,8 +100,13 @@ export async function siteTemplateHtml(key: string, data: Record<string, unknown
  * Markup-ul unui șablon modificat, ca elemente React (cu sloturile puse la locul lor), sau `null` dacă tema
  * viewer-ului nu l-a modificat. Sloturile obligatorii lipsă din șablon se adaugă la final.
  */
-export async function siteTemplate(key: string, data: Record<string, unknown>, slots: Record<string, ReactNode> = {}): Promise<ReactNode | null> {
-  const html = await siteTemplateHtml(key, data);
+export async function siteTemplate(
+  key: string,
+  data: Record<string, unknown>,
+  slots: Record<string, ReactNode> = {},
+  hooks: Record<string, string> = {},
+): Promise<ReactNode | null> {
+  const html = await siteTemplateHtml(key, data, hooks);
   if (html === null) return null;
   const required = (defaultTemplate(key)?.slots ?? []).filter((s) => s.required).map((s) => s.name);
   return htmlToReact(html, slots, required);

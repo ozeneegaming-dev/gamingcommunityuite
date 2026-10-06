@@ -115,7 +115,11 @@
       "poll_closed": "La encuesta está cerrada.",
       "guest": "Tienes que firmar.",
       "has_children": "La categoría todavía tiene foros.",
-      "has_content": "El foro tiene temas: elegir dónde se mueven."
+      "has_content": "El foro tiene temas: elegir dónde se mueven.",
+      "unsigned_requires_root": "Only a Root Admin can install unsigned packages.",
+      "db_role_unavailable": "The database user cannot create roles: plugins with their own database cannot be installed safely.",
+      "db_unavailable": "The database is not configured.",
+      "dependency_disabled": "A plugin dependency is not installed or is disabled."
     },
     "fields": {
       "invalid_color": "Color inválido (#RRGGBB)",
@@ -168,7 +172,11 @@
       "template_syntax": "The template has a syntax error.",
       "invalid_css_name": "File name: lower-case letters, digits, dot, dash or _, ending in .css.",
       "too_many_files": "The theme already has the maximum number of CSS files.",
-      "locked_file": "custom.css is the visual editor file: it cannot be renamed or deleted."
+      "locked_file": "custom.css is the visual editor file: it cannot be renamed or deleted.",
+      "invalid_code": "The 2FA code is not correct.",
+      "mismatch": "The text does not match.",
+      "unknown": "Unknown.",
+      "migration_failed": "A database migration failed."
     }
   },
   "acp": {
@@ -221,7 +229,7 @@
         "dashboard": "Panel",
         "files": "Archivos",
         "site_features": "Características del sitio",
-        "applications": "Aplicaciones",
+        "applications": "Aplicaciones y plugins",
         "integrations": "Integración",
         "menu_manager": "Menu manager",
         "api": "API",
@@ -252,7 +260,8 @@
         "cache": "Vaciar caché",
         "conversions": "Conversiones",
         "import": "Importación de otra plataforma",
-        "settings_languages": "Idiomas: traducción"
+        "settings_languages": "Idiomas: traducción",
+        "hooks": "Hooks"
       },
       "members": {
         "members": "Miembros",
@@ -1384,6 +1393,304 @@
         "emailItem": "Ana replied in “Welcome!”",
         "emailFooter": "Choose which emails you get in the notification settings.",
         "emailSubject": "A new notification — {site}"
+      }
+    },
+    "plugins": {
+      "title": "Applications and plugins",
+      "description": "The platform's optional applications and the installed plugins. A plugin is installed and enabled without a restart.",
+      "appsTitle": "Applications",
+      "signed": "Signed ({keyId})",
+      "unsigned": "Unsigned",
+      "status": {
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+        "auto": "Disabled automatically",
+        "cli": "Disabled from the console",
+        "removed": "Uninstalled, data kept"
+      },
+      "autoDisabled": {
+        "title": "Plugins disabled automatically: {count}",
+        "body": "They failed too many times in a row: {names}.",
+        "link": "See the plugins"
+      },
+      "list": {
+        "title": "Plugins",
+        "empty": "No plugins installed. Upload a .zip package below.",
+        "disableAll": "Disable all",
+        "disableAllConfirm": "Disable all plugins? You can re-enable each one.",
+        "toggle": "Plugin {name} enabled",
+        "manage": "Manage",
+        "updated": "updated {date}"
+      },
+      "upload": {
+        "title": "Upload a plugin",
+        "body": "The package (.zip) is checked before anything else: size, paths, manifest, compatibility, dependencies, migrations and signature. It is installed only after you confirm.",
+        "file": "Choose the plugin archive (.zip)",
+        "hint": "Maximum 8 MB. For an update, upload the new version of the same plugin.",
+        "submit": "Upload and check",
+        "uploading": "Checking…",
+        "network": "The upload failed. Check your connection and try again.",
+        "trusted": "Trusted signing keys: {keys}.",
+        "noTrusted": "No trusted signing keys configured (GCS_PLUGIN_TRUSTED_KEYS): every package is treated as unsigned."
+      },
+      "risk": {
+        "low": "low risk",
+        "medium": "medium risk",
+        "high": "high risk"
+      },
+      "capabilities": {
+        "none": "The plugin asks for no capabilities.",
+        "new": "new",
+        "db": {
+          "title": "Own database",
+          "body": "Creates tables in a separate schema, with a dedicated PostgreSQL role. It cannot read or change the site's tables."
+        },
+        "events": {
+          "title": "Events",
+          "body": "Learns when something happens on the site (new post, new member, chat message) and reacts in the background."
+        },
+        "filters": {
+          "title": "Filters before saving",
+          "body": "Can change or reject posts before they are saved."
+        },
+        "widgets": {
+          "title": "Widgets",
+          "body": "Adds widgets you can place on pages with “Edit page”."
+        },
+        "pages": {
+          "title": "Site pages",
+          "body": "Has its own pages on the site (addresses /p/…)."
+        },
+        "api": {
+          "title": "API routes",
+          "body": "Receives JSON requests from the browser (addresses /api/plugins/…)."
+        },
+        "acp": {
+          "title": "ACP pages",
+          "body": "Has its own pages in the admin panel."
+        },
+        "menus": {
+          "title": "Menus",
+          "body": "Adds links to the site menu or the user menu."
+        },
+        "jobs": {
+          "title": "Jobs",
+          "body": "Runs periodic or on-demand tasks in the background."
+        },
+        "settings": {
+          "title": "Settings",
+          "body": "Has its own settings, editable in the ACP."
+        },
+        "permissions": {
+          "title": "Permissions",
+          "body": "Declares group permissions, shown in ACP → Groups."
+        },
+        "hooks": {
+          "title": "Extension points",
+          "body": "Adds content to specific places in the interface (e.g. the author card)."
+        },
+        "http-out": {
+          "title": "Requests to other sites",
+          "body": "Can send requests to external services, so it can send out the data it sees. Internal addresses are blocked."
+        },
+        "client-css": {
+          "title": "CSS styles",
+          "body": "Brings its own CSS, confined to the plugin's container (it does not change the rest of the site)."
+        },
+        "client-js": {
+          "title": "JavaScript in the browser",
+          "body": "Runs JavaScript in visitors' browsers on the plugin's pages and can act on their behalf. Signed plugins only."
+        },
+        "templates": {
+          "title": "Templates",
+          "body": "Reserved: the plugin's templates, for the template engine."
+        }
+      },
+      "checks": {
+        "archive_ok": "The archive is valid ({files} files, no unsafe paths or links).",
+        "manifest_ok": "plugin.json is valid: {key} {version}.",
+        "compatible": "Compatible with this GCS version ({current}).",
+        "signed": "Valid signature, trusted key {keyId}.",
+        "unsigned": "Unsigned package: only a Root Admin can install it, with the 2FA code.",
+        "migrations_ok": "The SQL migrations ({count}) stay in the plugin's own schema.",
+        "dependency_disabled": "The dependency {key} is installed but disabled.",
+        "templates_reserved": "The “templates” capability is reserved and has no effect yet.",
+        "archive_too_large": "The archive is too large (maximum {max} bytes).",
+        "zip_invalid": "The file is not a valid ZIP archive.",
+        "zip64_unsupported": "ZIP64 archives are not accepted.",
+        "zip_multidisk": "Multi-volume archives are not accepted.",
+        "too_many_files": "Too many files (maximum {max}).",
+        "path_unsafe": "Unsafe path in the archive: {path}",
+        "zip_encrypted": "Encrypted file in the archive: {path}",
+        "symlink": "Symbolic link in the archive: {path}",
+        "special_file": "Special file in the archive: {path}",
+        "zip_method": "Unknown compression method: {path}",
+        "duplicate_path": "Duplicate file in the archive: {path}",
+        "file_too_large": "File too large: {path} (maximum {max} bytes).",
+        "total_too_large": "The archive content is too large (maximum {max} bytes).",
+        "compression_ratio": "Suspicious compression (possible ZIP bomb): {path}",
+        "zip_corrupt": "Damaged file in the archive: {path}",
+        "zip_crc": "Checksum mismatch: {path}",
+        "unexpected_file": "File not allowed in a package: {path}",
+        "not_utf8": "The file is not UTF-8 text: {path}",
+        "manifest_missing": "plugin.json is missing.",
+        "manifest_json": "plugin.json is not valid JSON.",
+        "manifest_invalid": "plugin.json: {path} — {issue}",
+        "server_missing": "server.mjs is missing.",
+        "lang_invalid": "Invalid language file: {path} ({issue})",
+        "missing_capability": "{path} needs the “{capability}” capability.",
+        "migration_rejected": "Migration rejected: {path} — {issue} ({detail})",
+        "asset_missing": "The declared file is missing: {path}",
+        "css_rejected": "CSS rejected: {path} — {issue} ({detail})",
+        "incompatible_gcs": "Needs GCS {required}; this installation has {current}.",
+        "dependency_missing": "The dependency {key} ({range}) is missing.",
+        "dependency_version": "The dependency {key} is version {found}; {range} is required.",
+        "version_not_newer": "Version {version} is not newer than the installed one ({installed}).",
+        "signature_invalid": "The signature does not match: the package was changed or the signature is broken ({reason}).",
+        "unsigned_denied": "Unsigned packages are not allowed on this server.",
+        "client_js_unsigned": "Browser JavaScript is only allowed for signed plugins."
+      },
+      "confirm": {
+        "pageTitle": "Confirm the installation",
+        "title": "Install {name}?",
+        "description": "Read the check report and what the plugin will be able to do, then confirm.",
+        "back": "Back to plugins",
+        "package": "Package",
+        "mode": {
+          "install": "New installation",
+          "reinstall": "Reinstall (data kept)"
+        },
+        "modeUpdate": "Update from {from}",
+        "name": "Plugin",
+        "version": "Version",
+        "author": "Author",
+        "about": "Description",
+        "file": "File",
+        "files": "files",
+        "signature": "Signature",
+        "checks": "Checks",
+        "checksOk": "All checks passed",
+        "checksFailed": "The package has errors",
+        "capabilities": "What the plugin will be able to do",
+        "capabilitiesHint": "The plugin runs isolated and can only use what it asks for here.",
+        "confirmTitle": "Confirmation",
+        "invalid": "The package cannot be installed: fix the errors in the report and upload it again.",
+        "submit": "Install the plugin",
+        "submitUpdate": "Update the plugin",
+        "signedBody": "The package is signed by a trusted key. The plugin is enabled right after installation.",
+        "unsignedTitle": "Unsigned package",
+        "unsignedBody": "Nobody has reviewed this code. Install it only if you fully trust the author: a malicious plugin could try to break out of its isolation.",
+        "code": "2FA code (from your authenticator app)",
+        "typeKey": "Type the plugin key ({key}) to confirm",
+        "rootOnly": "Only a Root Admin can install unsigned packages.",
+        "cancel": "Cancel"
+      },
+      "declared": {
+        "permissions": "Permissions",
+        "widgets": "Widgets",
+        "pages": "Site pages",
+        "acp": "ACP pages",
+        "api": "API routes",
+        "events": "Events",
+        "filters": "Filters",
+        "hooks": "Extension points",
+        "jobs": "Jobs",
+        "menus": "Menus",
+        "scopeGroup": "per group",
+        "scopeContainer": "per container: {type}",
+        "jobEvery": "{name} (every {minutes} minutes)"
+      },
+      "detail": {
+        "back": "Back to plugins",
+        "save": "Save",
+        "noRight": "You are not allowed to change plugin settings.",
+        "timings": "Timings per hook",
+        "noTimings": "The plugin has not been called yet.",
+        "hook": "Hook",
+        "calls": "Calls",
+        "failures": "Failures",
+        "avg": "Average",
+        "max": "Max",
+        "entries": "Log",
+        "noLogs": "The log is empty.",
+        "capabilities": "Capabilities",
+        "declared": "What it declares",
+        "runtime": "Runtime",
+        "process": "In this process",
+        "running": "loaded, thread running",
+        "loaded": "loaded",
+        "notLoaded": "not loaded",
+        "database": "Database",
+        "role": "role",
+        "migrations": "migrations: {count}",
+        "installed": "Installed",
+        "updatedAt": "updated",
+        "files": "Files ({count})",
+        "update": "Update",
+        "updateHint": "Installed version: {version}. Upload the archive of the new version; new migrations run when you confirm, and the settings are kept.",
+        "uninstall": "Uninstall",
+        "uninstallSubmit": "Uninstall",
+        "uninstallHint": "The plugin is unloaded right away from every process. Without “Keep data”, its tables, database role, settings, group permissions and widgets are deleted too.",
+        "keepData": "Keep data (for a reinstall)",
+        "typeKey": "Type the plugin key ({key}) to confirm",
+        "autoDisabled": "Disabled automatically after {count} failures in a row",
+        "log": "Log",
+        "details": "Details",
+        "manage": "Update and uninstall"
+      },
+      "hooks": {
+        "title": "Hooks",
+        "description": "Events and extension points, the plugins that use them and their order. A lower priority runs earlier.",
+        "save": "Save",
+        "priority": "Priority",
+        "priorityOf": "Priority for {name}",
+        "enabled": "Enabled",
+        "enabledOf": "{name} enabled",
+        "users": "Plugins: {count}",
+        "noPlugins": "No installed plugin has widgets, pages, routes, jobs or menus.",
+        "sections": {
+          "event": "Events",
+          "filter": "Filters",
+          "hook": "Extension points",
+          "widget": "Widgets",
+          "page": "Site pages",
+          "acp": "ACP pages",
+          "api": "API routes",
+          "job": "Jobs",
+          "menu": "Menus",
+          "own": "The plugins' own hooks"
+        },
+        "sectionHints": {
+          "event": "Delivered in the background, after the action finished; they cannot stop it. 5 s timeout.",
+          "filter": "Run before saving, in priority order.",
+          "hook": "HTML inserted into the interface (sanitized), in priority order. 3 s timeout.",
+          "own": "Each plugin's widgets, pages, API routes, jobs and menu entries; they can be switched off one by one."
+        },
+        "catalog": {
+          "post_created": "A new post (reply or the first post of a topic).",
+          "post_updated": "A post was edited.",
+          "post_deleted": "A post was deleted.",
+          "post_approved": "A post was approved from the moderation queue.",
+          "topic_created": "A new topic.",
+          "topic_updated": "A topic was changed (title, prefix, tags).",
+          "topic_deleted": "A topic was deleted.",
+          "topic_moved": "Topics were moved to another forum.",
+          "topic_moderated": "A moderation action on topics (pin, lock, hide…).",
+          "user_registered": "A new account.",
+          "user_promoted": "A new member was promoted to Member.",
+          "user_banned": "A member was banned.",
+          "user_unbanned": "A ban was lifted.",
+          "user_warned": "A member received a warning.",
+          "user_followed": "A member followed another member.",
+          "chat_message": "A new chat message.",
+          "chat_deleted": "A chat message was deleted.",
+          "report_created": "A new report for moderators.",
+          "badge_awarded": "A badge was awarded.",
+          "vip_granted": "A VIP subscription was granted.",
+          "vip_expired": "A VIP subscription expired.",
+          "post_before_save": "Before a post is saved (new topic, reply, edit): the plugin can change the title and content or reject the post. 2 s timeout; an error skips the plugin.",
+          "postbit_after_fields": "Below the author card in posts."
+        }
       }
     }
   },
@@ -2826,5 +3133,16 @@
     "posts": "Mensajes",
     "reputation": "Reputación",
     "joined": "Miembro desde {date}"
+  },
+  "plugins": {
+    "page": {
+      "safeMode": "Safe mode is on: plugins do not run for you.",
+      "forbidden": "You do not have access to this page.",
+      "error": "The plugin could not show this page. Try again later."
+    },
+    "safeMode": {
+      "banner": "Safe mode: the site runs without plugins, only for you.",
+      "exit": "Leave safe mode"
+    }
   }
 }

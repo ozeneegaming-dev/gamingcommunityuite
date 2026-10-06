@@ -1,0 +1,27 @@
+{
+  "name": "@gcs/plugin-sdk",
+  "version": "0.6.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./pack": "./src/pack.ts",
+    "./zip": "./src/zip.ts",
+    "./example": "./scripts/build-example.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "build:example": "tsx scripts/build-example.ts"
+  },
+  "devDependencies": {
+    "@gcs/config": "workspace:*",
+    "@types/node": "^22.0.0",
+    "esbuild": "^0.28.2",
+    "eslint": "^9.30.0",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}

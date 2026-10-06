@@ -151,7 +151,18 @@ export type GcsUserMenuLinks = {
  * Meniul userului (dropdown): linkurile de bază, apoi uneltele staff-ului (editorul de temă, editorul de pagină,
  * moderarea, ACP), fiecare doar cu dreptul lui, și ieșirea. Tema și limba se schimbă din footer (pentru toată lumea).
  */
-export function GcsUserMenu({ trigger, links, labels }: { trigger: ReactNode; links: GcsUserMenuLinks; labels: GcsUserMenuLabels }) {
+export function GcsUserMenu({
+  trigger,
+  links,
+  labels,
+  extra = [],
+}: {
+  trigger: ReactNode;
+  links: GcsUserMenuLinks;
+  labels: GcsUserMenuLabels;
+  /** Intrările pluginurilor (etapa 6), după linkurile de bază; iconițele vin randate de pe server. */
+  extra?: { key: string; label: string; href: string; icon: ReactNode }[];
+}) {
   const [, start] = useTransition();
   const router = useRouter();
   const pathname = usePathname();
@@ -176,6 +187,7 @@ export function GcsUserMenu({ trigger, links, labels }: { trigger: ReactNode; li
     { kind: "link", label: labels.messages, href: "/messages", icon: icon(faEnvelope) },
     { kind: "link", label: labels.notifications, href: "/notifications", icon: icon(faBell) },
     { kind: "link", label: labels.settings, href: "/settings/profile", icon: icon(faGear), testId: "gcs-menu-settings" },
+    ...extra.map((e) => ({ kind: "link", label: e.label, href: e.href, icon: e.icon, testId: `gcs-menu-plugin-${e.key}` }) as const),
     ...(staff ? [{ kind: "separator" } as const] : []),
     ...(links.themeEditor ? [{ kind: "link", label: labels.themeEditor, href: links.themeEditor, icon: icon(faPaintbrush), testId: "gcs-menu-theme-editor" } as const] : []),
     ...(links.pageEditor ? [{ kind: "action", label: labels.pageEditor, onSelect: editPage, icon: icon(faTableColumns), testId: "gcs-menu-page-editor" } as const] : []),

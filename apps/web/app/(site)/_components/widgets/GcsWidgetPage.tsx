@@ -6,13 +6,16 @@ import { currentActor } from "@/lib/actor";
 import { viewerEditing } from "@/lib/appearance";
 import { services } from "@/lib/services";
 import { GcsPageEditor, type GcsPageEditorItem } from "./GcsPageEditor";
+import { isPluginWidget, renderPluginWidget } from "./GcsPluginWidget";
 import { WIDGET_RENDERERS } from "./registry";
 
 /** Randează un widget; o eroare într-un widget nu strică pagina (widget-ul lipsește, eroarea ajunge în log). */
-async function renderPlacement(p: GcsWidgetPlacementView, actor: GcsActor): Promise<ReactNode> {
+async function renderPlacement(p: GcsWidgetPlacementView, actor: GcsActor, page: GcsWidgetPageKey): Promise<ReactNode> {
   const render = WIDGET_RENDERERS[p.type];
-  if (!render) return null;
+  if (!render && !isPluginWidget(p.type)) return null;
   try {
+    // Widget-urile pluginurilor (etapa 6) se randează prin gazda pluginurilor.
+    if (!render) return await renderPluginWidget(p, actor, page);
     return await render({ id: String(p.id), config: p.config, actor });
   } catch (error) {
     console.error(`[GCS] widget ${p.type} (#${p.id}):`, error);
@@ -21,8 +24,8 @@ async function renderPlacement(p: GcsWidgetPlacementView, actor: GcsActor): Prom
 }
 
 /** Un widget randat separat (în propriul `Suspense`): pagina nu așteaptă după el, iar o eroare îl ascunde doar pe el. */
-async function GcsWidgetSlot({ placement, actor }: { placement: GcsWidgetPlacementView; actor: GcsActor }) {
-  return <>{await renderPlacement(placement, actor)}</>;
+async function GcsWidgetSlot({ placement, actor, page }: { placement: GcsWidgetPlacementView; actor: GcsActor; page: GcsWidgetPageKey }) {
+  return <>{await renderPlacement(placement, actor, page)}</>;
 }
 
 /** Locul widget-ului cât timp se încarcă (aceeași lățime, o înălțime apropiată, ca pagina să nu sară). */
@@ -43,7 +46,7 @@ export async function GcsWidgetPage({ page, children }: { page: GcsWidgetPageKey
   const zone = (z: GcsWidgetZone) =>
     layout[z].map((p) => (
       <Suspense key={p.id} fallback={<GcsWidgetSkeleton zone={z} />}>
-        <GcsWidgetSlot placement={p} actor={actor} />
+        <GcsWidgetSlot placement={p} actor={actor} page={page} />
       </Suspense>
     ));
   return (
@@ -102,7 +105,7 @@ async function GcsPageEditorHost({ page, actor, children }: { page: GcsWidgetPag
     return app ? label(app.labelKey) : module;
   };
   const placements = GCS_WIDGET_ZONES.flatMap((z) => layout[z]);
-  const previews = await Promise.all(placements.map((p) => renderPlacement(p, actor)));
+  const previews = await Promise.all(placements.map((p) => renderPlacement(p, actor, page)));
   const channels = enabled("chat") ? await chatQueries.channels(actor) : [];
 
   const initial = Object.fromEntries(GCS_WIDGET_ZONES.map((z) => [z, [] as GcsPageEditorItem[]])) as Record<GcsWidgetZone, GcsPageEditorItem[]>;

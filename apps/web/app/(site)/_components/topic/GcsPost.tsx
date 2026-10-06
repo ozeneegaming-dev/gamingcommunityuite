@@ -6,6 +6,7 @@ import { getFormatter, getTranslations } from "next-intl/server";
 import { memberHref, postHref, tint } from "@/lib/forum-urls";
 import { postbitVars } from "@/lib/template-data";
 import { siteTemplate } from "@/lib/templates";
+import { pluginHookHtml } from "@/lib/plugins";
 import { GcsTranslateButton, type GcsTranslateLabels } from "../GcsTranslateButton";
 import { GcsPostContent, type GcsPostContentProps } from "./GcsPostContent";
 
@@ -47,7 +48,7 @@ export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, 
       data-post-number={post.number}
     >
       <div className="gcs-post__author gcs-postbit" data-testid="gcs-postbit">
-        {author ? <GcsPostbit author={author} data={postbit} post={{ id: post.id, number: post.number }} /> : <span className="gcs-muted">—</span>}
+        {author ? <GcsPostbit author={author} data={postbit} post={{ id: post.id, number: post.number }} topicId={topicId} /> : <span className="gcs-muted">—</span>}
       </div>
       <GcsPostContent
         topicId={topicId}
@@ -108,9 +109,11 @@ function GcsRankIcon({ icon }: { icon: string | null }) {
  * aprecieri) și câmpurile alese din ACP (cu iconițe; „Select cu imagini” arată imaginea); data înscrierii, statusul și
  * motto-ul (ultimul status de pe peretele membrului).
  */
-async function GcsPostbit({ author, data, post }: { author: NonNullable<GcsPostView["author"]>; data: GcsPostbitData | null; post: { id: number; number: number } }) {
-  // Șablonul `postbit.author` (cu `postbit.fields` inclus), dacă tema l-a modificat.
-  const custom = await siteTemplate("postbit.author", postbitVars(author, data, post));
+async function GcsPostbit({ author, data, post, topicId }: { author: NonNullable<GcsPostView["author"]>; data: GcsPostbitData | null; post: { id: number; number: number }; topicId: number }) {
+  // Punctul de extensie `postbit.after_fields` (pluginurile, etapa 6): HTML sanitizat, o dată pentru ambele randări.
+  const plugins = await pluginHookHtml("postbit.after_fields", { postId: post.id, topicId, authorId: author.id });
+  // Șablonul `postbit.author` (cu `postbit.fields` inclus), dacă tema l-a modificat; `{% hook %}` primește pluginurile.
+  const custom = await siteTemplate("postbit.author", postbitVars(author, data, post), {}, { "postbit.after_fields": plugins.join("") });
   if (custom) return custom;
   const t = await getTranslations("topic.author");
   const format = await getFormatter();
@@ -280,6 +283,14 @@ async function GcsPostbit({ author, data, post }: { author: NonNullable<GcsPostV
             </div>
           ))}
         </dl>
+      )}
+      {plugins.length > 0 && (
+        <div className="gcs-pluginHook" data-hook="postbit.after_fields">
+          {plugins.map((html, i) => (
+            // HTML-ul pluginului, trecut prin sanitizer (listă albă) de gazda pluginurilor.
+            <div key={i} dangerouslySetInnerHTML={{ __html: html }} />
+          ))}
+        </div>
       )}
 
       <div className="gcs-postbit__foot">

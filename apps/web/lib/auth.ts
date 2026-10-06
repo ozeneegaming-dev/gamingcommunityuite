@@ -73,6 +73,12 @@ function createAuth(config: GcsAuthConfig) {
               throw error;
             }
           },
+          // Evenimentul public al înregistrării (etapa 6: listenerii pluginurilor). O eroare nu oprește înregistrarea.
+          after: async (user) => {
+            await services()
+              .bus.emit({ name: "user.registered", payload: { userId: user.id }, tags: [] })
+              .catch(() => {});
+          },
         },
       },
     },

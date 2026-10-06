@@ -1,0 +1,45 @@
+/* Totul e închis automat în containerul pluginului (.gcsp--gcs--hello). */
+.gcsp-hello {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gcsp-hello__greeting {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-weight: 700;
+  color: var(--gcs-text);
+}
+
+.gcsp-hello__greeting .gcs-icon {
+  color: var(--gcs-accent);
+}
+
+.gcsp-hello__badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+
+.gcsp-hello__list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.gcsp-hello__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.gcsp-hello__stat {
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--gcs-surface-2, rgb(255 255 255 / 0.04));
+}

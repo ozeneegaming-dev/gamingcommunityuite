@@ -25,6 +25,16 @@ export default getRequestConfig(async () => {
     if (isLocale(fromSettings)) locale = fromSettings;
   }
   const messages = (await import(`./messages/${locale}.json`)).default as Record<string, unknown>;
+  // Textele pluginurilor încărcate (etapa 6), sub `pluginText.<vendor>.<nume>`: etichetele lor din registry (permisiuni,
+  // widget-uri, meniul ACP) se afișează ca orice alt mesaj.
+  let pluginText: Record<string, unknown> = {};
+  try {
+    const plugins = services().plugins;
+    await plugins.ready();
+    pluginText = plugins.messages(locale);
+  } catch {
+    // Înainte de instalare nu există baza de date: fără pluginuri.
+  }
   // Fusul orar: alegerea membrului (cookie), altfel cel al site-ului (ACP → Setări → Generale).
   const fromTzCookie = (await cookies()).get(TZ_COOKIE)?.value;
   const timeZone = isTimeZone(fromTzCookie)
@@ -33,5 +43,5 @@ export default getRequestConfig(async () => {
         .settings.get<string>("site.timezone")
         .then((tz) => (isTimeZone(tz) ? tz : "Europe/Bucharest"))
         .catch(() => "Europe/Bucharest");
-  return { locale, messages, timeZone };
+  return { locale, messages: { ...messages, pluginText }, timeZone };
 });

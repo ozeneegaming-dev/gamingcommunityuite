@@ -83,6 +83,8 @@ export class GcsForumModerationService {
       for (const t of topics) await this.audit(tx, actor, "mod.topic.move", t.id, { forumId: t.forumId }, { forumId: toForumId });
     }, WRITE_TX);
     await this.changed(topics.map((t) => t.id), forums);
+    // Evenimentul public al mutării (pluginurile, etapa 6); cache-ul l-a invalidat deja `topic.moderated`.
+    await this.posting.deps.bus.emit({ name: "topic.moved", payload: { topicIds: topics.map((t) => t.id), toForumId }, tags: [] });
   }
 
   /** Unește topicurile sursă în topicul țintă: postările se mută, ordinea rămâne cronologică, sursele se șterg. */

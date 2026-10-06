@@ -27,7 +27,8 @@ export class GcsPostService {
     if (topic.visibility !== "VISIBLE" && !(await posting.isModerator(actor, "approve", forumId))) throw new GcsForbidden({ reason: "not_visible" });
     if (topic.locked && !(await posting.isModerator(actor, "lock", forumId))) throw new GcsForbidden({ reason: "locked" });
 
-    const rendered = await posting.render(input.content);
+    const filtered = await posting.filterContent(actor, { kind: "reply", title: null, content: input.content, forumId, topicId: topic.id, authorId: actor.userId });
+    const rendered = await posting.render(filtered.content);
     await posting.checkFlood(actor);
     const pending = await posting.needsApproval(actor, topic.forum);
     const authorId = actor.userId;
@@ -91,9 +92,17 @@ export class GcsPostService {
       if (!inWindow) throw new GcsForbidden({ reason: "edit_window" });
     }
 
-    const rendered = await posting.render(input.content);
     const isFirst = post.id === post.topic.firstPostId;
-    const title = isFirst && input.title !== undefined ? posting.cleanTitle(input.title) : null;
+    const filtered = await posting.filterContent(actor, {
+      kind: "edit",
+      title: isFirst && input.title !== undefined ? input.title : null,
+      content: input.content,
+      forumId,
+      topicId: post.topicId,
+      authorId: post.authorId,
+    });
+    const rendered = await posting.render(filtered.content);
+    const title = filtered.title !== null ? posting.cleanTitle(filtered.title) : null;
 
     await db.$transaction(async (tx) => {
       await tx.postRevision.create({

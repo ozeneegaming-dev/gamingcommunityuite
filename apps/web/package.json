@@ -52,6 +52,7 @@
   "devDependencies": {
     "@formatjs/icu-messageformat-parser": "^3.5.20",
     "@gcs/config": "workspace:*",
+    "@gcs/plugin-sdk": "workspace:*",
     "@playwright/test": "^1.55.0",
     "@tailwindcss/postcss": "^4.1.0",
     "@tiptap/core": "^3.31.4",

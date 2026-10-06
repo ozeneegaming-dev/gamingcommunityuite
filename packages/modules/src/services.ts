@@ -33,15 +33,19 @@ import {
   GcsS3FileStore,
   GcsSettingsService,
   GcsWarningService,
+  GcsPluginDatabase,
+  GcsPluginService,
   sendEmail,
+  trustedPluginKeys,
+  renderTemplate,
   type GcsFileStore,
   type GcsMailer,
   type GcsModule,
   type GcsModuleRegistry,
 } from "@gcs/core";
 import { PrismaClient } from "@gcs/db";
-import { withEmailLayout } from "./templates/components";
-import { isGcsIcon } from "@gcs/ui/icon-registry";
+import { templateComponents, withEmailLayout } from "./templates/components";
+import { isGcsIcon, resolveIcon } from "@gcs/ui/icon-registry";
 import Redis from "ioredis";
 import { registerForumContent } from "./forums/content";
 import { GcsForumModerationService } from "./forums/moderation";
@@ -80,6 +84,8 @@ import { GcsConversationQueries } from "./messages/queries";
 import { GcsMemberList } from "./profile/members";
 import { GcsPostbitService } from "./profile/postbit";
 import { registerChatNotifications } from "./chat/notify";
+import { GcsPluginPublicApi } from "./plugins/api";
+import { GcsPluginHost } from "./plugins/host";
 
 export type GcsServices = {
   db: PrismaClient;
@@ -148,6 +154,10 @@ export type GcsServices = {
   profileQueries: GcsProfileQueries;
   conversations: GcsConversationService;
   conversationQueries: GcsConversationQueries;
+  /** Pluginurile încărcate în acest proces (hook-uri, widget-uri, pagini…), etapa 6. */
+  plugins: GcsPluginHost;
+  /** Ciclul de viață al pluginurilor (ACP → Sistem → Aplicații și pluginuri). */
+  pluginAdmin: GcsPluginService;
 };
 
 export type GcsServicesOptions = {
@@ -174,6 +184,15 @@ export function loadRuntimeEnv(configDir: string): void {
     const m = /^(DATABASE_URL|GCS_SECRET)=(.*)$/.exec(line);
     if (m) process.env[m[1]!] = m[2]!.startsWith('"') ? (JSON.parse(m[2]!) as string) : m[2]!;
   }
+}
+
+/** O iconiță Font Awesome ca SVG inline (pentru `<gcs-icon>` din HTML-ul pluginurilor), ca `GcsIconSvg`. */
+function iconSvg(name: string): string | null {
+  const def = resolveIcon(name);
+  if (!def) return null;
+  const [width, height, , , path] = def.icon;
+  const paths = (Array.isArray(path) ? path : [path]).map((d) => `<path d="${d}"/>`).join("");
+  return `<svg class="gcs-icon" viewBox="0 0 ${width} ${height}" width="1em" height="1em" fill="currentColor" focusable="false" aria-hidden="true" data-icon="${def.prefix}-${def.iconName}">${paths}</svg>`;
 }
 
 /** Host-ul public: din setarea `site.url`, altfel din `GCS_BASE_URL` (embed-urile Twitch îl cer). */
@@ -266,6 +285,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const forums = new GcsForumService({ db, bus, permissions, acp, registry });
   const readMarkers = new GcsReadMarkerService({ db, settings });
   const follows = new GcsFollowService({ db });
+  // Gazda pluginurilor se creează după serviciile pe care le folosește; filtrele de conținut o apelează la rulare.
+  const pluginRef: { host?: GcsPluginHost } = {};
   const posting = new GcsForumPosting({
     db,
     bus,
@@ -275,6 +296,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     renderer: new GcsContentRenderer(),
     attachments,
     siteHost: async () => siteHost(await settings.get<string>("site.url")),
+    contentFilter: (data, actor) => pluginRef.host!.filterPost(data, actor),
   });
   const polls = new GcsPollService(posting);
   const prefixes = new GcsPrefixService({ db, bus, acp });
@@ -377,6 +399,43 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
       return m ? renderChatText(m.body) : null;
     },
   });
+  // Pluginurile (etapa 6): ciclul de viață și gazda din acest proces. Gazda pornește doar unde e chemat `start()`
+  // (web și `gcs-worker`); în rest doar ascultă evenimentele, fără pluginuri încărcate.
+  const pluginDatabase = new GcsPluginDatabase({ databaseUrl });
+  const pluginAdmin = new GcsPluginService({
+    db,
+    acp,
+    database: pluginDatabase,
+    jobs,
+    notify: () => pluginRef.host!.notify(),
+    bus,
+    trustedKeys: () => trustedPluginKeys().keys,
+    unsignedPolicy: () => (process.env.GCS_PLUGINS_UNSIGNED === "deny" ? "deny" : "allow"),
+  });
+  const plugins = new GcsPluginHost({
+    db,
+    redis,
+    bus,
+    registry,
+    permissions,
+    jobs,
+    plugins: pluginAdmin,
+    database: pluginDatabase,
+    api: new GcsPluginPublicApi({ db, forumQueries, posting }),
+    dataDir: process.env.GCS_PLUGINS_DIR ?? path.join(opts.configDir, "plugins"),
+    iconSvg,
+    siteLocale: () => settings.get<string>("site.locale"),
+    safeMode: process.env.GCS_PLUGINS_SAFE_MODE === "1",
+    ...(Number(process.env.GCS_PLUGINS_MAX_FAILURES) > 0 ? { maxFailures: Number(process.env.GCS_PLUGINS_MAX_FAILURES) } : {}),
+    subscriber: () => redis.duplicate(),
+  });
+  pluginRef.host = plugins;
+  // `{ template, data }` întors de un plugin: motorul de șabloane (sandbox, limite de timp și iterații); rezultatul trece
+  // apoi prin sanitizer-ul pluginurilor.
+  plugins.setTemplateRenderer(async (_plugin, template, data) =>
+    template.length > 64 * 1024 ? "" : renderTemplate(template, data, { locale: await settings.get<string>("site.locale"), components: templateComponents() }),
+  );
+
   const services: GcsServices = {
     db,
     redis,
@@ -442,6 +501,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     profileQueries,
     conversations,
     conversationQueries: new GcsConversationQueries({ db, settings, profileQueries }),
+    plugins,
+    pluginAdmin,
   };
   registerAppJobs(services);
   return services;
@@ -449,6 +510,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
 
 /** Închide conexiunile (oprirea worker-ului, resetarea după instalare). */
 export async function closeGcsServices(s: GcsServices): Promise<void> {
+  await s.plugins.stop().catch(() => {});
   await s.jobs.close().catch(() => {});
   await s.db.$disconnect().catch(() => {});
   s.redis.disconnect();

@@ -31,6 +31,8 @@ Comenzi:
                                  --non-interactive citește GCS_INSTALL_* din mediu
   reset-admin-password <nume>    Parolă nouă pentru un Root Admin (2FA se dezactivează)
   maintenance on|off             Pornește sau oprește modul mentenanță
+  plugins:list                   Pluginurile instalate și starea lor
+  plugins:disable-all            Dezactivează toate pluginurile (recuperare)
   backup [--out <folder>]        Backup: baza de date, fișierele și configurarea
   restore <fișier>               Restaurează un backup
   help                           Acest ajutor
@@ -186,6 +188,30 @@ export async function runCli(argv: string[], io: GcsCliIo): Promise<number> {
       const res = await io.request("maintenance", { on: mode === "on" });
       if (res.status !== 200) return reportError(io, res);
       io.out(mode === "on" ? "Mentenanță pornită." : "Mentenanță oprită.");
+      return 0;
+    }
+
+    case "plugins:list": {
+      const res = await io.request("plugins-list");
+      if (res.status !== 200) return reportError(io, res);
+      const list = (res.body.plugins ?? []) as { key: string; version: string; enabled: boolean; status: string; signed: boolean; disabledReason: string | null }[];
+      if (list.length === 0) io.out("Niciun plugin instalat.");
+      for (const p of list) {
+        const state = p.status !== "installed" ? "dezinstalat (date păstrate)" : p.enabled ? "activ" : `dezactivat${p.disabledReason ? ` (${p.disabledReason})` : ""}`;
+        io.out(`${p.key.padEnd(40)} ${p.version.padEnd(12)} ${state}${p.signed ? "" : " · nesemnat"}`);
+      }
+      return 0;
+    }
+
+    case "plugins:disable-all": {
+      const res = await io.request("plugins-disable-all");
+      if (res.status === 503) {
+        io.err("Aplicația nu răspunde. Pornește-o fără pluginuri: GCS_PLUGINS_SAFE_MODE=1 în .env, apoi docker compose up -d.");
+        return 1;
+      }
+      if (res.status !== 200) return reportError(io, res);
+      const keys = (res.body.disabled ?? []) as string[];
+      io.out(keys.length === 0 ? "Niciun plugin activ." : `Dezactivate: ${keys.join(", ")}`);
       return 0;
     }
 

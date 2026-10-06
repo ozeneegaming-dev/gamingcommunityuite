@@ -108,6 +108,15 @@ export async function verifyAcpCredentials(userId: string, password: string, cod
   const credential = await db.account.findFirst({ where: { userId, providerId: "credential" }, select: { password: true } });
   if (credential?.password && !(await verifyPassword(credential.password, password))) return false;
 
+  return verifyTwoFactorCode(userId, code);
+}
+
+/**
+ * Doar codul 2FA (TOTP) al contului, verificat chiar acum: confirmările sensibile din ACP (ex. instalarea unui plugin
+ * nesemnat) îl cer din nou, chiar dacă sesiunea ACP e proaspătă.
+ */
+export async function verifyTwoFactorCode(userId: string, code: string): Promise<boolean> {
+  const { db } = services();
   const twoFactor = await db.twoFactor.findFirst({ where: { userId, verified: true }, select: { secret: true } });
   if (!twoFactor) return false;
   const ctx = await (await getAuth()).$context;
