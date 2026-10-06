@@ -3,7 +3,8 @@
     "home": "Acasă",
     "mainNav": "Principal",
     "nav": {
-      "forum": "Forum"
+      "forum": "Forum",
+      "chat": "Chat"
     },
     "acp": "ACP",
     "myProfile": "Profilul meu",
@@ -260,7 +261,10 @@
         "forums": "Forumuri",
         "prefixes": "Prefixe",
         "saved_actions": "Acțiuni salvate",
-        "forum_settings": "Setări forum"
+        "forum_settings": "Setări forum",
+        "chat_group": "Chat",
+        "chat_channels": "Canale",
+        "chat_settings": "Setări chat"
       },
       "vip": {
         "vip_group": "VIP",
@@ -304,7 +308,8 @@
           "redis": "Redis",
           "ok": "funcționează",
           "down": "nu răspunde",
-          "worker": "Procese în fundal (worker)"
+          "worker": "Procese în fundal (worker)",
+          "realtime": "Timp real (realtime)"
         },
         "admin_notes": {
           "title": "Notițe admin",
@@ -344,6 +349,10 @@
           "title": "Procesele în fundal nu rulează",
           "since": "Ultimul semn de la worker: {time}. Expirarea VIP, regulile și promovările sunt în pauză.",
           "never": "Worker-ul nu a pornit încă. Expirarea VIP, regulile și promovările sunt în pauză (pornește serviciul `worker`)."
+        },
+        "realtimeDown": {
+          "title": "Serviciul de timp real nu rulează",
+          "body": "Notificările live, chat-ul și „Cine e online” se actualizează doar la reîncărcarea paginii (pornește serviciul `realtime`)."
         }
       }
     },
@@ -575,7 +584,9 @@
         "email": "Email",
         "auth": "Login & Înregistrare",
         "advanced": "Avansat",
-        "posting": "Postare & Editor"
+        "posting": "Postare & Editor",
+        "notifications": "Notificări",
+        "chat": "Chat"
       },
       "save": "Salvează setările",
       "secretSet": "•••• salvat (lasă gol ca să păstrezi valoarea)",
@@ -932,6 +943,35 @@
       "spin": "Se rotește",
       "imageFile": "Imagine (pentru tipul Imagine)",
       "preview": "Previzualizare"
+    },
+    "chat": {
+      "title": "Canale de chat",
+      "settingsTitle": "Setări chat",
+      "name": "Nume",
+      "key": "Cheie",
+      "description": "Descriere",
+      "slowMode": "Slow mode (s)",
+      "retention": "Retenție (zile)",
+      "enabled": "Activ",
+      "showOnHome": "Pe pagina principală",
+      "permissions": "Permisiuni",
+      "save": "Salvează",
+      "delete": "Șterge",
+      "confirmDelete": "Ștergi canalul „{name}” cu toate mesajele lui?",
+      "create": "Canal nou",
+      "filter": "Filtrul de cuvinte",
+      "filterHint": "Un cuvânt sau o expresie pe rând; în mesajele noi devin ***.",
+      "mutes": "Mute-uri active",
+      "noMutes": "Niciun mute activ.",
+      "allChannels": "toate canalele",
+      "until": "până la {date}",
+      "permanent": "permanent",
+      "lift": "Ridică"
+    },
+    "notifications": {
+      "title": "Notificări",
+      "hint": "Valorile implicite pentru fiecare tip de notificare. Membrii le pot schimba din Setări → Notificări.",
+      "save": "Salvează"
     }
   },
   "settings": {
@@ -1006,7 +1046,8 @@
       "appearance": "Aspect",
       "privacy": "Confidențialitate",
       "ignored": "Ignorați",
-      "account": "Cont"
+      "account": "Cont",
+      "notifications": "Notificări"
     },
     "appearance": {
       "title": "Aspect",
@@ -1073,6 +1114,22 @@
       "emailInvalid": "Linkul de confirmare e invalid sau a expirat.",
       "steamBanner": "Contul tău a fost creat prin Steam și nu are un email real.",
       "steamBannerLink": "Adaugă-l acum"
+    },
+    "notifications": {
+      "title": "Notificări",
+      "hint": "Alege ce notificări primești pe site și pe email. Digestul zilnic adună într-un singur email ce n-ai citit.",
+      "saved": "Preferințele au fost salvate.",
+      "save": "Salvează",
+      "type": "Tip",
+      "site": "Pe site",
+      "email": "Email",
+      "email_OFF": "Oprit",
+      "email_INSTANT": "Imediat",
+      "email_DIGEST": "Digest zilnic",
+      "digest_hour": "Ora digestului zilnic (0–23, în fusul orar al site-ului)"
+    },
+    "chat": {
+      "word_filter": "Cuvinte filtrate în chat (înlocuite cu ***)"
     }
   },
   "permissions": {
@@ -1128,6 +1185,12 @@
     },
     "vip": {
       "manage": "Acordă, prelungește și retrage VIP"
+    },
+    "chat": {
+      "read": "Citește canalul",
+      "write": "Scrie în canal",
+      "moderate": "Moderează chat-ul (șterge, mute, slow mode)",
+      "flood_seconds": "Pauză între mesajele de chat (secunde)"
     }
   },
   "profile": {
@@ -1474,7 +1537,16 @@
       "uploadFailed": "Încărcarea a eșuat",
       "noMentions": "Niciun membru găsit"
     },
-    "ignored": "Ai ignorat pe {name}. Arată postarea"
+    "ignored": "Ai ignorat pe {name}. Arată postarea",
+    "live": {
+      "readers": "Citesc acum:",
+      "guests": "{count} vizitatori",
+      "typing": "{name} scrie un răspuns…",
+      "typingMany": "{names} scriu răspunsuri…",
+      "newPosts": "{count} postări noi",
+      "newPost": "1 postare nouă",
+      "show": "arată"
+    }
   },
   "newTopic": {
     "title": "Topic nou în {forum}",
@@ -1584,5 +1656,65 @@
     "leave": "Părăsește conversația",
     "confirmLeave": "Părăsești conversația? Nu o vei mai vedea.",
     "invited": "Invitat."
+  },
+  "notifications": {
+    "title": "Notificări",
+    "unreadLabel": "Notificări ({count} necitite)",
+    "empty": "Nu ai notificări.",
+    "markAll": "Marchează toate citite",
+    "seeAll": "Vezi toate notificările",
+    "preferences": "Preferințe",
+    "older": "Mai vechi",
+    "newer": "Mai noi",
+    "type": {
+      "forums": {
+        "mention": "Mențiuni",
+        "quote": "Citate",
+        "reply": "Răspunsuri în topicurile urmărite",
+        "topic": "Topicuri noi în forumurile urmărite",
+        "reaction": "Reacții la postările tale",
+        "solution": "Răspunsul tău marcat ca rezolvare"
+      },
+      "profile": {
+        "follower": "Urmăritori noi",
+        "wall": "Mesaje pe peretele tău",
+        "badge": "Badge-uri și ranguri noi"
+      },
+      "pm": {
+        "message": "Mesaje private"
+      },
+      "vip": {
+        "expiring": "VIP-ul expiră curând",
+        "granted": "VIP acordat",
+        "expired": "VIP expirat"
+      },
+      "core": {
+        "warning": "Avertismente"
+      }
+    }
+  },
+  "chat": {
+    "title": "Chat",
+    "shoutbox": "Shoutbox",
+    "channels": "Canale",
+    "noChannels": "Nu ai acces la niciun canal de chat.",
+    "placeholder": "Scrie un mesaj…",
+    "input": "Mesaj de chat",
+    "send": "Trimite",
+    "empty": "Niciun mesaj încă. Spune salut!",
+    "older": "Mesaje mai vechi",
+    "delete": "Șterge",
+    "mute": "Mute 10 min",
+    "muted": "Ai mute în chat până la {until}. Motiv: {reason}",
+    "slowMode": "Slow mode: un mesaj la {seconds} s.",
+    "readOnly": "Poți doar citi acest canal.",
+    "slowModeLabel": "Slow mode",
+    "slowModeOff": "Oprit"
+  },
+  "online": {
+    "title": "Cine e online",
+    "summary": "{members} membri · {guests} vizitatori",
+    "record": "Record: {count} · {date}",
+    "nobody": "Niciun membru vizibil online."
   }
 }

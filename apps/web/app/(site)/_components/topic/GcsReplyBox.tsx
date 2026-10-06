@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { useErrorMessage } from "@/lib/use-error-message";
 import { replyAction } from "../../topic-actions";
+import { useRealtime } from "../realtime/GcsRealtimeProvider";
 import { QUOTE_EVENT, useEditorLabels, type GcsQuoteDetail } from "./useEditorLabels";
 
 /** Caseta de răspuns din macheta Topic: editorul, ciorna și trimiterea. Primește citatele de la butoanele „Citează”. */
@@ -17,6 +18,16 @@ export function GcsReplyBox({ topicId, forumId, maxUploadMb }: { topicId: number
   const box = useRef<HTMLElement>(null);
   const [sending, setSending] = useState(false);
   const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
+  const realtime = useRealtime();
+  const lastTyping = useRef(0);
+
+  // „scrie un răspuns…” pentru ceilalți din topic, cel mult o dată la 3 s (serverul are același throttle).
+  const onTyping = () => {
+    const now = Date.now();
+    if (now - lastTyping.current < 3_000) return;
+    lastTyping.current = now;
+    realtime.emit("typing", topicId);
+  };
 
   useEffect(() => {
     function onQuote(e: Event) {
@@ -53,6 +64,7 @@ export function GcsReplyBox({ topicId, forumId, maxUploadMb }: { topicId: number
         uploadUrl="/api/forums/uploads"
         mentionUrl="/api/forums/mentions"
         draftKey={`topic-${topicId}`}
+        onChange={onTyping}
         footer={
           <>
             <span>{maxUploadMb === -1 ? t("footerUnlimited") : t("footer", { mb: maxUploadMb })}</span>

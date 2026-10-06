@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { currentActor } from "@/lib/actor";
 import { GcsSettingsNav } from "../_components/settings/GcsSettingsNav";
 
-const SECTIONS = ["profile", "appearance", "privacy", "ignored", "account"] as const;
+const SECTIONS = ["profile", "appearance", "privacy", "notifications", "ignored", "account"] as const;
 
 /** Setările contului (specul etapei 3, §8): doar pentru membri autentificați. */
 export default async function SettingsLayout({ children }: { children: ReactNode }) {

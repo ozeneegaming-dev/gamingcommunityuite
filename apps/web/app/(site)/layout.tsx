@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { GcsHoverCardHost } from "./_components/GcsHoverCardHost";
 import { GcsSiteFooter } from "./_components/GcsSiteFooter";
 import { GcsSiteHeader } from "./_components/GcsSiteHeader";
+import { GcsRealtimeProvider } from "./_components/realtime/GcsRealtimeProvider";
 import { currentActor } from "@/lib/actor";
 import { services } from "@/lib/services";
 
@@ -14,7 +15,7 @@ export default async function SiteLayout({ children }: { children: ReactNode }) 
   const email = actor.userId ? (await services().db.user.findUnique({ where: { id: actor.userId }, select: { email: true } }))?.email : null;
   const tb = await getTranslations("settings.account");
   return (
-    <>
+    <GcsRealtimeProvider>
       <GcsSiteHeader />
       <main style={{ maxWidth: 1320, margin: "0 auto", padding: 24, display: "flex", flexDirection: "column", gap: 24 }}>
         {email?.endsWith(STEAM_PLACEHOLDER_DOMAIN) && (
@@ -38,6 +39,6 @@ export default async function SiteLayout({ children }: { children: ReactNode }) 
           message: t("message"),
         }}
       />
-    </>
+    </GcsRealtimeProvider>
   );
 }

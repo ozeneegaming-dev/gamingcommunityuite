@@ -16,6 +16,8 @@ import { GcsPagination } from "../../_components/forum/GcsPagination";
 import { GcsPollCard } from "../../_components/topic/GcsPollCard";
 import { GcsPost } from "../../_components/topic/GcsPost";
 import { GcsReplyBox } from "../../_components/topic/GcsReplyBox";
+import { GcsTopicLive } from "../../_components/topic/GcsTopicLive";
+import { topicReadersView } from "@/lib/online";
 import { GcsTopicModMenu, SPLIT_FORM_ID } from "../../_components/topic/GcsTopicModMenu";
 
 type Props = { params: Promise<{ ref: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
@@ -71,11 +73,13 @@ export default async function TopicPage({ params, searchParams }: Props) {
   const visibleIds = data.posts.filter((p) => p.visibility === "VISIBLE").map((p) => p.id);
   const ignored = new Set(await social.ignoredIds(actor.userId, "posts"));
   const isMod = data.modPowers.length > 0;
-  const [maxUploadMb, , targets] = await Promise.all([
+  const [maxUploadMb, , targets, , readers, tl] = await Promise.all([
     actor.userId ? permissions.groupValue<number | boolean>(actor, "upload.max_mb") : Promise.resolve(0),
     registerTopicView(actor, topic.id),
     isMod ? moveTargets(actor) : Promise.resolve([]),
     actor.userId && visibleIds.length > 0 ? readMarkers.markRead(actor.userId, topic.id, Math.max(...visibleIds)) : Promise.resolve(),
+    topicReadersView(topic.id),
+    getTranslations("topic.live"),
   ]);
   const isTopicAuthor = actor.userId !== null && actor.userId === topic.author?.id;
   const canSolve = forum.type === "QA" && (isTopicAuthor || has(data.modPowers, "edit"));
@@ -151,6 +155,13 @@ export default async function TopicPage({ params, searchParams }: Props) {
         />
       )}
 
+      <GcsTopicLive
+        topicId={topic.id}
+        viewerId={actor.userId}
+        initialReaders={readers}
+        unreadHref={`${topicHref(topic)}/unread`}
+        labels={Object.fromEntries(["readers", "guests", "typing", "typingMany", "newPosts", "newPost", "show"].map((k) => [k, tl.raw(k) as string])) as Parameters<typeof GcsTopicLive>[0]["labels"]}
+      />
       <GcsPagination pagination={data.pagination} href={(p) => topicHref(topic, p)} />
       <div className="gcs-postList">
         {data.posts.map((post) => (

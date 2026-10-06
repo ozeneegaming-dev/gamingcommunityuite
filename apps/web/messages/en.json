@@ -3,7 +3,8 @@
     "home": "Home",
     "mainNav": "Main",
     "nav": {
-      "forum": "Forum"
+      "forum": "Forum",
+      "chat": "Chat"
     },
     "acp": "ACP",
     "myProfile": "My profile",
@@ -260,7 +261,10 @@
         "forums": "Forums",
         "prefixes": "Prefixes",
         "saved_actions": "Saved actions",
-        "forum_settings": "Forum settings"
+        "forum_settings": "Forum settings",
+        "chat_group": "Chat",
+        "chat_channels": "Channels",
+        "chat_settings": "Chat settings"
       },
       "vip": {
         "vip_group": "VIP",
@@ -304,7 +308,8 @@
           "redis": "Redis",
           "ok": "running",
           "down": "not responding",
-          "worker": "Background jobs (worker)"
+          "worker": "Background jobs (worker)",
+          "realtime": "Real time (realtime)"
         },
         "admin_notes": {
           "title": "Admin notes",
@@ -344,6 +349,10 @@
           "title": "Background jobs are not running",
           "since": "Last heartbeat from the worker: {time}. VIP expiry, rules and promotions are paused.",
           "never": "The worker has not started yet. VIP expiry, rules and promotions are paused (start the `worker` service)."
+        },
+        "realtimeDown": {
+          "title": "The real-time service is not running",
+          "body": "Live notifications, chat and “Who's online” only update on page reload (start the `realtime` service)."
         }
       }
     },
@@ -575,7 +584,9 @@
         "email": "Email",
         "auth": "Login & Registration",
         "advanced": "Advanced",
-        "posting": "Posting & Editor"
+        "posting": "Posting & Editor",
+        "notifications": "Notifications",
+        "chat": "Chat"
       },
       "save": "Save settings",
       "secretSet": "•••• saved (leave empty to keep the value)",
@@ -932,6 +943,35 @@
       "spin": "Spins",
       "imageFile": "Image (for the Image kind)",
       "preview": "Preview"
+    },
+    "chat": {
+      "title": "Chat channels",
+      "settingsTitle": "Chat settings",
+      "name": "Name",
+      "key": "Key",
+      "description": "Description",
+      "slowMode": "Slow mode (s)",
+      "retention": "Retention (days)",
+      "enabled": "Enabled",
+      "showOnHome": "On the home page",
+      "permissions": "Permissions",
+      "save": "Save",
+      "delete": "Delete",
+      "confirmDelete": "Delete the channel “{name}” with all its messages?",
+      "create": "New channel",
+      "filter": "Word filter",
+      "filterHint": "One word or phrase per line; it becomes *** in new messages.",
+      "mutes": "Active mutes",
+      "noMutes": "No active mutes.",
+      "allChannels": "all channels",
+      "until": "until {date}",
+      "permanent": "permanent",
+      "lift": "Lift"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "hint": "Default values for each notification type. Members can change them in Settings → Notifications.",
+      "save": "Save"
     }
   },
   "settings": {
@@ -1006,7 +1046,8 @@
       "appearance": "Appearance",
       "privacy": "Privacy",
       "ignored": "Ignored",
-      "account": "Account"
+      "account": "Account",
+      "notifications": "Notifications"
     },
     "appearance": {
       "title": "Appearance",
@@ -1073,6 +1114,22 @@
       "emailInvalid": "The confirmation link is invalid or has expired.",
       "steamBanner": "Your account was created with Steam and has no real email.",
       "steamBannerLink": "Add one now"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "hint": "Choose which notifications you get on the site and by email. The daily digest collects everything you haven't read into one email.",
+      "saved": "Preferences saved.",
+      "save": "Save",
+      "type": "Type",
+      "site": "On site",
+      "email": "Email",
+      "email_OFF": "Off",
+      "email_INSTANT": "Instant",
+      "email_DIGEST": "Daily digest",
+      "digest_hour": "Daily digest hour (0–23, in the site's time zone)"
+    },
+    "chat": {
+      "word_filter": "Filtered chat words (replaced with ***)"
     }
   },
   "permissions": {
@@ -1128,6 +1185,12 @@
     },
     "vip": {
       "manage": "Grants, extends and revokes VIP"
+    },
+    "chat": {
+      "read": "Reads the channel",
+      "write": "Writes in the channel",
+      "moderate": "Moderates chat (delete, mute, slow mode)",
+      "flood_seconds": "Pause between chat messages (seconds)"
     }
   },
   "profile": {
@@ -1474,7 +1537,16 @@
       "uploadFailed": "Upload failed",
       "noMentions": "No members found"
     },
-    "ignored": "You are ignoring {name}. Show post"
+    "ignored": "You are ignoring {name}. Show post",
+    "live": {
+      "readers": "Reading now:",
+      "guests": "{count} guests",
+      "typing": "{name} is writing a reply…",
+      "typingMany": "{names} are writing replies…",
+      "newPosts": "{count} new posts",
+      "newPost": "1 new post",
+      "show": "show"
+    }
   },
   "newTopic": {
     "title": "New topic in {forum}",
@@ -1584,5 +1656,65 @@
     "leave": "Leave conversation",
     "confirmLeave": "Leave the conversation? You won't see it anymore.",
     "invited": "Invited."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "unreadLabel": "Notifications ({count} unread)",
+    "empty": "You have no notifications.",
+    "markAll": "Mark all as read",
+    "seeAll": "See all notifications",
+    "preferences": "Preferences",
+    "older": "Older",
+    "newer": "Newer",
+    "type": {
+      "forums": {
+        "mention": "Mentions",
+        "quote": "Quotes",
+        "reply": "Replies in followed topics",
+        "topic": "New topics in followed forums",
+        "reaction": "Reactions to your posts",
+        "solution": "Your answer marked as the solution"
+      },
+      "profile": {
+        "follower": "New followers",
+        "wall": "Posts on your wall",
+        "badge": "New badges and ranks"
+      },
+      "pm": {
+        "message": "Private messages"
+      },
+      "vip": {
+        "expiring": "VIP expiring soon",
+        "granted": "VIP granted",
+        "expired": "VIP expired"
+      },
+      "core": {
+        "warning": "Warnings"
+      }
+    }
+  },
+  "chat": {
+    "title": "Chat",
+    "shoutbox": "Shoutbox",
+    "channels": "Channels",
+    "noChannels": "You don't have access to any chat channel.",
+    "placeholder": "Write a message…",
+    "input": "Chat message",
+    "send": "Send",
+    "empty": "No messages yet. Say hi!",
+    "older": "Older messages",
+    "delete": "Delete",
+    "mute": "Mute 10 min",
+    "muted": "You are muted in chat until {until}. Reason: {reason}",
+    "slowMode": "Slow mode: one message every {seconds} s.",
+    "readOnly": "You can only read this channel.",
+    "slowModeLabel": "Slow mode",
+    "slowModeOff": "Off"
+  },
+  "online": {
+    "title": "Who's online",
+    "summary": "{members} members · {guests} guests",
+    "record": "Record: {count} · {date}",
+    "nobody": "No visible members online."
   }
 }

@@ -11,7 +11,8 @@
     "./themes.css": "./src/themes.css",
     "./editor": "./src/editor/index.ts",
     "./forum.css": "./src/forum.css",
-    "./profile.css": "./src/profile.css"
+    "./profile.css": "./src/profile.css",
+    "./realtime.css": "./src/realtime.css"
   },
   "scripts": {
     "lint": "eslint .",

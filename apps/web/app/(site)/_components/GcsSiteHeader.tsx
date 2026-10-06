@@ -5,16 +5,17 @@ import { currentActor } from "@/lib/actor";
 import { memberHref } from "@/lib/forum-urls";
 import { services } from "@/lib/services";
 import { GcsLogoutButton } from "./GcsLogoutButton";
+import { GcsLiveCount, GcsNotificationBell } from "./notifications/GcsNotificationBell";
 
 /** Header-ul site-ului, după macheta `Main` (logo, meniu principal, zona userului). */
 export async function GcsSiteHeader() {
-  const t = await getTranslations("site");
-  const { permissions, profileQueries, conversations } = services();
+  const [t, tn] = await Promise.all([getTranslations("site"), getTranslations("notifications")]);
+  const { permissions, profileQueries, conversations, notifications } = services();
   const actor = await currentActor();
   const user = actor.userId ? ((await profileQueries.userDisplays([actor.userId])).get(actor.userId) ?? null) : null;
-  const [canAcp, unread] = user
-    ? await Promise.all([permissions.can(actor, "acp.access"), conversations.unreadCount(actor.userId)])
-    : [false, 0];
+  const [canAcp, unread, unreadNotifications] = user
+    ? await Promise.all([permissions.can(actor, "acp.access"), conversations.unreadCount(actor.userId), notifications.unreadCount(actor.userId)])
+    : [false, 0, 0];
 
   return (
     <header className="gcs-siteHeader" style={{ background: "#0F1116", borderBottom: "1px solid var(--gcs-border)" }}>
@@ -56,6 +57,11 @@ export async function GcsSiteHeader() {
           <Link href="/" className="gcs-nav__link gcs-nav__link--active">
             {t("nav.forum")}
           </Link>
+          {user && (
+            <Link href="/chat" className="gcs-nav__link">
+              {t("nav.chat")}
+            </Link>
+          )}
         </nav>
 
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -72,6 +78,10 @@ export async function GcsSiteHeader() {
                   <Link href="/admin">{t("acp")}</Link>
                 </GcsButton>
               )}
+              <GcsNotificationBell
+                initialUnread={unreadNotifications}
+                labels={{ title: tn("title"), unread: tn.raw("unreadLabel") as string, empty: tn("empty"), markAll: tn("markAll"), seeAll: tn("seeAll") }}
+              />
               <Link
                 href="/messages"
                 className="gcs-headerIcon"
@@ -82,11 +92,7 @@ export async function GcsSiteHeader() {
                   <rect x="3" y="5" width="18" height="14" rx="2" />
                   <path d="m3 7 9 6 9-6" />
                 </svg>
-                {unread > 0 && (
-                  <span className="gcs-headerIcon__count" data-testid="gcs-header-unread">
-                    {unread > 99 ? "99+" : unread}
-                  </span>
-                )}
+                <GcsLiveCount initial={unread} event="pm" testId="gcs-header-unread" />
               </Link>
               <span
                 style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 8px", minHeight: 44, boxSizing: "border-box" }}

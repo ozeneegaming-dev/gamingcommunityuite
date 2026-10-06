@@ -1,0 +1,214 @@
+/* Etapa 4: clopoțelul notificărilor, lista de notificări, shoutbox-ul, chat-ul și „Cine e online”. */
+
+.gcs-linkButton {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--gcs-accentInk);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.gcs-linkButton:hover {
+  text-decoration: underline;
+}
+
+/* Dropdown-ul clopoțelului. */
+.gcs-notifPanel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 50;
+  width: min(380px, calc(100vw - 32px));
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--gcs-surface);
+  border: 1px solid var(--gcs-border);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgb(0 0 0 / 0.45);
+  overflow: hidden;
+}
+.gcs-notifPanel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-notifPanel__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+}
+.gcs-notifPanel__empty {
+  margin: 0;
+  padding: 20px 14px;
+  color: var(--gcs-muted);
+  text-align: center;
+}
+.gcs-notifPanel__all {
+  display: block;
+  padding: 10px 14px;
+  border-top: 1px solid var(--gcs-border);
+  text-align: center;
+  font-size: 13px;
+}
+
+.gcs-notifItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  color: var(--gcs-muted);
+  border-left: 3px solid transparent;
+}
+.gcs-notifItem:hover {
+  background: var(--gcs-surface2);
+}
+.gcs-notifItem--unread {
+  color: var(--gcs-text);
+  border-left-color: var(--gcs-accent);
+  background: rgb(214 40 57 / 0.06);
+}
+.gcs-notifItem__text {
+  font-size: 14px;
+  line-height: 1.35;
+}
+.gcs-notifItem__snippet {
+  font-size: 13px;
+  color: var(--gcs-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-notifItem__time {
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+
+/* Pagina /notifications. */
+.gcs-notifList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--gcs-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.gcs-notifList > li + li {
+  border-top: 1px solid var(--gcs-border);
+}
+
+/* Tabelul preferințelor de notificare. */
+.gcs-prefTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+.gcs-prefTable th,
+.gcs-prefTable td {
+  padding: 10px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-prefTable th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--gcs-muted);
+}
+
+/* Chat-ul: shoutbox-ul și pagina /chat. */
+.gcs-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gcs-chat__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  height: 420px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gcs-chat--compact .gcs-chat__list {
+  height: 260px;
+}
+.gcs-chat__msg {
+  font-size: 14px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.gcs-chat__body {
+  margin-left: 6px;
+  color: var(--gcs-text);
+}
+.gcs-chat__time {
+  margin-left: 6px;
+  font-size: 11px;
+  color: var(--gcs-muted);
+}
+.gcs-chat__tools {
+  margin-left: 8px;
+  display: inline-flex;
+  gap: 8px;
+}
+.gcs-chat__tools .gcs-linkButton {
+  font-size: 12px;
+}
+.gcs-chat__empty {
+  color: var(--gcs-muted);
+  font-size: 14px;
+}
+.gcs-chat__form {
+  display: flex;
+  gap: 8px;
+}
+.gcs-chat__form .gcs-input {
+  flex: 1;
+  min-width: 0;
+}
+.gcs-chat__note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--gcs-muted);
+}
+.gcs-chat__note--warn {
+  color: var(--gcs-warn);
+}
+
+/* „Cine e online”. */
+.gcs-onlineList {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Bara live a topicului. */
+.gcs-topicLive {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+.gcs-topicLive:empty {
+  display: none;
+}
+.gcs-topicLive p {
+  margin: 0;
+}
+.gcs-topicLive__typing {
+  color: var(--gcs-muted);
+  font-style: italic;
+}
+.gcs-topicLive__banner {
+  padding: 10px 14px;
+  border: 1px solid var(--gcs-accent);
+  border-radius: 10px;
+  background: rgb(214 40 57 / 0.08);
+}

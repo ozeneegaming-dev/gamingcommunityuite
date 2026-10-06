@@ -5,6 +5,7 @@
 @import "@gcs/ui/base.css";
 @import "@gcs/ui/forum.css";
 @import "@gcs/ui/profile.css";
+@import "@gcs/ui/realtime.css";
 
 /* Componentele Gcs* din @gcs/ui folosesc utilitare Tailwind; sursele lor trebuie scanate. */
 @source "../../../packages/ui/src";

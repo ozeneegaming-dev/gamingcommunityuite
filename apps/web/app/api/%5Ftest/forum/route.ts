@@ -7,8 +7,9 @@ export const dynamic = "force-dynamic";
 type Body =
   | { action: "forum"; parentId: number | null; type: ForumType; name: string }
   | { action: "topic"; forumId: number; title: string; text: string; authorEmail: string; tags?: string[] }
-  | { action: "reply"; topicId: number; text: string; authorEmail: string }
-  | { action: "permissions"; forumId: number; groupKey: string; actions: string[] };
+  | { action: "reply"; topicId: number; text: string; authorEmail: string; mentionEmail?: string }
+  | { action: "permissions"; forumId: number; groupKey: string; actions: string[] }
+  | { action: "pm"; fromEmail: string; toEmail: string; title: string; text: string };
 
 const doc = (text: string) => ({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
 
@@ -56,9 +57,20 @@ export async function POST(req: Request): Promise<Response> {
     }
     case "reply": {
       const actor = await actorFor(body.authorEmail);
-      const res = await s.posts.reply(actor, { topicId: body.topicId, content: doc(body.text) });
+      // Cu `mentionEmail`, textul e precedat de o mențiune a acelui user.
+      const mentioned = body.mentionEmail ? await s.db.user.findUniqueOrThrow({ where: { email: body.mentionEmail.toLowerCase() } }) : null;
+      const content = mentioned
+        ? { type: "doc", content: [{ type: "paragraph", content: [{ type: "mention", attrs: { id: mentioned.id, label: mentioned.name } }, { type: "text", text: ` ${body.text}` }] }] }
+        : doc(body.text);
+      const res = await s.posts.reply(actor, { topicId: body.topicId, content });
       await clearFlood(actor);
       return Response.json(res);
+    }
+    case "pm": {
+      const actor = await actorFor(body.fromEmail);
+      const to = await s.db.user.findUniqueOrThrow({ where: { email: body.toEmail.toLowerCase() } });
+      await s.redis.del(`gcs:rl:pm:${actor.userId}`);
+      return Response.json(await s.conversations.start(actor, { to: [to.id], title: body.title, content: doc(body.text) }));
     }
     case "permissions": {
       // Matricea efectivă a forumului (urcând pe moștenire), cu acțiunile grupului înlocuite.
