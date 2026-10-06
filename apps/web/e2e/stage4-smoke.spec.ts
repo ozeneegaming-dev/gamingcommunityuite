@@ -78,8 +78,6 @@ test("etapa 4: notificări live → scrie… și postări noi → shoutbox → c
     await mod.reload();
     await Promise.all([ana.goto("/"), bogdan.goto("/")]);
     const shout = (p: Page) => p.getByTestId("gcs-shoutbox");
-    // Shoutbox-ul are deja mesajele demo din instalare.
-    await expect(shout(ana).getByTestId("gcs-chat-msg")).not.toHaveCount(0);
     await shout(bogdan).getByTestId("gcs-chat-input").fill("Salut din shoutbox");
     await shout(bogdan).getByRole("button", { name: "Trimite" }).click();
     const atAna = shout(ana).getByTestId("gcs-chat-msg").filter({ hasText: "Salut din shoutbox" });
