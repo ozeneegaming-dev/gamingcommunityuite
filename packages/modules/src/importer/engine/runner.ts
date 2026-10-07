@@ -100,8 +100,10 @@ export class GcsImportRunner {
       source = await this.openSource(job);
       if (job.dryRun) await this.dryRun(job, source, steps, checkpoint);
       else await this.runSteps(job, source, steps, log, checkpoint);
+      // Întâi pașii de final (redirecturile), apoi „Terminat”: ACP-ul reîncarcă pagina imediat ce vede starea finală.
+      // Un pas de final eșuat nu strică un import reușit: rămâne în jurnal.
+      await this.onDone(jobId).catch((error: unknown) => log("redirects", "warn", error instanceof Error ? error.message : String(error)));
       await db.importJob.update({ where: { id: jobId }, data: { status: "DONE", control: null, currentStep: null, finishedAt: new Date(), steps: steps as unknown as Prisma.InputJsonValue } });
-      await this.onDone(jobId);
     } catch (error) {
       if (error instanceof GcsImportStop) {
         await db.importJob.update({

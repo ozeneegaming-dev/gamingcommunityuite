@@ -335,4 +335,17 @@ describe("importul unei comunități prefixed-schema (BBCode)", () => {
     expect(await importer.resolveLegacy("/posts/200/", "")).toBeNull();
     expect(await importer.checkRedirect(w.root, "https://comunitate.exemplu.ro/posts/200/")).toEqual({ from: "/posts/200/", to: null });
   });
+
+  test("redirecturile pornesc înainte ca importul să apară „Terminat” (ACP-ul le citește imediat după)", async () => {
+    const seen: string[] = [];
+    const original = importer.enableRedirectsAfterImport.bind(importer);
+    importer.enableRedirectsAfterImport = async (jobId: string) => {
+      seen.push((await w.db.importJob.findUniqueOrThrow({ where: { id: jobId }, select: { status: true } })).status);
+      await original(jobId);
+    };
+    const job = await runImport("prefixed-schema", "https://comunitate.exemplu.ro");
+    expect(job.status).toBe("DONE");
+    expect(seen).toEqual(["RUNNING"]);
+    expect((await importer.redirectConfig(w.root)).enabled).toBe(true);
+  });
 });
