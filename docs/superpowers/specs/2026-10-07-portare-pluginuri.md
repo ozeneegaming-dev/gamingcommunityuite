@@ -94,6 +94,43 @@ report.json               același raport, pentru unelte
 ### 2.6 CLI
 `pnpm gcs:port <arhivă> --rights=author|consent|license [--key=vendor.nume] [--out=folder]` — aceeași conversie,
 fără bază de date: scrie folderul de mai sus. Fără `--rights` refuză (confirmarea e obligatorie și apare în raport).
+Se rulează din rădăcina monorepo-ului; căile relative sunt față de ea. Opțiuni: `--locale=en` (raportul în engleză),
+`--force` (scrie peste un folder existent).
+
+### 2.6.1 Unde e codul
+| Unde | Ce |
+|---|---|
+| `packages/modules/src/porting/archive.ts` | intrarea: ZIP (cititorul pluginurilor, limitele portării), TAR/gzip propriu, XML |
+| `packages/modules/src/porting/xml.ts`, `text.ts` | XML-ul (fără DTD, adâncime plafonată), textul (chei, versiuni, licență, comentarii sigure) |
+| `packages/modules/src/porting/formats/*` | cititoarele celor trei formate și PHP-ul citit ca text (`php.ts`) |
+| `packages/modules/src/porting/convert/*` | șabloanele (lexere → arbore → JavaScript), frazele, schema, CSS-ul |
+| `packages/modules/src/porting/generate.ts`, `report.ts` | pluginul, pachetul validat, raportul, `PORTING.md`, arhiva rezultatului |
+| `packages/modules/src/porting/service.ts` | `GcsPortingService` (`services().porting`) |
+| `packages/modules/src/porting/cli.ts` | CLI-ul (`pnpm gcs:port`) |
+| `apps/web/…/system/porting`, `/api/acp/porting/*` | pagina ACP, încărcarea și descărcarea (construite separat, peste serviciu) |
+
+### 2.6.2 API-ul serviciului (contractul interfeței)
+- `analyze(actor, { fileName, data })` → `GcsPortView` (`status: "analyzed"`, `analysis`: format, metadate, licență cu
+  `gpl`, cheia propusă, numerele pe tipuri, notele);
+- `convert(actor, id, { basis, confirmed, key?, locale? })` → `GcsPortView` (`status: "converted"`, `report`,
+  `canHandoff`);
+- `get(actor, id)`, `list(actor, limit?)`, `download(actor, id)` → `{ fileName, data }`,
+  `handoff(actor, id)` → `{ uploadId }` (ecranul instalatorului: `/admin/system/applications/install/<uploadId>`),
+  `delete(actor, id)`;
+- drepturile: `view` (citiri, descărcare), `edit` (încărcare, conversie, predare; predarea cere și
+  `system.applications` edit, verificat de instalator), `delete`;
+- erorile: `GcsValidationError({ file: <cod cititor> | "required" | "unknown_archive" | "unknown_format" |
+  "convert_failed" })`, `({ rights: "required" })`, `({ key: "invalid" })`, `({ package: "invalid" })`,
+  `GcsConflict({ reason: "already_converted" | "not_converted" })`, `GcsNotFound({ entity: "plugin_port" })`;
+- notele (`porting.notes.<cod>`): `invalid_file`, `files_outside_root`, `column_type_unknown`, `fulltext_index`,
+  `table_rejected`, `phrases_dropped`, `settings_unknown`, `templates_skipped`, `css_dropped`, `css_file_rejected`,
+  `html_dropped`, `forms`, `limit`, `gpl`.
+
+### 2.6.3 Limitele (surse ostile)
+Pe lângă limitele arhivei: XML cu cel mult 200 000 de elemente și 64 de niveluri; un șablon ≤ 256 KB, cel mult 300 de
+șabloane și 3 MB de cod generat; blocurile de șablon imbricate peste 32 de niveluri devin `TODO`; CSS ≤ 256 KB pe
+fișier și 8 niveluri; în PHP, cel mult 1000 de potriviri pe fișier și argumentele căutate pe cel mult 4 KB; frazele
+≤ 1800. Nicio căutare nu se repetă până la capătul fișierului pentru construcții neînchise (fără timp pătratic).
 
 ### 2.7 Stocare (migrația `20261021000000_plugin_ports`)
 `plugin_ports`: cine, numele fișierului, formatul, numele sursei, `sha256`, analiza (fără cod), temeiul confirmării și
