@@ -117,7 +117,7 @@
       "guest": "Sie müssen sich anmelden.",
       "has_children": "Die Kategorie hat immer noch Foren.",
       "has_content": "Das Forum hat Themen: Wählen Sie, wo sie sich bewegen.",
-      "unsigned_requires_root": "Nur ein Root-Admin kann nicht signierte Pakete installieren.",
+      "unsigned_requires_root": "Only a Root Admin can install packages that are not certified.",
       "db_role_unavailable": "Der Datenbankbenutzer kann keine Rollen erstellen: Plugins mit eigener Datenbank können nicht sicher installiert werden.",
       "db_unavailable": "Die Datenbank ist nicht konfiguriert.",
       "dependency_disabled": "Eine Plugin-Abhängigkeit ist nicht installiert oder deaktiviert."
@@ -1401,8 +1401,8 @@
       "title": "Anwendungen und Plugins",
       "description": "Die optionalen Anwendungen der Plattform und die installierten Plugins. Ein Plugin wird ohne Neustart installiert und aktiviert.",
       "appsTitle": "Anträge",
-      "signed": "Signiert ({keyId})",
-      "unsigned": "Nicht unterzeichnet",
+      "signed": "GCS certified ({keyId})",
+      "unsigned": "Not certified",
       "status": {
         "enabled": "Aktiviert",
         "disabled": "Behinderte",
@@ -1426,14 +1426,14 @@
       },
       "upload": {
         "title": "Ein Plugin hochladen",
-        "body": "Das Paket (.zip) wird vor allem anderen überprüft: Größe, Pfade, Manifest, Kompatibilität, Abhängigkeiten, Migrationen und Signatur. Es wird erst installiert, nachdem Sie es bestätigt haben.",
+        "body": "The package (.zip) is checked before anything else: size, paths, manifest, compatibility, dependencies, migrations and certification. It is installed only after you confirm.",
         "file": "Wählen Sie das Plugin Archiv (.zip)",
         "hint": "Maximal 8 MB. Für ein Update laden Sie die neue Version des gleichen Plugins hoch.",
         "submit": "Upload und Check",
         "uploading": "Überprüfung …",
         "network": "Der Upload ist fehlgeschlagen. Überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
-        "trusted": "Vertrauenswürdige Signaturschlüssel: {keys}.",
-        "noTrusted": "Keine vertrauenswürdigen Signaturschlüssel konfiguriert (GCS PLUGIN TRUSTED KEYS): Jedes Paket wird als unsigniert behandelt."
+        "trusted": "Trusted certification keys: {keys}.",
+        "noTrusted": "No certification keys configured (GCS_PLUGIN_TRUSTED_KEYS): every package is treated as not certified."
       },
       "risk": {
         "low": "geringes risiko",
@@ -1501,7 +1501,7 @@
         },
         "client-js": {
           "title": "JavaScript im Browser",
-          "body": "Führt JavaScript in den Browsern der Besucher auf den Seiten des Plugins aus und kann in ihrem Namen handeln. Nur signierte Plugins."
+          "body": "Runs JavaScript in visitors' browsers on the plugin's pages and can act on their behalf. GCS certified plugins only."
         },
         "templates": {
           "title": "Meldebögen",
@@ -1512,8 +1512,8 @@
         "archive_ok": "Das Archiv ist gültig ({files} Dateien, keine unsicheren Pfade oder Links).",
         "manifest_ok": "plugin.json ist gültig: {key} {version}.",
         "compatible": "Kompatibel mit dieser GCS-Version ({current}).",
-        "signed": "Gültige Signatur, vertrauenswürdiger Schlüssel {keyId}.",
-        "unsigned": "Unsigniertes Paket: Nur ein Root-Admin kann es mit dem 2FA-Code installieren.",
+        "signed": "GCS certified: the certification is valid (key {keyId}).",
+        "unsigned": "Package not certified: only a Root Admin can install it, with the 2FA code.",
         "migrations_ok": "Die SQL-Migrationen ({count}) bleiben im Plugin-eigenen Schema.",
         "dependency_disabled": "Die Abhängigkeit {key} ist installiert, aber deaktiviert.",
         "templates_reserved": "Die Fähigkeit „Vorlagen ist reserviert und hat noch keine Wirkung.",
@@ -1548,9 +1548,9 @@
         "dependency_missing": "Die Abhängigkeit {key} ({range}) fehlt.",
         "dependency_version": "Die Abhängigkeit {key} ist Version {found}; {range} ist erforderlich.",
         "version_not_newer": "Version {version} ist nicht neuer als die installierte ({installed}).",
-        "signature_invalid": "Die Signatur stimmt nicht überein: Das Paket wurde geändert oder die Signatur ist gebrochen ({reason}).",
-        "unsigned_denied": "Nicht signierte Pakete sind auf diesem Server nicht erlaubt.",
-        "client_js_unsigned": "Browser JavaScript ist nur für signierte Plugins erlaubt."
+        "signature_invalid": "The certification does not match: the package was changed or the certification is broken ({reason}).",
+        "unsigned_denied": "Packages that are not certified are not allowed on this server.",
+        "client_js_unsigned": "Browser JavaScript is only allowed for GCS certified plugins."
       },
       "confirm": {
         "pageTitle": "Bestätigen der Installation",
@@ -1569,7 +1569,7 @@
         "about": "Beschreibung",
         "file": "Datei",
         "files": "dateien",
-        "signature": "Unterschrift",
+        "signature": "Certification",
         "checks": "Kontrollen",
         "checksOk": "Alle Kontrollen bestanden",
         "checksFailed": "Das Paket hat Fehler",
@@ -1579,12 +1579,12 @@
         "invalid": "Das Paket kann nicht installiert werden: Beheben Sie die Fehler im Bericht und laden Sie es erneut hoch.",
         "submit": "Installieren Sie das Plugin",
         "submitUpdate": "Aktualisieren Sie das Plugin",
-        "signedBody": "Das Paket wird von einem vertrauenswürdigen Schlüssel signiert. Das Plugin ist direkt nach der Installation aktiviert.",
-        "unsignedTitle": "Nicht signiertes Paket",
+        "signedBody": "The package is GCS certified. The plugin is enabled right after installation.",
+        "unsignedTitle": "Package not certified",
         "unsignedBody": "Niemand hat diesen Code überprüft. Installieren Sie es nur, wenn Sie dem Autor voll vertrauen: Ein bösartiges Plugin könnte versuchen, aus seiner Isolation auszubrechen.",
         "code": "2FA-Code (aus Ihrer Authenticator-App)",
         "typeKey": "Geben Sie den Plugin-Schlüssel ({key}) ein, um zu bestätigen",
-        "rootOnly": "Nur ein Root-Admin kann nicht signierte Pakete installieren.",
+        "rootOnly": "Only a Root Admin can install packages that are not certified.",
         "cancel": "Abbrechen"
       },
       "declared": {
@@ -3479,7 +3479,7 @@
       "task": "scheduled task → job (jobs, everyMinutes)",
       "widget": "widget → widgets (sanitized HTML, rendered on the server)",
       "settings_form": "the settings form is generated from the manifest; only special validations remain",
-      "javascript": "client JavaScript → client-js (signed plugins only) or replaced with HTML/CSS",
+      "javascript": "client JavaScript → client-js (GCS certified plugins only) or replaced with HTML/CSS",
       "other": "to review: code without a direct equivalent"
     },
     "notes": {

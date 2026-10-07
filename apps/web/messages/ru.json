@@ -117,7 +117,7 @@
       "guest": "Тебе нужно войти.",
       "has_children": "В категории есть форумы.",
       "has_content": "На форуме есть темы: выберите, куда двигаться.",
-      "unsigned_requires_root": "Только Root Admin может устанавливать неподписанные пакеты.",
+      "unsigned_requires_root": "Only a Root Admin can install packages that are not certified.",
       "db_role_unavailable": "Пользователь базы данных не может создавать роли: плагины с собственной базой данных не могут быть установлены безопасно.",
       "db_unavailable": "База данных не настроена.",
       "dependency_disabled": "Зависимость от плагинов не установлена или отключена."
@@ -1401,8 +1401,8 @@
       "title": "Приложения и плагины",
       "description": "Дополнительные приложения платформы и установленные плагины. Плагин установлен и включен без перезагрузки.",
       "appsTitle": "Приложения",
-      "signed": "Подпись ({keyId})",
-      "unsigned": "Неподписанный",
+      "signed": "GCS certified ({keyId})",
+      "unsigned": "Not certified",
       "status": {
         "enabled": "Включено",
         "disabled": "Инвалид",
@@ -1426,14 +1426,14 @@
       },
       "upload": {
         "title": "Загрузить плагин",
-        "body": "Пакет (.zip) проверяется прежде всего: размер, пути, манифест, совместимость, зависимости, миграции и подпись. Он устанавливается только после подтверждения.",
+        "body": "The package (.zip) is checked before anything else: size, paths, manifest, compatibility, dependencies, migrations and certification. It is installed only after you confirm.",
         "file": "Выберите файл плагина (.zip)",
         "hint": "Максимум 8 Мб. Для обновления загрузите новую версию того же плагина.",
         "submit": "Загрузить и проверить",
         "uploading": "Проверить…",
         "network": "Загрузка не удалась. Проверьте свою связь и попробуйте еще раз.",
-        "trusted": "Доверенные ключи подписи: {keys}.",
-        "noTrusted": "Не настроены надежные ключи подписи (GCS PLUGIN TRUSTED KEYS): каждая упаковка считается неподписанной."
+        "trusted": "Trusted certification keys: {keys}.",
+        "noTrusted": "No certification keys configured (GCS_PLUGIN_TRUSTED_KEYS): every package is treated as not certified."
       },
       "risk": {
         "low": "низкий риск",
@@ -1501,7 +1501,7 @@
         },
         "client-js": {
           "title": "JavaScript в браузере",
-          "body": "Запускает JavaScript в браузерах посетителей на страницах плагина и может действовать от их имени. Только плагины."
+          "body": "Runs JavaScript in visitors' browsers on the plugin's pages and can act on their behalf. GCS certified plugins only."
         },
         "templates": {
           "title": "Шаблоны",
@@ -1512,8 +1512,8 @@
         "archive_ok": "Архив действителен (файлы {files}, никаких небезопасных путей или ссылок).",
         "manifest_ok": "plugin.json: {key} {version}.",
         "compatible": "Совместим с этой версией GCS ({current}).",
-        "signed": "Действительная подпись, надежный ключ {keyId}.",
-        "unsigned": "Неподписанный пакет: его может установить только Корневой администратор с кодом 2FA.",
+        "signed": "GCS certified: the certification is valid (key {keyId}).",
+        "unsigned": "Package not certified: only a Root Admin can install it, with the 2FA code.",
         "migrations_ok": "Миграции SQL ({count}) остаются в собственной схеме плагина.",
         "dependency_disabled": "Зависимость {key} установлена, но отключена.",
         "templates_reserved": "Возможности «шаблонов» зарезервированы и пока не имеют эффекта.",
@@ -1548,9 +1548,9 @@
         "dependency_missing": "Зависимость {key} ({range}) отсутствует.",
         "dependency_version": "Зависимость {key} — это версия {found}; требуется {range}.",
         "version_not_newer": "Версия {version} не новее установленной ({installed}).",
-        "signature_invalid": "Подпись не совпадает: пакет был изменен или подпись сломана ({reason}).",
-        "unsigned_denied": "Неподписанные пакеты на этом сервере не допускаются.",
-        "client_js_unsigned": "Браузер JavaScript разрешен только для подписанных плагинов."
+        "signature_invalid": "The certification does not match: the package was changed or the certification is broken ({reason}).",
+        "unsigned_denied": "Packages that are not certified are not allowed on this server.",
+        "client_js_unsigned": "Browser JavaScript is only allowed for GCS certified plugins."
       },
       "confirm": {
         "pageTitle": "Подтвердите установку",
@@ -1569,7 +1569,7 @@
         "about": "Описание",
         "file": "Файл",
         "files": "файлы",
-        "signature": "Подпись",
+        "signature": "Certification",
         "checks": "Проверка",
         "checksOk": "Все чеки прошли",
         "checksFailed": "В пакете есть ошибки",
@@ -1579,12 +1579,12 @@
         "invalid": "Пакет установить нельзя: исправьте ошибки в отчете и загрузите его повторно.",
         "submit": "Установите плагин",
         "submitUpdate": "Обновить плагин",
-        "signedBody": "Пакет подписывается надежным ключом. Плагин включен сразу после установки.",
-        "unsignedTitle": "Неподписанный пакет",
+        "signedBody": "The package is GCS certified. The plugin is enabled right after installation.",
+        "unsignedTitle": "Package not certified",
         "unsignedBody": "Никто не пересматривал этот кодекс. Установите его только в том случае, если вы полностью доверяете автору: вредоносный плагин может попытаться вырваться из его изоляции.",
         "code": "Код 2FA (из приложения для аутентификации)",
         "typeKey": "Введите ключ плагина ({key}) для подтверждения",
-        "rootOnly": "Только Root Admin может устанавливать неподписанные пакеты.",
+        "rootOnly": "Only a Root Admin can install packages that are not certified.",
         "cancel": "Отмена"
       },
       "declared": {
@@ -3479,7 +3479,7 @@
       "task": "scheduled task → job (jobs, everyMinutes)",
       "widget": "widget → widgets (sanitized HTML, rendered on the server)",
       "settings_form": "the settings form is generated from the manifest; only special validations remain",
-      "javascript": "client JavaScript → client-js (signed plugins only) or replaced with HTML/CSS",
+      "javascript": "client JavaScript → client-js (GCS certified plugins only) or replaced with HTML/CSS",
       "other": "to review: code without a direct equivalent"
     },
     "notes": {

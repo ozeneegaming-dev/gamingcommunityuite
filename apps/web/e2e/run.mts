@@ -152,11 +152,11 @@ async function prepareDatabase(baseUrl: string, translatorUrl: string): Promise<
   await admin.end();
   const url = new URL(baseUrl);
   url.pathname = "/redline_e2e";
-  // Sub sarcină mare (alte teste sau build-uri pe aceeași mașină), conectarea poate depăși cele 5 s implicite ale Prisma.
-  const migrateUrl = new URL(url);
-  migrateUrl.searchParams.set("connect_timeout", "60");
+  // Sub sarcină mare (alte teste sau build-uri pe aceeași mașină), conectarea poate depăși cele 5 s implicite ale Prisma:
+  // valabil pentru migrații, seed și instanțele aplicației (toate primesc adresa asta).
+  url.searchParams.set("connect_timeout", "60");
   execFileSync(process.execPath, [prismaCli, "migrate", "deploy", "--schema", schemaPath], {
-    env: { ...process.env, DATABASE_URL: migrateUrl.toString() },
+    env: { ...process.env, DATABASE_URL: url.toString() },
     stdio: "pipe",
   });
   const db = new PrismaClient({ datasourceUrl: url.toString() });

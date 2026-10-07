@@ -117,7 +117,7 @@
       "guest": "Trebuie să fii autentificat.",
       "has_children": "Categoria mai are forumuri.",
       "has_content": "Forumul are topicuri: alege unde se mută.",
-      "unsigned_requires_root": "Pachetele nesemnate pot fi instalate doar de un Root Admin.",
+      "unsigned_requires_root": "Pachetele necertificate pot fi instalate doar de un Root Admin.",
       "db_role_unavailable": "Userul bazei de date nu poate crea roluri: pluginurile cu bază de date proprie nu se pot instala sigur.",
       "db_unavailable": "Baza de date nu e configurată.",
       "dependency_disabled": "O dependență a pluginului nu e instalată sau e dezactivată."
@@ -1401,8 +1401,8 @@
       "title": "Aplicații și pluginuri",
       "description": "Aplicațiile opționale ale platformei și pluginurile instalate. Un plugin se instalează și se activează fără repornire.",
       "appsTitle": "Aplicații",
-      "signed": "Semnat ({keyId})",
-      "unsigned": "Nesemnat",
+      "signed": "Certificat GCS ({keyId})",
+      "unsigned": "Necertificat",
       "status": {
         "enabled": "Activ",
         "disabled": "Dezactivat",
@@ -1426,14 +1426,14 @@
       },
       "upload": {
         "title": "Încarcă un plugin",
-        "body": "Pachetul (.zip) e verificat înainte de orice: mărimea, căile, manifestul, compatibilitatea, dependențele, migrațiile și semnătura. Instalarea se face doar după confirmare.",
+        "body": "Pachetul (.zip) e verificat înainte de orice: mărimea, căile, manifestul, compatibilitatea, dependențele, migrațiile și certificarea. Instalarea se face doar după confirmare.",
         "file": "Alege arhiva pluginului (.zip)",
         "hint": "Maximum 8 MB. Pentru o actualizare, încarcă versiunea nouă a aceluiași plugin.",
         "submit": "Încarcă și verifică",
         "uploading": "Se verifică…",
         "network": "Încărcarea nu a reușit. Verifică conexiunea și încearcă din nou.",
-        "trusted": "Chei de semnare de încredere: {keys}.",
-        "noTrusted": "Nicio cheie de semnare de încredere configurată (GCS_PLUGIN_TRUSTED_KEYS): orice pachet e tratat ca nesemnat."
+        "trusted": "Chei de certificare de încredere: {keys}.",
+        "noTrusted": "Nicio cheie de certificare configurată (GCS_PLUGIN_TRUSTED_KEYS): orice pachet e tratat ca necertificat."
       },
       "risk": {
         "low": "risc mic",
@@ -1501,7 +1501,7 @@
         },
         "client-js": {
           "title": "JavaScript în browser",
-          "body": "Rulează JavaScript în browserul vizitatorilor, pe paginile pluginului, și poate acționa în numele lor. Doar pentru pluginuri semnate."
+          "body": "Rulează JavaScript în browserul vizitatorilor, pe paginile pluginului, și poate acționa în numele lor. Doar pentru pluginuri Certificat GCS."
         },
         "templates": {
           "title": "Șabloane",
@@ -1512,8 +1512,8 @@
         "archive_ok": "Arhiva e validă ({files} fișiere, fără căi sau link-uri nesigure).",
         "manifest_ok": "plugin.json e valid: {key} {version}.",
         "compatible": "Compatibil cu această versiune GCS ({current}).",
-        "signed": "Semnătură validă, cheia de încredere {keyId}.",
-        "unsigned": "Pachet nesemnat: poate fi instalat doar de Root Admin, cu codul 2FA.",
+        "signed": "Certificat GCS: certificarea e validă (cheia {keyId}).",
+        "unsigned": "Pachet necertificat: poate fi instalat doar de Root Admin, cu codul 2FA.",
         "migrations_ok": "Migrațiile SQL ({count}) rămân în schema proprie.",
         "dependency_disabled": "Dependența {key} e instalată, dar dezactivată.",
         "templates_reserved": "Capabilitatea „templates” e rezervată; nu are încă efect.",
@@ -1548,9 +1548,9 @@
         "dependency_missing": "Lipsește dependența {key} ({range}).",
         "dependency_version": "Dependența {key} are versiunea {found}; e nevoie de {range}.",
         "version_not_newer": "Versiunea {version} nu e mai nouă decât cea instalată ({installed}).",
-        "signature_invalid": "Semnătura nu se potrivește: pachetul a fost modificat sau semnătura e stricată ({reason}).",
-        "unsigned_denied": "Pachetele nesemnate sunt interzise pe acest server.",
-        "client_js_unsigned": "JavaScript-ul în browser e permis doar pluginurilor semnate."
+        "signature_invalid": "Certificarea nu se potrivește: pachetul a fost modificat sau certificarea e stricată ({reason}).",
+        "unsigned_denied": "Pachetele necertificate sunt interzise pe acest server.",
+        "client_js_unsigned": "JavaScript-ul în browser e permis doar pluginurilor Certificat GCS."
       },
       "confirm": {
         "pageTitle": "Confirmarea instalării",
@@ -1569,7 +1569,7 @@
         "about": "Descriere",
         "file": "Fișier",
         "files": "fișiere",
-        "signature": "Semnătură",
+        "signature": "Certificare",
         "checks": "Verificări",
         "checksOk": "Toate verificările au trecut",
         "checksFailed": "Pachetul are erori",
@@ -1579,12 +1579,12 @@
         "invalid": "Pachetul nu se poate instala: corectează erorile din raport și încarcă-l din nou.",
         "submit": "Instalează pluginul",
         "submitUpdate": "Actualizează pluginul",
-        "signedBody": "Pachetul e semnat de o cheie de încredere. Pluginul se activează imediat după instalare.",
-        "unsignedTitle": "Pachet nesemnat",
+        "signedBody": "Pachetul e Certificat GCS. Pluginul se activează imediat după instalare.",
+        "unsignedTitle": "Pachet necertificat",
         "unsignedBody": "Nimeni nu a verificat acest cod. Instalează-l doar dacă ai încredere deplină în autor: un plugin rău intenționat ar putea încerca să iasă din izolare.",
         "code": "Codul 2FA (din aplicația de autentificare)",
         "typeKey": "Scrie cheia pluginului ({key}) ca să confirmi",
-        "rootOnly": "Pachetele nesemnate pot fi instalate doar de un Root Admin.",
+        "rootOnly": "Pachetele necertificate pot fi instalate doar de un Root Admin.",
         "cancel": "Renunță"
       },
       "declared": {
@@ -3479,7 +3479,7 @@
       "task": "task programat → job (jobs, everyMinutes)",
       "widget": "widget → widgets (HTML sanitizat, randat pe server)",
       "settings_form": "formularul de setări e generat din manifest; rămân doar validările speciale",
-      "javascript": "JavaScript client → client-js (doar pentru pluginuri semnate) sau înlocuit cu HTML/CSS",
+      "javascript": "JavaScript client → client-js (doar pentru pluginuri Certificat GCS) sau înlocuit cu HTML/CSS",
       "other": "de analizat: cod fără echivalent direct"
     },
     "notes": {

@@ -117,7 +117,7 @@
       "guest": "You need to sign in.",
       "has_children": "The category still has forums.",
       "has_content": "The forum has topics: choose where they move.",
-      "unsigned_requires_root": "Only a Root Admin can install unsigned packages.",
+      "unsigned_requires_root": "Only a Root Admin can install packages that are not certified.",
       "db_role_unavailable": "The database user cannot create roles: plugins with their own database cannot be installed safely.",
       "db_unavailable": "The database is not configured.",
       "dependency_disabled": "A plugin dependency is not installed or is disabled."
@@ -1401,8 +1401,8 @@
       "title": "Applications and plugins",
       "description": "The platform's optional applications and the installed plugins. A plugin is installed and enabled without a restart.",
       "appsTitle": "Applications",
-      "signed": "Signed ({keyId})",
-      "unsigned": "Unsigned",
+      "signed": "GCS certified ({keyId})",
+      "unsigned": "Not certified",
       "status": {
         "enabled": "Enabled",
         "disabled": "Disabled",
@@ -1426,14 +1426,14 @@
       },
       "upload": {
         "title": "Upload a plugin",
-        "body": "The package (.zip) is checked before anything else: size, paths, manifest, compatibility, dependencies, migrations and signature. It is installed only after you confirm.",
+        "body": "The package (.zip) is checked before anything else: size, paths, manifest, compatibility, dependencies, migrations and certification. It is installed only after you confirm.",
         "file": "Choose the plugin archive (.zip)",
         "hint": "Maximum 8 MB. For an update, upload the new version of the same plugin.",
         "submit": "Upload and check",
         "uploading": "Checking…",
         "network": "The upload failed. Check your connection and try again.",
-        "trusted": "Trusted signing keys: {keys}.",
-        "noTrusted": "No trusted signing keys configured (GCS_PLUGIN_TRUSTED_KEYS): every package is treated as unsigned."
+        "trusted": "Trusted certification keys: {keys}.",
+        "noTrusted": "No certification keys configured (GCS_PLUGIN_TRUSTED_KEYS): every package is treated as not certified."
       },
       "risk": {
         "low": "low risk",
@@ -1501,7 +1501,7 @@
         },
         "client-js": {
           "title": "JavaScript in the browser",
-          "body": "Runs JavaScript in visitors' browsers on the plugin's pages and can act on their behalf. Signed plugins only."
+          "body": "Runs JavaScript in visitors' browsers on the plugin's pages and can act on their behalf. GCS certified plugins only."
         },
         "templates": {
           "title": "Templates",
@@ -1512,8 +1512,8 @@
         "archive_ok": "The archive is valid ({files} files, no unsafe paths or links).",
         "manifest_ok": "plugin.json is valid: {key} {version}.",
         "compatible": "Compatible with this GCS version ({current}).",
-        "signed": "Valid signature, trusted key {keyId}.",
-        "unsigned": "Unsigned package: only a Root Admin can install it, with the 2FA code.",
+        "signed": "GCS certified: the certification is valid (key {keyId}).",
+        "unsigned": "Package not certified: only a Root Admin can install it, with the 2FA code.",
         "migrations_ok": "The SQL migrations ({count}) stay in the plugin's own schema.",
         "dependency_disabled": "The dependency {key} is installed but disabled.",
         "templates_reserved": "The “templates” capability is reserved and has no effect yet.",
@@ -1548,9 +1548,9 @@
         "dependency_missing": "The dependency {key} ({range}) is missing.",
         "dependency_version": "The dependency {key} is version {found}; {range} is required.",
         "version_not_newer": "Version {version} is not newer than the installed one ({installed}).",
-        "signature_invalid": "The signature does not match: the package was changed or the signature is broken ({reason}).",
-        "unsigned_denied": "Unsigned packages are not allowed on this server.",
-        "client_js_unsigned": "Browser JavaScript is only allowed for signed plugins."
+        "signature_invalid": "The certification does not match: the package was changed or the certification is broken ({reason}).",
+        "unsigned_denied": "Packages that are not certified are not allowed on this server.",
+        "client_js_unsigned": "Browser JavaScript is only allowed for GCS certified plugins."
       },
       "confirm": {
         "pageTitle": "Confirm the installation",
@@ -1569,7 +1569,7 @@
         "about": "Description",
         "file": "File",
         "files": "files",
-        "signature": "Signature",
+        "signature": "Certification",
         "checks": "Checks",
         "checksOk": "All checks passed",
         "checksFailed": "The package has errors",
@@ -1579,12 +1579,12 @@
         "invalid": "The package cannot be installed: fix the errors in the report and upload it again.",
         "submit": "Install the plugin",
         "submitUpdate": "Update the plugin",
-        "signedBody": "The package is signed by a trusted key. The plugin is enabled right after installation.",
-        "unsignedTitle": "Unsigned package",
+        "signedBody": "The package is GCS certified. The plugin is enabled right after installation.",
+        "unsignedTitle": "Package not certified",
         "unsignedBody": "Nobody has reviewed this code. Install it only if you fully trust the author: a malicious plugin could try to break out of its isolation.",
         "code": "2FA code (from your authenticator app)",
         "typeKey": "Type the plugin key ({key}) to confirm",
-        "rootOnly": "Only a Root Admin can install unsigned packages.",
+        "rootOnly": "Only a Root Admin can install packages that are not certified.",
         "cancel": "Cancel"
       },
       "declared": {
@@ -3479,7 +3479,7 @@
       "task": "scheduled task → job (jobs, everyMinutes)",
       "widget": "widget → widgets (sanitized HTML, rendered on the server)",
       "settings_form": "the settings form is generated from the manifest; only special validations remain",
-      "javascript": "client JavaScript → client-js (signed plugins only) or replaced with HTML/CSS",
+      "javascript": "client JavaScript → client-js (GCS certified plugins only) or replaced with HTML/CSS",
       "other": "to review: code without a direct equivalent"
     },
     "notes": {

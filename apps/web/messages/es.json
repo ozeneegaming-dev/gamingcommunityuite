@@ -117,7 +117,7 @@
       "guest": "Tienes que firmar.",
       "has_children": "La categoría todavía tiene foros.",
       "has_content": "El foro tiene temas: elegir dónde se mueven.",
-      "unsigned_requires_root": "Sólo un administrador de raíz puede instalar paquetes no firmados.",
+      "unsigned_requires_root": "Only a Root Admin can install packages that are not certified.",
       "db_role_unavailable": "El usuario de la base de datos no puede crear roles: los plugins con su propia base de datos no pueden instalarse de forma segura.",
       "db_unavailable": "La base de datos no está configurada.",
       "dependency_disabled": "Una dependencia plugin no está instalada o está deshabilitada."
@@ -1401,8 +1401,8 @@
       "title": "Aplicaciones y plugins",
       "description": "Las aplicaciones opcionales de la plataforma y los plugins instalados. Se instala un plugin y se habilita sin reiniciar.",
       "appsTitle": "Aplicaciones",
-      "signed": "Firmada ({keyId})",
-      "unsigned": "No asignados",
+      "signed": "GCS certified ({keyId})",
+      "unsigned": "Not certified",
       "status": {
         "enabled": "Activado",
         "disabled": "Discapacitados",
@@ -1426,14 +1426,14 @@
       },
       "upload": {
         "title": "Subir un plugin",
-        "body": "El paquete (.zip) se revisa antes de cualquier otra cosa: tamaño, caminos, manifiesto, compatibilidad, dependencias, migraciones y firma. Está instalado sólo después de confirmarlo.",
+        "body": "The package (.zip) is checked before anything else: size, paths, manifest, compatibility, dependencies, migrations and certification. It is installed only after you confirm.",
         "file": "Elija el archivo plugin (.zip)",
         "hint": "Máximo 8 MB. Para una actualización, suba la nueva versión del mismo plugin.",
         "submit": "Subir y comprobar",
         "uploading": "Comprobando…",
         "network": "La carga falló. Comprueba tu conexión e intenta de nuevo.",
-        "trusted": "Teclas de firma confiadas: {keys}.",
-        "noTrusted": "No se configuran claves de firma de confianza (GCS PLUGIN TRUSTED KEYS): cada paquete es tratado como no firmado."
+        "trusted": "Trusted certification keys: {keys}.",
+        "noTrusted": "No certification keys configured (GCS_PLUGIN_TRUSTED_KEYS): every package is treated as not certified."
       },
       "risk": {
         "low": "bajo riesgo",
@@ -1501,7 +1501,7 @@
         },
         "client-js": {
           "title": "JavaScript en el navegador",
-          "body": "Corre JavaScript en los navegadores de visitantes en las páginas del plugin y puede actuar en su nombre. Sólo firmaron plugins."
+          "body": "Runs JavaScript in visitors' browsers on the plugin's pages and can act on their behalf. GCS certified plugins only."
         },
         "templates": {
           "title": "Plantillas",
@@ -1512,8 +1512,8 @@
         "archive_ok": "El archivo es válido (archivos {files}, no caminos o enlaces inseguros).",
         "manifest_ok": "plugin.json es válido: {key} {version}.",
         "compatible": "Compatible con esta versión GCS ({current}).",
-        "signed": "Firma válida, clave de confianza {keyId}.",
-        "unsigned": "Paquete no firmado: sólo un administrador de raíz puede instalarlo, con el código 2FA.",
+        "signed": "GCS certified: the certification is valid (key {keyId}).",
+        "unsigned": "Package not certified: only a Root Admin can install it, with the 2FA code.",
         "migrations_ok": "Las migraciones SQL ({count}) permanecen en el esquema propio del plugin.",
         "dependency_disabled": "La dependencia {key} está instalada pero deshabilitada.",
         "templates_reserved": "La capacidad de “templates” está reservada y no tiene efecto todavía.",
@@ -1548,9 +1548,9 @@
         "dependency_missing": "Falta la dependencia {key} ({range}).",
         "dependency_version": "La dependencia {key} es la versión {found}; {range} es necesaria.",
         "version_not_newer": "La versión {version} no es más nueva que la instalada ({installed}).",
-        "signature_invalid": "La firma no coincide: el paquete fue cambiado o la firma está rota ({reason}).",
-        "unsigned_denied": "No se permiten paquetes no firmados en este servidor.",
-        "client_js_unsigned": "Navegador JavaScript solo está permitido para plugins firmados."
+        "signature_invalid": "The certification does not match: the package was changed or the certification is broken ({reason}).",
+        "unsigned_denied": "Packages that are not certified are not allowed on this server.",
+        "client_js_unsigned": "Browser JavaScript is only allowed for GCS certified plugins."
       },
       "confirm": {
         "pageTitle": "Confirme la instalación",
@@ -1569,7 +1569,7 @@
         "about": "Descripción",
         "file": "Archivo",
         "files": "archivos",
-        "signature": "Firma",
+        "signature": "Certification",
         "checks": "Checks",
         "checksOk": "Todos los cheques aprobados",
         "checksFailed": "El paquete tiene errores",
@@ -1579,12 +1579,12 @@
         "invalid": "El paquete no se puede instalar: corregir los errores en el informe y subirlo de nuevo.",
         "submit": "Instalar el plugin",
         "submitUpdate": "Actualizar el plugin",
-        "signedBody": "El paquete está firmado por una llave de confianza. El plugin está habilitado justo después de la instalación.",
-        "unsignedTitle": "Paquete no firmado",
+        "signedBody": "The package is GCS certified. The plugin is enabled right after installation.",
+        "unsignedTitle": "Package not certified",
         "unsignedBody": "Nadie ha revisado este código. Instala sólo si confías plenamente en el autor: un plugin malicioso podría intentar romper su aislamiento.",
         "code": "Código 2FA (de tu app de autenticador)",
         "typeKey": "Escriba la tecla plugin ({key}) para confirmar",
-        "rootOnly": "Sólo un administrador de raíz puede instalar paquetes no firmados.",
+        "rootOnly": "Only a Root Admin can install packages that are not certified.",
         "cancel": "Cancelar"
       },
       "declared": {
@@ -3479,7 +3479,7 @@
       "task": "scheduled task → job (jobs, everyMinutes)",
       "widget": "widget → widgets (sanitized HTML, rendered on the server)",
       "settings_form": "the settings form is generated from the manifest; only special validations remain",
-      "javascript": "client JavaScript → client-js (signed plugins only) or replaced with HTML/CSS",
+      "javascript": "client JavaScript → client-js (GCS certified plugins only) or replaced with HTML/CSS",
       "other": "to review: code without a direct equivalent"
     },
     "notes": {
