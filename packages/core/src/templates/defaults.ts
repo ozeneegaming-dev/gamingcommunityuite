@@ -165,7 +165,8 @@ const POSTBIT_AUTHOR = `<div class="gcs-postbit__top">
   <span class="gcs-postbit__handle">@{{ author.handle }}</span>
 </div>
 
-<div class="gcs-postbit__profile">
+<div class="gcs-postbit__profile{% if author.cover %} gcs-postbit__profile--cover{% endif %}">
+  {% if author.cover %}<span class="gcs-postbit__cover" aria-hidden="true" style="background: center {{ author.coverPositionY }}% / cover no-repeat url({{ author.cover }})" data-testid="gcs-postbit-cover"></span>{% endif %}
   <span class="gcs-postbit__avatar">{% avatar author, size: "l" %}</span>
   <div class="gcs-postbit__identity">
     <span class="gcs-post__authorName">{% username author %}</span>
@@ -241,9 +242,6 @@ const POSTBIT_AUTHOR = `<div class="gcs-postbit__top">
 
 <div class="gcs-postbit__foot">
   <span class="gcs-postbit__joined">{% icon "fa-regular fa-clock" %}{{ "topic.author.memberSince" | t }} <strong>{{ author.joinedAt | date: "date" }}</strong></span>
-  {% if author.hasData %}
-    <span class="gcs-postbit__footStatus{% if author.online %} gcs-postbit__footStatus--on{% endif %}"><span class="gcs-postbit__dot" aria-hidden="true"></span>{{ "topic.author.status" | t }} <strong>{% if author.online %}{{ "topic.author.statusOnline" | t }}{% else %}{{ "topic.author.statusOffline" | t }}{% endif %}</strong></span>
-  {% endif %}
 </div>
 
 {% if author.motto %}
@@ -298,19 +296,19 @@ const MEMBER_CARD = `<article class="gcs-card gcs-memberCard" data-testid="gcs-m
 
 const HOVER_CARD = `<div class="gcs-card gcs-hoverCard" role="dialog" aria-label="{{ user.name }}" data-testid="gcs-hover-card">
   {% if user.cover %}
-    <div class="gcs-hoverCard__cover" style="background: center / cover no-repeat url({{ user.cover }})"></div>
+    <div class="gcs-hoverCard__cover gcs-hoverCard__cover--image" style="--gcs-hoverCard-accent: {{ user.accentColor }}; background: center {{ user.coverPositionY }}% / cover no-repeat url({{ user.cover }})" data-testid="gcs-hover-cover"></div>
   {% else %}
-    <div class="gcs-hoverCard__cover" style="background: linear-gradient(120deg, {{ user.accentColor | tint: 0.55 }}, {{ user.accentColor | tint: 0.12 }})"></div>
+    <div class="gcs-hoverCard__cover" style="--gcs-hoverCard-accent: {{ user.accentColor }}; background: linear-gradient(120deg, {{ user.accentColor | tint: 0.55 }}, {{ user.accentColor | tint: 0.12 }})" data-testid="gcs-hover-cover"></div>
   {% endif %}
   <div class="gcs-hoverCard__body">
     <div class="gcs-hoverCard__head">
-      {% avatar user, size: "m", class: "gcs-hoverCard__avatar" %}
-      <div style="min-width: 0">
-        <a href="{{ user.url }}" class="gcs-userLink gcs-name--{{ user.nameKey }} gcs-hoverCard__name">{{ user.name }}</a>
+      <span class="gcs-hoverCard__avatar">{% avatar user, size: "l" %}</span>
+      <div class="gcs-hoverCard__identity">
+        <a href="{{ user.url }}" class="gcs-userLink gcs-name--{{ user.nameKey }} gcs-hoverCard__name" title="{{ user.name }}">{{ user.name }}</a>
         <div class="gcs-hoverCard__meta">
           <span class="gcs-badge" style="background: {% if user.group.color %}{{ user.group.color | tint: 0.16 }}{% else %}rgba(161,167,180,.16){% endif %}; color: {{ user.group.color | default: "var(--gcs-muted)" }}">{{ user.group.name }}</span>
-          {% if user.rank %}<span class="gcs-hoverCard__rank" data-testid="gcs-hover-rank">{% if user.rank.icon %}{{ user.rank.icon }} {% endif %}{{ user.rank.name }}</span>{% endif %}
-          {% if online %}<span class="gcs-hoverCard__online"><span class="gcs-dot" style="background: var(--gcs-ok)"></span> {{ "hoverCard.online" | t }}</span>{% endif %}
+          {% if user.rank %}<span class="gcs-hoverCard__rank" data-testid="gcs-hover-rank">{% if user.rank.symbol %}{{ user.rank.symbol }} {% endif %}{{ user.rank.name }}</span>{% endif %}
+          {% if online %}<span class="gcs-hoverCard__online"><span class="gcs-dot" aria-hidden="true"></span>{{ "hoverCard.online" | t }}</span>{% endif %}
         </div>
       </div>
     </div>
@@ -327,7 +325,7 @@ const HOVER_CARD = `<div class="gcs-card gcs-hoverCard" role="dialog" aria-label
     {% endif %}
     {% if fields.size > 0 %}
       <dl class="gcs-hoverCard__fields">
-        {% for f in fields %}<div><dt>{{ f.label }}</dt><dd>{{ f.value }}</dd></div>{% endfor %}
+        {% for f in fields %}<div><dt>{{ f.label }}</dt><dd title="{{ f.value }}">{{ f.value }}</dd></div>{% endfor %}
       </dl>
     {% endif %}
     <div class="gcs-hoverCard__stats">
@@ -466,7 +464,7 @@ export const DEFAULT_TEMPLATES: GcsTemplateDef[] = [
     key: "postbit.author",
     group: "postbit",
     icon: "fa-solid fa-user-tag",
-    version: 1,
+    version: 2,
     title: T("Autorul postării (postbit)", "Post author (postbit)"),
     description: T("Coloana cu autorul, lângă fiecare postare.", "The author column next to every post."),
     variables: vars([
@@ -477,6 +475,8 @@ export const DEFAULT_TEMPLATES: GcsTemplateDef[] = [
       ["author.online", "boolean", "E online", "Is online"],
       ["author.secondary", "string", "Rândul al doilea: planul VIP, un grup secundar sau grupul", "Second line: VIP plan, a secondary group or the group"],
       ["author.customTitle", "string|nil", "Titlul personalizat", "Custom title"],
+      ["author.cover", "string|nil", "Coperta profilului (URL), dacă profilul e vizibil viewer-ului", "Profile cover (URL), if the profile is visible to the viewer"],
+      ["author.coverPositionY", "number", "Poziția verticală a copertei (0–100 %)", "Vertical cover position (0–100 %)"],
       ["author.vip", "boolean", "Are un plan VIP activ", "Has an active VIP plan"],
       ["author.rankLevel", "number|nil", "Nivelul rangului", "Rank level"],
       ["author.pips", "number", "Coroanele afișate (0–8)", "Crowns shown (0–8)"],
@@ -546,7 +546,7 @@ export const DEFAULT_TEMPLATES: GcsTemplateDef[] = [
     key: "members.hover_card",
     group: "members",
     icon: "fa-solid fa-id-card-clip",
-    version: 1,
+    version: 2,
     title: T("Hover card-ul unui membru", "Member hover card"),
     description: T("Cardul care apare la trecerea mouse-ului peste un nume.", "The card shown when hovering a member name."),
     variables: vars([
@@ -555,9 +555,10 @@ export const DEFAULT_TEMPLATES: GcsTemplateDef[] = [
       ["user.bio", "string", "Descrierea scurtă", "Short bio"],
       ["user.accentColor", "string|nil", "Culoarea de accent", "Accent colour"],
       ["user.cover", "string|nil", "Imaginea de copertă", "Cover image"],
+      ["user.coverPositionY", "number", "Poziția verticală a copertei (0–100 %)", "Vertical cover position (0–100 %)"],
       ["user.group.name", "string", "Grupul", "Group"],
       ["user.group.color", "string|nil", "Culoarea grupului", "Group colour"],
-      ["user.rank", "object|nil", "Rangul: name, icon", "Rank: name, icon"],
+      ["user.rank", "object|nil", "Rangul: name, icon, symbol (emoji-ul, dacă iconița nu e Font Awesome)", "Rank: name, icon, symbol (the emoji, if the icon is not Font Awesome)"],
       ["stats.posts", "number", "Postări", "Posts"],
       ["stats.reputation", "number", "Reputație", "Reputation"],
       ["stats.followers", "number", "Urmăritori", "Followers"],

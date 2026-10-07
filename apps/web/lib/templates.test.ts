@@ -1,11 +1,23 @@
-import { avatarHtml, DEFAULT_TEMPLATES, parseHtmlTree, sanitizeTemplateHtml, TEMPLATE_GROUP_ICONS, usernameHtml } from "@gcs/core";
-import { templateIconSvg } from "@gcs/modules";
-import { GcsAvatar, GcsUserLink } from "@gcs/ui";
+import {
+  avatarHtml,
+  DEFAULT_TEMPLATES,
+  defaultTemplate,
+  parseHtmlTree,
+  parseStyleAttribute,
+  renderTemplate,
+  sanitizeTemplateHtml,
+  TEMPLATE_GROUP_ICONS,
+  usernameHtml,
+  type GcsHtmlNode,
+} from "@gcs/core";
+import { templateComponents, templateIconSvg, type GcsCardView, type GcsPostAuthor, type GcsPostbitData } from "@gcs/modules";
+import { GcsAvatar, GcsHoverCard, GcsUserLink } from "@gcs/ui";
 import { GcsIconSvg } from "@gcs/ui/icons";
 import { resolveIcon } from "@gcs/ui/icon-registry";
 import { createElement, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
+import { hoverCardVars, postbitVars } from "./template-data";
 import { htmlToReact, jsxText } from "./templates";
 
 /** Arborele HTML (după sanitizer), ca să comparăm structura fără ordinea atributelor. */
@@ -45,6 +57,162 @@ describe("componentele șabloanelor produc același markup ca cele React", () =>
       for (const m of def.source.matchAll(/\{% icon "([^"]+)"/g)) names.add(m[1]!);
     }
     expect([...names].filter((n) => !resolveIcon(n))).toEqual([]);
+  });
+});
+
+/** Arborele fără spațiile de indentare și cu stilurile ca obiecte (ordinea și formatarea declarațiilor nu contează). */
+function normalized(html: string): unknown[] {
+  const walk = (nodes: GcsHtmlNode[]): unknown[] =>
+    nodes.flatMap((n): unknown[] => {
+      if (n.type === "text") {
+        const text = jsxText(n.text);
+        return text ? [text] : [];
+      }
+      const attrs: Record<string, unknown> = { ...n.attrs };
+      if (n.attrs.style !== undefined) attrs.style = parseStyleAttribute(n.attrs.style);
+      return [{ name: n.name, attrs, children: walk(n.children) }];
+    });
+  return walk(parseHtmlTree(sanitizeTemplateHtml(html)));
+}
+
+describe("hover card-ul: șablonul implicit `members.hover_card` produce markup-ul componentei React", () => {
+  const texts: Record<string, string> = {
+    "hoverCard.posts": "Postări",
+    "hoverCard.reputation": "Reputație",
+    "hoverCard.followers": "Urmăritori",
+    "hoverCard.online": "Online",
+    "hoverCard.joined": "Membru din",
+  };
+  const labels = { posts: "Postări", reputation: "Reputație", followers: "Urmăritori", online: "Online", joined: "Membru din" };
+  const base: GcsCardView = {
+    user: {
+      id: "u1",
+      name: "Ana Maria",
+      image: null,
+      nameKey: "admin",
+      frameKey: null,
+      groupKey: "admin",
+      group: { name: "Administrator", color: "#D62839" },
+      rank: { name: "Recrut", icon: null },
+      slug: "ana-maria",
+      bio: "",
+      accentColor: null,
+      cover: null,
+      coverPositionY: 50,
+    },
+    stats: { posts: 1234, reputation: 0, followers: 3, joinedAt: "2026-06-15T12:00:00.000Z" },
+    online: { online: false, hidden: false, lastActiveAt: null },
+    badges: [],
+    fields: [],
+    viewer: { isSelf: false, isFollowing: false, canMessage: false, canFollow: false },
+  };
+  const template = (card: GcsCardView) =>
+    renderTemplate(defaultTemplate("members.hover_card")!.source, hoverCardVars(card), { locale: "ro", translate: (key) => texts[key] ?? key, components: templateComponents() });
+  const component = (card: GcsCardView) =>
+    react(
+      createElement(GcsHoverCard, {
+        data: card,
+        labels,
+        format: { number: (n) => new Intl.NumberFormat("ro").format(n), year: (iso) => String(new Date(iso).getFullYear()) },
+        ...(card.viewer.canFollow || card.viewer.canMessage ? { actions: createElement("gcs-slot", { "data-name": "actions" }) } : {}),
+      }),
+    );
+
+  const cases: [string, GcsCardView][] = [
+    ["vizitator, fără copertă, membru nou", base],
+    [
+      "cu copertă (poziția salvată), bio, insigne, câmpuri, online, rang cu emoji, acțiuni",
+      {
+        ...base,
+        user: { ...base.user, image: "/files/avatar1", frameKey: "neon", bio: "Nu există lag.", accentColor: "#3DDC97", cover: "/files/cover1", coverPositionY: 30, rank: { name: "Veteran", icon: "🎖" } },
+        stats: { ...base.stats, reputation: 12 },
+        online: { online: true, hidden: false, lastActiveAt: null },
+        badges: [
+          { key: "b1", name: "Fondator", symbol: "F", image: null, color: "#F4B740", awardedAt: "2026-06-15T12:00:00.000Z" },
+          { key: "b2", name: "Lider", symbol: null, image: "/files/badge2", color: "#5EA2FF", awardedAt: "2026-06-15T12:00:00.000Z" },
+        ],
+        fields: [
+          { label: "Țară", value: "România" },
+          { label: "Rank CS2", value: "REGE" },
+        ],
+        viewer: { isSelf: false, isFollowing: false, canMessage: true, canFollow: true },
+      },
+    ],
+    ["rang cu iconiță Font Awesome (nu apare ca text), reputație negativă", { ...base, user: { ...base.user, rank: { name: "Staff", icon: "fa-crown" } }, stats: { ...base.stats, reputation: -2 } }],
+  ];
+
+  test.each(cases)("%s", (_name, card) => {
+    expect(normalized(template(card))).toEqual(normalized(component(card)));
+  });
+
+  test("numele și grupul stau sub copertă, nu în ea; coperta are poziția salvată", () => {
+    const html = component(cases[1]![1]);
+    const tree = normalized(html) as { children: { attrs: Record<string, unknown>; children: unknown[] }[] }[];
+    const [cover, body] = tree[0]!.children;
+    expect(cover!.children).toEqual([]);
+    expect(cover!.attrs.style).toMatchObject({ background: "center 30% / cover no-repeat url(/files/cover1)", "--gcs-hoverCard-accent": "#3DDC97" });
+    expect(JSON.stringify(body)).toContain("gcs-hoverCard__name");
+    expect(component(cases[2]![1])).not.toContain("fa-crown");
+  });
+});
+
+describe("postbit-ul: șablonul implicit `postbit.author`", () => {
+  const author = {
+    id: "u2",
+    name: "Bl1ng",
+    image: null,
+    groupKey: "admin",
+    nameKey: "admin",
+    frameKey: null,
+    rank: null,
+    groupColor: "#D62839",
+    groupName: "Administrator",
+    groupTitle: null,
+    postsCount: 9,
+    reputation: 0,
+    joinedAt: "2026-06-15T12:00:00.000Z",
+    signatureHtml: "",
+  } satisfies GcsPostAuthor;
+  const data: GcsPostbitData = {
+    customTitle: null,
+    group: { key: "admin", name: "Administrator", color: "#D62839", icon: null, banner: null },
+    vip: false,
+    vipName: null,
+    secondaryGroup: null,
+    rankLevel: null,
+    topicsCount: 2,
+    motto: null,
+    cover: { url: "/files/cover2", positionY: 35 },
+    xp: { points: 0, floor: 0, next: null, nextRank: null, percent: 100 },
+    badges: { count: 0, recent: [] },
+    fields: [],
+    online: true,
+    joinedAt: "2026-06-15T12:00:00.000Z",
+  };
+  const render = (d: GcsPostbitData | null) =>
+    sanitizeTemplateHtml(
+      renderTemplate(defaultTemplate("postbit.author")!.source, postbitVars(author, d, { id: 1, number: 1 }), {
+        locale: "ro",
+        translate: (key) => key,
+        components: templateComponents(),
+        include: (name) => defaultTemplate(name)?.source ?? null,
+      }),
+    );
+
+  test("coperta e fundalul blocului cu avatarul, cu poziția salvată; fără copertă blocul rămâne simplu", () => {
+    const html = render(data);
+    expect(html).toContain('class="gcs-postbit__profile gcs-postbit__profile--cover"');
+    expect(html).toContain('<span class="gcs-postbit__cover" aria-hidden="true" style="background:center 35% / cover no-repeat url(/files/cover2)"');
+    const plain = render({ ...data, cover: null });
+    expect(plain).toContain('class="gcs-postbit__profile"');
+    expect(plain).not.toContain("gcs-postbit__cover");
+  });
+
+  test("statusul online apare o singură dată (sus), nu și în subsol", () => {
+    const html = render(data);
+    expect(html.match(/topic\.author\.statusOnline/g)).toHaveLength(1);
+    expect(html).not.toContain("footStatus");
+    expect(html).toContain("topic.author.memberSince");
   });
 });
 
