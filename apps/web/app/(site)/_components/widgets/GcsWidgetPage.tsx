@@ -1,11 +1,11 @@
-import { GCS_WIDGET_ZONES, type GcsActor, type GcsWidgetPage as GcsWidgetPageKey, type GcsWidgetPlacementView, type GcsWidgetZone } from "@gcs/core";
+import { GCS_RICH_FIELDS, GCS_WIDGET_ZONES, type GcsActor, type GcsWidgetPage as GcsWidgetPageKey, type GcsWidgetPlacementView, type GcsWidgetZone } from "@gcs/core";
 import { GcsIcon } from "@gcs/ui/icons";
 import { getTranslations } from "next-intl/server";
 import { Suspense, type ReactNode } from "react";
 import { currentActor } from "@/lib/actor";
 import { viewerEditing } from "@/lib/appearance";
 import { services } from "@/lib/services";
-import { GcsPageEditor, type GcsPageEditorItem } from "./GcsPageEditor";
+import { GcsPageEditor, type GcsPageEditorField, type GcsPageEditorItem } from "./GcsPageEditor";
 import { isPluginWidget, renderPluginWidget } from "./GcsPluginWidget";
 import { WIDGET_RENDERERS } from "./registry";
 
@@ -128,16 +128,28 @@ async function GcsPageEditorHost({ page, actor, children }: { page: GcsWidgetPag
           icon: <GcsIcon name={c.icon} />,
           zones: c.zones,
           defaultConfig: c.defaultConfig,
-          fields: (def?.fields ?? []).map((f) => ({
-            ...f,
-            label: label(f.labelKey),
-            options:
-              f.type !== "select"
-                ? undefined
-                : f.optionsFrom === "chat.channels"
-                  ? [{ value: "", label: t("defaultChannel") }, ...channels.map((c) => ({ value: c.key, label: c.name }))]
-                  : (f.options ?? []).map((o) => ({ value: o.value, label: label(o.labelKey) })),
-          })),
+          fields: (def?.fields ?? []).map((f): GcsPageEditorField => {
+            const base = { key: f.key, label: label(f.labelKey) };
+            switch (f.type) {
+              case "number":
+                return { ...base, type: "number", min: f.min, max: f.max };
+              case "text":
+              case "textarea":
+                return { ...base, type: f.type, maxLength: f.maxLength };
+              // Textul formatat: editorul primește nodurile și mărcile profilului (aceleași pe care le verifică serverul).
+              case "richtext":
+                return { ...base, type: "richtext", maxLength: f.maxLength, allow: GCS_RICH_FIELDS[f.profile] };
+              case "select":
+                return {
+                  ...base,
+                  type: "select",
+                  options:
+                    f.optionsFrom === "chat.channels"
+                      ? [{ value: "", label: t("defaultChannel") }, ...channels.map((c) => ({ value: c.key, label: c.name }))]
+                      : (f.options ?? []).map((o) => ({ value: o.value, label: label(o.labelKey) })),
+                };
+            }
+          }),
         };
       })}
       groups={groups}

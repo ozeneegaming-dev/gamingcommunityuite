@@ -20,6 +20,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, v
 import { CSS } from "@dnd-kit/utilities";
 import type { GcsWidgetPage, GcsWidgetZone } from "@gcs/core";
 import { GcsButton, GcsIconSvg } from "@gcs/ui";
+import type { GcsEditorAllow } from "@gcs/ui/editor";
 import {
   faArrowDown,
   faArrowRotateLeft,
@@ -34,6 +35,7 @@ import {
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { useTranslations } from "next-intl";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
 import { useErrorMessage } from "@/lib/use-error-message";
@@ -41,6 +43,8 @@ import { closePageEditor, resetPageLayout, savePageLayout, saveWidgetFavorites }
 import { GcsWidgetSidebar } from "./GcsWidgetSidebar";
 
 const ZONES: GcsWidgetZone[] = ["top", "sidebar", "bottom"];
+/** Editorul textului formatat (Tiptap) se încarcă doar când se deschide configurarea unui widget care îl folosește. */
+const GcsRichTextInput = dynamic(() => import("../editor/GcsRichTextInput").then((m) => m.GcsRichTextInput), { ssr: false });
 /** Id-urile dnd-kit ale zonelor de drop pentru widget-urile noi („Trage widget-urile aici”). */
 const DROP_PREFIX = "drop:";
 
@@ -52,9 +56,11 @@ export type GcsPageEditorItem = {
   /** Widget-ul randat pe server (lipsește pentru cele adăugate acum, până la salvare). */
   preview: ReactNode;
 };
-type Field =
+/** Un câmp din configurarea unui widget, cu eticheta tradusă (vezi `GcsWidgetField` din nucleu). */
+export type GcsPageEditorField =
   | { key: string; label: string; type: "number"; min: number; max: number }
   | { key: string; label: string; type: "text" | "textarea"; maxLength: number }
+  | { key: string; label: string; type: "richtext"; maxLength: number; allow: GcsEditorAllow }
   | { key: string; label: string; type: "select"; options?: { value: string; label: string }[] };
 export type GcsPageEditorWidget = {
   key: string;
@@ -66,7 +72,7 @@ export type GcsPageEditorWidget = {
   icon: ReactNode;
   zones: readonly GcsWidgetZone[];
   defaultConfig: Record<string, unknown>;
-  fields: Field[];
+  fields: GcsPageEditorField[];
 };
 type Zones = Record<GcsWidgetZone, GcsPageEditorItem[]>;
 
@@ -484,6 +490,23 @@ function EditItem({ item, widget, index, count, zone, open, groups, onToggle, on
           {widget?.fields.map((f) => {
             const id = `${fieldId}-${f.key}`;
             const value = item.config[f.key];
+            if (f.type === "richtext") {
+              // Editorul nu e un control „etichetabil”: eticheta îl numește prin `aria-labelledby`.
+              return (
+                <div key={f.key} className="gcs-fieldRow gcs-fieldRow--rich">
+                  <span id={`${id}-label`}>{f.label}</span>
+                  <GcsRichTextInput
+                    id={id}
+                    initial={value ?? ""}
+                    allow={f.allow}
+                    maxLength={f.maxLength}
+                    imageUrl={f.allow.nodes.includes("image")}
+                    labelledBy={`${id}-label`}
+                    onValue={(v) => setConfig(f.key, v)}
+                  />
+                </div>
+              );
+            }
             return (
               <label key={f.key} htmlFor={id} className="gcs-fieldRow">
                 <span>{f.label}</span>
