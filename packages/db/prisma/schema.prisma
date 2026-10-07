@@ -79,6 +79,9 @@ model User {
   customTitle   String?
   prefs         Json    @default("{}")
 
+  /// Importul din altă platformă: IP-ul de la înregistrarea pe site-ul vechi (apare în uneltele IP din ACP).
+  registrationIp String?
+
   userPermissions UserPermission[]
   chatRoomsOwned  ChatChannel[]         @relation("ChatRoomOwner")
   chatRooms       ChatRoomMember[]      @relation("ChatRoomMember")
@@ -1530,4 +1533,75 @@ model PluginHookSetting {
 
   @@id([pluginKey, hook])
   @@map("plugin_hook_settings")
+}
+
+// ─── Importul din altă platformă (specul importului, etapa 6) ────────────────
+
+enum ImportStatus {
+  DRAFT
+  READY
+  QUEUED
+  RUNNING
+  PAUSED
+  CANCELLED
+  FAILED
+  DONE
+}
+
+/// Un import configurat în ACP → Sistem → Conversii. `config` nu conține secrete; `secret` = parola bazei vechi,
+/// criptată (`sealSecret`). `steps`: progresul și checkpoint-ul (cursorul) fiecărui pas.
+model ImportJob {
+  id          String       @id @default(cuid())
+  /// Schema detectată (`core-schema`, `prefixed-schema`) și cheia hărții de id-uri (schema + host-ul vechi).
+  source      String       @default("")
+  mapKey      String       @default("")
+  status      ImportStatus @default(DRAFT)
+  dryRun      Boolean      @default(false)
+  config      Json         @default("{}")
+  secret      String?
+  detected    Json?
+  steps       Json         @default("[]")
+  currentStep String?
+  /// Cererea de `pause` sau `cancel`, citită de worker între loturi.
+  control     String?
+  error       String?
+  createdById String?
+  heartbeatAt DateTime?
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  logs ImportLog[]
+
+  @@index([status])
+  @@map("import_jobs")
+}
+
+/// Legătura id vechi → id nou, pe tip (`member`, `topic`, `post`…). Rulările de pe aceeași sursă o refolosesc.
+model ImportMap {
+  source   String
+  type     String
+  sourceId String
+  targetId String
+
+  @@id([source, type, sourceId])
+  @@index([type, targetId])
+  @@map("import_map")
+}
+
+/// Jurnalul unui import (`info`, `warn`, `error`), pe pași.
+model ImportLog {
+  id        Int      @id @default(autoincrement())
+  jobId     String
+  step      String
+  level     String
+  message   String
+  sourceId  String?
+  createdAt DateTime @default(now())
+
+  job ImportJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId, id])
+  @@map("import_logs")
 }

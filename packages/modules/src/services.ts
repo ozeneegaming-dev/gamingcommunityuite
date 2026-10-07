@@ -86,6 +86,8 @@ import { GcsPostbitService } from "./profile/postbit";
 import { registerChatNotifications } from "./chat/notify";
 import { GcsPluginPublicApi } from "./plugins/api";
 import { GcsPluginHost } from "./plugins/host";
+import { RENDER_LABELS } from "./forums/labels";
+import { GcsImportService } from "./importer/service";
 
 export type GcsServices = {
   db: PrismaClient;
@@ -158,7 +160,21 @@ export type GcsServices = {
   plugins: GcsPluginHost;
   /** Ciclul de viață al pluginurilor (ACP → Sistem → Aplicații și pluginuri). */
   pluginAdmin: GcsPluginService;
+  /** Importul din altă platformă (ACP → Sistem → Conversii) și redirecturile 301. */
+  importer: GcsImportService;
 };
+
+/** Golește cache-ul Redis al paginilor (cheile și seturile de tag-uri `gcs:k:*`, `gcs:tag:*`), fără cozi și limite. */
+async function clearPageCache(redis: Redis): Promise<void> {
+  for (const pattern of ["gcs:k:*", "gcs:tag:*"]) {
+    let cursor = "0";
+    do {
+      const [next, keys] = await redis.scan(cursor, "MATCH", pattern, "COUNT", 500);
+      if (keys.length > 0) await redis.del(...keys);
+      cursor = next;
+    } while (cursor !== "0");
+  }
+}
 
 export type GcsServicesOptions = {
   /** Folderul de configurare (`GCS_CONFIG_DIR`): `.env.runtime`, fișierele locale. */
@@ -503,6 +519,24 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     conversationQueries: new GcsConversationQueries({ db, settings, profileQueries }),
     plugins,
     pluginAdmin,
+    importer: new GcsImportService({
+      db,
+      bus,
+      registry,
+      attachments,
+      groups,
+      permissions,
+      actors,
+      cache,
+      jobs,
+      acp,
+      settings,
+      renderOptions: async () => {
+        const [embeds, locale, url] = await Promise.all([settings.get<string[]>("forums.embeds"), settings.get<string>("site.locale"), settings.get<string>("site.url")]);
+        return { embeds, siteHost: siteHost(url), labels: RENDER_LABELS[locale] ?? RENDER_LABELS.ro! };
+      },
+      clearCache: () => clearPageCache(redis),
+    }),
   };
   registerAppJobs(services);
   return services;

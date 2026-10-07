@@ -51,3 +51,4 @@ export * from "./templates/components";
 export { GcsPluginHost, matchPluginRoute, PLUGINS_CHANNEL, type GcsPluginHookMetrics, type GcsPluginMenuEntry, type GcsPluginPageResult, type GcsPluginRenderedHtml, type GcsPluginTemplateRenderer } from "./plugins/host";
 export { isBlockedAddress } from "./plugins/http";
 export { GcsPluginTexts, PLUGIN_TEXT_NAMESPACE, pluginIcon } from "./plugins/module";
+export * from "./importer";
