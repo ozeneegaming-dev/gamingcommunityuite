@@ -1,16 +1,19 @@
 import { GCS_RICH_FIELDS, richFieldHtml, sanitizeContentHtml, type GcsActor } from "@gcs/core";
-import type { GcsUserRef } from "@gcs/modules";
+import { POLL_INTERVAL_SETTING, type GcsUserRef } from "@gcs/modules";
 import { GcsAvatar, GcsBadge, GcsButton, GcsCard, GcsUserLink } from "@gcs/ui";
 import Link from "next/link";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { memberHref, postHref, topicHref } from "@/lib/forum-urls";
 import { onlineView } from "@/lib/online";
+import { cardData, initialStatuses } from "@/lib/servers";
 import { widgetCardVars } from "@/lib/template-data";
 import { siteTemplate } from "@/lib/templates";
 import { services } from "@/lib/services";
 import { GcsShoutbox } from "../chat/GcsShoutbox";
 import { GcsRelTime } from "../forum/GcsRelTime";
+import { GcsServerLiveProvider } from "../servers/GcsServerLive";
+import { GcsServerWidgetList } from "../servers/GcsServerWidgetList";
 import { GcsWhoIsOnline } from "../forum/GcsWhoIsOnline";
 import { GcsGroupLegend, GcsStatsPanel, GcsWhoWasOnline } from "./GcsStatsPanel";
 import { GcsWidgetTitle, widgetIcon } from "./GcsWidgetTitle";
@@ -311,4 +314,30 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
   },
 
   "chat.shoutbox": async ({ config, actor }) => <GcsShoutbox actor={actor} channelKey={typeof config.channel === "string" && config.channel ? config.channel : null} />,
+
+  // Aplicația Servere: lista compactă, cu statusul live (realtime sau, fără el, cererea periodică).
+  "servers.list": async ({ id, config, actor }) => {
+    const { serverQueries, settings } = services();
+    const family = typeof config.game === "string" && config.game ? config.game : null;
+    const [t, ts, list, interval] = await Promise.all([
+      getTranslations("widgets"),
+      getTranslations("servers"),
+      serverQueries.list(actor, { family, limit: limitOf(config, 5) }),
+      settings.get<number>(POLL_INTERVAL_SETTING),
+    ]);
+    return (
+      <GcsWidgetCard id={id} type="servers.list" config={config} title={t("servers.list")} testId="gcs-widget-servers">
+        {list.length === 0 ? (
+          <p className="gcs-sideCard__line">{ts("widgetEmpty")}</p>
+        ) : (
+          <GcsServerLiveProvider initial={initialStatuses(list)} pollSeconds={interval}>
+            <GcsServerWidgetList servers={list.map(cardData)} />
+          </GcsServerLiveProvider>
+        )}
+        <Link href="/servers" className="gcs-serverList__all">
+          {ts("viewAll")}
+        </Link>
+      </GcsWidgetCard>
+    );
+  },
 };

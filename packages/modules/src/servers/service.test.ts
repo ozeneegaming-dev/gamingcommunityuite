@@ -83,9 +83,9 @@ describe("serverele din ACP", () => {
     await expect(w.servers.remove(w.member, a.id)).rejects.toThrow();
   });
 
-  test("același joc, host și port de două ori: `host: taken`", async () => {
+  test("același joc, host și port de două ori: `host: duplicate_server`", async () => {
     await w.servers.save(w.root, null, base);
-    expect(await fieldErrors(w.servers.save(w.root, null, { ...base, name: "Dublură" }))).toEqual({ host: "taken" });
+    expect(await fieldErrors(w.servers.save(w.root, null, { ...base, name: "Dublură" }))).toEqual({ host: "duplicate_server" });
   });
 
   test("schimbarea adresei șterge statusul vechi și programează serverul la runda următoare", async () => {

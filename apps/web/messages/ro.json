@@ -13,7 +13,8 @@
       "leaderboard": "Clasament",
       "vip": "VIP",
       "rules": "Reguli",
-      "more": "Mai mult"
+      "more": "Mai mult",
+      "servers": "Servere"
     },
     "acp": "ACP",
     "myProfile": "Profilul meu",
@@ -187,7 +188,10 @@
       "invalid_code": "Codul 2FA nu e corect.",
       "mismatch": "Textul nu se potrivește.",
       "unknown": "Necunoscut.",
-      "migration_failed": "O migrație a bazei de date a eșuat."
+      "migration_failed": "O migrație a bazei de date a eșuat.",
+      "invalid_host": "Host invalid (un IP sau un nume de domeniu public, fără port)",
+      "blocked_address": "Adresa e privată sau locală și nu se poate interoga",
+      "duplicate_server": "Serverul există deja (același joc, host și port)"
     }
   },
   "acp": {
@@ -330,6 +334,11 @@
         "widgets": "Widget-uri",
         "templates": "Șabloane",
         "css": "CSS"
+      },
+      "gaming": {
+        "servers_group": "Servere",
+        "servers": "Servere",
+        "servers_settings": "Setări servere"
       }
     },
     "comingSoon": {
@@ -726,7 +735,8 @@
         "chat": "Chat",
         "languages": "Limbi și traducere",
         "postbit": "Postbit",
-        "vip": "Pagina VIP și expirări"
+        "vip": "Pagina VIP și expirări",
+        "servers": "Servere"
       },
       "save": "Salvează setările",
       "secretSet": "•••• salvat (lasă gol ca să păstrezi valoarea)",
@@ -1761,6 +1771,80 @@
       "saved": "Regulile au fost salvate.",
       "cleared": "Regulile au fost șterse.",
       "confirmClear": "Ștergi regulile? Pagina va arăta o stare goală, iar itemul „Reguli” dispare din meniu."
+    },
+    "servers": {
+      "title": "Servere",
+      "lead": "Serverele de joc de pe /servers, în ordinea de aici. Trage de mâner sau folosește săgețile.",
+      "add": "Adaugă server",
+      "empty": "Niciun server încă. Adaugă primul server.",
+      "drag": "Mută serverul {name}",
+      "moveUp": "Mută mai sus: {name}",
+      "moveDown": "Mută mai jos: {name}",
+      "orderSaved": "Ordinea a fost salvată.",
+      "edit": "Editează",
+      "delete": "Șterge",
+      "confirmDelete": "Ștergi serverul „{name}” și istoricul lui?",
+      "view": "Vezi pagina",
+      "disabled": "Dezactivat",
+      "restricted": "Doar unele grupuri",
+      "statusNone": "Neinterogat încă",
+      "statusOnline": "Online · {players} / {max}",
+      "newTitle": "Server nou",
+      "editTitle": "Editează serverul",
+      "back": "Înapoi la servere",
+      "sections": {
+        "game": "Jocul",
+        "connection": "Adresa",
+        "page": "Pagina serverului",
+        "access": "Admini și vizibilitate"
+      },
+      "fields": {
+        "game": "Jocul",
+        "name": "Numele afișat",
+        "host": "Host (IP sau domeniu)",
+        "hostHint": "Fără http:// și fără port. Adresele private sau locale nu se pot interoga.",
+        "port": "Portul jocului",
+        "queryPort": "Portul de interogare",
+        "queryPortHint": "Gol = portul jocului.",
+        "banner": "Banner",
+        "bannerHint": "PNG, JPG, WebP sau GIF; recomandat 1200 × 300 px. Fără banner se folosește culoarea jocului.",
+        "bannerCurrent": "Bannerul curent",
+        "removeBanner": "Scoate bannerul",
+        "description": "Descriere",
+        "descriptionHint": "Text simplu, max 2000 de caractere.",
+        "forum": "Forumul serverului",
+        "noForum": "Fără forum",
+        "admins": "Adminii serverului",
+        "adminsHint": "Membri ai comunității; scrie cel puțin 2 litere din nume.",
+        "adminsSearch": "Caută un membru",
+        "adminsRemove": "Scoate {name}",
+        "adminsNone": "Niciun admin ales.",
+        "groups": "Cine vede serverul",
+        "groupsHint": "Nicio bifă = toți cei care au dreptul de a vedea serverele.",
+        "enabled": "Activ (apare pe site și e interogat)"
+      },
+      "test": "Testează",
+      "testing": "Se interoghează…",
+      "testOnline": "Serverul răspunde",
+      "testOffline": "Serverul nu răspunde",
+      "testPlayers": "{players} / {max} jucători",
+      "testPing": "{ms} ms",
+      "testName": "Nume pe server",
+      "testMap": "Harta",
+      "testVersion": "Versiunea",
+      "testList": "{count, plural, one {# jucător în listă} few {# jucători în listă} other {# de jucători în listă}}",
+      "queryErrors": {
+        "timeout": "Niciun răspuns în 5 secunde (server oprit, port greșit sau firewall).",
+        "blocked": "Adresa e privată sau locală: nu se poate interoga.",
+        "dns": "Numele de domeniu nu s-a putut rezolva.",
+        "refused": "Conexiunea a fost refuzată (portul e închis).",
+        "unreachable": "Serverul nu poate fi contactat.",
+        "invalid_response": "Răspunsul nu e al acestui joc (verifică jocul și portul).",
+        "too_large": "Răspunsul serverului e prea mare.",
+        "unknown_game": "Joc necunoscut."
+      },
+      "save": "Salvează",
+      "create": "Adaugă serverul"
     }
   },
   "settings": {
@@ -2005,6 +2089,11 @@
     },
     "rules": {
       "content": "Regulile comunității"
+    },
+    "servers": {
+      "poll_interval": "Intervalul de interogare a serverelor (secunde, 30–300)",
+      "retention_days": "Câte zile se păstrează istoricul jucătorilor (7–365)",
+      "show_players": "Arată numele jucătorilor pe pagina serverului"
     }
   },
   "permissions": {
@@ -2069,6 +2158,10 @@
       "create_public": "Creează camere de chat publice",
       "create_private": "Creează camere de chat private (cu invitați)",
       "announce": "Fixează mesaje și publică anunțuri în chat"
+    },
+    "servers": {
+      "view": "Vede serverele de joc",
+      "view_players": "Vede lista jucătorilor de pe servere"
     }
   },
   "profile": {
@@ -2776,7 +2869,8 @@
   },
   "apps": {
     "chat": "Chat",
-    "vip": "VIP"
+    "vip": "VIP",
+    "servers": "Servere"
   },
   "translate": {
     "translate": "Traduce",
@@ -3101,7 +3195,8 @@
       "body": "Text",
       "period": "Perioada",
       "channel": "Camera de chat",
-      "icon": "Iconiță (ex. fa-solid fa-star; gol = cea implicită)"
+      "icon": "Iconiță (ex. fa-solid fa-star; gol = cea implicită)",
+      "game": "Jocul"
     },
     "periods": {
       "week": "săptămâna aceasta",
@@ -3128,7 +3223,19 @@
       },
       "chat": {
         "shoutbox": "O cameră de chat, direct pe pagină."
+      },
+      "servers": {
+        "list": "Statusul live al serverelor de joc: jucători, hartă, adresă."
       }
+    },
+    "servers": {
+      "list": "Servere"
+    },
+    "games": {
+      "all": "Toate jocurile",
+      "cs16": "CS 1.6",
+      "cs2": "CS2 / CS:GO",
+      "minecraft": "Minecraft"
     }
   },
   "pageEditor": {
@@ -3176,7 +3283,8 @@
     "categories": {
       "core": "Comunitate",
       "forums": "Forumuri",
-      "chat": "Chat"
+      "chat": "Chat",
+      "servers": "Servere"
     },
     "search": "Caută un widget",
     "noResults": "Niciun widget nu se potrivește căutării.",
@@ -3200,7 +3308,9 @@
       "topics": "Topicuri",
       "posts": "Postări",
       "members": "Membri",
-      "vip": "Membri VIP"
+      "vip": "Membri VIP",
+      "serversOnline": "Servere online",
+      "serverPlayers": "Jucători pe servere"
     },
     "allOnline": "Vezi toți membrii online →",
     "panel": {
@@ -3736,5 +3846,95 @@
     "updated": "Actualizate pe {date}",
     "empty": "Regulile nu au fost publicate încă.",
     "write": "Scrie regulile"
+  },
+  "servers": {
+    "title": "Servere",
+    "lead": "{players, plural, one {# jucător online} few {# jucători online} other {# de jucători online}} acum pe {servers, plural, one {# server} few {# servere} other {# de servere}}",
+    "leadEmpty": "Serverele de joc ale comunității, cu statusul live.",
+    "refresh": "Statusul se actualizează la fiecare {seconds} s.",
+    "filterLabel": "Jocul",
+    "all": "Toate",
+    "empty": "Niciun server adăugat încă.",
+    "emptyFilter": "Niciun server pentru acest joc.",
+    "emptyAdmin": "Adaugă un server din ACP",
+    "status": {
+      "online": "Online",
+      "offline": "Offline",
+      "unknown": "Necunoscut"
+    },
+    "players": "{players} / {max} jucători",
+    "uptime": "uptime {value}",
+    "capacity": "Ocupare: {value}",
+    "copy": "Copiază",
+    "copyAddress": "Copiază adresa",
+    "copied": "Copiat",
+    "copyFailed": "Copierea nu a mers; selectează adresa.",
+    "connect": "Connect",
+    "details": "Detalii",
+    "address": "Adresa",
+    "chart": {
+      "title": {
+        "24h": "Jucători în ultimele 24 h",
+        "7d": "Jucători în ultimele 7 zile",
+        "30d": "Jucători în ultimele 30 de zile"
+      },
+      "rangeLabel": "Intervalul graficului",
+      "ranges": {
+        "24h": "24 h",
+        "7d": "7 zile",
+        "30d": "30 zile"
+      },
+      "now": "acum",
+      "avg": "{value} jucători în medie",
+      "peak": "vârf {value}",
+      "noData": "Fără date",
+      "table": "Valorile graficului",
+      "time": "Momentul",
+      "tableAvg": "Media",
+      "tablePeak": "Vârful",
+      "empty": "Încă nu există istoric pentru acest server.",
+      "hint": "Treci cu mouse-ul sau folosește săgețile pentru valori."
+    },
+    "facts": {
+      "peak": "Vârf",
+      "peakValue": "{players} / {max} la {time}",
+      "average": "Medie",
+      "uptime24": "Uptime 24 h",
+      "uptime7": "Uptime 7 zile",
+      "uptime30": "Uptime 30 zile",
+      "none": "—"
+    },
+    "playersTitle": "Jucători online",
+    "playersCount": "Jucători online ({count})",
+    "player": "Jucător",
+    "score": "Scor",
+    "time": "Timp",
+    "duration": {
+      "hours": "{h} h {m} min",
+      "minutes": "{m} min"
+    },
+    "playersHidden": "Lista jucătorilor nu e disponibilă pentru grupul tău.",
+    "playersNone": "Niciun jucător pe server acum.",
+    "playersUnavailable": "Serverul nu trimite lista jucătorilor.",
+    "playersOffline": "Serverul e offline.",
+    "playersSample": "Minecraft trimite doar un eșantion de nume.",
+    "about": "Despre server",
+    "game": "Jocul",
+    "map": "Harta",
+    "version": "Versiunea",
+    "ping": "Ping",
+    "pingValue": "{ms} ms",
+    "reportedName": "Numele pe server",
+    "bots": "Boți",
+    "admins": "Adminii serverului",
+    "noAdmins": "Niciun admin afișat.",
+    "forum": "Forumul serverului",
+    "maps": "Hărți jucate (24 h)",
+    "mapsEmpty": "Nicio hartă înregistrată în ultimele 24 h.",
+    "mapNow": "acum",
+    "updated": "Actualizat la {time}",
+    "unknownStatus": "Statusul nu a fost citit încă.",
+    "viewAll": "Toate serverele",
+    "widgetEmpty": "Niciun server de afișat."
   }
 }

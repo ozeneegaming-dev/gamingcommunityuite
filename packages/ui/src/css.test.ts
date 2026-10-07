@@ -85,6 +85,7 @@ describe("CSS-ul design system-ului", () => {
         ".gcs-siteHeader .gcs-dropdown__heading",
         ".gcs-staffGroup__title",
         ".gcs-pageHeader",
+        ".gcs-serverCard > .gcs-serverCard__head",
       ];
       expect(inventory.filter((s) => !banded.includes(s))).toEqual([]);
     });

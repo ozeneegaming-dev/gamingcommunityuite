@@ -220,7 +220,7 @@ export class GcsServerService {
         return saved;
       });
     } catch (error) {
-      if ((error as { code?: string }).code === "P2002") throw new GcsValidationError({ host: "taken" });
+      if ((error as { code?: string }).code === "P2002") throw new GcsValidationError({ host: "duplicate_server" });
       throw error;
     }
 

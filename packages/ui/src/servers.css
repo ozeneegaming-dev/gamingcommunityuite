@@ -1,0 +1,540 @@
+/*
+ * Aplicația Servere (specul 2026-10-07-servere): grila cardurilor de pe `/servers`, pagina unui server (graficul,
+ * jucătorii, hărțile, detaliile) și widget-ul. Banda titlurilor (numele din card, titlurile casetelor) e în `titles.css`.
+ * Culorile vin din tokenurile temei; singura culoare de status e `--gcs-ok` (online), mereu însoțită de text.
+ */
+
+/* ─── Filtrele și sumarul ───────────────────────────────────────────────────────────────── */
+
+.gcs-serverLead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: baseline;
+}
+.gcs-serverLead__count {
+  color: var(--gcs-text);
+  font-weight: 700;
+}
+
+/* ─── Grila și cardul ────────────────────────────────────────────────────────────────────── */
+
+.gcs-serverGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-serverCard {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* Bannerul: imaginea încărcată (decupată) sau degradeul jocului; eticheta jocului și statusul stau peste el. */
+.gcs-serverBanner {
+  position: relative;
+  height: 110px;
+  background: var(--gcs-server-banner, var(--gcs-surface2));
+  display: flex;
+  align-items: flex-end;
+  padding: 14px 16px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+.gcs-serverBanner--hero {
+  height: 180px;
+  border-radius: var(--gcs-radius, 14px);
+  overflow: hidden;
+  border: var(--gcs-box-border-w, 1px) solid var(--gcs-box-border, var(--gcs-border));
+}
+.gcs-serverBanner__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.gcs-serverGame,
+.gcs-serverStatus {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(11, 12, 16, 0.78);
+  color: #ecedf1;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.gcs-serverGame {
+  font-family: var(--gcs-font-display);
+}
+.gcs-serverStatus {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+.gcs-serverStatus .gcs-dot {
+  background: currentColor;
+}
+.gcs-serverStatus[data-state="online"] {
+  color: #3ddc97;
+}
+.gcs-serverStatus[data-state="offline"],
+.gcs-serverStatus[data-state="unknown"] {
+  color: #c9cdd6;
+}
+
+/* Banda titlului cardului: numele serverului și, pe a doua linie, harta (sau versiunea). */
+.gcs-serverCard__head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 16px;
+  min-width: 0;
+}
+.gcs-serverCard__name {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.gcs-root a.gcs-serverCard__name,
+.gcs-serverCard__name a {
+  color: inherit;
+}
+.gcs-serverCard__map {
+  font-size: 13px;
+  color: var(--gcs-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-serverCard__body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+.gcs-serverCard__players {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}
+.gcs-serverCard__players strong {
+  font-variant-numeric: tabular-nums;
+}
+.gcs-serverCard__uptime {
+  color: var(--gcs-muted);
+}
+.gcs-serverCard__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+.gcs-serverCard__actions > * {
+  flex: 1;
+}
+
+/* Bara de umplere (jucători / sloturi): singurul element colorat de status. */
+.gcs-serverBar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--gcs-surface2);
+  overflow: hidden;
+}
+.gcs-serverBar__fill {
+  height: 100%;
+  width: var(--gcs-fill, 0%);
+  background: var(--gcs-ok);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+.gcs-serverBar[data-state="offline"] .gcs-serverBar__fill,
+.gcs-serverBar[data-state="unknown"] .gcs-serverBar__fill {
+  width: 0;
+}
+.gcs-serverBar--thin {
+  height: 4px;
+}
+
+/* Banda adresei: monospace (se copiază și se compară caracter cu caracter), cu butonul „Copiază”. */
+.gcs-serverAddress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--gcs-surface2);
+  border-radius: 10px;
+  padding: 4px 4px 4px 12px;
+  min-width: 0;
+}
+.gcs-serverAddress__text {
+  flex: 1;
+  min-width: 0;
+  font: 600 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: color-mix(in srgb, var(--gcs-text) 85%, var(--gcs-muted));
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+.gcs-serverAddress .gcs-btn {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.gcs-serverCopied {
+  color: var(--gcs-ok);
+}
+
+/* ─── Pagina serverului ──────────────────────────────────────────────────────────────────── */
+
+.gcs-serverHeadStatus {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  align-items: center;
+  color: var(--gcs-muted);
+  font-size: 14px;
+}
+.gcs-serverHeadStatus__state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: var(--gcs-text);
+}
+.gcs-serverHeadStatus__state .gcs-dot {
+  background: var(--gcs-muted);
+}
+.gcs-serverHeadStatus__state[data-state="online"] .gcs-dot {
+  background: var(--gcs-ok);
+}
+.gcs-serverLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.gcs-serverLayout__main,
+.gcs-serverLayout__side {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+@media (max-width: 960px) {
+  .gcs-serverLayout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Titlul casetei cu intervalele graficului în dreapta. */
+.gcs-serverBox__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+.gcs-serverBox__title {
+  margin: 0;
+  font-size: 17px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gcs-serverFacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--gcs-muted);
+}
+.gcs-serverFacts > div {
+  display: flex;
+  gap: 6px;
+}
+.gcs-serverFacts dt::after {
+  content: ":";
+}
+.gcs-serverFacts dd {
+  margin: 0;
+  color: var(--gcs-text);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Graficul jucătorilor: SVG cu o singură serie, linii de grilă subțiri, tooltip la hover și la focus. */
+.gcs-serverChart {
+  position: relative;
+}
+.gcs-serverChart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.gcs-serverChart:focus-visible {
+  outline: 2px solid var(--gcs-accentInk);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+.gcs-serverChart__grid {
+  stroke: var(--gcs-border);
+  stroke-width: 1;
+}
+.gcs-serverChart__tick {
+  fill: var(--gcs-muted);
+  font: 500 11px var(--gcs-font-text);
+  font-variant-numeric: tabular-nums;
+}
+.gcs-serverChart__bar {
+  fill: var(--gcs-accent);
+}
+.gcs-serverChart__bar--now {
+  fill: var(--gcs-accentInk);
+}
+.gcs-serverChart__bar--active {
+  fill: var(--gcs-accentInk);
+}
+.gcs-serverChart__line {
+  fill: none;
+  stroke: var(--gcs-accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.gcs-serverChart__area {
+  fill: var(--gcs-accent);
+  fill-opacity: 0.1;
+}
+.gcs-serverChart__cursor {
+  stroke: var(--gcs-muted);
+  stroke-width: 1;
+}
+.gcs-serverChart__dot {
+  fill: var(--gcs-accent);
+  stroke: var(--gcs-box-bg, var(--gcs-surface));
+  stroke-width: 2;
+}
+.gcs-serverChart__tip {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background: var(--gcs-surface2);
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: var(--gcs-muted);
+  white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  z-index: 2;
+}
+.gcs-serverChart__tip strong {
+  display: block;
+  color: var(--gcs-text);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.gcs-serverChart__empty {
+  margin: 0;
+  padding: 36px 0;
+  text-align: center;
+  color: var(--gcs-muted);
+}
+
+/* Tabelul jucătorilor (nume, scor, timp), ca tabelul din machetă. */
+.gcs-serverPlayers {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.gcs-serverPlayers th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gcs-muted);
+  padding: 0 8px 8px 0;
+}
+.gcs-serverPlayers td {
+  padding: 9px 8px 9px 0;
+  border-top: 1px solid var(--gcs-border);
+  font-variant-numeric: tabular-nums;
+}
+.gcs-serverPlayers td:first-child {
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+.gcs-serverPlayers th:not(:first-child),
+.gcs-serverPlayers td:not(:first-child) {
+  text-align: right;
+  white-space: nowrap;
+  width: 1%;
+}
+.gcs-serverPlayers td:last-child {
+  color: var(--gcs-muted);
+}
+.gcs-serverNote {
+  margin: 0;
+  color: var(--gcs-muted);
+  font-size: 13px;
+}
+
+/* Detaliile serverului (descrierea, jocul, adresa, adminii, forumul). */
+.gcs-serverAbout__text {
+  margin: 0;
+  white-space: pre-line;
+  max-width: 72ch;
+  line-height: 1.6;
+}
+.gcs-serverDl {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 8px 16px;
+  margin: 0;
+  font-size: 14px;
+}
+.gcs-serverDl dt {
+  color: var(--gcs-muted);
+}
+.gcs-serverDl dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.gcs-serverMaps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+.gcs-serverMaps li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--gcs-border);
+  font-size: 13px;
+}
+.gcs-serverMaps li:first-child {
+  border-top: 0;
+}
+.gcs-serverMaps time,
+.gcs-serverMaps span:last-child {
+  color: var(--gcs-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ─── Widget-ul ──────────────────────────────────────────────────────────────────────────── */
+
+.gcs-serverList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+.gcs-serverRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 10px;
+  align-items: center;
+  padding: 10px 0;
+  border-top: 1px solid var(--gcs-border);
+}
+.gcs-serverRow:first-child {
+  border-top: 0;
+  padding-top: 2px;
+}
+.gcs-serverRow__main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.gcs-serverRow__name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  min-width: 0;
+}
+.gcs-serverRow__name a {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-serverRow__name .gcs-dot {
+  flex-shrink: 0;
+  background: var(--gcs-muted);
+}
+.gcs-serverRow[data-state="online"] .gcs-serverRow__name .gcs-dot {
+  background: var(--gcs-ok);
+}
+.gcs-serverRow__meta {
+  display: flex;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--gcs-muted);
+  min-width: 0;
+}
+.gcs-serverRow__meta span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-serverRow__count {
+  color: var(--gcs-text);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.gcs-serverRow__actions {
+  display: flex;
+  gap: 2px;
+}
+.gcs-serverRow__actions .gcs-iconBtn {
+  width: 36px;
+  height: 36px;
+}
+.gcs-serverRow__bar {
+  grid-column: 1 / -1;
+}
+.gcs-serverList__all {
+  display: inline-flex;
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gcs-serverBar__fill {
+    transition: none;
+  }
+}
+@media (max-width: 640px) {
+  .gcs-serverBanner--hero {
+    height: 130px;
+  }
+  .gcs-serverCard__actions {
+    flex-direction: column;
+  }
+}

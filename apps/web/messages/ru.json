@@ -13,7 +13,8 @@
       "leaderboard": "Leaderboard",
       "vip": "VIP",
       "rules": "Rules",
-      "more": "More"
+      "more": "More",
+      "servers": "Servers"
     },
     "acp": "ACP",
     "myProfile": "Мой профиль",
@@ -187,7 +188,10 @@
       "invalid_code": "Код 2FA не является правильным.",
       "mismatch": "Текст не совпадает.",
       "unknown": "Неизвестно.",
-      "migration_failed": "Миграция базы данных не удалась."
+      "migration_failed": "Миграция базы данных не удалась.",
+      "invalid_host": "Invalid host (a public IP or domain name, without a port)",
+      "blocked_address": "The address is private or local and can't be queried",
+      "duplicate_server": "The server already exists (same game, host and port)"
     }
   },
   "acp": {
@@ -330,6 +334,11 @@
         "widgets": "Виджеты",
         "templates": "Шаблоны",
         "css": "CSS"
+      },
+      "gaming": {
+        "servers_group": "Servers",
+        "servers": "Servers",
+        "servers_settings": "Server settings"
       }
     },
     "comingSoon": {
@@ -726,7 +735,8 @@
         "chat": "Чат",
         "languages": "Языки и перевод",
         "postbit": "Постбайт",
-        "vip": "VIP page and expiry"
+        "vip": "VIP page and expiry",
+        "servers": "Servers"
       },
       "save": "Сохранить настройки",
       "secretSet": "• сохраненные (оставьте пустыми, чтобы сохранить ценность)",
@@ -1761,6 +1771,80 @@
       "saved": "The rules were saved.",
       "cleared": "The rules were deleted.",
       "confirmClear": "Delete the rules? The page will show an empty state and the “Rules” item leaves the menu."
+    },
+    "servers": {
+      "title": "Servers",
+      "lead": "The game servers shown on /servers, in this order. Drag the handle or use the arrows.",
+      "add": "Add server",
+      "empty": "No servers yet. Add the first server.",
+      "drag": "Move server {name}",
+      "moveUp": "Move up: {name}",
+      "moveDown": "Move down: {name}",
+      "orderSaved": "The order was saved.",
+      "edit": "Edit",
+      "delete": "Delete",
+      "confirmDelete": "Delete the server “{name}” and its history?",
+      "view": "View page",
+      "disabled": "Disabled",
+      "restricted": "Some groups only",
+      "statusNone": "Not queried yet",
+      "statusOnline": "Online · {players} / {max}",
+      "newTitle": "New server",
+      "editTitle": "Edit server",
+      "back": "Back to servers",
+      "sections": {
+        "game": "Game",
+        "connection": "Address",
+        "page": "Server page",
+        "access": "Admins and visibility"
+      },
+      "fields": {
+        "game": "Game",
+        "name": "Display name",
+        "host": "Host (IP or domain)",
+        "hostHint": "No http:// and no port. Private or local addresses can't be queried.",
+        "port": "Game port",
+        "queryPort": "Query port",
+        "queryPortHint": "Empty = the game port.",
+        "banner": "Banner",
+        "bannerHint": "PNG, JPG, WebP or GIF; 1200 × 300 px recommended. Without a banner the game's colour is used.",
+        "bannerCurrent": "Current banner",
+        "removeBanner": "Remove the banner",
+        "description": "Description",
+        "descriptionHint": "Plain text, up to 2000 characters.",
+        "forum": "Server forum",
+        "noForum": "No forum",
+        "admins": "Server admins",
+        "adminsHint": "Community members; type at least 2 letters of the name.",
+        "adminsSearch": "Search for a member",
+        "adminsRemove": "Remove {name}",
+        "adminsNone": "No admins chosen.",
+        "groups": "Who sees the server",
+        "groupsHint": "Nothing ticked = everyone allowed to see the servers.",
+        "enabled": "Active (shown on the site and queried)"
+      },
+      "test": "Test",
+      "testing": "Querying…",
+      "testOnline": "The server answers",
+      "testOffline": "The server doesn't answer",
+      "testPlayers": "{players} / {max} players",
+      "testPing": "{ms} ms",
+      "testName": "Name on the server",
+      "testMap": "Map",
+      "testVersion": "Version",
+      "testList": "{count, plural, one {# player in the list} few {# players in the list} many {# players in the list} other {# players in the list}}",
+      "queryErrors": {
+        "timeout": "No answer within 5 seconds (server down, wrong port or firewall).",
+        "blocked": "The address is private or local: it can't be queried.",
+        "dns": "The domain name couldn't be resolved.",
+        "refused": "The connection was refused (the port is closed).",
+        "unreachable": "The server can't be reached.",
+        "invalid_response": "The answer isn't from this game (check the game and the port).",
+        "too_large": "The server's answer is too large.",
+        "unknown_game": "Unknown game."
+      },
+      "save": "Save",
+      "create": "Add the server"
     }
   },
   "settings": {
@@ -2005,6 +2089,11 @@
     },
     "rules": {
       "content": "Community rules"
+    },
+    "servers": {
+      "poll_interval": "Server query interval (seconds, 30–300)",
+      "retention_days": "How many days the player history is kept (7–365)",
+      "show_players": "Show player names on the server page"
     }
   },
   "permissions": {
@@ -2069,6 +2158,10 @@
       "create_public": "Создавайте публичные чаты",
       "create_private": "Создание частных чатов (с приглашениями)",
       "announce": "Pin-сообщения и публикации объявлений в чате"
+    },
+    "servers": {
+      "view": "Sees the game servers",
+      "view_players": "Sees the player list of the servers"
     }
   },
   "profile": {
@@ -2776,7 +2869,8 @@
   },
   "apps": {
     "chat": "Чат",
-    "vip": "VIP"
+    "vip": "VIP",
+    "servers": "Servers"
   },
   "translate": {
     "translate": "Переводить",
@@ -3101,7 +3195,8 @@
       "body": "Текст",
       "period": "Период",
       "channel": "Комната для чатов",
-      "icon": "Икона (например, fa-solid fa-star; empty = default)"
+      "icon": "Икона (например, fa-solid fa-star; empty = default)",
+      "game": "Game"
     },
     "periods": {
       "week": "на этой неделе",
@@ -3128,7 +3223,19 @@
       },
       "chat": {
         "shoutbox": "В чате, прямо на странице."
+      },
+      "servers": {
+        "list": "Live status of the game servers: players, map, address."
       }
+    },
+    "servers": {
+      "list": "Servers"
+    },
+    "games": {
+      "all": "All games",
+      "cs16": "CS 1.6",
+      "cs2": "CS2 / CS:GO",
+      "minecraft": "Minecraft"
     }
   },
   "pageEditor": {
@@ -3176,7 +3283,8 @@
     "categories": {
       "core": "Сообщество",
       "forums": "Форумы",
-      "chat": "Чат"
+      "chat": "Чат",
+      "servers": "Servers"
     },
     "search": "Поиск виджета",
     "noResults": "Ни один виджет не соответствует вашему поиску.",
@@ -3200,7 +3308,9 @@
       "topics": "Темы",
       "posts": "Сообщения",
       "members": "Участники",
-      "vip": "VIP-члены"
+      "vip": "VIP-члены",
+      "serversOnline": "Servers online",
+      "serverPlayers": "Players on servers"
     },
     "allOnline": "Смотреть все онлайн участники",
     "panel": {
@@ -3736,5 +3846,95 @@
     "updated": "Updated on {date}",
     "empty": "The rules haven't been published yet.",
     "write": "Write the rules"
+  },
+  "servers": {
+    "title": "Servers",
+    "lead": "{players, plural, one {# player online} few {# players online} many {# players online} other {# players online}} now on {servers, plural, one {# server} few {# servers} many {# servers} other {# servers}}",
+    "leadEmpty": "The community's game servers, with live status.",
+    "refresh": "The status refreshes every {seconds} s.",
+    "filterLabel": "Game",
+    "all": "All",
+    "empty": "No servers added yet.",
+    "emptyFilter": "No servers for this game.",
+    "emptyAdmin": "Add a server in the ACP",
+    "status": {
+      "online": "Online",
+      "offline": "Offline",
+      "unknown": "Unknown"
+    },
+    "players": "{players} / {max} players",
+    "uptime": "uptime {value}",
+    "capacity": "Capacity: {value}",
+    "copy": "Copy",
+    "copyAddress": "Copy address",
+    "copied": "Copied",
+    "copyFailed": "Copying didn't work; select the address.",
+    "connect": "Connect",
+    "details": "Details",
+    "address": "Address",
+    "chart": {
+      "title": {
+        "24h": "Players in the last 24 h",
+        "7d": "Players in the last 7 days",
+        "30d": "Players in the last 30 days"
+      },
+      "rangeLabel": "Chart range",
+      "ranges": {
+        "24h": "24 h",
+        "7d": "7 days",
+        "30d": "30 days"
+      },
+      "now": "now",
+      "avg": "{value} players on average",
+      "peak": "peak {value}",
+      "noData": "No data",
+      "table": "Chart values",
+      "time": "Time",
+      "tableAvg": "Average",
+      "tablePeak": "Peak",
+      "empty": "There's no history for this server yet.",
+      "hint": "Hover or use the arrow keys for values."
+    },
+    "facts": {
+      "peak": "Peak",
+      "peakValue": "{players} / {max} at {time}",
+      "average": "Average",
+      "uptime24": "Uptime 24 h",
+      "uptime7": "Uptime 7 days",
+      "uptime30": "Uptime 30 days",
+      "none": "—"
+    },
+    "playersTitle": "Players online",
+    "playersCount": "Players online ({count})",
+    "player": "Player",
+    "score": "Score",
+    "time": "Time",
+    "duration": {
+      "hours": "{h} h {m} min",
+      "minutes": "{m} min"
+    },
+    "playersHidden": "The player list isn't available for your group.",
+    "playersNone": "No players on the server right now.",
+    "playersUnavailable": "The server doesn't send its player list.",
+    "playersOffline": "The server is offline.",
+    "playersSample": "Minecraft only sends a sample of names.",
+    "about": "About the server",
+    "game": "Game",
+    "map": "Map",
+    "version": "Version",
+    "ping": "Ping",
+    "pingValue": "{ms} ms",
+    "reportedName": "Name on the server",
+    "bots": "Bots",
+    "admins": "Server admins",
+    "noAdmins": "No admins listed.",
+    "forum": "Server forum",
+    "maps": "Maps played (24 h)",
+    "mapsEmpty": "No maps recorded in the last 24 h.",
+    "mapNow": "now",
+    "updated": "Updated at {time}",
+    "unknownStatus": "The status hasn't been read yet.",
+    "viewAll": "All servers",
+    "widgetEmpty": "No servers to show."
   }
 }
