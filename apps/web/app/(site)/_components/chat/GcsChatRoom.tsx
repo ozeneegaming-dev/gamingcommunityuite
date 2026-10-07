@@ -339,7 +339,7 @@ export function GcsChatRoom(props: Props) {
   const visible = messages.filter((m) => !m.author || !ignored.has(m.author.id));
   const shown = top ? [...visible].reverse() : visible;
   const hideAvatars = config.hideAvatars || !avatars;
-  const hasRules = config.rules.trim() !== "";
+  const hasRules = config.rulesHtml !== "";
 
   const composerEl = (
     <GcsChatComposer
@@ -441,7 +441,7 @@ export function GcsChatRoom(props: Props) {
         </div>
       </header>
       {toolbar && <div className="gcs-chat__toolbar">{toolbar}</div>}
-      {rulesOpen && <GcsChatRules text={config.rules} title={t("rules")} close={t("close")} onClose={() => setRulesOpen(false)} />}
+      {rulesOpen && <GcsChatRules html={config.rulesHtml} title={t("rules")} close={t("close")} onClose={() => setRulesOpen(false)} />}
       {announcements.map((a) => (
         <p key={a.id} className="gcs-chat__announcement" role="note" data-testid="gcs-chat-announcement">
           <GcsIconSvg icon={faBullhorn} className="gcs-chat__barIcon" />
@@ -638,7 +638,8 @@ export function GcsChatRoom(props: Props) {
   );
 }
 
-function GcsChatRules({ text, title, close, onClose }: { text: string; title: string; close: string; onClose: () => void }) {
+/** Dialogul regulilor: HTML-ul produs și sanitizat de server (`GcsChatConfig.rulesHtml`). */
+function GcsChatRules({ html, title, close, onClose }: { html: string; title: string; close: string; onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const d = ref.current;
@@ -649,7 +650,7 @@ function GcsChatRules({ text, title, close, onClose }: { text: string; title: st
       <h2 id="gcs-chat-rules-title" className="gcs-display">
         {title}
       </h2>
-      <p className="gcs-chat__rules">{text}</p>
+      <div className="gcs-chat__rules gcs-postBody gcs-richText" data-testid="gcs-chat-rules-body" dangerouslySetInnerHTML={{ __html: html }} />
       <GcsButton variant="primary" onClick={onClose}>
         {close}
       </GcsButton>

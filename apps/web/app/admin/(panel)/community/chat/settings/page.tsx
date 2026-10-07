@@ -1,4 +1,4 @@
-import { APPS_ACP_SECTION } from "@gcs/core";
+import { APPS_ACP_SECTION, GCS_RICH_FIELDS } from "@gcs/core";
 import { CHAT_ACP_SETTINGS, CHAT_CONTAINER } from "@gcs/modules";
 import { GcsCard, GcsUserLink } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
@@ -87,7 +87,8 @@ export default async function AcpChatSettingsPage() {
     },
     { kind: "switch", key: "chat.newest_on_top", label: f("newestOnTop"), hint: f("newestOnTopHint"), value: bool("chat.newest_on_top") },
     { kind: "switch", key: "chat.show_rules", label: f("showRules"), hint: f("showRulesHint"), value: bool("chat.show_rules") },
-    { kind: "text", key: "chat.rules", label: f("rules"), hint: f("rulesHint"), value: String(values["chat.rules"] ?? ""), multiline: true, maxLength: 5000 },
+    // Regulile: editorul compact (profilul `chatRules`); un text vechi se deschide ca paragrafe.
+    { kind: "rich", key: "chat.rules", label: f("rules"), hint: f("rulesHint"), value: values["chat.rules"] ?? "", allow: GCS_RICH_FIELDS.chatRules, maxLength: GCS_RICH_FIELDS.chatRules.maxChars },
     { kind: "switch", key: "chat.hide_avatars", label: f("hideAvatars"), value: bool("chat.hide_avatars") },
     { kind: "number", key: "chat.min_height", label: f("minHeight"), hint: f("minHeightHint"), value: num("chat.min_height"), min: 120, max: 1200, unit: "px" },
     { kind: "switch", key: "chat.hide_enter_mobile", label: f("hideEnterMobile"), hint: f("hideEnterMobileHint"), value: bool("chat.hide_enter_mobile") },

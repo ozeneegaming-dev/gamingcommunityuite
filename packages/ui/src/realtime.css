@@ -765,11 +765,11 @@
   margin: 0 0 12px;
   font-size: 20px;
 }
+/* Regulile: HTML formatat în editor (paragrafe, liste, culori), deci fără `pre-wrap`. */
 .gcs-chat__rules {
   max-height: 60vh;
   margin: 0 0 16px;
   overflow: auto;
-  white-space: pre-wrap;
   line-height: 1.5;
 }
 .gcs-chat__dialog--video {
