@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { GCS_BADGE_SHAPES, GCS_BADGE_TIERS, resolveBadgeArt, type GcsBadgeArtSpec } from "./art";
+import { isGcsIcon } from "../icons/registry";
+import { BADGE_ICON_SUGGESTIONS, GCS_BADGE_SHAPES, GCS_BADGE_TIERS, resolveBadgeArt, type GcsBadgeArtSpec } from "./art";
 import { badgeArtSvg } from "./server";
 import { renderBadgeArtSvg } from "./svg";
 
@@ -67,6 +68,11 @@ describe("insignele: desenul SVG", () => {
     const forged = renderBadgeArtSvg(bad({ glyph: { kind: "icon", style: "solid", name: "x" } }), { width: 512, height: 512, paths: ['M0 0"/><script>x</script>'] });
     expect(forged).not.toContain("script");
     assertInert(parse(forged));
+  });
+
+  test("iconițele propuse în editor există toate în registru", () => {
+    expect(BADGE_ICON_SUGGESTIONS.filter((name) => !isGcsIcon(name))).toEqual([]);
+    expect(new Set(BADGE_ICON_SUGGESTIONS).size).toBe(BADGE_ICON_SUGGESTIONS.length);
   });
 
   test("strălucirea doar la aur și platină, scânteile doar la platină", () => {

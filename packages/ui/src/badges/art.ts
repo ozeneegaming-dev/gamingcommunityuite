@@ -33,6 +33,21 @@ export type GcsBadgeArtFields = {
   artIcon?: string | null;
 };
 
+/** Iconițele propuse în editorul din ACP înainte de căutare (căutarea le găsește pe toate din Font Awesome Free). */
+export const BADGE_ICON_SUGGESTIONS = [
+  ...[
+    "trophy", "medal", "award", "crown", "star", "gem", "fire", "bolt", "shield-halved", "heart", "thumbs-up", "handshake-angle",
+    "comments", "pen-nib", "feather-pointed", "cake-candles", "chess-rook", "chess-knight", "chess-queen", "gamepad", "dice-d20",
+    "headset", "crosshairs", "skull", "dragon", "hat-wizard", "wand-magic-sparkles", "masks-theater", "rocket", "flag-checkered",
+    "bullseye", "hand-fist", "ghost", "robot", "music", "camera", "palette", "code", "bug", "lightbulb", "graduation-cap", "book",
+    "calendar-check", "hourglass-half", "seedling", "tree", "mountain", "anchor", "gift", "coins", "hammer", "user-shield", "gavel",
+    "life-ring", "circle-check", "infinity",
+  ].map((n) => `fa-solid fa-${n}`),
+  "fa-brands fa-steam",
+  "fa-brands fa-discord",
+  "fa-brands fa-twitch",
+];
+
 /** Versiunea desenului: o schimbare a desenului trece la o adresă nouă (răspunsurile au cache `immutable`). */
 export const BADGE_ART_VERSION = "v1";
 export const BADGE_ART_PATH = `/badge-art/${BADGE_ART_VERSION}/`;

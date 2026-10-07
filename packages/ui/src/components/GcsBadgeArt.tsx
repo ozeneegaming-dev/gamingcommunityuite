@@ -22,13 +22,13 @@ export type GcsBadgeArtProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "src" |
 export function GcsBadgeArt({ badge, size = 32, locked = false, decorative = false, className, ...props }: GcsBadgeArtProps) {
   return (
     <img
+      loading="lazy"
+      decoding="async"
       {...props}
       src={badge.image ?? badge.art}
       alt={decorative ? "" : badge.name}
       width={size}
       height={size}
-      loading="lazy"
-      decoding="async"
       draggable={false}
       className={cx("gcs-badgeArt", `gcs-badgeArt--${size}`, badge.image && "gcs-badgeArt--image", locked && "gcs-badgeArt--locked", className)}
     />

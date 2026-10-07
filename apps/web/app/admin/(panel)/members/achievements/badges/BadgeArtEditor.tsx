@@ -145,7 +145,7 @@ export function BadgeArtEditor({ value, labels }: { value: BadgeArtEditorValue |
 
         <div className="gcs-field">
           <span>{labels.icon}</span>
-          <GcsIconPicker name="artIcon" value={icon} searchUrl="/api/icons/search" onChange={setIcon} labels={{ search: labels.iconSearch, none: labels.iconNone, noResults: labels.iconNoResults }} />
+          <GcsIconPicker name="artIcon" value={icon} searchUrl="/api/icons/badges" onChange={setIcon} labels={{ search: labels.iconSearch, none: labels.iconNone, noResults: labels.iconNoResults }} />
         </div>
 
         <label className="gcs-field">

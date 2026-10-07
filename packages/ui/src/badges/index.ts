@@ -2,6 +2,7 @@
 export {
   BADGE_ART_PATH,
   BADGE_ART_VERSION,
+  BADGE_ICON_SUGGESTIONS,
   BADGE_TEXT_MAX,
   badgeArtFile,
   badgeArtSrc,

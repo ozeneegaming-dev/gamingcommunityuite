@@ -271,10 +271,16 @@
   font-size: 11px;
   cursor: pointer;
 }
+/* Butonul radio acoperă toată eticheta (invizibil): un clic oriunde pe ea îl bifează. */
 .gcs-badgeChoice input {
   position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  margin: 0;
   opacity: 0;
-  pointer-events: none;
+  cursor: pointer;
 }
 .gcs-badgeChoice:has(input:checked) {
   border-color: var(--gcs-accentInk);
