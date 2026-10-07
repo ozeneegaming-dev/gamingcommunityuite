@@ -37,12 +37,12 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import type { Editor, JSONContent } from "@tiptap/core";
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type ReactNode } from "react";
+import { forwardRef, Fragment, useEffect, useImperativeHandle, useRef, useState, type ReactNode } from "react";
 import { cx } from "../cx";
 import { GcsIconSvg } from "../icons/svg";
 import { clearDraft, loadDraft, saveDraft } from "./draft";
 import { GCS_EMOJI_CATEGORIES, GCS_QUICK_EMOJI, type GcsEmojiCategory } from "./emoji";
-import { GCS_EDITOR_ALIGNS, GCS_EDITOR_COLORS, GCS_EDITOR_FONT_SIZES, GCS_EDITOR_HIGHLIGHTS, gcsEditorExtensions, isEmbedUrl } from "./extensions";
+import { GCS_EDITOR_ALIGNS, GCS_EDITOR_COLORS, GCS_EDITOR_FONT_SIZES, GCS_EDITOR_HIGHLIGHTS, gcsEditorExtensions, isEmbedUrl, isImageUrl, type GcsEditorAllow } from "./extensions";
 import { gcsMentionSuggestion } from "./mentions";
 import { uploadFile } from "./uploads";
 
@@ -77,6 +77,9 @@ export type GcsEditorLabels = {
   spoiler: string;
   mention: string;
   image: string;
+  /** Câmpul adresei, la butonul „Imagine” fără upload (`imageUrl`). */
+  imageUrl: string;
+  invalidImage: string;
   video: string;
   videoUrl: string;
   emoji: string;
@@ -98,6 +101,32 @@ export type GcsEditorLabels = {
   noMentions: string;
 };
 
+/** Butoanele barei de unelte (varianta compactă alege dintre ele; fiecare apare doar dacă schema îl permite). */
+export type GcsEditorTool =
+  | "bold"
+  | "italic"
+  | "underline"
+  | "strike"
+  | "superscript"
+  | "subscript"
+  | "align"
+  | "size"
+  | "color"
+  | "highlight"
+  | "clear"
+  | "bulletList"
+  | "orderedList"
+  | "horizontalRule"
+  | "link"
+  | "quote"
+  | "code"
+  | "spoiler"
+  | "mention"
+  | "image"
+  | "video"
+  | "emoji"
+  | "fullscreen";
+
 export type GcsQuoteInput = { postId: number; authorId: string | null; authorName: string; text: string };
 
 export type GcsEditorHandle = {
@@ -118,16 +147,28 @@ export type GcsEditorProps = {
   mentionUrl?: string;
   /** Cheia ciornei din `localStorage`; fără ea, nu se salvează ciornă. */
   draftKey?: string;
-  initialContent?: JSONContent | null;
+  /** Documentul inițial (sau HTML, parsat de schemă: ce nu e permis dispare). */
+  initialContent?: JSONContent | string | null;
+  /** Varianta compactă: schema restrânsă la nodurile și mărcile câmpului (vezi `GcsEditorAllow`). */
+  allow?: GcsEditorAllow;
+  /** Butoanele afișate (implicit: toate cele permise de schemă). */
+  tools?: readonly GcsEditorTool[];
+  /** Butonul „Imagine” cere adresa unei imagini (https), fără upload. */
+  imageUrl?: boolean;
+  /** Mai scund, fără „Tot ecranul” (câmpuri mici: semnătura, câmpurile de profil). */
+  compact?: boolean;
+  /** Id-ul etichetei formularului (zona de scris primește `aria-labelledby`). */
+  labelledBy?: string;
   /** Limita de caractere (contorul din subsol o arată; editorul nu lasă textul să o depășească). */
   maxLength?: number;
-  onChange?: (doc: JSONContent) => void;
+  /** La fiecare modificare: documentul (copie JSON simplă) și dacă editorul e gol. */
+  onChange?: (doc: JSONContent, empty: boolean) => void;
   footer?: ReactNode;
   id?: string;
   className?: string;
 };
 
-type Popover = "video" | "link" | "color" | "highlight" | "emoji" | null;
+type Popover = "video" | "image" | "link" | "color" | "highlight" | "emoji" | null;
 
 const DRAFT_DELAY_MS = 2000;
 const EMOJI_TABS: GcsEmojiCategory[] = ["smileys", "people", "gaming", "symbols"];
@@ -147,7 +188,7 @@ function paragraphs(text: string): JSONContent[] {
  * sanitizează doar serverul.
  */
 export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function GcsEditor(props, ref) {
-  const { labels, forumId, uploadUrl, mentionUrl, draftKey, initialContent, maxLength, onChange, footer, id, className } = props;
+  const { labels, forumId, uploadUrl, mentionUrl, draftKey, initialContent, maxLength, onChange, footer, id, className, allow, tools, imageUrl, compact, labelledBy } = props;
   const fileInput = useRef<HTMLInputElement>(null);
   const draftTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [status, setStatus] = useState<string | null>(null);
@@ -156,6 +197,8 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
   const [videoUrl, setVideoUrl] = useState("");
   const [videoError, setVideoError] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
+  const [imageSrc, setImageSrc] = useState("");
+  const [imageError, setImageError] = useState(false);
   const [emojiTab, setEmojiTab] = useState<GcsEmojiCategory>("smileys");
   const [fullscreen, setFullscreen] = useState(false);
   const baseId = id ?? "gcs-editor";
@@ -166,10 +209,11 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
       placeholder: labels.placeholder,
       ...(mentionUrl ? { mention: gcsMentionSuggestion(mentionUrl, labels.noMentions) } : {}),
       ...(maxLength ? { maxLength } : {}),
+      ...(allow ? { allow } : {}),
     }),
     content: initialContent ?? (draftKey ? loadDraft(draftKey) : null) ?? "",
     editorProps: {
-      attributes: { class: "gcs-editor__content", ...(id ? { id } : {}), "aria-multiline": "true", role: "textbox" },
+      attributes: { class: "gcs-editor__content", ...(id ? { id } : {}), ...(labelledBy ? { "aria-labelledby": labelledBy } : {}), "aria-multiline": "true", role: "textbox" },
       handlePaste: (_view, event) => {
         const files = [...(event.clipboardData?.files ?? [])];
         if (files.length > 0 && uploadUrl) {
@@ -177,7 +221,7 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
           return true;
         }
         const text = event.clipboardData?.getData("text/plain") ?? "";
-        if (isEmbedUrl(text)) {
+        if (isEmbedUrl(text) && editorRef.current?.schema.nodes.embed) {
           editorRef.current?.chain().focus().insertContent({ type: "embed", attrs: { url: text.trim() } }).run();
           return true;
         }
@@ -192,7 +236,7 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
       },
     },
     onUpdate: ({ editor: e }) => {
-      onChange?.(JSON.parse(JSON.stringify(e.getJSON())) as JSONContent);
+      onChange?.(JSON.parse(JSON.stringify(e.getJSON())) as JSONContent, e.isEmpty);
       if (!draftKey) return;
       clearTimeout(draftTimer.current);
       draftTimer.current = setTimeout(() => saveDraft(draftKey, e.getJSON()), DRAFT_DELAY_MS);
@@ -320,54 +364,118 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
     setPopover(null);
   }
 
+  function insertImage() {
+    if (!isImageUrl(imageSrc)) {
+      setImageError(true);
+      return;
+    }
+    editor?.chain().focus().insertContent({ type: "image", attrs: { src: imageSrc.trim(), alt: "" } }).run();
+    setImageSrc("");
+    setImageError(false);
+    setPopover(null);
+  }
+
   const c = () => editor!.chain().focus();
   const characters = maxLength
     ? labels.charactersMax.replace("{count}", String(state?.characters ?? 0)).replace("{max}", String(maxLength))
     : labels.characters.replace("{count}", String(state?.characters ?? 0));
   const active = (name: string) => !!state?.active(name);
 
-  return (
-    <div className={cx("gcs-editor", fullscreen && "gcs-editor--fullscreen", className)}>
-      <div className="gcs-editor__toolbar" role="toolbar" aria-label={labels.toolbar}>
-        {tool(labels.bold, active("bold"), () => c().toggleBold().run(), icon(faBold))}
-        {tool(labels.italic, active("italic"), () => c().toggleItalic().run(), icon(faItalic))}
-        {tool(labels.underline, active("underline"), () => c().toggleUnderline().run(), icon(faUnderline))}
-        {tool(labels.strike, active("strike"), () => c().toggleStrike().run(), icon(faStrikethrough))}
-        {tool(labels.superscript, active("superscript"), () => c().toggleSuperscript().run(), icon(faSuperscript))}
-        {tool(labels.subscript, active("subscript"), () => c().toggleSubscript().run(), icon(faSubscript))}
-        {sep("s1")}
-        {GCS_EDITOR_ALIGNS.map((a) => {
+  // Un buton apare dacă e cerut (`tools`) și dacă schema îl permite (`allow`); fără ele, bara completă a postărilor.
+  const node = (n: string) => !allow || allow.nodes.includes(n);
+  const mark = (m: string) => !allow || allow.marks.includes(m);
+  const shows = (t: GcsEditorTool): boolean => {
+    if (tools && !tools.includes(t)) return false;
+    switch (t) {
+      case "bold":
+      case "italic":
+      case "underline":
+      case "strike":
+      case "superscript":
+      case "subscript":
+      case "highlight":
+      case "link":
+        return mark(t);
+      case "size":
+      case "color":
+        return mark("textStyle");
+      case "bulletList":
+      case "orderedList":
+      case "horizontalRule":
+      case "spoiler":
+        return node(t);
+      case "quote":
+        return node("blockquote");
+      case "code":
+        return node("codeBlock");
+      case "mention":
+        return node("mention") && !!mentionUrl;
+      case "image":
+        return node("image") && (!!uploadUrl || !!imageUrl);
+      case "video":
+        return node("embed");
+      case "fullscreen":
+        return !compact;
+      default:
+        return true;
+    }
+  };
+  const item = (t: GcsEditorTool, el: ReactNode) => (shows(t) ? <Fragment key={t}>{el}</Fragment> : null);
+  // Grupurile barei, despărțite de separatori (un grup fără butoane nu lasă separator).
+  const groups: ReactNode[][] = [
+    [
+      item("bold", tool(labels.bold, active("bold"), () => c().toggleBold().run(), icon(faBold))),
+      item("italic", tool(labels.italic, active("italic"), () => c().toggleItalic().run(), icon(faItalic))),
+      item("underline", tool(labels.underline, active("underline"), () => c().toggleUnderline().run(), icon(faUnderline))),
+      item("strike", tool(labels.strike, active("strike"), () => c().toggleStrike().run(), icon(faStrikethrough))),
+      item("superscript", tool(labels.superscript, active("superscript"), () => c().toggleSuperscript().run(), icon(faSuperscript))),
+      item("subscript", tool(labels.subscript, active("subscript"), () => c().toggleSubscript().run(), icon(faSubscript))),
+    ],
+    [
+      item(
+        "align",
+        GCS_EDITOR_ALIGNS.map((a) => {
           const label = { left: labels.alignLeft, center: labels.alignCenter, right: labels.alignRight, justify: labels.alignJustify }[a];
           const def = { left: faAlignLeft, center: faAlignCenter, right: faAlignRight, justify: faAlignJustify }[a];
           return <span key={a}>{tool(label, !!state?.aligned(a), () => c().setTextAlign(a).run(), icon(def))}</span>;
-        })}
-        {sep("s2")}
-        <label className="gcs-srOnly" htmlFor={`${baseId}-size`}>
-          {labels.fontSize}
-        </label>
-        <select
-          id={`${baseId}-size`}
-          className="gcs-input gcs-editor__size"
-          title={labels.fontSize}
-          value={state?.fontSize ?? ""}
-          disabled={!editor}
-          onChange={(e) => (e.target.value ? c().setFontSize(e.target.value).run() : c().unsetFontSize().run())}
-        >
-          <option value="">{labels.sizeDefault}</option>
-          {GCS_EDITOR_FONT_SIZES.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
-        {tool(labels.color, popover === "color", () => toggle("color"), icon(faPalette), { expanded: popover === "color" })}
-        {tool(labels.highlight, popover === "highlight", () => toggle("highlight"), icon(faHighlighter), { expanded: popover === "highlight" })}
-        {tool(labels.clearFormatting, false, () => c().unsetAllMarks().unsetTextAlign().run(), icon(faTextSlash))}
-        {sep("s3")}
-        {tool(labels.bulletList, active("bulletList"), () => c().toggleBulletList().run(), icon(faListUl))}
-        {tool(labels.orderedList, active("orderedList"), () => c().toggleOrderedList().run(), icon(faListOl))}
-        {tool(labels.horizontalRule, false, () => c().setHorizontalRule().run(), icon(faGripLines))}
-        {tool(
+        }),
+      ),
+    ],
+    [
+      item(
+        "size",
+        <>
+          <label className="gcs-srOnly" htmlFor={`${baseId}-size`}>
+            {labels.fontSize}
+          </label>
+          <select
+            id={`${baseId}-size`}
+            className="gcs-input gcs-editor__size"
+            title={labels.fontSize}
+            value={state?.fontSize ?? ""}
+            disabled={!editor}
+            onChange={(e) => (e.target.value ? c().setFontSize(e.target.value).run() : c().unsetFontSize().run())}
+          >
+            <option value="">{labels.sizeDefault}</option>
+            {GCS_EDITOR_FONT_SIZES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </>,
+      ),
+      item("color", tool(labels.color, popover === "color", () => toggle("color"), icon(faPalette), { expanded: popover === "color" })),
+      item("highlight", tool(labels.highlight, popover === "highlight", () => toggle("highlight"), icon(faHighlighter), { expanded: popover === "highlight" })),
+      item("clear", tool(labels.clearFormatting, false, () => c().unsetAllMarks().unsetTextAlign().run(), icon(faTextSlash))),
+    ],
+    [
+      item("bulletList", tool(labels.bulletList, active("bulletList"), () => c().toggleBulletList().run(), icon(faListUl))),
+      item("orderedList", tool(labels.orderedList, active("orderedList"), () => c().toggleOrderedList().run(), icon(faListOl))),
+      item("horizontalRule", tool(labels.horizontalRule, false, () => c().setHorizontalRule().run(), icon(faGripLines))),
+      item(
+        "link",
+        tool(
           labels.link,
           active("link") || popover === "link",
           () => {
@@ -376,29 +484,89 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
           },
           icon(faLink),
           { expanded: popover === "link" },
-        )}
-        {tool(labels.quote, active("blockquote"), () => c().toggleBlockquote().run(), icon(faQuoteRight))}
-        {tool(labels.code, active("codeBlock"), () => c().toggleCodeBlock().run(), icon(faCode))}
-        {tool(labels.spoiler, active("spoiler"), () => (editor?.isActive("spoiler") ? c().lift("spoiler").run() : c().wrapIn("spoiler").run()), icon(faEyeSlash))}
-        {sep("s4")}
-        {mentionUrl && tool(labels.mention, false, () => c().insertContent("@").run(), icon(faAt))}
-        {uploadUrl && tool(labels.image, false, () => fileInput.current?.click(), icon(faImage))}
-        {tool(labels.video, popover === "video", () => toggle("video"), icon(faVideo), { expanded: popover === "video" })}
-        {tool(labels.emoji, popover === "emoji", () => toggle("emoji"), icon(faFaceSmile), { expanded: popover === "emoji" })}
+        ),
+      ),
+      item("quote", tool(labels.quote, active("blockquote"), () => c().toggleBlockquote().run(), icon(faQuoteRight))),
+      item("code", tool(labels.code, active("codeBlock"), () => c().toggleCodeBlock().run(), icon(faCode))),
+      item("spoiler", tool(labels.spoiler, active("spoiler"), () => (editor?.isActive("spoiler") ? c().lift("spoiler").run() : c().wrapIn("spoiler").run()), icon(faEyeSlash))),
+    ],
+    [
+      item("mention", tool(labels.mention, false, () => c().insertContent("@").run(), icon(faAt))),
+      item(
+        "image",
+        uploadUrl
+          ? tool(labels.image, false, () => fileInput.current?.click(), icon(faImage))
+          : tool(labels.image, popover === "image", () => toggle("image"), icon(faImage), { expanded: popover === "image" }),
+      ),
+      item("video", tool(labels.video, popover === "video", () => toggle("video"), icon(faVideo), { expanded: popover === "video" })),
+      item("emoji", tool(labels.emoji, popover === "emoji", () => toggle("emoji"), icon(faFaceSmile), { expanded: popover === "emoji" })),
+    ],
+  ];
+  const toolbar = groups.filter((g) => g.some(Boolean)).flatMap((g, i) => (i === 0 ? g : [sep(`s${i}`), ...g]));
+
+  return (
+    <div className={cx("gcs-editor", compact && "gcs-editor--compact", fullscreen && "gcs-editor--fullscreen", className)}>
+      <div className="gcs-editor__toolbar" role="toolbar" aria-label={labels.toolbar}>
+        {toolbar}
         <span className="gcs-editor__spacer" />
-        {tool(fullscreen ? labels.exitFullscreen : labels.fullscreen, fullscreen, () => setFullscreen((f) => !f), icon(fullscreen ? faCompress : faExpand))}
-        <input
-          ref={fileInput}
-          type="file"
-          hidden
-          multiple
-          onChange={(e) => {
-            const files = [...(e.target.files ?? [])];
-            e.target.value = "";
-            void uploadAll(files);
-          }}
-        />
+        {item("fullscreen", tool(fullscreen ? labels.exitFullscreen : labels.fullscreen, fullscreen, () => setFullscreen((f) => !f), icon(fullscreen ? faCompress : faExpand)))}
+        {uploadUrl && (
+          <input
+            ref={fileInput}
+            type="file"
+            hidden
+            multiple
+            onChange={(e) => {
+              const files = [...(e.target.files ?? [])];
+              e.target.value = "";
+              void uploadAll(files);
+            }}
+          />
+        )}
       </div>
+
+      {popover === "image" && (
+        <div className="gcs-editor__popover">
+          <label className="gcs-srOnly" htmlFor={`${baseId}-image`}>
+            {labels.imageUrl}
+          </label>
+          <input
+            id={`${baseId}-image`}
+            className="gcs-input"
+            type="url"
+            placeholder={labels.imageUrl}
+            value={imageSrc}
+            aria-invalid={imageError}
+            onChange={(e) => {
+              setImageSrc(e.target.value);
+              setImageError(false);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                insertImage();
+              }
+            }}
+          />
+          <button type="button" className="gcs-btn gcs-btn--primary gcs-btn--sm" onClick={insertImage}>
+            <span className="gcs-btn__icon" aria-hidden="true">
+              <GcsIconSvg icon={faCheck} />
+            </span>
+            {labels.insert}
+          </button>
+          <button type="button" className="gcs-btn gcs-btn--ghost gcs-btn--sm" onClick={() => setPopover(null)}>
+            <span className="gcs-btn__icon" aria-hidden="true">
+              <GcsIconSvg icon={faXmark} />
+            </span>
+            {labels.cancel}
+          </button>
+          {imageError && (
+            <span className="gcs-editor__error" role="alert">
+              {labels.invalidImage}
+            </span>
+          )}
+        </div>
+      )}
 
       {popover === "video" && (
         <div className="gcs-editor__popover">
@@ -574,9 +742,12 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
             <span style={{ width: `${progress}%` }} />
           </span>
         )}
-        <span className="gcs-editor__status" role="status">
-          {status}
-        </span>
+        {/* Starea încărcărilor (doar editoarele cu upload): un singur `role="status"` pe pagină, nu în fiecare câmp. */}
+        {uploadUrl && (
+          <span className="gcs-editor__status" role="status">
+            {status}
+          </span>
+        )}
         <span className="gcs-editor__count" data-testid="gcs-editor-count">
           {characters}
         </span>

@@ -1,0 +1,88 @@
+/*
+ * Câmpurile cu text formatat din afara postărilor (specul 2026-10-07-editor-campuri): editorul compact (semnătura,
+ * câmpurile de profil „Text lung”) și afișarea HTML-ului lor (regulile chat-ului, anunțul, semnătura, profilul).
+ */
+
+/* Editorul compact: mai scund decât cel al postărilor; imaginile din semnătură apar mici și în editor. */
+.gcs-editor--compact .gcs-editor__content {
+  min-height: 90px;
+}
+.gcs-richInput {
+  min-width: 0;
+}
+.gcs-editor--signature .gcs-editor__content img {
+  max-height: 90px;
+  width: auto;
+}
+
+/*
+ * Listele și titlurile din conținutul formatat (postări, câmpuri formatate, editor): stilurile de bază ale Tailwind
+ * scot marcajele listelor și mărimea titlurilor, deci fără regulile de aici o listă arăta ca simple rânduri.
+ */
+:is(.gcs-postBody, .gcs-richText, .gcs-editor__content) :is(ul, ol) {
+  margin: 0 0 12px;
+  padding-left: 1.5em;
+}
+:is(.gcs-postBody, .gcs-richText, .gcs-editor__content) ul {
+  list-style: disc;
+}
+:is(.gcs-postBody, .gcs-richText, .gcs-editor__content) ol {
+  list-style: decimal;
+}
+:is(.gcs-postBody, .gcs-richText, .gcs-editor__content) li > p {
+  margin: 0 0 4px;
+}
+:is(.gcs-postBody, .gcs-richText, .gcs-editor__content) :is(h2, h3, h4) {
+  margin: 0 0 10px;
+  font-family: var(--gcs-font-display);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--gcs-text);
+}
+:is(.gcs-postBody, .gcs-richText, .gcs-editor__content) h2 {
+  font-size: 1.45em;
+}
+:is(.gcs-postBody, .gcs-richText, .gcs-editor__content) h3 {
+  font-size: 1.25em;
+}
+:is(.gcs-postBody, .gcs-richText, .gcs-editor__content) h4 {
+  font-size: 1.1em;
+}
+:is(.gcs-postBody, .gcs-richText, .gcs-editor__content) hr {
+  margin: 12px 0;
+  border: 0;
+  border-top: 1px solid var(--gcs-border);
+}
+
+/* Un rând gol din editor (paragraf gol) rămâne un rând gol și la afișare. */
+.gcs-richText p:empty {
+  min-height: 1em;
+}
+.gcs-richText > :last-child {
+  margin-bottom: 0;
+}
+
+/* Semnătura: imaginile (doar din adrese https) au cel mult 90 px; semnătura rămâne la înălțimea ei maximă. */
+.gcs-post__signature .gcs-postImage,
+.gcs-post__signature img {
+  max-height: 90px;
+  width: auto;
+  max-width: 100%;
+  margin: 4px 0;
+  border-radius: 6px;
+}
+
+/* Profil → Despre: un câmp „Text lung” are eticheta deasupra și textul formatat pe toată lățimea. */
+.gcs-profileField--rich {
+  flex-direction: column;
+  gap: 4px;
+}
+.gcs-profileField--rich > .gcs-postBody {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* „Editează pagina”: editorul textului formatat ocupă toată lățimea panoului de configurare. */
+.gcs-fieldRow--rich .gcs-editor__content {
+  min-height: 120px;
+}
