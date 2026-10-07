@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { crc32, deflateSync } from "node:zlib";
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
@@ -7,13 +7,18 @@ import { forumTree, memberInNewContext, topicWithReplies, uid } from "./forum-fi
 import { enterAcpAsRoot, sql, useFreshIp } from "./helpers";
 
 /**
- * Studio VIP (pluginul `gcs.vip_studio`, semnat cu cheia de test a rulării): instalarea din ACP, o ramă nouă încărcată
- * din ACP, studioul unui membru VIP (alegeri → previzualizarea live → numărătoarea → salvarea), apoi aspectul în
- * postbit, hover card și pe profil, widget-ul „VIP online”, refuzul pentru ne-VIP și expirarea.
+ * Studio VIP (pluginul `gcs.vip_studio`, semnat cu cheia de test a rulării): instalarea din ACP, intrarea din meniul
+ * principal, o ramă nouă încărcată din ACP și mai multe rame animate încărcate odată (servite ca WebP animat), studioul
+ * unui membru VIP (alegeri → previzualizarea live → numărătoarea → salvarea), apoi aspectul în postbit, hover card și
+ * pe profil, widget-ul „VIP online”, refuzul pentru ne-VIP, expirarea și meniul care dispare cu pluginul dezactivat.
+ * Cu `GCS_E2E_SHOTS=<folder>`, salvează și capturi (grila stilurilor de nume pe tema închisă și deschisă, postbit-ul
+ * și hover card-ul cu câteva efecte), pentru verificarea vizuală.
  */
 const SDK_DIR = path.resolve(__dirname, "../../../packages/plugin-sdk");
 const KEY = "gcs.vip_studio";
-const UNSIGNED = path.join(SDK_DIR, "plugins/vip-studio/dist/gcs.vip_studio-1.0.0.zip");
+const VERSION = (JSON.parse(readFileSync(path.join(SDK_DIR, "plugins/vip-studio/plugin.json"), "utf8")) as { version: string }).version;
+const UNSIGNED = path.join(SDK_DIR, `plugins/vip-studio/dist/gcs.vip_studio-${VERSION}.zip`);
+const SHOTS = process.env.GCS_E2E_SHOTS ?? "";
 const SIGNED = path.join(__dirname, "../.e2e", "gcs.vip_studio-e2e.zip");
 const WIDGET = `[data-widget="plugin.${KEY}.roster"]`;
 
@@ -67,6 +72,51 @@ function framePng(): Buffer {
   return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk("IHDR", ihdr), chunk("IDAT", deflateSync(raw)), chunk("IEND", Buffer.alloc(0))]);
 }
 
+/**
+ * O ramă animată de test (APNG 192×192, 3 cadre): un inel care își schimbă culoarea. `seed` schimbă nuanțele, ca două
+ * rame să fie fișiere diferite.
+ */
+function apngRing(seed: number): Buffer {
+  const size = 192;
+  const frame = (r: number, g: number, b: number) => {
+    const raw = Buffer.alloc((size * 4 + 1) * size);
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const d = Math.hypot(x - 96, y - 96);
+        const o = y * (size * 4 + 1) + 1 + x * 4;
+        raw[o] = r;
+        raw[o + 1] = g;
+        raw[o + 2] = b;
+        raw[o + 3] = d > 74 && d < 90 ? 255 : 0;
+      }
+    }
+    return deflateSync(raw);
+  };
+  const chunk = (type: string, data: Buffer) => {
+    const len = Buffer.alloc(4);
+    len.writeUInt32BE(data.length);
+    const body = Buffer.concat([Buffer.from(type, "latin1"), data]);
+    const crc = Buffer.alloc(4);
+    crc.writeUInt32BE(crc32(body) >>> 0);
+    return Buffer.concat([len, body, crc]);
+  };
+  const u32 = (...v: number[]) => {
+    const b = Buffer.alloc(v.length * 4);
+    v.forEach((x, i) => b.writeUInt32BE(x, i * 4));
+    return b;
+  };
+  const ihdr = Buffer.concat([u32(size, size), Buffer.from([8, 6, 0, 0, 0])]);
+  const colors: [number, number, number][] = [[255, (seed * 40) % 256, 60], [60, 255, (seed * 70) % 256], [(seed * 90) % 256, 80, 255]];
+  const parts = [Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk("IHDR", ihdr), chunk("acTL", u32(colors.length, 0))];
+  let seq = 0;
+  colors.forEach(([r, g, b], i) => {
+    parts.push(chunk("fcTL", Buffer.concat([u32(seq++, size, size, 0, 0), Buffer.from([0, 15, 0, 100, 0, 0])])));
+    parts.push(i === 0 ? chunk("IDAT", frame(r, g, b)) : chunk("fdAT", Buffer.concat([u32(seq++), frame(r, g, b)])));
+  });
+  parts.push(chunk("IEND", Buffer.alloc(0)));
+  return Buffer.concat(parts);
+}
+
 async function profileFixture(request: APIRequestContext, data: Record<string, unknown>) {
   const res = await request.post("/api/_test/profile", { data });
   expect(res.ok(), await res.text()).toBe(true);
@@ -110,11 +160,11 @@ test("Root Admin instalează Studio VIP semnat și adaugă o ramă nouă din ACP
   // ACP → Rame avatar: catalogul implicit, apoi o ramă nouă, încărcată (GCS o recodează în WebP).
   await page.goto(`/admin/plugins/${KEY}/frames`);
   await expect(page.getByTestId("gcs-acp-plugin-page")).toContainText("Inel de foc");
-  await page.getByRole("link", { name: "Adaugă ramă" }).click();
+  await page.getByRole("link", { name: "Încarcă de pe calculator (unul)" }).click();
   await expect(page).toHaveURL(`/admin/plugins/${KEY}/new/frame`);
   const form = page.locator("form.gcsp-acpForm");
   await form.getByLabel("Nume").fill(`Rama E2E ${id}`);
-  await form.getByLabel("Imaginea ramei").setInputFiles({ name: "rama.png", mimeType: "image/png", buffer: framePng() });
+  await form.getByLabel("Încarcă de pe calculator: imaginea ramei").setInputFiles({ name: "rama.png", mimeType: "image/png", buffer: framePng() });
   await form.getByLabel("Scara față de avatar (%)").fill("136");
   await form.getByRole("checkbox", { name: "VIP Gold" }).check();
   await form.getByRole("button", { name: "Creează" }).click();
@@ -123,14 +173,44 @@ test("Root Admin instalează Studio VIP semnat și adaugă o ramă nouă din ACP
   await expect(page.locator(".gcsp-framePreview img.gcsp-av__frame").first()).toHaveAttribute("src", /\/plugins\/gcs\.vip_studio\/media\/[a-z0-9]+\.webp$/);
   const media = await sql<{ status: string; mime: string }>(`SELECT status, mime FROM plugin_media WHERE "pluginKey" = $1`, [KEY]);
   expect(media).toEqual([{ status: "kept", mime: "image/webp" }]);
+
+  // Meniul principal: „Studio VIP” apare în bara site-ului imediat după instalare.
+  await page.goto("/");
+  await expect(page.locator("header.gcs-siteHeader").locator(`a[href="/p/${KEY}"]`).first()).toBeAttached();
+});
+
+test("ACP: mai multe rame animate odată (APNG), duplicatul sărit, servite ca WebP animat", async () => {
+  const page = rootPage;
+  await page.goto(`/admin/plugins/${KEY}/frames`);
+  const bulk = page.locator("form", { has: page.locator('input[name="files"]') });
+  await expect(bulk).toHaveAttribute("enctype", "multipart/form-data");
+  await bulk.locator('input[name="files"]').setInputFiles([
+    { name: "inel-rosu.png", mimeType: "image/png", buffer: apngRing(1) },
+    { name: "inel-verde.png", mimeType: "image/png", buffer: apngRing(2) },
+    { name: "inel-rosu - Copie.png", mimeType: "image/png", buffer: apngRing(1) },
+  ]);
+  await bulk.getByRole("button", { name: "Încarcă fișierele" }).click();
+  await expect(page).toHaveURL(new RegExp(`/admin/plugins/${KEY.replace(".", "\\.")}/upload/[a-z0-9]+$`));
+  const report = page.getByTestId("gcs-acp-plugin-page");
+  await expect(report).toContainText("Adăugate: 2 · omise (duplicate): 1 · respinse: 0.");
+  await expect(report).toContainText("animată, 3 cadre");
+  await expect(report).toContainText("la fel ca „Inel rosu”");
+  // Ramele noi sunt în catalog și fișierele lor sunt WebP animate (RIFF … WEBP … ANIM).
+  await page.goto(`/admin/plugins/${KEY}/frames`);
+  await expect(page.getByTestId("gcs-acp-plugin-page")).toContainText("Inel verde");
+  const src = await page.locator('tr:has-text("Inel verde") img.gcsp-av__frame').getAttribute("src");
+  const res = await page.request.get(src!);
+  expect(res.headers()["content-type"]).toBe("image/webp");
+  const bytes = Buffer.from(await res.body());
+  expect([bytes.toString("latin1", 0, 4), bytes.toString("latin1", 8, 12), bytes.includes(Buffer.from("ANIM"))]).toEqual(["RIFF", "WEBP", true]);
 });
 
 test("un ne-VIP poate încerca orice în previzualizare, dar „Salvează” deschide „Devino VIP”", async ({ browser }) => {
   const page = await memberInNewContext(browser, `Curios${id}`, `curios-${id}@example.com`, "100.74.1");
   await page.goto(`/p/${KEY}`);
   await expect(studio(page)).toHaveClass(/gcsp-js/);
-  await pick(page, "nameStyle", "neon");
-  await expect(studio(page).locator('.gcsp-plate [data-gcsp-pv="name"]')).toHaveClass(/gcsp-fx-neon/);
+  await pick(page, "nameStyle", "neon_tub");
+  await expect(studio(page).locator('.gcsp-plate [data-gcsp-pv="name"]')).toHaveClass(/gcs-nfx--neon/);
   await expect(studio(page).locator("[data-gcsp-count]")).toHaveText("1 modificare nesalvată");
   await studio(page).locator("[data-gcsp-save]").click();
   await expect(studio(page).locator('[data-gcsp-sheet="vip"]')).toBeVisible();
@@ -148,11 +228,11 @@ test("un VIP își alege echipamentul: previzualizarea live, numărătoarea și 
   await expect(studio(page)).toContainText("Planul tău: VIP Gold");
 
   // Stilul numelui cu banda de variante.
-  await pick(page, "nameStyle", "neon");
-  await studio(page).locator('label.gcsp-swatch:has(input[value="neon:cyan"])').click();
+  await pick(page, "nameStyle", "neon_tub");
+  await studio(page).locator('label.gcsp-swatch:has(input[value="neon_tub:cyan"])').click();
   const plate = studio(page).locator('.gcsp-plate [data-gcsp-pv="name"]');
-  await expect(plate).toHaveClass(/gcsp-fx-neon/);
-  await expect(plate).toHaveAttribute("style", /--c1:#22D3EE/);
+  await expect(plate).toHaveClass(/gcs-nfx--neon/);
+  await expect(plate).toHaveAttribute("style", /--nfx-c1:#22D3EE/);
 
   // Rama încărcată în ACP, banner-ul, fundalul cardului și arma.
   await studio(page).locator('input[name="gcsp_tab_mini"][value="frame"]').locator("..").click();
@@ -236,7 +316,73 @@ test("widget-ul „VIP online” arată membrul VIP cu numele, rama și banner-u
   const widget = page.locator(WIDGET).filter({ visible: true });
   await expect(widget).toContainText(`Vip${id}`);
   await expect(widget.locator("[data-gcsp-roster]")).toHaveAttribute("data-gcsp-ready", "1");
-  await expect(widget.locator("a.gcs-userLink", { hasText: `Vip${id}` }).first()).toHaveClass(/gcsp-fx-neon/);
+  const link = widget.locator("a.gcs-userLink", { hasText: `Vip${id}` }).first();
+  await expect(link).toHaveAttribute("data-text", `Vip${id}`);
+  expect(await link.evaluate((el) => getComputedStyle(el).textShadow)).not.toBe("none");
+});
+
+test("rama animată (APNG încărcat) se mișcă pe postbit; capturile efectelor (cu GCS_E2E_SHOTS)", async ({ browser, request }) => {
+  test.setTimeout(300_000);
+  const email = `arta-${id}@example.com`;
+  const page = await memberInNewContext(browser, `Arta${id}`, email, "100.74.6");
+  await profileFixture(request, { action: "vip", email, groupKey: "vip_legend", days: 30 });
+  const shot = async (target: { screenshot(o: { path: string; animations: "allow" }): Promise<Buffer> }, name: string) => {
+    if (SHOTS) await target.screenshot({ path: path.join(SHOTS, `${name}.png`), animations: "allow" });
+  };
+  if (SHOTS) mkdirSync(SHOTS, { recursive: true });
+
+  // Rama animată din lotul încărcat în ACP, aleasă în studio.
+  await page.goto(`/p/${KEY}`);
+  await expect(studio(page)).toHaveClass(/gcsp-js/);
+  await studio(page).locator('input[name="gcsp_tab_mini"][value="frame"]').locator("..").click();
+  const frameTile = studio(page).locator("label.gcsp-tile--frame", { hasText: "Inel verde" });
+  await expect(async () => {
+    if (!(await frameTile.isVisible())) await page.mouse.wheel(0, 700);
+    await expect(frameTile).toBeVisible({ timeout: 400 });
+  }).toPass({ timeout: 20_000 });
+  await frameTile.click();
+  await studio(page).locator("[data-gcsp-save]").click();
+  await expect(page).toHaveURL(/saved=1/);
+  const tree = await forumTree(request);
+  const topic = await topicWithReplies(request, tree.forum.id, email, `Arta ${id}`, 0);
+  await page.goto(topic.url);
+  const avatar = page.getByTestId("gcs-postbit").first().locator(".gcs-avatar[data-avatar-user]");
+  expect(await avatar.evaluate((el) => getComputedStyle(el, "::after").backgroundImage)).toMatch(/\/plugins\/gcs\.vip_studio\/media\/[a-z0-9]+\.webp/);
+  // Cadrele se schimbă (WebP-ul animat ca fundal al ramei, redat de browser): două capturi diferite.
+  const first = await avatar.screenshot({ animations: "allow" });
+  await expect.poll(async () => (await avatar.screenshot({ animations: "allow" })).equals(first), { timeout: 5_000 }).toBe(false);
+
+  if (SHOTS) {
+    for (const theme of ["dark", "light"] as const) {
+      await page.context().addCookies([{ name: "gcs-theme", value: theme, url: page.url() }]);
+      await page.goto(`/p/${KEY}`);
+      await expect(studio(page)).toHaveClass(/gcsp-js/);
+      await page.evaluate(() => document.querySelectorAll(".gcsp-later").forEach((el) => el.classList.remove("gcsp-later")));
+      await page.waitForTimeout(1200);
+      await shot(studio(page).locator(".gcsp-panel--name"), `studio-nume-${theme}`);
+    }
+    await page.context().addCookies([{ name: "gcs-theme", value: "dark", url: page.url() }]);
+    // Câteva efecte pe postbit și hover card.
+    for (const style of ["infern", "glitch_rgb", "aur_curat", "ploaie_digitala", "tinta", "cosmic", "taietura", "fulger"]) {
+      await page.goto(`/p/${KEY}`);
+      await expect(studio(page)).toHaveClass(/gcsp-js/);
+      await pick(page, "nameStyle", style);
+      await studio(page).locator("[data-gcsp-save]").click();
+      await expect(page).toHaveURL(/saved=1/);
+      await page.goto(topic.url);
+      const postbit = page.getByTestId("gcs-postbit").first();
+      await page.waitForTimeout(900);
+      await shot(postbit, `postbit-${style}`);
+      if (style === "infern" || style === "cosmic") {
+        await postbit.locator(".gcs-post__authorName a.gcs-userLink").hover();
+        const card = page.getByTestId("gcs-hover-card");
+        await expect(card).toBeVisible();
+        await page.waitForTimeout(700);
+        await shot(card, `hovercard-${style}`);
+      }
+    }
+  }
+  await page.context().close();
 });
 
 test("VIP expirat: aspectul dispare de pe site, alegerile rămân în studio", async ({ request, browser }) => {
@@ -246,6 +392,26 @@ test("VIP expirat: aspectul dispare de pe site, alegerile rămân în studio", a
   const userRow = await sql<{ id: string }>(`SELECT id FROM users WHERE email = $1`, [vipEmail]);
   await expect.poll(async () => (await sql(`SELECT 1 FROM member_appearances WHERE "userId" = $1`, [userRow[0]!.id])).length, { timeout: 15_000 }).toBe(0);
   const rows = await sql<{ data: { nameStyle?: string } }>(`SELECT data FROM plugin_gcs__vip_studio.loadouts WHERE user_id = $1`, [userRow[0]!.id]);
-  expect(rows[0]?.data.nameStyle).toBe("neon");
+  expect(rows[0]?.data.nameStyle).toBe("neon_tub");
   void browser;
+});
+
+test("meniul: „Studio VIP” e și în sertarul de pe mobil și dispare când pluginul e dezactivat", async () => {
+  const page = rootPage;
+  // Pe un ecran îngust, meniul principal e în sertar.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await page.getByTestId("gcs-mobile-nav").click();
+  await expect(page.getByRole("dialog").getByRole("link", { name: "Studio VIP" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.setViewportSize({ width: 1280, height: 720 });
+
+  // Dezactivat din ACP: intrarea dispare din meniu (fără repornire).
+  await page.goto("/admin/system/applications");
+  await page.getByTestId(`gcs-plugin-toggle-${KEY}`).uncheck();
+  await expect(page.getByTestId(`gcs-plugin-toggle-${KEY}`)).not.toBeChecked();
+  await expect.poll(async () => {
+    await page.goto("/");
+    return page.locator("header.gcs-siteHeader").locator(`a[href="/p/${KEY}"]`).count();
+  }, { timeout: 20_000 }).toBe(0);
 });

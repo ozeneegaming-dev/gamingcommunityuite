@@ -72,7 +72,10 @@ export type GcsPluginVipMember = {
   lastActiveAt: string | null;
 };
 
-/** Un fișier media al pluginului (capabilitatea `media`), verificat de GCS; imaginile sunt recodate în WebP. */
+/**
+ * Un fișier media al pluginului (capabilitatea `media`), verificat de GCS; imaginile sunt recodate în WebP (cele animate
+ * — GIF, APNG, WebP — rămân animate, ca WebP animat).
+ */
 export type GcsPluginMediaInfo = {
   id: string;
   kind: "image" | "video" | "audio";
@@ -85,9 +88,66 @@ export type GcsPluginMediaInfo = {
   url: string;
   status: "pending" | "kept";
   createdAt: string;
+  /** Doar la încărcare (în corpul formularului; GCS ≥ 0.7.1): SHA-256 al fișierului trimis (hex), pentru duplicate. */
+  sha256?: string;
+  /** Doar la încărcare: numele original al fișierului (fără cale, doar text). */
+  originalName?: string;
+  /** Doar la încărcare: numărul de cadre al imaginii (> 1 = animată). */
+  frames?: number;
 };
-/** Un fișier respins de GCS la încărcare (pe câmpul lui din formular): `too_large`, `unsupported_type`, `too_long`… */
+/**
+ * Un fișier respins de GCS la încărcare (pe câmpul lui din formular): `too_large`, `unsupported_type`, `too_long`,
+ * `invalid_image`, `too_many_frames`, `animation_too_large`, `processing_timeout`, `quota_exceeded`, `rate_limited`,
+ * `too_many_files`… Parametrii mesajului (ex. `maxMb`) și, de la GCS 0.7.1, `originalName` (numele fișierului).
+ */
 export type GcsPluginMediaError = { error: string; [param: string]: string };
+
+/**
+ * Efectele numelui (lista albă a GCS). De la GCS 0.7.1 și: `gradient`, `inferno`, `typewriter`, `reveal`, `shatter`,
+ * `citylights`, `cosmic`, `crosshair`, `love`, `electric`, `mirror`, `lightning`, `money`, `razor`, `shadowdance`,
+ * `toxic`, `vscan`, `gold`, `aura`, `matrix`, `frost`, `plasma`, `outline`, `extrude`. Previzualizarea în paginile
+ * pluginului: `<span class="gcs-nfx gcs-nfx--<efect> gcs-nfx--n<culori>" data-text="Nume" style="--nfx-c1:#…">Nume</span>`.
+ */
+export type GcsNameEffect =
+  | "none"
+  | "gradient"
+  | "shimmer"
+  | "pulse"
+  | "neon"
+  | "glitch"
+  | "scan"
+  | "chrome"
+  | "fire"
+  | "holo"
+  | "caret"
+  | "inferno"
+  | "typewriter"
+  | "reveal"
+  | "shatter"
+  | "citylights"
+  | "cosmic"
+  | "crosshair"
+  | "love"
+  | "electric"
+  | "mirror"
+  | "lightning"
+  | "money"
+  | "razor"
+  | "shadowdance"
+  | "toxic"
+  | "vscan"
+  | "gold"
+  | "aura"
+  | "matrix"
+  | "frost"
+  | "plasma"
+  | "outline"
+  | "extrude";
+
+/** O eroare a unui stil CSS scris de admin: linia, codul (`css_forbidden`, `css_selector`, `css_url`…) și detaliul. */
+export type GcsCustomStyleError = { line: number; code: string; detail?: string };
+/** Rezultatul verificării / salvării unui stil CSS: clasa lui (pentru previzualizări) sau erorile pe linii. */
+export type GcsCustomStyleResult = { ok: true; className: string } | { ok: false; errors: GcsCustomStyleError[] };
 
 /** O umplere: 1 culoare (plină) sau 2–5 (gradient), unghiul și animația din lista albă. */
 export type GcsAppearanceFill = { colors: string[]; angle?: number; animation?: "none" | "flow" | "pulse" | "shine" | "aurora"; speed?: "slow" | "normal" | "fast" };
@@ -102,12 +162,15 @@ export type GcsAppearanceMedia = string;
 export type GcsMemberAppearance = {
   name?: {
     fill: GcsAppearanceFill;
-    effect?: "none" | "shimmer" | "pulse" | "neon" | "glitch" | "scan" | "chrome" | "fire" | "holo" | "caret";
+    effect?: GcsNameEffect;
     glow?: string;
     bold?: boolean;
     italic?: boolean;
+    /** Cheia unui stil CSS al pluginului (`ctx.members.appearance.styles.set("name", …)`, GCS ≥ 0.7.1). */
+    style?: string;
   };
-  banner?: { fill: GcsAppearanceFill; text?: string; label?: string };
+  /** `style`: cheia unui stil CSS de banner al pluginului (GCS ≥ 0.7.1); banner-ul îl desenează atunci clasa stilului. */
+  banner?: { fill: GcsAppearanceFill; text?: string; label?: string; style?: string };
   /** `scale` 100–160 (mărimea ramei față de avatar, în %), `x`/`y` -20…20 (decalaj în %). */
   frame?: { image: GcsAppearanceMedia; scale?: number; x?: number; y?: number };
   /** `x`/`y` 0–100 (poziția imaginii), `dim` 0–80 (întunecarea, în %). */
@@ -166,6 +229,16 @@ export interface GcsPluginContext {
       set(userId: string, appearance: GcsMemberAppearance | null): Promise<void>;
       get(userIds: string[]): Promise<Record<string, GcsMemberAppearance>>;
       clear(): Promise<number>;
+      /**
+       * Stilurile CSS scrise de un admin (GCS ≥ 0.7.1): doar declarații, `::before { }`, `::after { }` și `@keyframes`;
+       * nucleul le verifică, le închide pe clasa stilului și pe numele membrilor care le aleg și le oprește animațiile
+       * sub reduced-motion. `set` doar din rutele / paginile ACP ale pluginului (altfel `acp_required`); `null` șterge.
+       */
+      styles: {
+        check(kind: "name" | "banner", key: string, css: string): Promise<GcsCustomStyleResult>;
+        set(kind: "name" | "banner", key: string, css: string | null): Promise<GcsCustomStyleResult>;
+        list(kind?: "name" | "banner"): Promise<{ kind: "name" | "banner"; key: string; css: string; className: string; updatedAt: string }[]>;
+      };
     };
   };
   /**

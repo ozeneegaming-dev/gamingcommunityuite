@@ -5,8 +5,18 @@
 const FIELD = /^[A-Za-z][A-Za-z0-9_.:-]{0,59}$/;
 export const PLUGIN_FORM_MAX_FIELDS = 800;
 export const PLUGIN_FORM_MAX_VALUE = 20_000;
-/** Câte fișiere poate avea un formular (ex. ramă + previzualizare, video + poster). */
+/** Câte fișiere poate avea un formular de pe site (ex. ramă + previzualizare, video + poster). */
 export const PLUGIN_FORM_MAX_FILES = 4;
+/**
+ * Câte fișiere poate avea un formular trimis spre o rută ACP a pluginului (încărcarea în bloc a cataloagelor, ex. 50 de
+ * rame odată). Corpul întreg are limita `PLUGIN_FORM_ACP_MAX_BYTES`; limita de rată a încărcărilor ACP rămâne.
+ */
+export const PLUGIN_FORM_ACP_MAX_FILES = 50;
+/**
+ * Corpul maxim al unui formular `multipart` spre o rută ACP: 48 MB (sub limita proxy-ului Next de 64 MB și sub cei
+ * 50 MB ai nginx-ului din instalarea standard). Un lot mai mare se împarte în mai multe încărcări.
+ */
+export const PLUGIN_FORM_ACP_MAX_BYTES = 48 * 1024 * 1024;
 /** Un formular urlencoded (fără fișiere) are aceeași limită ca un corp JSON. */
 export const PLUGIN_FORM_MAX_BYTES = 64 * 1024;
 

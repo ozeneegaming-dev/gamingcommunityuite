@@ -11,7 +11,8 @@ import { services } from "./services";
  * venit de la plugin. Numele și rama vin din `/gcs-names.css`; aici sunt doar elementele din pagină.
  */
 export type GcsMemberLook = {
-  banner: { label: string; style: CSSProperties } | null;
+  /** `className`: clasa unui stil CSS de banner al pluginului (atunci `style` e gol), altfel șir gol. */
+  banner: { label: string; style: CSSProperties; className: string } | null;
   card: CSSProperties | null;
   flair: { icon: string; label: string } | null;
   profile: {
@@ -25,7 +26,13 @@ export type GcsMemberLook = {
 export function lookOf(a: GcsMemberAppearance): GcsMemberLook {
   const p = a.profile ?? {};
   return {
-    banner: a.banner ? { label: a.banner.label ?? "VIP", style: appearanceBannerStyle(a.banner) as CSSProperties } : null,
+    banner: a.banner
+      ? {
+          label: a.banner.label ?? "VIP",
+          style: appearanceBannerStyle(a.banner) as CSSProperties,
+          className: a.banner.styleClass && /^gcs-bannerStyle--[a-z0-9_-]+--[a-z0-9_]+$/.test(a.banner.styleClass) ? a.banner.styleClass : "",
+        }
+      : null,
     card: a.card ? (appearanceCardStyle(a.card) as CSSProperties) : null,
     flair: a.flair ? { icon: a.flair.icon, label: a.flair.label } : null,
     profile: {

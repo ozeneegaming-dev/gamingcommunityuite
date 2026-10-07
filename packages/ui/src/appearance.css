@@ -22,14 +22,26 @@
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18);
 }
 
-/* Arma în postbit (un rând în plus), în hover card (o statistică în plus) și pe profil. */
-.gcs-postbit__row[data-stat="weapon"] .gcs-postbit__rowIcon {
-  background: var(--gcs-surface2);
+/*
+ * Arma în postbit (un rând în plus), în hover card (o statistică în plus) și pe profil. Iconițele își păstrează
+ * proporțiile: înălțimea e fixă, lățimea urmează imaginea (o iconiță de linie 110×30 rămâne lată, una pătrată rămâne
+ * pătrată), cu o lățime maximă; nimic nu se strânge într-un pătrat.
+ */
+.gcs-postbit__row[data-stat="weapon"] dd {
+  min-width: 0;
 }
 .gcs-postbit__flair {
-  width: 17px;
-  height: 17px;
+  flex-shrink: 0;
+  width: auto;
+  height: 18px;
+  max-width: 76px;
   object-fit: contain;
+}
+.gcs-postbit__flairName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .gcs-hoverCard__stats:has(> .gcs-hoverCard__flair) {
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -42,8 +54,9 @@
   min-width: 0;
 }
 .gcs-hoverCard__flair img {
-  width: 22px;
-  height: 22px;
+  width: auto;
+  height: 20px;
+  max-width: 100%;
   object-fit: contain;
 }
 .gcs-profileStats__flair dd {
@@ -54,8 +67,9 @@
   font-size: 15px;
 }
 .gcs-profileStats__flair img {
-  width: 30px;
+  width: auto;
   height: 30px;
+  max-width: 120px;
   flex-shrink: 0;
   object-fit: contain;
 }

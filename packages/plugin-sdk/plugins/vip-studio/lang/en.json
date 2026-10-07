@@ -248,7 +248,13 @@
     "frame_small": "The frame must be at least 128 px on each side.",
     "image_small": "The image is too small.",
     "not_found": "This item no longer exists.",
-    "invalid": "The request isn't valid."
+    "invalid": "The request isn't valid.",
+    "upload_too_many_frames": "The animation has too many frames (at most 600).",
+    "upload_animation_too_large": "The animation is too large (its size or number of frames).",
+    "upload_processing_timeout": "The file took too long to process. Try a smaller version.",
+    "weapon_ratio": "The icon is too elongated (at most 8:1).",
+    "no_files": "Pick at least one file.",
+    "css_invalid": "The CSS has errors; see the list below."
   },
   "roster": {
     "label": "VIP members",
@@ -322,15 +328,39 @@
   },
   "effects": {
     "none": "No effect",
-    "shimmer": "Flow",
-    "pulse": "Pulse",
-    "neon": "Neon",
-    "glitch": "Glitch",
+    "gradient": "Static gradient",
+    "shimmer": "Colour flow",
+    "pulse": "Breathing",
+    "neon": "Neon tube",
+    "glitch": "RGB glitch",
     "scan": "Scan lines",
-    "chrome": "Chrome",
+    "chrome": "Polished chrome",
     "fire": "Flame",
     "holo": "Holographic",
-    "caret": "Terminal cursor"
+    "caret": "Digital (caret)",
+    "inferno": "Inferno (embers)",
+    "typewriter": "Typewriter",
+    "reveal": "Flicker (letter by letter)",
+    "shatter": "Broken mirror",
+    "citylights": "City lights",
+    "cosmic": "Cosmic (stars)",
+    "crosshair": "Crosshair",
+    "love": "Love wave",
+    "electric": "Electric",
+    "mirror": "Reflection",
+    "lightning": "Lightning",
+    "money": "Money",
+    "razor": "Razor split",
+    "shadowdance": "Shadow dance",
+    "toxic": "Acid",
+    "vscan": "Vertical beam",
+    "gold": "Gold",
+    "aura": "Aura",
+    "matrix": "Digital rain",
+    "frost": "Frost",
+    "plasma": "Plasma",
+    "outline": "Outline",
+    "extrude": "3D relief"
   },
   "animations": {
     "none": "Static",
@@ -361,7 +391,9 @@
       "song": "Songs",
       "members": "Member loadouts",
       "item": "Item",
-      "new": "New item"
+      "new": "New item",
+      "css": "CSS style",
+      "upload": "Bulk upload"
     },
     "nav": "VIP Studio catalogues",
     "overview": "Overview",
@@ -396,11 +428,11 @@
       "song": "Add song"
     },
     "hints": {
-      "name_style": "Name styles with their effect and colour variants. No CSS: only colours and effects from the list.",
-      "banner": "The banners under names: one colour, a gradient (up to 5 colours) or an animation from the list.",
-      "frame": "Frames are uploaded as PNG, WebP or GIF with transparency, close to square (at least 128 px). GCS re-encodes them to WebP.",
+      "name_style": "Name styles: animated effects (fire, neon, glitch, metal, holographic…) with colour variants, or a style you write in CSS.",
+      "banner": "The banners under names: one colour, a gradient (up to 5 colours), an animation from the list or a banner written in CSS.",
+      "frame": "Frames: PNG / APNG, WebP or GIF (animated or not), with transparency, close to square (at least 128 px). GCS re-encodes them to WebP (animations stay animated).",
       "card": "The images behind the member card (at least 320 px wide). GCS re-encodes them to WebP.",
-      "weapon": "Weapon icons: transparent PNG or WebP, ideally light lines.",
+      "weapon": "Weapon icons: transparent PNG or WebP, square or wide (line icons, e.g. 110×30). They're shown at their own proportions.",
       "background": "Profile backgrounds: an image (also used as the poster) and, optionally, a muted MP4 / WebM video.",
       "theme": "Profile page themes: the accent, the second accent and the panel colour.",
       "song": "The songs members choose from: an MP3 / Ogg file or a YouTube link."
@@ -456,16 +488,16 @@
       "glow": "Glow",
       "animation": "Animation",
       "text": "Text colour",
-      "frameFile": "Frame image",
-      "frameFileHint": "PNG, WebP or animated GIF with a transparent middle; up to 8 MB.",
+      "frameFile": "Upload from your computer: frame image",
+      "frameFileHint": "PNG / APNG, WebP or GIF (animated too), with a transparent middle; up to 8 MB.",
       "scale": "Scale relative to the avatar (%)",
       "scaleHint": "100 = the avatar's size; 130 = the frame extends 15% past the avatar on each side.",
       "offsetX": "Horizontal offset (%)",
       "offsetY": "Vertical offset (%)",
-      "cardFile": "Background image",
+      "cardFile": "Upload from your computer: background image",
       "cardFileHint": "PNG, JPG or WebP, ideally 720×400 or larger.",
-      "weaponFile": "Icon",
-      "weaponFileHint": "Transparent PNG or WebP, ideally 96×96.",
+      "weaponFile": "Upload from your computer: icon",
+      "weaponFileHint": "Transparent PNG or WebP: square (e.g. 96×96) or wide (e.g. 110×30).",
       "posterFile": "Image (and video poster)",
       "posterHint": "Also shown to people who prefer less motion.",
       "videoFile": "Video (optional)",
@@ -533,7 +565,102 @@
       "presets_missing": "added the missing presets",
       "presets_restore": "restored the presets",
       "reset_member": "reset the loadout of",
-      "reset_quote": "removed the quote of"
+      "reset_quote": "removed the quote of",
+      "bulk_upload": "bulk-uploaded",
+      "css_create": "added the CSS style",
+      "css_update": "changed the CSS style",
+      "presets_upgrade": "upgraded the style catalogue"
+    },
+    "bulk": {
+      "title": "Upload from your computer (several at once)",
+      "single": "Upload from your computer (one)",
+      "submit": "Upload the files",
+      "filesHint": "You can pick up to {max} files at once (Ctrl / Shift + click), at most {mb} MB in total.",
+      "batches": "More than {mb} MB? Upload in several batches.",
+      "files": {
+        "frame": "Frames (files)",
+        "weapon": "Weapon icons (files)",
+        "card": "Images (files)"
+      },
+      "hint": {
+        "frame": "Each file becomes a frame, with the category, plans, scale and offset below. Identical files (and ones already uploaded) are skipped. APNG and GIF stay animated. Animated frames take longer to process: for dozens of animated frames, upload in batches of 15–20.",
+        "weapon": "Each file becomes a weapon; the name comes from the file name (ak47 → AK47) and can be changed later. Identical files are skipped.",
+        "card": "Each file becomes a card background, with the category and plans below. Identical files are skipped."
+      },
+      "defaultName": {
+        "frame": "Frame",
+        "weapon": "Weapon",
+        "card": "Background"
+      },
+      "resultTitle": "Upload result",
+      "summary": "Added: {added} · skipped (duplicates): {skipped} · rejected: {rejected}.",
+      "added": "Added ({count})",
+      "skipped": "Skipped, duplicates ({count})",
+      "rejected": "Rejected ({count})",
+      "none": "None.",
+      "duplicateOf": "same as “{name}”",
+      "animated": "animated, {frames} frames",
+      "expired": "This upload's report is gone (kept for a day). The added items are in the catalogue."
+    },
+    "css": {
+      "add": {
+        "name_style": "New style (CSS)",
+        "banner": "New banner (CSS)"
+      },
+      "hint": {
+        "name_style": "Write the name style in CSS: only properties (e.g. color, text-shadow, animation), the ::before / ::after blocks and @keyframes. No selectors: GCS applies it to the names of the members who pick it. Animations stop automatically for people who prefer less motion.",
+        "banner": "Write the banner in CSS: only properties (e.g. background, color, box-shadow, animation), the ::before / ::after blocks and @keyframes. No selectors: GCS applies it to the banner of the members who pick it."
+      },
+      "code": "The style's CSS",
+      "rules": "Allowed: properties, the ::before and ::after blocks, @keyframes. Not allowed: selectors, @import, @media, !important, position: fixed, url() to other sites, the \\ character. For symbols in content, paste the character itself (e.g. ♥).",
+      "preview": "Preview",
+      "previewDraft": "Preview (draft, not saved)",
+      "previewSaved": "How it looks now",
+      "previewHint": "On your name, at the site's sizes, on dark and light backgrounds. Save it to add it to the catalogue.",
+      "baseColor": "Base colour",
+      "baseColorHint": "Used in small lists and if the style can't load.",
+      "baseBannerHint": "The banner's colour if the style can't load.",
+      "templatesTitle": "Starter templates",
+      "templatesHint": "Pick one, then change the colours and the animation to taste.",
+      "templates": {
+        "name_style": {
+          "foc": "Fire",
+          "neon": "Neon",
+          "gradient": "Gradient",
+          "glitch": "Glitch"
+        },
+        "banner": {
+          "aur": "Gold",
+          "neon": "Neon",
+          "gradient": "Gradient",
+          "foc": "Fire"
+        }
+      },
+      "errorsTitle": "The style wasn't saved:",
+      "line": "Line {line}",
+      "errors": {
+        "generic": "construct not allowed",
+        "css_forbidden": "forbidden construct",
+        "css_selector": "selectors aren't allowed (GCS adds the selector)",
+        "css_nested": "blocks inside other blocks aren't allowed",
+        "css_at_rule": "only @keyframes is allowed",
+        "css_braces": "the braces aren't closed correctly",
+        "css_syntax": "unclosed comment or string",
+        "css_declaration": "incomplete declaration (property: value;)",
+        "css_property": "invalid property name",
+        "css_important": "!important isn't allowed",
+        "css_position": "position: fixed / sticky isn't allowed",
+        "css_url": "url() can only point to the studio's files",
+        "css_value_too_long": "value too long",
+        "css_keyframes_name": "invalid animation name",
+        "css_keyframes_selector": "in @keyframes: only from, to or percentages",
+        "css_keyframes_duplicate": "animation defined twice",
+        "css_too_many_keyframes": "too many animations (at most 8)",
+        "css_too_many_declarations": "too many declarations in a block",
+        "css_too_large": "the text is too long",
+        "css_empty": "the style is empty",
+        "invalid_key": "invalid key"
+      }
     }
   },
   "vipPage": {

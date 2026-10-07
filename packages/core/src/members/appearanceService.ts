@@ -1,8 +1,10 @@
 import type { Prisma, PrismaClient } from "@gcs/db";
+import { writeAudit } from "../audit";
 import type { GcsCache } from "../cache";
 import { GcsNotFound, GcsValidationError } from "../errors";
 import type { GcsEventBus } from "../events";
-import { compileAppearanceCss, mergeAppearances, parseMemberAppearance, type GcsMemberAppearance } from "./appearance";
+import { compileAppearanceCss, mergeAppearances, parseMemberAppearance, type GcsCompiledStyleInput, type GcsMemberAppearance } from "./appearance";
+import { CUSTOM_STYLE_KEY, CUSTOM_STYLE_KINDS, customStyleClass, parseCustomStyle, type GcsCustomStyleError, type GcsCustomStyleKind } from "./customStyle";
 
 const VERSION_KEY = "gcs:appearance:version";
 const USER_TTL = 300;
@@ -12,6 +14,8 @@ const MAX_BATCH = 200;
 
 type Redis = { incr(key: string): Promise<number>; get(key: string): Promise<string | null> };
 type Row = { pluginKey: string; data: GcsMemberAppearance };
+/** Rezultatul verificării unui stil CSS: erorile au linia lor (formularul din ACP le arată). */
+export type GcsCustomStyleResult = { ok: true; className: string } | { ok: false; errors: GcsCustomStyleError[] };
 
 const userTag = (userId: string) => `appearance:user:${userId}`;
 
@@ -56,6 +60,68 @@ export class GcsMemberAppearanceService {
     await bus.emit({ name: "appearance.updated", payload: { userId, plugin: pluginKey }, tags: [userTag(userId), `user:${userId}`] });
   }
 
+  // ─── Stilurile CSS scrise de admini (ACP-ul pluginului) ───
+
+  /** Verifică CSS-ul unui stil, fără să-l salveze (erorile pe linii). */
+  checkStyle(pluginKey: string, kind: unknown, key: unknown, css: unknown): GcsCustomStyleResult {
+    const k = this.styleKind(kind);
+    if (!k || typeof key !== "string" || !CUSTOM_STYLE_KEY.test(key)) return { ok: false, errors: [{ line: 1, code: "invalid_key" }] };
+    const parsed = parseCustomStyle(typeof css === "string" ? css : "", { pluginKey });
+    return parsed.ok ? { ok: true, className: customStyleClass(pluginKey, k, key) } : { ok: false, errors: parsed.errors };
+  }
+
+  /**
+   * Salvează (sau șterge, cu `css` = `null`) un stil CSS al pluginului. Doar din rutele ACP ale pluginului (gazda
+   * verifică); adminul ajunge în jurnalul ACP. CSS-ul nu se salvează dacă are erori.
+   */
+  async setStyle(pluginKey: string, kind: unknown, key: unknown, css: unknown, actor: { userId: string | null; ip?: string | null }): Promise<GcsCustomStyleResult> {
+    const { db } = this.deps;
+    const k = this.styleKind(kind);
+    if (!k || typeof key !== "string" || !CUSTOM_STYLE_KEY.test(key)) return { ok: false, errors: [{ line: 1, code: "invalid_key" }] };
+    if (css === null) {
+      const { count } = await db.pluginAppearanceStyle.deleteMany({ where: { pluginKey, kind: k, key } });
+      if (count > 0) {
+        await writeAudit(db, { actorId: actor.userId, action: "plugin.appearance_style.delete", targetType: "plugin", targetId: pluginKey, before: { kind: k, key } });
+        await this.bump();
+      }
+      return { ok: true, className: customStyleClass(pluginKey, k, key) };
+    }
+    const checked = this.checkStyle(pluginKey, k, key, css);
+    if (!checked.ok) return checked;
+    const before = await db.pluginAppearanceStyle.findUnique({ where: { pluginKey_kind_key: { pluginKey, kind: k, key } }, select: { css: true } });
+    if (before?.css !== css) {
+      await db.pluginAppearanceStyle.upsert({
+        where: { pluginKey_kind_key: { pluginKey, kind: k, key } },
+        create: { pluginKey, kind: k, key, css: css as string, updatedBy: actor.userId },
+        update: { css: css as string, updatedBy: actor.userId },
+      });
+      await writeAudit(db, {
+        actorId: actor.userId,
+        action: before ? "plugin.appearance_style.update" : "plugin.appearance_style.create",
+        targetType: "plugin",
+        targetId: pluginKey,
+        before: before ? { kind: k, key, css: before.css } : undefined,
+        after: { kind: k, key, css },
+        ip: actor.ip ?? null,
+      });
+      await this.bump();
+    }
+    return checked;
+  }
+
+  /** Stilurile CSS ale pluginului (cheile, tipul și sursa). */
+  async listStyles(pluginKey: string, kind?: unknown): Promise<{ kind: GcsCustomStyleKind; key: string; css: string; className: string; updatedAt: string }[]> {
+    const k = kind === undefined ? null : this.styleKind(kind);
+    const rows = await this.deps.db.pluginAppearanceStyle.findMany({ where: { pluginKey, ...(k ? { kind: k } : {}) }, orderBy: [{ kind: "asc" }, { key: "asc" }], take: 500 });
+    return rows
+      .filter((r) => (CUSTOM_STYLE_KINDS as readonly string[]).includes(r.kind))
+      .map((r) => ({ kind: r.kind as GcsCustomStyleKind, key: r.key, css: r.css, className: customStyleClass(pluginKey, r.kind as GcsCustomStyleKind, r.key), updatedAt: r.updatedAt.toISOString() }));
+  }
+
+  private styleKind(kind: unknown): GcsCustomStyleKind | null {
+    return typeof kind === "string" && (CUSTOM_STYLE_KINDS as readonly string[]).includes(kind) ? (kind as GcsCustomStyleKind) : null;
+  }
+
   /** Rândurile proprii ale pluginului pentru acești useri. */
   async get(pluginKey: string, userIds: unknown): Promise<Record<string, GcsMemberAppearance>> {
     const list = this.ids(userIds);
@@ -98,8 +164,8 @@ export class GcsMemberAppearanceService {
     const list = this.ids(userIds);
     const all = await Promise.all(list.map(async (id) => [id, await this.rows(id)] as const));
     for (const [id, rows] of all) {
-      const ordered = active.map((key) => rows.find((r) => r.pluginKey === key)?.data).filter((d): d is GcsMemberAppearance => Boolean(d));
-      if (ordered.length > 0) out.set(id, mergeAppearances(ordered));
+      const ordered = active.map((key) => rows.find((r) => r.pluginKey === key)).filter((r): r is Row => Boolean(r));
+      if (ordered.length > 0) out.set(id, mergeAppearances(ordered.map((r) => r.data), ordered.map((r) => r.pluginKey)));
     }
     return out;
   }
@@ -123,11 +189,17 @@ export class GcsMemberAppearanceService {
       list.push({ pluginKey: r.pluginKey, data: r.data as GcsMemberAppearance });
       byUser.set(r.userId, list);
     }
-    const entries = [...byUser].map(([userId, list]) => ({
-      userId,
-      appearance: mergeAppearances(active.map((k) => list.find((r) => r.pluginKey === k)?.data).filter((d): d is GcsMemberAppearance => Boolean(d))),
-    }));
-    const css = compileAppearanceCss(entries);
+    const entries = [...byUser].map(([userId, list]) => {
+      const ordered = active.map((k) => list.find((r) => r.pluginKey === k)).filter((r): r is Row => Boolean(r));
+      return { userId, appearance: mergeAppearances(ordered.map((r) => r.data), ordered.map((r) => r.pluginKey)) };
+    });
+    const styles: GcsCompiledStyleInput[] = [];
+    for (const row of await db.pluginAppearanceStyle.findMany({ where: { pluginKey: { in: active } }, orderBy: [{ pluginKey: "asc" }, { kind: "asc" }, { key: "asc" }] })) {
+      const parsed = parseCustomStyle(row.css, { pluginKey: row.pluginKey });
+      if (parsed.ok && (CUSTOM_STYLE_KINDS as readonly string[]).includes(row.kind)) styles.push({ pluginKey: row.pluginKey, kind: row.kind as GcsCustomStyleKind, key: row.key, style: parsed.style });
+    }
+    // Clasele de previzualizare (efectele, stilurile CSS) apar mereu cât timp un plugin cu `appearance` e activ.
+    const css = compileAppearanceCss(entries, { previews: true, styles });
     await cache.set(key, css, { ttlSec: CSS_TTL, tags: ["appearance"] });
     return css;
   }

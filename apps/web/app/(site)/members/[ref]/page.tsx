@@ -95,7 +95,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         <GcsAvatar name={user.name} size="xl" userId={user.id} {...(user.image ? { src: user.image } : {})} {...(user.frameKey ? { frame: user.frameKey } : {})} />
         <div className="gcs-profileHeader__identity">
           <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-            <h1 className={`gcs-display gcs-name--${user.nameKey}`} style={{ margin: 0, fontSize: 40, letterSpacing: ".02em" }} data-testid="gcs-profile-name" data-name-user={user.id}>
+            <h1 className={`gcs-display gcs-name--${user.nameKey}`} style={{ margin: 0, fontSize: 40, letterSpacing: ".02em" }} data-testid="gcs-profile-name" data-name-user={user.id} data-text={user.name}>
               {user.name}
             </h1>
             {profile.online.online && (
@@ -115,7 +115,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
               </span>
             )}
             {look?.banner && (
-              <span className="gcs-vipPill gcs-fx" style={look.banner.style} data-testid="gcs-profile-vip-banner">
+              <span className={`gcs-vipPill gcs-fx${look.banner.className ? ` ${look.banner.className}` : ""}`} style={look.banner.style} data-testid="gcs-profile-vip-banner">
                 {look.banner.label}
               </span>
             )}

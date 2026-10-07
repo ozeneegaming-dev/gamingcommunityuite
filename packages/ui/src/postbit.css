@@ -141,8 +141,15 @@
   gap: 5px;
   min-width: 0;
 }
+/*
+ * Numele: tăiat cu „…” când e prea lung. Tăietura e cu puțin mai departe de text (padding + margin negativ egal, deci
+ * fără nicio schimbare de așezare), ca strălucirea și decorațiile numelor stilizate (Studio VIP: particule, țintă,
+ * fulger) să nu fie retezate într-un dreptunghi.
+ */
 .gcs-postbit .gcs-post__authorName {
-  max-width: 100%;
+  max-width: calc(100% + 1.4em);
+  margin: -0.45em -1.1em -0.45em -0.3em;
+  padding: 0.45em 1.1em 0.45em 0.3em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

@@ -105,6 +105,8 @@ function tile(input: StudioInput, o: TileOpts): string {
 }
 
 const lookAttrs = (l: Look) => `class="${esc(l.cls)}" style="${esc(l.style)}"`;
+/** Un nume stilizat: clasele și variabilele lui, plus `data-text` (straturile efectelor dublează textul). */
+const nameAttrs = (l: Look, text: string) => `${lookAttrs(l)} data-text="${esc(text)}"`;
 
 /** Avatarul membrului (imaginea sau inițiala), cu rama aleasă peste el. */
 function avatar(user: GcsPluginUser, size: "s" | "m" | "l" | "xl", frame: Item<"frame"> | null, pv = true): string {
@@ -166,7 +168,7 @@ function namePanel(input: StudioInput): string {
       value: "",
       checked: !loadout.nameStyle,
       label: ctx.t("studio.name.default"),
-      art: `<span ${lookAttrs(defLook)}>${esc(user.name)}</span>`,
+      art: `<span ${nameAttrs(defLook, user.name)}>${esc(user.name)}</span>`,
       index: 0,
     }),
   );
@@ -174,7 +176,7 @@ function namePanel(input: StudioInput): string {
     const d = item.data as NameStyleData;
     const selected = loadout.nameStyle === item.key;
     const variant = (selected && d.variants.find((v) => v.key === loadout.nameVariant)) || d.variants[0]!;
-    const look = nameLook(d, variant);
+    const look = nameLook(d, variant, item.key);
     const multi = d.variants.length > 1;
     parts.push(
       tile(input, {
@@ -183,7 +185,7 @@ function namePanel(input: StudioInput): string {
         value: item.key,
         checked: selected,
         label: item.name,
-        art: `<span ${lookAttrs(look)}>${esc(user.name)}</span>${multi ? `<span class="gcsp-tile__count">${esc(ctx.t("studio.name.variants", { count: d.variants.length }))}</span>` : ""}`,
+        art: `<span ${nameAttrs(look, user.name)}>${esc(user.name)}</span>${multi ? `<span class="gcsp-tile__count">${esc(ctx.t("studio.name.variants", { count: d.variants.length }))}</span>` : ""}`,
         item,
         extraClass: multi ? "gcsp-tile--variants" : "",
         index: i + 1,
@@ -192,7 +194,7 @@ function namePanel(input: StudioInput): string {
     if (multi) {
       const swatches = d.variants
         .map((v) => {
-          const vl = nameLook(d, v);
+          const vl = nameLook(d, v, item.key);
           const checked = selected ? v.key === variant.key : v === d.variants[0];
           return (
             `<label class="gcsp-swatch" title="${esc(ctx.t(`studio.colors.${v.key}`))}">` +
@@ -205,7 +207,7 @@ function namePanel(input: StudioInput): string {
       parts.push(`<div class="gcsp-variants" role="radiogroup" aria-label="${esc(ctx.t("studio.name.colorsOf", { name: item.name }))}"><span class="gcsp-variants__label">${esc(ctx.t("studio.name.pickColor"))}</span>${swatches}</div>`);
     }
   });
-  return parts.join("");
+  return `${filters(input, "name_style")}<div class="gcsp-grid gcsp-grid--name">${parts.join("")}</div>`;
 }
 
 function bannerPanel(input: StudioInput): string {
@@ -223,7 +225,7 @@ function bannerPanel(input: StudioInput): string {
     }),
   ];
   sorted(input.catalog.banner).forEach((item, i) => {
-    const look = bannerLook(item.data as BannerData);
+    const look = bannerLook(item.data as BannerData, item.key);
     parts.push(tile(input, { group: "banner", name: "banner", value: item.key, checked: loadout.banner === item.key, label: item.name, art: `<span ${lookAttrs(look)} data-gcsp-label>${esc(label)}</span>`, item, index: i + 1 }));
   });
   const custom = settings.allowCustomLabel
@@ -290,7 +292,7 @@ function weaponPanel(input: StudioInput): string {
     const d = item.data as WeaponData;
     parts.push(tile(input, { group: "weapon", name: "weapon", value: item.key, checked: loadout.weapon === item.key, label: item.name, art: `<img class="gcsp-weapon" src="${esc(d.icon)}" alt="">`, item, data: { src: d.icon, label: item.name }, index: i + 1 }));
   });
-  return `<div class="gcsp-grid gcsp-grid--weapon">${parts.join("")}</div>`;
+  return `${filters(input, "weapon")}<div class="gcsp-grid gcsp-grid--weapon">${parts.join("")}</div>`;
 }
 
 function backgroundPanel(input: StudioInput): string {
@@ -408,10 +410,10 @@ function songPanel(input: StudioInput): string {
 function preview(input: StudioInput): string {
   const { ctx, user, loadout, access } = input;
   const cur = current(input);
-  const nl = cur.style && cur.variant ? nameLook(cur.style.data as NameStyleData, cur.variant) : groupNameLook(user);
-  const bl = cur.banner ? bannerLook(cur.banner.data as BannerData) : defaultBannerLook(input);
+  const nl = cur.style && cur.variant ? nameLook(cur.style.data as NameStyleData, cur.variant, cur.style.key) : groupNameLook(user);
+  const bl = cur.banner ? bannerLook(cur.banner.data as BannerData, cur.banner.key) : defaultBannerLook(input);
   const label = bannerLabelFor(loadout, access);
-  const name = `<span ${lookAttrs(nl)} data-gcsp-pv="name">${esc(user.name)}</span>`;
+  const name = `<span ${nameAttrs(nl, user.name)} data-gcsp-pv="name">${esc(user.name)}</span>`;
   const pill = `<span ${lookAttrs(bl)} data-gcsp-pv="banner">${esc(label)}</span>`;
   const weapon = cur.weapon?.data as WeaponData | undefined;
   const card = cur.card?.data as CardData | undefined;
@@ -531,8 +533,8 @@ export function renderStudio(input: StudioInput): string {
   const miniActive = MINI_TABS.some((t) => t.key === query.tab) ? query.tab! : "name";
   const fullActive = FULL_TABS.some((t) => t.key === query.tab) ? query.tab! : "background";
   const mode = FULL_TABS.some((t) => t.key === query.tab) ? "full" : "mini";
-  const nl = cur.style && cur.variant ? nameLook(cur.style.data as NameStyleData, cur.variant) : groupNameLook(user);
-  const bl = cur.banner ? bannerLook(cur.banner.data as BannerData) : defaultBannerLook(input);
+  const nl = cur.style && cur.variant ? nameLook(cur.style.data as NameStyleData, cur.variant, cur.style.key) : groupNameLook(user);
+  const bl = cur.banner ? bannerLook(cur.banner.data as BannerData, cur.banner.key) : defaultBannerLook(input);
   const planBadge = access.vip
     ? `<span class="gcsp-plan">${icon("fa-solid fa-crown")}${esc(ctx.t("studio.planOf", { plan: access.planName ?? "VIP" }))}</span>`
     : `<span class="gcsp-plan gcsp-plan--none">${icon("fa-regular fa-gem")}${esc(ctx.t(access.testAll ? "studio.planTest" : "studio.planNone"))}</span>`;
@@ -542,7 +544,7 @@ export function renderStudio(input: StudioInput): string {
     `<header class="gcsp-hero"><div class="gcsp-hero__copy">` +
     `<p class="gcsp-hero__lede">${esc(ctx.t("studio.lede"))}</p>${planBadge}</div>` +
     `<div class="gcsp-plate" aria-live="polite"><span class="gcsp-plate__caption">${esc(ctx.t("studio.identity"))}</span>` +
-    `<span ${lookAttrs(nl)} data-gcsp-pv="name">${esc(user.name)}</span><span ${lookAttrs(bl)} data-gcsp-pv="banner">${esc(bannerLabelFor(input.loadout, access))}</span></div></header>`;
+    `<span ${nameAttrs(nl, user.name)} data-gcsp-pv="name">${esc(user.name)}</span><span ${lookAttrs(bl)} data-gcsp-pv="banner">${esc(bannerLabelFor(input.loadout, access))}</span></div></header>`;
 
   const modes =
     `<fieldset class="gcsp-modes"><legend class="gcsp-sr">${esc(ctx.t("studio.modes.legend"))}</legend>` +
@@ -556,7 +558,7 @@ export function renderStudio(input: StudioInput): string {
     `</fieldset>`;
 
   const panels =
-    panel("name", ctx.t("studio.hints.name"), namePanel(input)) +
+    panel("name", ctx.t("studio.hints.name"), namePanel(input), false) +
     panel("frame", ctx.t("studio.hints.frame"), framePanel(input), false) +
     panel("banner", ctx.t("studio.hints.banner"), bannerPanel(input), false) +
     panel("card", ctx.t("studio.hints.card"), cardPanel(input), false) +

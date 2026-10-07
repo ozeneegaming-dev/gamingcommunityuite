@@ -4,10 +4,13 @@
  * și formulare (fără JS în ACP); formularele trimit spre rutele API ale pluginului marcate `acp`.
  */
 import type { GcsPluginContext, GcsPluginUser, GcsPluginVipPlan } from "../../../../src/index";
+import type { BulkReport } from "../bulk";
+import { CSS_TEMPLATES, type CssDraft, type CssKind } from "../cssStyles";
 import { attrs, bannerLook, esc, icon, nameLook, vars } from "../html";
 import type { Loadout } from "../loadout";
 import {
   ANIMATIONS,
+  BULK_KINDS,
   EFFECTS,
   isNew,
   PLUGIN_KEY,
@@ -42,7 +45,9 @@ export const KIND_ROUTES: Record<Kind, string> = {
 };
 export const ROUTE_KINDS = Object.fromEntries(Object.entries(KIND_ROUTES).map(([k, r]) => [r, k as Kind])) as Record<string, Kind>;
 const UPLOAD_KINDS: Kind[] = ["frame", "card", "weapon", "background", "song"];
-const CATEGORY_KINDS: Kind[] = ["frame", "card", "background"];
+const CATEGORY_KINDS: Kind[] = ["name_style", "frame", "card", "weapon", "background"];
+/** Un lot încărcat odată: sub limita nginx-ului standard (50 MB), cu loc pentru restul formularului. */
+const BULK_MAX_MB = 45;
 
 export type AcpCommon = { ctx: GcsPluginContext; plans: GcsPluginVipPlan[]; query: Record<string, string> };
 
@@ -86,12 +91,13 @@ export function itemArt(item: Item, user: GcsPluginUser | null): string {
   switch (item.kind) {
     case "name_style": {
       const d = item.data as NameStyleData;
-      const l = nameLook(d, d.variants[0]!);
+      const l = nameLook(d, d.variants[0]!, item.key);
       const dots = d.variants.length > 1 ? `<span class="gcsp-dots">${d.variants.map((v) => `<span class="gcsp-swatch__dot gcsp-swatch__dot--n${Math.min(v.colors.length, 5)}" style="${esc(vars(Object.fromEntries(v.colors.slice(0, 5).map((c, i) => [`c${i + 1}`, c]))))}"></span>`).join("")}</span>` : "";
-      return `<span class="${esc(l.cls)}" style="${esc(l.style)}">${esc(user?.name ?? item.name)}</span>${dots}`;
+      const text = user?.name ?? item.name;
+      return `<span class="${esc(l.cls)}" style="${esc(l.style)}" data-text="${esc(text)}">${esc(text)}</span>${dots}`;
     }
     case "banner": {
-      const l = bannerLook(item.data as BannerData);
+      const l = bannerLook(item.data as BannerData, item.key);
       return `<span class="${esc(l.cls)}" style="${esc(l.style)}">VIP</span>`;
     }
     case "frame":
@@ -165,9 +171,173 @@ export function renderCatalog(c: AcpCommon & { kind: Kind; items: Item[]; catego
   const table = shown.length > 0 ? `<div class="gcs-table"><table class="gcs-table__table">${head}<tbody>${rows}</tbody></table></div>` : `<p class="gcs-muted">${esc(ctx.t("acp.empty"))}</p>`;
   return (
     `<div class="gcsp-acp">${tabsNav(c, route, c.counts)}${notice(c)}` +
-    `<div class="gcsp-acpHead"><p class="gcsp-panel__hint">${esc(ctx.t(`acp.hints.${kind}`))}</p><a class="gcs-btn gcs-btn--primary gcs-btn--sm" href="${ACP_BASE}/new/${kind}">${icon("fa-solid fa-plus")}${esc(ctx.t(`acp.add.${kind}`))}</a></div>` +
-    `${catTabs}${table}${CATEGORY_KINDS.includes(kind) ? categoriesBox(c, kind, categories) : ""}</div>`
+    `<div class="gcsp-acpHead"><p class="gcsp-panel__hint">${esc(ctx.t(`acp.hints.${kind}`))}</p><span class="gcsp-acpHead__actions">${headActions(c, kind)}</span></div>` +
+    `${(BULK_KINDS as readonly string[]).includes(kind) ? bulkBox(c, kind, categories) : ""}${catTabs}${table}${CATEGORY_KINDS.includes(kind) ? categoriesBox(c, kind, categories) : ""}</div>`
   );
+}
+
+/** Butoanele de adăugare ale unui catalog: încărcarea de pe calculator (unul), stilurile cu efecte sau în CSS. */
+function headActions(c: AcpCommon, kind: Kind): string {
+  const { ctx } = c;
+  const btn = (href: string, label: string, iconName: string, primary = true) => `<a class="gcs-btn ${primary ? "gcs-btn--primary" : "gcs-btn--ghost"} gcs-btn--sm" href="${ACP_BASE}${href}">${icon(iconName)}${esc(label)}</a>`;
+  if (kind === "name_style" || kind === "banner") {
+    return btn(`/new/${kind}`, ctx.t(`acp.add.${kind}`), "fa-solid fa-plus") + btn(`/css/${kind}`, ctx.t(`acp.css.add.${kind}`), "fa-solid fa-code", false);
+  }
+  if ((BULK_KINDS as readonly string[]).includes(kind)) return btn(`/new/${kind}`, ctx.t("acp.bulk.single"), "fa-solid fa-upload");
+  return btn(`/new/${kind}`, ctx.t(`acp.add.${kind}`), "fa-solid fa-plus");
+}
+
+/**
+ * „Încarcă de pe calculator”: mai multe fișiere odată (un formular obișnuit, fără JS), cu categoria, planurile și
+ * setările comune. Duplicatele (același fișier) se sar; rezultatul are pagina lui.
+ */
+function bulkBox(c: AcpCommon, kind: Kind, categories: Category[]): string {
+  const { ctx, plans } = c;
+  const accept = kind === "card" ? "image/png,image/webp,image/jpeg,image/gif" : "image/png,image/apng,image/webp,image/gif";
+  const fields: string[] = [
+    `<label class="gcsp-field gcsp-field--wide"><span class="gcsp-field__label">${esc(ctx.t(`acp.bulk.files.${kind}`))}</span><input type="file" name="files" multiple required${attrs({ accept })}><span class="gcsp-field__hint">${esc(ctx.t("acp.bulk.filesHint", { max: 50, mb: BULK_MAX_MB }))}</span></label>`,
+  ];
+  if (CATEGORY_KINDS.includes(kind)) {
+    fields.push(field(ctx.t("acp.fields.category"), select("categoryId", [{ value: "", label: "—" }, ...categories.map((cat) => ({ value: String(cat.id), label: cat.name }))], "")));
+  }
+  if (kind === "frame") {
+    fields.push(field(ctx.t("acp.fields.scale"), `<input type="number" name="scale" min="100" max="160" step="1" value="130">`, ctx.t("acp.fields.scaleHint")));
+    fields.push(field(ctx.t("acp.fields.offsetX"), `<input type="number" name="x" min="-20" max="20" step="1" value="0">`));
+    fields.push(field(ctx.t("acp.fields.offsetY"), `<input type="number" name="y" min="-20" max="20" step="1" value="0">`));
+  }
+  const planBoxes = plans.length
+    ? `<fieldset class="gcsp-acpBox gcsp-acpBox--flat"><legend>${esc(ctx.t("acp.fields.plans"))}</legend><p class="gcs-muted">${esc(ctx.t("acp.fields.plansHint"))}</p><div class="gcsp-checks">${plans
+        .map((p) => `<label class="gcsp-check"><input type="checkbox" name="plans"${attrs({ value: p.key })}> ${esc(p.name)}</label>`)
+        .join("")}</div></fieldset>`
+    : "";
+  return (
+    `<section class="gcsp-acpBox gcsp-bulk"><h3>${icon("fa-solid fa-cloud-arrow-up")}${esc(ctx.t("acp.bulk.title"))}</h3><p class="gcs-muted">${esc(ctx.t(`acp.bulk.hint.${kind}`))}</p>` +
+    `<form class="gcsp-acpForm" method="post" action="${API}/bulk" enctype="multipart/form-data">${hidden("kind", kind)}` +
+    `<div class="gcsp-acpFields">${fields.join("")}</div>${planBoxes}` +
+    `<div class="gcsp-checks"><label class="gcsp-check"><input type="checkbox" name="enabled" value="1" checked> ${esc(ctx.t("acp.fields.enabled"))}</label></div>` +
+    `<div class="gcsp-acpActions"><button type="submit" class="gcs-btn gcs-btn--primary">${icon("fa-solid fa-upload")}${esc(ctx.t("acp.bulk.submit"))}</button>` +
+    `<span class="gcs-muted">${esc(ctx.t("acp.bulk.batches", { mb: BULK_MAX_MB }))}</span></div></form></section>`
+  );
+}
+
+/** Motivul unei respingeri, din textele pluginului (`errors.upload_*` sau `errors.*`). */
+function reasonText(ctx: GcsPluginContext, reason: string, params?: Record<string, string>): string {
+  for (const key of [`errors.upload_${reason}`, `errors.${reason}`]) {
+    const text = ctx.t(key, params);
+    if (text !== key) return text;
+  }
+  return `${ctx.t("errors.generic")} (${reason})`;
+}
+
+/** Pagina de rezultat a unei încărcări în bloc: adăugate (cu previzualizarea), omise (duplicate) și respinse. */
+export function renderBulkResult(c: AcpCommon & { report: BulkReport | null; items: Map<number, Item>; user: GcsPluginUser | null }): string {
+  const { ctx, report } = c;
+  if (!report) {
+    return `<div class="gcsp-acp">${tabsNav(c, "", {})}<p class="gcsp-notice gcsp-notice--error" role="alert">${icon("fa-solid fa-clock")}${esc(ctx.t("acp.bulk.expired"))}</p></div>`;
+  }
+  const route = KIND_ROUTES[report.kind];
+  const added = report.added
+    .map((a) => {
+      const item = c.items.get(a.id);
+      const art = item ? itemArt(item, c.user) : "";
+      const anim = a.frames > 1 ? ` <span class="gcs-badge gcs-badge--accent">${esc(ctx.t("acp.bulk.animated", { frames: a.frames }))}</span>` : "";
+      return (
+        `<tr class="gcs-table__row" data-gcsp-added="${a.id}"><td class="gcs-table__td gcsp-acpArt">${art}</td>` +
+        `<td class="gcs-table__td"><a href="${ACP_BASE}/item/${a.id}"><strong>${esc(a.name)}</strong></a>${anim}<br><span class="gcs-muted">${esc(a.file)}</span></td>` +
+        `<td class="gcs-table__td">${a.width && a.height ? `${a.width}×${a.height}` : "—"}</td></tr>`
+      );
+    })
+    .join("");
+  const list = (rows: string[], empty: string) => (rows.length ? `<ul class="gcsp-bulkList">${rows.join("")}</ul>` : `<p class="gcs-muted">${esc(empty)}</p>`);
+  const skipped = report.skipped.map((s) => `<li data-gcsp-skipped><strong>${esc(s.file)}</strong> — ${esc(ctx.t("acp.bulk.duplicateOf", { name: s.duplicateOf }))}</li>`);
+  const rejected = report.rejected.map((r) => `<li data-gcsp-rejected><strong>${esc(r.file)}</strong> — ${esc(reasonText(ctx, r.reason, r.params))}</li>`);
+  const summary = ctx.t("acp.bulk.summary", { added: report.added.length, skipped: report.skipped.length, rejected: report.rejected.length });
+  return (
+    `<div class="gcsp-acp">${tabsNav(c, route, {})}<p class="gcsp-notice ${report.added.length ? "gcsp-notice--ok" : "gcsp-notice--error"}" role="status">${icon(report.added.length ? "fa-solid fa-circle-check" : "fa-solid fa-triangle-exclamation")}${esc(summary)}</p>` +
+    `<p><a href="${ACP_BASE}${route}">${icon("fa-solid fa-arrow-left")} ${esc(ctx.t(`acp.kinds.${report.kind}`))}</a></p>` +
+    `<section class="gcsp-acpBox"><h3>${esc(ctx.t("acp.bulk.added", { count: report.added.length }))}</h3>` +
+    (added ? `<div class="gcs-table"><table class="gcs-table__table"><tbody>${added}</tbody></table></div>` : `<p class="gcs-muted">${esc(ctx.t("acp.bulk.none"))}</p>`) +
+    `</section><section class="gcsp-acpBox"><h3>${esc(ctx.t("acp.bulk.skipped", { count: report.skipped.length }))}</h3>${list(skipped, ctx.t("acp.bulk.none"))}</section>` +
+    `<section class="gcsp-acpBox"><h3>${esc(ctx.t("acp.bulk.rejected", { count: report.rejected.length }))}</h3>${list(rejected, ctx.t("acp.bulk.none"))}</section></div>`
+  );
+}
+
+/**
+ * Formularul unui stil CSS (nume sau banner): textul, câmpurile elementului, șabloanele de pornire și previzualizarea
+ * pe numele adminului (după „Previzualizează”, fără JS), pe fundal închis și deschis, cu erorile pe linii.
+ */
+export function renderCssForm(
+  c: AcpCommon & { kind: CssKind; item: Item | null; css: string; draft: CssDraft | null; categories: Category[]; user: GcsPluginUser | null; template: string | null },
+): string {
+  const { ctx, kind, item, draft, plans } = c;
+  const d = item?.data as (NameStyleData & BannerData) | undefined;
+  const templates = CSS_TEMPLATES[kind];
+  const fromTemplate = c.template && templates[c.template] ? templates[c.template]! : null;
+  const css = draft?.css ?? fromTemplate ?? c.css;
+  const name = draft?.name ?? item?.name ?? "";
+  const color = draft?.color ?? (kind === "name_style" ? d?.variants?.[0]?.colors[0] : d?.fill?.colors[0]) ?? "#FFFFFF";
+  const text = draft?.text ?? d?.text ?? "#FFFFFF";
+  const chosenPlans = draft?.plans ?? item?.plans ?? [];
+  const categoryId = draft ? draft.categoryId : (item?.categoryId ?? null);
+  const enabled = draft ? draft.enabled : item ? item.enabled : true;
+  const back = KIND_ROUTES[kind];
+  const errors = draft?.errors?.length
+    ? `<div class="gcsp-notice gcsp-notice--error" role="alert">${icon("fa-solid fa-triangle-exclamation")}<div><strong>${esc(ctx.t("acp.css.errorsTitle"))}</strong><ul class="gcsp-cssErrors">${draft.errors
+        .map((e) => `<li>${esc(ctx.t("acp.css.line", { line: e.line }))}: ${esc(cssErrorText(ctx, e.code))}${e.detail ? ` <code>${esc(e.detail)}</code>` : ""}</li>`)
+        .join("")}</ul></div></div>`
+    : "";
+  const sample = c.user?.name ?? "Membru";
+  const previewClass = draft?.previewClass ?? null;
+  const savedClass = item ? (kind === "name_style" ? nameLook(d as NameStyleData, (d as NameStyleData).variants[0]!, item.key).cls : bannerLook(d as BannerData, item.key).cls) : null;
+  const shown = previewClass ? (kind === "name_style" ? `gcsp-ns gcs-nfx gcs-nfx--none gcs-nfx--n1 ${previewClass}` : `gcsp-pill gcsp-pill--custom ${previewClass}`) : savedClass;
+  const previewStyle = kind === "name_style" ? vars({ "nfx-c1": color }) : "";
+  const sampleEl = (size: string) =>
+    kind === "name_style"
+      ? `<span class="${esc(shown ?? "")}" style="${esc(previewStyle)}" data-text="${esc(sample)}" data-gcsp-size="${size}">${esc(sample)}</span>`
+      : `<span class="${esc(shown ?? "")}">VIP Gold</span>`;
+  const preview = shown
+    ? `<section class="gcsp-acpBox gcsp-cssPreview"><h3>${esc(ctx.t(previewClass ? "acp.css.previewDraft" : "acp.css.previewSaved"))}</h3><div class="gcsp-cssPreview__stages">` +
+      ["dark", "light"].map((tone) => `<div class="gcsp-cssStage gcsp-cssStage--${tone}">${sampleEl("s")}${sampleEl("m")}${sampleEl("l")}</div>`).join("") +
+      `</div><p class="gcs-muted">${esc(ctx.t("acp.css.previewHint"))}</p></section>`
+    : "";
+  const templateLinks = Object.keys(templates)
+    .map((t) => `<a class="gcs-btn gcs-btn--ghost gcs-btn--sm" href="${ACP_BASE}${item ? `/item/${item.id}` : `/css/${kind}`}?template=${t}">${esc(ctx.t(`acp.css.templates.${kind}.${t}`))}</a>`)
+    .join("");
+  const fields: string[] = [field(ctx.t("acp.fields.name"), `<input type="text" name="name" maxlength="40" required${attrs({ value: name })}>`)];
+  if (kind === "name_style") {
+    fields.push(field(ctx.t("acp.fields.category"), select("categoryId", [{ value: "", label: "—" }, ...c.categories.map((cat) => ({ value: String(cat.id), label: cat.name }))], categoryId ? String(categoryId) : "")));
+    fields.push(field(ctx.t("acp.css.baseColor"), `<input type="color" name="color"${attrs({ value: color.toLowerCase() })}>`, ctx.t("acp.css.baseColorHint")));
+  } else {
+    fields.push(field(ctx.t("acp.css.baseColor"), `<input type="color" name="color"${attrs({ value: color.toLowerCase() })}>`, ctx.t("acp.css.baseBannerHint")));
+    fields.push(field(ctx.t("acp.fields.text"), `<input type="color" name="text"${attrs({ value: text.toLowerCase() })}>`));
+  }
+  const planBoxes = plans.length
+    ? `<fieldset class="gcsp-acpBox"><legend>${esc(ctx.t("acp.fields.plans"))}</legend><p class="gcs-muted">${esc(ctx.t("acp.fields.plansHint"))}</p><div class="gcsp-checks">${plans
+        .map((p) => `<label class="gcsp-check"><input type="checkbox" name="plans"${attrs({ value: p.key, checked: chosenPlans.includes(p.key) })}> ${esc(p.name)}</label>`)
+        .join("")}</div></fieldset>`
+    : "";
+  return (
+    `<div class="gcsp-acp">${tabsNav(c, back, {})}${notice(c)}` +
+    `<p><a href="${ACP_BASE}${back}">${icon("fa-solid fa-arrow-left")} ${esc(ctx.t(`acp.kinds.${kind}`))}</a></p>` +
+    `<p class="gcsp-panel__hint">${esc(ctx.t(`acp.css.hint.${kind}`))}</p>${errors}${preview}` +
+    `<section class="gcsp-acpBox"><h3>${esc(ctx.t("acp.css.templatesTitle"))}</h3><p class="gcs-muted">${esc(ctx.t("acp.css.templatesHint"))}</p><p class="gcsp-templates">${templateLinks}</p></section>` +
+    `<form class="gcsp-acpForm" method="post" action="${API}/css">${hidden("kind", kind)}${item ? hidden("id", item.id) : ""}` +
+    `<div class="gcsp-acpFields">${fields.join("")}</div>` +
+    `<label class="gcsp-field gcsp-field--wide"><span class="gcsp-field__label">${esc(ctx.t("acp.css.code"))}</span>` +
+    `<textarea class="gcsp-cssCode" name="css" rows="18" maxlength="12000" spellcheck="false" autocomplete="off" required>${esc(css)}</textarea>` +
+    `<span class="gcsp-field__hint">${esc(ctx.t("acp.css.rules"))}</span></label>${planBoxes}` +
+    `<div class="gcsp-checks"><label class="gcsp-check"><input type="checkbox" name="enabled" value="1"${attrs({ checked: enabled })}> ${esc(ctx.t("acp.fields.enabled"))}</label></div>` +
+    `<div class="gcsp-acpActions"><button type="submit" name="op" value="preview" class="gcs-btn">${icon("fa-solid fa-eye")}${esc(ctx.t("acp.css.preview"))}</button>` +
+    `<button type="submit" name="op" value="save" class="gcs-btn gcs-btn--primary">${icon("fa-solid fa-floppy-disk")}${esc(ctx.t(item ? "acp.actions.save" : "acp.actions.create"))}</button>` +
+    `<a class="gcs-btn gcs-btn--ghost" href="${ACP_BASE}${back}">${esc(ctx.t("acp.actions.cancel"))}</a></div></form></div>`
+  );
+}
+
+/** Textul unei erori de CSS (codurile GCS), cu o formulare generică pentru codurile necunoscute. */
+function cssErrorText(ctx: GcsPluginContext, code: string): string {
+  const key = `acp.css.errors.${code}`;
+  const text = ctx.t(key);
+  return text === key ? ctx.t("acp.css.errors.generic") : text;
 }
 
 function categoriesBox(c: AcpCommon, kind: Kind, categories: Category[]): string {
@@ -237,7 +407,7 @@ export function renderItemForm(c: AcpCommon & { kind: Kind; item: Item | null; c
     }
     case "frame": {
       const f = d as FrameData | undefined;
-      fields.push(field(ctx.t("acp.fields.frameFile"), `<input type="file" name="file" accept="image/png,image/webp,image/gif"${attrs({ required: !item })}>`, ctx.t("acp.fields.frameFileHint")));
+      fields.push(field(ctx.t("acp.fields.frameFile"), `<input type="file" name="file" accept="image/png,image/apng,image/webp,image/gif"${attrs({ required: !item })}>`, ctx.t("acp.fields.frameFileHint")));
       fields.push(field(ctx.t("acp.fields.scale"), `<input type="number" name="scale" min="100" max="160" step="1"${attrs({ value: f?.scale ?? 130 })}>`, ctx.t("acp.fields.scaleHint")));
       fields.push(field(ctx.t("acp.fields.offsetX"), `<input type="number" name="x" min="-20" max="20" step="1"${attrs({ value: f?.x ?? 0 })}>`));
       fields.push(field(ctx.t("acp.fields.offsetY"), `<input type="number" name="y" min="-20" max="20" step="1"${attrs({ value: f?.y ?? 0 })}>`));

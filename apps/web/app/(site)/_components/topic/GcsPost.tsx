@@ -186,7 +186,7 @@ async function GcsPostbit({ author, data, post, topicId }: { author: NonNullable
       </div>
 
       <span
-        className={`gcs-postbit__group${banner || look?.banner ? " gcs-postbit__group--colored" : ""}${look?.banner ? " gcs-fx" : ""}`}
+        className={`gcs-postbit__group${banner || look?.banner ? " gcs-postbit__group--colored" : ""}${look?.banner ? " gcs-fx" : ""}${look?.banner?.className ? ` ${look.banner.className}` : ""}`}
         style={look?.banner ? look.banner.style : banner ? { background: banner } : undefined}
         data-testid="gcs-postbit-group"
         {...(look?.banner ? { "data-vip": "banner" } : {})}
@@ -278,11 +278,15 @@ async function GcsPostbit({ author, data, post, topicId }: { author: NonNullable
           <div className="gcs-postbit__row" data-stat="weapon" data-testid="gcs-postbit-weapon">
             <dt>
               <span className="gcs-postbit__rowIcon">
-                <img src={look.flair.icon} alt="" className="gcs-postbit__flair" />
+                <GcsIcon name="fa-solid fa-crosshairs" />
               </span>
               {t("weapon")}
             </dt>
-            <dd>{look.flair.label}</dd>
+            {/* Iconița armei la proporțiile ei (și cele late, 110×30), lângă nume, nu strânsă în cercul rândului. */}
+            <dd title={look.flair.label}>
+              <img src={look.flair.icon} alt="" className="gcs-postbit__flair" />
+              <span className="gcs-postbit__flairName">{look.flair.label}</span>
+            </dd>
           </div>
         )}
       </dl>

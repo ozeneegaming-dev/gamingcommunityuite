@@ -1,21 +1,24 @@
+import { compileCustomStyle, CUSTOM_STYLE_KEY, customStyleClass, customStylePrefix, type GcsParsedCustomStyle } from "./customStyle";
+import { compileNameEffectsCss, NAME_EFFECTS, nameVars, styledNameSelectors, type GcsNameEffect, type GcsStyledName } from "./nameEffects";
+
+export { NAME_EFFECTS, type GcsNameEffect } from "./nameEffects";
+
 /**
  * Aspectul membrilor publicat de pluginuri (capabilitatea `appearance`, specul Studio VIP §2.1): stilul numelui, rama,
  * banner-ul, fundalul cardului, insigna și extra-urile profilului.
  *
- * Nimic nu e CSS sau HTML brut: doar culori `#RRGGBB`, numere în intervale, chei din liste albe, texte simple și căi
- * spre fișierele pluginului care publică. CSS-ul se compilează aici, din valorile validate.
+ * Pluginul nu trimite CSS sau HTML: doar culori `#RRGGBB`, numere în intervale, chei din liste albe (efectele numelui),
+ * texte simple, căi spre fișierele lui și, opțional, cheia unui stil CSS scris de un admin în ACP (`style`), verificat
+ * și închis separat de nucleu (`customStyle.ts`). CSS-ul se compilează aici, din valorile validate.
  */
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
 const THEME_KEY = /^[a-z0-9_]{1,30}$/;
 const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/;
-const USER_ID = /^[A-Za-z0-9_-]{1,64}$/;
 /** Fișierele pluginului: imagini (din pachet sau încărcate) și, pentru video/audio, doar fișierele încărcate. */
 const ASSET_IMAGE = /^assets\/[A-Za-z0-9_-][A-Za-z0-9._/-]{0,180}\.(?:png|jpe?g|gif|webp)$/;
 const MEDIA_FILE = /^media\/[a-z0-9]{10,40}\.(webp|png|jpg|gif|mp4|webm|mp3|ogg)$/;
 
-export const NAME_EFFECTS = ["none", "shimmer", "pulse", "neon", "glitch", "scan", "chrome", "fire", "holo", "caret"] as const;
-export type GcsNameEffect = (typeof NAME_EFFECTS)[number];
 export const FILL_ANIMATIONS = ["none", "flow", "pulse", "shine", "aurora"] as const;
 export type GcsFillAnimation = (typeof FILL_ANIMATIONS)[number];
 export const FX_SPEEDS = ["slow", "normal", "fast"] as const;
@@ -24,8 +27,12 @@ export type GcsFxSpeed = (typeof FX_SPEEDS)[number];
 export type GcsAppearanceFill = { colors: string[]; angle?: number; animation?: GcsFillAnimation; speed?: GcsFxSpeed };
 
 export type GcsMemberAppearance = {
-  name?: { fill: GcsAppearanceFill; effect?: GcsNameEffect; glow?: string; bold?: boolean; italic?: boolean };
-  banner?: { fill: GcsAppearanceFill; text?: string; label?: string };
+  /**
+   * `style`: cheia unui stil CSS al pluginului (`styles.set("name", …)`), peste culorile de bază. `styleClass` îl pune
+   * doar nucleul, la combinarea pluginurilor (nu se acceptă de la plugin).
+   */
+  name?: { fill: GcsAppearanceFill; effect?: GcsNameEffect; glow?: string; bold?: boolean; italic?: boolean; style?: string; styleClass?: string };
+  banner?: { fill: GcsAppearanceFill; text?: string; label?: string; style?: string; styleClass?: string };
   frame?: { image: string; scale?: number; x?: number; y?: number };
   card?: { image: string; x?: number; y?: number; dim?: number };
   flair?: { icon: string; label: string };
@@ -157,6 +164,16 @@ function fill(ctx: Ctx, path: string, value: unknown): GcsAppearanceFill | undef
   return out;
 }
 
+/** Cheia unui stil CSS al pluginului (existența lui se verifică la compilare: un stil șters nu mai apare). */
+function styleKey(ctx: Ctx, path: string, value: unknown): string | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "string" || !CUSTOM_STYLE_KEY.test(value)) {
+    ctx.errors[path] = "invalid_key";
+    return undefined;
+  }
+  return value;
+}
+
 /** Copiază doar câmpurile definite (fără `undefined`, ca JSON-ul salvat să fie curat). */
 function compact<T extends Record<string, unknown>>(obj: T): T {
   return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined)) as T;
@@ -173,17 +190,24 @@ export function parseMemberAppearance(raw: unknown, opts: { pluginKey: string })
   const out: GcsMemberAppearance = {};
 
   if (root.name !== undefined) {
-    const n = known(ctx, "name", root.name, ["fill", "effect", "glow", "bold", "italic"]);
+    const n = known(ctx, "name", root.name, ["fill", "effect", "glow", "bold", "italic", "style"]);
     const f = n ? fill(ctx, "name.fill", n.fill) : undefined;
     if (n && f) {
       const effect = oneOf(ctx, "name.effect", n.effect, NAME_EFFECTS);
-      out.name = compact({ fill: f, effect: effect && effect !== "none" ? effect : undefined, glow: hex(ctx, "name.glow", n.glow), bold: bool(ctx, "name.bold", n.bold), italic: bool(ctx, "name.italic", n.italic) });
+      out.name = compact({
+        fill: f,
+        effect: effect && effect !== "none" ? effect : undefined,
+        glow: hex(ctx, "name.glow", n.glow),
+        bold: bool(ctx, "name.bold", n.bold),
+        italic: bool(ctx, "name.italic", n.italic),
+        style: styleKey(ctx, "name.style", n.style),
+      });
     }
   }
   if (root.banner !== undefined) {
-    const b = known(ctx, "banner", root.banner, ["fill", "text", "label"]);
+    const b = known(ctx, "banner", root.banner, ["fill", "text", "label", "style"]);
     const f = b ? fill(ctx, "banner.fill", b.fill) : undefined;
-    if (b && f) out.banner = compact({ fill: f, text: hex(ctx, "banner.text", b.text), label: text(ctx, "banner.label", b.label, 32, false) });
+    if (b && f) out.banner = compact({ fill: f, text: hex(ctx, "banner.text", b.text), label: text(ctx, "banner.label", b.label, 32, false), style: styleKey(ctx, "banner.style", b.style) });
   }
   if (root.frame !== undefined) {
     const fr = known(ctx, "frame", root.frame, ["image", "scale", "x", "y"]);
@@ -269,13 +293,19 @@ export function parseMemberAppearance(raw: unknown, opts: { pluginKey: string })
 
 /**
  * Aspectul final al unui membru din rândurile mai multor pluginuri, în ordinea priorității: fiecare câmp de pe primul
- * nivel (iar la profil, fiecare sub-câmp) vine de la primul plugin care îl are.
+ * nivel (iar la profil, fiecare sub-câmp) vine de la primul plugin care îl are. Cu `pluginKeys` (aliniate cu lista),
+ * stilurile CSS ale numelui și banner-ului primesc clasa lor (`styleClass`), a pluginului care le-a publicat.
  */
-export function mergeAppearances(list: GcsMemberAppearance[]): GcsMemberAppearance {
+export function mergeAppearances(list: GcsMemberAppearance[], pluginKeys?: string[]): GcsMemberAppearance {
   const out: GcsMemberAppearance = {};
-  for (const a of list) {
+  list.forEach((a, index) => {
     for (const key of ["name", "banner", "frame", "card", "flair"] as const) {
       if (a[key] && !out[key]) (out as Record<string, unknown>)[key] = a[key];
+    }
+    const pluginKey = pluginKeys?.[index];
+    if (pluginKey) {
+      if (a.name?.style && out.name === a.name) out.name = { ...a.name, styleClass: customStyleClass(pluginKey, "name", a.name.style) };
+      if (a.banner?.style && out.banner === a.banner) out.banner = { ...a.banner, styleClass: customStyleClass(pluginKey, "banner", a.banner.style) };
     }
     if (a.profile) {
       const p = (out.profile ??= {});
@@ -283,7 +313,7 @@ export function mergeAppearances(list: GcsMemberAppearance[]): GcsMemberAppearan
         if (a.profile[key] && !p[key]) (p as Record<string, unknown>)[key] = a.profile[key];
       }
     }
-  }
+  });
   return out;
 }
 
@@ -320,83 +350,23 @@ export function fillGradient(f: GcsAppearanceFill, opts: { loop?: boolean; minSt
   return `linear-gradient(${Math.round(f.angle ?? 90)}deg,${stops.join(",")})`;
 }
 
-/** Declarațiile CSS ale stilului de nume (pentru un selector dat). */
-function nameDecls(name: NonNullable<GcsMemberAppearance["name"]>): { main: string[]; after: string[] | null } {
-  const f = name.fill;
+/**
+ * Efectul compilat al unui nume: efectul ales; fără efect, animația veche a umplerii (curgere, puls, sclipire) devine
+ * efectul echivalent, iar mai multe culori fără efect devin gradientul fix.
+ */
+export function nameEffectOf(name: NonNullable<GcsMemberAppearance["name"]>): GcsNameEffect {
   const effect = name.effect ?? "none";
-  const main: string[] = [];
-  let after: string[] | null = null;
-  const first = HEX.test(f.colors[0] ?? "") ? f.colors[0]! : "#FFFFFF";
-  const glow = name.glow && HEX.test(name.glow) ? name.glow : null;
-  const needsGradient = f.colors.length > 1 || ["shimmer", "chrome", "scan", "holo", "fire"].includes(effect) || (f.animation !== undefined && f.animation !== "pulse");
-  const animations: string[] = [];
-
-  if (needsGradient) {
-    const gradient = fillGradient({ ...f, angle: f.angle ?? (effect === "fire" ? 0 : 90) }, { loop: true, minStops: 2 });
-    const layers: string[] = [];
-    const sizes: string[] = [];
-    if (effect === "chrome") {
-      layers.push("linear-gradient(100deg,transparent 35%,rgba(255,255,255,.9) 50%,transparent 65%)");
-      sizes.push("250% 100%");
-    }
-    if (effect === "scan") {
-      layers.push("repeating-linear-gradient(0deg,rgba(0,0,0,.38) 0 1px,transparent 1px 3px)");
-      sizes.push("100% 6px");
-    }
-    layers.push(gradient);
-    sizes.push("200% auto");
-    main.push(
-      `background-image:${layers.join(",")}`,
-      `background-size:${sizes.join(",")}`,
-      "-webkit-background-clip:text",
-      "background-clip:text",
-      "color:transparent",
-      "-webkit-text-fill-color:transparent",
-    );
-    if (effect === "shimmer" || f.animation === "flow" || f.animation === "aurora") animations.push(`gcsFxFlow ${seconds(3.5, f.speed)} linear infinite`);
-    if (effect === "chrome" || f.animation === "shine") animations.push(`gcsFxShine ${seconds(3, f.speed)} ease-in-out infinite`);
-    if (effect === "scan") animations.push(`gcsFxScan ${seconds(1.4, f.speed)} linear infinite`);
-    if (effect === "holo" || f.animation === "aurora") animations.push(`gcsFxHue ${seconds(8, f.speed)} linear infinite`);
-  } else {
-    main.push(`color:${first}`, "background:none", "-webkit-text-fill-color:currentColor");
-  }
-
-  const glowColor = glow ?? (effect === "neon" || effect === "pulse" || effect === "fire" ? first : null);
-  main.push(`--gcs-fx-glow:${glowColor ? rgba(glowColor, 0.75) : "transparent"}`);
-  if (effect === "neon") {
-    main.push(`text-shadow:0 0 4px ${rgba(glowColor!, 0.9)},0 0 12px ${rgba(glowColor!, 0.7)},0 0 24px ${rgba(glowColor!, 0.45)}`);
-    animations.push(`gcsFxFlicker ${seconds(4, f.speed)} linear infinite`);
-  } else if (effect === "glitch") {
-    const a = f.colors[1] && HEX.test(f.colors[1]) ? f.colors[1] : "#FF2E63";
-    const b = f.colors[2] && HEX.test(f.colors[2]) ? f.colors[2] : "#08D9D6";
-    main.push(`--gcs-fx-a:${rgba(a, 0.8)}`, `--gcs-fx-b:${rgba(b, 0.8)}`, "text-shadow:2px 0 var(--gcs-fx-a),-2px 0 var(--gcs-fx-b)");
-    animations.push(`gcsFxGlitch ${seconds(2.6, f.speed)} steps(1) infinite`);
-  } else if (needsGradient && glowColor) {
-    // Textul transparent (gradient) nu poate avea text-shadow vizibil peste el; strălucirea vine din `filter`.
-    main.push(`filter:drop-shadow(0 0 6px ${rgba(glowColor, 0.55)})`);
-  } else if (glowColor) {
-    main.push(`text-shadow:0 0 10px ${rgba(glowColor, 0.6)}`);
-  }
-  if (effect === "pulse" || f.animation === "pulse") animations.push(`gcsFxPulse ${seconds(2.4, f.speed)} ease-in-out infinite`);
-  if (effect === "fire") animations.push(`gcsFxFire ${seconds(1.8, f.speed)} ease-in-out infinite`);
-  if (effect === "caret") {
-    after = [
-      'content:""',
-      "display:inline-block",
-      "width:.09em",
-      "height:.95em",
-      "margin-left:.14em",
-      "vertical-align:-.1em",
-      `background:${first}`,
-      "-webkit-text-fill-color:initial",
-      `animation:gcsFxCaret 1s steps(1) infinite`,
-    ];
-  }
-  main.push(`animation:${animations.length > 0 ? animations.join(",") : "none"}`);
-  main.push(`font-weight:${name.bold === false ? 600 : 700}`);
-  if (name.italic) main.push("font-style:italic");
-  return { main, after };
+  if (effect !== "none") return effect;
+  const anim = name.fill.animation;
+  if (anim === "flow") return "shimmer";
+  if (anim === "aurora") return "holo";
+  if (anim === "pulse") return "pulse";
+  if (anim === "shine") return "chrome";
+  return name.fill.colors.length > 1 ? "gradient" : "none";
 }
+
+/** Stilurile CSS ale pluginurilor (verificate), pentru compilare. */
+export type GcsCompiledStyleInput = { pluginKey: string; kind: "name" | "banner"; key: string; style: GcsParsedCustomStyle };
 
 /**
  * Selectorul numelui unui membru: linkurile spre profil (`a.gcs-userLink[data-user-id]`, ca hover card-ul) și numele
@@ -410,32 +380,52 @@ export function nameSelector(userId: string): string {
 export const AVATAR_USER_ATTR = "data-avatar-user";
 
 /**
- * CSS-ul aspectului: stilul numelui și rama, per user (`data-user-id`), adăugat la `/gcs-names.css`. Doar din forma
- * validată; userii cu id nesigur sunt ignorați. Animațiile se opresc sub `prefers-reduced-motion`.
+ * CSS-ul aspectului, adăugat la `/gcs-names.css`: efectele numelor (`nameEffects.ts`), stilurile CSS ale pluginurilor
+ * (pe clasele lor și pe numele membrilor care le-au ales) și ramele, per user. Doar din forma validată; userii cu id
+ * nesigur sunt ignorați. Cu `previews`, și clasele de previzualizare (`.gcs-nfx--<efect>`, clasele stilurilor), pentru
+ * paginile pluginurilor. Animațiile se opresc sub `prefers-reduced-motion`.
  */
-export function compileAppearanceCss(entries: { userId: string; appearance: GcsMemberAppearance }[]): string {
-  const parts: string[] = [];
+export function compileAppearanceCss(entries: { userId: string; appearance: GcsMemberAppearance }[], opts: { previews?: boolean; styles?: GcsCompiledStyleInput[] } = {}): string {
+  const styled: GcsStyledName[] = [];
+  const styleUsers = new Map<string, string[]>();
+  const frames: string[] = [];
   for (const { userId, appearance } of entries) {
-    if (!USER_ID.test(userId)) continue;
-    if (appearance.name) {
-      const sel = nameSelector(userId);
-      const { main, after } = nameDecls(appearance.name);
-      parts.push(`${sel},${sel}:hover{${main.join(";")}}`);
-      if (after) parts.push(`${sel}::after{${after.join(";")}}`);
+    const sels = styledNameSelectors(userId);
+    if (!sels) continue;
+    const name = appearance.name;
+    if (name) {
+      const f = name.fill;
+      styled.push({
+        ...sels,
+        effect: nameEffectOf(name),
+        vars: nameVars({ colors: f.colors, glow: name.glow, speed: SPEED[f.speed ?? "normal"], angle: f.angle ?? 90, bold: name.bold, italic: name.italic }),
+      });
+      if (name.styleClass) styleUsers.set(name.styleClass, [...(styleUsers.get(name.styleClass) ?? []), sels.all]);
     }
     const frame = appearance.frame;
     if (frame && /^\/plugins\/[a-z0-9_.]+\/[A-Za-z0-9._/-]+$/.test(frame.image)) {
       const sel = `.gcs-avatar[${AVATAR_USER_ATTR}="${userId}"]`;
       const inset = -((frame.scale ?? 130) - 100) / 2;
-      parts.push(`${sel}{overflow:visible}`, `${sel}>.gcs-avatar__img{border-radius:inherit}`);
-      parts.push(
+      frames.push(`${sel}{overflow:visible}`, `${sel}>.gcs-avatar__img{border-radius:inherit}`);
+      // Imaginea ramei așa cum e (inclusiv WebP animat): `contain`, fără repetare sau decupare; animația o redă browserul.
+      frames.push(
         `${sel}::after{content:"";position:absolute;inset:${inset}%;background:url("${frame.image}") center/contain no-repeat;transform:translate(${frame.x ?? 0}%,${frame.y ?? 0}%);pointer-events:none;z-index:2}`,
       );
       // Rama clasică a nucleului (conic-gradient) nu se mai vede sub rama pluginului.
-      parts.push(`.gcs-avatarFrame:has(>${sel}){padding:0}`, `.gcs-avatarFrame:has(>${sel})::before{display:none}`);
-      parts.push(`.gcs-avatar--xs${sel}::after{display:none}`);
+      frames.push(`.gcs-avatarFrame:has(>${sel}){padding:0}`, `.gcs-avatarFrame:has(>${sel})::before{display:none}`);
+      frames.push(`.gcs-avatar--xs${sel}::after{display:none}`);
     }
   }
+  const parts: string[] = [];
+  const effects = compileNameEffectsCss(styled, { previews: opts.previews === true });
+  if (effects) parts.push(effects);
+  for (const st of opts.styles ?? []) {
+    const cls = customStyleClass(st.pluginKey, st.kind, st.key);
+    const selectors = [...(opts.previews ? [`.gcs-root .${cls}`] : []), ...(st.kind === "name" ? (styleUsers.get(cls) ?? []) : [`.gcs-root .${cls}`])];
+    const css = compileCustomStyle(st.style, { selectors: [...new Set(selectors)], prefix: customStylePrefix(st.pluginKey, st.kind, st.key) });
+    if (css) parts.push(css);
+  }
+  parts.push(...frames);
   if (parts.length === 0) return "";
   parts.push(
     "@media (prefers-reduced-motion: reduce){.gcs-root :is(a.gcs-userLink[data-user-id],[data-name-user]),.gcs-root :is(a.gcs-userLink[data-user-id],[data-name-user])::after{animation:none}}",
@@ -443,8 +433,12 @@ export function compileAppearanceCss(entries: { userId: string; appearance: GcsM
   return parts.join("\n");
 }
 
-/** Stilul inline al unui banner (pastila sau bara de sub nume): fundalul, culoarea textului, animația. */
+/**
+ * Stilul inline al unui banner (pastila sau bara de sub nume): fundalul, culoarea textului, animația. Un banner cu stil
+ * CSS al pluginului (`styleClass`) nu are stil inline: îl desenează clasa lui (stilul inline ar câștiga în fața ei).
+ */
 export function appearanceBannerStyle(banner: NonNullable<GcsMemberAppearance["banner"]>): Record<string, string> {
+  if (banner.styleClass) return {};
   const f = banner.fill;
   const style: Record<string, string> = {};
   const animated = f.animation === "flow" || f.animation === "aurora";

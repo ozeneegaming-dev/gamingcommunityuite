@@ -2,12 +2,12 @@
   "manifestVersion": 1,
   "key": "gcs.vip_studio",
   "name": "Studio VIP",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": { "name": "GamingCommunitySuite", "url": "https://gamingcommunitysuite.com" },
   "description": "Studioul de personalizare VIP: stilul numelui (cu variante de culoare), rame de avatar, bannere, fundaluri de card, arma preferată, fundal video pe profil, citat, temă și melodia profilului, cu previzualizare live; cataloagele se gestionează din ACP.",
   "icon": "fa-solid fa-crown",
   "license": "Proprietary",
-  "minGcs": "0.7.0",
+  "minGcs": "0.7.1",
   "capabilities": ["db", "events", "widgets", "pages", "acp", "api", "menus", "jobs", "settings", "permissions", "hooks", "client-css", "client-js", "media", "appearance"],
   "settings": {
     "tabs": [
@@ -86,12 +86,16 @@
       { "path": "/songs", "label": "acp.menu.song", "icon": "fa-solid fa-music" },
       { "path": "/members", "label": "acp.menu.members", "icon": "fa-solid fa-users" },
       { "path": "/item/:id", "label": "acp.menu.item" },
-      { "path": "/new/:kind", "label": "acp.menu.new" }
+      { "path": "/new/:kind", "label": "acp.menu.new" },
+      { "path": "/css/:kind", "label": "acp.menu.css" },
+      { "path": "/upload/:id", "label": "acp.menu.upload" }
     ],
     "api": [
       { "path": "/save", "methods": ["POST"], "permission": "use" },
       { "path": "/reset", "methods": ["POST"], "permission": "use" },
       { "path": "/acp/item", "methods": ["POST"], "acp": "edit" },
+      { "path": "/acp/bulk", "methods": ["POST"], "acp": "edit" },
+      { "path": "/acp/css", "methods": ["POST"], "acp": "edit" },
       { "path": "/acp/action", "methods": ["POST"], "acp": "edit" },
       { "path": "/acp/delete", "methods": ["POST"], "acp": "delete" }
     ]
@@ -100,6 +104,7 @@
   "hooks": [{ "point": "vip.page" }],
   "jobs": [{ "key": "reconcile", "everyMinutes": 60, "label": "jobs.reconcile" }],
   "menus": {
+    "site": [{ "key": "studio", "label": "menu.studio", "href": "/p/gcs.vip_studio", "icon": "fa-solid fa-crown", "permission": "use" }],
     "user": [{ "key": "studio", "label": "menu.studio", "href": "/p/gcs.vip_studio", "icon": "fa-solid fa-crown", "permission": "use" }]
   },
   "media": {

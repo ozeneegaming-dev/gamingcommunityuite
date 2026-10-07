@@ -98,7 +98,19 @@ export const PLUGIN_GCS_CLASSES = [
  * Clasele GCS de prezentare a membrilor (Studio VIP): un plugin afișează numele și avatarul exact ca nucleul (stilul
  * numelui, rama, hover card-ul prin `data-user-id` pe linkuri).
  */
-export const PLUGIN_GCS_MEMBER_CLASSES = ["gcs-userLink", "gcs-name--*", "gcs-avatar", "gcs-avatar__img", "gcs-avatarFrame", "gcs-avatarFrame--*"];
+export const PLUGIN_GCS_MEMBER_CLASSES = [
+  "gcs-userLink",
+  "gcs-name--*",
+  "gcs-avatar",
+  "gcs-avatar__img",
+  "gcs-avatarFrame",
+  "gcs-avatarFrame--*",
+  // Previzualizările efectelor numelui și ale stilurilor CSS ale pluginurilor (GCS 0.7.1).
+  "gcs-nfx",
+  "gcs-nfx--*",
+  "gcs-nameStyle--*",
+  "gcs-bannerStyle--*",
+];
 
 const ICON_NAME = /^fa-(?:solid|regular|brands) fa-[a-z0-9-]{1,60}$/;
 
@@ -236,7 +248,8 @@ const PAGE_ATTRIBUTES: Record<string, string[]> = {
  * - fără `script`, `style`, `iframe`, `svg`, `object`, comentarii; formularele și `audio`/`video` doar în paginile
  *   pluginului (`page`), cu acțiuni și surse doar ale lui;
  * - fără `id`, `on*`, `srcset`; `style` doar cu variabile CSS sigure; `name` doar pe controalele formularelor;
- *   atributele `data-*` doar `data-gcsp-*` (plus `data-user-id` pe linkuri, pentru hover card);
+ *   atributele `data-*` doar `data-gcsp-*` (plus `data-user-id` pe linkuri, pentru hover card, și `data-text`, textul
+ *   dublat de efectele numelui);
  * - clase doar `gcsp-*` și câteva clase GCS de prezentare (fără clasele de layout, modale sau sertare ale site-ului);
  * - linkuri `http(s)`, `mailto` sau relative, cu `rel="noopener noreferrer nofollow ugc"`; imagini `https` sau relative;
  * - `<gcs-icon name="fa-solid fa-star"></gcs-icon>` devine iconița Font Awesome (SVG generat de GCS).
@@ -273,7 +286,8 @@ export function sanitizePluginHtml(html: string, opts: GcsPluginHtmlOptions = {}
       progress: ["value", "max"],
       meter: ["value", "min", "max", "low", "high", "optimum"],
       ...(page ? PAGE_ATTRIBUTES : {}),
-      "*": ["class", "title", "lang", "dir", "role", "aria-*", "data-gcsp-*", "style"],
+      // `data-text`: textul dublat de efectele numelui (straturile `::before` / `::after`, doar ca text).
+      "*": ["class", "title", "lang", "dir", "role", "aria-*", "data-gcsp-*", "data-text", "style"],
     },
     allowedClasses: { "*": ["gcsp-*", ...PLUGIN_GCS_CLASSES, ...PLUGIN_GCS_MEMBER_CLASSES] },
     allowedSchemes: ["http", "https", "mailto"],

@@ -73,10 +73,16 @@
   min-width: 0;
   padding-top: 10px;
 }
+/*
+ * Numele e chiar elementul stilizat (straturile efectelor se așază pe el), deci nu primește padding: tăietura lui se
+ * lărgește cu `overflow-clip-margin`, ca strălucirea și decorațiile să nu fie retezate (unde browserul o știe).
+ */
 .gcs-hoverCard__name {
   display: inline-block;
   max-width: 100%;
   overflow: hidden;
+  overflow: clip;
+  overflow-clip-margin: 0.9em;
   text-overflow: ellipsis;
   white-space: nowrap;
   align-self: flex-start;

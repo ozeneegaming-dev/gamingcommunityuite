@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { mkdtempSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -6,7 +7,7 @@ import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createWorld } from "../../test/world";
 import { GcsRedisRateLimiter } from "../auth/rateLimit";
 import { GcsLocalFileStore } from "../content/files/localStore";
-import { GcsValidationError } from "../errors";
+import { GcsRateLimited, GcsValidationError } from "../errors";
 import { GcsPluginMediaService, PLUGIN_MEDIA_PENDING_MS } from "../plugins/media";
 import { testRedis } from "../../test/redis";
 import { GcsMemberAppearanceService } from "./appearanceService";
@@ -44,7 +45,7 @@ describe("aspectul membrilor publicat de pluginuri", () => {
     expect(await service.forUser(u.id)).toEqual({ name: { fill: { colors: ["#FF0000"] } }, frame: { image: `/plugins/${KEY}/assets/f.png` } });
     const css = await service.css();
     expect(css).toContain(`[data-user-id="${u.id}"]`);
-    expect(css).toContain("color:#FF0000");
+    expect(css).toContain("--nfx-c1:#FF0000");
   });
 
   test("o formă invalidă e refuzată cu câmpurile; un user inexistent → not_found", async () => {
@@ -82,6 +83,41 @@ describe("aspectul membrilor publicat de pluginuri", () => {
   });
 });
 
+describe("stilurile CSS scrise de admini", () => {
+  test("verificarea fără salvare; erorile au linia; CSS-ul greșit nu se salvează", async () => {
+    expect(service.checkStyle(KEY, "name", "neon_mov", "color: #c084fc;")).toEqual({ ok: true, className: "gcs-nameStyle--acme-looks--neon_mov" });
+    const bad = await service.setStyle(KEY, "name", "rau", "color: red;\n}body{display:none}", { userId: null });
+    expect(bad).toMatchObject({ ok: false, errors: [{ line: 2, code: "css_braces" }, { line: 2, code: "css_selector" }] });
+    expect(await service.listStyles(KEY)).toEqual([]);
+    expect(await service.setStyle(KEY, "altceva", "x", "color: red;", { userId: null })).toMatchObject({ ok: false });
+    expect(await service.setStyle(KEY, "name", "Cu Spațiu", "color: red;", { userId: null })).toMatchObject({ ok: false });
+  });
+
+  test("salvarea: jurnalul ACP, CSS-ul pe clasă și pe numele celor care l-au ales; ștergerea", async () => {
+    const admin = await w.createUser("Admin", "admin");
+    const u = await w.createUser("Dana", "vip_gold");
+    const before = await service.version();
+    const saved = await service.setStyle(KEY, "name", "neon_mov", "color: #c084fc;\nanimation: puls 2s infinite;\n@keyframes puls { 50% { opacity: .6; } }", { userId: admin.id });
+    expect(saved).toEqual({ ok: true, className: "gcs-nameStyle--acme-looks--neon_mov" });
+    expect(await service.version()).toBeGreaterThan(before);
+    const log = await w.db.auditLog.findFirst({ where: { action: "plugin.appearance_style.create" } });
+    expect(log).toMatchObject({ actorId: admin.id, targetType: "plugin", targetId: KEY });
+    await service.set(KEY, u.id, { name: { fill: { colors: ["#FFFFFF"] }, style: "neon_mov" } });
+    const look = await service.forUser(u.id);
+    expect(look?.name?.styleClass).toBe("gcs-nameStyle--acme-looks--neon_mov");
+    const css = await service.css();
+    expect(css).toContain(`.gcs-root .gcs-nameStyle--acme-looks--neon_mov,.gcs-root :is(a.gcs-userLink[data-user-id="${u.id}"],[data-name-user="${u.id}"]){color:#c084fc`);
+    expect(css).toContain("@keyframes gcsu-acme_looks-name-neon_mov-puls{");
+    // Clasele de previzualizare ale efectelor apar cât timp pluginul cu `appearance` e activ.
+    expect(css).toContain(".gcs-nfx--inferno");
+    expect(await service.listStyles(KEY, "name")).toMatchObject([{ kind: "name", key: "neon_mov", className: "gcs-nameStyle--acme-looks--neon_mov" }]);
+    // Ștergerea: stilul dispare din CSS (numele revine la culorile de bază).
+    expect(await service.setStyle(KEY, "name", "neon_mov", null, { userId: admin.id })).toMatchObject({ ok: true });
+    expect(await service.css()).not.toContain("color:#c084fc");
+    expect(await w.db.auditLog.count({ where: { action: "plugin.appearance_style.delete" } })).toBe(1);
+  });
+});
+
 describe("fișierele media ale pluginurilor (stocare)", () => {
   const decl = { image: { maxMb: 2, maxSide: 512, animated: false }, quotaMb: 1 };
   const media = () => new GcsPluginMediaService({ db: w.db, store: new GcsLocalFileStore(dir), rateLimiter: new GcsRedisRateLimiter(testRedis()) });
@@ -101,6 +137,23 @@ describe("fișierele media ale pluginurilor (stocare)", () => {
     const opened = await svc.open(KEY, `${info.id}.webp`, (size) => ({ start: 0, end: Math.min(9, size - 1) }));
     expect(opened).toMatchObject({ mime: "image/webp", range: { start: 0, end: 9 } });
     await opened?.body.cancel();
+  });
+
+  test("rezultatul încărcării: SHA-256 al fișierului trimis, numele original și cadrele; limitele de rată separate", async () => {
+    const svc = media();
+    const u = await w.createUser("Gelu", "admin");
+    const bytes = await png(32);
+    const info = await svc.upload(KEY, decl, { bytes, name: "C:\\rame\\rama 1.png" }, { userId: u.id, acp: true });
+    expect(info.sha256).toBe(createHash("sha256").update(bytes).digest("hex"));
+    expect(info.originalName).toBe("rama 1.png");
+    expect(info.frames).toBe(1);
+    // `get` nu le are (sunt doar ale încărcării).
+    expect((await svc.get(KEY, [info.id]))[0]).not.toHaveProperty("sha256");
+    // ACP-ul are limita lui: 60 de încărcări pe site nu o consumă.
+    const limiter = new GcsRedisRateLimiter(testRedis());
+    for (let i = 0; i < 60; i++) await limiter.consume(`plugin-media:${u.id}`, { window: 3600, max: 60 });
+    await expect(svc.upload(KEY, decl, { bytes }, { userId: u.id })).rejects.toBeInstanceOf(GcsRateLimited);
+    await expect(svc.upload(KEY, decl, { bytes }, { userId: u.id, acp: true })).resolves.toMatchObject({ kind: "image" });
   });
 
   test("cota pluginului și curățarea fișierelor nepăstrate", async () => {

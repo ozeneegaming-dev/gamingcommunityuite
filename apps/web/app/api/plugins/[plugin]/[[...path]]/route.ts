@@ -2,12 +2,15 @@ import {
   GcsRateLimited,
   GcsValidationError,
   isPluginFormField,
+  PLUGIN_FORM_ACP_MAX_BYTES,
+  PLUGIN_FORM_ACP_MAX_FILES,
   PLUGIN_FORM_MAX_BYTES,
   PLUGIN_FORM_MAX_FILES,
   pluginAcpSection,
   pluginFormBody,
   pluginFormReturn,
   pluginMediaMaxBytes,
+  pluginUploadName,
   type GcsActor,
   type GcsPluginMediaDecl,
 } from "@gcs/core";
@@ -31,10 +34,16 @@ const HEADERS = {
 const json = (body: unknown, status: number) => Response.json(body, { status, headers: HEADERS });
 const seeOther = (location: string) => new Response(null, { status: 303, headers: { ...HEADERS, Location: location } });
 
-/** Un formular `multipart`: câmpurile text și fișierele, verificate și salvate de nucleu (capabilitatea `media`). */
-async function multipartBody(request: Request, key: string, decl: GcsPluginMediaDecl, actor: GcsActor): Promise<Record<string, unknown> | Response> {
+/**
+ * Un formular `multipart`: câmpurile text și fișierele, verificate și salvate de nucleu (capabilitatea `media`). Spre o
+ * rută ACP (`acp`), un formular poate avea până la `PLUGIN_FORM_ACP_MAX_FILES` fișiere într-un corp de cel mult
+ * `PLUGIN_FORM_ACP_MAX_BYTES` (încărcarea în bloc a cataloagelor); pe site, cel mult `PLUGIN_FORM_MAX_FILES`.
+ */
+async function multipartBody(request: Request, key: string, decl: GcsPluginMediaDecl, actor: GcsActor, acp: boolean): Promise<Record<string, unknown> | Response> {
   const length = Number(request.headers.get("content-length"));
-  const max = pluginMediaMaxBytes(decl) + (decl.image ? decl.image.maxMb * 1024 * 1024 : 0) + MAX_BODY;
+  const single = pluginMediaMaxBytes(decl) + (decl.image ? decl.image.maxMb * 1024 * 1024 : 0);
+  const max = (acp ? Math.max(single, PLUGIN_FORM_ACP_MAX_BYTES) : single) + MAX_BODY;
+  const maxFiles = acp ? PLUGIN_FORM_ACP_MAX_FILES : PLUGIN_FORM_MAX_FILES;
   if (!Number.isFinite(length) || length <= 0) return json({ error: "length_required" }, 411);
   if (length > max) return json({ error: "too_large" }, 413);
   let data: FormData;
@@ -54,16 +63,19 @@ async function multipartBody(request: Request, key: string, decl: GcsPluginMedia
     }
     // Un câmp de fișier gol (nimic ales) nu înseamnă nimic.
     if (value.size === 0) continue;
-    if (++files > PLUGIN_FORM_MAX_FILES || !actor.userId) {
-      entries.push([name, { error: "too_many_files" }]);
+    // Numele original (doar text, fără cale) ajunge la plugin și pe eroare, ca un raport de încărcare să-l poată arăta.
+    const originalName = pluginUploadName(value.name);
+    const named = originalName ? { originalName } : {};
+    if (++files > maxFiles || !actor.userId) {
+      entries.push([name, { error: "too_many_files", ...named }]);
       continue;
     }
     try {
-      entries.push([name, await plugins.uploadMedia(key, { bytes: Buffer.from(await value.arrayBuffer()) }, actor)]);
+      entries.push([name, await plugins.uploadMedia(key, { bytes: Buffer.from(await value.arrayBuffer()), name: value.name }, actor, { acp })]);
     } catch (error) {
       // Pluginul primește motivul pe câmpul fișierului (ex. `too_large`) și decide ce afișează.
-      if (error instanceof GcsValidationError) entries.push([name, { error: error.fields.file ?? error.code, ...(error.params ?? {}) }]);
-      else if (error instanceof GcsRateLimited) entries.push([name, { error: "rate_limited" }]);
+      if (error instanceof GcsValidationError) entries.push([name, { error: error.fields.file ?? error.code, ...(error.params ?? {}), ...named }]);
+      else if (error instanceof GcsRateLimited) entries.push([name, { error: "rate_limited", ...named }]);
       else throw error;
     }
   }
@@ -107,7 +119,7 @@ async function handle(request: Request, ctx: Ctx): Promise<Response> {
     const type = (request.headers.get("content-type") ?? "").toLowerCase();
     if (type.startsWith("multipart/form-data")) {
       if (!route.media) return json({ error: "unsupported_media_type" }, 415);
-      const parsed = await multipartBody(request, key, route.media, actor);
+      const parsed = await multipartBody(request, key, route.media, actor, route.acp !== null);
       if (parsed instanceof Response) return parsed;
       body = parsed;
       form = true;

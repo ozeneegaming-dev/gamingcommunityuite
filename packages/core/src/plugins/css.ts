@@ -12,16 +12,32 @@ const MAX_CSS = 200_000;
  *   nimic spre alte site-uri (fără exfiltrare prin CSS);
  * - totul e închis în clasa pluginului: `.gcsp--<vendor>--<nume> { … }` (CSS imbricat), deci nu atinge restul paginii.
  */
-export function scopePluginCss(css: string, opts: { pluginKey: string; file: string }): GcsPluginCssResult {
-  if (css.length > MAX_CSS) return { ok: false, code: "css_too_large" };
-  // Browserul transformă CR, CRLF și FF în LF înainte de parsare (un șir se termină acolo); normalizăm la fel, ca textul
-  // verificat mai jos să fie exact cel servit. Celelalte caractere de control (NUL, ESC, DEL…) nu au ce căuta în CSS.
-  css = css.replace(/\r\n?|\f/g, "\n");
-  if (/[\u0000-\u0008\u000b\u000e-\u001f\u007f]/.test(css)) return { ok: false, code: "css_forbidden", detail: "control" };
-  if (/[<\\]/.test(css)) return { ok: false, code: "css_forbidden", detail: css.includes("<") ? "<" : "\\" };
+/**
+ * Browserul transformă CR, CRLF și FF în LF înainte de parsare (un șir se termină acolo); normalizăm la fel, ca textul
+ * verificat să fie exact cel servit.
+ */
+export const normalizeCssNewlines = (css: string): string => css.replace(/\r\n?|\f/g, "\n");
+
+/**
+ * Prima construcție interzisă într-un CSS deja normalizat (`normalizeCssNewlines`), cu poziția ei: caracterele de
+ * control (NUL, ESC, DEL…), `<` (ar închide `<style>`), `\` (escape-urile ar putea ascunde orice altceva), `@import`,
+ * `@charset`, `@namespace`, `expression(`, `javascript:`, `vbscript:`, `behavior:` (IE) și `-moz-binding`.
+ */
+export function forbiddenCss(css: string): { detail: string; index: number } | null {
+  const control = /[\u0000-\u0008\u000b\u000e-\u001f\u007f]/.exec(css);
+  if (control) return { detail: "control", index: control.index };
+  const char = /[<\\]/.exec(css);
+  if (char) return { detail: char[0], index: char.index };
   // `behavior:` (proprietatea veche a IE), dar nu `scroll-behavior` / `overscroll-behavior`.
   const forbidden = /@import|@charset|expression\s*\(|javascript\s*:|vbscript\s*:|(?<![\w-])behavior\s*:|-moz-binding|@namespace/i.exec(css);
-  if (forbidden) return { ok: false, code: "css_forbidden", detail: forbidden[0] };
+  return forbidden ? { detail: forbidden[0], index: forbidden.index } : null;
+}
+
+export function scopePluginCss(css: string, opts: { pluginKey: string; file: string }): GcsPluginCssResult {
+  if (css.length > MAX_CSS) return { ok: false, code: "css_too_large" };
+  css = normalizeCssNewlines(css);
+  const forbidden = forbiddenCss(css);
+  if (forbidden) return { ok: false, code: "css_forbidden", detail: forbidden.detail };
 
   // Acoladele, ignorând comentariile și șirurile: adâncimea nu poate coborî sub zero și trebuie să revină la zero.
   // Fiecare selector (textul dinaintea unei `{`) rămâne în container: fără `&` și fără `+`/`~` la început (frați ai

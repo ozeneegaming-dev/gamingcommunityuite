@@ -4,8 +4,8 @@
  */
 import type { GcsPluginContext } from "../../../src/index";
 import type { Loadout } from "./loadout";
-import { mediaIdsOf, parseItemData, PLAN_KEY, type Category, type Item, type ItemData, type Kind } from "./model";
-import { defaultPresets, PRESETS_VERSION } from "./presets";
+import { mediaIdsOf, parseItemData, PLAN_KEY, type Category, type Item, type ItemData, type Kind, type NameStyleData } from "./model";
+import { defaultPresets, LEGACY_NAME_MAP, LEGACY_NAME_STYLES, nameStyleData, PRESETS_VERSION } from "./presets";
 
 type ItemRow = {
   id: number;
@@ -48,12 +48,53 @@ let seededVersion = 0;
 export async function ensureSeeded(ctx: GcsPluginContext): Promise<void> {
   if (seededVersion >= PRESETS_VERSION) return;
   const [meta] = await ctx.db.query<{ value: number }>("SELECT (value)::int AS value FROM meta WHERE key = 'presets_version'");
-  if ((meta?.value ?? 0) >= PRESETS_VERSION) {
-    seededVersion = meta!.value;
+  const stored = meta?.value ?? 0;
+  if (stored >= PRESETS_VERSION) {
+    seededVersion = stored;
     return;
   }
   await insertPresets(ctx, false);
+  // O instalare veche (catalogul 1): stilurile de nume vechi, neschimbate de admin, fac loc catalogului nou.
+  if (stored === 1) {
+    const moved = await upgradeNameStyles(ctx);
+    if (moved.users > 0) await ctx.jobs.enqueue("reconcile", {});
+    if (moved.replaced > 0) await audit(ctx, "presets_upgrade", `${moved.replaced}/${moved.users}`);
+  }
   seededVersion = PRESETS_VERSION;
+}
+
+/**
+ * Actualizarea la catalogul 2 (pluginul 1.0.1): fiecare stil de nume din versiunea 1 pe care adminul nu l-a schimbat
+ * (nume, date, planuri, categorie, activ / retras) se înlocuiește cu stilul nou cel mai apropiat; membrii care îl
+ * aveau ales trec pe acela (cu varianta potrivită), apoi stilul vechi se șterge. Stilurile vechi schimbate de admin
+ * rămân neatinse (sunt ale lui). Idempotentă.
+ */
+export async function upgradeNameStyles(ctx: GcsPluginContext): Promise<{ replaced: number; users: number }> {
+  const current = new Map((await listItems(ctx, "name_style")).map((i) => [i.key, i]));
+  const replaced: string[] = [];
+  let users = 0;
+  for (const legacy of LEGACY_NAME_STYLES) {
+    const item = current.get(legacy.key);
+    const target = LEGACY_NAME_MAP[legacy.key];
+    const next = target ? current.get(target.to) : undefined;
+    if (!item || !target || !next) continue;
+    const parsed = parseItemData("name_style", nameStyleData(legacy));
+    const untouched =
+      parsed.ok && item.name === legacy.name && JSON.stringify(item.data) === JSON.stringify(parsed.data) && item.plans.length === 0 && item.categoryId === null && item.enabled && !item.retired;
+    if (!untouched) continue;
+    const variants = (next.data as NameStyleData).variants.map((x) => x.key);
+    const rows = await ctx.db.query<{ user_id: string; data: Record<string, unknown> }>("SELECT user_id, data FROM loadouts WHERE data->>'nameStyle' = $1", [legacy.key]);
+    const statements = rows.map((r) => {
+      const old = typeof r.data.nameVariant === "string" ? r.data.nameVariant : "";
+      const wanted = target.variant ?? target.variants?.[old] ?? old;
+      const variant = variants.includes(wanted) ? wanted : variants[0]!;
+      return { sql: "UPDATE loadouts SET data = $2::jsonb, updated_at = now() WHERE user_id = $1", params: [r.user_id, JSON.stringify({ ...r.data, nameStyle: next.key, nameVariant: variant })] };
+    });
+    await ctx.db.batch([...statements, { sql: "DELETE FROM items WHERE id = $1", params: [item.id] }]);
+    users += rows.length;
+    replaced.push(legacy.key);
+  }
+  return { replaced: replaced.length, users };
 }
 
 /**

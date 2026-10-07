@@ -234,6 +234,9 @@ html[data-theme="light"] .gcs-brand__logo--light {
   font-size: 14px;
   max-width: 140px;
   overflow: hidden;
+  /* Strălucirea numelor stilizate poate depăși puțin tăietura (unde browserul știe `overflow-clip-margin`). */
+  overflow: clip;
+  overflow-clip-margin: 0.6em;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

@@ -222,7 +222,8 @@ const CONTENT_TYPES: Record<string, string> = {
 export class GcsPluginHost {
   private readonly loaded = new Map<string, Loaded>();
   private hookSettings = new Map<string, { enabled: boolean; priority: number | null }>();
-  private readonly tokens = new Map<string, { key: string; actor: GcsActor; expires: number }>();
+  /** Jetoanele apelurilor în curs: userul și dacă apelul vine dintr-o rută / pagină ACP a pluginului (poarta ACP trecută). */
+  private readonly tokens = new Map<string, { key: string; actor: GcsActor; expires: number; acp: boolean }>();
   private readonly tasks = new Set<Promise<unknown>>();
   private readonly metrics = new Map<string, Map<string, Metric>>();
   private reconciling: Promise<void> | null = null;
@@ -433,10 +434,16 @@ export class GcsPluginHost {
     return this.guest;
   }
 
-  private issueToken(key: string, actor: GcsActor): string {
+  private issueToken(key: string, actor: GcsActor, acp = false): string {
     const token = randomBytes(16).toString("hex");
-    this.tokens.set(token, { key, actor, expires: Date.now() + 90_000 });
+    this.tokens.set(token, { key, actor, expires: Date.now() + 90_000, acp });
     return token;
+  }
+
+  /** Apelul vine dintr-o rută API sau o pagină ACP a pluginului (jetonul ei), deci de la staff cu acces ACP. */
+  private acpCall(key: string, token: string | null): GcsActor | null {
+    const entry = token ? this.tokens.get(token) : undefined;
+    return entry && entry.key === key && entry.acp && entry.expires > Date.now() ? entry.actor : null;
   }
 
   private async actorFor(key: string, token: string | null): Promise<GcsActor> {
@@ -460,11 +467,11 @@ export class GcsPluginHost {
    * Un apel al unui handler, cu timeout, metrici și numărarea eșecurilor. Vizitatorul (dacă există) primește un jeton
    * opac, valabil doar pe durata apelului: cu el, `ctx.api` și `ctx.permissions` citesc cu drepturile lui.
    */
-  private async invoke(l: Loaded, kind: CallKind, name: string, input: unknown, opts: { actor: GcsActor | null; locale: string; timeoutMs?: number }): Promise<unknown> {
+  private async invoke(l: Loaded, kind: CallKind, name: string, input: unknown, opts: { actor: GcsActor | null; locale: string; timeoutMs?: number; acp?: boolean }): Promise<unknown> {
     // Pluginul a fost descărcat (sau înlocuit de altă versiune) între alegerea țintelor și apel: nu mai rulează.
     if (this.loaded.get(l.row.key) !== l) throw new GcsPluginUnavailable("plugin_unloaded");
     const hook = hookId(kind, name);
-    const token = opts.actor ? this.issueToken(l.row.key, opts.actor) : null;
+    const token = opts.actor ? this.issueToken(l.row.key, opts.actor, opts.acp === true) : null;
     const started = performance.now();
     try {
       const value = await l.sandbox.call({
@@ -609,6 +616,19 @@ export class GcsPluginHost {
         case "members.appearance.clear":
           need("appearance");
           return await this.deps.appearance.clear(key);
+        case "members.appearance.styles.check":
+          need("appearance");
+          return this.deps.appearance.checkStyle(key, args[0], args[1], args[2]);
+        case "members.appearance.styles.list":
+          need("appearance");
+          return await this.deps.appearance.listStyles(key, args[0] ?? undefined);
+        case "members.appearance.styles.set": {
+          need("appearance");
+          // Stilurile CSS le scrie doar staff-ul, din ACP-ul pluginului: apelul trebuie să vină dintr-o rută ACP.
+          const admin = this.acpCall(key, token);
+          if (!admin) throw new Error("acp_required");
+          return await this.deps.appearance.setStyle(key, args[0], args[1], args[2] === undefined ? null : args[2], { userId: admin.userId, ip: admin.ip ?? null });
+        }
         case "media.keep":
           need("media");
           return await this.deps.media.keep(key, args[0]);
@@ -799,7 +819,7 @@ export class GcsPluginHost {
     if (permission && !(await this.deps.permissions.can(input.actor, `${pluginRegistryKey(key)}.${permission}`))) return { status: 403 };
     let value: unknown;
     try {
-      value = await this.invoke(l, kind, match.pattern, { path: rawPath, params: match.params, query: input.query }, { actor: input.actor, locale: input.locale });
+      value = await this.invoke(l, kind, match.pattern, { path: rawPath, params: match.params, query: input.query }, { actor: input.actor, locale: input.locale, acp: kind === "acp" });
     } catch {
       return { status: 500 };
     }
@@ -830,12 +850,15 @@ export class GcsPluginHost {
     return { status: 200, acp: route.acp ?? null, media: l.row.capabilities.includes("media") ? (l.row.manifest.media ?? null) : null };
   }
 
-  /** Un fișier din formularul unei rute API, verificat și salvat de nucleu (capabilitatea `media`), în așteptare. */
-  async uploadMedia(key: string, file: { bytes: Buffer }, actor: GcsActor): Promise<GcsPluginMediaInfo> {
+  /**
+   * Un fișier din formularul unei rute API, verificat și salvat de nucleu (capabilitatea `media`), în așteptare.
+   * `opts.acp`: ruta e una ACP, verificată de ruta web (limita de rată a încărcărilor din ACP).
+   */
+  async uploadMedia(key: string, file: { bytes: Buffer; name?: string }, actor: GcsActor, opts: { acp?: boolean } = {}): Promise<GcsPluginMediaInfo> {
     const l = this.loaded.get(key);
     const decl = l && l.row.capabilities.includes("media") ? l.row.manifest.media : undefined;
     if (!decl) throw new GcsValidationError({ file: "unsupported_type" });
-    return this.deps.media.upload(key, decl, file, { userId: actor.userId });
+    return this.deps.media.upload(key, decl, file, { userId: actor.userId, acp: opts.acp === true });
   }
 
   /** Un fișier media al pluginului, pentru servire (`/plugins/<cheie>/media/<id>.<ext>`). */
@@ -869,7 +892,7 @@ export class GcsPluginHost {
         "api",
         match.pattern,
         { method: input.method, path: input.path, params: match.params, query: input.query, body: input.body ?? null, form: input.form === true, acp: Boolean(route.acp) },
-        { actor: input.actor, locale: input.locale },
+        { actor: input.actor, locale: input.locale, acp: Boolean(route.acp) && input.acp === true },
       );
     } catch {
       return { status: 500, body: { error: "plugin_error" } };

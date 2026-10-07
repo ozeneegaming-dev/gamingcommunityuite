@@ -48,9 +48,10 @@ export function avatarHtml(user: Record<string, unknown>, opts: Record<string, u
   const body = src
     ? `<img src="${attr(src)}" alt="${attr(name)}" class="gcs-avatar__img"/>`
     : `<span aria-hidden="true">${escapeHtml(initial)}</span><span class="gcs-srOnly">${escapeHtml(name)}</span>`;
-  // Id-ul membrului → `data-avatar-user` (rama publicată de un plugin), ca în `GcsAvatar`.
-  const uid = typeof user.id === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(user.id) ? user.id : "";
-  const inner = `<span class="${cls}"${uid ? ` data-avatar-user="${uid}"` : ""} style="${style}">${body}</span>`;
+  // Ca în componenta React: `data-avatar-user` primește rama publicată de un plugin (aspectul membrului).
+  const id = toText(user.id);
+  const owner = id && KEY_RE.test(id) ? ` data-avatar-user="${attr(id)}"` : "";
+  const inner = `<span class="${cls}"${owner} style="${style}">${body}</span>`;
   if (!frame) return inner;
   const frameCls = ["gcs-avatarFrame", `gcs-avatarFrame--${frame}`, extra].filter(Boolean).join(" ");
   return `<span class="${frameCls}" style="width:${px}px;height:${px}px">${inner}</span>`;
@@ -62,7 +63,7 @@ export function usernameHtml(user: Record<string, unknown>, opts: Record<string,
   const nameKey = typeof user.nameKey === "string" && KEY_RE.test(user.nameKey) ? user.nameKey : "member";
   const extra = typeof opts.class === "string" && CLASS_RE.test(opts.class) ? ` ${opts.class.trim()}` : "";
   const id = toText(user.id);
-  return `<a href="${attr(safeHref(user.url))}" class="gcs-userLink gcs-name--${nameKey}${extra}"${id ? ` data-user-id="${attr(id)}"` : ""}>${escapeHtml(name)}</a>`;
+  return `<a href="${attr(safeHref(user.url))}" class="gcs-userLink gcs-name--${nameKey}${extra}"${id ? ` data-user-id="${attr(id)}"` : ""} data-text="${attr(name)}">${escapeHtml(name)}</a>`;
 }
 
 export function timeHtml(date: Date, relative: string, title: string): string {

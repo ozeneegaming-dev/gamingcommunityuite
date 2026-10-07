@@ -608,115 +608,25 @@
   color: var(--gcs-text);
 }
 
-/* ─── Stilurile numelui (ca CSS-ul generat de GCS pentru site) ─────────── */
-
+/*
+ * ─── Stilurile numelui ──────────────────────────────────────────────────
+ * Efectele le desenează GCS: clasele `.gcs-nfx--NUME-EFECT` (în `/gcs-names.css`) sunt aceleași reguli ca pe numele
+ * membrilor din site, deci previzualizarea arată exact ca acolo. Aici doar așezarea în plăci; fără `overflow: hidden`,
+ * ca strălucirile și particulele (::before / ::after) să se vadă întregi.
+ */
 .gcsp-ns {
-  --c1: #ffffff;
-  --c2: var(--c1);
-  --c3: var(--c2);
-  --c4: var(--c3);
-  --c5: var(--c4);
-  --ga: 90deg;
-  --sp: 1;
-  --glow-c: var(--glow, var(--c1));
   display: inline-block;
   max-width: 100%;
-  overflow: hidden;
-  font-weight: 700;
-  text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--c1);
-  animation-duration: calc(3.5s * var(--sp));
+  vertical-align: baseline;
 }
-.gcsp-ns--light {
-  font-weight: 600;
+.gcsp-tile--name .gcsp-tile__art {
+  min-height: 46px;
+  padding: 8px 4px 2px;
 }
-.gcsp-ns--italic {
-  font-style: italic;
-}
-.gcsp-ns--n1 {
-  --gcsp-grad: linear-gradient(var(--ga), var(--c1), color-mix(in srgb, var(--c1), #ffffff 45%), var(--c1));
-}
-.gcsp-ns--n2 {
-  --gcsp-grad: linear-gradient(var(--ga), var(--c1), var(--c2), var(--c1));
-}
-.gcsp-ns--n3 {
-  --gcsp-grad: linear-gradient(var(--ga), var(--c1), var(--c2), var(--c3), var(--c1));
-}
-.gcsp-ns--n4 {
-  --gcsp-grad: linear-gradient(var(--ga), var(--c1), var(--c2), var(--c3), var(--c4), var(--c1));
-}
-.gcsp-ns--n5 {
-  --gcsp-grad: linear-gradient(var(--ga), var(--c1), var(--c2), var(--c3), var(--c4), var(--c5), var(--c1));
-}
-.gcsp-ns--grad {
-  background-image: var(--gcsp-grad);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-}
-.gcsp-ns--grad.gcsp-ns:not(.gcsp-fx-neon):not(.gcsp-fx-glitch)[style*="--glow"] {
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--glow-c) 55%, transparent));
-}
-.gcsp-ns:not(.gcsp-ns--grad):not(.gcsp-fx-neon):not(.gcsp-fx-glitch)[style*="--glow"] {
-  text-shadow: 0 0 10px color-mix(in srgb, var(--glow-c) 60%, transparent);
-}
-.gcsp-fx-shimmer {
-  animation: gcsFxFlow calc(3.5s * var(--sp)) linear infinite;
-}
-.gcsp-fx-chrome {
-  background-image: linear-gradient(100deg, transparent 35%, rgba(255, 255, 255, 0.9) 50%, transparent 65%), var(--gcsp-grad);
-  background-size: 250% 100%, 200% auto;
-  animation: gcsFxShine calc(3s * var(--sp)) ease-in-out infinite;
-}
-.gcsp-fx-scan {
-  background-image: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.38) 0 1px, transparent 1px 3px), var(--gcsp-grad);
-  background-size: 100% 6px, 200% auto;
-  animation: gcsFxScan calc(1.4s * var(--sp)) linear infinite;
-}
-.gcsp-fx-holo {
-  animation: gcsFxHue calc(8s * var(--sp)) linear infinite;
-}
-.gcsp-fx-neon {
-  --gcs-fx-glow: color-mix(in srgb, var(--glow-c) 75%, transparent);
-  text-shadow:
-    0 0 4px color-mix(in srgb, var(--glow-c) 90%, transparent),
-    0 0 12px color-mix(in srgb, var(--glow-c) 70%, transparent),
-    0 0 24px color-mix(in srgb, var(--glow-c) 45%, transparent);
-  animation: gcsFxFlicker calc(4s * var(--sp)) linear infinite;
-}
-.gcsp-fx-glitch {
-  --gcs-fx-a: color-mix(in srgb, var(--c2) 80%, transparent);
-  --gcs-fx-b: color-mix(in srgb, var(--c3) 80%, transparent);
-  text-shadow: 2px 0 var(--gcs-fx-a), -2px 0 var(--gcs-fx-b);
-  animation: gcsFxGlitch calc(2.6s * var(--sp)) steps(1) infinite;
-}
-.gcsp-fx-pulse {
-  --gcs-fx-glow: color-mix(in srgb, var(--glow-c) 75%, transparent);
-  animation: gcsFxPulse calc(2.4s * var(--sp)) ease-in-out infinite;
-}
-.gcsp-fx-fire {
-  --gcs-fx-glow: color-mix(in srgb, var(--glow-c) 75%, transparent);
-  animation: gcsFxFire calc(1.8s * var(--sp)) ease-in-out infinite;
-}
-.gcsp-fx-caret::after {
-  content: "";
-  display: inline-block;
-  width: 0.09em;
-  height: 0.95em;
-  margin-left: 0.14em;
-  vertical-align: -0.1em;
-  background: var(--c1);
-  animation: gcsFxCaret 1s steps(1) infinite;
-}
-.gcsp-fx-caret,
-.gcsp-fx-neon,
-.gcsp-fx-glitch,
-.gcsp-fx-pulse,
-.gcsp-fx-fire {
-  overflow: visible;
+.gcsp-tile--name .gcsp-ns,
+.gcsp-tile--name .gcsp-nsGroup {
+  font-size: 17px;
 }
 /* Stilul grupului (fără stil ales): culoarea vine din clasa GCS a grupului (gcs-name--…), nu din plugin. */
 .gcsp-nsGroup {
@@ -889,8 +799,10 @@
   width: 9px;
   height: 9px;
 }
+/* Iconițele armelor la proporțiile lor: pătrate sau late (iconițe de linie, ex. 110×30). */
 .gcsp-weapon {
-  width: 48px;
+  width: 100%;
+  max-width: 120px;
   height: 48px;
   object-fit: contain;
 }
@@ -1156,8 +1068,9 @@
   font-size: 11px;
 }
 .gcsp-stat__icon {
-  width: 26px;
-  height: 26px;
+  width: auto;
+  max-width: 88px;
+  height: 24px;
   object-fit: contain;
 }
 .gcsp-stat--weapon strong {
@@ -1786,7 +1699,100 @@
   margin-right: 6px;
 }
 .gcsp-acpArt {
-  width: 120px;
+  width: 132px;
+}
+.gcsp-acpHead__actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Încărcarea în bloc și raportul ei. */
+.gcsp-bulk {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--gcsp-hot) 45%, var(--gcsp-line));
+  background: color-mix(in srgb, var(--gcsp-hot) 5%, transparent);
+}
+.gcsp-bulk h3 .gcs-icon {
+  width: 15px;
+  height: 15px;
+  margin-right: 8px;
+  vertical-align: -2px;
+}
+.gcsp-bulk input[type="file"] {
+  max-width: 100%;
+}
+.gcsp-field--wide {
+  grid-column: 1 / -1;
+}
+.gcsp-acpBox--flat {
+  margin: 10px 0;
+  padding: 8px 12px;
+}
+.gcsp-bulkList {
+  margin: 0;
+  padding-left: 18px;
+}
+.gcsp-bulkList li {
+  margin: 4px 0;
+  overflow-wrap: anywhere;
+}
+
+/* Stilurile scrise în CSS: editorul, șabloanele și previzualizarea pe fundal închis și deschis. */
+.gcsp-cssCode {
+  width: 100%;
+  min-height: 300px;
+  font: 13px/1.55 ui-monospace, "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+  tab-size: 2;
+  white-space: pre;
+}
+.gcsp-templates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+}
+.gcsp-cssErrors {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+.gcsp-cssErrors code {
+  font-size: 12px;
+}
+.gcsp-cssPreview__stages {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+}
+.gcsp-cssStage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px 26px;
+  padding: 26px 22px;
+  border-radius: 10px;
+  font-family: var(--gcs-font-display);
+}
+.gcsp-cssStage--dark {
+  background: #0b0d12;
+  color: #e6e8ee;
+}
+.gcsp-cssStage--light {
+  background: #f3f4f7;
+  color: #14161b;
+}
+.gcsp-cssStage [data-gcsp-size="s"] {
+  font-size: 15px;
+}
+.gcsp-cssStage [data-gcsp-size="m"] {
+  font-size: 20px;
+}
+.gcsp-cssStage [data-gcsp-size="l"] {
+  font-size: 32px;
+}
+.gcsp-pill--custom {
+  background: var(--gcs-accent);
+  color: #ffffff;
 }
 .gcsp-acpArt :is(.gcsp-ns, .gcsp-nsGroup) {
   font-family: var(--gcs-font-display);
