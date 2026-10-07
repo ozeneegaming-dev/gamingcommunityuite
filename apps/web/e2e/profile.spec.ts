@@ -85,7 +85,7 @@ test.describe("hover card", () => {
     await expect(card).toBeVisible();
     await expect(card.getByText("VIP Legend")).toBeVisible();
     await expect(card.getByTestId("gcs-hover-rank")).toHaveText("Recrut");
-    await expect(card.locator(".gcs-profileBadge")).not.toHaveCount(0);
+    await expect(card.locator("img.gcs-badgeArt")).not.toHaveCount(0);
     await expect(card.getByTestId("gcs-hover-followers")).toHaveText("0");
     await card.getByTestId("gcs-hover-follow").click();
     await expect(card.getByTestId("gcs-hover-followers")).toHaveText("1");
@@ -138,6 +138,19 @@ test.describe("pagina de profil", () => {
     await expect(page.getByTestId("gcs-profile-rank")).toHaveText("Recrut");
     await expect(page.getByTestId("gcs-profile-badges").locator(".gcs-badgeGrid__item", { hasText: "Primul post" })).toBeVisible();
     await expect(page.getByTestId("gcs-profile-activity").getByRole("link", { name: `Topicul Marei ${id}` })).toBeVisible();
+
+    // Tabul „Badge-uri”: insignele obținute (imagini desenate) și cele blocate, cu cerința și progresul.
+    await page.goto(`/members/${row!.id}-mara${id}?tab=badges`);
+    const firstPost = page.getByTestId("gcs-profile-badges").locator(".gcs-badgeGrid__item", { hasText: "Primul post" });
+    await expect(firstPost.locator("img.gcs-badgeArt")).toHaveAttribute("src", "/badge-art/v1/medal-bronze-5ea2ff-i-solid-pen-nib.svg");
+    const hundred = page.getByTestId("gcs-profile-badges-locked").locator(".gcs-badgeGrid__item", { hasText: "100 postări" });
+    await expect(hundred).toContainText("100 de postări");
+    await expect(hundred.getByRole("progressbar")).toHaveAttribute("aria-valuemax", "100");
+    await expect(hundred.locator("img.gcs-badgeArt--locked")).toBeVisible();
+    const art = await request.get("/badge-art/v1/medal-bronze-5ea2ff-i-solid-pen-nib.svg");
+    expect(art.status()).toBe(200);
+    expect(art.headers()["content-type"]).toContain("image/svg+xml");
+    expect((await request.get("/badge-art/v1/medal-bronze-5EA2FF-i-solid-pen-nib.svg")).status()).toBe(404);
     await expect(page.getByRole("link", { name: "Avertismente" })).toBeVisible();
 
     await other.goto(`/members/${row!.id}`);

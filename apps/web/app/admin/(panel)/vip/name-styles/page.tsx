@@ -8,7 +8,7 @@ import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { NameStyleEditor } from "../../groups/[id]/NameStyleEditor";
 import { createNameStyle, deleteNameStyle, saveNameStyleLook, saveNameStyleMeta } from "../actions";
-import { Availability } from "../Availability";
+import { Availability, AVAILABILITY_BADGE_SELECT } from "../Availability";
 import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -24,7 +24,7 @@ export default async function AcpNameStylesPage() {
   const [styles, groups, badges] = await Promise.all([
     db.nameStyle.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] }),
     db.group.findMany({ orderBy: { position: "asc" }, select: { id: true, name: true } }),
-    db.badge.findMany({ orderBy: { position: "asc" }, select: { id: true, name: true, symbol: true } }),
+    db.badge.findMany({ orderBy: { position: "asc" }, select: AVAILABILITY_BADGE_SELECT }),
   ]);
   const availabilityLabels = { title: t("availability"), all: t("availableAll"), groups: t("availableGroups"), badges: t("availableBadges") };
   const editorLabels = {

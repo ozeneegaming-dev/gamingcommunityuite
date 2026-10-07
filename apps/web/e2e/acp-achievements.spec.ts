@@ -51,17 +51,23 @@ test("o regulă nouă „3 postări → badge” se aplică automat de worker du
   const newBadge = page.locator("section", { has: page.locator("#gcs-badge-new") });
   await newBadge.getByLabel("Cheie").fill(`b_${id}`);
   await newBadge.getByLabel("Nume").fill(`Activ ${id}`);
-  await newBadge.getByLabel("Simbol").fill("A");
+  await newBadge.getByLabel("Text pe insignă").fill("A");
+  // Insigna: forma și nivelul schimbă previzualizarea pe loc.
+  await newBadge.getByLabel("Scut").check();
+  await newBadge.getByLabel("Aur", { exact: true }).check();
+  await expect(newBadge.getByTestId("gcs-badge-preview")).toHaveAttribute("src", /^\/badge-art\/v1\/shield-gold-/);
   await newBadge.getByLabel("Manual (acordat de staff)").uncheck();
   await newBadge.getByRole("button", { name: "Adaugă" }).click();
-  await expect(page.getByTestId("gcs-acp-badge").filter({ has: page.locator(`input[value="b_${id}"]`) })).toBeVisible();
+  const saved = page.getByTestId("gcs-acp-badge").filter({ has: page.locator(`input[value="b_${id}"]`) });
+  await expect(saved).toBeVisible();
+  await expect(saved.locator("img.gcs-badgeArt").first()).toHaveAttribute("src", /^\/badge-art\/v1\/shield-gold-f4b740-i-solid-star\.svg$/);
 
   await page.goto("/admin/members/achievements/rules");
   const newRule = page.locator("section", { has: page.locator("#gcs-rule-new") });
   await newRule.getByLabel("Nume").fill(`3 postări ${id}`);
   await newRule.getByLabel("Când").selectOption("POSTS_COUNT");
   await newRule.getByLabel("Prag", { exact: true }).fill("3");
-  await newRule.getByLabel("Badge").selectOption({ label: `A Activ ${id}` });
+  await newRule.getByLabel("Badge").selectOption({ label: `Activ ${id}` });
   await newRule.getByRole("button", { name: "Adaugă" }).click();
   await expect(page.getByTestId("gcs-acp-rule").filter({ has: page.locator(`input[value="3 postări ${id}"]`) })).toBeVisible();
 
@@ -75,7 +81,7 @@ test("o regulă nouă „3 postări → badge” se aplică automat de worker du
     })
     .toBe(1);
   await author.goto(`/members/${row!.id}`);
-  await expect(author.getByTestId("gcs-profile-badges").locator(".gcs-badgeGrid__item", { hasText: `Activ ${id}` })).toBeVisible();
+  await expect(author.getByTestId("gcs-profile-badges").locator(".gcs-badgeGrid__item", { hasText: `Activ ${id}` }).locator("img.gcs-badgeArt")).toHaveAttribute("src", /shield-gold-/);
   await author.close();
 });
 

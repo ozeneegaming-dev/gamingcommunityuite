@@ -118,7 +118,8 @@ Fiecare badge are un editor cu **previzualizare live**:
 - **Text:** 1–3 caractere, folosit când nu e aleasă o iconiță (ex. „GG”, „RP”).
 - **Imagine proprie (opțional):** PNG, JPEG, WebP sau GIF, prin upload-ul existent (tipul real din magic bytes,
   recodare cu `sharp`, fără SVG). Dacă există, înlocuiește insigna generată; „Elimină imaginea” revine la insignă.
-- Lista regulilor și fișa membrului arată insigna la 16–24 px lângă nume.
+- Fișa membrului (badge-urile acordate) arată insigna la 24 px, iar disponibilitatea stilurilor și ramelor VIP pe
+  badge-uri o arată la 16 px; listele derulante (regulile, acordarea manuală) arată doar numele.
 
 ## 7. Tema deschisă și cea întunecată
 
@@ -138,7 +139,10 @@ silueta pe alb). Se adaptează doar ce o înconjoară, prin tokenuri:
   nume de iconiță, altfel textul din `symbol` (≤ 3 caractere), altfel prima literă a numelui. Deci orice badge creat
   înainte de această schimbare primește automat o insignă în culoarea lui.
 - Migrația `20261022000000_badge_art` adaugă coloanele și atribuie grafica badge-urilor implicite (doar unde
-  coloanele sunt goale); seed-ul instalărilor noi creează badge-urile direct cu ea.
+  coloanele sunt goale); seed-ul instalărilor noi creează badge-urile direct cu ea. Tot ea mută culorile implicite
+  ale categoriilor (doar dacă adminul nu le-a schimbat): postările `#F4B740` → `#5EA2FF` (albastrul activității, ca
+  „Primul post”), vechimea `#5EA2FF` → `#26C6DA` (turcoaz). Pe un email chihlimbariu, rama de aur și glifa aurie se
+  pierdeau; așa, treptele aceleiași categorii au același email și diferă doar prin metal.
 
 ### 8.1 Grafica badge-urilor implicite
 

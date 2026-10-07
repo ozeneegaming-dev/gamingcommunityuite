@@ -884,7 +884,7 @@
       "ranksTitle": "Rangs",
       "ranksHelp": "Un militaire obtient le grade le plus élevé dont les seuils sont tous remplis. Les seuils vides ne sont pas requis. L'ordre ci-dessous est la hiérarchie (le dernier est le plus élevé). Sauver recalcule le rang de chacun.",
       "badgesTitle": "Badges",
-      "badgesHelp": "Les badges automatiques sont attribués par règlement; les badges manuels sont attribués par le personnel de la page membre. Les points sont ajoutés lorsqu'ils sont attribués.",
+      "badgesHelp": "Each badge has an emblem: the shape shows the category, the tier (metal) the level, and the colour fills the enamel and the ribbon. Automatic badges are awarded by rules; staff award manual ones from the member's page. Points are added when the badge is awarded.",
       "rulesTitle": "Règles",
       "rulesHelp": "Une règle de seuil s'applique une fois par membre (mauvais et/ou points). Pour chacune des règles ....",
       "settingsTitle": "Paramètres de réalisation",
@@ -900,7 +900,7 @@
       "minPoints": "Points (min)",
       "minReputation": "Réputation (min)",
       "key": "Clé",
-      "symbol": "Symbole",
+      "symbol": "Emblem text",
       "color": "Couleur",
       "points": "Points",
       "description": "Description",
@@ -929,6 +929,38 @@
         "EACH_POST": "Pour chaque poste publié",
         "EACH_REACTION_RECEIVED": "Pour chaque réaction positive reçue",
         "EACH_SOLUTION": "Pour chaque réponse marquée comme solution"
+      },
+      "art": {
+        "preview": "Emblem preview",
+        "previewDark": "On the dark theme",
+        "previewLight": "On the light theme",
+        "shape": "Shape",
+        "shapes": {
+          "medal": "Medal",
+          "shield": "Shield",
+          "hexagon": "Hexagon",
+          "rosette": "Rosette",
+          "diamond": "Diamond",
+          "star": "Star"
+        },
+        "tier": "Tier",
+        "tiers": {
+          "bronze": "Bronze",
+          "silver": "Silver",
+          "gold": "Gold",
+          "platinum": "Platinum",
+          "custom": "Badge colour"
+        },
+        "colorHint": "The emblem's enamel and ribbon",
+        "colorPicker": "Pick the colour",
+        "icon": "Icon",
+        "iconSearch": "Search icons",
+        "iconNone": "No icon (use the text)",
+        "iconNoResults": "No icons found",
+        "symbolHint": "1–3 characters, used when no icon is chosen",
+        "image": "Custom image (optional)",
+        "imageHint": "PNG, JPEG, WebP or GIF. Replaces the drawn emblem.",
+        "removeImage": "Remove the custom image"
       }
     },
     "promotions": {
@@ -2057,6 +2089,20 @@
       "reportReason": "Pourquoi rapportez-vous ce billet ?",
       "confirmDelete": "Supprimer définitivement ce post ?",
       "hidden": "masqué"
+    },
+    "badgeEarned": "Earned on {date}",
+    "badgesLocked": "{count, plural, one {# more badge to earn} many {# more badges to earn} other {# more badges to earn}}",
+    "badgeLocked": "locked",
+    "badgeProgress": "{current} / {target}",
+    "badgeReq": {
+      "POSTS_COUNT": "{count, plural, one {# post} many {# posts} other {# posts}}",
+      "REPUTATION": "{count, plural, one {# reputation point} many {# reputation points} other {# reputation points}}",
+      "POINTS": "{count, plural, one {# point} many {# points} other {# points}}",
+      "MEMBER_DAYS": "{count, plural, one {# day as a member} many {# days as a member} other {# days as a member}}",
+      "MEMBER_YEARS": "{count, plural, one {# year as a member} many {# years as a member} other {# years as a member}}",
+      "SOLUTIONS_COUNT": "{count, plural, one {# answer marked as the solution} many {# answers marked as the solution} other {# answers marked as the solution}}",
+      "IS_VIP": "Becomes VIP",
+      "manual": "Awarded by the team"
     }
   },
   "maintenance": {
@@ -2323,7 +2369,8 @@
       "likes": "aime",
       "memberSince": "Membre depuis:",
       "status": "État :",
-      "motto": "Devise"
+      "motto": "Devise",
+      "badgesMore": "{count, plural, one {# more badge} many {# more badges} other {# more badges}}"
     },
     "poll": {
       "votes": "{count, plural, one {# vote} many {# voix} other {# voix}}",
