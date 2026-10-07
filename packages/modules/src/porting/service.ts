@@ -12,6 +12,7 @@
  *   `zip_multidisk`, `path_unsafe`, `symlink`, `special_file`, `duplicate_path`, `too_many_files`, `file_too_large`,
  *   `total_too_large`, `compression_ratio`) plus `required` (fișier gol), `unknown_archive` (nici ZIP, nici TAR, nici
  *   XML) și `unknown_format` (arhivă validă, dar fără un format de plugin cunoscut); `params` poate avea `path`, `max`;
+ * - `GcsValidationError({ file: "convert_failed" })`: o eroare neașteptată la conversie (sursa rămâne, se poate reîncerca);
  * - `GcsValidationError({ rights: "required" })`: conversia fără confirmarea dreptului (bifa + temeiul valid);
  * - `GcsValidationError({ key: "invalid" })`: cheia pluginului nu e `vendor.nume` valid;
  * - `GcsValidationError({ package: "invalid" })`: predarea unui pachet care nu trece de validare;
@@ -21,6 +22,7 @@
 import { createHash } from "node:crypto";
 import {
   GcsConflict,
+  GcsError,
   GcsNotFound,
   GcsPluginPackageError,
   GcsValidationError,
@@ -225,8 +227,14 @@ export class GcsPortingService {
     const key = (input.key ?? "").trim() || analysis.suggestedKey;
     const confirmedAt = new Date();
     // Sursa a fost deja citită la încărcare; se recitește (tot doar ca text) din arhiva păstrată.
-    const source = readPortSource(readPortArchive(row.fileName, Buffer.from(row.source)));
-    const out = convertPortSource(source, { key, rights: { basis: input.basis, confirmedAt }, locale: input.locale === "en" ? "en" : "ro" });
+    let out: ReturnType<typeof convertPortSource>;
+    try {
+      const source = readPortSource(readPortArchive(row.fileName, Buffer.from(row.source)));
+      out = convertPortSource(source, { key, rights: { basis: input.basis, confirmedAt }, locale: input.locale === "en" ? "en" : "ro" });
+    } catch (e) {
+      if (e instanceof GcsError) throw e;
+      throw new GcsValidationError({ file: "convert_failed" });
+    }
     const updated = await db.$transaction(async (tx) => {
       const saved = await tx.pluginPort.update({
         where: { id: row.id },

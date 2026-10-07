@@ -10,40 +10,42 @@ function unquote(lit: string): string {
   return lit[0] === "'" ? body.replace(/\\(['\\])/g, "$1") : body.replace(/\\(["\\$])/g, "$1").replace(/\\n/g, "\n").replace(/\\t/g, "\t");
 }
 
+/** Câte potriviri se citesc cel mult într-un fișier și cât de departe se caută argumentele unui apel (fișiere ostile). */
+const MAX_MATCHES = 1000;
+const ARGS_WINDOW = 4096;
+
 const STRING = String.raw`'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"`;
 
 /**
  * Textul dintre paranteza (sau acolada, croșetul) deschisă de la `open` și perechea ei, ignorând șirurile și
- * comentariile. `null` dacă nu se închide (cod trunchiat).
+ * comentariile. `null` dacă nu se închide (cod trunchiat) în cel mult `limit` caractere: un fișier ostil cu mii de
+ * paranteze neînchise nu poate face citirea pătratică.
  */
-export function balanced(src: string, open: number): string | null {
+export function balanced(src: string, open: number, limit = 64 * 1024): string | null {
   const pairs: Record<string, string> = { "(": ")", "[": "]", "{": "}" };
   const stack: string[] = [];
-  for (let i = open; i < src.length; i++) {
-    const c = src[i]!;
+  // Toate căutările (șiruri, comentarii) rămân în fereastra de `limit` caractere.
+  const s = src.slice(open, open + limit);
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i]!;
     if (c === "'" || c === '"') {
-      for (i++; i < src.length && src[i] !== c; i++) if (src[i] === "\\") i++;
+      for (i++; i < s.length && s[i] !== c; i++) if (s[i] === "\\") i++;
       continue;
     }
-    if (c === "/" && src[i + 1] === "/") {
-      const nl = src.indexOf("\n", i);
-      i = nl === -1 ? src.length : nl;
+    if ((c === "/" && s[i + 1] === "/") || (c === "#" && s[i + 1] !== "[")) {
+      const nl = s.indexOf("\n", i);
+      i = nl === -1 ? s.length : nl;
       continue;
     }
-    if (c === "#" && src[i + 1] !== "[") {
-      const nl = src.indexOf("\n", i);
-      i = nl === -1 ? src.length : nl;
-      continue;
-    }
-    if (c === "/" && src[i + 1] === "*") {
-      const end = src.indexOf("*/", i + 2);
-      i = end === -1 ? src.length : end + 1;
+    if (c === "/" && s[i + 1] === "*") {
+      const close = s.indexOf("*/", i + 2);
+      i = close === -1 ? s.length : close + 1;
       continue;
     }
     if (pairs[c]) stack.push(pairs[c]);
     else if (c === ")" || c === "]" || c === "}") {
       if (stack.pop() !== c) return null;
-      if (stack.length === 0) return src.slice(open + 1, i);
+      if (stack.length === 0) return s.slice(1, i);
     }
   }
   return null;
@@ -102,12 +104,12 @@ export type GcsPhpFormField = { key: string; type: GcsPortSetting["type"]; optio
 export function scanFormFields(src: string): GcsPhpFormField[] {
   const out: GcsPhpFormField[] = [];
   const re = /new\s+\\?(?:[A-Za-z_]\w*\\)*Form\\(\w+)\s*\(\s*(['"])([A-Za-z0-9_.-]{1,80})\2/g;
-  for (const m of src.matchAll(re)) {
+  for (const m of [...src.matchAll(re)].slice(0, MAX_MATCHES)) {
     const type = FORM_TYPES[m[1]!.toLowerCase()] ?? "unknown";
     const field: GcsPhpFormField = { key: m[3]!, type };
     // Argumentele câmpului (opțiunile, limitele) sunt în aceeași pereche de paranteze.
     const open = src.indexOf("(", m.index!);
-    const args = open === -1 ? null : balanced(src, open);
+    const args = open === -1 ? null : balanced(src, open, ARGS_WINDOW);
     if (args) {
       if (type === "select") {
         const at = /['"]options['"]\s*=>\s*(array\s*\(|\[)/.exec(args);
@@ -180,9 +182,9 @@ function keyName(args: string): string | null {
 function tableFromBody(name: string, body: string, origin: string): GcsPortTable {
   const columns: GcsPortColumn[] = [];
   const indexes: GcsPortIndex[] = [];
-  for (const m of body.matchAll(/\$\w+\s*->\s*(addColumn|addPrimaryKey|addUniqueKey|addKey|addFullTextKey)\s*\(/g)) {
+  for (const m of [...body.matchAll(/\$\w+\s*->\s*(addColumn|addPrimaryKey|addUniqueKey|addKey|addFullTextKey)\s*\(/g)].slice(0, MAX_MATCHES)) {
     const open = m.index! + m[0].length - 1;
-    const args = balanced(body, open);
+    const args = balanced(body, open, ARGS_WINDOW);
     if (args === null) continue;
     if (m[1] === "addColumn") {
       const parts = [...args.matchAll(new RegExp(`(${STRING})|(-?\\d+)`, "g"))].map((x) => x[0]);
@@ -195,7 +197,7 @@ function tableFromBody(name: string, body: string, origin: string): GcsPortTable
       const end = statementEnd(body, open + args.length + 2);
       const chain = body.slice(open + args.length + 2, end === -1 ? body.length : end);
       for (const c of chain.matchAll(/->\s*(\w+)\s*\(/g)) {
-        const cargs = balanced(chain, c.index! + c[0].length - 1) ?? "";
+        const cargs = balanced(chain, c.index! + c[0].length - 1, ARGS_WINDOW) ?? "";
         switch (c[1]) {
           case "nullable":
             column.nullable = cargs.trim() === "" || /^true$/i.test(cargs.trim());
@@ -242,9 +244,9 @@ function tableFromBody(name: string, body: string, origin: string): GcsPortTable
 export function scanCreateTables(src: string, origin: string): GcsPortTable[] {
   const out: GcsPortTable[] = [];
   const re = new RegExp(String.raw`(?:createTable\(\s*(${STRING})\s*,|\$\w+\[\s*(${STRING})\s*\]\s*=)\s*(?:static\s+)?function\s*\([^)]*\)\s*(?:use\s*\([^)]*\)\s*)?\{`, "g");
-  for (const m of src.matchAll(re)) {
+  for (const m of [...src.matchAll(re)].slice(0, 200)) {
     const name = unquote((m[1] ?? m[2])!);
-    const body = balanced(src, m.index! + m[0].length - 1);
+    const body = balanced(src, m.index! + m[0].length - 1, 512 * 1024);
     if (body === null) continue;
     const table = tableFromBody(name, body, origin);
     if (table.columns.length > 0 && !out.some((t) => t.name === name)) out.push(table);

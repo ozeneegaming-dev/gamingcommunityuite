@@ -203,9 +203,12 @@ function lexBrace(src: string): (string | Token)[] {
   const out: (string | Token)[] = [];
   let text = "";
   let i = 0;
+  // Fără `}}` mai departe, restul `{{` sunt text (fără căutări repetate până la capăt).
+  let statements = true;
   while (i < src.length) {
-    if (src.startsWith("{{", i)) {
+    if (statements && src.startsWith("{{", i)) {
       const end = src.indexOf("}}", i + 2);
+      if (end === -1) statements = false;
       if (end !== -1) {
         out.push(text, braceStatement(src.slice(i + 2, end)));
         text = "";
@@ -261,6 +264,7 @@ function lexTag(src: string, templateType: string): (string | Token)[] {
   let text = "";
   const re = /<(\/?)([a-z][a-z0-9]{0,9}):([a-z][a-z0-9_]*)((?:[^<>"']|"[^"]*"|'[^']*')*?)(\/?)>|\{\{([\s\S]*?)\}\}|\{(\$[A-Za-z_][\w.]*(?:\|\w+)?)\}/g;
   let last = 0;
+  const unclosed = new Set<string>();
   for (let m = re.exec(src); m !== null; m = re.exec(src)) {
     text += src.slice(last, m.index);
     last = m.index + m[0].length;
@@ -331,10 +335,13 @@ function lexTag(src: string, templateType: string): (string | Token)[] {
         token = todo(m[0]);
     }
     // Conținutul tagurilor eliminate (comentarii, scripturi inline, atribuiri) dispare cu tot cu ele.
-    if (!closing && !selfClosing && TAG_DROP_CONTENT.has(tag)) {
-      const close = src.indexOf(`</${m[2]}:${m[3]}>`, last);
-      if (close !== -1) {
-        last = close + `</${m[2]}:${m[3]}>`.length;
+    const closeTag = `</${m[2]}:${m[3]}>`;
+    if (!closing && !selfClosing && TAG_DROP_CONTENT.has(tag) && !unclosed.has(closeTag)) {
+      const close = src.indexOf(closeTag, last);
+      // Un tag fără închidere nu se mai caută (un șablon ostil cu mii de taguri deschise nu face citirea pătratică).
+      if (close === -1) unclosed.add(closeTag);
+      else {
+        last = close + closeTag.length;
         re.lastIndex = last;
       }
     }
@@ -435,15 +442,27 @@ export function rewriteHtml(html: string, stats: GcsTplStats): string {
 
 // ─── Arborele ───
 
+const MAX_NESTING = 32;
+
 /** Construiește arborele din lista de bucăți HTML și construcții. Blocurile neînchise se închid la final. */
 function buildTree(seq: (string | Token)[], stats: GcsTplStats): GcsTplNode[] {
   type Frame = { kind: "root" } | { kind: "if"; node: Extract<GcsTplNode, { t: "if" }>; target: GcsTplNode[] } | { kind: "for"; node: Extract<GcsTplNode, { t: "for" }> };
   const root: GcsTplNode[] = [];
   const stack: { frame: Frame; body: GcsTplNode[] }[] = [{ frame: { kind: "root" }, body: root }];
   const top = () => stack[stack.length - 1]!;
+  // Peste `MAX_NESTING` niveluri, blocurile devin `TODO` (conținutul rămâne): emiterea recursivă are adâncimea mărginită.
+  let ignored = 0;
   for (const part of seq) {
     if (typeof part === "string") {
       if (part) top().body.push({ t: "html", html: part });
+      continue;
+    }
+    const opens = part.k === "if" || part.k === "for";
+    if (part.k !== "node" && (ignored > 0 || (opens && stack.length > MAX_NESTING))) {
+      if (opens) ignored++;
+      else if (part.k === "endif" || part.k === "endfor") ignored--;
+      stats.todos++;
+      top().body.push({ t: "todo", raw: part.k });
       continue;
     }
     switch (part.k) {

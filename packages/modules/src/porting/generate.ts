@@ -36,6 +36,8 @@ export type GcsPortOutput = {
 /** Cât cod de șabloane intră cel mult în `server.mjs` (un fișier de pachet are cel mult 4 MB). */
 const MAX_TEMPLATE_CODE = 3 * 1024 * 1024;
 const MAX_TEMPLATES = 300;
+/** Un șablon sursă mai mare rămâne manual (mărimea mărginește și timpul conversiei). */
+const MAX_TEMPLATE_SOURCE = 256 * 1024;
 
 const ROUTE_RE = /^\/$|^(?:\/(?:[a-z0-9][a-z0-9_-]{0,39}|:[a-z][a-zA-Z0-9]{0,29})){1,6}$/;
 const lit = (s: string) => JSON.stringify(s);
@@ -70,6 +72,7 @@ export function convertPortSource(source: GcsPortSource, opts: GcsPortOptions): 
   // ─── Șabloanele (întâi: frazele folosite de ele au prioritate în fișierul de limbă) ───
   const parsed: { name: string; area: string; params: string[]; origin: string; nodes: GcsTplNode[]; stats: GcsTplStats }[] = [];
   for (const t of source.templates.slice(0, MAX_TEMPLATES)) {
+    if (t.body.length > MAX_TEMPLATE_SOURCE) continue;
     const type = t.name.includes(":") ? t.name.split(":")[0]! : "public";
     const { nodes, stats } = parseTemplate(t.body, t.syntax, type);
     parsed.push({ name: t.name, area: t.area, params: t.params, origin: t.origin, nodes, stats });

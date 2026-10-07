@@ -1,5 +1,6 @@
 import { checkPluginSql, langFileError, pluginSchema, scopePluginCss } from "@gcs/core";
 import { describe, expect, test } from "vitest";
+import { scanCreateTables, scanFormFields } from "../formats/php";
 import { convertStyles } from "./css";
 import { convertPhrases, phraseText } from "./phrases";
 import { convertSchema, sqlIdent } from "./schema";
@@ -83,6 +84,33 @@ describe("șabloanele", () => {
     expect(rewriteHtml('<i class="fa fa-trophy"></i><span class="gcs-muted x" data-a="1" ID="b">t</span>', s)).toBe(
       '<gcs-icon name="fa-solid fa-trophy"></gcs-icon><span class="gcs-muted gcsp-x gcsp-id-b" data-gcsp-a="1">t</span>',
     );
+  });
+});
+
+describe("limitele (intrări ostile, fără timp pătratic sau depășirea stivei)", () => {
+  const fast = (fn: () => void) => {
+    const start = Date.now();
+    fn();
+    expect(Date.now() - start).toBeLessThan(10_000);
+  };
+
+  test("șabloane: imbricare foarte adâncă, mii de construcții neînchise", () => {
+    fast(() => {
+      const deep = parseTemplate(`${"{{if $a}}".repeat(20000)}x${"{{endif}}".repeat(20000)}`, "brace");
+      expect(emitTemplate(deep.nodes, emitCtx)).toContain("x");
+    });
+    fast(() => void parseTemplate("{{".repeat(100000), "brace"));
+    fast(() => void parseTemplate('<a:comment>'.repeat(20000), "tag"));
+    fast(() => void parseTemplate(`${"<a:if is=\"$x\">".repeat(20000)}`, "tag"));
+  });
+
+  test("PHP și CSS: paranteze neînchise, imbricare adâncă", () => {
+    fast(() => void scanFormFields("new X\\Form\\YesNo( 'a', ".repeat(50000)));
+    fast(() => void scanCreateTables("createTable('t', function (Create $table) { $table->addColumn('a', ".repeat(20000), "Setup.php"));
+    fast(() => {
+      const { css } = convertStyles([{ name: "x.css", origin: "x", syntax: "css", body: `${"a {".repeat(5000)}color:red${"}".repeat(5000)}` }], "acme.demo");
+      expect(css).toBeNull();
+    });
   });
 });
 

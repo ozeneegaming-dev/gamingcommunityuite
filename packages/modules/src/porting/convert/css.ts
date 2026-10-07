@@ -15,7 +15,9 @@ import { prefixClass } from "./template";
 type CssItem = { prelude: string; body: string | CssItem[] } | { decls: string };
 
 /** Împarte CSS-ul în reguli (`prelude { … }`) și declarații, recursiv pentru blocurile care conțin reguli. */
-function parseItems(css: string): CssItem[] | null {
+function parseItems(css: string, level = 0): CssItem[] | null {
+  // CSS-ul real are câteva niveluri (`@media` cu reguli imbricate); mai adânc înseamnă intrare ostilă.
+  if (level > 8) return null;
   const items: CssItem[] = [];
   let i = 0;
   let start = 0;
@@ -47,7 +49,7 @@ function parseItems(css: string): CssItem[] | null {
       if (lastSemi !== -1) items.push({ decls: prelude.slice(0, lastSemi + 1) });
       const head = lastSemi === -1 ? prelude : prelude.slice(lastSemi + 1).trim();
       if (inner.includes("{")) {
-        const nested = parseItems(inner);
+        const nested = parseItems(inner, level + 1);
         if (nested === null) return null;
         items.push({ prelude: head, body: nested });
       } else items.push({ prelude: head, body: inner });
@@ -125,6 +127,10 @@ export function convertStyles(styles: GcsPortStyle[], pluginKey: string): { css:
   const stats: GcsCssStats = { rules: 0, declarations: 0, files: 0 };
   const parts: string[] = [];
   for (const style of styles.slice(0, 100)) {
+    if (style.body.length > 256 * 1024) {
+      stats.files++;
+      continue;
+    }
     // Construcțiile de șablon și comentariile dispar înainte de parsare.
     const text = style.body
       .replace(/\/\*[\s\S]*?\*\//g, "")
