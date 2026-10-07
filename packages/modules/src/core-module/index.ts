@@ -211,8 +211,7 @@ const acpMenu: GcsAcpMenuSection[] = [
   ]),
   menuSection("system", "conversions", "fa-solid fa-right-left", [
     ["import", "/admin/system/import", "fa-solid fa-file-import"],
-    // Asistentul de portare a pluginurilor (secțiunea `system.porting`).
-    ["porting", "/admin/system/porting", "fa-solid fa-puzzle-piece"],
+    ["porting", "/admin/system/porting", "fa-solid fa-code-compare"],
   ]),
 
   menuSection("members", "members", "fa-solid fa-users", [
