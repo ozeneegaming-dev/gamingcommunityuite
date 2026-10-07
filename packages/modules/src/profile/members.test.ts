@@ -35,6 +35,23 @@ describe("lista de membri", () => {
     expect(await names("joined")).toEqual(["Iulia", "Ionuț"]);
   });
 
+  test("„Doar cei online”: cei activi recent, inclusiv cei fără setare de confidențialitate; cei ascunși nu apar", async () => {
+    const now = Date.now();
+    const fresh = await w.createUser("Activ", "member");
+    const hidden = await w.createUser("Ascuns", "member");
+    const away = await w.createUser("Plecat", "member");
+    await w.db.user.update({ where: { id: fresh.id }, data: { lastActiveAt: new Date(now - 60_000), privacy: {} } });
+    await w.db.user.update({ where: { id: hidden.id }, data: { lastActiveAt: new Date(now - 60_000), privacy: { showOnline: false } } });
+    await w.db.user.update({ where: { id: away.id }, data: { lastActiveAt: new Date(now - 60 * 60_000), privacy: {} } });
+    const { members, pagination } = await list.list(w.member, { online: true, page: 1 }, now);
+    const names = members.map((m) => m.name);
+    expect(names).toContain("Activ");
+    expect(names).not.toContain("Ascuns");
+    expect(names).not.toContain("Plecat");
+    expect(members.find((m) => m.name === "Activ")!.online).toBe(true);
+    expect(pagination.total).toBe(members.length);
+  });
+
   test("24 pe pagină; a doua pagină are restul", async () => {
     const before = await w.db.user.count();
     for (let i = 0; i < 30; i++) await w.createUser(`Membru${String(i).padStart(2, "0")}`, "member");

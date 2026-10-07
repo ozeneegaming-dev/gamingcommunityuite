@@ -67,11 +67,16 @@ export class GcsMemberList {
     await this.assertAccess(viewer);
     const { db, ranks } = this.deps;
     const q = query.q ? normalizeUsername(query.q).slice(0, 40) : "";
+    const since = new Date(now - ONLINE_MS);
+    // „Online”: activ în ultimele 5 minute; cei cu statusul ascuns nu apar. Ascunșii se caută separat: un
+    // `NOT { privacy.showOnline = false }` ar scoate și conturile fără setarea asta (NULL în SQL), adică aproape pe toți.
+    const hidden = query.online
+      ? (await db.user.findMany({ where: { lastActiveAt: { gte: since }, privacy: { path: ["showOnline"], equals: false } }, select: { id: true } })).map((u) => u.id)
+      : [];
     const where: Prisma.UserWhereInput = {
       ...(q ? { nameNormalized: { contains: q } } : {}),
       ...(query.groupId ? { primaryGroupId: query.groupId } : {}),
-      // „Online”: activ în ultimele 5 minute (cei cu statusul ascuns nu apar).
-      ...(query.online ? { lastActiveAt: { gte: new Date(now - ONLINE_MS) }, NOT: { privacy: { path: ["showOnline"], equals: false } } } : {}),
+      ...(query.online ? { lastActiveAt: { gte: since }, ...(hidden.length ? { id: { notIn: hidden } } : {}) } : {}),
     };
     const sort = query.sort ?? "joined";
     const orderBy: Prisma.UserOrderByWithRelationInput[] =
