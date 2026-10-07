@@ -12,7 +12,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
-    "port": "tsx scripts/port.ts"
+    "port": "tsx src/porting/cli.ts"
   },
   "devDependencies": {
     "@gcs/config": "workspace:*",

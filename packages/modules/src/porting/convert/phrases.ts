@@ -47,7 +47,7 @@ export function convertPhrases(phrases: Map<string, string>, used: Iterable<stri
   for (const k of used) if (phrases.has(k)) seen.add(k);
   for (const k of phrases.keys()) seen.add(k);
   const order = [...seen];
-  const entries: Record<string, string> = {};
+  const entries = Object.create(null) as Record<string, string>;
   const map = new Map<string, string>();
   const taken = new Set<string>();
   for (const key of order.slice(0, MAX_PHRASES)) {

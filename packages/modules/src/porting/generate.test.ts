@@ -6,7 +6,8 @@ import path from "node:path";
 import { afterAll, describe, expect, test } from "vitest";
 import { PORT_SOURCE_LIMITS, readPortArchive } from "./archive";
 import { readPortSource, suggestPluginKey } from "./detect";
-import { addonJsonFixture, appJsonFixture, pluginXmlFixture } from "./fixtures";
+import { writeZip } from "@gcs/plugin-sdk/zip";
+import { ADDON_FILES, addonJsonFixture, appJsonFixture, pluginXmlFixture } from "./fixtures";
 import { convertPortSource } from "./generate";
 
 const tmp = mkdtempSync(path.join(os.tmpdir(), "gcs-port-"));
@@ -128,6 +129,46 @@ describe("generatorul", () => {
     expect(manifest).toMatchObject({ key: "jane_doe.shoutbox_lite", license: "GPL-2.0-or-later", capabilities: ["client-css", "jobs", "settings"] });
     checkSyntax(files.get("server.mjs")!.toString(), "xml");
     expect(out.report.manual.map((m) => m.kind)).toEqual(expect.arrayContaining(["hook", "settings_form", "setup", "javascript"]));
+  });
+
+  test("o sursă ostilă (nume, fraze, șabloane, rute, tabele) dă tot un pachet valid, fără cod injectat", () => {
+    const evil = `Evil"); process.exit(1); //\n*/ <script>alert(1)</script> {x} ${"A".repeat(300)}`;
+    const files = Object.entries(ADDON_FILES).map(([name, data]) => ({ name: `Evil/Addon/${name}`, data }));
+    const replace = (name: string, data: string) => (files.find((f) => f.name === `Evil/Addon/${name}`)!.data = data);
+    replace("addon.json", JSON.stringify({ title: evil, description: evil, version_string: "1.0.0 <b>", dev: evil, dev_url: "javascript:alert(1)", icon: "fa-x\" onload=\"y" }));
+    replace(
+      "_data/phrases.xml",
+      `<phrases><phrase title="demo_items"><![CDATA[${evil}]]></phrase><phrase title="__proto__"><![CDATA[x]]></phrase><phrase title="a.b.c/../d"><![CDATA[{{ $x }} %s {0}]]></phrase></phrases>`,
+    );
+    replace(
+      "_data/routes.xml",
+      `<routes><route route_type="public" route_prefix="../../etc" controller="A:B"/><route route_type="public" route_prefix="ok&quot;);x(" controller="A:B"/></routes>`,
+    );
+    replace(
+      "_data/options.xml",
+      `<options><option option_id="__proto__" edit_format="spinbox" data_type="integer"><default_value>1e999</default_value><edit_format_params>min=5
+max=1</edit_format_params></option><option option_id="x&quot;y" edit_format="radio" data_type="string"><default_value>z</default_value><edit_format_params>a={phrase:demo_items}
+a=dup</edit_format_params></option></options>`,
+    );
+    replace(
+      "_data/templates.xml",
+      `<templates><template type="public" title="t&quot;);x(//"><![CDATA[<div onclick="${"x".repeat(10)}" class="a&quot;b">{$__proto__.x}{{ phrase('demo_items') }}<tpl:if is="$a">\`\${process.exit(1)}\`</tpl:if></div><tpl:foreach loop="$x" value="$constructor">{$constructor.y}</tpl:foreach>]]></template></templates>`,
+    );
+    replace("Setup.php", `<?php $sm->createTable('pg_catalog.users; DROP TABLE x', function (Create $table) { $table->addColumn('id"; --', 'int'); $table->addColumn('select', 'varchar', 10)->setDefault("'; DROP TABLE y; --"); });`);
+    const source = readPortSource(readPortArchive("evil.zip", writeZip(files)));
+    const out = convertPortSource(source, { key: suggestPluginKey(source), rights: confirmed });
+    expect(out.report.validation.checks.filter((c) => c.level === "error")).toEqual([]);
+    const pkg = readPluginZip(out.packageZip);
+    const server = pkg.get("server.mjs")!.toString();
+    checkSyntax(server, "evil");
+    // Textele sursei apar doar în literali JSON sau comentarii pe un rând; niciun apel injectat nu e cod.
+    expect(server).not.toMatch(/^[^/"]*process\.exit/m);
+    const manifest = JSON.parse(pkg.get("plugin.json")!.toString());
+    expect(manifest.name).not.toMatch(/[<>{}]/);
+    expect(manifest.icon).toBe("fa-solid fa-puzzle-piece");
+    expect(manifest.author).toEqual(expect.any(String));
+    expect(manifest.routes.pages.map((p: { path: string }) => p.path)).toEqual(["/etc", "/ok-x"]);
+    expect(pkg.get("migrations/001_init.sql")!.toString()).toContain("CREATE TABLE pg_catalog_users_drop_table_x (");
   });
 
   test("o cheie invalidă e refuzată; fără confirmare raportul o spune", () => {
