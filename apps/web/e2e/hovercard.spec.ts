@@ -32,6 +32,11 @@ async function uploadCover(page: Page, positionY: number): Promise<void> {
   expect(res.ok(), await res.text()).toBe(true);
 }
 
+/** Coperta randată: poziția verticală și imaginea (stilul calculat; browserul rescrie ordinea din `background`). */
+async function coverOf(locator: Locator) {
+  return locator.evaluate((el) => ({ y: getComputedStyle(el).backgroundPositionY, image: getComputedStyle(el).backgroundImage }));
+}
+
 async function box(locator: Locator) {
   const b = await locator.boundingBox();
   expect(b).not.toBeNull();
@@ -61,7 +66,7 @@ test("coperta apare în postbit și în hover card, cu poziția salvată; numele
   const postbit = page.getByTestId("gcs-post").first().getByTestId("gcs-postbit");
   const cover = postbit.getByTestId("gcs-postbit-cover");
   await expect(cover).toBeVisible();
-  expect(await cover.getAttribute("style")).toMatch(/center 30% \/ cover no-repeat url\(["']?\/files\//);
+  expect(await coverOf(cover)).toMatchObject({ y: "30%", image: expect.stringContaining("/files/") });
   await expect(postbit.locator(".gcs-postbit__profile--cover")).toBeVisible();
   // Online o singură dată: sus, lângă @handle (subsolul are doar „Membru din”).
   await expect(postbit.getByTestId("gcs-postbit-online")).toHaveCount(1);
@@ -72,7 +77,7 @@ test("coperta apare în postbit și în hover card, cu poziția salvată; numele
   const layer = await openCard(page, name);
   const card = layer.getByTestId("gcs-hover-card");
   const cardCover = card.getByTestId("gcs-hover-cover");
-  expect(await cardCover.getAttribute("style")).toMatch(/center 30% \/ cover no-repeat url\(["']?\/files\//);
+  expect(await coverOf(cardCover)).toMatchObject({ y: "30%", image: expect.stringContaining("/files/") });
   // Numele, grupul și statusul sunt sub copertă (nu desenate peste imagine).
   const coverBox = await box(cardCover);
   expect((await box(card.locator(".gcs-hoverCard__name"))).y).toBeGreaterThanOrEqual(coverBox.y + coverBox.height);
