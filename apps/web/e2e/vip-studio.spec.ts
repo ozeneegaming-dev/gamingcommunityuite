@@ -74,6 +74,15 @@ async function profileFixture(request: APIRequestContext, data: Record<string, u
 
 const studio = (page: Page) => page.locator("[data-gcsp-studio]");
 const tile = (page: Page, name: string, value: string) => studio(page).locator(`label.gcsp-tile:has(input[name="${name}"][value="${value}"])`);
+/** Alege o placă; cele de după primele 20 se încarcă pe loturi la derulare (ca la un membru real). */
+async function pick(page: Page, name: string, value: string) {
+  const t = tile(page, name, value);
+  await expect(async () => {
+    if (!(await t.isVisible())) await page.mouse.wheel(0, 700);
+    await expect(t).toBeVisible({ timeout: 400 });
+  }).toPass({ timeout: 20_000 });
+  await t.click();
+}
 
 let rootPage: Page;
 const id = uid();
@@ -120,7 +129,7 @@ test("un ne-VIP poate încerca orice în previzualizare, dar „Salvează” des
   const page = await memberInNewContext(browser, `Curios${id}`, `curios-${id}@example.com`, "100.74.1");
   await page.goto(`/p/${KEY}`);
   await expect(studio(page)).toHaveClass(/gcsp-js/);
-  await tile(page, "nameStyle", "neon").click();
+  await pick(page, "nameStyle", "neon");
   await expect(studio(page).locator('.gcsp-plate [data-gcsp-pv="name"]')).toHaveClass(/gcsp-fx-neon/);
   await expect(studio(page).locator("[data-gcsp-count]")).toHaveText("1 modificare nesalvată");
   await studio(page).locator("[data-gcsp-save]").click();
@@ -139,7 +148,7 @@ test("un VIP își alege echipamentul: previzualizarea live, numărătoarea și 
   await expect(studio(page)).toContainText("Planul tău: VIP Gold");
 
   // Stilul numelui cu banda de variante.
-  await tile(page, "nameStyle", "neon").click();
+  await pick(page, "nameStyle", "neon");
   await studio(page).locator('label.gcsp-swatch:has(input[value="neon:cyan"])').click();
   const plate = studio(page).locator('.gcsp-plate [data-gcsp-pv="name"]');
   await expect(plate).toHaveClass(/gcsp-fx-neon/);
@@ -150,24 +159,24 @@ test("un VIP își alege echipamentul: previzualizarea live, numărătoarea și 
   await studio(page).locator("label.gcsp-tile--frame", { hasText: `Rama E2E ${id}` }).click();
   await expect(studio(page).locator('.gcsp-card [data-gcsp-pv="frame"]')).toHaveAttribute("src", /\/media\//);
   await studio(page).locator('input[name="gcsp_tab_mini"][value="banner"]').locator("..").click();
-  await tile(page, "banner", "gold_shine").click();
+  await pick(page, "banner", "gold_shine");
   await expect(studio(page).locator('.gcsp-card [data-gcsp-pv="banner"]')).toHaveClass(/gcsp-pill--shine/);
   await studio(page).locator('input[name="gcsp_tab_mini"][value="card"]').locator("..").click();
-  await tile(page, "card", "nebula").click();
+  await pick(page, "card", "nebula");
   await expect(studio(page).locator('.gcsp-card [data-gcsp-pv="card"]')).toHaveAttribute("src", /cards\/nebula\.webp/);
   await studio(page).locator('input[name="gcsp_tab_mini"][value="weapon"]').locator("..").click();
-  await tile(page, "weapon", "rifle").click();
+  await pick(page, "weapon", "rifle");
   await expect(studio(page).locator('.gcsp-card [data-gcsp-pv="weapon-label"]')).toHaveText("Pușcă de asalt");
 
   // Profilul complet: fundalul, citatul (numărătoarea caracterelor), tema.
   await studio(page).locator("label.gcsp-mode--full").click();
-  await tile(page, "background", "aurora").click();
+  await pick(page, "background", "aurora");
   await studio(page).locator('input[name="gcsp_tab_full"][value="quote"]').locator("..").click();
   await studio(page).locator('textarea[name="quote"]').fill("Joc pentru echipă, nu pentru scor.");
   await expect(studio(page).locator("[data-gcsp-quote-count]")).toHaveText("34/200");
   await expect(studio(page).locator('[data-gcsp-pv="quote"]')).toHaveText("Joc pentru echipă, nu pentru scor.");
   await studio(page).locator('input[name="gcsp_tab_full"][value="theme"]').locator("..").click();
-  await tile(page, "theme", "carbon").click();
+  await pick(page, "theme", "carbon");
   await expect(studio(page).locator("[data-gcsp-count]")).toHaveText("8 modificări nesalvate");
 
   await studio(page).locator("[data-gcsp-save]").click();
