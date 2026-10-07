@@ -15,13 +15,15 @@ export default async function SettingsLayout({ children }: { children: ReactNode
   return (
     <div className="gcs-settingsLayout">
       <aside>
-        <h1 className="gcs-display" style={{ margin: "0 0 12px", fontSize: 26 }}>
-          <GcsIcon name="fa-solid fa-gear" className="gcs-hIcon" />
-          {t("title")}
-        </h1>
+        <header className="gcs-pageHeader gcs-pageHeader--compact">
+          <h1 className="gcs-display gcs-pageHeader__title">
+            <GcsIcon name="fa-solid fa-gear" className="gcs-hIcon" />
+            {t("title")}
+          </h1>
+        </header>
         <GcsSettingsNav label={t("title")} items={SETTINGS_SECTIONS.map(([s, icon]) => ({ href: `/settings/${s}`, label: t(`nav.${s}`), icon: <GcsIcon name={icon} /> }))} />
       </aside>
-      <GcsCard as="section" style={{ padding: "22px 24px", minWidth: 0 }}>
+      <GcsCard as="section" className="gcs-settingsCard" style={{ minWidth: 0 }}>
         {children}
       </GcsCard>
     </div>

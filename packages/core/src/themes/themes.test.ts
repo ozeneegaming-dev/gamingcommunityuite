@@ -159,7 +159,7 @@ describe("compileThemeCss (setările noi)", () => {
     const css = compileThemeCss(DEFAULT_THEME_SETTINGS, "");
     expect(css).toContain("--gcs-header-bg: var(--gcs-chrome);");
     expect(css).toContain("--gcs-drawer-text: var(--gcs-accentInk);");
-    expect(css).toContain("--gcs-box-header-bg: transparent;");
+    expect(css).toContain("--gcs-box-header-bg: var(--gcs-surface2);");
     expect(css).toContain("--gcs-btn-primary-text: #FFFFFF;");
     expect(css).toContain("--gcs-btn-primary-hover: #E23446;");
     expect(css).toContain("--gcs-header-h: 64px;");

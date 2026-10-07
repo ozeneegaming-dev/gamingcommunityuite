@@ -1,6 +1,6 @@
 "use client";
 
-import { THEME_FIELDS, THEME_TOKENS, isThemeHex, type GcsThemePalette, type GcsThemeToken } from "@gcs/core/themes";
+import { THEME_FIELDS, THEME_TOKENS, isThemeHex, themeElementAllowsTransparent, type GcsThemePalette, type GcsThemeToken } from "@gcs/core/themes";
 import { GcsIconSvg } from "@gcs/ui";
 import { faArrowUpFromBracket, faCheck, faChevronRight, faClockRotateLeft, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { useTranslations } from "next-intl";
@@ -201,8 +201,9 @@ export function GcsStudioColorRow({
 }
 
 /**
- * Selectorul de culoare: „Mostre” (tokenurile paletei modului editat; pentru elemente și „transparent”) și
- * „Selector” (`input type=color` + câmp hex). Culorile paletei sunt doar hex, deci mostrele le copiază valoarea.
+ * Selectorul de culoare: „Mostre” (tokenurile paletei modului editat; pentru elemente și „transparent”, în afară de
+ * elementele care au mereu fundal, ca antetul casetelor) și „Selector” (`input type=color` + câmp hex). Culorile
+ * paletei sunt doar hex, deci mostrele le copiază valoarea.
  */
 export function GcsStudioColorSelector({
   colorRef,
@@ -222,6 +223,7 @@ export function GcsStudioColorSelector({
   const [text, setText] = useState(hex);
   useEffect(() => setText(hex), [hex]);
   const element = colorRef.kind === "element";
+  const transparent = colorRef.kind === "element" && themeElementAllowsTransparent(colorRef.key);
   const tabs = [
     { id: "swatches" as const, label: t("tabs.swatches") },
     { id: "picker" as const, label: t("tabs.picker") },
@@ -264,7 +266,7 @@ export function GcsStudioColorSelector({
               </button>
             );
           })}
-          {element && (
+          {transparent && (
             <button
               type="button"
               role="option"

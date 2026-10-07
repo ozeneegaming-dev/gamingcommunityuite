@@ -41,15 +41,17 @@ export default async function ConversationPage({ params, searchParams }: Props) 
   return (
     <>
       <GcsRefreshAfterRead wasUnread={wasUnread} />
-      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        <Link href="/messages" style={{ fontSize: 13 }}>
-          <GcsIcon name="fa-solid fa-arrow-left" className="gcs-hIcon" />
-          {t("title")}
-        </Link>
-        <h1 className="gcs-display" style={{ margin: 0, fontSize: 28 }} data-testid="gcs-conversation-title">
-          {view.title}
-        </h1>
-      </div>
+      <header className="gcs-pageHeader">
+        <div className="gcs-pageHeader__text gcs-pageHeader__text--tight">
+          <Link href="/messages" className="gcs-pageHeader__back">
+            <GcsIcon name="fa-solid fa-arrow-left" className="gcs-hIcon" />
+            {t("title")}
+          </Link>
+          <h1 className="gcs-display gcs-pageHeader__title" style={{ fontSize: 28 }} data-testid="gcs-conversation-title">
+            {view.title}
+          </h1>
+        </div>
+      </header>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "flex-start" }}>
         <div style={{ flex: "999 1 640px", minWidth: 0, display: "flex", flexDirection: "column", gap: 14 }}>
           {view.pages > 1 && (
@@ -102,8 +104,8 @@ export default async function ConversationPage({ params, searchParams }: Props) 
           <GcsConversationReply conversationId={id} labels={{ send: t("send"), sending: t("sending"), reply: t("reply") }} />
         </div>
         <aside style={{ flex: "1 1 280px", minWidth: 0 }}>
-          <GcsCard as="section" style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
-            <h2 className="gcs-display" style={{ margin: 0, fontSize: 15, letterSpacing: ".08em", textTransform: "uppercase" }}>
+          <GcsCard as="section" className="gcs-titledBox" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <h2 className="gcs-display gcs-titleBand gcs-cardTitle">
               <GcsIcon name="fa-solid fa-user-group" className="gcs-hIcon" />
               {t("participants", { count: view.participants.length })}
             </h2>

@@ -29,6 +29,7 @@
     "./porting.css": "./src/porting.css",
     "./community.css": "./src/community.css",
     "./richtext.css": "./src/richtext.css",
+    "./titles.css": "./src/titles.css",
     "./icons": "./src/icons/index.tsx",
     "./icon-registry": "./src/icons/registry.ts",
     "./badge-art": "./src/badges/index.ts",

@@ -14,7 +14,8 @@ export const THEME_FONTS = ["Chakra Petch", "Manrope", "Inter", "Rajdhani", "Orb
 
 /**
  * Culorile elementelor (antet, subsol, casete, butoane…), separat pentru modul întunecat și cel luminos. Valoarea e un
- * hex (`#RRGGBB`), o referință la un token al paletei (`@accent` → `var(--gcs-accent)`) sau `transparent`.
+ * hex (`#RRGGBB`), o referință la un token al paletei (`@accent` → `var(--gcs-accent)`) sau `transparent` (în afară de
+ * elementele din `THEME_OPAQUE_ELEMENTS`).
  */
 export const THEME_ELEMENT_COLORS = [
   "bodyBg",
@@ -100,7 +101,10 @@ export type GcsThemeSettings = {
 
 export type GcsDeepPartial<T> = { [K in keyof T]?: T[K] extends Record<string, unknown> ? GcsDeepPartial<T[K]> : T[K] };
 
-/** Culorile implicite ale elementelor: exact regulile din `layout.css` / `base.css` de până acum. */
+/**
+ * Culorile implicite ale elementelor: regulile din `layout.css` / `base.css`. Antetul casetelor (banda titlurilor) are
+ * fundalul `@surface2`, diferit și de pagină (`@bg`), și de conținutul casetei (`@surface`), în ambele moduri.
+ */
 const DEFAULT_ELEMENTS: GcsThemeElements = {
   bodyBg: "@bg",
   heading: "@text",
@@ -114,7 +118,7 @@ const DEFAULT_ELEMENTS: GcsThemeElements = {
   drawerText: "@accentInk",
   boxBg: "@surface",
   boxBorder: "@border",
-  boxHeaderBg: "transparent",
+  boxHeaderBg: "@surface2",
   boxHeaderText: "@text",
   widgetTitle: "@text",
   widgetIcon: "@accentInk",
@@ -184,12 +188,26 @@ export const DEFAULT_THEME_SETTINGS: GcsThemeSettings = {
   buttons: { radius: 10 },
 };
 
+/**
+ * Elementele care au mereu un fundal propriu (specul `2026-10-07-antete-titluri.md`: fiecare titlu pe banda lui).
+ * Pentru ele, `transparent` sau o valoare goală înseamnă valoarea implicită, iar editorul nu oferă mostra „Transparent”.
+ */
+export const THEME_OPAQUE_ELEMENTS: readonly GcsThemeElementColor[] = ["boxHeaderBg"];
+
+/** Elementul poate fi `transparent` (în editorul vizual apare mostra „Transparent”). */
+export const themeElementAllowsTransparent = (key: GcsThemeElementColor): boolean => !THEME_OPAQUE_ELEMENTS.includes(key);
+
+/** Culoarea efectivă a unui element: la elementele opace, `transparent` sau gol devine valoarea implicită. */
+export function themeElementColor(key: GcsThemeElementColor, value: string): string {
+  return !themeElementAllowsTransparent(key) && (value === "transparent" || value.trim() === "") ? DEFAULT_ELEMENTS[key] : value;
+}
+
 // ─── Câmpurile ────────────────────────────────────────────────────────────────
 
 export type GcsThemeField =
   /** Culoare a paletei: doar hex (tokenurile nu se referă unele la altele). */
   | { kind: "palette" }
-  /** Culoare de element: hex, `@token` sau `transparent`. */
+  /** Culoare de element: hex, `@token` sau `transparent` (la elementele opace, `transparent` se normalizează). */
   | { kind: "color" }
   | { kind: "int"; min: number; max: number; step?: number; unit?: "px" | "%" }
   | { kind: "enum"; options: readonly string[] }
@@ -330,12 +348,18 @@ export function mergeThemeObjects<T>(base: T, patch: unknown): T {
   return out as T;
 }
 
-/** Setările salvate, completate cu valorile implicite (o temă veche, incompletă sau stricată rămâne validă). */
+/**
+ * Setările salvate, completate cu valorile implicite (o temă veche, incompletă sau stricată rămâne validă). Elementele
+ * opace (`THEME_OPAQUE_ELEMENTS`) salvate `transparent` primesc valoarea implicită.
+ */
 export function normalizeThemeSettings(raw: unknown): GcsThemeSettings {
   let out = structuredClone(DEFAULT_THEME_SETTINGS);
   for (const [path, field] of Object.entries(THEME_FIELDS)) {
     const value = themePath(raw, path);
     if (value !== undefined && themeFieldError(field, value) === null) out = withThemePath(out, path, value);
+  }
+  for (const mode of ["dark", "light"] as const) {
+    for (const key of THEME_OPAQUE_ELEMENTS) out = withThemePath(out, `elements.${mode}.${key}`, themeElementColor(key, out.elements[mode][key]));
   }
   return out;
 }

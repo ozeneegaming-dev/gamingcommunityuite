@@ -56,8 +56,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-const sectionTitle = { margin: 0, fontSize: 15, letterSpacing: ".08em", textTransform: "uppercase" } as const;
-
 /** Profilul „player card” (macheta Profil, specul etapei 3 §8). */
 export default async function MemberProfilePage({ params, searchParams }: Props) {
   const { ref } = await params;
@@ -217,8 +215,8 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
     );
 
   const aboutCard = (
-    <GcsCard as="section" style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
-      <h2 className="gcs-display" style={sectionTitle}>
+    <GcsCard as="section" className="gcs-titledBox" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <h2 className="gcs-display gcs-titleBand gcs-cardTitle">
         <GcsIcon name={TAB_ICONS.about} className="gcs-hIcon" />
         {t("tabs.about")}
       </h2>
@@ -237,8 +235,8 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
   );
 
   const accountsCard = (
-    <GcsCard as="section" style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
-      <h2 className="gcs-display" style={sectionTitle}>
+    <GcsCard as="section" className="gcs-titledBox" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <h2 className="gcs-display gcs-titleBand gcs-cardTitle">
         <GcsIcon name={TAB_ICONS.games} className="gcs-hIcon" />
         {t("linkedAccounts")}
       </h2>
@@ -281,8 +279,8 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
 
   /** Coloana laterală: primele 6 insigne (48 px) cu numele. */
   const badgesCompact = (
-    <GcsCard as="section" style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
-      <h2 className="gcs-display" style={sectionTitle}>
+    <GcsCard as="section" className="gcs-titledBox" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <h2 className="gcs-display gcs-titleBand gcs-cardTitle">
         <GcsIcon name={TAB_ICONS.badges} className="gcs-hIcon" />
         {t("badgesCount", { count: profile.badges.length })}
       </h2>
@@ -308,7 +306,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
     const activity = await services().profileQueries.activity(actor, user.id, query.before ? { before: query.before } : {});
     main = (
       <GcsCard as="section" style={{ overflow: "hidden" }}>
-        <h2 className="gcs-display" style={{ ...sectionTitle, padding: "16px 20px", borderBottom: "1px solid var(--gcs-border)" }}>
+        <h2 className="gcs-display gcs-titleBand gcs-cardTitle">
           <GcsIcon name={TAB_ICONS.activity} className="gcs-hIcon" />
           {t("recentActivity")}
         </h2>
@@ -380,7 +378,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
           </GcsCard>
         )}
         <GcsCard as="section" style={{ overflow: "hidden" }}>
-          <h2 className="gcs-display" style={{ ...sectionTitle, padding: "16px 20px", borderBottom: "1px solid var(--gcs-border)" }}>
+          <h2 className="gcs-display gcs-titleBand gcs-cardTitle">
             <GcsIcon name="fa-solid fa-comments" className="gcs-hIcon" />
             {t("wall.title")}
           </h2>
@@ -418,8 +416,8 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
   } else if (tab === "followers") {
     const followers = await services().profileQueries.followers(actor, user.id, pageParam(query.page));
     main = (
-      <GcsCard as="section" style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
-        <h2 className="gcs-display" style={sectionTitle}>
+      <GcsCard as="section" className="gcs-titledBox" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <h2 className="gcs-display gcs-titleBand gcs-cardTitle">
           <GcsIcon name={TAB_ICONS.followers} className="gcs-hIcon" />
           {t("followersCount", { count: followers?.total ?? 0 })}
         </h2>
@@ -442,8 +440,8 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
   } else if (tab === "badges") {
     const showcase = (await services().profileQueries.badgeShowcase(actor, user.id)) ?? { earned: profile.badges, locked: [] };
     main = (
-      <GcsCard as="section" style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
-        <h2 className="gcs-display" style={sectionTitle}>
+      <GcsCard as="section" className="gcs-titledBox" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <h2 className="gcs-display gcs-titleBand gcs-cardTitle">
           <GcsIcon name={TAB_ICONS.badges} className="gcs-hIcon" />
           {t("badgesCount", { count: showcase.earned.length })}
         </h2>
@@ -504,8 +502,8 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
   } else {
     const warnings = (await services().profileQueries.warnings(actor, user.id)) ?? [];
     main = (
-      <GcsCard as="section" style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 12 }} data-testid="gcs-profile-warnings">
-        <h2 className="gcs-display" style={sectionTitle}>
+      <GcsCard as="section" className="gcs-titledBox" style={{ display: "flex", flexDirection: "column", gap: 12 }} data-testid="gcs-profile-warnings">
+        <h2 className="gcs-display gcs-titleBand gcs-cardTitle">
           <GcsIcon name={TAB_ICONS.warnings} className="gcs-hIcon" />
           {t("tabs.warnings")}
         </h2>

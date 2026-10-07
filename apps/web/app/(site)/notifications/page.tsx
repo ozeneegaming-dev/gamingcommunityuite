@@ -27,18 +27,18 @@ export default async function NotificationsPage({ searchParams }: { searchParams
 
   return (
     <>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <h1 className="gcs-display" style={{ margin: 0, fontSize: 30 }}>
+      <header className="gcs-pageHeader gcs-pageHeader--center">
+        <h1 className="gcs-display gcs-pageHeader__title">
           <GcsIcon name="fa-solid fa-bell" className="gcs-hIcon" />
           {t("title")}
         </h1>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div className="gcs-pageHeader__actions">
           <GcsMarkAllRead label={t("markAll")} />
           <GcsButton variant="ghost" asChild icon={<GcsIcon name="fa-solid fa-sliders" />}>
             <Link href="/settings/notifications">{t("preferences")}</Link>
           </GcsButton>
         </div>
-      </div>
+      </header>
       {shown.length === 0 ? (
         <p className="gcs-muted">
           <GcsIcon name="fa-regular fa-bell-slash" className="gcs-emptyIcon" />

@@ -22,8 +22,8 @@ export default async function NewConversationPage({ searchParams }: { searchPara
       ? await services().db.user.findUnique({ where: { id: to }, select: { id: true, name: true } })
       : null;
   return (
-    <GcsCard as="section" style={{ padding: "22px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 26 }}>
+    <GcsCard as="section" className="gcs-titledBox gcs-titledBox--roomy" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <h1 className="gcs-display gcs-titleBand" style={{ fontSize: 26 }}>
         <GcsIcon name="fa-solid fa-pen" className="gcs-hIcon" />
         {t("new")}
       </h1>

@@ -13,7 +13,7 @@ import { rememberAuthReturn } from "@/lib/auth-return";
 export function GcsAuthModal({ title, subtitle, closeLabel, icon, children }: { title: string; subtitle: string; closeLabel: string; icon?: ReactNode; children: ReactNode }) {
   const router = useRouter();
   return (
-    <GcsModal title={title} closeLabel={closeLabel} size="sm" onClose={() => router.back()} {...(icon ? { icon } : {})}>
+    <GcsModal title={title} closeLabel={closeLabel} size="sm" className="gcs-authModal" onClose={() => router.back()} {...(icon ? { icon } : {})}>
       <p className="gcs-muted" style={{ margin: "0 0 16px" }}>
         {subtitle}
       </p>

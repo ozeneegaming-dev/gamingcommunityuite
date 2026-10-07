@@ -3,6 +3,7 @@ import {
   THEME_ELEMENT_COLORS,
   THEME_TOKENS,
   themeColorCss,
+  themeElementColor,
   themeFonts,
   type GcsThemeElementColor,
   type GcsThemeElements,
@@ -127,8 +128,9 @@ function primaryHover(elements: GcsThemeElements, p: GcsThemePalette, base: GcsT
   return `color-mix(in srgb, ${themeColorCss(elements.btnPrimaryBg)} 86%, #fff)`;
 }
 
+/** Variabilele culorilor de element (elementele opace nu ies niciodată `transparent`, nici din setări nenormalizate). */
 const elements = (e: GcsThemeElements, p: GcsThemePalette, base: GcsThemePalette) =>
-  [...THEME_ELEMENT_COLORS.map((k) => `  ${THEME_ELEMENT_VARS[k]}: ${themeColorCss(e[k])};`), `  --gcs-btn-primary-hover: ${primaryHover(e, p, base)};`].join("\n");
+  [...THEME_ELEMENT_COLORS.map((k) => `  ${THEME_ELEMENT_VARS[k]}: ${themeColorCss(themeElementColor(k, e[k]))};`),`  --gcs-btn-primary-hover: ${primaryHover(e, p, base)};`].join("\n");
 
 /** Fonturile livrate cu aplicația (prin next/font) au o variabilă proprie; restul vin din Google Fonts. */
 const BUNDLED_FONTS: Record<string, string> = { "Chakra Petch": "var(--font-gcs-display)", Manrope: "var(--font-gcs-text)" };

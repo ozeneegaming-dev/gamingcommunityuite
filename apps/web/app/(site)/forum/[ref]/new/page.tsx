@@ -36,11 +36,13 @@ export default async function NewTopicPage({ params }: Props) {
 
   return (
     <>
-      <GcsBreadcrumb crumbs={data.breadcrumb} />
-      <h1 className="gcs-display gcs-pageHeader__title">
-        <GcsIcon name="fa-solid fa-pen-to-square" className="gcs-hIcon" />
-        {t("newTopic.title", { forum: data.forum.name })}
-      </h1>
+      <header className="gcs-pageHeader">
+        <GcsBreadcrumb crumbs={data.breadcrumb} />
+        <h1 className="gcs-display gcs-pageHeader__title">
+          <GcsIcon name="fa-solid fa-pen-to-square" className="gcs-hIcon" />
+          {t("newTopic.title", { forum: data.forum.name })}
+        </h1>
+      </header>
       {data.forum.type === "FORUM" || data.forum.type === "QA" ? (
         <GcsNewTopicForm
           forum={{ id: data.forum.id, href: forumHref(data.forum) }}

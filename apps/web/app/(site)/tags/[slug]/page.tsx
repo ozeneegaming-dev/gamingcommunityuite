@@ -25,10 +25,12 @@ export default async function TagPage({ params, searchParams }: Props) {
 
   return (
     <>
-      <h1 className="gcs-display gcs-pageHeader__title">
-        <GcsIcon name="fa-solid fa-tags" className="gcs-hIcon" />
-        {t("title", { tag: data.tag.name })}
-      </h1>
+      <header className="gcs-pageHeader">
+        <h1 className="gcs-display gcs-pageHeader__title">
+          <GcsIcon name="fa-solid fa-tags" className="gcs-hIcon" />
+          {t("title", { tag: data.tag.name })}
+        </h1>
+      </header>
       <section className="gcs-card gcs-topicList">
         {data.topics.length === 0 ? (
           <p className="gcs-topicList__empty">

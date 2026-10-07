@@ -24,15 +24,15 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
 
   return (
     <>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <h1 className="gcs-display" style={{ margin: 0, fontSize: 30 }}>
+      <header className="gcs-pageHeader gcs-pageHeader--center">
+        <h1 className="gcs-display gcs-pageHeader__title">
           <GcsIcon name="fa-solid fa-envelope" className="gcs-hIcon" />
           {t("title")}
         </h1>
         <GcsButton variant="primary" asChild icon={<GcsIcon name="fa-solid fa-pen" />}>
           <Link href="/messages/new">{t("new")}</Link>
         </GcsButton>
-      </div>
+      </header>
       <GcsCard as="section" style={{ overflow: "hidden" }}>
         {inbox.items.length === 0 && (
           <p className="gcs-muted" style={{ padding: "20px 24px", margin: 0 }}>

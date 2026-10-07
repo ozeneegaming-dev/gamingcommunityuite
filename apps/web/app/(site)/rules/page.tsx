@@ -24,10 +24,12 @@ export default async function RulesPage() {
     const canEdit = actor.userId !== null && (await acp.can(actor, COMMUNITY_RULES_ACP_SECTION, "edit"));
     return (
       <GcsCard as="section" className="gcs-rules" aria-labelledby="gcs-rules-title" data-testid="gcs-rules-empty">
-        <h1 id="gcs-rules-title" className="gcs-display gcs-pageHeader__title">
-          <GcsIcon name="fa-solid fa-scale-balanced" className="gcs-hIcon" />
-          {t("title")}
-        </h1>
+        <header className="gcs-rules__head">
+          <h1 id="gcs-rules-title" className="gcs-display gcs-pageHeader__title">
+            <GcsIcon name="fa-solid fa-scale-balanced" className="gcs-hIcon" />
+            {t("title")}
+          </h1>
+        </header>
         <p className="gcs-muted" style={{ margin: 0, fontSize: 15 }}>
           <GcsIcon name="fa-regular fa-file-lines" className="gcs-emptyIcon" />
           {t("empty")}
