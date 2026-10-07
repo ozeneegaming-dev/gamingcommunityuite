@@ -295,7 +295,10 @@ function lexTag(src: string, templateType: string): (string | Token)[] {
           ? { k: "endfor" }
           : { k: "for", expr: parsePath((a.loop ?? "").replace(/^\{|\}$/g, "")), item: (a.value ?? "$item").replace(/^\$/, "").replace(/\W/g, "") || "item", key: a.key ? a.key.replace(/^\$/, "").replace(/\W/g, "") || null : null };
         break;
+      // Comentariile dispar; CSS-ul inclus e deja în `assets/style.css`.
       case "contentcheck":
+      case "comment":
+      case "css":
         token = "";
         break;
       case "title":

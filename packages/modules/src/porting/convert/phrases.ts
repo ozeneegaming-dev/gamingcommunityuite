@@ -43,10 +43,10 @@ export type GcsPhraseTable = {
 
 /** Tabelul frazelor: întâi cele folosite (`used`, în ordine), apoi restul, până la `MAX_PHRASES`. */
 export function convertPhrases(phrases: Map<string, string>, used: Iterable<string>): GcsPhraseTable {
-  const order: string[] = [];
   const seen = new Set<string>();
-  for (const k of used) if (phrases.has(k) && !seen.has(k)) order.push(k), seen.add(k);
-  for (const k of phrases.keys()) if (!seen.has(k)) order.push(k), seen.add(k);
+  for (const k of used) if (phrases.has(k)) seen.add(k);
+  for (const k of phrases.keys()) seen.add(k);
+  const order = [...seen];
   const entries: Record<string, string> = {};
   const map = new Map<string, string>();
   const taken = new Set<string>();
