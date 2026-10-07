@@ -29,16 +29,19 @@ fișierele lor păstrează doar tipografia și aranjamentul.
 | Proprietate | Valoare |
 |---|---|
 | Fundal | `var(--gcs-box-header-bg, var(--gcs-surface2))` — elementul de temă „Fundalul antetului casetelor” |
-| Text | `var(--gcs-box-header-text, var(--gcs-text))`; linkurile din titlu au aceeași culoare |
+| Text | `var(--gcs-box-header-text, var(--gcs-text))`; linkurile din titlu au aceeași culoare. Excepții care păstrează controlul lor din temă: titlurile widget-urilor (`--gcs-widget-title`, „Titlul widget-urilor”) și titlul paginii (`--gcs-heading`) |
 | Separator | o linie de 1 px jos, `var(--gcs-box-border, var(--gcs-border))` (aceeași ca bordura casetei) |
 | Padding | 12 px vertical; orizontal = padding-ul casetei (titlul se aliniază cu conținutul de dedesubt) |
 | Colțuri | sus = raza casetei minus grosimea bordurii (`calc(var(--gcs-radius, 14px) - var(--gcs-box-border-w, 1px))`), jos 0 |
 | Poziție | prima „felie” a casetei, pe toată lățimea ei |
 
 Casetele cu padding (cardurile laterale, cardurile profilului, setările, planurile VIP, regulile, rezultatele
-căutării…) își țin padding-ul în `--gcs-box-pad-y` / `--gcs-box-pad-x`; titlul de la început iese până la margini
-(`margin: calc(-1 * pad-y) calc(-1 * pad-x) 0`), deci nu se schimbă nici markup-ul, nici conținutul. Clasa
-`.gcs-titledBox` dă casetei padding-ul din variabile (implicit 18 × 20 px) și face banda primului titlu.
+căutării, dialogurile…) își țin padding-ul în `--gcs-box-pad-y` / `--gcs-box-pad-x`; titlul de la început iese până la
+margini (`margin: calc(-1 * pad-y) calc(-1 * pad-x) var(--gcs-band-gap, 0)`), deci nu se schimbă nici ordinea, nici
+conținutul. `--gcs-band-pad-y` (implicit 12 px) e padding-ul vertical al benzii, `--gcs-band-gap` spațiul de sub ea
+acolo unde caseta nu are `gap` (dialogurile, cardul de login). Clasa `.gcs-titledBox` dă unei casete padding-ul din
+variabile (implicit 18 × 20 px; `--roomy`: 22 × 24 px) și face banda primului titlu (`.gcs-titleBand`); stilurile
+inline cu `padding` / `margin` de pe casete și titluri dispar (ar bate regulile benzii).
 
 **Iconița și accentul.** Iconița titlului rămâne la începutul benzii, centrată vertical (pătratul de accent al
 widget-urilor, iconița categoriei, `gcs-hIcon`). Accentele existente stau **peste** bandă, nu în locul ei:
@@ -60,7 +63,13 @@ primesc fundalul casetei, ca să nu se piardă în bandă.
 Aceeași bandă, mai discretă: același fundal și separator, padding 8–10 px, colțurile sub-blocului. Se folosește când
 o casetă are secțiuni cu titlu propriu (secțiunile setărilor, „Cine e online” și legenda din panoul de statistici,
 grupurile camerelor de chat, grupurile emoticoanelor). Un titlu de secțiune fără chenar propriu (ex. „Insigne
-blocate”, subtitlurile setărilor) devine o fâșie de bandă cu colțuri de 8 px, pe toată lățimea secțiunii.
+blocate”, subtitlurile setărilor) devine o fâșie de bandă cu chenar și colțuri de 8 px, pe toată lățimea secțiunii.
+Textul sub-benzilor își păstrează culoarea (etichetele secundare, gri, rămân gri); doar titlurile secțiunilor de
+setări folosesc textul benzii.
+
+Secțiunile de setări făcute cu `<fieldset>` își păstrează `<legend>`-ul (numele grupului pentru cititoarele de ecran):
+legend-ul primește `float: left` și lățimea secțiunii, deci nu mai stă pe chenar, ci devine primul rând (banda), ca
+titlurile celorlalte secțiuni.
 
 ### 2.3 Panoul de antet al paginii (`.gcs-pageHeader`)
 
@@ -135,6 +144,7 @@ iar textul secundar (`--gcs-muted`) ≥ 4.5:1.
 | Răspunsul rapid | `.gcs-replyBox__title` | `--gcs-surface2` scris direct | bandă (aceeași variabilă) |
 | Sondajul | `.gcs-poll__question` | text pe caseta | bandă |
 | Zilele din „Activitate” | `.gcs-stream__dayTitle` | `--gcs-surface2` scris direct | bandă (aceeași variabilă, textul rămâne `--gcs-muted`) |
+| „Unelte de moderare” din topic (`<details>`) | `.gcs-modMenu__summary` | text pe caseta | bandă (închis: toată caseta; deschis: cu separator) |
 | Cardurile profilului (Despre, Conturi, Insigne, Activitate, Urmăritori, Avertismente…) | `.gcs-profileSection__title` (era stil inline) | text pe caseta | bandă |
 | Secțiunea din dreapta a setărilor | `.gcs-settingsCard > … > .gcs-settingsTitle` (primul titlu) | text pe caseta | bandă |
 | Planurile VIP | `.gcs-vipPlan__head` | text pe caseta | bandă sub linia planului |
@@ -179,6 +189,10 @@ iar textul secundar (`--gcs-muted`) ≥ 4.5:1.
 - Antetul postării (`.gcs-post__head`: data, numărul), antetul mesajelor (`.gcs-message__head`), titlul membrului din
   postbit (`.gcs-postbit__title`), coperta hover card-ului: meta, nu titluri.
 - Anunțul erou (vezi §2.3) și etichetele plăcilor de statistici.
+- Titlurile **din conținutul scris de membri sau de admin** (titlurile din postări, din regulile comunității, din
+  anunț): sunt formatarea autorului, în interiorul casetei care are deja banda ei.
+- Capetele de tabel (`.gcs-board__table th`), titlurile toast-urilor (notificări trecătoare, în colțul ecranului) și
+  etichetele câmpurilor din formulare.
 - **ACP-ul** și uneltele de administrare de pe site: editorul vizual al temei și lista „Widget-uri disponibile” a
   modului „Editează pagina” (`.gcs-pageSidebar`) au designul ACP.
 
