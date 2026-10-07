@@ -7,6 +7,7 @@
     ".": "./src/index.ts",
     "./themes": "./src/themes/shared.ts",
     "./diff": "./src/templates/diff.ts",
+    "./rich-fields": "./src/content/richFields.ts",
     "./test/redis": "./test/redis.ts",
     "./test/redisSetup": "./test/redisSetup.ts",
     "./test/world": "./test/world.ts",

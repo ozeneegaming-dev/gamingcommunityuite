@@ -194,6 +194,20 @@ describe("câmpurile și layout-ul implicit", () => {
     expect(config({ title: "prea lung" })).toBeNull();
   });
 
+  test("fieldsConfig: câmpul `richtext` acceptă documentul valid după profil, textul vechi și golul", () => {
+    const config = fieldsConfig([{ key: "body", labelKey: "b", type: "richtext", maxLength: 20, profile: "announcement" }], { body: "" });
+    const doc = (...content: unknown[]) => ({ type: "doc", content });
+    const formatted = doc({ type: "paragraph", content: [{ type: "text", text: "Bun venit", marks: [{ type: "bold" }] }] }, { type: "image", attrs: { src: "https://cdn.example/a.png" } });
+    expect(config({})).toEqual({ body: "" });
+    expect(config({ body: formatted })).toEqual({ body: formatted });
+    expect(config({ body: "<p>anunț vechi</p>" })).toEqual({ body: "<p>anunț vechi</p>" });
+    expect(config({ body: "x".repeat(21) })).toBeNull();
+    expect(config({ body: doc({ type: "paragraph", content: [{ type: "text", text: "x", marks: [{ type: "link", attrs: { href: "javascript:alert(1)" } }] }] }) })).toBeNull();
+    expect(config({ body: doc({ type: "embed", attrs: { url: "https://youtu.be/dQw4w9WgXcQ" } }) })).toBeNull();
+    expect(config({ body: { type: "html", html: "<script>alert(1)</script>" } })).toBeNull();
+    expect(config({ body: 42 })).toBeNull();
+  });
+
   test("layout-ul implicit se pune o singură dată; o pagină golită de admin rămâne goală; „reset” îl readuce", async () => {
     const withDefaults: GcsModule = { ...base, key: "defaults", widgets: [], nav: [], widgetLayout: { index: [{ zone: "sidebar", type: "base.recent" }, { zone: "top", type: "base.sidebarOnly" }] } };
     const world = await createWorld([base, withDefaults]);

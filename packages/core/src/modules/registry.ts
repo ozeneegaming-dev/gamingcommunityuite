@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { Prisma, PrismaClient } from "@gcs/db";
 import type { GcsCache } from "../cache";
+import type { GcsRichFieldKey } from "../content/richFields";
 import type { GcsEvent, GcsEventBus } from "../events";
 import type { GcsSettingDef } from "../settings/registry";
 
@@ -102,6 +103,11 @@ export type GcsWidgetDef = {
 export type GcsWidgetField =
   | { key: string; labelKey: string; type: "number"; min: number; max: number }
   | { key: string; labelKey: string; type: "text" | "textarea"; maxLength: number }
+  /**
+   * Text formatat în editorul compact (specul `2026-10-07-editor-campuri`): valoarea e documentul editorului, validat
+   * după profilul `profile` din `GCS_RICH_FIELDS`, sau un text vechi (afișat ca înainte); `maxLength` = caractere de text.
+   */
+  | { key: string; labelKey: string; type: "richtext"; maxLength: number; profile: GcsRichFieldKey }
   | { key: string; labelKey: string; type: "select"; options?: readonly { value: string; labelKey: string }[]; optionsFrom?: string };
 
 /** Layout-ul implicit al paginilor, contribuit de module (seed; doar pe paginile fără widget-uri). */
