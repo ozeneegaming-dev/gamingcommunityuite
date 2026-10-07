@@ -1,7 +1,7 @@
 "use client";
 
 import { faEnvelope, faUserMinus, faUserPlus } from "@fortawesome/free-solid-svg-icons";
-import { GcsButton, GcsHoverCard, GcsIconSvg, type GcsHoverCardData, type GcsHoverCardLabels } from "@gcs/ui";
+import { GcsButton, GcsHoverCard, GcsIconSvg, placeHoverCard, type GcsHoverCardData, type GcsHoverCardLabels, type GcsHoverCardPlacement } from "@gcs/ui";
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -15,7 +15,6 @@ const OPEN_DELAY = 300;
 const CLOSE_GRACE = 150;
 const LONG_PRESS = 500;
 const CLIENT_TTL = 5 * 60_000;
-const WIDTH = 340;
 
 /** Cache-ul din client (5 minute), comun tuturor cardurilor din pagină. `null` = profil invizibil. */
 const cache = new Map<string, { at: number; data: CardData | null }>();
@@ -29,7 +28,7 @@ async function load(userId: string, fresh = false): Promise<CardData | null> {
   return data;
 }
 
-type Open = { userId: string; anchor: HTMLElement; data: CardData; top: number; left: number };
+type Open = { userId: string; anchor: HTMLElement; data: CardData };
 
 /**
  * Cardul din șablonul temei: HTML-ul sanitizat pe server (fără scripturi sau atribute `on*`), cu butoanele React puse
@@ -49,21 +48,15 @@ function TemplatedCard({ html, actions }: { html: string; actions: ReactNode }) 
   );
 }
 
-function position(anchor: HTMLElement): { top: number; left: number } {
-  const r = anchor.getBoundingClientRect();
-  const left = Math.max(12, Math.min(r.left, window.innerWidth - WIDTH - 12));
-  const below = r.bottom + 8;
-  // Deasupra, dacă dedesubt nu e loc (cardul are ~300px).
-  const top = below + 320 > window.innerHeight && r.top > 340 ? r.top - 328 : below;
-  return { top, left };
-}
-
 /**
  * Hover card-ul pe orice nume de membru (`[data-user-id]`, spec §8): apare după 300 ms de hover sau focus,
  * rămâne deschis cât timp mouse-ul e pe el, se închide cu Escape. Pe ecrane tactile: apăsare lungă.
  */
 export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: string }) {
   const [open, setOpen] = useState<Open | null>(null);
+  /** Locul cardului, calculat după mărimea lui măsurată; `null` = încă nemăsurat (stratul e ascuns). */
+  const [place, setPlace] = useState<GcsHoverCardPlacement | null>(null);
+  const layer = useRef<HTMLDivElement>(null);
   const [pending, startTransition] = useTransition();
   const openTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -89,9 +82,31 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
     openTimer.current = setTimeout(async () => {
       const data = await load(userId).catch(() => null);
       if (!data || !anchor.isConnected) return;
-      setOpen({ userId, anchor, data, ...position(anchor) });
+      setPlace(null);
+      setOpen({ userId, anchor, data });
     }, delay);
   }, []);
+
+  // Așezarea: după desenarea ascunsă, înainte de afișare (fără pâlpâire), apoi la orice schimbare de mărime a cardului
+  // (conținut încărcat, butonul „Urmărește” schimbat, șablonul temei) și a ferestrei. Stratul e `position: fixed`,
+  // deci coordonatele sunt ale viewport-ului (ca `getBoundingClientRect()`), indiferent de scroll.
+  useLayoutEffect(() => {
+    const el = layer.current;
+    if (!open || !el) return;
+    const update = () => {
+      if (!open.anchor.isConnected) return;
+      const next = placeHoverCard(open.anchor.getBoundingClientRect(), { width: el.offsetWidth, height: el.offsetHeight }, { width: document.documentElement.clientWidth, height: window.innerHeight });
+      setPlace((p) => (p && p.top === next.top && p.left === next.left && p.side === next.side ? p : next));
+    };
+    update();
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(update);
+    observer?.observe(el);
+    window.addEventListener("resize", update);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, [open]);
 
   useEffect(() => {
     const anchorOf = (e: Event) => (e.target instanceof Element ? (e.target.closest("[data-user-id]") as HTMLElement | null) : null);
@@ -210,7 +225,14 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
     ) : undefined;
 
   return (
-    <div className="gcs-hoverCardLayer" style={{ top: open.top, left: open.left }} onPointerEnter={keepOpen} onPointerLeave={scheduleClose}>
+    <div
+      ref={layer}
+      className="gcs-hoverCardLayer"
+      style={{ top: place?.top ?? 0, left: place?.left ?? 0 }}
+      data-side={place?.side ?? "pending"}
+      onPointerEnter={keepOpen}
+      onPointerLeave={scheduleClose}
+    >
       {data.html ? <TemplatedCard html={data.html} actions={actions} /> : <GcsHoverCard data={data} labels={labels} format={{ number, year }} actions={actions} />}
     </div>
   );
