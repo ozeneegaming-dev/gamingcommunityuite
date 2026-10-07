@@ -111,8 +111,10 @@ export type GcsWidgetLayoutDefaults = Partial<Record<GcsWidgetPage, { zone: GcsW
 export type GcsStatTile = { key: string; labelKey: string; value: number; icon: string; href?: string; color?: string };
 export type GcsStatsContext = { db: PrismaClient };
 
-/** Un item implicit din meniul principal, declarat de un modul. */
-export type GcsNavDefault = { key: string; labelKey: string; icon: string; href: string; position: number };
+/** Un subitem implicit (un singur nivel sub un item din meniul principal). */
+export type GcsNavDefaultChild = { key: string; labelKey: string; icon: string; href: string };
+/** Un item implicit din meniul principal, declarat de un modul (cu subitemii lui, dacă are submeniu). */
+export type GcsNavDefault = GcsNavDefaultChild & { position: number; children?: GcsNavDefaultChild[] };
 
 /** Un modul GamingCommunitySuite (spec §5). Restul câmpurilor din spec se adaugă în etapele care le folosesc. */
 export interface GcsModule {
@@ -144,6 +146,11 @@ export interface GcsModule {
   stats?: (ctx: GcsStatsContext) => Promise<GcsStatTile[]>;
   /** Itemii modulului din meniul principal implicit. */
   nav?: GcsNavDefault[];
+  /**
+   * Itemii modulului din meniul implicit anterior (lipsă = aceiași cu `nav`). Recunosc un meniu pe care adminul nu
+   * l-a modificat, ca actualizarea meniului (marcajul `nav:v2`) să-l poată înlocui cu cel nou.
+   */
+  navPrevious?: GcsNavDefault[];
 }
 
 export class GcsModuleRegistry {

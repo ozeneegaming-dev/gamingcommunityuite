@@ -6,7 +6,14 @@
       "forum": "Forum",
       "chat": "Chat",
       "members": "Members",
-      "staff": "Staff"
+      "staff": "Staff",
+      "activity": "Activity",
+      "membersAll": "All members",
+      "membersOnline": "Online now",
+      "leaderboard": "Leaderboard",
+      "vip": "VIP",
+      "rules": "Rules",
+      "more": "More"
     },
     "acp": "ACP",
     "myProfile": "My profile",
@@ -263,7 +270,8 @@
         "import": "Import from another platform",
         "porting": "Plugin porting",
         "settings_languages": "Languages & translation",
-        "hooks": "Hooks"
+        "hooks": "Hooks",
+        "settings_rules": "Community rules"
       },
       "members": {
         "members": "Members",
@@ -310,7 +318,8 @@
         "subscribers": "Subscribers",
         "history": "History",
         "name_styles": "Name styles",
-        "frames": "Avatar frames"
+        "frames": "Avatar frames",
+        "page": "VIP page"
       },
       "appearance": {
         "appearance": "Appearance",
@@ -713,7 +722,8 @@
         "notifications": "Notifications",
         "chat": "Chat",
         "languages": "Languages & translation",
-        "postbit": "Postbit"
+        "postbit": "Postbit",
+        "vip": "VIP page and expiry"
       },
       "save": "Save settings",
       "secretSet": "•••• saved (leave empty to keep the value)",
@@ -1726,6 +1736,18 @@
           "postbit_after_fields": "Below the author card in posts."
         }
       }
+    },
+    "rules": {
+      "title": "Community rules",
+      "hint": "The rules appear on the public /rules page and are written with the post editor. While they are empty, the “Rules” item is left out of the site menu.",
+      "updated": "Published; last updated {date}.",
+      "empty": "Not published: the page shows an empty state and the item is left out of the menu.",
+      "view": "View the page",
+      "save": "Save the rules",
+      "clear": "Delete the rules",
+      "saved": "The rules were saved.",
+      "cleared": "The rules were deleted.",
+      "confirmClear": "Delete the rules? The page will show an empty state and the “Rules” item leaves the menu."
     }
   },
   "settings": {
@@ -1803,7 +1825,9 @@
       "messages_per_page": "Messages per page in a conversation"
     },
     "vip": {
-      "warn_days": "Days before expiry the member is warned"
+      "warn_days": "Days before expiry the member is warned",
+      "contact_url": "Link of the “Contact the staff” button on the VIP page (empty = the Staff page)",
+      "page_intro": "Introduction text of the VIP page (empty = the default text)"
     },
     "title": "Account settings",
     "nav": {
@@ -1961,6 +1985,9 @@
       "remove": "Remove signature",
       "saved": "Your signature has been saved.",
       "preview": "Preview"
+    },
+    "rules": {
+      "content": "Community rules"
     }
   },
   "permissions": {
@@ -3569,5 +3596,113 @@
       "convert_failed": "The conversion failed with an unexpected error. The source is still uploaded: you can try again.",
       "not_found": "The porting does not exist or has expired (it is kept for one day)."
     }
+  },
+  "activity": {
+    "title": "Activity",
+    "lead": "What happened recently in the community: new topics, replies, statuses and new members.",
+    "filters": "What the stream shows",
+    "filter": {
+      "all": "All",
+      "topics": "Topics",
+      "replies": "Replies",
+      "statuses": "Statuses"
+    },
+    "unreadOnly": "Unread only",
+    "toggleOn": "(on)",
+    "toggleOff": "(off)",
+    "line": {
+      "topic": "<user></user> started the topic <topic></topic>",
+      "reply": "<user></user> replied in <topic></topic>",
+      "status": "<user></user> updated their status",
+      "wall": "<user></user> wrote on <owner></owner>'s profile",
+      "member": "<user></user> joined the community"
+    },
+    "kind": {
+      "topic": "New topic",
+      "reply": "Reply",
+      "status": "Status",
+      "member": "New member"
+    },
+    "seeWall": "View profile",
+    "deletedUser": "Deleted member",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "older": "Older",
+    "newest": "Newest",
+    "pages": "Activity navigation",
+    "empty": "Nothing yet. The stream fills up as members post.",
+    "emptyFiltered": "Nothing of this kind yet.",
+    "emptyUnread": "You're all caught up: nothing unread."
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "lead": {
+      "week": "The most active members of the last 7 days, by {metric}.",
+      "month": "The most active members of the last 30 days, by {metric}.",
+      "all": "The best members of all time, by {metric}."
+    },
+    "metricLabel": "Measure",
+    "periodLabel": "Period",
+    "metric": {
+      "reputation": "Reputation",
+      "posts": "Posts",
+      "xp": "XP",
+      "solutions": "Solutions"
+    },
+    "metricLower": {
+      "reputation": "reputation",
+      "posts": "posts",
+      "xp": "XP",
+      "solutions": "solutions"
+    },
+    "period": {
+      "week": "This week",
+      "month": "This month",
+      "all": "All time"
+    },
+    "podium": "Podium",
+    "place": "Place {rank}",
+    "table": "The rest of the leaderboard",
+    "col": {
+      "rank": "Place",
+      "member": "Member",
+      "group": "Group"
+    },
+    "you": "You",
+    "empty": "Nobody has points here yet. Post, help and get reactions to show up on the leaderboard.",
+    "forbidden": "You don't have access to the leaderboard.",
+    "note": {
+      "period": "Values come from what was created in the chosen period and refresh every few minutes.",
+      "all": "Values are the profile totals and refresh every few minutes."
+    }
+  },
+  "vipPage": {
+    "title": "VIP",
+    "lead": "Support the community and get perks: a styled name, higher limits and extra access.",
+    "mine": {
+      "label": "Your plan",
+      "expires": "expires on {date} ({days, plural, one {# day left} other {# days left}})",
+      "permanent": "never expires"
+    },
+    "yourPlan": "Your plan",
+    "preview": "Your name will look like this:",
+    "sampleName": "YourName",
+    "benefits": "Perks",
+    "limit": "{label}: {value}",
+    "unlimited": "unlimited",
+    "forums": "Access to:",
+    "nameStyles": "{count, plural, one {# exclusive name style} other {# exclusive name styles}}",
+    "frames": "{count, plural, one {# exclusive avatar frame} other {# exclusive avatar frames}}",
+    "terms": "You agree on the duration and price with the staff.",
+    "termsCheckout": "Pay online; the plan is activated right away.",
+    "contact": "Contact the staff",
+    "buy": "Buy",
+    "empty": "There are no VIP plans yet."
+  },
+  "rules": {
+    "title": "Community rules",
+    "updated": "Updated on {date}",
+    "empty": "The rules haven't been published yet.",
+    "write": "Write the rules"
   }
 }

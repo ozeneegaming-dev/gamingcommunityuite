@@ -5,7 +5,7 @@ import { writeAudit } from "../audit";
 import type { GcsCache } from "../cache";
 import { GcsValidationError } from "../errors";
 import type { GcsEventBus } from "../events";
-import type { GcsModuleRegistry } from "../modules/registry";
+import type { GcsModuleRegistry, GcsNavDefault, GcsNavDefaultChild } from "../modules/registry";
 import type { GcsActor } from "../permissions/types";
 
 export const MENUS_ACP_SECTION = "system.menu_manager";
@@ -169,12 +169,73 @@ export class GcsNavService {
   /** Meniul implicit din itemii declarați de module, dacă meniul e gol (seed; idempotent). */
   static async seedDefaults(tx: Prisma.TransactionClient, registry: GcsModuleRegistry): Promise<void> {
     if ((await tx.navItem.count()) > 0) return;
-    const items = registry
-      .all()
-      .flatMap((m) => (m.nav ?? []).map((n) => ({ ...n, appKey: m.app?.optional ? m.key : null })))
-      .sort((a, b) => a.position - b.position);
-    for (const [position, n] of items.entries()) {
-      await tx.navItem.create({ data: { position, label: { key: n.labelKey }, icon: n.icon, href: n.href, appKey: n.appKey, groups: [] } });
+    await createDefaults(tx, navDefaults(registry, "current"), 0, true);
+  }
+
+  /**
+   * Actualizarea meniului unei instalări existente la meniul implicit curent (o singură dată, marcajul `nav:v2`):
+   * - meniul nemodificat (identic cu meniul implicit anterior al modulelor) e înlocuit cu cel nou;
+   * - un meniu modificat de admin rămâne cum e; itemii noi de pe primul nivel, cu un link care nu există încă în meniu,
+   *   se adaugă la coadă **dezactivați**, ca adminul să-i activeze din Manager meniu dacă îi vrea.
+   */
+  static async upgradeDefaults(tx: Prisma.TransactionClient, registry: GcsModuleRegistry): Promise<"replaced" | "appended" | "unchanged"> {
+    const rows = await tx.navItem.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] });
+    const current = navDefaults(registry, "current");
+    if (matchesDefaults(rows, navDefaults(registry, "previous"))) {
+      await tx.navItem.deleteMany({});
+      await createDefaults(tx, current, 0, true);
+      return "replaced";
+    }
+    const hrefs = new Set(rows.map((r) => r.href).filter((h): h is string => h !== null));
+    const missing = current.filter((n) => !hrefs.has(n.href));
+    if (missing.length === 0) return "unchanged";
+    const start = rows.filter((r) => r.parentId === null).reduce((max, r) => Math.max(max, r.position + 1), 0);
+    await createDefaults(tx, missing, start, false);
+    return "appended";
+  }
+}
+
+type NavDefaultItem = GcsNavDefault & { appKey: string | null };
+
+/** Itemii impliciți (curenți sau anteriori) ai tuturor modulelor, în ordinea pozițiilor. */
+function navDefaults(registry: GcsModuleRegistry, which: "current" | "previous"): NavDefaultItem[] {
+  return registry
+    .all()
+    .flatMap((m) => ((which === "previous" ? (m.navPrevious ?? m.nav) : m.nav) ?? []).map((n) => ({ ...n, appKey: m.app?.optional ? m.key : null })))
+    .sort((a, b) => a.position - b.position);
+}
+
+async function createDefaults(tx: Prisma.TransactionClient, items: NavDefaultItem[], start: number, enabled: boolean): Promise<void> {
+  for (const [i, n] of items.entries()) {
+    const row = await tx.navItem.create({ data: { position: start + i, label: { key: n.labelKey }, icon: n.icon, href: n.href, appKey: n.appKey, groups: [], enabled } });
+    for (const [position, c] of (n.children ?? []).entries()) {
+      await tx.navItem.create({ data: { parentId: row.id, position, label: { key: c.labelKey }, icon: c.icon, href: c.href, groups: [] } });
     }
   }
+}
+
+/** `true` dacă rândurile sunt exact meniul implicit dat: aceiași itemi, în aceeași ordine, cu valorile implicite. */
+function matchesDefaults(rows: Row[], defaults: NavDefaultItem[]): boolean {
+  const same = (r: Row, d: GcsNavDefaultChild, appKey: string | null) => {
+    const label = r.label as Record<string, unknown> | null;
+    return (
+      !!label &&
+      Object.keys(label).length === 1 &&
+      label.key === d.labelKey &&
+      r.icon === d.icon &&
+      r.href === d.href &&
+      r.appKey === appKey &&
+      r.groups.length === 0 &&
+      !r.newTab &&
+      r.enabled
+    );
+  };
+  const top = rows.filter((r) => r.parentId === null);
+  if (top.length !== defaults.length || rows.length !== defaults.reduce((n, d) => n + 1 + (d.children?.length ?? 0), 0)) return false;
+  return top.every((r, i) => {
+    const d = defaults[i]!;
+    const children = rows.filter((c) => c.parentId === r.id);
+    const expected = d.children ?? [];
+    return same(r, d, d.appKey) && children.length === expected.length && children.every((c, j) => same(c, expected[j]!, null));
+  });
 }

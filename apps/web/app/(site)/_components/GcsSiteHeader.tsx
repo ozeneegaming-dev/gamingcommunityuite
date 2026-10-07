@@ -118,7 +118,7 @@ export async function GcsSiteHeader() {
           <GcsBrand theme={theme} siteName={siteName} />
         </Link>
 
-        <GcsNavLinks items={menu} label={t("mainNav")} />
+        <GcsNavLinks items={menu} label={t("mainNav")} moreLabel={t("nav.more")} />
 
         <div className="gcs-siteHeader__tools">
           <GcsHeaderSearch label={t("searchLabel")} placeholder={t("searchPlaceholder")} />

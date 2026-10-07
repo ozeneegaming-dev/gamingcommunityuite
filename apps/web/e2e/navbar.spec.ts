@@ -32,18 +32,23 @@ test("meniul userului se folosește din tastatură; tema și limba se schimbă d
 
   await footer.getByRole("button", { name: "EN" }).click();
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
-  await expect(page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Members" })).toBeVisible();
+  // Membri e acum un submeniu (buton): eticheta lui e tradusă.
+  await expect(page.getByRole("navigation", { name: "Main" }).getByRole("button", { name: "Members" })).toBeVisible();
   const [row] = await sql<{ prefs: { locale?: string; theme?: string } }>(`SELECT prefs FROM users WHERE email = $1`, [`nav-${id}@example.com`]);
   expect(row!.prefs).toMatchObject({ locale: "en", theme: "light" });
 });
 
-test("un item de meniu vizibil doar pentru staff nu apare unui membru; meniul implicit are Forum, Chat, Membri, Staff", async ({ page, context }) => {
+test("meniul implicit: Forum, Activitate, Chat, Membri (cu Staff în submeniu), Clasament, VIP", async ({ page, context }) => {
   await useFreshIp(context, "100.69.1");
+  await page.setViewportSize({ width: 1600, height: 900 });
   const id = uid();
   await member(page, `Nav2${id}`, `nav2-${id}@example.com`);
   await page.goto("/");
   const nav = page.getByRole("navigation", { name: "Principal" });
-  for (const name of ["Forum", "Chat", "Membri", "Staff"]) await expect(nav.getByRole("link", { name })).toBeVisible();
+  await expect(nav).toHaveAttribute("data-ready", "");
+  for (const name of ["Forum", "Activitate", "Chat", "Clasament", "VIP"]) await expect(nav.getByRole("link", { name, exact: true })).toBeVisible();
+  await nav.getByRole("button", { name: "Membri" }).click();
+  await expect(page.getByRole("menu", { name: "Membri" }).getByRole("menuitem", { name: "Staff" })).toBeVisible();
 });
 
 test("pe mobil (375px), sertarul se deschide și duce la pagini", async ({ page, context }) => {
@@ -54,6 +59,7 @@ test("pe mobil (375px), sertarul se deschide și duce la pagini", async ({ page,
   await page.getByTestId("gcs-mobile-nav").click();
   const drawer = page.getByRole("dialog", { name: "Principal" });
   await expect(drawer).toBeVisible();
-  await drawer.getByRole("link", { name: "Membri" }).click();
+  await drawer.getByRole("button", { name: "Membri" }).click();
+  await drawer.getByRole("link", { name: "Toți membrii" }).click();
   await expect(page).toHaveURL(/\/members$/);
 });

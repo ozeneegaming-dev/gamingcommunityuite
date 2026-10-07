@@ -47,4 +47,7 @@ export const vipModule: GcsModule = {
   ],
   eventListeners: [],
   stats: vipStatTiles,
+  // Pagina publică a planurilor (`/vip`); dispare din meniu odată cu aplicația. Nu exista în meniul anterior.
+  nav: [{ key: "vip", labelKey: "site.nav.vip", icon: "fa-solid fa-crown", href: "/vip", position: 50 }],
+  navPrevious: [],
 };

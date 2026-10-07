@@ -6,7 +6,14 @@
       "forum": "Forum",
       "chat": "Chat",
       "members": "Membri",
-      "staff": "Staff"
+      "staff": "Staff",
+      "activity": "Activitate",
+      "membersAll": "Toți membrii",
+      "membersOnline": "Online acum",
+      "leaderboard": "Clasament",
+      "vip": "VIP",
+      "rules": "Reguli",
+      "more": "Mai mult"
     },
     "acp": "ACP",
     "myProfile": "Profilul meu",
@@ -263,7 +270,8 @@
         "import": "Import din altă platformă",
         "porting": "Portare plugin",
         "settings_languages": "Limbi și traducere",
-        "hooks": "Hook-uri"
+        "hooks": "Hook-uri",
+        "settings_rules": "Reguli comunitate"
       },
       "members": {
         "members": "Membri",
@@ -310,7 +318,8 @@
         "subscribers": "Abonați",
         "history": "Istoric",
         "name_styles": "Stiluri de nume",
-        "frames": "Avatar frames"
+        "frames": "Avatar frames",
+        "page": "Pagina VIP"
       },
       "appearance": {
         "appearance": "Aspect",
@@ -713,7 +722,8 @@
         "notifications": "Notificări",
         "chat": "Chat",
         "languages": "Limbi și traducere",
-        "postbit": "Postbit"
+        "postbit": "Postbit",
+        "vip": "Pagina VIP și expirări"
       },
       "save": "Salvează setările",
       "secretSet": "•••• salvat (lasă gol ca să păstrezi valoarea)",
@@ -1726,6 +1736,18 @@
           "postbit_after_fields": "Sub cardul autorului din postări."
         }
       }
+    },
+    "rules": {
+      "title": "Reguli comunitate",
+      "hint": "Regulile apar pe pagina publică /rules și se scriu cu editorul postărilor. Cât timp sunt goale, itemul „Reguli” lipsește din meniul site-ului.",
+      "updated": "Publicate; ultima actualizare: {date}.",
+      "empty": "Nepublicate: pagina arată o stare goală, iar itemul lipsește din meniu.",
+      "view": "Vezi pagina",
+      "save": "Salvează regulile",
+      "clear": "Șterge regulile",
+      "saved": "Regulile au fost salvate.",
+      "cleared": "Regulile au fost șterse.",
+      "confirmClear": "Ștergi regulile? Pagina va arăta o stare goală, iar itemul „Reguli” dispare din meniu."
     }
   },
   "settings": {
@@ -1803,7 +1825,9 @@
       "messages_per_page": "Mesaje pe pagină într-o conversație"
     },
     "vip": {
-      "warn_days": "Cu câte zile înainte de expirare e anunțat membrul"
+      "warn_days": "Cu câte zile înainte de expirare e anunțat membrul",
+      "contact_url": "Linkul butonului „Contactează staff-ul” de pe pagina VIP (gol = pagina Staff)",
+      "page_intro": "Textul de introducere al paginii VIP (gol = textul implicit)"
     },
     "title": "Setări cont",
     "nav": {
@@ -1961,6 +1985,9 @@
       "remove": "Șterge semnătura",
       "saved": "Semnătura a fost salvată.",
       "preview": "Previzualizare"
+    },
+    "rules": {
+      "content": "Regulile comunității"
     }
   },
   "permissions": {
@@ -3569,5 +3596,113 @@
       "convert_failed": "Conversia nu a reușit din cauza unei erori neașteptate. Sursa a rămas încărcată: poți încerca din nou.",
       "not_found": "Portarea nu există sau a expirat (se păstrează o zi)."
     }
+  },
+  "activity": {
+    "title": "Activitate",
+    "lead": "Ce s-a întâmplat recent în comunitate: topicuri noi, răspunsuri, statusuri și membri noi.",
+    "filters": "Ce arată fluxul",
+    "filter": {
+      "all": "Tot",
+      "topics": "Topicuri",
+      "replies": "Răspunsuri",
+      "statuses": "Statusuri"
+    },
+    "unreadOnly": "Doar necitite",
+    "toggleOn": "(activ)",
+    "toggleOff": "(inactiv)",
+    "line": {
+      "topic": "<user></user> a deschis topicul <topic></topic>",
+      "reply": "<user></user> a răspuns în <topic></topic>",
+      "status": "<user></user> și-a actualizat statusul",
+      "wall": "<user></user> a scris pe profilul lui <owner></owner>",
+      "member": "<user></user> s-a alăturat comunității"
+    },
+    "kind": {
+      "topic": "Topic nou",
+      "reply": "Răspuns",
+      "status": "Status",
+      "member": "Membru nou"
+    },
+    "seeWall": "Vezi profilul",
+    "deletedUser": "Membru șters",
+    "today": "Azi",
+    "yesterday": "Ieri",
+    "older": "Mai vechi",
+    "newest": "Cele mai noi",
+    "pages": "Navigare în activitate",
+    "empty": "Nimic încă. Fluxul se umple pe măsură ce membrii postează.",
+    "emptyFiltered": "Nimic de acest tip deocamdată.",
+    "emptyUnread": "Ești la zi: nimic necitit."
+  },
+  "leaderboard": {
+    "title": "Clasament",
+    "lead": {
+      "week": "Cei mai activi membri din ultimele 7 zile, după {metric}.",
+      "month": "Cei mai activi membri din ultimele 30 de zile, după {metric}.",
+      "all": "Cei mai buni membri dintotdeauna, după {metric}."
+    },
+    "metricLabel": "Măsura",
+    "periodLabel": "Perioada",
+    "metric": {
+      "reputation": "Reputație",
+      "posts": "Postări",
+      "xp": "XP",
+      "solutions": "Soluții"
+    },
+    "metricLower": {
+      "reputation": "reputație",
+      "posts": "postări",
+      "xp": "XP",
+      "solutions": "soluții"
+    },
+    "period": {
+      "week": "Săptămâna",
+      "month": "Luna",
+      "all": "Tot timpul"
+    },
+    "podium": "Podiumul",
+    "place": "Locul {rank}",
+    "table": "Restul clasamentului",
+    "col": {
+      "rank": "Loc",
+      "member": "Membru",
+      "group": "Grup"
+    },
+    "you": "Tu",
+    "empty": "Nimeni nu are încă puncte aici. Postează, ajută și primește reacții ca să apari în clasament.",
+    "forbidden": "Nu ai acces la clasament.",
+    "note": {
+      "period": "Valorile vin din ce s-a creat în perioada aleasă și se actualizează la câteva minute.",
+      "all": "Valorile sunt totalurile din profiluri și se actualizează la câteva minute."
+    }
+  },
+  "vipPage": {
+    "title": "VIP",
+    "lead": "Susține comunitatea și primește beneficii: nume stilizat, limite mai mari și acces în plus.",
+    "mine": {
+      "label": "Planul tău",
+      "expires": "expiră pe {date} ({days, plural, one {încă # zi} few {încă # zile} other {încă # de zile}})",
+      "permanent": "fără expirare"
+    },
+    "yourPlan": "Planul tău",
+    "preview": "Numele tău va arăta așa:",
+    "sampleName": "NumeleTău",
+    "benefits": "Beneficii",
+    "limit": "{label}: {value}",
+    "unlimited": "nelimitat",
+    "forums": "Acces la:",
+    "nameStyles": "{count, plural, one {# stil de nume exclusiv} few {# stiluri de nume exclusive} other {# de stiluri de nume exclusive}}",
+    "frames": "{count, plural, one {# ramă de avatar exclusivă} few {# rame de avatar exclusive} other {# de rame de avatar exclusive}}",
+    "terms": "Durata și prețul le stabilești cu staff-ul.",
+    "termsCheckout": "Plata se face online; planul se activează imediat.",
+    "contact": "Contactează staff-ul",
+    "buy": "Cumpără",
+    "empty": "Nu există planuri VIP deocamdată."
+  },
+  "rules": {
+    "title": "Regulile comunității",
+    "updated": "Actualizate pe {date}",
+    "empty": "Regulile nu au fost publicate încă.",
+    "write": "Scrie regulile"
   }
 }

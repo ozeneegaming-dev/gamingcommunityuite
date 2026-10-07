@@ -119,7 +119,28 @@ export const forumsModule: GcsModule = {
     { key: "forums.solution", labelKey: "notifications.type.forums.solution", important: false, defaultEmail: "DIGEST" },
   ],
   eventListeners: [],
+  // Meniul principal (2026-10-07): Forum · Activitate · Chat · Membri ▾ · Clasament · VIP · Reguli.
   nav: [
+    { key: "forum", labelKey: "site.nav.forum", icon: "fa-solid fa-comments", href: "/", position: 0 },
+    { key: "activity", labelKey: "site.nav.activity", icon: "fa-solid fa-bolt", href: "/activity", position: 5 },
+    {
+      key: "members",
+      labelKey: "site.nav.members",
+      icon: "fa-solid fa-users",
+      href: "/members",
+      position: 20,
+      children: [
+        { key: "members_all", labelKey: "site.nav.membersAll", icon: "fa-solid fa-user-group", href: "/members" },
+        { key: "members_online", labelKey: "site.nav.membersOnline", icon: "fa-solid fa-signal", href: "/members?online=1" },
+        { key: "staff", labelKey: "site.nav.staff", icon: "fa-solid fa-shield-halved", href: "/staff" },
+        { key: "members_leaderboard", labelKey: "site.nav.leaderboard", icon: "fa-solid fa-ranking-star", href: "/leaderboard" },
+      ],
+    },
+    { key: "leaderboard", labelKey: "site.nav.leaderboard", icon: "fa-solid fa-ranking-star", href: "/leaderboard", position: 40 },
+    { key: "rules", labelKey: "site.nav.rules", icon: "fa-solid fa-scale-balanced", href: "/rules", position: 60 },
+  ],
+  // Meniul implicit dinainte (recunoaște meniurile nemodificate la actualizare).
+  navPrevious: [
     { key: "forum", labelKey: "site.nav.forum", icon: "fa-solid fa-comments", href: "/", position: 0 },
     { key: "members", labelKey: "site.nav.members", icon: "fa-solid fa-users", href: "/members", position: 20 },
     { key: "staff", labelKey: "site.nav.staff", icon: "fa-solid fa-shield-halved", href: "/staff", position: 30 },
