@@ -1743,6 +1743,7 @@
           "badge_awarded": "Ein Abzeichen wurde vergeben.",
           "vip_granted": "Ein VIP-Abonnement wurde gewährt.",
           "vip_expired": "Ein VIP-Abonnement ist abgelaufen.",
+          "vip_revoked": "A VIP subscription revoked from the ACP.",
           "post_before_save": "Bevor ein Beitrag gespeichert wird (neues Thema, Antwort, Bearbeitung): Das Plugin kann Titel und Inhalt ändern oder den Beitrag ablehnen. 2 s timeout; ein fehler überspringt das plugin.",
           "postbit_after_fields": "Unterhalb der Autorenkarte in Posts."
         }

@@ -143,6 +143,12 @@ describe("CSS-ul pluginurilor", () => {
     expect(scope("a {\fcolor: red }")).toEqual({ ok: true, css: ".gcsp--acme--demo {\na {\ncolor: red }\n}\n" });
   });
 
+  test("`scroll-behavior` și `overscroll-behavior` sunt permise; `behavior:` nu", () => {
+    expect(scope(".t { scroll-behavior: smooth; overscroll-behavior-x: contain }")).toMatchObject({ ok: true });
+    expect(scope(".t { behavior: url(x.htc) }")).toMatchObject({ ok: false, code: "css_forbidden" });
+    expect(scope(".t{color:red;behavior:url(x.htc)}")).toMatchObject({ ok: false, code: "css_forbidden" });
+  });
+
   test("acoladele din șiruri și comentarii nu contează", () => {
     expect(scope('a::after { content: "}" } /* { */ b { color: red }')).toMatchObject({ ok: true });
   });

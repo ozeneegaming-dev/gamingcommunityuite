@@ -1743,6 +1743,7 @@
           "badge_awarded": "O insignă acordată.",
           "vip_granted": "Un abonament VIP acordat.",
           "vip_expired": "Un abonament VIP expirat.",
+          "vip_revoked": "Un abonament VIP retras din ACP.",
           "post_before_save": "Înainte de salvarea unei postări (topic nou, răspuns, editare): pluginul poate modifica titlul și conținutul sau poate respinge postarea. Timeout 2 s; o eroare sare pluginul.",
           "postbit_after_fields": "Sub cardul autorului din postări."
         }

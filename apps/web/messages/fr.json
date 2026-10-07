@@ -1743,6 +1743,7 @@
           "badge_awarded": "Un badge a été décerné.",
           "vip_granted": "Un abonnement VIP a été accordé.",
           "vip_expired": "Un abonnement VIP a expiré.",
+          "vip_revoked": "A VIP subscription revoked from the ACP.",
           "post_before_save": "Avant qu'un message soit enregistré (nouveau sujet, réponse, édition): le plugin peut changer le titre et le contenu ou rejeter le message. 2 s timeout; une erreur saute le plugin.",
           "postbit_after_fields": "Ci-dessous la carte d'auteur dans les messages."
         }

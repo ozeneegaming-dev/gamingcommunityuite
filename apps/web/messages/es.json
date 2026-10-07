@@ -1743,6 +1743,7 @@
           "badge_awarded": "Una placa fue otorgada.",
           "vip_granted": "Se concedió una suscripción VIP.",
           "vip_expired": "Una suscripción VIP caducó.",
+          "vip_revoked": "A VIP subscription revoked from the ACP.",
           "post_before_save": "Antes de guardar un post (nuevo tema, respuesta, edición): el plugin puede cambiar el título y el contenido o rechazar el post. 2 s timeout; un error salta el plugin.",
           "postbit_after_fields": "Debajo de la tarjeta de autor en publicaciones."
         }

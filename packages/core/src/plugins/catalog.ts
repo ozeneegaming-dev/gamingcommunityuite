@@ -97,6 +97,7 @@ export const PLUGIN_EVENTS = [
   "report.created",
   "badge.awarded",
   "vip.granted",
+  "vip.revoked",
   "vip.expired",
 ] as const;
 export type GcsPluginEventName = (typeof PLUGIN_EVENTS)[number];

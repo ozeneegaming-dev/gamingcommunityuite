@@ -19,7 +19,8 @@ export function scopePluginCss(css: string, opts: { pluginKey: string; file: str
   css = css.replace(/\r\n?|\f/g, "\n");
   if (/[\u0000-\u0008\u000b\u000e-\u001f\u007f]/.test(css)) return { ok: false, code: "css_forbidden", detail: "control" };
   if (/[<\\]/.test(css)) return { ok: false, code: "css_forbidden", detail: css.includes("<") ? "<" : "\\" };
-  const forbidden = /@import|@charset|expression\s*\(|javascript\s*:|vbscript\s*:|behavior\s*:|-moz-binding|@namespace/i.exec(css);
+  // `behavior:` (proprietatea veche a IE), dar nu `scroll-behavior` / `overscroll-behavior`.
+  const forbidden = /@import|@charset|expression\s*\(|javascript\s*:|vbscript\s*:|(?<![\w-])behavior\s*:|-moz-binding|@namespace/i.exec(css);
   if (forbidden) return { ok: false, code: "css_forbidden", detail: forbidden[0] };
 
   // Acoladele, ignorând comentariile și șirurile: adâncimea nu poate coborî sub zero și trebuie să revină la zero.

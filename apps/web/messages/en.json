@@ -1743,6 +1743,7 @@
           "badge_awarded": "A badge was awarded.",
           "vip_granted": "A VIP subscription was granted.",
           "vip_expired": "A VIP subscription expired.",
+          "vip_revoked": "A VIP subscription revoked from the ACP.",
           "post_before_save": "Before a post is saved (new topic, reply, edit): the plugin can change the title and content or reject the post. 2 s timeout; an error skips the plugin.",
           "postbit_after_fields": "Below the author card in posts."
         }
