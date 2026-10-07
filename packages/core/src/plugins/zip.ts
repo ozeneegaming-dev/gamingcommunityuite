@@ -76,7 +76,7 @@ function entryKind(madeBy: number, external: number): "file" | "dir" | "link" | 
 /**
  * Citește o arhivă ZIP (directorul central) și întoarce fișierele (cale → conținut), cu toate verificările de siguranță:
  * mărimi, număr de fișiere, ZIP64 și criptare refuzate, link-uri simbolice și intrări speciale refuzate, căi sigure,
- * duplicate (și cu majuscule diferite), raport de compresie, mărimea reală la dezarhivare limitată și CRC32 verificat.
+ * duplicate (și cu majuscule diferite, inclusiv o cale care e și fișier, și folder), raport de compresie, mărimea reală la dezarhivare limitată și CRC32 verificat.
  * Directoarele nu apar în rezultat.
  */
 export function readPluginZip(buf: Buffer, limits: Readonly<GcsPluginZipLimits> = PLUGIN_ZIP_LIMITS): Map<string, Buffer> {
@@ -134,12 +134,20 @@ export function readPluginZip(buf: Buffer, limits: Readonly<GcsPluginZipLimits> 
     entries.push({ name: clean, method, flags, crc, compressed, size, offset, kind: "file" });
   }
 
+  // Folderele implicite ale fișierelor: o cale nu poate fi și fișier, și folder (`a.css` și `a.css/b.css` nu se pot
+  // dezarhiva). Fără majuscule, ca pe Windows/macOS.
+  const dirs = new Set<string>();
+  for (const e of entries) {
+    const parts = e.name.toLowerCase().split("/");
+    for (let i = 1; i < parts.length; i++) dirs.add(parts.slice(0, i).join("/"));
+  }
+
   const seen = new Set<string>();
   let totalSize = 0;
   const files = new Map<string, Buffer>();
   for (const e of entries) {
     const lower = e.name.toLowerCase();
-    if (seen.has(lower)) throw new GcsPluginPackageError("duplicate_path", { path: e.name });
+    if (seen.has(lower) || dirs.has(lower)) throw new GcsPluginPackageError("duplicate_path", { path: e.name });
     seen.add(lower);
     if (e.size > limits.maxFileBytes) throw new GcsPluginPackageError("file_too_large", { path: e.name, max: String(limits.maxFileBytes) });
     totalSize += e.size;

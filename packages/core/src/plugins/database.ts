@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import pg from "pg";
 import { GcsConflict, GcsValidationError } from "../errors";
-import { pluginSchema } from "./catalog";
+import { comparePluginMigrations, pluginSchema } from "./catalog";
 import { checkPluginSql } from "./sqlGuard";
 
 export type GcsPluginDbCredentials = { role: string; password: string };
@@ -70,12 +70,31 @@ export class GcsPluginDatabase {
   }
 
   /**
-   * Creează (sau reactivează, cu o parolă nouă) rolul și schema pluginului. Fără drept de a crea roluri, instalarea unui
-   * plugin cu `db` e refuzată (`db_role_unavailable`), în loc să ruleze cu o izolare mai slabă.
+   * Rulează `fn` cu lacătul instalării pluginului (advisory lock pe o conexiune proprie, valabil între procese), ca două
+   * confirmări simultane pentru aceeași cheie să nu-și amestece rolul, parola și migrațiile.
+   */
+  async withInstallLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
+    // Fără bază de date (pluginuri fără `db`, într-un proces fără URL) nu avem unde ține lacătul.
+    if (!this.deps.databaseUrl) return fn();
+    return this.admin(async (c) => {
+      await c.query("SELECT pg_advisory_lock(hashtext('gcs-plugin-install'), hashtext($1))", [key]);
+      try {
+        return await fn();
+      } finally {
+        await c.query("SELECT pg_advisory_unlock(hashtext('gcs-plugin-install'), hashtext($1))", [key]).catch(() => {});
+      }
+    });
+  }
+
+  /**
+   * Creează (sau reactivează) rolul și schema pluginului. Cu credențialele existente (actualizare, reinstalare) parola
+   * rămâne aceeași: o migrație eșuată după acest pas nu lasă rolul cu o parolă pe care rândul pluginului nu o are.
+   * Fără drept de a crea roluri, instalarea unui plugin cu `db` e refuzată (`db_role_unavailable`), în loc să ruleze cu
+   * o izolare mai slabă.
    */
   async provision(key: string, existing?: GcsPluginDbCredentials | null): Promise<GcsPluginDbCredentials> {
     const role = existing?.role ?? this.roleName(key);
-    const password = randomBytes(24).toString("base64url");
+    const password = existing?.password ?? randomBytes(24).toString("base64url");
     const schema = pluginSchema(key);
     try {
       await this.admin(async (c) => {
@@ -96,7 +115,7 @@ export class GcsPluginDatabase {
       if (isPermissionError(error)) throw new GcsConflict({ reason: "db_role_unavailable" });
       throw error;
     }
-    await this.closePool(key);
+    if (!existing) await this.closePool(key);
     return { role, password };
   }
 
@@ -133,7 +152,7 @@ export class GcsPluginDatabase {
       await client.query(`SET LOCAL statement_timeout = '${MIGRATION_TIMEOUT}'`);
       await client.query(`CREATE TABLE IF NOT EXISTS _gcs_migrations (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())`);
       const done = new Set((await client.query<{ name: string }>("SELECT name FROM _gcs_migrations")).rows.map((r) => r.name));
-      for (const m of [...migrations].sort((a, b) => a.name.localeCompare(b.name))) {
+      for (const m of [...migrations].sort((a, b) => comparePluginMigrations(a.name, b.name))) {
         if (done.has(m.name)) continue;
         try {
           await client.query(m.sql);
@@ -144,7 +163,7 @@ export class GcsPluginDatabase {
         done.add(m.name);
       }
       await client.query("COMMIT");
-      return [...done].sort();
+      return [...done].sort(comparePluginMigrations);
     } catch (error) {
       await client.query("ROLLBACK").catch(() => {});
       throw error;
@@ -209,16 +228,28 @@ export class GcsPluginDatabase {
     await current?.pool.end().catch(() => {});
   }
 
-  /** Șterge datele pluginului: conexiunile rolului, schema (cu tot conținutul) și rolul. */
+  /**
+   * Șterge datele pluginului: conexiunile rolului, schema (cu tot conținutul), tot ce mai deține rolul în afara schemei
+   * (obiecte mari, privilegii implicite, drepturi) și rolul.
+   */
   async drop(key: string, role: string | null): Promise<void> {
     await this.closePool(key);
     await this.admin(async (c) => {
       if (role) await c.query("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE usename = $1", [role]).catch(() => {});
       await c.query(`DROP SCHEMA IF EXISTS ${pg.escapeIdentifier(pluginSchema(key))} CASCADE`);
       if (role) {
+        const r = pg.escapeIdentifier(role);
+        const exists = await c.query("SELECT 1 FROM pg_roles WHERE rolname = $1", [role]);
+        if (exists.rowCount) {
+          // `DROP OWNED` cere drepturile rolului: userul aplicației (CREATEROLE, deci ADMIN pe rol) și le dă singur
+          // (PostgreSQL 16+); apartenența dispare odată cu rolul.
+          const member = await c.query<{ ok: boolean }>("SELECT pg_has_role(current_user, $1, 'USAGE') AS ok", [role]);
+          if (!member.rows[0]?.ok) await c.query(`GRANT ${r} TO CURRENT_USER WITH INHERIT TRUE`);
+          await c.query(`DROP OWNED BY ${r}`);
+        }
         const database = pg.escapeIdentifier(decodeURIComponent(new URL(this.url).pathname.slice(1)));
-        await c.query(`REVOKE ALL ON DATABASE ${database} FROM ${pg.escapeIdentifier(role)}`).catch(() => {});
-        await c.query(`DROP ROLE IF EXISTS ${pg.escapeIdentifier(role)}`);
+        await c.query(`REVOKE ALL ON DATABASE ${database} FROM ${r}`).catch(() => {});
+        await c.query(`DROP ROLE IF EXISTS ${r}`);
       }
     });
   }

@@ -1,5 +1,5 @@
 import { createHash, type KeyObject } from "node:crypto";
-import { GCS_PLATFORM_VERSION, pluginSchema } from "./catalog";
+import { comparePluginMigrations, GCS_PLATFORM_VERSION, pluginSchema } from "./catalog";
 import { scopePluginCss } from "./css";
 import { parsePluginManifest, type GcsPluginManifest } from "./manifest";
 import { compareSemver, parseSemver, satisfiesSemver } from "./semver";
@@ -158,7 +158,7 @@ export function validatePluginPackage(zip: Buffer, ctx: GcsPluginValidateContext
   }
 
   const schema = pluginSchema(manifest.key);
-  const migrations = [...files.keys()].filter((p) => p.startsWith("migrations/")).sort();
+  const migrations = [...files.keys()].filter((p) => p.startsWith("migrations/")).sort(comparePluginMigrations);
   report.migrations = migrations.map((p) => p.slice("migrations/".length));
   if (migrations.length > 0 && !manifest.capabilities.includes("db")) error("missing_capability", { capability: "db", path: "migrations/" });
   for (const path of migrations) {

@@ -66,6 +66,20 @@ describe("CSS-ul pluginurilor", () => {
     for (const [css, code] of cases) expect([css, scope(css)]).toEqual([css, expect.objectContaining({ ok: false, code })]);
   });
 
+  test("CR, FF și celelalte caractere de control nu pot închide containerul", () => {
+    // Browserul transformă CR/FF în LF înainte de parsare: șirul se termină acolo, iar `}` de după e o acoladă reală.
+    for (const ctl of ["\f", "\r", "\r\n"]) {
+      const css = `.x { content: "${ctl}} } body { display: none } .y { content: "; }`;
+      expect([JSON.stringify(ctl), scope(css)]).toEqual([JSON.stringify(ctl), expect.objectContaining({ ok: false })]);
+    }
+    for (const ctl of ["\u0000", "\u0001", "\u000b", "\u001b", "\u007f"]) {
+      expect([JSON.stringify(ctl), scope(`a { color: red${ctl} }`)]).toEqual([JSON.stringify(ctl), { ok: false, code: "css_forbidden", detail: "control" }]);
+    }
+    // Sfârșiturile de rând Windows și tab-urile rămân valide (normalizate la LF).
+    expect(scope("a {\r\n\tcolor: red;\r\n}\r\n")).toEqual({ ok: true, css: ".gcsp--acme--demo {\na {\n\tcolor: red;\n}\n}\n" });
+    expect(scope("a {\fcolor: red }")).toEqual({ ok: true, css: ".gcsp--acme--demo {\na {\ncolor: red }\n}\n" });
+  });
+
   test("acoladele din șiruri și comentarii nu contează", () => {
     expect(scope('a::after { content: "}" } /* { */ b { color: red }')).toMatchObject({ ok: true });
   });

@@ -60,6 +60,11 @@ describe("SQL guard", () => {
       "SELECT pg_terminate_backend(1)",
       "SELECT pg_sleep(100)",
       "SELECT lo_import('/etc/passwd')",
+      "SELECT lo_create(0)",
+      "SELECT lo_creat(-1)",
+      "SELECT lowrite(lo_open(1, 131072), 'x')",
+      "SELECT loread(0, 10)",
+      "SELECT lo_truncate(0, 0)",
       "SELECT dblink_connect('host=x')",
       "SELECT pg_notify('gcs', 'x')",
     ]) {
@@ -92,6 +97,20 @@ describe("SQL guard", () => {
     ]) {
       expect([sql, codeOf(migration(sql))]).toEqual([sql, expect.stringMatching(/^sql_/)]);
     }
+  });
+
+  test("un corp de funcție care nu poate fi citit e refuzat, nu sărit", () => {
+    for (const sql of [
+      "CREATE FUNCTION f() RETURNS bigint LANGUAGE sql AS $$ SELECT U&'x'; SELECT count(*) FROM public.users $$",
+      "CREATE FUNCTION f() RETURNS void LANGUAGE plpgsql AS $body$ BEGIN PERFORM 1 $ 2; PERFORM pg_sleep(9); END $body$",
+      "CREATE PROCEDURE p() LANGUAGE sql AS $$ SELECT 'neterminat $$",
+      "CREATE OR REPLACE FUNCTION f() RETURNS int AS $$ SELECT U&'x' $$ LANGUAGE sql",
+    ]) {
+      expect([sql, migration(sql)]).toEqual([sql, { ok: false, code: "sql_syntax", detail: "function_body" }]);
+    }
+    // Un șir `$$…$$` obișnuit (date, nu cod) rămâne permis chiar dacă nu e SQL valid.
+    expect(query("SELECT $$costs $ 5$$")).toEqual({ ok: true });
+    expect(migration("INSERT INTO items (name) VALUES ($$it's $ 5$$)")).toEqual({ ok: true });
   });
 
   test("sintaxa ambiguă e refuzată", () => {

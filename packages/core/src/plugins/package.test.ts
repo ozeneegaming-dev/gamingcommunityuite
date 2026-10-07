@@ -2,6 +2,7 @@ import { generateSigningKey, packPlugin } from "@gcs/plugin-sdk/pack";
 import { writeZip } from "@gcs/plugin-sdk/zip";
 import { describe, expect, test } from "vitest";
 import { testManifest, testPluginFiles, testPluginZip } from "../../test/pluginFixtures";
+import { comparePluginMigrations } from "./catalog";
 import { langFileError, validatePluginPackage, type GcsPluginValidateContext } from "./package";
 import { trustedPluginKeys } from "./signature";
 import { readPluginZip } from "./zip";
@@ -80,6 +81,13 @@ describe("validarea pachetului", () => {
     expect(errors(testPluginZip({ manifest: withDb, files: { "migrations/002_evil.sql": "DROP TABLE public.users;" } }))).toEqual([
       ["migration_rejected", { path: "migrations/002_evil.sql", issue: "sql_schema", detail: "public" }],
     ]);
+  });
+
+  test("migrațiile se ordonează după număr, nu alfabetic (prefixe de 3 până la 6 cifre)", () => {
+    const withDb = testManifest({ capabilities: ["widgets", "db"] });
+    const files = Object.fromEntries(["000100_c.sql", "1000_e.sql", "0002_b.sql", "001_a.sql", "999_d.sql", "002_a.sql"].map((n) => [`migrations/${n}`, "SELECT 1;"]));
+    expect(validatePluginPackage(testPluginZip({ manifest: withDb, files }), ctx()).report.migrations).toEqual(["001_a.sql", "0002_b.sql", "002_a.sql", "000100_c.sql", "999_d.sql", "1000_e.sql"]);
+    expect(["010_x.sql", "9_y.sql", "abc.sql", "010_a.sql"].sort(comparePluginMigrations)).toEqual(["9_y.sql", "010_a.sql", "010_x.sql", "abc.sql"]);
   });
 
   test("CSS-ul declarat trebuie să existe și să rămână în container", () => {
