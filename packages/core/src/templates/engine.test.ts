@@ -186,10 +186,10 @@ describe("limbajul", () => {
     const user = { id: "u1", name: "Ana <x>", url: "/members/u1-ana", nameKey: "admin", image: null, frameKey: null };
     expect(render('{% username user %}', { user })).toBe('<a href="/members/u1-ana" class="gcs-userLink gcs-name--admin" data-user-id="u1" data-text="Ana &lt;x&gt;">Ana &lt;x&gt;</a>');
     expect(render('{% avatar user, size: "s" %}', { user })).toBe(
-      '<span class="gcs-avatar gcs-avatar--s" style="width:34px;height:34px;background:#5A2D6E;font-size:14px"><span aria-hidden="true">A</span><span class="gcs-srOnly">Ana &lt;x&gt;</span></span>',
+      '<span class="gcs-avatar gcs-avatar--s" data-avatar-user="u1" style="width:34px;height:34px;background:#5A2D6E;font-size:14px"><span aria-hidden="true">A</span><span class="gcs-srOnly">Ana &lt;x&gt;</span></span>',
     );
     expect(render('{% avatar user, size: "l" %}', { user: { ...user, image: "/files/a", frameKey: "neon" } })).toBe(
-      '<span class="gcs-avatarFrame gcs-avatarFrame--neon" style="width:104px;height:104px"><span class="gcs-avatar gcs-avatar--l" style="font-size:42px"><img src="/files/a" alt="Ana &lt;x&gt;" class="gcs-avatar__img"/></span></span>',
+      '<span class="gcs-avatarFrame gcs-avatarFrame--neon" style="width:104px;height:104px"><span class="gcs-avatar gcs-avatar--l" data-avatar-user="u1" style="font-size:42px"><img src="/files/a" alt="Ana &lt;x&gt;" class="gcs-avatar__img"/></span></span>',
     );
     // URL-uri periculoase în date: neutralizate deja în componentă.
     expect(render("{% username user %}", { user: { ...user, url: "javascript:alert(1)" } })).toContain('href="#"');

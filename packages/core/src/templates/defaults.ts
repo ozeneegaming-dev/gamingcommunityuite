@@ -307,7 +307,7 @@ const HOVER_CARD = `<div class="gcs-card gcs-hoverCard" role="dialog" aria-label
     <div class="gcs-hoverCard__head">
       <span class="gcs-hoverCard__avatar">{% avatar user, size: "l" %}</span>
       <div class="gcs-hoverCard__identity">
-        <a href="{{ user.url }}" class="gcs-userLink gcs-name--{{ user.nameKey }} gcs-hoverCard__name" title="{{ user.name }}" data-text="{{ user.name }}">{{ user.name }}</a>
+        <a href="{{ user.url }}" class="gcs-userLink gcs-name--{{ user.nameKey }} gcs-hoverCard__name" title="{{ user.name }}" data-name-user="{{ user.id }}" data-text="{{ user.name }}">{{ user.name }}</a>
         <div class="gcs-hoverCard__meta">
           <span class="gcs-badge gcs-hoverCard__group" style="--gcs-hoverCard-group: {{ user.group.color | default: "var(--gcs-muted)" }}">{{ user.group.name }}</span>
           {% if user.rank %}<span class="gcs-hoverCard__rank" data-testid="gcs-hover-rank">{% if user.rank.symbol %}{{ user.rank.symbol }} {% endif %}{{ user.rank.name }}</span>{% endif %}
