@@ -287,7 +287,7 @@ export function renderCssForm(
         .join("")}</ul></div></div>`
     : "";
   const sample = c.user?.name ?? "Membru";
-  const previewClass = draft?.previewClass ?? (item ? null : null);
+  const previewClass = draft?.previewClass ?? null;
   const savedClass = item ? (kind === "name_style" ? nameLook(d as NameStyleData, (d as NameStyleData).variants[0]!, item.key).cls : bannerLook(d as BannerData, item.key).cls) : null;
   const shown = previewClass ? (kind === "name_style" ? `gcsp-ns gcs-nfx gcs-nfx--none gcs-nfx--n1 ${previewClass}` : `gcsp-pill gcsp-pill--custom ${previewClass}`) : savedClass;
   const previewStyle = kind === "name_style" ? vars({ "nfx-c1": color }) : "";

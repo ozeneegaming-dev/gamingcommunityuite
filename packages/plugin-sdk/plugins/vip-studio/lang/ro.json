@@ -583,7 +583,7 @@
         "card": "Imaginile (fișierele)"
       },
       "hint": {
-        "frame": "Fiecare fișier devine o ramă, cu categoria, planurile, scara și decalajul de mai jos. Fișierele identice (și cu ramele deja încărcate) se sar. APNG și GIF rămân animate.",
+        "frame": "Fiecare fișier devine o ramă, cu categoria, planurile, scara și decalajul de mai jos. Fișierele identice (și cu ramele deja încărcate) se sar. APNG și GIF rămân animate. Ramele animate se procesează mai încet: pentru zeci de rame animate, încarcă în loturi de 15–20.",
         "weapon": "Fiecare fișier devine o armă; numele vine din numele fișierului (ak47 → AK47) și se poate schimba apoi. Fișierele identice se sar.",
         "card": "Fiecare fișier devine un fundal de card, cu categoria și planurile de mai jos. Fișierele identice se sar."
       },

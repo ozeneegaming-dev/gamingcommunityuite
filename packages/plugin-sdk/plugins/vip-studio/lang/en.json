@@ -583,7 +583,7 @@
         "card": "Images (files)"
       },
       "hint": {
-        "frame": "Each file becomes a frame, with the category, plans, scale and offset below. Identical files (and ones already uploaded) are skipped. APNG and GIF stay animated.",
+        "frame": "Each file becomes a frame, with the category, plans, scale and offset below. Identical files (and ones already uploaded) are skipped. APNG and GIF stay animated. Animated frames take longer to process: for dozens of animated frames, upload in batches of 15–20.",
         "weapon": "Each file becomes a weapon; the name comes from the file name (ak47 → AK47) and can be changed later. Identical files are skipped.",
         "card": "Each file becomes a card background, with the category and plans below. Identical files are skipped."
       },
