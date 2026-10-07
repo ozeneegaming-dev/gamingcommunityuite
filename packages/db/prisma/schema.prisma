@@ -1605,3 +1605,30 @@ model ImportLog {
   @@index([jobId, id])
   @@map("import_logs")
 }
+
+/// O portare de plugin (ACP → Sistem → Conversii → Portare plugin): arhiva sursă până la conversie, apoi raportul,
+/// rezultatul (`.zip` cu folderul generat, `ORIGINAL/` și `PORTING.md`) și pachetul instalabil. Ștearsă după o zi.
+model PluginPort {
+  id          String    @id @default(cuid())
+  actorId     String?
+  fileName    String
+  /// Formatul detectat: `app-json`, `plugin-xml` sau `addon-json`.
+  format      String
+  sourceName  String
+  sha256      String
+  /// Metadatele, licența și numerele pe tipuri (fără cod), afișate înaintea confirmării.
+  analysis    Json
+  /// Arhiva încărcată, ștearsă după conversie.
+  source      Bytes?
+  /// Temeiul confirmării dreptului de a modifica și folosi pluginul: `author`, `consent` sau `license`.
+  rightsBasis String?
+  confirmedAt DateTime?
+  pluginKey   String?
+  report      Json?
+  result      Bytes?
+  package     Bytes?
+  createdAt   DateTime  @default(now())
+
+  @@index([createdAt])
+  @@map("plugin_ports")
+}

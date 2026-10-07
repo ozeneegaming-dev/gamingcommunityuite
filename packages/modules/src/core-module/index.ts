@@ -209,7 +209,10 @@ const acpMenu: GcsAcpMenuSection[] = [
     ["logs", "/admin/logs", "fa-solid fa-clipboard-list"],
     ["cache", "/admin/system/cache", "fa-solid fa-bolt"],
   ]),
-  menuSection("system", "conversions", "fa-solid fa-right-left", [["import", "/admin/system/import", "fa-solid fa-file-import"]]),
+  menuSection("system", "conversions", "fa-solid fa-right-left", [
+    ["import", "/admin/system/import", "fa-solid fa-file-import"],
+    ["porting", "/admin/system/porting", "fa-solid fa-code-compare"],
+  ]),
 
   menuSection("members", "members", "fa-solid fa-users", [
     ["members", "/admin/members", "fa-solid fa-user"],

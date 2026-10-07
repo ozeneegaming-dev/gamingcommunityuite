@@ -88,6 +88,7 @@ import { GcsPluginPublicApi } from "./plugins/api";
 import { GcsPluginHost } from "./plugins/host";
 import { RENDER_LABELS } from "./forums/labels";
 import { GcsImportService } from "./importer/service";
+import { GcsPortingService } from "./porting/service";
 
 export type GcsServices = {
   db: PrismaClient;
@@ -162,6 +163,8 @@ export type GcsServices = {
   pluginAdmin: GcsPluginService;
   /** Importul din altă platformă (ACP → Sistem → Conversii) și redirecturile 301. */
   importer: GcsImportService;
+  /** Asistentul de portare a pluginurilor (ACP → Sistem → Conversii → Portare plugin). */
+  porting: GcsPortingService;
 };
 
 /** Golește cache-ul Redis al paginilor (cheile și seturile de tag-uri `gcs:k:*`, `gcs:tag:*`), fără cozi și limite. */
@@ -538,6 +541,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
       },
       clearCache: () => clearPageCache(redis),
     }),
+    porting: new GcsPortingService({ db, acp, plugins: pluginAdmin }),
   };
   registerAppJobs(services);
   return services;
