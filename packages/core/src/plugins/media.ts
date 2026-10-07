@@ -1,10 +1,11 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import type { PrismaClient } from "@gcs/db";
 import { fileTypeFromBuffer } from "file-type";
-import sharp from "sharp";
+import sharp, { type Sharp } from "sharp";
 import type { GcsRedisRateLimiter } from "../auth/rateLimit";
 import type { GcsByteRange, GcsFileStore } from "../content/files/store";
 import { GcsRateLimited, GcsValidationError } from "../errors";
+import { composeApng, GcsApngError, type GcsApngLimits } from "./apng";
 import type { GcsPluginMediaKind } from "./catalog";
 import type { GcsPluginManifest } from "./manifest";
 
@@ -23,18 +24,43 @@ export type GcsPluginMediaInfo = {
   url: string;
   status: "pending" | "kept";
   createdAt: string;
+  /**
+   * Doar în rezultatul încărcării (corpul formularului), nu și în `get`/`list`: SHA-256 al fișierului trimis (hex, ca
+   * pluginul să recunoască duplicatele), numele lui original (curățat) și numărul de cadre al unei imagini animate.
+   */
+  sha256?: string;
+  originalName?: string;
+  frames?: number;
 };
 
-/** Un fișier verificat (imaginile recodate), gata de salvat. */
-export type GcsPreparedPluginMedia = { kind: GcsPluginMediaKind; mime: string; ext: string; bytes: Buffer; width: number | null; height: number | null; durationMs: number | null };
+/** Un fișier verificat (imaginile recodate), gata de salvat. `frames` > 1 = imagine animată. */
+export type GcsPreparedPluginMedia = {
+  kind: GcsPluginMediaKind;
+  mime: string;
+  ext: string;
+  bytes: Buffer;
+  width: number | null;
+  height: number | null;
+  durationMs: number | null;
+  frames?: number;
+};
 
-const IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+const IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/apng", "image/webp", "image/gif"]);
+/**
+ * Limitele imaginilor animate (APNG, GIF, WebP): cadrele, latura pânzei, pixelii tuturor cadrelor (memoria, ×4 octeți)
+ * și timpul de lucru. Un fișier peste ele e refuzat cu un motiv clar (`too_many_frames`, `animation_too_large`,
+ * `processing_timeout`).
+ */
+export const PLUGIN_ANIMATION_LIMITS: GcsApngLimits = { maxFrames: 600, maxSide: 4096, maxPixels: 32_000_000, timeBudgetMs: 20_000 };
 const VIDEO = { "video/mp4": "mp4", "video/webm": "webm" } as const;
 const AUDIO = { "audio/mpeg": "mp3", "audio/ogg": "ogg" } as const;
 const MB = 1024 * 1024;
 /** Fișierele încărcate, dar nepăstrate de plugin (`ctx.media.keep`), se șterg după acest timp. */
 export const PLUGIN_MEDIA_PENDING_MS = 6 * 3600_000;
 const UPLOAD_LIMIT = { window: 3600, max: 60 };
+/** Încărcările din ACP (cataloage, încărcare în bloc): o limită separată, mai mare, doar pentru staff-ul cu acces ACP. */
+const ACP_UPLOAD_LIMIT = { window: 3600, max: 300 };
+const WEBP = { quality: 88, alphaQuality: 100, effort: 4 } as const;
 
 // ─── Durata video, citită din container (fără ffmpeg) ───
 
@@ -159,6 +185,87 @@ export function webmDurationMs(bytes: Buffer): number | null {
 
 // ─── Verificarea și recodarea ───
 
+/** Durata unui cadru GIF/WebP: sub 11 ms devine 100 ms, ca în browsere (altfel WebP-ul ar rula „cât de repede poate”). */
+const frameDelay = (ms: number) => (ms <= 10 ? 100 : Math.min(ms, 60_000));
+
+const animationError = (error: unknown): GcsValidationError => {
+  if (error instanceof GcsApngError) return new GcsValidationError({ file: error.code }, error.code === "too_many_frames" ? { maxFrames: String(PLUGIN_ANIMATION_LIMITS.maxFrames) } : {});
+  if (error instanceof GcsValidationError) return error;
+  if (error instanceof Error && /timeout/i.test(error.message)) return new GcsValidationError({ file: "processing_timeout" });
+  return new GcsValidationError({ file: "invalid_image" });
+};
+
+/**
+ * WebP-ul final al unei animații: latura maximă (`maxSide` = `null` când cadrele au deja mărimea finală), duratele și
+ * buclele păstrate; mereu recodat.
+ */
+async function encodeAnimation(img: Sharp, maxSide: number | null, delays: number[], loop: number): Promise<GcsPreparedPluginMedia> {
+  const sized = maxSide === null ? img : img.resize({ width: maxSide, height: maxSide, fit: "inside", withoutEnlargement: true });
+  const out = await sized
+    .webp(delays.length > 1 ? { ...WEBP, loop, delay: delays } : WEBP)
+    .timeout({ seconds: Math.ceil(PLUGIN_ANIMATION_LIMITS.timeBudgetMs / 1000) })
+    .toBuffer();
+  const meta = await sharp(out, { animated: true }).metadata();
+  return { kind: "image", mime: "image/webp", ext: "webp", bytes: out, width: meta.width ?? null, height: meta.pageHeight ?? meta.height ?? null, durationMs: null, frames: meta.pages ?? 1 };
+}
+
+/** O imagine statică → WebP (orientarea EXIF aplicată, fără metadate). */
+async function stillImage(bytes: Buffer, maxSide: number): Promise<GcsPreparedPluginMedia> {
+  let out: Buffer;
+  try {
+    out = await sharp(bytes, { limitInputPixels: 64_000_000 }).rotate().resize({ width: maxSide, height: maxSide, fit: "inside", withoutEnlargement: true }).webp(WEBP).toBuffer();
+  } catch {
+    throw new GcsValidationError({ file: "invalid_image" });
+  }
+  const meta = await sharp(out).metadata();
+  return { kind: "image", mime: "image/webp", ext: "webp", bytes: out, width: meta.width ?? null, height: meta.height ?? null, durationMs: null, frames: 1 };
+}
+
+/** APNG → WebP animat: cadrele compuse în nucleu (`apng.ts`), apoi recodate de `sharp`. */
+async function animatedPng(bytes: Buffer, maxSide: number): Promise<GcsPreparedPluginMedia> {
+  try {
+    const anim = await composeApng(bytes, PLUGIN_ANIMATION_LIMITS);
+    let { width, height, rgba } = anim;
+    // `resize` pe o intrare `raw` cu mai multe pagini ar păstra doar prima pagină: cadrele prea mari se micșorează pe rând.
+    const scale = Math.min(1, maxSide / Math.max(width, height));
+    if (scale < 1) {
+      const w = Math.max(1, Math.round(width * scale));
+      const h = Math.max(1, Math.round(height * scale));
+      const size = width * height * 4;
+      const frames: Buffer[] = [];
+      for (let i = 0; i < anim.frames; i++) {
+        frames.push(await sharp(rgba.subarray(i * size, (i + 1) * size), { raw: { width, height, channels: 4 } }).resize(w, h, { fit: "fill" }).raw().toBuffer());
+      }
+      rgba = Buffer.concat(frames);
+      width = w;
+      height = h;
+    }
+    const img = sharp(rgba, { raw: { width, height: height * anim.frames, channels: 4, pageHeight: height }, limitInputPixels: false });
+    return await encodeAnimation(img, null, anim.delays, anim.loop);
+  } catch (error) {
+    throw animationError(error);
+  }
+}
+
+/** GIF sau WebP animat → WebP animat (un singur cadru = imagine statică), cu aceleași limite ca APNG. */
+async function animatedImage(bytes: Buffer, maxSide: number): Promise<GcsPreparedPluginMedia> {
+  const L = PLUGIN_ANIMATION_LIMITS;
+  try {
+    const meta = await sharp(bytes, { animated: true, limitInputPixels: false }).metadata();
+    const pages = meta.pages ?? 1;
+    const width = meta.width ?? 0;
+    const pageHeight = meta.pageHeight ?? meta.height ?? 0;
+    if (!width || !pageHeight) throw new GcsValidationError({ file: "invalid_image" });
+    if (pages <= 1) return await stillImage(bytes, maxSide);
+    if (pages > L.maxFrames) throw new GcsApngError("too_many_frames");
+    if (width > L.maxSide || pageHeight > L.maxSide || width * pageHeight * pages > L.maxPixels) throw new GcsApngError("animation_too_large");
+    const delays = Array.from({ length: pages }, (_, i) => frameDelay(meta.delay?.[i] ?? 100));
+    return await encodeAnimation(sharp(bytes, { animated: true, limitInputPixels: false }), maxSide, delays, meta.loop ?? 0);
+  } catch (error) {
+    throw animationError(error);
+  }
+}
+
 /**
  * Verifică (și, pentru imagini, recodează) un fișier încărcat pentru un plugin, după declarația lui `media`:
  * tipul real din conținut, mărimea per tip, dimensiunile, durata video. Fișierul original nu se păstrează niciodată
@@ -171,17 +278,10 @@ export async function preparePluginMedia(bytes: Buffer, decl: GcsPluginMediaDecl
     const rule = decl.image;
     if (!rule) throw new GcsValidationError({ file: "unsupported_type" });
     if (bytes.length > rule.maxMb * MB) throw new GcsValidationError({ file: "too_large" }, { maxMb: String(rule.maxMb) });
-    const animated = rule.animated && (mime === "image/gif" || mime === "image/webp");
-    let out: Buffer;
-    try {
-      let img = sharp(bytes, { animated, limitInputPixels: 64_000_000 });
-      if (!animated) img = img.rotate();
-      out = await img.resize({ width: rule.maxSide, height: rule.maxSide, fit: "inside", withoutEnlargement: true }).webp({ quality: 88, alphaQuality: 100, effort: 4 }).toBuffer();
-    } catch {
-      throw new GcsValidationError({ file: "invalid_image" });
-    }
-    const meta = await sharp(out).metadata();
-    return { kind: "image", mime: "image/webp", ext: "webp", bytes: out, width: meta.width ?? null, height: meta.pageHeight ?? meta.height ?? null, durationMs: null };
+    if (rule.animated && mime === "image/apng") return animatedPng(bytes, rule.maxSide);
+    if (rule.animated && (mime === "image/gif" || mime === "image/webp")) return animatedImage(bytes, rule.maxSide);
+    // Fără animații declarate, un APNG / GIF devine imaginea lui statică (primul cadru).
+    return stillImage(bytes, rule.maxSide);
   }
   if (mime in VIDEO) {
     const rule = decl.video;
@@ -199,6 +299,17 @@ export async function preparePluginMedia(bytes: Buffer, decl: GcsPluginMediaDecl
     return { kind: "audio", mime, ext: AUDIO[mime as keyof typeof AUDIO], bytes, width: null, height: null, durationMs: null };
   }
   throw new GcsValidationError({ file: "unsupported_type" });
+}
+
+/** Numele original al unui fișier încărcat, doar ca text: fără cale, fără caractere de control, cel mult 120 de caractere. */
+export function pluginUploadName(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const base = raw.split(/[\\/]/).pop() ?? "";
+  const name = base
+    .replace(/[\p{Cc}\p{Cf}]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return name ? [...name].slice(0, 120).join("") : null;
 }
 
 /** Cea mai mare încărcare acceptată de declarație (pentru `Content-Length` înainte de citirea formularului). */
@@ -271,11 +382,16 @@ const ids = (raw: unknown): string[] => (Array.isArray(raw) ? [...new Set(raw.fi
 export class GcsPluginMediaService {
   constructor(private readonly deps: { db: PrismaClient; store: GcsFileStore; rateLimiter: GcsRedisRateLimiter }) {}
 
-  /** Un fișier nou, în așteptare până când pluginul îl păstrează. */
-  async upload(pluginKey: string, decl: GcsPluginMediaDecl, file: { bytes: Buffer }, uploader: { userId: string | null }): Promise<GcsPluginMediaInfo> {
+  /**
+   * Un fișier nou, în așteptare până când pluginul îl păstrează. `uploader.acp`: încărcarea vine dintr-o rută ACP a
+   * pluginului (poarta ACP verificată), cu limita de rată separată, mai mare (cataloagele, încărcarea în bloc).
+   */
+  async upload(pluginKey: string, decl: GcsPluginMediaDecl, file: { bytes: Buffer; name?: string }, uploader: { userId: string | null; acp?: boolean }): Promise<GcsPluginMediaInfo> {
     const { db, store, rateLimiter } = this.deps;
     if (uploader.userId) {
-      const limit = await rateLimiter.consume(`plugin-media:${uploader.userId}`, UPLOAD_LIMIT);
+      const limit = uploader.acp
+        ? await rateLimiter.consume(`plugin-media-acp:${uploader.userId}`, ACP_UPLOAD_LIMIT)
+        : await rateLimiter.consume(`plugin-media:${uploader.userId}`, UPLOAD_LIMIT);
       if (!limit.allowed) throw new GcsRateLimited({ retryAfter: String(limit.retryAfter) });
     }
     await this.purgePending(pluginKey);
@@ -299,7 +415,13 @@ export class GcsPluginMediaService {
         uploadedBy: uploader.userId,
       },
     });
-    return toInfo(row);
+    const name = pluginUploadName(file.name);
+    return {
+      ...toInfo(row),
+      sha256: createHash("sha256").update(file.bytes).digest("hex"),
+      ...(name ? { originalName: name } : {}),
+      ...(prepared.frames ? { frames: prepared.frames } : {}),
+    };
   }
 
   /** Păstrează fișierele încărcate (altfel se șterg după 6 ore). Doar ale pluginului. */

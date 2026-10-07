@@ -830,12 +830,15 @@ export class GcsPluginHost {
     return { status: 200, acp: route.acp ?? null, media: l.row.capabilities.includes("media") ? (l.row.manifest.media ?? null) : null };
   }
 
-  /** Un fișier din formularul unei rute API, verificat și salvat de nucleu (capabilitatea `media`), în așteptare. */
-  async uploadMedia(key: string, file: { bytes: Buffer }, actor: GcsActor): Promise<GcsPluginMediaInfo> {
+  /**
+   * Un fișier din formularul unei rute API, verificat și salvat de nucleu (capabilitatea `media`), în așteptare.
+   * `opts.acp`: ruta e una ACP, verificată de ruta web (limita de rată a încărcărilor din ACP).
+   */
+  async uploadMedia(key: string, file: { bytes: Buffer; name?: string }, actor: GcsActor, opts: { acp?: boolean } = {}): Promise<GcsPluginMediaInfo> {
     const l = this.loaded.get(key);
     const decl = l && l.row.capabilities.includes("media") ? l.row.manifest.media : undefined;
     if (!decl) throw new GcsValidationError({ file: "unsupported_type" });
-    return this.deps.media.upload(key, decl, file, { userId: actor.userId });
+    return this.deps.media.upload(key, decl, file, { userId: actor.userId, acp: opts.acp === true });
   }
 
   /** Un fișier media al pluginului, pentru servire (`/plugins/<cheie>/media/<id>.<ext>`). */

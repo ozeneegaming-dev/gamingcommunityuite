@@ -72,7 +72,10 @@ export type GcsPluginVipMember = {
   lastActiveAt: string | null;
 };
 
-/** Un fișier media al pluginului (capabilitatea `media`), verificat de GCS; imaginile sunt recodate în WebP. */
+/**
+ * Un fișier media al pluginului (capabilitatea `media`), verificat de GCS; imaginile sunt recodate în WebP (cele animate
+ * — GIF, APNG, WebP — rămân animate, ca WebP animat).
+ */
 export type GcsPluginMediaInfo = {
   id: string;
   kind: "image" | "video" | "audio";
@@ -85,8 +88,18 @@ export type GcsPluginMediaInfo = {
   url: string;
   status: "pending" | "kept";
   createdAt: string;
+  /** Doar la încărcare (în corpul formularului; GCS ≥ 0.7.1): SHA-256 al fișierului trimis (hex), pentru duplicate. */
+  sha256?: string;
+  /** Doar la încărcare: numele original al fișierului (fără cale, doar text). */
+  originalName?: string;
+  /** Doar la încărcare: numărul de cadre al imaginii (> 1 = animată). */
+  frames?: number;
 };
-/** Un fișier respins de GCS la încărcare (pe câmpul lui din formular): `too_large`, `unsupported_type`, `too_long`… */
+/**
+ * Un fișier respins de GCS la încărcare (pe câmpul lui din formular): `too_large`, `unsupported_type`, `too_long`,
+ * `invalid_image`, `too_many_frames`, `animation_too_large`, `processing_timeout`, `quota_exceeded`, `rate_limited`,
+ * `too_many_files`… Parametrii mesajului (ex. `maxMb`) și, de la GCS 0.7.1, `originalName` (numele fișierului).
+ */
 export type GcsPluginMediaError = { error: string; [param: string]: string };
 
 /** O umplere: 1 culoare (plină) sau 2–5 (gradient), unghiul și animația din lista albă. */
