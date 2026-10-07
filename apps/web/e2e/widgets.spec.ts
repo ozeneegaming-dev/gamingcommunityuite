@@ -110,6 +110,40 @@ test("adminul aranjează widget-urile; vizitatorul vede aranjarea, fără widget
 });
 
 /**
+ * Textul anunțului se scrie în editorul compact (specul `2026-10-07-editor-campuri`): formatarea ajunge pe pagină
+ * prin randatorul serverului. La final, layout-ul implicit revine.
+ */
+test("anunțul: textul formatat în editorul compact apare formatat pe pagina principală", async ({ page, context }) => {
+  test.setTimeout(120_000);
+  await useFreshIp(context, "100.71.9");
+  const id = uid();
+  await enterAcpAsRoot(page, `Ann${id}`, `ann-${id}@example.com`);
+  await page.goto("/");
+  await openPageEditor(page);
+  const announcement = page.getByTestId("gcs-zone-top").locator('[data-widget-type="core.announcement"]');
+  await announcement.getByTestId("gcs-edit-item-config").click();
+  const body = announcement.getByTestId("gcs-edit-item-panel").getByRole("textbox", { name: "Text", exact: true });
+  await body.click();
+  await page.keyboard.type(`Turneu ${id}`);
+  await page.keyboard.press("Shift+Home");
+  await announcement.getByRole("button", { name: "Bold", exact: true }).click();
+  // Fără video și fără upload: imaginile vin doar din adrese https.
+  await expect(announcement.getByRole("button", { name: "Video" })).toHaveCount(0);
+  await page.getByTestId("gcs-page-editor-save").click();
+  await expect(page.getByTestId("gcs-page-editor-status")).toHaveText("Pagina a fost salvată.");
+  await page.getByTestId("gcs-page-editor-done").click();
+  await expect(page.getByTestId("gcs-page-editor")).toHaveCount(0);
+  await expect(page.locator('[data-widget="core.announcement"] .gcs-announcement__body strong').filter({ visible: true })).toHaveText(`Turneu ${id}`);
+
+  // Layout-ul implicit înapoi (alte teste se bazează pe anunțul implicit).
+  await openPageEditor(page);
+  await page.getByTestId("gcs-page-editor-default").click();
+  await page.getByTestId("gcs-page-editor-default-confirm").click();
+  await expect(page.getByTestId("gcs-page-editor-status")).toHaveText("Pagina a revenit la widget-urile implicite.");
+  await page.getByTestId("gcs-page-editor-done").click();
+});
+
+/**
  * Lista „Widget-uri disponibile” (fixată în stânga): pornită din meniu de pe o pagină fără widget-uri (editorul se
  * deschide pe pagina principală), căutare, favorite păstrate pe server, adăugare cu „+” și prin tragere, apoi
  * „Termină editarea” salvează și închide. La final, layout-ul implicit revine.

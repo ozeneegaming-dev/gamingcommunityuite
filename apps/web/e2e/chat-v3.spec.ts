@@ -106,7 +106,14 @@ test("setările din ACP: regulile, mesajele noi sus, ora pe 12 h și limita de e
     const general = form.getByRole("tabpanel", { name: "General" });
     await expect(general.getByRole("switch", { name: "Activează chatbox-ul" })).toBeChecked();
     await general.getByRole("switch", { name: "Arată linkul spre reguli" }).check();
-    await general.getByLabel("Textul regulilor").fill(`Fără spam ${id}.\nRespect.`);
+    // Regulile se scriu în editorul compact (text formatat): un rând simplu, apoi unul îngroșat.
+    await general.getByRole("textbox", { name: "Textul regulilor" }).click();
+    await page.keyboard.press("ControlOrMeta+A");
+    await page.keyboard.press("Delete");
+    await page.keyboard.type(`Fără spam ${id}.`);
+    await page.keyboard.press("Enter");
+    await general.getByRole("button", { name: "Bold", exact: true }).click();
+    await page.keyboard.type("Respect.");
     await general.getByRole("switch", { name: "Mesajele noi sus" }).check();
     await general.getByLabel("Formatul orei").selectOption("12h");
     await general.getByRole("button", { name: "Salvează" }).click();
@@ -125,6 +132,7 @@ test("setările din ACP: regulile, mesajele noi sus, ora pe 12 h și limita de e
     const m = await chatPage(browser, `Mc${id}`, `c3-m-${id}@example.com`, "198.18.33");
     await room(m).getByTestId("gcs-chat-rules-open").click();
     await expect(m.getByTestId("gcs-chat-rules")).toContainText(`Fără spam ${id}.`);
+    await expect(m.getByTestId("gcs-chat-rules-body").locator("strong")).toHaveText("Respect.");
     await m.getByTestId("gcs-chat-rules").getByRole("button", { name: "Închide" }).click();
 
     // Câmpul de scris e deasupra listei; mesajul nou e primul.

@@ -1,6 +1,6 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
 import { forumTree, member, memberInNewContext, topicWithReplies, uid } from "./forum-fixtures";
-import { login, PASSWORD, sql, totp, useFreshIp } from "./helpers";
+import { login, PASSWORD, sql, totp, useFreshIp, userId } from "./helpers";
 
 async function profileFixture<T = unknown>(request: APIRequestContext, data: Record<string, unknown>): Promise<T> {
   const res = await request.post("/api/_test/profile", { data });
@@ -137,20 +137,75 @@ test.describe("setările din etapa 5", () => {
     await expect(page.getByTestId("gcs-2fa-status")).toHaveText("Autentificarea în doi pași este activă.");
   });
 
-  test("semnătura apare sub postări; imaginile sunt refuzate", async ({ page, request }) => {
+  test("semnătura formatată (culoare, mărime, imagine din adresă) apare sub postări; video-ul nu există în bară", async ({ page, request }) => {
     const t = await forumTree(request);
     const id = uid();
     await member(page, `Sig${id}`, `sig-${id}@example.com`);
     await page.goto("/settings/signature");
     const form = page.getByTestId("gcs-signature-form");
-    await form.locator(".gcs-editor__content").click();
+    // Editorul compact: formatarea, linkul, imaginea din adresă și emoji; fără video, citat, cod sau „Tot ecranul”.
+    const toolbar = form.getByRole("toolbar", { name: "Formatare" });
+    await expect(toolbar.getByRole("button", { name: "Video" })).toHaveCount(0);
+    await expect(toolbar.getByRole("button", { name: "Citat" })).toHaveCount(0);
+    const box = form.getByRole("textbox", { name: "Textul semnăturii" });
+    // După o comandă care mută focusul (popover, listă), editorul și-l recapătă la cadrul următor și își reaplică
+    // selecția; tastele se trimit abia după aceea.
+    const settle = async () => {
+      await expect(box).toBeFocused();
+      await page.waitForTimeout(250);
+    };
+    await box.click();
     await page.keyboard.type(`Semnătura lui Sig${id}`);
+    await page.keyboard.press("Enter");
+    await toolbar.getByRole("button", { name: "Imagine" }).click();
+    await form.getByLabel("Adresa imaginii (https://…)").fill("http://cdn.example/banner.png");
+    await form.getByRole("button", { name: "Inserează" }).click();
+    await expect(form.getByRole("alert")).toHaveText("Adresa trebuie să înceapă cu https:// și să ducă la o imagine.");
+    await form.getByLabel("Adresa imaginii (https://…)").fill("https://cdn.example/banner.png");
+    await form.getByRole("button", { name: "Inserează" }).click();
+    await settle();
+    // Tot textul: culoarea (butoanele barei nu iau focusul), apoi mărimea (lista o aplică aceleiași selecții).
+    await page.keyboard.press("ControlOrMeta+A");
+    await toolbar.getByRole("button", { name: "Culoarea textului" }).click();
+    await form.getByRole("button", { name: "#3DDC97" }).click();
+    await toolbar.getByLabel("Mărimea textului").selectOption("18px");
+    await settle();
     await form.getByRole("button", { name: "Salvează semnătura" }).click();
-    await expect(page.getByTestId("gcs-signature-preview")).toContainText(`Semnătura lui Sig${id}`);
+    const preview = page.getByTestId("gcs-signature-preview");
+    await expect(preview.locator('span[style*="color:#3DDC97"]')).toHaveText(`Semnătura lui Sig${id}`);
+    await expect(preview.locator('span[style*="font-size:18px"]')).toHaveCount(1);
+    await expect(preview.locator('img[src="https://cdn.example/banner.png"]')).toHaveCount(1);
 
     const topic = await topicWithReplies(request, t.forum.id, `sig-${id}@example.com`, `Semnat ${id}`);
     await page.goto(topic.url);
-    await expect(page.getByTestId("gcs-post").first().getByTestId("gcs-post-signature")).toContainText(`Semnătura lui Sig${id}`);
+    const signature = page.getByTestId("gcs-post").first().getByTestId("gcs-post-signature");
+    await expect(signature).toContainText(`Semnătura lui Sig${id}`);
+    await expect(signature.locator('span[style*="color:#3DDC97"]')).toHaveCount(1);
+    // Imaginile din semnătură sunt mici (cel mult 90 px înălțime).
+    expect(await signature.locator("img").evaluate((img) => getComputedStyle(img).maxHeight)).toBe("90px");
+  });
+
+  test("un câmp de profil „Text lung” se scrie în editorul compact și apare formatat în tabul Despre", async ({ page }) => {
+    const id = uid();
+    const key = `despre_${id}`;
+    await sql(`INSERT INTO profile_fields (key, label, type, section, "maxLength", position, options) VALUES ($1, $2, 'TEXTAREA', 'ABOUT', 300, 50, '{}')`, [key, `Despre mine ${id}`]);
+    try {
+      await member(page, `Ab${id}`, `ab-${id}@example.com`);
+      await page.goto("/settings/profile");
+      await page.getByRole("textbox", { name: `Despre mine ${id}` }).click();
+      await page.keyboard.type("Joc CS2 ");
+      await page.getByRole("button", { name: "Bold", exact: true }).click();
+      await page.keyboard.type("în fiecare seară");
+      await page.getByRole("button", { name: "Salvează", exact: true }).click();
+      await expect(page.getByTestId("gcs-settings-status")).toHaveText("Salvat.");
+
+      await page.goto(`/members/${await userId(`ab-${id}@example.com`)}?tab=about`);
+      const field = page.getByTestId("gcs-profile-rich-field").filter({ hasText: `Despre mine ${id}` });
+      await expect(field.locator("strong")).toHaveText("în fiecare seară");
+      await expect(field).toContainText("Joc CS2");
+    } finally {
+      await sql(`DELETE FROM profile_fields WHERE key = $1`, [key]);
+    }
   });
 
   test("toast-ul unei notificări noi apare; oprit din setări, nu mai apare", async ({ page, browser, request }) => {
