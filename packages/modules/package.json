@@ -11,11 +11,11 @@
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "port": "tsx scripts/port.ts"
   },
   "devDependencies": {
     "@gcs/config": "workspace:*",
-    "@gcs/plugin-sdk": "workspace:*",
     "@types/node": "^22.0.0",
     "@types/pg": "^8.23.1",
     "@types/sanitize-html": "^2.16.2",
@@ -24,12 +24,14 @@
     "pg": "^8.16.0",
     "redis-memory-server": "^0.17.1",
     "sharp": "^0.35.5",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.0",
     "vitest": "^3.2.0"
   },
   "dependencies": {
     "@gcs/core": "workspace:*",
     "@gcs/db": "workspace:*",
+    "@gcs/plugin-sdk": "workspace:*",
     "@gcs/ui": "workspace:*",
     "htmlparser2": "^12.0.0",
     "ioredis": "^5.11.1",
