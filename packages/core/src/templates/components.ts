@@ -48,7 +48,9 @@ export function avatarHtml(user: Record<string, unknown>, opts: Record<string, u
   const body = src
     ? `<img src="${attr(src)}" alt="${attr(name)}" class="gcs-avatar__img"/>`
     : `<span aria-hidden="true">${escapeHtml(initial)}</span><span class="gcs-srOnly">${escapeHtml(name)}</span>`;
-  const inner = `<span class="${cls}" style="${style}">${body}</span>`;
+  // Id-ul membrului → `data-avatar-user` (rama publicată de un plugin), ca în `GcsAvatar`.
+  const uid = typeof user.id === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(user.id) ? user.id : "";
+  const inner = `<span class="${cls}"${uid ? ` data-avatar-user="${uid}"` : ""} style="${style}">${body}</span>`;
   if (!frame) return inner;
   const frameCls = ["gcs-avatarFrame", `gcs-avatarFrame--${frame}`, extra].filter(Boolean).join(" ");
   return `<span class="${frameCls}" style="width:${px}px;height:${px}px">${inner}</span>`;

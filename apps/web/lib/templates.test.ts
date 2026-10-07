@@ -28,12 +28,12 @@ describe("componentele șabloanelor produc același markup ca cele React", () =>
   const user = { id: "u1", name: "Ana Maria", url: "/members/u1-ana-maria", image: null, nameKey: "admin", frameKey: null };
 
   test("avatarul (fără imagine, cu imagine și ramă, cu clasă)", () => {
-    expect(tree(avatarHtml(user, { size: "s" }))).toEqual(tree(react(createElement(GcsAvatar, { name: "Ana Maria", size: "s" }))));
+    expect(tree(avatarHtml(user, { size: "s" }))).toEqual(tree(react(createElement(GcsAvatar, { name: "Ana Maria", size: "s", userId: "u1" }))));
     expect(tree(avatarHtml({ ...user, image: "/files/a.png", frameKey: "neon" }, { size: "l" }))).toEqual(
-      tree(react(createElement(GcsAvatar, { name: "Ana Maria", size: "l", src: "/files/a.png", frame: "neon" }))),
+      tree(react(createElement(GcsAvatar, { name: "Ana Maria", size: "l", src: "/files/a.png", frame: "neon", userId: "u1" }))),
     );
     expect(tree(avatarHtml(user, { size: "m", class: "gcs-hoverCard__avatar" }))).toEqual(
-      tree(react(createElement(GcsAvatar, { name: "Ana Maria", size: "m", className: "gcs-hoverCard__avatar" }))),
+      tree(react(createElement(GcsAvatar, { name: "Ana Maria", size: "m", className: "gcs-hoverCard__avatar", userId: "u1" }))),
     );
   });
 
