@@ -36,7 +36,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
 /**
  * `/admin/plugins/<cheie>/…` (etapa 6): paginile ACP ale unui plugin, cu dreptul ACP `plugin.<cheie>` (rolurile ACP).
- * Doar HTML sanitizat: fără formulare și scripturi; setările pluginului au formularul generat din manifest.
+ * Doar HTML sanitizat, fără scripturi; formularele trimit doar spre rutele API ale pluginului (cele ACP cer poarta ACP).
  */
 export default async function AcpPluginPage(props: Props) {
   const { key, result } = await load(props);

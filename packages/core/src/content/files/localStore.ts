@@ -2,7 +2,7 @@ import { createReadStream } from "node:fs";
 import { mkdir, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { Readable } from "node:stream";
-import type { GcsFileStore, GcsStoredFile } from "./store";
+import type { GcsByteRange, GcsFileStore, GcsStoredFile } from "./store";
 
 /** Store într-un folder local (teste, dev fără MinIO). */
 export class GcsLocalFileStore implements GcsFileStore {
@@ -25,11 +25,12 @@ export class GcsLocalFileStore implements GcsFileStore {
     await writeFile(full, body);
   }
 
-  async get(key: string): Promise<GcsStoredFile | null> {
+  async get(key: string, range?: GcsByteRange): Promise<GcsStoredFile | null> {
     const full = this.file(key);
     const info = await stat(full).catch(() => null);
     if (!info?.isFile()) return null;
-    return { body: Readable.toWeb(createReadStream(full)) as ReadableStream<Uint8Array>, size: info.size };
+    const stream = range ? createReadStream(full, { start: range.start, end: range.end }) : createReadStream(full);
+    return { body: Readable.toWeb(stream) as ReadableStream<Uint8Array>, size: info.size };
   }
 
   async delete(key: string): Promise<void> {

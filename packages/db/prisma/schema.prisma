@@ -100,6 +100,8 @@ model User {
   badges           UserBadge[]
   achievementLog   AchievementLog[]
   vipSubscriptions VipSubscription[]
+  /// Aspectul publicat de pluginuri (capabilitatea `appearance`, Studio VIP).
+  appearances      MemberAppearance[]
 
   // Timp real (etapa 4).
   notifications           Notification[]
@@ -1490,6 +1492,8 @@ model Plugin {
   updatedAt           DateTime            @updatedAt
   hookSettings        PluginHookSetting[]
   logs                PluginLog[]
+  media               PluginMedia[]
+  appearances         MemberAppearance[]
 
   @@map("plugins")
 }
@@ -1533,6 +1537,45 @@ model PluginHookSetting {
 
   @@id([pluginKey, hook])
   @@map("plugin_hook_settings")
+}
+
+/// Un fișier media al unui plugin (capabilitatea `media`, Studio VIP): tipul verificat din conținut, imaginile recodate.
+/// `pending` până când pluginul îl păstrează (`ctx.media.keep`); cele nepăstrate se șterg după 6 ore.
+model PluginMedia {
+  id         String   @id @default(cuid())
+  pluginKey  String
+  /// `image`, `video` sau `audio`.
+  kind       String
+  mime       String
+  ext        String
+  size       Int
+  width      Int?
+  height     Int?
+  durationMs Int?
+  storageKey String   @unique
+  /// `pending` sau `kept`.
+  status     String   @default("pending")
+  uploadedBy String?
+  createdAt  DateTime @default(now())
+  plugin     Plugin   @relation(fields: [pluginKey], references: [key], onDelete: Cascade)
+
+  @@index([pluginKey, status, createdAt])
+  @@map("plugin_media")
+}
+
+/// Aspectul unui membru publicat de un plugin (capabilitatea `appearance`): JSON validat de nucleu
+/// (`parseMemberAppearance`), randat în nume, avatare, postbit, hover card și profil.
+model MemberAppearance {
+  pluginKey String
+  userId    String
+  data      Json
+  updatedAt DateTime @updatedAt
+  plugin    Plugin   @relation(fields: [pluginKey], references: [key], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([pluginKey, userId])
+  @@index([userId])
+  @@map("member_appearances")
 }
 
 // ─── Importul din altă platformă (specul importului, etapa 6) ────────────────

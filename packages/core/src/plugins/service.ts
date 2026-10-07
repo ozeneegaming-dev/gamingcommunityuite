@@ -99,6 +99,8 @@ export type GcsPluginServiceDeps = {
   trustedKeys: () => ReadonlyMap<string, KeyObject>;
   unsignedPolicy: () => "allow" | "deny";
   platformVersion?: string;
+  /** Datele pluginului din afara schemei lui (fișierele media, aspectul membrilor), șterse la dezinstalarea completă. */
+  removeData?: (key: string) => Promise<void>;
 };
 
 export type GcsPluginInstallConfirm = {
@@ -449,6 +451,8 @@ export class GcsPluginService {
     await db.plugin.update({ where: { key }, data: { enabled: false, disabledReason: "admin" } });
     await this.deps.notify();
     await database.drop(key, row.dbRole);
+    // Fișierele din store nu se șterg prin cheia străină: întâi ele, apoi rândurile (cascadă).
+    await this.deps.removeData?.(key);
     const prefix = `${pluginRegistryKey(key)}.`;
     await db.$transaction(async (tx) => {
       await tx.groupSetting.deleteMany({ where: { key: { startsWith: prefix } } });

@@ -1506,6 +1506,14 @@
         "templates": {
           "title": "Шаблоны",
           "body": "Зарезервировано: шаблоны плагина, для движка шаблона."
+        },
+        "media": {
+          "title": "Own media files",
+          "body": "Receives images, videos and audio files uploaded from its pages. GCS checks them by content, re-encodes images and enforces size limits and a quota."
+        },
+        "appearance": {
+          "title": "Member appearance",
+          "body": "Can change how members look across the site: name style, avatar frame, banner, card background and profile extras. GCS validates everything (only colours and the plugin's own files)."
         }
       },
       "checks": {

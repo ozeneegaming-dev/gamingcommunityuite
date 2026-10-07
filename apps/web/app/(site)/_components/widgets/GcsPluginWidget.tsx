@@ -9,7 +9,8 @@ export const isPluginWidget = (type: string) => type.startsWith("plugin.");
 
 /**
  * Un widget de plugin (etapa 6): HTML-ul randat de plugin pe server, deja sanitizat și închis în containerul pluginului,
- * în cardul comun al widget-urilor (titlul și iconița din manifest). CSS-ul pluginului se încarcă doar unde apare.
+ * în cardul comun al widget-urilor (titlul și iconița din manifest). CSS-ul pluginului se încarcă doar unde apare, iar
+ * JS-ul doar pentru pluginurile semnate.
  * În modul sigur (Root Admin, `?safe=1`) sau dacă pluginul nu răspunde, widget-ul lipsește.
  */
 export async function renderPluginWidget(p: GcsWidgetPlacementView, actor: GcsActor, page: string): Promise<ReactNode> {
@@ -22,6 +23,10 @@ export async function renderPluginWidget(p: GcsWidgetPlacementView, actor: GcsAc
     <section className="gcs-card gcs-sideCard gcs-widget gcs-pluginWidget" aria-labelledby={headingId} data-widget={p.type} data-testid="gcs-plugin-widget">
       {out.styles.map((href) => (
         <link key={href} rel="stylesheet" href={href} precedence="gcs-plugins" />
+      ))}
+      {/* JS-ul pluginurilor semnate (ex. caruselul); React îl include o singură dată pe pagină. */}
+      {out.scripts.map((src) => (
+        <script key={src} src={src} async />
       ))}
       <GcsWidgetTitle id={headingId} icon={widgetIcon(p.type, p.config)}>
         {plugins.widgetTitle(p.type, locale) ?? p.type}

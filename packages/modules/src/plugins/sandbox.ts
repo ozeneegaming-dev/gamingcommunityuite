@@ -3,8 +3,8 @@ import { Worker } from "node:worker_threads";
 import { PLUGIN_TIMEOUTS, type GcsPluginCallKind } from "@gcs/core";
 import { PLUGIN_WORKER_SOURCE } from "./worker-source";
 
-/** Rezultatul maxim al unui apel (JSON, caractere). */
-export const PLUGIN_MAX_RESULT = 512 * 1024;
+/** Rezultatul maxim al unui apel (JSON, caractere): încape o pagină de plugin la limita sanitizer-ului (900 KB). */
+export const PLUGIN_MAX_RESULT = 1536 * 1024;
 /** Câte apeluri ale contextului poate avea un plugin în curs, simultan. */
 const MAX_PENDING_RPC = 64;
 /**

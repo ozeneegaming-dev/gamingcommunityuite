@@ -26,6 +26,69 @@ describe("HTML-ul pluginurilor", () => {
     expect(sanitizePluginHtml('<span data-gcsp-id="1" data-testid="gcs-header-user" aria-label="x" role="note">x</span>')).toBe('<span data-gcsp-id="1" aria-label="x" role="note">x</span>');
   });
 
+  test("`style` păstrează doar variabilele CSS cu valori sigure", () => {
+    expect(sanitizePluginHtml('<div class="gcsp-x" style="--gcsp-c1:#FF0044; --a: 135deg;--w:700;--fx:gcsFxShimmer">x</div>')).toBe(
+      '<div class="gcsp-x" style="--gcsp-c1:#FF0044;--a:135deg;--w:700;--fx:gcsFxShimmer">x</div>',
+    );
+    for (const style of [
+      "color:red",
+      "--x:url(https://evil.example/a.png)",
+      "--x:expression(alert(1))",
+      '--x:"</div><script>"',
+      "--x:red;position:fixed;inset:0",
+      "--x:var(--y)",
+      "--x:1px 2px",
+      "-x:#fff",
+    ]) {
+      const out = sanitizePluginHtml(`<p style='${style}'>x</p>`);
+      expect([style, out]).toEqual([style, style.startsWith("--x:red") ? '<p style="--x:red">x</p>' : "<p>x</p>"]);
+    }
+  });
+
+  test("formularele: doar în pagini, spre API-ul sau paginile pluginului", () => {
+    const page = (html: string) => sanitizePluginHtml(html, { pluginKey: "acme.demo", page: true });
+    expect(page('<form method="POST" action="/api/plugins/acme.demo/save" enctype="multipart/form-data"><input type="radio" name="style" value="ns_1" checked><button>Salvează</button></form>')).toBe(
+      '<form method="post" action="/api/plugins/acme.demo/save" enctype="multipart/form-data"><input type="radio" name="style" value="ns_1" checked /><button type="submit">Salvează</button></form>',
+    );
+    expect(page('<form action="/p/acme.demo/items"><input type="search" name="q"></form>')).toBe('<form method="get" action="/p/acme.demo/items"><input type="search" name="q" /></form>');
+    for (const action of ["https://evil.example/x", "//evil.example", "/api/plugins/acme.other/save", "/api/auth/sign-out", "/api/plugins/acme.demo/../../auth", "/api/plugins/acme.demo%2f..%2fx", "javascript:alert(1)"]) {
+      expect([action, page(`<form method="post" action="${action}"><input name="a"></form>`)]).toEqual([action, '<div><input type="text" name="a" /></div>']);
+    }
+    // GET spre API sau POST spre o pagină: nu.
+    expect(page('<form method="get" action="/api/plugins/acme.demo/save"></form>')).toBe("<div></div>");
+    expect(page('<form method="post" action="/p/acme.demo"></form>')).toBe("<div></div>");
+    // Fără „page” (widget-uri, puncte de extensie), formularele dispar ca până acum.
+    expect(sanitizePluginHtml('<form method="post" action="/api/plugins/acme.demo/save"><input name="a"></form>', { pluginKey: "acme.demo" })).toBe("");
+  });
+
+  test("controalele: tipuri sigure, fără trimitere în altă parte", () => {
+    const page = (html: string) => sanitizePluginHtml(html, { pluginKey: "acme.demo", page: true });
+    expect(page('<input type="password" name="p"><input type="image" src="https://evil.example/x.png" name="i">')).toBe('<input type="text" name="p" /><input type="text" name="i" />');
+    expect(page('<button type="submit" formaction="https://evil.example" formmethod="get" form="other">x</button>')).toBe('<button type="submit">x</button>');
+    expect(page('<input name="a b" onfocus="x()" id="i" value="1">')).toBe('<input value="1" type="text" />');
+    expect(page('<textarea name="quote" maxlength="200" onkeyup="x()">a &lt;b&gt;</textarea>')).toBe('<textarea name="quote" maxlength="200">a &lt;b&gt;</textarea>');
+    expect(page('<select name="plan"><option value="gold" selected>Gold</option></select>')).toBe('<select name="plan"><option value="gold" selected>Gold</option></select>');
+  });
+
+  test("audio și video: doar fișierele pluginului; video fără sunet, audio fără pornire automată", () => {
+    const page = (html: string) => sanitizePluginHtml(html, { pluginKey: "acme.demo", page: true });
+    expect(page('<video src="/plugins/acme.demo/media/abc123.webm" poster="/plugins/acme.demo/media/p1.webp" autoplay loop></video>')).toBe(
+      '<video src="/plugins/acme.demo/media/abc123.webm" poster="/plugins/acme.demo/media/p1.webp" autoplay loop muted playsinline></video>',
+    );
+    expect(page('<audio src="/plugins/acme.demo/media/s.mp3" autoplay controls></audio>')).toBe('<audio src="/plugins/acme.demo/media/s.mp3" controls></audio>');
+    for (const src of ["https://evil.example/a.mp4", "/plugins/acme.other/media/a.mp4", "/plugins/acme.demo/../acme.other/media/a", "/files/abc", "/plugins/acme.demo/media/a.mp4?x=1"]) {
+      expect([src, page(`<video src="${src}"></video>`)]).toEqual([src, "<video muted playsinline></video>"]);
+    }
+    expect(sanitizePluginHtml('<video src="/plugins/acme.demo/media/a.webm"></video>', { pluginKey: "acme.demo" })).toBe("");
+  });
+
+  test("numele și avatarele membrilor ca în nucleu", () => {
+    expect(sanitizePluginHtml('<a class="gcs-userLink gcs-name--vip_gold gcs-drawer" data-user-id="u123" href="/members/u123-ana">Ana</a><span class="gcs-avatar"><img class="gcs-avatar__img" src="/files/a"></span>')).toBe(
+      '<a class="gcs-userLink gcs-name--vip_gold" data-user-id="u123" href="/members/u123-ana" rel="noopener noreferrer nofollow ugc">Ana</a><span class="gcs-avatar"><img class="gcs-avatar__img" src="/files/a" loading="lazy" /></span>',
+    );
+    expect(sanitizePluginHtml('<a data-user-id="x&quot; onmouseover=&quot;1" href="/m">x</a>')).toBe('<a href="/m" rel="noopener noreferrer nofollow ugc">x</a>');
+  });
+
   test("<gcs-icon> devine iconița Font Awesome; numele necunoscute dispar", () => {
     expect(sanitizePluginHtml('<p><gcs-icon name="fa-solid fa-star"></gcs-icon> Top</p>', { icon })).toBe('<p><svg class="gcs-icon"><path d="M0"/></svg> Top</p>');
     expect(sanitizePluginHtml('<gcs-icon name="fa-solid fa-star" />!', { icon })).toBe('<svg class="gcs-icon"><path d="M0"/></svg>!');

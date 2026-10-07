@@ -101,7 +101,7 @@ type Appearance = {
 
 ### 2.2 Fișierele media ale pluginului (`media`, risc mediu)
 
-- **Declarația** din manifest: `media: { image?: { maxMb ≤ 10, maxSide ≤ 4096, animated? }, video?: { maxMb ≤ 100,
+- **Declarația** din manifest: `media: { image?: { maxMb ≤ 10, maxSide ≤ 4096, animated? }, video?: { maxMb ≤ 50,
   maxSeconds ≤ 300 }, audio?: { maxMb ≤ 30 }, quotaMb ≤ 4096 }`. Tipurile nedeclarate sunt refuzate.
 - **Încărcarea** trece doar prin formularele `multipart/form-data` trimise spre o rută API a pluginului (§2.3): nucleul
   preia fișierele **înaintea** pluginului, iar pluginul primește în corp, pe câmpul fișierului,

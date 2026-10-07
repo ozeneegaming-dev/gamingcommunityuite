@@ -1506,6 +1506,14 @@
         "templates": {
           "title": "Șabloane",
           "body": "Rezervat: șabloanele pluginului, pentru motorul de șabloane."
+        },
+        "media": {
+          "title": "Fișiere media proprii",
+          "body": "Primește imagini, videoclipuri și fișiere audio încărcate din paginile lui. GCS le verifică după conținut, recodează imaginile și aplică limite de mărime și o cotă."
+        },
+        "appearance": {
+          "title": "Aspectul membrilor",
+          "body": "Poate schimba cum apar membrii pe site: stilul numelui, rama avatarului, banner-ul, fundalul cardului și extra-uri pe profil. GCS validează tot (doar culori și fișiere ale pluginului)."
         }
       },
       "checks": {

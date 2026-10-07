@@ -44,7 +44,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   // Versiunea permisiunilor se schimbă la orice modificare de grup: browserul ia imediat CSS-ul nou,
   // deși îl poate păstra în cache 60 s.
   const version = await orDefault(
-    async () => `${await services().permissions.currentVersion()}-${await services().cosmetics.version()}`,
+    async () => `${await services().permissions.currentVersion()}-${await services().cosmetics.version()}-${await services().appearance.version()}`,
     "0",
   );
   const theme = await viewerTheme();

@@ -8,7 +8,7 @@ import {
   S3Client,
   S3ServiceException,
 } from "@aws-sdk/client-s3";
-import type { GcsFileStore, GcsStoredFile } from "./store";
+import type { GcsByteRange, GcsFileStore, GcsStoredFile } from "./store";
 
 export type GcsS3Config = { endpoint: string; accessKey: string; secretKey: string; bucket: string; region?: string };
 
@@ -47,11 +47,15 @@ export class GcsS3FileStore implements GcsFileStore {
     await this.client.send(new PutObjectCommand({ Bucket: this.config.bucket, Key: key, Body: body, ContentType: mime }));
   }
 
-  async get(key: string): Promise<GcsStoredFile | null> {
+  async get(key: string, range?: GcsByteRange): Promise<GcsStoredFile | null> {
     try {
-      const out = await this.client.send(new GetObjectCommand({ Bucket: this.config.bucket, Key: key }));
+      const out = await this.client.send(
+        new GetObjectCommand({ Bucket: this.config.bucket, Key: key, ...(range ? { Range: `bytes=${range.start}-${range.end}` } : {}) }),
+      );
       if (!out.Body) return null;
-      return { body: out.Body.transformToWebStream() as ReadableStream<Uint8Array>, size: out.ContentLength ?? 0 };
+      // Cu `Range`, mărimea totală vine din `Content-Range` (`bytes 0-99/1234`).
+      const total = range ? Number(/\/(\d+)$/.exec(out.ContentRange ?? "")?.[1] ?? 0) : (out.ContentLength ?? 0);
+      return { body: out.Body.transformToWebStream() as ReadableStream<Uint8Array>, size: total };
     } catch (e) {
       if (e instanceof NoSuchKey || (e instanceof S3ServiceException && e.$metadata.httpStatusCode === 404)) return null;
       throw e;

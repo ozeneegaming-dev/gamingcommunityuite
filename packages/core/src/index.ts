@@ -45,6 +45,8 @@ export * from "./jobs/queue";
 export * from "./moderation/bans";
 export * from "./moderation/warnings";
 export * from "./nav/service";
+export * from "./members/appearance";
+export * from "./members/appearanceService";
 export * from "./members/directory";
 export * from "./notifications/service";
 export * from "./modules/registry";

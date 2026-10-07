@@ -19,6 +19,9 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@gcs/core", "@gcs/modules", "@gcs/ui"],
   // Module native: rămân `require` la runtime, nu intră în bundle.
   serverExternalPackages: ["@node-rs/argon2", "@prisma/client", ".prisma/client"],
+  // Cu proxy-ul activ, corpul cererilor e limitat (implicit 10 MB, apoi trunchiat): fișierele media ale pluginurilor
+  // (video ≤ 50 MB, plus posterul și câmpurile) trebuie să ajungă întregi la ruta API.
+  experimental: { proxyClientMaxBodySize: "64mb" },
   // Header-e de securitate pe toate răspunsurile (spec §15). CSP-ul strict vine odată cu editorul (etapa 2).
   async headers() {
     return [

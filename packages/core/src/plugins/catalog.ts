@@ -4,7 +4,7 @@
  */
 
 /** Versiunea platformei pentru `minGcs` (se actualizează la fiecare etapă care schimbă API-ul pluginurilor). */
-export const GCS_PLATFORM_VERSION = "0.6.0";
+export const GCS_PLATFORM_VERSION = "0.7.0";
 
 export const PLUGIN_CAPABILITIES = [
   "db",
@@ -23,6 +23,8 @@ export const PLUGIN_CAPABILITIES = [
   "client-css",
   "client-js",
   "templates",
+  "media",
+  "appearance",
 ] as const;
 export type GcsPluginCapability = (typeof PLUGIN_CAPABILITIES)[number];
 
@@ -44,6 +46,8 @@ export const CAPABILITY_RISK: Record<GcsPluginCapability, "low" | "medium" | "hi
   "client-css": "low",
   "client-js": "high",
   templates: "low",
+  media: "medium",
+  appearance: "medium",
 };
 
 /** Iconița Font Awesome a fiecărei capabilități (ecranul de confirmare, pagina pluginului). */
@@ -64,6 +68,8 @@ export const CAPABILITY_ICONS: Record<GcsPluginCapability, string> = {
   "client-css": "fa-solid fa-palette",
   "client-js": "fa-brands fa-js",
   templates: "fa-solid fa-file-code",
+  media: "fa-solid fa-photo-film",
+  appearance: "fa-solid fa-wand-magic-sparkles",
 };
 
 /**
@@ -102,6 +108,18 @@ export type GcsPluginFilterPoint = (typeof PLUGIN_FILTER_POINTS)[number];
 /** Punctele de extensie din interfață (HTML inserat; aceleași nume le vor folosi și șabloanele). */
 export const PLUGIN_HOOK_POINTS = ["postbit.after_fields"] as const;
 export type GcsPluginHookPoint = (typeof PLUGIN_HOOK_POINTS)[number];
+
+/**
+ * Plafoanele nucleului pentru fișierele media ale pluginurilor (declarația `media` din manifest nu le poate depăși).
+ * Imaginile se recodează; video și audio se verifică după tip, mărime și (video) durată.
+ */
+export const PLUGIN_MEDIA_CAPS = {
+  image: { maxMb: 10, maxSide: 4096 },
+  video: { maxMb: 50, maxSeconds: 300 },
+  audio: { maxMb: 30 },
+  quotaMb: 4096,
+} as const;
+export type GcsPluginMediaKind = "image" | "video" | "audio";
 
 /** Timpul maxim al fiecărui tip de apel (ms). */
 export const PLUGIN_TIMEOUTS = {

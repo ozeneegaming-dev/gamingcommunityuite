@@ -33,7 +33,9 @@ import {
   GcsS3FileStore,
   GcsSettingsService,
   GcsWarningService,
+  GcsMemberAppearanceService,
   GcsPluginDatabase,
+  GcsPluginMediaService,
   GcsPluginService,
   sendEmail,
   trustedPluginKeys,
@@ -161,6 +163,10 @@ export type GcsServices = {
   plugins: GcsPluginHost;
   /** Ciclul de viață al pluginurilor (ACP → Sistem → Aplicații și pluginuri). */
   pluginAdmin: GcsPluginService;
+  /** Aspectul membrilor publicat de pluginuri (numele, rama, banner-ul, profilul), Studio VIP. */
+  appearance: GcsMemberAppearanceService;
+  /** Fișierele media ale pluginurilor (capabilitatea media). */
+  pluginMedia: GcsPluginMediaService;
   /** Importul din altă platformă (ACP → Sistem → Conversii) și redirecturile 301. */
   importer: GcsImportService;
   /** Asistentul de portare a pluginurilor (ACP → Sistem → Conversii → Portare plugin). */
@@ -421,6 +427,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   // Pluginurile (etapa 6): ciclul de viață și gazda din acest proces. Gazda pornește doar unde e chemat `start()`
   // (web și `gcs-worker`); în rest doar ascultă evenimentele, fără pluginuri încărcate.
   const pluginDatabase = new GcsPluginDatabase({ databaseUrl });
+  const appearance = new GcsMemberAppearanceService({ db, cache, redis, bus });
+  const pluginMedia = new GcsPluginMediaService({ db, store: files, rateLimiter });
   const pluginAdmin = new GcsPluginService({
     db,
     acp,
@@ -431,6 +439,11 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     permissions,
     trustedKeys: () => trustedPluginKeys().keys,
     unsignedPolicy: () => (process.env.GCS_PLUGINS_UNSIGNED === "deny" ? "deny" : "allow"),
+    // Dezinstalarea fără păstrarea datelor: fișierele media (din store) și aspectul publicat de plugin.
+    removeData: async (key) => {
+      await pluginMedia.deleteAll(key);
+      await appearance.clear(key);
+    },
   });
   const plugins = new GcsPluginHost({
     db,
@@ -442,6 +455,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     plugins: pluginAdmin,
     database: pluginDatabase,
     api: new GcsPluginPublicApi({ db, forumQueries, posting }),
+    appearance,
+    media: pluginMedia,
     dataDir: process.env.GCS_PLUGINS_DIR ?? path.join(opts.configDir, "plugins"),
     iconSvg,
     siteLocale: () => settings.get<string>("site.locale"),
@@ -523,6 +538,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     conversationQueries: new GcsConversationQueries({ db, settings, profileQueries }),
     plugins,
     pluginAdmin,
+    appearance,
+    pluginMedia,
     importer: new GcsImportService({
       db,
       bus,

@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { isPluginKey, PLUGIN_CAPABILITIES, PLUGIN_EVENTS, PLUGIN_FILTER_POINTS, PLUGIN_HOOK_POINTS, type GcsPluginCapability } from "./catalog";
+import { isPluginKey, PLUGIN_CAPABILITIES, PLUGIN_EVENTS, PLUGIN_FILTER_POINTS, PLUGIN_HOOK_POINTS, PLUGIN_MEDIA_CAPS, type GcsPluginCapability } from "./catalog";
 import { isValidSemverRange, parseSemver } from "./semver";
 
 /** O cheie locală (setare, permisiune, widget, job, intrare de meniu). */
@@ -133,8 +133,16 @@ export const pluginManifestSchema = z.strictObject({
       pages: z.array(z.strictObject({ path: route, title: label.optional(), permission: localKey.optional() })).max(30).default([]),
       acp: z.array(z.strictObject({ path: route, label, icon: icon.optional() })).max(20).default([]),
       api: z
-        .array(z.strictObject({ path: route, methods: z.array(z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"])).min(1).max(5), permission: localKey.optional() }))
-        .max(30)
+        .array(
+          z.strictObject({
+            path: route,
+            methods: z.array(z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"])).min(1).max(5),
+            permission: localKey.optional(),
+            /** Rută a ACP-ului: poarta ACP (sesiune ACP, 2FA) și dreptul pe secțiunea `plugin.<cheie>`. */
+            acp: z.enum(["view", "edit", "delete"]).optional(),
+          }),
+        )
+        .max(40)
         .default([]),
     })
     .default({ pages: [], acp: [], api: [] }),
@@ -143,6 +151,15 @@ export const pluginManifestSchema = z.strictObject({
   hooks: z.array(z.strictObject({ point: z.enum(PLUGIN_HOOK_POINTS), priority })).max(PLUGIN_HOOK_POINTS.length).default([]),
   jobs: z.array(z.strictObject({ key: localKey, everyMinutes: z.number().int().min(5).max(10080).optional(), label: label.optional() })).max(20).default([]),
   menus: z.strictObject({ site: z.array(menuEntry).max(10).default([]), user: z.array(menuEntry).max(10).default([]) }).default({ site: [], user: [] }),
+  /** Fișierele media proprii (capabilitatea `media`): tipurile acceptate și limitele lor, sub plafoanele nucleului. */
+  media: z
+    .strictObject({
+      image: z.strictObject({ maxMb: z.number().positive().max(PLUGIN_MEDIA_CAPS.image.maxMb), maxSide: z.number().int().min(64).max(PLUGIN_MEDIA_CAPS.image.maxSide).default(2048), animated: z.boolean().default(false) }).optional(),
+      video: z.strictObject({ maxMb: z.number().positive().max(PLUGIN_MEDIA_CAPS.video.maxMb), maxSeconds: z.number().int().min(1).max(PLUGIN_MEDIA_CAPS.video.maxSeconds) }).optional(),
+      audio: z.strictObject({ maxMb: z.number().positive().max(PLUGIN_MEDIA_CAPS.audio.maxMb) }).optional(),
+      quotaMb: z.number().int().min(1).max(PLUGIN_MEDIA_CAPS.quotaMb),
+    })
+    .optional(),
   client: z
     .strictObject({
       styles: z.array(z.string().regex(/^assets\/[A-Za-z0-9._/-]+\.css$/, "invalid_asset")).max(10).default([]),
@@ -170,6 +187,7 @@ function requiredCapabilities(m: GcsPluginManifest): [GcsPluginCapability, strin
   if (m.menus.site.length || m.menus.user.length) out.push(["menus", "menus"]);
   if (m.client.styles.length) out.push(["client-css", "client.styles"]);
   if (m.client.scripts.length) out.push(["client-js", "client.scripts"]);
+  if (m.media) out.push(["media", "media"]);
   return out;
 }
 
@@ -184,6 +202,9 @@ function crossCheck(m: GcsPluginManifest): GcsPluginManifestIssue[] {
   const caps = new Set(m.capabilities);
   for (const [cap, path] of requiredCapabilities(m)) if (!caps.has(cap)) issues.push({ path, code: `missing_capability:${cap}` });
   if (m.dependencies[m.key]) issues.push({ path: "dependencies", code: "self_dependency" });
+  if (caps.has("media") && !m.media) issues.push({ path: "media", code: "required" });
+  if (m.media && !m.media.image && !m.media.video && !m.media.audio) issues.push({ path: "media", code: "required" });
+  for (const r of m.routes.api) if (r.acp && !caps.has("acp")) issues.push({ path: `routes.api.${r.path}.acp`, code: "missing_capability:acp" });
 
   const fields = m.settings?.tabs.flatMap((t) => t.fields) ?? [];
   for (const d of duplicates(fields.map((f) => f.key))) issues.push({ path: `settings.${d}`, code: "duplicate_key" });

@@ -22,10 +22,13 @@ import {
   type GcsModule,
   type GcsModuleRegistry,
   type GcsPermissionService,
+  type GcsMemberAppearanceService,
   type GcsPluginDatabase,
   type GcsPluginDbCredentials,
   type GcsPluginLoadable,
   type GcsPluginManifest,
+  type GcsPluginMediaInfo,
+  type GcsPluginMediaService,
   type GcsPluginRow,
   type GcsPluginService,
 } from "@gcs/core";
@@ -66,7 +69,7 @@ type Metric = { count: number; failures: number; totalMs: number; maxMs: number 
 
 export type GcsPluginHookMetrics = Record<string, Metric>;
 
-export type GcsPluginRenderedHtml = { html: string; styles: string[] };
+export type GcsPluginRenderedHtml = { html: string; styles: string[]; scripts: string[] };
 
 export type GcsPluginPageResult =
   | { status: 200; title: string; icon: string; html: string; styles: string[]; scripts: string[] }
@@ -88,6 +91,10 @@ export type GcsPluginHostDeps = {
   plugins: GcsPluginService;
   database: GcsPluginDatabase;
   api: GcsPluginPublicApi;
+  /** Aspectul membrilor publicat de pluginuri (capabilitatea `appearance`). */
+  appearance: GcsMemberAppearanceService;
+  /** Fișierele media ale pluginurilor (capabilitatea `media`). */
+  media: GcsPluginMediaService;
   /** Folderul în care se dezarhivează pluginurile (în afara codului aplicației). */
   dataDir: string;
   /** SVG-ul unei iconițe Font Awesome (pentru `<gcs-icon>` din HTML-ul pluginurilor). */
@@ -233,6 +240,16 @@ export class GcsPluginHost {
         this.dispatchEvent(e);
       });
     }
+    // Aspectul membrilor contează doar pentru pluginurile încărcate acum, în ordinea priorității.
+    deps.appearance.setActiveProvider(() => this.appearancePlugins());
+  }
+
+  /** Pluginurile încărcate cu `appearance` (și hook-ul `appearance` pornit), în ordinea priorității. */
+  appearancePlugins(): string[] {
+    return [...this.loaded.values()]
+      .filter((l) => l.row.capabilities.includes("appearance") && this.hookEnabled(l.row.key, "appearance"))
+      .sort((a, b) => this.priority(a.row.key, "appearance") - this.priority(b.row.key, "appearance") || a.row.key.localeCompare(b.row.key))
+      .map((l) => l.row.key);
   }
 
   // ─── Pornire, oprire, reconciliere ───
@@ -290,6 +307,7 @@ export class GcsPluginHost {
       return this.reconciling;
     }
     this.reconciling = (async () => {
+      const before = this.appearancePlugins().join(",");
       do {
         this.reconcileAgain = false;
         try {
@@ -298,6 +316,8 @@ export class GcsPluginHost {
           console.error("[GCS] Pluginuri: reconcilierea a eșuat", error);
         }
       } while (this.reconcileAgain);
+      // Alt set de pluginuri cu aspect (activat, dezactivat, alt hook): CSS-ul numelor primește o versiune nouă.
+      if (this.appearancePlugins().join(",") !== before) await this.deps.appearance.bump().catch(() => {});
     })().finally(() => {
       this.reconciling = null;
     });
@@ -569,7 +589,41 @@ export class GcsPluginHost {
         case "api.posts.recent":
         case "api.forums.list":
         case "api.stats":
+        case "api.vip.plans":
+        case "api.vip.status":
+        case "api.vip.members":
           return await this.deps.api.call(method, args, await this.actorFor(key, token));
+        case "members.appearance.set":
+          need("appearance");
+          try {
+            await this.deps.appearance.set(key, args[0], args[1] ?? null);
+          } catch (error) {
+            // Pluginul primește câmpurile greșite cu calea lor (`name.fill.colors.0: invalid_color`).
+            if (error instanceof GcsValidationError) throw new Error(`invalid_appearance: ${Object.entries(error.fields).map(([k, v]) => `${k}: ${v}`).join(", ")}`.slice(0, 500));
+            throw error;
+          }
+          return null;
+        case "members.appearance.get":
+          need("appearance");
+          return await this.deps.appearance.get(key, args[0]);
+        case "members.appearance.clear":
+          need("appearance");
+          return await this.deps.appearance.clear(key);
+        case "media.keep":
+          need("media");
+          return await this.deps.media.keep(key, args[0]);
+        case "media.get":
+          need("media");
+          return await this.deps.media.get(key, args[0]);
+        case "media.list":
+          need("media");
+          return await this.deps.media.list(key, args[0]);
+        case "media.delete":
+          need("media");
+          return await this.deps.media.delete(key, args[0]);
+        case "media.usage":
+          need("media");
+          return await this.deps.media.usage(key);
         case "cache.get":
         case "cache.set":
         case "cache.delete":
@@ -620,8 +674,11 @@ export class GcsPluginHost {
     this.templateRenderer = renderer;
   }
 
-  /** HTML-ul unui plugin: normalizat, sanitizat și închis în containerul lui (`contain: paint`, clasa pluginului). */
-  private async html(l: Loaded, value: unknown): Promise<string> {
+  /**
+   * HTML-ul unui plugin: normalizat, sanitizat și închis în containerul lui (`contain: paint`, clasa pluginului).
+   * Paginile (`page`) pot avea formulare și elemente media, doar spre pluginul însuși.
+   */
+  private async html(l: Loaded, value: unknown, opts: { page?: boolean } = {}): Promise<string> {
     let raw = "";
     if (typeof value === "string") raw = value;
     else if (value && typeof value === "object" && typeof (value as { html?: unknown }).html === "string") raw = (value as { html: string }).html;
@@ -633,13 +690,19 @@ export class GcsPluginHost {
       }
       raw = await this.templateRenderer(l.row.key, v.template, v.data && typeof v.data === "object" ? (v.data as Record<string, unknown>) : {});
     }
-    const clean = sanitizePluginHtml(raw, { icon: this.deps.iconSvg });
+    const clean = sanitizePluginHtml(raw, { icon: this.deps.iconSvg, pluginKey: l.row.key, page: opts.page === true });
     if (!clean.trim()) return "";
     return `<div class="gcsp ${pluginCssScope(l.row.key)}" data-gcs-plugin="${l.row.key}">${clean}</div>`;
   }
 
   private styleUrls(l: Loaded): string[] {
     return [...l.css.keys()].map((p) => `/plugins/${l.row.key}/${p}?v=${l.sha.slice(0, 10)}`);
+  }
+
+  /** Scripturile unui plugin semnat cu `client-js` (pe site: paginile lui și unde apare un widget al lui; nu în ACP). */
+  private scriptUrls(l: Loaded): string[] {
+    if (!l.row.signed || !l.row.capabilities.includes("client-js")) return [];
+    return l.row.manifest.client.scripts.map((p) => `/plugins/${l.row.key}/${p}?v=${l.sha.slice(0, 10)}`);
   }
 
   // ─── Hook-urile, pentru restul aplicației ───
@@ -716,7 +779,7 @@ export class GcsPluginHost {
     if (!found || !this.hookEnabled(found.l.row.key, `widget:${found.widget}`)) return null;
     try {
       const value = await this.invoke(found.l, "widget", found.widget, { config: input.config, page: input.page, zone: input.zone }, { actor: input.actor, locale: input.locale });
-      return { html: await this.html(found.l, value), styles: this.styleUrls(found.l) };
+      return { html: await this.html(found.l, value), styles: this.styleUrls(found.l), scripts: this.scriptUrls(found.l) };
     } catch {
       return null;
     }
@@ -748,29 +811,74 @@ export class GcsPluginHost {
     if (r.status === 403 || r.status === 404) return { status: r.status };
     const fallbackTitle = "title" in route && typeof route.title === "string" ? l.texts.text(route.title, input.locale) : "label" in route ? l.texts.text(route.label, input.locale) : l.row.name;
     const title = typeof r.title === "string" && r.title.trim() ? r.title.trim().slice(0, 200) : fallbackTitle;
-    const scripts = input.area === "site" && l.row.signed && l.row.capabilities.includes("client-js") ? l.row.manifest.client.scripts.map((p) => `/plugins/${key}/${p}?v=${l.sha.slice(0, 10)}`) : [];
+    const scripts = input.area === "site" ? this.scriptUrls(l) : [];
     const icon = pluginIcon("icon" in route && typeof route.icon === "string" ? route.icon : l.row.manifest.icon);
-    return { status: 200, title, icon, html: await this.html(l, r.html ?? ""), styles: this.styleUrls(l), scripts };
+    return { status: 200, title, icon, html: await this.html(l, r.html ?? "", { page: true }), styles: this.styleUrls(l), scripts };
   }
 
-  /** O rută API a pluginului: doar JSON; statusul și corpul vin de la plugin (validate). */
-  async handleApi(key: string, input: { method: string; path: string; query: Record<string, string>; body: unknown; actor: GcsActor; locale: string }): Promise<{ status: number; body: unknown }> {
+  /**
+   * Ruta API potrivită (înaintea citirii corpului): dreptul ACP cerut (`acp`), declarația `media` (formularele
+   * `multipart`) sau eroarea (404 / 405).
+   */
+  apiRoute(key: string, method: string, path: string): { status: 404 | 405 } | { status: 200; acp: "view" | "edit" | "delete" | null; media: GcsPluginManifest["media"] | null } {
+    const l = this.loaded.get(key);
+    if (!l) return { status: 404 };
+    const match = matchPluginRoute(l.row.manifest.routes.api.map((r) => r.path), path);
+    if (!match || !this.hookEnabled(key, `api:${match.pattern}`)) return { status: 404 };
+    const route = l.row.manifest.routes.api.find((r) => r.path === match.pattern)!;
+    if (!(route.methods as string[]).includes(method)) return { status: 405 };
+    return { status: 200, acp: route.acp ?? null, media: l.row.capabilities.includes("media") ? (l.row.manifest.media ?? null) : null };
+  }
+
+  /** Un fișier din formularul unei rute API, verificat și salvat de nucleu (capabilitatea `media`), în așteptare. */
+  async uploadMedia(key: string, file: { bytes: Buffer }, actor: GcsActor): Promise<GcsPluginMediaInfo> {
+    const l = this.loaded.get(key);
+    const decl = l && l.row.capabilities.includes("media") ? l.row.manifest.media : undefined;
+    if (!decl) throw new GcsValidationError({ file: "unsupported_type" });
+    return this.deps.media.upload(key, decl, file, { userId: actor.userId });
+  }
+
+  /** Un fișier media al pluginului, pentru servire (`/plugins/<cheie>/media/<id>.<ext>`). */
+  async mediaFile(key: string, file: string, range?: Parameters<GcsPluginMediaService["open"]>[2]) {
+    if (!this.loaded.has(key)) return null;
+    return this.deps.media.open(key, file, range);
+  }
+
+  /**
+   * O rută API a pluginului. Corpul vine ca JSON sau din formular (câmpurile ca text, fișierele deja verificate de
+   * nucleu); statusul și corpul vin de la plugin (validate). `{ redirect }` e o adresă a pluginului (site sau ACP), pe
+   * care ruta o folosește pentru formulare (303); orice altă adresă se ignoră.
+   */
+  async handleApi(
+    key: string,
+    input: { method: string; path: string; query: Record<string, string>; body: unknown; actor: GcsActor; locale: string; form?: boolean; acp?: boolean },
+  ): Promise<{ status: number; body: unknown; redirect?: string }> {
     const l = this.loaded.get(key);
     if (!l) return { status: 404, body: { error: "not_found" } };
     const match = matchPluginRoute(l.row.manifest.routes.api.map((r) => r.path), input.path);
     if (!match || !this.hookEnabled(key, `api:${match.pattern}`)) return { status: 404, body: { error: "not_found" } };
     const route = l.row.manifest.routes.api.find((r) => r.path === match.pattern)!;
     if (!(route.methods as string[]).includes(input.method)) return { status: 405, body: { error: "method_not_allowed" } };
+    // Rutele ACP cer poarta ACP, verificată de ruta web înainte (`acp: true`); fără ea, nu rulează.
+    if (route.acp && input.acp !== true) return { status: 403, body: { error: "forbidden" } };
     if (route.permission && !(await this.deps.permissions.can(input.actor, `${pluginRegistryKey(key)}.${route.permission}`))) return { status: 403, body: { error: "forbidden" } };
     let value: unknown;
     try {
-      value = await this.invoke(l, "api", match.pattern, { method: input.method, path: input.path, params: match.params, query: input.query, body: input.body ?? null }, { actor: input.actor, locale: input.locale });
+      value = await this.invoke(
+        l,
+        "api",
+        match.pattern,
+        { method: input.method, path: input.path, params: match.params, query: input.query, body: input.body ?? null, form: input.form === true, acp: Boolean(route.acp) },
+        { actor: input.actor, locale: input.locale },
+      );
     } catch {
       return { status: 500, body: { error: "plugin_error" } };
     }
-    const r = (value && typeof value === "object" ? value : {}) as { status?: unknown; body?: unknown };
+    const r = (value && typeof value === "object" ? value : {}) as { status?: unknown; body?: unknown; redirect?: unknown };
     const status = Number.isInteger(r.status) && (r.status as number) >= 200 && (r.status as number) <= 599 ? (r.status as number) : 200;
-    return { status, body: r.body ?? null };
+    const redirect =
+      typeof r.redirect === "string" && (isPluginRedirect(r.redirect, `/p/${key}`) || isPluginRedirect(r.redirect, `/admin/plugins/${key}`)) ? r.redirect : undefined;
+    return { status, body: r.body ?? null, ...(redirect ? { redirect } : {}) };
   }
 
   /** Punctele de extensie (ex. `postbit.after_fields`): HTML-ul pluginurilor, în ordinea priorității. */

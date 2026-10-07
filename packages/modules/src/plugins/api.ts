@@ -5,10 +5,14 @@ import { canViewPost } from "../forums/content";
 import type { GcsForumPosting } from "../forums/posting";
 import type { GcsForumQueries } from "../forums/queries";
 import { slugify } from "../forums/slug";
+import { normalizePrivacy } from "../profile/privacy";
 
 const topicUrl = (t: { id: number; slug: string }) => `/topic/${t.id}-${t.slug}`;
 const memberUrl = (u: { id: string; name: string }) => `/members/${u.id}-${slugify(u.name)}`;
 const postUrl = (topicId: number, postId: number) => `/topic/${topicId}/post/${postId}`;
+
+/** „Online” = activitate în ultimele 5 minute (ca prezența din postbit). */
+const ONLINE_MS = 5 * 60_000;
 
 const limitOf = (v: unknown, fallback: number, max: number) => (Number.isInteger(v) && (v as number) > 0 ? Math.min(v as number, max) : fallback);
 const idOf = (v: unknown) => (Number.isSafeInteger(v) && (v as number) > 0 ? (v as number) : null);
@@ -34,6 +38,12 @@ export class GcsPluginPublicApi {
         return this.recentPosts(actor, args[0]);
       case "api.forums.list":
         return this.forums(actor);
+      case "api.vip.plans":
+        return this.vipPlans();
+      case "api.vip.status":
+        return this.vipStatus(args[0]);
+      case "api.vip.members":
+        return this.vipMembers(args[0]);
       case "api.stats": {
         const s = await this.deps.forumQueries.stats();
         return { topics: s.topics, posts: s.posts, members: s.members };
@@ -49,17 +59,99 @@ export class GcsPluginPublicApi {
     if (ids.length === 0) return [];
     const rows = await this.deps.db.user.findMany({
       where: { id: { in: ids } },
-      select: { id: true, name: true, image: true, createdAt: true, postsCount: true, primaryGroup: { select: { key: true } } },
+      select: {
+        id: true,
+        name: true,
+        image: true,
+        createdAt: true,
+        postsCount: true,
+        primaryGroup: { select: { key: true } },
+        nameStyle: { select: { key: true } },
+        avatarFrame: { select: { key: true } },
+      },
     });
     return rows.map((u) => ({
       id: u.id,
       name: u.name,
       groupKey: u.primaryGroup.key,
+      nameKey: u.nameStyle?.key ?? u.primaryGroup.key,
+      frameKey: u.avatarFrame?.key ?? null,
       avatarUrl: u.image,
       joinedAt: u.createdAt.toISOString(),
       postsCount: u.postsCount,
       url: memberUrl(u),
     }));
+  }
+
+  /** Planurile VIP (grupurile VIP), în ordinea grupurilor. */
+  private async vipPlans() {
+    const rows = await this.deps.db.group.findMany({ where: { isVip: true }, orderBy: [{ position: "asc" }, { id: "asc" }], select: { key: true, name: true, color: true, icon: true, position: true } });
+    return rows.map((g) => ({ key: g.key, name: g.name, color: g.color, icon: g.icon, position: g.position }));
+  }
+
+  /** Abonamentul VIP activ al fiecărui user cerut (≤ 100): planul și expirarea; userii fără VIP au `plan: null`. */
+  private async vipStatus(raw: unknown) {
+    const ids = Array.isArray(raw) ? [...new Set(raw.filter((id): id is string => typeof id === "string" && id.length <= 64))].slice(0, 100) : [];
+    if (ids.length === 0) return [];
+    const subs = await this.deps.db.vipSubscription.findMany({
+      where: { userId: { in: ids }, status: "ACTIVE" },
+      select: { userId: true, expiresAt: true, startsAt: true, group: { select: { key: true, name: true } } },
+    });
+    const byUser = new Map(subs.map((s) => [s.userId, s]));
+    return ids.map((id) => {
+      const s = byUser.get(id);
+      return s
+        ? { userId: id, plan: s.group.key, planName: s.group.name, since: s.startsAt.toISOString(), expiresAt: s.expiresAt?.toISOString() ?? null }
+        : { userId: id, plan: null, planName: null, since: null, expiresAt: null };
+    });
+  }
+
+  /**
+   * Membrii VIP activi (online întâi, apoi după ultima activitate), cu planul. Starea online respectă setarea de
+   * confidențialitate a fiecăruia (`showOnline`).
+   */
+  private async vipMembers(raw: unknown) {
+    const opts = (raw && typeof raw === "object" ? raw : {}) as { limit?: unknown };
+    const limit = limitOf(opts.limit, 24, 100);
+    const subs = await this.deps.db.vipSubscription.findMany({
+      where: { status: "ACTIVE" },
+      orderBy: { user: { lastActiveAt: { sort: "desc", nulls: "last" } } },
+      take: limit,
+      select: {
+        group: { select: { key: true, name: true } },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+            lastActiveAt: true,
+            privacy: true,
+            primaryGroup: { select: { key: true } },
+            nameStyle: { select: { key: true } },
+            avatarFrame: { select: { key: true } },
+          },
+        },
+      },
+    });
+    const now = Date.now();
+    const list = subs.map((s) => {
+      const u = s.user;
+      const visible = normalizePrivacy(u.privacy).showOnline;
+      return {
+        id: u.id,
+        name: u.name,
+        url: memberUrl(u),
+        avatarUrl: u.image,
+        groupKey: u.primaryGroup.key,
+        nameKey: u.nameStyle?.key ?? u.primaryGroup.key,
+        frameKey: u.avatarFrame?.key ?? null,
+        plan: s.group.key,
+        planName: s.group.name,
+        online: visible && u.lastActiveAt !== null && now - u.lastActiveAt.getTime() < ONLINE_MS,
+        lastActiveAt: visible ? (u.lastActiveAt?.toISOString() ?? null) : null,
+      };
+    });
+    return list.sort((a, b) => Number(b.online) - Number(a.online));
   }
 
   private async topic(actor: GcsActor, raw: unknown) {

@@ -159,6 +159,25 @@ export const PLUGIN_WORKER_SOURCE = String.raw`
         posts: Object.freeze({ get: (id) => rpc("api.posts.get", [id], token), recent: (limit) => rpc("api.posts.recent", [limit === undefined ? 10 : limit], token) }),
         forums: Object.freeze({ list: () => rpc("api.forums.list", [], token) }),
         stats: () => rpc("api.stats", [], token),
+        vip: Object.freeze({
+          plans: () => rpc("api.vip.plans", [], token),
+          status: (ids) => rpc("api.vip.status", [ids], token),
+          members: (opts) => rpc("api.vip.members", [opts || {}], token),
+        }),
+      }),
+      members: Object.freeze({
+        appearance: Object.freeze({
+          set: (userId, data) => rpc("members.appearance.set", [userId, data === undefined ? null : data], token),
+          get: (ids) => rpc("members.appearance.get", [ids], token),
+          clear: () => rpc("members.appearance.clear", [], token),
+        }),
+      }),
+      media: Object.freeze({
+        keep: (ids) => rpc("media.keep", [ids], token),
+        get: (ids) => rpc("media.get", [ids], token),
+        list: (opts) => rpc("media.list", [opts || {}], token),
+        delete: (ids) => rpc("media.delete", [ids], token),
+        usage: () => rpc("media.usage", [], token),
       }),
       cache: Object.freeze({
         get: (key) => rpc("cache.get", [key], token),

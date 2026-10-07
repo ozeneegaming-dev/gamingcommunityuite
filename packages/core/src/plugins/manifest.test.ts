@@ -115,6 +115,26 @@ describe("manifestul unui plugin", () => {
     expect(issues(perm({ key: "view", scope: "group", label: "V" }, { routes: { pages: [{ path: "/", permission: "nope" }] } }))).toEqual(["routes.pages./.permission:unknown_permission"]);
   });
 
+  test("media: tipurile declarate, sub plafoanele nucleului, cu capabilitatea `media`", () => {
+    const media = (decl: unknown, capabilities = ["widgets", "media"]) => testManifest({ capabilities, media: decl });
+    const ok = parsePluginManifest(media({ image: { maxMb: 4 }, video: { maxMb: 40, maxSeconds: 30 }, quotaMb: 500 }));
+    expect(ok.ok).toBe(true);
+    if (ok.ok) expect(ok.manifest.media?.image).toEqual({ maxMb: 4, maxSide: 2048, animated: false });
+    expect(issues(media({ image: { maxMb: 4 }, quotaMb: 10 }, ["widgets"]))).toEqual(["media:missing_capability:media"]);
+    expect(issues(testManifest({ capabilities: ["widgets", "media"] }))).toEqual(["media:required"]);
+    expect(issues(media({ quotaMb: 10 }))).toEqual(["media:required"]);
+    expect(issues(media({ image: { maxMb: 11 }, quotaMb: 10 }))).toContain("media.image.maxMb:too_big");
+    expect(issues(media({ video: { maxMb: 10, maxSeconds: 301 }, quotaMb: 10 }))).toContain("media.video.maxSeconds:too_big");
+    expect(issues(media({ audio: { maxMb: 5 }, document: { maxMb: 1 }, quotaMb: 10 }))).toContain("media:unrecognized_keys");
+  });
+
+  test("rutele API ale ACP-ului cer capabilitatea `acp` și un drept cunoscut", () => {
+    const api = (route: Record<string, unknown>, capabilities = ["widgets", "api", "acp"]) => testManifest({ capabilities, routes: { api: [{ path: "/save", methods: ["POST"], ...route }] } });
+    expect(issues(api({ acp: "edit" }))).toEqual([]);
+    expect(issues(api({ acp: "edit" }, ["widgets", "api"]))).toEqual(["routes.api./save.acp:missing_capability:acp"]);
+    expect(issues(api({ acp: "root" }))).toContain("routes.api.0.acp:invalid_value");
+  });
+
   test("rutele: căi simple, cu parametri, fără duplicate", () => {
     const routes = (pages: unknown[]) => testManifest({ capabilities: ["widgets", "pages"], routes: { pages } });
     expect(issues(routes([{ path: "/" }, { path: "/item/:id" }]))).toEqual([]);

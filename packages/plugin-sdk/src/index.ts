@@ -10,8 +10,10 @@
 export type GcsPluginJson = null | boolean | number | string | GcsPluginJson[] | { [key: string]: GcsPluginJson };
 
 /**
- * HTML randat de plugin: un șir sau `{ html }`. Trece prin sanitizer (listă albă de taguri și atribute, fără scripturi,
- * `style`, `id` sau formulare; clase `gcsp-*`). `<gcs-icon name="fa-solid fa-star"></gcs-icon>` devine iconița Font Awesome.
+ * HTML randat de plugin: un șir sau `{ html }`. Trece prin sanitizer (listă albă de taguri și atribute, fără scripturi
+ * sau `id`; `style` doar cu variabile CSS sigure, `--nume: #hex | număr | identificator`; clase `gcsp-*`). Paginile
+ * (site și ACP) pot avea formulare (doar spre rutele API ale pluginului, sau GET spre paginile lui) și `audio`/`video`
+ * cu fișierele pluginului. `<gcs-icon name="fa-solid fa-star"></gcs-icon>` devine iconița Font Awesome.
  * `{ template, data }` e rezervat motorului de șabloane.
  */
 export type GcsPluginHtml = string | { html: string } | { template: string; data?: Record<string, GcsPluginJson> };
@@ -22,8 +24,12 @@ export type GcsPluginViewer = { userId: string | null; isGuest: boolean };
 export type GcsPluginUser = {
   id: string;
   name: string;
-  /** Cheia grupului principal (stilul numelui: clasa `gcs-name--<cheie>`). */
+  /** Cheia grupului principal. */
   groupKey: string;
+  /** Stilul numelui (clasa `gcs-name--<cheie>`): stilul ales de membru sau grupul principal. */
+  nameKey: string;
+  /** Rama avatarului (clasa `gcs-avatarFrame--<cheie>`), dacă are. */
+  frameKey: string | null;
   avatarUrl: string | null;
   joinedAt: string;
   postsCount: number;
@@ -46,6 +52,76 @@ export type GcsPluginPost = { id: number; topicId: number; topicTitle: string; a
 export type GcsPluginForum = { id: number; name: string; parentId: number | null; topicsCount: number; postsCount: number; url: string };
 
 export type GcsPluginStats = { topics: number; posts: number; members: number };
+
+/** Un plan VIP (un grup VIP). */
+export type GcsPluginVipPlan = { key: string; name: string; color: string | null; icon: string | null; position: number };
+/** Abonamentul VIP activ al unui user (`plan: null` = fără VIP). */
+export type GcsPluginVipStatus = { userId: string; plan: string | null; planName: string | null; since: string | null; expiresAt: string | null };
+/** Un membru VIP activ (widget-uri de tip „VIP online”). Starea online respectă confidențialitatea lui. */
+export type GcsPluginVipMember = {
+  id: string;
+  name: string;
+  url: string;
+  avatarUrl: string | null;
+  groupKey: string;
+  nameKey: string;
+  frameKey: string | null;
+  plan: string;
+  planName: string;
+  online: boolean;
+  lastActiveAt: string | null;
+};
+
+/** Un fișier media al pluginului (capabilitatea `media`), verificat de GCS; imaginile sunt recodate în WebP. */
+export type GcsPluginMediaInfo = {
+  id: string;
+  kind: "image" | "video" | "audio";
+  mime: string;
+  size: number;
+  width: number | null;
+  height: number | null;
+  durationMs: number | null;
+  /** Adresa publică: `/plugins/<cheie>/media/<id>.<ext>`. */
+  url: string;
+  status: "pending" | "kept";
+  createdAt: string;
+};
+/** Un fișier respins de GCS la încărcare (pe câmpul lui din formular): `too_large`, `unsupported_type`, `too_long`… */
+export type GcsPluginMediaError = { error: string; [param: string]: string };
+
+/** O umplere: 1 culoare (plină) sau 2–5 (gradient), unghiul și animația din lista albă. */
+export type GcsAppearanceFill = { colors: string[]; angle?: number; animation?: "none" | "flow" | "pulse" | "shine" | "aurora"; speed?: "slow" | "normal" | "fast" };
+/** Calea unui fișier al pluginului: `/plugins/<cheie>/assets/…` (imagini din pachet) sau `/plugins/<cheie>/media/<id>.<ext>`. */
+export type GcsAppearanceMedia = string;
+
+/**
+ * Aspectul unui membru (capabilitatea `appearance`), validat și randat de GCS: numele (oriunde apare), rama (peste
+ * avatar), banner-ul și fundalul cardului (postbit, hover card), insigna, iar pe profil fundalul, citatul, tema și melodia.
+ * Culorile sunt `#RRGGBB`; nimic nu e CSS sau HTML brut.
+ */
+export type GcsMemberAppearance = {
+  name?: {
+    fill: GcsAppearanceFill;
+    effect?: "none" | "shimmer" | "pulse" | "neon" | "glitch" | "scan" | "chrome" | "fire" | "holo" | "caret";
+    glow?: string;
+    bold?: boolean;
+    italic?: boolean;
+  };
+  banner?: { fill: GcsAppearanceFill; text?: string; label?: string };
+  /** `scale` 100–160 (mărimea ramei față de avatar, în %), `x`/`y` -20…20 (decalaj în %). */
+  frame?: { image: GcsAppearanceMedia; scale?: number; x?: number; y?: number };
+  /** `x`/`y` 0–100 (poziția imaginii), `dim` 0–80 (întunecarea, în %). */
+  card?: { image: GcsAppearanceMedia; x?: number; y?: number; dim?: number };
+  flair?: { icon: GcsAppearanceMedia; label: string };
+  profile?: {
+    /** `video` cere `image` (posterul, afișat și sub reduced-motion). */
+    background?: { image?: GcsAppearanceMedia; video?: GcsAppearanceMedia; x?: number; y?: number; dim?: number };
+    quote?: { text: string };
+    theme?: { key: string; accent: string; accent2?: string; surface?: string; glow?: boolean };
+    /** Un fișier audio sau un id YouTube (11 caractere); niciodată redare automată cu sunet. */
+    song?: { title: string; artist?: string; audio?: GcsAppearanceMedia; youtube?: string; autoplayMuted?: boolean };
+  };
+};
 
 export type GcsPluginFetchInit = { method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"; headers?: Record<string, string>; body?: string };
 export type GcsPluginFetchResponse = { status: number; headers: Record<string, string>; body: string };
@@ -77,6 +153,31 @@ export interface GcsPluginContext {
     posts: { get(id: number): Promise<GcsPluginPost | null>; recent(limit?: number): Promise<GcsPluginPost[]> };
     forums: { list(): Promise<GcsPluginForum[]> };
     stats(): Promise<GcsPluginStats>;
+    /** Planurile VIP, abonamentele active (≤ 100 de useri) și membrii VIP (online întâi). */
+    vip: {
+      plans(): Promise<GcsPluginVipPlan[]>;
+      status(userIds: string[]): Promise<GcsPluginVipStatus[]>;
+      members(opts?: { limit?: number }): Promise<GcsPluginVipMember[]>;
+    };
+  };
+  /** Aspectul membrilor (capabilitatea `appearance`): `set` validează tot (o eroare numește câmpurile); `null` îl șterge. */
+  readonly members: {
+    appearance: {
+      set(userId: string, appearance: GcsMemberAppearance | null): Promise<void>;
+      get(userIds: string[]): Promise<Record<string, GcsMemberAppearance>>;
+      clear(): Promise<number>;
+    };
+  };
+  /**
+   * Fișierele media (capabilitatea `media`). Se încarcă doar prin formulare `multipart` spre o rută API; un fișier nou e
+   * în așteptare până la `keep` (altfel se șterge după 6 ore).
+   */
+  readonly media: {
+    keep(ids: string[]): Promise<number>;
+    get(ids: string[]): Promise<GcsPluginMediaInfo[]>;
+    list(opts?: { kind?: "image" | "video" | "audio"; limit?: number; offset?: number }): Promise<GcsPluginMediaInfo[]>;
+    delete(ids: string[]): Promise<number>;
+    usage(): Promise<{ files: number; bytes: number }>;
   };
   /** Cache în Redis, în spațiul de nume al pluginului (valori JSON ≤ 64 KB, TTL ≤ o zi). */
   readonly cache: {
@@ -99,9 +200,18 @@ export type GcsPluginApiRequest = {
   path: string;
   params: Record<string, string>;
   query: Record<string, string>;
+  /**
+   * JSON sau, pentru formulare, câmpurile (numele repetate devin liste); un câmp de fișier conține
+   * `GcsPluginMediaInfo` (în așteptare) sau `GcsPluginMediaError`.
+   */
   body: GcsPluginJson;
+  /** Cererea vine dintr-un formular (urlencoded sau multipart): răspunsul poate fi `{ redirect }`. */
+  form: boolean;
+  /** Ruta e a ACP-ului (`acp` în manifest): poarta ACP și dreptul pe secțiunea pluginului au fost verificate. */
+  acp: boolean;
 };
-export type GcsPluginApiResponse = { status?: number; body?: GcsPluginJson };
+/** `redirect`: o pagină a pluginului (`/p/<cheie>…` sau `/admin/plugins/<cheie>…`), unde ajunge un formular (303). */
+export type GcsPluginApiResponse = { status?: number; body?: GcsPluginJson; redirect?: string };
 
 export type GcsPluginEventPayload = Record<string, string | number | boolean | null | (string | number | boolean | null)[]>;
 export type GcsPluginEvent = { name: string; payload: GcsPluginEventPayload };
