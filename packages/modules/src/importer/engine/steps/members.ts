@@ -211,7 +211,13 @@ export async function importProfileFields(s: GcsStepContext): Promise<void> {
     }
   }
   const fieldMap = await s.map.all("profile_field");
-  const maxLength = new Map((await db.profileField.findMany({ select: { id: true, maxLength: true } })).map((f) => [f.id, f.maxLength]));
+  const defs = new Map((await db.profileField.findMany({ select: { id: true, maxLength: true, type: true } })).map((f) => [f.id, f]));
+  /** Aceleași reguli ca la editarea profilului: un câmp URL primește doar adrese http(s), unul numeric doar numere. */
+  const valid = (type: string, value: string) => {
+    if (type === "URL") return URL.canParse(value) && ["http:", "https:"].includes(new URL(value).protocol);
+    if (type === "NUMBER") return /^-?\d+(\.\d+)?$/.test(value);
+    return true;
+  };
   await s.batches(
     (c, l) => s.adapter.profileValues(c, l),
     1000,
@@ -221,11 +227,12 @@ export async function importProfileFields(s: GcsStepContext): Promise<void> {
       for (const r of rows) {
         const userId = members.get(r.memberId);
         const fieldId = Number(fieldMap.get(r.fieldId));
-        if (!userId || !Number.isInteger(fieldId)) {
+        const def = defs.get(fieldId);
+        if (!userId || !def || !valid(def.type, r.value)) {
           s.state.skipped++;
           continue;
         }
-        data.push({ userId, fieldId, value: r.value.slice(0, maxLength.get(fieldId) ?? 200) });
+        data.push({ userId, fieldId, value: r.value.slice(0, def.maxLength) });
       }
       const res = await db.profileFieldValue.createMany({ data, skipDuplicates: true });
       s.state.imported += res.count;
