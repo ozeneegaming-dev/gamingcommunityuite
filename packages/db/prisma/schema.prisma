@@ -928,7 +928,9 @@ model Rank {
   @@map("ranks")
 }
 
-/// Badge: simbol scurt (1–3 caractere) sau imagine. `manual` = acordat doar de staff.
+/// Badge: insignă desenată (specul 2026-10-07-insigne-grafice) sau imagine proprie. `color` = emailul/panglica
+/// insignei (categoria); `artShape`/`artTier`/`artIcon` = forma, metalul și iconița (null = implicite); `symbol` =
+/// textul insignei (1–3 caractere) când nu are iconiță. `manual` = acordat doar de staff.
 model Badge {
   id                Int     @id @default(autoincrement())
   key               String  @unique
@@ -937,6 +939,9 @@ model Badge {
   symbol            String?
   imageAttachmentId String?
   color             String
+  artShape          String?
+  artTier           String?
+  artIcon           String?
   manual            Boolean @default(false)
   points            Int     @default(0)
   position          Int     @default(0)

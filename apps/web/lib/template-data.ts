@@ -117,11 +117,15 @@ export function postbitVars(author: GcsPostAuthor, data: GcsPostbitData | null, 
       xp: data ? { points: data.xp.points, next: data.xp.next, nextRank: data.xp.nextRank ?? "", percent: data.xp.percent } : { points: 0, next: null, nextRank: "", percent: 0 },
       badges: {
         count: data?.badges.count ?? 0,
+        /** Câte badge-uri nu încap în rândul din postbit („+N”). */
+        more: Math.max(0, (data?.badges.count ?? 0) - (data?.badges.recent.length ?? 0)),
         recent: (data?.badges.recent ?? []).map((b) => ({
           key: b.key,
           name: b.name,
+          description: b.description,
           color: b.color,
           image: b.image,
+          art: b.art,
           icon: b.symbol?.startsWith("fa-") ? b.symbol : null,
           symbol: b.symbol && !b.symbol.startsWith("fa-") ? b.symbol : null,
           initial: b.name.charAt(0),
@@ -184,7 +188,7 @@ export function hoverCardVars(card: GcsCardView) {
     },
     stats: card.stats,
     online: card.online.online,
-    badges: card.badges.map((b) => ({ key: b.key, name: b.name, symbol: b.symbol, image: b.image, color: b.color })),
+    badges: card.badges.map((b) => ({ key: b.key, name: b.name, description: b.description, symbol: b.symbol, image: b.image, color: b.color, art: b.art })),
     fields: card.fields,
     viewer: card.viewer,
   };

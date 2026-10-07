@@ -123,7 +123,7 @@ test("etapa 3: profil + badge → VIP din ACP → ramă → hover card → conve
     await expect(card).toBeVisible();
     await expect(card.getByText("VIP Gold")).toBeVisible();
     await expect(card.getByTestId("gcs-hover-rank")).toHaveText("Recrut");
-    await expect(card.locator(".gcs-profileBadge")).not.toHaveCount(0);
+    await expect(card.locator("img.gcs-badgeArt")).not.toHaveCount(0);
   });
 
   let conversationUrl = "";

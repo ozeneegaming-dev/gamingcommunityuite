@@ -128,8 +128,8 @@ describe("hover card-ul: șablonul implicit `members.hover_card` produce markup-
         stats: { ...base.stats, reputation: 12 },
         online: { online: true, hidden: false, lastActiveAt: null },
         badges: [
-          { key: "b1", name: "Fondator", symbol: "F", image: null, color: "#F4B740", awardedAt: "2026-06-15T12:00:00.000Z" },
-          { key: "b2", name: "Lider", symbol: null, image: "/files/badge2", color: "#5EA2FF", awardedAt: "2026-06-15T12:00:00.000Z" },
+          { key: "b1", name: "Fondator", description: "Membru fondator", symbol: "F", image: null, color: "#F4B740", art: "/badge-art/v1/rosette-gold-f4b740-t-F.svg", awardedAt: "2026-06-15T12:00:00.000Z" },
+          { key: "b2", name: "Lider", description: "", symbol: null, image: "/files/badge2", color: "#5EA2FF", art: "/badge-art/v1/medal-silver-5ea2ff-i-solid-crown.svg", awardedAt: "2026-06-15T12:00:00.000Z" },
         ],
         fields: [
           { label: "Țară", value: "România" },

@@ -1,5 +1,17 @@
-import { GcsNotFound, GcsValidationError, isHexColor, writeAudit, type GcsAcpRoleService, type GcsActor, type GcsEventBus, type GcsJobQueue } from "@gcs/core";
+import {
+  GcsNotFound,
+  GcsValidationError,
+  isHexColor,
+  writeAudit,
+  type GcsAcpRoleService,
+  type GcsActor,
+  type GcsAttachmentService,
+  type GcsEventBus,
+  type GcsJobQueue,
+} from "@gcs/core";
 import type { AchievementRule, AchievementTrigger, Badge, PrismaClient, Rank } from "@gcs/db";
+import { isBadgeShape, isBadgeText, isBadgeTier } from "@gcs/ui/badge-art";
+import { isGcsIcon } from "@gcs/ui/icon-registry";
 import { BADGES_ACP_SECTION, RANKS_RECOMPUTE_JOB, type GcsAchievementService } from "./achievements";
 
 export const RANKS_ACP_SECTION = "members.ranks";
@@ -9,7 +21,27 @@ const TRIGGERS: AchievementTrigger[] = ["POSTS_COUNT", "REPUTATION", "POINTS", "
 const MAX = 10_000_000;
 
 export type GcsRankInput = { name: string; icon: string | null; minPosts: number | null; minPoints: number | null; minReputation: number | null };
-export type GcsBadgeInput = { key: string; name: string; description: string; symbol: string; color: string; manual: boolean; points: number };
+/**
+ * Un badge din ACP. Insigna (specul 2026-10-07-insigne-grafice): `artShape`, `artTier`, `artIcon` (null = implicite),
+ * `symbol` = textul insignei (gol = fără text). `imageAttachmentId`: `undefined` păstrează imaginea proprie, `null` o
+ * scoate, un id o înlocuiește (un atașament de tip imagine, încărcat prin serviciul de atașamente).
+ */
+export type GcsBadgeInput = {
+  key: string;
+  name: string;
+  description: string;
+  symbol: string;
+  color: string;
+  manual: boolean;
+  points: number;
+  artShape?: string | null;
+  artTier?: string | null;
+  artIcon?: string | null;
+  imageAttachmentId?: string | null;
+};
+
+/** Imaginea proprie a unui badge e publică (o vede oricine vede badge-ul). */
+export const BADGE_IMAGE_CONTENT_TYPE = "badges.image";
 export type GcsRuleInput = { name: string; trigger: AchievementTrigger; threshold: number; points: number; badgeId: number | null; enabled: boolean };
 
 const graphemes = (s: string) => [...new Intl.Segmenter().segment(s)].length;
@@ -17,7 +49,18 @@ const optionalCount = (v: number | null) => v === null || (Number.isInteger(v) &
 
 /** ACP → Membri → Realizări: rangurile, badge-urile și regulile (specul etapei 3, §9). Totul intră în jurnal. */
 export class GcsAchievementAdmin {
-  constructor(private readonly deps: { db: PrismaClient; bus: GcsEventBus; acp: GcsAcpRoleService; achievements: GcsAchievementService; jobs: GcsJobQueue | null }) {}
+  constructor(
+    private readonly deps: {
+      db: PrismaClient;
+      bus: GcsEventBus;
+      acp: GcsAcpRoleService;
+      achievements: GcsAchievementService;
+      jobs: GcsJobQueue | null;
+      attachments?: GcsAttachmentService;
+    },
+  ) {
+    deps.attachments?.registerAccess(BADGE_IMAGE_CONTENT_TYPE, async () => true);
+  }
 
   private async audit(actor: GcsActor, action: string, targetType: string, targetId: string, before?: unknown, after?: unknown): Promise<void> {
     await writeAudit(this.deps.db, { actorId: actor.userId, action, targetType, targetId, before, after, ip: actor.ip });
@@ -94,19 +137,51 @@ export class GcsAchievementAdmin {
     if (!/^[a-z0-9_]{2,40}$/.test(input.key)) errors.key = "invalid";
     const name = input.name.trim();
     if (name.length < 1 || name.length > 40) errors.name = "required";
+    // Textul insignei e opțional (fără el și fără iconiță, insigna arată prima literă a numelui).
     const symbol = input.symbol.trim();
-    if (symbol === "" || graphemes(symbol) > 3) errors.symbol = "invalid";
+    if (symbol !== "" && !isBadgeText(symbol)) errors.symbol = "invalid";
     if (!isHexColor(input.color)) errors.color = "invalid_color";
     if (!Number.isInteger(input.points) || input.points < -1000 || input.points > 1000) errors.points = "invalid_range";
     if (input.description.length > 200) errors.description = "too_long";
+    const artShape = input.artShape || null;
+    const artTier = input.artTier || null;
+    const artIcon = input.artIcon || null;
+    if (artShape !== null && !isBadgeShape(artShape)) errors.artShape = "invalid_choice";
+    if (artTier !== null && !isBadgeTier(artTier)) errors.artTier = "invalid_choice";
+    if (artIcon !== null && !isGcsIcon(artIcon)) errors.artIcon = "invalid_choice";
+    if (input.imageAttachmentId) {
+      const att = await db.attachment.findUnique({ where: { id: input.imageAttachmentId } });
+      // Doar un fișier proaspăt încărcat de acest admin (nelegat încă) sau imaginea actuală a badge-ului.
+      const own = att && (att.contentType === null ? att.ownerId === actor.userId : att.contentType === BADGE_IMAGE_CONTENT_TYPE && att.contentId === String(id));
+      if (!att || !own || !att.mime.startsWith("image/")) errors.image = "invalid_image";
+    }
     if (Object.keys(errors).length > 0) throw new GcsValidationError(errors);
-    const data = { key: input.key, name, description: input.description.trim(), symbol, color: input.color.toUpperCase(), manual: input.manual, points: input.points };
+    const data = {
+      key: input.key,
+      name,
+      description: input.description.trim(),
+      symbol: symbol || null,
+      color: input.color.toUpperCase(),
+      manual: input.manual,
+      points: input.points,
+      artShape,
+      artTier,
+      artIcon,
+      ...(input.imageAttachmentId !== undefined ? { imageAttachmentId: input.imageAttachmentId } : {}),
+    };
     const before = id === null ? null : await db.badge.findUnique({ where: { id } });
     if (id !== null && !before) throw new GcsNotFound();
     const row = await (id === null ? db.badge.create({ data: { ...data, position: await db.badge.count() } }) : db.badge.update({ where: { id }, data })).catch((error: unknown) => {
       if ((error as { code?: string }).code === "P2002") throw new GcsValidationError({ key: "taken" });
       throw error;
     });
+    if (input.imageAttachmentId !== undefined && input.imageAttachmentId !== before?.imageAttachmentId) {
+      // Imaginea veche dispare (din store și din baza de date); cea nouă se leagă de badge și devine publică.
+      if (before?.imageAttachmentId) await this.deps.attachments?.deleteFor(BADGE_IMAGE_CONTENT_TYPE, [String(row.id)]);
+      if (input.imageAttachmentId) {
+        await db.attachment.update({ where: { id: input.imageAttachmentId }, data: { contentType: BADGE_IMAGE_CONTENT_TYPE, contentId: String(row.id) } });
+      }
+    }
     await this.audit(actor, id === null ? "badge.create" : "badge.update", "badge", String(row.id), before, row);
     await this.badgesChanged();
     return row;
@@ -118,6 +193,7 @@ export class GcsAchievementAdmin {
     const before = await db.badge.findUnique({ where: { id } });
     if (!before) throw new GcsNotFound();
     await db.badge.delete({ where: { id } });
+    await this.deps.attachments?.deleteFor(BADGE_IMAGE_CONTENT_TYPE, [String(id)]);
     await this.audit(actor, "badge.delete", "badge", String(id), before);
     await this.badgesChanged();
   }

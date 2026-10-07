@@ -1,6 +1,6 @@
 "use client";
 
-import { cloneElement, isValidElement, useId, useState, type FocusEvent, type MouseEvent, type ReactElement } from "react";
+import { cloneElement, isValidElement, useId, useState, type FocusEvent, type MouseEvent, type ReactElement, type ReactNode } from "react";
 
 type TriggerProps = {
   "aria-describedby"?: string;
@@ -11,8 +11,8 @@ type TriggerProps = {
 };
 
 export type GcsTooltipProps = {
-  /** Textul tooltip-ului. */
-  content: string;
+  /** Textul tooltip-ului (sau un conținut scurt, ex. numele și descrierea unui badge). */
+  content: ReactNode;
   /** Elementul pe care apare (un singur element care primește focus, ex. un buton sau un link). */
   children: ReactElement<TriggerProps>;
   side?: "top" | "bottom";

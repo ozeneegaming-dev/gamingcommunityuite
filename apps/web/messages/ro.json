@@ -884,7 +884,7 @@
       "ranksTitle": "Ranguri",
       "ranksHelp": "Membrul primește cel mai înalt rang ale cărui praguri completate sunt toate atinse. Un prag gol nu se cere. Ordinea de mai jos e ierarhia (ultimul e cel mai înalt). Salvarea recalculează rangurile tuturor.",
       "badgesTitle": "Badge-uri",
-      "badgesHelp": "Badge-urile automate se acordă prin reguli; cele manuale le acordă staff-ul din fișa membrului. Punctele se adaugă la acordare.",
+      "badgesHelp": "Fiecare badge are o insignă: forma spune categoria, nivelul (metalul) treapta, iar culoarea colorează emailul și panglica. Badge-urile automate se acordă prin reguli; cele manuale le acordă staff-ul din fișa membrului. Punctele se adaugă la acordare.",
       "rulesTitle": "Reguli",
       "rulesHelp": "O regulă cu prag se aplică o singură dată pe membru (badge și/sau puncte). Regulile „pentru fiecare …” dau puncte la fiecare acțiune și nu pot avea badge.",
       "settingsTitle": "Setări realizări",
@@ -900,7 +900,7 @@
       "minPoints": "Puncte (minim)",
       "minReputation": "Reputație (minim)",
       "key": "Cheie",
-      "symbol": "Simbol",
+      "symbol": "Text pe insignă",
       "color": "Culoare",
       "points": "Puncte",
       "description": "Descriere",
@@ -929,6 +929,38 @@
         "EACH_POST": "Pentru fiecare postare publicată",
         "EACH_REACTION_RECEIVED": "Pentru fiecare reacție pozitivă primită",
         "EACH_SOLUTION": "Pentru fiecare răspuns marcat rezolvare"
+      },
+      "art": {
+        "preview": "Previzualizarea insignei",
+        "previewDark": "Pe tema întunecată",
+        "previewLight": "Pe tema deschisă",
+        "shape": "Formă",
+        "shapes": {
+          "medal": "Medalie",
+          "shield": "Scut",
+          "hexagon": "Hexagon",
+          "rosette": "Rozetă",
+          "diamond": "Diamant",
+          "star": "Stea"
+        },
+        "tier": "Nivel",
+        "tiers": {
+          "bronze": "Bronz",
+          "silver": "Argint",
+          "gold": "Aur",
+          "platinum": "Platină",
+          "custom": "Culoarea badge-ului"
+        },
+        "colorHint": "Emailul și panglica insignei",
+        "colorPicker": "Alege culoarea",
+        "icon": "Iconiță",
+        "iconSearch": "Caută o iconiță",
+        "iconNone": "Fără iconiță (folosește textul)",
+        "iconNoResults": "Nicio iconiță găsită",
+        "symbolHint": "1–3 caractere, când nu alegi o iconiță",
+        "image": "Imagine proprie (opțional)",
+        "imageHint": "PNG, JPEG, WebP sau GIF. Înlocuiește insigna desenată.",
+        "removeImage": "Elimină imaginea proprie"
       }
     },
     "promotions": {
@@ -2057,6 +2089,20 @@
       "reportReason": "De ce raportezi acest mesaj?",
       "confirmDelete": "Ștergi definitiv acest mesaj?",
       "hidden": "ascuns"
+    },
+    "badgeEarned": "Obținut pe {date}",
+    "badgesLocked": "{count, plural, one {Încă # badge de obținut} few {Încă # badge-uri de obținut} other {Încă # de badge-uri de obținut}}",
+    "badgeLocked": "blocat",
+    "badgeProgress": "{current} / {target}",
+    "badgeReq": {
+      "POSTS_COUNT": "{count, plural, one {# postare} few {# postări} other {# de postări}}",
+      "REPUTATION": "{count, plural, one {# punct de reputație} few {# puncte de reputație} other {# de puncte de reputație}}",
+      "POINTS": "{count, plural, one {# punct} few {# puncte} other {# de puncte}}",
+      "MEMBER_DAYS": "{count, plural, one {# zi de membru} few {# zile de membru} other {# de zile de membru}}",
+      "MEMBER_YEARS": "{count, plural, one {# an de membru} few {# ani de membru} other {# de ani de membru}}",
+      "SOLUTIONS_COUNT": "{count, plural, one {# răspuns marcat rezolvare} few {# răspunsuri marcate rezolvare} other {# de răspunsuri marcate rezolvare}}",
+      "IS_VIP": "Devine VIP",
+      "manual": "Acordat de echipă"
     }
   },
   "maintenance": {
@@ -2323,7 +2369,8 @@
       "likes": "aprecieri",
       "memberSince": "Membru din:",
       "status": "Status:",
-      "motto": "Motto"
+      "motto": "Motto",
+      "badgesMore": "{count, plural, one {Încă # insignă} few {Încă # insigne} other {Încă # de insigne}}"
     },
     "poll": {
       "votes": "{count, plural, one {# vot} few {# voturi} other {# de voturi}}",

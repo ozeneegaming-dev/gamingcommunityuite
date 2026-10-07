@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import { GcsAvatar } from "./GcsAvatar";
+import { GcsBadgeArt } from "./GcsBadgeArt";
 
 export type GcsHoverCardData = {
   user: {
@@ -19,7 +20,8 @@ export type GcsHoverCardData = {
   };
   stats: { posts: number; reputation: number; followers: number; joinedAt: string };
   online: { online: boolean };
-  badges: { key: string; name: string; symbol: string | null; image: string | null; color: string }[];
+  /** `art` = adresa insignei generate; `image` = imaginea proprie încărcată în ACP (are prioritate). */
+  badges: { key: string; name: string; description?: string; art: string; image: string | null }[];
   fields: { label: string; value: string }[];
 };
 
@@ -100,9 +102,8 @@ export function GcsHoverCard({
         {data.badges.length > 0 && (
           <ul className="gcs-hoverCard__badges" aria-label="Badges">
             {data.badges.map((b) => (
-              <li key={b.key} title={b.name} className="gcs-profileBadge gcs-profileBadge--s" style={{ color: b.color, background: tint(b.color, 0.14, "rgba(161,167,180,.14)") }}>
-                {b.image ? <img src={b.image} alt={b.name} /> : <span aria-hidden="true">{b.symbol}</span>}
-                <span className="gcs-srOnly">{b.name}</span>
+              <li key={b.key} title={b.description ? `${b.name}: ${b.description}` : b.name} className="gcs-badgeArt__item">
+                <GcsBadgeArt badge={b} size={32} />
               </li>
             ))}
           </ul>
@@ -138,15 +139,5 @@ export function GcsHoverCard({
         {actions && <div className="gcs-hoverCard__actions">{actions}</div>}
       </div>
     </div>
-  );
-}
-
-/** O insignă de badge (simbol sau imagine), ca pe profil (macheta Profil). */
-export function GcsProfileBadge({ badge, size = "m" }: { badge: { name: string; symbol: string | null; image: string | null; color: string }; size?: "s" | "m" }) {
-  return (
-    <span className={`gcs-profileBadge gcs-profileBadge--${size}`} title={badge.name} style={{ color: badge.color, background: tint(badge.color, 0.14, "rgba(161,167,180,.14)") }}>
-      {badge.image ? <img src={badge.image} alt="" /> : <span aria-hidden="true">{badge.symbol}</span>}
-      <span className="gcs-srOnly">{badge.name}</span>
-    </span>
   );
 }

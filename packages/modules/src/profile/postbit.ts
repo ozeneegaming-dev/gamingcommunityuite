@@ -1,5 +1,6 @@
 import type { GcsActor, GcsCache, GcsPermissionService, GcsSettingsService } from "@gcs/core";
 import type { FieldVisibility, PrismaClient, ProfileFieldType } from "@gcs/db";
+import { badgeArtSrc } from "@gcs/ui/badge-art";
 import { normalizePrivacy } from "./privacy";
 
 /** „Online” în postbit = activitate în ultimele 5 minute (ca prezența din etapa 4). */
@@ -12,7 +13,8 @@ const LADDER_KEY = "profile:rank-ladder";
 const MOTTO_MAX = 140;
 
 export type GcsPostbitField = { key: string; label: string; icon: string | null; type: ProfileFieldType; value: string; image: string | null };
-export type GcsPostbitBadge = { key: string; name: string; symbol: string | null; color: string; image: string | null };
+/** `art` = adresa insignei generate (specul 2026-10-07-insigne-grafice); `image` = imaginea proprie, dacă există. */
+export type GcsPostbitBadge = { key: string; name: string; description: string; symbol: string | null; color: string; image: string | null; art: string };
 
 /** Tot ce arată cardul autorului lângă o postare (specul etapei 5, „Postbit”). */
 export type GcsPostbitData = {
@@ -147,8 +149,22 @@ export class GcsPostbitService {
         select: { userId: true, groupId: true, group: { select: { name: true, title: true } } },
       }),
       db.userBadge.groupBy({ by: ["userId"], where: { userId: { in: ids } }, _count: { _all: true } }),
-      db.$queryRaw<{ userId: string; key: string; name: string; symbol: string | null; color: string; imageAttachmentId: string | null }[]>`
-        SELECT r."userId", b."key", b."name", b."symbol", b."color", b."imageAttachmentId"
+      db.$queryRaw<
+        {
+          userId: string;
+          key: string;
+          name: string;
+          description: string;
+          symbol: string | null;
+          color: string;
+          imageAttachmentId: string | null;
+          manual: boolean;
+          artShape: string | null;
+          artTier: string | null;
+          artIcon: string | null;
+        }[]
+      >`
+        SELECT r."userId", b."key", b."name", b."description", b."symbol", b."color", b."imageAttachmentId", b."manual", b."artShape", b."artTier", b."artIcon"
         FROM (
           SELECT ub."userId", ub."badgeId", ub."createdAt",
                  row_number() OVER (PARTITION BY ub."userId" ORDER BY ub."createdAt" DESC, ub."id" DESC) AS rn
@@ -214,7 +230,15 @@ export class GcsPostbitService {
           count: countMap.get(u.id) ?? 0,
           recent: recent
             .filter((b) => b.userId === u.id)
-            .map((b) => ({ key: b.key, name: b.name, symbol: b.symbol, color: b.color, image: b.imageAttachmentId ? `/files/${b.imageAttachmentId}` : null })),
+            .map((b) => ({
+              key: b.key,
+              name: b.name,
+              description: b.description,
+              symbol: b.symbol,
+              color: b.color,
+              image: b.imageAttachmentId ? `/files/${b.imageAttachmentId}` : null,
+              art: badgeArtSrc(b),
+            })),
         },
         fields,
         online: privacy.showOnline && u.lastActiveAt !== null && now - u.lastActiveAt.getTime() <= ONLINE_MS,

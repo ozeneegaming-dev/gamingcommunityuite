@@ -1,9 +1,9 @@
 import { isSafeBanner, type GcsReactionView } from "@gcs/core";
 import type { GcsPostbitData, GcsPostView } from "@gcs/modules";
-import { GcsAvatar, GcsTooltip, GcsUserLink } from "@gcs/ui";
+import { GcsAvatar, GcsBadgeArt, GcsTooltip, GcsUserLink } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import { getFormatter, getTranslations } from "next-intl/server";
-import { memberHref, postHref, tint } from "@/lib/forum-urls";
+import { memberHref, postHref } from "@/lib/forum-urls";
 import { postbitVars } from "@/lib/template-data";
 import { siteTemplate } from "@/lib/templates";
 import { pluginHookHtml } from "@/lib/plugins";
@@ -235,20 +235,28 @@ async function GcsPostbit({ author, data, post, topicId }: { author: NonNullable
           {data && data.badges.recent.length > 0 && (
             <ul className="gcs-postbit__badges" data-testid="gcs-postbit-badges">
               {data.badges.recent.map((b) => (
-                <li key={b.key}>
-                  <GcsTooltip content={b.name}>
-                    <span
-                      className="gcs-postbit__badge"
-                      style={{ background: tint(b.color, 0.16), color: b.color, borderColor: b.color }}
-                      aria-label={b.name}
-                      role="img"
-                      tabIndex={0}
-                    >
-                      {b.image ? <img src={b.image} alt="" /> : b.symbol?.startsWith("fa-") ? <GcsIcon name={b.symbol} /> : (b.symbol ?? b.name.charAt(0))}
+                <li key={b.key} className="gcs-badgeArt__item">
+                  <GcsTooltip
+                    content={
+                      <span className="gcs-badgeTip">
+                        <strong>{b.name}</strong>
+                        {b.description && <span>{b.description}</span>}
+                      </span>
+                    }
+                  >
+                    <span className="gcs-badgeArt__focus" tabIndex={0}>
+                      <GcsBadgeArt badge={b} size={32} />
                     </span>
                   </GcsTooltip>
                 </li>
               ))}
+              {data.badges.count > data.badges.recent.length && (
+                <li className="gcs-badgeArt__item">
+                  <a className="gcs-badgeArt__more" href={`${profile}?tab=badges`} aria-label={t("badgesMore", { count: data.badges.count - data.badges.recent.length })} data-testid="gcs-postbit-badges-more">
+                    +{data.badges.count - data.badges.recent.length}
+                  </a>
+                </li>
+              )}
             </ul>
           )}
         </div>

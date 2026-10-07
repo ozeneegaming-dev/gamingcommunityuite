@@ -1,4 +1,5 @@
-import { GcsCard, GcsProfileBadge } from "@gcs/ui";
+import { GcsBadgeArt, GcsCard } from "@gcs/ui";
+import { badgeArtSrc } from "@gcs/ui/badge-art";
 import { getFormatter, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { services } from "@/lib/services";
@@ -85,7 +86,7 @@ export async function MemberProfileSections({ userId }: { userId: string }) {
         {userBadges.map((b) => (
           <div key={b.id} style={row}>
             <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <GcsProfileBadge badge={{ name: b.badge.name, symbol: b.badge.symbol, image: null, color: b.badge.color }} size="s" />
+              <GcsBadgeArt badge={{ name: b.badge.name, art: badgeArtSrc(b.badge), image: b.badge.imageAttachmentId ? `/files/${b.badge.imageAttachmentId}` : null }} size={24} decorative />
               <strong>{b.badge.name}</strong>
               <span className="gcs-muted">
                 · {format.dateTime(b.createdAt, { dateStyle: "medium" })}
@@ -106,7 +107,7 @@ export async function MemberProfileSections({ userId }: { userId: string }) {
                   .filter((b) => !owned.has(b.id))
                   .map((b) => (
                     <option key={b.id} value={b.id}>
-                      {b.symbol} {b.name}
+                      {b.name}
                       {b.manual ? "" : ` (${t("automatic")})`}
                     </option>
                   ))}

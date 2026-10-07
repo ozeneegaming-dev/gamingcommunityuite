@@ -26,15 +26,16 @@ const MAX_PASSES = 5;
 const BATCH = 500;
 
 type EachTrigger = Extract<AchievementTrigger, "EACH_POST" | "EACH_REACTION_RECEIVED" | "EACH_SOLUTION">;
-type ThresholdTrigger = Exclude<AchievementTrigger, EachTrigger>;
-const THRESHOLD_TRIGGERS: ThresholdTrigger[] = ["POSTS_COUNT", "REPUTATION", "POINTS", "MEMBER_DAYS", "SOLUTIONS_COUNT", "IS_VIP"];
+export type GcsThresholdTrigger = Exclude<AchievementTrigger, EachTrigger>;
+type ThresholdTrigger = GcsThresholdTrigger;
+export const THRESHOLD_TRIGGERS: ThresholdTrigger[] = ["POSTS_COUNT", "REPUTATION", "POINTS", "MEMBER_DAYS", "SOLUTIONS_COUNT", "IS_VIP"];
 
 export type GcsUserStats = { postsCount: number; reputation: number; points: number; solutionsCount: number; memberDays: number; isVip: boolean };
 
 const userTags = (id: string) => [`user:${id}`];
 
 /** Valoarea unui user pentru un trigger cu prag. */
-function statFor(trigger: ThresholdTrigger, s: GcsUserStats): number {
+export function statFor(trigger: ThresholdTrigger, s: GcsUserStats): number {
   switch (trigger) {
     case "POSTS_COUNT":
       return s.postsCount;
@@ -61,6 +62,31 @@ export function pickRank(ranks: Pick<Rank, "id" | "position" | "minPosts" | "min
     }
   }
   return best?.id ?? null;
+}
+
+/** Valorile unui user pentru regulile cu prag (și progresul badge-urilor blocate de pe profil). */
+export async function userStats(db: PrismaClient, userId: string, now = new Date()): Promise<GcsUserStats | null> {
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: {
+      postsCount: true,
+      reputation: true,
+      points: true,
+      solutionsCount: true,
+      createdAt: true,
+      primaryGroup: { select: { isVip: true } },
+      groups: { select: { group: { select: { isVip: true } } } },
+    },
+  });
+  if (!user) return null;
+  return {
+    postsCount: user.postsCount,
+    reputation: user.reputation,
+    points: user.points,
+    solutionsCount: user.solutionsCount,
+    memberDays: Math.floor((now.getTime() - user.createdAt.getTime()) / 86_400_000),
+    isVip: user.primaryGroup.isVip || user.groups.some((g) => g.group.isVip),
+  };
 }
 
 /**
@@ -112,27 +138,7 @@ export class GcsAchievementService {
   }
 
   async stats(userId: string, now = new Date()): Promise<GcsUserStats | null> {
-    const user = await this.deps.db.user.findUnique({
-      where: { id: userId },
-      select: {
-        postsCount: true,
-        reputation: true,
-        points: true,
-        solutionsCount: true,
-        createdAt: true,
-        primaryGroup: { select: { isVip: true } },
-        groups: { select: { group: { select: { isVip: true } } } },
-      },
-    });
-    if (!user) return null;
-    return {
-      postsCount: user.postsCount,
-      reputation: user.reputation,
-      points: user.points,
-      solutionsCount: user.solutionsCount,
-      memberDays: Math.floor((now.getTime() - user.createdAt.getTime()) / 86_400_000),
-      isVip: user.primaryGroup.isVip || user.groups.some((g) => g.group.isVip),
-    };
+    return userStats(this.deps.db, userId, now);
   }
 
   /**

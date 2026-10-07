@@ -139,6 +139,39 @@ describe("migrateDatabase", { timeout: 120_000 }, () => {
     expect(update.applied).toEqual(ALL_MIGRATIONS.filter((m) => m >= "20261009"));
   });
 
+  test("actualizarea dă badge-urilor implicite insignele; badge-urile și culorile schimbate de admin rămân", async () => {
+    await admin(async (c) => {
+      await c.query(`DROP DATABASE IF EXISTS "${DB}" WITH (FORCE)`);
+      await c.query(`CREATE DATABASE "${DB}"`);
+    });
+    const before = mkdtempSync(path.join(os.tmpdir(), "gcs-badges-"));
+    for (const name of ALL_MIGRATIONS.filter((m) => m < "20261022000000")) cpSync(path.join(migrationsDir, name), path.join(before, name), { recursive: true });
+    await migrateDatabase(url, before);
+    rmSync(before, { recursive: true, force: true });
+    const client = new pg.Client({ connectionString: url });
+    await client.connect();
+    try {
+      await client.query(
+        `INSERT INTO badges (key, name, symbol, color) VALUES
+          ('first_post', 'Primul post', '✎', '#5EA2FF'),
+          ('posts_100', '100 postări', 'C', '#F4B740'),
+          ('member_1y', '1 an membru', '1Y', '#123456'),
+          ('mvp', 'MVP', '★', '#FF0000')`,
+      );
+      const update = await migrateDatabase(url, migrationsDir);
+      expect(update.applied).toEqual(ALL_MIGRATIONS.filter((m) => m >= "20261022000000"));
+      const { rows } = await client.query(`SELECT key, color, "artShape", "artTier", "artIcon" FROM badges ORDER BY id`);
+      expect(rows).toEqual([
+        { key: "first_post", color: "#5EA2FF", artShape: "medal", artTier: "bronze", artIcon: "fa-solid fa-pen-nib" },
+        { key: "posts_100", color: "#5EA2FF", artShape: "medal", artTier: "silver", artIcon: "fa-solid fa-comments" },
+        { key: "member_1y", color: "#123456", artShape: "shield", artTier: "silver", artIcon: "fa-solid fa-cake-candles" },
+        { key: "mvp", color: "#FF0000", artShape: null, artTier: null, artIcon: null },
+      ]);
+    } finally {
+      await client.end();
+    }
+  });
+
   test("două rulări simultane nu aplică migrațiile de două ori (lock)", async () => {
     await admin(async (c) => {
       await c.query(`DROP DATABASE IF EXISTS "${DB}" WITH (FORCE)`);

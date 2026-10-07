@@ -49,6 +49,48 @@ describe("ACP → Realizări", () => {
     expect(await w.db.badge.findUnique({ where: { key: "mvp" } })).toBeNull();
   });
 
+  test("insigna: forma, nivelul și iconița se validează; textul e opțional (1–3 caractere)", async () => {
+    const base = { key: "mvp", name: "MVP", description: "", symbol: "", color: "#F4B740", manual: true, points: 0 };
+    await expect(
+      w.achievementAdmin.saveBadge(admin, null, { ...base, symbol: "ABCD", artShape: "circle", artTier: "wood", artIcon: 'fa-solid fa-star"><script>' }),
+    ).rejects.toMatchObject({ fields: { symbol: "invalid", artShape: "invalid_choice", artTier: "invalid_choice", artIcon: "invalid_choice" } });
+    await expect(w.achievementAdmin.saveBadge(admin, null, { ...base, artIcon: "fa-solid fa-nu-exista-deloc" })).rejects.toMatchObject({ fields: { artIcon: "invalid_choice" } });
+
+    const b = await w.achievementAdmin.saveBadge(admin, null, { ...base, artShape: "rosette", artTier: "gold", artIcon: "fa-solid fa-trophy" });
+    expect(b).toMatchObject({ symbol: null, artShape: "rosette", artTier: "gold", artIcon: "fa-solid fa-trophy" });
+    // Golirea câmpurilor revine la insigna implicită (din simbol și culoare).
+    const reset = await w.achievementAdmin.saveBadge(admin, b.id, { ...base, symbol: "GG", artShape: "", artTier: null, artIcon: null });
+    expect(reset).toMatchObject({ symbol: "GG", artShape: null, artTier: null, artIcon: null });
+  });
+
+  test("imaginea proprie: doar un atașament-imagine încărcat de admin; se leagă de badge, e publică și dispare la înlocuire", async () => {
+    const sharp = (await import("sharp")).default;
+    const png = await sharp({ create: { width: 64, height: 64, channels: 4, background: "#F4B740" } }).png().toBuffer();
+    const upload = (name: string, bytes: Buffer) => w.attachments.upload(admin, { name, bytes }, { permission: "acp.access" });
+    const base = { key: "img_badge", name: "Cu imagine", description: "", symbol: "I", color: "#F4B740", manual: true, points: 0 };
+
+    const text = await upload("note.txt", Buffer.from("nu e imagine"));
+    await expect(w.achievementAdmin.saveBadge(admin, null, { ...base, imageAttachmentId: text.id })).rejects.toMatchObject({ fields: { image: "invalid_image" } });
+    // Imaginea altcuiva (sau una deja legată de alt conținut) nu poate fi „adoptată” de un badge.
+    const foreign = await w.db.attachment.create({ data: { ownerId: w.member.userId, storageKey: "test/foreign.png", filename: "a.png", mime: "image/png", size: 10 } });
+    await expect(w.achievementAdmin.saveBadge(admin, null, { ...base, imageAttachmentId: foreign.id })).rejects.toMatchObject({ fields: { image: "invalid_image" } });
+
+    const first = await upload("a.png", png);
+    const b = await w.achievementAdmin.saveBadge(admin, null, { ...base, imageAttachmentId: first.id });
+    expect(b.imageAttachmentId).toBe(first.id);
+    expect(await w.db.attachment.findUnique({ where: { id: first.id } })).toMatchObject({ contentType: "badges.image", contentId: String(b.id) });
+    // Publică: un vizitator o poate deschide.
+    await expect(w.attachments.open(w.guest, first.id)).resolves.toMatchObject({ mime: "image/png" });
+
+    // Salvarea fără imagine nouă o păstrează; o imagine nouă o înlocuiește pe cea veche; `null` o scoate.
+    expect((await w.achievementAdmin.saveBadge(admin, b.id, base)).imageAttachmentId).toBe(first.id);
+    const second = await upload("b.png", png);
+    expect((await w.achievementAdmin.saveBadge(admin, b.id, { ...base, imageAttachmentId: second.id })).imageAttachmentId).toBe(second.id);
+    expect(await w.db.attachment.findUnique({ where: { id: first.id } })).toBeNull();
+    expect((await w.achievementAdmin.saveBadge(admin, b.id, { ...base, imageAttachmentId: null })).imageAttachmentId).toBeNull();
+    expect(await w.db.attachment.findUnique({ where: { id: second.id } })).toBeNull();
+  });
+
   test("reguli: o regulă pe acțiune nu poate da badge; o regulă nouă „5 postări → MVP” se aplică la evaluare", async () => {
     const mvp = await w.achievementAdmin.saveBadge(admin, null, { key: "mvp", name: "MVP", description: "", symbol: "★", color: "#F4B740", manual: false, points: 0 });
     await expect(w.achievementAdmin.saveRule(admin, null, { name: "x", trigger: "EACH_POST", threshold: 0, points: 0, badgeId: mvp.id, enabled: true })).rejects.toMatchObject({ fields: { badgeId: "each_no_badge" } });

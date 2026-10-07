@@ -29,6 +29,15 @@ describe("CSS-ul design system-ului", () => {
     expect(css.match(/prefers-reduced-motion: reduce/g)).toHaveLength(1);
   });
 
+  test("badges.css are insigna, starea blocată, „+N”, grila profilului, editorul din ACP și tema deschisă", () => {
+    const css = read("./badges.css");
+    for (const cls of [".gcs-badgeArt", ".gcs-badgeArt--locked", ".gcs-badgeArt__more", ".gcs-badgeTip", ".gcs-badgeGrid__item--locked", ".gcs-badgeStage", ".gcs-badgeChoice"]) {
+      expect(css).toContain(cls);
+    }
+    expect(css).toContain('[data-theme="light"]');
+    expect(css).toContain('[data-theme="auto"]');
+  });
+
   test("acp.css are shell-ul ACP (sidebar, bara de sus, antetul de pagină), tema luminoasă și reduced-motion", () => {
     const css = read("./acp.css");
     for (const cls of [".gcs-acpSide", ".gcs-acpSide--collapsed", ".gcs-acpNav__link--active", ".gcs-acpTop", ".gcs-acpPageHead", ".gcs-acpKpi", ".gcs-acpWidget__header", ".gcs-switch"]) {

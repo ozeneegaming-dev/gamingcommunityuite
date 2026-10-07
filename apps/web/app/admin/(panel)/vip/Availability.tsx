@@ -1,3 +1,9 @@
+import { GcsBadgeArt } from "@gcs/ui";
+import { badgeArtSrc, type GcsBadgeArtFields } from "@gcs/ui/badge-art";
+
+/** Câmpurile badge-urilor din listă: numele și insigna. */
+export const AVAILABILITY_BADGE_SELECT = { id: true, name: true, symbol: true, color: true, manual: true, artShape: true, artTier: true, artIcon: true, imageAttachmentId: true } as const;
+
 /** Disponibilitatea unui stil de nume sau a unei rame: pentru toți, pe grupuri sau pe badge-uri. */
 export function Availability({
   value,
@@ -7,7 +13,7 @@ export function Availability({
 }: {
   value: { allGroups: boolean; groupIds: number[]; badgeIds: number[] };
   groups: { id: number; name: string }[];
-  badges: { id: number; name: string; symbol: string | null }[];
+  badges: (GcsBadgeArtFields & { id: number; imageAttachmentId: string | null })[];
   labels: { title: string; all: string; groups: string; badges: string };
 }) {
   return (
@@ -35,7 +41,8 @@ export function Availability({
         {badges.map((b) => (
           <label key={b.id} className="gcs-check">
             <input type="checkbox" name="badgeIds" value={b.id} defaultChecked={value.badgeIds.includes(b.id)} />
-            {b.symbol} {b.name}
+            <GcsBadgeArt badge={{ name: b.name, art: badgeArtSrc(b), image: b.imageAttachmentId ? `/files/${b.imageAttachmentId}` : null }} size={16} decorative />
+            {b.name}
           </label>
         ))}
       </div>

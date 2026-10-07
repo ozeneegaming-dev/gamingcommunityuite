@@ -1,6 +1,6 @@
 "use server";
 
-import type { GcsResult } from "@gcs/core";
+import { GcsValidationError, type GcsResult } from "@gcs/core";
 import { BADGES_ACP_SECTION, PROMOTIONS_ACP_SECTION, RANKS_ACP_SECTION, RULES_ACP_SECTION } from "@gcs/modules";
 import type { AchievementTrigger } from "@gcs/db";
 import { field, intField, runAcpAction } from "@/lib/acp-actions";
@@ -36,9 +36,21 @@ export async function reorderRanks(order: number[]): Promise<GcsResult<null>> {
   });
 }
 
+/**
+ * Badge-ul cu insigna lui (specul 2026-10-07-insigne-grafice): forma, nivelul și iconița se validează în serviciu;
+ * imaginea proprie trece prin upload-ul atașamentelor (tipul real, recodare, fără SVG), apoi serviciul o leagă de badge.
+ */
 export async function saveBadge(id: number | null, fd: FormData): Promise<GcsResult<null>> {
   return runAcpAction(BADGES_ACP_SECTION, "edit", async (actor) => {
-    await services().achievementAdmin.saveBadge(actor, id, {
+    const { achievementAdmin, attachments } = services();
+    const file = fd.get("image");
+    let imageAttachmentId: string | null | undefined = fd.get("removeImage") === "on" ? null : undefined;
+    if (file instanceof File && file.size > 0) {
+      const att = await attachments.upload(actor, { name: file.name, bytes: Buffer.from(await file.arrayBuffer()) }, { permission: "acp.access" });
+      if (!att.isImage) throw new GcsValidationError({ image: "invalid_image" });
+      imageAttachmentId = att.id;
+    }
+    await achievementAdmin.saveBadge(actor, id, {
       key: field(fd, "key").trim(),
       name: field(fd, "name"),
       description: field(fd, "description"),
@@ -46,6 +58,10 @@ export async function saveBadge(id: number | null, fd: FormData): Promise<GcsRes
       color: field(fd, "color"),
       manual: fd.get("manual") === "on",
       points: intField(fd, "points"),
+      artShape: field(fd, "artShape") || null,
+      artTier: field(fd, "artTier") || null,
+      artIcon: field(fd, "artIcon") || null,
+      imageAttachmentId,
     });
     return null;
   });

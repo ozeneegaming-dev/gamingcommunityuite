@@ -884,7 +884,7 @@
       "ranksTitle": "Ranks",
       "ranksHelp": "A member gets the highest rank whose filled-in thresholds are all met. Empty thresholds are not required. The order below is the hierarchy (last is highest). Saving recalculates everyone's rank.",
       "badgesTitle": "Badges",
-      "badgesHelp": "Automatic badges are awarded by rules; manual ones are awarded by staff from the member page. Points are added when awarded.",
+      "badgesHelp": "Each badge has an emblem: the shape shows the category, the tier (metal) the level, and the colour fills the enamel and the ribbon. Automatic badges are awarded by rules; staff award manual ones from the member's page. Points are added when the badge is awarded.",
       "rulesTitle": "Rules",
       "rulesHelp": "A threshold rule applies once per member (badge and/or points). “For each …” rules give points for every action and cannot have a badge.",
       "settingsTitle": "Achievement settings",
@@ -900,7 +900,7 @@
       "minPoints": "Points (min)",
       "minReputation": "Reputation (min)",
       "key": "Key",
-      "symbol": "Symbol",
+      "symbol": "Emblem text",
       "color": "Color",
       "points": "Points",
       "description": "Description",
@@ -929,6 +929,38 @@
         "EACH_POST": "For each published post",
         "EACH_REACTION_RECEIVED": "For each positive reaction received",
         "EACH_SOLUTION": "For each answer marked as solution"
+      },
+      "art": {
+        "preview": "Emblem preview",
+        "previewDark": "On the dark theme",
+        "previewLight": "On the light theme",
+        "shape": "Shape",
+        "shapes": {
+          "medal": "Medal",
+          "shield": "Shield",
+          "hexagon": "Hexagon",
+          "rosette": "Rosette",
+          "diamond": "Diamond",
+          "star": "Star"
+        },
+        "tier": "Tier",
+        "tiers": {
+          "bronze": "Bronze",
+          "silver": "Silver",
+          "gold": "Gold",
+          "platinum": "Platinum",
+          "custom": "Badge colour"
+        },
+        "colorHint": "The emblem's enamel and ribbon",
+        "colorPicker": "Pick the colour",
+        "icon": "Icon",
+        "iconSearch": "Search icons",
+        "iconNone": "No icon (use the text)",
+        "iconNoResults": "No icons found",
+        "symbolHint": "1–3 characters, used when no icon is chosen",
+        "image": "Custom image (optional)",
+        "imageHint": "PNG, JPEG, WebP or GIF. Replaces the drawn emblem.",
+        "removeImage": "Remove the custom image"
       }
     },
     "promotions": {
@@ -2057,6 +2089,20 @@
       "reportReason": "Why are you reporting this post?",
       "confirmDelete": "Delete this post permanently?",
       "hidden": "hidden"
+    },
+    "badgeEarned": "Earned on {date}",
+    "badgesLocked": "{count, plural, one {# more badge to earn} other {# more badges to earn}}",
+    "badgeLocked": "locked",
+    "badgeProgress": "{current} / {target}",
+    "badgeReq": {
+      "POSTS_COUNT": "{count, plural, one {# post} other {# posts}}",
+      "REPUTATION": "{count, plural, one {# reputation point} other {# reputation points}}",
+      "POINTS": "{count, plural, one {# point} other {# points}}",
+      "MEMBER_DAYS": "{count, plural, one {# day as a member} other {# days as a member}}",
+      "MEMBER_YEARS": "{count, plural, one {# year as a member} other {# years as a member}}",
+      "SOLUTIONS_COUNT": "{count, plural, one {# answer marked as the solution} other {# answers marked as the solution}}",
+      "IS_VIP": "Becomes VIP",
+      "manual": "Awarded by the team"
     }
   },
   "maintenance": {
@@ -2323,7 +2369,8 @@
       "likes": "likes",
       "memberSince": "Member since:",
       "status": "Status:",
-      "motto": "Motto"
+      "motto": "Motto",
+      "badgesMore": "{count, plural, one {# more badge} other {# more badges}}"
     },
     "poll": {
       "votes": "{count, plural, one {# vote} other {# votes}}",
