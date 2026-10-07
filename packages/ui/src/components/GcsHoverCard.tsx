@@ -78,7 +78,7 @@ export function GcsHoverCard({
               {user.name}
             </a>
             <div className="gcs-hoverCard__meta">
-              <span className="gcs-badge" style={{ background: tint(user.group.color, 0.16, "rgba(161,167,180,.16)"), color: user.group.color ?? "var(--gcs-muted)" }}>
+              <span className="gcs-badge gcs-hoverCard__group" style={{ "--gcs-hoverCard-group": user.group.color ?? "var(--gcs-muted)" } as CSSProperties}>
                 {user.group.name}
               </span>
               {user.rank && (

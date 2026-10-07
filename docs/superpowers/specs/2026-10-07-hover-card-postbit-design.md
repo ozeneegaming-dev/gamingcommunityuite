@@ -69,7 +69,8 @@ umbrele și voalurile negre peste imagini (o imagine are aceeași luminozitate �
   Identitatea are `padding-top: 10px` — e mereu complet sub copertă.
 - Numele: Chakra Petch 18 px / 700, `line-height: 1.2`, un singur rând cu „…”; clasa stilului de nume
   (`gcs-name--<cheie>`) se păstrează.
-- Rândul de meta (sub nume, la 6 px): pastila grupului (`gcs-badge`, nuanța culorii grupului), rangul (12 px,
+- Rândul de meta (sub nume, la 6 px): pastila grupului (`gcs-badge`; fundal = culoarea grupului 16 %, text = culoarea
+  grupului amestecată 62 % cu `--gcs-text`, ca să rămână lizibilă și pe tema deschisă), rangul (12 px,
   `--gcs-muted`, iconița sau emoji-ul), „Online” (12 px, `--gcs-ok`, punct de 8 px cu strălucire). `flex-wrap`,
   spații 6×8 px; fără separatoare de text („·”).
 - Bio: 13 px / 1.45, `--gcs-muted`, cel mult 2 rânduri (`-webkit-line-clamp: 2`).
@@ -107,12 +108,12 @@ Funcție pură `placeHoverCard(anchor, card, viewport)`:
 - `anchor` = dreptunghiul numelui (coordonate de viewport — stratul e `position: fixed`), `card` = mărimea
   **măsurată** a cardului (`offsetWidth/offsetHeight`), `viewport` = lățimea/înălțimea vizibilă.
 - Dedesubt (8 px sub nume) dacă încape; altfel deasupra (8 px deasupra) dacă încape; altfel pe partea cu mai mult
-  loc, apoi limitat vertical în `[12, înălțime − card − 12]`.
+  loc, cu înălțimea limitată la locul de acolo (`maxHeight`; cardul derulează în el, fără să acopere numele).
 - Orizontal: aliniat la marginea stângă a numelui, limitat în `[12, lățime − card − 12]`.
 - Întoarce și partea (`below` / `above`) → `data-side` pe strat (direcția animației).
 
 Gazda randează stratul ascuns (`visibility: hidden`), îl măsoară într-un layout effect (înainte de desenare, fără
-pâlpâire), îl așază, apoi îl reașază la orice schimbare de mărime (`ResizeObserver`: conținut încărcat, butonul
+pâlpâire; înălțimea = `scrollHeight`, adică întreagă și când e limitată), îl așază, apoi îl reașază la orice schimbare de mărime (`ResizeObserver`: conținut încărcat, butonul
 „Urmărește” schimbat, șablon) și la redimensionarea ferestrei. La scroll se închide (ca până acum).
 
 ### Accesibilitate
@@ -144,12 +145,12 @@ la 2 (suprascrierile vechi apar „necesită revizuire”).
 - Coperta e un strat separat, decorativ (`<span class="gcs-postbit__cover" aria-hidden="true">`), poziționat
   absolut pe tot blocul (`inset: 0`, `z-index: -1` într-un bloc cu `isolation: isolate`), cu
   `background: center Y% / cover no-repeat url(…)`.
-- Voalul (`::after` pe strat): `linear-gradient(90deg, rgb(8 9 12 / .30), rgb(8 9 12 / .62) 45%,
-  rgb(8 9 12 / .85))`.
+- Voalul (`::after` pe strat): `linear-gradient(90deg, rgb(8 9 12 / .20), rgb(8 9 12 / .62) 42%,
+  rgb(8 9 12 / .85))` — coperta se vede în jurul avatarului, textul stă pe partea întunecată.
 - Blocul cu copertă (`.gcs-postbit__profile--cover`) devine o „insulă întunecată” în ambele teme: redefinește local
   `--gcs-text` (#F3F4F7), `--gcs-muted` (#C5CAD3), `--gcs-surface` (negru 55 %) și `--gcs-border` (alb 16 %), deci
   numele, rândul al doilea, titlul și coroanele rămân lizibile și pe tema deschisă. Textul identității primește
-  `text-shadow: 0 1px 2px rgb(0 0 0 / .6)`.
+  `text-shadow: 0 1px 2px rgb(0 0 0 / .7), 0 0 10px rgb(0 0 0 / .45)`.
 - Fără copertă: blocul arată exact ca înainte.
 - Pe mobil (avatarul de 56 px) coperta rămâne, cu aceleași reguli.
 

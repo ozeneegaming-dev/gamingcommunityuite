@@ -306,7 +306,7 @@ const HOVER_CARD = `<div class="gcs-card gcs-hoverCard" role="dialog" aria-label
       <div class="gcs-hoverCard__identity">
         <a href="{{ user.url }}" class="gcs-userLink gcs-name--{{ user.nameKey }} gcs-hoverCard__name" title="{{ user.name }}">{{ user.name }}</a>
         <div class="gcs-hoverCard__meta">
-          <span class="gcs-badge" style="background: {% if user.group.color %}{{ user.group.color | tint: 0.16 }}{% else %}rgba(161,167,180,.16){% endif %}; color: {{ user.group.color | default: "var(--gcs-muted)" }}">{{ user.group.name }}</span>
+          <span class="gcs-badge gcs-hoverCard__group" style="--gcs-hoverCard-group: {{ user.group.color | default: "var(--gcs-muted)" }}">{{ user.group.name }}</span>
           {% if user.rank %}<span class="gcs-hoverCard__rank" data-testid="gcs-hover-rank">{% if user.rank.symbol %}{{ user.rank.symbol }} {% endif %}{{ user.rank.name }}</span>{% endif %}
           {% if online %}<span class="gcs-hoverCard__online"><span class="gcs-dot" aria-hidden="true"></span>{{ "hoverCard.online" | t }}</span>{% endif %}
         </div>

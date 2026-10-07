@@ -127,6 +127,11 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Pastila grupului: culoarea grupului amestecată cu textul temei → lizibilă și pe tema deschisă (culori gândite pe întunecat). */
+.gcs-hoverCard__group {
+  background: color-mix(in srgb, var(--gcs-hoverCard-group, var(--gcs-muted)) 16%, transparent);
+  color: color-mix(in srgb, var(--gcs-hoverCard-group, var(--gcs-muted)) 62%, var(--gcs-text));
+}
 .gcs-hoverCard__rank,
 .gcs-hoverCard__online {
   display: inline-flex;
@@ -234,6 +239,10 @@
 .gcs-hoverCardLayer {
   position: fixed;
   z-index: 50;
+  /* Doar când nu încape nicăieri (`max-height` din poziționare): derulează în card, nu pagina. */
+  border-radius: 14px;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
 }
 .gcs-hoverCardLayer[data-side="pending"] {
   visibility: hidden;
