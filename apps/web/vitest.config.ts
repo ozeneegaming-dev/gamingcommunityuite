@@ -2,6 +2,8 @@ import path from "node:path";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  // tsconfig-ul are `jsx: preserve` (îl compilează Next.js); testele care importă pagini au nevoie de runtime-ul automat.
+  esbuild: { jsx: "automatic" },
   resolve: {
     alias: {
       "@": path.resolve(__dirname),
