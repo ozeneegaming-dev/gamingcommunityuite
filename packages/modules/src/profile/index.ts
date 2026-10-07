@@ -35,6 +35,8 @@ const settings: GcsSettingDef[] = [
   { key: "profile.wall_enabled", type: "boolean", default: true, section: "profiles", labelKey: "settings.profile.wall_enabled" },
   // Lungimea maximă a semnăturii (caractere de text), etapa 5.
   { key: "profile.signature_max_chars", type: "number", default: 500, section: "profiles", labelKey: "settings.profile.signature_max_chars", validate: between(0, 5000) },
+  // Imaginile din semnătură (adrese https, afișate mici; 0 = niciuna), specul 2026-10-07-editor-campuri.
+  { key: "profile.signature_max_images", type: "number", default: 1, section: "profiles", labelKey: "settings.profile.signature_max_images", validate: (v) => (Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 5 ? null : "invalid_range") },
   // Ordinea câmpurilor din postbit (cheile câmpurilor); cele marcate „în postbit” și nelistate vin la final (etapa 5).
   {
     key: "postbit.fields",

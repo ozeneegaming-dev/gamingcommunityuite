@@ -3,7 +3,8 @@
 import { faBell, faFloppyDisk, faLockOpen, faRightFromBracket, faShieldHalved, faTrash } from "@fortawesome/free-solid-svg-icons";
 import type { GcsResult } from "@gcs/core";
 import { GcsButton, GcsIconSvg } from "@gcs/ui";
-import { GcsEditor, type GcsEditorHandle } from "@gcs/ui/editor";
+import { GCS_RICH_FIELDS } from "@gcs/core/rich-fields";
+import { GcsEditor, type GcsEditorHandle, type GcsEditorTool } from "@gcs/ui/editor";
 import type { JSONContent } from "@tiptap/core";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
@@ -203,18 +204,81 @@ export function GcsTwoFactorSettings({
   );
 }
 
-/** Semnătura: editorul postărilor (fără imagini), cu limita de caractere; „Șterge” o scoate. */
-export function GcsSignatureForm({ initial, maxLength, labels }: { initial: JSONContent | null; maxLength: number; labels: { save: string; remove: string; saved: string; hint: string } }) {
+/** Bara de unelte a semnăturii (specul `2026-10-07-editor-campuri`): formatarea, linkul, imaginea din adresă, emoji. */
+const SIGNATURE_TOOLS: GcsEditorTool[] = ["bold", "italic", "underline", "strike", "color", "size", "align", "clear", "link", "image", "emoji"];
+
+/**
+ * Semnătura: editorul compact (schema semnăturii din `@gcs/core/rich-fields`), cu limita de caractere și imaginile din
+ * adrese (dacă sunt permise); „Șterge” o scoate. Fără drept de semnătură (grupul / site-ul), doar mesajul și „Șterge”.
+ */
+export function GcsSignatureForm({
+  initial,
+  maxLength,
+  maxImages,
+  hasSignature,
+  labels,
+}: {
+  initial: JSONContent | null;
+  maxLength: number;
+  maxImages: number;
+  hasSignature: boolean;
+  labels: { save: string; remove: string; saved: string; hint: string; disabled: string; label: string };
+}) {
   const editorLabels = useEditorLabels();
   const editor = useRef<GcsEditorHandle>(null);
   const router = useRouter();
   const { run, pending, message } = useRun(labels.saved);
+  const disabled = maxLength <= 0;
+  const remove = (
+    <GcsButton icon={<GcsIconSvg icon={faTrash} />}
+      variant="ghost"
+      disabled={pending}
+      onClick={() =>
+        run(
+          () => saveSignature({ content: null }),
+          () => {
+            editor.current?.clear();
+            router.refresh();
+          },
+        )
+      }
+    >
+      {labels.remove}
+    </GcsButton>
+  );
+  if (disabled) {
+    return (
+      <div className="gcs-settingsForm" data-testid="gcs-signature-form">
+        <p className="gcs-notice" style={{ margin: 0 }} data-testid="gcs-signature-disabled">
+          {labels.disabled}
+        </p>
+        {hasSignature && <div>{remove}</div>}
+        {message}
+      </div>
+    );
+  }
   return (
     <div className="gcs-settingsForm" data-testid="gcs-signature-form">
       <p className="gcs-muted" style={{ margin: 0 }}>
         {labels.hint}
       </p>
-      <GcsEditor ref={editor} id="gcs-signature-editor" labels={editorLabels} forumId={0} initialContent={initial} maxLength={maxLength} />
+      <span id="gcs-signature-label" className="gcs-srOnly">
+        {labels.label}
+      </span>
+      <GcsEditor
+        ref={editor}
+        id="gcs-signature-editor"
+        className="gcs-editor--signature"
+        labels={editorLabels}
+        forumId={0}
+        initialContent={initial}
+        maxLength={maxLength}
+        compact
+        allow={GCS_RICH_FIELDS.signature}
+        tools={SIGNATURE_TOOLS}
+        imageUrl={maxImages > 0}
+        labelledBy="gcs-signature-label"
+      />
       <div style={{ display: "flex", gap: 8 }}>
         <GcsButton icon={<GcsIconSvg icon={faFloppyDisk} />}
           variant="primary"
@@ -223,21 +287,7 @@ export function GcsSignatureForm({ initial, maxLength, labels }: { initial: JSON
         >
           {labels.save}
         </GcsButton>
-        <GcsButton icon={<GcsIconSvg icon={faTrash} />}
-          variant="ghost"
-          disabled={pending}
-          onClick={() =>
-            run(
-              () => saveSignature({ content: null }),
-              () => {
-                editor.current?.clear();
-                router.refresh();
-              },
-            )
-          }
-        >
-          {labels.remove}
-        </GcsButton>
+        {remove}
       </div>
       {message}
     </div>

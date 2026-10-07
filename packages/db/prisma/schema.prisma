@@ -822,7 +822,12 @@ model ProfileField {
 model ProfileFieldValue {
   userId  String
   fieldId Int
+  /// Textul simplu (postbit, card, căutare); la câmpurile „Text lung” e textul documentului de mai jos.
   value   String
+  /// Câmpurile „Text lung” (`TEXTAREA`) formatate cu editorul: documentul și HTML-ul randat de server la salvare.
+  /// Lipsă (valorile vechi) = textul `value` se afișează ca paragrafe (conversie la citire).
+  json    Json?
+  html    String  @default("")
 
   user  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   field ProfileField @relation(fields: [fieldId], references: [id], onDelete: Cascade)

@@ -2,9 +2,12 @@
 
 import { faFloppyDisk, faTrash } from "@fortawesome/free-solid-svg-icons";
 import type { GcsResult } from "@gcs/core";
+import { GCS_RICH_FIELDS } from "@gcs/core/rich-fields";
 import { GcsAvatar, GcsButton, GcsIconSvg } from "@gcs/ui";
+import type { GcsEditorTool } from "@gcs/ui/editor";
 import { useState } from "react";
 import { removeImage, saveProfile, setCoverPosition } from "../../settings-actions";
+import { GcsRichTextInput } from "../editor/GcsRichTextInput";
 import { GcsStatus } from "./GcsStatus";
 import { useSettingsAction } from "./useSettingsAction";
 
@@ -26,10 +29,31 @@ type Labels = {
   coverDenied: string;
 };
 
-/** Setări → Profil: câmpurile custom și bio-ul (un singur formular). */
-export function GcsProfileFieldsForm({ fields, values, bio, labels }: { fields: GcsFieldDef[]; values: Record<string, string>; bio: string; labels: Labels }) {
+/** Bara de unelte a câmpurilor „Text lung” (profilul `profileText`): formatarea textului, listele, linkul, emoji. */
+const PROFILE_TEXT_TOOLS: GcsEditorTool[] = ["bold", "italic", "underline", "strike", "color", "highlight", "align", "clear", "bulletList", "orderedList", "link", "emoji"];
+
+/**
+ * Setări → Profil: câmpurile custom și bio-ul (un singur formular). Câmpurile „Text lung” se scriu în editorul compact
+ * (documentul ajunge la server, care îl validează și îl randează).
+ */
+export function GcsProfileFieldsForm({
+  fields,
+  values,
+  docs,
+  bio,
+  labels,
+}: {
+  fields: GcsFieldDef[];
+  values: Record<string, string>;
+  /** Documentele câmpurilor „Text lung” scrise deja în editor. */
+  docs: Record<string, unknown>;
+  bio: string;
+  labels: Labels;
+}) {
   const { pending, status, run } = useSettingsAction(labels.saved);
   const [form, setForm] = useState<Record<string, string>>(() => Object.fromEntries(fields.map((f) => [f.key, values[f.key] ?? ""])));
+  // „Text lung”: valoarea trimisă e documentul editorului (sau textul vechi, neatins); `""` = golit.
+  const [rich, setRich] = useState<Record<string, unknown>>(() => Object.fromEntries(fields.filter((f) => f.type === "TEXTAREA").map((f) => [f.key, docs[f.key] ?? values[f.key] ?? ""])));
   const [bioText, setBio] = useState(bio);
   const input = (f: GcsFieldDef) => {
     const common = { id: `field-${f.key}`, name: f.key, value: form[f.key] ?? "", required: f.required, className: "gcs-input" };
@@ -66,7 +90,20 @@ export function GcsProfileFieldsForm({ fields, values, bio, labels }: { fields: 
         </select>
       );
     }
-    if (f.type === "TEXTAREA") return <textarea {...common} maxLength={f.maxLength} onChange={onChange} rows={4} />;
+    if (f.type === "TEXTAREA") {
+      return (
+        <GcsRichTextInput
+          id={`field-${f.key}`}
+          initial={rich[f.key] ?? ""}
+          allow={GCS_RICH_FIELDS.profileText}
+          tools={PROFILE_TEXT_TOOLS}
+          maxLength={f.maxLength}
+          compact
+          labelledBy={`field-${f.key}-label`}
+          onValue={(v) => setRich((s) => ({ ...s, [f.key]: v }))}
+        />
+      );
+    }
     return <input {...common} type={f.type === "URL" ? "url" : f.type === "NUMBER" ? "number" : "text"} maxLength={f.maxLength} onChange={onChange} />;
   };
   const section = (key: "ABOUT" | "GAMES", title: string) => {
@@ -93,7 +130,7 @@ export function GcsProfileFieldsForm({ fields, values, bio, labels }: { fields: 
       className="gcs-settingsForm"
       onSubmit={(e) => {
         e.preventDefault();
-        run(() => saveProfile({ bio: bioText, fields: form }));
+        run(() => saveProfile({ bio: bioText, fields: { ...form, ...(rich as Record<string, string | Record<string, unknown>>) } }));
       }}
     >
       <div className="gcs-field">

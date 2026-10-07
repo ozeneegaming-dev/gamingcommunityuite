@@ -175,6 +175,9 @@
       "permanent": "Постоянный VIP не может быть продлен.",
       "image": "Загрузите изображение для рамки изображения.",
       "signature_media": "Подпись не может содержать изображения или видео.",
+      "format_not_allowed": "The content uses formatting that is not allowed here (e.g. images, video or headings).",
+      "too_many_images": "Too many images.",
+      "signature_disabled": "Your group cannot have a signature.",
       "current_session": "Выйдите из этой сессии с помощью «Выйти».",
       "too_many_emoticons": "Слишком много смайликов в одном сообщении",
       "template_syntax": "Шаблон имеет синтаксическую ошибку.",
@@ -1819,7 +1822,8 @@
       "remove": "Убрать",
       "position": "Положение вертикального покрытия",
       "coverDenied": "Ваша группа не может установить прикрытие.",
-      "signature_max_chars": "Максимальная длина подписи (характеристики)"
+      "signature_max_chars": "Максимальная длина подписи (характеристики)",
+      "signature_max_images": "Images in the signature (https addresses, 0 = none)"
     },
     "pm": {
       "messages_per_page": "Сообщения на странице в разговоре"
@@ -1980,7 +1984,10 @@
     },
     "signature": {
       "title": "Подпись",
-      "hint": "Показаны под вашими постами. Форматированный текст и ссылки, никаких изображений или видео, вплоть до символов {max}.",
+      "hint": "Shown under your posts. Formatted text (colours, sizes, alignment) and links, no images or video, up to {max} characters.",
+      "hintImages": "Shown under your posts. Formatted text (colours, sizes, alignment), links and small images from https addresses (at most {images}), no video, up to {max} characters.",
+      "label": "Signature text",
+      "disabled": "Your group cannot have a signature.",
       "save": "Сохранить подпись",
       "remove": "Удалить подпись",
       "saved": "Ваша подпись была сохранена.",
@@ -2418,6 +2425,8 @@
       "spoiler": "Спойлер",
       "mention": "Упоминание",
       "image": "Изображение",
+      "imageUrl": "Image address (https://…)",
+      "invalidImage": "The address must start with https:// and point to an image.",
       "video": "Видео",
       "videoUrl": "YouTube, Twitch или Медаль",
       "insert": "Вставить",

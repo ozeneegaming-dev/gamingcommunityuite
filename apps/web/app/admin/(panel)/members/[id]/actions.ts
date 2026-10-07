@@ -6,16 +6,32 @@ import { services } from "@/lib/services";
 
 const SECTION = "members.members";
 
-/** Profilul membrului editat de staff (bio și câmpurile custom `field:<cheie>`). Intră în jurnal. */
+/**
+ * Profilul membrului editat de staff (bio și câmpurile custom `field:<cheie>`; câmpurile „Text lung” vin din editor ca
+ * JSON, în `fieldDoc:<cheie>`: documentul, `""` sau textul vechi neatins). Intră în jurnal.
+ */
 export async function staffSaveProfile(userId: string, fd: FormData): Promise<GcsResult<null>> {
   return runAcpAction(SECTION, "edit", async (actor) => {
     const { profiles } = services();
     await profiles.updateBio(actor, userId, field(fd, "bio"));
-    const values: Record<string, string> = {};
-    for (const [k, v] of fd.entries()) if (k.startsWith("field:") && typeof v === "string") values[k.slice(6)] = v;
+    const values: Record<string, unknown> = {};
+    for (const [k, v] of fd.entries()) {
+      if (typeof v !== "string") continue;
+      if (k.startsWith("field:")) values[k.slice(6)] = v;
+      else if (k.startsWith("fieldDoc:")) values[k.slice(9)] = parseJson(v);
+    }
     await profiles.updateFields(actor, userId, values);
     return null;
   });
+}
+
+/** JSON-ul unui câmp ascuns; invalid → o valoare pe care validarea câmpului o refuză. */
+function parseJson(raw: string): unknown {
+  try {
+    return JSON.parse(raw) as unknown;
+  } catch {
+    return null;
+  }
 }
 
 export async function staffResetImage(userId: string, kind: "avatar" | "cover"): Promise<GcsResult<null>> {

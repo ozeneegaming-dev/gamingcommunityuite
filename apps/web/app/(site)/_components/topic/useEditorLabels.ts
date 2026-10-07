@@ -40,6 +40,8 @@ const KEYS = [
   "spoiler",
   "mention",
   "image",
+  "imageUrl",
+  "invalidImage",
   "video",
   "videoUrl",
   "insert",
@@ -50,6 +52,11 @@ const KEYS = [
   "uploadFailed",
   "noMentions",
 ] as const satisfies readonly (keyof GcsEditorLabels)[];
+
+// Toate textele editorului trebuie traduse: o cheie lipsă din listă ar da `undefined` (ex. eticheta unui câmp).
+type Missing = Exclude<keyof GcsEditorLabels, (typeof KEYS)[number] | "characters" | "charactersMax">;
+const ALL_KEYS: [Missing] extends [never] ? true : Missing = true;
+void ALL_KEYS;
 
 /** Textele editorului, traduse (`topic.editor.*`). */
 export function useEditorLabels(): GcsEditorLabels {

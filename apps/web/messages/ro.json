@@ -175,6 +175,9 @@
       "permanent": "Un VIP permanent nu se prelungește.",
       "image": "Încarcă o imagine pentru rama de tip imagine.",
       "signature_media": "Semnătura nu poate conține imagini sau video.",
+      "format_not_allowed": "Conținutul folosește o formatare care nu e permisă aici (ex. imagini, video sau titluri).",
+      "too_many_images": "Prea multe imagini.",
+      "signature_disabled": "Grupul tău nu poate avea semnătură.",
       "current_session": "Sesiunea curentă se închide cu „Ieșire”.",
       "too_many_emoticons": "Prea multe emoticoane într-un mesaj",
       "template_syntax": "Șablonul are o eroare de sintaxă.",
@@ -1819,7 +1822,8 @@
       "remove": "Șterge",
       "position": "Poziția verticală a cover-ului",
       "coverDenied": "Grupul tău nu poate pune cover.",
-      "signature_max_chars": "Lungimea maximă a semnăturii (caractere)"
+      "signature_max_chars": "Lungimea maximă a semnăturii (caractere)",
+      "signature_max_images": "Imagini în semnătură (adrese https, 0 = niciuna)"
     },
     "pm": {
       "messages_per_page": "Mesaje pe pagină într-o conversație"
@@ -1980,7 +1984,10 @@
     },
     "signature": {
       "title": "Semnătură",
-      "hint": "Apare sub postările tale. Text formatat și linkuri, fără imagini sau video, maximum {max} de caractere.",
+      "hint": "Apare sub postările tale. Text formatat (culori, mărimi, aliniere) și linkuri, fără imagini sau video, maximum {max} de caractere.",
+      "hintImages": "Apare sub postările tale. Text formatat (culori, mărimi, aliniere), linkuri și imagini mici din adrese https (cel mult {images}), fără video, maximum {max} de caractere.",
+      "label": "Textul semnăturii",
+      "disabled": "Grupul tău nu poate avea semnătură.",
       "save": "Salvează semnătura",
       "remove": "Șterge semnătura",
       "saved": "Semnătura a fost salvată.",
@@ -2418,6 +2425,8 @@
       "spoiler": "Spoiler",
       "mention": "Mențiune",
       "image": "Imagine",
+      "imageUrl": "Adresa imaginii (https://…)",
+      "invalidImage": "Adresa trebuie să înceapă cu https:// și să ducă la o imagine.",
       "video": "Video",
       "videoUrl": "Link YouTube, Twitch sau Medal",
       "insert": "Inserează",

@@ -11,15 +11,19 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("settings"))("nav.signature") };
 }
 
-/** Setări → Semnătură (specul etapei 5): textul de sub postări, formatat, sanitizat de server, cu limită de lungime. */
+/**
+ * Setări → Semnătură (specul `2026-10-07-editor-campuri`): editorul compact (formatare, link, imagini mici din adrese),
+ * sanitizat de server, cu limitele site-ului și ale grupului.
+ */
 export default async function SignatureSettingsPage() {
   const actor = await currentActor();
-  const { db, settings } = services();
-  const [t, user, max] = await Promise.all([
+  const { db, profiles } = services();
+  const [t, user, limits] = await Promise.all([
     getTranslations("settings.signature"),
     db.user.findUniqueOrThrow({ where: { id: actor.userId! }, select: { signatureJson: true, signatureHtml: true } }),
-    settings.get<number>("profile.signature_max_chars"),
+    profiles.signatureLimits(actor),
   ]);
+  const max = limits.maxChars;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <h2 className="gcs-settingsTitle">
@@ -29,7 +33,16 @@ export default async function SignatureSettingsPage() {
       <GcsSignatureForm
         initial={(user.signatureJson as JSONContent | null) ?? null}
         maxLength={max}
-        labels={{ save: t("save"), remove: t("remove"), saved: t("saved"), hint: t("hint", { max }) }}
+        maxImages={limits.maxImages}
+        hasSignature={user.signatureHtml !== ""}
+        labels={{
+          save: t("save"),
+          remove: t("remove"),
+          saved: t("saved"),
+          hint: limits.maxImages > 0 ? t("hintImages", { max, images: limits.maxImages }) : t("hint", { max }),
+          disabled: t("disabled"),
+          label: t("label"),
+        }}
       />
       {user.signatureHtml && (
         <div>

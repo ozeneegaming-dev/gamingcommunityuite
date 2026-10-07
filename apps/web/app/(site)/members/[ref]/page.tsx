@@ -171,6 +171,28 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
     </section>
   );
 
+  /** Un câmp de profil: eticheta și valoarea (un link, textul sau, la „Text lung”, HTML-ul sanitizat de server). */
+  const fieldRow = (f: (typeof profile.fields)[number], linkText: string) =>
+    f.html ? (
+      <div key={f.key} className="gcs-profileField gcs-profileField--rich" data-testid="gcs-profile-rich-field">
+        <span>{f.label}</span>
+        <div className="gcs-postBody gcs-richText" dangerouslySetInnerHTML={{ __html: f.html }} />
+      </div>
+    ) : (
+      <div key={f.key} className="gcs-profileField">
+        <span>{f.label}</span>
+        <span>
+          {f.type === "URL" ? (
+            <a href={f.value} rel="nofollow ugc noopener" target="_blank">
+              {linkText}
+            </a>
+          ) : (
+            f.value
+          )}
+        </span>
+      </div>
+    );
+
   const aboutCard = (
     <GcsCard as="section" style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
       <h2 className="gcs-display" style={sectionTitle}>
@@ -183,12 +205,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
           {t("noFields")}
         </span>
       )}
-      {about.map((f) => (
-        <div key={f.key} className="gcs-profileField">
-          <span>{f.label}</span>
-          <span>{f.type === "URL" ? <a href={f.value} rel="nofollow ugc noopener" target="_blank">{f.value}</a> : f.value}</span>
-        </div>
-      ))}
+      {about.map((f) => fieldRow(f, f.value))}
       <div className="gcs-profileField">
         <span>{t("stats.joined")}</span>
         <span>{format.dateTime(new Date(stats.joinedAt), { dateStyle: "long" })}</span>
@@ -227,12 +244,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
           </div>
         </div>
       ))}
-      {games.map((f) => (
-        <div key={f.key} className="gcs-profileField">
-          <span>{f.label}</span>
-          <span>{f.type === "URL" ? <a href={f.value} rel="nofollow ugc noopener" target="_blank">{f.value.replace(/^https?:\/\//, "")}</a> : f.value}</span>
-        </div>
-      ))}
+      {games.map((f) => fieldRow(f, f.value.replace(/^https?:\/\//, "")))}
     </GcsCard>
   );
 

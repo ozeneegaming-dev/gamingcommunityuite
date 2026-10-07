@@ -175,6 +175,9 @@
       "permanent": "Ein permanenter VIP kann nicht verlängert werden.",
       "image": "Laden Sie ein Bild für ein Bildframe hoch.",
       "signature_media": "Die Signatur kann keine Bilder oder Videos enthalten.",
+      "format_not_allowed": "The content uses formatting that is not allowed here (e.g. images, video or headings).",
+      "too_many_images": "Too many images.",
+      "signature_disabled": "Your group cannot have a signature.",
       "current_session": "Melden Sie sich aus dieser Sitzung mit \"Log out\" ab.",
       "too_many_emoticons": "Zu viele Emoticons in einer Nachricht",
       "template_syntax": "Die Vorlage hat einen Syntaxfehler.",
@@ -1819,7 +1822,8 @@
       "remove": "Entfernen",
       "position": "Position der vertikalen Abdeckung",
       "coverDenied": "Ihre Gruppe kann kein Cover aufstellen.",
-      "signature_max_chars": "Maximale Signaturlänge (Zeichen)"
+      "signature_max_chars": "Maximale Signaturlänge (Zeichen)",
+      "signature_max_images": "Images in the signature (https addresses, 0 = none)"
     },
     "pm": {
       "messages_per_page": "Nachrichten pro Seite in einem Gespräch"
@@ -1980,7 +1984,10 @@
     },
     "signature": {
       "title": "Unterschrift",
-      "hint": "Unter deinen Posts gezeigt. Formatierter Text und Links, keine Bilder oder Videos, bis zu {max} Zeichen.",
+      "hint": "Shown under your posts. Formatted text (colours, sizes, alignment) and links, no images or video, up to {max} characters.",
+      "hintImages": "Shown under your posts. Formatted text (colours, sizes, alignment), links and small images from https addresses (at most {images}), no video, up to {max} characters.",
+      "label": "Signature text",
+      "disabled": "Your group cannot have a signature.",
       "save": "Signatur speichern",
       "remove": "Unterschrift entfernen",
       "saved": "Ihre Unterschrift wurde gespeichert.",
@@ -2418,6 +2425,8 @@
       "spoiler": "Spoiler",
       "mention": "Erwähnung",
       "image": "Bild",
+      "imageUrl": "Image address (https://…)",
+      "invalidImage": "The address must start with https:// and point to an image.",
       "video": "Video",
       "videoUrl": "YouTube, Twitch oder Medaille Link",
       "insert": "Einfügen",

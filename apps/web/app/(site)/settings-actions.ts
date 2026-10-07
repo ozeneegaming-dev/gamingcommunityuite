@@ -1,7 +1,6 @@
 "use server";
 
 import { GcsForbidden, GcsValidationError } from "@gcs/core";
-import { Prisma } from "@gcs/db";
 import { cookies, headers } from "next/headers";
 import * as z from "zod";
 import { gcsAction } from "@/lib/actions";
@@ -11,7 +10,8 @@ import { services } from "@/lib/services";
 
 /** Câmpurile de profil și bio-ul (Setări → Profil). */
 export const saveProfile = gcsAction(
-  z.object({ bio: z.string().max(500), fields: z.record(z.string(), z.string().max(5000)) }),
+  // Câmpurile „Text lung” trimit documentul editorului; serviciul validează fiecare valoare după tipul câmpului.
+  z.object({ bio: z.string().max(500), fields: z.record(z.string(), z.union([z.string().max(5000), z.record(z.string(), z.unknown())])) }),
   async ({ bio, fields }, { actor }) => {
     if (!actor.userId) throw new GcsForbidden({ reason: "guest" });
     const { profiles } = services();
@@ -130,28 +130,13 @@ export const revokeOtherSessions = gcsAction(z.object({}), async (_input, { acto
   return { count };
 });
 
-/** Semnătura de sub postări: același editor și același renderer ca postările, fără imagini și video; `null` = ștearsă. */
+/**
+ * Semnătura de sub postări: editorul compact; serverul validează documentul (validatorul conținutului + profilul
+ * semnăturii, limitele site-ului și ale grupului). `null` = ștearsă.
+ */
 export const saveSignature = gcsAction(z.object({ content: z.unknown().nullable() }), async ({ content }, { actor }) => {
-  if (!actor.userId) throw new GcsForbidden({ reason: "guest" });
-  const { db, posting, settings } = services();
-  if (content === null) {
-    await db.user.update({ where: { id: actor.userId }, data: { signatureJson: Prisma.DbNull, signatureHtml: "" } });
-    return;
-  }
-  if (hasNode(content, ["image", "embed"])) throw new GcsValidationError({ content: "signature_media" });
-  const rendered = await posting.render(content);
-  const max = await settings.get<number>("profile.signature_max_chars");
-  if (rendered.text.length > max) throw new GcsValidationError({ content: "too_long" }, { max: String(max) });
-  await db.user.update({ where: { id: actor.userId }, data: { signatureJson: rendered.json as Prisma.InputJsonValue, signatureHtml: rendered.html } });
+  await services().profiles.saveSignature(actor, content);
 });
-
-/** Documentul conține un nod de tipul dat (căutare limitată în adâncime). */
-function hasNode(doc: unknown, types: string[], depth = 0): boolean {
-  if (depth > 30 || typeof doc !== "object" || doc === null) return false;
-  const node = doc as { type?: unknown; content?: unknown };
-  if (typeof node.type === "string" && types.includes(node.type)) return true;
-  return Array.isArray(node.content) && node.content.some((c) => hasNode(c, types, depth + 1));
-}
 
 /** Id-ul sesiunii curente (Better Auth). */
 async function currentSessionId(): Promise<string | null> {

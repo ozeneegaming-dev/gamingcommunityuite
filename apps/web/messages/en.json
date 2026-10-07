@@ -175,6 +175,9 @@
       "permanent": "A permanent VIP cannot be extended.",
       "image": "Upload an image for an image frame.",
       "signature_media": "The signature cannot contain images or video.",
+      "format_not_allowed": "The content uses formatting that is not allowed here (e.g. images, video or headings).",
+      "too_many_images": "Too many images.",
+      "signature_disabled": "Your group cannot have a signature.",
       "current_session": "Sign out of this session with “Log out”.",
       "too_many_emoticons": "Too many emoticons in one message",
       "template_syntax": "The template has a syntax error.",
@@ -1819,7 +1822,8 @@
       "remove": "Remove",
       "position": "Vertical cover position",
       "coverDenied": "Your group cannot set a cover.",
-      "signature_max_chars": "Maximum signature length (characters)"
+      "signature_max_chars": "Maximum signature length (characters)",
+      "signature_max_images": "Images in the signature (https addresses, 0 = none)"
     },
     "pm": {
       "messages_per_page": "Messages per page in a conversation"
@@ -1980,7 +1984,10 @@
     },
     "signature": {
       "title": "Signature",
-      "hint": "Shown under your posts. Formatted text and links, no images or video, up to {max} characters.",
+      "hint": "Shown under your posts. Formatted text (colours, sizes, alignment) and links, no images or video, up to {max} characters.",
+      "hintImages": "Shown under your posts. Formatted text (colours, sizes, alignment), links and small images from https addresses (at most {images}), no video, up to {max} characters.",
+      "label": "Signature text",
+      "disabled": "Your group cannot have a signature.",
       "save": "Save signature",
       "remove": "Remove signature",
       "saved": "Your signature has been saved.",
@@ -2418,6 +2425,8 @@
       "spoiler": "Spoiler",
       "mention": "Mention",
       "image": "Image",
+      "imageUrl": "Image address (https://…)",
+      "invalidImage": "The address must start with https:// and point to an image.",
       "video": "Video",
       "videoUrl": "YouTube, Twitch or Medal link",
       "insert": "Insert",
