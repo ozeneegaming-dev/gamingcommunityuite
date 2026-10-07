@@ -3331,7 +3331,7 @@
       "title": "Încarcă pluginul sursă",
       "hint": "Arhiva e doar citită, ca text: nimic din ea nu se execută și nimic nu se convertește la acest pas.",
       "file": "Alege arhiva pluginului (.zip, .tar, .tar.gz sau .xml)",
-      "limits": "Maximum {size} MB, cel mult 2000 de fișiere.",
+      "limits": "Maximum {size} MB, cel mult {files} de fișiere.",
       "formats": "Formate recunoscute",
       "submit": "Încarcă și analizează",
       "uploading": "Se analizează…",
@@ -3517,6 +3517,7 @@
       "package_invalid": "Pachetul generat nu trece de verificări și nu poate fi trimis la instalare.",
       "already_converted": "Portarea a fost deja convertită.",
       "not_converted": "Portarea nu a fost încă convertită.",
+      "convert_failed": "Conversia nu a reușit din cauza unei erori neașteptate. Sursa a rămas încărcată: poți încerca din nou.",
       "not_found": "Portarea nu există sau a expirat (se păstrează o zi)."
     }
   }

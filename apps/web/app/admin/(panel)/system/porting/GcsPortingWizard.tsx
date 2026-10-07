@@ -9,6 +9,7 @@ import {
   faClock,
   faClockRotateLeft,
   faCode,
+  faCodeCompare,
   faDatabase,
   faDownload,
   faFileCode,
@@ -99,8 +100,9 @@ type Props = {
   recent: GcsPortListItem[];
   canEdit: boolean;
   canDelete: boolean;
-  /** Mărimea maximă a arhivei (octeți). */
+  /** Mărimea maximă a arhivei (octeți) și numărul maxim de fișiere din ea. */
   maxBytes: number;
+  maxFiles: number;
 };
 
 type Pending = "upload" | "convert" | "handoff" | "delete" | null;
@@ -111,7 +113,7 @@ type Pending = "upload" | "convert" | "handoff" | "delete" | null;
  * tipuri, verificările pachetului, fișierele de portat manual, avertismentele) cu descărcarea, predarea la instalator și
  * ștergerea. Tot ce vine din arhivă e afișat ca text simplu; nimic nu se instalează sau activează de aici.
  */
-export function GcsPortingWizard({ port: initial, missing, recent, canEdit, canDelete, maxBytes }: Props) {
+export function GcsPortingWizard({ port: initial, missing, recent, canEdit, canDelete, maxBytes, maxFiles }: Props) {
   const t = useTranslations("porting");
   const tChecks = useTranslations("acp.plugins.checks");
   const errorMessage = useErrorMessage();
@@ -215,7 +217,7 @@ export function GcsPortingWizard({ port: initial, missing, recent, canEdit, canD
         ))}
       </ol>
 
-      {!port && <UploadPanel canEdit={canEdit} pending={pending === "upload"} maxBytes={maxBytes} onSubmit={upload} />}
+      {!port && <UploadPanel canEdit={canEdit} pending={pending === "upload"} maxBytes={maxBytes} maxFiles={maxFiles} onSubmit={upload} />}
 
       {port && (
         <DetectedPanel
@@ -305,8 +307,21 @@ function Panel({ icon, title, sub, actions, children, testId }: { icon: Icon; ti
   );
 }
 
-function UploadPanel({ canEdit, pending, maxBytes, onSubmit }: { canEdit: boolean; pending: boolean; maxBytes: number; onSubmit: (e: FormEvent<HTMLFormElement>) => void }) {
+function UploadPanel({
+  canEdit,
+  pending,
+  maxBytes,
+  maxFiles,
+  onSubmit,
+}: {
+  canEdit: boolean;
+  pending: boolean;
+  maxBytes: number;
+  maxFiles: number;
+  onSubmit: (e: FormEvent<HTMLFormElement>) => void;
+}) {
   const t = useTranslations("porting");
+  const format = useFormatter();
   const [name, setName] = useState<string | null>(null);
   return (
     <Panel icon={faUpload} title={t("upload.title")} sub={t("upload.hint")} testId="gcs-porting-upload">
@@ -317,7 +332,7 @@ function UploadPanel({ canEdit, pending, maxBytes, onSubmit }: { canEdit: boolea
           </span>
           <span className="gcs-pluginUpload__text">
             <strong>{name ?? t("upload.file")}</strong>
-            <small>{t("upload.limits", { size: String(Math.round(maxBytes / (1024 * 1024))) })}</small>
+            <small>{t("upload.limits", { size: format.number(Math.round(maxBytes / (1024 * 1024))), files: format.number(maxFiles) })}</small>
           </span>
           <input
             type="file"
@@ -363,7 +378,7 @@ function DetectedPanel({ port, actions }: { port: GcsPortView; actions: ReactNod
   const m = a.meta;
   const description = m.description.length > 400 ? `${m.description.slice(0, 399)}…` : m.description;
   return (
-    <Panel icon={faPuzzlePiece} title={t("detected.title", { format: t(`formats.${a.format}`) })} sub={m.name} actions={actions} testId="gcs-porting-detected">
+    <Panel icon={faCodeCompare} title={t("detected.title", { format: t(`formats.${a.format}`) })} sub={m.name} actions={actions} testId="gcs-porting-detected">
       <dl className="gcs-porting__facts" data-testid="gcs-porting-facts">
         <div>
           <dt>{t("detected.name")}</dt>

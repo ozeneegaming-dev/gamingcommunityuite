@@ -1,13 +1,13 @@
-import { GcsError, GcsForbidden, GcsValidationError, PLUGIN_ZIP_LIMITS, type GcsResult } from "@gcs/core";
-import { PORTING_ACP_SECTION } from "@gcs/modules";
+import { GcsError, GcsForbidden, GcsValidationError, type GcsResult } from "@gcs/core";
+import { PORT_SOURCE_LIMITS, PORTING_ACP_SECTION } from "@gcs/modules";
 import { getAcpContext } from "@/lib/acp";
 import { isSameOrigin } from "@/lib/actions";
 import { services } from "@/lib/services";
 
 export const dynamic = "force-dynamic";
 
-/** Aceeași limită ca pachetele de plugin (8 MB); cititorul sursei o verifică din nou, împreună cu celelalte limite. */
-const MAX_BYTES = PLUGIN_ZIP_LIMITS.maxArchiveBytes;
+/** Limita arhivei sursă (8 MB, ca pachetele de plugin); cititorul o verifică din nou, împreună cu celelalte limite. */
+const MAX_BYTES = PORT_SOURCE_LIMITS.maxArchiveBytes;
 
 const result = (body: GcsResult<{ id: string }>, status = 200) => Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
 const failure = (error: GcsError) => result({ ok: false, error: error.toPayload() }, error.status);

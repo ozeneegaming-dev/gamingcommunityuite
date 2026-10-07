@@ -1,5 +1,5 @@
-import { GcsNotFound, PLUGIN_ZIP_LIMITS } from "@gcs/core";
-import { PORTING_ACP_SECTION, type GcsPortView } from "@gcs/modules";
+import { GcsNotFound } from "@gcs/core";
+import { PORT_SOURCE_LIMITS, PORTING_ACP_SECTION, type GcsPortView } from "@gcs/modules";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
@@ -37,7 +37,7 @@ export default async function AcpPortingPage({ searchParams }: Props) {
   ]);
   return (
     <>
-      <GcsAcpTitle icon="fa-solid fa-puzzle-piece" description={t("description")}>
+      <GcsAcpTitle icon="fa-solid fa-code-compare" description={t("description")}>
         {t("title")}
       </GcsAcpTitle>
       <GcsPortingWizard
@@ -47,7 +47,8 @@ export default async function AcpPortingPage({ searchParams }: Props) {
         recent={recent}
         canEdit={canEdit}
         canDelete={canDelete}
-        maxBytes={PLUGIN_ZIP_LIMITS.maxArchiveBytes}
+        maxBytes={PORT_SOURCE_LIMITS.maxArchiveBytes}
+        maxFiles={PORT_SOURCE_LIMITS.maxFiles}
       />
     </>
   );

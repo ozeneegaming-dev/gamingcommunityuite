@@ -3331,7 +3331,7 @@
       "title": "Upload the source plugin",
       "hint": "The archive is only read, as text: nothing in it is executed and nothing is converted at this step.",
       "file": "Choose the plugin archive (.zip, .tar, .tar.gz or .xml)",
-      "limits": "Up to {size} MB, at most 2000 files.",
+      "limits": "Up to {size} MB, at most {files} files.",
       "formats": "Recognized formats",
       "submit": "Upload and analyze",
       "uploading": "Analyzing…",
@@ -3517,6 +3517,7 @@
       "package_invalid": "The generated package does not pass the checks and cannot be sent to the installer.",
       "already_converted": "This porting was already converted.",
       "not_converted": "This porting has not been converted yet.",
+      "convert_failed": "The conversion failed with an unexpected error. The source is still uploaded: you can try again.",
       "not_found": "The porting does not exist or has expired (it is kept for one day)."
     }
   }
