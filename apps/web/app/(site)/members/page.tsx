@@ -51,10 +51,12 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 30 }}>
-        <GcsIcon name="fa-solid fa-users" className="gcs-hIcon" />
-        {t("title")} <span className="gcs-muted" style={{ fontSize: 18 }}>({result.pagination.total})</span>
-      </h1>
+      <header className="gcs-pageHeader">
+        <h1 className="gcs-display gcs-pageHeader__title">
+          <GcsIcon name="fa-solid fa-users" className="gcs-hIcon" />
+          {t("title")} <span className="gcs-muted" style={{ fontSize: 18 }}>({result.pagination.total})</span>
+        </h1>
+      </header>
       <form className="gcs-card gcs-memberFilters" action="/members" role="search" aria-label={t("filters")}>
         <label className="gcs-field">
           {t("search")}

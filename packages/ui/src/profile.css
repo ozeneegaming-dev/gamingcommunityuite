@@ -244,6 +244,14 @@
 
 /* ─── Pagina de profil (macheta Profil) ──────────────────────────────────── */
 
+/* Titlul cardurilor profilului și ale conversațiilor (banda lui e în `titles.css`). */
+.gcs-cardTitle {
+  margin: 0;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .gcs-profileHeader {
   overflow: hidden;
 }

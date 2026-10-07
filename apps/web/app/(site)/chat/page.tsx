@@ -47,9 +47,9 @@ export default async function ChatPage({ searchParams }: { searchParams: Promise
   if (channels.length === 0) {
     return (
       <>
-        <h1 className="gcs-display" style={{ margin: 0, fontSize: 30 }}>
-          {t("title")}
-        </h1>
+        <header className="gcs-pageHeader">
+          <h1 className="gcs-display gcs-pageHeader__title">{t("title")}</h1>
+        </header>
         <p className="gcs-muted">{t("noChannels")}</p>
         <GcsCreateRoom canPublic={canPublic} canPrivate={canPrivate} labels={createLabels} />
       </>
@@ -82,9 +82,9 @@ export default async function ChatPage({ searchParams }: { searchParams: Promise
   return (
     <div className="gcs-chatPage">
       <aside className="gcs-chatRooms" aria-label={t("channels")}>
-        <h1 className="gcs-display" style={{ margin: 0, fontSize: 26 }}>
-          {t("title")}
-        </h1>
+        <header className="gcs-pageHeader gcs-pageHeader--compact">
+          <h1 className="gcs-display gcs-pageHeader__title">{t("title")}</h1>
+        </header>
         <nav aria-label={t("channels")}>
           <h2 className="gcs-chatRooms__title">{t("rooms.publicTitle")}</h2>
           <ul className="gcs-chatRooms__list">{publicRooms.map(roomLink)}</ul>

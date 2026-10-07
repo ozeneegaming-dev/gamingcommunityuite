@@ -60,10 +60,12 @@ export default async function SearchPage({ searchParams }: Props) {
 
   return (
     <>
-      <h1 className="gcs-display gcs-pageHeader__title">
-        <GcsIcon name="fa-solid fa-magnifying-glass" className="gcs-hIcon" />
-        {t("title")}
-      </h1>
+      <header className="gcs-pageHeader">
+        <h1 className="gcs-display gcs-pageHeader__title">
+          <GcsIcon name="fa-solid fa-magnifying-glass" className="gcs-hIcon" />
+          {t("title")}
+        </h1>
+      </header>
       <form className="gcs-card gcs-formCard gcs-searchForm" method="get" role="search">
         <div className="gcs-field gcs-searchForm__q">
           <label className="gcs-field__label" htmlFor="gcs-search-q">

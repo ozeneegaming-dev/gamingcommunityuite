@@ -94,8 +94,8 @@ export default async function TopicPage({ params, searchParams }: Props) {
 
   return (
     <GcsWidgetPage page="topic">
-      <GcsBreadcrumb crumbs={data.breadcrumb} />
       <section className="gcs-pageHeader">
+        <GcsBreadcrumb crumbs={data.breadcrumb} />
         <div className="gcs-pageHeader__text">
           <div className="gcs-topicRow__badges">
             {topic.prefix && (

@@ -30,10 +30,12 @@ export default async function StaffPage() {
   }
   return (
     <>
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 30 }}>
-        <GcsIcon name="fa-solid fa-shield-halved" className="gcs-hIcon" />
-        {t("staffTitle")}
-      </h1>
+      <header className="gcs-pageHeader">
+        <h1 className="gcs-display gcs-pageHeader__title">
+          <GcsIcon name="fa-solid fa-shield-halved" className="gcs-hIcon" />
+          {t("staffTitle")}
+        </h1>
+      </header>
       {groups.length === 0 && (
         <GcsCard style={{ padding: 24, color: "var(--gcs-muted)" }}>
           <GcsIcon name="fa-solid fa-user-slash" className="gcs-emptyIcon" />

@@ -21,6 +21,8 @@
 @import "@gcs/ui/porting.css";
 @import "@gcs/ui/community.css";
 @import "@gcs/ui/richtext.css";
+/* Ultimul: banda titlurilor (fiecare titlu pe fundalul lui) peste regulile componentelor. */
+@import "@gcs/ui/titles.css";
 
 /* Componentele Gcs* din @gcs/ui folosesc utilitare Tailwind; sursele lor trebuie scanate. */
 @source "../../../packages/ui/src";

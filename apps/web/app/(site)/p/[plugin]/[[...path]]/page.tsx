@@ -63,10 +63,12 @@ export default async function PluginSitePage(props: Props) {
       {result.scripts.map((src) => (
         <script key={src} src={src} async />
       ))}
-      <h1 className="gcs-display" style={{ margin: 0, fontSize: 30 }} data-testid="gcs-plugin-page-title">
-        <GcsIcon name={result.icon} className="gcs-hIcon" />
-        {result.title}
-      </h1>
+      <header className="gcs-pageHeader">
+        <h1 className="gcs-display gcs-pageHeader__title" data-testid="gcs-plugin-page-title">
+          <GcsIcon name={result.icon} className="gcs-hIcon" />
+          {result.title}
+        </h1>
+      </header>
       <GcsCard as="section" className="gcs-pluginPage" style={{ padding: 24 }} data-testid="gcs-plugin-page" data-plugin={key}>
         {/* HTML-ul pluginului, trecut prin sanitizer (listă albă) de gazda pluginurilor. */}
         <div dangerouslySetInnerHTML={{ __html: result.html }} />

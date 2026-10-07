@@ -1,0 +1,373 @@
+/*
+ * Antetele titlurilor (specul 2026-10-07-antete-titluri.md): fiecare titlu stă pe banda lui, cu fundalul „antetului
+ * casetelor” din temă (`--gcs-box-header-bg`, implicit `@surface2`), diferit și de fundalul paginii, și de conținutul
+ * casetei. Fișierul se importă ultimul: componentele își păstrează tipografia și aranjamentul în fișierele lor, iar
+ * aici stă doar banda (fundal, text, separator, colțuri, padding). Clasele ACP-ului nu apar aici.
+ *
+ * Trei niveluri:
+ * 1. banda unei casete (prima felie a casetei, pe toată lățimea ei);
+ * 2. sub-banda unei secțiuni dintr-o casetă (aceeași culoare, mai discretă);
+ * 3. panoul de antet al paginii (titlul paginii, cu bara de accent în stânga).
+ */
+
+:root {
+  /* Colțurile de sus ale benzii: raza casetei minus bordura ei (niciodată negative). */
+  --gcs-band-radius: max(0px, calc(var(--gcs-radius, 14px) - var(--gcs-box-border-w, 1px)));
+}
+
+/* ─── 1. Banda titlului unei casete ───────────────────────────────────────────────────────────────────── */
+
+.gcs-titleBand,
+.gcs-category__header,
+.gcs-topicList__header,
+.gcs-statsPanel__head,
+.gcs-chat__head,
+.gcs-notifPanel__head,
+.gcs-replyBox__title,
+.gcs-sideCard > .gcs-sideCard__title,
+.gcs-poll > .gcs-poll__question,
+.gcs-vipPlan > .gcs-vipPlan__head,
+.gcs-rules > .gcs-rules__head,
+.gcs-searchResult > .gcs-searchResult__title,
+.gcs-settingsCard > * > .gcs-settingsTitle:first-child,
+.gcs-dialog .gcs-dialog__title,
+.gcs-chat__dialog > h2:first-child,
+.gcs-authModal .gcs-modal__header,
+.gcs-stream__dayTitle {
+  background: var(--gcs-box-header-bg, var(--gcs-surface2));
+  color: var(--gcs-box-header-text, var(--gcs-text));
+  border-bottom: 1px solid var(--gcs-box-border, var(--gcs-border));
+  border-radius: var(--gcs-band-radius) var(--gcs-band-radius) 0 0;
+}
+
+.gcs-titleBand {
+  margin: 0;
+  padding: 12px 20px;
+}
+
+/*
+ * Casetele cu padding își țin padding-ul în `--gcs-box-pad-y` / `--gcs-box-pad-x`, iar titlul de la început iese până
+ * la marginile casetei (aliniat cu conținutul de dedesubt). `.gcs-titledBox` e varianta generică (implicit 18 × 20 px).
+ * `--gcs-band-pad-y` (implicit 12 px) e padding-ul vertical al benzii, `--gcs-band-gap` spațiul de sub ea (pe lângă
+ * `gap`-ul casetei).
+ */
+.gcs-titledBox,
+.gcs-sideCard,
+.gcs-poll,
+.gcs-vipPlan,
+.gcs-rules,
+.gcs-searchResult,
+.gcs-settingsCard,
+.gcs-dialog,
+.gcs-chat__dialog:not(.gcs-chat__dialog--video) {
+  padding: var(--gcs-box-pad-y) var(--gcs-box-pad-x);
+}
+.gcs-titledBox {
+  --gcs-box-pad-y: 18px;
+  --gcs-box-pad-x: 20px;
+}
+.gcs-titledBox--roomy,
+.gcs-settingsCard,
+.gcs-dialog {
+  --gcs-box-pad-y: 22px;
+  --gcs-box-pad-x: 24px;
+}
+.gcs-sideCard {
+  --gcs-box-pad-y: 16px;
+  --gcs-box-pad-x: 18px;
+  --gcs-band-pad-y: 10px;
+}
+.gcs-poll {
+  --gcs-box-pad-y: 18px;
+  --gcs-box-pad-x: 22px;
+}
+.gcs-vipPlan {
+  --gcs-box-pad-y: 20px;
+  --gcs-box-pad-x: 20px;
+  --gcs-band-pad-y: 14px;
+  /* Linia de 3 px a planului rămâne deasupra benzii; colțurile benzii urmează conturul cardului. */
+  overflow: hidden;
+}
+.gcs-rules {
+  --gcs-box-pad-y: 28px;
+  --gcs-box-pad-x: 32px;
+  --gcs-band-pad-y: 18px;
+}
+.gcs-searchResult {
+  --gcs-box-pad-y: 16px;
+  --gcs-box-pad-x: 20px;
+  --gcs-band-gap: 6px;
+}
+/* Dialogurile: fără formular, titlul își păstrează spațiul de dedesubt; în formular îl dă `gap`-ul formularului. */
+.gcs-dialog,
+.gcs-chat__dialog {
+  --gcs-band-gap: 14px;
+}
+.gcs-chat__dialog {
+  --gcs-box-pad-y: 20px;
+  --gcs-box-pad-x: 20px;
+}
+/* Cardul paginilor de autentificare: titlul și subtitlul pe bandă, formularul dedesubt. */
+.gcs-authCard {
+  --gcs-box-pad-y: 28px;
+  --gcs-box-pad-x: 28px;
+  --gcs-band-pad-y: 18px;
+  --gcs-band-gap: 22px;
+  padding-bottom: 32px;
+}
+.gcs-dialog form {
+  --gcs-band-gap: 0px;
+}
+
+.gcs-titledBox > .gcs-titleBand:first-child,
+.gcs-sideCard > .gcs-sideCard__title,
+.gcs-poll > .gcs-poll__question,
+.gcs-vipPlan > .gcs-vipPlan__head,
+.gcs-rules > .gcs-rules__head,
+.gcs-searchResult > .gcs-searchResult__title,
+.gcs-settingsCard > * > .gcs-settingsTitle:first-child,
+.gcs-dialog .gcs-dialog__title,
+.gcs-chat__dialog > h2:first-child {
+  margin: calc(-1 * var(--gcs-box-pad-y)) calc(-1 * var(--gcs-box-pad-x)) var(--gcs-band-gap, 0px);
+  padding: var(--gcs-band-pad-y, 12px) var(--gcs-box-pad-x);
+}
+/*
+ * Titlurile widget-urilor își păstrează culoarea din temă („Titlul widget-urilor”), pe bandă. Au iconița de 28 px;
+ * cele fără iconiță primesc aceeași înălțime a benzii.
+ */
+.gcs-sideCard > .gcs-sideCard__title {
+  color: var(--gcs-widget-title, var(--gcs-box-header-text, var(--gcs-text)));
+}
+.gcs-sideCard > .gcs-sideCard__title:not(.gcs-widgetTitle) {
+  padding-block: 14px;
+}
+.gcs-vipPlan > .gcs-vipPlan__head {
+  border-radius: 0;
+}
+/* Dialogurile au raza lor (14 px / 16 px), nu pe cea a temei. */
+.gcs-dialog .gcs-dialog__title,
+.gcs-chat__dialog > h2:first-child {
+  border-radius: 13px 13px 0 0;
+}
+.gcs-authModal .gcs-modal__header {
+  padding: 10px 12px 10px 20px;
+  border-radius: 15px 15px 0 0;
+}
+/* Antetele din casete cu `overflow: hidden` sau din liste: colțurile le dă caseta. */
+.gcs-notifPanel__head {
+  border-radius: 0;
+}
+/* Zilele din „Activitate” sunt felii între liste: fără colțuri, iar textul rămâne secundar. */
+.gcs-stream__dayTitle {
+  border-radius: 0;
+  color: var(--gcs-muted);
+}
+
+/*
+ * „Unelte de moderare” din topic (`<details>`): titlul e banda; închis, banda e toată caseta, deschis, are separatorul
+ * și conținutul dedesubt.
+ */
+.gcs-modMenu__summary {
+  background: var(--gcs-box-header-bg, var(--gcs-surface2));
+  color: var(--gcs-box-header-text, var(--gcs-text));
+  border-radius: var(--gcs-band-radius);
+}
+.gcs-modMenu[open] > .gcs-modMenu__summary {
+  border-bottom: 1px solid var(--gcs-box-border, var(--gcs-border));
+  border-radius: var(--gcs-band-radius) var(--gcs-band-radius) 0 0;
+}
+.gcs-modMenu[open] > .gcs-modMenu__body {
+  padding-top: 14px;
+}
+
+/*
+ * Panoul de statistici: bara de 3 px și gradientul de accent stau peste bandă, nu în locul ei (stratul de jos e
+ * fundalul benzii, nu al casetei).
+ */
+.gcs-statsPanel__head {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--gcs-accent) 16%, transparent), color-mix(in srgb, var(--gcs-accent) 3%, transparent) 55%, transparent),
+    var(--gcs-box-header-bg, var(--gcs-surface2));
+}
+
+/* Controalele din bandă care aveau fundalul `surface2` primesc fundalul casetei, ca să nu se piardă în bandă. */
+.gcs-statsPanel__title .gcs-widgetTitle__icon,
+.gcs-statsPanel__toggle,
+.gcs-chat__headButton,
+.gcs-topicList__header .gcs-input {
+  background: var(--gcs-box-bg, var(--gcs-surface));
+}
+
+/* ─── 2. Sub-benzile (titlurile secțiunilor dintr-o casetă) ──────────────────────────────────────────────────── */
+
+/*
+ * „Cine e online” / „Cine a fost online” din panoul de statistici: titlul urcă într-o sub-bandă pe toată lățimea
+ * blocului; sumarul și punctele rămân în prima coloană, lista și butonul în coloanele lor.
+ */
+.gcs-onlineBlock {
+  grid-template-rows: auto auto minmax(0, 1fr);
+  row-gap: 0;
+}
+.gcs-onlineBlock__info {
+  display: contents;
+}
+.gcs-onlineBlock__title {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  margin: -14px -16px 12px;
+  padding: 8px 16px;
+  background: var(--gcs-box-header-bg, var(--gcs-surface2));
+  color: var(--gcs-box-header-text, var(--gcs-text));
+  border-bottom: 1px solid var(--gcs-box-border, var(--gcs-border));
+  border-radius: 0 3px 0 0;
+}
+.gcs-onlineBlock__summary {
+  grid-column: 1;
+  grid-row: 2;
+}
+.gcs-onlineBlock__dots {
+  grid-column: 1;
+  grid-row: 3;
+  align-self: start;
+}
+.gcs-onlineBlock__list {
+  grid-column: 2;
+  grid-row: 2 / span 2;
+}
+.gcs-onlineBlock__action {
+  grid-column: 3;
+  grid-row: 2 / span 2;
+}
+@media (max-width: 760px) {
+  .gcs-onlineBlock__list,
+  .gcs-onlineBlock__action {
+    grid-column: 1;
+    grid-row: auto;
+    margin-top: 12px;
+  }
+}
+
+/* Legenda grupurilor din panou și secțiunile setărilor: sub-banda iese până la marginile chenarului. */
+.gcs-legendBlock > .gcs-legendBlock__title {
+  margin: -12px -16px 10px;
+  padding: 8px 16px;
+  border-radius: 3px 3px 0 0;
+}
+.gcs-settingsFieldset > .gcs-settingsTitle,
+.gcs-settingsFieldset > legend {
+  margin: -16px -16px 0;
+  padding: 10px 16px;
+  border-radius: 11px 11px 0 0;
+}
+/* Un `<legend>` plutitor nu mai stă pe chenar: devine primul rând al secțiunii, ca titlurile celorlalte secțiuni. */
+.gcs-settingsFieldset > legend {
+  float: left;
+  box-sizing: border-box;
+  width: calc(100% + 32px);
+  font-weight: 700;
+}
+.gcs-settingsFieldset > legend + * {
+  clear: both;
+}
+
+.gcs-legendBlock > .gcs-legendBlock__title,
+.gcs-settingsFieldset > .gcs-settingsTitle,
+.gcs-settingsFieldset > legend,
+.gcs-chat__emojiHead {
+  background: var(--gcs-box-header-bg, var(--gcs-surface2));
+  border-bottom: 1px solid var(--gcs-box-border, var(--gcs-border));
+}
+.gcs-settingsFieldset > .gcs-settingsTitle,
+.gcs-settingsFieldset > legend {
+  color: var(--gcs-box-header-text, var(--gcs-text));
+}
+
+/* Titlurile de secțiune fără chenar propriu: o fâșie de bandă pe toată lățimea secțiunii. */
+.gcs-settingsSubtitle,
+.gcs-badgeGrid__section,
+.gcs-chatRooms__title,
+.gcs-siteHeader .gcs-dropdown__heading {
+  padding: 7px 12px;
+  background: var(--gcs-box-header-bg, var(--gcs-surface2));
+  border: 1px solid var(--gcs-box-border, var(--gcs-border));
+  border-radius: 8px;
+}
+.gcs-settingsSubtitle {
+  color: var(--gcs-box-header-text, var(--gcs-text));
+}
+.gcs-siteHeader .gcs-dropdown__heading {
+  margin: 2px 0 4px;
+  border-radius: 6px;
+}
+
+/* Grupurile din pagina Staff: titlul de secțiune e o fâșie cu chenar (culoarea numelui rămâne a grupului). */
+.gcs-staffGroup__title {
+  padding: 10px 16px;
+  background: var(--gcs-box-header-bg, var(--gcs-surface2));
+  border: var(--gcs-box-border-w, 1px) solid var(--gcs-box-border, var(--gcs-border));
+  border-radius: var(--gcs-radius, 14px);
+}
+
+/* ─── 3. Panoul de antet al paginii ─────────────────────────────────────────────────────────────────────── */
+
+/*
+ * Titlul paginii stă într-un panou propriu: fundalul benzii, chenarul casetelor și o bară de accent de 3 px în stânga
+ * (același semn ca linkul activ din meniul setărilor). Breadcrumb-ul, când există, e primul rând al panoului.
+ */
+.gcs-pageHeader {
+  box-sizing: border-box;
+  padding: 18px 22px;
+  background: var(--gcs-box-header-bg, var(--gcs-surface2));
+  color: var(--gcs-box-header-text, var(--gcs-text));
+  border: var(--gcs-box-border-w, 1px) solid var(--gcs-box-border, var(--gcs-border));
+  border-radius: var(--gcs-radius, 14px);
+  box-shadow: inset 3px 0 0 var(--gcs-accent);
+  row-gap: 12px;
+}
+.gcs-pageHeader > .gcs-breadcrumb {
+  flex: 1 1 100%;
+}
+/* Titlul și acțiunile pe aceeași linie (mesaje, notificări). */
+.gcs-pageHeader--center {
+  align-items: center;
+}
+/* Antetul mic (coloana setărilor, lista camerelor de chat): același panou, mai strâns. */
+.gcs-pageHeader--compact {
+  padding: 12px 16px;
+}
+.gcs-pageHeader--compact .gcs-pageHeader__title {
+  font-size: 26px;
+}
+.gcs-settingsLayout > aside > .gcs-pageHeader {
+  margin-bottom: 12px;
+}
+/* Linkul „înapoi” al conversațiilor stă în panou, ca un breadcrumb. */
+.gcs-pageHeader__text--tight {
+  gap: 4px;
+}
+.gcs-pageHeader__back {
+  align-self: flex-start;
+  font-size: 13px;
+}
+@media (max-width: 640px) {
+  .gcs-pageHeader {
+    padding: 16px;
+  }
+  .gcs-rules {
+    --gcs-box-pad-y: 20px;
+    --gcs-box-pad-x: 20px;
+  }
+}
+
+/*
+ * Profilul: antetul cu copertă e panoul paginii; zona identității (avatarul, numele, insignele, acțiunile) primește
+ * fundalul benzii exact de unde se termină suprapunerea avatarului peste copertă.
+ */
+.gcs-profileHeader__main {
+  background: linear-gradient(to bottom, transparent 76px, var(--gcs-box-header-bg, var(--gcs-surface2)) 76px);
+}
+@media (max-width: 640px) {
+  .gcs-profileHeader__main {
+    background: linear-gradient(to bottom, transparent 60px, var(--gcs-box-header-bg, var(--gcs-surface2)) 60px);
+  }
+}

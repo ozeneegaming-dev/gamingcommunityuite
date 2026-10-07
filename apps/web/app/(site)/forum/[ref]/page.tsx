@@ -69,8 +69,8 @@ export default async function ForumPage({ params, searchParams }: Props) {
 
   return (
     <GcsWidgetPage page="forum">
-      <GcsBreadcrumb crumbs={data.breadcrumb.slice(0, -1)} />
       <section className="gcs-pageHeader">
+        <GcsBreadcrumb crumbs={data.breadcrumb.slice(0, -1)} />
         <div className="gcs-pageHeader__text">
           <h1 className="gcs-display gcs-pageHeader__title">
             <GcsForumIcon icon={forum.icon} color={forum.color ?? "var(--gcs-accent)"} size={24} />
