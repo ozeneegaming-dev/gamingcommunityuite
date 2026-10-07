@@ -1,10 +1,11 @@
 "use server";
 
-import { GcsValidationError, HOOKS_ACP_SECTION, manifestSettingFields, PLUGINS_ACP_SECTION, type GcsResult } from "@gcs/core";
+import { GcsRateLimited, GcsValidationError, HOOKS_ACP_SECTION, manifestSettingFields, PLUGINS_ACP_SECTION, type GcsResult } from "@gcs/core";
 import { revalidatePath } from "next/cache";
 import { verifyTwoFactorCode } from "@/lib/acp";
 import { field, intField, runAcpAction } from "@/lib/acp-actions";
 import { services } from "@/lib/services";
+import { verifyTwoFactorStep } from "@/lib/two-factor-step";
 
 const PATH = "/admin/system/applications";
 
@@ -27,13 +28,20 @@ export async function disableAllPlugins(): Promise<GcsResult<null>> {
 }
 
 /**
- * Confirmarea instalării de pe ecranul de confirmare. Pentru pachetele nesemnate: codul 2FA (verificat chiar acum) și
- * cheia pluginului tastată; serviciul verifică în plus că actorul e Root Admin.
+ * Confirmarea instalării de pe ecranul de confirmare. Pentru pachetele nesemnate: codul 2FA (verificat chiar acum, cu
+ * limită de încercări și fără reluarea unui cod deja folosit) și cheia pluginului tastată; serviciul verifică în plus
+ * că actorul e Root Admin.
  */
 export async function confirmPluginInstall(uploadId: string, fd: FormData): Promise<GcsResult<{ key: string }>> {
   return runAcpAction(PLUGINS_ACP_SECTION, "edit", async (actor) => {
     const code = field(fd, "code").replace(/\s/g, "");
-    const twoFactorVerified = code !== "" && actor.userId !== null && (await verifyTwoFactorCode(actor.userId, code));
+    const userId = actor.userId;
+    let twoFactorVerified = false;
+    if (code !== "" && userId !== null) {
+      const step = await verifyTwoFactorStep(services(), userId, code, (c) => verifyTwoFactorCode(userId, c));
+      if (step === "rate_limited") throw new GcsRateLimited();
+      twoFactorVerified = step === "ok";
+    }
     if (code !== "" && !twoFactorVerified) throw new GcsValidationError({ code: "invalid_code" });
     const { key } = await services().pluginAdmin.install(actor, uploadId, { typedKey: field(fd, "confirmKey"), twoFactorVerified });
     revalidatePath(PATH);
