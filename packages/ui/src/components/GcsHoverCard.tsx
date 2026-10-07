@@ -37,6 +37,9 @@ function tint(hex: string | null, alpha: number, fallback: string): string {
   return m ? `rgba(${parseInt(m[1]!, 16)}, ${parseInt(m[2]!, 16)}, ${parseInt(m[3]!, 16)}, ${alpha})` : fallback;
 }
 
+/** Două etichete la fel (fără diferențe de majuscule sau spații). */
+const sameLabel = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+
 /** Iconița rangului ca text (emoji); numele Font Awesome (`fa-…`) nu se afișează ca text. */
 function rankSymbol(icon: string | null | undefined): string | null {
   return icon && !icon.startsWith("fa-") ? icon : null;
@@ -83,13 +86,16 @@ export function GcsHoverCard({
             <GcsAvatar name={user.name} size="l" userId={user.id} {...(user.image ? { src: user.image } : {})} {...(user.frameKey ? { frame: user.frameKey } : {})} />
           </span>
           <div className="gcs-hoverCard__identity">
-            <a href={`/members/${user.id}-${user.slug}`} className={`gcs-userLink gcs-name--${user.nameKey} gcs-hoverCard__name`} title={user.name}>
+            <a href={`/members/${user.id}-${user.slug}`} className={`gcs-userLink gcs-name--${user.nameKey} gcs-hoverCard__name`} title={user.name} data-name-user={user.id}>
               {user.name}
             </a>
             <div className="gcs-hoverCard__meta">
-              <span className="gcs-badge gcs-hoverCard__group" style={{ "--gcs-hoverCard-group": user.group.color ?? "var(--gcs-muted)" } as CSSProperties}>
-                {user.group.name}
-              </span>
+              {/* Banner-ul VIP înlocuiește pastila grupului când e același plan (fără dublură). */}
+              {!(look?.banner && sameLabel(look.banner.label, user.group.name)) && (
+                <span className="gcs-badge gcs-hoverCard__group" style={{ "--gcs-hoverCard-group": user.group.color ?? "var(--gcs-muted)" } as CSSProperties}>
+                  {user.group.name}
+                </span>
+              )}
               {look?.banner && (
                 <span className="gcs-vipPill gcs-fx" style={look.banner.style} data-testid="gcs-hover-vip-banner">
                   {look.banner.label}

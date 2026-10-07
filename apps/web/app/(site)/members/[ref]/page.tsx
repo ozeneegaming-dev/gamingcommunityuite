@@ -110,9 +110,12 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
           </div>
           {user.bio && <span style={{ color: "var(--gcs-muted)", fontSize: 14 }}>„{user.bio}”</span>}
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            <span className="gcs-badge" style={{ background: tint(user.group.color, 0.16), color: user.group.color ?? "var(--gcs-muted)" }}>
-              {user.group.name}
-            </span>
+            {/* Banner-ul VIP înlocuiește pastila grupului când e același plan (fără dublură). */}
+            {!(look?.banner && look.banner.label.trim().toLowerCase() === user.group.name.trim().toLowerCase()) && (
+              <span className="gcs-badge" style={{ background: tint(user.group.color, 0.16), color: user.group.color ?? "var(--gcs-muted)" }}>
+                {user.group.name}
+              </span>
+            )}
             {look?.banner && (
               <span className="gcs-vipPill gcs-fx" style={look.banner.style} data-testid="gcs-profile-vip-banner">
                 {look.banner.label}
