@@ -7,11 +7,28 @@ import { PLUGIN_WORKER_SOURCE } from "./worker-source";
 export const PLUGIN_MAX_RESULT = 512 * 1024;
 /** Câte apeluri ale contextului poate avea un plugin în curs, simultan. */
 const MAX_PENDING_RPC = 64;
+/**
+ * Câte apeluri ale handler-elor pot aștepta simultan un fir (inclusiv cele respinse ca ocupate, încă în coada lui);
+ * peste limită sunt respinse imediat.
+ */
+export const PLUGIN_MAX_PENDING_CALLS = 256;
 
+/** Handler-ul a rulat mai mult decât îi era permis (timpul se măsoară de când a început să ruleze, nu din coadă). */
 export class GcsPluginTimeout extends Error {
   constructor(readonly kind: string, readonly handler: string, readonly ms: number) {
     super(`timeout after ${ms} ms (${kind} ${handler})`);
     this.name = "GcsPluginTimeout";
+  }
+}
+
+/**
+ * Apelul nu a ajuns să ruleze sau a fost întrerupt din afara lui: firul ocupat (coada), prea multe apeluri, firul oprit,
+ * repornit sau căzut din cauza altui apel. Nu e un eșec al acestui handler (nu se numără la dezactivarea automată).
+ */
+export class GcsPluginUnavailable extends Error {
+  constructor(reason: string) {
+    super(reason);
+    this.name = "GcsPluginUnavailable";
   }
 }
 
@@ -37,24 +54,46 @@ export type GcsSandboxOptions = {
   /** Un apel al contextului (`ctx.db.query`…), venit din fir. Rezultatul trebuie să fie JSON. */
   onRpc: (method: string, args: unknown[], token: string | null) => Promise<unknown>;
   onLog: (level: "info" | "warn" | "error", message: string) => void;
-  /** Firul s-a oprit singur (eroare, memorie depășită). */
-  onExit?: (reason: string) => void;
+  /**
+   * Firul a căzut singur (pornire eșuată, memorie depășită, ieșire neașteptată): cel mult o dată pe fir, niciodată
+   * pentru un fir oprit de gazdă (`stop`, firul blocat oprit după un timeout, deja numărat ca timeout).
+   */
+  onCrash?: (reason: string, phase: "init" | "run") => void;
   memoryMb?: number;
 };
 
-type Pending = { resolve: (v: unknown) => void; reject: (e: Error) => void; timer: NodeJS.Timeout };
+type Pending = {
+  worker: Worker;
+  kind: string;
+  name: string;
+  ms: number;
+  started: boolean;
+  /** Respins deja ca ocupat: rămâne urmărit până la `result`, ca un handler care totuși începe să aibă timeout. */
+  abandoned: boolean;
+  resolve: (v: unknown) => void;
+  reject: (e: Error) => void;
+  timer: NodeJS.Timeout;
+};
 
 /**
  * Firul izolat al unui plugin (designul pluginurilor §3.1): pornit la cerere, cu limite de memorie, fără variabilele de
- * mediu ale procesului. Fiecare apel are un timeout; dacă după un timeout firul nu mai răspunde nici la ping
- * (ex. o buclă infinită), e oprit și repornit la următorul apel.
+ * mediu ale procesului. Fiecare apel are un timeout, măsurat de când handler-ul începe să ruleze (firul confirmă
+ * începutul); un apel care nu începe în același interval (firul e ocupat) e respins ca indisponibil, iar firul nu îl
+ * mai rulează după acest termen. Dacă totuși începe (cursa cu termenul), rulează tot sub timeout. Dacă după un
+ * timeout firul nu mai răspunde nici la ping (ex. o buclă infinită), e oprit și repornit la următorul apel.
  */
 export class GcsPluginSandbox {
   private worker: Worker | null = null;
   private starting: Promise<void> | null = null;
+  /** Verificarea de viață în curs (după un timeout): apelurile noi o așteaptă, ca să nu ajungă în coada unui fir blocat. */
+  private probing: Promise<void> | null = null;
   private seq = 0;
   private readonly calls = new Map<number, Pending>();
   private readonly pongs = new Map<number, () => void>();
+  /** Firele oprite de gazdă: ieșirea lor nu e o cădere a pluginului. */
+  private readonly killed = new WeakSet<Worker>();
+  /** Operațiile interne în curs (verificări de viață, opriri), pentru `idle()`. */
+  private readonly ops = new Set<Promise<unknown>>();
   private rpcInFlight = 0;
   private stopped = false;
   /** Ultima eroare de pornire (afișată în ACP). */
@@ -64,6 +103,22 @@ export class GcsPluginSandbox {
 
   get running(): boolean {
     return this.worker !== null;
+  }
+
+  /** Are operații interne în curs (verificare de viață, oprirea unui fir)? */
+  get busy(): boolean {
+    return this.ops.size > 0;
+  }
+
+  /** Așteaptă operațiile interne în curs; pentru teste și oprire. */
+  async idle(): Promise<void> {
+    while (this.ops.size > 0) await Promise.allSettled([...this.ops]);
+  }
+
+  private op<T>(p: Promise<T>): Promise<T> {
+    const tracked = p.finally(() => this.ops.delete(tracked));
+    this.ops.add(tracked);
+    return tracked;
   }
 
   /** Pornește firul și importă `server.mjs` (o singură dată; apelurile simultane așteaptă aceeași pornire). */
@@ -105,13 +160,21 @@ export class GcsPluginSandbox {
 
     return new Promise<void>((resolve, reject) => {
       let settled = false;
+      // O cădere se raportează o singură dată pe fir ('error' e urmat de 'exit'), și doar dacă nu gazda l-a oprit.
+      let crashed = false;
+      const crash = (reason: string) => {
+        if (crashed || this.stopped || this.killed.has(worker)) return;
+        crashed = true;
+        opts.onCrash?.(reason, settled ? "run" : "init");
+      };
       const done = (error?: Error) => {
         if (settled) return;
+        if (error) crash(error.message);
         settled = true;
         clearTimeout(timer);
         if (error) {
           this.lastStartError = error.message;
-          void this.kill(error.message);
+          void this.kill(worker, error.message);
           reject(error);
         } else {
           this.lastStartError = null;
@@ -127,25 +190,42 @@ export class GcsPluginSandbox {
         else if (m.t === "init-error") done(new Error(String(m.error ?? "init failed").slice(0, 1000)));
         else this.onMessage(worker, m);
       });
+      // Evenimentele unui fir vechi (deja înlocuit) ating doar apelurile lui, nu pe cele ale firului nou.
       worker.on("error", (error) => {
+        crash(`worker error: ${error.message}`);
         done(error);
-        this.failAll(`worker error: ${error.message}`);
+        this.failAll(worker, `worker error: ${error.message}`);
       });
       worker.on("exit", (code) => {
         if (this.worker === worker) this.worker = null;
+        crash(`exit ${code}`);
         done(new Error(`worker exited (${code})`));
-        this.failAll(`worker exited (${code})`);
-        if (!this.stopped) opts.onExit?.(`exit ${code}`);
+        this.failAll(worker, `worker exited (${code})`);
       });
     });
   }
 
   private onMessage(worker: Worker, m: Record<string, unknown>): void {
     switch (m.t) {
+      case "started": {
+        // Handler-ul a început să ruleze: de acum curge timeout-ul lui. Și pentru un apel deja respins ca ocupat
+        // (apelantul nu mai află nimic, nu se numără), ca un handler blocat să nu țină firul ocupat pentru totdeauna.
+        const id = Number(m.id);
+        const p = this.calls.get(id);
+        if (!p || p.worker !== worker || p.started) return;
+        p.started = true;
+        clearTimeout(p.timer);
+        p.timer = setTimeout(() => {
+          this.calls.delete(id);
+          if (!p.abandoned) p.reject(new GcsPluginTimeout(p.kind, p.name, p.ms));
+          void this.checkAlive(worker);
+        }, p.ms);
+        return;
+      }
       case "result": {
         const id = Number(m.id);
         const p = this.calls.get(id);
-        if (!p) return;
+        if (!p || p.worker !== worker) return;
         this.calls.delete(id);
         clearTimeout(p.timer);
         if (m.ok === true && typeof m.json === "string" && m.json.length <= PLUGIN_MAX_RESULT) {
@@ -192,47 +272,66 @@ export class GcsPluginSandbox {
     }
   }
 
-  private failAll(reason: string): void {
+  /** Respinge apelurile în curs ale unui fir (sau toate, fără fir), ca indisponibile. */
+  private failAll(worker: Worker | null, reason: string): void {
     for (const [id, p] of this.calls) {
+      if (worker && p.worker !== worker) continue;
       clearTimeout(p.timer);
-      p.reject(new Error(reason));
+      p.reject(new GcsPluginUnavailable(reason));
       this.calls.delete(id);
     }
   }
 
   /** Apelează un handler al pluginului, cu timeout. */
   async call(c: GcsSandboxCall): Promise<unknown> {
-    await this.start();
+    while (this.probing) await this.probing;
+    try {
+      await this.start();
+    } catch (error) {
+      // Căderea la pornire e raportată o dată, prin `onCrash`; apelul doar n-a putut rula.
+      throw new GcsPluginUnavailable(error instanceof Error ? error.message : String(error));
+    }
     const worker = this.worker;
-    if (!worker) throw new Error("worker_unavailable");
+    if (!worker) throw new GcsPluginUnavailable("worker_unavailable");
+    if (this.calls.size >= PLUGIN_MAX_PENDING_CALLS) throw new GcsPluginUnavailable("overloaded");
     const id = ++this.seq;
     const ms = c.timeoutMs ?? PLUGIN_TIMEOUTS[c.kind];
     return new Promise<unknown>((resolve, reject) => {
+      // Până la confirmarea începutului, apelul stă în coada firului (ocupat cu alt handler sincron). Respins ca
+      // ocupat, rămâne urmărit: firul îl refuză după `deadline` (`expired`), iar dacă totuși începe, are timeout.
       const timer = setTimeout(() => {
-        this.calls.delete(id);
-        reject(new GcsPluginTimeout(c.kind, c.name, ms));
-        void this.checkAlive(worker);
+        const p = this.calls.get(id);
+        if (p) p.abandoned = true;
+        reject(new GcsPluginUnavailable("busy"));
       }, ms);
-      this.calls.set(id, { resolve, reject, timer });
-      worker.postMessage({ t: "call", id, kind: c.kind, name: c.name, input: c.input, viewer: c.viewer, token: c.token, locale: c.locale });
+      this.calls.set(id, { worker, kind: c.kind, name: c.name, ms, started: false, abandoned: false, resolve, reject, timer });
+      const deadline = Date.now() + ms;
+      worker.postMessage({ t: "call", id, kind: c.kind, name: c.name, input: c.input, viewer: c.viewer, token: c.token, locale: c.locale, deadline });
     });
   }
 
   /** După un timeout: dacă firul nu răspunde la ping într-o secundă (ex. buclă infinită), e oprit. */
-  private async checkAlive(worker: Worker): Promise<void> {
-    const id = ++this.seq;
-    const alive = await new Promise<boolean>((resolve) => {
-      const timer = setTimeout(() => {
-        this.pongs.delete(id);
-        resolve(false);
-      }, 1000);
-      this.pongs.set(id, () => {
-        clearTimeout(timer);
-        resolve(true);
+  private checkAlive(worker: Worker): Promise<void> {
+    if (this.probing) return this.probing;
+    const probe = (async () => {
+      const id = ++this.seq;
+      const alive = await new Promise<boolean>((resolve) => {
+        const timer = setTimeout(() => {
+          this.pongs.delete(id);
+          resolve(false);
+        }, 1000);
+        this.pongs.set(id, () => {
+          clearTimeout(timer);
+          resolve(true);
+        });
+        worker.postMessage({ t: "ping", id });
       });
-      worker.postMessage({ t: "ping", id });
+      if (!alive && this.worker === worker) await this.kill(worker, "unresponsive");
+    })().finally(() => {
+      this.probing = null;
     });
-    if (!alive && this.worker === worker) await this.kill("unresponsive");
+    this.probing = probe;
+    return this.op(probe);
   }
 
   updateSettings(settings: Record<string, unknown>): void {
@@ -240,16 +339,22 @@ export class GcsPluginSandbox {
     this.worker?.postMessage({ t: "settings", settings });
   }
 
-  private async kill(reason: string): Promise<void> {
-    const worker = this.worker;
-    this.worker = null;
-    this.failAll(reason);
-    if (worker) await worker.terminate().catch(() => {});
+  /** Oprește un fir (gazda l-a oprit: ieșirea lui nu se mai raportează ca o cădere). */
+  private kill(worker: Worker, reason: string): Promise<void> {
+    if (this.worker === worker) this.worker = null;
+    this.killed.add(worker);
+    this.failAll(worker, reason);
+    return this.op(worker.terminate().then(
+      () => {},
+      () => {},
+    ));
   }
 
   /** Oprește definitiv firul (pluginul se descarcă). */
   async stop(): Promise<void> {
     this.stopped = true;
-    await this.kill("stopped");
+    const worker = this.worker;
+    if (worker) await this.kill(worker, "stopped");
+    this.failAll(null, "stopped");
   }
 }

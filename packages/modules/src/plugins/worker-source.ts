@@ -24,6 +24,8 @@ export const PLUGIN_WORKER_SOURCE = String.raw`
   const VERSION = workerData.version;
   const MAX_RESULT = workerData.maxResult;
   const post = (msg) => parentPort.postMessage(msg);
+  // Ceasul, luat înainte ca pluginul să poată înlocui Date.now (termenul trimis de gazdă cu fiecare apel).
+  const now = Date.now;
 
   if (typeof nodeModule.registerHooks !== "function") {
     post({ t: "init-error", error: "node_unsupported: module.registerHooks is required (Node.js >= 22.15)" });
@@ -229,6 +231,11 @@ export const PLUGIN_WORKER_SOURCE = String.raw`
       return;
     }
     if (msg.t === "call") {
+      // Gazda l-a respins deja ca ocupat: nu mai rulează.
+      if (typeof msg.deadline === "number" && now() >= msg.deadline) {
+        reply(msg.id, false, null, "expired");
+        return;
+      }
       const table = definition ? definition[TABLES[msg.kind]] : null;
       const fn = table && Object.prototype.hasOwnProperty.call(table, msg.name) ? table[msg.name] : null;
       if (typeof fn !== "function") {
@@ -242,6 +249,8 @@ export const PLUGIN_WORKER_SOURCE = String.raw`
         reply(msg.id, false, null, error);
         return;
       }
+      // Gazda pornește timeout-ul de acum (timpul petrecut în coada firului nu e al acestui handler).
+      post({ t: "started", id: msg.id });
       Promise.resolve()
         .then(() => fn.call(table, msg.input, ctx))
         .then((value) => reply(msg.id, true, value), (error) => reply(msg.id, false, null, error));

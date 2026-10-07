@@ -18,7 +18,7 @@ async function exists(p: string): Promise<boolean> {
  * Dezarhivează arhiva unui plugin în `<dataDir>/<cheie>/<sha256 scurt>/` (o singură dată; versiunea e în nume).
  * Arhiva e verificată după `sha256` și citită cu aceleași reguli ca la instalare. Scrierea se face într-un folder
  * temporar, mutat la final, ca un alt proces să nu vadă niciodată un folder pe jumătate scris.
- * Păstrează și versiunea anterioară (un alt proces o poate folosi încă), restul se șterg.
+ * Păstrează și versiunea anterioară (un alt proces o poate folosi încă), restul versiunilor terminate se șterg.
  */
 export async function extractPlugin(dataDir: string, key: string, sha256: string, pkg: Buffer): Promise<string> {
   if (!/^[a-f0-9]{64}$/.test(sha256)) throw new Error("invalid_sha");
@@ -54,17 +54,32 @@ export async function extractPlugin(dataDir: string, key: string, sha256: string
   return dir;
 }
 
-/** Păstrează versiunea curentă și cea mai recentă dintre celelalte. */
+const VERSION_DIR = /^[a-f0-9]{16}$/;
+const TMP_DIR = /^[a-f0-9]{16}\.tmp-/;
+/** După cât timp un folder temporar e sigur abandonat (procesul care îl scria a căzut). */
+const TMP_MAX_AGE_MS = 60 * 60 * 1000;
+
+/**
+ * Păstrează versiunea curentă și cea mai recentă dintre celelalte versiuni terminate (cu `.gcs-complete`). Folderele
+ * temporare ale altor procese (încă în scriere) rămân; se șterg doar cele abandonate, mai vechi de o oră.
+ */
 async function pruneVersions(base: string, current: string): Promise<void> {
   try {
     const entries = await readdir(base, { withFileTypes: true });
-    const others = await Promise.all(
-      entries
-        .filter((e) => e.isDirectory() && e.name !== current)
-        .map(async (e) => ({ name: e.name, mtime: (await stat(path.join(base, e.name))).mtimeMs })),
-    );
-    others.sort((a, b) => b.mtime - a.mtime);
-    for (const old of others.slice(1)) await rm(path.join(base, old.name), { recursive: true, force: true });
+    const finished: { name: string; mtime: number }[] = [];
+    for (const e of entries) {
+      if (!e.isDirectory() || e.name === current) continue;
+      if (TMP_DIR.test(e.name)) {
+        const age = Date.now() - (await stat(path.join(base, e.name))).mtimeMs;
+        if (age > TMP_MAX_AGE_MS) await rm(path.join(base, e.name), { recursive: true, force: true });
+      } else if (VERSION_DIR.test(e.name)) {
+        // Data versiunii: când a fost terminată (marcajul), nu ultima modificare a folderului.
+        const marker = await stat(path.join(base, e.name, COMPLETE)).catch(() => null);
+        if (marker) finished.push({ name: e.name, mtime: marker.mtimeMs });
+      }
+    }
+    finished.sort((a, b) => b.mtime - a.mtime);
+    for (const old of finished.slice(1)) await rm(path.join(base, old.name), { recursive: true, force: true });
   } catch {
     // Curățarea e opțională.
   }
