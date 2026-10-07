@@ -27,20 +27,20 @@ import {
   usersOfItem,
 } from "./store";
 
-type Body = Record<string, unknown>;
-const first = (v: unknown): unknown => (Array.isArray(v) ? v[0] : v);
-const str = (v: unknown) => (typeof first(v) === "string" ? (first(v) as string) : "");
-const checked = (v: unknown) => ["1", "on", "true"].includes(str(v));
-const intOf = (v: unknown) => (/^-?\d{1,9}$/.test(str(v)) ? Number(str(v)) : null);
+export type Body = Record<string, unknown>;
+export const first = (v: unknown): unknown => (Array.isArray(v) ? v[0] : v);
+export const str = (v: unknown) => (typeof first(v) === "string" ? (first(v) as string) : "");
+export const checked = (v: unknown) => ["1", "on", "true"].includes(str(v));
+export const intOf = (v: unknown) => (/^-?\d{1,9}$/.test(str(v)) ? Number(str(v)) : null);
 
 /** Răspunsul unui formular ACP: înapoi la pagină, cu mesajul (sau eroarea) în adresă. */
-const back = (path: string, params: Record<string, string>): GcsPluginApiResponse => {
+export const back = (path: string, params: Record<string, string>): GcsPluginApiResponse => {
   const q = new URLSearchParams(params).toString();
   return { redirect: `${ACP_BASE}${path}${q ? `?${q}` : ""}`, body: params.error ? { ok: false, error: params.error } : { ok: true }, status: params.error ? 422 : 200 };
 };
 
 /** Un fișier din formular: info-ul verificat de GCS sau eroarea lui. */
-function fileOf(v: unknown): { info: GcsPluginMediaInfo | null; error: string | null } {
+export function fileOf(v: unknown): { info: GcsPluginMediaInfo | null; error: string | null } {
   const f = first(v);
   if (!f || typeof f !== "object") return { info: null, error: null };
   const o = f as Record<string, unknown>;
@@ -49,14 +49,14 @@ function fileOf(v: unknown): { info: GcsPluginMediaInfo | null; error: string | 
 }
 
 /** Șterge fișierele încărcate pe care nu le mai folosește nimic. */
-async function dropUnused(ctx: GcsPluginContext, ids: string[]): Promise<void> {
+export async function dropUnused(ctx: GcsPluginContext, ids: string[]): Promise<void> {
   const unused: string[] = [];
   for (const id of ids) if (!(await mediaInUse(ctx, id))) unused.push(id);
   if (unused.length) await ctx.media.delete(unused);
 }
 
 /** Republică echipamentele care folosesc un element (pe loc până la 40 de membri, altfel prin job). */
-async function republishUsersOf(ctx: GcsPluginContext, kind: Kind, key: string): Promise<void> {
+export async function republishUsersOf(ctx: GcsPluginContext, kind: Kind, key: string): Promise<void> {
   const users = await usersOfItem(ctx, kind, key);
   if (users.length === 0) return;
   if (users.length <= 40) await republish(ctx, users);
@@ -81,11 +81,11 @@ function dataFromForm(kind: Kind, body: Body, previous: Item | null, files: { im
     case "banner":
       return { fill: { colors: str(body.colors), angle: str(body.angle), animation: str(body.animation), speed: str(body.speed) }, text: str(body.text) };
     case "frame":
-      return { image: files.image?.url ?? prev.image, scale: str(body.scale), x: str(body.x), y: str(body.y) };
+      return { image: files.image?.url ?? prev.image, scale: str(body.scale), x: str(body.x), y: str(body.y), hash: files.image ? files.image.sha256 : prev.hash };
     case "card":
-      return { image: files.image?.url ?? prev.image };
+      return { image: files.image?.url ?? prev.image, hash: files.image ? files.image.sha256 : prev.hash };
     case "weapon":
-      return { icon: files.image?.url ?? prev.icon };
+      return { icon: files.image?.url ?? prev.icon, hash: files.image ? files.image.sha256 : prev.hash };
     case "background": {
       const video = files.video?.url ?? (checked(body.removeVideo) ? undefined : prev.video);
       // Un poster nou înlocuiește și miniatura (cea din pachet era generată pentru imaginea veche).
@@ -100,8 +100,12 @@ function dataFromForm(kind: Kind, body: Body, previous: Item | null, files: { im
   }
 }
 
-/** Verificările fișierelor după tipul elementului (tipul media, proporțiile ramei, mărimea minimă). */
-function checkUpload(kind: Kind, image: GcsPluginMediaInfo | null, video: GcsPluginMediaInfo | null): string | null {
+/**
+ * Verificările fișierelor după tipul elementului: tipul media, proporțiile ramei (aproape pătrată, ≥ 128 px), iconițele
+ * armelor (și cele late, de linie: 110×30 merge, cel mult 8:1, latura lungă ≥ 24 px, cea scurtă ≥ 12 px), lățimea
+ * fundalurilor (≥ 320 px).
+ */
+export function checkUpload(kind: Kind, image: GcsPluginMediaInfo | null, video: GcsPluginMediaInfo | null): string | null {
   if (image) {
     if (kind === "song") {
       if (image.kind !== "audio") return "unsupported_type";
@@ -111,7 +115,12 @@ function checkUpload(kind: Kind, image: GcsPluginMediaInfo | null, video: GcsPlu
       if (ratio < 0.8 || ratio > 1.25) return "frame_ratio";
       if (Math.min(image.width, image.height) < 128) return "frame_small";
     }
-    if (kind === "weapon" && image.width && image.height && Math.min(image.width, image.height) < 32) return "image_small";
+    if (kind === "weapon" && image.width && image.height) {
+      const long = Math.max(image.width, image.height);
+      const short = Math.min(image.width, image.height);
+      if (long < 24 || short < 12) return "image_small";
+      if (long / short > 8) return "weapon_ratio";
+    }
     if ((kind === "card" || kind === "background") && image.width && image.width < 320) return "image_small";
   }
   if (video && video.kind !== "video") return "unsupported_type";
@@ -254,6 +263,10 @@ export async function acpDelete(ctx: GcsPluginContext, body: Body): Promise<GcsP
   const users = await usersOfItem(ctx, item.kind, item.key);
   await deleteItem(ctx, id);
   await dropUnused(ctx, item.mediaIds);
+  // Un stil CSS scris de admin: și stilul păstrat de GCS.
+  if ((item.kind === "name_style" || item.kind === "banner") && (item.data as { custom?: true }).custom) {
+    await ctx.members.appearance.styles.set(item.kind === "name_style" ? "name" : "banner", item.key, null);
+  }
   await audit(ctx, "item_delete", `${item.kind}/${item.key}`);
   // Echipamentele care îl foloseau: alegerea rămâne salvată, dar nu mai apare (implicit), până la o nouă alegere.
   if (users.length <= 40) await republish(ctx, users);

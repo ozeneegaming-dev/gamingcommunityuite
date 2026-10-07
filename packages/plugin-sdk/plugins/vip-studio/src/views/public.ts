@@ -3,7 +3,7 @@
  * site: numele cu stilul ales (și clasa GCS a grupului), rama, banner-ul planului.
  */
 import type { GcsPluginContext, GcsPluginVipMember, GcsPluginVipPlan } from "../../../../src/index";
-import { attrs, bannerLook, esc, icon, nameLook, vars } from "../html";
+import { attrs, bannerLook, esc, icon, vars } from "../html";
 import { bannerLabelFor, type Catalog, type Loadout } from "../loadout";
 import { inkFor, isAvailable, planAllows, PLUGIN_KEY, type Access, type BannerData, type FrameData, type Item, type Kind, type NameStyleData } from "../model";
 
@@ -16,12 +16,9 @@ const allowedFor = <K extends Kind>(catalog: Catalog, kind: K, key: string | und
 function rosterCard(ctx: GcsPluginContext, m: GcsPluginVipMember, loadout: Loadout | null, catalog: Catalog, plan: GcsPluginVipPlan | undefined, testMode: boolean): string {
   const access: Access = { vip: true, plan: m.plan, planName: m.planName, testAll: testMode };
   const l = loadout ?? {};
-  const style = allowedFor(catalog, "name_style", l.nameStyle, access);
-  const variant = style ? ((style.data as NameStyleData).variants.find((v) => v.key === l.nameVariant) ?? (style.data as NameStyleData).variants[0]!) : null;
-  const look = style && variant ? nameLook(style.data as NameStyleData, variant) : { cls: "", style: "" };
   const banner = allowedFor(catalog, "banner", l.banner, access);
   const color = plan?.color && /^#[0-9a-fA-F]{6}$/.test(plan.color) ? plan.color.toUpperCase() : "#D62839";
-  const bl = bannerLook((banner?.data as BannerData | undefined) ?? { fill: { colors: [color], angle: 90, animation: "none", speed: "normal" }, text: inkFor(color) });
+  const bl = bannerLook((banner?.data as BannerData | undefined) ?? { fill: { colors: [color], angle: 90, animation: "none", speed: "normal" }, text: inkFor(color) }, banner?.key);
   const frame = allowedFor(catalog, "frame", l.frame, access);
   const f = frame?.data as FrameData | undefined;
   const initial = esc([...m.name.trim()][0]?.toUpperCase() ?? "?");
@@ -33,7 +30,8 @@ function rosterCard(ctx: GcsPluginContext, m: GcsPluginVipMember, loadout: Loado
   return (
     `<li class="gcsp-roster__item" style="${esc(vars({ plan: color }))}">` +
     `<div class="gcsp-roster__card"><span class="gcsp-av gcsp-av--l">${img}${frameImg}</span>` +
-    `<a class="gcs-userLink gcs-name--${esc(m.nameKey)} gcsp-roster__name ${look.cls}"${attrs({ href: m.url, "data-user-id": m.id, style: look.style || null })}>${esc(m.name)}</a>` +
+    // Numele are stilul publicat în GCS (după `data-user-id`), ca oriunde pe site.
+    `<a class="gcs-userLink gcs-name--${esc(m.nameKey)} gcsp-roster__name"${attrs({ href: m.url, "data-user-id": m.id, "data-text": m.name })}>${esc(m.name)}</a>` +
     `<span class="${esc(bl.cls)}" style="${esc(bl.style)}">${esc(bannerLabelFor(l, access))}</span>${status}</div></li>`
   );
 }

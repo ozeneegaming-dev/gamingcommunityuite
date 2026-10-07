@@ -22,8 +22,8 @@ describe("echipamentul din formular", () => {
   test("câmpurile se citesc; varianta contează doar pentru stilul ales", () => {
     const { loadout } = readLoadoutForm(
       {
-        nameStyle: "neon",
-        nameVariant: ["duo:red", "neon:cyan"],
+        nameStyle: "neon_tub",
+        nameVariant: ["gradient_duo:red", "neon_tub:cyan"],
         frame: "ember",
         banner: "gold_shine",
         bannerLabel: "  Legenda  ",
@@ -38,7 +38,7 @@ describe("echipamentul din formular", () => {
       },
       {},
     );
-    expect(loadout).toEqual({ nameStyle: "neon", nameVariant: "cyan", frame: "ember", banner: "gold_shine", bannerLabel: "Legenda", card: "nebula", cardX: 20, cardY: 100, weapon: "rifle", quote: "Joc pentru echipă", theme: "carbon", songAutoplay: false });
+    expect(loadout).toEqual({ nameStyle: "neon_tub", nameVariant: "cyan", frame: "ember", banner: "gold_shine", bannerLabel: "Legenda", card: "nebula", cardX: 20, cardY: 100, weapon: "rifle", quote: "Joc pentru echipă", theme: "carbon", songAutoplay: false });
   });
 
   test("cheile nesigure și textele prea lungi se ignoră", () => {
@@ -58,7 +58,7 @@ describe("echipamentul din formular", () => {
 
 describe("planurile și disponibilitatea", () => {
   test("un VIP cu planul potrivit poate salva tot; un ne-VIP nimic", () => {
-    const l: Loadout = { nameStyle: "neon", frame: "ember", banner: "gold", quote: "Salut" };
+    const l: Loadout = { nameStyle: "neon_tub", frame: "ember", banner: "gold", quote: "Salut" };
     expect(checkLoadout(l, catalog(), gold, opts).problems).toEqual([]);
     const blocked = checkLoadout(l, catalog(), none, opts).problems;
     expect(blocked.map((p) => [p.group, p.code])).toEqual([
@@ -97,12 +97,12 @@ describe("planurile și disponibilitatea", () => {
 describe("aspectul publicat", () => {
   test("VIP: numele, rama, banner-ul cu planul, cardul, arma și profilul", () => {
     const a = toAppearance(
-      { nameStyle: "neon", nameVariant: "cyan", frame: "ember", banner: "gold_shine", card: "nebula", cardX: 30, cardY: 70, weapon: "rifle", background: "aurora", quote: "Salut", theme: "carbon" },
+      { nameStyle: "neon_tub", nameVariant: "cyan", frame: "ember", banner: "gold_shine", card: "nebula", cardX: 30, cardY: 70, weapon: "rifle", background: "aurora", quote: "Salut", theme: "carbon" },
       catalog(),
       gold,
     );
     expect(a).toMatchObject({
-      name: { fill: { colors: ["#22D3EE", "#0E7490"] }, effect: "neon", bold: true },
+      name: { fill: { colors: ["#22D3EE"] }, effect: "neon", bold: true },
       frame: { image: "/plugins/gcs.vip_studio/assets/frames/ember.png", scale: 130 },
       banner: { fill: { animation: "shine" }, label: "VIP Gold" },
       card: { image: "/plugins/gcs.vip_studio/assets/cards/nebula.webp", x: 30, y: 70 },
@@ -112,11 +112,11 @@ describe("aspectul publicat", () => {
   });
 
   test("expirarea VIP: nimic publicat (alegerile rămân salvate)", () => {
-    expect(toAppearance({ nameStyle: "neon", quote: "x" }, catalog(), none)).toBeNull();
+    expect(toAppearance({ nameStyle: "neon_tub", quote: "x" }, catalog(), none)).toBeNull();
   });
 
   test("un plan mai mic nu publică elementele rezervate", () => {
-    const a = toAppearance({ frame: "crown", nameStyle: "duo" }, catalog({ "frame/crown": { plans: ["vip_legend"] } }), gold);
+    const a = toAppearance({ frame: "crown", nameStyle: "gradient_duo" }, catalog({ "frame/crown": { plans: ["vip_legend"] } }), gold);
     expect(a?.frame).toBeUndefined();
     expect(a?.name).toBeDefined();
   });

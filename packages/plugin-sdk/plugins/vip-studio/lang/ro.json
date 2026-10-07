@@ -248,7 +248,13 @@
     "frame_small": "Rama trebuie să aibă cel puțin 128 px pe latură.",
     "image_small": "Imaginea e prea mică.",
     "not_found": "Elementul nu mai există.",
-    "invalid": "Cererea nu e validă."
+    "invalid": "Cererea nu e validă.",
+    "upload_too_many_frames": "Animația are prea multe cadre (cel mult 600).",
+    "upload_animation_too_large": "Animația e prea mare (dimensiunile sau numărul de cadre).",
+    "upload_processing_timeout": "Fișierul a durat prea mult de procesat. Încearcă o variantă mai mică.",
+    "weapon_ratio": "Iconița e prea alungită (cel mult 8:1).",
+    "no_files": "Alege cel puțin un fișier.",
+    "css_invalid": "CSS-ul are erori; vezi lista de mai jos."
   },
   "roster": {
     "label": "Membri VIP",
@@ -322,15 +328,39 @@
   },
   "effects": {
     "none": "Fără efect",
-    "shimmer": "Curgere",
-    "pulse": "Puls",
-    "neon": "Neon",
-    "glitch": "Glitch",
+    "gradient": "Gradient fix",
+    "shimmer": "Curgere de culoare",
+    "pulse": "Respirație",
+    "neon": "Tub de neon",
+    "glitch": "Glitch RGB",
     "scan": "Linii de scanare",
-    "chrome": "Crom",
+    "chrome": "Crom lustruit",
     "fire": "Flacără",
     "holo": "Holografic",
-    "caret": "Cursor de terminal"
+    "caret": "Digital (cursor)",
+    "inferno": "Infern (cu jar)",
+    "typewriter": "Mașina de scris",
+    "reveal": "Licăr (litere pe rând)",
+    "shatter": "Oglindă spartă",
+    "citylights": "Lumini de oraș",
+    "cosmic": "Cosmic (stele)",
+    "crosshair": "Țintă",
+    "love": "Val de dragoste",
+    "electric": "Electric",
+    "mirror": "Reflex",
+    "lightning": "Fulger",
+    "money": "Bani",
+    "razor": "Tăietură",
+    "shadowdance": "Umbre dansante",
+    "toxic": "Acid",
+    "vscan": "Rază verticală",
+    "gold": "Aur",
+    "aura": "Aură",
+    "matrix": "Ploaie digitală",
+    "frost": "Ger",
+    "plasma": "Plasmă",
+    "outline": "Contur",
+    "extrude": "Relief 3D"
   },
   "animations": {
     "none": "Static",
@@ -361,7 +391,9 @@
       "song": "Melodii",
       "members": "Echipamente membri",
       "item": "Element",
-      "new": "Element nou"
+      "new": "Element nou",
+      "css": "Stil CSS",
+      "upload": "Încărcare în bloc"
     },
     "nav": "Cataloagele Studioului VIP",
     "overview": "Prezentare",
@@ -396,11 +428,11 @@
       "song": "Adaugă melodie"
     },
     "hints": {
-      "name_style": "Stilurile de nume, cu efectul și variantele de culoare. Fără CSS: doar culori și efecte din listă.",
-      "banner": "Bannerele de sub nume: o culoare, un gradient (până la 5 culori) sau o animație din listă.",
-      "frame": "Ramele se încarcă ca PNG, WebP sau GIF cu transparență, aproape pătrate (cel puțin 128 px). GCS le recodează în WebP.",
+      "name_style": "Stilurile de nume: efecte animate (foc, neon, glitch, metal, holografic…) cu variante de culoare, sau un stil scris de tine în CSS.",
+      "banner": "Bannerele de sub nume: o culoare, un gradient (până la 5 culori), o animație din listă sau un banner scris în CSS.",
+      "frame": "Ramele: PNG / APNG, WebP sau GIF (animate sau nu), cu transparență, aproape pătrate (cel puțin 128 px). GCS le recodează în WebP (animațiile rămân animate).",
       "card": "Imaginile din spatele cardului de membru (cel puțin 320 px lățime). GCS le recodează în WebP.",
-      "weapon": "Iconițele armelor: PNG sau WebP transparent, de preferat linii deschise la culoare.",
+      "weapon": "Iconițele armelor: PNG sau WebP transparent, pătrate sau late (iconițe de linie, ex. 110×30). Se afișează la proporțiile lor.",
       "background": "Fundalurile de profil: o imagine (folosită și ca poster) și, opțional, un videoclip MP4 / WebM fără sunet.",
       "theme": "Temele paginii de profil: accentul, al doilea accent și culoarea panourilor.",
       "song": "Melodiile din care aleg membrii: un fișier MP3 / Ogg sau un link YouTube."
@@ -456,16 +488,16 @@
       "glow": "Strălucire",
       "animation": "Animație",
       "text": "Culoarea textului",
-      "frameFile": "Imaginea ramei",
-      "frameFileHint": "PNG, WebP sau GIF animat, cu transparență în mijloc; maximum 8 MB.",
+      "frameFile": "Încarcă de pe calculator: imaginea ramei",
+      "frameFileHint": "PNG / APNG, WebP sau GIF (și animate), cu transparență în mijloc; maximum 8 MB.",
       "scale": "Scara față de avatar (%)",
       "scaleHint": "100 = cât avatarul; 130 = rama depășește avatarul cu 15% pe fiecare parte.",
       "offsetX": "Decalaj orizontal (%)",
       "offsetY": "Decalaj vertical (%)",
-      "cardFile": "Imaginea fundalului",
+      "cardFile": "Încarcă de pe calculator: imaginea fundalului",
       "cardFileHint": "PNG, JPG sau WebP, de preferat 720×400 sau mai mare.",
-      "weaponFile": "Iconița",
-      "weaponFileHint": "PNG sau WebP transparent, de preferat 96×96.",
+      "weaponFile": "Încarcă de pe calculator: iconița",
+      "weaponFileHint": "PNG sau WebP transparent: pătrată (ex. 96×96) sau lată (ex. 110×30).",
       "posterFile": "Imaginea (și posterul videoclipului)",
       "posterHint": "Apare și pentru cine preferă mai puțină mișcare.",
       "videoFile": "Videoclip (opțional)",
@@ -533,7 +565,102 @@
       "presets_missing": "a adăugat presetările lipsă",
       "presets_restore": "a restaurat presetările",
       "reset_member": "a resetat echipamentul lui",
-      "reset_quote": "a șters citatul lui"
+      "reset_quote": "a șters citatul lui",
+      "bulk_upload": "a încărcat în bloc",
+      "css_create": "a adăugat stilul CSS",
+      "css_update": "a modificat stilul CSS",
+      "presets_upgrade": "a actualizat catalogul de stiluri"
+    },
+    "bulk": {
+      "title": "Încarcă de pe calculator (mai multe odată)",
+      "single": "Încarcă de pe calculator (unul)",
+      "submit": "Încarcă fișierele",
+      "filesHint": "Poți alege până la {max} fișiere odată (Ctrl / Shift + clic), în total cel mult {mb} MB.",
+      "batches": "Mai mult de {mb} MB? Încarcă în mai multe loturi.",
+      "files": {
+        "frame": "Ramele (fișierele)",
+        "weapon": "Iconițele armelor (fișierele)",
+        "card": "Imaginile (fișierele)"
+      },
+      "hint": {
+        "frame": "Fiecare fișier devine o ramă, cu categoria, planurile, scara și decalajul de mai jos. Fișierele identice (și cu ramele deja încărcate) se sar. APNG și GIF rămân animate.",
+        "weapon": "Fiecare fișier devine o armă; numele vine din numele fișierului (ak47 → AK47) și se poate schimba apoi. Fișierele identice se sar.",
+        "card": "Fiecare fișier devine un fundal de card, cu categoria și planurile de mai jos. Fișierele identice se sar."
+      },
+      "defaultName": {
+        "frame": "Ramă",
+        "weapon": "Armă",
+        "card": "Fundal"
+      },
+      "resultTitle": "Rezultatul încărcării",
+      "summary": "Adăugate: {added} · omise (duplicate): {skipped} · respinse: {rejected}.",
+      "added": "Adăugate ({count})",
+      "skipped": "Omise, duplicate ({count})",
+      "rejected": "Respinse ({count})",
+      "none": "Niciunul.",
+      "duplicateOf": "la fel ca „{name}”",
+      "animated": "animată, {frames} cadre",
+      "expired": "Raportul acestei încărcări nu mai există (se păstrează o zi). Elementele adăugate sunt în catalog."
+    },
+    "css": {
+      "add": {
+        "name_style": "Stil nou (CSS)",
+        "banner": "Banner nou (CSS)"
+      },
+      "hint": {
+        "name_style": "Scrie stilul numelui în CSS: doar proprietăți (ex. color, text-shadow, animation), blocurile ::before / ::after și @keyframes. Fără selectori: GCS îl pune singur pe numele membrilor care îl aleg. Animațiile se opresc automat pentru cine preferă mai puțină mișcare.",
+        "banner": "Scrie banner-ul în CSS: doar proprietăți (ex. background, color, box-shadow, animation), blocurile ::before / ::after și @keyframes. Fără selectori: GCS îl pune pe banner-ul membrilor care îl aleg."
+      },
+      "code": "CSS-ul stilului",
+      "rules": "Permise: proprietăți, blocurile ::before și ::after, @keyframes. Nepermise: selectori, @import, @media, !important, position: fixed, url() spre alte site-uri, caracterul \\. Pentru simboluri în content, lipește caracterul direct (ex. ♥).",
+      "preview": "Previzualizează",
+      "previewDraft": "Previzualizare (ciornă, nesalvată)",
+      "previewSaved": "Cum arată acum",
+      "previewHint": "Pe numele tău, la mărimile din site, pe fundal închis și deschis. Salvează ca să-l pui în catalog.",
+      "baseColor": "Culoarea de bază",
+      "baseColorHint": "Folosită în listele mici și dacă stilul nu se poate încărca.",
+      "baseBannerHint": "Culoarea banner-ului dacă stilul nu se poate încărca.",
+      "templatesTitle": "Șabloane de pornire",
+      "templatesHint": "Alege unul, apoi schimbă culorile și animația după gust.",
+      "templates": {
+        "name_style": {
+          "foc": "Foc",
+          "neon": "Neon",
+          "gradient": "Gradient",
+          "glitch": "Glitch"
+        },
+        "banner": {
+          "aur": "Aur",
+          "neon": "Neon",
+          "gradient": "Gradient",
+          "foc": "Foc"
+        }
+      },
+      "errorsTitle": "Stilul nu a fost salvat:",
+      "line": "Linia {line}",
+      "errors": {
+        "generic": "construcție nepermisă",
+        "css_forbidden": "construcție interzisă",
+        "css_selector": "selectorii nu sunt permiși (GCS pune singur selectorul)",
+        "css_nested": "blocurile din interiorul altor blocuri nu sunt permise",
+        "css_at_rule": "doar @keyframes e permis",
+        "css_braces": "acoladele nu sunt închise corect",
+        "css_syntax": "comentariu sau șir neînchis",
+        "css_declaration": "declarație incompletă (proprietate: valoare;)",
+        "css_property": "nume de proprietate nevalid",
+        "css_important": "!important nu e permis",
+        "css_position": "position: fixed / sticky nu e permis",
+        "css_url": "url() poate duce doar la fișierele studioului",
+        "css_value_too_long": "valoare prea lungă",
+        "css_keyframes_name": "nume de animație nevalid",
+        "css_keyframes_selector": "în @keyframes: doar from, to sau procente",
+        "css_keyframes_duplicate": "animație definită de două ori",
+        "css_too_many_keyframes": "prea multe animații (cel mult 8)",
+        "css_too_many_declarations": "prea multe declarații într-un bloc",
+        "css_too_large": "textul e prea lung",
+        "css_empty": "stilul e gol",
+        "invalid_key": "cheie nevalidă"
+      }
     }
   },
   "vipPage": {

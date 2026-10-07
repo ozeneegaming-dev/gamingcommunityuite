@@ -9,11 +9,52 @@ export const ASSET_BASE = `/plugins/${PLUGIN_KEY}/assets`;
 export const KINDS = ["name_style", "banner", "frame", "card", "weapon", "background", "theme", "song"] as const;
 export type Kind = (typeof KINDS)[number];
 /** Cataloagele cu categorii (filtrele din studio). */
-export const CATEGORY_KINDS = ["frame", "card", "background"] as const satisfies readonly Kind[];
+export const CATEGORY_KINDS = ["name_style", "frame", "card", "weapon", "background"] as const satisfies readonly Kind[];
+/** Cataloagele cu încărcare în bloc din ACP („Încarcă de pe calculator”, mai multe fișiere odată). */
+export const BULK_KINDS = ["frame", "weapon", "card"] as const satisfies readonly Kind[];
+export type BulkKind = (typeof BULK_KINDS)[number];
+/** Cataloagele cu stiluri CSS scrise de admin (verificate și închise de GCS). */
+export const CSS_KINDS = ["name_style", "banner"] as const satisfies readonly Kind[];
 /** Cataloagele cu fișiere (o lipsă le face „retrase”). */
 export const MEDIA_KINDS = ["frame", "card", "weapon", "background", "song"] as const satisfies readonly Kind[];
 
-export const EFFECTS = ["none", "shimmer", "pulse", "neon", "glitch", "scan", "chrome", "fire", "holo", "caret"] as const;
+/** Efectele numelui (lista albă a GCS ≥ 0.7.1; CSS-ul lor e în GCS, aici doar cheile). */
+export const EFFECTS = [
+  "none",
+  "gradient",
+  "shimmer",
+  "pulse",
+  "neon",
+  "glitch",
+  "scan",
+  "chrome",
+  "fire",
+  "holo",
+  "caret",
+  "inferno",
+  "typewriter",
+  "reveal",
+  "shatter",
+  "citylights",
+  "cosmic",
+  "crosshair",
+  "love",
+  "electric",
+  "mirror",
+  "lightning",
+  "money",
+  "razor",
+  "shadowdance",
+  "toxic",
+  "vscan",
+  "gold",
+  "aura",
+  "matrix",
+  "frost",
+  "plasma",
+  "outline",
+  "extrude",
+] as const;
 export type Effect = (typeof EFFECTS)[number];
 export const ANIMATIONS = ["none", "flow", "pulse", "shine", "aurora"] as const;
 export type Animation = (typeof ANIMATIONS)[number];
@@ -37,11 +78,13 @@ export const VARIANT_KEYS = Object.keys(VARIANTS);
 
 export type Fill = { colors: string[]; angle: number; animation: Animation; speed: Speed };
 export type Variant = { key: string; colors: string[]; glow?: string };
-export type NameStyleData = { effect: Effect; variants: Variant[]; angle: number; animation: Animation; speed: Speed; bold: boolean; italic: boolean };
-export type BannerData = { fill: Fill; text: string };
-export type FrameData = { image: string; scale: number; x: number; y: number };
-export type CardData = { image: string };
-export type WeaponData = { icon: string };
+/** `custom`: stilul e CSS scris de admin (păstrat de GCS sub cheia elementului); variantele dau culoarea de bază. */
+export type NameStyleData = { effect: Effect; variants: Variant[]; angle: number; animation: Animation; speed: Speed; bold: boolean; italic: boolean; custom?: true };
+export type BannerData = { fill: Fill; text: string; custom?: true };
+/** `hash`: SHA-256 al fișierului încărcat (duplicatele la încărcarea în bloc). */
+export type FrameData = { image: string; scale: number; x: number; y: number; hash?: string };
+export type CardData = { image: string; hash?: string };
+export type WeaponData = { icon: string; hash?: string };
 export type BackgroundData = { image: string; thumb?: string; video?: string };
 export type ThemeData = { accent: string; accent2?: string; surface?: string; glow: boolean };
 export type SongData = { title: string; artist: string; audio?: string; youtube?: string };
@@ -98,6 +141,8 @@ export function numberIn(v: unknown, min: number, max: number, fallback: number)
 export const oneOf = <T extends string>(v: unknown, list: readonly T[], fallback: T): T => (typeof v === "string" && (list as readonly string[]).includes(v) ? (v as T) : fallback);
 
 export const ITEM_KEY = /^[a-z0-9_]{2,40}$/;
+const SHA256 = /^[0-9a-f]{64}$/;
+const hashOf = (v: unknown): { hash?: string } => (typeof v === "string" && SHA256.test(v) ? { hash: v } : {});
 export const PLAN_KEY = /^[a-z][a-z0-9_]{0,39}$/;
 
 const MEDIA_URL = new RegExp(`^/plugins/${PLUGIN_KEY.replace(".", "\\.")}/media/([a-z0-9]{10,40})\\.(webp|png|jpg|gif|mp4|webm|mp3|ogg)$`);
@@ -201,25 +246,26 @@ export function parseItemData<K extends Kind>(kind: K, raw: unknown): DataResult
         speed: oneOf(r.speed, SPEEDS, "normal"),
         bold: r.bold !== false,
         italic: r.italic === true,
+        ...(r.custom === true ? { custom: true } : {}),
       } as NameStyleData as ItemData[K]);
     }
     case "banner": {
       const fill = fillOf(r.fill);
       if (!fill) return { ok: false, field: "colors" };
-      return ok({ fill, text: hex(r.text) ?? inkFor(fill.colors[0]!) } as BannerData as ItemData[K]);
+      return ok({ fill, text: hex(r.text) ?? inkFor(fill.colors[0]!), ...(r.custom === true ? { custom: true } : {}) } as BannerData as ItemData[K]);
     }
     case "frame": {
       const image = mediaUrl(r.image, "image");
       if (!image) return { ok: false, field: "image" };
-      return ok({ image, scale: numberIn(r.scale, 100, 160, 130), x: numberIn(r.x, -20, 20, 0), y: numberIn(r.y, -20, 20, 0) } as FrameData as ItemData[K]);
+      return ok({ image, scale: numberIn(r.scale, 100, 160, 130), x: numberIn(r.x, -20, 20, 0), y: numberIn(r.y, -20, 20, 0), ...hashOf(r.hash) } as FrameData as ItemData[K]);
     }
     case "card": {
       const image = mediaUrl(r.image, "image");
-      return image ? ok({ image } as CardData as ItemData[K]) : { ok: false, field: "image" };
+      return image ? ok({ image, ...hashOf(r.hash) } as CardData as ItemData[K]) : { ok: false, field: "image" };
     }
     case "weapon": {
       const icon = mediaUrl(r.icon, "image");
-      return icon ? ok({ icon } as WeaponData as ItemData[K]) : { ok: false, field: "image" };
+      return icon ? ok({ icon, ...hashOf(r.hash) } as WeaponData as ItemData[K]) : { ok: false, field: "image" };
     }
     case "background": {
       const image = mediaUrl(r.image, "image");
@@ -260,6 +306,25 @@ export function mediaIdsOf(kind: Kind, data: ItemData[Kind]): string[] {
   if (kind === "background") urls.push((data as BackgroundData).image, (data as BackgroundData).thumb, (data as BackgroundData).video);
   if (kind === "song") urls.push((data as SongData).audio);
   return [...new Set(urls.map(mediaIdOf).filter((id): id is string => id !== null))];
+}
+
+/**
+ * Numele unui element din numele fișierului încărcat: fără extensie și fără sufixele de copie („ - Copie”, „(2)”),
+ * cu spații în loc de `_` / `-`. Un cuvânt scurt cu cifre sau de cel mult 3 litere devine majuscule („ak47” → „AK47”,
+ * „awp” → „AWP”), altfel prima literă mare („deagle” → „Deagle”). Numele care arată ca un hash (hex lung) devin
+ * `fallback` (ex. „Ramă 12”). Cel mult 40 de caractere; adminul îl poate schimba oricând.
+ */
+export function nameFromFile(file: string | undefined, fallback: string): string {
+  const base = (file ?? "")
+    .replace(/\.[A-Za-z0-9]{2,5}$/, "")
+    .replace(/\s*(?:-\s*(?:copie|copy|kopie)(?:\s*\(\d+\))?|\(\d+\))\s*$/i, "")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!base || /^[0-9a-f]{16,}$/i.test(base.replace(/\s/g, ""))) return fallback;
+  // Doar codurile scrise cu litere mici („ak47”, „awp”); un nume cu majuscule proprii rămâne cum e.
+  const pretty = /^[a-z0-9]+$/.test(base) && (/\d/.test(base) || base.length <= 3) ? base.toUpperCase() : base.charAt(0).toUpperCase() + base.slice(1);
+  return plainText([...pretty].slice(0, 40).join(""), 40) ?? fallback;
 }
 
 /** O cheie nouă pentru un element creat din ACP: din nume, plus un sufix scurt. */

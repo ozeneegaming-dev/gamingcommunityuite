@@ -4,8 +4,10 @@
  */
 import { definePlugin, type GcsPluginApiRequest, type GcsPluginApiResponse, type GcsPluginContext, type GcsPluginUser } from "../../../src/index";
 import { acpAction, acpDelete, saveItemAction } from "./acpActions";
+import { bulkReport, bulkUpload } from "./bulk";
+import { cssAction, cssDraft, cssOf, type CssKind } from "./cssStyles";
 import { checkLoadout, readLoadoutForm, type Group, type Loadout } from "./loadout";
-import { KINDS, PLUGIN_KEY, type Kind } from "./model";
+import { KINDS, PLUGIN_KEY, type Item, type Kind } from "./model";
 import { accessOf, loadCatalog, publishFor, republish, vipPlans } from "./publish";
 import {
   countLoadouts,
@@ -22,7 +24,7 @@ import {
   saveLoadout,
   usersOfItem,
 } from "./store";
-import { renderCatalog, renderItemForm, renderMembers, renderOverview, ROUTE_KINDS, type AcpCommon } from "./views/acp";
+import { renderBulkResult, renderCatalog, renderCssForm, renderItemForm, renderMembers, renderOverview, ROUTE_KINDS, type AcpCommon } from "./views/acp";
 import { renderBenefits, renderRoster } from "./views/public";
 import { renderStudio, type StudioSettings } from "./views/studio";
 
@@ -184,9 +186,33 @@ export default definePlugin({
       const id = /^\d{1,9}$/.test(input.params.id ?? "") ? Number(input.params.id) : null;
       const item = id === null ? null : await getItem(ctx, id);
       if (!item) return { status: 404 };
+      // Un stil scris în CSS se editează în formularul lui (textul, șabloanele, previzualizarea).
+      if ((item.kind === "name_style" || item.kind === "banner") && (item.data as { custom?: true }).custom) {
+        const kind = item.kind as CssKind;
+        const [categories, user, css, draft] = await Promise.all([listCategories(ctx, kind), viewerUser(ctx), cssOf(ctx, item), input.query.draft === "1" ? cssDraft(ctx, kind, item.id) : null]);
+        return { title: `${ctx.t(`acp.kinds.${kind}`)}: ${item.name}`, html: renderCssForm({ ...c, kind, item, css, draft, categories, user, template: input.query.template ?? null }) };
+      }
       const [categories, user, users] = await Promise.all([listCategories(ctx, item.kind), viewerUser(ctx), usersOfItem(ctx, item.kind, item.key)]);
       const [checked] = await markMissingMedia(ctx, [item]);
       return { title: `${ctx.t(`acp.kinds.${item.kind}`)}: ${item.name}`, html: renderItemForm({ ...c, kind: item.kind, item: checked ?? item, categories, user, usedBy: users.length }) };
+    },
+    "/css/:kind": async (input, ctx) => {
+      const c = await acpCommon(ctx, input.query);
+      const kind = input.params.kind as CssKind;
+      if (kind !== "name_style" && kind !== "banner") return { status: 404 };
+      const [categories, user, draft] = await Promise.all([listCategories(ctx, kind), viewerUser(ctx), input.query.draft === "1" ? cssDraft(ctx, kind, null) : null]);
+      return { title: ctx.t(`acp.css.add.${kind}`), html: renderCssForm({ ...c, kind, item: null, css: "", draft, categories, user, template: input.query.template ?? "foc" }) };
+    },
+    "/upload/:id": async (input, ctx) => {
+      const c = await acpCommon(ctx, input.query);
+      const report = await bulkReport(ctx, input.params.id ?? "");
+      const items = new Map<number, Item>();
+      if (report) for (const a of report.added) {
+        const item = await getItem(ctx, a.id);
+        if (item) items.set(item.id, item);
+      }
+      const [checked, user] = await Promise.all([markMissingMedia(ctx, [...items.values()]), viewerUser(ctx)]);
+      return { title: ctx.t("acp.bulk.resultTitle"), html: renderBulkResult({ ...c, report, items: new Map(checked.map((i) => [i.id, i])), user }) };
     },
     "/new/:kind": async (input, ctx) => {
       const c = await acpCommon(ctx, input.query);
@@ -209,6 +235,14 @@ export default definePlugin({
     "/save": (req, ctx) => saveStudio(req, ctx),
     "/reset": (_req, ctx) => resetStudio(ctx),
     "/acp/item": async (req, ctx) => saveItemAction(ctx, (req.body ?? {}) as Record<string, unknown>),
+    "/acp/bulk": async (req, ctx) => {
+      await ensureSeeded(ctx);
+      return bulkUpload(ctx, (req.body ?? {}) as Record<string, unknown>);
+    },
+    "/acp/css": async (req, ctx) => {
+      await ensureSeeded(ctx);
+      return cssAction(ctx, (req.body ?? {}) as Record<string, unknown>);
+    },
     "/acp/action": async (req, ctx) => acpAction(ctx, (req.body ?? {}) as Record<string, unknown>),
     "/acp/delete": async (req, ctx) => acpDelete(ctx, (req.body ?? {}) as Record<string, unknown>),
   },

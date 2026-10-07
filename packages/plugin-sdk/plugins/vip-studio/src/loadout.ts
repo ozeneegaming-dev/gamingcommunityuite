@@ -211,10 +211,12 @@ export function toAppearance(l: Loadout, catalog: Catalog, access: Access): GcsM
     const variant = d.variants.find((v) => v.key === l.nameVariant) ?? d.variants[0]!;
     a.name = {
       fill: { colors: variant.colors, angle: d.angle, ...(d.animation !== "none" ? { animation: d.animation } : {}), ...(d.speed !== "normal" ? { speed: d.speed } : {}) },
-      ...(d.effect !== "none" ? { effect: d.effect } : {}),
+      ...(d.effect !== "none" && !d.custom ? { effect: d.effect } : {}),
       ...(variant.glow ? { glow: variant.glow } : {}),
       bold: d.bold,
       ...(d.italic ? { italic: true } : {}),
+      // Un stil CSS scris de admin: GCS pune clasa lui peste culoarea de bază.
+      ...(d.custom ? { style: style.key } : {}),
     };
   }
   const banner = allowed("banner", l.banner);
@@ -225,6 +227,7 @@ export function toAppearance(l: Loadout, catalog: Catalog, access: Access): GcsM
       fill: { colors: d.fill.colors, angle: d.fill.angle, ...(d.fill.animation !== "none" ? { animation: d.fill.animation } : {}), ...(d.fill.speed !== "normal" ? { speed: d.fill.speed } : {}) },
       text: d.text,
       label: bannerLabelFor(l, access),
+      ...(banner && d.custom ? { style: banner.key } : {}),
     };
   }
   const frame = allowed("frame", l.frame);
