@@ -3309,8 +3309,8 @@
       "posts": "Postări",
       "members": "Membri",
       "vip": "Membri VIP",
-      "serversOnline": "Servere online",
-      "serverPlayers": "Jucători pe servere"
+      "serversOnline": "Servere",
+      "serverPlayers": "Jucători"
     },
     "allOnline": "Vezi toți membrii online →",
     "panel": {
@@ -3885,7 +3885,7 @@
         "30d": "30 zile"
       },
       "now": "acum",
-      "avg": "{value} jucători în medie",
+      "avg": "{value, plural, one {# jucător în medie} few {# jucători în medie} other {# de jucători în medie}}",
       "peak": "vârf {value}",
       "noData": "Fără date",
       "table": "Valorile graficului",
@@ -3935,6 +3935,7 @@
     "updated": "Actualizat la {time}",
     "unknownStatus": "Statusul nu a fost citit încă.",
     "viewAll": "Toate serverele",
-    "widgetEmpty": "Niciun server de afișat."
+    "widgetEmpty": "Niciun server de afișat.",
+    "playersZero": "Fără jucători"
   }
 }

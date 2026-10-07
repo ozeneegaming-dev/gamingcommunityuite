@@ -129,7 +129,7 @@ function Row({ row, first, last, onMove, onDelete }: RowProps) {
               {t("view")}
             </Link>
           )}
-          <button type="button" className="gcs-acpBack" onClick={onDelete} aria-label={`${t("delete")}: ${row.name}`} style={{ background: "none", border: 0, cursor: "pointer" }}>
+          <button type="button" className="gcs-acpBack" onClick={onDelete} aria-label={`${t("delete")}: ${row.name}`} style={{ background: "none", border: 0, cursor: "pointer", color: "var(--gcs-accentInk)", font: "inherit" }}>
             <GcsIconSvg icon={faTrash} />
             {t("delete")}
           </button>

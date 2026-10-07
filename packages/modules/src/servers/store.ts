@@ -53,6 +53,15 @@ export class GcsServerStatusStore {
     return { next: toMap(next), failures: toMap(fails) };
   }
 
+  /**
+   * Rezervă serverele unei runde: până la `until` nu mai sunt scadente, deci o rundă care începe cât timp aceasta încă
+   * rulează (ex. multe servere căzute, fiecare cu termenul de 5 s) nu le interoghează a doua oară.
+   */
+  async claim(ids: number[], until: number): Promise<void> {
+    if (ids.length === 0) return;
+    await this.redis.hset(NEXT, Object.fromEntries(ids.map((id) => [String(id), String(until)])));
+  }
+
   /** Serverul se interoghează la runda următoare (ex. adresa s-a schimbat în ACP); statusul vechi dispare. */
   async reset(id: number, opts: { keepStatus?: boolean } = {}): Promise<void> {
     const multi = this.redis.multi().hdel(NEXT, String(id)).hdel(FAILS, String(id));

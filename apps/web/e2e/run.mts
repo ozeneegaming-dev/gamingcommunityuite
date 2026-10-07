@@ -246,6 +246,8 @@ async function main(): Promise<number> {
     // În producție Better Auth cere un secret propriu; pentru teste e unul de unică folosință.
     GCS_SECRET: process.env.GCS_SECRET ?? "gcs-e2e-secret-0123456789abcdef0123456789abcdef",
     GCS_TEST_ROUTES: "1",
+    // Aplicația Servere: serverul de joc fals al testelor rulează pe 127.0.0.1 (altfel adresa locală e refuzată).
+    GCS_SERVERS_ALLOW_NETS: "127.0.0.1/32",
     NEXT_TELEMETRY_DISABLED: "1",
   };
   env.GCS_REALTIME_URL = await startRealtime(env);

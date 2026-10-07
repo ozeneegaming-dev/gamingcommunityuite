@@ -21,7 +21,10 @@ export const STATUS_EVENT = "servers:status";
 export const SERVERS_STATS_TAG = "stats:servers";
 
 const TICK_MS = 10_000;
-const LOCK_MS = 55_000;
+/** Lacătul rundei (eliberat la final); expiră singur dacă worker-ul cade în timpul rundei. */
+const LOCK_MS = 120_000;
+/** Cât rămâne rezervat un server luat într-o rundă (până își salvează rezultatul). */
+const CLAIM_MS = 60_000;
 const CONCURRENCY = 4;
 export const MAX_SERVERS = 100;
 const MAX_DELAY_S = 600;
@@ -96,6 +99,7 @@ export class GcsServerPoller {
       const { next, failures } = await store.schedule();
       const now = this.now();
       const due = servers.filter((s) => (next.get(s.id) ?? 0) <= now);
+      await store.claim(due.map((s) => s.id), now + CLAIM_MS);
       await eachLimited(due, CONCURRENCY, async (s) => void (await this.pollOne(s, { interval, failures: failures.get(s.id) ?? 0, players: showPlayers })));
       return due.length;
     } finally {

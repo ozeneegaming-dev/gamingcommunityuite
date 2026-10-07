@@ -75,11 +75,12 @@ function GcsServerCard({ server }: { server: GcsServerCardData }) {
         </header>
         <div className="gcs-serverCard__body">
           <div className="gcs-serverCard__players">
-            <strong data-testid="gcs-server-players">{t("players", { players: status?.online ? status.players : 0, max: status?.maxPlayers || "—" })}</strong>
+            <strong data-testid="gcs-server-players">{status?.online ? t("players", { players: status.players, max: status.maxPlayers }) : t("playersZero")}</strong>
             {server.uptime30 !== null && <span className="gcs-serverCard__uptime">{t("uptime", { value: format.number(server.uptime30, { style: "percent", maximumFractionDigits: 1 }) })}</span>}
           </div>
           <GcsServerBar status={status} />
-          <GcsServerAddress address={server.address} />
+          {/* Jocurile fără Connect (Minecraft): acțiunea principală e chiar copierea, deci banda nu mai are butonul ei. */}
+          <GcsServerAddress address={server.address} copy={server.connectHref !== null} />
           <div className="gcs-serverCard__actions">
             {server.connectHref ? (
               <a className="gcs-btn gcs-btn--primary" href={server.connectHref} data-testid="gcs-server-connect">

@@ -42,8 +42,8 @@ function useCopy(text: string) {
   return { state, copy };
 }
 
-/** Banda adresei: `ip:port` (monospace, se selectează dintr-un clic) și butonul „Copiază”. */
-export function GcsServerAddress({ address }: { address: string }) {
+/** Banda adresei: `ip:port` (monospace, se selectează dintr-un clic) și, cu `copy`, butonul „Copiază”. */
+export function GcsServerAddress({ address, copy: withButton = true }: { address: string; copy?: boolean }) {
   const t = useTranslations("servers");
   const { state, copy } = useCopy(address);
   return (
@@ -51,13 +51,17 @@ export function GcsServerAddress({ address }: { address: string }) {
       <span className="gcs-serverAddress__text" data-testid="gcs-server-address">
         {address}
       </span>
-      <button type="button" className={`gcs-btn gcs-btn--ghost${state === "ok" ? " gcs-serverCopied" : ""}`} onClick={() => void copy()} aria-label={`${t("copyAddress")}: ${address}`}>
-        <GcsIconSvg icon={state === "ok" ? faCheck : faCopy} />
-        {state === "ok" ? t("copied") : t("copy")}
-      </button>
-      <span role="status" className="gcs-srOnly">
-        {state === "ok" ? t("copied") : state === "fail" ? t("copyFailed") : ""}
-      </span>
+      {withButton && (
+        <>
+          <button type="button" className={`gcs-btn gcs-btn--ghost${state === "ok" ? " gcs-serverCopied" : ""}`} onClick={() => void copy()} aria-label={`${t("copyAddress")}: ${address}`}>
+            <GcsIconSvg icon={state === "ok" ? faCheck : faCopy} />
+            {state === "ok" ? t("copied") : t("copy")}
+          </button>
+          <span role="status" className="gcs-srOnly">
+            {state === "ok" ? t("copied") : state === "fail" ? t("copyFailed") : ""}
+          </span>
+        </>
+      )}
     </div>
   );
 }

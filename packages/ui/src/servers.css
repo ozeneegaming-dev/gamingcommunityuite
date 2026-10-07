@@ -47,7 +47,7 @@
   flex-shrink: 0;
 }
 .gcs-serverBanner--hero {
-  height: 180px;
+  height: 150px;
   border-radius: var(--gcs-radius, 14px);
   overflow: hidden;
   border: var(--gcs-box-border-w, 1px) solid var(--gcs-box-border, var(--gcs-border));
@@ -144,8 +144,11 @@
   gap: 8px;
   margin-top: auto;
 }
-.gcs-serverCard__actions > * {
-  flex: 1;
+.gcs-serverCard__actions > :first-child {
+  flex: 1 1 auto;
+}
+.gcs-serverCard__actions .gcs-btn {
+  white-space: nowrap;
 }
 
 /* Bara de umplere (jucători / sloturi): singurul element colorat de status. */
@@ -175,6 +178,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  box-sizing: border-box;
+  /* Aceeași înălțime și fără butonul „Copiază” (cardurile Minecraft), ca benzile să se alinieze în grilă. */
+  min-height: 44px;
   background: var(--gcs-surface2);
   border-radius: 10px;
   padding: 4px 4px 4px 12px;
@@ -359,13 +365,25 @@
   color: var(--gcs-muted);
 }
 
-/* Tabelul jucătorilor (nume, scor, timp), ca tabelul din machetă. */
+/* Tabelul jucătorilor (nume, scor, timp), ca tabelul din machetă; o listă lungă derulează în casetă. */
+.gcs-serverPlayersScroll {
+  max-height: 460px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.gcs-serverPlayersScroll:focus-visible {
+  outline: 2px solid var(--gcs-accentInk);
+  outline-offset: 2px;
+}
 .gcs-serverPlayers {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
 }
 .gcs-serverPlayers th {
+  position: sticky;
+  top: 0;
+  background: var(--gcs-box-bg, var(--gcs-surface));
   text-align: left;
   font-size: 12px;
   font-weight: 700;
@@ -532,9 +550,6 @@
 }
 @media (max-width: 640px) {
   .gcs-serverBanner--hero {
-    height: 130px;
-  }
-  .gcs-serverCard__actions {
-    flex-direction: column;
+    height: 120px;
   }
 }

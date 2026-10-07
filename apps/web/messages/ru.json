@@ -3309,8 +3309,8 @@
       "posts": "Сообщения",
       "members": "Участники",
       "vip": "VIP-члены",
-      "serversOnline": "Servers online",
-      "serverPlayers": "Players on servers"
+      "serversOnline": "Servers",
+      "serverPlayers": "Players"
     },
     "allOnline": "Смотреть все онлайн участники",
     "panel": {
@@ -3885,7 +3885,7 @@
         "30d": "30 days"
       },
       "now": "now",
-      "avg": "{value} players on average",
+      "avg": "{value, plural, one {# player on average} few {# players on average} many {# players on average} other {# players on average}}",
       "peak": "peak {value}",
       "noData": "No data",
       "table": "Chart values",
@@ -3935,6 +3935,7 @@
     "updated": "Updated at {time}",
     "unknownStatus": "The status hasn't been read yet.",
     "viewAll": "All servers",
-    "widgetEmpty": "No servers to show."
+    "widgetEmpty": "No servers to show.",
+    "playersZero": "No players"
   }
 }

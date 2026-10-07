@@ -36,24 +36,27 @@ export function GcsServerPlayers({ serverId, hidden, headingId }: { serverId: nu
         <p className="gcs-serverNote">{t("playersNone")}</p>
       ) : (
         <>
-          <table className="gcs-serverPlayers" aria-labelledby={headingId} data-testid="gcs-server-players-table">
-            <thead>
-              <tr>
-                <th scope="col">{t("player")}</th>
-                {!sampleOnly && <th scope="col">{t("score")}</th>}
-                {!sampleOnly && <th scope="col">{t("time")}</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {players.map((p, i) => (
-                <tr key={`${i}-${p.name}`}>
-                  <td>{p.name}</td>
-                  {!sampleOnly && <td>{p.score ?? "—"}</td>}
-                  {!sampleOnly && <td>{duration(p.time)}</td>}
+          {/* Lista lungă derulează în casetă (antetul tabelului rămâne sus); zona primește focus din tastatură. */}
+          <div className="gcs-serverPlayersScroll" tabIndex={0} role="region" aria-labelledby={headingId}>
+            <table className="gcs-serverPlayers" aria-labelledby={headingId} data-testid="gcs-server-players-table">
+              <thead>
+                <tr>
+                  <th scope="col">{t("player")}</th>
+                  {!sampleOnly && <th scope="col">{t("score")}</th>}
+                  {!sampleOnly && <th scope="col">{t("time")}</th>}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {players.map((p, i) => (
+                  <tr key={`${i}-${p.name}`}>
+                    <td>{p.name}</td>
+                    {!sampleOnly && <td>{p.score ?? "—"}</td>}
+                    {!sampleOnly && <td>{duration(p.time)}</td>}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           {sampleOnly && <p className="gcs-serverNote">{t("playersSample")}</p>}
         </>
       )}

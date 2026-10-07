@@ -14,14 +14,6 @@ const MAX_BAR = 24;
 const GAP = 2;
 const RADIUS = 4;
 
-/** Un maxim „rotund” pentru axa Y (1, 2, 2.5, 5 × 10ⁿ), ca liniile de grilă să cadă pe valori ușor de citit. */
-function niceMax(max: number): number {
-  if (max <= 4) return 4;
-  const pow = 10 ** Math.floor(Math.log10(max));
-  for (const m of [1, 2, 2.5, 5, 10]) if (m * pow >= max) return m * pow;
-  return 10 * pow;
-}
-
 /** O coloană cu capătul de sus rotunjit (4 px) și baza dreaptă. */
 function barPath(x: number, y: number, w: number, h: number): string {
   const r = Math.min(RADIUS, w / 2, h);
@@ -44,7 +36,8 @@ export function GcsServerChart({ history }: { history: GcsServerHistory }) {
   const n = buckets.length;
   const hasData = buckets.some((b) => b.avg !== null);
   const peakMax = Math.max(0, ...buckets.map((b) => b.peak ?? 0));
-  const max = niceMax(Math.max(history.maxPlayers, peakMax, 1));
+  // Axa Y merge până la sloturi (o coloană plină = server plin), sau până la vârf, dacă a fost mai mare.
+  const max = Math.max(history.maxPlayers, peakMax) || 4;
   const slot = CW / n;
   const barW = Math.max(1, Math.min(MAX_BAR, slot - GAP));
   const xCenter = (i: number) => PAD.left + slot * i + slot / 2;
@@ -62,7 +55,7 @@ export function GcsServerChart({ history }: { history: GcsServerHistory }) {
   // Etichetele axei X: ~5 repere, ultimul „acum”.
   const step = range === "24h" ? 6 : range === "7d" ? 24 : 6;
   const xTicks = buckets.map((b, i) => ({ i, text: i === n - 1 ? t("now") : label(b.at) })).filter(({ i }) => i === n - 1 || (i % step === 0 && n - 1 - i >= step / 2));
-  const yTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(max * f));
+  const yTicks = [...new Set([0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(max * f)))];
 
   const value = (v: number | null) => (v === null ? null : format.number(v, { maximumFractionDigits: 1 }));
 
@@ -162,30 +155,33 @@ export function GcsServerChart({ history }: { history: GcsServerHistory }) {
       </svg>
       {current && (
         <div className="gcs-serverChart__tip" style={{ left: `${Math.min(88, Math.max(12, tipLeft))}%` }} data-testid="gcs-server-chart-tip">
-          <strong>{current.avg === null ? t("noData") : t("avg", { value: value(current.avg)! })}</strong>
+          <strong>{current.avg === null ? t("noData") : t("avg", { value: Math.round(current.avg * 10) / 10 })}</strong>
           {label(current.at, true)}
           {current.peak !== null && current.peak > 0 && ` · ${t("peak", { value: format.number(current.peak) })}`}
         </div>
       )}
-      <table id={`${id}-table`} className="gcs-srOnly">
-        <caption>{t("table")}</caption>
-        <thead>
-          <tr>
-            <th scope="col">{t("time")}</th>
-            <th scope="col">{t("tableAvg")}</th>
-            <th scope="col">{t("tablePeak")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {buckets.map((b) => (
-            <tr key={b.at}>
-              <th scope="row">{label(b.at, true)}</th>
-              <td>{value(b.avg) ?? t("noData")}</td>
-              <td>{b.peak === null ? t("noData") : format.number(b.peak)}</td>
+      {/* Tabelul stă într-un `div` ascuns vizual: un `<table>` nu respectă înălțimea de 1 px și ar lungi pagina. */}
+      <div className="gcs-srOnly">
+        <table id={`${id}-table`}>
+          <caption>{t("table")}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{t("time")}</th>
+              <th scope="col">{t("tableAvg")}</th>
+              <th scope="col">{t("tablePeak")}</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {buckets.map((b) => (
+              <tr key={b.at}>
+                <th scope="row">{label(b.at, true)}</th>
+                <td>{value(b.avg) ?? t("noData")}</td>
+                <td>{b.peak === null ? t("noData") : format.number(b.peak)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
