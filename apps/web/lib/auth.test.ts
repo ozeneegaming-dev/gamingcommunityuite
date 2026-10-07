@@ -1,4 +1,4 @@
-import { seedDefaults } from "@gcs/core";
+import { legacyPasswordHash, seedDefaults } from "@gcs/core";
 import { truncateAll } from "@gcs/db/test/helpers";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { getAuth } from "./auth";
@@ -93,5 +93,21 @@ describe("Better Auth (integrare)", () => {
 
     const otherIp = await call("/sign-in/email", { email: "tinta@mail.com", password: "parola-sigura-123" }, "198.51.100.8");
     expect(otherIp.status).toBe(200);
+  });
+
+  test("un membru importat intră cu parola veche (hash marcat), care se rescrie apoi în Argon2id", async () => {
+    await signUp("Importat", "importat@mail.com");
+    const user = await db.user.findUniqueOrThrow({ where: { email: "importat@mail.com" } });
+    const { createHash } = await import("node:crypto");
+    const sha = (s: string) => createHash("sha256").update(s).digest("hex");
+    const legacy = legacyPasswordHash({ scheme: "sha256s", salt: "sare", hash: sha(sha("parola-veche-9") + "sare") });
+    await db.account.updateMany({ where: { userId: user.id, providerId: "credential" }, data: { password: legacy } });
+
+    expect((await call("/sign-in/email", { email: "importat@mail.com", password: "gresita-123" }, "198.51.100.30")).status).toBe(401);
+    expect((await db.account.findFirstOrThrow({ where: { userId: user.id } })).password).toBe(legacy);
+    expect((await call("/sign-in/email", { email: "importat@mail.com", password: "parola-veche-9" }, "198.51.100.30")).status).toBe(200);
+    const account = await db.account.findFirstOrThrow({ where: { userId: user.id } });
+    expect(account.password?.startsWith("$argon2id$")).toBe(true);
+    expect((await call("/sign-in/email", { email: "importat@mail.com", password: "parola-veche-9" }, "198.51.100.31")).status).toBe(200);
   });
 });

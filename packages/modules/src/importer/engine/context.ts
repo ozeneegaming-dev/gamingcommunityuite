@@ -32,8 +32,10 @@ export class GcsOverlay<V> {
 
   /** Valori deja confirmate (ex. încărcate din baza de date). */
   seed(entries: Iterable<[string, V]>): void {
-    for (const [k, v] of entries) this.base.set(k, v);
-    if (this.base.size > 50_000) this.base.clear();
+    const list = [...entries];
+    // Cache-ul nu crește la nesfârșit pe importurile mari: se golește înainte de lotul care l-ar depăși.
+    if (this.base.size + list.length > 50_000) this.base.clear();
+    for (const [k, v] of list) this.base.set(k, v);
   }
 
   commit(): void {

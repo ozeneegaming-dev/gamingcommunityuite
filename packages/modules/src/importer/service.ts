@@ -216,7 +216,10 @@ export class GcsImportService {
       startedAt: job.startedAt,
       finishedAt: job.finishedAt,
       updatedAt: job.updatedAt,
-      stale: job.status === "RUNNING" && (!job.heartbeatAt || Date.now() - job.heartbeatAt.getTime() > IMPORT_STALE_MS),
+      // Rulează fără progres sau așteaptă în coadă de prea mult timp: worker-ul e oprit sau a căzut.
+      stale:
+        (job.status === "RUNNING" && (!job.heartbeatAt || Date.now() - job.heartbeatAt.getTime() > IMPORT_STALE_MS)) ||
+        (job.status === "QUEUED" && Date.now() - job.updatedAt.getTime() > IMPORT_STALE_MS),
     };
   }
 
