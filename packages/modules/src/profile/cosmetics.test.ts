@@ -41,8 +41,8 @@ describe("compileFramesCss (Review Focus #5)", () => {
 
   test("CSS-ul complet include stilurile grupurilor, stilurile alese și ramele implicite", async () => {
     const css = await w.cosmetics.css();
-    expect(css).toContain(".gcs-name--vip_gold{");
-    expect(css).toContain(".gcs-name--ns_neon{");
+    expect(css).toContain("a.gcs-name--vip_gold:hover{");
+    expect(css).toContain("a.gcs-name--ns_neon:hover{");
     expect(css).toContain(".gcs-avatarFrame--neon::before{");
   });
 });

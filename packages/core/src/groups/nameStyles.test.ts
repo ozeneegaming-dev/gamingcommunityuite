@@ -10,7 +10,7 @@ const gold = {
 describe("compileNameStylesCss", () => {
   test("vip_gold: gradient animat, ca în machetă", () => {
     const css = compileNameStylesCss([gold]);
-    expect(css).toContain(".gcs-name--vip_gold{");
+    expect(css).toContain("a.gcs-name--vip_gold:hover{");
     expect(css).toContain("background:linear-gradient(90deg,#F4B740,#FFF0B8,#E8961C,#F4B740)");
     expect(css).toContain("background-clip:text");
     expect(css).toContain("animation:gcsShimmer");
@@ -22,8 +22,13 @@ describe("compileNameStylesCss", () => {
       { key: "admin", color: "#FF4D57", nameStyle: { glow: "#FF4D57", bold: true, italic: true } },
     ]);
     expect(css).toContain(
-      ".gcs-name--admin{color:#FF4D57;text-shadow:0 0 10px rgba(255,77,87,.55);font-weight:700;font-style:italic}",
+      "{color:#FF4D57;text-shadow:0 0 10px rgba(255,77,87,.55);font-weight:700;font-style:italic}",
     );
+  });
+
+  test("stilul bate culoarea generală a linkurilor (`.gcs-root a`, și la hover): numele-link își păstrează culoarea grupului", () => {
+    const css = compileNameStylesCss([{ key: "member", color: "#ECEDF1", nameStyle: null }]);
+    expect(css).toContain(".gcs-name--member,.gcs-root a.gcs-name--member,.gcs-root a.gcs-name--member:hover{color:#ECEDF1");
   });
 
   test("culoarea din nameStyle are prioritate față de culoarea grupului", () => {

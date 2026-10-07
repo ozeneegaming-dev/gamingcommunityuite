@@ -52,7 +52,10 @@ function ruleFor(group: GcsNameStyleGroup): { css: string; animated: boolean } |
   decls.push(`font-weight:${style.bold ? 700 : 600}`);
   if (style.italic) decls.push("font-style:italic");
 
-  let css = `.gcs-name--${group.key}{${decls.join(";")}}`;
+  // Numele sunt de obicei linkuri: selectorii cu `.gcs-root a` (și `:hover`) bat culoarea generală a linkurilor,
+  // altfel toate numele ar avea culoarea linkurilor, iar gradientele n-ar mai apărea.
+  const k = group.key;
+  let css = `.gcs-name--${k},.gcs-root a.gcs-name--${k},.gcs-root a.gcs-name--${k}:hover{${decls.join(";")}}`;
   if (typeof style.icon === "string" && SAFE_ICON.test(style.icon)) {
     css += `.gcs-name--${group.key}::before{content:"${style.icon}";margin-right:.25em}`;
   }
