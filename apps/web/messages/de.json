@@ -1745,7 +1745,8 @@
           "vip_expired": "Ein VIP-Abonnement ist abgelaufen.",
           "vip_revoked": "A VIP subscription revoked from the ACP.",
           "post_before_save": "Bevor ein Beitrag gespeichert wird (neues Thema, Antwort, Bearbeitung): Das Plugin kann Titel und Inhalt ändern oder den Beitrag ablehnen. 2 s timeout; ein fehler überspringt das plugin.",
-          "postbit_after_fields": "Unterhalb der Autorenkarte in Posts."
+          "postbit_after_fields": "Unterhalb der Autorenkarte in Posts.",
+          "vip_page": "On the public VIP page (/vip), below the plans."
         }
       }
     },
@@ -2089,7 +2090,8 @@
       "reputation": "Ansehen",
       "followers": "Follower",
       "joined": "Mitglied seit",
-      "lastActive": "Zuletzt aktiv"
+      "lastActive": "Zuletzt aktiv",
+      "weapon": "Favourite weapon"
     },
     "tabsLabel": "Profilabschnitte",
     "tabs": {
@@ -2146,6 +2148,16 @@
       "SOLUTIONS_COUNT": "{count, plural, one {# answer marked as the solution} other {# answers marked as the solution}}",
       "IS_VIP": "Becomes VIP",
       "manual": "Awarded by the team"
+    },
+    "vip": {
+      "quote": "{name}'s quote",
+      "song": "Profile song",
+      "play": "Play",
+      "pause": "Pause",
+      "unmute": "Turn sound on",
+      "youtube": "YouTube video: it only loads when you press Play.",
+      "bgPause": "Pause the animated background",
+      "bgPlay": "Play the animated background"
     }
   },
   "maintenance": {
@@ -2413,7 +2425,8 @@
       "memberSince": "Mitglied seit:",
       "status": "Status:",
       "motto": "Motto",
-      "badgesMore": "{count, plural, one {# more badge} other {# more badges}}"
+      "badgesMore": "{count, plural, one {# more badge} other {# more badges}}",
+      "weapon": "Favourite weapon"
     },
     "poll": {
       "votes": "{count, plural, one {# Abstimmung} other {# Stimmen}}",
@@ -2576,7 +2589,8 @@
     "joined": "Mitglied seit",
     "follow": "Folgen",
     "unfollow": "Nicht mehr folgen",
-    "message": "Nachricht"
+    "message": "Nachricht",
+    "weapon": "Weapon"
   },
   "messages": {
     "title": "Nachrichten",

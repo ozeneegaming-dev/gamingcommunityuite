@@ -1745,7 +1745,8 @@
           "vip_expired": "Un abonament VIP expirat.",
           "vip_revoked": "Un abonament VIP retras din ACP.",
           "post_before_save": "Înainte de salvarea unei postări (topic nou, răspuns, editare): pluginul poate modifica titlul și conținutul sau poate respinge postarea. Timeout 2 s; o eroare sare pluginul.",
-          "postbit_after_fields": "Sub cardul autorului din postări."
+          "postbit_after_fields": "Sub cardul autorului din postări.",
+          "vip_page": "Pe pagina publică VIP (/vip), sub planuri."
         }
       }
     },
@@ -2089,7 +2090,8 @@
       "reputation": "Reputație",
       "followers": "Urmăritori",
       "joined": "Membru din",
-      "lastActive": "Ultima activitate"
+      "lastActive": "Ultima activitate",
+      "weapon": "Arma preferată"
     },
     "tabsLabel": "Secțiuni profil",
     "tabs": {
@@ -2146,6 +2148,16 @@
       "SOLUTIONS_COUNT": "{count, plural, one {# răspuns marcat rezolvare} few {# răspunsuri marcate rezolvare} other {# de răspunsuri marcate rezolvare}}",
       "IS_VIP": "Devine VIP",
       "manual": "Acordat de echipă"
+    },
+    "vip": {
+      "quote": "Citatul lui {name}",
+      "song": "Melodia profilului",
+      "play": "Redă",
+      "pause": "Pauză",
+      "unmute": "Pornește sunetul",
+      "youtube": "Video YouTube: se încarcă doar când apeși Redă.",
+      "bgPause": "Oprește fundalul animat",
+      "bgPlay": "Pornește fundalul animat"
     }
   },
   "maintenance": {
@@ -2413,7 +2425,8 @@
       "memberSince": "Membru din:",
       "status": "Status:",
       "motto": "Motto",
-      "badgesMore": "{count, plural, one {Încă # insignă} few {Încă # insigne} other {Încă # de insigne}}"
+      "badgesMore": "{count, plural, one {Încă # insignă} few {Încă # insigne} other {Încă # de insigne}}",
+      "weapon": "Arma preferată"
     },
     "poll": {
       "votes": "{count, plural, one {# vot} few {# voturi} other {# de voturi}}",
@@ -2576,7 +2589,8 @@
     "joined": "Membru din",
     "follow": "Urmărește",
     "unfollow": "Nu mai urmări",
-    "message": "Mesaj"
+    "message": "Mesaj",
+    "weapon": "Arma"
   },
   "messages": {
     "title": "Mesaje",

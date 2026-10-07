@@ -35,7 +35,8 @@ Cititorul ZIP e scris de noi (directorul central + `inflateRaw` din `node:zlib`)
   `plugin_<vendor>__<nume>` să fie unică); `name`, `version` (semver), `author`, `description`, `icon` (Font Awesome);
 - `minGcs` (versiunea minimă a platformei), `dependencies` (`{ "vendor.altul": "^1.2.0" }`);
 - `capabilities`: lista albă — `db`, `events`, `filters`, `widgets`, `pages`, `api`, `acp`, `menus`, `jobs`,
-  `settings`, `permissions`, `hooks`, `http-out`, `client-css`, `client-js`, `templates`;
+  `settings`, `permissions`, `hooks`, `http-out`, `client-css`, `client-js`, `templates`, `media`, `appearance`
+  (ultimele două din 0.7.0, specul `2026-10-07-studio-vip.md` §2);
 - declarațiile: `settings` (tab-uri cu câmpuri `text`, `textarea`, `number` cu „Nelimitat”, `toggle`, `select`,
   `secret`), `permissions` (pe grup sau pe container), `widgets`, `routes` (`pages`, `acp`, `api`), `events`,
   `filters`, `hooks` (puncte de extensie), `jobs`, `menus` (`site`, `user`), `client` (`styles`, `scripts`);
@@ -130,10 +131,10 @@ Contextul primit de plugin e singura lui ieșire, prin mesaje validate de gazdă
 ### 3.3 Hook-urile
 | Tip | Cum |
 | --- | --- |
-| Evenimente | lista publică: `post.created`, `post.updated`, `post.deleted`, `post.approved`, `topic.created`, `topic.updated`, `topic.deleted`, `topic.moved`, `topic.moderated`, `user.registered`, `user.promoted`, `user.banned`, `user.unbanned`, `user.warned`, `user.followed`, `chat.message`, `chat.deleted`, `report.created`, `badge.awarded`, `vip.granted`, `vip.expired`. Livrare asincronă (nu întârzie cererea), doar câmpurile simple din payload. Mesajele private nu se expun. |
+| Evenimente | lista publică: `post.created`, `post.updated`, `post.deleted`, `post.approved`, `topic.created`, `topic.updated`, `topic.deleted`, `topic.moved`, `topic.moderated`, `user.registered`, `user.promoted`, `user.banned`, `user.unbanned`, `user.warned`, `user.followed`, `chat.message`, `chat.deleted`, `report.created`, `badge.awarded`, `vip.granted`, `vip.revoked`, `vip.expired`. Livrare asincronă (nu întârzie cererea), doar câmpurile simple din payload. Mesajele private nu se expun. |
 | Filtre | `post.before_save` (topic nou, răspuns, editare): primește titlul și documentul, poate întoarce o variantă modificată sau o respingere. Rulează în ordinea priorității, cu timeout de 2 s; o eroare sau un timeout sare pluginul (nu blochează postarea); timeout-ul se numără ca eșec, eroarea doar se jurnalizează (vezi mai jos). |
 | Widget-uri | randate pe server ca HTML, trecut prin sanitizer (listă albă de taguri și atribute, fără `style`, `id`, `on*`, formulare, scripturi; clase doar `gcsp-*` și câteva clase GCS de prezentare; `<gcs-icon name="fa-solid fa-…">` devine iconița Font Awesome). Interfața `GcsPluginHtml` acceptă deja `{ template, data }`, pentru motorul de șabloane. |
-| Puncte de extensie | `postbit.after_fields` (sub câmpurile din cardul autorului). HTML-ul se calculează o dată și ajunge atât în postbit-ul implicit (React), cât și în `{% hook "postbit.after_fields" %}` dintr-un șablon `postbit.author` modificat de temă. |
+| Puncte de extensie | `postbit.after_fields` (sub câmpurile din cardul autorului); `vip.page` (pe pagina publică /vip, sub planuri). HTML-ul se calculează o dată și ajunge atât în postbit-ul implicit (React), cât și în `{% hook "postbit.after_fields" %}` dintr-un șablon `postbit.author` modificat de temă. |
 | Pagini site | `/p/<cheie>/…`, căi declarate (`/`, `/item/:id`), randate în layout-ul site-ului. |
 | Pagini ACP | `/admin/plugins/<cheie>/…`, cu secțiunea ACP `plugin.<cheie>` (apare în rolurile ACP); doar HTML sanitizat. |
 | API | `/api/plugins/<cheie>/…`: doar JSON, corp ≤ 64 KB, CSRF (Origin) la metodele care modifică, limită de rată. |
@@ -180,6 +181,16 @@ prea multe apeluri în așteptare (256 pe fir), firul oprit după blocarea altui
   dezinstalarea (cu „Păstrează datele”);
 - **Sistem → Hook-uri** (`/admin/system/hooks`): evenimentele, filtrele, punctele de extensie, widget-urile, paginile,
   rutele API, joburile și meniurile, cine le folosește, prioritatea (editabilă) și comutatorul per plugin și hook.
+
+## 4bis. Din 0.7.0: aspectul membrilor, fișiere media, formulare (specul `2026-10-07-studio-vip.md` §2)
+- `appearance`: pluginul publică aspectul unui membru (`ctx.members.appearance.set`), validat de nucleu (doar culori
+  `#RRGGBB`, efecte din listă, texte simple, fișierele proprii); nucleul îl randează în nume, rame, postbit, hover card și
+  profil, fără să mai cheme pluginul;
+- `media`: fișiere încărcate prin formularele paginilor pluginului (tipul din conținut, imaginile recodate în WebP, durata
+  video, mărimea, cota), păstrate cu `ctx.media.keep`, servite la `/plugins/<cheie>/media/<id>.<ext>` (cu `Range`);
+- paginile pluginului pot avea formulare (doar spre rutele API ale pluginului; GET doar spre paginile lui), `audio` /
+  `video` cu fișierele proprii și `style` doar cu variabile CSS; rutele API pot cere poarta ACP (`acp: "edit"`);
+- `ctx.api.vip` (planuri, abonamente, membri VIP); JS-ul pluginurilor semnate se încarcă și unde apare un widget al lor.
 
 ## 5. SDK și pluginul de exemplu
 - `@gcs/plugin-sdk` (`packages/plugin-sdk`): tipurile pentru `definePlugin` și context (fără acces la internele GCS),

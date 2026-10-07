@@ -398,10 +398,16 @@ function nameDecls(name: NonNullable<GcsMemberAppearance["name"]>): { main: stri
   return { main, after };
 }
 
-/** Selectorul elementelor cu numele unui membru (linkuri și titluri marcate cu `gcs-styledName`). */
+/**
+ * Selectorul numelui unui membru: linkurile spre profil (`a.gcs-userLink[data-user-id]`, ca hover card-ul) și numele
+ * care nu sunt linkuri (titlul profilului, meniul userului), marcate cu `data-name-user` (fără hover card).
+ */
 export function nameSelector(userId: string): string {
-  return `.gcs-root :is(a.gcs-userLink,.gcs-styledName)[data-user-id="${userId}"]`;
+  return `.gcs-root :is(a.gcs-userLink[data-user-id="${userId}"],[data-name-user="${userId}"])`;
 }
+
+/** Atributul avatarelor unui membru (rama pluginului); nu e `data-user-id`, ca avatarul să nu deschidă hover card-ul. */
+export const AVATAR_USER_ATTR = "data-avatar-user";
 
 /**
  * CSS-ul aspectului: stilul numelui și rama, per user (`data-user-id`), adăugat la `/gcs-names.css`. Doar din forma
@@ -419,7 +425,7 @@ export function compileAppearanceCss(entries: { userId: string; appearance: GcsM
     }
     const frame = appearance.frame;
     if (frame && /^\/plugins\/[a-z0-9_.]+\/[A-Za-z0-9._/-]+$/.test(frame.image)) {
-      const sel = `.gcs-avatar[data-user-id="${userId}"]`;
+      const sel = `.gcs-avatar[${AVATAR_USER_ATTR}="${userId}"]`;
       const inset = -((frame.scale ?? 130) - 100) / 2;
       parts.push(`${sel}{overflow:visible}`, `${sel}>.gcs-avatar__img{border-radius:inherit}`);
       parts.push(
@@ -432,7 +438,7 @@ export function compileAppearanceCss(entries: { userId: string; appearance: GcsM
   }
   if (parts.length === 0) return "";
   parts.push(
-    "@media (prefers-reduced-motion: reduce){.gcs-root :is(a.gcs-userLink,.gcs-styledName)[data-user-id],.gcs-root :is(a.gcs-userLink,.gcs-styledName)[data-user-id]::after{animation:none}}",
+    "@media (prefers-reduced-motion: reduce){.gcs-root :is(a.gcs-userLink[data-user-id],[data-name-user]),.gcs-root :is(a.gcs-userLink[data-user-id],[data-name-user])::after{animation:none}}",
   );
   return parts.join("\n");
 }

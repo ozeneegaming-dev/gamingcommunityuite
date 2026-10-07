@@ -70,7 +70,7 @@ export async function GcsForumRow({ forum, accent }: { forum: Row; accent: strin
           {forum.last ? (
             <>
               {forum.last.user ? (
-                <GcsAvatar name={forum.last.user.name} size="s" {...(forum.last.user.image ? { src: forum.last.user.image } : {})} {...(forum.last.user.frameKey ? { frame: forum.last.user.frameKey } : {})} />
+                <GcsAvatar name={forum.last.user.name} size="s" userId={forum.last.user.id} {...(forum.last.user.image ? { src: forum.last.user.image } : {})} {...(forum.last.user.frameKey ? { frame: forum.last.user.frameKey } : {})} />
               ) : null}
               <div className="gcs-forumRow__lastText">
                 <Link href={topicHref({ id: forum.last.topicId, slug: forum.last.topicSlug })} className="gcs-forumRow__lastTitle">

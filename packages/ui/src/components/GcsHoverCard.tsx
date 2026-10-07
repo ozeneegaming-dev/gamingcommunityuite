@@ -23,9 +23,14 @@ export type GcsHoverCardData = {
   /** `art` = adresa insignei generate; `image` = imaginea proprie încărcată în ACP (are prioritate). */
   badges: { key: string; name: string; description?: string; art: string; image: string | null }[];
   fields: { label: string; value: string }[];
+  /**
+   * Aspectul publicat de pluginuri (Studio VIP), cu stilurile deja calculate de GCS din valori validate: banner-ul de
+   * sub nume, fundalul copertei și arma (iconița și numele).
+   */
+  look?: { banner: { label: string; style: CSSProperties } | null; card: CSSProperties | null; flair: { icon: string; label: string } | null } | null;
 };
 
-export type GcsHoverCardLabels = { posts: string; reputation: string; followers: string; online: string; joined: string };
+export type GcsHoverCardLabels = { posts: string; reputation: string; followers: string; online: string; joined: string; weapon?: string };
 
 function tint(hex: string | null, alpha: number, fallback: string): string {
   const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex ?? "");
@@ -60,20 +65,22 @@ export function GcsHoverCard({
   const { user, stats } = data;
   const accent = user.accentColor ?? "#D62839";
   const symbol = rankSymbol(user.rank?.icon);
+  const look = data.look ?? null;
   const cover = user.cover
     ? `center ${user.coverPositionY ?? 50}% / cover no-repeat url(${user.cover})`
     : `linear-gradient(120deg, ${tint(accent, 0.55, "rgba(214,40,57,.55)")}, ${tint(accent, 0.12, "rgba(214,40,57,.12)")})`;
   return (
     <div className="gcs-card gcs-hoverCard" role="dialog" aria-label={user.name} id={id} data-testid="gcs-hover-card">
       <div
-        className={user.cover ? "gcs-hoverCard__cover gcs-hoverCard__cover--image" : "gcs-hoverCard__cover"}
-        style={{ "--gcs-hoverCard-accent": accent, background: cover } as CSSProperties}
+        className={user.cover || look?.card ? "gcs-hoverCard__cover gcs-hoverCard__cover--image" : "gcs-hoverCard__cover"}
+        style={{ "--gcs-hoverCard-accent": accent, ...(look?.card ?? { background: cover }) } as CSSProperties}
         data-testid="gcs-hover-cover"
+        {...(look?.card ? { "data-vip": "card" } : {})}
       />
       <div className="gcs-hoverCard__body">
         <div className="gcs-hoverCard__head">
           <span className="gcs-hoverCard__avatar">
-            <GcsAvatar name={user.name} size="l" {...(user.image ? { src: user.image } : {})} {...(user.frameKey ? { frame: user.frameKey } : {})} />
+            <GcsAvatar name={user.name} size="l" userId={user.id} {...(user.image ? { src: user.image } : {})} {...(user.frameKey ? { frame: user.frameKey } : {})} />
           </span>
           <div className="gcs-hoverCard__identity">
             <a href={`/members/${user.id}-${user.slug}`} className={`gcs-userLink gcs-name--${user.nameKey} gcs-hoverCard__name`} title={user.name}>
@@ -83,6 +90,11 @@ export function GcsHoverCard({
               <span className="gcs-badge gcs-hoverCard__group" style={{ "--gcs-hoverCard-group": user.group.color ?? "var(--gcs-muted)" } as CSSProperties}>
                 {user.group.name}
               </span>
+              {look?.banner && (
+                <span className="gcs-vipPill gcs-fx" style={look.banner.style} data-testid="gcs-hover-vip-banner">
+                  {look.banner.label}
+                </span>
+              )}
               {user.rank && (
                 <span className="gcs-hoverCard__rank" data-testid="gcs-hover-rank">
                   {symbol ? `${symbol} ` : ""}
@@ -135,6 +147,12 @@ export function GcsHoverCard({
             <strong>{format.year(stats.joinedAt)}</strong>
             {labels.joined}
           </div>
+          {look?.flair && (
+            <div className="gcs-hoverCard__flair" title={look.flair.label} data-testid="gcs-hover-weapon">
+              <img src={look.flair.icon} alt="" />
+              {labels.weapon ?? look.flair.label}
+            </div>
+          )}
         </div>
         {actions && <div className="gcs-hoverCard__actions">{actions}</div>}
       </div>

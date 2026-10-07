@@ -404,19 +404,16 @@ textarea.gcs-input {
   50% { opacity: 0; }
 }
 
-/* Elementele cu efecte (banner-e, previzualizări) se opresc sub reduced-motion, chiar și cu animația inline. */
-@media (prefers-reduced-motion: reduce) {
-  .gcs-fx,
-  .gcs-fx::before,
-  .gcs-fx::after {
-    animation: none !important;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .gcs-avatarFrame::before,
   [class*="gcs-name--"] {
     animation: none;
+  }
+  /* Elementele cu efecte ale aspectului membrilor (banner-e, rame): oprite chiar și cu animația inline. */
+  .gcs-fx,
+  .gcs-fx::before,
+  .gcs-fx::after {
+    animation: none !important;
   }
   * {
     transition-duration: 0.01ms !important;

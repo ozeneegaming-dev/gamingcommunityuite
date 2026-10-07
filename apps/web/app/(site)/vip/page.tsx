@@ -8,6 +8,7 @@ import { getFormatter, getTranslations } from "next-intl/server";
 import type { CSSProperties } from "react";
 import { currentActor } from "@/lib/actor";
 import { forumHref } from "@/lib/forum-urls";
+import { pluginHookHtml } from "@/lib/plugins";
 import { services } from "@/lib/services";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -31,6 +32,8 @@ export default async function VipPage() {
     actor.userId ? profileQueries.userDisplays([actor.userId]).then((m) => m.get(actor.userId!) ?? null) : Promise.resolve(null),
   ]);
   const sample = me?.name ?? t("sampleName");
+  // Punctul de extensie `vip.page` (ex. Studio VIP: personalizarea profilului), sub planuri.
+  const pluginBlocks = await pluginHookHtml("vip.page", { plans: plans.length });
   const benefit = (b: GcsVipBenefit) => {
     const label = tAll.has(b.labelKey) ? tAll(b.labelKey) : b.key;
     if (b.value === true) return label;
@@ -148,6 +151,14 @@ export default async function VipPage() {
               </GcsCard>
             );
           })}
+        </div>
+      )}
+      {pluginBlocks.length > 0 && (
+        <div className="gcs-pluginHook gcs-vipPluginBlocks" data-hook="vip.page">
+          {pluginBlocks.map((html, i) => (
+            // HTML-ul pluginului, trecut prin sanitizer (listă albă) de gazda pluginurilor.
+            <div key={i} dangerouslySetInnerHTML={{ __html: html }} />
+          ))}
         </div>
       )}
     </>

@@ -1,4 +1,5 @@
 import { currentActor } from "@/lib/actor";
+import { memberLook } from "@/lib/member-look";
 import { services } from "@/lib/services";
 import { hoverCardVars } from "@/lib/template-data";
 import { siteTemplateHtml } from "@/lib/templates";
@@ -16,5 +17,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const card = await services().profileQueries.card(await currentActor(), id);
   if (!card) return new Response(null, { status: 404 });
   const html = await siteTemplateHtml("members.hover_card", hoverCardVars(card));
-  return Response.json({ ...card, html }, { headers: { "Cache-Control": "private, no-store" } });
+  // Aspectul publicat de pluginuri (Studio VIP): banner-ul, fundalul copertei și arma, cu stilurile calculate de GCS.
+  const look = await memberLook(card.user.id);
+  return Response.json({ ...card, html, look: look ? { banner: look.banner, card: look.card, flair: look.flair } : null }, { headers: { "Cache-Control": "private, no-store" } });
 }

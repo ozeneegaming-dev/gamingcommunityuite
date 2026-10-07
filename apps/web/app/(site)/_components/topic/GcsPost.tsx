@@ -6,6 +6,7 @@ import { getFormatter, getTranslations } from "next-intl/server";
 import { memberHref, postHref } from "@/lib/forum-urls";
 import { postbitVars } from "@/lib/template-data";
 import { siteTemplate } from "@/lib/templates";
+import { memberLook } from "@/lib/member-look";
 import { pluginHookHtml } from "@/lib/plugins";
 import { GcsTranslateButton, type GcsTranslateLabels } from "../GcsTranslateButton";
 import { GcsPostContent, type GcsPostContentProps } from "./GcsPostContent";
@@ -118,6 +119,9 @@ async function GcsPostbit({ author, data, post, topicId }: { author: NonNullable
   if (custom) return custom;
   const t = await getTranslations("topic.author");
   const format = await getFormatter();
+  // Aspectul publicat de pluginuri (Studio VIP): banner-ul în bara grupului, fundalul în caseta avatarului, arma în rânduri.
+  const look = await memberLook(author.id);
+  const cover = look?.card ?? (data?.cover ? { background: `center ${data.cover.positionY}% / cover no-repeat url(${data.cover.url})` } : null);
   const groupColor = data?.group.color ?? author.groupColor;
   const groupLabel = data?.group.name ?? author.groupTitle ?? author.groupName;
   const banner = data?.group.banner && isSafeBanner(data.group.banner) ? data.group.banner : (groupColor ?? null);
@@ -150,18 +154,13 @@ async function GcsPostbit({ author, data, post, topicId }: { author: NonNullable
         <span className="gcs-postbit__handle">@{author.name.toLowerCase()}</span>
       </div>
 
-      <div className={`gcs-postbit__profile${data?.cover ? " gcs-postbit__profile--cover" : ""}`}>
-        {data?.cover && (
-          // Coperta membrului: strat decorativ sub avatar și nume, cu poziția salvată (voalul e în CSS).
-          <span
-            className="gcs-postbit__cover"
-            aria-hidden="true"
-            style={{ background: `center ${data.cover.positionY}% / cover no-repeat url(${data.cover.url})` }}
-            data-testid="gcs-postbit-cover"
-          />
+      <div className={`gcs-postbit__profile${cover ? " gcs-postbit__profile--cover" : ""}`}>
+        {cover && (
+          // Coperta membrului (sau fundalul cardului ales în Studio VIP): strat decorativ sub avatar și nume (voalul e în CSS).
+          <span className="gcs-postbit__cover" aria-hidden="true" style={cover} data-testid="gcs-postbit-cover" {...(look?.card ? { "data-vip": "card" } : {})} />
         )}
         <span className="gcs-postbit__avatar">
-          <GcsAvatar name={author.name} size="l" {...(author.image ? { src: author.image } : {})} {...(author.frameKey ? { frame: author.frameKey } : {})} />
+          <GcsAvatar name={author.name} size="l" userId={author.id} {...(author.image ? { src: author.image } : {})} {...(author.frameKey ? { frame: author.frameKey } : {})} />
         </span>
         <div className="gcs-postbit__identity">
           <span className="gcs-post__authorName">
@@ -187,12 +186,13 @@ async function GcsPostbit({ author, data, post, topicId }: { author: NonNullable
       </div>
 
       <span
-        className={`gcs-postbit__group${banner ? " gcs-postbit__group--colored" : ""}`}
-        style={banner ? { background: banner } : undefined}
+        className={`gcs-postbit__group${banner || look?.banner ? " gcs-postbit__group--colored" : ""}${look?.banner ? " gcs-fx" : ""}`}
+        style={look?.banner ? look.banner.style : banner ? { background: banner } : undefined}
         data-testid="gcs-postbit-group"
+        {...(look?.banner ? { "data-vip": "banner" } : {})}
       >
         {data?.group.icon && <GcsIcon name={data.group.icon} />}
-        <span>{groupLabel}</span>
+        <span>{look?.banner?.label ?? groupLabel}</span>
       </span>
 
       {(data || author.rank) && (
@@ -274,6 +274,17 @@ async function GcsPostbit({ author, data, post, topicId }: { author: NonNullable
             <dd>{s.value}</dd>
           </div>
         ))}
+        {look?.flair && (
+          <div className="gcs-postbit__row" data-stat="weapon" data-testid="gcs-postbit-weapon">
+            <dt>
+              <span className="gcs-postbit__rowIcon">
+                <img src={look.flair.icon} alt="" className="gcs-postbit__flair" />
+              </span>
+              {t("weapon")}
+            </dt>
+            <dd>{look.flair.label}</dd>
+          </div>
+        )}
       </dl>
       {data && data.fields.length > 0 && (
         <dl className="gcs-postbit__rows gcs-postbit__fields" data-testid="gcs-postbit-fields">

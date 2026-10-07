@@ -1745,7 +1745,8 @@
           "vip_expired": "A VIP subscription expired.",
           "vip_revoked": "A VIP subscription revoked from the ACP.",
           "post_before_save": "Before a post is saved (new topic, reply, edit): the plugin can change the title and content or reject the post. 2 s timeout; an error skips the plugin.",
-          "postbit_after_fields": "Below the author card in posts."
+          "postbit_after_fields": "Below the author card in posts.",
+          "vip_page": "On the public VIP page (/vip), below the plans."
         }
       }
     },
@@ -2089,7 +2090,8 @@
       "reputation": "Reputation",
       "followers": "Followers",
       "joined": "Member since",
-      "lastActive": "Last active"
+      "lastActive": "Last active",
+      "weapon": "Favourite weapon"
     },
     "tabsLabel": "Profile sections",
     "tabs": {
@@ -2146,6 +2148,16 @@
       "SOLUTIONS_COUNT": "{count, plural, one {# answer marked as the solution} other {# answers marked as the solution}}",
       "IS_VIP": "Becomes VIP",
       "manual": "Awarded by the team"
+    },
+    "vip": {
+      "quote": "{name}'s quote",
+      "song": "Profile song",
+      "play": "Play",
+      "pause": "Pause",
+      "unmute": "Turn sound on",
+      "youtube": "YouTube video: it only loads when you press Play.",
+      "bgPause": "Pause the animated background",
+      "bgPlay": "Play the animated background"
     }
   },
   "maintenance": {
@@ -2413,7 +2425,8 @@
       "memberSince": "Member since:",
       "status": "Status:",
       "motto": "Motto",
-      "badgesMore": "{count, plural, one {# more badge} other {# more badges}}"
+      "badgesMore": "{count, plural, one {# more badge} other {# more badges}}",
+      "weapon": "Favourite weapon"
     },
     "poll": {
       "votes": "{count, plural, one {# vote} other {# votes}}",
@@ -2576,7 +2589,8 @@
     "joined": "Member since",
     "follow": "Follow",
     "unfollow": "Unfollow",
-    "message": "Message"
+    "message": "Message",
+    "weapon": "Weapon"
   },
   "messages": {
     "title": "Messages",

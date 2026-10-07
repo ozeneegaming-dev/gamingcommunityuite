@@ -100,7 +100,7 @@ describe("aspectul membrilor: validarea", () => {
 describe("aspectul membrilor: CSS-ul", () => {
   test("numele: per user, cu gradient, animație și oprire sub reduced-motion", () => {
     const css = compileAppearanceCss([{ userId: "u1", appearance: { name: { fill: { colors: ["#FF0044", "#7A5CFF"] }, effect: "shimmer" } } }]);
-    expect(css).toContain('.gcs-root :is(a.gcs-userLink,.gcs-styledName)[data-user-id="u1"]');
+    expect(css).toContain('.gcs-root :is(a.gcs-userLink[data-user-id="u1"],[data-name-user="u1"])');
     expect(css).toContain("linear-gradient(90deg,#FF0044,#7A5CFF,#FF0044)");
     expect(css).toContain("animation:gcsFxFlow 3.5s linear infinite");
     expect(css).toContain("prefers-reduced-motion: reduce");
@@ -108,9 +108,9 @@ describe("aspectul membrilor: CSS-ul", () => {
 
   test("rama: imaginea pluginului peste avatar, rama clasică ascunsă", () => {
     const css = compileAppearanceCss([{ userId: "u2", appearance: { frame: { image: `/plugins/${KEY}/assets/frames/ember.png`, scale: 140, y: -4 } } }]);
-    expect(css).toContain(`.gcs-avatar[data-user-id="u2"]::after{content:"";position:absolute;inset:-20%;background:url("/plugins/${KEY}/assets/frames/ember.png")`);
+    expect(css).toContain(`.gcs-avatar[data-avatar-user="u2"]::after{content:"";position:absolute;inset:-20%;background:url("/plugins/${KEY}/assets/frames/ember.png")`);
     expect(css).toContain("translate(0%,-4%)");
-    expect(css).toContain('.gcs-avatarFrame:has(>.gcs-avatar[data-user-id="u2"])::before{display:none}');
+    expect(css).toContain('.gcs-avatarFrame:has(>.gcs-avatar[data-avatar-user="u2"])::before{display:none}');
   });
 
   test("id-urile nesigure sunt ignorate; fără aspect, fără CSS", () => {

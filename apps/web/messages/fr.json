@@ -1745,7 +1745,8 @@
           "vip_expired": "Un abonnement VIP a expiré.",
           "vip_revoked": "A VIP subscription revoked from the ACP.",
           "post_before_save": "Avant qu'un message soit enregistré (nouveau sujet, réponse, édition): le plugin peut changer le titre et le contenu ou rejeter le message. 2 s timeout; une erreur saute le plugin.",
-          "postbit_after_fields": "Ci-dessous la carte d'auteur dans les messages."
+          "postbit_after_fields": "Ci-dessous la carte d'auteur dans les messages.",
+          "vip_page": "On the public VIP page (/vip), below the plans."
         }
       }
     },
@@ -2089,7 +2090,8 @@
       "reputation": "Réputation",
       "followers": "Abonnés",
       "joined": "Membre depuis",
-      "lastActive": "Dernière activité"
+      "lastActive": "Dernière activité",
+      "weapon": "Favourite weapon"
     },
     "tabsLabel": "Sections de profil",
     "tabs": {
@@ -2146,6 +2148,16 @@
       "SOLUTIONS_COUNT": "{count, plural, one {# answer marked as the solution} many {# answers marked as the solution} other {# answers marked as the solution}}",
       "IS_VIP": "Becomes VIP",
       "manual": "Awarded by the team"
+    },
+    "vip": {
+      "quote": "{name}'s quote",
+      "song": "Profile song",
+      "play": "Play",
+      "pause": "Pause",
+      "unmute": "Turn sound on",
+      "youtube": "YouTube video: it only loads when you press Play.",
+      "bgPause": "Pause the animated background",
+      "bgPlay": "Play the animated background"
     }
   },
   "maintenance": {
@@ -2413,7 +2425,8 @@
       "memberSince": "Membre depuis:",
       "status": "État :",
       "motto": "Devise",
-      "badgesMore": "{count, plural, one {# more badge} many {# more badges} other {# more badges}}"
+      "badgesMore": "{count, plural, one {# more badge} many {# more badges} other {# more badges}}",
+      "weapon": "Favourite weapon"
     },
     "poll": {
       "votes": "{count, plural, one {# vote} many {# voix} other {# voix}}",
@@ -2576,7 +2589,8 @@
     "joined": "Membre depuis",
     "follow": "Suivre",
     "unfollow": "Ne plus suivre",
-    "message": "Message"
+    "message": "Message",
+    "weapon": "Weapon"
   },
   "messages": {
     "title": "Messages",

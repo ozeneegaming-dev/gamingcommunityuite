@@ -20,15 +20,21 @@ export type GcsAvatarProps = {
   size: GcsAvatarSize;
   /** Cheia ramei (ex. `neon`, `gold`, `fire`) → clasa `gcs-avatarFrame--{frame}`. */
   frame?: string;
+  /**
+   * Id-ul membrului → `data-avatar-user`: rama publicată de un plugin (aspectul membrului, Studio VIP) se pune peste
+   * avatar din CSS-ul generat. Nu e `data-user-id`, ca avatarul să nu deschidă hover card-ul.
+   */
+  userId?: string;
   className?: string;
 };
 
-export function GcsAvatar({ name, src, size, frame, className }: GcsAvatarProps) {
+export function GcsAvatar({ name, src, size, frame, userId, className }: GcsAvatarProps) {
   const px = GCS_AVATAR_SIZES[size];
   const initial = [...name.trim()][0]?.toUpperCase() ?? "?";
   const inner = (
     <span
       className={cx("gcs-avatar", `gcs-avatar--${size}`, !frame && className)}
+      data-avatar-user={userId}
       style={{
         ...(frame ? {} : { width: px, height: px }),
         ...(src ? {} : { background: backgroundFor(name) }),

@@ -139,8 +139,8 @@ export async function GcsSiteHeader() {
               <GcsUserMenu
                 trigger={
                   <>
-                    <GcsAvatar name={user.name} size="s" {...(user.image ? { src: user.image } : {})} {...(user.frameKey ? { frame: user.frameKey } : {})} />
-                    <span className={`gcs-userMenu__name gcs-name--${user.nameKey}`} data-testid="gcs-header-user">
+                    <GcsAvatar name={user.name} size="s" userId={user.id} {...(user.image ? { src: user.image } : {})} {...(user.frameKey ? { frame: user.frameKey } : {})} />
+                    <span className={`gcs-userMenu__name gcs-name--${user.nameKey}`} data-testid="gcs-header-user" data-name-user={user.id}>
                       {user.name}
                     </span>
                     <GcsIcon name="fa-solid fa-chevron-down" className="gcs-navbar__caret" />

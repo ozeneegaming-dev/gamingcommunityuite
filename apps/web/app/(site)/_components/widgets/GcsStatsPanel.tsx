@@ -169,7 +169,7 @@ export async function GcsStatsPanel({ id, config }: { id: string; config?: Recor
           <li className="gcs-statsTile gcs-statsTile--newest" data-tile="newest">
             <div className="gcs-statsTile__inner">
               <a href={memberHref(newest)} className="gcs-statsTile__avatar" tabIndex={-1} aria-hidden="true">
-                <GcsAvatar name={newest.name} size="m" {...(newest.image ? { src: newest.image } : {})} {...(newest.frameKey ? { frame: newest.frameKey } : {})} />
+                <GcsAvatar name={newest.name} size="m" userId={newest.id} {...(newest.image ? { src: newest.image } : {})} {...(newest.frameKey ? { frame: newest.frameKey } : {})} />
               </a>
               <span className="gcs-statsTile__text">
                 <span className="gcs-statsTile__kicker">

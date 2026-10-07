@@ -10,8 +10,10 @@ import { cache } from "react";
 import { currentActor } from "@/lib/actor";
 import { memberHref, tint, topicHref } from "@/lib/forum-urls";
 import { pageParam } from "@/lib/forum-page";
+import { memberLook } from "@/lib/member-look";
 import { services } from "@/lib/services";
 import { GcsProfileActions } from "../../_components/profile/GcsProfileActions";
+import { GcsProfileBackdrop, GcsProfileSong } from "../../_components/profile/GcsProfileVip";
 import { GcsWallComposer, GcsWallItemActions } from "../../_components/profile/GcsWall";
 import { GcsTranslateButton } from "../../_components/GcsTranslateButton";
 import { translateLabels } from "@/lib/translate";
@@ -75,6 +77,10 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
   const accent = user.accentColor ?? "#D62839";
   const about = profile.fields.filter((f) => f.section === "ABOUT");
   const games = profile.fields.filter((f) => f.section === "GAMES");
+  // Aspectul publicat de pluginuri (Studio VIP): doar adăugiri în locurile existente ale profilului (fundal, rama,
+  // pastila banner-ului, arma în statistici, citatul și melodia), iar tema prin variabile CSS.
+  const look = await memberLook(user.id);
+  const tv = look ? await getTranslations("profile.vip") : null;
 
   const header = (
     <section className="gcs-card gcs-profileHeader" style={{ borderColor: tint(accent, 0.45) }} data-testid="gcs-profile">
@@ -88,10 +94,10 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         }}
       />
       <div className="gcs-profileHeader__main">
-        <GcsAvatar name={user.name} size="xl" {...(user.image ? { src: user.image } : {})} {...(user.frameKey ? { frame: user.frameKey } : {})} />
+        <GcsAvatar name={user.name} size="xl" userId={user.id} {...(user.image ? { src: user.image } : {})} {...(user.frameKey ? { frame: user.frameKey } : {})} />
         <div className="gcs-profileHeader__identity">
           <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-            <h1 className={`gcs-display gcs-name--${user.nameKey}`} style={{ margin: 0, fontSize: 40, letterSpacing: ".02em" }} data-testid="gcs-profile-name">
+            <h1 className={`gcs-display gcs-name--${user.nameKey}`} style={{ margin: 0, fontSize: 40, letterSpacing: ".02em" }} data-testid="gcs-profile-name" data-name-user={user.id}>
               {user.name}
             </h1>
             {profile.online.online && (
@@ -107,6 +113,11 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
             <span className="gcs-badge" style={{ background: tint(user.group.color, 0.16), color: user.group.color ?? "var(--gcs-muted)" }}>
               {user.group.name}
             </span>
+            {look?.banner && (
+              <span className="gcs-vipPill gcs-fx" style={look.banner.style} data-testid="gcs-profile-vip-banner">
+                {look.banner.label}
+              </span>
+            )}
             {user.rank && (
               <span className="gcs-badge" style={{ background: "rgba(61,220,151,.14)", color: "#3DDC97" }} data-testid="gcs-profile-rank">
                 {user.rank.icon?.startsWith("fa-") ? <GcsIcon name={user.rank.icon} /> : user.rank.icon ? `${user.rank.icon} ` : ""}
@@ -159,6 +170,15 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
             <dt>{s.label}</dt>
           </div>
         ))}
+        {look?.flair && (
+          <div className="gcs-profileStats__flair" data-testid="gcs-profile-weapon">
+            <dd className="gcs-display" title={look.flair.label}>
+              <img src={look.flair.icon} alt="" />
+              <span>{look.flair.label}</span>
+            </dd>
+            <dt>{t("stats.weapon")}</dt>
+          </div>
+        )}
       </dl>
       <nav aria-label={t("tabsLabel")} className="gcs-tabs">
         {TABS.filter((k) => k !== "warnings" || viewer.canSeeWarnings).map((k) => (
@@ -507,18 +527,38 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
     );
   }
 
+  const vipQuote = look?.profile.quote ? (
+    <figure className="gcs-card gcs-vipQuote" data-testid="gcs-profile-quote">
+      <GcsIcon name="fa-solid fa-quote-left" className="gcs-vipQuote__icon" />
+      <blockquote>{look.profile.quote}</blockquote>
+      <figcaption>— {user.name}</figcaption>
+    </figure>
+  ) : null;
+  const vipSong =
+    look?.profile.song && tv ? (
+      <GcsProfileSong song={look.profile.song} labels={{ title: tv("song"), play: tv("play"), pause: tv("pause"), unmute: tv("unmute"), youtube: tv("youtube") }} />
+    ) : null;
+
   return (
-    <>
+    // Tema profilului: doar variabile CSS (accent, panouri) peste pagina existentă; `display: contents` nu schimbă layout-ul.
+    <div className="gcs-vipTheme" style={{ display: "contents", ...(look?.profile.theme ?? {}) }} {...(look?.profile.theme ? { "data-vip": "theme" } : {})}>
+      {look?.profile.background && tv && (
+        <GcsProfileBackdrop {...look.profile.background} labels={{ pause: tv("bgPause"), play: tv("bgPlay") }} />
+      )}
       {header}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "flex-start" }}>
         <aside style={{ flex: "1 1 340px", minWidth: 0, display: "flex", flexDirection: "column", gap: 20 }}>
+          {vipSong}
           {aboutCard}
           {tab !== "games" && accountsCard}
           {tab !== "badges" && badgesCompact}
         </aside>
-        <div style={{ flex: "999 1 640px", minWidth: 0, display: "flex", flexDirection: "column", gap: 20 }}>{main}</div>
+        <div style={{ flex: "999 1 640px", minWidth: 0, display: "flex", flexDirection: "column", gap: 20 }}>
+          {vipQuote}
+          {main}
+        </div>
       </div>
-    </>
+    </div>
   );
 
   /** Un status sau un răspuns: autorul, data și conținutul. */

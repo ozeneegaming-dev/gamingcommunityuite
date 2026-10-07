@@ -49,7 +49,7 @@ function RowAvatar({ user }: { user: GcsUserRef | null }) {
   if (!user) return <span className="gcs-avatar gcs-avatar--s gcs-widgetRow__avatar" aria-hidden="true" />;
   return (
     <a href={memberHref(user)} className="gcs-widgetRow__avatar" tabIndex={-1} aria-hidden="true">
-      <GcsAvatar name={user.name} size="s" {...(user.image ? { src: user.image } : {})} {...(user.frameKey ? { frame: user.frameKey } : {})} />
+      <GcsAvatar name={user.name} size="s" userId={user.id} {...(user.image ? { src: user.image } : {})} {...(user.frameKey ? { frame: user.frameKey } : {})} />
     </a>
   );
 }

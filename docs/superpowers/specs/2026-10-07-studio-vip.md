@@ -80,13 +80,15 @@ type Appearance = {
 
 **Randarea:**
 - **Numele** (oriunde): CSS generat per user, adăugat la `/gcs-names.css` (aceeași versiune în URL):
-  `.gcs-root :is(a.gcs-userLink, .gcs-styledName)[data-user-id="<id>"] { … }` — specificitatea bate stilul grupului.
-  Linkurile spre profil (`GcsUserLink`, șabloane) au deja `data-user-id`; titlul profilului, meniul userului și hover
-  card-ul îl primesc.
-- **Rama**: `GcsAvatar` primește `userId` (→ `data-user-id`); CSS-ul generat pune imaginea ramei peste avatar
-  (`::after`, `scale`/`x`/`y` validate), iar rama clasică a nucleului se ascunde pentru acel user.
-- **Banner-ul** înlocuiește bara grupului în postbit și apare sub nume în hover card și pe profil (gradient compilat de
-  nucleu din forma validată, eticheta ca text).
+  `.gcs-root :is(a.gcs-userLink[data-user-id="<id>"], [data-name-user="<id>"]) { … }` — specificitatea bate stilul
+  grupului. Linkurile spre profil (`GcsUserLink`, șabloane) au deja `data-user-id`; numele care nu sunt linkuri (titlul
+  profilului, meniul userului) primesc `data-name-user` (fără hover card).
+- **Rama**: `GcsAvatar` primește `userId` (→ `data-avatar-user`, nu `data-user-id`: avatarul nu deschide hover card-ul);
+  CSS-ul generat pune imaginea ramei peste avatar (`::after`, `scale`/`x`/`y` validate), iar rama clasică a nucleului se
+  ascunde pentru acel user.
+- **Banner-ul** colorează bara grupului din postbit (cu eticheta lui) și apare ca pastilă lângă grup în hover card și pe
+  profil (stilul compilat de nucleu din forma validată, eticheta ca text).
+- **Pagina /vip**: punctul de extensie `vip.page` (sub planuri), pentru blocul pluginului (link spre studio).
 - **Fundalul cardului**: în caseta autorului din postbit și în coperta hover card-ului (poziție și întunecare validate).
 - **Insigna (flair)**: iconița lângă nume (postbit, hover card) și în statisticile profilului („Arma preferată”).
 - **Profilul** (structura paginii nu se schimbă; elementele se adaugă în locurile existente): fundalul (imagine sau

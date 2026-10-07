@@ -1745,7 +1745,8 @@
           "vip_expired": "Срок действия VIP-подписки истек.",
           "vip_revoked": "A VIP subscription revoked from the ACP.",
           "post_before_save": "Перед сохранением сообщения (новая тема, ответ, редактирование): плагин может изменить заголовок и содержание или отклонить сообщение. 2 секунды; ошибка пропускает плагин.",
-          "postbit_after_fields": "Ниже авторской карточки в постах."
+          "postbit_after_fields": "Ниже авторской карточки в постах.",
+          "vip_page": "On the public VIP page (/vip), below the plans."
         }
       }
     },
@@ -2089,7 +2090,8 @@
       "reputation": "Репутация",
       "followers": "Подписчики",
       "joined": "Участник с",
-      "lastActive": "Последняя активность"
+      "lastActive": "Последняя активность",
+      "weapon": "Favourite weapon"
     },
     "tabsLabel": "Разделы профиля",
     "tabs": {
@@ -2146,6 +2148,16 @@
       "SOLUTIONS_COUNT": "{count, plural, one {# answer marked as the solution} few {# answers marked as the solution} many {# answers marked as the solution} other {# answers marked as the solution}}",
       "IS_VIP": "Becomes VIP",
       "manual": "Awarded by the team"
+    },
+    "vip": {
+      "quote": "{name}'s quote",
+      "song": "Profile song",
+      "play": "Play",
+      "pause": "Pause",
+      "unmute": "Turn sound on",
+      "youtube": "YouTube video: it only loads when you press Play.",
+      "bgPause": "Pause the animated background",
+      "bgPlay": "Play the animated background"
     }
   },
   "maintenance": {
@@ -2413,7 +2425,8 @@
       "memberSince": "Член с тех пор:",
       "status": "Состояние:",
       "motto": "Девиз",
-      "badgesMore": "{count, plural, one {# more badge} few {# more badges} many {# more badges} other {# more badges}}"
+      "badgesMore": "{count, plural, one {# more badge} few {# more badges} many {# more badges} other {# more badges}}",
+      "weapon": "Favourite weapon"
     },
     "poll": {
       "votes": "{count, plural, one {Голос #} few {# голосует} many {# голосует} other {# голосует}}",
@@ -2576,7 +2589,8 @@
     "joined": "Участник с",
     "follow": "Подписаться",
     "unfollow": "Отписаться",
-    "message": "Сообщение"
+    "message": "Сообщение",
+    "weapon": "Weapon"
   },
   "messages": {
     "title": "Сообщения",

@@ -107,7 +107,7 @@ export const PLUGIN_FILTER_POINTS = ["post.before_save"] as const;
 export type GcsPluginFilterPoint = (typeof PLUGIN_FILTER_POINTS)[number];
 
 /** Punctele de extensie din interfață (HTML inserat; aceleași nume le vor folosi și șabloanele). */
-export const PLUGIN_HOOK_POINTS = ["postbit.after_fields"] as const;
+export const PLUGIN_HOOK_POINTS = ["postbit.after_fields", "vip.page"] as const;
 export type GcsPluginHookPoint = (typeof PLUGIN_HOOK_POINTS)[number];
 
 /**

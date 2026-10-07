@@ -61,6 +61,7 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
           follow: t("follow"),
           unfollow: t("unfollow"),
           message: t("message"),
+          weapon: t("weapon"),
         }}
       />
     </GcsRealtimeProvider>

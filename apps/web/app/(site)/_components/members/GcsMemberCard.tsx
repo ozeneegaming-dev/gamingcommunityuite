@@ -14,7 +14,7 @@ export async function GcsMemberCard({ member }: { member: Card }) {
   return (
     <article className="gcs-card gcs-memberCard" data-testid="gcs-member-card">
       <span className="gcs-memberCard__avatar">
-        <GcsAvatar name={member.name} size="l" {...(member.image ? { src: member.image } : {})} {...(member.frameKey ? { frame: member.frameKey } : {})} />
+        <GcsAvatar name={member.name} size="l" userId={member.id} {...(member.image ? { src: member.image } : {})} {...(member.frameKey ? { frame: member.frameKey } : {})} />
         {member.online && <span className="gcs-postbit__online" role="img" aria-label={t("online")} title={t("online")} />}
       </span>
       <strong className="gcs-memberCard__name">

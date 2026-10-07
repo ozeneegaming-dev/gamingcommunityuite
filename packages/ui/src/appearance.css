@@ -1,0 +1,274 @@
+/*
+ * Aspectul membrilor publicat de pluginuri (Studio VIP): doar elementele adăugate în structura existentă a postbit-ului,
+ * a hover card-ului și a profilului (pastila banner-ului, arma, citatul, melodia, fundalul din spatele profilului).
+ * Numele și ramele vin din CSS-ul generat (`/gcs-names.css`); culorile și animațiile banner-elor vin inline, calculate
+ * de GCS din valori validate.
+ */
+
+/* Pastila banner-ului (profil, hover card). */
+.gcs-vipPill {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 2px 10px;
+  overflow: hidden;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  line-height: 1.6;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18);
+}
+
+/* Arma în postbit (un rând în plus), în hover card (o statistică în plus) și pe profil. */
+.gcs-postbit__row[data-stat="weapon"] .gcs-postbit__rowIcon {
+  background: var(--gcs-surface2);
+}
+.gcs-postbit__flair {
+  width: 17px;
+  height: 17px;
+  object-fit: contain;
+}
+.gcs-hoverCard__stats:has(> .gcs-hoverCard__flair) {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+.gcs-hoverCard__flair {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+.gcs-hoverCard__flair img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+.gcs-profileStats__flair dd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 15px;
+}
+.gcs-profileStats__flair img {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+.gcs-profileStats__flair span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Fundalul profilului: un strat fix în spatele paginii, cu vignetă pentru lizibilitate. */
+.gcs-vipBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--gcs-bg);
+}
+.gcs-vipBackdrop__media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.gcs-vipBackdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgb(0 0 0 / calc(var(--gcs-vip-dim, 0.45) * 0.4)), rgb(0 0 0 / calc(var(--gcs-vip-dim, 0.45) + 0.25))),
+    linear-gradient(transparent 40%, var(--gcs-bg));
+}
+.gcs-vipBackdrop__toggle {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--gcs-surface) 85%, transparent);
+  color: var(--gcs-text);
+  cursor: pointer;
+}
+.gcs-vipBackdrop__toggle:focus-visible {
+  outline: 2px solid var(--gcs-accent);
+  outline-offset: 2px;
+}
+.gcs-vipBackdrop__toggle .gcs-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* Citatul personal: primul card din coloana de conținut. */
+.gcs-vipQuote {
+  position: relative;
+  margin: 0;
+  padding: 18px 22px 16px 58px;
+  border-left: 3px solid var(--gcs-profile-accent, var(--gcs-accent));
+}
+.gcs-vipQuote__icon {
+  position: absolute;
+  top: 18px;
+  left: 20px;
+  width: 24px;
+  height: 24px;
+  color: var(--gcs-profile-accent, var(--gcs-accent));
+}
+.gcs-vipQuote blockquote {
+  margin: 0;
+  font-size: 17px;
+  font-style: italic;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.gcs-vipQuote figcaption {
+  margin-top: 8px;
+  color: var(--gcs-muted);
+  font-size: 13px;
+}
+
+/* Melodia profilului: un bloc în coloana laterală. */
+.gcs-vipSong {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px;
+}
+.gcs-vipSong__heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.gcs-vipSong__heading .gcs-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--gcs-profile-accent, var(--gcs-accent));
+}
+.gcs-vipSong__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.gcs-vipSong__disc {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  background: radial-gradient(circle, var(--gcs-profile-accent, var(--gcs-accent)) 0 22%, #111318 23% 100%);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--gcs-profile-accent, var(--gcs-accent)) 55%, transparent);
+}
+.gcs-vipSong__row--playing .gcs-vipSong__disc {
+  animation: gcsSpin 3s linear infinite;
+}
+.gcs-vipSong__meta {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.gcs-vipSong__meta strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-vipSong__meta span {
+  color: var(--gcs-muted);
+  font-size: 13px;
+}
+.gcs-vipSong__play {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--gcs-profile-accent, var(--gcs-accent));
+  color: #fff;
+  cursor: pointer;
+}
+.gcs-vipSong__play:focus-visible {
+  outline: 2px solid var(--gcs-text);
+  outline-offset: 2px;
+}
+.gcs-vipSong__play .gcs-icon {
+  width: 14px;
+  height: 14px;
+}
+.gcs-vipSong__unmute {
+  align-self: flex-start;
+}
+.gcs-vipSong__unmute .gcs-icon {
+  width: 13px;
+  height: 13px;
+  margin-right: 6px;
+}
+.gcs-vipSong__yt iframe {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  border-radius: 10px;
+}
+.gcs-vipSong__yt p {
+  margin: 0;
+  font-size: 13px;
+}
+
+/* Tema profilului: panourile primesc strălucirea temei (variabilele vin de pe pagina profilului). */
+.gcs-vipTheme[data-vip="theme"] .gcs-card {
+  box-shadow: var(--gcs-profile-glow, none);
+}
+
+/* Blocurile pluginurilor de pe pagina VIP (punctul de extensie `vip.page`). */
+.gcs-vipPluginBlocks {
+  margin-top: 20px;
+}
+.gcs-vipPluginBlocks section {
+  padding: 20px 22px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 14px;
+  background: radial-gradient(90% 120% at 0% 0%, color-mix(in srgb, var(--gcs-warn) 14%, transparent), transparent 60%), var(--gcs-surface);
+}
+.gcs-vipPluginBlocks h2 {
+  margin: 0 0 6px;
+  font-family: var(--gcs-font-display);
+  font-size: 20px;
+}
+.gcs-vipPluginBlocks p {
+  max-width: 75ch;
+  margin: 0 0 12px;
+  line-height: 1.55;
+}
+.gcs-vipPluginBlocks p:last-child {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gcs-vipSong__row--playing .gcs-vipSong__disc {
+    animation: none;
+  }
+}

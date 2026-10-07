@@ -483,7 +483,7 @@ export function GcsChatRoom(props: Props) {
               {!hideAvatars &&
                 (author ? (
                   <a href={memberHref(author)} className="gcs-chat__avatar" tabIndex={-1} aria-hidden="true" data-testid="gcs-chat-avatar">
-                    <GcsAvatar name={author.name} src={author.image ?? undefined} size={compact ? "s" : "m"} frame={author.frameKey ?? undefined} />
+                    <GcsAvatar name={author.name} userId={author.id} src={author.image ?? undefined} size={compact ? "s" : "m"} frame={author.frameKey ?? undefined} />
                   </a>
                 ) : (
                   <span className="gcs-chat__avatar" aria-hidden="true" />

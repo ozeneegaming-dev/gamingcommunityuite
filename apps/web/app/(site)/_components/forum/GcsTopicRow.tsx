@@ -20,7 +20,7 @@ export async function GcsTopicRow({ topic, select }: { topic: Row; select?: Reac
     <div className="gcs-topicRow" data-testid="gcs-topic-row" data-topic-id={topic.id}>
       {select}
       <span className="gcs-topicRow__avatar">
-        {topic.author && <GcsAvatar name={topic.author.name} size="s" {...(topic.author.image ? { src: topic.author.image } : {})} {...(topic.author.frameKey ? { frame: topic.author.frameKey } : {})} />}
+        {topic.author && <GcsAvatar name={topic.author.name} size="s" userId={topic.author.id} {...(topic.author.image ? { src: topic.author.image } : {})} {...(topic.author.frameKey ? { frame: topic.author.frameKey } : {})} />}
       </span>
       <div className="gcs-topicRow__main">
         <div className="gcs-topicRow__badges">

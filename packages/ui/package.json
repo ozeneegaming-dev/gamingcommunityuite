@@ -19,6 +19,7 @@
     "./edit.css": "./src/edit.css",
     "./widgets.css": "./src/widgets.css",
     "./postbit.css": "./src/postbit.css",
+    "./appearance.css": "./src/appearance.css",
     "./icons.css": "./src/icons.css",
     "./acp.css": "./src/acp.css",
     "./studio.css": "./src/studio.css",
