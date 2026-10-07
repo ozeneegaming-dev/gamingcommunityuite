@@ -6,7 +6,7 @@ import { notFound, redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { cache } from "react";
 import { requireAcpSection } from "@/lib/acp";
-import { pluginHost, pluginKeyParam, pluginQuery } from "@/lib/plugins";
+import { pluginHost, pluginKeyParam, pluginQuery, safeModeActive } from "@/lib/plugins";
 import { GcsAcpTitle } from "../../../_components/GcsAcpTitle";
 
 type Props = { params: Promise<{ plugin: string; path?: string[] }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
@@ -21,12 +21,17 @@ async function load({ params, searchParams }: Props) {
   const { plugin, path } = await params;
   const key = pluginKeyParam(plugin);
   if (!key) notFound();
+  // Modul sigur (spec §3.5): codul și CSS-ul pluginului nu rulează nici în ACP; dreptul ACP se verifică totuși.
+  if (await safeModeActive()) {
+    await requireAcpSection(pluginAcpSection(key));
+    return { key, result: null };
+  }
   return { key, result: await renderAcpPage(key, `/${(path ?? []).map(decodeURIComponent).join("/")}`, JSON.stringify(pluginQuery(await searchParams))) };
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const { result } = await load(props);
-  return { title: result.status === 200 ? result.title : undefined };
+  return { title: result?.status === 200 ? result.title : undefined };
 }
 
 /**
@@ -35,9 +40,17 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
  */
 export default async function AcpPluginPage(props: Props) {
   const { key, result } = await load(props);
+  const t = await getTranslations("plugins.page");
+  if (!result) {
+    return (
+      <GcsCard style={{ padding: 24 }} role="status" data-testid="gcs-plugin-safe-mode">
+        <GcsIcon name="fa-solid fa-shield-halved" className="gcs-emptyIcon" />
+        {t("safeMode")}
+      </GcsCard>
+    );
+  }
   if (result.status === 404) notFound();
   if (result.status === 302) redirect(result.redirect);
-  const t = await getTranslations("plugins.page");
   if (result.status !== 200) {
     return (
       <GcsCard style={{ padding: 24 }} role="alert" data-testid="gcs-acp-plugin-error">
