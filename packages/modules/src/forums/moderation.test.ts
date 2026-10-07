@@ -182,6 +182,45 @@ describe("acțiuni salvate", () => {
     await expectCountersConsistent();
   });
 
+  test("răspunsul predefinit trece prin filtrul post.before_save și emite post.created, ca orice răspuns", async () => {
+    const a = await topic(tree.forum.id, "Primul topic");
+    const b = await topic(tree.forum.id, "Al doilea topic");
+    const filtered: { kind: string; topicId: number | null; forumId: number; authorId: string | null }[] = [];
+    w.posting.deps.contentFilter = async (data) => {
+      filtered.push({ kind: data.kind, topicId: data.topicId, forumId: data.forumId, authorId: data.authorId });
+      return { ...data, content: doc(`Filtrat #${data.topicId}`) };
+    };
+    const created: unknown[] = [];
+    w.bus.on("post.created", async (e) => {
+      created.push(e.payload);
+    });
+    const action = await w.moderation.saveAction(w.root, { name: "Mută cu răspuns", forumIds: [], actions: { moveTo: forumB, reply: "Mutat." } });
+    await w.moderation.applySavedAction(w.root, action.id, [a.topicId, b.topicId]);
+
+    const authorId = w.root.userId;
+    expect(filtered).toEqual([
+      { kind: "reply", topicId: a.topicId, forumId: forumB, authorId },
+      { kind: "reply", topicId: b.topicId, forumId: forumB, authorId },
+    ]);
+    for (const t of [a, b]) {
+      const after = await w.db.topic.findUniqueOrThrow({ where: { id: t.topicId } });
+      const last = await w.db.post.findUniqueOrThrow({ where: { id: after.lastPostId! } });
+      expect(last.contentHtml).toBe(`<p>Filtrat #${t.topicId}</p>`);
+      expect(created).toContainEqual({ postId: last.id, topicId: t.topicId, forumId: forumB, pending: false, authorId });
+    }
+    expect(created).toHaveLength(2);
+  });
+
+  test("un filtru care respinge răspunsul predefinit oprește toată acțiunea", async () => {
+    const t = await topic(tree.forum.id, "Topic filtrat");
+    w.posting.deps.contentFilter = async () => {
+      throw new GcsValidationError({ content: "blocked" });
+    };
+    const action = await w.moderation.saveAction(w.root, { name: "Blochează cu răspuns", forumIds: [], actions: { lock: true, reply: "Închis." } });
+    await expect(w.moderation.applySavedAction(w.root, action.id, [t.topicId])).rejects.toBeInstanceOf(GcsValidationError);
+    expect(await w.db.topic.findUniqueOrThrow({ where: { id: t.topicId } })).toMatchObject({ locked: false, repliesCount: 0 });
+  });
+
   test("o acțiune restrânsă la alt forum nu se aplică; fără puterea cerută → GcsForbidden", async () => {
     const t = await topic(tree.forum.id, "Topic oarecare");
     const onlyB = await w.moderation.saveAction(w.root, { name: "Doar B", forumIds: [forumB], actions: { pin: true } });

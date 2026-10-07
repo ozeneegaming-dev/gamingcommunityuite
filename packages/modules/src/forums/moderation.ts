@@ -5,6 +5,7 @@ import {
   writeAudit,
   type GcsAcpRoleService,
   type GcsActor,
+  type GcsRendered,
   type GcsReportService,
 } from "@gcs/core";
 import type { ModSavedAction, Prisma } from "@gcs/db";
@@ -312,8 +313,17 @@ export class GcsForumModerationService {
       for (const power of powers.length > 0 ? powers : ["edit"]) await this.assertPower(actor, power, t.forumId);
     }
     if (steps.moveTo !== undefined) await this.assertTarget(actor, steps.moveTo);
-    const reply = steps.reply ? await posting.render(textDoc(steps.reply)) : null;
+    // Răspunsul predefinit trece, pe fiecare topic, prin aceleași filtre ale pluginurilor ca un răspuns obișnuit.
+    const replies = new Map<number, GcsRendered>();
+    if (steps.reply) {
+      for (const t of topics) {
+        const forumId = steps.moveTo ?? t.forumId;
+        const filtered = await posting.filterContent(actor, { kind: "reply", title: null, content: textDoc(steps.reply), forumId, topicId: t.id, authorId: actor.userId });
+        replies.set(t.id, await posting.render(filtered.content));
+      }
+    }
     const forums = new Set([...topics.map((t) => t.forumId), ...(steps.moveTo !== undefined ? [steps.moveTo] : [])]);
+    const created: { postId: number; topicId: number; forumId: number }[] = [];
 
     await db.$transaction(async (tx) => {
       for (const t of topics) {
@@ -327,17 +337,27 @@ export class GcsForumModerationService {
             ...(steps.moveTo !== undefined ? { forumId: steps.moveTo } : {}),
           },
         });
+        const reply = replies.get(t.id);
         if (reply) {
           const post = await tx.post.create({
             data: { topicId: t.id, authorId: actor.userId, contentJson: reply.json as Prisma.InputJsonValue, contentHtml: reply.html, ip: actor.ip },
           });
           await posting.search.indexPost(tx, post.id, reply.text);
+          created.push({ postId: post.id, topicId: t.id, forumId: steps.moveTo ?? t.forumId });
         }
         await this.audit(tx, actor, "mod.topic.saved_action", t.id, null, { actionId, name: action.name });
       }
       await this.recount(tx, topics.map((t) => t.id), forums, actor.userId ? [actor.userId] : []);
     }, WRITE_TX);
     await this.changed(topics.map((t) => t.id), forums);
+    // Același eveniment ca un răspuns obișnuit (notificări, pluginuri), după commit.
+    for (const c of created) {
+      await posting.deps.bus.emit({
+        name: "post.created",
+        payload: { ...c, pending: false, authorId: actor.userId },
+        tags: ["forums-tree", `forum:${c.forumId}`, `topic:${c.topicId}`],
+      });
+    }
   }
 
   private async setFlag(actor: GcsActor, topicIds: number[], field: "pinned" | "locked" | "featured", power: string, value: boolean): Promise<void> {
