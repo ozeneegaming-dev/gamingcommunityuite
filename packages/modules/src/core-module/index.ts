@@ -44,6 +44,8 @@ const notEmpty = (v: unknown) => ((v as string).trim() === "" ? "required" : nul
 
 const settings: GcsSettingDef[] = [
   setting("site.name", "string", "Comunitatea mea", "general", notEmpty),
+  // Descrierea din `<meta name="description">` (motoarele de căutare); goală → un text generic cu numele site-ului.
+  setting("site.description", "string", "", "general", (v) => ((v as string).length > 300 ? "too_long" : null)),
   setting("site.url", "string", "", "general", isUrlOrEmpty),
   { ...setting("site.locale", "string", "ro", "general", oneOf([...GCS_LOCALE_KEYS])), options: [...GCS_LOCALE_KEYS] },
   setting("site.timezone", "string", "Europe/Bucharest", "general", notEmpty),

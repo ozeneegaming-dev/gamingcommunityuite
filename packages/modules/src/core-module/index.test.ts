@@ -14,6 +14,7 @@ describe("coreModule", () => {
     expect(keys).toEqual(
       expect.arrayContaining([
         "site.name",
+        "site.description",
         "site.url",
         "site.locale",
         "site.timezone",

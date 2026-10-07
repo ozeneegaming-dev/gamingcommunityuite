@@ -215,7 +215,8 @@ export function GcsGuestPrefs({ locales, currentLocale, labels }: { locales: { c
   const [, start] = useTransition();
   return (
     <GcsDropdown
-      label={labels.language}
+      // Numele accesibil conține și textul vizibil (codul limbii), cum cer cititoarele de ecran și comenzile vocale.
+      label={`${labels.language}: ${currentLocale.toUpperCase()}`}
       trigger={
         <span className="gcs-guestLocale">
           <GcsIconSvg icon={faLanguage} />

@@ -39,7 +39,8 @@
     "footerNav": "Полезные ссылки",
     "closeToast": "Закрытое уведомление",
     "themeEditor": "Тематический редактор",
-    "pageEditor": "Редактор страниц"
+    "pageEditor": "Редактор страниц",
+    "metaDescription": "{name}: a gaming community with forums, chat and members."
   },
   "auth": {
     "login": {
@@ -1698,6 +1699,7 @@
   "settings": {
     "site": {
       "name": "Название сайта",
+      "description": "Site description (for search engines)",
       "url": "Адрес сайта (URL)",
       "locale": "Язык по умолчанию",
       "timezone": "Часовой пояс",

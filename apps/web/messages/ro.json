@@ -39,7 +39,8 @@
     "footerNav": "Linkuri utile",
     "closeToast": "Închide notificarea",
     "themeEditor": "Editor temă",
-    "pageEditor": "Editor pagină"
+    "pageEditor": "Editor pagină",
+    "metaDescription": "{name}: comunitate de gaming cu forum, chat și membri."
   },
   "auth": {
     "login": {
@@ -1698,6 +1699,7 @@
   "settings": {
     "site": {
       "name": "Numele site-ului",
+      "description": "Descrierea site-ului (pentru motoarele de căutare)",
       "url": "Adresa site-ului (URL)",
       "locale": "Limba implicită",
       "timezone": "Fusul orar",

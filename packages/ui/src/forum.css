@@ -373,6 +373,9 @@
   min-width: 0;
 }
 .gcs-root .gcs-forumRow__subs a {
+  /* Ținta de atingere are cel puțin 24 px înălțime (pe telefon). */
+  display: inline-block;
+  padding-block: 3px;
   color: color-mix(in srgb, var(--gcs-text) 80%, var(--gcs-muted));
   overflow: hidden;
   text-overflow: ellipsis;

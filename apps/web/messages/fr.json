@@ -39,7 +39,8 @@
     "footerNav": "Liens utiles",
     "closeToast": "Notification étroite",
     "themeEditor": "Éditeur de thème",
-    "pageEditor": "Éditeur de page"
+    "pageEditor": "Éditeur de page",
+    "metaDescription": "{name}: a gaming community with forums, chat and members."
   },
   "auth": {
     "login": {
@@ -1698,6 +1699,7 @@
   "settings": {
     "site": {
       "name": "Nom du site",
+      "description": "Site description (for search engines)",
       "url": "Adresse du site (URL)",
       "locale": "Langue par défaut",
       "timezone": "Fuseau horaire",

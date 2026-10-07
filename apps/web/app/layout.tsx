@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Chakra_Petch, Manrope } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { themeMode, viewerTheme } from "@/lib/appearance";
 import type { ReactNode } from "react";
 import { services } from "@/lib/services";
@@ -28,8 +28,11 @@ export async function generateMetadata(): Promise<Metadata> {
   const siteName = await orDefault(() => services().settings.get<string>("site.name"), "GamingCommunitySuite");
   const base = await siteBaseUrl();
   const { shown } = await viewerTheme();
+  const custom = await orDefault(() => services().settings.get<string>("site.description"), "");
+  const description = custom.trim() || (await orDefault(async () => (await getTranslations("site"))("metaDescription", { name: siteName }), siteName));
   return {
     title: { default: siteName, template: `%s · ${siteName}` },
+    description,
     metadataBase: new URL(base),
     openGraph: { siteName, type: "website" },
     ...(shown.faviconUrl ? { icons: { icon: [{ url: shown.faviconUrl, type: "image/png" }] } } : {}),

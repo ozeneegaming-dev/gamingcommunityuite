@@ -387,6 +387,11 @@ a.gcs-statsTile__inner:focus-visible {
   text-decoration: none;
   color: #fff;
 }
+/* Butoanele sunt linkuri: textul rămâne alb, nu culoarea generală a linkurilor. */
+.gcs-root a.gcs-onlineBlock__btn,
+.gcs-root a.gcs-onlineBlock__btn:hover {
+  color: #fff;
+}
 .gcs-onlineBlock__btn--now {
   background: #2e7d32;
   border-color: #43a047;
