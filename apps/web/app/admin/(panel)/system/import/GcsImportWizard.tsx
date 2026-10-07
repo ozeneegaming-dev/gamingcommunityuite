@@ -485,7 +485,9 @@ function OptionsPanel({ job, canEdit, pending, onStart }: { job: GcsImportView; 
             variant="primary"
             data-testid="gcs-import-start"
             disabled={pending || !job.detected?.supported}
-            onClick={() => onStart({ dryRun, options: selected, redirects: redirects && !dryRun })}
+            // Alegerea redirecturilor se salvează și la rularea de probă (care nu le pornește), ca importul real pornit
+            // din raportul ei să o păstreze.
+            onClick={() => onStart({ dryRun, options: selected, redirects })}
             icon={<GcsIconSvg icon={dryRun ? faFlask : faPlay} />}
           >
             {dryRun ? t("options.startDry") : t("options.start")}
