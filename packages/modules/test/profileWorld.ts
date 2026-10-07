@@ -49,7 +49,7 @@ export async function createProfileWorld() {
   // Fără coadă: evaluarea (jobul din worker) se apelează direct în teste; punctele pe acțiune vin din ascultători.
   const achievements = new GcsAchievementService({ db: world.db, bus: world.bus, acp: world.acp, jobs: null });
   achievements.listen(world.bus);
-  const achievementAdmin = new GcsAchievementAdmin({ db: world.db, bus: world.bus, acp: world.acp, achievements, jobs: null });
+  const achievementAdmin = new GcsAchievementAdmin({ db: world.db, bus: world.bus, acp: world.acp, achievements, jobs: null, attachments: world.attachments });
   const membership = new GcsMembership({ bus: world.bus, permissions: world.permissions });
   const promotions = new GcsPromotionService({ db: world.db, bus: world.bus, acp: world.acp, membership });
   achievements.onEvaluated(async (userId) => void (await promotions.evaluateUser(userId)));

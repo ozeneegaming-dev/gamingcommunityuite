@@ -512,7 +512,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     profileFields: new GcsProfileFieldAdmin({ db, bus, acp }),
     social,
     achievements,
-    achievementAdmin: new GcsAchievementAdmin({ db, bus, acp, achievements, jobs }),
+    achievementAdmin: new GcsAchievementAdmin({ db, bus, acp, achievements, jobs, attachments }),
     membership,
     promotions,
     cosmetics,

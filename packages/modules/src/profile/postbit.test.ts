@@ -69,6 +69,11 @@ describe("postbit", () => {
     expect(data.size).toBe(5);
     expect(data.get(authors[3]!.id)?.badges.count).toBe(2);
     expect(data.get(authors[3]!.id)?.badges.recent).toHaveLength(2);
+    // Insignele vin cu adresa desenului și cu descrierea (tooltip-ul din postbit).
+    for (const b of data.get(authors[3]!.id)!.badges.recent) {
+      expect(b.art).toMatch(/^\/badge-art\/v1\/[a-z]+-[a-z]+-[0-9a-f]{6}-i-solid-[a-z0-9-]+\.svg$/);
+      expect(typeof b.description).toBe("string");
+    }
   });
 
   test("un câmp vizibil doar staff-ului lipsește pentru membri, apare pentru autor; ordinea din ACP e respectată", async () => {

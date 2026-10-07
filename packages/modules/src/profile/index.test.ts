@@ -34,6 +34,9 @@ describe("modulele Profil, Mesaje și VIP", () => {
     ]);
     expect(await db.badge.count()).toBe(10);
     expect(await db.badge.count({ where: { manual: true } })).toBe(2);
+    // Insignele implicite (specul 2026-10-07-insigne-grafice, §8.1).
+    expect(await db.badge.findUniqueOrThrow({ where: { key: "vip" } })).toMatchObject({ artShape: "diamond", artTier: "platinum", artIcon: "fa-solid fa-gem" });
+    expect(await db.badge.count({ where: { artShape: null } })).toBe(0);
     expect(await db.achievementRule.count({ where: { badgeId: { not: null } } })).toBe(8);
     expect(await db.achievementRule.count({ where: { trigger: { in: ["EACH_POST", "EACH_REACTION_RECEIVED", "EACH_SOLUTION"] } } })).toBe(3);
     expect((await db.profileField.findMany({ orderBy: { position: "asc" } })).map((f) => f.key)).toEqual(["country", "platform", "twitch"]);

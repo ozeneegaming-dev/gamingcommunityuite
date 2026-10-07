@@ -1,6 +1,8 @@
 import type { GcsActor, GcsCache, GcsPermissionService } from "@gcs/core";
-import type { ContentVisibility, Prisma, PrismaClient } from "@gcs/db";
+import type { Badge, ContentVisibility, Prisma, PrismaClient } from "@gcs/db";
+import { badgeArtSrc } from "@gcs/ui/badge-art";
 import { forumContainer } from "../forums/posting";
+import { statFor, THRESHOLD_TRIGGERS, userStats, type GcsThresholdTrigger } from "./achievements";
 import { slugify } from "../forums/slug";
 import { rankLabel, toUserDisplay, userDisplaySelect, type GcsRankDirectory, type GcsRankLabel, type GcsUserDisplay } from "./display";
 import { normalizePrivacy } from "./privacy";
@@ -13,7 +15,17 @@ const CARD_TTL = 60;
 const WALL_PER_PAGE = 10;
 const FOLLOWERS_PER_PAGE = 30;
 
-export type GcsBadgeView = { key: string; name: string; symbol: string | null; image: string | null; color: string; awardedAt: string };
+/** Un badge obținut: `art` = adresa insignei generate, `image` = imaginea proprie din ACP (are prioritate). */
+export type GcsBadgeView = { key: string; name: string; description: string; symbol: string | null; image: string | null; color: string; art: string; awardedAt: string };
+/**
+ * Un badge încă neobținut (grila profilului, specul 2026-10-07-insigne-grafice §6.3): cerința celei mai ușoare reguli
+ * active care îl acordă și progresul membrului spre ea; `requirement: null` = acordat manual de echipă.
+ */
+export type GcsLockedBadge = Omit<GcsBadgeView, "awardedAt"> & {
+  requirement: { trigger: GcsThresholdTrigger; threshold: number } | null;
+  progress: { current: number; target: number } | null;
+};
+
 export type GcsLinkedAccount = { provider: "discord" | "steam"; accountId: string; url: string | null };
 export type GcsOnline = { online: boolean; hidden: boolean; lastActiveAt: string | null };
 
@@ -75,14 +87,20 @@ export function snippetOf(html: string, max = 160): string {
   return text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text;
 }
 
-const badgeView = (b: { createdAt: Date; badge: { key: string; name: string; symbol: string | null; imageAttachmentId: string | null; color: string } }): GcsBadgeView => ({
-  key: b.badge.key,
-  name: b.badge.name,
-  symbol: b.badge.symbol,
-  image: b.badge.imageAttachmentId ? `/files/${b.badge.imageAttachmentId}` : null,
-  color: b.badge.color,
-  awardedAt: b.createdAt.toISOString(),
+type BadgeArtRow = Pick<Badge, "key" | "name" | "description" | "symbol" | "imageAttachmentId" | "color" | "manual" | "artShape" | "artTier" | "artIcon">;
+
+/** Ce arată orice badge (obținut sau nu): nume, descriere, insignă sau imagine proprie. */
+const badgeLook = (b: BadgeArtRow) => ({
+  key: b.key,
+  name: b.name,
+  description: b.description,
+  symbol: b.symbol,
+  image: b.imageAttachmentId ? `/files/${b.imageAttachmentId}` : null,
+  color: b.color,
+  art: badgeArtSrc(b),
 });
+
+const badgeView = (b: { createdAt: Date; badge: BadgeArtRow }): GcsBadgeView => ({ ...badgeLook(b.badge), awardedAt: b.createdAt.toISOString() });
 
 /** Citirile pentru profil, hover card și activitate (specul etapei 3, §8). Totul respectă confidențialitatea și permisiunile. */
 export class GcsProfileQueries {
@@ -187,7 +205,8 @@ export class GcsProfileQueries {
   /** Datele comune ale cardului (fără partea care depinde de viewer), cache 60 s pe tag-ul `user:{id}`. */
   private async cardBase(userId: string): Promise<CardBase | null> {
     const { db, cache } = this.deps;
-    const key = `profile:card:${userId}`;
+    // `v2`: vizualizarea badge-urilor are insigna (`art`); intrările vechi din cache nu o au.
+    const key = `profile:card:v2:${userId}`;
     const cached = await cache.get<CardBase>(key);
     if (cached) return cached;
     const user = await db.user.findUnique({
@@ -255,6 +274,41 @@ export class GcsProfileQueries {
       fields: base.fields,
       viewer: { isSelf, isFollowing, canMessage, canFollow: viewer.userId !== null && !isSelf },
     };
+  }
+
+  /**
+   * Toate badge-urile pentru tabul „Badge-uri”: cele obținute (cu data) și cele blocate (cu cerința și progresul).
+   * Badge-urile automate fără nicio regulă activă nu se pot obține, deci nu apar. `null` = profil invizibil.
+   */
+  async badgeShowcase(viewer: GcsActor, userId: string, now = new Date()): Promise<{ earned: GcsBadgeView[]; locked: GcsLockedBadge[] } | null> {
+    const { db, profiles } = this.deps;
+    const owner = await db.user.findUnique({ where: { id: userId }, select: { id: true, privacy: true } });
+    if (!owner || !(await profiles.canView(viewer, owner))) return null;
+    const [earned, badges, stats] = await Promise.all([
+      db.userBadge.findMany({ where: { userId }, include: { badge: true }, orderBy: [{ badge: { position: "asc" } }, { createdAt: "asc" }] }),
+      db.badge.findMany({
+        orderBy: [{ position: "asc" }, { id: "asc" }],
+        include: { rules: { where: { enabled: true, trigger: { in: THRESHOLD_TRIGGERS } }, orderBy: [{ threshold: "asc" }, { id: "asc" }], take: 1 } },
+      }),
+      userStats(db, userId, now),
+    ]);
+    const owned = new Set(earned.map((e) => e.badgeId));
+    const locked: GcsLockedBadge[] = [];
+    for (const b of badges) {
+      if (owned.has(b.id)) continue;
+      const rule = b.rules[0];
+      if (!rule && !b.manual) continue;
+      const trigger = rule?.trigger as GcsThresholdTrigger | undefined;
+      const target = Math.max(1, rule?.threshold ?? 0);
+      locked.push({
+        ...badgeLook(b),
+        requirement: rule && trigger ? { trigger, threshold: rule.threshold } : null,
+        progress: trigger && trigger !== "IS_VIP" && stats ? { current: Math.max(0, Math.min(target, statFor(trigger, stats))), target } : null,
+      });
+    }
+    // Întâi cele care se pot câștiga (în ordinea din ACP), apoi cele acordate de echipă.
+    locked.sort((a, b) => Number(a.requirement === null) - Number(b.requirement === null));
+    return { earned: earned.map(badgeView), locked };
   }
 
   /** Activitatea: postări, topicuri noi și badge-uri, doar din forumurile pe care viewer-ul le poate citi. Paginare cu cursor (data). */
