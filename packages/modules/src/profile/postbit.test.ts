@@ -132,6 +132,26 @@ describe("postbit", () => {
     expect(data.get(b.id)).toMatchObject({ topicsCount: 1, motto: null });
   });
 
+  test("coperta vine cu poziția salvată, în aceeași interogare; lipsește fără copertă sau dacă profilul nu e vizibil viewer-ului", async () => {
+    const [a, b, c] = await Promise.all([author("Cova"), author("Covb"), author("Covc")]);
+    await w.db.user.update({ where: { id: a.id }, data: { coverAttachmentId: "covera1", coverPositionY: 30 } });
+    await w.db.user.update({ where: { id: c.id }, data: { coverAttachmentId: "coverc1", privacy: { profile: "MEMBERS" } } });
+    // Încălzește cache-ul (câmpurile și scara de XP), apoi numără: coperta nu adaugă interogări.
+    await postbit.forAuthors(w.member, [a.id]);
+    const one = counting();
+    await new GcsPostbitService({ db: one.db, cache: w.cache, permissions: w.permissions, settings: w.settings }).forAuthors(w.member, [b.id]);
+    const three = counting();
+    const data = await new GcsPostbitService({ db: three.db, cache: w.cache, permissions: w.permissions, settings: w.settings }).forAuthors(w.member, [a.id, b.id, c.id]);
+    expect(three.count()).toBe(one.count());
+    expect(data.get(a.id)!.cover).toEqual({ url: "/files/covera1", positionY: 30 });
+    expect(data.get(b.id)!.cover).toBeNull();
+    expect(data.get(c.id)!.cover).toEqual({ url: "/files/coverc1", positionY: 50 });
+
+    const forGuest = await postbit.forAuthors(w.guest, [a.id, c.id]);
+    expect(forGuest.get(a.id)!.cover).toEqual({ url: "/files/covera1", positionY: 30 });
+    expect(forGuest.get(c.id)!.cover).toBeNull();
+  });
+
   test("motto-ul e scurtat cu „…”", () => {
     expect(mottoText(`<p>${"a".repeat(200)}</p>`, 10)).toBe(`${"a".repeat(9)}…`);
     expect(mottoText("<p> </p>")).toBeNull();

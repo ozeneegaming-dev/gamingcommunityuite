@@ -106,8 +106,9 @@ function GcsRankIcon({ icon }: { icon: string | null }) {
  * Cardul autorului (specul etapei 5, „Postbit”, refăcut după referința proprietarului): statusul online și @handle-ul,
  * avatarul pătrat cu rama, numele stilizat, planul VIP / grupul, titlul custom și coroanele rangului; bara grupului
  * (culoarea sau banner-ul validat); rangul cu XP-ul, insignele (numărul și ultimele 5); contoarele (postări, topicuri,
- * aprecieri) și câmpurile alese din ACP (cu iconițe; „Select cu imagini” arată imaginea); data înscrierii, statusul și
- * motto-ul (ultimul status de pe peretele membrului).
+ * aprecieri) și câmpurile alese din ACP (cu iconițe; „Select cu imagini” arată imaginea); data înscrierii și motto-ul
+ * (ultimul status de pe peretele membrului). Statusul online apare o singură dată, sus; coperta membrului e fundalul
+ * blocului cu avatarul (specul „hover card și coperta în postbit”, 2026-10-07).
  */
 async function GcsPostbit({ author, data, post, topicId }: { author: NonNullable<GcsPostView["author"]>; data: GcsPostbitData | null; post: { id: number; number: number }; topicId: number }) {
   // Punctul de extensie `postbit.after_fields` (pluginurile, etapa 6): HTML sanitizat, o dată pentru ambele randări.
@@ -149,7 +150,16 @@ async function GcsPostbit({ author, data, post, topicId }: { author: NonNullable
         <span className="gcs-postbit__handle">@{author.name.toLowerCase()}</span>
       </div>
 
-      <div className="gcs-postbit__profile">
+      <div className={`gcs-postbit__profile${data?.cover ? " gcs-postbit__profile--cover" : ""}`}>
+        {data?.cover && (
+          // Coperta membrului: strat decorativ sub avatar și nume, cu poziția salvată (voalul e în CSS).
+          <span
+            className="gcs-postbit__cover"
+            aria-hidden="true"
+            style={{ background: `center ${data.cover.positionY}% / cover no-repeat url(${data.cover.url})` }}
+            data-testid="gcs-postbit-cover"
+          />
+        )}
         <span className="gcs-postbit__avatar">
           <GcsAvatar name={author.name} size="l" {...(author.image ? { src: author.image } : {})} {...(author.frameKey ? { frame: author.frameKey } : {})} />
         </span>
@@ -298,12 +308,6 @@ async function GcsPostbit({ author, data, post, topicId }: { author: NonNullable
           <GcsIcon name="fa-regular fa-clock" />
           {t("memberSince")} <strong>{format.dateTime(new Date(author.joinedAt), { dateStyle: "medium" })}</strong>
         </span>
-        {status && (
-          <span className={`gcs-postbit__footStatus${data?.online ? " gcs-postbit__footStatus--on" : ""}`}>
-            <span className="gcs-postbit__dot" aria-hidden="true" />
-            {t("status")} <strong>{status}</strong>
-          </span>
-        )}
       </div>
 
       {data?.motto && (
