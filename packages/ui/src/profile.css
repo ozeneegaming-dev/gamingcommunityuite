@@ -26,63 +26,139 @@
   font-size: 14px;
 }
 
-/* Hover card: lățimea din macheta Topic (340px), umbră puternică. */
+/*
+ * Hover card (specul „hover card și coperta în postbit”, 2026-10-07): coperta de 88 px cu cusătura de accent (2 px),
+ * avatarul de 64 px cu inel urcat pe jumătate peste copertă, identitatea mereu SUB copertă, apoi bio, insigne,
+ * câmpuri (2 coloane), contoare (4 coloane) și acțiuni. Doar tokenuri de temă (merge și pe tema deschisă).
+ */
 .gcs-hoverCard {
   width: 340px;
   max-width: calc(100vw - 24px);
+  box-sizing: border-box;
   overflow: hidden;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
-  border-color: #3b3054;
+  box-shadow: 0 18px 48px rgb(0 0 0 / 0.55);
+}
+[data-theme="light"] .gcs-hoverCard {
+  box-shadow: 0 16px 40px rgb(20 22 28 / 0.16);
+}
+@media (prefers-color-scheme: light) {
+  [data-theme="auto"] .gcs-hoverCard {
+    box-shadow: 0 16px 40px rgb(20 22 28 / 0.16);
+  }
 }
 .gcs-hoverCard__cover {
-  height: 72px;
+  position: relative;
+  height: 88px;
+  box-sizing: border-box;
+  border-bottom: 2px solid var(--gcs-hoverCard-accent, var(--gcs-accent));
+}
+/* Voalul de jos: doar peste imagine (degradeul fără copertă e deja discret). */
+.gcs-hoverCard__cover--image::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, rgb(0 0 0 / 0.35));
 }
 .gcs-hoverCard__body {
-  padding: 0 18px 16px;
+  padding: 0 16px 16px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 .gcs-hoverCard__head {
-  display: flex;
-  gap: 12px;
-  align-items: flex-end;
-  margin-top: -26px;
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: start;
 }
+/* Inelul (culoarea cardului) desparte avatarul de copertă; avatarul urcă 35 px (jumătate) peste ea. */
 .gcs-hoverCard__avatar {
-  border: 3px solid var(--gcs-surface);
-  border-radius: 50%;
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  width: 64px;
+  height: 64px;
+  margin-top: -35px;
+  padding: 3px;
+  border-radius: var(--gcs-avatar-radius, 50%);
+  background: var(--gcs-surface);
+}
+.gcs-hoverCard__avatar > .gcs-avatarFrame,
+.gcs-hoverCard__avatar > .gcs-avatar {
+  width: 64px !important;
+  height: 64px !important;
+}
+.gcs-hoverCard__avatar .gcs-avatar {
+  border-color: var(--gcs-surface);
+  font-size: 26px !important;
+}
+.gcs-hoverCard__identity {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding-top: 10px;
 }
 .gcs-hoverCard__name {
-  font-size: 18px;
   display: inline-block;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  align-self: flex-start;
+  font-family: var(--gcs-font-display);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
 }
 .gcs-hoverCard__meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
   align-items: center;
-  margin-top: 4px;
+  gap: 6px 8px;
+  min-width: 0;
+}
+.gcs-hoverCard__meta > .gcs-badge {
+  display: inline-block;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .gcs-hoverCard__rank,
 .gcs-hoverCard__online {
-  font-size: 12px;
-  color: var(--gcs-muted);
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-}
-.gcs-hoverCard__bio {
-  margin: 0;
-  font-size: 13px;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--gcs-muted);
 }
+.gcs-hoverCard__online {
+  color: var(--gcs-ok);
+}
+.gcs-hoverCard__online .gcs-dot {
+  background: var(--gcs-ok);
+  box-shadow: 0 0 6px var(--gcs-ok);
+}
+.gcs-hoverCard__bio {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--gcs-muted);
+}
+/* Insignele: rândul nu fixează înălțimi (cipurile pot deveni imagini de ~28–32 px). */
 .gcs-hoverCard__badges {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
   margin: 0;
   padding: 0;
@@ -90,33 +166,56 @@
 .gcs-hoverCard__fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px 12px;
+  gap: 8px 12px;
   margin: 0;
-  font-size: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--gcs-surface2);
+}
+.gcs-hoverCard__fields > div {
+  min-width: 0;
+}
+.gcs-hoverCard__fields > div:only-child {
+  grid-column: 1 / -1;
 }
 .gcs-hoverCard__fields dt {
+  font-size: 11px;
   color: var(--gcs-muted);
 }
 .gcs-hoverCard__fields dd {
-  margin: 0;
+  margin: 2px 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
   font-weight: 600;
+  color: var(--gcs-text);
 }
 .gcs-hoverCard__stats {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 11px;
-  color: var(--gcs-muted);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  padding-top: 12px;
   border-top: 1px solid var(--gcs-border);
-  padding-top: 10px;
+  font-size: 11px;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--gcs-muted);
 }
 .gcs-hoverCard__stats > div {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
 }
 .gcs-hoverCard__stats strong {
+  font-family: var(--gcs-font-display);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
   color: var(--gcs-text);
-  font-size: 14px;
 }
 .gcs-hoverCard__stats .gcs-rep--pos {
   color: var(--gcs-ok);
@@ -131,19 +230,32 @@
 .gcs-hoverCard__actions > * {
   flex: 1;
 }
+/* Stratul: coordonate de viewport (`position: fixed`), așezat după mărimea măsurată (ascuns până atunci). */
 .gcs-hoverCardLayer {
   position: fixed;
   z-index: 50;
 }
+.gcs-hoverCardLayer[data-side="pending"] {
+  visibility: hidden;
+}
 @media (prefers-reduced-motion: no-preference) {
-  .gcs-hoverCardLayer {
+  .gcs-hoverCardLayer[data-side="below"] {
     animation: gcsFadeIn 0.12s ease-out;
+  }
+  .gcs-hoverCardLayer[data-side="above"] {
+    animation: gcsFadeInUp 0.12s ease-out;
   }
 }
 @keyframes gcsFadeIn {
   from {
     opacity: 0;
     transform: translateY(4px);
+  }
+}
+@keyframes gcsFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
   }
 }
 
