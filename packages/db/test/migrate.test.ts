@@ -172,6 +172,53 @@ describe("migrateDatabase", { timeout: 120_000 }, () => {
     }
   });
 
+  test("actualizarea dă antetelor transparente ale casetelor banda implicită (setări și draft); culorile alese rămân", async () => {
+    await admin(async (c) => {
+      await c.query(`DROP DATABASE IF EXISTS "${DB}" WITH (FORCE)`);
+      await c.query(`CREATE DATABASE "${DB}"`);
+    });
+    const before = mkdtempSync(path.join(os.tmpdir(), "gcs-title-bands-"));
+    for (const name of ALL_MIGRATIONS.filter((m) => m < "20261025000000")) cpSync(path.join(migrationsDir, name), path.join(before, name), { recursive: true });
+    await migrateDatabase(url, before);
+    rmSync(before, { recursive: true, force: true });
+    const elements = (dark: string, light: string) => JSON.stringify({ elements: { dark: { boxHeaderBg: dark, headerBg: "transparent" }, light: { boxHeaderBg: light } }, radius: 8 });
+    const client = new pg.Client({ connectionString: url });
+    await client.connect();
+    try {
+      await client.query(
+        `INSERT INTO themes (key, name, settings, draft, version, "updatedAt") VALUES
+          ('default', 'Default', $1, $2, 3, CURRENT_TIMESTAMP),
+          ('neon', 'Neon', $3, NULL, 5, CURRENT_TIMESTAMP),
+          ('mixed', 'Mixed', $4, $5, 1, CURRENT_TIMESTAMP)`,
+        [elements("transparent", "transparent"), elements("transparent", "#FFFFFF"), elements("#202430", "@accent"), elements("#101010", "transparent"), JSON.stringify({ radius: 4 })],
+      );
+      const update = await migrateDatabase(url, migrationsDir);
+      expect(update.applied).toEqual(ALL_MIGRATIONS.filter((m) => m >= "20261025000000"));
+      const { rows } = await client.query(
+        `SELECT key, version, settings #> '{elements}' AS settings, draft #> '{elements}' AS draft, settings ->> 'radius' AS radius FROM themes ORDER BY id`,
+      );
+      expect(rows).toEqual([
+        {
+          key: "default",
+          version: 4,
+          settings: { dark: { boxHeaderBg: "@surface2", headerBg: "transparent" }, light: { boxHeaderBg: "@surface2" } },
+          draft: { dark: { boxHeaderBg: "@surface2", headerBg: "transparent" }, light: { boxHeaderBg: "#FFFFFF" } },
+          radius: "8",
+        },
+        { key: "neon", version: 5, settings: { dark: { boxHeaderBg: "#202430", headerBg: "transparent" }, light: { boxHeaderBg: "@accent" } }, draft: null, radius: "8" },
+        {
+          key: "mixed",
+          version: 2,
+          settings: { dark: { boxHeaderBg: "#101010", headerBg: "transparent" }, light: { boxHeaderBg: "@surface2" } },
+          draft: null,
+          radius: "8",
+        },
+      ]);
+    } finally {
+      await client.end();
+    }
+  });
+
   test("două rulări simultane nu aplică migrațiile de două ori (lock)", async () => {
     await admin(async (c) => {
       await c.query(`DROP DATABASE IF EXISTS "${DB}" WITH (FORCE)`);
