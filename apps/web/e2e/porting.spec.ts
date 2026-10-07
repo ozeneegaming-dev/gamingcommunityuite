@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -122,9 +122,14 @@ test("Root Admin portează un add-on: analiza, confirmarea dreptului, raportul, 
   expect(converted!.pluginKey).toBe(key);
 
   // Descărcarea: arhiva rezultatului (folderul pluginului, pachetul, ORIGINAL/, PORTING.md, report.json).
-  const [download] = await Promise.all([page.waitForEvent("download"), report.getByTestId("gcs-porting-download").click()]);
-  expect(download.suggestedFilename()).toBe(`${key}-port.zip`);
-  const zip = readFileSync((await download.path())!);
+  // Cererea pleacă prin `page.request` (aceleași cookie-uri și același IP de test): descărcările browserului nu primesc
+  // antetul `x-forwarded-for` al contextului, iar ACP-ul e legat de IP-ul autentificării.
+  const href = await report.getByTestId("gcs-porting-download").getAttribute("href");
+  expect(href).toBe(`/admin/porting-result.zip?id=${encodeURIComponent(portId)}`);
+  const download = await page.request.get(href!);
+  expect(download.status()).toBe(200);
+  expect(download.headers()["content-disposition"]).toBe(`attachment; filename="${key}-port.zip"`);
+  const zip = await download.body();
   expect(zip.subarray(0, 2).toString("latin1")).toBe("PK");
   for (const name of [`${key}/plugin.json`, `${key}/server.mjs`, `${key}-1.2.0.zip`, "ORIGINAL/", "PORTING.md", "report.json"]) {
     expect(zip.includes(Buffer.from(name)), name).toBe(true);
