@@ -494,7 +494,7 @@
     },
     "media": {
       "title": "Uploaded files",
-      "usage": "{files} files, {mb} MB of the plugin quota."
+      "usage": "Uploaded files: {files}, {mb} MB of the plugin quota in total."
     },
     "links": {
       "title": "Links",

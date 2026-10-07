@@ -79,8 +79,9 @@ export async function insertPresets(ctx: GcsPluginContext, restore: boolean): Pr
       params: [JSON.stringify(categories)],
     },
     {
-      sql: `INSERT INTO items (kind, key, name, category_id, data, plans, position)
-            SELECT r.kind, r.key, r.name, (SELECT id FROM categories c WHERE c.kind = r.kind AND c.name = r.category ORDER BY id LIMIT 1), r.data, ARRAY(SELECT jsonb_array_elements_text(r.plans)), r.position
+      // Presetările nu sunt „noi”: eticheta NOU rămâne pentru ce adaugă adminul.
+      sql: `INSERT INTO items (kind, key, name, category_id, data, plans, position, created_at)
+            SELECT r.kind, r.key, r.name, (SELECT id FROM categories c WHERE c.kind = r.kind AND c.name = r.category ORDER BY id LIMIT 1), r.data, ARRAY(SELECT jsonb_array_elements_text(r.plans)), r.position, now() - interval '400 days'
             FROM jsonb_to_recordset($1::jsonb) AS r(kind text, key text, name text, category text, data jsonb, plans jsonb, position int)
             ON CONFLICT (kind, key) DO ${restore ? "UPDATE SET name = EXCLUDED.name, data = EXCLUDED.data, category_id = EXCLUDED.category_id, position = EXCLUDED.position, retired = false, enabled = true, media_ids = '{}'" : "NOTHING"}`,
       params: [JSON.stringify(rows)],

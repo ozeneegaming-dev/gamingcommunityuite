@@ -494,7 +494,7 @@
     },
     "media": {
       "title": "Fișiere încărcate",
-      "usage": "{files} fișiere, {mb} MB din cota pluginului."
+      "usage": "Fișiere încărcate: {files}, în total {mb} MB din cota pluginului."
     },
     "links": {
       "title": "Linkuri",

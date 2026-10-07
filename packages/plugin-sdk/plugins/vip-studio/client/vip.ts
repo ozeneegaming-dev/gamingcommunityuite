@@ -114,7 +114,7 @@ function initStudio(root: HTMLElement): void {
     const tile = tileOf(style);
     const strip = variantStrip(style);
     const variant = strip ? $<HTMLInputElement>(strip, "input:checked") : null;
-    const look = $(tile ?? root, ".gcsp-ns");
+    const look = $(tile ?? root, ".gcsp-ns, .gcsp-nsGroup");
     if (variant && look && variant.dataset.gcspCls) {
       // Placa arată și ea varianta aleasă.
       look.className = variant.dataset.gcspCls;
@@ -378,16 +378,30 @@ function initStudio(root: HTMLElement): void {
   // ─ Filtrele pe categorii și încărcarea pe loturi ─
 
   for (const grid of $$<HTMLElement>(root, ".gcsp-grid")) {
+    // Tot ce e înaintea plăcii alese apare din prima (ordinea rămâne cea din catalog).
+    const tiles = $$<HTMLElement>(grid, ".gcsp-tile");
+    const chosenAt = tiles.findIndex((t) => t.querySelector("input:checked"));
+    for (const t of tiles.slice(0, chosenAt + 1)) t.classList.remove("gcsp-later");
     const later = () => $$<HTMLElement>(grid, ".gcsp-later:not(.gcsp-hide-filter)");
     if (later().length === 0) continue;
     const sentinel = document.createElement("div");
     sentinel.setAttribute("aria-hidden", "true");
     sentinel.style.height = "1px";
     grid.after(sentinel);
+    // Câte un lot de 10 cât timp capătul grilei e aproape de ecran (observatorul anunță doar schimbările, deci după
+    // fiecare lot verificăm din nou poziția).
+    const near = () => {
+      const r = sentinel.getBoundingClientRect();
+      return r.height > 0 && r.top < window.innerHeight + 200;
+    };
+    const fill = () => {
+      if (!near() || later().length === 0) return;
+      for (const el of later().slice(0, BATCH)) el.classList.remove("gcsp-later");
+      requestAnimationFrame(fill);
+    };
     const io = new IntersectionObserver(
       (entries) => {
-        if (!entries.some((e) => e.isIntersecting)) return;
-        for (const el of later().slice(0, BATCH)) el.classList.remove("gcsp-later");
+        if (entries.some((e) => e.isIntersecting)) fill();
         if ($$(grid, ".gcsp-later").length === 0) io.disconnect();
       },
       { rootMargin: "200px" },

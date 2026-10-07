@@ -18,7 +18,7 @@
   border: 0;
 }
 .gcsp-hide {
-  display: none;
+  display: none !important;
 }
 .gcsp-studio:not(.gcsp-js) .gcsp-onlyjs {
   display: none;
@@ -109,7 +109,7 @@
   color: var(--gcs-muted);
   font-size: 12px;
 }
-.gcsp-plate .gcsp-ns {
+.gcsp-plate :is(.gcsp-ns, .gcsp-nsGroup) {
   font-family: var(--gcs-font-display);
   font-size: clamp(26px, 3.4vw, 38px);
   line-height: 1.05;
@@ -453,7 +453,7 @@
   border: 2px solid var(--gcs-surface);
   border-radius: 999px;
   box-shadow: 0 0 0 1px var(--gcsp-line);
-  background: linear-gradient(135deg, var(--c1), var(--c2), var(--c3), var(--c4), var(--c5));
+  background: linear-gradient(135deg, var(--c1) 0 45%, var(--c2), var(--c3), var(--c4), var(--c5));
 }
 .gcsp-swatch__dot--n1 {
   background: var(--c1);
@@ -718,8 +718,14 @@
 .gcsp-fx-fire {
   overflow: visible;
 }
-.gcsp-ns--group {
+/* Stilul grupului (fără stil ales): culoarea vine din clasa GCS a grupului (gcs-name--…), nu din plugin. */
+.gcsp-nsGroup {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
   font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ─── Bannere (pastila de sub nume) ────────────────────────────────────── */
@@ -1053,8 +1059,8 @@
 }
 .gcsp-card__dragHint {
   position: absolute;
+  top: 8px;
   right: 8px;
-  bottom: 6px;
   display: none;
   align-items: center;
   gap: 5px;
@@ -1091,7 +1097,7 @@
   min-width: 0;
   padding-bottom: 2px;
 }
-.gcsp-card__id .gcsp-ns {
+.gcsp-card__id :is(.gcsp-ns, .gcsp-nsGroup) {
   font-family: var(--gcs-font-display);
   font-size: 19px;
 }
@@ -1210,7 +1216,7 @@
   gap: 5px;
   min-width: 0;
 }
-.gcsp-prof__id .gcsp-ns {
+.gcsp-prof__id :is(.gcsp-ns, .gcsp-nsGroup) {
   font-family: var(--gcs-font-display);
   font-size: 22px;
 }
@@ -1782,7 +1788,7 @@
 .gcsp-acpArt {
   width: 120px;
 }
-.gcsp-acpArt .gcsp-ns {
+.gcsp-acpArt :is(.gcsp-ns, .gcsp-nsGroup) {
   font-family: var(--gcs-font-display);
   font-size: 16px;
 }
@@ -1805,6 +1811,15 @@
   align-items: center;
   gap: 6px;
   margin: 0;
+}
+.gcsp-inline input[type="text"] {
+  flex: 1;
+  width: auto;
+  min-width: 180px;
+}
+.gcsp-acp .gcs-btn {
+  flex: none;
+  white-space: nowrap;
 }
 .gcsp-inline--grow {
   flex: 1;
@@ -1919,7 +1934,7 @@
   color: var(--gcs-muted);
   font-size: 12px;
 }
-.gcsp-acpPreview .gcsp-ns {
+.gcsp-acpPreview :is(.gcsp-ns, .gcsp-nsGroup) {
   font-family: var(--gcs-font-display);
   font-size: 26px;
 }

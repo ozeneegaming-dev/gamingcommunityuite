@@ -91,7 +91,8 @@ function tile(input: StudioInput, o: TileOpts): string {
     !retired && item && isNew(item, settings.newDays) ? `<span class="gcsp-chip gcsp-chip--new">${esc(ctx.t("studio.new"))}</span>` : "",
     !retired && locked ? `<span class="gcsp-chip gcsp-chip--lock" title="${esc(ctx.t("studio.lock.title", { plans: plansLabel(item!, plans, ctx.t) }))}">${icon("fa-solid fa-lock")}${esc(plansLabel(item!, plans, ctx.t))}</span>` : "",
   ].join("");
-  const later = o.index >= FIRST_BATCH && !o.checked ? " gcsp-later" : "";
+  // Doar cu JS se ascund (și apoi se arată pe loturi); JS-ul arată din prima tot până la placa aleasă.
+  const later = o.index >= FIRST_BATCH ? " gcsp-later" : "";
   return (
     `<label class="gcsp-tile gcsp-tile--${o.group}${o.extraClass ? ` ${o.extraClass}` : ""}${retired ? " gcsp-tile--retired" : ""}${locked ? " gcsp-tile--locked" : ""}${later}"` +
     `${attrs({ "data-gcsp-cat": item?.categoryId ?? null })}>` +
@@ -138,7 +139,7 @@ function current(input: StudioInput) {
 }
 
 /** Aspectul numelui fără stil ales: clasa grupului (GCS), ca pe site. */
-const groupNameLook = (user: GcsPluginUser): Look => ({ cls: `gcsp-ns gcsp-ns--group gcs-name--${user.nameKey}`, style: "" });
+const groupNameLook = (user: GcsPluginUser): Look => ({ cls: `gcsp-nsGroup gcs-name--${user.nameKey}`, style: "" });
 
 function planColor(input: StudioInput): string {
   const plan = input.plans.find((p) => p.key === input.access.plan);
