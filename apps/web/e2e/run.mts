@@ -229,8 +229,16 @@ async function main(): Promise<number> {
   const configDir = path.join(webDir, ".e2e", `config-${process.pid}`);
   mkdirSync(configDir, { recursive: true });
   writeFileSync(path.join(configDir, "installed.lock"), new Date().toISOString());
+  // Pluginurile semnate din teste (ex. Studio VIP): o cheie Ed25519 de unică folosință, de încredere doar pentru această
+  // rulare. Cheia privată stă în folderul `.e2e` (șters la rularea următoare) și ajunge doar la Playwright.
+  const { generateSigningKey } = await import("@gcs/plugin-sdk/pack");
+  const e2eKey = generateSigningKey();
+  const e2eKeyFile = path.join(webDir, ".e2e", `plugin-key-${process.pid}.pem`);
+  writeFileSync(e2eKeyFile, e2eKey.privateKeyPem, { mode: 0o600 });
+  cleanups.push(() => rmSync(e2eKeyFile, { force: true }));
   const env: NodeJS.ProcessEnv = {
     ...process.env,
+    GCS_PLUGIN_TRUSTED_KEYS: [process.env.GCS_PLUGIN_TRUSTED_KEYS, `e2e=${e2eKey.publicKeyBase64}`].filter(Boolean).join(","),
     DATABASE_URL: databaseUrl,
     REDIS_URL: redisUrl,
     GCS_BASE_URL: BASE_URL,
@@ -283,7 +291,7 @@ async function main(): Promise<number> {
   const playwright = run(
     playwrightBin,
     ["test", ...process.argv.slice(2)],
-    { ...env, ...installEnv, GCS_E2E_BASE_URL: BASE_URL },
+    { ...env, ...installEnv, GCS_E2E_BASE_URL: BASE_URL, GCS_E2E_PLUGIN_KEY: e2eKeyFile },
     "inherit",
   );
   const code = await new Promise<number>((resolve) => playwright.on("exit", (c) => resolve(c ?? 1)));
