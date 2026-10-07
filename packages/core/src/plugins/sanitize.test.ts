@@ -48,11 +48,11 @@ describe("HTML-ul pluginurilor", () => {
   test("formularele: doar în pagini, spre API-ul sau paginile pluginului", () => {
     const page = (html: string) => sanitizePluginHtml(html, { pluginKey: "acme.demo", page: true });
     expect(page('<form method="POST" action="/api/plugins/acme.demo/save" enctype="multipart/form-data"><input type="radio" name="style" value="ns_1" checked><button>Salvează</button></form>')).toBe(
-      '<form method="post" action="/api/plugins/acme.demo/save" enctype="multipart/form-data"><input type="radio" name="style" value="ns_1" checked /><button type="submit">Salvează</button></form>',
+      '<form method="post" action="/api/plugins/acme.demo/save" enctype="multipart/form-data"><input type="radio" value="ns_1" checked name="style" /><button type="submit">Salvează</button></form>',
     );
-    expect(page('<form action="/p/acme.demo/items"><input type="search" name="q"></form>')).toBe('<form method="get" action="/p/acme.demo/items"><input type="search" name="q" /></form>');
+    expect(page('<form action="/p/acme.demo/items"><input type="search" name="q"></form>')).toBe('<form action="/p/acme.demo/items" method="get"><input type="search" name="q" /></form>');
     for (const action of ["https://evil.example/x", "//evil.example", "/api/plugins/acme.other/save", "/api/auth/sign-out", "/api/plugins/acme.demo/../../auth", "/api/plugins/acme.demo%2f..%2fx", "javascript:alert(1)"]) {
-      expect([action, page(`<form method="post" action="${action}"><input name="a"></form>`)]).toEqual([action, '<div><input type="text" name="a" /></div>']);
+      expect([action, page(`<form method="post" action="${action}"><input name="a"></form>`)]).toEqual([action, '<div><input name="a" type="text" /></div>']);
     }
     // GET spre API sau POST spre o pagină: nu.
     expect(page('<form method="get" action="/api/plugins/acme.demo/save"></form>')).toBe("<div></div>");
@@ -66,16 +66,16 @@ describe("HTML-ul pluginurilor", () => {
     expect(page('<input type="password" name="p"><input type="image" src="https://evil.example/x.png" name="i">')).toBe('<input type="text" name="p" /><input type="text" name="i" />');
     expect(page('<button type="submit" formaction="https://evil.example" formmethod="get" form="other">x</button>')).toBe('<button type="submit">x</button>');
     expect(page('<input name="a b" onfocus="x()" id="i" value="1">')).toBe('<input value="1" type="text" />');
-    expect(page('<textarea name="quote" maxlength="200" onkeyup="x()">a &lt;b&gt;</textarea>')).toBe('<textarea name="quote" maxlength="200">a &lt;b&gt;</textarea>');
+    expect(page('<textarea name="quote" maxlength="200" onkeyup="x()">a &lt;b&gt;</textarea>')).toBe('<textarea maxlength="200" name="quote">a &lt;b&gt;</textarea>');
     expect(page('<select name="plan"><option value="gold" selected>Gold</option></select>')).toBe('<select name="plan"><option value="gold" selected>Gold</option></select>');
   });
 
   test("audio și video: doar fișierele pluginului; video fără sunet, audio fără pornire automată", () => {
     const page = (html: string) => sanitizePluginHtml(html, { pluginKey: "acme.demo", page: true });
     expect(page('<video src="/plugins/acme.demo/media/abc123.webm" poster="/plugins/acme.demo/media/p1.webp" autoplay loop></video>')).toBe(
-      '<video src="/plugins/acme.demo/media/abc123.webm" poster="/plugins/acme.demo/media/p1.webp" autoplay loop muted playsinline></video>',
+      '<video autoplay loop src="/plugins/acme.demo/media/abc123.webm" poster="/plugins/acme.demo/media/p1.webp" muted playsinline></video>',
     );
-    expect(page('<audio src="/plugins/acme.demo/media/s.mp3" autoplay controls></audio>')).toBe('<audio src="/plugins/acme.demo/media/s.mp3" controls></audio>');
+    expect(page('<audio src="/plugins/acme.demo/media/s.mp3" autoplay controls></audio>')).toBe('<audio controls src="/plugins/acme.demo/media/s.mp3"></audio>');
     for (const src of ["https://evil.example/a.mp4", "/plugins/acme.other/media/a.mp4", "/plugins/acme.demo/../acme.other/media/a", "/files/abc", "/plugins/acme.demo/media/a.mp4?x=1"]) {
       expect([src, page(`<video src="${src}"></video>`)]).toEqual([src, "<video muted playsinline></video>"]);
     }

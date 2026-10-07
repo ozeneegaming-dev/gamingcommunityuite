@@ -92,8 +92,7 @@ async function handle(request: Request, ctx: Ctx): Promise<Response> {
   const plugins = await pluginHost();
   const routePath = `/${(path ?? []).map(decodeURIComponent).join("/")}`;
   const route = plugins.apiRoute(key, method, routePath);
-  if (route.status === 404) return json({ error: "not_found" }, 404);
-  if (route.status === 405) return json({ error: "method_not_allowed" }, 405);
+  if (route.status !== 200) return json({ error: route.status === 404 ? "not_found" : "method_not_allowed" }, route.status);
 
   let actor = await currentActor();
   if (route.acp) {
