@@ -19,6 +19,7 @@
 @import "@gcs/ui/plugins.css";
 @import "@gcs/ui/importer.css";
 @import "@gcs/ui/porting.css";
+@import "@gcs/ui/community.css";
 
 /* Componentele Gcs* din @gcs/ui folosesc utilitare Tailwind; sursele lor trebuie scanate. */
 @source "../../../packages/ui/src";

@@ -513,6 +513,8 @@ model Topic {
 
   @@index([forumId, visibility, pinned(sort: Desc), lastPostAt(sort: Desc)])
   @@index([authorId])
+  /// Fluxul de activitate (`/activity`): topicurile noi, cele mai noi primele.
+  @@index([createdAt(sort: Desc), id(sort: Desc)])
   @@map("topics")
 }
 
@@ -537,6 +539,8 @@ model Post {
 
   @@index([topicId, visibility, id])
   @@index([authorId, createdAt])
+  /// Fluxul de activitate și clasamentul pe perioade (postările create recent).
+  @@index([createdAt(sort: Desc), id(sort: Desc)])
   @@map("posts")
 }
 
@@ -674,6 +678,8 @@ model ContentReaction {
 
   @@unique([contentType, contentId, userId])
   @@index([contentType, contentId])
+  /// Clasamentul pe perioade: reacțiile primite recent.
+  @@index([createdAt])
   @@map("content_reactions")
 }
 
@@ -845,6 +851,8 @@ model StatusUpdate {
   replies     StatusUpdate[] @relation("StatusReplies")
 
   @@index([profileUserId, parentId, createdAt])
+  /// Fluxul de activitate: statusurile noi de pe toate profilurile.
+  @@index([createdAt(sort: Desc), id(sort: Desc)])
   @@map("status_updates")
 }
 
@@ -1013,6 +1021,8 @@ model AchievementLog {
 
   @@unique([userId, uniqueKey])
   @@index([userId, createdAt])
+  /// Clasamentul pe perioade: XP-ul primit recent.
+  @@index([createdAt])
   @@map("achievement_log")
 }
 

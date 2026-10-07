@@ -1,4 +1,5 @@
 import type { GcsThemeView } from "@gcs/core";
+import { communityRules, RULES_HREF } from "@gcs/modules";
 import { GcsIcon } from "@gcs/ui/icons";
 import { GcsAvatar, GcsButton } from "@gcs/ui";
 import Link from "next/link";
@@ -6,6 +7,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
 import { viewerEditing, viewerTheme } from "@/lib/appearance";
 import { memberHref } from "@/lib/forum-urls";
+import { withoutHrefs } from "@/lib/nav-match";
 import { localeOptions } from "@/lib/locales";
 import { pluginHost, safeModeActive } from "@/lib/plugins";
 import { services } from "@/lib/services";
@@ -93,8 +95,10 @@ export async function GcsSiteHeader() {
   const pluginMenus = (await safeModeActive())
     ? { site: [], user: [] }
     : await pluginHost().then(async (host) => ({ site: await host.menus("site", actor, locale), user: user ? await host.menus("user", actor, locale) : [] }));
+  // Ascunse automat: Reguli, cât timp regulile comunității sunt goale (pagina rămâne, cu o stare goală).
+  const hidden = new Set((await communityRules(settings)) ? [] : [RULES_HREF]);
   const menu = [
-    ...entries(tree),
+    ...withoutHrefs(entries(tree), hidden),
     ...pluginMenus.site.map((m, i): GcsNavEntry => ({ id: -1000 - i, label: m.label, href: m.href, newTab: false, icon: <GcsIcon name={m.icon} />, children: [] })),
   ];
 

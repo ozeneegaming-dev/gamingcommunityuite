@@ -26,6 +26,7 @@
     "./plugins.css": "./src/plugins.css",
     "./importer.css": "./src/importer.css",
     "./porting.css": "./src/porting.css",
+    "./community.css": "./src/community.css",
     "./icons": "./src/icons/index.tsx",
     "./icon-registry": "./src/icons/registry.ts",
     "./badge-art": "./src/badges/index.ts",

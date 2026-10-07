@@ -1,4 +1,5 @@
-import type { GcsAcpMenuSection, GcsModule, GcsPermissionDef, GcsSettingDef } from "@gcs/core";
+import { isSafeHref, type GcsAcpMenuSection, type GcsModule, type GcsPermissionDef, type GcsSettingDef } from "@gcs/core";
+import { VIP_CONTACT_SETTING, VIP_INTRO_SETTING } from "./public";
 import { vipStatTiles } from "./stats";
 
 const permissions: GcsPermissionDef[] = [
@@ -15,6 +16,24 @@ const settings: GcsSettingDef[] = [
     labelKey: "settings.vip.warn_days",
     validate: (v) => (Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 30 ? null : "invalid_range"),
   },
+  // Pagina publică `/vip`: linkul butonului „Contactează staff-ul” (gol = pagina staff-ului) și un text de introducere.
+  {
+    key: VIP_CONTACT_SETTING,
+    type: "string",
+    default: "",
+    section: "vip",
+    labelKey: "settings.vip.contact_url",
+    validate: (v) => (v === "" || isSafeHref(v) ? null : "invalid_url"),
+  },
+  {
+    key: VIP_INTRO_SETTING,
+    type: "string",
+    default: "",
+    section: "vip",
+    labelKey: "settings.vip.page_intro",
+    multiline: true,
+    validate: (v) => ((v as string).length > 1000 ? "too_long" : null),
+  },
 ];
 
 /** ACP → VIP & Magazin → VIP (spec §12.1). Magazinul vine în etapa 9. */
@@ -24,12 +43,16 @@ const acpMenu: GcsAcpMenuSection[] = [
     title: "acp.menu.vip.vip_group",
     icon: "fa-solid fa-crown",
     items: [
-      ["tiers", "/admin/vip/tiers", "fa-solid fa-layer-group"],
-      ["subscribers", "/admin/vip/subscribers", "fa-solid fa-user-check"],
-      ["history", "/admin/vip/history", "fa-solid fa-clock-rotate-left"],
-      ["name_styles", "/admin/vip/name-styles", "fa-solid fa-signature"],
-      ["frames", "/admin/vip/frames", "fa-solid fa-circle-user"],
-    ].map(([key, href, icon]) => ({ key: `vip.${key}`, labelKey: `acp.menu.vip.${key}`, href: href!, section: `vip.${key}`, icon: icon! })),
+      ...[
+        ["tiers", "/admin/vip/tiers", "fa-solid fa-layer-group"],
+        ["subscribers", "/admin/vip/subscribers", "fa-solid fa-user-check"],
+        ["history", "/admin/vip/history", "fa-solid fa-clock-rotate-left"],
+        ["name_styles", "/admin/vip/name-styles", "fa-solid fa-signature"],
+        ["frames", "/admin/vip/frames", "fa-solid fa-circle-user"],
+      ].map(([key, href, icon]) => ({ key: `vip.${key}`, labelKey: `acp.menu.vip.${key}`, href: href!, section: `vip.${key}`, icon: icon! })),
+      // Setările secțiunii `vip` (pagina publică `/vip`, avertizarea expirării), în pagina generică de setări.
+      { key: "vip.page", labelKey: "acp.menu.vip.page", href: "/admin/settings/vip", section: "system.settings_vip", icon: "fa-solid fa-store" },
+    ],
   },
 ];
 
