@@ -7,34 +7,33 @@ const viewport = { width: 1280, height: 800 };
 
 describe("placeHoverCard (hover card-ul lângă nume, după mărimea măsurată)", () => {
   test("dedesubt, la 8 px sub nume, aliniat la stânga numelui, când încape", () => {
-    expect(placeHoverCard(name(200, 100), { width: 340, height: 290 }, viewport)).toEqual({ top: 128, left: 200, side: "below" });
+    expect(placeHoverCard(name(200, 100), { width: 340, height: 290 }, viewport)).toEqual({ top: 128, left: 200, side: "below", maxHeight: null });
   });
 
   test("deasupra, la 8 px deasupra numelui, după înălțimea reală (nu o estimare)", () => {
     // Numele la y = 600: dedesubt ar trebui 620 + 8 + 290 > 800 − 12. Cardul de vizitator (184 px) stă la 8 px de nume.
-    expect(placeHoverCard(name(200, 600), { width: 340, height: 184 }, viewport)).toEqual({ top: 600 - 8 - 184, left: 200, side: "above" });
-    expect(placeHoverCard(name(200, 600), { width: 340, height: 290 }, viewport)).toEqual({ top: 600 - 8 - 290, left: 200, side: "above" });
+    expect(placeHoverCard(name(200, 600), { width: 340, height: 184 }, viewport)).toEqual({ top: 600 - 8 - 184, left: 200, side: "above", maxHeight: null });
+    expect(placeHoverCard(name(200, 600), { width: 340, height: 290 }, viewport)).toEqual({ top: 600 - 8 - 290, left: 200, side: "above", maxHeight: null });
   });
 
   test("un card înalt de lângă marginea de jos se lipește tot de nume (cardul cu câmpuri, 420 px)", () => {
     const r = placeHoverCard(name(40, 700), { width: 340, height: 420 }, viewport);
-    expect(r).toEqual({ top: 700 - 8 - 420, left: 40, side: "above" });
+    expect(r).toEqual({ top: 700 - 8 - 420, left: 40, side: "above", maxHeight: null });
   });
 
   test("dedesubt încă încape exact (marginea de 12 px inclusă)", () => {
     // 500 + 20 + 8 + 260 = 788 = 800 − 12; un pixel în plus → deasupra (acolo e loc).
-    expect(placeHoverCard(name(10, 500), { width: 340, height: 260 }, viewport)).toEqual({ top: 528, left: 12, side: "below" });
-    expect(placeHoverCard(name(10, 500), { width: 340, height: 261 }, viewport)).toEqual({ top: 500 - 8 - 261, left: 12, side: "above" });
+    expect(placeHoverCard(name(10, 500), { width: 340, height: 260 }, viewport)).toEqual({ top: 528, left: 12, side: "below", maxHeight: null });
+    expect(placeHoverCard(name(10, 500), { width: 340, height: 261 }, viewport)).toEqual({ top: 500 - 8 - 261, left: 12, side: "above", maxHeight: null });
   });
 
-  test("nu încape nicăieri: partea cu mai mult loc, limitat în ecran", () => {
+  test("nu încape nicăieri: partea cu mai mult loc, cu înălțimea limitată la ea (derulează), fără să acopere numele", () => {
     const small = { width: 1280, height: 400 };
-    // Mai mult loc dedesubt (nume sus): începe sub nume, dar nu iese jos.
-    expect(placeHoverCard(name(10, 60), { width: 340, height: 360 }, small)).toEqual({ top: 400 - 12 - 360, left: 12, side: "below" });
-    // Mai mult loc deasupra (nume jos): urcă, dar nu iese sus.
-    expect(placeHoverCard(name(10, 300), { width: 340, height: 360 }, small)).toEqual({ top: 12, left: 12, side: "above" });
-    // Mai înalt decât ecranul: de la marginea de sus.
-    expect(placeHoverCard(name(10, 300), { width: 340, height: 500 }, small).top).toBe(12);
+    // Mai mult loc dedesubt (nume sus): 8 px sub nume, până la 12 px de marginea de jos.
+    expect(placeHoverCard(name(10, 60), { width: 340, height: 360 }, small)).toEqual({ top: 88, left: 12, side: "below", maxHeight: 400 - 12 - 88 });
+    // Mai mult loc deasupra (nume jos): de la 12 px de sus până la 8 px deasupra numelui.
+    expect(placeHoverCard(name(10, 300), { width: 340, height: 360 }, small)).toEqual({ top: 12, left: 12, side: "above", maxHeight: 300 - 8 - 12 });
+    expect(placeHoverCard(name(10, 300), { width: 340, height: 500 }, small)).toEqual({ top: 12, left: 12, side: "above", maxHeight: 280 });
   });
 
   test("orizontal rămâne în ecran (12 px de margine), și pe ecrane înguste", () => {

@@ -95,8 +95,9 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
     if (!open || !el) return;
     const update = () => {
       if (!open.anchor.isConnected) return;
-      const next = placeHoverCard(open.anchor.getBoundingClientRect(), { width: el.offsetWidth, height: el.offsetHeight }, { width: document.documentElement.clientWidth, height: window.innerHeight });
-      setPlace((p) => (p && p.top === next.top && p.left === next.left && p.side === next.side ? p : next));
+      // `scrollHeight`: înălțimea întreagă a cardului, și când stratul e limitat (`maxHeight`) și derulează.
+      const next = placeHoverCard(open.anchor.getBoundingClientRect(), { width: el.offsetWidth, height: el.scrollHeight }, { width: document.documentElement.clientWidth, height: window.innerHeight });
+      setPlace((p) => (p && p.top === next.top && p.left === next.left && p.side === next.side && p.maxHeight === next.maxHeight ? p : next));
     };
     update();
     const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(update);
@@ -228,7 +229,7 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
     <div
       ref={layer}
       className="gcs-hoverCardLayer"
-      style={{ top: place?.top ?? 0, left: place?.left ?? 0 }}
+      style={{ top: place?.top ?? 0, left: place?.left ?? 0, ...(place?.maxHeight != null ? { maxHeight: place.maxHeight, overflowY: "auto" } : {}) }}
       data-side={place?.side ?? "pending"}
       onPointerEnter={keepOpen}
       onPointerLeave={scheduleClose}
