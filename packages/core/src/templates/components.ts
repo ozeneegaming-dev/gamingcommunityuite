@@ -60,7 +60,7 @@ export function usernameHtml(user: Record<string, unknown>, opts: Record<string,
   const nameKey = typeof user.nameKey === "string" && KEY_RE.test(user.nameKey) ? user.nameKey : "member";
   const extra = typeof opts.class === "string" && CLASS_RE.test(opts.class) ? ` ${opts.class.trim()}` : "";
   const id = toText(user.id);
-  return `<a href="${attr(safeHref(user.url))}" class="gcs-userLink gcs-name--${nameKey}${extra}"${id ? ` data-user-id="${attr(id)}"` : ""}>${escapeHtml(name)}</a>`;
+  return `<a href="${attr(safeHref(user.url))}" class="gcs-userLink gcs-name--${nameKey}${extra}"${id ? ` data-user-id="${attr(id)}"` : ""} data-text="${attr(name)}">${escapeHtml(name)}</a>`;
 }
 
 export function timeHtml(date: Date, relative: string, title: string): string {

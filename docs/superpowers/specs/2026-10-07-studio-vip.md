@@ -53,8 +53,8 @@ doar culori `#RRGGBB`, numere în intervale, chei din liste albe și căi spre f
 type Fill = { colors: Hex[] /* 1–5; 1 = culoare plină */; angle?: 0..360; animation?: FillAnimation; speed?: "slow" | "normal" | "fast" };
 type MediaRef = string; // `/plugins/<cheia proprie>/assets/<cale>.(png|jpg|jpeg|gif|webp)` sau `/plugins/<cheia proprie>/media/<id>.<ext>`
 type Appearance = {
-  name?: { fill: Fill; effect?: NameEffect; glow?: Hex; bold?: boolean; italic?: boolean };
-  banner?: { fill: Fill; text?: Hex; label?: string /* ≤ 32 */ };
+  name?: { fill: Fill; effect?: NameEffect; glow?: Hex; bold?: boolean; italic?: boolean; style?: StyleKey /* 0.7.1 */ };
+  banner?: { fill: Fill; text?: Hex; label?: string /* ≤ 32 */; style?: StyleKey /* 0.7.1 */ };
   frame?: { image: MediaRef; scale?: 100..160; x?: -20..20; y?: -20..20 };
   card?: { image: MediaRef; x?: 0..100; y?: 0..100; dim?: 0..80 };
   flair?: { icon: MediaRef; label: string /* ≤ 40 */ };
@@ -67,10 +67,21 @@ type Appearance = {
 };
 ```
 
-- `NameEffect` (listă albă, keyframes definite de nucleu în `base.css`): `none`, `shimmer` (gradientul curge), `pulse`
-  (strălucirea respiră), `neon` (pâlpâie, cu glow puternic), `glitch` (decalaj RGB scurt), `scan` (linii de scanare),
-  `chrome` (o dungă de lumină trece peste nume), `fire` (flacără: glow cald, pâlpâire), `holo` (nuanța se rotește),
-  `caret` (cursor care clipește după nume).
+- `NameEffect` (listă albă; din GCS 0.7.1 definite toate în `packages/core/src/members/nameEffects.ts`, o singură dată,
+  aplicate atât pe numele membrilor, cât și pe clasele de previzualizare `.gcs-nfx.gcs-nfx--<efect>`): `none`,
+  `gradient`, `shimmer`, `pulse`, `neon`, `glitch`, `scan`, `chrome`, `fire`, `holo`, `caret`, `inferno`, `typewriter`,
+  `reveal`, `shatter`, `citylights`, `cosmic`, `crosshair`, `love`, `electric`, `mirror`, `lightning`, `money`, `razor`,
+  `shadowdance`, `toxic`, `vscan`, `gold`, `aura`, `matrix`, `frost`, `plasma`, `outline`, `extrude`.
+  - Culorile ajung doar ca variabile (`--nfx-c1…5`, `--nfx-gc`, `--nfx-sp`), din `#RRGGBB` validate; „cernelurile”
+    `--nfx-i*` își limitează luminozitatea pe fiecare temă (închise pe tema deschisă, ridicate pe cea închisă), ca
+    numele să rămână lizibile pe ambele.
+  - Decorațiile (straturi cu textul dublat din `data-text`, particule, iconițe — cel mult `::before` și `::after`, fără
+    evenimente de mouse, poziționate absolut) apar doar în locurile mari: profilul, postbit-ul, hover card-ul, meniul
+    userului și previzualizările. În listele dense numele are doar culoarea și animația ușoară a efectului.
+  - Animații doar pe transform, opacity, background-position, clip-path, mask și text-shadow; sub reduced-motion se
+    opresc toate, iar tăieturile / măștile dispar (rămâne aspectul static).
+- `StyleKey` (`[a-z0-9_]{1,40}`): un stil CSS scris de un admin în ACP-ul pluginului (§2.5); nucleul pune clasa lui
+  (`gcs-nameStyle--<plugin>--<cheie>` / `gcs-bannerStyle--…`) pe numele, respectiv banner-ul membrului.
 - `FillAnimation` pentru banner și nume: `none`, `flow` (gradientul curge), `pulse`, `shine` (dungă de lumină),
   `aurora` (curgere lentă + nuanță).
 - Textele (etichete, citat, titluri) sunt text simplu: caracterele de control se scot, spațiile se strâng, React le
@@ -110,10 +121,17 @@ type Appearance = {
   `{ id, kind, mime, size, width, height, durationMs, url }`.
   - tipul real din conținut (`file-type`), nu din extensie sau din antetul browserului;
   - imaginile se **recodează** în WebP cu `sharp` (fără metadate, transparența păstrată, latura ≤ `maxSide`, animația
-    doar cu `animated: true`); fișierul original nu se păstrează;
+    doar cu `animated: true`); fișierul original nu se păstrează. Cu `animated: true`, GIF și WebP animat rămân animate,
+    iar **APNG** (din 0.7.1) se compune în nucleu (`apng.ts`: decalaje, `blend_op` SOURCE/OVER, `dispose_op`
+    NONE/BACKGROUND/PREVIOUS) și devine WebP animat cu duratele și buclele lui; duratele sub 11 ms devin 100 ms, ca în
+    browsere. Limite: 600 de cadre, pânza ≤ 4096 px, 32 de milioane de pixeli în toate cadrele, 20 s de lucru
+    (`too_many_frames`, `animation_too_large`, `processing_timeout`);
   - video: doar MP4/WebM; durata citită din container (`mvhd` / `Duration` din EBML) trebuie să fie ≤ `maxSeconds`;
   - audio: doar MP3/Ogg;
-  - mărimea per tip, **cota** pluginului (`quotaMb`, toate fișierele lui) și o limită de rată per user (60 / oră).
+  - mărimea per tip, **cota** pluginului (`quotaMb`, toate fișierele lui) și o limită de rată per user (60 / oră pe
+    site; 300 / oră, separat, pentru încărcările din rutele ACP ale pluginului).
+  - rezultatul încărcării (doar în corpul formularului, din 0.7.1) are și `sha256` (al fișierului trimis, pentru
+    duplicate), `originalName` (fără cale, doar text) și `frames`; o eroare are și ea `originalName`.
 - **Ciclul de viață**: un fișier încărcat e *în așteptare* până când pluginul îl păstrează (`ctx.media.keep(ids)`);
   cele nepăstrate în 6 ore se șterg (la următoarea încărcare). `ctx.media.get(ids)`, `list({ kind, limit, offset })`,
   `delete(ids)`, `usage()`. La dezinstalare (fără „Păstrează datele”) se șterg toate.
@@ -133,7 +151,9 @@ type Appearance = {
     `maxlength`, `placeholder`, `accept`, `required`, `disabled`, `readonly`, `multiple`, `autocomplete` (`on`/`off`);
   - fără `formaction`, `formmethod`, `formenctype`, `formtarget`, `form` (s-ar putea trimite în altă parte).
 - **Ruta API** primește, pe lângă JSON: `application/x-www-form-urlencoded` (≤ 64 KB; câmpurile repetate devin liste) și
-  `multipart/form-data` (doar cu `media`; mărimea din `Content-Length` verificată înainte de citire).
+  `multipart/form-data` (doar cu `media`; mărimea din `Content-Length` verificată înainte de citire). Pe site, cel mult
+  4 fișiere; spre o rută ACP (încărcarea în bloc, din 0.7.1), cel mult 50 de fișiere într-un corp de cel mult 48 MB (sub
+  limita proxy-ului Next de 64 MB și sub cei 50 MB ai nginx-ului standard).
   - CSRF: ca până acum, `Origin` trebuie să fie site-ul (browserele îl trimit la formulare POST);
   - răspunsul unui formular: `{ redirect }` întors de plugin devine **303** spre acea adresă, doar dacă e una dintre
     paginile pluginului (`/p/<cheie>…` sau `/admin/plugins/<cheie>…`); altfel înapoi la pagina de unde a venit
@@ -141,6 +161,19 @@ type Appearance = {
 - **Rute API ale ACP-ului**: `routes.api[].acp: "view" | "edit" | "delete"` — nucleul cere poarta ACP (sesiune ACP
   validă, 2FA) și dreptul pe secțiunea `plugin.<cheie>`; pluginul primește `request.acp = true`. Paginile ACP ale
   pluginului își trimit formularele doar spre astfel de rute.
+
+### 2.5 Stilurile CSS scrise de admini (GCS 0.7.1)
+
+- `ctx.members.appearance.styles.check(kind, key, css)`, `set(kind, key, css | null)`, `list(kind?)`, cu `kind`
+  `name` sau `banner`. `set` merge doar dintr-o rută API sau o pagină ACP a pluginului (jetonul apelului știe asta;
+  altfel `acp_required`), iar adminul ajunge în jurnalul ACP (`plugin.appearance_style.create/update/delete`).
+- Gramatica (`customStyle.ts`): declarații, blocurile `::before { }` / `::after { }` și `@keyframes nume { }`; niciun
+  selector scris de admin. Aceleași interdicții ca la CSS-ul pluginurilor (normalizarea CR/FF, `<`, `\`, `@import`,
+  `expression(`, `javascript:`, `behavior:`, `-moz-binding`…), plus: fără `!important`, fără `position: fixed/sticky`,
+  fără `image-set(` / `src(`, `url()` doar spre fișierele pluginului. Erorile au linia lor.
+- Compilarea (în `/gcs-names.css`): pe clasa stilului (previzualizări, banner-ele randate de nucleu) și pe numele
+  membrilor care l-au ales; `@keyframes` primesc prefixul stilului, animațiile se opresc sub reduced-motion. Tabelul
+  `plugin_appearance_styles` (plugin, tip, cheie, sursa, cine, când).
 
 ### 2.4 Variabile CSS și elemente media în HTML-ul pluginului
 

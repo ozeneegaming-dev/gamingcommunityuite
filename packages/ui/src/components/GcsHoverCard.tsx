@@ -27,7 +27,7 @@ export type GcsHoverCardData = {
    * Aspectul publicat de pluginuri (Studio VIP), cu stilurile deja calculate de GCS din valori validate: banner-ul de
    * sub nume, fundalul copertei și arma (iconița și numele).
    */
-  look?: { banner: { label: string; style: CSSProperties } | null; card: CSSProperties | null; flair: { icon: string; label: string } | null } | null;
+  look?: { banner: { label: string; style: CSSProperties; className?: string } | null; card: CSSProperties | null; flair: { icon: string; label: string } | null } | null;
 };
 
 export type GcsHoverCardLabels = { posts: string; reputation: string; followers: string; online: string; joined: string; weapon?: string };
@@ -86,7 +86,7 @@ export function GcsHoverCard({
             <GcsAvatar name={user.name} size="l" userId={user.id} {...(user.image ? { src: user.image } : {})} {...(user.frameKey ? { frame: user.frameKey } : {})} />
           </span>
           <div className="gcs-hoverCard__identity">
-            <a href={`/members/${user.id}-${user.slug}`} className={`gcs-userLink gcs-name--${user.nameKey} gcs-hoverCard__name`} title={user.name} data-name-user={user.id}>
+            <a href={`/members/${user.id}-${user.slug}`} className={`gcs-userLink gcs-name--${user.nameKey} gcs-hoverCard__name`} title={user.name} data-name-user={user.id} data-text={user.name}>
               {user.name}
             </a>
             <div className="gcs-hoverCard__meta">
@@ -97,7 +97,7 @@ export function GcsHoverCard({
                 </span>
               )}
               {look?.banner && (
-                <span className="gcs-vipPill gcs-fx" style={look.banner.style} data-testid="gcs-hover-vip-banner">
+                <span className={`gcs-vipPill gcs-fx${look.banner.className ? ` ${look.banner.className}` : ""}`} style={look.banner.style} data-testid="gcs-hover-vip-banner">
                   {look.banner.label}
                 </span>
               )}

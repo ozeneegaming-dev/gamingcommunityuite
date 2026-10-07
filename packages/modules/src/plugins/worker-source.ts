@@ -170,6 +170,11 @@ export const PLUGIN_WORKER_SOURCE = String.raw`
           set: (userId, data) => rpc("members.appearance.set", [userId, data === undefined ? null : data], token),
           get: (ids) => rpc("members.appearance.get", [ids], token),
           clear: () => rpc("members.appearance.clear", [], token),
+          styles: Object.freeze({
+            check: (kind, key, css) => rpc("members.appearance.styles.check", [kind, key, css], token),
+            set: (kind, key, css) => rpc("members.appearance.styles.set", [kind, key, css === undefined ? null : css], token),
+            list: (kind) => rpc("members.appearance.styles.list", [kind === undefined ? null : kind], token),
+          }),
         }),
       }),
       media: Object.freeze({

@@ -101,9 +101,25 @@ describe("aspectul membrilor: CSS-ul", () => {
   test("numele: per user, cu gradient, animație și oprire sub reduced-motion", () => {
     const css = compileAppearanceCss([{ userId: "u1", appearance: { name: { fill: { colors: ["#FF0044", "#7A5CFF"] }, effect: "shimmer" } } }]);
     expect(css).toContain('.gcs-root :is(a.gcs-userLink[data-user-id="u1"],[data-name-user="u1"])');
-    expect(css).toContain("linear-gradient(90deg,#FF0044,#7A5CFF,#FF0044)");
-    expect(css).toContain("animation:gcsFxFlow 3.5s linear infinite");
+    // Culorile ca variabile; gradientul le folosește prin cernelurile temei (închise automat pe tema deschisă).
+    expect(css).toContain("--nfx-c1:#FF0044;--nfx-c2:#7A5CFF;--nfx-grad:linear-gradient(90deg,var(--nfx-i1),var(--nfx-i2),var(--nfx-i1))");
+    expect(css).toContain("animation:gcsNfxFlow calc(3.6s*var(--nfx-sp,1)) linear infinite");
     expect(css).toContain("prefers-reduced-motion: reduce");
+  });
+
+  test("validarea: efectele noi și cheia unui stil CSS al pluginului", () => {
+    expect(parse({ name: { fill: { colors: ["#FF0000"] }, effect: "razor", style: "flacara_mea" } }).ok).toBe(true);
+    expect(errors({ name: { fill: { colors: ["#FF0000"] }, style: "Flacără" } })).toEqual({ "name.style": "invalid_key" });
+    expect(errors({ banner: { fill: { colors: ["#FF0000"] }, style: "a b" } })).toEqual({ "banner.style": "invalid_key" });
+    // Clasa o pune doar nucleul.
+    expect(errors({ name: { fill: { colors: ["#FF0000"] }, styleClass: "gcs-x" } })).toEqual({ "name.styleClass": "unknown_key" });
+  });
+
+  test("combinarea: stilul CSS primește clasa pluginului care l-a publicat; banner-ul cu stil nu are stil inline", () => {
+    const merged = mergeAppearances([{ banner: { fill: { colors: ["#111111"] }, style: "aur" } }, { name: { fill: { colors: ["#222222"] }, style: "neon" } }], ["acme.one", "gcs.vip_studio"]);
+    expect(merged.banner?.styleClass).toBe("gcs-bannerStyle--acme-one--aur");
+    expect(merged.name?.styleClass).toBe("gcs-nameStyle--gcs-vip_studio--neon");
+    expect(appearanceBannerStyle(merged.banner!)).toEqual({});
   });
 
   test("rama: imaginea pluginului peste avatar, rama clasică ascunsă", () => {
