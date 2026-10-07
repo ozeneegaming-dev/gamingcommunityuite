@@ -120,7 +120,15 @@ export type GcsStatsContext = { db: PrismaClient };
 /** Un subitem implicit (un singur nivel sub un item din meniul principal). */
 export type GcsNavDefaultChild = { key: string; labelKey: string; icon: string; href: string };
 /** Un item implicit din meniul principal, declarat de un modul (cu subitemii lui, dacă are submeniu). */
-export type GcsNavDefault = GcsNavDefaultChild & { position: number; children?: GcsNavDefaultChild[] };
+export type GcsNavDefault = GcsNavDefaultChild & {
+  position: number;
+  children?: GcsNavDefaultChild[];
+  /**
+   * Marcajul versiunii de meniu care a adus itemul (ex. `nav:v3`); lipsă = în meniul implicit din `nav:v2`. Actualizarea
+   * la marcajul respectiv recunoaște meniul nemodificat fără itemii lui (vezi `GcsNavService.upgradeDefaults`).
+   */
+  since?: string;
+};
 
 /** Un modul GamingCommunitySuite (spec §5). Restul câmpurilor din spec se adaugă în etapele care le folosesc. */
 export interface GcsModule {

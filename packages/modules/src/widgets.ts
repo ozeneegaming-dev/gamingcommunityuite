@@ -90,3 +90,31 @@ export const chatWidgets: GcsWidgetDef[] = [
     fields: [{ key: "channel", labelKey: "widgets.fields.channel", type: "select", optionsFrom: "chat.channels" }],
   }),
 ];
+
+/**
+ * Widget-ul aplicației Servere (specul 2026-10-07-servere §7): lista compactă a serverelor vizibile, cu statusul live.
+ * Câmpurile: câte servere și jocul (gol = toate familiile).
+ */
+export const serverWidgets: GcsWidgetDef[] = [
+  widget({
+    key: "servers.list",
+    labelKey: "widgets.servers.list",
+    descriptionKey: "widgets.desc.servers.list",
+    icon: "fa-solid fa-server",
+    defaultConfig: { limit: 5, game: "" },
+    fields: [
+      limitField(),
+      {
+        key: "game",
+        labelKey: "widgets.fields.game",
+        type: "select",
+        options: [
+          { value: "", labelKey: "widgets.games.all" },
+          { value: "cs16", labelKey: "widgets.games.cs16" },
+          { value: "cs2", labelKey: "widgets.games.cs2" },
+          { value: "minecraft", labelKey: "widgets.games.minecraft" },
+        ],
+      },
+    ],
+  }),
+];

@@ -94,6 +94,10 @@ import { GcsPortingService } from "./porting/service";
 import { GcsActivityStream } from "./community/activity";
 import { GcsLeaderboard } from "./community/leaderboard";
 import { GcsVipPublic } from "./vip/public";
+import { GcsServerPoller } from "./servers/poller";
+import { GcsServerQueries } from "./servers/queries";
+import { GcsServerService, SERVER_BANNER } from "./servers/service";
+import { GcsServerStatusStore } from "./servers/store";
 
 export type GcsServices = {
   db: PrismaClient;
@@ -180,6 +184,12 @@ export type GcsServices = {
   leaderboard: GcsLeaderboard;
   /** Pagina publică a planurilor VIP (`/vip`). */
   vipPublic: GcsVipPublic;
+  /** Serverele de joc din ACP (Gaming → Servere): adăugare, editare, ordine, „Testează”. */
+  servers: GcsServerService;
+  /** Citirile publice ale serverelor (`/servers`, widget-ul, statusurile live). */
+  serverQueries: GcsServerQueries;
+  /** Interogarea periodică a serverelor (rulează în `gcs-worker`). */
+  serverPoller: GcsServerPoller;
 };
 
 /** Golește cache-ul Redis al paginilor (cheile și seturile de tag-uri `gcs:k:*`, `gcs:tag:*`), fără cozi și limite. */
@@ -406,6 +416,12 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const chatQueries = new GcsChatQueries({ db, permissions });
   const realtimeRooms = new GcsRealtimeRooms({ permissions, forumQueries });
   realtimeRooms.register("chat", (actor, key) => chatQueries.canRead(actor, key));
+  // Aplicația Servere (etapa Gaming): statusul din Redis, citirile publice, ACP-ul și interogarea din worker.
+  const serverStore = new GcsServerStatusStore(redis);
+  const serverQueries = new GcsServerQueries({ db, cache, permissions, settings, apps, store: serverStore });
+  realtimeRooms.register("servers", (actor, id) => serverQueries.canJoin(actor, id));
+  // Bannerul unui server se vede doar de cine vede serverul.
+  attachments.registerAccess(SERVER_BANNER, (actor, id) => serverQueries.canView(actor, Number(id)));
   registerChatNotifications({ db, bus, notifications, chatQueries, actors });
   registerLiveEvents(bus, { db, realtime });
 
@@ -572,6 +588,9 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
       clearCache: () => clearPageCache(redis),
     }),
     porting: new GcsPortingService({ db, acp, plugins: pluginAdmin }),
+    servers: new GcsServerService({ db, bus, acp, attachments, rateLimiter, store: serverStore }),
+    serverQueries,
+    serverPoller: new GcsServerPoller({ db, store: serverStore, realtime, cache, settings, apps }),
   };
   registerAppJobs(services);
   return services;

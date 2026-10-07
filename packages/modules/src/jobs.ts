@@ -18,4 +18,6 @@ export function registerAppJobs(s: GcsServices): void {
   // Joburile pluginurilor (etapa 6): un singur job generic, rulat de gazda pluginurilor din worker.
   s.jobs.register({ name: PLUGIN_JOB, handler: (data) => s.plugins.runJob(data) });
   s.importer.registerJobs(s.jobs);
+  // Aplicația Servere: runda de interogare (10 s) și agregarea orară a istoricului.
+  s.serverPoller.registerJobs(s.jobs);
 }

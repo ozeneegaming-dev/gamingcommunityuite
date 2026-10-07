@@ -1,6 +1,7 @@
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createWorld, type GcsTestWorld } from "../../test/world";
 import { NAV_SEED_MARK, seedDefaults } from "../install/seed";
+import { NAV_MARKS } from "./service";
 import type { GcsModule } from "../modules/registry";
 
 // Un modul cu meniul „nou” (submeniu, itemi noi) și meniul lui anterior; plus o aplicație opțională nouă în meniu.
@@ -70,14 +71,14 @@ async function menu(): Promise<Dump[]> {
     }));
 }
 
-/** Simulează o instalare făcută înainte de `nav:v2`: meniul anterior (eventual modificat) și doar marcajul `nav`. */
+/** Simulează o instalare făcută înainte de `nav:v2`: meniul anterior (eventual modificat) și doar marcajul `nav` (fără `NAV_MARKS`). */
 async function legacyInstall(items: { label: object; icon: string; href: string; enabled?: boolean }[]): Promise<void> {
   await w.db.navItem.deleteMany({});
   for (const [position, it] of items.entries()) {
     await w.db.navItem.create({ data: { position, label: it.label, icon: it.icon, href: it.href, groups: [], enabled: it.enabled ?? true } });
   }
   const state = await w.db.systemState.findUniqueOrThrow({ where: { id: 1 } });
-  await w.db.systemState.update({ where: { id: 1 }, data: { seedMarks: state.seedMarks.filter((m) => m !== NAV_SEED_MARK) } });
+  await w.db.systemState.update({ where: { id: 1 }, data: { seedMarks: state.seedMarks.filter((m) => !NAV_MARKS.includes(m)) } });
 }
 
 const LEGACY = [

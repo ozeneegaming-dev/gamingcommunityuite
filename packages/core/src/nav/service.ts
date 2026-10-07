@@ -16,6 +16,13 @@ const MAX_ITEMS = 60;
 const MAX_DEPTH = 2;
 const LABEL_LOCALES = ["ro", "en", "de", "es", "fr", "ru"];
 
+/**
+ * Versiunile meniului implicit, în ordine (marcajele din `system_state.seedMarks`): `nav:v2` (Activitate, Clasament,
+ * VIP, Reguli, submeniul Membri), `nav:v3` (Servere). O instalare nouă le primește pe toate; una existentă își
+ * actualizează meniul o dată pentru fiecare marcaj lipsă (`GcsNavService.upgradeDefaults`).
+ */
+export const NAV_MARKS: readonly string[] = ["nav:v2", "nav:v3"];
+
 /** Eticheta unui item: cheie de traducere (itemii impliciți) sau text pe limbi (itemii adăugați de admin). */
 export type GcsNavLabel = { key: string } | Partial<Record<string, string>>;
 export type GcsNavItemInput = { label: GcsNavLabel; icon?: string | null; href?: string | null; appKey?: string | null; groups?: number[]; newTab?: boolean; enabled?: boolean; children?: GcsNavItemInput[] };
@@ -173,15 +180,21 @@ export class GcsNavService {
   }
 
   /**
-   * Actualizarea meniului unei instalări existente la meniul implicit curent (o singură dată, marcajul `nav:v2`):
-   * - meniul nemodificat (identic cu meniul implicit anterior al modulelor) e înlocuit cu cel nou;
+   * Actualizarea meniului unei instalări existente la meniul implicit curent (o singură dată pe marcaj: `nav:v2`,
+   * `nav:v3`…):
+   * - meniul nemodificat (identic cu meniul implicit dinaintea marcajului) e înlocuit cu cel nou;
    * - un meniu modificat de admin rămâne cum e; itemii noi de pe primul nivel, cu un link care nu există încă în meniu,
    *   se adaugă la coadă **dezactivați**, ca adminul să-i activeze din Manager meniu dacă îi vrea.
+   *
+   * Meniul dinaintea lui `nav:v2` e cel din `navPrevious`; dinaintea unui marcaj mai nou, e meniul curent fără itemii
+   * aduși de el sau de marcajele de după (`since`).
    */
-  static async upgradeDefaults(tx: Prisma.TransactionClient, registry: GcsModuleRegistry): Promise<"replaced" | "appended" | "unchanged"> {
+  static async upgradeDefaults(tx: Prisma.TransactionClient, registry: GcsModuleRegistry, mark: string = NAV_MARKS[0]!): Promise<"replaced" | "appended" | "unchanged"> {
     const rows = await tx.navItem.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] });
     const current = navDefaults(registry, "current");
-    if (matchesDefaults(rows, navDefaults(registry, "previous"))) {
+    const index = Math.max(0, NAV_MARKS.indexOf(mark));
+    const previous = index === 0 ? navDefaults(registry, "previous") : current.filter((n) => NAV_MARKS.indexOf(n.since ?? NAV_MARKS[0]!) < index);
+    if (matchesDefaults(rows, previous)) {
       await tx.navItem.deleteMany({});
       await createDefaults(tx, current, 0, true);
       return "replaced";
