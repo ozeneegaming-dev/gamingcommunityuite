@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { Prisma, PrismaClient } from "@gcs/db";
 import type { GcsCache } from "../cache";
+import type { GcsRichFieldKey } from "../content/richFields";
 import type { GcsEvent, GcsEventBus } from "../events";
 import type { GcsSettingDef } from "../settings/registry";
 
@@ -102,6 +103,11 @@ export type GcsWidgetDef = {
 export type GcsWidgetField =
   | { key: string; labelKey: string; type: "number"; min: number; max: number }
   | { key: string; labelKey: string; type: "text" | "textarea"; maxLength: number }
+  /**
+   * Text formatat în editorul compact (specul `2026-10-07-editor-campuri`): valoarea e documentul editorului, validat
+   * după profilul `profile` din `GCS_RICH_FIELDS`, sau un text vechi (afișat ca înainte); `maxLength` = caractere de text.
+   */
+  | { key: string; labelKey: string; type: "richtext"; maxLength: number; profile: GcsRichFieldKey }
   | { key: string; labelKey: string; type: "select"; options?: readonly { value: string; labelKey: string }[]; optionsFrom?: string };
 
 /** Layout-ul implicit al paginilor, contribuit de module (seed; doar pe paginile fără widget-uri). */
@@ -111,8 +117,10 @@ export type GcsWidgetLayoutDefaults = Partial<Record<GcsWidgetPage, { zone: GcsW
 export type GcsStatTile = { key: string; labelKey: string; value: number; icon: string; href?: string; color?: string };
 export type GcsStatsContext = { db: PrismaClient };
 
-/** Un item implicit din meniul principal, declarat de un modul. */
-export type GcsNavDefault = { key: string; labelKey: string; icon: string; href: string; position: number };
+/** Un subitem implicit (un singur nivel sub un item din meniul principal). */
+export type GcsNavDefaultChild = { key: string; labelKey: string; icon: string; href: string };
+/** Un item implicit din meniul principal, declarat de un modul (cu subitemii lui, dacă are submeniu). */
+export type GcsNavDefault = GcsNavDefaultChild & { position: number; children?: GcsNavDefaultChild[] };
 
 /** Un modul GamingCommunitySuite (spec §5). Restul câmpurilor din spec se adaugă în etapele care le folosesc. */
 export interface GcsModule {
@@ -144,6 +152,11 @@ export interface GcsModule {
   stats?: (ctx: GcsStatsContext) => Promise<GcsStatTile[]>;
   /** Itemii modulului din meniul principal implicit. */
   nav?: GcsNavDefault[];
+  /**
+   * Itemii modulului din meniul implicit anterior (lipsă = aceiași cu `nav`). Recunosc un meniu pe care adminul nu
+   * l-a modificat, ca actualizarea meniului (marcajul `nav:v2`) să-l poată înlocui cu cel nou.
+   */
+  navPrevious?: GcsNavDefault[];
 }
 
 export class GcsModuleRegistry {

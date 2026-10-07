@@ -38,7 +38,8 @@ export const coreWidgets: GcsWidgetDef[] = [
     defaultConfig: { title: "", body: "" },
     fields: [
       { key: "title", labelKey: "widgets.fields.title", type: "text", maxLength: 120 },
-      { key: "body", labelKey: "widgets.fields.body", type: "textarea", maxLength: 5000 },
+      // Textul: editorul compact (profilul `announcement`); textul vechi (HTML sau simplu) rămâne valabil.
+      { key: "body", labelKey: "widgets.fields.body", type: "richtext", maxLength: 5000, profile: "announcement" },
     ],
   }),
   widget({ key: "core.online", labelKey: "widgets.core.online", descriptionKey: "widgets.desc.core.online", icon: "fa-solid fa-signal", defaultConfig: {} }),

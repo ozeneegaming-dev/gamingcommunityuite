@@ -62,6 +62,82 @@ describe("câmpurile de profil", () => {
   });
 });
 
+const doc = (...content: unknown[]) => ({ type: "doc", content });
+const p = (...content: unknown[]) => ({ type: "paragraph", content });
+const text = (t: string, marks?: unknown[]) => (marks ? { type: "text", text: t, marks } : { type: "text", text: t });
+
+describe("câmpurile „Text lung” formatate cu editorul", () => {
+  const about = () => w.db.profileField.create({ data: { key: "about", label: "Despre mine", type: "TEXTAREA", section: "ABOUT", maxLength: 40, position: 9 } });
+  const aboutOf = async (viewer: GcsActor) => (await w.profiles.visibleFields(viewer, w.member.userId!)).find((f) => f.key === "about");
+
+  test("documentul se validează și se randează; textul simplu rămâne pentru postbit și card", async () => {
+    await about();
+    const content = doc(p(text("Joc "), text("CS2", [{ type: "bold" }, { type: "textStyle", attrs: { color: "#3DDC97" } }])), p(text("seara")));
+    await w.profiles.updateFields(w.member, w.member.userId!, { about: content });
+    expect(await aboutOf(w.guest)).toMatchObject({ value: "Joc CS2\nseara", html: '<p>Joc <strong><span style="color:#3DDC97">CS2</span></strong></p><p>seara</p>' });
+    const row = await w.db.profileFieldValue.findFirstOrThrow({ where: { userId: w.member.userId!, field: { key: "about" } } });
+    expect(row.json).toEqual(content);
+  });
+
+  test("valorile vechi (text simplu) se afișează ca paragrafe; un text simplu nou șterge formatarea veche", async () => {
+    const field = await about();
+    await w.db.profileFieldValue.create({ data: { userId: w.member.userId!, fieldId: field.id, value: "Rândul 1\nRândul <2>" } });
+    expect((await aboutOf(w.guest))?.html).toBe("<p>Rândul 1</p><p>Rândul &lt;2&gt;</p>");
+
+    await w.profiles.updateFields(w.member, w.member.userId!, { about: doc(p(text("formatat", [{ type: "italic" }]))) });
+    await w.profiles.updateFields(w.member, w.member.userId!, { about: "simplu" });
+    const row = await w.db.profileFieldValue.findFirstOrThrow({ where: { userId: w.member.userId!, fieldId: field.id } });
+    expect({ value: row.value, json: row.json, html: row.html }).toEqual({ value: "simplu", json: null, html: "" });
+    expect((await aboutOf(w.guest))?.html).toBe("<p>simplu</p>");
+  });
+
+  test("refuză linkurile javascript:, imaginile, titlurile, documentele în câmpuri simple și textul peste limită", async () => {
+    await about();
+    const fails = (value: unknown, key = "about") => w.profiles.updateFields(w.member, w.member.userId!, { [key]: value }).catch((e: unknown) => (e as GcsValidationError).fields);
+    expect(await fails(doc(p(text("x", [{ type: "link", attrs: { href: "javascript:alert(1)" } }]))))).toEqual({ about: "invalid" });
+    expect(await fails(doc({ type: "image", attrs: { src: "https://cdn.example/a.png" } }))).toEqual({ about: "format_not_allowed" });
+    expect(await fails(doc({ type: "heading", attrs: { level: 2 }, content: [text("Titlu")] }))).toEqual({ about: "format_not_allowed" });
+    expect(await fails(doc(p(text("x".repeat(41)))))).toEqual({ about: "too_long" });
+    expect(await fails({ type: "html", html: "<script>alert(1)</script>" })).toEqual({ about: "invalid" });
+    expect(await fails(doc(p(text("România"))), "country")).toEqual({ country: "invalid" });
+    expect(await w.db.profileFieldValue.count({ where: { field: { key: "about" } } })).toBe(0);
+  });
+});
+
+describe("semnătura", () => {
+  const signature = () => w.db.user.findUniqueOrThrow({ where: { id: w.member.userId! }, select: { signatureJson: true, signatureHtml: true } });
+
+  test("se salvează formatată, cu o imagine din adresă; video, atașamentele și scripturile sunt refuzate; null o șterge", async () => {
+    await w.profiles.saveSignature(w.member, doc(p(text("GG", [{ type: "textStyle", attrs: { color: "#FF6B74", fontSize: "18px" } }])), { type: "image", attrs: { src: "https://cdn.example/clan.png" } }));
+    expect((await signature()).signatureHtml).toBe('<p><span style="color:#FF6B74;font-size:18px">GG</span></p><img class="gcs-postImage" src="https://cdn.example/clan.png" alt="" loading="lazy" />');
+
+    const fails = (content: unknown) => w.profiles.saveSignature(w.member, content).catch((e: unknown) => (e as GcsValidationError).fields);
+    expect(await fails(doc({ type: "embed", attrs: { url: "https://youtu.be/dQw4w9WgXcQ" } }))).toEqual({ content: "format_not_allowed" });
+    expect(await fails(doc({ type: "image", attrs: { attachmentId: "att_1" } }))).toEqual({ content: "format_not_allowed" });
+    expect(await fails(doc(p(text("x", [{ type: "link", attrs: { href: "javascript:alert(1)" } }]))))).toEqual({ content: "invalid" });
+    expect((await signature()).signatureHtml).toContain("GG");
+
+    await w.profiles.saveSignature(w.member, null);
+    expect(await signature()).toEqual({ signatureJson: null, signatureHtml: "" });
+  });
+
+  test("limitele: setarea site-ului și a grupului (cea mai strictă), imaginile; 0 / fără valoare = interzisă", async () => {
+    // Membru: 300 din setarea grupului (site-ul: 500).
+    expect(await w.profiles.signatureLimits(w.member)).toEqual({ maxChars: 300, maxImages: 1 });
+    expect(await w.profiles.saveSignature(w.member, "x".repeat(301)).catch((e: unknown) => [(e as GcsValidationError).fields, (e as GcsValidationError).params])).toEqual([{ content: "too_long" }, { max: "300" }]);
+    await w.settings.set("profile.signature_max_chars", 100, w.root);
+    await w.settings.set("profile.signature_max_images", 0, w.root);
+    expect(await w.profiles.signatureLimits(w.member)).toEqual({ maxChars: 100, maxImages: 0 });
+    expect(await w.profiles.saveSignature(w.member, doc({ type: "image", attrs: { src: "https://cdn.example/a.png" } })).catch((e: unknown) => (e as GcsValidationError).fields)).toEqual({ content: "too_many_images" });
+    // Root Admin: nelimitat în grup, deci limita site-ului.
+    expect((await w.profiles.signatureLimits(w.root)).maxChars).toBe(100);
+    // Membru nou: grupul nu are valoare (= interzis).
+    const fresh = await w.actorFor(await w.createUser("Nou", "new_member"));
+    expect((await w.profiles.signatureLimits(fresh)).maxChars).toBe(0);
+    await expect(w.profiles.saveSignature(fresh, "salut")).rejects.toMatchObject({ fields: { content: "signature_disabled" } });
+  });
+});
+
 describe("bio, accent, avatar, cover", () => {
   test("accentul acceptă doar #RRGGBB; bio-ul are maximum 160 de caractere", async () => {
     await w.profiles.setAccent(w.member, "#B794FF");

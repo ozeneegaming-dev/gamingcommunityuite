@@ -86,6 +86,38 @@ describe("profilul", () => {
   });
 });
 
+describe("insignele (specul 2026-10-07-insigne-grafice)", () => {
+  test("badge-urile obținute au insigna desenată; tabul arată și cele blocate, cu cerința și progresul", async () => {
+    await w.topics.create(w.member, { forumId: tree.forum.id, title: "Primul meu topic", content: doc("Salut") });
+    await w.achievements.evaluate(w.member.userId!);
+
+    const p = (await w.profileQueries.profile(other, w.member.userId!))!;
+    expect(p.badges[0]).toMatchObject({ key: "first_post", art: "/badge-art/v1/medal-bronze-5ea2ff-i-solid-pen-nib.svg", image: null });
+    expect((await w.profileQueries.card(other, w.member.userId!))!.badges[0]?.art).toBe(p.badges[0]!.art);
+
+    const showcase = (await w.profileQueries.badgeShowcase(other, w.member.userId!))!;
+    expect(showcase.earned.map((b) => b.key)).toEqual(["first_post"]);
+    const locked = new Map(showcase.locked.map((b) => [b.key, b]));
+    expect(locked.has("first_post")).toBe(false);
+    expect(locked.get("posts_100")).toMatchObject({ requirement: { trigger: "POSTS_COUNT", threshold: 100 }, progress: { current: 1, target: 100 } });
+    expect(locked.get("member_1y")).toMatchObject({ requirement: { trigger: "MEMBER_DAYS", threshold: 365 }, progress: { current: 0, target: 365 } });
+    expect(locked.get("vip")).toMatchObject({ requirement: { trigger: "IS_VIP", threshold: 1 }, progress: null });
+    // Cele manuale vin la final, fără cerință numerică; un badge automat fără regulă activă nu apare.
+    expect(showcase.locked.slice(-2).map((b) => [b.key, b.requirement])).toEqual([
+      ["tournament_champion", null],
+      ["rp_veteran", null],
+    ]);
+    await w.db.achievementRule.updateMany({ where: { key: "posts_1000" }, data: { enabled: false } });
+    expect((await w.profileQueries.badgeShowcase(other, w.member.userId!))!.locked.map((b) => b.key)).not.toContain("posts_1000");
+  });
+
+  test("un profil invizibil pentru viewer nu-și arată nici badge-urile", async () => {
+    await setPrivacy(w.member, { profile: "MEMBERS" });
+    expect(await w.profileQueries.badgeShowcase(w.guest, w.member.userId!)).toBeNull();
+    expect(await w.profileQueries.badgeShowcase(other, w.member.userId!)).not.toBeNull();
+  });
+});
+
 describe("cardul", () => {
   test("e cache-uit, iar alegerea unei rame îl invalidează", async () => {
     const gold = await w.actorFor(await w.createUser("Shadow", "vip_gold"));
@@ -93,6 +125,15 @@ describe("cardul", () => {
     const frame = await w.db.avatarFrame.findUniqueOrThrow({ where: { key: "gold" } });
     await w.cosmetics.choose(gold, { avatarFrameId: frame.id });
     expect((await w.profileQueries.card(w.guest, gold.userId!))!.user.frameKey).toBe("gold");
+  });
+
+  test("are coperta cu poziția ei verticală; mutarea copertei invalidează cache-ul", async () => {
+    expect((await w.profileQueries.card(w.guest, w.member.userId!))!.user).toMatchObject({ cover: null, coverPositionY: 50 });
+    await w.db.user.update({ where: { id: w.member.userId! }, data: { coverAttachmentId: "covercard1", coverPositionY: 20 } });
+    await w.profiles.setCoverPosition(w.member, 20);
+    expect((await w.profileQueries.card(w.guest, w.member.userId!))!.user).toMatchObject({ cover: "/files/covercard1", coverPositionY: 20 });
+    await w.profiles.setCoverPosition(w.member, 75);
+    expect((await w.profileQueries.card(w.guest, w.member.userId!))!.user.coverPositionY).toBe(75);
   });
 
   test("arată doar câmpurile publice marcate „pe card”", async () => {

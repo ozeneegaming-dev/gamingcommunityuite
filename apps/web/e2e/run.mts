@@ -141,6 +141,9 @@ async function startFakeTranslator(): Promise<string> {
   return `http://127.0.0.1:${port}`;
 }
 
+/** Pornirea aplicației (instalare + instanța de test); sub sarcină mare durează mai mult. */
+const HEALTH_TIMEOUT_MS = 360_000;
+
 async function prepareDatabase(baseUrl: string, translatorUrl: string): Promise<string> {
   const admin = new pg.Client({ connectionString: baseUrl });
   await admin.connect();
@@ -149,6 +152,9 @@ async function prepareDatabase(baseUrl: string, translatorUrl: string): Promise<
   await admin.end();
   const url = new URL(baseUrl);
   url.pathname = "/redline_e2e";
+  // Sub sarcină mare (alte teste sau build-uri pe aceeași mașină), conectarea poate depăși cele 5 s implicite ale Prisma:
+  // valabil pentru migrații, seed și instanțele aplicației (toate primesc adresa asta).
+  url.searchParams.set("connect_timeout", "60");
   execFileSync(process.execPath, [prismaCli, "migrate", "deploy", "--schema", schemaPath], {
     env: { ...process.env, DATABASE_URL: url.toString() },
     stdio: "pipe",
@@ -270,9 +276,9 @@ async function main(): Promise<number> {
     // Worker-ul așteaptă `installed.lock`, apoi pornește singur (ca în Docker, pe un site proaspăt).
     startWorker(installInstanceEnv);
     Object.assign(installEnv, { GCS_E2E_INSTALL_URL: INSTALL_URL, GCS_E2E_INSTALL_CODE: code ?? "" });
-    await waitForHealth(180_000, INSTALL_URL);
+    await waitForHealth(HEALTH_TIMEOUT_MS, INSTALL_URL);
   }
-  await waitForHealth(180_000);
+  await waitForHealth(HEALTH_TIMEOUT_MS);
 
   const playwright = run(
     playwrightBin,

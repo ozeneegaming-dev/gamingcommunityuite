@@ -58,6 +58,8 @@ const WARNING_ACTIONS = [
 ] as const;
 
 export const ROOT_ACP_ROLE = "Root";
+/** Versiunea meniului implicit pusă de seed (vezi `GcsNavService.upgradeDefaults`). */
+export const NAV_SEED_MARK = "nav:v2";
 
 /** Seed-ul face multe scrieri mici într-o tranzacție; limita implicită Prisma (5 s) e prea strânsă pe un server încărcat. */
 const SEED_TX = { timeout: 30_000, maxWait: 10_000 };
@@ -124,10 +126,15 @@ export async function seedDefaults(db: PrismaClient, registry: GcsModuleRegistry
 
     // Meniul principal implicit din itemii modulelor (etapa 5); un meniu editat de admin rămâne.
     // O singură dată (marcajul `nav`): un meniu golit de admin nu e refăcut la repornire.
+    // Marcajul `nav:v2` (meniul cu Activitate, Clasament, VIP, Reguli și submeniul Membri): o instalare nouă îl
+    // primește direct; una existentă își actualizează o singură dată meniul (`GcsNavService.upgradeDefaults`).
     const navState = await tx.systemState.upsert({ where: { id: 1 }, update: {}, create: { id: 1 } });
     if (!navState.seedMarks.includes("nav")) {
       await GcsNavService.seedDefaults(tx, registry);
-      await tx.systemState.update({ where: { id: 1 }, data: { seedMarks: { push: "nav" } } });
+      await tx.systemState.update({ where: { id: 1 }, data: { seedMarks: { push: ["nav", NAV_SEED_MARK] } } });
+    } else if (!navState.seedMarks.includes(NAV_SEED_MARK)) {
+      await GcsNavService.upgradeDefaults(tx, registry);
+      await tx.systemState.update({ where: { id: 1 }, data: { seedMarks: { push: NAV_SEED_MARK } } });
     }
     // Tema implicită (etapa 5), doar dacă nu există încă nicio temă.
     await GcsThemeService.seedDefault(tx);

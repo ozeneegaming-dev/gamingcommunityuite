@@ -4,7 +4,8 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { cx } from "../cx";
 
 export type GcsDropdownItem =
-  | { kind: "link"; label: ReactNode; href: string; icon?: ReactNode; testId?: string }
+  /** `active`: linkul paginii curente (`aria-current="page"`, marcat vizual). */
+  | { kind: "link"; label: ReactNode; href: string; icon?: ReactNode; testId?: string; active?: boolean }
   | { kind: "action"; label: ReactNode; onSelect: () => void; icon?: ReactNode; testId?: string }
   | { kind: "separator" }
   | { kind: "heading"; label: ReactNode };
@@ -117,7 +118,16 @@ export function GcsDropdown({ trigger, label, items, align = "end", className, t
               </>
             );
             return item.kind === "link" ? (
-              <a key={i} role="menuitem" tabIndex={-1} href={item.href} className="gcs-dropdown__item" onClick={() => setOpen(false)} data-testid={item.testId}>
+              <a
+                key={i}
+                role="menuitem"
+                tabIndex={-1}
+                href={item.href}
+                className={cx("gcs-dropdown__item", item.active && "gcs-dropdown__item--active")}
+                aria-current={item.active ? "page" : undefined}
+                onClick={() => setOpen(false)}
+                data-testid={item.testId}
+              >
                 {content}
               </a>
             ) : (

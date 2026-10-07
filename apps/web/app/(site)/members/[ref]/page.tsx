@@ -1,6 +1,6 @@
-import type { GcsProfileView } from "@gcs/modules";
+import type { GcsLockedBadge, GcsProfileView } from "@gcs/modules";
 import { parseUserRef, slugify } from "@gcs/modules/slug";
-import { GcsAvatar, GcsCard, GcsProfileBadge, GcsUserLink } from "@gcs/ui";
+import { GcsAvatar, GcsBadgeArt, GcsCard, GcsUserLink } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -114,7 +114,8 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
               </span>
             )}
             {profile.badges.slice(0, 3).map((b) => (
-              <span key={b.key} className="gcs-badge" style={{ background: tint(b.color, 0.14), color: b.color }}>
+              <span key={b.key} className="gcs-badgePill" title={b.description || undefined}>
+                <GcsBadgeArt badge={b} size={24} decorative />
                 {b.name}
               </span>
             ))}
@@ -170,6 +171,28 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
     </section>
   );
 
+  /** Un câmp de profil: eticheta și valoarea (un link, textul sau, la „Text lung”, HTML-ul sanitizat de server). */
+  const fieldRow = (f: (typeof profile.fields)[number], linkText: string) =>
+    f.html ? (
+      <div key={f.key} className="gcs-profileField gcs-profileField--rich" data-testid="gcs-profile-rich-field">
+        <span>{f.label}</span>
+        <div className="gcs-postBody gcs-richText" dangerouslySetInnerHTML={{ __html: f.html }} />
+      </div>
+    ) : (
+      <div key={f.key} className="gcs-profileField">
+        <span>{f.label}</span>
+        <span>
+          {f.type === "URL" ? (
+            <a href={f.value} rel="nofollow ugc noopener" target="_blank">
+              {linkText}
+            </a>
+          ) : (
+            f.value
+          )}
+        </span>
+      </div>
+    );
+
   const aboutCard = (
     <GcsCard as="section" style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
       <h2 className="gcs-display" style={sectionTitle}>
@@ -182,12 +205,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
           {t("noFields")}
         </span>
       )}
-      {about.map((f) => (
-        <div key={f.key} className="gcs-profileField">
-          <span>{f.label}</span>
-          <span>{f.type === "URL" ? <a href={f.value} rel="nofollow ugc noopener" target="_blank">{f.value}</a> : f.value}</span>
-        </div>
-      ))}
+      {about.map((f) => fieldRow(f, f.value))}
       <div className="gcs-profileField">
         <span>{t("stats.joined")}</span>
         <span>{format.dateTime(new Date(stats.joinedAt), { dateStyle: "long" })}</span>
@@ -226,16 +244,20 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
           </div>
         </div>
       ))}
-      {games.map((f) => (
-        <div key={f.key} className="gcs-profileField">
-          <span>{f.label}</span>
-          <span>{f.type === "URL" ? <a href={f.value} rel="nofollow ugc noopener" target="_blank">{f.value.replace(/^https?:\/\//, "")}</a> : f.value}</span>
-        </div>
-      ))}
+      {games.map((f) => fieldRow(f, f.value.replace(/^https?:\/\//, "")))}
     </GcsCard>
   );
 
-  const badgesGrid = (all: boolean) => (
+  /** Cerința unui badge blocat, ca text (zilele de vechime în ani, când se împart exact). */
+  const requirement = (b: GcsLockedBadge) => {
+    if (!b.requirement) return t("badgeReq.manual");
+    const { trigger, threshold } = b.requirement;
+    if (trigger === "MEMBER_DAYS" && threshold >= 365 && threshold % 365 === 0) return t("badgeReq.MEMBER_YEARS", { count: threshold / 365 });
+    return trigger === "IS_VIP" ? t("badgeReq.IS_VIP") : t(`badgeReq.${trigger}`, { count: threshold });
+  };
+
+  /** Coloana laterală: primele 6 insigne (48 px) cu numele. */
+  const badgesCompact = (
     <GcsCard as="section" style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
       <h2 className="gcs-display" style={sectionTitle}>
         <GcsIcon name={TAB_ICONS.badges} className="gcs-hIcon" />
@@ -247,14 +269,14 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
           {t("noBadges")}
         </span>
       )}
-      <div className="gcs-badgeGrid" data-testid="gcs-profile-badges">
-        {(all ? profile.badges : profile.badges.slice(0, 6)).map((b) => (
-          <div key={b.key} className="gcs-badgeGrid__item" title={all ? format.dateTime(new Date(b.awardedAt), { dateStyle: "medium" }) : undefined}>
-            <GcsProfileBadge badge={b} />
+      <ul className="gcs-badgeGrid gcs-badgeGrid--compact" data-testid="gcs-profile-badges">
+        {profile.badges.slice(0, 6).map((b) => (
+          <li key={b.key} className="gcs-badgeGrid__item" title={b.description || undefined}>
+            <GcsBadgeArt badge={b} size={48} decorative />
             <span>{b.name}</span>
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
     </GcsCard>
   );
 
@@ -278,7 +300,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
             <li key={item.kind === "badge" ? `b-${item.badge.key}` : `p-${item.postId}`} className="gcs-activity__item">
               {item.kind === "badge" ? (
                 <>
-                  <GcsProfileBadge badge={item.badge} size="s" />
+                  <GcsBadgeArt badge={item.badge} size={24} decorative />
                   <div className="gcs-activity__text">
                     <span>
                       <span className="gcs-muted">{t("activity.badge")}</span> <strong>{item.badge.name}</strong>
@@ -395,7 +417,67 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
       </GcsCard>
     );
   } else if (tab === "badges") {
-    main = badgesGrid(true);
+    const showcase = (await services().profileQueries.badgeShowcase(actor, user.id)) ?? { earned: profile.badges, locked: [] };
+    main = (
+      <GcsCard as="section" style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
+        <h2 className="gcs-display" style={sectionTitle}>
+          <GcsIcon name={TAB_ICONS.badges} className="gcs-hIcon" />
+          {t("badgesCount", { count: showcase.earned.length })}
+        </h2>
+        {showcase.earned.length === 0 && (
+          <span className="gcs-muted">
+            <GcsIcon name="fa-regular fa-star" className="gcs-emptyIcon" />
+            {t("noBadges")}
+          </span>
+        )}
+        <ul className="gcs-badgeGrid" data-testid="gcs-profile-badges">
+          {showcase.earned.map((b) => (
+            <li key={b.key} className="gcs-badgeGrid__item">
+              <GcsBadgeArt badge={b} size={64} decorative />
+              <strong className="gcs-badgeGrid__name">{b.name}</strong>
+              {b.description && <span className="gcs-badgeGrid__desc">{b.description}</span>}
+              <span className="gcs-badgeGrid__date">{t("badgeEarned", { date: format.dateTime(new Date(b.awardedAt), { dateStyle: "medium" }) })}</span>
+            </li>
+          ))}
+        </ul>
+        {showcase.locked.length > 0 && (
+          <>
+            <h3 className="gcs-badgeGrid__section">{t("badgesLocked", { count: showcase.locked.length })}</h3>
+            <ul className="gcs-badgeGrid" data-testid="gcs-profile-badges-locked">
+              {showcase.locked.map((b) => (
+                <li key={b.key} className="gcs-badgeGrid__item gcs-badgeGrid__item--locked">
+                  <GcsBadgeArt badge={b} size={64} locked decorative />
+                  <span className="gcs-badgeGrid__lock" aria-hidden="true">
+                    <GcsIcon name="fa-solid fa-lock" />
+                  </span>
+                  <strong className="gcs-badgeGrid__name">
+                    {b.name}
+                    <span className="gcs-srOnly"> ({t("badgeLocked")})</span>
+                  </strong>
+                  {b.description && <span className="gcs-badgeGrid__desc">{b.description}</span>}
+                  <span className="gcs-badgeGrid__req">{requirement(b)}</span>
+                  {b.progress && (
+                    <>
+                      <div
+                        className="gcs-badgeGrid__progress"
+                        role="progressbar"
+                        aria-label={requirement(b)}
+                        aria-valuemin={0}
+                        aria-valuemax={b.progress.target}
+                        aria-valuenow={b.progress.current}
+                      >
+                        <span style={{ width: `${Math.round((b.progress.current / b.progress.target) * 100)}%` }} />
+                      </div>
+                      <span className="gcs-badgeGrid__req">{t("badgeProgress", { current: format.number(b.progress.current), target: format.number(b.progress.target) })}</span>
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </GcsCard>
+    );
   } else {
     const warnings = (await services().profileQueries.warnings(actor, user.id)) ?? [];
     main = (
@@ -432,7 +514,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         <aside style={{ flex: "1 1 340px", minWidth: 0, display: "flex", flexDirection: "column", gap: 20 }}>
           {aboutCard}
           {tab !== "games" && accountsCard}
-          {tab !== "badges" && badgesGrid(false)}
+          {tab !== "badges" && badgesCompact}
         </aside>
         <div style={{ flex: "999 1 640px", minWidth: 0, display: "flex", flexDirection: "column", gap: 20 }}>{main}</div>
       </div>

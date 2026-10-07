@@ -51,7 +51,7 @@ export default async function AcpRulesPage() {
           <option value="">{t("noBadge")}</option>
           {badges.map((b) => (
             <option key={b.id} value={b.id}>
-              {b.symbol} {b.name}
+              {b.name}
             </option>
           ))}
         </select>

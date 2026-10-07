@@ -91,6 +91,9 @@ import { GcsPluginHost } from "./plugins/host";
 import { RENDER_LABELS } from "./forums/labels";
 import { GcsImportService } from "./importer/service";
 import { GcsPortingService } from "./porting/service";
+import { GcsActivityStream } from "./community/activity";
+import { GcsLeaderboard } from "./community/leaderboard";
+import { GcsVipPublic } from "./vip/public";
 
 export type GcsServices = {
   db: PrismaClient;
@@ -171,6 +174,12 @@ export type GcsServices = {
   importer: GcsImportService;
   /** Asistentul de portare a pluginurilor (ACP → Sistem → Conversii → Portare plugin). */
   porting: GcsPortingService;
+  /** Fluxul de activitate (`/activity`). */
+  activity: GcsActivityStream;
+  /** Clasamentul (`/leaderboard`). */
+  leaderboard: GcsLeaderboard;
+  /** Pagina publică a planurilor VIP (`/vip`). */
+  vipPublic: GcsVipPublic;
 };
 
 /** Golește cache-ul Redis al paginilor (cheile și seturile de tag-uri `gcs:k:*`, `gcs:tag:*`), fără cozi și limite. */
@@ -502,6 +511,10 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     stats: new GcsStatsService({ db, cache, registry, apps }),
     postbit: new GcsPostbitService({ db, cache, permissions, settings }),
     memberList: new GcsMemberList({ db, permissions, ranks }),
+    activity: new GcsActivityStream({ db, cache, permissions, social }),
+    leaderboard: new GcsLeaderboard({ db, cache, permissions }),
+    // Fără magazin încă: planurile au butonul „Contactează staff-ul” (`checkout` vine odată cu plățile).
+    vipPublic: new GcsVipPublic({ db, registry, permissions, settings, vip, checkout: null }),
     bans,
     warnings,
     actors,
@@ -527,7 +540,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     profileFields: new GcsProfileFieldAdmin({ db, bus, acp }),
     social,
     achievements,
-    achievementAdmin: new GcsAchievementAdmin({ db, bus, acp, achievements, jobs }),
+    achievementAdmin: new GcsAchievementAdmin({ db, bus, acp, achievements, jobs, attachments }),
     membership,
     promotions,
     cosmetics,

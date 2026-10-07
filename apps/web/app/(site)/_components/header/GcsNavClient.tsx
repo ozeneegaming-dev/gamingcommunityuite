@@ -5,6 +5,7 @@ import {
   faBell,
   faCheck,
   faChevronDown,
+  faEllipsis,
   faEnvelope,
   faGear,
   faLanguage,
@@ -19,17 +20,16 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { gcsToast, GcsDropdown, GcsIconSvg, type GcsDropdownItem } from "@gcs/ui";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useId, useLayoutEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { authClient } from "@/lib/auth-client";
+import { fitCount, navActive, withoutDuplicateChildren } from "@/lib/nav-match";
 import { useErrorMessage } from "@/lib/use-error-message";
 import { setLocale } from "../../actions";
 import { openPageEditor } from "../../edit-actions";
 
 /** Un item de meniu gata de afișat (iconița vine randată de pe server). */
 export type GcsNavEntry = { id: number; label: string; href: string; icon: ReactNode; newTab: boolean; children: GcsNavEntry[] };
-
-const isActive = (pathname: string, href: string) => (href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`));
 
 /** Header-ul devine compact și estompat (blur) după primii pixeli de derulare. */
 export function GcsHeaderScroll() {
@@ -44,43 +44,113 @@ export function GcsHeaderScroll() {
   return null;
 }
 
-/** Meniul principal (desktop): itemii cu submeniu devin dropdown-uri. */
-export function GcsNavLinks({ items, label }: { items: GcsNavEntry[]; label: string }) {
+type NavProps = { items: GcsNavEntry[]; label: string; moreLabel: string };
+
+/** `useSearchParams` cere un Suspense; rezerva (fără parametri) e aceeași componentă. */
+function withSearch<P extends object>(Inner: (props: P & { search: string }) => ReactNode) {
+  function WithParams(props: P) {
+    const params = useSearchParams();
+    return <Inner {...props} search={params.toString()} />;
+  }
+  return function WithSearch(props: P) {
+    return (
+      <Suspense fallback={<Inner {...props} search="" />}>
+        <WithParams {...props} />
+      </Suspense>
+    );
+  };
+}
+
+/**
+ * Meniul principal (desktop): itemii cu submeniu devin dropdown-uri, iar butoanele care nu încap (de la coadă) trec în
+ * „Mai mult” (priority+). Lățimile se măsoară pe butoanele reale: cele mutate rămân în DOM, scoase din flux și inerte.
+ * Până la hidratare bara taie ce nu încape (`overflow: hidden`), deci nu acoperă uneltele din dreapta.
+ */
+function NavBar({ items, label, moreLabel, search }: NavProps & { search: string }) {
   const pathname = usePathname();
+  const { isActive } = navActive(items, pathname, search);
+  const nav = useRef<HTMLElement>(null);
+  const [fit, setFit] = useState<number | null>(null);
+  const shown = fit ?? items.length;
+
+  useLayoutEffect(() => {
+    const el = nav.current;
+    if (!el) return;
+    const measure = () => {
+      const width = (n: Element | null) => n?.getBoundingClientRect().width ?? 0;
+      const gap = Number.parseFloat(getComputedStyle(el).columnGap) || 0;
+      setFit(fitCount([...el.querySelectorAll(":scope > [data-nav-item]")].map(width), width(el.querySelector(":scope > [data-nav-more]")), gap, el.clientWidth));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    // Fonturile temei se încarcă după prima randare și schimbă lățimea butoanelor.
+    let alive = true;
+    void document.fonts?.ready.then(() => alive && measure());
+    return () => {
+      alive = false;
+      observer.disconnect();
+    };
+  }, [items]);
+
+  const link = (c: GcsNavEntry): GcsDropdownItem => ({ kind: "link", label: c.label, href: c.href, icon: c.icon, active: isActive(c) });
+  const overflow = items.slice(shown);
+  // În „Mai mult”, un subitem care repetă un item mutat tot acolo (ex. Clasament sub Membri) nu se mai afișează.
+  const moreItems = withoutDuplicateChildren(overflow).flatMap<GcsDropdownItem>((item) => (item.children.length > 0 ? [{ kind: "heading", label: item.label }, ...item.children.map(link)] : [link(item)]));
+  const slot = (hidden: boolean) => ({ className: `gcs-navbar__item${hidden ? " gcs-navbar__item--hidden" : ""}`, "aria-hidden": hidden || undefined, inert: hidden || undefined });
+
   return (
-    <nav aria-label={label} className="gcs-navbar__menu">
-      {items.map((item) =>
-        item.children.length > 0 ? (
-          <GcsDropdown
-            key={item.id}
-            label={item.label}
-            align="start"
-            triggerClassName="gcs-nav__link"
-            trigger={
-              <>
-                {item.icon}
-                <span>{item.label}</span>
-                <GcsIconSvg icon={faChevronDown} className="gcs-navbar__caret" />
-              </>
-            }
-            items={item.children.map<GcsDropdownItem>((c) => ({ kind: "link", label: c.label, href: c.href, icon: c.icon }))}
-          />
-        ) : (
-          <Link
-            key={item.id}
-            href={item.href}
-            className={`gcs-nav__link${isActive(pathname, item.href) ? " gcs-nav__link--active" : ""}`}
-            aria-current={isActive(pathname, item.href) ? "page" : undefined}
-            {...(item.newTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-          >
-            {item.icon}
-            <span>{item.label}</span>
-          </Link>
-        ),
-      )}
+    <nav ref={nav} aria-label={label} className="gcs-navbar__menu" data-ready={fit === null ? undefined : ""}>
+      {items.map((item, i) => (
+        <div key={item.id} data-nav-item="" {...slot(i >= shown)}>
+          {item.children.length > 0 ? (
+            <GcsDropdown
+              label={item.label}
+              align="start"
+              triggerClassName={`gcs-nav__link${isActive(item) ? " gcs-nav__link--active" : ""}`}
+              trigger={
+                <>
+                  {item.icon}
+                  <span>{item.label}</span>
+                  <GcsIconSvg icon={faChevronDown} className="gcs-navbar__caret" />
+                </>
+              }
+              items={item.children.map(link)}
+              testId={`gcs-nav-menu-${item.id}`}
+            />
+          ) : (
+            <Link
+              href={item.href}
+              className={`gcs-nav__link${isActive(item) ? " gcs-nav__link--active" : ""}`}
+              aria-current={isActive(item) ? "page" : undefined}
+              {...(item.newTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </Link>
+          )}
+        </div>
+      ))}
+      <div data-nav-more="" {...slot(overflow.length === 0)}>
+        <GcsDropdown
+          label={moreLabel}
+          align="end"
+          triggerClassName={`gcs-nav__link${overflow.some((i) => isActive(i)) ? " gcs-nav__link--active" : ""}`}
+          trigger={
+            <>
+              <GcsIconSvg icon={faEllipsis} />
+              <span>{moreLabel}</span>
+            </>
+          }
+          items={moreItems}
+          testId="gcs-nav-more"
+        />
+      </div>
     </nav>
   );
 }
+
+export const GcsNavLinks = withSearch<NavProps>(NavBar);
 
 /** Căutarea din header: o iconiță care se deschide într-un câmp (pe ecranele mici). */
 export function GcsHeaderSearch({ label, placeholder }: { label: string; placeholder: string }) {
@@ -239,46 +309,91 @@ export function GcsGuestPrefs({ locales, currentLocale, labels }: { locales: { c
   );
 }
 
-/** Meniul de pe mobil: un sertar lateral cu meniul principal și linkurile contului. */
-export function GcsMobileNav({
-  items,
-  extra,
-  labels,
-}: {
+type MobileNavProps = {
   items: GcsNavEntry[];
   extra: { href: string; label: string; icon?: ReactNode }[];
   labels: { open: string; close: string; menu: string };
-}) {
+};
+
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/**
+ * Meniul de pe mobil: un sertar lateral (dialog modal) cu meniul principal și linkurile contului. Un item cu submeniu e un
+ * buton-dezvăluire (deschis din start dacă pagina curentă e în el); subitemii care repetă un link de pe primul nivel nu
+ * se mai afișează. Tab rămâne în sertar; Escape, butonul de închidere sau un click în afară readuc focusul pe ☰.
+ */
+function MobileNav({ items, extra, labels, search }: MobileNavProps & { search: string }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const panel = useRef<HTMLDivElement>(null);
-  useEffect(() => setOpen(false), [pathname]);
+  const opener = useRef<HTMLButtonElement>(null);
+  const tree = withoutDuplicateChildren(items);
+  const { isActive } = navActive(tree, pathname, search);
+  const close = () => {
+    setOpen(false);
+    opener.current?.focus();
+  };
+  useEffect(() => setOpen(false), [pathname, search]);
   useEffect(() => {
     if (!open) return;
-    panel.current?.querySelector<HTMLElement>("a, button")?.focus();
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    panel.current?.querySelector<HTMLElement>(".gcs-drawer__nav a, .gcs-drawer__nav button")?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        opener.current?.focus();
+        return;
+      }
+      if (e.key !== "Tab" || !panel.current) return;
+      const list = [...panel.current.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((el) => el.offsetParent !== null);
+      const first = list[0];
+      const last = list[list.length - 1];
+      if (!first || !last) return;
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
-  const flat = items.flatMap((i) => (i.children.length > 0 ? i.children : [i]));
+  const linkProps = (i: GcsNavEntry, className: string) => ({
+    href: i.href,
+    className: `${className}${isActive(i) ? " gcs-drawer__link--active" : ""}`,
+    "aria-current": isActive(i) ? ("page" as const) : undefined,
+    ...(i.newTab ? { target: "_blank", rel: "noopener noreferrer" } : {}),
+  });
   return (
     <>
-      <button type="button" className="gcs-headerIcon gcs-mobileNav__open" aria-label={labels.open} aria-expanded={open} onClick={() => setOpen(true)} data-testid="gcs-mobile-nav">
+      <button ref={opener} type="button" className="gcs-headerIcon gcs-mobileNav__open" aria-label={labels.open} aria-expanded={open} onClick={() => setOpen(true)} data-testid="gcs-mobile-nav">
         <GcsIconSvg icon={faBars} />
       </button>
       {open && (
-        <div className="gcs-drawer" onMouseDown={(e) => e.target === e.currentTarget && setOpen(false)}>
+        <div className="gcs-drawer" onMouseDown={(e) => e.target === e.currentTarget && close()}>
           <div ref={panel} className="gcs-drawer__panel" role="dialog" aria-modal="true" aria-label={labels.menu}>
-            <button type="button" className="gcs-headerIcon gcs-drawer__close" aria-label={labels.close} onClick={() => setOpen(false)}>
+            <button type="button" className="gcs-headerIcon gcs-drawer__close" aria-label={labels.close} onClick={close}>
               <GcsIconSvg icon={faXmark} />
             </button>
             <nav aria-label={labels.menu} className="gcs-drawer__nav">
-              {flat.map((i) => (
-                <Link key={i.id} href={i.href} className={`gcs-drawer__link${isActive(pathname, i.href) ? " gcs-drawer__link--active" : ""}`}>
-                  {i.icon}
-                  <span>{i.label}</span>
-                </Link>
-              ))}
+              {tree.map((i) =>
+                i.children.length > 0 ? (
+                  <GcsDrawerGroup key={i.id} item={i} active={isActive(i)}>
+                    {i.children.map((c) => (
+                      <Link key={c.id} {...linkProps(c, "gcs-drawer__link gcs-drawer__link--sub")}>
+                        {c.icon}
+                        <span>{c.label}</span>
+                      </Link>
+                    ))}
+                  </GcsDrawerGroup>
+                ) : (
+                  <Link key={i.id} {...linkProps(i, "gcs-drawer__link")}>
+                    {i.icon}
+                    <span>{i.label}</span>
+                  </Link>
+                ),
+              )}
               {extra.length > 0 && <hr className="gcs-drawer__sep" />}
               {extra.map((e) => (
                 <Link key={e.href} href={e.href} className="gcs-drawer__link">
@@ -293,3 +408,30 @@ export function GcsMobileNav({
     </>
   );
 }
+
+/** Un submeniu în sertar: butonul (cu `aria-expanded`) și subitemii, indentați pe o linie verticală. */
+function GcsDrawerGroup({ item, active, children }: { item: GcsNavEntry; active: boolean; children: ReactNode }) {
+  const [open, setOpen] = useState(active);
+  const id = useId();
+  return (
+    <div className="gcs-drawer__group">
+      <button
+        type="button"
+        className={`gcs-drawer__link gcs-drawer__toggle${active ? " gcs-drawer__link--active" : ""}`}
+        aria-expanded={open}
+        aria-controls={id}
+        onClick={() => setOpen((v) => !v)}
+        data-testid={`gcs-drawer-group-${item.id}`}
+      >
+        {item.icon}
+        <span>{item.label}</span>
+        <GcsIconSvg icon={faChevronDown} className="gcs-drawer__caret" />
+      </button>
+      <div id={id} className="gcs-drawer__sub" hidden={!open}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export const GcsMobileNav = withSearch<MobileNavProps>(MobileNav);

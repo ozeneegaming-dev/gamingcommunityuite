@@ -1,6 +1,9 @@
-import { GcsCard, GcsProfileBadge } from "@gcs/ui";
+import { GCS_RICH_FIELDS } from "@gcs/core";
+import { GcsBadgeArt, GcsCard } from "@gcs/ui";
+import { badgeArtSrc } from "@gcs/ui/badge-art";
 import { getFormatter, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
+import { GcsRichTextInput } from "@/app/(site)/_components/editor/GcsRichTextInput";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
@@ -38,6 +41,8 @@ export async function MemberProfileSections({ userId }: { userId: string }) {
     vip.history({ userId, page: 1, perPage: 20 }),
   ]);
   const valueOf = new Map(values.map((v) => [v.field.key, v.value]));
+  // „Text lung”: documentul din editor (lipsă = textul vechi, deschis ca paragrafe).
+  const docOf = new Map(values.filter((v) => v.json !== null).map((v) => [v.field.key, v.json]));
   const owned = new Set(userBadges.map((b) => b.badgeId));
 
   return (
@@ -48,23 +53,38 @@ export async function MemberProfileSections({ userId }: { userId: string }) {
             {t("bio")}
             <input className="gcs-input" name="bio" defaultValue={user.bio} maxLength={160} />
           </label>
-          {fields.map((f) => (
-            <label key={f.key} className="gcs-field">
-              {f.label}
-              {f.type === "SELECT" ? (
-                <select className="gcs-input" name={`field:${f.key}`} defaultValue={valueOf.get(f.key) ?? ""}>
-                  <option value="">—</option>
-                  {f.options.map((o) => (
-                    <option key={o} value={o}>
-                      {o}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <input className="gcs-input" name={`field:${f.key}`} defaultValue={valueOf.get(f.key) ?? ""} maxLength={f.maxLength} />
-              )}
-            </label>
-          ))}
+          {fields.map((f) =>
+            f.type === "TEXTAREA" ? (
+              <div key={f.key} className="gcs-field">
+                <span id={`gcs-acp-field-${f.key}-label`}>{f.label}</span>
+                <GcsRichTextInput
+                  name={`fieldDoc:${f.key}`}
+                  id={`gcs-acp-field-${f.key}`}
+                  initial={docOf.get(f.key) ?? valueOf.get(f.key) ?? ""}
+                  allow={GCS_RICH_FIELDS.profileText}
+                  maxLength={f.maxLength}
+                  compact
+                  labelledBy={`gcs-acp-field-${f.key}-label`}
+                />
+              </div>
+            ) : (
+              <label key={f.key} className="gcs-field">
+                {f.label}
+                {f.type === "SELECT" ? (
+                  <select className="gcs-input" name={`field:${f.key}`} defaultValue={valueOf.get(f.key) ?? ""}>
+                    <option value="">—</option>
+                    {f.options.map((o) => (
+                      <option key={o} value={o}>
+                        {o}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input className="gcs-input" name={`field:${f.key}`} defaultValue={valueOf.get(f.key) ?? ""} maxLength={f.maxLength} />
+                )}
+              </label>
+            ),
+          )}
         </GcsActionForm>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           {user.image && (
@@ -85,7 +105,7 @@ export async function MemberProfileSections({ userId }: { userId: string }) {
         {userBadges.map((b) => (
           <div key={b.id} style={row}>
             <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <GcsProfileBadge badge={{ name: b.badge.name, symbol: b.badge.symbol, image: null, color: b.badge.color }} size="s" />
+              <GcsBadgeArt badge={{ name: b.badge.name, art: badgeArtSrc(b.badge), image: b.badge.imageAttachmentId ? `/files/${b.badge.imageAttachmentId}` : null }} size={24} decorative />
               <strong>{b.badge.name}</strong>
               <span className="gcs-muted">
                 · {format.dateTime(b.createdAt, { dateStyle: "medium" })}
@@ -106,7 +126,7 @@ export async function MemberProfileSections({ userId }: { userId: string }) {
                   .filter((b) => !owned.has(b.id))
                   .map((b) => (
                     <option key={b.id} value={b.id}>
-                      {b.symbol} {b.name}
+                      {b.name}
                       {b.manual ? "" : ` (${t("automatic")})`}
                     </option>
                   ))}

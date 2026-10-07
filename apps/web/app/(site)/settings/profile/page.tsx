@@ -58,6 +58,8 @@ export default async function ProfileSettingsPage() {
       <GcsProfileFieldsForm
         fields={fields.map((f) => ({ key: f.key, label: f.label, type: f.type, options: f.options, required: f.required, maxLength: f.maxLength, section: f.section, optionImages: (f.optionImages ?? {}) as Record<string, string> }))}
         values={Object.fromEntries(values.map((v) => [v.field.key, v.value]))}
+        // Câmpurile „Text lung”: documentul din editor (lipsă = textul vechi, deschis ca paragrafe).
+        docs={Object.fromEntries(values.filter((v) => v.json !== null).map((v) => [v.field.key, v.json]))}
         bio={user.bio}
         labels={labels}
       />

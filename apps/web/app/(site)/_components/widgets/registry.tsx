@@ -1,4 +1,4 @@
-import { sanitizeContentHtml, type GcsActor } from "@gcs/core";
+import { GCS_RICH_FIELDS, richFieldHtml, sanitizeContentHtml, type GcsActor } from "@gcs/core";
 import type { GcsUserRef } from "@gcs/modules";
 import { GcsAvatar, GcsBadge, GcsButton, GcsCard, GcsUserLink } from "@gcs/ui";
 import Link from "next/link";
@@ -70,10 +70,12 @@ function RowMeta({ user, children }: { user: GcsUserRef | null; children: ReactN
 }
 
 /**
- * Textul anunțului: HTML-ul scris de admin trece prin sanitizer-ul conținutului; textul simplu devine paragrafe
- * (rând gol = paragraf nou, Enter = rând nou).
+ * Textul anunțului: documentul scris în editor → HTML-ul produs de renderer (profilul `announcement`). Valorile vechi
+ * (text): HTML-ul scris de admin trece prin sanitizer-ul conținutului; textul simplu devine paragrafe (rând gol =
+ * paragraf nou, Enter = rând nou).
  */
-function announcementHtml(body: string): string {
+function announcementHtml(body: unknown): string {
+  if (typeof body !== "string") return richFieldHtml(body, GCS_RICH_FIELDS.announcement);
   const html = /<[a-z][\s\S]*>/i.test(body)
     ? body
     : body
@@ -88,7 +90,7 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
   "core.announcement": async ({ config, actor }) => {
     const [t, siteName] = await Promise.all([getTranslations("forum"), services().settings.get<string>("site.name")]);
     const title = typeof config.title === "string" && config.title.trim() ? config.title : t("announcement.title", { site: siteName });
-    const body = typeof config.body === "string" ? config.body.trim() : "";
+    const body = announcementHtml(typeof config.body === "string" ? config.body.trim() : config.body);
     return (
       <GcsCard as="section" className="gcs-announcement gcs-widget" data-widget="core.announcement">
         <div className="gcs-announcement__text">
@@ -99,7 +101,7 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
             {title}
           </GcsWidgetTitle>
           {body ? (
-            <div className="gcs-announcement__body gcs-prose" dangerouslySetInnerHTML={{ __html: announcementHtml(body) }} />
+            <div className="gcs-announcement__body gcs-prose gcs-richText" dangerouslySetInnerHTML={{ __html: body }} />
           ) : (
             <p className="gcs-announcement__body">{t("announcement.body")}</p>
           )}

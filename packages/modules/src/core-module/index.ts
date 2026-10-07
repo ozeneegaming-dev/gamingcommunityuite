@@ -1,3 +1,4 @@
+import { communityRulesSetting } from "../community/rules";
 import { coreWidgets } from "../widgets";
 import type { GcsAcpApp, GcsAcpMenuSection, GcsModule, GcsPermissionDef, GcsSettingDef } from "@gcs/core";
 
@@ -72,6 +73,8 @@ const settings: GcsSettingDef[] = [
   setting("i18n.deepl_key", "secret", "", "languages"),
   // Ora (în fusul site-ului) la care pleacă digestul zilnic al notificărilor (etapa 4).
   setting("notifications.digest_hour", "number", 8, "notifications", (v) => (Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 23 ? null : "invalid_range")),
+  // Regulile comunității (pagina `/rules`), editate cu editorul postărilor în ACP → Setări → Reguli comunitate.
+  communityRulesSetting,
 ];
 
 function groupPermission(key: string, defaults: GcsPermissionDef["default"], merge?: "max" | "min"): GcsPermissionDef {
@@ -186,6 +189,7 @@ const acpMenu: GcsAcpMenuSection[] = [
   menuSection("system", "settings", "fa-solid fa-sliders", [
     ["settings_general", "/admin/settings/general", "fa-solid fa-gear"],
     ["settings_terms", "/admin/settings/terms", "fa-solid fa-file-contract"],
+    ["settings_rules", "/admin/settings/rules", "fa-solid fa-scale-balanced"],
     ["settings_posting", "/admin/settings/posting", "fa-solid fa-pen-to-square"],
     ["settings_email", "/admin/settings/email", "fa-solid fa-envelope"],
     ["settings_languages", "/admin/settings/languages", "fa-solid fa-language"],

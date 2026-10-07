@@ -11,18 +11,22 @@ export const DEFAULT_RANKS = [
   { name: "Legendă", minPosts: 3000 },
 ] as const;
 
-/** Badge-urile implicite: 8 automate (prin reguli, +10 puncte) și 2 manuale. */
+/**
+ * Badge-urile implicite: 8 automate (prin reguli, +10 puncte) și 2 manuale. Insigna (specul 2026-10-07-insigne-grafice,
+ * §8.1): forma spune categoria, nivelul (metalul) treapta, culoarea emailul; aceeași grafică o primesc și instalările
+ * existente prin migrația `20261022000000_badge_art`. `symbol` rămâne textul insignei dacă adminul scoate iconița.
+ */
 export const DEFAULT_BADGES = [
-  { key: "first_post", name: "Primul post", symbol: "✎", color: "#5EA2FF", points: 10 },
-  { key: "posts_100", name: "100 postări", symbol: "C", color: "#F4B740", points: 10 },
-  { key: "posts_1000", name: "1000 postări", symbol: "1K", color: "#F4B740", points: 10 },
-  { key: "member_1y", name: "1 an membru", symbol: "1Y", color: "#5EA2FF", points: 10 },
-  { key: "member_3y", name: "3 ani membru", symbol: "3Y", color: "#5EA2FF", points: 10 },
-  { key: "reputation_100", name: "100 reputație", symbol: "+", color: "#3DDC97", points: 10 },
-  { key: "top_helper", name: "Top helper", symbol: "★", color: "#3DDC97", points: 10 },
-  { key: "vip", name: "VIP", symbol: "L", color: "#FF7AC6", points: 10 },
-  { key: "tournament_champion", name: "Campion turneu", symbol: "GG", color: "#FF6B74", points: 0, manual: true },
-  { key: "rp_veteran", name: "Veteran RP", symbol: "RP", color: "#B794FF", points: 0, manual: true },
+  { key: "first_post", name: "Primul post", symbol: "✎", color: "#5EA2FF", points: 10, artShape: "medal", artTier: "bronze", artIcon: "fa-solid fa-pen-nib" },
+  { key: "posts_100", name: "100 postări", symbol: "C", color: "#5EA2FF", points: 10, artShape: "medal", artTier: "silver", artIcon: "fa-solid fa-comments" },
+  { key: "posts_1000", name: "1000 postări", symbol: "1K", color: "#5EA2FF", points: 10, artShape: "medal", artTier: "gold", artIcon: "fa-solid fa-fire" },
+  { key: "member_1y", name: "1 an membru", symbol: "1Y", color: "#26C6DA", points: 10, artShape: "shield", artTier: "silver", artIcon: "fa-solid fa-cake-candles" },
+  { key: "member_3y", name: "3 ani membru", symbol: "3Y", color: "#26C6DA", points: 10, artShape: "shield", artTier: "gold", artIcon: "fa-solid fa-chess-rook" },
+  { key: "reputation_100", name: "100 reputație", symbol: "+", color: "#3DDC97", points: 10, artShape: "hexagon", artTier: "silver", artIcon: "fa-solid fa-thumbs-up" },
+  { key: "top_helper", name: "Top helper", symbol: "★", color: "#3DDC97", points: 10, artShape: "hexagon", artTier: "gold", artIcon: "fa-solid fa-handshake-angle" },
+  { key: "vip", name: "VIP", symbol: "VIP", color: "#FF7AC6", points: 10, artShape: "diamond", artTier: "platinum", artIcon: "fa-solid fa-gem" },
+  { key: "tournament_champion", name: "Campion turneu", symbol: "GG", color: "#FF6B74", points: 0, manual: true, artShape: "rosette", artTier: "gold", artIcon: "fa-solid fa-trophy" },
+  { key: "rp_veteran", name: "Veteran RP", symbol: "RP", color: "#B794FF", points: 0, manual: true, artShape: "star", artTier: "custom", artIcon: "fa-solid fa-masks-theater" },
 ] as const;
 
 type DefaultRule = { key: string; name: string; trigger: AchievementTrigger; threshold?: number; points?: number; badge?: string };

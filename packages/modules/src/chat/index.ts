@@ -1,4 +1,4 @@
-import type { GcsAcpMenuSection, GcsModule, GcsPermissionDef, GcsSettingDef, GcsSeedContext } from "@gcs/core";
+import { GCS_RICH_FIELDS, richFieldError, type GcsAcpMenuSection, type GcsModule, type GcsPermissionDef, type GcsSettingDef, type GcsSeedContext } from "@gcs/core";
 import { chatWidgets } from "../widgets";
 import { seedChatDemo } from "./seed";
 
@@ -68,7 +68,8 @@ export const CHAT_DISPLAY_SETTINGS: GcsSettingDef[] = [
   chatSetting("newest_on_top", "boolean", false),
   // Linkul „Reguli” din antetul chat-ului (apare doar dacă textul regulilor nu e gol).
   chatSetting("show_rules", "boolean", true),
-  chatSetting("rules", "string", "", { multiline: true, validate: (v) => (typeof v === "string" && v.length <= 5000 ? null : "invalid_length") }),
+  // Regulile: documentul editorului (profilul `chatRules`); un text vechi rămâne valabil (devine paragrafe la citire).
+  chatSetting("rules", "json", "", { validate: (v) => richFieldError(v, GCS_RICH_FIELDS.chatRules) }),
   chatSetting("hide_avatars", "boolean", false),
   chatSetting("min_height", "number", 420, { validate: int(120, 1200) }),
   chatSetting("hide_enter_mobile", "boolean", false),

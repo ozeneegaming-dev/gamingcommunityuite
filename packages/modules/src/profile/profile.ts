@@ -1,10 +1,14 @@
 import { createHash, randomBytes } from "node:crypto";
 import {
+  GCS_RICH_FIELDS,
   GcsForbidden,
   GcsNotFound,
   GcsRateLimited,
   GcsValidationError,
   isHexColor,
+  isRichDoc,
+  renderRichField,
+  richFieldHtml,
   writeAudit,
   type GcsActor,
   type GcsAttachmentService,
@@ -15,7 +19,8 @@ import {
   type GcsSettingsService,
   type GcsUploadedFile,
 } from "@gcs/core";
-import type { FieldVisibility, Prisma, PrismaClient, ProfileField } from "@gcs/db";
+import { Prisma, type FieldVisibility, type PrismaClient, type ProfileField } from "@gcs/db";
+import { RENDER_LABELS } from "../forums/labels";
 import { emailChangeMail } from "./emails";
 import { isValidPrivacy, normalizePrivacy, type GcsPrivacy } from "./privacy";
 
@@ -29,7 +34,20 @@ const EMAIL_TOKEN_HOURS = 24;
 const EMAIL_CHANGE_LIMIT = { window: 3600, max: 5 };
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export type GcsVisibleField = { key: string; label: string; type: ProfileField["type"]; section: ProfileField["section"]; value: string; showOnCard: boolean };
+export type GcsVisibleField = {
+  key: string;
+  label: string;
+  type: ProfileField["type"];
+  section: ProfileField["section"];
+  /** Textul simplu (postbit, card). */
+  value: string;
+  /** Câmpurile „Text lung”: HTML-ul sanitizat (formatat cu editorul, sau textul vechi ca paragrafe). */
+  html?: string;
+  showOnCard: boolean;
+};
+
+/** O valoare validată: textul simplu și, la câmpurile „Text lung” scrise în editor, documentul și HTML-ul. */
+type FieldValue = { value: string; json?: Prisma.InputJsonValue; html?: string };
 
 export type GcsProfileDeps = {
   db: PrismaClient;
@@ -122,11 +140,30 @@ export class GcsProfileService {
     return rows
       .filter((r) => r.value !== "" && (viewer.userId === userId || allowed(r.field.visibility)))
       .sort((a, b) => a.field.position - b.field.position || a.field.id - b.field.id)
-      .map((r) => ({ key: r.field.key, label: r.field.label, type: r.field.type, section: r.field.section, value: r.value, showOnCard: r.field.showOnCard }));
+      .map((r) => ({
+        key: r.field.key,
+        label: r.field.label,
+        type: r.field.type,
+        section: r.field.section,
+        value: r.value,
+        // Valorile vechi (fără HTML) se afișează ca paragrafe: conversie la citire.
+        ...(r.field.type === "TEXTAREA" ? { html: r.html || richFieldHtml(r.value, GCS_RICH_FIELDS.profileText) } : {}),
+        showOnCard: r.field.showOnCard,
+      }));
   }
 
   /** Validează o valoare pentru tipul câmpului; întoarce valoarea curățată sau codul erorii. */
-  private validate(field: ProfileField, raw: unknown): { value: string } | { error: string } {
+  private validate(field: ProfileField, raw: unknown): FieldValue | { error: string } {
+    // „Text lung” scris în editor: documentul trece prin validatorul conținutului și prin profilul câmpului.
+    if (field.type === "TEXTAREA" && isRichDoc(raw)) {
+      try {
+        const rendered = renderRichField(raw, GCS_RICH_FIELDS.profileText, { maxChars: field.maxLength, field: field.key });
+        return { value: rendered.text, json: rendered.json as Prisma.InputJsonValue, html: rendered.html };
+      } catch (error) {
+        if (error instanceof GcsValidationError) return { error: Object.values(error.fields)[0] ?? "invalid" };
+        throw error;
+      }
+    }
     if (typeof raw !== "string") return { error: "invalid" };
     // Fără caractere de control (în afară de rândul nou, doar la TEXTAREA).
     const value = (field.type === "TEXTAREA" ? raw.replace(/\r\n?/g, "\n") : raw.replace(/\s+/g, " "))
@@ -162,7 +199,7 @@ export class GcsProfileService {
       (await this.deps.db.profileFieldValue.findMany({ where: { userId } })).map((v) => [v.fieldId, v.value]),
     );
     const errors: Record<string, string> = {};
-    const writes: { field: ProfileField; value: string }[] = [];
+    const writes: (FieldValue & { field: ProfileField })[] = [];
     for (const [key, raw] of Object.entries(values)) {
       const field = byKey.get(key);
       if (!field) {
@@ -171,7 +208,7 @@ export class GcsProfileService {
       }
       const result = this.validate(field, raw);
       if ("error" in result) errors[key] = result.error;
-      else writes.push({ field, value: result.value });
+      else writes.push({ field, ...result });
     }
     const written = new Map(writes.map((w) => [w.field.id, w.value]));
     for (const field of fields) {
@@ -180,13 +217,15 @@ export class GcsProfileService {
     if (Object.keys(errors).length > 0) throw new GcsValidationError(errors);
 
     await this.deps.db.$transaction(async (tx) => {
-      for (const { field, value } of writes) {
+      for (const { field, value, json, html } of writes) {
+        // Un text simplu (fără editor) șterge formatarea veche: se afișează ca paragrafe.
+        const rich = { json: json ?? Prisma.DbNull, html: html ?? "" };
         if (value === "") await tx.profileFieldValue.deleteMany({ where: { userId, fieldId: field.id } });
         else
           await tx.profileFieldValue.upsert({
             where: { userId_fieldId: { userId, fieldId: field.id } },
-            create: { userId, fieldId: field.id, value },
-            update: { value },
+            create: { userId, fieldId: field.id, value, ...rich },
+            update: { value, ...rich },
           });
       }
     });
@@ -201,6 +240,42 @@ export class GcsProfileService {
     if (clean.length > BIO_MAX) throw new GcsValidationError({ bio: "too_long" }, { max: String(BIO_MAX) });
     await this.deps.db.user.update({ where: { id: userId }, data: { bio: clean } });
     await this.changed(userId, actor, asStaff, "bio", undefined, clean);
+  }
+
+  // ─── Semnătura ────────────────────────────────────────────────────────────
+
+  /**
+   * Limitele semnăturii pentru actor: `profile.signature_max_chars` (0 = semnături oprite pe site) și setarea de grup
+   * `signature.max_chars` (convenția grupurilor: `-1` = nelimitat, `0` / lipsă = interzis), se aplică cea mai strictă;
+   * imaginile: `profile.signature_max_images`. `maxChars: 0` = actorul nu poate avea semnătură.
+   */
+  async signatureLimits(actor: GcsActor): Promise<{ maxChars: number; maxImages: number }> {
+    const { settings, permissions } = this.deps;
+    const [site, images, group] = await Promise.all([
+      settings.get<number>("profile.signature_max_chars"),
+      settings.get<number>("profile.signature_max_images"),
+      actor.userId ? permissions.groupValue<number | boolean>(actor, "signature.max_chars") : Promise.resolve(0),
+    ]);
+    const groupMax = group === -1 || group === true ? Number.POSITIVE_INFINITY : typeof group === "number" && group > 0 ? group : 0;
+    return { maxChars: Math.max(0, Math.min(site, groupMax)), maxImages: images };
+  }
+
+  /**
+   * Semnătura de sub postări (Setări → Semnătură): documentul editorului trece prin validatorul conținutului și prin
+   * profilul semnăturii (fără video, imagini doar din adrese https, limitele de mai sus); `null` o șterge.
+   */
+  async saveSignature(actor: GcsActor, content: unknown): Promise<void> {
+    if (!actor.userId) throw new GcsForbidden({ reason: "guest" });
+    const { db, settings } = this.deps;
+    if (content === null) {
+      await db.user.update({ where: { id: actor.userId }, data: { signatureJson: Prisma.DbNull, signatureHtml: "" } });
+      return;
+    }
+    const limits = await this.signatureLimits(actor);
+    if (limits.maxChars <= 0) throw new GcsValidationError({ content: "signature_disabled" });
+    const locale = await settings.get<string>("site.locale");
+    const rendered = renderRichField(content, GCS_RICH_FIELDS.signature, { ...limits, render: { labels: RENDER_LABELS[locale] ?? RENDER_LABELS.ro! } });
+    await db.user.update({ where: { id: actor.userId }, data: { signatureJson: rendered.json as Prisma.InputJsonValue, signatureHtml: rendered.html } });
   }
 
   /** Culoarea de accent: doar `#RRGGBB` (ajunge în CSS inline pe profil); `null` = implicită. */

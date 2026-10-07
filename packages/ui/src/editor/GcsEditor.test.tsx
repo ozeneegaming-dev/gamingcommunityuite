@@ -3,7 +3,7 @@ import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import { createRef } from "react";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { GcsEditor, type GcsEditorHandle, type GcsEditorLabels } from "./GcsEditor";
-import { gcsEditorExtensions, GCS_EDITOR_MARKS, GCS_EDITOR_NODES, isEmbedUrl } from "./extensions";
+import { gcsEditorExtensions, GCS_EDITOR_MARKS, GCS_EDITOR_NODES, isEmbedUrl, isImageUrl, type GcsEditorAllow } from "./extensions";
 
 const labels: GcsEditorLabels = {
   toolbar: "Formatare",
@@ -44,6 +44,8 @@ const labels: GcsEditorLabels = {
   spoiler: "Spoiler",
   mention: "Mențiune",
   image: "Imagine",
+  imageUrl: "Adresa imaginii",
+  invalidImage: "Adresă de imagine invalidă",
   video: "Video",
   videoUrl: "Link video",
   insert: "Inserează",
@@ -216,5 +218,106 @@ describe("GcsEditor.getJSON", () => {
     act(() => ref.current!.insertQuote({ postId: 7, authorId: "u1", authorName: "ShadowRO", text: "x" }));
     const quote = ref.current!.getJSON().content!.find((n) => n.type === "quote")!;
     expect(Object.getPrototypeOf(quote.attrs)).toBe(Object.prototype);
+  });
+});
+
+/** Profilul regulilor chat-ului (ca în `@gcs/core/rich-fields`): fără imagini, video, mențiuni, cod. */
+const RULES: GcsEditorAllow = {
+  nodes: ["paragraph", "heading", "bulletList", "orderedList", "listItem", "blockquote", "horizontalRule", "hardBreak"],
+  marks: ["bold", "italic", "underline", "strike", "link", "highlight", "textStyle"],
+};
+/** Câmpurile de profil: fără titluri și fără imagini. */
+const PROFILE_TEXT: GcsEditorAllow = { nodes: ["paragraph", "hardBreak", "bulletList", "listItem"], marks: ["bold", "italic", "link"] };
+
+describe("varianta compactă", () => {
+  test("allow restrânge schema: doar nodurile și mărcile câmpului", () => {
+    const editor = new Editor({ element: document.createElement("div"), extensions: gcsEditorExtensions({ placeholder: "", allow: RULES }) });
+    expect(Object.keys(editor.schema.nodes).sort()).toEqual(["doc", "text", ...RULES.nodes].sort());
+    expect(Object.keys(editor.schema.marks).sort()).toEqual([...RULES.marks].sort());
+    editor.destroy();
+  });
+
+  test("conținutul nepermis (titlu, imagine, cod) devine text la încărcare și la lipire", () => {
+    const html = '<h2>Titlu</h2><p><strong>bold</strong> <code>cod</code></p><img src="https://cdn.example/a.png"><pre><code>x</code></pre>';
+    const editor = new Editor({ element: document.createElement("div"), extensions: gcsEditorExtensions({ placeholder: "", allow: PROFILE_TEXT }), content: html });
+    expect([...types(editor.getJSON())].sort()).toEqual(["doc", "mark:bold", "paragraph", "text"]);
+    expect(editor.getText()).toContain("Titlu");
+    editor.destroy();
+  });
+
+  test("bara rezultă din schemă și din lista `tools`; fără „Tot ecranul” în modul compact", async () => {
+    render(
+      <GcsEditor
+        labels={labels}
+        forumId={0}
+        compact
+        imageUrl
+        allow={{ nodes: ["paragraph", "hardBreak", "image"], marks: ["bold", "italic", "underline", "strike", "link", "textStyle"] }}
+        tools={["bold", "italic", "underline", "strike", "color", "size", "align", "link", "image", "emoji", "clear", "highlight", "video"]}
+      />,
+    );
+    await waitFor(() => expect(screen.getByRole("button", { name: "Bold" })).not.toHaveProperty("disabled", true));
+    const names = [...screen.getByRole("toolbar", { name: "Formatare" }).querySelectorAll("button")].map((b) => b.getAttribute("aria-label"));
+    // Evidențierea și video-ul sunt cerute, dar schema nu le are; „Tot ecranul” lipsește în modul compact.
+    expect(names).toEqual(["Bold", "Italic", "Subliniat", "Tăiat", "Stânga", "Centru", "Dreapta", "Justify", "Culoare", "Șterge formatarea", "Link", "Imagine", "Emoji"]);
+    expect(screen.getByLabelText("Mărime")).toBeTruthy();
+    expect(document.querySelector(".gcs-editor--compact")).not.toBeNull();
+  });
+
+  test("butonul Imagine fără upload cere adresa: https → nod `image` cu `src`; altfel eroare", async () => {
+    const ref = createRef<GcsEditorHandle>();
+    render(<GcsEditor ref={ref} labels={labels} forumId={0} imageUrl allow={{ nodes: ["paragraph", "image"], marks: [] }} />);
+    await waitFor(() => expect(screen.getByRole("button", { name: "Imagine" })).not.toHaveProperty("disabled", true));
+    const insert = (value: string) => {
+      const input = screen.getByLabelText("Adresa imaginii") as HTMLInputElement;
+      act(() => {
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, value);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      act(() => screen.getByRole("button", { name: "Inserează" }).click());
+    };
+    act(() => screen.getByRole("button", { name: "Imagine" }).click());
+    insert("http://cdn.example/a.png");
+    expect(screen.getByRole("alert").textContent).toBe("Adresă de imagine invalidă");
+    insert("https://cdn.example/banner.png");
+    const img = ref.current!.getJSON().content!.find((n) => n.type === "image")!;
+    expect(img.attrs).toMatchObject({ src: "https://cdn.example/banner.png", attachmentId: null });
+  });
+
+  test("labelledBy leagă eticheta formularului de zona de scris", async () => {
+    render(
+      <>
+        <span id="lbl">Textul regulilor</span>
+        <GcsEditor labels={labels} forumId={0} labelledBy="lbl" allow={RULES} />
+      </>,
+    );
+    await waitFor(() => expect(screen.getByRole("textbox", { name: "Textul regulilor" })).toBeTruthy());
+  });
+
+  test("culorile și mărimile lipite sunt aduse la forma serverului (`#RRGGBB`, mărimile din bară)", () => {
+    const html =
+      '<p><span style="color: rgb(61, 220, 151)">verde</span> <span style="color:#abc; font-size: 13px">mic</span> <span style="font-size:18px">mare</span> ' +
+      '<span style="color: rgba(0, 0, 0, 0)">transparent</span> <mark style="background-color: rgb(253, 230, 138)">galben</mark> <mark data-color="#123456">altul</mark></p>';
+    const editor = headless(html);
+    const marks = editor.getJSON().content![0]!.content!.filter((n) => n.marks).map((n) => [(n as { text?: string }).text, n.marks]);
+    expect(marks).toEqual([
+      ["verde", [{ type: "textStyle", attrs: { color: "#3DDC97", fontSize: null } }]],
+      ["mic", [{ type: "textStyle", attrs: { color: "#AABBCC", fontSize: null } }]],
+      ["mare", [{ type: "textStyle", attrs: { color: null, fontSize: "18px" } }]],
+      ["transparent", [{ type: "textStyle", attrs: { color: null, fontSize: null } }]],
+      ["galben", [{ type: "highlight", attrs: { color: "#FDE68A" } }]],
+      ["altul", [{ type: "highlight", attrs: { color: null } }]],
+    ]);
+    editor.destroy();
+  });
+
+  test.each([
+    ["https://cdn.example/a.png", true],
+    ["  https://cdn.example/a.png  ", true],
+    ["http://cdn.example/a.png", false],
+    ['https://cdn.example/a.png" onerror="x', false],
+    ["javascript:alert(1)", false],
+  ])("isImageUrl(%s) → %s", (url, expected) => {
+    expect(isImageUrl(url)).toBe(expected);
   });
 });

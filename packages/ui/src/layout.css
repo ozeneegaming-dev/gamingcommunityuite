@@ -154,19 +154,45 @@ html[data-theme="light"] .gcs-brand__logo--light {
   }
 }
 
-/* Meniul principal. */
+/*
+ * Meniul principal: ocupă tot spațiul dintre logo și unelte; butoanele care nu încap trec în „Mai mult” (măsurate din
+ * JS). Cele mutate rămân în DOM, scoase din flux și invizibile, ca lățimea lor să poată fi măsurată în continuare.
+ */
 .gcs-navbar__menu {
   display: flex;
   align-items: center;
   gap: 2px;
   flex-wrap: nowrap;
+  flex: 1 1 0;
   min-width: 0;
+  position: relative;
 }
-.gcs-navbar__menu .gcs-nav__link {
+/* Până la prima măsurare (înainte de hidratare), ce nu încape e tăiat (cu o margine estompată), nu peste unelte. */
+.gcs-navbar__menu:not([data-ready]) {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+}
+.gcs-navbar__item {
+  display: flex;
+  flex: none;
+  white-space: nowrap;
+}
+.gcs-navbar__item--hidden {
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+/* Butoane mai strânse decât `.gcs-nav__link` de bază: bara implicită (7 itemi) încape lângă logo și unelte. */
+.gcs-navbar__menu .gcs-nav__link,
+.gcs-root .gcs-navbar__menu a.gcs-nav__link {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   min-height: 44px;
+  padding: 10px;
 }
 .gcs-navbar__caret {
   font-size: 10px;
@@ -276,6 +302,47 @@ html[data-theme="light"] .gcs-brand__logo--light {
 .gcs-drawer__link--active {
   background: var(--gcs-surface2);
 }
+.gcs-drawer__link--active {
+  box-shadow: inset 3px 0 0 var(--gcs-accent);
+}
+/* Un submeniu în sertar: butonul-dezvăluire și subitemii indentați pe o linie verticală. */
+.gcs-drawer__toggle {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: var(--gcs-drawer-text, var(--gcs-link, var(--gcs-accentInk)));
+}
+.gcs-drawer__toggle.gcs-drawer__link--active {
+  background: transparent;
+  box-shadow: none;
+}
+.gcs-drawer__caret {
+  margin-left: auto;
+  font-size: 12px;
+  opacity: 0.7;
+  transition: transform 0.15s;
+}
+.gcs-drawer__toggle[aria-expanded="true"] .gcs-drawer__caret {
+  transform: rotate(180deg);
+}
+.gcs-drawer__sub {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 2px 0 6px 21px;
+  padding-left: 10px;
+  border-left: 1px solid var(--gcs-border);
+}
+.gcs-drawer__sub[hidden] {
+  display: none;
+}
+.gcs-drawer__link--sub {
+  min-height: 42px;
+  font-weight: 500;
+}
 .gcs-drawer__sep {
   border: 0;
   border-top: 1px solid var(--gcs-border);
@@ -372,6 +439,9 @@ html[data-theme="light"] .gcs-brand__logo--light {
 @media (prefers-reduced-motion: reduce) {
   .gcs-drawer__panel {
     animation: none;
+  }
+  .gcs-drawer__caret {
+    transition: none;
   }
   .gcs-headerSearch__input {
     transition: none;

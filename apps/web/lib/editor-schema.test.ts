@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { GCS_DOC_MARKS, GCS_DOC_NODES, GcsContentRenderer } from "@gcs/core";
+import { GCS_DOC_MARKS, GCS_DOC_NODES, GCS_RICH_FIELDS, GcsContentRenderer, renderRichField } from "@gcs/core";
 import { gcsEditorExtensions, GCS_EDITOR_MARKS, GCS_EDITOR_NODES } from "@gcs/ui/editor";
 import { Editor } from "@tiptap/core";
 import { describe, expect, test } from "vitest";
@@ -40,6 +40,35 @@ describe("editor ↔ renderer", () => {
     expect(out.mentions).toEqual(["user_1"]);
     expect(out.quotes).toEqual([12]);
     expect(out.html).toContain('<iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"');
+    editor.destroy();
+  });
+});
+
+/**
+ * Câmpurile formatate (specul `2026-10-07-editor-campuri`): editorul compact primește profilul serverului ca schemă,
+ * deci tot ce poate scrie (sau lipi) trebuie să treacă de `renderRichField` cu același profil.
+ */
+describe("editorul compact ↔ profilurile câmpurilor", () => {
+  test.each(Object.values(GCS_RICH_FIELDS))("$key: schema editorului are exact nodurile și mărcile profilului", (profile) => {
+    const editor = new Editor({ element: document.createElement("div"), extensions: gcsEditorExtensions({ placeholder: "", allow: profile }) });
+    expect(Object.keys(editor.schema.nodes).sort()).toEqual(["doc", "text", ...profile.nodes].sort());
+    expect(Object.keys(editor.schema.marks).sort()).toEqual([...profile.marks].sort());
+    editor.destroy();
+  });
+
+  test.each(Object.values(GCS_RICH_FIELDS))("$key: un document lipit cu de toate e redus la profil și acceptat de server", (profile) => {
+    // Culori și mărimi cum vin din alte pagini (`rgb(…)`, mărimi din afara listei): editorul le aduce la forma serverului.
+    const html =
+      '<h2>Titlu</h2><p style="text-align:center"><strong>bold</strong> <em>italic</em> <u>sub</u> <s>tăiat</s> ' +
+      '<a href="https://example.com">link</a> <span style="color:#FF6B74">roșu</span> <span style="color: rgb(61, 220, 151); font-size: 13px">verde</span> ' +
+      '<span style="font-size:18px">mare</span> <mark data-color="#FDE68A">galben</mark> <mark style="background-color: rgb(1, 2, 3)">altă culoare</mark></p>' +
+      '<ul><li><p>a</p></li></ul><blockquote><p>citat</p></blockquote><hr><pre><code>cod</code></pre>' +
+      '<img src="https://cdn.example/banner.png"><div data-embed-url="https://youtu.be/dQw4w9WgXcQ"></div>';
+    const editor = new Editor({ element: document.createElement("div"), extensions: gcsEditorExtensions({ placeholder: "", allow: profile }), content: html });
+    const out = renderRichField(editor.getJSON(), profile, { maxImages: 1 });
+    expect(out.text).toContain("bold");
+    expect(out.html).not.toContain("<iframe");
+    if (profile.marks.includes("textStyle")) expect(out.html).toContain('<span style="color:#3DDC97">verde</span>');
     editor.destroy();
   });
 });

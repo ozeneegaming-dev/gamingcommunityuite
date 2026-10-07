@@ -3,9 +3,11 @@
 import { faFloppyDisk } from "@fortawesome/free-solid-svg-icons";
 import type { GcsResult } from "@gcs/core";
 import { GcsButton, GcsIconSvg } from "@gcs/ui";
+import type { GcsEditorAllow } from "@gcs/ui/editor";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useId, useState, type FormEvent, type ReactNode } from "react";
+import { GcsRichTextInput } from "@/app/(site)/_components/editor/GcsRichTextInput";
 
 type Base = { key: string; label: string; hint?: string };
 /** Un rând al formularului: eticheta în stânga, controlul în dreapta, explicația dedesubt (ca în referință). */
@@ -25,6 +27,8 @@ export type GcsChatSettingRow =
       none?: { or: string; label: string; fallback: number };
     })
   | (Base & { kind: "text"; value: string; multiline?: boolean; maxLength?: number })
+  /** Text formatat în editorul compact (ex. regulile): `value` = documentul salvat sau un text vechi. */
+  | (Base & { kind: "rich"; value: unknown; allow: GcsEditorAllow; maxLength: number })
   | (Base & { kind: "secret"; set: boolean; placeholderSet: string });
 
 type Props = {
@@ -130,6 +134,8 @@ export function GcsChatSettingsForm({ rows, action, labels, hidden, children }: 
         ) : (
           <input className="gcs-input" name={`setting:${r.key}`} defaultValue={r.value} maxLength={r.maxLength} {...aria} />
         );
+      case "rich":
+        return <GcsRichTextInput name={`setting:${r.key}`} initial={r.value} allow={r.allow} maxLength={r.maxLength} labelledBy={`${fid}-label`} id={fid} />;
       case "secret":
         return <input className="gcs-input" type="password" autoComplete="new-password" name={`setting:${r.key}`} placeholder={r.set ? r.placeholderSet : ""} {...aria} />;
     }
@@ -153,7 +159,8 @@ export function GcsChatSettingsForm({ rows, action, labels, hidden, children }: 
         const described = [hintId, errorId].filter(Boolean).join(" ") || undefined;
         return (
           <div key={r.key} className={`gcs-chatAcp__row${r.kind === "switch" ? " gcs-chatAcp__row--switch" : ""}`} id={r.key}>
-            <label className="gcs-chatAcp__label" htmlFor={fid}>
+            {/* Editorul nu e un control „etichetabil”: îl leagă `aria-labelledby` (id-ul etichetei). */}
+            <label className="gcs-chatAcp__label" id={`${fid}-label`} htmlFor={r.kind === "rich" ? undefined : fid}>
               {r.label}
               {r.kind === "select" && r.required && (
                 <>

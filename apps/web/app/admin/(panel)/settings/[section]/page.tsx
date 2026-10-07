@@ -65,6 +65,7 @@ export default async function AcpSettingsPage({ params }: Props) {
       const f: GcsSettingsField = { key: def.key, label: label(def.labelKey), type: def.type, value: def.type === "secret" ? "" : value };
       if (def.type === "secret") f.secretSet = typeof value === "string" && value !== "";
       if (def.options) f.options = def.options.map((o) => ({ value: o, label: label(`settings.choices.${o}`) }));
+      if (def.multiline) f.multiline = true;
       return f;
     }),
   );

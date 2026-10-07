@@ -6,7 +6,14 @@
       "forum": "Forum",
       "chat": "Chat",
       "members": "Membri",
-      "staff": "Staff"
+      "staff": "Staff",
+      "activity": "Activitate",
+      "membersAll": "Toți membrii",
+      "membersOnline": "Online acum",
+      "leaderboard": "Clasament",
+      "vip": "VIP",
+      "rules": "Reguli",
+      "more": "Mai mult"
     },
     "acp": "ACP",
     "myProfile": "Profilul meu",
@@ -117,7 +124,7 @@
       "guest": "Trebuie să fii autentificat.",
       "has_children": "Categoria mai are forumuri.",
       "has_content": "Forumul are topicuri: alege unde se mută.",
-      "unsigned_requires_root": "Pachetele nesemnate pot fi instalate doar de un Root Admin.",
+      "unsigned_requires_root": "Pachetele necertificate pot fi instalate doar de un Root Admin.",
       "db_role_unavailable": "Userul bazei de date nu poate crea roluri: pluginurile cu bază de date proprie nu se pot instala sigur.",
       "db_unavailable": "Baza de date nu e configurată.",
       "dependency_disabled": "O dependență a pluginului nu e instalată sau e dezactivată."
@@ -168,6 +175,9 @@
       "permanent": "Un VIP permanent nu se prelungește.",
       "image": "Încarcă o imagine pentru rama de tip imagine.",
       "signature_media": "Semnătura nu poate conține imagini sau video.",
+      "format_not_allowed": "Conținutul folosește o formatare care nu e permisă aici (ex. imagini, video sau titluri).",
+      "too_many_images": "Prea multe imagini.",
+      "signature_disabled": "Grupul tău nu poate avea semnătură.",
       "current_session": "Sesiunea curentă se închide cu „Ieșire”.",
       "too_many_emoticons": "Prea multe emoticoane într-un mesaj",
       "template_syntax": "Șablonul are o eroare de sintaxă.",
@@ -263,7 +273,8 @@
         "import": "Import din altă platformă",
         "porting": "Portare plugin",
         "settings_languages": "Limbi și traducere",
-        "hooks": "Hook-uri"
+        "hooks": "Hook-uri",
+        "settings_rules": "Reguli comunitate"
       },
       "members": {
         "members": "Membri",
@@ -310,7 +321,8 @@
         "subscribers": "Abonați",
         "history": "Istoric",
         "name_styles": "Stiluri de nume",
-        "frames": "Avatar frames"
+        "frames": "Avatar frames",
+        "page": "Pagina VIP"
       },
       "appearance": {
         "appearance": "Aspect",
@@ -713,7 +725,8 @@
         "notifications": "Notificări",
         "chat": "Chat",
         "languages": "Limbi și traducere",
-        "postbit": "Postbit"
+        "postbit": "Postbit",
+        "vip": "Pagina VIP și expirări"
       },
       "save": "Salvează setările",
       "secretSet": "•••• salvat (lasă gol ca să păstrezi valoarea)",
@@ -884,7 +897,7 @@
       "ranksTitle": "Ranguri",
       "ranksHelp": "Membrul primește cel mai înalt rang ale cărui praguri completate sunt toate atinse. Un prag gol nu se cere. Ordinea de mai jos e ierarhia (ultimul e cel mai înalt). Salvarea recalculează rangurile tuturor.",
       "badgesTitle": "Badge-uri",
-      "badgesHelp": "Badge-urile automate se acordă prin reguli; cele manuale le acordă staff-ul din fișa membrului. Punctele se adaugă la acordare.",
+      "badgesHelp": "Fiecare badge are o insignă: forma spune categoria, nivelul (metalul) treapta, iar culoarea colorează emailul și panglica. Badge-urile automate se acordă prin reguli; cele manuale le acordă staff-ul din fișa membrului. Punctele se adaugă la acordare.",
       "rulesTitle": "Reguli",
       "rulesHelp": "O regulă cu prag se aplică o singură dată pe membru (badge și/sau puncte). Regulile „pentru fiecare …” dau puncte la fiecare acțiune și nu pot avea badge.",
       "settingsTitle": "Setări realizări",
@@ -900,7 +913,7 @@
       "minPoints": "Puncte (minim)",
       "minReputation": "Reputație (minim)",
       "key": "Cheie",
-      "symbol": "Simbol",
+      "symbol": "Text pe insignă",
       "color": "Culoare",
       "points": "Puncte",
       "description": "Descriere",
@@ -929,6 +942,38 @@
         "EACH_POST": "Pentru fiecare postare publicată",
         "EACH_REACTION_RECEIVED": "Pentru fiecare reacție pozitivă primită",
         "EACH_SOLUTION": "Pentru fiecare răspuns marcat rezolvare"
+      },
+      "art": {
+        "preview": "Previzualizarea insignei",
+        "previewDark": "Pe tema întunecată",
+        "previewLight": "Pe tema deschisă",
+        "shape": "Formă",
+        "shapes": {
+          "medal": "Medalie",
+          "shield": "Scut",
+          "hexagon": "Hexagon",
+          "rosette": "Rozetă",
+          "diamond": "Diamant",
+          "star": "Stea"
+        },
+        "tier": "Nivel",
+        "tiers": {
+          "bronze": "Bronz",
+          "silver": "Argint",
+          "gold": "Aur",
+          "platinum": "Platină",
+          "custom": "Culoarea badge-ului"
+        },
+        "colorHint": "Emailul și panglica insignei",
+        "colorPicker": "Alege culoarea",
+        "icon": "Iconiță",
+        "iconSearch": "Caută o iconiță",
+        "iconNone": "Fără iconiță (folosește textul)",
+        "iconNoResults": "Nicio iconiță găsită",
+        "symbolHint": "1–3 caractere, când nu alegi o iconiță",
+        "image": "Imagine proprie (opțional)",
+        "imageHint": "PNG, JPEG, WebP sau GIF. Înlocuiește insigna desenată.",
+        "removeImage": "Elimină imaginea proprie"
       }
     },
     "promotions": {
@@ -1401,8 +1446,8 @@
       "title": "Aplicații și pluginuri",
       "description": "Aplicațiile opționale ale platformei și pluginurile instalate. Un plugin se instalează și se activează fără repornire.",
       "appsTitle": "Aplicații",
-      "signed": "Semnat ({keyId})",
-      "unsigned": "Nesemnat",
+      "signed": "Certificat GCS ({keyId})",
+      "unsigned": "Necertificat",
       "status": {
         "enabled": "Activ",
         "disabled": "Dezactivat",
@@ -1426,14 +1471,14 @@
       },
       "upload": {
         "title": "Încarcă un plugin",
-        "body": "Pachetul (.zip) e verificat înainte de orice: mărimea, căile, manifestul, compatibilitatea, dependențele, migrațiile și semnătura. Instalarea se face doar după confirmare.",
+        "body": "Pachetul (.zip) e verificat înainte de orice: mărimea, căile, manifestul, compatibilitatea, dependențele, migrațiile și certificarea. Instalarea se face doar după confirmare.",
         "file": "Alege arhiva pluginului (.zip)",
         "hint": "Maximum 8 MB. Pentru o actualizare, încarcă versiunea nouă a aceluiași plugin.",
         "submit": "Încarcă și verifică",
         "uploading": "Se verifică…",
         "network": "Încărcarea nu a reușit. Verifică conexiunea și încearcă din nou.",
-        "trusted": "Chei de semnare de încredere: {keys}.",
-        "noTrusted": "Nicio cheie de semnare de încredere configurată (GCS_PLUGIN_TRUSTED_KEYS): orice pachet e tratat ca nesemnat."
+        "trusted": "Chei de certificare de încredere: {keys}.",
+        "noTrusted": "Nicio cheie de certificare configurată (GCS_PLUGIN_TRUSTED_KEYS): orice pachet e tratat ca necertificat."
       },
       "risk": {
         "low": "risc mic",
@@ -1501,7 +1546,7 @@
         },
         "client-js": {
           "title": "JavaScript în browser",
-          "body": "Rulează JavaScript în browserul vizitatorilor, pe paginile pluginului, și poate acționa în numele lor. Doar pentru pluginuri semnate."
+          "body": "Rulează JavaScript în browserul vizitatorilor, pe paginile pluginului, și poate acționa în numele lor. Doar pentru pluginuri Certificat GCS."
         },
         "templates": {
           "title": "Șabloane",
@@ -1520,8 +1565,8 @@
         "archive_ok": "Arhiva e validă ({files} fișiere, fără căi sau link-uri nesigure).",
         "manifest_ok": "plugin.json e valid: {key} {version}.",
         "compatible": "Compatibil cu această versiune GCS ({current}).",
-        "signed": "Semnătură validă, cheia de încredere {keyId}.",
-        "unsigned": "Pachet nesemnat: poate fi instalat doar de Root Admin, cu codul 2FA.",
+        "signed": "Certificat GCS: certificarea e validă (cheia {keyId}).",
+        "unsigned": "Pachet necertificat: poate fi instalat doar de Root Admin, cu codul 2FA.",
         "migrations_ok": "Migrațiile SQL ({count}) rămân în schema proprie.",
         "dependency_disabled": "Dependența {key} e instalată, dar dezactivată.",
         "templates_reserved": "Capabilitatea „templates” e rezervată; nu are încă efect.",
@@ -1556,9 +1601,9 @@
         "dependency_missing": "Lipsește dependența {key} ({range}).",
         "dependency_version": "Dependența {key} are versiunea {found}; e nevoie de {range}.",
         "version_not_newer": "Versiunea {version} nu e mai nouă decât cea instalată ({installed}).",
-        "signature_invalid": "Semnătura nu se potrivește: pachetul a fost modificat sau semnătura e stricată ({reason}).",
-        "unsigned_denied": "Pachetele nesemnate sunt interzise pe acest server.",
-        "client_js_unsigned": "JavaScript-ul în browser e permis doar pluginurilor semnate."
+        "signature_invalid": "Certificarea nu se potrivește: pachetul a fost modificat sau certificarea e stricată ({reason}).",
+        "unsigned_denied": "Pachetele necertificate sunt interzise pe acest server.",
+        "client_js_unsigned": "JavaScript-ul în browser e permis doar pluginurilor Certificat GCS."
       },
       "confirm": {
         "pageTitle": "Confirmarea instalării",
@@ -1577,7 +1622,7 @@
         "about": "Descriere",
         "file": "Fișier",
         "files": "fișiere",
-        "signature": "Semnătură",
+        "signature": "Certificare",
         "checks": "Verificări",
         "checksOk": "Toate verificările au trecut",
         "checksFailed": "Pachetul are erori",
@@ -1587,12 +1632,12 @@
         "invalid": "Pachetul nu se poate instala: corectează erorile din raport și încarcă-l din nou.",
         "submit": "Instalează pluginul",
         "submitUpdate": "Actualizează pluginul",
-        "signedBody": "Pachetul e semnat de o cheie de încredere. Pluginul se activează imediat după instalare.",
-        "unsignedTitle": "Pachet nesemnat",
+        "signedBody": "Pachetul e Certificat GCS. Pluginul se activează imediat după instalare.",
+        "unsignedTitle": "Pachet necertificat",
         "unsignedBody": "Nimeni nu a verificat acest cod. Instalează-l doar dacă ai încredere deplină în autor: un plugin rău intenționat ar putea încerca să iasă din izolare.",
         "code": "Codul 2FA (din aplicația de autentificare)",
         "typeKey": "Scrie cheia pluginului ({key}) ca să confirmi",
-        "rootOnly": "Pachetele nesemnate pot fi instalate doar de un Root Admin.",
+        "rootOnly": "Pachetele necertificate pot fi instalate doar de un Root Admin.",
         "cancel": "Renunță"
       },
       "declared": {
@@ -1702,6 +1747,18 @@
           "postbit_after_fields": "Sub cardul autorului din postări."
         }
       }
+    },
+    "rules": {
+      "title": "Reguli comunitate",
+      "hint": "Regulile apar pe pagina publică /rules și se scriu cu editorul postărilor. Cât timp sunt goale, itemul „Reguli” lipsește din meniul site-ului.",
+      "updated": "Publicate; ultima actualizare: {date}.",
+      "empty": "Nepublicate: pagina arată o stare goală, iar itemul lipsește din meniu.",
+      "view": "Vezi pagina",
+      "save": "Salvează regulile",
+      "clear": "Șterge regulile",
+      "saved": "Regulile au fost salvate.",
+      "cleared": "Regulile au fost șterse.",
+      "confirmClear": "Ștergi regulile? Pagina va arăta o stare goală, iar itemul „Reguli” dispare din meniu."
     }
   },
   "settings": {
@@ -1773,13 +1830,16 @@
       "remove": "Șterge",
       "position": "Poziția verticală a cover-ului",
       "coverDenied": "Grupul tău nu poate pune cover.",
-      "signature_max_chars": "Lungimea maximă a semnăturii (caractere)"
+      "signature_max_chars": "Lungimea maximă a semnăturii (caractere)",
+      "signature_max_images": "Imagini în semnătură (adrese https, 0 = niciuna)"
     },
     "pm": {
       "messages_per_page": "Mesaje pe pagină într-o conversație"
     },
     "vip": {
-      "warn_days": "Cu câte zile înainte de expirare e anunțat membrul"
+      "warn_days": "Cu câte zile înainte de expirare e anunțat membrul",
+      "contact_url": "Linkul butonului „Contactează staff-ul” de pe pagina VIP (gol = pagina Staff)",
+      "page_intro": "Textul de introducere al paginii VIP (gol = textul implicit)"
     },
     "title": "Setări cont",
     "nav": {
@@ -1932,11 +1992,17 @@
     },
     "signature": {
       "title": "Semnătură",
-      "hint": "Apare sub postările tale. Text formatat și linkuri, fără imagini sau video, maximum {max} de caractere.",
+      "hint": "Apare sub postările tale. Text formatat (culori, mărimi, aliniere) și linkuri, fără imagini sau video, maximum {max} de caractere.",
+      "hintImages": "Apare sub postările tale. Text formatat (culori, mărimi, aliniere), linkuri și imagini mici din adrese https (cel mult {images}), fără video, maximum {max} de caractere.",
+      "label": "Textul semnăturii",
+      "disabled": "Grupul tău nu poate avea semnătură.",
       "save": "Salvează semnătura",
       "remove": "Șterge semnătura",
       "saved": "Semnătura a fost salvată.",
       "preview": "Previzualizare"
+    },
+    "rules": {
+      "content": "Regulile comunității"
     }
   },
   "permissions": {
@@ -2065,6 +2131,20 @@
       "reportReason": "De ce raportezi acest mesaj?",
       "confirmDelete": "Ștergi definitiv acest mesaj?",
       "hidden": "ascuns"
+    },
+    "badgeEarned": "Obținut pe {date}",
+    "badgesLocked": "{count, plural, one {Încă # badge de obținut} few {Încă # badge-uri de obținut} other {Încă # de badge-uri de obținut}}",
+    "badgeLocked": "blocat",
+    "badgeProgress": "{current} / {target}",
+    "badgeReq": {
+      "POSTS_COUNT": "{count, plural, one {# postare} few {# postări} other {# de postări}}",
+      "REPUTATION": "{count, plural, one {# punct de reputație} few {# puncte de reputație} other {# de puncte de reputație}}",
+      "POINTS": "{count, plural, one {# punct} few {# puncte} other {# de puncte}}",
+      "MEMBER_DAYS": "{count, plural, one {# zi de membru} few {# zile de membru} other {# de zile de membru}}",
+      "MEMBER_YEARS": "{count, plural, one {# an de membru} few {# ani de membru} other {# de ani de membru}}",
+      "SOLUTIONS_COUNT": "{count, plural, one {# răspuns marcat rezolvare} few {# răspunsuri marcate rezolvare} other {# de răspunsuri marcate rezolvare}}",
+      "IS_VIP": "Devine VIP",
+      "manual": "Acordat de echipă"
     }
   },
   "maintenance": {
@@ -2331,7 +2411,8 @@
       "likes": "aprecieri",
       "memberSince": "Membru din:",
       "status": "Status:",
-      "motto": "Motto"
+      "motto": "Motto",
+      "badgesMore": "{count, plural, one {Încă # insignă} few {Încă # insigne} other {Încă # de insigne}}"
     },
     "poll": {
       "votes": "{count, plural, one {# vot} few {# voturi} other {# de voturi}}",
@@ -2352,6 +2433,8 @@
       "spoiler": "Spoiler",
       "mention": "Mențiune",
       "image": "Imagine",
+      "imageUrl": "Adresa imaginii (https://…)",
+      "invalidImage": "Adresa trebuie să înceapă cu https:// și să ducă la o imagine.",
       "video": "Video",
       "videoUrl": "Link YouTube, Twitch sau Medal",
       "insert": "Inserează",
@@ -3487,7 +3570,7 @@
       "task": "task programat → job (jobs, everyMinutes)",
       "widget": "widget → widgets (HTML sanitizat, randat pe server)",
       "settings_form": "formularul de setări e generat din manifest; rămân doar validările speciale",
-      "javascript": "JavaScript client → client-js (doar pentru pluginuri semnate) sau înlocuit cu HTML/CSS",
+      "javascript": "JavaScript client → client-js (doar pentru pluginuri Certificat GCS) sau înlocuit cu HTML/CSS",
       "other": "de analizat: cod fără echivalent direct"
     },
     "notes": {
@@ -3530,5 +3613,113 @@
       "convert_failed": "Conversia nu a reușit din cauza unei erori neașteptate. Sursa a rămas încărcată: poți încerca din nou.",
       "not_found": "Portarea nu există sau a expirat (se păstrează o zi)."
     }
+  },
+  "activity": {
+    "title": "Activitate",
+    "lead": "Ce s-a întâmplat recent în comunitate: topicuri noi, răspunsuri, statusuri și membri noi.",
+    "filters": "Ce arată fluxul",
+    "filter": {
+      "all": "Tot",
+      "topics": "Topicuri",
+      "replies": "Răspunsuri",
+      "statuses": "Statusuri"
+    },
+    "unreadOnly": "Doar necitite",
+    "toggleOn": "(activ)",
+    "toggleOff": "(inactiv)",
+    "line": {
+      "topic": "<user></user> a deschis topicul <topic></topic>",
+      "reply": "<user></user> a răspuns în <topic></topic>",
+      "status": "<user></user> și-a actualizat statusul",
+      "wall": "<user></user> a scris pe profilul lui <owner></owner>",
+      "member": "<user></user> s-a alăturat comunității"
+    },
+    "kind": {
+      "topic": "Topic nou",
+      "reply": "Răspuns",
+      "status": "Status",
+      "member": "Membru nou"
+    },
+    "seeWall": "Vezi profilul",
+    "deletedUser": "Membru șters",
+    "today": "Azi",
+    "yesterday": "Ieri",
+    "older": "Mai vechi",
+    "newest": "Cele mai noi",
+    "pages": "Navigare în activitate",
+    "empty": "Nimic încă. Fluxul se umple pe măsură ce membrii postează.",
+    "emptyFiltered": "Nimic de acest tip deocamdată.",
+    "emptyUnread": "Ești la zi: nimic necitit."
+  },
+  "leaderboard": {
+    "title": "Clasament",
+    "lead": {
+      "week": "Cei mai activi membri din ultimele 7 zile, după {metric}.",
+      "month": "Cei mai activi membri din ultimele 30 de zile, după {metric}.",
+      "all": "Cei mai buni membri dintotdeauna, după {metric}."
+    },
+    "metricLabel": "Măsura",
+    "periodLabel": "Perioada",
+    "metric": {
+      "reputation": "Reputație",
+      "posts": "Postări",
+      "xp": "XP",
+      "solutions": "Soluții"
+    },
+    "metricLower": {
+      "reputation": "reputație",
+      "posts": "postări",
+      "xp": "XP",
+      "solutions": "soluții"
+    },
+    "period": {
+      "week": "Săptămâna",
+      "month": "Luna",
+      "all": "Tot timpul"
+    },
+    "podium": "Podiumul",
+    "place": "Locul {rank}",
+    "table": "Restul clasamentului",
+    "col": {
+      "rank": "Loc",
+      "member": "Membru",
+      "group": "Grup"
+    },
+    "you": "Tu",
+    "empty": "Nimeni nu are încă puncte aici. Postează, ajută și primește reacții ca să apari în clasament.",
+    "forbidden": "Nu ai acces la clasament.",
+    "note": {
+      "period": "Valorile vin din ce s-a creat în perioada aleasă și se actualizează la câteva minute.",
+      "all": "Valorile sunt totalurile din profiluri și se actualizează la câteva minute."
+    }
+  },
+  "vipPage": {
+    "title": "VIP",
+    "lead": "Susține comunitatea și primește beneficii: nume stilizat, limite mai mari și acces în plus.",
+    "mine": {
+      "label": "Planul tău",
+      "expires": "expiră pe {date} ({days, plural, one {încă # zi} few {încă # zile} other {încă # de zile}})",
+      "permanent": "fără expirare"
+    },
+    "yourPlan": "Planul tău",
+    "preview": "Numele tău va arăta așa:",
+    "sampleName": "NumeleTău",
+    "benefits": "Beneficii",
+    "limit": "{label}: {value}",
+    "unlimited": "nelimitat",
+    "forums": "Acces la:",
+    "nameStyles": "{count, plural, one {# stil de nume exclusiv} few {# stiluri de nume exclusive} other {# de stiluri de nume exclusive}}",
+    "frames": "{count, plural, one {# ramă de avatar exclusivă} few {# rame de avatar exclusive} other {# de rame de avatar exclusive}}",
+    "terms": "Durata și prețul le stabilești cu staff-ul.",
+    "termsCheckout": "Plata se face online; planul se activează imediat.",
+    "contact": "Contactează staff-ul",
+    "buy": "Cumpără",
+    "empty": "Nu există planuri VIP deocamdată."
+  },
+  "rules": {
+    "title": "Regulile comunității",
+    "updated": "Actualizate pe {date}",
+    "empty": "Regulile nu au fost publicate încă.",
+    "write": "Scrie regulile"
   }
 }

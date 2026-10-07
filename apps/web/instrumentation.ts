@@ -28,8 +28,10 @@ export async function register(): Promise<void> {
   try {
     const { seedDefaults } = await import("@gcs/core");
     const { services } = await import("./lib/services");
-    const { db, registry } = services();
+    const { db, registry, cache } = services();
     await seedDefaults(db, registry);
+    // Seed-ul poate actualiza meniul (ex. marcajul `nav:v2`): cache-ul lui din Redis supraviețuiește repornirii.
+    await cache.invalidateTags(["nav"]);
   } catch (error) {
     console.error("[GCS] Seed-ul modulelor a eșuat", error);
   }

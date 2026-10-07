@@ -264,6 +264,14 @@ dialog:modal {
   background: var(--gcs-surface2);
   outline: none;
 }
+/* Linkul paginii curente (ex. în submeniurile meniului principal): bara de accent din stânga. */
+.gcs-dropdown__item--active {
+  background: var(--gcs-surface2);
+  box-shadow: inset 3px 0 0 var(--gcs-accent);
+}
+.gcs-dropdown__item--active .gcs-dropdown__icon {
+  color: var(--gcs-text);
+}
 .gcs-dropdown__icon {
   width: 18px;
   display: inline-flex;

@@ -1,8 +1,10 @@
 import {
+  GCS_RICH_FIELDS,
   GcsForbidden,
   GcsNotFound,
   GcsRateLimited,
   GcsValidationError,
+  richFieldHtml,
   writeAudit,
   type GcsAcpRoleService,
   type GcsActor,
@@ -41,7 +43,8 @@ export type GcsChatFile = { id: string; kind: "image" | "audio"; width: number |
 export type GcsChatConfig = {
   timeFormat: "24h" | "12h";
   newestOnTop: boolean;
-  rules: string;
+  /** Regulile, ca HTML sanitizat (formatate în editor sau textul vechi ca paragrafe); `""` = fără butonul „Reguli”. */
+  rulesHtml: string;
   hideAvatars: boolean;
   minHeight: number;
   hideEnterMobile: boolean;
@@ -129,6 +132,16 @@ function roomKey(name: string): string {
   return `${base || "camera"}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+/** Ultimele reguli randate: `config()` se cere la fiecare încărcare a chat-ului, iar setarea se schimbă rar. */
+let rulesMemo: { key: string; html: string } | null = null;
+
+/** HTML-ul regulilor (documentul din editor sau textul vechi, convertit la citire: un paragraf pe rând). */
+function rulesHtml(value: unknown): string {
+  const key = JSON.stringify(value ?? "");
+  if (rulesMemo?.key !== key) rulesMemo = { key, html: richFieldHtml(value, GCS_RICH_FIELDS.chatRules) };
+  return rulesMemo.html;
+}
+
 /**
  * Chat-ul (specul etapei 4 §3, §7): trimitere cu permisiuni, mute, slow mode, flood și filtru; moderare cu jurnal;
  * canale din ACP; retenție zilnică. Mesajele noi și ștergerile pleacă live în camera `chat:{cheie}`.
@@ -169,7 +182,7 @@ export class GcsChatService {
         s.get<string>("chat.time_format"),
         s.get<boolean>("chat.newest_on_top"),
         s.get<boolean>("chat.show_rules"),
-        s.get<string>("chat.rules"),
+        s.get<unknown>("chat.rules"),
         s.get<boolean>("chat.hide_avatars"),
         s.get<number>("chat.min_height"),
         s.get<boolean>("chat.hide_enter_mobile"),
@@ -187,7 +200,7 @@ export class GcsChatService {
       timeFormat: timeFormat === "12h" ? "12h" : "24h",
       newestOnTop,
       // Linkul „Reguli” se poate ascunde din ACP fără să se piardă textul.
-      rules: showRules === false ? "" : rules,
+      rulesHtml: showRules === false ? "" : rulesHtml(rules),
       hideAvatars,
       minHeight,
       hideEnterMobile,

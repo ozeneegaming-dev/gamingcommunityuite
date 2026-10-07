@@ -95,7 +95,11 @@ describe("șabloanele implicite", () => {
         rankIcon: "fa-solid fa-shield-halved",
         group: { label: "Membri", icon: "fa-solid fa-user", banner: "#334455" },
         xp: { points: 10, next: 20, nextRank: "Următorul", percent: 50 },
-        badges: { count: 1, recent: [{ key: "b", name: "Insignă", color: "#FFAA00", image: null, icon: "fa-solid fa-star", symbol: null, initial: "I" }] },
+        badges: {
+          count: 3,
+          more: 2,
+          recent: [{ key: "b", name: "Insignă", description: "Prima", color: "#FFAA00", image: null, art: "/badge-art/v1/medal-gold-ffaa00-i-solid-star.svg", icon: "fa-solid fa-star", symbol: null, initial: "I" }],
+        },
         postsCount: 5,
         topicsCount: 1,
         reputation: 3,
@@ -107,7 +111,7 @@ describe("șabloanele implicite", () => {
       user: { ...user, bio: "Bio", accentColor: null, cover: null, group: { name: "Membri", color: null }, rank: null },
       stats: { posts: 1, reputation: -2, followers: 3, joinedAt: "2026-01-01T00:00:00Z" },
       online: true,
-      badges: [],
+      badges: [{ key: "b", name: "Insignă", description: "", symbol: null, image: "/files/abc", color: "#FFAA00", art: "/badge-art/v1/medal-gold-ffaa00-t-49.svg" }],
       fields: [],
       viewer: { canFollow: true, canMessage: false, isFollowing: false },
       widget: { id: "1", type: "forums.stats", title: "Statistici", icon: "fa-solid fa-chart-simple", headingId: "gcs-widget-1", hasExtra: false, testId: null },
@@ -120,6 +124,13 @@ describe("șabloanele implicite", () => {
       if (def.key !== "email.layout") expect(html.length, def.key).toBeGreaterThan(20);
       expect(html).not.toMatch(/<script|javascript:/i);
     }
+    // Insignele (specul 2026-10-07-insigne-grafice): imaginea generată sau cea proprie, „+N” pentru restul.
+    const postbit = sanitizeTemplateHtml(renderTemplate(defaultTemplate("postbit.author")!.source, data, { locale: "en", include, translate: (k) => k }), "site");
+    expect(postbit).toContain('src="/badge-art/v1/medal-gold-ffaa00-i-solid-star.svg"');
+    expect(postbit).toContain('title="Insignă: Prima"');
+    expect(postbit).toMatch(/class="gcs-badgeArt__more"[^>]*>\+2</);
+    const card = sanitizeTemplateHtml(renderTemplate(defaultTemplate("members.hover_card")!.source, data, { locale: "en", include, translate: (k) => k }), "site");
+    expect(card).toContain('<img class="gcs-badgeArt gcs-badgeArt--32 gcs-badgeArt--image" src="/files/abc" alt="Insignă"');
   });
 });
 

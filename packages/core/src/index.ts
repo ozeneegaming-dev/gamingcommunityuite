@@ -26,6 +26,8 @@ export * from "./content/files/localStore";
 export * from "./content/files/s3Store";
 export * from "./content/files/store";
 export * from "./content/renderer";
+export * from "./content/richFields";
+export * from "./content/richRender";
 export * from "./content/search";
 export * from "./content/tags";
 export * from "./errors";

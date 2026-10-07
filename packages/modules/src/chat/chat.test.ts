@@ -259,9 +259,29 @@ describe("GcsChatService / GcsChatQueries", () => {
     expect(await chat.giphyKey()).toBe("secret-cheie");
     // Linkul „Reguli” oprit din ACP: clientul nu mai primește textul (care rămâne salvat).
     await w.settings.set("chat.rules", "Fără spam.", w.root);
-    expect((await chat.config()).rules).toBe("Fără spam.");
+    expect((await chat.config()).rulesHtml).toBe("<p>Fără spam.</p>");
     await w.settings.set("chat.show_rules", false, w.root);
-    expect((await chat.config()).rules).toBe("");
+    expect((await chat.config()).rulesHtml).toBe("");
+  });
+
+  test("regulile formatate în editor: documentul validat ajunge HTML sanitizat; imaginile și scripturile sunt refuzate", async () => {
+    const rules = {
+      type: "doc",
+      content: [
+        { type: "heading", attrs: { level: 3 }, content: [{ type: "text", text: "Reguli" }] },
+        { type: "bulletList", content: [{ type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Fără spam", marks: [{ type: "bold" }, { type: "textStyle", attrs: { color: "#D62839" } }] }] }] }] },
+      ],
+    };
+    await w.settings.set("chat.rules", rules, w.root);
+    expect((await chat.config()).rulesHtml).toBe('<h3>Reguli</h3><ul><li><p><strong><span style="color:#D62839">Fără spam</span></strong></p></li></ul>');
+    const rejects = (value: unknown) => w.settings.set("chat.rules", value, w.root).catch((e: unknown) => (e as GcsValidationError).fields);
+    expect(await rejects({ type: "doc", content: [{ type: "image", attrs: { src: "https://cdn.example/a.png" } }] })).toEqual({ "chat.rules": "format_not_allowed" });
+    expect(await rejects({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "x", marks: [{ type: "link", attrs: { href: "javascript:alert(1)" } }] }] }] })).toEqual({ "chat.rules": "invalid" });
+    expect(await rejects({ type: "html", html: "<script>alert(1)</script>" })).toEqual({ "chat.rules": "invalid" });
+    expect(await rejects("x".repeat(5001))).toEqual({ "chat.rules": "too_long" });
+    // Golirea regulilor e permisă (fără butonul „Reguli”).
+    await w.settings.set("chat.rules", "", w.root);
+    expect((await chat.config()).rulesHtml).toBe("");
   });
 
   test("istoricul cu cursor", async () => {

@@ -106,6 +106,8 @@ export function postbitVars(author: GcsPostAuthor, data: GcsPostbitData | null, 
       online: data?.online ?? false,
       secondary,
       customTitle: data?.customTitle ?? null,
+      cover: data?.cover?.url ?? null,
+      coverPositionY: data?.cover?.positionY ?? 50,
       vip: data?.vip ?? false,
       rankLevel: data?.rankLevel ?? null,
       pips: data?.rankLevel ? Math.min(data.rankLevel, MAX_PIPS) : 0,
@@ -115,11 +117,15 @@ export function postbitVars(author: GcsPostAuthor, data: GcsPostbitData | null, 
       xp: data ? { points: data.xp.points, next: data.xp.next, nextRank: data.xp.nextRank ?? "", percent: data.xp.percent } : { points: 0, next: null, nextRank: "", percent: 0 },
       badges: {
         count: data?.badges.count ?? 0,
+        /** Câte badge-uri nu încap în rândul din postbit („+N”). */
+        more: Math.max(0, (data?.badges.count ?? 0) - (data?.badges.recent.length ?? 0)),
         recent: (data?.badges.recent ?? []).map((b) => ({
           key: b.key,
           name: b.name,
+          description: b.description,
           color: b.color,
           image: b.image,
+          art: b.art,
           icon: b.symbol?.startsWith("fa-") ? b.symbol : null,
           symbol: b.symbol && !b.symbol.startsWith("fa-") ? b.symbol : null,
           initial: b.name.charAt(0),
@@ -173,12 +179,16 @@ export function hoverCardVars(card: GcsCardView) {
       bio: card.user.bio,
       accentColor: card.user.accentColor ?? "#D62839",
       cover: card.user.cover,
+      coverPositionY: card.user.coverPositionY,
       group: { name: card.user.group.name, color: card.user.group.color },
-      rank: card.user.rank ? { name: card.user.rank.name, icon: card.user.rank.icon } : null,
+      // `symbol`: iconița ca text (emoji), ca în componentă; un nume Font Awesome nu se afișează ca text.
+      rank: card.user.rank
+        ? { name: card.user.rank.name, icon: card.user.rank.icon, symbol: card.user.rank.icon && !card.user.rank.icon.startsWith("fa-") ? card.user.rank.icon : null }
+        : null,
     },
     stats: card.stats,
     online: card.online.online,
-    badges: card.badges.map((b) => ({ key: b.key, name: b.name, symbol: b.symbol, image: b.image, color: b.color })),
+    badges: card.badges.map((b) => ({ key: b.key, name: b.name, description: b.description, symbol: b.symbol, image: b.image, color: b.color, art: b.art })),
     fields: card.fields,
     viewer: card.viewer,
   };

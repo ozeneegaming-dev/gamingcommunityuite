@@ -12,6 +12,7 @@
     "./editor": "./src/editor/index.ts",
     "./forum.css": "./src/forum.css",
     "./profile.css": "./src/profile.css",
+    "./badges.css": "./src/badges.css",
     "./realtime.css": "./src/realtime.css",
     "./controls.css": "./src/controls.css",
     "./layout.css": "./src/layout.css",
@@ -25,8 +26,12 @@
     "./plugins.css": "./src/plugins.css",
     "./importer.css": "./src/importer.css",
     "./porting.css": "./src/porting.css",
+    "./community.css": "./src/community.css",
+    "./richtext.css": "./src/richtext.css",
     "./icons": "./src/icons/index.tsx",
-    "./icon-registry": "./src/icons/registry.ts"
+    "./icon-registry": "./src/icons/registry.ts",
+    "./badge-art": "./src/badges/index.ts",
+    "./badge-art/server": "./src/badges/server.ts"
   },
   "scripts": {
     "lint": "eslint .",

@@ -6,7 +6,14 @@
       "forum": "Форум",
       "chat": "Чат",
       "members": "Участники",
-      "staff": "Команда"
+      "staff": "Команда",
+      "activity": "Activity",
+      "membersAll": "All members",
+      "membersOnline": "Online now",
+      "leaderboard": "Leaderboard",
+      "vip": "VIP",
+      "rules": "Rules",
+      "more": "More"
     },
     "acp": "ACP",
     "myProfile": "Мой профиль",
@@ -117,7 +124,7 @@
       "guest": "Тебе нужно войти.",
       "has_children": "В категории есть форумы.",
       "has_content": "На форуме есть темы: выберите, куда двигаться.",
-      "unsigned_requires_root": "Только Root Admin может устанавливать неподписанные пакеты.",
+      "unsigned_requires_root": "Only a Root Admin can install packages that are not certified.",
       "db_role_unavailable": "Пользователь базы данных не может создавать роли: плагины с собственной базой данных не могут быть установлены безопасно.",
       "db_unavailable": "База данных не настроена.",
       "dependency_disabled": "Зависимость от плагинов не установлена или отключена."
@@ -168,6 +175,9 @@
       "permanent": "Постоянный VIP не может быть продлен.",
       "image": "Загрузите изображение для рамки изображения.",
       "signature_media": "Подпись не может содержать изображения или видео.",
+      "format_not_allowed": "The content uses formatting that is not allowed here (e.g. images, video or headings).",
+      "too_many_images": "Too many images.",
+      "signature_disabled": "Your group cannot have a signature.",
       "current_session": "Выйдите из этой сессии с помощью «Выйти».",
       "too_many_emoticons": "Слишком много смайликов в одном сообщении",
       "template_syntax": "Шаблон имеет синтаксическую ошибку.",
@@ -263,7 +273,8 @@
         "import": "Импорт с другой платформы",
         "porting": "Plugin porting",
         "settings_languages": "Языки и перевод",
-        "hooks": "Крюки"
+        "hooks": "Крюки",
+        "settings_rules": "Community rules"
       },
       "members": {
         "members": "Участники",
@@ -310,7 +321,8 @@
         "subscribers": "Подписчики",
         "history": "История",
         "name_styles": "Имена стилей",
-        "frames": "Avatar кадры"
+        "frames": "Avatar кадры",
+        "page": "VIP page"
       },
       "appearance": {
         "appearance": "Оформление",
@@ -713,7 +725,8 @@
         "notifications": "Уведомления",
         "chat": "Чат",
         "languages": "Языки и перевод",
-        "postbit": "Постбайт"
+        "postbit": "Постбайт",
+        "vip": "VIP page and expiry"
       },
       "save": "Сохранить настройки",
       "secretSet": "• сохраненные (оставьте пустыми, чтобы сохранить ценность)",
@@ -884,7 +897,7 @@
       "ranksTitle": "Ранги",
       "ranksHelp": "Член получает самый высокий ранг, чьи пороги заполнены. Пустые пороги не требуются. Приведенный ниже порядок — иерархия (последняя — высшая). Спасение пересчитывает ранг каждого.",
       "badgesTitle": "Значки",
-      "badgesHelp": "Автоматические значки присваиваются правилами; ручные присваиваются сотрудниками со страницы участника. Баллы добавляются при присуждении.",
+      "badgesHelp": "Each badge has an emblem: the shape shows the category, the tier (metal) the level, and the colour fills the enamel and the ribbon. Automatic badges are awarded by rules; staff award manual ones from the member's page. Points are added when the badge is awarded.",
       "rulesTitle": "Правила",
       "rulesHelp": "Пороговое правило применяется один раз на члена (знак и/или точки). Правила «для каждого...» дают очки за каждое действие и не могут иметь значок.",
       "settingsTitle": "Параметры достижения",
@@ -900,7 +913,7 @@
       "minPoints": "Пункты (мин)",
       "minReputation": "Репутация (мин)",
       "key": "Ключ",
-      "symbol": "Символ",
+      "symbol": "Emblem text",
       "color": "Цвет",
       "points": "Очки",
       "description": "Описание",
@@ -929,6 +942,38 @@
         "EACH_POST": "Для каждого опубликованного поста",
         "EACH_REACTION_RECEIVED": "За каждую полученную положительную реакцию",
         "EACH_SOLUTION": "Для каждого ответа, помеченного как решение"
+      },
+      "art": {
+        "preview": "Emblem preview",
+        "previewDark": "On the dark theme",
+        "previewLight": "On the light theme",
+        "shape": "Shape",
+        "shapes": {
+          "medal": "Medal",
+          "shield": "Shield",
+          "hexagon": "Hexagon",
+          "rosette": "Rosette",
+          "diamond": "Diamond",
+          "star": "Star"
+        },
+        "tier": "Tier",
+        "tiers": {
+          "bronze": "Bronze",
+          "silver": "Silver",
+          "gold": "Gold",
+          "platinum": "Platinum",
+          "custom": "Badge colour"
+        },
+        "colorHint": "The emblem's enamel and ribbon",
+        "colorPicker": "Pick the colour",
+        "icon": "Icon",
+        "iconSearch": "Search icons",
+        "iconNone": "No icon (use the text)",
+        "iconNoResults": "No icons found",
+        "symbolHint": "1–3 characters, used when no icon is chosen",
+        "image": "Custom image (optional)",
+        "imageHint": "PNG, JPEG, WebP or GIF. Replaces the drawn emblem.",
+        "removeImage": "Remove the custom image"
       }
     },
     "promotions": {
@@ -1401,8 +1446,8 @@
       "title": "Приложения и плагины",
       "description": "Дополнительные приложения платформы и установленные плагины. Плагин установлен и включен без перезагрузки.",
       "appsTitle": "Приложения",
-      "signed": "Подпись ({keyId})",
-      "unsigned": "Неподписанный",
+      "signed": "GCS certified ({keyId})",
+      "unsigned": "Not certified",
       "status": {
         "enabled": "Включено",
         "disabled": "Инвалид",
@@ -1426,14 +1471,14 @@
       },
       "upload": {
         "title": "Загрузить плагин",
-        "body": "Пакет (.zip) проверяется прежде всего: размер, пути, манифест, совместимость, зависимости, миграции и подпись. Он устанавливается только после подтверждения.",
+        "body": "The package (.zip) is checked before anything else: size, paths, manifest, compatibility, dependencies, migrations and certification. It is installed only after you confirm.",
         "file": "Выберите файл плагина (.zip)",
         "hint": "Максимум 8 Мб. Для обновления загрузите новую версию того же плагина.",
         "submit": "Загрузить и проверить",
         "uploading": "Проверить…",
         "network": "Загрузка не удалась. Проверьте свою связь и попробуйте еще раз.",
-        "trusted": "Доверенные ключи подписи: {keys}.",
-        "noTrusted": "Не настроены надежные ключи подписи (GCS PLUGIN TRUSTED KEYS): каждая упаковка считается неподписанной."
+        "trusted": "Trusted certification keys: {keys}.",
+        "noTrusted": "No certification keys configured (GCS_PLUGIN_TRUSTED_KEYS): every package is treated as not certified."
       },
       "risk": {
         "low": "низкий риск",
@@ -1501,7 +1546,7 @@
         },
         "client-js": {
           "title": "JavaScript в браузере",
-          "body": "Запускает JavaScript в браузерах посетителей на страницах плагина и может действовать от их имени. Только плагины."
+          "body": "Runs JavaScript in visitors' browsers on the plugin's pages and can act on their behalf. GCS certified plugins only."
         },
         "templates": {
           "title": "Шаблоны",
@@ -1520,8 +1565,8 @@
         "archive_ok": "Архив действителен (файлы {files}, никаких небезопасных путей или ссылок).",
         "manifest_ok": "plugin.json: {key} {version}.",
         "compatible": "Совместим с этой версией GCS ({current}).",
-        "signed": "Действительная подпись, надежный ключ {keyId}.",
-        "unsigned": "Неподписанный пакет: его может установить только Корневой администратор с кодом 2FA.",
+        "signed": "GCS certified: the certification is valid (key {keyId}).",
+        "unsigned": "Package not certified: only a Root Admin can install it, with the 2FA code.",
         "migrations_ok": "Миграции SQL ({count}) остаются в собственной схеме плагина.",
         "dependency_disabled": "Зависимость {key} установлена, но отключена.",
         "templates_reserved": "Возможности «шаблонов» зарезервированы и пока не имеют эффекта.",
@@ -1556,9 +1601,9 @@
         "dependency_missing": "Зависимость {key} ({range}) отсутствует.",
         "dependency_version": "Зависимость {key} — это версия {found}; требуется {range}.",
         "version_not_newer": "Версия {version} не новее установленной ({installed}).",
-        "signature_invalid": "Подпись не совпадает: пакет был изменен или подпись сломана ({reason}).",
-        "unsigned_denied": "Неподписанные пакеты на этом сервере не допускаются.",
-        "client_js_unsigned": "Браузер JavaScript разрешен только для подписанных плагинов."
+        "signature_invalid": "The certification does not match: the package was changed or the certification is broken ({reason}).",
+        "unsigned_denied": "Packages that are not certified are not allowed on this server.",
+        "client_js_unsigned": "Browser JavaScript is only allowed for GCS certified plugins."
       },
       "confirm": {
         "pageTitle": "Подтвердите установку",
@@ -1577,7 +1622,7 @@
         "about": "Описание",
         "file": "Файл",
         "files": "файлы",
-        "signature": "Подпись",
+        "signature": "Certification",
         "checks": "Проверка",
         "checksOk": "Все чеки прошли",
         "checksFailed": "В пакете есть ошибки",
@@ -1587,12 +1632,12 @@
         "invalid": "Пакет установить нельзя: исправьте ошибки в отчете и загрузите его повторно.",
         "submit": "Установите плагин",
         "submitUpdate": "Обновить плагин",
-        "signedBody": "Пакет подписывается надежным ключом. Плагин включен сразу после установки.",
-        "unsignedTitle": "Неподписанный пакет",
+        "signedBody": "The package is GCS certified. The plugin is enabled right after installation.",
+        "unsignedTitle": "Package not certified",
         "unsignedBody": "Никто не пересматривал этот кодекс. Установите его только в том случае, если вы полностью доверяете автору: вредоносный плагин может попытаться вырваться из его изоляции.",
         "code": "Код 2FA (из приложения для аутентификации)",
         "typeKey": "Введите ключ плагина ({key}) для подтверждения",
-        "rootOnly": "Только Root Admin может устанавливать неподписанные пакеты.",
+        "rootOnly": "Only a Root Admin can install packages that are not certified.",
         "cancel": "Отмена"
       },
       "declared": {
@@ -1702,6 +1747,18 @@
           "postbit_after_fields": "Ниже авторской карточки в постах."
         }
       }
+    },
+    "rules": {
+      "title": "Community rules",
+      "hint": "The rules appear on the public /rules page and are written with the post editor. While they are empty, the “Rules” item is left out of the site menu.",
+      "updated": "Published; last updated {date}.",
+      "empty": "Not published: the page shows an empty state and the item is left out of the menu.",
+      "view": "View the page",
+      "save": "Save the rules",
+      "clear": "Delete the rules",
+      "saved": "The rules were saved.",
+      "cleared": "The rules were deleted.",
+      "confirmClear": "Delete the rules? The page will show an empty state and the “Rules” item leaves the menu."
     }
   },
   "settings": {
@@ -1773,13 +1830,16 @@
       "remove": "Убрать",
       "position": "Положение вертикального покрытия",
       "coverDenied": "Ваша группа не может установить прикрытие.",
-      "signature_max_chars": "Максимальная длина подписи (характеристики)"
+      "signature_max_chars": "Максимальная длина подписи (характеристики)",
+      "signature_max_images": "Images in the signature (https addresses, 0 = none)"
     },
     "pm": {
       "messages_per_page": "Сообщения на странице в разговоре"
     },
     "vip": {
-      "warn_days": "За несколько дней до истечения срока член предупрежден"
+      "warn_days": "За несколько дней до истечения срока член предупрежден",
+      "contact_url": "Link of the “Contact the staff” button on the VIP page (empty = the Staff page)",
+      "page_intro": "Introduction text of the VIP page (empty = the default text)"
     },
     "title": "Настройки аккаунта",
     "nav": {
@@ -1932,11 +1992,17 @@
     },
     "signature": {
       "title": "Подпись",
-      "hint": "Показаны под вашими постами. Форматированный текст и ссылки, никаких изображений или видео, вплоть до символов {max}.",
+      "hint": "Shown under your posts. Formatted text (colours, sizes, alignment) and links, no images or video, up to {max} characters.",
+      "hintImages": "Shown under your posts. Formatted text (colours, sizes, alignment), links and small images from https addresses (at most {images}), no video, up to {max} characters.",
+      "label": "Signature text",
+      "disabled": "Your group cannot have a signature.",
       "save": "Сохранить подпись",
       "remove": "Удалить подпись",
       "saved": "Ваша подпись была сохранена.",
       "preview": "Предпросмотр"
+    },
+    "rules": {
+      "content": "Community rules"
     }
   },
   "permissions": {
@@ -2065,6 +2131,20 @@
       "reportReason": "Почему вы сообщаете этот пост?",
       "confirmDelete": "Удалить этот пост навсегда?",
       "hidden": "скрыто"
+    },
+    "badgeEarned": "Earned on {date}",
+    "badgesLocked": "{count, plural, one {# more badge to earn} few {# more badges to earn} many {# more badges to earn} other {# more badges to earn}}",
+    "badgeLocked": "locked",
+    "badgeProgress": "{current} / {target}",
+    "badgeReq": {
+      "POSTS_COUNT": "{count, plural, one {# post} few {# posts} many {# posts} other {# posts}}",
+      "REPUTATION": "{count, plural, one {# reputation point} few {# reputation points} many {# reputation points} other {# reputation points}}",
+      "POINTS": "{count, plural, one {# point} few {# points} many {# points} other {# points}}",
+      "MEMBER_DAYS": "{count, plural, one {# day as a member} few {# days as a member} many {# days as a member} other {# days as a member}}",
+      "MEMBER_YEARS": "{count, plural, one {# year as a member} few {# years as a member} many {# years as a member} other {# years as a member}}",
+      "SOLUTIONS_COUNT": "{count, plural, one {# answer marked as the solution} few {# answers marked as the solution} many {# answers marked as the solution} other {# answers marked as the solution}}",
+      "IS_VIP": "Becomes VIP",
+      "manual": "Awarded by the team"
     }
   },
   "maintenance": {
@@ -2331,7 +2411,8 @@
       "likes": "любитель",
       "memberSince": "Член с тех пор:",
       "status": "Состояние:",
-      "motto": "Девиз"
+      "motto": "Девиз",
+      "badgesMore": "{count, plural, one {# more badge} few {# more badges} many {# more badges} other {# more badges}}"
     },
     "poll": {
       "votes": "{count, plural, one {Голос #} few {# голосует} many {# голосует} other {# голосует}}",
@@ -2352,6 +2433,8 @@
       "spoiler": "Спойлер",
       "mention": "Упоминание",
       "image": "Изображение",
+      "imageUrl": "Image address (https://…)",
+      "invalidImage": "The address must start with https:// and point to an image.",
       "video": "Видео",
       "videoUrl": "YouTube, Twitch или Медаль",
       "insert": "Вставить",
@@ -3487,7 +3570,7 @@
       "task": "scheduled task → job (jobs, everyMinutes)",
       "widget": "widget → widgets (sanitized HTML, rendered on the server)",
       "settings_form": "the settings form is generated from the manifest; only special validations remain",
-      "javascript": "client JavaScript → client-js (signed plugins only) or replaced with HTML/CSS",
+      "javascript": "client JavaScript → client-js (GCS certified plugins only) or replaced with HTML/CSS",
       "other": "to review: code without a direct equivalent"
     },
     "notes": {
@@ -3530,5 +3613,113 @@
       "convert_failed": "The conversion failed with an unexpected error. The source is still uploaded: you can try again.",
       "not_found": "The porting does not exist or has expired (it is kept for one day)."
     }
+  },
+  "activity": {
+    "title": "Activity",
+    "lead": "What happened recently in the community: new topics, replies, statuses and new members.",
+    "filters": "What the stream shows",
+    "filter": {
+      "all": "All",
+      "topics": "Topics",
+      "replies": "Replies",
+      "statuses": "Statuses"
+    },
+    "unreadOnly": "Unread only",
+    "toggleOn": "(on)",
+    "toggleOff": "(off)",
+    "line": {
+      "topic": "<user></user> started the topic <topic></topic>",
+      "reply": "<user></user> replied in <topic></topic>",
+      "status": "<user></user> updated their status",
+      "wall": "<user></user> wrote on <owner></owner>'s profile",
+      "member": "<user></user> joined the community"
+    },
+    "kind": {
+      "topic": "New topic",
+      "reply": "Reply",
+      "status": "Status",
+      "member": "New member"
+    },
+    "seeWall": "View profile",
+    "deletedUser": "Deleted member",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "older": "Older",
+    "newest": "Newest",
+    "pages": "Activity navigation",
+    "empty": "Nothing yet. The stream fills up as members post.",
+    "emptyFiltered": "Nothing of this kind yet.",
+    "emptyUnread": "You're all caught up: nothing unread."
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "lead": {
+      "week": "The most active members of the last 7 days, by {metric}.",
+      "month": "The most active members of the last 30 days, by {metric}.",
+      "all": "The best members of all time, by {metric}."
+    },
+    "metricLabel": "Measure",
+    "periodLabel": "Period",
+    "metric": {
+      "reputation": "Reputation",
+      "posts": "Posts",
+      "xp": "XP",
+      "solutions": "Solutions"
+    },
+    "metricLower": {
+      "reputation": "reputation",
+      "posts": "posts",
+      "xp": "XP",
+      "solutions": "solutions"
+    },
+    "period": {
+      "week": "This week",
+      "month": "This month",
+      "all": "All time"
+    },
+    "podium": "Podium",
+    "place": "Place {rank}",
+    "table": "The rest of the leaderboard",
+    "col": {
+      "rank": "Place",
+      "member": "Member",
+      "group": "Group"
+    },
+    "you": "You",
+    "empty": "Nobody has points here yet. Post, help and get reactions to show up on the leaderboard.",
+    "forbidden": "You don't have access to the leaderboard.",
+    "note": {
+      "period": "Values come from what was created in the chosen period and refresh every few minutes.",
+      "all": "Values are the profile totals and refresh every few minutes."
+    }
+  },
+  "vipPage": {
+    "title": "VIP",
+    "lead": "Support the community and get perks: a styled name, higher limits and extra access.",
+    "mine": {
+      "label": "Your plan",
+      "expires": "expires on {date} ({days, plural, one {# day left} few {# days left} many {# days left} other {# days left}})",
+      "permanent": "never expires"
+    },
+    "yourPlan": "Your plan",
+    "preview": "Your name will look like this:",
+    "sampleName": "YourName",
+    "benefits": "Perks",
+    "limit": "{label}: {value}",
+    "unlimited": "unlimited",
+    "forums": "Access to:",
+    "nameStyles": "{count, plural, one {# exclusive name style} few {# exclusive name styles} many {# exclusive name styles} other {# exclusive name styles}}",
+    "frames": "{count, plural, one {# exclusive avatar frame} few {# exclusive avatar frames} many {# exclusive avatar frames} other {# exclusive avatar frames}}",
+    "terms": "You agree on the duration and price with the staff.",
+    "termsCheckout": "Pay online; the plan is activated right away.",
+    "contact": "Contact the staff",
+    "buy": "Buy",
+    "empty": "There are no VIP plans yet."
+  },
+  "rules": {
+    "title": "Community rules",
+    "updated": "Updated on {date}",
+    "empty": "The rules haven't been published yet.",
+    "write": "Write the rules"
   }
 }
