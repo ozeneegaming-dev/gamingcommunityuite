@@ -1,0 +1,2010 @@
+/*
+ * Studio VIP: totul e închis automat în containerul pluginului (.gcsp--gcs--vip_studio). Culorile vin din tokenurile
+ * GCS (temă închisă sau deschisă); efectele numelor și ale bannerelor folosesc animațiile din GCS (gcsFx…), deci
+ * previzualizarea arată ca pe site. Sub prefers-reduced-motion, nimic nu se mișcă.
+ */
+
+/* ─── Bază ──────────────────────────────────────────────────────────────── */
+
+.gcsp-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.gcsp-hide {
+  display: none;
+}
+.gcsp-studio:not(.gcsp-js) .gcsp-onlyjs {
+  display: none;
+}
+.gcsp-studio.gcsp-js .gcsp-nojs {
+  display: none;
+}
+.gcsp-studio,
+.gcsp-acp,
+.gcsp-benefits,
+.gcsp-roster {
+  --gcsp-line: color-mix(in srgb, var(--gcs-border) 85%, transparent);
+  --gcsp-slot: color-mix(in srgb, var(--gcs-surface2) 70%, var(--gcs-bg));
+  --gcsp-hot: var(--gcs-accent);
+  color: var(--gcs-text);
+  font-family: var(--gcs-font-text);
+}
+
+/* ─── Antetul și placa de identitate ───────────────────────────────────── */
+
+.gcsp-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: stretch;
+  margin-bottom: 18px;
+}
+.gcsp-hero__title {
+  margin: 0 0 6px;
+  font-family: var(--gcs-font-display);
+  font-size: 28px;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+}
+.gcsp-hero__lede {
+  max-width: 60ch;
+  margin: 0 0 12px;
+  color: var(--gcs-muted);
+  line-height: 1.55;
+}
+.gcsp-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+}
+.gcsp-plan {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px 5px 9px;
+  border: 1px solid color-mix(in srgb, var(--gcs-warn) 45%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--gcs-warn) 12%, transparent);
+  color: var(--gcs-warn);
+  font-size: 13px;
+  font-weight: 700;
+}
+.gcsp-plan--none {
+  border-color: var(--gcsp-line);
+  background: transparent;
+  color: var(--gcs-muted);
+}
+.gcsp-plan .gcs-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* Placa: numele stilizat pe o scenă mică, cu o lumină de spot (singurul element „mare” al paginii). */
+.gcsp-plate {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 10px;
+  min-height: 132px;
+  padding: 18px 22px;
+  overflow: hidden;
+  border: 1px solid var(--gcsp-line);
+  border-radius: 14px;
+  background:
+    radial-gradient(120% 90% at 18% 0%, color-mix(in srgb, var(--gcs-accent) 22%, transparent), transparent 62%),
+    repeating-linear-gradient(135deg, transparent 0 9px, color-mix(in srgb, var(--gcs-text) 4%, transparent) 9px 10px),
+    color-mix(in srgb, var(--gcs-bg) 88%, black);
+}
+.gcsp-plate__caption {
+  color: var(--gcs-muted);
+  font-size: 12px;
+}
+.gcsp-plate .gcsp-ns {
+  font-family: var(--gcs-font-display);
+  font-size: clamp(26px, 3.4vw, 38px);
+  line-height: 1.05;
+}
+
+/* ─── Mesajele ─────────────────────────────────────────────────────────── */
+
+.gcsp-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border: 1px solid var(--gcsp-line);
+  border-radius: 10px;
+  background: var(--gcsp-slot);
+  font-size: 14px;
+}
+.gcsp-notice .gcs-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.gcsp-notice--ok {
+  border-color: color-mix(in srgb, var(--gcs-ok) 45%, transparent);
+  color: var(--gcs-ok);
+}
+.gcsp-notice--error {
+  border-color: color-mix(in srgb, var(--gcs-accent) 55%, transparent);
+  color: var(--gcs-accentInk);
+}
+.gcsp-notice--vip {
+  border-color: color-mix(in srgb, var(--gcs-warn) 45%, transparent);
+}
+.gcsp-notice--vip .gcs-icon {
+  color: var(--gcs-warn);
+}
+.gcsp-notice--test .gcs-icon {
+  color: var(--gcs-muted);
+}
+
+/* ─── Moduri și tab-uri (radio-uri: merg și fără JS) ───────────────────── */
+
+.gcsp-modes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 0;
+  border: 0;
+}
+.gcsp-mode {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--gcsp-line);
+  border-radius: 12px;
+  background: var(--gcsp-slot);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.gcsp-mode > .gcs-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--gcs-muted);
+}
+.gcsp-mode__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.gcsp-mode__text strong {
+  font-family: var(--gcs-font-display);
+  font-size: 16px;
+}
+.gcsp-mode__text small {
+  color: var(--gcs-muted);
+  font-size: 12px;
+}
+.gcsp-mode:has(input:checked) {
+  border-color: var(--gcsp-hot);
+  background: color-mix(in srgb, var(--gcsp-hot) 10%, var(--gcsp-slot));
+}
+.gcsp-mode:has(input:checked) > .gcs-icon {
+  color: var(--gcsp-hot);
+}
+.gcsp-mode:has(input:focus-visible),
+.gcsp-tab:has(input:focus-visible),
+.gcsp-tile:has(input:focus-visible),
+.gcsp-swatch:has(input:focus-visible) {
+  outline: 2px solid var(--gcsp-hot);
+  outline-offset: 2px;
+}
+
+.gcsp-tabs {
+  display: none;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0 0 12px;
+  padding: 4px;
+  border: 1px solid var(--gcsp-line);
+  border-radius: 11px;
+  background: var(--gcsp-slot);
+}
+.gcsp-studio:has(input[name="gcsp_mode"][value="mini"]:checked) .gcsp-tabs--mini,
+.gcsp-studio:has(input[name="gcsp_mode"][value="full"]:checked) .gcsp-tabs--full {
+  display: flex;
+}
+.gcsp-tab {
+  display: inline-flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: var(--gcs-muted);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.gcsp-tab .gcs-icon {
+  width: 14px;
+  height: 14px;
+}
+.gcsp-tab:hover {
+  color: var(--gcs-text);
+}
+.gcsp-tab:has(input:checked) {
+  background: var(--gcs-surface);
+  color: var(--gcs-text);
+  box-shadow: inset 0 -2px 0 var(--gcsp-hot);
+}
+
+/* Panourile: doar cel al tab-ului bifat, în modul bifat. */
+.gcsp-panel {
+  display: none;
+}
+.gcsp-studio:has(input[name="gcsp_mode"][value="mini"]:checked):has(input[name="gcsp_tab_mini"][value="name"]:checked) .gcsp-panel--name,
+.gcsp-studio:has(input[name="gcsp_mode"][value="mini"]:checked):has(input[name="gcsp_tab_mini"][value="frame"]:checked) .gcsp-panel--frame,
+.gcsp-studio:has(input[name="gcsp_mode"][value="mini"]:checked):has(input[name="gcsp_tab_mini"][value="banner"]:checked) .gcsp-panel--banner,
+.gcsp-studio:has(input[name="gcsp_mode"][value="mini"]:checked):has(input[name="gcsp_tab_mini"][value="card"]:checked) .gcsp-panel--card,
+.gcsp-studio:has(input[name="gcsp_mode"][value="mini"]:checked):has(input[name="gcsp_tab_mini"][value="weapon"]:checked) .gcsp-panel--weapon,
+.gcsp-studio:has(input[name="gcsp_mode"][value="full"]:checked):has(input[name="gcsp_tab_full"][value="background"]:checked) .gcsp-panel--background,
+.gcsp-studio:has(input[name="gcsp_mode"][value="full"]:checked):has(input[name="gcsp_tab_full"][value="quote"]:checked) .gcsp-panel--quote,
+.gcsp-studio:has(input[name="gcsp_mode"][value="full"]:checked):has(input[name="gcsp_tab_full"][value="theme"]:checked) .gcsp-panel--theme,
+.gcsp-studio:has(input[name="gcsp_mode"][value="full"]:checked):has(input[name="gcsp_tab_full"][value="song"]:checked) .gcsp-panel--song {
+  display: block;
+}
+.gcsp-panel__hint {
+  max-width: 70ch;
+  margin: 0 0 12px;
+  color: var(--gcs-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ─── Banc de lucru: opțiuni + scenă ───────────────────────────────────── */
+
+.gcsp-bench {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 400px);
+  gap: 22px;
+  align-items: start;
+}
+.gcsp-options {
+  min-width: 0;
+}
+
+/* ─── Grila de plăci (sloturi de inventar) ─────────────────────────────── */
+
+.gcsp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(142px, 1fr));
+  gap: 10px;
+}
+.gcsp-grid--banner {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+.gcsp-grid--weapon,
+.gcsp-grid--theme {
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+}
+.gcsp-grid--card,
+.gcsp-grid--background {
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+}
+.gcsp-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  min-width: 0;
+  padding: 14px 10px 10px;
+  border: 1px solid var(--gcsp-line);
+  border-radius: 10px;
+  background: var(--gcsp-slot);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s, background 0.15s;
+}
+/* Colțurile „slotului”: două repere mici, discrete, care se aprind la selecție. */
+.gcsp-tile::before,
+.gcsp-tile::after {
+  content: "";
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-color: transparent;
+  border-style: solid;
+  transition: border-color 0.15s;
+  pointer-events: none;
+}
+.gcsp-tile::before {
+  top: 5px;
+  left: 5px;
+  border-width: 2px 0 0 2px;
+}
+.gcsp-tile::after {
+  right: 5px;
+  bottom: 5px;
+  border-width: 0 2px 2px 0;
+}
+.gcsp-tile:hover {
+  border-color: color-mix(in srgb, var(--gcs-text) 28%, var(--gcsp-line));
+}
+.gcsp-tile:has(input:checked) {
+  border-color: var(--gcsp-hot);
+  background: radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--gcsp-hot) 16%, transparent), transparent 70%), var(--gcsp-slot);
+}
+.gcsp-tile:has(input:checked)::before,
+.gcsp-tile:has(input:checked)::after {
+  border-color: var(--gcsp-hot);
+}
+.gcsp-tile--retired {
+  cursor: not-allowed;
+  opacity: 0.55;
+  filter: grayscale(0.8);
+}
+.gcsp-tile__art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  min-height: 58px;
+}
+.gcsp-tile__label {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcsp-tile__sub,
+.gcsp-tile__count {
+  color: var(--gcs-muted);
+  font-size: 11px;
+}
+.gcsp-tile__chips {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  gap: 4px;
+}
+.gcsp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+}
+.gcsp-chip .gcs-icon {
+  width: 9px;
+  height: 9px;
+}
+.gcsp-chip--new {
+  background: var(--gcs-ok);
+  color: #06140D;
+}
+.gcsp-chip--lock {
+  background: color-mix(in srgb, var(--gcs-warn) 18%, var(--gcs-surface));
+  color: var(--gcs-warn);
+}
+.gcsp-chip--retired {
+  background: var(--gcs-surface2);
+  color: var(--gcs-muted);
+}
+.gcsp-studio.gcsp-js .gcsp-later,
+.gcsp-hide-filter {
+  display: none;
+}
+
+/* Banda de variante: deschisă sub stilul ales, pe tot rândul. */
+.gcsp-variants {
+  display: none;
+  grid-column: 1 / -1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px dashed color-mix(in srgb, var(--gcsp-hot) 55%, var(--gcsp-line));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--gcsp-hot) 6%, var(--gcsp-slot));
+}
+.gcsp-tile:has(input:checked) + .gcsp-variants {
+  display: flex;
+}
+.gcsp-variants__label {
+  margin-right: 4px;
+  color: var(--gcs-muted);
+  font-size: 12px;
+}
+.gcsp-swatch {
+  position: relative;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.gcsp-swatch__dot {
+  --c1: #ffffff;
+  --c2: var(--c1);
+  --c3: var(--c2);
+  --c4: var(--c3);
+  --c5: var(--c4);
+  display: block;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--gcs-surface);
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px var(--gcsp-line);
+  background: linear-gradient(135deg, var(--c1), var(--c2), var(--c3), var(--c4), var(--c5));
+}
+.gcsp-swatch__dot--n1 {
+  background: var(--c1);
+}
+.gcsp-swatch:has(input:checked) .gcsp-swatch__dot {
+  box-shadow: 0 0 0 2px var(--gcsp-hot);
+  transform: scale(1.08);
+}
+.gcsp-dots {
+  display: flex;
+  gap: 3px;
+}
+.gcsp-dots .gcsp-swatch__dot {
+  width: 12px;
+  height: 12px;
+  border-width: 1px;
+}
+
+/* ─── Câmpuri ──────────────────────────────────────────────────────────── */
+
+.gcsp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 14px;
+}
+.gcsp-field--inline {
+  max-width: 420px;
+}
+.gcsp-field__label {
+  font-size: 13px;
+  font-weight: 700;
+}
+.gcsp-field__hint {
+  margin: 0;
+  color: var(--gcs-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.gcsp-field input[type="text"],
+.gcsp-field input[type="url"],
+.gcsp-field input[type="number"],
+.gcsp-field textarea,
+.gcsp-field select,
+.gcsp-inline input[type="text"],
+.gcsp-acp td input[type="text"] {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 9px;
+  background: var(--gcs-surface);
+  color: var(--gcs-text);
+  font: inherit;
+  font-size: 14px;
+}
+.gcsp-field textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+.gcsp-field input:focus-visible,
+.gcsp-field textarea:focus-visible,
+.gcsp-field select:focus-visible {
+  outline: 2px solid var(--gcsp-hot);
+  outline-offset: 1px;
+}
+.gcsp-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+  font-size: 14px;
+  cursor: pointer;
+}
+.gcsp-quoteMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: -6px;
+}
+.gcsp-counter {
+  font-variant-numeric: tabular-nums;
+  color: var(--gcs-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+.gcsp-counter--warn {
+  color: var(--gcs-warn);
+}
+.gcsp-counter--danger {
+  color: var(--gcs-accentInk);
+}
+.gcsp-position {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--gcsp-line);
+  border-radius: 10px;
+}
+.gcsp-range {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.gcsp-range input {
+  accent-color: var(--gcsp-hot);
+}
+.gcsp-custom {
+  margin: 16px 0 6px;
+  padding: 12px 14px 2px;
+  border: 1px solid var(--gcsp-line);
+  border-radius: 10px;
+}
+.gcsp-custom legend {
+  padding: 0 6px;
+  font-weight: 700;
+}
+
+/* ─── Filtre ───────────────────────────────────────────────────────────── */
+
+.gcsp-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 12px;
+}
+.gcsp-studio:not(.gcsp-js) .gcsp-filters {
+  display: none;
+}
+.gcsp-filter {
+  padding: 5px 12px;
+  border: 1px solid var(--gcsp-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--gcs-muted);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.gcsp-filter:hover {
+  color: var(--gcs-text);
+}
+.gcsp-filter--on {
+  border-color: var(--gcsp-hot);
+  background: color-mix(in srgb, var(--gcsp-hot) 14%, transparent);
+  color: var(--gcs-text);
+}
+
+/* ─── Stilurile numelui (ca CSS-ul generat de GCS pentru site) ─────────── */
+
+.gcsp-ns {
+  --c1: #ffffff;
+  --c2: var(--c1);
+  --c3: var(--c2);
+  --c4: var(--c3);
+  --c5: var(--c4);
+  --ga: 90deg;
+  --sp: 1;
+  --glow-c: var(--glow, var(--c1));
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--c1);
+  animation-duration: calc(3.5s * var(--sp));
+}
+.gcsp-ns--light {
+  font-weight: 600;
+}
+.gcsp-ns--italic {
+  font-style: italic;
+}
+.gcsp-ns--n1 {
+  --gcsp-grad: linear-gradient(var(--ga), var(--c1), color-mix(in srgb, var(--c1), #ffffff 45%), var(--c1));
+}
+.gcsp-ns--n2 {
+  --gcsp-grad: linear-gradient(var(--ga), var(--c1), var(--c2), var(--c1));
+}
+.gcsp-ns--n3 {
+  --gcsp-grad: linear-gradient(var(--ga), var(--c1), var(--c2), var(--c3), var(--c1));
+}
+.gcsp-ns--n4 {
+  --gcsp-grad: linear-gradient(var(--ga), var(--c1), var(--c2), var(--c3), var(--c4), var(--c1));
+}
+.gcsp-ns--n5 {
+  --gcsp-grad: linear-gradient(var(--ga), var(--c1), var(--c2), var(--c3), var(--c4), var(--c5), var(--c1));
+}
+.gcsp-ns--grad {
+  background-image: var(--gcsp-grad);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+.gcsp-ns--grad.gcsp-ns:not(.gcsp-fx-neon):not(.gcsp-fx-glitch)[style*="--glow"] {
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--glow-c) 55%, transparent));
+}
+.gcsp-ns:not(.gcsp-ns--grad):not(.gcsp-fx-neon):not(.gcsp-fx-glitch)[style*="--glow"] {
+  text-shadow: 0 0 10px color-mix(in srgb, var(--glow-c) 60%, transparent);
+}
+.gcsp-fx-shimmer {
+  animation: gcsFxFlow calc(3.5s * var(--sp)) linear infinite;
+}
+.gcsp-fx-chrome {
+  background-image: linear-gradient(100deg, transparent 35%, rgba(255, 255, 255, 0.9) 50%, transparent 65%), var(--gcsp-grad);
+  background-size: 250% 100%, 200% auto;
+  animation: gcsFxShine calc(3s * var(--sp)) ease-in-out infinite;
+}
+.gcsp-fx-scan {
+  background-image: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.38) 0 1px, transparent 1px 3px), var(--gcsp-grad);
+  background-size: 100% 6px, 200% auto;
+  animation: gcsFxScan calc(1.4s * var(--sp)) linear infinite;
+}
+.gcsp-fx-holo {
+  animation: gcsFxHue calc(8s * var(--sp)) linear infinite;
+}
+.gcsp-fx-neon {
+  --gcs-fx-glow: color-mix(in srgb, var(--glow-c) 75%, transparent);
+  text-shadow:
+    0 0 4px color-mix(in srgb, var(--glow-c) 90%, transparent),
+    0 0 12px color-mix(in srgb, var(--glow-c) 70%, transparent),
+    0 0 24px color-mix(in srgb, var(--glow-c) 45%, transparent);
+  animation: gcsFxFlicker calc(4s * var(--sp)) linear infinite;
+}
+.gcsp-fx-glitch {
+  --gcs-fx-a: color-mix(in srgb, var(--c2) 80%, transparent);
+  --gcs-fx-b: color-mix(in srgb, var(--c3) 80%, transparent);
+  text-shadow: 2px 0 var(--gcs-fx-a), -2px 0 var(--gcs-fx-b);
+  animation: gcsFxGlitch calc(2.6s * var(--sp)) steps(1) infinite;
+}
+.gcsp-fx-pulse {
+  --gcs-fx-glow: color-mix(in srgb, var(--glow-c) 75%, transparent);
+  animation: gcsFxPulse calc(2.4s * var(--sp)) ease-in-out infinite;
+}
+.gcsp-fx-fire {
+  --gcs-fx-glow: color-mix(in srgb, var(--glow-c) 75%, transparent);
+  animation: gcsFxFire calc(1.8s * var(--sp)) ease-in-out infinite;
+}
+.gcsp-fx-caret::after {
+  content: "";
+  display: inline-block;
+  width: 0.09em;
+  height: 0.95em;
+  margin-left: 0.14em;
+  vertical-align: -0.1em;
+  background: var(--c1);
+  animation: gcsFxCaret 1s steps(1) infinite;
+}
+.gcsp-fx-caret,
+.gcsp-fx-neon,
+.gcsp-fx-glitch,
+.gcsp-fx-pulse,
+.gcsp-fx-fire {
+  overflow: visible;
+}
+.gcsp-ns--group {
+  font-weight: 700;
+}
+
+/* ─── Bannere (pastila de sub nume) ────────────────────────────────────── */
+
+.gcsp-pill {
+  --c1: #d62839;
+  --c2: var(--c1);
+  --c3: var(--c2);
+  --c4: var(--c3);
+  --c5: var(--c4);
+  --ga: 90deg;
+  --sp: 1;
+  --ink: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 3px 10px;
+  overflow: hidden;
+  border-radius: 6px;
+  background-color: var(--c1);
+  color: var(--ink);
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+.gcsp-pill--n2 {
+  background-image: linear-gradient(var(--ga), var(--c1), var(--c2));
+  --gcsp-loop: linear-gradient(var(--ga), var(--c1), var(--c2), var(--c1));
+}
+.gcsp-pill--n3 {
+  background-image: linear-gradient(var(--ga), var(--c1), var(--c2), var(--c3));
+  --gcsp-loop: linear-gradient(var(--ga), var(--c1), var(--c2), var(--c3), var(--c1));
+}
+.gcsp-pill--n4 {
+  background-image: linear-gradient(var(--ga), var(--c1), var(--c2), var(--c3), var(--c4));
+  --gcsp-loop: linear-gradient(var(--ga), var(--c1), var(--c2), var(--c3), var(--c4), var(--c1));
+}
+.gcsp-pill--n5 {
+  background-image: linear-gradient(var(--ga), var(--c1), var(--c2), var(--c3), var(--c4), var(--c5));
+  --gcsp-loop: linear-gradient(var(--ga), var(--c1), var(--c2), var(--c3), var(--c4), var(--c5), var(--c1));
+}
+.gcsp-pill--n1 {
+  --gcsp-loop: linear-gradient(var(--ga), var(--c1), color-mix(in srgb, var(--c1), #ffffff 45%), var(--c1));
+}
+.gcsp-pill--flow,
+.gcsp-pill--aurora {
+  background-image: var(--gcsp-loop);
+  background-size: 200% 100%;
+  animation: gcsFxFlow calc(4s * var(--sp)) linear infinite;
+}
+.gcsp-pill--aurora {
+  animation: gcsFxFlow calc(4s * var(--sp)) linear infinite, gcsFxHue calc(10s * var(--sp)) linear infinite;
+}
+.gcsp-pill--shine {
+  background-image: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.42) 50%, transparent 70%), var(--gcsp-loop);
+  background-size: 250% 100%, 100% 100%;
+  animation: gcsFxShine calc(3s * var(--sp)) ease-in-out infinite;
+}
+.gcsp-pill--pulse {
+  --gcs-fx-glow: color-mix(in srgb, var(--c1) 60%, transparent);
+  animation: gcsFxGlowBox calc(2.4s * var(--sp)) ease-in-out infinite;
+}
+.gcsp-tile .gcsp-pill {
+  font-size: 12px;
+}
+
+/* ─── Avatare cu ramă (aceleași proporții ca GCS) ──────────────────────── */
+
+.gcsp-av {
+  --fs: 130;
+  --fx: 0;
+  --fy: 0;
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--av, 44px);
+  height: var(--av, 44px);
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4b2a82, #8a1e2b);
+}
+.gcsp-av--s {
+  --av: 28px;
+}
+.gcsp-av--m {
+  --av: 44px;
+}
+.gcsp-av--l {
+  --av: 72px;
+}
+.gcsp-av--xl {
+  --av: 112px;
+}
+.gcsp-av__img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.gcsp-av__initial {
+  color: #ffffff;
+  font-family: var(--gcs-font-display);
+  font-size: calc(var(--av, 44px) * 0.42);
+  font-weight: 700;
+}
+.gcsp-av__frame {
+  position: absolute;
+  top: calc((100 - var(--fs)) / 2 * 1%);
+  left: calc((100 - var(--fs)) / 2 * 1%);
+  width: calc(var(--fs) * 1%);
+  max-width: none;
+  height: calc(var(--fs) * 1%);
+  transform: translate(calc(var(--fx) * 1%), calc(var(--fy) * 1%));
+  pointer-events: none;
+}
+
+/* ─── Desenele plăcilor ────────────────────────────────────────────────── */
+
+.gcsp-thumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 7px;
+  object-fit: cover;
+}
+.gcsp-thumb--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--gcsp-line);
+  color: var(--gcs-muted);
+}
+.gcsp-thumb--empty .gcs-icon {
+  width: 20px;
+  height: 20px;
+}
+.gcsp-thumbWrap {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+.gcsp-thumb__badge {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.gcsp-thumb__badge .gcs-icon {
+  width: 9px;
+  height: 9px;
+}
+.gcsp-weapon {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+.gcsp-weapon--none {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gcs-muted);
+}
+.gcsp-weapon--none .gcs-icon {
+  width: 20px;
+  height: 20px;
+}
+.gcsp-themeSwatch {
+  --ta: var(--gcs-accent);
+  --ta2: var(--gcs-accentInk);
+  --ts: var(--gcs-surface);
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 4px;
+  width: 100%;
+  height: 54px;
+  padding: 5px;
+  border-radius: 8px;
+  background: var(--ts);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+.gcsp-themeSwatch span {
+  border-radius: 4px;
+}
+.gcsp-themeSwatch span:nth-child(1) {
+  grid-row: 1 / 3;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--ta) 35%, var(--ts)), var(--ts));
+}
+.gcsp-themeSwatch span:nth-child(2) {
+  background: var(--ta);
+}
+.gcsp-themeSwatch span:nth-child(3) {
+  background: var(--ta2);
+}
+.gcsp-themeSwatch--default {
+  background: var(--gcs-surface);
+}
+.gcsp-disc {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  background: radial-gradient(circle, var(--gcs-surface) 0 18%, #15171c 19% 100%);
+  box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--gcsp-hot) 60%, transparent);
+  color: var(--gcs-text);
+}
+.gcsp-disc .gcs-icon {
+  width: 16px;
+  height: 16px;
+}
+.gcsp-disc--off {
+  box-shadow: inset 0 0 0 2px var(--gcsp-line);
+  color: var(--gcs-muted);
+}
+
+/* ─── Scena (previzualizarea lipită) ───────────────────────────────────── */
+
+.gcsp-stage {
+  position: sticky;
+  top: 76px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--gcsp-line);
+  border-radius: 14px;
+  background:
+    radial-gradient(90% 60% at 50% 0%, color-mix(in srgb, var(--gcs-accent) 13%, transparent), transparent 70%),
+    linear-gradient(transparent 0 calc(100% - 1px), color-mix(in srgb, var(--gcs-text) 5%, transparent) 0) 0 0 / 100% 22px,
+    color-mix(in srgb, var(--gcs-bg) 90%, black);
+}
+.gcsp-stage__panel {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+}
+.gcsp-stage__caption {
+  margin: 0;
+  color: var(--gcs-muted);
+  font-size: 12px;
+}
+.gcsp-studio:has(input[name="gcsp_mode"][value="mini"]:checked) .gcsp-stage__panel--mini,
+.gcsp-studio:has(input[name="gcsp_mode"][value="full"]:checked):not(:has(input[name="gcsp_tab_full"][value="song"]:checked)) .gcsp-stage__panel--full,
+.gcsp-studio:has(input[name="gcsp_mode"][value="full"]:checked):has(input[name="gcsp_tab_full"][value="song"]:checked) .gcsp-stage__panel--song {
+  display: flex;
+}
+
+/* Antetul site-ului, în miniatură. */
+.gcsp-hdr {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--gcsp-line);
+  border-radius: 10px;
+  background: var(--gcs-surface);
+}
+.gcsp-hdr__brand {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  background: var(--gcs-accent);
+}
+.gcsp-hdr__nav {
+  display: flex;
+  flex: 1;
+  gap: 6px;
+}
+.gcsp-hdr__nav i {
+  width: 34px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--gcs-surface2);
+}
+.gcsp-hdr__user {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 14px;
+}
+
+/* Cardul de membru (hover card / caseta din postări). */
+.gcsp-card {
+  overflow: hidden;
+  border: 1px solid var(--gcs-border);
+  border-radius: 12px;
+  background: var(--gcs-surface);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+.gcsp-card__cover {
+  position: relative;
+  height: 96px;
+  overflow: hidden;
+  background: linear-gradient(120deg, color-mix(in srgb, var(--gcs-accent) 55%, transparent), color-mix(in srgb, var(--gcs-accent) 12%, transparent));
+  border-bottom: 2px solid var(--gcs-accent);
+  touch-action: none;
+}
+.gcsp-card__cover--image {
+  cursor: grab;
+}
+.gcsp-card__cover--image:active {
+  cursor: grabbing;
+}
+.gcsp-card__img {
+  --cx: 50;
+  --cy: 50;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: calc(var(--cx) * 1%) calc(var(--cy) * 1%);
+  filter: brightness(0.75);
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.gcsp-card__dragHint {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  display: none;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  font-size: 11px;
+}
+.gcsp-card__dragHint .gcs-icon {
+  width: 10px;
+  height: 10px;
+}
+.gcsp-studio.gcsp-js .gcsp-card__cover--image .gcsp-card__dragHint {
+  display: inline-flex;
+}
+.gcsp-card__body {
+  padding: 0 14px 14px;
+}
+.gcsp-card__head {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-top: -30px;
+}
+.gcsp-card__head .gcsp-av {
+  border: 3px solid var(--gcs-surface);
+  box-sizing: content-box;
+}
+.gcsp-card__id {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding-bottom: 2px;
+}
+.gcsp-card__id .gcsp-ns {
+  font-family: var(--gcs-font-display);
+  font-size: 19px;
+}
+.gcsp-card__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.gcsp-grp {
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: var(--gcs-surface2);
+  color: var(--gcs-muted);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.gcsp-online {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gcs-ok);
+  font-size: 12px;
+}
+.gcsp-online__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--gcs-ok);
+}
+.gcsp-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+.gcsp-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 6px;
+  border-radius: 9px;
+  background: var(--gcs-surface2);
+  text-align: center;
+}
+.gcsp-stat strong {
+  max-width: 100%;
+  overflow: hidden;
+  font-family: var(--gcs-font-display);
+  font-size: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcsp-stat span {
+  color: var(--gcs-muted);
+  font-size: 11px;
+}
+.gcsp-stat__icon {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+.gcsp-stat--weapon strong {
+  font-size: 12px;
+}
+
+/* Pagina de profil, în miniatură. */
+.gcsp-prof {
+  --ta: var(--gcs-accent);
+  --ta2: var(--gcs-accentInk);
+  --ts: var(--gcs-surface);
+  position: relative;
+  overflow: hidden;
+  padding: 0 12px 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 12px;
+  background: var(--gcs-bg);
+}
+.gcsp-prof__bg {
+  position: absolute;
+  inset: 0;
+}
+.gcsp-prof__bgImg,
+.gcsp-prof__bgVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.gcsp-prof__bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 80% at 50% 10%, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.78));
+}
+.gcsp-prof__cover {
+  position: relative;
+  height: 64px;
+  margin: 0 -12px;
+  background: linear-gradient(120deg, color-mix(in srgb, var(--ta) 50%, transparent), transparent);
+}
+.gcsp-prof__head {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-top: -40px;
+}
+.gcsp-prof__head .gcsp-av {
+  --av: 84px;
+  border: 3px solid var(--ts);
+  box-sizing: content-box;
+}
+.gcsp-prof__id {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.gcsp-prof__id .gcsp-ns {
+  font-family: var(--gcs-font-display);
+  font-size: 22px;
+}
+.gcsp-stats--wide {
+  position: relative;
+}
+.gcsp-prof .gcsp-stat {
+  background: color-mix(in srgb, var(--ts) 88%, transparent);
+}
+.gcsp-prof--themed .gcsp-stat,
+.gcsp-prof--themed .gcsp-quote,
+.gcsp-prof--themed .gcsp-ghost {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ta) 30%, transparent);
+}
+.gcsp-prof__tabs {
+  position: relative;
+  display: flex;
+  gap: 4px;
+  margin: 12px 0 10px;
+  border-bottom: 1px solid var(--gcsp-line);
+}
+.gcsp-prof__tab {
+  padding: 6px 8px;
+  color: var(--gcs-muted);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.gcsp-prof__tab--on {
+  color: var(--gcs-text);
+  box-shadow: inset 0 -2px 0 var(--ta);
+}
+.gcsp-prof__cols {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px;
+  gap: 8px;
+}
+.gcsp-quote {
+  position: relative;
+  margin: 0 0 8px;
+  padding: 12px 12px 10px 34px;
+  border-left: 3px solid var(--ta);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--ts) 92%, transparent);
+}
+.gcsp-quote .gcs-icon {
+  position: absolute;
+  top: 12px;
+  left: 11px;
+  width: 15px;
+  height: 15px;
+  color: var(--ta);
+}
+.gcsp-quote blockquote {
+  margin: 0;
+  font-size: 13px;
+  font-style: italic;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.gcsp-quote figcaption {
+  margin-top: 6px;
+  color: var(--gcs-muted);
+  font-size: 11.5px;
+}
+.gcsp-ghost {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 10px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--ts) 88%, transparent);
+}
+.gcsp-ghost i {
+  height: 6px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--gcs-text) 12%, transparent);
+}
+.gcsp-ghost i:nth-child(2) {
+  width: 80%;
+}
+.gcsp-ghost i:nth-child(3) {
+  width: 55%;
+}
+.gcsp-miniSong {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 8px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--ta) 22%, var(--ts));
+  font-size: 11px;
+  font-weight: 700;
+  overflow: hidden;
+}
+.gcsp-miniSong .gcs-icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  color: var(--ta2);
+}
+
+/* Player-ul melodiei. */
+.gcsp-player {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 10px 14px;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 12px;
+  background: var(--gcs-surface);
+}
+.gcsp-player__disc {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  background: repeating-radial-gradient(circle, #111318 0 2px, #1b1e26 2px 4px);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--gcsp-hot) 50%, transparent);
+}
+.gcsp-player__disc span {
+  position: absolute;
+  inset: 24px;
+  border-radius: 999px;
+  background: var(--gcsp-hot);
+}
+.gcsp-player--playing .gcsp-player__disc {
+  animation: gcsSpin 3s linear infinite;
+}
+.gcsp-player__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.gcsp-player__meta strong {
+  overflow: hidden;
+  font-family: var(--gcs-font-display);
+  font-size: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcsp-player__meta span {
+  color: var(--gcs-muted);
+  font-size: 12px;
+}
+.gcsp-player__controls {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 12px;
+}
+.gcsp-player__play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--gcsp-hot);
+  color: #ffffff;
+  cursor: pointer;
+}
+.gcsp-player__play .gcs-icon {
+  width: 15px;
+  height: 15px;
+}
+.gcsp-player__play:focus-visible {
+  outline: 2px solid var(--gcs-text);
+  outline-offset: 2px;
+}
+.gcsp-player__vol {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  color: var(--gcs-muted);
+}
+.gcsp-player__vol .gcs-icon {
+  width: 14px;
+  height: 14px;
+}
+.gcsp-player__vol input {
+  flex: 1;
+  accent-color: var(--gcsp-hot);
+}
+.gcsp-player__audio {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+.gcsp-studio.gcsp-js .gcsp-player__audio {
+  display: none;
+}
+.gcsp-player__yt {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  border-radius: 9px;
+  background: #000000;
+}
+.gcsp-player__ytNote {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  color: #d4d4d8;
+  font-size: 12px;
+}
+.gcsp-player__ytNote .gcs-icon {
+  width: 16px;
+  height: 16px;
+  color: #ff0033;
+}
+.gcsp-player__yt iframe {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+}
+.gcsp-player .gcsp-field__hint {
+  grid-column: 1 / -1;
+}
+.gcsp-player--empty .gcsp-player__controls {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* ─── Bara de jos (lipită) și ferestrele ───────────────────────────────── */
+
+.gcsp-dock {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 20px;
+  padding: 12px 14px;
+  border: 1px solid var(--gcsp-line);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--gcs-surface) 94%, transparent);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.3);
+}
+.gcsp-dock__count {
+  flex: 1;
+  color: var(--gcs-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.gcsp-dock__count--dirty {
+  color: var(--gcs-warn);
+}
+.gcsp-save {
+  margin-left: auto;
+}
+.gcsp-dock .gcs-btn .gcs-icon,
+.gcsp-sheet .gcs-btn .gcs-icon {
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+}
+.gcsp-resetForm {
+  margin-top: 12px;
+}
+
+.gcsp-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: none;
+  background: rgba(5, 6, 9, 0.62);
+  backdrop-filter: blur(2px);
+}
+.gcsp-studio--sheet .gcsp-veil {
+  display: block;
+}
+/* Containerul pluginului e bloc de conținere (contain: paint): fereastra stă în el, iar JS-ul o aduce în dreptul ecranului. */
+.gcsp-sheet {
+  position: absolute;
+  left: 50%;
+  top: var(--gcsp-sheet-top, 30%);
+  z-index: 30;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: min(440px, calc(100% - 32px));
+  padding: 22px 22px 18px;
+  border: 1px solid var(--gcsp-line);
+  border-radius: 16px;
+  background: var(--gcs-surface);
+  text-align: center;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+  transform: translateX(-50%);
+}
+.gcsp-sheet--open {
+  display: flex;
+}
+.gcsp-sheet > .gcs-icon {
+  width: 30px;
+  height: 30px;
+  color: var(--gcs-warn);
+}
+.gcsp-sheet--error > .gcs-icon {
+  color: var(--gcs-accentInk);
+}
+.gcsp-sheet h3 {
+  margin: 0;
+  font-family: var(--gcs-font-display);
+  font-size: 20px;
+}
+.gcsp-sheet p {
+  margin: 0;
+  color: var(--gcs-muted);
+  line-height: 1.5;
+}
+.gcsp-sheet ul {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--gcs-text);
+  font-size: 14px;
+  text-align: left;
+}
+.gcsp-sheet li + li {
+  margin-top: 4px;
+}
+.gcsp-sheet__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+.gcsp-loader {
+  display: inline-flex;
+  gap: 6px;
+  padding: 6px 0;
+}
+.gcsp-loader i {
+  width: 10px;
+  height: 22px;
+  border-radius: 3px;
+  background: var(--gcsp-hot);
+  animation: gcsFxPulse 1s ease-in-out infinite;
+  --gcs-fx-glow: color-mix(in srgb, var(--gcsp-hot) 80%, transparent);
+}
+.gcsp-loader i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.gcsp-loader i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+/* ─── Carusel „VIP online” ─────────────────────────────────────────────── */
+
+.gcsp-roster {
+  position: relative;
+}
+.gcsp-roster__summary {
+  margin: 0 0 8px;
+  color: var(--gcs-muted);
+  font-size: 12px;
+}
+.gcsp-roster__track {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  padding: 2px 2px 8px;
+  overflow-x: auto;
+  list-style: none;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+}
+.gcsp-roster__track:focus-visible {
+  outline: 2px solid var(--gcsp-hot);
+  outline-offset: 2px;
+}
+.gcsp-roster__item {
+  --plan: var(--gcs-accent);
+  flex: 0 0 auto;
+  width: 148px;
+  scroll-snap-align: start;
+}
+.gcsp-roster__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  height: 100%;
+  padding: 16px 10px 12px;
+  border: 1px solid var(--gcsp-line);
+  border-top: 3px solid var(--plan);
+  border-radius: 12px;
+  background: radial-gradient(110% 70% at 50% 0%, color-mix(in srgb, var(--plan) 16%, transparent), transparent 70%), var(--gcsp-slot);
+  text-align: center;
+}
+.gcsp-roster__name {
+  max-width: 100%;
+  overflow: hidden;
+  font-family: var(--gcs-font-display);
+  font-size: 15px;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcsp-roster__seen {
+  color: var(--gcs-muted);
+  font-size: 11.5px;
+}
+.gcsp-roster__more {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 12.5px;
+}
+.gcsp-roster__nav {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--gcsp-line);
+  border-radius: 999px;
+  background: var(--gcs-surface);
+  color: var(--gcs-text);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+.gcsp-roster__nav:hover {
+  border-color: var(--gcsp-hot);
+}
+.gcsp-roster__nav:focus-visible {
+  outline: 2px solid var(--gcsp-hot);
+  outline-offset: 2px;
+}
+.gcsp-roster__nav--prev {
+  left: -4px;
+}
+.gcsp-roster__nav--next {
+  right: -4px;
+}
+.gcsp-roster--js .gcsp-roster__track {
+  scrollbar-width: none;
+}
+.gcsp-roster--empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.gcsp-roster--empty > .gcs-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--gcs-warn);
+}
+.gcsp-roster--empty p {
+  margin: 0;
+  color: var(--gcs-muted);
+}
+
+/* ─── Beneficii ────────────────────────────────────────────────────────── */
+
+.gcsp-hero--benefits {
+  grid-template-columns: minmax(0, 1fr);
+}
+.gcsp-benefitList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+}
+.gcsp-benefit {
+  display: flex;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--gcsp-line);
+  border-radius: 12px;
+  background: var(--gcsp-slot);
+}
+.gcsp-benefit > .gcs-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--gcs-warn);
+}
+.gcsp-benefit h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+.gcsp-benefit p {
+  margin: 0;
+  color: var(--gcs-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.gcsp-planDot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 6px;
+  border-radius: 999px;
+  background: var(--plan);
+}
+.gcsp-plansTable td {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── ACP ──────────────────────────────────────────────────────────────── */
+
+.gcsp-acpTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--gcsp-line);
+}
+.gcsp-acpTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  color: var(--gcs-muted);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.gcsp-acpTab:hover {
+  color: var(--gcs-text);
+  background: var(--gcs-surface2);
+}
+.gcsp-acpTab--on {
+  background: color-mix(in srgb, var(--gcsp-hot) 14%, transparent);
+  color: var(--gcs-text);
+}
+.gcsp-acpTab__n {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--gcs-surface2);
+  font-size: 11px;
+}
+.gcsp-acpHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.gcsp-acpHead .gcs-icon,
+.gcsp-acp .gcs-btn .gcs-icon {
+  width: 13px;
+  height: 13px;
+  margin-right: 6px;
+}
+.gcsp-acpArt {
+  width: 120px;
+}
+.gcsp-acpArt .gcsp-ns {
+  font-family: var(--gcs-font-display);
+  font-size: 16px;
+}
+.gcsp-acpThumb {
+  width: 110px;
+  aspect-ratio: 16 / 9;
+  border-radius: 6px;
+  object-fit: cover;
+}
+.gcsp-row--muted td {
+  opacity: 0.6;
+}
+.gcsp-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.gcsp-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+.gcsp-inline--grow {
+  flex: 1;
+}
+.gcsp-iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--gcsp-line);
+  border-radius: 8px;
+  background: var(--gcs-surface);
+  color: var(--gcs-text);
+  cursor: pointer;
+}
+.gcsp-iconBtn .gcs-icon {
+  width: 13px;
+  height: 13px;
+}
+.gcsp-iconBtn:hover {
+  border-color: var(--gcs-text);
+}
+.gcsp-iconBtn--danger:hover {
+  border-color: var(--gcs-accent);
+  color: var(--gcs-accentInk);
+}
+.gcsp-acpBox {
+  margin: 16px 0;
+  padding: 14px 16px;
+  border: 1px solid var(--gcsp-line);
+  border-radius: 12px;
+}
+.gcsp-acpBox h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+.gcsp-acpBox legend {
+  padding: 0 6px;
+  font-weight: 700;
+}
+.gcsp-catList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0 12px;
+  padding: 0;
+  list-style: none;
+}
+.gcsp-catRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.gcsp-acpFields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0 18px;
+}
+.gcsp-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+}
+.gcsp-acpActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+.gcsp-acpStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+.gcsp-acpStat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  border: 1px solid var(--gcsp-line);
+  border-radius: 10px;
+  color: var(--gcs-text);
+  text-decoration: none;
+}
+.gcsp-acpStat strong {
+  font-family: var(--gcs-font-display);
+  font-size: 24px;
+}
+.gcsp-acpStat span {
+  color: var(--gcs-muted);
+  font-size: 12.5px;
+}
+.gcsp-acpStat:hover {
+  border-color: var(--gcsp-hot);
+}
+.gcsp-framePreview__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 28px;
+  padding: 16px 8px;
+}
+.gcsp-framePreview figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+.gcsp-framePreview figcaption {
+  color: var(--gcs-muted);
+  font-size: 12px;
+}
+.gcsp-acpPreview .gcsp-ns {
+  font-family: var(--gcs-font-display);
+  font-size: 26px;
+}
+.gcsp-acpWide,
+.gcsp-acpVideo {
+  width: 100%;
+  max-width: 560px;
+  border-radius: 10px;
+}
+.gcsp-audit {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+.gcsp-audit li {
+  padding: 5px 0;
+  border-bottom: 1px solid var(--gcsp-line);
+}
+.gcsp-audit time {
+  color: var(--gcs-muted);
+}
+.gcsp-links {
+  margin: 0;
+  padding-left: 18px;
+}
+.gcsp-pager {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+/* ─── Mai puțină mișcare și ecrane mici ────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .gcsp-ns,
+  .gcsp-ns::after,
+  .gcsp-pill,
+  .gcsp-player__disc,
+  .gcsp-loader i {
+    animation: none;
+  }
+  .gcsp-tile,
+  .gcsp-mode {
+    transition: none;
+  }
+}
+
+@media (max-width: 980px) {
+  .gcsp-bench {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .gcsp-stage {
+    position: relative;
+    top: 0;
+    order: -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .gcsp-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .gcsp-modes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .gcsp-mode__text small {
+    display: none;
+  }
+  .gcsp-grid {
+    grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  }
+  .gcsp-tab span {
+    display: none;
+  }
+  .gcsp-tab {
+    flex: 1 1 0;
+  }
+  .gcsp-dock {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .gcsp-dock__count {
+    flex-basis: 100%;
+    order: -1;
+  }
+}

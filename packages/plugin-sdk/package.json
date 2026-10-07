@@ -1,19 +1,23 @@
 {
   "name": "@gcs/plugin-sdk",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
     "./pack": "./src/pack.ts",
     "./zip": "./src/zip.ts",
-    "./example": "./scripts/build-example.ts"
+    "./example": "./scripts/build-example.ts",
+    "./vip-studio": "./scripts/build-vip-studio.ts",
+    "./sign": "./scripts/sign-plugin.ts"
   },
   "scripts": {
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p plugins/vip-studio",
     "test": "vitest run --passWithNoTests",
-    "build:example": "tsx scripts/build-example.ts"
+    "build:example": "tsx scripts/build-example.ts",
+    "build:vip-studio": "tsx scripts/build-vip-studio.ts",
+    "sign:plugin": "tsx scripts/sign-plugin.ts"
   },
   "devDependencies": {
     "@gcs/config": "workspace:*",

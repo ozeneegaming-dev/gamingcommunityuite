@@ -1,0 +1,111 @@
+{
+  "manifestVersion": 1,
+  "key": "gcs.vip_studio",
+  "name": "Studio VIP",
+  "version": "1.0.0",
+  "author": { "name": "GamingCommunitySuite", "url": "https://gamingcommunitysuite.com" },
+  "description": "Studioul de personalizare VIP: stilul numelui (cu variante de culoare), rame de avatar, bannere, fundaluri de card, arma preferată, fundal video pe profil, citat, temă și melodia profilului, cu previzualizare live; cataloagele se gestionează din ACP.",
+  "icon": "fa-solid fa-crown",
+  "license": "Proprietary",
+  "minGcs": "0.7.0",
+  "capabilities": ["db", "events", "widgets", "pages", "acp", "api", "menus", "jobs", "settings", "permissions", "client-css", "client-js", "media", "appearance"],
+  "settings": {
+    "tabs": [
+      {
+        "key": "general",
+        "label": "settings.tabs.general",
+        "icon": "fa-solid fa-sliders",
+        "fields": [
+          { "type": "text", "key": "vipPageUrl", "label": "settings.vipPageUrl", "hint": "settings.vipPageUrlHint", "default": "/vip", "maxLength": 200 },
+          { "type": "number", "key": "newDays", "label": "settings.newDays", "hint": "settings.newDaysHint", "default": 7, "min": 0, "max": 60, "unit": "settings.days" },
+          { "type": "toggle", "key": "allowCustomLabel", "label": "settings.allowCustomLabel", "hint": "settings.allowCustomLabelHint", "default": true }
+        ]
+      },
+      {
+        "key": "song",
+        "label": "settings.tabs.song",
+        "icon": "fa-solid fa-music",
+        "fields": [
+          { "type": "toggle", "key": "allowYoutube", "label": "settings.allowYoutube", "hint": "settings.allowYoutubeHint", "default": true },
+          { "type": "toggle", "key": "allowSongUpload", "label": "settings.allowSongUpload", "hint": "settings.allowSongUploadHint", "default": false },
+          { "type": "number", "key": "songMaxMb", "label": "settings.songMaxMb", "default": 8, "min": 1, "max": 20, "unit": "MB" }
+        ]
+      }
+    ]
+  },
+  "permissions": [
+    {
+      "key": "use",
+      "scope": "group",
+      "label": "permissions.use",
+      "default": {
+        "root_admin": true,
+        "admin": true,
+        "super_moderator": true,
+        "moderator": true,
+        "member": true,
+        "new_member": true,
+        "vip_bronze": true,
+        "vip_silver": true,
+        "vip_gold": true,
+        "vip_legend": true
+      }
+    },
+    {
+      "key": "test_all",
+      "scope": "group",
+      "label": "permissions.test_all",
+      "default": { "root_admin": true, "admin": true }
+    }
+  ],
+  "widgets": [
+    {
+      "key": "roster",
+      "label": "widget.title",
+      "description": "widget.description",
+      "icon": "fa-solid fa-crown",
+      "zones": ["top", "bottom", "sidebar"],
+      "fields": [{ "type": "number", "key": "limit", "label": "widget.limit", "min": 4, "max": 48 }],
+      "defaultConfig": { "limit": 16 }
+    }
+  ],
+  "routes": {
+    "pages": [
+      { "path": "/", "title": "studio.title", "permission": "use" },
+      { "path": "/benefits", "title": "benefits.title" }
+    ],
+    "acp": [
+      { "path": "/", "label": "acp.menu.overview", "icon": "fa-solid fa-crown" },
+      { "path": "/name-styles", "label": "acp.menu.name_style", "icon": "fa-solid fa-signature" },
+      { "path": "/banners", "label": "acp.menu.banner", "icon": "fa-solid fa-ribbon" },
+      { "path": "/frames", "label": "acp.menu.frame", "icon": "fa-solid fa-circle-user" },
+      { "path": "/cards", "label": "acp.menu.card", "icon": "fa-solid fa-image" },
+      { "path": "/weapons", "label": "acp.menu.weapon", "icon": "fa-solid fa-crosshairs" },
+      { "path": "/backgrounds", "label": "acp.menu.background", "icon": "fa-solid fa-film" },
+      { "path": "/themes", "label": "acp.menu.theme", "icon": "fa-solid fa-palette" },
+      { "path": "/songs", "label": "acp.menu.song", "icon": "fa-solid fa-music" },
+      { "path": "/members", "label": "acp.menu.members", "icon": "fa-solid fa-users" },
+      { "path": "/item/:id", "label": "acp.menu.item" },
+      { "path": "/new/:kind", "label": "acp.menu.new" }
+    ],
+    "api": [
+      { "path": "/save", "methods": ["POST"], "permission": "use" },
+      { "path": "/reset", "methods": ["POST"], "permission": "use" },
+      { "path": "/acp/item", "methods": ["POST"], "acp": "edit" },
+      { "path": "/acp/action", "methods": ["POST"], "acp": "edit" },
+      { "path": "/acp/delete", "methods": ["POST"], "acp": "delete" }
+    ]
+  },
+  "events": ["vip.granted", "vip.revoked", "vip.expired"],
+  "jobs": [{ "key": "reconcile", "everyMinutes": 60, "label": "jobs.reconcile" }],
+  "menus": {
+    "user": [{ "key": "studio", "label": "menu.studio", "href": "/p/gcs.vip_studio", "icon": "fa-solid fa-crown", "permission": "use" }]
+  },
+  "media": {
+    "image": { "maxMb": 8, "maxSide": 2048, "animated": true },
+    "video": { "maxMb": 40, "maxSeconds": 60 },
+    "audio": { "maxMb": 20 },
+    "quotaMb": 2048
+  },
+  "client": { "styles": ["assets/vip.css"], "scripts": ["assets/vip.js"] }
+}

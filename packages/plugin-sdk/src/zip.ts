@@ -1,4 +1,34 @@
-import { crc32, deflateRawSync } from "node:zlib";
+import { crc32, deflateRawSync, inflateRawSync } from "node:zlib";
+
+/**
+ * Citește o arhivă simplă (fără ZIP64, *store* / *deflate*), ca semnarea unui pachet deja construit să lucreze pe exact
+ * aceleași fișiere. Doar pentru arhivele proprii: GCS își verifică pachetele cu cititorul lui, mult mai strict.
+ */
+export function readZip(zip: Buffer): Map<string, Buffer> {
+  const end = zip.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
+  if (end < 0) throw new Error("zip: end of central directory not found");
+  const count = zip.readUInt16LE(end + 10);
+  let at = zip.readUInt32LE(end + 16);
+  const out = new Map<string, Buffer>();
+  for (let i = 0; i < count; i++) {
+    if (zip.readUInt32LE(at) !== 0x02014b50) throw new Error("zip: bad central directory");
+    const method = zip.readUInt16LE(at + 10);
+    const crc = zip.readUInt32LE(at + 16);
+    const compressed = zip.readUInt32LE(at + 20);
+    const nameLen = zip.readUInt16LE(at + 28);
+    const extraLen = zip.readUInt16LE(at + 30);
+    const commentLen = zip.readUInt16LE(at + 32);
+    const local = zip.readUInt32LE(at + 42);
+    const name = zip.toString("utf8", at + 46, at + 46 + nameLen);
+    const dataAt = local + 30 + zip.readUInt16LE(local + 26) + zip.readUInt16LE(local + 28);
+    const body = zip.subarray(dataAt, dataAt + compressed);
+    const data = method === 8 ? inflateRawSync(body) : method === 0 ? Buffer.from(body) : null;
+    if (!data || (crc32(data) >>> 0) !== crc) throw new Error(`zip: cannot read ${name}`);
+    if (!name.endsWith("/")) out.set(name, data);
+    at += 46 + nameLen + extraLen + commentLen;
+  }
+  return out;
+}
 
 /**
  * O intrare de scris în arhivă. `mode` (cu biții de tip Unix, ex. `0o100644`) marchează arhiva ca fiind creată pe Unix;
