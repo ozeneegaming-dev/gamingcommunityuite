@@ -95,6 +95,15 @@ describe("cardul", () => {
     expect((await w.profileQueries.card(w.guest, gold.userId!))!.user.frameKey).toBe("gold");
   });
 
+  test("are coperta cu poziția ei verticală; mutarea copertei invalidează cache-ul", async () => {
+    expect((await w.profileQueries.card(w.guest, w.member.userId!))!.user).toMatchObject({ cover: null, coverPositionY: 50 });
+    await w.db.user.update({ where: { id: w.member.userId! }, data: { coverAttachmentId: "covercard1", coverPositionY: 20 } });
+    await w.profiles.setCoverPosition(w.member, 20);
+    expect((await w.profileQueries.card(w.guest, w.member.userId!))!.user).toMatchObject({ cover: "/files/covercard1", coverPositionY: 20 });
+    await w.profiles.setCoverPosition(w.member, 75);
+    expect((await w.profileQueries.card(w.guest, w.member.userId!))!.user.coverPositionY).toBe(75);
+  });
+
   test("arată doar câmpurile publice marcate „pe card”", async () => {
     await w.profiles.updateFields(w.member, w.member.userId!, { country: "România", platform: "PC" });
     expect((await w.profileQueries.card(w.guest, w.member.userId!))!.fields).toEqual([{ label: "Țară", value: "România" }]);

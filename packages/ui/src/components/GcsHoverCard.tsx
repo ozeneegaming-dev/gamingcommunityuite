@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { GcsAvatar } from "./GcsAvatar";
 
 export type GcsHoverCardData = {
@@ -12,6 +12,8 @@ export type GcsHoverCardData = {
     bio: string;
     accentColor: string | null;
     cover: string | null;
+    /** Poziția verticală a copertei (0–100 %), aleasă de membru; implicit 50. */
+    coverPositionY?: number;
     group: { name: string; color: string | null };
     rank: { name: string; icon: string | null } | null;
   };
@@ -28,9 +30,17 @@ function tint(hex: string | null, alpha: number, fallback: string): string {
   return m ? `rgba(${parseInt(m[1]!, 16)}, ${parseInt(m[2]!, 16)}, ${parseInt(m[3]!, 16)}, ${alpha})` : fallback;
 }
 
+/** Iconița rangului ca text (emoji); numele Font Awesome (`fa-…`) nu se afișează ca text. */
+function rankSymbol(icon: string | null | undefined): string | null {
+  return icon && !icon.startsWith("fa-") ? icon : null;
+}
+
 /**
- * Hover card-ul unui membru (macheta Topic): cover cu culoarea de accent, avatar cu ramă, nume stilizat, grup, rang,
- * 3 badge-uri, câmpurile marcate „pe card” și statisticile. Acțiunile (Urmărește / Mesaj) vin din `actions`.
+ * Hover card-ul unui membru (specul „hover card și coperta în postbit”, 2026-10-07): coperta (imaginea cu poziția
+ * salvată sau degradeul accentului) cu cusătura de accent; sub ea avatarul cu ramă (urcat pe jumătate peste copertă) și,
+ * în dreapta lui, numele stilizat, grupul, rangul și statusul online — niciodată peste imagine; apoi bio-ul, insignele,
+ * câmpurile „pe card” (2 coloane), contoarele și acțiunile (Urmărește / Mesaj, din `actions`).
+ * Șablonul implicit `members.hover_card` produce exact același markup.
  */
 export function GcsHoverCard({
   data,
@@ -47,36 +57,40 @@ export function GcsHoverCard({
 }) {
   const { user, stats } = data;
   const accent = user.accentColor ?? "#D62839";
+  const symbol = rankSymbol(user.rank?.icon);
+  const cover = user.cover
+    ? `center ${user.coverPositionY ?? 50}% / cover no-repeat url(${user.cover})`
+    : `linear-gradient(120deg, ${tint(accent, 0.55, "rgba(214,40,57,.55)")}, ${tint(accent, 0.12, "rgba(214,40,57,.12)")})`;
   return (
     <div className="gcs-card gcs-hoverCard" role="dialog" aria-label={user.name} id={id} data-testid="gcs-hover-card">
       <div
-        className="gcs-hoverCard__cover"
-        style={{
-          background: user.cover
-            ? `center / cover no-repeat url(${user.cover})`
-            : `linear-gradient(120deg, ${tint(accent, 0.55, "rgba(214,40,57,.55)")}, ${tint(accent, 0.12, "rgba(214,40,57,.12)")})`,
-        }}
+        className={user.cover ? "gcs-hoverCard__cover gcs-hoverCard__cover--image" : "gcs-hoverCard__cover"}
+        style={{ "--gcs-hoverCard-accent": accent, background: cover } as CSSProperties}
+        data-testid="gcs-hover-cover"
       />
       <div className="gcs-hoverCard__body">
         <div className="gcs-hoverCard__head">
-          <GcsAvatar name={user.name} size="m" {...(user.image ? { src: user.image } : {})} {...(user.frameKey ? { frame: user.frameKey } : {})} className="gcs-hoverCard__avatar" />
-          <div style={{ minWidth: 0 }}>
-            <a href={`/members/${user.id}-${user.slug}`} className={`gcs-userLink gcs-name--${user.nameKey} gcs-hoverCard__name`}>
+          <span className="gcs-hoverCard__avatar">
+            <GcsAvatar name={user.name} size="l" {...(user.image ? { src: user.image } : {})} {...(user.frameKey ? { frame: user.frameKey } : {})} />
+          </span>
+          <div className="gcs-hoverCard__identity">
+            <a href={`/members/${user.id}-${user.slug}`} className={`gcs-userLink gcs-name--${user.nameKey} gcs-hoverCard__name`} title={user.name}>
               {user.name}
             </a>
             <div className="gcs-hoverCard__meta">
-              <span className="gcs-badge" style={{ background: tint(user.group.color, 0.16, "rgba(161,167,180,.16)"), color: user.group.color ?? "var(--gcs-muted)" }}>
+              <span className="gcs-badge gcs-hoverCard__group" style={{ "--gcs-hoverCard-group": user.group.color ?? "var(--gcs-muted)" } as CSSProperties}>
                 {user.group.name}
               </span>
               {user.rank && (
                 <span className="gcs-hoverCard__rank" data-testid="gcs-hover-rank">
-                  {user.rank.icon ? `${user.rank.icon} ` : ""}
+                  {symbol ? `${symbol} ` : ""}
                   {user.rank.name}
                 </span>
               )}
               {data.online.online && (
                 <span className="gcs-hoverCard__online">
-                  <span className="gcs-dot" style={{ background: "var(--gcs-ok)" }} /> {labels.online}
+                  <span className="gcs-dot" aria-hidden="true" />
+                  {labels.online}
                 </span>
               )}
             </div>
@@ -98,7 +112,7 @@ export function GcsHoverCard({
             {data.fields.map((f) => (
               <div key={f.label}>
                 <dt>{f.label}</dt>
-                <dd>{f.value}</dd>
+                <dd title={f.value}>{f.value}</dd>
               </div>
             ))}
           </dl>

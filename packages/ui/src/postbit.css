@@ -80,6 +80,36 @@
   border: 1px solid var(--gcs-border);
   min-width: 0;
 }
+/*
+ * Coperta membrului ca fundal al blocului (specul „hover card și coperta în postbit”, 2026-10-07): un strat decorativ
+ * sub avatar și nume, cu voal mai închis spre text. Blocul devine o „insulă întunecată” în ambele teme (tokenurile
+ * redefinite local), ca numele, rândul al doilea, titlul și coroanele să rămână lizibile peste orice imagine.
+ */
+.gcs-postbit__profile--cover {
+  --gcs-bg: #0B0C10;
+  --gcs-text: #F3F4F7;
+  --gcs-muted: #C5CAD3;
+  --gcs-surface: rgb(11 12 16 / 0.55);
+  --gcs-border: rgb(255 255 255 / 0.16);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  color: var(--gcs-text);
+}
+.gcs-postbit__cover {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+.gcs-postbit__cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgb(8 9 12 / 0.2), rgb(8 9 12 / 0.62) 42%, rgb(8 9 12 / 0.85));
+}
+.gcs-postbit__profile--cover .gcs-postbit__identity {
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.7), 0 0 10px rgb(0 0 0 / 0.45);
+}
 .gcs-postbit__avatar {
   position: relative;
   display: inline-flex;
@@ -375,7 +405,7 @@
   object-fit: contain;
 }
 
-/* Subsolul: data înscrierii | statusul; apoi motto-ul (ultimul status), pe un rând, cu „…”. */
+/* Subsolul: data înscrierii (statusul online e doar sus); apoi motto-ul (ultimul status), pe un rând, cu „…”. */
 .gcs-postbit__foot {
   display: flex;
   flex-wrap: wrap;
@@ -400,6 +430,7 @@
 .gcs-postbit__joined strong {
   color: var(--gcs-accentInk);
 }
+/* `footStatus`: doar pentru șabloanele de temă pornite de la versiunea 1 a `postbit.author`. */
 .gcs-postbit__footStatus {
   display: inline-flex;
   align-items: center;

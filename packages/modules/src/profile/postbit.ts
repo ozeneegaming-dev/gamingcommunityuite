@@ -29,6 +29,8 @@ export type GcsPostbitData = {
   topicsCount: number;
   /** Ultimul status (motto) al membrului, ca text scurtat; `null` dacă nu are sau profilul nu e vizibil viewer-ului. */
   motto: string | null;
+  /** Coperta profilului (fundalul blocului cu avatarul), cu poziția verticală salvată (0–100 %); ca motto-ul, doar dacă profilul e vizibil viewer-ului. */
+  cover: { url: string; positionY: number } | null;
   /** XP = punctele din realizări; progresul spre următorul rang cu prag de puncte. */
   xp: { points: number; floor: number; next: number | null; nextRank: string | null; percent: number };
   badges: { count: number; recent: GcsPostbitBadge[] };
@@ -133,6 +135,8 @@ export class GcsPostbitService {
           createdAt: true,
           lastActiveAt: true,
           privacy: true,
+          coverAttachmentId: true,
+          coverPositionY: true,
           rankId: true,
           primaryGroupId: true,
           primaryGroup: { select: { key: true, name: true, title: true, color: true, icon: true, banner: true } },
@@ -192,7 +196,7 @@ export class GcsPostbitService {
       const privacy = normalizePrivacy(u.privacy);
       const vip = vipMap.get(u.id);
       const second = secondary.find((g) => g.userId === u.id && g.groupId !== u.primaryGroupId && g.groupId !== vip?.groupId);
-      // Motto-ul vine de pe perete: îl arătăm doar dacă profilul e vizibil viewer-ului („doar urmăritori” → doar autorului).
+      // Motto-ul (de pe perete) și coperta: doar dacă profilul e vizibil viewer-ului („doar urmăritori” → doar autorului).
       const profileVisible = own || privacy.profile === "PUBLIC" || (privacy.profile === "MEMBERS" && viewer.userId !== null);
       const motto = profileVisible ? mottoText(mottoMap.get(u.id) ?? "") : null;
       out.set(u.id, {
@@ -204,6 +208,7 @@ export class GcsPostbitService {
         rankLevel: u.rankId !== null ? (levels.get(u.rankId) ?? null) : null,
         topicsCount: topicMap.get(u.id) ?? 0,
         motto,
+        cover: profileVisible && u.coverAttachmentId ? { url: `/files/${u.coverAttachmentId}`, positionY: u.coverPositionY } : null,
         xp: xpProgress(u.points, xpLadder),
         badges: {
           count: countMap.get(u.id) ?? 0,

@@ -106,6 +106,8 @@ export function postbitVars(author: GcsPostAuthor, data: GcsPostbitData | null, 
       online: data?.online ?? false,
       secondary,
       customTitle: data?.customTitle ?? null,
+      cover: data?.cover?.url ?? null,
+      coverPositionY: data?.cover?.positionY ?? 50,
       vip: data?.vip ?? false,
       rankLevel: data?.rankLevel ?? null,
       pips: data?.rankLevel ? Math.min(data.rankLevel, MAX_PIPS) : 0,
@@ -173,8 +175,12 @@ export function hoverCardVars(card: GcsCardView) {
       bio: card.user.bio,
       accentColor: card.user.accentColor ?? "#D62839",
       cover: card.user.cover,
+      coverPositionY: card.user.coverPositionY,
       group: { name: card.user.group.name, color: card.user.group.color },
-      rank: card.user.rank ? { name: card.user.rank.name, icon: card.user.rank.icon } : null,
+      // `symbol`: iconița ca text (emoji), ca în componentă; un nume Font Awesome nu se afișează ca text.
+      rank: card.user.rank
+        ? { name: card.user.rank.name, icon: card.user.rank.icon, symbol: card.user.rank.icon && !card.user.rank.icon.startsWith("fa-") ? card.user.rank.icon : null }
+        : null,
     },
     stats: card.stats,
     online: card.online.online,

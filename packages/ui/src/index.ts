@@ -6,6 +6,7 @@ export { GcsButton, type GcsButtonProps } from "./components/GcsButton";
 export { GcsCard, type GcsCardProps } from "./components/GcsCard";
 export { GcsChart, type GcsChartProps, type GcsChartType } from "./components/GcsChart";
 export { GcsHoverCard, GcsProfileBadge, type GcsHoverCardData, type GcsHoverCardLabels } from "./components/GcsHoverCard";
+export { placeHoverCard, type GcsHoverCardPlacement } from "./components/hoverCardPosition";
 export { GcsField, type GcsFieldProps } from "./components/GcsField";
 export { GcsTable, type GcsTableColumn, type GcsTableProps } from "./components/GcsTable";
 export { GcsUserLink, type GcsUserLinkProps } from "./components/GcsUserLink";

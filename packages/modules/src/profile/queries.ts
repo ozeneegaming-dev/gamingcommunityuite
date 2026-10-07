@@ -39,7 +39,8 @@ export type GcsProfileView = {
 };
 
 export type GcsCardView = {
-  user: GcsUserDisplay & { slug: string; bio: string; accentColor: string | null; cover: string | null };
+  /** `cover`: URL-ul copertei; `coverPositionY`: poziția ei verticală salvată (0–100 %), ca pe profil. */
+  user: GcsUserDisplay & { slug: string; bio: string; accentColor: string | null; cover: string | null; coverPositionY: number };
   stats: { posts: number; reputation: number; followers: number; joinedAt: string };
   online: GcsOnline;
   badges: GcsBadgeView[];
@@ -197,6 +198,7 @@ export class GcsProfileQueries {
         bio: true,
         accentColor: true,
         coverAttachmentId: true,
+        coverPositionY: true,
         privacy: true,
         postsCount: true,
         reputation: true,
@@ -222,6 +224,7 @@ export class GcsProfileQueries {
         bio: user.bio,
         accentColor: user.accentColor,
         cover: user.coverAttachmentId ? `/files/${user.coverAttachmentId}` : null,
+        coverPositionY: user.coverPositionY,
       },
       rankId: user.rankId,
       primaryGroupId: user.primaryGroupId,
@@ -248,7 +251,8 @@ export class GcsProfileQueries {
     const [rankData, isFollowing, canMessage] = await Promise.all([ranks.data(), social.isFollowing(viewer.userId, userId), this.canMessage(viewer, userId, base.privacy)]);
     const rank: GcsRankLabel | null = rankLabel(rankData, base.rankId, base.primaryGroupId);
     return {
-      user: { ...base.user, rank },
+      // `?? 50`: o intrare din cache scrisă înainte de câmpul nou.
+      user: { ...base.user, coverPositionY: base.user.coverPositionY ?? 50, rank },
       stats: base.stats,
       online: this.online(base.lastActiveAt, base.privacy, { isSelf, isModerator }),
       badges: base.badges,
