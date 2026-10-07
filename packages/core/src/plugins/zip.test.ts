@@ -42,6 +42,15 @@ describe("arhiva unui plugin", () => {
     expect(code(() => readPluginZip(writeZip([{ name: "a.txt", data: "1" }, { name: "a.txt", data: "2" }])))).toBe("duplicate_path");
   });
 
+  test("o cale nu poate fi în același timp fișier și folder (nici cu majuscule diferite)", () => {
+    const pair = (a: string, b: string) => code(() => readPluginZip(writeZip([{ name: a, data: "1" }, { name: b, data: "2" }])));
+    expect(pair("assets/x.css", "assets/x.css/y.css")).toBe("duplicate_path");
+    expect(pair("assets/x.css/y.css", "assets/x.css")).toBe("duplicate_path");
+    expect(pair("assets/X.css/y.css", "assets/x.css")).toBe("duplicate_path");
+    expect(pair("assets/a", "assets/A/b/c.css")).toBe("duplicate_path");
+    expect(pair("assets/a.css", "assets/ab/c.css")).toBe("ok");
+  });
+
   test("limitele de mărime și număr", () => {
     const small = { ...PLUGIN_ZIP_LIMITS, maxFiles: 2, maxFileBytes: 100, maxTotalBytes: 150, maxArchiveBytes: 10_000 };
     expect(code(() => readPluginZip(writeZip([{ name: "a", data: "1" }, { name: "b", data: "2" }, { name: "c", data: "3" }]), small))).toBe("too_many_files");

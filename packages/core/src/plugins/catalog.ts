@@ -138,6 +138,18 @@ export function pluginSchema(key: string): string {
   return `plugin_${key.replace(".", "__")}`;
 }
 
+/**
+ * Ordinea migrațiilor (numele sau calea `migrations/…`): după numărul din față (`001_`, `0002_`, `1000_` au lățimi
+ * diferite, deci nu ordinea alfabetică), apoi după nume.
+ */
+export function comparePluginMigrations(a: string, b: string): number {
+  const n = (s: string) => Number.parseInt(/^\d+/.exec(s.slice(s.lastIndexOf("/") + 1))?.[0] ?? "", 10);
+  const na = n(a);
+  const nb = n(b);
+  if (na !== nb && !Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
 /** Clasa CSS a containerului pluginului (CSS-ul lui e închis în ea): `gcsp--<vendor>--<nume>` (părțile nu conțin `-`). */
 export function pluginCssScope(key: string): string {
   return `gcsp--${key.replace(".", "--")}`;

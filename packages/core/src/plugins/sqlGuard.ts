@@ -193,6 +193,19 @@ const FORBIDDEN_WORDS = new Set([
   "lo_from_bytea",
   "lo_put",
   "lo_open",
+  // Obiectele mari aparțin bazei întregi, nu schemei pluginului (ar rămâne după dezinstalare).
+  "lo_create",
+  "lo_creat",
+  "lo_close",
+  "lo_get",
+  "lo_lseek",
+  "lo_lseek64",
+  "lo_tell",
+  "lo_tell64",
+  "lo_truncate",
+  "lo_truncate64",
+  "lowrite",
+  "loread",
 ]);
 const FORBIDDEN_PREFIXES = ["pg_advisory", "pg_try_advisory", "dblink", "pg_logical", "pg_replication", "pg_import_system"];
 
@@ -215,9 +228,13 @@ function name(tok: Token | undefined): string | null {
 
 /** Verificările valabile peste tot (inclusiv în corpurile de funcții): cuvinte interzise, scheme străine, `SET ROLE`… */
 function checkTokens(tokens: Token[], schema: string): GcsSqlCheck {
+  // În instrucțiunea curentă apare `FUNCTION`/`PROCEDURE`: un șir `$$…$$` de după `AS` e cod, nu date.
+  let routine = false;
   for (let i = 0; i < tokens.length; i++) {
     const tok = tokens[i]!;
     const word = name(tok);
+    if (tok.t === "semi") routine = false;
+    if (word === "function" || word === "procedure") routine = true;
     if (word !== null) {
       if (FORBIDDEN_WORDS.has(word) || FORBIDDEN_PREFIXES.some((p) => word.startsWith(p))) return fail("sql_forbidden", word);
       const next = name(tokens[i + 1]);
@@ -241,6 +258,9 @@ function checkTokens(tokens: Token[], schema: string): GcsSqlCheck {
       try {
         inner = tokenize(tok.body);
       } catch {
+        // Un corp de funcție pe care nu-l putem citi e refuzat (altfel ar scăpa de toate verificările); un șir de date
+        // `$$…$$` care nu e SQL valid rămâne permis.
+        if (routine || name(tokens[i - 1]) === "as") return fail("sql_syntax", "function_body");
         continue;
       }
       const bodyCheck = checkTokens(inner, schema);

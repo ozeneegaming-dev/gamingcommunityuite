@@ -14,6 +14,10 @@ const MAX_CSS = 200_000;
  */
 export function scopePluginCss(css: string, opts: { pluginKey: string; file: string }): GcsPluginCssResult {
   if (css.length > MAX_CSS) return { ok: false, code: "css_too_large" };
+  // Browserul transformă CR, CRLF și FF în LF înainte de parsare (un șir se termină acolo); normalizăm la fel, ca textul
+  // verificat mai jos să fie exact cel servit. Celelalte caractere de control (NUL, ESC, DEL…) nu au ce căuta în CSS.
+  css = css.replace(/\r\n?|\f/g, "\n");
+  if (/[\u0000-\u0008\u000b\u000e-\u001f\u007f]/.test(css)) return { ok: false, code: "css_forbidden", detail: "control" };
   if (/[<\\]/.test(css)) return { ok: false, code: "css_forbidden", detail: css.includes("<") ? "<" : "\\" };
   const forbidden = /@import|@charset|expression\s*\(|javascript\s*:|vbscript\s*:|behavior\s*:|-moz-binding|@namespace/i.exec(css);
   if (forbidden) return { ok: false, code: "css_forbidden", detail: forbidden[0] };

@@ -5,6 +5,7 @@ import { AUDIT_REDACTED, writeAudit } from "../audit";
 import { GcsConflict, GcsForbidden, GcsNotFound, GcsValidationError } from "../errors";
 import type { GcsEventBus } from "../events";
 import type { GcsJobQueue } from "../jobs/queue";
+import type { GcsPermissionService } from "../permissions/service";
 import type { GcsActor } from "../permissions/types";
 import { PLUGIN_DEFAULT_PRIORITY, pluginAcpSection, pluginRegistryKey } from "./catalog";
 import type { GcsPluginDatabase } from "./database";
@@ -93,6 +94,8 @@ export type GcsPluginServiceDeps = {
   notify: () => Promise<void>;
   /** Pentru invalidarea cache-urilor atinse la dezinstalare (layout-ul widget-urilor). */
   bus?: GcsEventBus;
+  /** Versiunea permisiunilor crește când dezinstalarea șterge permisiunile pluginului (altfel cache-ul le-ar păstra). */
+  permissions: Pick<GcsPermissionService, "bumpVersion">;
   trustedKeys: () => ReadonlyMap<string, KeyObject>;
   unsignedPolicy: () => "allow" | "deny";
   platformVersion?: string;
@@ -223,9 +226,16 @@ export class GcsPluginService {
    * păstrează starea (activ / dezactivat) și setările, completate cu valorile implicite ale câmpurilor noi.
    */
   async install(actor: GcsActor, uploadId: string, confirm: GcsPluginInstallConfirm = {}): Promise<{ key: string; mode: "install" | "update" | "reinstall" }> {
-    const { db, acp, database } = this.deps;
-    await acp.assert(actor, PLUGINS_ACP_SECTION, "edit");
-    const upload = await db.pluginUpload.findUnique({ where: { id: uploadId } });
+    await this.deps.acp.assert(actor, PLUGINS_ACP_SECTION, "edit");
+    const { manifest } = await this.confirmedUpload(actor, uploadId, confirm);
+    // Două confirmări simultane (dublu-click, doi admini) pentru aceeași cheie rulează pe rând; a doua revalidează
+    // încărcarea (poate fi deja consumată) față de starea lăsată de prima.
+    return this.deps.database.withInstallLock(manifest.key, () => this.installLocked(actor, uploadId, confirm));
+  }
+
+  /** Încărcarea confirmată: există, e validă, iar un pachet nesemnat are confirmările cerute. */
+  private async confirmedUpload(actor: GcsActor, uploadId: string, confirm: GcsPluginInstallConfirm) {
+    const upload = await this.deps.db.pluginUpload.findUnique({ where: { id: uploadId } });
     if (!upload || upload.createdAt.getTime() < Date.now() - UPLOAD_TTL_MS) throw new GcsNotFound({ entity: "plugin_upload" });
     const data = Buffer.from(upload.data);
     const { report, files } = await this.validate(data);
@@ -238,11 +248,17 @@ export class GcsPluginService {
       if (!confirm.twoFactorVerified) throw new GcsValidationError({ code: "invalid_code" });
       if ((confirm.typedKey ?? "").trim() !== manifest.key) throw new GcsValidationError({ confirmKey: "mismatch" });
     }
+    return { data, report: { ...report, mode: report.mode }, files, manifest, signed };
+  }
 
+  private async installLocked(actor: GcsActor, uploadId: string, confirm: GcsPluginInstallConfirm): Promise<{ key: string; mode: "install" | "update" | "reinstall" }> {
+    const { db, database } = this.deps;
+    const { data, report, files, manifest, signed } = await this.confirmedUpload(actor, uploadId, confirm);
     const existing = await db.plugin.findUnique({ where: { key: manifest.key } });
     let creds = existing?.dbRole && existing.dbPassword ? { role: existing.dbRole, password: existing.dbPassword } : null;
     let applied = existing?.migrations ?? [];
     if (manifest.capabilities.includes("db")) {
+      // Cu credențiale existente parola rămâne aceeași: o migrație eșuată nu taie accesul versiunii instalate.
       creds = await database.provision(manifest.key, creds);
       const migrations = [...files.keys()]
         .filter((p) => p.startsWith("migrations/"))
@@ -443,6 +459,8 @@ export class GcsPluginService {
       await tx.plugin.delete({ where: { key } });
       await writeAudit(tx, { actorId: actor.userId, action: "plugin.uninstall", targetType: "plugin", targetId: key, before: { version: row.version }, after: { keepData: false }, ip: actor.ip });
     });
+    // Permisiunile pluginului au fost șterse: o reinstalare rapidă nu trebuie să le primească înapoi din cache.
+    await this.deps.permissions.bumpVersion();
     // Widget-urile pluginului au dispărut din layout-urile paginilor.
     await this.deps.bus?.emit({ name: "layout.updated", payload: { plugin: key }, tags: ["layout"] });
     await this.deps.notify();

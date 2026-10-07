@@ -53,6 +53,26 @@ const dbManifest = (over: Record<string, unknown> = {}) =>
   });
 const MIGRATION_1 = { "migrations/001_init.sql": "CREATE TABLE items (id serial PRIMARY KEY, name text NOT NULL);" };
 
+/** O conexiune nouă, direct ca rolul pluginului (fără pool-ul gazdei). */
+async function connectAs(creds: { role: string; password: string }): Promise<pg.Client> {
+  const url = new URL(testDbUrl());
+  const client = new pg.Client({ host: url.hostname, port: Number(url.port), database: url.pathname.slice(1), user: creds.role, password: creds.password });
+  await client.connect();
+  return client;
+}
+
+/** Credențialele salvate în rândul pluginului deschid o conexiune nouă. */
+async function credentialsWork(key: string): Promise<boolean> {
+  const creds = (await service.credentials(key))!;
+  try {
+    const client = await connectAs(creds);
+    await client.end();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 beforeEach(async () => {
   for (const key of KEYS) await database.drop(key, database.roleName(key)).catch(() => {});
   w = await createWorld([
@@ -85,6 +105,7 @@ beforeEach(async () => {
       schedulerIds: async (prefix) => [...schedulers.keys()].filter((k) => k.startsWith(prefix)),
     },
     notify: async () => void notified++,
+    permissions: w.permissions,
     trustedKeys: () => trustedPluginKeys(`market=${market.publicKeyBase64}`).keys,
     unsignedPolicy: () => "allow",
     platformVersion: "0.6.0",
@@ -188,6 +209,43 @@ describe("ciclul de viață al pluginurilor", () => {
     expect(await service.get("acme.db")).toBeNull();
   });
 
+  test("o actualizare cu o migrație care eșuează nu schimbă parola rolului: versiunea instalată își păstrează baza", async () => {
+    await service.install(admin, (await service.stage(admin, { fileName: "v1.zip", data: testPluginZip({ manifest: dbManifest(), files: MIGRATION_1, sign }) })).id);
+    const before = (await service.credentials("acme.db"))!;
+    const v2 = testPluginZip({ manifest: dbManifest({ version: "1.1.0" }), files: { ...MIGRATION_1, "migrations/002_bad.sql": "CREATE TABLE items (id int);" }, sign });
+    const { id } = await service.stage(admin, { fileName: "v2.zip", data: v2 });
+    expect(await errorOf(service.install(admin, id))).toMatchObject({ fields: { migration: "migration_failed" } });
+    expect(await service.get("acme.db")).toMatchObject({ version: "1.0.0", migrations: ["001_init.sql"] });
+    expect(await service.credentials("acme.db")).toEqual(before);
+    expect(await credentialsWork("acme.db")).toBe(true);
+    // Încărcarea rămâne, ca adminul să poată reîncerca.
+    expect(await w.db.pluginUpload.count({ where: { id } })).toBe(1);
+  });
+
+  test("două confirmări simultane ale aceleiași încărcări: una instalează, cealaltă e refuzată, parola rămâne sincronizată", async () => {
+    await service.install(admin, (await service.stage(admin, { fileName: "v1.zip", data: testPluginZip({ manifest: dbManifest(), files: MIGRATION_1, sign }) })).id);
+    const files = { ...MIGRATION_1, "migrations/002_note.sql": "ALTER TABLE items ADD COLUMN note text;" };
+    const { id } = await service.stage(admin, { fileName: "v2.zip", data: testPluginZip({ manifest: dbManifest({ version: "1.1.0" }), files, sign }) });
+    const results = await Promise.allSettled([service.install(admin, id), service.install(admin, id)]);
+    expect(results.map((r) => r.status).sort()).toEqual(["fulfilled", "rejected"]);
+    const rejected = results.find((r): r is PromiseRejectedResult => r.status === "rejected")!;
+    expect(rejected.reason).toMatchObject({ code: "not_found" });
+    expect(await service.get("acme.db")).toMatchObject({ version: "1.1.0", migrations: ["001_init.sql", "002_note.sql"] });
+    expect(await credentialsWork("acme.db")).toBe(true);
+  });
+
+  test("migrațiile rulează în ordinea numerelor (prefixe de 3 și 6 cifre)", async () => {
+    const files = {
+      "migrations/000100_last.sql": "ALTER TABLE items ADD COLUMN extra text;",
+      "migrations/0002_note.sql": "ALTER TABLE items ADD COLUMN note text;",
+      "migrations/001_init.sql": "CREATE TABLE items (id serial PRIMARY KEY, name text NOT NULL);",
+    };
+    await service.install(admin, (await service.stage(admin, { fileName: "db.zip", data: testPluginZip({ manifest: dbManifest(), files, sign }) })).id);
+    expect(await service.get("acme.db")).toMatchObject({ migrations: ["001_init.sql", "0002_note.sql", "000100_last.sql"] });
+    const creds = (await service.credentials("acme.db"))!;
+    expect(await database.query("acme.db", creds, "INSERT INTO items (name, note, extra) VALUES ('a', 'b', 'c')")).toMatchObject({ rowCount: 1 });
+  });
+
   test("setările: validare pe câmpuri, secretul gol păstrează valoarea, jurnalul ascunde secretele", async () => {
     await service.install(admin, (await service.stage(admin, { fileName: "db.zip", data: testPluginZip({ manifest: dbManifest(), files: MIGRATION_1, sign }) })).id);
     expect(await errorOf(service.saveSettings(admin, "acme.db", { greeting: 5, limit: 99 }))).toMatchObject({ fields: { greeting: "invalid_type", limit: "invalid_range" } });
@@ -245,11 +303,32 @@ describe("ciclul de viață al pluginurilor", () => {
     const again = (await service.credentials("acme.db"))!;
     expect((await database.query("acme.db", again, "SELECT name FROM items")).rows).toEqual([{ name: "păstrat" }]);
 
+    const version = await w.permissions.currentVersion();
     await service.uninstall(admin, "acme.db", { keepData: false });
     expect(await service.get("acme.db")).toBeNull();
     expect(await w.db.groupSetting.count({ where: { key: { startsWith: "plugin.acme.db." } } })).toBe(0);
+    // Permisiunile șterse nu mai pot veni din cache (versiunea permisiunilor a crescut).
+    expect(await w.permissions.currentVersion()).toBeGreaterThan(version);
     const schemas = await w.db.$queryRaw<{ n: number }[]>`SELECT count(*)::int AS n FROM pg_namespace WHERE nspname = 'plugin_acme__db'`;
     const roles = await w.db.$queryRaw<{ n: number }[]>`SELECT count(*)::int AS n FROM pg_roles WHERE rolname = ${again.role}`;
     expect([schemas[0]!.n, roles[0]!.n]).toEqual([0, 0]);
+  });
+
+  test("ștergerea completă merge și când rolul pluginului deține obiecte în afara schemei (obiecte mari)", async () => {
+    await service.install(admin, (await service.stage(admin, { fileName: "db.zip", data: testPluginZip({ manifest: dbManifest(), files: MIGRATION_1, sign }) })).id);
+    const creds = (await service.credentials("acme.db"))!;
+    // Ocolind SQL guard (care refuză `lo_create`), direct ca rolul pluginului.
+    const direct = await connectAs(creds);
+    let oid: number;
+    try {
+      oid = (await direct.query<{ oid: number }>("SELECT lo_create(0)::int AS oid")).rows[0]!.oid;
+    } finally {
+      await direct.end();
+    }
+    await service.uninstall(admin, "acme.db", { keepData: false });
+    expect(await service.get("acme.db")).toBeNull();
+    const objects = await w.db.$queryRaw<{ n: number }[]>`SELECT count(*)::int AS n FROM pg_largeobject_metadata WHERE oid = ${oid}::oid`;
+    const roles = await w.db.$queryRaw<{ n: number }[]>`SELECT count(*)::int AS n FROM pg_roles WHERE rolname = ${creds.role}`;
+    expect([objects[0]!.n, roles[0]!.n]).toEqual([0, 0]);
   });
 });

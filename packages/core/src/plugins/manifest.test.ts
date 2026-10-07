@@ -49,7 +49,23 @@ describe("manifestul unui plugin", () => {
     const menu = (href: string) => testManifest({ capabilities: ["widgets", "menus"], menus: { user: [{ key: "x", label: "X", href }] } });
     expect(issues(menu("/p/acme.demo"))).toEqual([]);
     expect(issues(menu("/p/acme.demo/stats?tab=1"))).toEqual([]);
-    for (const href of ["https://evil.example", "//evil.example", "/admin", "/p/acme.demoX", "/p/acme.demo/../../admin", "javascript:alert(1)"]) {
+    for (const href of [
+      "https://evil.example",
+      "//evil.example",
+      "/admin",
+      "/p/acme.demoX",
+      "/p/acme.demo/../../admin",
+      "javascript:alert(1)",
+      // Segmentele `..` codificate: browserul le tratează ca `..` și ar ieși din /p/<cheie>.
+      "/p/acme.demo/%2e%2e/%2e%2e/admin",
+      "/p/acme.demo/%2E%2E/%2E%2E/admin",
+      "/p/acme.demo/.%2e/.%2E/admin",
+      "/p/acme.demo/%2e./admin",
+      "/p/acme.demo/x%2f..%2f..%2fadmin",
+      "/p/acme.demo/x%5C..%5C..%5Cadmin",
+      "/p/acme.demo%2f..%2fadmin",
+      "/p/acme.demo/%252e%252e/admin",
+    ]) {
       expect(issues(menu(href))).toContain("menus.user.x.href:external_link");
     }
   });

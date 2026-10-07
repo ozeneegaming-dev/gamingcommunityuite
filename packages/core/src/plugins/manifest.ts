@@ -65,6 +65,20 @@ const widgetField = z.discriminatedUnion("type", [
 
 const json: z.ZodType<unknown> = z.lazy(() => z.union([z.null(), z.boolean(), z.number().finite(), z.string().max(5000), z.array(json).max(100), z.record(z.string().max(100), json)]));
 
+/**
+ * Un link care ar putea ieși din folderul lui: `..`, `\` sau forma lor codificată (`%2e`, `%2f`, `%5c`; browserul
+ * tratează `%2e%2e` ca `..`). Verificăm și forma decodificată o dată, ca să prindem și codificarea dublă.
+ */
+function hasDotSegment(href: string): boolean {
+  const unsafe = (s: string) => s.includes("..") || s.includes("\\") || /%(?:2e|2f|5c)/i.test(s);
+  if (unsafe(href)) return true;
+  try {
+    return unsafe(decodeURIComponent(href));
+  } catch {
+    return true;
+  }
+}
+
 const menuEntry = z.strictObject({ key: localKey, label, href: z.string().max(200), icon: icon.optional(), permission: localKey.optional() });
 
 export const pluginManifestSchema = z.strictObject({
@@ -216,7 +230,7 @@ function crossCheck(m: GcsPluginManifest): GcsPluginManifestIssue[] {
   for (const area of ["site", "user"] as const) {
     for (const d of duplicates(m.menus[area].map((e) => e.key))) issues.push({ path: `menus.${area}.${d}`, code: "duplicate_key" });
     for (const e of m.menus[area]) {
-      const ok = (e.href === own || e.href.startsWith(`${own}/`) || e.href.startsWith(`${own}?`)) && /^[A-Za-z0-9._~/?=&%:-]+$/.test(e.href) && !e.href.includes("..");
+      const ok = (e.href === own || e.href.startsWith(`${own}/`) || e.href.startsWith(`${own}?`)) && /^[A-Za-z0-9._~/?=&%:-]+$/.test(e.href) && !hasDotSegment(e.href);
       if (!ok) issues.push({ path: `menus.${area}.${e.key}.href`, code: "external_link" });
       permissionRef(`menus.${area}.${e.key}.permission`, e.permission);
     }
