@@ -7,7 +7,10 @@ import { PLUGIN_WORKER_SOURCE } from "./worker-source";
 export const PLUGIN_MAX_RESULT = 512 * 1024;
 /** Câte apeluri ale contextului poate avea un plugin în curs, simultan. */
 const MAX_PENDING_RPC = 64;
-/** Câte apeluri ale handler-elor pot aștepta simultan un fir; peste limită sunt respinse imediat. */
+/**
+ * Câte apeluri ale handler-elor pot aștepta simultan un fir (inclusiv cele respinse ca ocupate, încă în coada lui);
+ * peste limită sunt respinse imediat.
+ */
 export const PLUGIN_MAX_PENDING_CALLS = 256;
 
 /** Handler-ul a rulat mai mult decât îi era permis (timpul se măsoară de când a început să ruleze, nu din coadă). */
@@ -65,6 +68,8 @@ type Pending = {
   name: string;
   ms: number;
   started: boolean;
+  /** Respins deja ca ocupat: rămâne urmărit până la `result`, ca un handler care totuși începe să aibă timeout. */
+  abandoned: boolean;
   resolve: (v: unknown) => void;
   reject: (e: Error) => void;
   timer: NodeJS.Timeout;
@@ -73,7 +78,8 @@ type Pending = {
 /**
  * Firul izolat al unui plugin (designul pluginurilor §3.1): pornit la cerere, cu limite de memorie, fără variabilele de
  * mediu ale procesului. Fiecare apel are un timeout, măsurat de când handler-ul începe să ruleze (firul confirmă
- * începutul); un apel care nu începe în același interval (firul e ocupat) e respins ca indisponibil. Dacă după un
+ * începutul); un apel care nu începe în același interval (firul e ocupat) e respins ca indisponibil, iar firul nu îl
+ * mai rulează după acest termen. Dacă totuși începe (cursa cu termenul), rulează tot sub timeout. Dacă după un
  * timeout firul nu mai răspunde nici la ping (ex. o buclă infinită), e oprit și repornit la următorul apel.
  */
 export class GcsPluginSandbox {
@@ -202,7 +208,8 @@ export class GcsPluginSandbox {
   private onMessage(worker: Worker, m: Record<string, unknown>): void {
     switch (m.t) {
       case "started": {
-        // Handler-ul a început să ruleze: de acum curge timeout-ul lui.
+        // Handler-ul a început să ruleze: de acum curge timeout-ul lui. Și pentru un apel deja respins ca ocupat
+        // (apelantul nu mai află nimic, nu se numără), ca un handler blocat să nu țină firul ocupat pentru totdeauna.
         const id = Number(m.id);
         const p = this.calls.get(id);
         if (!p || p.worker !== worker || p.started) return;
@@ -210,7 +217,7 @@ export class GcsPluginSandbox {
         clearTimeout(p.timer);
         p.timer = setTimeout(() => {
           this.calls.delete(id);
-          p.reject(new GcsPluginTimeout(p.kind, p.name, p.ms));
+          if (!p.abandoned) p.reject(new GcsPluginTimeout(p.kind, p.name, p.ms));
           void this.checkAlive(worker);
         }, p.ms);
         return;
@@ -290,13 +297,16 @@ export class GcsPluginSandbox {
     const id = ++this.seq;
     const ms = c.timeoutMs ?? PLUGIN_TIMEOUTS[c.kind];
     return new Promise<unknown>((resolve, reject) => {
-      // Până la confirmarea începutului, apelul stă în coada firului (ocupat cu alt handler sincron).
+      // Până la confirmarea începutului, apelul stă în coada firului (ocupat cu alt handler sincron). Respins ca
+      // ocupat, rămâne urmărit: firul îl refuză după `deadline` (`expired`), iar dacă totuși începe, are timeout.
       const timer = setTimeout(() => {
-        this.calls.delete(id);
+        const p = this.calls.get(id);
+        if (p) p.abandoned = true;
         reject(new GcsPluginUnavailable("busy"));
       }, ms);
-      this.calls.set(id, { worker, kind: c.kind, name: c.name, ms, started: false, resolve, reject, timer });
-      worker.postMessage({ t: "call", id, kind: c.kind, name: c.name, input: c.input, viewer: c.viewer, token: c.token, locale: c.locale });
+      this.calls.set(id, { worker, kind: c.kind, name: c.name, ms, started: false, abandoned: false, resolve, reject, timer });
+      const deadline = Date.now() + ms;
+      worker.postMessage({ t: "call", id, kind: c.kind, name: c.name, input: c.input, viewer: c.viewer, token: c.token, locale: c.locale, deadline });
     });
   }
 

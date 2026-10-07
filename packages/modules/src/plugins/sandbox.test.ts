@@ -68,6 +68,39 @@ describe("firul pluginului: timeout-uri și căderi", () => {
     expect(crashes).toEqual([]);
   }, 20_000);
 
+  test("apelul respins ca ocupat nu mai rulează când firul ajunge la el (termenul trimis firului)", async () => {
+    const { box, crashes } = await sandbox();
+    await box.start();
+    const first = box.call(widget("block", { ms: 1000 }, 1600));
+    // Respins ca ocupat la 0,5 s; firul ajunge la el abia la ~1 s și nu îl mai rulează.
+    const spin = await box.call(widget("spin", {}, 500)).then((v) => v, (e: unknown) => e);
+    expect(spin).toBeInstanceOf(GcsPluginUnavailable);
+    expect((spin as Error).message).toBe("busy");
+    expect(await first).toBe("gata");
+    expect(await box.call(widget("ok", {}, 1000))).toBe("ok");
+    expect(crashes).toEqual([]);
+  }, 20_000);
+
+  test("apelul respins ca ocupat care totuși începe rulează sub timeout: firul blocat e oprit și repornit", async () => {
+    const { box, crashes } = await sandbox();
+    await box.start();
+    const first = box.call(widget("block", { ms: 1000 }, 1600));
+    // Cursa „started” / termen: firul primește un termen mai târziu decât cel al gazdei, deci pornește apelul respins.
+    const realNow = Date.now.bind(Date);
+    const clock = vi.spyOn(Date, "now").mockImplementation(() => realNow() + 60_000);
+    const spinCall = box.call(widget("spin", {}, 500)).then((v) => v, (e: unknown) => e);
+    await new Promise((resolve) => setImmediate(resolve));
+    clock.mockRestore();
+    const spin = await spinCall;
+    expect(spin).toBeInstanceOf(GcsPluginUnavailable);
+    expect((spin as Error).message).toBe("busy");
+    expect(await first).toBe("gata");
+    // Bucla pornită după respingere e prinsă de timeout: firul e oprit, un apel ulterior merge pe un fir nou.
+    await vi.waitFor(async () => expect(await box.call(widget("ok", {}, 300))).toBe("ok"), { timeout: 10_000, interval: 100 });
+    await box.idle();
+    expect(crashes).toEqual([]);
+  }, 20_000);
+
   test("buclă infinită: un singur timeout, firul oprit nu e raportat ca o cădere, apelul următor merge pe un fir nou", async () => {
     const { box, crashes } = await sandbox();
     await expect(box.call(widget("spin", {}, 500))).rejects.toBeInstanceOf(GcsPluginTimeout);
