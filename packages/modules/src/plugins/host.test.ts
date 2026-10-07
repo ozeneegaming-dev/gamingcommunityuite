@@ -3,9 +3,9 @@ import type { GcsActor } from "@gcs/core";
 import { closePluginServices, createPluginServices, installTestPlugin, pluginFiles, resetPluginWorld } from "../../test/pluginWorld";
 import type { GcsServices } from "../services";
 import { isBlockedAddress } from "./http";
-import { matchPluginRoute } from "./host";
+import { isPluginRedirect, matchPluginRoute, plainPayload } from "./host";
 
-const KEYS = ["acme.probe", "acme.spin", "acme.filter", "acme.ctx", "acme.events"];
+const KEYS = ["acme.probe", "acme.spin", "acme.filter", "acme.ctx", "acme.events", "acme.throw", "acme.slow", "acme.assets"];
 
 let services: GcsServices;
 let configDir: string;
@@ -103,6 +103,44 @@ describe("izolarea firului pluginului", () => {
     expect(await services.db.auditLog.findFirst({ where: { action: "plugin.auto_disable", targetId: key } })).not.toBeNull();
     expect((await services.pluginAdmin.logs(key)).some((l) => /timeout/.test(l.message))).toBe(true);
   }, 40_000);
+});
+
+describe("dezactivarea automată: doar eșecurile pluginului", () => {
+  test("erorile aruncate pe datele unui vizitator se jurnalizează și apar în metrici, dar nu opresc pluginul", async () => {
+    const server = `export default { api: { "/item": (req) => ({ body: req.query.id.trim() }) } };`;
+    const key = await installTestPlugin(services, root, pluginFiles({ key: "acme.throw", capabilities: ["api"], routes: { api: [{ path: "/item", methods: ["GET"] }] } }, server));
+    // Pragul testelor e 2: patru cereri construite să arunce o eroare nu ajung să-l dezactiveze.
+    for (const res of await Promise.all([1, 2, 3, 4].map(() => api(key, "/item", guest)))) expect(res).toEqual({ status: 500, body: { error: "plugin_error" } });
+    await services.plugins.idle();
+    expect(await services.pluginAdmin.get(key)).toMatchObject({ enabled: true, disabledReason: null });
+    expect(services.plugins.loadedKeys()).toContain(key);
+    expect((await services.pluginAdmin.logs(key)).filter((l) => l.level === "error")).toHaveLength(4);
+    expect((await services.plugins.hookMetrics(key))["api:/item"]).toMatchObject({ count: 4, failures: 4 });
+    expect(await services.plugins.handleApi(key, { method: "GET", path: "/item", query: { id: " 7 " }, body: null, actor: guest, locale: "ro" })).toEqual({ status: 200, body: "7" });
+  });
+
+  test("apelurile în curs la descărcarea pluginului nu se numără ca eșecuri", async () => {
+    const server = `export default { api: { "/slow": async () => { await new Promise((r) => setTimeout(r, 1500)); return { body: 1 }; } } };`;
+    const key = await installTestPlugin(services, root, pluginFiles({ key: "acme.slow", capabilities: ["api"], routes: { api: [{ path: "/slow", methods: ["GET"] }] } }, server));
+    const calls = [1, 2, 3].map(() => api(key, "/slow", guest));
+    await new Promise((r) => setTimeout(r, 300));
+    await services.pluginAdmin.setEnabled(root, key, false);
+    for (const res of await Promise.all(calls)) expect(res.status).toBe(500);
+    await services.plugins.idle();
+    expect((await services.pluginAdmin.logs(key)).filter((l) => l.level === "error" || l.level === "warn")).toEqual([]);
+    expect(await services.redis.get(`gcs:plugin:fail:${key}`)).toBeNull();
+    expect(await services.pluginAdmin.get(key)).toMatchObject({ enabled: false, disabledReason: "admin" });
+  });
+});
+
+describe("fișierele client", () => {
+  test("extensia contează cu litere mici: un plugin nesemnat nu primește niciodată JS servit ca script", async () => {
+    const key = await installTestPlugin(services, root, pluginFiles({ key: "acme.assets" }, "export default {};", { "assets/evil.js": "alert(1)", "assets/logo.png": "png" }), { signed: false });
+    expect(await services.plugins.asset(key, "assets/logo.png")).toMatchObject({ contentType: "image/png" });
+    for (const p of ["assets/evil.js", "assets/evil.JS", "assets/evil.Js", "assets/logo.PNG", "assets/evil.SVG", "assets/evil.HTML"]) {
+      expect([p, await services.plugins.asset(key, p)]).toEqual([p, null]);
+    }
+  });
 });
 
 describe("hook-urile", () => {
@@ -237,6 +275,29 @@ describe("utilitare", () => {
     expect(matchPluginRoute(["/", "/item/:id"], "")).toEqual({ pattern: "/", params: {} });
     expect(matchPluginRoute(["/item/:id"], "/item/a%2Fb")).toBeNull();
     expect(matchPluginRoute(["/item/:id"], "/item/1/2")).toBeNull();
+  });
+
+  test("redirecționările pluginului rămân în spațiul lui (și cu segmente codate)", () => {
+    for (const ok of ["/p/acme.x", "/p/acme.x/", "/p/acme.x/item/1?next=%2Fp%2Facme.x", "/p/acme.x?tab=2"]) expect([ok, isPluginRedirect(ok, "/p/acme.x")]).toEqual([ok, true]);
+    for (const bad of [
+      "/p/acme.xy",
+      "/admin",
+      "/p/acme.x/../../admin",
+      "/p/acme.x/%2e%2e/%2e%2e/admin",
+      "/p/acme.x/%2E%2E/admin",
+      "/p/acme.x/.%2e/admin",
+      "/p/acme.x/%2e./admin",
+      "/p/acme.x/a%2f..%2f..%2fadmin",
+      "/p/acme.x/%5c..%5cadmin",
+      "/p/acme.x/\..\admin",
+    ]) {
+      expect([bad, isPluginRedirect(bad, "/p/acme.x")]).toEqual([bad, false]);
+    }
+  });
+
+  test("payload-ul evenimentelor: listele de obiecte simple devin liste pe câmp (post.approved)", () => {
+    expect(plainPayload({ posts: [{ postId: 8, authorId: "u1" }, { postId: 9, authorId: null }] })).toEqual({ postIds: [8, 9], authorIds: ["u1", null] });
+    expect(plainPayload({ postId: 7, nested: { secret: 1 }, items: [{ deep: { x: 1 } }], tags: ["a"] })).toEqual({ postId: 7, tags: ["a"] });
   });
 
   test("adresele blocate pentru http-out", () => {

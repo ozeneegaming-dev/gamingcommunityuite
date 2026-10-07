@@ -242,6 +242,8 @@ export const PLUGIN_WORKER_SOURCE = String.raw`
         reply(msg.id, false, null, error);
         return;
       }
+      // Gazda pornește timeout-ul de acum (timpul petrecut în coada firului nu e al acestui handler).
+      post({ t: "started", id: msg.id });
       Promise.resolve()
         .then(() => fn.call(table, msg.input, ctx))
         .then((value) => reply(msg.id, true, value), (error) => reply(msg.id, false, null, error));

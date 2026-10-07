@@ -131,7 +131,7 @@ Contextul primit de plugin e singura lui ieșire, prin mesaje validate de gazdă
 | Tip | Cum |
 | --- | --- |
 | Evenimente | lista publică: `post.created`, `post.updated`, `post.deleted`, `post.approved`, `topic.created`, `topic.updated`, `topic.deleted`, `topic.moved`, `topic.moderated`, `user.registered`, `user.promoted`, `user.banned`, `user.unbanned`, `user.warned`, `user.followed`, `chat.message`, `chat.deleted`, `report.created`, `badge.awarded`, `vip.granted`, `vip.expired`. Livrare asincronă (nu întârzie cererea), doar câmpurile simple din payload. Mesajele private nu se expun. |
-| Filtre | `post.before_save` (topic nou, răspuns, editare): primește titlul și documentul, poate întoarce o variantă modificată sau o respingere. Rulează în ordinea priorității, cu timeout de 2 s; o eroare sau un timeout sare pluginul (nu blochează postarea) și se numără ca eșec. |
+| Filtre | `post.before_save` (topic nou, răspuns, editare): primește titlul și documentul, poate întoarce o variantă modificată sau o respingere. Rulează în ordinea priorității, cu timeout de 2 s; o eroare sau un timeout sare pluginul (nu blochează postarea); timeout-ul se numără ca eșec, eroarea doar se jurnalizează (vezi mai jos). |
 | Widget-uri | randate pe server ca HTML, trecut prin sanitizer (listă albă de taguri și atribute, fără `style`, `id`, `on*`, formulare, scripturi; clase doar `gcsp-*` și câteva clase GCS de prezentare; `<gcs-icon name="fa-solid fa-…">` devine iconița Font Awesome). Interfața `GcsPluginHtml` acceptă deja `{ template, data }`, pentru motorul de șabloane. |
 | Puncte de extensie | `postbit.after_fields` (sub câmpurile din cardul autorului). HTML-ul se calculează o dată și ajunge atât în postbit-ul implicit (React), cât și în `{% hook "postbit.after_fields" %}` dintr-un șablon `postbit.author` modificat de temă. |
 | Pagini site | `/p/<cheie>/…`, căi declarate (`/`, `/item/:id`), randate în layout-ul site-ului. |
@@ -143,6 +143,16 @@ Contextul primit de plugin e singura lui ieșire, prin mesaje validate de gazdă
 Fiecare apel: timeout (eveniment 5 s, filtru 2 s, widget / hook 3 s, pagină 5 s, API 10 s, job 60 s), `try/catch`,
 durata măsurată (număr, eșecuri, timp total și maxim per hook, în Redis, comun proceselor). **5 eșecuri la rând**
 (`GCS_PLUGINS_MAX_FAILURES`) → pluginul se dezactivează automat, apare în ACP cu motivul și intră în jurnalul ACP.
+
+Ce se numără la dezactivarea automată: doar eșecurile care consumă resursele procesului — timeout-ul unui handler
+care chiar rula (timpul se măsoară de când firul confirmă că a început apelul, nu din coada lui) și căderea firului
+(pornire eșuată, memorie depășită, ieșire neașteptată; o cădere se numără o singură dată). O eroare aruncată de handler
+se jurnalizează (cel mult 60 de intrări pe minut) și apare în metrici, dar **nu** se numără: ea vine adesea din datele
+unei cereri (rute API și pagini accesibile vizitatorilor, filtrul `post.before_save`), iar altfel un singur vizitator ar
+putea opri pluginul pe tot site-ul cu câteva cereri construite să-l facă să arunce o eroare. Nu se numără nici apelurile
+care n-au ajuns să ruleze sau au fost întrerupte din afară: fir ocupat (apelul nu începe în intervalul lui de timeout),
+prea multe apeluri în așteptare (256 pe fir), firul oprit după blocarea altui apel, pluginul descărcat sau reîncărcat
+(actualizare, dezactivare) în timpul apelului. Un succes resetează numărătoarea.
 
 ### 3.4 CSS și JS client
 - CSS (`client-css`): fără `@import`, fără `<`, `url()` doar spre fișierele pluginului, iar totul e **închis în

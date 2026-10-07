@@ -35,7 +35,7 @@ import type { GcsPluginPublicApi } from "./api";
 import { extractPlugin } from "./files";
 import { pluginFetch } from "./http";
 import { GcsPluginTexts, pluginIcon, pluginModule, type GcsPluginLangs } from "./module";
-import { GcsPluginSandbox, type GcsSandboxCall } from "./sandbox";
+import { GcsPluginSandbox, GcsPluginTimeout, GcsPluginUnavailable, type GcsSandboxCall } from "./sandbox";
 
 /** Canalul Redis pe care procesele află că starea pluginurilor s-a schimbat. */
 export const PLUGINS_CHANNEL = "gcs:plugins";
@@ -107,15 +107,37 @@ const errorText = (error: unknown): string => {
   return error instanceof Error ? error.message : String(error);
 };
 
-/** Doar câmpurile simple din payload-ul unui eveniment (fără obiecte imbricate). */
-function plainPayload(payload: Record<string, unknown>): Record<string, unknown> {
+/**
+ * Doar câmpurile simple din payload-ul unui eveniment (fără obiecte imbricate). O listă de obiecte simple devine câte o
+ * listă pe câmp, la plural: `posts: [{ postId, authorId }]` → `postIds: […]`, `authorIds: […]`.
+ */
+export function plainPayload(payload: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   const simple = (v: unknown) => v === null || typeof v === "string" || typeof v === "boolean" || (typeof v === "number" && Number.isFinite(v));
+  const record = (v: unknown): v is Record<string, unknown> => Boolean(v) && typeof v === "object" && !Array.isArray(v);
+  const clip = (v: unknown) => (typeof v === "string" ? v.slice(0, 500) : v);
   for (const [k, v] of Object.entries(payload)) {
-    if (simple(v)) out[k] = typeof v === "string" ? v.slice(0, 500) : v;
+    if (simple(v)) out[k] = clip(v);
     else if (Array.isArray(v) && v.length <= 100 && v.every(simple)) out[k] = v;
+    else if (Array.isArray(v) && v.length <= 100 && v.every(record)) {
+      for (const field of new Set(v.flatMap((item) => Object.keys(item)))) {
+        const values = v.map((item) => item[field] ?? null);
+        const name = `${field}s`;
+        if (values.every(simple) && !(name in payload) && !(name in out)) out[name] = values.map(clip);
+      }
+    }
   }
   return out;
+}
+
+/**
+ * O redirecționare a pluginului rămâne în spațiul lui (`prefix`, ex. `/p/<cheie>`): doar caractere sigure, fără `..`
+ * și fără `.`, `/` sau `\` codate în cale (`%2e`, `%2f`, `%5c`), pe care browserul le-ar interpreta ca segmente.
+ */
+export function isPluginRedirect(target: string, prefix: string): boolean {
+  if (!(target === prefix || target.startsWith(`${prefix}/`) || target.startsWith(`${prefix}?`))) return false;
+  if (!/^[A-Za-z0-9._~/?=&%:-]+$/.test(target) || target.includes("..")) return false;
+  return !/%(?:2e|2f|5c)/i.test(target.split("?")[0]!);
 }
 
 /** Potrivește o cale cu rutele declarate (`/`, `/stats`, `/item/:id`); rutele fixe au prioritate. */
@@ -173,7 +195,6 @@ function hookId(kind: CallKind, name: string): string {
   }
 }
 
-const JS_FILE = /\.js$/;
 const CONTENT_TYPES: Record<string, string> = {
   css: "text/css; charset=utf-8",
   js: "text/javascript; charset=utf-8",
@@ -347,14 +368,17 @@ export class GcsPluginHost {
       required: requiredHandlers(row.manifest),
       onRpc: (method, args, token) => this.rpc(key, method, args, token),
       onLog: (level, message) => this.pluginLog(key, level, message),
-      onExit: (reason) => void this.recordFailure(key, "worker", reason, null),
+      // O cădere a firului se numără o dată, și doar pentru firul versiunii încărcate acum.
+      onCrash: (reason, phase) => {
+        if (this.loaded.get(key)?.sandbox === sandbox) this.track(this.recordFailure(key, phase === "init" ? "init" : "worker", reason, null, true));
+      },
     });
     this.deps.registry.unregister(module.key);
     this.deps.registry.register(module);
     this.loaded.set(key, { row, sha: row.packageSha256!, settingsHash, dir, texts, module, sandbox, css, creds: undefined, failing: false, logWindow: 0, logCount: 0 });
     await this.deps.redis.del(this.failKey(key)).catch(() => 0);
-    // Firul pornește acum; o eroare de pornire se numără ca eșec (și apare în jurnalul pluginului).
-    this.track(sandbox.start().catch((error: unknown) => this.recordFailure(key, "init", errorText(error), null)));
+    // Firul pornește acum; o eroare de pornire ajunge prin `onCrash` (se numără ca eșec și apare în jurnalul pluginului).
+    this.track(sandbox.start());
   }
 
   private async unload(key: string): Promise<void> {
@@ -417,6 +441,8 @@ export class GcsPluginHost {
    * opac, valabil doar pe durata apelului: cu el, `ctx.api` și `ctx.permissions` citesc cu drepturile lui.
    */
   private async invoke(l: Loaded, kind: CallKind, name: string, input: unknown, opts: { actor: GcsActor | null; locale: string; timeoutMs?: number }): Promise<unknown> {
+    // Pluginul a fost descărcat (sau înlocuit de altă versiune) între alegerea țintelor și apel: nu mai rulează.
+    if (this.loaded.get(l.row.key) !== l) throw new GcsPluginUnavailable("plugin_unloaded");
     const hook = hookId(kind, name);
     const token = opts.actor ? this.issueToken(l.row.key, opts.actor) : null;
     const started = performance.now();
@@ -437,20 +463,30 @@ export class GcsPluginHost {
       }
       return value;
     } catch (error) {
+      // Apelurile prinse de o descărcare sau reîncărcare nu sunt eșecuri ale pluginului (nici în metrici, nici în jurnal).
+      if (this.loaded.get(l.row.key) !== l) throw error;
       const ms = performance.now() - started;
       this.record(l.row.key, hook, ms, false);
-      await this.recordFailure(l.row.key, hook, errorText(error), ms);
+      if (error instanceof GcsPluginUnavailable) this.logLimited(l.row.key, "warn", errorText(error), hook, ms);
+      else await this.recordFailure(l.row.key, hook, errorText(error), ms, error instanceof GcsPluginTimeout);
       throw error;
     } finally {
       if (token) this.tokens.delete(token);
     }
   }
 
-  /** Un eșec: în jurnalul pluginului și în numărătoarea comună (Redis); la prag, pluginul se dezactivează automat. */
-  private async recordFailure(key: string, hook: string, message: string, ms: number | null): Promise<void> {
+  /**
+   * Un eșec al pluginului, în jurnalul lui (limitat pe minut). Dezactivarea automată numără doar eșecurile care consumă
+   * resursele procesului (`counted`): timeout-ul unui handler care chiar rula și căderea firului (pornire, memorie).
+   * O eroare aruncată de handler se jurnalizează și apare în metrici, dar nu se numără: ea vine adesea din datele unei
+   * cereri (un vizitator poate trimite oricând date pe care pluginul nu le așteaptă), iar altfel câteva cereri ar opri
+   * pluginul pe tot site-ul. Apelurile respinse fără să ruleze (fir ocupat, supraîncărcat, oprit) nu ajung aici.
+   */
+  private async recordFailure(key: string, hook: string, message: string, ms: number | null, counted: boolean): Promise<void> {
     const l = this.loaded.get(key);
+    this.logLimited(key, "error", message, hook, ms);
+    if (!counted) return;
     if (l) l.failing = true;
-    await this.deps.plugins.log(key, "error", message, hook, ms === null ? null : Math.round(ms));
     const count = await this.deps.redis.incr(this.failKey(key)).catch(() => 0);
     await this.deps.redis.expire(this.failKey(key), 86_400).catch(() => 0);
     const max = this.deps.maxFailures ?? PLUGIN_MAX_FAILURES_DEFAULT;
@@ -463,6 +499,11 @@ export class GcsPluginHost {
   }
 
   private pluginLog(key: string, level: "info" | "warn" | "error", message: string): void {
+    this.logLimited(key, level, message, "log", null);
+  }
+
+  /** O intrare în jurnalul pluginului, cel mult `LOGS_PER_MINUTE` pe minut (și eșecurile: cererile nu inundă baza). */
+  private logLimited(key: string, level: "info" | "warn" | "error", message: string, hook: string, ms: number | null): void {
     const l = this.loaded.get(key);
     if (!l) return;
     const now = Date.now();
@@ -471,7 +512,7 @@ export class GcsPluginHost {
       l.logCount = 0;
     }
     if (++l.logCount > LOGS_PER_MINUTE) return;
-    this.track(this.deps.plugins.log(key, level, message, "log"));
+    this.track(this.deps.plugins.log(key, level, message, hook, ms === null ? null : Math.round(ms)));
   }
 
   private track<T>(p: Promise<T>): void {
@@ -479,9 +520,18 @@ export class GcsPluginHost {
     this.tasks.add(tracked);
   }
 
-  /** Așteaptă livrările asincrone în curs (evenimente, jurnal); pentru teste și oprire. */
+  /**
+   * Așteaptă tot ce rulează asincron și poate schimba starea: livrările, jurnalul, eșecurile numărate (cu dezactivarea
+   * automată), reconcilierea, verificările și opririle firelor. Pentru teste și oprire.
+   */
   async idle(): Promise<void> {
-    while (this.tasks.size > 0) await Promise.allSettled([...this.tasks]);
+    for (;;) {
+      const pending: Promise<unknown>[] = [...this.tasks];
+      if (this.reconciling) pending.push(this.reconciling);
+      for (const l of this.loaded.values()) if (l.sandbox.busy) pending.push(l.sandbox.idle());
+      if (pending.length === 0) return;
+      await Promise.allSettled(pending);
+    }
   }
 
   // ─── Contextul pluginului (apelurile venite din fir) ───
@@ -693,8 +743,7 @@ export class GcsPluginHost {
     const r = (value && typeof value === "object" ? value : {}) as { title?: unknown; html?: unknown; status?: unknown; redirect?: unknown };
     if (typeof r.redirect === "string") {
       const prefix = input.area === "site" ? `/p/${key}` : `/admin/plugins/${key}`;
-      const ok = (r.redirect === prefix || r.redirect.startsWith(`${prefix}/`) || r.redirect.startsWith(`${prefix}?`)) && /^[A-Za-z0-9._~/?=&%:-]+$/.test(r.redirect) && !r.redirect.includes("..");
-      if (ok) return { status: 302, redirect: r.redirect };
+      if (isPluginRedirect(r.redirect, prefix)) return { status: 302, redirect: r.redirect };
     }
     if (r.status === 403 || r.status === 404) return { status: r.status };
     const fallbackTitle = "title" in route && typeof route.title === "string" ? l.texts.text(route.title, input.locale) : "label" in route ? l.texts.text(route.label, input.locale) : l.row.name;
@@ -773,14 +822,18 @@ export class GcsPluginHost {
   async asset(key: string, rawPath: string): Promise<{ body: Buffer | string; contentType: string } | null> {
     const l = this.loaded.get(key);
     if (!l || !isSafeArchivePath(rawPath) || !rawPath.startsWith("assets/")) return null;
-    const ext = rawPath.slice(rawPath.lastIndexOf(".") + 1).toLowerCase();
+    const rawExt = rawPath.slice(rawPath.lastIndexOf(".") + 1);
+    const ext = rawExt.toLowerCase();
+    // Pachetele au doar extensii cu litere mici: altă formă (`.JS`) ar ajunge, pe un sistem de fișiere care nu ține cont
+    // de litere, la alt fișier decât cel verificat (ex. JS-ul unui plugin nesemnat servit ca script).
+    if (rawExt !== ext) return null;
     const contentType = CONTENT_TYPES[ext];
     if (!contentType) return null;
     if (ext === "css") {
       const css = l.css.get(rawPath);
       return css === undefined ? null : { body: css, contentType };
     }
-    if (JS_FILE.test(rawPath)) {
+    if (ext === "js") {
       if (!l.row.signed || !l.row.capabilities.includes("client-js") || !l.row.manifest.client.scripts.includes(rawPath)) return null;
     }
     try {
