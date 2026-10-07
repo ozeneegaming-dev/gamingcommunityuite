@@ -68,7 +68,10 @@ export function GcsServerChart({ history }: { history: GcsServerHistory }) {
   };
   // Etichetele axei X: ~5 repere, ultimul „acum”.
   const step = range === "24h" ? 6 : range === "7d" ? 24 : 6;
-  const xTicks = buckets.map((b, i) => ({ i, text: i === n - 1 ? t("now") : label(b.at) })).filter(({ i }) => i === n - 1 || (i % step === 0 && n - 1 - i >= step / 2));
+  // Un reper prea aproape de „acum” (sub ~56 px, ex. pe telefon) se sare, ca etichetele să nu se lipească.
+  const xTicks = buckets
+    .map((b, i) => ({ i, text: i === n - 1 ? t("now") : label(b.at) }))
+    .filter(({ i }) => i === n - 1 || (i % step === 0 && n - 1 - i >= step / 2 && (n - 1 - i) * slot >= 56));
   const yTicks = [...new Set([0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(max * f)))];
 
   const value = (v: number | null) => (v === null ? null : format.number(v, { maximumFractionDigits: 1 }));
