@@ -3,7 +3,7 @@ import type { GcsPortArchive } from "./archive";
 import { addonRoot, readAddonJson } from "./formats/addonJson";
 import { appRoot, readAppJson } from "./formats/appJson";
 import { readPluginXml } from "./formats/pluginXml";
-import { keyPart } from "./text";
+import { boundNote, keyPart } from "./text";
 import type { GcsPortAnalysis, GcsPortSource } from "./types";
 
 const isPluginXml = (data: Buffer) => /^(?:\uFEFF)?\s*(?:<\?xml[^>]*\?>\s*)?(?:<!--[\s\S]*?-->\s*)*<plugin\b/.test(data.subarray(0, 4096).toString("utf8"));
@@ -13,6 +13,25 @@ const isPluginXml = (data: Buffer) => /^(?:\uFEFF)?\s*(?:<\?xml[^>]*\?>\s*)?(?:<
  * `data/application.json` → `app-json`, un XML cu rădăcina `<plugin>` → `plugin-xml` (și într-un `.zip`).
  */
 export function readPortSource(archive: GcsPortArchive): GcsPortSource {
+  const source = readFormat(archive);
+  // Metadatele ajung în analiză, raport și ACP: text pe un rând, plafonat (o descriere de câțiva MB nu trece mai departe).
+  const one = (s: string, max: number) => s.replace(/[\u0000-\u001f\u007f]+/g, " ").trim().slice(0, max);
+  const m = source.meta;
+  source.meta = {
+    id: one(m.id, 200),
+    name: one(m.name, 200) || "Plugin",
+    version: one(m.version, 50) || "1.0.0",
+    author: one(m.author, 200),
+    // Doar adrese http(s): un `javascript:` din sursă nu ajunge niciodată un link în ACP.
+    url: m.url && /^https?:\/\/[^\s]+$/i.test(one(m.url, 300)) ? one(m.url, 300) : null,
+    description: one(m.description, 2000),
+    icon: m.icon ? one(m.icon, 80) : null,
+  };
+  source.notes = source.notes.slice(0, 200).map(boundNote);
+  return source;
+}
+
+function readFormat(archive: GcsPortArchive): GcsPortSource {
   const { files } = archive;
   const addon = addonRoot(files);
   if (addon !== null) return readAddonJson(files, addon);

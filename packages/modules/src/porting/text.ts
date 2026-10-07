@@ -1,5 +1,5 @@
 import { parseSemver } from "@gcs/core";
-import type { GcsPortLicense } from "./types";
+import type { GcsPortLicense, GcsPortNote } from "./types";
 
 const ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
 
@@ -140,4 +140,10 @@ export function detectLicense(files: Map<string, Buffer>): GcsPortLicense {
     }
   }
   return { spdx: spdx ? spdx.slice(0, 40) : null, gpl, files: [...found].sort().slice(0, 20) };
+}
+
+/** O notă cu parametrii plafonați (nume de tabele, căi): ajunge în raport și în ACP. */
+export function boundNote(note: GcsPortNote): GcsPortNote {
+  if (!note.params) return { code: note.code };
+  return { code: note.code, params: Object.fromEntries(Object.entries(note.params).map(([k, v]) => [k, commentText(String(v), 200)])) };
 }

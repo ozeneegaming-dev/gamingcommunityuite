@@ -246,6 +246,18 @@ describe("formatele", () => {
     expect(analyzePortSource(source).counts).toMatchObject({ settings: 5, permissions: 2, routes: 3, tables: 1, templates: 3, styles: 1, tasks: 1, widgets: 1, javascript: 1 });
   });
 
+  test("metadatele ajung în analiză curățate: pe un rând, plafonate, linkuri doar http(s)", () => {
+    const zip = writeZip([
+      { name: "A/B/addon.json", data: JSON.stringify({ title: `Nume\nlung ${"x".repeat(5000)}`, description: "d".repeat(100_000), dev_url: "javascript:alert(1)", version_string: "1.0.0" }), method: 0 },
+      { name: "A/B/_data/phrases.xml", data: "<phrases/>" },
+    ]);
+    const meta = readPortSource(readPortArchive("a.zip", zip)).meta;
+    expect(meta.name).not.toContain("\n");
+    expect(meta.name.length).toBeLessThanOrEqual(200);
+    expect(meta.description.length).toBe(2000);
+    expect(meta.url).toBeNull();
+  });
+
   test("o arhivă fără niciun format cunoscut e refuzată", () => {
     expect(code(() => readPortSource(readPortArchive("x.zip", writeZip([{ name: "readme.txt", data: "x" }]))))).toBe("unknown_format");
     expect(code(() => readPortSource(readPortArchive("x.xml", Buffer.from("<?xml version='1.0'?><other/>"))))).toBe("unknown_format");

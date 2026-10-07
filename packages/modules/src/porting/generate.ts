@@ -12,7 +12,7 @@ import { convertPhrases } from "./convert/phrases";
 import { convertSchema } from "./convert/schema";
 import { emitTemplate, parseTemplate, TEMPLATE_RUNTIME, type GcsTplNode, type GcsTplStats } from "./convert/template";
 import { automatedPercent, manualItems, portingMarkdown, type GcsPortLocale } from "./report";
-import { commentText, htmlToText, labelText, localKey, toSemver, uniqueKeys } from "./text";
+import { boundNote, commentText, htmlToText, labelText, localKey, toSemver, uniqueKeys } from "./text";
 import type { GcsPortArea, GcsPortNote, GcsPortReport, GcsPortRightsBasis, GcsPortSource } from "./types";
 
 export type GcsPortOptions = {
@@ -388,7 +388,7 @@ export function convertPortSource(source: GcsPortSource, opts: GcsPortOptions): 
     areas,
     manual: manualItems(source.code, locale),
     todos,
-    notes: notes.slice(0, 200),
+    notes: notes.slice(0, 200).map(boundNote),
     validation: { ok: validation.report.ok, checks: validation.report.checks },
   };
 
