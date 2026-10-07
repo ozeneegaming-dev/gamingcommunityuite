@@ -422,6 +422,9 @@
   color: var(--gcs-muted);
 }
 .gcs-forumRow__lastTitle {
+  /* Linkul cât textul (cu „…” la nevoie), nu pe toată lățimea coloanei: clicul în gol nu deschide topicul. */
+  align-self: flex-start;
+  max-width: 100%;
   font-weight: 600;
   font-size: 13px;
   white-space: nowrap;

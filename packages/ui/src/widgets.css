@@ -85,6 +85,9 @@ span.gcs-widgetRow__avatar.gcs-avatar {
   gap: 2px;
 }
 .gcs-widgetRow__title {
+  /* Linkul cât textul, nu pe toată lățimea rândului: clicul în gol nu deschide topicul. */
+  align-self: flex-start;
+  max-width: 100%;
   font-size: 13px;
   font-weight: 700;
   line-height: 1.35;
