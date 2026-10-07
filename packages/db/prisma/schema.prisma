@@ -86,6 +86,8 @@ model User {
   chatRoomsOwned  ChatChannel[]         @relation("ChatRoomOwner")
   chatRooms       ChatRoomMember[]      @relation("ChatRoomMember")
   chatReactions   ChatMessageReaction[]
+  /// Serverele de joc la care membrul e admin (aplicația Servere).
+  gameServerAdmin GameServerAdmin[]
 
   rank             Rank?                     @relation(fields: [rankId], references: [id], onDelete: SetNull)
   nameStyle        NameStyle?                @relation(fields: [nameStyleId], references: [id], onDelete: SetNull)
@@ -479,6 +481,8 @@ model Forum {
   children Forum[]       @relation("ForumTree")
   topics   Topic[]
   prefixes ForumPrefix[]
+  /// Serverele de joc care au acest forum ca „forumul serverului”.
+  gameServers GameServer[]
 
   @@index([parentId, position])
   @@map("forums")
@@ -1694,4 +1698,75 @@ model PluginPort {
 
   @@index([createdAt])
   @@map("plugin_ports")
+}
+
+// ─── Servere de joc (etapa Gaming, specul 2026-10-07-servere) ─────────────────
+
+/// Un server de joc afișat pe `/servers`. `game` = cheia din catalogul jocurilor (`cs16`, `cs2`, `minecraft`,
+/// `minecraft_bedrock`). `groups` gol = îl vede oricine are `servers.view`; altfel doar aceste grupuri.
+model GameServer {
+  id          Int      @id @default(autoincrement())
+  game        String
+  host        String
+  port        Int
+  /// Portul de interogare, dacă diferă de portul jocului.
+  queryPort   Int?
+  name        String
+  slug        String
+  position    Int      @default(0)
+  /// Atașamentul bannerului (`servers.banner`, legat de id-ul serverului).
+  bannerId    String?
+  /// Text simplu (rândurile noi se păstrează), max 2000 de caractere.
+  description String   @default("")
+  forumId     Int?
+  enabled     Boolean  @default(true)
+  groups      Int[]    @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  forum     Forum?            @relation(fields: [forumId], references: [id], onDelete: SetNull)
+  admins    GameServerAdmin[]
+  snapshots ServerSnapshot[]
+
+  @@unique([game, host, port])
+  @@index([enabled, position])
+  @@map("game_servers")
+}
+
+/// Adminii unui server de joc (membri GCS), în ordinea afișată.
+model GameServerAdmin {
+  serverId Int
+  userId   String
+  position Int    @default(0)
+
+  server GameServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([serverId, userId])
+  @@index([userId])
+  @@map("game_server_admins")
+}
+
+/// Istoricul interogărilor: un rând brut pe interogare (`hourly = false`), agregat pe oră după 7 zile (`hourly = true`).
+/// `samples` e greutatea rândului (multiplicatorul backoff-ului), `onlineSamples` partea ei „online”: uptime-ul =
+/// Σ onlineSamples / Σ samples, ponderat cu timpul.
+model ServerSnapshot {
+  id            BigInt   @id @default(autoincrement())
+  serverId      Int
+  at            DateTime @default(now())
+  hourly        Boolean  @default(false)
+  online        Boolean
+  players       Int      @default(0)
+  peak          Int      @default(0)
+  maxPlayers    Int      @default(0)
+  map           String?
+  ping          Int?
+  samples       Int      @default(1)
+  onlineSamples Int      @default(0)
+
+  server GameServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@index([serverId, at])
+  @@index([hourly, at])
+  @@map("server_snapshots")
 }
