@@ -2,12 +2,12 @@
 
 import type { GcsServerHistory } from "@gcs/modules";
 import { useFormatter, useTranslations } from "next-intl";
-import { useId, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 
-const W = 720;
+/** Lățimea implicită (randarea pe server); în browser, viewBox-ul ia lățimea reală a graficului. */
+const DEFAULT_W = 720;
 const H = 220;
 const PAD = { top: 12, right: 8, bottom: 26, left: 36 };
-const CW = W - PAD.left - PAD.right;
 const CH = H - PAD.top - PAD.bottom;
 /** Coloanele: cel mult 24 px, cu 2 px de spațiu între ele (macheta și regulile graficelor). */
 const MAX_BAR = 24;
@@ -31,7 +31,21 @@ export function GcsServerChart({ history }: { history: GcsServerHistory }) {
   const format = useFormatter();
   const id = useId().replace(/:/g, "");
   const svgRef = useRef<SVGSVGElement>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState<number | null>(null);
+  // Un viewBox de lățimea reală: textul axelor are mereu ~11 px (pe telefon, o scalare a 720 px l-ar face ilizibil).
+  const [W, setW] = useState(DEFAULT_W);
+  useEffect(() => {
+    const el = boxRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(([entry]) => {
+      const width = Math.round(entry?.contentRect.width ?? DEFAULT_W);
+      if (width > 0) setW(Math.max(280, Math.min(1200, width)));
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  const CW = W - PAD.left - PAD.right;
   const { buckets, range } = history;
   const n = buckets.length;
   const hasData = buckets.some((b) => b.avg !== null);
@@ -102,6 +116,7 @@ export function GcsServerChart({ history }: { history: GcsServerHistory }) {
 
   return (
     <div
+      ref={boxRef}
       className="gcs-serverChart"
       tabIndex={0}
       role="group"
