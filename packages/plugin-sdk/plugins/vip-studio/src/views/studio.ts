@@ -537,7 +537,8 @@ export function renderStudio(input: StudioInput): string {
     : `<span class="gcsp-plan gcsp-plan--none">${icon("fa-regular fa-gem")}${esc(ctx.t(access.testAll ? "studio.planTest" : "studio.planNone"))}</span>`;
 
   const hero =
-    `<header class="gcsp-hero"><div class="gcsp-hero__copy"><h2 class="gcsp-hero__title">${esc(ctx.t("studio.title"))}</h2>` +
+    // Titlul paginii îl pune GCS deasupra (h1); aici, doar explicația și planul.
+    `<header class="gcsp-hero"><div class="gcsp-hero__copy">` +
     `<p class="gcsp-hero__lede">${esc(ctx.t("studio.lede"))}</p>${planBadge}</div>` +
     `<div class="gcsp-plate" aria-live="polite"><span class="gcsp-plate__caption">${esc(ctx.t("studio.identity"))}</span>` +
     `<span ${lookAttrs(nl)} data-gcsp-pv="name">${esc(user.name)}</span><span ${lookAttrs(bl)} data-gcsp-pv="banner">${esc(bannerLabelFor(input.loadout, access))}</span></div></header>`;

@@ -91,7 +91,7 @@ export function renderBenefits(ctx: GcsPluginContext, input: { catalog: Catalog;
           .join("")}</tbody></table></div>`
       : "";
   return (
-    `<div class="gcsp-benefits"><header class="gcsp-hero gcsp-hero--benefits"><div class="gcsp-hero__copy"><h2 class="gcsp-hero__title">${esc(ctx.t("benefits.title"))}</h2><p class="gcsp-hero__lede">${esc(ctx.t("benefits.lede"))}</p>` +
+    `<div class="gcsp-benefits"><header class="gcsp-hero gcsp-hero--benefits"><div class="gcsp-hero__copy"><p class="gcsp-hero__lede">${esc(ctx.t("benefits.lede"))}</p>` +
     `<p class="gcsp-hero__actions"><a class="gcs-btn gcs-btn--primary" href="${esc(input.vipPageUrl)}">${esc(ctx.t("benefits.cta"))}</a><a class="gcs-btn gcs-btn--ghost" href="/p/${PLUGIN_KEY}">${esc(ctx.t("benefits.tryStudio"))}</a></p></div></header>` +
     `<ul class="gcsp-benefitList">${list}</ul>${table}</div>`
   );

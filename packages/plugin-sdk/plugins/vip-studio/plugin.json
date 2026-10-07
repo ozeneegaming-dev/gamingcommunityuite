@@ -8,7 +8,7 @@
   "icon": "fa-solid fa-crown",
   "license": "Proprietary",
   "minGcs": "0.7.0",
-  "capabilities": ["db", "events", "widgets", "pages", "acp", "api", "menus", "jobs", "settings", "permissions", "client-css", "client-js", "media", "appearance"],
+  "capabilities": ["db", "events", "widgets", "pages", "acp", "api", "menus", "jobs", "settings", "permissions", "hooks", "client-css", "client-js", "media", "appearance"],
   "settings": {
     "tabs": [
       {
@@ -97,6 +97,7 @@
     ]
   },
   "events": ["vip.granted", "vip.revoked", "vip.expired"],
+  "hooks": [{ "point": "vip.page" }],
   "jobs": [{ "key": "reconcile", "everyMinutes": 60, "label": "jobs.reconcile" }],
   "menus": {
     "user": [{ "key": "studio", "label": "menu.studio", "href": "/p/gcs.vip_studio", "icon": "fa-solid fa-crown", "permission": "use" }]

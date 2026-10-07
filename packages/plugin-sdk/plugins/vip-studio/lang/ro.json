@@ -1,7 +1,10 @@
 {
   "name": "Studio VIP",
   "settings": {
-    "tabs": { "general": "General", "song": "Melodia profilului" },
+    "tabs": {
+      "general": "General",
+      "song": "Melodia profilului"
+    },
     "vipPageUrl": "Pagina VIP",
     "vipPageUrlHint": "Unde duc butoanele „Devino VIP”: o adresă a site-ului (ex. /vip) sau un link https.",
     "newDays": "Eticheta „NOU”",
@@ -24,8 +27,12 @@
     "description": "Caruselul membrilor VIP: cei online întâi, cu numele, rama și banner-ul lor.",
     "limit": "Câți membri"
   },
-  "menu": { "studio": "Studio VIP" },
-  "jobs": { "reconcile": "Reaplică echipamentele (planuri, catalog)" },
+  "menu": {
+    "studio": "Studio VIP"
+  },
+  "jobs": {
+    "reconcile": "Reaplică echipamentele (planuri, catalog)"
+  },
   "studio": {
     "title": "Studio VIP",
     "lede": "Alege cum te văd ceilalți: numele, rama, banner-ul și profilul. Previzualizarea se schimbă pe loc, iar „Salvează” aplică totul.",
@@ -45,7 +52,10 @@
     "new": "NOU",
     "all": "Toate",
     "filters": "Categorii",
-    "lock": { "vip": "VIP", "title": "Disponibil pentru: {plans}" },
+    "lock": {
+      "vip": "VIP",
+      "title": "Disponibil pentru: {plans}"
+    },
     "modes": {
       "legend": "Ce personalizezi",
       "mini": "Profil mic",
@@ -102,7 +112,9 @@
       "label": "Textul banner-ului",
       "labelHint": "Gol = numele planului tău."
     },
-    "frame": { "none": "Fără ramă" },
+    "frame": {
+      "none": "Fără ramă"
+    },
     "card": {
       "none": "Fără fundal",
       "position": "Poziția imaginii",
@@ -110,14 +122,21 @@
       "y": "Vertical",
       "dragHint": "Sau trage imaginea direct în previzualizare."
     },
-    "weapon": { "none": "Niciuna" },
-    "background": { "none": "Fără fundal", "video": "Video" },
+    "weapon": {
+      "none": "Niciuna"
+    },
+    "background": {
+      "none": "Fără fundal",
+      "video": "Video"
+    },
     "quote": {
       "label": "Citatul tău",
       "placeholder": "Ex. „Joc pentru echipă, nu pentru scor.”",
       "hint": "Maximum 200 de caractere, text simplu."
     },
-    "theme": { "default": "Implicit" },
+    "theme": {
+      "default": "Implicit"
+    },
     "song": {
       "none": "Fără melodie",
       "custom": "Melodia mea",
@@ -142,7 +161,11 @@
     "joined": "Membru din",
     "weapon": "Arma preferată",
     "member": "Membru",
-    "tabs": { "activity": "Activitate", "posts": "Postări", "about": "Despre" },
+    "tabs": {
+      "activity": "Activitate",
+      "posts": "Postări",
+      "about": "Despre"
+    },
     "noSong": "Nicio melodie aleasă",
     "play": "Redă",
     "pause": "Pauză",
@@ -157,8 +180,14 @@
       "cta": "Vezi planurile VIP",
       "keep": "Mai încerc"
     },
-    "saving": { "title": "Se echipează…", "body": "Salvăm alegerile și le aplicăm pe tot site-ul." },
-    "error": { "title": "Nu am putut salva", "close": "Înapoi la studio" }
+    "saving": {
+      "title": "Se echipează…",
+      "body": "Salvăm alegerile și le aplicăm pe tot site-ul."
+    },
+    "error": {
+      "title": "Nu am putut salva",
+      "close": "Înapoi la studio"
+    }
   },
   "client": {
     "count": {
@@ -239,16 +268,47 @@
     "cta": "Vezi planurile VIP",
     "tryStudio": "Încearcă studioul",
     "byPlan": "Ce include fiecare plan",
-    "name": { "title": "{count} stiluri de nume", "body": "Culori, gradiente și animații; {variants} stiluri au variante de culoare." },
-    "frame": { "title": "{count} rame de avatar", "body": "Peste avatarul tău, în postări, pe card și pe profil." },
-    "banner": { "title": "{count} bannere", "body": "Pastila de sub nume, cu numele planului.", "bodyCustom": "Pastila de sub nume, cu numele planului sau textul tău." },
-    "card": { "title": "{count} fundaluri de card", "body": "Pe hover card și în caseta ta din postări, cu poziția aleasă de tine." },
-    "weapon": { "title": "Arma preferată ({count})", "body": "O iconiță lângă statisticile tale." },
-    "background": { "title": "{count} fundaluri de profil", "body": "Imagini și videoclipuri în spatele paginii tale de profil." },
-    "quote": { "title": "Citat personal", "body": "Un citat pe profil, într-o casetă proprie." },
-    "theme": { "title": "{count} teme de profil", "body": "Culorile paginii tale de profil." },
-    "song": { "title": "Melodia profilului", "body": "Un player pe profil, fără redare automată cu sunet." },
-    "roster": { "title": "Secțiunea VIP online", "body": "Apari în caruselul membrilor VIP." },
+    "name": {
+      "title": "{count} stiluri de nume",
+      "body": "Culori, gradiente și animații; {variants} stiluri au variante de culoare."
+    },
+    "frame": {
+      "title": "{count} rame de avatar",
+      "body": "Peste avatarul tău, în postări, pe card și pe profil."
+    },
+    "banner": {
+      "title": "{count} bannere",
+      "body": "Pastila de sub nume, cu numele planului.",
+      "bodyCustom": "Pastila de sub nume, cu numele planului sau textul tău."
+    },
+    "card": {
+      "title": "{count} fundaluri de card",
+      "body": "Pe hover card și în caseta ta din postări, cu poziția aleasă de tine."
+    },
+    "weapon": {
+      "title": "Arma preferată ({count})",
+      "body": "O iconiță lângă statisticile tale."
+    },
+    "background": {
+      "title": "{count} fundaluri de profil",
+      "body": "Imagini și videoclipuri în spatele paginii tale de profil."
+    },
+    "quote": {
+      "title": "Citat personal",
+      "body": "Un citat pe profil, într-o casetă proprie."
+    },
+    "theme": {
+      "title": "{count} teme de profil",
+      "body": "Culorile paginii tale de profil."
+    },
+    "song": {
+      "title": "Melodia profilului",
+      "body": "Un player pe profil, fără redare automată cu sunet."
+    },
+    "roster": {
+      "title": "Secțiunea VIP online",
+      "body": "Apari în caruselul membrilor VIP."
+    },
     "kinds": {
       "name_style": "Stiluri de nume",
       "banner": "Bannere",
@@ -272,9 +332,21 @@
     "holo": "Holografic",
     "caret": "Cursor de terminal"
   },
-  "animations": { "none": "Static", "flow": "Curgere", "pulse": "Puls", "shine": "Luciu", "aurora": "Auroră" },
-  "speeds": { "slow": "Lent", "normal": "Normal", "fast": "Rapid" },
-  "colors": { "default": "Implicit" },
+  "animations": {
+    "none": "Static",
+    "flow": "Curgere",
+    "pulse": "Puls",
+    "shine": "Luciu",
+    "aurora": "Auroră"
+  },
+  "speeds": {
+    "slow": "Lent",
+    "normal": "Normal",
+    "fast": "Rapid"
+  },
+  "colors": {
+    "default": "Implicit"
+  },
   "acp": {
     "title": "Studio VIP",
     "menu": {
@@ -333,8 +405,19 @@
       "theme": "Temele paginii de profil: accentul, al doilea accent și culoarea panourilor.",
       "song": "Melodiile din care aleg membrii: un fișier MP3 / Ogg sau un link YouTube."
     },
-    "cols": { "preview": "Previzualizare", "name": "Nume", "category": "Categorie", "plans": "Planuri", "status": "Stare", "actions": "Acțiuni" },
-    "status": { "active": "Activ", "disabled": "Dezactivat", "retired": "Retras" },
+    "cols": {
+      "preview": "Previzualizare",
+      "name": "Nume",
+      "category": "Categorie",
+      "plans": "Planuri",
+      "status": "Stare",
+      "actions": "Acțiuni"
+    },
+    "status": {
+      "active": "Activ",
+      "disabled": "Dezactivat",
+      "retired": "Retras"
+    },
     "actions": {
       "up": "Mută mai sus",
       "down": "Mută mai jos",
@@ -403,9 +486,22 @@
       "enabled": "Activ (apare în studio)",
       "retired": "Retras (apare marcat, dar nu se mai poate alege)"
     },
-    "sizes": { "s": "Mic", "m": "Mediu", "l": "Mare", "xl": "Profil" },
-    "media": { "title": "Fișiere încărcate", "usage": "{files} fișiere, {mb} MB din cota pluginului." },
-    "links": { "title": "Linkuri", "studio": "Deschide studioul", "benefits": "Pagina beneficiilor", "settings": "Setările pluginului" },
+    "sizes": {
+      "s": "Mic",
+      "m": "Mediu",
+      "l": "Mare",
+      "xl": "Profil"
+    },
+    "media": {
+      "title": "Fișiere încărcate",
+      "usage": "{files} fișiere, {mb} MB din cota pluginului."
+    },
+    "links": {
+      "title": "Linkuri",
+      "studio": "Deschide studioul",
+      "benefits": "Pagina beneficiilor",
+      "settings": "Setările pluginului"
+    },
     "restore": {
       "title": "Catalogul implicit",
       "hint": "Readaugă presetările lipsă sau le readuce pe toate la forma inițială (numele, ordinea și datele lor). Elementele adăugate de tine rămân.",
@@ -439,5 +535,11 @@
       "reset_member": "a resetat echipamentul lui",
       "reset_quote": "a șters citatul lui"
     }
+  },
+  "vipPage": {
+    "title": "Personalizează-ți profilul",
+    "body": "Cu un plan VIP îți alegi stilul numelui ({styles} stiluri), rama avatarului ({frames} rame), banner-ul ({banners}), fundalul cardului, arma preferată și extra-uri pe profil: fundal video, citat, temă și melodie.",
+    "open": "Deschide Studio VIP",
+    "benefits": "Vezi toate beneficiile"
   }
 }

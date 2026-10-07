@@ -227,6 +227,21 @@ export default definePlugin({
     },
   },
 
+  hooks: {
+    /** Pe pagina publică VIP: ce poți personaliza (numerele vin din catalogul activ) și linkurile spre studio. */
+    "vip.page": async (_data, ctx) => {
+      await ensureSeeded(ctx);
+      const catalog = await loadCatalog(ctx);
+      const n = (kind: Kind) => [...catalog[kind].values()].filter((i) => i.enabled && !i.retired).length;
+      const esc = ctx.escape;
+      return (
+        `<section class="gcsp-vipPromo"><h2>${esc(ctx.t("vipPage.title"))}</h2>` +
+        `<p class="gcs-muted">${esc(ctx.t("vipPage.body", { styles: n("name_style"), frames: n("frame"), banners: n("banner") }))}</p>` +
+        `<p><a class="gcs-btn gcs-btn--primary" href="${STUDIO}">${esc(ctx.t("vipPage.open"))}</a> <a class="gcs-btn gcs-btn--ghost" href="${STUDIO}/benefits">${esc(ctx.t("vipPage.benefits"))}</a></p></section>`
+      );
+    },
+  },
+
   events: {
     "vip.granted": (e, ctx) => onVipChange(ctx, e.payload),
     "vip.revoked": (e, ctx) => onVipChange(ctx, e.payload),

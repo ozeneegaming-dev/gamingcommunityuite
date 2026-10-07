@@ -1,7 +1,10 @@
 {
   "name": "VIP Studio",
   "settings": {
-    "tabs": { "general": "General", "song": "Profile song" },
+    "tabs": {
+      "general": "General",
+      "song": "Profile song"
+    },
     "vipPageUrl": "VIP page",
     "vipPageUrlHint": "Where the “Become VIP” buttons lead: a site address (e.g. /vip) or an https link.",
     "newDays": "“NEW” label",
@@ -24,8 +27,12 @@
     "description": "A carousel of VIP members: online first, with their name, frame and banner.",
     "limit": "How many members"
   },
-  "menu": { "studio": "VIP Studio" },
-  "jobs": { "reconcile": "Re-apply loadouts (plans, catalogue)" },
+  "menu": {
+    "studio": "VIP Studio"
+  },
+  "jobs": {
+    "reconcile": "Re-apply loadouts (plans, catalogue)"
+  },
   "studio": {
     "title": "VIP Studio",
     "lede": "Choose how others see you: your name, frame, banner and profile. The preview changes instantly and “Save” applies everything.",
@@ -45,7 +52,10 @@
     "new": "NEW",
     "all": "All",
     "filters": "Categories",
-    "lock": { "vip": "VIP", "title": "Available for: {plans}" },
+    "lock": {
+      "vip": "VIP",
+      "title": "Available for: {plans}"
+    },
     "modes": {
       "legend": "What you customise",
       "mini": "Mini profile",
@@ -102,7 +112,9 @@
       "label": "Banner text",
       "labelHint": "Empty = your plan's name."
     },
-    "frame": { "none": "No frame" },
+    "frame": {
+      "none": "No frame"
+    },
     "card": {
       "none": "No background",
       "position": "Image position",
@@ -110,14 +122,21 @@
       "y": "Vertical",
       "dragHint": "Or drag the image right in the preview."
     },
-    "weapon": { "none": "None" },
-    "background": { "none": "No background", "video": "Video" },
+    "weapon": {
+      "none": "None"
+    },
+    "background": {
+      "none": "No background",
+      "video": "Video"
+    },
     "quote": {
       "label": "Your quote",
       "placeholder": "E.g. “I play for the team, not the score.”",
       "hint": "Up to 200 characters, plain text."
     },
-    "theme": { "default": "Default" },
+    "theme": {
+      "default": "Default"
+    },
     "song": {
       "none": "No song",
       "custom": "My song",
@@ -142,7 +161,11 @@
     "joined": "Member since",
     "weapon": "Favourite weapon",
     "member": "Member",
-    "tabs": { "activity": "Activity", "posts": "Posts", "about": "About" },
+    "tabs": {
+      "activity": "Activity",
+      "posts": "Posts",
+      "about": "About"
+    },
     "noSong": "No song chosen",
     "play": "Play",
     "pause": "Pause",
@@ -157,8 +180,14 @@
       "cta": "See VIP plans",
       "keep": "Keep trying"
     },
-    "saving": { "title": "Equipping…", "body": "Saving your picks and applying them across the site." },
-    "error": { "title": "Couldn't save", "close": "Back to the studio" }
+    "saving": {
+      "title": "Equipping…",
+      "body": "Saving your picks and applying them across the site."
+    },
+    "error": {
+      "title": "Couldn't save",
+      "close": "Back to the studio"
+    }
   },
   "client": {
     "count": {
@@ -239,16 +268,47 @@
     "cta": "See VIP plans",
     "tryStudio": "Try the studio",
     "byPlan": "What each plan includes",
-    "name": { "title": "{count} name styles", "body": "Colours, gradients and animations; {variants} styles have colour variants." },
-    "frame": { "title": "{count} avatar frames", "body": "On top of your avatar, in posts, on the card and on your profile." },
-    "banner": { "title": "{count} banners", "body": "The pill under your name, with your plan's name.", "bodyCustom": "The pill under your name, with your plan's name or your own text." },
-    "card": { "title": "{count} card backgrounds", "body": "On your hover card and your post author box, positioned the way you like." },
-    "weapon": { "title": "Favourite weapon ({count})", "body": "An icon next to your stats." },
-    "background": { "title": "{count} profile backgrounds", "body": "Images and videos behind your profile page." },
-    "quote": { "title": "Personal quote", "body": "A quote on your profile in its own box." },
-    "theme": { "title": "{count} profile themes", "body": "The colours of your profile page." },
-    "song": { "title": "Profile song", "body": "A player on your profile, never autoplaying with sound." },
-    "roster": { "title": "The VIP online section", "body": "You show up in the VIP members carousel." },
+    "name": {
+      "title": "{count} name styles",
+      "body": "Colours, gradients and animations; {variants} styles have colour variants."
+    },
+    "frame": {
+      "title": "{count} avatar frames",
+      "body": "On top of your avatar, in posts, on the card and on your profile."
+    },
+    "banner": {
+      "title": "{count} banners",
+      "body": "The pill under your name, with your plan's name.",
+      "bodyCustom": "The pill under your name, with your plan's name or your own text."
+    },
+    "card": {
+      "title": "{count} card backgrounds",
+      "body": "On your hover card and your post author box, positioned the way you like."
+    },
+    "weapon": {
+      "title": "Favourite weapon ({count})",
+      "body": "An icon next to your stats."
+    },
+    "background": {
+      "title": "{count} profile backgrounds",
+      "body": "Images and videos behind your profile page."
+    },
+    "quote": {
+      "title": "Personal quote",
+      "body": "A quote on your profile in its own box."
+    },
+    "theme": {
+      "title": "{count} profile themes",
+      "body": "The colours of your profile page."
+    },
+    "song": {
+      "title": "Profile song",
+      "body": "A player on your profile, never autoplaying with sound."
+    },
+    "roster": {
+      "title": "The VIP online section",
+      "body": "You show up in the VIP members carousel."
+    },
     "kinds": {
       "name_style": "Name styles",
       "banner": "Banners",
@@ -272,9 +332,21 @@
     "holo": "Holographic",
     "caret": "Terminal cursor"
   },
-  "animations": { "none": "Static", "flow": "Flow", "pulse": "Pulse", "shine": "Shine", "aurora": "Aurora" },
-  "speeds": { "slow": "Slow", "normal": "Normal", "fast": "Fast" },
-  "colors": { "default": "Default" },
+  "animations": {
+    "none": "Static",
+    "flow": "Flow",
+    "pulse": "Pulse",
+    "shine": "Shine",
+    "aurora": "Aurora"
+  },
+  "speeds": {
+    "slow": "Slow",
+    "normal": "Normal",
+    "fast": "Fast"
+  },
+  "colors": {
+    "default": "Default"
+  },
   "acp": {
     "title": "VIP Studio",
     "menu": {
@@ -333,8 +405,19 @@
       "theme": "Profile page themes: the accent, the second accent and the panel colour.",
       "song": "The songs members choose from: an MP3 / Ogg file or a YouTube link."
     },
-    "cols": { "preview": "Preview", "name": "Name", "category": "Category", "plans": "Plans", "status": "Status", "actions": "Actions" },
-    "status": { "active": "Active", "disabled": "Disabled", "retired": "Retired" },
+    "cols": {
+      "preview": "Preview",
+      "name": "Name",
+      "category": "Category",
+      "plans": "Plans",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Active",
+      "disabled": "Disabled",
+      "retired": "Retired"
+    },
     "actions": {
       "up": "Move up",
       "down": "Move down",
@@ -403,9 +486,22 @@
       "enabled": "Active (shows in the studio)",
       "retired": "Retired (shows marked, but can't be picked)"
     },
-    "sizes": { "s": "Small", "m": "Medium", "l": "Large", "xl": "Profile" },
-    "media": { "title": "Uploaded files", "usage": "{files} files, {mb} MB of the plugin quota." },
-    "links": { "title": "Links", "studio": "Open the studio", "benefits": "Benefits page", "settings": "Plugin settings" },
+    "sizes": {
+      "s": "Small",
+      "m": "Medium",
+      "l": "Large",
+      "xl": "Profile"
+    },
+    "media": {
+      "title": "Uploaded files",
+      "usage": "{files} files, {mb} MB of the plugin quota."
+    },
+    "links": {
+      "title": "Links",
+      "studio": "Open the studio",
+      "benefits": "Benefits page",
+      "settings": "Plugin settings"
+    },
     "restore": {
       "title": "Default catalogue",
       "hint": "Adds back missing presets or restores all of them to their original form (names, order and data). Items you added stay.",
@@ -439,5 +535,11 @@
       "reset_member": "reset the loadout of",
       "reset_quote": "removed the quote of"
     }
+  },
+  "vipPage": {
+    "title": "Customise your profile",
+    "body": "With a VIP plan you pick your name style ({styles} styles), avatar frame ({frames} frames), banner ({banners}), card background, favourite weapon and profile extras: video background, quote, theme and song.",
+    "open": "Open the VIP Studio",
+    "benefits": "See all benefits"
   }
 }
