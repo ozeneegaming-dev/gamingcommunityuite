@@ -1,0 +1,273 @@
+/*
+ * ACP → Sistem → Conversii → Portare plugin: asistentul în pași. Refolosește clasele asistentului de import
+ * (`gcs-import__*`: pașii, panourile, numerele, tabelele, mesajele) și pe cele ale pluginurilor (încărcarea arhivei,
+ * verificările pachetului, avertismentele); aici sunt doar piesele proprii portării.
+ */
+
+.gcs-porting {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.gcs-porting__muted {
+  color: var(--gcs-muted);
+  font-size: 12.5px;
+}
+.gcs-porting__spaced {
+  margin-top: 18px;
+}
+
+/* Încărcarea: zona arhivei și formatele recunoscute */
+.gcs-pluginUpload__drop.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.gcs-porting__formats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-porting__formats li {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-surface2);
+  font-size: 13px;
+}
+.gcs-porting__formats small {
+  color: var(--gcs-muted);
+  font-size: 12px;
+}
+
+/* Ce s-a detectat: metadatele sursei */
+.gcs-porting__facts {
+  display: flex;
+  flex-direction: column;
+  margin: 0 0 16px;
+}
+.gcs-porting__facts > div {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-porting__facts > div:last-child {
+  border-bottom: 0;
+}
+.gcs-porting__facts dt {
+  color: var(--gcs-muted);
+  font-size: 13px;
+}
+.gcs-porting__facts dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 13.5px;
+  overflow-wrap: anywhere;
+}
+.gcs-porting__facts code,
+.gcs-porting__recent code,
+.gcs-porting__manual code {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--gcs-text) 9%, transparent);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.gcs-import__count.gcs-porting__count--zero {
+  opacity: 0.55;
+}
+
+/* Confirmarea dreptului */
+.gcs-porting__gpl {
+  margin-bottom: 2px;
+}
+.gcs-porting__gpl strong .gcs-icon {
+  color: var(--gcs-warn);
+}
+.gcs-porting__bases {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.gcs-porting__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--gcs-acp-c3) 10%, transparent);
+  font-size: 13px;
+}
+.gcs-porting__notice > .gcs-icon {
+  flex: none;
+  margin-top: 2px;
+  color: var(--gcs-acp-c3);
+}
+.gcs-porting__key {
+  max-width: 340px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.gcs-porting__confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.gcs-porting__confirm.is-checked {
+  border-color: var(--gcs-acp-c1);
+  background: color-mix(in srgb, var(--gcs-acp-c1) 10%, transparent);
+}
+.gcs-porting__confirm input {
+  margin-top: 3px;
+  accent-color: var(--gcs-acp-c1);
+}
+.gcs-porting__confirm .gcs-icon {
+  color: var(--gcs-acp-c1);
+}
+
+/* Rezultatul: procentul automat și detaliile */
+.gcs-porting__summary {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+}
+@media (max-width: 720px) {
+  .gcs-porting__summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.gcs-porting__percent {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 12px;
+  background: var(--gcs-surface2);
+}
+.gcs-porting__percent strong {
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.gcs-porting__percent > span:not(.gcs-porting__bar) {
+  color: var(--gcs-muted);
+  font-size: 12.5px;
+}
+.gcs-porting__bar {
+  --tone: var(--gcs-acp-good);
+}
+.gcs-porting__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13.5px;
+}
+.gcs-porting__meta li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.gcs-porting__meta .gcs-icon {
+  flex: none;
+  color: var(--gcs-muted);
+}
+.gcs-porting__safe {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 16px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--gcs-acp-good) 10%, transparent);
+  font-size: 13px;
+}
+.gcs-porting__safe > .gcs-icon {
+  flex: none;
+  margin-top: 2px;
+  color: var(--gcs-acp-good);
+}
+.gcs-porting__blocked {
+  margin-top: 12px;
+}
+.gcs-porting__checks {
+  max-height: 360px;
+  overflow: auto;
+}
+.gcs-porting__notes {
+  max-height: 360px;
+}
+
+/* Fișierele de portat manual: textul echivalentului se rupe pe rânduri */
+.gcs-porting__manual th,
+.gcs-porting__manual td {
+  text-align: left;
+  vertical-align: top;
+}
+.gcs-porting__manual td:last-child {
+  min-width: 260px;
+  white-space: normal;
+}
+.gcs-porting__manual td:nth-child(3) {
+  text-align: right;
+}
+.gcs-porting__manual tbody th {
+  font-weight: 500;
+}
+
+/* Portările recente */
+.gcs-porting__recent {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-porting__recent li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-porting__recent li:last-child {
+  border-bottom: 0;
+}
+.gcs-porting__recentMain {
+  display: flex;
+  flex: 1 1 260px;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 13.5px;
+}
+.gcs-porting__recentMain small {
+  color: var(--gcs-muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}

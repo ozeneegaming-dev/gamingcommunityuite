@@ -260,6 +260,7 @@
         "cache": "Golire cache",
         "conversions": "Conversii",
         "import": "Import din altă platformă",
+        "porting": "Portare plugin",
         "settings_languages": "Limbi și traducere",
         "hooks": "Hook-uri"
       },
@@ -3314,6 +3315,209 @@
       "invalid_path": "cale absolută invalidă",
       "invalid_url": "adresă invalidă",
       "too_long": "prea lung"
+    }
+  },
+  "porting": {
+    "title": "Portare plugin",
+    "description": "Transformă un plugin scris pentru altă platformă într-un plugin GCS: manifestul, setările, permisiunile, rutele, frazele, tabelele, șabloanele și CSS-ul se convertesc automat, iar pentru cod primești echivalentul GCS al fiecărui fișier. Nimic nu se instalează automat.",
+    "stepsLabel": "Pașii portării",
+    "steps": {
+      "upload": "Încărcare",
+      "rights": "Dreptul de folosire",
+      "convert": "Conversie",
+      "result": "Rezultat"
+    },
+    "upload": {
+      "title": "Încarcă pluginul sursă",
+      "hint": "Arhiva e doar citită, ca text: nimic din ea nu se execută și nimic nu se convertește la acest pas.",
+      "file": "Alege arhiva pluginului (.zip, .tar, .tar.gz sau .xml)",
+      "limits": "Maximum {size} MB, cel mult 2000 de fișiere.",
+      "formats": "Formate recunoscute",
+      "submit": "Încarcă și analizează",
+      "uploading": "Se analizează…",
+      "network": "Încărcarea nu a reușit. Verifică conexiunea și încearcă din nou."
+    },
+    "formats": {
+      "app-json": "aplicație cu data/application.json",
+      "plugin-xml": "plugin într-un fișier XML",
+      "addon-json": "add-on cu addon.json și _data/"
+    },
+    "formatHints": {
+      "app-json": "Arhivă .tar sau .tar.gz cu data/application.json, data/settings.json, data/lang.xml și codul PHP.",
+      "plugin-xml": "Un singur fișier .xml cu hook-uri, setări, fraze, șabloane și fișiere încorporate.",
+      "addon-json": "Arhivă .zip cu addon.json, folderul _data/ (opțiuni, fraze, permisiuni, rute, șabloane) și clasele PHP."
+    },
+    "detected": {
+      "title": "Format detectat: {format}",
+      "newUpload": "Altă arhivă",
+      "name": "Nume",
+      "version": "Versiune",
+      "author": "Autor",
+      "website": "Site",
+      "about": "Descriere",
+      "license": "Licența detectată",
+      "noLicense": "nedetectată",
+      "licenseFiles": "găsită în {files}",
+      "file": "Fișier",
+      "expires": "Portarea și arhivele ei se șterg automat pe {date}.",
+      "counts": "Ce conține sursa",
+      "warnings": "Avertismentele citirii"
+    },
+    "counts": {
+      "files": "Fișiere",
+      "settings": "Setări",
+      "permissions": "Permisiuni",
+      "routes": "Rute",
+      "phrases": "Fraze",
+      "tables": "Tabele",
+      "templates": "Șabloane",
+      "styles": "Fișiere CSS",
+      "tasks": "Task-uri programate",
+      "widgets": "Widget-uri",
+      "php": "Fișiere PHP",
+      "javascript": "Fișiere JavaScript"
+    },
+    "rights": {
+      "title": "Confirmă dreptul de a porta pluginul",
+      "hint": "Obligatoriu înaintea conversiei. Temeiul și confirmarea intră în jurnalul ACP și în raportul portării.",
+      "basis": "Temeiul",
+      "bases": {
+        "author": "Sunt autorul pluginului",
+        "consent": "Am acordul scris al autorului",
+        "license": "Licența pluginului permite modificarea și folosirea"
+      },
+      "purchased": "Pluginurile cumpărate sunt licențiate de autorii lor: dreptul de a folosi un plugin nu înseamnă, de obicei, și dreptul de a-l modifica, de a-l porta sau de a-l redistribui.",
+      "gplTitle": "Licență GPL detectată",
+      "gplBody": "Licența sau antetele fișierelor sunt GPL/AGPL/LGPL: codul GPL nu poate intra într-o distribuție GCS închisă. Păstrează licența și sursele dacă redistribui pluginul portat.",
+      "key": "Cheia pluginului GCS",
+      "keyHint": "Forma vendor.nume: litere mici, cifre și _ (ex. acme.demo). E propusă din sursă; o poți schimba.",
+      "confirm": "Confirm că am dreptul să modific și să folosesc acest plugin",
+      "submit": "Convertește",
+      "converting": "Se convertește…",
+      "needsConfirm": "Alege temeiul și bifează confirmarea ca să poți converti.",
+      "readOnly": "Ai doar drept de vizualizare: conversia o poate porni un administrator cu drept de editare."
+    },
+    "report": {
+      "title": "Rezultatul portării",
+      "subtitle": "{name} → {key} · versiunea {version}",
+      "percentLabel": "din muncă s-a făcut automat (estimare)",
+      "percentHint": "Estimarea compară ce s-a convertit (setări, permisiuni, rute, tabele, șabloane, fraze) cu ce rămâne de portat manual (rândurile de PHP și JavaScript, locurile TODO din server.mjs).",
+      "rights": "Dreptul confirmat: {basis} · {date}",
+      "todos": "Locuri de completat în server.mjs (TODO): {count}",
+      "size": "Arhiva rezultatului: {size} KB",
+      "contents": "Arhiva conține folderul pluginului, pachetul instalabil ({file}), sursele originale (ORIGINAL/, doar ca text), PORTING.md și report.json.",
+      "nothingInstalled": "Nimic nu a fost instalat sau activat. Pluginul generat e un schelet: verifică-l și completează-l înainte de a-l folosi pe un site public.",
+      "areas": "Ce s-a convertit, pe tipuri",
+      "area": "Tip",
+      "auto": "Automat",
+      "manual": "Manual",
+      "download": "Descarcă rezultatul (.zip)",
+      "handoff": "Trimite la instalare",
+      "handing": "Se trimite…",
+      "handoffHint": "Pachetul intră în pasul de validare al instalatorului de pluginuri (Aplicații și pluginuri), unde decizi tu. Nu se instalează și nu se activează automat.",
+      "handoffBlocked": "Pachetul generat nu trece de verificări, deci nu poate fi trimis la instalare. Descarcă rezultatul, corectează pluginul și încarcă-l din Aplicații și pluginuri.",
+      "delete": "Șterge portarea",
+      "deleteConfirm": "Ștergi portarea și arhivele ei? Rezultatul descărcat rămâne la tine."
+    },
+    "areas": {
+      "manifest": "Manifestul",
+      "settings": "Setările",
+      "permissions": "Permisiunile",
+      "routes": "Rutele și meniurile",
+      "phrases": "Frazele",
+      "schema": "Tabelele (migrația)",
+      "templates": "Șabloanele",
+      "styles": "CSS-ul",
+      "tasks": "Task-urile (joburi)",
+      "widgets": "Widget-urile",
+      "code": "Codul PHP",
+      "javascript": "JavaScript-ul"
+    },
+    "checks": {
+      "title": "Verificările pachetului",
+      "hint": "Aceleași verificări ca la instalarea din Aplicații și pluginuri.",
+      "ok": "Pachet valid",
+      "failed": "Pachet invalid"
+    },
+    "manual": {
+      "title": "De portat manual",
+      "hint": "Codul sursei e în ORIGINAL/ (doar ca text); PORTING.md din arhivă are același tabel.",
+      "file": "Fișier (în ORIGINAL/)",
+      "kind": "Tip",
+      "lines": "Rânduri",
+      "equivalent": "Echivalentul GCS",
+      "none": "Nimic de portat manual: tot ce s-a recunoscut în sursă s-a convertit."
+    },
+    "kinds": {
+      "controller": "Controller",
+      "acp_controller": "Controller ACP",
+      "api_controller": "Controller API",
+      "model": "Model",
+      "service": "Serviciu",
+      "extension": "Extensie de clasă",
+      "hook": "Hook",
+      "listener": "Listener",
+      "setup": "Instalare",
+      "task": "Task programat",
+      "widget": "Widget",
+      "settings_form": "Formular de setări",
+      "javascript": "JavaScript",
+      "other": "Altul"
+    },
+    "equivalents": {
+      "controller": "pagină pe site (routes.pages + pages în server.mjs); datele din ctx.api și ctx.db",
+      "acp_controller": "pagină ACP (routes.acp + acp); configurarea prin setările generate din manifest",
+      "api_controller": "rută API (routes.api + api), JSON, cu permisiunile pluginului",
+      "model": "tabel în migrație + funcții de acces cu ctx.db.query / ctx.db.execute",
+      "service": "funcții în server.mjs (sau server/*.mjs), apelate din pagini, evenimente și joburi",
+      "extension": "extinderea unei clase a platformei sursă → eveniment (events), filtrul post.before_save sau un punct de extensie",
+      "hook": "hook → punct de extensie (postbit.after_fields), widget sau filtrul post.before_save",
+      "listener": "listener → evenimentele GCS (events: post.created, user.registered…)",
+      "setup": "instalare / actualizare → migrațiile SQL din migrations/ (schema pluginului)",
+      "task": "task programat → job (jobs, everyMinutes)",
+      "widget": "widget → widgets (HTML sanitizat, randat pe server)",
+      "settings_form": "formularul de setări e generat din manifest; rămân doar validările speciale",
+      "javascript": "JavaScript client → client-js (doar pentru pluginuri semnate) sau înlocuit cu HTML/CSS",
+      "other": "de analizat: cod fără echivalent direct"
+    },
+    "notes": {
+      "title": "Avertismente",
+      "none": "Niciun avertisment.",
+      "invalid_file": "Fișier ilizibil (JSON/XML invalid): {path}",
+      "files_outside_root": "{count} fișiere din afara folderului aplicației au fost ignorate",
+      "column_type_unknown": "Tipul coloanei {table}.{column} ({type}) a devenit text",
+      "fulltext_index": "Indexul fulltext {table}.{index} nu s-a convertit (căutarea se portează separat)",
+      "table_rejected": "Tabelul {table} a fost respins de verificarea SQL ({issue})",
+      "phrases_dropped": "{count} fraze peste limita fișierului de limbă au rămas doar în ORIGINAL/",
+      "settings_unknown": "{count} setări cu tip necunoscut au devenit câmpuri text",
+      "templates_skipped": "{count} șabloane nu s-au convertit (limita de mărime)",
+      "css_dropped": "{rules} reguli și {declarations} declarații CSS nesigure sau LESS au fost scoase",
+      "css_file_rejected": "{count} fișiere CSS nu s-au putut citi",
+      "html_dropped": "Din șabloane au fost scoase: {scripts} scripturi, {styles} blocuri de stil, {inline} atribute style, {handlers} handlere on*",
+      "forms": "{count} câmpuri de formular din șabloane: formularele nu sunt permise în HTML-ul pluginului (folosește setările sau rutele API)",
+      "limit": "Limita manifestului: doar primele {max} intrări de tip {what} au fost păstrate",
+      "gpl": "Licență GPL: codul GPL nu poate intra într-o distribuție GCS închisă; păstrează licența și sursele dacă redistribui pluginul"
+    },
+    "recent": {
+      "title": "Portări recente",
+      "hint": "Portările și arhivele lor se șterg automat după o zi.",
+      "empty": "Nicio portare în ultima zi.",
+      "analyzed": "Analizată",
+      "converted": "Convertită",
+      "percent": "{percent}% automat",
+      "open": "Deschide"
+    },
+    "errors": {
+      "required": "Alege arhiva pluginului.",
+      "archive_too_large": "Arhiva e prea mare (maximum {max} octeți).",
+      "unknown_archive": "Fișierul nu e o arhivă .zip, .tar sau .tar.gz validă și nici un fișier .xml.",
+      "unknown_format": "Arhiva e validă, dar nu conține un plugin într-un format cunoscut: aplicație cu data/application.json, plugin într-un fișier XML sau add-on cu addon.json și _data/.",
+      "rights_required": "Alege temeiul și confirmă că ai dreptul să modifici și să folosești pluginul.",
+      "key_invalid": "Cheia pluginului trebuie să fie de forma vendor.nume (litere mici, cifre și _).",
+      "package_invalid": "Pachetul generat nu trece de verificări și nu poate fi trimis la instalare.",
+      "already_converted": "Portarea a fost deja convertită.",
+      "not_converted": "Portarea nu a fost încă convertită.",
+      "not_found": "Portarea nu există sau a expirat (se păstrează o zi)."
     }
   }
 }

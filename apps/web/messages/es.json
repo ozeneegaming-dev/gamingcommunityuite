@@ -260,6 +260,7 @@
         "cache": "Vaciar caché",
         "conversions": "Conversiones",
         "import": "Importación de otra plataforma",
+        "porting": "Plugin porting",
         "settings_languages": "Idiomas: traducción",
         "hooks": "Ganchos"
       },
@@ -3314,6 +3315,209 @@
       "invalid_path": "camino absoluto inválido",
       "invalid_url": "dirección inválida",
       "too_long": "demasiado tiempo"
+    }
+  },
+  "porting": {
+    "title": "Plugin porting",
+    "description": "Turn a plugin written for another platform into a GCS plugin: the manifest, settings, permissions, routes, phrases, tables, templates and CSS are converted automatically, and for the code you get the GCS equivalent of every file. Nothing is installed automatically.",
+    "stepsLabel": "Porting steps",
+    "steps": {
+      "upload": "Upload",
+      "rights": "Right to use",
+      "convert": "Conversion",
+      "result": "Result"
+    },
+    "upload": {
+      "title": "Upload the source plugin",
+      "hint": "The archive is only read, as text: nothing in it is executed and nothing is converted at this step.",
+      "file": "Choose the plugin archive (.zip, .tar, .tar.gz or .xml)",
+      "limits": "Up to {size} MB, at most 2000 files.",
+      "formats": "Recognized formats",
+      "submit": "Upload and analyze",
+      "uploading": "Analyzing…",
+      "network": "The upload failed. Check your connection and try again."
+    },
+    "formats": {
+      "app-json": "application with data/application.json",
+      "plugin-xml": "plugin in a single XML file",
+      "addon-json": "add-on with addon.json and _data/"
+    },
+    "formatHints": {
+      "app-json": "A .tar or .tar.gz archive with data/application.json, data/settings.json, data/lang.xml and the PHP code.",
+      "plugin-xml": "A single .xml file with hooks, settings, phrases, templates and embedded files.",
+      "addon-json": "A .zip archive with addon.json, the _data/ folder (options, phrases, permissions, routes, templates) and the PHP classes."
+    },
+    "detected": {
+      "title": "Detected format: {format}",
+      "newUpload": "Another archive",
+      "name": "Name",
+      "version": "Version",
+      "author": "Author",
+      "website": "Website",
+      "about": "Description",
+      "license": "Detected license",
+      "noLicense": "not detected",
+      "licenseFiles": "found in {files}",
+      "file": "File",
+      "expires": "The porting and its archives are deleted automatically on {date}.",
+      "counts": "What the source contains",
+      "warnings": "Reading warnings"
+    },
+    "counts": {
+      "files": "Files",
+      "settings": "Settings",
+      "permissions": "Permissions",
+      "routes": "Routes",
+      "phrases": "Phrases",
+      "tables": "Tables",
+      "templates": "Templates",
+      "styles": "CSS files",
+      "tasks": "Scheduled tasks",
+      "widgets": "Widgets",
+      "php": "PHP files",
+      "javascript": "JavaScript files"
+    },
+    "rights": {
+      "title": "Confirm your right to port the plugin",
+      "hint": "Required before the conversion. The basis and the confirmation go into the ACP log and the porting report.",
+      "basis": "Basis",
+      "bases": {
+        "author": "I am the plugin's author",
+        "consent": "I have the author's written consent",
+        "license": "The plugin's license allows modification and use"
+      },
+      "purchased": "Purchased plugins are licensed by their authors: the right to use a plugin usually does not include the right to modify, port or redistribute it.",
+      "gplTitle": "GPL license detected",
+      "gplBody": "The license or the file headers are GPL/AGPL/LGPL: GPL code cannot go into a closed GCS distribution. Keep the license and the sources if you redistribute the ported plugin.",
+      "key": "GCS plugin key",
+      "keyHint": "The form vendor.name: lowercase letters, digits and _ (e.g. acme.demo). Proposed from the source; you can change it.",
+      "confirm": "I confirm that I have the right to modify and use this plugin",
+      "submit": "Convert",
+      "converting": "Converting…",
+      "needsConfirm": "Choose the basis and tick the confirmation to convert.",
+      "readOnly": "You can only view this page: an administrator with edit rights can start the conversion."
+    },
+    "report": {
+      "title": "Porting result",
+      "subtitle": "{name} → {key} · version {version}",
+      "percentLabel": "of the work was done automatically (estimate)",
+      "percentHint": "The estimate compares what was converted (settings, permissions, routes, tables, templates, phrases) with what is left to port by hand (lines of PHP and JavaScript, the TODO places in server.mjs).",
+      "rights": "Right confirmed: {basis} · {date}",
+      "todos": "Places to fill in in server.mjs (TODO): {count}",
+      "size": "Result archive: {size} KB",
+      "contents": "The archive contains the plugin folder, the installable package ({file}), the original sources (ORIGINAL/, as text only), PORTING.md and report.json.",
+      "nothingInstalled": "Nothing was installed or enabled. The generated plugin is a skeleton: review and complete it before using it on a public site.",
+      "areas": "What was converted, by type",
+      "area": "Type",
+      "auto": "Automatic",
+      "manual": "Manual",
+      "download": "Download the result (.zip)",
+      "handoff": "Send to installer",
+      "handing": "Sending…",
+      "handoffHint": "The package goes to the validation step of the plugin installer (Applications and plugins), where you decide. It is not installed or enabled automatically.",
+      "handoffBlocked": "The generated package does not pass the checks, so it cannot be sent to the installer. Download the result, fix the plugin and upload it from Applications and plugins.",
+      "delete": "Delete the porting",
+      "deleteConfirm": "Delete this porting and its archives? The result you downloaded stays with you."
+    },
+    "areas": {
+      "manifest": "Manifest",
+      "settings": "Settings",
+      "permissions": "Permissions",
+      "routes": "Routes and menus",
+      "phrases": "Phrases",
+      "schema": "Tables (migration)",
+      "templates": "Templates",
+      "styles": "CSS",
+      "tasks": "Tasks (jobs)",
+      "widgets": "Widgets",
+      "code": "PHP code",
+      "javascript": "JavaScript"
+    },
+    "checks": {
+      "title": "Package checks",
+      "hint": "The same checks as when installing from Applications and plugins.",
+      "ok": "Valid package",
+      "failed": "Invalid package"
+    },
+    "manual": {
+      "title": "Left to port by hand",
+      "hint": "The source code is in ORIGINAL/ (as text only); PORTING.md in the archive has the same table.",
+      "file": "File (in ORIGINAL/)",
+      "kind": "Type",
+      "lines": "Lines",
+      "equivalent": "GCS equivalent",
+      "none": "Nothing to port by hand: everything recognized in the source was converted."
+    },
+    "kinds": {
+      "controller": "Controller",
+      "acp_controller": "ACP controller",
+      "api_controller": "API controller",
+      "model": "Model",
+      "service": "Service",
+      "extension": "Class extension",
+      "hook": "Hook",
+      "listener": "Listener",
+      "setup": "Setup",
+      "task": "Scheduled task",
+      "widget": "Widget",
+      "settings_form": "Settings form",
+      "javascript": "JavaScript",
+      "other": "Other"
+    },
+    "equivalents": {
+      "controller": "site page (routes.pages + pages in server.mjs); data from ctx.api and ctx.db",
+      "acp_controller": "ACP page (routes.acp + acp); configuration through the settings generated from the manifest",
+      "api_controller": "API route (routes.api + api), JSON, with the plugin's permissions",
+      "model": "table in the migration + access functions with ctx.db.query / ctx.db.execute",
+      "service": "functions in server.mjs (or server/*.mjs), called from pages, events and jobs",
+      "extension": "extension of a source platform class → event (events), the post.before_save filter or an extension point",
+      "hook": "hook → extension point (postbit.after_fields), widget or the post.before_save filter",
+      "listener": "listener → GCS events (events: post.created, user.registered…)",
+      "setup": "install / upgrade → SQL migrations in migrations/ (the plugin's schema)",
+      "task": "scheduled task → job (jobs, everyMinutes)",
+      "widget": "widget → widgets (sanitized HTML, rendered on the server)",
+      "settings_form": "the settings form is generated from the manifest; only special validations remain",
+      "javascript": "client JavaScript → client-js (signed plugins only) or replaced with HTML/CSS",
+      "other": "to review: code without a direct equivalent"
+    },
+    "notes": {
+      "title": "Warnings",
+      "none": "No warnings.",
+      "invalid_file": "Unreadable file (invalid JSON/XML): {path}",
+      "files_outside_root": "{count} files outside the application folder were ignored",
+      "column_type_unknown": "Column type {table}.{column} ({type}) became text",
+      "fulltext_index": "Fulltext index {table}.{index} was not converted (search is ported separately)",
+      "table_rejected": "Table {table} was rejected by the SQL check ({issue})",
+      "phrases_dropped": "{count} phrases over the language file limit stayed only in ORIGINAL/",
+      "settings_unknown": "{count} settings with an unknown type became text fields",
+      "templates_skipped": "{count} templates were not converted (size limit)",
+      "css_dropped": "{rules} unsafe or LESS CSS rules and {declarations} declarations were removed",
+      "css_file_rejected": "{count} CSS files could not be read",
+      "html_dropped": "Removed from templates: {scripts} scripts, {styles} style blocks, {inline} style attributes, {handlers} on* handlers",
+      "forms": "{count} form fields in templates: forms are not allowed in plugin HTML (use settings or API routes)",
+      "limit": "Manifest limit: only the first {max} {what} entries were kept",
+      "gpl": "GPL license: GPL code cannot go into a closed GCS distribution; keep the license and sources if you redistribute the plugin"
+    },
+    "recent": {
+      "title": "Recent portings",
+      "hint": "Portings and their archives are deleted automatically after one day.",
+      "empty": "No portings in the last day.",
+      "analyzed": "Analyzed",
+      "converted": "Converted",
+      "percent": "{percent}% automatic",
+      "open": "Open"
+    },
+    "errors": {
+      "required": "Choose the plugin archive.",
+      "archive_too_large": "The archive is too large (up to {max} bytes).",
+      "unknown_archive": "The file is not a valid .zip, .tar or .tar.gz archive, nor an .xml file.",
+      "unknown_format": "The archive is valid but does not contain a plugin in a known format: application with data/application.json, plugin in a single XML file or add-on with addon.json and _data/.",
+      "rights_required": "Choose the basis and confirm that you have the right to modify and use the plugin.",
+      "key_invalid": "The plugin key must have the form vendor.name (lowercase letters, digits and _).",
+      "package_invalid": "The generated package does not pass the checks and cannot be sent to the installer.",
+      "already_converted": "This porting was already converted.",
+      "not_converted": "This porting has not been converted yet.",
+      "not_found": "The porting does not exist or has expired (it is kept for one day)."
     }
   }
 }

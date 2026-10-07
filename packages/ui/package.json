@@ -24,6 +24,7 @@
     "./code.css": "./src/code.css",
     "./plugins.css": "./src/plugins.css",
     "./importer.css": "./src/importer.css",
+    "./porting.css": "./src/porting.css",
     "./icons": "./src/icons/index.tsx",
     "./icon-registry": "./src/icons/registry.ts"
   },
