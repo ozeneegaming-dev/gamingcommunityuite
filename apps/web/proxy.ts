@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { clientIp } from "./lib/actor";
 import { getAuth } from "./lib/auth";
 import { gcsConfigDir } from "./lib/config";
+import { isMaintenanceExempt } from "./lib/maintenance";
 import { isRootAdmin, SAFE_MODE_COOKIE, SAFE_MODE_PARAM } from "./lib/plugins";
 import { services } from "./lib/services";
 import { previewKeyFor, THEME_PREVIEW_COOKIE, THEME_PREVIEW_HEADER, THEME_PREVIEW_PARAM } from "./lib/theme-preview";
@@ -14,9 +15,6 @@ async function isInstalled(): Promise<boolean> {
   if (!installedCache) installedCache = await new GcsInstallState(gcsConfigDir()).isInstalled();
   return installedCache;
 }
-
-/** Căile disponibile și în mentenanță: login-ul (staff-ul trebuie să poată intra), autentificarea și health-check-ul. */
-const MAINTENANCE_EXEMPT = [/^\/login$/, /^\/api\/auth\//, /^\/api\/health$/, /^\/maintenance$/, /^\/gcs-names\.css$/];
 
 /** Actorul are `acp.access` (staff-ul vede site-ul normal în mentenanță). */
 async function hasAcpAccess(request: NextRequest): Promise<boolean> {
@@ -40,7 +38,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   if (gate === "not_found") return NextResponse.rewrite(new URL("/_not-found", request.url), { status: 404 });
   if (path === "/install" || path.startsWith("/install/")) return NextResponse.next();
 
-  if (!MAINTENANCE_EXEMPT.some((r) => r.test(path))) {
+  if (!isMaintenanceExempt(path)) {
     const maintenance = await services()
       .settings.get<boolean>("system.maintenance")
       .catch(() => false);
