@@ -61,6 +61,11 @@ const UPLOAD_LIMIT = { window: 3600, max: 60 };
 /** Încărcările din ACP (cataloage, încărcare în bloc): o limită separată, mai mare, doar pentru staff-ul cu acces ACP. */
 const ACP_UPLOAD_LIMIT = { window: 3600, max: 300 };
 const WEBP = { quality: 88, alphaQuality: 100, effort: 4 } as const;
+/**
+ * Animațiile: efortul 2 (în loc de 4) scurtează codarea cu ~40% pentru fișiere cu ~8% mai mari — un lot de zeci de rame
+ * animate trebuie să încapă în timpul unei cereri (proxy-ul are de obicei 60 s).
+ */
+const WEBP_ANIMATED = { ...WEBP, effort: 2 } as const;
 
 // ─── Durata video, citită din container (fără ffmpeg) ───
 
@@ -202,7 +207,7 @@ const animationError = (error: unknown): GcsValidationError => {
 async function encodeAnimation(img: Sharp, maxSide: number | null, delays: number[], loop: number): Promise<GcsPreparedPluginMedia> {
   const sized = maxSide === null ? img : img.resize({ width: maxSide, height: maxSide, fit: "inside", withoutEnlargement: true });
   const out = await sized
-    .webp(delays.length > 1 ? { ...WEBP, loop, delay: delays } : WEBP)
+    .webp(delays.length > 1 ? { ...WEBP_ANIMATED, loop, delay: delays } : WEBP)
     .timeout({ seconds: Math.ceil(PLUGIN_ANIMATION_LIMITS.timeBudgetMs / 1000) })
     .toBuffer();
   const meta = await sharp(out, { animated: true }).metadata();
