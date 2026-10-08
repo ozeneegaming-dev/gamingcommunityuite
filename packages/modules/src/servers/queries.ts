@@ -168,6 +168,11 @@ export class GcsServerQueries {
     return (await this.visibleRows(actor)).some((r) => r.id === id);
   }
 
+  /** Id-urile serverelor vizibile viewer-ului (puntea: statisticile, meciurile, clasamentele). */
+  async visibleIds(actor: GcsActor): Promise<number[]> {
+    return (await this.visibleRows(actor)).map((r) => r.id);
+  }
+
   /** Accesul la camera live `servers:{id}`. */
   async canJoin(actor: GcsActor, id: string): Promise<boolean> {
     return /^[1-9]\d{0,9}$/.test(id) && this.canView(actor, Number(id));

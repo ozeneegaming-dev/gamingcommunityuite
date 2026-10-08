@@ -98,6 +98,9 @@ import { GcsServerPoller } from "./servers/poller";
 import { GcsServerQueries } from "./servers/queries";
 import { GcsServerService, SERVER_BANNER } from "./servers/service";
 import { GcsServerStatusStore } from "./servers/store";
+import { GcsBridge } from "./servers/bridge";
+import { MAP_IMAGE, SANCTION_EVIDENCE } from "./servers/bridge/config";
+import { registerBridgeNotifications } from "./servers/bridge/notify";
 import { GcsClanAdmin } from "./clans/admin";
 import type { GcsClanGameStatsSource } from "./clans/gameStats";
 import { registerClanNotifications } from "./clans/notify";
@@ -195,6 +198,11 @@ export type GcsServices = {
   serverQueries: GcsServerQueries;
   /** Interogarea periodică a serverelor (rulează în `gcs-worker`). */
   serverPoller: GcsServerPoller;
+  /**
+   * Puntea cu serverele de joc (specul 2026-10-08-servere-bridge): protocolul pluginurilor, cheile, identitățile,
+   * adminii, sancțiunile, statisticile, meciurile mix, contestațiile, hărțile și joburile lor.
+   */
+  bridge: GcsBridge;
   /** Clanurile (etapa Gaming): crearea, intrarea, rolurile, forumul privat, moderarea staff-ului, joburile. */
   clans: GcsClanService;
   /** Citirile publice ale clanurilor (`/clans`, pagina clanului, tagurile, widget-ul). */
@@ -435,6 +443,28 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   attachments.registerAccess(SERVER_BANNER, (actor, id) => serverQueries.canView(actor, Number(id)));
   // Aplicația Clanuri: serviciul, citirile publice, imaginile (le vede cine vede clanul) și notificările.
   const servers = new GcsServerService({ db, bus, acp, attachments, rateLimiter, store: serverStore });
+  // Puntea cu serverele de joc: furnizorul statisticilor (citit de clanuri), imaginile hărților (publice), dovezile
+  // sancțiunilor (le vede cine vede sancțiunea), camera live a unui meci mix și notificările tichetelor.
+  const bridge = new GcsBridge({
+    db,
+    redis,
+    bus,
+    settings,
+    permissions,
+    acp,
+    apps,
+    attachments,
+    rateLimiter,
+    realtime,
+    render: (content) => posting.render(content),
+    canViewServer: (actor, id) => serverQueries.canView(actor, id),
+    visibleServers: (actor) => serverQueries.visibleIds(actor),
+  });
+  bridge.listen(bus);
+  servers.playerStats.use(bridge.stats);
+  attachments.registerAccess(MAP_IMAGE, async () => true);
+  attachments.registerAccess(SANCTION_EVIDENCE, (actor, id) => bridge.sanctions.canView(actor, Number(id)));
+  realtimeRooms.register("match", (actor, id) => bridge.queries.canJoinMatch(actor, id));
   // Statisticile de joc ale aplicației Servere, citite de clanuri doar cu aplicația Servere activă (specul clanurilor §15).
   const clanGameStats: GcsClanGameStatsSource = { enabled: () => apps.enabled("servers"), forUsers: (ids, opts) => servers.playerStats.forUsers(ids, opts) };
   const clans = new GcsClanService({ db, cache, bus, settings, permissions, acp, apps, actors, attachments, rateLimiter, gameStats: clanGameStats });
@@ -443,6 +473,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   attachments.registerAccess(CLAN_BANNER, (actor, id) => clanQueries.canSeeClan(actor, Number(id)));
   registerClanNotifications({ db, bus, notifications, clanQueries, actors });
   registerChatNotifications({ db, bus, notifications, chatQueries, actors });
+  registerBridgeNotifications({ db, bus, notifications, tickets: bridge.tickets, actors });
   registerLiveEvents(bus, { db, realtime });
 
   // Butonul „Traduce” (etapa 5): conținutul membrilor, cu verificarea accesului fiecărui tip.
@@ -611,6 +642,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     servers,
     serverQueries,
     serverPoller: new GcsServerPoller({ db, store: serverStore, realtime, cache, settings, apps }),
+    bridge,
     clans,
     clanQueries,
     clanAdmin: new GcsClanAdmin({ db, acp, settings, permissions, bus, registry, clans }),

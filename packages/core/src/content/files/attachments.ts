@@ -267,6 +267,16 @@ export class GcsAttachmentService {
     if (file.bytes.length > opts.maxBytes) throw new GcsValidationError({ file: "too_large" }, { maxKb: String(Math.floor(opts.maxBytes / 1024)) });
     const limit = await rateLimiter.consume(`upload:${actor.userId}`, UPLOAD_LIMIT);
     if (!limit.allowed) throw new GcsRateLimited({ retryAfter: String(limit.retryAfter) });
+    return this.storeImage(actor.userId, file, opts);
+  }
+
+  /**
+   * Aceeași recodare ca `uploadImage`, pentru imaginile aduse de un modul în numele site-ului (ex. imaginile hărților
+   * încărcate în masă din ACP sau descărcate după un șablon de adresă): fără limitele de upload ale unui membru. Dreptul
+   * și limitele le verifică apelantul; fișierul rămâne nelegat până când modulul îl leagă de conținut.
+   */
+  async storeImage(ownerId: string | null, file: GcsUploadedFile, opts: { maxBytes: number; width: number; height: number; fit: "cover" | "inside" }): Promise<GcsAttachmentInfo> {
+    if (file.bytes.length > opts.maxBytes) throw new GcsValidationError({ file: "too_large" }, { maxKb: String(Math.floor(opts.maxBytes / 1024)) });
     const detected = await fileTypeFromBuffer(file.bytes);
     if (!detected || !(detected.mime in IMAGE_FORMATS)) throw new GcsValidationError({ file: "unsupported_type" });
     let out: Buffer;
@@ -280,7 +290,7 @@ export class GcsAttachmentService {
       throw new GcsValidationError({ file: "invalid_image" });
     }
     const meta = await sharp(out).metadata();
-    return this.save(actor.userId, `${cleanFilename(file.name).replace(/\.[a-z0-9]+$/i, "") || "imagine"}.webp`, {
+    return this.save(ownerId, `${cleanFilename(file.name).replace(/\.[a-z0-9]+$/i, "") || "imagine"}.webp`, {
       bytes: out,
       mime: "image/webp",
       ext: "webp",

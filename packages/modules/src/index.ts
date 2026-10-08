@@ -64,6 +64,7 @@ export { GcsServerQueries, GCS_HISTORY_RANGES, type GcsHistoryRange, type GcsHis
 export { GcsServerService, SERVERS_ACP_SECTION, SERVER_BANNER, SERVER_LIMITS, type GcsServerAcpRow, type GcsServerEdit, type GcsServerInput, type GcsServerTestInput } from "./servers/service";
 export { GcsServerPoller, POLL_INTERVAL_SETTING, serverRoom, STATUS_EVENT, SHOW_PLAYERS_SETTING } from "./servers/poller";
 export * from "./servers/playerStats";
+export * from "./servers/bridge";
 export { clansModule } from "./clans";
 export * from "./clans/text";
 export * from "./clans/options";

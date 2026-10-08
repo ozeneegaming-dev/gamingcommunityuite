@@ -20,6 +20,8 @@ export function registerAppJobs(s: GcsServices): void {
   s.importer.registerJobs(s.jobs);
   // Aplicația Servere: runda de interogare (10 s) și agregarea orară a istoricului.
   s.serverPoller.registerJobs(s.jobs);
+  // Puntea cu serverele de joc: curățenia (5 min), locurile pe server, legăturile Steam și imaginile hărților (10 min).
+  s.bridge.registerJobs(s.jobs);
   // Aplicația Clanuri: clasamentul (orar), expirările și arhivarea clanurilor inactive (zilnic).
   s.clans.registerJobs(s.jobs);
 }

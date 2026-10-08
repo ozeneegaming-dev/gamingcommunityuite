@@ -88,6 +88,11 @@ model User {
   chatReactions   ChatMessageReaction[]
   /// Serverele de joc la care membrul e admin (aplicația Servere).
   gameServerAdmin GameServerAdmin[]
+  /// Puntea cu serverele de joc: identitățile de joc legate, codurile de legare, intrările de admin și tichetele.
+  gamePlayers     GamePlayer[]
+  gameLinkCodes   GameLinkCode[]
+  gameAdmins      GameAdmin[]
+  gameTickets     GameTicket[]      @relation("GameTicketAuthor")
   /// Aplicația Clanuri: clanurile membrului, cererile / invitațiile lui, invitațiile trimise și clanurile fondate.
   clanMemberships ClanMember[]
   clanRequests    ClanRequest[] @relation("ClanRequestUser")
@@ -213,6 +218,8 @@ model Group {
   promotionsTo         GroupPromotion[]
   vipSubscriptions     VipSubscription[]
   vipLog               VipLog[]
+  /// VIP pe serverele de joc (flag-urile grupului pe fiecare server).
+  gameVipMappings      GameVipMapping[]
 
   @@map("groups")
 }
@@ -1749,9 +1756,27 @@ model GameServer {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  forum     Forum?            @relation(fields: [forumId], references: [id], onDelete: SetNull)
-  admins    GameServerAdmin[]
-  snapshots ServerSnapshot[]
+  /// Puntea (specul 2026-10-08-servere-bridge §4.1): modul identităților (`steam` / `mixed`), identitățile pe nume,
+  /// serverul de meciuri mix, ultimul heartbeat și pluginul raportat.
+  identityMode String    @default("mixed")
+  nameIds      Boolean   @default(false)
+  isMix        Boolean   @default(false)
+  bridgeSeenAt DateTime?
+  bridgePlugin String?
+
+  forum        Forum?            @relation(fields: [forumId], references: [id], onDelete: SetNull)
+  admins       GameServerAdmin[]
+  snapshots    ServerSnapshot[]
+  bridgeKeys   GameServerKey[]
+  sessions     GameSession[]
+  playerStats  GamePlayerStat[]
+  gameAdmins   GameAdmin[]
+  sanctions    GameSanction[]
+  vipMappings  GameVipMapping[]
+  matches      GameMatch[]
+  adminActions GameAdminAction[]
+  tickets      GameTicket[]
+  lastPlayers  GamePlayer[]      @relation("GamePlayerLastServer")
 
   @@unique([game, host, port])
   @@index([enabled, position])
@@ -1922,4 +1947,537 @@ model ClanRequest {
   @@index([clanId, status])
   @@index([userId, status])
   @@map("clan_requests")
+}
+
+// ─── Puntea cu serverele de joc (specul 2026-10-08-servere-bridge) ───────────
+
+/// Tipul unei identități de joc: Steam (dovedit), non-Steam (ID-ul emulatorului) sau numele.
+enum GamePlayerKind {
+  STEAM
+  NONSTEAM
+  NAME
+}
+
+enum GameTrust {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+/// Cum a fost legată identitatea de un membru: contul Steam conectat, codul din joc sau staff-ul.
+enum GameLinkSource {
+  STEAM
+  CODE
+  STAFF
+}
+
+/// Cine primește drepturile unui admin de server: un membru, o identitate brută sau un nume cu parolă.
+enum GameAdminSubject {
+  USER
+  PLAYER
+  NAME
+}
+
+enum GameSanctionType {
+  BAN
+  MUTE
+  GAG
+}
+
+enum GameSanctionScope {
+  SERVER
+  GLOBAL
+}
+
+enum GameSanctionSource {
+  SITE
+  GAME
+}
+
+enum GameMatchStatus {
+  WARMUP
+  LIVE
+  HALFTIME
+  ENDED
+  ABORTED
+}
+
+/// Contestația unui ban, reclamația unui cheater sau a unui admin.
+enum GameTicketKind {
+  APPEAL
+  CHEATER
+  ADMIN
+}
+
+enum GameTicketStatus {
+  OPEN
+  REVIEW
+  ACCEPTED
+  REJECTED
+  CLOSED
+}
+
+enum GameTicketMessageKind {
+  MESSAGE
+  STATUS
+  ASSIGN
+}
+
+enum GameMapSource {
+  UPLOAD
+  TEMPLATE
+}
+
+/// Cheile API ale unui server. `signingKey` = hash-ul secretului (SHA-256 hex), sigilat cu `GCS_SECRET`; secretul nu e
+/// păstrat nicăieri. `expiresAt` = perioada de grație a unei chei rotite.
+model GameServerKey {
+  id          Int       @id @default(autoincrement())
+  serverId    Int
+  keyId       String    @unique
+  signingKey  String
+  label       String    @default("")
+  createdById String?
+  createdAt   DateTime  @default(now())
+  lastUsedAt  DateTime?
+  lastIp      String?
+  revokedAt   DateTime?
+  expiresAt   DateTime?
+
+  server GameServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@index([serverId])
+  @@map("game_server_keys")
+}
+
+/// O identitate de joc (`kind`, `value`), cu sau fără cont pe site. `value`: SteamID64 (`STEAM`), ID-ul canonic al
+/// emulatorului (`NONSTEAM`) sau numele normalizat (`NAME`).
+model GamePlayer {
+  id           Int             @id @default(autoincrement())
+  kind         GamePlayerKind
+  value        String
+  trust        GameTrust
+  userId       String?
+  linkSource   GameLinkSource?
+  linkedAt     DateTime?
+  /// Ultimul nume văzut (curățat, max 32).
+  name         String          @default("")
+  firstSeenAt  DateTime        @default(now())
+  lastSeenAt   DateTime        @default(now())
+  lastServerId Int?
+
+  user         User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  lastServer   GameServer?       @relation("GamePlayerLastServer", fields: [lastServerId], references: [id], onDelete: SetNull)
+  linkCodes    GameLinkCode[]
+  sessions     GameSession[]
+  stats        GamePlayerStat[]
+  weaponStats  GameWeaponStat[]
+  mapStats     GameMapStat[]
+  adminEntries GameAdmin[]
+  sanctions    GameSanction[]
+  matches      GameMatchPlayer[]
+  rating       GameRating?
+
+  @@unique([kind, value])
+  @@index([userId])
+  @@index([lastSeenAt])
+  @@map("game_players")
+}
+
+/// Codurile de legare din joc (`/gcs COD`): doar hash-ul codului (SHA-256), valabil 10 minute, o singură folosire.
+model GameLinkCode {
+  id        Int       @id @default(autoincrement())
+  userId    String
+  codeHash  String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  playerId  Int?
+  createdAt DateTime  @default(now())
+
+  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  player GamePlayer? @relation(fields: [playerId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@map("game_link_codes")
+}
+
+/// Conectările pe servere. `disconnectedAt` gol = online; `adminId` = adminul recunoscut în sesiune.
+model GameSession {
+  id             BigInt    @id @default(autoincrement())
+  serverId       Int
+  playerId       Int
+  adminId        Int?
+  name           String    @default("")
+  ip             String?
+  connectedAt    DateTime  @default(now())
+  disconnectedAt DateTime?
+  seconds        Int       @default(0)
+
+  server GameServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  admin  GameAdmin? @relation(fields: [adminId], references: [id], onDelete: SetNull)
+
+  @@index([serverId, disconnectedAt])
+  @@index([playerId, connectedAt])
+  @@index([adminId, connectedAt])
+  @@map("game_sessions")
+}
+
+/// Statisticile unui jucător pe un server. `score` = ucideri − decese − ucideri în echipă; `rank` = locul pe server
+/// (jobul `servers.bridge.ranks`), gol sub timpul minim de joc.
+model GamePlayerStat {
+  playerId   Int
+  serverId   Int
+  kills      Int      @default(0)
+  deaths     Int      @default(0)
+  headshots  Int      @default(0)
+  assists    Int      @default(0)
+  teamkills  Int      @default(0)
+  suicides   Int      @default(0)
+  shots      Int      @default(0)
+  hits       Int      @default(0)
+  damage     Int      @default(0)
+  playtime   Int      @default(0)
+  rounds     Int      @default(0)
+  roundsWon  Int      @default(0)
+  score      Int      @default(0)
+  rank       Int?
+  lastSeenAt DateTime @default(now())
+
+  player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  server GameServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@id([playerId, serverId])
+  @@index([serverId, rank])
+  @@map("game_player_stats")
+}
+
+model GameWeaponStat {
+  playerId  Int
+  serverId  Int
+  weapon    String
+  kills     Int    @default(0)
+  deaths    Int    @default(0)
+  headshots Int    @default(0)
+  shots     Int    @default(0)
+  hits      Int    @default(0)
+  damage    Int    @default(0)
+
+  player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@id([playerId, serverId, weapon])
+  @@map("game_weapon_stats")
+}
+
+model GameMapStat {
+  playerId  Int
+  serverId  Int
+  map       String
+  kills     Int    @default(0)
+  deaths    Int    @default(0)
+  headshots Int    @default(0)
+  playtime  Int    @default(0)
+  rounds    Int    @default(0)
+  roundsWon Int    @default(0)
+
+  player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@id([playerId, serverId, map])
+  @@map("game_map_stats")
+}
+
+/// Id-urile evenimentelor aplicate (idempotența), păstrate 14 zile.
+model GameBridgeEvent {
+  serverId  Int
+  eventId   String
+  createdAt DateTime @default(now())
+
+  @@id([serverId, eventId])
+  @@index([createdAt])
+  @@map("game_bridge_events")
+}
+
+/// Presetările de admin (flag-uri AMXX + imunitate), editabile.
+model GameAdminPreset {
+  id       Int    @id @default(autoincrement())
+  name     String
+  flags    String
+  immunity Int    @default(0)
+  position Int    @default(0)
+
+  admins GameAdmin[]
+
+  @@map("game_admin_presets")
+}
+
+/// Un admin de server. `serverId` gol = toate serverele; `flags` / `immunity` goale = ale presetului. Subiectul `NAME`
+/// are doar sarea și verificatorul parolei (`hex(SHA-256(salt:parolă))`), niciodată parola.
+model GameAdmin {
+  id               Int              @id @default(autoincrement())
+  subject          GameAdminSubject
+  userId           String?
+  playerId         Int?
+  name             String?
+  nameNormalized   String?
+  passwordSalt     String?
+  passwordVerifier String?
+  serverId         Int?
+  presetId         Int?
+  flags            String?
+  immunity         Int?
+  allowNonSteam    Boolean          @default(false)
+  note             String           @default("")
+  expiresAt        DateTime?
+  /// Expirarea a fost deja scrisă în jurnal (jobul de curățenie).
+  expiredLoggedAt  DateTime?
+  createdById      String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  user     User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  player   GamePlayer?      @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  server   GameServer?      @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  preset   GameAdminPreset? @relation(fields: [presetId], references: [id], onDelete: SetNull)
+  sessions GameSession[]
+
+  @@index([userId])
+  @@index([playerId])
+  @@index([serverId])
+  @@index([nameNormalized])
+  @@map("game_admins")
+}
+
+/// Bannurile și comunicațiile (mute vocal / gag chat). Activă = `unbannedAt` gol și (`expiresAt` gol sau în viitor);
+/// se aplică pe serverul S = `GLOBAL` sau `serverId = S`. `revision` vine din secvența `game_sync_revision` și se
+/// schimbă la orice modificare (sincronizarea incrementală a pluginurilor).
+model GameSanction {
+  id             Int                @id @default(autoincrement())
+  type           GameSanctionType
+  scope          GameSanctionScope
+  serverId       Int?
+  playerId       Int?
+  targetKind     GamePlayerKind?
+  targetValue    String?
+  ip             String?
+  name           String?
+  reason         String
+  createdAt      DateTime           @default(now())
+  expiresAt      DateTime?
+  adminUserId    String?
+  adminPlayerId  Int?
+  adminName      String             @default("")
+  source         GameSanctionSource
+  unbannedAt     DateTime?
+  unbannedById   String?
+  unbannedByName String?
+  unbanReason    String?
+  /// `[{ url }]`, max 10 adrese https.
+  evidence       Json               @default("[]")
+  revision       BigInt             @default(dbgenerated("nextval('game_sync_revision'::regclass)"))
+  updatedAt      DateTime           @updatedAt
+
+  server  GameServer?  @relation(fields: [serverId], references: [id], onDelete: SetNull)
+  player  GamePlayer?  @relation(fields: [playerId], references: [id], onDelete: SetNull)
+  tickets GameTicket[]
+
+  @@index([revision])
+  @@index([playerId])
+  @@index([targetKind, targetValue])
+  @@index([ip])
+  @@index([type, expiresAt])
+  @@map("game_sanctions")
+}
+
+/// Jurnalul acțiunilor din joc (ban, kick, slay, mute…), raportate de plugin.
+model GameAdminAction {
+  id             Int      @id @default(autoincrement())
+  serverId       Int
+  adminPlayerId  Int?
+  adminUserId    String?
+  adminId        Int?
+  adminName      String   @default("")
+  action         String
+  targetPlayerId Int?
+  targetName     String   @default("")
+  reason         String   @default("")
+  details        Json?
+  sanctionId     Int?
+  at             DateTime @default(now())
+
+  server GameServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@index([serverId, at])
+  @@index([adminId, at])
+  @@index([adminUserId, at])
+  @@map("game_admin_actions")
+}
+
+/// VIP pe servere: grupul VIP pornit pe server, cu flag-urile lui (implicit `b`, rezervarea).
+model GameVipMapping {
+  id       Int     @id @default(autoincrement())
+  serverId Int
+  groupId  Int
+  enabled  Boolean @default(true)
+  flags    String  @default("b")
+
+  server GameServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  group  Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([serverId, groupId])
+  @@map("game_vip_mappings")
+}
+
+/// Un meci mix (5v5). `externalId` = id-ul dat de plugin, unic pe server; `winner` = `A` / `B` / `DRAW` la final;
+/// `rated` = ELO-ul a fost aplicat.
+model GameMatch {
+  id         Int             @id @default(autoincrement())
+  serverId   Int
+  externalId String
+  map        String          @default("")
+  status     GameMatchStatus @default(WARMUP)
+  teamAName  String          @default("")
+  teamBName  String          @default("")
+  scoreA     Int             @default(0)
+  scoreB     Int             @default(0)
+  round      Int             @default(0)
+  winner     String?
+  startedAt  DateTime        @default(now())
+  liveAt     DateTime?
+  endedAt    DateTime?
+  rated      Boolean         @default(false)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  server  GameServer        @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  players GameMatchPlayer[]
+  rounds  GameMatchRound[]
+
+  @@unique([serverId, externalId])
+  @@index([serverId, startedAt])
+  @@index([status, endedAt])
+  @@map("game_matches")
+}
+
+model GameMatchPlayer {
+  matchId   Int
+  playerId  Int
+  team      String
+  name      String @default("")
+  kills     Int    @default(0)
+  deaths    Int    @default(0)
+  assists   Int    @default(0)
+  headshots Int    @default(0)
+  damage    Int    @default(0)
+  mvps      Int    @default(0)
+  eloBefore Int?
+  eloAfter  Int?
+
+  match  GameMatch  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@id([matchId, playerId])
+  @@index([playerId])
+  @@map("game_match_players")
+}
+
+model GameMatchRound {
+  matchId Int
+  number  Int
+  winner  String
+  scoreA  Int
+  scoreB  Int
+  reason  String   @default("")
+  endedAt DateTime @default(now())
+
+  match GameMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@id([matchId, number])
+  @@map("game_match_rounds")
+}
+
+/// ELO-ul unei identități (meciurile mix) și totalurile ei.
+model GameRating {
+  playerId  Int      @id
+  elo       Int
+  matches   Int      @default(0)
+  wins      Int      @default(0)
+  losses    Int      @default(0)
+  draws     Int      @default(0)
+  peak      Int
+  updatedAt DateTime @updatedAt
+
+  player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([elo])
+  @@map("game_ratings")
+}
+
+/// Contestațiile bannurilor și reclamațiile (cheater / admin). Conținutul e documentul editorului, randat ca postările.
+model GameTicket {
+  id             Int              @id @default(autoincrement())
+  kind           GameTicketKind
+  status         GameTicketStatus @default(OPEN)
+  authorId       String
+  serverId       Int?
+  sanctionId     Int?
+  targetPlayerId Int?
+  targetUserId   String?
+  targetAdminId  Int?
+  targetName     String           @default("")
+  title          String
+  contentJson    Json
+  contentHtml    String
+  /// `[{ url }]`, max 10 adrese https.
+  evidence       Json             @default("[]")
+  assigneeId     String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  lastActivityAt DateTime         @default(now())
+  closedAt       DateTime?
+
+  author   User                @relation("GameTicketAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  server   GameServer?         @relation(fields: [serverId], references: [id], onDelete: SetNull)
+  sanction GameSanction?       @relation(fields: [sanctionId], references: [id], onDelete: SetNull)
+  messages GameTicketMessage[]
+
+  @@index([status, lastActivityAt])
+  @@index([authorId, kind, status])
+  @@index([sanctionId])
+  @@index([serverId, status])
+  @@map("game_tickets")
+}
+
+model GameTicketMessage {
+  id          Int                   @id @default(autoincrement())
+  ticketId    Int
+  authorId    String?
+  kind        GameTicketMessageKind @default(MESSAGE)
+  contentJson Json?
+  contentHtml String                @default("")
+  internal    Boolean               @default(false)
+  data        Json?
+  createdAt   DateTime              @default(now())
+
+  ticket GameTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt])
+  @@map("game_ticket_messages")
+}
+
+/// Catalogul hărților pe joc. `imageId` = atașamentul `servers.map` (public); fără el se arată arta generică.
+model GameMap {
+  id          Int            @id @default(autoincrement())
+  game        String
+  name        String
+  imageId     String?
+  source      GameMapSource?
+  fetchedAt   DateTime?
+  fetchError  String?
+  attempts    Int            @default(0)
+  nextFetchAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@unique([game, name])
+  @@index([imageId, nextFetchAt])
+  @@map("game_maps")
 }
