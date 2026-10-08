@@ -83,7 +83,25 @@ export const serversModule: GcsModule = {
   seed: ({ tx }) => GcsBridgeAdmins.seedPresets(tx),
   widgets: serverWidgets,
   stats: serverStatTiles,
-  // Imediat după Forum (macheta aprobată); adus de actualizarea meniului `nav:v3`.
-  nav: [{ key: "servers", labelKey: "site.nav.servers", icon: "fa-solid fa-server", href: "/servers", position: 2, since: "nav:v3" }],
+  // Imediat după Forum (macheta aprobată); adus de actualizarea meniului `nav:v3`. Submeniul (paginile punții, specul
+  // 2026-10-08-servere-pagini §10) vine cu `nav:v6`: pe un site existent, copiii se adaugă activi sub itemul neschimbat.
+  nav: [
+    {
+      key: "servers",
+      labelKey: "site.nav.servers",
+      icon: "fa-solid fa-server",
+      href: "/servers",
+      position: 2,
+      since: "nav:v3",
+      children: [
+        { key: "servers_all", labelKey: "site.nav.serversAll", icon: "fa-solid fa-server", href: "/servers", since: "nav:v6" },
+        { key: "servers_leaderboard", labelKey: "site.nav.serversLeaderboard", icon: "fa-solid fa-ranking-star", href: "/servers/leaderboard", since: "nav:v6" },
+        { key: "servers_matches", labelKey: "site.nav.serversMatches", icon: "fa-solid fa-crosshairs", href: "/servers/matches", since: "nav:v6" },
+        { key: "servers_bans", labelKey: "site.nav.bans", icon: "fa-solid fa-gavel", href: "/bans", since: "nav:v6" },
+        { key: "servers_admins", labelKey: "site.nav.serverAdmins", icon: "fa-solid fa-user-shield", href: "/servers/admins", since: "nav:v6" },
+        { key: "servers_tickets", labelKey: "site.nav.serverTickets", icon: "fa-solid fa-flag", href: "/servers/tickets", since: "nav:v6" },
+      ],
+    },
+  ],
   navPrevious: [],
 };

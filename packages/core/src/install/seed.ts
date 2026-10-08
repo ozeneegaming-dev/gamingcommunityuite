@@ -127,7 +127,8 @@ export async function seedDefaults(db: PrismaClient, registry: GcsModuleRegistry
     // Meniul principal implicit din itemii modulelor (etapa 5); un meniu editat de admin rămâne.
     // O singură dată (marcajul `nav`): un meniu golit de admin nu e refăcut la repornire.
     // Marcajele versiunilor de meniu (`NAV_MARKS`: `nav:v2` cu Activitate, Clasament, VIP, Reguli și submeniul Membri;
-    // `nav:v3` cu Servere; `nav:v4` cu Clanuri; `nav:v5` pornește itemii adăugați dezactivați și completează submeniul Membri): o instalare nouă le primește direct; una existentă își actualizează meniul o singură dată
+    // `nav:v3` cu Servere; `nav:v4` cu Clanuri; `nav:v5` pornește itemii adăugați dezactivați și completează submeniul Membri;
+    // `nav:v6` adaugă submeniul Servere): o instalare nouă le primește direct; una existentă își actualizează meniul o singură dată
     // pentru fiecare marcaj lipsă, în ordine (`GcsNavService.upgradeDefaults`).
     const navState = await tx.systemState.upsert({ where: { id: 1 }, update: {}, create: { id: 1 } });
     if (!navState.seedMarks.includes("nav")) {
@@ -137,6 +138,7 @@ export async function seedDefaults(db: PrismaClient, registry: GcsModuleRegistry
       for (const mark of NAV_MARKS) {
         if (navState.seedMarks.includes(mark)) continue;
         if (mark === "nav:v5") await GcsNavService.enableDefaults(tx, registry);
+        else if (mark === "nav:v6") await GcsNavService.appendDefaultChildren(tx, registry, mark);
         else await GcsNavService.upgradeDefaults(tx, registry, mark);
         await tx.systemState.update({ where: { id: 1 }, data: { seedMarks: { push: mark } } });
       }

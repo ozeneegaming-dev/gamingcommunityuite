@@ -15,7 +15,13 @@
       "rules": "Reguli",
       "more": "Mai mult",
       "servers": "Servere",
-      "clans": "Clanuri"
+      "clans": "Clanuri",
+      "serversAll": "Toate serverele",
+      "serversLeaderboard": "Clasamente",
+      "serversMatches": "Meciuri mix",
+      "bans": "Banuri",
+      "serverAdmins": "Admini",
+      "serverTickets": "Contestații"
     },
     "acp": "ACP",
     "myProfile": "Profilul meu",

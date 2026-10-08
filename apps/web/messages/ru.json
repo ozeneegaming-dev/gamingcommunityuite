@@ -15,7 +15,13 @@
       "rules": "Rules",
       "more": "More",
       "servers": "Servers",
-      "clans": "Clans"
+      "clans": "Clans",
+      "serversAll": "All servers",
+      "serversLeaderboard": "Leaderboards",
+      "serversMatches": "Mix matches",
+      "bans": "Bans",
+      "serverAdmins": "Admins",
+      "serverTickets": "Appeals"
     },
     "acp": "ACP",
     "myProfile": "Мой профиль",

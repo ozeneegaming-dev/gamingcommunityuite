@@ -117,8 +117,11 @@ export type GcsWidgetLayoutDefaults = Partial<Record<GcsWidgetPage, { zone: GcsW
 export type GcsStatTile = { key: string; labelKey: string; value: number; icon: string; href?: string; color?: string };
 export type GcsStatsContext = { db: PrismaClient };
 
-/** Un subitem implicit (un singur nivel sub un item din meniul principal). */
-export type GcsNavDefaultChild = { key: string; labelKey: string; icon: string; href: string };
+/**
+ * Un subitem implicit (un singur nivel sub un item din meniul principal). `since` = marcajul versiunii de meniu care l-a
+ * adus (ex. `nav:v6`); lipsă = a venit odată cu itemul părinte (vezi `GcsNavService.appendDefaultChildren`).
+ */
+export type GcsNavDefaultChild = { key: string; labelKey: string; icon: string; href: string; since?: string };
 /** Un item implicit din meniul principal, declarat de un modul (cu subitemii lui, dacă are submeniu). */
 export type GcsNavDefault = GcsNavDefaultChild & {
   position: number;

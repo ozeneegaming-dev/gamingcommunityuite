@@ -18,10 +18,11 @@ const LABEL_LOCALES = ["ro", "en", "de", "es", "fr", "ru"];
 
 /**
  * Versiunile meniului implicit, în ordine (marcajele din `system_state.seedMarks`): `nav:v2` (Activitate, Clasament,
- * VIP, Reguli, submeniul Membri), `nav:v3` (Servere), `nav:v4` (Clanuri). O instalare nouă le primește pe toate; una existentă își
- * actualizează meniul o dată pentru fiecare marcaj lipsă (`GcsNavService.upgradeDefaults`).
+ * VIP, Reguli, submeniul Membri), `nav:v3` (Servere), `nav:v4` (Clanuri), `nav:v5` (itemii adăugați dezactivați
+ * pornesc), `nav:v6` (submeniul Servere). O instalare nouă le primește pe toate; una existentă își actualizează meniul o
+ * dată pentru fiecare marcaj lipsă (`GcsNavService.upgradeDefaults`, `enableDefaults`, `appendDefaultChildren`).
  */
-export const NAV_MARKS: readonly string[] = ["nav:v2", "nav:v3", "nav:v4", "nav:v5"];
+export const NAV_MARKS: readonly string[] = ["nav:v2", "nav:v3", "nav:v4", "nav:v5", "nav:v6"];
 
 /** Eticheta unui item: cheie de traducere (itemii impliciți) sau text pe limbi (itemii adăugați de admin). */
 export type GcsNavLabel = { key: string } | Partial<Record<string, string>>;
@@ -194,7 +195,12 @@ export class GcsNavService {
     const rows = await tx.navItem.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] });
     const current = navDefaults(registry, "current");
     const index = Math.max(0, NAV_MARKS.indexOf(mark));
-    const previous = index === 0 ? navDefaults(registry, "previous") : current.filter((n) => NAV_MARKS.indexOf(n.since ?? NAV_MARKS[0]!) < index);
+    // Meniul dinaintea marcajului: fără itemii și fără copiii aduși de el sau de marcajele de după.
+    const before = (since: string | undefined) => NAV_MARKS.indexOf(since ?? NAV_MARKS[0]!) < index;
+    const previous =
+      index === 0
+        ? navDefaults(registry, "previous")
+        : current.filter((n) => before(n.since)).map((n) => (n.children ? { ...n, children: n.children.filter((c) => before(c.since)) } : n));
     if (matchesDefaults(rows, previous)) {
       await tx.navItem.deleteMany({});
       await createDefaults(tx, current, 0, true);
@@ -239,6 +245,38 @@ export class GcsNavService {
       }
     }
     return { enabled, children };
+  }
+
+  /**
+   * Marcajul `nav:v6` (și următoarele care aduc copii noi, o singură dată): sub fiecare item implicit de pe primul nivel
+   * găsit neschimbat (aceeași etichetă-cheie, același link, aceeași aplicație) se adaugă la coadă, **activi**, copiii
+   * impliciți aduși de marcaj (`since`) al căror link lipsește din submeniul lui. Itemii creați sau redenumiți de admin
+   * nu se ating; copiii mai vechi scoși de admin nu revin; un copil al cărui link adminul l-a pus singur pe primul nivel
+   * (un link care nu e implicit acolo) nu se dublează.
+   */
+  static async appendDefaultChildren(tx: Prisma.TransactionClient, registry: GcsModuleRegistry, mark: string): Promise<number> {
+    const rows = await tx.navItem.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] });
+    const top = rows.filter((r) => r.parentId === null);
+    const topHrefs = new Set(top.map((r) => r.href).filter((h): h is string => h !== null));
+    const defaults = navDefaults(registry, "current");
+    const defaultTopHrefs = new Set(defaults.map((d) => d.href));
+    let added = 0;
+    for (const d of defaults) {
+      const kids = (d.children ?? []).filter((c) => c.since === mark);
+      if (kids.length === 0) continue;
+      const row = top.find((r) => r.href === d.href && labelKeyOf(r.label) === d.labelKey && r.appKey === d.appKey);
+      if (!row) continue;
+      const existing = rows.filter((r) => r.parentId === row.id);
+      const have = new Set(existing.map((r) => r.href));
+      let position = existing.reduce((max, r) => Math.max(max, r.position + 1), 0);
+      for (const c of kids) {
+        if (have.has(c.href) || (topHrefs.has(c.href) && !defaultTopHrefs.has(c.href))) continue;
+        await tx.navItem.create({ data: { parentId: row.id, position: position++, label: { key: c.labelKey }, icon: c.icon, href: c.href, groups: [], enabled: true } });
+        have.add(c.href);
+        added++;
+      }
+    }
+    return added;
   }
 }
 
