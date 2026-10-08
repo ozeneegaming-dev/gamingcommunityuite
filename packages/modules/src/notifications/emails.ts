@@ -53,7 +53,31 @@ const TEXTS: Record<string, Record<Locale, (a: string, t: string, n: number, dat
   "vip.granted": { ro: (_a, t) => `Ai primit ${t}`, en: (_a, t) => `You received ${t}` },
   "vip.expired": { ro: (_a, t) => `${t} a expirat`, en: (_a, t) => `Your ${t} has expired` },
   "core.warning": { ro: (_a, t) => `Ai primit un avertisment: ${t}`, en: (_a, t) => `You received a warning: ${t}` },
+  "clans.invite": { ro: (a, t) => `${a} te-a invitat în clanul „${t}”`, en: (a, t) => `${a} invited you to the clan “${t}”` },
+  "clans.request": {
+    ro: (a, t, n) => (n > 1 ? `${n} cereri noi de intrare în clanul „${t}”` : `${a} vrea să intre în clanul „${t}”`),
+    en: (a, t, n) => (n > 1 ? `${n} new requests to join the clan “${t}”` : `${a} wants to join the clan “${t}”`),
+  },
+  "clans.membership": { ro: (_a, t, _n, d) => clanMembershipText("ro", t, d.kind), en: (_a, t, _n, d) => clanMembershipText("en", t, d.kind) },
+  "clans.review": {
+    ro: (_a, t, _n, d) => (d.kind === "approved" ? `Clanul tău „${t}” a fost aprobat` : `Clanul tău „${t}” a fost respins${d.reason ? `: ${String(d.reason)}` : ""}`),
+    en: (_a, t, _n, d) => (d.kind === "approved" ? `Your clan “${t}” was approved` : `Your clan “${t}” was rejected${d.reason ? `: ${String(d.reason)}` : ""}`),
+  },
 };
+
+/** Schimbările de apartenență la un clan (`clans.membership`), după `data.kind`. */
+function clanMembershipText(l: Locale, t: string, kind: unknown): string {
+  const texts: Record<string, Record<Locale, string>> = {
+    accepted: { ro: `Cererea ta de intrare în clanul „${t}” a fost acceptată`, en: `Your request to join the clan “${t}” was accepted` },
+    rejected: { ro: `Cererea ta de intrare în clanul „${t}” a fost refuzată`, en: `Your request to join the clan “${t}” was declined` },
+    promoted: { ro: `Ai fost numit ofițer în clanul „${t}”`, en: `You are now an officer of the clan “${t}”` },
+    demoted: { ro: `Nu mai ești ofițer în clanul „${t}”`, en: `You are no longer an officer of the clan “${t}”` },
+    leader: { ro: `Ai devenit liderul clanului „${t}”`, en: `You are now the leader of the clan “${t}”` },
+    kicked: { ro: `Ai fost scos din clanul „${t}”`, en: `You were removed from the clan “${t}”` },
+    disbanded: { ro: `Clanul „${t}” a fost desființat`, en: `The clan “${t}” was disbanded` },
+  };
+  return texts[typeof kind === "string" ? kind : ""]?.[l] ?? t;
+}
 
 /** Propoziția unei notificări (text simplu). */
 export function notificationText(input: GcsNotificationTextInput, locale: string): string {

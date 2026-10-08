@@ -18,10 +18,10 @@ const LABEL_LOCALES = ["ro", "en", "de", "es", "fr", "ru"];
 
 /**
  * Versiunile meniului implicit, în ordine (marcajele din `system_state.seedMarks`): `nav:v2` (Activitate, Clasament,
- * VIP, Reguli, submeniul Membri), `nav:v3` (Servere). O instalare nouă le primește pe toate; una existentă își
+ * VIP, Reguli, submeniul Membri), `nav:v3` (Servere), `nav:v4` (Clanuri). O instalare nouă le primește pe toate; una existentă își
  * actualizează meniul o dată pentru fiecare marcaj lipsă (`GcsNavService.upgradeDefaults`).
  */
-export const NAV_MARKS: readonly string[] = ["nav:v2", "nav:v3"];
+export const NAV_MARKS: readonly string[] = ["nav:v2", "nav:v3", "nav:v4"];
 
 /** Eticheta unui item: cheie de traducere (itemii impliciți) sau text pe limbi (itemii adăugați de admin). */
 export type GcsNavLabel = { key: string } | Partial<Record<string, string>>;

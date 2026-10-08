@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { Prisma, PrismaClient } from "@gcs/db";
 import { writeAudit } from "../audit";
 import type { GcsCache } from "../cache";
@@ -26,6 +27,18 @@ type GcsGroupSetPerms = {
 
 type GcsModeratorRow = { userId: string | null; groupId: number | null; powers: string[] };
 
+/** Drepturile date direct unui membru de module (`GcsModule.memberGrants`), în forma din cache. */
+type GcsUserGrants = {
+  /** `${containerType}:${containerId}:${action}` */
+  actions: string[];
+  /** `${containerType}:${containerId}` → puterile de moderare. */
+  powers: Record<string, string[]>;
+};
+const NO_GRANTS: GcsUserGrants = { actions: [], powers: {} };
+/** Generația drepturilor unui membru: se schimbă la `invalidateMemberGrants`, deci cheile vechi nu se mai citesc. */
+const GRANTS_GEN_TTL_SEC = 7 * 24 * 3600;
+const grantsGenKey = (userId: string) => `perm:grants-gen:${userId}`;
+
 /**
  * Singurul punct de verificare a permisiunilor (spec §6.3).
  *
@@ -41,6 +54,10 @@ type GcsModeratorRow = { userId: string | null; groupId: number | null; powers: 
  * Etapa 5: **permisiunile individuale** (`user_permissions`) se aplică după grupuri, doar pentru setările de grup:
  * valoarea individuală o înlocuiește pe cea combinată a grupurilor (poate da sau lua un drept). Bannul și
  * `root_admin` rămân deasupra lor.
+ *
+ * Clanurile (specul 2026-10-08-clanuri §5.2): **drepturile date membrilor** de module (`GcsModule.memberGrants`, ex.
+ * forumul privat al clanului) se adaugă la uniunea grupurilor pe containerul efectiv, în `can`, `filterContainers` și
+ * `moderatorPowers`. Vizitatorii nu primesc niciodată astfel de drepturi; bannul și `root_admin` rămân deasupra lor.
  */
 export class GcsPermissionService {
   constructor(
@@ -68,7 +85,9 @@ export class GcsPermissionService {
     if (container) {
       const effective = await this.effectiveContainer(container, version);
       if (!effective) return false;
-      return perms.containers.includes(`${effective.type}:${effective.id}:${key}`);
+      const ref = `${effective.type}:${effective.id}:${key}`;
+      if (perms.containers.includes(ref)) return true;
+      return (await this.memberGrants(actor.userId, version)).actions.includes(ref);
     }
     const own = await this.userOverrides(actor.userId, version);
     return isGranted(key in own ? own[key] : perms.values[key]);
@@ -125,7 +144,16 @@ export class GcsPermissionService {
     const mine = rows.filter(
       (r) => (r.userId !== null && r.userId === actor.userId) || (r.groupId !== null && actor.groupIds.includes(r.groupId)),
     );
-    return [...new Set(mine.flatMap((r) => r.powers))].sort();
+    const powers = mine.flatMap((r) => r.powers);
+    // Puterile date membrului de module, pe container și pe containerul de la care moștenește permisiunile.
+    if (actor.userId) {
+      const grants = await this.memberGrants(actor.userId, version);
+      const effective = resolveInherit(await this.inheritMap(version), container);
+      for (const ref of new Set([`${container.type}:${container.id}`, ...(effective ? [`${effective.type}:${effective.id}`] : [])])) {
+        powers.push(...(grants.powers[ref] ?? []));
+      }
+    }
+    return [...new Set(powers)].sort();
   }
 
   /**
@@ -140,6 +168,7 @@ export class GcsPermissionService {
 
     const parents = await this.inheritMap(version);
     const granted = new Set(perms.containers);
+    for (const ref of (await this.memberGrants(actor.userId, version)).actions) granted.add(ref);
     const allowed = new Set<string>();
     for (const c of containers) {
       const effective = resolveInherit(parents, c);
@@ -211,6 +240,43 @@ export class GcsPermissionService {
   /** Versiunea curentă a permisiunilor (se schimbă la orice modificare de grupuri sau permisiuni). */
   currentVersion(): Promise<number> {
     return this.version();
+  }
+
+  /**
+   * Drepturile date direct membrilor (`GcsModule.memberGrants`) se recalculează: se cheamă după orice schimbare care le
+   * afectează (ex. intrarea sau ieșirea dintr-un clan). Noua generație face cheile vechi inutile, deci și un request
+   * care a citit starea veche chiar înainte de schimbare nu poate pune în cache drepturi expirate pentru request-urile
+   * următoare.
+   */
+  async invalidateMemberGrants(userIds: string[]): Promise<void> {
+    for (const userId of new Set(userIds)) {
+      await this.deps.cache.set(grantsGenKey(userId), randomUUID(), { ttlSec: GRANTS_GEN_TTL_SEC, tags: [] });
+    }
+  }
+
+  /** Drepturile date membrului de module, cache-uite pe (versiunea permisiunilor, generația membrului); `{}` pentru vizitatori. */
+  private async memberGrants(userId: string | null, version: number): Promise<GcsUserGrants> {
+    if (!userId) return NO_GRANTS;
+    const providers = this.deps.registry.all().filter((m) => m.memberGrants);
+    if (providers.length === 0) return NO_GRANTS;
+    const { db, cache } = this.deps;
+    const gen = (await cache.get<string>(grantsGenKey(userId))) ?? "0";
+    const cacheKey = `perm:${version}:grants:${userId}:${gen}`;
+    const cached = await cache.get<GcsUserGrants>(cacheKey);
+    if (cached) return cached;
+    const actions = new Set<string>();
+    const powers: Record<string, string[]> = {};
+    for (const m of providers) {
+      for (const g of await m.memberGrants!({ db, cache }, userId)) {
+        const ref = `${g.type}:${g.id}`;
+        for (const action of g.actions) actions.add(`${ref}:${action}`);
+        if (g.powers.length > 0) powers[ref] = [...new Set([...(powers[ref] ?? []), ...g.powers])];
+      }
+    }
+    const grants: GcsUserGrants = { actions: [...actions], powers };
+    // `apps`: o aplicație dezactivată nu mai dă drepturi (modulul verifică starea ei la calcul).
+    await cache.set(cacheKey, grants, { ttlSec: CACHE_TTL_SEC, tags: [CACHE_TAG, "apps"] });
+    return grants;
   }
 
   private async version(): Promise<number> {

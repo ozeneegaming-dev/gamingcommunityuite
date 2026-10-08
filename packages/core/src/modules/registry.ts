@@ -130,6 +130,14 @@ export type GcsNavDefault = GcsNavDefaultChild & {
   since?: string;
 };
 
+/**
+ * Drepturile unui membru pe un container date de un modul, nu de grupuri (specul 2026-10-08-clanuri §5.2): ex. forumul
+ * privat al unui clan, pentru membrii clanului. `actions` = cheile de permisiune pe container (ex. `forums.read`),
+ * `powers` = puterile de moderare (ex. `hide`). Se adaugă la uniunea grupurilor; bannul și Root Admin rămân deasupra.
+ */
+export type GcsMemberGrant = { type: string; id: string; actions: string[]; powers: string[] };
+export type GcsMemberGrantsContext = { db: PrismaClient; cache: GcsCache };
+
 /** Un modul GamingCommunitySuite (spec §5). Restul câmpurilor din spec se adaugă în etapele care le folosesc. */
 export interface GcsModule {
   key: string;
@@ -165,6 +173,11 @@ export interface GcsModule {
    * l-a modificat, ca actualizarea meniului (marcajul `nav:v2`) să-l poată înlocui cu cel nou.
    */
   navPrevious?: GcsNavDefault[];
+  /**
+   * Drepturile date direct unui membru pe containere (vezi `GcsMemberGrant`). Rezultatul e cache-uit de
+   * `GcsPermissionService` pe membru; modulul cheamă `invalidateMemberGrants` la orice schimbare care le afectează.
+   */
+  memberGrants?: (ctx: GcsMemberGrantsContext, userId: string) => Promise<GcsMemberGrant[]>;
 }
 
 export class GcsModuleRegistry {

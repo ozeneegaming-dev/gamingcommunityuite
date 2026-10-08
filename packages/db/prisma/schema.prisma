@@ -88,6 +88,11 @@ model User {
   chatReactions   ChatMessageReaction[]
   /// Serverele de joc la care membrul e admin (aplicația Servere).
   gameServerAdmin GameServerAdmin[]
+  /// Aplicația Clanuri: clanurile membrului, cererile / invitațiile lui, invitațiile trimise și clanurile fondate.
+  clanMemberships ClanMember[]
+  clanRequests    ClanRequest[] @relation("ClanRequestUser")
+  clanInvitesSent ClanRequest[] @relation("ClanRequestInviter")
+  clansCreated    Clan[]        @relation("ClanCreator")
 
   rank             Rank?                     @relation(fields: [rankId], references: [id], onDelete: SetNull)
   nameStyle        NameStyle?                @relation(fields: [nameStyleId], references: [id], onDelete: SetNull)
@@ -483,6 +488,8 @@ model Forum {
   prefixes ForumPrefix[]
   /// Serverele de joc care au acest forum ca „forumul serverului”.
   gameServers GameServer[]
+  /// Clanul care are acest forum ca forum privat.
+  clan        Clan?
 
   @@index([parentId, position])
   @@map("forums")
@@ -1787,4 +1794,132 @@ model ServerSnapshot {
   @@index([serverId, at])
   @@index([hourly, at])
   @@map("server_snapshots")
+}
+
+// ─── Clanuri (etapa Gaming, specul 2026-10-08-clanuri) ───────────────────────
+
+/// Starea unui clan: în așteptarea aprobării staff-ului, activ sau arhivat (fără activitate sau de staff).
+enum ClanStatus {
+  PENDING
+  ACTIVE
+  ARCHIVED
+}
+
+enum ClanRole {
+  LEADER
+  OFFICER
+  MEMBER
+}
+
+/// Cum se intră în clan: liber, cu cerere aprobată sau doar cu invitație.
+enum ClanJoinMode {
+  OPEN
+  REQUEST
+  INVITE
+}
+
+enum ClanRequestKind {
+  REQUEST
+  INVITE
+}
+
+enum ClanRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+  EXPIRED
+}
+
+/// Un clan. `tagNormalized` / `nameNormalized` (litere mari / mici, fără diacritice) țin unicitatea. `forumId` = forumul
+/// privat (drepturile vin din apartenență, nu din grupuri). `memberLimit` gol = limita grupurilor liderului.
+model Clan {
+  id              Int          @id @default(autoincrement())
+  tag             String
+  tagNormalized   String       @unique
+  name            String
+  nameNormalized  String       @unique
+  slug            String
+  status          ClanStatus   @default(PENDING)
+  locked          Boolean      @default(false)
+  lockReason      String?
+  joinMode        ClanJoinMode @default(REQUEST)
+  /// Documentul editorului (profilul `clanDescription`) și HTML-ul sanitizat de renderer.
+  descriptionJson Json?
+  descriptionHtml String       @default("")
+  /// Atașamentele logo-ului și bannerului (`clans.logo` / `clans.banner`, legate de id-ul clanului).
+  logoId          String?
+  bannerId        String?
+  color           String       @default("#D62839")
+  color2          String       @default("#1B1E26")
+  /// `{ discord?, steam?, website?, youtube?, twitch? }`, adrese https validate.
+  links           Json         @default("{}")
+  /// Drepturile date ofițerilor de lider (`members`, `invite`, `requests`, `edit`, `forum`, `events`).
+  officerRights   String[]     @default([])
+  memberLimit     Int?
+  membersCount    Int          @default(0)
+  score           Int          @default(0)
+  /// Locul în clasament (doar clanurile active); `scoreParts` = valorile formulei.
+  rank            Int?
+  scoreParts      Json         @default("{}")
+  scoredAt        DateTime?
+  forumId         Int?         @unique
+  /// Liderul a cerut forumul privat la creare (opțiunea „opțional”): se creează la aprobare.
+  forumRequested  Boolean      @default(false)
+  createdById     String?
+  approvedById    String?
+  approvedAt      DateTime?
+  lastActivityAt  DateTime     @default(now())
+  archivedAt      DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  forum     Forum?        @relation(fields: [forumId], references: [id], onDelete: SetNull)
+  createdBy User?         @relation("ClanCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  members   ClanMember[]
+  requests  ClanRequest[]
+
+  @@index([status, rank])
+  @@index([status, membersCount])
+  @@index([status, createdAt])
+  @@map("clans")
+}
+
+/// Membrii unui clan. Un singur lider pe clan (indexul unic parțial `clan_members_one_leader`, din migrare).
+model ClanMember {
+  clanId   Int
+  userId   String
+  role     ClanRole @default(MEMBER)
+  joinedAt DateTime @default(now())
+
+  clan Clan @relation(fields: [clanId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([clanId, userId])
+  @@index([userId])
+  @@map("clan_members")
+}
+
+/// Cererile de intrare (`REQUEST`, `userId` = candidatul) și invitațiile (`INVITE`, `userId` = invitatul). O singură
+/// cerere / invitație în așteptare pe (clan, membru, fel): indexul unic parțial `clan_requests_one_pending`, din migrare.
+model ClanRequest {
+  id          Int               @id @default(autoincrement())
+  clanId      Int
+  userId      String
+  kind        ClanRequestKind
+  status      ClanRequestStatus @default(PENDING)
+  message     String            @default("")
+  invitedById String?
+  decidedById String?
+  createdAt   DateTime          @default(now())
+  expiresAt   DateTime
+  decidedAt   DateTime?
+
+  clan      Clan  @relation(fields: [clanId], references: [id], onDelete: Cascade)
+  user      User  @relation("ClanRequestUser", fields: [userId], references: [id], onDelete: Cascade)
+  invitedBy User? @relation("ClanRequestInviter", fields: [invitedById], references: [id], onDelete: SetNull)
+
+  @@index([clanId, status])
+  @@index([userId, status])
+  @@map("clan_requests")
 }

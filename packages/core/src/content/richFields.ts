@@ -14,7 +14,7 @@ type DocNode = {
   marks?: { type: string; attrs?: Record<string, unknown> }[];
 };
 
-export type GcsRichFieldKey = "signature" | "chatRules" | "announcement" | "profileText";
+export type GcsRichFieldKey = "signature" | "chatRules" | "announcement" | "profileText" | "clanDescription";
 
 /** Ce acceptă un câmp: nodurile și mărcile permise și limitele implicite. */
 export type GcsRichFieldProfile = {
@@ -61,6 +61,14 @@ export const GCS_RICH_FIELDS = {
     marks: ["bold", "italic", "underline", "strike", "link", "highlight", "textStyle"],
     maxChars: 5000,
     maxImages: 0,
+  },
+  // Descrierea unui clan (specul 2026-10-08-clanuri): titluri, liste, citate și cel mult 2 imagini din adrese https.
+  clanDescription: {
+    key: "clanDescription",
+    nodes: ["paragraph", "heading", ...LISTS, "blockquote", "horizontalRule", "hardBreak", "image"],
+    marks: TEXT_MARKS,
+    maxChars: 5000,
+    maxImages: 2,
   },
 } as const satisfies Record<GcsRichFieldKey, GcsRichFieldProfile>;
 

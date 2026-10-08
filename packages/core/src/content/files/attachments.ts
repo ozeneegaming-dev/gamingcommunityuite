@@ -256,6 +256,40 @@ export class GcsAttachmentService {
   }
 
   /**
+   * O imagine cu mărimea fixată de modul (ex. logo-ul sau bannerul unui clan, specul 2026-10-08-clanuri §9): doar
+   * imagini (tipul real din magic bytes), recodate în WebP fără EXIF și fără animație; `fit: "cover"` decupează exact la
+   * `width × height`, `"inside"` o încadrează (fără mărire). Limita de mărime o dă apelantul (opțiunile modulului), iar
+   * dreptul de a încărca îl verifică tot apelantul. Rămâne nelegată (a membrului) până când modulul o leagă de conținut.
+   */
+  async uploadImage(actor: GcsActor, file: GcsUploadedFile, opts: { maxBytes: number; width: number; height: number; fit: "cover" | "inside" }): Promise<GcsAttachmentInfo> {
+    const { rateLimiter } = this.deps;
+    if (!actor.userId) throw new GcsForbidden({ reason: "guest" });
+    if (file.bytes.length > opts.maxBytes) throw new GcsValidationError({ file: "too_large" }, { maxKb: String(Math.floor(opts.maxBytes / 1024)) });
+    const limit = await rateLimiter.consume(`upload:${actor.userId}`, UPLOAD_LIMIT);
+    if (!limit.allowed) throw new GcsRateLimited({ retryAfter: String(limit.retryAfter) });
+    const detected = await fileTypeFromBuffer(file.bytes);
+    if (!detected || !(detected.mime in IMAGE_FORMATS)) throw new GcsValidationError({ file: "unsupported_type" });
+    let out: Buffer;
+    try {
+      const img = sharp(file.bytes, { limitInputPixels: 100_000_000 }).rotate();
+      out = await img
+        .resize(opts.fit === "cover" ? { width: opts.width, height: opts.height, fit: "cover", position: "attention" } : { width: opts.width, height: opts.height, fit: "inside", withoutEnlargement: true })
+        .webp({ quality: 88 })
+        .toBuffer();
+    } catch {
+      throw new GcsValidationError({ file: "invalid_image" });
+    }
+    const meta = await sharp(out).metadata();
+    return this.save(actor.userId, `${cleanFilename(file.name).replace(/\.[a-z0-9]+$/i, "") || "imagine"}.webp`, {
+      bytes: out,
+      mime: "image/webp",
+      ext: "webp",
+      width: meta.width ?? null,
+      height: meta.height ?? null,
+    });
+  }
+
+  /**
    * Logo-ul sau favicon-ul unei teme (specul etapei 5): doar imagini, recodate, fără animație. Logo-ul devine WebP
    * (max 800×240, transparența se păstrează), favicon-ul PNG 64×64 (încadrat, fundal transparent). Fișierul e public
    * (`theme.logo` / `theme.favicon`, legat de cheia temei); dreptul ACP îl verifică apelantul.

@@ -118,3 +118,18 @@ export const serverWidgets: GcsWidgetDef[] = [
     ],
   }),
 ];
+
+/**
+ * Widget-ul aplicației Clanuri (specul 2026-10-08-clanuri §12): primele clanuri din clasament (locul, logo-ul, tagul,
+ * numele, membrii, punctele). Câmpul: câte clanuri.
+ */
+export const clanWidgets: GcsWidgetDef[] = [
+  widget({
+    key: "clans.top",
+    labelKey: "widgets.clans.top",
+    descriptionKey: "widgets.desc.clans.top",
+    icon: "fa-solid fa-people-group",
+    defaultConfig: { limit: 5 },
+    fields: [limitField()],
+  }),
+];

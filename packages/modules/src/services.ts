@@ -98,6 +98,10 @@ import { GcsServerPoller } from "./servers/poller";
 import { GcsServerQueries } from "./servers/queries";
 import { GcsServerService, SERVER_BANNER } from "./servers/service";
 import { GcsServerStatusStore } from "./servers/store";
+import { GcsClanAdmin } from "./clans/admin";
+import { registerClanNotifications } from "./clans/notify";
+import { GcsClanQueries } from "./clans/queries";
+import { CLAN_BANNER, CLAN_LOGO, GcsClanService } from "./clans/service";
 
 export type GcsServices = {
   db: PrismaClient;
@@ -190,6 +194,12 @@ export type GcsServices = {
   serverQueries: GcsServerQueries;
   /** Interogarea periodică a serverelor (rulează în `gcs-worker`). */
   serverPoller: GcsServerPoller;
+  /** Clanurile (etapa Gaming): crearea, intrarea, rolurile, forumul privat, moderarea staff-ului, joburile. */
+  clans: GcsClanService;
+  /** Citirile publice ale clanurilor (`/clans`, pagina clanului, tagurile, widget-ul). */
+  clanQueries: GcsClanQueries;
+  /** ACP → Gaming → Clanuri: lista, fișa și opțiunile. */
+  clanAdmin: GcsClanAdmin;
 };
 
 /** Golește cache-ul Redis al paginilor (cheile și seturile de tag-uri `gcs:k:*`, `gcs:tag:*`), fără cozi și limite. */
@@ -422,6 +432,12 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   realtimeRooms.register("servers", (actor, id) => serverQueries.canJoin(actor, id));
   // Bannerul unui server se vede doar de cine vede serverul.
   attachments.registerAccess(SERVER_BANNER, (actor, id) => serverQueries.canView(actor, Number(id)));
+  // Aplicația Clanuri: serviciul, citirile publice, imaginile (le vede cine vede clanul) și notificările.
+  const clans = new GcsClanService({ db, cache, bus, settings, permissions, acp, apps, actors, attachments, rateLimiter });
+  const clanQueries = new GcsClanQueries({ db, cache, permissions, settings, apps, clans });
+  attachments.registerAccess(CLAN_LOGO, (actor, id) => clanQueries.canSeeClan(actor, Number(id)));
+  attachments.registerAccess(CLAN_BANNER, (actor, id) => clanQueries.canSeeClan(actor, Number(id)));
+  registerClanNotifications({ db, bus, notifications, clanQueries, actors });
   registerChatNotifications({ db, bus, notifications, chatQueries, actors });
   registerLiveEvents(bus, { db, realtime });
 
@@ -591,6 +607,9 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     servers: new GcsServerService({ db, bus, acp, attachments, rateLimiter, store: serverStore }),
     serverQueries,
     serverPoller: new GcsServerPoller({ db, store: serverStore, realtime, cache, settings, apps }),
+    clans,
+    clanQueries,
+    clanAdmin: new GcsClanAdmin({ db, acp, settings, permissions, bus, registry, clans }),
   };
   registerAppJobs(services);
   return services;

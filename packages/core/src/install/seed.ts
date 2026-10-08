@@ -127,7 +127,7 @@ export async function seedDefaults(db: PrismaClient, registry: GcsModuleRegistry
     // Meniul principal implicit din itemii modulelor (etapa 5); un meniu editat de admin rămâne.
     // O singură dată (marcajul `nav`): un meniu golit de admin nu e refăcut la repornire.
     // Marcajele versiunilor de meniu (`NAV_MARKS`: `nav:v2` cu Activitate, Clasament, VIP, Reguli și submeniul Membri;
-    // `nav:v3` cu Servere): o instalare nouă le primește direct; una existentă își actualizează meniul o singură dată
+    // `nav:v3` cu Servere; `nav:v4` cu Clanuri): o instalare nouă le primește direct; una existentă își actualizează meniul o singură dată
     // pentru fiecare marcaj lipsă, în ordine (`GcsNavService.upgradeDefaults`).
     const navState = await tx.systemState.upsert({ where: { id: 1 }, update: {}, create: { id: 1 } });
     if (!navState.seedMarks.includes("nav")) {
