@@ -21,7 +21,7 @@ const LABEL_LOCALES = ["ro", "en", "de", "es", "fr", "ru"];
  * VIP, Reguli, submeniul Membri), `nav:v3` (Servere), `nav:v4` (Clanuri). O instalare nouă le primește pe toate; una existentă își
  * actualizează meniul o dată pentru fiecare marcaj lipsă (`GcsNavService.upgradeDefaults`).
  */
-export const NAV_MARKS: readonly string[] = ["nav:v2", "nav:v3", "nav:v4"];
+export const NAV_MARKS: readonly string[] = ["nav:v2", "nav:v3", "nav:v4", "nav:v5"];
 
 /** Eticheta unui item: cheie de traducere (itemii impliciți) sau text pe limbi (itemii adăugați de admin). */
 export type GcsNavLabel = { key: string } | Partial<Record<string, string>>;
@@ -184,7 +184,8 @@ export class GcsNavService {
    * `nav:v3`…):
    * - meniul nemodificat (identic cu meniul implicit dinaintea marcajului) e înlocuit cu cel nou;
    * - un meniu modificat de admin rămâne cum e; itemii noi de pe primul nivel, cu un link care nu există încă în meniu,
-   *   se adaugă la coadă **dezactivați**, ca adminul să-i activeze din Manager meniu dacă îi vrea.
+   *   se adaugă la coadă **activi** (decizia proprietarului, 2026-10-08: o aplicație nouă apare singură în meniu; adminul
+   *   o poate ascunde din Manager meniu).
    *
    * Meniul dinaintea lui `nav:v2` e cel din `navPrevious`; dinaintea unui marcaj mai nou, e meniul curent fără itemii
    * aduși de el sau de marcajele de după (`since`).
@@ -203,8 +204,41 @@ export class GcsNavService {
     const missing = current.filter((n) => !hrefs.has(n.href));
     if (missing.length === 0) return "unchanged";
     const start = rows.filter((r) => r.parentId === null).reduce((max, r) => Math.max(max, r.position + 1), 0);
-    await createDefaults(tx, missing, start, false);
+    await createDefaults(tx, missing, start, true);
     return "appended";
+  }
+
+  /**
+   * Marcajul `nav:v5` (o singură dată): pornește itemii impliciți adăugați **dezactivați** de actualizările dinainte
+   * (`nav:v2`–`nav:v4`) și completează submeniul implicit al unui item de pe primul nivel care nu are copii (ex. Membri).
+   * Se ating doar itemii identici cu cei impliciți (aceeași etichetă-cheie, link și aplicație); itemii proprii ai adminului
+   * rămân neschimbați. Un copil implicit al cărui link adminul l-a pus singur pe primul nivel (ex. Staff) nu se mai adaugă.
+   */
+  static async enableDefaults(tx: Prisma.TransactionClient, registry: GcsModuleRegistry): Promise<{ enabled: number; children: number }> {
+    const rows = await tx.navItem.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] });
+    const top = rows.filter((r) => r.parentId === null);
+    const topHrefs = new Set(top.map((r) => r.href).filter((h): h is string => h !== null));
+    const defaults = navDefaults(registry, "current");
+    const defaultHrefs = new Set(defaults.map((d) => d.href));
+    let enabled = 0;
+    let children = 0;
+    for (const d of defaults) {
+      const row = top.find((r) => r.href === d.href && labelKeyOf(r.label) === d.labelKey && r.appKey === d.appKey);
+      if (!row) continue;
+      if (!row.enabled) {
+        await tx.navItem.update({ where: { id: row.id }, data: { enabled: true } });
+        enabled++;
+      }
+      const kids = d.children ?? [];
+      if (kids.length === 0 || rows.some((r) => r.parentId === row.id)) continue;
+      let position = 0;
+      for (const c of kids) {
+        if (topHrefs.has(c.href) && !defaultHrefs.has(c.href)) continue;
+        await tx.navItem.create({ data: { parentId: row.id, position: position++, label: { key: c.labelKey }, icon: c.icon, href: c.href, groups: [] } });
+        children++;
+      }
+    }
+    return { enabled, children };
   }
 }
 
@@ -225,6 +259,13 @@ async function createDefaults(tx: Prisma.TransactionClient, items: NavDefaultIte
       await tx.navItem.create({ data: { parentId: row.id, position, label: { key: c.labelKey }, icon: c.icon, href: c.href, groups: [] } });
     }
   }
+}
+
+/** Cheia etichetei unui item (`{ key }`), sau `null` pentru o etichetă scrisă de admin. */
+function labelKeyOf(label: Prisma.JsonValue): string | null {
+  return label && typeof label === "object" && !Array.isArray(label) && Object.keys(label).length === 1 && typeof (label as Record<string, unknown>).key === "string"
+    ? ((label as Record<string, unknown>).key as string)
+    : null;
 }
 
 /** `true` dacă rândurile sunt exact meniul implicit dat: aceiași itemi, în aceeași ordine, cu valorile implicite. */
