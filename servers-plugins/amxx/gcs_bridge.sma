@@ -40,10 +40,13 @@
 #define PLUGIN_ID   "gcs-amxx/1.0.0"
 #define BASE_PATH   "/api/servers/bridge/v1"
 
-#define BIG          49152
-#define ITEM         2048
-#define MAX_QUEUE    3000
+// Corpul unei cereri: nativele AMX Mod X (hash_string) și AmxxEasyHttp (set_body) citesc cel mult 16383 de caractere
+// dintr-un șir Pawn, deci un lot rămâne sub această limită (și semnătura acoperă exact ce se trimite).
+#define BODY         16000
+#define ITEM         4096
+#define MAX_QUEUE    2000
 #define BATCH        100
+#define ROUND_CHUNK  8
 #define SANCTION_PAGE 100
 #define AUTH_LEN     40
 #define NAME_LEN     64
@@ -131,10 +134,12 @@ new bool:g_nameIds;
 // ─── Starea ──────────────────────────────────────────────────────────────────
 
 new Array:g_queue, Array:g_admins, Array:g_vip, Array:g_sanctions;
+new g_queueHead;              // evenimentele dinaintea lui sunt confirmate (scoase fără mutarea întregii cozi)
 new g_runId[9], g_seq;
 new bool:g_inflight, g_batchCount, g_backoff, g_nextSendAt, g_lastEventsAt;
 new g_etagAdmins[33], g_etagVip[33], g_cursor, g_remoteSanctions, g_lastPull;
 new bool:g_pullingSanctions, bool:g_sanctionsFull;
+new g_removedTotal, g_removedAtPull;  // evenimentele ieșite din coadă (de la pornire); câte erau la ultima cerere de sancțiuni
 new g_dataDir[128];
 
 // ─── Jucătorii ──────────────────────────────────────────────────────────────
@@ -219,10 +224,20 @@ public plugin_natives()
 	register_native("gcs_mix_command", "native_mix_command");
 	register_native("gcs_mix_state", "native_mix_state");
 	register_native("gcs_queue_event", "native_queue_event");
+	set_module_filter("module_filter");
 	set_native_filter("native_filter");
 }
 
-/** ReAPI e opțional: fără el, nativele lui lipsesc și pluginul merge mai departe. */
+/**
+ * ReAPI e opțional: `reapi.inc` cere biblioteca `reapi` (`#pragma reqlib`); fără filtrul acesta, pluginul compilat cu
+ * ReAPI nu s-ar încărca pe serverele fără el.
+ */
+public module_filter(const library[], LibType:type)
+{
+	return equal(library, "reapi") ? PLUGIN_HANDLED : PLUGIN_CONTINUE;
+}
+
+/** Fără ReAPI, nativele lui lipsesc și pluginul merge mai departe (nu le apelează: vezi `steam_state`). */
 public native_filter(const name[], index, trap)
 {
 	return trap ? PLUGIN_CONTINUE : PLUGIN_HANDLED;
@@ -304,6 +319,12 @@ stock gcs_now()
 stock bridge_request(const method[], const path[], const body[], kind, extra = 0)
 {
 	if (!g_configured) return 0;
+	// Peste limită, hash_string și set_body ar tăia corpul (semnătura n-ar mai corespunde): cererea nu pleacă.
+	if (strlen(body) >= BODY)
+	{
+		log_amx("[GCS] Cererea %s %s e prea mare (%d caractere).", method, path, strlen(body));
+		return 0;
+	}
 	new url[320], ts[16], nonce[25], bodyHash[65], signature[65], header[90];
 	static canonical[512], envelope[700];
 	formatex(url, charsmax(url), "%s%s%s", g_url, BASE_PATH, path);
@@ -352,10 +373,20 @@ public on_response(EzHttpRequest:request)
 		return;
 	}
 	new code = ezhttp_get_http_code(request);
-	static response[BIG];
-	response[0] = EOS;
-	if (code != 304) ezhttp_get_data(request, response, charsmax(response));
-	new JSON:root = response[0] ? json_parse(response) : Invalid_JSON;
+	// Răspunsul trece printr-un fișier: json_parse dintr-un șir citește cel mult 16383 de caractere, iar listele
+	// (admini, VIP, sancțiuni) pot fi mai mari. Din fișier nu există limita.
+	new path[192], JSON:root = Invalid_JSON;
+	formatex(path, charsmax(path), "%s/gcs_bridge_response.json", g_dataDir);
+	if (code != 304 && ezhttp_save_data_to_file(request, path) > 0)
+	{
+		root = json_parse(path, true);
+		delete_file(path);
+		if (root != Invalid_JSON && !json_is_object(root))
+		{
+			json_free(root);
+			root = Invalid_JSON;
+		}
+	}
 	if (root != Invalid_JSON && json_object_has_value(root, "serverTime", JSONNumber))
 	{
 		g_offset += json_object_get_number(root, "serverTime") - gcs_now();
@@ -410,9 +441,40 @@ stock on_failure(kind, drop)
 	}
 }
 
+/** Evenimentele din coadă (neconfirmate). */
+stock queue_size()
+{
+	return ArraySize(g_queue) - g_queueHead;
+}
+
+/**
+ * Scoate primele `count` evenimente. Doar începutul cozii se mută (ștergerea fiecărui element ar muta toată coada, de
+ * zeci de MB după o pană a site-ului); memoria se compactează rar.
+ */
 stock remove_front(count)
 {
-	for (new i = 0; i < count && ArraySize(g_queue) > 0; i++) ArrayDeleteItem(g_queue, 0);
+	new total = ArraySize(g_queue);
+	new removed = min(max(count, 0), total - g_queueHead);
+	g_removedTotal += removed;
+	g_queueHead += removed;
+	if (g_queueHead >= total)
+	{
+		ArrayClear(g_queue);
+		g_queueHead = 0;
+	}
+	else if (g_queueHead >= 500)
+	{
+		new Array:rest = ArrayCreate(ITEM);
+		static item[ITEM];
+		for (new i = g_queueHead; i < total; i++)
+		{
+			ArrayGetString(g_queue, i, item, charsmax(item));
+			ArrayPushString(rest, item);
+		}
+		ArrayDestroy(g_queue);
+		g_queue = rest;
+		g_queueHead = 0;
+	}
 }
 
 // ─── Ritmul: heartbeat, evenimente, liste ───────────────────────────────────
@@ -421,7 +483,7 @@ public task_tick()
 {
 	if (!g_configured) return;
 	new now = get_systime();
-	if (!g_inflight && ArraySize(g_queue) > 0 && now >= g_nextSendAt && (ArraySize(g_queue) >= BATCH || now - g_lastEventsAt >= g_eventsInterval)) send_events();
+	if (!g_inflight && queue_size() > 0 && now >= g_nextSendAt && (queue_size() >= BATCH || now - g_lastEventsAt >= g_eventsInterval)) send_events();
 	// O tragere completă a listelor o dată la 10 minute (și la versiuni noi, din heartbeat).
 	if (now - g_lastPull >= 600) pull_lists(true);
 }
@@ -434,10 +496,10 @@ public task_heartbeat()
 
 stock send_events()
 {
-	static body[BIG], item[ITEM];
+	static body[BODY], item[ITEM];
 	new len = copy(body, charsmax(body), "{^"events^":[");
 	new count = 0, total = ArraySize(g_queue);
-	for (new i = 0; i < total && count < BATCH; i++)
+	for (new i = g_queueHead; i < total && count < BATCH; i++)
 	{
 		ArrayGetString(g_queue, i, item, charsmax(item));
 		if (len + strlen(item) + 4 >= charsmax(body)) break;
@@ -449,7 +511,7 @@ stock send_events()
 	g_inflight = true;
 	g_batchCount = count;
 	g_lastEventsAt = get_systime();
-	bridge_request("POST", "/events", body, REQ_EVENTS, count);
+	if (!bridge_request("POST", "/events", body, REQ_EVENTS, count)) g_inflight = false;
 }
 
 stock on_events_done(count)
@@ -492,10 +554,13 @@ stock send_heartbeat()
 		json_object_set_value(root, "match", match);
 		json_free(match);
 	}
-	static body[BIG];
-	json_serial_to_string(root, body, charsmax(body));
+	static body[BODY];
+	// Un JSON tăiat ar fi invalid: peste limită, heartbeat-ul nu pleacă (32 de jucători încap cu mult).
+	new bool:fits = json_serial_size(root) < charsmax(body);
+	if (fits) json_serial_to_string(root, body, charsmax(body));
 	json_free(root);
-	bridge_request("POST", "/heartbeat", body, REQ_HEARTBEAT);
+	if (fits) bridge_request("POST", "/heartbeat", body, REQ_HEARTBEAT);
+	else log_amx("[GCS] Heartbeat-ul depășește %d caractere: nu se trimite.", charsmax(body));
 }
 
 stock on_heartbeat(JSON:root)
@@ -538,7 +603,8 @@ stock pull_sanctions()
 	g_pullingSanctions = true;
 	new path[96];
 	formatex(path, charsmax(path), "/sanctions?since=%d&limit=%d", g_cursor, SANCTION_PAGE);
-	bridge_request("GET", path, "", REQ_SANCTIONS);
+	g_removedAtPull = g_removedTotal;
+	if (!bridge_request("GET", path, "", REQ_SANCTIONS)) g_pullingSanctions = false;
 }
 
 public cmd_sync(id, level, cid)
@@ -557,7 +623,7 @@ public cmd_sync(id, level, cid)
 stock steam_state(id)
 {
 #if defined _reapi_included
-	if (has_reunion()) return REU_GetAuthtype(id) == CA_TYPE_STEAM ? 1 : 0;
+	if (LibraryExists("reapi", LibType_Library) && has_reunion()) return REU_GetAuthtype(id) == CA_TYPE_STEAM ? 1 : 0;
 #endif
 	#pragma unused id
 	return -1;
@@ -599,7 +665,7 @@ stock normalize_name(const name[], out[], len)
 	for (new i = 0; name[i] != EOS && j < len; i++)
 	{
 		new c = name[i];
-		if (c == '^' && name[i + 1] >= '0' && name[i + 1] <= '9')
+		if (c == '^^' && name[i + 1] >= '0' && name[i + 1] <= '9')
 		{
 			i++;
 			continue;
@@ -643,7 +709,10 @@ stock JSON:console_ref()
 
 // ─── Coada de evenimente ────────────────────────────────────────────────────
 
-/** Pune un eveniment în coadă: id unic (același la retrimitere) și timpul în ceasul GCS. */
+/**
+ * Pune un eveniment în coadă: id unic (același la retrimitere) și timpul în ceasul GCS. Întoarce poziția lui de la
+ * pornire (1, 2, …; vezi `g_removedTotal`), sau 0 dacă evenimentul a fost aruncat.
+ */
 stock queue_event(JSON:event)
 {
 	new eventId[40];
@@ -652,10 +721,24 @@ stock queue_event(JSON:event)
 	json_object_set_string(event, "id", eventId);
 	json_object_set_number(event, "at", gcs_now());
 	static item[ITEM];
+	// Un eveniment tăiat ar strica tot lotul (JSON invalid): peste limită se aruncă și se notează.
+	if (json_serial_size(event) >= charsmax(item))
+	{
+		log_amx("[GCS] Eveniment prea mare (peste %d caractere), aruncat.", charsmax(item));
+		json_free(event);
+		return 0;
+	}
 	json_serial_to_string(event, item, charsmax(item));
 	json_free(event);
-	if (ArraySize(g_queue) >= MAX_QUEUE) ArrayDeleteItem(g_queue, 0);
+	if (queue_size() >= MAX_QUEUE)
+	{
+		// Coada e plină (site-ul e căzut de mult): se pierde cel mai vechi eveniment; în timpul unui lot trimis (ale
+		// cărui poziții trebuie să rămână aceleași), cel nou.
+		if (g_inflight) return 0;
+		remove_front(1);
+	}
 	ArrayPushString(g_queue, item);
+	return g_removedTotal + queue_size();
 }
 
 stock JSON:new_event(const type[])
@@ -684,11 +767,11 @@ stock save_queue()
 	queue_path(path, charsmax(path));
 	if (file_exists(path)) delete_file(path);
 	new total = ArraySize(g_queue);
-	if (!total) return;
+	if (total <= g_queueHead) return;
 	new file = fopen(path, "wt");
 	if (!file) return;
 	static item[ITEM];
-	for (new i = 0; i < total; i++)
+	for (new i = g_queueHead; i < total; i++)
 	{
 		ArrayGetString(g_queue, i, item, charsmax(item));
 		fprintf(file, "%s^n", item);
@@ -707,7 +790,7 @@ stock load_queue()
 	{
 		fgets(file, line, charsmax(line));
 		trim(line);
-		if (line[0] == '{' && ArraySize(g_queue) < MAX_QUEUE) ArrayPushString(g_queue, line);
+		if (line[0] == '{' && queue_size() < MAX_QUEUE) ArrayPushString(g_queue, line);
 	}
 	fclose(file);
 	delete_file(path);
@@ -906,6 +989,14 @@ stock on_sanctions(JSON:root)
 		return;
 	}
 	g_sanctionsFull = false;
+	// Bannurile date din joc se aplică imediat, cu id-ul -poziția evenimentului în coadă. Dacă evenimentul ieșise din
+	// coadă înainte de cererea acestei pagini, lista GCS îl conține (sau GCS l-a respins): intrarea locală dispare, ca o
+	// ridicare a banului pe site să conteze.
+	for (new i = ArraySize(g_sanctions) - 1; i >= 0; i--)
+	{
+		ArrayGetArray(g_sanctions, i, entry);
+		if (entry[SE_Id] < 0 && -entry[SE_Id] <= g_removedAtPull) ArrayDeleteItem(g_sanctions, i);
+	}
 	save_sanctions();
 	for (new id = 1; id <= MaxClients; id++) if (is_user_connected(id)) apply_sanctions(id);
 }
@@ -1112,10 +1203,16 @@ stock set_comm(id, bool:mute, bool:gag)
 
 stock kick_banned(id, const reason[], expires)
 {
-	new left[48];
+	new left[48], text[200];
 	if (expires > 0) formatex(left, charsmax(left), "%d minute rămase", max(1, (expires - gcs_now()) / 60));
 	else copy(left, charsmax(left), "permanent");
-	server_cmd("kick #%d ^"Banat: %s (%s)^"", get_user_userid(id), reason, left);
+	// Motivul (de pe site sau de la un admin) ajunge într-o comandă a serverului: ghilimelele și liniile noi ar închide-o
+	// și ar permite alte comenzi după ea.
+	copy(text, charsmax(text), reason);
+	replace_string(text, charsmax(text), "^"", "'");
+	replace_string(text, charsmax(text), "^n", " ");
+	replace_string(text, charsmax(text), "^r", " ");
+	server_cmd("kick #%d ^"Banat: %s (%s)^"", get_user_userid(id), text, left);
 }
 
 // ─── Conectări ──────────────────────────────────────────────────────────────
@@ -1327,19 +1424,28 @@ public ev_win_draw()
 	round_end("draw");
 }
 
-/** Sfârșitul rundei: rundele jucate / câștigate, focurile și, în meciul mix, scorul și istoricul rundelor. */
+/**
+ * Sfârșitul rundei: rundele jucate / câștigate, focurile și, în meciul mix, scorul și istoricul rundelor. Jucătorii
+ * pleacă în loturi de câte ROUND_CHUNK (un eveniment `round_end` pe lot, ca să încapă în ITEM); GCS numără rundele pe
+ * jucător, deci împărțirea nu schimbă nimic.
+ */
 stock round_end(const winner[])
 {
-	new JSON:event = new_event("round_end");
-	new JSON:players = json_init_array(), team[16], map[64];
+	new JSON:event = Invalid_JSON, JSON:players = Invalid_JSON, team[16], map[64], count = 0;
 	get_mapname(map, charsmax(map));
-	json_object_set_string(event, "winner", winner);
-	json_object_set_string(event, "map", map);
 	for (new id = 1; id <= MaxClients; id++)
 	{
 		if (!is_user_connected(id) || is_user_bot(id) || is_user_hltv(id)) continue;
 		get_user_team(id, team, charsmax(team));
 		if (!equal(team, "CT") && !equal(team, "TERRORIST")) continue;
+		if (event == Invalid_JSON)
+		{
+			event = new_event("round_end");
+			json_object_set_string(event, "winner", winner);
+			json_object_set_string(event, "map", map);
+			players = json_init_array();
+			count = 0;
+		}
 		new JSON:item = json_init_object();
 		set_ref(item, "player", id);
 		new code[8];
@@ -1348,11 +1454,21 @@ stock round_end(const winner[])
 		json_array_append_value(players, item);
 		json_free(item);
 		flush_weapon_stats(id);
+		if (++count >= ROUND_CHUNK)
+		{
+			queue_round_end(event, players);
+			event = Invalid_JSON;
+		}
 	}
+	if (event != Invalid_JSON) queue_round_end(event, players);
+	if (g_mixState == MIX_LIVE) mix_round_end(winner);
+}
+
+stock queue_round_end(JSON:event, JSON:players)
+{
 	json_object_set_value(event, "players", players);
 	json_free(players);
 	queue_event(event);
-	if (g_mixState == MIX_LIVE) mix_round_end(winner);
 }
 
 // ─── Comenzile jucătorilor (chat) ───────────────────────────────────────────
@@ -1454,7 +1570,7 @@ stock queue_sanction(admin, target, const auth[], kind, minutes, const reason[],
 	if (global) json_object_set_string(event, "scope", "global");
 	else json_object_set_string(event, "scope", "server");
 	set_ref(event, "admin", admin);
-	queue_event(event);
+	return queue_event(event);
 }
 
 public cmd_ban(id, level, cid)
@@ -1479,13 +1595,16 @@ public cmd_ban(id, level, cid)
 		console_print(id, "[GCS] Doar banuri temporare cu drepturile tale.");
 		return PLUGIN_HANDLED;
 	}
-	new target = (contain(arg, "STEAM_") == 0 || contain(arg, "VALVE_") == 0) ? 0 : find_target(id, arg);
-	if (!target && contain(arg, "STEAM_") != 0 && contain(arg, "VALVE_") != 0 && contain(arg, ".") == -1) return PLUGIN_HANDLED;
-	new bool:global = equal(command, "gcs_gban");
-	queue_sanction(id, target, arg, SAN_BAN, minutes, reason, global);
-	// Aplicat imediat local; lista GCS îl confirmă la următoarea sincronizare.
+	// Un authid al unui jucător online îl țintește pe el (cu imunitatea lui); altfel banul e pe ID-ul / IP-ul scris.
+	new bool:byAuth = contain(arg, "STEAM_") == 0 || contain(arg, "VALVE_") == 0;
+	new bool:online = byAuth && find_player("c", arg) != 0;
+	new target = (byAuth && !online) ? 0 : find_target(id, arg);
+	if (!target && (!byAuth || online) && contain(arg, ".") == -1) return PLUGIN_HANDLED;
+	new bool:global = bool:equal(command, "gcs_gban");
+	new position = queue_sanction(id, target, arg, SAN_BAN, minutes, reason, global);
+	// Aplicat imediat local (id = -poziția evenimentului); lista GCS îl înlocuiește la sincronizarea de după trimitere.
 	new entry[SanctionEntry];
-	entry[SE_Id] = 0;
+	entry[SE_Id] = -max(position, 1);
 	entry[SE_Type] = SAN_BAN;
 	entry[SE_Kind] = target ? g_kind[target] : (contain(arg, ".") != -1 ? KIND_NONE : KIND_NONSTEAM);
 	if (target) copy(entry[SE_Auth], AUTH_LEN - 1, g_auth[target]);
@@ -1558,7 +1677,7 @@ public cmd_uncomm(id, level, cid)
 	read_argv(2, reason, charsmax(reason));
 	new target = find_target(id, arg);
 	if (!target) return PLUGIN_HANDLED;
-	new bool:mute = equal(command, "gcs_unmute");
+	new bool:mute = bool:equal(command, "gcs_unmute");
 	new JSON:event = new_event("unsanction");
 	new text[8];
 	sanction_kind(mute ? SAN_MUTE : SAN_GAG, text, charsmax(text));
