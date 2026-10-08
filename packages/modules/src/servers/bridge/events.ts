@@ -1,6 +1,7 @@
 import { Prisma, type PrismaClient } from "@gcs/db";
 import { cleanGameText } from "../text";
 import type { GcsBridgeAdmins } from "./admins";
+import type { GcsBridgeDemos } from "./demos/service";
 import { reportedAdminFlags } from "./flags";
 import { cleanIp, resolveIdentity, type GcsPlayerRef } from "./identity";
 import type { GcsBridgeMaps } from "./maps";
@@ -57,6 +58,8 @@ export class GcsBridgeEvents {
       matches: GcsBridgeMatches;
       maps: GcsBridgeMaps;
       store: GcsBridgeStore;
+      /** Demo-urile (rândul la final) și rcon-ul HLTV (specul servere-hltv §5–6). */
+      demos?: GcsBridgeDemos;
       now?: () => number;
     },
   ) {}
@@ -310,10 +313,12 @@ export class GcsBridgeEvents {
         return async (tx) => {
           const out = await matches.applyState(tx, server, state, players, at);
           if ("error" in out) throw new Rejected(out.error);
+          const effects = (await this.deps.demos?.onMatchState(tx, server, out)) ?? [];
           ctx.after.push(async () => {
             if (state.map) await maps.seen(server.game, state.map);
             const live = await matches.liveFromDb(out.matchId);
             if (live) await matches.publish(live);
+            for (const effect of effects) await effect();
           });
         };
       }

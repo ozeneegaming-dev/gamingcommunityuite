@@ -464,6 +464,9 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     siteUrl: async () => baseUrl(await settings.get<string>("site.url")),
     // Binarele pluginurilor (pasul de release): în depozit, lângă aplicație (Next.js le include în build-ul standalone).
     pluginReleaseDir: () => process.env.GCS_PLUGIN_RELEASE_DIR ?? path.resolve(process.cwd(), "../../servers-plugins/release"),
+    // Demo-urile meciurilor mix: private în store-ul platformei; joburile le aduc și le curăță (specul servere-hltv).
+    files,
+    jobs,
   });
   bridge.listen(bus);
   servers.playerStats.use(bridge.stats);

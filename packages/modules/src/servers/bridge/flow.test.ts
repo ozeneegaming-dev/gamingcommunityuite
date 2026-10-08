@@ -132,7 +132,7 @@ describe("serverul fals: scenariul complet (§18)", () => {
     // Catalogul hărților și ultimul heartbeat.
     expect(await w.db.gameMap.findMany({ select: { game: true, name: true } })).toEqual([{ game: "cs2", name: "de_mirage" }]);
     const server = await w.db.gameServer.findUniqueOrThrow({ where: { id } });
-    expect(server.bridgePlugin).toBe("gcs-mock/cs2/1.1.0");
+    expect(server.bridgePlugin).toBe("gcs-mock/cs2/1.2.0");
     expect(server.bridgeSeenAt).not.toBeNull();
 
     // Retrimiterea întregului scenariu (aceleași id-uri) nu dublează nimic.

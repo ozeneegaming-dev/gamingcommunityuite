@@ -2,7 +2,7 @@
 
 export declare const BRIDGE_BASE_PATH: string;
 
-export type MockRequest = { method: string; path: string; headers: Record<string, string>; body: string };
+export type MockRequest = { method: string; path: string; headers: Record<string, string>; body: string | Uint8Array };
 export type MockResponse = { status: number; headers?: Record<string, string>; body: string | null };
 export type MockTransport = (req: MockRequest) => Promise<MockResponse>;
 
@@ -16,7 +16,7 @@ export declare function signHeaders(
   key: { keyId: string; signingKey: string },
   method: string,
   path: string,
-  body: string,
+  body: string | Uint8Array,
   timestamp: number,
   alg?: "hmac-sha256" | "sha256-env",
   nonce?: string,
@@ -24,6 +24,8 @@ export declare function signHeaders(
 export declare function httpTransport(baseUrl: string, extraHeaders?: Record<string, string>): MockTransport;
 export declare function startA2sResponder(opts?: { port?: number; game?: string; name?: string; map?: string; players?: number; maxPlayers?: number }): Promise<{ port: number; close(): Promise<void> }>;
 export declare function mockPlayer(game: string, n: number, extra?: Partial<MockPlayerRef>): MockPlayerRef;
+
+export type MockMixContext = { matchId: string; map: string; players: MockPlayerRef[]; teamA: MockPlayerRef[]; teamB: MockPlayerRef[] };
 
 export declare class GcsMockServer {
   constructor(opts: { token?: string; transport: MockTransport; game?: string; clock?: () => number; alg?: "hmac-sha256" | "sha256-env"; runId?: string; log?: (msg: string) => void });
@@ -43,7 +45,11 @@ export declare class GcsMockServer {
   enroll(opts?: { port?: number; hostname?: string; map?: string; players?: number; maxPlayers?: number }): Promise<MockPlainResponse>;
   enrollStatus(): Promise<MockPlainResponse>;
   waitForKey(opts?: { intervalMs?: number; timeoutMs?: number }): Promise<string>;
-  heartbeat(opts?: { map?: string; players?: MockPlayerRef[]; match?: unknown; maxPlayers?: number; modules?: string[]; scores?: { ct: number; t: number } }): Promise<any>;
+  heartbeat(opts?: { map?: string; players?: MockPlayerRef[]; match?: unknown; maxPlayers?: number; modules?: string[]; scores?: { ct: number; t: number }; tv?: Record<string, unknown> }): Promise<any>;
+  requestBinary(method: string, path: string, bytes: Uint8Array): Promise<{ status: number; json: any; headers: Record<string, string> }>;
+  uploadDemo(opts: { match: string; file: string; bytes: Uint8Array; stopAfter?: number }): Promise<{ status: number; json: any; headers: Record<string, string> }>;
+  startMix(opts?: { map?: string; matchId?: string; tv?: Record<string, unknown> }): Promise<MockMixContext>;
+  finishMix(ctx: MockMixContext, opts?: { rounds?: number; status?: "ended" | "aborted" }): Promise<{ matchId: string; score: { A: number; B: number }; result: MockEventResult }>;
   send(events: MockEvent[]): Promise<MockEventResult[]>;
   pullAdmins(): Promise<any[] | null>;
   pullVip(): Promise<any[] | null>;
