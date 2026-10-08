@@ -165,9 +165,20 @@ export default async function SanctionPage({ params }: Props) {
               <GcsIcon name="fa-solid fa-paperclip" className="gcs-hIcon" />
               {t("evidence")}
             </h2>
-            {s.evidence.length === 0 ? (
+            {(s.files ?? []).length > 0 && (
+              <ul className="gcs-evidenceThumbs" data-testid="gcs-ban-files">
+                {(s.files ?? []).map((f, i) => (
+                  <li key={f.id}>
+                    <a href={f.url} target="_blank" rel="noopener">
+                      <img src={f.url} alt={t("evidenceImage", { n: i + 1 })} loading="lazy" />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {s.evidence.length === 0 && (s.files ?? []).length === 0 ? (
               <p className="gcs-serverNote">{t("noEvidence")}</p>
-            ) : (
+            ) : s.evidence.length === 0 ? null : (
               <ul className="gcs-evidenceList" data-testid="gcs-ban-evidence">
                 {s.evidence.map((e) => (
                   <li key={e.url}>

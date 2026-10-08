@@ -1151,6 +1151,29 @@ html[data-theme="light"] {
 .gcs-evidenceList a {
   overflow-wrap: anywhere;
 }
+/* Imaginile-dovadă: miniaturi 16:9 (formularul și detaliul sancțiunii). */
+.gcs-evidenceThumbs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-evidenceThumbs li {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gcs-evidenceThumbs img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--gcs-border);
+  background: var(--gcs-surface2);
+}
 
 /* ─── Formularele (sancțiunea, tichetul) ──────────────────────────────────────────────────── */
 

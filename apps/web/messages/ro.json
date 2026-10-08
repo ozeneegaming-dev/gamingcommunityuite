@@ -5038,7 +5038,8 @@
         "MUTE": "Ridică mute-ul",
         "GAG": "Ridică gag-ul"
       },
-      "unknown": "Jucător necunoscut"
+      "unknown": "Jucător necunoscut",
+      "evidenceImage": "Dovada {n}"
     },
     "sanctionForm": {
       "titleCreate": "Sancțiune nouă",
@@ -5099,7 +5100,11 @@
       "submitEdit": "Salvează modificările",
       "saved": "Sancțiunea a fost modificată.",
       "liftReason": "Motivul ridicării",
-      "lift": "Ridică sancțiunea"
+      "lift": "Ridică sancțiunea",
+      "images": "Imagini (capturi de ecran)",
+      "imagesHint": "PNG, JPEG, WebP sau GIF, max 5 MB fiecare; în total max 10 dovezi.",
+      "uploading": "Se încarcă…",
+      "removeImage": "Scoate"
     },
     "picker": {
       "change": "Alege altul",

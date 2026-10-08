@@ -5038,7 +5038,8 @@
         "MUTE": "Lift the mute",
         "GAG": "Lift the gag"
       },
-      "unknown": "Unknown player"
+      "unknown": "Unknown player",
+      "evidenceImage": "Evidence {n}"
     },
     "sanctionForm": {
       "titleCreate": "New sanction",
@@ -5099,7 +5100,11 @@
       "submitEdit": "Save changes",
       "saved": "The sanction was updated.",
       "liftReason": "Reason for lifting",
-      "lift": "Lift the sanction"
+      "lift": "Lift the sanction",
+      "images": "Images (screenshots)",
+      "imagesHint": "PNG, JPEG, WebP or GIF, up to 5 MB each; up to 10 pieces of evidence in total.",
+      "uploading": "Uploading…",
+      "removeImage": "Remove"
     },
     "picker": {
       "change": "Pick another",

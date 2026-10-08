@@ -1,3 +1,4 @@
+import sharp from "sharp";
 import { beforeEach, describe, expect, it } from "vitest";
 import { mockPlayer } from "../../../../../servers-plugins/mock/gcs-mock-server.mjs";
 import { createBridgeWorld, type GcsBridgeWorld } from "../../../test/bridgeWorld";
@@ -55,6 +56,19 @@ describe("serviciile paginilor publice (specul 2026-10-08-servere-pagini)", () =
     expect(await w.bridge.sanctions.abilities(w.member)).toMatchObject({ staff: false, grants: [] });
   });
 
+  it("dovezile încărcate: doar cine poate sancționa; legate la creare, arătate în detaliul sancțiunii", async () => {
+    const server = await w.bridgeServer();
+    const png = await sharp({ create: { width: 8, height: 8, channels: 3, background: "#d62839" } }).png().toBuffer();
+    await expect(w.bridge.sanctions.uploadEvidence(w.member, { name: "demo.png", bytes: png })).rejects.toMatchObject({ code: "forbidden" });
+    const file = await w.bridge.sanctions.uploadEvidence(w.root, { name: "demo.png", bytes: png });
+    expect(file.url).toBe(`/files/${file.id}`);
+    await expect(w.bridge.sanctions.uploadEvidence(w.root, { name: "x.txt", bytes: Buffer.from("nu e imagine") })).rejects.toMatchObject({ fields: { file: "unsupported_type" } });
+    const { id } = await w.bridge.sanctions.create(w.root, { type: "BAN", scope: "SERVER", serverId: server.id, target: { auth: steam64(7), authKind: "steam" }, reason: "aimbot", minutes: 0, attachmentIds: [file.id] });
+    expect((await w.bridge.sanctions.get(w.guest, id))!.files).toEqual([{ id: file.id, url: `/files/${file.id}` }]);
+    // Lista nu încarcă fișierele (doar detaliul).
+    expect((await w.bridge.sanctions.list(w.guest, {})).items[0]!.files).toBeUndefined();
+  });
+
   it("tichetele: responsabilul în listă și în tichet, cei care pot trata (alegerea responsabilului)", async () => {
     const server = await w.bridgeServer();
     const adm = await w.actorFor(await w.createUser("AdminCS", "member"));
@@ -100,6 +114,9 @@ describe("serviciile paginilor publice (specul 2026-10-08-servere-pagini)", () =
     const online = (await w.bridge.queries.onlineAdmins(w.member))!;
     expect(online).toEqual([expect.objectContaining({ adminId: e1, server: { id: shown.id, name: expect.any(String) }, since: expect.any(String) })]);
     expect(online.some((o) => o.adminId === e2)).toBe(false);
+    // Adminii unui server vizibil: activitatea de pe serverul ascuns nu se vede (nici ultima apariție).
+    const onShown = (await w.bridge.queries.serverAdmins(w.member, shown.id))!;
+    expect(onShown.find((a) => a.id === e3)).toMatchObject({ online: null, lastSeenAt: null });
     const counts = await w.bridge.queries.adminsOnlineCounts(w.member, [shown.id, hidden.id]);
     expect(Object.fromEntries(counts)).toEqual({ [shown.id]: 1 });
     expect(await w.bridge.queries.onlineAdmins({ ...w.guest, isBanned: true })).toBeNull();

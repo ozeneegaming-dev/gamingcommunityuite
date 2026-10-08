@@ -219,7 +219,7 @@ export type { GcsPlayerView } from "./players";
 export { LINK_CODE_TTL_MS } from "./players";
 export { matchRoom, MATCH_STATE_EVENT, SERVER_MATCH_EVENT } from "./matches";
 export { ticketHref } from "./notify";
-export { SANCTION_REASON_MAX } from "./sanctions";
+export { SANCTION_EVIDENCE_MAX_BYTES, SANCTION_REASON_MAX } from "./sanctions";
 export type { GcsLiveMatch } from "./matches";
 export type { GcsRoster } from "./store";
 export type { GcsBridgeKeyRow } from "./keys";

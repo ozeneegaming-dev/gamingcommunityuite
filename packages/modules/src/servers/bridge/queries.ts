@@ -352,7 +352,8 @@ export class GcsBridgeQueries {
   /** Adminii unui server, cu prezența. */
   async serverAdmins(actor: GcsActor, serverId: number): Promise<GcsAdminPresence[] | null> {
     if (!(await this.canViewStats(actor)) || !(await this.deps.canViewServer(actor, serverId))) return null;
-    return this.deps.presence.list(actor, { serverId });
+    // Sesiunile și acțiunile doar de pe serverele vizibile (un admin „toate serverele” poate juca pe unul ascuns).
+    return this.deps.presence.list(actor, { serverId, visibleServers: await this.deps.visibleServers(actor) });
   }
 }
 

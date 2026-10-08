@@ -1,5 +1,6 @@
 "use client";
 
+import type { GcsResult } from "@gcs/core";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useId, useState, type FormEvent } from "react";
@@ -65,6 +66,8 @@ export function GcsSanctionForm({ mode, abilities, sanctionId, type: fixedType, 
   const [preset, setPreset] = useState<string>((PRESETS as readonly number[]).includes(startMinutes) ? String(startMinutes) : "custom");
   const [custom, setCustom] = useState(String(startMinutes || 60));
   const [evidence, setEvidence] = useState((initial?.evidence ?? []).join("\n"));
+  const [files, setFiles] = useState<{ id: string; url: string }[]>([]);
+  const [uploading, setUploading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, setPending] = useState(false);
@@ -95,6 +98,7 @@ export function GcsSanctionForm({ mode, abilities, sanctionId, type: fixedType, 
             ...common,
             type,
             target: targetMode === "player" ? { playerId: player?.id ?? null, ip: ip || null } : { auth: auth || null, authKind, ip: ip || null, name: name || null },
+            attachmentIds: files.map((f) => f.id),
           })
         : await updateSanction({ sanctionId: sanctionId!, ...common });
     setPending(false);
@@ -236,6 +240,50 @@ export function GcsSanctionForm({ mode, abilities, sanctionId, type: fixedType, 
           <span className="gcs-field__hint">{t("evidenceHint")}</span>
           {fieldError("evidence")}
         </label>
+        {mode === "create" && (
+          <div className="gcs-field">
+            <label htmlFor={`${uid}-files`}>{t("images")}</label>
+            <input
+              id={`${uid}-files`}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              multiple
+              disabled={uploading || files.length >= 10}
+              data-testid="gcs-sanction-files"
+              onChange={async (e) => {
+                const chosen = [...(e.target.files ?? [])].slice(0, 10 - files.length);
+                e.target.value = "";
+                if (chosen.length === 0) return;
+                setUploading(true);
+                setFieldErrors((f) => ({ ...f, attachments: "" }));
+                for (const file of chosen) {
+                  const fd = new FormData();
+                  fd.set("file", file);
+                  const res = (await fetch("/api/servers/evidence", { method: "POST", body: fd })
+                    .then((r) => r.json())
+                    .catch(() => null)) as GcsResult<{ id: string; url: string }> | null;
+                  if (res?.ok) setFiles((list) => [...list, res.data]);
+                  else setFieldErrors((f) => ({ ...f, attachments: res && !res.ok ? (Object.values(res.error.fields ?? {})[0] ?? "invalid_image") : "invalid_image" }));
+                }
+                setUploading(false);
+              }}
+            />
+            <span className="gcs-field__hint">{uploading ? t("uploading") : t("imagesHint")}</span>
+            {fieldError("attachments")}
+            {files.length > 0 && (
+              <ul className="gcs-evidenceThumbs" data-testid="gcs-sanction-thumbs">
+                {files.map((f) => (
+                  <li key={f.id}>
+                    <img src={f.url} alt="" />
+                    <button type="button" className="gcs-btn gcs-btn--ghost gcs-btn--sm" onClick={() => setFiles((list) => list.filter((x) => x.id !== f.id))}>
+                      {t("removeImage")}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
       </fieldset>
 
       {!ok && <p className="gcs-notice gcs-notice--warn">{t("notAllowed")}</p>}

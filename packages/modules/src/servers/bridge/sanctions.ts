@@ -10,6 +10,8 @@ const REVISION_LOCK = 726_354_001;
 export const SANCTION_REASON_MAX = 200;
 export const SANCTION_PAGE = 1000;
 const MAX_EVIDENCE = 10;
+/** Imaginile-dovadă: max 5 MB, recodate (încadrate în 1920 × 1080). */
+export const SANCTION_EVIDENCE_MAX_BYTES = 5 * 1024 * 1024;
 /** Durata maximă a unei sancțiuni temporare (10 ani); 0 = permanentă. */
 const MAX_MINUTES = 5_256_000;
 const PAGE_SIZE = 50;
@@ -73,6 +75,8 @@ export type GcsSanctionView = {
   source: "SITE" | "GAME";
   lifted: { at: string; by: string; reason: string } | null;
   evidence: { url: string }[];
+  /** Imaginile-dovadă încărcate (doar în detaliul sancțiunii, `get`). */
+  files?: { id: string; url: string }[];
 };
 
 type Row = Prisma.GameSanctionGetPayload<{ include: { server: { select: { id: true; name: true } }; player: { select: { id: true; name: true; kind: true; value: true } } } }>;
@@ -594,8 +598,22 @@ export class GcsBridgeSanctions {
 
   async get(actor: GcsActor, id: number): Promise<GcsSanctionView | null> {
     if (!(await this.canView(actor, id))) return null;
-    const s = await this.deps.db.gameSanction.findUnique({ where: { id }, include: { server: { select: { id: true, name: true } }, player: { select: { id: true, name: true, kind: true, value: true } } } });
-    return s ? this.view(s, this.now(), await this.deps.permissions.can(actor, BRIDGE_PERMISSION.viewIps)) : null;
+    const { db } = this.deps;
+    const s = await db.gameSanction.findUnique({ where: { id }, include: { server: { select: { id: true, name: true } }, player: { select: { id: true, name: true, kind: true, value: true } } } });
+    if (!s) return null;
+    const files = await db.attachment.findMany({ where: { contentType: SANCTION_EVIDENCE, contentId: String(id) }, select: { id: true }, orderBy: { createdAt: "asc" } });
+    return { ...this.view(s, this.now(), await this.deps.permissions.can(actor, BRIDGE_PERMISSION.viewIps)), files: files.map((f) => ({ id: f.id, url: `/files/${f.id}` })) };
+  }
+
+  /**
+   * O imagine-dovadă încărcată din formularul sancțiunii (doar cine poate da sancțiuni de pe site): prin pipeline-ul
+   * atașamentelor (tipul real din magic bytes, recodarea); se leagă de sancțiune la creare (`attachmentIds`).
+   */
+  async uploadEvidence(actor: GcsActor, file: { name: string; bytes: Buffer }): Promise<{ id: string; url: string }> {
+    const abilities = await this.abilities(actor);
+    if (!actor.userId || (!abilities.staff && abilities.grants.length === 0)) throw new GcsForbidden({ permission: BRIDGE_PERMISSION.sanction });
+    const stored = await this.deps.attachments.storeImage(actor.userId, { name: file.name, bytes: file.bytes }, { maxBytes: SANCTION_EVIDENCE_MAX_BYTES, width: 1920, height: 1080, fit: "inside" });
+    return { id: stored.id, url: `/files/${stored.id}` };
   }
 
   /** Lista bannurilor și comunicațiilor (`servers.bans_view`): filtre pe tip, stare, server, jucător și căutare. */

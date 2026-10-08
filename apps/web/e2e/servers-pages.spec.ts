@@ -341,11 +341,15 @@ test("/bans: căutarea, filtrele, detaliul; staff-ul dă un mute pe toate server
   await page.getByTestId("gcs-sanction-reason").fill("spam pe voce");
   await page.getByTestId("gcs-sanction-duration").selectOption("1440");
   await page.getByTestId("gcs-sanction-evidence").fill("https://clips.exemplu.ro/demo-1");
+  // O captură încărcată (pipeline-ul atașamentelor), legată de sancțiune la creare.
+  await page.getByTestId("gcs-sanction-files").setInputFiles({ name: "captura.png", mimeType: "image/png", buffer: await shotPng() });
+  await expect(page.getByTestId("gcs-sanction-thumbs").locator("img")).toHaveCount(1);
   await shot(page, "sanction-form");
   await page.getByTestId("gcs-sanction-submit").click();
   await expect(page).toHaveURL(/\/bans\/\d+$/);
   await expect(page.getByTestId("gcs-ban-details")).toContainText("Pe toate serverele");
   await expect(page.getByTestId("gcs-ban-evidence")).toContainText("clips.exemplu.ro/demo-1");
+  await expect(page.getByTestId("gcs-ban-files").locator("img")).toHaveCount(1);
   await shot(page, "sanction-detail");
   const muteId = Number(page.url().split("/").pop());
   // Serverul de joc primește mute-ul la sincronizare.
@@ -544,6 +548,11 @@ test("capturile: temele întunecată și luminoasă, desktop și 375 px", async 
   await page.setViewportSize({ width: 1280, height: 800 });
   expect(overflow).toEqual([]);
 });
+
+/** O imagine PNG mică pentru dovezi: un colț din captura paginii staff-ului (fără imagini din afara testului). */
+async function shotPng(): Promise<Buffer> {
+  return staff.screenshot({ clip: { x: 0, y: 0, width: 64, height: 36 } });
+}
 
 /** SteamID64 pentru `accountId = 900000 + n` (ca `mockPlayer`). */
 function steam64(n: number): string {

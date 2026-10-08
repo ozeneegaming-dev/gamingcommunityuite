@@ -37,6 +37,7 @@ export const createSanction = gcsAction(
     reason: z.string().max(400),
     minutes: z.number().int().min(0).max(5_256_000),
     evidence: urls,
+    attachmentIds: z.array(z.string().min(8).max(40).regex(/^[a-z0-9]+$/i)).max(10),
   }),
   async (input, { actor }) => services().bridge.sanctions.create(actor, input),
 );

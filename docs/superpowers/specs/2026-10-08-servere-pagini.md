@@ -31,6 +31,7 @@
 | `/api/servers/maps/image/{game}/{map}` | imaginea hărții: redirect la imaginea încărcată sau la arta generică | public (aplicația activă) |
 | `/api/servers/live?server={id}` | meciul live al unui server (rezerva fără realtime) | `servers.stats_view` + vizibilitatea serverului |
 | `/api/servers/players?q=` | căutarea jucătorilor (formularele: reclamație, sancțiune) | `servers.stats_view`; limită pe IP |
+| `/api/servers/evidence` | încărcarea unei imagini-dovadă (formularul sancțiunii) | cine poate da sancțiuni (`sanctions.abilities`) |
 
 - Rutele sunt în engleză, ca restul site-ului (`/servers`, `/members`); textele din meniu sunt traduse.
 - `slug`-ul profilului vine din ultimul nume al jucătorului; un slug greșit redirecționează la cel corect (ca la servere).
@@ -91,8 +92,9 @@ Manrope pentru text, benzile titlurilor). Puntea adaugă un singur element nou d
   identitatea țintă legată), dacă sancțiunea e activă și nu are deja o contestație deschisă.
 - **Formularul** (creare / editare), pentru cine are `canSanction`: tipul, ținta (jucător căutat sau ID scris + tipul
   lui, IP, nume), scopul pe sancțiune („acest server” / „toate serverele”), serverul, motivul (obligatoriu, max 200),
-  durata (presetări: 30 min, 1 h, 1 zi, 7 zile, 30 de zile, permanent, sau minute scrise), dovezile (până la 10 adrese
-  `https`). Opțiunile arătate respectă drepturile (`sanctions.abilities`): serverele unde actorul e admin cu `d` / `v` /
+  durata (presetări: 30 min, 1 h, 1 zi, 7 zile, 30 de zile, permanent, sau minute scrise), dovezile (adrese `https` și
+  imagini încărcate, în total max 10). Imaginile trec prin pipeline-ul atașamentelor (`POST /api/servers/evidence`, doar
+  cine poate da sancțiuni, max 5 MB, recodate) și se leagă de sancțiune la creare; detaliul le arată ca miniaturi. Opțiunile arătate respectă drepturile (`sanctions.abilities`): serverele unde actorul e admin cu `d` / `v` /
   `i`, scopul global doar cu o intrare pe toate serverele, durata maximă pentru `v`. Serviciul verifică oricum totul.
 - **Ridicarea:** motivul obligatoriu; jurnalul și revizia nouă vin din serviciu (partea A).
 
@@ -118,8 +120,9 @@ Manrope pentru text, benzile titlurilor). Puntea adaugă un singur element nou d
   văzut în 24 h / 7 zile, timpul de joc pe 24 h / 7 zile / 30 de zile, ultima apariție, acțiunile din joc (7 / 30 de
   zile), tichetele tratate (30 de zile), „Inactiv” (peste `servers.admin_inactive_days`). Filtrul pe server. Cei online
   primii.
-- **Vizibilitatea:** un admin al unui server ascuns viewer-ului nu apare; online pe un server ascuns nu se arată
-  (`queries.adminPresence` filtrează după serverele vizibile).
+- **Vizibilitatea:** un admin al unui server ascuns viewer-ului nu apare; online, sesiunile (timpul de joc, ultima
+  apariție) și acțiunile de pe un server ascuns nu se socotesc (`queries.adminPresence` și `queries.serverAdmins`
+  trec serverele vizibile la `presence.list`).
 - **Widget-ul „Admini online”** (`servers.adminsOnline`, toate zonele): adminii online acum (numele, serverul, de cât
   timp); câmpul „Câte elemente”. Citire ușoară: lista jucătorilor din ultimul heartbeat (Redis), fără istoricul
   sesiunilor (`presence.online`).
