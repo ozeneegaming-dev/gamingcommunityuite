@@ -41,9 +41,12 @@ export function GcsMapTemplateForm({ game, template: saved, mode: savedMode, sam
   const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, setPending] = useState(false);
 
+  // Câmpul gol nu e o eroare: previzualizarea folosește atunci o hartă obișnuită a jocului.
+  const fallbackSample = game.key === "cs2" ? "de_mirage" : "de_dust2";
+  const previewMap = sample.trim() || fallbackSample;
   const code = template.trim() ? mapTemplateError(template.trim(), { allowHttp }) : null;
   const error = code ? (tErr.has(code) ? tErr(code) : code) : undefined;
-  const url = template.trim() && !code ? mapTemplateUrl(template.trim(), sample, { allowHttp }) : null;
+  const url = template.trim() && !code ? mapTemplateUrl(template.trim(), previewMap, { allowHttp }) : null;
   const art = mapArtUrl(game.key);
   const state = probe?.url === url ? probe.state : "loading";
   const active = saved ? savedMode : "none";
@@ -106,7 +109,7 @@ export function GcsMapTemplateForm({ game, template: saved, mode: savedMode, sam
 
         <div className="gcs-mapTpl__preview">
           <GcsField label={t("sample")} className="gcs-mapTpl__sample">
-            <input value={sample} onChange={(e) => setSample(e.target.value)} maxLength={64} autoComplete="off" spellCheck={false} data-testid="gcs-map-template-sample" />
+            <input value={sample} onChange={(e) => setSample(e.target.value)} placeholder={fallbackSample} maxLength={64} autoComplete="off" spellCheck={false} data-testid="gcs-map-template-sample" />
           </GcsField>
           <figure className="gcs-mapTpl__figure" data-testid="gcs-map-template-preview" data-state={url ? state : "art"}>
             <span className="gcs-mapPic gcs-mapTpl__pic" style={{ "--gcs-map-art": `url("${art}")` } as CSSProperties}>
@@ -121,7 +124,7 @@ export function GcsMapTemplateForm({ game, template: saved, mode: savedMode, sam
                   onError={() => setProbe({ url, state: "error" })}
                 />
               )}
-              <span className="gcs-mapTpl__picName">{cleanMapName(sample) ?? sample}</span>
+              <span className="gcs-mapTpl__picName">{cleanMapName(previewMap) ?? previewMap}</span>
             </span>
             <figcaption className="gcs-mapTpl__caption" aria-live="polite">
               {url ? (
