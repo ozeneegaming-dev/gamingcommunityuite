@@ -1,6 +1,6 @@
 "use client";
 
-import { faDiscord, faSteam } from "@fortawesome/free-brands-svg-icons";
+import { faDiscord, faGoogle, faSteam } from "@fortawesome/free-brands-svg-icons";
 import { faRightToBracket, faShieldHalved } from "@fortawesome/free-solid-svg-icons";
 import { GcsButton, GcsField, GcsIconSvg } from "@gcs/ui";
 import Link from "next/link";
@@ -9,9 +9,9 @@ import { useState, type FormEvent } from "react";
 import { authClient, authErrorKey } from "@/lib/auth-client";
 import { authReturnPath } from "@/lib/auth-return";
 
-type Props = { discordEnabled: boolean; initialError: string | null };
+type Props = { discordEnabled: boolean; googleEnabled?: boolean; initialError: string | null };
 
-export function LoginForm({ discordEnabled, initialError }: Props) {
+export function LoginForm({ discordEnabled, googleEnabled = false, initialError }: Props) {
   const t = useTranslations("auth");
   const [step, setStep] = useState<"credentials" | "twoFactor">("credentials");
   const [error, setError] = useState<string | null>(initialError);
@@ -102,6 +102,17 @@ export function LoginForm({ discordEnabled, initialError }: Props) {
         <span style={{ flex: 1, height: 1, background: "var(--gcs-border)" }} />
       </div>
 
+      {googleEnabled && (
+        <GcsButton
+          variant="ghost"
+          className="gcs-btn--google"
+          icon={<GcsIconSvg icon={faGoogle} />}
+          onClick={() => authClient.signIn.social({ provider: "google", callbackURL: "/" })}
+          data-testid="gcs-login-google"
+        >
+          {t("login.google")}
+        </GcsButton>
+      )}
       {discordEnabled && (
         <GcsButton
           variant="ghost"

@@ -17,6 +17,8 @@ type GcsAuthConfig = {
   emailConfirm: boolean;
   discordClientId: string;
   discordClientSecret: string;
+  googleClientId: string;
+  googleClientSecret: string;
   turnstileSecret: string;
 };
 
@@ -48,9 +50,11 @@ function createAuth(config: GcsAuthConfig) {
         },
       },
     },
-    socialProviders: config.discordClientId
-      ? { discord: { clientId: config.discordClientId, clientSecret: config.discordClientSecret } }
-      : {},
+    // Discord și Google doar când au cheile completate în ACP (Setări → Autentificare).
+    socialProviders: {
+      ...(config.discordClientId ? { discord: { clientId: config.discordClientId, clientSecret: config.discordClientSecret } } : {}),
+      ...(config.googleClientId ? { google: { clientId: config.googleClientId, clientSecret: config.googleClientSecret, prompt: "select_account" as const } } : {}),
+    },
     user: {
       additionalFields: {
         nameNormalized: { type: "string", required: false, input: false },
@@ -61,7 +65,7 @@ function createAuth(config: GcsAuthConfig) {
       user: {
         create: {
           before: async (user, ctx) => {
-            // La înregistrarea cu email, userul își poate corecta numele; la Discord/Steam alegem automat unul liber.
+            // La înregistrarea cu email, userul își poate corecta numele; la Discord/Google/Steam alegem automat unul liber.
             const strict = ctx?.path === "/sign-up/email";
             try {
               const data = await prepareNewUser(
@@ -102,7 +106,7 @@ function createAuth(config: GcsAuthConfig) {
       ipAddress: { ipAddressHeaders: ["x-real-ip", "x-forwarded-for"] },
     },
     plugins: [
-      // allowPasswordless: și conturile fără parolă (doar Discord/Steam) pot activa 2FA, cerut pentru ACP.
+      // allowPasswordless: și conturile fără parolă (doar Discord/Google/Steam) pot activa 2FA, cerut pentru ACP.
       twoFactor({ issuer: config.siteName, allowPasswordless: true }),
       // Cloudflare Turnstile la înregistrare, doar când e configurat în ACP (spec §15).
       ...(config.turnstileSecret
@@ -123,21 +127,23 @@ const globalForAuth = globalThis as unknown as { gcsAuth?: { key: string; auth: 
 
 /**
  * Instanța Better Auth pentru setările curente. Setările vin din ACP (cache Redis), deci o schimbare
- * a cheilor Discord sau a numelui site-ului se aplică la următorul request, fără restart.
+ * a cheilor Discord / Google sau a numelui site-ului se aplică la următorul request, fără restart.
  */
 export async function getAuth(): Promise<GcsAuth> {
   const { settings } = services();
   // Înainte de instalare (sau dacă baza nu răspunde) folosim valorile implicite ale setărilor.
   const get = <T,>(key: string, fallback: T) => settings.get<T>(key).catch(() => fallback);
-  const [siteName, siteUrl, emailConfirm, discordClientId, discordClientSecret, turnstileSecret] = await Promise.all([
+  const [siteName, siteUrl, emailConfirm, discordClientId, discordClientSecret, googleClientId, googleClientSecret, turnstileSecret] = await Promise.all([
     get("site.name", "GamingCommunitySuite"),
     get("site.url", ""),
     get("auth.email_confirm", true),
     get("auth.discord_client_id", ""),
     get("auth.discord_client_secret", ""),
+    get("auth.google_client_id", ""),
+    get("auth.google_client_secret", ""),
     get("auth.turnstile_secret", ""),
   ]);
-  const config: GcsAuthConfig = { siteName, siteUrl, emailConfirm, discordClientId, discordClientSecret, turnstileSecret };
+  const config: GcsAuthConfig = { siteName, siteUrl, emailConfirm, discordClientId, discordClientSecret, googleClientId, googleClientSecret, turnstileSecret };
   const key = JSON.stringify(config);
   if (globalForAuth.gcsAuth?.key !== key) globalForAuth.gcsAuth = { key, auth: createAuth(config) };
   return globalForAuth.gcsAuth.auth;

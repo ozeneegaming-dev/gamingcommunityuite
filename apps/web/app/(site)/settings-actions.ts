@@ -90,8 +90,8 @@ export const changePassword = gcsAction(
   },
 );
 
-/** Dezleagă Discord/Steam, doar dacă rămâne o altă metodă de login. */
-export const unlinkAccount = gcsAction(z.object({ providerId: z.enum(["discord", "steam"]) }), async ({ providerId }, { actor }) => {
+/** Dezleagă Discord/Google/Steam, doar dacă rămâne o altă metodă de login. */
+export const unlinkAccount = gcsAction(z.object({ providerId: z.enum(["discord", "google", "steam"]) }), async ({ providerId }, { actor }) => {
   if (!actor.userId) throw new GcsForbidden({ reason: "guest" });
   const { db } = services();
   const accounts = await db.account.findMany({ where: { userId: actor.userId }, select: { providerId: true } });

@@ -1,6 +1,6 @@
 "use client";
 
-import { faDiscord, faSteam } from "@fortawesome/free-brands-svg-icons";
+import { faDiscord, faGoogle, faSteam } from "@fortawesome/free-brands-svg-icons";
 import { faEnvelope, faFloppyDisk, faKey, faLink, faLinkSlash, faPaperPlane, faRotateLeft, faUserCheck, faUserPlus } from "@fortawesome/free-solid-svg-icons";
 import { GcsAvatar, GcsButton, GcsIconSvg } from "@gcs/ui";
 import { useEffect, useState } from "react";
@@ -258,7 +258,7 @@ export function GcsAccountForms({
 }: {
   email: string | null;
   hasPassword: boolean;
-  accounts: { providerId: "discord" | "steam" }[];
+  accounts: { providerId: "discord" | "google" | "steam" }[];
   labels: Record<string, string>;
 }) {
   const emailAction = useSettingsAction(labels.emailSent!);
@@ -332,13 +332,13 @@ export function GcsAccountForms({
           <GcsIconSvg icon={faLink} className="gcs-hIcon" />
           {labels.linkedTitle}
         </h2>
-        {(["discord", "steam"] as const).map((p) => {
+        {(["discord", "google", "steam"] as const).map((p) => {
           const linked = accounts.some((a) => a.providerId === p);
           return (
             <div key={p} className="gcs-settingsList__row">
               <span>
-                <GcsIconSvg icon={p === "discord" ? faDiscord : faSteam} className="gcs-hIcon" />
-                <strong>{p === "discord" ? "Discord" : "Steam"}</strong> <span className="gcs-muted">· {linked ? labels.linked : labels.notLinked}</span>
+                <GcsIconSvg icon={p === "discord" ? faDiscord : p === "google" ? faGoogle : faSteam} className="gcs-hIcon" />
+                <strong>{p === "discord" ? "Discord" : p === "google" ? "Google" : "Steam"}</strong> <span className="gcs-muted">· {linked ? labels.linked : labels.notLinked}</span>
               </span>
               {linked && (
                 <GcsButton icon={<GcsIconSvg icon={faLinkSlash} />} variant="ghost" disabled={linkAction.pending} onClick={() => linkAction.run(() => unlinkAccount({ providerId: p }))}>

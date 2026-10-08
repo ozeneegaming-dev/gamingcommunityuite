@@ -65,6 +65,7 @@
       "password": "Parolă",
       "submit": "Intră în cont",
       "or": "sau",
+      "google": "Continuă cu Google",
       "discord": "Continuă cu Discord",
       "steam": "Continuă cu Steam",
       "noAccount": "Nu ai cont?",
@@ -2433,6 +2434,8 @@
       "email_confirm": "Confirmare pe email",
       "discord_client_id": "Discord: Client ID",
       "discord_client_secret": "Discord: Client Secret",
+      "google_client_id": "Google: Client ID",
+      "google_client_secret": "Google: Client Secret",
       "steam_api_key": "Steam: cheie Web API",
       "turnstile_site_key": "Turnstile: Site Key",
       "turnstile_secret": "Turnstile: Secret Key"

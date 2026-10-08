@@ -65,6 +65,7 @@
       "password": "Пароль",
       "submit": "Войти",
       "or": "или",
+      "google": "Продолжить с Google",
       "discord": "Продолжайте с раздором",
       "steam": "Продолжить с Steam",
       "noAccount": "Еще нет счета?",
@@ -2433,6 +2434,8 @@
       "email_confirm": "Подтверждение электронной почты",
       "discord_client_id": "Разногласия: Client ID",
       "discord_client_secret": "Разногласия: Секрет клиента",
+      "google_client_id": "Google: Client ID",
+      "google_client_secret": "Google: Client Secret",
       "steam_api_key": "Steam: ключ Web API",
       "turnstile_site_key": "Turnstile: Ключ сайта",
       "turnstile_secret": "Оригинальное название: Secret Key"

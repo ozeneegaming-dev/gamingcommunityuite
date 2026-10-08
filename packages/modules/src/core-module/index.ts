@@ -60,6 +60,8 @@ const settings: GcsSettingDef[] = [
   setting("auth.email_confirm", "boolean", true, "auth"),
   setting("auth.discord_client_id", "string", "", "auth"),
   setting("auth.discord_client_secret", "secret", "", "auth"),
+  setting("auth.google_client_id", "string", "", "auth"),
+  setting("auth.google_client_secret", "secret", "", "auth"),
   setting("auth.steam_api_key", "secret", "", "auth"),
   setting("auth.turnstile_site_key", "string", "", "auth"),
   setting("auth.turnstile_secret", "secret", "", "auth"),

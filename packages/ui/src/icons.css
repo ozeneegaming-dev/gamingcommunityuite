@@ -176,9 +176,12 @@ span.gcs-hIcon > svg {
   color: var(--gcs-accent);
 }
 
-/* Butoanele Discord și Steam din login. */
+/* Butoanele Discord, Google și Steam din login. */
 .gcs-btn--discord .gcs-btn__icon {
   color: #5865f2;
+}
+.gcs-btn--google .gcs-btn__icon {
+  color: #4285f4;
 }
 .gcs-btn--steam .gcs-btn__icon {
   color: #66c0f4;

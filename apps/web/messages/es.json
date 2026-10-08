@@ -65,6 +65,7 @@
       "password": "Contraseña",
       "submit": "Iniciar sesión",
       "or": "o",
+      "google": "Continuar con Google",
       "discord": "Continuar con la discordia",
       "steam": "Continuar con Steam",
       "noAccount": "¿Todavía no tiene cuenta?",
@@ -2433,6 +2434,8 @@
       "email_confirm": "Confirmación por correo electrónico",
       "discord_client_id": "Discord: ID de cliente",
       "discord_client_secret": "Discord: Secreto del Cliente",
+      "google_client_id": "Google: ID de cliente",
+      "google_client_secret": "Google: secreto de cliente",
       "steam_api_key": "Steam: clave de la API web",
       "turnstile_site_key": "Turnstile: Clave del sitio",
       "turnstile_secret": "Turnstile: Clave secreta"

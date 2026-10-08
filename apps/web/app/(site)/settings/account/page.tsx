@@ -60,7 +60,7 @@ export default async function AccountSettingsPage({ searchParams }: { searchPara
       <GcsAccountForms
         email={email}
         hasPassword={user.accounts.some((a) => a.providerId === "credential" && a.password)}
-        accounts={user.accounts.filter((a) => a.providerId === "discord" || a.providerId === "steam").map((a) => ({ providerId: a.providerId as "discord" | "steam" }))}
+        accounts={user.accounts.filter((a) => a.providerId === "discord" || a.providerId === "google" || a.providerId === "steam").map((a) => ({ providerId: a.providerId as "discord" | "google" | "steam" }))}
         labels={{ ...Object.fromEntries(KEYS.map((k) => [k, t(k)])), currentEmail: email ? t("currentEmail", { email }) : "" }}
       />
       {games && <GcsGameAccounts identities={games.identities} canLink={games.canLink} command={LINK_COMMAND} />}

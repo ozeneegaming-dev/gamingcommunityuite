@@ -65,6 +65,7 @@
       "password": "Password",
       "submit": "Sign in",
       "or": "or",
+      "google": "Continue with Google",
       "discord": "Continue with Discord",
       "steam": "Continue with Steam",
       "noAccount": "No account yet?",
@@ -2433,6 +2434,8 @@
       "email_confirm": "Email confirmation",
       "discord_client_id": "Discord: Client ID",
       "discord_client_secret": "Discord: Client Secret",
+      "google_client_id": "Google: Client ID",
+      "google_client_secret": "Google: Client Secret",
       "steam_api_key": "Steam: Web API key",
       "turnstile_site_key": "Turnstile: Site Key",
       "turnstile_secret": "Turnstile: Secret Key"
