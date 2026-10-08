@@ -11,7 +11,7 @@ async function profileFixture(request: APIRequestContext, data: Record<string, u
 const WIDE = { width: 1600, height: 900 };
 
 test.describe("meniul principal", () => {
-  test("pe desktop: Forum · Activitate · Chat · Membri ▾ · Clasament · VIP; submeniul Membri merge din tastatură", async ({ page, context }) => {
+  test("pe desktop: Forum · Servere · Clanuri · Activitate · Chat · Membri ▾, apoi Clasament și VIP în „Mai mult”; submeniul Membri merge din tastatură", async ({ page, context }) => {
     await useFreshIp(context, "100.71.0");
     await page.setViewportSize(WIDE);
     const id = uid();
@@ -20,10 +20,14 @@ test.describe("meniul principal", () => {
     const nav = page.getByRole("navigation", { name: "Principal" });
     // Bara a măsurat ce încape (după hidratare).
     await expect(nav).toHaveAttribute("data-ready", "");
-    for (const name of ["Forum", "Activitate", "Chat", "Clasament", "VIP"]) await expect(nav.getByRole("link", { name, exact: true })).toBeVisible();
-    // Staff a trecut în submeniul Membri; „Mai mult” nu apare când totul încape.
+    for (const name of ["Forum", "Servere", "Clanuri", "Activitate", "Chat"]) await expect(nav.getByRole("link", { name, exact: true })).toBeVisible();
+    // Staff a trecut în submeniul Membri. Cu aplicațiile Gaming (Servere, Clanuri), bara implicită are 8 itemi: ultimii
+    // (Clasament, VIP) trec în „Mai mult” la lățimea paginii.
     await expect(nav.getByRole("link", { name: "Staff" })).toHaveCount(0);
-    await expect(page.getByTestId("gcs-nav-more")).toBeHidden();
+    await expect(page.getByTestId("gcs-nav-more")).toBeVisible();
+    await page.getByTestId("gcs-nav-more").click();
+    await expect(page.getByRole("menu", { name: "Mai mult" }).getByRole("menuitem", { name: "VIP" })).toBeVisible();
+    await page.keyboard.press("Escape");
 
     const trigger = nav.getByRole("button", { name: "Membri" });
     await trigger.focus();
@@ -43,10 +47,11 @@ test.describe("meniul principal", () => {
     await expect(page.getByRole("menuitem", { name: "Toți membrii" })).not.toHaveAttribute("aria-current", "page");
     await page.keyboard.press("Escape");
 
-    // Clasament aprinde doar butonul lui, nu și Membri.
-    await nav.getByRole("link", { name: "Clasament", exact: true }).click();
+    // Clasament (din „Mai mult”) aprinde doar „Mai mult”, nu și Membri.
+    await page.getByTestId("gcs-nav-more").click();
+    await page.getByRole("menu", { name: "Mai mult" }).getByRole("menuitem", { name: "Clasament" }).click();
     await expect(page).toHaveURL(/\/leaderboard$/);
-    await expect(nav.getByRole("link", { name: "Clasament", exact: true })).toHaveAttribute("aria-current", "page");
+    await expect(page.getByTestId("gcs-nav-more")).toHaveClass(/gcs-nav__link--active/);
     await expect(nav.getByRole("button", { name: "Membri" })).not.toHaveClass(/gcs-nav__link--active/);
   });
 
@@ -69,9 +74,11 @@ test.describe("meniul principal", () => {
     // Pagina curentă e în „Mai mult”: butonul lui e activ.
     await expect(page.getByTestId("gcs-nav-more")).toHaveClass(/gcs-nav__link--active/);
 
+    // Mai lat: încap mai mulți itemi în bară (VIP rămâne în „Mai mult”: bara implicită are 8 itemi).
+    const narrow = await nav.getByRole("link").count();
     await page.setViewportSize(WIDE);
-    await expect(page.getByTestId("gcs-nav-more")).toBeHidden();
-    await expect(nav.getByRole("link", { name: "VIP", exact: true })).toBeVisible();
+    await expect.poll(() => nav.getByRole("link").count()).toBeGreaterThan(narrow);
+    await expect(nav.getByRole("link", { name: "Chat", exact: true })).toBeVisible();
   });
 
   test("pe mobil: sertarul cu submeniul Membri ca dezvăluire, fără dubluri, închis cu Escape", async ({ page, context }) => {

@@ -4460,6 +4460,7 @@
       "memberLine": "{hours}, K/D {kd}",
       "steamHint": "Statisticile tale de pe servere intră în ale clanului după ce îți conectezi contul Steam.",
       "steamLink": "Conectează Steam"
-    }
+    },
+    "manageLink": "Administrează"
   }
 }

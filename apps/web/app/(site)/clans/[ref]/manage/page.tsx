@@ -98,7 +98,7 @@ export default async function ClanManagePage({ params, searchParams }: Props) {
 
       {tab === "members" && (
         <>
-          <section className="gcs-card gcs-titledBox" aria-labelledby="gcs-clan-manage-members">
+          <section className="gcs-card gcs-titledBox gcs-clanBox" aria-labelledby="gcs-clan-manage-members">
             <h2 id="gcs-clan-manage-members" className="gcs-titleBand gcs-clanBox__title">
               <GcsIcon name="fa-solid fa-users" className="gcs-hIcon" />
               {t("membersTitle", { count: clan.members.length })}
@@ -112,7 +112,7 @@ export default async function ClanManagePage({ params, searchParams }: Props) {
               members={clan.members.map((m) => ({ userId: m.user.id, name: m.user.name, role: m.role, joined: date(m.joinedAt), link: <Who user={m.user} /> }))}
             />
           </section>
-          <section className="gcs-card gcs-titledBox" aria-labelledby="gcs-clan-manage-events">
+          <section className="gcs-card gcs-titledBox gcs-clanBox" aria-labelledby="gcs-clan-manage-events">
             <h2 id="gcs-clan-manage-events" className="gcs-titleBand gcs-clanBox__title">
               <GcsIcon name="fa-solid fa-trophy" className="gcs-hIcon" />
               {t("events.title")}
@@ -128,7 +128,7 @@ export default async function ClanManagePage({ params, searchParams }: Props) {
       {tab === "requests" && (
         <>
           {access.can.requests && (
-            <section className="gcs-card gcs-titledBox" aria-labelledby="gcs-clan-manage-requests">
+            <section className="gcs-card gcs-titledBox gcs-clanBox" aria-labelledby="gcs-clan-manage-requests">
               <h2 id="gcs-clan-manage-requests" className="gcs-titleBand gcs-clanBox__title">
                 <GcsIcon name="fa-solid fa-envelope-open-text" className="gcs-hIcon" />
                 {t("requestsTitle", { count: data.requests.length })}
@@ -139,7 +139,7 @@ export default async function ClanManagePage({ params, searchParams }: Props) {
             </section>
           )}
           {access.can.invite && (
-            <section className="gcs-card gcs-titledBox" aria-labelledby="gcs-clan-manage-invites">
+            <section className="gcs-card gcs-titledBox gcs-clanBox" aria-labelledby="gcs-clan-manage-invites">
               <h2 id="gcs-clan-manage-invites" className="gcs-titleBand gcs-clanBox__title">
                 <GcsIcon name="fa-solid fa-paper-plane" className="gcs-hIcon" />
                 {t("invitesTitle")}
@@ -161,7 +161,7 @@ export default async function ClanManagePage({ params, searchParams }: Props) {
 
       {tab === "settings" && (
         <>
-          <section className="gcs-card gcs-titledBox gcs-titledBox--roomy" aria-labelledby="gcs-clan-manage-settings">
+          <section className="gcs-card gcs-titledBox gcs-clanBox gcs-titledBox--roomy" aria-labelledby="gcs-clan-manage-settings">
             <h2 id="gcs-clan-manage-settings" className="gcs-titleBand gcs-clanBox__title">
               <GcsIcon name="fa-solid fa-sliders" className="gcs-hIcon" />
               {t("settingsTitle")}
@@ -185,7 +185,7 @@ export default async function ClanManagePage({ params, searchParams }: Props) {
               options={{ ...data.options, requireApproval }}
             />
           </section>
-          <section className="gcs-card gcs-titledBox" aria-labelledby="gcs-clan-manage-forum">
+          <section className="gcs-card gcs-titledBox gcs-clanBox" aria-labelledby="gcs-clan-manage-forum">
             <h2 id="gcs-clan-manage-forum" className="gcs-titleBand gcs-clanBox__title">
               <GcsIcon name="fa-solid fa-comments" className="gcs-hIcon" />
               {t("forumTitle")}
@@ -220,7 +220,7 @@ export default async function ClanManagePage({ params, searchParams }: Props) {
       )}
 
       {tab === "danger" && (
-        <section className="gcs-card gcs-titledBox gcs-clanDanger" aria-labelledby="gcs-clan-manage-danger">
+        <section className="gcs-card gcs-titledBox gcs-clanBox gcs-clanDanger" aria-labelledby="gcs-clan-manage-danger">
           <h2 id="gcs-clan-manage-danger" className="gcs-titleBand gcs-clanBox__title">
             <GcsIcon name="fa-solid fa-triangle-exclamation" className="gcs-hIcon" />
             {t("tabs.danger")}

@@ -25,7 +25,7 @@ export async function GcsClanGameStats({ clan }: { clan: GcsClanDetails }) {
     [t("mvps"), s ? format.number(s.mvps) : dash],
   ];
   return (
-    <section className="gcs-card gcs-titledBox" aria-labelledby="gcs-clan-game" data-testid="gcs-clan-game">
+    <section className="gcs-card gcs-titledBox gcs-clanBox" aria-labelledby="gcs-clan-game" data-testid="gcs-clan-game">
       <h2 id="gcs-clan-game" className="gcs-titleBand gcs-clanBox__title">
         <GcsIcon name="fa-solid fa-crosshairs" className="gcs-hIcon" />
         {t("title")}
@@ -39,9 +39,9 @@ export async function GcsClanGameStats({ clan }: { clan: GcsClanDetails }) {
           </div>
         ))}
       </dl>
-      {s === null && <p className="gcs-muted" style={{ margin: "12px 0 0" }}>{t("empty")}</p>}
+      {s === null && <p className="gcs-muted" style={{ margin: 0 }}>{t("empty")}</p>}
       {game.members.length > 0 && (
-        <ul className="gcs-clanTopics" style={{ marginTop: 14 }} aria-label={t("top")}>
+        <ul className="gcs-clanTopics" aria-label={t("top")}>
           {game.members.map((m) => (
             <li key={m.user.id}>
               <GcsUserLink userId={m.user.id} name={m.user.name} nameKey={m.user.nameKey} href={memberHref(m.user)} />
@@ -51,7 +51,7 @@ export async function GcsClanGameStats({ clan }: { clan: GcsClanDetails }) {
         </ul>
       )}
       {clan.viewer.steamLinked === false && (
-        <p className="gcs-field__hint" style={{ margin: "12px 0 0" }} data-testid="gcs-clan-steam-hint">
+        <p className="gcs-field__hint" style={{ margin: 0 }} data-testid="gcs-clan-steam-hint">
           {t("steamHint")} <Link href="/settings/account">{t("steamLink")}</Link>
         </p>
       )}

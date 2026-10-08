@@ -4460,6 +4460,7 @@
       "memberLine": "{hours}, K/D {kd}",
       "steamHint": "Your server stats count for the clan once you connect your Steam account.",
       "steamLink": "Connect Steam"
-    }
+    },
+    "manageLink": "Manage"
   }
 }

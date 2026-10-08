@@ -97,7 +97,7 @@ export default async function ClanPage({ params }: Props) {
           {clan.viewer.canManage && (
             <Link className="gcs-btn gcs-btn--ghost" href={`${clan.href}/manage`} data-testid="gcs-clan-manage">
               <GcsIcon name="fa-solid fa-sliders" />
-              {t("manage")}
+              {t("manageLink")}
             </Link>
           )}
         </div>
@@ -123,7 +123,7 @@ export default async function ClanPage({ params }: Props) {
 
       <div className="gcs-clanLayout">
         <div className="gcs-clanLayout__main">
-          <section className="gcs-card gcs-titledBox" aria-labelledby="gcs-clan-about">
+          <section className="gcs-card gcs-titledBox gcs-clanBox" aria-labelledby="gcs-clan-about">
             <h2 id="gcs-clan-about" className="gcs-titleBand gcs-clanBox__title">
               <GcsIcon name="fa-solid fa-scroll" className="gcs-hIcon" />
               {t("about")}
@@ -138,7 +138,7 @@ export default async function ClanPage({ params }: Props) {
             )}
           </section>
 
-          <section className="gcs-card gcs-titledBox" aria-labelledby="gcs-clan-members" data-testid="gcs-clan-roster">
+          <section className="gcs-card gcs-titledBox gcs-clanBox" aria-labelledby="gcs-clan-members" data-testid="gcs-clan-roster">
             <h2 id="gcs-clan-members" className="gcs-titleBand gcs-clanBox__title">
               <GcsIcon name="fa-solid fa-users" className="gcs-hIcon" />
               {t("members")}
@@ -170,7 +170,7 @@ export default async function ClanPage({ params }: Props) {
 
           {clan.game && <GcsClanGameStats clan={clan} />}
 
-          <section className="gcs-card gcs-titledBox" aria-labelledby="gcs-clan-activity">
+          <section className="gcs-card gcs-titledBox gcs-clanBox" aria-labelledby="gcs-clan-activity">
             <h2 id="gcs-clan-activity" className="gcs-titleBand gcs-clanBox__title">
               <GcsIcon name="fa-solid fa-clock-rotate-left" className="gcs-hIcon" />
               {t("activity.title")}
@@ -199,7 +199,7 @@ export default async function ClanPage({ params }: Props) {
         </div>
 
         <aside className="gcs-clanLayout__side">
-          <section className="gcs-card gcs-titledBox" aria-labelledby="gcs-clan-stats">
+          <section className="gcs-card gcs-titledBox gcs-clanBox" aria-labelledby="gcs-clan-stats">
             <h2 id="gcs-clan-stats" className="gcs-titleBand gcs-clanBox__title">
               <GcsIcon name="fa-solid fa-ranking-star" className="gcs-hIcon" />
               {t("stats.title")}
@@ -232,7 +232,7 @@ export default async function ClanPage({ params }: Props) {
           </section>
 
           {links.length > 0 && (
-            <section className="gcs-card gcs-titledBox" aria-labelledby="gcs-clan-links">
+            <section className="gcs-card gcs-titledBox gcs-clanBox" aria-labelledby="gcs-clan-links">
               <h2 id="gcs-clan-links" className="gcs-titleBand gcs-clanBox__title">
                 <GcsIcon name="fa-solid fa-link" className="gcs-hIcon" />
                 {t("links.title")}
@@ -251,7 +251,7 @@ export default async function ClanPage({ params }: Props) {
           )}
 
           {clan.forum && (
-            <section className="gcs-card gcs-titledBox" aria-labelledby="gcs-clan-forum" data-testid="gcs-clan-forum">
+            <section className="gcs-card gcs-titledBox gcs-clanBox" aria-labelledby="gcs-clan-forum" data-testid="gcs-clan-forum">
               <h2 id="gcs-clan-forum" className="gcs-titleBand gcs-clanBox__title">
                 <GcsIcon name="fa-solid fa-comments" className="gcs-hIcon" />
                 {t("forum.title")}

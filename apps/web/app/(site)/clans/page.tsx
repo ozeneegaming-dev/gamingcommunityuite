@@ -83,7 +83,7 @@ export default async function ClansPage({ searchParams }: { searchParams: Promis
       </header>
 
       {invites.length > 0 && (
-        <section className="gcs-card gcs-titledBox gcs-clanInvites" aria-labelledby="gcs-clan-invites-title" data-testid="gcs-clan-invites">
+        <section className="gcs-card gcs-titledBox gcs-clanBox gcs-clanInvites" aria-labelledby="gcs-clan-invites-title" data-testid="gcs-clan-invites">
           <h2 id="gcs-clan-invites-title" className="gcs-titleBand gcs-clanBox__title">
             <GcsIcon name="fa-solid fa-envelope-open-text" className="gcs-hIcon" />
             {t("invites.title", { count: invites.length })}

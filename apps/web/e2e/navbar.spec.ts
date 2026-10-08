@@ -38,7 +38,7 @@ test("meniul userului se folosește din tastatură; tema și limba se schimbă d
   expect(row!.prefs).toMatchObject({ locale: "en", theme: "light" });
 });
 
-test("meniul implicit: Forum, Activitate, Chat, Membri (cu Staff în submeniu), Clasament, VIP", async ({ page, context }) => {
+test("meniul implicit: Forum, Servere, Clanuri, Activitate, Chat, Membri (cu Staff în submeniu); Clasament și VIP în „Mai mult”", async ({ page, context }) => {
   await useFreshIp(context, "100.69.1");
   await page.setViewportSize({ width: 1600, height: 900 });
   const id = uid();
@@ -46,7 +46,10 @@ test("meniul implicit: Forum, Activitate, Chat, Membri (cu Staff în submeniu), 
   await page.goto("/");
   const nav = page.getByRole("navigation", { name: "Principal" });
   await expect(nav).toHaveAttribute("data-ready", "");
-  for (const name of ["Forum", "Activitate", "Chat", "Clasament", "VIP"]) await expect(nav.getByRole("link", { name, exact: true })).toBeVisible();
+  for (const name of ["Forum", "Servere", "Clanuri", "Activitate", "Chat"]) await expect(nav.getByRole("link", { name, exact: true })).toBeVisible();
+  await page.getByTestId("gcs-nav-more").click();
+  for (const name of ["Clasament", "VIP"]) await expect(page.getByRole("menu", { name: "Mai mult" }).getByRole("menuitem", { name })).toBeVisible();
+  await page.keyboard.press("Escape");
   await nav.getByRole("button", { name: "Membri" }).click();
   await expect(page.getByRole("menu", { name: "Membri" }).getByRole("menuitem", { name: "Staff" })).toBeVisible();
 });

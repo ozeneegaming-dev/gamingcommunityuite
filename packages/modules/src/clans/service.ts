@@ -376,7 +376,8 @@ export class GcsClanService {
     // Un clan creat cu forum: drepturile fondatorului se recalculează.
     await this.deps.permissions.invalidateMemberGrants([userId]);
     await this.changed(created.id, { forum: status === "ACTIVE" });
-    if (status === "ACTIVE") await this.rescore(created.id, options);
+    // Un clan activ intră imediat în clasament (locurile se refac).
+    if (status === "ACTIVE") await this.rerank(options);
     return { id: created.id, slug: created.slug, status: created.status };
   }
 
@@ -772,6 +773,7 @@ export class GcsClanService {
       payload: { clanId, tag: clan.tag, name: clan.name, userIds: userIds.filter((id) => id !== actor.userId), actorId: actor.userId },
       tags: [],
     });
+    await this.rerank(await this.options());
     await this.changed(clanId, { forum: clan.forumId !== null });
   }
 
@@ -795,6 +797,7 @@ export class GcsClanService {
       await writeAudit(tx, { actorId: actor?.userId ?? null, action, targetType: "clan", targetId: String(clan.id), before: { status: clan.status }, after: { status }, ip: actor?.ip ?? null });
     });
     await this.invalidateMembers(clan.id);
+    await this.rerank(await this.options());
     await this.changed(clan.id);
   }
 
@@ -821,7 +824,7 @@ export class GcsClanService {
     if (clan.createdById) {
       await this.deps.bus.emit({ name: "clan.reviewed", payload: { clanId: clan.id, userId: clan.createdById, actorId: actor.userId, kind: "approved", name: clan.name }, tags: [] });
     }
-    await this.rescore(clan.id, options);
+    await this.rerank(options);
     await this.changed(clan.id, { forum: true });
   }
 
@@ -978,6 +981,11 @@ export class GcsClanService {
     await this.deps.permissions.invalidateMemberGrants(userIds);
     await this.rescore(clanId, options);
     await this.changed(clanId);
+  }
+
+  /** Locurile tuturor clanurilor active (după aprobare, creare activă, arhivare, reactivare, desființare). */
+  private async rerank(options: GcsClanOptions): Promise<void> {
+    await recomputeClanRanking(this.deps.db, options.weights, new Date(), this.deps.gameStats ?? null);
   }
 
   private async rescore(clanId: number, options: GcsClanOptions): Promise<void> {
