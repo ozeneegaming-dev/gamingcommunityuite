@@ -3,6 +3,11 @@
 	# Endpoint-ul intern al CLI-ului `gcs` e doar pentru consola serverului.
 	respond /api/internal/* 404
 	# WebSocket-urile serviciului `gcs-realtime`.
-	reverse_proxy /socket.io/* realtime:4000
-	reverse_proxy web:3000
+	# `X-Real-IP` e mereu adresa conexiunii (clientul nu-l poate trimite el): aplicația ia IP-ul de aici.
+	reverse_proxy /socket.io/* realtime:4000 {
+		header_up X-Real-IP {remote_host}
+	}
+	reverse_proxy web:3000 {
+		header_up X-Real-IP {remote_host}
+	}
 }

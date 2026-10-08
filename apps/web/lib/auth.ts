@@ -98,7 +98,8 @@ function createAuth(config: GcsAuthConfig) {
       cookiePrefix: "gcs",
       useSecureCookies: production,
       defaultCookieAttributes: { httpOnly: true, sameSite: "lax", secure: production },
-      ipAddress: { ipAddressHeaders: ["x-forwarded-for"] },
+      // `X-Real-IP` e suprascris de proxy (vezi `client-ip.ts`); `X-Forwarded-For` rămâne doar fără proxy (dezvoltare, E2E).
+      ipAddress: { ipAddressHeaders: ["x-real-ip", "x-forwarded-for"] },
     },
     plugins: [
       // allowPasswordless: și conturile fără parolă (doar Discord/Steam) pot activa 2FA, cerut pentru ACP.

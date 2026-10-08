@@ -3,16 +3,10 @@ import type { GcsActor } from "@gcs/core";
 import { headers } from "next/headers";
 import { cache } from "react";
 import { getAuth } from "./auth";
+import { clientIp } from "./client-ip";
 import { services } from "./services";
 
-/**
- * IP-ul clientului. În producție, Caddy e singurul proxy din fața aplicației și setează `X-Forwarded-For`;
- * prima adresă din listă e a clientului.
- */
-export function clientIp(h: Headers): string {
-  const forwarded = h.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return forwarded || h.get("x-real-ip") || "0.0.0.0";
-}
+export { clientIp };
 
 const SESSION_COOKIES = ["__Secure-gcs.session_token", "gcs.session_token"];
 

@@ -36,11 +36,20 @@ function log(message: string, error?: unknown): void {
   (error ? console.error : console.log)(JSON.stringify(line));
 }
 
-/** IP-ul clientului: primul din `X-Forwarded-For` (în spatele Caddy), altfel adresa socket-ului. */
+/**
+ * IP-ul clientului: `X-Real-IP` (suprascris de proxy), altfel ultima adresă din `X-Forwarded-For` (cea adăugată de
+ * proxy; primele pot veni chiar de la client), altfel adresa socket-ului. La fel ca `clientIp` din web.
+ */
 function clientIp(socket: Socket): string {
-  const fwd = socket.handshake.headers["x-forwarded-for"];
-  const first = (Array.isArray(fwd) ? fwd[0] : fwd)?.split(",")[0]?.trim();
-  return first || socket.handshake.address;
+  const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v.join(",") : v);
+  const real = one(socket.handshake.headers["x-real-ip"])?.trim();
+  if (real) return real;
+  const last = one(socket.handshake.headers["x-forwarded-for"])
+    ?.split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .at(-1);
+  return last || socket.handshake.address;
 }
 
 /**
