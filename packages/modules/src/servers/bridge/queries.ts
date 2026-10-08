@@ -1,7 +1,8 @@
 import type { GcsActor, GcsAppService, GcsPermissionService } from "@gcs/core";
-import type { GamePlayerKind, Prisma, PrismaClient } from "@gcs/db";
+import { Prisma, type GameMatchStatus, type GamePlayerKind, type PrismaClient } from "@gcs/db";
 import { SERVERS_APP } from "../poller";
 import { BRIDGE_PERMISSION } from "./config";
+import { cleanMapName } from "./mapImages";
 import type { GcsLiveMatch } from "./matches";
 import type { GcsBridgePlayers } from "./players";
 import type { GcsAdminPresence, GcsBridgePresence, GcsOnlineAdmin } from "./presence";
@@ -9,6 +10,15 @@ import type { GcsBridgeSanctions, GcsSanctionView } from "./sanctions";
 import type { GcsBridgeStore } from "./store";
 
 const PAGE = 50;
+/** Câte hărți are filtrul listei de meciuri (cele mai jucate). */
+const MATCH_MAPS_MAX = 50;
+/** Tab-urile listei de meciuri: „live” = încălzire / live / pauză, „terminate” = încheiate / anulate. */
+const OPEN_MATCH: GameMatchStatus[] = ["WARMUP", "LIVE", "HALFTIME"];
+const CLOSED_MATCH: GameMatchStatus[] = ["ENDED", "ABORTED"];
+export type GcsMatchStatusFilter = "live" | "ended";
+export type GcsMatchFilter = { serverId?: number; playerId?: number; page?: number; status?: GcsMatchStatusFilter; map?: string; withStats?: boolean };
+/** Jucătorii pe echipe (formatul, ex. 5v5) și ELO-ul mediu al unui meci. */
+export type GcsMatchStats = { players: { A: number; B: number }; avgElo: number | null };
 
 export type GcsStatTotals = { kills: number; deaths: number; headshots: number; assists: number; kd: number; headshotRate: number | null; accuracy: number | null; damage: number; playtime: number; rounds: number; roundsWon: number };
 export type GcsIdentityView = { id: number; kind: GamePlayerKind; trust: string; name: string; value: string; verified: boolean; lastSeenAt: string };
@@ -57,14 +67,19 @@ export type GcsMatchSummary = {
   status: string;
   teams: { A: { name: string; score: number }; B: { name: string; score: number } };
   winner: string | null;
+  /** Runda curentă (la final, ultima). */
+  round: number;
   startedAt: string;
+  /** Începutul jocului propriu-zis (după încălzire): durata se măsoară de aici. */
+  liveAt: string | null;
   endedAt: string | null;
   /** Pentru un jucător: echipa lui și schimbarea de ELO. */
   player?: { team: string; eloBefore: number | null; eloAfter: number | null; kills: number; deaths: number };
+  /** Doar cu `withStats`: formatul și ELO-ul mediu (lista meciurilor). */
+  stats?: GcsMatchStats;
 };
 
 export type GcsMatchDetails = GcsMatchSummary & {
-  round: number;
   rated: boolean;
   players: { playerId: number; name: string; team: string; kills: number; deaths: number; assists: number; headshots: number; damage: number; mvps: number; eloBefore: number | null; eloAfter: number | null }[];
   rounds: { number: number; winner: string; scoreA: number; scoreB: number; reason: string; endedAt: string }[];
@@ -272,14 +287,33 @@ export class GcsBridgeQueries {
     return { items: rows.map((r, i) => ({ position: (p - 1) * PAGE + i + 1, elo: r.elo, peak: r.peak, matches: r.matches, wins: r.wins, losses: r.losses, draws: r.draws, player: r.player })), total, page: p, pages: Math.max(1, Math.ceil(total / PAGE)) };
   }
 
-  /** Meciurile (încheiate sau în curs), pe server sau pe jucător, cele mai noi primele. */
-  async matches(actor: GcsActor, filter: { serverId?: number; playerId?: number; page?: number }): Promise<{ items: GcsMatchSummary[]; total: number; page: number; pages: number }> {
+  /** Serverele vizibile ale unei liste de meciuri (filtrul pe server, dacă e dat). */
+  private async matchServers(actor: GcsActor, serverId?: number): Promise<number[]> {
+    const visible = await this.deps.visibleServers(actor);
+    return typeof serverId === "number" ? visible.filter((id) => id === serverId) : visible;
+  }
+
+  /** Condiția listei de meciuri: serverele, jucătorul, starea (tab-ul) și harta (un nume invalid nu filtrează). */
+  private matchWhere(serverIds: number[], filter: Pick<GcsMatchFilter, "playerId" | "status" | "map">): Prisma.GameMatchWhereInput {
+    const map = filter.map === undefined ? null : cleanMapName(filter.map);
+    return {
+      serverId: { in: serverIds },
+      ...(typeof filter.playerId === "number" ? { players: { some: { playerId: filter.playerId } } } : {}),
+      ...(filter.status === "live" ? { status: { in: OPEN_MATCH } } : filter.status === "ended" ? { status: { in: CLOSED_MATCH } } : {}),
+      ...(map ? { map } : {}),
+    };
+  }
+
+  /**
+   * Meciurile (încheiate sau în curs), pe server, jucător, stare și hartă, cele mai noi primele. Cu `withStats`, fiecare
+   * are formatul (jucătorii pe echipe) și ELO-ul mediu (o singură citire în plus pentru toată pagina).
+   */
+  async matches(actor: GcsActor, filter: GcsMatchFilter): Promise<{ items: GcsMatchSummary[]; total: number; page: number; pages: number }> {
     const empty = { items: [], total: 0, page: 1, pages: 1 };
     if (!(await this.canViewStats(actor))) return empty;
-    const visible = await this.deps.visibleServers(actor);
-    const serverIds = typeof filter.serverId === "number" ? visible.filter((id) => id === filter.serverId) : visible;
+    const serverIds = await this.matchServers(actor, filter.serverId);
     if (serverIds.length === 0) return empty;
-    const where: Prisma.GameMatchWhereInput = { serverId: { in: serverIds }, ...(typeof filter.playerId === "number" ? { players: { some: { playerId: filter.playerId } } } : {}) };
+    const where = this.matchWhere(serverIds, filter);
     const p = Math.max(1, Math.floor(filter.page ?? 1));
     const [total, rows] = await Promise.all([
       this.deps.db.gameMatch.count({ where }),
@@ -292,6 +326,7 @@ export class GcsBridgeQueries {
         take: PAGE,
       }),
     ]);
+    const stats = filter.withStats ? await this.matchStats(rows.map((m) => m.id)) : null;
     return {
       items: rows.map((m) => {
         const mine = (m as { players?: { team: string; eloBefore: number | null; eloAfter: number | null; kills: number; deaths: number }[] }).players?.[0];
@@ -302,15 +337,64 @@ export class GcsBridgeQueries {
           status: m.status.toLowerCase(),
           teams: { A: { name: m.teamAName, score: m.scoreA }, B: { name: m.teamBName, score: m.scoreB } },
           winner: m.winner,
+          round: m.round,
           startedAt: m.startedAt.toISOString(),
+          liveAt: m.liveAt?.toISOString() ?? null,
           endedAt: m.endedAt?.toISOString() ?? null,
           ...(mine ? { player: { team: mine.team, eloBefore: mine.eloBefore, eloAfter: mine.eloAfter, kills: mine.kills, deaths: mine.deaths } } : {}),
+          ...(stats ? { stats: stats.get(m.id) ?? { players: { A: 0, B: 0 }, avgElo: null } } : {}),
         };
       }),
       total,
       page: p,
       pages: Math.max(1, Math.ceil(total / PAGE)),
     };
+  }
+
+  /**
+   * Formatul și ELO-ul mediu al meciurilor (o citire agregată): ELO-ul de dinainte de meci (meciurile evaluate), altfel
+   * ratingul curent al jucătorului; jucătorii fără rating nu intră în medie; niciunul = necunoscut (`null`).
+   */
+  private async matchStats(ids: number[]): Promise<Map<number, GcsMatchStats>> {
+    if (ids.length === 0) return new Map();
+    const rows = await this.deps.db.$queryRaw<{ id: number; a: number; b: number; elo: number | null }[]>`
+      SELECT mp."matchId" AS id,
+             (COUNT(*) FILTER (WHERE mp.team = 'A'))::int AS a,
+             (COUNT(*) FILTER (WHERE mp.team = 'B'))::int AS b,
+             ROUND(AVG(COALESCE(mp."eloBefore", r.elo)))::int AS elo
+      FROM game_match_players mp
+      LEFT JOIN game_ratings r ON r."playerId" = mp."playerId"
+      WHERE mp."matchId" IN (${Prisma.join(ids)})
+      GROUP BY mp."matchId"`;
+    return new Map(rows.map((r) => [r.id, { players: { A: r.a, B: r.b }, avgElo: r.elo }]));
+  }
+
+  /** Numărătorile tab-urilor listei (cu filtrele pe server și hartă): toate, live (încălzire / live / pauză), terminate. */
+  async matchCounts(actor: GcsActor, filter: { serverId?: number; map?: string } = {}): Promise<{ all: number; live: number; ended: number }> {
+    const zero = { all: 0, live: 0, ended: 0 };
+    if (!(await this.canViewStats(actor))) return zero;
+    const serverIds = await this.matchServers(actor, filter.serverId);
+    if (serverIds.length === 0) return zero;
+    const groups = await this.deps.db.gameMatch.groupBy({ by: ["status"], where: this.matchWhere(serverIds, filter), _count: { _all: true } });
+    const count = (statuses: GameMatchStatus[]) => groups.reduce((n, g) => n + (statuses.includes(g.status) ? g._count._all : 0), 0);
+    const live = count(OPEN_MATCH);
+    const ended = count(CLOSED_MATCH);
+    return { all: live + ended, live, ended };
+  }
+
+  /** Hărțile filtrului listei (cele mai jucate 50, apoi alfabetic), cu numărul de meciuri. */
+  async matchMaps(actor: GcsActor, filter: { serverId?: number } = {}): Promise<{ map: string; count: number }[]> {
+    if (!(await this.canViewStats(actor))) return [];
+    const serverIds = await this.matchServers(actor, filter.serverId);
+    if (serverIds.length === 0) return [];
+    const groups = await this.deps.db.gameMatch.groupBy({
+      by: ["map"],
+      where: { serverId: { in: serverIds }, map: { not: "" } },
+      _count: { _all: true },
+      orderBy: [{ _count: { map: "desc" } }, { map: "asc" }],
+      take: MATCH_MAPS_MAX,
+    });
+    return groups.map((g) => ({ map: g.map, count: g._count._all })).sort((a, b) => a.map.localeCompare(b.map));
   }
 
   async match(actor: GcsActor, id: number): Promise<GcsMatchDetails | null> {
@@ -328,6 +412,7 @@ export class GcsBridgeQueries {
       teams: { A: { name: m.teamAName, score: m.scoreA }, B: { name: m.teamBName, score: m.scoreB } },
       winner: m.winner,
       startedAt: m.startedAt.toISOString(),
+      liveAt: m.liveAt?.toISOString() ?? null,
       endedAt: m.endedAt?.toISOString() ?? null,
       round: m.round,
       rated: m.rated,

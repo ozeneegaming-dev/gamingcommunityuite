@@ -19,7 +19,7 @@
 |---|---|---|
 | `/servers/players/{id}-{slug}` | profilul jucătorului (o identitate de joc), cu tab-uri | `servers.stats_view` |
 | `/servers/leaderboard` | clasamentul ELO (mix); `?server={id}` = clasamentul clasic al unui server | `servers.stats_view` + vizibilitatea serverului |
-| `/servers/matches` | istoricul meciurilor mix (`?server=`, `?page=`) | `servers.stats_view` |
+| `/servers/matches` | meciurile mix, live și terminate (`?status=live|ended`, `?server=`, `?map=`, `?page=`) | `servers.stats_view` |
 | `/servers/matches/{id}` | pagina meciului: echipele, jucătorii, rundele, ELO-ul; live | `servers.stats_view` + vizibilitatea serverului |
 | `/servers/admins` | prezența adminilor (online acum, 24 h / 7 zile, timpul de joc, activitatea) | `servers.stats_view` |
 | `/servers/tickets` | tichetele mele și coada staff-ului | membrii autentificați |
@@ -142,7 +142,18 @@ Manrope pentru text, benzile titlurilor). Puntea adaugă un singur element nou d
 - **Clasamentul ELO:** locul, jucătorul (link), ELO-ul, vârful, meciurile, victoriile, procentul; pagini de 50.
 - **Clasamentul clasic** al unui server: locul, jucătorul, ucideri, decese, K/D, headshot %, timp de joc; pagina
   serverului are primele 10, cu legătura spre tot clasamentul.
-- **Istoricul meciurilor:** data, serverul, harta, echipele și scorul, starea; filtrul pe server.
+- **Lista meciurilor** (`/servers/matches`, re-așezată 2026-10-08): sus blocul filtrelor — tab-urile **Toate / Live /
+  Terminate** cu numărătorile (pe serverul și harta alese; live = încălzire / live / pauză, terminate = încheiate /
+  anulate), filtrele pe server și hartă (formular GET, merge fără JavaScript) și comutatorul **„Actualizare live”**
+  (pornit implicit, preferința ținută în browser): camerele `servers:{id}` (`servers:match`) schimbă scorul și starea
+  pe loc, un meci nou sau încheiat reîncarcă lista; fără realtime, reîmprospătarea la 15 s cu pagina vizibilă. Apoi
+  **cardurile compacte** (grilă, o coloană la 375 px): imaginea hărții (ordinea §13 partea A, rezolvată pe server) cu
+  numele ei, starea (live cu punctul pulsând și runda / terminat cu timpul relativ), formatul (ex. 5v5), scorul mare în
+  culorile echipelor, serverul, **ELO-ul mediu** (cel de dinainte de meci la meciurile evaluate, altfel ratingul curent
+  al jucătorilor cu rating) și durata (de la începutul jocului). Tot cardul duce la pagina meciului printr-o singură
+  legătură (echipele și scorul, întinsă peste card), cu focusul vizibil pe card. Paginare de 50.
+- Serviciile: `queries.matches(actor, { serverId?, playerId?, status?, map?, page?, withStats? })`,
+  `queries.matchCounts(actor, { serverId?, map? })`, `queries.matchMaps(actor, { serverId? })`.
 
 ## 8. Setări → Cont: „Conturi de joc”
 

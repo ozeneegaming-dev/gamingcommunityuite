@@ -5032,7 +5032,29 @@
       "empty": "No mix match played yet.",
       "servers": "Servers",
       "matchTitle": "{a} vs {b}",
-      "notRated": "This match did not change ELO (too few rounds or a team without players)."
+      "notRated": "This match did not change ELO (too few rounds or a team without players).",
+      "filtersLabel": "Match filters",
+      "statusFilter": "Match status",
+      "tabs": {
+        "all": "All",
+        "live": "Live",
+        "ended": "Finished"
+      },
+      "liveUpdates": "Live updates",
+      "liveOff": "off",
+      "liveRealtime": "real time",
+      "livePolling": "every 15 seconds",
+      "mapFilter": "Map",
+      "allMaps": "All maps",
+      "filterSubmit": "Filter",
+      "filterReset": "Reset filters",
+      "emptyFiltered": "No matches for the chosen filters.",
+      "mode": "{a}v{b}",
+      "statusRound": "{status} · round {round}",
+      "statusAgo": "{status} · {ago}",
+      "avgElo": "Avg. ELO {elo}",
+      "avgEloNone": "Avg. ELO —",
+      "duration": "Duration"
     },
     "match": {
       "teamA": "Team A",

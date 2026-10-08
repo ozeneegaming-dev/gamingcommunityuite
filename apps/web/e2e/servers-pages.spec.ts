@@ -118,6 +118,7 @@ test.beforeAll(async ({ browser }) => {
 test.afterAll(async () => {
   await staffContext?.close();
   await fake?.close();
+  await resetSetting("servers.rank_min_minutes");
   await sql(`DELETE FROM game_sanctions WHERE "serverId" = $1 OR "playerId" IN (SELECT id FROM game_players WHERE name = ANY($2))`, [serverId, PLAYERS.map((p) => p.name)]);
   await sql(`DELETE FROM game_servers WHERE name LIKE $1`, [`%${id}%`]);
 });
@@ -178,7 +179,9 @@ test("staff: serverul (ACP), cheia API, un admin de server și datele generate d
     [serverId],
   );
   expect(counts).toEqual({ matches: 2, rated: 1, kills: 57 });
-  // Locurile pe server se calculează la 10 minute: pentru test, imediat (fără prag de timp de joc).
+  // Locurile pe server se calculează la 10 minute: pentru test, imediat (fără prag de timp de joc). Pragul e oprit și
+  // pentru jobul worker-ului, care altfel (rulând între timp) ar goli locurile jucătorilor cu mai puțin de 30 de minute.
+  await setSetting("servers.rank_min_minutes", 0);
   await sql(`UPDATE game_player_stats s SET rank = r.rank FROM (SELECT "playerId", ROW_NUMBER() OVER (ORDER BY score DESC, kills DESC, "playerId")::int AS rank FROM game_player_stats WHERE "serverId" = $1) r WHERE s."serverId" = $1 AND s."playerId" = r."playerId"`, [serverId]);
 });
 
@@ -250,11 +253,64 @@ test("meciurile și clasamentele: istoricul, pagina meciului (rundele, echipele,
   test.setTimeout(120_000);
   await useFreshIp(context, "100.77.2");
   await page.goto(`/servers/matches?server=${serverId}`);
-  const rows = page.getByTestId("gcs-match-row");
-  await expect(rows).toHaveCount(2);
-  await expect(rows.first()).toHaveAttribute("data-status", "live");
+  // Blocul filtrelor: tab-urile cu numărătorile (pe serverul ales), „Actualizare live” pornită implicit.
+  await expect(page.getByTestId("gcs-mix-count-all")).toHaveText("2");
+  await expect(page.getByTestId("gcs-mix-count-live")).toHaveText("1");
+  await expect(page.getByTestId("gcs-mix-count-ended")).toHaveText("1");
+  const toggle = page.getByTestId("gcs-mix-live");
+  await expect(toggle).toBeChecked();
+  const cards = page.getByTestId("gcs-mix-card");
+  await expect(cards).toHaveCount(2);
+  const liveCard = cards.first();
+  const endedCard = cards.nth(1);
+  await expect(liveCard).toHaveAttribute("data-status", "live");
+  await expect(liveCard.getByTestId("gcs-mix-card-status")).toContainText("Live · runda");
+  await expect(liveCard.locator(".gcs-liveDot")).toHaveCount(1);
+  // Cardul compact: harta (imaginea rezolvată pe server), formatul, scorul, starea, ELO-ul mediu, durata; o singură legătură.
+  await expect(endedCard).toHaveAttribute("data-status", "ended");
+  await expect(endedCard.locator(".gcs-mapPic")).toHaveAttribute("data-kind", "art");
+  await expect(endedCard).toContainText("de_mirage");
+  await expect(endedCard.getByTestId("gcs-mix-card-mode")).toHaveText("5v5");
+  await expect(endedCard.getByTestId("gcs-mix-card-score")).toHaveText(/^10.*6$/);
+  await expect(endedCard.getByTestId("gcs-mix-card-status")).toContainText("Încheiat ·");
+  await expect(endedCard.getByTestId("gcs-mix-card-elo")).toHaveText(/^ELO mediu \d/);
+  await expect(endedCard.getByTestId("gcs-mix-card-duration")).toHaveText(/\d+ min/);
+  await expect(endedCard.getByRole("link")).toHaveCount(1);
+  await expect(liveCard.getByRole("link")).toHaveCount(1);
+
+  // Live: o rundă nouă schimbă scorul de pe card fără reîncărcare (realtime sau rezerva de 15 s).
+  await expect(liveCard.getByTestId("gcs-mix-card-score")).toHaveText(/^3.*1$/);
+  expect(await playMatchRound(5, "B", { A: 3, B: 1 })).toBe(true);
+  await expect(liveCard.getByTestId("gcs-mix-card-score")).toHaveText(/^3.*2$/, { timeout: 30_000 });
+  // Oprită: scorul rămâne; repornită: lista se aduce la zi imediat.
+  await toggle.uncheck();
+  await expect(page.getByTestId("gcs-mix-live-state")).toHaveText("oprită");
+  expect(await playMatchRound(6, "A", { A: 3, B: 2 })).toBe(true);
+  await page.waitForTimeout(2000);
+  await expect(liveCard.getByTestId("gcs-mix-card-score")).toHaveText(/^3.*2$/);
+  await toggle.check();
+  await expect(liveCard.getByTestId("gcs-mix-card-score")).toHaveText(/^4.*2$/, { timeout: 15_000 });
   await shot(page, "matches-list");
-  await rows.nth(1).getByRole("link").click();
+
+  // Tab-urile (Live / Terminate) și filtrul pe hartă (formularul merge și fără JavaScript).
+  const tabs = page.getByTestId("gcs-mix-tabs");
+  await tabs.getByRole("link", { name: /Live/ }).click();
+  await expect(page).toHaveURL(/status=live/);
+  await expect(cards).toHaveCount(1);
+  await expect(cards.first()).toHaveAttribute("data-status", "live");
+  await tabs.getByRole("link", { name: /Terminate/ }).click();
+  await expect(page).toHaveURL(/status=ended/);
+  await expect(cards).toHaveCount(1);
+  await page.getByTestId("gcs-mix-filter-map").selectOption("de_mirage");
+  await page.getByTestId("gcs-mix-filter-form").getByRole("button").click();
+  await expect(page).toHaveURL(/map=de_mirage/);
+  await expect(page).toHaveURL(/status=ended/);
+  await expect(cards).toHaveCount(1);
+  await expect(page.getByTestId("gcs-mix-count-ended")).toHaveText("1");
+
+  // Tot cardul duce la pagina meciului (un clic pe imaginea hărții, nu pe text).
+  const media = await cards.first().locator(".gcs-mixCard__media").boundingBox();
+  await page.mouse.click(media!.x + media!.width / 2, media!.y + media!.height / 2);
   await expect(page).toHaveURL(/\/servers\/matches\/\d+$/);
   const board = page.getByTestId("gcs-match-board");
   await expect(board).toHaveAttribute("data-status", "ended");
@@ -530,6 +586,8 @@ test("capturile: temele întunecată și luminoasă, desktop și 375 px", async 
     ["player", `/servers/players/${player!.id}`],
     ["player-mix", `/servers/players/${player!.id}?tab=mix`],
     ["match", `/servers/matches/${match!.id}`],
+    ["matches", "/servers/matches"],
+    ["matches-live", "/servers/matches?status=live"],
     ["bans", "/bans"],
     ["ban", `/bans/${banId}`],
     ["leaderboard", "/servers/leaderboard"],

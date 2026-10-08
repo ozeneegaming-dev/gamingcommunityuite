@@ -322,7 +322,7 @@ export type { GcsAdminPresence, GcsOnlineAdmin } from "./presence";
 export type { GcsSanctionInput, GcsSanctionUpdate, GcsSanctionView } from "./sanctions";
 export type { GcsTicketInput, GcsTicketView, GcsTicketSummary, GcsTicketMessageView } from "./tickets";
 export { TICKET_TITLE_MAX, TICKET_TITLE_MIN } from "./tickets";
-export type { GcsPlayerProfile, GcsMatchDetails, GcsMatchSummary, GcsUserGameCard, GcsPlayerHit, GcsStatTotals, GcsIdentityView } from "./queries";
+export type { GcsPlayerProfile, GcsMatchDetails, GcsMatchSummary, GcsMatchFilter, GcsMatchStats, GcsMatchStatusFilter, GcsUserGameCard, GcsPlayerHit, GcsStatTotals, GcsIdentityView } from "./queries";
 export type { GcsPlayerView } from "./players";
 export { LINK_CODE_TTL_MS } from "./players";
 export { matchRoom, MATCH_STATE_EVENT, SERVER_MATCH_EVENT } from "./matches";

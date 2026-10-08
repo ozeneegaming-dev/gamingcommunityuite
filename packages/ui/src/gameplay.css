@@ -581,6 +581,332 @@ html[data-theme="light"] {
   color: var(--gcs-muted);
 }
 
+/* ─── Meciurile mix: lista (filtrele cu tab-urile pe stare, „Actualizare live”, cardurile compacte) ──────────── */
+
+.gcs-mixFilters {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+}
+.gcs-mixFilters__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 18px;
+}
+.gcs-mixTabs {
+  max-width: 100%;
+}
+.gcs-root a.gcs-segLink .gcs-mixTabs__count,
+.gcs-mixTabs__count {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font: 700 12px var(--gcs-font-display);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--gcs-muted);
+  background: color-mix(in srgb, var(--gcs-text) 9%, transparent);
+}
+.gcs-segLink--active .gcs-mixTabs__count {
+  color: var(--gcs-text);
+  background: color-mix(in srgb, var(--gcs-accent) 22%, transparent);
+}
+.gcs-mixTabs__dot {
+  color: var(--gcs-accentInk);
+}
+.gcs-mixLive {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.gcs-mixLive__state {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gcs-muted);
+}
+.gcs-mixLive[data-on] .gcs-mixLive__state {
+  color: var(--gcs-ok);
+}
+.gcs-mixFilters__form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--gcs-border);
+}
+.gcs-mixFilters__field {
+  flex: 1 1 200px;
+  max-width: 280px;
+  min-width: 0;
+}
+.gcs-mixFilters__reset {
+  align-self: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+.gcs-mixEmpty {
+  padding: 28px 20px;
+}
+
+.gcs-mixGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
+  gap: 16px;
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+}
+.gcs-mixGrid > li {
+  min-width: 0;
+}
+.gcs-mixCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border: var(--gcs-box-border-w, 1px) solid var(--gcs-box-border, var(--gcs-border));
+  border-radius: var(--gcs-radius, 14px);
+  background: var(--gcs-surface);
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+.gcs-mixCard:hover {
+  border-color: color-mix(in srgb, var(--gcs-accent) 55%, var(--gcs-border));
+}
+/* O singură legătură pe card (echipele și scorul), întinsă peste tot cardul; focusul se vede pe card. */
+.gcs-mixCard:has(.gcs-mixCard__link:focus-visible) {
+  outline: 2px solid var(--gcs-accent);
+  outline-offset: 2px;
+}
+.gcs-mixCard[data-status="live"],
+.gcs-mixCard[data-status="halftime"] {
+  border-color: color-mix(in srgb, var(--gcs-accent) 45%, var(--gcs-border));
+}
+.gcs-mixCard__media {
+  position: relative;
+  aspect-ratio: 16 / 6;
+  min-height: 96px;
+  background: linear-gradient(120deg, #1b1e26, #262a34);
+}
+/* Mai specific decât `.gcs-mapPic` (definit mai jos), care e relativ. */
+.gcs-mixCard__media > .gcs-mixCard__map {
+  position: absolute;
+  inset: 0;
+}
+.gcs-mixCard__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8, 9, 12, 0.35) 0%, rgba(8, 9, 12, 0.05) 40%, rgba(8, 9, 12, 0.72) 100%);
+  pointer-events: none;
+}
+.gcs-mixCard__status,
+.gcs-mixCard__mode {
+  position: absolute;
+  top: 10px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: calc(100% - 90px);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #ecedf1;
+  background: rgba(11, 12, 16, 0.78);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gcs-mixCard__status {
+  left: 10px;
+}
+.gcs-mixCard__status[data-status="live"] {
+  color: #fff;
+  background: color-mix(in srgb, var(--gcs-accent) 88%, #000);
+}
+.gcs-mixCard__status[data-status="halftime"] {
+  color: #1a1204;
+  background: #f4b740;
+}
+.gcs-mixCard__mode {
+  right: 10px;
+  font-family: var(--gcs-font-display);
+  font-variant-numeric: tabular-nums;
+}
+.gcs-mixCard__mode svg {
+  width: 12px;
+  height: 12px;
+}
+.gcs-mixCard__mapName {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 8px;
+  z-index: 1;
+  font-size: 17px;
+  line-height: 1.2;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.75);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-mixCard__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  padding: 14px 16px 14px;
+}
+.gcs-mixCard__heading {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+.gcs-root a.gcs-mixCard__link,
+.gcs-mixCard__link {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  color: var(--gcs-text);
+  text-decoration: none;
+}
+.gcs-mixCard__link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+.gcs-mixCard__link:focus-visible {
+  outline: none;
+}
+.gcs-mixCard__team {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-mixCard__team::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.gcs-mixCard__team[data-team="A"]::before {
+  background: var(--gcs-teamA);
+}
+.gcs-mixCard__team[data-team="B"] {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+.gcs-mixCard__team[data-team="B"]::before {
+  background: var(--gcs-teamB);
+}
+.gcs-mixCard[data-status="ended"] .gcs-mixCard__team:not([data-won]) {
+  color: color-mix(in srgb, var(--gcs-text) 68%, var(--gcs-muted));
+}
+.gcs-mixCard__score {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 32px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.gcs-mixCard__score [data-team="A"] {
+  color: var(--gcs-teamA);
+}
+.gcs-mixCard__score [data-team="B"] {
+  color: var(--gcs-teamB);
+}
+.gcs-mixCard__sep {
+  font-size: 0.6em;
+  color: var(--gcs-muted);
+}
+.gcs-mixCard__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: auto 0 0;
+  padding: 10px 0 0;
+  border-top: 1px solid var(--gcs-border);
+  list-style: none;
+  font-size: 13px;
+  color: var(--gcs-muted);
+  font-variant-numeric: tabular-nums;
+}
+.gcs-mixCard__meta li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.gcs-mixCard__meta svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+.gcs-mixCard__server {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--gcs-text);
+  font-weight: 600;
+}
+@media (max-width: 640px) {
+  .gcs-mixFilters {
+    padding: 12px;
+  }
+  .gcs-mixFilters__top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .gcs-mixTabs {
+    display: flex;
+    flex-wrap: nowrap;
+  }
+  .gcs-root a.gcs-mixTabs__tab,
+  .gcs-mixTabs__tab {
+    flex: 1 1 0;
+    justify-content: center;
+    gap: 6px;
+    min-width: 0;
+    padding: 0 6px;
+  }
+  .gcs-mixFilters__field {
+    flex-basis: 100%;
+    max-width: none;
+  }
+  .gcs-mixCard__score {
+    font-size: 28px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gcs-mixCard {
+    transition: none;
+  }
+}
+
 /* ─── Meciurile ───────────────────────────────────────────────────────────────────────────── */
 
 .gcs-matchRows {
