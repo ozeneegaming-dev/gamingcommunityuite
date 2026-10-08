@@ -75,7 +75,7 @@ test("ACP: cheia API (o singură dată), scenariul complet al serverului fals, s
   const out = await mock.scenarioFull();
   expect(out.ended).toMatchObject({ status: "ok" });
   expect(out.ban).toMatchObject({ status: "ok", note: "scope_downgraded" });
-  expect(out.sanctions).toEqual([expect.objectContaining({ type: "ban", active: true, reason: "wallhack" })]);
+  expect(out.sanctions).toEqual(expect.arrayContaining([expect.objectContaining({ id: out.ban.sanctionId, type: "ban", active: true, reason: "wallhack", scope: "server" })]));
 
   // O cerere semnată greșit e refuzată (aceeași cheie, semnătura stricată).
   const forged = await new GcsMockServer({ token: token.replace(/.$/, (c) => (c === "A" ? "B" : "A")), transport: httpTransport(baseURL ?? "http://localhost:3100") }).request("POST", "/heartbeat", {});

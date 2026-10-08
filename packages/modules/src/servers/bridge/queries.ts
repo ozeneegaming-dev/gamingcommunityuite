@@ -110,7 +110,10 @@ export class GcsBridgeQueries {
     const [weapons, maps, history, matches, list] = await Promise.all([
       db.gameWeaponStat.groupBy({ by: ["weapon"], where: { playerId, serverId: { in: serverIds } }, _sum: { kills: true, deaths: true, headshots: true, shots: true, hits: true, damage: true }, orderBy: { _sum: { kills: "desc" } }, take: 30 }),
       db.gameMapStat.groupBy({ by: ["map"], where: { playerId, serverId: { in: serverIds } }, _sum: { kills: true, deaths: true, headshots: true, playtime: true, rounds: true, roundsWon: true }, orderBy: { _sum: { playtime: "desc" } }, take: 30 }),
-      db.gameMatchPlayer.findMany({ where: { playerId, eloAfter: { not: null }, match: { serverId: { in: serverIds } } }, include: { match: { select: { id: true, endedAt: true, startedAt: true } } }, orderBy: { match: { endedAt: "asc" } }, take: 200 }),
+      // Ultimele 200 de meciuri evaluate (graficul ELO), apoi în ordine cronologică.
+      db.gameMatchPlayer
+        .findMany({ where: { playerId, eloAfter: { not: null }, match: { serverId: { in: serverIds } } }, include: { match: { select: { id: true, endedAt: true, startedAt: true } } }, orderBy: { match: { endedAt: "desc" } }, take: 200 })
+        .then((rows) => rows.reverse()),
       this.matches(actor, { playerId }),
       (await permissions.can(actor, BRIDGE_PERMISSION.bansView)) ? sanctions.list(actor, { playerId }).then((r) => r.items) : Promise.resolve(null),
     ]);

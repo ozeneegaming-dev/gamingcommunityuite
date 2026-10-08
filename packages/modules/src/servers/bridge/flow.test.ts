@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { Prisma } from "@gcs/db";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mockPlayer } from "../../../../../servers-plugins/mock/gcs-mock-server.mjs";
 import { createBridgeWorld, type GcsBridgeWorld } from "../../../test/bridgeWorld";
 import { steam64 } from "./steamid";
@@ -6,6 +7,9 @@ import { steam64 } from "./steamid";
 let w: GcsBridgeWorld;
 beforeEach(async () => {
   w = await createBridgeWorld();
+});
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 const playerId = async (auth: string) => {
@@ -54,6 +58,21 @@ describe("evenimentele (§6.4): idempotența și statisticile", () => {
     expect(await stat(a)).toMatchObject({ kills: 1, deaths: 1, suicides: 1, teamkills: 1, score: -1, shots: 40, hits: 10, damage: 500, rounds: 1, roundsWon: 1 });
     expect(await stat(b)).toMatchObject({ kills: 0, deaths: 2, suicides: 1, rounds: 1, roundsWon: 0, score: -2 });
     expect(await stat(c)).toMatchObject({ deaths: 1, assists: 1 });
+  });
+
+  it("un eveniment care nu se poate aplica (eroare a datelor) e respins, nu blochează lotul și nici coada pluginului", async () => {
+    const { token } = await w.bridgeServer();
+    const mock = w.mock(token);
+    vi.spyOn(w.bridge.matches, "applyState").mockRejectedValueOnce(new Prisma.PrismaClientKnownRequestError("constrângere", { code: "P2003", clientVersion: "test" }));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const players = [mockPlayer("cs2", 1), mockPlayer("cs2", 2)];
+    const bad = mock.event("match", { match: mock.matchState("m-otrava", "live", { teamA: [players[0]!], teamB: [players[1]!] }) });
+    const results = await mock.send([bad, mock.event("connect", { player: players[0]! })]);
+    expect(results.map((r) => [r.status, r.error])).toEqual([
+      ["rejected", "internal_error"],
+      ["ok", undefined],
+    ]);
+    expect(await w.db.gameBridgeEvent.count({ where: { eventId: bad.id } })).toBe(0);
   });
 
   it("timpii evenimentelor se taie la [acum − 7 zile, acum + 60 s]", async () => {

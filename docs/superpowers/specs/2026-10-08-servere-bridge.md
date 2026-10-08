@@ -411,6 +411,8 @@ Răspuns: `{ "serverTime": …, "results": [ { "id": "k7Qp-000042", "status": "o
 - `since=N`: toate schimbările cu `revision > N` care privesc serverul: cele active (adăugate / modificate) și cele
   care nu mai trebuie aplicate (`active: false`: ridicate, expirate prin modificare, mutate pe alt server).
 - Pagini de max 1000 de rânduri, în ordinea reviziei; `more: true` → pluginul cere din nou cu `since = cursor`.
+  Parametrul opțional `limit` (1–1000) dă pagini mai mici pentru runtime-urile cu memorie puțină (pluginul AMX Mod X
+  cere câte 100).
 
 ```json
 {

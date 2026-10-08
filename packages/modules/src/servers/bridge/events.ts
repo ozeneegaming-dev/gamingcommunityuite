@@ -130,6 +130,12 @@ export class GcsBridgeEvents {
       return { id, status: "ok", ...extra };
     } catch (error) {
       if (error instanceof Rejected) return { id, status: "rejected", error: error.code };
+      // O eroare a datelor (ex. o constrângere a bazei) ar bloca pentru totdeauna coada pluginului: evenimentul se
+      // confirmă ca respins și se notează. Erorile de conexiune urcă mai departe (lotul se reîncearcă).
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        console.error(`[gcs] evenimentul ${id} (${type}) al serverului ${ctx.server.id} nu s-a putut aplica`, error.code);
+        return { id, status: "rejected", error: "internal_error" };
+      }
       throw error;
     }
   }
