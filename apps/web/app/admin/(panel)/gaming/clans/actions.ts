@@ -11,7 +11,16 @@ const TAB_KEYS: Record<string, readonly string[]> = {
   tag: [CLAN_SETTING.tagMin, CLAN_SETTING.tagMax, CLAN_SETTING.tagCharset],
   members: [CLAN_SETTING.inviteDays, CLAN_SETTING.requestDays, CLAN_SETTING.officerRights, CLAN_SETTING.archiveInactiveDays],
   forum: [CLAN_SETTING.forumMode, CLAN_SETTING.forumParent, CLAN_SETTING.forumStaffGroups],
-  ranking: [CLAN_SETTING.weightPosts, CLAN_SETTING.weightReputation, CLAN_SETTING.weightActivity, CLAN_SETTING.weightMembers],
+  ranking: [
+    CLAN_SETTING.weightPosts,
+    CLAN_SETTING.weightReputation,
+    CLAN_SETTING.weightActivity,
+    CLAN_SETTING.weightMembers,
+    CLAN_SETTING.weightPlaytime,
+    CLAN_SETTING.weightKd,
+    CLAN_SETTING.weightMixWins,
+    CLAN_SETTING.weightElo,
+  ],
   display: [CLAN_SETTING.tagPlaces, CLAN_SETTING.profileBadge],
 };
 
@@ -30,7 +39,9 @@ export async function saveClanSettings(tab: string, fd: FormData): Promise<GcsRe
   return runAcpAction(CLANS_SETTINGS_ACP_SECTION, "edit", async (actor) => {
     const keys = TAB_KEYS[tab];
     if (!keys) throw new GcsValidationError({ tab: "invalid_choice" });
-    await services().clanAdmin.saveOptions(actor, Object.fromEntries(keys.map((k) => [k, readSetting(fd, k)])));
+    // Câmpurile numerice și text absente din formular (ex. ponderile de joc, fără aplicația Servere) rămân neschimbate.
+    const present = keys.filter((k) => fd.has(`setting:${k}`) || ["boolean", "json"].includes(CLAN_SETTINGS.find((d) => d.key === k)!.type));
+    await services().clanAdmin.saveOptions(actor, Object.fromEntries(present.map((k) => [k, readSetting(fd, k)])));
     return null;
   });
 }

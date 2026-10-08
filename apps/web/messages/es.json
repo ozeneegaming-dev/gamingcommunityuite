@@ -2021,7 +2021,13 @@
         "canModerate": "Site staff",
         "maxMembersHint": "Members per clan: -1 = unlimited.",
         "save": "Save",
-        "recompute": "Recalculate the ranking now"
+        "recompute": "Recalculate the ranking now",
+        "gameWeights": "Server stats",
+        "gameFormula": "Added to the score only for members with stats: playtime hours × weight + K/D × 100 × weight + mix matches won × weight + average ELO ÷ 10 × weight. 0 = ignored.",
+        "weightPlaytime": "Playtime hours weight",
+        "weightKd": "K/D weight",
+        "weightMixWins": "Mix matches won weight",
+        "weightElo": "Average ELO weight"
       }
     }
   },
@@ -2299,7 +2305,11 @@
       "weight_activity": "Clan ranking: active members weight",
       "weight_members": "Clan ranking: member count weight",
       "tag_places": "Where the clan tag appears next to names",
-      "profile_badge": "Clan badge on members' profiles"
+      "profile_badge": "Clan badge on members' profiles",
+      "weight_playtime": "Clan ranking: server playtime weight",
+      "weight_kd": "Clan ranking: K/D weight",
+      "weight_mix_wins": "Clan ranking: mix matches won weight",
+      "weight_elo": "Clan ranking: average ELO weight"
     }
   },
   "permissions": {
@@ -4243,7 +4253,11 @@
       "transferred": "{name} is the new leader.",
       "disbandLabel": "Type the tag ({tag}) to confirm disbanding",
       "disbandStaff": "You are disbanding the clan as staff (no tag confirmation).",
-      "disband": "Disband the clan"
+      "disband": "Disband the clan",
+      "steam": "Steam",
+      "steamLinked": "Connected",
+      "steamMissing": "Not connected",
+      "steamHint": "The clan's game stats come from the members' connected Steam accounts. Members without Steam can connect it in Settings → Account."
     },
     "about": "About the clan",
     "noDescription": "The clan has no description yet.",
@@ -4322,7 +4336,8 @@
       "members": "Members",
       "membersOf": "{count} / {limit}",
       "founded": "Founded",
-      "parts": "From: {posts} posts in 30 days, {reputation} reputation, {active} active members, {members} members."
+      "parts": "From: {posts} posts in 30 days, {reputation} reputation, {active} active members, {members} members.",
+      "partsGame": "Game: {hours} h, K/D {kd}, {mixWins} mix matches won."
     },
     "links": {
       "title": "Links",
@@ -4428,6 +4443,23 @@
       "approvalNote": "The clan will wait for staff approval. You get a notification when it is approved.",
       "create": "Create the clan",
       "save": "Save"
+    },
+    "game": {
+      "title": "Game stats",
+      "players": "{count,plural,one{one member with stats} many{# members with stats} other{# members with stats}}",
+      "playtime": "Playtime",
+      "hours": "{hours} h",
+      "kd": "K/D",
+      "headshots": "Headshots",
+      "mix": "Mix matches",
+      "mixValue": "{won} won of {played}",
+      "elo": "Average ELO",
+      "mvps": "MVP",
+      "empty": "No member has stats on the community servers yet.",
+      "top": "Most active members on the servers",
+      "memberLine": "{hours}, K/D {kd}",
+      "steamHint": "Your server stats count for the clan once you connect your Steam account.",
+      "steamLink": "Connect Steam"
     }
   }
 }

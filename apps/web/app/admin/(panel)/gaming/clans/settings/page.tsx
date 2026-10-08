@@ -47,13 +47,15 @@ export default async function AcpClanSettingsPage({ searchParams }: Props) {
   const { actor } = await requireAcpSection(CLANS_SETTINGS_ACP_SECTION);
   const sp = await searchParams;
   const tab: Tab = TABS.includes(sp.tab as Tab) ? (sp.tab as Tab) : "create";
-  const { clanQueries, db, permissions, acp } = services();
-  const [t, o, forums, groups, canGroups] = await Promise.all([
+  const { clanQueries, db, permissions, acp, apps } = services();
+  const [t, o, forums, groups, canGroups, serversOn] = await Promise.all([
     getTranslations("acp.clans.settings"),
     clanQueries.options(),
     db.forum.findMany({ where: { type: { in: ["CATEGORY", "FORUM"] } }, orderBy: [{ parentId: "asc" }, { position: "asc" }], select: { id: true, name: true, type: true, parentId: true } }),
     db.group.findMany({ orderBy: { position: "asc" }, select: { id: true, key: true, name: true } }),
     acp.can(actor, "members.groups", "edit"),
+    // Ponderile de joc (statisticile aplicației Servere) apar doar cu aplicația Servere activă.
+    apps.enabled("servers"),
   ]);
   const name = (key: string) => `setting:${key}`;
   const save = saveClanSettings.bind(null, tab);
@@ -171,6 +173,16 @@ export default async function AcpClanSettingsPage({ searchParams }: Props) {
         <Row label={t("weightReputation")}>{num(CLAN_SETTING.weightReputation, v.weights.reputation, 0, 100)}</Row>
         <Row label={t("weightActivity")}>{num(CLAN_SETTING.weightActivity, v.weights.activity, 0, 100)}</Row>
         <Row label={t("weightMembers")}>{num(CLAN_SETTING.weightMembers, v.weights.members, 0, 100)}</Row>
+        {serversOn && (
+          <fieldset className="gcs-settingsFieldset" style={{ maxWidth: 520 }} data-testid="gcs-acp-clan-game-weights">
+            <legend>{t("gameWeights")}</legend>
+            <p className="gcs-field__hint">{t("gameFormula")}</p>
+            <Row label={t("weightPlaytime")}>{num(CLAN_SETTING.weightPlaytime, v.weights.playtime, 0, 100)}</Row>
+            <Row label={t("weightKd")}>{num(CLAN_SETTING.weightKd, v.weights.kd, 0, 100)}</Row>
+            <Row label={t("weightMixWins")}>{num(CLAN_SETTING.weightMixWins, v.weights.mixWins, 0, 100)}</Row>
+            <Row label={t("weightElo")}>{num(CLAN_SETTING.weightElo, v.weights.elo, 0, 100)}</Row>
+          </fieldset>
+        )}
       </>
     ),
     display: (v) => (

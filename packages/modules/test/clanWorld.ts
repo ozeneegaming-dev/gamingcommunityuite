@@ -1,5 +1,7 @@
 import { GcsAppService, GcsNotificationService, type GcsActor, type GcsEvent } from "@gcs/core";
+import type { GcsPlayerStatsAggregate } from "../src/servers/playerStats";
 import { GcsClanAdmin } from "../src/clans/admin";
+import type { GcsClanGameStatsSource } from "../src/clans/gameStats";
 import { registerClanNotifications } from "../src/clans/notify";
 import { GcsClanQueries } from "../src/clans/queries";
 import { CLAN_BANNER, CLAN_LOGO, GcsClanService, type GcsClanInput } from "../src/clans/service";
@@ -15,6 +17,12 @@ export const clanDoc = (text: string) => ({ type: "doc", content: [{ type: "para
 export async function createClanWorld() {
   const w = await createForumWorld();
   const apps = new GcsAppService({ db: w.db, cache: w.cache, bus: w.bus, registry: w.registry, acp: w.acp });
+  // Statisticile de joc „ale aplicației Servere”, controlate de test: pornite / oprite și datele pe membru.
+  const gameStats = { on: false, data: new Map<string, GcsPlayerStatsAggregate>() };
+  const gameSource: GcsClanGameStatsSource = {
+    enabled: async () => gameStats.on,
+    forUsers: async (ids) => new Map(ids.flatMap((id) => (gameStats.data.has(id) ? [[id, gameStats.data.get(id)!] as const] : []))),
+  };
   const clans = new GcsClanService({
     db: w.db,
     cache: w.cache,
@@ -26,8 +34,9 @@ export async function createClanWorld() {
     actors: w.actors,
     attachments: w.attachments,
     rateLimiter: w.rateLimiter,
+    gameStats: gameSource,
   });
-  const clanQueries = new GcsClanQueries({ db: w.db, cache: w.cache, permissions: w.permissions, settings: w.settings, apps, clans });
+  const clanQueries = new GcsClanQueries({ db: w.db, cache: w.cache, permissions: w.permissions, settings: w.settings, apps, clans, gameStats: gameSource });
   const clanAdmin = new GcsClanAdmin({ db: w.db, acp: w.acp, settings: w.settings, permissions: w.permissions, bus: w.bus, registry: w.registry, clans });
   const notifications = new GcsNotificationService({ db: w.db, bus: w.bus, cache: w.cache, registry: w.registry });
   registerClanNotifications({ db: w.db, bus: w.bus, notifications, clanQueries, actors: w.actors });
@@ -83,7 +92,7 @@ export async function createClanWorld() {
     return category.id;
   }
 
-  return { ...w, apps, clans, clanQueries, clanAdmin, notifications, clanEvents, user, input, option, activeClan, forumCategory };
+  return { ...w, gameStats, apps, clans, clanQueries, clanAdmin, notifications, clanEvents, user, input, option, activeClan, forumCategory };
 }
 
 export type GcsClanWorld = Awaited<ReturnType<typeof createClanWorld>>;

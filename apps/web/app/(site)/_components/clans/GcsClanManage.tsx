@@ -38,7 +38,20 @@ export type GcsManageMember = { userId: string; name: string; role: "LEADER" | "
  * Tab-ul „Membri”: rolurile, numirea / retrogradarea ofițerilor (liderul) și excluderea (liderul; ofițerii cu dreptul
  * `members` doar pe membrii simpli). Liderul nu are acțiuni pe rândul lui.
  */
-export function GcsClanMembersTable({ clanId, members, canLead, canKick }: { clanId: number; members: GcsManageMember[]; canLead: boolean; canKick: boolean }) {
+export function GcsClanMembersTable({
+  clanId,
+  members,
+  canLead,
+  canKick,
+  steam = null,
+}: {
+  clanId: number;
+  members: GcsManageMember[];
+  canLead: boolean;
+  canKick: boolean;
+  /** Cine are Steam conectat (statisticile de joc ale aplicației Servere); `null` = coloana nu apare. */
+  steam?: Record<string, boolean> | null;
+}) {
   const t = useTranslations("clans.manage");
   const tr = useTranslations("clans.roles");
   const { pending, run, message } = useRun();
@@ -50,6 +63,7 @@ export function GcsClanMembersTable({ clanId, members, canLead, canKick }: { cla
             <th scope="col">{t("member")}</th>
             <th scope="col">{t("role")}</th>
             <th scope="col">{t("joined")}</th>
+            {steam && <th scope="col">{t("steam")}</th>}
             <th scope="col">
               <span className="gcs-srOnly">{t("actions")}</span>
             </th>
@@ -63,6 +77,11 @@ export function GcsClanMembersTable({ clanId, members, canLead, canKick }: { cla
               </td>
               <td data-testid="gcs-clan-member-role">{tr(m.role)}</td>
               <td className="gcs-muted">{m.joined}</td>
+              {steam && (
+                <td data-testid="gcs-clan-member-steam" className={steam[m.userId] ? undefined : "gcs-muted"}>
+                  {steam[m.userId] ? t("steamLinked") : t("steamMissing")}
+                </td>
+              )}
               <td className="gcs-clanManage__cell--actions">
                 {m.role !== "LEADER" && (
                   <div className="gcs-clanManage__actions">

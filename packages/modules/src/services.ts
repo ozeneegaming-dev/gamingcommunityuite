@@ -99,6 +99,7 @@ import { GcsServerQueries } from "./servers/queries";
 import { GcsServerService, SERVER_BANNER } from "./servers/service";
 import { GcsServerStatusStore } from "./servers/store";
 import { GcsClanAdmin } from "./clans/admin";
+import type { GcsClanGameStatsSource } from "./clans/gameStats";
 import { registerClanNotifications } from "./clans/notify";
 import { GcsClanQueries } from "./clans/queries";
 import { CLAN_BANNER, CLAN_LOGO, GcsClanService } from "./clans/service";
@@ -433,8 +434,11 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   // Bannerul unui server se vede doar de cine vede serverul.
   attachments.registerAccess(SERVER_BANNER, (actor, id) => serverQueries.canView(actor, Number(id)));
   // Aplicația Clanuri: serviciul, citirile publice, imaginile (le vede cine vede clanul) și notificările.
-  const clans = new GcsClanService({ db, cache, bus, settings, permissions, acp, apps, actors, attachments, rateLimiter });
-  const clanQueries = new GcsClanQueries({ db, cache, permissions, settings, apps, clans });
+  const servers = new GcsServerService({ db, bus, acp, attachments, rateLimiter, store: serverStore });
+  // Statisticile de joc ale aplicației Servere, citite de clanuri doar cu aplicația Servere activă (specul clanurilor §15).
+  const clanGameStats: GcsClanGameStatsSource = { enabled: () => apps.enabled("servers"), forUsers: (ids, opts) => servers.playerStats.forUsers(ids, opts) };
+  const clans = new GcsClanService({ db, cache, bus, settings, permissions, acp, apps, actors, attachments, rateLimiter, gameStats: clanGameStats });
+  const clanQueries = new GcsClanQueries({ db, cache, permissions, settings, apps, clans, gameStats: clanGameStats });
   attachments.registerAccess(CLAN_LOGO, (actor, id) => clanQueries.canSeeClan(actor, Number(id)));
   attachments.registerAccess(CLAN_BANNER, (actor, id) => clanQueries.canSeeClan(actor, Number(id)));
   registerClanNotifications({ db, bus, notifications, clanQueries, actors });
@@ -604,7 +608,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
       clearCache: () => clearPageCache(redis),
     }),
     porting: new GcsPortingService({ db, acp, plugins: pluginAdmin }),
-    servers: new GcsServerService({ db, bus, acp, attachments, rateLimiter, store: serverStore }),
+    servers,
     serverQueries,
     serverPoller: new GcsServerPoller({ db, store: serverStore, realtime, cache, settings, apps }),
     clans,

@@ -26,6 +26,7 @@ import {
 import { Prisma, type Clan, type ClanJoinMode, type ClanRole, type PrismaClient } from "@gcs/db";
 import { clanForumParent, createClanForum, renameClanForum, retireClanForum } from "./forum";
 import { CLAN_OFFICER_RIGHTS, readClanOptions, type GcsClanOptions, type GcsClanRight } from "./options";
+import type { GcsClanGameStatsSource } from "./gameStats";
 import { recomputeClanRanking, rescoreClan } from "./ranking";
 import { CLAN_MESSAGE_MAX, clanSlug, cleanLine, cleanText, isHexColor, nameError, normalizeClanName, normalizeLinks, normalizeTag, tagError } from "./text";
 
@@ -121,6 +122,8 @@ export class GcsClanService {
       actors: GcsActorResolver;
       attachments: GcsAttachmentService;
       rateLimiter: GcsRedisRateLimiter;
+      /** Statisticile de joc din aplicația Servere (opționale, doar citire), pentru ponderile de joc ale clasamentului. */
+      gameStats?: GcsClanGameStatsSource | null;
     },
   ) {}
 
@@ -884,7 +887,7 @@ export class GcsClanService {
   async recompute(actor: GcsActor | null): Promise<number> {
     if (actor) await this.assertStaff(actor);
     const options = await this.options();
-    const ranked = await recomputeClanRanking(this.deps.db, options.weights);
+    const ranked = await recomputeClanRanking(this.deps.db, options.weights, new Date(), this.deps.gameStats ?? null);
     if (actor) await writeAudit(this.deps.db, { actorId: actor.userId, action: "clans.rank", targetType: "clan", targetId: "ranking", after: { ranked }, ip: actor.ip });
     await this.deps.bus.emit({ name: "clans.updated", payload: { clanId: null }, tags: [CLANS_CACHE_TAG, CLANS_STATS_TAG] });
     return ranked;
@@ -978,7 +981,7 @@ export class GcsClanService {
   }
 
   private async rescore(clanId: number, options: GcsClanOptions): Promise<void> {
-    await rescoreClan(this.deps.db, clanId, options.weights);
+    await rescoreClan(this.deps.db, clanId, options.weights, new Date(), this.deps.gameStats ?? null);
   }
 
   /** Listele (director, widget, placa) se reîmprospătează; `forum` = s-a schimbat și arborele forumului. */

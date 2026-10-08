@@ -34,6 +34,11 @@ export const CLAN_SETTING = {
   weightReputation: "clans.weight_reputation",
   weightActivity: "clans.weight_activity",
   weightMembers: "clans.weight_members",
+  // Ponderile de joc (statisticile aplicației Servere; ignorate fără ea sau fără statistici).
+  weightPlaytime: "clans.weight_playtime",
+  weightKd: "clans.weight_kd",
+  weightMixWins: "clans.weight_mix_wins",
+  weightElo: "clans.weight_elo",
   tagPlaces: "clans.tag_places",
   profileBadge: "clans.profile_badge",
 } as const;
@@ -73,6 +78,10 @@ export const CLAN_SETTINGS: GcsSettingDef[] = [
   setting(CLAN_SETTING.weightReputation, "number", 1, int(0, 100)),
   setting(CLAN_SETTING.weightActivity, "number", 10, int(0, 100)),
   setting(CLAN_SETTING.weightMembers, "number", 5, int(0, 100)),
+  setting(CLAN_SETTING.weightPlaytime, "number", 0, int(0, 100)),
+  setting(CLAN_SETTING.weightKd, "number", 0, int(0, 100)),
+  setting(CLAN_SETTING.weightMixWins, "number", 0, int(0, 100)),
+  setting(CLAN_SETTING.weightElo, "number", 0, int(0, 100)),
   setting(CLAN_SETTING.tagPlaces, "json", [...CLAN_TAG_PLACES], subset(CLAN_TAG_PLACES)),
   setting(CLAN_SETTING.profileBadge, "boolean", true),
 ];
@@ -95,7 +104,8 @@ export type GcsClanOptions = {
   inviteDays: number;
   requestDays: number;
   archiveInactiveDays: number;
-  weights: { posts: number; reputation: number; activity: number; members: number };
+  /** Ponderile clasamentului; cele de joc (`playtime`, `kd`, `mixWins`, `elo`) contează doar cu aplicația Servere. */
+  weights: { posts: number; reputation: number; activity: number; members: number; playtime: number; kd: number; mixWins: number; elo: number };
   tagPlaces: GcsClanTagPlace[];
   profileBadge: boolean;
 };
@@ -126,6 +136,10 @@ export async function readClanOptions(settings: GcsSettingsService): Promise<Gcs
       reputation: get<number>(CLAN_SETTING.weightReputation),
       activity: get<number>(CLAN_SETTING.weightActivity),
       members: get<number>(CLAN_SETTING.weightMembers),
+      playtime: get<number>(CLAN_SETTING.weightPlaytime),
+      kd: get<number>(CLAN_SETTING.weightKd),
+      mixWins: get<number>(CLAN_SETTING.weightMixWins),
+      elo: get<number>(CLAN_SETTING.weightElo),
     },
     tagPlaces: get<GcsClanTagPlace[]>(CLAN_SETTING.tagPlaces),
     profileBadge: get<boolean>(CLAN_SETTING.profileBadge),

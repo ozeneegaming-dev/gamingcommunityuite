@@ -103,10 +103,12 @@ export default async function ClanManagePage({ params, searchParams }: Props) {
               <GcsIcon name="fa-solid fa-users" className="gcs-hIcon" />
               {t("membersTitle", { count: clan.members.length })}
             </h2>
+            {data.steam && <p className="gcs-field__hint" style={{ margin: 0 }}>{t("steamHint")}</p>}
             <GcsClanMembersTable
               clanId={clan.id}
               canLead={access.leader}
               canKick={access.can.members}
+              steam={data.steam}
               members={clan.members.map((m) => ({ userId: m.user.id, name: m.user.name, role: m.role, joined: date(m.joinedAt), link: <Who user={m.user} /> }))}
             />
           </section>

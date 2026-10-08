@@ -4,6 +4,7 @@ import type { PrismaClient } from "@gcs/db";
 import { slugify } from "../forums/slug";
 import { enabledGames } from "./games";
 import { isQueryableAddress, normalizeHost, serversAllowNets } from "./net";
+import { GcsPlayerStatsHub } from "./playerStats";
 import { MAX_SERVERS, SERVERS_STATS_TAG, type GcsServerQueryFn } from "./poller";
 import { queryGameServer } from "./query";
 import type { GcsServerStatusStore } from "./store";
@@ -83,6 +84,11 @@ export function serverSlug(name: string): string {
  */
 export class GcsServerService {
   private readonly query: GcsServerQueryFn;
+  /**
+   * Statisticile de joc ale membrilor (doar citire). Sistemul de statistici al serverelor își înregistrează aici
+   * furnizorul (`playerStats.use(...)`); fără el, nimeni nu are statistici.
+   */
+  readonly playerStats = new GcsPlayerStatsHub();
 
   constructor(
     private readonly deps: {

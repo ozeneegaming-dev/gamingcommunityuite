@@ -12,6 +12,7 @@ import { services } from "@/lib/services";
 import { GcsClanJoinActions } from "../../_components/clans/GcsClanActions";
 import { GcsClanRecruit, GcsClanStateLabel } from "../../_components/clans/GcsClanGrid";
 import { clanColors, GcsClanLogo } from "../../_components/clans/GcsClanLogo";
+import { GcsClanGameStats } from "../../_components/clans/GcsClanGameStats";
 import { GcsRelTime } from "../../_components/forum/GcsRelTime";
 
 type Props = { params: Promise<{ ref: string }> };
@@ -167,6 +168,8 @@ export default async function ClanPage({ params }: Props) {
             </div>
           </section>
 
+          {clan.game && <GcsClanGameStats clan={clan} />}
+
           <section className="gcs-card gcs-titledBox" aria-labelledby="gcs-clan-activity">
             <h2 id="gcs-clan-activity" className="gcs-titleBand gcs-clanBox__title">
               <GcsIcon name="fa-solid fa-clock-rotate-left" className="gcs-hIcon" />
@@ -218,12 +221,14 @@ export default async function ClanPage({ params }: Props) {
                 <dt>{t("stats.founded")}</dt>
                 <dd>{format.dateTime(new Date(clan.createdAt), { month: "short", year: "numeric" })}</dd>
               </div>
-              {clan.scoreParts && (
-                <p className="gcs-clanStats__parts">
-                  {t("stats.parts", { posts: clan.scoreParts.posts, reputation: clan.scoreParts.reputation, active: clan.scoreParts.active, members: clan.scoreParts.members })}
-                </p>
-              )}
             </dl>
+            {clan.scoreParts && (
+              <p className="gcs-clanStats__parts">
+                {t("stats.parts", { posts: clan.scoreParts.posts, reputation: clan.scoreParts.reputation, active: clan.scoreParts.active, members: clan.scoreParts.members })}
+                {clan.scoreParts.game &&
+                  ` ${t("stats.partsGame", { hours: clan.scoreParts.game.playtimeHours, kd: format.number(clan.scoreParts.game.kd, { maximumFractionDigits: 2 }), mixWins: clan.scoreParts.game.mixWins })}`}
+              </p>
+            )}
           </section>
 
           {links.length > 0 && (

@@ -2021,7 +2021,13 @@
         "canModerate": "Staff pe site",
         "maxMembersHint": "Membri pe clan: -1 = nelimitat.",
         "save": "Salvează",
-        "recompute": "Recalculează clasamentul acum"
+        "recompute": "Recalculează clasamentul acum",
+        "gameWeights": "Statisticile de pe servere",
+        "gameFormula": "Se adaugă la scor doar pentru membrii cu statistici: ore de joc × pondere + K/D × 100 × pondere + meciuri mix câștigate × pondere + ELO mediu ÷ 10 × pondere. 0 = ignorate.",
+        "weightPlaytime": "Ponderea orelor de joc",
+        "weightKd": "Ponderea K/D-ului",
+        "weightMixWins": "Ponderea meciurilor mix câștigate",
+        "weightElo": "Ponderea ELO-ului mediu"
       }
     }
   },
@@ -2299,7 +2305,11 @@
       "weight_activity": "Clasamentul clanurilor: ponderea membrilor activi",
       "weight_members": "Clasamentul clanurilor: ponderea numărului de membri",
       "tag_places": "Unde apare tagul clanului lângă nume",
-      "profile_badge": "Insigna clanului pe profilul membrilor"
+      "profile_badge": "Insigna clanului pe profilul membrilor",
+      "weight_playtime": "Clasamentul clanurilor: ponderea orelor de joc pe servere",
+      "weight_kd": "Clasamentul clanurilor: ponderea K/D-ului",
+      "weight_mix_wins": "Clasamentul clanurilor: ponderea meciurilor mix câștigate",
+      "weight_elo": "Clasamentul clanurilor: ponderea ELO-ului mediu"
     }
   },
   "permissions": {
@@ -4243,7 +4253,11 @@
       "transferred": "{name} este noul lider.",
       "disbandLabel": "Scrie tagul ({tag}) ca să confirmi desființarea",
       "disbandStaff": "Desființezi clanul ca staff (fără confirmarea tagului).",
-      "disband": "Desființează clanul"
+      "disband": "Desființează clanul",
+      "steam": "Steam",
+      "steamLinked": "Conectat",
+      "steamMissing": "Neconectat",
+      "steamHint": "Statisticile de joc ale clanului vin din conturile Steam conectate ale membrilor. Membrii fără Steam își pot conecta contul din Setări → Cont."
     },
     "about": "Despre clan",
     "noDescription": "Clanul nu are încă o descriere.",
@@ -4322,7 +4336,8 @@
       "members": "Membri",
       "membersOf": "{count} / {limit}",
       "founded": "Fondat",
-      "parts": "Din: {posts} postări în 30 de zile, {reputation} reputație, {active} membri activi, {members} membri."
+      "parts": "Din: {posts} postări în 30 de zile, {reputation} reputație, {active} membri activi, {members} membri.",
+      "partsGame": "Joc: {hours} h, K/D {kd}, {mixWins} meciuri mix câștigate."
     },
     "links": {
       "title": "Linkuri",
@@ -4428,6 +4443,23 @@
       "approvalNote": "Clanul va aștepta aprobarea staff-ului. Primești o notificare când e aprobat.",
       "create": "Creează clanul",
       "save": "Salvează"
+    },
+    "game": {
+      "title": "Statistici de joc",
+      "players": "{count, plural, one {un membru cu statistici} few {# membri cu statistici} other {# de membri cu statistici}}",
+      "playtime": "Timp de joc",
+      "hours": "{hours} h",
+      "kd": "K/D",
+      "headshots": "Headshot-uri",
+      "mix": "Meciuri mix",
+      "mixValue": "{won} câștigate din {played}",
+      "elo": "ELO mediu",
+      "mvps": "MVP",
+      "empty": "Niciun membru nu are încă statistici pe serverele comunității.",
+      "top": "Membrii cei mai activi pe servere",
+      "memberLine": "{hours}, K/D {kd}",
+      "steamHint": "Statisticile tale de pe servere intră în ale clanului după ce îți conectezi contul Steam.",
+      "steamLink": "Conectează Steam"
     }
   }
 }

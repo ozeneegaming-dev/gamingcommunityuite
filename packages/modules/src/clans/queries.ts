@@ -6,6 +6,8 @@ import { readClanOptions, type GcsClanOptions, type GcsClanRight, type GcsClanTa
 import type { GcsClanAccess, GcsClanService } from "./service";
 import { clanHref, readLinks, tagInk, type GcsClanLinks } from "./text";
 import type { GcsSettingsService } from "@gcs/core";
+import { sumPlayerStats, type GcsGroupGameStats, type GcsPlayerStatsAggregate } from "../servers/playerStats";
+import type { GcsClanGameStatsSource } from "./gameStats";
 
 export const CLANS_PER_PAGE = 24;
 export const GCS_CLAN_SORTS = ["rank", "members", "newest"] as const;
@@ -43,6 +45,12 @@ export type GcsClanCard = {
 export type GcsClanTag = { id: number; tag: string; name: string; href: string; color: string; color2: string; ink: string; logoUrl: string | null; role: ClanRole };
 
 export type GcsClanMemberView = { user: GcsUserRef; role: ClanRole; joinedAt: string };
+/**
+ * Statisticile de joc ale clanului (aplicația Servere, §15): totalurile și membrii cu statistici (cei mai activi primii).
+ * `null` pe pagină = aplicația Servere e oprită (secțiunea nu apare).
+ */
+export type GcsClanGameView = { totals: GcsGroupGameStats | null; members: { user: GcsUserRef; stats: GcsPlayerStatsAggregate }[] };
+
 export type GcsClanActivity = { kind: "created" | "approved" | "joined" | "left" | "promoted" | "leader"; at: string; user: GcsUserRef | null };
 
 export type GcsClanDetails = GcsClanCard & {
@@ -51,7 +59,9 @@ export type GcsClanDetails = GcsClanCard & {
   lockReason: string | null;
   createdAt: string;
   memberLimit: number | null;
-  scoreParts: { posts: number; reputation: number; active: number; members: number } | null;
+  scoreParts: { posts: number; reputation: number; active: number; members: number; game: { playtimeHours: number; kd: number; mixWins: number; elo: number | null } | null } | null;
+  /** Statisticile de joc (doar cu aplicația Servere activă). */
+  game: GcsClanGameView | null;
   members: GcsClanMemberView[];
   activity: GcsClanActivity[];
   forum: { id: number; name: string; slug: string; topics: { id: number; title: string; slug: string; lastPostAt: string }[] } | null;
@@ -66,6 +76,8 @@ export type GcsClanDetails = GcsClanCard & {
     invite: { id: number; invitedBy: GcsUserRef | null } | null;
     /** De ce nu poate intra (pentru un mesaj): oaspete, fără drept, deja în numărul maxim de clanuri. */
     blocked: "guest" | "no_permission" | "max_clans" | null;
+    /** Un membru al clanului are contul Steam conectat (statisticile de joc); `null` = nu e membru sau aplicația Servere e oprită. */
+    steamLinked: boolean | null;
   };
 };
 
@@ -83,6 +95,8 @@ export type GcsClanManage = {
   invites: GcsClanRequestView[];
   options: Pick<GcsClanOptions, "officerRights" | "forumMode" | "tagMin" | "tagMax" | "tagCharset" | "requiredFields" | "logoMaxKb" | "bannerMaxKb">;
   forumParentReady: boolean;
+  /** Membrii cu Steam conectat (doar pentru lider și staff, doar cu aplicația Servere activă); `null` = nu se arată. */
+  steam: Record<string, boolean> | null;
 };
 
 const clanSelect = {
@@ -134,6 +148,8 @@ export class GcsClanQueries {
       settings: GcsSettingsService;
       apps: GcsAppService;
       clans: GcsClanService;
+      /** Statisticile de joc din aplicația Servere (opționale, doar citire). */
+      gameStats?: GcsClanGameStatsSource | null;
     },
   ) {}
 
@@ -253,6 +269,22 @@ export class GcsClanQueries {
       }
     }
 
+    // Statisticile de joc (aplicația Servere activă): totalurile clanului și membrii cu statistici; Steam-ul viewer-ului membru.
+    const gamesOn = Boolean(this.deps.gameStats) && (await this.deps.gameStats!.enabled());
+    let game: GcsClanGameView | null = null;
+    let steamLinked: boolean | null = null;
+    if (gamesOn) {
+      const stats = await this.deps.gameStats!.forUsers(
+        members.map((m) => m.user.id),
+        { scope: "all" },
+      );
+      const withStats = members.flatMap((m) => {
+        const s = stats.get(m.user.id);
+        return s ? [{ user: toRef(m.user), stats: s }] : [];
+      });
+      game = { totals: sumPlayerStats(withStats.map((m) => m.stats)), members: withStats.sort((a, b) => b.stats.playtimeSeconds - a.stats.playtimeSeconds).slice(0, 10) };
+      if (access.role !== null && actor.userId) steamLinked = (await db.account.count({ where: { userId: actor.userId, providerId: "steam" } })) > 0;
+    }
     const open = clan.status === "ACTIVE" && !clan.locked;
     const blocked: GcsClanDetails["viewer"]["blocked"] = !actor.userId ? "guest" : !canJoinPerm ? "no_permission" : myClans >= options.maxPerMember ? "max_clans" : null;
     const parts = clan.scoreParts as Record<string, unknown>;
@@ -263,7 +295,18 @@ export class GcsClanQueries {
       lockReason: clan.lockReason,
       createdAt: clan.createdAt.toISOString(),
       memberLimit,
-      scoreParts: typeof parts.members === "number" ? { posts: Number(parts.posts) || 0, reputation: Number(parts.reputation) || 0, active: Number(parts.active) || 0, members: parts.members } : null,
+      scoreParts:
+        typeof parts.members === "number"
+          ? {
+              posts: Number(parts.posts) || 0,
+              reputation: Number(parts.reputation) || 0,
+              active: Number(parts.active) || 0,
+              members: parts.members,
+              // Partea de joc a scorului se arată doar cu aplicația Servere activă.
+              game: gamesOn && parts.game && typeof parts.game === "object" ? (parts.game as NonNullable<GcsClanDetails["scoreParts"]>["game"]) : null,
+            }
+          : null,
+      game,
       members: members
         .map((m) => ({ user: toRef(m.user), role: m.role, joinedAt: m.joinedAt.toISOString() }))
         .sort((a, b) => ROLE_ORDER[a.role] - ROLE_ORDER[b.role] || a.joinedAt.localeCompare(b.joinedAt)),
@@ -278,6 +321,7 @@ export class GcsClanQueries {
         pendingRequest: request !== null,
         invite: invite && access.role === null ? { id: invite.id, invitedBy: invite.invitedBy ? toRef(invite.invitedBy) : null } : null,
         blocked: access.role === null ? blocked : null,
+        steamLinked,
       },
     };
   }
@@ -324,7 +368,15 @@ export class GcsClanQueries {
         bannerMaxKb: options.bannerMaxKb,
       },
       forumParentReady: parent !== null && parent.type !== "LINK",
+      steam: details.game !== null && access.leader ? await this.steamStatus(details.members.map((m) => m.user.id)) : null,
     };
+  }
+
+  /** Care dintre membri au contul Steam conectat (statisticile de joc ale aplicației Servere). */
+  private async steamStatus(userIds: string[]): Promise<Record<string, boolean>> {
+    const rows = await this.deps.db.account.findMany({ where: { userId: { in: userIds }, providerId: "steam" }, select: { userId: true } });
+    const linked = new Set(rows.map((r) => r.userId));
+    return Object.fromEntries(userIds.map((id) => [id, linked.has(id)]));
   }
 
   /** Invitațiile în așteptare ale viewer-ului (directorul le arată sus). */
