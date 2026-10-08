@@ -14,8 +14,9 @@ const nextConfig: NextConfig = {
   agentRules: false,
   // Rădăcina monorepo-ului, ca build-ul standalone să includă și pachetele @gcs/*.
   outputFileTracingRoot: path.resolve(process.cwd(), "../.."),
-  // Migrațiile SQL, aplicate la pornire și de installer (fără CLI-ul Prisma în imagine).
-  outputFileTracingIncludes: { "/*": ["../../packages/db/prisma/migrations/**/*"] },
+  // Migrațiile SQL, aplicate la pornire și de installer (fără CLI-ul Prisma în imagine), și binarele pluginurilor de
+  // server (pasul de release), puse în pachetele descărcate din ACP.
+  outputFileTracingIncludes: { "/*": ["../../packages/db/prisma/migrations/**/*", "../../servers-plugins/release/**/*"] },
   transpilePackages: ["@gcs/core", "@gcs/modules", "@gcs/ui"],
   // Module native: rămân `require` la runtime, nu intră în bundle.
   serverExternalPackages: ["@node-rs/argon2", "@prisma/client", ".prisma/client"],

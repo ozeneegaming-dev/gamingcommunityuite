@@ -461,6 +461,9 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     visibleServers: (actor) => serverQueries.visibleIds(actor),
     // Aprobarea unei înrolări automate creează serverul prin aplicația Servere (validarea, jurnalul `servers.create`).
     createServer: (actor, input) => servers.save(actor, null, { ...input, queryPort: null, description: "", forumId: null, groups: [], adminIds: [], enabled: true }),
+    siteUrl: async () => baseUrl(await settings.get<string>("site.url")),
+    // Binarele pluginurilor (pasul de release): în depozit, lângă aplicație (Next.js le include în build-ul standalone).
+    pluginReleaseDir: () => process.env.GCS_PLUGIN_RELEASE_DIR ?? path.resolve(process.cwd(), "../../servers-plugins/release"),
   });
   bridge.listen(bus);
   servers.playerStats.use(bridge.stats);

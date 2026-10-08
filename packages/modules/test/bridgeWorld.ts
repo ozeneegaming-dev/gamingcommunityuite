@@ -1,3 +1,4 @@
+import path from "node:path";
 import type { GcsFetchedFile, GcsRealtime, GcsRealtimeMessage } from "@gcs/core";
 import { GcsMockServer, type MockRequest, type MockResponse } from "../../../servers-plugins/mock/gcs-mock-server.mjs";
 import { GcsBridge } from "../src/servers/bridge";
@@ -25,6 +26,8 @@ export async function createBridgeWorld() {
   /** Răspunsurile descărcării imaginilor hărților, pe adresă (lipsă = eroare de rețea). */
   const remote = new Map<string, GcsFetchedFile | Error>();
   const fetched: string[] = [];
+  /** Adresa site-ului și folderul release-ului pluginurilor (schimbabile în teste). */
+  const site = { url: "https://comunitate.gcs.test", releaseDir: path.resolve(__dirname, "../../../servers-plugins/release") };
   const bridge = new GcsBridge({
     db: w.db,
     redis: w.redis,
@@ -43,6 +46,8 @@ export async function createBridgeWorld() {
     query: w.query,
     allow: () => parseAllowNets("127.0.0.1/32"),
     createServer: (actor, input) => w.servers.save(actor, null, { ...input, queryPort: null, description: "", forumId: null, groups: [], adminIds: [], enabled: true }),
+    siteUrl: async () => site.url,
+    pluginReleaseDir: () => site.releaseDir,
     now: () => w.clock.now,
     fetchMapImage: async (url) => {
       fetched.push(url);
@@ -77,7 +82,7 @@ export async function createBridgeWorld() {
     return new GcsMockServer({ token, transport, game, clock: () => w.clock.now, ...(runId ? { runId } : {}) });
   }
 
-  return { ...w, bridge, live, remote, fetched, transport, bridgeServer, mock };
+  return { ...w, bridge, live, remote, fetched, transport, bridgeServer, mock, site };
 }
 
 export type GcsBridgeWorld = Awaited<ReturnType<typeof createBridgeWorld>>;

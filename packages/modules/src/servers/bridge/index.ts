@@ -30,6 +30,7 @@ import { closeSession, GcsBridgeEvents } from "./events";
 import { GcsBridgeKeys, type GcsBridgeKeyRow } from "./keys";
 import { GcsBridgeMaps } from "./maps";
 import { GcsBridgeMatches, type GcsLiveMatch } from "./matches";
+import { GcsBridgePackages } from "./package";
 import { GcsBridgePlayers } from "./players";
 import { GcsBridgePresence } from "./presence";
 import { GcsBridgeQueries } from "./queries";
@@ -71,6 +72,10 @@ export type GcsBridgeDeps = {
   allow?: () => BlockList | null;
   /** Crearea unui server în aplicația Servere (aprobarea unei înrolări): `GcsServerService.save`. */
   createServer: (actor: GcsActor, input: { game: string; host: string; port: number; name: string }) => Promise<{ id: number }>;
+  /** Adresa publică a site-ului (config-ul din pachetele pluginului). */
+  siteUrl: () => Promise<string>;
+  /** Folderul release-ului pluginurilor (binarele și `manifest.json`). */
+  pluginReleaseDir: () => string;
 };
 
 /** Coloanele modulelor opționale din `game_servers` (specul plugin-v2 §1.2). */
@@ -130,6 +135,8 @@ export class GcsBridge {
   readonly api: GcsBridgeApi;
   /** Înrolările automate ale serverelor necunoscute (specul plugin-v2 §5). */
   readonly enrollments: GcsBridgeEnrollments;
+  /** Pachetele pluginului descărcate din ACP (pe server, cu o cheie nouă, și general). */
+  readonly packages: GcsBridgePackages;
   readonly presence: GcsBridgePresence;
   readonly tickets: GcsBridgeTickets;
   readonly queries: GcsBridgeQueries;
@@ -161,6 +168,7 @@ export class GcsBridge {
       createServer: deps.createServer,
       now,
     });
+    this.packages = new GcsBridgePackages({ db, acp, rateLimiter, keys: this.keys, releaseDir: deps.pluginReleaseDir, siteUrl: deps.siteUrl, now });
     this.api = new GcsBridgeApi({
       db,
       apps,
@@ -315,4 +323,6 @@ export type { GcsBridgeKeyRow } from "./keys";
 export type { GcsEnrollmentView, GcsEnrollCheck, GcsEnrollCheckResult } from "./enroll";
 export { ENROLL_TTL_DAYS, MAX_PENDING, MAX_PENDING_PER_IP } from "./enroll";
 export type { GcsBridgeFeatures } from "./types";
+export type { GcsPluginDownload, GcsPluginGame, GcsReleaseManifest, GcsPackageVariant } from "./package";
+export { buildPluginPackage, readPluginRelease, installNote, RELEASE_FILES } from "./package";
 export type { GcsVipMappingView } from "./vip";
