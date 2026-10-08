@@ -33,7 +33,19 @@ export default async function AcpEditServerPage({ params }: Props) {
         <GcsIcon name="fa-solid fa-arrow-left" />
         {t("back")}
       </Link>
-      <GcsAcpTitle icon={current?.icon ?? "fa-solid fa-server"} description={server.name}>
+      <GcsAcpTitle
+        icon={current?.icon ?? "fa-solid fa-server"}
+        description={server.name}
+        actions={
+          // Puntea (pluginul de server și cheile API) există doar pentru CS 1.6 și CS2.
+          server.game === "cs16" || server.game === "cs2" ? (
+            <Link href={`/admin/gaming/servers/${server.id}/bridge`} className="gcs-btn gcs-btn--ghost" data-testid="gcs-acp-server-bridge">
+              <GcsIcon name="fa-solid fa-plug" />
+              {t("bridgeLink")}
+            </Link>
+          ) : undefined
+        }
+      >
         {t("editTitle")}
       </GcsAcpTitle>
       <GcsCard as="section" aria-label={t("editTitle")} style={{ padding: 20 }}>

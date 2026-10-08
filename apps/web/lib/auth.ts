@@ -107,7 +107,8 @@ function createAuth(config: GcsAuthConfig) {
       ...(config.turnstileSecret
         ? [captcha({ provider: "cloudflare-turnstile", secretKey: config.turnstileSecret, endpoints: ["/sign-up/email"] })]
         : []),
-      steamPlugin({ apiKey: () => settings.get<string>("auth.steam_api_key") }),
+      // La login / legarea Steam, identitatea de joc Steam a membrului se leagă de cont (puntea serverelor de joc).
+      steamPlugin({ apiKey: () => settings.get<string>("auth.steam_api_key"), onLinked: (userId) => services().bridge.players.syncSteam(userId) }),
       installFinishPlugin(),
       // Trebuie să fie ultimul: setează cookie-urile din Server Actions.
       nextCookies(),

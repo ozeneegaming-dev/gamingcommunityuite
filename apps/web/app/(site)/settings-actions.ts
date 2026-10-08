@@ -98,6 +98,8 @@ export const unlinkAccount = gcsAction(z.object({ providerId: z.enum(["discord",
   if (!accounts.some((a) => a.providerId === providerId)) return;
   if (accounts.length < 2) throw new GcsValidationError({ providerId: "last_login_method" });
   await db.account.deleteMany({ where: { userId: actor.userId, providerId } });
+  // Fără contul Steam, identitatea de joc Steam legată prin el se dezleagă (puntea serverelor de joc).
+  if (providerId === "steam") await services().bridge.players.syncSteam(actor.userId);
 });
 
 /** Fusul orar (Setări → Limbă și fus orar): în cont și în cookie (formatarea datelor îl citește la fiecare request). */

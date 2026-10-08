@@ -213,7 +213,18 @@
       "clan_tag_taken": "A clan with this tag already exists",
       "clan_name_taken": "A clan with this name already exists",
       "tag_range": "The minimum length cannot be greater than the maximum length",
-      "not_member": "The chosen member is not in the clan"
+      "not_member": "The chosen member is not in the clan",
+      "weak_password": "The password must have 8 to 64 characters.",
+      "duplicate": "An entry with this value already exists.",
+      "invalid_identity": "Invalid ID (SteamID, [U:1:…], SteamID64 or STEAM_X:Y:Z / VALVE_X:Y:Z).",
+      "appeal_open": "There is already an open appeal for this sanction.",
+      "not_active": "The sanction is no longer active.",
+      "too_many_open": "You have too many open tickets of this kind.",
+      "invalid_transition": "The status cannot change this way.",
+      "lifted": "The sanction was already lifted.",
+      "invalid_map_template": "An http(s) address that contains '{map}'.",
+      "invalid_map_name": "The file name is not a map name (lowercase letters, digits, _ . -).",
+      "steam_unlink_account": "The Steam identity is unlinked together with the Steam account (Settings → Account)."
     }
   },
   "acp": {
@@ -363,7 +374,10 @@
         "servers_settings": "Server settings",
         "clans_group": "Clans",
         "clans": "Clans",
-        "clans_settings": "Clan settings"
+        "clans_settings": "Clan settings",
+        "server_admins": "Server admins",
+        "server_maps": "Maps",
+        "servers_bridge": "Bridge and ELO"
       }
     },
     "comingSoon": {
@@ -762,7 +776,8 @@
         "postbit": "Постбайт",
         "vip": "VIP page and expiry",
         "servers": "Servers",
-        "clans": "Clans"
+        "clans": "Clans",
+        "servers_bridge": "Bridge and ELO"
       },
       "save": "Сохранить настройки",
       "secretSet": "• сохраненные (оставьте пустыми, чтобы сохранить ценность)",
@@ -1870,7 +1885,8 @@
         "unknown_game": "Unknown game."
       },
       "save": "Save",
-      "create": "Add the server"
+      "create": "Add the server",
+      "bridgeLink": "Plugin and API keys"
     },
     "clans": {
       "title": "Clans",
@@ -2029,6 +2045,238 @@
         "weightMixWins": "Mix matches won weight",
         "weightElo": "Average ELO weight"
       }
+    },
+    "bridge": {
+      "title": "Plugin and API keys",
+      "back": "Back to the server",
+      "unsupported": "The bridge (server plugin) exists only for Counter-Strike 1.6 and Counter-Strike 2.",
+      "status": {
+        "title": "Bridge status",
+        "connected": "Connected",
+        "disconnected": "No recent heartbeat",
+        "lastSeen": "Last heartbeat",
+        "never": "never",
+        "plugin": "Plugin",
+        "counts": {
+          "online": "Players online",
+          "players": "Players with stats",
+          "sanctions": "Active sanctions",
+          "matches": "Mix matches"
+        },
+        "match": "Match {state}: {a} {scoreA} – {scoreB} {b} (round {round})",
+        "matchStates": {
+          "warmup": "in warmup",
+          "live": "live",
+          "halftime": "at halftime",
+          "ended": "ended",
+          "aborted": "aborted"
+        },
+        "player": "Player",
+        "identity": "Identity",
+        "team": "Team",
+        "score": "Score",
+        "admin": "admin"
+      },
+      "kinds": {
+        "STEAM": "Steam",
+        "NONSTEAM": "non-Steam",
+        "NAME": "name"
+      },
+      "keys": {
+        "title": "API keys",
+        "lead": "The plugin signs every request with the server key; the secret never travels over the network and is not stored in plain text. Rotating keeps the old key valid for 10 more minutes; revoking is immediate. Max 5 active keys.",
+        "freshTitle": "The new key",
+        "freshHint": "Copy it into the plugin config now: it is shown only once.",
+        "token": "API key",
+        "copy": "Copy",
+        "copied": "Copied",
+        "configHint": "Protocol address: {url}. Plugin config:",
+        "empty": "No keys yet. Create a key for this server's plugin.",
+        "keyId": "Key",
+        "label": "Label",
+        "lastUsed": "Last used",
+        "status": "Status",
+        "never": "never",
+        "revoked": "Revoked",
+        "expired": "Expired",
+        "grace": "Rotated, valid until {time}",
+        "active": "Active",
+        "rotate": "Rotate",
+        "rotateConfirm": "Create a new key? The old one keeps working for 10 minutes.",
+        "revoke": "Revoke",
+        "revokeConfirm": "Revoke the key? The plugin using it stops immediately.",
+        "newLabel": "Key label (optional)",
+        "newLabelHint": "e.g. main server",
+        "create": "Create key"
+      },
+      "identity": {
+        "title": "Player identities",
+        "save": "Save",
+        "mode": "Identity mode",
+        "modes": {
+          "mixed": "Mixed (Steam and non-Steam clients)",
+          "steam": "Steam only (no emulator)"
+        },
+        "modeHint": "In mixed mode, without ReAPI / Reunion on the server, every player is non-Steam (Steam cannot be proven).",
+        "cs2Hint": "On CS2 every player is Steam; the mode changes nothing.",
+        "nameIds": "Players without a valid ID (LAN, PENDING) become name identities",
+        "nameIdsHint": "Name identities have low trust: anyone can use a name.",
+        "isMix": "5v5 mix match server (matches, ELO)"
+      },
+      "vip": {
+        "title": "VIP on the server",
+        "lead": "Members with an active VIP subscription in the enabled groups get the flags on their Steam and non-Steam identities. When it expires, the rights disappear at the next sync.",
+        "none": "There are no VIP groups.",
+        "save": "Save VIP",
+        "group": "VIP group",
+        "enabled": "Enabled",
+        "enabledFor": "VIP {group} enabled on the server",
+        "flags": "Flags",
+        "flagsFor": "Flags for {group}",
+        "flagsHint": "AMXX letters (default b, the reserved slot). On CS2 they become CounterStrikeSharp permissions."
+      },
+      "setup": {
+        "title": "Installing the plugin",
+        "cs16": "CS 1.6: AMX Mod X 1.9+ with the AmxxEasyHttp module; the gcs_bridge.amxx plugin and the gcs_bridge.cfg config (see servers-plugins/README.md).",
+        "cs2": "CS2: CounterStrikeSharp (on Metamod:Source); the GcsBridge plugin and its JSON config (see servers-plugins/README.md).",
+        "endpoint": "Protocol address",
+        "security": "Use HTTPS. The lists (admins, bans, VIP) are also kept locally on the server: a site outage stops neither admins nor bans."
+      }
+    },
+    "serverAdmins": {
+      "title": "Server admins",
+      "lead": "Game server admins, with AMXX flags (on CS2 they become CounterStrikeSharp permissions), on one server or on all.",
+      "add": "Add admin",
+      "filterServer": "Server",
+      "allAdmins": "All admins",
+      "search": "Search",
+      "searchSubmit": "Filter",
+      "empty": "No server admins.",
+      "subjects": {
+        "USER": "Member",
+        "PLAYER": "Game identity",
+        "NAME": "Name + password"
+      },
+      "allServers": "All servers",
+      "customFlagsShort": "custom flags",
+      "immunityShort": "immunity {value}",
+      "expired": "expired",
+      "expires": "expires {date}",
+      "warnings": {
+        "no_identity": "No linked identity: the rights appear when they link Steam",
+        "non_steam": "Non-Steam ID: can be impersonated"
+      },
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteConfirm": "Delete the admin “{name}”?",
+      "presets": {
+        "title": "Presets",
+        "lead": "Sets of flags and immunity. Admins using a preset receive its changes.",
+        "save": "Save preset",
+        "name": "Name",
+        "used": "{count, plural, one {used by # admin} few {used by # admins} many {used by # admins} other {used by # admins}}",
+        "delete": "Delete preset",
+        "deleteConfirm": "Delete the preset “{name}”? Its admins keep their flags.",
+        "add": "Add preset"
+      },
+      "flagsLegend": "AMXX flags",
+      "newTitle": "New admin",
+      "editTitle": "Edit admin",
+      "back": "Back to admins",
+      "saved": "Saved",
+      "save": "Save admin",
+      "noPreset": "No preset (custom flags)",
+      "kinds": {
+        "steam": "Steam",
+        "nonsteam": "non-Steam (emulator)"
+      },
+      "fields": {
+        "subject": "Who gets the rights",
+        "user": "Member",
+        "userRemove": "Choose another member",
+        "userSearch": "Search a member",
+        "userHint": "The rights apply to the member's linked Steam identities (connecting Steam on the site).",
+        "allowNonSteam": "Allow the member's non-Steam IDs",
+        "allowNonSteamWarning": "A non-Steam ID can be faked by anyone who learns it. For non-Steam players we recommend name + password.",
+        "identity": "Player ID",
+        "identityHint": "A SteamID in any form; for non-Steam, an ID like STEAM_X:Y:Z or VALVE_X:Y:Z.",
+        "identityKind": "ID type",
+        "name": "In-game name",
+        "password": "Password (setinfo)",
+        "passwordKeep": "Empty = the password stays the same",
+        "generate": "Generate",
+        "passwordHint": "Min 8 characters; shown only now. The player puts it in setinfo (setinfo _pw password). The server receives only the salt and the verifier, never the password.",
+        "server": "Server",
+        "preset": "Preset",
+        "immunity": "Immunity (0–100)",
+        "customFlags": "Custom flags (instead of the preset's)",
+        "expiresAt": "Expires",
+        "expiresHint": "Empty = permanent.",
+        "note": "Internal note"
+      },
+      "flags": {
+        "a": "immunity (cannot be kicked or banned by other admins)",
+        "b": "reserved slot",
+        "c": "kick",
+        "d": "ban and unban",
+        "e": "slay / slap",
+        "f": "change map",
+        "g": "cvars",
+        "h": "execute configs",
+        "i": "chat (and mute / gag)",
+        "j": "votes",
+        "k": "server password",
+        "l": "rcon",
+        "m": "custom level A",
+        "n": "custom level B",
+        "o": "custom level C",
+        "p": "custom level D",
+        "q": "custom level E",
+        "r": "custom level F",
+        "s": "custom level G",
+        "t": "custom level H",
+        "u": "menus",
+        "v": "temporary ban",
+        "z": "user (no admin rights)"
+      }
+    },
+    "serverMaps": {
+      "title": "Maps",
+      "lead": "Maps seen on the servers. Without an image, the game's generic art is shown (original GCS art); images come only from your uploads or from the address template.",
+      "upload": {
+        "title": "Upload images",
+        "game": "Game",
+        "files": "Images",
+        "hint": "The file name gives the map name (de_dust2.jpg → de_dust2). Max 5 MB per image, max 100 files at once.",
+        "submit": "Upload",
+        "uploading": "Uploading…",
+        "none": "Choose at least one image.",
+        "tooMany": "Max {max} files at once.",
+        "failed": "The upload failed.",
+        "saved": "{count, plural, one {# image saved.} few {# images saved.} many {# images saved.} other {# images saved.}}"
+      },
+      "template": {
+        "title": "Address template",
+        "lead": "With a template (e.g. https://images.example.com/cs/'{map}'.jpg), the worker fetches missing images every 10 minutes through the platform's guarded download (public addresses only, max 5 MB).",
+        "none": "not set",
+        "edit": "Change templates"
+      },
+      "filterGame": "Game",
+      "allGames": "All games",
+      "search": "Search a map",
+      "missingOnly": "Only without image",
+      "searchSubmit": "Filter",
+      "empty": "No maps yet: they appear when a server reports its current map.",
+      "generic": "generic art",
+      "sources": {
+        "UPLOAD": "uploaded",
+        "TEMPLATE": "from template"
+      },
+      "fetchError": "Error: {error} ({attempts} attempts)",
+      "removeImage": "Remove image",
+      "removeConfirm": "Remove the image of map {name}?",
+      "prev": "← Back",
+      "next": "Next →"
     }
   },
   "settings": {
@@ -2281,7 +2529,21 @@
     "servers": {
       "poll_interval": "Server query interval (seconds, 30–300)",
       "retention_days": "How many days the player history is kept (7–365)",
-      "show_players": "Show player names on the server page"
+      "show_players": "Show player names on the server page",
+      "bridge_heartbeat": "Plugin heartbeat interval (seconds, 15–120)",
+      "bridge_events": "Event sending interval (seconds, 5–60)",
+      "elo_start": "Starting ELO (100–3000)",
+      "elo_k": "K factor (1–100)",
+      "elo_k_new": "K factor for new players (1–100)",
+      "elo_provisional": "Matches until the ELO is stable (0–100)",
+      "elo_performance": "Performance weight in ELO (%, 0–50)",
+      "mix_min_rounds": "Minimum rounds for a rated mix match (1–30)",
+      "rank_min_minutes": "Minimum playtime minutes for a server rank (0–6000)",
+      "admin_inactive_days": "Days without being seen until an admin is inactive (1–365)",
+      "tempban_max": "Maximum temporary ban for admins with flag v (minutes, 1–525600)",
+      "bridge_retention_days": "Days to keep sessions and the in-game log (30–730)",
+      "map_template_cs16": "CS 1.6 map image template (e.g. https://images.example.com/cs/'{map}'.jpg)",
+      "map_template_cs2": "CS2 map image template (e.g. https://images.example.com/cs2/'{map}'.jpg)"
     },
     "clans": {
       "require_approval": "A new clan waits for staff approval",
@@ -2377,7 +2639,15 @@
     },
     "servers": {
       "view": "Sees the game servers",
-      "view_players": "Sees the player list of the servers"
+      "view_players": "Sees the player list of the servers",
+      "stats_view": "Sees stats, player profiles and matches",
+      "bans_view": "Sees the list of bans and communication blocks (mute / gag)",
+      "sanction": "Issues sanctions from the site, on any server",
+      "view_ips": "Sees IPs in sanctions and sessions",
+      "tickets_create": "Sends appeals and reports",
+      "tickets_manage": "Handles all appeals and reports",
+      "link_identity": "Links non-Steam identities with an in-game code",
+      "players_manage": "Links and unlinks members' game identities"
     },
     "clans": {
       "view": "See clans",
@@ -2977,6 +3247,11 @@
         "request": "New requests to join your clan",
         "membership": "Changes in your clan (requests, roles, removals)",
         "review": "Approval of the clans you created"
+      },
+      "servers": {
+        "ticket_new": "New appeals and reports to handle",
+        "ticket_update": "Replies and changes on your appeals and reports",
+        "player_linked": "Game identity linked to your account"
       }
     }
   },

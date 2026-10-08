@@ -213,7 +213,18 @@
       "clan_tag_taken": "Există deja un clan cu acest tag",
       "clan_name_taken": "Există deja un clan cu acest nume",
       "tag_range": "Lungimea minimă nu poate depăși lungimea maximă",
-      "not_member": "Membrul ales nu e în clan"
+      "not_member": "Membrul ales nu e în clan",
+      "weak_password": "Parola trebuie să aibă între 8 și 64 de caractere.",
+      "duplicate": "Există deja o intrare cu această valoare.",
+      "invalid_identity": "ID invalid (SteamID, [U:1:…], SteamID64 sau STEAM_X:Y:Z / VALVE_X:Y:Z).",
+      "appeal_open": "Există deja o contestație deschisă pentru această sancțiune.",
+      "not_active": "Sancțiunea nu mai e activă.",
+      "too_many_open": "Ai prea multe tichete deschise de acest fel.",
+      "invalid_transition": "Starea nu se poate schimba așa.",
+      "lifted": "Sancțiunea a fost deja ridicată.",
+      "invalid_map_template": "Adresă http(s) care conține '{map}'.",
+      "invalid_map_name": "Numele fișierului nu e un nume de hartă (litere mici, cifre, _ . -).",
+      "steam_unlink_account": "Identitatea Steam se dezleagă odată cu contul Steam (Setări → Cont)."
     }
   },
   "acp": {
@@ -363,7 +374,10 @@
         "servers_settings": "Setări servere",
         "clans_group": "Clanuri",
         "clans": "Clanuri",
-        "clans_settings": "Setări clanuri"
+        "clans_settings": "Setări clanuri",
+        "server_admins": "Admini servere",
+        "server_maps": "Hărți",
+        "servers_bridge": "Bridge și ELO"
       }
     },
     "comingSoon": {
@@ -762,7 +776,8 @@
         "postbit": "Postbit",
         "vip": "Pagina VIP și expirări",
         "servers": "Servere",
-        "clans": "Clanuri"
+        "clans": "Clanuri",
+        "servers_bridge": "Bridge și ELO"
       },
       "save": "Salvează setările",
       "secretSet": "•••• salvat (lasă gol ca să păstrezi valoarea)",
@@ -1870,7 +1885,8 @@
         "unknown_game": "Joc necunoscut."
       },
       "save": "Salvează",
-      "create": "Adaugă serverul"
+      "create": "Adaugă serverul",
+      "bridgeLink": "Plugin și chei API"
     },
     "clans": {
       "title": "Clanuri",
@@ -2029,6 +2045,238 @@
         "weightMixWins": "Ponderea meciurilor mix câștigate",
         "weightElo": "Ponderea ELO-ului mediu"
       }
+    },
+    "bridge": {
+      "title": "Plugin și chei API",
+      "back": "Înapoi la server",
+      "unsupported": "Puntea (pluginul de server) există doar pentru Counter-Strike 1.6 și Counter-Strike 2.",
+      "status": {
+        "title": "Starea punții",
+        "connected": "Conectat",
+        "disconnected": "Fără heartbeat recent",
+        "lastSeen": "Ultimul heartbeat",
+        "never": "niciodată",
+        "plugin": "Pluginul",
+        "counts": {
+          "online": "Jucători online",
+          "players": "Jucători cu statistici",
+          "sanctions": "Sancțiuni active",
+          "matches": "Meciuri mix"
+        },
+        "match": "Meci {state}: {a} {scoreA} – {scoreB} {b} (runda {round})",
+        "matchStates": {
+          "warmup": "în încălzire",
+          "live": "în desfășurare",
+          "halftime": "la pauză",
+          "ended": "încheiat",
+          "aborted": "anulat"
+        },
+        "player": "Jucător",
+        "identity": "Identitate",
+        "team": "Echipa",
+        "score": "Scor",
+        "admin": "admin"
+      },
+      "kinds": {
+        "STEAM": "Steam",
+        "NONSTEAM": "non-Steam",
+        "NAME": "nume"
+      },
+      "keys": {
+        "title": "Chei API",
+        "lead": "Pluginul semnează fiecare cerere cu cheia serverului; secretul nu circulă pe rețea și nu e păstrat în clar. Rotirea lasă cheia veche valabilă încă 10 minute; revocarea e imediată. Max 5 chei active.",
+        "freshTitle": "Cheia nouă",
+        "freshHint": "Copiaz-o acum în configul pluginului: se arată o singură dată.",
+        "token": "Cheia API",
+        "copy": "Copiază",
+        "copied": "Copiată",
+        "configHint": "Adresa protocolului: {url}. Configul pluginului:",
+        "empty": "Nicio cheie încă. Creează o cheie pentru pluginul acestui server.",
+        "keyId": "Cheia",
+        "label": "Eticheta",
+        "lastUsed": "Ultima folosire",
+        "status": "Starea",
+        "never": "niciodată",
+        "revoked": "Revocată",
+        "expired": "Expirată",
+        "grace": "Rotită, valabilă până la {time}",
+        "active": "Activă",
+        "rotate": "Rotește",
+        "rotateConfirm": "Creezi o cheie nouă? Cea veche mai merge 10 minute.",
+        "revoke": "Revocă",
+        "revokeConfirm": "Revoci cheia? Pluginul care o folosește se oprește imediat.",
+        "newLabel": "Eticheta cheii (opțional)",
+        "newLabelHint": "ex. serverul principal",
+        "create": "Creează cheie"
+      },
+      "identity": {
+        "title": "Identitățile jucătorilor",
+        "save": "Salvează",
+        "mode": "Modul identităților",
+        "modes": {
+          "mixed": "Mixt (clienți Steam și non-Steam)",
+          "steam": "Doar Steam (fără emulator)"
+        },
+        "modeHint": "În modul mixt, fără ReAPI / Reunion pe server, toți jucătorii sunt non-Steam (Steam-ul nu se poate dovedi).",
+        "cs2Hint": "Pe CS2 toți jucătorii sunt Steam; modul nu schimbă nimic.",
+        "nameIds": "Jucătorii fără ID valid (LAN, PENDING) devin identități pe nume",
+        "nameIdsHint": "Identitățile pe nume au încredere mică: oricine poate folosi un nume.",
+        "isMix": "Server de meciuri mix 5v5 (meciuri, ELO)"
+      },
+      "vip": {
+        "title": "VIP pe server",
+        "lead": "Membrii cu abonament VIP activ în grupurile pornite primesc flag-urile pe identitățile lor Steam și non-Steam. La expirare, drepturile dispar la următoarea sincronizare.",
+        "none": "Nu există grupuri VIP.",
+        "save": "Salvează VIP-ul",
+        "group": "Grupul VIP",
+        "enabled": "Pornit",
+        "enabledFor": "VIP {group} pornit pe server",
+        "flags": "Flag-uri",
+        "flagsFor": "Flag-urile pentru {group}",
+        "flagsHint": "Litere AMXX (implicit b, slotul rezervat). Pe CS2 devin permisiuni CounterStrikeSharp."
+      },
+      "setup": {
+        "title": "Instalarea pluginului",
+        "cs16": "CS 1.6: AMX Mod X 1.9+ cu modulul AmxxEasyHttp; pluginul gcs_bridge.amxx și configul gcs_bridge.cfg (vezi servers-plugins/README.md).",
+        "cs2": "CS2: CounterStrikeSharp (peste Metamod:Source); pluginul GcsBridge și configul lui JSON (vezi servers-plugins/README.md).",
+        "endpoint": "Adresa protocolului",
+        "security": "Folosește HTTPS. Listele (admini, bannuri, VIP) se păstrează și local pe server: site-ul căzut nu oprește adminii și nici bannurile."
+      }
+    },
+    "serverAdmins": {
+      "title": "Admini servere",
+      "lead": "Adminii serverelor de joc, cu flag-uri AMXX (pe CS2 devin permisiuni CounterStrikeSharp), pe un server sau pe toate.",
+      "add": "Adaugă admin",
+      "filterServer": "Serverul",
+      "allAdmins": "Toți adminii",
+      "search": "Caută",
+      "searchSubmit": "Filtrează",
+      "empty": "Niciun admin de server.",
+      "subjects": {
+        "USER": "Membru",
+        "PLAYER": "Identitate de joc",
+        "NAME": "Nume + parolă"
+      },
+      "allServers": "Toate serverele",
+      "customFlagsShort": "flag-uri proprii",
+      "immunityShort": "imunitate {value}",
+      "expired": "expirat",
+      "expires": "expiră {date}",
+      "warnings": {
+        "no_identity": "Fără identitate legată: drepturile apar când își leagă Steam-ul",
+        "non_steam": "ID non-Steam: poate fi impersonat"
+      },
+      "edit": "Editează",
+      "delete": "Șterge",
+      "deleteConfirm": "Ștergi adminul „{name}”?",
+      "presets": {
+        "title": "Presetări",
+        "lead": "Seturi de flag-uri și imunitate. Adminii care folosesc o presetare primesc schimbările ei.",
+        "save": "Salvează presetarea",
+        "name": "Numele",
+        "used": "{count, plural, one {folosită de # admin} few {folosită de # admini} other {folosită de # de admini}}",
+        "delete": "Șterge presetarea",
+        "deleteConfirm": "Ștergi presetarea „{name}”? Adminii ei își păstrează flag-urile.",
+        "add": "Adaugă presetarea"
+      },
+      "flagsLegend": "Flag-urile AMXX",
+      "newTitle": "Admin nou",
+      "editTitle": "Editează adminul",
+      "back": "Înapoi la admini",
+      "saved": "Salvat",
+      "save": "Salvează adminul",
+      "noPreset": "Fără presetare (flag-uri proprii)",
+      "kinds": {
+        "steam": "Steam",
+        "nonsteam": "non-Steam (emulator)"
+      },
+      "fields": {
+        "subject": "Cine primește drepturile",
+        "user": "Membrul",
+        "userRemove": "Alege alt membru",
+        "userSearch": "Caută un membru",
+        "userHint": "Drepturile se aplică identităților Steam legate de membru (conectarea Steam pe site).",
+        "allowNonSteam": "Permite ID-urile non-Steam ale membrului",
+        "allowNonSteamWarning": "Un ID non-Steam poate fi falsificat de cine îl află. Pentru jucătorii non-Steam recomandăm nume + parolă.",
+        "identity": "ID-ul jucătorului",
+        "identityHint": "SteamID în orice formă; pentru non-Steam, ID-ul de forma STEAM_X:Y:Z sau VALVE_X:Y:Z.",
+        "identityKind": "Tipul ID-ului",
+        "name": "Numele din joc",
+        "password": "Parola (setinfo)",
+        "passwordKeep": "Gol = parola rămâne aceeași",
+        "generate": "Generează",
+        "passwordHint": "Min 8 caractere; se arată doar acum. Jucătorul o pune în setinfo (setinfo _pw parola). Serverul primește doar sarea și verificatorul, niciodată parola.",
+        "server": "Serverul",
+        "preset": "Presetarea",
+        "immunity": "Imunitatea (0–100)",
+        "customFlags": "Flag-uri proprii (în locul celor din presetare)",
+        "expiresAt": "Expiră",
+        "expiresHint": "Gol = permanent.",
+        "note": "Notă internă"
+      },
+      "flags": {
+        "a": "imunitate (nu poate fi dat afară sau banat de alți admini)",
+        "b": "slot rezervat",
+        "c": "kick",
+        "d": "ban și unban",
+        "e": "slay / slap",
+        "f": "schimbă harta",
+        "g": "cvar-uri",
+        "h": "execută config-uri",
+        "i": "chat (și mute / gag)",
+        "j": "voturi",
+        "k": "parola serverului",
+        "l": "rcon",
+        "m": "nivel personalizat A",
+        "n": "nivel personalizat B",
+        "o": "nivel personalizat C",
+        "p": "nivel personalizat D",
+        "q": "nivel personalizat E",
+        "r": "nivel personalizat F",
+        "s": "nivel personalizat G",
+        "t": "nivel personalizat H",
+        "u": "meniuri",
+        "v": "ban temporar",
+        "z": "utilizator (fără drepturi de admin)"
+      }
+    },
+    "serverMaps": {
+      "title": "Hărți",
+      "lead": "Hărțile văzute pe servere. Fără imagine se arată arta generică a jocului (originală GCS); imaginile vin doar din încărcarea ta sau din șablonul de adresă.",
+      "upload": {
+        "title": "Încarcă imagini",
+        "game": "Jocul",
+        "files": "Imaginile",
+        "hint": "Numele fișierului dă numele hărții (de_dust2.jpg → de_dust2). Max 5 MB pe imagine, max 100 de fișiere odată.",
+        "submit": "Încarcă",
+        "uploading": "Se încarcă…",
+        "none": "Alege cel puțin o imagine.",
+        "tooMany": "Max {max} de fișiere odată.",
+        "failed": "Încărcarea a eșuat.",
+        "saved": "{count, plural, one {# imagine salvată.} few {# imagini salvate.} other {# de imagini salvate.}}"
+      },
+      "template": {
+        "title": "Șablonul de adresă",
+        "lead": "Cu un șablon (ex. https://imagini.exemplu.ro/cs/'{map}'.jpg), worker-ul aduce imaginile lipsă la 10 minute, prin descărcarea gardată a platformei (doar adrese publice, max 5 MB).",
+        "none": "nesetat",
+        "edit": "Schimbă șabloanele"
+      },
+      "filterGame": "Jocul",
+      "allGames": "Toate jocurile",
+      "search": "Caută o hartă",
+      "missingOnly": "Doar fără imagine",
+      "searchSubmit": "Filtrează",
+      "empty": "Nicio hartă încă: apar când un server raportează harta curentă.",
+      "generic": "artă generică",
+      "sources": {
+        "UPLOAD": "încărcată",
+        "TEMPLATE": "din șablon"
+      },
+      "fetchError": "Eroare: {error} ({attempts} încercări)",
+      "removeImage": "Scoate imaginea",
+      "removeConfirm": "Scoți imaginea hărții {name}?",
+      "prev": "← Înapoi",
+      "next": "Înainte →"
     }
   },
   "settings": {
@@ -2281,7 +2529,21 @@
     "servers": {
       "poll_interval": "Intervalul de interogare a serverelor (secunde, 30–300)",
       "retention_days": "Câte zile se păstrează istoricul jucătorilor (7–365)",
-      "show_players": "Arată numele jucătorilor pe pagina serverului"
+      "show_players": "Arată numele jucătorilor pe pagina serverului",
+      "bridge_heartbeat": "Intervalul heartbeat-ului pluginului (secunde, 15–120)",
+      "bridge_events": "Intervalul trimiterii evenimentelor (secunde, 5–60)",
+      "elo_start": "ELO-ul de start (100–3000)",
+      "elo_k": "Factorul K (1–100)",
+      "elo_k_new": "Factorul K pentru jucătorii noi (1–100)",
+      "elo_provisional": "Meciuri până la ELO stabil (0–100)",
+      "elo_performance": "Ponderea performanței în ELO (%, 0–50)",
+      "mix_min_rounds": "Runde minime pentru un meci mix evaluat (1–30)",
+      "rank_min_minutes": "Minute de joc minime pentru locul pe server (0–6000)",
+      "admin_inactive_days": "Zile fără apariție până când un admin e inactiv (1–365)",
+      "tempban_max": "Banul temporar maxim al adminilor cu flag-ul v (minute, 1–525600)",
+      "bridge_retention_days": "Câte zile se păstrează sesiunile și jurnalul din joc (30–730)",
+      "map_template_cs16": "Șablonul imaginilor hărților CS 1.6 (ex. https://imagini.exemplu.ro/cs/'{map}'.jpg)",
+      "map_template_cs2": "Șablonul imaginilor hărților CS2 (ex. https://imagini.exemplu.ro/cs2/'{map}'.jpg)"
     },
     "clans": {
       "require_approval": "Un clan nou așteaptă aprobarea staff-ului",
@@ -2377,7 +2639,15 @@
     },
     "servers": {
       "view": "Vede serverele de joc",
-      "view_players": "Vede lista jucătorilor de pe servere"
+      "view_players": "Vede lista jucătorilor de pe servere",
+      "stats_view": "Vede statisticile, profilurile de jucător și meciurile",
+      "bans_view": "Vede lista bannurilor și a comunicațiilor (mute / gag)",
+      "sanction": "Dă sancțiuni de pe site, pe orice server",
+      "view_ips": "Vede IP-urile din sancțiuni și sesiuni",
+      "tickets_create": "Trimite contestații și reclamații",
+      "tickets_manage": "Tratează toate contestațiile și reclamațiile",
+      "link_identity": "Își leagă identitățile non-Steam prin cod din joc",
+      "players_manage": "Leagă și dezleagă identitățile de joc ale membrilor"
     },
     "clans": {
       "view": "Vede clanurile",
@@ -2977,6 +3247,11 @@
         "request": "Cereri noi de intrare în clanul tău",
         "membership": "Schimbări în clanul tău (cereri, roluri, excluderi)",
         "review": "Aprobarea clanurilor create de tine"
+      },
+      "servers": {
+        "ticket_new": "Contestații și reclamații noi de tratat",
+        "ticket_update": "Răspunsuri și schimbări la contestațiile și reclamațiile tale",
+        "player_linked": "Identitate de joc legată de cont"
       }
     }
   },

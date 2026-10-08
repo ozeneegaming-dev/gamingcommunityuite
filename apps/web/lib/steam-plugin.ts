@@ -20,8 +20,11 @@ function safeCallback(url: string | undefined, fallback: string): string {
  *
  * Steam nu dă adresa de email, așa că un cont nou primește adresa `<steamId>@steam.invalid`
  * (domeniul `.invalid` e rezervat și nu primește niciodată email).
+ *
+ * `onLinked` rulează după orice login sau legare Steam reușită (ex. identitatea de joc Steam a membrului se leagă de cont,
+ * specul 2026-10-08-servere-bridge §3.3); o eroare a lui nu oprește autentificarea.
  */
-export function steamPlugin(opts: { apiKey: () => Promise<string>; errorURL?: string }): BetterAuthPlugin {
+export function steamPlugin(opts: { apiKey: () => Promise<string>; errorURL?: string; onLinked?: (userId: string) => Promise<unknown> }): BetterAuthPlugin {
   const errorURL = opts.errorURL ?? "/login?error=steam";
 
   return {
@@ -59,6 +62,7 @@ export function steamPlugin(opts: { apiKey: () => Promise<string>; errorURL?: st
             userId = account.userId;
           } else if (current) {
             await adapter.linkAccount({ userId: current.user.id, providerId: PROVIDER_ID, accountId: steamId });
+            await opts.onLinked?.(current.user.id).catch(() => {});
             throw ctx.redirect(callbackURL);
           } else {
             const profile = await fetchSteamProfile(steamId, await opts.apiKey());
@@ -76,6 +80,7 @@ export function steamPlugin(opts: { apiKey: () => Promise<string>; errorURL?: st
 
           const user = await adapter.findUserById(userId);
           if (!user) throw ctx.redirect(errorURL);
+          await opts.onLinked?.(user.id).catch(() => {});
           const session = await adapter.createSession(user.id);
           await setSessionCookie(ctx, { session, user });
           throw ctx.redirect(callbackURL);

@@ -10,9 +10,10 @@ import { describe, expect, test } from "vitest";
 const BRANDS = [/\bIPS\b/, /invision/i, /indungi/i, /ipsappzone/i, /xenforo/i, /vbulletin/i, /phpbb/i];
 
 const root = path.resolve(__dirname, "../../..");
-const SCAN = ["apps/web/app", "apps/web/lib", "apps/web/messages", "apps/web/e2e", "apps/realtime/src", "apps/worker/src", "packages"];
-const SKIP = new Set(["node_modules", ".next", "dist", "coverage", ".turbo", "generated"]);
-const EXT = /\.(ts|tsx|mts|css|json|prisma|sql)$/;
+// `servers-plugins`: pluginurile serverelor de joc (Pawn, C#), serverul fals și documentația lor.
+const SCAN = ["apps/web/app", "apps/web/lib", "apps/web/messages", "apps/web/e2e", "apps/realtime/src", "apps/worker/src", "packages", "servers-plugins"];
+const SKIP = new Set(["node_modules", ".next", "dist", "coverage", ".turbo", "generated", "bin", "obj"]);
+const EXT = /\.(ts|tsx|mts|mjs|css|json|prisma|sql|sma|inc|cs|csproj|md|cfg|ps1|sh)$/;
 
 function files(dir: string): string[] {
   let entries: string[];

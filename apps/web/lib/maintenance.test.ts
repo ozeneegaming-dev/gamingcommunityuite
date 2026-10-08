@@ -12,6 +12,11 @@ describe("căile scutite de mentenanță", () => {
     expect(isMaintenanceExempt("/api/internal/cli")).toBe(true);
   });
 
+  test("protocolul serverelor de joc (se autentifică singur, cu cheia pe server) rămâne disponibil", () => {
+    for (const path of ["/api/servers/bridge/v1/heartbeat", "/api/servers/bridge/v1/sanctions"]) expect(isMaintenanceExempt(path)).toBe(true);
+    for (const path of ["/api/servers/bridge/v2/heartbeat", "/api/servers/status", "/api/servers/bridge/v1"]) expect(isMaintenanceExempt(path)).toBe(false);
+  });
+
   test("doar calea exactă a consolei: restul site-ului și alte căi interne rămân blocate", () => {
     for (const path of ["/", "/forums", "/api/internal/cli/x", "/api/internal/clix", "/api/internal/other", "/x/api/internal/cli", "/admin"]) {
       expect(isMaintenanceExempt(path)).toBe(false);
