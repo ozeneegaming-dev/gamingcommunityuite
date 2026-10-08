@@ -38,6 +38,23 @@ export async function saveBridgeConfig(serverId: number, fd: FormData): Promise<
   });
 }
 
+/**
+ * Modulele opționale ale pluginului (specul 2026-10-08-servere-plugin-v2 §1.2): implicit oprite (pluginul doar
+ * colectează date); bifate = GCS administrează acea parte a serverului. Pluginul le primește la următorul heartbeat.
+ */
+export async function saveBridgeModules(serverId: number, fd: FormData): Promise<GcsResult<null>> {
+  return runAcpAction(SERVERS_ACP_SECTION, "edit", async (actor) => {
+    await services().bridge.saveFeatures(actor, serverId, {
+      manageAdmins: fd.get("manageAdmins") === "on",
+      enforceSanctions: fd.get("enforceSanctions") === "on",
+      manageVip: fd.get("manageVip") === "on",
+      mixReady: fd.get("mixReady") === "on",
+      adminCommands: fd.get("adminCommands") === "on",
+    });
+    return null;
+  });
+}
+
 /** Grupurile VIP pe server: `vip` (id-urile pornite) și `flags:<id>` pentru fiecare grup. */
 export async function saveVipMappings(serverId: number, fd: FormData): Promise<GcsResult<null>> {
   return runAcpAction(SERVERS_ACP_SECTION, "edit", async (actor) => {

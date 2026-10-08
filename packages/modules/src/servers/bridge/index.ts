@@ -271,6 +271,14 @@ export class GcsBridge {
     };
   }
 
+  /** Doar modulele opționale ale pluginului (specul plugin-v2 §1.2); restul configurației rămâne cum e. */
+  async saveFeatures(actor: GcsActor, serverId: number, input: Pick<GcsBridgeConfigInput, "manageAdmins" | "enforceSanctions" | "manageVip" | "mixReady" | "adminCommands">): Promise<void> {
+    await this.deps.acp.assert(actor, SERVERS_ACP_SECTION, "edit");
+    const current = await this.deps.db.gameServer.findUnique({ where: { id: serverId }, select: { identityMode: true, nameIds: true, isMix: true } });
+    if (!current) throw new GcsNotFound();
+    await this.saveConfig(actor, serverId, { ...current, ...input });
+  }
+
   /**
    * Modul identităților (`steam` / `mixed`), identitățile pe nume, serverul de meciuri mix (§15.3) și modulele opționale
    * ale pluginului (specul plugin-v2 §1.2; lipsă = neschimbat). Pluginul le primește la următorul heartbeat.
@@ -303,7 +311,7 @@ export { mapArtSvg } from "./mapArt";
 export { BRIDGE_BASE_PATH, signBridgeRequest } from "./signing";
 export type { GcsBridgeHttpRequest, GcsBridgeHttpResponse } from "./api";
 export { BRIDGE_MAX_BODY, LINK_COMMAND } from "./api";
-export { GCS_ADMIN_FLAGS, FLAG_CSS, normalizeFlags, cssPermissions } from "./flags";
+export { GCS_ADMIN_FLAGS, FLAG_CSS, normalizeFlags, cssPermissions, isPowerAdmin, POWER_FLAGS, reportedAdminFlags } from "./flags";
 export { generateAdminPassword, ADMIN_PASSWORD_MIN, type GcsServerAdminInput, type GcsServerAdminRow, type GcsAdminPresetView } from "./admins";
 export type { GcsMapRow } from "./maps";
 export { MAP_UPLOAD_MAX_FILES, MAP_IMAGE_MAX_BYTES, mapArtUrl } from "./maps";

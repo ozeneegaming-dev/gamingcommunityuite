@@ -230,7 +230,12 @@
       "lifted": "The sanction was already lifted.",
       "invalid_map_template": "An http(s) address that contains '{map}'.",
       "invalid_map_name": "The file name is not a map name (lowercase letters, digits, _ . -).",
-      "steam_unlink_account": "The Steam identity is unlinked together with the Steam account (Settings → Account)."
+      "steam_unlink_account": "The Steam identity is unlinked together with the Steam account (Settings → Account).",
+      "not_verified": "The query did not confirm the server: approve explicitly (\"Approve anyway\").",
+      "missing": "The plugin binaries are missing on the site (release step).",
+      "corrupt": "The plugin binaries on the site do not match the manifest (release step).",
+      "unsupported_game": "This game has no plugin (only CS 1.6 and CS2).",
+      "invalid_ip_list": "Invalid list: IPs or CIDRs, comma separated."
     }
   },
   "acp": {
@@ -1892,7 +1897,55 @@
       },
       "save": "Save",
       "create": "Add the server",
-      "bridgeLink": "Plugin and API keys"
+      "bridgeLink": "Plugin and API keys",
+      "general": {
+        "title": "General plugin (new servers)",
+        "lead": "The same plugin for any server not added yet: it only has the site address, no key. Installed on a server, it announces itself here, under \"New servers detected\"; once approved it receives its key and starts sending data. By default it only collects data.",
+        "cs16": "Download the general CS 1.6 plugin",
+        "cs2": "Download the general CS2 plugin"
+      },
+      "enroll": {
+        "title": "New servers detected",
+        "lead": "Servers with the general plugin asking for a key. The site checks with a query that a real game server answers at that IP:port; the name and map are the ones reported by the server. Only approve servers you recognise.",
+        "empty": "No new servers.",
+        "address": "Address",
+        "server": "Reported server",
+        "check": "Check",
+        "seen": "Seen",
+        "decision": "Decision",
+        "duplicate": "address requested more than once",
+        "duplicateHint": "Several requests for the same IP:port: one of them may be fake.",
+        "mapPlayers": "{map} · {players} / {max} players",
+        "checks": {
+          "ok": "Server confirmed",
+          "game_mismatch": "Another game at this address",
+          "offline": "Not answering",
+          "blocked": "Address cannot be checked",
+          "none": "Not checked"
+        },
+        "differs": "the name or map differs from the reported ones",
+        "recheck": "Check again",
+        "rechecked": "The check was run again.",
+        "firstSeen": "First: {time}",
+        "lastSeen": "Last: {time}",
+        "target": "Approved server",
+        "newServer": "New server (from the reported data)",
+        "attachTo": "Attach to {name}",
+        "approve": "Approve",
+        "approveAnyway": "Approve anyway",
+        "approveUnverified": "The query did not confirm a game server at this address. Approve anyway? The server will receive an API key.",
+        "approvedNew": "Approved: the server was added. The plugin receives its key within a minute.",
+        "approvedAttached": "Approved: attached to the chosen server. The plugin receives its key within a minute.",
+        "approvedDelivered": "Approved · {server} · key delivered",
+        "approvedWaiting": "Approved · {server} · waiting for the plugin",
+        "reject": "Reject",
+        "rejectedDone": "Rejected.",
+        "rejected": "Rejected",
+        "pending": "Pending",
+        "block": "Block IP",
+        "blockConfirm": "Block the IP {ip}? Its pending requests are rejected and new ones are no longer accepted.",
+        "blocked": "IP blocked; requests rejected: {count}."
+      }
     },
     "clans": {
       "title": "Clans",
@@ -2081,7 +2134,10 @@
         "identity": "Identity",
         "team": "Team",
         "score": "Score",
-        "admin": "admin"
+        "admin": "admin",
+        "modules": "Modules active on the server",
+        "collectorOnly": "none (data collection only)",
+        "serverAdmin": "admin (server)"
       },
       "kinds": {
         "STEAM": "Steam",
@@ -2147,6 +2203,33 @@
         "cs2": "CS2: CounterStrikeSharp (on Metamod:Source); the GcsBridge plugin and its JSON config (see servers-plugins/README.md).",
         "endpoint": "Protocol address",
         "security": "Use HTTPS. The lists (admins, bans, VIP) are also kept locally on the server: a site outage stops neither admins nor bans."
+      },
+      "package": {
+        "title": "Plugin for this server",
+        "lead": "A ready-to-install archive: the compiled plugin, the config with the site address and a new API key (created now, only placed in the archive), the install note and the licence. On the server: upload the files, restart, done.",
+        "download": "Download the plugin for this server",
+        "downloading": "Preparing…",
+        "done": "Downloaded: {file}",
+        "failed": "The download failed."
+      },
+      "modules": {
+        "title": "Optional modules — only if you want GCS to manage the server",
+        "lead": "By default the plugin only collects data (statistics, matches, admins present) and changes nothing on the server: admins, bans and commands stay the server's own. Turn a module on only if you want GCS to take over that part; the plugin receives it within a minute. On the server, gcs_allow_manage 0 (CS 1.6) or \"AllowManage\": false (CS2) keeps them off regardless.",
+        "save": "Save modules",
+        "names": {
+          "admins": "Admins from GCS",
+          "sanctions": "Bans, mutes and gags from GCS",
+          "vip": "VIP from GCS",
+          "mixReady": "Ready-up for mix matches",
+          "commands": "GCS admin commands"
+        },
+        "hints": {
+          "admins": "The admins from the ACP replace the rights from users.ini / admins.json (including name + password admins).",
+          "sanctions": "Sanctions given on the site are enforced on the server: banned players are kicked on join, mutes, gags.",
+          "vip": "VIP flags are added on top of the server's rights (the existing ones stay).",
+          "mixReady": "On mix servers: /ready starts the match and GCS restarts the game.",
+          "commands": "The gcs_ban, gcs_mute, gcs_match … commands (CS2: css_gcs…) and the admin action log."
+        }
       }
     },
     "serverAdmins": {
@@ -2559,7 +2642,9 @@
       "tempban_max": "Maximum temporary ban for admins with flag v (minutes, 1–525600)",
       "bridge_retention_days": "Days to keep sessions and the in-game log (30–730)",
       "map_template_cs16": "CS 1.6 map image template (e.g. https://images.example.com/cs/'{map}'.jpg)",
-      "map_template_cs2": "CS2 map image template (e.g. https://images.example.com/cs2/'{map}'.jpg)"
+      "map_template_cs2": "CS2 map image template (e.g. https://images.example.com/cs2/'{map}'.jpg)",
+      "enroll_enabled": "Automatic enrollment of new servers (general plugin; approval stays in the ACP)",
+      "enroll_blocked_ips": "IPs blocked from enrollment (IPs or CIDRs, comma separated)"
     },
     "clans": {
       "require_approval": "A new clan waits for staff approval",

@@ -1,4 +1,4 @@
-import { GCS_ADMIN_FLAGS, SERVERS_ACP_SECTION, gameDef } from "@gcs/modules";
+import { GCS_ADMIN_FLAGS, SERVERS_ACP_SECTION, gameDef, isPowerAdmin } from "@gcs/modules";
 import { GcsCard } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
@@ -9,8 +9,9 @@ import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../../../_components/GcsActionForm";
 import { GcsAcpTitle, GcsAcpTitleIcon } from "../../../../_components/GcsAcpTitle";
-import { saveBridgeConfig, saveVipMappings } from "../../bridge-actions";
+import { saveBridgeConfig, saveBridgeModules, saveVipMappings } from "../../bridge-actions";
 import { GcsBridgeKeys } from "../../GcsBridgeKeys";
+import { GcsPluginDownload } from "../../GcsPluginDownload";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -19,6 +20,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const KIND_BADGE: Record<string, string> = { STEAM: "gcs-badge--ok", NONSTEAM: "gcs-badge--warn", NAME: "gcs-badge--neutral" };
+/** Modulele opționale (specul plugin-v2 §1.2): câmpul formularului și cheia din `config.features`. */
+const MODULES = [
+  ["manageAdmins", "admins"],
+  ["enforceSanctions", "sanctions"],
+  ["manageVip", "vip"],
+  ["mixReady", "mixReady"],
+  ["adminCommands", "commands"],
+] as const;
 
 /**
  * ACP → Gaming → Servere → un server → Plugin și chei API (specul 2026-10-08-servere-bridge §15.3): starea punții
@@ -73,6 +82,12 @@ export default async function AcpServerBridgePage({ params }: Props) {
           <span>
             {t("status.plugin")}: <strong data-testid="gcs-bridge-plugin">{s.bridgePlugin ?? "—"}</strong>
           </span>
+          {status.roster && (
+            <span data-testid="gcs-bridge-modules">
+              {t("status.modules")}:{" "}
+              <strong>{status.roster.modules && status.roster.modules.length > 0 ? status.roster.modules.map((m) => t(`modules.names.${m}`)).join(", ") : t("status.collectorOnly")}</strong>
+            </span>
+          )}
         </div>
         <div className="gcs-acpKpis" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
           {(
@@ -116,6 +131,11 @@ export default async function AcpServerBridgePage({ params }: Props) {
                 <tr key={p.playerId} className="gcs-table__row">
                   <td className="gcs-table__td">
                     {p.name || "—"} {p.adminId !== null && <span className="gcs-badge gcs-badge--accent">{t("status.admin")}</span>}
+                    {p.adminId === null && isPowerAdmin(p.flags) && (
+                      <span className="gcs-badge gcs-badge--accent" title={p.flags ?? ""} data-testid="gcs-bridge-server-admin">
+                        {t("status.serverAdmin")}
+                      </span>
+                    )}
                   </td>
                   <td className="gcs-table__td">
                     <span className={`gcs-badge ${KIND_BADGE[p.kind] ?? "gcs-badge--neutral"}`}>{t(`kinds.${p.kind}`)}</span>
@@ -138,6 +158,38 @@ export default async function AcpServerBridgePage({ params }: Props) {
           {t("keys.lead")}
         </p>
         <GcsBridgeKeys serverId={s.id} game={s.game} siteUrl={site} keys={status.keys.map((k) => ({ ...k, lastUsedLabel: k.lastUsedAt ? format.dateTime(new Date(k.lastUsedAt), { dateStyle: "medium", timeStyle: "medium" }) : null, expiresLabel: k.expiresAt ? format.dateTime(new Date(k.expiresAt), { timeStyle: "short" }) : null }))} canEdit={canEdit} canDelete={canDelete} />
+      </GcsCard>
+
+      <GcsCard as="section" aria-labelledby="gcs-bridge-package" style={{ padding: 16, maxWidth: 820, display: "flex", flexDirection: "column", gap: 10 }}>
+        <h2 id="gcs-bridge-package" className="gcs-acpWidget__title">
+          <GcsAcpTitleIcon name="fa-solid fa-file-zipper" />
+          {t("package.title")}
+        </h2>
+        <p className="gcs-muted" style={{ margin: 0, fontSize: 14 }}>
+          {t("package.lead")}
+        </p>
+        {supported && canEdit && <GcsPluginDownload serverId={s.id} game={s.game} variant="primary" label={t("package.download")} testId="gcs-bridge-package" />}
+      </GcsCard>
+
+      <GcsCard as="section" aria-labelledby="gcs-bridge-modules" style={{ padding: 16, maxWidth: 820 }}>
+        <h2 id="gcs-bridge-modules" className="gcs-acpWidget__title" style={{ marginBottom: 8 }}>
+          <GcsAcpTitleIcon name="fa-solid fa-sliders" />
+          {t("modules.title")}
+        </h2>
+        <p className="gcs-muted" style={{ margin: "0 0 12px", fontSize: 14 }}>
+          {t("modules.lead")}
+        </p>
+        <GcsActionForm action={saveBridgeModules.bind(null, s.id)} submitLabel={t("modules.save")} submitKind="save">
+          {MODULES.map(([field, key]) => (
+            <div key={field}>
+              <label className="gcs-checkRow">
+                <input type="checkbox" name={field} defaultChecked={status.features[key]} data-testid={`gcs-bridge-module-${key}`} />
+                {t(`modules.names.${key}`)}
+              </label>
+              <span className="gcs-field__hint">{t(`modules.hints.${key}`)}</span>
+            </div>
+          ))}
+        </GcsActionForm>
       </GcsCard>
 
       <GcsCard as="section" aria-labelledby="gcs-bridge-identity" style={{ padding: 16, maxWidth: 820 }}>

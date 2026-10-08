@@ -230,7 +230,12 @@
       "lifted": "Sancțiunea a fost deja ridicată.",
       "invalid_map_template": "Adresă http(s) care conține '{map}'.",
       "invalid_map_name": "Numele fișierului nu e un nume de hartă (litere mici, cifre, _ . -).",
-      "steam_unlink_account": "Identitatea Steam se dezleagă odată cu contul Steam (Setări → Cont)."
+      "steam_unlink_account": "Identitatea Steam se dezleagă odată cu contul Steam (Setări → Cont).",
+      "not_verified": "Interogarea nu a confirmat serverul: aprobă explicit („Aprobă oricum”).",
+      "missing": "Binarele pluginului lipsesc de pe site (pasul de release).",
+      "corrupt": "Binarele pluginului de pe site nu corespund manifestului (pasul de release).",
+      "unsupported_game": "Jocul nu are plugin (doar CS 1.6 și CS2).",
+      "invalid_ip_list": "Listă invalidă: IP-uri sau CIDR-uri, separate prin virgulă."
     }
   },
   "acp": {
@@ -1892,7 +1897,55 @@
       },
       "save": "Salvează",
       "create": "Adaugă serverul",
-      "bridgeLink": "Plugin și chei API"
+      "bridgeLink": "Plugin și chei API",
+      "general": {
+        "title": "Pluginul general (servere noi)",
+        "lead": "Același plugin pentru orice server încă neadăugat: are doar adresa site-ului, fără cheie. Pus pe server, se anunță singur aici, la „Servere noi detectate”; după aprobare primește cheia și începe să trimită datele. Implicit doar colectează date.",
+        "cs16": "Descarcă pluginul general CS 1.6",
+        "cs2": "Descarcă pluginul general CS2"
+      },
+      "enroll": {
+        "title": "Servere noi detectate",
+        "lead": "Serverele cu pluginul general care cer o cheie. Site-ul verifică printr-o interogare că la acel IP:port răspunde un server de joc real; numele și harta sunt cele raportate de server. Aprobă doar serverele pe care le recunoști.",
+        "empty": "Niciun server nou.",
+        "address": "Adresa",
+        "server": "Serverul raportat",
+        "check": "Verificarea",
+        "seen": "Văzut",
+        "decision": "Decizia",
+        "duplicate": "adresă cerută de mai multe ori",
+        "duplicateHint": "Mai multe cereri pentru același IP:port: una poate fi falsă.",
+        "mapPlayers": "{map} · {players} / {max} jucători",
+        "checks": {
+          "ok": "Server confirmat",
+          "game_mismatch": "Alt joc la adresă",
+          "offline": "Nu răspunde",
+          "blocked": "Adresă neverificabilă",
+          "none": "Neverificat"
+        },
+        "differs": "numele sau harta diferă de cele raportate",
+        "recheck": "Verifică din nou",
+        "rechecked": "Verificarea a fost refăcută.",
+        "firstSeen": "Prima dată: {time}",
+        "lastSeen": "Ultima dată: {time}",
+        "target": "Serverul aprobat",
+        "newServer": "Server nou (din datele raportate)",
+        "attachTo": "Atașează la {name}",
+        "approve": "Aprobă",
+        "approveAnyway": "Aprobă oricum",
+        "approveUnverified": "Interogarea nu a confirmat un server de joc la această adresă. Aprobi totuși? Serverul va primi o cheie API.",
+        "approvedNew": "Aprobat: serverul a fost adăugat. Pluginul primește cheia în cel mult un minut.",
+        "approvedAttached": "Aprobat: atașat la serverul ales. Pluginul primește cheia în cel mult un minut.",
+        "approvedDelivered": "Aprobat · {server} · cheia livrată",
+        "approvedWaiting": "Aprobat · {server} · așteaptă pluginul",
+        "reject": "Respinge",
+        "rejectedDone": "Respins.",
+        "rejected": "Respins",
+        "pending": "În așteptare",
+        "block": "Blochează IP",
+        "blockConfirm": "Blochezi IP-ul {ip}? Cererile lui în așteptare se resping, iar altele noi nu mai sunt primite.",
+        "blocked": "IP blocat; cereri respinse: {count}."
+      }
     },
     "clans": {
       "title": "Clanuri",
@@ -2081,7 +2134,10 @@
         "identity": "Identitate",
         "team": "Echipa",
         "score": "Scor",
-        "admin": "admin"
+        "admin": "admin",
+        "modules": "Module active pe server",
+        "collectorOnly": "niciunul (doar colectează date)",
+        "serverAdmin": "admin (server)"
       },
       "kinds": {
         "STEAM": "Steam",
@@ -2143,10 +2199,37 @@
       },
       "setup": {
         "title": "Instalarea pluginului",
-        "cs16": "CS 1.6: AMX Mod X 1.9+ cu modulul AmxxEasyHttp; pluginul gcs_bridge.amxx și configul gcs_bridge.cfg (vezi servers-plugins/README.md).",
-        "cs2": "CS2: CounterStrikeSharp (peste Metamod:Source); pluginul GcsBridge și configul lui JSON (vezi servers-plugins/README.md).",
+        "cs16": "CS 1.6: AMX Mod X 1.9+ cu modulul AmxxEasyHttp. Cel mai simplu: descarcă pluginul pentru acest server (mai sus); arhiva are totul completat.",
+        "cs2": "CS2: Metamod:Source 2 și CounterStrikeSharp. Cel mai simplu: descarcă pluginul pentru acest server (mai sus); arhiva are totul completat.",
         "endpoint": "Adresa protocolului",
-        "security": "Folosește HTTPS. Listele (admini, bannuri, VIP) se păstrează și local pe server: site-ul căzut nu oprește adminii și nici bannurile."
+        "security": "Folosește HTTPS. Implicit pluginul doar colectează date; listele modulelor de administrare (admini, bannuri, VIP) se păstrează și local pe server, deci site-ul căzut nu le oprește."
+      },
+      "package": {
+        "title": "Pluginul pentru acest server",
+        "lead": "Arhiva gata de pus pe server: pluginul compilat, configul cu adresa site-ului și o cheie API nouă (creată acum, pusă doar în arhivă), nota de instalare și licența. Pe server: încarci fișierele, repornești, gata.",
+        "download": "Descarcă pluginul pentru acest server",
+        "downloading": "Se pregătește…",
+        "done": "Descărcat: {file}",
+        "failed": "Descărcarea a eșuat."
+      },
+      "modules": {
+        "title": "Module opționale — doar dacă vrei ca GCS să administreze serverul",
+        "lead": "Implicit pluginul doar colectează date (statistici, meciuri, adminii prezenți) și nu atinge nimic pe server: adminii, bannurile și comenzile rămân ale serverului. Pornește un modul doar dacă vrei ca GCS să preia acea parte; pluginul îl primește în cel mult un minut. Pe server, gcs_allow_manage 0 (CS 1.6) sau \"AllowManage\": false (CS2) le ține oprite oricum.",
+        "save": "Salvează modulele",
+        "names": {
+          "admins": "Admini din GCS",
+          "sanctions": "Bannuri, mute și gag din GCS",
+          "vip": "VIP din GCS",
+          "mixReady": "Ready-up pentru meciurile mix",
+          "commands": "Comenzile de admin GCS"
+        },
+        "hints": {
+          "admins": "Adminii din ACP înlocuiesc drepturile din users.ini / admins.json (inclusiv adminii pe nume + parolă).",
+          "sanctions": "Sancțiunile date pe site se aplică pe server: kick la intrare pentru cei banați, mute, gag.",
+          "vip": "Flag-urile VIP se adaugă peste drepturile serverului (cele existente rămân).",
+          "mixReady": "Pe serverele de mix: /ready pornește meciul, iar GCS face restartul.",
+          "commands": "Comenzile gcs_ban, gcs_mute, gcs_match … (CS2: css_gcs…) și jurnalul acțiunilor adminilor."
+        }
       }
     },
     "serverAdmins": {
@@ -2559,7 +2642,9 @@
       "tempban_max": "Banul temporar maxim al adminilor cu flag-ul v (minute, 1–525600)",
       "bridge_retention_days": "Câte zile se păstrează sesiunile și jurnalul din joc (30–730)",
       "map_template_cs16": "Șablonul imaginilor hărților CS 1.6 (ex. https://imagini.exemplu.ro/cs/'{map}'.jpg)",
-      "map_template_cs2": "Șablonul imaginilor hărților CS2 (ex. https://imagini.exemplu.ro/cs2/'{map}'.jpg)"
+      "map_template_cs2": "Șablonul imaginilor hărților CS2 (ex. https://imagini.exemplu.ro/cs2/'{map}'.jpg)",
+      "enroll_enabled": "Înrolarea automată a serverelor noi (pluginul general; aprobarea rămâne în ACP)",
+      "enroll_blocked_ips": "IP-urile blocate la înrolare (IP-uri sau CIDR-uri, separate prin virgulă)"
     },
     "clans": {
       "require_approval": "Un clan nou așteaptă aprobarea staff-ului",
