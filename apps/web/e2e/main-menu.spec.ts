@@ -73,7 +73,9 @@ test.describe("meniul principal", () => {
     await expect(menu.getByRole("menuitem", { name: "VIP" })).toBeVisible();
     await menu.getByRole("menuitem", { name: "VIP" }).click();
     await expect(page).toHaveURL(/\/vip$/);
-    // Pagina curentă e în „Mai mult”: butonul lui e activ.
+    // Pagina curentă e în „Mai mult”: butonul lui e activ. Antetul vine în flux (Suspense): până când React îl
+    // dezvăluie, butonul există de două ori (o copie ascunsă).
+    await expect(page.getByTestId("gcs-nav-more")).toHaveCount(1);
     await expect(page.getByTestId("gcs-nav-more")).toHaveClass(/gcs-nav__link--active/);
 
     // Mai lat: încap mai mulți itemi în bară (VIP rămâne în „Mai mult”: bara implicită are 8 itemi).
@@ -160,7 +162,7 @@ test.describe("paginile noi", () => {
       if (i === 3) continue;
       await sql(
         `INSERT INTO users (id, name, "nameNormalized", email, "primaryGroupId", "createdAt", "updatedAt")
-         VALUES ($1, $2, lower($2), $3, (SELECT id FROM groups WHERE key = $4), now(), now())`,
+         VALUES ($1, $2, lower($2), $3, (SELECT id FROM groups WHERE key = $4), timezone('UTC', now()), timezone('UTC', now()))`,
         [`lb${i}${id}`, name, `lb-x${i}-${id}@example.com`, i === 4 ? "banned" : "member"],
       );
     }

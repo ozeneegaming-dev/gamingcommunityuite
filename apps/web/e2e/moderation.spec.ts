@@ -82,7 +82,7 @@ test("moderatorul: fixează și blochează, mută din bara de acțiuni, desparte
   const newbieEmail = `nou-${id}@example.com`;
   await sql(
     `INSERT INTO users (id, name, "nameNormalized", email, "primaryGroupId", "createdAt", "updatedAt")
-     VALUES ($1, $2, $3, $4, (SELECT id FROM groups WHERE key = 'new_member'), now(), now())`,
+     VALUES ($1, $2, $3, $4, (SELECT id FROM groups WHERE key = 'new_member'), timezone('UTC', now()), timezone('UTC', now()))`,
     [`nou${id}`, `Nou${id}`, `nou${id}`, newbieEmail],
   );
   const pending = await fixture<{ postId: number; pending: boolean }>(request, { action: "reply", topicId: a.topicId, text: "Mesaj de aprobat", authorEmail: newbieEmail });

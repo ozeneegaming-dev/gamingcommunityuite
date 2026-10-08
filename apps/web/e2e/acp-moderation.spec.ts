@@ -11,7 +11,7 @@ async function dbUser(name: string, group: string): Promise<string> {
   const email = `${name.toLowerCase()}@example.com`;
   await sql(
     `INSERT INTO users (id, name, "nameNormalized", email, "primaryGroupId", "createdAt", "updatedAt")
-     VALUES ($1, $2, $3, $4, (SELECT id FROM groups WHERE key = $5), now(), now())`,
+     VALUES ($1, $2, $3, $4, (SELECT id FROM groups WHERE key = $5), timezone('UTC', now()), timezone('UTC', now()))`,
     [name.toLowerCase(), name, name.toLowerCase(), email, group],
   );
   return email;
