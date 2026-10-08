@@ -18,7 +18,7 @@ describe("GcsLocalFileStore", () => {
     const store = new GcsLocalFileStore(path.join(dir, "files"));
     const source = path.join(dir, "demo.dem");
     await writeFile(source, Buffer.from("HLDEMO\0\0-continut", "latin1"));
-    await store.putFile("servers/demos/2026/10/a.dem", source, "application/octet-stream");
+    await store.putFile("servers/demos/2026/10/a.dem", source);
     const whole = await store.get("servers/demos/2026/10/a.dem");
     expect(whole?.size).toBe(17);
     expect(Buffer.from(await new Response(whole!.body).arrayBuffer()).toString("latin1")).toBe("HLDEMO\0\0-continut");
