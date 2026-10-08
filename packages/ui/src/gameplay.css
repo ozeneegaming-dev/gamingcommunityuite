@@ -483,12 +483,9 @@ html[data-theme="light"] {
   aspect-ratio: 16 / 9;
   background: var(--gcs-surface);
 }
-.gcs-mapCard__art img {
+.gcs-mapCard__art .gcs-mapCard__pic {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 .gcs-mapCard__name {
   position: absolute;
@@ -732,9 +729,20 @@ html[data-theme="light"] {
   color: #fff;
   background:
     linear-gradient(180deg, rgba(8, 9, 12, 0.55) 0%, rgba(8, 9, 12, 0.82) 100%),
-    var(--gcs-map-image, linear-gradient(120deg, #1b1e26, #262a34)) center / cover no-repeat,
-    #14161c;
+    linear-gradient(120deg, #1b1e26, #262a34);
   isolation: isolate;
+}
+/* Imaginea hărții sub tabela de scor (peste arta jocului), cu umbra care ține textul lizibil. */
+.gcs-matchBoard__stage > .gcs-matchBoard__map {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+.gcs-matchBoard__map::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8, 9, 12, 0.55) 0%, rgba(8, 9, 12, 0.82) 100%);
 }
 /* Linia echipelor: o bandă în culoarea fiecărei echipe, pe margini. */
 .gcs-matchBoard__stage::before,
@@ -1700,8 +1708,40 @@ html[data-theme="light"] {
   background: linear-gradient(180deg, rgba(8, 9, 12, 0.05) 30%, rgba(8, 9, 12, 0.6) 100%);
   pointer-events: none;
 }
-.gcs-serverBanner--map > :not(img) {
+.gcs-serverBanner--map > :not(img, .gcs-mapPic) {
   z-index: 1;
+}
+/*
+ * Imaginea unei hărți peste arta generică a jocului: arta e fundalul, imaginea (locală sau de pe alt site, după șablon)
+ * stă deasupra. O imagine lipsă sau blocată (`alt=""`) nu desenează nimic, deci rămâne arta; mărimea vine din CSS.
+ */
+.gcs-mapPic {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  background: var(--gcs-map-art, none) center / cover no-repeat, var(--gcs-surface2, #1b1e26);
+}
+.gcs-mapPic > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border: 0;
+  color: transparent;
+  font-size: 0;
+}
+/* O imagine care nu s-a încărcat (404, blocată): browserele desenează atunci pseudo-elementele imaginii; acesta
+   acoperă iconița de imagine stricată cu aceeași artă, fără JavaScript. Pe o imagine încărcată nu apare. */
+.gcs-mapPic > img::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--gcs-map-art, none) center / cover no-repeat, var(--gcs-surface2, #1b1e26);
+}
+.gcs-serverBanner__img.gcs-mapPic {
+  position: absolute;
 }
 .gcs-serverMaps__name {
   display: inline-flex;
@@ -1712,10 +1752,148 @@ html[data-theme="light"] {
 .gcs-serverMaps__thumb {
   width: 48px;
   height: 27px;
-  object-fit: cover;
   border-radius: 4px;
   flex-shrink: 0;
-  background: var(--gcs-surface2);
+}
+
+/* ─── ACP → Gaming → Hărți: șablonul pe joc (modul activ, câmpul, previzualizarea) ──────────── */
+
+.gcs-mapTpls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
+  gap: 14px;
+}
+.gcs-mapTpl {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-surface);
+}
+.gcs-mapTpl__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.gcs-mapTpl__title {
+  margin: 0;
+  font: 700 16px var(--gcs-font-display);
+}
+.gcs-mapTpl__desc {
+  margin: 0;
+  font-size: 13px;
+  color: var(--gcs-muted);
+}
+.gcs-mapTpl__form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gcs-mapTpl__modes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.gcs-mapTpl__modes > legend {
+  margin-bottom: 4px;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+.gcs-mapTpl__mode {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 14px;
+  cursor: pointer;
+}
+.gcs-mapTpl__mode input {
+  margin-top: 3px;
+  accent-color: var(--gcs-accent);
+}
+.gcs-mapTpl__modeDesc {
+  display: block;
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-mapTpl__preview {
+  display: grid;
+  grid-template-columns: minmax(0, 160px) minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+.gcs-mapTpl__figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.gcs-mapTpl__pic {
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+}
+.gcs-mapTpl__picName {
+  position: absolute;
+  left: 10px;
+  bottom: 8px;
+  right: 10px;
+  font: 700 15px var(--gcs-font-display);
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  overflow-wrap: anywhere;
+}
+.gcs-mapTpl__caption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-mapTpl__caption [data-state="ok"] {
+  color: var(--gcs-ok);
+}
+.gcs-mapTpl__caption [data-state="error"] {
+  color: var(--gcs-warn);
+}
+.gcs-mapTpl__url {
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.gcs-mapTpl__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.gcs-mapTpl__ok,
+.gcs-mapTpl__err {
+  font-size: 13px;
+  font-weight: 600;
+}
+.gcs-mapTpl__ok {
+  color: var(--gcs-ok);
+}
+.gcs-mapTpl__err {
+  color: var(--gcs-accentInk);
+}
+.gcs-mapTpl__fill {
+  position: absolute;
+  inset: 0;
+}
+@media (max-width: 520px) {
+  .gcs-mapTpl__preview {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* ─── Setări → Cont → Conturi de joc ──────────────────────────────────────────────────────── */

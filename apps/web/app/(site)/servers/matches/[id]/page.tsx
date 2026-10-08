@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { cache } from "react";
 import { currentActor } from "@/lib/actor";
+import { mapPictures } from "@/lib/servers";
 import { services } from "@/lib/services";
 import { GcsMatchBoard, type GcsBoardState } from "../../../_components/servers/GcsMatchBoard";
 
@@ -33,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function MatchPage({ params }: Props) {
   const match = await load((await params).id);
   if (!match) notFound();
-  const t = await getTranslations("bridge.matches");
+  const [t, pictures] = await Promise.all([getTranslations("bridge.matches"), mapPictures(match.server.game, [match.map])]);
   const state: GcsBoardState = {
     id: match.id,
     status: match.status,
@@ -72,7 +73,7 @@ export default async function MatchPage({ params }: Props) {
           {!match.rated && match.status === "ended" && <p className="gcs-pageHeader__desc">{t("notRated")}</p>}
         </div>
       </header>
-      <GcsMatchBoard initial={state} game={game} server={{ id: match.server.id, name: match.server.name, href: serverHref }} mode="match" />
+      <GcsMatchBoard initial={state} game={game} mapImage={pictures.get(match.map) ?? null} server={{ id: match.server.id, name: match.server.name, href: serverHref }} mode="match" />
     </>
   );
 }

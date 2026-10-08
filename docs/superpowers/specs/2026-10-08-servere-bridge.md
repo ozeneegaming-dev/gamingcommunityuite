@@ -614,15 +614,32 @@ ELO nou = max(100, ELO vechi + Δ_p)
 - **Încărcarea în masă** (ACP → Gaming → Hărți): mai multe imagini odată; numele fișierului dă numele hărții
   (`de_dust2.jpg` → `de_dust2`); prin pipeline-ul de atașamente (tipul real din magic bytes, recodarea), max 5 MB,
   max 100 de fișiere pe încărcare. Imaginea veche se șterge.
-- **Șablonul de adresă** pe joc (`servers.map_template_cs16`, `servers.map_template_cs2`), ex.
-  `https://imagini.exemplu.ro/cs/{map}.jpg`: jobul `servers.bridge.maps` (la 10 minute, max 20 de hărți pe rundă) aduce
-  imaginile lipsă cu **descărcarea gardată a platformei** (`safeFetchBuffer`: doar http/https pe porturile 80/443,
-  adrese publice verificate la conectare, redirecturile re-verificate, max 5 MB, 15 s) și le trece prin pipeline. Un
-  eșec se notează (`fetchError`) și se reîncearcă după 1 h × 2^încercări (max 7 zile).
+- **Șablonul de adresă** pe joc (`servers.map_template_cs16`, `servers.map_template_cs2`, gol implicit; GCS nu
+  livrează nicio adresă), ex. `https://exemplu.com/harti/{map}.jpg`. Validarea: doar https (http doar în dezvoltare),
+  `{map}` în cale sau în parametri (nu în host: originea e fixă), fără nume / parolă, fără spații sau ghilimele, max 500.
+  `{map}` = numele validat (`cleanMapName`), codat. **Modul** pe joc (`servers.map_mode_cs16`, `servers.map_mode_cs2`):
+  - `direct` (**implicit**, decizia proprietarului 2026-10-08): browserul încarcă imaginea chiar de la adresa
+    șablonului; nimic nu se descarcă sau stochează. Paginile pun adresa direct în `<img>` (rezolvată pe server, fără
+    redirect), cu `referrerPolicy="no-referrer"`, `loading="lazy"`, `decoding="async"`, peste arta generică (fundalul
+    elementului): o imagine lipsă (404) sau blocată lasă arta să se vadă, fără JavaScript și fără salt de layout. O hartă
+    schimbată live pe pagină trece prin ruta `/api/servers/maps/image/{game}/{map}` (302 spre adresa externă, cu
+    `Referrer-Policy: no-referrer`).
+  - `copy`: jobul `servers.bridge.maps` (la 10 minute, max 20 de hărți pe rundă) aduce imaginile lipsă cu **descărcarea
+    gardată a platformei** (`safeFetchBuffer`: doar http/https pe porturile 80/443, adrese publice verificate la
+    conectare, redirecturile re-verificate, max 5 MB, 15 s) și le trece prin pipeline. Un eșec se notează (`fetchError`)
+    și se reîncearcă după 1 h × 2^încercări (max 7 zile). Schimbarea șablonului sau a modului reîncearcă hărțile.
+- **Ordinea imaginilor:** bannerul serverului > imaginea încărcată în ACP > șablonul (direct sau copiat) > arta GCS. În
+  modul `direct`, copiile vechi ale șablonului se folosesc doar dacă șablonul e gol / invalid.
+- **CSP:** `bridge.maps.cspImageOrigins()` dă originile șabloanelor în modul `direct` (din setări, deci din cache;
+  niciodată `*`), pentru `img-src`. Paginile site-ului nu au încă un CSP propriu (doar rutele de fișiere au): când se
+  adaugă, `img-src` primește aceste origini la fiecare cerere.
+- **ACP → Gaming → Hărți:** pe joc, modul activ (direct / copiere / fără șablon), câmpul cu validarea pe loc, modul și
+  previzualizarea live pe o hartă de probă (salvarea cere dreptul pe setările Bridge și ELO).
 - **Arta generică**: GCS livrează doar artă **originală**, desenată de noi (SVG): un card în culorile jocului cu un
   model geometric; numele hărții se scrie peste ea la afișare. Ruta `GET /api/servers/maps/art/{game}` (SVG,
   cache public o zi). **Nu se livrează niciodată capturi de hărți ale altora.**
-- `bridge.maps.image(game, map)` → `{ url, generic }`.
+- `bridge.maps.image(game, map)` / `images(game, maps)` → `{ url, generic, kind: upload | direct | copy | art, external,
+  fallback }` (`fallback` = arta jocului, pusă sub imagine).
 
 ## 14. Contestații și reclamații (date și servicii; paginile în partea B)
 
@@ -678,7 +695,8 @@ ELO nou = max(100, ELO vechi + Δ_p)
 | `servers.admin_inactive_days` | 7 | 1–365 |
 | `servers.tempban_max` | 10080 minute | 1–525600 |
 | `servers.bridge_retention_days` (sesiuni, jurnalul din joc) | 180 | 30–730 |
-| `servers.map_template_cs16`, `servers.map_template_cs2` | gol | adresă http(s) cu `{map}` |
+| `servers.map_template_cs16`, `servers.map_template_cs2` | gol | adresă https cu `{map}` (§13) |
+| `servers.map_mode_cs16`, `servers.map_mode_cs2` | `direct` | `direct` / `copy` (§13) |
 
 ### 15.3 Paginile ACP (partea A)
 

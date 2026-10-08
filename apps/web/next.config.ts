@@ -36,6 +36,12 @@ const nextConfig: NextConfig = {
           { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
         ],
       },
+      // Imaginea unei hărți poate redirecționa spre o adresă externă (șablonul în modul direct, specul punții §13):
+      // cererea următoare pleacă fără referrer. Ultima regulă potrivită câștigă.
+      {
+        source: "/api/servers/maps/image/:path*",
+        headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
+      },
       // Previzualizarea editorului vizual de temă rulează într-un iframe pe aceeași origine: doar pentru cererile ei
       // (parametrul sau cookie-ul de previzualizare) `DENY` devine `SAMEORIGIN`. Ultima regulă potrivită câștigă.
       ...["query", "cookie"].map((type) => ({

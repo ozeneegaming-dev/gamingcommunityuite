@@ -112,6 +112,16 @@ export async function groupId(key: string): Promise<number> {
  */
 export async function resetSetting(key: string): Promise<void> {
   await sql(`DELETE FROM settings WHERE key = $1`, [key]);
+  await clearSettingsCache();
+}
+
+/** Scrie o setare direct în baza E2E (fără validarea din ACP) și golește cache-ul de setări; se readuce cu `resetSetting`. */
+export async function setSetting(key: string, value: unknown): Promise<void> {
+  await sql(`INSERT INTO settings (key, value, "updatedAt") VALUES ($1, $2::jsonb, now()) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, "updatedAt" = now()`, [key, JSON.stringify(value)]);
+  await clearSettingsCache();
+}
+
+async function clearSettingsCache(): Promise<void> {
   const { default: Redis } = await import("ioredis");
   const redis = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379");
   try {

@@ -1,6 +1,7 @@
 import type { GcsServerLive } from "@gcs/modules";
 import { slugify } from "@gcs/modules/slug";
 import type { GcsIconSvgProps } from "@gcs/ui";
+import type { GcsMapPictureData } from "./GcsMapPicture";
 
 /** Iconița rezolvată pe server (doar datele SVG ajung în browser). */
 export type GcsIconDef = GcsIconSvgProps["icon"];
@@ -23,6 +24,8 @@ export type GcsServerCardData = {
   status: GcsServerLive | null;
   /** Adminii recunoscuți acum pe server (lista ultimului heartbeat); 0 = niciunul. */
   adminsOnline: number;
+  /** Imaginea hărții curente, rezolvată pe server (fără redirect); o hartă schimbată live trece prin rută. */
+  mapImage?: GcsMapPictureData | null;
 };
 
 /** `/servers/{id}-{slug}`. */
@@ -42,7 +45,5 @@ export const playerHref = (p: { id: number; name: string }, tab?: string) => `/s
 export const matchHref = (id: number) => `/servers/matches/${id}`;
 export const sanctionHref = (id: number) => `/bans/${id}`;
 export const ticketPageHref = (id: number) => `/servers/tickets/${id}`;
-/** Imaginea hărții: redirect la imaginea încărcată din ACP sau la arta generică originală a jocului. */
-export const mapImageHref = (game: string, map: string) => `/api/servers/maps/image/${encodeURIComponent(game)}/${encodeURIComponent(map)}`;
 /** Jocurile cu punte (pluginuri): doar ele au statistici, meciuri, admini în joc și imaginile hărților. */
 export const isBridgeGameKey = (game: string) => game === "cs16" || game === "cs2";

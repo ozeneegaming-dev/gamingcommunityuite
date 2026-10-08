@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useFormatter, useTranslations } from "next-intl";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRealtime } from "../realtime/GcsRealtimeProvider";
-import { mapImageHref, matchHref, playerHref } from "./types";
+import { GcsMapPicture, mapPicture, type GcsMapPictureData } from "./GcsMapPicture";
+import { matchHref, playerHref } from "./types";
 
 /** Un jucător pe tabela de scor (din starea live sau din meciul salvat). */
 export type GcsBoardPlayer = {
@@ -42,6 +43,8 @@ const REFRESH_MS = 15_000;
 type Props = {
   initial: GcsBoardState | null;
   game: string;
+  /** Imaginea hărții inițiale, rezolvată pe server; o hartă schimbată live trece prin rută. */
+  mapImage?: GcsMapPictureData | null;
   server: { id: number; name: string; href: string };
   /** `match` = pagina meciului (camera `match:{id}`); `server` = pagina serverului (camera `servers:{id}`). */
   mode: "match" | "server";
@@ -67,7 +70,7 @@ function merge(prev: GcsBoardState | null, next: GcsBoardState): GcsBoardState {
  * `servers:match` pe pagina serverului); fără realtime, pagina meciului se reîmprospătează la 15 s cât timp meciul e
  * deschis, iar pagina serverului cere `/api/servers/live`. Numele vin din joc: doar text.
  */
-export function GcsMatchBoard({ initial, game, server, mode }: Props) {
+export function GcsMatchBoard({ initial, game, mapImage = null, server, mode }: Props) {
   const t = useTranslations("bridge.match");
   const format = useFormatter();
   const realtime = useRealtime();
@@ -134,12 +137,13 @@ export function GcsMatchBoard({ initial, game, server, mode }: Props) {
   const label = t(`state.${state.status}`, { round: state.round });
   const teams = (["A", "B"] as const).map((team) => ({ team, info: state.teams[team], players: state.players.filter((p) => p.team === team).sort((a, b) => b.kills - a.kills || a.deaths - b.deaths) }));
   const played = Math.max(1, rounds.length, state.teams.A.score + state.teams.B.score);
-  const mapStyle = state.map ? ({ "--gcs-map-image": `url("${mapImageHref(game, state.map)}")` } as CSSProperties) : undefined;
+  const picture = state.map ? mapPicture(game, state.map, mapImage) : null;
 
   return (
     <div className={`gcs-matchView gcs-matchView--${mode}`} data-testid="gcs-match-board" data-status={state.status}>
       <section className="gcs-card gcs-matchBoard" aria-label={t("boardLabel", { a: state.teams.A.name, b: state.teams.B.name })}>
-        <div className="gcs-matchBoard__stage" style={mapStyle}>
+        <div className="gcs-matchBoard__stage">
+          {picture && <GcsMapPicture key={picture.map} className="gcs-matchBoard__map" image={picture} eager testId="gcs-match-map-image" />}
           {(["A", "B"] as const).map((team) => (
             <div key={team} className="gcs-matchBoard__team" data-team={team} data-won={state.winner === team ? "" : undefined}>
               <span className="gcs-matchBoard__side">

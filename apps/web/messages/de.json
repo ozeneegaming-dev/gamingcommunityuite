@@ -228,14 +228,18 @@
       "too_many_open": "You have too many open tickets of this kind.",
       "invalid_transition": "The status cannot change this way.",
       "lifted": "The sanction was already lifted.",
-      "invalid_map_template": "An http(s) address that contains '{map}'.",
+      "invalid_map_template": "Invalid address: a full address without spaces or quotes, with '{map}' where the map name goes.",
       "invalid_map_name": "The file name is not a map name (lowercase letters, digits, _ . -).",
       "steam_unlink_account": "The Steam identity is unlinked together with the Steam account (Settings → Account).",
       "not_verified": "The query did not confirm the server: approve explicitly (\"Approve anyway\").",
       "missing": "The plugin binaries are missing on the site (release step).",
       "corrupt": "The plugin binaries on the site do not match the manifest (release step).",
       "unsupported_game": "This game has no plugin (only CS 1.6 and CS2).",
-      "invalid_ip_list": "Invalid list: IPs or CIDRs, comma separated."
+      "invalid_ip_list": "Invalid list: IPs or CIDRs, comma separated.",
+      "map_template_placeholder": "The address must contain '{map}' in the path or query (not in the host name).",
+      "map_template_https": "Only https addresses.",
+      "map_template_credentials": "The address can't contain a user name or password.",
+      "map_template_too_long": "The address is too long (max 500 characters)."
     }
   },
   "acp": {
@@ -2341,7 +2345,7 @@
     },
     "serverMaps": {
       "title": "Maps",
-      "lead": "Maps seen on the servers. Without an image, the game's generic art is shown (original GCS art); images come only from your uploads or from the address template.",
+      "lead": "Maps seen on the servers. Images come from your uploads or from the game's address template; without an image, the game's generic art is shown (original GCS art).",
       "upload": {
         "title": "Upload images",
         "game": "Game",
@@ -2356,9 +2360,38 @@
       },
       "template": {
         "title": "Address template",
-        "lead": "With a template (e.g. https://images.example.com/cs/'{map}'.jpg), the worker fetches missing images every 10 minutes through the platform's guarded download (public addresses only, max 5 MB).",
-        "none": "not set",
-        "edit": "Change templates"
+        "lead": "Image order: the server banner, then the image uploaded here, then the address template, then the GCS art. A missing or blocked external image lets the GCS art show through.",
+        "edit": "All bridge settings",
+        "settingsNote": "The same settings are also under Bridge and ELO.",
+        "active": {
+          "direct": "Direct",
+          "copy": "Copy",
+          "none": "No template"
+        },
+        "activeDesc": {
+          "direct": "Active: the visitor's browser loads the images from the template address; nothing is downloaded or stored on the site.",
+          "copy": "Active: the worker downloads missing images every 10 minutes (guarded download, max 5 MB) and keeps them on the site.",
+          "none": "No template: images uploaded here are shown, otherwise the GCS art."
+        },
+        "field": "Address template",
+        "hint": "The full (https) address of an image, with '{map}' where the map name goes, e.g. {example}. Empty = no template.",
+        "mode": "Mode",
+        "modes": {
+          "direct": "Direct (default)",
+          "copy": "Copy to the site"
+        },
+        "modesDesc": {
+          "direct": "The browser loads the image straight from the address; the site downloads nothing.",
+          "copy": "The worker downloads the images and serves them from the site."
+        },
+        "sample": "Sample map",
+        "previewOk": "The image loaded ({size}).",
+        "previewError": "The image didn't load (missing or blocked): visitors see the GCS art.",
+        "previewLoading": "Loading the image…",
+        "previewArt": "No template: visitors see the GCS art (or the uploaded image).",
+        "previewBadMap": "The sample map name isn't valid (lowercase letters, digits, _ . -).",
+        "save": "Save",
+        "saved": "Saved."
       },
       "filterGame": "Game",
       "allGames": "All games",
@@ -2366,16 +2399,17 @@
       "missingOnly": "Only without image",
       "searchSubmit": "Filter",
       "empty": "No maps yet: they appear when a server reports its current map.",
-      "generic": "generic art",
-      "sources": {
-        "UPLOAD": "uploaded",
-        "TEMPLATE": "from template"
-      },
       "fetchError": "Error: {error} ({attempts} attempts)",
       "removeImage": "Remove image",
       "removeConfirm": "Remove the image of map {name}?",
       "prev": "← Back",
-      "next": "Next →"
+      "next": "Next →",
+      "kinds": {
+        "upload": "uploaded",
+        "copy": "copied from the template",
+        "direct": "direct from the template",
+        "art": "generic art"
+      }
     }
   },
   "settings": {
@@ -2424,7 +2458,9 @@
       "alnum": "Latin letters and digits",
       "alnum_symbols": "Letters, digits and symbols",
       "unicode": "Any alphabet",
-      "optional": "Optional"
+      "optional": "Optional",
+      "direct": "Direct: the browser loads the image from the address (nothing copied to the site)",
+      "copy": "Copy: images are downloaded and kept on the site"
     },
     "forums": {
       "posts_per_page": "Beiträge pro Seite",
@@ -2641,10 +2677,12 @@
       "admin_inactive_days": "Days without being seen until an admin is inactive (1–365)",
       "tempban_max": "Maximum temporary ban for admins with flag v (minutes, 1–525600)",
       "bridge_retention_days": "Days to keep sessions and the in-game log (30–730)",
-      "map_template_cs16": "CS 1.6 map image template (e.g. https://images.example.com/cs/'{map}'.jpg)",
-      "map_template_cs2": "CS2 map image template (e.g. https://images.example.com/cs2/'{map}'.jpg)",
+      "map_template_cs16": "CS 1.6 map image template (e.g. https://example.com/maps/'{map}'.jpg)",
+      "map_template_cs2": "CS2 map image template (e.g. https://example.com/maps/'{map}'.jpg)",
       "enroll_enabled": "Automatic enrollment of new servers (general plugin; approval stays in the ACP)",
-      "enroll_blocked_ips": "IPs blocked from enrollment (IPs or CIDRs, comma separated)"
+      "enroll_blocked_ips": "IPs blocked from enrollment (IPs or CIDRs, comma separated)",
+      "map_mode_cs16": "CS 1.6 map image mode",
+      "map_mode_cs2": "CS2 map image mode"
     },
     "clans": {
       "require_approval": "A new clan waits for staff approval",

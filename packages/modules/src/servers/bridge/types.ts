@@ -79,12 +79,8 @@ export function plainText(value: unknown, max: number): string {
   return [...clean].slice(0, max).join("");
 }
 
-/** Numele unei hărți: litere mici, `[a-z0-9_.-]`, max 64; altfel `null`. */
-export function cleanMapName(value: unknown): string | null {
-  if (typeof value !== "string") return null;
-  const name = value.trim().toLowerCase();
-  return /^[a-z0-9_.-]{1,64}$/.test(name) && !/^\.+$/.test(name) ? name : null;
-}
+/** Numele unei hărți: litere mici, `[a-z0-9_.-]`, max 64; altfel `null` (definit lângă imaginile hărților). */
+export { cleanMapName } from "./mapImages";
 
 /** Numele unei arme: litere mici, `[a-z0-9_-]`, fără prefixul `weapon_`, max 32; altfel `null`. */
 export function cleanWeapon(value: unknown): string | null {

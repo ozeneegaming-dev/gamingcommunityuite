@@ -7,7 +7,8 @@
     ".": "./src/index.ts",
     "./services": "./src/services.ts",
     "./slug": "./src/forums/slug.ts",
-    "./clans-text": "./src/clans/text.ts"
+    "./clans-text": "./src/clans/text.ts",
+    "./map-images": "./src/servers/bridge/mapImages.ts"
   },
   "scripts": {
     "lint": "eslint .",

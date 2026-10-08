@@ -4,7 +4,7 @@ import { readZip } from "@gcs/plugin-sdk/zip";
 import { expect, test, type Page } from "@playwright/test";
 import { GcsMockServer, httpTransport, startA2sResponder } from "../../../servers-plugins/mock/gcs-mock-server.mjs";
 import { uid } from "./forum-fixtures";
-import { enterAcpAsRoot, sql, useFreshIp } from "./helpers";
+import { enterAcpAsRoot, resetSetting, sql, useFreshIp } from "./helpers";
 
 /**
  * Puntea cu serverele de joc (specul 2026-10-08-servere-bridge §18, E2E minimal): cheia creată în ACP (arătată o singură
@@ -107,11 +107,13 @@ test("ACP: cheia API (o singură dată), scenariul complet al serverului fals, s
   const [open] = await sql<{ n: number }>(`SELECT count(*)::int AS n FROM game_sessions WHERE "serverId" = $1 AND "disconnectedAt" IS NULL`, [serverId]);
   expect(open!.n).toBe(0);
 
-  // Hărțile: harta văzută, cu arta generică (fără capturi ale altora).
+  // Hărțile: harta văzută, cu arta generică (fără capturi ale altora; fără șablon, nicio imagine externă).
   await page.goto("/admin/gaming/server-maps?game=cs2&q=de_mirage");
   const map = page.getByTestId("gcs-server-map").filter({ hasText: "de_mirage" });
   await expect(map).toBeVisible();
-  await expect(map.locator("img")).toHaveAttribute("src", "/api/servers/maps/art/cs2");
+  await expect(map.getByTestId("gcs-server-map-kind")).toHaveAttribute("data-kind", "art");
+  await expect(map.locator("img")).toHaveCount(0);
+  expect(await map.locator(".gcs-mapPic").evaluate((el) => getComputedStyle(el).backgroundImage)).toContain("/api/servers/maps/art/cs2");
   const art = await page.request.get("/api/servers/maps/art/cs2");
   expect(art.headers()["content-type"]).toContain("image/svg+xml");
   expect(await art.text()).not.toMatch(/<image|<script|href=/);
@@ -123,6 +125,103 @@ test("ACP: cheia API (o singură dată), scenariul complet al serverului fals, s
   await expect(presetNames).toHaveCount(3);
   expect(await presetNames.evaluateAll((els) => els.map((e) => (e as HTMLInputElement).value))).toEqual(["Moderator", "Admin", "Head admin"]);
   await shot(page, "bridge-admins");
+});
+
+/** O imagine „externă” de test (SVG desenat aici, servit de interceptarea Playwright, fără rețea). */
+const TEST_IMAGE = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0f3d3e"/><stop offset="1" stop-color="#3f8f6b"/></linearGradient></defs><rect width="640" height="360" fill="url(#g)"/><circle cx="470" cy="120" r="70" fill="#f2d16b" opacity=".8"/><path d="M0 300 L180 190 L320 270 L470 170 L640 260 L640 360 L0 360Z" fill="#0b2426"/></svg>`;
+const TEMPLATE_HOST = "https://imagini.exemplu.test";
+
+test("ACP → Hărți: șablonul direct (implicit), validarea și previzualizarea; imaginea vine de la adresă, cu arta GCS ca rezervă", async ({ page, context }) => {
+  test.setTimeout(150_000);
+  await useFreshIp(context, "100.76.2");
+  // Adresa de exemplu nu există: Playwright răspunde în locul ei (de_mirage = imaginea, restul = 404), cu antetele cererii.
+  const referers: (string | null)[] = [];
+  let missing = false;
+  await context.route(`${TEMPLATE_HOST}/**`, async (route) => {
+    referers.push(route.request().headers()["referer"] ?? null);
+    if (!missing && route.request().url().endsWith("/de_mirage.jpg")) await route.fulfill({ status: 200, contentType: "image/svg+xml", body: TEST_IMAGE });
+    else await route.fulfill({ status: 404, contentType: "text/plain", body: "" });
+  });
+  try {
+    await enterAcpAsRoot(page, `Harti${id}`, `harti-${id}@example.com`);
+    await page.goto("/admin/gaming/server-maps?game=cs2");
+    const cs2 = page.locator('[data-testid="gcs-map-template"][data-game="cs2"]');
+    await expect(cs2).toHaveAttribute("data-mode", "none");
+    await expect(cs2.getByTestId("gcs-map-template-mode")).toHaveText("Fără șablon");
+    // Modul implicit: direct.
+    await expect(cs2.getByTestId("gcs-map-template-mode-direct")).toBeChecked();
+
+    // Validarea pe loc: doar https, `{map}` nu în host; butonul rămâne oprit.
+    const input = cs2.getByTestId("gcs-map-template-input");
+    await input.fill(`http://imagini.exemplu.test/cs2/{map}.jpg`);
+    await expect(cs2.getByRole("alert")).toHaveText("Doar adrese https.");
+    await expect(cs2.getByTestId("gcs-map-template-save")).toBeDisabled();
+    await input.fill("https://{map}.exemplu.test/poza.jpg");
+    await expect(cs2.getByRole("alert")).toContainText("(nu în numele site-ului)");
+    await input.fill(`${TEMPLATE_HOST}/cs2/{map}.jpg`);
+    await expect(cs2.getByRole("alert")).toHaveCount(0);
+
+    // Previzualizarea live: adresa calculată și imaginea (încărcată / lipsă → arta GCS).
+    const sample = cs2.getByTestId("gcs-map-template-sample");
+    const preview = cs2.getByTestId("gcs-map-template-preview");
+    await sample.fill("de_lipsa");
+    await expect(cs2.getByTestId("gcs-map-template-url")).toHaveText(`${TEMPLATE_HOST}/cs2/de_lipsa.jpg`);
+    await expect(preview).toHaveAttribute("data-state", "error");
+    await sample.fill("DE_Mirage");
+    await expect(cs2.getByTestId("gcs-map-template-url")).toHaveText(`${TEMPLATE_HOST}/cs2/de_mirage.jpg`);
+    await expect(preview).toHaveAttribute("data-state", "ok");
+    await expect(preview.locator("img")).toHaveAttribute("referrerpolicy", "no-referrer");
+    await shot(page, "bridge-maps-template-preview");
+
+    await cs2.getByTestId("gcs-map-template-save").click();
+    await expect(cs2.getByRole("status")).toHaveText("Salvat.");
+    await expect(cs2).toHaveAttribute("data-mode", "direct");
+    await expect(cs2.getByTestId("gcs-map-template-mode")).toHaveText("Direct");
+
+    // Lista: de_mirage vine direct de la adresă (imagine externă: fără referrer, leneșă, asincronă), peste artă.
+    const map = page.getByTestId("gcs-server-map").filter({ hasText: "de_mirage" });
+    await expect(map.getByTestId("gcs-server-map-kind")).toHaveAttribute("data-kind", "direct");
+    const img = map.locator("img");
+    await expect(img).toHaveAttribute("src", `${TEMPLATE_HOST}/cs2/de_mirage.jpg`);
+    await expect(img).toHaveAttribute("referrerpolicy", "no-referrer");
+    await expect(img).toHaveAttribute("loading", "lazy");
+    await expect(img).toHaveAttribute("decoding", "async");
+    await shot(page, "bridge-maps-direct");
+
+    // Ruta imaginii: redirect chiar la adresa externă, fără referrer; nimic descărcat sau stocat pe site.
+    const res = await page.request.get("/api/servers/maps/image/cs2/de_mirage", { maxRedirects: 0 });
+    expect(res.status()).toBe(302);
+    expect(res.headers().location).toBe(`${TEMPLATE_HOST}/cs2/de_mirage.jpg`);
+    expect(res.headers()["referrer-policy"]).toBe("no-referrer");
+    const [row] = await sql<{ imageId: string | null; fetchError: string | null }>(`SELECT "imageId", "fetchError" FROM game_maps WHERE game = 'cs2' AND name = 'de_mirage'`);
+    expect(row).toEqual({ imageId: null, fetchError: null });
+
+    // Pagina meciului: harta de sub tabela de scor vine de la adresă, fără redirect.
+    const [match] = await sql<{ id: number }>(`SELECT id FROM game_matches WHERE "serverId" = $1`, [serverId]);
+    await page.goto(`/servers/matches/${match!.id}`);
+    const pic = page.getByTestId("gcs-match-map-image");
+    await expect(pic).toHaveAttribute("data-kind", "direct");
+    await expect(pic.locator("img")).toHaveAttribute("src", `${TEMPLATE_HOST}/cs2/de_mirage.jpg`);
+    await expect.poll(() => pic.locator("img").evaluate((el) => (el as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+    await shot(page, "bridge-match-direct-image");
+
+    // Imaginea externă lipsește (404): fără JavaScript, arta GCS de dedesubt rămâne vizibilă, fără salt de layout.
+    missing = true;
+    await page.reload();
+    await expect.poll(() => pic.locator("img").evaluate((el) => (el as HTMLImageElement).complete && (el as HTMLImageElement).naturalWidth === 0)).toBe(true);
+    expect(await pic.evaluate((el) => getComputedStyle(el).backgroundImage)).toContain("/api/servers/maps/art/cs2");
+    // Imaginea stă absolut peste toată scena: mărimea scenei nu depinde de ea.
+    expect(await pic.boundingBox()).toEqual(await page.locator(".gcs-matchBoard__stage").boundingBox());
+    await shot(page, "bridge-match-direct-fallback");
+
+    // Browserul n-a trimis niciodată adresa paginii site-ului spre adresa externă.
+    expect(referers.length).toBeGreaterThan(0);
+    expect(referers.every((r) => r === null)).toBe(true);
+  } finally {
+    await context.unroute(`${TEMPLATE_HOST}/**`);
+    await resetSetting("servers.map_template_cs2");
+    await resetSetting("servers.map_mode_cs2");
+  }
 });
 
 test("ACP: serverul nou se înrolează singur, adminul îl aprobă, primește cheia și trimite date; pachetul pe server are configul completat", async ({ page, context, baseURL }) => {

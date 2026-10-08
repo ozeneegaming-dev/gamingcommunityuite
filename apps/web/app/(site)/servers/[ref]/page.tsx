@@ -8,7 +8,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
 import { forumHref, memberHref } from "@/lib/forum-urls";
-import { cardData } from "@/lib/servers";
+import { bannerMap, cardData, mapPictures } from "@/lib/servers";
 import { services } from "@/lib/services";
 import { GcsCopyAddressButton, GcsServerAddress } from "../../_components/servers/GcsServerAddress";
 import { GcsServerChart } from "../../_components/servers/GcsServerChart";
@@ -18,7 +18,8 @@ import { GcsServerPlayers } from "../../_components/servers/GcsServerPlayers";
 import { GcsPlayerLink, playtimeText } from "../../_components/servers/GcsBridgeBits";
 import { GcsMatchBoard } from "../../_components/servers/GcsMatchBoard";
 import { GcsMatchRows } from "../../_components/servers/GcsMatchRows";
-import { isBridgeGameKey, mapImageHref, serverHref } from "../../_components/servers/types";
+import { GcsMapPicture, mapPicture } from "../../_components/servers/GcsMapPicture";
+import { isBridgeGameKey, serverHref } from "../../_components/servers/types";
 
 type Props = { params: Promise<{ ref: string }>; searchParams: Promise<{ range?: string }> };
 
@@ -50,7 +51,8 @@ export default async function ServerPage({ params, searchParams }: Props) {
   const { serverQueries, settings, bridge } = services();
   const actor = await currentActor();
   const bridgeGame = isBridgeGameKey(server.game.key);
-  const [t, tb, td, format, history, interval, counts, live, board, matches, gameAdmins] = await Promise.all([
+  const bannerMapName = bannerMap(server);
+  const [t, tb, td, format, history, interval, counts, live, board, matches, gameAdmins, pictures] = await Promise.all([
     getTranslations("servers"),
     getTranslations("bridge.server"),
     getTranslations("bridge.duration"),
@@ -63,8 +65,11 @@ export default async function ServerPage({ params, searchParams }: Props) {
     bridgeGame ? bridge.queries.leaderboard(actor, server.id, 1) : Promise.resolve(null),
     bridgeGame ? bridge.queries.matches(actor, { serverId: server.id }) : Promise.resolve(null),
     bridgeGame ? bridge.queries.serverAdmins(actor, server.id) : Promise.resolve(null),
+    // Imaginile hărților (bannerul, meciul live, hărțile jucate), rezolvate aici: o citire, fără redirect în browser.
+    mapPictures(server.game.key, [bannerMapName ?? "", server.status?.map ?? "", ...(server.game.hasMap ? server.maps.map((m) => m.map) : [])]),
   ]);
-  const card = cardData(server, counts.get(server.id) ?? 0);
+  const card = cardData(server, counts.get(server.id) ?? 0, bannerMapName ? (pictures.get(bannerMapName) ?? null) : null);
+  const liveMapImage = live?.map ? (pictures.get(live.map) ?? null) : null;
   const top = board?.items.slice(0, 10) ?? [];
   const recent = matches?.items.slice(0, 5) ?? [];
   const admins = [...(gameAdmins ?? [])].sort((a, b) => Number(b.online !== null) - Number(a.online !== null) || (b.lastSeenAt ?? "").localeCompare(a.lastSeenAt ?? "")).slice(0, 12);
@@ -146,7 +151,7 @@ export default async function ServerPage({ params, searchParams }: Props) {
             </dl>
           </section>
 
-          {bridgeGame && <GcsMatchBoard initial={live} game={server.game.key} server={{ id: server.id, name: server.name, href: serverHref(server) }} mode="server" />}
+          {bridgeGame && <GcsMatchBoard initial={live} game={server.game.key} mapImage={liveMapImage} server={{ id: server.id, name: server.name, href: serverHref(server) }} mode="server" />}
 
           {top.length > 0 && (
             <section className="gcs-card gcs-titledBox gcs-statBox" aria-labelledby="gcs-server-board">
@@ -319,7 +324,7 @@ export default async function ServerPage({ params, searchParams }: Props) {
                   {server.maps.map((m, i) => (
                     <li key={`${m.from}-${m.map}`}>
                       <span className="gcs-serverMaps__name">
-                        {bridgeGame && <img className="gcs-serverMaps__thumb" src={mapImageHref(server.game.key, m.map)} alt="" loading="lazy" />}
+                        {bridgeGame && <GcsMapPicture className="gcs-serverMaps__thumb" image={mapPicture(server.game.key, m.map, pictures.get(m.map))} />}
                         {m.map}
                       </span>
                       <span>

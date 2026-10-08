@@ -28,7 +28,7 @@
 | `/bans` | bannurile și comunicațiile (mute / gag), căutare și filtre | `servers.bans_view` |
 | `/bans/{id}` | detaliul unei sancțiuni; editarea și ridicarea (cu drept) | `servers.bans_view` sau cine o poate modifica |
 | `/bans/new` | sancțiune nouă de pe site | `canSanction` (staff `servers.sanction` sau adminii serverelor, §8.1) |
-| `/api/servers/maps/image/{game}/{map}` | imaginea hărții: redirect la imaginea încărcată sau la arta generică | public (aplicația activă) |
+| `/api/servers/maps/image/{game}/{map}` | imaginea hărții: redirect la imaginea aleasă (§13 partea A: încărcată, șablonul direct sau copiat, arta generică); paginile o rezolvă pe server | public (aplicația activă) |
 | `/api/servers/live?server={id}` | meciul live al unui server (rezerva fără realtime) | `servers.stats_view` + vizibilitatea serverului |
 | `/api/servers/players?q=` | căutarea jucătorilor (formularele: reclamație, sancțiune) | `servers.stats_view`; limită pe IP |
 | `/api/servers/evidence` | încărcarea unei imagini-dovadă (formularul sancțiunii) | cine poate da sancțiuni (`sanctions.abilities`) |

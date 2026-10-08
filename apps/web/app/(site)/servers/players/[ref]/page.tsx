@@ -10,11 +10,13 @@ import { cache } from "react";
 import { currentActor } from "@/lib/actor";
 import { pageParam } from "@/lib/forum-page";
 import { memberHref } from "@/lib/forum-urls";
+import { mapPictures } from "@/lib/servers";
 import { services } from "@/lib/services";
 import { GcsPagination } from "../../../_components/forum/GcsPagination";
 import { GcsEloChart, GcsFormGuide, GcsIdentityTag, GcsSanctionStatus, GcsSanctionType, matchResult, playtimeText } from "../../../_components/servers/GcsBridgeBits";
 import { GcsMatchRows } from "../../../_components/servers/GcsMatchRows";
-import { mapImageHref, playerHref, sanctionHref } from "../../../_components/servers/types";
+import { GcsMapPicture, mapPicture } from "../../../_components/servers/GcsMapPicture";
+import { playerHref, sanctionHref } from "../../../_components/servers/types";
 
 const TABS = ["overview", "classic", "mix", "matches", "weapons", "maps", "sanctions"] as const;
 type Tab = (typeof TABS)[number];
@@ -222,7 +224,7 @@ export default async function PlayerProfilePage({ params, searchParams }: Props)
       {list.map((m) => (
         <li key={m.map} className="gcs-mapCard">
           <span className="gcs-mapCard__art">
-            <img src={mapImageHref(game, m.map)} alt="" loading="lazy" />
+            <GcsMapPicture className="gcs-mapCard__pic" image={mapPicture(game, m.map, pictures.get(m.map))} />
             <span className="gcs-mapCard__name">{m.map}</span>
           </span>
           <dl className="gcs-mapCard__stats">
@@ -246,6 +248,7 @@ export default async function PlayerProfilePage({ params, searchParams }: Props)
 
   // Jocul hărților: al serverului cu cel mai mult timp de joc (imaginile hărților sunt pe joc).
   const game = profile.classic[0]?.server.game ?? "cs2";
+  const pictures = await mapPictures(game, profile.maps.map((m) => m.map));
 
   let main: ReactNode;
   if (tab === "overview") {

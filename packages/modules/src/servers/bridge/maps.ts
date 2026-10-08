@@ -1,8 +1,8 @@
 import { GcsBlockedFetch, GcsNotFound, GcsValidationError, safeFetchBuffer, writeAudit, type GcsAcpRoleService, type GcsActor, type GcsAttachmentService, type GcsFetchedFile, type GcsSettingsService } from "@gcs/core";
 import type { Prisma, PrismaClient } from "@gcs/db";
 import { gameDef } from "../games";
-import { BRIDGE_SETTING, MAP_IMAGE, SERVER_MAPS_ACP_SECTION, isBridgeGame } from "./config";
-import { cleanMapName } from "./types";
+import { BRIDGE_GAMES, MAP_IMAGE, SERVER_MAPS_ACP_SECTION, isBridgeGame, mapModeSetting, mapTemplateSetting } from "./config";
+import { DEFAULT_MAP_IMAGE_MODE, cleanMapName, isMapImageMode, mapArtUrl, mapImageOrigins, mapTemplateHttpAllowed, mapTemplateUrl, type GcsMapImageMode } from "./mapImages";
 
 export const MAP_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 export const MAP_UPLOAD_MAX_FILES = 100;
@@ -15,10 +15,17 @@ const RETRY_MAX_MS = 7 * 86_400_000;
 const FETCH_TIMEOUT_MS = 15_000;
 const PAGE_SIZE = 60;
 
-/** Adresa artei generice a unui joc (SVG original, cache public o zi). */
-export const mapArtUrl = (game: string) => `/api/servers/maps/art/${encodeURIComponent(game)}`;
+export { mapArtUrl };
 
-export type GcsMapImage = { url: string; generic: boolean };
+/**
+ * Imaginea afișată a unei hărți: `upload` (încărcată în ACP), `direct` (adresa șablonului, încărcată de browser),
+ * `copy` (adusă după șablon și păstrată pe site), `art` (arta generică originală). `fallback` = arta jocului, pusă sub
+ * imagine (o imagine externă lipsă sau blocată lasă arta să se vadă); `external` = imagine de pe alt site.
+ */
+export type GcsMapImageKind = "upload" | "copy" | "direct" | "art";
+export type GcsMapImage = { url: string; generic: boolean; kind: GcsMapImageKind; external: boolean; fallback: string };
+/** Configurația imaginilor unui joc (din setări). */
+export type GcsMapImageConfig = { game: string; template: string; mode: GcsMapImageMode };
 export type GcsMapRow = {
   id: number;
   game: string;
@@ -38,7 +45,16 @@ export function mapNameFromFile(filename: string): string | null {
   return cleanMapName(base.replace(/\.[A-Za-z0-9]{1,5}$/, ""));
 }
 
-const templateKey = (game: string) => (game === "cs2" ? BRIDGE_SETTING.mapTemplateCs2 : game === "cs16" ? BRIDGE_SETTING.mapTemplateCs16 : null);
+/** Imaginea unei hărți după ordinea §13: încărcată în ACP > șablonul (direct sau copiat) > arta generică. */
+function pickImage(cfg: GcsMapImageConfig, map: string, row: { imageId: string | null; source: string | null } | undefined): GcsMapImage {
+  const fallback = mapArtUrl(cfg.game);
+  const stored = row?.imageId ? `/files/${row.imageId}` : null;
+  if (stored && row?.source !== "TEMPLATE") return { url: stored, generic: false, kind: "upload", external: false, fallback };
+  const direct = cfg.mode === "direct" ? mapTemplateUrl(cfg.template, map, { allowHttp: mapTemplateHttpAllowed() }) : null;
+  if (direct) return { url: direct, generic: false, kind: "direct", external: true, fallback };
+  if (stored) return { url: stored, generic: false, kind: "copy", external: false, fallback };
+  return { url: fallback, generic: true, kind: "art", external: false, fallback };
+}
 
 /**
  * Catalogul hărților (specul 2026-10-08-servere-bridge §13): rândurile apar când o hartă e văzută (heartbeat, `map`,
@@ -69,19 +85,37 @@ export class GcsBridgeMaps {
     await this.deps.db.gameMap.createMany({ data: [{ game, name }], skipDuplicates: true });
   }
 
+  /** Șablonul și modul unui joc (setările sunt în cache); jocurile fără punte n-au șablon. */
+  async config(game: string): Promise<GcsMapImageConfig> {
+    const tKey = mapTemplateSetting(game);
+    const mKey = mapModeSetting(game);
+    if (!tKey || !mKey) return { game, template: "", mode: DEFAULT_MAP_IMAGE_MODE };
+    const [template, mode] = await Promise.all([this.deps.settings.get<unknown>(tKey), this.deps.settings.get<unknown>(mKey)]);
+    return { game, template: typeof template === "string" ? template.trim() : "", mode: isMapImageMode(mode) ? mode : DEFAULT_MAP_IMAGE_MODE };
+  }
+
   async image(game: string, map: string): Promise<GcsMapImage> {
-    return (await this.images(game, [map])).get(map) ?? { url: mapArtUrl(game), generic: true };
+    return (await this.images(game, [map])).get(map) ?? pickImage(await this.config(game), map, undefined);
   }
 
   /** Imaginile mai multor hărți ale unui joc (o singură citire). */
   async images(game: string, maps: string[]): Promise<Map<string, GcsMapImage>> {
     const names = [...new Set(maps.map((m) => cleanMapName(m)).filter((m): m is string => m !== null))];
-    const rows = names.length === 0 ? [] : await this.deps.db.gameMap.findMany({ where: { game, name: { in: names } }, select: { name: true, imageId: true } });
-    const byName = new Map(rows.map((r) => [r.name, r.imageId]));
-    return new Map(maps.map((m) => {
-      const imageId = byName.get(cleanMapName(m) ?? "");
-      return [m, imageId ? { url: `/files/${imageId}`, generic: false } : { url: mapArtUrl(game), generic: true }];
-    }));
+    const [cfg, rows] = await Promise.all([
+      this.config(game),
+      names.length === 0 ? Promise.resolve([]) : this.deps.db.gameMap.findMany({ where: { game, name: { in: names } }, select: { name: true, imageId: true, source: true } }),
+    ]);
+    const byName = new Map(rows.map((r) => [r.name, r]));
+    return new Map(maps.map((m) => [m, pickImage(cfg, m, byName.get(cleanMapName(m) ?? ""))]));
+  }
+
+  /**
+   * Originile pentru `img-src` din CSP: ale șabloanelor jocurilor în modul `direct` (citite din setări, deci din cache;
+   * niciodată `*`). În modul `copy` imaginile vin de pe site.
+   */
+  async cspImageOrigins(): Promise<string[]> {
+    const configs = await Promise.all(BRIDGE_GAMES.map((g) => this.config(g)));
+    return mapImageOrigins(configs.filter((c) => c.mode === "direct").map((c) => c.template), { allowHttp: mapTemplateHttpAllowed() });
   }
 
   async list(actor: GcsActor, filter: { game?: string; q?: string; missing?: boolean; page?: number } = {}): Promise<{ items: GcsMapRow[]; total: number; page: number; pages: number }> {
@@ -91,13 +125,18 @@ export class GcsBridgeMaps {
     if (filter.q?.trim()) where.name = { contains: filter.q.trim().toLowerCase() };
     if (filter.missing) where.imageId = null;
     const page = Math.max(1, Math.floor(filter.page ?? 1));
-    const [total, rows] = await Promise.all([this.deps.db.gameMap.count({ where }), this.deps.db.gameMap.findMany({ where, orderBy: [{ game: "asc" }, { name: "asc" }], skip: (page - 1) * PAGE_SIZE, take: PAGE_SIZE })]);
+    const [total, rows, configs] = await Promise.all([
+      this.deps.db.gameMap.count({ where }),
+      this.deps.db.gameMap.findMany({ where, orderBy: [{ game: "asc" }, { name: "asc" }], skip: (page - 1) * PAGE_SIZE, take: PAGE_SIZE }),
+      Promise.all(BRIDGE_GAMES.map((g) => this.config(g))),
+    ]);
+    const cfg = new Map(configs.map((c) => [c.game, c]));
     return {
       items: rows.map((r) => ({
         id: r.id,
         game: r.game,
         name: r.name,
-        image: r.imageId ? { url: `/files/${r.imageId}`, generic: false } : { url: mapArtUrl(r.game), generic: true },
+        image: pickImage(cfg.get(r.game) ?? { game: r.game, template: "", mode: DEFAULT_MAP_IMAGE_MODE }, r.name, r),
         source: r.source,
         fetchedAt: r.fetchedAt?.toISOString() ?? null,
         fetchError: r.fetchError,
@@ -168,19 +207,18 @@ export class GcsBridgeMaps {
   }
 
   /**
-   * Jobul `servers.bridge.maps` (la 10 minute): pentru fiecare joc cu șablon (`https://…/{map}.jpg`), max 20 de hărți
-   * fără imagine, scadente. Descărcarea e gardată (doar http/https pe 80 / 443, adrese publice verificate la conectare,
+   * Jobul `servers.bridge.maps` (la 10 minute): pentru fiecare joc cu șablon (`https://…/{map}.jpg`) în modul `copy`,
+   * max 20 de hărți fără imagine, scadente (în modul `direct`, implicit, nu se descarcă nimic). Descărcarea e gardată (doar http/https pe 80 / 443, adrese publice verificate la conectare,
    * redirecturile re-verificate, max 5 MB, 15 s); un eșec se notează și se reîncearcă după 1 h × 2^încercări (max 7 zile).
    */
   async fetchDue(): Promise<{ fetched: number; failed: number }> {
-    const { db, settings } = this.deps;
+    const { db } = this.deps;
     const now = this.now();
     let fetched = 0;
     let failed = 0;
-    for (const game of ["cs16", "cs2"]) {
-      const key = templateKey(game);
-      const template = key ? (await settings.get<string>(key)).trim() : "";
-      if (!template) continue;
+    for (const game of BRIDGE_GAMES) {
+      const { template, mode } = await this.config(game);
+      if (!template || mode !== "copy") continue;
       const due = await db.gameMap.findMany({
         where: { game, imageId: null, OR: [{ nextFetchAt: null }, { nextFetchAt: { lte: now } }] },
         orderBy: [{ attempts: "asc" }, { id: "asc" }],
@@ -204,7 +242,7 @@ export class GcsBridgeMaps {
     return { fetched, failed };
   }
 
-  /** Șablonul unui joc s-a schimbat: hărțile fără imagine se reîncearcă la runda următoare. */
+  /** Șablonul sau modul unui joc s-a schimbat: hărțile fără imagine se reîncearcă la runda următoare. */
   async resetFetches(game: string): Promise<void> {
     await this.deps.db.gameMap.updateMany({ where: { game, imageId: null }, data: { attempts: 0, fetchError: null, nextFetchAt: null } });
   }

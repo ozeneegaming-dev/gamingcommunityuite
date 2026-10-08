@@ -1,6 +1,7 @@
 import { isIP } from "node:net";
 import type { GcsSettingDef, GcsSettingsService } from "@gcs/core";
 import type { GcsEloConfig } from "./elo";
+import { DEFAULT_MAP_IMAGE_MODE, MAP_IMAGE_MODES, isMapImageMode, mapTemplateError, mapTemplateHttpAllowed } from "./mapImages";
 
 /**
  * Setările punții (specul 2026-10-08-servere-bridge §15.2), în ACP → Gaming → Servere → Bridge și ELO
@@ -24,6 +25,9 @@ export const BRIDGE_SETTING = {
   retentionDays: "servers.bridge_retention_days",
   mapTemplateCs16: "servers.map_template_cs16",
   mapTemplateCs2: "servers.map_template_cs2",
+  /** Modul șablonului pe joc: `direct` (implicit, browserul încarcă imaginea de la adresă) sau `copy` (jobul o aduce). */
+  mapModeCs16: "servers.map_mode_cs16",
+  mapModeCs2: "servers.map_mode_cs2",
   /** Înrolarea automată a serverelor necunoscute (specul plugin-v2 §5), pornită implicit; aprobarea rămâne manuală. */
   enrollEnabled: "servers.enroll_enabled",
   /** IP-urile / CIDR-urile care nu se pot înrola (butonul „Blochează IP” din ACP adaugă aici). */
@@ -53,15 +57,13 @@ export const TICKET_EVIDENCE = "servers.ticket";
 
 const int = (min: number, max: number) => (v: unknown) => (Number.isInteger(v) && (v as number) >= min && (v as number) <= max ? null : "invalid_range");
 
-/** Un șablon de adresă: gol sau o adresă http(s) care conține `{map}`. */
-export function mapTemplateError(v: unknown): string | null {
-  if (v === "") return null;
-  if (typeof v !== "string" || v.length > 500 || !v.includes("{map}")) return "invalid_map_template";
-  const probe = v.replaceAll("{map}", "de_dust2");
-  if (!URL.canParse(probe)) return "invalid_map_template";
-  const url = new URL(probe);
-  return (url.protocol === "https:" || url.protocol === "http:") && !url.username && !url.password ? null : "invalid_map_template";
-}
+/** Cheile șablonului și ale modului pe joc (doar jocurile cu punte au imagini de hărți). */
+export const mapTemplateSetting = (game: string): string | null => (game === "cs2" ? BRIDGE_SETTING.mapTemplateCs2 : game === "cs16" ? BRIDGE_SETTING.mapTemplateCs16 : null);
+export const mapModeSetting = (game: string): string | null => (game === "cs2" ? BRIDGE_SETTING.mapModeCs2 : game === "cs16" ? BRIDGE_SETTING.mapModeCs16 : null);
+
+/** Un șablon de adresă la salvare: gol sau https cu `{map}` (http doar în dezvoltare); vezi `mapTemplateError`. */
+const validMapTemplate = (v: unknown) => mapTemplateError(v, { allowHttp: mapTemplateHttpAllowed() });
+const validMapMode = (v: unknown) => (isMapImageMode(v) ? null : "invalid_choice");
 
 /** Lista IP-urilor blocate la înrolare: gol sau IP-uri / CIDR-uri valide, separate prin virgulă sau spațiu (max 500). */
 export function enrollBlockedError(v: unknown): string | null {
@@ -92,8 +94,11 @@ export const BRIDGE_SETTING_DEFS: GcsSettingDef[] = [
   { key: BRIDGE_SETTING.adminInactiveDays, type: "number", default: 7, section: S, labelKey: "settings.servers.admin_inactive_days", validate: int(1, 365) },
   { key: BRIDGE_SETTING.tempbanMax, type: "number", default: 10_080, section: S, labelKey: "settings.servers.tempban_max", validate: int(1, 525_600) },
   { key: BRIDGE_SETTING.retentionDays, type: "number", default: 180, section: S, labelKey: "settings.servers.bridge_retention_days", validate: int(30, 730) },
-  { key: BRIDGE_SETTING.mapTemplateCs16, type: "string", default: "", section: S, labelKey: "settings.servers.map_template_cs16", validate: mapTemplateError },
-  { key: BRIDGE_SETTING.mapTemplateCs2, type: "string", default: "", section: S, labelKey: "settings.servers.map_template_cs2", validate: mapTemplateError },
+  // Șablonul gol implicit: GCS nu livrează nicio adresă de imagini; fiecare site își pune sursa lui.
+  { key: BRIDGE_SETTING.mapTemplateCs16, type: "string", default: "", section: S, labelKey: "settings.servers.map_template_cs16", validate: validMapTemplate },
+  { key: BRIDGE_SETTING.mapModeCs16, type: "string", default: DEFAULT_MAP_IMAGE_MODE, section: S, labelKey: "settings.servers.map_mode_cs16", options: [...MAP_IMAGE_MODES], validate: validMapMode },
+  { key: BRIDGE_SETTING.mapTemplateCs2, type: "string", default: "", section: S, labelKey: "settings.servers.map_template_cs2", validate: validMapTemplate },
+  { key: BRIDGE_SETTING.mapModeCs2, type: "string", default: DEFAULT_MAP_IMAGE_MODE, section: S, labelKey: "settings.servers.map_mode_cs2", options: [...MAP_IMAGE_MODES], validate: validMapMode },
   { key: BRIDGE_SETTING.enrollEnabled, type: "boolean", default: true, section: S, labelKey: "settings.servers.enroll_enabled" },
   { key: BRIDGE_SETTING.enrollBlockedIps, type: "string", default: "", section: S, labelKey: "settings.servers.enroll_blocked_ips", validate: enrollBlockedError, multiline: true },
 ];

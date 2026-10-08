@@ -4,7 +4,7 @@ import { expect, test, type BrowserContext, type Locator, type Page } from "@pla
 import { GcsMockServer, httpTransport, mockPlayer } from "../../../servers-plugins/mock/gcs-mock-server.mjs";
 import { member, typeInEditor, uid } from "./forum-fixtures";
 import { startFakeGameServer, type FakeGameServer } from "./game-server";
-import { enterAcpAsRoot, sql, useFreshIp } from "./helpers";
+import { enterAcpAsRoot, resetSetting, setSetting, sql, useFreshIp } from "./helpers";
 
 /**
  * Paginile publice ale punții (specul 2026-10-08-servere-pagini), pe date reale generate de serverul de joc fals prin
@@ -195,11 +195,29 @@ test("serverul: imaginea hărții, „Admin online”, meciul live, clasamentul,
     await page.goto("/servers");
     await expect(card.getByTestId("gcs-server-status")).toHaveText("Online", { timeout: 2000 });
   }).toPass({ timeout: 75_000 });
-  await expect(card.getByTestId("gcs-server-map-image")).toHaveAttribute("src", "/api/servers/maps/image/cs2/de_mirage");
+  // Imaginea hărții e rezolvată pe server (fără redirect): fără imagine încărcată și fără șablon, arta generică.
+  // (Pagina reîncărcată: statusul online poate fi venit live, iar o hartă venită live trece prin rută.)
+  await page.reload();
+  await expect(card.getByTestId("gcs-server-map-image")).toHaveAttribute("data-map", "de_mirage");
+  await expect(card.getByTestId("gcs-server-map-image")).toHaveAttribute("data-kind", "art");
   await expect(card.getByTestId("gcs-server-admin-online")).toHaveText("Admin online");
   const art = await page.request.get("/api/servers/maps/image/cs2/de_mirage", { maxRedirects: 0 });
   expect(art.status()).toBe(302);
   expect(art.headers().location).toBe("/api/servers/maps/art/cs2");
+
+  // Cu un șablon direct (implicit), cardul încarcă imaginea chiar de la adresa externă (fără referrer, leneș).
+  await setSetting("servers.map_template_cs2", "https://imagini.exemplu.test/cs2/{map}.jpg");
+  try {
+    await page.goto("/servers");
+    const external = card.getByTestId("gcs-server-map-image");
+    await expect(external).toHaveAttribute("data-kind", "direct");
+    await expect(external.locator("img")).toHaveAttribute("src", "https://imagini.exemplu.test/cs2/de_mirage.jpg");
+    await expect(external.locator("img")).toHaveAttribute("referrerpolicy", "no-referrer");
+    await expect(external.locator("img")).toHaveAttribute("loading", "lazy");
+  } finally {
+    await resetSetting("servers.map_template_cs2");
+  }
+  await page.goto("/servers");
   await shot(card, "server-card", false);
 
   await page.goto(serverHref);
@@ -290,7 +308,9 @@ test("profilul jucătorului: cartea, toate tab-urile, sancțiunile, legătura cu
   await expect(page.getByTestId("gcs-player-weapons")).toContainText("ak47");
   await shot(page, "player-weapons");
   await tabs.getByRole("link", { name: "Hărți" }).click();
-  await expect(page.getByTestId("gcs-player-maps").locator("img").first()).toHaveAttribute("src", "/api/servers/maps/image/cs2/de_mirage");
+  // Fără imagine încărcată și fără șablon: arta generică a jocului, rezolvată pe server (fără redirect).
+  await expect(page.getByTestId("gcs-player-maps").locator(".gcs-mapPic").first()).toHaveAttribute("data-kind", "art");
+  await expect(page.getByTestId("gcs-player-maps").locator(".gcs-mapPic").first()).toHaveAttribute("data-map", "de_mirage");
   await shot(page, "player-maps");
   // Sancțiunile (lista bannurilor e publică), fără IP pentru un membru.
   await tabs.getByRole("link", { name: "Sancțiuni" }).click();

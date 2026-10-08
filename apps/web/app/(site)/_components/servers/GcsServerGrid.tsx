@@ -7,7 +7,8 @@ import { useFormatter, useTranslations } from "next-intl";
 import type { CSSProperties } from "react";
 import { GcsCopyAddressButton, GcsServerAddress } from "./GcsServerAddress";
 import { serverState, useServerStatus, useServerStatuses } from "./GcsServerLive";
-import { fillPercent, isBridgeGameKey, mapImageHref, type GcsServerCardData } from "./types";
+import { GcsMapPicture, mapPicture } from "./GcsMapPicture";
+import { fillPercent, isBridgeGameKey, type GcsServerCardData } from "./types";
 
 /** Eticheta de status de pe banner: punctul și textul (culoarea nu e niciodată singură). */
 export function GcsServerStatusBadge({ state }: { state: "online" | "offline" | "unknown" }) {
@@ -53,8 +54,9 @@ export function GcsServerAdminsOnline({ count }: { count: number }) {
 }
 
 /**
- * Bannerul: imaginea încărcată, altfel (la jocurile cu punte) imaginea hărții curente — încărcată în ACP sau arta
- * generică originală — și, în lipsa ei, degradeul jocului; eticheta jocului (și statusul, pe carduri) stau peste el.
+ * Bannerul: imaginea încărcată, altfel (la jocurile cu punte) imaginea hărții curente — încărcată în ACP, după șablon
+ * (direct sau copiată) sau arta generică originală, care rămâne și dedesubt ca rezervă — și, în lipsa ei, degradeul
+ * jocului; eticheta jocului (și statusul, pe carduri) stau peste el.
  */
 export function GcsServerBanner({ server, hero = false, state }: { server: GcsServerCardData; hero?: boolean; state?: "online" | "offline" | "unknown" }) {
   const status = useServerStatus(server.id, server.status);
@@ -62,7 +64,7 @@ export function GcsServerBanner({ server, hero = false, state }: { server: GcsSe
   return (
     <div className={`gcs-serverBanner${hero ? " gcs-serverBanner--hero" : ""}${map ? " gcs-serverBanner--map" : ""}`} style={{ "--gcs-server-banner": server.bannerGradient } as CSSProperties}>
       {server.bannerUrl && <img className="gcs-serverBanner__img" src={server.bannerUrl} alt="" loading={hero ? "eager" : "lazy"} />}
-      {map && <img key={map} className="gcs-serverBanner__img" src={mapImageHref(server.game, map)} alt="" loading={hero ? "eager" : "lazy"} data-testid="gcs-server-map-image" />}
+      {map && <GcsMapPicture key={map} className="gcs-serverBanner__img" image={mapPicture(server.game, map, server.mapImage)} eager={hero} testId="gcs-server-map-image" />}
       <span className="gcs-serverGame">
         {server.gameIcon && <GcsIconSvg icon={server.gameIcon} />}
         {server.gameName}

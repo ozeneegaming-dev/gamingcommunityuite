@@ -24,7 +24,7 @@ import { queryGameServer } from "../query";
 import { SERVERS_ACP_SECTION } from "../service";
 import { GcsBridgeAdmins } from "./admins";
 import { GcsBridgeApi } from "./api";
-import { BRIDGE_SETTING } from "./config";
+import { BRIDGE_GAMES, BRIDGE_SETTING, mapModeSetting, mapTemplateSetting } from "./config";
 import { GcsBridgeEnrollments } from "./enroll";
 import { closeSession, GcsBridgeEvents } from "./events";
 import { GcsBridgeKeys, type GcsBridgeKeyRow } from "./keys";
@@ -196,12 +196,13 @@ export class GcsBridge {
     return new Date(this.deps.now?.() ?? Date.now());
   }
 
-  /** Ascultătorii: VIP-ul schimbă listele; un șablon de hărți schimbat reîncearcă hărțile fără imagine. */
+  /** Ascultătorii: VIP-ul schimbă listele; un șablon (sau mod) de hărți schimbat reîncearcă hărțile fără imagine. */
   listen(bus: GcsEventBus): void {
     this.vip.listen(bus);
     bus.on("settings.updated", async (e) => {
-      if (e.payload.key === BRIDGE_SETTING.mapTemplateCs16) await this.maps.resetFetches("cs16");
-      if (e.payload.key === BRIDGE_SETTING.mapTemplateCs2) await this.maps.resetFetches("cs2");
+      for (const game of BRIDGE_GAMES) {
+        if (e.payload.key === mapTemplateSetting(game) || e.payload.key === mapModeSetting(game)) await this.maps.resetFetches(game);
+      }
     });
   }
 
@@ -313,7 +314,9 @@ export type { GcsBridgeHttpRequest, GcsBridgeHttpResponse } from "./api";
 export { BRIDGE_MAX_BODY, LINK_COMMAND } from "./api";
 export { GCS_ADMIN_FLAGS, FLAG_CSS, normalizeFlags, cssPermissions, isPowerAdmin, POWER_FLAGS, reportedAdminFlags } from "./flags";
 export { generateAdminPassword, ADMIN_PASSWORD_MIN, type GcsServerAdminInput, type GcsServerAdminRow, type GcsAdminPresetView } from "./admins";
-export type { GcsMapRow } from "./maps";
+export type { GcsMapRow, GcsMapImage, GcsMapImageKind, GcsMapImageConfig } from "./maps";
+export { DEFAULT_MAP_IMAGE_MODE, MAP_IMAGE_MODES, MAP_TEMPLATE_MAX, isMapImageMode, mapImageOrigins, mapImageRoute, mapTemplateError, mapTemplateOrigin, mapTemplateUrl, type GcsMapImageMode } from "./mapImages";
+export { BRIDGE_GAMES, mapModeSetting, mapTemplateSetting } from "./config";
 export { MAP_UPLOAD_MAX_FILES, MAP_IMAGE_MAX_BYTES, mapArtUrl } from "./maps";
 export type { GcsAdminPresence, GcsOnlineAdmin } from "./presence";
 export type { GcsSanctionInput, GcsSanctionUpdate, GcsSanctionView } from "./sanctions";

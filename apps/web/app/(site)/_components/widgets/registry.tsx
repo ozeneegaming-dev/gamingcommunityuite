@@ -337,7 +337,7 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
           <p className="gcs-sideCard__line">{ts("widgetEmpty")}</p>
         ) : (
           <GcsServerLiveProvider initial={initialStatuses(list)} pollSeconds={interval}>
-            <GcsServerWidgetList servers={list.map(cardData)} />
+            <GcsServerWidgetList servers={list.map((v) => cardData(v))} />
           </GcsServerLiveProvider>
         )}
         <Link href="/servers" className="gcs-serverList__all">

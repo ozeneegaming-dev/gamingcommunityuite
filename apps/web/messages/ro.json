@@ -228,14 +228,18 @@
       "too_many_open": "Ai prea multe tichete deschise de acest fel.",
       "invalid_transition": "Starea nu se poate schimba așa.",
       "lifted": "Sancțiunea a fost deja ridicată.",
-      "invalid_map_template": "Adresă http(s) care conține '{map}'.",
+      "invalid_map_template": "Adresă invalidă: o adresă completă, fără spații sau ghilimele, cu '{map}' în locul numelui hărții.",
       "invalid_map_name": "Numele fișierului nu e un nume de hartă (litere mici, cifre, _ . -).",
       "steam_unlink_account": "Identitatea Steam se dezleagă odată cu contul Steam (Setări → Cont).",
       "not_verified": "Interogarea nu a confirmat serverul: aprobă explicit („Aprobă oricum”).",
       "missing": "Binarele pluginului lipsesc de pe site (pasul de release).",
       "corrupt": "Binarele pluginului de pe site nu corespund manifestului (pasul de release).",
       "unsupported_game": "Jocul nu are plugin (doar CS 1.6 și CS2).",
-      "invalid_ip_list": "Listă invalidă: IP-uri sau CIDR-uri, separate prin virgulă."
+      "invalid_ip_list": "Listă invalidă: IP-uri sau CIDR-uri, separate prin virgulă.",
+      "map_template_placeholder": "Adresa trebuie să conțină '{map}' în cale sau în parametri (nu în numele site-ului).",
+      "map_template_https": "Doar adrese https.",
+      "map_template_credentials": "Adresa nu poate conține nume de utilizator sau parolă.",
+      "map_template_too_long": "Adresa e prea lungă (max 500 de caractere)."
     }
   },
   "acp": {
@@ -2341,7 +2345,7 @@
     },
     "serverMaps": {
       "title": "Hărți",
-      "lead": "Hărțile văzute pe servere. Fără imagine se arată arta generică a jocului (originală GCS); imaginile vin doar din încărcarea ta sau din șablonul de adresă.",
+      "lead": "Hărțile văzute pe servere. Imaginile vin din încărcarea ta sau din șablonul de adresă al jocului; fără imagine se arată arta generică a jocului (originală GCS).",
       "upload": {
         "title": "Încarcă imagini",
         "game": "Jocul",
@@ -2356,9 +2360,38 @@
       },
       "template": {
         "title": "Șablonul de adresă",
-        "lead": "Cu un șablon (ex. https://imagini.exemplu.ro/cs/'{map}'.jpg), worker-ul aduce imaginile lipsă la 10 minute, prin descărcarea gardată a platformei (doar adrese publice, max 5 MB).",
-        "none": "nesetat",
-        "edit": "Schimbă șabloanele"
+        "lead": "Ordinea imaginilor: bannerul serverului, apoi imaginea încărcată aici, apoi șablonul de adresă, apoi arta GCS. O imagine externă lipsă sau blocată lasă arta GCS să se vadă.",
+        "edit": "Toate setările punții",
+        "settingsNote": "Aceleași setări sunt și în Bridge și ELO.",
+        "active": {
+          "direct": "Direct",
+          "copy": "Copiere",
+          "none": "Fără șablon"
+        },
+        "activeDesc": {
+          "direct": "Activ: browserul vizitatorului încarcă imaginile de la adresa șablonului; nimic nu se descarcă sau stochează pe site.",
+          "copy": "Activ: worker-ul aduce imaginile lipsă la 10 minute (descărcarea gardată, max 5 MB) și le păstrează pe site.",
+          "none": "Fără șablon: se arată imaginile încărcate aici, altfel arta GCS."
+        },
+        "field": "Șablonul de adresă",
+        "hint": "Adresa completă (https) a unei imagini, cu '{map}' în locul numelui hărții, de ex. {example}. Gol = fără șablon.",
+        "mode": "Modul",
+        "modes": {
+          "direct": "Direct (implicit)",
+          "copy": "Copiere pe site"
+        },
+        "modesDesc": {
+          "direct": "Browserul încarcă imaginea chiar de la adresă; site-ul nu descarcă nimic.",
+          "copy": "Worker-ul descarcă imaginile și le servește de pe site."
+        },
+        "sample": "Harta de probă",
+        "previewOk": "Imaginea s-a încărcat ({size}).",
+        "previewError": "Imaginea nu s-a încărcat (lipsește sau e blocată): vizitatorii văd arta GCS.",
+        "previewLoading": "Se încarcă imaginea…",
+        "previewArt": "Fără șablon: vizitatorii văd arta GCS (sau imaginea încărcată).",
+        "previewBadMap": "Numele hărții de probă nu e valid (litere mici, cifre, _ . -).",
+        "save": "Salvează",
+        "saved": "Salvat."
       },
       "filterGame": "Jocul",
       "allGames": "Toate jocurile",
@@ -2366,16 +2399,17 @@
       "missingOnly": "Doar fără imagine",
       "searchSubmit": "Filtrează",
       "empty": "Nicio hartă încă: apar când un server raportează harta curentă.",
-      "generic": "artă generică",
-      "sources": {
-        "UPLOAD": "încărcată",
-        "TEMPLATE": "din șablon"
-      },
       "fetchError": "Eroare: {error} ({attempts} încercări)",
       "removeImage": "Scoate imaginea",
       "removeConfirm": "Scoți imaginea hărții {name}?",
       "prev": "← Înapoi",
-      "next": "Înainte →"
+      "next": "Înainte →",
+      "kinds": {
+        "upload": "încărcată",
+        "copy": "copiată după șablon",
+        "direct": "direct după șablon",
+        "art": "artă generică"
+      }
     }
   },
   "settings": {
@@ -2424,7 +2458,9 @@
       "alnum": "Litere latine și cifre",
       "alnum_symbols": "Litere, cifre și simboluri",
       "unicode": "Orice alfabet",
-      "optional": "La alegere"
+      "optional": "La alegere",
+      "direct": "Direct: browserul încarcă imaginea de la adresă (nimic copiat pe site)",
+      "copy": "Copiere: imaginile se aduc și se păstrează pe site"
     },
     "forums": {
       "posts_per_page": "Postări pe pagină",
@@ -2641,10 +2677,12 @@
       "admin_inactive_days": "Zile fără apariție până când un admin e inactiv (1–365)",
       "tempban_max": "Banul temporar maxim al adminilor cu flag-ul v (minute, 1–525600)",
       "bridge_retention_days": "Câte zile se păstrează sesiunile și jurnalul din joc (30–730)",
-      "map_template_cs16": "Șablonul imaginilor hărților CS 1.6 (ex. https://imagini.exemplu.ro/cs/'{map}'.jpg)",
-      "map_template_cs2": "Șablonul imaginilor hărților CS2 (ex. https://imagini.exemplu.ro/cs2/'{map}'.jpg)",
+      "map_template_cs16": "Șablonul imaginilor hărților CS 1.6 (ex. https://exemplu.com/harti/'{map}'.jpg)",
+      "map_template_cs2": "Șablonul imaginilor hărților CS2 (ex. https://exemplu.com/harti/'{map}'.jpg)",
       "enroll_enabled": "Înrolarea automată a serverelor noi (pluginul general; aprobarea rămâne în ACP)",
-      "enroll_blocked_ips": "IP-urile blocate la înrolare (IP-uri sau CIDR-uri, separate prin virgulă)"
+      "enroll_blocked_ips": "IP-urile blocate la înrolare (IP-uri sau CIDR-uri, separate prin virgulă)",
+      "map_mode_cs16": "Modul imaginilor hărților CS 1.6",
+      "map_mode_cs2": "Modul imaginilor hărților CS2"
     },
     "clans": {
       "require_approval": "Un clan nou așteaptă aprobarea staff-ului",
