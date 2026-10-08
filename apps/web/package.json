@@ -38,6 +38,7 @@
     "@gcs/ui": "workspace:*",
     "@inquirer/prompts": "^8.7.3",
     "@lezer/highlight": "^1.2.5",
+    "basic-ftp": "^5.3.1",
     "better-auth": "^1.7.7",
     "ioredis": "^5.6.0",
     "next": "^16.0.0",
@@ -47,6 +48,7 @@
     "react-dom": "^19.2.0",
     "server-only": "^0.0.1",
     "socket.io-client": "^4.8.4",
+    "ssh2": "^1.17.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {

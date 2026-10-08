@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import http from "node:http";
 import type { AddressInfo } from "node:net";
 import { expect, test } from "@playwright/test";
+import { startSftpDemoServer } from "../../../packages/modules/test/demoServers";
 import { GcsMockServer, httpTransport } from "../../../servers-plugins/mock/gcs-mock-server.mjs";
 import { uid } from "./forum-fixtures";
 import { enterAcpAsRoot, sql, useFreshIp } from "./helpers";
@@ -9,7 +10,8 @@ import { enterAcpAsRoot, sql, useFreshIp } from "./helpers";
 /**
  * HLTV / GOTV la meciurile mix (specul 2026-10-08-servere-hltv §9): adresa și întârzierea setate în ACP → „Urmărește live”
  * pe meciul live (pagina meciului, cardul din /servers/matches, pagina serverului); sursa HTTP (un folder local cu un demo
- * HLTV) → meciul serverului fals se încheie → gcs-worker aduce demo-ul → apare pe pagina meciului și se descarcă identic.
+ * HLTV) → meciul serverului fals se încheie → gcs-worker aduce demo-ul → apare pe pagina meciului și se descarcă identic;
+ * apoi sursa SFTP (un server local) testată din procesul web: parola sigilată, amprenta cheii reținută la prima conectare.
  */
 
 test.describe.configure({ mode: "serial" });
@@ -144,6 +146,32 @@ test("ACP HLTV / GOTV → „Urmărește live” pe meciul live; sursa HTTP → 
   await page.goto(`/admin/gaming/servers/${serverId}/bridge`);
   await expect(page.getByTestId("gcs-tv-last-fetch")).toContainText("reușită");
   await expect(page.getByTestId("gcs-tv-demo").first()).toHaveAttribute("data-status", "available");
-  // Secretele nu se arată niciodată; ID-ul inexistent → 404.
+  // ID-ul inexistent → 404.
   expect((await page.request.get("/api/servers/demos/999999999")).status()).toBe(404);
+
+  // SFTP: „Testează conexiunea” rulează în procesul web; parola nu se arată înapoi și stă sigilată în baza de date.
+  const sftp = await startSftpDemoServer(new Map([[folder!.name, { bytes: folder!.demo }]]));
+  try {
+    const box = page.getByTestId("gcs-bridge-tv");
+    await box.getByTestId("gcs-tv-source").selectOption("sftp");
+    await box.getByTestId("gcs-tv-host").fill("127.0.0.1");
+    await box.locator('input[name="port"]').fill(String(sftp.port));
+    await box.getByTestId("gcs-tv-username").fill(sftp.user);
+    await box.getByTestId("gcs-tv-password").fill(sftp.pass);
+    await box.getByTestId("gcs-tv-dir").fill(sftp.dir);
+    await box.getByRole("button", { name: "Salvează HLTV / GOTV" }).click();
+    await expect(box.getByRole("status").filter({ hasText: "Salvat" })).toBeVisible();
+    await box.getByTestId("gcs-tv-test").click();
+    await expect(box.getByTestId("gcs-tv-test-result")).toContainText("1 demo-uri");
+    await expect(box.getByTestId("gcs-tv-test-result")).toContainText("amprenta SHA256:");
+    await page.reload();
+    await expect(page.getByTestId("gcs-tv-password")).toHaveValue("");
+    expect(await page.content()).not.toContain(sftp.pass);
+    const [cfg] = await sql<{ secret: string; hostKey: string }>(`SELECT secret, "hostKey" FROM game_server_tv WHERE "serverId" = $1`, [serverId]);
+    expect(cfg!.secret).toMatch(/^v1\./);
+    expect(cfg!.secret).not.toContain(sftp.pass);
+    expect(cfg!.hostKey).toMatch(/^SHA256:/);
+  } finally {
+    await sftp.close();
+  }
 });

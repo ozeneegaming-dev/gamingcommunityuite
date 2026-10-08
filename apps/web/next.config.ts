@@ -18,8 +18,9 @@ const nextConfig: NextConfig = {
   // server (pasul de release), puse în pachetele descărcate din ACP.
   outputFileTracingIncludes: { "/*": ["../../packages/db/prisma/migrations/**/*", "../../servers-plugins/release/**/*"] },
   transpilePackages: ["@gcs/core", "@gcs/modules", "@gcs/ui"],
-  // Module native: rămân `require` la runtime, nu intră în bundle.
-  serverExternalPackages: ["@node-rs/argon2", "@prisma/client", ".prisma/client"],
+  // Module native: rămân `require` la runtime, nu intră în bundle. Clienții FTP / SFTP ai demo-urilor (aplicația Servere,
+  // „Testează conexiunea”) au legături native opționale și fișiere încărcate după cale: tot la runtime.
+  serverExternalPackages: ["@node-rs/argon2", "@prisma/client", ".prisma/client", "ssh2", "basic-ftp"],
   // Cu proxy-ul activ, corpul cererilor e limitat (implicit 10 MB, apoi trunchiat): fișierele media ale pluginurilor
   // (video ≤ 50 MB, plus posterul și câmpurile) trebuie să ajungă întregi la ruta API.
   experimental: { proxyClientMaxBodySize: "64mb" },
