@@ -137,7 +137,7 @@ export default async function AcpServerBridgePage({ params }: Props) {
         <p className="gcs-muted" style={{ margin: 0, fontSize: 14 }}>
           {t("keys.lead")}
         </p>
-        <GcsBridgeKeys serverId={s.id} game={s.game} siteUrl={site} keys={status.keys} canEdit={canEdit} canDelete={canDelete} />
+        <GcsBridgeKeys serverId={s.id} game={s.game} siteUrl={site} keys={status.keys.map((k) => ({ ...k, lastUsedLabel: k.lastUsedAt ? format.dateTime(new Date(k.lastUsedAt), { dateStyle: "medium", timeStyle: "medium" }) : null, expiresLabel: k.expiresAt ? format.dateTime(new Date(k.expiresAt), { timeStyle: "short" }) : null }))} canEdit={canEdit} canDelete={canDelete} />
       </GcsCard>
 
       <GcsCard as="section" aria-labelledby="gcs-bridge-identity" style={{ padding: 16, maxWidth: 820 }}>

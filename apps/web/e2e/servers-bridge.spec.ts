@@ -116,8 +116,10 @@ test("ACP: cheia API (o singură dată), scenariul complet al serverului fals, s
   expect(await art.text()).not.toMatch(/<image|<script|href=/);
   await shot(page, "bridge-maps");
 
-  // Adminii serverelor: presetările implicite.
+  // Adminii serverelor: presetările implicite (numele lor sunt în câmpurile editabile).
   await page.goto("/admin/gaming/server-admins");
-  await expect(page.getByTestId("gcs-admin-presets")).toContainText("Head admin");
+  const presetNames = page.getByTestId("gcs-admin-presets").locator('input[name="name"]');
+  await expect(presetNames).toHaveCount(3);
+  expect(await presetNames.evaluateAll((els) => els.map((e) => (e as HTMLInputElement).value))).toEqual(["Moderator", "Admin", "Head admin"]);
   await shot(page, "bridge-admins");
 });

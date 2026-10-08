@@ -19,6 +19,9 @@ export type GcsBridgeKeyItem = {
   expiresAt: string | null;
   revokedAt: string | null;
   active: boolean;
+  /** Datele formatate pe server (fusul orar și limba membrului). */
+  lastUsedLabel: string | null;
+  expiresLabel: string | null;
 };
 
 type Props = { serverId: number; game: string; siteUrl: string; keys: GcsBridgeKeyItem[]; canEdit: boolean; canDelete: boolean };
@@ -121,10 +124,10 @@ export function GcsBridgeKeys({ serverId, game, siteUrl, keys, canEdit, canDelet
                   <code>{k.keyId}</code>
                 </td>
                 <td className="gcs-table__td">{k.label || "—"}</td>
-                <td className="gcs-table__td">{k.lastUsedAt ? `${new Date(k.lastUsedAt).toLocaleString()}${k.lastIp ? ` · ${k.lastIp}` : ""}` : t("never")}</td>
+                <td className="gcs-table__td">{k.lastUsedLabel ? `${k.lastUsedLabel}${k.lastIp ? ` · ${k.lastIp}` : ""}` : t("never")}</td>
                 <td className="gcs-table__td">
                   <span className={`gcs-badge ${k.active ? (k.expiresAt ? "gcs-badge--warn" : "gcs-badge--ok") : "gcs-badge--neutral"}`}>
-                    {k.revokedAt ? t("revoked") : !k.active ? t("expired") : k.expiresAt ? t("grace", { time: new Date(k.expiresAt).toLocaleTimeString() }) : t("active")}
+                    {k.revokedAt ? t("revoked") : !k.active ? t("expired") : k.expiresAt ? t("grace", { time: k.expiresLabel ?? "" }) : t("active")}
                   </span>
                 </td>
                 <td className="gcs-table__td" style={{ whiteSpace: "nowrap" }}>
