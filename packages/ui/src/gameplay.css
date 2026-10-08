@@ -158,47 +158,71 @@ html[data-theme="light"] {
   background: var(--gcs-accent);
 }
 
-/* Graficul ELO: o linie cu o spălare discretă; ultimul punct în accentInk. */
+/* Graficul ELO: SVG-ul întins (doar linii), etichetele și punctele în HTML (nu se deformează). */
 .gcs-eloChart {
   margin: 0;
 }
-.gcs-eloChart svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  max-height: 240px;
-  overflow: visible;
+.gcs-eloChart__plot {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  height: var(--gcs-chart-h, 200px);
+  padding: 8px 6px 8px 0;
 }
-.gcs-eloChart--compact svg {
-  max-height: 120px;
+.gcs-eloChart--compact .gcs-eloChart__plot {
+  grid-template-columns: minmax(0, 1fr);
+  padding: 6px 4px;
+}
+.gcs-eloChart__ticks {
+  position: relative;
+}
+.gcs-eloChart__ticks span {
+  position: absolute;
+  right: 10px;
+  transform: translateY(-50%);
+  font: 500 11px var(--gcs-font-text);
+  font-variant-numeric: tabular-nums;
+  color: var(--gcs-muted);
+}
+.gcs-eloChart__area {
+  position: relative;
+  min-width: 0;
+}
+.gcs-eloChart__area svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
 }
 .gcs-eloChart__grid {
   stroke: var(--gcs-border);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
-.gcs-eloChart__tick {
-  fill: var(--gcs-muted);
-  font: 500 11px var(--gcs-font-text);
-  font-variant-numeric: tabular-nums;
-}
 .gcs-eloChart__line {
   fill: none;
   stroke: var(--gcs-accent);
   stroke-width: 2;
   stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
 }
-.gcs-eloChart__area {
+.gcs-eloChart__fill {
   fill: var(--gcs-accent);
   fill-opacity: 0.1;
 }
 .gcs-eloChart__dot {
-  fill: var(--gcs-accent);
-  stroke: var(--gcs-box-bg, var(--gcs-surface));
-  stroke-width: 2;
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--gcs-accent);
+  box-shadow: 0 0 0 2px var(--gcs-box-bg, var(--gcs-surface));
 }
 .gcs-eloChart__dot--last {
-  fill: var(--gcs-accentInk);
+  width: 10px;
+  height: 10px;
+  background: var(--gcs-accentInk);
 }
 
 /* Casetele cu titlu și legătura „toate” în dreapta benzii. */
@@ -240,7 +264,8 @@ html[data-theme="light"] {
 }
 .gcs-dataTable th:first-child,
 .gcs-dataTable td:first-child,
-.gcs-dataTable tbody th {
+.gcs-dataTable tbody th,
+.gcs-dataTable thead th.gcs-dataTable__left {
   text-align: left;
 }
 .gcs-dataTable tbody th {
@@ -422,6 +447,7 @@ html[data-theme="light"] {
 .gcs-mixFacts > div {
   display: flex;
   flex-direction: column-reverse;
+  justify-content: flex-end;
   gap: 2px;
 }
 .gcs-mixFacts dt {
@@ -484,6 +510,8 @@ html[data-theme="light"] {
 .gcs-mapCard__stats > div {
   display: flex;
   flex-direction: column-reverse;
+  /* În `column-reverse`, `flex-end` = sus: cifrele stau pe aceeași linie chiar dacă o etichetă se rupe pe două rânduri. */
+  justify-content: flex-end;
   min-width: 0;
 }
 .gcs-mapCard__stats dt {
@@ -743,9 +771,18 @@ html[data-theme="light"] {
   text-align: right;
 }
 .gcs-matchBoard__side {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  white-space: nowrap;
+  min-height: 20px;
   font-size: 12px;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.72);
+}
+.gcs-matchBoard__team[data-team="B"] .gcs-matchBoard__side {
+  flex-direction: row-reverse;
 }
 .gcs-matchBoard__team[data-team="A"] .gcs-matchBoard__side {
   color: color-mix(in srgb, var(--gcs-teamA) 70%, #fff);
@@ -1073,6 +1110,10 @@ html[data-theme="light"] {
   .gcs-banTable td:nth-child(3) {
     grid-column: 1 / -1;
   }
+  /* Tipul se citește din etichetă (iconița și textul): fără titlul coloanei deasupra. */
+  .gcs-banTable td:first-child::before {
+    display: none;
+  }
 }
 
 .gcs-banHead {
@@ -1081,9 +1122,15 @@ html[data-theme="light"] {
   align-items: center;
   gap: 8px 18px;
 }
+.gcs-banTitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  overflow-wrap: anywhere;
+}
 .gcs-pageHeader__title .gcs-sanctionType {
   font-size: 15px;
-  vertical-align: middle;
 }
 .gcs-banDl__reason {
   font-weight: 700;
@@ -1560,6 +1607,7 @@ html[data-theme="light"] {
 .gcs-presenceCard__stats > div {
   display: flex;
   flex-direction: column-reverse;
+  justify-content: flex-end;
   gap: 2px;
   min-width: 0;
 }
@@ -1728,6 +1776,7 @@ html[data-theme="light"] {
 .gcs-gameCard > div {
   display: flex;
   flex-direction: column-reverse;
+  justify-content: flex-end;
   gap: 2px;
 }
 .gcs-gameCard dt {
@@ -1762,17 +1811,35 @@ html[data-theme="light"] {
   }
   .gcs-playerHead__elo {
     grid-column: 1 / -1;
-    justify-items: start;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
     padding-left: 0;
     padding-top: 14px;
     border-left: 0;
     border-top: 1px solid var(--gcs-border);
-    grid-template-columns: auto auto;
-    align-items: baseline;
-    column-gap: 12px;
+  }
+  .gcs-playerHead__eloValue {
+    font-size: 36px;
   }
   .gcs-playerHead__elo .gcs-formGuide {
-    grid-column: 1 / -1;
+    flex-basis: 100%;
+    margin-top: 2px;
+  }
+  /* Tab-urile pe un singur rând, derulate orizontal (ca pe aplicațiile de telefon). */
+  .gcs-playerHead .gcs-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 0 8px;
+  }
+  .gcs-playerHead .gcs-tab {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .gcs-dataTable__wide {
+    display: none;
   }
   .gcs-statStrip {
     grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -164,7 +164,9 @@ export default async function ServerPage({ params, searchParams }: Props) {
                   <thead>
                     <tr>
                       <th scope="col">{tb("rank")}</th>
-                      <th scope="col">{tb("player")}</th>
+                      <th scope="col" className="gcs-dataTable__left">
+                        {tb("player")}
+                      </th>
                       <th scope="col">{tb("kills")}</th>
                       <th scope="col">{tb("kd")}</th>
                       <th scope="col">{tb("playtime")}</th>

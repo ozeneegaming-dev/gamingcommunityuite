@@ -185,14 +185,17 @@ html[data-theme="light"] .gcs-brand__logo--light {
   visibility: hidden;
   pointer-events: none;
 }
-/* Butoane mai strânse decât `.gcs-nav__link` de bază: bara implicită (7 itemi) încape lângă logo și unelte. */
+/*
+ * Butoane mai strânse decât `.gcs-nav__link` de bază: bara implicită (Forum, Servere ▾, Clanuri, Activitate, Chat,
+ * Membri ▾) încape lângă logo și unelte; Servere are submeniu din `nav:v6`, deci padding-ul lateral e de 8 px.
+ */
 .gcs-navbar__menu .gcs-nav__link,
 .gcs-root .gcs-navbar__menu a.gcs-nav__link {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   min-height: 44px;
-  padding: 10px;
+  padding: 10px 8px;
 }
 .gcs-navbar__caret {
   font-size: 10px;
@@ -432,6 +435,23 @@ html[data-theme="light"] .gcs-brand__logo--light {
   .gcs-userMenu__name {
     display: none;
   }
+}
+/*
+ * Telefoanele înguste (375 px): Autentificare / Înregistrare doar cu iconița, ca antetul să nu iasă din ecran (textul
+ * rămâne pentru cititoarele de ecran: e doar micșorat la 0, nu ascuns).
+ */
+@media (max-width: 420px) {
+  .gcs-siteHeader__auth {
+    font-size: 0;
+    gap: 0;
+    min-width: 40px;
+    justify-content: center;
+  }
+  .gcs-siteHeader__auth .gcs-btn__icon {
+    font-size: 16px;
+  }
+}
+@media (max-width: 640px) {
   .gcs-siteFooter__inner {
     grid-template-columns: 1fr;
   }

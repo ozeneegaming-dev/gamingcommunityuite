@@ -65,7 +65,9 @@ export default async function ServersLeaderboardPage({ searchParams }: Props) {
             <thead>
               <tr>
                 <th scope="col">{t("rank")}</th>
-                <th scope="col">{t("player")}</th>
+                <th scope="col" className="gcs-dataTable__left">
+                  {t("player")}
+                </th>
                 <th scope="col">{t("kills")}</th>
                 <th scope="col">{t("deaths")}</th>
                 <th scope="col">{t("kd")}</th>
@@ -107,7 +109,9 @@ export default async function ServersLeaderboardPage({ searchParams }: Props) {
             <thead>
               <tr>
                 <th scope="col">{t("rank")}</th>
-                <th scope="col">{t("player")}</th>
+                <th scope="col" className="gcs-dataTable__left">
+                  {t("player")}
+                </th>
                 <th scope="col">{t("elo")}</th>
                 <th scope="col">{t("peak")}</th>
                 <th scope="col">{t("matches")}</th>
@@ -124,8 +128,8 @@ export default async function ServersLeaderboardPage({ searchParams }: Props) {
                     <th scope="row">
                       <GcsPlayerLink player={r.player} />
                     </th>
-                    <td className="gcs-board__value">{num(r.elo)}</td>
-                    <td>{num(r.peak)}</td>
+                    <td className="gcs-board__value">{format.number(r.elo, { useGrouping: false })}</td>
+                    <td>{format.number(r.peak, { useGrouping: false })}</td>
                     <td>{num(r.matches)}</td>
                     <td>{t("recordValue", { wins: r.wins, losses: r.losses, draws: r.draws })}</td>
                     <td>{pct(decided > 0 ? r.wins / decided : null)}</td>

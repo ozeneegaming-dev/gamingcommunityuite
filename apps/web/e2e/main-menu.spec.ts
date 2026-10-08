@@ -20,7 +20,9 @@ test.describe("meniul principal", () => {
     const nav = page.getByRole("navigation", { name: "Principal" });
     // Bara a măsurat ce încape (după hidratare).
     await expect(nav).toHaveAttribute("data-ready", "");
-    for (const name of ["Forum", "Servere", "Clanuri", "Activitate", "Chat"]) await expect(nav.getByRole("link", { name, exact: true })).toBeVisible();
+    for (const name of ["Forum", "Clanuri", "Activitate", "Chat"]) await expect(nav.getByRole("link", { name, exact: true })).toBeVisible();
+    // Servere are submeniu (paginile punții, `nav:v6`): e un buton.
+    await expect(nav.getByRole("button", { name: "Servere", exact: true })).toBeVisible();
     // Staff a trecut în submeniul Membri. Cu aplicațiile Gaming (Servere, Clanuri), bara implicită are 8 itemi: ultimii
     // (Clasament, VIP) trec în „Mai mult” la lățimea paginii.
     await expect(nav.getByRole("link", { name: "Staff" })).toHaveCount(0);

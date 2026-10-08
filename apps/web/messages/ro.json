@@ -3763,7 +3763,7 @@
       },
       "servers": {
         "list": "Statusul live al serverelor de joc: jucători, hartă, adresă.",
-        "adminsOnline": "Adminii serverelor de joc online acum: numele, serverul și de cât timp joacă."
+        "adminsOnline": "Adminii din joc online acum: numele, serverul și de cât timp joacă."
       },
       "clans": {
         "top": "Primele clanuri din clasament, cu membrii și punctele."
@@ -5224,7 +5224,7 @@
     },
     "admins": {
       "title": "Adminii serverelor",
-      "summary": "{online, plural, one {# admin online acum} few {# admini online acum} other {# de admini online acum}}, {seen} văzuți în ultimele 24 h, din {total}.",
+      "summary": "{online, plural, one {# admin online acum} few {# admini online acum} other {# de admini online acum}}, {seen, plural, one {# văzut} few {# văzuți} other {# de văzuți}} în ultimele 24 h, din {total}.",
       "serverFilter": "Serverul",
       "allServers": "Toate serverele",
       "empty": "Niciun admin de server.",

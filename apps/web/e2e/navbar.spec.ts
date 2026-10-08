@@ -46,7 +46,9 @@ test("meniul implicit: Forum, Servere, Clanuri, Activitate, Chat, Membri (cu Sta
   await page.goto("/");
   const nav = page.getByRole("navigation", { name: "Principal" });
   await expect(nav).toHaveAttribute("data-ready", "");
-  for (const name of ["Forum", "Servere", "Clanuri", "Activitate", "Chat"]) await expect(nav.getByRole("link", { name, exact: true })).toBeVisible();
+  for (const name of ["Forum", "Clanuri", "Activitate", "Chat"]) await expect(nav.getByRole("link", { name, exact: true })).toBeVisible();
+  // Servere are submeniu (paginile punții, `nav:v6`): e un buton.
+  await expect(nav.getByRole("button", { name: "Servere", exact: true })).toBeVisible();
   await page.getByTestId("gcs-nav-more").click();
   for (const name of ["Clasament", "VIP"]) await expect(page.getByRole("menu", { name: "Mai mult" }).getByRole("menuitem", { name })).toBeVisible();
   await page.keyboard.press("Escape");

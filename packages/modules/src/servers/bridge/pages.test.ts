@@ -105,6 +105,14 @@ describe("serviciile paginilor publice (specul 2026-10-08-servere-pagini)", () =
     expect(await w.bridge.queries.onlineAdmins({ ...w.guest, isBanned: true })).toBeNull();
   });
 
+  it("meciurile începute în aceeași secundă: cel mai nou (după id) primul", async () => {
+    const { id: serverId } = await w.bridgeServer({ isMix: true });
+    const at = new Date(w.clock.now);
+    const first = await w.db.gameMatch.create({ data: { serverId, externalId: "a", startedAt: at, status: "ENDED" } });
+    const second = await w.db.gameMatch.create({ data: { serverId, externalId: "b", startedAt: at, status: "LIVE" } });
+    expect((await w.bridge.queries.matches(w.guest, { serverId })).items.map((m) => m.id)).toEqual([second.id, first.id]);
+  });
+
   it("caseta din profilul membrului, căutarea jucătorilor și membrii cu identități legate (furnizorul)", async () => {
     const { id: serverId, token } = await w.bridgeServer({ isMix: true });
     await w.mock(token).scenarioFull();

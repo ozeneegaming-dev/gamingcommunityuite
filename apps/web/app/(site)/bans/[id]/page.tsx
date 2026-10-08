@@ -69,7 +69,7 @@ export default async function SanctionPage({ params }: Props) {
           </ol>
         </nav>
         <div className="gcs-pageHeader__text">
-          <h1 className="gcs-display gcs-pageHeader__title" data-testid="gcs-ban-title">
+          <h1 className="gcs-display gcs-pageHeader__title gcs-banTitle" data-testid="gcs-ban-title">
             <GcsSanctionType type={s.type} />
             <span>{who}</span>
           </h1>

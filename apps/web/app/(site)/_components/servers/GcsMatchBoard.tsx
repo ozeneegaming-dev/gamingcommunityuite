@@ -142,9 +142,11 @@ export function GcsMatchBoard({ initial, game, server, mode }: Props) {
         <div className="gcs-matchBoard__stage" style={mapStyle}>
           {(["A", "B"] as const).map((team) => (
             <div key={team} className="gcs-matchBoard__team" data-team={team} data-won={state.winner === team ? "" : undefined}>
-              <span className="gcs-matchBoard__side">{t(`team${team}`)}</span>
+              <span className="gcs-matchBoard__side">
+                {t(`team${team}`)}
+                {state.winner === team && <span className="gcs-matchBoard__winner">{t("winner")}</span>}
+              </span>
               <span className="gcs-display gcs-matchBoard__name">{state.teams[team].name}</span>
-              {state.winner === team && <span className="gcs-matchBoard__winner">{t("winner")}</span>}
             </div>
           ))}
           <div className="gcs-matchBoard__center">

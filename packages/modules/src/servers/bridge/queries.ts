@@ -286,7 +286,8 @@ export class GcsBridgeQueries {
       this.deps.db.gameMatch.findMany({
         where,
         include: { server: { select: { id: true, name: true, slug: true, game: true } }, ...(typeof filter.playerId === "number" ? { players: { where: { playerId: filter.playerId } } } : {}) },
-        orderBy: { startedAt: "desc" },
+        // Meciurile începute în aceeași secundă (timpii vin în secunde): cel creat mai târziu primul.
+        orderBy: [{ startedAt: "desc" }, { id: "desc" }],
         skip: (p - 1) * PAGE,
         take: PAGE,
       }),

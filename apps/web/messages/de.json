@@ -5224,7 +5224,7 @@
     },
     "admins": {
       "title": "Server admins",
-      "summary": "{online, plural, one {# admin online now} other {# admins online now}}, {seen} seen in the last 24 h, out of {total}.",
+      "summary": "{online, plural, one {# admin online now} other {# admins online now}}, {seen, plural, one {# seen} other {# seen}} in the last 24 h, out of {total}.",
       "serverFilter": "Server",
       "allServers": "All servers",
       "empty": "No server admins.",

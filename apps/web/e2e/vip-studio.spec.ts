@@ -401,6 +401,8 @@ test("meniul: „Studio VIP” e și în sertarul de pe mobil și dispare când 
   // Pe un ecran îngust, meniul principal e în sertar.
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
+  // Antetul vine în flux (Suspense): până când React îl dezvăluie, butonul sertarului există de două ori (o copie ascunsă).
+  await expect(page.getByTestId("gcs-mobile-nav")).toHaveCount(1);
   await page.getByTestId("gcs-mobile-nav").click();
   await expect(page.getByRole("dialog").getByRole("link", { name: "Studio VIP" })).toBeVisible();
   await page.keyboard.press("Escape");

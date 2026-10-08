@@ -325,7 +325,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
           [t("game.kills"), format.number(game.kills)],
           [t("game.headshots"), game.headshotRate === null ? "—" : format.number(game.headshotRate, { style: "percent", maximumFractionDigits: 0 })],
           [t("game.playtime"), t("game.hours", { hours: format.number(Math.round(game.playtime / 3600)) })],
-          [t("game.elo"), game.elo === null ? "—" : format.number(game.elo)],
+          [t("game.elo"), game.elo === null ? "—" : format.number(game.elo, { useGrouping: false })],
           [t("game.bestRank"), game.bestRank === null ? "—" : `#${game.bestRank}`],
         ].map(([label, value]) => (
           <div key={label}>

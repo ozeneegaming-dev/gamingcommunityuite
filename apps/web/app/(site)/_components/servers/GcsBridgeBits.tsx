@@ -1,5 +1,6 @@
 import { GcsIcon } from "@gcs/ui/icons";
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { getTranslations } from "next-intl/server";
 import { playerHref } from "./types";
 
@@ -91,8 +92,9 @@ export async function GcsFormGuide({ results, label }: { results: GcsResult[]; l
 }
 
 /**
- * Graficul ELO (SVG, fără JavaScript): o linie cu punctele meciurilor, liniile de grilă la valori rotunde și ultima
- * valoare în `accentInk`. Un tabel ascuns vizual dă aceleași valori cititoarelor de ecran.
+ * Graficul ELO (fără JavaScript): linia și spălarea într-un SVG întins pe toată caseta (fără text în SVG, deci nimic
+ * nu se deformează), etichetele axei și punctele meciurilor ca elemente HTML poziționate în procente; ultimul punct în
+ * `accentInk`. Un tabel ascuns vizual dă aceleași valori cititoarelor de ecran.
  */
 export async function GcsEloChart({ history, start, height = 200, compact = false }: { history: { matchId: number; at: string; elo: number }[]; start: number; height?: number; compact?: boolean }) {
   const t = await getTranslations("bridge.elo");
@@ -102,35 +104,41 @@ export async function GcsEloChart({ history, start, height = 200, compact = fals
   const step = 50;
   const min = Math.floor((Math.min(...values) - 10) / step) * step;
   const max = Math.ceil((Math.max(...values) + 10) / step) * step;
-  const width = 640;
-  const pad = { top: 12, right: 12, bottom: compact ? 8 : 22, left: compact ? 8 : 44 };
-  const w = width - pad.left - pad.right;
-  const h = height - pad.top - pad.bottom;
-  const x = (i: number) => pad.left + (points.length === 1 ? w / 2 : (i / (points.length - 1)) * w);
-  const y = (v: number) => pad.top + h - ((v - min) / Math.max(1, max - min)) * h;
-  const line = points.map((p, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(p.elo).toFixed(1)}`).join(" ");
-  const area = `${line} L${x(points.length - 1).toFixed(1)},${(pad.top + h).toFixed(1)} L${x(0).toFixed(1)},${(pad.top + h).toFixed(1)} Z`;
-  const ticks = Math.max(1, Math.round((max - min) / step) > 4 ? Math.ceil((max - min) / step / 4) : 1);
+  // Coordonatele în procente (0–100): x pe meciuri, y de sus în jos.
+  const x = (i: number) => (points.length === 1 ? 50 : (i / (points.length - 1)) * 100);
+  const y = (v: number) => 100 - ((v - min) / Math.max(1, max - min)) * 100;
+  const line = points.map((p, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(2)},${y(p.elo).toFixed(2)}`).join(" ");
+  const area = `${line} L${x(points.length - 1).toFixed(2)},100 L${x(0).toFixed(2)},100 Z`;
+  const every = Math.max(1, Math.ceil((max - min) / step / 4));
   const grid: number[] = [];
-  for (let v = min; v <= max; v += step * ticks) grid.push(v);
+  for (let v = min; v <= max; v += step * every) grid.push(v);
   const last = points.at(-1)!;
   return (
-    <figure className={`gcs-eloChart${compact ? " gcs-eloChart--compact" : ""}`} data-testid="gcs-elo-chart">
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={t("chartLabel", { from: start, to: last.elo, count: history.length })} preserveAspectRatio="none">
-        {!compact &&
-          grid.map((v) => (
-            <g key={v}>
-              <line className="gcs-eloChart__grid" x1={pad.left} x2={width - pad.right} y1={y(v)} y2={y(v)} />
-              <text className="gcs-eloChart__tick" x={pad.left - 8} y={y(v) + 4} textAnchor="end">
+    <figure className={`gcs-eloChart${compact ? " gcs-eloChart--compact" : ""}`} data-testid="gcs-elo-chart" style={{ "--gcs-chart-h": `${height}px` } as CSSProperties}>
+      <div className="gcs-eloChart__plot" role="img" aria-label={t("chartLabel", { from: start, to: last.elo, count: history.length })}>
+        {!compact && (
+          <div className="gcs-eloChart__ticks" aria-hidden="true">
+            {grid.map((v) => (
+              <span key={v} style={{ top: `${y(v)}%` }}>
                 {v}
-              </text>
-            </g>
-          ))}
-        <path className="gcs-eloChart__area" d={area} />
-        <path className="gcs-eloChart__line" d={line} vectorEffect="non-scaling-stroke" />
-        {!compact && points.length <= 60 && points.slice(1).map((p, i) => <circle key={p.matchId} className="gcs-eloChart__dot" cx={x(i + 1)} cy={y(p.elo)} r={3} />)}
-        <circle className="gcs-eloChart__dot gcs-eloChart__dot--last" cx={x(points.length - 1)} cy={y(last.elo)} r={4.5} />
-      </svg>
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="gcs-eloChart__area">
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            {grid.map((v) => (
+              <line key={v} className="gcs-eloChart__grid" x1={0} x2={100} y1={y(v)} y2={y(v)} />
+            ))}
+            <path className="gcs-eloChart__fill" d={area} />
+            <path className="gcs-eloChart__line" d={line} />
+          </svg>
+          {!compact &&
+            points.length <= 60 &&
+            points.slice(1, -1).map((p, i) => <span key={p.matchId} className="gcs-eloChart__dot" style={{ left: `${x(i + 1)}%`, top: `${y(p.elo)}%` }} aria-hidden="true" />)}
+          <span className="gcs-eloChart__dot gcs-eloChart__dot--last" style={{ left: `${x(points.length - 1)}%`, top: `${y(last.elo)}%` }} aria-hidden="true" />
+        </div>
+      </div>
       <table className="gcs-srOnly">
         <caption>{t("tableCaption")}</caption>
         <thead>

@@ -79,6 +79,8 @@ export default async function PlayerProfilePage({ params, searchParams }: Props)
   const canSanction = abilities.staff || abilities.grants.length > 0;
   const s = profile.summary;
   const num = (v: number) => format.number(v);
+  // ELO-ul e un rating, nu o cantitate: fără separatorul miilor (1018, nu 1.018).
+  const elo = (v: number) => format.number(v, { useGrouping: false });
   const pct = (v: number | null) => (v === null ? "—" : format.number(v, { style: "percent", maximumFractionDigits: 1 }));
   const kd = (v: number) => format.number(v, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const hours = (sec: number) => playtimeText(sec, td);
@@ -127,8 +129,8 @@ export default async function PlayerProfilePage({ params, searchParams }: Props)
         {profile.mix.elo !== null && (
           <div className="gcs-playerHead__elo" data-testid="gcs-player-elo">
             <span className="gcs-playerHead__eloLabel">{t("elo")}</span>
-            <strong className="gcs-display gcs-playerHead__eloValue">{num(profile.mix.elo)}</strong>
-            {profile.mix.peak !== null && <span className="gcs-playerHead__eloPeak">{t("peak", { value: num(profile.mix.peak) })}</span>}
+            <strong className="gcs-display gcs-playerHead__eloValue">{elo(profile.mix.elo)}</strong>
+            {profile.mix.peak !== null && <span className="gcs-playerHead__eloPeak">{t("peak", { value: elo(profile.mix.peak) })}</span>}
             <GcsFormGuide results={recent.map((m) => matchResult(m.player?.team, m.winner))} label={t("form")} />
           </div>
         )}
@@ -341,11 +343,11 @@ export default async function PlayerProfilePage({ params, searchParams }: Props)
               <dl className="gcs-mixFacts" data-testid="gcs-player-mix">
                 <div>
                   <dt>{t("elo")}</dt>
-                  <dd className="gcs-display">{m.elo === null ? "—" : num(m.elo)}</dd>
+                  <dd className="gcs-display">{m.elo === null ? "—" : elo(m.elo)}</dd>
                 </div>
                 <div>
                   <dt>{t("peakLabel")}</dt>
-                  <dd className="gcs-display">{m.peak === null ? "—" : num(m.peak)}</dd>
+                  <dd className="gcs-display">{m.peak === null ? "—" : elo(m.peak)}</dd>
                 </div>
                 <div>
                   <dt>{t("mixMatches")}</dt>

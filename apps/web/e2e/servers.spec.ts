@@ -127,7 +127,9 @@ test("/servers: cardurile cu statusul citit de worker, Connect, copierea adresei
   await useFreshIp(guest, "100.75.2");
   const visitor = await guest.newPage();
   await visitor.goto("/");
-  await visitor.getByRole("navigation", { name: "Principal" }).getByRole("link", { name: "Servere", exact: true }).click();
+  // Servere e un submeniu (`nav:v6`): „Toate serverele” duce la listă.
+  await visitor.getByRole("navigation", { name: "Principal" }).getByRole("button", { name: "Servere", exact: true }).click();
+  await visitor.getByRole("menu", { name: "Servere" }).getByRole("menuitem", { name: "Toate serverele" }).click();
   await expect(visitor).toHaveURL(/\/servers$/);
   await expect(visitor.getByTestId("gcs-server-card").filter({ hasText: CS })).toBeVisible();
   await guest.close();
@@ -197,7 +199,7 @@ test("widget-ul „Servere” pe pagina principală; aplicația dezactivată dis
   const m = await other.newPage();
   await member(m, `SrvMem${id}`, `srvmem-${id}@example.com`);
   await m.goto("/");
-  await expect(m.getByRole("navigation", { name: "Principal" }).getByRole("link", { name: "Servere", exact: true })).toHaveCount(0);
+  await expect(m.getByRole("navigation", { name: "Principal" }).getByRole("button", { name: "Servere", exact: true })).toHaveCount(0);
   await expect(m.getByTestId("gcs-widget-servers")).toHaveCount(0);
   expect((await m.goto("/servers"))?.status()).toBe(404);
   expect((await m.request.get("/api/servers/status?ids=1")).status()).toBe(404);

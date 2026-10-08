@@ -15,7 +15,8 @@ export async function GET(_req: Request, ctx: Ctx): Promise<Response> {
   if (!(await serverQueries.appEnabled())) return new Response(null, { status: 404 });
   const { game, map } = await ctx.params;
   const key = /^[a-z0-9_]{1,32}$/.test(game) ? game : "default";
-  const name = decodeURIComponent(map).trim().toLowerCase();
+  // Parametrul vine deja decodat; un nume de hartă valid nu are `%`, deci nu se mai decodează nimic.
+  const name = map.trim().toLowerCase();
   const image = /^[a-z0-9_.-]{1,64}$/.test(name) && !/^\.+$/.test(name) ? await bridge.maps.image(key, name) : { url: mapArtUrl(key), generic: true };
   // Adresa relativă: în spatele unui proxy, `req.url` poate avea host-ul intern.
   return new Response(null, { status: 302, headers: { Location: image.url, "Cache-Control": "public, max-age=300" } });
