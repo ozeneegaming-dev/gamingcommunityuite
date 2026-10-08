@@ -20,6 +20,7 @@ public sealed class EventQueue
     private readonly List<string> _items = new();
     private readonly string _runId = Convert.ToHexString(Guid.NewGuid().ToByteArray())[..8].ToLowerInvariant();
     private long _seq;
+    private long _removed;
     private int _backoff;
     private DateTime _nextSendAt = DateTime.MinValue;
     private DateTime _lastSentAt = DateTime.MinValue;
@@ -34,16 +35,36 @@ public sealed class EventQueue
         }
     }
 
-    /// <summary>Pune un eveniment în coadă, cu id și timpul în ceasul GCS.</summary>
-    public void Add(JsonObject ev, long now)
+    /// <summary>Evenimentele ieșite din coadă de la pornire (confirmate sau aruncate).</summary>
+    public long Removed
+    {
+        get
+        {
+            lock (_lock) return _removed;
+        }
+    }
+
+    /// <summary>
+    /// Pune un eveniment în coadă, cu id și timpul în ceasul GCS. Întoarce poziția lui de la pornire (1, 2, …; comparabilă
+    /// cu <see cref="Removed"/>), sau 0 dacă a fost aruncat.
+    /// </summary>
+    public long Add(JsonObject ev, long now)
     {
         lock (_lock)
         {
             _seq++;
             ev["id"] = $"{_runId}-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}-{_seq}";
             ev["at"] = now;
-            if (_items.Count >= MaxQueue) _items.RemoveAt(0);
+            if (_items.Count >= MaxQueue)
+            {
+                // Coada e plină (site-ul e căzut de mult): se pierde cel mai vechi eveniment; în timpul unui lot trimis
+                // (ale cărui poziții trebuie să rămână aceleași), cel nou.
+                if (InFlight) return 0;
+                _items.RemoveAt(0);
+                _removed++;
+            }
             _items.Add(ev.ToJsonString());
+            return _removed + _items.Count;
         }
     }
 
@@ -74,7 +95,9 @@ public sealed class EventQueue
                 _nextSendAt = DateTime.UtcNow.AddSeconds(_backoff);
                 return;
             }
-            _items.RemoveRange(0, Math.Min(count, _items.Count));
+            var removed = Math.Min(count, _items.Count);
+            _items.RemoveRange(0, removed);
+            _removed += removed;
             _backoff = 0;
             _nextSendAt = DateTime.MinValue;
         }

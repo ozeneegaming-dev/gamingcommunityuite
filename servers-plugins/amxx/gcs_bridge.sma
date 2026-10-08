@@ -959,11 +959,19 @@ stock on_sanctions(JSON:root)
 	g_pullingSanctions = false;
 	if (root == Invalid_JSON) return;
 	new bool:full = json_object_get_bool(root, "full");
-	// Prima pagină a unei sincronizări complete înlocuiește lista locală.
-	if (full && !g_sanctionsFull) ArrayClear(g_sanctions);
+	new entry[SanctionEntry];
+	// Prima pagină a unei sincronizări complete înlocuiește lista locală; bannurile date acum din joc (id negativ, încă
+	// netrimise) rămân.
+	if (full && !g_sanctionsFull)
+	{
+		for (new i = ArraySize(g_sanctions) - 1; i >= 0; i--)
+		{
+			ArrayGetArray(g_sanctions, i, entry);
+			if (entry[SE_Id] >= 0) ArrayDeleteItem(g_sanctions, i);
+		}
+	}
 	g_sanctionsFull = full;
 	new JSON:list = json_object_get_value(root, "sanctions");
-	new entry[SanctionEntry];
 	if (list != Invalid_JSON)
 	{
 		for (new i = 0, n = json_array_get_count(list); i < n; i++)

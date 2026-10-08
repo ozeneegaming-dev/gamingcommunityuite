@@ -89,8 +89,13 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
         _lists.Load();
         _queue.Load(Path.Combine(DataDir, "gcs_bridge_queue.jsonl"));
 
-        RegisterListener<Listeners.OnMapStart>(_ => OnMapStart());
-        RegisterListener<Listeners.OnMapEnd>(() => _queue.Save(Path.Combine(DataDir, "gcs_bridge_queue.jsonl")));
+        RegisterListener<Listeners.OnMapStart>(OnMapStart);
+        RegisterListener<Listeners.OnMapEnd>(() =>
+        {
+            _queue.Save(Path.Combine(DataDir, "gcs_bridge_queue.jsonl"));
+            // Timerul heartbeat-ului (STOP_ON_MAPCHANGE) e distrus acum de CounterStrikeSharp: nu se mai oprește a doua oară.
+            _heartbeatTimer = null;
+        });
         RegisterEventHandler<EventPlayerConnectFull>(OnConnectFull);
         RegisterEventHandler<EventPlayerDisconnect>(OnDisconnect, HookMode.Pre);
         RegisterEventHandler<EventPlayerDeath>(OnDeath);
@@ -127,15 +132,16 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
 
     private static JsonObject ConsoleRef() => new() { ["auth"] = "CONSOLE", ["name"] = "Console" };
 
-    private void Queue(string type, JsonObject fields)
+    /// <summary>Pune evenimentul în coadă; întoarce poziția lui (<see cref="EventQueue.Add"/>).</summary>
+    private long Queue(string type, JsonObject fields)
     {
         fields["type"] = type;
-        _queue.Add(fields, Now());
+        return _queue.Add(fields, Now());
     }
 
-    private void OnMapStart()
+    private void OnMapStart(string mapName)
     {
-        Queue("map", new JsonObject { ["map"] = Server.MapName });
+        Queue("map", new JsonObject { ["map"] = mapName });
         // Timerul heartbeat-ului se oprește la schimbarea hărții: îl pornim din nou.
         ScheduleHeartbeat(5);
     }
@@ -264,11 +270,19 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
 
     private async Task SendEventsAsync(string body, int count)
     {
-        var res = await _client!.SendAsync("POST", "/events", body).ConfigureAwait(false);
-        // 200 = toate rezultatele sunt confirmări; 4xx (în afară de 409 / 429 / clock_skew) = lot invalid; restul se reîncearcă.
-        var outcome = res.Status == 200 ? BatchOutcome.Confirmed : res.Status is >= 400 and < 500 and not 409 and not 429 && res.Error != "clock_skew" ? BatchOutcome.Dropped : BatchOutcome.Retry;
-        if (Config.Debug) Logger.LogInformation("[GCS] events {Status} ({Count})", res.Status, count);
-        _queue.Done(count, outcome);
+        // Lotul se încheie mereu (confirmat, aruncat sau de reîncercat): rămas „în zbor”, ar bloca pentru totdeauna coada.
+        var outcome = BatchOutcome.Retry;
+        try
+        {
+            var res = await _client!.SendAsync("POST", "/events", body).ConfigureAwait(false);
+            // 200 = toate rezultatele sunt confirmări; 4xx (în afară de 409 / 429 / clock_skew) = lot invalid; restul se reîncearcă.
+            outcome = res.Status == 200 ? BatchOutcome.Confirmed : res.Status is >= 400 and < 500 and not 409 and not 429 && res.Error != "clock_skew" ? BatchOutcome.Dropped : BatchOutcome.Retry;
+            if (Config.Debug) Logger.LogInformation("[GCS] events {Status} ({Count})", res.Status, count);
+        }
+        finally
+        {
+            _queue.Done(count, outcome);
+        }
     }
 
     private async Task HeartbeatAsync()
@@ -317,14 +331,19 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
         try
         {
             var first = true;
+            long removedAtPull = 0;
             for (var page = 0; page < 1000; page++)
             {
+                removedAtPull = _queue.Removed;
                 var res = await _client!.SendAsync("GET", $"/sanctions?since={_lists.Cursor}").ConfigureAwait(false);
                 if (res.Status != 200 || res.Body is null) return;
                 _lists.ApplySanctionPage(res.Body, first);
                 first = false;
                 if (res.Body["more"]?.GetValue<bool>() != true) break;
             }
+            // Bannurile date din joc (id = -poziția evenimentului) au ajuns la GCS dacă evenimentul ieșise din coadă înainte
+            // de ultima cerere: lista GCS le conține (sau GCS le-a respins), iar o ridicare pe site trebuie să conteze.
+            _lists.RemoveWhere(s => s.Id < 0 && -s.Id <= removedAtPull);
             _lists.SaveSanctions();
             Server.NextFrame(() => Utilities.GetPlayers().Where(Tracked).ToList().ForEach(ApplyLocal));
         }
@@ -367,9 +386,14 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
     private void Kick(CCSPlayerController p, Sanction ban)
     {
         var left = ban.ExpiresAt is long e ? $"{Math.Max(1, (e - Now()) / 60)} minute rămase" : "permanent";
-        var reason = $"Banat: {ban.Reason} ({left})".Replace("\"", "'");
-        Server.ExecuteCommand($"kickid {p.UserId} \"{reason}\"");
+        Server.ExecuteCommand($"kickid {p.UserId} \"{CommandText($"Banat: {ban.Reason} ({left})")}\"");
     }
+
+    /// <summary>
+    /// Un text pus între ghilimele într-o comandă a serverului (motivul vine de pe site sau de la un admin): ghilimelele și
+    /// liniile noi l-ar închide și ar permite alte comenzi după el.
+    /// </summary>
+    private static string CommandText(string text) => text.Replace('"', '\'').Replace('\n', ' ').Replace('\r', ' ');
 
     /// <summary>`/check` la conectare (3 secunde); fără răspuns, rămân listele locale.</summary>
     private async Task CheckAsync(CCSPlayerController p)
@@ -406,7 +430,8 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
         var text = info.GetArg(1).Trim();
         if (Config.MixReady && (text.Equals("!ready", StringComparison.OrdinalIgnoreCase) || text.Equals("/ready", StringComparison.OrdinalIgnoreCase)))
         {
-            foreach (var (type, fields) in _mix.Ready(player.Slot, true, Utilities.GetPlayers().Where(Tracked).ToList(), Config.MixPlayers, Server.MapName, Ref, out var message)) Queue(type, fields);
+            var events = _mix.Ready(player.Slot, true, Utilities.GetPlayers().Where(Tracked).ToList(), Config.MixPlayers, Server.MapName, Ref, out var message);
+            foreach (var (type, fields) in events) Queue(type, fields);
             Server.PrintToChatAll($" [GCS] {message}");
             return HookResult.Handled;
         }
@@ -448,9 +473,9 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
 
     // ─── Sancțiunile din joc ────────────────────────────────────────────────
 
-    private void QueueSanction(CCSPlayerController? admin, CCSPlayerController target, string kind, int minutes, string reason, bool global)
+    private long QueueSanction(CCSPlayerController? admin, CCSPlayerController target, string kind, int minutes, string reason, bool global)
     {
-        Queue("sanction", new JsonObject
+        return Queue("sanction", new JsonObject
         {
             ["kind"] = kind,
             ["target"] = Ref(target),
@@ -485,8 +510,9 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
         foreach (var target in command.GetArgTargetResult(1).Players.Where(Tracked))
         {
             if (admin is not null && !AdminManager.CanPlayerTarget(admin, target)) continue;
-            QueueSanction(admin, target, "ban", minutes, reason, global);
-            var local = new Sanction(-Random.Shared.NextInt64(1, long.MaxValue), "ban", target.SteamID, (target.IpAddress ?? "").Split(':')[0], reason, Now(), minutes > 0 ? Now() + minutes * 60L : null, admin?.PlayerName ?? "Console", global ? "global" : "server");
+            var position = QueueSanction(admin, target, "ban", minutes, reason, global);
+            // Aplicat imediat local; lista GCS îl înlocuiește la sincronizarea de după trimitere (vezi PullSanctionsAsync).
+            var local = new Sanction(_lists.ProvisionalId(position), "ban", target.SteamID, (target.IpAddress ?? "").Split(':')[0], reason, Now(), minutes > 0 ? Now() + minutes * 60L : null, admin?.PlayerName ?? "Console", global ? "global" : "server");
             _lists.AddLocal(local);
             Kick(target, local);
         }
@@ -548,7 +574,7 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
         {
             if (admin is not null && !AdminManager.CanPlayerTarget(admin, target)) continue;
             Queue("admin_action", new JsonObject { ["admin"] = admin is not null && Tracked(admin) ? Ref(admin) : ConsoleRef(), ["action"] = "kick", ["target"] = Ref(target), ["reason"] = reason });
-            Server.ExecuteCommand($"kickid {target.UserId} \"{reason.Replace("\"", "'")}\"");
+            Server.ExecuteCommand($"kickid {target.UserId} \"{CommandText(reason)}\"");
         }
     }
 

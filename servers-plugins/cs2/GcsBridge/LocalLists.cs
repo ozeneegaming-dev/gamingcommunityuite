@@ -105,7 +105,11 @@ public sealed class LocalLists
     {
         lock (_lock)
         {
-            if (firstPage && root["full"]?.GetValue<bool>() == true) Sanctions.Clear();
+            // Sincronizarea completă înlocuiește lista; bannurile date acum din joc (id negativ, încă netrimise) rămân.
+            if (firstPage && root["full"]?.GetValue<bool>() == true)
+            {
+                foreach (var id in Sanctions.Keys.Where(id => id >= 0).ToList()) Sanctions.Remove(id);
+            }
             foreach (var item in root["sanctions"] as JsonArray ?? new JsonArray())
             {
                 if (item is null) continue;
@@ -130,6 +134,21 @@ public sealed class LocalLists
     public void AddLocal(Sanction s)
     {
         lock (_lock) Sanctions[s.Id] = s;
+    }
+
+    /// <summary>
+    /// Id-ul unei sancțiuni date din joc: -poziția evenimentului ei în coadă (vezi <see cref="EventQueue.Add"/>). Un id
+    /// ocupat (de o sancțiune salvată înaintea repornirii) dă unul mai mic: intrarea dispare doar mai târziu, niciodată
+    /// înainte ca evenimentul să plece.
+    /// </summary>
+    public long ProvisionalId(long position)
+    {
+        lock (_lock)
+        {
+            var id = -Math.Max(position, 1);
+            while (Sanctions.ContainsKey(id)) id--;
+            return id;
+        }
     }
 
     public void RemoveWhere(Func<Sanction, bool> predicate)

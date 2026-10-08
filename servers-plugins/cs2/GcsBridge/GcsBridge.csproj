@@ -18,8 +18,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- API-ul CounterStrikeSharp (doar referință: biblioteca o aduce framework-ul de pe server). -->
-    <PackageReference Include="CounterStrikeSharp.API" Version="1.0.*">
+    <!--
+      API-ul CounterStrikeSharp (doar referință: biblioteca o aduce framework-ul de pe server). Versiune fixă, ca
+      fiecare compilare să dea același rezultat: 1.0.368 e ultima pentru net8.0 (de la 1.0.369 pachetul cere net10.0 și
+      .NET SDK 10). Pluginul net8.0 rulează și pe CounterStrikeSharp-ul nou, cu runtime-ul .NET 10.
+    -->
+    <PackageReference Include="CounterStrikeSharp.API" Version="1.0.368">
       <PrivateAssets>all</PrivateAssets>
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>

@@ -40,7 +40,8 @@ public sealed class BridgeClient : IDisposable
     {
         _baseUrl = (url ?? "").Trim().TrimEnd('/');
         var parts = (token ?? "").Trim().Split('.');
-        Configured = parts.Length == 3 && parts[0] == "gcs1" && parts[1].Length == 12 && parts[2].Length == 43 && _baseUrl.Length > 0;
+        var urlOk = Uri.TryCreate(_baseUrl, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp);
+        Configured = parts.Length == 3 && parts[0] == "gcs1" && parts[1].Length == 12 && parts[2].Length == 43 && urlOk;
         _keyId = Configured ? parts[1] : "";
         var k = Configured ? Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(parts[2]))).ToLowerInvariant() : "";
         _signingKey = Encoding.ASCII.GetBytes(k);
@@ -92,19 +93,27 @@ public sealed class BridgeClient : IDisposable
             }
             using (response)
             {
-                var text = response.StatusCode == HttpStatusCode.NotModified ? "" : await response.Content.ReadAsStringAsync(cts.Token).ConfigureAwait(false);
-                JsonNode? json = null;
+                // Nicio excepție nu iese de aici: un lot de evenimente rămas „în zbor” ar bloca pentru totdeauna coada.
+                string text;
                 try
                 {
-                    if (text.Length > 0) json = JsonNode.Parse(text);
+                    text = response.StatusCode == HttpStatusCode.NotModified ? "" : await response.Content.ReadAsStringAsync(cts.Token).ConfigureAwait(false);
+                }
+                catch (Exception)
+                {
+                    return new BridgeResponse(0, null, "network");
+                }
+                JsonObject? json = null;
+                try
+                {
+                    if (text.Length > 0) json = JsonNode.Parse(text) as JsonObject;
                 }
                 catch (JsonException)
                 {
                     json = null;
                 }
-                var serverTime = json?["serverTime"]?.GetValue<long>();
-                if (serverTime is long st) Offset += st - Now();
-                var error = json?["error"]?.GetValue<string>();
+                if (json?["serverTime"] is JsonValue time && time.TryGetValue<long>(out var st)) Offset += st - Now();
+                var error = json?["error"] is JsonValue err && err.TryGetValue<string>(out var code) ? code : null;
                 if ((int)response.StatusCode == 401 && error == "clock_skew" && attempt == 0) continue;
                 return new BridgeResponse((int)response.StatusCode, json, error);
             }
