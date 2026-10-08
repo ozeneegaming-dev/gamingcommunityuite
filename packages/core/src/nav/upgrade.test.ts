@@ -121,7 +121,7 @@ describe("actualizarea meniului implicit (nav:v2)", () => {
     expect(await menu()).toEqual([]);
   });
 
-  test("un meniu modificat de admin rămâne; itemii noi lipsă se adaugă la coadă, dezactivați", async () => {
+  test("un meniu modificat de admin rămâne; itemii noi lipsă se adaugă la coadă, activi", async () => {
     await legacyInstall([
       { label: { ro: "Comunitate" }, icon: "fa-solid fa-comments", href: "/" },
       { label: { key: "nav.members" }, icon: "fa-solid fa-users", href: "/members" },
@@ -130,11 +130,21 @@ describe("actualizarea meniului implicit (nav:v2)", () => {
     await seedDefaults(w.db, w.registry);
     expect(await menu()).toEqual([
       { label: { ro: "Comunitate" }, href: "/", enabled: true, appKey: null, children: [] },
-      { label: { key: "nav.members" }, href: "/members", enabled: true, appKey: null, children: [] },
+      // Membri e chiar itemul implicit: primește submeniul implicit (`nav:v5`).
+      {
+        label: { key: "nav.members" },
+        href: "/members",
+        enabled: true,
+        appKey: null,
+        children: [
+          { label: { key: "nav.all" }, href: "/members" },
+          { label: { key: "nav.staff" }, href: "/staff" },
+        ],
+      },
       { label: { ro: "Regulament" }, href: "/rules", enabled: true, appKey: null, children: [] },
       // Doar cele al căror link lipsea (Membri și Reguli existau deja), fără să atingă ce a făcut adminul.
-      { label: { key: "nav.activity" }, href: "/activity", enabled: false, appKey: null, children: [] },
-      { label: { key: "nav.vip" }, href: "/vip", enabled: false, appKey: "navvip", children: [] },
+      { label: { key: "nav.activity" }, href: "/activity", enabled: true, appKey: null, children: [] },
+      { label: { key: "nav.vip" }, href: "/vip", enabled: true, appKey: "navvip", children: [] },
     ]);
     // Idempotent: repornirea nu mai adaugă nimic.
     await seedDefaults(w.db, w.registry);
@@ -151,14 +161,14 @@ describe("actualizarea meniului implicit (nav:v2)", () => {
       ["/staff", false],
     ]);
     expect(after.slice(3).map((i) => [i.href, i.enabled])).toEqual([
-      ["/activity", false],
-      ["/vip", false],
-      ["/rules", false],
+      ["/activity", true],
+      ["/vip", true],
+      ["/rules", true],
     ]);
 
     await legacyInstall(LEGACY.map((it, i) => (i === 0 ? { ...it, icon: "fa-solid fa-house" } : it)));
     await seedDefaults(w.db, w.registry);
     expect((await menu())[0]).toMatchObject({ href: "/", label: { key: "nav.forum" } });
-    expect(await w.db.navItem.count({ where: { enabled: false } })).toBe(3);
+    expect(await w.db.navItem.count({ where: { enabled: false } })).toBe(0);
   });
 });

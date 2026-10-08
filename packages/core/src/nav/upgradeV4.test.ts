@@ -68,7 +68,7 @@ describe("actualizarea meniului la nav:v4 (Clanuri)", () => {
     ]);
     const { seedMarks } = await w.db.systemState.findUniqueOrThrow({ where: { id: 1 } });
     expect(seedMarks).toEqual(expect.arrayContaining(["nav", ...NAV_MARKS]));
-    expect(NAV_MARKS.at(-1)).toBe("nav:v4");
+    expect(NAV_MARKS).toContain("nav:v4");
   });
 
   test("meniul nav:v3 nemodificat e înlocuit: Clanuri apare activ, după Servere", async () => {
@@ -82,7 +82,7 @@ describe("actualizarea meniului la nav:v4 (Clanuri)", () => {
     ]);
   });
 
-  test("un meniu personalizat rămâne; Clanuri se adaugă la coadă, dezactivat, o singură dată", async () => {
+  test("un meniu personalizat rămâne; Clanuri se adaugă la coadă, activ, o singură dată", async () => {
     // Ca meniul personalizat al unui site existent, care avea deja Servere (adăugat la nav:v3).
     await v3Install([V3[2]!, V3[0]!, V3[1]!, { label: { ro: "Comunitatea" }, icon: "fa-solid fa-users", href: "/members" }]);
     await seedDefaults(w.db, w.registry);
@@ -91,7 +91,7 @@ describe("actualizarea meniului la nav:v4 (Clanuri)", () => {
       ["/", true, null],
       ["/servers", true, "v4servers"],
       ["/members", true, null],
-      ["/clans", false, "v4clans"],
+      ["/clans", true, "v4clans"],
     ]);
     await seedDefaults(w.db, w.registry);
     expect((await menu()).filter(([href]) => href === "/clans")).toHaveLength(1);

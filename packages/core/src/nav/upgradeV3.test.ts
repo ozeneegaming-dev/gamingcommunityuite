@@ -78,13 +78,13 @@ describe("actualizarea meniului la nav:v3 (Servere)", () => {
     ]);
   });
 
-  test("un meniu personalizat rămâne; Servere se adaugă la coadă, dezactivat, o singură dată", async () => {
+  test("un meniu personalizat rămâne; Servere se adaugă la coadă, activ, o singură dată", async () => {
     await v2Install([V2[1]!, { label: { ro: "Acasă" }, icon: "fa-solid fa-house", href: "/" }]);
     await seedDefaults(w.db, w.registry);
     expect(await menu()).toEqual([
       ["/activity", true, null],
       ["/", true, null],
-      ["/servers", false, "v3servers"],
+      ["/servers", true, "v3servers"],
     ]);
     await seedDefaults(w.db, w.registry);
     expect(await menu()).toHaveLength(3);
