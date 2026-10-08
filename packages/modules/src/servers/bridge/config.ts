@@ -32,6 +32,10 @@ export const BRIDGE_SETTING = {
   enrollEnabled: "servers.enroll_enabled",
   /** IP-urile / CIDR-urile care nu se pot înrola (butonul „Blochează IP” din ACP adaugă aici). */
   enrollBlockedIps: "servers.enroll_blocked_ips",
+  /** Demo-urile meciurilor mix (specul 2026-10-08-servere-hltv §2.3): păstrarea, mărimea maximă pe demo și cota totală. */
+  demoRetentionDays: "servers.demo_retention_days",
+  demoMaxMb: "servers.demo_max_mb",
+  demoQuotaGb: "servers.demo_quota_gb",
 } as const;
 
 /** Secțiunile ACP ale punții. */
@@ -48,6 +52,8 @@ export const BRIDGE_PERMISSION = {
   ticketsManage: "servers.tickets_manage",
   linkIdentity: "servers.link_identity",
   playersManage: "servers.players_manage",
+  /** Descărcarea demo-urilor meciurilor mix (specul 2026-10-08-servere-hltv §2.3). */
+  demosDownload: "servers.demos_download",
 } as const;
 
 /** Atașamentele: imaginea unei hărți (publică) și dovezile unei sancțiuni / unui tichet. */
@@ -101,6 +107,9 @@ export const BRIDGE_SETTING_DEFS: GcsSettingDef[] = [
   { key: BRIDGE_SETTING.mapModeCs2, type: "string", default: DEFAULT_MAP_IMAGE_MODE, section: S, labelKey: "settings.servers.map_mode_cs2", options: [...MAP_IMAGE_MODES], validate: validMapMode },
   { key: BRIDGE_SETTING.enrollEnabled, type: "boolean", default: true, section: S, labelKey: "settings.servers.enroll_enabled" },
   { key: BRIDGE_SETTING.enrollBlockedIps, type: "string", default: "", section: S, labelKey: "settings.servers.enroll_blocked_ips", validate: enrollBlockedError, multiline: true },
+  { key: BRIDGE_SETTING.demoRetentionDays, type: "number", default: 14, section: S, labelKey: "settings.servers.demo_retention_days", validate: int(1, 365) },
+  { key: BRIDGE_SETTING.demoMaxMb, type: "number", default: 300, section: S, labelKey: "settings.servers.demo_max_mb", validate: int(10, 2000) },
+  { key: BRIDGE_SETTING.demoQuotaGb, type: "number", default: 20, section: S, labelKey: "settings.servers.demo_quota_gb", validate: int(1, 2000) },
 ];
 
 /** Configurația ELO din setări. */

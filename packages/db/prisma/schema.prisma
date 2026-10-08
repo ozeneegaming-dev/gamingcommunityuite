@@ -1785,6 +1785,8 @@ model GameServer {
   tickets      GameTicket[]
   lastPlayers  GamePlayer[]      @relation("GamePlayerLastServer")
   enrollments  GameServerEnrollment[]
+  tv           GameServerTv?
+  demos        GameMatchDemo[]
 
   @@unique([game, host, port])
   @@index([enabled, position])
@@ -2402,6 +2404,7 @@ model GameMatch {
   server  GameServer        @relation(fields: [serverId], references: [id], onDelete: Cascade)
   players GameMatchPlayer[]
   rounds  GameMatchRound[]
+  demos   GameMatchDemo[]
 
   @@unique([serverId, externalId])
   @@index([serverId, startedAt])
@@ -2444,6 +2447,86 @@ model GameMatchRound {
 
   @@id([matchId, number])
   @@map("game_match_rounds")
+}
+
+/// HLTV / GOTV și demo-urile unui server (specul 2026-10-08-servere-hltv §2.1); lipsa rândului = totul oprit. Secretele
+/// (`secret`, `privateKey`, `rconPassword`) sunt sigilate cu `sealSecret` și nu se arată niciodată înapoi.
+model GameServerTv {
+  serverId      Int       @id
+  address       String?
+  delay         Int?
+  source        String    @default("none")
+  host          String?
+  port          Int?
+  username      String?
+  secret        String?
+  privateKey    String?
+  remoteDir     String    @default("/")
+  tlsInsecure   Boolean   @default(false)
+  hostKey       String?
+  httpTemplate  String?
+  namePrefix    String    @default("")
+  timeZone      String    @default("UTC")
+  record        Boolean   @default(false)
+  rconPassword  String?
+  lastFetchAt   DateTime?
+  lastFetchOk   Boolean?
+  lastFetchCode String?
+  lastFetchInfo Json?
+  lastRcon      Json?
+  updatedAt     DateTime  @updatedAt
+
+  server GameServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@map("game_server_tv")
+}
+
+/// Starea unui demo (specul 2026-10-08-servere-hltv §2.2).
+enum GameDemoStatus {
+  WAITING
+  FETCHING
+  AVAILABLE
+  NOT_FOUND
+  FAILED
+  EXPIRED
+}
+
+/// Un fișier demo al unui meci mix (un meci poate avea mai multe părți). Fișierul stă privat în store-ul platformei
+/// (`storageKey`), servit doar prin ruta descărcării, cu drepturile verificate. Rândurile rămase fără meci se curăță
+/// împreună cu fișierul lor.
+model GameMatchDemo {
+  id            Int            @id @default(autoincrement())
+  matchId       Int?
+  serverId      Int?
+  part          Int            @default(1)
+  status        GameDemoStatus @default(WAITING)
+  source        String
+  remoteName    String?
+  fileName      String
+  storageKey    String?
+  encoding      String         @default("identity")
+  size          Int?
+  storedSize    Int?
+  sha256        String?
+  downloads     Int            @default(0)
+  attempts      Int            @default(0)
+  nextAttemptAt DateTime?
+  error         String?
+  chunkSize     Int?
+  received      Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  availableAt   DateTime?
+  expiresAt     DateTime?
+
+  match  GameMatch?  @relation(fields: [matchId], references: [id], onDelete: SetNull)
+  server GameServer? @relation(fields: [serverId], references: [id], onDelete: SetNull)
+
+  @@unique([matchId, part])
+  @@index([status, nextAttemptAt])
+  @@index([status, availableAt])
+  @@index([serverId, createdAt])
+  @@map("game_match_demos")
 }
 
 /// ELO-ul unei identități (meciurile mix) și totalurile ei.

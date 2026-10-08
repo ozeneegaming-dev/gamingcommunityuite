@@ -2682,7 +2682,10 @@
       "enroll_enabled": "Automatic enrollment of new servers (general plugin; approval stays in the ACP)",
       "enroll_blocked_ips": "IPs blocked from enrollment (IPs or CIDRs, comma separated)",
       "map_mode_cs16": "CS 1.6 map image mode",
-      "map_mode_cs2": "CS2 map image mode"
+      "map_mode_cs2": "CS2 map image mode",
+      "demo_retention_days": "How many days mix match demos are kept (1–365)",
+      "demo_max_mb": "Maximum size of a demo (MB, 10–2000)",
+      "demo_quota_gb": "Total space for demos (GB, 1–2000); above it, the oldest are deleted"
     },
     "clans": {
       "require_approval": "A new clan waits for staff approval",
@@ -2786,7 +2789,8 @@
       "tickets_create": "Sends appeals and reports",
       "tickets_manage": "Handles all appeals and reports",
       "link_identity": "Links non-Steam identities with an in-game code",
-      "players_manage": "Links and unlinks members' game identities"
+      "players_manage": "Links and unlinks members' game identities",
+      "demos_download": "Downloads mix match demos"
     },
     "clans": {
       "view": "See clans",

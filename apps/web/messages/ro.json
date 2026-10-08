@@ -2682,7 +2682,10 @@
       "enroll_enabled": "Înrolarea automată a serverelor noi (pluginul general; aprobarea rămâne în ACP)",
       "enroll_blocked_ips": "IP-urile blocate la înrolare (IP-uri sau CIDR-uri, separate prin virgulă)",
       "map_mode_cs16": "Modul imaginilor hărților CS 1.6",
-      "map_mode_cs2": "Modul imaginilor hărților CS2"
+      "map_mode_cs2": "Modul imaginilor hărților CS2",
+      "demo_retention_days": "Câte zile se păstrează demo-urile meciurilor mix (1–365)",
+      "demo_max_mb": "Mărimea maximă a unui demo (MB, 10–2000)",
+      "demo_quota_gb": "Spațiul total pentru demo-uri (GB, 1–2000); peste el, cele mai vechi se șterg"
     },
     "clans": {
       "require_approval": "Un clan nou așteaptă aprobarea staff-ului",
@@ -2786,7 +2789,8 @@
       "tickets_create": "Trimite contestații și reclamații",
       "tickets_manage": "Tratează toate contestațiile și reclamațiile",
       "link_identity": "Își leagă identitățile non-Steam prin cod din joc",
-      "players_manage": "Leagă și dezleagă identitățile de joc ale membrilor"
+      "players_manage": "Leagă și dezleagă identitățile de joc ale membrilor",
+      "demos_download": "Descarcă demo-urile meciurilor mix"
     },
     "clans": {
       "view": "Vede clanurile",

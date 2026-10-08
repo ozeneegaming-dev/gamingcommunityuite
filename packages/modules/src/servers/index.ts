@@ -33,6 +33,8 @@ const permissions: GcsPermissionDef[] = [
   { key: BRIDGE_PERMISSION.ticketsManage, scope: "group", labelKey: "permissions.servers.tickets_manage", default: { ...GLOBAL_STAFF } },
   { key: BRIDGE_PERMISSION.linkIdentity, scope: "group", labelKey: "permissions.servers.link_identity", default: { ...MEMBERS } },
   { key: BRIDGE_PERMISSION.playersManage, scope: "group", labelKey: "permissions.servers.players_manage", default: { ...GLOBAL_STAFF } },
+  // Demo-urile meciurilor mix (specul 2026-10-08-servere-hltv §2.3): implicit cine vede meciul.
+  { key: BRIDGE_PERMISSION.demosDownload, scope: "group", labelKey: "permissions.servers.demos_download", default: { ...EVERYONE } },
 ];
 
 const int = (min: number, max: number) => (v: unknown) => (Number.isInteger(v) && (v as number) >= min && (v as number) <= max ? null : "invalid_range");
