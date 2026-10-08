@@ -1,5 +1,5 @@
 {
   "extends": "../config/tsconfig.base.json",
   "compilerOptions": { "types": ["node"] },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "test/**/*.ts", "*.config.ts"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "test/**/*.ts", "scripts/**/*.ts", "*.config.ts"]
 }

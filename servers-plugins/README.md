@@ -1,9 +1,14 @@
 # GCS Server Bridge — pluginurile serverelor de joc
 
-Puntea dintre serverele de joc ale comunității și GamingCommunitySuite (specul
-`docs/superpowers/specs/2026-10-08-servere-bridge.md`). Pluginul de pe server trimite heartbeat-uri și evenimente
-(conectări, ucideri, runde, focuri, acțiuni de admin, sancțiuni, meciuri mix) și trage de la site listele de admini,
-sancțiuni (bannuri, mute, gag) și VIP. Listele se păstrează local: site-ul căzut nu oprește adminii și nici bannurile.
+Puntea dintre serverele de joc ale comunității și GamingCommunitySuite (specurile
+`docs/superpowers/specs/2026-10-08-servere-bridge.md` și `2026-10-08-servere-plugin-v2.md`).
+
+**Implicit pluginul doar colectează date** pentru site: heartbeat (harta, jucătorii și flag-urile lor de admin, citite
+din sistemul de admini al serverului), evenimente (conectări, ucideri, runde, focuri, scorul echipelor), meciurile mix
+urmărite pasiv pe serverele marcate „mix” și legarea contului cu `/gcs COD`. Nu atinge adminii (`users.ini`,
+`configs/admins.json`), bannurile, comenzile sau alte pluginuri ale serverului.
+
+Același binar merge pe orice server; doar configul diferă, iar ACP-ul îl completează singur (vezi „Pachetele”).
 
 | Joc | Framework | Sursa | HTTP | Licența |
 |---|---|---|---|---|
@@ -12,81 +17,118 @@ sancțiuni (bannuri, mute, gag) și VIP. Listele se păstrează local: site-ul c
 
 Licența GCS nu e afectată: pluginurile sunt programe separate care vorbesc HTTP cu site-ul.
 
+## Pachetele (configurare zero)
+
+- **Pe server:** ACP → Gaming → Servere → serverul → Plugin și chei API → „Descarcă pluginul pentru acest server”. Arhiva
+  are pluginul compilat, configul cu adresa site-ului și o cheie API nouă (creată atunci, pusă doar în arhivă, în
+  jurnal), nota de instalare și licența. Pe server: încarci fișierele, repornești, gata.
+- **General:** ACP → Gaming → Servere → „Descarcă pluginul general” (CS 1.6 / CS2): doar adresa site-ului, fără cheie.
+  Pus pe orice server încă neadăugat, pluginul se înrolează singur; adminul îl aprobă la „Servere noi detectate”, iar
+  pluginul primește cheia o singură dată și o salvează local (CS 1.6: `configs/gcs_bridge_key.cfg`; CS2:
+  `plugins/GcsBridge/data/gcs_bridge_key.txt`).
+- Pe CS 1.6 arhiva are și `configs/plugins-gcs.ini` (AMX Mod X încarcă singur fișierele `plugins-*.ini`), deci
+  `plugins.ini` nu se editează.
+
+## Modulele opționale (oprite implicit)
+
+Se pornesc din ACP pe fiecare server („Module opționale — doar dacă vrei ca GCS să administreze serverul”); pluginul
+le primește în heartbeat (`config.features`). Un modul oprit nu își înregistrează comenzile și nu își trage listele.
+`gcs_allow_manage 0` (CS 1.6) / `"AllowManage": false` (CS2) ține pluginul colector oricum ar fi setările din ACP.
+
+| Modul | Cheia | Ce face |
+|---|---|---|
+| Admini din GCS | `admins` | adminii din ACP înlocuiesc drepturile jucătorilor (nume + parolă, protecția numelui); la oprire, adminii serverului se reîncarcă (`amx_reloadadmins` / `css_reloadadmins`) |
+| Bannuri, mute, gag din GCS | `sanctions` | sincronizarea sancțiunilor, `/check` la conectare, kick-ul celor banați, mute / gag |
+| VIP din GCS | `vip` | flag-urile / permisiunile VIP adăugate peste cele ale serverului (doar cele adăugate de GCS se scot) |
+| Ready-up mix | `mixReady` | `say /ready` / `!ready`: GCS pornește meciul (restartul) |
+| Comenzile de admin GCS | `commands` | comenzile din tabelele de mai jos și jurnalul acțiunilor adminilor |
+
 ## Protocolul pe scurt
 
-- Baza: `{site}/api/servers/bridge/v1`, JSON UTF-8, HTTPS (HTTP doar în LAN, la alegerea operatorului).
-- Cheia serverului se creează în ACP → Gaming → Servere → serverul → **Plugin și chei API** și se arată o singură
-  dată: `gcs1.<keyId>.<secret>`. Secretul nu pleacă niciodată pe rețea.
-- Fiecare cerere are anteturile `X-GCS-Key` (keyId), `X-GCS-Timestamp` (Unix, secunde), `X-GCS-Nonce` (16–64 de
-  caractere `[A-Za-z0-9_-]`, unic) și `X-GCS-Signature`:
-  - șirul canonic: `METODĂ \n CALE \n TIMESTAMP \n NONCE \n hex(SHA-256(corp))`, unde CALE = partea de după bază, cu
-    query-ul exact cum se trimite (ex. `/sanctions?since=120&limit=100`);
-  - `K = hex(SHA-256(secret))` (64 de caractere hex);
-  - `hmac-sha256=<hex>` = HMAC-SHA256 cu cheia K (ca octeți ASCII) peste șirul canonic (pluginul CS2);
-  - `sha256-env=<hex>` = SHA-256(K + "\n" + canonic + "\n" + K) (pluginul AMX Mod X, care are doar `hash_string`).
-- Ceasul: diferența maximă e 300 s; la `401 clock_skew` răspunsul are `serverTime`, pluginul își corectează decalajul
-  și retrimite. Toate răspunsurile au `serverTime` și antetul `X-GCS-Time`.
-- Rutele: `POST /heartbeat`, `POST /events` (max 500 / lot, fiecare cu id unic: retrimiterea e sigură),
-  `GET /admins` și `GET /vip` (cu `If-None-Match`), `GET /sanctions?since=<cursor>[&limit=1..1000]`, `POST /check`
-  (verificarea la conectare, 3 s), `POST /link` (`/gcs COD`).
-- Reîncercările: rețea / 5xx → același lot, cu backoff 5 s, 10 s, 20 s … max 5 minute; 4xx (în afară de 401
-  `clock_skew`, 409 `replay`, 429) → lotul e invalid și se aruncă. Evenimentele netrimise se salvează pe disc la
-  schimbarea hărții / oprire și se retrimit cu aceleași id-uri.
+- Baza: `{site}/api/servers/bridge/v1`, JSON UTF-8, HTTPS (HTTP doar în LAN, la alegerea operatorului; pluginul scrie
+  un avertisment în log, iar la înrolare cheia ar trece în clar).
+- Cheia serverului: `gcs1.<keyId>.<secret>`. Secretul nu pleacă niciodată pe rețea.
+- Fiecare cerere semnată are `X-GCS-Key`, `X-GCS-Timestamp` (Unix), `X-GCS-Nonce` (16–64 de caractere
+  `[A-Za-z0-9_-]`, unic) și `X-GCS-Signature`:
+  - șirul canonic: `METODĂ \n CALE \n TIMESTAMP \n NONCE \n hex(SHA-256(corp))`, CALE = partea de după bază, cu query-ul
+    exact cum se trimite;
+  - `K = hex(SHA-256(secret))`; `hmac-sha256=<hex>` (CS2) sau `sha256-env=<hex>` = SHA-256(K + "\n" + canonic + "\n" +
+    K) (AMX Mod X, care are doar `hash_string`).
+- Ceasul: max 300 s diferență; la `401 clock_skew` pluginul își corectează decalajul (`serverTime`) și retrimite.
+- Rutele semnate: `POST /heartbeat` (răspunsul are `config.features`, `config.isMix`), `POST /events`, `GET /admins`,
+  `GET /vip`, `GET /sanctions?since=…` (doar cu modulele lor), `POST /check`, `POST /link`.
+- **Înrolarea** (fără semnătură, max 4 KB): `POST /enroll` `{ game, port, hostname, map, maxPlayers, players, plugin,
+  secret }` → `{ status, enrollment }`; `POST /enroll/status` `{ enrollment, secret }` → `pending` / `approved` + `key`
+  (o singură dată) / `approved` + `delivered` / `rejected`; referința necunoscută sau secretul greșit → `404
+  unknown_enrollment`. Site-ul păstrează doar `SHA-256(secret)`, verifică prin interogarea A2S că la IP-ul sursei
+  răspunde un server al jocului și aplică limite pe IP, plafoane și expirarea (7 zile).
+- Heartbeat-ul raportează pe fiecare jucător flag-urile de admin existente (CS 1.6: `flags`, literele din
+  `get_user_flags`; CS2: `permissions` și `groups` din CounterStrikeSharp, doar citite) și `modules` / `scores`.
 
 Un server de joc fals care vorbește protocolul (fără dependențe, Node ≥ 18) e în `mock/gcs-mock-server.mjs`:
 
 ```sh
 node servers-plugins/mock/gcs-mock-server.mjs --url https://comunitate.exemplu.ro --key gcs1.<keyId>.<secret> --scenario full
+node servers-plugins/mock/gcs-mock-server.mjs --url https://comunitate.exemplu.ro --scenario enroll --game cs2
 ```
+
+## Release-ul (binarele de pe site)
+
+ACP-ul pune în pachete binarele din `release/` (în depozit), verificate cu `release/manifest.json` (versiunile, sha256
+pentru fiecare fișier, sha256 al surselor folosite, versiunile uneltelor). După orice schimbare în surse:
+
+```powershell
+.\servers-plugins\release.ps1 -Compiler "C:\amxmodx\scripting\amxxpc.exe" -Includes "C:\easy_http","C:\reapi" -Dotnet "C:\dotnet8\dotnet.exe"
+```
+
+```sh
+AMXXPC=/opt/amxmodx/scripting/amxxpc AMXX_INCLUDES=/opt/easy_http:/opt/reapi DOTNET_EXE=/opt/dotnet8/dotnet ./servers-plugins/release.sh
+```
+
+Scriptul oprește release-ul la orice avertisment, compilează DLL-ul fără `.pdb` și fără căile locale ale mașinii
+(build reproductibil) și rescrie `release/`. Testul `packages/modules/src/servers/bridge/release.test.ts` pică dacă
+sursele s-au schimbat fără un release nou. Next.js include folderul în build-ul standalone; altă cale:
+`GCS_PLUGIN_RELEASE_DIR`.
 
 ## Counter-Strike 1.6 (AMX Mod X)
 
 ### Cerințe pe server
 
-- AMX Mod X **1.9 sau 1.10** (nativele `json_*` și `hash_string` cu SHA-256): <https://www.amxmodx.org/downloads.php>
+- AMX Mod X **1.9 sau 1.10**: <https://www.amxmodx.org/downloads.php>
 - Modulul **AmxxEasyHttp** 1.4 sau mai nou (HTTPS asincron, prin libcurl), de pe pagina oficială a proiectului
-  (GitHub, „AmxxEasyHttp”, secțiunea Releases): din arhiva versiunii, modulul (`easy_http_amxx_i386.so` /
-  `easy_http_amxx.dll`) în `addons/amxmodx/modules/` și certificatele (`addons/amxmodx/data/amxx_easy_http_cacert.pem`,
-  necesare pentru HTTPS); `easy_http.inc` și `easy_http_json.inc` la include-urile compilatorului.
-- Opțional, **ReAPI** cu **Reunion** (pentru a deosebi clienții Steam de cei non-Steam): fără ele, în modul `mixed`
-  toți jucătorii sunt non-Steam (Steam-ul nu se poate dovedi). Pluginul compilat cu `reapi.inc` se încarcă și fără
-  ReAPI (biblioteca e opțională).
+  (GitHub, „AmxxEasyHttp”, Releases): modulul în `addons/amxmodx/modules/` și certificatele
+  `addons/amxmodx/data/amxx_easy_http_cacert.pem` (necesare pentru HTTPS).
+- Opțional, **ReAPI** cu **Reunion** (deosebesc clienții Steam de cei non-Steam).
 
 ### Compilarea
 
-Compilatorul (`amxxpc`) vine în pachetul oficial AMX Mod X (folderul `addons/amxmodx/scripting/`). Depozitul GCS nu
-conține și nu descarcă compilatorul.
+`amxxpc` vine în pachetul oficial AMX Mod X. Depozitul nu conține și nu descarcă compilatorul.
 
 ```powershell
-# Windows
 .\servers-plugins\amxx\build.ps1 -Compiler "C:\amxmodx\addons\amxmodx\scripting\amxxpc.exe" -Includes "C:\easy_http","C:\reapi"
 ```
 
 ```sh
-# Linux
 AMXXPC=/opt/amxmodx/addons/amxmodx/scripting/amxxpc AMXX_INCLUDES=/opt/easy_http:/opt/reapi ./servers-plugins/amxx/build.sh
 ```
 
-`-Includes` / `AMXX_INCLUDES` = folderele cu `easy_http.inc` + `easy_http_json.inc` și, opțional, `reapi*.inc` (pe
-Windows o listă sau separate prin `;`, pe Linux prin `:`). Rezultatul: `servers-plugins/amxx/build/gcs_bridge.amxx`.
-Compilat cu `amxxpc` 1.10, pluginul folosește doar native care există și în AMX Mod X 1.9.
+**Limitele Pawn:** nativele care citesc un șir din plugin (`hash_string`, `ezhttp_option_set_body`, `json_parse` dintr-un
+șir) se opresc la 16383 de caractere: corpul unei cereri rămâne sub 16000, un eveniment sub 4095 (jucătorii unui
+`round_end` pleacă în loturi de câte 8), răspunsurile se citesc din fișier.
 
-**Limitele Pawn** (de ținut minte la modificări): nativele care citesc un șir din plugin (`hash_string`,
-`ezhttp_option_set_body`, `json_parse` dintr-un șir) se opresc la 16383 de caractere. De aceea corpul unei cereri rămâne
-sub 16000 de caractere (lotul de evenimente se oprește înainte), un eveniment are cel mult 4095 (jucătorii unui
-`round_end` pleacă în loturi de câte 8), iar răspunsurile se citesc din fișier (`json_parse(…, true)`), fără limită.
+### Configul (`configs/gcs_bridge.cfg`)
 
-### Instalarea
+| Cvar | Implicit | Ce face |
+|---|---|---|
+| `gcs_url` | — | adresa site-ului |
+| `gcs_key` | gol | cheia; goală = înrolarea automată |
+| `gcs_allow_manage` | 1 | 0 = doar colector, orice module s-ar porni în ACP |
+| `gcs_password_field`, `gcs_name_protect` | `_pw`, 1 | modulul „admins”: parola adminilor pe nume și protecția numelui |
+| `gcs_amx_aliases` | 1 | modulul „commands”: `amx_ban` / `amx_unban` prin GCS |
+| `gcs_mix_players`, `gcs_mix_maxrounds` | 10, 30 | ready-up-ul și rundele meciului când `mp_maxrounds` e 0 |
+| `gcs_debug` | 0 | jurnalul cererilor (fără chei sau semnături) |
 
-1. `gcs_bridge.amxx` → `addons/amxmodx/plugins/`; în `addons/amxmodx/configs/plugins.ini` adaugă `gcs_bridge.amxx`
-   **înaintea** `admincmd.amxx` (ca acțiunile adminilor să intre în jurnal înainte să le trateze AMX Mod X).
-2. `gcs_bridge.cfg` → `addons/amxmodx/configs/` și completează `gcs_url` și `gcs_key`.
-3. În `modules.ini`: `easy_http`. Repornește harta.
-4. Adminii vin de la GCS: pluginul setează flag-urile la intrare (`users.ini` nu mai e necesar pentru ei; flag-urile
-   date de `users.ini` sunt înlocuite, deci adminii se adaugă în ACP înainte). Adminii pe nume + parolă pun parola în
-   setinfo: `setinfo _pw parola` (câmpul se schimbă cu `gcs_password_field`).
-
-### Comenzi
+### Comenzile modulului „commands”
 
 | Comandă | Drept | Ce face |
 |---|---|---|
@@ -95,83 +137,76 @@ sub 16000 de caractere (lotul de evenimente se oprește înainte), un eveniment 
 | `gcs_unban <authid \| ip> [motiv]` / `amx_unban` | `d` | ridică banul |
 | `gcs_mute` / `gcs_gag <țintă> <minute> [motiv]` | `i` | mute vocal / gag |
 | `gcs_unmute` / `gcs_ungag <țintă>` | `i` | ridică mute-ul / gag-ul |
-| `gcs_match <start\|live\|halftime\|end\|abort>` | `h` | meciul mix urmărit de GCS |
+| `gcs_match <start\|live\|halftime\|end\|abort>` | `h` | meciul mix condus din comandă |
 | `gcs_sync` | `l` | trage acum listele de la site |
-| `say /gcs COD` | oricine | leagă identitatea non-Steam de contul de pe site (codul din Setări → Cont) |
-| `say /ready`, `say /unready` | oricine, cu `gcs_mix_ready 1` | ready-up-ul meciului mix |
 
-Alte pluginuri de mix pot conduce meciul prin `gcs_bridge.inc` (`gcs_mix_command`, `gcs_mix_state`,
-`gcs_queue_event`, forward-urile `gcs_on_match_state` și `gcs_on_player_linked`).
+Mereu: `say /gcs COD` (legarea identității non-Steam). Cu `mixReady`: `say /ready`, `say /unready`. Alte pluginuri de
+mix pot conduce meciul prin `gcs_bridge.inc` (`gcs_mix_command`, `gcs_mix_state`, `gcs_queue_event`, forward-urile
+`gcs_on_match_state` și `gcs_on_player_linked`); atunci GCS doar urmărește meciul (restartul și mutările le face
+pluginul lor).
 
 ## Counter-Strike 2 (CounterStrikeSharp)
 
 ### Cerințe pe server
 
-- **Metamod:Source 2** și **CounterStrikeSharp** (cu runtime-ul .NET inclus), din pagina oficială a proiectului
+- **Metamod:Source 2** și **CounterStrikeSharp** (cu runtime-ul .NET), din pagina oficială a proiectului
   CounterStrikeSharp (GitHub, Releases).
 
 ### Compilarea
 
-Necesită **.NET SDK 8**: <https://dotnet.microsoft.com/download/dotnet/8.0> (sau scriptul oficial `dotnet-install`
-cu `-Channel 8.0 -InstallDir <folder>`, fără instalare în sistem). Pachetul `CounterStrikeSharp.API` vine din NuGet la
-prima compilare, în versiunea fixă din `GcsBridge.csproj`: **1.0.368**, ultima pentru net8.0 (de la 1.0.369 pachetul
-cere net10.0, deci .NET SDK 10). Pluginul net8.0 rulează și pe CounterStrikeSharp-ul nou, cu runtime-ul .NET 10.
+Necesită **.NET SDK 8**: <https://dotnet.microsoft.com/download/dotnet/8.0>. `CounterStrikeSharp.API` vine din NuGet în
+versiunea fixă din `GcsBridge.csproj`: **1.0.368**, ultima pentru net8.0. Pluginul net8.0 rulează și pe
+CounterStrikeSharp-ul nou, cu runtime-ul .NET 10.
 
 ```powershell
 .\servers-plugins\cs2\build.ps1 [-Dotnet "C:\tools\dotnet8\dotnet.exe"]
 ```
 
-```sh
-[DOTNET_EXE=/opt/dotnet8/dotnet] ./servers-plugins/cs2/build.sh
-```
+### Configul (`configs/plugins/GcsBridge/GcsBridge.json`)
 
-Rezultatul: `servers-plugins/cs2/GcsBridge/bin/Release/net8.0/GcsBridge.dll` (pe server ajung doar `GcsBridge.dll` și,
-opțional, `GcsBridge.pdb`; CounterStrikeSharp își aduce singur API-ul).
+`Url`, `Key` (gol = înrolarea automată), `AllowManage` (false = doar colector), `MixPlayers`, `MixMaxRounds`, `Debug`.
 
-### Instalarea
+### Comenzile modulului „commands” (chat: `!…` sau `/…`)
 
-1. `GcsBridge.dll` → `addons/counterstrikesharp/plugins/GcsBridge/`.
-2. La prima pornire se creează `addons/counterstrikesharp/configs/plugins/GcsBridge/GcsBridge.json`; completează
-   `Url` și `Key`, apoi `css_plugins reload GcsBridge` (sau schimbă harta).
-3. Adminii și VIP-ul vin de la GCS ca permisiuni CounterStrikeSharp (`@css/*`, plus `@gcs/custom_a`…`@gcs/custom_h`
-   și `@gcs/tempban`), cu imunitatea lor. Permisiunile din `configs/admins.json` ale unui jucător sunt înlocuite la
-   conectare, deci adminii se adaugă în ACP înainte.
-
-### Comenzi
-
-| Comandă (chat: `!…` sau `/…`) | Permisiune | Ce face |
+| Comandă | Permisiune | Ce face |
 |---|---|---|
 | `css_gcsban` / `css_gcsgban <țintă> <minute> [motiv]` | `@css/ban` (sau `@gcs/tempban` doar temporar) | ban pe acest server / pe toate |
 | `css_gcsunban <SteamID64 \| IP> [motiv]` | `@css/unban` | ridică banul |
 | `css_gcsmute` / `css_gcsgag <țintă> <minute> [motiv]` | `@css/chat` | mute vocal / gag |
 | `css_gcsunmute` / `css_gcsungag <țintă>` | `@css/chat` | ridică mute-ul / gag-ul |
 | `css_gcskick <țintă> [motiv]` | `@css/kick` | kick, cu intrare în jurnalul GCS |
-| `css_gcsmatch <start\|live\|halftime\|end\|abort>` | `@css/config` | meciul mix urmărit de GCS |
-| `!gcs COD` | oricine | legarea identității (pe CS2 contul Steam se leagă de pe site) |
-| `!ready`, `!unready` | oricine, cu `MixReady: true` | ready-up-ul meciului mix |
+| `css_gcsmatch <start\|live\|halftime\|end\|abort>` | `@css/config` | meciul mix condus din comandă |
+
+Mereu: `!gcs COD` (pe CS2 contul Steam se leagă de pe site). Cu `mixReady`: `!ready`, `!unready`.
+
+## Meciurile mix urmărite pasiv
+
+Pe un server marcat „mix” în ACP, fără ready-up și fără ca meciul să fie condus din comandă / native, pluginul doar
+observă: un restart al jocului urmat de o rundă cu cel puțin 2 jucători în fiecare echipă pornește meciul (A = CT);
+schimbarea părților (majoritatea lui A pe partea cealaltă) e pauza; finalul vine la majoritatea lui `mp_maxrounds`
+(30 pe CS 1.6 / 24 pe CS2 dacă e 0) sau, pe CS2, la panoul de final; harta schimbată anulează meciul deschis.
 
 ## Securitate
 
 - Cheia e pe server: se rotește (cea veche mai merge 10 minute) și se revocă din ACP. O cheie furată poate scrie
-  statistici false și poate raporta bannuri în numele serverului; bannurile globale venite din joc cer un admin cunoscut
-  de GCS pe toate serverele.
-- Adminii membri primesc drepturile doar pe identitățile Steam (dovedite). ID-urile non-Steam pot fi falsificate: se
-  permit doar explicit, cu avertisment; pentru jucătorii non-Steam folosiți nume + parolă.
-- Parolele adminilor pe nume nu circulă niciodată spre server: lista conține doar sarea și verificatorul
-  (`SHA-256(salt:parolă)`). Dacă fișierul local al serverului e furat, o parolă slabă se poate ghici offline: folosiți
-  parole lungi (butonul „Generează” din ACP) și rotiți-le.
-- Textele venite din joc (nume, motive, hărți) sunt curățate de GCS și afișate doar ca text.
+  statistici false; de aceea înrolarea cere aprobarea unui admin, iar cheia se livrează o singură dată, doar celui cu
+  referința și secretul înrolării.
+- Secretul înrolării pe CS 1.6 vine dintr-un rezervor de entropie trecut prin SHA-256 (AMX Mod X nu are un generator
+  criptografic); referința dată de site (aleatorie, doar prin răspunsul către plugin) o completează.
+- Adminii membri primesc drepturile doar pe identitățile Steam (dovedite). Parolele adminilor pe nume nu circulă
+  niciodată spre server (doar sarea și verificatorul).
+- Textele venite din joc (nume, motive, hărți, numele raportat la înrolare) sunt curățate de GCS și afișate doar ca text.
 
 ## Starea compilării
 
-Ambele pluginuri se compilează fără erori și fără avertismente (2026-10-08):
+Ambele pluginuri (1.1.0) se compilează fără erori și fără avertismente (2026-10-08):
 
 | Plugin | Unelte | Rezultat |
 |---|---|---|
-| `amxx/gcs_bridge.sma` | `amxxpc` din AMX Mod X 1.10.0.5486; include-urile AmxxEasyHttp 1.5.0 și ReAPI 5.29.0.358 | `gcs_bridge.amxx`; nativele folosite există toate și în AMX Mod X 1.9 |
-| `cs2/GcsBridge` | .NET SDK 8.0.425; `CounterStrikeSharp.API` 1.0.368 | `GcsBridge.dll` (net8.0) |
+| `amxx/gcs_bridge.sma` | `amxxpc` din AMX Mod X 1.10.0.5486; include-urile AmxxEasyHttp 1.5.0 și ReAPI 5.29.0.358 | `gcs_bridge.amxx`; nativele folosite există și în AMX Mod X 1.9 |
+| `cs2/GcsBridge` | .NET SDK 8.0.425; `CounterStrikeSharp.API` 1.0.368 | `GcsBridge.dll` (net8.0), fără `.pdb` |
 
-Semnarea e verificată cap la cap cu codul GCS (`signing.ts`) și cu serverul fals: clientul CS2 (`BridgeClient.cs`,
-`EventQueue.cs`) și algoritmul `sha256-env` al pluginului AMX Mod X, inclusiv corectarea ceasului la `clock_skew`,
-corpurile cu UTF-8, query-ul din cale, `If-None-Match` / 304 și o cheie greșită (refuzată). Pluginurile nu au rulat încă
-pe un server de joc real.
+Protocolul e verificat cap la cap cu codul site-ului: clientul CS2 real (`BridgeClient.cs`, `EventQueue.cs`) prin HTTP
+(înrolarea, secretul greșit, cheia livrată, heartbeat-ul semnat cu permisiunile raportate, evenimentele) și pașii
+pluginului AMX Mod X refăcuți în Node (corpurile ca `json_serial_to_string`, `sha256-env`, cheia din
+`gcs_bridge_key.cfg`). Pluginurile nu au rulat încă pe un server de joc real.

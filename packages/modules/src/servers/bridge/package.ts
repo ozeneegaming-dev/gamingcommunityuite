@@ -131,18 +131,19 @@ export function installNote(game: GcsPluginGame, variant: GcsPackageVariant, opt
         "- CounterStrikeSharp 1.0.368 sau mai nou (cu runtime-ul .NET la prima instalare): pagina oficială a proiectului",
         "  (GitHub, „CounterStrikeSharp”, Releases).",
       ];
+  const filled = variant === "generic" ? "de completat adresa site-ului" : "completat";
   const files = cs16
     ? [
         "  addons/amxmodx/plugins/gcs_bridge.amxx           pluginul",
         "  addons/amxmodx/configs/plugins-gcs.ini           îl încarcă automat (plugins.ini nu se editează)",
-        "  addons/amxmodx/configs/gcs_bridge.cfg            configul (completat)",
+        `  addons/amxmodx/configs/gcs_bridge.cfg            configul (${filled})`,
         "  addons/amxmodx/scripting/gcs_bridge.sma          sursa (licența GPL o cere alături)",
         "  addons/amxmodx/scripting/include/gcs_bridge.inc  doar pentru alte pluginuri de mix",
         "  LICENSE.txt                                      licența (GPL-3.0-or-later)",
       ]
     : [
         "  addons/counterstrikesharp/plugins/GcsBridge/GcsBridge.dll           pluginul",
-        "  addons/counterstrikesharp/configs/plugins/GcsBridge/GcsBridge.json  configul (completat)",
+        `  addons/counterstrikesharp/configs/plugins/GcsBridge/GcsBridge.json  configul (${filled})`,
         "  LICENSE.txt                                                          licența (MIT)",
       ];
   const modules = cs16
