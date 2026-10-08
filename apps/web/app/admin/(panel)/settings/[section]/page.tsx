@@ -4,7 +4,7 @@ import { GcsButton, GcsCard } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { requireAcpPanel, requireAcpSection } from "@/lib/acp";
 import { LOCALE_NAMES } from "@/lib/locales";
@@ -29,6 +29,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  */
 export default async function AcpSettingsPage({ params }: Props) {
   const { section } = await params;
+  // Opțiunile clanurilor au pagina lor (tab-uri, liste de grupuri și categorii), nu formularul generic.
+  if (section === "clans") redirect("/admin/gaming/clans/settings");
   const { registry, settings, db } = services();
   const defs = registry.settingDefs().filter((d) => d.section === section);
 

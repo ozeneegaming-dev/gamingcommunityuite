@@ -1,6 +1,6 @@
 import type { GcsLockedBadge, GcsProfileView } from "@gcs/modules";
 import { parseUserRef, slugify } from "@gcs/modules/slug";
-import { GcsAvatar, GcsBadgeArt, GcsCard, GcsUserLink } from "@gcs/ui";
+import { GcsAvatar, GcsBadgeArt, GcsCard, GcsClanTag, GcsUserLink } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -12,6 +12,7 @@ import { memberHref, tint, topicHref } from "@/lib/forum-urls";
 import { pageParam } from "@/lib/forum-page";
 import { memberLook } from "@/lib/member-look";
 import { services } from "@/lib/services";
+import { clanColors, GcsClanLogo } from "../../_components/clans/GcsClanLogo";
 import { GcsProfileActions } from "../../_components/profile/GcsProfileActions";
 import { GcsProfileBackdrop, GcsProfileSong } from "../../_components/profile/GcsProfileVip";
 import { GcsWallComposer, GcsWallItemActions } from "../../_components/profile/GcsWall";
@@ -79,6 +80,9 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
   // pastila banner-ului, arma în statistici, citatul și melodia), iar tema prin variabile CSS.
   const look = await memberLook(user.id);
   const tv = look ? await getTranslations("profile.vip") : null;
+  // Clanurile membrului (aplicația Clanuri): tagul lângă nume și insigna clanului, după opțiuni.
+  const clans = await services().clanQueries.memberClans(user.id);
+  const tr = await getTranslations("clans.roles");
 
   const header = (
     <section className="gcs-card gcs-profileHeader" style={{ borderColor: tint(accent, 0.45) }} data-testid="gcs-profile">
@@ -98,6 +102,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
             <h1 className={`gcs-display gcs-name--${user.nameKey}`} style={{ margin: 0, fontSize: 40, letterSpacing: ".02em" }} data-testid="gcs-profile-name" data-name-user={user.id} data-text={user.name}>
               {user.name}
             </h1>
+            {clans.tagOnName && clans.clans[0] && <GcsClanTag clan={clans.clans[0]} testId="gcs-profile-clan-tag" />}
             {profile.online.online && (
               <span style={{ fontSize: 13, color: "var(--gcs-ok)", display: "flex", alignItems: "center", gap: 6 }}>
                 <span className="gcs-dot" style={{ background: "var(--gcs-ok)" }} />
@@ -132,6 +137,28 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
               </span>
             ))}
           </div>
+          {clans.clans.length > 0 && (
+            <ul className="gcs-profileClans" aria-label={t("clans")} data-testid="gcs-profile-clans">
+              {clans.clans.map((c) => (
+                <li key={c.id}>
+                  {clans.badge ? (
+                    <a className="gcs-profileClan" href={c.href} style={clanColors(c)} data-testid="gcs-profile-clan">
+                      <GcsClanLogo clan={c} size="s" />
+                      <GcsClanTag clan={c} size="sm" plain />
+                      <strong>{c.name}</strong>
+                      <span className="gcs-profileClan__role">{tr(c.role)}</span>
+                    </a>
+                  ) : (
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 13 }} data-testid="gcs-profile-clan">
+                      <GcsClanTag clan={c} size="sm" />
+                      <Link href={c.href}>{c.name}</Link>
+                      <span className="gcs-profileClan__role">{tr(c.role)}</span>
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <GcsProfileActions
           userId={user.id}

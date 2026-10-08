@@ -995,7 +995,7 @@ export class GcsClanService {
 function uniqueError(error: unknown): unknown {
   if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
     const target = String((error.meta as { target?: unknown } | undefined)?.target ?? "");
-    return new GcsValidationError(target.includes("name") ? { name: "taken" } : { tag: "taken" });
+    return new GcsValidationError(target.includes("name") ? { name: "clan_name_taken" } : { tag: "clan_tag_taken" });
   }
   return error;
 }

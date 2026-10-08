@@ -1,6 +1,6 @@
 import { GCS_RICH_FIELDS, richFieldHtml, sanitizeContentHtml, type GcsActor } from "@gcs/core";
 import { POLL_INTERVAL_SETTING, type GcsUserRef } from "@gcs/modules";
-import { GcsAvatar, GcsBadge, GcsButton, GcsCard, GcsUserLink } from "@gcs/ui";
+import { GcsAvatar, GcsBadge, GcsButton, GcsCard, GcsClanTag, GcsUserLink } from "@gcs/ui";
 import Link from "next/link";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
@@ -11,6 +11,7 @@ import { widgetCardVars } from "@/lib/template-data";
 import { siteTemplate } from "@/lib/templates";
 import { services } from "@/lib/services";
 import { GcsShoutbox } from "../chat/GcsShoutbox";
+import { GcsClanLogo } from "../clans/GcsClanLogo";
 import { GcsRelTime } from "../forum/GcsRelTime";
 import { GcsServerLiveProvider } from "../servers/GcsServerLive";
 import { GcsServerWidgetList } from "../servers/GcsServerWidgetList";
@@ -336,6 +337,39 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
         )}
         <Link href="/servers" className="gcs-serverList__all">
           {ts("viewAll")}
+        </Link>
+      </GcsWidgetCard>
+    );
+  },
+
+  // Aplicația Clanuri: primele clanuri din clasament (locul, logo-ul, plăcuța, numele, membrii, punctele).
+  "clans.top": async ({ id, config, actor }) => {
+    const { clanQueries } = services();
+    if (!(await clanQueries.canView(actor))) return null;
+    const [t, tc, format, list] = await Promise.all([getTranslations("widgets"), getTranslations("clans"), getFormatter(), clanQueries.top(limitOf(config, 5))]);
+    return (
+      <GcsWidgetCard id={id} type="clans.top" config={config} title={t("clans.top")} testId="gcs-widget-clans">
+        {list.length === 0 ? (
+          <p className="gcs-sideCard__line">{tc("widgetEmpty")}</p>
+        ) : (
+          <ol className="gcs-clanWidget">
+            {list.map((c, i) => (
+              <li key={c.id} className="gcs-clanWidget__row" data-testid="gcs-widget-clan">
+                <span className="gcs-clanWidget__pos">{c.rank ?? i + 1}</span>
+                <GcsClanLogo clan={c} size="s" />
+                <span className="gcs-clanWidget__body">
+                  <span className="gcs-clanWidget__name">
+                    <GcsClanTag clan={c} size="sm" />
+                    <Link href={c.href}>{c.name}</Link>
+                  </span>
+                  <span className="gcs-clanWidget__meta">{tc("widgetMeta", { members: c.membersCount, score: format.number(c.score) })}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
+        <Link href="/clans" className="gcs-clanList__all">
+          {tc("viewAll")}
         </Link>
       </GcsWidgetCard>
     );

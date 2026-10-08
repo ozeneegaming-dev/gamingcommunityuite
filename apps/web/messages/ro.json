@@ -14,7 +14,8 @@
       "vip": "VIP",
       "rules": "Reguli",
       "more": "Mai mult",
-      "servers": "Servere"
+      "servers": "Servere",
+      "clans": "Clanuri"
     },
     "acp": "ACP",
     "myProfile": "Profilul meu",
@@ -128,7 +129,23 @@
       "unsigned_requires_root": "Pachetele necertificate pot fi instalate doar de un Root Admin.",
       "db_role_unavailable": "Userul bazei de date nu poate crea roluri: pluginurile cu bază de date proprie nu se pot instala sigur.",
       "db_unavailable": "Baza de date nu e configurată.",
-      "dependency_disabled": "O dependență a pluginului nu e instalată sau e dezactivată."
+      "dependency_disabled": "O dependență a pluginului nu e instalată sau e dezactivată.",
+      "clan_closed": "Clanul nu primește membri acum (e în așteptare, blocat, arhivat sau doar cu invitație).",
+      "clan_already_member": "Ești deja membru al acestui clan.",
+      "clan_max_clans": "Ai atins numărul maxim de clanuri în care poți fi.",
+      "clan_full": "Clanul a atins limita de membri.",
+      "clan_cooldown": "Ai ieșit de curând dintr-un clan: mai așteaptă puțin până să intri în altul.",
+      "clan_pending_exists": "Există deja o cerere sau o invitație în așteptare.",
+      "clan_request_closed": "Cererea sau invitația nu mai e valabilă.",
+      "clan_cannot_join": "Acest membru nu poate intra în clanuri.",
+      "clan_invites_full": "Clanul are prea multe invitații în așteptare.",
+      "clan_request_waiting": "Membrul a cerut deja intrarea: cererea așteaptă un lider sau un ofițer care poate decide.",
+      "clan_leader_role": "Rolul liderului se schimbă doar prin transferul conducerii.",
+      "clan_leader_must_transfer": "Liderul nu poate ieși: transferă întâi conducerea sau desființează clanul.",
+      "clan_forum_exists": "Clanul are deja un forum.",
+      "clan_no_forum_parent": "Staff-ul nu a ales încă unde se creează forumurile clanurilor.",
+      "clan_not_archived": "Clanul nu e arhivat.",
+      "clan_not_pending": "Clanul nu mai așteaptă aprobarea."
     },
     "fields": {
       "invalid_color": "Culoare invalidă (#RRGGBB)",
@@ -191,7 +208,12 @@
       "migration_failed": "O migrație a bazei de date a eșuat.",
       "invalid_host": "Host invalid (un IP sau un nume de domeniu public, fără port)",
       "blocked_address": "Adresa e privată sau locală și nu se poate interoga",
-      "duplicate_server": "Serverul există deja (același joc, host și port)"
+      "duplicate_server": "Serverul există deja (același joc, host și port)",
+      "invalid_chars": "Conține caractere nepermise",
+      "clan_tag_taken": "Există deja un clan cu acest tag",
+      "clan_name_taken": "Există deja un clan cu acest nume",
+      "tag_range": "Lungimea minimă nu poate depăși lungimea maximă",
+      "not_member": "Membrul ales nu e în clan"
     }
   },
   "acp": {
@@ -338,7 +360,10 @@
       "gaming": {
         "servers_group": "Servere",
         "servers": "Servere",
-        "servers_settings": "Setări servere"
+        "servers_settings": "Setări servere",
+        "clans_group": "Clanuri",
+        "clans": "Clanuri",
+        "clans_settings": "Setări clanuri"
       }
     },
     "comingSoon": {
@@ -736,7 +761,8 @@
         "languages": "Limbi și traducere",
         "postbit": "Postbit",
         "vip": "Pagina VIP și expirări",
-        "servers": "Servere"
+        "servers": "Servere",
+        "clans": "Clanuri"
       },
       "save": "Salvează setările",
       "secretSet": "•••• salvat (lasă gol ca să păstrezi valoarea)",
@@ -1845,6 +1871,158 @@
       },
       "save": "Salvează",
       "create": "Adaugă serverul"
+    },
+    "clans": {
+      "title": "Clanuri",
+      "lead": "Clanurile comunității: aprobarea celor noi, blocarea, arhivarea și desființarea, limitele și jurnalul fiecăruia.",
+      "recompute": "Recalculează clasamentul",
+      "filterLabel": "Starea clanurilor",
+      "filters": {
+        "pending": "În așteptare ({count})",
+        "active": "Active ({count})",
+        "archived": "Arhivate ({count})",
+        "locked": "Blocate ({count})",
+        "all": "Toate ({count})"
+      },
+      "search": "Caută după tag sau nume",
+      "searchSubmit": "Caută",
+      "empty": {
+        "pending": "Niciun clan nu așteaptă aprobarea.",
+        "active": "Niciun clan activ.",
+        "archived": "Niciun clan arhivat.",
+        "locked": "Niciun clan blocat.",
+        "all": "Niciun clan încă."
+      },
+      "leader": "Lider",
+      "noLeader": "Fără lider",
+      "row": "{members, plural, one {# membru} few {# membri} other {# de membri}}, {score} puncte, creat pe {date}",
+      "approve": "Aprobă",
+      "reject": "Respinge",
+      "rejectConfirm": "Respingi clanul „{name}”? Clanul se șterge, iar fondatorul primește motivul.",
+      "rejectReason": "Motivul (îl vede fondatorul)",
+      "status": {
+        "PENDING": "În așteptare",
+        "ACTIVE": "Activ",
+        "ARCHIVED": "Arhivat",
+        "LOCKED": "Blocat"
+      },
+      "edit": "Gestionează",
+      "view": "Vezi pagina",
+      "prev": "← Pagina anterioară",
+      "next": "Pagina următoare →",
+      "back": "Înapoi la clanuri",
+      "editOnSite": "Editează pagina clanului",
+      "pendingTitle": "Aprobarea clanului",
+      "moderationTitle": "Moderare",
+      "locked": "Clanul e blocat.",
+      "lockedReason": "Clanul e blocat: {reason}",
+      "unlock": "Deblochează",
+      "lock": "Blochează",
+      "lockReason": "Motivul blocării (opțional, apare pe pagina clanului)",
+      "archive": "Arhivează",
+      "reactivate": "Reactivează",
+      "save": "Salvează",
+      "memberLimit": "Limita de membri a acestui clan",
+      "unlimited": "nelimitat",
+      "memberLimitHint": "Gol = după grupurile liderului (ACP → Gaming → Clanuri → Setări → Grupuri).",
+      "membersTitle": "{count, plural, one {Un membru} few {# membri} other {# de membri}}",
+      "roles": {
+        "LEADER": "Lider",
+        "OFFICER": "Ofițer",
+        "MEMBER": "Membru"
+      },
+      "transfer": "Transferă conducerea",
+      "transferTo": "Noul lider",
+      "disbandTitle": "Desființarea clanului",
+      "disbandText": "Clanul se șterge cu membrii, cererile și imaginile lui. Forumul privat se șterge dacă e gol, altfel rămâne doar pentru staff. Jurnalul păstrează datele.",
+      "disband": "Desființează clanul",
+      "disbandConfirm": "Desființezi clanul „{name}”? Acțiunea nu se poate anula.",
+      "auditTitle": "Jurnalul clanului",
+      "system": "Sistem",
+      "settingsTitle": "Setări clanuri",
+      "settings": {
+        "title": "Setări clanuri",
+        "lead": "Cine creează clanuri și cum, tagul, membrii, forumul privat, clasamentul și unde apare tagul.",
+        "tabsLabel": "Secțiunile setărilor",
+        "tabs": {
+          "create": "Crearea",
+          "tag": "Tagul",
+          "members": "Membrii",
+          "forum": "Forumul privat",
+          "ranking": "Clasamentul",
+          "display": "Afișarea",
+          "groups": "Grupuri"
+        },
+        "requireApproval": "Un clan nou așteaptă aprobarea staff-ului",
+        "maxPerMember": "În câte clanuri poate fi un membru",
+        "maxPerMemberHint": "1 = un singur clan. Se numără și clanurile în așteptare.",
+        "leaveCooldown": "Pauza după ieșirea dintr-un clan (ore)",
+        "leaveCooldownHint": "Cât așteaptă un membru care a ieșit sau a fost scos până să intre în alt clan. 0 = fără pauză.",
+        "requiredFields": "Câmpuri obligatorii",
+        "fields": {
+          "logo": "Logo",
+          "banner": "Banner",
+          "description": "Descrierea"
+        },
+        "logoMaxKb": "Mărimea maximă a logo-ului (KB)",
+        "bannerMaxKb": "Mărimea maximă a bannerului (KB)",
+        "tagMin": "Lungimea minimă a tagului",
+        "tagMax": "Lungimea maximă a tagului",
+        "tagCharset": "Caracterele permise în tag",
+        "charsets": {
+          "alnum": "Litere latine și cifre",
+          "alnum_symbols": "Litere latine, cifre și simbolurile - _ . ! ? # * ~ ^ '",
+          "unicode": "Litere și cifre din orice alfabet"
+        },
+        "inviteDays": "După câte zile expiră o invitație",
+        "requestDays": "După câte zile expiră o cerere de intrare",
+        "archiveInactive": "Arhivarea automată după câte zile fără activitate",
+        "archiveInactiveHint": "0 = oprită; altfel între 14 și 730 de zile. Activitate = membri activi pe site sau schimbări în clan.",
+        "officerRights": "Ce drepturi poate da liderul ofițerilor",
+        "officerRightsHint": "Un drept scos de aici dispare și din clanurile care îl dăduseră.",
+        "rights": {
+          "members": "Scot membri simpli",
+          "invite": "Trimit invitații",
+          "requests": "Acceptă sau refuză cereri",
+          "edit": "Editează pagina clanului",
+          "forum": "Moderează forumul privat",
+          "events": "Înscriu clanul la evenimente și turnee"
+        },
+        "forumParentMissing": "Alege categoria forumurilor clanurilor: fără ea nu se poate crea niciun forum privat.",
+        "forumMode": "Forumul privat",
+        "forumModes": {
+          "auto": "Creat automat la activarea clanului",
+          "optional": "La alegerea liderului",
+          "off": "Fără forumuri private"
+        },
+        "forumParent": "Unde se creează forumurile clanurilor",
+        "forumParentHint": "O categorie (sau un forum) existentă. Forumul unui clan nu moștenește drepturile ei.",
+        "forumParentNone": "Nicio categorie aleasă",
+        "forumStaff": "Staff-ul care vede forumurile private",
+        "forumStaffHint": "Aceste grupuri citesc și scriu în forumurile tuturor clanurilor. Root Admin le vede oricum.",
+        "formula": "Scorul = postările membrilor din ultimele 30 de zile × pondere + reputația membrilor × pondere + membrii activi în ultimele 30 de zile × pondere + membrii × pondere. Clasamentul se recalculează în fiecare oră.",
+        "weightPosts": "Ponderea postărilor",
+        "weightReputation": "Ponderea reputației",
+        "weightActivity": "Ponderea membrilor activi",
+        "weightMembers": "Ponderea numărului de membri",
+        "tagPlaces": "Unde apare tagul lângă numele membrilor",
+        "places": {
+          "postbit": "Postbit (lângă postări)",
+          "hovercard": "Hover card",
+          "profile": "Profil"
+        },
+        "profileBadge": "Membrii primesc pe profil insigna clanului (logo, tag și nume)",
+        "groupsHint": "Bifele și limitele se aplică pe grup; un membru are drepturile combinate ale grupurilor lui. Limita de membri a unui clan vine din grupurile liderului.",
+        "groupsNoRight": "Ai nevoie și de dreptul de a edita grupurile ca să schimbi aceste valori.",
+        "group": "Grupul",
+        "canCreate": "Creează clanuri",
+        "canJoin": "Intră în clanuri",
+        "maxMembers": "Membri pe clan",
+        "canModerate": "Staff pe site",
+        "maxMembersHint": "Membri pe clan: -1 = nelimitat.",
+        "save": "Salvează",
+        "recompute": "Recalculează clasamentul acum"
+      }
     }
   },
   "settings": {
@@ -1889,7 +2067,11 @@
       "deepl": "DeepL",
       "off": "Oprită",
       "24h": "24 de ore (14:30)",
-      "12h": "12 ore (2:30 PM)"
+      "12h": "12 ore (2:30 PM)",
+      "alnum": "Litere latine și cifre",
+      "alnum_symbols": "Litere, cifre și simboluri",
+      "unicode": "Orice alfabet",
+      "optional": "La alegere"
     },
     "forums": {
       "posts_per_page": "Postări pe pagină",
@@ -2094,6 +2276,30 @@
       "poll_interval": "Intervalul de interogare a serverelor (secunde, 30–300)",
       "retention_days": "Câte zile se păstrează istoricul jucătorilor (7–365)",
       "show_players": "Arată numele jucătorilor pe pagina serverului"
+    },
+    "clans": {
+      "require_approval": "Un clan nou așteaptă aprobarea staff-ului",
+      "max_per_member": "În câte clanuri poate fi un membru",
+      "leave_cooldown_hours": "Pauza după ieșirea dintr-un clan (ore)",
+      "tag_min": "Lungimea minimă a tagului clanului",
+      "tag_max": "Lungimea maximă a tagului clanului",
+      "tag_charset": "Caracterele permise în tagul clanului",
+      "required_fields": "Câmpurile obligatorii ale unui clan",
+      "logo_max_kb": "Mărimea maximă a logo-ului clanului (KB)",
+      "banner_max_kb": "Mărimea maximă a bannerului clanului (KB)",
+      "forum_mode": "Forumul privat al clanurilor",
+      "forum_parent": "Categoria forumurilor clanurilor",
+      "forum_staff_groups": "Staff-ul care vede forumurile clanurilor",
+      "officer_rights": "Drepturile pe care liderul le poate da ofițerilor",
+      "invite_days": "Zilele până expiră o invitație în clan",
+      "request_days": "Zilele până expiră o cerere de intrare în clan",
+      "archive_inactive_days": "Arhivarea automată a clanurilor inactive (zile)",
+      "weight_posts": "Clasamentul clanurilor: ponderea postărilor",
+      "weight_reputation": "Clasamentul clanurilor: ponderea reputației",
+      "weight_activity": "Clasamentul clanurilor: ponderea membrilor activi",
+      "weight_members": "Clasamentul clanurilor: ponderea numărului de membri",
+      "tag_places": "Unde apare tagul clanului lângă nume",
+      "profile_badge": "Insigna clanului pe profilul membrilor"
     }
   },
   "permissions": {
@@ -2162,6 +2368,13 @@
     "servers": {
       "view": "Vede serverele de joc",
       "view_players": "Vede lista jucătorilor de pe servere"
+    },
+    "clans": {
+      "view": "Vede clanurile",
+      "create": "Creează clanuri",
+      "join": "Intră în clanuri (cere intrarea, acceptă invitații)",
+      "max_members": "Câți membri poate avea un clan condus de acest grup (-1 = nelimitat)",
+      "moderate": "Staff pentru clanuri pe site (editează, blochează, desființează orice clan)"
     }
   },
   "profile": {
@@ -2251,7 +2464,8 @@
       "youtube": "Video YouTube: se încarcă doar când apeși Redă.",
       "bgPause": "Oprește fundalul animat",
       "bgPlay": "Pornește fundalul animat"
-    }
+    },
+    "clans": "Clanurile membrului"
   },
   "maintenance": {
     "title": "Mentenanță",
@@ -2747,6 +2961,12 @@
       },
       "chat": {
         "mention": "Mențiuni în chat"
+      },
+      "clans": {
+        "invite": "Invitații în clanuri",
+        "request": "Cereri noi de intrare în clanul tău",
+        "membership": "Schimbări în clanul tău (cereri, roluri, excluderi)",
+        "review": "Aprobarea clanurilor create de tine"
       }
     }
   },
@@ -2870,7 +3090,8 @@
   "apps": {
     "chat": "Chat",
     "vip": "VIP",
-    "servers": "Servere"
+    "servers": "Servere",
+    "clans": "Clanuri"
   },
   "translate": {
     "translate": "Traduce",
@@ -3226,6 +3447,9 @@
       },
       "servers": {
         "list": "Statusul live al serverelor de joc: jucători, hartă, adresă."
+      },
+      "clans": {
+        "top": "Primele clanuri din clasament, cu membrii și punctele."
       }
     },
     "servers": {
@@ -3236,6 +3460,9 @@
       "cs16": "CS 1.6",
       "cs2": "CS2 / CS:GO",
       "minecraft": "Minecraft"
+    },
+    "clans": {
+      "top": "Top clanuri"
     }
   },
   "pageEditor": {
@@ -3284,7 +3511,8 @@
       "core": "Comunitate",
       "forums": "Forumuri",
       "chat": "Chat",
-      "servers": "Servere"
+      "servers": "Servere",
+      "clans": "Clanuri"
     },
     "search": "Caută un widget",
     "noResults": "Niciun widget nu se potrivește căutării.",
@@ -3310,7 +3538,8 @@
       "members": "Membri",
       "vip": "Membri VIP",
       "serversOnline": "Servere",
-      "serverPlayers": "Jucători"
+      "serverPlayers": "Jucători",
+      "clans": "Clanuri"
     },
     "allOnline": "Vezi toți membrii online →",
     "panel": {
@@ -3937,5 +4166,268 @@
     "viewAll": "Toate serverele",
     "widgetEmpty": "Niciun server de afișat.",
     "playersZero": "Fără jucători"
+  },
+  "clans": {
+    "title": "Clanuri",
+    "lead": "{count, plural, one {Un clan activ} few {# clanuri active} other {# de clanuri active}}",
+    "leadEmpty": "Echipele comunității, cu tagul, membrii și clasamentul lor.",
+    "create": "Creează un clan",
+    "createTitle": "Creează un clan",
+    "createLead": "Alege tagul și numele, descrie clanul și cum se intră în el. Le poți schimba mai târziu.",
+    "createForbidden": "Grupul tău nu poate crea clanuri. Clanurile se creează de membrii VIP și de staff (sau de grupurile alese de staff).",
+    "createGuest": "Intră în cont ca să creezi un clan.",
+    "forbidden": "Nu ai acces la clanuri.",
+    "empty": "Niciun clan încă.",
+    "emptyFilter": "Niciun clan nu se potrivește filtrelor.",
+    "emptyCreate": "Creează primul clan",
+    "view": "Vezi clanul",
+    "viewClan": "Vezi clanul {name}",
+    "rankLabel": "Locul {rank} în clasament",
+    "rankPlace": "Locul {rank} în clasament",
+    "manage": {
+      "title": "Administrare",
+      "tabs": {
+        "label": "Secțiunile administrării",
+        "members": "Membri",
+        "requests": "Cereri și invitații",
+        "settings": "Setări",
+        "danger": "Zona periculoasă"
+      },
+      "membersTitle": "{count, plural, one {Un membru} few {# membri} other {# de membri}}",
+      "member": "Membru",
+      "role": "Rol",
+      "joined": "Intrat",
+      "actions": "Acțiuni",
+      "promote": "Numește ofițer",
+      "demote": "Retrogradează",
+      "kick": "Scoate din clan",
+      "kickConfirm": "Îl scoți pe {name} din clan?",
+      "noRequests": "Nicio cerere în așteptare.",
+      "accept": "Acceptă",
+      "reject": "Refuză",
+      "requestsTitle": "{count, plural, =0 {Cereri de intrare} one {O cerere de intrare} few {# cereri de intrare} other {# de cereri de intrare}}",
+      "requestMeta": "Trimisă pe {date}, expiră pe {expires}",
+      "invitesTitle": "Invitații",
+      "inviteMeta": "Invitat de {name}, expiră pe {expires}",
+      "inviteMetaAnon": "Expiră pe {expires}",
+      "inviteLabel": "Invită un membru",
+      "invitePlaceholder": "Numele membrului",
+      "invite": "Trimite invitația",
+      "invited": "Invitația a fost trimisă lui {name}.",
+      "inviteSuggestions": "Membri găsiți",
+      "noInvites": "Nicio invitație în așteptare.",
+      "cancelInvite": "Anulează",
+      "createForum": "Creează forumul clanului",
+      "forumCreated": "Forumul clanului a fost creat.",
+      "forumNotReady": "Staff-ul nu a ales încă unde se creează forumurile clanurilor.",
+      "forumTitle": "Forumul privat",
+      "forumExists": "Forumul clanului:",
+      "forumOff": "Forumurile private ale clanurilor sunt oprite.",
+      "forumAfterApproval": "Forumul se poate crea după activarea clanului.",
+      "forumText": "Un forum văzut doar de membrii clanului (și de staff). Liderul și ofițerii cu dreptul de moderare îl moderează.",
+      "forumLeader": "Forumul clanului îl poate crea liderul.",
+      "settingsTitle": "Setările clanului",
+      "events": {
+        "title": "Evenimente și turnee",
+        "body": "Înscrierea clanului la evenimente și turnee apare aici odată cu aplicația Evenimente.",
+        "youCan": "Tu vei putea înscrie clanul.",
+        "whoCan": "Clanul îl înscriu liderul și ofițerii care au acest drept."
+      },
+      "reactivateText": "Clanul e arhivat: nu apare în director și nu primește membri. Reactivarea îl readuce imediat.",
+      "reactivate": "Reactivează clanul",
+      "reactivated": "Clanul a fost reactivat.",
+      "transferLabel": "Transferă conducerea către",
+      "transferNone": "Niciun alt membru",
+      "transfer": "Transferă conducerea",
+      "transferConfirm": "Îl faci pe {name} liderul clanului? Tu devii ofițer.",
+      "transferred": "{name} este noul lider.",
+      "disbandLabel": "Scrie tagul ({tag}) ca să confirmi desființarea",
+      "disbandStaff": "Desființezi clanul ca staff (fără confirmarea tagului).",
+      "disband": "Desființează clanul"
+    },
+    "about": "Despre clan",
+    "noDescription": "Clanul nu are încă o descriere.",
+    "members": "Membri",
+    "since": "din {date}",
+    "widgetEmpty": "Niciun clan încă.",
+    "widgetMeta": "{members, plural, one {# membru} few {# membri} other {# de membri}}, {score} puncte",
+    "viewAll": "Toate clanurile",
+    "facts": {
+      "members": "Membri",
+      "score": "Puncte"
+    },
+    "recruit": {
+      "OPEN": "Intrare liberă",
+      "REQUEST": "Cu cerere",
+      "INVITE": "Doar cu invitație"
+    },
+    "state": {
+      "pending": "În așteptarea aprobării",
+      "locked": "Blocat",
+      "archived": "Arhivat"
+    },
+    "invites": {
+      "title": "{count, plural, one {O invitație} few {# invitații} other {# de invitații}}",
+      "from": "de la {name}"
+    },
+    "filters": {
+      "label": "Filtrele clanurilor",
+      "search": "Caută (tag sau nume)",
+      "sort": "Sortare",
+      "join": "Recrutare",
+      "joinAll": "Orice recrutare",
+      "archived": "Doar arhivate",
+      "apply": "Aplică"
+    },
+    "sorts": {
+      "rank": "Clasament",
+      "members": "Membri",
+      "newest": "Cele mai noi"
+    },
+    "roles": {
+      "LEADER": "Lider",
+      "OFFICER": "Ofițer",
+      "MEMBER": "Membru",
+      "plural": {
+        "LEADER": "Lider",
+        "OFFICER": "{count, plural, one {Ofițer} few {Ofițeri ({count})} other {Ofițeri ({count})}}",
+        "MEMBER": "{count, plural, one {Membru} few {Membri ({count})} other {Membri ({count})}}"
+      }
+    },
+    "notices": {
+      "pending": "Clanul așteaptă aprobarea staff-ului. Până atunci îl văd doar membrii lui și staff-ul.",
+      "locked": "Clanul a fost blocat de staff: nu primește membri și nu poate fi modificat.",
+      "lockedReason": "Clanul a fost blocat de staff: {reason}"
+    },
+    "activity": {
+      "title": "Activitate recentă",
+      "empty": "Nicio activitate încă.",
+      "created": "<name></name> a fondat clanul",
+      "approved": "<name></name> a aprobat clanul",
+      "joined": "<name></name> a intrat în clan",
+      "left": "<name></name> a ieșit din clan",
+      "promoted": "<name></name> a devenit ofițer",
+      "leader": "<name></name> a devenit liderul clanului",
+      "createdAnon": "Clanul a fost fondat",
+      "approvedAnon": "Clanul a fost aprobat",
+      "joinedAnon": "Un membru a intrat în clan",
+      "leftAnon": "Un membru a ieșit din clan",
+      "promotedAnon": "Un membru a devenit ofițer",
+      "leaderAnon": "Clanul are un lider nou"
+    },
+    "stats": {
+      "title": "Statistici",
+      "rank": "Locul",
+      "score": "Puncte",
+      "members": "Membri",
+      "membersOf": "{count} / {limit}",
+      "founded": "Fondat",
+      "parts": "Din: {posts} postări în 30 de zile, {reputation} reputație, {active} membri activi, {members} membri."
+    },
+    "links": {
+      "title": "Linkuri",
+      "discord": "Serverul de Discord",
+      "steam": "Grupul de Steam",
+      "website": "Site-ul clanului",
+      "youtube": "Canalul de YouTube",
+      "twitch": "Canalul de Twitch"
+    },
+    "forum": {
+      "title": "Forumul clanului",
+      "empty": "Niciun topic încă.",
+      "open": "Deschide forumul clanului"
+    },
+    "actions": {
+      "invited": "Ai o invitație în acest clan.",
+      "invitedBy": "{name} te-a invitat în acest clan.",
+      "acceptInvite": "Acceptă invitația",
+      "declineInvite": "Refuză",
+      "leave": "Părăsește clanul",
+      "leaveConfirm": "Părăsești clanul „{name}”?",
+      "join": "Intră în clan",
+      "requestPending": "Cererea ta așteaptă răspuns.",
+      "cancelRequest": "Retrage cererea",
+      "messageLabel": "Mesaj pentru lider (opțional)",
+      "messagePlaceholder": "Ce joci, de cât timp, de ce vrei să intri…",
+      "sendRequest": "Trimite cererea",
+      "cancel": "Renunță",
+      "request": "Cere intrarea",
+      "blocked": {
+        "guest": "Intră în cont ca să te alături clanului.",
+        "no_permission": "Grupul tău nu poate intra în clanuri.",
+        "max_clans": "Ești deja în numărul maxim de clanuri."
+      },
+      "inviteOnly": "Clanul primește membri doar cu invitație."
+    },
+    "form": {
+      "saved": "Setările clanului au fost salvate.",
+      "previewName": "Numele clanului",
+      "charsets": {
+        "alnum": "litere latine și cifre",
+        "alnum_symbols": "litere latine, cifre și - _ . ! ? # * ~ ^ '",
+        "unicode": "litere și cifre"
+      },
+      "sections": {
+        "identity": "Tagul și numele",
+        "look": "Culori și imagini",
+        "about": "Descriere și linkuri",
+        "recruit": "Recrutarea"
+      },
+      "tag": "Tag",
+      "tagHint": "Între {min} și {max} caractere: {chars}. Unic pe site.",
+      "name": "Numele clanului",
+      "nameHint": "Între 3 și 40 de caractere. Unic pe site.",
+      "leaderOnly": "Tagul, numele și drepturile ofițerilor le schimbă doar liderul.",
+      "color": "Culoarea principală",
+      "color2": "Culoarea secundară",
+      "logo": "Logo",
+      "banner": "Banner",
+      "logoCurrent": "Logo-ul curent",
+      "bannerCurrent": "Bannerul curent",
+      "uploading": "Se încarcă…",
+      "replace": "Schimbă",
+      "upload": "Încarcă",
+      "removeImage": "Scoate",
+      "logoHint": "PNG, JPG, WebP sau GIF, max {kb} KB; se decupează pătrat (256 × 256 px).",
+      "bannerHint": "PNG, JPG, WebP sau GIF, max {kb} KB; recomandat 1600 × 400 px. Fără banner se folosește degradeul culorilor.",
+      "description": "Descrierea",
+      "links": {
+        "discord": "Discord (link de invitație)",
+        "steam": "Grupul de Steam",
+        "website": "Site",
+        "youtube": "YouTube",
+        "twitch": "Twitch",
+        "discordPlaceholder": "https://discord.gg/…",
+        "steamPlaceholder": "https://steamcommunity.com/groups/…",
+        "websitePlaceholder": "https://…",
+        "youtubePlaceholder": "https://www.youtube.com/@…",
+        "twitchPlaceholder": "https://twitch.tv/…"
+      },
+      "joinMode": "Cum se intră în clan",
+      "joinModes": {
+        "OPEN": "Intrare liberă",
+        "REQUEST": "Cu cerere",
+        "INVITE": "Doar cu invitație"
+      },
+      "joinModesHint": {
+        "OPEN": "Oricine are dreptul intră imediat.",
+        "REQUEST": "Membrii cer intrarea, liderul sau ofițerii decid.",
+        "INVITE": "Intră doar cine primește o invitație."
+      },
+      "officerRights": "Ce pot face ofițerii",
+      "rights": {
+        "members": "Scot membri simpli",
+        "invite": "Trimit invitații",
+        "requests": "Acceptă sau refuză cereri",
+        "edit": "Editează pagina clanului",
+        "forum": "Moderează forumul clanului",
+        "events": "Înscriu clanul la evenimente și turnee"
+      },
+      "wantForum": "Vreau un forum privat pentru clan",
+      "forumAuto": "Clanul primește automat un forum privat, văzut doar de membri.",
+      "approvalNote": "Clanul va aștepta aprobarea staff-ului. Primești o notificare când e aprobat.",
+      "create": "Creează clanul",
+      "save": "Salvează"
+    }
   }
 }

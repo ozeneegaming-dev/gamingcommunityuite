@@ -78,7 +78,7 @@ export default async function TopicPage({ params, searchParams }: Props) {
   const ignored = new Set(await social.ignoredIds(actor.userId, "posts"));
   const isMod = data.modPowers.length > 0;
   const authorIds = data.posts.flatMap((p) => (p.author ? [p.author.id] : []));
-  const [maxUploadMb, , targets, , readers, tl, translate, postbits] = await Promise.all([
+  const [maxUploadMb, , targets, , readers, tl, translate, postbits, clanTags] = await Promise.all([
     actor.userId ? permissions.groupValue<number | boolean>(actor, "upload.max_mb") : Promise.resolve(0),
     registerTopicView(actor, topic.id),
     isMod ? moveTargets(actor) : Promise.resolve([]),
@@ -88,6 +88,8 @@ export default async function TopicPage({ params, searchParams }: Props) {
     translateLabels(actor),
     // Cardul autorilor (etapa 5): o singură rundă de interogări pentru toată pagina.
     services().postbit.forAuthors(actor, authorIds),
+    // Tagurile clanurilor autorilor (aplicația Clanuri, dacă opțiunile le arată în postbit).
+    services().clanQueries.tagsFor(authorIds, "postbit"),
   ]);
   const isTopicAuthor = actor.userId !== null && actor.userId === topic.author?.id;
   const canSolve = forum.type === "QA" && (isTopicAuthor || has(data.modPowers, "edit"));
@@ -190,6 +192,7 @@ export default async function TopicPage({ params, searchParams }: Props) {
             ignored={post.author !== null && ignored.has(post.author.id)}
             translate={translate}
             postbit={post.author ? (postbits.get(post.author.id) ?? null) : null}
+            clan={post.author ? (clanTags.get(post.author.id) ?? null) : null}
             can={{
               react: actor.userId !== null && post.visibility === "VISIBLE",
               quote: data.canReply,

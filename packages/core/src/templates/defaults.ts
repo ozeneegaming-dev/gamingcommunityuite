@@ -170,6 +170,7 @@ const POSTBIT_AUTHOR = `<div class="gcs-postbit__top">
   <span class="gcs-postbit__avatar">{% avatar author, size: "l" %}</span>
   <div class="gcs-postbit__identity">
     <span class="gcs-post__authorName">{% username author %}</span>
+    {% if author.clan %}<span class="gcs-postbit__clan" data-testid="gcs-postbit-clan"><a class="gcs-clanTag gcs-clanTag--sm" style="--gcs-clan-color: {{ author.clan.color }}; --gcs-clan-color2: {{ author.clan.color2 }}; --gcs-clan-ink: {{ author.clan.ink }}" href="{{ author.clan.url }}" title="{{ author.clan.name }}" aria-label="[{{ author.clan.tag }}] {{ author.clan.name }}">{{ author.clan.tag }}</a><span class="gcs-postbit__clanName">{{ author.clan.name }}</span></span>{% endif %}
     <span class="gcs-postbit__secondary"{% if author.vip %} data-testid="gcs-postbit-vip"{% endif %}>{{ author.secondary }}</span>
     {% if author.customTitle %}
       <span class="gcs-postbit__title" title="{{ author.customTitle }}">{% icon "fa-solid fa-id-badge" %}<span>{{ author.customTitle }}</span></span>
@@ -309,6 +310,7 @@ const HOVER_CARD = `<div class="gcs-card gcs-hoverCard" role="dialog" aria-label
       <div class="gcs-hoverCard__identity">
         <a href="{{ user.url }}" class="gcs-userLink gcs-name--{{ user.nameKey }} gcs-hoverCard__name" title="{{ user.name }}" data-name-user="{{ user.id }}" data-text="{{ user.name }}">{{ user.name }}</a>
         <div class="gcs-hoverCard__meta">
+          {% if clan %}<a class="gcs-clanTag gcs-clanTag--sm" style="--gcs-clan-color: {{ clan.color }}; --gcs-clan-color2: {{ clan.color2 }}; --gcs-clan-ink: {{ clan.ink }}" href="{{ clan.url }}" title="{{ clan.name }}" aria-label="[{{ clan.tag }}] {{ clan.name }}" data-testid="gcs-hover-clan">{{ clan.tag }}</a>{% endif %}
           <span class="gcs-badge gcs-hoverCard__group" style="--gcs-hoverCard-group: {{ user.group.color | default: "var(--gcs-muted)" }}">{{ user.group.name }}</span>
           {% if user.rank %}<span class="gcs-hoverCard__rank" data-testid="gcs-hover-rank">{% if user.rank.symbol %}{{ user.rank.symbol }} {% endif %}{{ user.rank.name }}</span>{% endif %}
           {% if online %}<span class="gcs-hoverCard__online"><span class="gcs-dot" aria-hidden="true"></span>{{ "hoverCard.online" | t }}</span>{% endif %}
@@ -466,7 +468,7 @@ export const DEFAULT_TEMPLATES: GcsTemplateDef[] = [
     key: "postbit.author",
     group: "postbit",
     icon: "fa-solid fa-user-tag",
-    version: 2,
+    version: 3,
     title: T("Autorul postării (postbit)", "Post author (postbit)"),
     description: T("Coloana cu autorul, lângă fiecare postare.", "The author column next to every post."),
     variables: vars([
@@ -500,6 +502,7 @@ export const DEFAULT_TEMPLATES: GcsTemplateDef[] = [
       ["author.joinedAt", "date", "Data înscrierii", "Joined at"],
       ["author.motto", "string|nil", "Motto-ul (ultimul status)", "Motto (latest status)"],
       ["author.fields", "list", "Câmpurile din postbit: key, label, icon, type, value, display, image", "Postbit fields: key, label, icon, type, value, display, image"],
+      ["author.clan", "object|nil", "Clanul membrului (dacă tagul apare în postbit): tag, name, url, color, color2, ink", "The member clan (if the tag is shown in the postbit): tag, name, url, color, color2, ink"],
       ["post.id", "number", "ID-ul postării", "Post ID"],
       ["post.number", "number", "Numărul postării în topic", "Post number in the topic"],
     ]),
@@ -549,7 +552,7 @@ export const DEFAULT_TEMPLATES: GcsTemplateDef[] = [
     key: "members.hover_card",
     group: "members",
     icon: "fa-solid fa-id-card-clip",
-    version: 2,
+    version: 3,
     title: T("Hover card-ul unui membru", "Member hover card"),
     description: T("Cardul care apare la trecerea mouse-ului peste un nume.", "The card shown when hovering a member name."),
     variables: vars([
@@ -572,6 +575,7 @@ export const DEFAULT_TEMPLATES: GcsTemplateDef[] = [
       ["viewer.canFollow", "boolean", "Viewer-ul îl poate urmări", "The viewer can follow"],
       ["viewer.canMessage", "boolean", "Viewer-ul îi poate scrie", "The viewer can message"],
       ["viewer.isFollowing", "boolean", "Viewer-ul îl urmărește deja", "The viewer already follows"],
+      ["clan", "object|nil", "Clanul membrului (dacă tagul apare pe hover card): tag, name, url, color, color2, ink", "The member clan (if the tag is shown on the hover card): tag, name, url, color, color2, ink"],
     ]),
     slots: [slot("actions", false, "Butoanele „Urmărește” și „Mesaj”", "The “Follow” and “Message” buttons")],
     mode: "site",

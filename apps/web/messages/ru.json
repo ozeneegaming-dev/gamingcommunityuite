@@ -14,7 +14,8 @@
       "vip": "VIP",
       "rules": "Rules",
       "more": "More",
-      "servers": "Servers"
+      "servers": "Servers",
+      "clans": "Clans"
     },
     "acp": "ACP",
     "myProfile": "Мой профиль",
@@ -128,7 +129,23 @@
       "unsigned_requires_root": "Only a Root Admin can install packages that are not certified.",
       "db_role_unavailable": "Пользователь базы данных не может создавать роли: плагины с собственной базой данных не могут быть установлены безопасно.",
       "db_unavailable": "База данных не настроена.",
-      "dependency_disabled": "Зависимость от плагинов не установлена или отключена."
+      "dependency_disabled": "Зависимость от плагинов не установлена или отключена.",
+      "clan_closed": "The clan is not taking members right now (pending, locked, archived or invite-only).",
+      "clan_already_member": "You are already a member of this clan.",
+      "clan_max_clans": "You have reached the maximum number of clans you can be in.",
+      "clan_full": "The clan has reached its member limit.",
+      "clan_cooldown": "You left a clan recently: wait a little before joining another one.",
+      "clan_pending_exists": "There is already a pending request or invitation.",
+      "clan_request_closed": "The request or invitation is no longer valid.",
+      "clan_cannot_join": "This member cannot join clans.",
+      "clan_invites_full": "The clan has too many pending invitations.",
+      "clan_request_waiting": "The member already asked to join: the request is waiting for a leader or officer who can decide.",
+      "clan_leader_role": "The leader role only changes through a leadership transfer.",
+      "clan_leader_must_transfer": "The leader cannot leave: transfer the leadership or disband the clan first.",
+      "clan_forum_exists": "The clan already has a forum.",
+      "clan_no_forum_parent": "The staff has not chosen where clan forums are created yet.",
+      "clan_not_archived": "The clan is not archived.",
+      "clan_not_pending": "The clan is no longer waiting for approval."
     },
     "fields": {
       "invalid_color": "Недействительный цвет (#RRGGBB)",
@@ -191,7 +208,12 @@
       "migration_failed": "Миграция базы данных не удалась.",
       "invalid_host": "Invalid host (a public IP or domain name, without a port)",
       "blocked_address": "The address is private or local and can't be queried",
-      "duplicate_server": "The server already exists (same game, host and port)"
+      "duplicate_server": "The server already exists (same game, host and port)",
+      "invalid_chars": "Contains characters that are not allowed",
+      "clan_tag_taken": "A clan with this tag already exists",
+      "clan_name_taken": "A clan with this name already exists",
+      "tag_range": "The minimum length cannot be greater than the maximum length",
+      "not_member": "The chosen member is not in the clan"
     }
   },
   "acp": {
@@ -338,7 +360,10 @@
       "gaming": {
         "servers_group": "Servers",
         "servers": "Servers",
-        "servers_settings": "Server settings"
+        "servers_settings": "Server settings",
+        "clans_group": "Clans",
+        "clans": "Clans",
+        "clans_settings": "Clan settings"
       }
     },
     "comingSoon": {
@@ -736,7 +761,8 @@
         "languages": "Языки и перевод",
         "postbit": "Постбайт",
         "vip": "VIP page and expiry",
-        "servers": "Servers"
+        "servers": "Servers",
+        "clans": "Clans"
       },
       "save": "Сохранить настройки",
       "secretSet": "• сохраненные (оставьте пустыми, чтобы сохранить ценность)",
@@ -1845,6 +1871,158 @@
       },
       "save": "Save",
       "create": "Add the server"
+    },
+    "clans": {
+      "title": "Clans",
+      "lead": "The community clans: approving new ones, locking, archiving and disbanding, limits and each clan's log.",
+      "recompute": "Recalculate the ranking",
+      "filterLabel": "Clan status",
+      "filters": {
+        "pending": "Pending ({count})",
+        "active": "Active ({count})",
+        "archived": "Archived ({count})",
+        "locked": "Locked ({count})",
+        "all": "All ({count})"
+      },
+      "search": "Search by tag or name",
+      "searchSubmit": "Search",
+      "empty": {
+        "pending": "No clan is waiting for approval.",
+        "active": "No active clans.",
+        "archived": "No archived clans.",
+        "locked": "No locked clans.",
+        "all": "No clans yet."
+      },
+      "leader": "Leader",
+      "noLeader": "No leader",
+      "row": "{members,plural,one{# member} few{# members} many{# members} other{# members}}, {score} points, created on {date}",
+      "approve": "Approve",
+      "reject": "Reject",
+      "rejectConfirm": "Reject the clan “{name}”? The clan is deleted and the founder gets the reason.",
+      "rejectReason": "Reason (shown to the founder)",
+      "status": {
+        "PENDING": "Pending",
+        "ACTIVE": "Active",
+        "ARCHIVED": "Archived",
+        "LOCKED": "Locked"
+      },
+      "edit": "Manage",
+      "view": "View page",
+      "prev": "← Previous page",
+      "next": "Next page →",
+      "back": "Back to clans",
+      "editOnSite": "Edit the clan page",
+      "pendingTitle": "Clan approval",
+      "moderationTitle": "Moderation",
+      "locked": "The clan is locked.",
+      "lockedReason": "The clan is locked: {reason}",
+      "unlock": "Unlock",
+      "lock": "Lock",
+      "lockReason": "Lock reason (optional, shown on the clan page)",
+      "archive": "Archive",
+      "reactivate": "Reactivate",
+      "save": "Save",
+      "memberLimit": "Member limit of this clan",
+      "unlimited": "unlimited",
+      "memberLimitHint": "Empty = based on the leader's groups (ACP → Gaming → Clans → Settings → Groups).",
+      "membersTitle": "{count,plural,one{One member} few{# members} many{# members} other{# members}}",
+      "roles": {
+        "LEADER": "Leader",
+        "OFFICER": "Officer",
+        "MEMBER": "Member"
+      },
+      "transfer": "Transfer leadership",
+      "transferTo": "New leader",
+      "disbandTitle": "Disband the clan",
+      "disbandText": "The clan is deleted with its members, requests and images. The private forum is deleted if empty, otherwise it stays for the staff only. The log keeps the data.",
+      "disband": "Disband the clan",
+      "disbandConfirm": "Disband the clan “{name}”? This cannot be undone.",
+      "auditTitle": "Clan log",
+      "system": "System",
+      "settingsTitle": "Clan settings",
+      "settings": {
+        "title": "Clan settings",
+        "lead": "Who creates clans and how, the tag, members, the private forum, the ranking and where the tag appears.",
+        "tabsLabel": "Settings sections",
+        "tabs": {
+          "create": "Creation",
+          "tag": "Tag",
+          "members": "Members",
+          "forum": "Private forum",
+          "ranking": "Ranking",
+          "display": "Display",
+          "groups": "Groups"
+        },
+        "requireApproval": "A new clan waits for staff approval",
+        "maxPerMember": "How many clans a member can be in",
+        "maxPerMemberHint": "1 = a single clan. Pending clans count too.",
+        "leaveCooldown": "Pause after leaving a clan (hours)",
+        "leaveCooldownHint": "How long a member who left or was removed waits before joining another clan. 0 = no pause.",
+        "requiredFields": "Required fields",
+        "fields": {
+          "logo": "Logo",
+          "banner": "Banner",
+          "description": "Description"
+        },
+        "logoMaxKb": "Maximum logo size (KB)",
+        "bannerMaxKb": "Maximum banner size (KB)",
+        "tagMin": "Minimum tag length",
+        "tagMax": "Maximum tag length",
+        "tagCharset": "Characters allowed in the tag",
+        "charsets": {
+          "alnum": "Latin letters and digits",
+          "alnum_symbols": "Latin letters, digits and the symbols - _ . ! ? # * ~ ^ '",
+          "unicode": "Letters and digits in any alphabet"
+        },
+        "inviteDays": "Days until an invitation expires",
+        "requestDays": "Days until a join request expires",
+        "archiveInactive": "Automatic archiving after how many days without activity",
+        "archiveInactiveHint": "0 = off; otherwise between 14 and 730 days. Activity = members active on the site or changes in the clan.",
+        "officerRights": "Rights the leader can give officers",
+        "officerRightsHint": "A right removed here also disappears from the clans that had given it.",
+        "rights": {
+          "members": "Remove regular members",
+          "invite": "Send invitations",
+          "requests": "Accept or decline requests",
+          "edit": "Edit the clan page",
+          "forum": "Moderate the private forum",
+          "events": "Register the clan for events and tournaments"
+        },
+        "forumParentMissing": "Choose the category for clan forums: without it no private forum can be created.",
+        "forumMode": "Private forum",
+        "forumModes": {
+          "auto": "Created automatically when the clan is activated",
+          "optional": "The leader chooses",
+          "off": "No private forums"
+        },
+        "forumParent": "Where clan forums are created",
+        "forumParentHint": "An existing category (or forum). A clan forum does not inherit its permissions.",
+        "forumParentNone": "No category chosen",
+        "forumStaff": "Staff who see the private forums",
+        "forumStaffHint": "These groups read and post in every clan forum. The Root Admin sees them anyway.",
+        "formula": "Score = members' posts in the last 30 days × weight + members' reputation × weight + members active in the last 30 days × weight + members × weight. The ranking is recalculated every hour.",
+        "weightPosts": "Posts weight",
+        "weightReputation": "Reputation weight",
+        "weightActivity": "Active members weight",
+        "weightMembers": "Member count weight",
+        "tagPlaces": "Where the tag appears next to member names",
+        "places": {
+          "postbit": "Postbit (next to posts)",
+          "hovercard": "Hover card",
+          "profile": "Profile"
+        },
+        "profileBadge": "Members get the clan badge on their profile (logo, tag and name)",
+        "groupsHint": "Checks and limits apply per group; a member has the combined rights of their groups. A clan's member limit comes from its leader's groups.",
+        "groupsNoRight": "You also need the right to edit groups to change these values.",
+        "group": "Group",
+        "canCreate": "Create clans",
+        "canJoin": "Join clans",
+        "maxMembers": "Members per clan",
+        "canModerate": "Site staff",
+        "maxMembersHint": "Members per clan: -1 = unlimited.",
+        "save": "Save",
+        "recompute": "Recalculate the ranking now"
+      }
     }
   },
   "settings": {
@@ -1889,7 +2067,11 @@
       "deepl": "DeepL",
       "off": "Выкл.",
       "24h": "24 часа (14:30)",
-      "12h": "12 часов (2:30 вечера)"
+      "12h": "12 часов (2:30 вечера)",
+      "alnum": "Latin letters and digits",
+      "alnum_symbols": "Letters, digits and symbols",
+      "unicode": "Any alphabet",
+      "optional": "Optional"
     },
     "forums": {
       "posts_per_page": "Посты на странице",
@@ -2094,6 +2276,30 @@
       "poll_interval": "Server query interval (seconds, 30–300)",
       "retention_days": "How many days the player history is kept (7–365)",
       "show_players": "Show player names on the server page"
+    },
+    "clans": {
+      "require_approval": "A new clan waits for staff approval",
+      "max_per_member": "How many clans a member can be in",
+      "leave_cooldown_hours": "Pause after leaving a clan (hours)",
+      "tag_min": "Minimum clan tag length",
+      "tag_max": "Maximum clan tag length",
+      "tag_charset": "Characters allowed in the clan tag",
+      "required_fields": "Required clan fields",
+      "logo_max_kb": "Maximum clan logo size (KB)",
+      "banner_max_kb": "Maximum clan banner size (KB)",
+      "forum_mode": "Clan private forums",
+      "forum_parent": "Category of clan forums",
+      "forum_staff_groups": "Staff who see clan forums",
+      "officer_rights": "Rights the leader can give officers",
+      "invite_days": "Days until a clan invitation expires",
+      "request_days": "Days until a clan join request expires",
+      "archive_inactive_days": "Automatic archiving of inactive clans (days)",
+      "weight_posts": "Clan ranking: posts weight",
+      "weight_reputation": "Clan ranking: reputation weight",
+      "weight_activity": "Clan ranking: active members weight",
+      "weight_members": "Clan ranking: member count weight",
+      "tag_places": "Where the clan tag appears next to names",
+      "profile_badge": "Clan badge on members' profiles"
     }
   },
   "permissions": {
@@ -2162,6 +2368,13 @@
     "servers": {
       "view": "Sees the game servers",
       "view_players": "Sees the player list of the servers"
+    },
+    "clans": {
+      "view": "See clans",
+      "create": "Create clans",
+      "join": "Join clans (ask to join, accept invitations)",
+      "max_members": "How many members a clan led by this group can have (-1 = unlimited)",
+      "moderate": "Clan staff on the site (edit, lock, disband any clan)"
     }
   },
   "profile": {
@@ -2251,7 +2464,8 @@
       "youtube": "YouTube video: it only loads when you press Play.",
       "bgPause": "Pause the animated background",
       "bgPlay": "Play the animated background"
-    }
+    },
+    "clans": "The member's clans"
   },
   "maintenance": {
     "title": "Техобслуживание",
@@ -2747,6 +2961,12 @@
       },
       "chat": {
         "mention": "Чат упоминает"
+      },
+      "clans": {
+        "invite": "Clan invitations",
+        "request": "New requests to join your clan",
+        "membership": "Changes in your clan (requests, roles, removals)",
+        "review": "Approval of the clans you created"
       }
     }
   },
@@ -2870,7 +3090,8 @@
   "apps": {
     "chat": "Чат",
     "vip": "VIP",
-    "servers": "Servers"
+    "servers": "Servers",
+    "clans": "Clans"
   },
   "translate": {
     "translate": "Переводить",
@@ -3226,6 +3447,9 @@
       },
       "servers": {
         "list": "Live status of the game servers: players, map, address."
+      },
+      "clans": {
+        "top": "The top clans in the ranking, with members and points."
       }
     },
     "servers": {
@@ -3236,6 +3460,9 @@
       "cs16": "CS 1.6",
       "cs2": "CS2 / CS:GO",
       "minecraft": "Minecraft"
+    },
+    "clans": {
+      "top": "Top clans"
     }
   },
   "pageEditor": {
@@ -3284,7 +3511,8 @@
       "core": "Сообщество",
       "forums": "Форумы",
       "chat": "Чат",
-      "servers": "Servers"
+      "servers": "Servers",
+      "clans": "Clans"
     },
     "search": "Поиск виджета",
     "noResults": "Ни один виджет не соответствует вашему поиску.",
@@ -3310,7 +3538,8 @@
       "members": "Участники",
       "vip": "VIP-члены",
       "serversOnline": "Servers",
-      "serverPlayers": "Players"
+      "serverPlayers": "Players",
+      "clans": "Clans"
     },
     "allOnline": "Смотреть все онлайн участники",
     "panel": {
@@ -3937,5 +4166,268 @@
     "viewAll": "All servers",
     "widgetEmpty": "No servers to show.",
     "playersZero": "No players"
+  },
+  "clans": {
+    "title": "Clans",
+    "lead": "{count,plural,one{One active clan} few{# active clans} many{# active clans} other{# active clans}}",
+    "leadEmpty": "The community teams, with their tag, members and ranking.",
+    "create": "Create a clan",
+    "createTitle": "Create a clan",
+    "createLead": "Choose the tag and name, describe the clan and how members join. You can change them later.",
+    "createForbidden": "Your group cannot create clans. Clans are created by VIP members and staff (or the groups chosen by the staff).",
+    "createGuest": "Sign in to create a clan.",
+    "forbidden": "You do not have access to clans.",
+    "empty": "No clans yet.",
+    "emptyFilter": "No clan matches the filters.",
+    "emptyCreate": "Create the first clan",
+    "view": "View clan",
+    "viewClan": "View the clan {name}",
+    "rankLabel": "Rank {rank}",
+    "rankPlace": "Rank {rank} in the ranking",
+    "manage": {
+      "title": "Management",
+      "tabs": {
+        "label": "Management sections",
+        "members": "Members",
+        "requests": "Requests and invitations",
+        "settings": "Settings",
+        "danger": "Danger zone"
+      },
+      "membersTitle": "{count,plural,one{One member} few{# members} many{# members} other{# members}}",
+      "member": "Member",
+      "role": "Role",
+      "joined": "Joined",
+      "actions": "Actions",
+      "promote": "Make officer",
+      "demote": "Demote",
+      "kick": "Remove from the clan",
+      "kickConfirm": "Remove {name} from the clan?",
+      "noRequests": "No pending requests.",
+      "accept": "Accept",
+      "reject": "Decline",
+      "requestsTitle": "{count,plural,one{One join request} few{# join requests} many{# join requests} other{# join requests} =0{Join requests}}",
+      "requestMeta": "Sent on {date}, expires on {expires}",
+      "invitesTitle": "Invitations",
+      "inviteMeta": "Invited by {name}, expires on {expires}",
+      "inviteMetaAnon": "Expires on {expires}",
+      "inviteLabel": "Invite a member",
+      "invitePlaceholder": "Member name",
+      "invite": "Send the invitation",
+      "invited": "The invitation was sent to {name}.",
+      "inviteSuggestions": "Members found",
+      "noInvites": "No pending invitations.",
+      "cancelInvite": "Cancel",
+      "createForum": "Create the clan forum",
+      "forumCreated": "The clan forum was created.",
+      "forumNotReady": "The staff has not chosen where clan forums are created yet.",
+      "forumTitle": "Private forum",
+      "forumExists": "The clan forum:",
+      "forumOff": "Clan private forums are turned off.",
+      "forumAfterApproval": "The forum can be created after the clan is activated.",
+      "forumText": "A forum seen only by the clan members (and the staff). The leader and the officers with the moderation right moderate it.",
+      "forumLeader": "The leader can create the clan forum.",
+      "settingsTitle": "Clan settings",
+      "events": {
+        "title": "Events and tournaments",
+        "body": "Registering the clan for events and tournaments appears here with the Events app.",
+        "youCan": "You will be able to register the clan.",
+        "whoCan": "The leader and the officers with this right register the clan."
+      },
+      "reactivateText": "The clan is archived: it does not appear in the directory and takes no members. Reactivating brings it back immediately.",
+      "reactivate": "Reactivate the clan",
+      "reactivated": "The clan was reactivated.",
+      "transferLabel": "Transfer leadership to",
+      "transferNone": "No other member",
+      "transfer": "Transfer leadership",
+      "transferConfirm": "Make {name} the clan leader? You become an officer.",
+      "transferred": "{name} is the new leader.",
+      "disbandLabel": "Type the tag ({tag}) to confirm disbanding",
+      "disbandStaff": "You are disbanding the clan as staff (no tag confirmation).",
+      "disband": "Disband the clan"
+    },
+    "about": "About the clan",
+    "noDescription": "The clan has no description yet.",
+    "members": "Members",
+    "since": "since {date}",
+    "widgetEmpty": "No clans yet.",
+    "widgetMeta": "{members,plural,one{# member} few{# members} many{# members} other{# members}}, {score} points",
+    "viewAll": "All clans",
+    "facts": {
+      "members": "Members",
+      "score": "Points"
+    },
+    "recruit": {
+      "OPEN": "Open to join",
+      "REQUEST": "By request",
+      "INVITE": "Invite only"
+    },
+    "state": {
+      "pending": "Waiting for approval",
+      "locked": "Locked",
+      "archived": "Archived"
+    },
+    "invites": {
+      "title": "{count,plural,one{One invitation} few{# invitations} many{# invitations} other{# invitations}}",
+      "from": "from {name}"
+    },
+    "filters": {
+      "label": "Clan filters",
+      "search": "Search (tag or name)",
+      "sort": "Sort",
+      "join": "Recruiting",
+      "joinAll": "Any recruiting",
+      "archived": "Archived only",
+      "apply": "Apply"
+    },
+    "sorts": {
+      "rank": "Ranking",
+      "members": "Members",
+      "newest": "Newest"
+    },
+    "roles": {
+      "LEADER": "Leader",
+      "OFFICER": "Officer",
+      "MEMBER": "Member",
+      "plural": {
+        "LEADER": "Leader",
+        "OFFICER": "{count,plural,one{Officer} few{Officers ({count})} many{Officers ({count})} other{Officers ({count})}}",
+        "MEMBER": "{count,plural,one{Member} few{Members ({count})} many{Members ({count})} other{Members ({count})}}"
+      }
+    },
+    "notices": {
+      "pending": "The clan is waiting for staff approval. Until then only its members and the staff can see it.",
+      "locked": "The clan was locked by the staff: it takes no members and cannot be changed.",
+      "lockedReason": "The clan was locked by the staff: {reason}"
+    },
+    "activity": {
+      "title": "Recent activity",
+      "empty": "No activity yet.",
+      "created": "<name></name> founded the clan",
+      "approved": "<name></name> approved the clan",
+      "joined": "<name></name> joined the clan",
+      "left": "<name></name> left the clan",
+      "promoted": "<name></name> became an officer",
+      "leader": "<name></name> became the clan leader",
+      "createdAnon": "The clan was founded",
+      "approvedAnon": "The clan was approved",
+      "joinedAnon": "A member joined the clan",
+      "leftAnon": "A member left the clan",
+      "promotedAnon": "A member became an officer",
+      "leaderAnon": "The clan has a new leader"
+    },
+    "stats": {
+      "title": "Stats",
+      "rank": "Rank",
+      "score": "Points",
+      "members": "Members",
+      "membersOf": "{count} / {limit}",
+      "founded": "Founded",
+      "parts": "From: {posts} posts in 30 days, {reputation} reputation, {active} active members, {members} members."
+    },
+    "links": {
+      "title": "Links",
+      "discord": "Discord server",
+      "steam": "Steam group",
+      "website": "Clan website",
+      "youtube": "YouTube channel",
+      "twitch": "Twitch channel"
+    },
+    "forum": {
+      "title": "Clan forum",
+      "empty": "No topics yet.",
+      "open": "Open the clan forum"
+    },
+    "actions": {
+      "invited": "You have an invitation to this clan.",
+      "invitedBy": "{name} invited you to this clan.",
+      "acceptInvite": "Accept the invitation",
+      "declineInvite": "Decline",
+      "leave": "Leave the clan",
+      "leaveConfirm": "Leave the clan “{name}”?",
+      "join": "Join the clan",
+      "requestPending": "Your request is waiting for an answer.",
+      "cancelRequest": "Withdraw the request",
+      "messageLabel": "Message for the leader (optional)",
+      "messagePlaceholder": "What you play, for how long, why you want to join…",
+      "sendRequest": "Send the request",
+      "cancel": "Cancel",
+      "request": "Ask to join",
+      "blocked": {
+        "guest": "Sign in to join the clan.",
+        "no_permission": "Your group cannot join clans.",
+        "max_clans": "You are already in the maximum number of clans."
+      },
+      "inviteOnly": "The clan takes members by invitation only."
+    },
+    "form": {
+      "saved": "The clan settings were saved.",
+      "previewName": "Clan name",
+      "charsets": {
+        "alnum": "Latin letters and digits",
+        "alnum_symbols": "Latin letters, digits and - _ . ! ? # * ~ ^ '",
+        "unicode": "letters and digits"
+      },
+      "sections": {
+        "identity": "Tag and name",
+        "look": "Colours and images",
+        "about": "Description and links",
+        "recruit": "Recruiting"
+      },
+      "tag": "Tag",
+      "tagHint": "Between {min} and {max} characters: {chars}. Unique on the site.",
+      "name": "Clan name",
+      "nameHint": "Between 3 and 40 characters. Unique on the site.",
+      "leaderOnly": "Only the leader changes the tag, the name and the officers' rights.",
+      "color": "Main colour",
+      "color2": "Secondary colour",
+      "logo": "Logo",
+      "banner": "Banner",
+      "logoCurrent": "Current logo",
+      "bannerCurrent": "Current banner",
+      "uploading": "Uploading…",
+      "replace": "Change",
+      "upload": "Upload",
+      "removeImage": "Remove",
+      "logoHint": "PNG, JPG, WebP or GIF, max {kb} KB; cropped square (256 × 256 px).",
+      "bannerHint": "PNG, JPG, WebP or GIF, max {kb} KB; 1600 × 400 px recommended. Without a banner the colour gradient is used.",
+      "description": "Description",
+      "links": {
+        "discord": "Discord (invite link)",
+        "steam": "Steam group",
+        "website": "Website",
+        "youtube": "YouTube",
+        "twitch": "Twitch",
+        "discordPlaceholder": "https://discord.gg/…",
+        "steamPlaceholder": "https://steamcommunity.com/groups/…",
+        "websitePlaceholder": "https://…",
+        "youtubePlaceholder": "https://www.youtube.com/@…",
+        "twitchPlaceholder": "https://twitch.tv/…"
+      },
+      "joinMode": "How members join",
+      "joinModes": {
+        "OPEN": "Open to join",
+        "REQUEST": "By request",
+        "INVITE": "Invite only"
+      },
+      "joinModesHint": {
+        "OPEN": "Anyone with the right joins immediately.",
+        "REQUEST": "Members ask to join, the leader or officers decide.",
+        "INVITE": "Only invited members join."
+      },
+      "officerRights": "What officers can do",
+      "rights": {
+        "members": "Remove regular members",
+        "invite": "Send invitations",
+        "requests": "Accept or decline requests",
+        "edit": "Edit the clan page",
+        "forum": "Moderate the clan forum",
+        "events": "Register the clan for events and tournaments"
+      },
+      "wantForum": "I want a private forum for the clan",
+      "forumAuto": "The clan automatically gets a private forum, seen only by its members.",
+      "approvalNote": "The clan will wait for staff approval. You get a notification when it is approved.",
+      "create": "Create the clan",
+      "save": "Save"
+    }
   }
 }

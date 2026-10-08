@@ -1,0 +1,694 @@
+/*
+ * Aplicația Clanuri (specul 2026-10-08-clanuri): plăcuța tagului, directorul, pagina clanului, administrarea și
+ * widget-ul. Banda titlurilor (numele din card, titlurile casetelor, rolurile membrilor) e în `titles.css`.
+ * Culorile clanului (`--gcs-clan-color`, `--gcs-clan-color2`, `--gcs-clan-ink`) vin validate din server și colorează doar
+ * plăcuța, rama logo-ului și degradeul bannerului fără imagine; restul folosește tokenurile temei.
+ */
+
+/* ─── Plăcuța tagului: singurul element îndrăzneț, același peste tot ─────────────────────────────────────── */
+
+.gcs-clanTag,
+.gcs-root a.gcs-clanTag {
+  --gcs-clan-cut: 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 2.4em;
+  box-sizing: border-box;
+  padding: 0.2em 0.62em 0.26em;
+  font-family: var(--gcs-font-display);
+  font-weight: 700;
+  font-size: 0.8em;
+  line-height: 1.15;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--gcs-clan-ink, #fff);
+  background: var(--gcs-clan-color, var(--gcs-accent));
+  /* Dunga de jos în culoarea secundară; colțurile opuse teșite la 45°. */
+  box-shadow: inset 0 -2px 0 var(--gcs-clan-color2, transparent);
+  clip-path: polygon(var(--gcs-clan-cut) 0, 100% 0, 100% calc(100% - var(--gcs-clan-cut)), calc(100% - var(--gcs-clan-cut)) 100%, 0 100%, 0 var(--gcs-clan-cut));
+  text-decoration: none;
+  vertical-align: 0.06em;
+}
+.gcs-root a.gcs-clanTag:hover {
+  color: var(--gcs-clan-ink, #fff);
+  text-decoration: none;
+  filter: brightness(1.1);
+}
+/* Conturul de focus nu poate ieși dintr-un `clip-path`: la focus plăcuța își pierde colțurile teșite. */
+.gcs-root a.gcs-clanTag:focus-visible {
+  clip-path: none;
+  outline: 2px solid var(--gcs-accentInk);
+  outline-offset: 2px;
+}
+.gcs-clanTag--sm,
+.gcs-root a.gcs-clanTag--sm {
+  --gcs-clan-cut: 4px;
+  font-size: 11px;
+  padding: 2px 6px 3px;
+}
+.gcs-clanTag--lg,
+.gcs-root a.gcs-clanTag--lg {
+  --gcs-clan-cut: 9px;
+  font-size: 24px;
+  padding: 5px 14px 7px;
+  box-shadow: inset 0 -3px 0 var(--gcs-clan-color2, transparent);
+}
+
+/* Logo-ul: pătrat, cu rama în culoarea clanului; fără imagine, tagul pe culoarea clanului. */
+.gcs-clanLogo {
+  --gcs-clan-logo: 56px;
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: var(--gcs-clan-logo);
+  height: var(--gcs-clan-logo);
+  box-sizing: border-box;
+  border-radius: 12px;
+  border: 2px solid var(--gcs-clan-color, var(--gcs-border));
+  background: var(--gcs-surface2);
+  overflow: hidden;
+  font-family: var(--gcs-font-display);
+  font-weight: 700;
+  font-size: calc(var(--gcs-clan-logo) * 0.3);
+  color: var(--gcs-clan-ink, #fff);
+}
+.gcs-clanLogo--empty {
+  background: linear-gradient(135deg, var(--gcs-clan-color, var(--gcs-accent)), var(--gcs-clan-color2, var(--gcs-surface2)));
+}
+.gcs-clanLogo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.gcs-clanLogo--s {
+  --gcs-clan-logo: 32px;
+  border-radius: 8px;
+  border-width: 1.5px;
+}
+.gcs-clanLogo--l {
+  --gcs-clan-logo: 96px;
+  border-radius: 18px;
+  border-width: 3px;
+}
+
+/* ─── Directorul ──────────────────────────────────────────────────────────────────────────────────────── */
+
+.gcs-clanLead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+.gcs-clanGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-clanCard {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+}
+.gcs-clanBanner {
+  position: relative;
+  height: 96px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--gcs-clan-color, var(--gcs-accent)), var(--gcs-clan-color2, var(--gcs-surface2)));
+}
+.gcs-clanBanner__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.gcs-clanCard .gcs-clanLogo {
+  position: absolute;
+  left: 16px;
+  bottom: -20px;
+  z-index: 1;
+  box-shadow: 0 0 0 3px var(--gcs-box-bg, var(--gcs-surface));
+}
+/* Locul în clasament (doar la sortarea „Clasament”): un număr mic în colț, nu o medalie. */
+.gcs-clanCard__rank {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 2px 9px;
+  border-radius: 6px;
+  background: rgba(11, 12, 16, 0.78);
+  color: #ecedf1;
+  font: 700 13px/1.4 var(--gcs-font-display);
+  font-variant-numeric: tabular-nums;
+}
+.gcs-clanCard > .gcs-clanCard__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  /* Loc pentru logo-ul care coboară din banner. */
+  padding: 12px 16px 12px 88px;
+  min-height: 46px;
+  box-sizing: border-box;
+}
+.gcs-clanCard__name {
+  margin: 0;
+  min-width: 0;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-root .gcs-clanCard__name a {
+  color: inherit;
+}
+.gcs-clanCard__body {
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+.gcs-clanFacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--gcs-muted);
+}
+.gcs-clanFacts > div {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+.gcs-clanFacts dd {
+  margin: 0;
+  color: var(--gcs-text);
+  font: 700 15px var(--gcs-font-display);
+  font-variant-numeric: tabular-nums;
+}
+.gcs-clanRecruit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--gcs-muted);
+}
+.gcs-clanRecruit[data-mode="OPEN"] {
+  color: var(--gcs-ok);
+}
+.gcs-clanCard__foot {
+  margin-top: auto;
+  display: flex;
+  gap: 8px;
+}
+.gcs-clanCard__foot .gcs-btn {
+  flex: 1 1 auto;
+}
+.gcs-clanState {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.gcs-clanState[data-state="pending"],
+.gcs-clanState[data-state="locked"] {
+  color: var(--gcs-warn);
+}
+.gcs-clanState[data-state="archived"] {
+  color: var(--gcs-muted);
+}
+
+/* Invitațiile viewer-ului (sus pe director). */
+.gcs-clanInvites {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gcs-clanInvite {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+.gcs-clanInvite__text {
+  flex: 1 1 220px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.gcs-clanInvite__actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ─── Pagina clanului ─────────────────────────────────────────────────────────────────────────────────── */
+
+.gcs-clanTitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+.gcs-clanTitle .gcs-pageHeader__title {
+  margin: 0;
+}
+.gcs-clanHeadMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  align-items: center;
+  margin: 0;
+  color: var(--gcs-muted);
+  font-size: 14px;
+}
+.gcs-clanHero {
+  position: relative;
+  height: 180px;
+  border-radius: var(--gcs-radius, 14px);
+  border: var(--gcs-box-border-w, 1px) solid var(--gcs-box-border, var(--gcs-border));
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--gcs-clan-color, var(--gcs-accent)), var(--gcs-clan-color2, var(--gcs-surface2)));
+}
+.gcs-clanHero .gcs-clanLogo {
+  position: absolute;
+  left: 22px;
+  bottom: 18px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+.gcs-clanLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.gcs-clanLayout__main,
+.gcs-clanLayout__side {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+@media (max-width: 960px) {
+  .gcs-clanLayout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.gcs-clanBox__title {
+  margin: 0;
+  font-size: 17px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.gcs-clanBox__count {
+  color: var(--gcs-muted);
+  font-weight: 600;
+  font-size: 14px;
+}
+.gcs-clanAbout {
+  max-width: 72ch;
+}
+.gcs-clanNotice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 18px;
+  border-radius: var(--gcs-radius, 14px);
+  border: 1px solid color-mix(in srgb, var(--gcs-warn) 45%, var(--gcs-border));
+  background: color-mix(in srgb, var(--gcs-warn) 10%, var(--gcs-surface));
+  font-size: 14px;
+}
+
+/* Membrii, pe roluri: fiecare rol are sub-banda lui (vezi `titles.css`). */
+.gcs-clanRoster {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.gcs-clanRoster__role {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.gcs-clanRoster__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(210px, 100%), 1fr));
+  gap: 8px 14px;
+}
+.gcs-clanRoster__member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.gcs-clanRoster__who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.gcs-clanRoster__who .gcs-userLink {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-clanRoster__since {
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+
+.gcs-clanStats {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.gcs-clanStats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--gcs-surface2);
+}
+.gcs-clanStats dt {
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-clanStats dd {
+  margin: 0;
+  font: 700 18px/1.2 var(--gcs-font-display);
+  font-variant-numeric: tabular-nums;
+}
+.gcs-clanStats__parts {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+
+.gcs-clanLinks,
+.gcs-clanActivity,
+.gcs-clanTopics {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gcs-clanLinks a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  overflow-wrap: anywhere;
+}
+.gcs-clanActivity li {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  font-size: 14px;
+}
+.gcs-clanActivity time {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-clanTopics li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 14px;
+}
+
+/* ─── Administrarea ───────────────────────────────────────────────────────────────────────────────────── */
+
+.gcs-clanManage__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.gcs-clanManage__table th,
+.gcs-clanManage__table td {
+  padding: 10px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--gcs-border);
+  vertical-align: middle;
+}
+.gcs-clanManage__table th {
+  font-size: 12px;
+  color: var(--gcs-muted);
+  font-weight: 700;
+}
+.gcs-clanManage__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.gcs-clanManage__who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.gcs-clanRequest {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-clanRequest:last-child {
+  border-bottom: 0;
+}
+.gcs-clanRequest__body {
+  flex: 1 1 240px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.gcs-clanRequest__message {
+  margin: 0;
+  white-space: pre-line;
+  color: var(--gcs-text);
+  font-size: 14px;
+}
+.gcs-clanRequest__meta {
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-clanForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.gcs-clanForm__row {
+  display: grid;
+  grid-template-columns: minmax(0, 160px) minmax(0, 1fr);
+  gap: 12px 16px;
+}
+.gcs-clanForm__colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+}
+.gcs-clanForm__color {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.gcs-clanForm__color input[type="color"] {
+  width: 44px;
+  height: 36px;
+  padding: 2px;
+  border-radius: 8px;
+  border: 1px solid var(--gcs-border);
+  background: var(--gcs-surface2);
+}
+.gcs-clanForm__preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--gcs-surface2);
+}
+.gcs-clanForm__image {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.gcs-clanForm__bannerPreview {
+  width: 100%;
+  max-width: 420px;
+  aspect-ratio: 4 / 1;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--gcs-surface2);
+}
+.gcs-clanForm__ok {
+  color: var(--gcs-ok);
+  font-size: 13px;
+  font-weight: 600;
+}
+.gcs-clanDanger {
+  border-color: color-mix(in srgb, var(--gcs-accent) 45%, var(--gcs-border));
+}
+@media (max-width: 640px) {
+  .gcs-clanForm__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .gcs-clanHero {
+    height: 130px;
+  }
+  .gcs-clanHero .gcs-clanLogo {
+    --gcs-clan-logo: 72px;
+    left: 14px;
+    bottom: 12px;
+  }
+  .gcs-clanManage__table thead {
+    display: none;
+  }
+  .gcs-clanManage__table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 8px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--gcs-border);
+  }
+  .gcs-clanManage__table td {
+    padding: 0;
+    border: 0;
+  }
+  .gcs-clanManage__table td.gcs-clanManage__cell--actions {
+    grid-column: 1 / -1;
+  }
+  .gcs-clanManage__actions {
+    justify-content: flex-start;
+  }
+}
+
+/* ─── Postbit, hover card, profil, widget ─────────────────────────────────────────────────────────────── */
+
+.gcs-postbit__clan {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-width: 0;
+  font-size: 12px;
+}
+.gcs-postbit__clanName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--gcs-muted);
+  font-weight: 600;
+}
+.gcs-profileClans {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-profileClan {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 4px;
+  border-radius: 12px;
+  border: 1px solid var(--gcs-box-border, var(--gcs-border));
+  background: var(--gcs-box-bg, var(--gcs-surface));
+  font-size: 13px;
+}
+.gcs-root a.gcs-profileClan {
+  color: var(--gcs-text);
+  text-decoration: none;
+}
+.gcs-root a.gcs-profileClan:hover {
+  border-color: var(--gcs-clan-color, var(--gcs-accent));
+}
+.gcs-profileClan__role {
+  color: var(--gcs-muted);
+  font-size: 12px;
+}
+.gcs-clanWidget {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gcs-clanWidget__row {
+  display: grid;
+  grid-template-columns: 24px 32px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+.gcs-clanWidget__pos {
+  font: 700 14px var(--gcs-font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--gcs-muted);
+  text-align: right;
+}
+.gcs-clanWidget__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+.gcs-clanWidget__name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-weight: 700;
+  font-size: 14px;
+}
+.gcs-clanWidget__name a:not(.gcs-clanTag) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-clanWidget__meta {
+  font-size: 12px;
+  color: var(--gcs-muted);
+  font-variant-numeric: tabular-nums;
+}
+.gcs-clanList__all {
+  display: inline-flex;
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gcs-root a.gcs-clanTag:hover {
+    filter: none;
+  }
+}

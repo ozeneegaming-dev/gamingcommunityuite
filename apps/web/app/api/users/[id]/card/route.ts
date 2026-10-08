@@ -16,8 +16,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if (!/^[a-z0-9]{8,40}$/i.test(id)) return new Response(null, { status: 404 });
   const card = await services().profileQueries.card(await currentActor(), id);
   if (!card) return new Response(null, { status: 404 });
-  const html = await siteTemplateHtml("members.hover_card", hoverCardVars(card));
+  // Tagul clanului lângă nume (aplicația Clanuri, dacă opțiunile îl arată pe hover card).
+  const clan = (await services().clanQueries.tagsFor([card.user.id], "hovercard")).get(card.user.id) ?? null;
+  const html = await siteTemplateHtml("members.hover_card", hoverCardVars(card, clan));
   // Aspectul publicat de pluginuri (Studio VIP): banner-ul, fundalul copertei și arma, cu stilurile calculate de GCS.
   const look = await memberLook(card.user.id);
-  return Response.json({ ...card, html, look: look ? { banner: look.banner, card: look.card, flair: look.flair } : null }, { headers: { "Cache-Control": "private, no-store" } });
+  return Response.json({ ...card, clan, html, look: look ? { banner: look.banner, card: look.card, flair: look.flair } : null }, { headers: { "Cache-Control": "private, no-store" } });
 }

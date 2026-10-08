@@ -10,8 +10,8 @@ import {
   usernameHtml,
   type GcsHtmlNode,
 } from "@gcs/core";
-import { templateComponents, templateIconSvg, type GcsCardView, type GcsPostAuthor, type GcsPostbitData } from "@gcs/modules";
-import { GcsAvatar, GcsHoverCard, GcsUserLink } from "@gcs/ui";
+import { templateComponents, templateIconSvg, type GcsCardView, type GcsClanTag as GcsClanTagView, type GcsPostAuthor, type GcsPostbitData } from "@gcs/modules";
+import { GcsAvatar, GcsClanTag, GcsHoverCard, GcsUserLink } from "@gcs/ui";
 import { GcsIconSvg } from "@gcs/ui/icons";
 import { resolveIcon } from "@gcs/ui/icon-registry";
 import { createElement, type ReactElement } from "react";
@@ -145,6 +145,14 @@ describe("hover card-ul: șablonul implicit `members.hover_card` produce markup-
     expect(normalized(template(card))).toEqual(normalized(component(card)));
   });
 
+  test("cu tagul clanului lângă nume (aplicația Clanuri)", () => {
+    const clan: GcsClanTagView = { id: 3, tag: "RLX", name: "Red Lynx", href: "/clans/3-red-lynx", color: "#F4B740", color2: "#1B1E26", ink: "#0B0C10", logoUrl: null, role: "OFFICER" };
+    const html = renderTemplate(defaultTemplate("members.hover_card")!.source, hoverCardVars(base, clan), { locale: "ro", translate: (key) => texts[key] ?? key, components: templateComponents() });
+    const card = { ...base, clan } as GcsCardView & { clan: GcsClanTagView };
+    expect(normalized(html)).toEqual(normalized(component(card)));
+    expect(html).toContain("gcs-clanTag");
+  });
+
   test("numele și grupul stau sub copertă, nu în ea; coperta are poziția salvată", () => {
     const html = component(cases[1]![1]);
     const tree = normalized(html) as { children: { attrs: Record<string, unknown>; children: unknown[] }[] }[];
@@ -206,6 +214,24 @@ describe("postbit-ul: șablonul implicit `postbit.author`", () => {
     const plain = render({ ...data, cover: null });
     expect(plain).toContain('class="gcs-postbit__profile"');
     expect(plain).not.toContain("gcs-postbit__cover");
+  });
+
+  test("tagul clanului: aceeași plăcuță ca în componenta React, sub nume", () => {
+    const clan: GcsClanTagView = { id: 3, tag: "RLX", name: "Red Lynx", href: "/clans/3-red-lynx", color: "#D62839", color2: "#1B1E26", ink: "#FFFFFF", logoUrl: null, role: "MEMBER" };
+    const html = sanitizeTemplateHtml(
+      renderTemplate(defaultTemplate("postbit.author")!.source, postbitVars(author, data, { id: 1, number: 1 }, clan), {
+        locale: "ro",
+        translate: (key) => key,
+        components: templateComponents(),
+        include: (name) => defaultTemplate(name)?.source ?? null,
+      }),
+    );
+    const part = /<span class="gcs-postbit__clan"[\s\S]*?<\/span><\/span>/.exec(html)![0];
+    const expected = react(
+      createElement("span", { className: "gcs-postbit__clan", "data-testid": "gcs-postbit-clan" }, createElement(GcsClanTag, { clan, size: "sm" }), createElement("span", { className: "gcs-postbit__clanName" }, clan.name)),
+    );
+    expect(tree(part)).toEqual(tree(expected));
+    expect(render(data)).not.toContain("gcs-postbit__clan");
   });
 
   test("statusul online apare o singură dată (sus), nu și în subsol", () => {

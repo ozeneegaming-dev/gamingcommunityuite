@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./services": "./src/services.ts",
-    "./slug": "./src/forums/slug.ts"
+    "./slug": "./src/forums/slug.ts",
+    "./clans-text": "./src/clans/text.ts"
   },
   "scripts": {
     "lint": "eslint .",

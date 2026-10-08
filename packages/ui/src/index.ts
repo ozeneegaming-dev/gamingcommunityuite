@@ -4,6 +4,7 @@ export { GcsAvatar, GCS_AVATAR_SIZES, type GcsAvatarProps, type GcsAvatarSize } 
 export { GcsBadge, type GcsBadgeProps, type GcsBadgeTone } from "./components/GcsBadge";
 export { GcsButton, type GcsButtonProps } from "./components/GcsButton";
 export { GcsCard, type GcsCardProps } from "./components/GcsCard";
+export { GcsClanTag, type GcsClanTagData, type GcsClanTagProps } from "./components/GcsClanTag";
 export { GcsChart, type GcsChartProps, type GcsChartType } from "./components/GcsChart";
 export { GcsHoverCard, type GcsHoverCardData, type GcsHoverCardLabels } from "./components/GcsHoverCard";
 export { placeHoverCard, type GcsHoverCardPlacement } from "./components/hoverCardPosition";

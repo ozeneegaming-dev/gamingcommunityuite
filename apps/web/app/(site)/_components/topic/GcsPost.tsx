@@ -1,6 +1,6 @@
 import { isSafeBanner, type GcsReactionView } from "@gcs/core";
-import type { GcsPostbitData, GcsPostView } from "@gcs/modules";
-import { GcsAvatar, GcsBadgeArt, GcsTooltip, GcsUserLink } from "@gcs/ui";
+import type { GcsClanTag, GcsPostbitData, GcsPostView } from "@gcs/modules";
+import { GcsAvatar, GcsBadgeArt, GcsClanTag as GcsClanPlate, GcsTooltip, GcsUserLink } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { memberHref, postHref } from "@/lib/forum-urls";
@@ -25,10 +25,12 @@ type Props = {
   translate?: GcsTranslateLabels | null;
   /** Cardul autorului (etapa 5): grupul, XP-ul, insignele, câmpurile, online. */
   postbit?: GcsPostbitData | null;
+  /** Tagul clanului autorului (aplicația Clanuri, dacă opțiunile îl arată în postbit). */
+  clan?: GcsClanTag | null;
 };
 
 /** O postare (macheta Topic): coloana autorului (server) și conținutul cu acțiunile (client). */
-export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, can, actorId, ignored = false, translate = null, postbit = null }: Props) {
+export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, can, actorId, ignored = false, translate = null, postbit = null, clan = null }: Props) {
   const t = await getTranslations("topic");
   const format = await getFormatter();
   const author = post.author;
@@ -49,7 +51,7 @@ export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, 
       data-post-number={post.number}
     >
       <div className="gcs-post__author gcs-postbit" data-testid="gcs-postbit">
-        {author ? <GcsPostbit author={author} data={postbit} post={{ id: post.id, number: post.number }} topicId={topicId} /> : <span className="gcs-muted">—</span>}
+        {author ? <GcsPostbit author={author} data={postbit} clan={clan} post={{ id: post.id, number: post.number }} topicId={topicId} /> : <span className="gcs-muted">—</span>}
       </div>
       <GcsPostContent
         topicId={topicId}
@@ -111,11 +113,23 @@ function GcsRankIcon({ icon }: { icon: string | null }) {
  * (ultimul status de pe peretele membrului). Statusul online apare o singură dată, sus; coperta membrului e fundalul
  * blocului cu avatarul (specul „hover card și coperta în postbit”, 2026-10-07).
  */
-async function GcsPostbit({ author, data, post, topicId }: { author: NonNullable<GcsPostView["author"]>; data: GcsPostbitData | null; post: { id: number; number: number }; topicId: number }) {
+async function GcsPostbit({
+  author,
+  data,
+  clan,
+  post,
+  topicId,
+}: {
+  author: NonNullable<GcsPostView["author"]>;
+  data: GcsPostbitData | null;
+  clan: GcsClanTag | null;
+  post: { id: number; number: number };
+  topicId: number;
+}) {
   // Punctul de extensie `postbit.after_fields` (pluginurile, etapa 6): HTML sanitizat, o dată pentru ambele randări.
   const plugins = await pluginHookHtml("postbit.after_fields", { postId: post.id, topicId, authorId: author.id });
   // Șablonul `postbit.author` (cu `postbit.fields` inclus), dacă tema l-a modificat; `{% hook %}` primește pluginurile.
-  const custom = await siteTemplate("postbit.author", postbitVars(author, data, post), {}, { "postbit.after_fields": plugins.join("") });
+  const custom = await siteTemplate("postbit.author", postbitVars(author, data, post, clan), {}, { "postbit.after_fields": plugins.join("") });
   if (custom) return custom;
   const t = await getTranslations("topic.author");
   const format = await getFormatter();
@@ -166,6 +180,12 @@ async function GcsPostbit({ author, data, post, topicId }: { author: NonNullable
           <span className="gcs-post__authorName">
             <GcsUserLink userId={author.id} name={author.name} nameKey={author.nameKey} href={profile} />
           </span>
+          {clan && (
+            <span className="gcs-postbit__clan" data-testid="gcs-postbit-clan">
+              <GcsClanPlate clan={clan} size="sm" />
+              <span className="gcs-postbit__clanName">{clan.name}</span>
+            </span>
+          )}
           <span className="gcs-postbit__secondary" {...(data?.vip ? { "data-testid": "gcs-postbit-vip" } : {})}>
             {secondary}
           </span>

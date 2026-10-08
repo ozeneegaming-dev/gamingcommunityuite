@@ -87,8 +87,8 @@ describe("crearea și aprobarea", () => {
     await w.option("clans.tag_charset", "unicode");
     expect(await err({ tag: "ȘTF", name: "Ștefănești" })).toBeNull();
     // `STF` e același tag cu `ȘTF`; numele la fel, fără diacritice.
-    expect(await err({ tag: "stf" })).toEqual({ tag: "taken" });
-    expect(await err({ tag: "NEW", name: "stefanesti" })).toEqual({ name: "taken" });
+    expect(await err({ tag: "stf" })).toEqual({ tag: "clan_tag_taken" });
+    expect(await err({ tag: "NEW", name: "stefanesti" })).toEqual({ name: "clan_name_taken" });
     expect(await err({ tag: "AB", name: "ab" })).toEqual({ name: "too_short" });
   });
 

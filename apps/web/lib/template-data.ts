@@ -4,7 +4,7 @@
  * Numele și formele variabilelor sunt documentate în `@gcs/core` (`DEFAULT_TEMPLATES[].variables`).
  */
 import { isSafeBanner } from "@gcs/core";
-import type { GcsCardView, GcsForumRow, GcsMemberCard, GcsPostAuthor, GcsPostbitData, GcsTopicRow, GcsUserRef } from "@gcs/modules";
+import type { GcsCardView, GcsClanTag, GcsForumRow, GcsMemberCard, GcsPostAuthor, GcsPostbitData, GcsTopicRow, GcsUserRef } from "@gcs/modules";
 import { forumHref, memberHref, tagHref, topicHref, unreadHref } from "./forum-urls";
 
 /** Numele vechi ale iconițelor de forum (din etapele 1–4), pentru date nemigrate. */
@@ -90,8 +90,13 @@ function rankIcon(icon: string | null | undefined): { icon: string; symbol: stri
   return { icon: /^fa-(solid|regular|brands) /.test(icon) ? icon : `fa-solid ${icon}`, symbol: null };
 }
 
+/** Tagul clanului în șabloane (`author.clan`, `clan`): ca plăcuța din componenta `GcsClanTag`. */
+export function clanVar(clan: GcsClanTag | null | undefined) {
+  return clan ? { tag: clan.tag, name: clan.name, url: clan.href, color: clan.color, color2: clan.color2, ink: clan.ink } : null;
+}
+
 /** `postbit.author` (și `postbit.fields`) */
-export function postbitVars(author: GcsPostAuthor, data: GcsPostbitData | null, post: { id: number; number: number }) {
+export function postbitVars(author: GcsPostAuthor, data: GcsPostbitData | null, post: { id: number; number: number }, clan: GcsClanTag | null = null) {
   const groupColor = data?.group.color ?? author.groupColor;
   const groupLabel = data?.group.name ?? author.groupTitle ?? author.groupName;
   const banner = data?.group.banner && isSafeBanner(data.group.banner) ? data.group.banner : (groupColor ?? null);
@@ -136,6 +141,7 @@ export function postbitVars(author: GcsPostAuthor, data: GcsPostbitData | null, 
       reputation: author.reputation,
       joinedAt: author.joinedAt,
       motto: data?.motto ?? null,
+      clan: clanVar(clan),
       fields: (data?.fields ?? []).map((f) => ({
         key: f.key,
         label: f.label,
@@ -166,8 +172,9 @@ export function memberCardVars(member: GcsMemberCard) {
 }
 
 /** `members.hover_card` */
-export function hoverCardVars(card: GcsCardView) {
+export function hoverCardVars(card: GcsCardView, clan: GcsClanTag | null = null) {
   return {
+    clan: clanVar(clan),
     user: {
       id: card.user.id,
       name: card.user.name,

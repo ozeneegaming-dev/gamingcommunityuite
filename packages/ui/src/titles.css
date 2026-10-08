@@ -34,7 +34,8 @@
 .gcs-chat__dialog > h2:first-child,
 .gcs-authModal .gcs-modal__header,
 .gcs-stream__dayTitle,
-.gcs-serverCard > .gcs-serverCard__head {
+.gcs-serverCard > .gcs-serverCard__head,
+.gcs-clanCard > .gcs-clanCard__head {
   background: var(--gcs-box-header-bg, var(--gcs-surface2));
   color: var(--gcs-box-header-text, var(--gcs-text));
   border-bottom: 1px solid var(--gcs-box-border, var(--gcs-border));
@@ -158,8 +159,9 @@
 .gcs-notifPanel__head {
   border-radius: 0;
 }
-/* Cardul unui server: banda numelui stă sub banner (nu e prima felie), deci fără colțuri proprii. */
-.gcs-serverCard > .gcs-serverCard__head {
+/* Cardul unui server sau al unui clan: banda numelui stă sub banner (nu e prima felie), deci fără colțuri proprii. */
+.gcs-serverCard > .gcs-serverCard__head,
+.gcs-clanCard > .gcs-clanCard__head {
   border-radius: 0;
   border-top: 1px solid var(--gcs-box-border, var(--gcs-border));
 }
@@ -292,6 +294,7 @@
 .gcs-settingsSubtitle,
 .gcs-badgeGrid__section,
 .gcs-chatRooms__title,
+.gcs-clanRoster__role,
 .gcs-siteHeader .gcs-dropdown__heading {
   padding: 7px 12px;
   background: var(--gcs-box-header-bg, var(--gcs-surface2));

@@ -1,3 +1,4 @@
+import { GcsClanTag, type GcsClanTagData } from "./GcsClanTag";
 import type { CSSProperties, ReactNode } from "react";
 import { GcsAvatar } from "./GcsAvatar";
 import { GcsBadgeArt } from "./GcsBadgeArt";
@@ -28,6 +29,8 @@ export type GcsHoverCardData = {
    * sub nume, fundalul copertei și arma (iconița și numele).
    */
   look?: { banner: { label: string; style: CSSProperties; className?: string } | null; card: CSSProperties | null; flair: { icon: string; label: string } | null } | null;
+  /** Tagul clanului membrului (aplicația Clanuri, dacă opțiunile îl arată pe hover card). */
+  clan?: GcsClanTagData | null;
 };
 
 export type GcsHoverCardLabels = { posts: string; reputation: string; followers: string; online: string; joined: string; weapon?: string };
@@ -90,6 +93,7 @@ export function GcsHoverCard({
               {user.name}
             </a>
             <div className="gcs-hoverCard__meta">
+              {data.clan && <GcsClanTag clan={data.clan} size="sm" testId="gcs-hover-clan" />}
               {/* Banner-ul VIP înlocuiește pastila grupului când e același plan (fără dublură). */}
               {!(look?.banner && sameLabel(look.banner.label, user.group.name)) && (
                 <span className="gcs-badge gcs-hoverCard__group" style={{ "--gcs-hoverCard-group": user.group.color ?? "var(--gcs-muted)" } as CSSProperties}>
