@@ -109,7 +109,7 @@ export class GcsBridge {
     this.api = new GcsBridgeApi({ db, apps, settings, rateLimiter, store, keys: this.keys, players: this.players, admins: this.admins, vip: this.vip, sanctions: this.sanctions, events: this.events, matches: this.matches, maps: this.maps, now });
     this.presence = new GcsBridgePresence({ db, permissions, settings, apps, store, now });
     this.tickets = new GcsBridgeTickets({ db, bus, permissions, admins: this.admins, sanctions: this.sanctions, render: deps.render, now });
-    this.queries = new GcsBridgeQueries({ db, apps, permissions, store, sanctions: this.sanctions, presence: this.presence, canViewServer: deps.canViewServer, visibleServers: deps.visibleServers });
+    this.queries = new GcsBridgeQueries({ db, apps, permissions, store, players: this.players, sanctions: this.sanctions, presence: this.presence, canViewServer: deps.canViewServer, visibleServers: deps.visibleServers });
     this.stats = new GcsBridgeStatsProvider({ db });
   }
 
@@ -210,10 +210,16 @@ export { GCS_ADMIN_FLAGS, FLAG_CSS, normalizeFlags, cssPermissions } from "./fla
 export { generateAdminPassword, ADMIN_PASSWORD_MIN, type GcsServerAdminInput, type GcsServerAdminRow, type GcsAdminPresetView } from "./admins";
 export type { GcsMapRow } from "./maps";
 export { MAP_UPLOAD_MAX_FILES, MAP_IMAGE_MAX_BYTES, mapArtUrl } from "./maps";
-export type { GcsAdminPresence } from "./presence";
-export type { GcsSanctionInput, GcsSanctionView } from "./sanctions";
-export type { GcsTicketInput, GcsTicketView, GcsTicketSummary } from "./tickets";
-export type { GcsPlayerProfile, GcsMatchDetails, GcsMatchSummary } from "./queries";
+export type { GcsAdminPresence, GcsOnlineAdmin } from "./presence";
+export type { GcsSanctionInput, GcsSanctionUpdate, GcsSanctionView } from "./sanctions";
+export type { GcsTicketInput, GcsTicketView, GcsTicketSummary, GcsTicketMessageView } from "./tickets";
+export { TICKET_TITLE_MAX, TICKET_TITLE_MIN } from "./tickets";
+export type { GcsPlayerProfile, GcsMatchDetails, GcsMatchSummary, GcsUserGameCard, GcsPlayerHit, GcsStatTotals, GcsIdentityView } from "./queries";
+export type { GcsPlayerView } from "./players";
+export { LINK_CODE_TTL_MS } from "./players";
+export { matchRoom, MATCH_STATE_EVENT, SERVER_MATCH_EVENT } from "./matches";
+export { ticketHref } from "./notify";
+export { SANCTION_REASON_MAX } from "./sanctions";
 export type { GcsLiveMatch } from "./matches";
 export type { GcsRoster } from "./store";
 export type { GcsBridgeKeyRow } from "./keys";

@@ -76,6 +76,17 @@ describe("statisticile de joc (aplicația Servere) văzute din clanuri", () => {
     expect((await w.clanQueries.manage(leader, id))!.steam).toEqual({ [leader.userId!]: false, [ana.userId!]: true });
   });
 
+  test("o identitate de joc legată prin cod (fără Steam) ține loc de Steam: fără indicație, „conectat” pentru lider", async () => {
+    w.gameStats.on = true;
+    const { id, leader } = await w.activeClan({ joinMode: "OPEN" });
+    const ana = await w.user("Ana");
+    await w.clans.join(ana, id);
+    expect((await w.clanQueries.details(ana, id))!.viewer.steamLinked).toBe(false);
+    w.gameStats.linked.add(ana.userId!);
+    expect((await w.clanQueries.details(ana, id))!.viewer.steamLinked).toBe(true);
+    expect((await w.clanQueries.manage(leader, id))!.steam).toEqual({ [leader.userId!]: false, [ana.userId!]: true });
+  });
+
   test("ponderile de joc ale clasamentului: ignorate fără statistici sau cu aplicația oprită, adăugate altfel", async () => {
     expect(clanScore({ posts: 0, reputation: 0, active: 0, members: 2, game: null }, { posts: 1, reputation: 1, activity: 10, members: 5, playtime: 10, kd: 10, mixWins: 10, elo: 10 })).toBe(10);
     expect(

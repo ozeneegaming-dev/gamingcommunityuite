@@ -30,6 +30,8 @@ export type GcsPlayerStatsAggregate = {
 /** Furnizorul statisticilor de joc (doar citire). Membrii fără statistici lipsesc din rezultat. */
 export interface GcsPlayerStatsProvider {
   forUsers(userIds: string[], opts: { scope: GcsPlayerStatsScope }): Promise<Map<string, GcsPlayerStatsAggregate>>;
+  /** Membrii dați care au cel puțin o identitate de joc legată (Steam sau prin cod); opțional. */
+  linkedUsers?(userIds: string[]): Promise<Set<string>>;
 }
 
 /** Implementarea implicită: niciun membru nu are statistici. */
@@ -57,6 +59,13 @@ export class GcsPlayerStatsHub implements GcsPlayerStatsProvider {
     const ids = [...new Set(userIds)];
     if (ids.length === 0) return new Map();
     return this.provider.forUsers(ids, opts);
+  }
+
+  /** Membrii cu identități de joc legate (indicația „leagă-ți contul” din clanuri); fără furnizor: niciunul. */
+  async linkedUsers(userIds: string[]): Promise<Set<string>> {
+    const ids = [...new Set(userIds)];
+    if (ids.length === 0 || !this.provider.linkedUsers) return new Set();
+    return this.provider.linkedUsers(ids);
   }
 }
 

@@ -446,6 +446,17 @@ export class GcsBridgeAdmins {
     return normalizeFlags(entries.map((e) => grantOf(e).flags).join(""));
   }
 
+  /**
+   * Drepturile membrului ca admin de server, pe server (`null` = toate serverele): reuniunea flag-urilor intrărilor
+   * active `USER` (formularul sancțiunilor de pe site, §8.1).
+   */
+  async userGrants(userId: string): Promise<{ serverId: number | null; flags: string }[]> {
+    const entries = await this.deps.db.gameAdmin.findMany({ where: { AND: [{ subject: "USER", userId }, this.active()] }, include: { preset: true }, orderBy: { id: "asc" } });
+    const by = new Map<number | null, string>();
+    for (const e of entries) by.set(e.serverId, normalizeFlags(`${by.get(e.serverId) ?? ""}${grantOf(e).flags}`));
+    return [...by].filter(([, flags]) => flags !== "").map(([serverId, flags]) => ({ serverId, flags }));
+  }
+
   /** Serverele pe care membrul are flag-ul dat (`null` în listă = toate serverele). */
   async userServers(userId: string, flag: string): Promise<(number | null)[]> {
     const entries = await this.deps.db.gameAdmin.findMany({ where: { AND: [{ subject: "USER", userId }, this.active()] }, include: { preset: true } });

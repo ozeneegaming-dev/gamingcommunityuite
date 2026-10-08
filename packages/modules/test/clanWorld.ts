@@ -18,10 +18,11 @@ export async function createClanWorld() {
   const w = await createForumWorld();
   const apps = new GcsAppService({ db: w.db, cache: w.cache, bus: w.bus, registry: w.registry, acp: w.acp });
   // Statisticile de joc „ale aplicației Servere”, controlate de test: pornite / oprite și datele pe membru.
-  const gameStats = { on: false, data: new Map<string, GcsPlayerStatsAggregate>() };
+  const gameStats = { on: false, data: new Map<string, GcsPlayerStatsAggregate>(), linked: new Set<string>() };
   const gameSource: GcsClanGameStatsSource = {
     enabled: async () => gameStats.on,
     forUsers: async (ids) => new Map(ids.flatMap((id) => (gameStats.data.has(id) ? [[id, gameStats.data.get(id)!] as const] : []))),
+    linkedUsers: async (ids) => new Set(ids.filter((id) => gameStats.linked.has(id))),
   };
   const clans = new GcsClanService({
     db: w.db,

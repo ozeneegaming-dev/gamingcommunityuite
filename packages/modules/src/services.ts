@@ -466,7 +466,11 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   attachments.registerAccess(SANCTION_EVIDENCE, (actor, id) => bridge.sanctions.canView(actor, Number(id)));
   realtimeRooms.register("match", (actor, id) => bridge.queries.canJoinMatch(actor, id));
   // Statisticile de joc ale aplicației Servere, citite de clanuri doar cu aplicația Servere activă (specul clanurilor §15).
-  const clanGameStats: GcsClanGameStatsSource = { enabled: () => apps.enabled("servers"), forUsers: (ids, opts) => servers.playerStats.forUsers(ids, opts) };
+  const clanGameStats: GcsClanGameStatsSource = {
+    enabled: () => apps.enabled("servers"),
+    forUsers: (ids, opts) => servers.playerStats.forUsers(ids, opts),
+    linkedUsers: (ids) => servers.playerStats.linkedUsers(ids),
+  };
   const clans = new GcsClanService({ db, cache, bus, settings, permissions, acp, apps, actors, attachments, rateLimiter, gameStats: clanGameStats });
   const clanQueries = new GcsClanQueries({ db, cache, permissions, settings, apps, clans, gameStats: clanGameStats });
   attachments.registerAccess(CLAN_LOGO, (actor, id) => clanQueries.canSeeClan(actor, Number(id)));

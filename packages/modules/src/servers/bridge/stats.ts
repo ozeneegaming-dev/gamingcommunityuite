@@ -94,6 +94,14 @@ type EloRow = { userId: string; elo: number };
 export class GcsBridgeStatsProvider implements GcsPlayerStatsProvider {
   constructor(private readonly deps: { db: PrismaClient }) {}
 
+  /** Membrii cu cel puțin o identitate `STEAM` / `NONSTEAM` legată. */
+  async linkedUsers(userIds: string[]): Promise<Set<string>> {
+    const ids = [...new Set(userIds)].slice(0, 5000);
+    if (ids.length === 0) return new Set();
+    const rows = await this.deps.db.gamePlayer.findMany({ where: { userId: { in: ids }, kind: { in: ["STEAM", "NONSTEAM"] } }, select: { userId: true }, distinct: ["userId"] });
+    return new Set(rows.flatMap((r) => (r.userId ? [r.userId] : [])));
+  }
+
   async forUsers(userIds: string[], opts: { scope: GcsPlayerStatsScope }): Promise<Map<string, GcsPlayerStatsAggregate>> {
     const { db } = this.deps;
     const out = new Map<string, GcsPlayerStatsAggregate>();

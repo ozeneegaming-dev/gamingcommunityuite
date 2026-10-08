@@ -10,6 +10,8 @@ export type GcsClanGameStatsSource = {
   /** Aplicația Servere e activă? */
   enabled(): Promise<boolean>;
   forUsers: GcsPlayerStatsProvider["forUsers"];
+  /** Membrii cu o identitate de joc legată (Steam sau prin cod), citiți tot prin furnizorul aplicației Servere. */
+  linkedUsers?: (userIds: string[]) => Promise<Set<string>>;
 };
 
 /** Partea de joc a scorului unui clan (valorile, nu punctele). */

@@ -149,6 +149,48 @@ export class GcsBridgeSanctions {
     return opts.minutes <= (await this.deps.settings.get<number>(BRIDGE_SETTING.tempbanMax));
   }
 
+  /**
+   * Ce poate da actorul de pe site (formularul sancțiunilor): `staff` = `servers.sanction` (orice server și scop); altfel
+   * drepturile lui de admin de server, pe server (`null` = toate serverele), și durata maximă a unui ban temporar (`v`).
+   * Serviciul verifică oricum fiecare sancțiune (`canSanction`).
+   */
+  async abilities(actor: GcsActor): Promise<{ staff: boolean; grants: { serverId: number | null; flags: string }[]; tempbanMax: number }> {
+    const tempbanMax = await this.deps.settings.get<number>(BRIDGE_SETTING.tempbanMax);
+    if (!actor.userId || actor.isBanned) return { staff: false, grants: [], tempbanMax };
+    if (await this.deps.permissions.can(actor, BRIDGE_PERMISSION.sanction)) return { staff: true, grants: [], tempbanMax };
+    const grants = (await this.deps.admins.userGrants(actor.userId)).filter((g) => /[dvi]/.test(g.flags));
+    return { staff: false, grants, tempbanMax };
+  }
+
+  /**
+   * Sancțiunile active ale actorului (contestația unui ban): ținta e una dintre identitățile legate de el (după jucător
+   * sau după identitatea scrisă), cu semnul unei contestații deschise.
+   */
+  async mine(actor: GcsActor): Promise<(GcsSanctionView & { appealOpen: boolean })[]> {
+    const { db, permissions } = this.deps;
+    if (!actor.userId || actor.isBanned) return [];
+    const identities = await db.gamePlayer.findMany({ where: { userId: actor.userId }, select: { id: true, kind: true, value: true } });
+    if (identities.length === 0) return [];
+    const now = this.now();
+    const rows = await db.gameSanction.findMany({
+      where: {
+        unbannedAt: null,
+        AND: [
+          { OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
+          { OR: [{ playerId: { in: identities.map((i) => i.id) } }, ...identities.map((i) => ({ targetKind: i.kind, targetValue: i.value }))] },
+        ],
+      },
+      include: { server: { select: { id: true, name: true } }, player: { select: { id: true, name: true, kind: true, value: true } } },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    });
+    const open = new Set(
+      (await db.gameTicket.findMany({ where: { kind: "APPEAL", sanctionId: { in: rows.map((r) => r.id) }, status: { in: ["OPEN", "REVIEW"] } }, select: { sanctionId: true } })).map((t) => t.sanctionId),
+    );
+    const showIp = await permissions.can(actor, BRIDGE_PERMISSION.viewIps);
+    return rows.map((r) => ({ ...this.view(r, now, showIp), appealOpen: open.has(r.id) }));
+  }
+
   /** Vede actorul sancțiunea (lista publică a bannurilor sau cine o poate modifica)? */
   async canView(actor: GcsActor, id: number): Promise<boolean> {
     if (actor.isBanned) return false;
@@ -559,7 +601,7 @@ export class GcsBridgeSanctions {
   /** Lista bannurilor și comunicațiilor (`servers.bans_view`): filtre pe tip, stare, server, jucător și căutare. */
   async list(
     actor: GcsActor,
-    filter: { type?: GameSanctionType; status?: "active" | "expired" | "lifted" | "all"; serverId?: number; playerId?: number; q?: string; page?: number } = {},
+    filter: { type?: GameSanctionType; status?: "active" | "expired" | "lifted" | "all"; scope?: GameSanctionScope; serverId?: number; playerId?: number; q?: string; page?: number } = {},
   ): Promise<{ items: GcsSanctionView[]; total: number; page: number; pages: number }> {
     const { db, permissions } = this.deps;
     if (actor.isBanned || !(await permissions.can(actor, BRIDGE_PERMISSION.bansView))) throw new GcsForbidden({ permission: BRIDGE_PERMISSION.bansView });
@@ -570,7 +612,9 @@ export class GcsBridgeSanctions {
     if (filter.status === "active") and.push({ unbannedAt: null, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] });
     else if (filter.status === "expired") and.push({ unbannedAt: null, expiresAt: { lte: now } });
     else if (filter.status === "lifted") and.push({ unbannedAt: { not: null } });
-    if (typeof filter.serverId === "number") and.push({ OR: [{ scope: "GLOBAL" }, { serverId: filter.serverId }] });
+    // Un server: sancțiunile care se aplică pe el (ale lui și cele globale); scopul le restrânge.
+    if (filter.scope && SCOPES.includes(filter.scope)) and.push({ scope: filter.scope });
+    if (typeof filter.serverId === "number") and.push(filter.scope === "SERVER" ? { serverId: filter.serverId } : { OR: [{ scope: "GLOBAL" }, { serverId: filter.serverId }] });
     if (typeof filter.playerId === "number") and.push({ playerId: filter.playerId });
     const q = filter.q?.trim().slice(0, 64);
     if (q) {

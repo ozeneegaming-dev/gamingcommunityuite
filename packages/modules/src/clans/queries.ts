@@ -283,7 +283,7 @@ export class GcsClanQueries {
         return s ? [{ user: toRef(m.user), stats: s }] : [];
       });
       game = { totals: sumPlayerStats(withStats.map((m) => m.stats)), members: withStats.sort((a, b) => b.stats.playtimeSeconds - a.stats.playtimeSeconds).slice(0, 10) };
-      if (access.role !== null && actor.userId) steamLinked = (await db.account.count({ where: { userId: actor.userId, providerId: "steam" } })) > 0;
+      if (access.role !== null && actor.userId) steamLinked = (await this.steamStatus([actor.userId]))[actor.userId] === true;
     }
     const open = clan.status === "ACTIVE" && !clan.locked;
     const blocked: GcsClanDetails["viewer"]["blocked"] = !actor.userId ? "guest" : !canJoinPerm ? "no_permission" : myClans >= options.maxPerMember ? "max_clans" : null;
@@ -372,10 +372,16 @@ export class GcsClanQueries {
     };
   }
 
-  /** Care dintre membri au contul Steam conectat (statisticile de joc ale aplicației Servere). */
+  /**
+   * Care dintre membri au contul Steam conectat sau o identitate de joc legată prin cod (statisticile de joc ale
+   * aplicației Servere, citite prin furnizorul ei).
+   */
   private async steamStatus(userIds: string[]): Promise<Record<string, boolean>> {
-    const rows = await this.deps.db.account.findMany({ where: { userId: { in: userIds }, providerId: "steam" }, select: { userId: true } });
-    const linked = new Set(rows.map((r) => r.userId));
+    const [rows, games] = await Promise.all([
+      this.deps.db.account.findMany({ where: { userId: { in: userIds }, providerId: "steam" }, select: { userId: true } }),
+      this.deps.gameStats?.linkedUsers ? this.deps.gameStats.linkedUsers(userIds) : Promise.resolve(new Set<string>()),
+    ]);
+    const linked = new Set([...rows.map((r) => r.userId), ...games]);
     return Object.fromEntries(userIds.map((id) => [id, linked.has(id)]));
   }
 

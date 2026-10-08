@@ -50,6 +50,8 @@ export type GcsTicketSummary = {
   server: { id: number; name: string } | null;
   targetName: string;
   assigneeId: string | null;
+  /** Responsabilul (numele, pentru liste). */
+  assignee: { id: string; name: string } | null;
   createdAt: string;
   lastActivityAt: string;
 };
@@ -262,10 +264,19 @@ export class GcsBridgeTickets {
       db.gameTicket.count({ where }),
       db.gameTicket.findMany({ where, include: TICKET_INCLUDE, orderBy: { lastActivityAt: "desc" }, skip: (page - 1) * PAGE_SIZE, take: PAGE_SIZE }),
     ]);
-    return { items: rows.map((r) => this.summary(r)), total, page, pages: Math.max(1, Math.ceil(total / PAGE_SIZE)) };
+    const names = await this.userNames(rows.flatMap((r) => (r.assigneeId ? [r.assigneeId] : [])));
+    return { items: rows.map((r) => this.summary(r, names)), total, page, pages: Math.max(1, Math.ceil(total / PAGE_SIZE)) };
   }
 
-  private summary(t: TicketRow): GcsTicketSummary {
+  /** Numele membrilor dați, într-o singură citire. */
+  private async userNames(ids: string[]): Promise<Map<string, { id: string; name: string }>> {
+    const unique = [...new Set(ids)];
+    if (unique.length === 0) return new Map();
+    const users = await this.deps.db.user.findMany({ where: { id: { in: unique } }, select: { id: true, name: true } });
+    return new Map(users.map((u) => [u.id, u]));
+  }
+
+  private summary(t: TicketRow, names: Map<string, { id: string; name: string }>): GcsTicketSummary {
     return {
       id: t.id,
       kind: t.kind,
@@ -275,6 +286,7 @@ export class GcsBridgeTickets {
       server: t.server,
       targetName: t.targetName,
       assigneeId: t.assigneeId,
+      assignee: t.assigneeId ? (names.get(t.assigneeId) ?? null) : null,
       createdAt: t.createdAt.toISOString(),
       lastActivityAt: t.lastActivityAt.toISOString(),
     };
@@ -287,10 +299,10 @@ export class GcsBridgeTickets {
     if (!t || !(await this.canView(actor, t))) return null;
     const handle = await this.canHandle(actor, t);
     const messages = await db.gameTicketMessage.findMany({ where: { ticketId: id, ...(handle ? {} : { internal: false }) }, orderBy: { id: "asc" } });
-    const authors = new Map((await db.user.findMany({ where: { id: { in: [...new Set(messages.flatMap((m) => (m.authorId ? [m.authorId] : [])))] } }, select: { id: true, name: true } })).map((u) => [u.id, u]));
+    const authors = await this.userNames([...messages.flatMap((m) => (m.authorId ? [m.authorId] : [])), ...(t.assigneeId ? [t.assigneeId] : [])]);
     const isAuthor = actor.userId === t.authorId;
     return {
-      ...this.summary(t),
+      ...this.summary(t, authors),
       contentHtml: t.contentHtml,
       evidence: (Array.isArray(t.evidence) ? t.evidence : []) as { url: string }[],
       sanction: t.sanction ? { id: t.sanction.id, type: t.sanction.type, reason: t.sanction.reason, createdAt: t.sanction.createdAt.toISOString(), expiresAt: t.sanction.expiresAt?.toISOString() ?? null, lifted: t.sanction.unbannedAt !== null } : null,
@@ -357,6 +369,29 @@ export class GcsBridgeTickets {
     });
     if (!isAuthor) await bus.emit({ name: "servers.ticket.updated", payload: { ticketId: id, actorId: actor.userId, recipients: [t.authorId], kind: "status", status }, tags: [] });
     if (lift) await bus.emit({ name: "servers.sanction.changed", payload: { id: t.sanction!.id }, tags: ["servers:sanctions"] });
+  }
+
+  /**
+   * Cei care pot trata tichetul (alegerea responsabilului): staff-ul cu `servers.tickets_manage` și, la contestații /
+   * reclamații de cheater, adminii serverului cu `d`; fără autor și fără cel despre care e tichetul. Gol pentru cine nu
+   * poate trata tichetul.
+   */
+  async handlerOptions(actor: GcsActor, id: number): Promise<{ id: string; name: string }[]> {
+    const t = await this.deps.db.gameTicket.findUnique({ where: { id } });
+    if (!t || !(await this.canHandle(actor, t))) return [];
+    const ids = (await this.handlers(t)).filter((u) => u !== t.authorId);
+    return [...(await this.userNames(ids)).values()].sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  /** Poate actorul contesta sancțiunea (e a lui, e activă, nu are deja o contestație deschisă)? */
+  async canAppeal(actor: GcsActor, sanctionId: number): Promise<boolean> {
+    const { db, permissions } = this.deps;
+    if (!actor.userId || actor.isBanned || !(await permissions.can(actor, BRIDGE_PERMISSION.ticketsCreate))) return false;
+    const s = await db.gameSanction.findUnique({ where: { id: sanctionId }, include: { player: { select: { userId: true } } } });
+    if (!s || !sanctionActive(s, this.now())) return false;
+    const own = s.player?.userId === actor.userId || (s.targetKind && s.targetValue && (await db.gamePlayer.count({ where: { kind: s.targetKind, value: s.targetValue, userId: actor.userId } })) > 0);
+    if (!own) return false;
+    return (await db.gameTicket.count({ where: { kind: "APPEAL", sanctionId, status: { in: OPEN_STATES } } })) === 0;
   }
 
   /** Responsabilul (`null` = nimeni); trebuie să poată trata tichetul. */

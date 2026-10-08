@@ -3,7 +3,8 @@ import type { GamePlayerKind, Prisma, PrismaClient } from "@gcs/db";
 import { SERVERS_APP } from "../poller";
 import { BRIDGE_PERMISSION } from "./config";
 import type { GcsLiveMatch } from "./matches";
-import type { GcsAdminPresence, GcsBridgePresence } from "./presence";
+import type { GcsBridgePlayers } from "./players";
+import type { GcsAdminPresence, GcsBridgePresence, GcsOnlineAdmin } from "./presence";
 import type { GcsBridgeSanctions, GcsSanctionView } from "./sanctions";
 import type { GcsBridgeStore } from "./store";
 
@@ -26,6 +27,26 @@ export type GcsPlayerProfile = {
   /** `null` = viewer-ul nu vede lista bannurilor. */
   sanctions: GcsSanctionView[] | null;
 };
+
+/** Caseta „Statistici pe servere” din profilul membrului: identitatea principală și totalurile (citire ușoară). */
+export type GcsUserGameCard = {
+  player: { id: number; name: string; kind: GamePlayerKind; trust: string; value: string };
+  /** Câte identități de joc are membrul legate. */
+  identities: number;
+  kills: number;
+  deaths: number;
+  headshots: number;
+  kd: number;
+  headshotRate: number | null;
+  playtime: number;
+  lastSeenAt: string | null;
+  bestRank: number | null;
+  elo: number | null;
+  matches: number;
+};
+
+/** Un jucător găsit (formularele reclamației și sancțiunii); fără IP-uri. */
+export type GcsPlayerHit = { id: number; name: string; kind: GamePlayerKind; value: string; trust: string; lastSeenAt: string };
 
 export type GcsMatchSummary = {
   id: number;
@@ -73,6 +94,7 @@ export class GcsBridgeQueries {
       apps: GcsAppService;
       permissions: GcsPermissionService;
       store: GcsBridgeStore;
+      players: GcsBridgePlayers;
       sanctions: GcsBridgeSanctions;
       presence: GcsBridgePresence;
       /** Vede viewer-ul serverul (grupurile serverului)? */
@@ -153,6 +175,73 @@ export class GcsBridgeQueries {
       ORDER BY (p.kind = 'STEAM') DESC, COALESCE(SUM(s.playtime), 0) DESC, p."lastSeenAt" DESC
       LIMIT 1`;
     return rows[0] ? this.playerProfile(actor, rows[0].id) : null;
+  }
+
+  /**
+   * Caseta din profilul membrului: identitatea principală (ca `userProfile`) și totalurile ei pe serverele vizibile,
+   * ELO-ul și locul cel mai bun. `null` = membrul nu are identități (sau viewer-ul nu vede statisticile).
+   */
+  async userCard(actor: GcsActor, userId: string): Promise<GcsUserGameCard | null> {
+    if (!(await this.canViewStats(actor))) return null;
+    const { db } = this.deps;
+    const identities = await db.gamePlayer.findMany({ where: { userId }, select: { id: true } });
+    if (identities.length === 0) return null;
+    const [main] = await db.$queryRaw<{ id: number }[]>`
+      SELECT p.id FROM game_players p LEFT JOIN game_player_stats s ON s."playerId" = p.id
+      WHERE p."userId" = ${userId}
+      GROUP BY p.id, p.kind, p."lastSeenAt"
+      ORDER BY (p.kind = 'STEAM') DESC, COALESCE(SUM(s.playtime), 0) DESC, p."lastSeenAt" DESC
+      LIMIT 1`;
+    const visible = await this.deps.visibleServers(actor);
+    const [player, sum, rating] = await Promise.all([
+      db.gamePlayer.findUniqueOrThrow({ where: { id: main!.id }, select: { id: true, name: true, kind: true, trust: true, value: true } }),
+      db.gamePlayerStat.aggregate({ where: { playerId: main!.id, serverId: { in: visible } }, _sum: { kills: true, deaths: true, headshots: true, playtime: true }, _max: { lastSeenAt: true }, _min: { rank: true } }),
+      db.gameRating.findUnique({ where: { playerId: main!.id }, select: { elo: true, matches: true } }),
+    ]);
+    const kills = sum._sum.kills ?? 0;
+    const deaths = sum._sum.deaths ?? 0;
+    const headshots = sum._sum.headshots ?? 0;
+    return {
+      player,
+      identities: identities.length,
+      kills,
+      deaths,
+      headshots,
+      kd: kills / Math.max(1, deaths),
+      headshotRate: kills > 0 ? headshots / kills : null,
+      playtime: sum._sum.playtime ?? 0,
+      lastSeenAt: sum._max.lastSeenAt?.toISOString() ?? null,
+      bestRank: sum._min.rank ?? null,
+      elo: rating && rating.matches > 0 ? rating.elo : null,
+      matches: rating?.matches ?? 0,
+    };
+  }
+
+  /** Căutarea jucătorilor după nume sau ID (formularele reclamației și sancțiunii); fără IP-uri. */
+  async searchPlayers(actor: GcsActor, q: string): Promise<GcsPlayerHit[]> {
+    if (!(await this.canViewStats(actor))) return [];
+    return (await this.deps.players.search(q, 10)).map((p) => ({ id: p.id, name: p.name, kind: p.kind, value: p.value, trust: p.trust, lastSeenAt: p.lastSeenAt }));
+  }
+
+  /** Prezența adminilor pe pagina publică: doar serverele vizibile viewer-ului (§6 partea B). */
+  async adminPresence(actor: GcsActor, opts: { serverId?: number } = {}): Promise<GcsAdminPresence[] | null> {
+    if (!(await this.canViewStats(actor))) return null;
+    const visible = await this.deps.visibleServers(actor);
+    if (typeof opts.serverId === "number" && !visible.includes(opts.serverId)) return null;
+    return this.deps.presence.list(actor, { ...opts, visibleServers: visible });
+  }
+
+  /** Adminii online acum pe serverele vizibile (widget-ul „Admini online”). */
+  async onlineAdmins(actor: GcsActor, limit = 50): Promise<GcsOnlineAdmin[] | null> {
+    if (!(await this.canViewStats(actor))) return null;
+    return this.deps.presence.online(await this.deps.visibleServers(actor), limit);
+  }
+
+  /** Câți admini sunt acum pe fiecare server dat și vizibil (indicatorul „Admin online” de pe carduri). */
+  async adminsOnlineCounts(actor: GcsActor, serverIds: number[]): Promise<Map<number, number>> {
+    if (serverIds.length === 0 || !(await this.canViewStats(actor))) return new Map();
+    const visible = new Set(await this.deps.visibleServers(actor));
+    return this.deps.presence.onlineCounts(serverIds.filter((id) => visible.has(id)));
   }
 
   /** Clasamentul unui server (după loc; doar jucătorii cu loc). */
