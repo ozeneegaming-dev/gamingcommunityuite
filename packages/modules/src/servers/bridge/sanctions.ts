@@ -166,11 +166,14 @@ export class GcsBridgeSanctions {
     if (!TYPES.includes(input.type)) errors.type = "invalid";
     if (!SCOPES.includes(input.scope)) errors.scope = "invalid";
     const serverId = await this.checkServer(input.scope, input.serverId, errors);
+    const minutes = input.minutes;
+    if (!Number.isInteger(minutes) || minutes < 0 || minutes > MAX_MINUTES) errors.minutes = "invalid_range";
+    if (Object.keys(errors).length > 0) throw new GcsValidationError(errors);
+    // Dreptul se verifică înainte de orice scriere (ținta scrisă poate crea identitatea de joc).
+    if (!(await this.canSanction(actor, { type: input.type, scope: input.scope, serverId, minutes }))) throw new GcsForbidden({ permission: BRIDGE_PERMISSION.sanction });
     const target = await this.resolveTarget(input.target, errors);
     const reason = plainText(input.reason, SANCTION_REASON_MAX);
     if (!reason) errors.reason = "required";
-    const minutes = input.minutes;
-    if (!Number.isInteger(minutes) || minutes < 0 || minutes > MAX_MINUTES) errors.minutes = "invalid_range";
     const files = [...new Set(Array.isArray(input.attachmentIds) ? input.attachmentIds.filter((a) => typeof a === "string") : [])];
     const evidence = cleanEvidence(input.evidence, errors, MAX_EVIDENCE - files.length);
     if (files.length > MAX_EVIDENCE) errors.evidence = "too_many";
@@ -179,7 +182,6 @@ export class GcsBridgeSanctions {
       if (own !== files.length) errors.attachments = "invalid";
     }
     if (Object.keys(errors).length > 0) throw new GcsValidationError(errors);
-    if (!(await this.canSanction(actor, { type: input.type, scope: input.scope, serverId, minutes }))) throw new GcsForbidden({ permission: BRIDGE_PERMISSION.sanction });
 
     const user = await db.user.findUniqueOrThrow({ where: { id: actor.userId }, select: { name: true } });
     const now = this.now();

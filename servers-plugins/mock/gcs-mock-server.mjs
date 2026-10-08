@@ -11,7 +11,6 @@
 // Licența: MIT (ca pluginul CS2).
 
 import { createHash, createHmac, randomBytes } from "node:crypto";
-import { pathToFileURL } from "node:url";
 
 export const BRIDGE_BASE_PATH = "/api/servers/bridge/v1";
 
@@ -237,7 +236,8 @@ function parseArgs(argv) {
   return out;
 }
 
-const isMain = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href;
+// Rulat direct (node gcs-mock-server.mjs …). Fără import.meta: testele E2E îl încarcă și prin loader-ul Playwright (CJS).
+const isMain = /gcs-mock-server\.mjs$/.test(process.argv[1] ?? "");
 if (isMain) {
   const args = parseArgs(process.argv.slice(2));
   if (!args.url || !args.key) {

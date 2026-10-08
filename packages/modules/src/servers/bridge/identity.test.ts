@@ -40,6 +40,8 @@ describe("identitatea jucătorului (resolveIdentity, server-side)", () => {
   it("boții și HLTV-ul nu sunt urmăriți", () => {
     expect(resolveIdentity({ auth: "STEAM_0:1:42", steam: true, bot: true }, cs16)).toBeNull();
     expect(resolveIdentity({ auth: "BOT", name: "Bot Ion" }, cs16Names)).toBeNull();
+    // Consola serverului (acțiunile din rcon) nu devine identitate pe nume.
+    expect(resolveIdentity({ auth: "CONSOLE", name: "Console" }, cs16Names)).toBeNull();
   });
 
   it("numele afișat e curățat (fără caractere de control), max 32", () => {

@@ -29,8 +29,8 @@ export const NAME_MAX = 32;
 const TRUST: Record<GcsIdentityKind, GcsIdentityTrust> = { STEAM: "HIGH", NONSTEAM: "MEDIUM", NAME: "LOW" };
 /** Numele implicite ale clientului: nu identifică pe nimeni. */
 const DEFAULT_NAMES = new Set(["player", "unnamed", "unconnected"]);
-/** ID-urile care marchează boții și HLTV-ul (nu sunt urmăriți nici ca nume). */
-const NOT_PLAYERS = new Set(["BOT", "HLTV"]);
+/** ID-urile care marchează boții, HLTV-ul și consola serverului (acțiunile date din consolă / rcon): nu sunt jucători. */
+const NOT_PLAYERS = new Set(["BOT", "HLTV", "CONSOLE"]);
 /** Codurile de culoare de tip `^1` din unele moduri. */
 const COLOR_CODES = /\^\d/g;
 

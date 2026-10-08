@@ -2,7 +2,7 @@ import { createHash, randomInt } from "node:crypto";
 import { GcsForbidden, GcsNotFound, GcsRateLimited, GcsValidationError, writeAudit, type GcsActor, type GcsEventBus, type GcsPermissionService } from "@gcs/core";
 import { Prisma, type GamePlayerKind, type PrismaClient } from "@gcs/db";
 import { BRIDGE_PERMISSION } from "./config";
-import { identityTrust, parseTypedIdentity, resolveIdentity, type GcsPlayerRef, type GcsResolvedIdentity } from "./identity";
+import { parseTypedIdentity, resolveIdentity, type GcsPlayerRef, type GcsResolvedIdentity } from "./identity";
 import type { GcsBridgeStore } from "./store";
 import { GcsBridgeError, type GcsBridgeServer, type GcsPlayerRow } from "./types";
 
@@ -231,24 +231,22 @@ export class GcsBridgePlayers {
 
   /**
    * Legăturile Steam ale unui membru, după conturile Steam conectate pe site: identitatea `STEAM` cu același SteamID64 e
-   * a lui (dovada Steam câștigă), iar cele legate prin Steam fără cont se dezleagă. Chemat la conectarea / dezlegarea
-   * Steam-ului și de jobul de reconciliere.
+   * a lui (dovada Steam câștigă), iar cele legate prin Steam fără cont se dezleagă. O identitate încă nevăzută în joc nu se
+   * creează: se leagă la prima apariție (`upsert`). Chemat la conectarea / dezlegarea Steam-ului și de jobul de reconciliere.
    */
   async syncSteam(userId: string): Promise<number> {
     const { db } = this.deps;
     const accounts = (await db.account.findMany({ where: { userId, providerId: "steam" }, select: { accountId: true } })).map((a) => a.accountId).filter((id) => /^\d{17}$/.test(id));
-    let changed = 0;
     const now = this.now();
-    for (const value of accounts) {
-      const existing = await db.gamePlayer.findUnique({ where: { kind_value: { kind: "STEAM", value } } });
-      if (existing?.userId === userId && existing.linkSource === "STEAM") continue;
-      await db.gamePlayer.upsert({
-        where: { kind_value: { kind: "STEAM", value } },
-        create: { kind: "STEAM", value, trust: identityTrust("STEAM"), userId, linkSource: "STEAM", linkedAt: now, firstSeenAt: now, lastSeenAt: now },
-        update: { userId, linkSource: "STEAM", linkedAt: now },
-      });
-      changed++;
-    }
+    const linked =
+      accounts.length === 0
+        ? { count: 0 }
+        : await db.gamePlayer.updateMany({
+            // Explicit și pentru NULL: o comparație cu NULL nu e nici adevărată, nici falsă în SQL.
+            where: { kind: "STEAM", value: { in: accounts }, OR: [{ userId: null }, { userId: { not: userId } }, { linkSource: null }, { linkSource: { not: "STEAM" } }] },
+            data: { userId, linkSource: "STEAM", linkedAt: now },
+          });
+    let changed = linked.count;
     const stale = await db.gamePlayer.updateMany({ where: { userId, kind: "STEAM", linkSource: "STEAM", value: { notIn: accounts } }, data: { userId: null, linkSource: null, linkedAt: null } });
     changed += stale.count;
     if (changed > 0) await this.deps.store.bumpVersion();
@@ -260,8 +258,8 @@ export class GcsBridgePlayers {
     const { db } = this.deps;
     const fromAccounts = await db.$queryRaw<{ userId: string }[]>`
       SELECT DISTINCT a."userId" FROM accounts a
-      LEFT JOIN game_players p ON p.kind = 'STEAM' AND p.value = a."accountId"
-      WHERE a."providerId" = 'steam' AND (p.id IS NULL OR p."userId" IS DISTINCT FROM a."userId" OR p."linkSource" IS DISTINCT FROM 'STEAM')`;
+      JOIN game_players p ON p.kind = 'STEAM' AND p.value = a."accountId"
+      WHERE a."providerId" = 'steam' AND (p."userId" IS DISTINCT FROM a."userId" OR p."linkSource" IS DISTINCT FROM 'STEAM')`;
     const fromPlayers = await db.$queryRaw<{ userId: string }[]>`
       SELECT DISTINCT p."userId" FROM game_players p
       WHERE p.kind = 'STEAM' AND p."linkSource" = 'STEAM' AND p."userId" IS NOT NULL

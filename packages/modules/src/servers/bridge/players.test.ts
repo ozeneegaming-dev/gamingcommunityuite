@@ -36,6 +36,11 @@ describe("identitățile și legarea de cont (§3.3)", () => {
     expect(await w.bridge.players.syncSteam(w.member.userId!)).toBe(1);
     expect((await w.db.gamePlayer.findUniqueOrThrow({ where: { id: player.id } })).userId).toBeNull();
     expect(await w.bridge.players.reconcileSteam()).toBe(0);
+    // Un cont Steam fără identitate văzută în joc: nimic de legat acum (legarea se face la prima apariție).
+    await w.db.account.create({ data: { userId: w.root.userId!, providerId: "steam", accountId: "76561197960265999" } });
+    expect(await w.bridge.players.syncSteam(w.root.userId!)).toBe(0);
+    expect(await w.bridge.players.reconcileSteam()).toBe(0);
+    expect(await w.db.gamePlayer.count({ where: { value: "76561197960265999" } })).toBe(0);
   });
 
   it("codul de legare: 6 caractere, valabil 10 minute, o singură folosire; un cod nou îl anulează pe cel vechi", async () => {

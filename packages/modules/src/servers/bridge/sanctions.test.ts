@@ -115,6 +115,9 @@ describe("sancțiunile (§8): scopul, expirarea, sincronizarea, verificarea la c
     const { id } = await w.bridge.sanctions.create(mod, ban({ scope: "SERVER", serverId: a.id, minutes: 120 }));
     expect(await w.db.gameSanction.findUniqueOrThrow({ where: { id } })).toMatchObject({ adminUserId: mod.userId, adminName: "Moderatorul", source: "SITE" });
     expect(await w.bridge.sanctions.canSanction(w.member, { type: "BAN", scope: "SERVER", serverId: a.id, minutes: 60 })).toBe(false);
+    // Fără drept, nimic nu se scrie (nici identitatea țintei scrise).
+    await expect(w.bridge.sanctions.create(w.member, ban({ scope: "SERVER", serverId: a.id, target: { auth: "STEAM_1:0:777" } }))).rejects.toMatchObject({ code: "forbidden" });
+    expect(await w.db.gamePlayer.count({ where: { value: "76561197960267282" } })).toBe(0);
   });
 
   it("din joc: globală doar de la un admin cunoscut pe toate serverele; ridicarea din joc; lista publică ascunde IP-ul", async () => {
