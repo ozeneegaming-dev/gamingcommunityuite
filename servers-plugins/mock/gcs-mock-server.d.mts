@@ -26,6 +26,7 @@ export declare function mockPlayer(game: string, n: number, extra?: Partial<Mock
 export declare class GcsMockServer {
   constructor(opts: { token: string; transport: MockTransport; game?: string; clock?: () => number; alg?: "hmac-sha256" | "sha256-env"; runId?: string; log?: (msg: string) => void });
   readonly key: { keyId: string; signingKey: string };
+  readonly runId: string;
   game: string;
   offset: number;
   cursor: number;
