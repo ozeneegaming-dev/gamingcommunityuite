@@ -77,6 +77,10 @@ describe("sancțiunile (§8): scopul, expirarea, sincronizarea, verificarea la c
     expect(first.json).toMatchObject({ full: true, more: true });
     expect(first.json.sanctions).toHaveLength(1000);
     expect((await mock.pullSanctions()).length).toBe(1205);
+    // Pagini mai mici (pluginul AMX Mod X): `limit`.
+    const small = await mock.request("GET", "/sanctions?since=0&limit=100");
+    expect(small.json).toMatchObject({ full: true, more: true });
+    expect(small.json.sanctions).toHaveLength(100);
   });
 
   it("banul pe nume se aplică doar non-Steam; banul pe IP oricui", async () => {

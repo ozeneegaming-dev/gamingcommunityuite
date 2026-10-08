@@ -1,0 +1,14 @@
+GCS Server Bridge — AMX Mod X plugin (gcs_bridge.sma, gcs_bridge.inc)
+Copyright (C) GamingCommunitySuite
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
+License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+version (SPDX-License-Identifier: GPL-3.0-or-later).
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+The full license text is available at <https://www.gnu.org/licenses/gpl-3.0.txt>.
+
+The plugin talks to GamingCommunitySuite only over HTTP; the GCS platform itself is a separate program and is not
+covered by this license.

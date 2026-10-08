@@ -149,9 +149,11 @@ export class GcsBridgeApi {
         return json(200, { etag, vip: list }, { ETag: `"${etag}"` });
       }
       if (method === "GET" && route === "/sanctions") {
-        const raw = new URLSearchParams(query).get("since") ?? "0";
-        if (!/^\d{1,15}$/.test(raw)) throw new GcsBridgeError("invalid_cursor", 400);
-        return json(200, { ...(await this.deps.sanctions.syncPage(server, Number(raw))) });
+        const params = new URLSearchParams(query);
+        const raw = params.get("since") ?? "0";
+        const limit = params.get("limit") ?? "1000";
+        if (!/^\d{1,15}$/.test(raw) || !/^\d{1,4}$/.test(limit)) throw new GcsBridgeError("invalid_cursor", 400);
+        return json(200, { ...(await this.deps.sanctions.syncPage(server, Number(raw), Number(limit))) });
       }
       if (method === "POST" && route === "/check") return json(200, await this.check(server, parse()));
       if (method === "POST" && route === "/link") {

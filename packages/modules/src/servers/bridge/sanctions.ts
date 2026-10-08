@@ -468,10 +468,11 @@ export class GcsBridgeSanctions {
 
   /**
    * `GET /sanctions?since=N` (§6.6): `since = 0` → doar sancțiunile active care se aplică serverului (`full`); altfel
-   * toate schimbările cu revizia > N (cele care nu se mai aplică vin cu `active: false`). Pagini de 1000, în ordinea
-   * reviziei; `more` = mai sunt pagini (pluginul cere din nou cu `since = cursor`).
+   * toate schimbările cu revizia > N (cele care nu se mai aplică vin cu `active: false`). Pagini de max 1000 (`limit`, ex.
+   * pagini mai mici pentru runtime-urile cu memorie puțină, ca AMX Mod X), în ordinea reviziei; `more` = mai sunt pagini
+   * (pluginul cere din nou cu `since = cursor`).
    */
-  async syncPage(server: Pick<GcsBridgeServer, "id" | "game">, since: number): Promise<GcsSanctionSyncPage> {
+  async syncPage(server: Pick<GcsBridgeServer, "id" | "game">, since: number, limit = SANCTION_PAGE): Promise<GcsSanctionSyncPage> {
     const { db } = this.deps;
     const now = this.now();
     const max = await this.maxRevision();
@@ -480,9 +481,10 @@ export class GcsBridgeSanctions {
     const from = full ? 0 : since;
     const where: Prisma.GameSanctionWhereInput = { revision: { gt: BigInt(from), lte: BigInt(max) } };
     if (full) Object.assign(where, { unbannedAt: null, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }], AND: [{ OR: [{ scope: "GLOBAL" }, { serverId: server.id }] }] });
-    const rows = await db.gameSanction.findMany({ where, orderBy: { revision: "asc" }, take: SANCTION_PAGE + 1 });
-    const more = rows.length > SANCTION_PAGE;
-    const page = rows.slice(0, SANCTION_PAGE);
+    const size = Math.min(SANCTION_PAGE, Math.max(1, Math.floor(limit)));
+    const rows = await db.gameSanction.findMany({ where, orderBy: { revision: "asc" }, take: size + 1 });
+    const more = rows.length > size;
+    const page = rows.slice(0, size);
     return {
       cursor: more ? Number(page.at(-1)!.revision) : max,
       full,
