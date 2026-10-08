@@ -13,6 +13,7 @@ import { pageParam } from "@/lib/forum-page";
 import { memberLook } from "@/lib/member-look";
 import { services } from "@/lib/services";
 import { clanColors, GcsClanLogo } from "../../_components/clans/GcsClanLogo";
+import { playerHref } from "../../_components/servers/types";
 import { GcsProfileActions } from "../../_components/profile/GcsProfileActions";
 import { GcsProfileBackdrop, GcsProfileSong } from "../../_components/profile/GcsProfileVip";
 import { GcsWallComposer, GcsWallItemActions } from "../../_components/profile/GcsWall";
@@ -82,6 +83,8 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
   const tv = look ? await getTranslations("profile.vip") : null;
   // Clanurile membrului (aplicația Clanuri): tagul lângă nume și insigna clanului, după opțiuni.
   const clans = await services().clanQueries.memberClans(user.id);
+  // Statisticile de pe serverele comunității (aplicația Servere): identitatea principală, cu link spre profilul de jucător.
+  const game = await services().bridge.queries.userCard(actor, user.id);
   const tr = await getTranslations("clans.roles");
 
   const header = (
@@ -267,7 +270,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         <GcsIcon name={TAB_ICONS.games} className="gcs-hIcon" />
         {t("linkedAccounts")}
       </h2>
-      {profile.accounts.length === 0 && games.length === 0 && (
+      {profile.accounts.length === 0 && games.length === 0 && !game && (
         <span className="gcs-muted">
           <GcsIcon name="fa-solid fa-link-slash" className="gcs-emptyIcon" />
           {t("noAccounts")}
@@ -293,8 +296,54 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         </div>
       ))}
       {games.map((f) => fieldRow(f, f.value.replace(/^https?:\/\//, "")))}
+      {game && (
+        <Link href={playerHref({ id: game.player.id, name: game.player.name || game.player.value })} className="gcs-linkedAccount gcs-linkedAccount--player" data-testid="gcs-profile-player-link">
+          <span className="gcs-display gcs-linkedAccount__tag gcs-linkedAccount__tag--game">
+            <GcsIcon name="fa-solid fa-crosshairs" />
+          </span>
+          <span style={{ display: "flex", flexDirection: "column", fontSize: 13 }}>
+            <span style={{ fontWeight: 700 }}>{t("game.playerProfile")}</span>
+            <span className="gcs-muted" style={{ fontSize: 12 }}>
+              {game.player.name || game.player.value}
+            </span>
+          </span>
+        </Link>
+      )}
     </GcsCard>
   );
+
+  /** Caseta „Statistici pe servere” (tab-ul Jocuri): totalurile identității principale și legătura spre profilul ei. */
+  const gameCard = game ? (
+    <GcsCard as="section" className="gcs-titledBox" style={{ display: "flex", flexDirection: "column", gap: 12 }} data-testid="gcs-profile-game-stats">
+      <h2 className="gcs-display gcs-titleBand gcs-cardTitle">
+        <GcsIcon name="fa-solid fa-crosshairs" className="gcs-hIcon" />
+        {t("game.title")}
+      </h2>
+      <dl className="gcs-gameCard">
+        {[
+          [t("game.kd"), format.number(game.kd, { minimumFractionDigits: 2, maximumFractionDigits: 2 })],
+          [t("game.kills"), format.number(game.kills)],
+          [t("game.headshots"), game.headshotRate === null ? "—" : format.number(game.headshotRate, { style: "percent", maximumFractionDigits: 0 })],
+          [t("game.playtime"), t("game.hours", { hours: format.number(Math.round(game.playtime / 3600)) })],
+          [t("game.elo"), game.elo === null ? "—" : format.number(game.elo)],
+          [t("game.bestRank"), game.bestRank === null ? "—" : `#${game.bestRank}`],
+        ].map(([label, value]) => (
+          <div key={label}>
+            <dt>{label}</dt>
+            <dd className="gcs-display">{value}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="gcs-muted" style={{ margin: 0, fontSize: 13 }}>
+        {game.lastSeenAt ? t("game.lastSeen", { time: relative(game.lastSeenAt) }) : t("game.neverSeen")}
+        {game.identities > 1 && ` · ${t("game.identities", { count: game.identities })}`}
+      </p>
+      <Link href={playerHref({ id: game.player.id, name: game.player.name || game.player.value })} className="gcs-btn gcs-btn--ghost" style={{ alignSelf: "flex-start" }} data-testid="gcs-profile-game-link">
+        <GcsIcon name="fa-solid fa-id-card" />
+        {t("game.open")}
+      </Link>
+    </GcsCard>
+  ) : null;
 
   /** Cerința unui badge blocat, ca text (zilele de vechime în ani, când se împart exact). */
   const requirement = (b: GcsLockedBadge) => {
@@ -439,7 +488,12 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
       </>
     );
   } else if (tab === "games") {
-    main = accountsCard;
+    main = (
+      <>
+        {gameCard}
+        {accountsCard}
+      </>
+    );
   } else if (tab === "followers") {
     const followers = await services().profileQueries.followers(actor, user.id, pageParam(query.page));
     main = (

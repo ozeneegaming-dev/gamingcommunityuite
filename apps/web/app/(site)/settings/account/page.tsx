@@ -1,4 +1,6 @@
-import { STEAM_PLACEHOLDER_DOMAIN } from "@gcs/modules";
+import type { GcsActor } from "@gcs/core";
+import { BRIDGE_PERMISSION, LINK_COMMAND, STEAM_PLACEHOLDER_DOMAIN } from "@gcs/modules";
+import { GcsGameAccounts } from "../../_components/servers/GcsGameAccounts";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
@@ -37,6 +39,7 @@ export default async function AccountSettingsPage({ searchParams }: { searchPara
     select: { email: true, accounts: { select: { providerId: true, password: true } } },
   });
   const result = (await searchParams).email;
+  const games = await gameAccounts(actor);
   const email = user.email.endsWith(STEAM_PLACEHOLDER_DOMAIN) ? null : user.email;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -60,6 +63,18 @@ export default async function AccountSettingsPage({ searchParams }: { searchPara
         accounts={user.accounts.filter((a) => a.providerId === "discord" || a.providerId === "steam").map((a) => ({ providerId: a.providerId as "discord" | "steam" }))}
         labels={{ ...Object.fromEntries(KEYS.map((k) => [k, t(k)])), currentEmail: email ? t("currentEmail", { email }) : "" }}
       />
+      {games && <GcsGameAccounts identities={games.identities} canLink={games.canLink} command={LINK_COMMAND} />}
     </div>
   );
+}
+
+/** „Conturi de joc” (aplicația Servere activă): identitățile legate și dreptul de a genera un cod de legare. */
+async function gameAccounts(actor: GcsActor) {
+  const { serverQueries, bridge, permissions } = services();
+  if (!actor.userId || !(await serverQueries.appEnabled())) return null;
+  const [identities, canLink] = await Promise.all([bridge.players.byUser(actor.userId), permissions.can(actor, BRIDGE_PERMISSION.linkIdentity)]);
+  return {
+    canLink: canLink && !actor.isBanned,
+    identities: identities.map((i) => ({ id: i.id, kind: i.kind, trust: i.trust, name: i.name, value: i.value, linkSource: i.linkSource, linkedAt: i.linkedAt })),
+  };
 }

@@ -1,0 +1,1799 @@
+/*
+ * Paginile punții serverelor de joc (specul 2026-10-08-servere-pagini): profilul jucătorului, meciurile mix (tabela de
+ * scor, banda rundelor, echipele), clasamentele, bannurile, contestațiile, prezența adminilor, conturile de joc.
+ * Totul vine din tokenurile temei; culorile proprii sunt doar ale echipelor (A / B), ale tipului „gag” și ale
+ * încrederii identităților, fiecare cu variantă pentru tema luminoasă și mereu însoțite de text.
+ */
+:root {
+  --gcs-teamA: var(--gcs-accentInk);
+  --gcs-teamB: #5b9bff;
+  --gcs-gag: #b18cff;
+  --gcs-trust-high: var(--gcs-ok);
+  --gcs-trust-medium: var(--gcs-warn);
+}
+html[data-theme="light"] {
+  --gcs-teamA: #c81e32;
+  --gcs-teamB: #2563eb;
+  --gcs-gag: #7c3aed;
+  --gcs-trust-high: #13845a;
+  --gcs-trust-medium: #a5650a;
+}
+@media (prefers-color-scheme: light) {
+  html[data-theme="auto"] {
+    --gcs-teamA: #c81e32;
+    --gcs-teamB: #2563eb;
+    --gcs-gag: #7c3aed;
+    --gcs-trust-high: #13845a;
+    --gcs-trust-medium: #a5650a;
+  }
+}
+
+/* ─── Piesele comune ──────────────────────────────────────────────────────────────────────── */
+
+/* Identitatea: tipul, încrederea (culoarea după încredere, mereu cu text) și ID-ul în monospace. */
+.gcs-identity {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 13px;
+  line-height: 1.3;
+  min-width: 0;
+}
+.gcs-identity__kind,
+.gcs-identity__trust {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.gcs-identity__kind {
+  background: color-mix(in srgb, var(--gcs-text) 9%, transparent);
+  color: var(--gcs-text);
+}
+.gcs-identity__trust {
+  --gcs-trust: var(--gcs-muted);
+  color: var(--gcs-trust);
+  background: color-mix(in srgb, var(--gcs-trust) 14%, transparent);
+}
+.gcs-identity[data-trust="HIGH"] .gcs-identity__trust {
+  --gcs-trust: var(--gcs-trust-high);
+}
+.gcs-identity[data-trust="MEDIUM"] .gcs-identity__trust {
+  --gcs-trust: var(--gcs-trust-medium);
+}
+.gcs-identity--compact .gcs-identity__kind,
+.gcs-identity--compact .gcs-identity__trust {
+  padding: 1px 7px;
+  font-size: 12px;
+}
+.gcs-identity__id {
+  font: 600 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--gcs-muted);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+/* Tipul sancțiunii: ban (accent), mute (galben), gag (violet); iconița și textul. */
+.gcs-sanctionType {
+  --gcs-type: var(--gcs-accentInk);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 10px 3px 8px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--gcs-type) 45%, transparent);
+  color: var(--gcs-type);
+  background: color-mix(in srgb, var(--gcs-type) 10%, transparent);
+  font: 700 13px var(--gcs-font-display);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.gcs-sanctionType[data-type="MUTE"] {
+  --gcs-type: var(--gcs-warn);
+}
+.gcs-sanctionType[data-type="GAG"] {
+  --gcs-type: var(--gcs-gag);
+}
+.gcs-sanctionStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.gcs-sanctionStatus .gcs-dot {
+  background: var(--gcs-muted);
+}
+.gcs-sanctionStatus[data-status="active"] {
+  color: var(--gcs-accentInk);
+}
+.gcs-sanctionStatus[data-status="active"] .gcs-dot {
+  background: var(--gcs-accentInk);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gcs-accentInk) 22%, transparent);
+}
+.gcs-sanctionStatus[data-status="lifted"] {
+  color: var(--gcs-ok);
+}
+.gcs-sanctionStatus[data-status="lifted"] .gcs-dot {
+  background: var(--gcs-ok);
+}
+.gcs-sanctionStatus[data-status="expired"] {
+  color: var(--gcs-muted);
+}
+
+.gcs-playerLink {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+/* Forma: ultimele meciuri ca pastile cu litera rezultatului. */
+.gcs-formGuide {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-formGuide__pip {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  font: 700 12px var(--gcs-font-display);
+  color: var(--gcs-muted);
+  background: color-mix(in srgb, var(--gcs-text) 8%, transparent);
+}
+.gcs-formGuide__pip[data-result="win"] {
+  color: #0b0c10;
+  background: var(--gcs-ok);
+}
+.gcs-formGuide__pip[data-result="loss"] {
+  color: #fff;
+  background: var(--gcs-accent);
+}
+
+/* Graficul ELO: o linie cu o spălare discretă; ultimul punct în accentInk. */
+.gcs-eloChart {
+  margin: 0;
+}
+.gcs-eloChart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 240px;
+  overflow: visible;
+}
+.gcs-eloChart--compact svg {
+  max-height: 120px;
+}
+.gcs-eloChart__grid {
+  stroke: var(--gcs-border);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.gcs-eloChart__tick {
+  fill: var(--gcs-muted);
+  font: 500 11px var(--gcs-font-text);
+  font-variant-numeric: tabular-nums;
+}
+.gcs-eloChart__line {
+  fill: none;
+  stroke: var(--gcs-accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.gcs-eloChart__area {
+  fill: var(--gcs-accent);
+  fill-opacity: 0.1;
+}
+.gcs-eloChart__dot {
+  fill: var(--gcs-accent);
+  stroke: var(--gcs-box-bg, var(--gcs-surface));
+  stroke-width: 2;
+}
+.gcs-eloChart__dot--last {
+  fill: var(--gcs-accentInk);
+}
+
+/* Casetele cu titlu și legătura „toate” în dreapta benzii. */
+.gcs-statBox {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.gcs-statBox__more {
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Tabelele de date: cifrele aliniate la dreapta, capul tabelului ca la tabelele GCS, derulare orizontală pe mobil. */
+.gcs-dataScroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  min-width: 0;
+}
+.gcs-dataTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.gcs-dataTable th,
+.gcs-dataTable td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--gcs-border);
+  text-align: right;
+  white-space: nowrap;
+}
+.gcs-dataTable thead th {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gcs-muted);
+}
+.gcs-dataTable th:first-child,
+.gcs-dataTable td:first-child,
+.gcs-dataTable tbody th {
+  text-align: left;
+}
+.gcs-dataTable tbody th {
+  font-weight: 600;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  min-width: 120px;
+}
+.gcs-dataTable tr:last-child > * {
+  border-bottom: 0;
+}
+.gcs-dataTable__wide {
+  width: 30%;
+}
+.gcs-killBar {
+  display: block;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--gcs-accent) var(--gcs-fill, 0%), color-mix(in srgb, var(--gcs-text) 8%, transparent) var(--gcs-fill, 0%));
+}
+.gcs-board__rank[data-medal="1"] {
+  color: var(--gcs-medal-gold, #f4b740);
+}
+.gcs-board__rank[data-medal="2"] {
+  color: var(--gcs-medal-silver, #d8dfea);
+}
+.gcs-board__rank[data-medal="3"] {
+  color: var(--gcs-medal-bronze, #cd7f32);
+}
+.gcs-dataTable .gcs-board__rank {
+  text-align: left;
+  font: 700 15px var(--gcs-font-display);
+}
+
+/* ─── Profilul jucătorului ────────────────────────────────────────────────────────────────── */
+
+.gcs-playerHead {
+  overflow: hidden;
+}
+.gcs-playerHead__main {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 18px 22px;
+  align-items: center;
+  padding: 22px 24px;
+  background: var(--gcs-box-header-bg, var(--gcs-surface2));
+}
+/* Monograma: inițiala numelui pe o placă în culoarea tipului identității (fără avataruri ale altora). */
+.gcs-playerHead__mark {
+  --gcs-mark: var(--gcs-accent);
+  display: grid;
+  place-items: center;
+  width: 84px;
+  height: 84px;
+  border-radius: 18px;
+  font: 700 44px/1 var(--gcs-font-display);
+  color: #fff;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--gcs-mark) 92%, #fff) 0%, var(--gcs-mark) 55%, color-mix(in srgb, var(--gcs-mark) 60%, #000) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
+}
+.gcs-playerHead[data-kind="STEAM"] .gcs-playerHead__mark {
+  --gcs-mark: #2a475e;
+}
+.gcs-playerHead[data-kind="NONSTEAM"] .gcs-playerHead__mark {
+  --gcs-mark: #9a6510;
+}
+.gcs-playerHead[data-kind="NAME"] .gcs-playerHead__mark {
+  --gcs-mark: #565d6b;
+}
+.gcs-playerHead__id {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.gcs-playerHead__name {
+  margin: 0;
+  font-size: clamp(28px, 4.2vw, 42px);
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  overflow-wrap: anywhere;
+}
+.gcs-playerHead__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 22px;
+  margin: 0;
+  font-size: 14px;
+}
+.gcs-playerHead__facts > div {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+.gcs-playerHead__facts dt {
+  color: var(--gcs-muted);
+}
+.gcs-playerHead__facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+/* ELO-ul și forma: elementul îndrăzneț al cărții jucătorului. */
+.gcs-playerHead__elo {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+  padding-left: 22px;
+  border-left: 1px solid var(--gcs-border);
+}
+.gcs-playerHead__eloLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gcs-muted);
+}
+.gcs-playerHead__eloValue {
+  font-size: 46px;
+  line-height: 1;
+  color: var(--gcs-accentInk);
+  font-variant-numeric: tabular-nums;
+}
+.gcs-playerHead__eloPeak {
+  font-size: 13px;
+  color: var(--gcs-muted);
+}
+.gcs-playerHead__elo .gcs-formGuide {
+  margin-top: 6px;
+}
+.gcs-playerHead__action {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+
+/* Banda cifrelor: etichetele cu litere mici, cifrele mari în fontul titlurilor. */
+.gcs-statStrip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  margin: 0;
+  border-top: 1px solid var(--gcs-border);
+}
+.gcs-statStrip > div {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  gap: 2px;
+  padding: 14px 20px;
+  border-right: 1px solid var(--gcs-border);
+  min-width: 0;
+}
+.gcs-statStrip > div:last-child {
+  border-right: 0;
+}
+.gcs-statStrip dt {
+  font-size: 13px;
+  color: var(--gcs-muted);
+}
+.gcs-statStrip dd {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.gcs-playerGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+.gcs-mixFacts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+.gcs-mixFacts > div {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 2px;
+}
+.gcs-mixFacts dt {
+  font-size: 13px;
+  color: var(--gcs-muted);
+}
+.gcs-mixFacts dd {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Cardurile hărților: imaginea (încărcată sau arta generică) cu numele scris peste ea. */
+.gcs-mapCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-mapCard {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--gcs-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--gcs-surface2);
+}
+.gcs-mapCard__art {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: var(--gcs-surface);
+}
+.gcs-mapCard__art img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.gcs-mapCard__name {
+  position: absolute;
+  left: 10px;
+  bottom: 8px;
+  right: 10px;
+  font: 700 17px var(--gcs-font-display);
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7), 0 0 12px rgba(0, 0, 0, 0.5);
+  overflow-wrap: anywhere;
+}
+.gcs-mapCard__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 10px 12px;
+}
+.gcs-mapCard__stats > div {
+  display: flex;
+  flex-direction: column-reverse;
+  min-width: 0;
+}
+.gcs-mapCard__stats dt {
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-mapCard__stats dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.gcs-identityList,
+.gcs-sanctionList,
+.gcs-evidenceList,
+.gcs-adminRows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+.gcs-identityList li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--gcs-border);
+}
+.gcs-identityList li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.gcs-identityList__name {
+  font-weight: 700;
+}
+.gcs-sanctionList__row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "type reason status" "type meta status";
+  gap: 2px 14px;
+  align-items: center;
+  padding: 12px 0;
+  border-top: 1px solid var(--gcs-border);
+}
+.gcs-sanctionList__row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.gcs-sanctionList__row > .gcs-sanctionType {
+  grid-area: type;
+}
+.gcs-sanctionList__row > .gcs-sanctionStatus {
+  grid-area: status;
+}
+.gcs-sanctionList__reason {
+  grid-area: reason;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.gcs-sanctionList__meta {
+  grid-area: meta;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: 13px;
+  color: var(--gcs-muted);
+}
+
+/* ─── Meciurile ───────────────────────────────────────────────────────────────────────────── */
+
+.gcs-matchRows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-matchRow {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr) auto;
+  grid-template-areas: "result teams mine" "result meta mine";
+  gap: 2px 16px;
+  align-items: center;
+  padding: 12px 18px;
+  border-top: 1px solid var(--gcs-border);
+}
+.gcs-matchRow:first-child {
+  border-top: 0;
+}
+.gcs-statBox > .gcs-matchRows .gcs-matchRow,
+.gcs-titledBox .gcs-matchRow {
+  padding-left: 0;
+  padding-right: 0;
+}
+.gcs-matchRow__result {
+  grid-area: result;
+  justify-self: start;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font: 700 13px var(--gcs-font-display);
+  color: var(--gcs-muted);
+  background: color-mix(in srgb, var(--gcs-text) 8%, transparent);
+  white-space: nowrap;
+}
+.gcs-matchRow__result[data-result="win"] {
+  color: var(--gcs-ok);
+  background: color-mix(in srgb, var(--gcs-ok) 14%, transparent);
+}
+.gcs-matchRow__result[data-result="loss"] {
+  color: var(--gcs-accentInk);
+  background: color-mix(in srgb, var(--gcs-accent) 14%, transparent);
+}
+.gcs-matchRow__result[data-status="live"],
+.gcs-matchRow__result[data-status="halftime"] {
+  color: var(--gcs-accentInk);
+}
+.gcs-root a.gcs-matchRow__teams,
+.gcs-matchRow__teams {
+  grid-area: teams;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  color: inherit;
+  min-width: 0;
+}
+.gcs-matchRow__team {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-matchRow__team[data-team="A"] {
+  text-align: right;
+}
+.gcs-matchRow__team[data-won] {
+  color: var(--gcs-text);
+}
+.gcs-matchRow__team:not([data-won]) {
+  color: color-mix(in srgb, var(--gcs-text) 72%, var(--gcs-muted));
+}
+.gcs-matchRow__score {
+  display: inline-flex;
+  gap: 6px;
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+.gcs-matchRow__score [data-team="A"],
+.gcs-matchBoard__score [data-team="A"] {
+  color: var(--gcs-teamA);
+}
+.gcs-matchRow__score [data-team="B"],
+.gcs-matchBoard__score [data-team="B"] {
+  color: var(--gcs-teamB);
+}
+.gcs-matchRow__meta {
+  grid-area: meta;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px 14px;
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-matchRow__mine {
+  grid-area: mine;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-variant-numeric: tabular-nums;
+}
+.gcs-matchRow__kd {
+  font-weight: 700;
+}
+.gcs-eloDelta {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gcs-muted);
+  white-space: nowrap;
+}
+.gcs-eloDelta[data-sign="up"] {
+  color: var(--gcs-ok);
+}
+.gcs-eloDelta[data-sign="down"] {
+  color: var(--gcs-accentInk);
+}
+@media (max-width: 640px) {
+  .gcs-matchRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "result mine" "teams teams" "meta meta";
+    padding: 12px 14px;
+  }
+  .gcs-matchRow__meta {
+    justify-content: flex-start;
+  }
+}
+
+/* Tabela de scor: echipele și scorul peste imaginea hărții, starea live, banda rundelor. */
+.gcs-matchView {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.gcs-matchBoard {
+  overflow: hidden;
+}
+.gcs-matchBoard__stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  min-height: 190px;
+  padding: 28px 28px 24px;
+  color: #fff;
+  background:
+    linear-gradient(180deg, rgba(8, 9, 12, 0.55) 0%, rgba(8, 9, 12, 0.82) 100%),
+    var(--gcs-map-image, linear-gradient(120deg, #1b1e26, #262a34)) center / cover no-repeat,
+    #14161c;
+  isolation: isolate;
+}
+/* Linia echipelor: o bandă în culoarea fiecărei echipe, pe margini. */
+.gcs-matchBoard__stage::before,
+.gcs-matchBoard__stage::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+}
+.gcs-matchBoard__stage::before {
+  left: 0;
+  background: var(--gcs-teamA);
+}
+.gcs-matchBoard__stage::after {
+  right: 0;
+  background: var(--gcs-teamB);
+}
+.gcs-matchBoard__team {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.gcs-matchBoard__team[data-team="A"] {
+  grid-column: 1;
+  grid-row: 1;
+  align-items: flex-start;
+}
+.gcs-matchBoard__team[data-team="B"] {
+  grid-column: 3;
+  grid-row: 1;
+  align-items: flex-end;
+  text-align: right;
+}
+.gcs-matchBoard__side {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.72);
+}
+.gcs-matchBoard__team[data-team="A"] .gcs-matchBoard__side {
+  color: color-mix(in srgb, var(--gcs-teamA) 70%, #fff);
+}
+.gcs-matchBoard__team[data-team="B"] .gcs-matchBoard__side {
+  color: color-mix(in srgb, var(--gcs-teamB) 70%, #fff);
+}
+.gcs-matchBoard__name {
+  font-size: clamp(18px, 2.6vw, 28px);
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+.gcs-matchBoard__winner {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: #0b0c10;
+  background: var(--gcs-ok);
+}
+.gcs-matchBoard__center {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.gcs-matchBoard__score {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  font-size: clamp(48px, 8vw, 84px);
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+}
+.gcs-matchBoard__score [data-team="A"],
+.gcs-matchBoard__score [data-team="B"] {
+  color: #fff;
+}
+.gcs-matchBoard__sep {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.6em;
+}
+.gcs-matchBoard__state {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  background: rgba(11, 12, 16, 0.7);
+  color: #ecedf1;
+  white-space: nowrap;
+}
+.gcs-matchBoard__state[data-status="live"] {
+  color: #fff;
+  background: color-mix(in srgb, var(--gcs-accent) 85%, #000);
+}
+.gcs-liveDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: gcs-live-pulse 1.6s ease-in-out infinite;
+}
+@keyframes gcs-live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+/* Câștigătorul: scorul echipei câștigătoare în culoarea ei. */
+.gcs-matchBoard:has(.gcs-matchBoard__team[data-team="A"][data-won]) .gcs-matchBoard__score [data-team="A"] {
+  color: color-mix(in srgb, var(--gcs-teamA) 70%, #fff);
+}
+.gcs-matchBoard:has(.gcs-matchBoard__team[data-team="B"][data-won]) .gcs-matchBoard__score [data-team="B"] {
+  color: color-mix(in srgb, var(--gcs-teamB) 70%, #fff);
+}
+.gcs-matchBoard__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 22px;
+  padding: 12px 20px;
+  font-size: 14px;
+  border-top: 1px solid var(--gcs-border);
+}
+.gcs-matchBoard__open {
+  margin-left: auto;
+  font-weight: 700;
+}
+/* Banda rundelor: un pătrat pe rundă, în culoarea echipei care a câștigat-o. */
+.gcs-roundStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0 20px 16px;
+  list-style: none;
+}
+.gcs-roundStrip__round {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--gcs-text) 12%, transparent);
+}
+.gcs-roundStrip__round[data-winner="A"] {
+  background: var(--gcs-teamA);
+}
+.gcs-roundStrip__round[data-winner="B"] {
+  background: var(--gcs-teamB);
+}
+
+.gcs-matchTeams {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(440px, 100%), 1fr));
+  gap: 20px;
+  align-items: start;
+}
+.gcs-matchView--server .gcs-matchTeams {
+  grid-template-columns: 1fr;
+}
+.gcs-matchTeam {
+  overflow: hidden;
+}
+.gcs-matchTeam__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 17px;
+}
+.gcs-matchTeam__swatch {
+  width: 10px;
+  height: 22px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.gcs-matchTeam[data-team="A"] .gcs-matchTeam__swatch {
+  background: var(--gcs-teamA);
+}
+.gcs-matchTeam[data-team="B"] .gcs-matchTeam__swatch {
+  background: var(--gcs-teamB);
+}
+.gcs-matchTeam__score {
+  margin-left: auto;
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+}
+.gcs-matchTeam .gcs-dataTable th:first-child,
+.gcs-matchTeam .gcs-dataTable td:first-child {
+  padding-left: 18px;
+}
+.gcs-matchTeam .gcs-dataTable th:last-child,
+.gcs-matchTeam .gcs-dataTable td:last-child {
+  padding-right: 18px;
+}
+.gcs-eloCell {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+@media (max-width: 640px) {
+  .gcs-matchBoard__stage {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    padding: 20px 16px;
+    min-height: 0;
+  }
+  .gcs-matchBoard__center {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .gcs-matchBoard__team[data-team="B"] {
+    grid-column: 2;
+  }
+  .gcs-roundStrip {
+    padding: 0 16px 14px;
+  }
+  .gcs-roundStrip__round {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* ─── Bannurile ───────────────────────────────────────────────────────────────────────────── */
+
+.gcs-banSearch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+}
+.gcs-banSearch .gcs-field {
+  flex: 1 1 200px;
+}
+.gcs-banSearch__q {
+  flex: 3 1 280px !important;
+}
+.gcs-banBoard {
+  overflow: hidden;
+}
+.gcs-banTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.gcs-banTable th,
+.gcs-banTable td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--gcs-border);
+  text-align: left;
+  vertical-align: middle;
+}
+.gcs-banTable thead th {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gcs-muted);
+}
+.gcs-banTable tbody tr:last-child td {
+  border-bottom: 0;
+}
+.gcs-banTable tbody tr[data-status="active"] td:first-child {
+  box-shadow: inset 3px 0 0 var(--gcs-accent);
+}
+.gcs-banTable tbody tr:not([data-status="active"]) {
+  color: color-mix(in srgb, var(--gcs-text) 78%, var(--gcs-muted));
+}
+.gcs-banTable__reason {
+  max-width: 34ch;
+  overflow-wrap: anywhere;
+}
+.gcs-banTable__reason a {
+  color: inherit;
+  font-weight: 600;
+}
+.gcs-banTable__date {
+  display: block;
+  font-size: 12px;
+  color: var(--gcs-muted);
+  margin-top: 2px;
+}
+.gcs-banTarget {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.gcs-banTarget__name {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.gcs-banScope--global {
+  font-weight: 700;
+  color: var(--gcs-accentInk);
+}
+/* Durata: textul și bara scursă (cât din durată a trecut). */
+.gcs-banTime {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 120px;
+}
+.gcs-banTime--permanent {
+  color: var(--gcs-accentInk);
+  font-weight: 700;
+}
+.gcs-banTime__bar {
+  display: block;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--gcs-muted) var(--gcs-fill, 0%), color-mix(in srgb, var(--gcs-accent) 55%, transparent) var(--gcs-fill, 0%));
+}
+@media (max-width: 760px) {
+  .gcs-banTable thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .gcs-banTable,
+  .gcs-banTable tbody,
+  .gcs-banTable tr,
+  .gcs-banTable td {
+    display: block;
+  }
+  .gcs-banTable tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px 14px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--gcs-border);
+  }
+  .gcs-banTable tbody tr:last-child {
+    border-bottom: 0;
+  }
+  .gcs-banTable td {
+    padding: 0;
+    border: 0;
+  }
+  .gcs-banTable tbody tr[data-status="active"] td:first-child {
+    box-shadow: none;
+  }
+  .gcs-banTable tbody tr[data-status="active"] {
+    box-shadow: inset 3px 0 0 var(--gcs-accent);
+  }
+  .gcs-banTable td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gcs-muted);
+    margin-bottom: 3px;
+  }
+  .gcs-banTable td:nth-child(2),
+  .gcs-banTable td:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+}
+
+.gcs-banHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+}
+.gcs-pageHeader__title .gcs-sanctionType {
+  font-size: 15px;
+  vertical-align: middle;
+}
+.gcs-banDl__reason {
+  font-weight: 700;
+}
+.gcs-evidenceList li {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 8px 0;
+  border-top: 1px solid var(--gcs-border);
+  font-size: 14px;
+  min-width: 0;
+}
+.gcs-evidenceList li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.gcs-evidenceList a {
+  overflow-wrap: anywhere;
+}
+
+/* ─── Formularele (sancțiunea, tichetul) ──────────────────────────────────────────────────── */
+
+.gcs-formCard {
+  padding: 22px 24px;
+}
+.gcs-sanctionForm {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 880px;
+}
+.gcs-sanctionForm__group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.gcs-sanctionForm__group > legend {
+  margin-bottom: 10px;
+  padding: 0;
+  font: 700 16px var(--gcs-font-display);
+}
+.gcs-optionRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr));
+  gap: 10px;
+}
+.gcs-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-surface);
+  font-weight: 700;
+  cursor: pointer;
+}
+.gcs-option:has(input:checked) {
+  border-color: var(--gcs-accent);
+  box-shadow: inset 0 0 0 1px var(--gcs-accent);
+  background: color-mix(in srgb, var(--gcs-accent) 7%, var(--gcs-surface));
+}
+.gcs-option:has(input:focus-visible) {
+  outline: 2px solid var(--gcs-accentInk);
+  outline-offset: 2px;
+}
+.gcs-option:has(input:disabled) {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.gcs-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.gcs-option__hint {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gcs-muted);
+}
+.gcs-formRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
+}
+.gcs-formActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.gcs-formOk {
+  color: var(--gcs-ok);
+  font-size: 13px;
+  font-weight: 700;
+}
+.gcs-liftForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+.gcs-liftForm .gcs-field {
+  align-self: stretch;
+}
+.gcs-segLinks label.gcs-segLink {
+  cursor: pointer;
+}
+.gcs-segLinks label.gcs-segLink:has(input:focus-visible) {
+  outline: 2px solid var(--gcs-accentInk);
+  outline-offset: 1px;
+}
+
+/* Căutarea unui jucător: lista rezultatelor sub câmp. */
+.gcs-picker {
+  position: relative;
+}
+.gcs-picker__list {
+  position: absolute;
+  z-index: 20;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin: 4px 0 0;
+  padding: 4px;
+  list-style: none;
+  max-height: 280px;
+  overflow-y: auto;
+  background: var(--gcs-surface2);
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+}
+.gcs-picker__option,
+.gcs-picker__empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  font-weight: 500;
+}
+.gcs-picker__option {
+  cursor: pointer;
+}
+.gcs-picker__option[aria-selected="true"],
+.gcs-picker__option:hover {
+  background: color-mix(in srgb, var(--gcs-accent) 14%, transparent);
+}
+.gcs-picker__empty {
+  color: var(--gcs-muted);
+}
+.gcs-pickedPlayer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  padding: 8px 8px 8px 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-surface2);
+  font-weight: 600;
+}
+
+/* ─── Contestațiile și reclamațiile ───────────────────────────────────────────────────────── */
+
+.gcs-tabs--bare {
+  border-top: 0;
+  border-bottom: 1px solid var(--gcs-border);
+  padding: 0;
+}
+.gcs-ticketKind,
+.gcs-ticketStatus {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.gcs-ticketKind {
+  color: var(--gcs-text);
+  background: color-mix(in srgb, var(--gcs-text) 9%, transparent);
+}
+.gcs-ticketKind[data-kind="APPEAL"] {
+  color: var(--gcs-accentInk);
+  background: color-mix(in srgb, var(--gcs-accent) 12%, transparent);
+}
+.gcs-ticketKind[data-kind="ADMIN"] {
+  color: var(--gcs-gag);
+  background: color-mix(in srgb, var(--gcs-gag) 12%, transparent);
+}
+.gcs-ticketStatus {
+  border: 1px solid var(--gcs-border);
+  color: var(--gcs-muted);
+}
+.gcs-ticketStatus[data-status="OPEN"],
+.gcs-ticketStatus[data-status="REVIEW"] {
+  color: var(--gcs-warn);
+  border-color: color-mix(in srgb, var(--gcs-warn) 45%, transparent);
+}
+.gcs-ticketStatus[data-status="ACCEPTED"] {
+  color: var(--gcs-ok);
+  border-color: color-mix(in srgb, var(--gcs-ok) 45%, transparent);
+}
+.gcs-ticketStatus[data-status="REJECTED"] {
+  color: var(--gcs-accentInk);
+  border-color: color-mix(in srgb, var(--gcs-accentInk) 45%, transparent);
+}
+.gcs-ticketList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-ticketList__row {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr) auto;
+  gap: 4px 16px;
+  align-items: center;
+  padding: 14px 18px;
+  border-top: 1px solid var(--gcs-border);
+}
+.gcs-ticketList__row:first-child {
+  border-top: 0;
+}
+.gcs-ticketList__row .gcs-ticketKind {
+  justify-self: start;
+}
+.gcs-ticketList__main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.gcs-ticketList__title {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.gcs-ticketList__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-ticketList__side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.gcs-ticketList__assignee {
+  font-size: 12px;
+  color: var(--gcs-muted);
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .gcs-ticketList__row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 12px 14px;
+  }
+  .gcs-ticketList__main {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .gcs-ticketList__side {
+    grid-row: 1;
+    grid-column: 2;
+  }
+}
+.gcs-ticketHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.gcs-ticketPost {
+  overflow: hidden;
+}
+.gcs-ticketPost__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.gcs-ticketPost__head time {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gcs-muted);
+}
+.gcs-ticketPost__body {
+  padding: 16px 20px;
+  overflow-wrap: anywhere;
+}
+/* Nota internă: o bandă galbenă, vizibilă doar staff-ului. */
+.gcs-ticketPost--internal {
+  border-color: color-mix(in srgb, var(--gcs-warn) 55%, var(--gcs-border));
+  background: color-mix(in srgb, var(--gcs-warn) 5%, var(--gcs-surface));
+}
+.gcs-ticketPost__internal {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--gcs-warn);
+}
+.gcs-ticketThread__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.gcs-ticketThread__list:empty {
+  display: none;
+}
+.gcs-ticketEvent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: 2px 6px 2px 18px;
+  font-size: 13px;
+  color: var(--gcs-muted);
+  border-left: 2px solid var(--gcs-border);
+  margin-left: 12px;
+}
+.gcs-ticketEvent__icon {
+  color: var(--gcs-text);
+}
+.gcs-ticketEvent__lifted {
+  color: var(--gcs-ok);
+}
+.gcs-ticketEvent time {
+  margin-left: auto;
+  font-size: 12px;
+}
+.gcs-ticketReply {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gcs-ticketControls {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.gcs-ticketControls__status {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gcs-ticketControls__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.gcs-ticketControls__assign {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--gcs-border);
+}
+.gcs-ticketControls__label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gcs-muted);
+}
+.gcs-ticketControls__select {
+  flex: 1 1 160px;
+}
+
+/* ─── Prezența adminilor ──────────────────────────────────────────────────────────────────── */
+
+.gcs-presenceGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-presenceCard {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.gcs-presenceCard[data-online] {
+  border-color: color-mix(in srgb, var(--gcs-ok) 55%, var(--gcs-border));
+}
+.gcs-presenceCard__head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 18px;
+}
+.gcs-presenceCard__state {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gcs-muted);
+}
+.gcs-presenceCard__state .gcs-dot {
+  background: var(--gcs-muted);
+}
+.gcs-presenceCard__state[data-state="online"] {
+  color: var(--gcs-ok);
+}
+.gcs-presenceCard__state[data-state="online"] .gcs-dot {
+  background: var(--gcs-ok);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gcs-ok) 25%, transparent);
+}
+.gcs-presenceCard__state[data-state="recent"] .gcs-dot {
+  background: var(--gcs-warn);
+}
+.gcs-presenceCard[data-inactive] .gcs-presenceCard__state {
+  color: var(--gcs-accentInk);
+}
+.gcs-presenceCard__name {
+  margin: 0;
+  font-size: 19px;
+  overflow-wrap: anywhere;
+}
+.gcs-presenceCard__role {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  font-size: 13px;
+  color: var(--gcs-muted);
+}
+.gcs-presenceCard__where::before {
+  content: "";
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+.gcs-presenceCard__now {
+  margin: 0;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gcs-ok);
+  background: color-mix(in srgb, var(--gcs-ok) 8%, transparent);
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-presenceCard__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 10px;
+  margin: 0;
+  padding: 14px 18px 16px;
+}
+.gcs-presenceCard__stats > div {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 2px;
+  min-width: 0;
+}
+.gcs-presenceCard__stats dt {
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-presenceCard__stats dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.gcs-adminRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0 10px;
+  align-items: center;
+  padding: 8px 0;
+  border-top: 1px solid var(--gcs-border);
+}
+.gcs-adminRow:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.gcs-adminRow .gcs-dot {
+  background: var(--gcs-muted);
+}
+.gcs-adminRow[data-state="online"] .gcs-dot {
+  background: var(--gcs-ok);
+}
+.gcs-adminRow__name {
+  font-weight: 700;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.gcs-adminRow__meta {
+  grid-column: 2;
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+
+/* ─── Serverele: indicatorul „Admin online” și imaginile hărților ────────────────────────── */
+
+.gcs-serverAdminOnline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gcs-ok);
+  white-space: nowrap;
+}
+.gcs-serverBanner .gcs-serverAdminOnline {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(11, 12, 16, 0.78);
+  color: #3ddc97;
+}
+/* Imaginea hărții ca banner: o umbră jos, ca eticheta jocului să rămână lizibilă. */
+.gcs-serverBanner--map::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8, 9, 12, 0.05) 30%, rgba(8, 9, 12, 0.6) 100%);
+  pointer-events: none;
+}
+.gcs-serverBanner--map > :not(img) {
+  z-index: 1;
+}
+.gcs-serverMaps__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.gcs-serverMaps__thumb {
+  width: 48px;
+  height: 27px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+  background: var(--gcs-surface2);
+}
+
+/* ─── Setări → Cont → Conturi de joc ──────────────────────────────────────────────────────── */
+
+.gcs-linkCode {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  padding: 16px 18px;
+  border: 1px dashed var(--gcs-border);
+  border-radius: 12px;
+  background: var(--gcs-surface2);
+}
+.gcs-linkCode[data-state="active"] {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--gcs-accent) 55%, var(--gcs-border));
+}
+.gcs-linkCode__hint,
+.gcs-linkCode__timer {
+  margin: 0;
+  font-size: 13px;
+  color: var(--gcs-muted);
+  flex-basis: 100%;
+}
+.gcs-linkCode__command {
+  margin: 0;
+  flex-basis: 100%;
+}
+.gcs-linkCode__command code {
+  display: inline-block;
+  font: 700 clamp(24px, 5vw, 34px) / 1.1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.08em;
+  color: var(--gcs-text);
+  user-select: all;
+}
+.gcs-gameAccounts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-gameAccounts__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 12px 0;
+  border-top: 1px solid var(--gcs-border);
+}
+.gcs-gameAccounts__row:first-child {
+  border-top: 0;
+}
+.gcs-gameAccounts__who {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.gcs-gameAccounts__name {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.gcs-gameAccounts__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+
+/* ─── Profilul membrului: caseta „Statistici pe servere” ─────────────────────────────────── */
+
+.gcs-gameCard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+.gcs-gameCard > div {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 2px;
+}
+.gcs-gameCard dt {
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-gameCard dd {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.gcs-root a.gcs-linkedAccount--player {
+  color: inherit;
+}
+.gcs-linkedAccount__tag--game {
+  background: var(--gcs-accent);
+  color: #fff;
+}
+
+@media (max-width: 760px) {
+  .gcs-playerHead__main {
+    grid-template-columns: auto minmax(0, 1fr);
+    padding: 18px 16px;
+  }
+  .gcs-playerHead__mark {
+    width: 60px;
+    height: 60px;
+    border-radius: 14px;
+    font-size: 30px;
+    align-self: start;
+  }
+  .gcs-playerHead__elo {
+    grid-column: 1 / -1;
+    justify-items: start;
+    padding-left: 0;
+    padding-top: 14px;
+    border-left: 0;
+    border-top: 1px solid var(--gcs-border);
+    grid-template-columns: auto auto;
+    align-items: baseline;
+    column-gap: 12px;
+  }
+  .gcs-playerHead__elo .gcs-formGuide {
+    grid-column: 1 / -1;
+  }
+  .gcs-statStrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .gcs-statStrip > div {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--gcs-border);
+  }
+  .gcs-statStrip > div:nth-child(2n) {
+    border-right: 0;
+  }
+  .gcs-statStrip dd {
+    font-size: 20px;
+  }
+  .gcs-presenceCard__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gcs-liveDot {
+    animation: none;
+  }
+}

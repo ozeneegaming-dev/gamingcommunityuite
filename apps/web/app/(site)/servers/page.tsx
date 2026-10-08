@@ -6,7 +6,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
-import { cardData, initialStatuses } from "@/lib/servers";
+import { cardsData, initialStatuses } from "@/lib/servers";
 import { services } from "@/lib/services";
 import { GcsServerGrid, GcsServerSummary } from "../_components/servers/GcsServerGrid";
 import { GcsServerLiveProvider } from "../_components/servers/GcsServerLive";
@@ -75,7 +75,7 @@ export default async function ServersPage({ searchParams }: { searchParams: Prom
           </p>
         </GcsCard>
       ) : (
-        <GcsServerGrid servers={shown.map(cardData)} />
+        <GcsServerGrid servers={await cardsData(actor, shown)} />
       )}
     </GcsServerLiveProvider>
   );

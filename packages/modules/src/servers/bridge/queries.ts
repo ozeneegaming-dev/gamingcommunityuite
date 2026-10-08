@@ -19,7 +19,8 @@ export type GcsPlayerProfile = {
   /** Celelalte identități ale aceluiași membru (cu tipul și încrederea). */
   identities: GcsIdentityView[];
   summary: GcsStatTotals & { lastSeenAt: string | null; lastServer: { id: number; name: string } | null; bestRank: number | null };
-  classic: (GcsStatTotals & { server: { id: number; name: string }; rank: number | null; lastSeenAt: string })[];
+  /** Pe server vizibil; `server.game` = cheia jocului (imaginile hărților). */
+  classic: (GcsStatTotals & { server: { id: number; name: string; game: string }; rank: number | null; lastSeenAt: string })[];
   mix: { elo: number | null; peak: number | null; matches: number; wins: number; losses: number; draws: number; history: { matchId: number; at: string; elo: number }[] };
   matches: GcsMatchSummary[];
   weapons: { weapon: string; kills: number; deaths: number; headshots: number; shots: number; hits: number; damage: number; accuracy: number | null }[];
@@ -50,7 +51,8 @@ export type GcsPlayerHit = { id: number; name: string; kind: GamePlayerKind; val
 
 export type GcsMatchSummary = {
   id: number;
-  server: { id: number; name: string };
+  /** Serverul (`slug` pentru link, `game` pentru imaginea hărții). */
+  server: { id: number; name: string; slug: string; game: string };
   map: string;
   status: string;
   teams: { A: { name: string; score: number }; B: { name: string; score: number } };
@@ -120,7 +122,7 @@ export class GcsBridgeQueries {
     const visible = new Set(await this.deps.visibleServers(actor));
     const others = player.userId ? await db.gamePlayer.findMany({ where: { userId: player.userId, NOT: { id: player.id } }, orderBy: [{ kind: "asc" }, { lastSeenAt: "desc" }] }) : [];
 
-    const stats = (await db.gamePlayerStat.findMany({ where: { playerId }, include: { server: { select: { id: true, name: true } } }, orderBy: { playtime: "desc" } })).filter((s) => visible.has(s.serverId));
+    const stats = (await db.gamePlayerStat.findMany({ where: { playerId }, include: { server: { select: { id: true, name: true, game: true } } }, orderBy: { playtime: "desc" } })).filter((s) => visible.has(s.serverId));
     const sum = stats.reduce(
       (a, s) => ({ kills: a.kills + s.kills, deaths: a.deaths + s.deaths, headshots: a.headshots + s.headshots, assists: a.assists + s.assists, shots: a.shots + s.shots, hits: a.hits + s.hits, damage: a.damage + s.damage, playtime: a.playtime + s.playtime, rounds: a.rounds + s.rounds, roundsWon: a.roundsWon + s.roundsWon }),
       { kills: 0, deaths: 0, headshots: 0, assists: 0, shots: 0, hits: 0, damage: 0, playtime: 0, rounds: 0, roundsWon: 0 },
@@ -144,7 +146,7 @@ export class GcsBridgeQueries {
       player: this.identity(player),
       user: player.user,
       identities: others.map((o) => this.identity(o)),
-      summary: { ...totals(sum), lastSeenAt: latest?.lastSeenAt.toISOString() ?? null, lastServer: latest?.server ?? null, bestRank: ranks.length > 0 ? Math.min(...ranks) : null },
+      summary: { ...totals(sum), lastSeenAt: latest?.lastSeenAt.toISOString() ?? null, lastServer: latest ? { id: latest.server.id, name: latest.server.name } : null, bestRank: ranks.length > 0 ? Math.min(...ranks) : null },
       classic: stats.map((s) => ({ ...totals(s), server: s.server, rank: s.rank, lastSeenAt: s.lastSeenAt.toISOString() })),
       mix: {
         elo: r?.elo ?? null,
@@ -283,7 +285,7 @@ export class GcsBridgeQueries {
       this.deps.db.gameMatch.count({ where }),
       this.deps.db.gameMatch.findMany({
         where,
-        include: { server: { select: { id: true, name: true } }, ...(typeof filter.playerId === "number" ? { players: { where: { playerId: filter.playerId } } } : {}) },
+        include: { server: { select: { id: true, name: true, slug: true, game: true } }, ...(typeof filter.playerId === "number" ? { players: { where: { playerId: filter.playerId } } } : {}) },
         orderBy: { startedAt: "desc" },
         skip: (p - 1) * PAGE,
         take: PAGE,
@@ -314,7 +316,7 @@ export class GcsBridgeQueries {
     if (!(await this.canViewStats(actor))) return null;
     const m = await this.deps.db.gameMatch.findUnique({
       where: { id },
-      include: { server: { select: { id: true, name: true } }, players: { orderBy: [{ team: "asc" }, { kills: "desc" }] }, rounds: { orderBy: { number: "asc" } } },
+      include: { server: { select: { id: true, name: true, slug: true, game: true } }, players: { orderBy: [{ team: "asc" }, { kills: "desc" }] }, rounds: { orderBy: { number: "asc" } } },
     });
     if (!m || !(await this.deps.canViewServer(actor, m.serverId))) return null;
     return {

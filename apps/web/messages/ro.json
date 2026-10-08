@@ -2244,6 +2244,16 @@
         "u": "meniuri",
         "v": "ban temporar",
         "z": "utilizator (fără drepturi de admin)"
+      },
+      "presence": {
+        "online": "Online acum pe {server}",
+        "never": "Nevăzut niciodată",
+        "inactive": "{days, plural, one {Inactiv de # zi} few {Inactiv de # zile} other {Inactiv de # de zile}}",
+        "seen": "Văzut {time}",
+        "onlyInactive": "Doar inactivii",
+        "warning": "{count, plural, one {Un admin nu a mai fost văzut în joc} few {# admini nu au mai fost văzuți în joc} other {# de admini nu au mai fost văzuți în joc}} de peste {days, plural, one {# zi} few {# zile} other {# de zile}} (sau niciodată).",
+        "showInactive": "Arată-i",
+        "setting": "Pragul de inactivitate (Bridge și ELO)"
       }
     },
     "serverMaps": {
@@ -2751,7 +2761,22 @@
       "bgPause": "Oprește fundalul animat",
       "bgPlay": "Pornește fundalul animat"
     },
-    "clans": "Clanurile membrului"
+    "clans": "Clanurile membrului",
+    "game": {
+      "title": "Statistici pe servere",
+      "kd": "K/D",
+      "kills": "Ucideri",
+      "headshots": "Headshot-uri",
+      "playtime": "Timp de joc",
+      "hours": "{hours} h",
+      "elo": "ELO mix",
+      "bestRank": "Cel mai bun loc",
+      "lastSeen": "Văzut în joc {time}",
+      "neverSeen": "Încă nevăzut în joc",
+      "identities": "{count, plural, one {# identitate de joc} few {# identități de joc} other {# de identități de joc}}",
+      "open": "Profilul de jucător",
+      "playerProfile": "Profilul de jucător"
+    }
   },
   "maintenance": {
     "title": "Mentenanță",
@@ -3737,14 +3762,16 @@
         "shoutbox": "O cameră de chat, direct pe pagină."
       },
       "servers": {
-        "list": "Statusul live al serverelor de joc: jucători, hartă, adresă."
+        "list": "Statusul live al serverelor de joc: jucători, hartă, adresă.",
+        "adminsOnline": "Adminii serverelor de joc online acum: numele, serverul și de cât timp joacă."
       },
       "clans": {
         "top": "Primele clanuri din clasament, cu membrii și punctele."
       }
     },
     "servers": {
-      "list": "Servere"
+      "list": "Servere",
+      "adminsOnline": "Admini online"
     },
     "games": {
       "all": "Toate jocurile",
@@ -4456,7 +4483,8 @@
     "unknownStatus": "Statusul nu a fost citit încă.",
     "viewAll": "Toate serverele",
     "widgetEmpty": "Niciun server de afișat.",
-    "playersZero": "Fără jucători"
+    "playersZero": "Fără jucători",
+    "adminsOnline": "{count, plural, one {Admin online} few {# admini online} other {# de admini online}}"
   },
   "clans": {
     "title": "Clanuri",
@@ -4743,5 +4771,520 @@
       "steamLink": "Conectează Steam"
     },
     "manageLink": "Administrează"
+  },
+  "bridge": {
+    "identity": {
+      "kind": {
+        "STEAM": "Steam",
+        "NONSTEAM": "Non-Steam",
+        "NAME": "Nume"
+      },
+      "trust": {
+        "HIGH": "Încredere ridicată",
+        "MEDIUM": "Încredere medie",
+        "LOW": "Neverificat"
+      },
+      "trustShort": {
+        "HIGH": "ridicată",
+        "MEDIUM": "medie",
+        "LOW": "neverificat"
+      },
+      "trustHint": {
+        "HIGH": "Contul Steam e dovedit de Steam la conectare.",
+        "MEDIUM": "ID generat de emulator: se poate schimba sau falsifica.",
+        "LOW": "Doar numele: oricine poate intra cu el."
+      }
+    },
+    "sanction": {
+      "type": {
+        "BAN": "Ban",
+        "MUTE": "Mute",
+        "GAG": "Gag"
+      },
+      "status": {
+        "active": "Activ",
+        "expired": "Expirat",
+        "lifted": "Ridicat"
+      },
+      "time": {
+        "permanent": "Permanent",
+        "remaining": "Expiră {time}",
+        "expired": "A expirat pe {date}",
+        "lifted": "Ridicat pe {date}"
+      }
+    },
+    "result": {
+      "win": "Victorie",
+      "loss": "Înfrângere",
+      "draw": "Egal",
+      "open": "În desfășurare",
+      "short": {
+        "win": "V",
+        "loss": "Î",
+        "draw": "E",
+        "open": "–"
+      }
+    },
+    "elo": {
+      "empty": "Încă niciun meci mix evaluat.",
+      "chartLabel": "Evoluția ELO: de la {from} la {to}, {count, plural, one {un meci} few {# meciuri} other {# de meciuri}}",
+      "tableCaption": "ELO-ul după fiecare meci",
+      "match": "Meciul",
+      "value": "ELO"
+    },
+    "duration": {
+      "hours": "{h} h {m} min",
+      "minutes": "{m} min"
+    },
+    "player": {
+      "member": "Membru",
+      "noAccount": "Fără cont pe site",
+      "lastSeen": "Ultima apariție",
+      "never": "niciodată",
+      "onServer": "pe",
+      "elo": "ELO",
+      "peak": "vârf {value}",
+      "peakLabel": "Vârful",
+      "form": "Forma: ultimele meciuri, de la cel mai vechi",
+      "stats": {
+        "kd": "K/D",
+        "kills": "Ucideri",
+        "headshots": "Headshot-uri",
+        "accuracy": "Precizie",
+        "playtime": "Timp de joc",
+        "bestRank": "Cel mai bun loc"
+      },
+      "tabsLabel": "Secțiunile profilului de jucător",
+      "tabs": {
+        "overview": "Prezentare",
+        "classic": "Clasic",
+        "mix": "Mix",
+        "matches": "Meciuri",
+        "weapons": "Arme",
+        "maps": "Hărți",
+        "sanctions": "Sancțiuni"
+      },
+      "weapon": "Arma",
+      "share": "Partea din ucideri",
+      "hs": "HS %",
+      "damage": "Damage",
+      "roundsWon": "Runde câștigate",
+      "recentMatches": "Ultimele meciuri",
+      "allMatches": "Toate meciurile",
+      "noMatches": "Niciun meci mix jucat încă.",
+      "eloTitle": "Evoluția ELO",
+      "topWeapons": "Armele preferate",
+      "noWeapons": "Nicio ucidere înregistrată încă.",
+      "topMaps": "Hărțile preferate",
+      "noMaps": "Nicio hartă jucată încă.",
+      "identities": "Celelalte identități ale membrului",
+      "server": "Serverul",
+      "rank": "Locul",
+      "deaths": "Decese",
+      "noClassic": "Nicio statistică pe serverele pe care le poți vedea.",
+      "noMix": "Încă niciun meci mix.",
+      "mixMatches": "Meciuri",
+      "record": "V–Î–E",
+      "recordValue": "{wins}–{losses}–{draws}",
+      "winRate": "Victorii",
+      "noSanctions": "Nicio sancțiune.",
+      "sanction": "Sancționează"
+    },
+    "matches": {
+      "status": {
+        "warmup": "Încălzire",
+        "live": "Live",
+        "halftime": "Pauză",
+        "ended": "Încheiat",
+        "aborted": "Anulat"
+      },
+      "scoreSep": "la",
+      "kd": "{kills}–{deaths}",
+      "eloDelta": "{delta} ELO",
+      "title": "Meciuri mix",
+      "lead": "Meciurile 5v5 de pe serverele de mix, cu scorul, rundele și ELO-ul jucătorilor.",
+      "eloBoard": "Clasamentul ELO",
+      "serverFilter": "Serverul",
+      "allServers": "Toate serverele",
+      "empty": "Niciun meci mix jucat încă.",
+      "servers": "Servere",
+      "matchTitle": "{a} contra {b}",
+      "notRated": "Meciul nu a schimbat ELO-ul (prea puține runde sau o echipă fără jucători)."
+    },
+    "match": {
+      "teamA": "Echipa A",
+      "teamB": "Echipa B",
+      "winner": "Câștigătoare",
+      "scoreSep": "la",
+      "state": {
+        "warmup": "Încălzire",
+        "live": "Live · runda {round}",
+        "halftime": "Pauză după runda {round}",
+        "ended": "Meci încheiat",
+        "aborted": "Meci anulat"
+      },
+      "map": "Harta",
+      "server": "Serverul",
+      "started": "Început",
+      "open": "Pagina meciului",
+      "rounds": "Rundele, în ordine",
+      "roundWon": "Runda {round}: {team}",
+      "boardLabel": "Tabela de scor: {a} contra {b}",
+      "noPlayers": "Niciun jucător înregistrat.",
+      "player": "Jucător",
+      "kills": "Ucideri",
+      "killsShort": "U",
+      "deaths": "Decese",
+      "deathsShort": "D",
+      "assists": "Asistențe",
+      "assistsShort": "A",
+      "hs": "HS %",
+      "adr": "ADR",
+      "adrLong": "Damage pe rundă",
+      "mvp": "MVP",
+      "elo": "ELO"
+    },
+    "board": {
+      "title": "Clasamente",
+      "classicTitle": "Clasament: {server}",
+      "classicLead": "Locul pe server după ucideri minus decese și ucideri în echipă, pentru jucătorii cu timp de joc suficient.",
+      "eloLead": "ELO-ul din meciurile mix 5v5: câștigi când echipa ta bate o echipă mai bună.",
+      "boardFilter": "Clasamentul",
+      "eloTab": "ELO mix",
+      "rank": "Locul",
+      "player": "Jucător",
+      "kills": "Ucideri",
+      "deaths": "Decese",
+      "kd": "K/D",
+      "hs": "HS %",
+      "playtime": "Timp de joc",
+      "elo": "ELO",
+      "peak": "Vârf",
+      "matches": "Meciuri",
+      "record": "V–Î–E",
+      "recordValue": "{wins}–{losses}–{draws}",
+      "winRate": "Victorii",
+      "emptyClassic": "Niciun jucător clasat încă pe acest server.",
+      "emptyElo": "Niciun meci mix evaluat încă."
+    },
+    "bans": {
+      "title": "Banuri",
+      "lead": "{count, plural, one {O sancțiune} few {# sancțiuni} other {# de sancțiuni}}: bannuri, mute (voce) și gag (chat) de pe serverele comunității.",
+      "create": "Sancțiune nouă",
+      "searchLabel": "Caută în sancțiuni",
+      "search": "Caută",
+      "searchPlaceholder": "Nume, SteamID sau motiv",
+      "searchPlaceholderIp": "Nume, SteamID, IP sau motiv",
+      "server": "Serverul",
+      "allServers": "Toate serverele",
+      "globalOnly": "Doar cele pe toate serverele",
+      "searchSubmit": "Caută",
+      "statusFilter": "Starea",
+      "statuses": {
+        "all": "Toate",
+        "active": "Active",
+        "expired": "Expirate",
+        "lifted": "Ridicate"
+      },
+      "typeFilter": "Tipul",
+      "allTypes": "Orice tip",
+      "types": {
+        "BAN": "Bannuri",
+        "MUTE": "Mute",
+        "GAG": "Gag"
+      },
+      "empty": "Nicio sancțiune.",
+      "emptyFilter": "Nicio sancțiune pentru această căutare.",
+      "col": {
+        "type": "Tip",
+        "player": "Jucător",
+        "reason": "Motiv",
+        "scope": "Unde",
+        "admin": "Admin",
+        "time": "Durata",
+        "status": "Stare"
+      },
+      "global": "Toate serverele",
+      "unknownPlayer": "Jucător necunoscut"
+    },
+    "ban": {
+      "bans": "Banuri",
+      "appeal": "Contestă",
+      "details": "Detaliile sancțiunii",
+      "reason": "Motivul",
+      "player": "Jucătorul",
+      "identity": "Identitatea",
+      "ip": "IP",
+      "scope": "Unde se aplică",
+      "global": "Pe toate serverele",
+      "serverScope": "Doar pe {server}",
+      "origin": "Dată pe",
+      "created": "Dată la",
+      "expires": "Expiră",
+      "permanent": "Permanent",
+      "admin": "Adminul",
+      "source": "Sursa",
+      "sources": {
+        "SITE": "De pe site",
+        "GAME": "Din joc"
+      },
+      "lifted": "Ridicată",
+      "liftedValue": "de {by}, {date}: {reason}",
+      "edit": "Modifică sancțiunea",
+      "evidence": "Dovezi",
+      "noEvidence": "Nicio dovadă atașată.",
+      "liftTitle": {
+        "BAN": "Ridică banul",
+        "MUTE": "Ridică mute-ul",
+        "GAG": "Ridică gag-ul"
+      },
+      "unknown": "Jucător necunoscut"
+    },
+    "sanctionForm": {
+      "titleCreate": "Sancțiune nouă",
+      "bans": "Banuri",
+      "leadStaff": "Ban, mute sau gag pe un server sau pe toate. Ajunge la servere la următoarea sincronizare.",
+      "leadAdmin": "Ca admin, poți sancționa doar pe serverele tale, cu drepturile tale de pe ele.",
+      "type": "Tipul",
+      "typeHint": {
+        "BAN": "Nu mai poate intra pe server",
+        "MUTE": "Fără voce",
+        "GAG": "Fără chat"
+      },
+      "target": "Cine",
+      "targetMode": "Cum alegi jucătorul",
+      "targetModes": {
+        "player": "Caută jucătorul",
+        "id": "Scrie ID-ul"
+      },
+      "player": "Jucătorul",
+      "playerHint": "Caută după nume sau SteamID.",
+      "auth": "SteamID sau ID non-Steam",
+      "authKind": "Tipul ID-ului",
+      "kinds": {
+        "steam": "Steam",
+        "nonsteam": "Non-Steam (emulator)"
+      },
+      "name": "Numele (fără ID)",
+      "nameHint": "Un ban pe nume se aplică doar jucătorilor non-Steam.",
+      "ip": "IP (opțional)",
+      "ipHint": "O plasă de siguranță: IP-urile se schimbă și pot fi comune.",
+      "scope": "Unde se aplică",
+      "scopes": {
+        "SERVER": "Acest server",
+        "GLOBAL": "Toate serverele"
+      },
+      "globalDenied": "Cere drepturi pe toate serverele",
+      "server": "Serverul",
+      "originServer": "Serverul de origine (opțional)",
+      "noServer": "Niciunul",
+      "details": "Motivul și durata",
+      "reason": "Motivul",
+      "duration": "Durata",
+      "presets": {
+        "0": "Permanent",
+        "30": "30 de minute",
+        "60": "O oră",
+        "1440": "O zi",
+        "10080": "7 zile",
+        "43200": "30 de zile",
+        "custom": "Alt număr de minute"
+      },
+      "minutes": "Minute",
+      "durationFromStart": "Durata se socotește de la data sancțiunii.",
+      "evidence": "Dovezi (adrese https, una pe rând)",
+      "evidenceHint": "Demo-uri, capturi, clipuri: max 10 adrese.",
+      "notAllowed": "Nu ai dreptul să dai această sancțiune aici; alege alt tip, server sau altă durată.",
+      "submitCreate": "Aplică sancțiunea",
+      "submitEdit": "Salvează modificările",
+      "saved": "Sancțiunea a fost modificată.",
+      "liftReason": "Motivul ridicării",
+      "lift": "Ridică sancțiunea"
+    },
+    "picker": {
+      "change": "Alege altul",
+      "placeholder": "Nume sau SteamID (min 2 caractere)",
+      "none": "Niciun jucător găsit."
+    },
+    "tickets": {
+      "title": "Contestații și reclamații",
+      "lead": "Contestă o sancțiune sau reclamă un cheater ori un admin. Răspunsul vine aici și în notificări.",
+      "create": "Tichet nou",
+      "scopeLabel": "Tichetele",
+      "scopes": {
+        "mine": "Ale mele",
+        "handle": "De tratat"
+      },
+      "kindFilter": "Felul",
+      "allKinds": "Orice fel",
+      "kinds": {
+        "APPEAL": "Contestație",
+        "CHEATER": "Cheater",
+        "ADMIN": "Reclamație admin"
+      },
+      "statusFilter": "Starea",
+      "statuses": {
+        "open": "Deschise",
+        "all": "Toate",
+        "ACCEPTED": "Acceptate",
+        "REJECTED": "Respinse",
+        "CLOSED": "Închise"
+      },
+      "emptyHandle": "Niciun tichet de tratat.",
+      "emptyMine": "Nu ai deschis niciun tichet.",
+      "by": "de {name}",
+      "target": "despre {name}",
+      "activity": "activ {time}",
+      "statusNames": {
+        "OPEN": "Deschis",
+        "REVIEW": "În analiză",
+        "ACCEPTED": "Acceptat",
+        "REJECTED": "Respins",
+        "CLOSED": "Închis"
+      },
+      "assignedTo": "Preluat de {name}",
+      "unassigned": "Nepreluat"
+    },
+    "ticketForm": {
+      "pageTitle": "Tichet nou",
+      "tickets": "Contestații",
+      "lead": "Scrie ce s-a întâmplat și adaugă dovezi. Staff-ul și adminii serverului îți răspund aici.",
+      "allServers": "Toate serverele",
+      "kind": "Ce vrei să faci",
+      "kinds": {
+        "APPEAL": "Contest o sancțiune",
+        "CHEATER": "Reclam un cheater",
+        "ADMIN": "Reclam un admin"
+      },
+      "kindHints": {
+        "APPEAL": "Un ban, mute sau gag primit de tine",
+        "CHEATER": "Un jucător care trișează",
+        "ADMIN": "Abuz sau comportament al unui admin"
+      },
+      "target": "Despre ce",
+      "noSanctions": "Nu ai nicio sancțiune activă pe identitățile tale legate (Setări → Cont → Conturi de joc).",
+      "sanction": "Sancțiunea",
+      "appealOpen": "{label} (contestație deschisă)",
+      "server": "Serverul",
+      "player": "Jucătorul",
+      "playerHint": "Caută după nume sau SteamID; dacă nu-l găsești, scrie numele lui alături.",
+      "targetName": "Numele din joc",
+      "noAdmins": "Serverul nu are admini.",
+      "admin": "Adminul",
+      "message": "Mesajul",
+      "title": "Titlul",
+      "content": "Ce s-a întâmplat",
+      "evidence": "Dovezi (adrese https, una pe rând)",
+      "evidenceHint": "Demo-uri, capturi, clipuri: max 10 adrese.",
+      "submit": "Trimite tichetul"
+    },
+    "ticket": {
+      "reply": "Răspunde",
+      "internal": "Notă internă (doar staff-ul o vede)",
+      "sendInternal": "Adaugă nota",
+      "send": "Trimite răspunsul",
+      "statusReason": "Motivul (opțional)",
+      "liftOnAccept": "Ridică sancțiunea la acceptare",
+      "to": {
+        "OPEN": "Redeschide",
+        "REVIEW": "În analiză",
+        "ACCEPTED": "Acceptă",
+        "REJECTED": "Respinge",
+        "CLOSED": "Închide"
+      },
+      "assignee": "Responsabil",
+      "take": "Preiau",
+      "release": "Eliberez",
+      "assignTo": "Atribuie tichetul",
+      "nobody": "Nimeni",
+      "system": "Sistem",
+      "statusChanged": "{who} a schimbat starea: {from} → {to}.",
+      "lifted": "Sancțiunea a fost ridicată.",
+      "reasonValue": "Motiv: {reason}",
+      "released": "{who} a eliberat tichetul.",
+      "took": "{who} a preluat tichetul.",
+      "assigned": "{who} a atribuit tichetul lui {to}.",
+      "openedBy": "deschis de {name}, {date}",
+      "original": "Mesajul inițial",
+      "thread": "Discuția",
+      "internalNote": "Notă internă",
+      "handle": "Tratează tichetul",
+      "yourTicket": "Tichetul tău",
+      "facts": "Detalii",
+      "server": "Serverul",
+      "admin": "Adminul",
+      "player": "Jucătorul",
+      "sanction": "Sancțiunea",
+      "sanctionLifted": "ridicată",
+      "activity": "Ultima activitate",
+      "evidence": "Dovezi"
+    },
+    "ticketStatus": {
+      "saving": "Se salvează…"
+    },
+    "admins": {
+      "title": "Adminii serverelor",
+      "summary": "{online, plural, one {# admin online acum} few {# admini online acum} other {# de admini online acum}}, {seen} văzuți în ultimele 24 h, din {total}.",
+      "serverFilter": "Serverul",
+      "allServers": "Toate serverele",
+      "empty": "Niciun admin de server.",
+      "online": "Online",
+      "seen24h": "Văzut azi",
+      "seen7d": "Văzut săptămâna asta",
+      "inactive": "Inactiv",
+      "away": "Absent",
+      "allServersShort": "toate serverele",
+      "playingSince": "Pe {server}, intrat {time}",
+      "playingOn": "Pe {server}",
+      "playtime24": "Joc 24 h",
+      "playtime7": "Joc 7 zile",
+      "playtime30": "Joc 30 zile",
+      "actions": "Acțiuni (7 / 30 zile)",
+      "actionsValue": "{d7} / {d30}",
+      "tickets": "Tichete tratate (30 zile)",
+      "lastSeen": "Ultima apariție",
+      "now": "acum",
+      "never": "niciodată"
+    },
+    "server": {
+      "top": "Clasamentul serverului",
+      "fullBoard": "Tot clasamentul",
+      "rank": "Locul",
+      "player": "Jucător",
+      "kills": "Ucideri",
+      "kd": "K/D",
+      "playtime": "Timp de joc",
+      "matches": "Meciuri recente",
+      "allMatches": "Toate meciurile",
+      "gameAdmins": "Admini în joc",
+      "allAdmins": "Prezența",
+      "onlineSince": "online, intrat {time}",
+      "onlineNow": "online acum",
+      "lastSeen": "văzut {time}",
+      "neverSeen": "nevăzut încă"
+    },
+    "widget": {
+      "empty": "Niciun admin online acum.",
+      "since": "{server}, intrat {time}",
+      "all": "Toți adminii"
+    },
+    "gameAccounts": {
+      "title": "Conturi de joc",
+      "lead": "Identitatea Steam se leagă singură când îți conectezi contul Steam. Pentru un ID non-Steam sau un nume, generează un cod și scrie-l în chat-ul jocului.",
+      "type": "Scrie în chat-ul jocului:",
+      "expiresIn": "Valabil încă {minutes}:{seconds}. Un cod nou îl anulează pe acesta.",
+      "expired": "Codul a expirat. Generează altul.",
+      "how": "Codul e valabil 10 minute și merge o singură dată: scrie {command} COD în chat-ul jocului.",
+      "generate": "Generează un cod",
+      "regenerate": "Generează alt cod",
+      "none": "Nicio identitate de joc legată.",
+      "source": {
+        "STEAM": "legat prin contul Steam",
+        "CODE": "legat prin cod",
+        "STAFF": "legat de staff"
+      },
+      "steamHint": "Se dezleagă odată cu contul Steam (mai sus).",
+      "unlink": "Dezleagă"
+    }
   }
 }

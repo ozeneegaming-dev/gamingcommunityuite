@@ -1,4 +1,4 @@
-import { GCS_ADMIN_FLAGS, SERVER_ADMINS_ACP_SECTION } from "@gcs/modules";
+import { BRIDGE_SETTING, GCS_ADMIN_FLAGS, SERVER_ADMINS_ACP_SECTION, type GcsAdminPresence } from "@gcs/modules";
 import { GcsButton, GcsCard } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.serverAdmins"))("title") };
 }
 
-type Props = { searchParams: Promise<{ server?: string; q?: string }> };
+type Props = { searchParams: Promise<{ server?: string; q?: string; inactive?: string }> };
 
 const SUBJECT_ICON = { USER: "fa-solid fa-user", PLAYER: "fa-solid fa-gamepad", NAME: "fa-solid fa-signature" } as const;
 
@@ -41,8 +41,8 @@ export default async function AcpServerAdminsPage({ searchParams }: Props) {
   const sp = await searchParams;
   const serverId = /^\d{1,9}$/.test(sp.server ?? "") ? Number(sp.server) : null;
   const q = (sp.q ?? "").slice(0, 40);
-  const { bridge, db, acp } = services();
-  const [t, format, rows, presets, servers, canEdit, canDelete] = await Promise.all([
+  const { bridge, db, acp, settings } = services();
+  const [t, format, all, presets, servers, canEdit, canDelete, presence, inactiveDays] = await Promise.all([
     getTranslations("acp.serverAdmins"),
     getFormatter(),
     bridge.admins.list(actor, { serverId, q }),
@@ -50,8 +50,30 @@ export default async function AcpServerAdminsPage({ searchParams }: Props) {
     db.gameServer.findMany({ where: { game: { in: ["cs16", "cs2"] } }, orderBy: [{ position: "asc" }, { id: "asc" }], select: { id: true, name: true } }),
     acp.can(actor, SERVER_ADMINS_ACP_SECTION, "edit"),
     acp.can(actor, SERVER_ADMINS_ACP_SECTION, "delete"),
+    // Prezența (specul 2026-10-08-servere-pagini §6): ultima apariție și inactivitatea, după `servers.admin_inactive_days`.
+    bridge.presence.list(actor).catch(() => [] as GcsAdminPresence[]),
+    settings.get<number>(BRIDGE_SETTING.adminInactiveDays),
   ]);
+  const seen = new Map(presence.map((p) => [p.id, p]));
+  const inactiveOnly = sp.inactive === "1";
+  const inactive = all.filter((a) => !a.expired && seen.get(a.id)?.inactive);
+  const rows = inactiveOnly ? inactive : all;
   const flagLabel = (f: string) => t(`flags.${f}`);
+  /** Starea prezenței unui admin: online acum, ultima apariție, inactiv de N zile sau nevăzut niciodată. */
+  const presenceBadge = (id: number) => {
+    const p = seen.get(id);
+    if (!p) return null;
+    if (p.online) return <span className="gcs-badge gcs-badge--ok">{t("presence.online", { server: p.online.serverName })}</span>;
+    if (!p.lastSeenAt) return <span className="gcs-badge gcs-badge--warn">{t("presence.never")}</span>;
+    const days = Math.floor((Date.now() - Date.parse(p.lastSeenAt)) / 86_400_000);
+    return p.inactive ? (
+      <span className="gcs-badge gcs-badge--warn" data-testid="gcs-admin-inactive">
+        {t("presence.inactive", { days })}
+      </span>
+    ) : (
+      <span className="gcs-badge">{t("presence.seen", { time: format.relativeTime(new Date(p.lastSeenAt)) })}</span>
+    );
+  };
 
   return (
     <>
@@ -87,10 +109,24 @@ export default async function AcpServerAdminsPage({ searchParams }: Props) {
           {t("search")}
           <input className="gcs-input" type="search" name="q" defaultValue={q} maxLength={40} />
         </label>
+        <label className="gcs-checkRow" style={{ minHeight: 40 }}>
+          <input type="checkbox" name="inactive" value="1" defaultChecked={inactiveOnly} />
+          {t("presence.onlyInactive")}
+        </label>
         <button type="submit" className="gcs-btn gcs-btn--ghost">
           {t("searchSubmit")}
         </button>
       </form>
+
+      {inactive.length > 0 && (
+        <p className="gcs-notice gcs-notice--warn" role="status" data-testid="gcs-admins-inactive-warning">
+          <GcsIcon name="fa-solid fa-triangle-exclamation" />{" "}
+          {t("presence.warning", { count: inactive.length, days: inactiveDays })}{" "}
+          {!inactiveOnly && <Link href={`/admin/gaming/server-admins?inactive=1${serverId ? `&server=${serverId}` : ""}`}>{t("presence.showInactive")}</Link>}
+          {" · "}
+          <Link href="/admin/settings/servers_bridge">{t("presence.setting")}</Link>
+        </p>
+      )}
 
       <GcsCard as="section" aria-label={t("title")} style={{ overflow: "hidden" }}>
         {rows.length === 0 ? (
@@ -114,15 +150,14 @@ export default async function AcpServerAdminsPage({ searchParams }: Props) {
                       {t(`subjects.${a.subject}`)} · {a.server?.name ?? t("allServers")} · {a.preset?.name ?? t("customFlagsShort")} · <code>{a.flags}</code> · {t("immunityShort", { value: a.immunity })}
                       {a.expiresAt && ` · ${a.expired ? t("expired") : t("expires", { date: format.dateTime(new Date(a.expiresAt), { dateStyle: "medium", timeStyle: "short" }) })}`}
                     </span>
-                    {a.warnings.length > 0 && (
-                      <span style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 4 }}>
-                        {a.warnings.map((w) => (
-                          <span key={w} className="gcs-badge gcs-badge--warn">
-                            {t(`warnings.${w}`)}
-                          </span>
-                        ))}
-                      </span>
-                    )}
+                    <span style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 4 }}>
+                      {!a.expired && presenceBadge(a.id)}
+                      {a.warnings.map((w) => (
+                        <span key={w} className="gcs-badge gcs-badge--warn">
+                          {t(`warnings.${w}`)}
+                        </span>
+                      ))}
+                    </span>
                   </span>
                 </span>
                 <span style={{ display: "flex", gap: 8, alignItems: "center" }}>

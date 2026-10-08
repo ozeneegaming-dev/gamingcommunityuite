@@ -1,4 +1,5 @@
 import type { GcsServerLive } from "@gcs/modules";
+import { slugify } from "@gcs/modules/slug";
 import type { GcsIconSvgProps } from "@gcs/ui";
 
 /** Iconița rezolvată pe server (doar datele SVG ajung în browser). */
@@ -9,6 +10,8 @@ export type GcsServerCardData = {
   id: number;
   href: string;
   name: string;
+  /** Cheia jocului (catalogul): imaginea hărții se cere după ea. */
+  game: string;
   gameName: string;
   gameIcon: GcsIconDef | null;
   hasMap: boolean;
@@ -18,6 +21,8 @@ export type GcsServerCardData = {
   bannerGradient: string;
   uptime30: number | null;
   status: GcsServerLive | null;
+  /** Adminii recunoscuți acum pe server (lista ultimului heartbeat); 0 = niciunul. */
+  adminsOnline: number;
 };
 
 /** `/servers/{id}-{slug}`. */
@@ -25,3 +30,19 @@ export const serverHref = (s: { id: number; slug: string }) => `/servers/${s.id}
 
 /** Procentul de umplere a sloturilor (0–100). */
 export const fillPercent = (s: GcsServerLive | null) => (s && s.online && s.maxPlayers > 0 ? Math.min(100, Math.round((s.players / s.maxPlayers) * 100)) : 0);
+
+/** Slug-ul profilului unui jucător (numele din joc; un nume fără litere dă „player”). */
+function playerSlug(name: string): string {
+  const slug = slugify(name);
+  return slug === "topic" && !/topic/i.test(name) ? "player" : slug;
+}
+
+/** `/servers/players/{id}-{slug}`: profilul unei identități de joc (și fără cont pe site). */
+export const playerHref = (p: { id: number; name: string }, tab?: string) => `/servers/players/${p.id}-${playerSlug(p.name)}${tab && tab !== "overview" ? `?tab=${tab}` : ""}`;
+export const matchHref = (id: number) => `/servers/matches/${id}`;
+export const sanctionHref = (id: number) => `/bans/${id}`;
+export const ticketPageHref = (id: number) => `/servers/tickets/${id}`;
+/** Imaginea hărții: redirect la imaginea încărcată din ACP sau la arta generică originală a jocului. */
+export const mapImageHref = (game: string, map: string) => `/api/servers/maps/image/${encodeURIComponent(game)}/${encodeURIComponent(map)}`;
+/** Jocurile cu punte (pluginuri): doar ele au statistici, meciuri, admini în joc și imaginile hărților. */
+export const isBridgeGameKey = (game: string) => game === "cs16" || game === "cs2";

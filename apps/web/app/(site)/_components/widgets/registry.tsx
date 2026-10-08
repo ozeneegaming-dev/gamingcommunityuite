@@ -89,6 +89,11 @@ function announcementHtml(body: unknown): string {
   return sanitizeContentHtml(html);
 }
 
+/** Numele unui membru cu link spre profil (fără stilul grupului: datele vin din intrarea de admin). */
+function GcsUserLinkPlain({ user }: { user: { id: string; name: string } }) {
+  return <Link href={memberHref(user)}>{user.name}</Link>;
+}
+
 /** Randarea fiecărui tip de widget (după cheia din `GcsWidgetDef`). Un tip necunoscut nu se randează. */
 export const WIDGET_RENDERERS: Record<string, Renderer> = {
   "core.announcement": async ({ config, actor }) => {
@@ -337,6 +342,36 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
         )}
         <Link href="/servers" className="gcs-serverList__all">
           {ts("viewAll")}
+        </Link>
+      </GcsWidgetCard>
+    );
+  },
+
+  // Puntea serverelor: adminii online acum (numele, serverul, de cât timp), din lista ultimului heartbeat.
+  "servers.adminsOnline": async ({ id, config, actor }) => {
+    const { bridge } = services();
+    const list = await bridge.queries.onlineAdmins(actor, limitOf(config, 8));
+    if (list === null) return null;
+    const [t, tb, format] = await Promise.all([getTranslations("widgets"), getTranslations("bridge.widget"), getFormatter()]);
+    return (
+      <GcsWidgetCard id={id} type="servers.adminsOnline" config={config} title={t("servers.adminsOnline")} testId="gcs-widget-admins-online" extra={list.length > 0 ? String(list.length) : undefined}>
+        {list.length === 0 ? (
+          <p className="gcs-sideCard__line">{tb("empty")}</p>
+        ) : (
+          <ul className="gcs-adminRows">
+            {list.map((a) => (
+              <li key={`${a.server.id}-${a.adminId}`} className="gcs-adminRow" data-state="online" data-testid="gcs-widget-admin">
+                <span className="gcs-dot" aria-hidden="true" />
+                <span className="gcs-adminRow__name">{a.user ? <GcsUserLinkPlain user={a.user} /> : a.name}</span>
+                <span className="gcs-adminRow__meta">
+                  {a.since ? tb("since", { server: a.server.name, time: format.relativeTime(new Date(a.since)) }) : a.server.name}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <Link href="/servers/admins" className="gcs-serverList__all">
+          {tb("all")}
         </Link>
       </GcsWidgetCard>
     );

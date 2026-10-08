@@ -117,6 +117,15 @@ export const serverWidgets: GcsWidgetDef[] = [
       },
     ],
   }),
+  // Puntea (specul 2026-10-08-servere-pagini §6): adminii online acum pe serverele vizibile viewer-ului.
+  widget({
+    key: "servers.adminsOnline",
+    labelKey: "widgets.servers.adminsOnline",
+    descriptionKey: "widgets.desc.servers.adminsOnline",
+    icon: "fa-solid fa-user-shield",
+    defaultConfig: { limit: 8 },
+    fields: [limitField()],
+  }),
 ];
 
 /**

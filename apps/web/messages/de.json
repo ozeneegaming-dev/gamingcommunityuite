@@ -2244,6 +2244,16 @@
         "u": "menus",
         "v": "temporary ban",
         "z": "user (no admin rights)"
+      },
+      "presence": {
+        "online": "Online now on {server}",
+        "never": "Never seen",
+        "inactive": "{days, plural, one {Inactive for # day} other {Inactive for # days}}",
+        "seen": "Seen {time}",
+        "onlyInactive": "Inactive only",
+        "warning": "{count, plural, one {One admin has not been seen in game} other {# admins have not been seen in game}} for over {days, plural, one {# day} other {# days}} (or ever).",
+        "showInactive": "Show them",
+        "setting": "Inactivity threshold (Bridge and ELO)"
       }
     },
     "serverMaps": {
@@ -2751,7 +2761,22 @@
       "bgPause": "Pause the animated background",
       "bgPlay": "Play the animated background"
     },
-    "clans": "The member's clans"
+    "clans": "The member's clans",
+    "game": {
+      "title": "Server stats",
+      "kd": "K/D",
+      "kills": "Kills",
+      "headshots": "Headshots",
+      "playtime": "Playtime",
+      "hours": "{hours} h",
+      "elo": "Mix ELO",
+      "bestRank": "Best rank",
+      "lastSeen": "Seen in game {time}",
+      "neverSeen": "Not seen in game yet",
+      "identities": "{count, plural, one {# game identity} other {# game identities}}",
+      "open": "Player profile",
+      "playerProfile": "Player profile"
+    }
   },
   "maintenance": {
     "title": "Wartung",
@@ -3737,14 +3762,16 @@
         "shoutbox": "Ein chat-raum, direkt auf der seite."
       },
       "servers": {
-        "list": "Live status of the game servers: players, map, address."
+        "list": "Live status of the game servers: players, map, address.",
+        "adminsOnline": "Game server admins online now: the name, the server and how long they have been playing."
       },
       "clans": {
         "top": "The top clans in the ranking, with members and points."
       }
     },
     "servers": {
-      "list": "Servers"
+      "list": "Servers",
+      "adminsOnline": "Admins online"
     },
     "games": {
       "all": "All games",
@@ -4456,7 +4483,8 @@
     "unknownStatus": "The status hasn't been read yet.",
     "viewAll": "All servers",
     "widgetEmpty": "No servers to show.",
-    "playersZero": "No players"
+    "playersZero": "No players",
+    "adminsOnline": "{count, plural, one {Admin online} other {# admins online}}"
   },
   "clans": {
     "title": "Clans",
@@ -4743,5 +4771,520 @@
       "steamLink": "Connect Steam"
     },
     "manageLink": "Manage"
+  },
+  "bridge": {
+    "identity": {
+      "kind": {
+        "STEAM": "Steam",
+        "NONSTEAM": "Non-Steam",
+        "NAME": "Name"
+      },
+      "trust": {
+        "HIGH": "High trust",
+        "MEDIUM": "Medium trust",
+        "LOW": "Unverified"
+      },
+      "trustShort": {
+        "HIGH": "high",
+        "MEDIUM": "medium",
+        "LOW": "unverified"
+      },
+      "trustHint": {
+        "HIGH": "The Steam account is proven by Steam on connect.",
+        "MEDIUM": "An emulator-generated ID: it can change or be spoofed.",
+        "LOW": "Only the name: anyone can join with it."
+      }
+    },
+    "sanction": {
+      "type": {
+        "BAN": "Ban",
+        "MUTE": "Mute",
+        "GAG": "Gag"
+      },
+      "status": {
+        "active": "Active",
+        "expired": "Expired",
+        "lifted": "Lifted"
+      },
+      "time": {
+        "permanent": "Permanent",
+        "remaining": "Expires {time}",
+        "expired": "Expired on {date}",
+        "lifted": "Lifted on {date}"
+      }
+    },
+    "result": {
+      "win": "Win",
+      "loss": "Loss",
+      "draw": "Draw",
+      "open": "In progress",
+      "short": {
+        "win": "W",
+        "loss": "L",
+        "draw": "D",
+        "open": "–"
+      }
+    },
+    "elo": {
+      "empty": "No rated mix match yet.",
+      "chartLabel": "ELO over time: from {from} to {to}, {count, plural, one {one match} other {# matches}}",
+      "tableCaption": "ELO after each match",
+      "match": "Match",
+      "value": "ELO"
+    },
+    "duration": {
+      "hours": "{h} h {m} min",
+      "minutes": "{m} min"
+    },
+    "player": {
+      "member": "Member",
+      "noAccount": "No site account",
+      "lastSeen": "Last seen",
+      "never": "never",
+      "onServer": "on",
+      "elo": "ELO",
+      "peak": "peak {value}",
+      "peakLabel": "Peak",
+      "form": "Form: latest matches, oldest first",
+      "stats": {
+        "kd": "K/D",
+        "kills": "Kills",
+        "headshots": "Headshots",
+        "accuracy": "Accuracy",
+        "playtime": "Playtime",
+        "bestRank": "Best rank"
+      },
+      "tabsLabel": "Player profile sections",
+      "tabs": {
+        "overview": "Overview",
+        "classic": "Classic",
+        "mix": "Mix",
+        "matches": "Matches",
+        "weapons": "Weapons",
+        "maps": "Maps",
+        "sanctions": "Sanctions"
+      },
+      "weapon": "Weapon",
+      "share": "Share of kills",
+      "hs": "HS %",
+      "damage": "Damage",
+      "roundsWon": "Rounds won",
+      "recentMatches": "Latest matches",
+      "allMatches": "All matches",
+      "noMatches": "No mix match played yet.",
+      "eloTitle": "ELO over time",
+      "topWeapons": "Favourite weapons",
+      "noWeapons": "No kills recorded yet.",
+      "topMaps": "Favourite maps",
+      "noMaps": "No map played yet.",
+      "identities": "The member's other identities",
+      "server": "Server",
+      "rank": "Rank",
+      "deaths": "Deaths",
+      "noClassic": "No stats on the servers you can see.",
+      "noMix": "No mix match yet.",
+      "mixMatches": "Matches",
+      "record": "W–L–D",
+      "recordValue": "{wins}–{losses}–{draws}",
+      "winRate": "Win rate",
+      "noSanctions": "No sanctions.",
+      "sanction": "Sanction"
+    },
+    "matches": {
+      "status": {
+        "warmup": "Warmup",
+        "live": "Live",
+        "halftime": "Halftime",
+        "ended": "Ended",
+        "aborted": "Aborted"
+      },
+      "scoreSep": "to",
+      "kd": "{kills}–{deaths}",
+      "eloDelta": "{delta} ELO",
+      "title": "Mix matches",
+      "lead": "5v5 matches on the mix servers, with the score, the rounds and the players' ELO.",
+      "eloBoard": "ELO leaderboard",
+      "serverFilter": "Server",
+      "allServers": "All servers",
+      "empty": "No mix match played yet.",
+      "servers": "Servers",
+      "matchTitle": "{a} vs {b}",
+      "notRated": "This match did not change ELO (too few rounds or a team without players)."
+    },
+    "match": {
+      "teamA": "Team A",
+      "teamB": "Team B",
+      "winner": "Winner",
+      "scoreSep": "to",
+      "state": {
+        "warmup": "Warmup",
+        "live": "Live · round {round}",
+        "halftime": "Halftime after round {round}",
+        "ended": "Match ended",
+        "aborted": "Match aborted"
+      },
+      "map": "Map",
+      "server": "Server",
+      "started": "Started",
+      "open": "Match page",
+      "rounds": "Rounds, in order",
+      "roundWon": "Round {round}: {team}",
+      "boardLabel": "Scoreboard: {a} vs {b}",
+      "noPlayers": "No players recorded.",
+      "player": "Player",
+      "kills": "Kills",
+      "killsShort": "K",
+      "deaths": "Deaths",
+      "deathsShort": "D",
+      "assists": "Assists",
+      "assistsShort": "A",
+      "hs": "HS %",
+      "adr": "ADR",
+      "adrLong": "Damage per round",
+      "mvp": "MVP",
+      "elo": "ELO"
+    },
+    "board": {
+      "title": "Leaderboards",
+      "classicTitle": "Leaderboard: {server}",
+      "classicLead": "Server rank by kills minus deaths and team kills, for players with enough playtime.",
+      "eloLead": "ELO from 5v5 mix matches: you gain more when your team beats a stronger team.",
+      "boardFilter": "Leaderboard",
+      "eloTab": "Mix ELO",
+      "rank": "Rank",
+      "player": "Player",
+      "kills": "Kills",
+      "deaths": "Deaths",
+      "kd": "K/D",
+      "hs": "HS %",
+      "playtime": "Playtime",
+      "elo": "ELO",
+      "peak": "Peak",
+      "matches": "Matches",
+      "record": "W–L–D",
+      "recordValue": "{wins}–{losses}–{draws}",
+      "winRate": "Win rate",
+      "emptyClassic": "No ranked players on this server yet.",
+      "emptyElo": "No rated mix match yet."
+    },
+    "bans": {
+      "title": "Bans",
+      "lead": "{count, plural, one {One sanction} other {# sanctions}}: bans, mutes (voice) and gags (chat) on the community servers.",
+      "create": "New sanction",
+      "searchLabel": "Search sanctions",
+      "search": "Search",
+      "searchPlaceholder": "Name, SteamID or reason",
+      "searchPlaceholderIp": "Name, SteamID, IP or reason",
+      "server": "Server",
+      "allServers": "All servers",
+      "globalOnly": "All-server sanctions only",
+      "searchSubmit": "Search",
+      "statusFilter": "Status",
+      "statuses": {
+        "all": "All",
+        "active": "Active",
+        "expired": "Expired",
+        "lifted": "Lifted"
+      },
+      "typeFilter": "Type",
+      "allTypes": "Any type",
+      "types": {
+        "BAN": "Bans",
+        "MUTE": "Mutes",
+        "GAG": "Gags"
+      },
+      "empty": "No sanctions.",
+      "emptyFilter": "No sanctions match this search.",
+      "col": {
+        "type": "Type",
+        "player": "Player",
+        "reason": "Reason",
+        "scope": "Where",
+        "admin": "Admin",
+        "time": "Duration",
+        "status": "Status"
+      },
+      "global": "All servers",
+      "unknownPlayer": "Unknown player"
+    },
+    "ban": {
+      "bans": "Bans",
+      "appeal": "Appeal",
+      "details": "Sanction details",
+      "reason": "Reason",
+      "player": "Player",
+      "identity": "Identity",
+      "ip": "IP",
+      "scope": "Applies to",
+      "global": "All servers",
+      "serverScope": "Only {server}",
+      "origin": "Given on",
+      "created": "Given at",
+      "expires": "Expires",
+      "permanent": "Permanent",
+      "admin": "Admin",
+      "source": "Source",
+      "sources": {
+        "SITE": "From the site",
+        "GAME": "In game"
+      },
+      "lifted": "Lifted",
+      "liftedValue": "by {by}, {date}: {reason}",
+      "edit": "Edit the sanction",
+      "evidence": "Evidence",
+      "noEvidence": "No evidence attached.",
+      "liftTitle": {
+        "BAN": "Lift the ban",
+        "MUTE": "Lift the mute",
+        "GAG": "Lift the gag"
+      },
+      "unknown": "Unknown player"
+    },
+    "sanctionForm": {
+      "titleCreate": "New sanction",
+      "bans": "Bans",
+      "leadStaff": "A ban, mute or gag on one server or on all of them. Servers get it on their next sync.",
+      "leadAdmin": "As a server admin, you can only sanction on your servers, with your rights there.",
+      "type": "Type",
+      "typeHint": {
+        "BAN": "Cannot join the server",
+        "MUTE": "No voice",
+        "GAG": "No chat"
+      },
+      "target": "Who",
+      "targetMode": "How to pick the player",
+      "targetModes": {
+        "player": "Search the player",
+        "id": "Type the ID"
+      },
+      "player": "Player",
+      "playerHint": "Search by name or SteamID.",
+      "auth": "SteamID or non-Steam ID",
+      "authKind": "ID type",
+      "kinds": {
+        "steam": "Steam",
+        "nonsteam": "Non-Steam (emulator)"
+      },
+      "name": "Name (without an ID)",
+      "nameHint": "A ban by name only applies to non-Steam players.",
+      "ip": "IP (optional)",
+      "ipHint": "A safety net: IPs change and can be shared.",
+      "scope": "Applies to",
+      "scopes": {
+        "SERVER": "This server",
+        "GLOBAL": "All servers"
+      },
+      "globalDenied": "Needs rights on all servers",
+      "server": "Server",
+      "originServer": "Origin server (optional)",
+      "noServer": "None",
+      "details": "Reason and duration",
+      "reason": "Reason",
+      "duration": "Duration",
+      "presets": {
+        "0": "Permanent",
+        "30": "30 minutes",
+        "60": "One hour",
+        "1440": "One day",
+        "10080": "7 days",
+        "43200": "30 days",
+        "custom": "Other number of minutes"
+      },
+      "minutes": "Minutes",
+      "durationFromStart": "The duration counts from the sanction date.",
+      "evidence": "Evidence (https addresses, one per line)",
+      "evidenceHint": "Demos, screenshots, clips: up to 10 addresses.",
+      "notAllowed": "You cannot give this sanction here; pick another type, server or duration.",
+      "submitCreate": "Apply the sanction",
+      "submitEdit": "Save changes",
+      "saved": "The sanction was updated.",
+      "liftReason": "Reason for lifting",
+      "lift": "Lift the sanction"
+    },
+    "picker": {
+      "change": "Pick another",
+      "placeholder": "Name or SteamID (min 2 characters)",
+      "none": "No player found."
+    },
+    "tickets": {
+      "title": "Appeals and reports",
+      "lead": "Appeal a sanction or report a cheater or an admin. Replies arrive here and in your notifications.",
+      "create": "New ticket",
+      "scopeLabel": "Tickets",
+      "scopes": {
+        "mine": "Mine",
+        "handle": "To handle"
+      },
+      "kindFilter": "Kind",
+      "allKinds": "Any kind",
+      "kinds": {
+        "APPEAL": "Appeal",
+        "CHEATER": "Cheater",
+        "ADMIN": "Admin report"
+      },
+      "statusFilter": "Status",
+      "statuses": {
+        "open": "Open",
+        "all": "All",
+        "ACCEPTED": "Accepted",
+        "REJECTED": "Rejected",
+        "CLOSED": "Closed"
+      },
+      "emptyHandle": "No tickets to handle.",
+      "emptyMine": "You have not opened any ticket.",
+      "by": "by {name}",
+      "target": "about {name}",
+      "activity": "active {time}",
+      "statusNames": {
+        "OPEN": "Open",
+        "REVIEW": "Under review",
+        "ACCEPTED": "Accepted",
+        "REJECTED": "Rejected",
+        "CLOSED": "Closed"
+      },
+      "assignedTo": "Taken by {name}",
+      "unassigned": "Not taken"
+    },
+    "ticketForm": {
+      "pageTitle": "New ticket",
+      "tickets": "Appeals",
+      "lead": "Describe what happened and add evidence. Staff and the server admins answer here.",
+      "allServers": "All servers",
+      "kind": "What do you want to do",
+      "kinds": {
+        "APPEAL": "Appeal a sanction",
+        "CHEATER": "Report a cheater",
+        "ADMIN": "Report an admin"
+      },
+      "kindHints": {
+        "APPEAL": "A ban, mute or gag you received",
+        "CHEATER": "A player who cheats",
+        "ADMIN": "An admin's abuse or behaviour"
+      },
+      "target": "About",
+      "noSanctions": "You have no active sanction on your linked identities (Settings → Account → Game accounts).",
+      "sanction": "Sanction",
+      "appealOpen": "{label} (appeal open)",
+      "server": "Server",
+      "player": "Player",
+      "playerHint": "Search by name or SteamID; if you cannot find them, type their name next to it.",
+      "targetName": "In-game name",
+      "noAdmins": "This server has no admins.",
+      "admin": "Admin",
+      "message": "Message",
+      "title": "Title",
+      "content": "What happened",
+      "evidence": "Evidence (https addresses, one per line)",
+      "evidenceHint": "Demos, screenshots, clips: up to 10 addresses.",
+      "submit": "Send the ticket"
+    },
+    "ticket": {
+      "reply": "Reply",
+      "internal": "Internal note (only staff see it)",
+      "sendInternal": "Add the note",
+      "send": "Send the reply",
+      "statusReason": "Reason (optional)",
+      "liftOnAccept": "Lift the sanction on accept",
+      "to": {
+        "OPEN": "Reopen",
+        "REVIEW": "Under review",
+        "ACCEPTED": "Accept",
+        "REJECTED": "Reject",
+        "CLOSED": "Close"
+      },
+      "assignee": "Assignee",
+      "take": "Take it",
+      "release": "Release",
+      "assignTo": "Assign the ticket",
+      "nobody": "Nobody",
+      "system": "System",
+      "statusChanged": "{who} changed the status: {from} → {to}.",
+      "lifted": "The sanction was lifted.",
+      "reasonValue": "Reason: {reason}",
+      "released": "{who} released the ticket.",
+      "took": "{who} took the ticket.",
+      "assigned": "{who} assigned the ticket to {to}.",
+      "openedBy": "opened by {name}, {date}",
+      "original": "Original message",
+      "thread": "Discussion",
+      "internalNote": "Internal note",
+      "handle": "Handle the ticket",
+      "yourTicket": "Your ticket",
+      "facts": "Details",
+      "server": "Server",
+      "admin": "Admin",
+      "player": "Player",
+      "sanction": "Sanction",
+      "sanctionLifted": "lifted",
+      "activity": "Last activity",
+      "evidence": "Evidence"
+    },
+    "ticketStatus": {
+      "saving": "Saving…"
+    },
+    "admins": {
+      "title": "Server admins",
+      "summary": "{online, plural, one {# admin online now} other {# admins online now}}, {seen} seen in the last 24 h, out of {total}.",
+      "serverFilter": "Server",
+      "allServers": "All servers",
+      "empty": "No server admins.",
+      "online": "Online",
+      "seen24h": "Seen today",
+      "seen7d": "Seen this week",
+      "inactive": "Inactive",
+      "away": "Away",
+      "allServersShort": "all servers",
+      "playingSince": "On {server}, joined {time}",
+      "playingOn": "On {server}",
+      "playtime24": "Played 24 h",
+      "playtime7": "Played 7 days",
+      "playtime30": "Played 30 days",
+      "actions": "Actions (7 / 30 days)",
+      "actionsValue": "{d7} / {d30}",
+      "tickets": "Tickets handled (30 days)",
+      "lastSeen": "Last seen",
+      "now": "now",
+      "never": "never"
+    },
+    "server": {
+      "top": "Server leaderboard",
+      "fullBoard": "Full leaderboard",
+      "rank": "Rank",
+      "player": "Player",
+      "kills": "Kills",
+      "kd": "K/D",
+      "playtime": "Playtime",
+      "matches": "Recent matches",
+      "allMatches": "All matches",
+      "gameAdmins": "In-game admins",
+      "allAdmins": "Presence",
+      "onlineSince": "online, joined {time}",
+      "onlineNow": "online now",
+      "lastSeen": "seen {time}",
+      "neverSeen": "not seen yet"
+    },
+    "widget": {
+      "empty": "No admin online right now.",
+      "since": "{server}, joined {time}",
+      "all": "All admins"
+    },
+    "gameAccounts": {
+      "title": "Game accounts",
+      "lead": "Your Steam identity links itself when you connect your Steam account. For a non-Steam ID or a name, generate a code and type it in the game chat.",
+      "type": "Type in the game chat:",
+      "expiresIn": "Valid for {minutes}:{seconds}. A new code cancels this one.",
+      "expired": "The code expired. Generate another one.",
+      "how": "The code is valid for 10 minutes and works once: type {command} CODE in the game chat.",
+      "generate": "Generate a code",
+      "regenerate": "Generate another code",
+      "none": "No game identity linked.",
+      "source": {
+        "STEAM": "linked through the Steam account",
+        "CODE": "linked with a code",
+        "STAFF": "linked by staff"
+      },
+      "steamHint": "Unlinks together with the Steam account (above).",
+      "unlink": "Unlink"
+    }
   }
 }

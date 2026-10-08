@@ -1,13 +1,13 @@
 "use client";
 
-import { faRightToBracket } from "@fortawesome/free-solid-svg-icons";
+import { faRightToBracket, faUserShield } from "@fortawesome/free-solid-svg-icons";
 import { GcsIconSvg } from "@gcs/ui";
 import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
 import type { CSSProperties } from "react";
 import { GcsCopyAddressButton, GcsServerAddress } from "./GcsServerAddress";
 import { serverState, useServerStatus, useServerStatuses } from "./GcsServerLive";
-import { fillPercent, type GcsServerCardData } from "./types";
+import { fillPercent, isBridgeGameKey, mapImageHref, type GcsServerCardData } from "./types";
 
 /** Eticheta de status de pe banner: punctul și textul (culoarea nu e niciodată singură). */
 export function GcsServerStatusBadge({ state }: { state: "online" | "offline" | "unknown" }) {
@@ -40,16 +40,35 @@ export function GcsServerBar({ status, thin = false }: { status: GcsServerCardDa
   );
 }
 
-/** Bannerul: imaginea încărcată sau degradeul jocului, cu eticheta jocului (și statusul, pe carduri). */
-export function GcsServerBanner({ server, hero = false, state }: { server: GcsServerCardData; hero?: boolean; state?: "online" | "offline" | "unknown" }) {
+/** „Admin online” (cu numărul, peste unul): adminii recunoscuți acum pe server, din lista ultimului heartbeat. */
+export function GcsServerAdminsOnline({ count }: { count: number }) {
+  const t = useTranslations("servers");
+  if (count <= 0) return null;
   return (
-    <div className={`gcs-serverBanner${hero ? " gcs-serverBanner--hero" : ""}`} style={{ "--gcs-server-banner": server.bannerGradient } as CSSProperties}>
+    <span className="gcs-serverAdminOnline" data-testid="gcs-server-admin-online">
+      <GcsIconSvg icon={faUserShield} />
+      {t("adminsOnline", { count })}
+    </span>
+  );
+}
+
+/**
+ * Bannerul: imaginea încărcată, altfel (la jocurile cu punte) imaginea hărții curente — încărcată în ACP sau arta
+ * generică originală — și, în lipsa ei, degradeul jocului; eticheta jocului (și statusul, pe carduri) stau peste el.
+ */
+export function GcsServerBanner({ server, hero = false, state }: { server: GcsServerCardData; hero?: boolean; state?: "online" | "offline" | "unknown" }) {
+  const status = useServerStatus(server.id, server.status);
+  const map = !server.bannerUrl && isBridgeGameKey(server.game) && status?.online && status.map ? status.map : null;
+  return (
+    <div className={`gcs-serverBanner${hero ? " gcs-serverBanner--hero" : ""}${map ? " gcs-serverBanner--map" : ""}`} style={{ "--gcs-server-banner": server.bannerGradient } as CSSProperties}>
       {server.bannerUrl && <img className="gcs-serverBanner__img" src={server.bannerUrl} alt="" loading={hero ? "eager" : "lazy"} />}
+      {map && <img key={map} className="gcs-serverBanner__img" src={mapImageHref(server.game, map)} alt="" loading={hero ? "eager" : "lazy"} data-testid="gcs-server-map-image" />}
       <span className="gcs-serverGame">
         {server.gameIcon && <GcsIconSvg icon={server.gameIcon} />}
         {server.gameName}
       </span>
       {state && <GcsServerStatusBadge state={state} />}
+      {!hero && <GcsServerAdminsOnline count={server.adminsOnline} />}
     </div>
   );
 }
@@ -142,6 +161,7 @@ export function GcsServerHeadStatus({ server }: { server: GcsServerCardData }) {
           {status.ping !== null && <span>{t("pingValue", { ms: status.ping })}</span>}
         </>
       )}
+      <GcsServerAdminsOnline count={server.adminsOnline} />
     </p>
   );
 }

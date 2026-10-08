@@ -15,7 +15,10 @@ import { GcsServerChart } from "../../_components/servers/GcsServerChart";
 import { GcsServerBanner, GcsServerHeadStatus } from "../../_components/servers/GcsServerGrid";
 import { GcsServerLiveProvider } from "../../_components/servers/GcsServerLive";
 import { GcsServerPlayers } from "../../_components/servers/GcsServerPlayers";
-import { serverHref } from "../../_components/servers/types";
+import { GcsPlayerLink, playtimeText } from "../../_components/servers/GcsBridgeBits";
+import { GcsMatchBoard } from "../../_components/servers/GcsMatchBoard";
+import { GcsMatchRows } from "../../_components/servers/GcsMatchRows";
+import { isBridgeGameKey, mapImageHref, serverHref } from "../../_components/servers/types";
 
 type Props = { params: Promise<{ ref: string }>; searchParams: Promise<{ range?: string }> };
 
@@ -44,9 +47,27 @@ export default async function ServerPage({ params, searchParams }: Props) {
   if (!server) notFound();
   if (ref !== `${server.id}-${server.slug}`) permanentRedirect(`${serverHref(server)}${sp.range ? `?range=${encodeURIComponent(sp.range)}` : ""}`);
   const range: GcsHistoryRange = GCS_HISTORY_RANGES.includes(sp.range as GcsHistoryRange) ? (sp.range as GcsHistoryRange) : "24h";
-  const { serverQueries, settings } = services();
-  const [t, format, history, interval] = await Promise.all([getTranslations("servers"), getFormatter(), serverQueries.history(server.id, range), settings.get<number>(POLL_INTERVAL_SETTING)]);
-  const card = cardData(server);
+  const { serverQueries, settings, bridge } = services();
+  const actor = await currentActor();
+  const bridgeGame = isBridgeGameKey(server.game.key);
+  const [t, tb, td, format, history, interval, counts, live, board, matches, gameAdmins] = await Promise.all([
+    getTranslations("servers"),
+    getTranslations("bridge.server"),
+    getTranslations("bridge.duration"),
+    getFormatter(),
+    serverQueries.history(server.id, range),
+    settings.get<number>(POLL_INTERVAL_SETTING),
+    // Puntea (jocurile cu pluginuri): adminii online, meciul live, clasamentul, meciurile recente, adminii din joc.
+    bridgeGame ? bridge.queries.adminsOnlineCounts(actor, [server.id]) : Promise.resolve(new Map<number, number>()),
+    bridgeGame ? bridge.queries.liveMatch(actor, server.id) : Promise.resolve(null),
+    bridgeGame ? bridge.queries.leaderboard(actor, server.id, 1) : Promise.resolve(null),
+    bridgeGame ? bridge.queries.matches(actor, { serverId: server.id }) : Promise.resolve(null),
+    bridgeGame ? bridge.queries.serverAdmins(actor, server.id) : Promise.resolve(null),
+  ]);
+  const card = cardData(server, counts.get(server.id) ?? 0);
+  const top = board?.items.slice(0, 10) ?? [];
+  const recent = matches?.items.slice(0, 5) ?? [];
+  const admins = [...(gameAdmins ?? [])].sort((a, b) => Number(b.online !== null) - Number(a.online !== null) || (b.lastSeenAt ?? "").localeCompare(a.lastSeenAt ?? "")).slice(0, 12);
   const pct = (v: number | null) => (v === null ? t("facts.none") : format.number(v, { style: "percent", maximumFractionDigits: 1 }));
   const uptimeRange = range === "24h" ? server.uptime.d1 : range === "7d" ? server.uptime.d7 : server.uptime.d30;
   const rangeHref = (r: GcsHistoryRange) => (r === "24h" ? serverHref(server) : `${serverHref(server)}?range=${r}`);
@@ -125,6 +146,65 @@ export default async function ServerPage({ params, searchParams }: Props) {
             </dl>
           </section>
 
+          {bridgeGame && <GcsMatchBoard initial={live} game={server.game.key} server={{ id: server.id, name: server.name, href: serverHref(server) }} mode="server" />}
+
+          {top.length > 0 && (
+            <section className="gcs-card gcs-titledBox gcs-statBox" aria-labelledby="gcs-server-board">
+              <div className="gcs-titleBand gcs-serverBox__head">
+                <h2 id="gcs-server-board" className="gcs-display gcs-serverBox__title">
+                  <GcsIcon name="fa-solid fa-ranking-star" className="gcs-hIcon" />
+                  {tb("top")}
+                </h2>
+                <Link href={`/servers/leaderboard?server=${server.id}`} className="gcs-statBox__more">
+                  {tb("fullBoard")}
+                </Link>
+              </div>
+              <div className="gcs-dataScroll">
+                <table className="gcs-dataTable" data-testid="gcs-server-board">
+                  <thead>
+                    <tr>
+                      <th scope="col">{tb("rank")}</th>
+                      <th scope="col">{tb("player")}</th>
+                      <th scope="col">{tb("kills")}</th>
+                      <th scope="col">{tb("kd")}</th>
+                      <th scope="col">{tb("playtime")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {top.map((r) => (
+                      <tr key={r.player.id}>
+                        <td className="gcs-board__rank" data-medal={r.rank <= 3 ? r.rank : undefined}>
+                          {r.rank}
+                        </td>
+                        <th scope="row">
+                          <GcsPlayerLink player={r.player} />
+                        </th>
+                        <td>{format.number(r.kills)}</td>
+                        <td>{format.number(r.kd, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td>{playtimeText(r.playtime, td)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+
+          {recent.length > 0 && (
+            <section className="gcs-card gcs-titledBox gcs-statBox" aria-labelledby="gcs-server-matches">
+              <div className="gcs-titleBand gcs-serverBox__head">
+                <h2 id="gcs-server-matches" className="gcs-display gcs-serverBox__title">
+                  <GcsIcon name="fa-solid fa-crosshairs" className="gcs-hIcon" />
+                  {tb("matches")}
+                </h2>
+                <Link href={`/servers/matches?server=${server.id}`} className="gcs-statBox__more">
+                  {tb("allMatches")}
+                </Link>
+              </div>
+              <GcsMatchRows matches={recent} showServer={false} />
+            </section>
+          )}
+
           <section className="gcs-card gcs-titledBox" aria-labelledby="gcs-server-about" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <h2 id="gcs-server-about" className="gcs-display gcs-titleBand gcs-serverBox__title">
               <GcsIcon name="fa-solid fa-circle-info" className="gcs-hIcon" />
@@ -193,6 +273,37 @@ export default async function ServerPage({ params, searchParams }: Props) {
             )}
           </section>
 
+          {admins.length > 0 && (
+            <section className="gcs-card gcs-titledBox" aria-labelledby="gcs-server-game-admins" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div className="gcs-titleBand gcs-serverBox__head">
+                <h2 id="gcs-server-game-admins" className="gcs-display gcs-serverBox__title">
+                  <GcsIcon name="fa-solid fa-shield-halved" className="gcs-hIcon" />
+                  {tb("gameAdmins")}
+                </h2>
+                <Link href={`/servers/admins?server=${server.id}`} className="gcs-statBox__more">
+                  {tb("allAdmins")}
+                </Link>
+              </div>
+              <ul className="gcs-adminRows" data-testid="gcs-server-game-admins">
+                {admins.map((a) => (
+                  <li key={a.id} className="gcs-adminRow" data-state={a.online ? "online" : "away"}>
+                    <span className="gcs-dot" aria-hidden="true" />
+                    <span className="gcs-adminRow__name">{a.user ? <Link href={memberHref(a.user)}>{a.name}</Link> : a.name}</span>
+                    <span className="gcs-adminRow__meta">
+                      {a.online && a.online.serverId === server.id
+                        ? a.online.since
+                          ? tb("onlineSince", { time: format.relativeTime(new Date(a.online.since)) })
+                          : tb("onlineNow")
+                        : a.lastSeenAt
+                          ? tb("lastSeen", { time: format.relativeTime(new Date(a.lastSeenAt)) })
+                          : tb("neverSeen")}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           {server.game.hasMap && (
             <section className="gcs-card gcs-titledBox" aria-labelledby="gcs-server-maps" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <h2 id="gcs-server-maps" className="gcs-display gcs-titleBand gcs-serverBox__title">
@@ -205,7 +316,10 @@ export default async function ServerPage({ params, searchParams }: Props) {
                 <ul className="gcs-serverMaps" data-testid="gcs-server-maps">
                   {server.maps.map((m, i) => (
                     <li key={`${m.from}-${m.map}`}>
-                      <span>{m.map}</span>
+                      <span className="gcs-serverMaps__name">
+                        {bridgeGame && <img className="gcs-serverMaps__thumb" src={mapImageHref(server.game.key, m.map)} alt="" loading="lazy" />}
+                        {m.map}
+                      </span>
                       <span>
                         {time(m.from)}–{i === 0 && server.status?.online && server.status.map === m.map ? t("mapNow") : time(m.to)}
                       </span>

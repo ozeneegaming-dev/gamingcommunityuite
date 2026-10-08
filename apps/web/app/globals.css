@@ -24,6 +24,7 @@
 @import "@gcs/ui/richtext.css";
 @import "@gcs/ui/servers.css";
 @import "@gcs/ui/clans.css";
+@import "@gcs/ui/gameplay.css";
 /* Ultimul: banda titlurilor (fiecare titlu pe fundalul lui) peste regulile componentelor. */
 @import "@gcs/ui/titles.css";
 

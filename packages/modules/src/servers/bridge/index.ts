@@ -205,7 +205,7 @@ export { BRIDGE_PERMISSION, BRIDGE_SETTING, BRIDGE_SETTING_DEFS, BRIDGE_SETTINGS
 export { mapArtSvg } from "./mapArt";
 export { BRIDGE_BASE_PATH, signBridgeRequest } from "./signing";
 export type { GcsBridgeHttpRequest, GcsBridgeHttpResponse } from "./api";
-export { BRIDGE_MAX_BODY } from "./api";
+export { BRIDGE_MAX_BODY, LINK_COMMAND } from "./api";
 export { GCS_ADMIN_FLAGS, FLAG_CSS, normalizeFlags, cssPermissions } from "./flags";
 export { generateAdminPassword, ADMIN_PASSWORD_MIN, type GcsServerAdminInput, type GcsServerAdminRow, type GcsAdminPresetView } from "./admins";
 export type { GcsMapRow } from "./maps";
