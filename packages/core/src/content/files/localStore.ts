@@ -1,5 +1,5 @@
 import { createReadStream } from "node:fs";
-import { mkdir, rm, stat, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { Readable } from "node:stream";
 import type { GcsByteRange, GcsFileStore, GcsStoredFile } from "./store";
@@ -23,6 +23,12 @@ export class GcsLocalFileStore implements GcsFileStore {
     const full = this.file(key);
     await mkdir(path.dirname(full), { recursive: true });
     await writeFile(full, body);
+  }
+
+  async putFile(key: string, filePath: string): Promise<void> {
+    const full = this.file(key);
+    await mkdir(path.dirname(full), { recursive: true });
+    await copyFile(filePath, full);
   }
 
   async get(key: string, range?: GcsByteRange): Promise<GcsStoredFile | null> {
