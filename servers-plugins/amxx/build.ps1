@@ -1,4 +1,4 @@
-# GCS Server Bridge — compilarea pluginului AMX Mod X (Windows).
+﻿# GCS Server Bridge — compilarea pluginului AMX Mod X (Windows).
 # Rulează doar dacă găsește compilatorul (amxxpc.exe) din pachetul oficial AMX Mod X; nu descarcă nimic.
 #   .\build.ps1 -Compiler "C:\amxmodx\addons\amxmodx\scripting\amxxpc.exe" [-Includes "C:\easy_http","C:\reapi"]
 # -Includes (sau AMXX_INCLUDES) primește unul sau mai multe foldere de include-uri (listă sau separate prin „;”).
