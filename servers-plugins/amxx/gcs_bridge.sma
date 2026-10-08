@@ -1,10 +1,19 @@
 /*
  * GCS Server Bridge — pluginul AMX Mod X pentru Counter-Strike 1.6 (GamingCommunitySuite).
  *
- * Vorbește protocolul v1 al punții (specul 2026-10-08-servere-bridge): heartbeat, evenimente (conectări, ucideri,
- * runde, focuri, acțiuni de admin, sancțiuni, meciuri mix), listele trase de la site (admini, sancțiuni, VIP),
- * verificarea la conectare și legarea identității cu `/gcs COD`. Listele se păstrează local: site-ul căzut nu oprește
- * adminii și nici bannurile. Evenimentele netrimise se salvează pe disc și se retrimit cu aceleași id-uri.
+ * Vorbește protocolul v1 al punții (specul 2026-10-08-servere-bridge și 2026-10-08-servere-plugin-v2).
+ *
+ * Implicit pluginul DOAR COLECTEAZĂ DATE: heartbeat (harta, jucătorii și flag-urile lor de admin, citite din sistemul
+ * de admini al serverului), evenimente (conectări, ucideri, runde, focuri, scorul echipelor), meciurile mix detectate
+ * pasiv pe serverele marcate „mix” și legarea identității cu `/gcs COD`. Nu scrie flag-uri, nu dă kick / mute / gag, nu
+ * rulează comenzi pe server și nu înregistrează comenzi de admin.
+ *
+ * Modulele opționale (oprite implicit, pornite din ACP pe fiecare server; `gcs_allow_manage 0` le ține oprite oricum):
+ * adminii din GCS, bannurile / mute / gag din GCS, VIP-ul din GCS, ready-up-ul mix și comenzile de admin GCS. Un modul
+ * oprit nu își înregistrează comenzile și nu își trage listele de la site.
+ *
+ * Fără cheie (pachetul general), pluginul se înrolează singur la site și primește cheia după aprobarea din ACP.
+ * Evenimentele netrimise se salvează pe disc și se retrimit cu aceleași id-uri.
  *
  * Cerințe: AMX Mod X 1.9 / 1.10 (nativele json_* și hash_string cu SHA-256), modulul AmxxEasyHttp (HTTPS asincron).
  * Opțional: ReAPI + Reunion (deosebesc clienții Steam de cei non-Steam).
@@ -35,9 +44,9 @@
 #pragma dynamic 262144
 
 #define PLUGIN      "GCS Server Bridge"
-#define VERSION     "1.0.0"
+#define VERSION     "1.1.0"
 #define AUTHOR      "GamingCommunitySuite"
-#define PLUGIN_ID   "gcs-amxx/1.0.0"
+#define PLUGIN_ID   "gcs-amxx/1.1.0"
 #define BASE_PATH   "/api/servers/bridge/v1"
 
 // Corpul unei cereri: nativele AMX Mod X (hash_string) și AmxxEasyHttp (set_body) citesc cel mult 16383 de caractere
@@ -50,6 +59,8 @@
 #define SANCTION_PAGE 100
 #define AUTH_LEN     40
 #define NAME_LEN     64
+// Meciul mix detectat pasiv: cel puțin atâția jucători în fiecare echipă.
+#define MIX_MIN_TEAM 2
 
 // Tipurile cererilor (datele utilizatorului din AmxxEasyHttp).
 enum
@@ -60,8 +71,24 @@ enum
 	REQ_VIP,
 	REQ_SANCTIONS,
 	REQ_CHECK,
-	REQ_LINK
+	REQ_LINK,
+	REQ_ENROLL,
+	REQ_ENROLL_STATUS
 };
+
+// Modulele opționale (specul plugin-v2 §1.2), oprite implicit: pluginul doar colectează date.
+enum
+{
+	FEAT_ADMINS = 0,
+	FEAT_SANCTIONS,
+	FEAT_VIP,
+	FEAT_MIXREADY,
+	FEAT_COMMANDS,
+	FEAT_COUNT
+};
+
+// Cheile modulelor în `config.features` (site) și în `modules` (heartbeat).
+new const g_featKeys[][] = { "admins", "sanctions", "vip", "mixReady", "commands" };
 
 // Identitatea locală a unui jucător (ca în GCS: Steam, non-Steam, nume).
 enum
@@ -123,13 +150,25 @@ enum
 
 // ─── Configurarea ────────────────────────────────────────────────────────────
 
-new g_cvarUrl, g_cvarKey, g_cvarPwField, g_cvarNameProtect, g_cvarAliases, g_cvarMixReady, g_cvarMixPlayers, g_cvarMixRounds, g_cvarDebug;
+new g_cvarUrl, g_cvarKey, g_cvarPwField, g_cvarNameProtect, g_cvarAliases, g_cvarMixPlayers, g_cvarMixRounds, g_cvarDebug, g_cvarAllowManage;
 new g_url[192], g_keyId[13], g_signKey[65];
 new bool:g_configured;
 new g_offset;                 // ceasul GCS − ceasul local (secunde)
 new g_heartbeat = 30, g_eventsInterval = 10;
 new g_identityMode[8] = "mixed";
 new bool:g_nameIds;
+new bool:g_isMix;
+
+// ─── Modulele opționale ─────────────────────────────────────────────────────
+
+new bool:g_siteFeat[FEAT_COUNT];     // cum le-a trimis site-ul (salvate local, pentru pornirea următoare)
+new bool:g_registered[FEAT_COUNT];   // comenzile înregistrate în harta curentă
+
+// ─── Înrolarea (fără cheie) ─────────────────────────────────────────────────
+
+new g_enrollSecret[65], g_enrollRef[32];
+new bool:g_enrolling, bool:g_enrollBusy, bool:g_enrollAnnounced;
+new g_enrollNextAt, g_enrollBackoff;
 
 // ─── Starea ──────────────────────────────────────────────────────────────────
 
@@ -144,7 +183,7 @@ new g_dataDir[128];
 
 // ─── Jucătorii ──────────────────────────────────────────────────────────────
 
-new g_auth[33][AUTH_LEN], g_steam[33], g_kind[33], g_userid[33];
+new g_auth[33][AUTH_LEN], g_steam[33], g_kind[33], g_userid[33], g_vipAdded[33];
 new bool:g_muted[33], bool:g_gagged[33], g_adminId[33], bool:g_linkedChecked[33];
 new g_shots[33][CSW_P90 + 1], g_hits[33][CSW_P90 + 1], g_damage[33][CSW_P90 + 1], g_hs[33][CSW_P90 + 1];
 new g_clipBefore[33];
@@ -155,6 +194,10 @@ new g_matchTeam[33];          // 'A' / 'B' / 0
 
 new g_mixState, g_mixId[40], g_scoreA, g_scoreB, g_mixRound, g_sideA = 2;  // CS_TEAM_CT = 2
 new bool:g_ready[33];
+// Meciul condus de GCS (ready-up / gcs_match: restart, schimbarea părților) sau de alt plugin (nativele): detectarea
+// pasivă stă deoparte până la harta următoare.
+new bool:g_mixDriven, bool:g_mixManual, bool:g_pendingStart, bool:g_mixSwapped;
+new g_teamCT, g_teamT;
 new g_fwdMatchState, g_fwdLinked;
 
 public plugin_init()
@@ -166,10 +209,10 @@ public plugin_init()
 	g_cvarPwField = register_cvar("gcs_password_field", "_pw");
 	g_cvarNameProtect = register_cvar("gcs_name_protect", "1");
 	g_cvarAliases = register_cvar("gcs_amx_aliases", "1");
-	g_cvarMixReady = register_cvar("gcs_mix_ready", "0");
 	g_cvarMixPlayers = register_cvar("gcs_mix_players", "10");
 	g_cvarMixRounds = register_cvar("gcs_mix_maxrounds", "30");
 	g_cvarDebug = register_cvar("gcs_debug", "0");
+	g_cvarAllowManage = register_cvar("gcs_allow_manage", "1");
 
 	g_queue = ArrayCreate(ITEM);
 	g_admins = ArrayCreate(AdminEntry);
@@ -181,6 +224,10 @@ public plugin_init()
 	register_event("SendAudio", "ev_win_t", "a", "2&%!MRAD_terwin");
 	register_event("SendAudio", "ev_win_ct", "a", "2&%!MRAD_ctwin");
 	register_event("SendAudio", "ev_win_draw", "a", "2&%!MRAD_rounddraw");
+	// Scorul echipelor și meciurile mix detectate pasiv (restartul jocului, începutul rundei).
+	register_event("TeamScore", "ev_team_score", "a");
+	register_event("TextMsg", "ev_game_restart", "a", "2&#Game_C", "2&#Game_w");
+	register_event("HLTV", "ev_new_round", "a", "1=0", "2=0");
 
 	// Focurile: înainte și după atacul principal al fiecărei arme de foc (încărcătorul scade = foc tras).
 	new name[32];
@@ -192,25 +239,10 @@ public plugin_init()
 		RegisterHam(Ham_Weapon_PrimaryAttack, name, "ham_attack_post", 1);
 	}
 
+	// `say /gcs COD` (legarea contului) rămâne în modul colector; restul comenzilor sunt ale modulului „commands”
+	// (`register_feature`), înregistrate doar când e pornit.
 	register_clcmd("say", "cmd_say");
 	register_clcmd("say_team", "cmd_say");
-
-	register_concmd("gcs_ban", "cmd_ban", ADMIN_BAN | ADMIN_BAN_TEMP, "<nume|#userid|authid> <minute> [motiv] — ban pe acest server");
-	register_concmd("gcs_gban", "cmd_ban", ADMIN_BAN | ADMIN_BAN_TEMP, "<nume|#userid|authid> <minute> [motiv] — ban pe toate serverele");
-	register_concmd("gcs_unban", "cmd_unban", ADMIN_BAN, "<authid|ip> [motiv]");
-	register_concmd("gcs_mute", "cmd_comm", ADMIN_CHAT, "<nume|#userid> <minute> [motiv] — mute vocal");
-	register_concmd("gcs_gag", "cmd_comm", ADMIN_CHAT, "<nume|#userid> <minute> [motiv] — gag (chat)");
-	register_concmd("gcs_unmute", "cmd_uncomm", ADMIN_CHAT, "<nume|#userid> [motiv]");
-	register_concmd("gcs_ungag", "cmd_uncomm", ADMIN_CHAT, "<nume|#userid> [motiv]");
-	register_concmd("gcs_match", "cmd_match", ADMIN_CFG, "<start|live|halftime|end|abort> — meciul mix urmărit de GCS");
-	register_concmd("gcs_sync", "cmd_sync", ADMIN_RCON, "— trage acum listele de la site");
-	// Aliasurile clasice (cu `gcs_amx_aliases 1`); jurnalul acțiunilor pentru comenzile adminilor din AMX Mod X.
-	register_concmd("amx_ban", "cmd_amx_ban", ADMIN_BAN | ADMIN_BAN_TEMP, "<nume|#userid|authid> <minute> [motiv]");
-	register_concmd("amx_unban", "cmd_amx_unban", ADMIN_BAN, "<authid|ip>");
-	register_concmd("amx_kick", "log_kick", ADMIN_KICK);
-	register_concmd("amx_slay", "log_slay", ADMIN_SLAY);
-	register_concmd("amx_slap", "log_slap", ADMIN_SLAY);
-	register_concmd("amx_map", "log_map", ADMIN_MAP);
 
 	g_fwdMatchState = CreateMultiForward("gcs_on_match_state", ET_IGNORE, FP_STRING, FP_STRING, FP_CELL, FP_CELL);
 	g_fwdLinked = CreateMultiForward("gcs_on_player_linked", ET_IGNORE, FP_CELL, FP_STRING);
@@ -250,7 +282,19 @@ public plugin_cfg()
 	get_localinfo("amxx_configsdir", cfg, charsmax(cfg));
 	server_cmd("exec %s/gcs_bridge.cfg", cfg);
 	server_exec();
+	// Cheia primită prin înrolare (gcs_bridge_key.cfg), doar dacă gcs_bridge.cfg nu are una.
+	new key[8], path[192];
+	get_pcvar_string(g_cvarKey, key, charsmax(key));
+	formatex(path, charsmax(path), "%s/gcs_bridge_key.cfg", cfg);
+	if (!key[0] && file_exists(path))
+	{
+		server_cmd("exec %s", path);
+		server_exec();
+	}
+	load_features();
 	read_config();
+	if (g_enrolling) load_enroll();
+	apply_features();
 	load_queue();
 	load_lists();
 	set_task(1.0, "task_tick", _, _, _, "b");
@@ -259,6 +303,8 @@ public plugin_cfg()
 
 public plugin_end()
 {
+	// Meciul nu continuă pe harta următoare: unul deschis se anulează (fără ELO).
+	if (g_mixState == MIX_WARMUP || g_mixState == MIX_LIVE || g_mixState == MIX_HALFTIME) mix_command("abort", false);
 	save_queue();
 }
 
@@ -277,8 +323,17 @@ stock read_config()
 	strtok2(token, prefix, charsmax(prefix), rest, charsmax(rest), '.');
 	strtok2(rest, g_keyId, charsmax(g_keyId), secret, charsmax(secret), '.');
 	g_configured = equal(prefix, "gcs1") && strlen(g_keyId) == 12 && strlen(secret) == 43 && g_url[0] != EOS;
+	g_enrolling = false;
 	if (g_configured) hash_string(secret, Hash_Sha256, g_signKey, charsmax(g_signKey));
-	else log_amx("[GCS] Configurare incompletă: setează gcs_url și gcs_key în gcs_bridge.cfg.");
+	else if (g_url[0] && !token[0])
+	{
+		// Pachetul general: adresa fără cheie → înrolarea automată (aprobarea în ACP).
+		g_enrolling = true;
+		g_enrollNextAt = get_systime() + 10;
+	}
+	else if (g_url[0]) log_amx("[GCS] gcs_key nu are forma gcs1.<keyId>.<secret>: verifică gcs_bridge.cfg.");
+	else log_amx("[GCS] Configurare incompletă: setează gcs_url în gcs_bridge.cfg.");
+	if (equali(g_url, "http://", 7)) log_amx("[GCS] Atenție: adresa site-ului e http:// (fără TLS); folosește https://.");
 }
 
 // ─── Cererile semnate ───────────────────────────────────────────────────────
@@ -369,7 +424,8 @@ public on_response(EzHttpRequest:request)
 
 	if (ezhttp_get_error_code(request) != EZH_OK)
 	{
-		on_failure(kind, 0);
+		if (kind == REQ_ENROLL || kind == REQ_ENROLL_STATUS) on_enroll(kind, 0, Invalid_JSON, "network");
+		else on_failure(kind, 0);
 		return;
 	}
 	new code = ezhttp_get_http_code(request);
@@ -393,6 +449,13 @@ public on_response(EzHttpRequest:request)
 	}
 	new error[32];
 	if (root != Invalid_JSON && json_object_has_value(root, "error", JSONString)) json_object_get_string(root, "error", error, charsmax(error));
+
+	if (kind == REQ_ENROLL || kind == REQ_ENROLL_STATUS)
+	{
+		on_enroll(kind, code, root, error);
+		if (root != Invalid_JSON) json_free(root);
+		return;
+	}
 
 	if (code == 200 || code == 304)
 	{
@@ -481,11 +544,17 @@ stock remove_front(count)
 
 public task_tick()
 {
-	if (!g_configured) return;
 	new now = get_systime();
+	if (g_enrolling)
+	{
+		enroll_tick(now);
+		return;
+	}
+	if (!g_configured) return;
 	if (!g_inflight && queue_size() > 0 && now >= g_nextSendAt && (queue_size() >= BATCH || now - g_lastEventsAt >= g_eventsInterval)) send_events();
-	// O tragere completă a listelor o dată la 10 minute (și la versiuni noi, din heartbeat).
-	if (now - g_lastPull >= 600) pull_lists(true);
+	// Modulele cu liste (admini, VIP, sancțiuni): o tragere completă o dată la 10 minute (și la versiuni noi, din
+	// heartbeat). Colectorul nu trage nimic.
+	if (now - g_lastPull >= 600 && (feat(FEAT_ADMINS) || feat(FEAT_VIP) || feat(FEAT_SANCTIONS))) pull_lists(true);
 }
 
 public task_heartbeat()
@@ -543,11 +612,19 @@ stock send_heartbeat()
 		json_object_set_string(ref, "team", code);
 		json_object_set_number(ref, "score", get_user_frags(id));
 		json_object_set_number(ref, "time", get_user_time(id, 1));
+		set_admin_flags(ref, id);
 		json_array_append_value(players, ref);
 		json_free(ref);
 	}
 	json_object_set_value(root, "players", players);
 	json_free(players);
+	// Modulele active pe server și scorul echipelor (afișate în ACP).
+	new JSON:modules = json_init_array();
+	for (new f = 0; f < FEAT_COUNT; f++) if (feat(f)) json_array_append_string(modules, g_featKeys[f]);
+	json_object_set_value(root, "modules", modules);
+	json_free(modules);
+	json_object_set_number(root, "scores.ct", g_teamCT, true);
+	json_object_set_number(root, "scores.t", g_teamT, true);
 	if (g_mixState == MIX_WARMUP || g_mixState == MIX_LIVE || g_mixState == MIX_HALFTIME)
 	{
 		new JSON:match = match_state();
@@ -573,18 +650,41 @@ stock on_heartbeat(JSON:root)
 		g_eventsInterval = clamp(json_object_get_number(config, "events"), 5, 60);
 		json_object_get_string(config, "identityMode", g_identityMode, charsmax(g_identityMode));
 		g_nameIds = json_object_get_bool(config, "nameIds");
+		g_isMix = json_object_get_bool(config, "isMix");
+		new JSON:features = json_object_get_value(config, "features");
+		if (features != Invalid_JSON)
+		{
+			new bool:before[FEAT_COUNT], bool:changed = false;
+			for (new f = 0; f < FEAT_COUNT; f++)
+			{
+				before[f] = feat(f);
+				new bool:value = json_object_get_bool(features, g_featKeys[f]);
+				if (value != g_siteFeat[f])
+				{
+					g_siteFeat[f] = value;
+					changed = true;
+				}
+			}
+			json_free(features);
+			if (changed)
+			{
+				save_features();
+				features_changed(before);
+			}
+		}
 		json_free(config);
 	}
 	new JSON:versions = json_object_get_value(root, "versions");
 	if (versions != Invalid_JSON)
 	{
+		// Doar listele modulelor pornite.
 		new etag[33];
 		json_object_get_string(versions, "admins", etag, charsmax(etag));
-		if (!equal(etag, g_etagAdmins)) bridge_request("GET", "/admins", "", REQ_ADMINS);
+		if (feat(FEAT_ADMINS) && !equal(etag, g_etagAdmins)) bridge_request("GET", "/admins", "", REQ_ADMINS);
 		json_object_get_string(versions, "vip", etag, charsmax(etag));
-		if (!equal(etag, g_etagVip)) bridge_request("GET", "/vip", "", REQ_VIP);
+		if (feat(FEAT_VIP) && !equal(etag, g_etagVip)) bridge_request("GET", "/vip", "", REQ_VIP);
 		g_remoteSanctions = json_object_get_number(versions, "sanctions");
-		if (g_remoteSanctions != g_cursor) pull_sanctions();
+		if (feat(FEAT_SANCTIONS) && g_remoteSanctions != g_cursor) pull_sanctions();
 		json_free(versions);
 	}
 }
@@ -592,9 +692,121 @@ stock on_heartbeat(JSON:root)
 stock pull_lists(bool:all)
 {
 	g_lastPull = get_systime();
-	bridge_request("GET", "/admins", "", REQ_ADMINS);
-	bridge_request("GET", "/vip", "", REQ_VIP);
-	if (all) pull_sanctions();
+	if (feat(FEAT_ADMINS)) bridge_request("GET", "/admins", "", REQ_ADMINS);
+	if (feat(FEAT_VIP)) bridge_request("GET", "/vip", "", REQ_VIP);
+	if (all && feat(FEAT_SANCTIONS)) pull_sanctions();
+}
+
+// ─── Modulele opționale (specul plugin-v2 §1.2) ─────────────────────────────
+
+/** Modulul e pornit: pe site și cu acordul local (`gcs_allow_manage`). */
+stock bool:feat(f)
+{
+	return g_siteFeat[f] && get_pcvar_num(g_cvarAllowManage) != 0;
+}
+
+stock features_path(path[], len)
+{
+	formatex(path, len, "%s/gcs_bridge_features.json", g_dataDir);
+}
+
+/** Modulele primite ultima dată de la site: pornirea următoare înregistrează direct ce e pornit. */
+stock load_features()
+{
+	new path[192];
+	features_path(path, charsmax(path));
+	new JSON:root = file_exists(path) ? json_parse(path, true) : Invalid_JSON;
+	if (root == Invalid_JSON) return;
+	for (new f = 0; f < FEAT_COUNT; f++) g_siteFeat[f] = json_object_get_bool(root, g_featKeys[f]);
+	json_free(root);
+}
+
+stock save_features()
+{
+	new JSON:root = json_init_object();
+	for (new f = 0; f < FEAT_COUNT; f++) json_object_set_bool(root, g_featKeys[f], g_siteFeat[f]);
+	new path[192];
+	features_path(path, charsmax(path));
+	json_serial_to_file(root, path);
+	json_free(root);
+}
+
+stock apply_features()
+{
+	for (new f = 0; f < FEAT_COUNT; f++) register_feature(f);
+}
+
+/**
+ * Comenzile unui modul pornit (o dată pe hartă). Doar modulul „commands” are comenzi proprii; celelalte lucrează prin
+ * hook-urile comune (conectarea, chat-ul), care verifică modulul la fiecare apel. Un modul oprit în timpul hărții devine
+ * inert imediat (comenzile lui nu mai fac nimic) și dispare la harta următoare.
+ */
+stock register_feature(f)
+{
+	if (g_registered[f] || !feat(f)) return;
+	g_registered[f] = true;
+	if (f != FEAT_COMMANDS) return;
+	register_concmd("gcs_ban", "cmd_ban", ADMIN_BAN | ADMIN_BAN_TEMP, "<nume|#userid|authid> <minute> [motiv] — ban pe acest server");
+	register_concmd("gcs_gban", "cmd_ban", ADMIN_BAN | ADMIN_BAN_TEMP, "<nume|#userid|authid> <minute> [motiv] — ban pe toate serverele");
+	register_concmd("gcs_unban", "cmd_unban", ADMIN_BAN, "<authid|ip> [motiv]");
+	register_concmd("gcs_mute", "cmd_comm", ADMIN_CHAT, "<nume|#userid> <minute> [motiv] — mute vocal");
+	register_concmd("gcs_gag", "cmd_comm", ADMIN_CHAT, "<nume|#userid> <minute> [motiv] — gag (chat)");
+	register_concmd("gcs_unmute", "cmd_uncomm", ADMIN_CHAT, "<nume|#userid> [motiv]");
+	register_concmd("gcs_ungag", "cmd_uncomm", ADMIN_CHAT, "<nume|#userid> [motiv]");
+	register_concmd("gcs_match", "cmd_match", ADMIN_CFG, "<start|live|halftime|end|abort> — meciul mix urmărit de GCS");
+	register_concmd("gcs_sync", "cmd_sync", ADMIN_RCON, "— trage acum listele de la site");
+	// Aliasurile clasice (cu `gcs_amx_aliases 1`); jurnalul acțiunilor pentru comenzile adminilor din AMX Mod X.
+	register_concmd("amx_ban", "cmd_amx_ban", ADMIN_BAN | ADMIN_BAN_TEMP, "<nume|#userid|authid> <minute> [motiv]");
+	register_concmd("amx_unban", "cmd_amx_unban", ADMIN_BAN, "<authid|ip>");
+	register_concmd("amx_kick", "log_kick", ADMIN_KICK);
+	register_concmd("amx_slay", "log_slay", ADMIN_SLAY);
+	register_concmd("amx_slap", "log_slap", ADMIN_SLAY);
+	register_concmd("amx_map", "log_map", ADMIN_MAP);
+}
+
+/** Modulele s-au schimbat pe site: ce s-a oprit nu mai atinge nimic, ce s-a pornit își trage listele acum. */
+stock features_changed(const bool:before[])
+{
+	apply_features();
+	if (before[FEAT_ADMINS] && !feat(FEAT_ADMINS))
+	{
+		// Adminii revin la sistemul serverului (users.ini): AMX Mod X îi reîncarcă pentru toți jucătorii.
+		for (new id = 1; id <= MaxClients; id++)
+		{
+			g_adminId[id] = 0;
+			g_vipAdded[id] = 0;
+		}
+		server_cmd("amx_reloadadmins");
+	}
+	else if (before[FEAT_VIP] && !feat(FEAT_VIP) && !feat(FEAT_ADMINS))
+	{
+		// Doar flag-urile adăugate de GCS dispar.
+		for (new id = 1; id <= MaxClients; id++)
+		{
+			if (is_user_connected(id) && g_vipAdded[id]) remove_user_flags(id, g_vipAdded[id]);
+			g_vipAdded[id] = 0;
+		}
+	}
+	if (before[FEAT_SANCTIONS] && !feat(FEAT_SANCTIONS))
+	{
+		for (new id = 1; id <= MaxClients; id++) if (is_user_connected(id) && (g_muted[id] || g_gagged[id])) set_comm(id, false, false);
+	}
+	new bool:pull = false;
+	for (new f = FEAT_ADMINS; f <= FEAT_VIP; f++) if (!before[f] && feat(f)) pull = true;
+	if (pull)
+	{
+		g_etagAdmins[0] = EOS;
+		g_etagVip[0] = EOS;
+		pull_lists(true);
+	}
+}
+
+/** Flag-urile de admin actuale ale jucătorului, din sistemul serverului (doar citite; fără `z`). */
+stock set_admin_flags(JSON:ref, id)
+{
+	new letters[32];
+	get_flags(get_user_flags(id) & ~ADMIN_USER, letters, charsmax(letters));
+	if (letters[0]) json_object_set_string(ref, "flags", letters);
 }
 
 stock pull_sanctions()
@@ -609,6 +821,7 @@ stock pull_sanctions()
 
 public cmd_sync(id, level, cid)
 {
+	if (!feat(FEAT_COMMANDS)) return PLUGIN_CONTINUE;
 	if (!cmd_access(id, level, cid, 1)) return PLUGIN_HANDLED;
 	g_etagAdmins[0] = EOS;
 	g_etagVip[0] = EOS;
@@ -863,7 +1076,7 @@ stock on_admins(JSON:root)
 	list_path("admins", path, charsmax(path));
 	json_serial_to_file(list, path);
 	json_free(list);
-	for (new id = 1; id <= MaxClients; id++) if (is_user_connected(id)) apply_rights(id);
+	if (feat(FEAT_ADMINS) || feat(FEAT_VIP)) for (new id = 1; id <= MaxClients; id++) if (is_user_connected(id)) apply_rights(id);
 }
 
 stock load_admins(JSON:list)
@@ -902,7 +1115,7 @@ stock on_vip(JSON:root)
 	list_path("vip", path, charsmax(path));
 	json_serial_to_file(list, path);
 	json_free(list);
-	for (new id = 1; id <= MaxClients; id++) if (is_user_connected(id)) apply_rights(id);
+	if (feat(FEAT_ADMINS) || feat(FEAT_VIP)) for (new id = 1; id <= MaxClients; id++) if (is_user_connected(id)) apply_rights(id);
 }
 
 stock load_vip(JSON:list)
@@ -1006,7 +1219,7 @@ stock on_sanctions(JSON:root)
 		if (entry[SE_Id] < 0 && -entry[SE_Id] <= g_removedAtPull) ArrayDeleteItem(g_sanctions, i);
 	}
 	save_sanctions();
-	for (new id = 1; id <= MaxClients; id++) if (is_user_connected(id)) apply_sanctions(id);
+	if (feat(FEAT_SANCTIONS)) for (new id = 1; id <= MaxClients; id++) if (is_user_connected(id)) apply_sanctions(id);
 }
 
 stock save_sanctions()
@@ -1098,13 +1311,19 @@ stock bool:expired(expires)
 	return expires > 0 && expires <= gcs_now();
 }
 
-/** Drepturile din liste: adminii (identitate) și VIP-ul; fără nimic, utilizator simplu (`z`). */
+/**
+ * Drepturile din liste. Cu modulul „admins”: adminii (identitate) și VIP-ul înlocuiesc drepturile jucătorului; fără nimic,
+ * utilizator simplu (`z`). Doar cu „vip”: flag-urile VIP se adaugă peste drepturile serverului, iar la schimbare se scot
+ * doar cele adăugate de GCS. Fără niciunul, nimic nu se atinge.
+ */
 stock apply_rights(id)
 {
 	if (is_user_bot(id) || is_user_hltv(id)) return;
-	new flags = 0, entry[AdminEntry], vip[VipEntry];
+	new bool:admins = feat(FEAT_ADMINS), bool:vipOn = feat(FEAT_VIP);
+	if (!admins && !vipOn) return;
+	new flags = 0, vipFlags = 0, entry[AdminEntry], vip[VipEntry];
 	g_adminId[id] = g_adminId[id] < 0 ? g_adminId[id] : 0;
-	for (new i = 0, n = ArraySize(g_admins); i < n; i++)
+	for (new i = 0, n = admins ? ArraySize(g_admins) : 0; i < n; i++)
 	{
 		ArrayGetArray(g_admins, i, entry);
 		if (expired(entry[AE_Expires]) || entry[AE_Kind] == KIND_NAME) continue;
@@ -1115,7 +1334,7 @@ stock apply_rights(id)
 		}
 	}
 	// Adminul pe nume (logat cu parola): `g_adminId` negativ păstrează id-ul intrării.
-	if (g_adminId[id] < 0)
+	if (admins && g_adminId[id] < 0)
 	{
 		for (new i = 0, n = ArraySize(g_admins); i < n; i++)
 		{
@@ -1123,13 +1342,22 @@ stock apply_rights(id)
 			if (entry[AE_Id] == -g_adminId[id] && !expired(entry[AE_Expires])) flags |= entry[AE_Flags];
 		}
 	}
-	for (new i = 0, n = ArraySize(g_vip); i < n; i++)
+	for (new i = 0, n = vipOn ? ArraySize(g_vip) : 0; i < n; i++)
 	{
 		ArrayGetArray(g_vip, i, vip);
-		if (!expired(vip[VE_Expires]) && auth_matches(id, vip[VE_Kind], vip[VE_Auth])) flags |= vip[VE_Flags];
+		if (!expired(vip[VE_Expires]) && auth_matches(id, vip[VE_Kind], vip[VE_Auth])) vipFlags |= vip[VE_Flags];
 	}
-	remove_user_flags(id);
-	set_user_flags(id, flags ? flags : ADMIN_USER);
+	if (admins)
+	{
+		remove_user_flags(id);
+		set_user_flags(id, (flags | vipFlags) ? (flags | vipFlags) : ADMIN_USER);
+		g_vipAdded[id] = 0;
+		return;
+	}
+	// Doar VIP: drepturile serverului rămân; se adaugă doar flag-urile lipsă (și se scot doar cele adăugate de GCS).
+	if (g_vipAdded[id]) remove_user_flags(id, g_vipAdded[id]);
+	g_vipAdded[id] = vipFlags & ~get_user_flags(id);
+	if (g_vipAdded[id]) set_user_flags(id, g_vipAdded[id]);
 }
 
 /**
@@ -1243,17 +1471,23 @@ public client_putinserver(id)
 	if (!g_auth[id][0]) get_user_authid(id, g_auth[id], AUTH_LEN - 1);
 	g_steam[id] = steam_state(id);
 	g_kind[id] = local_kind(id);
+	g_vipAdded[id] = 0;
 
-	// Mai întâi listele locale (merg și fără site), apoi verificarea proaspătă (`/check`, 3 secunde).
-	apply_sanctions(id);
+	// Modulele de administrare (oprite implicit): mai întâi listele locale (merg și fără site), apoi verificarea
+	// proaspătă (`/check`, 3 secunde).
+	if (feat(FEAT_SANCTIONS)) apply_sanctions(id);
 	if (!is_user_connected(id)) return;
-	check_name_admin(id);
+	if (feat(FEAT_ADMINS)) check_name_admin(id);
 	apply_rights(id);
 
 	new JSON:event = new_event("connect");
-	set_ref(event, "player", id);
+	new JSON:ref = player_ref(id);
+	set_admin_flags(ref, id);
+	json_object_set_value(event, "player", ref);
+	json_free(ref);
 	queue_event(event);
 
+	if (!feat(FEAT_SANCTIONS) && !feat(FEAT_ADMINS) && !feat(FEAT_VIP)) return;
 	new JSON:body = json_init_object();
 	set_ref(body, "player", id);
 	static text[ITEM];
@@ -1264,13 +1498,14 @@ public client_putinserver(id)
 
 public client_infochanged(id)
 {
-	if (is_user_connected(id) && !is_user_bot(id)) set_task(0.1, "task_recheck_name", id);
+	// Numele schimbat: adminii pe nume + parolă și flag-urile VIP (sistemul serverului le poate reseta).
+	if ((feat(FEAT_ADMINS) || feat(FEAT_VIP)) && is_user_connected(id) && !is_user_bot(id)) set_task(0.1, "task_recheck_name", id);
 }
 
 public task_recheck_name(id)
 {
 	if (!is_user_connected(id)) return;
-	check_name_admin(id);
+	if (feat(FEAT_ADMINS)) check_name_admin(id);
 	apply_rights(id);
 }
 
@@ -1297,12 +1532,19 @@ public client_disconnected(id)
 	g_auth[id][0] = EOS;
 	g_userid[id] = 0;
 	g_adminId[id] = 0;
+	g_vipAdded[id] = 0;
 	g_ready[id] = false;
+	// Slotul poate fi luat de alt jucător: echipa și cifrele din meci nu se moștenesc.
+	g_matchTeam[id] = 0;
+	g_matchKills[id] = 0;
+	g_matchDeaths[id] = 0;
+	g_matchHs[id] = 0;
+	g_matchDamage[id] = 0;
 }
 
 stock on_check(id, JSON:root)
 {
-	if (root == Invalid_JSON) return;
+	if (root == Invalid_JSON || !feat(FEAT_SANCTIONS)) return;
 	new entry[SanctionEntry];
 	new JSON:ban = json_object_get_value(root, "ban");
 	if (ban != Invalid_JSON && json_get_type(ban) == JSONObject)
@@ -1483,7 +1725,7 @@ stock queue_round_end(JSON:event, JSON:players)
 
 public cmd_say(id)
 {
-	if (g_gagged[id]) return PLUGIN_HANDLED;
+	if (g_gagged[id] && feat(FEAT_SANCTIONS)) return PLUGIN_HANDLED;
 	new text[128], command[16], code[32];
 	read_args(text, charsmax(text));
 	remove_quotes(text);
@@ -1494,7 +1736,7 @@ public cmd_say(id)
 		link_player(id, code);
 		return PLUGIN_HANDLED;
 	}
-	if (get_pcvar_num(g_cvarMixReady))
+	if (feat(FEAT_MIXREADY) && g_isMix)
 	{
 		if (equali(command, "/ready") || equali(command, "!ready"))
 		{
@@ -1583,6 +1825,7 @@ stock queue_sanction(admin, target, const auth[], kind, minutes, const reason[],
 
 public cmd_ban(id, level, cid)
 {
+	if (!feat(FEAT_COMMANDS)) return PLUGIN_CONTINUE;
 	if (!cmd_access(id, level, cid, 3)) return PLUGIN_HANDLED;
 	new arg[AUTH_LEN], length[12], reason[200], command[16];
 	read_argv(0, command, charsmax(command));
@@ -1632,6 +1875,7 @@ public cmd_ban(id, level, cid)
 
 public cmd_unban(id, level, cid)
 {
+	if (!feat(FEAT_COMMANDS)) return PLUGIN_CONTINUE;
 	if (!cmd_access(id, level, cid, 2)) return PLUGIN_HANDLED;
 	new arg[AUTH_LEN], reason[200];
 	read_argv(1, arg, charsmax(arg));
@@ -1659,6 +1903,7 @@ public cmd_unban(id, level, cid)
 
 public cmd_comm(id, level, cid)
 {
+	if (!feat(FEAT_COMMANDS)) return PLUGIN_CONTINUE;
 	if (!cmd_access(id, level, cid, 3)) return PLUGIN_HANDLED;
 	new command[16], arg[64], length[12], reason[200];
 	read_argv(0, command, charsmax(command));
@@ -1678,6 +1923,7 @@ public cmd_comm(id, level, cid)
 
 public cmd_uncomm(id, level, cid)
 {
+	if (!feat(FEAT_COMMANDS)) return PLUGIN_CONTINUE;
 	if (!cmd_access(id, level, cid, 2)) return PLUGIN_HANDLED;
 	new command[16], arg[64], reason[200];
 	read_argv(0, command, charsmax(command));
@@ -1703,13 +1949,13 @@ public cmd_uncomm(id, level, cid)
 /** `amx_ban` / `amx_unban` merg prin GCS doar cu `gcs_amx_aliases 1` (altfel le tratează alt plugin). */
 public cmd_amx_ban(id, level, cid)
 {
-	if (!get_pcvar_num(g_cvarAliases)) return PLUGIN_CONTINUE;
+	if (!feat(FEAT_COMMANDS) || !get_pcvar_num(g_cvarAliases)) return PLUGIN_CONTINUE;
 	return cmd_ban(id, level, cid);
 }
 
 public cmd_amx_unban(id, level, cid)
 {
-	if (!get_pcvar_num(g_cvarAliases)) return PLUGIN_CONTINUE;
+	if (!feat(FEAT_COMMANDS) || !get_pcvar_num(g_cvarAliases)) return PLUGIN_CONTINUE;
 	return cmd_unban(id, level, cid);
 }
 
@@ -1726,7 +1972,7 @@ stock log_action(id, const action[], target, const reason[])
 
 stock log_target_command(id, level, const action[])
 {
-	if (!(get_user_flags(id) & level) && id > 0) return PLUGIN_CONTINUE;
+	if (!feat(FEAT_COMMANDS) || (!(get_user_flags(id) & level) && id > 0)) return PLUGIN_CONTINUE;
 	new arg[64], reason[200];
 	read_argv(1, arg, charsmax(arg));
 	read_argv(2, reason, charsmax(reason));
@@ -1752,7 +1998,7 @@ public log_slap(id, level, cid)
 
 public log_map(id, level, cid)
 {
-	if (id > 0 && !(get_user_flags(id) & level)) return PLUGIN_CONTINUE;
+	if (!feat(FEAT_COMMANDS) || (id > 0 && !(get_user_flags(id) & level))) return PLUGIN_CONTINUE;
 	new map[64];
 	read_argv(1, map, charsmax(map));
 	new JSON:event = new_event("admin_action");
@@ -1825,8 +2071,12 @@ stock queue_match(const status[])
 	g_lastEventsAt = 0;
 }
 
-/** Tranzițiile (§6.9): start → warmup, warmup / halftime → live, live → halftime / ended, orice deschis → aborted. */
-stock bool:mix_command(const command[])
+/**
+ * Tranzițiile (§6.9): start → warmup, warmup / halftime → live, live → halftime / ended, orice deschis → aborted.
+ * `manage` = GCS conduce meciul (ready-up, `gcs_match`): restartul și schimbarea părților le face pluginul. Altfel
+ * (alt plugin prin native, detectarea pasivă) pluginul doar urmărește meciul și nu schimbă nimic pe server.
+ */
+stock bool:mix_command(const command[], bool:manage)
 {
 	if (equal(command, "start"))
 	{
@@ -1849,6 +2099,8 @@ stock bool:mix_command(const command[])
 			else if (team == 1) g_matchTeam[id] = 'B';
 		}
 		g_mixState = MIX_WARMUP;
+		g_mixDriven = manage;
+		g_mixSwapped = false;
 		queue_match("warmup");
 		return true;
 	}
@@ -1856,7 +2108,7 @@ stock bool:mix_command(const command[])
 	{
 		if (g_mixState != MIX_WARMUP && g_mixState != MIX_HALFTIME) return false;
 		g_mixState = MIX_LIVE;
-		server_cmd("sv_restart 1");
+		if (manage) server_cmd("sv_restart 1");
 		queue_match("live");
 		return true;
 	}
@@ -1864,9 +2116,10 @@ stock bool:mix_command(const command[])
 	{
 		if (g_mixState != MIX_LIVE) return false;
 		g_mixState = MIX_HALFTIME;
-		// Echipele A / B rămân aceleași, doar părțile se schimbă.
+		// Echipele A / B rămân aceleași, doar părțile se schimbă (mutarea jucătorilor doar când GCS conduce meciul).
 		g_sideA = g_sideA == 2 ? 1 : 2;
-		for (new id = 1; id <= MaxClients; id++)
+		g_mixSwapped = true;
+		for (new id = 1; manage && id <= MaxClients; id++)
 		{
 			if (!is_user_connected(id) || !g_matchTeam[id]) continue;
 			new side = g_matchTeam[id] == 'A' ? g_sideA : (g_sideA == 2 ? 1 : 2);
@@ -1918,20 +2171,119 @@ stock mix_round_end(const winner[])
 		json_object_set_string(event, "reason", "round_end");
 		queue_event(event);
 	}
-	if (!get_pcvar_num(g_cvarMixReady)) return;
-	// Mix-ul automat: pauza la jumătate, finalul la majoritate (sau egal la ultima rundă).
-	new maxRounds = max(2, get_pcvar_num(g_cvarMixRounds));
-	if (g_scoreA > maxRounds / 2 || g_scoreB > maxRounds / 2 || g_mixRound >= maxRounds) mix_command("end");
-	else if (g_mixRound == maxRounds / 2)
+	new maxRounds = mix_max_rounds();
+	if (g_mixDriven && feat(FEAT_MIXREADY))
 	{
-		mix_command("halftime");
-		set_task(10.0, "task_mix_live");
+		// Mix-ul condus de GCS (ready-up): pauza la jumătate, finalul la majoritate (sau egal la ultima rundă).
+		if (g_scoreA > maxRounds / 2 || g_scoreB > maxRounds / 2 || g_mixRound >= maxRounds) mix_command("end", true);
+		else if (g_mixRound == maxRounds / 2)
+		{
+			mix_command("halftime", true);
+			set_task(10.0, "task_mix_live");
+		}
+		return;
 	}
+	// Detectarea pasivă: doar finalul (pauza se vede din schimbarea părților, la începutul rundei).
+	if (passive_mix() && (g_scoreA > maxRounds / 2 || g_scoreB > maxRounds / 2 || g_mixRound >= maxRounds)) mix_command("end", false);
+}
+
+/** Rundele unui meci: `mp_maxrounds` al serverului, altfel `gcs_mix_maxrounds` (implicit 30). */
+stock mix_max_rounds()
+{
+	new rounds = get_cvar_num("mp_maxrounds");
+	return rounds > 0 ? rounds : max(2, get_pcvar_num(g_cvarMixRounds));
 }
 
 public task_mix_live()
 {
-	mix_command("live");
+	mix_command("live", true);
+}
+
+// ─── Meciurile mix detectate pasiv (specul plugin-v2 §3) ────────────────────
+
+/** Pe un server mix, fără ready-up GCS și fără alt plugin care conduce meciul în această hartă. */
+stock bool:passive_mix()
+{
+	return g_isMix && !feat(FEAT_MIXREADY) && !g_mixManual;
+}
+
+public ev_team_score()
+{
+	new team[16];
+	read_data(1, team, charsmax(team));
+	if (equal(team, "CT")) g_teamCT = read_data(2);
+	else if (equal(team, "TERRORIST")) g_teamT = read_data(2);
+}
+
+/** `#Game_Commencing` / `#Game_will_restart_in`: jocul repornește; decizia se ia la începutul rundei următoare. */
+public ev_game_restart()
+{
+	if (passive_mix()) g_pendingStart = true;
+}
+
+public ev_new_round()
+{
+	if (!passive_mix()) return;
+	if (g_pendingStart)
+	{
+		g_pendingStart = false;
+		if (g_mixState == MIX_WARMUP || g_mixState == MIX_LIVE || g_mixState == MIX_HALFTIME)
+		{
+			// Restartul cu 0 runde (LO3) sau după schimbarea părților (LO3-ul reprizei a doua): meciul continuă. Unul
+			// înainte de runda 3: meciul a fost repornit, deci altul nou. Mai târziu se ignoră.
+			if (g_mixRound > 0 && !g_mixSwapped && g_mixRound < 3)
+			{
+				mix_command("abort", false);
+				passive_start();
+			}
+			return;
+		}
+		passive_start();
+		return;
+	}
+	if (g_mixState == MIX_LIVE) passive_sides();
+}
+
+/** Meci nou: cel puțin MIX_MIN_TEAM jucători în fiecare echipă; echipa A = CT. */
+stock passive_start()
+{
+	new ct = 0, t = 0;
+	for (new id = 1; id <= MaxClients; id++)
+	{
+		if (!is_user_connected(id) || is_user_bot(id) || is_user_hltv(id)) continue;
+		new team = get_user_team(id);
+		if (team == 2) ct++;
+		else if (team == 1) t++;
+	}
+	if (ct < MIX_MIN_TEAM || t < MIX_MIN_TEAM) return;
+	if (mix_command("start", false)) mix_command("live", false);
+}
+
+/**
+ * Începutul rundei în meci: dacă majoritatea jucătorilor din A sunt pe partea cealaltă, e pauza (A / B rămân aceleași,
+ * părțile se schimbă). Jucătorii veniți târziu intră în echipa părții lor.
+ */
+stock passive_sides()
+{
+	new onA = 0, offA = 0;
+	for (new id = 1; id <= MaxClients; id++)
+	{
+		if (!is_user_connected(id) || is_user_bot(id) || is_user_hltv(id) || g_matchTeam[id] != 'A') continue;
+		new team = get_user_team(id);
+		if (team == g_sideA) onA++;
+		else if (team == 1 || team == 2) offA++;
+	}
+	if (offA > onA)
+	{
+		mix_command("halftime", false);
+		mix_command("live", false);
+	}
+	for (new id = 1; id <= MaxClients; id++)
+	{
+		if (!is_user_connected(id) || is_user_bot(id) || is_user_hltv(id) || g_matchTeam[id]) continue;
+		new team = get_user_team(id);
+		if (team == 1 || team == 2) g_matchTeam[id] = team == g_sideA ? 'A' : 'B';
+	}
 }
 
 stock set_ready(id, bool:ready)
@@ -1945,7 +2297,7 @@ stock set_ready(id, bool:ready)
 	if (count >= need)
 	{
 		for (new i = 1; i <= MaxClients; i++) g_ready[i] = false;
-		if (g_mixState != MIX_WARMUP) mix_command("start");
+		if (g_mixState != MIX_WARMUP) mix_command("start", true);
 		set_task(5.0, "task_mix_live");
 		client_print(0, print_chat, "[GCS] Meciul începe în 5 secunde.");
 	}
@@ -1953,10 +2305,13 @@ stock set_ready(id, bool:ready)
 
 public cmd_match(id, level, cid)
 {
+	if (!feat(FEAT_COMMANDS)) return PLUGIN_CONTINUE;
 	if (!cmd_access(id, level, cid, 2)) return PLUGIN_HANDLED;
 	new command[16];
 	read_argv(1, command, charsmax(command));
-	if (mix_command(command)) console_print(id, "[GCS] Meci: %s.", command);
+	// Meciul condus din comandă: detectarea pasivă stă deoparte până la harta următoare.
+	g_mixManual = true;
+	if (mix_command(command, true)) console_print(id, "[GCS] Meci: %s.", command);
 	else console_print(id, "[GCS] Tranziție nepermisă: %s.", command);
 	return PLUGIN_HANDLED;
 }
@@ -1965,7 +2320,226 @@ public native_mix_command(plugin, params)
 {
 	new command[16];
 	get_string(1, command, charsmax(command));
-	return mix_command(command);
+	// Alt plugin conduce meciul (și face el restartul / mutările): GCS doar îl urmărește.
+	g_mixManual = true;
+	return mix_command(command, false);
+}
+
+// ─── Înrolarea automată (specul plugin-v2 §5) ───────────────────────────────
+
+stock enroll_path(path[], len)
+{
+	formatex(path, len, "%s/gcs_bridge_enroll.json", g_dataDir);
+}
+
+/** Secretul înrolării (generat o singură dată, păstrat local) și referința primită de la site. */
+stock load_enroll()
+{
+	new path[192];
+	enroll_path(path, charsmax(path));
+	new JSON:root = file_exists(path) ? json_parse(path, true) : Invalid_JSON;
+	if (root != Invalid_JSON)
+	{
+		json_object_get_string(root, "secret", g_enrollSecret, charsmax(g_enrollSecret));
+		json_object_get_string(root, "enrollment", g_enrollRef, charsmax(g_enrollRef));
+		// Respins: pauza continuă și după o repornire.
+		g_enrollNextAt = max(g_enrollNextAt, json_object_get_number(root, "pausedUntil"));
+		json_free(root);
+	}
+	if (strlen(g_enrollSecret) != 64)
+	{
+		make_secret(g_enrollSecret, charsmax(g_enrollSecret));
+		g_enrollRef[0] = EOS;
+		save_enroll(0);
+	}
+}
+
+stock save_enroll(pausedUntil)
+{
+	new JSON:root = json_init_object();
+	json_object_set_string(root, "secret", g_enrollSecret);
+	json_object_set_string(root, "enrollment", g_enrollRef);
+	json_object_set_number(root, "pausedUntil", pausedUntil);
+	new path[192];
+	enroll_path(path, charsmax(path));
+	json_serial_to_file(root, path);
+	json_free(root);
+}
+
+/**
+ * Secretul (64 de caractere hex): AMX Mod X nu are un generator criptografic, deci se amestecă într-un SHA-256 tot ce
+ * nu se poate ghici ușor din afară: timpul, ceasul în milisecunde (citit de mai multe ori), timpul motorului,
+ * generatorul AMX Mod X, harta, numele serverului; apoi încă o rundă cu alte valori. Site-ul păstrează doar hash-ul lui,
+ * iar cheia se livrează doar cu secretul și referința aleatorie dată de site.
+ */
+stock make_secret(out[], len)
+{
+	static pool[640];
+	new host[64], map[32], first[65];
+	get_cvar_string("hostname", host, charsmax(host));
+	get_mapname(map, charsmax(map));
+	formatex(pool, charsmax(pool), "%d|%d|%f|%d|%d|%d|%d|%d|%d|%d|%d|%s|%s|%d|%d", get_systime(), tickcount(), get_gametime(), random(0x7FFFFFFF), random(0x7FFFFFFF), random(0x7FFFFFFF), random(0x7FFFFFFF), random(0x7FFFFFFF), random(0x7FFFFFFF), random(0x7FFFFFFF), random(0x7FFFFFFF), host, map, get_playersnum(), tickcount());
+	hash_string(pool, Hash_Sha256, first, charsmax(first));
+	formatex(pool, charsmax(pool), "%s|%d|%d|%d|%d|%f|%d", first, random(0x7FFFFFFF), random(0x7FFFFFFF), tickcount(), get_systime(), get_gametime(), random(0x7FFFFFFF));
+	hash_string(pool, Hash_Sha256, out, len);
+}
+
+/** O cerere a înrolării: fără semnătură (pluginul nu are încă o cheie), doar JSON. */
+stock enroll_request(const path[], const body[], kind)
+{
+	new url[320];
+	formatex(url, charsmax(url), "%s%s%s", g_url, BASE_PATH, path);
+	new EzHttpOptions:options = ezhttp_create_options();
+	ezhttp_option_set_header(options, "User-Agent", PLUGIN_ID);
+	ezhttp_option_set_header(options, "Content-Type", "application/json");
+	ezhttp_option_set_timeout(options, 15000);
+	new data[3];
+	data[0] = kind;
+	ezhttp_option_set_user_data(options, data, sizeof(data));
+	ezhttp_option_set_body(options, body);
+	if (get_pcvar_num(g_cvarDebug)) log_amx("[GCS] POST %s", path);
+	ezhttp_post(url, "on_response", options);
+}
+
+stock enroll_tick(now)
+{
+	if (g_enrollBusy || now < g_enrollNextAt) return;
+	g_enrollBusy = true;
+	static body[1024];
+	new JSON:root = json_init_object();
+	if (!g_enrollRef[0])
+	{
+		new host[128], map[64];
+		get_cvar_string("hostname", host, charsmax(host));
+		get_mapname(map, charsmax(map));
+		json_object_set_string(root, "game", "cs16");
+		json_object_set_number(root, "port", get_cvar_num("port"));
+		json_object_set_string(root, "hostname", host);
+		json_object_set_string(root, "map", map);
+		json_object_set_number(root, "maxPlayers", get_maxplayers());
+		json_object_set_number(root, "players", get_playersnum());
+		json_object_set_string(root, "plugin", PLUGIN_ID);
+		json_object_set_string(root, "secret", g_enrollSecret);
+		json_serial_to_string(root, body, charsmax(body));
+		json_free(root);
+		enroll_request("/enroll", body, REQ_ENROLL);
+		return;
+	}
+	json_object_set_string(root, "enrollment", g_enrollRef);
+	json_object_set_string(root, "secret", g_enrollSecret);
+	json_serial_to_string(root, body, charsmax(body));
+	json_free(root);
+	enroll_request("/enroll/status", body, REQ_ENROLL_STATUS);
+}
+
+/** Rețeaua / 5xx: 60 s, 120 s … max 15 minute. */
+stock enroll_backoff()
+{
+	g_enrollBackoff = g_enrollBackoff ? min(g_enrollBackoff * 2, 900) : 60;
+	g_enrollNextAt = get_systime() + g_enrollBackoff;
+}
+
+stock on_enroll(kind, code, JSON:root, const error[])
+{
+	g_enrollBusy = false;
+	new now = get_systime();
+	if (code == 0 || code >= 500)
+	{
+		enroll_backoff();
+		return;
+	}
+	if (code == 429)
+	{
+		g_enrollNextAt = now + 120;
+		return;
+	}
+	if (code == 404 && kind == REQ_ENROLL_STATUS)
+	{
+		// Înrolarea a expirat / a dispărut: se cere din nou, cu același secret.
+		g_enrollRef[0] = EOS;
+		save_enroll(0);
+		g_enrollNextAt = now + 5;
+		return;
+	}
+	if (code != 200 || root == Invalid_JSON)
+	{
+		log_amx("[GCS] Înrolarea refuzată de site (%d %s). Reîncerc peste o oră.", code, error);
+		g_enrollNextAt = now + 3600;
+		return;
+	}
+	g_enrollBackoff = 0;
+	new status[16];
+	json_object_get_string(root, "status", status, charsmax(status));
+	if (equal(status, "rejected"))
+	{
+		log_amx("[GCS] Serverul a fost respins în ACP. Nu mai cer o cheie 24 de ore.");
+		g_enrollNextAt = now + 86400;
+		save_enroll(g_enrollNextAt);
+		return;
+	}
+	if (json_object_has_value(root, "enrollment", JSONString))
+	{
+		json_object_get_string(root, "enrollment", g_enrollRef, charsmax(g_enrollRef));
+		save_enroll(0);
+	}
+	if (json_object_has_value(root, "key", JSONString))
+	{
+		new key[160];
+		json_object_get_string(root, "key", key, charsmax(key));
+		store_key(key);
+		return;
+	}
+	if (equal(status, "approved"))
+	{
+		if (json_object_get_bool(root, "delivered"))
+		{
+			// Cheia a plecat deja (și a fost folosită), dar nu e aici: o înrolare nouă, de aprobat din nou.
+			log_amx("[GCS] Cheia acestui server a fost deja livrată, dar nu e salvată aici. Mă înrolez din nou.");
+			make_secret(g_enrollSecret, charsmax(g_enrollSecret));
+			g_enrollRef[0] = EOS;
+			save_enroll(0);
+			g_enrollNextAt = now + 60;
+			return;
+		}
+		g_enrollNextAt = now + 1;
+		return;
+	}
+	if (!g_enrollAnnounced)
+	{
+		g_enrollAnnounced = true;
+		log_amx("[GCS] Serverul așteaptă aprobarea pe site: ACP → Gaming → Servere → Servere noi detectate.");
+	}
+	new retry = json_object_has_value(root, "retryAfter", JSONNumber) ? json_object_get_number(root, "retryAfter") : 60;
+	g_enrollNextAt = now + clamp(retry, 30, 600);
+}
+
+/**
+ * Cheia primită după aprobare: salvată în `configs/gcs_bridge_key.cfg` (citit la pornire doar dacă `gcs_key` din
+ * gcs_bridge.cfg e gol), apoi pluginul continuă imediat cu protocolul semnat.
+ */
+stock store_key(const key[])
+{
+	new cfg[128], path[192];
+	get_localinfo("amxx_configsdir", cfg, charsmax(cfg));
+	formatex(path, charsmax(path), "%s/gcs_bridge_key.cfg", cfg);
+	new file = fopen(path, "wt");
+	if (file)
+	{
+		fprintf(file, "// GCS Server Bridge: cheia acestui server, primită de la site după aprobare. Nu o publica.^ngcs_key ^"%s^"^n", key);
+		fclose(file);
+	}
+	else log_amx("[GCS] Nu pot salva cheia în %s (drepturile folderului).", path);
+	set_pcvar_string(g_cvarKey, key);
+	read_config();
+	if (!g_configured)
+	{
+		log_amx("[GCS] Cheia primită nu e validă.");
+		return;
+	}
+	enroll_path(path, charsmax(path));
+	if (file_exists(path)) delete_file(path);
+	log_amx("[GCS] Serverul a fost aprobat: cheia e salvată, pluginul e conectat la site.");
+	send_heartbeat();
 }
 
 public native_mix_state(plugin, params)

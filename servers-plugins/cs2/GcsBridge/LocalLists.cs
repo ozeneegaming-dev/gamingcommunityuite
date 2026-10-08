@@ -196,6 +196,15 @@ public sealed class LocalLists
         }
     }
 
+    /// <summary>Permisiunile VIP ale unui jucător (intrările neexpirate), pentru modulul „VIP” fără „Admini din GCS”.</summary>
+    public string[] VipPermissionsFor(ulong steamId64, long now)
+    {
+        lock (_lock)
+        {
+            return Vip.Where(v => v.SteamId64 == steamId64 && (v.ExpiresAt is null || v.ExpiresAt > now)).SelectMany(v => v.Permissions).Distinct().ToArray();
+        }
+    }
+
     /// <summary>Drepturile unui jucător: reuniunea adminilor și a VIP-ului, imunitatea maximă (intrările neexpirate).</summary>
     public (string[] Permissions, uint Immunity, long? AdminId) RightsFor(ulong steamId64, long now)
     {

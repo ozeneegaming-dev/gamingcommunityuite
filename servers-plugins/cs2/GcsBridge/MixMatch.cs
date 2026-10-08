@@ -9,12 +9,17 @@ using CounterStrikeSharp.API.Modules.Utils;
 namespace Gcs.Bridge;
 
 /// <summary>
-/// Meciul mix (§6.9): `warmup → live`, `live → halftime`, `halftime → live`, `live → ended`, orice stare deschisă →
-/// `aborted`. Echipele A / B rămân aceleași după pauză (doar părțile se schimbă). Fiecare schimbare de stare pleacă ca
-/// evenimentul `match` (starea completă), fiecare rundă ca `match_round`. Statisticile din ultima stare sunt totalurile.
+/// Meciul mix (§6.9 partea A, §3 plugin-v2): `warmup → live`, `live → halftime`, `halftime → live`, `live → ended`,
+/// orice stare deschisă → `aborted`. Echipele A / B rămân aceleași după pauză (doar părțile se schimbă). Fiecare schimbare
+/// de stare pleacă ca evenimentul `match` (starea completă), fiecare rundă ca `match_round`. Statisticile din ultima
+/// stare sunt totalurile. Meciul se urmărește pasiv (jocul face restartul și schimbarea părților); doar comanda
+/// `css_gcsmatch halftime` mută jucătorii.
 /// </summary>
 public sealed class MixMatch
 {
+    /// <summary>Cel puțin atâția jucători în fiecare echipă pentru un meci detectat pasiv.</summary>
+    public const int MinTeam = 2;
+
     private sealed class Line
     {
         public required ulong SteamId;
@@ -33,14 +38,21 @@ public sealed class MixMatch
     private int _scoreB;
     private int _round;
     private CsTeam _sideA = CsTeam.CounterTerrorist;
-    private readonly Dictionary<int, Line> _lines = new();
+    /// <summary>Jucătorii meciului după SteamID (cei ieșiți rămân, cu cifrele lor).</summary>
+    private readonly Dictionary<ulong, Line> _lines = new();
     private readonly HashSet<int> _ready = new();
 
     public bool Open => _status is "warmup" or "live" or "halftime";
 
-    private bool Live => _status == "live";
+    public bool Live => _status == "live";
 
-    private Line? LineOf(CCSPlayerController? p) => p is not null && _lines.TryGetValue(p.Slot, out var l) && l.SteamId == p.SteamID ? l : null;
+    /// <summary>Rundele jucate în meciul curent.</summary>
+    public int Round => _round;
+
+    /// <summary>Părțile s-au schimbat deja (pauza a trecut).</summary>
+    public bool Swapped { get; private set; }
+
+    private Line? LineOf(CCSPlayerController? p) => p is not null && _lines.TryGetValue(p.SteamID, out var l) ? l : null;
 
     public void OnDeath(CCSPlayerController? killer, CCSPlayerController victim, CCSPlayerController? assister, bool headshot, bool suicide)
     {
@@ -70,10 +82,10 @@ public sealed class MixMatch
     public JsonObject State(string map, Func<CCSPlayerController, JsonObject> reference)
     {
         var players = new JsonArray();
-        foreach (var (slot, line) in _lines)
+        var online = Utilities.GetPlayers().Where(p => p is { IsValid: true, IsBot: false }).ToDictionary(p => p.SteamID, p => p);
+        foreach (var line in _lines.Values)
         {
-            var p = Utilities.GetPlayerFromSlot(slot);
-            var r = p is not null && p.IsValid && p.SteamID == line.SteamId ? reference(p) : new JsonObject { ["auth"] = line.SteamId.ToString(), ["steam"] = true };
+            var r = online.TryGetValue(line.SteamId, out var p) ? reference(p) : new JsonObject { ["auth"] = line.SteamId.ToString(), ["steam"] = true };
             players.Add(new JsonObject
             {
                 ["player"] = r,
@@ -100,8 +112,11 @@ public sealed class MixMatch
 
     private (string, JsonObject) StateEvent(string map, Func<CCSPlayerController, JsonObject> reference) => ("match", new JsonObject { ["match"] = State(map, reference) });
 
-    /// <summary>O comandă (`start`, `live`, `halftime`, `end`, `abort`); `ok` = tranziția e permisă.</summary>
-    public List<(string Type, JsonObject Fields)> Command(string command, List<CCSPlayerController> players, string map, Func<CCSPlayerController, JsonObject> reference, out bool ok)
+    /// <summary>
+    /// O comandă (`start`, `live`, `halftime`, `end`, `abort`); `ok` = tranziția e permisă. `move` = la `halftime`
+    /// pluginul mută jucătorii pe partea cealaltă (doar comanda adminului; jocul o face singur cu `mp_halftime`).
+    /// </summary>
+    public List<(string Type, JsonObject Fields)> Command(string command, List<CCSPlayerController> players, string map, Func<CCSPlayerController, JsonObject> reference, out bool ok, bool move = false)
     {
         ok = true;
         switch (command)
@@ -111,11 +126,12 @@ public sealed class MixMatch
                 _status = "warmup";
                 _scoreA = _scoreB = _round = 0;
                 _sideA = CsTeam.CounterTerrorist;
+                Swapped = false;
                 _lines.Clear();
                 foreach (var p in players)
                 {
                     if (p.Team is not (CsTeam.CounterTerrorist or CsTeam.Terrorist)) continue;
-                    _lines[p.Slot] = new Line { SteamId = p.SteamID, Team = p.Team == CsTeam.CounterTerrorist ? 'A' : 'B' };
+                    _lines[p.SteamID] = new Line { SteamId = p.SteamID, Team = p.Team == CsTeam.CounterTerrorist ? 'A' : 'B' };
                 }
                 break;
             case "live" when _status is "warmup" or "halftime":
@@ -123,13 +139,12 @@ public sealed class MixMatch
                 break;
             case "halftime" when _status == "live":
                 _status = "halftime";
-                _sideA = _sideA == CsTeam.CounterTerrorist ? CsTeam.Terrorist : CsTeam.CounterTerrorist;
-                foreach (var (slot, line) in _lines)
+                _sideA = Other(_sideA);
+                Swapped = true;
+                if (!move) break;
+                foreach (var p in players)
                 {
-                    var p = Utilities.GetPlayerFromSlot(slot);
-                    if (p is null || !p.IsValid || p.SteamID != line.SteamId) continue;
-                    var side = line.Team == 'A' ? _sideA : (_sideA == CsTeam.CounterTerrorist ? CsTeam.Terrorist : CsTeam.CounterTerrorist);
-                    p.SwitchTeam(side);
+                    if (LineOf(p) is { } line) p.SwitchTeam(line.Team == 'A' ? _sideA : Other(_sideA));
                 }
                 break;
             case "end" when _status == "live":
@@ -145,28 +160,64 @@ public sealed class MixMatch
         return new List<(string, JsonObject)> { StateEvent(map, reference) };
     }
 
-    /// <summary>Sfârșitul unei runde: scorul echipelor, `match_round`; în mix-ul automat, pauza și finalul.</summary>
-    public List<(string Type, JsonObject Fields)> OnRoundEnd(string winner, bool auto, int maxRounds)
+    private static CsTeam Other(CsTeam side) => side == CsTeam.CounterTerrorist ? CsTeam.Terrorist : CsTeam.CounterTerrorist;
+
+    /// <summary>Câte jucători sunt pe fiecare parte (CT, T).</summary>
+    public static (int Ct, int T) Sides(IEnumerable<CCSPlayerController> players)
+    {
+        var list = players.ToList();
+        return (list.Count(p => p.Team == CsTeam.CounterTerrorist), list.Count(p => p.Team == CsTeam.Terrorist));
+    }
+
+    /// <summary>
+    /// Începutul rundei într-un meci live: dacă majoritatea jucătorilor din A sunt pe partea cealaltă, e pauza (`halftime`
+    /// apoi `live`); jucătorii veniți târziu intră în echipa părții lor.
+    /// </summary>
+    public List<(string Type, JsonObject Fields)> OnRoundStart(List<CCSPlayerController> players, string map, Func<CCSPlayerController, JsonObject> reference)
+    {
+        var events = new List<(string, JsonObject)>();
+        if (!Live) return events;
+        int on = 0, off = 0;
+        foreach (var p in players)
+        {
+            if (LineOf(p) is not { Team: 'A' }) continue;
+            if (p.Team == _sideA) on++;
+            else if (p.Team is CsTeam.CounterTerrorist or CsTeam.Terrorist) off++;
+        }
+        if (off > on)
+        {
+            events.AddRange(Command("halftime", players, map, reference, out _));
+            events.AddRange(Command("live", players, map, reference, out _));
+        }
+        foreach (var p in players)
+        {
+            if (p.Team is not (CsTeam.CounterTerrorist or CsTeam.Terrorist) || LineOf(p) is not null) continue;
+            _lines[p.SteamID] = new Line { SteamId = p.SteamID, Team = p.Team == _sideA ? 'A' : 'B' };
+        }
+        return events;
+    }
+
+    /// <summary>
+    /// Sfârșitul unei runde: scorul echipelor (numărat de plugin, restarturile jocului nu îl strică), `match_round`; cu
+    /// `autoEnd`, finalul la majoritate (sau egal la ultima rundă).
+    /// </summary>
+    public List<(string Type, JsonObject Fields)> OnRoundEnd(string winner, bool autoEnd, int maxRounds)
     {
         var events = new List<(string, JsonObject)>();
         if (!Live) return events;
         _round++;
         var side = winner == "CT" ? CsTeam.CounterTerrorist : winner == "T" ? CsTeam.Terrorist : CsTeam.None;
-        if (side == CsTeam.None) return events;
-        var team = side == _sideA ? "A" : "B";
-        if (team == "A") _scoreA++;
-        else _scoreB++;
-        events.Add(("match_round", new JsonObject { ["matchId"] = _id, ["round"] = _round, ["winner"] = team, ["scoreA"] = _scoreA, ["scoreB"] = _scoreB, ["reason"] = "round_end" }));
-        if (!auto) return events;
-        var max = Math.Max(2, maxRounds);
-        var map = Server.MapName;
-        JsonObject Ref(CCSPlayerController p) => new() { ["auth"] = p.SteamID.ToString(), ["steam"] = true, ["name"] = p.PlayerName };
-        if (_scoreA > max / 2 || _scoreB > max / 2 || _round >= max) events.AddRange(Command("end", new List<CCSPlayerController>(), map, Ref, out _));
-        else if (_round == max / 2)
+        if (side != CsTeam.None)
         {
-            events.AddRange(Command("halftime", new List<CCSPlayerController>(), map, Ref, out _));
-            events.AddRange(Command("live", new List<CCSPlayerController>(), map, Ref, out _));
+            var team = side == _sideA ? "A" : "B";
+            if (team == "A") _scoreA++;
+            else _scoreB++;
+            events.Add(("match_round", new JsonObject { ["matchId"] = _id, ["round"] = _round, ["winner"] = team, ["scoreA"] = _scoreA, ["scoreB"] = _scoreB, ["reason"] = "round_end" }));
         }
+        if (!autoEnd) return events;
+        var max = Math.Max(2, maxRounds);
+        JsonObject Ref(CCSPlayerController p) => new() { ["auth"] = p.SteamID.ToString(), ["steam"] = true, ["name"] = p.PlayerName };
+        if (_scoreA > max / 2 || _scoreB > max / 2 || _round >= max) events.AddRange(Command("end", new List<CCSPlayerController>(), Server.MapName, Ref, out _));
         return events;
     }
 

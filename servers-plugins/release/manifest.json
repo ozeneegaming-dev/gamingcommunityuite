@@ -1,0 +1,34 @@
+{
+  "version": "1.1.0",
+  "builtAt": "2026-10-08T14:23:49.546Z",
+  "tools": {
+    "amxxpc": "1.10.0.5486",
+    "amxxIncludes": "easyhttp-1.5.0, reapi-5.29.0.358",
+    "dotnetSdk": "8.0.425",
+    "counterStrikeSharpApi": "1.0.368"
+  },
+  "plugins": {
+    "cs16": {
+      "id": "gcs-amxx/1.1.0",
+      "version": "1.1.0",
+      "sourcesSha256": "c780d83053b2f0f8f43600056ebbff172b3aed24860a6f568f0c4c756daa69a7",
+      "files": {
+        "gcs_bridge.amxx": "26593d4a5389b204c32cc17e99acd93d5d13229b91f2c60dbdf9152ace44fac2",
+        "gcs_bridge.sma": "fa5ba534e09fc17c82e1921f63c5c17ee815a252e68922047f04feeff7c528b1",
+        "gcs_bridge.inc": "dc26cdc9235e1824758a28aaf926c591b404c95717b506d59afa8de568f337dd",
+        "gcs_bridge.cfg": "edc06bead64efd1d84be192cb6e7bcf4831d1789901b3971fc30ef2ae3e09515",
+        "LICENSE": "05600f17057fb38a074bd72ba90d5dbb6d3429dd45e94aaa953ebab37e41fead"
+      }
+    },
+    "cs2": {
+      "id": "gcs-cs2/1.1.0",
+      "version": "1.1.0",
+      "sourcesSha256": "b89d851b2c38194f25e99216b1100fdb6da50223897bc6441ec03c5a3188f0ba",
+      "files": {
+        "GcsBridge.dll": "8c6195fa3d2a9f02eee80f6bdadc1ed2cf901a9f117598d83d1042c0e2ac4f1a",
+        "GcsBridge.json": "5271f6816f6fd21b743dce296035192ba41fb62304b1c40ecc164f2c0d15a22b",
+        "LICENSE": "9aae00a51fdd498b00c52ee9af59e074cc4b61ae21ba211c97e923aaf3fc8785"
+      }
+    }
+  }
+}

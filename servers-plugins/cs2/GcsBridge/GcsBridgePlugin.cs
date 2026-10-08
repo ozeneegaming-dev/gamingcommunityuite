@@ -1,12 +1,22 @@
 // GCS Server Bridge — pluginul CounterStrikeSharp pentru Counter-Strike 2 (GamingCommunitySuite).
 //
-// Vorbește protocolul v1 al punții (specul 2026-10-08-servere-bridge): heartbeat, evenimente (conectări, ucideri,
-// runde, focuri, damage, MVP, acțiuni de admin, sancțiuni, meciuri mix), listele trase de la site (admini, sancțiuni,
-// VIP), verificarea la conectare și legarea identității. Listele se păstrează local: site-ul căzut nu oprește adminii și
-// nici bannurile. Evenimentele netrimise se salvează pe disc și se retrimit cu aceleași id-uri.
+// Vorbește protocolul v1 al punții (specul 2026-10-08-servere-bridge și 2026-10-08-servere-plugin-v2).
+//
+// Implicit pluginul DOAR COLECTEAZĂ DATE: heartbeat (harta, jucătorii și permisiunile lor de admin, citite din sistemul
+// de admini al serverului), evenimente (conectări, ucideri, runde, focuri, damage, MVP, scorul echipelor), meciurile mix
+// urmărite pasiv pe serverele marcate „mix” și legarea identității. Nu schimbă permisiuni, nu dă kick / mute / gag, nu
+// rulează comenzi pe server și nu înregistrează comenzi de admin.
+//
+// Modulele opționale (oprite implicit, pornite din ACP pe fiecare server; `"AllowManage": false` le ține oprite oricum):
+// adminii din GCS, bannurile / mute / gag din GCS, VIP-ul din GCS, ready-up-ul mix și comenzile de admin GCS. Un modul
+// oprit nu își înregistrează comenzile și nu își trage listele de la site.
+//
+// Fără cheie (pachetul general), pluginul se înrolează singur la site și primește cheia după aprobarea din ACP.
+// Evenimentele netrimise se salvează pe disc și se retrimit cu aceleași id-uri.
 //
 // Licența: MIT (CounterStrikeSharp permite explicit pluginuri MIT). Vezi LICENSE.
 
+using System.Security.Cryptography;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using CounterStrikeSharp.API;
@@ -15,6 +25,7 @@ using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Commands.Targeting;
+using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
@@ -29,14 +40,19 @@ public sealed class GcsBridgeConfig : BasePluginConfig
     /// <summary>Adresa site-ului (ex. https://comunitate.exemplu.ro), fără calea protocolului.</summary>
     [JsonPropertyName("Url")] public string Url { get; set; } = "";
 
-    /// <summary>Cheia API a serverului (`gcs1.&lt;keyId&gt;.&lt;secret&gt;`), din ACP → Servere → Plugin și chei API.</summary>
+    /// <summary>
+    /// Cheia API a serverului (`gcs1.&lt;keyId&gt;.&lt;secret&gt;`). Goală = pluginul se înrolează singur, iar adminul îl
+    /// aprobă în ACP (cheia primită se salvează în `plugins/GcsBridge/data/gcs_bridge_key.txt`).
+    /// </summary>
     [JsonPropertyName("Key")] public string Key { get; set; } = "";
 
-    /// <summary>Ready-up-ul simplu al meciurilor mix (!ready / !unready).</summary>
-    [JsonPropertyName("MixReady")] public bool MixReady { get; set; } = false;
+    /// <summary>`false` = pluginul rămâne doar colector, orice module opționale s-ar porni în ACP.</summary>
+    [JsonPropertyName("AllowManage")] public bool AllowManage { get; set; } = true;
 
+    /// <summary>Jucătorii necesari pentru ready-up (modulul „Ready-up mix”).</summary>
     [JsonPropertyName("MixPlayers")] public int MixPlayers { get; set; } = 10;
 
+    /// <summary>Rundele unui meci mix când `mp_maxrounds` e 0.</summary>
     [JsonPropertyName("MixMaxRounds")] public int MixMaxRounds { get; set; } = 24;
 
     [JsonPropertyName("Debug")] public bool Debug { get; set; } = false;
@@ -45,9 +61,19 @@ public sealed class GcsBridgeConfig : BasePluginConfig
 public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
 {
     public override string ModuleName => "GCS Server Bridge";
-    public override string ModuleVersion => "1.0.0";
+    public override string ModuleVersion => BridgeClient.Version;
     public override string ModuleAuthor => "GamingCommunitySuite";
-    public override string ModuleDescription => "Puntea serverului cu GamingCommunitySuite: admini, bannuri, statistici, meciuri mix.";
+    public override string ModuleDescription => "Puntea serverului cu GamingCommunitySuite: colectează datele serverului (statistici, meciuri mix, adminii prezenți).";
+
+    /// <summary>Modulele opționale (cheile din `config.features`), oprite implicit.</summary>
+    private static readonly string[] Features = { "admins", "sanctions", "vip", "mixReady", "commands" };
+
+    /// <summary>Permisiunile citite din sistemul de admini al serverului (raportate în heartbeat, doar citite).</summary>
+    private static readonly string[] KnownPermissions =
+    {
+        "@css/root", "@css/generic", "@css/kick", "@css/ban", "@css/unban", "@css/slay", "@css/changemap", "@css/cvar",
+        "@css/config", "@css/chat", "@css/vote", "@css/password", "@css/rcon", "@css/reservation", "@gcs/tempban",
+    };
 
     public GcsBridgeConfig Config { get; set; } = new();
 
@@ -64,6 +90,24 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
     private readonly HashSet<int> _gagged = new();
     private readonly HashSet<int> _muted = new();
     private readonly Dictionary<int, Dictionary<string, WeaponDelta>> _weapons = new();
+    private readonly Dictionary<int, string[]> _vipAdded = new();
+
+    // Modulele: cum le-a trimis site-ul (salvate local) și comenzile înregistrate acum.
+    private readonly Dictionary<string, bool> _siteFeatures = Features.ToDictionary(f => f, _ => false);
+    private bool _commandsRegistered;
+    private bool _isMix;
+    // Meciul condus din comandă (`css_gcsmatch`): urmărirea pasivă stă deoparte până la harta următoare.
+    private bool _mixManual;
+    private bool _pendingStart;
+
+    // Înrolarea (fără cheie).
+    private bool _enrolling;
+    private bool _enrollBusy;
+    private bool _enrollAnnounced;
+    private string _enrollSecret = "";
+    private string _enrollRef = "";
+    private DateTime _enrollNextAt = DateTime.MinValue;
+    private int _enrollBackoff;
 
     private sealed class WeaponDelta
     {
@@ -73,25 +117,49 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
         public int Headshots;
     }
 
+    private string DataDir => Path.Combine(ModuleDirectory, "data");
+    private string KeyPath => Path.Combine(DataDir, "gcs_bridge_key.txt");
+    private string EnrollPath => Path.Combine(DataDir, "gcs_bridge_enroll.json");
+    private string FeaturesPath => Path.Combine(DataDir, "gcs_bridge_features.json");
+
     public void OnConfigParsed(GcsBridgeConfig config)
     {
         Config = config;
-        _client?.Dispose();
-        _client = new BridgeClient(config.Url, config.Key);
-        if (!_client.Configured) Logger.LogWarning("[GCS] Configurare incompletă: setează Url și Key în GcsBridge.json.");
+        Connect();
     }
 
-    private string DataDir => Path.Combine(ModuleDirectory, "data");
+    /// <summary>
+    /// Clientul protocolului: cheia din config, altfel cea primită prin înrolare; fără niciuna, dar cu adresa site-ului,
+    /// înrolarea automată.
+    /// </summary>
+    private void Connect()
+    {
+        Directory.CreateDirectory(DataDir);
+        var key = Config.Key.Trim();
+        if (key.Length == 0 && File.Exists(KeyPath)) key = File.ReadAllText(KeyPath).Trim();
+        _client?.Dispose();
+        _client = new BridgeClient(Config.Url, key);
+        _enrolling = !_client.Configured && _client.UrlOk && key.Length == 0;
+        if (_client.Insecure) Logger.LogWarning("[GCS] Adresa site-ului e http:// (fără TLS); folosește https://.");
+        if (_enrolling) LoadEnroll();
+        else if (!_client.Configured) Logger.LogWarning(_client.UrlOk ? "[GCS] Key nu are forma gcs1.<keyId>.<secret>: verifică GcsBridge.json." : "[GCS] Configurare incompletă: setează Url în GcsBridge.json.");
+    }
 
     public override void Load(bool hotReload)
     {
+        Directory.CreateDirectory(DataDir);
         _lists = new LocalLists(DataDir);
         _lists.Load();
         _queue.Load(Path.Combine(DataDir, "gcs_bridge_queue.jsonl"));
+        LoadFeatures();
 
         RegisterListener<Listeners.OnMapStart>(OnMapStart);
         RegisterListener<Listeners.OnMapEnd>(() =>
         {
+            // Meciul nu continuă pe harta următoare: unul deschis se anulează (fără ELO).
+            if (_mix.Open) QueueAll(_mix.Command("abort", new List<CCSPlayerController>(), Server.MapName, Ref, out _));
+            _mixManual = false;
+            _pendingStart = false;
             _queue.Save(Path.Combine(DataDir, "gcs_bridge_queue.jsonl"));
             // Timerul heartbeat-ului (STOP_ON_MAPCHANGE) e distrus acum de CounterStrikeSharp: nu se mai oprește a doua oară.
             _heartbeatTimer = null;
@@ -103,9 +171,15 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
         RegisterEventHandler<EventWeaponFire>(OnWeaponFire);
         RegisterEventHandler<EventRoundMvp>(OnMvp);
         RegisterEventHandler<EventRoundEnd>(OnRoundEnd);
+        // Meciurile mix urmărite pasiv: începutul meciului (după warmup / restart), începutul rundei, finalul.
+        RegisterEventHandler<EventRoundAnnounceMatchStart>((_, _) => MarkRestart());
+        RegisterEventHandler<EventBeginNewMatch>((_, _) => MarkRestart());
+        RegisterEventHandler<EventRoundStart>(OnRoundStart);
+        RegisterEventHandler<EventCsWinPanelMatch>(OnMatchEnd);
         AddCommandListener("say", OnSay, HookMode.Pre);
         AddCommandListener("say_team", OnSay, HookMode.Pre);
 
+        ApplyFeatures();
         AddTimer(1.0f, Tick, TimerFlags.REPEAT);
         ScheduleHeartbeat(5);
         if (hotReload) Server.NextFrame(() => Utilities.GetPlayers().Where(Tracked).ToList().ForEach(ApplyLocal));
@@ -121,6 +195,86 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
 
     private long Now() => _client?.Now() ?? DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
+    // ─── Modulele opționale (specul plugin-v2 §1.2) ──────────────────────────
+
+    /// <summary>Modulul e pornit: pe site și cu acordul local (`AllowManage`).</summary>
+    private bool Feat(string name) => Config.AllowManage && _siteFeatures.TryGetValue(name, out var on) && on;
+
+    private bool AnyManage => Feat("admins") || Feat("sanctions") || Feat("vip");
+
+    private void LoadFeatures()
+    {
+        try
+        {
+            if (File.Exists(FeaturesPath) && JsonNode.Parse(File.ReadAllText(FeaturesPath)) is JsonObject saved)
+            {
+                foreach (var f in Features) _siteFeatures[f] = saved[f] is JsonValue v && v.TryGetValue<bool>(out var on) && on;
+            }
+        }
+        catch (Exception)
+        {
+            // Un fișier stricat contează ca lipsă: modulele vin din nou de la site.
+        }
+    }
+
+    private void SaveFeatures()
+    {
+        var doc = new JsonObject();
+        foreach (var f in Features) doc[f] = _siteFeatures[f];
+        File.WriteAllText(FeaturesPath, doc.ToJsonString());
+    }
+
+    /// <summary>Comenzile modulului „commands”: înregistrate doar cât timp e pornit (CounterStrikeSharp le poate scoate).</summary>
+    private void ApplyFeatures()
+    {
+        var commands = Feat("commands");
+        if (commands == _commandsRegistered) return;
+        _commandsRegistered = commands;
+        foreach (var (name, description, handler) in AdminCommands())
+        {
+            if (commands) AddCommand(name, description, handler);
+            else RemoveCommand(name, handler);
+        }
+    }
+
+    private List<(string Name, string Description, CommandInfo.CommandCallback Handler)> AdminCommands() => new()
+    {
+        ("css_gcsban", "Ban pe acest server: <țintă> <minute> [motiv]", OnBanCommand),
+        ("css_gcsgban", "Ban pe toate serverele: <țintă> <minute> [motiv]", OnBanCommand),
+        ("css_gcsmute", "Mute vocal: <țintă> <minute> [motiv]", OnCommCommand),
+        ("css_gcsgag", "Gag (chat): <țintă> <minute> [motiv]", OnCommCommand),
+        ("css_gcsunmute", "Ridică mute-ul: <țintă> [motiv]", OnUncommCommand),
+        ("css_gcsungag", "Ridică gag-ul: <țintă> [motiv]", OnUncommCommand),
+        ("css_gcsunban", "Ridică un ban: <SteamID64 | IP> [motiv]", OnUnbanCommand),
+        ("css_gcskick", "Kick cu motiv (intră în jurnalul GCS): <țintă> [motiv]", OnKickCommand),
+        ("css_gcsmatch", "Meciul mix urmărit de GCS: start | live | halftime | end | abort", OnMatchCommand),
+    };
+
+    /// <summary>Modulele s-au schimbat pe site: ce s-a oprit nu mai atinge nimic, ce s-a pornit își trage listele acum.</summary>
+    private void FeaturesChanged(Dictionary<string, bool> before)
+    {
+        ApplyFeatures();
+        var players = Utilities.GetPlayers().Where(Tracked).ToList();
+        if (before["admins"] && !Feat("admins"))
+        {
+            // Permisiunile revin la sistemul serverului (configs/admins.json).
+            _vipAdded.Clear();
+            Server.ExecuteCommand("css_reloadadmins");
+        }
+        else if (before["vip"] && !Feat("vip") && !Feat("admins"))
+        {
+            foreach (var p in players)
+            {
+                if (_vipAdded.Remove(p.Slot, out var added) && added.Length > 0) AdminManager.RemovePlayerPermissions(new SteamID(p.SteamID), added);
+            }
+        }
+        if (before["sanctions"] && !Feat("sanctions"))
+        {
+            foreach (var p in players) SetComm(p, false, false);
+        }
+        if ((!before["admins"] && Feat("admins")) || (!before["vip"] && Feat("vip")) || (!before["sanctions"] && Feat("sanctions"))) _ = PullListsAsync(true);
+    }
+
     // ─── Referințele și evenimentele ─────────────────────────────────────────
 
     /// <summary>Referința jucătorului (§6.3): pe CS2 identitatea e mereu SteamID-ul (GCS decide, pluginul raportează).</summary>
@@ -130,6 +284,28 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
         return new JsonObject { ["auth"] = p.SteamID.ToString(), ["steam"] = true, ["name"] = p.PlayerName, ["ip"] = ip };
     }
 
+    /// <summary>
+    /// Referința cu permisiunile de admin actuale ale jucătorului, din sistemul serverului (`configs/admins.json`,
+    /// grupurile): doar citite, ca site-ul să arate prezența adminilor.
+    /// </summary>
+    private static JsonObject RefWithRights(CCSPlayerController p)
+    {
+        var r = Ref(p);
+        var steamId = new SteamID(p.SteamID);
+        var data = AdminManager.GetPlayerAdminData(steamId);
+        if (data is null) return r;
+        var permissions = new JsonArray();
+        foreach (var perm in KnownPermissions)
+        {
+            if (AdminManager.PlayerHasPermissions(steamId, perm)) permissions.Add(perm);
+        }
+        if (permissions.Count > 0) r["permissions"] = permissions;
+        var groups = new JsonArray();
+        foreach (var g in data.Groups.Take(16)) groups.Add(g);
+        if (groups.Count > 0) r["groups"] = groups;
+        return r;
+    }
+
     private static JsonObject ConsoleRef() => new() { ["auth"] = "CONSOLE", ["name"] = "Console" };
 
     /// <summary>Pune evenimentul în coadă; întoarce poziția lui (<see cref="EventQueue.Add"/>).</summary>
@@ -137,6 +313,11 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
     {
         fields["type"] = type;
         return _queue.Add(fields, Now());
+    }
+
+    private void QueueAll(List<(string Type, JsonObject Fields)> events)
+    {
+        foreach (var (type, fields) in events) Queue(type, fields);
     }
 
     private void OnMapStart(string mapName)
@@ -151,9 +332,11 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
         var p = ev.Userid;
         if (!Tracked(p)) return HookResult.Continue;
         _weapons[p!.Slot] = new Dictionary<string, WeaponDelta>();
+        _vipAdded.Remove(p.Slot);
         ApplyLocal(p);
-        Queue("connect", new JsonObject { ["player"] = Ref(p) });
-        _ = CheckAsync(p);
+        Queue("connect", new JsonObject { ["player"] = RefWithRights(p) });
+        // Verificarea proaspătă la site doar pentru modulele de administrare.
+        if (AnyManage) _ = CheckAsync(p);
         return HookResult.Continue;
     }
 
@@ -166,6 +349,7 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
         _gagged.Remove(p!.Slot);
         _muted.Remove(p.Slot);
         _weapons.Remove(p.Slot);
+        _vipAdded.Remove(p.Slot);
         _mix.Leave(p.Slot);
         return HookResult.Continue;
     }
@@ -232,6 +416,18 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
         map.Clear();
     }
 
+    /// <summary>Scorul echipelor (CT / T), din entitățile echipelor.</summary>
+    private static (int Ct, int T) TeamScores()
+    {
+        int ct = 0, t = 0;
+        foreach (var team in Utilities.FindAllEntitiesByDesignerName<CCSTeam>("cs_team_manager"))
+        {
+            if (team.TeamNum == (int)CsTeam.CounterTerrorist) ct = team.Score;
+            else if (team.TeamNum == (int)CsTeam.Terrorist) t = team.Score;
+        }
+        return (ct, t);
+    }
+
     private HookResult OnRoundEnd(EventRoundEnd ev, GameEventInfo info)
     {
         // Winner: 2 = T, 3 = CT; altceva = egal.
@@ -244,7 +440,64 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
             FlushWeapons(p);
         }
         Queue("round_end", new JsonObject { ["winner"] = winner, ["players"] = players, ["map"] = Server.MapName });
-        foreach (var (type, fields) in _mix.OnRoundEnd(winner, Config.MixReady, Config.MixMaxRounds)) Queue(type, fields);
+        // Finalul meciului la majoritate: urmărirea pasivă și ready-up-ul (comanda adminului îl încheie singură).
+        QueueAll(_mix.OnRoundEnd(winner, !_mixManual, MaxRounds()));
+        return HookResult.Continue;
+    }
+
+    // ─── Meciurile mix urmărite pasiv (specul plugin-v2 §3) ──────────────────
+
+    /// <summary>Rundele unui meci: `mp_maxrounds` al serverului, altfel `MixMaxRounds`.</summary>
+    private int MaxRounds()
+    {
+        var rounds = ConVar.Find("mp_maxrounds")?.GetPrimitiveValue<int>() ?? 0;
+        return rounds > 0 ? rounds : Math.Max(2, Config.MixMaxRounds);
+    }
+
+    /// <summary>Pe un server mix, fără ca meciul să fie condus din comandă în această hartă.</summary>
+    private bool PassiveMix => _isMix && !_mixManual;
+
+    private HookResult MarkRestart()
+    {
+        if (PassiveMix) _pendingStart = true;
+        return HookResult.Continue;
+    }
+
+    private HookResult OnRoundStart(EventRoundStart ev, GameEventInfo info)
+    {
+        if (!PassiveMix) return HookResult.Continue;
+        var players = Utilities.GetPlayers().Where(Tracked).ToList();
+        if (_pendingStart)
+        {
+            _pendingStart = false;
+            if (_mix.Open)
+            {
+                // Restartul cu 0 runde sau după schimbarea părților: meciul continuă. Unul înainte de runda 3: meci nou.
+                if (_mix.Round > 0 && !_mix.Swapped && _mix.Round < 3)
+                {
+                    QueueAll(_mix.Command("abort", players, Server.MapName, Ref, out _));
+                    StartPassive(players);
+                }
+                return HookResult.Continue;
+            }
+            StartPassive(players);
+            return HookResult.Continue;
+        }
+        QueueAll(_mix.OnRoundStart(players, Server.MapName, Ref));
+        return HookResult.Continue;
+    }
+
+    private void StartPassive(List<CCSPlayerController> players)
+    {
+        var (ct, t) = MixMatch.Sides(players);
+        if (ct < MixMatch.MinTeam || t < MixMatch.MinTeam) return;
+        QueueAll(_mix.Command("start", players, Server.MapName, Ref, out var ok));
+        if (ok) QueueAll(_mix.Command("live", players, Server.MapName, Ref, out _));
+    }
+
+    private HookResult OnMatchEnd(EventCsWinPanelMatch ev, GameEventInfo info)
+    {
+        if (!_mixManual && _mix.Live) QueueAll(_mix.Command("end", new List<CCSPlayerController>(), Server.MapName, Ref, out _));
         return HookResult.Continue;
     }
 
@@ -262,10 +515,16 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
 
     private void Tick()
     {
+        if (_enrolling)
+        {
+            EnrollTick();
+            return;
+        }
         if (_client is not { Configured: true }) return;
         var batch = _queue.TakeBatch(_eventsInterval);
         if (batch is { } b) _ = SendEventsAsync(b.Body, b.Count);
-        if ((DateTime.UtcNow - _lastPull).TotalMinutes >= 10) _ = PullListsAsync(true);
+        // Doar modulele cu liste (admini, VIP, sancțiuni) trag de la site; colectorul nu trage nimic.
+        if (AnyManage && (DateTime.UtcNow - _lastPull).TotalMinutes >= 10) _ = PullListsAsync(true);
     }
 
     private async Task SendEventsAsync(string body, int count)
@@ -294,33 +553,70 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
             var players = new JsonArray();
             foreach (var p in Utilities.GetPlayers().Where(Tracked))
             {
-                var r = Ref(p);
+                var r = RefWithRights(p);
                 r["team"] = p.Team == CsTeam.CounterTerrorist ? "CT" : p.Team == CsTeam.Terrorist ? "T" : "SPEC";
                 r["score"] = p.Score;
                 players.Add(r);
             }
-            var body = new JsonObject { ["plugin"] = BridgeClient.PluginId, ["map"] = Server.MapName, ["maxPlayers"] = Server.MaxPlayers, ["players"] = players };
+            var (ct, t) = TeamScores();
+            var modules = new JsonArray();
+            foreach (var f in Features.Where(Feat)) modules.Add(f);
+            var body = new JsonObject
+            {
+                ["plugin"] = BridgeClient.PluginId,
+                ["map"] = Server.MapName,
+                ["maxPlayers"] = Server.MaxPlayers,
+                ["players"] = players,
+                ["modules"] = modules,
+                ["scores"] = new JsonObject { ["ct"] = ct, ["t"] = t },
+            };
             if (_mix.Open) body["match"] = _mix.State(Server.MapName, Ref);
             tcs.SetResult(body.ToJsonString());
         });
         var res = await _client.SendAsync("POST", "/heartbeat", await tcs.Task.ConfigureAwait(false)).ConfigureAwait(false);
         if (res.Status != 200 || res.Body is null) return;
-        _heartbeat = Math.Clamp(res.Body["config"]?["heartbeat"]?.GetValue<int>() ?? 30, 15, 120);
-        _eventsInterval = Math.Clamp(res.Body["config"]?["events"]?.GetValue<int>() ?? 10, 5, 60);
+        var config = res.Body["config"];
+        _heartbeat = Math.Clamp(config?["heartbeat"]?.GetValue<int>() ?? 30, 15, 120);
+        _eventsInterval = Math.Clamp(config?["events"]?.GetValue<int>() ?? 10, 5, 60);
+        _isMix = config?["isMix"] is JsonValue mix && mix.TryGetValue<bool>(out var isMix) && isMix;
+        if (config?["features"] is JsonObject features)
+        {
+            var before = Features.ToDictionary(f => f, Feat);
+            var changed = false;
+            foreach (var f in Features)
+            {
+                var on = features[f] is JsonValue v && v.TryGetValue<bool>(out var value) && value;
+                if (on == _siteFeatures[f]) continue;
+                _siteFeatures[f] = on;
+                changed = true;
+            }
+            if (changed)
+            {
+                SaveFeatures();
+                Server.NextFrame(() => FeaturesChanged(before));
+            }
+        }
+        // Doar listele modulelor pornite.
         var versions = res.Body["versions"];
-        if (versions?["admins"]?.GetValue<string>() != _lists.AdminsEtag || versions?["vip"]?.GetValue<string>() != _lists.VipEtag) await PullListsAsync(false).ConfigureAwait(false);
+        if ((Feat("admins") && versions?["admins"]?.GetValue<string>() != _lists.AdminsEtag) || (Feat("vip") && versions?["vip"]?.GetValue<string>() != _lists.VipEtag)) await PullListsAsync(false).ConfigureAwait(false);
         _remoteSanctions = versions?["sanctions"]?.GetValue<long>() ?? _remoteSanctions;
-        if (_remoteSanctions != _lists.Cursor) await PullSanctionsAsync().ConfigureAwait(false);
+        if (Feat("sanctions") && _remoteSanctions != _lists.Cursor) await PullSanctionsAsync().ConfigureAwait(false);
     }
 
     private async Task PullListsAsync(bool withSanctions)
     {
         _lastPull = DateTime.UtcNow;
-        var admins = await _client!.SendAsync("GET", "/admins", etag: _lists.AdminsEtag).ConfigureAwait(false);
-        if (admins.Status == 200 && admins.Body is not null) _lists.SetAdmins(admins.Body);
-        var vip = await _client.SendAsync("GET", "/vip", etag: _lists.VipEtag).ConfigureAwait(false);
-        if (vip.Status == 200 && vip.Body is not null) _lists.SetVip(vip.Body);
-        if (withSanctions) await PullSanctionsAsync().ConfigureAwait(false);
+        if (Feat("admins"))
+        {
+            var admins = await _client!.SendAsync("GET", "/admins", etag: _lists.AdminsEtag).ConfigureAwait(false);
+            if (admins.Status == 200 && admins.Body is not null) _lists.SetAdmins(admins.Body);
+        }
+        if (Feat("vip"))
+        {
+            var vip = await _client!.SendAsync("GET", "/vip", etag: _lists.VipEtag).ConfigureAwait(false);
+            if (vip.Status == 200 && vip.Body is not null) _lists.SetVip(vip.Body);
+        }
+        if (withSanctions && Feat("sanctions")) await PullSanctionsAsync().ConfigureAwait(false);
         Server.NextFrame(() => Utilities.GetPlayers().Where(Tracked).ToList().ForEach(ApplyLocal));
     }
 
@@ -353,34 +649,53 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
         }
     }
 
-    // ─── Aplicarea pe jucători ───────────────────────────────────────────────
+    // ─── Aplicarea pe jucători (doar modulele pornite) ───────────────────────
 
-    /// <summary>Listele locale: banul → kick; mute → vocea oprită; gag → chat-ul blocat; drepturile de admin și VIP.</summary>
+    /// <summary>
+    /// Listele locale, după module: banul → kick; mute → vocea oprită; gag → chat-ul blocat („sanctions”); adminii și VIP-ul
+    /// înlocuiesc permisiunile („admins”) sau VIP-ul se adaugă peste cele ale serverului („vip”). Fără module, nimic.
+    /// </summary>
     private void ApplyLocal(CCSPlayerController p)
     {
         if (!Tracked(p)) return;
-        var ip = (p.IpAddress ?? "").Split(':')[0];
-        var active = _lists.ActiveFor(p.SteamID, ip, Now());
-        if (active.TryGetValue("ban", out var ban))
+        if (Feat("sanctions"))
         {
-            Kick(p, ban);
+            var ip = (p.IpAddress ?? "").Split(':')[0];
+            var active = _lists.ActiveFor(p.SteamID, ip, Now());
+            if (active.TryGetValue("ban", out var ban))
+            {
+                Kick(p, ban);
+                return;
+            }
+            SetComm(p, active.ContainsKey("mute"), active.ContainsKey("gag"));
+        }
+        var steamId = new SteamID(p.SteamID);
+        if (Feat("admins"))
+        {
+            var rights = _lists.RightsFor(p.SteamID, Now());
+            AdminManager.ClearPlayerPermissions(steamId);
+            if (rights.Permissions.Length > 0) AdminManager.AddPlayerPermissions(steamId, rights.Permissions);
+            AdminManager.SetPlayerImmunity(steamId, rights.Immunity);
             return;
         }
-        SetComm(p, active.ContainsKey("mute"), active.ContainsKey("gag"));
-        var steamId = new SteamID(p.SteamID);
-        var rights = _lists.RightsFor(p.SteamID, Now());
-        AdminManager.ClearPlayerPermissions(steamId);
-        if (rights.Permissions.Length > 0) AdminManager.AddPlayerPermissions(steamId, rights.Permissions);
-        AdminManager.SetPlayerImmunity(steamId, rights.Immunity);
+        if (!Feat("vip")) return;
+        // Doar VIP: permisiunile serverului rămân; se adaugă doar cele lipsă (și se scot doar cele adăugate de GCS).
+        if (_vipAdded.Remove(p.Slot, out var previous) && previous.Length > 0) AdminManager.RemovePlayerPermissions(steamId, previous);
+        var added = _lists.VipPermissionsFor(p.SteamID, Now()).Where(perm => !AdminManager.PlayerHasPermissions(steamId, perm)).ToArray();
+        if (added.Length > 0) AdminManager.AddPlayerPermissions(steamId, added);
+        _vipAdded[p.Slot] = added;
     }
 
     private void SetComm(CCSPlayerController p, bool mute, bool gag)
     {
+        var wasMuted = _muted.Contains(p.Slot);
         if (mute) _muted.Add(p.Slot);
         else _muted.Remove(p.Slot);
         if (gag) _gagged.Add(p.Slot);
         else _gagged.Remove(p.Slot);
-        p.VoiceFlags = mute ? VoiceFlags.Muted : VoiceFlags.Normal;
+        // Vocea se schimbă doar când GCS a pus / scoate un mute (nu se atinge un mute dat de alt plugin).
+        if (mute) p.VoiceFlags = VoiceFlags.Muted;
+        else if (wasMuted) p.VoiceFlags = VoiceFlags.Normal;
     }
 
     private void Kick(CCSPlayerController p, Sanction ban)
@@ -405,6 +720,7 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
         if (res.Status != 200 || res.Body is null) return;
         Server.NextFrame(() =>
         {
+            if (!Feat("sanctions")) return;
             var player = Utilities.GetPlayerFromSlot(slot);
             if (player is null || !player.IsValid || player.SteamID != steamId) return;
             if (LocalLists.ParseSanction(res.Body["ban"]) is { Id: > 0 } ban)
@@ -422,20 +738,20 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
     private HookResult OnSay(CCSPlayerController? player, CommandInfo info)
     {
         if (player is null || !Tracked(player)) return HookResult.Continue;
-        if (_gagged.Contains(player.Slot))
+        if (Feat("sanctions") && _gagged.Contains(player.Slot))
         {
             player.PrintToChat($" {ChatColors.Red}[GCS]{ChatColors.Default} Ai gag: nu poți scrie în chat.");
             return HookResult.Handled;
         }
+        if (!Feat("mixReady") || !_isMix) return HookResult.Continue;
         var text = info.GetArg(1).Trim();
-        if (Config.MixReady && (text.Equals("!ready", StringComparison.OrdinalIgnoreCase) || text.Equals("/ready", StringComparison.OrdinalIgnoreCase)))
+        if (text.Equals("!ready", StringComparison.OrdinalIgnoreCase) || text.Equals("/ready", StringComparison.OrdinalIgnoreCase))
         {
-            var events = _mix.Ready(player.Slot, true, Utilities.GetPlayers().Where(Tracked).ToList(), Config.MixPlayers, Server.MapName, Ref, out var message);
-            foreach (var (type, fields) in events) Queue(type, fields);
+            QueueAll(_mix.Ready(player.Slot, true, Utilities.GetPlayers().Where(Tracked).ToList(), Config.MixPlayers, Server.MapName, Ref, out var message));
             Server.PrintToChatAll($" [GCS] {message}");
             return HookResult.Handled;
         }
-        if (Config.MixReady && (text.Equals("!unready", StringComparison.OrdinalIgnoreCase) || text.Equals("/unready", StringComparison.OrdinalIgnoreCase)))
+        if (text.Equals("!unready", StringComparison.OrdinalIgnoreCase) || text.Equals("/unready", StringComparison.OrdinalIgnoreCase))
         {
             _mix.Ready(player.Slot, false, Utilities.GetPlayers().Where(Tracked).ToList(), Config.MixPlayers, Server.MapName, Ref, out var message);
             Server.PrintToChatAll($" [GCS] {message}");
@@ -471,7 +787,16 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
         });
     }
 
-    // ─── Sancțiunile din joc ────────────────────────────────────────────────
+    // ─── Comenzile de admin GCS (modulul „commands”) ─────────────────────────
+
+    /// <summary>Comanda e permisă: modulul pornit și (pentru un jucător) cel puțin una dintre permisiuni.</summary>
+    private bool Allowed(CCSPlayerController? admin, CommandInfo command, params string[] permissions)
+    {
+        if (!Feat("commands")) return false;
+        if (admin is null || permissions.Any(perm => AdminManager.PlayerHasPermissions(admin, perm))) return true;
+        command.ReplyToCommand("[GCS] Nu ai dreptul la această comandă.");
+        return false;
+    }
 
     private long QueueSanction(CCSPlayerController? admin, CCSPlayerController target, string kind, int minutes, string reason, bool global)
     {
@@ -493,12 +818,11 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
         return (minutes, reason.Length > 0 ? reason : "-");
     }
 
-    [ConsoleCommand("css_gcsban", "Ban pe acest server: <țintă> <minute> [motiv]")]
-    [ConsoleCommand("css_gcsgban", "Ban pe toate serverele: <țintă> <minute> [motiv]")]
     [CommandHelper(minArgs: 2, usage: "<țintă> <minute> [motiv]")]
     [RequiresPermissionsOr("@css/ban", "@gcs/tempban")]
     public void OnBanCommand(CCSPlayerController? admin, CommandInfo command)
     {
+        if (!Allowed(admin, command, "@css/ban", "@gcs/tempban")) return;
         var (minutes, reason) = Duration(command);
         // `@gcs/tempban` (flag-ul v) dă doar bannuri temporare.
         if (admin is not null && minutes == 0 && !AdminManager.PlayerHasPermissions(admin, "@css/ban"))
@@ -519,12 +843,11 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
         command.ReplyToCommand(global ? "[GCS] Ban trimis (toate serverele)." : "[GCS] Ban trimis (acest server).");
     }
 
-    [ConsoleCommand("css_gcsmute", "Mute vocal: <țintă> <minute> [motiv]")]
-    [ConsoleCommand("css_gcsgag", "Gag (chat): <țintă> <minute> [motiv]")]
     [CommandHelper(minArgs: 2, usage: "<țintă> <minute> [motiv]")]
     [RequiresPermissions("@css/chat")]
     public void OnCommCommand(CCSPlayerController? admin, CommandInfo command)
     {
+        if (!Allowed(admin, command, "@css/chat")) return;
         var (minutes, reason) = Duration(command);
         var mute = command.GetArg(0).Equals("css_gcsmute", StringComparison.OrdinalIgnoreCase);
         foreach (var target in command.GetArgTargetResult(1).Players.Where(Tracked))
@@ -536,12 +859,11 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
         command.ReplyToCommand(mute ? "[GCS] Mute aplicat." : "[GCS] Gag aplicat.");
     }
 
-    [ConsoleCommand("css_gcsunmute", "Ridică mute-ul: <țintă> [motiv]")]
-    [ConsoleCommand("css_gcsungag", "Ridică gag-ul: <țintă> [motiv]")]
     [CommandHelper(minArgs: 1, usage: "<țintă> [motiv]")]
     [RequiresPermissions("@css/chat")]
     public void OnUncommCommand(CCSPlayerController? admin, CommandInfo command)
     {
+        if (!Allowed(admin, command, "@css/chat")) return;
         var mute = command.GetArg(0).Equals("css_gcsunmute", StringComparison.OrdinalIgnoreCase);
         foreach (var target in command.GetArgTargetResult(1).Players.Where(Tracked))
         {
@@ -551,11 +873,11 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
         command.ReplyToCommand(mute ? "[GCS] Mute ridicat." : "[GCS] Gag ridicat.");
     }
 
-    [ConsoleCommand("css_gcsunban", "Ridică un ban: <SteamID64 | IP> [motiv]")]
     [CommandHelper(minArgs: 1, usage: "<SteamID64 | IP> [motiv]")]
     [RequiresPermissions("@css/unban")]
     public void OnUnbanCommand(CCSPlayerController? admin, CommandInfo command)
     {
+        if (!Allowed(admin, command, "@css/unban")) return;
         var arg = command.GetArg(1).Trim();
         var target = arg.Contains('.') ? new JsonObject { ["ip"] = arg } : new JsonObject { ["auth"] = arg, ["steam"] = true };
         Queue("unsanction", new JsonObject { ["kind"] = "ban", ["target"] = target, ["reason"] = command.GetArg(2), ["admin"] = admin is not null && Tracked(admin) ? Ref(admin) : ConsoleRef() });
@@ -564,11 +886,11 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
     }
 
     /// <summary>Jurnalul acțiunilor (§4.9) pentru kick-urile date prin plugin.</summary>
-    [ConsoleCommand("css_gcskick", "Kick cu motiv (intră în jurnalul GCS): <țintă> [motiv]")]
     [CommandHelper(minArgs: 1, usage: "<țintă> [motiv]")]
     [RequiresPermissions("@css/kick")]
     public void OnKickCommand(CCSPlayerController? admin, CommandInfo command)
     {
+        if (!Allowed(admin, command, "@css/kick")) return;
         var reason = command.GetArg(2);
         foreach (var target in command.GetArgTargetResult(1).Players.Where(Tracked))
         {
@@ -578,16 +900,175 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
         }
     }
 
-    // ─── Meciul mix ─────────────────────────────────────────────────────────
-
-    [ConsoleCommand("css_gcsmatch", "Meciul mix urmărit de GCS: start | live | halftime | end | abort")]
     [CommandHelper(minArgs: 1, usage: "<start|live|halftime|end|abort>")]
     [RequiresPermissions("@css/config")]
     public void OnMatchCommand(CCSPlayerController? admin, CommandInfo command)
     {
-        var events = _mix.Command(command.GetArg(1).ToLowerInvariant(), Utilities.GetPlayers().Where(Tracked).ToList(), Server.MapName, Ref, out var ok);
-        foreach (var (type, fields) in events) Queue(type, fields);
+        if (!Allowed(admin, command, "@css/config")) return;
+        // Meciul condus din comandă: urmărirea pasivă stă deoparte până la harta următoare; doar aici pluginul mută
+        // jucătorii la pauză și repornește jocul la `live`.
+        _mixManual = true;
+        var events = _mix.Command(command.GetArg(1).ToLowerInvariant(), Utilities.GetPlayers().Where(Tracked).ToList(), Server.MapName, Ref, out var ok, move: true);
+        QueueAll(events);
         if (ok && command.GetArg(1).Equals("live", StringComparison.OrdinalIgnoreCase)) Server.ExecuteCommand("mp_restartgame 1");
         command.ReplyToCommand(ok ? $"[GCS] Meci: {command.GetArg(1)}." : $"[GCS] Tranziție nepermisă: {command.GetArg(1)}.");
+    }
+
+    // ─── Înrolarea automată (specul plugin-v2 §5) ────────────────────────────
+
+    /// <summary>Secretul (generat o singură dată, 32 de octeți aleatori) și referința primită de la site.</summary>
+    private void LoadEnroll()
+    {
+        try
+        {
+            if (File.Exists(EnrollPath) && JsonNode.Parse(File.ReadAllText(EnrollPath)) is JsonObject saved)
+            {
+                _enrollSecret = saved["secret"]?.GetValue<string>() ?? "";
+                _enrollRef = saved["enrollment"]?.GetValue<string>() ?? "";
+                var paused = saved["pausedUntil"]?.GetValue<long>() ?? 0;
+                if (paused > 0) _enrollNextAt = DateTimeOffset.FromUnixTimeSeconds(paused).UtcDateTime;
+            }
+        }
+        catch (Exception)
+        {
+            _enrollSecret = "";
+        }
+        if (_enrollSecret.Length < 32)
+        {
+            _enrollSecret = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)).Replace('+', '-').Replace('/', '_').TrimEnd('=');
+            _enrollRef = "";
+            SaveEnroll(0);
+        }
+        // Prima cerere după 10 secunde (serverul trebuie să răspundă deja la interogarea site-ului).
+        if (_enrollNextAt < DateTime.UtcNow.AddSeconds(10)) _enrollNextAt = DateTime.UtcNow.AddSeconds(10);
+    }
+
+    private void SaveEnroll(long pausedUntil)
+    {
+        var doc = new JsonObject { ["secret"] = _enrollSecret, ["enrollment"] = _enrollRef, ["pausedUntil"] = pausedUntil };
+        File.WriteAllText(EnrollPath, doc.ToJsonString());
+    }
+
+    private void EnrollTick()
+    {
+        if (_enrollBusy || DateTime.UtcNow < _enrollNextAt || _client is null) return;
+        _enrollBusy = true;
+        JsonObject body;
+        string path;
+        if (_enrollRef.Length == 0)
+        {
+            path = "/enroll";
+            body = new JsonObject
+            {
+                ["game"] = "cs2",
+                ["port"] = ConVar.Find("hostport")?.GetPrimitiveValue<int>() ?? 27015,
+                ["hostname"] = ConVar.Find("hostname")?.StringValue ?? "",
+                ["map"] = Server.MapName,
+                ["maxPlayers"] = Server.MaxPlayers,
+                ["players"] = Utilities.GetPlayers().Count(Tracked),
+                ["plugin"] = BridgeClient.PluginId,
+                ["secret"] = _enrollSecret,
+            };
+        }
+        else
+        {
+            path = "/enroll/status";
+            body = new JsonObject { ["enrollment"] = _enrollRef, ["secret"] = _enrollSecret };
+        }
+        var client = _client;
+        var text = body.ToJsonString();
+        _ = Task.Run(async () =>
+        {
+            var res = await client.PostPlainAsync(path, text).ConfigureAwait(false);
+            Server.NextFrame(() => OnEnroll(path, res));
+        });
+    }
+
+    private void OnEnroll(string path, BridgeResponse res)
+    {
+        _enrollBusy = false;
+        if (!_enrolling) return;
+        var now = DateTime.UtcNow;
+        if (res.Status == 0 || res.Status >= 500)
+        {
+            // Rețeaua / 5xx: 60 s, 120 s … max 15 minute.
+            _enrollBackoff = _enrollBackoff == 0 ? 60 : Math.Min(_enrollBackoff * 2, 900);
+            _enrollNextAt = now.AddSeconds(_enrollBackoff);
+            return;
+        }
+        if (res.Status == 429)
+        {
+            _enrollNextAt = now.AddSeconds(120);
+            return;
+        }
+        if (res.Status == 404 && path == "/enroll/status")
+        {
+            // Înrolarea a expirat / a dispărut: se cere din nou, cu același secret.
+            _enrollRef = "";
+            SaveEnroll(0);
+            _enrollNextAt = now.AddSeconds(5);
+            return;
+        }
+        if (res.Status != 200 || res.Body is null)
+        {
+            Logger.LogWarning("[GCS] Înrolarea refuzată de site ({Status} {Error}). Reîncerc peste o oră.", res.Status, res.Error);
+            _enrollNextAt = now.AddHours(1);
+            return;
+        }
+        _enrollBackoff = 0;
+        var status = res.Body["status"]?.GetValue<string>() ?? "";
+        if (status == "rejected")
+        {
+            Logger.LogWarning("[GCS] Serverul a fost respins în ACP. Nu mai cer o cheie 24 de ore.");
+            _enrollNextAt = now.AddHours(24);
+            SaveEnroll(new DateTimeOffset(_enrollNextAt).ToUnixTimeSeconds());
+            return;
+        }
+        if (res.Body["enrollment"] is JsonValue reference && reference.TryGetValue<string>(out var enrollment))
+        {
+            _enrollRef = enrollment;
+            SaveEnroll(0);
+        }
+        if (res.Body["key"] is JsonValue keyValue && keyValue.TryGetValue<string>(out var key))
+        {
+            StoreKey(key);
+            return;
+        }
+        if (status == "approved")
+        {
+            if (res.Body["delivered"]?.GetValue<bool>() == true)
+            {
+                // Cheia a plecat deja (și a fost folosită), dar nu e aici: o înrolare nouă, de aprobat din nou.
+                Logger.LogWarning("[GCS] Cheia acestui server a fost deja livrată, dar nu e salvată aici. Mă înrolez din nou.");
+                _enrollSecret = "";
+                if (File.Exists(EnrollPath)) File.Delete(EnrollPath);
+                LoadEnroll();
+                return;
+            }
+            _enrollNextAt = now.AddSeconds(1);
+            return;
+        }
+        if (!_enrollAnnounced)
+        {
+            _enrollAnnounced = true;
+            Logger.LogInformation("[GCS] Serverul așteaptă aprobarea pe site: ACP → Gaming → Servere → Servere noi detectate.");
+        }
+        var retry = res.Body["retryAfter"] is JsonValue r && r.TryGetValue<int>(out var seconds) ? seconds : 60;
+        _enrollNextAt = now.AddSeconds(Math.Clamp(retry, 30, 600));
+    }
+
+    /// <summary>Cheia primită după aprobare: salvată în `data/gcs_bridge_key.txt`, apoi protocolul semnat, imediat.</summary>
+    private void StoreKey(string key)
+    {
+        File.WriteAllText(KeyPath, key.Trim());
+        Connect();
+        if (_client is not { Configured: true })
+        {
+            Logger.LogWarning("[GCS] Cheia primită nu e validă.");
+            return;
+        }
+        if (File.Exists(EnrollPath)) File.Delete(EnrollPath);
+        Logger.LogInformation("[GCS] Serverul a fost aprobat: cheia e salvată, pluginul e conectat la site.");
+        _ = HeartbeatAsync();
     }
 }

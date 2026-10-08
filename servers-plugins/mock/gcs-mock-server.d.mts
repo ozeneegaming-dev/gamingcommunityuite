@@ -6,7 +6,8 @@ export type MockRequest = { method: string; path: string; headers: Record<string
 export type MockResponse = { status: number; headers?: Record<string, string>; body: string | null };
 export type MockTransport = (req: MockRequest) => Promise<MockResponse>;
 
-export type MockPlayerRef = { auth: string; steam?: boolean; name: string; ip?: string; team?: string; score?: number; time?: number };
+export type MockPlayerRef = { auth: string; steam?: boolean; name: string; ip?: string; team?: string; score?: number; time?: number; flags?: string; permissions?: string[]; groups?: string[] };
+export type MockPlainResponse = { status: number; json: any; headers: Record<string, string> };
 export type MockEvent = { id: string; type: string; at: number; [field: string]: unknown };
 export type MockEventResult = { id: string; status: "ok" | "duplicate" | "rejected"; error?: string; note?: string; sanctionId?: number };
 
@@ -20,12 +21,16 @@ export declare function signHeaders(
   alg?: "hmac-sha256" | "sha256-env",
   nonce?: string,
 ): Record<string, string>;
-export declare function httpTransport(baseUrl: string): MockTransport;
+export declare function httpTransport(baseUrl: string, extraHeaders?: Record<string, string>): MockTransport;
+export declare function startA2sResponder(opts?: { port?: number; game?: string; name?: string; map?: string; players?: number; maxPlayers?: number }): Promise<{ port: number; close(): Promise<void> }>;
 export declare function mockPlayer(game: string, n: number, extra?: Partial<MockPlayerRef>): MockPlayerRef;
 
 export declare class GcsMockServer {
-  constructor(opts: { token: string; transport: MockTransport; game?: string; clock?: () => number; alg?: "hmac-sha256" | "sha256-env"; runId?: string; log?: (msg: string) => void });
-  readonly key: { keyId: string; signingKey: string };
+  constructor(opts: { token?: string; transport: MockTransport; game?: string; clock?: () => number; alg?: "hmac-sha256" | "sha256-env"; runId?: string; log?: (msg: string) => void });
+  key: { keyId: string; signingKey: string } | null;
+  token: string | null;
+  enrollSecret: string;
+  enrollment: string | null;
   readonly runId: string;
   game: string;
   offset: number;
@@ -34,7 +39,11 @@ export declare class GcsMockServer {
   now(): number;
   request(method: string, path: string, payload?: unknown, extraHeaders?: Record<string, string>): Promise<{ status: number; json: any; headers: Record<string, string> }>;
   event(type: string, fields?: Record<string, unknown>): MockEvent;
-  heartbeat(opts?: { map?: string; players?: MockPlayerRef[]; match?: unknown; maxPlayers?: number }): Promise<any>;
+  plain(path: string, payload: unknown): Promise<MockPlainResponse>;
+  enroll(opts?: { port?: number; hostname?: string; map?: string; players?: number; maxPlayers?: number }): Promise<MockPlainResponse>;
+  enrollStatus(): Promise<MockPlainResponse>;
+  waitForKey(opts?: { intervalMs?: number; timeoutMs?: number }): Promise<string>;
+  heartbeat(opts?: { map?: string; players?: MockPlayerRef[]; match?: unknown; maxPlayers?: number; modules?: string[]; scores?: { ct: number; t: number } }): Promise<any>;
   send(events: MockEvent[]): Promise<MockEventResult[]>;
   pullAdmins(): Promise<any[] | null>;
   pullVip(): Promise<any[] | null>;

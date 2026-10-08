@@ -12,7 +12,9 @@
 #endif
 
 /**
- * Conduce meciul mix urmărit de GCS (aceleași comenzi ca `gcs_match`):
+ * Conduce meciul mix urmărit de GCS (aceleași tranziții ca `gcs_match`). GCS doar urmărește meciul: restartul jocului
+ * și mutarea jucătorilor la pauză le face pluginul care cheamă nativa. După primul apel, detectarea pasivă a meciurilor
+ * stă deoparte până la harta următoare.
  *   "start"    — meci nou (warmup), echipa A = CT, echipa B = T;
  *   "live"     — meciul începe (sau reîncepe după pauză);
  *   "halftime" — pauza: echipele A / B rămân aceleași, doar părțile se schimbă;

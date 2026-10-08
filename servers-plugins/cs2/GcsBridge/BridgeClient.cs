@@ -24,7 +24,8 @@ public sealed record BridgeResponse(int Status, JsonNode? Body, string? Error)
 public sealed class BridgeClient : IDisposable
 {
     public const string BasePath = "/api/servers/bridge/v1";
-    public const string PluginId = "gcs-cs2/1.0.0";
+    public const string Version = "1.1.0";
+    public const string PluginId = "gcs-cs2/" + Version;
 
     private readonly HttpClient _http;
     private readonly string _baseUrl;
@@ -36,17 +37,24 @@ public sealed class BridgeClient : IDisposable
 
     public bool Configured { get; }
 
+    /// <summary>Adresa site-ului e o adresă http(s) absolută (fără ea nu există nici înrolare).</summary>
+    public bool UrlOk { get; }
+
+    /// <summary>Adresa e `http://`: cheia livrată la înrolare ar trece în clar.</summary>
+    public bool Insecure { get; }
+
     public BridgeClient(string url, string token)
     {
         _baseUrl = (url ?? "").Trim().TrimEnd('/');
         var parts = (token ?? "").Trim().Split('.');
-        var urlOk = Uri.TryCreate(_baseUrl, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp);
-        Configured = parts.Length == 3 && parts[0] == "gcs1" && parts[1].Length == 12 && parts[2].Length == 43 && urlOk;
+        UrlOk = Uri.TryCreate(_baseUrl, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp);
+        Insecure = UrlOk && uri!.Scheme == Uri.UriSchemeHttp;
+        Configured = parts.Length == 3 && parts[0] == "gcs1" && parts[1].Length == 12 && parts[2].Length == 43 && UrlOk;
         _keyId = Configured ? parts[1] : "";
         var k = Configured ? Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(parts[2]))).ToLowerInvariant() : "";
         _signingKey = Encoding.ASCII.GetBytes(k);
         _http = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
-        _http.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("gcs-cs2", "1.0.0"));
+        _http.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("gcs-cs2", Version));
     }
 
     /// <summary>Timpul în ceasul GCS (secunde Unix).</summary>
@@ -119,6 +127,39 @@ public sealed class BridgeClient : IDisposable
             }
         }
         return new BridgeResponse(0, null, "unreachable");
+    }
+
+    /// <summary>
+    /// O cerere fără semnătură (înrolarea, specul plugin-v2 §5: pluginul nu are încă o cheie): `POST` cu JSON. Nicio
+    /// excepție nu iese de aici; rețeaua căzută dă statusul 0.
+    /// </summary>
+    public async Task<BridgeResponse> PostPlainAsync(string path, string body, CancellationToken ct = default)
+    {
+        if (!UrlOk) return new BridgeResponse(0, null, "not_configured");
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, _baseUrl + BasePath + path) { Content = new StringContent(body, Encoding.UTF8, "application/json") };
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            cts.CancelAfter(TimeSpan.FromSeconds(15));
+            using var response = await _http.SendAsync(request, cts.Token).ConfigureAwait(false);
+            var text = await response.Content.ReadAsStringAsync(cts.Token).ConfigureAwait(false);
+            JsonObject? json = null;
+            try
+            {
+                if (text.Length > 0) json = JsonNode.Parse(text) as JsonObject;
+            }
+            catch (JsonException)
+            {
+                json = null;
+            }
+            if (json?["serverTime"] is JsonValue time && time.TryGetValue<long>(out var st)) Offset += st - Now();
+            var error = json?["error"] is JsonValue err && err.TryGetValue<string>(out var code) ? code : null;
+            return new BridgeResponse((int)response.StatusCode, json, error);
+        }
+        catch (Exception)
+        {
+            return new BridgeResponse(0, null, "network");
+        }
     }
 
     public void Dispose() => _http.Dispose();

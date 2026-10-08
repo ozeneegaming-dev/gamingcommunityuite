@@ -84,7 +84,7 @@ test("ACP: cheia API (o singură dată), scenariul complet al serverului fals, s
   // ACP: starea punții (ultimul heartbeat, pluginul), numerele, cheia folosită.
   await page.reload();
   await expect(page.getByTestId("gcs-bridge-connected")).toHaveAttribute("data-connected", "1");
-  await expect(page.getByTestId("gcs-bridge-plugin")).toHaveText("gcs-mock/cs2/1.0.0");
+  await expect(page.getByTestId("gcs-bridge-plugin")).toHaveText("gcs-mock/cs2/1.1.0");
   await expect(page.getByTestId("gcs-bridge-count-matches")).toContainText("1");
   await expect(page.getByTestId("gcs-bridge-count-sanctions")).toContainText("1");
   await expect(page.getByTestId("gcs-bridge-count-players")).toContainText("10");

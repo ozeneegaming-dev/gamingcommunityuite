@@ -1,0 +1,9 @@
+{
+  "Url": "https://comunitate.exemplu.ro",
+  "Key": "",
+  "AllowManage": true,
+  "MixPlayers": 10,
+  "MixMaxRounds": 24,
+  "Debug": false,
+  "ConfigVersion": 1
+}

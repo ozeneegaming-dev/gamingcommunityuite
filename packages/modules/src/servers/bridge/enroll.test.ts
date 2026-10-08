@@ -287,4 +287,24 @@ describe("înrolarea automată: starea, aprobarea și cheia livrată o singură 
     await enroll({ game: "cs2", port: 27030, plugin: "gcs-cs2/1.1.0" }, LOCAL);
     expect((await w.db.gameServerEnrollment.findFirstOrThrow()).check).toMatchObject({ result: "ok", folder: "csgo" });
   });
+
+  it("serverul fals (ca pluginul): se înrolează fără cheie, adminul aprobă, primește cheia o dată și trimite heartbeat-ul semnat", async () => {
+    const mock = w.mock(null, "cs16");
+    expect((await mock.enroll({ port: 27040, hostname: "Mock | CS 1.6" })).json).toMatchObject({ status: "pending" });
+    expect((await mock.enrollStatus()).json).toMatchObject({ status: "pending" });
+    await expect(mock.heartbeat()).rejects.toThrow(/cheie/);
+    // IP-ul de test (documentație) nu se poate interoga și nici adăuga ca server nou: atașarea la un server existent.
+    const existing = await w.addServer({ game: "cs16" });
+    const [row] = await w.bridge.enrollments.list(w.root);
+    const { serverId } = await w.bridge.enrollments.approve(w.root, row!.id, { serverId: existing.id, force: true });
+    const token = await mock.waitForKey({ intervalMs: 1, timeoutMs: 1000 });
+    expect(token).toMatch(/^gcs1\./);
+    const hb = await mock.heartbeat({ players: [{ auth: "STEAM_0:1:42", steam: true, name: "Admin", flags: "bcdefu" }] });
+    expect(hb.config).toMatchObject({ features: { admins: false, sanctions: false, vip: false, mixReady: false, commands: false } });
+    const status = await w.bridge.status(w.root, serverId);
+    expect(status).toMatchObject({ connected: true, server: { bridgePlugin: "gcs-mock/cs16/1.1.0" } });
+    expect(status!.roster!.players[0]).toMatchObject({ name: "Admin", flags: "bcdefu" });
+    // A doua întrebare după folosirea cheii: nimic nou.
+    expect((await mock.enrollStatus()).json).toMatchObject({ status: "approved", delivered: true });
+  });
 });

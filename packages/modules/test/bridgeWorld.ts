@@ -77,9 +77,9 @@ export async function createBridgeWorld() {
     return { id, token: key.token, keyRowId: key.id, keyId: key.keyId };
   }
 
-  /** Serverul de joc fals, pe ceasul lumii. */
-  function mock(token: string, game: "cs2" | "cs16" = "cs2", runId?: string) {
-    return new GcsMockServer({ token, transport, game, clock: () => w.clock.now, ...(runId ? { runId } : {}) });
+  /** Serverul de joc fals, pe ceasul lumii; fără cheie (`null`) se înrolează (specul plugin-v2 §5). */
+  function mock(token: string | null, game: "cs2" | "cs16" = "cs2", runId?: string) {
+    return new GcsMockServer({ ...(token ? { token } : {}), transport, game, clock: () => w.clock.now, ...(runId ? { runId } : {}) });
   }
 
   return { ...w, bridge, live, remote, fetched, transport, bridgeServer, mock, site };
