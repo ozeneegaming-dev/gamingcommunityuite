@@ -13,6 +13,7 @@ import {
   unignore,
   unlinkAccount,
 } from "../../settings-actions";
+import { authClient } from "@/lib/auth-client";
 import { GcsStatus } from "./GcsStatus";
 import { useSettingsAction } from "./useSettingsAction";
 
@@ -254,11 +255,14 @@ export function GcsAccountForms({
   email,
   hasPassword,
   accounts,
+  available = ["discord", "google", "steam"],
   labels,
 }: {
   email: string | null;
   hasPassword: boolean;
   accounts: { providerId: "discord" | "google" | "steam" }[];
+  /** Metodele de login pornite pe site (Discord / Google doar cu cheile completate în ACP). */
+  available?: ("discord" | "google" | "steam")[];
   labels: Record<string, string>;
 }) {
   const emailAction = useSettingsAction(labels.emailSent!);
@@ -334,15 +338,31 @@ export function GcsAccountForms({
         </h2>
         {(["discord", "google", "steam"] as const).map((p) => {
           const linked = accounts.some((a) => a.providerId === p);
+          if (!linked && !available.includes(p)) return null;
           return (
             <div key={p} className="gcs-settingsList__row">
               <span>
                 <GcsIconSvg icon={p === "discord" ? faDiscord : p === "google" ? faGoogle : faSteam} className="gcs-hIcon" />
                 <strong>{p === "discord" ? "Discord" : p === "google" ? "Google" : "Steam"}</strong> <span className="gcs-muted">· {linked ? labels.linked : labels.notLinked}</span>
               </span>
-              {linked && (
+              {linked ? (
                 <GcsButton icon={<GcsIconSvg icon={faLinkSlash} />} variant="ghost" disabled={linkAction.pending} onClick={() => linkAction.run(() => unlinkAccount({ providerId: p }))}>
                   {labels.unlink}
+                </GcsButton>
+              ) : p === "steam" ? (
+                <GcsButton variant="ghost" asChild icon={<GcsIconSvg icon={faLink} />}>
+                  <a href="/api/auth/steam/sign-in?callbackURL=/settings/account" data-testid={`gcs-link-${p}`}>
+                    {labels.link}
+                  </a>
+                </GcsButton>
+              ) : (
+                <GcsButton
+                  icon={<GcsIconSvg icon={faLink} />}
+                  variant="ghost"
+                  data-testid={`gcs-link-${p}`}
+                  onClick={() => authClient.linkSocial({ provider: p, callbackURL: "/settings/account", errorCallbackURL: "/settings/account" })}
+                >
+                  {labels.link}
                 </GcsButton>
               )}
             </div>

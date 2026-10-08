@@ -107,7 +107,7 @@ export function LoginForm({ discordEnabled, googleEnabled = false, initialError 
           variant="ghost"
           className="gcs-btn--google"
           icon={<GcsIconSvg icon={faGoogle} />}
-          onClick={() => authClient.signIn.social({ provider: "google", callbackURL: "/" })}
+          onClick={() => authClient.signIn.social({ provider: "google", callbackURL: "/", errorCallbackURL: "/login" })}
           data-testid="gcs-login-google"
         >
           {t("login.google")}
@@ -118,7 +118,7 @@ export function LoginForm({ discordEnabled, googleEnabled = false, initialError 
           variant="ghost"
           className="gcs-btn--discord"
           icon={<GcsIconSvg icon={faDiscord} />}
-          onClick={() => authClient.signIn.social({ provider: "discord", callbackURL: "/" })}
+          onClick={() => authClient.signIn.social({ provider: "discord", callbackURL: "/", errorCallbackURL: "/login" })}
         >
           {t("login.discord")}
         </GcsButton>

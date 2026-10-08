@@ -104,6 +104,8 @@
       "captcha": "The anti-spam check failed. Please try again.",
       "steam": "Steam sign-in failed.",
       "steam_linked": "This Steam account is already linked to another user.",
+      "account_not_linked": "An account with this email already exists, but its email isn't confirmed, so it wasn't linked automatically. Sign in with your password, then link it in Settings → Account → Linked accounts.",
+      "social": "Sign-in failed. Try again.",
       "generic": "Something went wrong. Please try again."
     }
   },
@@ -2576,6 +2578,13 @@
       "linked": "linked",
       "notLinked": "not linked",
       "unlink": "Unlink",
+      "link": "Link",
+      "linkErrors": {
+        "steam_linked": "This Steam account is already linked to another user on this site.",
+        "email_doesnt_match": "The chosen account has a different email than your account on this site.",
+        "account_already_linked_to_different_user": "The chosen account is already linked to another user on this site.",
+        "generic": "Linking the account failed. Try again."
+      },
       "emailChanged": "Your email address was confirmed and changed.",
       "emailInvalid": "The confirmation link is invalid or has expired.",
       "steamBanner": "Your account was created with Steam and has no real email.",

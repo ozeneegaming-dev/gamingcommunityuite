@@ -22,11 +22,23 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     settings.get<string>("auth.google_client_id"),
   ]);
   const { error } = await searchParams;
-  const initialError = error === "steam" || error === "steam_linked" ? error : null;
+  const initialError = loginError(error);
 
   return (
     <GcsAuthCard title={t("title")} subtitle={t("subtitle", { site: siteName })} icon={<GcsIcon name="fa-solid fa-right-to-bracket" />}>
       <LoginForm discordEnabled={discordClientId !== ""} googleEnabled={googleClientId !== ""} initialError={initialError} />
     </GcsAuthCard>
   );
+}
+
+/**
+ * Eroarea din adresă, după o autentificare eșuată: Steam (pluginul nostru) sau Discord / Google (Better Auth trimite
+ * codul în `?error=`). `account_not_linked`: există deja un cont cu acest email, cu emailul neconfirmat, deci nu se
+ * leagă automat (altfel cine a creat contul cu emailul altcuiva ar păstra accesul); se leagă din Setări → Cont.
+ */
+function loginError(error: string | undefined): string | null {
+  if (!error) return null;
+  if (error === "steam" || error === "steam_linked") return error;
+  if (error === "account_not_linked") return "account_not_linked";
+  return "social";
 }

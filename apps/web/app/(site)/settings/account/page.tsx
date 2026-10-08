@@ -29,16 +29,22 @@ const KEYS = [
   "linked",
   "notLinked",
   "unlink",
+  "link",
 ];
 
-export default async function AccountSettingsPage({ searchParams }: { searchParams: Promise<{ email?: string }> }) {
+export default async function AccountSettingsPage({ searchParams }: { searchParams: Promise<{ email?: string; error?: string }> }) {
   const actor = await currentActor();
   const t = await getTranslations("settings.account");
   const user = await services().db.user.findUniqueOrThrow({
     where: { id: actor.userId! },
     select: { email: true, accounts: { select: { providerId: true, password: true } } },
   });
-  const result = (await searchParams).email;
+  const sp = await searchParams;
+  const result = sp.email;
+  const linkError = sp.error ? (["steam_linked", "email_doesn't_match", "account_already_linked_to_different_user"].includes(sp.error) ? sp.error.replace(/'/g, "") : "generic") : null;
+  const { settings } = services();
+  const [discordId, googleId] = await Promise.all([settings.get<string>("auth.discord_client_id"), settings.get<string>("auth.google_client_id")]);
+  const available = [...(discordId ? (["discord"] as const) : []), ...(googleId ? (["google"] as const) : []), "steam" as const];
   const games = await gameAccounts(actor);
   const email = user.email.endsWith(STEAM_PLACEHOLDER_DOMAIN) ? null : user.email;
   return (
@@ -52,6 +58,11 @@ export default async function AccountSettingsPage({ searchParams }: { searchPara
           {t("emailChanged")}
         </p>
       )}
+      {linkError && (
+        <p role="alert" className="gcs-notice gcs-notice--error" data-testid="gcs-link-error">
+          {t(`linkErrors.${linkError}`)}
+        </p>
+      )}
       {result === "invalid" && (
         <p role="alert" className="gcs-notice gcs-notice--error">
           {t("emailInvalid")}
@@ -61,6 +72,7 @@ export default async function AccountSettingsPage({ searchParams }: { searchPara
         email={email}
         hasPassword={user.accounts.some((a) => a.providerId === "credential" && a.password)}
         accounts={user.accounts.filter((a) => a.providerId === "discord" || a.providerId === "google" || a.providerId === "steam").map((a) => ({ providerId: a.providerId as "discord" | "google" | "steam" }))}
+        available={available}
         labels={{ ...Object.fromEntries(KEYS.map((k) => [k, t(k)])), currentEmail: email ? t("currentEmail", { email }) : "" }}
       />
       {games && <GcsGameAccounts identities={games.identities} canLink={games.canLink} command={LINK_COMMAND} />}

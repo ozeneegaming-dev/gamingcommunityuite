@@ -104,6 +104,8 @@
       "captcha": "Der Anti-Spam-Check ist fehlgeschlagen. Bitte versuchen Sie es noch einmal.",
       "steam": "Steam-Anmeldung fehlgeschlagen.",
       "steam_linked": "Dieses Steam-Konto ist bereits mit einem anderen Benutzer verknüpft.",
+      "account_not_linked": "Ein Konto mit dieser E-Mail existiert bereits, aber die E-Mail ist nicht bestätigt, daher wurde es nicht automatisch verknüpft. Melde dich mit deinem Passwort an und verknüpfe es unter Einstellungen → Konto → Verknüpfte Konten.",
+      "social": "Die Anmeldung ist fehlgeschlagen. Versuche es erneut.",
       "generic": "Irgendetwas ging schief. Bitte versuchen Sie es noch einmal."
     }
   },
@@ -2576,6 +2578,13 @@
       "linked": "verbunden",
       "notLinked": "nicht verbunden",
       "unlink": "Unlink",
+      "link": "Verknüpfen",
+      "linkErrors": {
+        "steam_linked": "Dieses Steam-Konto ist bereits mit einem anderen Benutzer verknüpft.",
+        "email_doesnt_match": "Das gewählte Konto hat eine andere E-Mail als dein Konto hier.",
+        "account_already_linked_to_different_user": "Das gewählte Konto ist bereits mit einem anderen Benutzer verknüpft.",
+        "generic": "Die Verknüpfung ist fehlgeschlagen. Versuche es erneut."
+      },
       "emailChanged": "Ihre E-Mail-Adresse wurde bestätigt und geändert.",
       "emailInvalid": "Der Bestätigungslink ist ungültig oder abgelaufen.",
       "steamBanner": "Ihr Konto wurde mit Steam erstellt und hat keine echte E-Mail.",

@@ -58,7 +58,7 @@ export function steamPlugin(opts: { apiKey: () => Promise<string>; errorURL?: st
           let userId: string;
           if (account) {
             // Contul Steam e deja legat; dacă e legat de alt user decât cel logat, nu-l mutăm.
-            if (current && current.user.id !== account.userId) throw ctx.redirect(`${errorURL}_linked`);
+            if (current && current.user.id !== account.userId) throw ctx.redirect("/settings/account?error=steam_linked");
             userId = account.userId;
           } else if (current) {
             await adapter.linkAccount({ userId: current.user.id, providerId: PROVIDER_ID, accountId: steamId });

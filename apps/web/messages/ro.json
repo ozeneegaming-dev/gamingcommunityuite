@@ -104,6 +104,8 @@
       "captcha": "Verificarea anti-spam a eșuat. Încearcă din nou.",
       "steam": "Autentificarea cu Steam a eșuat.",
       "steam_linked": "Contul Steam e legat deja de alt utilizator.",
+      "account_not_linked": "Există deja un cont cu acest email, dar emailul lui nu e confirmat, așa că nu l-am legat automat. Intră cu parola, apoi leagă contul din Setări → Cont → Conturi legate.",
+      "social": "Autentificarea nu a reușit. Încearcă din nou.",
       "generic": "A apărut o eroare. Încearcă din nou."
     }
   },
@@ -2576,6 +2578,13 @@
       "linked": "legat",
       "notLinked": "nelegat",
       "unlink": "Dezleagă",
+      "link": "Leagă",
+      "linkErrors": {
+        "steam_linked": "Contul Steam e legat deja de alt utilizator de pe site.",
+        "email_doesnt_match": "Contul ales are alt email decât contul tău de pe site.",
+        "account_already_linked_to_different_user": "Contul ales e legat deja de alt utilizator de pe site.",
+        "generic": "Legarea contului nu a reușit. Încearcă din nou."
+      },
       "emailChanged": "Adresa de email a fost confirmată și schimbată.",
       "emailInvalid": "Linkul de confirmare e invalid sau a expirat.",
       "steamBanner": "Contul tău a fost creat prin Steam și nu are un email real.",

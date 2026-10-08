@@ -104,6 +104,8 @@
       "captcha": "El cheque anti-spam falló. Por favor, inténtalo de nuevo.",
       "steam": "El registro de Steam falló.",
       "steam_linked": "Esta cuenta de Steam ya está vinculada a otro usuario.",
+      "account_not_linked": "Ya existe una cuenta con este correo, pero su correo no está confirmado, así que no se vinculó automáticamente. Inicia sesión con tu contraseña y vincúlala en Ajustes → Cuenta → Cuentas vinculadas.",
+      "social": "No se pudo iniciar sesión. Inténtalo de nuevo.",
       "generic": "Algo salió mal. Por favor, inténtalo de nuevo."
     }
   },
@@ -2576,6 +2578,13 @@
       "linked": "vinculados",
       "notLinked": "no vinculado",
       "unlink": "Unlink",
+      "link": "Vincular",
+      "linkErrors": {
+        "steam_linked": "Esta cuenta de Steam ya está vinculada a otro usuario.",
+        "email_doesnt_match": "La cuenta elegida tiene un correo distinto al de tu cuenta aquí.",
+        "account_already_linked_to_different_user": "La cuenta elegida ya está vinculada a otro usuario.",
+        "generic": "No se pudo vincular la cuenta. Inténtalo de nuevo."
+      },
       "emailChanged": "Su dirección de correo electrónico fue confirmada y cambiada.",
       "emailInvalid": "El enlace de confirmación es nulo o ha expirado.",
       "steamBanner": "Su cuenta fue creada con Steam y no tiene email real.",

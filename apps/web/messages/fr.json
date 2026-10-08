@@ -104,6 +104,8 @@
       "captcha": "Le contrôle anti-spam a échoué. Veuillez réessayer.",
       "steam": "Le signal de vapeur a échoué.",
       "steam_linked": "Ce compte Steam est déjà lié à un autre utilisateur.",
+      "account_not_linked": "Un compte avec cet e-mail existe déjà, mais son e-mail n'est pas confirmé, il n'a donc pas été lié automatiquement. Connecte-toi avec ton mot de passe, puis lie-le dans Paramètres → Compte → Comptes liés.",
+      "social": "La connexion a échoué. Réessaie.",
       "generic": "Quelque chose a mal tourné. Veuillez réessayer."
     }
   },
@@ -2576,6 +2578,13 @@
       "linked": "lié",
       "notLinked": "non liés",
       "unlink": "Déconnecter",
+      "link": "Lier",
+      "linkErrors": {
+        "steam_linked": "Ce compte Steam est déjà lié à un autre utilisateur.",
+        "email_doesnt_match": "Le compte choisi a un e-mail différent de ton compte ici.",
+        "account_already_linked_to_different_user": "Le compte choisi est déjà lié à un autre utilisateur.",
+        "generic": "La liaison du compte a échoué. Réessaie."
+      },
       "emailChanged": "Votre adresse e-mail a été confirmée et modifiée.",
       "emailInvalid": "Le lien de confirmation est invalide ou a expiré.",
       "steamBanner": "Votre compte a été créé avec Steam et n'a aucun e-mail réel.",
