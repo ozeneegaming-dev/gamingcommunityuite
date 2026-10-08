@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Verificarea încrucișată a protocolului (specul 2026-10-08-servere-hltv §9): clientul real al pluginului CS2
+    (BridgeClient.cs, DemoUploader.cs, fără CounterStrikeSharp) contra codului real al site-ului, prin HTTP. Rulat de
+    testul opțional packages/modules/src/servers/bridge/demos/crosscheck.test.ts (GCS_DOTNET=<dotnet>). Nu face parte
+    din plugin și nici din release. Licența: MIT.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>Gcs.Bridge.CrossCheck</RootNamespace>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="../GcsBridge/BridgeClient.cs" />
+    <Compile Include="../GcsBridge/DemoUploader.cs" />
+  </ItemGroup>
+
+</Project>

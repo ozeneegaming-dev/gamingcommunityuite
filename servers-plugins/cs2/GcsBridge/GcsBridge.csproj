@@ -12,7 +12,7 @@
     <LangVersion>latest</LangVersion>
     <AssemblyName>GcsBridge</AssemblyName>
     <RootNamespace>Gcs.Bridge</RootNamespace>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <!-- Build reproductibil, fără căile locale ale mașinii în DLL (folderul proiectului devine /_/). -->

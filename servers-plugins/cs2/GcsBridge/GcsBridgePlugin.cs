@@ -8,8 +8,9 @@
 // rulează comenzi pe server și nu înregistrează comenzi de admin.
 //
 // Modulele opționale (oprite implicit, pornite din ACP pe fiecare server; `"AllowManage": false` le ține oprite oricum):
-// adminii din GCS, bannurile / mute / gag din GCS, VIP-ul din GCS, ready-up-ul mix și comenzile de admin GCS. Un modul
-// oprit nu își înregistrează comenzile și nu își trage listele de la site.
+// adminii din GCS, bannurile / mute / gag din GCS, VIP-ul din GCS, ready-up-ul mix, comenzile de admin GCS și
+// înregistrarea demo-urilor meciurilor mix (`tv_record` / `tv_stoprecord`, cu încărcarea opțională pe site după meci,
+// specul 2026-10-08-servere-hltv). Un modul oprit nu își înregistrează comenzile și nu își trage listele de la site.
 //
 // Fără cheie (pachetul general), pluginul se înrolează singur la site și primește cheia după aprobarea din ACP.
 // Evenimentele netrimise se salvează pe disc și se retrimit cu aceleași id-uri.
@@ -55,6 +56,9 @@ public sealed class GcsBridgeConfig : BasePluginConfig
     /// <summary>Rundele unui meci mix când `mp_maxrounds` e 0.</summary>
     [JsonPropertyName("MixMaxRounds")] public int MixMaxRounds { get; set; } = 24;
 
+    /// <summary>Modulul „demos”: demo-ul rămâne pe disc după ce a ajuns pe site (implicit se șterge: l-a creat pluginul).</summary>
+    [JsonPropertyName("KeepDemos")] public bool KeepDemos { get; set; } = false;
+
     [JsonPropertyName("Debug")] public bool Debug { get; set; } = false;
 }
 
@@ -66,7 +70,7 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
     public override string ModuleDescription => "Puntea serverului cu GamingCommunitySuite: colectează datele serverului (statistici, meciuri mix, adminii prezenți).";
 
     /// <summary>Modulele opționale (cheile din `config.features`), oprite implicit.</summary>
-    private static readonly string[] Features = { "admins", "sanctions", "vip", "mixReady", "commands" };
+    private static readonly string[] Features = { "admins", "sanctions", "vip", "mixReady", "commands", "demos" };
 
     /// <summary>Permisiunile citite din sistemul de admini al serverului (raportate în heartbeat, doar citite).</summary>
     private static readonly string[] KnownPermissions =
@@ -99,6 +103,12 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
     // Meciul condus din comandă (`css_gcsmatch`): urmărirea pasivă stă deoparte până la harta următoare.
     private bool _mixManual;
     private bool _pendingStart;
+
+    // Demo-urile meciurilor mix (modulul „demos”): înregistrarea în curs și coada de încărcat.
+    private DemoUploader _uploader = null!;
+    private string? _recordingMatch;
+    private string? _recordingName;
+    private bool _tvWarned;
 
     // Înrolarea (fără cheie).
     private bool _enrolling;
@@ -152,6 +162,9 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
         _lists.Load();
         _queue.Load(Path.Combine(DataDir, "gcs_bridge_queue.jsonl"));
         LoadFeatures();
+        // Încărcarea demo-urilor: niciodată cât timp pe server e un meci mix (încălzire, live, pauză).
+        _uploader = new DemoUploader(Path.Combine(DataDir, "gcs_demo_uploads.json")) { Paused = () => _mix.Open, KeepFiles = Config.KeepDemos, Log = message => Logger.LogInformation("{Message}", message) };
+        _uploader.Load();
 
         RegisterListener<Listeners.OnMapStart>(OnMapStart);
         RegisterListener<Listeners.OnMapEnd>(() =>
@@ -318,6 +331,109 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
     private void QueueAll(List<(string Type, JsonObject Fields)> events)
     {
         foreach (var (type, fields) in events) Queue(type, fields);
+        foreach (var (type, fields) in events)
+        {
+            if (type == "match" && fields["match"] is JsonObject state) OnMatchState(state);
+        }
+    }
+
+    // ─── Demo-urile meciurilor mix (modulul „demos”, specul servere-hltv §8) ──
+
+    /// <summary>Numele înregistrării: `gcs-&lt;id meci&gt;` (ca pe site: caracterele din afara `[A-Za-z0-9_-]` devin `_`).</summary>
+    private static string DemoName(string matchId) => "gcs-" + new string(matchId.Select(c => char.IsAsciiLetterOrDigit(c) || c is '_' or '-' ? c : '_').ToArray());
+
+    /// <summary>Valoarea numerică a unui cvar, după tipul lui real (citirea cu alt tip ar da gunoi); necunoscut → null.</summary>
+    private static double? ConVarNumber(string name)
+    {
+        var cvar = ConVar.Find(name);
+        if (cvar is null) return null;
+        try
+        {
+            return cvar.Type.ToString() switch
+            {
+                "Bool" => cvar.GetPrimitiveValue<bool>() ? 1 : 0,
+                "Float32" => cvar.GetPrimitiveValue<float>(),
+                "Float64" => cvar.GetPrimitiveValue<double>(),
+                "Int32" => cvar.GetPrimitiveValue<int>(),
+                "UInt32" => cvar.GetPrimitiveValue<uint>(),
+                "Int16" => cvar.GetPrimitiveValue<short>(),
+                "UInt16" => cvar.GetPrimitiveValue<ushort>(),
+                _ => null,
+            };
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>GOTV pornit pe server (`tv_enable 1`): fără el `tv_record` nu înregistrează nimic.</summary>
+    private static bool TvEnabled() => ConVarNumber("tv_enable") is > 0;
+
+    private static int TvDelay() => (int)Math.Clamp(Math.Round(ConVarNumber("tv_delay") ?? 0), 0, 3600);
+
+    /// <summary>
+    /// Starea meciului: la `live` pornește înregistrarea (o dată pe meci); la `ended` / `aborted` o oprește după întârzierea
+    /// transmisiei + 5 s (GOTV scrie finalul cu întârziere), iar demo-ul unui meci încheiat intră în coada de încărcat.
+    /// </summary>
+    private void OnMatchState(JsonObject state)
+    {
+        var id = state["id"]?.GetValue<string>() ?? "";
+        var status = state["status"]?.GetValue<string>() ?? "";
+        if (status == "live" && _recordingMatch is null && Feat("demos"))
+        {
+            if (!TvEnabled())
+            {
+                if (!_tvWarned) Logger.LogWarning("[GCS] Modulul demo-urilor e pornit, dar GOTV e oprit (tv_enable 0): meciul nu se înregistrează.");
+                _tvWarned = true;
+                return;
+            }
+            _recordingMatch = id;
+            _recordingName = DemoName(id);
+            Server.ExecuteCommand($"tv_record \"{_recordingName}\"");
+            return;
+        }
+        if ((status == "ended" || status == "aborted") && _recordingMatch == id && _recordingName is { } name)
+        {
+            _recordingMatch = null;
+            _recordingName = null;
+            var ended = status == "ended";
+            AddTimer(TvDelay() + 5f, () =>
+            {
+                Server.ExecuteCommand("tv_stoprecord");
+                // Fișierul se închide după oprire; încărcarea (dacă e pornită pe site) pleacă după câteva secunde.
+                AddTimer(5f, () =>
+                {
+                    var path = DemoPath(name);
+                    if (path is null) return;
+                    if (ended) _uploader.Enqueue(id, path);
+                    else if (!Config.KeepDemos) TryDelete(path);
+                });
+            });
+        }
+    }
+
+    /// <summary>Unde a scris GOTV demo-ul (folderul jocului, `csgo/`).</summary>
+    private static string? DemoPath(string name)
+    {
+        foreach (var dir in new[] { Path.Combine(Server.GameDirectory, "csgo"), Server.GameDirectory })
+        {
+            var path = Path.Combine(dir, name + ".dem");
+            if (File.Exists(path)) return path;
+        }
+        return null;
+    }
+
+    private static void TryDelete(string path)
+    {
+        try
+        {
+            File.Delete(path);
+        }
+        catch (Exception)
+        {
+            // Încă deschis: rămâne pe disc.
+        }
     }
 
     private void OnMapStart(string mapName)
@@ -521,6 +637,7 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
             return;
         }
         if (_client is not { Configured: true }) return;
+        _uploader.Tick(_client);
         var batch = _queue.TakeBatch(_eventsInterval);
         if (batch is { } b) _ = SendEventsAsync(b.Body, b.Count);
         // Doar modulele cu liste (admini, VIP, sancțiuni) trag de la site; colectorul nu trage nimic.
@@ -569,6 +686,8 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
                 ["players"] = players,
                 ["modules"] = modules,
                 ["scores"] = new JsonObject { ["ct"] = ct, ["t"] = t },
+                // Transmisia (GOTV): pentru „Urmărește live” și starea din ACP; doar citită.
+                ["tv"] = new JsonObject { ["enabled"] = TvEnabled(), ["delay"] = TvDelay(), ["port"] = (int)Math.Clamp(ConVarNumber("tv_port") ?? 0, 0, 65535), ["recording"] = _recordingMatch is not null },
             };
             if (_mix.Open) body["match"] = _mix.State(Server.MapName, Ref);
             tcs.SetResult(body.ToJsonString());
@@ -579,6 +698,10 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
         _heartbeat = Math.Clamp(config?["heartbeat"]?.GetValue<int>() ?? 30, 15, 120);
         _eventsInterval = Math.Clamp(config?["events"]?.GetValue<int>() ?? 10, 5, 60);
         _isMix = config?["isMix"] is JsonValue mix && mix.TryGetValue<bool>(out var isMix) && isMix;
+        // Încărcarea demo-urilor (`config.tv`, specul servere-hltv §4.3): doar cu modulul „demos” pornit.
+        var tv = config?["tv"];
+        _uploader.Enabled = tv?["upload"] is JsonValue up && up.TryGetValue<bool>(out var upload) && upload;
+        if (tv?["rate"] is JsonValue rateValue && rateValue.TryGetValue<long>(out var rate) && rate > 0) _uploader.Rate = rate;
         if (config?["features"] is JsonObject features)
         {
             var before = Features.ToDictionary(f => f, Feat);
@@ -596,6 +719,7 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
                 Server.NextFrame(() => FeaturesChanged(before));
             }
         }
+        _uploader.Enabled = _uploader.Enabled && Feat("demos");
         // Doar listele modulelor pornite.
         var versions = res.Body["versions"];
         if ((Feat("admins") && versions?["admins"]?.GetValue<string>() != _lists.AdminsEtag) || (Feat("vip") && versions?["vip"]?.GetValue<string>() != _lists.VipEtag)) await PullListsAsync(false).ConfigureAwait(false);
