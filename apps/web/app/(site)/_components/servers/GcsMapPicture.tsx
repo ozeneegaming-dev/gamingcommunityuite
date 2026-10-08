@@ -24,6 +24,11 @@ type Props = {
   className?: string;
   /** Imaginile locale de deasupra paginii (bannerul mare) se încarcă imediat; cele externe, mereu leneș. */
   eager?: boolean;
+  /**
+   * Pentru bannere late: o imagine de pe alt site (de obicei mică, ex. 160×120) nu se mai întinde pe toată lățimea
+   * (ar ieși neclară), ci stă clară, încadrată, peste o copie a ei estompată care umple bannerul.
+   */
+  frame?: boolean;
   testId?: string;
 };
 
@@ -33,18 +38,22 @@ type Props = {
  * layout). Imaginile externe: `referrerPolicy="no-referrer"`, `loading="lazy"`, `decoding="async"`. Fără hooks: merge
  * și în componentele server, și în cele client.
  */
-export function GcsMapPicture({ image, className, eager = false, testId }: Props) {
+export function GcsMapPicture({ image, className, eager = false, frame = false, testId }: Props) {
   const art = image.url === image.fallback;
+  const framed = frame && image.external && !art;
+  const loading = eager && !image.external ? "eager" : "lazy";
+  const external = image.external ? { referrerPolicy: "no-referrer" as const } : {};
   return (
     <span
-      className={`gcs-mapPic${className ? ` ${className}` : ""}`}
+      className={`gcs-mapPic${framed ? " gcs-mapPic--framed" : ""}${className ? ` ${className}` : ""}`}
       style={{ "--gcs-map-art": `url("${image.fallback}")` } as CSSProperties}
       data-kind={image.kind}
       data-map={image.map}
       {...(testId ? { "data-testid": testId } : {})}
       aria-hidden="true"
     >
-      {!art && <img src={image.url} alt="" loading={eager && !image.external ? "eager" : "lazy"} decoding="async" {...(image.external ? { referrerPolicy: "no-referrer" as const } : {})} />}
+      {framed && <img className="gcs-mapPic__backdrop" src={image.url} alt="" loading={loading} decoding="async" {...external} />}
+      {!art && <img className={framed ? "gcs-mapPic__frame" : undefined} src={image.url} alt="" loading={loading} decoding="async" {...external} />}
     </span>
   );
 }

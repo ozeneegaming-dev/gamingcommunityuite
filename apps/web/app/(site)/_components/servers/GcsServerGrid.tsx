@@ -64,7 +64,7 @@ export function GcsServerBanner({ server, hero = false, state }: { server: GcsSe
   return (
     <div className={`gcs-serverBanner${hero ? " gcs-serverBanner--hero" : ""}${map ? " gcs-serverBanner--map" : ""}`} style={{ "--gcs-server-banner": server.bannerGradient } as CSSProperties}>
       {server.bannerUrl && <img className="gcs-serverBanner__img" src={server.bannerUrl} alt="" loading={hero ? "eager" : "lazy"} />}
-      {map && <GcsMapPicture key={map} className="gcs-serverBanner__img" image={mapPicture(server.game, map, server.mapImage)} eager={hero} testId="gcs-server-map-image" />}
+      {map && <GcsMapPicture key={map} className="gcs-serverBanner__img" image={mapPicture(server.game, map, server.mapImage)} eager={hero} frame testId="gcs-server-map-image" />}
       <span className="gcs-serverGame">
         {server.gameIcon && <GcsIconSvg icon={server.gameIcon} />}
         {server.gameName}

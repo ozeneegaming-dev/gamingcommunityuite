@@ -2069,6 +2069,30 @@ html[data-theme="light"] {
 .gcs-serverBanner__img.gcs-mapPic {
   position: absolute;
 }
+/*
+ * Imaginea mică de pe alt site într-un banner lat: copia estompată umple fundalul, iar imaginea clară stă încadrată în
+ * dreapta, la cel mult ~1,5× mărimea ei (nu se mai întinde pe toată lățimea, deci nu iese neclară).
+ */
+.gcs-mapPic--framed > img.gcs-mapPic__backdrop {
+  filter: blur(16px) saturate(1.15) brightness(0.55);
+  transform: scale(1.15);
+}
+.gcs-mapPic--framed > img.gcs-mapPic__frame {
+  inset: auto;
+  top: 50%;
+  right: 16px;
+  width: auto;
+  height: min(calc(100% - 24px), 180px);
+  aspect-ratio: 4 / 3;
+  transform: translateY(-50%);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+/* Imaginea încadrată lipsă (404): niciun cadru gol, rămâne doar arta de dedesubt. */
+.gcs-mapPic--framed > img.gcs-mapPic__frame::after {
+  border-radius: inherit;
+}
 .gcs-serverMaps__name {
   display: inline-flex;
   align-items: center;
