@@ -242,7 +242,19 @@
       "map_template_placeholder": "The address must contain '{map}' in the path or query (not in the host name).",
       "map_template_https": "Only https addresses.",
       "map_template_credentials": "The address can't contain a user name or password.",
-      "map_template_too_long": "The address is too long (max 500 characters)."
+      "map_template_too_long": "The address is too long (max 500 characters).",
+      "invalid_address": "Invalid address (host:port, IPv4 or a public domain name)",
+      "plugin_cs2_only": "Plugin uploads exist only on CS2",
+      "plugin_needs_record": "Plugin uploads need demo recording turned on",
+      "invalid_time_zone": "Unknown time zone (e.g. Europe/Bucharest or UTC)",
+      "invalid_template": "Invalid address: http(s)://…/'{file}', without user / password or parameters",
+      "invalid_host_key": "Invalid fingerprint (SHA256:…)",
+      "invalid_private_key": "Invalid private key (PEM / OpenSSH, max 16 KB)",
+      "invalid_secret": "Invalid password (no quotes or control characters)",
+      "invalid_path": "Invalid folder",
+      "invalid_prefix": "Invalid prefix (letters, digits, _ . -, max 32)",
+      "rcon_needs_address": "HLTV rcon needs the HLTV address",
+      "not_configured": "The demo source is not configured"
     }
   },
   "acp": {
@@ -2228,7 +2240,8 @@
           "sanctions": "Bans, mutes and gags from GCS",
           "vip": "VIP from GCS",
           "mixReady": "Ready-up for mix matches",
-          "commands": "GCS admin commands"
+          "commands": "GCS admin commands",
+          "demos": "Demo recording (GOTV)"
         },
         "hints": {
           "admins": "The admins from the ACP replace the rights from users.ini / admins.json (including name + password admins).",
@@ -2236,6 +2249,146 @@
           "vip": "VIP flags are added on top of the server's rights (the existing ones stay).",
           "mixReady": "On mix servers: /ready starts the match and GCS restarts the game.",
           "commands": "The gcs_ban, gcs_mute, gcs_match … commands (CS2: css_gcs…) and the admin action log."
+        }
+      },
+      "tv": {
+        "title": "HLTV / GOTV and demos",
+        "lead": "Everything is off by default: nothing changes on the game server until you enable something here. The address adds “Watch live” to mix matches; the source brings the demo of every finished match to the match page.",
+        "save": "Save HLTV / GOTV",
+        "watch": {
+          "title": "Watch live",
+          "address": "HLTV / GOTV address (host:port)",
+          "addressHint": "Empty = no “Watch live” button. CS2: the GOTV port (tv_port, usually 27020).",
+          "delay": "Broadcast delay (seconds)",
+          "delayHintCs16": "The HLTV “delay” value; shown next to the button and used to match demos.",
+          "delayHintCs2": "The plugin reports tv_delay; this value is only the fallback."
+        },
+        "source": {
+          "title": "Mix match demos",
+          "label": "Where the site gets the demos from",
+          "none": "Nowhere (off)",
+          "ftp": "FTP",
+          "ftps": "FTPS (FTP with TLS)",
+          "sftp": "SFTP",
+          "http": "HTTP folder",
+          "plugin": "Uploaded by the CS2 plugin",
+          "hints": {
+            "none": "No demos on the site.",
+            "ftp": "The FTP account of the server (or of HLTV); the password travels unencrypted, prefer FTPS or SFTP.",
+            "ftps": "FTP with explicit TLS; the certificate is checked against the host name.",
+            "sftp": "Password or private key; the server's fingerprint is kept on the first connection.",
+            "http": "A web folder with a file listing (the web server's index page).",
+            "plugin": "The plugin records (tv_record) and uploads the demo after the match, in chunks, never during a live match."
+          }
+        },
+        "remote": {
+          "host": "Host",
+          "port": "Port",
+          "username": "Username",
+          "password": "Password",
+          "passwordOrPassphrase": "Password (or key passphrase)",
+          "dir": "Demo folder",
+          "tlsInsecure": "Accept an unverified certificate (insecure: anyone on the path can read the password)",
+          "privateKey": "Private key (optional)",
+          "hostKey": "Server key fingerprint",
+          "hostKeyHint": "Empty = kept on the first connection; a changed key stops the connection."
+        },
+        "secret": {
+          "saved": "Saved (not shown). Leave empty to keep it.",
+          "none": "Not set.",
+          "clear": "Delete the saved password",
+          "clearKey": "Delete the saved key"
+        },
+        "http": {
+          "template": "Demo address (with '{file}')",
+          "hint": "E.g. https://demos.example.com/cstrike/'{file}'. The folder must list its files."
+        },
+        "match": {
+          "prefix": "Only files starting with",
+          "prefixHint": "Optional (e.g. the HLTV recording prefix).",
+          "timeZone": "Time zone of the demo names",
+          "timeZoneHint": "HLTV writes the machine's local time in the name (e.g. Europe/Bucharest)."
+        },
+        "record": {
+          "title": "Recording (optional)",
+          "cs16": "GCS starts and stops the HLTV recording through rcon",
+          "cs2": "Record a demo of mix matches (plugin module)",
+          "cs16Hint": "Only if HLTV does not record already: “record gcs-m…” (the match id) at live, “stoprecording” at the end, sent only to the address above (needs the HLTV adminpassword).",
+          "cs2Hint": "The plugin runs tv_record / tv_stoprecord at match start and end (GOTV must be on: tv_enable 1). AllowManage = false keeps it off.",
+          "rconPassword": "HLTV rcon password (adminpassword)"
+        },
+        "test": {
+          "button": "Test the connection",
+          "running": "Testing…",
+          "hint": "Uses the saved settings.",
+          "ok": "Connected: {files} demos in the folder.",
+          "failed": "Error: {error}",
+          "hostKey": "fingerprint {key}"
+        },
+        "reported": {
+          "label": "Reported by the plugin",
+          "hltv": "HLTV proxies connected: {count}",
+          "gotv": "GOTV on, {delay} s delay, port {port}, recording: {recording, select, yes {yes} other {no}}",
+          "gotvOff": "GOTV off (tv_enable 0)"
+        },
+        "lastFetch": {
+          "label": "Last fetch",
+          "ok": "succeeded ({matched} of {files} files)",
+          "failed": "error: {error}",
+          "never": "never"
+        },
+        "lastRcon": {
+          "label": "Last rcon command",
+          "ok": "succeeded"
+        },
+        "recent": {
+          "title": "Latest demos",
+          "none": "No demos yet.",
+          "match": "Match",
+          "status": "Status",
+          "size": "Size",
+          "downloads": "Downloads",
+          "actions": "Actions",
+          "part": "part {part}",
+          "refetch": "Fetch again",
+          "delete": "Delete",
+          "deleteConfirm": "Delete the demo file? This cannot be undone."
+        },
+        "demoStatus": {
+          "waiting": "Waiting",
+          "fetching": "Downloading",
+          "available": "Available",
+          "not_found": "Not found",
+          "failed": "Failed",
+          "expired": "Expired"
+        },
+        "errors": {
+          "not_found": "no matching file",
+          "not_configured": "source not configured",
+          "auth": "authentication refused",
+          "refused": "connection refused",
+          "timeout": "timed out",
+          "tls": "invalid TLS certificate",
+          "blocked": "address not allowed (private or reserved)",
+          "dns": "name does not resolve",
+          "host_key_mismatch": "the SFTP server key changed",
+          "invalid_private_key": "the private key cannot be read",
+          "network": "network error",
+          "protocol": "unexpected server reply",
+          "redirect": "redirect to another site (refused)",
+          "listing_too_large": "the file listing is too large",
+          "too_large": "file too large",
+          "invalid_demo": "not a demo of this game",
+          "over_quota": "over quota",
+          "bad_password": "wrong rcon password",
+          "bad_challenge": "rcon challenge refused",
+          "invalid_address": "invalid address",
+          "upload_missing": "never uploaded by the plugin",
+          "upload_abandoned": "upload abandoned",
+          "checksum_mismatch": "file corrupted during upload",
+          "retention": "deleted after the retention period",
+          "quota": "deleted to free space",
+          "deleted": "deleted by staff"
         }
       }
     },
@@ -2694,7 +2847,10 @@
       "enroll_enabled": "Automatic enrollment of new servers (general plugin; approval stays in the ACP)",
       "enroll_blocked_ips": "IPs blocked from enrollment (IPs or CIDRs, comma separated)",
       "map_mode_cs16": "CS 1.6 map image mode",
-      "map_mode_cs2": "CS2 map image mode"
+      "map_mode_cs2": "CS2 map image mode",
+      "demo_retention_days": "How many days mix match demos are kept (1–365)",
+      "demo_max_mb": "Maximum size of a demo (MB, 10–2000)",
+      "demo_quota_gb": "Total space for demos (GB, 1–2000); above it, the oldest are deleted"
     },
     "clans": {
       "require_approval": "A new clan waits for staff approval",
@@ -2798,7 +2954,8 @@
       "tickets_create": "Sends appeals and reports",
       "tickets_manage": "Handles all appeals and reports",
       "link_identity": "Links non-Steam identities with an in-game code",
-      "players_manage": "Links and unlinks members' game identities"
+      "players_manage": "Links and unlinks members' game identities",
+      "demos_download": "Downloads mix match demos"
     },
     "clans": {
       "view": "See clans",
@@ -5099,7 +5256,10 @@
       "adr": "ADR",
       "adrLong": "Damage per round",
       "mvp": "MVP",
-      "elo": "ELO"
+      "elo": "ELO",
+      "watchLive": "Watch live",
+      "watchDelay": "{seconds} s delay",
+      "watchHint": "Starts the game through Steam and joins as a spectator (HLTV / GOTV)"
     },
     "board": {
       "title": "Leaderboards",
@@ -5447,6 +5607,39 @@
       },
       "steamHint": "Unlinks together with the Steam account (above).",
       "unlink": "Unlink"
+    },
+    "demos": {
+      "title": "Match demo",
+      "download": "Download demo",
+      "downloadPart": "Download demo · part {part}",
+      "downloads": "Downloads: {count}",
+      "hint": "The .dem file opens in the game (console: playdemo / demoui).",
+      "noRight": "This match has a demo, but you are not allowed to download it.",
+      "staffTitle": "Demo status (staff)",
+      "part": "Part {part}",
+      "nextAttempt": "next attempt at {at} (attempts: {attempts})",
+      "settings": "The server's HLTV / GOTV settings",
+      "status": {
+        "waiting": "Waiting",
+        "fetching": "Downloading",
+        "available": "Available",
+        "not_found": "Not found",
+        "failed": "Failed",
+        "expired": "Expired"
+      },
+      "errors": {
+        "not_found": "no matching file",
+        "too_large": "too large",
+        "invalid_demo": "not a demo of this game",
+        "over_quota": "over quota",
+        "not_configured": "source not configured",
+        "upload_missing": "never uploaded by the plugin",
+        "upload_abandoned": "upload abandoned",
+        "checksum_mismatch": "file corrupted during upload",
+        "retention": "deleted after the retention period",
+        "quota": "deleted to free space",
+        "deleted": "deleted by staff"
+      }
     }
   }
 }

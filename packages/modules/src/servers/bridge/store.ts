@@ -51,7 +51,14 @@ export type GcsRoster = {
   modules?: string[];
   /** Scorul echipelor (CT / T) raportat de plugin. */
   scores?: { ct: number; t: number } | null;
+  /**
+   * Transmisia raportată de plugin (specul 2026-10-08-servere-hltv §8): CS2 — GOTV pornit, întârzierea, portul, dacă
+   * înregistrează; CS 1.6 — câte proxy-uri HLTV sunt conectate.
+   */
+  tv?: GcsRosterTv | null;
 };
+
+export type GcsRosterTv = { enabled?: boolean; delay?: number | null; port?: number | null; recording?: boolean; hltv?: number };
 
 export class GcsBridgeStore {
   constructor(private readonly redis: Redis) {}

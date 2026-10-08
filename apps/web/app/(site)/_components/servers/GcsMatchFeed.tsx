@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useRealtime } from "../realtime/GcsRealtimeProvider";
+import { GcsWatchLive } from "./GcsMatchBoard";
 import { GcsMapPicture, mapPicture, type GcsMapPictureData } from "./GcsMapPicture";
 import { matchHref } from "./types";
 
@@ -26,6 +27,8 @@ export type GcsMixCardData = {
   endedAt: string | null;
   players: { A: number; B: number };
   avgElo: number | null;
+  /** „Urmărește live” (doar la meciurile deschise ale serverelor cu adresa HLTV / GOTV). */
+  tv?: { address: string; delay: number | null } | null;
 };
 
 /** Starea live a unui meci (evenimentul `servers:match` din camera serverului). */
@@ -266,6 +269,11 @@ function GcsMixCard({ match: m, now }: { match: GcsMixCardData; now: number }) {
               <GcsIconSvg icon={faRankingStar} />
               {m.avgElo !== null ? t("avgElo", { elo: String(m.avgElo) }) : t("avgEloNone")}
             </li>
+            {open && m.tv && (
+              <li className="gcs-mixCard__watchItem">
+                <GcsWatchLive tv={m.tv} className="gcs-mixCard__watch" testId="gcs-mix-card-watch" />
+              </li>
+            )}
             {minutes !== null && (
               <li data-testid="gcs-mix-card-duration">
                 <GcsIconSvg icon={faClock} />

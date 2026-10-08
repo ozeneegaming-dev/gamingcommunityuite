@@ -302,7 +302,7 @@ describe("înrolarea automată: starea, aprobarea și cheia livrată o singură 
     const hb = await mock.heartbeat({ players: [{ auth: "STEAM_0:1:42", steam: true, name: "Admin", flags: "bcdefu" }] });
     expect(hb.config).toMatchObject({ features: { admins: false, sanctions: false, vip: false, mixReady: false, commands: false } });
     const status = await w.bridge.status(w.root, serverId);
-    expect(status).toMatchObject({ connected: true, server: { bridgePlugin: "gcs-mock/cs16/1.1.0" } });
+    expect(status).toMatchObject({ connected: true, server: { bridgePlugin: "gcs-mock/cs16/1.2.0" } });
     expect(status!.roster!.players[0]).toMatchObject({ name: "Admin", flags: "bcdefu" });
     // A doua întrebare după folosirea cheii: nimic nou.
     expect((await mock.enrollStatus()).json).toMatchObject({ status: "approved", delivered: true });

@@ -24,7 +24,7 @@ public sealed record BridgeResponse(int Status, JsonNode? Body, string? Error)
 public sealed class BridgeClient : IDisposable
 {
     public const string BasePath = "/api/servers/bridge/v1";
-    public const string Version = "1.1.0";
+    public const string Version = "1.2.0";
     public const string PluginId = "gcs-cs2/" + Version;
 
     private readonly HttpClient _http;
@@ -68,15 +68,25 @@ public sealed class BridgeClient : IDisposable
     /// O cerere semnată. `path` = calea de după baza protocolului, cu query-ul exact cum se trimite. La `clock_skew`
     /// decalajul se corectează și cererea se retrimite o dată (nonce nou).
     /// </summary>
-    public async Task<BridgeResponse> SendAsync(string method, string path, string? body = null, string? etag = null, TimeSpan? timeout = null, CancellationToken ct = default)
+    public Task<BridgeResponse> SendAsync(string method, string path, string? body = null, string? etag = null, TimeSpan? timeout = null, CancellationToken ct = default) =>
+        SendCoreAsync(method, path, body is null ? null : Encoding.UTF8.GetBytes(body), "application/json", etag, timeout, ct);
+
+    /// <summary>
+    /// O cerere semnată cu un corp binar (bucățile unui demo, specul servere-hltv §4.3): semnătura acoperă
+    /// hex(SHA-256(octeți)), exact ca la JSON.
+    /// </summary>
+    public Task<BridgeResponse> SendBytesAsync(string path, byte[] body, TimeSpan? timeout = null, CancellationToken ct = default) =>
+        SendCoreAsync("POST", path, body, "application/octet-stream", null, timeout, ct);
+
+    private async Task<BridgeResponse> SendCoreAsync(string method, string path, byte[]? body, string contentType, string? etag, TimeSpan? timeout, CancellationToken ct)
     {
         if (!Configured) return new BridgeResponse(0, null, "not_configured");
-        var payload = body ?? "";
+        var payload = body ?? Array.Empty<byte>();
         for (var attempt = 0; attempt < 2; attempt++)
         {
             var timestamp = Now().ToString();
             var nonce = Nonce();
-            var canonical = string.Join('\n', method.ToUpperInvariant(), path, timestamp, nonce, Hex(SHA256.HashData(Encoding.UTF8.GetBytes(payload))));
+            var canonical = string.Join('\n', method.ToUpperInvariant(), path, timestamp, nonce, Hex(SHA256.HashData(payload)));
             string signature;
             using (var hmac = new HMACSHA256(_signingKey)) signature = Hex(hmac.ComputeHash(Encoding.UTF8.GetBytes(canonical)));
 
@@ -86,7 +96,11 @@ public sealed class BridgeClient : IDisposable
             request.Headers.Add("X-GCS-Nonce", nonce);
             request.Headers.Add("X-GCS-Signature", "hmac-sha256=" + signature);
             if (etag is not null) request.Headers.TryAddWithoutValidation("If-None-Match", "\"" + etag + "\"");
-            if (body is not null) request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+            if (body is not null)
+            {
+                request.Content = new ByteArrayContent(payload);
+                request.Content.Headers.ContentType = new MediaTypeHeaderValue(contentType) { CharSet = contentType == "application/json" ? "utf-8" : null };
+            }
 
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
             cts.CancelAfter(timeout ?? TimeSpan.FromSeconds(15));

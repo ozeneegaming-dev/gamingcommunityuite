@@ -52,7 +52,7 @@ export default async function ServerPage({ params, searchParams }: Props) {
   const actor = await currentActor();
   const bridgeGame = isBridgeGameKey(server.game.key);
   const bannerMapName = bannerMap(server);
-  const [t, tb, td, format, history, interval, counts, live, board, matches, gameAdmins, pictures] = await Promise.all([
+  const [t, tb, td, format, history, interval, counts, live, board, matches, gameAdmins, pictures, watch] = await Promise.all([
     getTranslations("servers"),
     getTranslations("bridge.server"),
     getTranslations("bridge.duration"),
@@ -67,6 +67,8 @@ export default async function ServerPage({ params, searchParams }: Props) {
     bridgeGame ? bridge.queries.serverAdmins(actor, server.id) : Promise.resolve(null),
     // Imaginile hărților (bannerul, meciul live, hărțile jucate), rezolvate aici: o citire, fără redirect în browser.
     mapPictures(server.game.key, [bannerMapName ?? "", server.status?.map ?? "", ...(server.game.hasMap ? server.maps.map((m) => m.map) : [])]),
+    // „Urmărește live” la meciul mix în desfășurare (adresa HLTV / GOTV a serverului, specul servere-hltv §3).
+    bridgeGame ? bridge.queries.watch(actor, [server.id]) : Promise.resolve(new Map<number, { address: string; delay: number | null }>()),
   ]);
   const card = cardData(server, counts.get(server.id) ?? 0, bannerMapName ? (pictures.get(bannerMapName) ?? null) : null);
   const liveMapImage = live?.map ? (pictures.get(live.map) ?? null) : null;
@@ -151,7 +153,9 @@ export default async function ServerPage({ params, searchParams }: Props) {
             </dl>
           </section>
 
-          {bridgeGame && <GcsMatchBoard initial={live} game={server.game.key} mapImage={liveMapImage} server={{ id: server.id, name: server.name, href: serverHref(server) }} mode="server" />}
+          {bridgeGame && (
+            <GcsMatchBoard initial={live} game={server.game.key} mapImage={liveMapImage} server={{ id: server.id, name: server.name, href: serverHref(server) }} mode="server" tv={watch.get(server.id) ?? null} />
+          )}
 
           {top.length > 0 && (
             <section className="gcs-card gcs-titledBox gcs-statBox" aria-labelledby="gcs-server-board">

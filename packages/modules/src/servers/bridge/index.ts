@@ -8,6 +8,7 @@ import {
   type GcsAttachmentService,
   type GcsEventBus,
   type GcsFetchedFile,
+  type GcsFileStore,
   type GcsJobQueue,
   type GcsPermissionService,
   type GcsRealtime,
@@ -25,6 +26,9 @@ import { SERVERS_ACP_SECTION } from "../service";
 import { GcsBridgeAdmins } from "./admins";
 import { GcsBridgeApi } from "./api";
 import { BRIDGE_GAMES, BRIDGE_SETTING, mapModeSetting, mapTemplateSetting } from "./config";
+import type { GcsDemoGuardOptions } from "./demos/guard";
+import { DEMO_JOBS, GcsBridgeDemos } from "./demos/service";
+import type { GcsDemoConnect } from "./demos/sources";
 import { GcsBridgeEnrollments } from "./enroll";
 import { closeSession, GcsBridgeEvents } from "./events";
 import { GcsBridgeKeys, type GcsBridgeKeyRow } from "./keys";
@@ -38,6 +42,7 @@ import { GcsBridgeSanctions } from "./sanctions";
 import { GcsBridgeStatsProvider, recomputeRanks } from "./stats";
 import { GcsBridgeStore, type GcsRoster } from "./store";
 import { GcsBridgeTickets } from "./tickets";
+import { GcsBridgeTv } from "./tv";
 import { BRIDGE_SERVER_SELECT, bridgeFeatures, type GcsBridgeFeatures } from "./types";
 import { GcsBridgeVip, type GcsVipMappingView } from "./vip";
 
@@ -76,6 +81,14 @@ export type GcsBridgeDeps = {
   siteUrl: () => Promise<string>;
   /** Folderul release-ului pluginurilor (binarele și `manifest.json`). */
   pluginReleaseDir: () => string;
+  /** Store-ul platformei: demo-urile meciurilor (private) și bucățile încărcărilor (specul servere-hltv §6). */
+  files: GcsFileStore;
+  /** Coada de joburi (aducerea demo-urilor la finalul meciului, rcon-ul HLTV); fără ea, doar joburile periodice. */
+  jobs?: Pick<GcsJobQueue, "enqueue">;
+  /** Doar pentru teste: conectarea la sursele demo-urilor, garda adreselor și folderul temporar. */
+  demoConnect?: GcsDemoConnect;
+  demoGuard?: () => GcsDemoGuardOptions;
+  demoTmpDir?: () => string;
 };
 
 /** Coloanele modulelor opționale din `game_servers` (specul plugin-v2 §1.2). */
@@ -142,6 +155,10 @@ export class GcsBridge {
   readonly queries: GcsBridgeQueries;
   /** Furnizorul statisticilor de joc ale membrilor (înregistrat în `GcsServerService.playerStats`). */
   readonly stats: GcsBridgeStatsProvider;
+  /** HLTV / GOTV pe server: setările, testul, rcon-ul, adresa „Urmărește live” (specul servere-hltv). */
+  readonly tv: GcsBridgeTv;
+  /** Demo-urile meciurilor mix: aducerea, încărcarea pluginului, stocarea, descărcarea, curățenia. */
+  readonly demos: GcsBridgeDemos;
 
   constructor(private readonly deps: GcsBridgeDeps) {
     const { db, redis, bus, settings, permissions, acp, apps, attachments, rateLimiter, realtime, now } = deps;
@@ -154,7 +171,30 @@ export class GcsBridge {
     this.sanctions = new GcsBridgeSanctions({ db, bus, permissions, settings, attachments, admins: this.admins, now });
     this.matches = new GcsBridgeMatches({ db, settings, store, realtime, now });
     this.maps = new GcsBridgeMaps({ db, acp, attachments, settings, now, ...(deps.fetchMapImage ? { fetch: deps.fetchMapImage } : {}) });
-    this.events = new GcsBridgeEvents({ db, players: this.players, admins: this.admins, sanctions: this.sanctions, matches: this.matches, maps: this.maps, store, now });
+    this.tv = new GcsBridgeTv({
+      db,
+      acp,
+      rateLimiter,
+      store,
+      ...(deps.demoConnect ? { connect: deps.demoConnect } : {}),
+      ...(deps.demoGuard ? { guard: deps.demoGuard } : {}),
+      now,
+    });
+    this.demos = new GcsBridgeDemos({
+      db,
+      settings,
+      permissions,
+      acp,
+      apps,
+      rateLimiter,
+      files: deps.files,
+      tv: this.tv,
+      canViewServer: deps.canViewServer,
+      ...(deps.jobs ? { jobs: deps.jobs } : {}),
+      ...(deps.demoTmpDir ? { tmpDir: deps.demoTmpDir } : {}),
+      now,
+    });
+    this.events = new GcsBridgeEvents({ db, players: this.players, admins: this.admins, sanctions: this.sanctions, matches: this.matches, maps: this.maps, store, demos: this.demos, now });
     this.enrollments = new GcsBridgeEnrollments({
       db,
       apps,
@@ -184,11 +224,12 @@ export class GcsBridge {
       matches: this.matches,
       maps: this.maps,
       enrollments: this.enrollments,
+      demos: this.demos,
       now,
     });
     this.presence = new GcsBridgePresence({ db, permissions, settings, apps, store, now });
     this.tickets = new GcsBridgeTickets({ db, bus, permissions, admins: this.admins, sanctions: this.sanctions, render: deps.render, now });
-    this.queries = new GcsBridgeQueries({ db, apps, permissions, store, players: this.players, sanctions: this.sanctions, presence: this.presence, canViewServer: deps.canViewServer, visibleServers: deps.visibleServers });
+    this.queries = new GcsBridgeQueries({ db, apps, permissions, store, players: this.players, sanctions: this.sanctions, presence: this.presence, canViewServer: deps.canViewServer, visibleServers: deps.visibleServers, tv: this.tv });
     this.stats = new GcsBridgeStatsProvider({ db });
   }
 
@@ -211,6 +252,17 @@ export class GcsBridge {
     jobs.register({ name: BRIDGE_JOBS.ranks, everyMs: 10 * MIN, handler: async () => void (await this.ranks()) });
     jobs.register({ name: BRIDGE_JOBS.steam, everyMs: 10 * MIN, handler: async () => void (await this.players.reconcileSteam()) });
     jobs.register({ name: BRIDGE_JOBS.maps, everyMs: 10 * MIN, handler: async () => void (await this.maps.fetchDue()) });
+    // Demo-urile meciurilor mix (specul servere-hltv §6): la 2 minute + programat la finalul meciului.
+    jobs.register({ name: DEMO_JOBS.fetch, everyMs: 2 * MIN, handler: async (data) => void (await this.demos.fetchDue(typeof data.matchId === "number" ? { matchId: data.matchId } : {})) });
+    jobs.register({ name: DEMO_JOBS.ingest, handler: async (data) => void (typeof data.demoId === "number" ? await this.demos.ingest(data.demoId) : undefined) });
+    jobs.register({ name: DEMO_JOBS.cleanup, everyMs: 60 * MIN, handler: async () => void (await this.demos.cleanup()) });
+    jobs.register({
+      name: DEMO_JOBS.rcon,
+      handler: async (data) => {
+        if (typeof data.serverId !== "number" || typeof data.matchId !== "number" || (data.action !== "record" && data.action !== "stop")) return;
+        await this.tv.rcon(data.serverId, data.action, data.matchId);
+      },
+    });
   }
 
   /** Locurile pe server (jobul `servers.bridge.ranks`). */
@@ -337,3 +389,8 @@ export type { GcsBridgeFeatures } from "./types";
 export type { GcsPluginDownload, GcsPluginGame, GcsReleaseManifest, GcsPackageVariant } from "./package";
 export { buildPluginPackage, readPluginRelease, installNote, RELEASE_FILES } from "./package";
 export type { GcsVipMappingView } from "./vip";
+export type { GcsServerTvView, GcsServerTvInput, GcsTvWatch, GcsTvTestResult } from "./tv";
+export type { GcsDemoFile, GcsDemoStaffRow, GcsMatchDemos, GcsOpenedDemo } from "./demos/service";
+export { DEMO_JOBS, DEMO_CHUNK_SIZE, DEMO_CHUNK_MAX, DEMO_UPLOAD_RATE } from "./demos/service";
+export { DEMO_SOURCES, TV_DELAY_MAX, steamConnectUrl, type GcsDemoSource } from "./demos/settings";
+export { bridgeBodyLimit } from "./api";

@@ -1,3 +1,4 @@
+import os from "node:os";
 import path from "node:path";
 import type { GcsFetchedFile, GcsRealtime, GcsRealtimeMessage } from "@gcs/core";
 import { GcsMockServer, type MockRequest, type MockResponse } from "../../../servers-plugins/mock/gcs-mock-server.mjs";
@@ -26,6 +27,9 @@ export async function createBridgeWorld() {
   /** Răspunsurile descărcării imaginilor hărților, pe adresă (lipsă = eroare de rețea). */
   const remote = new Map<string, GcsFetchedFile | Error>();
   const fetched: string[] = [];
+  /** Joburile programate (aducerea demo-urilor, rcon-ul HLTV); folderul temporar al demo-urilor. */
+  const enqueued: { name: string; data: Record<string, unknown>; opts: { jobId?: string; delayMs?: number } }[] = [];
+  const demoTmp = path.join(os.tmpdir(), `gcs-demo-tmp-${process.pid}`);
   /** Adresa site-ului și folderul release-ului pluginurilor (schimbabile în teste). */
   const site = { url: "https://comunitate.gcs.test", releaseDir: path.resolve(__dirname, "../../../servers-plugins/release") };
   const bridge = new GcsBridge({
@@ -49,6 +53,10 @@ export async function createBridgeWorld() {
     siteUrl: async () => site.url,
     pluginReleaseDir: () => site.releaseDir,
     now: () => w.clock.now,
+    files: w.files,
+    jobs: { enqueue: async (name, data, opts) => void enqueued.push({ name, data: data ?? {}, opts: opts ?? {} }) },
+    demoGuard: () => ({ allow: parseAllowNets("127.0.0.1/32"), production: false }),
+    demoTmpDir: () => demoTmp,
     fetchMapImage: async (url) => {
       fetched.push(url);
       const answer = remote.get(url);
@@ -82,7 +90,7 @@ export async function createBridgeWorld() {
     return new GcsMockServer({ ...(token ? { token } : {}), transport, game, clock: () => w.clock.now, ...(runId ? { runId } : {}) });
   }
 
-  return { ...w, bridge, live, remote, fetched, transport, bridgeServer, mock, site };
+  return { ...w, bridge, live, remote, fetched, transport, bridgeServer, mock, site, enqueued };
 }
 
 export type GcsBridgeWorld = Awaited<ReturnType<typeof createBridgeWorld>>;

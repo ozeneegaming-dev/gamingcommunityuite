@@ -159,6 +159,8 @@ export function installNote(game: GcsPluginGame, variant: GcsPackageVariant, opt
         "    gcs_sync, aliasurile amx_ban / amx_unban și jurnalul acțiunilor (amx_kick, amx_slay …; pentru jurnal mută",
         "    linia gcs_bridge.amxx din plugins-gcs.ini în plugins.ini, înaintea lui admincmd.amxx).",
         "Pe server, gcs_allow_manage 0 în gcs_bridge.cfg ține pluginul doar colector, orice s-ar alege în ACP.",
+        "HLTV și demo-urile meciurilor mix (ACP → serverul → „HLTV / GOTV și demo-uri”): pluginul doar raportează",
+        "proxy-urile HLTV conectate; site-ul aduce demo-urile de la HLTV (FTP / SFTP / HTTP) și arată „Urmărește live”.",
       ]
     : [
         "Se pornesc doar din ACP (Gaming → Servere → serverul → Plugin și chei API → „Module opționale”), câte unul. Cât",
@@ -169,6 +171,9 @@ export function installNote(game: GcsPluginGame, variant: GcsPackageVariant, opt
         "  - Ready-up mix: !ready, meciul pornit de GCS.",
         "  - Comenzile de admin GCS: css_gcsban, css_gcsgban, css_gcsunban, css_gcsmute, css_gcsgag, css_gcsunmute,",
         "    css_gcsungag, css_gcskick, css_gcsmatch.",
+        "  - Demo-urile meciurilor mix (ACP → „HLTV / GOTV și demo-uri”): tv_record / tv_stoprecord la meciurile mix",
+        "    (cere GOTV pornit: tv_enable 1) și, opțional, încărcarea demo-ului pe site după meci, niciodată în timpul",
+        '    unui meci; "KeepDemos": true păstrează fișierul pe server după încărcare.',
         'Pe server, "AllowManage": false în GcsBridge.json ține pluginul doar colector, orice s-ar alege în ACP.',
       ];
   const created = cs16

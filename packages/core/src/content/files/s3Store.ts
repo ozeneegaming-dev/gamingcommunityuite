@@ -8,6 +8,8 @@ import {
   S3Client,
   S3ServiceException,
 } from "@aws-sdk/client-s3";
+import { createReadStream } from "node:fs";
+import { stat } from "node:fs/promises";
 import type { GcsByteRange, GcsFileStore, GcsStoredFile } from "./store";
 
 export type GcsS3Config = { endpoint: string; accessKey: string; secretKey: string; bucket: string; region?: string };
@@ -45,6 +47,13 @@ export class GcsS3FileStore implements GcsFileStore {
   async put(key: string, body: Buffer, mime: string): Promise<void> {
     await this.ensureBucket();
     await this.client.send(new PutObjectCommand({ Bucket: this.config.bucket, Key: key, Body: body, ContentType: mime }));
+  }
+
+  /** Încărcarea în flux din fișierul local (mărimea cunoscută, deci un singur PUT, până la 5 GB). */
+  async putFile(key: string, filePath: string, mime: string): Promise<void> {
+    await this.ensureBucket();
+    const { size } = await stat(filePath);
+    await this.client.send(new PutObjectCommand({ Bucket: this.config.bucket, Key: key, Body: createReadStream(filePath), ContentLength: size, ContentType: mime }));
   }
 
   async get(key: string, range?: GcsByteRange): Promise<GcsStoredFile | null> {

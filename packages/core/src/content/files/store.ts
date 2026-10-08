@@ -10,6 +10,11 @@ export type GcsByteRange = { start: number; end: number };
  */
 export interface GcsFileStore {
   put(key: string, body: Buffer, mime: string): Promise<void>;
+  /**
+   * Un fișier mare de pe discul local, citit în flux (fără să fie ținut în memorie): ex. demo-urile meciurilor, de sute
+   * de MB. Fișierul sursă rămâne; îl șterge apelantul.
+   */
+  putFile(key: string, filePath: string, mime: string): Promise<void>;
   /** Fișierul întreg sau, cu `range`, doar acea parte (`size` rămâne mărimea totală). */
   get(key: string, range?: GcsByteRange): Promise<GcsStoredFile | null>;
   delete(key: string): Promise<void>;

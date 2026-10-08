@@ -2,3 +2,5 @@
 amxx/build/
 cs2/GcsBridge/bin/
 cs2/GcsBridge/obj/
+cs2/crosscheck/bin/
+cs2/crosscheck/obj/

@@ -1,14 +1,14 @@
-import { BRIDGE_BASE_PATH, BRIDGE_MAX_BODY } from "@gcs/modules";
+import { BRIDGE_BASE_PATH, bridgeBodyLimit } from "@gcs/modules";
 import { clientIp } from "@/lib/actor";
 import { services } from "@/lib/services";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Corpul cererii, citit cel mult până la limita protocolului (512 KB) + 1 octet: un corp mai mare nu se încarcă în
- * memorie (API-ul răspunde 413 după primul octet în plus).
+ * Corpul cererii, citit cel mult până la limita protocolului (512 KB; bucățile demo-urilor 1 MiB) + 1 octet: un corp mai
+ * mare nu se încarcă în memorie (API-ul răspunde 413 după primul octet în plus).
  */
-async function readLimited(req: Request): Promise<Uint8Array> {
+async function readLimited(req: Request, max: number): Promise<Uint8Array> {
   if (!req.body) return new Uint8Array();
   const reader = req.body.getReader();
   const chunks: Uint8Array[] = [];
@@ -18,7 +18,7 @@ async function readLimited(req: Request): Promise<Uint8Array> {
     if (done) break;
     chunks.push(value);
     size += value.length;
-    if (size > BRIDGE_MAX_BODY) {
+    if (size > max) {
       await reader.cancel().catch(() => {});
       break;
     }
@@ -41,7 +41,8 @@ async function handle(req: Request): Promise<Response> {
   const url = new URL(req.url);
   const path = url.pathname.startsWith(BRIDGE_BASE_PATH) ? url.pathname.slice(BRIDGE_BASE_PATH.length) + url.search : url.pathname + url.search;
   const declared = Number(req.headers.get("content-length") ?? "0");
-  const body = declared > BRIDGE_MAX_BODY ? new Uint8Array(BRIDGE_MAX_BODY + 1) : await readLimited(req);
+  const max = bridgeBodyLimit(path);
+  const body = declared > max ? new Uint8Array(max + 1) : await readLimited(req, max);
   const res = await services().bridge.api.handle({
     method: req.method,
     path,

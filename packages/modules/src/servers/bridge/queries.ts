@@ -8,6 +8,7 @@ import type { GcsBridgePlayers } from "./players";
 import type { GcsAdminPresence, GcsBridgePresence, GcsOnlineAdmin } from "./presence";
 import type { GcsBridgeSanctions, GcsSanctionView } from "./sanctions";
 import type { GcsBridgeStore } from "./store";
+import type { GcsBridgeTv, GcsTvWatch } from "./tv";
 
 const PAGE = 50;
 /** Câte hărți are filtrul listei de meciuri (cele mai jucate). */
@@ -118,6 +119,8 @@ export class GcsBridgeQueries {
       canViewServer: (actor: GcsActor, id: number) => Promise<boolean>;
       /** Serverele vizibile viewer-ului. */
       visibleServers: (actor: GcsActor) => Promise<number[]>;
+      /** Adresele „Urmărește live” (HLTV / GOTV, specul servere-hltv §3). */
+      tv?: GcsBridgeTv;
     },
   ) {}
 
@@ -425,6 +428,16 @@ export class GcsBridgeQueries {
   async liveMatch(actor: GcsActor, serverId: number): Promise<GcsLiveMatch | null> {
     if (!(await this.canViewStats(actor)) || !(await this.deps.canViewServer(actor, serverId))) return null;
     return this.deps.store.match<GcsLiveMatch>(serverId);
+  }
+
+  /**
+   * „Urmărește live” (specul servere-hltv §3): adresa HLTV / GOTV și întârzierea serverelor date, doar pentru cine vede
+   * statisticile și doar pentru serverele vizibile; serverele fără adresă lipsesc.
+   */
+  async watch(actor: GcsActor, serverIds: number[]): Promise<Map<number, GcsTvWatch>> {
+    if (!this.deps.tv || serverIds.length === 0 || !(await this.canViewStats(actor))) return new Map();
+    const visible = new Set(await this.deps.visibleServers(actor));
+    return this.deps.tv.watch([...new Set(serverIds)].filter((id) => visible.has(id)));
   }
 
   /** Accesul la camera live `match:{id}`. */

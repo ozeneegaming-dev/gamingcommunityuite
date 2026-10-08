@@ -85,7 +85,7 @@ test("ACP: cheia API (o singură dată), scenariul complet al serverului fals, s
   // ACP: starea punții (ultimul heartbeat, pluginul), numerele, cheia folosită.
   await page.reload();
   await expect(page.getByTestId("gcs-bridge-connected")).toHaveAttribute("data-connected", "1");
-  await expect(page.getByTestId("gcs-bridge-plugin")).toHaveText("gcs-mock/cs2/1.1.0");
+  await expect(page.getByTestId("gcs-bridge-plugin")).toHaveText("gcs-mock/cs2/1.2.0");
   await expect(page.getByTestId("gcs-bridge-count-matches")).toContainText("1");
   await expect(page.getByTestId("gcs-bridge-count-sanctions")).toContainText("1");
   await expect(page.getByTestId("gcs-bridge-count-players")).toContainText("10");
@@ -261,7 +261,7 @@ test("ACP: serverul nou se înrolează singur, adminul îl aprobă, primește ch
     // Starea punții: conectat, pluginul, adminul raportat de server, doar colector.
     await page.goto(`/admin/gaming/servers/${createdId}/bridge`);
     await expect(page.getByTestId("gcs-bridge-connected")).toHaveAttribute("data-connected", "1");
-    await expect(page.getByTestId("gcs-bridge-plugin")).toHaveText("gcs-mock/cs2/1.1.0");
+    await expect(page.getByTestId("gcs-bridge-plugin")).toHaveText("gcs-mock/cs2/1.2.0");
     await expect(page.getByTestId("gcs-bridge-server-admin")).toBeVisible();
     await expect(page.getByTestId("gcs-bridge-module-admins")).not.toBeChecked();
     await shot(page, "bridge-enroll-connected");

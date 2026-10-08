@@ -4,6 +4,7 @@
   "AllowManage": true,
   "MixPlayers": 10,
   "MixMaxRounds": 24,
+  "KeepDemos": false,
   "Debug": false,
   "ConfigVersion": 1
 }

@@ -242,7 +242,19 @@
       "map_template_placeholder": "Adresa trebuie să conțină '{map}' în cale sau în parametri (nu în numele site-ului).",
       "map_template_https": "Doar adrese https.",
       "map_template_credentials": "Adresa nu poate conține nume de utilizator sau parolă.",
-      "map_template_too_long": "Adresa e prea lungă (max 500 de caractere)."
+      "map_template_too_long": "Adresa e prea lungă (max 500 de caractere).",
+      "invalid_address": "Adresă invalidă (host:port, IPv4 sau nume de domeniu public)",
+      "plugin_cs2_only": "Încărcarea de către plugin există doar pe CS2",
+      "plugin_needs_record": "Încărcarea de către plugin cere înregistrarea demo-urilor pornită",
+      "invalid_time_zone": "Fus orar necunoscut (ex. Europe/Bucharest sau UTC)",
+      "invalid_template": "Adresă invalidă: http(s)://…/'{file}', fără nume / parolă sau parametri",
+      "invalid_host_key": "Amprentă invalidă (SHA256:…)",
+      "invalid_private_key": "Cheie privată invalidă (PEM / OpenSSH, max 16 KB)",
+      "invalid_secret": "Parolă invalidă (fără ghilimele sau caractere de control)",
+      "invalid_path": "Folder invalid",
+      "invalid_prefix": "Prefix invalid (litere, cifre, _ . -, max 32)",
+      "rcon_needs_address": "Rcon-ul HLTV cere adresa HLTV",
+      "not_configured": "Sursa demo-urilor nu e configurată"
     }
   },
   "acp": {
@@ -2228,7 +2240,8 @@
           "sanctions": "Bannuri, mute și gag din GCS",
           "vip": "VIP din GCS",
           "mixReady": "Ready-up pentru meciurile mix",
-          "commands": "Comenzile de admin GCS"
+          "commands": "Comenzile de admin GCS",
+          "demos": "Înregistrarea demo-urilor (GOTV)"
         },
         "hints": {
           "admins": "Adminii din ACP înlocuiesc drepturile din users.ini / admins.json (inclusiv adminii pe nume + parolă).",
@@ -2236,6 +2249,146 @@
           "vip": "Flag-urile VIP se adaugă peste drepturile serverului (cele existente rămân).",
           "mixReady": "Pe serverele de mix: /ready pornește meciul, iar GCS face restartul.",
           "commands": "Comenzile gcs_ban, gcs_mute, gcs_match … (CS2: css_gcs…) și jurnalul acțiunilor adminilor."
+        }
+      },
+      "tv": {
+        "title": "HLTV / GOTV și demo-uri",
+        "lead": "Totul e oprit implicit: pe serverul de joc nu se schimbă nimic până nu pornești ceva aici. Adresa adaugă „Urmărește live” la meciurile mix; sursa aduce demo-ul fiecărui meci încheiat pe pagina meciului.",
+        "save": "Salvează HLTV / GOTV",
+        "watch": {
+          "title": "Urmărește live",
+          "address": "Adresa HLTV / GOTV (host:port)",
+          "addressHint": "Goală = fără butonul „Urmărește live”. CS2: portul GOTV (tv_port, de obicei 27020).",
+          "delay": "Întârzierea transmisiei (secunde)",
+          "delayHintCs16": "Valoarea „delay” a HLTV-ului; afișată lângă buton și folosită la potrivirea demo-urilor.",
+          "delayHintCs2": "Pluginul raportează tv_delay; valoarea de aici e doar rezerva."
+        },
+        "source": {
+          "title": "Demo-urile meciurilor mix",
+          "label": "De unde ia site-ul demo-urile",
+          "none": "Nicăieri (oprit)",
+          "ftp": "FTP",
+          "ftps": "FTPS (FTP cu TLS)",
+          "sftp": "SFTP",
+          "http": "Folder HTTP",
+          "plugin": "Încărcate de pluginul CS2",
+          "hints": {
+            "none": "Fără demo-uri pe site.",
+            "ftp": "Contul FTP al serverului (sau al HLTV-ului); parola trece necriptată pe rețea, preferă FTPS sau SFTP.",
+            "ftps": "FTP cu TLS explicit; certificatul se verifică pe numele host-ului.",
+            "sftp": "Parolă sau cheie privată; amprenta serverului se reține la prima conectare.",
+            "http": "Un folder web cu lista fișierelor (pagina de index a serverului web).",
+            "plugin": "Pluginul înregistrează (tv_record) și încarcă demo-ul după meci, în bucăți, niciodată în timpul unui meci live."
+          }
+        },
+        "remote": {
+          "host": "Host",
+          "port": "Port",
+          "username": "Utilizator",
+          "password": "Parola",
+          "passwordOrPassphrase": "Parola (sau fraza cheii)",
+          "dir": "Folderul demo-urilor",
+          "tlsInsecure": "Acceptă un certificat nevalidat (nesigur: oricine de pe drum poate citi parola)",
+          "privateKey": "Cheia privată (opțională)",
+          "hostKey": "Amprenta cheii serverului",
+          "hostKeyHint": "Goală = se reține la prima conectare; o cheie schimbată oprește conectarea."
+        },
+        "secret": {
+          "saved": "Salvată (nu se arată). Lasă gol ca să o păstrezi.",
+          "none": "Nu e setată.",
+          "clear": "Șterge parola salvată",
+          "clearKey": "Șterge cheia salvată"
+        },
+        "http": {
+          "template": "Adresa demo-urilor (cu '{file}')",
+          "hint": "Ex. https://demos.exemplu.ro/cstrike/'{file}'. Folderul trebuie să aibă lista fișierelor."
+        },
+        "match": {
+          "prefix": "Doar fișierele care încep cu",
+          "prefixHint": "Opțional (ex. prefixul înregistrărilor HLTV).",
+          "timeZone": "Fusul orar din numele demo-urilor",
+          "timeZoneHint": "HLTV scrie în nume ora locală a mașinii (ex. Europe/Bucharest)."
+        },
+        "record": {
+          "title": "Înregistrarea (opțională)",
+          "cs16": "GCS pornește și oprește înregistrarea HLTV prin rcon",
+          "cs2": "Înregistrează demo la meciurile mix (modulul pluginului)",
+          "cs16Hint": "Doar dacă HLTV-ul nu înregistrează deja: la live „record gcs-m…” (id-ul meciului), la final „stoprecording”, trimise doar la adresa de mai sus (cere adminpassword-ul HLTV).",
+          "cs2Hint": "Pluginul rulează tv_record / tv_stoprecord la începutul și finalul meciului (GOTV trebuie să fie pornit: tv_enable 1). AllowManage = false îl ține oprit.",
+          "rconPassword": "Parola rcon a HLTV-ului (adminpassword)"
+        },
+        "test": {
+          "button": "Testează conexiunea",
+          "running": "Se testează…",
+          "hint": "Folosește setările salvate.",
+          "ok": "Conectat: {files} demo-uri în folder.",
+          "failed": "Eroare: {error}",
+          "hostKey": "amprenta {key}"
+        },
+        "reported": {
+          "label": "Raportat de plugin",
+          "hltv": "proxy-uri HLTV conectate: {count}",
+          "gotv": "GOTV pornit, întârziere {delay} s, port {port}, înregistrează: {recording, select, yes {da} other {nu}}",
+          "gotvOff": "GOTV oprit (tv_enable 0)"
+        },
+        "lastFetch": {
+          "label": "Ultima aducere",
+          "ok": "reușită ({matched} din {files} fișiere)",
+          "failed": "eroare: {error}",
+          "never": "niciodată"
+        },
+        "lastRcon": {
+          "label": "Ultima comandă rcon",
+          "ok": "reușită"
+        },
+        "recent": {
+          "title": "Ultimele demo-uri",
+          "none": "Niciun demo încă.",
+          "match": "Meciul",
+          "status": "Starea",
+          "size": "Mărimea",
+          "downloads": "Descărcări",
+          "actions": "Acțiuni",
+          "part": "partea {part}",
+          "refetch": "Caută din nou",
+          "delete": "Șterge",
+          "deleteConfirm": "Ștergi fișierul demo? Nu se poate anula."
+        },
+        "demoStatus": {
+          "waiting": "În așteptare",
+          "fetching": "În transfer",
+          "available": "Disponibil",
+          "not_found": "Negăsit",
+          "failed": "Eroare",
+          "expired": "Expirat"
+        },
+        "errors": {
+          "not_found": "niciun fișier potrivit",
+          "not_configured": "sursa nu e configurată",
+          "auth": "autentificare refuzată",
+          "refused": "conexiune refuzată",
+          "timeout": "fără răspuns în timp",
+          "tls": "certificat TLS nevalid",
+          "blocked": "adresă nepermisă (privată sau rezervată)",
+          "dns": "numele nu se rezolvă",
+          "host_key_mismatch": "cheia serverului SFTP s-a schimbat",
+          "invalid_private_key": "cheia privată nu se poate citi",
+          "network": "eroare de rețea",
+          "protocol": "răspuns neașteptat al serverului",
+          "redirect": "redirect spre alt site (refuzat)",
+          "listing_too_large": "lista fișierelor e prea mare",
+          "too_large": "fișier prea mare",
+          "invalid_demo": "nu e un demo al jocului",
+          "over_quota": "peste cotă",
+          "bad_password": "parola rcon greșită",
+          "bad_challenge": "challenge rcon refuzat",
+          "invalid_address": "adresă invalidă",
+          "upload_missing": "pluginul nu l-a încărcat",
+          "upload_abandoned": "încărcare abandonată",
+          "checksum_mismatch": "fișierul s-a stricat la încărcare",
+          "retention": "șters după perioada de păstrare",
+          "quota": "șters pentru spațiu",
+          "deleted": "șters de staff"
         }
       }
     },
@@ -2694,7 +2847,10 @@
       "enroll_enabled": "Înrolarea automată a serverelor noi (pluginul general; aprobarea rămâne în ACP)",
       "enroll_blocked_ips": "IP-urile blocate la înrolare (IP-uri sau CIDR-uri, separate prin virgulă)",
       "map_mode_cs16": "Modul imaginilor hărților CS 1.6",
-      "map_mode_cs2": "Modul imaginilor hărților CS2"
+      "map_mode_cs2": "Modul imaginilor hărților CS2",
+      "demo_retention_days": "Câte zile se păstrează demo-urile meciurilor mix (1–365)",
+      "demo_max_mb": "Mărimea maximă a unui demo (MB, 10–2000)",
+      "demo_quota_gb": "Spațiul total pentru demo-uri (GB, 1–2000); peste el, cele mai vechi se șterg"
     },
     "clans": {
       "require_approval": "Un clan nou așteaptă aprobarea staff-ului",
@@ -2798,7 +2954,8 @@
       "tickets_create": "Trimite contestații și reclamații",
       "tickets_manage": "Tratează toate contestațiile și reclamațiile",
       "link_identity": "Își leagă identitățile non-Steam prin cod din joc",
-      "players_manage": "Leagă și dezleagă identitățile de joc ale membrilor"
+      "players_manage": "Leagă și dezleagă identitățile de joc ale membrilor",
+      "demos_download": "Descarcă demo-urile meciurilor mix"
     },
     "clans": {
       "view": "Vede clanurile",
@@ -5099,7 +5256,10 @@
       "adr": "ADR",
       "adrLong": "Damage pe rundă",
       "mvp": "MVP",
-      "elo": "ELO"
+      "elo": "ELO",
+      "watchLive": "Urmărește live",
+      "watchDelay": "întârziere {seconds} s",
+      "watchHint": "Pornește jocul prin Steam și intră ca spectator (HLTV / GOTV)"
     },
     "board": {
       "title": "Clasamente",
@@ -5447,6 +5607,39 @@
       },
       "steamHint": "Se dezleagă odată cu contul Steam (mai sus).",
       "unlink": "Dezleagă"
+    },
+    "demos": {
+      "title": "Demo-ul meciului",
+      "download": "Descarcă demo",
+      "downloadPart": "Descarcă demo · partea {part}",
+      "downloads": "Descărcări: {count}",
+      "hint": "Fișierul .dem se deschide în joc (consola: playdemo / demoui).",
+      "noRight": "Meciul are demo, dar nu ai dreptul să-l descarci.",
+      "staffTitle": "Starea demo-ului (staff)",
+      "part": "Partea {part}",
+      "nextAttempt": "următoarea încercare la {at} (încercări: {attempts})",
+      "settings": "Setările HLTV / GOTV ale serverului",
+      "status": {
+        "waiting": "În așteptare",
+        "fetching": "În transfer",
+        "available": "Disponibil",
+        "not_found": "Negăsit",
+        "failed": "Eroare",
+        "expired": "Expirat"
+      },
+      "errors": {
+        "not_found": "niciun fișier potrivit",
+        "too_large": "prea mare",
+        "invalid_demo": "nu e un demo al jocului",
+        "over_quota": "peste cotă",
+        "not_configured": "sursa nu e configurată",
+        "upload_missing": "pluginul nu l-a încărcat",
+        "upload_abandoned": "încărcare abandonată",
+        "checksum_mismatch": "fișierul s-a stricat la încărcare",
+        "retention": "șters după perioada de păstrare",
+        "quota": "șters pentru spațiu",
+        "deleted": "șters de staff"
+      }
     }
   }
 }

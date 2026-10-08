@@ -95,7 +95,13 @@ export class GcsBridgeMatches {
    * Evenimentul `match`, în tranzacția lui. `players` = identitățile rezolvate, în ordinea din stare (`null` = neurmărit).
    * O tranziție invalidă (eveniment vechi sosit târziu) → `invalid_state`.
    */
-  async applyState(tx: Prisma.TransactionClient, server: GcsBridgeServer, state: GcsMatchStateInput, players: (GcsPlayerRow | null)[], at: Date): Promise<{ matchId: number; ended: boolean } | { error: string }> {
+  async applyState(
+    tx: Prisma.TransactionClient,
+    server: GcsBridgeServer,
+    state: GcsMatchStateInput,
+    players: (GcsPlayerRow | null)[],
+    at: Date,
+  ): Promise<{ matchId: number; ended: boolean; status: GameMatchStatus; previous: GameMatchStatus | null } | { error: string }> {
     const existing = await tx.$queryRaw<{ id: number; status: GameMatchStatus }[]>`
       SELECT id, status FROM game_matches WHERE "serverId" = ${server.id} AND "externalId" = ${state.externalId} FOR UPDATE`;
     const current = existing[0];
@@ -129,7 +135,8 @@ export class GcsBridgeMatches {
       await tx.gameMatchPlayer.upsert({ where: { matchId_playerId: { matchId: match.id, playerId } }, create: { matchId: match.id, playerId, ...data }, update: data });
     }
     if (state.status === "ENDED") await this.rate(tx, match.id);
-    return { matchId: match.id, ended: final };
+    // Starea de dinainte: demo-urile și rcon-ul HLTV reacționează doar la o schimbare (specul servere-hltv §6).
+    return { matchId: match.id, ended: final, status: state.status, previous: current?.status ?? null };
   }
 
   /**

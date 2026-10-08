@@ -5,6 +5,7 @@ import { SERVERS_APP } from "../poller";
 import { cleanGameText } from "../text";
 import type { GcsBridgeAdmins } from "./admins";
 import { BRIDGE_SETTING, isBridgeGame } from "./config";
+import { DEMO_CHUNK_MAX, DEMO_CHUNK_SIZE, DEMO_UPLOAD_RATE, type GcsBridgeDemos } from "./demos/service";
 import type { GcsBridgeEnrollments } from "./enroll";
 import { closeSession, openSession, MAX_EVENTS, type GcsBridgeEvents } from "./events";
 import { reportedAdminFlags } from "./flags";
@@ -15,7 +16,7 @@ import { parseMatchState, type GcsBridgeMatches } from "./matches";
 import type { GcsBridgePlayers } from "./players";
 import type { GcsBridgeSanctions } from "./sanctions";
 import { canonicalString, isBridgeKeyId, verifyBridgeSignature } from "./signing";
-import type { GcsBridgeStore, GcsRosterEntry } from "./store";
+import type { GcsBridgeStore, GcsRosterEntry, GcsRosterTv } from "./store";
 import { BRIDGE_SERVER_SELECT, GcsBridgeError, bridgeFeatures, cleanMapName, identityKey, type GcsBridgeAuth, type GcsBridgeFeatures, type GcsBridgeServer, type GcsPlayerRow } from "./types";
 import type { GcsBridgeVip } from "./vip";
 
@@ -24,6 +25,13 @@ export type GcsBridgeHttpRequest = { method: string; path: string; header: (name
 export type GcsBridgeHttpResponse = { status: number; headers: Record<string, string>; body: string | null };
 
 export const BRIDGE_MAX_BODY = 512 * 1024;
+/** Calea încărcării bucăților unui demo (corp binar, cel mult 1 MiB; specul servere-hltv §4.3). */
+const DEMO_CHUNK_ROUTE = "/demos/chunk";
+
+/** Limita corpului unei cereri: 512 KB, bucățile demo-urilor 1 MiB (calea fără query). */
+export function bridgeBodyLimit(path: string): number {
+  return path.split("?", 1)[0] === DEMO_CHUNK_ROUTE ? DEMO_CHUNK_MAX : BRIDGE_MAX_BODY;
+}
 const AUTH_FAILS_PER_MINUTE = 30;
 const KEY_LIMIT = { window: 60, max: 240 };
 const CLOCK_SKEW_S = 300;
@@ -33,6 +41,24 @@ const TIMESTAMP = /^\d{1,12}$/;
 export const LINK_COMMAND = "/gcs";
 /** Cheile modulelor opționale (`config.features`, `modules` raportate de plugin). */
 export const FEATURE_KEYS = ["admins", "sanctions", "vip", "mixReady", "commands"] as const satisfies readonly (keyof GcsBridgeFeatures)[];
+/** Modulele raportate de plugin (cu înregistrarea demo-urilor CS2, specul servere-hltv §8). */
+const REPORTED_MODULES: readonly string[] = [...FEATURE_KEYS, "demos"];
+
+/** Starea transmisiei din heartbeat (CS2: GOTV; CS 1.6: proxy-urile HLTV conectate), curățată. */
+function parseTv(raw: unknown): GcsRosterTv | null {
+  const o = obj(raw);
+  if (Object.keys(o).length === 0) return null;
+  const tv: GcsRosterTv = {};
+  if (typeof o.enabled === "boolean") tv.enabled = o.enabled;
+  if (typeof o.recording === "boolean") tv.recording = o.recording;
+  const delay = int(o.delay, 3600);
+  if (delay !== null && delay >= 0) tv.delay = delay;
+  const port = int(o.port, 65_535);
+  if (port !== null && port > 0) tv.port = port;
+  const hltv = int(o.hltv, 32);
+  if (hltv !== null && hltv >= 0) tv.hltv = hltv;
+  return tv;
+}
 
 const obj = (v: unknown): Record<string, unknown> => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
 const int = (v: unknown, max: number): number | null => (typeof v === "number" && Number.isFinite(v) ? Math.max(-max, Math.min(max, Math.trunc(v))) : null);
@@ -69,6 +95,7 @@ export class GcsBridgeApi {
       matches: GcsBridgeMatches;
       maps: GcsBridgeMaps;
       enrollments: GcsBridgeEnrollments;
+      demos?: GcsBridgeDemos;
       now?: () => number;
     },
   ) {}
@@ -97,7 +124,7 @@ export class GcsBridgeApi {
     // Înrolarea (specul plugin-v2 §5): fără cheie, cu limitele și verificările ei.
     const enrollRoute = req.path.split("?", 1)[0];
     if (enrollRoute === "/enroll" || enrollRoute === "/enroll/status") return this.deps.enrollments.handle({ route: enrollRoute, method: req.method, body, ip: req.ip });
-    if (body.length > BRIDGE_MAX_BODY) return bare(413, "too_large");
+    if (body.length > bridgeBodyLimit(req.path)) return bare(413, "too_large");
     const failKey = `auth:${req.ip}`;
     if ((await store.failures(failKey)) >= AUTH_FAILS_PER_MINUTE) return bare(429, "rate_limited", { "Retry-After": "60" });
     const fail = async (code: string) => {
@@ -164,6 +191,9 @@ export class GcsBridgeApi {
         return json(200, { ...(await this.deps.sanctions.syncPage(server, Number(raw), Number(limit))) });
       }
       if (method === "POST" && route === "/check") return json(200, await this.check(server, parse()));
+      // Demo-urile încărcate de pluginul CS2 (specul servere-hltv §4.3).
+      if (method === "POST" && route === "/demos/upload" && this.deps.demos) return json(200, await this.deps.demos.uploadStart(server, parse()));
+      if (method === "POST" && route === DEMO_CHUNK_ROUTE && this.deps.demos) return json(200, await this.deps.demos.uploadChunk(server, query, body));
       if (method === "POST" && route === "/link") {
         const b = parse();
         return json(200, await this.deps.players.linkFromGame(server, obj(b.player), b.code));
@@ -232,7 +262,7 @@ export class GcsBridgeApi {
     for (const s of open) if (!present.has(s.playerId)) await closeSession(db, server.id, s.playerId, now, currentMap);
 
     const scores = obj(body.scores);
-    const modules = (Array.isArray(body.modules) ? body.modules : []).filter((m): m is string => typeof m === "string" && (FEATURE_KEYS as readonly string[]).includes(m));
+    const modules = (Array.isArray(body.modules) ? body.modules : []).filter((m): m is string => typeof m === "string" && REPORTED_MODULES.includes(m));
     await store.saveRoster(server.id, {
       at: now.getTime(),
       map,
@@ -240,6 +270,7 @@ export class GcsBridgeApi {
       players: roster,
       modules: [...new Set(modules)],
       scores: typeof scores.ct === "number" && typeof scores.t === "number" ? { ct: int(scores.ct, 1000) ?? 0, t: int(scores.t, 1000) ?? 0 } : null,
+      tv: parseTv(body.tv),
     });
     if (map) {
       await store.setMap(server.id, map);
@@ -258,16 +289,28 @@ export class GcsBridgeApi {
       }
     }
 
-    const [heartbeat, events, adminList, vipList, sanctions] = await Promise.all([
+    const [heartbeat, events, adminList, vipList, sanctions, tv] = await Promise.all([
       settings.get<number>(BRIDGE_SETTING.heartbeat),
       settings.get<number>(BRIDGE_SETTING.events),
       admins.serverList(server),
       this.deps.vip.serverList(server),
       this.deps.sanctions.maxRevision(),
+      db.gameServerTv.findUnique({ where: { serverId: server.id }, select: { record: true, source: true } }),
     ]);
+    // Înregistrarea demo-urilor (modulul CS2, oprit implicit) și încărcarea lor directă (specul servere-hltv §4.3, §8).
+    const record = server.game === "cs2" && tv?.record === true;
     return {
       ok: true,
-      config: { heartbeat, events, identityMode: server.identityMode, nameIds: server.nameIds, isMix: server.isMix, linkCommand: LINK_COMMAND, features: bridgeFeatures(server) },
+      config: {
+        heartbeat,
+        events,
+        identityMode: server.identityMode,
+        nameIds: server.nameIds,
+        isMix: server.isMix,
+        linkCommand: LINK_COMMAND,
+        features: { ...bridgeFeatures(server), demos: record },
+        tv: { upload: record && tv?.source === "plugin", chunkSize: DEMO_CHUNK_SIZE, rate: DEMO_UPLOAD_RATE },
+      },
       versions: { admins: listEtag(adminList), vip: listEtag(vipList), sanctions },
     };
   }

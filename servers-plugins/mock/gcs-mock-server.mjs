@@ -3,17 +3,20 @@
 //
 // Vorbește protocolul v1 exact ca pluginurile (semnarea cererilor, decalajul ceasului, reîncercarea la `clock_skew`):
 // heartbeat-uri (cu flag-urile de admin ale jucătorilor, ca pluginurile 1.1), conectări, ucideri, runde, un meci mix
-// complet (warmup → live → halftime → ended), un ban și înrolarea automată (specul plugin-v2 §5: cererea fără cheie,
-// așteptarea aprobării, cheia primită o singură dată). Fără dependențe (doar modulele Node). Transportul e o funcție:
-// testele unitare apelează direct API-ul, E2E-ul și linia de comandă folosesc HTTP real.
+// complet (warmup → live → halftime → ended), un ban, înrolarea automată (specul plugin-v2 §5: cererea fără cheie,
+// așteptarea aprobării, cheia primită o singură dată), starea transmisiei (`tv`) și încărcarea în bucăți a unui demo
+// (specul servere-hltv §4.3, ca modulul CS2). Fără dependențe (doar modulele Node). Transportul e o funcție: testele
+// unitare apelează direct API-ul, E2E-ul și linia de comandă folosesc HTTP real.
 //
 //   node gcs-mock-server.mjs --url https://site.exemplu --key gcs1.<keyId>.<secret> --scenario full [--game cs2|cs16]
 //   node gcs-mock-server.mjs --url https://site.exemplu --scenario enroll [--game cs2|cs16] [--a2s-port 27015]
+//   node gcs-mock-server.mjs --url https://site.exemplu --key gcs1.<keyId>.<secret> --scenario demo --demo meci.dem
 //
 // Licența: MIT (ca pluginul CS2).
 
 import { createHash, createHmac, randomBytes } from "node:crypto";
 import dgram from "node:dgram";
+import { readFileSync } from "node:fs";
 
 export const BRIDGE_BASE_PATH = "/api/servers/bridge/v1";
 
@@ -44,7 +47,8 @@ export function signHeaders({ keyId, signingKey }, method, path, body, timestamp
 export function httpTransport(baseUrl, extraHeaders = {}) {
   const base = String(baseUrl).replace(/\/+$/, "") + BRIDGE_BASE_PATH;
   return async ({ method, path, headers, body }) => {
-    const res = await fetch(base + path, { method, headers: { ...extraHeaders, ...headers, ...(body ? { "Content-Type": "application/json" } : {}) }, body: body || undefined });
+    const type = body && !headers["Content-Type"] ? { "Content-Type": "application/json" } : {};
+    const res = await fetch(base + path, { method, headers: { ...extraHeaders, ...headers, ...type }, body: body && body.length > 0 ? body : undefined });
     const text = res.status === 304 ? null : await res.text();
     return { status: res.status, headers: Object.fromEntries(res.headers.entries()), body: text };
   };
@@ -134,6 +138,48 @@ export class GcsMockServer {
     return { id: `${this.runId}-${String(this.seq).padStart(6, "0")}`, type, at: this.now(), ...fields };
   }
 
+  /** O cerere semnată cu un corp binar (bucățile unui demo): semnătura acoperă hash-ul octeților. */
+  async requestBinary(method, path, bytes) {
+    if (!this.key) throw new Error("Serverul fals nu are încă o cheie.");
+    const body = Buffer.from(bytes);
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const headers = { ...signHeaders(this.key, method, path, body, this.now(), this.alg), "Content-Type": "application/octet-stream" };
+      const res = await this.transport({ method, path, headers, body });
+      const json = res.body ? JSON.parse(res.body) : null;
+      if (json && typeof json.serverTime === "number") this.offset += json.serverTime - this.now();
+      if (res.status === 401 && json?.error === "clock_skew" && attempt === 0) continue;
+      return { status: res.status, json, headers: res.headers ?? {} };
+    }
+    throw new Error("unreachable");
+  }
+
+  /**
+   * Încărcarea unui demo (specul servere-hltv §4.3, ca modulul CS2): `POST /demos/upload`, apoi bucățile de la
+   * `received`; `stopAfter` bucăți = o întrerupere (reluarea continuă de unde a rămas). Întoarce ultimul răspuns.
+   */
+  async uploadDemo({ match, file, bytes, stopAfter = Infinity }) {
+    const data = Buffer.from(bytes);
+    const sha256 = createHash("sha256").update(data).digest("hex");
+    const start = await this.request("POST", "/demos/upload", { match, file, size: data.length, sha256 });
+    if (start.status !== 200 || start.json.done || start.json.processing) return start;
+    const { upload, chunkSize } = start.json;
+    let received = start.json.received;
+    let sent = 0;
+    while (received < data.length) {
+      if (sent >= stopAfter) return { status: 200, json: { upload, received, interrupted: true }, headers: {} };
+      const res = await this.requestBinary("POST", `/demos/chunk?upload=${upload}&offset=${received}`, data.subarray(received, received + chunkSize));
+      sent += 1;
+      if (res.status === 409 && typeof res.json?.received === "number") {
+        received = res.json.received;
+        continue;
+      }
+      if (res.status !== 200) return res;
+      received = res.json.received;
+      if (res.json.complete) return res;
+    }
+    return start;
+  }
+
   /** O cerere a înrolării: fără semnătură (pluginul nu are încă o cheie). */
   async plain(path, payload) {
     const body = JSON.stringify(payload);
@@ -145,7 +191,7 @@ export class GcsMockServer {
 
   /** `POST /enroll` (specul plugin-v2 §5.2): jocul, portul, numele, harta, secretul; ține minte referința primită. */
   async enroll({ port = 27015, hostname = "GCS Mock", map = "de_dust2", players = 0, maxPlayers = 32 } = {}) {
-    const res = await this.plain("/enroll", { game: this.game, port, hostname, map, maxPlayers, players, plugin: `gcs-mock/${this.game}/1.1.0`, secret: this.enrollSecret });
+    const res = await this.plain("/enroll", { game: this.game, port, hostname, map, maxPlayers, players, plugin: `gcs-mock/${this.game}/1.2.0`, secret: this.enrollSecret });
     if (res.status === 200 && res.json?.enrollment) this.enrollment = res.json.enrollment;
     return res;
   }
@@ -173,15 +219,16 @@ export class GcsMockServer {
     }
   }
 
-  async heartbeat({ map = "de_dust2", players = [], match, maxPlayers = 32, modules, scores } = {}) {
+  async heartbeat({ map = "de_dust2", players = [], match, maxPlayers = 32, modules, scores, tv } = {}) {
     const res = await this.request("POST", "/heartbeat", {
-      plugin: `gcs-mock/${this.game}/1.1.0`,
+      plugin: `gcs-mock/${this.game}/1.2.0`,
       map,
       maxPlayers,
       players,
       ...(match !== undefined ? { match } : {}),
       ...(modules !== undefined ? { modules } : {}),
       ...(scores !== undefined ? { scores } : {}),
+      ...(tv !== undefined ? { tv } : {}),
     });
     if (res.status !== 200) throw new Error(`heartbeat: ${res.status} ${JSON.stringify(res.json)}`);
     return res.json;
@@ -239,6 +286,38 @@ export class GcsMockServer {
       score,
       players: [...teamA.map((p) => ({ player: p, team: "A" })), ...teamB.map((p) => ({ player: p, team: "B" }))].map((x) => ({ ...x, ...(stats?.get(x.player.auth) ?? { kills: 0, deaths: 0, assists: 0, headshots: 0, damage: 0, mvps: 0 }) })),
     };
+  }
+
+  /**
+   * Un meci mix scurt, pornit (încălzire → live, cu un heartbeat care îl arată live): 10 jucători, harta dată. Întoarce
+   * contextul pentru `finishMix`.
+   */
+  async startMix({ map = "de_mirage", matchId = `m-${this.runId}-${randomBytes(2).toString("hex")}`, tv } = {}) {
+    const players = Array.from({ length: 10 }, (_, i) => mockPlayer(this.game, i + 1));
+    const teamA = players.slice(0, 5);
+    const teamB = players.slice(5);
+    const roster = players.map((p, i) => ({ ...p, team: i < 5 ? "CT" : "T" }));
+    await this.send([this.event("map", { map }), ...players.map((p) => this.event("connect", { player: p }))]);
+    await this.send([this.event("match", { match: this.matchState(matchId, "warmup", { map, teamA, teamB }) })]);
+    await this.send([this.event("match", { match: this.matchState(matchId, "live", { map, teamA, teamB }) })]);
+    await this.heartbeat({ map, players: roster, match: this.matchState(matchId, "live", { map, teamA, teamB }), ...(tv !== undefined ? { tv } : {}) });
+    return { matchId, map, players, teamA, teamB };
+  }
+
+  /** Încheie meciul pornit cu `startMix`: `rounds` runde (A câștigă rundele impare și ultima), apoi `ended` sau `aborted`. */
+  async finishMix(ctx, { rounds = 12, status = "ended" } = {}) {
+    const { matchId, map, teamA, teamB, players } = ctx;
+    const score = { A: 0, B: 0 };
+    const events = [];
+    for (let round = 1; round <= rounds; round++) {
+      const winner = round % 2 === 1 || round === rounds ? "A" : "B";
+      score[winner] += 1;
+      events.push(this.event("match_round", { matchId, round, winner, scoreA: score.A, scoreB: score.B, reason: "elimination" }));
+    }
+    if (events.length > 0) await this.send(events);
+    const final = await this.send([this.event("match", { match: this.matchState(matchId, status, { map, round: rounds, score: { ...score }, teamA, teamB }) })]);
+    await this.heartbeat({ map, players: players.map((p, i) => ({ ...p, team: i < 5 ? "CT" : "T" })), match: null });
+    return { matchId, score, result: final[0] };
   }
 
   /**
@@ -346,7 +425,17 @@ if (isMain) {
       await a2s.close();
     }
   };
-  const run = args.scenario === "heartbeat" ? mock.heartbeat({ players: [mockPlayer(mock.game, 1)] }) : args.scenario === "enroll" ? enrollScenario() : mock.scenarioFull();
+  // Un meci mix scurt, apoi demo-ul dat încărcat ca de modulul CS2 (serverul trebuie să aibă sursa „plugin” în ACP).
+  const demoScenario = async () => {
+    if (!args.demo) throw new Error("--demo <fișier.dem> lipsește");
+    const ctx = await mock.startMix({ map: args.map ?? "de_mirage" });
+    const { score } = await mock.finishMix(ctx);
+    const bytes = readFileSync(args.demo);
+    const res = await mock.uploadDemo({ match: ctx.matchId, file: `gcs-${ctx.matchId}.dem`, bytes });
+    return { matchId: ctx.matchId, score, config: res.json };
+  };
+  const scenarios = { heartbeat: () => mock.heartbeat({ players: [mockPlayer(mock.game, 1)] }), enroll: enrollScenario, demo: demoScenario };
+  const run = (scenarios[args.scenario] ?? (() => mock.scenarioFull()))();
   run
     .then((result) => {
       console.log(JSON.stringify({ ok: true, matchId: result.matchId ?? null, score: result.score ?? null, ban: result.ban ?? null, config: result.config ?? null, key: result.key ?? null }, null, 2));

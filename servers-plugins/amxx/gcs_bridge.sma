@@ -12,6 +12,9 @@
  * adminii din GCS, bannurile / mute / gag din GCS, VIP-ul din GCS, ready-up-ul mix și comenzile de admin GCS. Un modul
  * oprit nu își înregistrează comenzile și nu își trage listele de la site.
  *
+ * HLTV-ul e un proxy separat: pluginul doar raportează câte proxy-uri HLTV sunt conectate (heartbeat `tv.hltv`);
+ * demo-urile și „Urmărește live” se configurează pe site (specul 2026-10-08-servere-hltv).
+ *
  * Fără cheie (pachetul general), pluginul se înrolează singur la site și primește cheia după aprobarea din ACP.
  * Evenimentele netrimise se salvează pe disc și se retrimit cu aceleași id-uri.
  *
@@ -44,9 +47,9 @@
 #pragma dynamic 262144
 
 #define PLUGIN      "GCS Server Bridge"
-#define VERSION     "1.1.0"
+#define VERSION     "1.2.0"
 #define AUTHOR      "GamingCommunitySuite"
-#define PLUGIN_ID   "gcs-amxx/1.1.0"
+#define PLUGIN_ID   "gcs-amxx/1.2.0"
 #define BASE_PATH   "/api/servers/bridge/v1"
 
 // Corpul unei cereri: nativele AMX Mod X (hash_string) și AmxxEasyHttp (set_body) citesc cel mult 16383 de caractere
@@ -602,8 +605,10 @@ stock send_heartbeat()
 	json_object_set_number(root, "maxPlayers", get_maxplayers());
 	new JSON:players = json_init_array();
 	new team[16];
+	new hltv = 0;
 	for (new id = 1; id <= MaxClients; id++)
 	{
+		if (is_user_connected(id) && is_user_hltv(id)) hltv++;
 		if (!is_user_connected(id) || is_user_bot(id) || is_user_hltv(id)) continue;
 		new JSON:ref = player_ref(id);
 		get_user_team(id, team, charsmax(team));
@@ -625,6 +630,8 @@ stock send_heartbeat()
 	json_free(modules);
 	json_object_set_number(root, "scores.ct", g_teamCT, true);
 	json_object_set_number(root, "scores.t", g_teamT, true);
+	// Proxy-urile HLTV conectate (specul servere-hltv §8): starea transmisiei în ACP; doar citită.
+	json_object_set_number(root, "tv.hltv", hltv, true);
 	if (g_mixState == MIX_WARMUP || g_mixState == MIX_LIVE || g_mixState == MIX_HALFTIME)
 	{
 		new JSON:match = match_state();

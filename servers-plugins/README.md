@@ -1,7 +1,8 @@
 # GCS Server Bridge — pluginurile serverelor de joc
 
 Puntea dintre serverele de joc ale comunității și GamingCommunitySuite (specurile
-`docs/superpowers/specs/2026-10-08-servere-bridge.md` și `2026-10-08-servere-plugin-v2.md`).
+`docs/superpowers/specs/2026-10-08-servere-bridge.md`, `2026-10-08-servere-plugin-v2.md` și
+`2026-10-08-servere-hltv.md`).
 
 **Implicit pluginul doar colectează date** pentru site: heartbeat (harta, jucătorii și flag-urile lor de admin, citite
 din sistemul de admini al serverului), evenimente (conectări, ucideri, runde, focuri, scorul echipelor), meciurile mix
@@ -42,6 +43,7 @@ le primește în heartbeat (`config.features`). Un modul oprit nu își înregis
 | VIP din GCS | `vip` | flag-urile / permisiunile VIP adăugate peste cele ale serverului (doar cele adăugate de GCS se scot) |
 | Ready-up mix | `mixReady` | `say /ready` / `!ready`: GCS pornește meciul (restartul) |
 | Comenzile de admin GCS | `commands` | comenzile din tabelele de mai jos și jurnalul acțiunilor adminilor |
+| Demo-urile meciurilor mix (doar CS2) | `demos` | `tv_record gcs-<id meci>` la trecerea meciului în live, `tv_stoprecord` după `tv_delay` + 5 s; cu sursa „încărcate de plugin”, demo-ul urcă pe site după meci (§ „HLTV / GOTV”) |
 
 ## Protocolul pe scurt
 
@@ -63,13 +65,22 @@ le primește în heartbeat (`config.features`). Un modul oprit nu își înregis
   unknown_enrollment`. Site-ul păstrează doar `SHA-256(secret)`, verifică prin interogarea A2S că la IP-ul sursei
   răspunde un server al jocului și aplică limite pe IP, plafoane și expirarea (7 zile).
 - Heartbeat-ul raportează pe fiecare jucător flag-urile de admin existente (CS 1.6: `flags`, literele din
-  `get_user_flags`; CS2: `permissions` și `groups` din CounterStrikeSharp, doar citite) și `modules` / `scores`.
+  `get_user_flags`; CS2: `permissions` și `groups` din CounterStrikeSharp, doar citite), `modules` / `scores` și
+  transmisia `tv` (CS2: `enabled`, `delay`, `port`, `recording` din `tv_enable` / `tv_delay` / `tv_port`; CS 1.6:
+  `hltv`, câte proxy-uri HLTV sunt conectate). Răspunsul are `config.features.demos` și `config.tv` (`upload`,
+  `chunkSize`, `rate`).
+- **Demo-urile încărcate de plugin** (semnate, doar cu sursa „plugin” și modulul `demos`): `POST /demos/upload`
+  `{ match, file, size, sha256 }` → `{ upload, chunkSize, received }` / `{ done: true }` / `{ processing: true }`, apoi
+  `POST /demos/chunk?upload=<id>&offset=<n>` cu corpul binar (exact `chunkSize` octeți, ultima bucată restul; max 1 MiB;
+  semnătura acoperă hex(SHA-256(octeți))) → `{ received }` / `{ received, complete: true }` / `409 offset_mismatch`.
+  Aceeași mărime și același sha256 reiau încărcarea de la `received`.
 
 Un server de joc fals care vorbește protocolul (fără dependențe, Node ≥ 18) e în `mock/gcs-mock-server.mjs`:
 
 ```sh
 node servers-plugins/mock/gcs-mock-server.mjs --url https://comunitate.exemplu.ro --key gcs1.<keyId>.<secret> --scenario full
 node servers-plugins/mock/gcs-mock-server.mjs --url https://comunitate.exemplu.ro --scenario enroll --game cs2
+node servers-plugins/mock/gcs-mock-server.mjs --url https://comunitate.exemplu.ro --key gcs1.<keyId>.<secret> --scenario demo --demo meci.dem
 ```
 
 ## Release-ul (binarele de pe site)
@@ -164,7 +175,8 @@ CounterStrikeSharp-ul nou, cu runtime-ul .NET 10.
 
 ### Configul (`configs/plugins/GcsBridge/GcsBridge.json`)
 
-`Url`, `Key` (gol = înrolarea automată), `AllowManage` (false = doar colector), `MixPlayers`, `MixMaxRounds`, `Debug`.
+`Url`, `Key` (gol = înrolarea automată), `AllowManage` (false = doar colector), `MixPlayers`, `MixMaxRounds`,
+`KeepDemos` (modulul `demos`: true păstrează demo-ul pe server după ce a ajuns pe site), `Debug`.
 
 ### Comenzile modulului „commands” (chat: `!…` sau `/…`)
 
@@ -186,6 +198,23 @@ observă: un restart al jocului urmat de o rundă cu cel puțin 2 jucători în 
 schimbarea părților (majoritatea lui A pe partea cealaltă) e pauza; finalul vine la majoritatea lui `mp_maxrounds`
 (30 pe CS 1.6 / 24 pe CS2 dacă e 0) sau, pe CS2, la panoul de final; harta schimbată anulează meciul deschis.
 
+## HLTV / GOTV și demo-urile meciurilor mix
+
+Totul se setează pe site, pe fiecare server (ACP → Gaming → Servere → serverul → Plugin și chei API → „HLTV / GOTV și
+demo-uri”), și e oprit implicit:
+
+- **„Urmărește live”:** adresa HLTV / GOTV (`host:port`) și întârzierea; pe CS2 pluginul raportează `tv_delay`.
+- **Sursa demo-urilor:** FTP / FTPS / SFTP (secretele sigilate pe site, niciodată arătate înapoi), un folder HTTP cu lista
+  fișierelor sau, pe CS2, încărcarea directă de către plugin. Site-ul potrivește fișierele cu meciul după nume (numele
+  GCS, `<prefix>-<AALLZZhhmm>-<hartă>.dem` ale HLTV-ului, numele cu dată), fereastra meciului și hartă, inclusiv
+  demo-urile împărțite.
+- **CS 1.6:** HLTV-ul e un proxy separat; pluginul nu înregistrează nimic. Opțional, gcs-worker pornește / oprește
+  înregistrarea HLTV prin rcon (`record gcs-m<id>` / `stoprecording`, cu `adminpassword`-ul HLTV), doar la adresa
+  configurată.
+- **CS2:** modulul `demos` rulează `tv_record` / `tv_stoprecord` (cere `tv_enable 1`) și, cu sursa „plugin”, încarcă
+  demo-ul după meci, în bucăți, cu ritmul cerut de site, reluabil după repornire (`data/gcs_demo_uploads.json`) și
+  **niciodată cât timp pe server e un meci**.
+
 ## Securitate
 
 - Cheia e pe server: se rotește (cea veche mai merge 10 minute) și se revocă din ACP. O cheie furată poate scrie
@@ -199,7 +228,7 @@ schimbarea părților (majoritatea lui A pe partea cealaltă) e pauza; finalul v
 
 ## Starea compilării
 
-Ambele pluginuri (1.1.0) se compilează fără erori și fără avertismente (2026-10-08):
+Ambele pluginuri (1.2.0) se compilează fără erori și fără avertismente (2026-10-09):
 
 | Plugin | Unelte | Rezultat |
 |---|---|---|
@@ -209,4 +238,12 @@ Ambele pluginuri (1.1.0) se compilează fără erori și fără avertismente (20
 Protocolul e verificat cap la cap cu codul site-ului: clientul CS2 real (`BridgeClient.cs`, `EventQueue.cs`) prin HTTP
 (înrolarea, secretul greșit, cheia livrată, heartbeat-ul semnat cu permisiunile raportate, evenimentele) și pașii
 pluginului AMX Mod X refăcuți în Node (corpurile ca `json_serial_to_string`, `sha256-env`, cheia din
-`gcs_bridge_key.cfg`). Pluginurile nu au rulat încă pe un server de joc real.
+`gcs_bridge_key.cfg`). Încărcarea demo-urilor are un test repetabil: `cs2/crosscheck` compilează `BridgeClient.cs` și
+`DemoUploader.cs` fără CounterStrikeSharp și încarcă un demo pe codul real al site-ului prin HTTP (heartbeat-ul cu
+modulul `demos`, întreruperea și reluarea, lipirea, `done`):
+
+```sh
+GCS_DOTNET=/cale/spre/dotnet NUGET_PACKAGES=/cale/spre/nuget npx vitest run src/servers/bridge/demos/crosscheck.test.ts
+```
+
+(din `packages/modules`). Pluginurile nu au rulat încă pe un server de joc real.

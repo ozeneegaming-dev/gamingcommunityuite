@@ -1,4 +1,7 @@
 import { randomUUID } from "node:crypto";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { describe, expect, test } from "vitest";
 import { GcsS3FileStore } from "./s3Store";
 
@@ -34,6 +37,19 @@ describe.skipIf(!url)("GcsS3FileStore (MinIO)", () => {
 
     await s.delete(key);
     expect(await s.get(key)).toBeNull();
+  });
+
+  test("putFile: un fișier local, încărcat în flux", async () => {
+    const s = store();
+    const key = `test/${randomUUID()}.bin`;
+    const dir = await mkdtemp(path.join(os.tmpdir(), "gcs-s3-"));
+    const file = path.join(dir, "demo.bin");
+    await writeFile(file, Buffer.alloc(3 * 1024 * 1024, 7));
+    await s.putFile(key, file, "application/octet-stream");
+    const got = await s.get(key);
+    expect(got?.size).toBe(3 * 1024 * 1024);
+    await s.delete(key);
+    await rm(dir, { recursive: true, force: true });
   });
 
   test("o cheie inexistentă → null", async () => {
