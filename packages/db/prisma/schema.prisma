@@ -1763,6 +1763,13 @@ model GameServer {
   isMix        Boolean   @default(false)
   bridgeSeenAt DateTime?
   bridgePlugin String?
+  /// Modulele opționale ale pluginului (specul 2026-10-08-servere-plugin-v2 §1.2), implicit oprite: pluginul doar
+  /// colectează date. Adminii din GCS, sancțiunile, VIP-ul, ready-up-ul mix și comenzile de admin GCS.
+  manageAdmins     Boolean @default(false)
+  enforceSanctions Boolean @default(false)
+  manageVip        Boolean @default(false)
+  mixReady         Boolean @default(false)
+  adminCommands    Boolean @default(false)
 
   forum        Forum?            @relation(fields: [forumId], references: [id], onDelete: SetNull)
   admins       GameServerAdmin[]
@@ -1777,6 +1784,7 @@ model GameServer {
   adminActions GameAdminAction[]
   tickets      GameTicket[]
   lastPlayers  GamePlayer[]      @relation("GamePlayerLastServer")
+  enrollments  GameServerEnrollment[]
 
   @@unique([game, host, port])
   @@index([enabled, position])
@@ -2049,6 +2057,48 @@ model GameServerKey {
   @@map("game_server_keys")
 }
 
+enum GameEnrollmentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+/// O înrolare automată (specul 2026-10-08-servere-plugin-v2 §5): un server necunoscut cu pluginul general cere o cheie.
+/// `ref` = referința aleatorie dată doar pluginului; `secretHash` = SHA-256(secretul generat de plugin). `ip` = IP-ul
+/// sursei cererii (nu o adresă raportată); `check` = rezultatul interogării acelui IP:port. Cheia se creează abia la
+/// livrare (`keyId`), o singură dată.
+model GameServerEnrollment {
+  id          Int                  @id @default(autoincrement())
+  ref         String               @unique
+  secretHash  String               @unique
+  game        String
+  ip          String
+  port        Int
+  hostname    String               @default("")
+  map         String?
+  players     Int                  @default(0)
+  maxPlayers  Int                  @default(0)
+  plugin      String               @default("")
+  status      GameEnrollmentStatus @default(PENDING)
+  check       Json?
+  checkedAt   DateTime?
+  serverId    Int?
+  decidedById String?
+  decidedAt   DateTime?
+  keyId       String?
+  deliveredAt DateTime?
+  deliveries  Int                  @default(0)
+  createdAt   DateTime             @default(now())
+  lastSeenAt  DateTime             @default(now())
+  expiresAt   DateTime
+
+  server GameServer? @relation(fields: [serverId], references: [id], onDelete: SetNull)
+
+  @@index([status, expiresAt])
+  @@index([ip])
+  @@map("game_server_enrollments")
+}
+
 /// O identitate de joc (`kind`, `value`), cu sau fără cont pe site. `value`: SteamID64 (`STEAM`), ID-ul canonic al
 /// emulatorului (`NONSTEAM`) sau numele normalizat (`NAME`).
 model GamePlayer {
@@ -2111,6 +2161,8 @@ model GameSession {
   connectedAt    DateTime  @default(now())
   disconnectedAt DateTime?
   seconds        Int       @default(0)
+  /// Flag-urile de admin raportate de server (litere AMXX normalizate), din sistemul de admini al serverului.
+  adminFlags     String?
 
   server GameServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
   player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)

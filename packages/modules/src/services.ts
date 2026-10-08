@@ -459,6 +459,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     render: (content) => posting.render(content),
     canViewServer: (actor, id) => serverQueries.canView(actor, id),
     visibleServers: (actor) => serverQueries.visibleIds(actor),
+    // Aprobarea unei înrolări automate creează serverul prin aplicația Servere (validarea, jurnalul `servers.create`).
+    createServer: (actor, input) => servers.save(actor, null, { ...input, queryPort: null, description: "", forumId: null, groups: [], adminIds: [], enabled: true }),
   });
   bridge.listen(bus);
   servers.playerStats.use(bridge.stats);

@@ -21,6 +21,8 @@ export type GcsServerStatus = {
   version: string | null;
   /** `null` = protocolul nu dă lista (sau nu s-a cerut). */
   playerList: GcsServerPlayer[] | null;
+  /** Folderul jocului raportat prin A2S (`cstrike`, `csgo`; verificarea înrolărilor); lipsă la celelalte protocoale. */
+  folder?: string | null;
   updatedAt: string;
   error: GcsQueryError | null;
 };
@@ -29,6 +31,6 @@ export type GcsServerStatus = {
 export type GcsServerLive = Omit<GcsServerStatus, "playerList" | "error"> & { id: number };
 
 export function liveStatus(id: number, s: GcsServerStatus): GcsServerLive {
-  const { playerList: _players, error: _error, ...rest } = s;
+  const { playerList: _players, error: _error, folder: _folder, ...rest } = s;
   return { id, ...rest };
 }

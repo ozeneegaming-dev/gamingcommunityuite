@@ -16,11 +16,16 @@ import {
   type GcsSettingsService,
 } from "@gcs/core";
 import type { PrismaClient } from "@gcs/db";
+import type { BlockList } from "node:net";
 import type Redis from "ioredis";
+import { serversAllowNets } from "../net";
+import type { GcsServerQueryFn } from "../poller";
+import { queryGameServer } from "../query";
 import { SERVERS_ACP_SECTION } from "../service";
 import { GcsBridgeAdmins } from "./admins";
 import { GcsBridgeApi } from "./api";
 import { BRIDGE_SETTING } from "./config";
+import { GcsBridgeEnrollments } from "./enroll";
 import { closeSession, GcsBridgeEvents } from "./events";
 import { GcsBridgeKeys, type GcsBridgeKeyRow } from "./keys";
 import { GcsBridgeMaps } from "./maps";
@@ -32,6 +37,7 @@ import { GcsBridgeSanctions } from "./sanctions";
 import { GcsBridgeStatsProvider, recomputeRanks } from "./stats";
 import { GcsBridgeStore, type GcsRoster } from "./store";
 import { GcsBridgeTickets } from "./tickets";
+import { BRIDGE_SERVER_SELECT, bridgeFeatures, type GcsBridgeFeatures } from "./types";
 import { GcsBridgeVip, type GcsVipMappingView } from "./vip";
 
 /** Joburile punții (§16), în `gcs-worker`. */
@@ -59,11 +65,45 @@ export type GcsBridgeDeps = {
   now?: () => number;
   /** Doar pentru teste: descărcarea imaginilor hărților. */
   fetchMapImage?: (url: string) => Promise<GcsFetchedFile>;
+  /** Interogarea serverelor (verificarea înrolărilor); implicit cea a aplicației. */
+  query?: GcsServerQueryFn;
+  /** Excepția operatorului pentru interogări (`GCS_SERVERS_ALLOW_NETS`). */
+  allow?: () => BlockList | null;
+  /** Crearea unui server în aplicația Servere (aprobarea unei înrolări): `GcsServerService.save`. */
+  createServer: (actor: GcsActor, input: { game: string; host: string; port: number; name: string }) => Promise<{ id: number }>;
+};
+
+/** Coloanele modulelor opționale din `game_servers` (specul plugin-v2 §1.2). */
+const FEATURE_COLUMNS = ["manageAdmins", "enforceSanctions", "manageVip", "mixReady", "adminCommands"] as const;
+
+/** Configurarea punții unui server din ACP; modulele lipsă rămân neschimbate. */
+export type GcsBridgeConfigInput = {
+  identityMode: string;
+  nameIds: boolean;
+  isMix: boolean;
+  manageAdmins?: boolean;
+  enforceSanctions?: boolean;
+  manageVip?: boolean;
+  mixReady?: boolean;
+  adminCommands?: boolean;
 };
 
 /** Starea punții unui server în ACP (Gaming → Servere → un server → Plugin și chei API). */
 export type GcsBridgeStatus = {
-  server: { id: number; name: string; game: string; identityMode: string; nameIds: boolean; isMix: boolean; bridgeSeenAt: string | null; bridgePlugin: string | null };
+  server: {
+    id: number;
+    name: string;
+    game: string;
+    identityMode: string;
+    nameIds: boolean;
+    isMix: boolean;
+    bridgeSeenAt: string | null;
+    bridgePlugin: string | null;
+    host: string;
+    port: number;
+  };
+  /** Modulele opționale pornite pe site (specul plugin-v2 §1.2); implicit toate oprite (colectorul). */
+  features: GcsBridgeFeatures;
   connected: boolean;
   roster: GcsRoster | null;
   match: GcsLiveMatch | null;
@@ -88,6 +128,8 @@ export class GcsBridge {
   readonly maps: GcsBridgeMaps;
   readonly events: GcsBridgeEvents;
   readonly api: GcsBridgeApi;
+  /** Înrolările automate ale serverelor necunoscute (specul plugin-v2 §5). */
+  readonly enrollments: GcsBridgeEnrollments;
   readonly presence: GcsBridgePresence;
   readonly tickets: GcsBridgeTickets;
   readonly queries: GcsBridgeQueries;
@@ -106,7 +148,36 @@ export class GcsBridge {
     this.matches = new GcsBridgeMatches({ db, settings, store, realtime, now });
     this.maps = new GcsBridgeMaps({ db, acp, attachments, settings, now, ...(deps.fetchMapImage ? { fetch: deps.fetchMapImage } : {}) });
     this.events = new GcsBridgeEvents({ db, players: this.players, admins: this.admins, sanctions: this.sanctions, matches: this.matches, maps: this.maps, store, now });
-    this.api = new GcsBridgeApi({ db, apps, settings, rateLimiter, store, keys: this.keys, players: this.players, admins: this.admins, vip: this.vip, sanctions: this.sanctions, events: this.events, matches: this.matches, maps: this.maps, now });
+    this.enrollments = new GcsBridgeEnrollments({
+      db,
+      apps,
+      settings,
+      acp,
+      rateLimiter,
+      store,
+      keys: this.keys,
+      query: deps.query ?? queryGameServer,
+      allow: deps.allow ?? serversAllowNets,
+      createServer: deps.createServer,
+      now,
+    });
+    this.api = new GcsBridgeApi({
+      db,
+      apps,
+      settings,
+      rateLimiter,
+      store,
+      keys: this.keys,
+      players: this.players,
+      admins: this.admins,
+      vip: this.vip,
+      sanctions: this.sanctions,
+      events: this.events,
+      matches: this.matches,
+      maps: this.maps,
+      enrollments: this.enrollments,
+      now,
+    });
     this.presence = new GcsBridgePresence({ db, permissions, settings, apps, store, now });
     this.tickets = new GcsBridgeTickets({ db, bus, permissions, admins: this.admins, sanctions: this.sanctions, render: deps.render, now });
     this.queries = new GcsBridgeQueries({ db, apps, permissions, store, players: this.players, sanctions: this.sanctions, presence: this.presence, canViewServer: deps.canViewServer, visibleServers: deps.visibleServers });
@@ -143,7 +214,7 @@ export class GcsBridge {
    * șterge codurile de legare expirate, id-urile evenimentelor mai vechi de 14 zile și sesiunile / jurnalul din joc mai
    * vechi decât retenția.
    */
-  async sweep(): Promise<{ sessions: number; admins: number; codes: number; events: number; old: number }> {
+  async sweep(): Promise<{ sessions: number; admins: number; codes: number; events: number; old: number; enrollments: number }> {
     const { db, settings } = this.deps;
     const store = this.store;
     const now = this.now();
@@ -154,15 +225,20 @@ export class GcsBridge {
     const retention = new Date(now.getTime() - (await settings.get<number>(BRIDGE_SETTING.retentionDays)) * 86_400_000);
     const oldSessions = (await db.gameSession.deleteMany({ where: { disconnectedAt: { lt: retention } } })).count;
     const oldActions = (await db.gameAdminAction.deleteMany({ where: { at: { lt: retention } } })).count;
-    return { sessions, admins, codes, events, old: oldSessions + oldActions };
+    const enrollments = await this.enrollments.sweep();
+    return { sessions, admins, codes, events, old: oldSessions + oldActions, enrollments };
   }
 
   /** Starea punții unui server (ACP). */
   async status(actor: GcsActor, serverId: number): Promise<GcsBridgeStatus | null> {
     const { db, acp, settings } = this.deps;
     await acp.assert(actor, SERVERS_ACP_SECTION, "view");
-    const server = await db.gameServer.findUnique({ where: { id: serverId }, select: { id: true, name: true, game: true, identityMode: true, nameIds: true, isMix: true, bridgeSeenAt: true, bridgePlugin: true } });
-    if (!server) return null;
+    const row = await db.gameServer.findUnique({
+      where: { id: serverId },
+      select: { ...BRIDGE_SERVER_SELECT, bridgeSeenAt: true, bridgePlugin: true, host: true, port: true },
+    });
+    if (!row) return null;
+    const { manageAdmins, enforceSanctions, manageVip, mixReady, adminCommands, enabled: _enabled, ...server } = row;
     const now = this.now();
     const heartbeat = await settings.get<number>(BRIDGE_SETTING.heartbeat);
     const [roster, match, keys, vip, sessionsOpen, players, activeSanctions, matches] = await Promise.all([
@@ -177,6 +253,7 @@ export class GcsBridge {
     ]);
     return {
       server: { ...server, bridgeSeenAt: server.bridgeSeenAt?.toISOString() ?? null },
+      features: bridgeFeatures({ manageAdmins, enforceSanctions, manageVip, mixReady, adminCommands }),
       connected: server.bridgeSeenAt !== null && now.getTime() - server.bridgeSeenAt.getTime() <= 2 * heartbeat * 1000 + 15_000,
       roster,
       match,
@@ -186,14 +263,26 @@ export class GcsBridge {
     };
   }
 
-  /** Modul identităților (`steam` / `mixed`), identitățile pe nume și serverul de meciuri mix (§15.3). */
-  async saveConfig(actor: GcsActor, serverId: number, input: { identityMode: string; nameIds: boolean; isMix: boolean }): Promise<void> {
+  /**
+   * Modul identităților (`steam` / `mixed`), identitățile pe nume, serverul de meciuri mix (§15.3) și modulele opționale
+   * ale pluginului (specul plugin-v2 §1.2; lipsă = neschimbat). Pluginul le primește la următorul heartbeat.
+   */
+  async saveConfig(actor: GcsActor, serverId: number, input: GcsBridgeConfigInput): Promise<void> {
     const { db, acp } = this.deps;
     await acp.assert(actor, SERVERS_ACP_SECTION, "edit");
     if (!(IDENTITY_MODES as readonly string[]).includes(input.identityMode)) throw new GcsValidationError({ identityMode: "invalid" });
-    const before = await db.gameServer.findUnique({ where: { id: serverId }, select: { identityMode: true, nameIds: true, isMix: true } });
+    const before = await db.gameServer.findUnique({
+      where: { id: serverId },
+      select: { identityMode: true, nameIds: true, isMix: true, manageAdmins: true, enforceSanctions: true, manageVip: true, mixReady: true, adminCommands: true },
+    });
     if (!before) throw new GcsNotFound();
-    const after = { identityMode: input.identityMode, nameIds: input.nameIds === true, isMix: input.isMix === true };
+    const flag = (key: (typeof FEATURE_COLUMNS)[number]) => (typeof input[key] === "boolean" ? input[key] : before[key]);
+    const after = {
+      identityMode: input.identityMode,
+      nameIds: input.nameIds === true,
+      isMix: input.isMix === true,
+      ...Object.fromEntries(FEATURE_COLUMNS.map((k) => [k, flag(k)])),
+    };
     await db.$transaction(async (tx) => {
       await tx.gameServer.update({ where: { id: serverId }, data: after });
       await writeAudit(tx, { actorId: actor.userId, action: "servers.bridge.update", targetType: "game_server", targetId: String(serverId), before, after, ip: actor.ip });
@@ -223,4 +312,7 @@ export { SANCTION_EVIDENCE_MAX_BYTES, SANCTION_REASON_MAX } from "./sanctions";
 export type { GcsLiveMatch } from "./matches";
 export type { GcsRoster } from "./store";
 export type { GcsBridgeKeyRow } from "./keys";
+export type { GcsEnrollmentView, GcsEnrollCheck, GcsEnrollCheckResult } from "./enroll";
+export { ENROLL_TTL_DAYS, MAX_PENDING, MAX_PENDING_PER_IP } from "./enroll";
+export type { GcsBridgeFeatures } from "./types";
 export type { GcsVipMappingView } from "./vip";

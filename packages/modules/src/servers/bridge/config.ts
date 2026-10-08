@@ -1,3 +1,4 @@
+import { isIP } from "node:net";
 import type { GcsSettingDef, GcsSettingsService } from "@gcs/core";
 import type { GcsEloConfig } from "./elo";
 
@@ -23,6 +24,10 @@ export const BRIDGE_SETTING = {
   retentionDays: "servers.bridge_retention_days",
   mapTemplateCs16: "servers.map_template_cs16",
   mapTemplateCs2: "servers.map_template_cs2",
+  /** Înrolarea automată a serverelor necunoscute (specul plugin-v2 §5), pornită implicit; aprobarea rămâne manuală. */
+  enrollEnabled: "servers.enroll_enabled",
+  /** IP-urile / CIDR-urile care nu se pot înrola (butonul „Blochează IP” din ACP adaugă aici). */
+  enrollBlockedIps: "servers.enroll_blocked_ips",
 } as const;
 
 /** Secțiunile ACP ale punții. */
@@ -58,6 +63,21 @@ export function mapTemplateError(v: unknown): string | null {
   return (url.protocol === "https:" || url.protocol === "http:") && !url.username && !url.password ? null : "invalid_map_template";
 }
 
+/** Lista IP-urilor blocate la înrolare: gol sau IP-uri / CIDR-uri valide, separate prin virgulă sau spațiu (max 500). */
+export function enrollBlockedError(v: unknown): string | null {
+  if (v === "") return null;
+  if (typeof v !== "string" || v.length > 4000) return "invalid_ip_list";
+  const entries = v.split(/[\s,]+/).filter(Boolean);
+  if (entries.length > 500) return "invalid_ip_list";
+  for (const e of entries) {
+    const [address, prefix, ...rest] = e.split("/");
+    const family = isIP(address ?? "");
+    if (family === 0 || rest.length > 0) return "invalid_ip_list";
+    if (prefix !== undefined && !(/^\d{1,3}$/.test(prefix) && Number(prefix) <= (family === 6 ? 128 : 32))) return "invalid_ip_list";
+  }
+  return null;
+}
+
 const S = BRIDGE_SETTINGS_SECTION;
 export const BRIDGE_SETTING_DEFS: GcsSettingDef[] = [
   { key: BRIDGE_SETTING.heartbeat, type: "number", default: 30, section: S, labelKey: "settings.servers.bridge_heartbeat", validate: int(15, 120) },
@@ -74,6 +94,8 @@ export const BRIDGE_SETTING_DEFS: GcsSettingDef[] = [
   { key: BRIDGE_SETTING.retentionDays, type: "number", default: 180, section: S, labelKey: "settings.servers.bridge_retention_days", validate: int(30, 730) },
   { key: BRIDGE_SETTING.mapTemplateCs16, type: "string", default: "", section: S, labelKey: "settings.servers.map_template_cs16", validate: mapTemplateError },
   { key: BRIDGE_SETTING.mapTemplateCs2, type: "string", default: "", section: S, labelKey: "settings.servers.map_template_cs2", validate: mapTemplateError },
+  { key: BRIDGE_SETTING.enrollEnabled, type: "boolean", default: true, section: S, labelKey: "settings.servers.enroll_enabled" },
+  { key: BRIDGE_SETTING.enrollBlockedIps, type: "string", default: "", section: S, labelKey: "settings.servers.enroll_blocked_ips", validate: enrollBlockedError },
 ];
 
 /** Configurația ELO din setări. */

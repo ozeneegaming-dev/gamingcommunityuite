@@ -360,7 +360,7 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
         ) : (
           <ul className="gcs-adminRows">
             {list.map((a) => (
-              <li key={`${a.server.id}-${a.adminId}`} className="gcs-adminRow" data-state="online" data-testid="gcs-widget-admin">
+              <li key={`${a.server.id}-${a.adminId ?? `p${a.playerId}`}`} className="gcs-adminRow" data-state="online" data-testid="gcs-widget-admin">
                 <span className="gcs-dot" aria-hidden="true" />
                 <span className="gcs-adminRow__name">{a.user ? <GcsUserLinkPlain user={a.user} /> : a.name}</span>
                 <span className="gcs-adminRow__meta">

@@ -53,6 +53,41 @@ export function cssPermissions(flags: string): string[] {
   return out;
 }
 
+/**
+ * Literele „de putere” (specul 2026-10-08-servere-plugin-v2 §2): kick, ban, slay, hartă, cvar, cfg, chat, vot, parolă,
+ * rcon, meniuri, ban temporar. `a` (imunitatea) singură, `b` (rezervarea) și nivelurile `m`–`t` (folosite des pentru
+ * VIP) nu fac pe cineva admin.
+ */
+export const POWER_FLAGS = "cdefghijkluv";
+
+/** Inversul tabelului `FLAG_CSS`: permisiunea CounterStrikeSharp → litera AMXX. */
+const CSS_FLAG = new Map(Object.entries(FLAG_CSS).flatMap(([letter, perms]) => perms.map((p) => [p, letter] as const)));
+const MAX_REPORTED = 64;
+
+/**
+ * Flag-urile de admin raportate de un server (din sistemul lui de admini), normalizate în litere AMXX, fără `z`:
+ * CS 1.6 trimite literele (`flags`), CS2 permisiunile CounterStrikeSharp (`permissions`, `@css/root` = toate literele de
+ * admin). Datele vin de la server: orice altceva se ignoră. `null` = nimic de admin.
+ */
+export function reportedAdminFlags(ref: { flags?: unknown; permissions?: unknown }): string | null {
+  let letters = typeof ref.flags === "string" ? ref.flags.slice(0, MAX_REPORTED) : "";
+  if (Array.isArray(ref.permissions)) {
+    for (const p of ref.permissions.slice(0, MAX_REPORTED)) {
+      if (typeof p !== "string") continue;
+      const perm = p.trim().toLowerCase();
+      if (perm === "@css/root") letters += ADMIN_LETTERS;
+      else letters += CSS_FLAG.get(perm) ?? "";
+    }
+  }
+  const flags = normalizeFlags(letters).replace("z", "");
+  return flags === "" ? null : flags;
+}
+
+/** Are cel puțin o literă de putere (e admin pentru prezență). */
+export function isPowerAdmin(flags: string | null | undefined): boolean {
+  return !!flags && [...POWER_FLAGS].some((c) => flags.includes(c));
+}
+
 /** Imunitatea efectivă (0–100): a intrării, altfel a presetului; `a` fără imunitate explicită → 100. */
 export function effectiveImmunity(opts: { immunity: number | null; presetImmunity: number | null; flags: string }): number {
   if (opts.immunity !== null) return opts.immunity;

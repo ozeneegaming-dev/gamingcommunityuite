@@ -5,7 +5,9 @@ import { SERVERS_APP } from "../poller";
 import { cleanGameText } from "../text";
 import type { GcsBridgeAdmins } from "./admins";
 import { BRIDGE_SETTING, isBridgeGame } from "./config";
+import type { GcsBridgeEnrollments } from "./enroll";
 import { closeSession, openSession, MAX_EVENTS, type GcsBridgeEvents } from "./events";
+import { reportedAdminFlags } from "./flags";
 import { cleanIp, resolveIdentity } from "./identity";
 import type { GcsBridgeKeys } from "./keys";
 import type { GcsBridgeMaps } from "./maps";
@@ -14,7 +16,7 @@ import type { GcsBridgePlayers } from "./players";
 import type { GcsBridgeSanctions } from "./sanctions";
 import { canonicalString, isBridgeKeyId, verifyBridgeSignature } from "./signing";
 import type { GcsBridgeStore, GcsRosterEntry } from "./store";
-import { BRIDGE_SERVER_SELECT, GcsBridgeError, cleanMapName, identityKey, type GcsBridgeAuth, type GcsBridgeServer, type GcsPlayerRow } from "./types";
+import { BRIDGE_SERVER_SELECT, GcsBridgeError, bridgeFeatures, cleanMapName, identityKey, type GcsBridgeAuth, type GcsBridgeFeatures, type GcsBridgeServer, type GcsPlayerRow } from "./types";
 import type { GcsBridgeVip } from "./vip";
 
 /** O cerere HTTP către protocol; `path` = partea de după `/api/servers/bridge/v1`, cu query-ul exact cum a fost trimis. */
@@ -29,6 +31,8 @@ const MAX_ROSTER = 128;
 const NONCE = /^[A-Za-z0-9_-]{16,64}$/;
 const TIMESTAMP = /^\d{1,12}$/;
 export const LINK_COMMAND = "/gcs";
+/** Cheile modulelor opționale (`config.features`, `modules` raportate de plugin). */
+export const FEATURE_KEYS = ["admins", "sanctions", "vip", "mixReady", "commands"] as const satisfies readonly (keyof GcsBridgeFeatures)[];
 
 const obj = (v: unknown): Record<string, unknown> => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
 const int = (v: unknown, max: number): number | null => (typeof v === "number" && Number.isFinite(v) ? Math.max(-max, Math.min(max, Math.trunc(v))) : null);
@@ -64,6 +68,7 @@ export class GcsBridgeApi {
       events: GcsBridgeEvents;
       matches: GcsBridgeMatches;
       maps: GcsBridgeMaps;
+      enrollments: GcsBridgeEnrollments;
       now?: () => number;
     },
   ) {}
@@ -89,6 +94,9 @@ export class GcsBridgeApi {
     // 1–3: aplicația, corpul, eșecurile de autentificare pe IP.
     if (!(await apps.enabled(SERVERS_APP))) return bare(404, "not_found");
     const body = typeof req.body === "string" ? Buffer.from(req.body, "utf8") : Buffer.from(req.body);
+    // Înrolarea (specul plugin-v2 §5): fără cheie, cu limitele și verificările ei.
+    const enrollRoute = req.path.split("?", 1)[0];
+    if (enrollRoute === "/enroll" || enrollRoute === "/enroll/status") return this.deps.enrollments.handle({ route: enrollRoute, method: req.method, body, ip: req.ip });
     if (body.length > BRIDGE_MAX_BODY) return bare(413, "too_large");
     const failKey = `auth:${req.ip}`;
     if ((await store.failures(failKey)) >= AUTH_FAILS_PER_MINUTE) return bare(429, "rate_limited", { "Retry-After": "60" });
@@ -189,26 +197,50 @@ export class GcsBridgeApi {
       if (meta.has(row.id)) continue;
       const time = int(o.time, 86_400);
       meta.set(row.id, { ip: cleanIp(o.ip), name: identity.name || row.name, time, row });
-      roster.push({ playerId: row.id, kind: row.kind, name: identity.name || row.name, team: cleanGameText(o.team, 16) || null, score: int(o.score, 100_000), time, adminId: index.players[row.id] ?? null });
+      roster.push({
+        playerId: row.id,
+        kind: row.kind,
+        name: identity.name || row.name,
+        team: cleanGameText(o.team, 16) || null,
+        score: int(o.score, 100_000),
+        time,
+        adminId: index.players[row.id] ?? null,
+        // Flag-urile din sistemul de admini al serverului (specul plugin-v2 §2): prezența fără adminii GCS.
+        flags: reportedAdminFlags(o),
+      });
     }
 
-    // Sesiunile: cine apare fără sesiune deschisă intră acum (sau de `time` secunde); cine lipsește iese acum.
-    const open = await db.gameSession.findMany({ where: { serverId: server.id, disconnectedAt: null }, select: { playerId: true, adminId: true } });
-    const openBy = new Map(open.map((s) => [s.playerId, s.adminId]));
+    // Sesiunile: cine apare fără sesiune deschisă intră acum (sau de `time` secunde); cine lipsește iese acum. Flag-urile
+    // raportate se țin la zi pe sesiunea deschisă.
+    const open = await db.gameSession.findMany({ where: { serverId: server.id, disconnectedAt: null }, select: { playerId: true, adminId: true, adminFlags: true } });
+    const openBy = new Map(open.map((s) => [s.playerId, s]));
     const currentMap = map ?? (await store.currentMap(server.id));
     for (const entry of roster) {
-      if (openBy.has(entry.playerId)) {
-        entry.adminId ??= openBy.get(entry.playerId) ?? null;
+      const session = openBy.get(entry.playerId);
+      if (session) {
+        entry.adminId ??= session.adminId;
+        if ((session.adminFlags ?? null) !== (entry.flags ?? null)) {
+          await db.gameSession.updateMany({ where: { serverId: server.id, playerId: entry.playerId, disconnectedAt: null }, data: { adminFlags: entry.flags ?? null } });
+        }
         continue;
       }
       const m = meta.get(entry.playerId)!;
       const since = new Date(now.getTime() - Math.max(0, m.time ?? 0) * 1000);
-      await openSession(db, server.id, m.row, { name: m.name, ip: m.ip, adminId: entry.adminId, at: since });
+      await openSession(db, server.id, m.row, { name: m.name, ip: m.ip, adminId: entry.adminId, at: since, adminFlags: entry.flags ?? null });
     }
     const present = new Set(roster.map((r) => r.playerId));
     for (const s of open) if (!present.has(s.playerId)) await closeSession(db, server.id, s.playerId, now, currentMap);
 
-    await store.saveRoster(server.id, { at: now.getTime(), map, maxPlayers: int(body.maxPlayers, 256) ?? 0, players: roster });
+    const scores = obj(body.scores);
+    const modules = (Array.isArray(body.modules) ? body.modules : []).filter((m): m is string => typeof m === "string" && (FEATURE_KEYS as readonly string[]).includes(m));
+    await store.saveRoster(server.id, {
+      at: now.getTime(),
+      map,
+      maxPlayers: int(body.maxPlayers, 256) ?? 0,
+      players: roster,
+      modules: [...new Set(modules)],
+      scores: typeof scores.ct === "number" && typeof scores.t === "number" ? { ct: int(scores.ct, 1000) ?? 0, t: int(scores.t, 1000) ?? 0 } : null,
+    });
     if (map) {
       await store.setMap(server.id, map);
       await maps.seen(server.game, map);
@@ -235,7 +267,7 @@ export class GcsBridgeApi {
     ]);
     return {
       ok: true,
-      config: { heartbeat, events, identityMode: server.identityMode, nameIds: server.nameIds, isMix: server.isMix, linkCommand: LINK_COMMAND },
+      config: { heartbeat, events, identityMode: server.identityMode, nameIds: server.nameIds, isMix: server.isMix, linkCommand: LINK_COMMAND, features: bridgeFeatures(server) },
       versions: { admins: listEtag(adminList), vip: listEtag(vipList), sanctions },
     };
   }

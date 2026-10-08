@@ -35,9 +35,23 @@ export type GcsRosterEntry = {
   time: number | null;
   /** Adminul recunoscut (identitate sau `admin_login`). */
   adminId: number | null;
+  /**
+   * Flag-urile de admin raportate de server din sistemul lui de admini (litere AMXX, specul plugin-v2 §2); lipsă la
+   * listele salvate de versiunea veche.
+   */
+  flags?: string | null;
 };
 
-export type GcsRoster = { at: number; map: string | null; maxPlayers: number; players: GcsRosterEntry[] };
+export type GcsRoster = {
+  at: number;
+  map: string | null;
+  maxPlayers: number;
+  players: GcsRosterEntry[];
+  /** Modulele opționale active pe server (raportate de plugin, după acordul local). */
+  modules?: string[];
+  /** Scorul echipelor (CT / T) raportat de plugin. */
+  scores?: { ct: number; t: number } | null;
+};
 
 export class GcsBridgeStore {
   constructor(private readonly redis: Redis) {}

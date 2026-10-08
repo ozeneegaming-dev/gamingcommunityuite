@@ -1,6 +1,7 @@
 import { Prisma, type PrismaClient } from "@gcs/db";
 import { cleanGameText } from "../text";
 import type { GcsBridgeAdmins } from "./admins";
+import { reportedAdminFlags } from "./flags";
 import { cleanIp, resolveIdentity, type GcsPlayerRef } from "./identity";
 import type { GcsBridgeMaps } from "./maps";
 import { parseMatchState, type GcsBridgeMatches } from "./matches";
@@ -156,7 +157,7 @@ export class GcsBridgeEvents {
         const adminId = p ? await admins.adminFor(server.id, p.id) : null;
         return async (tx) => {
           if (!p) return { note: "untracked" };
-          await openSession(tx, server.id, p, { name: cleanGameText(ref.name, 32), ip: cleanIp(ref.ip), adminId, at });
+          await openSession(tx, server.id, p, { name: cleanGameText(ref.name, 32), ip: cleanIp(ref.ip), adminId, at, adminFlags: reportedAdminFlags(ref) });
         };
       }
       case "disconnect": {
@@ -337,10 +338,15 @@ export class GcsBridgeEvents {
 }
 
 /** Sesiunea deschisă a jucătorului pe server (o singură sesiune deschisă: indexul unic parțial). */
-export async function openSession(tx: Tx | PrismaClient, serverId: number, p: GcsPlayerRow, s: { name: string; ip: string | null; adminId: number | null; at: Date }): Promise<void> {
+export async function openSession(
+  tx: Tx | PrismaClient,
+  serverId: number,
+  p: GcsPlayerRow,
+  s: { name: string; ip: string | null; adminId: number | null; at: Date; adminFlags?: string | null },
+): Promise<void> {
   await tx.$executeRaw`
-    INSERT INTO game_sessions ("serverId", "playerId", "adminId", name, ip, "connectedAt")
-    VALUES (${serverId}, ${p.id}, ${s.adminId}, ${s.name || p.name}, ${s.ip}, ${s.at.toISOString()}::timestamp)
+    INSERT INTO game_sessions ("serverId", "playerId", "adminId", name, ip, "connectedAt", "adminFlags")
+    VALUES (${serverId}, ${p.id}, ${s.adminId}, ${s.name || p.name}, ${s.ip}, ${s.at.toISOString()}::timestamp, ${s.adminFlags ?? null})
     ON CONFLICT ("serverId", "playerId") WHERE "disconnectedAt" IS NULL DO NOTHING`;
 }
 

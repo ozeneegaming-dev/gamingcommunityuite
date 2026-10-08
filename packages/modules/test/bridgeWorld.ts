@@ -3,6 +3,7 @@ import { GcsMockServer, type MockRequest, type MockResponse } from "../../../ser
 import { GcsBridge } from "../src/servers/bridge";
 import type { GcsBridgeHttpResponse } from "../src/servers/bridge/api";
 import { MAP_IMAGE, SANCTION_EVIDENCE } from "../src/servers/bridge/config";
+import { parseAllowNets } from "../src/servers/net";
 import { createServerWorld } from "./serverWorld";
 
 /** IP-ul „serverului de joc” din teste (protocolul nu verifică IP-ul, doar limita eșecurilor pe IP). */
@@ -38,6 +39,10 @@ export async function createBridgeWorld() {
     render: (content) => w.posting.render(content),
     canViewServer: (actor, id) => w.serverQueries.canView(actor, id),
     visibleServers: (actor) => w.serverQueries.visibleIds(actor),
+    // Interogarea falsă a lumii (răspunsurile pe `host:port`) și excepția 127.0.0.1, ca la poller.
+    query: w.query,
+    allow: () => parseAllowNets("127.0.0.1/32"),
+    createServer: (actor, input) => w.servers.save(actor, null, { ...input, queryPort: null, description: "", forumId: null, groups: [], adminIds: [], enabled: true }),
     now: () => w.clock.now,
     fetchMapImage: async (url) => {
       fetched.push(url);

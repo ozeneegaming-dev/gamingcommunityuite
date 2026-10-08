@@ -164,6 +164,7 @@ async function queryA2s(address: GcsResolvedAddress, port: number, format: A2sFo
       ping,
       version: clean(info.version, TEXT_LIMITS.version),
       playerList,
+      folder: clean(info.folder, 32),
       updatedAt: new Date().toISOString(),
       error: null,
     };

@@ -2,17 +2,23 @@ import { GcsForbidden, type GcsActor, type GcsAppService, type GcsPermissionServ
 import type { Prisma, PrismaClient } from "@gcs/db";
 import { SERVERS_APP } from "../poller";
 import { BRIDGE_PERMISSION, BRIDGE_SETTING } from "./config";
-import { normalizeFlags } from "./flags";
+import { isPowerAdmin, normalizeFlags } from "./flags";
 import type { GcsBridgeStore, GcsRoster } from "./store";
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
 const WINDOWS = { d1: DAY, d7: 7 * DAY, d30: 30 * DAY } as const;
 
-/** Un admin în lista prezenței (§11). */
+/**
+ * Un admin în lista prezenței (§11). `subject` = `USER` / `PLAYER` / `NAME` pentru intrările GCS (`game_admins`) sau
+ * `SERVER` pentru un admin raportat de sistemul de admini al serverului (specul plugin-v2 §2): atunci `id` = −id-ul
+ * identității de joc, `playerId` = identitatea, `flags` = flag-urile raportate.
+ */
 export type GcsAdminPresence = {
   id: number;
   subject: string;
+  /** Identitatea de joc (doar adminii raportați de servere). */
+  playerId: number | null;
   name: string;
   user: { id: string; name: string } | null;
   label: string | null;
@@ -31,9 +37,11 @@ export type GcsAdminPresence = {
   inactive: boolean;
 };
 
-/** Un admin online acum (widget-ul „Admini online”). */
+/** Un admin online acum (widget-ul „Admini online”); `adminId` gol = admin raportat de server (flag-urile lui). */
 export type GcsOnlineAdmin = {
-  adminId: number;
+  adminId: number | null;
+  /** Flag-urile raportate de server (doar adminii fără intrare GCS). */
+  flags: string | null;
   name: string;
   user: { id: string; name: string } | null;
   label: string | null;
@@ -90,7 +98,6 @@ export class GcsBridgePresence {
     if (typeof opts.serverId === "number") (where.AND as Prisma.GameAdminWhereInput[]).push({ OR: [{ serverId: opts.serverId }, { serverId: null }] });
     if (visible) (where.AND as Prisma.GameAdminWhereInput[]).push({ OR: [{ serverId: { in: visible } }, { serverId: null }] });
     const entries = await db.gameAdmin.findMany({ where, include: ENTRY_INCLUDE, orderBy: { id: "asc" }, take: 500 });
-    if (entries.length === 0) return [];
 
     const [heartbeat, inactiveDays] = await Promise.all([settings.get<number>(BRIDGE_SETTING.heartbeat), settings.get<number>(BRIDGE_SETTING.adminInactiveDays)]);
     const servers = await db.gameServer.findMany({
@@ -128,7 +135,7 @@ export class GcsBridgePresence {
     ]);
     const fresh = 2 * heartbeat * 1000;
 
-    return entries.map((e) => {
+    const fromEntries = entries.map((e) => {
       const ids = new Set(idsOf.get(e.id)!);
       const mine = sessions.filter((s) => s.adminId === e.id || ids.has(s.playerId));
       let online: GcsAdminPresence["online"] = null;
@@ -171,6 +178,90 @@ export class GcsBridgePresence {
         actions: { d7: myActions.filter((a) => now - a.at.getTime() <= WINDOWS.d7).length, d30: myActions.length },
         ticketsHandled30: e.userId ? tickets.filter((t) => t.authorId === e.userId).length : 0,
         inactive: last === 0 || now - last > inactiveDays * DAY,
+        playerId: null,
+      };
+    });
+    const covered = new Set(allPlayers);
+    const reported = await this.reportedAdmins({ now, fresh, inactiveDays, rosters, serverName, covered, onServers, serverId: opts.serverId });
+    return [...fromEntries, ...reported];
+  }
+
+  /**
+   * Adminii raportați de servere (specul plugin-v2 §2): identitățile cu flag-uri de putere în sesiunile din ultimele 30
+   * de zile (`game_sessions.adminFlags`) sau în lista online, fără cele acoperite deja de o intrare GCS. Timpul de joc și
+   * ultima apariție vin doar din sesiunile în care au fost admini.
+   */
+  private async reportedAdmins(ctx: {
+    now: number;
+    fresh: number;
+    inactiveDays: number;
+    rosters: Map<number, GcsRoster>;
+    serverName: Map<number, string>;
+    covered: Set<number>;
+    onServers: Prisma.GameSessionWhereInput;
+    serverId?: number;
+  }): Promise<GcsAdminPresence[]> {
+    const { db } = this.deps;
+    const { now, fresh, rosters, serverName, covered } = ctx;
+    const since30 = new Date(now - WINDOWS.d30);
+    const sessions = (
+      await db.gameSession.findMany({
+        where: {
+          adminFlags: { not: null },
+          serverId: { in: [...serverName.keys()] },
+          AND: [{ OR: [{ disconnectedAt: null }, { disconnectedAt: { gte: since30 } }] }, ctx.onServers],
+          ...(covered.size > 0 ? { playerId: { notIn: [...covered] } } : {}),
+        },
+        select: { serverId: true, playerId: true, connectedAt: true, disconnectedAt: true, adminFlags: true },
+        orderBy: { connectedAt: "desc" },
+        take: 5000,
+      })
+    ).filter((s) => isPowerAdmin(s.adminFlags));
+    // Online acum: lista ultimului heartbeat (și adminii fără sesiune salvată încă).
+    const onlineBy = new Map<number, { serverId: number; flags: string; name: string }>();
+    for (const [serverId, roster] of rosters) {
+      if (now - roster.at > fresh) continue;
+      for (const p of roster.players) if (p.flags && isPowerAdmin(p.flags) && !covered.has(p.playerId) && !onlineBy.has(p.playerId)) onlineBy.set(p.playerId, { serverId, flags: p.flags, name: p.name });
+    }
+    const ids = [...new Set([...sessions.map((s) => s.playerId), ...onlineBy.keys()])].slice(0, 500);
+    if (ids.length === 0) return [];
+    const players = await db.gamePlayer.findMany({ where: { id: { in: ids } }, select: { id: true, name: true, value: true, user: { select: { id: true, name: true } } } });
+    const actions = await db.gameAdminAction.findMany({ where: { at: { gte: since30 }, adminPlayerId: { in: ids }, ...(ctx.serverId !== undefined ? { serverId: ctx.serverId } : {}) }, select: { adminPlayerId: true, at: true } });
+    return players.map((p) => {
+      const mine = sessions.filter((s) => s.playerId === p.id);
+      const live = onlineBy.get(p.id) ?? null;
+      const open = live ? mine.find((s) => s.serverId === live.serverId && s.disconnectedAt === null) : undefined;
+      const playtime = { d1: 0, d7: 0, d30: 0 };
+      let last = 0;
+      for (const s of mine) {
+        const start = s.connectedAt.getTime();
+        const end = s.disconnectedAt?.getTime() ?? now;
+        playtime.d1 += overlap(start, end, now, WINDOWS.d1);
+        playtime.d7 += overlap(start, end, now, WINDOWS.d7);
+        playtime.d30 += overlap(start, end, now, WINDOWS.d30);
+        last = Math.max(last, end);
+      }
+      if (live) last = now;
+      // Serverul și flag-urile: unde e acum, altfel ultima sesiune de admin.
+      const where = live?.serverId ?? mine[0]?.serverId ?? null;
+      const myActions = actions.filter((a) => a.adminPlayerId === p.id);
+      return {
+        id: -p.id,
+        subject: "SERVER",
+        playerId: p.id,
+        name: p.name || live?.name || p.value,
+        user: p.user ? { id: p.user.id, name: p.user.name } : null,
+        label: null,
+        flags: normalizeFlags(live?.flags ?? mine[0]?.adminFlags ?? ""),
+        server: where !== null ? { id: where, name: serverName.get(where) ?? "" } : null,
+        online: live ? { serverId: live.serverId, serverName: serverName.get(live.serverId) ?? "", since: open?.connectedAt.toISOString() ?? null } : null,
+        seen24h: last > 0 && now - last <= WINDOWS.d1,
+        seen7d: last > 0 && now - last <= WINDOWS.d7,
+        playtime: { d1: Math.round(playtime.d1), d7: Math.round(playtime.d7), d30: Math.round(playtime.d30) },
+        lastSeenAt: last > 0 ? new Date(last).toISOString() : null,
+        actions: { d7: myActions.filter((a) => now - a.at.getTime() <= WINDOWS.d7).length, d30: myActions.length },
+        ticketsHandled30: 0,
+        inactive: last === 0 || now - last > ctx.inactiveDays * DAY,
       };
     });
   }
@@ -188,7 +279,8 @@ export class GcsBridgePresence {
   async onlineCounts(serverIds: number[]): Promise<Map<number, number>> {
     const out = new Map<number, number>();
     for (const [id, roster] of await this.freshRosters(serverIds)) {
-      const n = new Set(roster.players.flatMap((p) => (p.adminId === null ? [] : [p.adminId]))).size;
+      // Intrările GCS recunoscute și adminii raportați de sistemul de admini al serverului (specul plugin-v2 §2).
+      const n = new Set(roster.players.flatMap((p) => (p.adminId !== null ? [`a${p.adminId}`] : isPowerAdmin(p.flags) ? [`p${p.playerId}`] : []))).size;
       if (n > 0) out.set(id, n);
     }
     return out;
@@ -201,30 +293,48 @@ export class GcsBridgePresence {
   async online(serverIds: number[], limit = 50): Promise<GcsOnlineAdmin[]> {
     const { db } = this.deps;
     const rosters = await this.freshRosters(serverIds);
-    const hits = [...rosters].flatMap(([serverId, r]) => r.players.flatMap((p) => (p.adminId === null ? [] : [{ serverId, playerId: p.playerId, adminId: p.adminId, name: p.name }])));
+    // Intrările GCS recunoscute și adminii raportați de sistemul de admini al serverului (specul plugin-v2 §2).
+    const hits = [...rosters].flatMap(([serverId, r]) =>
+      r.players.flatMap((p) => (p.adminId !== null || isPowerAdmin(p.flags) ? [{ serverId, playerId: p.playerId, adminId: p.adminId, name: p.name, flags: p.flags ?? null }] : [])),
+    );
     if (hits.length === 0) return [];
-    const [entries, servers, sessions] = await Promise.all([
-      db.gameAdmin.findMany({
-        where: { id: { in: [...new Set(hits.map((h) => h.adminId))] } },
-        include: { preset: { select: { name: true } }, user: { select: { id: true, name: true } }, player: { select: { name: true, value: true } } },
-      }),
+    const adminIds = [...new Set(hits.flatMap((h) => (h.adminId === null ? [] : [h.adminId])))];
+    const reportedIds = [...new Set(hits.flatMap((h) => (h.adminId === null ? [h.playerId] : [])))];
+    const [entries, servers, sessions, players] = await Promise.all([
+      adminIds.length === 0
+        ? Promise.resolve([])
+        : db.gameAdmin.findMany({
+            where: { id: { in: adminIds } },
+            include: { preset: { select: { name: true } }, user: { select: { id: true, name: true } }, player: { select: { name: true, value: true } } },
+          }),
       db.gameServer.findMany({ where: { id: { in: [...rosters.keys()] } }, select: { id: true, name: true } }),
       db.gameSession.findMany({ where: { disconnectedAt: null, OR: hits.map((h) => ({ serverId: h.serverId, playerId: h.playerId })) }, select: { serverId: true, playerId: true, connectedAt: true } }),
+      reportedIds.length === 0 ? Promise.resolve([]) : db.gamePlayer.findMany({ where: { id: { in: reportedIds } }, select: { id: true, user: { select: { id: true, name: true } } } }),
     ]);
     const entryBy = new Map(entries.map((e) => [e.id, e]));
     const serverBy = new Map(servers.map((s) => [s.id, s]));
+    const userOf = new Map(players.map((p) => [p.id, p.user]));
     const seen = new Set<string>();
     const out: GcsOnlineAdmin[] = [];
     for (const h of hits) {
-      const e = entryBy.get(h.adminId);
       const server = serverBy.get(h.serverId);
+      if (!server) continue;
+      const since = sessions.find((s) => s.serverId === h.serverId && s.playerId === h.playerId)?.connectedAt.toISOString() ?? null;
+      if (h.adminId === null) {
+        const user = userOf.get(h.playerId) ?? null;
+        const key = `${h.serverId}:${user?.id ?? `p${h.playerId}`}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push({ adminId: null, flags: normalizeFlags(h.flags ?? ""), name: user?.name ?? h.name, user, label: null, playerId: h.playerId, server, since });
+        continue;
+      }
+      const e = entryBy.get(h.adminId);
       // Un membru cu mai multe identități (sau intrări) apare o singură dată pe server.
       const key = `${h.serverId}:${e?.userId ?? `a${h.adminId}`}`;
-      if (!e || !server || seen.has(key)) continue;
+      if (!e || seen.has(key)) continue;
       seen.add(key);
-      const since = sessions.find((s) => s.serverId === h.serverId && s.playerId === h.playerId)?.connectedAt.toISOString() ?? null;
       const name = e.subject === "USER" ? (e.user?.name ?? h.name) : e.subject === "PLAYER" ? e.player?.name || h.name || e.player?.value || "" : (e.name ?? h.name);
-      out.push({ adminId: e.id, name, user: e.user, label: e.preset?.name ?? null, playerId: h.playerId, server, since });
+      out.push({ adminId: e.id, flags: null, name, user: e.user, label: e.preset?.name ?? null, playerId: h.playerId, server, since });
     }
     return out.sort((a, b) => (a.since ?? "").localeCompare(b.since ?? "")).slice(0, limit);
   }

@@ -1,5 +1,5 @@
 import { GcsNotFound, GcsValidationError, openSecret, sealSecret, writeAudit, type GcsAcpRoleService, type GcsActor } from "@gcs/core";
-import type { PrismaClient } from "@gcs/db";
+import type { Prisma, PrismaClient } from "@gcs/db";
 import { SERVERS_ACP_SECTION } from "../service";
 import { generateBridgeKey } from "./signing";
 
@@ -22,6 +22,9 @@ export type GcsBridgeKeyRow = {
   expiresAt: string | null;
   active: boolean;
 };
+
+/** De unde vine o cheie (jurnalul): pachetul descărcat din ACP sau o înrolare automată aprobată. */
+export type GcsKeySource = "package" | "enrollment";
 
 /** O cheie verificată la o cerere: `signingKey` = K, desigilat. */
 export type GcsBridgeKeyAuth = { id: number; keyId: string; serverId: number; signingKey: string; lastUsedAt: Date | null };
@@ -61,24 +64,42 @@ export class GcsBridgeKeys {
     }));
   }
 
-  /** O cheie nouă; `token` (`gcs1.<keyId>.<secret>`) se arată o singură dată. */
-  async create(actor: GcsActor, serverId: number, input: { label?: string } = {}): Promise<{ id: number; keyId: string; token: string }> {
+  /**
+   * O cheie nouă; `token` (`gcs1.<keyId>.<secret>`) se arată o singură dată. `source` (jurnal): `package` = pusă doar în
+   * pachetul descărcat din ACP (specul plugin-v2 §4).
+   */
+  async create(actor: GcsActor, serverId: number, input: { label?: string; source?: GcsKeySource } = {}): Promise<{ id: number; keyId: string; token: string }> {
     const { db, acp } = this.deps;
     await acp.assert(actor, SERVERS_ACP_SECTION, "edit");
     const server = await db.gameServer.findUnique({ where: { id: serverId }, select: { id: true } });
     if (!server) throw new GcsNotFound();
-    const now = this.now();
-    const active = await db.gameServerKey.count({ where: { serverId, revokedAt: null, expiresAt: null } });
+    return db.$transaction((tx) => this.issue(tx, serverId, { label: input.label, actorId: actor.userId, ip: actor.ip, ...(input.source ? { source: input.source } : {}) }));
+  }
+
+  /**
+   * Emite o cheie în tranzacția dată (cu limita cheilor active și jurnalul `servers.key.create`). Folosită de ACP și de
+   * livrarea unei înrolări aprobate (`actorId` gol: sistemul, `source: "enrollment"`).
+   */
+  async issue(
+    tx: Prisma.TransactionClient,
+    serverId: number,
+    opts: { label?: string; actorId: string | null; ip?: string | null; source?: GcsKeySource; extra?: Record<string, unknown> },
+  ): Promise<{ id: number; keyId: string; token: string }> {
+    const active = await tx.gameServerKey.count({ where: { serverId, revokedAt: null, expiresAt: null } });
     if (active >= MAX_ACTIVE_KEYS) throw new GcsValidationError({ keys: "too_many" }, { max: String(MAX_ACTIVE_KEYS) });
     const key = generateBridgeKey();
-    const row = await db.$transaction(async (tx) => {
-      const created = await tx.gameServerKey.create({
-        data: { serverId, keyId: key.keyId, signingKey: sealSecret(key.signingKey), label: label(input.label), createdById: actor.userId, createdAt: now },
-      });
-      await writeAudit(tx, { actorId: actor.userId, action: "servers.key.create", targetType: "game_server", targetId: String(serverId), after: { keyId: key.keyId, label: created.label }, ip: actor.ip });
-      return created;
+    const created = await tx.gameServerKey.create({
+      data: { serverId, keyId: key.keyId, signingKey: sealSecret(key.signingKey), label: label(opts.label), createdById: opts.actorId, createdAt: this.now() },
     });
-    return { id: row.id, keyId: row.keyId, token: key.token };
+    await writeAudit(tx, {
+      actorId: opts.actorId,
+      action: "servers.key.create",
+      targetType: "game_server",
+      targetId: String(serverId),
+      after: { keyId: key.keyId, label: created.label, ...(opts.source ? { source: opts.source } : {}), ...opts.extra },
+      ip: opts.ip ?? null,
+    });
+    return { id: created.id, keyId: created.keyId, token: key.token };
   }
 
   /** Rotirea: o cheie nouă (cu aceeași etichetă), iar cea veche expiră peste 10 minute. */

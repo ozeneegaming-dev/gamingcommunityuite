@@ -117,4 +117,24 @@ describe("autentificarea protocolului (§5.3)", () => {
     const mc = await w.bridge.keys.create(w.root, id);
     expect(await call(mc.token)).toMatchObject({ status: 403, json: { error: "unsupported_game" } });
   });
+
+  it("modulele opționale (plugin-v2 §1.2): implicit toate oprite (colectorul); pornite din ACP ajung în config, cu jurnal", async () => {
+    const server = await w.bridgeServer();
+    expect((await call(server.token)).json!.config).toMatchObject({ features: { admins: false, sanctions: false, vip: false, mixReady: false, commands: false } });
+    await w.bridge.saveConfig(w.root, server.id, { identityMode: "mixed", nameIds: false, isMix: true, manageAdmins: true, enforceSanctions: true });
+    expect((await call(server.token)).json!.config).toMatchObject({ isMix: true, features: { admins: true, sanctions: true, vip: false, mixReady: false, commands: false } });
+    // Fără câmpurile modulelor, ele rămân neschimbate.
+    await w.bridge.saveConfig(w.root, server.id, { identityMode: "steam", nameIds: false, isMix: true });
+    expect((await w.bridge.status(w.root, server.id))!.features).toEqual({ admins: true, sanctions: true, vip: false, mixReady: false, commands: false });
+    const audit = await w.db.auditLog.findFirstOrThrow({ where: { action: "servers.bridge.update" }, orderBy: { createdAt: "asc" }, skip: 1 });
+    expect(audit.after).toMatchObject({ manageAdmins: true, enforceSanctions: true, adminCommands: false });
+    await expect(w.bridge.saveConfig(w.member, server.id, { identityMode: "mixed", nameIds: false, isMix: false, manageAdmins: true })).rejects.toMatchObject({ code: "forbidden" });
+  });
+
+  it("heartbeat-ul: modulele active pe server și scorul echipelor ajung în starea punții; doar cheile cunoscute", async () => {
+    const server = await w.bridgeServer();
+    await call(server.token, { body: JSON.stringify({ plugin: "gcs-amxx/1.1.0", map: "de_dust2", players: [], modules: ["admins", "evil", 5, "admins"], scores: { ct: 7, t: 3 } }) });
+    const status = await w.bridge.status(w.root, server.id);
+    expect(status!.roster).toMatchObject({ modules: ["admins"], scores: { ct: 7, t: 3 } });
+  });
 });

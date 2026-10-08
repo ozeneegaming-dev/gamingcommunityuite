@@ -38,7 +38,8 @@ export default async function NewTicketPage({ searchParams }: { searchParams: Pr
       label: `${ts(s.type)} · ${s.scope === "GLOBAL" ? t("allServers") : (s.server?.name ?? "—")} · ${format.dateTime(new Date(s.createdAt), { dateStyle: "medium" })} · ${s.reason}`,
     })),
     servers: servers.filter((s) => isBridgeGameKey(s.game.key)).map((s) => ({ id: s.id, name: s.name })),
-    admins: (presence ?? []).map((a) => ({ id: a.id, name: a.name || `#${a.id}`, serverId: a.server?.id ?? null })),
+    // Reclamațiile de admin țintesc intrările GCS (adminii raportați doar de servere nu au intrare).
+    admins: (presence ?? []).filter((a) => a.subject !== "SERVER").map((a) => ({ id: a.id, name: a.name || `#${a.id}`, serverId: a.server?.id ?? null })),
   };
   return (
     <>

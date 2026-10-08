@@ -1,9 +1,42 @@
 import type { GamePlayerKind } from "@gcs/db";
 import { accountFromSteam64, steam2 } from "./steamid";
 
-/** Serverul unei cereri a punții (ce trebuie știut din `game_servers`). */
-export type GcsBridgeServer = { id: number; game: string; name: string; enabled: boolean; identityMode: string; nameIds: boolean; isMix: boolean };
-export const BRIDGE_SERVER_SELECT = { id: true, game: true, name: true, enabled: true, identityMode: true, nameIds: true, isMix: true } as const;
+/** Serverul unei cereri a punții (ce trebuie știut din `game_servers`), cu modulele opționale (specul plugin-v2 §1.2). */
+export type GcsBridgeServer = {
+  id: number;
+  game: string;
+  name: string;
+  enabled: boolean;
+  identityMode: string;
+  nameIds: boolean;
+  isMix: boolean;
+  manageAdmins: boolean;
+  enforceSanctions: boolean;
+  manageVip: boolean;
+  mixReady: boolean;
+  adminCommands: boolean;
+};
+export const BRIDGE_SERVER_SELECT = {
+  id: true,
+  game: true,
+  name: true,
+  enabled: true,
+  identityMode: true,
+  nameIds: true,
+  isMix: true,
+  manageAdmins: true,
+  enforceSanctions: true,
+  manageVip: true,
+  mixReady: true,
+  adminCommands: true,
+} as const;
+
+/** Modulele opționale ale pluginului, cum le primește în `config.features` (toate oprite implicit: colectorul). */
+export type GcsBridgeFeatures = { admins: boolean; sanctions: boolean; vip: boolean; mixReady: boolean; commands: boolean };
+
+export function bridgeFeatures(s: Pick<GcsBridgeServer, "manageAdmins" | "enforceSanctions" | "manageVip" | "mixReady" | "adminCommands">): GcsBridgeFeatures {
+  return { admins: s.manageAdmins, sanctions: s.enforceSanctions, vip: s.manageVip, mixReady: s.mixReady, commands: s.adminCommands };
+}
 
 /** O identitate de joc, cum o folosesc serviciile punții. */
 export type GcsPlayerRow = { id: number; kind: GamePlayerKind; value: string; userId: string | null; name: string };

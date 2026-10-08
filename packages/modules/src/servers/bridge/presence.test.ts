@@ -52,4 +52,49 @@ describe("prezența adminilor (§11)", () => {
     expect((await w.bridge.presence.list(w.member, { serverId: server.id })).map((a) => a.id).sort()).toEqual([adminId, idleId].sort());
     await expect(w.bridge.presence.list({ ...w.guest, isBanned: true })).rejects.toMatchObject({ code: "forbidden" });
   });
+
+  it("adminii raportați de sistemul de admini al serverului (plugin-v2 §2): online, numărul pe server, timpul de joc; fără intrări GCS", async () => {
+    const server = await w.bridgeServer({ game: "cs16", identityMode: "steam" });
+    const cs2 = await w.bridgeServer();
+    const mock = w.mock(server.token, "cs16");
+    const mock2 = w.mock(cs2.token);
+    const admin = mockPlayer("cs16", 1, { flags: "abcdeiju" } as never);
+    const vip = mockPlayer("cs16", 2, { flags: "bt" } as never);
+    const plain = mockPlayer("cs16", 3);
+    const cssAdmin = mockPlayer("cs2", 4, { permissions: ["@css/generic", "@css/kick"] } as never);
+    const start = w.clock.now - (w.clock.now % 1000);
+    w.clock.now = start - 2 * HOUR;
+    await mock.send([mock.event("connect", { player: admin }), mock.event("connect", { player: vip })]);
+    w.clock.now = start;
+    await mock.heartbeat({ players: [admin, vip, plain] });
+    await mock2.heartbeat({ players: [cssAdmin] });
+
+    const sessions = await w.db.gameSession.findMany({ where: { serverId: server.id }, orderBy: { id: "asc" }, select: { adminFlags: true } });
+    expect(sessions.map((s) => s.adminFlags)).toEqual(["abcdeiju", "bt", null]);
+
+    const list = await w.bridge.presence.list(w.member);
+    expect(list.map((a) => [a.subject, a.name, a.flags]).sort()).toEqual([
+      ["SERVER", "Jucator1", "abcdeiju"],
+      ["SERVER", "Jucator4", "cu"],
+    ]);
+    const me = list.find((a) => a.name === "Jucator1")!;
+    expect(me).toMatchObject({ id: -me.playerId!, online: { serverId: server.id, since: new Date(start - 2 * HOUR).toISOString() }, server: { id: server.id }, label: null, inactive: false });
+    expect(me.playtime.d1).toBe(7200);
+    expect(await w.bridge.presence.onlineCounts([server.id, cs2.id])).toEqual(new Map([[server.id, 1], [cs2.id, 1]]));
+    const online = await w.bridge.presence.online([server.id, cs2.id]);
+    expect(online.map((o) => [o.adminId, o.flags, o.name]).sort()).toEqual([
+      [null, "abcdeiju", "Jucator1"],
+      [null, "cu", "Jucator4"],
+    ]);
+
+    // Flag-urile se schimbă (scoase de sistemul serverului): sesiunea se actualizează, adminul nu mai e online.
+    await mock.heartbeat({ players: [{ ...admin, flags: "z" } as never, vip] });
+    expect((await w.db.gameSession.findFirstOrThrow({ where: { serverId: server.id, disconnectedAt: null, name: "Jucator1" } })).adminFlags).toBeNull();
+    expect((await w.bridge.presence.onlineCounts([server.id])).get(server.id)).toBeUndefined();
+
+    // O identitate care e și intrare GCS apare o singură dată (ca intrare).
+    const { id: entryId } = await w.bridge.admins.save(w.root, null, { subject: "PLAYER", identity: cssAdmin.auth, serverId: null, presetId: null, flags: "c", immunity: null, allowNonSteam: false, note: "", expiresAt: null });
+    const after = await w.bridge.presence.list(w.member);
+    expect(after.filter((a) => a.name === "Jucator4" || a.id === entryId).map((a) => a.subject)).toEqual(["PLAYER"]);
+  });
 });
