@@ -1,7 +1,8 @@
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { readZip } from "@gcs/plugin-sdk/zip";
 import { expect, test, type Page } from "@playwright/test";
-import { GcsMockServer, httpTransport } from "../../../servers-plugins/mock/gcs-mock-server.mjs";
+import { GcsMockServer, httpTransport, startA2sResponder } from "../../../servers-plugins/mock/gcs-mock-server.mjs";
 import { uid } from "./forum-fixtures";
 import { enterAcpAsRoot, sql, useFreshIp } from "./helpers";
 
@@ -122,4 +123,68 @@ test("ACP: cheia API (o singură dată), scenariul complet al serverului fals, s
   await expect(presetNames).toHaveCount(3);
   expect(await presetNames.evaluateAll((els) => els.map((e) => (e as HTMLInputElement).value))).toEqual(["Moderator", "Admin", "Head admin"]);
   await shot(page, "bridge-admins");
+});
+
+test("ACP: serverul nou se înrolează singur, adminul îl aprobă, primește cheia și trimite date; pachetul pe server are configul completat", async ({ page, context, baseURL }) => {
+  test.setTimeout(180_000);
+  const site = baseURL ?? "http://localhost:3100";
+  // Un server de joc CS2 minimal la 127.0.0.1 (excepția operatorului din E2E) și serverul fals fără cheie, ca pluginul
+  // general. Fără proxy în E2E, IP-ul sursei vine din X-Forwarded-For (în producție îl pune Caddy).
+  const a2s = await startA2sResponder({ game: "cs2", name: `Enroll E2E ${id}`, map: "de_inferno" });
+  let createdId = 0;
+  try {
+    await useFreshIp(context, "100.77.0");
+    await enterAcpAsRoot(page, `Inrol${id}`, `inrol-${id}@example.com`);
+    const mock = new GcsMockServer({ transport: httpTransport(site, { "X-Forwarded-For": "127.0.0.1" }), game: "cs2" });
+    const enrolled = await mock.enroll({ port: a2s.port, hostname: `Enroll E2E ${id}`, map: "de_inferno", players: 0, maxPlayers: 20 });
+    expect(enrolled.json).toMatchObject({ status: "pending" });
+
+    // ACP → Gaming → Servere: „Servere noi detectate”, cu interogarea confirmată.
+    await page.goto("/admin/gaming/servers");
+    const row = page.getByTestId("gcs-enrollment").filter({ hasText: `Enroll E2E ${id}` });
+    await expect(row).toHaveAttribute("data-address", `127.0.0.1:${a2s.port}`);
+    await expect(row.getByTestId("gcs-enrollment-check")).toHaveAttribute("data-result", "ok");
+    await shot(page, "bridge-enroll-pending");
+    await row.getByTestId("gcs-enrollment-approve").click();
+    await expect(page.getByRole("status").filter({ hasText: "Aprobat" })).toBeVisible();
+    await expect(page.getByTestId("gcs-enrollment").filter({ hasText: `Enroll E2E ${id}` })).toHaveAttribute("data-status", "APPROVED");
+
+    // Serverul fals primește cheia (o singură dată) și trimite heartbeat-ul semnat, cu un admin din sistemul serverului.
+    const token = await mock.waitForKey({ intervalMs: 500, timeoutMs: 30_000 });
+    expect(token).toMatch(/^gcs1\.[a-z0-9]{12}\.[A-Za-z0-9_-]{43}$/);
+    const hb = await mock.heartbeat({ map: "de_inferno", players: [{ auth: "76561197960287930", steam: true, name: `AdminE2E${id}`, permissions: ["@css/generic", "@css/kick"] }] });
+    expect(hb.config).toMatchObject({ features: { admins: false, sanctions: false, vip: false, mixReady: false, commands: false } });
+    expect((await mock.enrollStatus()).json).toMatchObject({ status: "approved", delivered: true });
+    const [created] = await sql<{ id: number; name: string }>(`SELECT id, name FROM game_servers WHERE host = '127.0.0.1' AND port = $1`, [a2s.port]);
+    createdId = created!.id;
+    expect(created!.name).toBe(`Enroll E2E ${id}`);
+
+    // Starea punții: conectat, pluginul, adminul raportat de server, doar colector.
+    await page.goto(`/admin/gaming/servers/${createdId}/bridge`);
+    await expect(page.getByTestId("gcs-bridge-connected")).toHaveAttribute("data-connected", "1");
+    await expect(page.getByTestId("gcs-bridge-plugin")).toHaveText("gcs-mock/cs2/1.1.0");
+    await expect(page.getByTestId("gcs-bridge-server-admin")).toBeVisible();
+    await expect(page.getByTestId("gcs-bridge-module-admins")).not.toBeChecked();
+    await shot(page, "bridge-enroll-connected");
+
+    // „Descarcă pluginul pentru acest server”: arhiva are DLL-ul și configul cu adresa site-ului și o cheie nouă.
+    const download = page.waitForEvent("download");
+    await page.getByTestId("gcs-bridge-package").click();
+    const file = await (await download).path();
+    const zip = readZip(readFileSync(file));
+    expect([...zip.keys()]).toContain("addons/counterstrikesharp/plugins/GcsBridge/GcsBridge.dll");
+    const config = JSON.parse(zip.get("addons/counterstrikesharp/configs/plugins/GcsBridge/GcsBridge.json")!.toString("utf8")) as { Url: string; Key: string; AllowManage: boolean };
+    expect(config.Url).toBe(site.replace(/\/+$/, ""));
+    expect(config.Key).toMatch(/^gcs1\.[a-z0-9]{12}\.[A-Za-z0-9_-]{43}$/);
+    expect(config.Key).not.toBe(token);
+    expect(zip.get("INSTALARE.txt")!.toString("utf8")).toContain("DOAR COLECTEAZĂ DATE");
+    const packageKeyId = config.Key.split(".")[1]!;
+    await page.reload();
+    await expect(page.getByTestId("gcs-bridge-key").filter({ hasText: packageKeyId })).toContainText("Pachet descărcat");
+    expect(await page.content()).not.toContain(config.Key.split(".")[2]!);
+  } finally {
+    await a2s.close();
+    if (createdId) await sql(`DELETE FROM game_servers WHERE id = $1`, [createdId]);
+    await sql(`DELETE FROM game_server_enrollments WHERE port = $1`, [a2s.port]);
+  }
 });

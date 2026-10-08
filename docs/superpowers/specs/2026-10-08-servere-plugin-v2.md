@@ -59,7 +59,8 @@
 - **Datele:** `game_sessions.adminFlags` (literele la intrare, actualizate de heartbeat), lista online din Redis are
   `flags` pe fiecare jucător.
 - **Prezența** (`presence.list` / `online` / `onlineCounts`): pe lângă intrările GCS (`game_admins`), adminii
-  raportați de servere apar ca „admin al serverului” (subiectul `SERVER`, id-ul identității), cu numele din joc,
+  raportați de servere apar ca „admin al serverului” (subiectul `SERVER`, `id` = −id-ul identității, `playerId`), cu
+  numele din joc,
   membrul legat (dacă identitatea e legată), flag-urile raportate, timpul de joc din sesiunile cu `adminFlags`, ultima
   apariție. Un jucător care e și intrare GCS nu apare de două ori. Acțiunile din joc există doar cu modulul
   `commands`.
@@ -133,8 +134,10 @@ Ambele rute sunt sub `/api/servers/bridge/v1`, fără semnătură (pluginul nu a
 
 ### 5.3 Ce verifică site-ul
 
-1. Aplicația Servere activă (404), corpul ≤ 4 KB (413), setarea `servers.enroll_enabled` (implicit pornită),
-   IP-ul sursei nu e în lista `servers.enroll_blocked_ips` (IP-uri sau CIDR-uri, separate prin virgulă / spațiu).
+1. Aplicația Servere activă (404), corpul ≤ 4 KB (413), IP-ul sursei nu e în lista `servers.enroll_blocked_ips`
+   (IP-uri sau CIDR-uri, separate prin virgulă / spațiu; 403), setarea `servers.enroll_enabled` (implicit pornită) pentru
+   cererile noi (`/enroll`; starea înrolărilor existente merge și cu setarea oprită, ca aprobările deja date să se
+   încheie).
 2. **Limitele pe IP:** `POST /enroll` 10 pe oră; `POST /enroll/status` 30 pe minut; eșecurile (referință sau secret
    greșit) intră în limita comună a eșecurilor de autentificare (30 pe minut, apoi 429).
 3. **Plafoanele:** max 50 de înrolări în așteptare în total și 5 pe IP (`503 too_many_pending`).

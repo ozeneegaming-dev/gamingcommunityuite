@@ -95,7 +95,7 @@ export const BRIDGE_SETTING_DEFS: GcsSettingDef[] = [
   { key: BRIDGE_SETTING.mapTemplateCs16, type: "string", default: "", section: S, labelKey: "settings.servers.map_template_cs16", validate: mapTemplateError },
   { key: BRIDGE_SETTING.mapTemplateCs2, type: "string", default: "", section: S, labelKey: "settings.servers.map_template_cs2", validate: mapTemplateError },
   { key: BRIDGE_SETTING.enrollEnabled, type: "boolean", default: true, section: S, labelKey: "settings.servers.enroll_enabled" },
-  { key: BRIDGE_SETTING.enrollBlockedIps, type: "string", default: "", section: S, labelKey: "settings.servers.enroll_blocked_ips", validate: enrollBlockedError },
+  { key: BRIDGE_SETTING.enrollBlockedIps, type: "string", default: "", section: S, labelKey: "settings.servers.enroll_blocked_ips", validate: enrollBlockedError, multiline: true },
 ];
 
 /** Configurația ELO din setări. */
