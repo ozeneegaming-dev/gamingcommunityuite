@@ -1,5 +1,7 @@
 "use client";
 
+import { faTv } from "@fortawesome/free-solid-svg-icons";
+import { GcsIconSvg } from "@gcs/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useFormatter, useTranslations } from "next-intl";
@@ -48,7 +50,25 @@ type Props = {
   server: { id: number; name: string; href: string };
   /** `match` = pagina meciului (camera `match:{id}`); `server` = pagina serverului (camera `servers:{id}`). */
   mode: "match" | "server";
+  /** „Urmărește live”: adresa HLTV / GOTV a serverului și întârzierea (doar cu adresa configurată). */
+  tv?: { address: string; delay: number | null } | null;
 };
+
+/** Butonul „Urmărește live” (specul servere-hltv §3): jocul pornește prin Steam și intră ca spectator. */
+export function GcsWatchLive({ tv, className = "", testId = "gcs-watch-live" }: { tv: { address: string; delay: number | null }; className?: string; testId?: string }) {
+  const t = useTranslations("bridge.match");
+  return (
+    <a href={`steam://connect/${tv.address}`} className={`gcs-watchLive ${className}`} title={t("watchHint")} data-testid={testId}>
+      <GcsIconSvg icon={faTv} />
+      <span>{t("watchLive")}</span>
+      {tv.delay !== null && (
+        <span className="gcs-watchLive__delay" data-testid={`${testId}-delay`}>
+          {t("watchDelay", { seconds: tv.delay })}
+        </span>
+      )}
+    </a>
+  );
+}
 
 /** Starea nouă peste cea veche: ELO-ul (doar în meciul salvat) rămâne pe jucătorii știuți. */
 function merge(prev: GcsBoardState | null, next: GcsBoardState): GcsBoardState {
@@ -70,7 +90,7 @@ function merge(prev: GcsBoardState | null, next: GcsBoardState): GcsBoardState {
  * `servers:match` pe pagina serverului); fără realtime, pagina meciului se reîmprospătează la 15 s cât timp meciul e
  * deschis, iar pagina serverului cere `/api/servers/live`. Numele vin din joc: doar text.
  */
-export function GcsMatchBoard({ initial, game, mapImage = null, server, mode }: Props) {
+export function GcsMatchBoard({ initial, game, mapImage = null, server, mode, tv = null }: Props) {
   const t = useTranslations("bridge.match");
   const format = useFormatter();
   const realtime = useRealtime();
@@ -182,6 +202,7 @@ export function GcsMatchBoard({ initial, game, mapImage = null, server, mode }: 
               <span className="gcs-muted">{t("started")}</span> {format.dateTime(new Date(state.startedAt), { dateStyle: "medium", timeStyle: "short" })}
             </span>
           )}
+          {tv && OPEN.has(state.status) && <GcsWatchLive tv={tv} className="gcs-matchBoard__watch" />}
           {mode === "server" && state.id !== null && (
             <Link href={matchHref(state.id)} className="gcs-matchBoard__open" data-testid="gcs-live-match-link">
               {t("open")}

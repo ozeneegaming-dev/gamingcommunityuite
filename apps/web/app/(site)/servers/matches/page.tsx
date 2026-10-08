@@ -40,6 +40,9 @@ export default async function MatchesPage({ searchParams }: Props) {
   const map = maps.some((m) => m.map === sp.map) ? sp.map! : null;
   const filter = { ...scope, ...(map ? { map } : {}) };
   const [list, counts] = await Promise.all([bridge.queries.matches(actor, { ...filter, ...(status ? { status } : {}), page, withStats: true }), bridge.queries.matchCounts(actor, filter)]);
+  // „Urmărește live” pe cardurile meciurilor deschise (serverele cu adresa HLTV / GOTV, specul servere-hltv §3).
+  const OPEN = new Set(["warmup", "live", "halftime"]);
+  const watch = await bridge.queries.watch(actor, list.items.filter((m) => OPEN.has(m.status)).map((m) => m.server.id));
 
   // Imaginile hărților, rezolvate aici (o citire pe joc): browserul nu mai trece prin redirect.
   const byGame = new Map<string, string[]>();
@@ -60,6 +63,7 @@ export default async function MatchesPage({ searchParams }: Props) {
     endedAt: m.endedAt,
     players: m.stats?.players ?? { A: 0, B: 0 },
     avgElo: m.stats?.avgElo ?? null,
+    tv: watch.get(m.server.id) ?? null,
   }));
 
   const href = (patch: { server?: number | null; map?: string | null; status?: Status | null; page?: number }) => {

@@ -8,6 +8,7 @@ import { currentActor } from "@/lib/actor";
 import { mapPictures } from "@/lib/servers";
 import { services } from "@/lib/services";
 import { GcsMatchBoard, type GcsBoardState } from "../../../_components/servers/GcsMatchBoard";
+import { GcsMatchDemos } from "../../../_components/servers/GcsMatchDemos";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -29,12 +30,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 /**
  * Pagina unui meci mix (specul 2026-10-08-servere-pagini §7): tabela de scor peste imaginea hărții, banda rundelor,
  * echipele cu jucătorii (ucideri, decese, asistențe, headshot-uri, damage pe rundă, MVP, ELO). Un meci deschis se
- * actualizează live (camera `match:{id}`).
+ * actualizează live (camera `match:{id}`) și are „Urmărește live” (HLTV / GOTV); unul încheiat, demo-ul (specul
+ * 2026-10-08-servere-hltv).
  */
 export default async function MatchPage({ params }: Props) {
   const match = await load((await params).id);
   if (!match) notFound();
-  const [t, pictures] = await Promise.all([getTranslations("bridge.matches"), mapPictures(match.server.game, [match.map])]);
+  const { bridge } = services();
+  const actor = await currentActor();
+  const [t, pictures, demos, watch] = await Promise.all([
+    getTranslations("bridge.matches"),
+    mapPictures(match.server.game, [match.map]),
+    bridge.demos.forMatch(actor, match.id),
+    bridge.queries.watch(actor, [match.server.id]),
+  ]);
   const state: GcsBoardState = {
     id: match.id,
     status: match.status,
@@ -73,7 +82,8 @@ export default async function MatchPage({ params }: Props) {
           {!match.rated && match.status === "ended" && <p className="gcs-pageHeader__desc">{t("notRated")}</p>}
         </div>
       </header>
-      <GcsMatchBoard initial={state} game={game} mapImage={pictures.get(match.map) ?? null} server={{ id: match.server.id, name: match.server.name, href: serverHref }} mode="match" />
+      <GcsMatchBoard initial={state} game={game} mapImage={pictures.get(match.map) ?? null} server={{ id: match.server.id, name: match.server.name, href: serverHref }} mode="match" tv={watch.get(match.server.id) ?? null} />
+      <GcsMatchDemos demos={demos} serverId={match.server.id} />
     </>
   );
 }

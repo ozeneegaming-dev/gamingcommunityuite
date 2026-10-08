@@ -497,4 +497,15 @@ describe("„Urmărește live”: adresa și întârzierea", () => {
     expect((await w.bridge.store.roster(cs2.id))?.tv).toEqual({ enabled: true, delay: 105, port: 27020, recording: true });
     expect((await w.bridge.store.roster(cs16.id))?.tv).toEqual({ hltv: 1, delay: 5 });
   });
+
+  it("pentru pagini: doar cine vede statisticile și doar serverele vizibile", async () => {
+    const pub = await w.bridgeServer({ game: "cs16", isMix: true });
+    const hidden = await w.bridgeServer({ game: "cs16", isMix: true });
+    for (const s of [pub, hidden]) await w.bridge.tv.save(w.root, s.id, tvInput({ address: "217.156.22.86:27020", delay: 30 }));
+    await w.db.gameServer.update({ where: { id: hidden.id }, data: { groups: [w.groups.root_admin!] } });
+    await w.cache.invalidateTags(["servers"]);
+    expect([...(await w.bridge.queries.watch(w.guest, [pub.id, hidden.id])).keys()]).toEqual([pub.id]);
+    expect([...(await w.bridge.queries.watch(w.root, [pub.id, hidden.id])).keys()].sort()).toEqual([pub.id, hidden.id].sort());
+    expect((await w.bridge.queries.watch({ ...w.guest, isBanned: true }, [pub.id])).size).toBe(0);
+  });
 });

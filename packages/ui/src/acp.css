@@ -1340,6 +1340,32 @@ input[type="checkbox"].gcs-switch:checked::before,
     padding: 16px;
   }
 }
+/* „HLTV / GOTV și demo-uri” (specul servere-hltv §7): grupurile formularului. */
+.gcs-tvFieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 12px 14px 14px;
+  border: 1px solid var(--gcs-border);
+  border-radius: var(--gcs-radius-sm, 10px);
+}
+.gcs-tvFieldset > legend {
+  padding: 0 6px;
+  font-weight: 700;
+  font-size: 14px;
+}
+.gcs-tvGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px 14px;
+  align-items: start;
+}
+.gcs-tvGrid[hidden],
+.gcs-tvFieldset [hidden] {
+  display: none;
+}
 @media (max-width: 640px) {
   .gcs-acpSearch {
     order: 3;

@@ -7,7 +7,7 @@ import path from "node:path";
 import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { createGunzip, createGzip } from "node:zlib";
-import { GcsNotFound, GcsRateLimited, writeAudit, type GcsAcpRoleService, type GcsActor, type GcsAppService, type GcsFileStore, type GcsJobQueue, type GcsPermissionService, type GcsRedisRateLimiter, type GcsSettingsService } from "@gcs/core";
+import { GcsNotFound, GcsRateLimited, GcsValidationError, writeAudit, type GcsAcpRoleService, type GcsActor, type GcsAppService, type GcsFileStore, type GcsJobQueue, type GcsPermissionService, type GcsRedisRateLimiter, type GcsSettingsService } from "@gcs/core";
 import type { GameDemoStatus, GameMatchStatus, Prisma, PrismaClient } from "@gcs/db";
 import { SERVERS_APP } from "../../poller";
 import { SERVERS_ACP_SECTION } from "../../service";
@@ -586,7 +586,7 @@ export class GcsBridgeDemos {
     const match = await db.gameMatch.findUnique({ where: { id: matchId }, select: { id: true, serverId: true, status: true } });
     if (!match || match.status !== "ENDED") throw new GcsNotFound();
     const tv = await db.gameServerTv.findUnique({ where: { serverId: match.serverId }, select: { source: true } });
-    if (!tv || tv.source === "none") throw new GcsBridgeError("not_configured", 409);
+    if (!tv || tv.source === "none") throw new GcsValidationError({ source: "not_configured" });
     const now = this.now();
     const rows = await db.gameMatchDemo.findMany({ where: { matchId } });
     if (rows.length === 0) await db.gameMatchDemo.create({ data: { matchId, serverId: match.serverId, part: 1, status: "WAITING", source: tv.source, fileName: `m${matchId}.dem`, nextAttemptAt: now } });

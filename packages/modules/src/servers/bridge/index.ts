@@ -229,7 +229,7 @@ export class GcsBridge {
     });
     this.presence = new GcsBridgePresence({ db, permissions, settings, apps, store, now });
     this.tickets = new GcsBridgeTickets({ db, bus, permissions, admins: this.admins, sanctions: this.sanctions, render: deps.render, now });
-    this.queries = new GcsBridgeQueries({ db, apps, permissions, store, players: this.players, sanctions: this.sanctions, presence: this.presence, canViewServer: deps.canViewServer, visibleServers: deps.visibleServers });
+    this.queries = new GcsBridgeQueries({ db, apps, permissions, store, players: this.players, sanctions: this.sanctions, presence: this.presence, canViewServer: deps.canViewServer, visibleServers: deps.visibleServers, tv: this.tv });
     this.stats = new GcsBridgeStatsProvider({ db });
   }
 

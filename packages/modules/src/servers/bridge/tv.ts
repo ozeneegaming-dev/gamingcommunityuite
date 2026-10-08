@@ -219,7 +219,7 @@ export class GcsBridgeTv {
         const hkErr = hostKeyError(input.hostKey ?? "");
         if (hkErr) errors.hostKey = hkErr;
       }
-      if (input.password && (input.password.length > 256 || /[\u0000-\u001F\u007F]/.test(input.password))) errors.password = "invalid_password";
+      if (input.password && (input.password.length > 256 || /[\u0000-\u001F\u007F]/.test(input.password))) errors.password = "invalid_secret";
       const willHaveSecret = (input.password ? true : !input.clearPassword && Boolean(before?.secret)) || (source === "sftp" && (input.privateKey ? true : !input.clearPrivateKey && Boolean(before?.privateKey)));
       if (!willHaveSecret) errors.password = "required";
     }

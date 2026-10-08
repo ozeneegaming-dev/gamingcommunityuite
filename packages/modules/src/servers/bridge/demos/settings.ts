@@ -90,5 +90,5 @@ export function privateKeyError(raw: unknown): string | null {
 /** Parola rcon a HLTV-ului (`adminpassword`): 1–64, fără ghilimele (o închid în comandă) și caractere de control. */
 export function rconPasswordError(raw: unknown): string | null {
   if (typeof raw !== "string" || raw.length === 0) return "required";
-  return raw.length > 64 || CONTROL.test(raw) || raw.includes('"') ? "invalid_password" : null;
+  return raw.length > 64 || CONTROL.test(raw) || raw.includes('"') ? "invalid_secret" : null;
 }

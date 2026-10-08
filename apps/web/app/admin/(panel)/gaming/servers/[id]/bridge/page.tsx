@@ -12,6 +12,8 @@ import { GcsAcpTitle, GcsAcpTitleIcon } from "../../../../_components/GcsAcpTitl
 import { saveBridgeConfig, saveBridgeModules, saveVipMappings } from "../../bridge-actions";
 import { GcsBridgeKeys } from "../../GcsBridgeKeys";
 import { GcsPluginDownload } from "../../GcsPluginDownload";
+import { GcsServerTv } from "../../GcsServerTv";
+import { deleteMatchDemo, refetchMatchDemo, saveServerTv, testServerTv } from "../../tv-actions";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -20,6 +22,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const KIND_BADGE: Record<string, string> = { STEAM: "gcs-badge--ok", NONSTEAM: "gcs-badge--warn", NAME: "gcs-badge--neutral" };
+const DEMO_BADGE: Record<string, string> = { waiting: "gcs-badge--neutral", fetching: "gcs-badge--warn", available: "gcs-badge--ok", not_found: "gcs-badge--neutral", failed: "gcs-badge--accent", expired: "gcs-badge--neutral" };
+/** Mărimea unui fișier (MB, o zecimală). */
+const mb = (bytes: number | null) => (bytes === null ? "—" : `${(bytes / 1024 / 1024).toFixed(1)} MB`);
+
 /** Modulele opționale (specul plugin-v2 §1.2): câmpul formularului și cheia din `config.features`. */
 const MODULES = [
   ["manageAdmins", "admins"],
@@ -39,13 +45,17 @@ export default async function AcpServerBridgePage({ params }: Props) {
   const { bridge, acp, settings } = services();
   const status = Number.isInteger(id) ? await bridge.status(actor, id) : null;
   if (!status) notFound();
-  const [t, format, canEdit, canDelete, siteUrl] = await Promise.all([
+  const [t, format, canEdit, canDelete, siteUrl, tvView, demos] = await Promise.all([
     getTranslations("acp.bridge"),
     getFormatter(),
     acp.can(actor, SERVERS_ACP_SECTION, "edit"),
     acp.can(actor, SERVERS_ACP_SECTION, "delete"),
     settings.get<string>("site.url"),
+    bridge.tv.view(actor, id),
+    bridge.demos.recent(actor, id),
   ]);
+  const tvReported = status.roster?.tv ?? null;
+  const tvError = (code: string | null) => (code && t.has(`tv.errors.${code}`) ? t(`tv.errors.${code}`) : (code ?? "?"));
   const s = status.server;
   const game = gameDef(s.game);
   const supported = s.game === "cs16" || s.game === "cs2";
@@ -191,6 +201,107 @@ export default async function AcpServerBridgePage({ params }: Props) {
           ))}
         </GcsActionForm>
       </GcsCard>
+
+      {supported && (
+        <GcsCard as="section" aria-labelledby="gcs-bridge-tv-title" id="gcs-bridge-tv" style={{ padding: 16, maxWidth: 820, display: "flex", flexDirection: "column", gap: 12 }} data-testid="gcs-bridge-tv">
+          <h2 id="gcs-bridge-tv-title" className="gcs-acpWidget__title">
+            <GcsAcpTitleIcon name="fa-solid fa-tv" />
+            {t("tv.title")}
+          </h2>
+          <p className="gcs-muted" style={{ margin: 0, fontSize: 14 }}>
+            {t("tv.lead")}
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 20px", fontSize: 14 }} data-testid="gcs-tv-status">
+            {tvReported && (
+              <span data-testid="gcs-tv-reported">
+                {t("tv.reported.label")}:{" "}
+                <strong>
+                  {s.game === "cs16"
+                    ? t("tv.reported.hltv", { count: tvReported.hltv ?? 0 })
+                    : tvReported.enabled === false
+                      ? t("tv.reported.gotvOff")
+                      : t("tv.reported.gotv", { delay: tvReported.delay ?? 0, port: tvReported.port ?? 0, recording: tvReported.recording ? "yes" : "no" })}
+                </strong>
+              </span>
+            )}
+            <span data-testid="gcs-tv-last-fetch">
+              {t("tv.lastFetch.label")}:{" "}
+              <strong>
+                {tvView.lastFetch
+                  ? `${format.dateTime(new Date(tvView.lastFetch.at), { dateStyle: "medium", timeStyle: "short" })} · ${
+                      tvView.lastFetch.ok
+                        ? t("tv.lastFetch.ok", { files: Number(tvView.lastFetch.info?.files ?? 0), matched: Number(tvView.lastFetch.info?.matched ?? 0) })
+                        : t("tv.lastFetch.failed", { error: tvError(tvView.lastFetch.code) })
+                    }`
+                  : t("tv.lastFetch.never")}
+              </strong>
+            </span>
+            {tvView.lastRcon && (
+              <span data-testid="gcs-tv-last-rcon">
+                {t("tv.lastRcon.label")}:{" "}
+                <strong>
+                  {format.dateTime(new Date(tvView.lastRcon.at), { dateStyle: "medium", timeStyle: "short" })} · {tvView.lastRcon.action} · {tvView.lastRcon.ok ? t("tv.lastRcon.ok") : tvError(tvView.lastRcon.code)}
+                </strong>
+              </span>
+            )}
+          </div>
+          <GcsServerTv view={tvView} canEdit={canEdit} save={saveServerTv.bind(null, s.id)} test={testServerTv.bind(null, s.id)} />
+          <h3 className="gcs-acpWidget__title" style={{ fontSize: 15, marginTop: 8 }}>
+            {t("tv.recent.title")}
+          </h3>
+          {demos.length === 0 ? (
+            <p className="gcs-muted" style={{ margin: 0 }}>
+              {t("tv.recent.none")}
+            </p>
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+              <table className="gcs-table__table" data-testid="gcs-tv-demos">
+                <thead>
+                  <tr>
+                    <th className="gcs-table__th" scope="col">{t("tv.recent.match")}</th>
+                    <th className="gcs-table__th" scope="col">{t("tv.recent.status")}</th>
+                    <th className="gcs-table__th" scope="col">{t("tv.recent.size")}</th>
+                    <th className="gcs-table__th" scope="col">{t("tv.recent.downloads")}</th>
+                    <th className="gcs-table__th" scope="col">{t("tv.recent.actions")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {demos.map((d) => (
+                    <tr key={d.id} className="gcs-table__row" data-testid="gcs-tv-demo" data-status={d.status}>
+                      <td className="gcs-table__td">
+                        {d.match ? (
+                          <Link href={`/servers/matches/${d.match.id}`}>
+                            #{d.match.id} {d.match.map} · {d.match.teams.A} {d.match.score.A}–{d.match.score.B} {d.match.teams.B}
+                          </Link>
+                        ) : (
+                          "—"
+                        )}
+                        {d.part > 1 && <span className="gcs-muted"> · {t("tv.recent.part", { part: d.part })}</span>}
+                      </td>
+                      <td className="gcs-table__td">
+                        <span className={`gcs-badge ${DEMO_BADGE[d.status] ?? "gcs-badge--neutral"}`}>{t(`tv.demoStatus.${d.status}`)}</span>
+                        {d.error && <span className="gcs-muted"> {tvError(d.error)}</span>}
+                      </td>
+                      <td className="gcs-table__td">{mb(d.size)}</td>
+                      <td className="gcs-table__td">{d.downloads}</td>
+                      <td className="gcs-table__td">
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                          {canEdit && d.matchId !== null && d.part === 1 && d.status !== "fetching" && (
+                            <GcsActionForm action={refetchMatchDemo.bind(null, d.matchId)} submitLabel={t("tv.recent.refetch")} submitKind="recompute" variant="ghost" compact />
+                          )}
+                          {canDelete && d.status === "available" && (
+                            <GcsActionForm action={deleteMatchDemo.bind(null, d.id)} submitLabel={t("tv.recent.delete")} submitKind="delete" variant="ghost" compact confirm={t("tv.recent.deleteConfirm")} />
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </GcsCard>
+      )}
 
       <GcsCard as="section" aria-labelledby="gcs-bridge-identity" style={{ padding: 16, maxWidth: 820 }}>
         <h2 id="gcs-bridge-identity" className="gcs-acpWidget__title" style={{ marginBottom: 12 }}>
