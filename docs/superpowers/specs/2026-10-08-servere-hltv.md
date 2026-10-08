@@ -165,8 +165,9 @@ Pe numele fișierului (doar `*.dem`, nume simple `[A-Za-z0-9_.()+-]`, max 200):
 
 - **La finalul meciului** (`ended`, server cu sursă): rândul `WAITING` (partea 1), scadent după întârzierea transmisiei
   + 30 s; jobul e programat atunci. Meciurile anulate nu au demo.
-- **Reîncercările:** 2, 5, 10, 20, 40, 60, 120, 240 de minute; după ultima: `NOT_FOUND` (niciun fișier potrivit) sau
-  `FAILED` (eroarea). Timpul: conectarea 15 s, listarea 30 s, descărcarea max 15 minute.
+- **Reîncercările:** 8 încercări, cu pauzele de 2, 5, 10, 20, 40, 60 și 120 de minute (~4 ore); după ultima:
+  `NOT_FOUND` (niciun fișier potrivit) sau `FAILED` (eroarea). Erorile definitive (prea mare, alt joc, cota, sursa
+  neconfigurată) nu se reîncearcă. Timpul: conectarea 15 s, listarea 30 s, descărcarea max 15 minute.
 - **Limitele:** `servers.demo_max_mb` pe fișier (oprit din flux, nu după), antetul verificat (`HLDEMO` pe CS 1.6,
   `PBDEMS2` / `HL2DEMO` pe CS2), numele sigure.
 - **Garda SSRF** (aducerea, testul, rcon-ul): doar host-ul și portul configurate; adresa rezolvată o singură dată și

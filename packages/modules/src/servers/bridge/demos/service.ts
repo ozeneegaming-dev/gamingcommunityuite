@@ -33,8 +33,8 @@ export const DEMO_CHUNK_SIZE = 512 * 1024;
 export const DEMO_CHUNK_MAX = 1024 * 1024;
 /** Ritmul încărcării recomandat pluginului (octeți / s). */
 export const DEMO_UPLOAD_RATE = 1024 * 1024;
-/** Reîncercările aducerii (minute), apoi `NOT_FOUND` / `FAILED`. */
-export const DEMO_RETRY_MINUTES = [2, 5, 10, 20, 40, 60, 120, 240];
+/** Pauzele dintre încercările aducerii (minute): 8 încercări în ~4 ore, apoi `NOT_FOUND` / `FAILED`. */
+export const DEMO_RETRY_MINUTES = [2, 5, 10, 20, 40, 60, 120, 0];
 /** Rezerva după final: întârzierea transmisiei + 30 s (HLTV-ul scrie finalul cu întârziere). */
 const GRACE_MS = 30_000;
 const FETCH_BATCH = 5;
@@ -177,21 +177,23 @@ export class GcsBridgeDemos {
     return { fetched, failed };
   }
 
-  /** O reîncercare (cu pauza din tabel) sau starea finală (`NOT_FOUND` / `FAILED`). */
+  /**
+   * O reîncercare (cu pauza din tabel: după a 8-a încercare nu mai urmează alta) sau starea finală (`NOT_FOUND` /
+   * `FAILED`); la starea finală a părții 1, celelalte părți ale meciului rămase în așteptare primesc aceeași stare.
+   */
   private async retry(rows: DemoRow[], code: string): Promise<void> {
     const now = this.now();
     for (const row of rows) {
       const attempts = row.attempts + 1;
       const final = DEFINITIVE.has(code) || attempts >= DEMO_RETRY_MINUTES.length;
+      const status = final ? (code === "not_found" ? "NOT_FOUND" : "FAILED") : "WAITING";
       await this.deps.db.gameMatchDemo.update({
         where: { id: row.id },
-        data: {
-          attempts,
-          error: code.slice(0, 64),
-          status: final ? (code === "not_found" ? "NOT_FOUND" : "FAILED") : "WAITING",
-          nextAttemptAt: final ? null : new Date(now.getTime() + DEMO_RETRY_MINUTES[attempts - 1]! * 60_000),
-        },
+        data: { attempts, error: code.slice(0, 64), status, nextAttemptAt: final ? null : new Date(now.getTime() + DEMO_RETRY_MINUTES[attempts - 1]! * 60_000) },
       });
+      if (final && row.part === 1 && row.matchId !== null) {
+        await this.deps.db.gameMatchDemo.updateMany({ where: { matchId: row.matchId, part: { gt: 1 }, status: "WAITING" }, data: { status, error: code.slice(0, 64), nextAttemptAt: null } });
+      }
     }
   }
 

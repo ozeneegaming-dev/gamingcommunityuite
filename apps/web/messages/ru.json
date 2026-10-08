@@ -2251,7 +2251,7 @@
       "tv": {
         "title": "HLTV / GOTV and demos",
         "lead": "Everything is off by default: nothing changes on the game server until you enable something here. The address adds “Watch live” to mix matches; the source brings the demo of every finished match to the match page.",
-        "save": "Save",
+        "save": "Save HLTV / GOTV",
         "watch": {
           "title": "Watch live",
           "address": "HLTV / GOTV address (host:port)",

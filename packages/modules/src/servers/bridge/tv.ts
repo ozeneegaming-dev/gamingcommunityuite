@@ -240,6 +240,7 @@ export class GcsBridgeTv {
     if (Object.keys(errors).length > 0) throw new GcsValidationError(errors);
 
     const keepSecret = (fresh: string | undefined, clear: boolean | undefined, old: string | null | undefined) => (fresh ? sealSecret(fresh) : clear ? null : (old ?? null));
+    const hostMoved = before?.host !== host || before?.port !== port;
     const data = {
       address: address && address !== "invalid" ? address.value : null,
       delay,
@@ -251,8 +252,9 @@ export class GcsBridgeTv {
       privateKey: source === "sftp" ? keepSecret(input.privateKey, input.clearPrivateKey, before?.privateKey) : null,
       remoteDir: remote ? (input.remoteDir?.trim() || "/") : "/",
       tlsInsecure: source === "ftps" && input.tlsInsecure === true,
-      // Amprenta SFTP: un host schimbat o golește (se reține din nou la prima conectare).
-      hostKey: source === "sftp" ? (input.hostKey || (before?.host === host && before?.port === port ? before?.hostKey : null) || null) : null,
+      // Amprenta SFTP: câmpul gol = se reține la prima conectare; un host / port schimbat golește amprenta veche rămasă
+      // în formular (altfel noul server ar fi refuzat ca „cheie schimbată”).
+      hostKey: source === "sftp" ? (hostMoved && input.hostKey === before?.hostKey ? null : input.hostKey || null) : null,
       httpTemplate: source === "http" ? input.httpTemplate : null,
       namePrefix: input.namePrefix ?? "",
       timeZone: input.timeZone,

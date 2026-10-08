@@ -88,6 +88,22 @@ describe("setările HLTV / GOTV (ACP)", () => {
     await expect(w.bridge.tv.save(w.root, cs16.id, tvInput({ delay: 4000 }))).rejects.toMatchObject({ fields: { delay: "invalid_range" } });
   });
 
+  it("amprenta SFTP: păstrată la aceeași adresă, golită când host-ul se schimbă și formularul are amprenta veche", async () => {
+    const { id } = await w.bridgeServer({ game: "cs16" });
+    const fp = "SHA256:nThbg6kXUpJWGl7E1IGOCspRomTxdCARLviKw6E5SY8";
+    const sftp = (patch: Partial<GcsServerTvInput>) => tvInput({ source: "sftp", host: "sftp.exemplu.ro", username: "hltv", password: "p", ...patch });
+    await w.bridge.tv.save(w.root, id, sftp({ hostKey: fp }));
+    expect((await w.bridge.tv.view(w.root, id)).hostKey).toBe(fp);
+    await w.bridge.tv.save(w.root, id, sftp({ hostKey: fp }));
+    expect((await w.bridge.tv.view(w.root, id)).hostKey).toBe(fp);
+    await w.bridge.tv.save(w.root, id, sftp({ host: "alt.exemplu.ro", hostKey: fp }));
+    expect((await w.bridge.tv.view(w.root, id)).hostKey).toBe("");
+    await w.bridge.tv.save(w.root, id, sftp({ host: "alt.exemplu.ro", hostKey: fp }));
+    expect((await w.bridge.tv.view(w.root, id)).hostKey).toBe(fp);
+    await w.bridge.tv.save(w.root, id, sftp({ host: "alt.exemplu.ro", hostKey: "" }));
+    expect((await w.bridge.tv.view(w.root, id)).hostKey).toBe("");
+  });
+
   it("drepturile: un membru fără ACP nu vede, nu schimbă și nu testează", async () => {
     const { id } = await w.bridgeServer({ game: "cs16" });
     await expect(w.bridge.tv.view(w.member, id)).rejects.toMatchObject({ code: "forbidden" });
@@ -148,6 +164,9 @@ describe("demo-ul unui meci mix (sursa HTTP)", () => {
     const mock = w.mock(token, "cs16");
     await mock.finishMix(await mock.startMix());
     const minutes = [2, 5, 10, 20, 40, 60, 120];
+    // O parte 2 rămasă dintr-o aducere veche: la starea finală a părții 1 primește aceeași stare.
+    const first = await w.db.gameMatchDemo.findFirstOrThrow({ where: { serverId: id } });
+    const part2 = await w.db.gameMatchDemo.create({ data: { matchId: first.matchId, serverId: id, part: 2, status: "WAITING", source: "http", fileName: "x.dem" } });
     w.clock.now += 31_000;
     for (const [i, m] of minutes.entries()) {
       expect(await w.bridge.demos.fetchDue()).toEqual({ fetched: 0, failed: 1 });
@@ -157,7 +176,8 @@ describe("demo-ul unui meci mix (sursa HTTP)", () => {
       w.clock.now += m * 60_000;
     }
     await w.bridge.demos.fetchDue();
-    expect(await w.db.gameMatchDemo.findFirstOrThrow({ where: { serverId: id } })).toMatchObject({ status: "NOT_FOUND", attempts: 8, nextAttemptAt: null });
+    expect(await w.db.gameMatchDemo.findFirstOrThrow({ where: { serverId: id, part: 1 } })).toMatchObject({ status: "NOT_FOUND", attempts: 8, nextAttemptAt: null });
+    expect(await w.db.gameMatchDemo.findUniqueOrThrow({ where: { id: part2.id } })).toMatchObject({ status: "NOT_FOUND", error: "not_found" });
     expect((await w.bridge.tv.view(w.root, id)).lastFetch).toMatchObject({ ok: false, code: "not_found", info: { files: 1, matched: 0 } });
   });
 

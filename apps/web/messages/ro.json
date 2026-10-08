@@ -2251,7 +2251,7 @@
       "tv": {
         "title": "HLTV / GOTV și demo-uri",
         "lead": "Totul e oprit implicit: pe serverul de joc nu se schimbă nimic până nu pornești ceva aici. Adresa adaugă „Urmărește live” la meciurile mix; sursa aduce demo-ul fiecărui meci încheiat pe pagina meciului.",
-        "save": "Salvează",
+        "save": "Salvează HLTV / GOTV",
         "watch": {
           "title": "Urmărește live",
           "address": "Adresa HLTV / GOTV (host:port)",

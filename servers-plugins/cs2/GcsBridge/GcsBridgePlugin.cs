@@ -108,6 +108,9 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
     private DemoUploader _uploader = null!;
     private string? _recordingMatch;
     private string? _recordingName;
+    // Oprirea programată (după întârzierea transmisiei): meciul, numele fișierului, dacă meciul s-a încheiat.
+    private (string Match, string Name, bool Ended)? _stopping;
+    private Timer? _stopTimer;
     private bool _tvWarned;
 
     // Înrolarea (fără cheie).
@@ -388,6 +391,8 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
                 _tvWarned = true;
                 return;
             }
+            // GOTV înregistrează un singur demo odată: oprirea încă programată a meciului de dinainte se face acum.
+            FinishStop();
             _recordingMatch = id;
             _recordingName = DemoName(id);
             Server.ExecuteCommand($"tv_record \"{_recordingName}\"");
@@ -397,20 +402,30 @@ public sealed class GcsBridgePlugin : BasePlugin, IPluginConfig<GcsBridgeConfig>
         {
             _recordingMatch = null;
             _recordingName = null;
-            var ended = status == "ended";
-            AddTimer(TvDelay() + 5f, () =>
-            {
-                Server.ExecuteCommand("tv_stoprecord");
-                // Fișierul se închide după oprire; încărcarea (dacă e pornită pe site) pleacă după câteva secunde.
-                AddTimer(5f, () =>
-                {
-                    var path = DemoPath(name);
-                    if (path is null) return;
-                    if (ended) _uploader.Enqueue(id, path);
-                    else if (!Config.KeepDemos) TryDelete(path);
-                });
-            });
+            _stopping = (id, name, status == "ended");
+            // Meciul încheiat: GOTV scrie finalul cu întârzierea transmisiei, deci oprirea așteaptă tv_delay + 5 s. Cel
+            // anulat nu se păstrează: se oprește acum.
+            if (status == "ended") _stopTimer = AddTimer(TvDelay() + 5f, FinishStop);
+            else FinishStop();
         }
+    }
+
+    /// <summary>Oprește înregistrarea programată; demo-ul meciului încheiat intră în coada de încărcat.</summary>
+    private void FinishStop()
+    {
+        if (_stopping is not { } stop) return;
+        _stopping = null;
+        _stopTimer?.Kill();
+        _stopTimer = null;
+        Server.ExecuteCommand("tv_stoprecord");
+        // Fișierul se închide după oprire; încărcarea (dacă e pornită pe site) pleacă după câteva secunde.
+        AddTimer(5f, () =>
+        {
+            var path = DemoPath(stop.Name);
+            if (path is null) return;
+            if (stop.Ended) _uploader.Enqueue(stop.Match, path);
+            else if (!Config.KeepDemos) TryDelete(path);
+        });
     }
 
     /// <summary>Unde a scris GOTV demo-ul (folderul jocului, `csgo/`).</summary>

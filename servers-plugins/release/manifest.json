@@ -1,6 +1,6 @@
 {
   "version": "1.2.0",
-  "builtAt": "2026-10-08T22:41:15.289Z",
+  "builtAt": "2026-10-08T22:58:45.006Z",
   "tools": {
     "amxxpc": "1.10.0.5486",
     "amxxIncludes": "easyhttp-1.5.0, reapi-5.29.0.358",
@@ -23,9 +23,9 @@
     "cs2": {
       "id": "gcs-cs2/1.2.0",
       "version": "1.2.0",
-      "sourcesSha256": "2189cc8933a602c8731dfc8eac9dd97194d0a5b04a03b1468489c401009bfb6a",
+      "sourcesSha256": "9db401139a80328359cdbe0fd0e533535956a0df1552982cbfd5371bac33666a",
       "files": {
-        "GcsBridge.dll": "692e57daa54888f56d8f1d00d786c3f58143e15b3acc04dfc1ae0d296e708286",
+        "GcsBridge.dll": "3bacb6e4425454ea8ec1604bb8e2f256a44d4852b3f00a78708164522637f4a7",
         "GcsBridge.json": "fb1679b573b312675d997f075611a26b91fa4e2b186685e1dcd25503a4621496",
         "LICENSE": "9aae00a51fdd498b00c52ee9af59e074cc4b61ae21ba211c97e923aaf3fc8785"
       }
