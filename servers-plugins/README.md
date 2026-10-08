@@ -44,11 +44,13 @@ node servers-plugins/mock/gcs-mock-server.mjs --url https://comunitate.exemplu.r
 ### Cerințe pe server
 
 - AMX Mod X **1.9 sau 1.10** (nativele `json_*` și `hash_string` cu SHA-256): <https://www.amxmodx.org/downloads.php>
-- Modulul **AmxxEasyHttp** (HTTPS asincron, prin libcurl), de pe pagina oficială a proiectului (GitHub,
-  „AmxxEasyHttp”, secțiunea Releases): `easy_http_amxx_i386.so` / `easy_http_amxx.dll` în `addons/amxmodx/modules/`
-  și `easy_http.inc` la include-urile compilatorului.
+- Modulul **AmxxEasyHttp** 1.4 sau mai nou (HTTPS asincron, prin libcurl), de pe pagina oficială a proiectului
+  (GitHub, „AmxxEasyHttp”, secțiunea Releases): din arhiva versiunii, modulul (`easy_http_amxx_i386.so` /
+  `easy_http_amxx.dll`) în `addons/amxmodx/modules/` și certificatele (`addons/amxmodx/data/amxx_easy_http_cacert.pem`,
+  necesare pentru HTTPS); `easy_http.inc` și `easy_http_json.inc` la include-urile compilatorului.
 - Opțional, **ReAPI** cu **Reunion** (pentru a deosebi clienții Steam de cei non-Steam): fără ele, în modul `mixed`
-  toți jucătorii sunt non-Steam (Steam-ul nu se poate dovedi).
+  toți jucătorii sunt non-Steam (Steam-ul nu se poate dovedi). Pluginul compilat cu `reapi.inc` se încarcă și fără
+  ReAPI (biblioteca e opțională).
 
 ### Compilarea
 
@@ -57,17 +59,22 @@ conține și nu descarcă compilatorul.
 
 ```powershell
 # Windows
-.\servers-plugins\amxx\build.ps1 -Compiler "C:\amxmodx\addons\amxmodx\scripting\amxxpc.exe" -Includes "C:\includes"
+.\servers-plugins\amxx\build.ps1 -Compiler "C:\amxmodx\addons\amxmodx\scripting\amxxpc.exe" -Includes "C:\easy_http","C:\reapi"
 ```
 
 ```sh
 # Linux
-AMXXPC=/opt/amxmodx/addons/amxmodx/scripting/amxxpc AMXX_INCLUDES=/opt/includes ./servers-plugins/amxx/build.sh
+AMXXPC=/opt/amxmodx/addons/amxmodx/scripting/amxxpc AMXX_INCLUDES=/opt/easy_http:/opt/reapi ./servers-plugins/amxx/build.sh
 ```
 
-`-Includes` / `AMXX_INCLUDES` = folderul cu `easy_http.inc` (și `reapi.inc`, dacă folosești ReAPI). Rezultatul:
-`servers-plugins/amxx/build/gcs_bridge.amxx`. Se poate compila și cu compilatorul online al AMX Mod X, încărcând
-`gcs_bridge.sma` împreună cu include-urile.
+`-Includes` / `AMXX_INCLUDES` = folderele cu `easy_http.inc` + `easy_http_json.inc` și, opțional, `reapi*.inc` (pe
+Windows o listă sau separate prin `;`, pe Linux prin `:`). Rezultatul: `servers-plugins/amxx/build/gcs_bridge.amxx`.
+Compilat cu `amxxpc` 1.10, pluginul folosește doar native care există și în AMX Mod X 1.9.
+
+**Limitele Pawn** (de ținut minte la modificări): nativele care citesc un șir din plugin (`hash_string`,
+`ezhttp_option_set_body`, `json_parse` dintr-un șir) se opresc la 16383 de caractere. De aceea corpul unei cereri rămâne
+sub 16000 de caractere (lotul de evenimente se oprește înainte), un eveniment are cel mult 4095 (jucătorii unui
+`round_end` pleacă în loturi de câte 8), iar răspunsurile se citesc din fișier (`json_parse(…, true)`), fără limită.
 
 ### Instalarea
 
@@ -75,8 +82,9 @@ AMXXPC=/opt/amxmodx/addons/amxmodx/scripting/amxxpc AMXX_INCLUDES=/opt/includes 
    **înaintea** `admincmd.amxx` (ca acțiunile adminilor să intre în jurnal înainte să le trateze AMX Mod X).
 2. `gcs_bridge.cfg` → `addons/amxmodx/configs/` și completează `gcs_url` și `gcs_key`.
 3. În `modules.ini`: `easy_http`. Repornește harta.
-4. Adminii vin de la GCS: pluginul setează flag-urile la intrare (`users.ini` nu mai e necesar pentru ei). Adminii pe
-   nume + parolă pun parola în setinfo: `setinfo _pw parola` (câmpul se schimbă cu `gcs_password_field`).
+4. Adminii vin de la GCS: pluginul setează flag-urile la intrare (`users.ini` nu mai e necesar pentru ei; flag-urile
+   date de `users.ini` sunt înlocuite, deci adminii se adaugă în ACP înainte). Adminii pe nume + parolă pun parola în
+   setinfo: `setinfo _pw parola` (câmpul se schimbă cu `gcs_password_field`).
 
 ### Comenzi
 
@@ -104,18 +112,21 @@ Alte pluginuri de mix pot conduce meciul prin `gcs_bridge.inc` (`gcs_mix_command
 
 ### Compilarea
 
-Necesită **.NET SDK 8**: <https://dotnet.microsoft.com/download/dotnet/8.0>. Pachetul `CounterStrikeSharp.API` vine
-din NuGet la prima compilare.
+Necesită **.NET SDK 8**: <https://dotnet.microsoft.com/download/dotnet/8.0> (sau scriptul oficial `dotnet-install`
+cu `-Channel 8.0 -InstallDir <folder>`, fără instalare în sistem). Pachetul `CounterStrikeSharp.API` vine din NuGet la
+prima compilare, în versiunea fixă din `GcsBridge.csproj`: **1.0.368**, ultima pentru net8.0 (de la 1.0.369 pachetul
+cere net10.0, deci .NET SDK 10). Pluginul net8.0 rulează și pe CounterStrikeSharp-ul nou, cu runtime-ul .NET 10.
 
 ```powershell
-.\servers-plugins\cs2\build.ps1
+.\servers-plugins\cs2\build.ps1 [-Dotnet "C:\tools\dotnet8\dotnet.exe"]
 ```
 
 ```sh
-./servers-plugins/cs2/build.sh
+[DOTNET_EXE=/opt/dotnet8/dotnet] ./servers-plugins/cs2/build.sh
 ```
 
-Rezultatul: `servers-plugins/cs2/GcsBridge/bin/Release/net8.0/GcsBridge.dll`.
+Rezultatul: `servers-plugins/cs2/GcsBridge/bin/Release/net8.0/GcsBridge.dll` (pe server ajung doar `GcsBridge.dll` și,
+opțional, `GcsBridge.pdb`; CounterStrikeSharp își aduce singur API-ul).
 
 ### Instalarea
 
@@ -123,7 +134,8 @@ Rezultatul: `servers-plugins/cs2/GcsBridge/bin/Release/net8.0/GcsBridge.dll`.
 2. La prima pornire se creează `addons/counterstrikesharp/configs/plugins/GcsBridge/GcsBridge.json`; completează
    `Url` și `Key`, apoi `css_plugins reload GcsBridge` (sau schimbă harta).
 3. Adminii și VIP-ul vin de la GCS ca permisiuni CounterStrikeSharp (`@css/*`, plus `@gcs/custom_a`…`@gcs/custom_h`
-   și `@gcs/tempban`), cu imunitatea lor.
+   și `@gcs/tempban`), cu imunitatea lor. Permisiunile din `configs/admins.json` ale unui jucător sunt înlocuite la
+   conectare, deci adminii se adaugă în ACP înainte.
 
 ### Comenzi
 
@@ -152,6 +164,14 @@ Rezultatul: `servers-plugins/cs2/GcsBridge/bin/Release/net8.0/GcsBridge.dll`.
 
 ## Starea compilării
 
-Sursele sunt scrise după API-urile documentate ale AMX Mod X 1.9 / 1.10, AmxxEasyHttp și CounterStrikeSharp, dar nu au
-fost compilate încă: compilatorul AMX Mod X și .NET SDK nu sunt instalate pe mașina de dezvoltare și se descarcă doar
-cu acordul proprietarului. Protocolul e verificat complet de testele GCS cu serverul fals (`mock/`).
+Ambele pluginuri se compilează fără erori și fără avertismente (2026-10-08):
+
+| Plugin | Unelte | Rezultat |
+|---|---|---|
+| `amxx/gcs_bridge.sma` | `amxxpc` din AMX Mod X 1.10.0.5486; include-urile AmxxEasyHttp 1.5.0 și ReAPI 5.29.0.358 | `gcs_bridge.amxx`; nativele folosite există toate și în AMX Mod X 1.9 |
+| `cs2/GcsBridge` | .NET SDK 8.0.425; `CounterStrikeSharp.API` 1.0.368 | `GcsBridge.dll` (net8.0) |
+
+Semnarea e verificată cap la cap cu codul GCS (`signing.ts`) și cu serverul fals: clientul CS2 (`BridgeClient.cs`,
+`EventQueue.cs`) și algoritmul `sha256-env` al pluginului AMX Mod X, inclusiv corectarea ceasului la `clock_skew`,
+corpurile cu UTF-8, query-ul din cale, `If-None-Match` / 304 și o cheie greșită (refuzată). Pluginurile nu au rulat încă
+pe un server de joc real.
