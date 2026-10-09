@@ -797,6 +797,18 @@
         "cooldownHint": "0 = no pause.",
         "never": "Guests and banned members cannot be mentioned.",
         "save": "Save mentions"
+      },
+      "display": {
+        "title": "Anzeige",
+        "priority": "Anzeigepriorität",
+        "priorityHint": "Die höhere Zahl gewinnt: Unter den Gruppen eines Mitglieds mit Namensstil bestimmt die mit der höchsten Priorität die Namensfarbe. Team oben, VIP danach, alle anderen unten.",
+        "selectable": "Mitglieder können diese Gruppe als angezeigte Gruppe wählen",
+        "showSecondary": "Als Nebengruppe anzeigen",
+        "primaryOnly": "Nur Mitglieder mit dieser Hauptgruppe (Mitgliederseite und @Erwähnungen)",
+        "public": "Mitgliederseite der Gruppe (das Gruppen-Abzeichen verlinkt dorthin)",
+        "description": "Kurzbeschreibung (Tooltip)",
+        "descriptionHint": "Erste Zeile im Tooltip des Gruppen-Abzeichens. Höchstens 120 Zeichen.",
+        "save": "Anzeige speichern"
       }
     },
     "permissions": {
@@ -3304,7 +3316,12 @@
       "saved": "Gespeichert.",
       "preview": "Vorschau",
       "skin": "Gebietsthema",
-      "skinSaved": "Thema geändert."
+      "skinSaved": "Thema geändert.",
+      "displayGroup": "Angezeigte Gruppe",
+      "displayGroupHint": "Die Gruppe, die deinen Namen färbt, und das Abzeichen daneben.",
+      "displayGroupAuto": "Automatisch",
+      "displayGroupAutoHint": "nach Gruppenpriorität",
+      "displayGroupSave": "Angezeigte Gruppe speichern"
     },
     "privacy": {
       "title": "Privatsphäre",

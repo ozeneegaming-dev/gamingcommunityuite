@@ -797,6 +797,18 @@
         "cooldownHint": "0 = no pause.",
         "never": "Guests and banned members cannot be mentioned.",
         "save": "Save mentions"
+      },
+      "display": {
+        "title": "Affichage",
+        "priority": "Priorité d’affichage",
+        "priorityHint": "Le nombre le plus élevé l’emporte : parmi les groupes d’un membre ayant un style de nom, celui de plus haute priorité donne la couleur du nom. L’équipe en haut, les VIP ensuite, les autres en bas.",
+        "selectable": "Les membres peuvent choisir ce groupe comme groupe affiché",
+        "showSecondary": "Afficher comme groupe secondaire",
+        "primaryOnly": "Uniquement les membres dont c’est le groupe principal (page des membres et @mentions)",
+        "public": "Page des membres du groupe (le badge du groupe y mène)",
+        "description": "Description courte (infobulle)",
+        "descriptionHint": "Première ligne de l’infobulle du badge du groupe. 120 caractères au maximum.",
+        "save": "Enregistrer l’affichage"
       }
     },
     "permissions": {
@@ -3304,7 +3316,12 @@
       "saved": "Enregistré.",
       "preview": "Aperçu",
       "skin": "Thème du site",
-      "skinSaved": "Le thème a changé."
+      "skinSaved": "Le thème a changé.",
+      "displayGroup": "Groupe affiché",
+      "displayGroupHint": "Le groupe qui colore ton nom et le badge à côté.",
+      "displayGroupAuto": "Automatique",
+      "displayGroupAutoHint": "selon la priorité des groupes",
+      "displayGroupSave": "Enregistrer le groupe affiché"
     },
     "privacy": {
       "title": "Confidentialité",

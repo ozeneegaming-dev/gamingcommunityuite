@@ -1,4 +1,12 @@
-import { GROUP_MENTION_LIMITS, GROUP_MENTION_NEVER, GROUP_MENTION_STAFF, mentionSettingsOf, type GcsNameStyle } from "@gcs/core";
+import {
+  GROUP_DESCRIPTION_MAX,
+  GROUP_MENTION_LIMITS,
+  GROUP_MENTION_NEVER,
+  GROUP_MENTION_STAFF,
+  GROUP_PRIORITY_RANGE,
+  mentionSettingsOf,
+  type GcsNameStyle,
+} from "@gcs/core";
 import { GcsCard, GcsIconPicker } from "@gcs/ui";
 import { isGcsIcon } from "@gcs/ui/icon-registry";
 import { GcsIcon } from "@gcs/ui/icons";
@@ -11,7 +19,7 @@ import { requireAcpSection } from "@/lib/acp";
 import { permissionLabel } from "@/lib/permission-label";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
-import { deleteGroup, updateGroupDetails, updateGroupLook, updateGroupMentions, updateGroupSettings, updateGroupStyle } from "../actions";
+import { deleteGroup, updateGroupDetails, updateGroupDisplay, updateGroupLook, updateGroupMentions, updateGroupSettings, updateGroupStyle } from "../actions";
 import { NameStyleEditor } from "./NameStyleEditor";
 import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 
@@ -57,6 +65,8 @@ export default async function AcpGroupPage({ params }: Props) {
     allGroups.filter((g) => GROUP_MENTION_STAFF.includes(g.key)).map((g) => g.id),
   );
   const neverMentionable = GROUP_MENTION_NEVER.includes(group.key);
+  // Setările de afișare efective (prioritate, alegere, secundar, doar principal, pagina membrilor, descriere).
+  const display = (await services().groupDisplay.info()).get(group.id)?.settings;
   const t = await getTranslations("acp.group");
   const tAll = await getTranslations();
   const saved = (await getTranslations("acp"))("saved");
@@ -120,6 +130,59 @@ export default async function AcpGroupPage({ params }: Props) {
               </label>
             </GcsActionForm>
           </Section>
+
+          {display && (
+            <Section title={t("display.title")} icon="fa-solid fa-id-badge">
+              <GcsActionForm action={updateGroupDisplay.bind(null, group.id)} submitLabel={t("display.save")} submitKind="save">
+                <label className="gcs-field">
+                  {t("display.priority")}
+                  <input
+                    className="gcs-input"
+                    type="number"
+                    name="displayPriority"
+                    min={GROUP_PRIORITY_RANGE.min}
+                    max={GROUP_PRIORITY_RANGE.max}
+                    step={1}
+                    required
+                    defaultValue={display.priority}
+                    style={{ maxWidth: 180 }}
+                    data-testid="gcs-group-display-priority"
+                  />
+                  <span className="gcs-field__hint">{t("display.priorityHint")}</span>
+                </label>
+                <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, minHeight: 36 }}>
+                  <input type="checkbox" name="displaySelectable" defaultChecked={display.selectable} style={checkbox} />
+                  {t("display.selectable")}
+                </label>
+                <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, minHeight: 36 }}>
+                  <input type="checkbox" name="displaySecondary" defaultChecked={display.showSecondary} style={checkbox} />
+                  {t("display.showSecondary")}
+                </label>
+                <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, minHeight: 36 }}>
+                  <input type="checkbox" name="displayPrimaryOnly" defaultChecked={display.primaryOnly} style={checkbox} />
+                  {t("display.primaryOnly")}
+                </label>
+                {group.key !== "guest" && (
+                  <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, minHeight: 36 }}>
+                    <input type="hidden" name="displayPublicField" value="1" />
+                    <input type="checkbox" name="displayPublic" defaultChecked={display.public} style={checkbox} />
+                    {t("display.public")}
+                  </label>
+                )}
+                <label className="gcs-field">
+                  {t("display.description")}
+                  <input
+                    className="gcs-input"
+                    name="displayDescription"
+                    defaultValue={display.description}
+                    maxLength={GROUP_DESCRIPTION_MAX}
+                    data-testid="gcs-group-display-description"
+                  />
+                  <span className="gcs-field__hint">{t("display.descriptionHint")}</span>
+                </label>
+              </GcsActionForm>
+            </Section>
+          )}
 
           <Section title={t("style.title")} icon="fa-solid fa-signature">
             <NameStyleEditor

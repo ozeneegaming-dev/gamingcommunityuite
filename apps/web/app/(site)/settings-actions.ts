@@ -47,6 +47,11 @@ export const saveAppearance = gcsAction(
   },
 );
 
+/** Setări → Aspect → „Grupul afișat”: `null` = automat (după prioritatea grupurilor). */
+export const saveDisplayGroup = gcsAction(z.object({ groupId: z.number().int().positive().nullable() }), async (input, { actor }) => {
+  await services().groupDisplay.choose(actor, input.groupId);
+});
+
 export const savePrivacy = gcsAction(
   z.object({
     profile: z.enum(["PUBLIC", "MEMBERS", "FOLLOWED"]),

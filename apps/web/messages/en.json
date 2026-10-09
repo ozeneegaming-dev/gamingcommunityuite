@@ -797,6 +797,18 @@
         "cooldownHint": "0 = no pause.",
         "never": "Guests and banned members cannot be mentioned.",
         "save": "Save mentions"
+      },
+      "display": {
+        "title": "Display",
+        "priority": "Display priority",
+        "priorityHint": "Higher wins: among a member's groups that have a name style, the one with the highest priority sets the name colour. Staff high, VIP next, everyone else low.",
+        "selectable": "Members can choose this group as their displayed group",
+        "showSecondary": "Show as a secondary group",
+        "primaryOnly": "Only members with it as their primary group (members page and @mentions)",
+        "public": "Group members page (the group pill links to them)",
+        "description": "Short description (tooltip)",
+        "descriptionHint": "First line of the group pill tooltip. At most 120 characters.",
+        "save": "Save display"
       }
     },
     "permissions": {
@@ -3304,7 +3316,12 @@
       "saved": "Saved.",
       "preview": "Preview",
       "skin": "Site theme",
-      "skinSaved": "Theme changed."
+      "skinSaved": "Theme changed.",
+      "displayGroup": "Displayed group",
+      "displayGroupHint": "The group that colours your name and the pill next to it.",
+      "displayGroupAuto": "Automatic",
+      "displayGroupAutoHint": "by group priority",
+      "displayGroupSave": "Save displayed group"
     },
     "privacy": {
       "title": "Privacy",

@@ -797,6 +797,18 @@
         "cooldownHint": "0 = fără pauză.",
         "never": "Vizitatorii și membrii banați nu pot fi menționați.",
         "save": "Salvează mențiunile"
+      },
+      "display": {
+        "title": "Afișare",
+        "priority": "Prioritate afișare",
+        "priorityHint": "Numărul mai mare câștigă: dintre grupurile unui membru care au stil de nume, cel cu prioritatea cea mai mare dă culoarea numelui. Staff sus, VIP după, ceilalți jos.",
+        "selectable": "Membrii pot alege acest grup ca grup afișat",
+        "showSecondary": "Afișează ca grup secundar",
+        "primaryOnly": "Doar membrii care îl au ca grup principal (pagina membrilor și @mențiunile)",
+        "public": "Pagina membrilor grupului (pastila grupului e un link spre ei)",
+        "description": "Descriere scurtă (tooltip)",
+        "descriptionHint": "Primul rând din tooltip-ul pastilei grupului. Cel mult 120 de caractere.",
+        "save": "Salvează afișarea"
       }
     },
     "permissions": {
@@ -3304,7 +3316,12 @@
       "saved": "Salvat.",
       "preview": "Previzualizare",
       "skin": "Tema site-ului",
-      "skinSaved": "Tema a fost schimbată."
+      "skinSaved": "Tema a fost schimbată.",
+      "displayGroup": "Grupul afișat",
+      "displayGroupHint": "Grupul care dă culoarea numelui tău și pastila de lângă el.",
+      "displayGroupAuto": "Automat",
+      "displayGroupAutoHint": "după prioritatea grupurilor",
+      "displayGroupSave": "Salvează grupul afișat"
     },
     "privacy": {
       "title": "Confidențialitate",

@@ -111,6 +111,28 @@ export async function updateGroupMentions(groupId: number, fd: FormData): Promis
   });
 }
 
+/**
+ * Secțiunea „Afișare”: prioritatea de afișare, alegerea de către membri, grupul secundar, „doar grupul principal”,
+ * pagina membrilor (link pe pastilă) și descrierea scurtă din tooltip. Checkbox-urile lipsă înseamnă `false`.
+ */
+export async function updateGroupDisplay(groupId: number, fd: FormData): Promise<GcsResult<null>> {
+  return runAcpAction(SECTION, "edit", async (actor) => {
+    await services().groupDisplay.setSettings(
+      groupId,
+      {
+        priority: intField(fd, "displayPriority"),
+        selectable: fd.get("displaySelectable") === "on",
+        showSecondary: fd.get("displaySecondary") === "on",
+        primaryOnly: fd.get("displayPrimaryOnly") === "on",
+        ...(fd.has("displayPublicField") ? { public: fd.get("displayPublic") === "on" } : {}),
+        description: String(fd.get("displayDescription") ?? ""),
+      },
+      actor,
+    );
+    return null;
+  });
+}
+
 export async function deleteGroup(groupId: number): Promise<GcsResult<null>> {
   return runAcpAction(SECTION, "delete", async (actor) => {
     await services().groups.delete(groupId, actor);

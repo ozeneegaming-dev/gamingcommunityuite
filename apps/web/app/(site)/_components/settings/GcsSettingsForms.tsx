@@ -9,6 +9,7 @@ import {
   ignoreByName,
   requestEmailChange,
   saveAppearance,
+  saveDisplayGroup,
   savePrivacy,
   unignore,
   unlinkAccount,
@@ -117,6 +118,67 @@ export function GcsAppearanceForm({
           <GcsButton icon={<GcsIconSvg icon={faRotateLeft} />} variant="ghost" onClick={() => setAccent(null)}>
             {labels.defaultAccent}
           </GcsButton>
+        </div>
+      </fieldset>
+      <div>
+        <GcsButton icon={<GcsIconSvg icon={faFloppyDisk} />} type="submit" variant="primary" disabled={pending}>
+          {labels.save}
+        </GcsButton>
+      </div>
+      <GcsStatus status={status} />
+    </form>
+  );
+}
+
+/**
+ * Setări → Aspect → „Grupul afișat”: Automat (grupul cu prioritatea cea mai mare) sau unul dintre grupurile membrului
+ * care permit alegerea. Fiecare opțiune arată numele în stilul acelui grup.
+ */
+export function GcsDisplayGroupForm({
+  user,
+  groups,
+  autoKey,
+  current,
+  labels,
+}: {
+  user: { name: string };
+  groups: { id: number; key: string; name: string }[];
+  /** Grupul pe care l-ar alege modul automat (previzualizarea opțiunii „Automat”). */
+  autoKey: string;
+  current: number | null;
+  labels: { title: string; hint: string; auto: string; autoHint: string; save: string; saved: string };
+}) {
+  const { pending, status, run } = useSettingsAction(labels.saved);
+  const [choice, setChoice] = useState<number | null>(current);
+  return (
+    <form
+      className="gcs-settingsForm"
+      data-testid="gcs-display-group-form"
+      onSubmit={(e) => {
+        e.preventDefault();
+        run(() => saveDisplayGroup({ groupId: choice }));
+      }}
+    >
+      <fieldset className="gcs-settingsFieldset">
+        <legend>{labels.title}</legend>
+        <p className="gcs-muted" style={{ margin: "0 0 10px", fontSize: 13 }}>
+          {labels.hint}
+        </p>
+        <div className="gcs-choiceGrid">
+          <label className="gcs-choice">
+            <input type="radio" name="displayGroup" value="" checked={choice === null} onChange={() => setChoice(null)} />
+            <span className={`gcs-name--${autoKey}`}>{user.name}</span>
+            <span>
+              {labels.auto} <span className="gcs-muted">({labels.autoHint})</span>
+            </span>
+          </label>
+          {groups.map((g) => (
+            <label key={g.id} className="gcs-choice">
+              <input type="radio" name="displayGroup" value={g.key} checked={choice === g.id} onChange={() => setChoice(g.id)} />
+              <span className={`gcs-name--${g.key}`}>{user.name}</span>
+              <span>{g.name}</span>
+            </label>
+          ))}
         </div>
       </fieldset>
       <div>

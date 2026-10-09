@@ -797,6 +797,18 @@
         "cooldownHint": "0 = no pause.",
         "never": "Guests and banned members cannot be mentioned.",
         "save": "Save mentions"
+      },
+      "display": {
+        "title": "Visualización",
+        "priority": "Prioridad de visualización",
+        "priorityHint": "Gana el número mayor: entre los grupos de un miembro con estilo de nombre, el de mayor prioridad da el color del nombre. Equipo arriba, VIP después, el resto abajo.",
+        "selectable": "Los miembros pueden elegir este grupo como grupo mostrado",
+        "showSecondary": "Mostrar como grupo secundario",
+        "primaryOnly": "Solo miembros con este grupo principal (página de miembros y @menciones)",
+        "public": "Página de miembros del grupo (la etiqueta del grupo enlaza a ella)",
+        "description": "Descripción corta (tooltip)",
+        "descriptionHint": "Primera línea del tooltip de la etiqueta del grupo. Como máximo 120 caracteres.",
+        "save": "Guardar visualización"
       }
     },
     "permissions": {
@@ -3304,7 +3316,12 @@
       "saved": "Guardado.",
       "preview": "Vista previa",
       "skin": "Tema del sitio",
-      "skinSaved": "El tema cambió."
+      "skinSaved": "El tema cambió.",
+      "displayGroup": "Grupo mostrado",
+      "displayGroupHint": "El grupo que da color a tu nombre y la etiqueta junto a él.",
+      "displayGroupAuto": "Automático",
+      "displayGroupAutoHint": "según la prioridad de los grupos",
+      "displayGroupSave": "Guardar grupo mostrado"
     },
     "privacy": {
       "title": "Privacidad",
