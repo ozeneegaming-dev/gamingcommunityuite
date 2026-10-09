@@ -11,6 +11,7 @@ import { useEffect, useState, useTransition, type ReactNode } from "react";
 import { setThemeMode } from "../../actions";
 import { useRealtime } from "../realtime/GcsRealtimeProvider";
 import { GcsServerLiveProvider, useServerStatuses } from "../servers/GcsServerLive";
+import { GcsCountUp } from "./GcsCountUp";
 import { HEADER_EVENTS, useHeaderState } from "./header-context";
 
 /** Meniul: bara (desktop) sau butonul sertarului (tabletă, mobil). */
@@ -150,7 +151,11 @@ export function GcsMobileBar({
           <>
             <span className="gcs-mbar__icon">
               <GcsIconSvg icon={BAR_ICONS[item]} />
-              {count > 0 && <span className="gcs-hb__count">{count > 99 ? "99+" : count}</span>}
+              {count > 0 && (
+                <span className="gcs-hb__count">
+                  <GcsCountUp value={count} format={(n) => (n > 99 ? "99+" : String(n))} />
+                </span>
+              )}
             </span>
             <span className={showLabels && item !== "create" ? "gcs-mbar__label" : "gcs-srOnly"}>{label}</span>
           </>

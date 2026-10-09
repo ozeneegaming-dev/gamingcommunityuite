@@ -12,6 +12,7 @@ import { useErrorMessage } from "@/lib/use-error-message";
 import { setLocale, setThemeMode } from "../../actions";
 import { openPageEditor } from "../../edit-actions";
 import { setPresenceStatus } from "../../header-actions";
+import { GcsCountUp } from "./GcsCountUp";
 import { useHeaderPopover } from "./GcsHeaderPopover";
 import { useHeaderState } from "./header-context";
 
@@ -197,11 +198,15 @@ export function GcsAccountMenu({
             </div>
             <div className="gcs-am__stats">
               <span className="gcs-am__stat">
-                <b>{format.number(data.stats.posts)}</b>
+                <b>
+                  <GcsCountUp value={data.stats.posts} format={(n) => format.number(n)} />
+                </b>
                 <span>{t("stats.posts")}</span>
               </span>
               <span className="gcs-am__stat">
-                <b>{format.number(data.stats.reputation)}</b>
+                <b>
+                  <GcsCountUp value={data.stats.reputation} format={(n) => format.number(n)} />
+                </b>
                 <span>{t("stats.reputation")}</span>
               </span>
               {data.stats.elo !== null && (

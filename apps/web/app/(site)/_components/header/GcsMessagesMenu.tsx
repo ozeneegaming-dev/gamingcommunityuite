@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { memberHref } from "@/lib/forum-urls";
 import { useRealtime } from "../realtime/GcsRealtimeProvider";
+import { GcsCountUp } from "./GcsCountUp";
 import { useHeaderPopover } from "./GcsHeaderPopover";
 import { useHeaderState } from "./header-context";
 
@@ -62,7 +63,7 @@ export function GcsMessagesMenu({ initialUnread }: { initialUnread: number }) {
         <GcsIconSvg icon={faEnvelope} />
         {unread > 0 && (
           <span className="gcs-hb__count" data-testid="gcs-header-unread">
-            {badge(unread)}
+            <GcsCountUp value={unread} format={badge} />
           </span>
         )}
       </button>

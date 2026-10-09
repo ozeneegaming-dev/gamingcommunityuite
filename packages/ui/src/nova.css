@@ -3132,6 +3132,21 @@ html.gcs-nova[data-theme="light"] .gcs-btn--ghost:is(:hover, :focus-visible) {
 .gcs-nova .gcs-hb--cockpit .gcs-hb__row--bottom {
   border-top-color: #2a3346;
 }
+/* Cockpit: butoanele pătrate mai rotunjite și „Creează” în textul obișnuit (macheta Cockpit). */
+.gcs-nova .gcs-hb--cockpit :is(.gcs-hb__sq, .gcs-headerIcon) {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background-color: #151922;
+  border-color: #2a3346;
+}
+.gcs-nova .gcs-hb--cockpit .gcs-hb__create {
+  min-height: 38px;
+  border-radius: 6px;
+  font: 700 12px var(--gcs-font-text);
+  letter-spacing: 0;
+  text-transform: none;
+}
 .gcs-nova .gcs-hb--centered .gcs-hb__row--main .gcs-hb__logo {
   flex-direction: column;
   gap: 4px;
