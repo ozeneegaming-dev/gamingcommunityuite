@@ -1452,9 +1452,44 @@ html.gcs-nova[data-theme="light"] {
 .gcs-nova .gcs-siteFooter__scheme .gcs-seg {
   border-radius: 6px;
 }
+.gcs-nova .gcs-siteFooter__scheme .gcs-seg--active,
+.gcs-nova .gcs-siteFooter__scheme .gcs-seg--active > .gcs-icon {
+  color: #fff;
+}
 .gcs-nova .gcs-siteFooter__scheme .gcs-seg--active {
   background: var(--gcs-accent);
-  color: #fff;
+}
+
+/* ─── Clasamentul: podiumul ca plăci cu chenarul medaliei, tabelul cu rândurile care se luminează ───────── */
+
+.gcs-nova .gcs-podium__place {
+  padding: 14px 12px 0;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--gcs-medal) 55%, var(--gcs-box-border, var(--gcs-border)));
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, color-mix(in srgb, var(--gcs-medal) 16%, transparent), transparent 70%),
+    var(--gcs-box-bg, var(--gcs-surface));
+  box-shadow: var(--gcs-box-shadow, none);
+  transition: transform var(--gcs-ease), border-color var(--gcs-ease);
+}
+.gcs-nova .gcs-podium__place:hover {
+  transform: translateY(var(--gcs-hover-lift));
+  border-color: var(--gcs-medal);
+}
+.gcs-nova .gcs-podium__plinth {
+  transform: none;
+  border-radius: 8px 8px 0 0;
+}
+.gcs-nova .gcs-podium__rank {
+  transform: none;
+}
+.gcs-nova .gcs-board__table th {
+  background: var(--gcs-band-bg);
+  color: var(--gcs-muted);
+  font-size: 11px;
+}
+.gcs-nova .gcs-board__rank {
+  border-radius: 6px;
 }
 
 /* ─── Sertarul de pe mobil: aceeași comportare, aspectul Nova ─────────────────────────────────────────── */
