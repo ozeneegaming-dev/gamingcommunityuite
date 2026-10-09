@@ -181,14 +181,14 @@ test("Chat Pro: aceeași listă, pastila după id; mesajul e evidențiat ca men�
 });
 
 test("peretele profilului: sugestiile în textarea, pastila în status și notificarea", async () => {
-  await author.goto(`/members/${await userId(targetEmail)}`);
+  await author.goto(`/members/${await userId(targetEmail)}?tab=about`);
   const input = author.getByTestId("gcs-wall-input");
   await input.click();
   await author.keyboard.type("Bravo ");
   await pick(author, author.locator("form.gcs-wallComposer").first(), targetName.slice(0, 5), targetName, "click");
   await author.keyboard.type("pentru turneu");
   await author.locator("form.gcs-wallComposer").first().locator('button[type="submit"]').click();
-  const pill = author.locator(".gcs-wallItem").filter({ hasText: "pentru turneu" }).first().locator("a.gcs-mention");
+  const pill = author.getByTestId("gcs-wall-item").filter({ hasText: "pentru turneu" }).first().locator("a.gcs-mention");
   await expect(pill).toHaveAttribute("data-user-id", await userId(targetEmail));
   await expect(pill).toHaveClass(/gcs-name--member/);
   await shot(author, "wall");

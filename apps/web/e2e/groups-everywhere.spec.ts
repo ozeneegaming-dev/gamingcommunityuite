@@ -93,7 +93,7 @@ test("legenda și postbit-ul: pastilele duc la membrii grupului; Moderator princ
 
   await test.step("legenda simplă din panoul de statistici: hover = numărătoarea, click = membrii grupului", async () => {
     await visitor.goto("/");
-    const legend = visitor.locator('[data-widget="core.statsPanel"]').getByTestId("gcs-legend");
+    const legend = visitor.locator('[data-widget="core.statsPanel"] [data-testid="gcs-legend"]:visible');
     const pill = legend.locator("a.gcs-legend__pill").filter({ hasText: "Root Admin" });
     await expect(pill).toHaveAttribute("href", `/members?group=${await groupId("root_admin")}`);
     await pill.hover();
@@ -141,7 +141,7 @@ test("Grupuri Pro: oprită → legenda simplă și 404; pornită → legenda pe 
   await test.step("oprită (implicit): legenda simplă, `/members/groups` nu există", async () => {
     await setGroupsPro(false);
     await page.goto("/");
-    await expect(page.locator('[data-widget="core.statsPanel"]').getByTestId("gcs-legend")).toBeVisible();
+    await expect(page.locator('[data-widget="core.statsPanel"] [data-testid="gcs-legend"]:visible')).toBeVisible();
     await expect(page.getByTestId("gcs-legend-pro")).toHaveCount(0);
     const res = await page.goto("/members/groups");
     expect(res?.status()).toBe(404);
@@ -157,9 +157,9 @@ test("Grupuri Pro: oprită → legenda simplă și 404; pornită → legenda pe 
     await sql(`UPDATE groups SET "inLegend" = true WHERE key = 'admin'`);
     await setGroupsPro(true);
     await page.goto("/");
-    const legend = page.getByTestId("gcs-legend-pro");
+    const legend = page.locator('[data-testid="gcs-legend-pro"]:visible');
     await expect(legend).toBeVisible();
-    await expect(page.locator(".gcs-legendPro__heading")).toHaveText("Legenda grupurilor");
+    await expect(page.locator(".gcs-legendPro__heading:visible")).toHaveText("Legenda grupurilor");
     await expect(legend.locator('[data-category="staff"] .gcs-legendPro__title')).toContainText("Staff");
     const row = legend.getByTestId("gcs-legend-pro-row").filter({ hasText: "Root Admin" });
     await expect(row).toHaveAttribute("href", `/members?group=${await groupId("root_admin")}`);
@@ -178,7 +178,7 @@ test("Grupuri Pro: oprită → legenda simplă și 404; pornită → legenda pe 
   });
 
   await test.step("„Vezi toate grupurile” → pagina grupurilor: rândurile se deschid, filtrul secundar", async () => {
-    await page.getByTestId("gcs-legend-pro-all").click();
+    await page.locator('[data-testid="gcs-legend-pro-all"]:visible').click();
     await expect(page).toHaveURL(/\/members\/groups$/);
     await expect(page.locator(".gcs-groupsPage h1")).toContainText("Grupurile comunității");
     const row = page.getByTestId("gcs-groups-row-root_admin");
