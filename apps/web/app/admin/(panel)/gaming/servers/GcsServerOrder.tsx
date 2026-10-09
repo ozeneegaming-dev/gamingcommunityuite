@@ -58,7 +58,9 @@ export function GcsServerOrder({ servers }: { servers: GcsServerOrderRow[] }) {
 
   async function remove(row: GcsServerOrderRow) {
     if (!window.confirm(t("confirmDelete", { name: row.name }))) return;
-    const res = await deleteServer(row.id);
+    // A doua întrebare: și jucătorii văzuți doar aici (ex. la un server de test), cu statisticile și ELO-ul lor.
+    const purgePlayers = window.confirm(t("confirmPurgePlayers"));
+    const res = await deleteServer(row.id, purgePlayers);
     if (!res.ok) return setStatus({ ok: false, text: errorMessage(res.error) });
     setRows((list) => list.filter((r) => r.id !== row.id));
     router.refresh();

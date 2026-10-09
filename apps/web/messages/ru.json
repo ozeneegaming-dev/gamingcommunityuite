@@ -1855,6 +1855,7 @@
       "edit": "Edit",
       "delete": "Delete",
       "confirmDelete": "Delete the server “{name}” and its history?",
+      "confirmPurgePlayers": "Also delete the players seen only on this server (no site account, no sanctions), with their stats and ELO? OK = yes; Cancel = keep them.",
       "view": "View page",
       "disabled": "Disabled",
       "restricted": "Some groups only",

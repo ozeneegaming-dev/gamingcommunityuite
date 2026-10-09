@@ -30,9 +30,9 @@ export async function saveServer(id: number | null, fd: FormData): Promise<GcsRe
   });
 }
 
-export async function deleteServer(id: number): Promise<GcsResult<null>> {
+export async function deleteServer(id: number, purgePlayers = false): Promise<GcsResult<null>> {
   return runAcpAction(SERVERS_ACP_SECTION, "delete", async (actor) => {
-    await services().servers.remove(actor, id);
+    await services().servers.remove(actor, id, { purgePlayers: purgePlayers === true });
     return null;
   });
 }

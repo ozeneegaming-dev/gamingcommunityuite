@@ -1,6 +1,6 @@
 import { isIP, type BlockList } from "node:net";
 import { GcsNotFound, GcsRateLimited, GcsValidationError, writeAudit, type GcsAcpRoleService, type GcsActor, type GcsAttachmentService, type GcsEventBus, type GcsRedisRateLimiter } from "@gcs/core";
-import type { PrismaClient } from "@gcs/db";
+import type { Prisma, PrismaClient } from "@gcs/db";
 import { slugify } from "../forums/slug";
 import { enabledGames } from "./games";
 import { isQueryableAddress, normalizeHost, serversAllowNets } from "./net";
@@ -243,14 +243,29 @@ export class GcsServerService {
     return { id: row.id };
   }
 
-  async remove(actor: GcsActor, id: number): Promise<void> {
+  /**
+   * Șterge serverul (meciurile, sesiunile și statisticile lui pe server pleacă odată cu el). Cu `purgePlayers` (ex. un
+   * server de test) pleacă și jucătorii văzuți **numai** pe acest server, fără cont pe site, fără sancțiuni și fără
+   * intrări de admin, cu ratingurile lor; ceilalți jucători rămân.
+   */
+  async remove(actor: GcsActor, id: number, opts: { purgePlayers?: boolean } = {}): Promise<void> {
     const { db, acp, attachments, store } = this.deps;
     await acp.assert(actor, SERVERS_ACP_SECTION, "delete");
     const before = await db.gameServer.findUnique({ where: { id } });
     if (!before) throw new GcsNotFound();
     await db.$transaction(async (tx) => {
+      const purge = opts.purgePlayers ? await exclusivePlayers(tx, id) : [];
       await tx.gameServer.delete({ where: { id } });
-      await writeAudit(tx, { actorId: actor.userId, action: "servers.delete", targetType: "game_server", targetId: String(id), before, ip: actor.ip });
+      if (purge.length > 0) await tx.gamePlayer.deleteMany({ where: { id: { in: purge } } });
+      await writeAudit(tx, {
+        actorId: actor.userId,
+        action: "servers.delete",
+        targetType: "game_server",
+        targetId: String(id),
+        before,
+        ...(opts.purgePlayers ? { after: { purgedPlayers: purge.length } } : {}),
+        ip: actor.ip,
+      });
     });
     await attachments.deleteFor(SERVER_BANNER, [String(id)]);
     await store.reset(id);
@@ -288,3 +303,30 @@ export class GcsServerService {
   }
 }
 
+/** Jucătorii văzuți numai pe serverul dat (sesiuni, statistici, meciuri), fără cont pe site, sancțiuni sau admin. */
+async function exclusivePlayers(tx: Prisma.TransactionClient, serverId: number): Promise<number[]> {
+  const seen = new Set<number>();
+  const add = (rows: { playerId: number }[]) => rows.forEach((r) => seen.add(r.playerId));
+  add(await tx.gameSession.findMany({ where: { serverId }, select: { playerId: true }, distinct: ["playerId"] }));
+  add(await tx.gamePlayerStat.findMany({ where: { serverId }, select: { playerId: true } }));
+  add(await tx.gameWeaponStat.findMany({ where: { serverId }, select: { playerId: true }, distinct: ["playerId"] }));
+  add(await tx.gameMapStat.findMany({ where: { serverId }, select: { playerId: true }, distinct: ["playerId"] }));
+  add(await tx.gameMatchPlayer.findMany({ where: { match: { serverId } }, select: { playerId: true }, distinct: ["playerId"] }));
+  if (seen.size === 0) return [];
+  const other = { not: serverId };
+  const rows = await tx.gamePlayer.findMany({
+    where: {
+      id: { in: [...seen] },
+      userId: null,
+      sessions: { none: { serverId: other } },
+      stats: { none: { serverId: other } },
+      weaponStats: { none: { serverId: other } },
+      mapStats: { none: { serverId: other } },
+      matches: { none: { match: { serverId: other } } },
+      sanctions: { none: {} },
+      adminEntries: { none: {} },
+    },
+    select: { id: true },
+  });
+  return rows.map((r) => r.id);
+}

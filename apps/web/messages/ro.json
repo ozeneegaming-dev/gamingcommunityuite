@@ -1855,6 +1855,7 @@
       "edit": "Editează",
       "delete": "Șterge",
       "confirmDelete": "Ștergi serverul „{name}” și istoricul lui?",
+      "confirmPurgePlayers": "Ștergi și jucătorii văzuți doar pe acest server (fără cont pe site, fără sancțiuni), cu statisticile și ELO-ul lor? OK = da; Anulează = îi păstrezi.",
       "view": "Vezi pagina",
       "disabled": "Dezactivat",
       "restricted": "Doar unele grupuri",
