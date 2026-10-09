@@ -1226,7 +1226,7 @@ html.gcs-nova[data-theme="light"] {
 .gcs-nova :is(.gcs-staffGroup, .gcs-profileHeader) .gcs-avatar:not(.gcs-avatarFrame > .gcs-avatar) {
   border-radius: 16px;
 }
-.gcs-nova .gcs-profileSection__title {
+.gcs-nova :is(.gcs-profileSection__title, .gcs-cardTitle, .gcs-settingsTitle) {
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 0;

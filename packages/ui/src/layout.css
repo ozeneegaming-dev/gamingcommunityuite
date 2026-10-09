@@ -673,6 +673,15 @@ summary.gcs-siteFooter__barLink {
   .gcs-siteFooter__inner {
     padding-inline: 16px;
   }
+  /* Pe telefon coloanele de linkuri stau câte două, sub coloana „Despre”. */
+  .gcs-siteFooter__top {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px 10px;
+  }
+  .gcs-siteFooter__pill {
+    gap: 8px;
+    padding: 0 10px;
+  }
   .gcs-siteFooter__social,
   .gcs-siteFooter__barLinks {
     margin: 0;

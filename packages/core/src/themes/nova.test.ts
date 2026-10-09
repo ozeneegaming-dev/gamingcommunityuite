@@ -150,6 +150,8 @@ describe("designul Nova: CSS-ul compilat", () => {
     expect(css).toContain("--gcs-hover-scale: 1;");
     expect(css).toContain("--gcs-hero-pattern: none;");
     expect(css).toContain("html.gcs-nova .gcs-crumbBar {\n  display: none;");
+    // Căutarea nu dispare odată cu rândul: iconița din antet revine.
+    expect(css).toContain("html.gcs-nova .gcs-siteHeader__tools .gcs-headerSearch {\n  display: flex;");
     expect(compileThemeCss(nova("bands.style", "accent"), "")).toContain("--gcs-band-shadow: inset 3px 0 0 var(--gcs-accent);");
     expect(compileThemeCss(nova("bands.icon", "rounded"), "")).toContain("--gcs-band-icon-radius: 10px;");
   });

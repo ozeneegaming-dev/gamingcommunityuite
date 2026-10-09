@@ -189,6 +189,8 @@ const BAND_ICON_RADIUS: Record<GcsThemeSettings["bands"]["icon"], string> = { ci
  * pusă de layout-ul site-ului pe designul Nova), deci în designul clasic nu schimbă nimic.
  */
 function novaRules(s: GcsThemeSettings): string[] {
+  // Pe o temă clasică regulile n-ar avea efect (clasa `gcs-nova` lipsește): CSS-ul ei rămâne cel de până acum.
+  if (s.preset !== "nova") return [];
   const base = NOVA_THEME_SETTINGS;
   const rules: string[] = [];
   if (s.bands.style === "gradient") {
@@ -203,7 +205,8 @@ function novaRules(s: GcsThemeSettings): string[] {
   }
   if (!s.effects.hover) rules.push(`html.gcs-nova {\n  --gcs-hover-scale: 1;\n  --gcs-hover-lift: 0px;\n  --gcs-ease: 0s;\n}`);
   if (!s.header.pattern) rules.push(`html.gcs-nova {\n  --gcs-hero-pattern: none;\n}`);
-  if (!s.header.crumbs) rules.push(`html.gcs-nova .gcs-crumbBar {\n  display: none;\n}`);
+  // Fără rândul de sub meniu, căutarea revine ca iconiță în antet (și pe desktop).
+  if (!s.header.crumbs) rules.push(`html.gcs-nova .gcs-crumbBar {\n  display: none;\n}`, `html.gcs-nova .gcs-siteHeader__tools .gcs-headerSearch {\n  display: flex;\n}`);
   // Antetul fix: deasupra conținutului la derulare; breadcrumb-ul paginilor rămâne atunci în pagină (nu urcă în antet).
   if (s.header.sticky) {
     rules.push(

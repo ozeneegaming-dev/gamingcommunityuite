@@ -47,6 +47,47 @@ describe("CSS-ul design system-ului", () => {
     expect(css).toContain("prefers-reduced-motion: reduce");
   });
 
+  describe("nova.css: designul Nova (specul 2026-10-10-tema-nova)", () => {
+    const css = read("./nova.css").replace(/\/\*[\s\S]*?\*\//g, "");
+    /** Lista unui selector, despărțită doar la virgulele din afara parantezelor (`:is(a, b)` rămâne întreg). */
+    const splitTop = (list: string) => {
+      const out: string[] = [];
+      let depth = 0;
+      let cur = "";
+      for (const ch of list) {
+        if (ch === "(") depth++;
+        if (ch === ")") depth--;
+        if (ch === "," && depth === 0) {
+          out.push(cur.trim());
+          cur = "";
+        } else cur += ch;
+      }
+      out.push(cur.trim());
+      return out;
+    };
+    /** Selectorii fiecărei reguli (și din `@media`). */
+    const selectors = [...css.matchAll(/(?:^|[{};])\s*([^{}@;]+)\{/g)].flatMap((m) => splitTop(m[1]!)).filter((s) => s && !/^(from|to|\d+%)$/.test(s));
+
+    test("totul e sub `.gcs-nova` (designul clasic și ACP-ul nu sunt atinse)", () => {
+      const outside = selectors.filter((s) => !s.includes(".gcs-nova") && s !== ".gcs-collapseToggle");
+      expect(outside).toEqual([]);
+      expect(css).not.toMatch(/\.gcs-acp/);
+    });
+
+    test("plăcile de moderare au culorile cerute; mișcarea redusă oprește transformările", () => {
+      for (const [tone, color] of [["feature", "#2ecc71"], ["move", "#3498db"], ["hide", "#e67e22"], ["delete", "#e74c3c"]]) {
+        expect(css).toMatch(new RegExp(`\\.gcs-modTile\\[data-tone="${tone}"\\] \\{\\s*--gcs-tone: ${color};`));
+      }
+      expect(css).toMatch(/\.gcs-modTile \{[^}]*--gcs-tone: #9b59b6;/);
+      expect(css).toMatch(/prefers-reduced-motion: reduce\) \{\s*\.gcs-nova \{[^}]*--gcs-hover-scale: 1;[^}]*--gcs-ease: 0s;/);
+    });
+
+    test("varianta luminoasă își are variabilele (și în modul „auto” cu sistemul luminos)", () => {
+      expect(css).toContain('html.gcs-nova[data-theme="light"]');
+      expect(css).toMatch(/prefers-color-scheme: light\) \{\s*html\.gcs-nova\[data-theme="auto"\]/);
+    });
+  });
+
   describe("titles.css: fiecare titlu pe banda lui (specul 2026-10-07-antete-titluri)", () => {
     const css = read("./titles.css");
     /** Selectorii fiecărei reguli care dă fundalul benzii (`--gcs-box-header-bg`). */

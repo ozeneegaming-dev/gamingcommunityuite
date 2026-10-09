@@ -20,7 +20,7 @@ async function shot(page: Page, name: string): Promise<void> {
 
 test("Nova: designul pe site (nu în ACP), antetul, subsolul din ACP și plăcile de moderare", async ({ page, context, request }) => {
   test.setTimeout(300_000);
-  await useFreshIp(context, "100.72.0");
+  await useFreshIp(context, "100.88.7");
   const id = uid();
   const email = `nova-${id}@example.com`;
   // Prima vizită compilează paginile (în modul `next dev`); înregistrarea așteaptă apoi doar serverul.
