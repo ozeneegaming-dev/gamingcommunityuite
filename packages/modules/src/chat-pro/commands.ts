@@ -87,8 +87,8 @@ const birthday: GcsChatCommand = {
   async run({ db, today }) {
     const [month, day] = [Number(today.slice(5, 7)), Number(today.slice(8, 10))];
     const rows = await db.$queryRaw<{ id: string; name: string; group: string; style: string | null }[]>(Prisma.sql`
-      SELECT u.id, u.name, g.key AS "group", ns.key AS style
-      FROM users u JOIN groups g ON g.id = u."primaryGroupId" LEFT JOIN name_styles ns ON ns.id = u."nameStyleId"
+      SELECT u.id, u.name, COALESCE(dg.key, g.key) AS "group", ns.key AS style
+      FROM users u JOIN groups g ON g.id = u."primaryGroupId" LEFT JOIN groups dg ON dg.id = u."nameGroupId" LEFT JOIN name_styles ns ON ns.id = u."nameStyleId"
       WHERE u."birthdayVisible" AND u.birthday IS NOT NULL
         AND EXTRACT(MONTH FROM u.birthday) = ${month} AND EXTRACT(DAY FROM u.birthday) = ${day}
         AND g.key <> 'banned'

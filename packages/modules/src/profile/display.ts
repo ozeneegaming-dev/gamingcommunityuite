@@ -1,5 +1,6 @@
 import type { GcsCache } from "@gcs/core";
 import type { PrismaClient } from "@gcs/db";
+import { nameKeyOf } from "./nameKeys";
 
 /**
  * Afișarea unui user, la fel peste tot (topic, liste, card, profil, mesaje, ACP): numele cu clasa stilului
@@ -13,6 +14,7 @@ export const userDisplaySelect = {
   primaryGroupId: true,
   primaryGroup: { select: { key: true, name: true, title: true, color: true } },
   nameStyle: { select: { key: true } },
+  nameGroup: { select: { key: true } },
   avatarFrame: { select: { key: true } },
 } as const;
 
@@ -24,6 +26,7 @@ export type GcsUserDisplayRow = {
   primaryGroupId: number;
   primaryGroup: { key: string; name: string; title: string | null; color: string | null };
   nameStyle: { key: string } | null;
+  nameGroup?: { key: string } | null;
   avatarFrame: { key: string } | null;
 };
 
@@ -82,7 +85,7 @@ export function toUserDisplay(row: GcsUserDisplayRow, ranks: GcsRankData): GcsUs
     id: row.id,
     name: row.name,
     image: row.image,
-    nameKey: row.nameStyle?.key ?? row.primaryGroup.key,
+    nameKey: nameKeyOf(row),
     frameKey: row.avatarFrame?.key ?? null,
     groupKey: row.primaryGroup.key,
     group: { name: row.primaryGroup.title ?? row.primaryGroup.name, color: row.primaryGroup.color },

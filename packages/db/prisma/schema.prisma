@@ -21,6 +21,11 @@ model User {
   image                  String?
   primaryGroupId         Int
   previousPrimaryGroupId Int?
+  /// Grupul afișat (stilul numelui): calculat de GCS dintre grupul principal și cele secundare, după „Prioritate
+  /// afișare”, sau cel ales de membru. `null` = grupul principal.
+  nameGroupId            Int?
+  /// Grupul ales de membru ca grup afișat (Setări), dacă grupul permite; `null` = automat (după prioritate).
+  displayGroupChoiceId   Int?
   locale                 String    @default("ro")
   timezone               String    @default("Europe/Bucharest")
   twoFactorEnabled       Boolean   @default(false)
@@ -31,18 +36,20 @@ model User {
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
-  primaryGroup    Group               @relation("UserPrimaryGroup", fields: [primaryGroupId], references: [id], onDelete: Restrict)
-  groups          UserGroup[]
-  accounts        Account[]
-  sessions        Session[]
-  twoFactors      TwoFactor[]
-  warnings        Warning[]           @relation("WarningTarget")
-  warningsIssued  Warning[]           @relation("WarningIssuer")
-  bans            Ban[]               @relation("BanTarget")
-  bansCreated     Ban[]               @relation("BanCreator")
-  moderatorOf     Moderator[]
-  acpRoles        AcpRoleAssignment[]
-  dashboardLayout AcpDashboardLayout?
+  primaryGroup       Group               @relation("UserPrimaryGroup", fields: [primaryGroupId], references: [id], onDelete: Restrict)
+  nameGroup          Group?              @relation("UserNameGroup", fields: [nameGroupId], references: [id], onDelete: SetNull)
+  displayGroupChoice Group?              @relation("UserDisplayGroupChoice", fields: [displayGroupChoiceId], references: [id], onDelete: SetNull)
+  groups             UserGroup[]
+  accounts           Account[]
+  sessions           Session[]
+  twoFactors         TwoFactor[]
+  warnings           Warning[]           @relation("WarningTarget")
+  warningsIssued     Warning[]           @relation("WarningIssuer")
+  bans               Ban[]               @relation("BanTarget")
+  bansCreated        Ban[]               @relation("BanCreator")
+  moderatorOf        Moderator[]
+  acpRoles           AcpRoleAssignment[]
+  dashboardLayout    AcpDashboardLayout?
 
   // Forum (etapa 2). Contoarele sunt denormalizate și se actualizează în tranzacția scrierii.
   postsCount         Int @default(0)
@@ -96,12 +103,12 @@ model User {
   gamePlayers     GamePlayer[]
   gameLinkCodes   GameLinkCode[]
   gameAdmins      GameAdmin[]
-  gameTickets     GameTicket[]      @relation("GameTicketAuthor")
+  gameTickets     GameTicket[]          @relation("GameTicketAuthor")
   /// Aplicația Clanuri: clanurile membrului, cererile / invitațiile lui, invitațiile trimise și clanurile fondate.
   clanMemberships ClanMember[]
-  clanRequests    ClanRequest[] @relation("ClanRequestUser")
-  clanInvitesSent ClanRequest[] @relation("ClanRequestInviter")
-  clansCreated    Clan[]        @relation("ClanCreator")
+  clanRequests    ClanRequest[]         @relation("ClanRequestUser")
+  clanInvitesSent ClanRequest[]         @relation("ClanRequestInviter")
+  clansCreated    Clan[]                @relation("ClanCreator")
 
   rank             Rank?                     @relation(fields: [rankId], references: [id], onDelete: SetNull)
   nameStyle        NameStyle?                @relation(fields: [nameStyleId], references: [id], onDelete: SetNull)
@@ -218,6 +225,8 @@ model Group {
   inLegend    Boolean @default(true)
 
   primaryUsers         User[]                @relation("UserPrimaryGroup")
+  nameUsers            User[]                @relation("UserNameGroup")
+  displayChoiceUsers   User[]                @relation("UserDisplayGroupChoice")
   members              UserGroup[]
   settings             GroupSetting[]
   containerPermissions ContainerPermission[]
@@ -497,10 +506,10 @@ model Forum {
   lastPosterId    String?
   createdAt       DateTime  @default(now())
 
-  parent   Forum?        @relation("ForumTree", fields: [parentId], references: [id], onDelete: Restrict)
-  children Forum[]       @relation("ForumTree")
-  topics   Topic[]
-  prefixes ForumPrefix[]
+  parent      Forum?        @relation("ForumTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children    Forum[]       @relation("ForumTree")
+  topics      Topic[]
+  prefixes    ForumPrefix[]
   /// Serverele de joc care au acest forum ca „forumul serverului”.
   gameServers GameServer[]
   /// Clanul care are acest forum ca forum privat.
@@ -855,7 +864,7 @@ model ProfileFieldValue {
   /// Câmpurile „Text lung” (`TEXTAREA`) formatate cu editorul: documentul și HTML-ul randat de server la salvare.
   /// Lipsă (valorile vechi) = textul `value` se afișează ca paragrafe (conversie la citire).
   json    Json?
-  html    String  @default("")
+  html    String @default("")
 
   user  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   field ProfileField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
@@ -1618,16 +1627,16 @@ model TranslationCache {
 /// `status`: `installed` sau `removed_kept_data` (dezinstalat cu păstrarea datelor: schema, rolul DB și setările).
 /// `dbRole` / `dbPassword`: rolul PostgreSQL dedicat, cu care rulează SQL-ul pluginului (doar în schema lui).
 model Plugin {
-  key                 String              @id
+  key                 String                  @id
   name                String
   version             String
-  enabled             Boolean             @default(false)
-  status              String              @default("installed")
-  signed              Boolean             @default(false)
+  enabled             Boolean                 @default(false)
+  status              String                  @default("installed")
+  signed              Boolean                 @default(false)
   signatureKeyId      String?
   capabilities        String[]
   manifest            Json
-  settings            Json                @default("{}")
+  settings            Json                    @default("{}")
   package             Bytes?
   packageSha256       String?
   dbRole              String?
@@ -1635,12 +1644,12 @@ model Plugin {
   migrations          String[]
   /// `admin`, `auto` (eșecuri la rând) sau `cli` (dezactivare din consolă), când `enabled = false`.
   disabledReason      String?
-  consecutiveFailures Int                 @default(0)
+  consecutiveFailures Int                     @default(0)
   lastError           String?
   lastErrorAt         DateTime?
-  installedAt         DateTime            @default(now())
+  installedAt         DateTime                @default(now())
   installedById       String?
-  updatedAt           DateTime            @updatedAt
+  updatedAt           DateTime                @updatedAt
   hookSettings        PluginHookSetting[]
   logs                PluginLog[]
   media               PluginMedia[]
@@ -1871,20 +1880,20 @@ model GameServer {
 
   /// Puntea (specul 2026-10-08-servere-bridge §4.1): modul identităților (`steam` / `mixed`), identitățile pe nume,
   /// serverul de meciuri mix, ultimul heartbeat și pluginul raportat.
-  identityMode String    @default("mixed")
-  nameIds      Boolean   @default(false)
-  isMix        Boolean   @default(false)
-  bridgeSeenAt DateTime?
-  bridgePlugin String?
+  identityMode     String    @default("mixed")
+  nameIds          Boolean   @default(false)
+  isMix            Boolean   @default(false)
+  bridgeSeenAt     DateTime?
+  bridgePlugin     String?
   /// Modulele opționale ale pluginului (specul 2026-10-08-servere-plugin-v2 §1.2), implicit oprite: pluginul doar
   /// colectează date. Adminii din GCS, sancțiunile, VIP-ul, ready-up-ul mix și comenzile de admin GCS.
-  manageAdmins     Boolean @default(false)
-  enforceSanctions Boolean @default(false)
-  manageVip        Boolean @default(false)
-  mixReady         Boolean @default(false)
-  adminCommands    Boolean @default(false)
+  manageAdmins     Boolean   @default(false)
+  enforceSanctions Boolean   @default(false)
+  manageVip        Boolean   @default(false)
+  mixReady         Boolean   @default(false)
+  adminCommands    Boolean   @default(false)
 
-  forum        Forum?            @relation(fields: [forumId], references: [id], onDelete: SetNull)
+  forum        Forum?                 @relation(fields: [forumId], references: [id], onDelete: SetNull)
   admins       GameServerAdmin[]
   snapshots    ServerSnapshot[]
   bridgeKeys   GameServerKey[]
@@ -1896,7 +1905,7 @@ model GameServer {
   matches      GameMatch[]
   adminActions GameAdminAction[]
   tickets      GameTicket[]
-  lastPlayers  GamePlayer[]      @relation("GamePlayerLastServer")
+  lastPlayers  GamePlayer[]           @relation("GamePlayerLastServer")
   enrollments  GameServerEnrollment[]
   tv           GameServerTv?
   demos        GameMatchDemo[]

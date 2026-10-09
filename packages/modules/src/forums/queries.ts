@@ -1,5 +1,6 @@
 import { docFirstImage, docSnippet } from "../content-text";
 import { rankLabel, type GcsRankDirectory, type GcsRankLabel } from "../profile/display";
+import { nameKeyOf, nameKeySelect } from "../profile/nameKeys";
 import {
   GcsForbidden,
   GcsNotFound,
@@ -198,15 +199,14 @@ export const userRefSelect = {
   id: true,
   name: true,
   image: true,
-  primaryGroup: { select: { key: true } },
-  nameStyle: { select: { key: true } },
+  ...nameKeySelect,
   avatarFrame: { select: { key: true } },
 } as const;
 
-type UserRefRow = { id: string; name: string; image: string | null; primaryGroup: { key: string }; nameStyle: { key: string } | null; avatarFrame: { key: string } | null };
+type UserRefRow = { id: string; name: string; image: string | null; primaryGroup: { key: string }; nameStyle: { key: string } | null; nameGroup?: { key: string } | null; avatarFrame: { key: string } | null };
 
 export function toRef(u: UserRefRow): GcsUserRef {
-  return { id: u.id, name: u.name, image: u.image, groupKey: u.primaryGroup.key, nameKey: u.nameStyle?.key ?? u.primaryGroup.key, frameKey: u.avatarFrame?.key ?? null };
+  return { id: u.id, name: u.name, image: u.image, groupKey: u.primaryGroup.key, nameKey: nameKeyOf(u), frameKey: u.avatarFrame?.key ?? null };
 }
 
 const has = (powers: string[], power: string) => powers.includes("*") || powers.includes(power);

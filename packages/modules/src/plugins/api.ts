@@ -5,6 +5,7 @@ import { canViewPost } from "../forums/content";
 import type { GcsForumPosting } from "../forums/posting";
 import type { GcsForumQueries } from "../forums/queries";
 import { slugify } from "../forums/slug";
+import { nameKeyOf, nameKeySelect } from "../profile/nameKeys";
 import { normalizePrivacy } from "../profile/privacy";
 
 const topicUrl = (t: { id: number; slug: string }) => `/topic/${t.id}-${t.slug}`;
@@ -65,8 +66,7 @@ export class GcsPluginPublicApi {
         image: true,
         createdAt: true,
         postsCount: true,
-        primaryGroup: { select: { key: true } },
-        nameStyle: { select: { key: true } },
+        ...nameKeySelect,
         avatarFrame: { select: { key: true } },
       },
     });
@@ -74,7 +74,7 @@ export class GcsPluginPublicApi {
       id: u.id,
       name: u.name,
       groupKey: u.primaryGroup.key,
-      nameKey: u.nameStyle?.key ?? u.primaryGroup.key,
+      nameKey: nameKeyOf(u),
       frameKey: u.avatarFrame?.key ?? null,
       avatarUrl: u.image,
       joinedAt: u.createdAt.toISOString(),
@@ -126,8 +126,7 @@ export class GcsPluginPublicApi {
             image: true,
             lastActiveAt: true,
             privacy: true,
-            primaryGroup: { select: { key: true } },
-            nameStyle: { select: { key: true } },
+            ...nameKeySelect,
             avatarFrame: { select: { key: true } },
           },
         },
@@ -143,7 +142,7 @@ export class GcsPluginPublicApi {
         url: memberUrl(u),
         avatarUrl: u.image,
         groupKey: u.primaryGroup.key,
-        nameKey: u.nameStyle?.key ?? u.primaryGroup.key,
+        nameKey: nameKeyOf(u),
         frameKey: u.avatarFrame?.key ?? null,
         plan: s.group.key,
         planName: s.group.name,

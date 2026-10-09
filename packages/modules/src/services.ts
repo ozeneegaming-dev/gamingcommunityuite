@@ -11,6 +11,7 @@ import {
   GcsContentRenderer,
   GcsEventBus,
   GcsFollowService,
+  GcsGroupDisplayService,
   GcsGroupMentionService,
   GcsGroupService,
   GcsJobQueue,
@@ -141,6 +142,8 @@ export type GcsServices = {
   groups: GcsGroupService;
   /** Mențiunile de grup (Mențiuni v2): setările grupurilor, cine poate menționa ce grup, pauza dintre mențiuni. */
   groupMentions: GcsGroupMentionService;
+  /** Grupul afișat al membrilor (stilul numelui): prioritatea grupurilor, alegerea membrului, setările de afișare. */
+  groupDisplay: GcsGroupDisplayService;
   members: GcsMemberDirectory;
   notifications: GcsNotificationService;
   realtime: GcsRealtime;
@@ -348,6 +351,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const acpSearch = new GcsAcpSearch({ db, registry, acp });
   const groups = new GcsGroupService({ db, bus, permissions, acp });
   const groupMentions = new GcsGroupMentionService({ db, cache, redis });
+  const groupDisplay = new GcsGroupDisplayService({ db, cache, bus });
+  groupDisplay.listen();
   const apps = new GcsAppService({ db, cache, bus, registry, acp, permissions, settings });
   const members = new GcsMemberDirectory({ db });
   const notifications = new GcsNotificationService({ db, bus, cache, registry });
@@ -630,6 +635,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     acpSearch,
     groups,
     groupMentions,
+    groupDisplay,
     members,
     notifications,
     realtime,
