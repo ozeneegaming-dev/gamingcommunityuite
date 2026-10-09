@@ -43,7 +43,6 @@ async function loadGroup(groupId: string): Promise<GcsGroupCardData | null> {
   return data;
 }
 
-
 async function load(userId: string, fresh = false): Promise<CardData | null> {
   const hit = cache.get(userId);
   if (!fresh && hit && Date.now() - hit.at < CLIENT_TTL) return hit.data;
