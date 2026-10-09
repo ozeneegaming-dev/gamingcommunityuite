@@ -16,6 +16,8 @@ export { GcsUserLink, type GcsUserLinkProps } from "./components/GcsUserLink";
 export { GcsDropdown, type GcsDropdownItem, type GcsDropdownProps } from "./components/GcsDropdown";
 export { GcsIconPicker, type GcsIconPickerMatch, type GcsIconPickerProps } from "./components/GcsIconPicker";
 export { GcsModal, type GcsModalProps } from "./components/GcsModal";
+export { GcsImageViewer, type GcsImageViewerLabels, type GcsImageViewerProps } from "./components/GcsImageViewer";
+export type { GcsViewerImage } from "./components/imageViewer";
 export { dismissToast, gcsToast, GcsToastHost, playNotificationSound, type GcsToastInput } from "./components/GcsToast";
 export { GcsTooltip, type GcsTooltipProps } from "./components/GcsTooltip";
 export { GcsIconSvg, type GcsIconSvgProps } from "./icons/svg";

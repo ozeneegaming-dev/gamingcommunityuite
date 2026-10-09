@@ -56,6 +56,10 @@ export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, 
       data-testid="gcs-post"
       data-post-id={post.id}
       data-post-number={post.number}
+      // Legenda imaginilor din postare în vizualizator: autorul, data și linkul spre postare.
+      data-gcs-caption-author={author?.name ?? undefined}
+      data-gcs-caption-date={post.createdAt}
+      data-gcs-caption-href={postHref(topicId, post.id)}
       {...(staffColor ? { "data-staff": "", style: { "--gcs-post-group": staffColor } as CSSProperties } : {})}
     >
       <div className="gcs-post__author gcs-postbit" data-testid="gcs-postbit">

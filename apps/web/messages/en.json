@@ -5669,7 +5669,9 @@
       "steamHint": "Your server stats count for the clan once you connect your Steam account.",
       "steamLink": "Connect Steam"
     },
-    "manageLink": "Manage"
+    "manageLink": "Manage",
+    "bannerImage": "Clan banner",
+    "logoImage": "Clan logo"
   },
   "bridge": {
     "identity": {
@@ -6292,5 +6294,22 @@
       "cookies": "Cookies",
       "unread": "Unread content"
     }
+  },
+  "imageViewer": {
+    "dialog": "Image viewer",
+    "close": "Close",
+    "prev": "Previous image",
+    "next": "Next image",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "original": "Open original",
+    "download": "Download",
+    "thumbnails": "Thumbnails",
+    "counter": "{current} of {total}",
+    "by": "by {name}",
+    "source": "View source",
+    "enlarge": "Enlarge image",
+    "cover": "Profile cover",
+    "avatar": "Avatar"
   }
 }

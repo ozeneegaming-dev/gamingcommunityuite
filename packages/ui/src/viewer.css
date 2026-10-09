@@ -1,0 +1,299 @@
+/*
+ * Vizualizatorul de imagini (nucleul GCS): ecran complet, fundal închis în ambele teme (imaginea e în prim-plan),
+ * bara de sus cu numărătoarea, legenda și acțiunile, scena cu imaginea, săgețile și banda de miniaturi. Accentul vine
+ * din temă (Nova: portocaliu; Clasic: roșu). Imaginile mari din postări: micșorate, cu indiciul „Mărește”.
+ */
+
+.gcs-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  background: rgb(6 8 12 / 0.94);
+  animation: gcs-viewer-in 0.16s ease-out;
+}
+@keyframes gcs-viewer-in {
+  from {
+    opacity: 0;
+  }
+}
+.gcs-viewer__dialog {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  color: #e9edf3;
+  outline: none;
+}
+.gcs-viewer__bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  min-height: 56px;
+  background: linear-gradient(to bottom, rgb(0 0 0 / 0.55), transparent);
+}
+.gcs-viewer__counter {
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  color: #b9c1cd;
+  min-width: 52px;
+}
+.gcs-viewer__caption {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  font-size: 13px;
+  color: #b9c1cd;
+}
+.gcs-viewer__caption strong {
+  color: #fff;
+  font-weight: 600;
+}
+.gcs-viewer__source {
+  color: var(--gcs-accentInk, #ff6b74);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.gcs-viewer__actions {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
+.gcs-viewer__btn,
+.gcs-viewer__nav {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgb(255 255 255 / 0.14);
+  background: rgb(255 255 255 / 0.06);
+  color: #fff;
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+}
+.gcs-viewer__btn:hover,
+.gcs-viewer__nav:hover {
+  background: rgb(255 255 255 / 0.16);
+  border-color: rgb(255 255 255 / 0.3);
+}
+.gcs-viewer__btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.gcs-viewer__btn:focus-visible,
+.gcs-viewer__nav:focus-visible,
+.gcs-viewer__thumb:focus-visible,
+.gcs-viewer__source:focus-visible {
+  outline: 2px solid var(--gcs-accent, #d62839);
+  outline-offset: 2px;
+}
+.gcs-viewer__stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  touch-action: none;
+  user-select: none;
+  cursor: zoom-in;
+}
+.gcs-viewer__stage--zoomed {
+  cursor: grab;
+}
+.gcs-viewer__stage--dragging {
+  cursor: grabbing;
+}
+.gcs-viewer__img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transform-origin: center center;
+  transition: transform 0.12s ease-out;
+  will-change: transform;
+  pointer-events: none;
+}
+.gcs-viewer__stage--dragging .gcs-viewer__img {
+  transition: none;
+}
+.gcs-viewer__nav {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  width: 46px;
+  height: 46px;
+  background: rgb(0 0 0 / 0.45);
+}
+.gcs-viewer__nav--prev {
+  left: 14px;
+}
+.gcs-viewer__nav--next {
+  right: 14px;
+}
+.gcs-viewer__thumbs {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  padding: 10px 14px 14px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.gcs-viewer__thumb {
+  flex: none;
+  width: 64px;
+  height: 48px;
+  padding: 0;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background: rgb(255 255 255 / 0.06);
+  overflow: hidden;
+  cursor: pointer;
+  opacity: 0.6;
+  transition:
+    opacity 0.15s,
+    border-color 0.15s;
+}
+.gcs-viewer__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.gcs-viewer__thumb:hover {
+  opacity: 0.9;
+}
+.gcs-viewer__thumb--active {
+  opacity: 1;
+  border-color: var(--gcs-accent, #d62839);
+}
+
+/* Telefoanele: săgețile mai mici, bara pe două rânduri când legenda e lungă, fără miniaturi pe ecranele foarte joase. */
+@media (max-width: 600px) {
+  .gcs-viewer__bar {
+    flex-wrap: wrap;
+    padding: 8px 10px;
+  }
+  .gcs-viewer__caption {
+    order: 3;
+    flex-basis: 100%;
+  }
+  .gcs-viewer__btn {
+    width: 36px;
+    height: 36px;
+  }
+  .gcs-viewer__nav {
+    width: 38px;
+    height: 38px;
+  }
+  .gcs-viewer__nav--prev {
+    left: 6px;
+  }
+  .gcs-viewer__nav--next {
+    right: 6px;
+  }
+  .gcs-viewer__thumb {
+    width: 52px;
+    height: 40px;
+  }
+}
+@media (max-height: 420px) {
+  .gcs-viewer__thumbs {
+    display: none;
+  }
+}
+
+/* ─── Imaginile care se deschid în vizualizator ─────────────────────────────────────────────────────── */
+
+/* Imaginile mari din postări: micșorate la înălțimea ecranului, cu cursorul de mărire. */
+.gcs-postBody img.gcs-postImage {
+  max-height: min(70vh, 640px);
+  width: auto;
+  object-fit: contain;
+}
+[data-gcs-zoomable] {
+  cursor: zoom-in;
+}
+[data-gcs-zoomable]:focus-visible {
+  outline: 2px solid var(--gcs-accent, #d62839);
+  outline-offset: 2px;
+}
+/* Butoanele care deschid o imagine (coperta și avatarul profilului, bannerul și logo-ul clanului): fără aspect propriu. */
+.gcs-profileHeader__cover {
+  position: relative;
+}
+.gcs-profileHeader__coverZoom,
+.gcs-clanBanner__zoom {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+.gcs-profileHeader__avatarZoom,
+.gcs-clanLogo__zoom {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+  border-radius: 50%;
+  line-height: 0;
+}
+.gcs-profileHeader__coverZoom:focus-visible,
+.gcs-clanBanner__zoom:focus-visible,
+.gcs-profileHeader__avatarZoom:focus-visible,
+.gcs-clanLogo__zoom:focus-visible,
+.gcs-evidenceThumbs a:focus-visible {
+  outline: 2px solid var(--gcs-accent, #d62839);
+  outline-offset: -2px;
+}
+@media (max-width: 640px) {
+  .gcs-profileHeader__main > .gcs-profileHeader__avatarZoom > .gcs-avatar {
+    width: 120px !important;
+    height: 120px !important;
+  }
+}
+
+/* Indiciul „Mărește” peste o imagine micșorată (poziționat de `GcsImageViewerHost` la colțul imaginii). */
+.gcs-zoomCue {
+  position: absolute;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgb(8 10 14 / 0.78);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.35);
+}
+.gcs-zoomCue svg {
+  width: 12px;
+  height: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gcs-viewer {
+    animation: none;
+  }
+  .gcs-viewer__img,
+  .gcs-viewer__btn,
+  .gcs-viewer__nav,
+  .gcs-viewer__thumb {
+    transition: none;
+  }
+}

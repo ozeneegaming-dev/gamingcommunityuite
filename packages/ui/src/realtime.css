@@ -707,6 +707,16 @@
 .gcs-chat__image {
   display: block;
   line-height: 0;
+  /* Un buton care deschide vizualizatorul de imagini (fără aspectul de buton). */
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+  border-radius: 8px;
+}
+.gcs-chat__image:focus-visible {
+  outline: 2px solid var(--gcs-accent);
+  outline-offset: 2px;
 }
 .gcs-chat__image img {
   display: block;

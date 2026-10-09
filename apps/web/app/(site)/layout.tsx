@@ -5,6 +5,7 @@ import { Suspense, type ReactNode } from "react";
 import { GcsDesignSync } from "./_components/GcsDesignSync";
 import { GcsNavProgress } from "./_components/GcsNavProgress";
 import { GcsHoverCardHost } from "./_components/GcsHoverCardHost";
+import { GcsImageViewerHost } from "./_components/GcsImageViewerHost";
 import { GcsSiteFooter } from "./_components/GcsSiteFooter";
 import { GcsSiteHeader } from "./_components/GcsSiteHeader";
 import { GcsNotificationToasts } from "./_components/notifications/GcsNotificationToasts";
@@ -19,7 +20,7 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
   const [t, locale, actor] = await Promise.all([getTranslations("hoverCard"), getLocale(), currentActor()]);
   // Conturile create prin Steam au un email placeholder: le cerem unul real (specul etapei 3, §8).
   const email = actor.userId ? (await services().db.user.findUnique({ where: { id: actor.userId }, select: { email: true } }))?.email : null;
-  const [tb, alerts, tc, tp, safeMode, { preview, shown }, deletion, format] = await Promise.all([
+  const [tb, alerts, tc, tp, safeMode, { preview, shown }, deletion, format, tv] = await Promise.all([
     getTranslations("settings.account"),
     alertPrefs(actor.userId),
     getTranslations("site"),
@@ -29,7 +30,11 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
     // Cererea „Șterge contul meu” în perioada de răzgândire: banda de pe tot site-ul, cu link spre anulare.
     actor.userId ? services().memberRemoval.pendingFor(actor.userId) : null,
     getFormatter(),
+    getTranslations("imageViewer"),
   ]);
+  const viewerLabels = Object.fromEntries(
+    (["dialog", "close", "prev", "next", "zoomIn", "zoomOut", "original", "download", "thumbnails", "counter", "by", "source", "enlarge"] as const).map((k) => [k, tv.raw(k) as string]),
+  ) as Parameters<typeof GcsImageViewerHost>[0]["labels"];
   return (
     <GcsRealtimeProvider>
       {/* Clasa designului temei pe `<html>` (pusă și de layout-ul rădăcină; aici, după navigarea din ACP). */}
@@ -63,6 +68,8 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
       {modal}
       {/* În previzualizarea editoarelor (iframe) nu apar notificările adminului. */}
       {actor.userId && !preview && <GcsNotificationToasts toasts={alerts.toasts} sound={alerts.sound} closeLabel={tc("closeToast")} />}
+      {/* Vizualizatorul de imagini (postări, chat, profil, clanuri, dovezi): o singură instanță pe site. */}
+      <GcsImageViewerHost labels={viewerLabels} locale={locale} />
       <GcsHoverCardHost
         locale={locale}
         labels={{

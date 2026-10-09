@@ -25,6 +25,8 @@
 @import "@gcs/ui/servers.css";
 @import "@gcs/ui/clans.css";
 @import "@gcs/ui/gameplay.css";
+@import "@gcs/ui/viewer.css";
+@import "@gcs/ui/chatpro.css";
 /* Ultimul: banda titlurilor (fiecare titlu pe fundalul lui) peste regulile componentelor. */
 @import "@gcs/ui/titles.css";
 /* Designul Nova (tema implicită „GCS Nova”): totul sub `.gcs-nova`, pus pe `<html>` doar pe paginile site-ului. */

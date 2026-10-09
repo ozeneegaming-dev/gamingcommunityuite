@@ -5669,7 +5669,9 @@
       "steamHint": "Statisticile tale de pe servere intră în ale clanului după ce îți conectezi contul Steam.",
       "steamLink": "Conectează Steam"
     },
-    "manageLink": "Administrează"
+    "manageLink": "Administrează",
+    "bannerImage": "Bannerul clanului",
+    "logoImage": "Logo-ul clanului"
   },
   "bridge": {
     "identity": {
@@ -6292,5 +6294,22 @@
       "cookies": "Cookie-uri",
       "unread": "Conținut necitit"
     }
+  },
+  "imageViewer": {
+    "dialog": "Vizualizator de imagini",
+    "close": "Închide",
+    "prev": "Imaginea anterioară",
+    "next": "Imaginea următoare",
+    "zoomIn": "Mărește",
+    "zoomOut": "Micșorează",
+    "original": "Deschide originalul",
+    "download": "Descarcă",
+    "thumbnails": "Miniaturi",
+    "counter": "{current} din {total}",
+    "by": "de {name}",
+    "source": "Vezi conținutul",
+    "enlarge": "Mărește imaginea",
+    "cover": "Coperta profilului",
+    "avatar": "Avatarul"
   }
 }

@@ -178,7 +178,7 @@ export default async function TopicPage({ params, searchParams }: Props) {
         labels={Object.fromEntries(["readers", "guests", "typing", "typingMany", "newPosts", "newPost", "show"].map((k) => [k, tl.raw(k) as string])) as Parameters<typeof GcsTopicLive>[0]["labels"]}
       />
       <GcsPagination pagination={data.pagination} href={(p) => topicHref(topic, p)} />
-      <div className="gcs-postList">
+      <div className="gcs-postList" data-gcs-gallery="topic">
         {data.posts.map((post) => (
           <GcsPost
             key={post.id}

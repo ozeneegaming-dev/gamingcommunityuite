@@ -469,6 +469,7 @@ export function GcsChatRoom(props: Props) {
       <ol
         ref={listRef}
         className="gcs-chat__list"
+        data-gcs-gallery="chat"
         style={compact ? undefined : { height: config.minHeight }}
         aria-live="polite"
         aria-relevant="additions"
@@ -481,7 +482,14 @@ export function GcsChatRoom(props: Props) {
           const author = m.author;
           const open = menu?.id === m.id ? menu.kind : null;
           return (
-            <li key={m.id} className={`gcs-chat__msg${own ? " gcs-chat__msg--own" : ""}`} data-testid="gcs-chat-msg" data-message-id={m.id}>
+            <li
+              key={m.id}
+              className={`gcs-chat__msg${own ? " gcs-chat__msg--own" : ""}`}
+              data-testid="gcs-chat-msg"
+              data-message-id={m.id}
+              data-gcs-caption-author={author?.name ?? labels.deletedMember}
+              data-gcs-caption-date={m.createdAt}
+            >
               {!hideAvatars &&
                 (author ? (
                   <a href={memberHref(author)} className="gcs-chat__avatar" tabIndex={-1} aria-hidden="true" data-testid="gcs-chat-avatar">

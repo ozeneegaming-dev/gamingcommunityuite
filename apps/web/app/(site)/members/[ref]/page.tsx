@@ -87,9 +87,17 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
   // Statisticile de pe serverele comunității (aplicația Servere): identitatea principală, cu link spre profilul de jucător.
   const game = await services().bridge.queries.userCard(actor, user.id);
   const tr = await getTranslations("clans.roles");
+  const tViewer = await getTranslations("imageViewer");
 
   const header = (
-    <section className="gcs-card gcs-profileHeader" style={{ borderColor: tint(accent, 0.45) }} data-testid="gcs-profile">
+    <section
+      className="gcs-card gcs-profileHeader"
+      style={{ borderColor: tint(accent, 0.45) }}
+      data-testid="gcs-profile"
+      // Coperta și avatarul se deschid în vizualizatorul de imagini (galeria profilului).
+      data-gcs-gallery="profile"
+      data-gcs-caption-author={user.name}
+    >
       <div
         className="gcs-profileHeader__cover"
         data-testid="gcs-profile-cover"
@@ -98,9 +106,17 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
             ? `center ${user.cover.positionY}% / cover no-repeat url(${user.cover.url})`
             : `radial-gradient(circle at 20% 30%, ${tint(accent, 0.55)}, transparent 45%), linear-gradient(120deg, #1B1033, ${tint(accent, 0.25)} 40%, #0F2236)`,
         }}
-      />
+      >
+        {user.cover && <button type="button" className="gcs-profileHeader__coverZoom" data-gcs-viewer={user.cover.url} aria-label={tViewer("cover")} data-testid="gcs-profile-cover-zoom" />}
+      </div>
       <div className="gcs-profileHeader__main">
-        <GcsAvatar name={user.name} size="xl" userId={user.id} {...(user.image ? { src: user.image } : {})} {...(user.frameKey ? { frame: user.frameKey } : {})} />
+        {user.image ? (
+          <button type="button" className="gcs-profileHeader__avatarZoom" data-gcs-viewer={user.image} aria-label={tViewer("avatar")} data-testid="gcs-profile-avatar-zoom">
+            <GcsAvatar name={user.name} size="xl" userId={user.id} src={user.image} {...(user.frameKey ? { frame: user.frameKey } : {})} />
+          </button>
+        ) : (
+          <GcsAvatar name={user.name} size="xl" userId={user.id} {...(user.frameKey ? { frame: user.frameKey } : {})} />
+        )}
         <div className="gcs-profileHeader__identity">
           <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
             <h1 className={`gcs-display gcs-name--${user.nameKey}`} style={{ margin: 0, fontSize: 40, letterSpacing: ".02em" }} data-testid="gcs-profile-name" data-name-user={user.id} data-text={user.name}>

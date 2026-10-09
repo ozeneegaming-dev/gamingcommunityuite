@@ -116,9 +116,20 @@ export default async function ClanPage({ params }: Props) {
         </div>
       )}
 
-      <div className="gcs-clanHero" style={clanColors(clan)}>
-        {clan.bannerUrl && <img className="gcs-clanBanner__img" src={clan.bannerUrl} alt="" />}
-        <GcsClanLogo clan={clan} size="l" eager />
+      <div className="gcs-clanHero" style={clanColors(clan)} data-gcs-gallery="clan" data-gcs-caption-author={clan.name}>
+        {clan.bannerUrl && (
+          // Bannerul și logo-ul se deschid în vizualizatorul de imagini (galeria clanului).
+          <button type="button" className="gcs-clanBanner__zoom" data-gcs-viewer={clan.bannerUrl} aria-label={t("bannerImage")} data-testid="gcs-clan-banner-zoom">
+            <img className="gcs-clanBanner__img" src={clan.bannerUrl} alt="" />
+          </button>
+        )}
+        {clan.logoUrl ? (
+          <button type="button" className="gcs-clanLogo__zoom" data-gcs-viewer={clan.logoUrl} aria-label={t("logoImage")}>
+            <GcsClanLogo clan={clan} size="l" eager />
+          </button>
+        ) : (
+          <GcsClanLogo clan={clan} size="l" eager />
+        )}
       </div>
 
       <div className="gcs-clanLayout">

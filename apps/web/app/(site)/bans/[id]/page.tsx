@@ -166,10 +166,11 @@ export default async function SanctionPage({ params }: Props) {
               {t("evidence")}
             </h2>
             {(s.files ?? []).length > 0 && (
-              <ul className="gcs-evidenceThumbs" data-testid="gcs-ban-files">
+              <ul className="gcs-evidenceThumbs" data-testid="gcs-ban-files" data-gcs-gallery="evidence">
                 {(s.files ?? []).map((f, i) => (
                   <li key={f.id}>
-                    <a href={f.url} target="_blank" rel="noopener">
+                    {/* Un click deschide vizualizatorul de imagini (galeria dovezilor); linkul rămâne fără JavaScript. */}
+                    <a href={f.url} target="_blank" rel="noopener" data-gcs-viewer={f.url}>
                       <img src={f.url} alt={t("evidenceImage", { n: i + 1 })} loading="lazy" />
                     </a>
                   </li>
