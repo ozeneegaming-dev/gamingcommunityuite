@@ -13,8 +13,8 @@ import "./globals.css";
 
 const display = Chakra_Petch({ subsets: ["latin", "latin-ext"], weight: ["500", "600", "700"], variable: "--font-gcs-display" });
 const text = Manrope({ subsets: ["latin", "latin-ext"], weight: ["400", "500", "600", "700"], variable: "--font-gcs-text" });
-/** Fontul designului Nova (OFL), livrat cu aplicația ca celelalte două. */
-const nova = DM_Sans({ subsets: ["latin", "latin-ext"], weight: ["400", "500", "600", "700", "800"], variable: "--font-gcs-nova" });
+/** Fontul designului Nova (OFL), livrat cu aplicația ca celelalte două; e un font variabil (toate grosimile într-un fișier). */
+const nova = DM_Sans({ subsets: ["latin", "latin-ext"], variable: "--font-gcs-nova" });
 
 export const dynamic = "force-dynamic";
 

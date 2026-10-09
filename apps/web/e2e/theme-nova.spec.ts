@@ -94,7 +94,8 @@ test("Nova: designul pe site (nu în ACP), antetul, subsolul din ACP și plăcil
     await page.locator('.gcs-modTile[data-tone="delete"]').click();
     const dialog = page.getByRole("dialog", { name: "Șterge topicul" });
     await expect(dialog).toBeVisible();
-    await dialog.getByRole("button", { name: "Anulează" }).click();
+    // Butonul din dialog (cel din antet, „închide”, are același nume).
+    await dialog.getByRole("button", { name: "Anulează" }).last().click();
     await expect(dialog).toHaveCount(0);
     await expect(page.getByRole("heading", { name: `Topic Nova ${id}`, level: 1 })).toBeVisible();
     await shot(page, "topic-dark-desktop");
