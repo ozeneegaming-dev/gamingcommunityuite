@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { member, uid } from "./forum-fixtures";
-import { enterAcpAsRoot, sql, useFreshIp } from "./helpers";
+import { enterAcpAsRoot, resetSetting, sql, useFreshIp } from "./helpers";
 
 /**
  * ACP → Sistem → Aplicații (specul 2026-10-09-acp-navigatie-aplicatii §2): rândurile (versiunea, autorul, starea),
@@ -14,9 +14,15 @@ async function openApps(page: Page) {
   await expect(page.getByTestId("gcs-apps-list")).toBeVisible();
 }
 
+/** Adresa canonică a paginii are calea dată (Next scrie rădăcina fără „/” final). */
+async function expectCanonical(page: Page, pathname: string) {
+  await expect.poll(async () => new URL((await page.locator('link[rel="canonical"]').getAttribute("href")) ?? "http://x/lipsa").pathname).toBe(pathname);
+}
+
 test.afterAll(async () => {
-  // Starea implicită, chiar dacă un test s-a oprit la jumătate.
-  await sql(`DELETE FROM settings WHERE key IN ('apps.landing', 'apps.order')`).catch(() => {});
+  // Starea implicită (cu cache-ul setărilor golit), chiar dacă un test s-a oprit la jumătate.
+  await resetSetting("apps.landing").catch(() => {});
+  await resetSetting("apps.order").catch(() => {});
   await sql(`DELETE FROM group_settings WHERE key = 'clans.app_access'`).catch(() => {});
   await sql(`UPDATE system_state SET "permVersion" = "permVersion" + 1 WHERE id = 1`).catch(() => {});
 });
@@ -112,6 +118,7 @@ test("pagina de pornire: ★ Clanuri face din / pagina clanurilor (canonical /),
   await openApps(page);
   await expect(page.getByTestId("gcs-apps-landing")).toHaveText("Pagina de pornire: Forum");
   await page.getByTestId("gcs-app-landing-clans").click();
+  await expect(page.getByTestId("gcs-apps-notice")).toHaveText("Pagina de pornire e acum Clanuri.");
   await expect(page.getByTestId("gcs-apps-landing")).toHaveText("Pagina de pornire: Clanuri");
   await expect(page.getByTestId("gcs-app-landing-clans")).toHaveAttribute("aria-pressed", "true");
 
@@ -121,21 +128,22 @@ test("pagina de pornire: ★ Clanuri face din / pagina clanurilor (canonical /),
   expect(res?.status()).toBe(200);
   expect(new URL(guest.url()).pathname).toBe("/");
   await expect(guest.getByTestId("gcs-clans-summary").or(guest.getByTestId("gcs-clans-empty")).first()).toBeVisible();
-  await expect(guest.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/$/);
+  await expectCanonical(guest, "/");
   // Meniul: Clanuri e activ pe `/`, Forum duce la /forum.
   const nav = guest.getByRole("navigation", { name: "Principal" });
   await expect(nav.getByRole("link", { name: "Clanuri" })).toHaveAttribute("aria-current", "page");
   await expect(nav.getByRole("link", { name: "Forum" })).toHaveAttribute("href", "/forum");
   await guest.goto("/forum");
   await expect(guest.getByTestId("gcs-forum-index")).toBeVisible();
-  await expect(guest.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/forum$/);
+  await expectCanonical(guest, "/forum");
   // Pagina clanurilor își are aceeași adresă canonică (`/`).
   await guest.goto("/clans");
-  await expect(guest.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/$/);
+  await expectCanonical(guest, "/");
 
   // Înapoi la Forum: /forum duce pe / (o singură adresă), fără buclă.
   await openApps(page);
   await page.getByTestId("gcs-app-landing-forums").click();
+  await expect(page.getByTestId("gcs-apps-notice")).toHaveText("Pagina de pornire e acum Forum.");
   await expect(page.getByTestId("gcs-apps-landing")).toHaveText("Pagina de pornire: Forum");
   await guest.goto("/forum");
   expect(new URL(guest.url()).pathname).toBe("/");
@@ -155,7 +163,7 @@ test("ordinea: butoanele sus / jos mută aplicația, iar meniul principal o urme
   expect(await navOrder()).toEqual(["Servere", "Clanuri"]);
 
   await openApps(page);
-  const rows = () => page.getByTestId("gcs-apps-list").locator("li[data-testid^='gcs-app-']").evaluateAll((els) => els.map((e) => e.getAttribute("data-testid")));
+  const rows = () => page.getByTestId("gcs-apps-list").locator("li.gcs-appItem").evaluateAll((els) => els.map((e) => e.getAttribute("data-testid")));
   const before = await rows();
   expect(before.indexOf("gcs-app-clans")).toBeGreaterThan(before.indexOf("gcs-app-servers"));
   await page.getByRole("button", { name: "Mută Clanuri mai sus" }).click();

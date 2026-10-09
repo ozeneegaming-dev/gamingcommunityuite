@@ -25,6 +25,9 @@ async function hasAcpAccess(request: NextRequest): Promise<boolean> {
   return permissions.can(actor, "acp.access");
 }
 
+/** Adresa alternativă a indexului forumului (când pagina de pornire e altă aplicație); vezi `lib/landing.ts`. */
+const FORUM_INDEX_ALT = "/forum";
+
 /** Actorul cererii (membru sau vizitator), pentru accesul pe grup la aplicații. */
 async function requestActor(request: NextRequest): Promise<GcsActor> {
   const session = await (await getAuth()).api.getSession({ headers: request.headers }).catch(() => null);
@@ -35,7 +38,7 @@ async function requestActor(request: NextRequest): Promise<GcsActor> {
  * Aplicațiile (specul 2026-10-09-acp-navigatie-aplicatii §2.3–2.4):
  * - o cale a unei aplicații restricționate pe grup (`app.routes`) răspunde 404 celor fără acces (paginile, API-ul);
  * - `/` se rescrie intern (adresa rămâne `/`) spre pagina aplicației de pornire, dacă nu e Forumul și vizitatorul o
- *   poate accesa; altfel `/` randează Forumul. Fără redirecturi, deci fără bucle.
+ *   poate accesa; altfel `/` randează Forumul, iar `/forum` duce (307) pe `/`. `/` nu redirecționează niciodată: fără bucle.
  * Actorul se calculează doar pentru aplicațiile restricționate. Baza indisponibilă: paginile decid singure.
  */
 async function appRouting(request: NextRequest): Promise<NextResponse | URL | null> {
@@ -43,13 +46,20 @@ async function appRouting(request: NextRequest): Promise<NextResponse | URL | nu
   if (path.startsWith("/admin") || path.startsWith("/_next/")) return null;
   const { apps } = services();
   try {
-    if (path === "/") {
+    if (path === "/" || path === FORUM_INDEX_ALT) {
       const target = await apps.landingFor(null);
-      if (!target) return null;
-      if ((await apps.restrictedApps()).has(target.key) && !(await apps.canAccess(await requestActor(request), target.key))) return null;
+      // Pornirea e o aplicație restricționată pe grup pe care vizitatorul nu o poate accesa: `/` îi arată Forumul.
+      const usable = target !== null && (!(await apps.restrictedApps()).has(target.key) || (await apps.canAccess(await requestActor(request), target.key)));
       const url = request.nextUrl.clone();
-      url.pathname = target.href;
-      return url;
+      if (path === "/") {
+        if (!usable) return null;
+        url.pathname = target.href;
+        return url;
+      }
+      // `/forum` când `/` arată chiar forumul: redirect HTTP spre `/` (o singură adresă; `/` nu redirecționează niciodată).
+      if (usable) return null;
+      url.pathname = "/";
+      return NextResponse.redirect(url, 307);
     }
     const app = apps.routeApp(path);
     if (!app || !(await apps.restrictedApps()).has(app)) return null;
