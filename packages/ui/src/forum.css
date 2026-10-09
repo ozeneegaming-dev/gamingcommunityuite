@@ -101,6 +101,28 @@
   position: absolute;
   z-index: 50;
 }
+/*
+ * Sugestiile din câmpurile simple (chat, perete, tichete): lista ancorată de câmp (containerul `gcs-mentionAnchor`),
+ * deasupra sau dedesubt, cât încape pe un ecran îngust (375 px).
+ */
+.gcs-mentionAnchor {
+  position: relative;
+}
+.gcs-mentionPopup--inline {
+  left: 0;
+  z-index: 70;
+  width: min(340px, calc(100vw - 32px));
+}
+.gcs-mentionPopup--inline .gcs-mentionList {
+  max-height: min(320px, 50vh);
+  overflow-y: auto;
+}
+.gcs-mentionPopup--above {
+  bottom: calc(100% + 6px);
+}
+.gcs-mentionPopup--below {
+  top: calc(100% + 6px);
+}
 .gcs-mentionList {
   list-style: none;
   margin: 0;

@@ -8,7 +8,7 @@ import { services } from "@/lib/services";
 import { GcsActionForm } from "../../../_components/GcsActionForm";
 import { closeReport } from "../../../moderation-actions";
 import { GcsAcpTitle } from "../../../_components/GcsAcpTitle";
-import { GcsMemberLink } from "@/lib/member-names";
+import { GcsMemberLink, GcsNamedHtml } from "@/lib/member-names";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.reports"))("title") };
@@ -38,7 +38,7 @@ export default async function AcpReportsPage() {
             <Link href={postHref(r.topicId, Number(r.contentId))}>
               {r.topicTitle} · {t("open")}
             </Link>
-            <div className="gcs-postBody" dangerouslySetInnerHTML={{ __html: r.html }} />
+            <GcsNamedHtml className="gcs-postBody" html={r.html} />
             <div>
               <strong>{t("reasons")}</strong>
               <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>

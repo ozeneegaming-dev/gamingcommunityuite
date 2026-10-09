@@ -12,7 +12,7 @@ import { pluginHookHtml } from "@/lib/plugins";
 import { GcsDeletedPostbit } from "../GcsDeletedMember";
 import { GcsTranslateButton, type GcsTranslateLabels } from "../GcsTranslateButton";
 import { GcsPostContent, type GcsPostContentProps } from "./GcsPostContent";
-import { GcsMemberLink } from "@/lib/member-names";
+import { GcsMemberLink, GcsNamedHtml } from "@/lib/member-names";
 import { GcsGroupLink } from "@/lib/group-pills";
 
 /** Grupurile staff-ului (postările lor au chenarul colorat). */
@@ -93,7 +93,7 @@ export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, 
         signature={
           author?.signatureHtml && post.visibility === "VISIBLE" ? (
             // Semnătura: HTML-ul produs și sanitizat de renderer la salvare (Setări → Semnătură).
-            <div className="gcs-post__signature gcs-postBody" data-testid="gcs-post-signature" dangerouslySetInnerHTML={{ __html: author.signatureHtml }} />
+            <GcsNamedHtml className="gcs-post__signature gcs-postBody" data-testid="gcs-post-signature" html={author.signatureHtml} />
           ) : null
         }
       />

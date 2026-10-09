@@ -1,5 +1,6 @@
 "use client";
 
+import type { GcsMentionHint } from "@gcs/core/text-mentions";
 import { faFaceSmile, faTrashCan } from "@fortawesome/free-regular-svg-icons";
 import { faBullhorn, faCommentSlash, faGear, faPen, faScroll, faThumbtack, faUserSlash, faVolumeHigh, faVolumeXmark } from "@fortawesome/free-solid-svg-icons";
 import type { GcsErrorPayload } from "@gcs/core";
@@ -297,8 +298,8 @@ export function GcsChatRoom(props: Props) {
       }
     });
 
-  const send = async (body: string, files: string[]): Promise<boolean> => {
-    const res = await sendChatMessage({ channel: channel.key, body, files });
+  const send = async (body: string, files: string[], mentions: GcsMentionHint[]): Promise<boolean> => {
+    const res = await sendChatMessage({ channel: channel.key, body, files, mentions });
     if (!res.ok) {
       setError(message(res.error));
       return false;

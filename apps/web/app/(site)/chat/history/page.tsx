@@ -6,6 +6,7 @@ import { notFound, redirect } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
 import { memberHref } from "@/lib/forum-urls";
+import { namesHtml } from "@/lib/member-names";
 import { services } from "@/lib/services";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -119,10 +120,10 @@ export default async function ChatHistoryPage({ searchParams }: { searchParams: 
               </tr>
             </thead>
             <tbody>
-              {data.rows.map((r) => (
+              {(await Promise.all(data.rows.map(async (r) => ({ ...r, html: await namesHtml(r.html) })))).map((r) => (
                 <tr key={r.id} data-testid="gcs-chat-history-row">
                   <td>{r.author ? <GcsMemberName userId={r.author.id} name={r.author.name} nameKey={r.author.nameKey} href={memberHref(r.author)} /> : <span className="gcs-deletedMember">{t("deletedMember")}</span>}</td>
-                  {/* HTML-ul produs de server din text (escapat; doar linkurile http(s) devin <a>). */}
+                  {/* HTML-ul produs de server din text (escapat; linkurile http(s) și pastilele mențiunilor, cu stilul numelor). */}
                   <td className="gcs-chatHistory__content" dangerouslySetInnerHTML={{ __html: r.html }} />
                   <td className="gcs-chatHistory__num">
                     <time dateTime={r.createdAt}>{when(r.createdAt)}</time>

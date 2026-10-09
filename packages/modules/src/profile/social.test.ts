@@ -65,6 +65,27 @@ describe("peretele profilului", () => {
     await expect(w.social.postStatus(w.guest, w.member.userId!, doc("x"))).rejects.toBeInstanceOf(GcsForbidden);
   });
 
+  test("mențiunile dintr-un status și dintr-un comentariu: pastile după id și notificarea de mențiune", async () => {
+    const mira = await w.createUser("Mira", "member");
+    const mention = (id: string, label: string) => ({ type: "mention", attrs: { id, label, kind: "user" } });
+    const status = await w.social.postStatus(other, w.member.userId!, {
+      type: "doc",
+      content: [{ type: "paragraph", content: [{ type: "text", text: "salut " }, mention(mira.id, "Mira")] }],
+    });
+    expect(status.contentHtml).toContain(`data-user-id="${mira.id}"`);
+    await expect.poll(() => w.db.notification.count({ where: { userId: mira.id, type: "forums.mention", targetType: "profile.status" } })).toBe(1);
+    // Proprietarul peretelui, menționat în statusul de pe peretele lui, primește o singură notificare (mențiunea).
+    await w.clearWallFlood(other);
+    const own = await w.social.postStatus(other, w.member.userId!, {
+      type: "doc",
+      content: [{ type: "paragraph", content: [mention(w.member.userId!, "Mara")] }],
+    });
+    await expect.poll(() => w.db.notification.count({ where: { userId: w.member.userId!, targetId: String(own.id) } })).toBe(1);
+    // Un comentariu cu mențiune notifică și el.
+    await w.social.postStatus(w.member, w.member.userId!, { type: "doc", content: [{ type: "paragraph", content: [mention(mira.id, "Mira")] }] }, status.id);
+    await expect.poll(() => w.db.notification.count({ where: { userId: mira.id, type: "forums.mention" } })).toBe(2);
+  });
+
   test("perete FOLLOWED: doar cei urmăriți de proprietar (și staff-ul); NOBODY: doar proprietarul și staff-ul", async () => {
     await setPrivacy(w.member, { wall: "FOLLOWED" });
     await expect(w.social.postStatus(other, w.member.userId!, doc("salut"))).rejects.toBeInstanceOf(GcsForbidden);

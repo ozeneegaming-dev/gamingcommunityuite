@@ -13,7 +13,7 @@ import { translateLabels } from "@/lib/translate";
 import { GcsDeletedMember } from "../../_components/GcsDeletedMember";
 import { GcsTranslateButton } from "../../_components/GcsTranslateButton";
 import { GcsConversationReply, GcsConversationTools, GcsRefreshAfterRead, GcsReportMessageButton } from "../../_components/messages/GcsMessageForms";
-import { GcsMemberLink } from "@/lib/member-names";
+import { GcsMemberLink, GcsNamedHtml } from "@/lib/member-names";
 import { Fragment } from "react";
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ page?: string }> };
@@ -82,7 +82,7 @@ export default async function ConversationPage({ params, searchParams }: Props) 
                 </time>
                 {!m.mine && <GcsReportMessageButton messageId={m.id} labels={{ report: t("report"), reason: t("reportReason"), done: t("reported") }} />}
               </header>
-              <div className="gcs-postBody" dangerouslySetInnerHTML={{ __html: m.html }} />
+              <GcsNamedHtml className="gcs-postBody" html={m.html} />
               {translate && !m.mine && <GcsTranslateButton contentType="pm.message" contentId={m.id} labels={translate} />}
               {m.attachments.length > 0 && (
                 <ul className="gcs-attachments">

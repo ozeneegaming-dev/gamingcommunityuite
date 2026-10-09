@@ -6,6 +6,7 @@ import { services } from "@/lib/services";
 import { GcsSignatureForm } from "../../_components/settings/GcsSettingsExtra";
 import { GcsIcon } from "@gcs/ui/icons";
 import { SETTINGS_ICONS } from "../../_components/settings/sections";
+import { GcsNamedHtml } from "@/lib/member-names";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("settings"))("nav.signature") };
@@ -50,7 +51,7 @@ export default async function SignatureSettingsPage() {
             <GcsIcon name="fa-solid fa-eye" className="gcs-hIcon" />
             {t("preview")}
           </h3>
-          <div className="gcs-post__signature gcs-postBody" data-testid="gcs-signature-preview" dangerouslySetInnerHTML={{ __html: user.signatureHtml }} />
+          <GcsNamedHtml className="gcs-post__signature gcs-postBody" data-testid="gcs-signature-preview" html={user.signatureHtml} />
         </div>
       )}
     </div>

@@ -1,6 +1,6 @@
 "use server";
 
-import { GcsNotFound, type GcsActor } from "@gcs/core";
+import { GcsNotFound, parseMentionHints, type GcsActor } from "@gcs/core";
 import * as z from "zod";
 import { gcsAction } from "@/lib/actions";
 import { services } from "@/lib/services";
@@ -21,10 +21,17 @@ async function assertChatEnabled(actor: GcsActor): Promise<void> {
  * mesajul salvat (cu HTML-ul randat).
  */
 export const sendChatMessage = gcsAction(
-  z.object({ channel, body: z.string().max(4000), files: z.array(z.string().min(1).max(40)).max(4).optional(), replyTo: z.number().int().positive().nullable().optional() }),
-  async ({ channel, body, files, replyTo }, { actor }) => {
+  z.object({
+    channel,
+    body: z.string().max(4000),
+    files: z.array(z.string().min(1).max(40)).max(4).optional(),
+    replyTo: z.number().int().positive().nullable().optional(),
+    // Sugestiile de mențiuni alese în câmp (serverul le verifică: numele trebuie să fie încă în text).
+    mentions: z.array(z.object({ kind: z.enum(["user", "group"]), id: z.string().min(1).max(64) })).max(20).optional(),
+  }),
+  async ({ channel, body, files, replyTo, mentions }, { actor }) => {
     await assertChatEnabled(actor);
-    return services().chat.send(actor, channel, body, { files: files ?? [], replyTo: replyTo ?? null });
+    return services().chat.send(actor, channel, body, { files: files ?? [], replyTo: replyTo ?? null, mentions: parseMentionHints(mentions ?? []) });
   },
 );
 

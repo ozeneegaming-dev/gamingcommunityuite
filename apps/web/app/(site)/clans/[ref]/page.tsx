@@ -14,6 +14,7 @@ import { GcsClanRecruit, GcsClanStateLabel } from "../../_components/clans/GcsCl
 import { clanColors, GcsClanLogo } from "../../_components/clans/GcsClanLogo";
 import { GcsClanGameStats } from "../../_components/clans/GcsClanGameStats";
 import { GcsRelTime } from "../../_components/forum/GcsRelTime";
+import { GcsNamedHtml } from "@/lib/member-names";
 
 type Props = { params: Promise<{ ref: string }> };
 
@@ -141,7 +142,7 @@ export default async function ClanPage({ params }: Props) {
             </h2>
             {clan.descriptionHtml ? (
               // HTML-ul produs și sanitizat de renderer-ul editorului la salvare (profilul `clanDescription`).
-              <div className="gcs-postBody gcs-clanAbout" data-testid="gcs-clan-description" dangerouslySetInnerHTML={{ __html: clan.descriptionHtml }} />
+              <GcsNamedHtml className="gcs-postBody gcs-clanAbout" data-testid="gcs-clan-description" html={clan.descriptionHtml} />
             ) : (
               <p className="gcs-muted" style={{ margin: 0 }}>
                 {t("noDescription")}

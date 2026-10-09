@@ -8,6 +8,7 @@ import { services } from "@/lib/services";
 import { GcsActionForm } from "../../../_components/GcsActionForm";
 import { moderateQueue } from "../../../moderation-actions";
 import { GcsAcpTitle } from "../../../_components/GcsAcpTitle";
+import { GcsNamedHtml } from "@/lib/member-names";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.queue"))("title") };
@@ -56,7 +57,7 @@ export default async function AcpQueuePage() {
                 {p.author && <GcsMemberName userId={p.author.id} name={p.author.name} nameKey={p.author.nameKey} href={`/admin/members/${p.author.id}`} />}
                 <span className="gcs-muted">{format.relativeTime(new Date(p.createdAt))}</span>
               </div>
-              <div className="gcs-postBody" dangerouslySetInnerHTML={{ __html: p.html }} />
+              <GcsNamedHtml className="gcs-postBody" html={p.html} />
               <div style={{ display: "flex", gap: 8 }}>
                 <GcsActionForm action={moderateQueue} submitLabel={t("approve")} submitKind="approve" compact>
                   <input type="hidden" name="postId" value={p.postId} />

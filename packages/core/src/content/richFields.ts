@@ -55,9 +55,10 @@ export const GCS_RICH_FIELDS = {
     maxChars: 5000,
     maxImages: 4,
   },
+  // Mențiunile (pastile după id) sunt permise, fără notificări: textul profilului e static, se poate salva de multe ori.
   profileText: {
     key: "profileText",
-    nodes: ["paragraph", ...LISTS, "blockquote", "horizontalRule", "hardBreak"],
+    nodes: ["paragraph", ...LISTS, "blockquote", "horizontalRule", "hardBreak", "mention"],
     marks: ["bold", "italic", "underline", "strike", "link", "highlight", "textStyle"],
     maxChars: 5000,
     maxImages: 0,
@@ -65,7 +66,7 @@ export const GCS_RICH_FIELDS = {
   // Descrierea unui clan (specul 2026-10-08-clanuri): titluri, liste, citate și cel mult 2 imagini din adrese https.
   clanDescription: {
     key: "clanDescription",
-    nodes: ["paragraph", "heading", ...LISTS, "blockquote", "horizontalRule", "hardBreak", "image"],
+    nodes: ["paragraph", "heading", ...LISTS, "blockquote", "horizontalRule", "hardBreak", "image", "mention"],
     marks: TEXT_MARKS,
     maxChars: 5000,
     maxImages: 2,

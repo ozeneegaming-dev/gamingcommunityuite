@@ -95,7 +95,7 @@ describe("numele membrilor trec prin componenta comună", () => {
       "apps/web/app/(site)/_components/GcsSiteHeader.tsx",
       "apps/web/app/(site)/members/[ref]/page.tsx",
       "packages/ui/src/components/GcsHoverCard.tsx",
-      "packages/ui/src/editor/mentions.tsx",
+      "packages/ui/src/editor/mentionList.tsx",
     ]) {
       expect([file, uses(file)]).toEqual([file, true]);
     }

@@ -167,8 +167,18 @@ export class GcsNotificationProducers {
     });
     bus.on("status.created", async (e) => {
       const profileUserId = str(e.payload.profileUserId);
-      if (!profileUserId || e.payload.parentId !== null) return;
-      await notifications.notify({ userIds: [profileUserId], type: "profile.wall", targetType: "profile.status", targetId: String(e.payload.statusId), actorId: str(e.payload.authorId) });
+      const authorId = str(e.payload.authorId);
+      const statusId = Number(e.payload.statusId);
+      // Mențiunile din status sau din comentariu (după id): membrii cu notificarea de mențiune, grupurile prin worker.
+      const status = Number.isSafeInteger(statusId) ? await db.statusUpdate.findUnique({ where: { id: statusId }, select: { contentJson: true } }) : null;
+      const refs = status ? contentRefs(status.contentJson) : { mentions: [] as string[], groups: [] as number[] };
+      const mentioned = refs.mentions.filter((id) => id !== authorId).slice(0, MAX_REFS);
+      const target = { targetType: "profile.status", targetId: String(statusId), actorId: authorId };
+      if (mentioned.length > 0) await notifications.notify({ userIds: mentioned, type: "forums.mention", ...target });
+      const groups = refs.groups.slice(0, MAX_GROUP_REFS);
+      if (groups.length > 0) await this.run(NOTIFY_GROUP_MENTION_JOB, { ...target, groups, skip: mentioned }, `notif-group-status-${statusId}`);
+      if (!profileUserId || e.payload.parentId !== null || mentioned.includes(profileUserId)) return;
+      await notifications.notify({ userIds: [profileUserId], type: "profile.wall", ...target });
     });
     bus.on("badge.awarded", async (e) => {
       const userId = str(e.payload.userId);
@@ -193,9 +203,32 @@ export class GcsNotificationProducers {
       // Mențiunile de grup dintr-un mesaj privat: doar membrii grupului care participă la conversație o pot vedea.
       const messageId = Number(e.payload.messageId);
       const message = Number.isSafeInteger(messageId) ? await db.conversationMessage.findUnique({ where: { id: messageId }, select: { contentJson: true } }) : null;
+      // Mențiunile de membri: doar participanții (ceilalți nu văd conversația), cu notificarea de mențiune.
+      const mentioned = message ? contentRefs(message.contentJson).mentions.filter((id) => others.includes(id)).slice(0, MAX_REFS) : [];
+      if (mentioned.length > 0) {
+        await notifications.notify({ userIds: mentioned, type: "forums.mention", targetType: "pm.conversation", targetId: String(conversationId), actorId: authorId });
+      }
       const groups = message ? contentRefs(message.contentJson).groups.slice(0, MAX_GROUP_REFS) : [];
       if (groups.length > 0) {
-        await this.run(NOTIFY_GROUP_MENTION_JOB, { targetType: "pm.conversation", targetId: String(conversationId), actorId: authorId, groups, skip: [] }, `notif-group-pm-${messageId}`);
+        await this.run(NOTIFY_GROUP_MENTION_JOB, { targetType: "pm.conversation", targetId: String(conversationId), actorId: authorId, groups, skip: mentioned }, `notif-group-pm-${messageId}`);
+      }
+    });
+    // Mențiunile din conținutul fără editor de postări (chat-ul, statusurile de pe profil, tichetele): membrii după id,
+    // cu tipul dat (implicit `forums.mention`, „te-a menționat în …”), grupurile prin notificarea de grup (setările lor).
+    bus.on("mentions.created", async (e) => {
+      const targetType = str(e.payload.targetType);
+      const targetId = str(e.payload.targetId);
+      if (!targetType || !targetId) return;
+      const authorId = str(e.payload.authorId);
+      const type = typeof e.payload.type === "string" && e.payload.type ? e.payload.type : "forums.mention";
+      const userIds = (Array.isArray(e.payload.userIds) ? e.payload.userIds : [])
+        .filter((id): id is string => typeof id === "string" && id !== authorId)
+        .slice(0, MAX_REFS);
+      if (userIds.length > 0) await notifications.notify({ userIds, type, targetType, targetId, actorId: authorId });
+      const groups = (Array.isArray(e.payload.groupIds) ? e.payload.groupIds : []).filter((id): id is number => Number.isInteger(id)).slice(0, MAX_GROUP_REFS);
+      const skip = (Array.isArray(e.payload.skip) ? e.payload.skip : []).filter((id): id is string => typeof id === "string");
+      if (groups.length > 0) {
+        await this.run(NOTIFY_GROUP_MENTION_JOB, { targetType, targetId, actorId: authorId, groups, skip: [...userIds, ...skip] }, `notif-group-${targetType}-${targetId}`);
       }
     });
     bus.on("pm.read", async (e) => {

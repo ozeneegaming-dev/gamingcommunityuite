@@ -64,8 +64,10 @@ export type GcsBridgeDeps = {
   attachments: GcsAttachmentService;
   rateLimiter: GcsRedisRateLimiter;
   realtime: GcsRealtime;
-  /** Documentul editorului → JSON validat + HTML sanitizat (ca postările). */
-  render: (content: unknown) => Promise<GcsRendered>;
+  /** Documentul editorului → JSON validat + HTML sanitizat (ca postările); cu `actor`, și mențiunile de grup. */
+  render: (content: unknown, ctx?: { actor?: GcsActor; cooldown?: boolean }) => Promise<GcsRendered>;
+  /** Pornește pauza dintre mențiunile de grup după salvare. */
+  markGroupMentions?: (actor: GcsActor, rendered: GcsRendered) => Promise<void>;
   canViewServer: (actor: GcsActor, id: number) => Promise<boolean>;
   visibleServers: (actor: GcsActor) => Promise<number[]>;
   now?: () => number;
@@ -228,7 +230,16 @@ export class GcsBridge {
       now,
     });
     this.presence = new GcsBridgePresence({ db, permissions, settings, apps, store, now });
-    this.tickets = new GcsBridgeTickets({ db, bus, permissions, admins: this.admins, sanctions: this.sanctions, render: deps.render, now });
+    this.tickets = new GcsBridgeTickets({
+      db,
+      bus,
+      permissions,
+      admins: this.admins,
+      sanctions: this.sanctions,
+      render: deps.render,
+      ...(deps.markGroupMentions ? { markGroupMentions: deps.markGroupMentions } : {}),
+      now,
+    });
     this.queries = new GcsBridgeQueries({ db, apps, permissions, store, players: this.players, sanctions: this.sanctions, presence: this.presence, canViewServer: deps.canViewServer, visibleServers: deps.visibleServers, tv: this.tv });
     this.stats = new GcsBridgeStatsProvider({ db });
   }

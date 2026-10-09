@@ -11,7 +11,7 @@ import { GcsPlayerPicker, type GcsPickedPlayer } from "./GcsPlayerPicker";
 
 /** Ce acceptă textul unui tichet: același renderer ca postările, fără titluri și video (adrese de imagini https). */
 export const TICKET_ALLOW: GcsEditorAllow = {
-  nodes: ["paragraph", "bulletList", "orderedList", "listItem", "blockquote", "horizontalRule", "hardBreak", "image"],
+  nodes: ["paragraph", "bulletList", "orderedList", "listItem", "blockquote", "horizontalRule", "hardBreak", "image", "mention"],
   marks: ["bold", "italic", "underline", "strike", "code", "link"],
 };
 export const TICKET_TOOLS: GcsEditorTool[] = ["bold", "italic", "underline", "strike", "bulletList", "orderedList", "quote", "link", "image", "emoji", "clear"];

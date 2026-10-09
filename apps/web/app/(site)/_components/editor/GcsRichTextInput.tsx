@@ -60,6 +60,8 @@ export function GcsRichTextInput({ name, initial, allow, maxLength, onValue, too
         {...(compact ? { compact } : {})}
         {...(labelledBy ? { labelledBy } : {})}
         {...(id ? { id } : {})}
+        // @mențiunile (aceleași sugestii ca în postări), doar unde câmpul le permite (`mention` în `allow`).
+        {...(allow.nodes.includes("mention") ? { mentionUrl: "/api/forums/mentions" } : {})}
         onChange={(doc, empty) => {
           setValue(empty ? '""' : JSON.stringify(doc));
           onValueRef.current?.(empty ? "" : doc);

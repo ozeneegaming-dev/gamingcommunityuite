@@ -24,6 +24,8 @@ export type GcsChatProData = {
   historyHref: string | null;
   /** Numele viewer-ului (mențiunile lui se evidențiază). */
   viewerName: string | null;
+  /** Grupurile viewer-ului: un mesaj care menționează unul dintre ele se evidențiază ca o mențiune. */
+  viewerGroupIds: number[];
 };
 
 /** Viewer-ul folosește Chat Pro (aplicația pornită și accesibilă grupurilor lui). */
@@ -45,6 +47,6 @@ export async function chatProRoomProps(actor: GcsActor, channel: GcsChatChannelV
     chatPro.history.canView(actor),
     actor.userId ? db.user.findUnique({ where: { id: actor.userId }, select: { name: true } }) : Promise.resolve(null),
   ]);
-  const pro: GcsChatProData = { config, me, emotes, bar, ranking, badges, historyHref: canHistory ? "/chat/history" : null, viewerName: viewer?.name ?? null };
+  const pro: GcsChatProData = { config, me, emotes, bar, ranking, badges, historyHref: canHistory ? "/chat/history" : null, viewerName: viewer?.name ?? null, viewerGroupIds: actor.userId ? actor.groupIds : [] };
   return { ...base, pro };
 }

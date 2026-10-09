@@ -16,7 +16,8 @@ import {
   type GcsRedisRateLimiter,
   type GcsSettingsService,
 } from "@gcs/core";
-import { normalizeUsername } from "@gcs/core";
+import { normalizeUsername, parseTextMentions, type GcsGroupMentionService, type GcsMentionHint, type GcsTextMention } from "@gcs/core";
+import { mentionIds, type GcsTextMentions } from "../profile/textMentions";
 import type { ChatChannel, ChatRoomType, Prisma, PrismaClient } from "@gcs/db";
 import type { GcsChatProMessage } from "../chat-pro/types";
 import { toRef, userRefSelect, type GcsUserRef } from "../forums/queries";
@@ -78,6 +79,8 @@ export type GcsChatMessageView = {
   replyToId: number | null;
   /** Datele adăugate de Chat Pro (porecla, insignele, citatul, rezultatul unei comenzi); lipsesc în chat-ul standard. */
   pro?: GcsChatProMessage;
+  /** Mențiunile hotărâte la trimitere (membri și grupuri, după id): pastilele din `html` și evidențierea din Chat Pro. */
+  mentions?: GcsTextMention[];
 };
 export type GcsChatRoomInput = { name: string; type: ChatRoomType; invite?: string[] };
 export type GcsChatChannelInput = {
@@ -101,7 +104,13 @@ type ChatMessageRow = {
   reactions?: { userId: string; reactionId: number }[];
   files?: unknown;
   replyToId?: number | null;
+  meta?: unknown;
 };
+
+/** Mențiunile salvate în `meta.mentions` al unui mesaj. */
+export function chatMentionsOf(meta: unknown): GcsTextMention[] {
+  return typeof meta === "object" && meta !== null && !Array.isArray(meta) ? parseTextMentions((meta as { mentions?: unknown }).mentions) : [];
+}
 
 const isChatFile = (f: unknown): f is GcsChatFile =>
   typeof f === "object" && f !== null && typeof (f as GcsChatFile).id === "string" && ((f as GcsChatFile).kind === "image" || (f as GcsChatFile).kind === "audio");
@@ -115,12 +124,14 @@ function countReactions(rows: { reactionId: number }[]): GcsChatReactionCount[] 
 
 export function toChatView(m: ChatMessageRow, channel: string, viewerId: string | null = null): GcsChatMessageView {
   const reactions = m.reactions ?? [];
+  const mentions = chatMentionsOf(m.meta);
   return {
     id: m.id,
     channel,
     author: m.author ? toRef(m.author) : null,
     body: m.body,
-    html: renderChatText(m.body),
+    html: renderChatText(m.body, mentions),
+    ...(mentions.length > 0 ? { mentions } : {}),
     createdAt: m.createdAt.toISOString(),
     editedAt: m.editedAt?.toISOString() ?? null,
     reactions: countReactions(reactions),
@@ -168,6 +179,10 @@ export class GcsChatService {
       attachments?: GcsAttachmentService;
       /** Punctele de extensie (Chat Pro); fără ele, chat-ul standard. */
       extensions?: GcsChatExtensions;
+      /** Mențiunile din text (după id); fără ele, doar `@nume` exact, ca înainte. */
+      textMentions?: GcsTextMentions;
+      /** Pauza dintre mențiunile aceluiași grup (setările `mentions.*` ale grupului). */
+      groupMentions?: GcsGroupMentionService;
     },
   ) {
     deps.attachments?.registerAccess(CHAT_FILE_CONTENT_TYPE, (actor, id) => this.canReadMessage(actor, Number(id)));
@@ -282,7 +297,7 @@ export class GcsChatService {
    * încă nelegate). Imaginile cer `chat.allow_images`, vocea `chat.voice_enabled`. `replyTo`: un mesaj al aceleiași
    * camere (răspunsul citat din Chat Pro).
    */
-  async send(actor: GcsActor, key: string, raw: unknown, opts: { files?: string[]; replyTo?: number | null } = {}): Promise<GcsChatMessageView> {
+  async send(actor: GcsActor, key: string, raw: unknown, opts: { files?: string[]; replyTo?: number | null; mentions?: GcsMentionHint[] } = {}): Promise<GcsChatMessageView> {
     const { db, bus, permissions, settings, rateLimiter, realtime } = this.deps;
     const channel = await this.accessible(actor, key);
     if (!actor.userId || actor.isBanned || !(await permissions.can(actor, "chat.write", chatContainer(channel.key)))) {
@@ -320,7 +335,11 @@ export class GcsChatService {
     const words = await settings.get<string[]>("chat.word_filter");
     const filtered = applyWordFilter(patch.body ?? body, Array.isArray(words) ? words : []);
     const authorId = actor.userId;
-    const meta = patch.meta ?? null;
+    // Mențiunile (sugestiile alese și `@nume` exact), hotărâte acum și păstrate cu mesajul: pastilele și notificările merg după id.
+    const mentions = this.deps.textMentions && !patch.meta?.bot ? await this.deps.textMentions.resolve(actor, filtered, opts.mentions ?? []) : [];
+    const mentionedGroups = mentionIds(mentions).groups;
+    await this.deps.groupMentions?.assertCooldown(actor, mentionedGroups);
+    const meta = mentions.length > 0 ? { ...(patch.meta ?? {}), mentions } : (patch.meta ?? null);
     const message = await db.$transaction(async (tx) => {
       const row = await tx.chatMessage.create({
         data: { channelId: channel.id, authorId, body: filtered, files, replyToId, ...(meta ? { meta: meta as Prisma.InputJsonValue } : {}) },
@@ -337,7 +356,8 @@ export class GcsChatService {
       tags: [`chat:${channel.key}`],
     });
     await realtime.publish(`chat:${channel.key}`, "message", view);
-    await this.mentions(channel, message.id, actor.userId, filtered);
+    await this.deps.groupMentions?.markCooldown(actor, mentionedGroups);
+    await this.mentions(channel, message.id, actor.userId, filtered, this.deps.textMentions ? mentions : null);
     return view!;
   }
 
@@ -364,15 +384,29 @@ export class GcsChatService {
   }
 
   /**
-   * Mențiunile `@nume` dintr-un mesaj: cei menționați care pot citi camera primesc notificarea `chat.mention`
-   * (evenimentul îl transformă în notificare `registerChatNotifications`). Cel mult 10 pe mesaj.
+   * Mențiunile dintr-un mesaj: membrii menționați (după id) primesc `chat.mention` (evenimentul îl transformă în
+   * notificare `registerChatNotifications`; cine nu poate citi camera n-o vede), grupurile trec prin notificarea de grup
+   * (`mentions.created` → `core.group_mention`, cu setările grupului). Fără serviciul de mențiuni: `@nume` exact.
    */
-  private async mentions(channel: ChatChannel, messageId: number, authorId: string, body: string): Promise<void> {
-    const names = [...new Set([...body.matchAll(MENTION_RE)].map((m) => normalizeUsername(m[1]!)))].slice(0, MAX_MENTIONS);
-    if (names.length === 0) return;
-    const users = await this.deps.db.user.findMany({ where: { nameNormalized: { in: names }, id: { not: authorId } }, select: { id: true } });
-    if (users.length === 0) return;
-    await this.deps.bus.emit({ name: "chat.mention", payload: { channelKey: channel.key, messageId, authorId, userIds: users.map((u) => u.id) }, tags: [] });
+  private async mentions(channel: ChatChannel, messageId: number, authorId: string, body: string, resolved: GcsTextMention[] | null): Promise<void> {
+    let userIds: string[];
+    if (resolved) {
+      userIds = mentionIds(resolved).users.filter((id) => id !== authorId);
+      const groupIds = mentionIds(resolved).groups;
+      if (groupIds.length > 0) {
+        await this.deps.bus.emit({
+          name: "mentions.created",
+          payload: { targetType: "chat.message", targetId: String(messageId), authorId, userIds: [], groupIds, skip: userIds, type: "chat.mention" },
+          tags: [],
+        });
+      }
+    } else {
+      const names = [...new Set([...body.matchAll(MENTION_RE)].map((m) => normalizeUsername(m[1]!)))].slice(0, MAX_MENTIONS);
+      if (names.length === 0) return;
+      userIds = (await this.deps.db.user.findMany({ where: { nameNormalized: { in: names }, id: { not: authorId } }, select: { id: true } })).map((u) => u.id);
+    }
+    if (userIds.length === 0) return;
+    await this.deps.bus.emit({ name: "chat.mention", payload: { channelKey: channel.key, messageId, authorId, userIds }, tags: [] });
   }
 
   /** Editarea propriului mesaj, în 5 minute; mesajul e marcat „editat”. */

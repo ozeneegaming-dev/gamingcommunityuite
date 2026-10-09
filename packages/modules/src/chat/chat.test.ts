@@ -50,6 +50,15 @@ describe("textul", () => {
     expect(renderChatText("link: https://ex.com.")).toBe('link: <a href="https://ex.com" rel="nofollow ugc noopener" target="_blank">https://ex.com</a>.');
   });
 
+  test("mențiunile hotărâte de server devin pastile (membru, grup); un `@nume` dintr-o adresă rămâne în adresă", () => {
+    const ana = { kind: "user" as const, id: "u1", name: "Ana" };
+    const mods = { kind: "group" as const, id: "7", name: "Moderatori" };
+    expect(renderChatText("hei @ana și @Moderatori <3", [ana, mods])).toBe(
+      'hei <a class="gcs-userLink gcs-mention" href="/members/u1" data-user="u1" data-user-id="u1">@ana</a> și <a class="gcs-groupMention" href="/members?group=7" data-group-id="7">@Moderatori</a> &lt;3',
+    );
+    expect(renderChatText("https://x.ro/@Ana", [ana])).toBe('<a href="https://x.ro/@Ana" rel="nofollow ugc noopener" target="_blank">https://x.ro/@Ana</a>');
+  });
+
   test("filtrul înlocuiește cuvintele întregi, fără să conteze literele mari sau diacriticele", () => {
     expect(applyWordFilter("Prost și prost, dar nu prostie", ["prost"])).toBe("*** și ***, dar nu prostie");
     expect(applyWordFilter("Ești un PROȘTI", ["prosti"])).toBe("Ești un ***");
@@ -425,5 +434,55 @@ describe("chat v2 (etapa 5)", () => {
     await chat.send(a, "general", "@Bogdan vino în joc");
     const rows = await w.db.notification.findMany({ where: { userId: b.userId!, type: "chat.mention" } });
     expect(rows).toHaveLength(1);
+  });
+
+  test("mențiunile după id: pastile în HTML, `meta.mentions`, notificări pentru membri și pentru grup", async () => {
+    const { registerChatNotifications } = await import("./notify");
+    const { GcsTextMentions } = await import("../profile/textMentions");
+    registerChatNotifications({ db: w.db, bus: w.bus, notifications: w.notifications, chatQueries: queries, actors: w.actors });
+    const withMentions = new GcsChatService({
+      db: w.db,
+      bus: w.bus,
+      permissions: w.permissions,
+      settings: w.settings,
+      rateLimiter: w.rateLimiter,
+      realtime: w.realtime,
+      acp: w.acp,
+      textMentions: new GcsTextMentions({ db: w.db, groupMentions: w.groupMentions }),
+      groupMentions: w.groupMentions,
+    });
+    const a = await member("Ana");
+    const bogdan = await w.createUser("Bogdan Popa", "member");
+    const vera = await w.createUser("Vera", "vip_gold");
+    await w.groupService.setMentionSettings(w.groups.vip_gold!, { enabled: true, allowedGroupIds: [w.groups.member!], notify: true, notifyLimit: 50, cooldownMinutes: 0 }, w.root);
+
+    // Numele cu spațiu merge doar ales din sugestii; grupul, ales sau scris exact; un id ales dar scos din text nu contează.
+    const m = await withMentions.send(a, "general", "salut @Bogdan Popa și @VIP Gold!", {
+      mentions: [
+        { kind: "user", id: bogdan.id },
+        { kind: "group", id: String(w.groups.vip_gold) },
+        { kind: "user", id: vera.id },
+      ],
+    });
+    expect(m.mentions).toEqual([
+      { kind: "user", id: bogdan.id, name: "Bogdan Popa" },
+      { kind: "group", id: String(w.groups.vip_gold), name: "VIP Gold" },
+    ]);
+    expect(m.html).toContain(`data-user-id="${bogdan.id}"`);
+    expect(m.html).toContain(`data-group-id="${w.groups.vip_gold}"`);
+    const saved = await w.db.chatMessage.findUniqueOrThrow({ where: { id: m.id }, select: { meta: true } });
+    expect((saved.meta as { mentions?: unknown[] }).mentions).toHaveLength(2);
+    // Lista de mesaje aduce aceleași pastile (din `meta`), și după o redenumire (după id).
+    await w.db.user.update({ where: { id: bogdan.id }, data: { name: "Bogdan P" } });
+    const [again] = (await queries.recent(a, "general")).filter((x) => x.id === m.id);
+    expect(again?.html).toContain(`href="/members/${bogdan.id}"`);
+
+    await expect.poll(async () => w.db.notification.count({ where: { userId: bogdan.id, type: "chat.mention" } })).toBe(1);
+    await expect.poll(async () => w.db.notification.count({ where: { userId: vera.id, type: "core.group_mention" } })).toBe(1);
+    // Un grup pe care autorul nu-l poate menționa rămâne text.
+    await clear(a);
+    const plain = await withMentions.send(a, "general", "@Moderator salut", { mentions: [{ kind: "group", id: String(w.groups.moderator) }] });
+    expect(plain.mentions ?? []).toEqual([]);
+    expect(plain.html).not.toContain("gcs-groupMention");
   });
 });

@@ -1728,35 +1728,8 @@ html.gcs-nova[data-theme="light"] {
 
 /* ─── Mișcarea: tokenurile comune și animațiile de intrare ─────────────────────────────────────────────── */
 
-/*
- * Durate și curba comune (hover card, sugestii, dropdown-urile legendei, tooltip-uri, pagina grupurilor). Definite pe
- * `:root`, deci le folosesc și componentele din afara temei Nova (cu valori de rezervă acolo unde sunt citite).
- */
-:root {
-  --gcs-motion-fast: 0.15s;
-  --gcs-motion-base: 0.2s;
-  --gcs-motion-slow: 0.3s;
-  --gcs-motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
-}
+/* Tokenurile (`--gcs-motion-*`) și animațiile `gcs-motion-drop` / `gcs-motion-fade` sunt comune, în `base.css`. */
 /* Panourile care apar (hover card, sugestiile mențiunilor, dropdown-urile): opacitate + 6 px de alunecare. */
-@keyframes gcs-motion-drop {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes gcs-motion-fade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
 .gcs-nova .gcs-hoverCard,
 .gcs-nova .gcs-groupCard,
 .gcs-nova .gcs-mentionList {
@@ -1768,10 +1741,9 @@ html.gcs-nova[data-theme="light"] {
 /*
  * Pe toate butoanele: cele normale și cele cu iconiță, pătratele din antet, tab-urile și segmentele, paginarea, cipurile,
  * itemii meniurilor și ai sugestiilor. Stratul e un `background-image` (sub text, peste culoarea de fundal); regulile de
- * hover ale butoanelor setează `background-color`, nu `background`, ca să nu-l șteargă. `.gcs-sweep` îl pune pe orice
- * alt element. La ieșire stratul se retrage lin; la intrare vine cu un mic recul.
+ * hover ale butoanelor setează `background-color`, nu `background`, ca să nu-l șteargă. Utilitarul `.gcs-sweep` (în
+ * `base.css`) îl pune pe orice alt element. La ieșire stratul se retrage lin; la intrare vine cu un mic recul.
  */
-.gcs-sweep,
 html.gcs-nova
   :is(
     .gcs-btn,
@@ -1805,7 +1777,6 @@ html.gcs-nova
     box-shadow var(--gcs-ease, 0.18s),
     transform var(--gcs-ease, 0.18s);
 }
-.gcs-sweep:is(:hover, :focus-visible),
 html.gcs-nova
   :is(
     .gcs-btn,
@@ -1851,7 +1822,6 @@ html.gcs-nova
   .gcs-nova .gcs-mentionList {
     animation-name: gcs-motion-fade;
   }
-  .gcs-sweep,
   html.gcs-nova :is(.gcs-btn, .gcs-iconBtn, .gcs-headerIcon, .gcs-userMenu__trigger, .gcs-seg, .gcs-tab, .gcs-pagination__link, .gcs-segLink, .gcs-settingsNav__link, .gcs-toggleLink, .gcs-chip, .gcs-dropdown__item, .gcs-mentionList__item, .gcs-legendPro__info, .gcs-legendPro__toggle, .gcs-legendPro__menuItem, .gcs-groupsPage__segItem, .gcs-groupsPage__chip),
   html.gcs-nova :is(.gcs-btn, .gcs-iconBtn, .gcs-headerIcon, .gcs-userMenu__trigger, .gcs-seg, .gcs-tab, .gcs-pagination__link, .gcs-segLink, .gcs-settingsNav__link, .gcs-toggleLink, .gcs-chip, .gcs-dropdown__item, .gcs-mentionList__item, .gcs-legendPro__info, .gcs-legendPro__toggle, .gcs-legendPro__menuItem, .gcs-groupsPage__segItem, .gcs-groupsPage__chip):is(:hover, :focus-visible) {
     transition: none;

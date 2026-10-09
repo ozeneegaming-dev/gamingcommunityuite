@@ -12,7 +12,7 @@ import { services } from "@/lib/services";
 import { GcsTicketControls } from "../../../_components/servers/GcsTicketControls";
 import { GcsTicketReply } from "../../../_components/servers/GcsTicketForm";
 import { playerHref, sanctionHref } from "../../../_components/servers/types";
-import { GcsMemberLink } from "@/lib/member-names";
+import { GcsMemberLink, GcsNamedHtml } from "@/lib/member-names";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -107,7 +107,7 @@ export default async function TicketPage({ params }: Props) {
               <time dateTime={ticket.createdAt}>{when(ticket.createdAt)}</time>
             </header>
             {/* HTML-ul vine din renderer-ul platformei (documentul editorului validat și sanitizat la salvare, ca postările). */}
-            <div className="gcs-postBody gcs-richText gcs-ticketPost__body" dangerouslySetInnerHTML={{ __html: ticket.contentHtml }} />
+            <GcsNamedHtml className="gcs-postBody gcs-richText gcs-ticketPost__body" html={ticket.contentHtml} />
           </GcsCard>
 
           <section aria-labelledby="gcs-ticket-thread" className="gcs-ticketThread">
@@ -128,7 +128,7 @@ export default async function TicketPage({ params }: Props) {
                       )}
                       <time dateTime={m.createdAt}>{when(m.createdAt)}</time>
                     </header>
-                    <div className="gcs-postBody gcs-richText gcs-ticketPost__body" dangerouslySetInnerHTML={{ __html: m.contentHtml }} />
+                    <GcsNamedHtml className="gcs-postBody gcs-richText gcs-ticketPost__body" html={m.contentHtml} />
                   </li>
                 ) : (
                   <li key={m.id} className="gcs-ticketEvent" data-kind={m.kind}>

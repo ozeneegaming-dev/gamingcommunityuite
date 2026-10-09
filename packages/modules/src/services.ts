@@ -128,6 +128,8 @@ import { GcsClanQueries } from "./clans/queries";
 import { CLAN_BANNER, CLAN_LOGO, GcsClanService } from "./clans/service";
 import { GcsGroupDirectory } from "./profile/groupDirectory";
 import { GcsGroupsProService } from "./groups-pro/service";
+import { GcsTextMentions } from "./profile/textMentions";
+import { chatMentionNames } from "./chat/mentionNames";
 
 export type GcsServices = {
   db: PrismaClient;
@@ -437,7 +439,17 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     mailer,
     baseUrl: async () => baseUrl(await settings.get<string>("site.url")),
   });
-  const social = new GcsSocialService({ db, bus, cache, permissions, settings, rateLimiter, profiles, render: (content) => posting.render(content) });
+  const social = new GcsSocialService({
+    db,
+    bus,
+    cache,
+    permissions,
+    settings,
+    rateLimiter,
+    profiles,
+    render: (content, ctx) => posting.render(content, ctx),
+    markGroupMentions: (actor, rendered) => posting.markGroupMentions(actor, rendered),
+  });
   social.registerContent({ reactions, reports });
   const achievements = new GcsAchievementService({ db, bus, acp, jobs });
   achievements.listen(bus);
@@ -485,7 +497,11 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   notificationProducers.listen(bus);
   // Punctele de extensie ale chat-ului (Chat Pro), împărțite de serviciu și de citiri.
   const chatExtensions = new GcsChatExtensions();
-  const chat = new GcsChatService({ db, bus, permissions, settings, rateLimiter, realtime, acp, attachments, extensions: chatExtensions });
+  // Mențiunile din textul simplu (chat, statusuri): după id, cu setările de mențiune ale grupurilor.
+  const textMentions = new GcsTextMentions({ db, groupMentions });
+  const chat = new GcsChatService({ db, bus, permissions, settings, rateLimiter, realtime, acp, attachments, extensions: chatExtensions, textMentions, groupMentions });
+  // Stilul numelor din pastilele mențiunilor (decorarea de bază, înaintea extensiilor); `appearance` e creat mai jos.
+  chatExtensions.useBase(chatMentionNames({ db, letterUsers: () => appearance.letterUsers() }));
   const chatQueries = new GcsChatQueries({ db, permissions, extensions: chatExtensions });
   const chatPro = new GcsChatProService({
     db,
@@ -527,7 +543,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     attachments,
     rateLimiter,
     realtime,
-    render: (content) => posting.render(content),
+    render: (content, ctx) => posting.render(content, ctx),
+    markGroupMentions: (actor, rendered) => posting.markGroupMentions(actor, rendered),
     canViewServer: (actor, id) => serverQueries.canView(actor, id),
     visibleServers: (actor) => serverQueries.visibleIds(actor),
     // Aprobarea unei înrolări automate creează serverul prin aplicația Servere (validarea, jurnalul `servers.create`).

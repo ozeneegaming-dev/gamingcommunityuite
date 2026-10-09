@@ -51,6 +51,14 @@ export async function namesHtml(html: string | string[]): Promise<string | strin
 }
 
 /**
+ * HTML produs de server (statusurile și comentariile de pe profil, mesajele private, tichetele, descrierea clanului,
+ * câmpurile de profil, semnăturile): randat ca element, cu numele și pastilele mențiunilor aduse la stilul de acum.
+ */
+export async function GcsNamedHtml({ html, as: Tag = "div", ...props }: { html: string; as?: "div" | "td"; className?: string; "data-testid"?: string }) {
+  return <Tag {...props} dangerouslySetInnerHTML={{ __html: await namesHtml(html) }} />;
+}
+
+/**
  * Cheia stilului unui membru, cerută dintr-o componentă: cererile din aceeași randare se adună într-o singură
  * interogare (o listă de 50 de nume = o interogare), o dată pe request.
  */

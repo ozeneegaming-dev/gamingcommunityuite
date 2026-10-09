@@ -278,6 +278,8 @@ export function GcsSignatureForm({
         tools={SIGNATURE_TOOLS}
         imageUrl={maxImages > 0}
         labelledBy="gcs-signature-label"
+        // Mențiunile din semnătură sunt pastile (după id), fără notificări: semnătura apare sub fiecare postare.
+        mentionUrl="/api/forums/mentions"
       />
       <div style={{ display: "flex", gap: 8 }}>
         <GcsButton icon={<GcsIconSvg icon={faFloppyDisk} />}

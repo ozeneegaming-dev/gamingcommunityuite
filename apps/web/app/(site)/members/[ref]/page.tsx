@@ -20,7 +20,7 @@ import { GcsWallComposer, GcsWallItemActions } from "../../_components/profile/G
 import { GcsTranslateButton } from "../../_components/GcsTranslateButton";
 import { GcsDeletedMember } from "../../_components/GcsDeletedMember";
 import { translateLabels } from "@/lib/translate";
-import { GcsMemberLink } from "@/lib/member-names";
+import { GcsMemberLink, GcsNamedHtml } from "@/lib/member-names";
 import { GcsGroupLink } from "@/lib/group-pills";
 
 const TABS = ["activity", "about", "games", "followers", "badges", "warnings"] as const;
@@ -251,7 +251,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
     f.html ? (
       <div key={f.key} className="gcs-profileField gcs-profileField--rich" data-testid="gcs-profile-rich-field">
         <span>{f.label}</span>
-        <div className="gcs-postBody gcs-richText" dangerouslySetInnerHTML={{ __html: f.html }} />
+        <GcsNamedHtml className="gcs-postBody gcs-richText" html={f.html} />
       </div>
     ) : (
       <div key={f.key} className="gcs-profileField">
@@ -695,7 +695,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
             <span className="gcs-muted">· {relative(entry.createdAt)}</span>
             {entry.visibility !== "VISIBLE" && <span className="gcs-muted"> · {t("wall.hidden")}</span>}
           </span>
-          <div className="gcs-postBody" dangerouslySetInnerHTML={{ __html: entry.html }} />
+          <GcsNamedHtml className="gcs-postBody" html={entry.html} />
         </div>
       </div>
     );

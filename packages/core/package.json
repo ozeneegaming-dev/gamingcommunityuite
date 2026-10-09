@@ -10,6 +10,7 @@
     "./diff": "./src/templates/diff.ts",
     "./rich-fields": "./src/content/richFields.ts",
     "./member-name": "./src/members/memberName.ts",
+    "./text-mentions": "./src/members/textMentions.ts",
     "./test/redis": "./test/redis.ts",
     "./test/redisSetup": "./test/redisSetup.ts",
     "./test/world": "./test/world.ts",

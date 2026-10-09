@@ -2,6 +2,7 @@ import { GcsForbidden, normalizeUsername, type GcsActor, type GcsPermissionServi
 import type { Prisma, PrismaClient } from "@gcs/db";
 import type { GcsChatQueries } from "../chat/queries";
 import { renderChatText } from "../chat/text";
+import { chatMentionsOf } from "../chat/chat";
 import { toRef, userRefSelect, type GcsUserRef } from "../forums/queries";
 
 export const HISTORY_PAGE_SIZE = 25;
@@ -90,7 +91,7 @@ export class GcsChatHistory {
         channel: m.channel,
         author: m.author ? toRef(m.author) : null,
         body: m.body,
-        html: renderChatText(m.body),
+        html: renderChatText(m.body, chatMentionsOf(m.meta)),
         createdAt: m.createdAt.toISOString(),
         editedAt: m.editedAt?.toISOString() ?? null,
       })),

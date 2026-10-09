@@ -1,8 +1,10 @@
 /**
- * Textul mesajelor de chat (specul etapei 4 §3): text simplu, cu linkurile `http(s)` clicabile. Limita configurabilă
- * (`chat.max_length`) o verifică serviciul; aici e doar plafonul tehnic.
- * Fără importuri: fișierul e folosit și de clientul web (randarea mesajelor primite live).
+ * Textul mesajelor de chat (specul etapei 4 §3): text simplu, cu linkurile `http(s)` clicabile și mențiunile hotărâte
+ * de server (`meta.mentions`) ca pastile. Limita configurabilă (`chat.max_length`) o verifică serviciul; aici e doar
+ * plafonul tehnic. Doar importuri pure (`@gcs/core/text-mentions`): fișierul e folosit și de clientul web.
  */
+import { splitMentions, type GcsTextMention } from "@gcs/core/text-mentions";
+
 export const CHAT_MAX_CHARS = 2000;
 
 const ESC: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
@@ -20,20 +22,61 @@ export function cleanChatText(raw: string): string {
 const URL_RE = /\bhttps?:\/\/[^\s<>"']+/gi;
 const TRAILING = /[.,!?;:)\]}]+$/;
 
-/** HTML-ul unui mesaj: totul escapat; doar adresele `http(s)` devin linkuri. */
-export function renderChatText(text: string): string {
+/** Adresele `http(s)` din text: poziția și adresa (fără punctuația de la final). */
+function urlRanges(text: string): { start: number; end: number; url: string }[] {
+  const out: { start: number; end: number; url: string }[] = [];
+  for (const m of text.matchAll(URL_RE)) {
+    const trail = TRAILING.exec(m[0])?.[0] ?? "";
+    const url = m[0].slice(0, m[0].length - trail.length);
+    out.push({ start: m.index, end: m.index + url.length, url });
+  }
+  return out;
+}
+
+/** O bucată de text fără mențiuni: escapată, cu adresele `http(s)` ca linkuri. */
+function linkify(text: string): string {
   let html = "";
   let last = 0;
-  for (const m of text.matchAll(URL_RE)) {
-    let url = m[0];
-    const trail = TRAILING.exec(url)?.[0] ?? "";
-    url = url.slice(0, url.length - trail.length);
-    const start = m.index;
-    html += escape(text.slice(last, start));
-    html += `<a href="${escape(url)}" rel="nofollow ugc noopener" target="_blank">${escape(url)}</a>`;
-    last = start + url.length;
+  for (const r of urlRanges(text)) {
+    html += escape(text.slice(last, r.start));
+    html += `<a href="${escape(r.url)}" rel="nofollow ugc noopener" target="_blank">${escape(r.url)}</a>`;
+    last = r.end;
   }
   return html + escape(text.slice(last));
+}
+
+/**
+ * Pastila unei mențiuni, cu același markup ca în postări: un membru (`gcs-userLink gcs-mention`, cu `data-user-id`;
+ * stilul numelui îl adaugă decorarea numelor) sau un grup (`gcs-groupMention`, cu `data-group-id`; culoarea vine din
+ * CSS-ul grupurilor). Hover card-ul și cardul grupului se deschid de pe ele, ca peste tot.
+ */
+function mentionPill(m: GcsTextMention, shown: string): string {
+  const id = escape(m.id);
+  return m.kind === "group"
+    ? `<a class="gcs-groupMention" href="/members?group=${id}" data-group-id="${id}">${escape(shown)}</a>`
+    : `<a class="gcs-userLink gcs-mention" href="/members/${id}" data-user="${id}" data-user-id="${id}">${escape(shown)}</a>`;
+}
+
+/**
+ * HTML-ul unui mesaj: totul escapat; adresele `http(s)` devin linkuri, iar mențiunile (cele hotărâte de server, după
+ * id) devin pastile. Un `@nume` din interiorul unei adrese rămâne parte din adresă.
+ */
+export function renderChatText(text: string, mentions: readonly GcsTextMention[] = []): string {
+  if (mentions.length === 0) return linkify(text);
+  const urls = urlRanges(text);
+  let html = "";
+  let pos = 0;
+  let plain = "";
+  for (const part of splitMentions(text, mentions)) {
+    const start = pos;
+    pos += part.text.length;
+    const inUrl = urls.some((u) => start < u.end && pos > u.start);
+    if (part.mention && !inUrl) {
+      html += linkify(plain) + mentionPill(part.mention, part.text);
+      plain = "";
+    } else plain += part.text;
+  }
+  return html + linkify(plain);
 }
 
 /** Litera fără diacritice, cu literă mică (o literă → unul sau mai multe caractere). */

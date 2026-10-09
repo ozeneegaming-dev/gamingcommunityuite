@@ -1,5 +1,6 @@
 "use client";
 
+import type { GcsMentionHint } from "@gcs/core/text-mentions";
 import { faArrowDown, faBullhorn, faClockRotateLeft, faGear, faPowerOff, faScroll, faThumbtack, faCheckToSlot, faXmark } from "@fortawesome/free-solid-svg-icons";
 import type { GcsErrorPayload } from "@gcs/core";
 import type { GcsChatAnnouncementView, GcsChatMessageView, GcsChatProGif, GcsChatProPrefs, GcsChatReactionCount } from "@gcs/modules";
@@ -131,7 +132,18 @@ export function GcsChatProRoom(props: Props) {
     const names = [pro.viewerName, nickname].filter((n): n is string => !!n).map(escapeRe);
     return names.length > 0 ? new RegExp(`(^|[^\\p{L}\\p{N}_])@(?:${names.join("|")})(?![\\p{L}\\p{N}_])`, "iu") : null;
   }, [pro.viewerName, nickname]);
-  const mentions = useCallback((m: GcsChatMessageView) => mentionRe !== null && m.author?.id !== viewerId && mentionRe.test(m.body), [mentionRe, viewerId]);
+  // Mesajele noi au mențiunile hotărâte de server (după id: viewer-ul sau unul dintre grupurile lui, și după o
+  // redenumire); cele vechi se recunosc după nume, ca înainte.
+  const myGroups = useMemo(() => new Set((pro.viewerGroupIds ?? []).map(String)), [pro.viewerGroupIds]);
+  const mentions = useCallback(
+    (m: GcsChatMessageView) => {
+      if (m.author?.id === viewerId) return false;
+      if (m.mentions?.some((x) => (x.kind === "user" ? x.id === viewerId : myGroups.has(x.id)))) return true;
+      // Porecla din Chat Pro nu e un nume de membru: rămâne recunoscută după text.
+      return mentionRe !== null && mentionRe.test(m.body);
+    },
+    [mentionRe, viewerId, myGroups],
+  );
 
   const merge = useCallback((incoming: GcsChatMessageView[]) => {
     setMessages((list) => {
@@ -329,8 +341,8 @@ export function GcsChatProRoom(props: Props) {
       }
     });
 
-  const send = async (body: string, files: string[]): Promise<boolean> => {
-    const res = await sendChatMessage({ channel: channel.key, body, files, replyTo: replyTo?.id ?? null });
+  const send = async (body: string, files: string[], mentions: GcsMentionHint[]): Promise<boolean> => {
+    const res = await sendChatMessage({ channel: channel.key, body, files, replyTo: replyTo?.id ?? null, mentions });
     if (!res.ok) {
       setError(errorMessage(res.error));
       return false;

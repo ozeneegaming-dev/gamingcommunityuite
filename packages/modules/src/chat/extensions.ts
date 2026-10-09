@@ -48,10 +48,19 @@ export interface GcsChatExtension {
 /** Registrul extensiilor chat-ului, împărțit de `GcsChatService` și `GcsChatQueries`. */
 export class GcsChatExtensions {
   private list: GcsChatExtension[] = [];
+  private base: ((views: GcsChatMessageView[]) => Promise<void>)[] = [];
 
   /** Înregistrează (sau înlocuiește, după cheie) o extensie. */
   use(ext: GcsChatExtension): void {
     this.list = [...this.list.filter((e) => e.key !== ext.key), ext];
+  }
+
+  /**
+   * O decorare a chat-ului standard (mereu activă, înaintea extensiilor): ex. stilul numelor din pastilele mențiunilor.
+   * Rulează și fără nicio extensie înregistrată.
+   */
+  useBase(decorate: (views: GcsChatMessageView[]) => Promise<void>): void {
+    this.base.push(decorate);
   }
 
   private async active(): Promise<GcsChatExtension[]> {
@@ -80,7 +89,9 @@ export class GcsChatExtensions {
   }
 
   async decorate<T extends GcsChatMessageView[]>(views: T): Promise<T> {
-    if (this.list.length === 0 || views.length === 0) return views;
+    if (views.length === 0) return views;
+    for (const d of this.base) await d(views);
+    if (this.list.length === 0) return views;
     for (const e of await this.active()) await e.decorate?.(views);
     return views;
   }

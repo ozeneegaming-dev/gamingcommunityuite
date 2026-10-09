@@ -43,7 +43,8 @@ export async function createProfileWorld() {
     settings: world.settings,
     rateLimiter: world.rateLimiter,
     profiles,
-    render: (content) => world.posting.render(content),
+    render: (content, ctx) => world.posting.render(content, ctx),
+    markGroupMentions: (actor, rendered) => world.posting.markGroupMentions(actor, rendered),
   });
   social.registerContent({ reactions: world.reactions, reports: world.reports });
   // Fără coadă: evaluarea (jobul din worker) se apelează direct în teste; punctele pe acțiune vin din ascultători.

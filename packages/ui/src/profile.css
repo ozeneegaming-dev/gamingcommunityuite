@@ -605,6 +605,12 @@
 .gcs-wallComposer--compact {
   padding-left: 52px;
 }
+/* Câmpul cu lista de sugestii a mențiunilor ancorată de el. */
+.gcs-wallComposer__field {
+  display: flex;
+  flex: 1 1 240px;
+  min-width: 0;
+}
 .gcs-wallComposer__input {
   flex: 1 1 240px;
   min-width: 0;

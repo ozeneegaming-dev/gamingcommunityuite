@@ -52,6 +52,7 @@ export * from "./moderation/warnings";
 export * from "./nav/service";
 export * from "./members/appearance";
 export * from "./members/memberName";
+export * from "./members/textMentions";
 export * from "./members/appearanceService";
 export * from "./members/directory";
 export * from "./members/removal/types";

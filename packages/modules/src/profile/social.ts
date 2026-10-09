@@ -32,8 +32,13 @@ export type GcsSocialDeps = {
   settings: GcsSettingsService;
   rateLimiter: GcsRedisRateLimiter;
   profiles: GcsProfileService;
-  /** Randarea conținutului (aceeași ca la postările forumului: validare, sanitizare, lungime maximă). */
-  render: (content: unknown) => Promise<GcsRendered>;
+  /**
+   * Randarea conținutului (aceeași ca la postările forumului: validare, sanitizare, lungime maximă). Cu `actor`,
+   * mențiunile de grup ale autorului devin pastile (cu pauza dintre mențiuni verificată, `cooldown`).
+   */
+  render: (content: unknown, ctx?: { actor?: GcsActor; cooldown?: boolean }) => Promise<GcsRendered>;
+  /** Pornește pauza dintre mențiunile de grup după salvare. */
+  markGroupMentions?: (actor: GcsActor, rendered: GcsRendered) => Promise<void>;
 };
 
 const userTags = (...ids: string[]) => ids.map((id) => `user:${id}`);
@@ -168,7 +173,7 @@ export class GcsSocialService {
       const res = await rateLimiter.consume(`wall-post:${actor.userId}`, { window: seconds, max: 1 });
       if (!res.allowed) throw new GcsRateLimited({ retryAfter: String(res.retryAfter) });
     }
-    const rendered = await render(content);
+    const rendered = await render(content, { actor, cooldown: true });
     if (rendered.text.trim() === "" && rendered.attachments.length === 0) throw new GcsValidationError({ content: "required" });
 
     const status = await db.$transaction(async (tx) => {
@@ -185,6 +190,7 @@ export class GcsSocialService {
       if (parentId !== undefined) await tx.statusUpdate.update({ where: { id: parentId }, data: { repliesCount: { increment: 1 } } });
       return row;
     });
+    await this.deps.markGroupMentions?.(actor, rendered);
     await bus.emit({
       name: "status.created",
       payload: { statusId: status.id, profileUserId, authorId: actor.userId, parentId: parentId ?? null },

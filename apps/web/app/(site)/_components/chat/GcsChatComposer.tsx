@@ -9,6 +9,8 @@ import { useTranslations } from "next-intl";
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { GcsChatEmojiPicker } from "./GcsChatEmojiPicker";
 import { useDismiss } from "./use-dismiss";
+import { useMentionInput } from "@gcs/ui/mention-input";
+import type { GcsMentionHint } from "@gcs/core/text-mentions";
 
 const MAX_FILES = 4;
 const VOICE_TYPES = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/mp4"];
@@ -47,8 +49,8 @@ type Props = {
   labels: { placeholder: string; send: string; input: string };
   /** Unde se deschid selectoarele: deasupra câmpului (implicit) sau dedesubt (câmpul e deasupra listei). */
   placement?: "above" | "below";
-  /** Trimite mesajul; `true` dacă a plecat (câmpul se golește). */
-  onSend: (body: string, files: string[]) => Promise<boolean>;
+  /** Trimite mesajul (cu sugestiile de mențiuni alese, încă în text); `true` dacă a plecat (câmpul se golește). */
+  onSend: (body: string, files: string[], mentions: GcsMentionHint[]) => Promise<boolean>;
   onError: (error: GcsErrorPayload | string | null) => void;
   /** Extensiile Chat Pro (lipsă = chat-ul standard). */
   ext?: GcsChatComposerExtensions;
@@ -82,7 +84,17 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
   const [files, setFiles] = useState<Pending[]>([]);
   const [panel, setPanel] = useState<"emoji" | "gif" | null>(null);
   const [uploading, setUploading] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  // @mențiunile: aceeași listă de sugestii ca în editorul postărilor (membri și grupuri), ancorată de câmp.
+  const te = useTranslations("topic.editor");
+  const mention = useMentionInput<HTMLInputElement>({
+    value: text,
+    onValue: setText,
+    labels: { empty: te("noMentions"), group: te("mentionGroup"), online: te("mentionOnline") },
+    enabled: !disabled,
+    placement: placement === "below" ? "below" : "above",
+    maxLength: config.maxLength > 0 ? config.maxLength : 2000,
+  });
+  const inputRef = mention.ref;
   const formRef = useRef<HTMLFormElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -193,11 +205,16 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
       return;
     }
     if (!body && files.length === 0) return;
-    const ok = await onSend(body, files.map((f) => f.id));
+    const ok = await onSend(
+      body,
+      files.map((f) => f.id),
+      mention.hints(),
+    );
     if (ok) {
       setText("");
       setFiles([]);
       setPanel(null);
+      mention.reset();
     }
   };
 
@@ -215,7 +232,7 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
     }
   };
   const sendGif = async (gif: GcsGif) => {
-    if (await onSend(gif.url, [])) {
+    if (await onSend(gif.url, [], [])) {
       setPanel(null);
       setGifs(null);
       setGifQuery("");
@@ -250,7 +267,7 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
       try {
         const res = await uploadChatFile(channel, new Blob(chunks, { type }), `voce.${ext}`);
         if (!res.ok) return onError(res.error);
-        await onSend("", [res.data.id]);
+        await onSend("", [res.data.id], []);
       } finally {
         setUploading(false);
       }
@@ -312,7 +329,7 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
         ))}
       {panel === "gif" && ext?.gifPanel && (
         <div ref={panelRef} style={{ display: "contents" }}>
-          {ext.gifPanel({ send: (url) => onSend(url, []), close: closePanel, placement })}
+          {ext.gifPanel({ send: (url) => onSend(url, [], []), close: closePanel, placement })}
         </div>
       )}
       {panel === "gif" && !ext?.gifPanel && (
@@ -364,7 +381,8 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
         </ul>
       )}
       <form ref={formRef} className="gcs-chat__form" onSubmit={(e) => void submit(e)}>
-        <div className="gcs-chat__field">
+        <div className="gcs-chat__field gcs-mentionAnchor">
+          {mention.popup}
           <input
             ref={inputRef}
             className="gcs-chat__input"
@@ -377,8 +395,10 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
               setText(e.target.value);
               ext?.onInput?.(e.target.value);
               updateSuggestions(e.target.value, e.target.selectionStart ?? e.target.value.length);
+              mention.onText(e.target.value, e.target.selectionStart ?? e.target.value.length);
             }}
             onKeyDown={(e) => {
+              if (mention.onKeyDown(e)) return;
               if (!suggestions) return;
               const n = suggestions.items.length;
               if (e.key === "ArrowDown" || e.key === "ArrowUp") {
@@ -392,8 +412,11 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
                 setSuggestions(null);
               }
             }}
-            onBlur={() => setSuggestions(null)}
-            {...(suggestions ? { role: "combobox", "aria-expanded": true, "aria-autocomplete": "list" as const } : {})}
+            onBlur={() => {
+              setSuggestions(null);
+              mention.onBlur();
+            }}
+            {...(suggestions ? { role: "combobox", "aria-expanded": true, "aria-autocomplete": "list" as const } : mention.open ? { role: "combobox", ...mention.aria } : {})}
             onPaste={(e) => {
               const pasted = [...e.clipboardData.files];
               if (pasted.some((f) => f.type.startsWith("image/"))) {

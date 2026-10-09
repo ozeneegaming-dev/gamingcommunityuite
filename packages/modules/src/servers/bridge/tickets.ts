@@ -1,4 +1,4 @@
-import { GcsForbidden, GcsNotFound, GcsRateLimited, GcsValidationError, writeAudit, type GcsActor, type GcsEventBus, type GcsPermissionService, type GcsRendered } from "@gcs/core";
+import { contentRefs, GcsForbidden, GcsNotFound, GcsRateLimited, GcsValidationError, writeAudit, type GcsActor, type GcsEventBus, type GcsPermissionService, type GcsRendered } from "@gcs/core";
 import type { GameTicketKind, GameTicketStatus, Prisma, PrismaClient } from "@gcs/db";
 import type { GcsBridgeAdmins } from "./admins";
 import { BRIDGE_PERMISSION } from "./config";
@@ -92,10 +92,28 @@ export class GcsBridgeTickets {
       permissions: GcsPermissionService;
       admins: GcsBridgeAdmins;
       sanctions: GcsBridgeSanctions;
-      render: (content: unknown) => Promise<GcsRendered>;
+      /** Randarea textului (ca postările); cu `actor`, mențiunile de grup ale autorului devin pastile. */
+      render: (content: unknown, ctx?: { actor?: GcsActor; cooldown?: boolean }) => Promise<GcsRendered>;
+      /** Pornește pauza dintre mențiunile de grup după salvare. */
+      markGroupMentions?: (actor: GcsActor, rendered: GcsRendered) => Promise<void>;
       now?: () => number;
     },
   ) {}
+
+  /**
+   * Mențiunile dintr-un tichet sau dintr-un răspuns public (după id): membrii primesc notificarea de mențiune, grupurile
+   * notificarea de grup; cine nu poate vedea tichetul nu primește nimic (ținta `servers.ticket`).
+   */
+  private async mentioned(actor: GcsActor, ticketId: number, rendered: GcsRendered): Promise<void> {
+    await this.deps.markGroupMentions?.(actor, rendered);
+    const refs = contentRefs(rendered.json);
+    if (refs.mentions.length === 0 && refs.groups.length === 0) return;
+    await this.deps.bus.emit({
+      name: "mentions.created",
+      payload: { targetType: "servers.ticket", targetId: String(ticketId), authorId: actor.userId, userIds: refs.mentions, groupIds: refs.groups, type: "forums.mention" },
+      tags: [],
+    });
+  }
 
   private now(): Date {
     return new Date(this.deps.now?.() ?? Date.now());
@@ -179,7 +197,7 @@ export class GcsBridgeTickets {
     }
     let rendered: GcsRendered | null = null;
     try {
-      rendered = await render(input.content);
+      rendered = await render(input.content, { actor, cooldown: true });
       if (rendered.text.trim().length === 0) errors.content = "required";
     } catch (error) {
       if (error instanceof GcsValidationError) Object.assign(errors, error.fields);
@@ -205,6 +223,7 @@ export class GcsBridgeTickets {
     });
     const recipients = (await this.handlers(row)).filter((id) => id !== actor.userId);
     await bus.emit({ name: "servers.ticket.created", payload: { ticketId: row.id, actorId: actor.userId, recipients }, tags: [] });
+    await this.mentioned(actor, row.id, rendered!);
     return { id: row.id };
   }
 
@@ -327,7 +346,7 @@ export class GcsBridgeTickets {
     if (!handle && !(isAuthor && t.status !== "CLOSED")) throw new GcsForbidden();
     const internal = input.internal === true;
     if (internal && !handle) throw new GcsForbidden();
-    const rendered = await render(input.content);
+    const rendered = await render(input.content, { actor, cooldown: !internal });
     if (rendered.text.trim().length === 0) throw new GcsValidationError({ content: "required" });
     const now = this.now();
     const msg = await db.$transaction(async (tx) => {
@@ -339,6 +358,8 @@ export class GcsBridgeTickets {
       // Răspunsul staff-ului ajunge la autor; răspunsul autorului ajunge la responsabil.
       const recipients = isAuthor ? (t.assigneeId ? [t.assigneeId] : []) : [t.authorId];
       if (recipients.length > 0) await bus.emit({ name: "servers.ticket.updated", payload: { ticketId: id, actorId: actor.userId, recipients, kind: "reply" }, tags: [] });
+      // Notele interne nu notifică mențiunile: cei menționați n-ar vedea nota.
+      await this.mentioned(actor, id, rendered);
     }
     return { id: msg.id };
   }
