@@ -105,8 +105,20 @@ export class GcsMemberRemovalService {
     });
   }
 
-  private async assertFree(userId: string): Promise<void> {
-    if (await this.activeFor(userId)) throw new GcsConflict({ reason: "removal_in_progress" });
+  /**
+   * Nicio altă operație activă pe cont. `supersede`: cererea membrului încă în perioada de răzgândire nu blochează (o
+   * operație pornită de staff o înlocuiește, vezi `supersedeScheduled`).
+   */
+  private async assertFree(userId: string, opts: { supersede?: boolean } = {}): Promise<void> {
+    const active = await this.activeFor(userId);
+    if (!active) return;
+    if (opts.supersede && active.status === "SCHEDULED" && active.userId === userId) return;
+    throw new GcsConflict({ reason: "removal_in_progress" });
+  }
+
+  /** Cererea membrului în așteptare e înlocuită de operația pornită de staff (se anulează, în aceeași tranzacție). */
+  private async supersedeScheduled(tx: Tx, userId: string): Promise<void> {
+    await tx.memberRemoval.updateMany({ where: { userId, status: "SCHEDULED" }, data: { status: "CANCELLED", finishedAt: this.now(), error: "superseded" } });
   }
 
   /**
@@ -206,9 +218,10 @@ export class GcsMemberRemovalService {
     if (input.mode !== "KEEP_CONTENT" && input.mode !== "DELETE_CONTENT") throw new GcsValidationError({ mode: "invalid_choice" });
     await this.assertManageable(actor, userId, "remove");
     const user = await this.loadUser(userId);
-    await this.assertFree(userId);
+    await this.assertFree(userId, { supersede: true });
     const { total } = await this.collect(userId);
     const removal = await this.deps.db.$transaction(async (tx) => {
+      await this.supersedeScheduled(tx, userId);
       const row = await this.createRemoval(tx, {
         kind: "DELETE",
         status: "QUEUED",
@@ -243,10 +256,11 @@ export class GcsMemberRemovalService {
     await this.assertManageable(actor, sourceId, "remove");
     await this.assertManageable(actor, targetId, "keep");
     const [source, target] = await Promise.all([this.loadUser(sourceId), this.loadUser(targetId)]);
-    await this.assertFree(sourceId);
+    await this.assertFree(sourceId, { supersede: true });
     await this.assertFree(targetId);
     const { total } = await this.collect(sourceId);
     const removal = await this.deps.db.$transaction(async (tx) => {
+      await this.supersedeScheduled(tx, sourceId);
       const row = await this.createRemoval(tx, {
         kind: "MERGE",
         status: "QUEUED",

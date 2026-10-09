@@ -8,6 +8,7 @@ import { postbitVars } from "@/lib/template-data";
 import { siteTemplate } from "@/lib/templates";
 import { memberLook } from "@/lib/member-look";
 import { pluginHookHtml } from "@/lib/plugins";
+import { GcsDeletedPostbit } from "../GcsDeletedMember";
 import { GcsTranslateButton, type GcsTranslateLabels } from "../GcsTranslateButton";
 import { GcsPostContent, type GcsPostContentProps } from "./GcsPostContent";
 
@@ -51,7 +52,7 @@ export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, 
       data-post-number={post.number}
     >
       <div className="gcs-post__author gcs-postbit" data-testid="gcs-postbit">
-        {author ? <GcsPostbit author={author} data={postbit} clan={clan} post={{ id: post.id, number: post.number }} topicId={topicId} /> : <span className="gcs-muted">—</span>}
+        {author ? <GcsPostbit author={author} data={postbit} clan={clan} post={{ id: post.id, number: post.number }} topicId={topicId} /> : <GcsDeletedPostbit />}
       </div>
       <GcsPostContent
         topicId={topicId}

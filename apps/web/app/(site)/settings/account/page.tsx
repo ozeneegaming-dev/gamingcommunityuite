@@ -1,10 +1,12 @@
-import type { GcsActor } from "@gcs/core";
+import { DELETION_COOLING_SETTING, type GcsActor } from "@gcs/core";
 import { BRIDGE_PERMISSION, LINK_COMMAND, STEAM_PLACEHOLDER_DOMAIN } from "@gcs/modules";
 import { GcsGameAccounts } from "../../_components/servers/GcsGameAccounts";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getFormatter, getTranslations } from "next-intl/server";
+import { freshSignIn } from "@/lib/account-deletion";
 import { currentActor } from "@/lib/actor";
 import { services } from "@/lib/services";
+import { GcsDeleteAccount } from "../../_components/settings/GcsDeleteAccount";
 import { GcsAccountForms } from "../../_components/settings/GcsSettingsForms";
 import { GcsIcon } from "@gcs/ui/icons";
 import { SETTINGS_ICONS } from "../../_components/settings/sections";
@@ -37,8 +39,15 @@ export default async function AccountSettingsPage({ searchParams }: { searchPara
   const t = await getTranslations("settings.account");
   const user = await services().db.user.findUniqueOrThrow({
     where: { id: actor.userId! },
-    select: { email: true, accounts: { select: { providerId: true, password: true } } },
+    select: { email: true, twoFactorEnabled: true, accounts: { select: { providerId: true, password: true } } },
   });
+  const hasPassword = user.accounts.some((a) => a.providerId === "credential" && a.password);
+  const [td, format, pending, cooling] = await Promise.all([
+    getTranslations("settings.account.delete"),
+    getFormatter(),
+    services().memberRemoval.pendingFor(actor.userId!),
+    services().settings.get<number>(DELETION_COOLING_SETTING),
+  ]);
   const sp = await searchParams;
   const result = sp.email;
   const linkError = sp.error ? (["steam_linked", "email_doesn't_match", "account_already_linked_to_different_user"].includes(sp.error) ? sp.error.replace(/'/g, "") : "generic") : null;
@@ -70,12 +79,33 @@ export default async function AccountSettingsPage({ searchParams }: { searchPara
       )}
       <GcsAccountForms
         email={email}
-        hasPassword={user.accounts.some((a) => a.providerId === "credential" && a.password)}
+        hasPassword={hasPassword}
         accounts={user.accounts.filter((a) => a.providerId === "discord" || a.providerId === "google" || a.providerId === "steam").map((a) => ({ providerId: a.providerId as "discord" | "google" | "steam" }))}
         available={available}
         labels={{ ...Object.fromEntries(KEYS.map((k) => [k, t(k)])), currentEmail: email ? t("currentEmail", { email }) : "" }}
       />
       {games && <GcsGameAccounts identities={games.identities} canLink={games.canLink} command={LINK_COMMAND} />}
+      <GcsDeleteAccount
+        pending={pending?.runAfter ? td("pending", { date: format.dateTime(pending.runAfter, { dateStyle: "long", timeStyle: "short" }) }) : null}
+        hasPassword={hasPassword}
+        twoFactor={user.twoFactorEnabled}
+        fresh={hasPassword ? true : await freshSignIn()}
+        labels={{
+          title: td("title"),
+          intro: td("intro"),
+          kept: td("kept"),
+          cooling: td("cooling", { days: cooling }),
+          password: td("password"),
+          code: td("code"),
+          understand: td("understand"),
+          submit: td("submit"),
+          fresh: td("fresh"),
+          reauth: td("reauth"),
+          cancel: td("cancel"),
+          cancelled: td("cancelled"),
+          requested: td("requested"),
+        }}
+      />
     </div>
   );
 }

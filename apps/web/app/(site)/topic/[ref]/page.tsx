@@ -22,6 +22,7 @@ import { topicReadersView } from "@/lib/online";
 import { translateLabels } from "@/lib/translate";
 import { GcsTopicModMenu, SPLIT_FORM_ID } from "../../_components/topic/GcsTopicModMenu";
 import { GcsWidgetPage } from "../../_components/widgets/GcsWidgetPage";
+import { GcsDeletedMember } from "../../_components/GcsDeletedMember";
 
 type Props = { params: Promise<{ ref: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -113,13 +114,11 @@ export default async function TopicPage({ params, searchParams }: Props) {
           </div>
           <h1 className="gcs-display gcs-pageHeader__title">{topic.title}</h1>
           <div className="gcs-topicMeta">
-            {topic.author && (
-              <span>
-                {t("startedBy")}{" "}
-                <GcsUserLink userId={topic.author.id} name={topic.author.name} nameKey={topic.author.nameKey} href={memberHref(topic.author)} /> ·{" "}
-                {format.dateTime(new Date(topic.createdAt), { dateStyle: "medium" })}
-              </span>
-            )}
+            <span>
+              {t("startedBy")}{" "}
+              {topic.author ? <GcsUserLink userId={topic.author.id} name={topic.author.name} nameKey={topic.author.nameKey} href={memberHref(topic.author)} /> : <GcsDeletedMember />} ·{" "}
+              {format.dateTime(new Date(topic.createdAt), { dateStyle: "medium" })}
+            </span>
             <span>
               <GcsIcon name="fa-regular fa-comment" className="gcs-metaIcon" />
               {tf("replies", { count: topic.repliesCount })}

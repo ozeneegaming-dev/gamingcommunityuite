@@ -255,6 +255,14 @@ describe("cererea membrului", () => {
     expect(await w.db.user.findUnique({ where: { id: user.id } })).toBeNull();
   });
 
+  test("o ștergere pornită de staff înlocuiește cererea membrului aflată în perioada de răzgândire", async () => {
+    const user = await w.createUser("Graba", "member");
+    const pending = await removal.requestSelf(user.id, null);
+    const row = await removal.requestDelete(root, user.id, { mode: "KEEP_CONTENT", keepMessages: false });
+    expect(row.status).toBe("DONE");
+    expect(await w.db.memberRemoval.findUniqueOrThrow({ where: { id: pending.id } })).toMatchObject({ status: "CANCELLED", error: "superseded" });
+  });
+
   test("sweep-ul repune în coadă o rulare căzută (fără heartbeat de 10 minute)", async () => {
     const user = await w.createUser("Cazut", "member");
     const s = service({ inlineLimit: -1 });

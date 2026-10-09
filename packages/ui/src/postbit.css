@@ -621,6 +621,39 @@
   max-width: min(360px, 90vw);
 }
 
+/* ─── „Membru șters” (specul 2026-10-09-stergere-unire-membri §1): conținutul unui cont șters ────────────── */
+
+.gcs-deletedMember {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gcs-muted);
+  font-style: italic;
+  font-weight: 600;
+}
+.gcs-deletedMember__icon {
+  font-style: normal;
+}
+.gcs-postbit__deleted {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 8px;
+  text-align: center;
+}
+.gcs-postbit__deletedAvatar {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border: 1px dashed var(--gcs-border);
+  border-radius: 14px;
+  background: var(--gcs-surface2);
+  color: var(--gcs-muted);
+  font-size: 26px;
+}
+
 /* ─── Mobil: postbit-ul devine un antet compact deasupra conținutului ──────────────────────────────────── */
 
 @media (max-width: 720px) {
@@ -661,6 +694,17 @@
   }
   .gcs-postbit__rows > .gcs-postbit__row:nth-child(2) {
     border-top: 0;
+  }
+  .gcs-postbit__deleted {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    padding: 6px;
+    text-align: left;
+  }
+  .gcs-postbit__deletedAvatar {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
   }
   .gcs-post__content {
     flex-basis: 100%;

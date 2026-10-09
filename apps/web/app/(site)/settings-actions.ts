@@ -1,8 +1,10 @@
 "use server";
 
-import { GcsForbidden, GcsValidationError } from "@gcs/core";
+import { GcsConflict, GcsForbidden, GcsRateLimited, GcsValidationError, verifyPassword } from "@gcs/core";
 import { cookies, headers } from "next/headers";
 import * as z from "zod";
+import { verifyTwoFactorCode } from "@/lib/acp";
+import { freshSignIn } from "@/lib/account-deletion";
 import { gcsAction } from "@/lib/actions";
 import { isTimeZone, TZ_COOKIE } from "@/lib/appearance";
 import { getAuth } from "@/lib/auth";
@@ -146,3 +148,38 @@ async function currentSessionId(): Promise<string | null> {
   const session = await auth.api.getSession({ headers: await headers() });
   return session?.session.id ?? null;
 }
+
+const DELETE_LIMIT = { window: 15 * 60, max: 5 };
+
+/**
+ * „Șterge contul meu” (specul 2026-10-09-stergere-unire-membri §5): parola (sau, fără parolă, o autentificare din ultimele
+ * 15 minute) și codul 2FA, dacă e activ; apoi cererea, cu perioada de răzgândire. Încercările sunt limitate.
+ */
+export const requestAccountDeletion = gcsAction(
+  z.object({ password: z.string().max(200), code: z.string().max(20), confirm: z.boolean() }),
+  async ({ password, code, confirm }, { actor, ip }) => {
+    if (!actor.userId) throw new GcsForbidden({ reason: "guest" });
+    if (!confirm) throw new GcsValidationError({ confirm: "required" });
+    const { db, rateLimiter, memberRemoval } = services();
+    const limit = await rateLimiter.consume(`delete-account:${actor.userId}`, DELETE_LIMIT);
+    if (!limit.allowed) throw new GcsRateLimited({ retryAfter: String(limit.retryAfter) });
+    const [credential, user] = await Promise.all([
+      db.account.findFirst({ where: { userId: actor.userId, providerId: "credential" }, select: { password: true } }),
+      db.user.findUniqueOrThrow({ where: { id: actor.userId }, select: { twoFactorEnabled: true } }),
+    ]);
+    if (credential?.password) {
+      if (!password || !(await verifyPassword(credential.password, password))) throw new GcsValidationError({ password: "invalid_password" });
+    } else if (!(await freshSignIn())) {
+      throw new GcsConflict({ reason: "reauth_required" });
+    }
+    if (user.twoFactorEnabled && !(await verifyTwoFactorCode(actor.userId, code))) throw new GcsValidationError({ code: "invalid_code" });
+    const removal = await memberRemoval.requestSelf(actor.userId, ip);
+    return { runAfter: removal.runAfter?.toISOString() ?? null };
+  },
+);
+
+/** Membrul își anulează cererea de ștergere (în perioada de răzgândire). */
+export const cancelAccountDeletion = gcsAction(z.object({}), async (_input, { actor, ip }) => {
+  if (!actor.userId) throw new GcsForbidden({ reason: "guest" });
+  await services().memberRemoval.cancelSelf(actor.userId, ip);
+});

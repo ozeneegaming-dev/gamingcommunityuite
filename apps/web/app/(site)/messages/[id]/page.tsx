@@ -10,6 +10,7 @@ import { memberHref } from "@/lib/forum-urls";
 import { pageParam } from "@/lib/forum-page";
 import { services } from "@/lib/services";
 import { translateLabels } from "@/lib/translate";
+import { GcsDeletedMember } from "../../_components/GcsDeletedMember";
 import { GcsTranslateButton } from "../../_components/GcsTranslateButton";
 import { GcsConversationReply, GcsConversationTools, GcsRefreshAfterRead, GcsReportMessageButton } from "../../_components/messages/GcsMessageForms";
 
@@ -72,7 +73,7 @@ export default async function ConversationPage({ params, searchParams }: Props) 
                     <GcsUserLink userId={m.author.id} name={m.author.name} nameKey={m.author.nameKey} href={memberHref(m.author)} />
                   </>
                 ) : (
-                  <span className="gcs-muted">—</span>
+                  <GcsDeletedMember withIcon />
                 )}
                 <time className="gcs-muted" dateTime={m.createdAt} style={{ fontSize: 12 }}>
                   {format.dateTime(new Date(m.createdAt), { dateStyle: "medium", timeStyle: "short" })}

@@ -1,3 +1,4 @@
+import { MEMBER_REMOVAL_ACP_SECTION } from "@gcs/core";
 import { GcsAvatar, GcsBadge, GcsCard, GcsUserLink } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
@@ -38,13 +39,17 @@ const muted = { color: "var(--gcs-muted)", fontSize: 13 } as const;
 const listRow = { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "8px 0", borderBottom: "1px solid var(--gcs-border)", fontSize: 13 } as const;
 
 export default async function AcpMemberPage({ params }: Props) {
-  await requireAcpSection("members.members");
+  const panel = await requireAcpSection("members.members");
   const { id } = await params;
-  const { members, db } = services();
+  const { members, db, memberRemoval } = services();
   const member = await members.detail(id);
   if (!member) notFound();
   const t = await getTranslations("acp.member");
+  const tr = await getTranslations("acp.removal");
   const format = await getFormatter();
+  // Ștergerea și unirea (specul 2026-10-09-stergere-unire-membri): dreptul `delete` pe membri; o operație în curs apare ca bandă.
+  const canRemove = await services().acp.can(panel.actor, MEMBER_REMOVAL_ACP_SECTION, "delete");
+  const removal = await memberRemoval.activeFor(member.id);
   const groups = await db.group.findMany({ orderBy: { position: "asc" }, select: { id: true, name: true } });
   const { permissions, registry } = services();
   const [overrides, tAll] = await Promise.all([permissions.userPermissions(member.id), getTranslations()]);
@@ -75,6 +80,17 @@ export default async function AcpMemberPage({ params }: Props) {
         </div>
       </div>
 
+      {removal && (
+        <p className="gcs-removalBanner" data-testid="gcs-member-removal-banner">
+          <GcsIcon name={removal.status === "SCHEDULED" ? "fa-solid fa-hourglass-half" : "fa-solid fa-gears"} />
+          {removal.status === "SCHEDULED"
+            ? tr("memberScheduled", { date: format.dateTime(removal.runAfter ?? new Date(), { dateStyle: "medium", timeStyle: "short" }) })
+            : removal.targetId === member.id
+              ? tr("memberIsTarget", { name: removal.userName })
+              : tr("memberInProgress")}
+          {removal.status !== "SCHEDULED" && <Link href={`/admin/members/removals/${removal.id}`}>{tr("viewProgress")}</Link>}
+        </p>
+      )}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20, alignItems: "start" }}>
         <Section title={t("groups.title")} icon="fa-solid fa-users">
           <GcsActionForm action={setPrimaryGroup.bind(null, member.id)} submitLabel={t("groups.save")} submitKind="save">
@@ -241,6 +257,38 @@ export default async function AcpMemberPage({ params }: Props) {
           </div>
         </GcsActionForm>
       </Section>
+      {canRemove && (!removal || removal.status === "SCHEDULED") && (
+        <GcsCard as="section" aria-label={tr("dangerTitle")} className="gcs-dangerZone" data-testid="gcs-member-danger">
+          <div className="gcs-acpWidget__header">
+            <h2 className="gcs-acpWidget__title">
+              <GcsAcpTitleIcon name="fa-solid fa-triangle-exclamation" />
+              {tr("dangerTitle")}
+            </h2>
+          </div>
+          <div style={{ padding: 16 }}>
+            <div className="gcs-dangerZone__row">
+              <div className="gcs-dangerZone__text">
+                <strong>{tr("mergeTitle")}</strong>
+                <span>{tr("mergeHint")}</span>
+              </div>
+              <Link href={`/admin/members/${member.id}/merge`} className="gcs-btn gcs-btn--ghost" data-testid="gcs-member-merge">
+                <GcsIcon name="fa-solid fa-code-merge" className="gcs-btn__icon" />
+                {tr("mergeOpen")}
+              </Link>
+            </div>
+            <div className="gcs-dangerZone__row">
+              <div className="gcs-dangerZone__text">
+                <strong>{tr("deleteTitle")}</strong>
+                <span>{tr("deleteHint")}</span>
+              </div>
+              <Link href={`/admin/members/${member.id}/delete`} className="gcs-btn gcs-btn--ghost" data-testid="gcs-member-delete">
+                <GcsIcon name="fa-solid fa-user-xmark" className="gcs-btn__icon" />
+                {tr("deleteOpen")}
+              </Link>
+            </div>
+          </div>
+        </GcsCard>
+      )}
     </>
   );
 }

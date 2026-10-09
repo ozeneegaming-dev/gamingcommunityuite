@@ -45,6 +45,8 @@ export type GcsChatRoomLabels = {
   unpin: string;
   pinned: string;
   announcement: string;
+  /** Autorul unui mesaj al cărui cont a fost șters. */
+  deletedMember: string;
 };
 
 export type GcsChatReactionOption = { id: number; symbol: string; label: string };
@@ -503,7 +505,9 @@ export function GcsChatRoom(props: Props) {
                       {author.name}
                     </button>
                   ) : (
-                    <span className="gcs-muted">—</span>
+                    <span className="gcs-deletedMember" data-testid="gcs-deleted-member">
+                      {labels.deletedMember}
+                    </span>
                   )}
                   <time className="gcs-chat__time" dateTime={m.createdAt} suppressHydrationWarning>
                     {time(m.createdAt)}

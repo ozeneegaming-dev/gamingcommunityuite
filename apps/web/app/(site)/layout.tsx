@@ -1,6 +1,6 @@
 import { STEAM_PLACEHOLDER_DOMAIN } from "@gcs/modules";
 import Link from "next/link";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { Suspense, type ReactNode } from "react";
 import { GcsNavProgress } from "./_components/GcsNavProgress";
 import { GcsHoverCardHost } from "./_components/GcsHoverCardHost";
@@ -17,13 +17,16 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
   const [t, locale, actor] = await Promise.all([getTranslations("hoverCard"), getLocale(), currentActor()]);
   // Conturile create prin Steam au un email placeholder: le cerem unul real (specul etapei 3, §8).
   const email = actor.userId ? (await services().db.user.findUnique({ where: { id: actor.userId }, select: { email: true } }))?.email : null;
-  const [tb, alerts, tc, tp, safeMode, { preview }] = await Promise.all([
+  const [tb, alerts, tc, tp, safeMode, { preview }, deletion, format] = await Promise.all([
     getTranslations("settings.account"),
     alertPrefs(actor.userId),
     getTranslations("site"),
     getTranslations("plugins.safeMode"),
     safeModeActive(),
     viewerTheme(),
+    // Cererea „Șterge contul meu” în perioada de răzgândire: banda de pe tot site-ul, cu link spre anulare.
+    actor.userId ? services().memberRemoval.pendingFor(actor.userId) : null,
+    getFormatter(),
   ]);
   return (
     <GcsRealtimeProvider>
@@ -36,6 +39,12 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
         {email?.endsWith(STEAM_PLACEHOLDER_DOMAIN) && (
           <p role="status" className="gcs-notice gcs-notice--warn" data-testid="gcs-steam-email-banner">
             {tb("steamBanner")} <Link href="/settings/account">{tb("steamBannerLink")}</Link>
+          </p>
+        )}
+        {deletion?.runAfter && (
+          <p role="status" className="gcs-notice gcs-notice--error" data-testid="gcs-deletion-banner">
+            {tb("delete.banner", { date: format.dateTime(deletion.runAfter, { dateStyle: "long", timeStyle: "short" }) })}{" "}
+            <Link href="/settings/account#gcs-delete-account">{tb("delete.bannerLink")}</Link>
           </p>
         )}
         {safeMode && (

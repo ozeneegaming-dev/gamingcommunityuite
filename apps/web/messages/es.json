@@ -55,7 +55,8 @@
     "closeToast": "Cerrar notificación",
     "themeEditor": "Theme editor",
     "pageEditor": "Editor de página",
-    "metaDescription": "{name}: a gaming community with forums, chat and members."
+    "metaDescription": "{name}: a gaming community with forums, chat and members.",
+    "deletedMember": "Deleted member"
   },
   "auth": {
     "login": {
@@ -154,7 +155,12 @@
       "clan_forum_exists": "The clan already has a forum.",
       "clan_no_forum_parent": "The staff has not chosen where clan forums are created yet.",
       "clan_not_archived": "The clan is not archived.",
-      "clan_not_pending": "The clan is no longer waiting for approval."
+      "clan_not_pending": "The clan is no longer waiting for approval.",
+      "removal_self": "You cannot delete your own account from the ACP or use it as a merge source.",
+      "removal_in_progress": "The account already has a deletion or merge in progress.",
+      "removal_started": "The operation has already started and can no longer be cancelled.",
+      "removal_not_failed": "Only a failed operation can be retried.",
+      "reauth_required": "To confirm, sign in again."
     },
     "fields": {
       "invalid_color": "Color inválido (#RRGGBB)",
@@ -254,7 +260,9 @@
       "invalid_path": "Invalid folder",
       "invalid_prefix": "Invalid prefix (letters, digits, _ . -, max 32)",
       "rcon_needs_address": "HLTV rcon needs the HLTV address",
-      "not_configured": "The demo source is not configured"
+      "not_configured": "The demo source is not configured",
+      "confirm_mismatch": "The name you typed does not match.",
+      "same_account": "Choose an account other than the source."
     }
   },
   "acp": {
@@ -807,7 +815,8 @@
         "vip": "VIP page and expiry",
         "servers": "Servers",
         "clans": "Clans",
-        "servers_bridge": "Bridge and ELO"
+        "servers_bridge": "Bridge and ELO",
+        "gdpr": "GDPR requests"
       },
       "save": "Guardar ajustes",
       "secretSet": "••••• guardar (dejar vacío para mantener el valor)",
@@ -1827,7 +1836,10 @@
           "vip_revoked": "A VIP subscription revoked from the ACP.",
           "post_before_save": "Antes de guardar un post (nuevo tema, respuesta, edición): el plugin puede cambiar el título y el contenido o rechazar el post. 2 s timeout; un error salta el plugin.",
           "postbit_after_fields": "Debajo de la tarjeta de autor en publicaciones.",
-          "vip_page": "On the public VIP page (/vip), below the plans."
+          "vip_page": "On the public VIP page (/vip), below the plans.",
+          "user_deleting": "An account starts being deleted (the plugin deletes the member's data).",
+          "user_deleted": "An account was deleted.",
+          "user_merged": "An account was merged into another (the plugin moves its data to the target account)."
         }
       }
     },
@@ -2566,6 +2578,228 @@
         "direct": "direct from the template",
         "art": "generic art"
       }
+    },
+    "removal": {
+      "crumbMembers": "Members",
+      "back": "Back to the member",
+      "dangerTitle": "Danger zone",
+      "deleteTitle": "Delete member",
+      "deleteHint": "The account and its private data are removed. Posts can stay, signed “Deleted member”.",
+      "deleteOpen": "Delete member…",
+      "deleteLead": "What {name} has and what happens to each part. The account is blocked right after you confirm.",
+      "mergeTitle": "Merge with another account",
+      "mergeHint": "Moves everything this account has into another account of the same member, then deletes this one.",
+      "mergeOpen": "Merge…",
+      "mergeLead": "The account {name} (source) moves into the chosen account (target), then it is deleted.",
+      "memberScheduled": "The member asked for their account to be deleted; it is deleted on {date} unless they cancel.",
+      "memberInProgress": "The account is being deleted or merged and is blocked.",
+      "memberIsTarget": "The account {name} is being moved into this account.",
+      "viewProgress": "View progress",
+      "scheduledSupersede": "The member already asked for deletion (scheduled for {date}). An operation started here replaces it.",
+      "hasTitle": "What {name} has",
+      "hasEmpty": "The account has no content or app data.",
+      "confirmTitle": "Confirm the deletion",
+      "modeTitle": "What happens to public content",
+      "recommended": "Recommended",
+      "modes": {
+        "KEEP_CONTENT": {
+          "title": "Keep content",
+          "body": "Topics, posts, statuses and chat messages stay, signed “Deleted member”. Private data is erased: email, password, linked accounts, profile, private messages, notifications, IPs."
+        },
+        "DELETE_CONTENT": {
+          "title": "Delete content too",
+          "body": "Also deletes the topics they started (with all replies), their posts, statuses, chat messages and files. Meant for spam accounts."
+        }
+      },
+      "keepMessages": "Keep the private messages they sent",
+      "keepMessagesHint": "Deleted by default. When checked, they stay in the other members' conversations, signed “Deleted member”, without IPs.",
+      "confirmLabel": "Type the member's name to confirm: {name}",
+      "deleteSubmit": "Delete permanently",
+      "deleteWarning": "Deletion cannot be undone. The account is blocked at once; data is removed in the background.",
+      "blockedSelf": "You cannot delete your own account from the ACP. Use Settings → Account → “Delete account”.",
+      "blockedSelfMerge": "Your own account cannot be the source of a merge (it would be deleted). Swap source and target.",
+      "blockedRoot": "A Root Admin can only be deleted or merged by another Root Admin.",
+      "permanent": "permanent",
+      "kind": {
+        "DELETE": "Deletion",
+        "MERGE": "Merge"
+      },
+      "source": {
+        "ACP": "Started by staff",
+        "SELF": "Member's request"
+      },
+      "status": {
+        "SCHEDULED": "Scheduled",
+        "QUEUED": "Queued",
+        "RUNNING": "Running",
+        "DONE": "Done",
+        "FAILED": "Failed",
+        "CANCELLED": "Cancelled"
+      },
+      "items": {
+        "reactions": {
+          "given": "Reactions given"
+        },
+        "follows": {
+          "following": "Following",
+          "followers": "Followers"
+        },
+        "forums": {
+          "topics": "Topics started",
+          "posts": "Posts",
+          "pollVotes": "Poll votes"
+        },
+        "profile": {
+          "statuses": "Statuses on other profiles",
+          "wall": "Statuses on their wall",
+          "badges": "Badges",
+          "fields": "Profile fields",
+          "ignores": "Ignored members"
+        },
+        "messages": {
+          "conversations": "Private conversations",
+          "sent": "Private messages sent"
+        },
+        "chat": {
+          "messages": "Chat messages",
+          "rooms": "Own chat rooms"
+        },
+        "vip": {
+          "active": "Active VIP subscription",
+          "history": "VIP history"
+        },
+        "clans": {
+          "memberships": "Clans",
+          "leader": "Clans led",
+          "requests": "Pending clan requests"
+        },
+        "servers": {
+          "identities": "Linked game identities",
+          "admins": "Server admin entries",
+          "tickets": "Appeals and reports"
+        },
+        "notifications": {
+          "all": "Notifications"
+        },
+        "account": {
+          "warnings": "Warnings",
+          "bans": "Bans",
+          "reports": "Reports sent",
+          "staff": "Staff roles and own permissions"
+        },
+        "files": {
+          "owned": "Uploaded files"
+        }
+      },
+      "steps": {
+        "reactions": "Reactions",
+        "follows": "Follows",
+        "forums": "Forum",
+        "profile": "Profile",
+        "messages": "Private messages",
+        "chat": "Chat",
+        "vip": "VIP",
+        "clans": "Clans",
+        "servers": "Game servers",
+        "notifications": "Notifications",
+        "account": "Account data",
+        "files": "Files"
+      },
+      "notes": {
+        "topic_replies": "Their topics have {count} replies by other members: with “Delete content too” they are deleted as well.",
+        "bans_kept": "{count} email / IP bans stay active, no longer tied to the account.",
+        "ban_moves": "The source has an active account ban: after the merge it applies to the target too.",
+        "staff_dropped": "The source's staff roles and own permissions ({count}) are not moved.",
+        "profile_kept": "The source's profile (fields, signature, appearance) is not moved: the target keeps its own.",
+        "vip_moves": "The source's VIP ({tier}, until: {until}) moves to the target.",
+        "vip_source_longer": "The source's VIP ({tier}, until: {until}) is longer and is kept; the target's is closed.",
+        "vip_target_kept": "The target's VIP ({tier}, until: {until}) is kept; the source's is closed.",
+        "clan_successor": "Leads the clan [{tag}] {clan}: leadership passes to {name}.",
+        "clan_archived": "Leads the clan [{tag}] {clan} with no other members: the clan is archived.",
+        "clans_move": "The source's clans ({tags}) move to the target, with the roles.",
+        "clans_target_kept": "The target is already in clans ({tags}): those stay, and the source leaves {dropped}.",
+        "game_unlinked": "{count} game identities are unlinked; their stats, ELO and matches stay."
+      },
+      "merge": {
+        "searchTitle": "Target account",
+        "searchLabel": "The account that stays (target)",
+        "searchPlaceholder": "Name, email or id",
+        "search": "Search",
+        "keeps": "The target keeps its name, email, password, 2FA, groups, settings and profile.",
+        "noResults": "No account found.",
+        "pick": "Choose as target",
+        "pairLabel": "Source and target",
+        "source": "Deleted · source",
+        "target": "Stays · target",
+        "swap": "Swap",
+        "movesTitle": "What moves from {name}",
+        "logins": "Sign-in accounts",
+        "noLogins": "The source has no sign-in accounts.",
+        "providers": {
+          "credential": "Password",
+          "discord": "Discord",
+          "google": "Google",
+          "steam": "Steam"
+        },
+        "loginCredential": "the source's password is removed",
+        "loginMove": "moves to the target (the target can sign in with it)",
+        "loginDrop": "the target already has one: the source's is removed",
+        "confirmTitle": "Confirm the merge",
+        "confirmLabel": "Type the source account's name to confirm: {name}",
+        "submit": "Merge accounts",
+        "warning": "A merge cannot be undone. The source is blocked at once and deleted at the end."
+      },
+      "progress": {
+        "title": "Operation progress",
+        "titleDelete": "Deleting the account {name}",
+        "titleMerge": "Merging {name} → {target}",
+        "stateTitle": "Status and steps",
+        "stepsTitle": "Operation steps",
+        "processed": "{count, plural, one {# row} many {# rows} other {# rows}}",
+        "error": "Last error: {error}",
+        "retry": "Retry",
+        "runAfter": "Deleted on {date} unless the member cancels.",
+        "doneDelete": "The account was deleted.",
+        "doneMerge": "The accounts were merged.",
+        "viewTarget": "View the target account",
+        "backToList": "All requests"
+      },
+      "gdpr": {
+        "title": "GDPR requests",
+        "description": "Account deletions and merges: members' requests (with their cooling-off period) and operations started by staff.",
+        "coolingTitle": "Cooling-off period",
+        "coolingLabel": "Days until a member's requested deletion (0–90)",
+        "coolingHint": "Meanwhile the member can cancel from Settings → Account. 0 = on the next job run (a few minutes).",
+        "coolingValue": "{days, plural, one {# day} many {# days} other {# days}}",
+        "save": "Save",
+        "filtersLabel": "Filter by status",
+        "filters": {
+          "all": "All",
+          "active": "Active",
+          "SCHEDULED": "Waiting",
+          "DONE": "Done",
+          "FAILED": "Failed",
+          "CANCELLED": "Cancelled"
+        },
+        "total": "{count, plural, one {# operation} many {# operations} other {# operations}}",
+        "empty": "No requests.",
+        "columns": {
+          "member": "Member",
+          "kind": "Operation",
+          "status": "Status",
+          "when": "Requested",
+          "actions": "Actions"
+        },
+        "kindMerge": "Merge into {target}",
+        "runAfter": "due: {date}",
+        "view": "Progress",
+        "runNow": "Run now",
+        "cancel": "Cancel",
+        "confirmRunNow": "Delete the account {name} now, without waiting for the cooling-off period? This cannot be undone.",
+        "prev": "Previous page",
+        "next": "Next page",
+        "page": "Page {page} of {pages}"
+      }
     }
   },
   "settings": {
@@ -2741,7 +2975,25 @@
       "emailChanged": "Su dirección de correo electrónico fue confirmada y cambiada.",
       "emailInvalid": "El enlace de confirmación es nulo o ha expirado.",
       "steamBanner": "Su cuenta fue creada con Steam y no tiene email real.",
-      "steamBannerLink": "Añadir uno ahora"
+      "steamBannerLink": "Añadir uno ahora",
+      "delete": {
+        "title": "Delete account",
+        "intro": "Your account and its private data are deleted: email, password, linked accounts (Discord, Google, Steam), profile, private messages, notifications, VIP subscription, clan memberships.",
+        "kept": "Your topics and posts stay, signed “Deleted member”.",
+        "cooling": "You have {days, plural, one {# day} many {# days} other {# days}} to change your mind: sign in and cancel here.",
+        "password": "Account password",
+        "code": "2FA code",
+        "understand": "I understand that after the cooling-off period the account cannot be recovered.",
+        "submit": "Request account deletion",
+        "fresh": "Your account has no password: to confirm, sign in again (your last sign-in is older than 15 minutes).",
+        "reauth": "Sign in again",
+        "pending": "Your account will be deleted on {date}.",
+        "cancel": "Cancel deletion",
+        "cancelled": "The request was cancelled. Your account stays.",
+        "requested": "Your request was recorded.",
+        "banner": "Your account will be deleted on {date}.",
+        "bannerLink": "Cancel deletion"
+      }
     },
     "notifications": {
       "title": "Notificaciones",
@@ -2879,6 +3131,9 @@
       "weight_kd": "Clan ranking: K/D weight",
       "weight_mix_wins": "Clan ranking: mix matches won weight",
       "weight_elo": "Clan ranking: average ELO weight"
+    },
+    "members": {
+      "deletion_cooling_days": "Cooling-off before a member's requested deletion (days, 0–90)"
     }
   },
   "permissions": {
@@ -3687,7 +3942,8 @@
         "popular": "Popular",
         "categories": "Emoji categories"
       }
-    }
+    },
+    "deletedMember": "Deleted member"
   },
   "online": {
     "title": "Quién está en línea",

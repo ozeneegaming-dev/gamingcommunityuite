@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { memberHref, tagHref, tint, topicHref, unreadHref } from "@/lib/forum-urls";
 import { topicRowVars } from "@/lib/template-data";
 import { siteTemplate } from "@/lib/templates";
+import { GcsDeletedMember } from "../GcsDeletedMember";
 import { GcsRelTime } from "./GcsRelTime";
 
 /**
@@ -46,13 +47,9 @@ export async function GcsTopicRow({ topic, select }: { topic: Row; select?: Reac
           )}
         </span>
         <span className="gcs-topicRow__meta">
-          {topic.author && (
-            <>
-              {t("byWord")}{" "}
-              <GcsUserLink userId={topic.author.id} name={topic.author.name} nameKey={topic.author.nameKey} href={memberHref(topic.author)} />
-              {" · "}
-            </>
-          )}
+          {t("byWord")}{" "}
+          {topic.author ? <GcsUserLink userId={topic.author.id} name={topic.author.name} nameKey={topic.author.nameKey} href={memberHref(topic.author)} /> : <GcsDeletedMember />}
+          {" · "}
           <GcsRelTime at={topic.createdAt} />
           {topic.tags.map((tag) => (
             <Link key={tag.slug} href={tagHref(tag.slug)} className="gcs-tag">

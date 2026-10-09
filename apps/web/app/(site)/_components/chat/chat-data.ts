@@ -35,6 +35,7 @@ const LABEL_KEYS = [
   "unpin",
   "pinned",
   "announcement",
+  "deletedMember",
 ] as const satisfies readonly (keyof GcsChatRoomLabels)[];
 
 export async function chatRoomLabels(): Promise<GcsChatRoomLabels> {
