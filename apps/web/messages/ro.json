@@ -809,6 +809,15 @@
         "description": "Descriere scurtă (tooltip)",
         "descriptionHint": "Primul rând din tooltip-ul pastilei grupului. Cel mult 120 de caractere.",
         "save": "Salvează afișarea"
+      },
+      "legend": {
+        "title": "Legendă (Grupuri Pro)",
+        "category": "Categorie în legendă",
+        "hidden": "Nu apare în legendă",
+        "parent": "Apare în legendă sub grupul…",
+        "parentNone": "Pe rândul lui",
+        "parentHint": "Un grup legat apare în lista care se deschide de pe rândul grupului ales (din aceeași categorie).",
+        "save": "Salvează legenda"
       }
     },
     "permissions": {
@@ -3571,6 +3580,9 @@
       "bar_seconds": "Rotirea barei de anunțuri (secunde)",
       "emote_max_kb": "Mărimea maximă a unui emoticon (KB)",
       "emote_max_side": "Latura maximă a unui emoticon (px)"
+    },
+    "groups_pro": {
+      "legend_categories": "Categoriile legendei grupurilor"
     }
   },
   "permissions": {
@@ -4422,7 +4434,8 @@
       "vip": "Abonamentele VIP: niveluri, stiluri de nume, avatar frames și pagina publică a planurilor.",
       "servers": "Serverele de joc: starea live, statistici, meciuri mix cu ELO, banuri, admini și contestații.",
       "clans": "Clanurile comunității: membri și roluri, pagina clanului, forumul privat și cererile de intrare.",
-      "chat_pro": "Chat-ul avansat: 7 aranjamente, setări pe membru, bara de anunțuri, insigne, emoticoane, GIF-uri, comenzi, clasament și istoric."
+      "chat_pro": "Chat-ul avansat: 7 aranjamente, setări pe membru, bara de anunțuri, insigne, emoticoane, GIF-uri, comenzi, clasament și istoric.",
+      "groups_pro": "Legenda grupurilor pe categorii (cu numărători și grupuri legate) și pagina „Grupurile comunității”."
     },
     "sections": {
       "messages": "Mesaje private",
@@ -4432,7 +4445,8 @@
       "clans_create": "Creează un clan",
       "chat_pro_history": "Istoricul chat-ului"
     },
-    "chat_pro": "Chat Pro"
+    "chat_pro": "Chat Pro",
+    "groups_pro": "Grupuri Pro"
   },
   "translate": {
     "translate": "Traduce",
@@ -6772,5 +6786,45 @@
     "secondaryTitle": "Grupuri secundare",
     "secondaryTag": "secundar",
     "primaryTag": "principal"
+  },
+  "groupsPro": {
+    "category": {
+      "staff": "Staff",
+      "moderators": "Moderatori",
+      "vip": "VIP",
+      "members": "Membri"
+    },
+    "legend": {
+      "title": "Legenda grupurilor",
+      "info": "Mouse pe un grup: câți membri are. Click: lista membrilor.",
+      "groups": "{count, plural, one {# grup} few {# grupuri} other {# de grupuri}}",
+      "seeAll": "Vezi toate grupurile",
+      "seeAllTip": "Toate grupurile și membrii lor (principal și secundar)",
+      "linked": "Grupuri secundare legate",
+      "linkedTotal": "{count, plural, one {# membru în total} few {# membri în total} other {# de membri în total}}",
+      "toggle": "Grupurile legate de {name}",
+      "categoryTotal": "{count, plural, one {# membru} few {# membri} other {# de membri}}",
+      "onlineCount": "{count} online"
+    },
+    "page": {
+      "title": "Grupurile comunității",
+      "subtitle": "{groups} · {members} · click pe un grup ca să vezi cine face parte din el",
+      "search": "Caută un grup sau un membru…",
+      "searchLabel": "Caută",
+      "scope": "Membrii afișați",
+      "scopeAll": "Toți membrii",
+      "scopePrimary": "Doar principal",
+      "scopeSecondary": "Doar secundar",
+      "categories": "Categorii",
+      "allCategories": "Toate",
+      "members": "membri",
+      "asSecondary": "ca secundar",
+      "online": "online",
+      "includes": "include {names}",
+      "shown": "{shown} afișați din {total}",
+      "allMembers": "Toți membrii grupului",
+      "empty": "Niciun grup nu se potrivește căutării.",
+      "noMembers": "Grupul nu are membri aici."
+    }
   }
 }

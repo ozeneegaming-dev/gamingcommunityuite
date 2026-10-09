@@ -32,7 +32,7 @@ describe("directorul grupurilor (pastile, legendă, pagina membrilor)", () => {
     const fresh = await w.groupService.create({ name: "Grup nou" }, root);
 
     const counts = await dir.counts(now);
-    expect(counts.get(w.groups.vip_gold!)).toEqual({ members: 3, secondary: 2, online: 1 });
+    expect(counts.get(w.groups.vip_gold!)).toEqual({ members: 3, secondary: 2, online: 1, onlineSecondary: 0 });
     // Grupul creat acum în ACP: fără rând în numărători (pastila arată „0 membri · 0 online acum”).
     expect(counts.get(fresh.id)).toBeUndefined();
     expect((await dir.group(fresh.id))?.public).toBe(true);
@@ -43,7 +43,7 @@ describe("directorul grupurilor (pastile, legendă, pagina membrilor)", () => {
     await w.createUser("Emil", "member", ["vip_gold"]);
     await display.setSettings(w.groups.vip_gold!, { primaryOnly: true }, root);
     const counts = await dir.counts();
-    expect(counts.get(w.groups.vip_gold!)).toEqual({ members: 1, secondary: 0, online: 0 });
+    expect(counts.get(w.groups.vip_gold!)).toEqual({ members: 1, secondary: 0, online: 0, onlineSecondary: 0 });
     expect((await dir.group(w.groups.vip_gold!))?.primaryOnly).toBe(true);
   });
 

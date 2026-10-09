@@ -38,6 +38,14 @@
   /* Stratul de lumină al butoanelor secundare la hover: +8% alb pe cele închise, +30% pe cele deschise. */
   --gcs-btn-hover-mix: 92%;
   /*
+   * Regula de hover (comună): chenarul luminat al butoanelor secundare, 3% alb pe itemii meniurilor, 5% pe tab-urile
+   * inactive și stratul de sticlă al sweep-ului (8% alb). Pe varianta luminoasă, aceleași straturi din culoarea textului.
+   */
+  --gcs-hover-border: color-mix(in srgb, #fff 22%, transparent);
+  --gcs-hover-menu: color-mix(in srgb, #fff 3%, transparent);
+  --gcs-hover-tab: color-mix(in srgb, #fff 5%, transparent);
+  --gcs-sweep: rgb(255 255 255 / 0.08);
+  /*
    * Iconițele implicite ale benzilor fără iconiță proprie (Font Awesome Free, CC BY 4.0), gri neutru: se citesc pe
    * cercul închis și pe cel deschis. Contextul alege glifa (`--gcs-band-glyph`).
    */
@@ -55,6 +63,10 @@
 
 /* Varianta luminoasă: suprafețe deschise, același accent; antetul rămâne închis (imaginea cu stratul întunecat). */
 html.gcs-nova[data-theme="light"] {
+  --gcs-hover-border: color-mix(in srgb, var(--gcs-text) 28%, transparent);
+  --gcs-hover-menu: color-mix(in srgb, var(--gcs-text) 4%, transparent);
+  --gcs-hover-tab: color-mix(in srgb, var(--gcs-text) 6%, transparent);
+  --gcs-sweep: color-mix(in srgb, var(--gcs-text) 7%, transparent);
   --gcs-hero-end: var(--gcs-header-bg, #0e121a);
   --gcs-on-tint: var(--gcs-heading, var(--gcs-text));
   --gcs-btn-hover-mix: 70%;
@@ -64,6 +76,10 @@ html.gcs-nova[data-theme="light"] {
 }
 @media (prefers-color-scheme: light) {
   html.gcs-nova[data-theme="auto"] {
+    --gcs-hover-border: color-mix(in srgb, var(--gcs-text) 28%, transparent);
+    --gcs-hover-menu: color-mix(in srgb, var(--gcs-text) 4%, transparent);
+    --gcs-hover-tab: color-mix(in srgb, var(--gcs-text) 6%, transparent);
+    --gcs-sweep: color-mix(in srgb, var(--gcs-text) 7%, transparent);
     --gcs-hero-end: var(--gcs-header-bg, #0e121a);
     --gcs-on-tint: var(--gcs-heading, var(--gcs-text));
     --gcs-btn-hover-mix: 70%;
@@ -196,13 +212,13 @@ html.gcs-nova[data-theme="light"] {
   height: 38px;
   border-radius: 50%;
   color: var(--gcs-header-text, #d3d9e2);
-  background: transparent;
+  background-color: transparent;
   transition: color var(--gcs-ease), background-color var(--gcs-ease);
 }
 .gcs-nova .gcs-siteHeader .gcs-headerIcon:hover,
 .gcs-nova .gcs-siteHeader .gcs-headerIcon[aria-expanded="true"] {
   color: #fff;
-  background: color-mix(in srgb, #fff 8%, transparent);
+  background-color: color-mix(in srgb, #fff 8%, transparent);
 }
 .gcs-nova .gcs-headerIcon__count {
   background: var(--gcs-accent);
@@ -215,17 +231,17 @@ html.gcs-nova[data-theme="light"] {
   padding: 3px 10px 3px 3px !important;
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, #fff 10%, transparent);
-  background: color-mix(in srgb, #000 20%, transparent);
+  background-color: color-mix(in srgb, #000 20%, transparent);
   color: #fff;
   transition: border-color var(--gcs-ease), background-color var(--gcs-ease);
 }
 .gcs-nova .gcs-siteHeader .gcs-userMenu__trigger:hover {
   border-color: color-mix(in srgb, #fff 22%, transparent);
-  background: color-mix(in srgb, #fff 6%, transparent);
+  background-color: color-mix(in srgb, #fff 6%, transparent);
 }
 /* Butoanele vizitatorului: „Autentificare” transparent, „Înregistrare” plin. */
 .gcs-nova .gcs-siteHeader__auth.gcs-btn--ghost {
-  background: transparent;
+  background-color: transparent;
   border-color: transparent;
   color: #fff;
 }
@@ -550,21 +566,23 @@ html.gcs-nova[data-theme="light"] {
 .gcs-nova .gcs-root a.gcs-btn--primary {
   box-shadow: 0 2px 10px -2px color-mix(in srgb, var(--gcs-btn-primary-bg, var(--gcs-accent)) 55%, transparent);
 }
-.gcs-nova .gcs-btn--primary:hover,
-.gcs-nova .gcs-root a.gcs-btn--primary:hover {
-  background: var(--gcs-btn-primary-hover);
+/* Butonul plin la hover: aceeași culoare (niciodată mai închisă), stratul alb al sweep-ului și o umbră fină de accent. */
+.gcs-nova .gcs-btn--primary:is(:hover, :focus-visible),
+.gcs-nova .gcs-root a.gcs-btn--primary:is(:hover, :focus-visible) {
+  background-color: var(--gcs-btn-primary-bg, var(--gcs-accent));
   color: var(--gcs-btn-primary-text, #fff);
-  box-shadow: 0 4px 16px -3px color-mix(in srgb, var(--gcs-btn-primary-bg, var(--gcs-accent)) 70%, transparent);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--gcs-btn-primary-bg, var(--gcs-accent)) 25%, transparent);
 }
 .gcs-nova .gcs-btn--ghost,
 .gcs-nova .gcs-root a.gcs-btn--ghost {
   border-color: transparent;
 }
-/* Butonul secundar (închis): +8% alb la hover. */
-.gcs-nova .gcs-btn--ghost:hover,
-.gcs-nova .gcs-root a.gcs-btn--ghost:hover {
-  background: color-mix(in srgb, var(--gcs-btn-secondary-bg, var(--gcs-surface2)) var(--gcs-btn-hover-mix), #fff);
-  color: var(--gcs-btn-secondary-text, var(--gcs-text));
+/* Butonul secundar la hover: fundalul rămâne (stratul de sticlă vine din sweep), chenarul se luminează, textul devine alb. */
+.gcs-nova .gcs-btn--ghost:is(:hover, :focus-visible),
+.gcs-nova .gcs-root a.gcs-btn--ghost:is(:hover, :focus-visible) {
+  background-color: var(--gcs-btn-secondary-bg, var(--gcs-surface2));
+  border-color: var(--gcs-hover-border);
+  color: var(--gcs-on-tint);
 }
 .gcs-nova .gcs-iconBtn,
 .gcs-nova .gcs-seg {
@@ -574,7 +592,7 @@ html.gcs-nova[data-theme="light"] {
   border-radius: 4px;
 }
 .gcs-nova .gcs-iconBtn:hover {
-  background: var(--gcs-hover-light);
+  background-color: var(--gcs-hover-light);
 }
 
 /* ─── Câmpurile ─────────────────────────────────────────────────────────────────────────────────────────── */
@@ -630,13 +648,15 @@ html.gcs-nova[data-theme="light"] {
   font-size: 13px;
   transition: background-color var(--gcs-ease), color var(--gcs-ease);
 }
+/* Itemii meniurilor: 3% alb și o mărire abia simțită. */
 .gcs-nova .gcs-dropdown__item:hover,
 .gcs-nova .gcs-dropdown__item:focus-visible {
-  background: var(--gcs-hover-tint);
+  background-color: var(--gcs-hover-menu);
   color: var(--gcs-heading, var(--gcs-text));
+  transform: scale(1.01);
 }
 .gcs-nova .gcs-dropdown__item--active {
-  background: color-mix(in srgb, var(--gcs-accent) 12%, transparent);
+  background-color: color-mix(in srgb, var(--gcs-accent) 12%, transparent);
   color: var(--gcs-accentInk);
 }
 /* Tooltip: o bulă mică, închisă, cu săgeată. */
@@ -831,7 +851,7 @@ html.gcs-nova[data-theme="light"] {
   gap: 10px;
   border-radius: 6px;
   border: 1px solid var(--gcs-border);
-  background: var(--gcs-surface);
+  background-color: var(--gcs-surface);
   color: var(--gcs-text);
   font-size: 13px;
   font-weight: 600;
@@ -858,12 +878,16 @@ html.gcs-nova[data-theme="light"] {
 .gcs-nova :is(.gcs-segLink, .gcs-settingsNav__link):not(:has(> svg:first-child)) {
   padding-left: 14px;
 }
-.gcs-nova .gcs-root a:is(.gcs-segLink, .gcs-settingsNav__link, .gcs-toggleLink):hover,
+/* Cipurile la hover: chenarul se luminează și textul devine alb (fără umplere de culoare); activ = accentul. */
+.gcs-nova .gcs-root a:is(.gcs-segLink, .gcs-settingsNav__link, .gcs-toggleLink):is(:hover, :focus-visible):not(.gcs-segLink--active, .gcs-settingsNav__link--active, [data-active]) {
+  color: var(--gcs-on-tint);
+  border-color: var(--gcs-hover-border);
+}
 .gcs-nova .gcs-root a:is(.gcs-segLink--active, .gcs-settingsNav__link--active),
 .gcs-nova :is(.gcs-segLink--active, .gcs-settingsNav__link--active),
 .gcs-nova .gcs-root a.gcs-toggleLink[data-active] {
   color: var(--gcs-on-tint);
-  background: color-mix(in srgb, var(--gcs-accent) 22%, var(--gcs-surface));
+  background-color: color-mix(in srgb, var(--gcs-accent) 22%, var(--gcs-surface));
   border-color: var(--gcs-accent);
   box-shadow: none;
 }
@@ -878,8 +902,9 @@ html.gcs-nova[data-theme="light"] {
   font-size: 13px;
   transition: background-color var(--gcs-ease), color var(--gcs-ease), border-color var(--gcs-ease);
 }
+/* Tab-urile inactive la hover: 5% alb. */
 .gcs-nova .gcs-tab:hover {
-  background: var(--gcs-hover-tint);
+  background-color: var(--gcs-hover-tab);
   color: var(--gcs-heading, var(--gcs-text));
 }
 /* Paginarea: pătrățele de 4 px, pagina curentă plină cu accentul. */
@@ -888,7 +913,7 @@ html.gcs-nova[data-theme="light"] {
   transition: background-color var(--gcs-ease), color var(--gcs-ease), border-color var(--gcs-ease);
 }
 .gcs-nova .gcs-pagination__link[aria-current="page"] {
-  background: var(--gcs-accent);
+  background-color: var(--gcs-accent);
   border-color: var(--gcs-accent);
   color: #fff;
 }
@@ -1266,18 +1291,18 @@ html.gcs-nova[data-theme="light"] {
   transition: background-color var(--gcs-ease), color var(--gcs-ease);
 }
 .gcs-nova .gcs-root a.gcs-serverRow__connect:hover {
-  background: color-mix(in srgb, var(--gcs-btn-secondary-bg, var(--gcs-surface2)) var(--gcs-btn-hover-mix), #fff);
+  background-color: color-mix(in srgb, var(--gcs-btn-secondary-bg, var(--gcs-surface2)) var(--gcs-btn-hover-mix), #fff);
   color: var(--gcs-on-tint);
 }
 .gcs-nova .gcs-serverRow__actions .gcs-iconBtn {
   width: 30px;
   height: 30px;
   border-radius: 4px;
-  background: var(--gcs-btn-secondary-bg, var(--gcs-surface2));
+  background-color: var(--gcs-btn-secondary-bg, var(--gcs-surface2));
   color: var(--gcs-text);
 }
 .gcs-nova .gcs-serverRow__actions .gcs-iconBtn:hover {
-  background: color-mix(in srgb, var(--gcs-btn-secondary-bg, var(--gcs-surface2)) var(--gcs-btn-hover-mix), #fff);
+  background-color: color-mix(in srgb, var(--gcs-btn-secondary-bg, var(--gcs-surface2)) var(--gcs-btn-hover-mix), #fff);
   color: var(--gcs-on-tint);
 }
 .gcs-nova .gcs-serverTotals {
@@ -1317,7 +1342,7 @@ html.gcs-nova[data-theme="light"] {
   transition: opacity var(--gcs-ease);
 }
 .gcs-nova .gcs-groupMention:hover {
-  opacity: 0.8;
+  filter: brightness(1.2);
 }
 .gcs-nova .gcs-mentionList {
   border-radius: 10px;
@@ -1330,10 +1355,11 @@ html.gcs-nova[data-theme="light"] {
   transition: background-color var(--gcs-ease);
 }
 .gcs-nova .gcs-mentionList__item:hover {
-  background: var(--gcs-hover-tint);
+  background-color: var(--gcs-hover-menu);
+  transform: scale(1.01);
 }
 .gcs-nova .gcs-mentionList li[aria-selected="true"] > .gcs-mentionList__item {
-  background: color-mix(in srgb, var(--gcs-accent) 16%, transparent);
+  background-color: color-mix(in srgb, var(--gcs-accent) 16%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gcs-accent) 45%, transparent);
 }
 .gcs-nova .gcs-mentionList__group {
@@ -1457,7 +1483,7 @@ html.gcs-nova[data-theme="light"] {
   color: #fff;
 }
 .gcs-nova .gcs-siteFooter__scheme .gcs-seg--active {
-  background: var(--gcs-accent);
+  background-color: var(--gcs-accent);
 }
 
 /* ─── Clasamentul: podiumul ca plăci cu chenarul medaliei, tabelul cu rândurile care se luminează ───────── */
@@ -1577,7 +1603,7 @@ html.gcs-nova[data-theme="light"] {
   .gcs-nova .gcs-siteHeader .gcs-userMenu__trigger {
     padding: 2px !important;
     border: 0;
-    background: transparent;
+    background-color: transparent;
   }
   .gcs-nova .gcs-userMenu__trigger .gcs-navbar__caret {
     display: none;
@@ -1700,6 +1726,117 @@ html.gcs-nova[data-theme="light"] {
   background: var(--gcs-band-icon-bg);
 }
 
+/* ─── Mișcarea: tokenurile comune și animațiile de intrare ─────────────────────────────────────────────── */
+
+/*
+ * Durate și curba comune (hover card, sugestii, dropdown-urile legendei, tooltip-uri, pagina grupurilor). Definite pe
+ * `:root`, deci le folosesc și componentele din afara temei Nova (cu valori de rezervă acolo unde sunt citite).
+ */
+:root {
+  --gcs-motion-fast: 0.15s;
+  --gcs-motion-base: 0.2s;
+  --gcs-motion-slow: 0.3s;
+  --gcs-motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Panourile care apar (hover card, sugestiile mențiunilor, dropdown-urile): opacitate + 6 px de alunecare. */
+@keyframes gcs-motion-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes gcs-motion-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.gcs-nova .gcs-hoverCard,
+.gcs-nova .gcs-groupCard,
+.gcs-nova .gcs-mentionList {
+  animation: gcs-motion-drop var(--gcs-motion-base) var(--gcs-motion-ease) both;
+}
+
+/* ─── Sweep-ul butoanelor: un strat de sticlă (8% alb) care umple butonul de la stânga la hover / focus ──── */
+
+/*
+ * Pe toate butoanele: cele normale și cele cu iconiță, pătratele din antet, tab-urile și segmentele, paginarea, cipurile,
+ * itemii meniurilor și ai sugestiilor. Stratul e un `background-image` (sub text, peste culoarea de fundal); regulile de
+ * hover ale butoanelor setează `background-color`, nu `background`, ca să nu-l șteargă. `.gcs-sweep` îl pune pe orice
+ * alt element. La ieșire stratul se retrage lin; la intrare vine cu un mic recul.
+ */
+.gcs-sweep,
+html.gcs-nova
+  :is(
+    .gcs-btn,
+    .gcs-iconBtn,
+    .gcs-headerIcon,
+    .gcs-userMenu__trigger,
+    .gcs-seg,
+    .gcs-tab,
+    .gcs-pagination__link,
+    .gcs-segLink,
+    .gcs-settingsNav__link,
+    .gcs-toggleLink,
+    .gcs-chip,
+    .gcs-dropdown__item,
+    .gcs-mentionList__item,
+    .gcs-legendPro__info,
+    .gcs-legendPro__toggle,
+    .gcs-legendPro__menuItem,
+    .gcs-groupsPage__segItem,
+    .gcs-groupsPage__chip
+  ) {
+  background-image: linear-gradient(var(--gcs-sweep, rgb(255 255 255 / 0.08)), var(--gcs-sweep, rgb(255 255 255 / 0.08)));
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 0% 100%;
+  transition:
+    background-size 1.2s ease-out,
+    background-color var(--gcs-ease, 0.18s),
+    color var(--gcs-ease, 0.18s),
+    border-color var(--gcs-ease, 0.18s),
+    box-shadow var(--gcs-ease, 0.18s),
+    transform var(--gcs-ease, 0.18s);
+}
+.gcs-sweep:is(:hover, :focus-visible),
+html.gcs-nova
+  :is(
+    .gcs-btn,
+    .gcs-iconBtn,
+    .gcs-headerIcon,
+    .gcs-userMenu__trigger,
+    .gcs-seg,
+    .gcs-tab,
+    .gcs-pagination__link,
+    .gcs-segLink,
+    .gcs-settingsNav__link,
+    .gcs-toggleLink,
+    .gcs-chip,
+    .gcs-dropdown__item,
+    .gcs-mentionList__item,
+    .gcs-legendPro__info,
+    .gcs-legendPro__toggle,
+    .gcs-legendPro__menuItem,
+    .gcs-groupsPage__segItem,
+    .gcs-groupsPage__chip
+  ):is(:hover, :focus-visible):not(:disabled) {
+  background-size: 100% 100%;
+  transition:
+    background-size 1.2s cubic-bezier(0.52, 1.64, 0.37, 0.66),
+    background-color var(--gcs-ease, 0.18s),
+    color var(--gcs-ease, 0.18s),
+    border-color var(--gcs-ease, 0.18s),
+    box-shadow var(--gcs-ease, 0.18s),
+    transform var(--gcs-ease, 0.18s);
+}
+
 /* ─── Mișcarea redusă: fără transformări și tranziții ───────────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
@@ -1707,5 +1844,20 @@ html.gcs-nova[data-theme="light"] {
     --gcs-hover-scale: 1;
     --gcs-hover-lift: 0px;
     --gcs-ease: 0s;
+  }
+  /* Doar opacitatea: panourile apar fără alunecare, sweep-ul apare direct, itemii nu se măresc. */
+  .gcs-nova .gcs-hoverCard,
+  .gcs-nova .gcs-groupCard,
+  .gcs-nova .gcs-mentionList {
+    animation-name: gcs-motion-fade;
+  }
+  .gcs-sweep,
+  html.gcs-nova :is(.gcs-btn, .gcs-iconBtn, .gcs-headerIcon, .gcs-userMenu__trigger, .gcs-seg, .gcs-tab, .gcs-pagination__link, .gcs-segLink, .gcs-settingsNav__link, .gcs-toggleLink, .gcs-chip, .gcs-dropdown__item, .gcs-mentionList__item, .gcs-legendPro__info, .gcs-legendPro__toggle, .gcs-legendPro__menuItem, .gcs-groupsPage__segItem, .gcs-groupsPage__chip),
+  html.gcs-nova :is(.gcs-btn, .gcs-iconBtn, .gcs-headerIcon, .gcs-userMenu__trigger, .gcs-seg, .gcs-tab, .gcs-pagination__link, .gcs-segLink, .gcs-settingsNav__link, .gcs-toggleLink, .gcs-chip, .gcs-dropdown__item, .gcs-mentionList__item, .gcs-legendPro__info, .gcs-legendPro__toggle, .gcs-legendPro__menuItem, .gcs-groupsPage__segItem, .gcs-groupsPage__chip):is(:hover, :focus-visible) {
+    transition: none;
+  }
+  .gcs-nova .gcs-dropdown__item:is(:hover, :focus-visible),
+  .gcs-nova .gcs-mentionList__item:hover {
+    transform: none;
   }
 }

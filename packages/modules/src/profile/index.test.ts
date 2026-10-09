@@ -16,7 +16,7 @@ afterAll(async () => {
 
 describe("modulele Profil, Mesaje și VIP", () => {
   test("se înregistrează lângă core și forum, fără chei duplicate", () => {
-    expect(world.registry.all().map((m) => m.key)).toEqual(["core", "forums", "profile", "messages", "vip", "chat", "chat_pro", "servers", "clans"]);
+    expect(world.registry.all().map((m) => m.key)).toEqual(["core", "forums", "profile", "messages", "vip", "chat", "chat_pro", "groups_pro", "servers", "clans"]);
     expect(world.registry.permissionDef("pm.max_participants")).toMatchObject({ merge: "max" });
     expect(world.registry.acpMenu().some((s) => s.app === "vip")).toBe(true);
   });

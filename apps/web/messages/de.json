@@ -809,6 +809,15 @@
         "description": "Kurzbeschreibung (Tooltip)",
         "descriptionHint": "Erste Zeile im Tooltip des Gruppen-Abzeichens. Höchstens 120 Zeichen.",
         "save": "Anzeige speichern"
+      },
+      "legend": {
+        "title": "Legende (Gruppen Pro)",
+        "category": "Kategorie in der Legende",
+        "hidden": "Nicht in der Legende",
+        "parent": "In der Legende unter der Gruppe…",
+        "parentNone": "In eigener Zeile",
+        "parentHint": "Eine verknüpfte Gruppe erscheint in der Liste, die sich in der Zeile der gewählten Gruppe öffnet (gleiche Kategorie).",
+        "save": "Legende speichern"
       }
     },
     "permissions": {
@@ -3571,6 +3580,9 @@
       "bar_seconds": "Announcement bar rotation (seconds)",
       "emote_max_kb": "Maximum emote size (KB)",
       "emote_max_side": "Maximum emote side (px)"
+    },
+    "groups_pro": {
+      "legend_categories": "Kategorien der Gruppenlegende"
     }
   },
   "permissions": {
@@ -4422,7 +4434,8 @@
       "vip": "VIP subscriptions: tiers, name styles, avatar frames and the public plans page.",
       "servers": "Game servers: live status, statistics, mix matches with ELO, bans, admins and appeals.",
       "clans": "Community clans: members and roles, the clan page, the private forum and join requests.",
-      "chat_pro": "The advanced chat: 7 layouts, per-member settings, announcement bar, badges, emotes, GIFs, commands, ranking and history."
+      "chat_pro": "The advanced chat: 7 layouts, per-member settings, announcement bar, badges, emotes, GIFs, commands, ranking and history.",
+      "groups_pro": "Gruppenlegende nach Kategorien (mit Zahlen und verknüpften Gruppen) und die Seite „Gruppen der Community“."
     },
     "sections": {
       "messages": "Private messages",
@@ -4432,7 +4445,8 @@
       "clans_create": "Create a clan",
       "chat_pro_history": "Chat history"
     },
-    "chat_pro": "Chat Pro"
+    "chat_pro": "Chat Pro",
+    "groups_pro": "Gruppen Pro"
   },
   "translate": {
     "translate": "Übersetzen",
@@ -6772,5 +6786,45 @@
     "secondaryTitle": "Nebengruppen",
     "secondaryTag": "Nebengruppe",
     "primaryTag": "Hauptgruppe"
+  },
+  "groupsPro": {
+    "category": {
+      "staff": "Team",
+      "moderators": "Moderatoren",
+      "vip": "VIP",
+      "members": "Mitglieder"
+    },
+    "legend": {
+      "title": "Gruppenlegende",
+      "info": "Maus auf eine Gruppe: wie viele Mitglieder sie hat. Klick: die Mitgliederliste.",
+      "groups": "{count, plural, one {# Gruppe} other {# Gruppen}}",
+      "seeAll": "Alle Gruppen ansehen",
+      "seeAllTip": "Alle Gruppen und ihre Mitglieder (Haupt- und Nebengruppe)",
+      "linked": "Verknüpfte Nebengruppen",
+      "linkedTotal": "{count, plural, one {# Mitglied insgesamt} other {# Mitglieder insgesamt}}",
+      "toggle": "Mit {name} verknüpfte Gruppen",
+      "categoryTotal": "{count, plural, one {# Mitglied} other {# Mitglieder}}",
+      "onlineCount": "{count} online"
+    },
+    "page": {
+      "title": "Gruppen der Community",
+      "subtitle": "{groups} · {members} · klicke auf eine Gruppe, um zu sehen, wer dazugehört",
+      "search": "Gruppe oder Mitglied suchen…",
+      "searchLabel": "Suchen",
+      "scope": "Angezeigte Mitglieder",
+      "scopeAll": "Alle Mitglieder",
+      "scopePrimary": "Nur Hauptgruppe",
+      "scopeSecondary": "Nur Nebengruppe",
+      "categories": "Kategorien",
+      "allCategories": "Alle",
+      "members": "Mitglieder",
+      "asSecondary": "als Nebengruppe",
+      "online": "online",
+      "includes": "enthält {names}",
+      "shown": "{shown} von {total} angezeigt",
+      "allMembers": "Alle Mitglieder der Gruppe",
+      "empty": "Keine Gruppe passt zur Suche.",
+      "noMembers": "Die Gruppe hat hier keine Mitglieder."
+    }
   }
 }

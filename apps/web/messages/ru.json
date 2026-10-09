@@ -809,6 +809,15 @@
         "description": "Краткое описание (подсказка)",
         "descriptionHint": "Первая строка подсказки значка группы. Не более 120 символов.",
         "save": "Сохранить отображение"
+      },
+      "legend": {
+        "title": "Легенда (Группы Pro)",
+        "category": "Категория в легенде",
+        "hidden": "Не показывать в легенде",
+        "parent": "Показывать в легенде под группой…",
+        "parentNone": "Отдельной строкой",
+        "parentHint": "Связанная группа появляется в списке, который открывается из строки выбранной группы (той же категории).",
+        "save": "Сохранить легенду"
       }
     },
     "permissions": {
@@ -3571,6 +3580,9 @@
       "bar_seconds": "Announcement bar rotation (seconds)",
       "emote_max_kb": "Maximum emote size (KB)",
       "emote_max_side": "Maximum emote side (px)"
+    },
+    "groups_pro": {
+      "legend_categories": "Категории легенды групп"
     }
   },
   "permissions": {
@@ -4422,7 +4434,8 @@
       "vip": "VIP subscriptions: tiers, name styles, avatar frames and the public plans page.",
       "servers": "Game servers: live status, statistics, mix matches with ELO, bans, admins and appeals.",
       "clans": "Community clans: members and roles, the clan page, the private forum and join requests.",
-      "chat_pro": "The advanced chat: 7 layouts, per-member settings, announcement bar, badges, emotes, GIFs, commands, ranking and history."
+      "chat_pro": "The advanced chat: 7 layouts, per-member settings, announcement bar, badges, emotes, GIFs, commands, ranking and history.",
+      "groups_pro": "Легенда групп по категориям (со счётчиками и связанными группами) и страница «Группы сообщества»."
     },
     "sections": {
       "messages": "Private messages",
@@ -4432,7 +4445,8 @@
       "clans_create": "Create a clan",
       "chat_pro_history": "Chat history"
     },
-    "chat_pro": "Chat Pro"
+    "chat_pro": "Chat Pro",
+    "groups_pro": "Группы Pro"
   },
   "translate": {
     "translate": "Переводить",
@@ -6772,5 +6786,45 @@
     "secondaryTitle": "Дополнительные группы",
     "secondaryTag": "дополнительная",
     "primaryTag": "основная"
+  },
+  "groupsPro": {
+    "category": {
+      "staff": "Команда",
+      "moderators": "Модераторы",
+      "vip": "VIP",
+      "members": "Участники"
+    },
+    "legend": {
+      "title": "Легенда групп",
+      "info": "Наведите на группу: сколько в ней участников. Клик: список участников.",
+      "groups": "{count, plural, one {# группа} few {# группы} many {# групп} other {# группы}}",
+      "seeAll": "Все группы",
+      "seeAllTip": "Все группы и их участники (основная и дополнительная)",
+      "linked": "Связанные дополнительные группы",
+      "linkedTotal": "{count, plural, one {# участник всего} few {# участника всего} many {# участников всего} other {# участника всего}}",
+      "toggle": "Группы, связанные с {name}",
+      "categoryTotal": "{count, plural, one {# участник} few {# участника} many {# участников} other {# участника}}",
+      "onlineCount": "{count} онлайн"
+    },
+    "page": {
+      "title": "Группы сообщества",
+      "subtitle": "{groups} · {members} · нажмите на группу, чтобы увидеть, кто в ней состоит",
+      "search": "Найти группу или участника…",
+      "searchLabel": "Поиск",
+      "scope": "Показанные участники",
+      "scopeAll": "Все участники",
+      "scopePrimary": "Только основная",
+      "scopeSecondary": "Только дополнительная",
+      "categories": "Категории",
+      "allCategories": "Все",
+      "members": "участников",
+      "asSecondary": "как дополнительная",
+      "online": "онлайн",
+      "includes": "включает {names}",
+      "shown": "Показано {shown} из {total}",
+      "allMembers": "Все участники группы",
+      "empty": "Ни одна группа не подходит под поиск.",
+      "noMembers": "В группе здесь нет участников."
+    }
   }
 }

@@ -19,7 +19,7 @@ import { requireAcpSection } from "@/lib/acp";
 import { permissionLabel } from "@/lib/permission-label";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
-import { deleteGroup, updateGroupDetails, updateGroupDisplay, updateGroupLook, updateGroupMentions, updateGroupSettings, updateGroupStyle } from "../actions";
+import { deleteGroup, updateGroupDetails, updateGroupDisplay, updateGroupLegend, updateGroupLook, updateGroupMentions, updateGroupSettings, updateGroupStyle } from "../actions";
 import { NameStyleEditor } from "./NameStyleEditor";
 import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 
@@ -67,6 +67,18 @@ export default async function AcpGroupPage({ params }: Props) {
   const neverMentionable = GROUP_MENTION_NEVER.includes(group.key);
   // Setările de afișare efective (prioritate, alegere, secundar, doar principal, pagina membrilor, descriere).
   const display = (await services().groupDisplay.info()).get(group.id)?.settings;
+  // Grupuri Pro (premium): locul grupului în legenda pe categorii, doar cu aplicația pornită.
+  const legendOn = await services()
+    .apps.enabled("groups_pro")
+    .catch(() => false);
+  const [legendCategories, legendPlaces] = legendOn ? await Promise.all([services().groupsPro.categories(), services().groupsPro.places()]) : [[], new Map()];
+  const legendPlace = legendPlaces.get(group.id) ?? { category: "", parentId: null };
+  const tCategory = await getTranslations("groupsPro.category");
+  const legendParents = legendOn
+    ? (await db.group.findMany({ where: { id: { not: group.id } }, orderBy: [{ position: "asc" }, { id: "asc" }], select: { id: true, name: true } })).filter(
+        (g) => (legendPlaces.get(g.id)?.parentId ?? null) === null && (legendPlaces.get(g.id)?.category ?? "") !== "",
+      )
+    : [];
   const t = await getTranslations("acp.group");
   const tAll = await getTranslations();
   const saved = (await getTranslations("acp"))("saved");
@@ -179,6 +191,36 @@ export default async function AcpGroupPage({ params }: Props) {
                     data-testid="gcs-group-display-description"
                   />
                   <span className="gcs-field__hint">{t("display.descriptionHint")}</span>
+                </label>
+              </GcsActionForm>
+            </Section>
+          )}
+
+          {legendOn && (
+            <Section title={t("legend.title")} icon="fa-solid fa-layer-group">
+              <GcsActionForm action={updateGroupLegend.bind(null, group.id)} submitLabel={t("legend.save")} submitKind="save">
+                <label className="gcs-field">
+                  {t("legend.category")}
+                  <select className="gcs-input" name="legendCategory" defaultValue={legendPlace.category} style={{ maxWidth: 280 }} data-testid="gcs-group-legend-category">
+                    <option value="">{t("legend.hidden")}</option>
+                    {legendCategories.map((c) => (
+                      <option key={c.key} value={c.key}>
+                        {c.label || (tCategory.has(c.key as never) ? tCategory(c.key as never) : c.key)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="gcs-field">
+                  {t("legend.parent")}
+                  <select className="gcs-input" name="legendParent" defaultValue={legendPlace.parentId ?? ""} style={{ maxWidth: 280 }} data-testid="gcs-group-legend-parent">
+                    <option value="">{t("legend.parentNone")}</option>
+                    {legendParents.map((g) => (
+                      <option key={g.id} value={g.id}>
+                        {g.name}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="gcs-field__hint">{t("legend.parentHint")}</span>
                 </label>
               </GcsActionForm>
             </Section>

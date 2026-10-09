@@ -133,6 +133,19 @@ export async function updateGroupDisplay(groupId: number, fd: FormData): Promise
   });
 }
 
+/** Secțiunea „Legendă” (Grupuri Pro): categoria în legendă (`""` = nu apare) și grupul sub care apare (gol = rând propriu). */
+export async function updateGroupLegend(groupId: number, fd: FormData): Promise<GcsResult<null>> {
+  return runAcpAction(SECTION, "edit", async (actor) => {
+    const parent = field(fd, "legendParent");
+    await services().groupsPro.setPlace(
+      groupId,
+      { category: String(fd.get("legendCategory") ?? ""), parentId: parent && /^\d+$/.test(parent) ? Number(parent) : null },
+      actor,
+    );
+    return null;
+  });
+}
+
 export async function deleteGroup(groupId: number): Promise<GcsResult<null>> {
   return runAcpAction(SECTION, "delete", async (actor) => {
     await services().groups.delete(groupId, actor);

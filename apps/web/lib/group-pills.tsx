@@ -20,7 +20,7 @@ const groupData = cache(async () => {
 });
 
 /** Traducerile pastilei, în forma cerută de `groupPillText`. */
-const pillT = (t: Awaited<ReturnType<typeof getTranslations<"groups.pill">>>): GcsGroupPillT => (key, values) => t(key, values as never);
+export const pillT = (t: Awaited<ReturnType<typeof getTranslations<"groups.pill">>>): GcsGroupPillT => (key, values) => t(key, values as never);
 
 /** Datele unei pastile pentru un grup (din cache): linkul (doar grupurile publice), tooltip-ul și eticheta. */
 export async function groupPillProps(groupId: number, detail?: string | null): Promise<Pick<GcsGroupPillProps, "group" | "href" | "tooltip" | "ariaLabel"> & { ref: GcsGroupRef } | null> {

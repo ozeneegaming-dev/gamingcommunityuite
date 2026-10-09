@@ -127,6 +127,7 @@ import { registerClanNotifications } from "./clans/notify";
 import { GcsClanQueries } from "./clans/queries";
 import { CLAN_BANNER, CLAN_LOGO, GcsClanService } from "./clans/service";
 import { GcsGroupDirectory } from "./profile/groupDirectory";
+import { GcsGroupsProService } from "./groups-pro/service";
 
 export type GcsServices = {
   db: PrismaClient;
@@ -147,6 +148,8 @@ export type GcsServices = {
   groupDisplay: GcsGroupDisplayService;
   /** Grupurile pentru pastile, legendă și paginile de membri: lista, numărătorile din cache, grupurile membrilor. */
   groupDirectory: GcsGroupDirectory;
+  /** Grupuri Pro (aplicația premium): categoriile legendei, locul grupurilor în ea și pagina grupurilor. */
+  groupsPro: GcsGroupsProService;
   members: GcsMemberDirectory;
   notifications: GcsNotificationService;
   realtime: GcsRealtime;
@@ -357,6 +360,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const groupDisplay = new GcsGroupDisplayService({ db, cache, bus });
   groupDisplay.listen();
   const groupDirectory = new GcsGroupDirectory({ db, cache, display: groupDisplay });
+  const groupsPro = new GcsGroupsProService({ db, cache, bus, settings, groups: groupDirectory });
   const apps = new GcsAppService({ db, cache, bus, registry, acp, permissions, settings });
   const members = new GcsMemberDirectory({ db });
   const notifications = new GcsNotificationService({ db, bus, cache, registry });
@@ -642,6 +646,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     groupMentions,
     groupDisplay,
     groupDirectory,
+    groupsPro,
     members,
     notifications,
     realtime,

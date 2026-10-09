@@ -36,8 +36,8 @@ export type GcsGroupRef = {
   primaryOnly: boolean;
 };
 
-/** Câți membri are un grup (principal + secundar), câți îl au ca secundar și câți sunt online acum. */
-export type GcsGroupCount = { members: number; secondary: number; online: number };
+/** Câți membri are un grup (principal + secundar), câți îl au ca secundar, câți sunt online acum (și dintre ei, ca secundar). */
+export type GcsGroupCount = { members: number; secondary: number; online: number; onlineSecondary: number };
 
 /** Grupurile unui membru pentru pastile: cel afișat (stilul numelui) și cele secundare vizibile, după prioritate. */
 export type GcsMemberGroups = { shown: GcsGroupRef; secondary: GcsGroupRef[] };
@@ -110,7 +110,12 @@ export class GcsGroupDirectory {
       FROM m GROUP BY gid`;
     const primaryOnly = new Set((await this.groups()).filter((g) => g.primaryOnly).map((g) => g.id));
     const out = new Map<number, GcsGroupCount>(
-      rows.map((r) => [r.gid, primaryOnly.has(r.gid) ? { members: r.ptotal, secondary: 0, online: r.ponline } : { members: r.total, secondary: r.secondary, online: r.online }]),
+      rows.map((r) => [
+        r.gid,
+        primaryOnly.has(r.gid)
+          ? { members: r.ptotal, secondary: 0, online: r.ponline, onlineSecondary: 0 }
+          : { members: r.total, secondary: r.secondary, online: r.online, onlineSecondary: r.online - r.ponline },
+      ]),
     );
     await this.deps.cache.set(COUNTS_KEY, [...out], { ttlSec: COUNTS_TTL_SEC, tags: ["name-styles"] });
     return out;

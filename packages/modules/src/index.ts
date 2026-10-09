@@ -36,6 +36,8 @@ export * from "./vip/vip";
 export * from "./profile/display";
 export * from "./profile/nameKeys";
 export * from "./profile/groupDirectory";
+export * from "./groups-pro";
+export * from "./groups-pro/service";
 export * from "./profile/queries";
 export * from "./messages/conversations";
 export * from "./messages/queries";

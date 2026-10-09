@@ -35,6 +35,7 @@
     "./titles.css": "./src/titles.css",
     "./viewer.css": "./src/viewer.css",
     "./chatpro.css": "./src/chatpro.css",
+    "./groups-pro.css": "./src/groups-pro.css",
     "./nova.css": "./src/nova.css",
     "./icons": "./src/icons/index.tsx",
     "./icon-registry": "./src/icons/registry.ts",

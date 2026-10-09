@@ -189,7 +189,7 @@ select option {
 }
 a.gcs-groupPill:hover,
 a.gcs-groupPill:focus-visible,
-[data-group-pill]:focus-visible {
+.gcs-groupPill[data-group-pill]:focus-visible {
   background-color: color-mix(in srgb, var(--gcs-gp) 30%, transparent);
   border-color: color-mix(in srgb, var(--gcs-gp) 60%, transparent);
   box-shadow: 0 0 12px color-mix(in srgb, var(--gcs-gp) 45%, transparent);

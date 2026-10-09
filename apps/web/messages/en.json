@@ -809,6 +809,15 @@
         "description": "Short description (tooltip)",
         "descriptionHint": "First line of the group pill tooltip. At most 120 characters.",
         "save": "Save display"
+      },
+      "legend": {
+        "title": "Legend (Groups Pro)",
+        "category": "Legend category",
+        "hidden": "Not shown in the legend",
+        "parent": "Shown in the legend under the group…",
+        "parentNone": "On its own row",
+        "parentHint": "A linked group appears in the list that opens from the chosen group’s row (same category).",
+        "save": "Save legend"
       }
     },
     "permissions": {
@@ -3571,6 +3580,9 @@
       "bar_seconds": "Announcement bar rotation (seconds)",
       "emote_max_kb": "Maximum emote size (KB)",
       "emote_max_side": "Maximum emote side (px)"
+    },
+    "groups_pro": {
+      "legend_categories": "Group legend categories"
     }
   },
   "permissions": {
@@ -4422,7 +4434,8 @@
       "vip": "VIP subscriptions: tiers, name styles, avatar frames and the public plans page.",
       "servers": "Game servers: live status, statistics, mix matches with ELO, bans, admins and appeals.",
       "clans": "Community clans: members and roles, the clan page, the private forum and join requests.",
-      "chat_pro": "The advanced chat: 7 layouts, per-member settings, announcement bar, badges, emotes, GIFs, commands, ranking and history."
+      "chat_pro": "The advanced chat: 7 layouts, per-member settings, announcement bar, badges, emotes, GIFs, commands, ranking and history.",
+      "groups_pro": "Group legend by category (with counts and linked groups) and the “Community groups” page."
     },
     "sections": {
       "messages": "Private messages",
@@ -4432,7 +4445,8 @@
       "clans_create": "Create a clan",
       "chat_pro_history": "Chat history"
     },
-    "chat_pro": "Chat Pro"
+    "chat_pro": "Chat Pro",
+    "groups_pro": "Groups Pro"
   },
   "translate": {
     "translate": "Translate",
@@ -6772,5 +6786,45 @@
     "secondaryTitle": "Secondary groups",
     "secondaryTag": "secondary",
     "primaryTag": "primary"
+  },
+  "groupsPro": {
+    "category": {
+      "staff": "Staff",
+      "moderators": "Moderators",
+      "vip": "VIP",
+      "members": "Members"
+    },
+    "legend": {
+      "title": "Group legend",
+      "info": "Hover a group: how many members it has. Click: the member list.",
+      "groups": "{count, plural, one {# group} other {# groups}}",
+      "seeAll": "See all groups",
+      "seeAllTip": "All groups and their members (primary and secondary)",
+      "linked": "Linked secondary groups",
+      "linkedTotal": "{count, plural, one {# member in total} other {# members in total}}",
+      "toggle": "Groups linked to {name}",
+      "categoryTotal": "{count, plural, one {# member} other {# members}}",
+      "onlineCount": "{count} online"
+    },
+    "page": {
+      "title": "Community groups",
+      "subtitle": "{groups} · {members} · click a group to see who is in it",
+      "search": "Search a group or a member…",
+      "searchLabel": "Search",
+      "scope": "Members shown",
+      "scopeAll": "All members",
+      "scopePrimary": "Primary only",
+      "scopeSecondary": "Secondary only",
+      "categories": "Categories",
+      "allCategories": "All",
+      "members": "members",
+      "asSecondary": "as secondary",
+      "online": "online",
+      "includes": "includes {names}",
+      "shown": "{shown} shown of {total}",
+      "allMembers": "All group members",
+      "empty": "No group matches the search.",
+      "noMembers": "The group has no members here."
+    }
   }
 }

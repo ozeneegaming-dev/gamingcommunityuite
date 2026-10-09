@@ -6,9 +6,10 @@ import { services } from "./services";
 /**
  * Registrul legendei grupurilor (panoul de statistici și widget-ul „Legenda grupurilor”): pachetul standard are legenda
  * simplă (pastilele); o aplicație activă (ex. Grupuri Pro, premium) își înregistrează aici legenda ei, iar panoul o
- * folosește fără să știe de aplicație. Primul renderer al unei aplicații active câștigă.
+ * folosește fără să știe de aplicație. Primul renderer al unei aplicații active câștigă. În panou, legenda aplicației
+ * înlocuiește tot blocul (cu titlul lui, `headingId`); în widget, doar conținutul de sub titlul widget-ului.
  */
-export type GcsLegendContext = { groups: GcsLegendGroup[]; place: "panel" | "widget" };
+export type GcsLegendContext = { groups: GcsLegendGroup[]; place: "panel" | "widget"; headingId?: string };
 type Renderer = (ctx: GcsLegendContext) => Promise<ReactNode | null>;
 
 const renderers: { app: string; render: Renderer }[] = [];

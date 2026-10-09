@@ -11,7 +11,7 @@ import { GcsWhoIsOnline } from "../forum/GcsWhoIsOnline";
 import { GcsStatsPanelFrame } from "./GcsStatsPanelFrame";
 import { GcsWidgetTitle, widgetIcon } from "./GcsWidgetTitle";
 import { groupPillProps } from "@/lib/group-pills";
-import { renderGroupLegend } from "@/lib/group-legend";
+import { renderGroupLegend } from "@/lib/app-legends";
 
 /** „Cine a fost online” (24 h): lista e aceeași pentru toți vizitatorii, deci se calculează cel mult o dată pe minut. */
 async function cachedWhoWasOnline(): Promise<GcsWhoWasOnline> {
@@ -242,15 +242,16 @@ export async function GcsStatsPanel({ id, config }: { id: string; config?: Recor
         </div>
       </section>
 
-      {legend.length > 0 && (
-        <section className="gcs-legendBlock" aria-labelledby={`${headingId}-legend`}>
-          <h3 id={`${headingId}-legend`} className="gcs-legendBlock__title">
-            <GcsIcon name="fa-solid fa-users" />
-            {tp("legendTitle")}
-          </h3>
-          {(await renderGroupLegend({ groups: legend, place: "panel" })) ?? <LegendPills groups={legend} testId="gcs-legend" />}
-        </section>
-      )}
+      {legend.length > 0 &&
+        ((await renderGroupLegend({ groups: legend, place: "panel", headingId: `${headingId}-legend` })) ?? (
+          <section className="gcs-legendBlock" aria-labelledby={`${headingId}-legend`}>
+            <h3 id={`${headingId}-legend`} className="gcs-legendBlock__title">
+              <GcsIcon name="fa-solid fa-users" />
+              {tp("legendTitle")}
+            </h3>
+            <LegendPills groups={legend} testId="gcs-legend" />
+          </section>
+        ))}
     </GcsStatsPanelFrame>
   );
 }
