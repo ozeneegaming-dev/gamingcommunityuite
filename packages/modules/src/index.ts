@@ -24,6 +24,7 @@ export { DEFAULT_BADGES, DEFAULT_FRAMES, DEFAULT_NAME_STYLES, DEFAULT_RANKS, DEF
 export { vipModule } from "./vip";
 export * from "./profile/privacy";
 export * from "./profile/postbit";
+export * from "./profile/level";
 export * from "./profile/members";
 export * from "./profile/mentions";
 export { GcsProfileService, STEAM_PLACEHOLDER_DOMAIN, USER_AVATAR, USER_COVER, type GcsVisibleField } from "./profile/profile";
