@@ -13,7 +13,8 @@ type Body =
   | { action: "expire"; email: string }
   | { action: "sweep" }
   | { action: "outbox" }
-  | { action: "digest" };
+  | { action: "digest" }
+  | { action: "groupStyle"; groupKey: string; nameStyle: Record<string, unknown> | null };
 
 const doc = (text: string) => ({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
 
@@ -77,6 +78,12 @@ export async function POST(req: Request): Promise<Response> {
       return Response.json(await s.vip.sweep());
     case "digest":
       return Response.json({ sent: await s.notificationProducers.digest() });
+    case "groupStyle": {
+      // Stilul numelui unui grup, prin serviciul grupurilor (invalidează CSS-ul generat, ca editarea din ACP).
+      const group = await s.db.group.findUniqueOrThrow({ where: { key: body.groupKey } });
+      await s.groups.update(group.id, { nameStyle: body.nameStyle as never }, await rootActor());
+      return Response.json({ ok: true });
+    }
     case "outbox": {
       const mails = await s.redis.lrange(TEST_OUTBOX_KEY, 0, 49);
       return Response.json(mails.map((m) => JSON.parse(m) as unknown));
