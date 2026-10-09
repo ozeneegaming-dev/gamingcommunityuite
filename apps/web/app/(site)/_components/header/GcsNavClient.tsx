@@ -383,6 +383,12 @@ function MobileNav({ items, extra, labels, home, search }: MobileNavProps & { se
     opener.current?.focus();
   };
   useEffect(() => setOpen(false), [pathname, search]);
+  // Bara de jos de pe mobil (antetul construit) deschide sertarul cu butonul „Meniu”.
+  useEffect(() => {
+    const onOpen = () => setOpen(true);
+    window.addEventListener("gcs:drawer-open", onOpen);
+    return () => window.removeEventListener("gcs:drawer-open", onOpen);
+  }, []);
   useEffect(() => {
     if (!open) return;
     panel.current?.querySelector<HTMLElement>(".gcs-drawer__nav a, .gcs-drawer__nav button")?.focus();

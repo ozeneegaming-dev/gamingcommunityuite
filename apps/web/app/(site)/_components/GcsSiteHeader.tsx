@@ -1,4 +1,4 @@
-import { pluginRegistryKey, type GcsThemeView } from "@gcs/core";
+import { headerLayoutIsPreset, pluginRegistryKey, type GcsThemeView } from "@gcs/core";
 import { communityRules, RULES_HREF } from "@gcs/modules";
 import { GcsIcon } from "@gcs/ui/icons";
 import { GcsAvatar, GcsButton } from "@gcs/ui";
@@ -12,7 +12,8 @@ import { withoutHrefs } from "@/lib/nav-match";
 import { localeOptions } from "@/lib/locales";
 import { pluginHost, safeModeActive } from "@/lib/plugins";
 import { services } from "@/lib/services";
-import { GcsCrumbTrail, GcsGuestPrefs, GcsHeaderScroll, GcsHeaderSearch, GcsMobileNav, GcsNavLinks, GcsUserMenu, type GcsNavEntry } from "./header/GcsNavClient";
+import { GcsHeaderBuilder, type GcsHeaderNavItem } from "./header/GcsHeaderBuilder";
+import { GcsCrumbTrail, GcsGuestPrefs, GcsHeaderScroll, GcsHeaderSearch, GcsMobileNav, GcsNavLinks, GcsUserMenu } from "./header/GcsNavClient";
 import { GcsAuthLink } from "./GcsAuthModal";
 import { GcsLiveCount, GcsNotificationBell } from "./notifications/GcsNotificationBell";
 
@@ -94,8 +95,20 @@ export async function GcsSiteHeader() {
 
   const label = (l: { key: string } | { text: string }) => ("key" in l ? (tAll.has(l.key) ? tAll(l.key) : l.key) : l.text);
   const href = (i: (typeof tree)[number]) => (landing && i.href === "/" && "key" in i.label && i.label.key === FORUM_NAV_LABEL ? FORUM_INDEX_ALT_HREF : i.href);
-  const entries = (items: typeof tree): GcsNavEntry[] =>
-    items.map((i) => ({ id: i.id, label: label(i.label), href: href(i), newTab: i.newTab, icon: i.icon ? <GcsIcon name={i.icon} /> : null, children: entries(i.children) }));
+  // Descrierea (mega meniurile): textul adminului sau cheia implicită, doar dacă are traducere.
+  const description = (d: (typeof tree)[number]["description"]) => (!d ? null : "text" in d ? d.text : tAll.has(d.key) ? tAll(d.key) : null);
+  const entries = (items: typeof tree): GcsHeaderNavItem[] =>
+    items.map((i) => ({
+      id: i.id,
+      label: label(i.label),
+      href: href(i),
+      newTab: i.newTab,
+      icon: i.icon ? <GcsIcon name={i.icon} /> : null,
+      iconName: i.icon,
+      description: description(i.description),
+      badge: i.badge,
+      children: entries(i.children),
+    }));
   // Intrările pluginurilor (etapa 6): în meniul principal și în meniul userului; nu în modul sigur.
 // Doar ale pluginurilor accesibile viewer-ului (accesul pe grup din ACP → Aplicații; cheia intrării: `<plugin>.<intrare>`).
   const usable = await apps.accessFilter(actor);
@@ -108,10 +121,28 @@ export async function GcsSiteHeader() {
       }));
   // Ascunse automat: Reguli, cât timp regulile comunității sunt goale (pagina rămâne, cu o stare goală).
   const hidden = new Set((await communityRules(settings)) ? [] : [RULES_HREF]);
-  const menu = [
+  const menu: GcsHeaderNavItem[] = [
     ...withoutHrefs(entries(tree), hidden),
-    ...pluginMenus.site.map((m, i): GcsNavEntry => ({ id: -1000 - i, label: m.label, href: m.href, newTab: false, icon: <GcsIcon name={m.icon} />, children: [] })),
+    ...pluginMenus.site.map((m, i): GcsHeaderNavItem => ({ id: -1000 - i, label: m.label, href: m.href, newTab: false, icon: <GcsIcon name={m.icon} />, iconName: m.icon, description: null, badge: null, children: [] })),
   ];
+
+  // Designul Nova cu un antet construit (orice presetare în afară de „Nova clasic” neatins): constructorul de antet.
+  const layout = theme.settings.header.layout;
+  if (theme.settings.preset === "nova" && !(layout.preset === "classic" && headerLayoutIsPreset(layout))) {
+    return (
+      <GcsHeaderBuilder
+        actor={actor}
+        theme={theme}
+        siteName={siteName}
+        brand={<GcsBrand theme={theme} siteName={siteName} />}
+        menu={menu}
+        landing={landing?.href}
+        user={user}
+        counts={{ messages: unread, notifications: unreadNotifications }}
+        staff={{ themeEditor: editing.canTheme ? `/admin/theme-editor/${theme.key}` : null, pageEditor: editing.canWidgets }}
+      />
+    );
+  }
 
   return (
     <header className="gcs-siteHeader">
