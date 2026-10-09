@@ -228,7 +228,11 @@ function conditionalRules(s: GcsThemeSettings): string[] {
   if (s.boxes.shadow !== "none") rules.push(`.gcs-card:where(:not(.gcs-acp *)) {\n  box-shadow: var(--gcs-box-shadow);\n}`);
   if (!s.scheme.toggle) rules.push(`html:root .gcs-siteFooter__scheme {\n  display: none;\n}`);
   if (s.logo.textMobile) rules.push(`@media (max-width: 640px) {\n  html:root .gcs-brand__text {\n    display: flex;\n  }\n}`);
-  if (!s.header.navIcons) rules.push(`html:root .gcs-navbar__menu .gcs-nav__link > .gcs-icon:not(.gcs-navbar__caret) {\n  display: none;\n}`);
+  if (!s.header.navIcons) {
+    rules.push(
+      `html:root .gcs-navbar__menu .gcs-nav__link > .gcs-icon:not(.gcs-navbar__caret),\nhtml:root .gcs-hb__navBar .gcs-hb__nav > .gcs-icon:not(.gcs-hb__caret) {\n  display: none;\n}`,
+    );
+  }
   if (!s.header.sticky) rules.push(`html:root .gcs-siteHeader {\n  position: relative;\n}`);
   if (s.mobileNav.side === "right") {
     rules.push(

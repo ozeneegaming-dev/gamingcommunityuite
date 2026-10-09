@@ -298,7 +298,8 @@ test("consola Hero Cockpit: pornită / oprită, feed-ul, meciul live, trofeele p
     await sql(`INSERT INTO widget_placements (page, zone, position, type, config, groups) VALUES ('index', 'sidebar', 0, 'core.ranking', '{"metric":"posts","period":"day"}', '{}')`);
     await clearWidgetCache();
     await page.goto("/");
-    const widget = page.getByTestId("gcs-ranking-widget");
+    // Widgeturile vin în flux (streaming): rezerva ascunsă rămâne în pagină, deci doar copia vizibilă.
+    const widget = page.getByTestId("gcs-ranking-widget").filter({ visible: true }).first();
     await expect(widget).toBeVisible();
     await expect(widget.getByTestId("gcs-ranking-widget-row").first()).toHaveAttribute("data-medal", "gold");
     await expect(widget.getByTestId("gcs-ranking-widget-trophy")).toHaveCount(3);

@@ -16,6 +16,7 @@ import {
   unusedHeaderElements,
   type GcsHeaderBuilder,
 } from "./headerBuilder";
+import { compileThemeCss } from "./css";
 import { NOVA_THEME_SETTINGS, normalizeThemeSettings, themeSettingsErrors, withThemePath } from "./settings";
 
 const clone = <T>(v: T): T => structuredClone(v);
@@ -219,6 +220,15 @@ describe("setările temei: antetul, bara de jos și consola", () => {
     expect(themeSettingsErrors({ cockpit: { enabled: true, pages: "all", left: "top", center: "featured", right: "none", image: null } })).toEqual({});
     expect(themeSettingsErrors({ cockpit: { left: "chess" } })).toEqual({ "cockpit.left": "invalid_choice" });
     expect(themeSettingsErrors({ header: { customHtml: "x".repeat(2001) } })).toEqual({ "header.customHtml": "too_long" });
+  });
+});
+
+describe("constructorul de antet: CSS-ul temei", () => {
+  test("fără iconițe în meniu: ascunse și în bara constructorului, nu doar în antetul clasic", () => {
+    const off = compileThemeCss(withThemePath(clone(NOVA_THEME_SETTINGS), "header.navIcons", false), "");
+    expect(off).toContain(".gcs-hb__navBar .gcs-hb__nav > .gcs-icon:not(.gcs-hb__caret)");
+    const on = compileThemeCss(withThemePath(clone(NOVA_THEME_SETTINGS), "header.navIcons", true), "");
+    expect(on).not.toContain(".gcs-hb__navBar .gcs-hb__nav > .gcs-icon");
   });
 });
 
