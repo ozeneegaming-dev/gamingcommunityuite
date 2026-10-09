@@ -1,3 +1,4 @@
+import { FOOTER_SETTING, SOCIAL_NETWORKS, footerConfigError } from "../community/footer";
 import { communityRulesSetting } from "../community/rules";
 import { coreWidgets } from "../widgets";
 import { APP_SETTING_DEFS, type GcsAcpApp, type GcsAcpArea, type GcsAcpMenuSection, type GcsModule, type GcsPermissionDef, type GcsSettingDef } from "@gcs/core";
@@ -51,6 +52,10 @@ const settings: GcsSettingDef[] = [
   { ...setting("site.locale", "string", "ro", "general", oneOf([...GCS_LOCALE_KEYS])), options: [...GCS_LOCALE_KEYS] },
   setting("site.timezone", "string", "Europe/Bucharest", "general", notEmpty),
   { ...setting("site.theme", "string", "dark", "general", oneOf(["dark", "light", "auto"])), options: ["dark", "light", "auto"] },
+  // Profilurile sociale ale comunității (cercurile colorate din subsol); goale = ascunse.
+  ...SOCIAL_NETWORKS.map((n) => setting(n.setting, "string", "", "general", isUrlOrEmpty)),
+  // Subsolul (ACP → Aspect → Subsol); `null` = valorile implicite, construite din aplicațiile instalate.
+  setting(FOOTER_SETTING, "json", null, "footer", footerConfigError),
   setting("email.smtp_host", "string", "", "email"),
   setting("email.smtp_port", "number", 587, "email", isPort),
   setting("email.smtp_user", "string", "", "email"),
@@ -277,7 +282,11 @@ const acpMenu: GcsAcpMenuSection[] = [
     ["templates", "/admin/appearance/templates", "fa-solid fa-file-code"],
     ["css", "/admin/appearance/css", "fa-brands fa-css3-alt"],
   ]),
-  menuSection("appearance", "layout", "fa-solid fa-table-cells-large", [["widgets", "/admin/appearance/widgets", "fa-solid fa-table-cells-large"]]),
+  menuSection("appearance", "layout", "fa-solid fa-table-cells-large", [
+    ["widgets", "/admin/appearance/widgets", "fa-solid fa-table-cells-large"],
+    // Subsolul site-ului: coloana „Despre”, coloanele de linkuri și bara de jos (specul 2026-10-10-tema-nova §5).
+    ["footer", "/admin/appearance/footer", "fa-solid fa-shoe-prints"],
+  ]),
   // Managerul meniului principal: secțiunea `system.menu_manager`, afișată lângă widget-uri.
   menuSection("system", "layout", "fa-solid fa-table-cells-large", [["menu_manager", "/admin/system/menu", "fa-solid fa-bars-staggered"]], {
     area: "appearance",

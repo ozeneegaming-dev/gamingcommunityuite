@@ -8,6 +8,7 @@ import {
   faEllipsis,
   faEnvelope,
   faGear,
+  faHouse,
   faLanguage,
   faMagnifyingGlass,
   faPaintbrush,
@@ -158,6 +159,46 @@ function NavBar({ items, label, moreLabel, home, search }: NavProps & { search: 
 }
 
 export const GcsNavLinks = withSearch<NavProps>(NavBar);
+
+type TrailProps = { items: GcsNavEntry[]; home?: string | undefined; labels: { home: string; trail: string } };
+
+/**
+ * Breadcrumb-ul generic din rândul de sub antet (designul Nova): Acasă › secțiunea activă din meniul principal
+ * (› subitemul activ). Paginile cu un breadcrumb propriu (forum, topic, servere…) îl pun peste acesta, din CSS.
+ */
+function CrumbTrail({ items, home, labels, search }: TrailProps & { search: string }) {
+  const pathname = usePathname();
+  const { href } = navActive(items, activePath(pathname, home), search);
+  const parent = href ? items.find((i) => i.children.some((c) => c.href === href) && !items.some((t) => t.children.length === 0 && t.href === href)) : undefined;
+  const leaf = href ? (parent?.children.find((c) => c.href === href) ?? items.find((i) => i.children.length === 0 && i.href === href)) : undefined;
+  const atHome = pathname === "/" && (!leaf || leaf.href === (home ?? "/"));
+  return (
+    <nav aria-label={labels.trail} className="gcs-breadcrumb gcs-crumbBar__trail" data-testid="gcs-crumb-trail">
+      <ol>
+        <li>
+          <Link href="/" aria-current={atHome ? "page" : undefined}>
+            <GcsIconSvg icon={faHouse} className="gcs-breadcrumb__home" />
+            {labels.home}
+          </Link>
+        </li>
+        {!atHome && parent && (
+          <li>
+            <span>{parent.label}</span>
+          </li>
+        )}
+        {!atHome && leaf && (
+          <li>
+            <Link href={leaf.href} aria-current={pathname === leaf.href.split("?")[0] ? "page" : undefined}>
+              {leaf.label}
+            </Link>
+          </li>
+        )}
+      </ol>
+    </nav>
+  );
+}
+
+export const GcsCrumbTrail = withSearch<TrailProps>(CrumbTrail);
 
 /** Căutarea din header: o iconiță care se deschide într-un câmp (pe ecranele mici). */
 export function GcsHeaderSearch({ label, placeholder }: { label: string; placeholder: string }) {

@@ -2,6 +2,7 @@ import { STEAM_PLACEHOLDER_DOMAIN } from "@gcs/modules";
 import Link from "next/link";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { Suspense, type ReactNode } from "react";
+import { GcsDesignSync } from "./_components/GcsDesignSync";
 import { GcsNavProgress } from "./_components/GcsNavProgress";
 import { GcsHoverCardHost } from "./_components/GcsHoverCardHost";
 import { GcsSiteFooter } from "./_components/GcsSiteFooter";
@@ -12,12 +13,13 @@ import { currentActor } from "@/lib/actor";
 import { alertPrefs, viewerTheme } from "@/lib/appearance";
 import { safeModeActive } from "@/lib/plugins";
 import { services } from "@/lib/services";
+import { designClass } from "@/lib/theme-preview";
 
 export default async function SiteLayout({ children, modal }: { children: ReactNode; modal: ReactNode }) {
   const [t, locale, actor] = await Promise.all([getTranslations("hoverCard"), getLocale(), currentActor()]);
   // Conturile create prin Steam au un email placeholder: le cerem unul real (specul etapei 3, §8).
   const email = actor.userId ? (await services().db.user.findUnique({ where: { id: actor.userId }, select: { email: true } }))?.email : null;
-  const [tb, alerts, tc, tp, safeMode, { preview }, deletion, format] = await Promise.all([
+  const [tb, alerts, tc, tp, safeMode, { preview, shown }, deletion, format] = await Promise.all([
     getTranslations("settings.account"),
     alertPrefs(actor.userId),
     getTranslations("site"),
@@ -30,6 +32,8 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
   ]);
   return (
     <GcsRealtimeProvider>
+      {/* Clasa designului temei pe `<html>` (pusă și de layout-ul rădăcină; aici, după navigarea din ACP). */}
+      <GcsDesignSync design={designClass(shown.settings.preset)} />
       {/* `useSearchParams` cere un Suspense: bara nu blochează randarea paginii. */}
       <Suspense fallback={null}>
         <GcsNavProgress />

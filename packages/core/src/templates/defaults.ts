@@ -347,20 +347,19 @@ const HOVER_CARD = `<div class="gcs-card gcs-hoverCard" role="dialog" aria-label
 
 const FOOTER = `<footer class="gcs-siteFooter">
   <div class="gcs-siteFooter__inner">
-    <div class="gcs-siteFooter__brand">
-      <strong class="gcs-display">{{ site.name }}</strong>
-      <span>© {{ year }} {{ site.name }}</span>
+    {% slot "columns" %}
+    <div class="gcs-siteFooter__bar">
+      <div class="gcs-siteFooter__barStart">
+        {% slot "powered" %}
+        <span class="gcs-siteFooter__copy">© {{ year }} {{ site.name }}</span>
+      </div>
+      {% slot "social" %}
+      <nav aria-label="{{ "site.footerNav" | t }}" class="gcs-siteFooter__barLinks">
+        {% slot "language_menu" %}
+        {% slot "links" %}
+        {% slot "scheme" %}
+      </nav>
     </div>
-    <nav aria-label="{{ "site.footerNav" | t }}" class="gcs-siteFooter__links">
-      <a href="/members">{% icon "fa-solid fa-users" %}{{ "site.nav.members" | t }}</a>
-      <a href="/staff">{% icon "fa-solid fa-shield-halved" %}{{ "site.nav.staff" | t }}</a>
-      <a href="/search">{% icon "fa-solid fa-magnifying-glass" %}{{ "site.searchLabel" | t }}</a>
-    </nav>
-    <div class="gcs-siteFooter__prefs">
-      {% slot "language" %}
-      {% slot "scheme" %}
-    </div>
-    {% slot "powered" %}
   </div>
 </footer>
 `;
@@ -386,12 +385,19 @@ export const DEFAULT_TEMPLATES: GcsTemplateDef[] = [
     key: "layout.footer",
     group: "layout",
     icon: "fa-solid fa-shoe-prints",
-    version: 1,
+    // Versiunea 2: subsolul configurabil din ACP → Aspect → Subsol (coloanele, rețelele sociale, bara de jos).
+    version: 2,
     title: T("Subsolul site-ului", "Site footer"),
-    description: T("Subsolul tuturor paginilor: numele site-ului, linkurile utile, limba și modul de culori.", "The footer of every page: site name, useful links, language and colour mode."),
+    description: T(
+      "Subsolul tuturor paginilor: coloana „Despre” și coloanele de linkuri (ACP → Aspect → Subsol), rețelele sociale, limba, linkurile legale și modul de culori.",
+      "The footer of every page: the About column and link columns (ACP → Appearance → Footer), social networks, language, legal links and colour mode.",
+    ),
     variables: vars([...common, ["year", "number", "Anul curent", "Current year"]]),
     slots: [
-      slot("language", false, "Butoanele de limbă", "Language buttons"),
+      slot("columns", false, "Coloana „Despre” și coloanele de linkuri (ACP → Aspect → Subsol)", "The About column and the link columns (ACP → Appearance → Footer)"),
+      slot("social", false, "Cercurile rețelelor sociale (ACP → Setări → Generale)", "The social network circles (ACP → Settings → General)"),
+      slot("links", false, "Linkurile legale și „Conținut necitit”", "Legal links and “Unread content”"),
+      slot("language_menu", false, "Meniul limbii (o listă care se deschide)", "Language menu (a drop-up list)"),
       slot("scheme", false, "Butoanele modului de culori", "Colour mode buttons"),
       slot("powered", true, "Mențiunea „Powered by GamingCommunitySuite” (apare oricum)", "The “Powered by GamingCommunitySuite” line (always shown)"),
     ],

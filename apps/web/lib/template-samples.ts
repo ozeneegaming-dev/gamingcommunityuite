@@ -147,6 +147,10 @@ export async function templateSample(key: string, actor: GcsActor): Promise<GcsT
       return {
         data: { year: new Date().getFullYear() },
         slots: {
+          columns: slotBox("columns", t("slot", { name: "columns" })),
+          social: slotBox("social", t("slot", { name: "social" })),
+          links: slotBox("links", t("slot", { name: "links" })),
+          language_menu: slotBox("language_menu", t("slot", { name: "language_menu" })),
           language: slotBox("language", t("slot", { name: "language" })),
           scheme: slotBox("scheme", t("slot", { name: "scheme" })),
           powered: '<p class="gcs-siteFooter__powered">Powered by <a href="https://gamingcommunitysuite.com">GamingCommunitySuite</a></p>',

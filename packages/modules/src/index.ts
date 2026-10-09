@@ -57,6 +57,7 @@ export * from "./porting";
 export * from "./community/activity";
 export * from "./community/leaderboard";
 export * from "./community/rules";
+export * from "./community/footer";
 export * from "./vip/public";
 export { serversModule } from "./servers";
 export * from "./servers/games";

@@ -371,6 +371,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   // Logo-ul și favicon-ul temelor sunt publice (etapa 5).
   attachments.registerAccess("theme.logo", async () => true);
   attachments.registerAccess("theme.favicon", async () => true);
+  attachments.registerAccess("theme.header", async () => true);
   const forums = new GcsForumService({ db, bus, permissions, acp, registry });
   const readMarkers = new GcsReadMarkerService({ db, settings });
   const follows = new GcsFollowService({ db });

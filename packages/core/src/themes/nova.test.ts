@@ -149,7 +149,7 @@ describe("designul Nova: CSS-ul compilat", () => {
     expect(css).toContain("--gcs-band-icon-bg: transparent;");
     expect(css).toContain("--gcs-hover-scale: 1;");
     expect(css).toContain("--gcs-hero-pattern: none;");
-    expect(css).toContain("html:root .gcs-nova .gcs-crumbBar {\n  display: none;");
+    expect(css).toContain("html.gcs-nova .gcs-crumbBar {\n  display: none;");
     expect(compileThemeCss(nova("bands.style", "accent"), "")).toContain("--gcs-band-shadow: inset 3px 0 0 var(--gcs-accent);");
     expect(compileThemeCss(nova("bands.icon", "rounded"), "")).toContain("--gcs-band-icon-radius: 10px;");
   });

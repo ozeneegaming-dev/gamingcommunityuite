@@ -202,6 +202,11 @@ html[data-theme="light"] .gcs-brand__logo--light {
   opacity: 0.7;
 }
 
+/* Rândul cu breadcrumb-ul și căutarea de sub meniu: doar în designul Nova (`nova.css`). */
+.gcs-crumbBar {
+  display: none;
+}
+
 /* Căutarea extensibilă. */
 .gcs-headerSearch {
   display: flex;
@@ -355,7 +360,11 @@ html[data-theme="light"] .gcs-brand__logo--light {
   margin: 8px 0;
 }
 
-/* Footer. */
+/*
+ * Footer (specul 2026-10-10-tema-nova §5, ACP → Aspect → Subsol): coloana „Despre”, coloanele de linkuri (pastile cu
+ * iconițe) și bara de jos (mențiunea produsului, rețelele sociale, limba, linkurile legale, tema). Aspectul de bază;
+ * designul Nova îl rafinează în `nova.css`. Șablonul vechi (brand / linkuri / preferințe) are în continuare clasele lui.
+ */
 .gcs-siteFooter {
   margin-top: 48px;
   border-top: 1px solid var(--gcs-border);
@@ -364,14 +373,75 @@ html[data-theme="light"] .gcs-brand__logo--light {
 .gcs-siteFooter__inner {
   max-width: var(--gcs-page-width, 1320px);
   margin: 0 auto;
-  padding: 24px;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 16px 24px;
-  align-items: center;
+  padding: 28px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
   color: var(--gcs-footer-text, var(--gcs-muted));
   font-size: 13px;
 }
+.gcs-siteFooter__top {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) repeat(auto-fit, minmax(170px, 1fr));
+  gap: 28px;
+}
+.gcs-siteFooter__about {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.gcs-siteFooter__title {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gcs-heading, var(--gcs-text));
+}
+.gcs-siteFooter__accent,
+.gcs-siteFooter__hl {
+  color: var(--gcs-accentInk);
+}
+.gcs-siteFooter__hl {
+  font-weight: 700;
+}
+.gcs-siteFooter__text {
+  margin: 0;
+  line-height: 1.7;
+  max-width: 62ch;
+}
+.gcs-siteFooter__cta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--gcs-border);
+  background: var(--gcs-surface);
+  color: var(--gcs-text);
+  max-width: 62ch;
+}
+.gcs-root a.gcs-siteFooter__cta {
+  color: var(--gcs-text);
+}
+.gcs-siteFooter__ctaIcon {
+  color: var(--gcs-accentInk);
+}
+.gcs-siteFooter__ctaArrow {
+  margin-left: auto;
+  opacity: 0.6;
+}
+.gcs-siteFooter__col {
+  min-width: 0;
+}
+.gcs-siteFooter__list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+/* Clasele șablonului vechi (brand, linkuri pe un rând, preferințe), pentru șabloanele modificate înainte de subsolul nou. */
 .gcs-siteFooter__brand {
   display: flex;
   flex-direction: column;
@@ -391,17 +461,157 @@ html[data-theme="light"] .gcs-brand__logo--light {
   flex-wrap: wrap;
   gap: 12px;
 }
+.gcs-siteFooter__pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 6px;
+  border: 1px solid var(--gcs-border);
+  background: var(--gcs-surface2);
+}
+.gcs-root a.gcs-siteFooter__pill {
+  color: var(--gcs-text);
+}
+.gcs-siteFooter__pillIcon {
+  width: 16px;
+  display: inline-flex;
+  justify-content: center;
+  color: var(--gcs-muted);
+}
+.gcs-siteFooter__pillText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-siteFooter__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--gcs-border);
+  background: var(--gcs-surface);
+}
+.gcs-siteFooter__barStart {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+}
+.gcs-siteFooter__copy {
+  color: var(--gcs-muted);
+}
+.gcs-siteFooter__social {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.gcs-siteFooter__socialLink {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+.gcs-root a.gcs-siteFooter__socialLink {
+  color: #fff;
+}
+.gcs-siteFooter__barLinks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  margin-left: auto;
+}
+.gcs-siteFooter__barLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.gcs-root a.gcs-siteFooter__barLink,
+summary.gcs-siteFooter__barLink {
+  color: var(--gcs-footer-text, var(--gcs-muted));
+}
+.gcs-siteFooter__code {
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+/* Limba: un meniu `<details>` (merge și fără JavaScript). */
+.gcs-siteFooter__menu {
+  position: relative;
+}
+.gcs-siteFooter__menu > summary {
+  list-style: none;
+}
+.gcs-siteFooter__menu > summary::-webkit-details-marker {
+  display: none;
+}
+.gcs-siteFooter__menuList {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 160px;
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid var(--gcs-border);
+  background: var(--gcs-surface);
+  box-shadow: 0 16px 40px -8px rgb(0 0 0 / 0.45);
+}
+.gcs-siteFooter__menuList .gcs-seg {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-start;
+  text-align: left;
+}
+.gcs-siteFooter__langName {
+  font-weight: 500;
+}
+.gcs-siteFooter__schemeText {
+  margin-left: 4px;
+}
 .gcs-seg__group {
   display: flex;
   gap: 4px;
   align-items: center;
 }
+/*
+ * Mențiunea produsului (specul principal §1.1): mereu vizibilă. Regulile cu `!important` nu pot fi anulate de CSS-ul
+ * unei teme; în plus, `GcsPoweredGuard` verifică în browser și adaugă o rezervă dacă rândul tot nu se vede.
+ */
 .gcs-siteFooter__powered {
   margin: 0;
-  justify-self: end;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: static !important;
+  transform: none !important;
+  clip-path: none !important;
+  font-size: max(12px, 1em) !important;
 }
 .gcs-siteFooter__powered a {
+  display: inline !important;
+  visibility: visible !important;
+  opacity: 1 !important;
   font-weight: 700;
+  font-size: inherit !important;
 }
 
 @media (max-width: 1024px) {
@@ -451,12 +661,24 @@ html[data-theme="light"] .gcs-brand__logo--light {
     font-size: 16px;
   }
 }
+@media (max-width: 900px) {
+  .gcs-siteFooter__top {
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  }
+  .gcs-siteFooter__about {
+    grid-column: 1 / -1;
+  }
+}
 @media (max-width: 640px) {
   .gcs-siteFooter__inner {
-    grid-template-columns: 1fr;
+    padding-inline: 16px;
   }
-  .gcs-siteFooter__powered {
-    justify-self: start;
+  .gcs-siteFooter__social,
+  .gcs-siteFooter__barLinks {
+    margin: 0;
+  }
+  .gcs-siteFooter__schemeText {
+    display: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {

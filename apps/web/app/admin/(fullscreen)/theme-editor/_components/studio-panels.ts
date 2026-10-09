@@ -17,19 +17,33 @@ import {
   faWindowMaximize,
   faTableCellsLarge,
   faTableList,
+  faWandMagicSparkles,
 } from "@fortawesome/free-solid-svg-icons";
+import { NOVA_ONLY_FIELDS } from "@gcs/core/themes";
 
 /** Locurile imaginilor din temă (același nume ca `kind` din `/api/themes/images`). */
-export type GcsStudioImageSlot = "logo" | "logoLight" | "logoMobile" | "logoMobileLight" | "favicon";
+export type GcsStudioImageSlot = "logo" | "logoLight" | "logoMobile" | "logoMobileLight" | "favicon" | "headerImage";
 
 /** O culoare editabilă: un token al paletei (doar hex) sau o culoare de element (hex, token sau transparent). */
 export type GcsStudioColorRef = { kind: "token"; token: GcsThemeToken } | { kind: "element"; key: GcsThemeElementColor };
 
 /** Un rând din tab-ul „Setări”: o setare (calea ei), o imagine sau un subtitlu. */
-export type GcsStudioSettingItem = string | { image: GcsStudioImageSlot } | { heading: string };
+export type GcsStudioSettingItem = string | { image: GcsStudioImageSlot } | { heading: string; nova?: true };
+
+/**
+ * Rândul apare pentru designul temei editate: setările, imaginile și subtitlurile designului Nova (`NOVA_ONLY_FIELDS`,
+ * imaginea antetului, subtitlurile marcate `nova`) doar când tema e Nova; altfel ar fi opțiuni fără efect.
+ */
+export function studioItemVisible(item: GcsStudioSettingItem, preset: string): boolean {
+  if (preset === "nova") return true;
+  if (typeof item === "string") return !NOVA_ONLY_FIELDS.includes(item);
+  if ("image" in item) return item.image !== "headerImage";
+  return !item.nova;
+}
 
 export type GcsStudioPanelId =
   | "start"
+  | "design"
   | "palette"
   | "scheme"
   | "logos"
@@ -71,6 +85,7 @@ export const STUDIO_PANELS: Record<GcsStudioPanelId, GcsStudioPanel> = {
     rows: [
       { type: "css" },
       { type: "separator" },
+      nav("design"),
       nav("palette"),
       nav("scheme"),
       nav("logos"),
@@ -81,6 +96,10 @@ export const STUDIO_PANELS: Record<GcsStudioPanelId, GcsStudioPanel> = {
       nav("mobileNav"),
       nav("global"),
     ],
+  },
+  design: {
+    icon: faWandMagicSparkles,
+    settings: ["preset", { heading: "bands", nova: true }, "bands.style", "bands.icon", { heading: "effects", nova: true }, "effects.hover"],
   },
   palette: {
     icon: faPalette,
@@ -117,7 +136,20 @@ export const STUDIO_PANELS: Record<GcsStudioPanelId, GcsStudioPanel> = {
     colors: [token("text"), token("muted"), element("heading"), element("link"), element("linkHover")],
   },
   header: { icon: faWindowMaximize, rows: [nav("headerDesktop"), nav("headerMobile")] },
-  headerDesktop: { icon: faDesktop, settings: ["header.height", "header.navIcons", "header.sticky"], colors: [element("headerBg"), element("headerText")] },
+  headerDesktop: {
+    icon: faDesktop,
+    settings: [
+      "header.height",
+      "header.navIcons",
+      "header.sticky",
+      "header.crumbs",
+      { heading: "headerImage", nova: true },
+      { image: "headerImage" },
+      "header.overlay",
+      "header.pattern",
+    ],
+    colors: [element("headerBg"), element("headerText")],
+  },
   headerMobile: { icon: faMobileScreen, settings: ["header.heightMobile", "logo.sizeMobile", "logo.textMobile", "logo.heightMobile"], colors: [element("headerBg"), element("headerText")] },
   footer: { icon: faGripLines, settings: ["scheme.toggle"], colors: [element("footerBg"), element("footerText")] },
   mobileNav: { icon: faMobileScreen, settings: ["mobileNav.side", "mobileNav.icons"], colors: [element("drawerBg"), element("drawerText")] },

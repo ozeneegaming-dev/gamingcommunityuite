@@ -6,7 +6,7 @@ import { gcsConfigDir } from "./lib/config";
 import { isMaintenanceExempt } from "./lib/maintenance";
 import { isRootAdmin, SAFE_MODE_COOKIE, SAFE_MODE_PARAM } from "./lib/plugins";
 import { services } from "./lib/services";
-import { previewKeyFor, THEME_PREVIEW_COOKIE, THEME_PREVIEW_HEADER, THEME_PREVIEW_PARAM } from "./lib/theme-preview";
+import { previewKeyFor, SITE_AREA_HEADER, siteAreaFor, THEME_PREVIEW_COOKIE, THEME_PREVIEW_HEADER, THEME_PREVIEW_PARAM } from "./lib/theme-preview";
 
 /** Odată instalat, rămâne instalat: nu mai verificăm fișierul la fiecare request. */
 let installedCache = false;
@@ -150,6 +150,8 @@ async function legacyRedirect(request: NextRequest): Promise<NextResponse | null
 function withThemePreview(request: NextRequest, rewrite: URL | null = null): NextResponse {
   const headers = new Headers(request.headers);
   headers.delete(THEME_PREVIEW_HEADER);
+  // Zona cererii (ACP sau site), pentru clasa designului temei; valoarea venită din afară e suprascrisă.
+  headers.set(SITE_AREA_HEADER, siteAreaFor(request.nextUrl.pathname));
   const param = request.nextUrl.searchParams.get(THEME_PREVIEW_PARAM);
   const key = previewKeyFor(param, request.cookies.get(THEME_PREVIEW_COOKIE)?.value, request.headers.get("sec-fetch-dest"));
   if (key) headers.set(THEME_PREVIEW_HEADER, key);

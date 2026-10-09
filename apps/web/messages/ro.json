@@ -56,7 +56,8 @@
     "themeEditor": "Editor temă",
     "pageEditor": "Editor pagină",
     "metaDescription": "{name}: comunitate de gaming cu forum, chat și membri.",
-    "deletedMember": "Membru șters"
+    "deletedMember": "Membru șters",
+    "crumbs": "Unde te afli"
   },
   "auth": {
     "login": {
@@ -411,7 +412,8 @@
         "templates": "Șabloane",
         "css": "CSS",
         "style": "Teme și stil",
-        "layout": "Pagini și meniuri"
+        "layout": "Pagini și meniuri",
+        "footer": "Subsol"
       },
       "gaming": {
         "servers_group": "Servere",
@@ -2988,6 +2990,60 @@
         "none": "nimic",
         "lockedNote": "Aplicație de bază: face parte din platformă, deci nu se oprește și nu se dezinstalează."
       }
+    },
+    "footer": {
+      "title": "Subsol",
+      "intro": "Coloana „Despre”, coloanele de linkuri și bara de jos a site-ului. Mențiunea „Powered by GamingCommunitySuite” apare mereu.",
+      "usingDefaults": "Site-ul arată acum subsolul implicit, tradus și construit din aplicațiile pornite. La salvare, textele de mai jos devin subsolul site-ului.",
+      "about": {
+        "section": "Coloana „Despre”",
+        "title": "Titlu",
+        "accent": "Partea colorată a titlului",
+        "text": "Text",
+        "textHelp": "Pune **cuvintele** între câte două asteriscuri ca să le evidențiezi; Enter = rând nou.",
+        "ctaOn": "Card-link sub text",
+        "cta": "Card-link"
+      },
+      "link": {
+        "label": "Etichetă",
+        "href": "Adresă",
+        "hrefHelp": "O cale de pe site (/forum), o adresă https:// sau mailto:",
+        "icon": "Iconiță"
+      },
+      "columns": {
+        "section": "Coloane de linkuri",
+        "column": "Coloana {n}",
+        "add": "Adaugă o coloană",
+        "remove": "Șterge coloana",
+        "title": "Titlu",
+        "accent": "Partea colorată",
+        "addLink": "Adaugă un link",
+        "removeLink": "Șterge linkul",
+        "up": "Mută sus",
+        "down": "Mută jos",
+        "max": "Cel mult {max} coloane, câte {links} linkuri fiecare.",
+        "empty": "Nicio coloană: subsolul arată doar coloana „Despre”."
+      },
+      "bottom": {
+        "section": "Bara de jos",
+        "privacy": "Confidențialitate (adresă)",
+        "contact": "Contact (adresă)",
+        "cookies": "Cookie-uri (adresă)",
+        "urlHelp": "Goală = linkul nu apare.",
+        "language": "Alegerea limbii",
+        "unread": "„Conținut necitit” (pentru membri)",
+        "theme": "Comutatorul temei",
+        "social": "Rețelele sociale (cercurile colorate) se completează în Setări → Generale."
+      },
+      "preview": "Previzualizare",
+      "save": "Salvează subsolul",
+      "saved": "Subsolul a fost salvat.",
+      "reset": "Revino la subsolul implicit",
+      "resetTitle": "Revii la subsolul implicit?",
+      "resetBody": "Textele și linkurile salvate se șterg; site-ul arată din nou subsolul implicit, tradus și construit din aplicațiile pornite.",
+      "resetConfirm": "Da, revino",
+      "resetDone": "Site-ul arată din nou subsolul implicit.",
+      "cancel": "Anulează"
     }
   },
   "settings": {
@@ -3326,6 +3382,18 @@
     "apps": {
       "landing": "Aplicația de pornire",
       "order": "Ordinea aplicațiilor"
+    },
+    "social": {
+      "facebook": "Facebook (adresa paginii)",
+      "instagram": "Instagram (adresa profilului)",
+      "tiktok": "TikTok (adresa profilului)",
+      "youtube": "YouTube (adresa canalului)",
+      "x": "X (adresa profilului)",
+      "twitch": "Twitch (adresa canalului)",
+      "kick": "Kick (adresa canalului)",
+      "steam": "Grupul Steam (adresa)",
+      "github": "GitHub (adresa)",
+      "discord": "Discord (linkul de invitație)"
     }
   },
   "permissions": {
@@ -4226,7 +4294,8 @@
       "boxes": "Casete conținut",
       "sidebar": "Bară laterală",
       "avatars": "Avatare",
-      "buttons": "Butoane"
+      "buttons": "Butoane",
+      "design": "Design"
     },
     "tabs": {
       "settings": "Setări",
@@ -4238,7 +4307,10 @@
       "textLogo": "Logo text",
       "imageDesktop": "Logo imagine (desktop)",
       "imageMobile": "Logo imagine (mobil)",
-      "favicon": "Favicon"
+      "favicon": "Favicon",
+      "bands": "Benzile titlurilor",
+      "effects": "Efecte",
+      "headerImage": "Imaginea antetului"
     },
     "images": {
       "logo": "Logo (mod întunecat)",
@@ -4248,7 +4320,8 @@
       "favicon": "Favicon",
       "none": "Nicio imagine",
       "upload": "Încarcă",
-      "remove": "Șterge"
+      "remove": "Șterge",
+      "headerImage": "Fundalul antetului"
     },
     "tokens": {
       "accent": "Culoarea primară",
@@ -4423,7 +4496,8 @@
         "options": {
           "none": "Fără",
           "soft": "Discretă",
-          "strong": "Puternică"
+          "strong": "Puternică",
+          "subtle": "Fină"
         }
       },
       "boxes_clickableRows": {
@@ -4450,6 +4524,48 @@
       },
       "buttons_radius": {
         "label": "Raza colțurilor butoanelor"
+      },
+      "preset": {
+        "label": "Designul temei",
+        "help": "Nova: antetul înalt cu imagine, titlurile cu iconița în cerc, subsolul bogat și efectele de hover. Clasic: aspectul de până acum.",
+        "options": {
+          "classic": "Clasic",
+          "nova": "Nova"
+        }
+      },
+      "bands_style": {
+        "label": "Stilul benzilor",
+        "help": "Fundalul titlului fiecărei casete.",
+        "options": {
+          "solid": "Plin",
+          "gradient": "Gradient de accent",
+          "accent": "Bară de accent"
+        }
+      },
+      "bands_icon": {
+        "label": "Iconița din bandă",
+        "help": "Chenarul iconiței din fața titlurilor.",
+        "options": {
+          "circle": "Cerc",
+          "rounded": "Pătrat rotunjit",
+          "none": "Fără chenar"
+        }
+      },
+      "effects_hover": {
+        "label": "Efecte la hover",
+        "help": "Tranzițiile și mărirea ușoară a butoanelor-pastilă. Fără ele rămân doar schimbările de culoare."
+      },
+      "header_overlay": {
+        "label": "Întunecarea imaginii",
+        "help": "Cât de închis e stratul peste imaginea antetului, ca textul să se citească."
+      },
+      "header_pattern": {
+        "label": "Model tehnic",
+        "help": "Grila fină peste grafica implicită a antetului."
+      },
+      "header_crumbs": {
+        "label": "Rândul cu breadcrumb și căutare",
+        "help": "Sub meniu: unde te afli pe site și câmpul de căutare."
       }
     },
     "status": {
@@ -6115,6 +6231,50 @@
         "quota": "șters pentru spațiu",
         "deleted": "șters de staff"
       }
+    }
+  },
+  "footer": {
+    "about": {
+      "title": "Pe scurt despre",
+      "text": "**{site}** este casa gamerilor noștri: forum, servere de joc, clanuri și chat, totul într-un singur loc. Intră, joacă alături de prieteni și **fă parte din comunitate**.",
+      "cta": "Cunoaște echipa care are grijă de comunitate"
+    },
+    "columns": {
+      "discover": {
+        "title": "Descoperă",
+        "accent": "comunitatea"
+      },
+      "gaming": {
+        "title": "Servere",
+        "accent": "& clanuri"
+      },
+      "more": {
+        "title": "Mai multe",
+        "accent": "linkuri"
+      }
+    },
+    "links": {
+      "forum": "Forum",
+      "activity": "Activitate",
+      "members": "Membri",
+      "staff": "Echipa",
+      "leaderboard": "Clasament",
+      "servers": "Servere",
+      "matches": "Meciuri mix",
+      "serverRanking": "Statistici jucători",
+      "bans": "Banuri",
+      "clans": "Clanuri",
+      "chat": "Chat",
+      "vip": "VIP",
+      "rules": "Regulament",
+      "search": "Căutare"
+    },
+    "bar": {
+      "social": "Rețele sociale",
+      "privacy": "Confidențialitate",
+      "contact": "Contact",
+      "cookies": "Cookie-uri",
+      "unread": "Conținut necitit"
     }
   }
 }

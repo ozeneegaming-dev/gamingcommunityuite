@@ -56,7 +56,8 @@
     "themeEditor": "Theme editor",
     "pageEditor": "Editor de página",
     "metaDescription": "{name}: a gaming community with forums, chat and members.",
-    "deletedMember": "Deleted member"
+    "deletedMember": "Deleted member",
+    "crumbs": "You are here"
   },
   "auth": {
     "login": {
@@ -411,7 +412,8 @@
         "templates": "Plantillas",
         "css": "CSS",
         "style": "Themes & style",
-        "layout": "Pages & menus"
+        "layout": "Pages & menus",
+        "footer": "Footer"
       },
       "gaming": {
         "servers_group": "Servers",
@@ -2988,6 +2990,60 @@
         "none": "nothing",
         "lockedNote": "Core app: part of the platform, so it can't be turned off or uninstalled."
       }
+    },
+    "footer": {
+      "title": "Footer",
+      "intro": "The About column, the link columns and the bottom bar of the site. The “Powered by GamingCommunitySuite” line is always shown.",
+      "usingDefaults": "The site currently shows the default footer, translated and built from the enabled apps. When you save, the texts below become the site footer.",
+      "about": {
+        "section": "About column",
+        "title": "Title",
+        "accent": "Coloured part of the title",
+        "text": "Text",
+        "textHelp": "Put **words** between double asterisks to highlight them; Enter = new line.",
+        "ctaOn": "Link card under the text",
+        "cta": "Link card"
+      },
+      "link": {
+        "label": "Label",
+        "href": "Address",
+        "hrefHelp": "A path on the site (/forum), an https:// address or mailto:",
+        "icon": "Icon"
+      },
+      "columns": {
+        "section": "Link columns",
+        "column": "Column {n}",
+        "add": "Add a column",
+        "remove": "Remove column",
+        "title": "Title",
+        "accent": "Coloured part",
+        "addLink": "Add a link",
+        "removeLink": "Remove link",
+        "up": "Move up",
+        "down": "Move down",
+        "max": "Up to {max} columns, {links} links each.",
+        "empty": "No columns: the footer shows only the About column."
+      },
+      "bottom": {
+        "section": "Bottom bar",
+        "privacy": "Privacy (address)",
+        "contact": "Contact (address)",
+        "cookies": "Cookies (address)",
+        "urlHelp": "Empty = the link is not shown.",
+        "language": "Language picker",
+        "unread": "“Unread content” (for members)",
+        "theme": "Theme switch",
+        "social": "The social networks (coloured circles) are set in Settings → General."
+      },
+      "preview": "Preview",
+      "save": "Save footer",
+      "saved": "The footer was saved.",
+      "reset": "Back to the default footer",
+      "resetTitle": "Go back to the default footer?",
+      "resetBody": "The saved texts and links are removed; the site shows the default footer again, translated and built from the enabled apps.",
+      "resetConfirm": "Yes, go back",
+      "resetDone": "The site shows the default footer again.",
+      "cancel": "Cancel"
     }
   },
   "settings": {
@@ -3326,6 +3382,18 @@
     "apps": {
       "landing": "Landing app",
       "order": "App order"
+    },
+    "social": {
+      "facebook": "Facebook (page address)",
+      "instagram": "Instagram (profile address)",
+      "tiktok": "TikTok (profile address)",
+      "youtube": "YouTube (channel address)",
+      "x": "X (profile address)",
+      "twitch": "Twitch (channel address)",
+      "kick": "Kick (channel address)",
+      "steam": "Steam group (address)",
+      "github": "GitHub (address)",
+      "discord": "Discord (invite link)"
     }
   },
   "permissions": {
@@ -4226,7 +4294,8 @@
       "boxes": "Cuadros de contenido",
       "sidebar": "Sidebar",
       "avatars": "Avatares",
-      "buttons": "Botones"
+      "buttons": "Botones",
+      "design": "Design"
     },
     "tabs": {
       "settings": "Ajustes",
@@ -4238,7 +4307,10 @@
       "textLogo": "Logotipos",
       "imageDesktop": "Logo de imagen (desktop)",
       "imageMobile": "Logo de imagen (móvil)",
-      "favicon": "Favicon"
+      "favicon": "Favicon",
+      "bands": "Title bands",
+      "effects": "Effects",
+      "headerImage": "Header image"
     },
     "images": {
       "logo": "Logo (modo oscuro)",
@@ -4248,7 +4320,8 @@
       "favicon": "Favicon",
       "none": "Sin imagen",
       "upload": "Subir",
-      "remove": "Quitar"
+      "remove": "Quitar",
+      "headerImage": "Header background"
     },
     "tokens": {
       "accent": "Color primario",
@@ -4423,7 +4496,8 @@
         "options": {
           "none": "Ninguno",
           "soft": "Suave",
-          "strong": "Fuerte"
+          "strong": "Fuerte",
+          "subtle": "Subtle"
         }
       },
       "boxes_clickableRows": {
@@ -4450,6 +4524,48 @@
       },
       "buttons_radius": {
         "label": "Botón de esquina radius"
+      },
+      "preset": {
+        "label": "Theme design",
+        "help": "Nova: tall header with an image, titles with a round icon, a rich footer and hover effects. Classic: the previous look.",
+        "options": {
+          "classic": "Classic",
+          "nova": "Nova"
+        }
+      },
+      "bands_style": {
+        "label": "Band style",
+        "help": "The background of every box title.",
+        "options": {
+          "solid": "Solid",
+          "gradient": "Accent gradient",
+          "accent": "Accent bar"
+        }
+      },
+      "bands_icon": {
+        "label": "Band icon",
+        "help": "The frame of the icon in front of titles.",
+        "options": {
+          "circle": "Circle",
+          "rounded": "Rounded square",
+          "none": "No frame"
+        }
+      },
+      "effects_hover": {
+        "label": "Hover effects",
+        "help": "Transitions and the slight zoom of pill buttons. Without them only the colour changes remain."
+      },
+      "header_overlay": {
+        "label": "Image darkening",
+        "help": "How dark the layer over the header image is, so the text stays readable."
+      },
+      "header_pattern": {
+        "label": "Tech pattern",
+        "help": "The fine grid over the default header artwork."
+      },
+      "header_crumbs": {
+        "label": "Breadcrumb and search row",
+        "help": "Below the menu: where you are on the site and the search field."
       }
     },
     "status": {
@@ -6115,6 +6231,50 @@
         "quota": "deleted to free space",
         "deleted": "deleted by staff"
       }
+    }
+  },
+  "footer": {
+    "about": {
+      "title": "In short about",
+      "text": "**{site}** is home for our gamers: forum, game servers, clans and chat, all in one place. Jump in, play with friends and **become part of the community**.",
+      "cta": "Meet the team that looks after the community"
+    },
+    "columns": {
+      "discover": {
+        "title": "Discover",
+        "accent": "the community"
+      },
+      "gaming": {
+        "title": "Servers",
+        "accent": "& clans"
+      },
+      "more": {
+        "title": "More",
+        "accent": "links"
+      }
+    },
+    "links": {
+      "forum": "Forum",
+      "activity": "Activity",
+      "members": "Members",
+      "staff": "The team",
+      "leaderboard": "Leaderboard",
+      "servers": "Servers",
+      "matches": "Mix matches",
+      "serverRanking": "Player stats",
+      "bans": "Bans",
+      "clans": "Clans",
+      "chat": "Chat",
+      "vip": "VIP",
+      "rules": "Rules",
+      "search": "Search"
+    },
+    "bar": {
+      "social": "Social networks",
+      "privacy": "Privacy",
+      "contact": "Contact",
+      "cookies": "Cookies",
+      "unread": "Unread content"
     }
   }
 }

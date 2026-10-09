@@ -10,6 +10,8 @@ type Body =
   | { action: "reply"; topicId: number; text: string; authorEmail: string; mentionEmail?: string }
   | { action: "permissions"; forumId: number; groupKey: string; actions: string[] }
   | { action: "pm"; fromEmail: string; toEmail: string; title: string; text: string }
+  /** Conținutul demo al instalatorului (forumuri, topicuri, chat, profiluri), cu autorul dat; doar pe o bază fără forumuri. */
+  | { action: "demo"; adminEmail: string }
   | {
       action: "profileField";
       key: string;
@@ -103,6 +105,13 @@ export async function POST(req: Request): Promise<Response> {
         optionImages: body.optionImages ?? {},
       });
       return Response.json({ id: row.id });
+    }
+    case "demo": {
+      for (const m of s.registry.all()) {
+        await m.seedDemo?.({ db: s.db, cache: s.cache, bus: s.bus, registry: s.registry, variant: "demo", adminEmail: body.adminEmail });
+      }
+      await s.cache.invalidateTags(["forums", "nav", "widgets"]);
+      return Response.json({ ok: true });
     }
     case "pm": {
       const actor = await actorFor(body.fromEmail);

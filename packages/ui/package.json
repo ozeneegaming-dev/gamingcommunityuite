@@ -33,6 +33,7 @@
     "./clans.css": "./src/clans.css",
     "./gameplay.css": "./src/gameplay.css",
     "./titles.css": "./src/titles.css",
+    "./nova.css": "./src/nova.css",
     "./icons": "./src/icons/index.tsx",
     "./icon-registry": "./src/icons/registry.ts",
     "./badge-art": "./src/badges/index.ts",

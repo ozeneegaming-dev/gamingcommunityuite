@@ -12,7 +12,7 @@ import { withoutHrefs } from "@/lib/nav-match";
 import { localeOptions } from "@/lib/locales";
 import { pluginHost, safeModeActive } from "@/lib/plugins";
 import { services } from "@/lib/services";
-import { GcsGuestPrefs, GcsHeaderScroll, GcsHeaderSearch, GcsMobileNav, GcsNavLinks, GcsUserMenu, type GcsNavEntry } from "./header/GcsNavClient";
+import { GcsCrumbTrail, GcsGuestPrefs, GcsHeaderScroll, GcsHeaderSearch, GcsMobileNav, GcsNavLinks, GcsUserMenu, type GcsNavEntry } from "./header/GcsNavClient";
 import { GcsAuthLink } from "./GcsAuthModal";
 import { GcsLiveCount, GcsNotificationBell } from "./notifications/GcsNotificationBell";
 
@@ -195,6 +195,21 @@ export async function GcsSiteHeader() {
               </GcsButton>
             </>
           )}
+        </div>
+      </div>
+      {/* Rândul de sub meniu (designul Nova; ascuns în cel clasic): unde te afli și căutarea. */}
+      <div className="gcs-crumbBar">
+        <div className="gcs-crumbBar__inner">
+          <GcsCrumbTrail items={menu} home={landing?.href} labels={{ home: t("home"), trail: t("crumbs") }} />
+          <form action="/search" method="get" role="search" className="gcs-crumbBar__search">
+            <label htmlFor="gcs-crumb-search" className="gcs-srOnly">
+              {t("searchLabel")}
+            </label>
+            <input id="gcs-crumb-search" name="q" type="search" placeholder={t("searchPlaceholder")} className="gcs-crumbBar__input" data-testid="gcs-crumb-search" />
+            <button type="submit" className="gcs-crumbBar__go" aria-label={t("searchLabel")}>
+              <GcsIcon name="fa-solid fa-magnifying-glass" />
+            </button>
+          </form>
         </div>
       </div>
     </header>

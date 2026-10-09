@@ -302,12 +302,14 @@ export class GcsAttachmentService {
   /**
    * Logo-ul sau favicon-ul unei teme (specul etapei 5): doar imagini, recodate, fără animație. Logo-ul devine WebP
    * (max 800×240, transparența se păstrează), favicon-ul PNG 64×64 (încadrat, fundal transparent). Fișierul e public
-   * (`theme.logo` / `theme.favicon`, legat de cheia temei); dreptul ACP îl verifică apelantul.
+   * (`theme.logo` / `theme.favicon`, legat de cheia temei); dreptul ACP îl verifică apelantul. Imaginea antetului
+   * (designul Nova, `theme.header`) poate avea 5 MB și devine WebP de cel mult 2560×800.
    */
-  async uploadSiteImage(actor: GcsActor, file: GcsUploadedFile, opts: { kind: "logo" | "favicon"; themeKey: string }): Promise<GcsAttachmentInfo> {
+  async uploadSiteImage(actor: GcsActor, file: GcsUploadedFile, opts: { kind: "logo" | "favicon" | "header"; themeKey: string }): Promise<GcsAttachmentInfo> {
     const { db, store } = this.deps;
     if (!actor.userId) throw new GcsForbidden({ reason: "guest" });
-    if (file.bytes.length > 2 * 1024 * 1024) throw new GcsValidationError({ file: "too_large" }, { maxMb: "2" });
+    const maxMb = opts.kind === "header" ? 5 : 2;
+    if (file.bytes.length > maxMb * 1024 * 1024) throw new GcsValidationError({ file: "too_large" }, { maxMb: String(maxMb) });
     const detected = await fileTypeFromBuffer(file.bytes);
     if (!detected || !(detected.mime in IMAGE_FORMATS)) throw new GcsValidationError({ file: "unsupported_type" });
     const favicon = opts.kind === "favicon";
@@ -316,7 +318,9 @@ export class GcsAttachmentService {
       const img = sharp(file.bytes, { limitInputPixels: 100_000_000 }).rotate();
       out = favicon
         ? await img.resize({ width: 64, height: 64, fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer()
-        : await img.resize({ width: 800, height: 240, fit: "inside", withoutEnlargement: true }).webp({ quality: 90 }).toBuffer();
+        : opts.kind === "header"
+          ? await img.resize({ width: 2560, height: 800, fit: "inside", withoutEnlargement: true }).webp({ quality: 82 }).toBuffer()
+          : await img.resize({ width: 800, height: 240, fit: "inside", withoutEnlargement: true }).webp({ quality: 90 }).toBuffer();
     } catch {
       throw new GcsValidationError({ file: "invalid_image" });
     }

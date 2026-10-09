@@ -2432,3 +2432,99 @@ input[type="checkbox"].gcs-switch:checked::before,
     transition: none;
   }
 }
+
+/* ─── ACP → Aspect → Subsol: editorul coloanelor și al linkurilor ─────────────────────────────────────── */
+.gcs-footerEditor {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.gcs-footerEditor__section {
+  margin: 0;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 12px;
+  min-width: 0;
+}
+.gcs-footerEditor__section > legend {
+  padding: 0 6px;
+  font-weight: 700;
+}
+.gcs-footerEditor__pair,
+.gcs-footerEditor__triple {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.gcs-footerEditor__triple {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.gcs-footerEditor__columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 12px;
+}
+.gcs-footerEditor__column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--gcs-border);
+  background: var(--gcs-surface2);
+  min-width: 0;
+}
+.gcs-footerEditor__columnHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.gcs-footerEditor__tools {
+  display: flex;
+  gap: 2px;
+}
+.gcs-footerEditor__link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.gcs-footerEditor__grow {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.gcs-footerEditor__iconBtn {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--gcs-border);
+  background: var(--gcs-surface);
+  color: var(--gcs-accentInk);
+  cursor: pointer;
+  font-size: 16px;
+}
+.gcs-footerEditor__iconBtn:hover {
+  border-color: var(--gcs-accent);
+}
+.gcs-footerEditor__checks,
+.gcs-footerEditor__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  align-items: center;
+}
+@media (max-width: 720px) {
+  .gcs-footerEditor__pair,
+  .gcs-footerEditor__triple,
+  .gcs-footerEditor__columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .gcs-footerEditor__link {
+    flex-wrap: wrap;
+  }
+}

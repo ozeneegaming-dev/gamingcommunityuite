@@ -33,6 +33,8 @@ export default async function AcpSettingsPage({ params }: Props) {
   if (section === "clans") redirect("/admin/gaming/clans/settings");
   // Pornirea și ordinea aplicațiilor se schimbă din pagina Aplicații (nu au formular generic).
   if (section === "apps") redirect("/admin/system/applications");
+  // Subsolul are pagina lui (coloane de linkuri, iconițe), sub Aspect.
+  if (section === "footer") redirect("/admin/appearance/footer");
   const { registry, settings, db } = services();
   const defs = registry.settingDefs().filter((d) => d.section === section);
 

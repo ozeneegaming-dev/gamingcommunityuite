@@ -1,16 +1,20 @@
 import type { Metadata } from "next";
-import { Chakra_Petch, Manrope } from "next/font/google";
+import { Chakra_Petch, DM_Sans, Manrope } from "next/font/google";
+import { headers } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import { themeMode, viewerTheme } from "@/lib/appearance";
 import type { ReactNode } from "react";
 import { services } from "@/lib/services";
 import { siteBaseUrl } from "@/lib/seo";
+import { designClass, SITE_AREA_HEADER } from "@/lib/theme-preview";
 import { GcsThemePreviewBridge } from "./(site)/_components/edit/GcsThemePreviewBridge";
 import "./globals.css";
 
 const display = Chakra_Petch({ subsets: ["latin", "latin-ext"], weight: ["500", "600", "700"], variable: "--font-gcs-display" });
 const text = Manrope({ subsets: ["latin", "latin-ext"], weight: ["400", "500", "600", "700"], variable: "--font-gcs-text" });
+/** Fontul designului Nova (OFL), livrat cu aplicația ca celelalte două. */
+const nova = DM_Sans({ subsets: ["latin", "latin-ext"], weight: ["400", "500", "600", "700", "800"], variable: "--font-gcs-nova" });
 
 export const dynamic = "force-dynamic";
 
@@ -48,8 +52,11 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     "0",
   );
   const theme = await viewerTheme();
+  // Designul temei (ex. `gcs-nova`) doar pe paginile site-ului: ACP-ul și editoarele lui au designul lor.
+  const site = (await headers()).get(SITE_AREA_HEADER) !== "admin";
+  const design = site ? designClass(theme.shown.settings.preset) : null;
   return (
-    <html lang={locale} data-theme={await themeMode()} className={`${display.variable} ${text.variable}`}>
+    <html lang={locale} data-theme={await themeMode()} className={[display.variable, text.variable, nova.variable, design].filter(Boolean).join(" ")}>
       <head>
         {/* Stilurile de nume și ramele de avatar, generate din ACP (spec §9). */}
         <link rel="stylesheet" href={`/gcs-names.css?v=${version}`} />

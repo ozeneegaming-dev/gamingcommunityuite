@@ -1,7 +1,7 @@
 "use client";
 
 import type { GcsResult } from "@gcs/core";
-import { CUSTOM_CSS_FILE, DEFAULT_THEME_SETTINGS, compileThemeCss, joinThemeCssFiles, themePath, withThemePath, type GcsThemeSettings } from "@gcs/core/themes";
+import { CUSTOM_CSS_FILE, compileThemeCss, joinThemeCssFiles, themeDefaults, themePath, withThemePath, type GcsThemeSettings } from "@gcs/core/themes";
 import { GcsIconSvg, GcsModal } from "@gcs/ui";
 import {
   faArrowRightFromBracket,
@@ -28,7 +28,7 @@ import { useErrorMessage } from "@/lib/use-error-message";
 import { isPreviewReadyMessage, STUDIO_MESSAGE_SOURCE, type GcsStudioApplyMessage } from "@/lib/theme-preview";
 import { discardThemeStudio, publishThemeStudio, saveThemeStudioDraft } from "../actions";
 import { GcsStudioColorRow, GcsStudioColorSelector, GcsStudioImageRow, GcsStudioSettingRow, colorLabel } from "./GcsStudioControls";
-import { CSS_ROW_ICON, STUDIO_PANELS, colorPath, parentPanel, type GcsStudioColorRef, type GcsStudioImageSlot, type GcsStudioPanelId } from "./studio-panels";
+import { CSS_ROW_ICON, STUDIO_PANELS, colorPath, parentPanel, studioItemVisible, type GcsStudioColorRef, type GcsStudioImageSlot, type GcsStudioPanelId } from "./studio-panels";
 
 export type GcsThemeStudioValue = { settings: GcsThemeSettings; customCss: string; logoUrl: string | null; faviconUrl: string | null };
 
@@ -53,12 +53,15 @@ function imageUrl(v: GcsThemeStudioValue, slot: GcsStudioImageSlot): string | nu
       return v.settings.logo.imageMobile;
     case "logoMobileLight":
       return v.settings.logo.imageMobileLight;
+    case "headerImage":
+      return v.settings.header.image;
   }
 }
 
 function withImage(v: GcsThemeStudioValue, slot: GcsStudioImageSlot, url: string | null): GcsThemeStudioValue {
   if (slot === "logo") return { ...v, logoUrl: url };
   if (slot === "favicon") return { ...v, faviconUrl: url };
+  if (slot === "headerImage") return { ...v, settings: withThemePath(v.settings, "header.image", url) };
   const key = slot === "logoLight" ? "imageLight" : slot === "logoMobile" ? "imageMobile" : "imageMobileLight";
   return { ...v, settings: withThemePath(v.settings, `logo.${key}`, url) };
 }
@@ -216,9 +219,10 @@ export function GcsThemeStudio({
       css,
       mode,
       logo: { text: value.settings.logo.text, slogan: value.settings.logo.slogan },
+      preset: value.settings.preset,
     };
     win.postMessage(message, window.location.origin);
-  }, [css, mode, value.settings.logo.text, value.settings.logo.slogan]);
+  }, [css, mode, value.settings.logo.text, value.settings.logo.slogan, value.settings.preset]);
 
   useEffect(() => postPreview(), [postPreview]);
 
@@ -363,14 +367,16 @@ export function GcsThemeStudio({
     setTab("settings");
   };
 
-  const settingRows = (panel.settings ?? []).map((item, i): ReactNode => {
+  // „Revino la implicit”: valorile designului temei (Nova sau clasic).
+  const defaults = themeDefaults(value.settings.preset);
+  const settingRows = (panel.settings ?? []).filter((item) => studioItemVisible(item, value.settings.preset)).map((item, i): ReactNode => {
     if (typeof item === "string") {
       return (
         <GcsStudioSettingRow
           key={item}
           path={item}
           value={themePath(value.settings, item)}
-          defaultValue={themePath(DEFAULT_THEME_SETTINGS, item)}
+          defaultValue={themePath(defaults, item)}
           fonts={fonts}
           onChange={(v) => setSetting(item, v)}
         />
@@ -402,10 +408,10 @@ export function GcsThemeStudio({
         key={path}
         colorRef={ref}
         value={String(themePath(value.settings, path))}
-        defaultValue={String(themePath(DEFAULT_THEME_SETTINGS, path))}
+        defaultValue={String(themePath(defaults, path))}
         palette={palette}
         onOpen={() => setColorTarget(ref)}
-        onRevert={() => setSetting(path, themePath(DEFAULT_THEME_SETTINGS, path))}
+        onRevert={() => setSetting(path, themePath(defaults, path))}
       />
     );
   });

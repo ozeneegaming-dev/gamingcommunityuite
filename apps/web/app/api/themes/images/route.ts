@@ -6,27 +6,31 @@ import { services } from "@/lib/services";
 
 export const dynamic = "force-dynamic";
 
-const MAX_BODY_BYTES = 3 * 1024 * 1024;
+const MAX_BODY_BYTES = 6 * 1024 * 1024;
 
-/** Locurile unei imagini în temă: logo-ul de bază și favicon-ul (coloanele temei) și variantele logo-ului (setări). */
-const SLOTS: Record<string, { upload: "logo" | "favicon"; draft: (url: string) => GcsThemeDraft }> = {
+/**
+ * Locurile unei imagini în temă: logo-ul de bază și favicon-ul (coloanele temei), variantele logo-ului și imaginea
+ * antetului (designul Nova; setări).
+ */
+const SLOTS: Record<string, { upload: "logo" | "favicon" | "header"; draft: (url: string) => GcsThemeDraft }> = {
   logo: { upload: "logo", draft: (url) => ({ logoUrl: url }) },
   favicon: { upload: "favicon", draft: (url) => ({ faviconUrl: url }) },
   logoLight: { upload: "logo", draft: (url) => ({ logo: { imageLight: url } }) },
   logoMobile: { upload: "logo", draft: (url) => ({ logo: { imageMobile: url } }) },
   logoMobileLight: { upload: "logo", draft: (url) => ({ logo: { imageMobileLight: url } }) },
+  headerImage: { upload: "header", draft: (url) => ({ header: { image: url } }) },
 };
 
 /**
  * O imagine a unei teme, din editorul de pe site sau din editorul vizual (specul etapei 5): `multipart/form-data` cu
- * `file`, `kind` (`logo` | `favicon` | `logoLight` | `logoMobile` | `logoMobileLight`) și `theme` (cheia). Imaginea
+ * `file`, `kind` (`logo` | `favicon` | `logoLight` | `logoMobile` | `logoMobileLight` | `headerImage`) și `theme` (cheia). Imaginea
  * intră în draft-ul temei; răspunde cu `GcsResult<{ url, css }>` (CSS-ul draft-ului, pentru previzualizare).
  */
 export async function POST(req: Request): Promise<Response> {
   const result = await toResult(async () => {
     const h = await headers();
     if (!isSameOrigin(h)) throw new GcsForbidden({ reason: "csrf" });
-    if (Number(h.get("content-length") ?? "0") > MAX_BODY_BYTES) throw new GcsValidationError({ file: "too_large" }, { maxMb: "2" });
+    if (Number(h.get("content-length") ?? "0") > MAX_BODY_BYTES) throw new GcsValidationError({ file: "too_large" }, { maxMb: "5" });
     const form = await req.formData().catch(() => null);
     const file = form?.get("file");
     const kind = form?.get("kind");

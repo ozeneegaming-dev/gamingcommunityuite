@@ -11,6 +11,17 @@
 export const THEME_PREVIEW_PARAM = "gcs-theme-preview";
 export const THEME_PREVIEW_COOKIE = "gcs-theme-preview";
 export const THEME_PREVIEW_HEADER = "x-gcs-theme-preview";
+
+/**
+ * Zona cererii, pusă de proxy (header intern, cel venit din afară e suprascris): `admin` pentru ACP și editoarele lui,
+ * `site` pentru rest. Layout-ul rădăcină pune clasa designului temei (ex. `gcs-nova`) doar pe paginile site-ului: ACP-ul
+ * are designul lui.
+ */
+export const SITE_AREA_HEADER = "x-gcs-area";
+export const siteAreaFor = (pathname: string): "admin" | "site" => (pathname === "/admin" || pathname.startsWith("/admin/") ? "admin" : "site");
+
+/** Clasa `<html>` a designului unei teme (`classic` nu are clasă: e aspectul de bază). */
+export const designClass = (preset: string | undefined): string | null => (preset === "nova" ? "gcs-nova" : null);
 /** Cheia unei teme (aceeași regulă ca în serviciul temelor). */
 export const THEME_KEY_RE = /^[a-z0-9][a-z0-9-]{1,31}$/;
 
@@ -36,6 +47,8 @@ export type GcsStudioApplyMessage = {
   css: string;
   mode?: "dark" | "light";
   logo?: { text: string; slogan: string };
+  /** Designul temei editate (`classic` / `nova`): previzualizarea schimbă clasa de pe `<html>`. */
+  preset?: string;
 };
 
 export type GcsPreviewReadyMessage = {
@@ -53,6 +66,7 @@ export const isStudioApplyMessage = (d: unknown): d is GcsStudioApplyMessage => 
     m.type === "apply" &&
     typeof m.css === "string" &&
     (m.mode === undefined || m.mode === "dark" || m.mode === "light") &&
+    (m.preset === undefined || m.preset === "classic" || m.preset === "nova") &&
     (logo === undefined || (!!logo && typeof logo.text === "string" && typeof logo.slogan === "string"))
   );
 };

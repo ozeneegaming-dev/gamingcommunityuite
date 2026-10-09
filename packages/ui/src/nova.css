@@ -1,0 +1,670 @@
+/*
+ * Designul Nova (specul 2026-10-10-tema-nova): bleumarin închis + portocaliu-roșu, DM Sans 13 px, casete de 12 px cu
+ * umbră fină, butoane de 4 px, antetul înalt cu imagine, benzile titlurilor cu iconița într-un cerc, subsolul bogat și
+ * sistemul de hover. Totul stă sub `.gcs-nova`, clasa pusă pe `<html>` de layout-ul rădăcină doar pe paginile site-ului
+ * (nu în ACP), când tema afișată are `preset: "nova"`. Culorile vin din temă (`--gcs-*`), deci varianta luminoasă și
+ * accentul ales de admin se aplică singure. Fișierul se importă ultimul (după stratul titlurilor).
+ *
+ * Variabilele de mai jos sunt valorile implicite; setările Nova ale temei (benzile, iconițele, efectele, antetul) le
+ * schimbă din CSS-ul compilat (`html.gcs-nova`, specificitate mai mare).
+ */
+
+.gcs-nova {
+  /* Banda titlurilor și iconița din ea. */
+  --gcs-band-bg: var(--gcs-box-header-bg, var(--gcs-surface2));
+  --gcs-band-shadow: none;
+  --gcs-band-icon-size: 36px;
+  --gcs-band-icon-radius: 50%;
+  --gcs-band-icon-bg: color-mix(in srgb, var(--gcs-bg) 70%, var(--gcs-surface));
+  --gcs-band-icon-border: color-mix(in srgb, var(--gcs-text) 10%, transparent);
+  /* Sistemul de hover. */
+  --gcs-ease: 0.18s;
+  --gcs-hover-scale: 1.05;
+  --gcs-hover-lift: -1px;
+  --gcs-hover-light: color-mix(in srgb, #fff 8%, transparent);
+  --gcs-hover-tint: color-mix(in srgb, var(--gcs-text) 5%, transparent);
+  /* Suprafața „mai deschisă” a rândurilor la hover și a butoanelor secundare. */
+  --gcs-raise: color-mix(in srgb, var(--gcs-surface2) 60%, var(--gcs-btn-secondary-bg, var(--gcs-surface2)));
+  /* Pastilele (insigne, etichete): raza din referință. */
+  --gcs-pill-radius: 6px;
+  /* Portocaliul cald al insignelor. */
+  --gcs-warm: #ea6c00;
+  /* Rândul de sub antet (breadcrumb + căutare). */
+  --gcs-crumb-h: 58px;
+  /* Modelul tehnic peste grafica antetului (circuite fine), desenat aici, fără imagini externe. */
+  --gcs-hero-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.055' stroke-width='1'%3E%3Cpath d='M0 80h46l12-12h44l12 12h46M80 0v34l12 12v68l-12 12v34M0 20h20l10 10v20M160 140h-20l-10-10v-20'/%3E%3Ccircle cx='46' cy='80' r='2.5'/%3E%3Ccircle cx='114' cy='80' r='2.5'/%3E%3Ccircle cx='80' cy='34' r='2.5'/%3E%3Ccircle cx='80' cy='126' r='2.5'/%3E%3Ccircle cx='30' cy='50' r='2'/%3E%3Ccircle cx='130' cy='110' r='2'/%3E%3C/g%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='10' cy='10' r='1'/%3E%3Ccircle cx='150' cy='10' r='1'/%3E%3Ccircle cx='10' cy='150' r='1'/%3E%3Ccircle cx='150' cy='150' r='1'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* ─── Baza: tipografia, linkurile, selecția ─────────────────────────────────────────────────────────────── */
+
+.gcs-nova body {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.gcs-nova .gcs-root {
+  -webkit-font-smoothing: antialiased;
+}
+.gcs-nova .gcs-display {
+  letter-spacing: 0;
+}
+.gcs-nova ::selection {
+  background: color-mix(in srgb, var(--gcs-accent) 45%, transparent);
+  color: #fff;
+}
+/* Linkurile devin accentul la hover (sistemul de hover). */
+.gcs-nova .gcs-root a {
+  transition: color var(--gcs-ease), background-color var(--gcs-ease), border-color var(--gcs-ease), opacity var(--gcs-ease);
+}
+.gcs-nova .gcs-root a:hover {
+  color: var(--gcs-link-hover, var(--gcs-accent));
+}
+/* Linkurile din conținutul scris de membri: subliniate discret (altfel ar semăna cu textul alb). */
+.gcs-nova :is(.gcs-prose, .gcs-richText, .gcs-postBody) a:not([class]) {
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+  text-underline-offset: 2px;
+}
+.gcs-nova .gcs-siteMain {
+  gap: 20px !important;
+  padding-top: 20px !important;
+}
+
+/* ─── Antetul: zona înaltă cu imaginea (sau grafica GCS) și stratul închis ─────────────────────────────────── */
+
+/*
+ * Antetul nu formează un context de suprapunere (`z-index: auto`): breadcrumb-ul unei pagini poate urca în rândul lui
+ * (mai jos), iar meniurile derulante rămân deasupra. Antetul fix (setarea temei) își primește z-index-ul din CSS-ul
+ * compilat.
+ */
+.gcs-nova .gcs-siteHeader {
+  z-index: auto;
+  border-bottom: 0;
+  background-color: var(--gcs-header-bg, var(--gcs-chrome));
+  background-image:
+    linear-gradient(to bottom, rgb(11 15 23 / calc(var(--gcs-header-overlay, 0.7) * 0.55)), rgb(11 15 23 / var(--gcs-header-overlay, 0.7)) 62%, var(--gcs-body-bg, var(--gcs-bg))),
+    var(--gcs-hero-pattern),
+    radial-gradient(ellipse 55% 140% at 88% -20%, color-mix(in srgb, var(--gcs-accent) 38%, transparent), transparent 62%),
+    radial-gradient(ellipse 40% 110% at 8% -30%, color-mix(in srgb, var(--gcs-accent) 18%, transparent), transparent 60%),
+    var(--gcs-header-image, none),
+    linear-gradient(160deg, #141a26 0%, #0d1119 55%, #0b0f17 100%);
+  background-size: auto, 160px 160px, auto, auto, cover, auto;
+  background-position: center, center top, center, center, center, center;
+  background-repeat: no-repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+}
+.gcs-nova .gcs-siteHeader--scrolled {
+  background-color: color-mix(in srgb, var(--gcs-header-bg, var(--gcs-chrome)) 92%, transparent);
+}
+.gcs-nova .gcs-siteHeader__inner {
+  gap: 24px;
+  padding-inline: 20px;
+}
+/* Logo-ul: marcajul cu inițiala și numele, alb și apăsat. */
+.gcs-nova .gcs-brand {
+  color: #fff;
+}
+.gcs-nova .gcs-brand__mark {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  transform: none;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--gcs-accent) 85%, #fff), var(--gcs-accent));
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--gcs-accent) 40%, transparent);
+}
+.gcs-nova .gcs-brand__mark > span {
+  transform: none;
+  font-family: var(--gcs-logo-font, var(--gcs-font-display));
+  font-weight: 800;
+}
+.gcs-nova .gcs-brand__name {
+  letter-spacing: -0.01em;
+  color: #fff;
+}
+.gcs-nova .gcs-brand__slogan {
+  color: color-mix(in srgb, var(--gcs-header-text, #d3d9e2) 70%, transparent);
+}
+/* Meniul principal: text alb-gri, se luminează la hover; activul are o linie de accent jos. */
+.gcs-nova .gcs-navbar__menu .gcs-nav__link,
+.gcs-nova .gcs-root .gcs-navbar__menu a.gcs-nav__link {
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  background: transparent;
+  box-shadow: none;
+  transition: color var(--gcs-ease), background-color var(--gcs-ease);
+}
+.gcs-nova .gcs-siteHeader .gcs-navbar__menu .gcs-nav__link:hover,
+.gcs-nova .gcs-siteHeader .gcs-navbar__menu .gcs-nav__link[aria-expanded="true"] {
+  color: #fff;
+  background: color-mix(in srgb, #fff 6%, transparent);
+}
+.gcs-nova .gcs-siteHeader .gcs-navbar__menu .gcs-nav__link--active {
+  color: #fff;
+  background: transparent;
+  box-shadow: inset 0 -2px 0 var(--gcs-accent);
+  border-radius: 0;
+}
+.gcs-nova .gcs-navbar__caret {
+  font-size: 9px;
+  margin-left: 2px;
+}
+/* Iconițele din dreapta: butoane rotunde, discrete, care se luminează. */
+.gcs-nova .gcs-siteHeader__tools {
+  gap: 4px;
+}
+.gcs-nova .gcs-siteHeader .gcs-headerIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  color: var(--gcs-header-text, #d3d9e2);
+  background: transparent;
+  transition: color var(--gcs-ease), background-color var(--gcs-ease);
+}
+.gcs-nova .gcs-siteHeader .gcs-headerIcon:hover,
+.gcs-nova .gcs-siteHeader .gcs-headerIcon[aria-expanded="true"] {
+  color: #fff;
+  background: color-mix(in srgb, #fff 8%, transparent);
+}
+.gcs-nova .gcs-headerIcon__count {
+  background: var(--gcs-accent);
+  color: #fff;
+  box-shadow: 0 0 0 2px var(--gcs-header-bg, var(--gcs-chrome));
+}
+/* Meniul contului: avatarul într-o pastilă cu chenar fin. */
+.gcs-nova .gcs-siteHeader .gcs-userMenu__trigger {
+  min-height: 40px;
+  padding: 3px 10px 3px 3px !important;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, #fff 10%, transparent);
+  background: color-mix(in srgb, #000 20%, transparent);
+  color: #fff;
+  transition: border-color var(--gcs-ease), background-color var(--gcs-ease);
+}
+.gcs-nova .gcs-siteHeader .gcs-userMenu__trigger:hover {
+  border-color: color-mix(in srgb, #fff 22%, transparent);
+  background: color-mix(in srgb, #fff 6%, transparent);
+}
+/* Butoanele vizitatorului: „Autentificare” transparent, „Înregistrare” plin. */
+.gcs-nova .gcs-siteHeader__auth.gcs-btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: #fff;
+}
+
+/* ─── Rândul de sub meniu: breadcrumb-ul și căutarea ───────────────────────────────────────────────────── */
+
+.gcs-nova .gcs-crumbBar {
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+.gcs-nova .gcs-crumbBar__inner {
+  max-width: var(--gcs-page-width, 1320px);
+  margin: 0 auto;
+  box-sizing: border-box;
+  min-height: var(--gcs-crumb-h);
+  padding: 6px 24px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.gcs-nova .gcs-crumbBar__trail {
+  min-width: 0;
+}
+.gcs-nova .gcs-crumbBar .gcs-breadcrumb ol,
+.gcs-nova .gcs-pageHeader > .gcs-breadcrumb ol {
+  flex-wrap: nowrap;
+  overflow: hidden;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.gcs-nova .gcs-crumbBar .gcs-breadcrumb li,
+.gcs-nova .gcs-pageHeader > .gcs-breadcrumb li {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.gcs-nova .gcs-crumbBar .gcs-breadcrumb,
+.gcs-nova .gcs-crumbBar .gcs-breadcrumb a {
+  color: color-mix(in srgb, var(--gcs-header-text, #d3d9e2) 72%, transparent);
+}
+.gcs-nova .gcs-crumbBar .gcs-breadcrumb li:last-child,
+.gcs-nova .gcs-crumbBar .gcs-breadcrumb li:last-child a {
+  color: #fff;
+  font-weight: 700;
+}
+.gcs-nova .gcs-crumbBar .gcs-breadcrumb a:hover {
+  color: #fff;
+}
+.gcs-nova .gcs-breadcrumb__home {
+  margin-right: 6px;
+  vertical-align: -0.1em;
+}
+.gcs-nova .gcs-breadcrumb li + li::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin: 0 9px 2px 3px;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  opacity: 0.6;
+}
+/* Căutarea: câmp translucid cu lupa în dreapta. */
+.gcs-nova .gcs-crumbBar__search {
+  position: relative;
+  flex: 0 1 300px;
+  display: flex;
+}
+.gcs-nova .gcs-crumbBar__input {
+  width: 100%;
+  height: 38px;
+  box-sizing: border-box;
+  padding: 0 40px 0 14px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, #fff 9%, transparent);
+  background: color-mix(in srgb, #0b0f17 55%, transparent);
+  color: #fff;
+  font: 500 13px var(--gcs-font-text);
+  transition: border-color var(--gcs-ease), background-color var(--gcs-ease);
+}
+.gcs-nova .gcs-crumbBar__input::placeholder {
+  color: color-mix(in srgb, #d3d9e2 55%, transparent);
+}
+.gcs-nova .gcs-crumbBar__input:hover {
+  border-color: color-mix(in srgb, #fff 16%, transparent);
+}
+.gcs-nova .gcs-crumbBar__input:focus {
+  outline: none;
+  border-color: var(--gcs-accent);
+  background: color-mix(in srgb, #0b0f17 75%, transparent);
+}
+.gcs-nova .gcs-crumbBar__go {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 40px;
+  border: 0;
+  background: transparent;
+  color: color-mix(in srgb, #d3d9e2 70%, transparent);
+  cursor: pointer;
+  transition: color var(--gcs-ease);
+}
+.gcs-nova .gcs-crumbBar__go:hover {
+  color: #fff;
+}
+/* În Nova, căutarea are câmpul ei în rând: iconița din antet rămâne doar pe ecranele mici. */
+@media (min-width: 761px) {
+  .gcs-nova .gcs-siteHeader__tools .gcs-headerSearch {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  .gcs-nova .gcs-crumbBar__search {
+    display: none;
+  }
+  .gcs-nova .gcs-crumbBar__inner {
+    min-height: 44px;
+    padding: 0 12px 10px;
+  }
+}
+
+/*
+ * Paginile cu un breadcrumb propriu (forum, topic, servere, clanuri…): breadcrumb-ul lor urcă în rândul de sub antet, în
+ * locul celui generic (main e containerul lui; poziția e rândul, deasupra paginii).
+ */
+@media (min-width: 761px) {
+  .gcs-nova .gcs-siteMain {
+    position: relative;
+  }
+  .gcs-nova .gcs-siteMain .gcs-pageHeader > .gcs-breadcrumb {
+    position: absolute;
+    top: calc(-1 * var(--gcs-crumb-h) + 6px);
+    left: 24px;
+    right: 348px;
+    height: calc(var(--gcs-crumb-h) - 20px);
+    display: flex;
+    align-items: center;
+    z-index: 2;
+  }
+  .gcs-nova .gcs-siteMain .gcs-pageHeader > .gcs-breadcrumb,
+  .gcs-nova .gcs-siteMain .gcs-pageHeader > .gcs-breadcrumb a {
+    color: color-mix(in srgb, var(--gcs-header-text, #d3d9e2) 72%, transparent);
+  }
+  .gcs-nova .gcs-siteMain .gcs-pageHeader > .gcs-breadcrumb a:hover {
+    color: #fff;
+  }
+  .gcs-nova .gcs-siteMain .gcs-pageHeader > .gcs-breadcrumb li:last-child a {
+    color: #fff;
+    font-weight: 700;
+  }
+  .gcs-nova body:has(.gcs-siteMain .gcs-pageHeader > .gcs-breadcrumb) .gcs-crumbBar__trail {
+    visibility: hidden;
+  }
+}
+
+/* ─── Casetele: 12 px, chenar fin, umbră fină ──────────────────────────────────────────────────────────── */
+
+.gcs-nova .gcs-card {
+  border-radius: var(--gcs-radius, 12px);
+  box-shadow: var(--gcs-box-shadow, none);
+}
+
+/* ─── Benzile titlurilor: fundalul benzii, textul alb 16/700, iconița în cerc la stânga ─────────────────── */
+
+.gcs-nova :is(
+    .gcs-titleBand,
+    .gcs-category__header,
+    .gcs-topicList__header,
+    .gcs-statsPanel__head,
+    .gcs-chat__head,
+    .gcs-notifPanel__head,
+    .gcs-replyBox__title,
+    .gcs-sideCard > .gcs-sideCard__title,
+    .gcs-poll > .gcs-poll__question,
+    .gcs-vipPlan > .gcs-vipPlan__head,
+    .gcs-rules > .gcs-rules__head,
+    .gcs-searchResult > .gcs-searchResult__title,
+    .gcs-settingsCard > * > .gcs-settingsTitle:first-child,
+    .gcs-dialog .gcs-dialog__title,
+    .gcs-chat__dialog > h2:first-child,
+    .gcs-authModal .gcs-modal__header,
+    .gcs-modal__header,
+    .gcs-modMenu__summary
+  ) {
+  background: var(--gcs-band-bg);
+  box-shadow: var(--gcs-band-shadow);
+}
+.gcs-nova :is(.gcs-category__title, .gcs-sideCard__title, .gcs-widgetTitle, .gcs-topicList__header h2, .gcs-chat__head h2, .gcs-modal__title, .gcs-dialog__title) {
+  font-family: var(--gcs-font-display);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  line-height: 1.3;
+}
+.gcs-nova .gcs-sideCard > .gcs-sideCard__title {
+  color: var(--gcs-widget-title, var(--gcs-heading, #fff));
+}
+.gcs-nova .gcs-category__header,
+.gcs-nova .gcs-topicList__header {
+  padding: 16px 20px;
+  gap: 14px;
+}
+/* Titlul categoriei: textul, nu majuscule; bara colorată devine punctul iconiței (culoarea rămâne pe cerc). */
+.gcs-nova .gcs-category__bar {
+  display: none;
+}
+.gcs-nova .gcs-category__title,
+.gcs-nova .gcs-root .gcs-category__title a {
+  color: var(--gcs-box-header-text, var(--gcs-heading, #fff));
+}
+
+/*
+ * Iconița din bandă: cercul închis cu chenar fin (widget-uri, liste, dialoguri), cercul cu nuanța de accent pentru
+ * categorii. Aceeași formă pentru toate (setarea „Iconița din bandă”: cerc / pătrat rotunjit / fără chenar).
+ */
+.gcs-nova :is(.gcs-widgetTitle__icon, .gcs-category__icon, .gcs-bandIcon) {
+  box-sizing: border-box;
+  flex: none;
+  width: var(--gcs-band-icon-size);
+  height: var(--gcs-band-icon-size);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--gcs-band-icon-radius);
+  border: 1px solid var(--gcs-band-icon-border);
+  background: var(--gcs-band-icon-bg);
+  color: var(--gcs-widget-icon, var(--gcs-accentInk));
+  font-size: 14px;
+  transition: background-color var(--gcs-ease), border-color var(--gcs-ease), color var(--gcs-ease);
+}
+.gcs-nova .gcs-category__icon {
+  color: var(--gcs-accent);
+  background: color-mix(in srgb, currentColor 16%, var(--gcs-band-icon-bg));
+  border-color: color-mix(in srgb, currentColor 32%, transparent);
+}
+/* Iconițele „în linie” ale titlurilor din benzi (`gcs-hIcon`) devin și ele cercuri. */
+.gcs-nova :is(.gcs-topicList__header, .gcs-titleBand, .gcs-chat__head, .gcs-replyBox__title, .gcs-sideCard__title, .gcs-settingsTitle, .gcs-profileSection__title, .gcs-modal__title, .gcs-dialog__title) svg.gcs-hIcon,
+.gcs-nova .gcs-modal__icon {
+  box-sizing: border-box;
+  flex: none;
+  width: var(--gcs-band-icon-size);
+  height: var(--gcs-band-icon-size);
+  padding: 10px;
+  margin-right: 12px;
+  vertical-align: middle;
+  border-radius: var(--gcs-band-icon-radius);
+  border: 1px solid var(--gcs-band-icon-border);
+  background: var(--gcs-band-icon-bg);
+  color: var(--gcs-accentInk);
+}
+.gcs-nova .gcs-modal__icon {
+  margin-right: 0;
+}
+.gcs-nova :is(.gcs-topicList__header, .gcs-titleBand) :is(h1, h2, h3):has(> svg.gcs-hIcon) {
+  display: flex;
+  align-items: center;
+}
+.gcs-nova .gcs-sideCard {
+  --gcs-band-pad-y: 13px;
+}
+.gcs-nova .gcs-sideCard > .gcs-sideCard__title:not(.gcs-widgetTitle) {
+  padding-block: 18px;
+}
+.gcs-nova .gcs-widgetTitle {
+  gap: 12px;
+}
+.gcs-nova .gcs-widgetTitle__extra {
+  font-size: 12px;
+}
+
+/* Panoul de antet al paginii: un card cu banda, iconița în cerc (cea a forumului sau implicită) și titlul. */
+.gcs-nova .gcs-pageHeader {
+  background: var(--gcs-band-bg);
+  box-shadow: var(--gcs-box-shadow, none), var(--gcs-band-shadow);
+  border-radius: var(--gcs-radius, 12px);
+  padding: 18px 22px;
+}
+.gcs-nova .gcs-pageHeader__title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--gcs-heading, #fff);
+}
+.gcs-nova .gcs-pageHeader__title:has(> .gcs-forumIcon) .gcs-forumIcon,
+.gcs-nova .gcs-pageHeader__title > .gcs-bandIcon {
+  box-sizing: border-box;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--gcs-band-icon-radius);
+  background: color-mix(in srgb, var(--gcs-accent) 14%, var(--gcs-band-icon-bg));
+  border: 1px solid color-mix(in srgb, var(--gcs-accent) 30%, transparent);
+  font-size: 17px !important;
+}
+.gcs-nova .gcs-pageHeader__desc {
+  font-size: 13px;
+}
+
+/* ─── Butoane: 4 px, primarul cu accentul, secundarul gri-albăstrui; hover = strat de lumină ──────────── */
+
+.gcs-nova .gcs-btn {
+  min-height: 38px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  position: relative;
+  transition: background-color var(--gcs-ease), color var(--gcs-ease), border-color var(--gcs-ease), box-shadow var(--gcs-ease), transform var(--gcs-ease);
+}
+.gcs-nova .gcs-btn--sm {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 12.5px;
+}
+.gcs-nova .gcs-btn--primary,
+.gcs-nova .gcs-root a.gcs-btn--primary {
+  box-shadow: 0 2px 10px -2px color-mix(in srgb, var(--gcs-btn-primary-bg, var(--gcs-accent)) 55%, transparent);
+}
+.gcs-nova .gcs-btn--primary:hover,
+.gcs-nova .gcs-root a.gcs-btn--primary:hover {
+  background: var(--gcs-btn-primary-hover);
+  color: var(--gcs-btn-primary-text, #fff);
+  box-shadow: 0 4px 16px -3px color-mix(in srgb, var(--gcs-btn-primary-bg, var(--gcs-accent)) 70%, transparent);
+}
+.gcs-nova .gcs-btn--ghost,
+.gcs-nova .gcs-root a.gcs-btn--ghost {
+  border-color: transparent;
+}
+/* Butonul secundar (închis): +8% alb la hover. */
+.gcs-nova .gcs-btn--ghost:hover,
+.gcs-nova .gcs-root a.gcs-btn--ghost:hover {
+  background: color-mix(in srgb, var(--gcs-btn-secondary-bg, var(--gcs-surface2)) 92%, #fff);
+  color: var(--gcs-btn-secondary-text, var(--gcs-text));
+}
+.gcs-nova .gcs-iconBtn,
+.gcs-nova .gcs-seg {
+  transition: background-color var(--gcs-ease), color var(--gcs-ease);
+}
+.gcs-nova .gcs-iconBtn {
+  border-radius: 4px;
+}
+.gcs-nova .gcs-iconBtn:hover {
+  background: var(--gcs-hover-light);
+}
+
+/* ─── Câmpurile ─────────────────────────────────────────────────────────────────────────────────────────── */
+
+.gcs-nova .gcs-input {
+  height: 38px;
+  border-radius: 6px;
+  font-size: 13px;
+  background: color-mix(in srgb, var(--gcs-bg) 60%, var(--gcs-surface));
+  transition: border-color var(--gcs-ease), background-color var(--gcs-ease);
+}
+.gcs-nova textarea.gcs-input {
+  height: auto;
+}
+.gcs-nova .gcs-input:hover {
+  border-color: color-mix(in srgb, var(--gcs-text) 18%, var(--gcs-border));
+}
+
+/* ─── Insignele și etichetele: 6 px, fundal nuanțat, chenar și text colorat ───────────────────────────── */
+
+.gcs-nova .gcs-badge {
+  border-radius: var(--gcs-pill-radius);
+  border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+}
+.gcs-nova .gcs-badge--accent {
+  background: color-mix(in srgb, var(--gcs-accent) 16%, transparent);
+  color: var(--gcs-accentInk);
+}
+.gcs-nova .gcs-badge--warn {
+  background: color-mix(in srgb, var(--gcs-warn) 16%, transparent);
+}
+.gcs-nova .gcs-tag {
+  border-radius: var(--gcs-pill-radius);
+  transition: opacity var(--gcs-ease);
+}
+.gcs-nova .gcs-tag:hover {
+  opacity: 0.7;
+}
+
+/* ─── Meniurile derulante, tab-urile, tooltip-urile ─────────────────────────────────────────────────────── */
+
+.gcs-nova .gcs-dropdown__menu {
+  border-radius: 10px;
+  border-color: var(--gcs-border);
+  background: var(--gcs-surface);
+  box-shadow: 0 16px 40px -8px rgb(0 0 0 / 0.55);
+  padding: 6px;
+}
+.gcs-nova .gcs-dropdown__item {
+  border-radius: 6px;
+  font-size: 13px;
+  transition: background-color var(--gcs-ease), color var(--gcs-ease);
+}
+.gcs-nova .gcs-dropdown__item:hover,
+.gcs-nova .gcs-dropdown__item:focus-visible {
+  background: var(--gcs-hover-tint);
+  color: var(--gcs-heading, var(--gcs-text));
+}
+.gcs-nova .gcs-dropdown__item--active {
+  background: color-mix(in srgb, var(--gcs-accent) 12%, transparent);
+  color: var(--gcs-accentInk);
+}
+/* Tooltip: o bulă mică, închisă, cu săgeată. */
+.gcs-nova .gcs-tooltip {
+  border-radius: 6px;
+  padding: 5px 9px;
+  background: #0b0f17;
+  color: #e9edf2;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #1e2533;
+  box-shadow: 0 8px 20px rgb(0 0 0 / 0.4);
+}
+.gcs-nova .gcs-tooltip::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background: inherit;
+  border: inherit;
+  transform: translateX(-50%) rotate(45deg);
+}
+.gcs-nova .gcs-tooltip--top::after {
+  bottom: -5px;
+  border-top: 0;
+  border-left: 0;
+}
+.gcs-nova .gcs-tooltip--bottom::after {
+  top: -5px;
+  border-bottom: 0;
+  border-right: 0;
+}
+
+/* ─── Modalele ─────────────────────────────────────────────────────────────────────────────────────────── */
+
+.gcs-nova .gcs-modal {
+  background: rgb(5 7 12 / 0.72);
+  backdrop-filter: blur(3px);
+}
+.gcs-nova .gcs-modal__dialog {
+  border-radius: 12px;
+  border: 1px solid var(--gcs-border);
+  background: var(--gcs-surface);
+  box-shadow: 0 30px 80px -10px rgb(0 0 0 / 0.7);
+}
+.gcs-nova .gcs-modal__header {
+  border-bottom: 1px solid var(--gcs-box-border, var(--gcs-border));
+  border-radius: 11px 11px 0 0;
+  padding: 14px 16px 14px 20px;
+}
+.gcs-nova .gcs-modal__close {
+  border-radius: 6px;
+  transition: background-color var(--gcs-ease), color var(--gcs-ease);
+}
+.gcs-nova .gcs-modal__close:hover {
+  background: var(--gcs-hover-light);
+  color: #fff;
+}
+
+/* ─── Mișcarea redusă: fără transformări și tranziții ───────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .gcs-nova {
+    --gcs-hover-scale: 1;
+    --gcs-hover-lift: 0px;
+    --gcs-ease: 0s;
+  }
+}

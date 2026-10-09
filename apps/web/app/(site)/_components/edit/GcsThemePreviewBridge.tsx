@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { isStudioApplyMessage, PREVIEW_MESSAGE_SOURCE, type GcsPreviewReadyMessage, type GcsStudioApplyMessage } from "@/lib/theme-preview";
+import { designClass, isStudioApplyMessage, PREVIEW_MESSAGE_SOURCE, type GcsPreviewReadyMessage, type GcsStudioApplyMessage } from "@/lib/theme-preview";
 
 /** Aplică starea editorului: CSS-ul (ultimul în `<head>`, peste cel randat de server), modul și textul logo-ului. */
 function apply(m: GcsStudioApplyMessage) {
@@ -15,6 +15,8 @@ function apply(m: GcsStudioApplyMessage) {
   style.textContent = m.css;
   document.head.appendChild(style);
   if (m.mode) document.documentElement.dataset.theme = m.mode;
+  // Designul temei (Nova / clasic): markup-ul e același, doar clasa de pe `<html>` se schimbă.
+  if (m.preset) document.documentElement.classList.toggle("gcs-nova", designClass(m.preset) === "gcs-nova");
   const logo = m.logo;
   if (!logo) return;
   document.querySelectorAll<HTMLElement>("[data-gcs-logo-text]").forEach((el) => {

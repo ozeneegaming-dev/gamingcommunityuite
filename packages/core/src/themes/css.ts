@@ -193,17 +193,25 @@ function novaRules(s: GcsThemeSettings): string[] {
   const rules: string[] = [];
   if (s.bands.style === "gradient") {
     rules.push(
-      `html:root .gcs-nova {\n  --gcs-band-bg: linear-gradient(90deg, color-mix(in srgb, var(--gcs-accent) 14%, transparent), transparent 62%), var(--gcs-box-header-bg, var(--gcs-surface2));\n}`,
+      `html.gcs-nova {\n  --gcs-band-bg: linear-gradient(90deg, color-mix(in srgb, var(--gcs-accent) 14%, transparent), transparent 62%), var(--gcs-box-header-bg, var(--gcs-surface2));\n}`,
     );
   }
-  if (s.bands.style === "accent") rules.push(`html:root .gcs-nova {\n  --gcs-band-shadow: inset 3px 0 0 var(--gcs-accent);\n}`);
+  if (s.bands.style === "accent") rules.push(`html.gcs-nova {\n  --gcs-band-shadow: inset 3px 0 0 var(--gcs-accent);\n}`);
   if (s.bands.icon !== base.bands.icon) {
     const none = s.bands.icon === "none" ? `\n  --gcs-band-icon-bg: transparent;\n  --gcs-band-icon-border: transparent;\n  --gcs-band-icon-size: 22px;` : "";
-    rules.push(`html:root .gcs-nova {\n  --gcs-band-icon-radius: ${BAND_ICON_RADIUS[s.bands.icon]};${none}\n}`);
+    rules.push(`html.gcs-nova {\n  --gcs-band-icon-radius: ${BAND_ICON_RADIUS[s.bands.icon]};${none}\n}`);
   }
-  if (!s.effects.hover) rules.push(`html:root .gcs-nova {\n  --gcs-hover-scale: 1;\n  --gcs-hover-lift: 0px;\n  --gcs-ease: 0s;\n}`);
-  if (!s.header.pattern) rules.push(`html:root .gcs-nova {\n  --gcs-hero-pattern: none;\n}`);
-  if (!s.header.crumbs) rules.push(`html:root .gcs-nova .gcs-crumbBar {\n  display: none;\n}`);
+  if (!s.effects.hover) rules.push(`html.gcs-nova {\n  --gcs-hover-scale: 1;\n  --gcs-hover-lift: 0px;\n  --gcs-ease: 0s;\n}`);
+  if (!s.header.pattern) rules.push(`html.gcs-nova {\n  --gcs-hero-pattern: none;\n}`);
+  if (!s.header.crumbs) rules.push(`html.gcs-nova .gcs-crumbBar {\n  display: none;\n}`);
+  // Antetul fix: deasupra conținutului la derulare; breadcrumb-ul paginilor rămâne atunci în pagină (nu urcă în antet).
+  if (s.header.sticky) {
+    rules.push(
+      `html.gcs-nova .gcs-siteHeader {\n  z-index: 40;\n}`,
+      `html.gcs-nova .gcs-siteMain .gcs-pageHeader > .gcs-breadcrumb {\n  position: static;\n  height: auto;\n}`,
+      `html.gcs-nova body .gcs-crumbBar__trail {\n  visibility: visible !important;\n}`,
+    );
+  }
   return rules;
 }
 

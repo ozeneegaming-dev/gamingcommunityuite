@@ -215,6 +215,13 @@ describe("GcsAttachmentService.uploadSiteImage", () => {
     await expect(service.open(guest, logo.id)).resolves.toMatchObject({ inline: true });
   });
 
+  test("imaginea antetului (Nova) devine WebP de cel mult 2560×800; poate avea până la 5 MB", async () => {
+    const header = await service.uploadSiteImage(member, { name: "hero.png", bytes: await png(3200, 800) }, { kind: "header", themeKey: "nova" });
+    expect(header).toMatchObject({ mime: "image/webp", width: 2560, height: 640 });
+    expect(await world.db.attachment.findUniqueOrThrow({ where: { id: header.id } })).toMatchObject({ contentType: "theme.header", contentId: "nova" });
+    await expect(service.uploadSiteImage(member, { name: "a.png", bytes: Buffer.alloc(6 * 1024 * 1024) }, { kind: "header", themeKey: "nova" })).rejects.toBeInstanceOf(GcsValidationError);
+  });
+
   test("un fișier care nu e imagine sau peste 2 MB e refuzat; vizitatorul → GcsForbidden", async () => {
     await expect(service.uploadSiteImage(member, { name: "a.svg", bytes: Buffer.from("<svg onload=alert(1)/>") }, { kind: "logo", themeKey: "default" })).rejects.toBeInstanceOf(GcsValidationError);
     await expect(service.uploadSiteImage(member, { name: "a.png", bytes: Buffer.alloc(3 * 1024 * 1024) }, { kind: "logo", themeKey: "default" })).rejects.toBeInstanceOf(GcsValidationError);

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { isPreviewReadyMessage, isStudioApplyMessage, previewKeyFor, STUDIO_MESSAGE_SOURCE } from "./theme-preview";
+import { designClass, isPreviewReadyMessage, isStudioApplyMessage, previewKeyFor, siteAreaFor, STUDIO_MESSAGE_SOURCE } from "./theme-preview";
 
 describe("previzualizarea editorului vizual", () => {
   test("cheia vine din parametru (validată) sau din cookie, dar doar pentru un document din iframe", () => {
@@ -23,5 +23,25 @@ describe("previzualizarea editorului vizual", () => {
     expect(isStudioApplyMessage("x")).toBe(false);
     expect(isPreviewReadyMessage({ source: "gcs-theme-preview", type: "ready", path: "/" })).toBe(true);
     expect(isPreviewReadyMessage({ source: "other", type: "ready" })).toBe(false);
+  });
+});
+
+describe("designul temei pe paginile site-ului", () => {
+  test("zona cererii: ACP-ul și editoarele lui sunt `admin`, restul `site`", () => {
+    expect(siteAreaFor("/admin")).toBe("admin");
+    expect(siteAreaFor("/admin/theme-editor/nova")).toBe("admin");
+    expect(siteAreaFor("/administratori")).toBe("site");
+    expect(siteAreaFor("/")).toBe("site");
+    expect(siteAreaFor("/forum/1-general")).toBe("site");
+  });
+
+  test("clasa designului: doar Nova are una; mesajul editorului poate purta designul", () => {
+    expect(designClass("nova")).toBe("gcs-nova");
+    expect(designClass("classic")).toBeNull();
+    expect(designClass(undefined)).toBeNull();
+    const ok = { source: STUDIO_MESSAGE_SOURCE, type: "apply", css: "a{}" };
+    expect(isStudioApplyMessage({ ...ok, preset: "nova" })).toBe(true);
+    expect(isStudioApplyMessage({ ...ok, preset: "classic" })).toBe(true);
+    expect(isStudioApplyMessage({ ...ok, preset: 'evil" onload=' })).toBe(false);
   });
 });
