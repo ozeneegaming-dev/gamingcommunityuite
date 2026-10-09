@@ -18,6 +18,7 @@ import { GcsProfileActions } from "../../_components/profile/GcsProfileActions";
 import { GcsProfileBackdrop, GcsProfileSong } from "../../_components/profile/GcsProfileVip";
 import { GcsWallComposer, GcsWallItemActions } from "../../_components/profile/GcsWall";
 import { GcsTranslateButton } from "../../_components/GcsTranslateButton";
+import { GcsDeletedMember } from "../../_components/GcsDeletedMember";
 import { translateLabels } from "@/lib/translate";
 
 const TABS = ["activity", "about", "games", "followers", "badges", "warnings"] as const;
@@ -651,7 +652,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         {a ? <GcsAvatar name={a.name} size="m" {...(a.image ? { src: a.image } : {})} {...(a.frameKey ? { frame: a.frameKey } : {})} /> : <span className="gcs-avatar gcs-avatar--m" />}
         <div style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
           <span style={{ fontSize: 13 }}>
-            {a ? <GcsUserLink userId={a.id} name={a.name} nameKey={a.nameKey} href={`/members/${a.id}-${slugify(a.name)}`} /> : "—"}{" "}
+            {a ? <GcsUserLink userId={a.id} name={a.name} nameKey={a.nameKey} href={`/members/${a.id}-${slugify(a.name)}`} /> : <GcsDeletedMember />}{" "}
             <span className="gcs-muted">· {relative(entry.createdAt)}</span>
             {entry.visibility !== "VISIBLE" && <span className="gcs-muted"> · {t("wall.hidden")}</span>}
           </span>

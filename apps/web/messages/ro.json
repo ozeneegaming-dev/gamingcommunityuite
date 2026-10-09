@@ -55,7 +55,8 @@
     "closeToast": "Închide notificarea",
     "themeEditor": "Editor temă",
     "pageEditor": "Editor pagină",
-    "metaDescription": "{name}: comunitate de gaming cu forum, chat și membri."
+    "metaDescription": "{name}: comunitate de gaming cu forum, chat și membri.",
+    "deletedMember": "Membru șters"
   },
   "auth": {
     "login": {
@@ -154,7 +155,12 @@
       "clan_forum_exists": "Clanul are deja un forum.",
       "clan_no_forum_parent": "Staff-ul nu a ales încă unde se creează forumurile clanurilor.",
       "clan_not_archived": "Clanul nu e arhivat.",
-      "clan_not_pending": "Clanul nu mai așteaptă aprobarea."
+      "clan_not_pending": "Clanul nu mai așteaptă aprobarea.",
+      "removal_self": "Nu îți poți șterge contul din ACP și nu-l poți folosi ca sursă a unei uniri.",
+      "removal_in_progress": "Contul are deja o ștergere sau o unire în curs.",
+      "removal_started": "Operația a pornit deja și nu mai poate fi anulată.",
+      "removal_not_failed": "Doar o operație eșuată poate fi reluată.",
+      "reauth_required": "Pentru confirmare, intră din nou în cont."
     },
     "fields": {
       "invalid_color": "Culoare invalidă (#RRGGBB)",
@@ -254,7 +260,9 @@
       "invalid_path": "Folder invalid",
       "invalid_prefix": "Prefix invalid (litere, cifre, _ . -, max 32)",
       "rcon_needs_address": "Rcon-ul HLTV cere adresa HLTV",
-      "not_configured": "Sursa demo-urilor nu e configurată"
+      "not_configured": "Sursa demo-urilor nu e configurată",
+      "confirm_mismatch": "Numele scris nu se potrivește.",
+      "same_account": "Alege alt cont decât sursa."
     }
   },
   "acp": {
@@ -807,7 +815,8 @@
         "vip": "Pagina VIP și expirări",
         "servers": "Servere",
         "clans": "Clanuri",
-        "servers_bridge": "Bridge și ELO"
+        "servers_bridge": "Bridge și ELO",
+        "gdpr": "Cereri GDPR"
       },
       "save": "Salvează setările",
       "secretSet": "•••• salvat (lasă gol ca să păstrezi valoarea)",
@@ -1827,7 +1836,10 @@
           "vip_revoked": "Un abonament VIP retras din ACP.",
           "post_before_save": "Înainte de salvarea unei postări (topic nou, răspuns, editare): pluginul poate modifica titlul și conținutul sau poate respinge postarea. Timeout 2 s; o eroare sare pluginul.",
           "postbit_after_fields": "Sub cardul autorului din postări.",
-          "vip_page": "Pe pagina publică VIP (/vip), sub planuri."
+          "vip_page": "Pe pagina publică VIP (/vip), sub planuri.",
+          "user_deleting": "Un cont începe să fie șters (pluginul își șterge datele membrului).",
+          "user_deleted": "Un cont a fost șters.",
+          "user_merged": "Un cont a fost unit cu altul (pluginul își mută datele în contul țintă)."
         }
       }
     },
@@ -2567,6 +2579,229 @@
         "direct": "direct după șablon",
         "art": "artă generică"
       }
+    },
+    "removal": {
+      "crumbMembers": "Membri",
+      "back": "Înapoi la membru",
+      "dangerTitle": "Zona periculoasă",
+      "deleteTitle": "Șterge membrul",
+      "deleteHint": "Contul și datele lui private dispar. Postările pot rămâne, semnate „Membru șters”.",
+      "deleteOpen": "Șterge membrul…",
+      "deleteLead": "Ce are {name} și ce se întâmplă cu fiecare lucru. Contul e blocat imediat după confirmare.",
+      "mergeTitle": "Unește cu alt cont",
+      "mergeHint": "Mută tot ce are acest cont într-un alt cont al aceluiași membru, apoi îl șterge pe acesta.",
+      "mergeOpen": "Unește cu alt cont…",
+      "mergeLead": "Contul {name} (sursa) se mută în contul ales (ținta), apoi se șterge.",
+      "memberScheduled": "Membrul și-a cerut ștergerea contului; se șterge pe {date}, dacă nu anulează.",
+      "memberInProgress": "Contul e în curs de ștergere sau de unire și e blocat.",
+      "memberIsTarget": "Contul {name} se mută acum în acest cont.",
+      "viewProgress": "Vezi progresul",
+      "scheduledSupersede": "Membrul și-a cerut deja ștergerea (programată pe {date}). Operația pornită de aici o înlocuiește.",
+      "hasTitle": "Ce are {name}",
+      "hasEmpty": "Contul nu are conținut sau date în aplicații.",
+      "confirmTitle": "Confirmă ștergerea",
+      "modeTitle": "Ce se întâmplă cu conținutul public",
+      "recommended": "Recomandat",
+      "modes": {
+        "KEEP_CONTENT": {
+          "title": "Păstrează conținutul",
+          "body": "Topicurile, postările, statusurile și mesajele din chat rămân, semnate „Membru șters”. Datele private se șterg: emailul, parola, conturile legate, profilul, mesajele private, notificările, IP-urile."
+        },
+        "DELETE_CONTENT": {
+          "title": "Șterge și conținutul",
+          "body": "Se șterg și topicurile pornite de membru (cu tot cu răspunsurile), postările, statusurile, mesajele din chat și fișierele lui. Potrivit pentru conturile de spam."
+        }
+      },
+      "keepMessages": "Păstrează mesajele private trimise",
+      "keepMessagesHint": "Implicit se șterg. Bifat, rămân în conversațiile celorlalți, semnate „Membru șters”, fără IP.",
+      "confirmLabel": "Scrie numele membrului pentru confirmare: {name}",
+      "deleteSubmit": "Șterge definitiv",
+      "deleteWarning": "Ștergerea nu se poate anula. Contul e blocat imediat; datele se șterg în fundal.",
+      "blockedSelf": "Nu îți poți șterge contul din ACP. Folosește Setări → Cont → „Șterge contul”.",
+      "blockedSelfMerge": "Contul tău nu poate fi sursa unei uniri (ar fi șters). Inversează sursa cu ținta.",
+      "blockedRoot": "Un Root Admin poate fi șters sau unit doar de alt Root Admin.",
+      "permanent": "permanent",
+      "kind": {
+        "DELETE": "Ștergere",
+        "MERGE": "Unire"
+      },
+      "source": {
+        "ACP": "Pornită de staff",
+        "SELF": "Cererea membrului"
+      },
+      "status": {
+        "SCHEDULED": "Programată",
+        "QUEUED": "În coadă",
+        "RUNNING": "În lucru",
+        "DONE": "Terminată",
+        "FAILED": "Eșuată",
+        "CANCELLED": "Anulată"
+      },
+      "items": {
+        "reactions": {
+          "given": "Reacții date"
+        },
+        "follows": {
+          "following": "Urmăriri",
+          "followers": "Urmăritori"
+        },
+        "forums": {
+          "topics": "Topicuri pornite",
+          "posts": "Postări",
+          "pollVotes": "Voturi în sondaje"
+        },
+        "profile": {
+          "statuses": "Statusuri pe alte profiluri",
+          "wall": "Statusuri pe peretele lui",
+          "badges": "Insigne",
+          "fields": "Câmpuri de profil",
+          "ignores": "Membri ignorați"
+        },
+        "messages": {
+          "conversations": "Conversații private",
+          "sent": "Mesaje private trimise"
+        },
+        "chat": {
+          "messages": "Mesaje în chat",
+          "rooms": "Camere de chat proprii"
+        },
+        "vip": {
+          "active": "Abonament VIP activ",
+          "history": "Istoric VIP"
+        },
+        "clans": {
+          "memberships": "Clanuri",
+          "leader": "Clanuri conduse",
+          "requests": "Cereri de clan în așteptare"
+        },
+        "servers": {
+          "identities": "Identități de joc legate",
+          "admins": "Intrări de admin pe servere",
+          "tickets": "Contestații și reclamații"
+        },
+        "notifications": {
+          "all": "Notificări"
+        },
+        "account": {
+          "warnings": "Avertismente",
+          "bans": "Bannuri",
+          "reports": "Rapoarte trimise",
+          "staff": "Roluri de staff și permisiuni proprii"
+        },
+        "files": {
+          "owned": "Fișiere încărcate"
+        }
+      },
+      "steps": {
+        "reactions": "Reacții",
+        "follows": "Urmăriri",
+        "forums": "Forum",
+        "profile": "Profil",
+        "messages": "Mesaje private",
+        "chat": "Chat",
+        "vip": "VIP",
+        "clans": "Clanuri",
+        "servers": "Servere de joc",
+        "importer": "Harta importului",
+        "notifications": "Notificări",
+        "account": "Date de cont",
+        "files": "Fișiere"
+      },
+      "notes": {
+        "topic_replies": "Topicurile lui au {count} răspunsuri ale altor membri: în modul „Șterge și conținutul” se șterg și ele.",
+        "bans_kept": "{count} bannuri pe email / IP rămân active, fără legătura cu contul.",
+        "ban_moves": "Sursa are un ban de cont activ: după unire, bannul se aplică și țintei.",
+        "staff_dropped": "Rolurile de staff și permisiunile proprii ale sursei ({count}) nu se mută.",
+        "profile_kept": "Profilul sursei (câmpuri, semnătură, aspect) nu se mută: ținta îl păstrează pe al ei.",
+        "vip_moves": "VIP-ul sursei ({tier}, până la: {until}) trece pe țintă.",
+        "vip_source_longer": "Se păstrează VIP-ul sursei ({tier}, până la: {until}), mai lung decât al țintei; al țintei se închide.",
+        "vip_target_kept": "Se păstrează VIP-ul țintei ({tier}, până la: {until}); al sursei se închide.",
+        "clan_successor": "Conduce clanul [{tag}] {clan}: conducerea trece la {name}.",
+        "clan_archived": "Conduce clanul [{tag}] {clan}, fără alți membri: clanul se arhivează.",
+        "clans_move": "Clanurile sursei ({tags}) trec la țintă, cu rolurile.",
+        "clans_target_kept": "Ținta e deja în clanuri ({tags}): rămân acelea, iar sursa iese din {dropped}.",
+        "game_unlinked": "{count} identități de joc se dezleagă; statisticile, ELO-ul și meciurile lor rămân."
+      },
+      "merge": {
+        "searchTitle": "Contul țintă",
+        "searchLabel": "Contul care rămâne (ținta)",
+        "searchPlaceholder": "Nume, email sau id",
+        "search": "Caută",
+        "keeps": "Ținta își păstrează numele, emailul, parola, 2FA, grupurile, setările și profilul.",
+        "noResults": "Niciun cont găsit.",
+        "pick": "Alege ca țintă",
+        "pairLabel": "Sursa și ținta",
+        "source": "Se șterge · sursa",
+        "target": "Rămâne · ținta",
+        "swap": "Inversează",
+        "movesTitle": "Ce se mută din {name}",
+        "logins": "Conturi de login",
+        "noLogins": "Sursa nu are conturi de login.",
+        "providers": {
+          "credential": "Parolă",
+          "discord": "Discord",
+          "google": "Google",
+          "steam": "Steam"
+        },
+        "loginCredential": "parola sursei se șterge",
+        "loginMove": "trece în țintă (ținta poate intra cu el)",
+        "loginDrop": "ținta are deja unul: al sursei se șterge",
+        "confirmTitle": "Confirmă unirea",
+        "confirmLabel": "Scrie numele contului sursă pentru confirmare: {name}",
+        "submit": "Unește conturile",
+        "warning": "Unirea nu se poate anula. Sursa e blocată imediat și se șterge la final."
+      },
+      "progress": {
+        "title": "Progresul operației",
+        "titleDelete": "Ștergerea contului {name}",
+        "titleMerge": "Unirea {name} → {target}",
+        "stateTitle": "Stare și pași",
+        "stepsTitle": "Pașii operației",
+        "processed": "{count, plural, one {# rând} few {# rânduri} other {# de rânduri}}",
+        "error": "Ultima eroare: {error}",
+        "retry": "Reia",
+        "runAfter": "Se șterge pe {date}, dacă membrul nu anulează.",
+        "doneDelete": "Contul a fost șters.",
+        "doneMerge": "Conturile au fost unite.",
+        "viewTarget": "Vezi contul țintă",
+        "backToList": "Toate cererile"
+      },
+      "gdpr": {
+        "title": "Cereri GDPR",
+        "description": "Ștergerile și unirile de conturi: cererile membrilor (cu perioada de răzgândire) și operațiile pornite de staff.",
+        "coolingTitle": "Perioada de răzgândire",
+        "coolingLabel": "Zile până la ștergerea cerută de membru (0–90)",
+        "coolingHint": "În acest timp membrul își poate anula cererea din Setări → Cont. 0 = la următoarea trecere a jobului (câteva minute).",
+        "coolingValue": "{days, plural, one {# zi} few {# zile} other {# de zile}}",
+        "save": "Salvează",
+        "filtersLabel": "Filtrează după stare",
+        "filters": {
+          "all": "Toate",
+          "active": "Active",
+          "SCHEDULED": "În așteptare",
+          "DONE": "Terminate",
+          "FAILED": "Eșuate",
+          "CANCELLED": "Anulate"
+        },
+        "total": "{count, plural, one {# operație} few {# operații} other {# de operații}}",
+        "empty": "Nicio cerere.",
+        "columns": {
+          "member": "Membru",
+          "kind": "Operație",
+          "status": "Stare",
+          "when": "Cerută",
+          "actions": "Acțiuni"
+        },
+        "kindMerge": "Unire în {target}",
+        "runAfter": "termen: {date}",
+        "view": "Progres",
+        "runNow": "Rulează acum",
+        "cancel": "Anulează",
+        "confirmRunNow": "Ștergi acum contul {name}, fără să mai aștepți perioada de răzgândire? Nu se poate anula.",
+        "prev": "Pagina anterioară",
+        "next": "Pagina următoare",
+        "page": "Pagina {page} din {pages}"
+      }
     }
   },
   "settings": {
@@ -2742,7 +2977,25 @@
       "emailChanged": "Adresa de email a fost confirmată și schimbată.",
       "emailInvalid": "Linkul de confirmare e invalid sau a expirat.",
       "steamBanner": "Contul tău a fost creat prin Steam și nu are un email real.",
-      "steamBannerLink": "Adaugă-l acum"
+      "steamBannerLink": "Adaugă-l acum",
+      "delete": {
+        "title": "Șterge contul",
+        "intro": "Contul tău și datele lui private se șterg: emailul, parola, conturile legate (Discord, Google, Steam), profilul, mesajele private, notificările, abonamentul VIP, locul în clanuri.",
+        "kept": "Topicurile și postările tale rămân, semnate „Membru șters”.",
+        "cooling": "Ai {days, plural, one {# zi} few {# zile} other {# de zile}} să te răzgândești: intră în cont și anulează de aici.",
+        "password": "Parola contului",
+        "code": "Codul 2FA",
+        "understand": "Înțeleg că după perioada de răzgândire contul nu mai poate fi recuperat.",
+        "submit": "Cere ștergerea contului",
+        "fresh": "Contul tău nu are parolă: pentru confirmare, intră din nou în cont (ultima autentificare e mai veche de 15 minute).",
+        "reauth": "Intră din nou",
+        "pending": "Contul tău va fi șters pe {date}.",
+        "cancel": "Anulează ștergerea",
+        "cancelled": "Cererea a fost anulată. Contul rămâne.",
+        "requested": "Cererea a fost înregistrată.",
+        "banner": "Contul tău va fi șters pe {date}.",
+        "bannerLink": "Anulează ștergerea"
+      }
     },
     "notifications": {
       "title": "Notificări",
@@ -2880,6 +3133,9 @@
       "weight_kd": "Clasamentul clanurilor: ponderea K/D-ului",
       "weight_mix_wins": "Clasamentul clanurilor: ponderea meciurilor mix câștigate",
       "weight_elo": "Clasamentul clanurilor: ponderea ELO-ului mediu"
+    },
+    "members": {
+      "deletion_cooling_days": "Perioada de răzgândire a ștergerii cerute de membru (zile, 0–90)"
     }
   },
   "permissions": {
@@ -3688,7 +3944,8 @@
         "popular": "Populare",
         "categories": "Categorii de emoji"
       }
-    }
+    },
+    "deletedMember": "Membru șters"
   },
   "online": {
     "title": "Cine e online",

@@ -368,6 +368,16 @@ export class GcsAttachmentService {
     await this.deleteRows(await this.deps.db.attachment.findMany({ where: { contentType: `user.${kind}`, contentId: userId } }));
   }
 
+  /**
+   * Un lot din fișierele încărcate de un membru și nelegate de niciun conținut (ștergerea contului); întoarce câte s-au
+   * șters (0 = nu mai sunt).
+   */
+  async deleteUnattachedOf(ownerId: string, limit = 100): Promise<number> {
+    const rows = await this.deps.db.attachment.findMany({ where: { ownerId, contentType: null }, take: limit, select: { id: true, storageKey: true } });
+    await this.deleteRows(rows);
+    return rows.length;
+  }
+
   private async deleteRows(rows: { id: string; storageKey: string }[]): Promise<void> {
     if (rows.length === 0) return;
     for (const row of rows) await this.deps.store.delete(row.storageKey).catch(() => {});

@@ -957,6 +957,100 @@ export class GcsClanService {
     jobs.register({ name: CLAN_DAILY_JOB, everyMs: 24 * 3_600_000, handler: async () => void (await this.daily()) });
   }
 
+  // ─── Ștergerea și unirea conturilor (specul 2026-10-09-stergere-unire-membri) ────────────────────────────────
+
+  /**
+   * Cine preia fiecare clan condus de membru când acesta iese (ștergerea contului, sursa unei uniri): `prefer` (ținta unirii,
+   * dacă e în același clan), altfel cel mai vechi ofițer, altfel cel mai vechi membru; `null` = clanul rămâne fără membri și
+   * se arhivează.
+   */
+  async successions(userId: string, prefer: string | null = null): Promise<{ clanId: number; tag: string; name: string; successor: { id: string; name: string } | null }[]> {
+    const { db } = this.deps;
+    const led = await db.clanMember.findMany({ where: { userId, role: "LEADER" }, select: { clan: { select: { id: true, tag: true, name: true } } } });
+    const out = [];
+    for (const { clan } of led) {
+      const successor = await this.successorOf(db, clan.id, userId, prefer);
+      out.push({ clanId: clan.id, tag: clan.tag, name: clan.name, successor });
+    }
+    return out;
+  }
+
+  private async successorOf(db: Tx | PrismaClient, clanId: number, userId: string, prefer: string | null): Promise<{ id: string; name: string } | null> {
+    const select = { user: { select: { id: true, name: true } } } as const;
+    const preferred = prefer ? await db.clanMember.findUnique({ where: { clanId_userId: { clanId, userId: prefer } }, select }) : null;
+    if (preferred) return preferred.user;
+    const officer = await db.clanMember.findFirst({ where: { clanId, role: "OFFICER", userId: { not: userId } }, orderBy: [{ joinedAt: "asc" }, { userId: "asc" }], select });
+    if (officer) return officer.user;
+    const member = await db.clanMember.findFirst({ where: { clanId, userId: { not: userId } }, orderBy: [{ joinedAt: "asc" }, { userId: "asc" }], select });
+    return member?.user ?? null;
+  }
+
+  /**
+   * Membrul iese din toate clanurile (ștergerea contului): conducerea trece la succesor (`successions`), iar un clan rămas
+   * fără membri se arhivează. Cererile și invitațiile lui se șterg. Întoarce câte rânduri s-au schimbat (0 = gata).
+   */
+  async accountLeave(userId: string, prefer: string | null = null): Promise<number> {
+    const { db } = this.deps;
+    const memberships = await db.clanMember.findMany({ where: { userId }, select: { clanId: true, role: true } });
+    const options = await this.options();
+    let archived = false;
+    for (const m of memberships) {
+      const result = await db.$transaction(async (tx) => {
+        let successor: { id: string; name: string } | null = null;
+        let archive = false;
+        if (m.role === "LEADER") {
+          successor = await this.successorOf(tx, m.clanId, userId, prefer);
+          // Întâi liderul coboară (indexul unic parțial: un singur lider pe clan).
+          await tx.clanMember.update({ where: { clanId_userId: { clanId: m.clanId, userId } }, data: { role: "MEMBER" } });
+          if (successor) await tx.clanMember.update({ where: { clanId_userId: { clanId: m.clanId, userId: successor.id } }, data: { role: "LEADER" } });
+          else archive = true;
+        }
+        await this.removeMember(tx, m.clanId, userId);
+        if (archive) await tx.clan.update({ where: { id: m.clanId }, data: { status: "ARCHIVED", archivedAt: new Date(), rank: null } });
+        await writeAudit(tx, {
+          actorId: null,
+          action: "clans.account_leave",
+          targetType: "clan",
+          targetId: String(m.clanId),
+          before: { userId, role: m.role },
+          after: { leaderId: successor?.id ?? null, archived: archive },
+          ip: null,
+        });
+        return { successor, archive };
+      }, TX);
+      archived ||= result.archive;
+      await this.afterMembership(m.clanId, [userId, ...(result.successor ? [result.successor.id] : [])], options);
+      if (result.successor) await this.membershipNotice(m.clanId, result.successor.id, null, "leader");
+    }
+    if (archived) await this.rerank(options);
+    const requests = await db.clanRequest.deleteMany({ where: { userId } });
+    const invites = await db.clanRequest.updateMany({ where: { invitedById: userId }, data: { invitedById: null } });
+    return memberships.length + requests.count + invites.count;
+  }
+
+  /**
+   * Unirea (specul §4): dacă ținta e în vreun clan, rămân clanurile ei (sursa iese ca la ștergere, iar conducerea unui clan
+   * comun trece la țintă); altfel apartenențele sursei (cu rolurile) trec la țintă. Întoarce câte rânduri s-au schimbat.
+   */
+  async accountMerge(sourceId: string, targetId: string): Promise<number> {
+    const { db } = this.deps;
+    let n = 0;
+    if ((await db.clanMember.count({ where: { userId: sourceId } })) > 0) {
+      if ((await db.clanMember.count({ where: { userId: targetId } })) > 0) {
+        n += await this.accountLeave(sourceId, targetId);
+      } else {
+        const clans = await db.clanMember.findMany({ where: { userId: sourceId }, select: { clanId: true } });
+        n += (await db.clanMember.updateMany({ where: { userId: sourceId }, data: { userId: targetId } })).count;
+        await this.deps.permissions.invalidateMemberGrants([sourceId, targetId]);
+        for (const c of clans) await this.changed(c.clanId);
+      }
+    }
+    n += (await db.clanRequest.updateMany({ where: { userId: sourceId, status: "PENDING" }, data: { status: "CANCELLED", decidedAt: new Date() } })).count;
+    n += (await db.clanRequest.updateMany({ where: { invitedById: sourceId }, data: { invitedById: targetId } })).count;
+    n += (await db.clan.updateMany({ where: { createdById: sourceId }, data: { createdById: targetId } })).count;
+    return n;
+  }
+
   // ─── Ajutoare ──────────────────────────────────────────────────────────────────────────────────────────────
 
   /** Membrii care au un drept în clan: liderul și ofițerii cărora liderul (și staff-ul) le-au dat dreptul. */

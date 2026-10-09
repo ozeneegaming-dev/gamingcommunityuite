@@ -2616,3 +2616,66 @@ model GameMap {
   @@index([imageId, nextFetchAt])
   @@map("game_maps")
 }
+
+// ─── Ștergerea și unirea conturilor (specul 2026-10-09-stergere-unire-membri) ─
+
+enum MemberRemovalKind {
+  DELETE
+  MERGE
+}
+
+/// Ce se întâmplă cu conținutul public la ștergere: rămâne ca „Membru șters” sau se șterge și el.
+enum MemberRemovalMode {
+  KEEP_CONTENT
+  DELETE_CONTENT
+}
+
+/// Cine a cerut operația: staff-ul (ACP) sau membrul însuși (Setări → Cont).
+enum MemberRemovalSource {
+  ACP
+  SELF
+}
+
+/// `SCHEDULED` = cererea membrului, în perioada de răzgândire (`runAfter`); `QUEUED` / `RUNNING` = jobul; `FAILED` = de reluat.
+enum MemberRemovalStatus {
+  SCHEDULED
+  QUEUED
+  RUNNING
+  DONE
+  FAILED
+  CANCELLED
+}
+
+/// O ștergere sau o unire de conturi (ACP → Membri → Cereri GDPR). `userId` / `targetId` nu au chei străine: rândul rămâne
+/// după ștergerea userului, cu numele vechi (singura dată personală păstrată, ca în jurnal). `steps` = progresul pe pașii
+/// handler-elor (`{ [cheie]: { done, processed } }`). Un singur rând activ pe `userId` (index unic parțial, din migrare).
+model MemberRemoval {
+  id            String              @id @default(cuid())
+  kind          MemberRemovalKind
+  status        MemberRemovalStatus
+  source        MemberRemovalSource @default(ACP)
+  mode          MemberRemovalMode   @default(KEEP_CONTENT)
+  /// Ștergerea: mesajele private trimise rămân în conversațiile celorlalți (ca „Membru șters”).
+  keepMessages  Boolean             @default(false)
+  userId        String
+  userName      String
+  targetId      String?
+  targetName    String?
+  requestedById String?
+  /// Cererea membrului: sfârșitul perioadei de răzgândire.
+  runAfter      DateTime?
+  steps         Json                @default("{}")
+  currentStep   String?
+  error         String?
+  attempts      Int                 @default(0)
+  heartbeatAt   DateTime?
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([status, runAfter])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("member_removals")
+}

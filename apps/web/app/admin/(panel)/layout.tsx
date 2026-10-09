@@ -15,7 +15,8 @@ import { GcsAcpAccountMenu } from "./_components/GcsAcpAccountMenu";
 import { GcsAcpSearch } from "./_components/GcsAcpSearch";
 import { GcsAcpShell } from "./_components/GcsAcpShell";
 import { GcsPluginNotice } from "./_components/GcsPluginNotice";
-import { ACP_THEME_COOKIE, GcsAcpThemeSwitch, type GcsAcpTheme } from "./_components/GcsAcpThemeSwitch";
+import { ACP_THEME_COOKIE, ACP_THEMES, type GcsAcpTheme } from "./_components/acp-theme";
+import { GcsAcpThemeSwitch } from "./_components/GcsAcpThemeSwitch";
 import type { GcsAcpIconDef, GcsAcpNavGroup, GcsAcpNavItem, GcsAcpNavSection } from "./_components/types";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -23,7 +24,6 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("title"), robots: { index: false, follow: false } };
 }
 
-const THEMES: GcsAcpTheme[] = ["auto", "light", "dark"];
 const DASHBOARD_HREF = "/admin";
 
 /**
@@ -87,7 +87,7 @@ export default async function AcpPanelLayout({ children }: { children: ReactNode
     : null;
 
   const themeCookie = (await cookies()).get(ACP_THEME_COOKIE)?.value as GcsAcpTheme | undefined;
-  const theme: GcsAcpTheme = themeCookie && THEMES.includes(themeCookie) ? themeCookie : "dark";
+  const theme: GcsAcpTheme = themeCookie && ACP_THEMES.includes(themeCookie) ? themeCookie : "dark";
   const user = panel.user;
   const avatar = (size: "s" | "m") => <GcsAvatar name={user.name} size={size} {...(user.image ? { src: user.image } : {})} />;
   const role = roles.length > 0 ? roles.join(", ") : user.primaryGroup.name;

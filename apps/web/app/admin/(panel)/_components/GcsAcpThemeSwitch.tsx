@@ -3,9 +3,7 @@
 import { faCircleHalfStroke, faMoon, faSun } from "@fortawesome/free-solid-svg-icons";
 import { cx, GcsIconSvg } from "@gcs/ui";
 import { useState } from "react";
-
-export type GcsAcpTheme = "auto" | "light" | "dark";
-export const ACP_THEME_COOKIE = "gcs-acp-theme";
+import { ACP_THEME_COOKIE, type GcsAcpTheme } from "./acp-theme";
 
 const THEME_ICONS = { auto: faCircleHalfStroke, light: faSun, dark: faMoon } as const;
 

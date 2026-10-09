@@ -1374,6 +1374,338 @@ input[type="checkbox"].gcs-switch:checked::before,
   }
 }
 
+/* ─── Ștergerea și unirea conturilor (specul 2026-10-09-stergere-unire-membri) ───────────────────────────────── */
+
+/* „Zona periculoasă” din fișa membrului: rama și titlul în roșul stărilor rele, butoanele ghost cu text roșu. */
+.gcs-dangerZone {
+  border-color: color-mix(in srgb, var(--gcs-acp-bad) 45%, var(--gcs-border));
+}
+.gcs-dangerZone .gcs-acpWidget__title {
+  color: var(--gcs-acp-bad);
+}
+.gcs-dangerZone__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-dangerZone__row:first-child {
+  padding-top: 0;
+}
+.gcs-dangerZone__row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.gcs-dangerZone__text {
+  display: flex;
+  flex: 1 1 240px;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.gcs-dangerZone__text > strong {
+  font-size: 14px;
+}
+.gcs-dangerZone__text > span {
+  color: var(--gcs-muted);
+  font-size: 13px;
+}
+.gcs-dangerZone .gcs-btn.gcs-btn--ghost,
+.gcs-root .gcs-dangerZone a.gcs-btn--ghost {
+  color: var(--gcs-acp-bad);
+  border-color: color-mix(in srgb, var(--gcs-acp-bad) 55%, transparent);
+}
+.gcs-dangerZone .gcs-btn.gcs-btn--ghost:hover,
+.gcs-root .gcs-dangerZone a.gcs-btn--ghost:hover {
+  background: color-mix(in srgb, var(--gcs-acp-bad) 14%, var(--gcs-surface2));
+  color: var(--gcs-acp-bad);
+}
+
+/* Banda unei operații în curs (fișa membrului, pagina de progres). */
+.gcs-removalBanner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin: 0;
+  padding: 12px 16px;
+  border: 1px solid color-mix(in srgb, var(--gcs-warn) 45%, var(--gcs-border));
+  border-radius: var(--gcs-radius-sm, 10px);
+  background: color-mix(in srgb, var(--gcs-warn) 10%, var(--gcs-surface));
+  font-size: 14px;
+}
+
+/* „Ce are membrul”: plăci cu numărul mare și eticheta, grupate pe aplicații. */
+.gcs-removalItems {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-removalItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: var(--gcs-radius-sm, 10px);
+  background: var(--gcs-surface2);
+}
+.gcs-removalItem__count {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.gcs-removalItem__label {
+  color: var(--gcs-muted);
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+}
+.gcs-removalNotes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-removalNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--gcs-radius-sm, 10px);
+  background: color-mix(in srgb, var(--gcs-text) 6%, transparent);
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+.gcs-removalNote--warn {
+  background: color-mix(in srgb, var(--gcs-warn) 13%, transparent);
+}
+.gcs-removalNote > .gcs-icon {
+  flex: none;
+  margin-top: 3px;
+  color: var(--gcs-muted);
+}
+.gcs-removalNote--warn > .gcs-icon {
+  color: var(--gcs-warn);
+}
+
+/* Modul ștergerii: două carduri radio; cel ales are rama accentului. */
+.gcs-removalModes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.gcs-removalModes > legend {
+  margin-bottom: 8px;
+  padding: 0;
+  font-weight: 700;
+  font-size: 14px;
+}
+.gcs-removalMode {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 14px 14px 44px;
+  border: 1px solid var(--gcs-border);
+  border-radius: var(--gcs-radius-sm, 10px);
+  background: var(--gcs-surface2);
+  cursor: pointer;
+}
+.gcs-removalMode:has(input:checked) {
+  border-color: var(--gcs-accent);
+  box-shadow: 0 0 0 1px var(--gcs-accent);
+}
+.gcs-removalMode:has(input:focus-visible) {
+  outline: 2px solid var(--gcs-accent);
+  outline-offset: 2px;
+}
+.gcs-removalMode > input {
+  position: absolute;
+  top: 16px;
+  left: 14px;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--gcs-accent);
+}
+.gcs-removalMode__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  font-weight: 700;
+  font-size: 14px;
+}
+.gcs-removalMode__body {
+  color: var(--gcs-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+/* Unirea: sursa → ținta, cu „Inversează”. */
+.gcs-mergePair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: 12px;
+}
+.gcs-mergePair__arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gcs-muted);
+  font-size: 18px;
+}
+.gcs-mergeCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--gcs-border);
+  border-radius: var(--gcs-radius-sm, 10px);
+  background: var(--gcs-surface2);
+}
+.gcs-mergeCard--source {
+  border-color: color-mix(in srgb, var(--gcs-acp-bad) 45%, var(--gcs-border));
+}
+.gcs-mergeCard--target {
+  border-color: color-mix(in srgb, var(--gcs-acp-good) 45%, var(--gcs-border));
+}
+.gcs-mergeCard__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.gcs-mergeCard__role {
+  color: var(--gcs-muted);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.gcs-mergeCard__name {
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-mergeCard__meta {
+  overflow: hidden;
+  color: var(--gcs-muted);
+  font-size: 12.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .gcs-mergePair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .gcs-mergePair__arrow {
+    transform: rotate(90deg);
+  }
+}
+
+/* Lista Cererilor GDPR: pe ecrane înguste, fiecare rând devine un card (membrul și starea sus, apoi restul). */
+@media (max-width: 640px) {
+  .gcs-removalTable thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .gcs-removalTable .gcs-table__table,
+  .gcs-removalTable tbody {
+    display: block;
+  }
+  .gcs-removalTable .gcs-table__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--gcs-border);
+  }
+  .gcs-removalTable .gcs-table__td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+  }
+  .gcs-removalTable .gcs-removalTable__member {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .gcs-removalTable .gcs-removalTable__status {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .gcs-removalTable .gcs-removalTable__kind,
+  .gcs-removalTable .gcs-removalTable__when,
+  .gcs-removalTable .gcs-removalTable__actions {
+    grid-column: 1 / -1;
+  }
+  .gcs-removalTable .gcs-table__empty {
+    display: block;
+    padding: 20px 16px;
+  }
+}
+
+/* Progresul pe pași. */
+.gcs-removalSteps {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-removalStep {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--gcs-border);
+  font-size: 14px;
+}
+.gcs-removalStep:last-child {
+  border-bottom: 0;
+}
+.gcs-removalStep__icon {
+  flex: none;
+  width: 18px;
+  color: var(--gcs-muted);
+  text-align: center;
+}
+.gcs-removalStep--done .gcs-removalStep__icon {
+  color: var(--gcs-acp-good);
+}
+.gcs-removalStep--current {
+  font-weight: 700;
+}
+.gcs-removalStep--current .gcs-removalStep__icon {
+  color: var(--gcs-warn);
+}
+.gcs-removalStep__count {
+  margin-left: auto;
+  color: var(--gcs-muted);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .gcs-acpSide,
   .gcs-acpNav__chevron,

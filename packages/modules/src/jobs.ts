@@ -24,4 +24,6 @@ export function registerAppJobs(s: GcsServices): void {
   s.bridge.registerJobs(s.jobs);
   // Aplicația Clanuri: clasamentul (orar), expirările și arhivarea clanurilor inactive (zilnic).
   s.clans.registerJobs(s.jobs);
+  // Ștergerea și unirea conturilor: rularea operațiilor și cererile ajunse la termen (5 min).
+  s.memberRemoval.registerJobs(s.jobs);
 }

@@ -92,6 +92,10 @@ export const PLUGIN_EVENTS = [
   "user.unbanned",
   "user.warned",
   "user.followed",
+  // Ștergerea și unirea conturilor (specul 2026-10-09-stergere-unire-membri): pluginurile își curăță / mută datele.
+  "user.deleting",
+  "user.deleted",
+  "user.merged",
   "chat.message",
   "chat.deleted",
   "report.created",

@@ -141,6 +141,30 @@ async function startFakeTranslator(): Promise<string> {
   return `http://127.0.0.1:${port}`;
 }
 
+/**
+ * Verificatorul OpenID Steam fals (login-ul cu Steam în E2E): la `check_authentication` răspunde `is_valid:true` doar
+ * pentru răspunsurile semnate de teste (`openid.sig` = HMAC-SHA256 cu secretul acestei rulări al lui `openid.claimed_id`).
+ * Instanța web îl folosește doar cu `GCS_TEST_ROUTES=1` (vezi `steam-plugin.ts`).
+ */
+async function startFakeSteam(secret: string): Promise<string> {
+  const { createHmac } = await import("node:crypto");
+  const port = await freePort();
+  const server = http.createServer((req, res) => {
+    let raw = "";
+    req.on("data", (c: Buffer) => (raw += c.toString()));
+    req.on("end", () => {
+      const params = new URLSearchParams(raw);
+      const expected = createHmac("sha256", secret).update(params.get("openid.claimed_id") ?? "").digest("base64url");
+      const valid = params.get("openid.mode") === "check_authentication" && params.get("openid.sig") === expected;
+      res.setHeader("content-type", "text/plain");
+      res.end(`ns:http://specs.openid.net/auth/2.0\nis_valid:${valid ? "true" : "false"}\n`);
+    });
+  });
+  await new Promise<void>((resolve) => server.listen(port, "127.0.0.1", () => resolve()));
+  cleanups.push(() => new Promise<void>((resolve) => server.close(() => resolve())));
+  return `http://127.0.0.1:${port}/openid/login`;
+}
+
 /** Pornirea aplicației (instalare + instanța de test); sub sarcină mare durează mai mult. */
 const HEALTH_TIMEOUT_MS = 360_000;
 
@@ -236,6 +260,9 @@ async function main(): Promise<number> {
   const e2eKeyFile = path.join(webDir, ".e2e", `plugin-key-${process.pid}.pem`);
   writeFileSync(e2eKeyFile, e2eKey.privateKeyPem, { mode: 0o600 });
   cleanups.push(() => rmSync(e2eKeyFile, { force: true }));
+  // Login-ul cu Steam: un secret de unică folosință, cunoscut doar de verificatorul fals și de Playwright.
+  const steamSecret = (await import("node:crypto")).randomBytes(24).toString("base64url");
+  const steamCheckUrl = await startFakeSteam(steamSecret);
   const env: NodeJS.ProcessEnv = {
     ...process.env,
     GCS_PLUGIN_TRUSTED_KEYS: [process.env.GCS_PLUGIN_TRUSTED_KEYS, `e2e=${e2eKey.publicKeyBase64}`].filter(Boolean).join(","),
@@ -246,6 +273,7 @@ async function main(): Promise<number> {
     // În producție Better Auth cere un secret propriu; pentru teste e unul de unică folosință.
     GCS_SECRET: process.env.GCS_SECRET ?? "gcs-e2e-secret-0123456789abcdef0123456789abcdef",
     GCS_TEST_ROUTES: "1",
+    GCS_STEAM_OPENID_CHECK_URL: steamCheckUrl,
     // Aplicația Servere: serverul de joc fals al testelor rulează pe 127.0.0.1 (altfel adresa locală e refuzată).
     GCS_SERVERS_ALLOW_NETS: "127.0.0.1/32",
     NEXT_TELEMETRY_DISABLED: "1",
@@ -293,7 +321,7 @@ async function main(): Promise<number> {
   const playwright = run(
     playwrightBin,
     ["test", ...process.argv.slice(2)],
-    { ...env, ...installEnv, GCS_E2E_BASE_URL: BASE_URL, GCS_E2E_PLUGIN_KEY: e2eKeyFile },
+    { ...env, ...installEnv, GCS_E2E_BASE_URL: BASE_URL, GCS_E2E_PLUGIN_KEY: e2eKeyFile, GCS_E2E_STEAM_SECRET: steamSecret },
     "inherit",
   );
   const code = await new Promise<number>((resolve) => playwright.on("exit", (c) => resolve(c ?? 1)));

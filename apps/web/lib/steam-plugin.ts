@@ -7,6 +7,16 @@ import * as z from "zod";
 
 const PROVIDER_ID = "steam";
 
+/**
+ * Verificarea răspunsului OpenID (`check_authentication`). Doar în instanțele de test (`GCS_TEST_ROUTES=1`), cu
+ * `GCS_STEAM_OPENID_CHECK_URL`, cererea merge la verificatorul fals al E2E (semnătura lui de unică folosință) în loc de
+ * Steam; restul verificărilor (endpoint-ul Steam, SteamID64, `return_to`) rămân aceleași.
+ */
+function steamCheckFetch(): typeof fetch {
+  const testUrl = process.env.GCS_TEST_ROUTES === "1" ? process.env.GCS_STEAM_OPENID_CHECK_URL : undefined;
+  return testUrl ? (_url, init) => fetch(testUrl, init) : fetch;
+}
+
 /** Doar căi relative din site, ca un `callbackURL` să nu poată trimite userul pe alt domeniu. */
 function safeCallback(url: string | undefined, fallback: string): string {
   return url && url.startsWith("/") && !url.startsWith("//") && !url.includes("\\") ? url : fallback;
@@ -46,7 +56,7 @@ export function steamPlugin(opts: { apiKey: () => Promise<string>; errorURL?: st
         async (ctx) => {
           const callbackURL = safeCallback(ctx.query.callbackURL, "/");
           const params = new URLSearchParams(ctx.query);
-          const steamId = await verifySteamAssertion(params, fetch, {
+          const steamId = await verifySteamAssertion(params, steamCheckFetch(), {
             expectedReturnTo: `${ctx.context.baseURL}/steam/callback`,
           });
           if (!steamId) throw ctx.redirect(errorURL);

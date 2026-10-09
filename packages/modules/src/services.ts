@@ -40,11 +40,25 @@ import {
   sendEmail,
   trustedPluginKeys,
   renderTemplate,
+  GcsMemberRemovalService,
+  accountDataHandler,
+  fileDataHandler,
+  followDataHandler,
+  notificationDataHandler,
+  reactionDataHandler,
   type GcsFileStore,
   type GcsMailer,
   type GcsModule,
   type GcsModuleRegistry,
 } from "@gcs/core";
+import { forumMemberData } from "./forums/memberData";
+import { profileMemberData } from "./profile/memberData";
+import { messageMemberData } from "./messages/memberData";
+import { chatMemberData } from "./chat/memberData";
+import { vipMemberData } from "./vip/memberData";
+import { clanMemberData } from "./clans/memberData";
+import { serverMemberData } from "./servers/bridge/memberData";
+import { importerMemberData } from "./importer/memberData";
 import { PrismaClient } from "@gcs/db";
 import { templateComponents, withEmailLayout } from "./templates/components";
 import { isGcsIcon, resolveIcon } from "@gcs/ui/icon-registry";
@@ -209,6 +223,11 @@ export type GcsServices = {
   clanQueries: GcsClanQueries;
   /** ACP → Gaming → Clanuri: lista, fișa și opțiunile. */
   clanAdmin: GcsClanAdmin;
+  /**
+   * Ștergerea și unirea conturilor (specul 2026-10-09-stergere-unire-membri): ACP → Membri, cererea membrului din Setări →
+   * Cont, jobul și pașii aplicațiilor (fiecare își tratează datele în `memberData.ts`).
+   */
+  memberRemoval: GcsMemberRemovalService;
 };
 
 /** Golește cache-ul Redis al paginilor (cheile și seturile de tag-uri `gcs:k:*`, `gcs:tag:*`), fără cozi și limite. */
@@ -658,9 +677,45 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     clans,
     clanQueries,
     clanAdmin: new GcsClanAdmin({ db, acp, settings, permissions, bus, registry, clans }),
+    memberRemoval: createMemberRemoval({ db, bus, acp, settings, jobs, reactions, attachments, posting, achievements, vip, clans, bridge }),
   };
   registerAppJobs(services);
   return services;
+}
+
+/**
+ * Ștergerea și unirea conturilor, cu pașii în ordine: reacțiile (înaintea mutării conținutului, ca să recunoască reacțiile
+ * la propriul conținut), urmăririle, aplicațiile, apoi notificările, datele de cont și fișierele (după conținutul lor).
+ */
+function createMemberRemoval(d: {
+  db: PrismaClient;
+  bus: GcsEventBus;
+  acp: GcsAcpRoleService;
+  settings: GcsSettingsService;
+  jobs: GcsJobQueue;
+  reactions: GcsReactionService;
+  attachments: GcsAttachmentService;
+  posting: GcsForumPosting;
+  achievements: GcsAchievementService;
+  vip: GcsVipService;
+  clans: GcsClanService;
+  bridge: GcsBridge;
+}): GcsMemberRemovalService {
+  const removal = new GcsMemberRemovalService({ db: d.db, bus: d.bus, acp: d.acp, settings: d.settings, jobs: d.jobs });
+  removal.register(reactionDataHandler({ db: d.db, reactions: d.reactions }));
+  removal.register(followDataHandler({ db: d.db }));
+  removal.register(forumMemberData(d.posting));
+  removal.register(profileMemberData({ db: d.db, evaluate: (userId) => d.achievements.evaluate(userId) }));
+  removal.register(messageMemberData({ db: d.db, attachments: d.attachments }));
+  removal.register(chatMemberData({ db: d.db, attachments: d.attachments }));
+  removal.register(vipMemberData({ db: d.db, vip: d.vip }));
+  removal.register(clanMemberData({ db: d.db, clans: d.clans }));
+  removal.register(serverMemberData({ db: d.db, store: d.bridge.store, players: d.bridge.players }));
+  removal.register(importerMemberData({ db: d.db }));
+  removal.register(notificationDataHandler({ db: d.db }));
+  removal.register(accountDataHandler({ db: d.db }));
+  removal.register(fileDataHandler({ db: d.db, attachments: d.attachments }));
+  return removal;
 }
 
 /** Închide conexiunile (oprirea worker-ului, resetarea după instalare). */
