@@ -26,6 +26,9 @@ describe("lista de membri", () => {
     expect((await list.list(w.member, { q: "ionut", page: 1 })).members.map((m) => m.name)).toEqual(["Ionuț"]);
     expect((await list.list(w.member, { q: "IONUȚ", page: 1 })).members.map((m) => m.name)).toEqual(["Ionuț"]);
     expect((await list.list(w.member, { groupId: w.groups.vip_gold!, page: 1 })).members.map((m) => m.name)).toEqual(["Iulia"]);
+    // Filtrul pe grup include și membrii care au grupul ca grup secundar.
+    await w.createUser("Secundar", "member", ["vip_gold"]);
+    expect((await list.list(w.member, { groupId: w.groups.vip_gold!, sort: "name", page: 1 })).members.map((m) => m.name)).toEqual(["Iulia", "Secundar"]);
 
     const names = async (sort: "posts" | "reputation" | "name" | "joined") =>
       (await list.list(w.member, { q: "i", sort, page: 1 })).members.map((m) => m.name).filter((n) => ["Ionuț", "Iulia"].includes(n));

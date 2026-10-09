@@ -75,7 +75,8 @@ export class GcsMemberList {
       : [];
     const where: Prisma.UserWhereInput = {
       ...(q ? { nameNormalized: { contains: q } } : {}),
-      ...(query.groupId ? { primaryGroupId: query.groupId } : {}),
+      // Membrii grupului: principal sau secundar (linkul „Vezi toți” din cardul unui grup menționat).
+      ...(query.groupId ? { OR: [{ primaryGroupId: query.groupId }, { groups: { some: { groupId: query.groupId } } }] } : {}),
       ...(query.online ? { lastActiveAt: { gte: since }, ...(hidden.length ? { id: { notIn: hidden } } : {}) } : {}),
     };
     const sort = query.sort ?? "joined";

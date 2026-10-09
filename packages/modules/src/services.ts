@@ -99,6 +99,7 @@ import { GcsVipService } from "./vip/vip";
 import { GcsConversationService } from "./messages/conversations";
 import { GcsConversationQueries } from "./messages/queries";
 import { GcsMemberList } from "./profile/members";
+import { GcsMentionQueries } from "./profile/mentions";
 import { GcsPostbitService } from "./profile/postbit";
 import { registerChatNotifications } from "./chat/notify";
 import { GcsPluginPublicApi } from "./plugins/api";
@@ -156,6 +157,8 @@ export type GcsServices = {
   stats: GcsStatsService;
   postbit: GcsPostbitService;
   memberList: GcsMemberList;
+  /** Sugestiile @mențiunilor (membri și grupuri) și cardul unui grup menționat (Mențiuni v2). */
+  mentionQueries: GcsMentionQueries;
   chatQueries: GcsChatQueries;
   bans: GcsBanService;
   warnings: GcsWarningService;
@@ -617,6 +620,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     stats: new GcsStatsService({ db, cache, registry, apps }),
     postbit: new GcsPostbitService({ db, cache, permissions, settings }),
     memberList: new GcsMemberList({ db, permissions, ranks }),
+    mentionQueries: new GcsMentionQueries({ db, cache, permissions, groupMentions }),
     activity: new GcsActivityStream({ db, cache, permissions, social }),
     leaderboard: new GcsLeaderboard({ db, cache, permissions }),
     // Fără magazin încă: planurile au butonul „Contactează staff-ul” (`checkout` vine odată cu plățile).
