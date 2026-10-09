@@ -1,6 +1,6 @@
 import type { Prisma, PrismaClient } from "@gcs/db";
 import type { GcsAcpRoleService } from "../acp/roles";
-import type { GcsAppService } from "../apps/service";
+import type { GcsAppService, GcsAppViewer } from "../apps/service";
 import { writeAudit } from "../audit";
 import type { GcsCache } from "../cache";
 import { GcsValidationError } from "../errors";
@@ -59,11 +59,13 @@ export class GcsWidgetService {
   }
 
   /**
-   * Layout-ul văzut de viewer: doar widget-urile cunoscute, ale aplicațiilor active și vizibile pentru grupurile lui.
+   * Layout-ul văzut de viewer: doar widget-urile cunoscute, ale aplicațiilor active (și accesibile lui) și vizibile pentru
+   * grupurile lui.
    * Cu `all: true` (modul de editare) se întorc toate, indiferent de grupuri.
    */
-  async layout(page: GcsWidgetPage, viewer: { groupIds: number[] }, opts: { all?: boolean } = {}): Promise<GcsPageLayout> {
-    const enabled = await this.deps.apps.enabledFilter();
+  async layout(page: GcsWidgetPage, viewer: GcsAppViewer, opts: { all?: boolean } = {}): Promise<GcsPageLayout> {
+    // Aplicațiile oprite lipsesc mereu; cele restricționate pe grup, doar în afara modului de editare.
+    const enabled = opts.all ? await this.deps.apps.enabledFilter() : await this.deps.apps.accessFilter(viewer);
     const out = emptyLayout();
     for (const p of await this.stored(page)) {
       const def = this.deps.registry.widgetDef(p.type);

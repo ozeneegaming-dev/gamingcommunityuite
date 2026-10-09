@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { landingCanonical } from "@/lib/landing";
 import { currentActor } from "@/lib/actor";
 import { pageParam } from "@/lib/forum-page";
 import { services } from "@/lib/services";
@@ -15,7 +16,8 @@ import { GcsClanLogo } from "../_components/clans/GcsClanLogo";
 import { GcsPagination } from "../_components/forum/GcsPagination";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getTranslations("clans"))("title") };
+  // Aleasă ca pagină de pornire, are aceeași adresă canonică pe `/` și pe /clans: `/`.
+  return { title: (await getTranslations("clans"))("title"), alternates: { canonical: await landingCanonical("clans", "/clans") } };
 }
 
 export const dynamic = "force-dynamic";

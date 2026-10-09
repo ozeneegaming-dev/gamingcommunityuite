@@ -153,6 +153,21 @@ export function pluginModule(key: string, manifest: GcsPluginManifest, texts: Gc
     })),
     acpMenu: acpItems.length > 0 ? [{ app: "system", area: "apps", title: texts.nameKey, icon: pluginIcon(manifest.icon), items: acpItems }] : [],
     widgets,
-    app: { optional: false, labelKey: texts.nameKey, icon: pluginIcon(manifest.icon) },
+    // Aplicația pluginului (ACP → Aplicații): rutele lui (accesul pe grup le închide) și paginile fără parametri ca secțiuni.
+    app: {
+      optional: false,
+      labelKey: texts.nameKey,
+      icon: pluginIcon(manifest.icon),
+      routes: [`/p/${key}`, `/api/plugins/${key}`],
+      sections: manifest.routes.pages
+        .filter((r) => !r.path.includes(":"))
+        .map((r) => ({
+          key: r.path,
+          labelKey: r.title ? texts.labelKey(r.title) : texts.nameKey,
+          icon: pluginIcon(manifest.icon),
+          href: `/p/${key}${r.path === "/" ? "" : r.path}`,
+          ...(r.permission ? { permission: `${base}.${r.permission}` } : {}),
+        })),
+    },
   };
 }

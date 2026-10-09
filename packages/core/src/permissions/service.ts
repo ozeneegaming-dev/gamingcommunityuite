@@ -323,7 +323,8 @@ export class GcsPermissionService {
       if (def.scope !== "group") continue;
       const perGroup = groups.map((group) => {
         const row = group.settings.find((s) => s.key === def.key);
-        return row ? row.value : def.default[group.key];
+        // Fără rând salvat: valoarea implicită a grupului, apoi cea pentru orice grup (`fallback`, ex. accesul la aplicații).
+        return row ? row.value : (def.default[group.key] ?? def.fallback);
       });
       const merged = mergeValues(perGroup, def);
       if (merged !== undefined) values[def.key] = merged;

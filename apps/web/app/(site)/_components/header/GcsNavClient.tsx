@@ -44,7 +44,14 @@ export function GcsHeaderScroll() {
   return null;
 }
 
-type NavProps = { items: GcsNavEntry[]; label: string; moreLabel: string };
+/**
+ * `home`: pagina aplicației de pornire (specul 2026-10-09-acp-navigatie-aplicatii §2.3), dacă nu e Forumul; pe `/`,
+ * itemul ei din meniu e cel activ.
+ */
+type NavProps = { items: GcsNavEntry[]; label: string; moreLabel: string; home?: string | undefined };
+
+/** Calea după care se alege linkul activ: pe `/`, pagina aplicației de pornire. */
+const activePath = (pathname: string, home: string | undefined) => (pathname === "/" && home ? home : pathname);
 
 /** `useSearchParams` cere un Suspense; rezerva (fără parametri) e aceeași componentă. */
 function withSearch<P extends object>(Inner: (props: P & { search: string }) => ReactNode) {
@@ -66,9 +73,9 @@ function withSearch<P extends object>(Inner: (props: P & { search: string }) => 
  * „Mai mult” (priority+). Lățimile se măsoară pe butoanele reale: cele mutate rămân în DOM, scoase din flux și inerte.
  * Până la hidratare bara taie ce nu încape (`overflow: hidden`), deci nu acoperă uneltele din dreapta.
  */
-function NavBar({ items, label, moreLabel, search }: NavProps & { search: string }) {
+function NavBar({ items, label, moreLabel, home, search }: NavProps & { search: string }) {
   const pathname = usePathname();
-  const { isActive } = navActive(items, pathname, search);
+  const { isActive } = navActive(items, activePath(pathname, home), search);
   const nav = useRef<HTMLElement>(null);
   const [fit, setFit] = useState<number | null>(null);
   const shown = fit ?? items.length;
@@ -313,6 +320,7 @@ type MobileNavProps = {
   items: GcsNavEntry[];
   extra: { href: string; label: string; icon?: ReactNode }[];
   labels: { open: string; close: string; menu: string };
+  home?: string | undefined;
 };
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -322,13 +330,13 @@ const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), [tabi
  * buton-dezvăluire (deschis din start dacă pagina curentă e în el); subitemii care repetă un link de pe primul nivel nu
  * se mai afișează. Tab rămâne în sertar; Escape, butonul de închidere sau un click în afară readuc focusul pe ☰.
  */
-function MobileNav({ items, extra, labels, search }: MobileNavProps & { search: string }) {
+function MobileNav({ items, extra, labels, home, search }: MobileNavProps & { search: string }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const panel = useRef<HTMLDivElement>(null);
   const opener = useRef<HTMLButtonElement>(null);
   const tree = withoutDuplicateChildren(items);
-  const { isActive } = navActive(tree, pathname, search);
+  const { isActive } = navActive(tree, activePath(pathname, home), search);
   const close = () => {
     setOpen(false);
     opener.current?.focus();

@@ -1,6 +1,6 @@
 import type { Prisma, PrismaClient } from "@gcs/db";
 import type { GcsAcpRoleService } from "../acp/roles";
-import type { GcsAppService } from "../apps/service";
+import { APPS_ACP_SECTION, type GcsAppService, type GcsAppViewer } from "../apps/service";
 import { writeAudit } from "../audit";
 import type { GcsCache } from "../cache";
 import { GcsValidationError } from "../errors";
@@ -31,6 +31,25 @@ export type GcsNavItemView = { id: number; label: { key: string } | { text: stri
 export type GcsNavItemEdit = Omit<GcsNavItemInput, "children" | "label"> & { id: number; label: GcsNavLabel; children: GcsNavItemEdit[] };
 
 type Row = { id: number; parentId: number | null; position: number; label: Prisma.JsonValue; icon: string | null; href: string | null; appKey: string | null; groups: number[]; newTab: boolean; enabled: boolean };
+
+/**
+ * Ordinea aplicațiilor în meniul principal (specul 2026-10-09-acp-navigatie-aplicatii §2.7): itemii legați de aplicații
+ * își schimbă între ei locurile după `order` (cei care nu sunt în ea rămân după, în ordinea lor); ceilalți itemi rămân pe
+ * loc. Întoarce itemii în noua ordine.
+ */
+export function reorderAppItems<T extends { appKey: string | null }>(rows: readonly T[], order: readonly string[]): T[] {
+  const slots = rows.flatMap((r, i) => (r.appKey ? [i] : []));
+  const rank = (r: T) => {
+    const at = order.indexOf(r.appKey!);
+    return at === -1 ? order.length : at;
+  };
+  const apps = slots.map((i) => rows[i]!).sort((a, b) => rank(a) - rank(b));
+  const out = [...rows];
+  slots.forEach((slot, n) => {
+    out[slot] = apps[n]!;
+  });
+  return out;
+}
 
 /** Linkurile permise: căi interne (`/…`, fără `//`) sau adrese http(s). */
 export function isSafeHref(href: unknown): href is string {
@@ -78,10 +97,11 @@ export class GcsNavService {
   }
 
   /** Meniul văzut de viewer, în limba lui (textele fără traducere cad pe limba site-ului, apoi pe oricare). */
-  async tree(viewer: { groupIds: number[] }, locale: string, siteLocale = "ro"): Promise<GcsNavItemView[]> {
-    const enabled = await this.deps.apps.enabledFilter();
+  async tree(viewer: GcsAppViewer, locale: string, siteLocale = "ro"): Promise<GcsNavItemView[]> {
+    // Itemii legați de o aplicație: doar dacă e pornită și (cu acces pe grup) accesibilă viewer-ului.
+    const usable = await this.deps.apps.accessFilter(viewer);
     const rows = (await this.rows()).filter(
-      (r) => r.enabled && (!r.appKey || enabled(r.appKey)) && (r.groups.length === 0 || r.groups.some((g) => viewer.groupIds.includes(g))),
+      (r) => r.enabled && (!r.appKey || usable(r.appKey)) && (r.groups.length === 0 || r.groups.some((g) => viewer.groupIds.includes(g))),
     );
     const build = (parentId: number | null): GcsNavItemView[] =>
       rows
@@ -170,6 +190,19 @@ export class GcsNavService {
       };
       await create(items, null);
       await writeAudit(tx, { actorId: actor.userId, action: "nav.save", targetType: "settings", targetId: "nav", before, after: items, ip: actor.ip });
+    });
+    await bus.emit({ name: "nav.updated", payload: {}, tags: [CACHE_TAG] });
+  }
+
+  /** Aplică ordinea aplicațiilor (ACP → Aplicații) itemilor lor de pe primul nivel (`reorderAppItems`). */
+  async applyAppOrder(actor: GcsActor, order: readonly string[]): Promise<void> {
+    const { db, acp, bus } = this.deps;
+    await acp.assert(actor, APPS_ACP_SECTION, "edit");
+    const top = await db.navItem.findMany({ where: { parentId: null }, orderBy: [{ position: "asc" }, { id: "asc" }], select: { id: true, appKey: true, position: true } });
+    const next = reorderAppItems(top, order);
+    if (next.every((r, i) => r.id === top[i]!.id)) return;
+    await db.$transaction(async (tx) => {
+      for (const [position, r] of next.entries()) await tx.navItem.update({ where: { id: r.id }, data: { position } });
     });
     await bus.emit({ name: "nav.updated", payload: {}, tags: [CACHE_TAG] });
   }

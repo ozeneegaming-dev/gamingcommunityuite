@@ -73,7 +73,22 @@ const acpMenu: GcsAcpMenuSection[] = [
  */
 export const serversModule: GcsModule = {
   key: "servers",
-  app: { optional: true, labelKey: "apps.servers", icon: "fa-solid fa-server" },
+  app: {
+    optional: true,
+    labelKey: "apps.servers",
+    icon: "fa-solid fa-server",
+    descriptionKey: "apps.descriptions.servers",
+    routes: ["/servers", "/bans", "/api/servers"],
+    landing: { href: "/servers" },
+    sections: [
+      { key: "servers", labelKey: "site.nav.serversAll", icon: "fa-solid fa-server", href: "/servers", permission: "servers.view" },
+      { key: "matches", labelKey: "site.nav.serversMatches", icon: "fa-solid fa-crosshairs", href: "/servers/matches", permission: BRIDGE_PERMISSION.statsView },
+      { key: "leaderboard", labelKey: "site.nav.serversLeaderboard", icon: "fa-solid fa-ranking-star", href: "/servers/leaderboard", permission: BRIDGE_PERMISSION.statsView },
+      { key: "bans", labelKey: "site.nav.bans", icon: "fa-solid fa-gavel", href: "/bans", permission: BRIDGE_PERMISSION.bansView },
+      { key: "admins", labelKey: "site.nav.serverAdmins", icon: "fa-solid fa-user-shield", href: "/servers/admins", permission: BRIDGE_PERMISSION.statsView },
+      { key: "tickets", labelKey: "site.nav.serverTickets", icon: "fa-solid fa-flag", href: "/servers/tickets", permission: BRIDGE_PERMISSION.ticketsCreate },
+    ],
+  },
   permissions,
   settings,
   acpMenu,

@@ -11,7 +11,7 @@ let stats: GcsStatsService;
 beforeEach(async () => {
   w = await createProfileWorld();
   admin = await w.actorFor(await w.createUser("Admin", "root_admin"));
-  apps = new GcsAppService({ db: w.db, cache: w.cache, bus: w.bus, registry: w.registry, acp: w.acp });
+  apps = new GcsAppService({ db: w.db, cache: w.cache, bus: w.bus, registry: w.registry, acp: w.acp, permissions: w.permissions, settings: w.settings });
   stats = new GcsStatsService({ db: w.db, cache: w.cache, registry: w.registry, apps });
 });
 

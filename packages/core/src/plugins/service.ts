@@ -504,6 +504,14 @@ export class GcsPluginService {
     return row?.package ? langsOf(readPluginZip(Buffer.from(row.package))) : {};
   }
 
+  /** Exportul pachetului instalat (ACP → Aplicații → ⋯ → Exportă pachetul), cu dreptul de editare pe pluginuri. */
+  async exportPackage(actor: GcsActor, key: string): Promise<{ fileName: string; data: Buffer }> {
+    await this.deps.acp.assert(actor, PLUGINS_ACP_SECTION, "edit");
+    const row = await this.deps.db.plugin.findUnique({ where: { key }, select: { key: true, version: true, package: true } });
+    if (!row?.package) throw new GcsNotFound({ entity: "plugin" });
+    return { fileName: `${row.key}-${row.version}.zip`, data: Buffer.from(row.package) };
+  }
+
   /** Arhiva instalată a unui plugin, citită (pentru pagina lui: fișierele). */
   async packageFiles(key: string): Promise<{ path: string; size: number }[]> {
     const row = await this.deps.db.plugin.findUnique({ where: { key }, select: { package: true } });

@@ -61,7 +61,14 @@ const acpMenu: GcsAcpMenuSection[] = [
 /** Modulul VIP (specul etapei 3): niveluri, abonamente cu expirare, istoric. */
 export const vipModule: GcsModule = {
   key: "vip",
-  app: { optional: true, labelKey: "apps.vip", icon: "fa-solid fa-crown" },
+  app: {
+    optional: true,
+    labelKey: "apps.vip",
+    icon: "fa-solid fa-crown",
+    descriptionKey: "apps.descriptions.vip",
+    routes: ["/vip"],
+    sections: [{ key: "page", labelKey: "site.nav.vip", icon: "fa-solid fa-crown", href: "/vip" }],
+  },
   permissions,
   settings,
   acpMenu,

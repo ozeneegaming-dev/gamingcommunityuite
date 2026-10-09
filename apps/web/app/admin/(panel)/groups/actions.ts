@@ -80,7 +80,7 @@ export async function updateGroupSettings(groupId: number, fd: FormData): Promis
         continue;
       }
       // Scriem (și jurnalizăm) doar valorile schimbate față de cea efectivă (salvată sau implicită).
-      const current = stored.has(def.key) ? stored.get(def.key) : group ? def.default[group.key] : undefined;
+      const current = stored.has(def.key) ? stored.get(def.key) : group ? (def.default[group.key] ?? def.fallback) : undefined;
       const effective = current ?? (kind === "number" ? 0 : kind === "text" ? "" : false);
       if (effective === value) continue;
       await groups.setSetting(groupId, def.key, value, actor);

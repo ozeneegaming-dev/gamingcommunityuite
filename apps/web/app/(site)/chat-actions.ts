@@ -1,6 +1,6 @@
 "use server";
 
-import { GcsNotFound } from "@gcs/core";
+import { GcsNotFound, type GcsActor } from "@gcs/core";
 import * as z from "zod";
 import { gcsAction } from "@/lib/actions";
 import { services } from "@/lib/services";
@@ -8,16 +8,19 @@ import { services } from "@/lib/services";
 // Cheile camerelor create de membri au un sufix aleator (până la 27 de caractere).
 const channel = z.string().min(2).max(40);
 
-/** Aplicația Chat dezactivată din ACP: acțiunile chat-ului nu mai funcționează („nu există”). */
-async function assertChatEnabled(): Promise<void> {
-  if (!(await services().apps.enabled("chat"))) throw new GcsNotFound();
+/**
+ * Aplicația Chat dezactivată din ACP sau inaccesibilă grupurilor actorului (accesul pe grup): acțiunile chat-ului nu
+ * mai funcționează („nu există”).
+ */
+async function assertChatEnabled(actor: GcsActor): Promise<void> {
+  if (!(await services().apps.canAccess(actor, "chat"))) throw new GcsNotFound();
 }
 
 /** Trimite un mesaj în chat (text și/sau fișiere încărcate înainte). Întoarce mesajul salvat (cu HTML-ul randat). */
 export const sendChatMessage = gcsAction(
   z.object({ channel, body: z.string().max(4000), files: z.array(z.string().min(1).max(40)).max(4).optional() }),
   async ({ channel, body, files }, { actor }) => {
-    await assertChatEnabled();
+    await assertChatEnabled(actor);
     return services().chat.send(actor, channel, body, { files: files ?? [] });
   },
 );
@@ -26,7 +29,7 @@ export const sendChatMessage = gcsAction(
 export const loadChatMessages = gcsAction(
   z.object({ channel, before: z.number().int().positive().optional(), limit: z.number().int().min(10).max(100).optional() }),
   async ({ channel, before, limit }, { actor }) => {
-    await assertChatEnabled();
+    await assertChatEnabled(actor);
     return services().chatQueries.history(actor, channel, before ?? null, limit);
   },
 );
@@ -89,7 +92,7 @@ export const removeChatAnnouncement = gcsAction(z.object({ id: z.number().int().
 export const createChatRoom = gcsAction(
   z.object({ name: z.string().min(2).max(50), type: z.enum(["PUBLIC", "PRIVATE"]), invite: z.array(z.string().min(1).max(40)).max(50) }),
   async ({ name, type, invite }, { actor }) => {
-    await assertChatEnabled();
+    await assertChatEnabled(actor);
     const room = await services().chat.createRoom(actor, { name, type, invite });
     return { key: room.key };
   },

@@ -5,12 +5,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
+import { landingCanonical } from "@/lib/landing";
 import { currentActor } from "@/lib/actor";
 import { forumHref, memberHref, postHref, topicHref } from "@/lib/forum-urls";
 import { services } from "@/lib/services";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getTranslations("activity"))("title") };
+  // Aleasă ca pagină de pornire, are aceeași adresă canonică pe `/` și pe /activity: `/`.
+  return { title: (await getTranslations("activity"))("title"), alternates: { canonical: await landingCanonical("core", "/activity") } };
 }
 
 type Search = { type?: string; unread?: string; before?: string };

@@ -314,6 +314,19 @@ describe("ciclul de viață al pluginurilor", () => {
     expect([schemas[0]!.n, roles[0]!.n]).toEqual([0, 0]);
   });
 
+  test("exportul pachetului: arhiva instalată, doar cu dreptul pe pluginuri; fără pachet (dezinstalat) nu există", async () => {
+    const zip = testPluginZip({ manifest: dbManifest(), files: MIGRATION_1, sign });
+    await service.install(admin, (await service.stage(admin, { fileName: "db.zip", data: zip })).id);
+    const exported = await service.exportPackage(admin, "acme.db");
+    expect(exported.fileName).toBe("acme.db-1.0.0.zip");
+    expect(Buffer.compare(exported.data, zip)).toBe(0);
+    const member = await w.actorFor(await w.createUser("Ana", "member"));
+    expect(await errorOf(service.exportPackage(member, "acme.db"))).toMatchObject({ code: "forbidden" });
+    expect(await errorOf(service.exportPackage(admin, "acme.nimic"))).toMatchObject({ code: "not_found" });
+    await service.uninstall(admin, "acme.db", { keepData: true });
+    expect(await errorOf(service.exportPackage(admin, "acme.db"))).toMatchObject({ code: "not_found" });
+  });
+
   test("ștergerea completă merge și când rolul pluginului deține obiecte în afara schemei (obiecte mari)", async () => {
     await service.install(admin, (await service.stage(admin, { fileName: "db.zip", data: testPluginZip({ manifest: dbManifest(), files: MIGRATION_1, sign }) })).id);
     const creds = (await service.credentials("acme.db"))!;

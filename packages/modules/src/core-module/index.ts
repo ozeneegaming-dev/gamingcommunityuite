@@ -1,6 +1,6 @@
 import { communityRulesSetting } from "../community/rules";
 import { coreWidgets } from "../widgets";
-import type { GcsAcpApp, GcsAcpArea, GcsAcpMenuSection, GcsModule, GcsPermissionDef, GcsSettingDef } from "@gcs/core";
+import { APP_SETTING_DEFS, type GcsAcpApp, type GcsAcpArea, type GcsAcpMenuSection, type GcsModule, type GcsPermissionDef, type GcsSettingDef } from "@gcs/core";
 
 /** Grupurile create la instalare (spec §6.1). */
 export const DEFAULT_GROUP_KEYS = [
@@ -325,9 +325,27 @@ const acpMenu: GcsAcpMenuSection[] = [
 /** Modulul „core”: setările, permisiunile de grup și meniul ACP de bază. */
 export const coreModule: GcsModule = {
   key: "core",
-  settings,
+  // Setările aplicațiilor (pornirea și ordinea), schimbate din ACP → Sistem → Aplicații.
+  settings: [...settings, ...APP_SETTING_DEFS],
   permissions,
   acpMenu,
+  // „Nucleu” în ACP → Aplicații: blocat (nu se oprește); pornirea lui e pagina Activitate.
+  app: {
+    optional: false,
+    locked: true,
+    labelKey: "apps.core",
+    icon: "fa-solid fa-cube",
+    descriptionKey: "apps.descriptions.core",
+    landing: { href: "/activity" },
+    sections: [
+      { key: "activity", labelKey: "site.nav.activity", icon: "fa-solid fa-bolt", href: "/activity" },
+      { key: "members", labelKey: "site.nav.membersAll", icon: "fa-solid fa-user-group", href: "/members", permission: "core.members_list" },
+      { key: "staff", labelKey: "site.nav.staff", icon: "fa-solid fa-shield-halved", href: "/staff" },
+      { key: "leaderboard", labelKey: "site.nav.leaderboard", icon: "fa-solid fa-ranking-star", href: "/leaderboard" },
+      { key: "messages", labelKey: "apps.sections.messages", icon: "fa-solid fa-envelope", href: "/messages", permission: "pm.send" },
+      { key: "rules", labelKey: "site.nav.rules", icon: "fa-solid fa-scale-balanced", href: "/rules" },
+    ],
+  },
   notificationTypes: [
     { key: "core.warning", labelKey: "notifications.type.core.warning", important: true, defaultEmail: "INSTANT" },
   ],

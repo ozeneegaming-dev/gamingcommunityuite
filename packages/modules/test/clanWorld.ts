@@ -16,7 +16,7 @@ export const clanDoc = (text: string) => ({ type: "doc", content: [{ type: "para
  */
 export async function createClanWorld() {
   const w = await createForumWorld();
-  const apps = new GcsAppService({ db: w.db, cache: w.cache, bus: w.bus, registry: w.registry, acp: w.acp });
+  const apps = new GcsAppService({ db: w.db, cache: w.cache, bus: w.bus, registry: w.registry, acp: w.acp, permissions: w.permissions, settings: w.settings });
   // Statisticile de joc „ale aplicației Servere”, controlate de test: pornite / oprite și datele pe membru.
   const gameStats = { on: false, data: new Map<string, GcsPlayerStatsAggregate>(), linked: new Set<string>() };
   const gameSource: GcsClanGameStatsSource = {

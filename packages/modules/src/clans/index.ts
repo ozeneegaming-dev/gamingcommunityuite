@@ -55,7 +55,18 @@ async function clanStatTiles({ db }: GcsStatsContext): Promise<GcsStatTile[]> {
  */
 export const clansModule: GcsModule = {
   key: "clans",
-  app: { optional: true, labelKey: "apps.clans", icon: "fa-solid fa-people-group" },
+  app: {
+    optional: true,
+    labelKey: "apps.clans",
+    icon: "fa-solid fa-people-group",
+    descriptionKey: "apps.descriptions.clans",
+    routes: ["/clans", "/api/clans"],
+    landing: { href: "/clans" },
+    sections: [
+      { key: "clans", labelKey: "site.nav.clans", icon: "fa-solid fa-people-group", href: "/clans", permission: "clans.view" },
+      { key: "create", labelKey: "apps.sections.clans_create", icon: "fa-solid fa-plus", href: "/clans/new", permission: "clans.create" },
+    ],
+  },
   permissions,
   settings: CLAN_SETTINGS,
   acpMenu,

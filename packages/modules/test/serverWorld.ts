@@ -25,7 +25,7 @@ export async function createServerWorld() {
   const w = await createForumWorld();
   const clock = { now: Date.now() };
   const now = () => clock.now;
-  const apps = new GcsAppService({ db: w.db, cache: w.cache, bus: w.bus, registry: w.registry, acp: w.acp });
+  const apps = new GcsAppService({ db: w.db, cache: w.cache, bus: w.bus, registry: w.registry, acp: w.acp, permissions: w.permissions, settings: w.settings });
   const store = new GcsServerStatusStore(w.redis);
   const published: GcsRealtimeMessage[] = [];
   const realtime = {

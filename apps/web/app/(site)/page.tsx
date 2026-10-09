@@ -1,30 +1,12 @@
-import { GcsCard } from "@gcs/ui";
-import { GcsIcon } from "@gcs/ui/icons";
-import { getTranslations } from "next-intl/server";
-import { currentActor } from "@/lib/actor";
-import { services } from "@/lib/services";
-import { GcsCategoryCard } from "./_components/forum/GcsCategoryCard";
-import { GcsWidgetPage } from "./_components/widgets/GcsWidgetPage";
+import type { Metadata } from "next";
+import { GcsForumIndex } from "./_components/forum/GcsForumIndex";
+
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 /**
- * Pagina principală a forumului (macheta Main): categoriile cu forumurile, iar în jur widget-urile paginii (anunțul,
- * shoutbox-ul, statisticile, „Cine e online”…), aranjate de admin din „Editează pagina”.
+ * Pagina principală: indexul forumului. Când aplicația de pornire e alta (ACP → Aplicații, ★), proxy-ul rescrie `/`
+ * spre pagina ei, iar indexul forumului rămâne pe `/forum`.
  */
-export default async function HomePage() {
-  const t = await getTranslations("forum");
-  const categories = await services().forumQueries.index(await currentActor());
-  return (
-    <GcsWidgetPage page="index">
-      <div className="gcs-forumIndex" data-testid="gcs-forum-index">
-        {categories.length === 0 ? (
-          <GcsCard style={{ padding: 24, color: "var(--gcs-muted)" }}>
-            <GcsIcon name="fa-regular fa-folder-open" className="gcs-emptyIcon" />
-            {t("emptyForums")}
-          </GcsCard>
-        ) : (
-          categories.map((c) => <GcsCategoryCard key={c.id} category={c} />)
-        )}
-      </div>
-    </GcsWidgetPage>
-  );
+export default function HomePage() {
+  return <GcsForumIndex />;
 }

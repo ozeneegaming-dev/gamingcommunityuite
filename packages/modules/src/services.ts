@@ -333,7 +333,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const acp = new GcsAcpRoleService({ db, registry });
   const acpSearch = new GcsAcpSearch({ db, registry, acp });
   const groups = new GcsGroupService({ db, bus, permissions, acp });
-  const apps = new GcsAppService({ db, cache, bus, registry, acp });
+  const apps = new GcsAppService({ db, cache, bus, registry, acp, permissions, settings });
   const members = new GcsMemberDirectory({ db });
   const notifications = new GcsNotificationService({ db, bus, cache, registry });
   const bans = new GcsBanService({ db, cache, bus, acp });

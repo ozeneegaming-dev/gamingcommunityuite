@@ -3,9 +3,10 @@ import { createWorld, type GcsTestWorld } from "../../test/world";
 import { GcsAppService } from "../apps/service";
 import { GcsForbidden, GcsNotFound } from "../errors";
 import type { GcsModule, GcsWidgetDef } from "../modules/registry";
-import { GcsNavService, isSafeHref } from "../nav/service";
+import { GcsNavService, isSafeHref, reorderAppItems } from "../nav/service";
 import type { GcsActor } from "../permissions/types";
 import { seedDefaults } from "../install/seed";
+import { GcsSettingsService } from "../settings/service";
 import { fieldsConfig } from "./fields";
 import { GcsWidgetService } from "./service";
 
@@ -51,7 +52,7 @@ let member: GcsActor;
 
 beforeEach(async () => {
   w = await createWorld([base, optional]);
-  apps = new GcsAppService({ db: w.db, cache: w.cache, bus: w.bus, registry: w.registry, acp: w.acp });
+  apps = new GcsAppService({ db: w.db, cache: w.cache, bus: w.bus, registry: w.registry, acp: w.acp, permissions: w.permissions, settings: new GcsSettingsService({ db: w.db, cache: w.cache, bus: w.bus, registry: w.registry }) });
   widgets = new GcsWidgetService({ db: w.db, cache: w.cache, bus: w.bus, registry: w.registry, acp: w.acp, apps });
   nav = new GcsNavService({ db: w.db, cache: w.cache, bus: w.bus, registry: w.registry, acp: w.acp, apps, isIcon: (n) => n.startsWith("fa-solid fa-") });
   root = await w.actorFor(await w.createUser("Root", "root_admin"));
@@ -154,6 +155,38 @@ describe("meniu", () => {
     expect(await w.db.auditLog.count({ where: { action: "nav.save" } })).toBe(1);
   });
 
+  test("accesul pe grup la o aplicație ascunde itemii ei din meniu și widget-urile ei (nu și în modul de editare)", async () => {
+    await widgets.save(root, "index", [{ zone: "sidebar", type: "opt.box" }]);
+    expect((await widgets.layout("index", member)).sidebar.map((p) => p.type)).toEqual(["opt.box"]);
+    await apps.setAccess(root, "optapp.app_access", [w.groups.admin!]);
+    expect((await nav.tree(member, "ro")).map((i) => i.href)).toEqual(["/"]);
+    expect((await nav.tree(root, "ro")).map((i) => i.href)).toEqual(["/", "/opt"]);
+    expect((await widgets.layout("index", member)).sidebar).toEqual([]);
+    expect((await widgets.layout("index", member, { all: true })).sidebar.map((p) => p.type)).toEqual(["opt.box"]);
+    expect((await widgets.layout("index", root)).sidebar.map((p) => p.type)).toEqual(["opt.box"]);
+  });
+
+  test("ordinea aplicațiilor mută itemii lor de pe primul nivel între ei; ceilalți itemi rămân pe loc", async () => {
+    const rows = [
+      { id: 1, appKey: null },
+      { id: 2, appKey: "a" },
+      { id: 3, appKey: null },
+      { id: 4, appKey: "b" },
+      { id: 5, appKey: "c" },
+    ];
+    expect(reorderAppItems(rows, ["c", "b"]).map((r) => r.id)).toEqual([1, 5, 3, 4, 2]);
+    expect(reorderAppItems(rows, []).map((r) => r.id)).toEqual([1, 2, 3, 4, 5]);
+
+    await nav.save(root, [
+      { label: { key: "nav.opt" }, href: "/opt", appKey: "optapp" },
+      { label: { key: "nav.forum" }, href: "/" },
+      { label: { ro: "Al doilea" }, href: "/doi", appKey: "basew" },
+    ]);
+    await nav.applyAppOrder(root, ["basew", "optapp"]);
+    expect((await nav.tree(root, "ro")).map((i) => i.href)).toEqual(["/doi", "/", "/opt"]);
+    await expect(nav.applyAppOrder(member, [])).rejects.toBeInstanceOf(GcsForbidden);
+  });
+
   test("validarea meniului: linkuri periculoase, iconițe invalide, adâncime, fără drept", async () => {
     const fields = (items: Parameters<GcsNavService["save"]>[1]) =>
       nav.save(root, items).then(
@@ -211,7 +244,7 @@ describe("câmpurile și layout-ul implicit", () => {
   test("layout-ul implicit se pune o singură dată; o pagină golită de admin rămâne goală; „reset” îl readuce", async () => {
     const withDefaults: GcsModule = { ...base, key: "defaults", widgets: [], nav: [], widgetLayout: { index: [{ zone: "sidebar", type: "base.recent" }, { zone: "top", type: "base.sidebarOnly" }] } };
     const world = await createWorld([base, withDefaults]);
-    const ws = new GcsWidgetService({ db: world.db, cache: world.cache, bus: world.bus, registry: world.registry, acp: world.acp, apps: new GcsAppService({ db: world.db, cache: world.cache, bus: world.bus, registry: world.registry, acp: world.acp }) });
+    const ws = new GcsWidgetService({ db: world.db, cache: world.cache, bus: world.bus, registry: world.registry, acp: world.acp, apps: new GcsAppService({ db: world.db, cache: world.cache, bus: world.bus, registry: world.registry, acp: world.acp, permissions: world.permissions, settings: new GcsSettingsService({ db: world.db, cache: world.cache, bus: world.bus, registry: world.registry }) }) });
     const admin = await world.actorFor(await world.createUser("Root2", "root_admin"));
     // `base.sidebarOnly` nu e permis sus: se sare.
     expect((await ws.layout("index", admin)).sidebar.map((p) => p.type)).toEqual(["base.recent"]);

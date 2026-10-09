@@ -2841,6 +2841,138 @@
       "modules": {
         "forums": "Forum"
       }
+    },
+    "appsPage": {
+      "description": "Turn the site's apps on and off, put them in order, pick the landing page and choose who can use each app.",
+      "checkUpdates": "Check for updates",
+      "checkUpdatesHint": "Available with licences",
+      "appsTitle": "Apps",
+      "pluginsTitle": "Plugins",
+      "pluginsEmpty": "No plugins installed. Upload a .zip package below.",
+      "close": "Close",
+      "cancel": "Cancel",
+      "toggle": "{name} on",
+      "lockedHint": "Core app: it can't be turned off",
+      "toggled": {
+        "on": "{name} is on.",
+        "off": "{name} is off."
+      },
+      "columns": {
+        "name": "App",
+        "version": "Version",
+        "author": "Author",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "status": {
+        "active": "On",
+        "stopped": "Off",
+        "locked": "Locked",
+        "removed": "Uninstalled",
+        "auto": "turned off after errors"
+      },
+      "certified": {
+        "label": "GCS certified",
+        "title": "Signed with the trusted key {keyId}"
+      },
+      "uncertified": {
+        "label": "Not certified",
+        "title": "Package without a GCS signature: only the Root Admin can install it"
+      },
+      "landing": {
+        "current": "Landing page: {name}",
+        "make": "Make {name} the landing page",
+        "is": "{name} is the landing page",
+        "saved": "The landing page is now {name}."
+      },
+      "access": {
+        "title": "Who can use {name}",
+        "sectionTitle": "Who can use “{name}”",
+        "hint": "Unticked groups lose the “{permission}” permission. For an app, its pages answer 404 and its menu items and widgets disappear for them.",
+        "all": "all groups",
+        "none": "Root Admin only",
+        "some": "{count} of {total} groups",
+        "selectAll": "All",
+        "selectNone": "None",
+        "legend": "Groups with access",
+        "root": "always has access",
+        "save": "Save access",
+        "saved": "Saved: {name}.",
+        "pluginStopped": "Turn the plugin on to choose its groups"
+      },
+      "sections": {
+        "show": "Show the sections of {name}",
+        "hide": "Hide the sections of {name}",
+        "title": "Sections of {name}",
+        "none": "This app has no pages of its own on the site.",
+        "noPermission": "no separate permission"
+      },
+      "menu": {
+        "label": "More actions for {name}",
+        "details": "Details",
+        "manage": "Settings and log",
+        "update": "Update",
+        "export": "Export the package",
+        "uninstall": "Uninstall",
+        "coreNote": "Core app: it can't be uninstalled"
+      },
+      "disable": {
+        "title": "Turn off {name}?",
+        "body": "The app's pages will answer 404 and its menu items, widgets and statistics leave the site. Its data stays and you can turn it back on at any time.",
+        "pluginBody": "The plugin unloads right away: its pages, widgets and menus disappear. Its settings and data stay.",
+        "confirm": "Turn off"
+      },
+      "disableAll": {
+        "button": "Turn off all plugins",
+        "title": "Turn off all plugins?",
+        "body": "The emergency switch: every plugin unloads right away. You can then turn them on one by one.",
+        "confirm": "Turn all off",
+        "done": "All plugins are off."
+      },
+      "order": {
+        "drag": "Move {name} (drag, or Space and the arrow keys)",
+        "up": "Move {name} up",
+        "down": "Move {name} down",
+        "saved": "Order saved."
+      },
+      "update": {
+        "title": "Update {name}",
+        "body": "Installed version: {version}. Upload the new version's archive: the package is checked, then you confirm the update. Settings and data stay."
+      },
+      "uninstall": {
+        "title": "Uninstall {name}?",
+        "bodyKept": "The package is removed and the plugin's data stays for a reinstall.",
+        "body": "These are deleted for good:",
+        "removes": {
+          "schema": "its own tables (schema {schema})",
+          "settings": "its settings, log and the permissions given to groups",
+          "widgets": "the widgets placed on pages",
+          "files": "the files uploaded through the plugin",
+          "acp": "the ACP role rights on its pages"
+        },
+        "keepData": "Keep the data (for a reinstall)",
+        "typeKey": "Type the plugin key ({key}) to confirm",
+        "confirm": "Uninstall",
+        "done": "{name} was uninstalled, data included.",
+        "doneKept": "{name} was uninstalled; its data was kept."
+      },
+      "details": {
+        "version": "Version",
+        "author": "Author",
+        "status": "Status",
+        "landing": "Landing page",
+        "key": "Key",
+        "certificate": "Certification",
+        "database": "Own database",
+        "adds": "What it adds",
+        "capabilities": "What it is allowed to do",
+        "sitePages": "Site pages",
+        "acpPages": "ACP pages",
+        "widgets": "Widgets",
+        "permissions": "Permissions",
+        "none": "nothing",
+        "lockedNote": "Core app: part of the platform, so it can't be turned off or uninstalled."
+      }
     }
   },
   "settings": {
@@ -3175,6 +3307,10 @@
     },
     "members": {
       "deletion_cooling_days": "Cooling-off before a member's requested deletion (days, 0–90)"
+    },
+    "apps": {
+      "landing": "Landing app",
+      "order": "App order"
     }
   },
   "permissions": {
@@ -3259,7 +3395,8 @@
       "join": "Join clans (ask to join, accept invitations)",
       "max_members": "How many members a clan led by this group can have (-1 = unlimited)",
       "moderate": "Clan staff on the site (edit, lock, disband any clan)"
-    }
+    },
+    "app_access": "Can access the {app} app"
   },
   "profile": {
     "memberSince": "Mitglied seit {date}",
@@ -3996,7 +4133,24 @@
     "chat": "Chat",
     "vip": "VIP",
     "servers": "Servers",
-    "clans": "Clans"
+    "clans": "Clans",
+    "core": "Core",
+    "forums": "Forum",
+    "descriptions": {
+      "core": "Members, profiles, private messages, notifications, groups and the admin panel.",
+      "forums": "Categories and forums, topics, posts, polls, reactions and search.",
+      "chat": "Real-time chat: public channels, private rooms, mentions and the shoutbox on pages.",
+      "vip": "VIP subscriptions: tiers, name styles, avatar frames and the public plans page.",
+      "servers": "Game servers: live status, statistics, mix matches with ELO, bans, admins and appeals.",
+      "clans": "Community clans: members and roles, the clan page, the private forum and join requests."
+    },
+    "sections": {
+      "messages": "Private messages",
+      "forums": "Forums",
+      "search": "Search",
+      "chat_private": "Private rooms",
+      "clans_create": "Create a clan"
+    }
   },
   "translate": {
     "translate": "Übersetzen",

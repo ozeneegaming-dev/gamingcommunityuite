@@ -110,6 +110,19 @@ export const forumsModule: GcsModule = {
   permissions,
   settings,
   acpMenu,
+  // „Forum” în ACP → Aplicații: blocat; randează chiar `/` (aplicația „acasă”), cu adresa alternativă `/forum`.
+  app: {
+    optional: false,
+    locked: true,
+    labelKey: "apps.forums",
+    icon: "fa-solid fa-comments",
+    descriptionKey: "apps.descriptions.forums",
+    landing: { href: "/forum", home: true },
+    sections: [
+      { key: "forums", labelKey: "apps.sections.forums", icon: "fa-solid fa-comments", href: "/forum" },
+      { key: "search", labelKey: "apps.sections.search", icon: "fa-solid fa-magnifying-glass", href: "/search" },
+    ],
+  },
   notificationTypes: [
     { key: "forums.mention", labelKey: "notifications.type.forums.mention", important: false, defaultEmail: "DIGEST" },
     { key: "forums.quote", labelKey: "notifications.type.forums.quote", important: false, defaultEmail: "DIGEST" },

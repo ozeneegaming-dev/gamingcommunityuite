@@ -1,4 +1,4 @@
-import type { GcsThemeView } from "@gcs/core";
+import { pluginRegistryKey, type GcsThemeView } from "@gcs/core";
 import { communityRules, RULES_HREF } from "@gcs/modules";
 import { GcsIcon } from "@gcs/ui/icons";
 import { GcsAvatar, GcsButton } from "@gcs/ui";
@@ -7,6 +7,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
 import { viewerEditing, viewerTheme } from "@/lib/appearance";
 import { memberHref } from "@/lib/forum-urls";
+import { FORUM_INDEX_ALT_HREF, FORUM_NAV_LABEL } from "@/lib/landing";
 import { withoutHrefs } from "@/lib/nav-match";
 import { localeOptions } from "@/lib/locales";
 import { pluginHost, safeModeActive } from "@/lib/plugins";
@@ -69,8 +70,11 @@ function GcsBrand({ theme, siteName }: { theme: GcsThemeView; siteName: string }
  */
 export async function GcsSiteHeader() {
   const [t, tn, tAll, locale] = await Promise.all([getTranslations("site"), getTranslations("notifications"), getTranslations(), getLocale()]);
-  const { permissions, profileQueries, conversations, notifications, nav, settings } = services();
+  const { permissions, profileQueries, conversations, notifications, nav, settings, apps } = services();
   const actor = await currentActor();
+  // Aplicația de pornire (specul 2026-10-09-acp-navigatie-aplicatii §2.3): pe `/` itemul ei e activ, iar Forumul are
+  // adresa lui alternativă, `/forum`.
+  const landing = await apps.landingFor(actor);
   const [siteName, siteLocale] = await Promise.all([settings.get<string>("site.name"), settings.get<string>("site.locale")]);
   const [tree, user, locales, { shown: theme }, editing] = await Promise.all([
     nav.tree(actor, locale, siteLocale),
@@ -89,12 +93,19 @@ export async function GcsSiteHeader() {
     : [false, false, 0, 0];
 
   const label = (l: { key: string } | { text: string }) => ("key" in l ? (tAll.has(l.key) ? tAll(l.key) : l.key) : l.text);
+  const href = (i: (typeof tree)[number]) => (landing && i.href === "/" && "key" in i.label && i.label.key === FORUM_NAV_LABEL ? FORUM_INDEX_ALT_HREF : i.href);
   const entries = (items: typeof tree): GcsNavEntry[] =>
-    items.map((i) => ({ id: i.id, label: label(i.label), href: i.href, newTab: i.newTab, icon: i.icon ? <GcsIcon name={i.icon} /> : null, children: entries(i.children) }));
+    items.map((i) => ({ id: i.id, label: label(i.label), href: href(i), newTab: i.newTab, icon: i.icon ? <GcsIcon name={i.icon} /> : null, children: entries(i.children) }));
   // Intrările pluginurilor (etapa 6): în meniul principal și în meniul userului; nu în modul sigur.
+// Doar ale pluginurilor accesibile viewer-ului (accesul pe grup din ACP → Aplicații; cheia intrării: `<plugin>.<intrare>`).
+  const usable = await apps.accessFilter(actor);
+  const ownPlugin = (m: { key: string }) => usable(pluginRegistryKey(m.key.split(".").slice(0, 2).join(".")));
   const pluginMenus = (await safeModeActive())
     ? { site: [], user: [] }
-    : await pluginHost().then(async (host) => ({ site: await host.menus("site", actor, locale), user: user ? await host.menus("user", actor, locale) : [] }));
+    : await pluginHost().then(async (host) => ({
+        site: (await host.menus("site", actor, locale)).filter(ownPlugin),
+        user: user ? (await host.menus("user", actor, locale)).filter(ownPlugin) : [],
+      }));
   // Ascunse automat: Reguli, cât timp regulile comunității sunt goale (pagina rămâne, cu o stare goală).
   const hidden = new Set((await communityRules(settings)) ? [] : [RULES_HREF]);
   const menu = [
@@ -108,6 +119,7 @@ export async function GcsSiteHeader() {
       <div className="gcs-siteHeader__inner">
         <GcsMobileNav
           items={menu}
+          home={landing?.href}
           extra={
             user
               ? []
@@ -122,7 +134,7 @@ export async function GcsSiteHeader() {
           <GcsBrand theme={theme} siteName={siteName} />
         </Link>
 
-        <GcsNavLinks items={menu} label={t("mainNav")} moreLabel={t("nav.more")} />
+        <GcsNavLinks items={menu} label={t("mainNav")} moreLabel={t("nav.more")} home={landing?.href} />
 
         <div className="gcs-siteHeader__tools">
           <GcsHeaderSearch label={t("searchLabel")} placeholder={t("searchPlaceholder")} />

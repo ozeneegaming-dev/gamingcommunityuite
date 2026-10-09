@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { landingCanonical } from "@/lib/landing";
 import { currentActor } from "@/lib/actor";
 import { cardsData, initialStatuses } from "@/lib/servers";
 import { services } from "@/lib/services";
@@ -12,7 +13,8 @@ import { GcsServerGrid, GcsServerSummary } from "../_components/servers/GcsServe
 import { GcsServerLiveProvider } from "../_components/servers/GcsServerLive";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getTranslations("servers"))("title") };
+  // Aleasă ca pagină de pornire, are aceeași adresă canonică pe `/` și pe /servers: `/`.
+  return { title: (await getTranslations("servers"))("title"), alternates: { canonical: await landingCanonical("servers", "/servers") } };
 }
 
 export const dynamic = "force-dynamic";

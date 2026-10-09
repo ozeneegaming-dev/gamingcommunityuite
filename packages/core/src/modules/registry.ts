@@ -23,6 +23,24 @@ export interface GcsPermissionDef {
   labelKey: string;
   default: Partial<Record<GroupKey, unknown>>;
   merge?: "max" | "min";
+  /** Valoarea grupurilor fără o valoare implicită proprie în `default` (ex. grupurile create din ACP). */
+  fallback?: unknown;
+  /** Permisiunea de acces generată pentru aplicația cu această cheie de modul (`<app>.app_access`). */
+  app?: string;
+}
+
+/** Cheia permisiunii de acces a unei aplicații („Poate accesa aplicația”), generată de registry. */
+export const appAccessKey = (moduleKey: string) => `${moduleKey}.app_access`;
+
+/**
+ * Permisiunile unui modul, cu permisiunea de acces generată pentru aplicațiile care nu sunt blocate (specul
+ * 2026-10-09-acp-navigatie-aplicatii §2.4): booleană, de grup, implicit `true` pentru orice grup.
+ */
+function modulePermissions(m: GcsModule): GcsPermissionDef[] {
+  if (!m.app || m.app.locked) return m.permissions;
+  const key = appAccessKey(m.key);
+  if (m.permissions.some((p) => p.key === key)) return m.permissions;
+  return [...m.permissions, { key, scope: "group", labelKey: "permissions.app_access", default: {}, fallback: true, app: m.key }];
 }
 
 export type GcsAcpApp = "system" | "community" | "members" | "vip" | "gaming" | "pages" | "stats" | "appearance";
@@ -64,6 +82,18 @@ export interface GcsAcpMenuSection {
   group?: string;
   items: GcsAcpMenuItem[];
 }
+
+/**
+ * O secțiune de pe site a unei aplicații (ACP → Aplicații → ▸), cu permisiunea de grup care o controlează, dacă are una
+ * (o permisiune booleană, de grup, a aplicației).
+ */
+export type GcsAppSection = { key: string; labelKey: string; icon: string; href: string; permission?: string };
+
+/**
+ * Pagina de pornire a site-ului pe care o poate da o aplicație (★ din ACP → Aplicații): `href` e pagina ei. `home`: aplicația
+ * randează chiar `/` (Forumul), deci aleasă nu cere nicio rescriere; `href` e atunci adresa ei alternativă.
+ */
+export type GcsAppLanding = { href: string; home?: boolean };
 
 /** Contextul primit de hook-ul `seed` al unui modul: tranzacția seed-ului și id-urile grupurilor implicite. */
 export type GcsSeedContext = { tx: Prisma.TransactionClient; groupIds: ReadonlyMap<string, number> };
@@ -177,10 +207,26 @@ export interface GcsModule {
   /** Conținutul de pornire ales în wizard (pasul „demo” al instalării). Idempotent. */
   seedDemo?: (ctx: GcsDemoContext) => Promise<void>;
   /**
-   * Etapa 5: o aplicație opțională (se poate dezactiva din ACP → Sistem → Aplicații). Dezactivată, nu apare în meniu,
-   * widget-uri sau statistici, iar paginile ei răspund cu 404.
+   * O aplicație (ACP → Sistem → Aplicații). `optional`: se poate dezactiva de acolo (etapa 5); dezactivată, nu apare în
+   * meniu, widget-uri sau statistici, iar paginile ei răspund cu 404. Pluginurile au `optional: false` (le pornește și
+   * le oprește serviciul pluginurilor). Orice aplicație care nu e `locked` primește permisiunea de acces pe grup
+   * (`appAccessKey`).
    */
-  app?: { optional: boolean; labelKey: string; icon: string };
+  app?: {
+    optional: boolean;
+    labelKey: string;
+    icon: string;
+    /** Aplicațiile de bază (Nucleu, Forum): nu se opresc, nu se dezinstalează și nu au acces pe grup. */
+    locked?: boolean;
+    /** Descrierea scurtă (dialogul „Detalii” din ACP → Aplicații). */
+    descriptionKey?: string;
+    /** Prefixele căilor aplicației (pagini și API): grupurile fără acces primesc 404 (proxy-ul). */
+    routes?: string[];
+    /** Secțiunile de pe site (ACP → Aplicații → ▸). */
+    sections?: GcsAppSection[];
+    /** Pagina de pornire a site-ului pe care o poate da aplicația. */
+    landing?: GcsAppLanding;
+  };
   /** Tipurile de widget-uri ale modulului. */
   widgets?: GcsWidgetDef[];
   /** Widget-urile puse implicit pe pagini la instalare (în ordinea modulelor). */
@@ -212,14 +258,15 @@ export class GcsModuleRegistry {
     if (this.modules.some((existing) => existing.key === m.key)) {
       throw new Error(`Modulul „${m.key}” e deja înregistrat`);
     }
+    const permissions = modulePermissions(m);
     assertUnique(m.settings.map((s) => s.key), this.settings, "setarea");
-    assertUnique(m.permissions.map((p) => p.key), this.permissions, "permisiunea");
+    assertUnique(permissions.map((p) => p.key), this.permissions, "permisiunea");
     const widgetKeys = new Map(this.widgetDefs().map((w) => [w.def.key, w]));
     assertUnique((m.widgets ?? []).map((w) => w.key), widgetKeys, "widget-ul");
 
     this.modules.push(m);
     for (const s of m.settings) this.settings.set(s.key, s);
-    for (const p of m.permissions) this.permissions.set(p.key, p);
+    for (const p of permissions) this.permissions.set(p.key, p);
     this.fingerprint = null;
   }
 
@@ -232,7 +279,7 @@ export class GcsModuleRegistry {
     if (index === -1) return false;
     const [m] = this.modules.splice(index, 1);
     for (const s of m!.settings) this.settings.delete(s.key);
-    for (const p of m!.permissions) this.permissions.delete(p.key);
+    for (const p of modulePermissions(m!)) this.permissions.delete(p.key);
     this.fingerprint = null;
     return true;
   }
@@ -243,7 +290,7 @@ export class GcsModuleRegistry {
    */
   permissionsFingerprint(): string {
     this.fingerprint ??= createHash("sha256")
-      .update(JSON.stringify([...this.permissions.values()].map((p) => [p.key, p.scope, p.default, p.merge ?? null]).sort((a, b) => String(a[0]).localeCompare(String(b[0])))))
+      .update(JSON.stringify([...this.permissions.values()].map((p) => [p.key, p.scope, p.default, p.merge ?? null, p.fallback ?? null]).sort((a, b) => String(a[0]).localeCompare(String(b[0])))))
       .digest("hex")
       .slice(0, 10);
     return this.fingerprint;

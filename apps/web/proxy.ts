@@ -1,4 +1,4 @@
-import { GcsInstallState, installGate } from "@gcs/core";
+import { GcsInstallState, installGate, type GcsActor } from "@gcs/core";
 import { NextResponse, type NextRequest } from "next/server";
 import { clientIp } from "./lib/actor";
 import { getAuth } from "./lib/auth";
@@ -23,6 +23,42 @@ async function hasAcpAccess(request: NextRequest): Promise<boolean> {
   if (!session) return false;
   const actor = await actors.getActor({ sessionToken: session.session.token, ip: clientIp(request.headers) });
   return permissions.can(actor, "acp.access");
+}
+
+/** Actorul cererii (membru sau vizitator), pentru accesul pe grup la aplicații. */
+async function requestActor(request: NextRequest): Promise<GcsActor> {
+  const session = await (await getAuth()).api.getSession({ headers: request.headers }).catch(() => null);
+  return services().actors.getActor({ ...(session ? { sessionToken: session.session.token } : {}), ip: clientIp(request.headers) });
+}
+
+/**
+ * Aplicațiile (specul 2026-10-09-acp-navigatie-aplicatii §2.3–2.4):
+ * - o cale a unei aplicații restricționate pe grup (`app.routes`) răspunde 404 celor fără acces (paginile, API-ul);
+ * - `/` se rescrie intern (adresa rămâne `/`) spre pagina aplicației de pornire, dacă nu e Forumul și vizitatorul o
+ *   poate accesa; altfel `/` randează Forumul. Fără redirecturi, deci fără bucle.
+ * Actorul se calculează doar pentru aplicațiile restricționate. Baza indisponibilă: paginile decid singure.
+ */
+async function appRouting(request: NextRequest): Promise<NextResponse | URL | null> {
+  const path = request.nextUrl.pathname;
+  if (path.startsWith("/admin") || path.startsWith("/_next/")) return null;
+  const { apps } = services();
+  try {
+    if (path === "/") {
+      const target = await apps.landingFor(null);
+      if (!target) return null;
+      if ((await apps.restrictedApps()).has(target.key) && !(await apps.canAccess(await requestActor(request), target.key))) return null;
+      const url = request.nextUrl.clone();
+      url.pathname = target.href;
+      return url;
+    }
+    const app = apps.routeApp(path);
+    if (!app || !(await apps.restrictedApps()).has(app)) return null;
+    if (await apps.canAccess(await requestActor(request), app)) return null;
+    if (path.startsWith("/api/")) return NextResponse.json({ error: "not_found" }, { status: 404, headers: { "Cache-Control": "no-store" } });
+    return NextResponse.rewrite(new URL("/_not-found", request.url), { status: 404 });
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -53,7 +89,9 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   if (safe) return safe;
   const legacy = await legacyRedirect(request);
   if (legacy) return legacy;
-  return withThemePreview(request);
+  const routed = await appRouting(request);
+  if (routed instanceof NextResponse) return routed;
+  return withThemePreview(request, routed);
 }
 
 /**
@@ -99,13 +137,14 @@ async function legacyRedirect(request: NextRequest): Promise<NextResponse | null
  * Previzualizarea editorului vizual de temă: `?gcs-theme-preview=<cheie>` (sau cookie-ul lui, doar în `iframe`) devine
  * header-ul intern citit de layout. Header-ul trimis de client e mereu șters. Layout-ul verifică apoi dreptul pe teme.
  */
-function withThemePreview(request: NextRequest): NextResponse {
+function withThemePreview(request: NextRequest, rewrite: URL | null = null): NextResponse {
   const headers = new Headers(request.headers);
   headers.delete(THEME_PREVIEW_HEADER);
   const param = request.nextUrl.searchParams.get(THEME_PREVIEW_PARAM);
   const key = previewKeyFor(param, request.cookies.get(THEME_PREVIEW_COOKIE)?.value, request.headers.get("sec-fetch-dest"));
   if (key) headers.set(THEME_PREVIEW_HEADER, key);
-  const response = NextResponse.next({ request: { headers } });
+  // Aplicația de pornire: `/` rescris intern spre pagina ei (cu aceleași headere ale cererii).
+  const response = rewrite ? NextResponse.rewrite(rewrite, { request: { headers } }) : NextResponse.next({ request: { headers } });
   if (param !== null && key) {
     response.cookies.set(THEME_PREVIEW_COOKIE, key, { path: "/", httpOnly: true, sameSite: "strict", secure: process.env.NODE_ENV === "production" });
   }

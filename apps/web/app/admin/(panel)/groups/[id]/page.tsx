@@ -8,6 +8,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { requireAcpSection } from "@/lib/acp";
+import { permissionLabel } from "@/lib/permission-label";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { deleteGroup, updateGroupDetails, updateGroupLook, updateGroupSettings, updateGroupStyle } from "../actions";
@@ -50,7 +51,7 @@ export default async function AcpGroupPage({ params }: Props) {
   const stored = new Map(group.settings.map((s) => [s.key, s.value]));
   const defs = registry.permissionDefs().filter((d) => d.scope === "group");
   const settings = defs.map((def) => {
-    const value = stored.has(def.key) ? stored.get(def.key) : def.default[group.key];
+    const value = stored.has(def.key) ? stored.get(def.key) : (def.default[group.key] ?? def.fallback);
     // Tipul setării: după valorile implicite ale grupurilor (text, număr sau da/nu).
     const defaults = Object.values(def.default);
     const kind = defaults.some((v) => typeof v === "string") || typeof value === "string"
@@ -155,7 +156,7 @@ export default async function AcpGroupPage({ params }: Props) {
                 <input type="hidden" name={`kind:${def.key}`} value={kind} />
                 {kind === "text" ? (
                   <label className="gcs-field">
-                    {tAll.has(def.labelKey) ? tAll(def.labelKey) : def.key}
+                    {permissionLabel(def, tAll, registry)}
                     <input
                       className="gcs-input"
                       type="text"
@@ -167,7 +168,7 @@ export default async function AcpGroupPage({ params }: Props) {
                   </label>
                 ) : kind === "number" ? (
                   <label className="gcs-field">
-                    {tAll.has(def.labelKey) ? tAll(def.labelKey) : def.key}
+                    {permissionLabel(def, tAll, registry)}
                     <input
                       className="gcs-input"
                       type="number"
@@ -181,7 +182,7 @@ export default async function AcpGroupPage({ params }: Props) {
                 ) : (
                   <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, minHeight: 36 }}>
                     <input type="checkbox" name={`setting:${def.key}`} defaultChecked={value === true} style={checkbox} />
-                    {tAll.has(def.labelKey) ? tAll(def.labelKey) : def.key}
+                    {permissionLabel(def, tAll, registry)}
                   </label>
                 )}
               </div>

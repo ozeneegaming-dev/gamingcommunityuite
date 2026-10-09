@@ -3,15 +3,16 @@ import { GcsIcon } from "@gcs/ui/icons";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { forumHref } from "@/lib/forum-urls";
+import { forumIndexHref } from "@/lib/landing";
 
 /** Breadcrumb-ul din macheta Topic: Forum › categorie › forum. */
 export async function GcsBreadcrumb({ crumbs }: { crumbs: GcsCrumb[] }) {
-  const t = await getTranslations("forum");
+  const [t, home] = await Promise.all([getTranslations("forum"), forumIndexHref()]);
   return (
     <nav aria-label={t("breadcrumb")} className="gcs-breadcrumb">
       <ol>
         <li>
-          <Link href="/">
+          <Link href={home}>
             <GcsIcon name="fa-solid fa-house" className="gcs-breadcrumb__home" />
             {t("home")}
           </Link>

@@ -2841,6 +2841,138 @@
       "modules": {
         "forums": "Forum"
       }
+    },
+    "appsPage": {
+      "description": "Pornește, oprește și ordonează aplicațiile site-ului, alege pagina de pornire și cine poate folosi fiecare aplicație.",
+      "checkUpdates": "Verifică actualizări",
+      "checkUpdatesHint": "Disponibil odată cu licențele",
+      "appsTitle": "Aplicații",
+      "pluginsTitle": "Pluginuri",
+      "pluginsEmpty": "Niciun plugin instalat. Încarcă un pachet .zip mai jos.",
+      "close": "Închide",
+      "cancel": "Anulează",
+      "toggle": "{name} pornită",
+      "lockedHint": "Aplicație de bază: nu se poate opri",
+      "toggled": {
+        "on": "{name} a fost pornită.",
+        "off": "{name} a fost oprită."
+      },
+      "columns": {
+        "name": "Aplicație",
+        "version": "Versiune",
+        "author": "Autor",
+        "status": "Stare",
+        "actions": "Acțiuni"
+      },
+      "status": {
+        "active": "Activă",
+        "stopped": "Oprită",
+        "locked": "Blocată",
+        "removed": "Dezinstalată",
+        "auto": "oprită automat după erori"
+      },
+      "certified": {
+        "label": "Certificat GCS",
+        "title": "Semnat cu cheia de încredere {keyId}"
+      },
+      "uncertified": {
+        "label": "Necertificat",
+        "title": "Pachet fără semnătură GCS: îl poate instala doar Root Admin"
+      },
+      "landing": {
+        "current": "Pagina de pornire: {name}",
+        "make": "Fă din {name} pagina de pornire",
+        "is": "{name} e pagina de pornire",
+        "saved": "Pagina de pornire e acum {name}."
+      },
+      "access": {
+        "title": "Cine poate accesa {name}",
+        "sectionTitle": "Cine poate folosi „{name}”",
+        "hint": "Grupurile debifate pierd permisiunea „{permission}”. La o aplicație, paginile ei răspund cu 404, iar meniul și widget-urile ei dispar pentru ele.",
+        "all": "toate grupurile",
+        "none": "doar Root Admin",
+        "some": "{count} din {total} grupuri",
+        "selectAll": "Toate",
+        "selectNone": "Niciunul",
+        "legend": "Grupurile cu acces",
+        "root": "are mereu acces",
+        "save": "Salvează accesul",
+        "saved": "Salvat: {name}.",
+        "pluginStopped": "Pornește pluginul ca să-i alegi grupurile"
+      },
+      "sections": {
+        "show": "Arată secțiunile aplicației {name}",
+        "hide": "Ascunde secțiunile aplicației {name}",
+        "title": "Secțiunile aplicației {name}",
+        "none": "Aplicația nu are pagini proprii pe site.",
+        "noPermission": "fără permisiune separată"
+      },
+      "menu": {
+        "label": "Mai multe acțiuni pentru {name}",
+        "details": "Detalii",
+        "manage": "Setări și jurnal",
+        "update": "Actualizează",
+        "export": "Exportă pachetul",
+        "uninstall": "Dezinstalează",
+        "coreNote": "Aplicație de bază: nu se dezinstalează"
+      },
+      "disable": {
+        "title": "Oprești {name}?",
+        "body": "Paginile aplicației vor răspunde cu 404, iar meniul, widget-urile și statisticile ei dispar de pe site. Datele rămân și o poți porni oricând.",
+        "pluginBody": "Pluginul se descarcă imediat: paginile, widget-urile și meniurile lui dispar. Setările și datele rămân.",
+        "confirm": "Oprește"
+      },
+      "disableAll": {
+        "button": "Oprește toate pluginurile",
+        "title": "Oprești toate pluginurile?",
+        "body": "Butonul de urgență: toate pluginurile se descarcă imediat. Le poți porni apoi pe fiecare.",
+        "confirm": "Oprește toate",
+        "done": "Toate pluginurile au fost oprite."
+      },
+      "order": {
+        "drag": "Mută {name} (trage sau Spațiu și săgețile)",
+        "up": "Mută {name} mai sus",
+        "down": "Mută {name} mai jos",
+        "saved": "Ordinea a fost salvată."
+      },
+      "update": {
+        "title": "Actualizează {name}",
+        "body": "Versiunea instalată: {version}. Încarcă arhiva versiunii noi: pachetul e verificat, apoi confirmi actualizarea. Setările și datele rămân."
+      },
+      "uninstall": {
+        "title": "Dezinstalezi {name}?",
+        "bodyKept": "Pachetul se scoate, iar datele pluginului rămân pentru o reinstalare.",
+        "body": "Se șterg definitiv:",
+        "removes": {
+          "schema": "tabelele proprii (schema {schema})",
+          "settings": "setările, jurnalul și permisiunile date grupurilor",
+          "widgets": "widget-urile puse pe pagini",
+          "files": "fișierele încărcate prin plugin",
+          "acp": "drepturile rolurilor ACP pe paginile lui"
+        },
+        "keepData": "Păstrează datele (pentru o reinstalare)",
+        "typeKey": "Scrie cheia pluginului ({key}) ca să confirmi",
+        "confirm": "Dezinstalează",
+        "done": "{name} a fost dezinstalat, cu tot cu datele lui.",
+        "doneKept": "{name} a fost dezinstalat; datele lui au rămas."
+      },
+      "details": {
+        "version": "Versiune",
+        "author": "Autor",
+        "status": "Stare",
+        "landing": "Pagina de pornire",
+        "key": "Cheie",
+        "certificate": "Certificare",
+        "database": "Baza de date proprie",
+        "adds": "Ce aduce",
+        "capabilities": "Ce i se permite",
+        "sitePages": "Pagini pe site",
+        "acpPages": "Pagini în ACP",
+        "widgets": "Widget-uri",
+        "permissions": "Permisiuni",
+        "none": "nimic",
+        "lockedNote": "Aplicație de bază: face parte din platformă, deci nu se oprește și nu se dezinstalează."
+      }
     }
   },
   "settings": {
@@ -3175,6 +3307,10 @@
     },
     "members": {
       "deletion_cooling_days": "Perioada de răzgândire a ștergerii cerute de membru (zile, 0–90)"
+    },
+    "apps": {
+      "landing": "Aplicația de pornire",
+      "order": "Ordinea aplicațiilor"
     }
   },
   "permissions": {
@@ -3259,7 +3395,8 @@
       "join": "Intră în clanuri (cere intrarea, acceptă invitații)",
       "max_members": "Câți membri poate avea un clan condus de acest grup (-1 = nelimitat)",
       "moderate": "Staff pentru clanuri pe site (editează, blochează, desființează orice clan)"
-    }
+    },
+    "app_access": "Poate accesa aplicația {app}"
   },
   "profile": {
     "memberSince": "Membru din {date}",
@@ -3996,7 +4133,24 @@
     "chat": "Chat",
     "vip": "VIP",
     "servers": "Servere",
-    "clans": "Clanuri"
+    "clans": "Clanuri",
+    "core": "Nucleu",
+    "forums": "Forum",
+    "descriptions": {
+      "core": "Membrii, profilurile, mesajele private, notificările, grupurile și panoul de administrare.",
+      "forums": "Categoriile și forumurile, topicurile, postările, sondajele, reacțiile și căutarea.",
+      "chat": "Chat în timp real: canale publice, camere private, mențiuni și shoutbox-ul de pe pagini.",
+      "vip": "Abonamentele VIP: niveluri, stiluri de nume, avatar frames și pagina publică a planurilor.",
+      "servers": "Serverele de joc: starea live, statistici, meciuri mix cu ELO, banuri, admini și contestații.",
+      "clans": "Clanurile comunității: membri și roluri, pagina clanului, forumul privat și cererile de intrare."
+    },
+    "sections": {
+      "messages": "Mesaje private",
+      "forums": "Forumuri",
+      "search": "Căutare",
+      "chat_private": "Camere private",
+      "clans_create": "Creează un clan"
+    }
   },
   "translate": {
     "translate": "Traduce",

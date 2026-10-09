@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { requireAcpSection } from "@/lib/acp";
+import { permissionLabel } from "@/lib/permission-label";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { MemberProfileSections } from "./MemberProfileSections";
@@ -236,7 +237,7 @@ export default async function AcpMemberPage({ params }: Props) {
             {permDefs.map((def) => {
               const value = overrides[def.key];
               const numeric = typeof Object.values(def.default).find((v) => v !== undefined) === "number";
-              const label = tAll.has(def.labelKey) ? tAll(def.labelKey) : def.key;
+              const label = permissionLabel(def, tAll, registry);
               return (
                 <label key={def.key} className="gcs-field gcs-permGrid__row">
                   <span>
