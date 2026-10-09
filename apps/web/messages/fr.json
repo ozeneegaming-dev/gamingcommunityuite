@@ -3318,7 +3318,9 @@
       "notifications": "Notifications",
       "language": "Langue et fuseau horaire",
       "signature": "Signature",
-      "security": "Sécurité"
+      "security": "Sécurité",
+      "following": "Ce que je suis",
+      "attachments": "Mes pièces jointes"
     },
     "appearance": {
       "title": "Apparence",
@@ -3583,6 +3585,19 @@
       "bar_seconds": "Announcement bar rotation (seconds)",
       "emote_max_kb": "Maximum emote size (KB)",
       "emote_max_side": "Maximum emote side (px)"
+    },
+    "following": {
+      "title": "Ce que je suis",
+      "intro": "Les membres, sujets et forums que tu suis (tu reçois des notifications à leur sujet).",
+      "empty": "Tu ne suis rien pour l'instant.",
+      "members": "{count, plural, one {Membres (#)} many {Membres (#)} other {Membres (#)}}",
+      "topics": "{count, plural, one {Sujets (#)} many {Sujets (#)} other {Sujets (#)}}",
+      "forums": "{count, plural, one {Forums (#)} many {Forums (#)} other {Forums (#)}}"
+    },
+    "attachments": {
+      "title": "Mes pièces jointes",
+      "intro": "{count, plural, one {Tu as envoyé # fichier.} many {Tu as envoyé # fichiers.} other {Tu as envoyé # fichiers.}} Les plus récents d'abord.",
+      "empty": "Tu n'as encore envoyé aucun fichier."
     }
   },
   "permissions": {

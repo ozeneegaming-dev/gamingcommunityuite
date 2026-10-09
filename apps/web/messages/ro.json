@@ -3318,7 +3318,9 @@
       "notifications": "Notificări",
       "language": "Limbă și fus orar",
       "signature": "Semnătură",
-      "security": "Securitate"
+      "security": "Securitate",
+      "following": "Ce urmăresc",
+      "attachments": "Atașamentele mele"
     },
     "appearance": {
       "title": "Aspect",
@@ -3583,6 +3585,19 @@
       "bar_seconds": "Rotirea barei de anunțuri (secunde)",
       "emote_max_kb": "Mărimea maximă a unui emoticon (KB)",
       "emote_max_side": "Latura maximă a unui emoticon (px)"
+    },
+    "following": {
+      "title": "Ce urmăresc",
+      "intro": "Membrii, topicurile și forumurile pe care le urmărești (primești notificări despre ele).",
+      "empty": "Nu urmărești nimic încă.",
+      "members": "{count, plural, one {Membri (#)} few {Membri (#)} other {Membri (#)}}",
+      "topics": "{count, plural, one {Topicuri (#)} few {Topicuri (#)} other {Topicuri (#)}}",
+      "forums": "{count, plural, one {Forumuri (#)} few {Forumuri (#)} other {Forumuri (#)}}"
+    },
+    "attachments": {
+      "title": "Atașamentele mele",
+      "intro": "{count, plural, one {Ai încărcat # fișier.} few {Ai încărcat # fișiere.} other {Ai încărcat # de fișiere.}} Cele mai noi apar primele.",
+      "empty": "Nu ai încărcat niciun fișier încă."
     }
   },
   "permissions": {

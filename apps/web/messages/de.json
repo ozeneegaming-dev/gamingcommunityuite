@@ -3318,7 +3318,9 @@
       "notifications": "Benachrichtigungen",
       "language": "Sprache und Zeitzone",
       "signature": "Unterschrift",
-      "security": "Sicherheit"
+      "security": "Sicherheit",
+      "following": "Was ich verfolge",
+      "attachments": "Meine Anhänge"
     },
     "appearance": {
       "title": "Darstellung",
@@ -3583,6 +3585,19 @@
       "bar_seconds": "Announcement bar rotation (seconds)",
       "emote_max_kb": "Maximum emote size (KB)",
       "emote_max_side": "Maximum emote side (px)"
+    },
+    "following": {
+      "title": "Was ich verfolge",
+      "intro": "Die Mitglieder, Themen und Foren, denen du folgst (du bekommst Benachrichtigungen dazu).",
+      "empty": "Du folgst noch nichts.",
+      "members": "{count, plural, one {Mitglieder (#)} other {Mitglieder (#)}}",
+      "topics": "{count, plural, one {Themen (#)} other {Themen (#)}}",
+      "forums": "{count, plural, one {Foren (#)} other {Foren (#)}}"
+    },
+    "attachments": {
+      "title": "Meine Anhänge",
+      "intro": "{count, plural, one {Du hast # Datei hochgeladen.} other {Du hast # Dateien hochgeladen.}} Die neuesten stehen zuerst.",
+      "empty": "Du hast noch keine Datei hochgeladen."
     }
   },
   "permissions": {

@@ -3318,7 +3318,9 @@
       "notifications": "Notifications",
       "language": "Language and time zone",
       "signature": "Signature",
-      "security": "Security"
+      "security": "Security",
+      "following": "Following",
+      "attachments": "My attachments"
     },
     "appearance": {
       "title": "Appearance",
@@ -3583,6 +3585,19 @@
       "bar_seconds": "Announcement bar rotation (seconds)",
       "emote_max_kb": "Maximum emote size (KB)",
       "emote_max_side": "Maximum emote side (px)"
+    },
+    "following": {
+      "title": "Following",
+      "intro": "The members, topics and forums you follow (you get notifications about them).",
+      "empty": "You don't follow anything yet.",
+      "members": "{count, plural, one {Members (#)} other {Members (#)}}",
+      "topics": "{count, plural, one {Topics (#)} other {Topics (#)}}",
+      "forums": "{count, plural, one {Forums (#)} other {Forums (#)}}"
+    },
+    "attachments": {
+      "title": "My attachments",
+      "intro": "{count, plural, one {You uploaded # file.} other {You uploaded # files.}} The newest come first.",
+      "empty": "You haven't uploaded any file yet."
     }
   },
   "permissions": {

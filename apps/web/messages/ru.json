@@ -3318,7 +3318,9 @@
       "notifications": "Уведомления",
       "language": "Язык и часовой пояс",
       "signature": "Подпись",
-      "security": "Безопасность"
+      "security": "Безопасность",
+      "following": "Мои подписки",
+      "attachments": "Мои вложения"
     },
     "appearance": {
       "title": "Оформление",
@@ -3583,6 +3585,19 @@
       "bar_seconds": "Announcement bar rotation (seconds)",
       "emote_max_kb": "Maximum emote size (KB)",
       "emote_max_side": "Maximum emote side (px)"
+    },
+    "following": {
+      "title": "Мои подписки",
+      "intro": "Участники, темы и форумы, на которые ты подписан (ты получаешь о них уведомления).",
+      "empty": "Ты пока ни на что не подписан.",
+      "members": "{count, plural, one {Участники (#)} few {Участники (#)} many {Участники (#)} other {Участники (#)}}",
+      "topics": "{count, plural, one {Темы (#)} few {Темы (#)} many {Темы (#)} other {Темы (#)}}",
+      "forums": "{count, plural, one {Форумы (#)} few {Форумы (#)} many {Форумы (#)} other {Форумы (#)}}"
+    },
+    "attachments": {
+      "title": "Мои вложения",
+      "intro": "{count, plural, one {Ты загрузил # файл.} few {Ты загрузил # файла.} many {Ты загрузил # файлов.} other {Ты загрузил # файла.}} Новые сверху.",
+      "empty": "Ты ещё не загрузил ни одного файла."
     }
   },
   "permissions": {

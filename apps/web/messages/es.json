@@ -3318,7 +3318,9 @@
       "notifications": "Notificaciones",
       "language": "Idioma y zona horaria",
       "signature": "Firma",
-      "security": "Seguridad"
+      "security": "Seguridad",
+      "following": "Lo que sigo",
+      "attachments": "Mis adjuntos"
     },
     "appearance": {
       "title": "Apariencia",
@@ -3583,6 +3585,19 @@
       "bar_seconds": "Announcement bar rotation (seconds)",
       "emote_max_kb": "Maximum emote size (KB)",
       "emote_max_side": "Maximum emote side (px)"
+    },
+    "following": {
+      "title": "Lo que sigo",
+      "intro": "Los miembros, temas y foros que sigues (recibes notificaciones sobre ellos).",
+      "empty": "Aún no sigues nada.",
+      "members": "{count, plural, one {Miembros (#)} many {Miembros (#)} other {Miembros (#)}}",
+      "topics": "{count, plural, one {Temas (#)} many {Temas (#)} other {Temas (#)}}",
+      "forums": "{count, plural, one {Foros (#)} many {Foros (#)} other {Foros (#)}}"
+    },
+    "attachments": {
+      "title": "Mis adjuntos",
+      "intro": "{count, plural, one {Has subido # archivo.} many {Has subido # archivos.} other {Has subido # archivos.}} Los más nuevos aparecen primero.",
+      "empty": "Aún no has subido ningún archivo."
     }
   },
   "permissions": {

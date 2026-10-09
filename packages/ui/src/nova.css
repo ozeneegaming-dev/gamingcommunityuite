@@ -4252,6 +4252,63 @@ html.gcs-nova[data-theme="light"] .gcs-ckWrap {
   color: var(--gcs-muted);
 }
 
+/* ─── Setări: „Ce urmăresc” și „Atașamentele mele” (meniul contului) ────────────────────────────────────── */
+
+.gcs-nova .gcs-plainList,
+.gcs-nova .gcs-attachList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-nova .gcs-plainList > li,
+.gcs-nova .gcs-attachList__item {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--gcs-border);
+  background-color: color-mix(in srgb, var(--gcs-bg) 40%, var(--gcs-surface));
+  transition: background-color var(--gcs-dur);
+}
+.gcs-nova .gcs-plainList > li:hover,
+.gcs-nova .gcs-attachList__item:hover {
+  background-color: color-mix(in srgb, var(--gcs-surface2) 70%, var(--gcs-surface));
+}
+.gcs-nova .gcs-attachList__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.gcs-nova .gcs-attachList__thumb {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--gcs-surface2);
+  color: var(--gcs-muted);
+}
+.gcs-nova .gcs-attachList__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--gcs-dur-slow) var(--gcs-ease-out);
+  animation: gcs-fade-in var(--gcs-dur-slow) ease both;
+}
+.gcs-nova .gcs-attachList__item:hover .gcs-attachList__thumb img {
+  transform: scale(1.1);
+}
+.gcs-nova .gcs-attachList__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
 /* ─── Mișcarea redusă: fără deplasări și fără sweep (schimbarea de culoare e imediată) ──────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
