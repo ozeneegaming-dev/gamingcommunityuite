@@ -15,6 +15,7 @@ import {
   type GcsSettingsService,
 } from "@gcs/core";
 import type { Conversation, ConversationMessage, Prisma, PrismaClient } from "@gcs/db";
+import type { GcsRenderContext } from "../forums/posting";
 import type { GcsProfileService } from "../profile/profile";
 import { normalizePrivacy } from "../profile/privacy";
 import type { GcsSocialService } from "../profile/social";
@@ -48,7 +49,10 @@ export class GcsConversationService {
       attachments: GcsAttachmentService;
       profiles: GcsProfileService;
       social: GcsSocialService;
-      render: (content: unknown) => Promise<GcsRendered>;
+      /** Randarea conținutului; cu `ctx.actor`, mențiunile de grup permise autorului rămân pastile (Mențiuni v2). */
+      render: (content: unknown, ctx?: GcsRenderContext) => Promise<GcsRendered>;
+      /** Pornește pauza dintre mențiunile de grup, după salvarea mesajului. */
+      markGroupMentions?: (actor: GcsActor, rendered: GcsRendered) => Promise<void>;
     },
   ) {}
 
@@ -100,8 +104,8 @@ export class GcsConversationService {
     return clean;
   }
 
-  private async renderMessage(content: unknown): Promise<GcsRendered> {
-    const rendered = await this.deps.render(content);
+  private async renderMessage(content: unknown, actor: GcsActor): Promise<GcsRendered> {
+    const rendered = await this.deps.render(content, { actor, cooldown: true });
     if (rendered.text.trim() === "" && rendered.attachments.length === 0) throw new GcsValidationError({ content: "required" });
     return rendered;
   }
@@ -127,7 +131,7 @@ export class GcsConversationService {
       if (active >= maxConversations) throw new GcsValidationError({ to: "conversation_limit" }, { max: String(maxConversations) });
     }
     await this.assertRecipients(actor, to);
-    const rendered = await this.renderMessage(input.content);
+    const rendered = await this.renderMessage(input.content, actor);
     await this.checkFlood(actor);
 
     const result = await db.$transaction(async (tx) => {
@@ -141,6 +145,7 @@ export class GcsConversationService {
       const message = await this.addMessage(tx, conversation.id, actor, rendered);
       return { conversationId: conversation.id, messageId: message.id };
     });
+    await this.deps.markGroupMentions?.(actor, rendered);
     await this.invalidateUnread([actor.userId, ...to]);
     await bus.emit({ name: "pm.conversation.created", payload: { ...result, starterId: actor.userId, participants: [actor.userId, ...to] }, tags: pmTags([actor.userId, ...to], result.conversationId) });
     await bus.emit({ name: "pm.message.created", payload: { ...result, authorId: actor.userId }, tags: [`conversation:${result.conversationId}`] });
@@ -174,9 +179,10 @@ export class GcsConversationService {
     const { db, bus, permissions } = this.deps;
     await this.assertParticipant(actor, conversationId);
     await permissions.assert(actor, "pm.send");
-    const rendered = await this.renderMessage(content);
+    const rendered = await this.renderMessage(content, actor);
     await this.checkFlood(actor);
     const message = await db.$transaction((tx) => this.addMessage(tx, conversationId, actor, rendered));
+    await this.deps.markGroupMentions?.(actor, rendered);
     const participants = await this.activeIds(conversationId);
     await this.invalidateUnread(participants);
     await bus.emit({ name: "pm.message.created", payload: { conversationId, messageId: message.id, authorId: actor.userId }, tags: [`conversation:${conversationId}`] });

@@ -28,7 +28,7 @@ export class GcsPostService {
     if (topic.locked && !(await posting.isModerator(actor, "lock", forumId))) throw new GcsForbidden({ reason: "locked" });
 
     const filtered = await posting.filterContent(actor, { kind: "reply", title: null, content: input.content, forumId, topicId: topic.id, authorId: actor.userId });
-    const rendered = await posting.render(filtered.content);
+    const rendered = await posting.render(filtered.content, { actor, cooldown: true });
     await posting.checkFlood(actor);
     const pending = await posting.needsApproval(actor, topic.forum);
     const authorId = actor.userId;
@@ -61,6 +61,7 @@ export class GcsPostService {
       }
       return { postId: post.id, promoted };
     }, WRITE_TX);
+    await posting.markGroupMentions(actor, rendered);
 
     await bus.emit({
       name: "post.created",
@@ -101,7 +102,8 @@ export class GcsPostService {
       topicId: post.topicId,
       authorId: post.authorId,
     });
-    const rendered = await posting.render(filtered.content);
+    // La editare nu se trimit notificări, deci nici pauza dintre mențiuni nu se aplică; pastilele vechi rămân.
+    const rendered = await posting.render(filtered.content, { actor, keep: post.contentJson });
     const title = filtered.title !== null ? posting.cleanTitle(filtered.title) : null;
 
     await db.$transaction(async (tx) => {

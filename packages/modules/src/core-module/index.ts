@@ -348,6 +348,8 @@ export const coreModule: GcsModule = {
   },
   notificationTypes: [
     { key: "core.warning", labelKey: "notifications.type.core.warning", important: true, defaultEmail: "INSTANT" },
+    // Mențiuni v2: un membru a menționat un grup din care faci parte (postare sau mesaj privat).
+    { key: "core.group_mention", labelKey: "notifications.type.core.group_mention", important: false, defaultEmail: "DIGEST" },
   ],
   eventListeners: [],
   widgets: coreWidgets,

@@ -3,6 +3,7 @@ import {
   type GcsActor,
   type GcsActorResolver,
   type GcsEventBus,
+  type GcsGroupMentionService,
   type GcsJobData,
   type GcsJobQueue,
   type GcsMailer,
@@ -25,10 +26,16 @@ export const NOTIFY_FANOUT_JOB = "notifications.fanout";
 export const NOTIFY_EMAIL_JOB = "notifications.email";
 export const NOTIFY_DIGEST_JOB = "notifications.digest";
 export const NOTIFY_CLEANUP_JOB = "notifications.cleanup";
+export const NOTIFY_GROUP_MENTION_JOB = "notifications.group_mention";
 
 const FANOUT_BATCH = 500;
 /** O postare cu zeci de mențiuni nu trimite zeci de notificări. */
 const MAX_REFS = 20;
+/** Câte grupuri dintr-un conținut notifică membrii (restul pastilelor rămân, fără notificări). */
+const MAX_GROUP_REFS = 5;
+/** Membrii unui grup menționat se citesc în loturi; cel mult atâția candidați verificați pe grup. */
+const GROUP_BATCH = 200;
+const GROUP_SCAN_MAX = 2_000;
 const SNIPPET_MAX = 140;
 const DIGEST_CHECK_MS = 15 * 60_000;
 const DIGEST_MAX_ITEMS = 50;
@@ -60,6 +67,8 @@ export class GcsNotificationProducers {
       realtime: GcsRealtime;
       jobs: GcsJobQueue | null;
       baseUrl: () => Promise<string>;
+      /** Mențiunile de grup (Mențiuni v2); lipsă = fără notificări pentru grupuri. */
+      groupMentions?: GcsGroupMentionService;
     },
   ) {}
 
@@ -178,6 +187,13 @@ export class GcsNotificationProducers {
       const others = participants.map((p) => p.userId).filter((id) => id !== authorId);
       await notifications.notify({ userIds: others, type: "pm.message", targetType: "pm.conversation", targetId: String(conversationId), actorId: authorId });
       for (const userId of others) await realtime.publish(`user:${userId}`, "pm", { unread: await conversations.unreadCount(userId) });
+      // Mențiunile de grup dintr-un mesaj privat: doar membrii grupului care participă la conversație o pot vedea.
+      const messageId = Number(e.payload.messageId);
+      const message = Number.isSafeInteger(messageId) ? await db.conversationMessage.findUnique({ where: { id: messageId }, select: { contentJson: true } }) : null;
+      const groups = message ? contentRefs(message.contentJson).groups.slice(0, MAX_GROUP_REFS) : [];
+      if (groups.length > 0) {
+        await this.run(NOTIFY_GROUP_MENTION_JOB, { targetType: "pm.conversation", targetId: String(conversationId), actorId: authorId, groups, skip: [] }, `notif-group-pm-${messageId}`);
+      }
     });
     bus.on("pm.read", async (e) => {
       const userId = str(e.payload.userId);
@@ -211,6 +227,7 @@ export class GcsNotificationProducers {
 
   registerJobs(jobs: GcsJobQueue): void {
     jobs.register({ name: NOTIFY_FANOUT_JOB, handler: (data) => this.fanout(data) });
+    jobs.register({ name: NOTIFY_GROUP_MENTION_JOB, handler: (data) => this.groupMentionFanout(data) });
     jobs.register({ name: NOTIFY_EMAIL_JOB, handler: async (data) => void (await this.sendInstant(Number(data.notificationId))) });
     jobs.register({ name: NOTIFY_DIGEST_JOB, everyMs: DIGEST_CHECK_MS, handler: async () => void (await this.digestIfDue()) });
     jobs.register({ name: NOTIFY_CLEANUP_JOB, everyMs: 24 * 3600_000, handler: async () => void (await this.deps.notifications.cleanup()) });
@@ -223,6 +240,7 @@ export class GcsNotificationProducers {
       return;
     }
     if (name === NOTIFY_FANOUT_JOB) await this.fanout(data);
+    else if (name === NOTIFY_GROUP_MENTION_JOB) await this.groupMentionFanout(data);
     else if (name === NOTIFY_EMAIL_JOB) await this.sendInstant(Number(data.notificationId));
   }
 
@@ -241,6 +259,56 @@ export class GcsNotificationProducers {
     await notifications.notify({ userIds: quotedAuthors, type: "forums.quote", ...target });
     // Cine a fost deja notificat pentru mențiune sau citat nu mai primește și „răspuns nou” pentru aceeași postare.
     await this.run(NOTIFY_FANOUT_JOB, { kind, postId, skip: [...mentioned, ...quotedAuthors] }, `notif-fanout-${postId}`);
+    // Mențiunile de grup (Mențiuni v2), tot prin worker: membrii grupurilor, fără cei notificați deja direct.
+    const groups = refs.groups.slice(0, MAX_GROUP_REFS);
+    if (groups.length > 0) {
+      await this.run(
+        NOTIFY_GROUP_MENTION_JOB,
+        { targetType: "forums.post", targetId: String(postId), actorId: post.authorId, groups, skip: [...mentioned, ...quotedAuthors] },
+        `notif-group-post-${postId}`,
+      );
+    }
+  }
+
+  /**
+   * Notificările unei mențiuni de grup (`core.group_mention`, cu numele grupului): membrii grupului (principal sau
+   * secundar), cei mai activi primii, cel mult `notifyLimit` pe grup. Sar autorul, cei care nu văd conținutul și cei
+   * notificați deja (mențiune directă, citat sau alt grup menționat în același conținut). Preferințele fiecărui membru
+   * (tipul oprit pe site, ignorarea autorului) le aplică `notify`.
+   */
+  async groupMentionFanout(data: GcsJobData): Promise<void> {
+    const { db, notifications, groupMentions } = this.deps;
+    if (!groupMentions || typeof data.targetType !== "string" || typeof data.targetId !== "string") return;
+    const { targetType, targetId } = data;
+    const actorId = typeof data.actorId === "string" ? data.actorId : null;
+    const groupIds = (Array.isArray(data.groups) ? data.groups : []).filter((id): id is number => Number.isInteger(id)).slice(0, MAX_GROUP_REFS);
+    const notified = new Set<string>([...(Array.isArray(data.skip) ? data.skip.filter((id): id is string => typeof id === "string") : []), ...(actorId ? [actorId] : [])]);
+    const all = await groupMentions.groups();
+
+    for (const groupId of new Set(groupIds)) {
+      const group = all.find((g) => g.id === groupId);
+      if (!group || !group.mentionable || !group.settings.notify) continue;
+      const limit = group.settings.notifyLimit;
+      const picked: string[] = [];
+      for (let offset = 0; picked.length < limit && offset < GROUP_SCAN_MAX; offset += GROUP_BATCH) {
+        const batch = await db.user.findMany({
+          where: { OR: [{ primaryGroupId: groupId }, { groups: { some: { groupId } } }] },
+          orderBy: [{ lastActiveAt: { sort: "desc", nulls: "last" } }, { id: "asc" }],
+          skip: offset,
+          take: GROUP_BATCH,
+          select: { id: true },
+        });
+        for (const { id } of batch) {
+          if (picked.length >= limit) break;
+          if (notified.has(id)) continue;
+          if ((await notifications.visibleTo(targetType, targetId, [id])).length > 0) picked.push(id);
+        }
+        if (batch.length < GROUP_BATCH) break;
+      }
+      for (const id of picked) notified.add(id);
+      if (picked.length === 0) continue;
+      await notifications.notify({ userIds: picked, type: "core.group_mention", targetType, targetId, actorId, data: { group: group.name, groupId: group.id } });
+    }
   }
 
   /** Urmăritorii topicului (răspuns) sau ai forumului (topic nou), în loturi. */

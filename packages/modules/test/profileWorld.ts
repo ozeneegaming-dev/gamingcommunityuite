@@ -76,7 +76,8 @@ export async function createProfileWorld() {
     attachments: world.attachments,
     profiles,
     social,
-    render: (content) => world.posting.render(content),
+    render: (content, ctx) => world.posting.render(content, ctx),
+    markGroupMentions: (actor, rendered) => world.posting.markGroupMentions(actor, rendered),
   });
   conversations.registerContent({ reports: world.reports });
   const conversationQueries = new GcsConversationQueries({ db: world.db, settings: world.settings, profileQueries });
@@ -96,6 +97,7 @@ export async function createProfileWorld() {
     realtime,
     jobs: null,
     baseUrl: async () => "https://forum.test",
+    groupMentions: world.groupMentions,
   });
   producers.registerTargets();
   producers.listen(world.bus);

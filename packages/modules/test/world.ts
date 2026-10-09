@@ -4,6 +4,7 @@ import {
   GcsAttachmentService,
   GcsContentRenderer,
   GcsFollowService,
+  GcsGroupMentionService,
   GcsReactionService,
   GcsReportService,
   GcsLocalFileStore,
@@ -67,6 +68,7 @@ export async function createForumWorld() {
   const files = new GcsLocalFileStore(path.join(os.tmpdir(), `gcs-forum-files-${process.pid}`));
   const attachments = new GcsAttachmentService({ db, store: files, permissions, rateLimiter });
   const forums = new GcsForumService({ db, bus, permissions, acp: world.acp, registry });
+  const groupMentions = new GcsGroupMentionService({ db, cache, redis });
   const posting = new GcsForumPosting({
     db,
     bus,
@@ -76,6 +78,7 @@ export async function createForumWorld() {
     renderer: new GcsContentRenderer(),
     attachments,
     siteHost: async () => "forum.test",
+    groupMentions,
   });
   const polls = new GcsPollService(posting);
   const prefixes = new GcsPrefixService({ db, bus, acp: world.acp });
@@ -116,6 +119,7 @@ export async function createForumWorld() {
     ...world,
     settings,
     rateLimiter,
+    groupMentions,
     files,
     attachments,
     forums,

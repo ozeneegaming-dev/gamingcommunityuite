@@ -35,7 +35,7 @@ export class GcsTopicService {
 
     const filtered = await posting.filterContent(actor, { kind: "topic", title: input.title, content: input.content, forumId: forum.id, topicId: null, authorId: actor.userId });
     const title = posting.cleanTitle(filtered.title ?? input.title);
-    const rendered = await posting.render(filtered.content);
+    const rendered = await posting.render(filtered.content, { actor, cooldown: true });
     if (input.prefixId != null && !(await this.extras.prefixes.allowedFor(forum.id)).some((p) => p.id === input.prefixId)) {
       throw new GcsValidationError({ prefixId: "invalid_choice" });
     }
@@ -92,6 +92,7 @@ export class GcsTopicService {
       }
       return { topicId: topic.id, postId: post.id, promoted };
     }, WRITE_TX);
+    await posting.markGroupMentions(actor, rendered);
 
     await bus.emit({
       name: "topic.created",

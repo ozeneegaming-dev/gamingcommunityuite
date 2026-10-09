@@ -32,6 +32,10 @@ function formatDate(value: unknown, l: Locale): string {
 const TEXTS: Record<string, Record<Locale, (a: string, t: string, n: number, data: Record<string, unknown>) => string>> = {
   "forums.mention": { ro: (a, t) => `${a} te-a menționat în „${t}”`, en: (a, t) => `${a} mentioned you in “${t}”` },
   "forums.quote": { ro: (a, t) => `${a} te-a citat în „${t}”`, en: (a, t) => `${a} quoted you in “${t}”` },
+  "core.group_mention": {
+    ro: (a, t, _n, d) => `${a} te-a menționat prin grupul ${groupName(d)} în „${t}”`,
+    en: (a, t, _n, d) => `${a} mentioned you through the group ${groupName(d)} in “${t}”`,
+  },
   "forums.reply": {
     ro: (a, t, n) => (n > 1 ? `${n} răspunsuri noi în „${t}” (ultimul: ${a})` : `${a} a răspuns în „${t}”`),
     en: (a, t, n) => (n > 1 ? `${n} new replies in “${t}” (latest: ${a})` : `${a} replied in “${t}”`),
@@ -64,6 +68,9 @@ const TEXTS: Record<string, Record<Locale, (a: string, t: string, n: number, dat
     en: (_a, t, _n, d) => (d.kind === "approved" ? `Your clan “${t}” was approved` : `Your clan “${t}” was rejected${d.reason ? `: ${String(d.reason)}` : ""}`),
   },
 };
+
+/** Numele grupului menționat, salvat în notificare (`data.group`). */
+const groupName = (d: Record<string, unknown>) => (typeof d.group === "string" && d.group ? d.group : "…");
 
 /** Schimbările de apartenență la un clan (`clans.membership`), după `data.kind`. */
 function clanMembershipText(l: Locale, t: string, kind: unknown): string {

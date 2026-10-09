@@ -7,6 +7,7 @@ import {
   type GcsAttachmentService,
   type GcsContentRenderer,
   type GcsEventBus,
+  type GcsGroupMentionService,
   type GcsPermissionService,
   type GcsRedisRateLimiter,
   type GcsRendered,
@@ -34,7 +35,16 @@ export type GcsForumDeps = {
    * respinge postarea. Lipsă = fără filtre.
    */
   contentFilter?: <T extends GcsPostFilterInput>(data: T, actor: GcsActor) => Promise<T>;
+  /** Mențiunile de grup (Mențiuni v2): ce grupuri poate menționa autorul și pauza dintre mențiuni. Lipsă = text simplu. */
+  groupMentions?: GcsGroupMentionService;
 };
+
+/**
+ * Cine scrie conținutul randat (Mențiuni v2): fără `actor`, mențiunile de grup devin text simplu. `keep`: documentul
+ * vechi, la o editare (pastilele deja salvate rămân). `cooldown`: verifică pauza dintre mențiuni (conținut nou, care
+ * notifică membrii grupului); pauza pornește abia după salvare (`markGroupMentions`).
+ */
+export type GcsRenderContext = { actor?: GcsActor; keep?: unknown; cooldown?: boolean };
 
 /** Datele trimise filtrelor de conținut: topic nou, răspuns sau editare. */
 export type GcsPostFilterInput = {
@@ -96,18 +106,28 @@ export class GcsForumPosting {
     return this.deps.contentFilter ? this.deps.contentFilter(data, actor) : data;
   }
 
-  /** Conținutul trimis de editor → JSON validat + HTML sanitizat, cu lungimea maximă din setări. */
-  async render(content: unknown): Promise<GcsRendered> {
-    const { settings, renderer, siteHost } = this.deps;
-    const [embeds, maxChars, locale, host] = await Promise.all([
+  /**
+   * Conținutul trimis de editor → JSON validat + HTML sanitizat, cu lungimea maximă din setări. Cu `ctx.actor`,
+   * mențiunile grupurilor pe care autorul le poate menționa rămân pastile; restul devin text simplu.
+   */
+  async render(content: unknown, ctx: GcsRenderContext = {}): Promise<GcsRendered> {
+    const { settings, renderer, siteHost, groupMentions } = this.deps;
+    const [embeds, maxChars, locale, host, groups] = await Promise.all([
       settings.get<string[]>("forums.embeds"),
       settings.get<number>("forums.post_max_chars"),
       settings.get<string>("site.locale"),
       siteHost(),
+      groupMentions && ctx.actor ? groupMentions.renderMap(ctx.actor, ctx.keep) : Promise.resolve(undefined),
     ]);
-    const rendered = renderer.render(content, { embeds, siteHost: host, labels: RENDER_LABELS[locale] ?? RENDER_LABELS.ro! });
+    const rendered = renderer.render(content, { embeds, siteHost: host, labels: RENDER_LABELS[locale] ?? RENDER_LABELS.ro!, ...(groups ? { groups } : {}) });
     if (rendered.text.length > maxChars) throw new GcsValidationError({ content: "too_long" }, { max: String(maxChars) });
+    if (ctx.cooldown && ctx.actor && groupMentions) await groupMentions.assertCooldown(ctx.actor, rendered.groupMentions);
     return rendered;
+  }
+
+  /** Pornește pauza dintre mențiuni pentru grupurile menționate într-un conținut nou, după salvare. */
+  async markGroupMentions(actor: GcsActor, rendered: Pick<GcsRendered, "groupMentions">): Promise<void> {
+    await this.deps.groupMentions?.markCooldown(actor, rendered.groupMentions);
   }
 
   /** Titlul unui topic: spațiile multiple comasate, 3–150 de caractere. */

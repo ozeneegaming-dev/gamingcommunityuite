@@ -53,6 +53,15 @@ export class GcsNotificationService {
     this.targets.set(targetType, target);
   }
 
+  /** Destinatarii (din `userIds`, în aceeași ordine) care pot vedea ținta; un tip de țintă necunoscut → nimeni. */
+  async visibleTo(targetType: string, targetId: string, userIds: string[]): Promise<string[]> {
+    const target = this.targets.get(targetType);
+    if (!target) return [];
+    const out: string[] = [];
+    for (const id of userIds) if (await target.canView(id, targetId)) out.push(id);
+    return out;
+  }
+
   /** Valorile implicite pe tip: cele salvate din ACP, completate cu cele declarate de module. */
   async defaults(): Promise<GcsNotificationPrefs> {
     const rows = await this.deps.db.notificationDefault.findMany();

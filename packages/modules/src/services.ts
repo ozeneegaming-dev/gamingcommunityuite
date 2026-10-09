@@ -11,6 +11,7 @@ import {
   GcsContentRenderer,
   GcsEventBus,
   GcsFollowService,
+  GcsGroupMentionService,
   GcsGroupService,
   GcsJobQueue,
   GcsLocalFileStore,
@@ -134,6 +135,8 @@ export type GcsServices = {
   acpDashboard: GcsAcpDashboardService;
   acpSearch: GcsAcpSearch;
   groups: GcsGroupService;
+  /** Mențiunile de grup (Mențiuni v2): setările grupurilor, cine poate menționa ce grup, pauza dintre mențiuni. */
+  groupMentions: GcsGroupMentionService;
   members: GcsMemberDirectory;
   notifications: GcsNotificationService;
   realtime: GcsRealtime;
@@ -333,6 +336,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const acp = new GcsAcpRoleService({ db, registry });
   const acpSearch = new GcsAcpSearch({ db, registry, acp });
   const groups = new GcsGroupService({ db, bus, permissions, acp });
+  const groupMentions = new GcsGroupMentionService({ db, cache, redis });
   const apps = new GcsAppService({ db, cache, bus, registry, acp, permissions, settings });
   const members = new GcsMemberDirectory({ db });
   const notifications = new GcsNotificationService({ db, bus, cache, registry });
@@ -379,6 +383,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     attachments,
     siteHost: async () => siteHost(await settings.get<string>("site.url")),
     contentFilter: (data, actor) => pluginRef.host!.filterPost(data, actor),
+    groupMentions,
   });
   const polls = new GcsPollService(posting);
   const prefixes = new GcsPrefixService({ db, bus, acp });
@@ -427,7 +432,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     attachments,
     profiles,
     social,
-    render: (content) => posting.render(content),
+    render: (content, ctx) => posting.render(content, ctx),
+    markGroupMentions: (actor, rendered) => posting.markGroupMentions(actor, rendered),
   });
   conversations.registerContent({ reports });
   const vip = new GcsVipService({ db, bus, permissions, settings, membership });
@@ -447,6 +453,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     realtime,
     jobs,
     baseUrl: async () => baseUrl(await settings.get<string>("site.url")),
+    groupMentions,
   });
   notificationProducers.registerTargets();
   notificationProducers.listen(bus);
@@ -591,6 +598,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     acpDashboard,
     acpSearch,
     groups,
+    groupMentions,
     members,
     notifications,
     realtime,
