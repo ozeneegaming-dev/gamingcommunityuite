@@ -66,13 +66,15 @@ test("adminul activează mențiunile unui grup; un membru îl menționează; mem
     await author.goto(topic.url);
     await typeInEditor(author, "Salut ");
     await author.keyboard.type(`@Echipa${id.slice(0, 3)}`);
-    const groupOption = author.getByRole("option").filter({ hasText: `@${groupName}` });
+    // Lista de sugestii (bara editorului are și ea `<option>`-uri, în selectorul de mărime).
+    const list = author.locator(".gcs-mentionList");
+    const groupOption = list.getByRole("option").filter({ hasText: `@${groupName}` });
     await expect(groupOption).toBeVisible();
-    await expect(author.getByRole("option").first()).toHaveAttribute("data-kind", "group");
+    await expect(list.getByRole("option").first()).toHaveAttribute("data-kind", "group");
     await expect(groupOption.locator("svg")).toHaveCount(1);
     await groupOption.click();
     await author.keyboard.type(`și @Root${id}`);
-    const userOption = author.getByRole("option").filter({ hasText: `@${rootName}` });
+    const userOption = list.getByRole("option").filter({ hasText: `@${rootName}` });
     await expect(userOption.locator(".gcs-avatar")).toBeVisible();
     await userOption.click();
     await author.keyboard.type("uitați-vă aici");
