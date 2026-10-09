@@ -164,7 +164,8 @@
       "removal_started": "The operation has already started and can no longer be cancelled.",
       "removal_not_failed": "Only a failed operation can be retried.",
       "reauth_required": "To confirm, sign in again.",
-      "group_mention_cooldown": "You mentioned this group recently: wait a few minutes before mentioning it again."
+      "group_mention_cooldown": "You mentioned this group recently: wait a few minutes before mentioning it again.",
+      "not_opponent": "Only the challenged member can answer."
     },
     "fields": {
       "invalid_color": "Ungültige Farbe (#RRGGBB)",
@@ -267,7 +268,21 @@
       "not_configured": "The demo source is not configured",
       "confirm_mismatch": "The name you typed does not match.",
       "same_account": "Choose an account other than the source.",
-      "not_mentionable": "This group cannot be mentioned."
+      "not_mentionable": "This group cannot be mentioned.",
+      "command_disabled": "This command is turned off on this site.",
+      "command_args": "The command's arguments aren't right (e.g. /roll 100, /rps @member).",
+      "command_user": "That member doesn't exist.",
+      "command_self": "You can't challenge yourself.",
+      "command_files": "A command can't have attached files.",
+      "invalid_nickname": "The nickname can have 2–24 letters, digits, spaces, “_”, “.” or “-”.",
+      "not_owned": "You can only choose badges you earned.",
+      "invalid_emote_code": "The code can have 2–32 lowercase letters, digits or “_”.",
+      "too_big_dimensions": "The image is too big (side).",
+      "closed": "The challenge is over.",
+      "requires": "Turn on the apps it depends on first.",
+      "before_start": "The end must be after the start.",
+      "invalid_date": "The date isn't valid.",
+      "invalid_value": "The value isn't valid."
     }
   },
   "acp": {
@@ -396,7 +411,11 @@
         "forum_settings": "Forumseinstellungen",
         "chat_group": "Chat",
         "chat_channels": "Kanäle",
-        "chat_settings": "Chat-Einstellungen"
+        "chat_settings": "Chat-Einstellungen",
+        "chat_pro_group": "Chat Pro",
+        "chat_pro_settings": "Chat Pro settings",
+        "chat_pro_bar": "Announcement bar",
+        "chat_pro_emotes": "Emotes"
       },
       "vip": {
         "vip_group": "VIP",
@@ -2727,6 +2746,10 @@
         },
         "files": {
           "owned": "Uploaded files"
+        },
+        "chat_pro": {
+          "days": "Days with messages in the chat ranking",
+          "wins": "Chat ranking periods won"
         }
       },
       "steps": {
@@ -2742,7 +2765,8 @@
         "importer": "Import map",
         "notifications": "Notifications",
         "account": "Account data",
-        "files": "Files"
+        "files": "Files",
+        "chat_pro": "Chat Pro"
       },
       "notes": {
         "topic_replies": "Their topics have {count} replies by other members: with “Delete content too” they are deleted as well.",
@@ -3046,6 +3070,113 @@
       "resetConfirm": "Yes, go back",
       "resetDone": "The site shows the default footer again.",
       "cancel": "Cancel"
+    },
+    "chatPro": {
+      "title": "Chat Pro",
+      "intro": "The advanced chat (premium app) on top of the standard chat's channels.",
+      "barLink": "Announcement bar",
+      "emotesLink": "Emotes",
+      "save": "Save",
+      "form": {
+        "tabGeneral": "General",
+        "tabGifs": "GIFs",
+        "tabVote": "Vote reminder",
+        "tabEmotes": "Emotes",
+        "enabled": "Chat Pro enabled",
+        "needsChat": "Turn the Chat app on first (Chat Pro depends on it).",
+        "enabledHint": "Off: the standard chat stays exactly as before.",
+        "enabledNoRight": "Turning it on or off needs the Applications right.",
+        "ranking": "Ranking",
+        "period": "Ranking period",
+        "periods": {
+          "month": "Monthly",
+          "week": "Weekly"
+        },
+        "resetDay": "Reset day",
+        "resetDayHint": "Monthly: day of the month (1–28). Weekly: day of the week (1 = Monday … 7 = Sunday).",
+        "cooldown": "Pause between counted messages",
+        "cooldownHint": "More frequent messages don't raise the ranking (anti-spam, on top of the chat flood limit). Bot commands never count.",
+        "seconds": "seconds",
+        "minutes": "minutes",
+        "commands": "Bot commands",
+        "command": {
+          "roll": "/roll [max]",
+          "rollHint": "A random number from 1 to max (default 100).",
+          "rps": "/rps @member",
+          "rpsHint": "A rock-paper-scissors challenge (10 minutes to answer).",
+          "birthday": "/zi-de-nastere",
+          "birthdayHint": "Today's birthdays, from profiles that show them.",
+          "iq": "/iq",
+          "iqHint": "A random joke IQ."
+        },
+        "bar": "Announcement bar",
+        "barSeconds": "Auto-rotate every",
+        "gifProvider": "GIF provider",
+        "gifProviderHint": "Searches go through the server; the key never reaches the browser. The provider's required attribution shows in the picker.",
+        "gifKey": "Provider API key",
+        "gifKeyHint": "Without a key there is no GIF button.",
+        "voteEnabled": "Vote reminder on",
+        "voteEnabledHint": "Each member privately gets the text and link at the chosen interval (they can turn it off in their settings).",
+        "voteText": "Reminder text",
+        "voteUrl": "Vote link",
+        "urlHint": "An `https://` address or a site path (e.g. /servers).",
+        "voteInterval": "Interval",
+        "emoteKb": "Maximum emote file size",
+        "emoteSide": "Maximum emote side",
+        "emoteSideHint": "Larger images are rejected on upload."
+      },
+      "bar": {
+        "title": "Announcement bar",
+        "intro": "The items rotating above the Chat Pro conversation: text, an optional button, schedule and groups.",
+        "empty": "No items yet.",
+        "noButton": "No button",
+        "on": "On",
+        "off": "Off",
+        "schedule": "from {from} to {to}",
+        "always": "always",
+        "allGroups": "all groups",
+        "up": "Move up",
+        "down": "Move down",
+        "edit": "Edit",
+        "delete": "Delete",
+        "add": "Add an item",
+        "text": "Text",
+        "ctaLabel": "Button label (optional)",
+        "ctaUrl": "Button link",
+        "startsAt": "Starts at",
+        "endsAt": "Ends at",
+        "groups": "Groups that see it (none ticked = everyone)",
+        "enabled": "Enabled",
+        "save": "Save",
+        "cancel": "Cancel",
+        "saved": "Saved.",
+        "confirmTitle": "Delete the item?",
+        "confirmText": "“{text}” disappears from the bar for all members."
+      },
+      "emotes": {
+        "title": "Chat emotes",
+        "intro": "Emote packs uploaded by staff (PNG, GIF or WebP, at most {kb} KB and {side} px per side). The code comes from the file name and can be changed.",
+        "empty": "No packs yet. Create one, then upload emotes.",
+        "packName": "Pack name",
+        "enabled": "Enabled",
+        "savePack": "Save",
+        "createPack": "Create pack",
+        "deletePack": "Delete pack",
+        "files": "Emote files",
+        "upload": "Upload",
+        "uploaded": "{count, plural, one {# emote added} other {# emotes added}}",
+        "noEmotes": "This pack has no emotes yet.",
+        "code": "Code",
+        "rename": "Change code",
+        "delete": "Delete",
+        "addPack": "New pack",
+        "saved": "Saved.",
+        "cancel": "Cancel",
+        "confirmPackTitle": "Delete the pack?",
+        "confirmEmoteTitle": "Delete the emote?",
+        "confirmPack": "The pack “{name}” and all its emotes are deleted permanently.",
+        "confirmEmote": "{name} is deleted permanently; old messages keep the code text."
+      }
     }
   },
   "settings": {
@@ -3126,7 +3257,12 @@
       "position": "Position der vertikalen Abdeckung",
       "coverDenied": "Ihre Gruppe kann kein Cover aufstellen.",
       "signature_max_chars": "Maximale Signaturlänge (Zeichen)",
-      "signature_max_images": "Images in the signature (https addresses, 0 = none)"
+      "signature_max_images": "Images in the signature (https addresses, 0 = none)",
+      "birthday": "Birthday",
+      "birthdayDate": "Date of birth",
+      "birthdayVisible": "Show my birthday (without the year) on my profile and in the chat",
+      "birthdayHint": "The year never shows; the chat's /zi-de-nastere command lists you only if ticked.",
+      "birthdayClear": "Clear date"
     },
     "pm": {
       "messages_per_page": "Nachrichten pro Seite in einem Gespräch"
@@ -3396,6 +3532,21 @@
       "steam": "Steam group (address)",
       "github": "GitHub (address)",
       "discord": "Discord (invite link)"
+    },
+    "chat_pro": {
+      "ranking_period": "Chat ranking period",
+      "ranking_reset_day": "Ranking reset day",
+      "count_cooldown": "Pause between counted messages (seconds)",
+      "commands": "Active bot commands",
+      "gif_provider": "GIF provider",
+      "gif_key": "GIF API key",
+      "vote_enabled": "Vote reminder",
+      "vote_text": "Vote reminder text",
+      "vote_url": "Vote link",
+      "vote_interval": "Reminder interval (minutes)",
+      "bar_seconds": "Announcement bar rotation (seconds)",
+      "emote_max_kb": "Maximum emote size (KB)",
+      "emote_max_side": "Maximum emote side (px)"
     }
   },
   "permissions": {
@@ -3481,7 +3632,10 @@
       "max_members": "How many members a clan led by this group can have (-1 = unlimited)",
       "moderate": "Clan staff on the site (edit, lock, disband any clan)"
     },
-    "app_access": "Can access the {app} app"
+    "app_access": "Can access the {app} app",
+    "chat_pro": {
+      "history": "Can view the chat history (/chat/history)"
+    }
   },
   "profile": {
     "memberSince": "Mitglied seit {date}",
@@ -3586,7 +3740,8 @@
       "identities": "{count, plural, one {# game identity} other {# game identities}}",
       "open": "Player profile",
       "playerProfile": "Player profile"
-    }
+    },
+    "birthday": "Birthday"
   },
   "maintenance": {
     "title": "Wartung",
@@ -4103,6 +4258,9 @@
         "ticket_new": "New appeals and reports to handle",
         "ticket_update": "Replies and changes on your appeals and reports",
         "player_linked": "Game identity linked to your account"
+      },
+      "chat_pro": {
+        "reply": "Chat replies"
       }
     }
   },
@@ -4214,7 +4372,9 @@
         "recent": "Kürzlich verwendet",
         "popular": "Populär",
         "categories": "Emojikategorien"
-      }
+      },
+      "suggestions": "Emote suggestions",
+      "showMedia": "Show media"
     },
     "deletedMember": "Deleted member"
   },
@@ -4237,15 +4397,18 @@
       "chat": "Real-time chat: public channels, private rooms, mentions and the shoutbox on pages.",
       "vip": "VIP subscriptions: tiers, name styles, avatar frames and the public plans page.",
       "servers": "Game servers: live status, statistics, mix matches with ELO, bans, admins and appeals.",
-      "clans": "Community clans: members and roles, the clan page, the private forum and join requests."
+      "clans": "Community clans: members and roles, the clan page, the private forum and join requests.",
+      "chat_pro": "The advanced chat: 7 layouts, per-member settings, announcement bar, badges, emotes, GIFs, commands, ranking and history."
     },
     "sections": {
       "messages": "Private messages",
       "forums": "Forums",
       "search": "Search",
       "chat_private": "Private rooms",
-      "clans_create": "Create a clan"
-    }
+      "clans_create": "Create a clan",
+      "chat_pro_history": "Chat history"
+    },
+    "chat_pro": "Chat Pro"
   },
   "translate": {
     "translate": "Übersetzen",
@@ -6311,5 +6474,267 @@
     "enlarge": "Enlarge image",
     "cover": "Profile cover",
     "avatar": "Avatar"
+  },
+  "chatPro": {
+    "mentionToast": "{name} mentioned you in the chat",
+    "disabled": "You turned the chat off for yourself. You can turn it back on anytime.",
+    "enable": "Turn the chat on",
+    "history": "Chat history",
+    "ignoredMessage": "Hidden message from an ignored member.",
+    "show": "Show",
+    "side": "Ranking and challenges",
+    "vote": "Vote",
+    "dismiss": "Dismiss",
+    "jump": "Jump to latest",
+    "jumpNew": "{count, plural, one {# new message} other {# new messages}}",
+    "typingOne": "{name} is typing…",
+    "typingTwo": "{a} and {b} are typing…",
+    "typingMany": "Several members are typing…",
+    "replyingTo": "Replying to {name}:",
+    "cancelReply": "Cancel reply",
+    "report": {
+      "title": "Report message",
+      "reason": "Reason (only moderators see it)",
+      "send": "Send report",
+      "done": "Thanks! The moderators received your report."
+    },
+    "bot": {
+      "tag": "Bot",
+      "roll": "{name} rolled {result} (1–{max})",
+      "iq": "{name}'s IQ: {value}.",
+      "iqHigh": "Bot-certified genius.",
+      "iqMid": "Enough for a clutch.",
+      "iqLow": "At least they have team spirit.",
+      "birthday": "Happy birthday: {names}!",
+      "noBirthday": "Nobody celebrates a birthday today.",
+      "rps": "{name} challenges {opponent} to rock-paper-scissors.",
+      "rpsChoose": "Choose",
+      "rpsChoice": {
+        "rock": "Rock",
+        "paper": "Paper",
+        "scissors": "Scissors"
+      },
+      "rpsWaiting": "Waiting for the opponent.",
+      "rpsExpired": "The challenge expired.",
+      "rpsDraw": "It's a draw!",
+      "rpsWinner": "{name} wins!"
+    },
+    "message": {
+      "first": "First message",
+      "winner": "Ranking winner",
+      "reply": "Reply",
+      "react": "React",
+      "enlarge": "Enlarge media",
+      "more": "More",
+      "edit": "Edit",
+      "pin": "Pin",
+      "mute": "Mute",
+      "ignore": "Ignore member",
+      "report": "Report",
+      "delete": "Delete"
+    },
+    "bar": {
+      "label": "Announcements",
+      "carousel": "carousel",
+      "prev": "Previous announcement",
+      "next": "Next announcement"
+    },
+    "ranking": {
+      "title": "Most active in chat",
+      "period": "Period: {start} – {end}",
+      "empty": "No counted messages in this period yet.",
+      "podium": "Period podium",
+      "place": "Place {place}",
+      "messages": "{count, plural, one {# message} other {# messages}}",
+      "spammer": "Spammer of the day",
+      "nobodyToday": "Nobody has written today.",
+      "lastWinner": "Last winner",
+      "noWinner": "No winner yet.",
+      "myPosition": "Your position",
+      "today": "Messages today",
+      "thisPeriod": "Messages this period",
+      "thisWeek": "This week",
+      "resetDays": "{count, plural, one {# day to reset} other {# days to reset}}",
+      "resetHours": "{count, plural, one {# hour to reset} other {# hours to reset}}",
+      "resetMinutes": "{count, plural, one {# minute to reset} other {# minutes to reset}}"
+    },
+    "notifications": {
+      "open": "Chat notifications",
+      "unread": "unread",
+      "title": "Chat notifications",
+      "all": "All",
+      "mentions": "Mentions",
+      "loading": "Loading…",
+      "empty": "No notifications.",
+      "types": {
+        "mention": "{name} mentioned you in #{room}",
+        "reply": "{name} replied to you in #{room}"
+      }
+    },
+    "emotes": {
+      "title": "Emotes",
+      "search": "Search by code",
+      "categories": "Categories",
+      "favorites": "Favourites",
+      "emoji": "Emoji",
+      "results": "Results",
+      "none": "No emotes found.",
+      "noFavorites": "Press the star on an emote to add it here.",
+      "emptyPack": "This pack is empty.",
+      "favorite": "Add :{code}: to favourites",
+      "unfavorite": "Remove :{code}: from favourites",
+      "prevPage": "Previous page",
+      "nextPage": "Next page",
+      "page": "Page {page} of {pages}"
+    },
+    "gifs": {
+      "title": "GIFs",
+      "search": "Search GIFs",
+      "trending": "Trending",
+      "results": "Results",
+      "favorites": "Favourites",
+      "loading": "Loading…",
+      "none": "No GIFs found.",
+      "noFavorites": "Press the star on a GIF to keep it here.",
+      "rateLimited": "Too many searches; try again in a minute.",
+      "error": "The GIF provider is not responding right now.",
+      "favorite": "Add to favourites",
+      "unfavorite": "Remove from favourites"
+    },
+    "settings": {
+      "title": "Chat settings",
+      "close": "Close",
+      "search": "Search settings",
+      "sections": "Settings sections",
+      "sectionNames": {
+        "prefs": "Preferences",
+        "bot": "Bot",
+        "layout": "Layout",
+        "account": "Account"
+      },
+      "results": "Search results",
+      "noResults": "No settings found.",
+      "acp": "Site-wide chat settings (ACP)",
+      "reset": "Reset",
+      "save": "Save",
+      "saved": "Saved.",
+      "loading": "Loading…",
+      "sound": "Sound on new messages",
+      "soundHint": "A short sound when a new message arrives.",
+      "voiceVolume": "Voice message volume",
+      "autoplayGifs": "Autoplay GIFs",
+      "autoplayGifsHint": "Off: GIFs play only when you hover them.",
+      "linkPreviews": "Rich link previews",
+      "linkPreviewsHint": "The page title and site, in a compact card.",
+      "showTyping": "Show who is typing",
+      "showTypingHint": "See when others are writing a message.",
+      "shareTyping": "Let others see me typing",
+      "shareTypingHint": "Off: you never send the typing signal.",
+      "ignoredPlaceholder": "Show placeholders for ignored members",
+      "ignoredPlaceholderHint": "A “hidden message” note in place of the message, with an option to reveal it.",
+      "mentionAlerts": "Mention alerts",
+      "mentionAlertsHint": "A sound and an on-screen notice when someone mentions you.",
+      "autoscroll": "Autoscroll",
+      "autoscrollHint": "The list follows new messages when you are already at the bottom.",
+      "hideBar": "Hide the announcement bar",
+      "hideBarHint": "The rotating bar above the conversation.",
+      "showRanking": "Show the ranking panel",
+      "showRankingHint": "The podium, spammer of the day and your stats, next to the conversation.",
+      "mobileMediaButtons": "Media buttons on small screens",
+      "mobileMediaButtonsHint": "On phones, images and GIFs stay behind a “Show media” button.",
+      "voteReminders": "Vote reminders",
+      "voteRemindersHint": "A private message now and then with the community's vote link.",
+      "voteOff": "Vote reminders are turned off on this site.",
+      "commandOff": "This command is turned off on this site.",
+      "commands": {
+        "roll": "/roll results",
+        "rollHint": "Dice: a random number.",
+        "rps": "/rps challenges",
+        "rpsHint": "Rock-paper-scissors between two members.",
+        "birthday": "Birthdays (/zi-de-nastere)",
+        "birthdayHint": "Who celebrates today (only profiles that show it).",
+        "iq": "/iq results",
+        "iqHint": "A joke IQ “measured” by the bot."
+      },
+      "position": "Position on the home page",
+      "positionHint": "Where the chat sits when it is at the top or bottom of the home page.",
+      "positions": {
+        "auto": "Where the admin placed it",
+        "top": "Top",
+        "bottom": "Bottom"
+      },
+      "layout": "Message layout",
+      "layoutHint": "How messages are shown in the conversation.",
+      "layouts": {
+        "cards": "Cards",
+        "stream": "Stream",
+        "columns": "Columns",
+        "bubbles": "Bubbles",
+        "timeline": "Timeline",
+        "discord": "Discord-like",
+        "accent": "Accent"
+      },
+      "accent": "Accent colour",
+      "accentHint": "The chat's buttons, links and highlights.",
+      "colors": "Chat colours",
+      "colorsHint": "Colours and opacity change only your own view.",
+      "element": "Element",
+      "elements": {
+        "messageBg": "Message background",
+        "messageBorder": "Message border",
+        "messageText": "Message text",
+        "chatBg": "Chat background",
+        "header": "Header",
+        "ranking": "Ranking panel",
+        "input": "Input",
+        "buttons": "Buttons",
+        "accent": "Accent and links",
+        "uiBorder": "UI borders",
+        "uiText": "UI text"
+      },
+      "colorArea": "Saturation and brightness",
+      "hue": "Hue",
+      "opacity": "Opacity",
+      "height": "Chat height",
+      "emojiSize": "Emote size",
+      "nickname": "Chat nickname",
+      "nicknameHint": "Empty = your forum name. It can't be another member's name.",
+      "nicknamePlaceholder": "Your forum name",
+      "badges": "Badges next to your name",
+      "badgesHint": "Choose up to 2 of your earned badges.",
+      "noBadges": "You have no badges yet.",
+      "ignored": "Ignored members",
+      "ignoredHint": "Their messages don't show in the chat.",
+      "noIgnored": "You don't ignore anyone.",
+      "unignore": "Stop ignoring",
+      "disable": "Turn the chat off for me",
+      "disableHint": "The chat disappears from your pages; you can turn it back on anytime."
+    },
+    "historyPage": {
+      "title": "Chat history",
+      "back": "Back to the chat",
+      "forbidden": "You don't have access to the chat history.",
+      "totalMessages": "Messages",
+      "totalUsers": "Members who wrote",
+      "totalEdited": "Edited messages",
+      "search": "Search the history",
+      "text": "Text",
+      "member": "Member (name or nickname)",
+      "from": "From",
+      "to": "To",
+      "submit": "Search",
+      "found": "{count, plural, one {# message found} other {# messages found}}",
+      "empty": "No messages match the search.",
+      "colMember": "Member",
+      "colContent": "Message",
+      "colTime": "Time",
+      "colNumber": "Message #",
+      "colEdited": "Edited",
+      "deletedMember": "Deleted member",
+      "pages": "History pages",
+      "prev": "Previous page",
+      "next": "Next page",
+      "page": "Page {page} of {pages}"
+    }
   }
 }

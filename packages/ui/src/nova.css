@@ -1632,6 +1632,74 @@ html.gcs-nova[data-theme="light"] {
   }
 }
 
+/* ─── Chat Pro: aceeași bandă, cercurile iconițelor, cardurile închise, hover-ul Nova ───────────────────── */
+
+.gcs-nova .gcs-chatPro {
+  --cp-radius: 8px;
+}
+.gcs-nova .gcs-chatPro .gcs-chat__headButton {
+  border-radius: 50%;
+}
+.gcs-nova .gcs-chatPro__msg {
+  transition: border-color var(--gcs-ease), background-color var(--gcs-ease);
+}
+.gcs-nova .gcs-chatPro--cards .gcs-chatPro__msg:hover,
+.gcs-nova .gcs-chatPro--accent .gcs-chatPro__msg:hover {
+  border-color: color-mix(in srgb, var(--cp-accent-ui) 35%, var(--cp-card-border));
+}
+.gcs-nova .gcs-chatPro__side {
+  background: var(--cp-rank-bg, var(--gcs-band-bg));
+}
+.gcs-nova .gcs-chatPro__rankTitle svg {
+  box-sizing: border-box;
+  width: 30px;
+  height: 30px;
+  padding: 7px;
+  border-radius: var(--gcs-band-icon-radius);
+  border: 1px solid var(--gcs-band-icon-border);
+  background: var(--gcs-band-icon-bg);
+}
+.gcs-nova .gcs-chatPro__step {
+  background: var(--gcs-raise);
+  transition: transform var(--gcs-ease), border-color var(--gcs-ease);
+}
+.gcs-nova .gcs-chatPro__step:hover {
+  transform: translateY(var(--gcs-hover-lift));
+}
+.gcs-nova .gcs-chatPro__bar {
+  border-radius: var(--gcs-pill-radius);
+  background:
+    radial-gradient(ellipse 50% 140% at 0% 50%, color-mix(in srgb, var(--cp-accent-ui) 22%, transparent), transparent 70%),
+    var(--gcs-raise);
+}
+.gcs-nova .gcs-chatPro__barCta {
+  border-radius: 4px;
+  transition: background-color var(--gcs-ease);
+}
+.gcs-nova .gcs-chatPro__barCta:hover {
+  filter: none;
+  background: color-mix(in srgb, var(--cp-accent-ui) 92%, #fff);
+}
+.gcs-nova .gcs-chatPro__tool:hover,
+.gcs-nova .gcs-chatPro__menuItem:hover {
+  background: var(--gcs-hover-tint);
+}
+.gcs-nova .gcs-chatPro__settingsTab--on {
+  background: var(--gcs-raise);
+  box-shadow: inset 2px 0 0 var(--gcs-accent);
+}
+.gcs-nova .gcs-chatPro__layoutTile {
+  background: var(--gcs-raise);
+}
+.gcs-nova .gcs-chatPro__layoutTile--on {
+  background: color-mix(in srgb, var(--gcs-accent) 16%, var(--gcs-raise));
+}
+.gcs-nova .gcs-chatHistory__totalIcon {
+  border-radius: var(--gcs-band-icon-radius);
+  border: 1px solid var(--gcs-band-icon-border);
+  background: var(--gcs-band-icon-bg);
+}
+
 /* ─── Mișcarea redusă: fără transformări și tranziții ───────────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {

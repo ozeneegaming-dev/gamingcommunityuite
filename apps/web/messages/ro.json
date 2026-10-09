@@ -164,7 +164,8 @@
       "removal_started": "Operația a pornit deja și nu mai poate fi anulată.",
       "removal_not_failed": "Doar o operație eșuată poate fi reluată.",
       "reauth_required": "Pentru confirmare, intră din nou în cont.",
-      "group_mention_cooldown": "Ai menționat acest grup de curând: așteaptă câteva minute înainte să-l menționezi din nou."
+      "group_mention_cooldown": "Ai menționat acest grup de curând: așteaptă câteva minute înainte să-l menționezi din nou.",
+      "not_opponent": "Doar membrul provocat poate răspunde."
     },
     "fields": {
       "invalid_color": "Culoare invalidă (#RRGGBB)",
@@ -267,7 +268,21 @@
       "not_configured": "Sursa demo-urilor nu e configurată",
       "confirm_mismatch": "Numele scris nu se potrivește.",
       "same_account": "Alege alt cont decât sursa.",
-      "not_mentionable": "Acest grup nu poate fi menționat."
+      "not_mentionable": "Acest grup nu poate fi menționat.",
+      "command_disabled": "Comanda e oprită pe acest site.",
+      "command_args": "Argumentele comenzii nu sunt corecte (ex. /roll 100, /rps @membru).",
+      "command_user": "Membrul nu există.",
+      "command_self": "Nu te poți provoca singur.",
+      "command_files": "O comandă nu poate avea fișiere atașate.",
+      "invalid_nickname": "Porecla poate avea 2–24 de litere, cifre, spații, „_”, „.” sau „-”.",
+      "not_owned": "Poți alege doar badge-uri obținute.",
+      "invalid_emote_code": "Codul poate avea 2–32 de litere mici, cifre sau „_”.",
+      "too_big_dimensions": "Imaginea e prea mare (latura).",
+      "closed": "Provocarea s-a încheiat.",
+      "requires": "Pornește întâi aplicațiile de care depinde.",
+      "before_start": "Sfârșitul trebuie să fie după început.",
+      "invalid_date": "Data nu e validă.",
+      "invalid_value": "Valoarea nu e validă."
     }
   },
   "acp": {
@@ -396,7 +411,11 @@
         "forum_settings": "Setări forum",
         "chat_group": "Chat",
         "chat_channels": "Canale",
-        "chat_settings": "Setări chat"
+        "chat_settings": "Setări chat",
+        "chat_pro_group": "Chat Pro",
+        "chat_pro_settings": "Setări Chat Pro",
+        "chat_pro_bar": "Bara de anunțuri",
+        "chat_pro_emotes": "Emoticoane"
       },
       "vip": {
         "vip_group": "VIP",
@@ -2727,6 +2746,10 @@
         },
         "files": {
           "owned": "Fișiere încărcate"
+        },
+        "chat_pro": {
+          "days": "Zile cu mesaje în clasamentul chat-ului",
+          "wins": "Perioade câștigate în chat"
         }
       },
       "steps": {
@@ -2742,7 +2765,8 @@
         "importer": "Harta importului",
         "notifications": "Notificări",
         "account": "Date de cont",
-        "files": "Fișiere"
+        "files": "Fișiere",
+        "chat_pro": "Chat Pro"
       },
       "notes": {
         "topic_replies": "Topicurile lui au {count} răspunsuri ale altor membri: în modul „Șterge și conținutul” se șterg și ele.",
@@ -3046,6 +3070,113 @@
       "resetConfirm": "Da, revino",
       "resetDone": "Site-ul arată din nou subsolul implicit.",
       "cancel": "Anulează"
+    },
+    "chatPro": {
+      "title": "Chat Pro",
+      "intro": "Chat-ul avansat (aplicația premium) peste canalele chat-ului standard.",
+      "barLink": "Bara de anunțuri",
+      "emotesLink": "Emoticoane",
+      "save": "Salvează",
+      "form": {
+        "tabGeneral": "General",
+        "tabGifs": "GIF-uri",
+        "tabVote": "Memento de vot",
+        "tabEmotes": "Emoticoane",
+        "enabled": "Chat Pro pornit",
+        "needsChat": "Pornește întâi aplicația Chat (Chat Pro depinde de ea).",
+        "enabledHint": "Oprit: chat-ul standard rămâne exact ca înainte.",
+        "enabledNoRight": "Pornirea și oprirea cer dreptul pe Aplicații.",
+        "ranking": "Clasamentul",
+        "period": "Perioada clasamentului",
+        "periods": {
+          "month": "Lunar",
+          "week": "Săptămânal"
+        },
+        "resetDay": "Ziua resetării",
+        "resetDayHint": "Lunar: ziua lunii (1–28). Săptămânal: ziua săptămânii (1 = luni … 7 = duminică).",
+        "cooldown": "Pauza dintre mesajele numărate",
+        "cooldownHint": "Mesajele mai dese nu cresc clasamentul (anti-spam, peste flood-ul chat-ului). Comenzile botului nu se numără niciodată.",
+        "seconds": "secunde",
+        "minutes": "minute",
+        "commands": "Comenzile botului",
+        "command": {
+          "roll": "/roll [max]",
+          "rollHint": "Un număr la întâmplare între 1 și max (implicit 100).",
+          "rps": "/rps @membru",
+          "rpsHint": "O provocare la piatră-hârtie-foarfecă (10 minute pentru răspuns).",
+          "birthday": "/zi-de-nastere",
+          "birthdayHint": "Zilele de naștere de azi, din profilurile care le arată.",
+          "iq": "/iq",
+          "iqHint": "Un IQ la întâmplare, în glumă."
+        },
+        "bar": "Bara de anunțuri",
+        "barSeconds": "Rotirea automată la",
+        "gifProvider": "Furnizorul de GIF-uri",
+        "gifProviderHint": "Căutările trec prin server; cheia nu ajunge în browser. Atribuirea cerută de furnizor apare în selector.",
+        "gifKey": "Cheia API a furnizorului",
+        "gifKeyHint": "Fără cheie, butonul GIF nu apare.",
+        "voteEnabled": "Mementoul de vot pornit",
+        "voteEnabledHint": "Fiecare membru primește, privat, textul și linkul la intervalul ales (îl poate opri din setările lui).",
+        "voteText": "Textul mementoului",
+        "voteUrl": "Linkul de vot",
+        "urlHint": "O adresă `https://` sau o cale a site-ului (ex. /servers).",
+        "voteInterval": "Intervalul",
+        "emoteKb": "Mărimea maximă a unui emoticon",
+        "emoteSide": "Latura maximă a unui emoticon",
+        "emoteSideHint": "Imaginile mai mari sunt respinse la încărcare."
+      },
+      "bar": {
+        "title": "Bara de anunțuri",
+        "intro": "Elementele rotite deasupra conversației Chat Pro: text, un buton opțional, program și grupuri.",
+        "empty": "Niciun element încă.",
+        "noButton": "Fără buton",
+        "on": "Pornit",
+        "off": "Oprit",
+        "schedule": "de la {from} până la {to}",
+        "always": "mereu",
+        "allGroups": "toate grupurile",
+        "up": "Mută mai sus",
+        "down": "Mută mai jos",
+        "edit": "Editează",
+        "delete": "Șterge",
+        "add": "Adaugă un element",
+        "text": "Textul",
+        "ctaLabel": "Textul butonului (opțional)",
+        "ctaUrl": "Linkul butonului",
+        "startsAt": "Începe la",
+        "endsAt": "Se termină la",
+        "groups": "Grupurile care îl văd (niciunul bifat = toți)",
+        "enabled": "Pornit",
+        "save": "Salvează",
+        "cancel": "Renunță",
+        "saved": "Salvat.",
+        "confirmTitle": "Ștergi elementul?",
+        "confirmText": "„{text}” dispare din bară pentru toți membrii."
+      },
+      "emotes": {
+        "title": "Emoticoanele chat-ului",
+        "intro": "Pachete de emoticoane încărcate de staff (PNG, GIF sau WebP, cel mult {kb} KB și {side} px pe latură). Codul vine din numele fișierului și se poate schimba.",
+        "empty": "Niciun pachet încă. Creează unul, apoi încarcă emoticoanele.",
+        "packName": "Numele pachetului",
+        "enabled": "Pornit",
+        "savePack": "Salvează",
+        "createPack": "Creează pachetul",
+        "deletePack": "Șterge pachetul",
+        "files": "Fișierele emoticoanelor",
+        "upload": "Încarcă",
+        "uploaded": "{count, plural, one {# emoticon adăugat} few {# emoticoane adăugate} other {# de emoticoane adăugate}}",
+        "noEmotes": "Pachetul nu are încă emoticoane.",
+        "code": "Codul",
+        "rename": "Schimbă codul",
+        "delete": "Șterge",
+        "addPack": "Pachet nou",
+        "saved": "Salvat.",
+        "cancel": "Renunță",
+        "confirmPackTitle": "Ștergi pachetul?",
+        "confirmEmoteTitle": "Ștergi emoticonul?",
+        "confirmPack": "Pachetul „{name}” și toate emoticoanele lui se șterg definitiv.",
+        "confirmEmote": "{name} se șterge definitiv; în mesajele vechi rămâne textul codului."
+      }
     }
   },
   "settings": {
@@ -3126,7 +3257,12 @@
       "position": "Poziția verticală a cover-ului",
       "coverDenied": "Grupul tău nu poate pune cover.",
       "signature_max_chars": "Lungimea maximă a semnăturii (caractere)",
-      "signature_max_images": "Imagini în semnătură (adrese https, 0 = niciuna)"
+      "signature_max_images": "Imagini în semnătură (adrese https, 0 = niciuna)",
+      "birthday": "Ziua de naștere",
+      "birthdayDate": "Data nașterii",
+      "birthdayVisible": "Arată ziua de naștere (fără an) pe profil și în chat",
+      "birthdayHint": "Anul nu apare nicăieri; comanda /zi-de-nastere din chat te anunță doar dacă bifezi.",
+      "birthdayClear": "Șterge data"
     },
     "pm": {
       "messages_per_page": "Mesaje pe pagină într-o conversație"
@@ -3396,6 +3532,21 @@
       "steam": "Grupul Steam (adresa)",
       "github": "GitHub (adresa)",
       "discord": "Discord (linkul de invitație)"
+    },
+    "chat_pro": {
+      "ranking_period": "Perioada clasamentului chat-ului",
+      "ranking_reset_day": "Ziua resetării clasamentului",
+      "count_cooldown": "Pauza dintre mesajele numărate (secunde)",
+      "commands": "Comenzile botului active",
+      "gif_provider": "Furnizorul de GIF-uri",
+      "gif_key": "Cheia API pentru GIF-uri",
+      "vote_enabled": "Mementoul de vot",
+      "vote_text": "Textul mementoului de vot",
+      "vote_url": "Linkul de vot",
+      "vote_interval": "Intervalul mementoului (minute)",
+      "bar_seconds": "Rotirea barei de anunțuri (secunde)",
+      "emote_max_kb": "Mărimea maximă a unui emoticon (KB)",
+      "emote_max_side": "Latura maximă a unui emoticon (px)"
     }
   },
   "permissions": {
@@ -3481,7 +3632,10 @@
       "max_members": "Câți membri poate avea un clan condus de acest grup (-1 = nelimitat)",
       "moderate": "Staff pentru clanuri pe site (editează, blochează, desființează orice clan)"
     },
-    "app_access": "Poate accesa aplicația {app}"
+    "app_access": "Poate accesa aplicația {app}",
+    "chat_pro": {
+      "history": "Vede istoricul chat-ului (/chat/history)"
+    }
   },
   "profile": {
     "memberSince": "Membru din {date}",
@@ -3586,7 +3740,8 @@
       "identities": "{count, plural, one {# identitate de joc} few {# identități de joc} other {# de identități de joc}}",
       "open": "Profilul de jucător",
       "playerProfile": "Profilul de jucător"
-    }
+    },
+    "birthday": "Ziua de naștere"
   },
   "maintenance": {
     "title": "Mentenanță",
@@ -4103,6 +4258,9 @@
         "ticket_new": "Contestații și reclamații noi de tratat",
         "ticket_update": "Răspunsuri și schimbări la contestațiile și reclamațiile tale",
         "player_linked": "Identitate de joc legată de cont"
+      },
+      "chat_pro": {
+        "reply": "Răspunsuri în chat"
       }
     }
   },
@@ -4214,7 +4372,9 @@
         "recent": "Folosite recent",
         "popular": "Populare",
         "categories": "Categorii de emoji"
-      }
+      },
+      "suggestions": "Sugestii de emoticoane",
+      "showMedia": "Arată media"
     },
     "deletedMember": "Membru șters"
   },
@@ -4237,15 +4397,18 @@
       "chat": "Chat în timp real: canale publice, camere private, mențiuni și shoutbox-ul de pe pagini.",
       "vip": "Abonamentele VIP: niveluri, stiluri de nume, avatar frames și pagina publică a planurilor.",
       "servers": "Serverele de joc: starea live, statistici, meciuri mix cu ELO, banuri, admini și contestații.",
-      "clans": "Clanurile comunității: membri și roluri, pagina clanului, forumul privat și cererile de intrare."
+      "clans": "Clanurile comunității: membri și roluri, pagina clanului, forumul privat și cererile de intrare.",
+      "chat_pro": "Chat-ul avansat: 7 aranjamente, setări pe membru, bara de anunțuri, insigne, emoticoane, GIF-uri, comenzi, clasament și istoric."
     },
     "sections": {
       "messages": "Mesaje private",
       "forums": "Forumuri",
       "search": "Căutare",
       "chat_private": "Camere private",
-      "clans_create": "Creează un clan"
-    }
+      "clans_create": "Creează un clan",
+      "chat_pro_history": "Istoricul chat-ului"
+    },
+    "chat_pro": "Chat Pro"
   },
   "translate": {
     "translate": "Traduce",
@@ -6311,5 +6474,267 @@
     "enlarge": "Mărește imaginea",
     "cover": "Coperta profilului",
     "avatar": "Avatarul"
+  },
+  "chatPro": {
+    "mentionToast": "{name} te-a menționat în chat",
+    "disabled": "Ai oprit chat-ul pentru tine. Îl poți porni oricând.",
+    "enable": "Pornește chat-ul",
+    "history": "Istoricul chat-ului",
+    "ignoredMessage": "Mesaj ascuns de la un membru ignorat.",
+    "show": "Arată",
+    "side": "Clasament și provocări",
+    "vote": "Votează",
+    "dismiss": "Ascunde",
+    "jump": "Sari la ultimele mesaje",
+    "jumpNew": "{count, plural, one {# mesaj nou} few {# mesaje noi} other {# de mesaje noi}}",
+    "typingOne": "{name} scrie…",
+    "typingTwo": "{a} și {b} scriu…",
+    "typingMany": "Mai mulți membri scriu…",
+    "replyingTo": "Răspunzi lui {name}:",
+    "cancelReply": "Anulează răspunsul",
+    "report": {
+      "title": "Raportează mesajul",
+      "reason": "Motivul (îl văd doar moderatorii)",
+      "send": "Trimite raportul",
+      "done": "Mulțumim! Moderatorii au primit raportul."
+    },
+    "bot": {
+      "tag": "Bot",
+      "roll": "{name} a dat cu zarul: {result} (1–{max})",
+      "iq": "IQ-ul lui {name}: {value}.",
+      "iqHigh": "Geniu confirmat de bot.",
+      "iqMid": "Suficient pentru un clutch.",
+      "iqLow": "Măcar are spirit de echipă.",
+      "birthday": "La mulți ani: {names}!",
+      "noBirthday": "Azi nu își serbează nimeni ziua de naștere.",
+      "rps": "{name} îl provoacă pe {opponent} la piatră-hârtie-foarfecă.",
+      "rpsChoose": "Alege",
+      "rpsChoice": {
+        "rock": "Piatră",
+        "paper": "Hârtie",
+        "scissors": "Foarfecă"
+      },
+      "rpsWaiting": "Așteaptă răspunsul adversarului.",
+      "rpsExpired": "Provocarea a expirat.",
+      "rpsDraw": "Egalitate!",
+      "rpsWinner": "câștigă {name}!"
+    },
+    "message": {
+      "first": "Primul mesaj",
+      "winner": "Câștigătorul clasamentului",
+      "reply": "Răspunde",
+      "react": "Reacționează",
+      "enlarge": "Mărește media",
+      "more": "Mai multe",
+      "edit": "Editează",
+      "pin": "Fixează",
+      "mute": "Mute",
+      "ignore": "Ignoră membrul",
+      "report": "Raportează",
+      "delete": "Șterge"
+    },
+    "bar": {
+      "label": "Anunțuri",
+      "carousel": "carusel",
+      "prev": "Anunțul anterior",
+      "next": "Anunțul următor"
+    },
+    "ranking": {
+      "title": "Cei mai activi în chat",
+      "period": "Perioada: {start} – {end}",
+      "empty": "Niciun mesaj numărat în perioada aceasta.",
+      "podium": "Podiumul perioadei",
+      "place": "Locul {place}",
+      "messages": "{count, plural, one {# mesaj} few {# mesaje} other {# de mesaje}}",
+      "spammer": "Spammer-ul zilei",
+      "nobodyToday": "Nimeni n-a scris azi.",
+      "lastWinner": "Ultimul câștigător",
+      "noWinner": "Încă niciun câștigător.",
+      "myPosition": "Poziția ta",
+      "today": "Mesaje azi",
+      "thisPeriod": "Mesaje în perioadă",
+      "thisWeek": "Săptămâna aceasta",
+      "resetDays": "{count, plural, one {# zi până la resetare} few {# zile până la resetare} other {# de zile până la resetare}}",
+      "resetHours": "{count, plural, one {# oră până la resetare} few {# ore până la resetare} other {# de ore până la resetare}}",
+      "resetMinutes": "{count, plural, one {# minut până la resetare} few {# minute până la resetare} other {# de minute până la resetare}}"
+    },
+    "notifications": {
+      "open": "Notificările chat-ului",
+      "unread": "necitite",
+      "title": "Notificări din chat",
+      "all": "Toate",
+      "mentions": "Mențiuni",
+      "loading": "Se încarcă…",
+      "empty": "Nicio notificare.",
+      "types": {
+        "mention": "{name} te-a menționat în #{room}",
+        "reply": "{name} ți-a răspuns în #{room}"
+      }
+    },
+    "emotes": {
+      "title": "Emoticoane",
+      "search": "Caută după cod",
+      "categories": "Categorii",
+      "favorites": "Favorite",
+      "emoji": "Emoji",
+      "results": "Rezultate",
+      "none": "Niciun emoticon găsit.",
+      "noFavorites": "Apasă steaua de pe un emoticon ca să-l adaugi aici.",
+      "emptyPack": "Pachetul e gol.",
+      "favorite": "Adaugă :{code}: la favorite",
+      "unfavorite": "Scoate :{code}: din favorite",
+      "prevPage": "Pagina anterioară",
+      "nextPage": "Pagina următoare",
+      "page": "Pagina {page} din {pages}"
+    },
+    "gifs": {
+      "title": "GIF-uri",
+      "search": "Caută GIF-uri",
+      "trending": "Populare",
+      "results": "Rezultate",
+      "favorites": "Favorite",
+      "loading": "Se încarcă…",
+      "none": "Niciun GIF găsit.",
+      "noFavorites": "Apasă steaua de pe un GIF ca să-l păstrezi aici.",
+      "rateLimited": "Prea multe căutări; încearcă peste un minut.",
+      "error": "Furnizorul de GIF-uri nu răspunde acum.",
+      "favorite": "Adaugă la favorite",
+      "unfavorite": "Scoate din favorite"
+    },
+    "settings": {
+      "title": "Setările chat-ului",
+      "close": "Închide",
+      "search": "Caută în setări",
+      "sections": "Secțiunile setărilor",
+      "sectionNames": {
+        "prefs": "Preferințe",
+        "bot": "Bot",
+        "layout": "Aranjament",
+        "account": "Cont"
+      },
+      "results": "Rezultatele căutării",
+      "noResults": "Nicio setare găsită.",
+      "acp": "Setările chat-ului pentru tot site-ul (ACP)",
+      "reset": "Resetează",
+      "save": "Salvează",
+      "saved": "Salvat.",
+      "loading": "Se încarcă…",
+      "sound": "Sunet la mesaje noi",
+      "soundHint": "Un sunet scurt când primești un mesaj nou.",
+      "voiceVolume": "Volumul mesajelor vocale",
+      "autoplayGifs": "Pornește GIF-urile automat",
+      "autoplayGifsHint": "Oprit: GIF-urile pornesc doar când treci cu mouse-ul peste ele.",
+      "linkPreviews": "Previzualizări bogate ale linkurilor",
+      "linkPreviewsHint": "Titlul paginii și site-ul, într-un card compact.",
+      "showTyping": "Arată cine scrie",
+      "showTypingHint": "Vezi când ceilalți scriu un mesaj.",
+      "shareTyping": "Ceilalți văd când scriu",
+      "shareTypingHint": "Oprit: nu trimiți semnalul „scrie…”.",
+      "ignoredPlaceholder": "Arată mesajele ascunse ale celor ignorați",
+      "ignoredPlaceholderHint": "O mențiune „mesaj ascuns” în locul mesajului, cu opțiunea de a-l vedea.",
+      "mentionAlerts": "Alerte la mențiuni",
+      "mentionAlertsHint": "Un sunet și o notificare pe ecran când cineva te menționează.",
+      "autoscroll": "Derulare automată",
+      "autoscrollHint": "Lista coboară singură la mesajele noi, dacă ești deja jos.",
+      "hideBar": "Ascunde bara de anunțuri",
+      "hideBarHint": "Bara rotativă de deasupra conversației.",
+      "showRanking": "Arată panoul de clasament",
+      "showRankingHint": "Podiumul, spammer-ul zilei și statisticile tale, lângă conversație.",
+      "mobileMediaButtons": "Butoane pentru media pe ecranele mici",
+      "mobileMediaButtonsHint": "Pe telefon, imaginile și GIF-urile stau ascunse după „Arată media”.",
+      "voteReminders": "Mementouri de vot",
+      "voteRemindersHint": "Un mesaj privat, din când în când, cu linkul de vot al comunității.",
+      "voteOff": "Mementourile de vot sunt oprite pe acest site.",
+      "commandOff": "Comanda e oprită pe acest site.",
+      "commands": {
+        "roll": "Rezultatele /roll",
+        "rollHint": "Zarul: un număr la întâmplare.",
+        "rps": "Provocările /rps",
+        "rpsHint": "Piatră-hârtie-foarfecă între doi membri.",
+        "birthday": "Zilele de naștere (/zi-de-nastere)",
+        "birthdayHint": "Cine își serbează azi ziua (doar profilurile care o arată).",
+        "iq": "Rezultatele /iq",
+        "iqHint": "Un IQ „măsurat” de bot, în glumă."
+      },
+      "position": "Poziția pe pagina principală",
+      "positionHint": "Unde stă chat-ul când e sus sau jos pe pagina principală.",
+      "positions": {
+        "auto": "Unde l-a pus adminul",
+        "top": "Sus",
+        "bottom": "Jos"
+      },
+      "layout": "Aranjamentul mesajelor",
+      "layoutHint": "Cum se afișează mesajele în conversație.",
+      "layouts": {
+        "cards": "Carduri",
+        "stream": "Flux",
+        "columns": "Coloane",
+        "bubbles": "Bule",
+        "timeline": "Cronologie",
+        "discord": "Stil Discord",
+        "accent": "Accent"
+      },
+      "accent": "Culoarea de accent",
+      "accentHint": "Butoanele, linkurile și evidențierile chat-ului.",
+      "colors": "Culorile chat-ului",
+      "colorsHint": "Culorile și opacitatea schimbă doar ce vezi tu.",
+      "element": "Elementul",
+      "elements": {
+        "messageBg": "Fundalul mesajelor",
+        "messageBorder": "Chenarul mesajelor",
+        "messageText": "Textul mesajelor",
+        "chatBg": "Fundalul chat-ului",
+        "header": "Antetul",
+        "ranking": "Panoul de clasament",
+        "input": "Câmpul de scris",
+        "buttons": "Butoanele",
+        "accent": "Accent și linkuri",
+        "uiBorder": "Chenarele interfeței",
+        "uiText": "Textul interfeței"
+      },
+      "colorArea": "Saturația și luminozitatea",
+      "hue": "Nuanța",
+      "opacity": "Opacitatea",
+      "height": "Înălțimea chat-ului",
+      "emojiSize": "Mărimea emoticoanelor",
+      "nickname": "Porecla din chat",
+      "nicknameHint": "Gol = numele de pe forum. Nu poate fi numele altui membru.",
+      "nicknamePlaceholder": "Numele de pe forum",
+      "badges": "Insignele de lângă nume",
+      "badgesHint": "Alege cel mult 2 dintre badge-urile obținute.",
+      "noBadges": "Nu ai încă niciun badge.",
+      "ignored": "Membri ignorați",
+      "ignoredHint": "Mesajele lor nu apar în chat.",
+      "noIgnored": "Nu ignori pe nimeni.",
+      "unignore": "Nu mai ignora",
+      "disable": "Oprește chat-ul pentru mine",
+      "disableHint": "Chat-ul dispare din paginile tale; îl poți porni din nou oricând."
+    },
+    "historyPage": {
+      "title": "Istoricul chat-ului",
+      "back": "Înapoi la chat",
+      "forbidden": "Nu ai acces la istoricul chat-ului.",
+      "totalMessages": "Mesaje",
+      "totalUsers": "Membri care au scris",
+      "totalEdited": "Mesaje editate",
+      "search": "Caută în istoric",
+      "text": "Text",
+      "member": "Membru (nume sau poreclă)",
+      "from": "De la",
+      "to": "Până la",
+      "submit": "Caută",
+      "found": "{count, plural, one {# mesaj găsit} few {# mesaje găsite} other {# de mesaje găsite}}",
+      "empty": "Niciun mesaj nu se potrivește căutării.",
+      "colMember": "Membru",
+      "colContent": "Mesaj",
+      "colTime": "Ora",
+      "colNumber": "Mesajul nr.",
+      "colEdited": "Editat",
+      "deletedMember": "Membru șters",
+      "pages": "Paginile istoricului",
+      "prev": "Pagina anterioară",
+      "next": "Pagina următoare",
+      "page": "Pagina {page} din {pages}"
+    }
   }
 }

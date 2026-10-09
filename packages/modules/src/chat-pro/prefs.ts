@@ -38,8 +38,11 @@ export type GcsChatProPrefs = {
   voteReminders: boolean;
   commandResults: Record<GcsChatProCommand, boolean>;
   // ─── Aranjament ─────────────────────────────────────────────
-  /** Unde stă chat-ul pe pagina principală (deasupra sau sub celelalte widget-uri ale zonei). */
-  position: "top" | "bottom";
+  /**
+   * Unde stă chat-ul pe pagina principală: `auto` = unde l-a pus adminul; `top` = primul în zona de sus; `bottom` =
+   * ultimul în zona de jos (doar când widget-ul e sus sau jos, nu în coloana laterală).
+   */
+  position: "auto" | "top" | "bottom";
   layout: GcsChatProLayout;
   /** Accentul propriu (`#RRGGBB`) sau `null` = accentul temei. */
   accent: string | null;
@@ -72,7 +75,7 @@ export const DEFAULT_CHAT_PRO_PREFS: GcsChatProPrefs = {
   mobileMediaButtons: true,
   voteReminders: true,
   commandResults: { roll: true, rps: true, birthday: true, iq: true },
-  position: "top",
+  position: "auto",
   layout: "cards",
   accent: null,
   colors: {},
@@ -110,7 +113,7 @@ export function normalizeChatProPrefs(raw: unknown): GcsChatProPrefs {
   if (isInt(r.voiceVolume, 0, 100)) out.voiceVolume = r.voiceVolume;
   const commands = r.commandResults && typeof r.commandResults === "object" ? (r.commandResults as Record<string, unknown>) : {};
   for (const c of CHAT_PRO_COMMANDS) if (typeof commands[c] === "boolean") out.commandResults[c] = commands[c];
-  if (r.position === "top" || r.position === "bottom") out.position = r.position;
+  if (r.position === "auto" || r.position === "top" || r.position === "bottom") out.position = r.position;
   if (CHAT_PRO_LAYOUTS.includes(r.layout as GcsChatProLayout)) out.layout = r.layout as GcsChatProLayout;
   if (typeof r.accent === "string" && HEX6.test(r.accent)) out.accent = r.accent.toUpperCase();
   const colors = r.colors && typeof r.colors === "object" ? (r.colors as Record<string, unknown>) : {};
@@ -138,7 +141,7 @@ export function chatProPrefsError(patch: unknown): string | null {
       if (!v || typeof v !== "object" || Array.isArray(v)) return key;
       for (const [c, on] of Object.entries(v)) if (!CHAT_PRO_COMMANDS.includes(c as GcsChatProCommand) || typeof on !== "boolean") return key;
     } else if (key === "position") {
-      if (v !== "top" && v !== "bottom") return key;
+      if (v !== "auto" && v !== "top" && v !== "bottom") return key;
     } else if (key === "layout") {
       if (!CHAT_PRO_LAYOUTS.includes(v as GcsChatProLayout)) return key;
     } else if (key === "accent") {
@@ -216,4 +219,34 @@ export function cssColor(hex8: string): string {
   const n = (i: number) => parseInt(hex8.slice(i, i + 2), 16);
   const alpha = hex8.length === 9 ? Math.round((n(7) / 255) * 1000) / 1000 : 1;
   return `rgb(${n(1)} ${n(3)} ${n(5)} / ${alpha})`;
+}
+
+/** Variabila CSS a fiecărui element colorabil (folosită de `chatpro.css`). */
+export const CHAT_PRO_COLOR_VARS: Record<GcsChatProColorElement, string> = {
+  messageBg: "--cp-msg-bg",
+  messageBorder: "--cp-msg-border",
+  messageText: "--cp-msg-text",
+  chatBg: "--cp-chat-bg",
+  header: "--cp-head-bg",
+  ranking: "--cp-rank-bg",
+  input: "--cp-input-bg",
+  buttons: "--cp-btn-bg",
+  accent: "--cp-accent",
+  uiBorder: "--cp-border",
+  uiText: "--cp-text",
+};
+
+/**
+ * Variabilele CSS ale vederii membrului: înălțimea listei, mărimea emoticoanelor, accentul propriu și culorile proprii
+ * (cu opacitate). Se pun pe rădăcina chat-ului, deci schimbă doar ce vede el. Culoarea elementului „Accent” câștigă
+ * peste accentul ales din listă.
+ */
+export function chatProStyleVars(prefs: GcsChatProPrefs): Record<string, string> {
+  const vars: Record<string, string> = { "--cp-height": `${prefs.height}px`, "--cp-emoji": `${prefs.emojiSize}px` };
+  if (prefs.accent) vars["--cp-accent"] = prefs.accent;
+  for (const el of CHAT_PRO_COLOR_ELEMENTS) {
+    const c = prefs.colors[el];
+    if (c) vars[CHAT_PRO_COLOR_VARS[el]] = cssColor(c);
+  }
+  return vars;
 }

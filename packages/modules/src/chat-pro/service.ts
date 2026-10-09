@@ -240,7 +240,7 @@ export class GcsChatProService {
     const map = await this.emotes.map();
     const current = (await this.me(userId)).emoteFavorites;
     const next = current.includes(code) ? current.filter((c) => c !== code) : map.has(code) ? [code, ...current].slice(0, MAX_EMOTE_FAVORITES) : null;
-    if (!next) throw new GcsValidationError({ code: "invalid_code" });
+    if (!next) throw new GcsValidationError({ code: "invalid_emote_code" });
     await this.deps.db.chatProProfile.upsert({ where: { userId }, create: { userId, emoteFavorites: next }, update: { emoteFavorites: next } });
     return next;
   }

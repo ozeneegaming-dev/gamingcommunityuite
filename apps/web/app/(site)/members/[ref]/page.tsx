@@ -88,6 +88,8 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
   const game = await services().bridge.queries.userCard(actor, user.id);
   const tr = await getTranslations("clans.roles");
   const tViewer = await getTranslations("imageViewer");
+  const birthdayRow = await services().db.user.findUnique({ where: { id: user.id }, select: { birthday: true, birthdayVisible: true } });
+  const birthday = birthdayRow?.birthdayVisible && birthdayRow.birthday ? birthdayRow.birthday : null;
 
   const header = (
     <section
@@ -278,6 +280,13 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         <span>{t("stats.joined")}</span>
         <span>{format.dateTime(new Date(stats.joinedAt), { dateStyle: "long" })}</span>
       </div>
+      {birthday && (
+        // Ziua de naștere publică: ziua și luna, fără an.
+        <div className="gcs-profileField" data-testid="gcs-profile-birthday">
+          <span>{t("birthday")}</span>
+          <span>{format.dateTime(birthday, { day: "numeric", month: "long", timeZone: "UTC" })}</span>
+        </div>
+      )}
     </GcsCard>
   );
 

@@ -1,5 +1,14 @@
 import { describe, expect, test } from "vitest";
 import { addDays, dayKey, daysBetween, isoWeekday, previousPeriod, rankingPeriod, secondsSinceMidnight, weekStart } from "./period";
+import { chatProStyleVars, normalizeChatProPrefs } from "./prefs";
+
+describe("variabilele CSS ale vederii membrului", () => {
+  test("înălțimea, emoticoanele, accentul și culorile proprii (culoarea elementului câștigă peste accent)", () => {
+    expect(chatProStyleVars(normalizeChatProPrefs({}))).toEqual({ "--cp-height": "460px", "--cp-emoji": "24px" });
+    const vars = chatProStyleVars(normalizeChatProPrefs({ accent: "#ff8800", colors: { messageBg: "#11223380", accent: "#00FF00FF" }, height: 600 }));
+    expect(vars).toEqual({ "--cp-height": "600px", "--cp-emoji": "24px", "--cp-accent": "rgb(0 255 0 / 1)", "--cp-msg-bg": "rgb(17 34 51 / 0.502)" });
+  });
+});
 
 describe("zilele și perioadele clasamentului", () => {
   test("ziua în fusul orar al site-ului (nu UTC)", () => {

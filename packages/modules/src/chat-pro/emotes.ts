@@ -195,7 +195,7 @@ export class GcsChatEmoteService {
     const { db, acp } = this.deps;
     await acp.assert(actor, CHAT_PRO_ACP_EMOTES, "edit");
     const code = typeof rawCode === "string" ? rawCode.trim().replace(/^:|:$/g, "").toLowerCase() : "";
-    if (!CODE_RE.test(code)) throw new GcsValidationError({ code: "invalid_code" });
+    if (!CODE_RE.test(code)) throw new GcsValidationError({ code: "invalid_emote_code" });
     const emote = await db.chatEmote.findUnique({ where: { id } });
     if (!emote) throw new GcsNotFound();
     if (emote.code === code) return;

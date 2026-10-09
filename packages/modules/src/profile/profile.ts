@@ -242,6 +242,24 @@ export class GcsProfileService {
     await this.changed(userId, actor, asStaff, "bio", undefined, clean);
   }
 
+  /**
+   * Ziua de naștere a membrului (`YYYY-MM-DD` sau `null` = ștearsă) și dacă e publică: pe profil (ziua și luna, fără an)
+   * și în comanda `/zi-de-nastere` din Chat Pro. Anul trebuie să fie între 1900 și anul curent, data nu poate fi în viitor.
+   */
+  async setBirthday(actor: GcsActor, input: { date: string | null; visible: boolean }): Promise<void> {
+    if (!actor.userId || actor.isBanned) throw new GcsForbidden({ reason: "guest" });
+    let birthday: Date | null = null;
+    if (input.date) {
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(input.date);
+      const d = m ? new Date(`${input.date}T00:00:00Z`) : null;
+      const valid = d !== null && !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === input.date && Number(m![1]) >= 1900 && d.getTime() <= Date.now();
+      if (!valid) throw new GcsValidationError({ birthday: "invalid_date" });
+      birthday = d;
+    }
+    await this.deps.db.user.update({ where: { id: actor.userId }, data: { birthday, birthdayVisible: birthday !== null && input.visible === true } });
+    await this.changed(actor.userId, actor, false, "birthday");
+  }
+
   // ─── Semnătura ────────────────────────────────────────────────────────────
 
   /**

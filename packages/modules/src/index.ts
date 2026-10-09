@@ -59,6 +59,7 @@ export { GcsChatHistory, HISTORY_PAGE_SIZE, type GcsChatHistoryPage, type GcsCha
 export { GcsChatProBar, type GcsChatProBarAdminItem, type GcsChatProBarInput } from "./chat-pro/bar";
 export { GcsChatProRankingService, RANKING_TAG } from "./chat-pro/ranking";
 export * from "./chat-pro/period";
+export { parseLinkPreview, type GcsLinkPreview } from "./chat-pro/preview";
 export * from "./realtime/live";
 export * from "./templates/components";
 export { GcsPluginHost, matchPluginRoute, PLUGINS_CHANNEL, type GcsPluginHookMetrics, type GcsPluginMenuEntry, type GcsPluginPageResult, type GcsPluginRenderedHtml, type GcsPluginTemplateRenderer } from "./plugins/host";

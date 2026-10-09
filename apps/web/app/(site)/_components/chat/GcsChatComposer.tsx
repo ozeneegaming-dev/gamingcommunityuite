@@ -6,7 +6,7 @@ import type { GcsAttachmentInfo, GcsErrorPayload, GcsResult } from "@gcs/core";
 import type { GcsChatConfig, GcsGif } from "@gcs/modules";
 import { GcsIconSvg } from "@gcs/ui";
 import { useTranslations } from "next-intl";
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState, type FormEvent } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { GcsChatEmojiPicker } from "./GcsChatEmojiPicker";
 import { useDismiss } from "./use-dismiss";
 
@@ -16,6 +16,27 @@ const VOICE_TYPES = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=o
 export type GcsChatComposerHandle = {
   /** Adaugă `@nume ` în mesaj (click pe numele unui membru). */
   mention: (name: string) => void;
+  /** Pune focusul în câmp (ex. după „Răspunde”). */
+  focus: () => void;
+};
+
+/** O sugestie a completării automate (ex. `:cod:` al unui emoticon): valoarea inserată și ce se afișează. */
+export type GcsComposerSuggestion = { key: string; value: string; label: ReactNode };
+
+/**
+ * Extensiile câmpului de mesaj (Chat Pro). Fără ele, câmpul e exact cel al chat-ului standard.
+ * - `before`: deasupra câmpului (ex. bara „Răspunzi lui …”);
+ * - `onInput`: la fiecare schimbare a textului (semnalul „scrie…”);
+ * - `emojiPanel` / `gifPanel`: selectoarele proprii (emoticoanele comunității, GIF-urile furnizorului ales);
+ * - `suggest`: sugestiile pentru `:text` tastat (emoticoanele după cod).
+ */
+export type GcsChatComposerExtensions = {
+  before?: ReactNode;
+  onInput?: (text: string) => void;
+  emojiPanel?: (api: { insert: (s: string) => void; close: () => void; placement: "above" | "below" }) => ReactNode;
+  gifPanel?: (api: { send: (url: string) => Promise<boolean>; close: () => void; placement: "above" | "below" }) => ReactNode;
+  gifLabel?: string;
+  suggest?: (query: string) => GcsComposerSuggestion[];
 };
 
 type Props = {
@@ -29,6 +50,8 @@ type Props = {
   /** Trimite mesajul; `true` dacă a plecat (câmpul se golește). */
   onSend: (body: string, files: string[]) => Promise<boolean>;
   onError: (error: GcsErrorPayload | string | null) => void;
+  /** Extensiile Chat Pro (lipsă = chat-ul standard). */
+  ext?: GcsChatComposerExtensions;
 };
 
 type Pending = { id: string; url: string; name: string };
@@ -53,7 +76,7 @@ async function uploadChatFile(channel: string, file: Blob, name: string): Promis
  * trimite oricum).
  */
 export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function GcsChatComposer(props, ref) {
-  const { channel, disabled, busy, config, labels, onSend, onError, placement = "above" } = props;
+  const { channel, disabled, busy, config, labels, onSend, onError, placement = "above", ext } = props;
   const t = useTranslations("chat.ui");
   const [text, setText] = useState("");
   const [files, setFiles] = useState<Pending[]>([]);
@@ -94,7 +117,28 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
       const before = text && !text.endsWith(" ") ? " " : "";
       insert(`${before}@${name} `);
     },
+    focus: () => inputRef.current?.focus(),
   }));
+
+  // ─── Completarea automată (`:cod` → emoticonul), doar cu extensia `suggest` ───────────
+  const [suggestions, setSuggestions] = useState<{ start: number; end: number; items: GcsComposerSuggestion[]; active: number } | null>(null);
+  const updateSuggestions = (value: string, caret: number) => {
+    if (!ext?.suggest) return;
+    const m = /(^|\s):([a-z0-9_]{2,32})$/i.exec(value.slice(0, caret));
+    const items = m ? ext.suggest(m[2]!.toLowerCase()).slice(0, 8) : [];
+    setSuggestions(m && items.length > 0 ? { start: caret - m[2]!.length - 1, end: caret, items, active: 0 } : null);
+  };
+  const applySuggestion = (s: GcsComposerSuggestion) => {
+    if (!suggestions) return;
+    const next = `${text.slice(0, suggestions.start)}${s.value} ${text.slice(suggestions.end)}`;
+    setText(next);
+    setSuggestions(null);
+    const pos = suggestions.start + s.value.length + 1;
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      inputRef.current?.setSelectionRange(pos, pos);
+    });
+  };
 
   const addFiles = async (list: File[]) => {
     const images = list.filter((f) => f.type.startsWith("image/"));
@@ -258,8 +302,20 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
           ))}
         </ul>
       )}
-      {panel === "emoji" && <GcsChatEmojiPicker ref={panelRef} placement={placement} onPick={insert} />}
-      {panel === "gif" && (
+      {panel === "emoji" &&
+        (ext?.emojiPanel ? (
+          <div ref={panelRef} style={{ display: "contents" }}>
+            {ext.emojiPanel({ insert, close: closePanel, placement })}
+          </div>
+        ) : (
+          <GcsChatEmojiPicker ref={panelRef} placement={placement} onPick={insert} />
+        ))}
+      {panel === "gif" && ext?.gifPanel && (
+        <div ref={panelRef} style={{ display: "contents" }}>
+          {ext.gifPanel({ send: (url) => onSend(url, []), close: closePanel, placement })}
+        </div>
+      )}
+      {panel === "gif" && !ext?.gifPanel && (
         <div ref={panelRef} className={`gcs-chat__panel gcs-chat__gifs gcs-chat__panel--${placement}`} role="dialog" aria-label="GIPHY" data-testid="gcs-chat-gifs">
           <form
             className="gcs-chat__gifSearch"
@@ -295,6 +351,18 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
           </button>
         </p>
       )}
+      {ext?.before}
+      {suggestions && (
+        <ul className={`gcs-chat__panel gcs-chatPro__suggest gcs-chat__panel--${placement}`} role="listbox" aria-label={t("suggestions")} data-testid="gcs-chat-suggest">
+          {suggestions.items.map((s, i) => (
+            <li key={s.key} role="option" aria-selected={i === suggestions.active}>
+              <button type="button" tabIndex={-1} onMouseDown={(e) => e.preventDefault()} onClick={() => applySuggestion(s)}>
+                {s.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
       <form ref={formRef} className="gcs-chat__form" onSubmit={(e) => void submit(e)}>
         <div className="gcs-chat__field">
           <input
@@ -305,7 +373,27 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
             maxLength={config.maxLength > 0 ? config.maxLength : 2000}
             value={text}
             disabled={disabled || recording !== null}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => {
+              setText(e.target.value);
+              ext?.onInput?.(e.target.value);
+              updateSuggestions(e.target.value, e.target.selectionStart ?? e.target.value.length);
+            }}
+            onKeyDown={(e) => {
+              if (!suggestions) return;
+              const n = suggestions.items.length;
+              if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+                e.preventDefault();
+                setSuggestions({ ...suggestions, active: (suggestions.active + (e.key === "ArrowDown" ? 1 : n - 1)) % n });
+              } else if (e.key === "Enter" || e.key === "Tab") {
+                e.preventDefault();
+                applySuggestion(suggestions.items[suggestions.active]!);
+              } else if (e.key === "Escape") {
+                e.preventDefault();
+                setSuggestions(null);
+              }
+            }}
+            onBlur={() => setSuggestions(null)}
+            {...(suggestions ? { role: "combobox", "aria-expanded": true, "aria-autocomplete": "list" as const } : {})}
             onPaste={(e) => {
               const pasted = [...e.clipboardData.files];
               if (pasted.some((f) => f.type.startsWith("image/"))) {
@@ -335,13 +423,13 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
                 />
               </>
             )}
-            {config.giphy && (
+            {(ext?.gifPanel !== undefined || config.giphy) && (
               <button
                 ref={gifButton}
                 type="button"
                 className="gcs-chat__tool gcs-chat__tool--gif"
                 aria-label="GIF"
-                title="GIPHY"
+                title={ext?.gifLabel ?? "GIPHY"}
                 aria-haspopup="dialog"
                 aria-expanded={panel === "gif"}
                 disabled={disabled}

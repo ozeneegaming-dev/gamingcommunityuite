@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
 import { services } from "@/lib/services";
+import { GcsBirthdayForm } from "../../_components/settings/GcsBirthdayForm";
 import { GcsImageSetting, GcsProfileFieldsForm } from "../../_components/settings/GcsProfileSettings";
 import { GcsIcon } from "@gcs/ui/icons";
 import { SETTINGS_ICONS } from "../../_components/settings/sections";
@@ -15,7 +16,7 @@ export default async function ProfileSettingsPage() {
   const { db, profiles, permissions } = services();
   const t = await getTranslations("settings.profile");
   const [user, fields, values, canCover, animated] = await Promise.all([
-    db.user.findUniqueOrThrow({ where: { id: actor.userId! }, select: { name: true, bio: true, image: true, coverAttachmentId: true, coverPositionY: true } }),
+    db.user.findUniqueOrThrow({ where: { id: actor.userId! }, select: { name: true, bio: true, image: true, coverAttachmentId: true, coverPositionY: true, birthday: true, birthdayVisible: true } }),
     profiles.fields(),
     db.profileFieldValue.findMany({ where: { userId: actor.userId! }, include: { field: { select: { key: true } } } }),
     permissions.can(actor, "profile.cover"),
@@ -62,6 +63,11 @@ export default async function ProfileSettingsPage() {
         docs={Object.fromEntries(values.filter((v) => v.json !== null).map((v) => [v.field.key, v.json]))}
         bio={user.bio}
         labels={labels}
+      />
+      <GcsBirthdayForm
+        date={user.birthday ? user.birthday.toISOString().slice(0, 10) : null}
+        visible={user.birthdayVisible}
+        labels={{ title: t("birthday"), date: t("birthdayDate"), visible: t("birthdayVisible"), hint: t("birthdayHint"), save: t("save"), saved: t("saved"), clear: t("birthdayClear") }}
       />
     </div>
   );

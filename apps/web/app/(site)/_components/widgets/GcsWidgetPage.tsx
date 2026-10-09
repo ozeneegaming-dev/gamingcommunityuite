@@ -33,6 +33,25 @@ function GcsWidgetSkeleton({ zone }: { zone: GcsWidgetZone }) {
   return <div className={`gcs-card gcs-widgetSkeleton gcs-widgetSkeleton--${zone}`} aria-hidden="true" />;
 }
 
+type GcsLayout = Record<GcsWidgetZone, GcsWidgetPlacementView[]>;
+
+/**
+ * Chat Pro: pe pagina principală, membrul alege unde stă chat-ul (preferința „Poziție”): primul în zona de sus sau
+ * ultimul în zona de jos. Doar pentru un chat pus de admin sus sau jos (coloana laterală rămâne cum e).
+ */
+async function arrangeChat(layout: GcsLayout, actor: GcsActor): Promise<GcsLayout> {
+  const { chatPro } = services();
+  if (!actor.userId || !(await chatPro.canUse(actor))) return layout;
+  const { position } = await chatPro.prefs(actor.userId);
+  if (position === "auto") return layout;
+  const isChat = (p: GcsWidgetPlacementView) => p.type === "chat.shoutbox";
+  const moving = [...layout.top.filter(isChat), ...layout.bottom.filter(isChat)];
+  if (moving.length === 0) return layout;
+  const top = layout.top.filter((p) => !isChat(p));
+  const bottom = layout.bottom.filter((p) => !isChat(p));
+  return { ...layout, top: position === "top" ? [...moving, ...top] : top, bottom: position === "bottom" ? [...bottom, ...moving] : bottom };
+}
+
 /**
  * O pagină cu zone de widget-uri (specul etapei 5): sus, coloana din dreapta și jos, în jurul conținutului paginii.
  * Vizitatorii văd widget-urile vizibile grupurilor lor; adminii în modul „Editează pagina” primesc editorul.
@@ -42,7 +61,8 @@ export async function GcsWidgetPage({ page, children }: { page: GcsWidgetPageKey
   const [actor, editing] = await Promise.all([currentActor(), viewerEditing()]);
   if (editing.pageEditing) return <GcsPageEditorHost page={page} actor={actor}>{children}</GcsPageEditorHost>;
 
-  const layout = await services().widgets.layout(page, actor);
+  const base = await services().widgets.layout(page, actor);
+  const layout = page === "index" ? await arrangeChat(base, actor) : base;
   const zone = (z: GcsWidgetZone) =>
     layout[z].map((p) => (
       <Suspense key={p.id} fallback={<GcsWidgetSkeleton zone={z} />}>

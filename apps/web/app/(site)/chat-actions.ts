@@ -16,12 +16,15 @@ async function assertChatEnabled(actor: GcsActor): Promise<void> {
   if (!(await services().apps.canAccess(actor, "chat"))) throw new GcsNotFound();
 }
 
-/** Trimite un mesaj în chat (text și/sau fișiere încărcate înainte). Întoarce mesajul salvat (cu HTML-ul randat). */
+/**
+ * Trimite un mesaj în chat (text și/sau fișiere încărcate înainte; `replyTo` = mesajul citat, din Chat Pro). Întoarce
+ * mesajul salvat (cu HTML-ul randat).
+ */
 export const sendChatMessage = gcsAction(
-  z.object({ channel, body: z.string().max(4000), files: z.array(z.string().min(1).max(40)).max(4).optional() }),
-  async ({ channel, body, files }, { actor }) => {
+  z.object({ channel, body: z.string().max(4000), files: z.array(z.string().min(1).max(40)).max(4).optional(), replyTo: z.number().int().positive().nullable().optional() }),
+  async ({ channel, body, files, replyTo }, { actor }) => {
     await assertChatEnabled(actor);
-    return services().chat.send(actor, channel, body, { files: files ?? [] });
+    return services().chat.send(actor, channel, body, { files: files ?? [], replyTo: replyTo ?? null });
   },
 );
 
