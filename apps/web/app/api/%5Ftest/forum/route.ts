@@ -6,7 +6,8 @@ export const dynamic = "force-dynamic";
 
 type Body =
   | { action: "forum"; parentId: number | null; type: ForumType; name: string; icon?: string; subforumColumns?: number }
-  | { action: "topic"; forumId: number; title: string; text: string; authorEmail: string; tags?: string[] }
+  /** `images`: câte imagini (încărcate ca atașamente ale autorului) urmează după text (vizualizatorul de imagini). */
+  | { action: "topic"; forumId: number; title: string; text: string; authorEmail: string; tags?: string[]; images?: number }
   | { action: "reply"; topicId: number; text: string; authorEmail: string; mentionEmail?: string }
   | { action: "permissions"; forumId: number; groupKey: string; actions: string[] }
   | { action: "pm"; fromEmail: string; toEmail: string; title: string; text: string }
@@ -24,6 +25,12 @@ type Body =
     };
 
 const doc = (text: string) => ({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
+
+/** O imagine PNG de 120×40 (o culoare), pentru postările cu imagini din teste. */
+const PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAHgAAAAoCAYAAAA16j4lAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAA2klEQVR4nO2VwREDMRDCrhxa2P57oJ2kigxw0UN/D7Lsx7oP3Gs3eNIHgEMwl+AomEtwPNH+wy+BP1h5CQguGMqjULDyEhBcMJRHoWDlJSC4YCiPQsHKS0BwwVAehYKVl4DggqE8CgUrLwHBBUN5FApWXgKCC4byKBSsvAQEFwzlUShYeQkILhjKo1Cw8hIQXDCUR6Fg5SUguGAoj0LByktAcMFQHoWClZeA4IKhPAoFKy8BwQVDeRQKVl4CgguG8igUrLwEBBcM5VEoWHkJCC4YyqNQsPISfskXUMR26J4zmrwAAAAASUVORK5CYII=",
+  "base64",
+);
 
 /** Actorul unui user existent (după email); pauza de flood e ștearsă, ca testele să poată posta în ritmul lor. */
 async function actorFor(email: string): Promise<GcsActor> {
@@ -67,10 +74,15 @@ export async function POST(req: Request): Promise<Response> {
     }
     case "topic": {
       const actor = await actorFor(body.authorEmail);
+      const content = doc(body.text) as { type: string; content: unknown[] };
+      for (let i = 0; i < (body.images ?? 0); i++) {
+        const file = await s.attachments.importFile(actor.userId, { name: `poza-${i + 1}.png`, bytes: PNG }, { maxBytes: 1024 * 1024 });
+        content.content.push({ type: "image", attrs: { attachmentId: file.id, alt: `Poza ${i + 1}`, width: file.width, height: file.height } });
+      }
       const res = await s.topics.create(actor, {
         forumId: body.forumId,
         title: body.title,
-        content: doc(body.text),
+        content,
         ...(body.tags ? { tags: body.tags } : {}),
       });
       await clearFlood(actor);
