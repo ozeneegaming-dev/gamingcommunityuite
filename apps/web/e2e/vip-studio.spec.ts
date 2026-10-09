@@ -410,7 +410,9 @@ test("meniul: „Studio VIP” e și în sertarul de pe mobil și dispare când 
 
   // Dezactivat din ACP: intrarea dispare din meniu (fără repornire).
   await page.goto("/admin/system/applications");
-  await page.getByTestId(`gcs-plugin-toggle-${KEY}`).uncheck();
+  // Oprirea cere confirmare, într-un dialog din pagină (ACP → Aplicații).
+  await page.getByTestId(`gcs-plugin-toggle-${KEY}`).click();
+  await page.getByTestId("gcs-app-confirm-ok").click();
   await expect(page.getByTestId(`gcs-plugin-toggle-${KEY}`)).not.toBeChecked();
   await expect.poll(async () => {
     await page.goto("/");

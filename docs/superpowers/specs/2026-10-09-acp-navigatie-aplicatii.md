@@ -16,9 +16,10 @@
   apoi **Dashboard** (link direct, nu zonă) și zonele, fiecare cu iconiță și eticheta mică dedesubt. Zona care conține
   pagina curentă e marcată (`aria-current`), zona afișată în coloană e „selectată”.
 - **Coloana a doua** (lângă bară): titlul zonei, apoi **toate** paginile ei odată, pe grupuri cu titluri mici, cu
-  majuscule. Pagina curentă e evidențiată (`aria-current="page"`). Coloana se restrânge (butonul din bara de sus) și
-  alegerea se ține minte (localStorage). Zona afișată e cea a paginii curente; pe Dashboard (care nu e într-o zonă)
-  coloana arată **ultima zonă folosită** (ținută minte în localStorage). Un click pe o zonă din bară o afișează în
+  majuscule. Pagina curentă e evidențiată (`aria-current="page"`). Coloana se restrânge (hamburgerul din bara de sus sau
+  butonul din antetul ei) și alegerea se ține minte (cookie, citit de layout: prima randare e deja cea corectă). Zona
+  afișată e cea a paginii curente; pe Dashboard (care nu e într-o zonă) coloana arată **ultima zonă folosită** (tot
+  într-un cookie). Un click pe o zonă din bară o afișează în
   coloană (și redeschide coloana restrânsă), fără navigare.
 - **Cardul adminului** (avatar, nume, rolul ACP, 2FA) e la baza coloanei.
 - **Mobil (≤ 900 px):** hamburgerul deschide un sertar (dialog modal) cu aceleași două niveluri: bara și coloana, una
@@ -119,7 +120,8 @@ aplicații: `GcsAppService.setEnabled`; pentru pluginuri: `pluginAdmin.setEnable
   **`<modul>.app_access`** („Poate accesa aplicația X”), booleană, cu valoarea **implicită `true` pentru orice grup**
   (inclusiv grupurile create de admin: câmp nou `fallback` în `GcsPermissionDef`). Folosește sistemul existent: setările
   de grup, uniunea permisivă, Root Admin are mereu acces, bannul îl anulează; apare și în pagina grupului.
-- Dialogul: toate grupurile cu „Poate accesa” (Root Admin bifat și blocat), butoanele „Toate” / „Niciunul”, „Salvează”.
+- Dialogul: toate grupurile cu „Poate accesa” (Root Admin bifat și blocat; Banat lipsește, bannul anulează oricum tot),
+  butoanele „Toate” / „Niciunul”, „Salvează”.
   `GcsAppService.setAccess(actor, app, permission, allowedGroupIds)` (dreptul `system.applications` edit) scrie toate
   grupurile într-o tranzacție, cu jurnal, apoi crește versiunea permisiunilor.
 - **Aplicarea pe server:**
@@ -149,7 +151,8 @@ din manifest (cu permisiunea lor, dacă au).
 ### 2.7 Ordinea
 
 Aplicațiile se reordonează prin tragere (și cu butoanele sus/jos, din tastatură). Ordinea se salvează în `apps.order`
-și se folosește: în lista din ACP și în meniul principal, unde itemii de pe primul nivel legați de aplicații își schimbă
+(implicit: aplicațiile de bază, apoi ordinea lor din meniul principal, ca prima mutare să nu amestece meniul) și se
+folosește: în lista din ACP și în meniul principal, unde itemii de pe primul nivel legați de aplicații își schimbă
 între ei locurile (ceilalți itemi rămân pe loc).
 
 ### 2.8 „Verifică actualizări”
