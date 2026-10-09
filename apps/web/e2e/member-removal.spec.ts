@@ -187,11 +187,16 @@ test("capturi: ecranele ștergerii și unirii (dark / light, 375 px)", async ({ 
     ["gdpr", "/admin/members/gdpr"],
   ];
   for (const theme of ["dark", "light"] as const) {
-    await page.context().addCookies([{ name: "gcs-acp-theme", value: theme, url: `${new URL(page.url()).origin}/` }]);
+    // Comutatorul temei ACP (Auto / Luminoasă / Întunecată) scrie cookie-ul citit de layout la navigările următoare.
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.getByTestId("gcs-acp-theme").locator("button").nth(theme === "light" ? 1 : 2).click();
+    await expect(page.locator(".gcs-acp")).toHaveAttribute("data-theme", theme);
     for (const [w, h, size] of [[1280, 900, "desktop"], [375, 812, "375"]] as const) {
       await page.setViewportSize({ width: w, height: h });
       for (const [name, url] of screens) {
         await page.goto(url);
+        // Tema aleasă rămâne și după o navigare completă (layout-ul citește cookie-ul pe server).
+        await expect(page.locator(".gcs-acp")).toHaveAttribute("data-theme", theme);
         await page.evaluate(() => document.fonts.ready.then(() => undefined));
         await page.waitForTimeout(300);
         if (name === "member") await page.getByTestId("gcs-member-danger").scrollIntoViewIfNeeded();

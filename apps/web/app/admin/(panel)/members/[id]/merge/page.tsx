@@ -172,7 +172,8 @@ function MergeCard({ role, user, kind }: { role: string; user: GcsMergePreview["
       <GcsAvatar name={user.name} size="m" />
       <div className="gcs-mergeCard__body">
         <span className="gcs-mergeCard__role">{role}</span>
-        <span className={`gcs-mergeCard__name gcs-name--${user.groupKey}`}>{user.name}</span>
+        {/* Fără stilul numelui grupului: culorile lui sunt alese pentru site și pot dispărea pe tema deschisă a ACP. */}
+        <span className="gcs-mergeCard__name">{user.name}</span>
         <span className="gcs-mergeCard__meta">
           {user.groupName} · {user.email}
         </span>

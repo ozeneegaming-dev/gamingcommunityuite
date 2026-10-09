@@ -73,6 +73,7 @@ export default async function AcpGdprPage({ searchParams }: Props) {
         </nav>
         <div style={{ padding: "0 16px 12px", color: "var(--gcs-muted)", fontSize: 13 }}>{t("gdpr.total", { count: result.total })}</div>
         <GcsTable
+          className="gcs-removalTable"
           caption={t("gdpr.title")}
           rowKey={(r) => r.id}
           empty={t("gdpr.empty")}
@@ -80,6 +81,7 @@ export default async function AcpGdprPage({ searchParams }: Props) {
           columns={[
             {
               key: "userName",
+              className: "gcs-removalTable__member",
               header: t("gdpr.columns.member"),
               render: (r) => (
                 <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -90,12 +92,14 @@ export default async function AcpGdprPage({ searchParams }: Props) {
             },
             {
               key: "kind",
+              className: "gcs-removalTable__kind",
               header: t("gdpr.columns.kind"),
               render: (r) => (r.kind === "MERGE" ? t("gdpr.kindMerge", { target: r.targetName ?? "" }) : `${t("kind.DELETE")} · ${t(`modes.${r.mode}.title`)}`),
             },
-            { key: "status", header: t("gdpr.columns.status"), render: (r) => <GcsRemovalStatus status={r.status} label={t(`status.${r.status}`)} /> },
+            { key: "status", className: "gcs-removalTable__status", header: t("gdpr.columns.status"), render: (r) => <GcsRemovalStatus status={r.status} label={t(`status.${r.status}`)} /> },
             {
               key: "createdAt",
+              className: "gcs-removalTable__when",
               header: t("gdpr.columns.when"),
               render: (r) => (
                 <span style={{ display: "flex", flexDirection: "column", gap: 2, fontSize: 13 }}>
@@ -106,6 +110,7 @@ export default async function AcpGdprPage({ searchParams }: Props) {
             },
             {
               key: "id",
+              className: "gcs-removalTable__actions",
               header: t("gdpr.columns.actions"),
               render: (r) => (
                 <span style={{ display: "flex", flexWrap: "wrap", gap: 6 }} data-testid="gcs-gdpr-actions">

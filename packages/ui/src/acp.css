@@ -1620,6 +1620,51 @@ input[type="checkbox"].gcs-switch:checked::before,
   }
 }
 
+/* Lista Cererilor GDPR: pe ecrane înguste, fiecare rând devine un card (membrul și starea sus, apoi restul). */
+@media (max-width: 640px) {
+  .gcs-removalTable thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .gcs-removalTable .gcs-table__table,
+  .gcs-removalTable tbody {
+    display: block;
+  }
+  .gcs-removalTable .gcs-table__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--gcs-border);
+  }
+  .gcs-removalTable .gcs-table__td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+  }
+  .gcs-removalTable .gcs-removalTable__member {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .gcs-removalTable .gcs-removalTable__status {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .gcs-removalTable .gcs-removalTable__kind,
+  .gcs-removalTable .gcs-removalTable__when,
+  .gcs-removalTable .gcs-removalTable__actions {
+    grid-column: 1 / -1;
+  }
+  .gcs-removalTable .gcs-table__empty {
+    display: block;
+    padding: 20px 16px;
+  }
+}
+
 /* Progresul pe pași. */
 .gcs-removalSteps {
   display: flex;
