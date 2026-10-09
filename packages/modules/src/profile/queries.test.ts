@@ -102,10 +102,12 @@ describe("insignele (specul 2026-10-07-insigne-grafice)", () => {
     expect(locked.get("posts_100")).toMatchObject({ requirement: { trigger: "POSTS_COUNT", threshold: 100 }, progress: { current: 1, target: 100 } });
     expect(locked.get("member_1y")).toMatchObject({ requirement: { trigger: "MEMBER_DAYS", threshold: 365 }, progress: { current: 0, target: 365 } });
     expect(locked.get("vip")).toMatchObject({ requirement: { trigger: "IS_VIP", threshold: 1 }, progress: null });
-    // Cele manuale vin la final, fără cerință numerică; un badge automat fără regulă activă nu apare.
-    expect(showcase.locked.slice(-2).map((b) => [b.key, b.requirement])).toEqual([
+    // Cele manuale vin la final, fără cerință numerică (ultimul: câștigătorul clasamentului Chat Pro, acordat de
+    // aplicație); un badge automat fără regulă activă nu apare.
+    expect(showcase.locked.slice(-3).map((b) => [b.key, b.requirement])).toEqual([
       ["tournament_champion", null],
       ["rp_veteran", null],
+      ["chat_pro_winner", null],
     ]);
     await w.db.achievementRule.updateMany({ where: { key: "posts_1000" }, data: { enabled: false } });
     expect((await w.profileQueries.badgeShowcase(other, w.member.userId!))!.locked.map((b) => b.key)).not.toContain("posts_1000");
