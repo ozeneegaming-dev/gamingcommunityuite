@@ -56,6 +56,15 @@ const chat: GcsModule = {
   eventListeners: [],
   app: { optional: true, labelKey: "apps.chatx", icon: "fa-solid fa-comment" },
 };
+/** O aplicație care depinde de alta (ca Chat Pro de Chat), marcată premium. */
+const chatPlus: GcsModule = {
+  key: "chatplus",
+  permissions: [],
+  settings: [],
+  acpMenu: [],
+  eventListeners: [],
+  app: { optional: true, labelKey: "apps.chatplus", icon: "fa-solid fa-star", requires: ["chatx"], premium: true },
+};
 const plugin: GcsModule = {
   key: "plugin.gcs.hello",
   permissions: [],
@@ -73,7 +82,7 @@ let newbie: GcsActor;
 let guest: GcsActor;
 
 beforeEach(async () => {
-  w = await createWorld([forums, servers, chat, plugin]);
+  w = await createWorld([forums, servers, chat, chatPlus, plugin]);
   const settings = new GcsSettingsService({ db: w.db, cache: w.cache, bus: w.bus, registry: w.registry });
   apps = new GcsAppService({ db: w.db, cache: w.cache, bus: w.bus, registry: w.registry, acp: w.acp, permissions: w.permissions, settings });
   root = await w.actorFor(await w.createUser("Root", "root_admin"));
@@ -156,6 +165,24 @@ describe("accesul pe grup", () => {
   });
 });
 
+describe("dependențele aplicațiilor", () => {
+  test("o aplicație cu `requires` e activă doar cu dependențele active; pornirea ei cere dependențele pornite", async () => {
+    expect(await apps.enabled("chatplus")).toBe(true);
+    await apps.setEnabled(root, "chatx", false);
+    // Dependența oprită: aplicația nu mai e activă (meniu, widget-uri, pagini), deși starea ei proprie e „pornită”.
+    expect(await apps.enabled("chatplus")).toBe(false);
+    expect((await apps.enabledFilter())("chatplus")).toBe(false);
+    expect(await apps.canAccess(member, "chatplus")).toBe(false);
+    expect((await apps.catalog()).find((a) => a.key === "chatplus")).toMatchObject({ enabled: true, requires: ["chatx"], premium: true });
+    await apps.setEnabled(root, "chatplus", false);
+    await expect(apps.setEnabled(root, "chatplus", true)).rejects.toMatchObject({ fields: { app: "requires" }, params: { requires: "chatx" } });
+    await apps.setEnabled(root, "chatx", true);
+    await apps.setEnabled(root, "chatplus", true);
+    expect(await apps.enabled("chatplus")).toBe(true);
+    expect((await apps.catalog()).find((a) => a.key === "srv")).toMatchObject({ requires: [], premium: false });
+  });
+});
+
 describe("aplicația de pornire", () => {
   test("implicit Forum (fără rescriere); o aplicație aleasă e pornirea doar dacă e pornită și accesibilă", async () => {
     expect(await apps.landingKey()).toBe("forums");
@@ -184,10 +211,10 @@ describe("aplicația de pornire", () => {
 
 describe("ordinea și catalogul", () => {
   test("catalogul (fără pluginuri) urmează ordinea salvată; cheile necunoscute rămân în ordine, dar nu apar", async () => {
-    expect((await apps.catalog()).map((a) => a.key)).toEqual(["forums", "srv", "chatx"]);
+    expect((await apps.catalog()).map((a) => a.key)).toEqual(["forums", "srv", "chatx", "chatplus"]);
     await apps.setOrder(root, ["chatx", "plugin.gcs.vechi", "srv", "chatx"]);
     expect(await apps.order()).toEqual(["chatx", "plugin.gcs.vechi", "srv"]);
-    expect((await apps.catalog()).map((a) => a.key)).toEqual(["chatx", "srv", "forums"]);
+    expect((await apps.catalog()).map((a) => a.key)).toEqual(["chatx", "srv", "forums", "chatplus"]);
     await expect(apps.setOrder(member, [])).rejects.toBeInstanceOf(GcsForbidden);
     await expect(apps.setOrder(root, [5 as unknown as string])).rejects.toBeInstanceOf(GcsValidationError);
   });
@@ -200,7 +227,7 @@ describe("ordinea și catalogul", () => {
         { position: 2, label: { key: "nav.srv" }, href: "/srv", appKey: "srv" },
       ],
     });
-    expect((await apps.catalog()).map((a) => a.key)).toEqual(["forums", "chatx", "srv"]);
+    expect((await apps.catalog()).map((a) => a.key)).toEqual(["forums", "chatx", "srv", "chatplus"]);
   });
 
   test("o intrare din catalog: blocarea, starea, accesul, secțiunile și pornirea", async () => {
@@ -217,6 +244,8 @@ describe("ordinea și catalogul", () => {
       access: "srv.app_access",
       sections: servers.app!.sections,
       landing: { href: "/srv" },
+      requires: [],
+      premium: false,
     });
     expect(list.find((a) => a.key === "chatx")).toMatchObject({ descriptionKey: null, sections: [], landing: null });
   });

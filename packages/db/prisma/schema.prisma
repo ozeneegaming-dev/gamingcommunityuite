@@ -73,6 +73,10 @@ model User {
   nameStyleId       Int?
   avatarFrameId     Int?
 
+  /// Ziua de naștere (fără oră) și dacă e publică (comanda `/zi-de-nastere` din Chat Pro, profilul).
+  birthday        DateTime? @db.Date
+  birthdayVisible Boolean   @default(false)
+
   // UI modern (etapa 5). `prefs`: { sound, toasts, theme } (specul etapei 5).
   signatureJson Json?
   signatureHtml String  @default("")
@@ -120,6 +124,10 @@ model User {
   notificationPreferences NotificationPreference[]
   chatMessages            ChatMessage[]            @relation("ChatAuthor")
   chatMutes               ChatMute[]               @relation("ChatMuted")
+  /// Chat Pro (aplicația premium): profilul de chat, statisticile zilnice și perioadele câștigate.
+  chatProProfile          ChatProProfile?
+  chatProStats            ChatProDailyStat[]
+  chatProWins             ChatProWinner[]
 
   @@index([primaryGroupId])
   @@map("users")
@@ -1261,13 +1269,21 @@ model ChatMessage {
   editedAt    DateTime?
   /// Chat v3: imaginile și mesajele vocale încărcate (`[{ id, kind, width, height }]`); atașamentele sunt `chat.message`.
   files       Json      @default("[]")
+  /// Răspunsul citat (Chat Pro): mesajul la care răspunde; dispare odată cu el.
+  replyToId   Int?
+  /// Datele extensiilor (Chat Pro): `{ first?, bot? }`; chat-ul standard le ignoră.
+  meta        Json?
 
   channel   ChatChannel           @relation(fields: [channelId], references: [id], onDelete: Cascade)
   author    User?                 @relation("ChatAuthor", fields: [authorId], references: [id], onDelete: SetNull)
   reactions ChatMessageReaction[]
+  replyTo   ChatMessage?          @relation("ChatReply", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies   ChatMessage[]         @relation("ChatReply")
 
   @@index([channelId, id])
   @@index([createdAt])
+  /// Istoricul Chat Pro (căutarea după membru) și ștergerea / unirea conturilor.
+  @@index([authorId, id])
   @@map("chat_messages")
 }
 
@@ -1485,6 +1501,103 @@ model ChatAnnouncement {
 
   @@index([expiresAt])
   @@map("chat_announcements")
+}
+
+// ─── Chat Pro (aplicația premium, specul 2026-10-10-chat-pro) ────────────────
+
+/// Profilul de chat al unui membru: preferințele (JSON normalizat de modul), porecla, insignele alese, favoritele.
+model ChatProProfile {
+  userId             String   @id
+  prefs              Json     @default("{}")
+  /// Porecla din chat (gol = numele de pe forum); unică după normalizare, nu poate fi numele altui membru.
+  nickname           String?
+  nicknameNormalized String?  @unique
+  /// Cel mult 2 badge-uri obținute, afișate lângă nume.
+  badgeIds           Int[]    @default([])
+  /// Emoticoanele favorite (codurile, fără `:`) și GIF-urile favorite (`[{ id, url, preview, width, height }]`).
+  emoteFavorites     String[] @default([])
+  gifFavorites       Json     @default("[]")
+  updatedAt          DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("chat_pro_profiles")
+}
+
+/// Mesajele numărate ale unui membru într-o zi (`day` = YYYY-MM-DD în fusul orar al site-ului): clasamentul și statisticile.
+model ChatProDailyStat {
+  userId   String
+  day      String
+  messages Int    @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, day])
+  @@index([day])
+  @@map("chat_pro_daily_stats")
+}
+
+/// Câștigătorul unei perioade a clasamentului (`periodStart` – `periodEnd`, zile YYYY-MM-DD, inclusiv).
+model ChatProWinner {
+  id          Int      @id @default(autoincrement())
+  periodStart String   @unique
+  periodEnd   String
+  userId      String?
+  messages    Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("chat_pro_winners")
+}
+
+/// Un element al barei de anunțuri de deasupra conversației (text, buton opțional, program, grupuri).
+model ChatProBarItem {
+  id        Int       @id @default(autoincrement())
+  text      String
+  ctaLabel  String    @default("")
+  ctaUrl    String    @default("")
+  startsAt  DateTime?
+  endsAt    DateTime?
+  /// Grupurile care îl văd (gol = toți).
+  groupIds  Int[]     @default([])
+  enabled   Boolean   @default(true)
+  position  Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("chat_pro_bar_items")
+}
+
+/// Un pachet (categorie) de emoticoane încărcate de admini.
+model ChatEmotePack {
+  id        Int      @id @default(autoincrement())
+  name      String
+  position  Int      @default(0)
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  emotes ChatEmote[]
+
+  @@map("chat_emote_packs")
+}
+
+/// Un emoticon: codul `:cod:` (unic), imaginea (atașamentul `chat_pro.emote`) și dimensiunile ei.
+model ChatEmote {
+  id           Int      @id @default(autoincrement())
+  packId       Int
+  code         String   @unique
+  attachmentId String
+  width        Int
+  height       Int
+  animated     Boolean  @default(false)
+  position     Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  pack ChatEmotePack @relation(fields: [packId], references: [id], onDelete: Cascade)
+
+  @@index([packId, position])
+  @@map("chat_emotes")
 }
 
 /// Cache-ul traducerilor de conținut: `hash` = sha256(provider + limba țintă + text).

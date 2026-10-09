@@ -382,6 +382,12 @@ export class GcsAttachmentService {
     return rows.length;
   }
 
+  /** Renunță la fișiere încărcate și încă nelegate (ex. un emoticon respins după verificarea dimensiunilor). */
+  async discard(ids: string[]): Promise<void> {
+    if (ids.length === 0) return;
+    await this.deleteRows(await this.deps.db.attachment.findMany({ where: { id: { in: ids }, contentType: null }, select: { id: true, storageKey: true } }));
+  }
+
   private async deleteRows(rows: { id: string; storageKey: string }[]): Promise<void> {
     if (rows.length === 0) return;
     for (const row of rows) await this.deps.store.delete(row.storageKey).catch(() => {});

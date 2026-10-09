@@ -16,7 +16,7 @@ afterAll(async () => {
 
 describe("modulele Profil, Mesaje și VIP", () => {
   test("se înregistrează lângă core și forum, fără chei duplicate", () => {
-    expect(world.registry.all().map((m) => m.key)).toEqual(["core", "forums", "profile", "messages", "vip", "chat", "servers", "clans"]);
+    expect(world.registry.all().map((m) => m.key)).toEqual(["core", "forums", "profile", "messages", "vip", "chat", "chat_pro", "servers", "clans"]);
     expect(world.registry.permissionDef("pm.max_participants")).toMatchObject({ merge: "max" });
     expect(world.registry.acpMenu().some((s) => s.app === "vip")).toBe(true);
   });
@@ -32,8 +32,9 @@ describe("modulele Profil, Mesaje și VIP", () => {
       ["Elită", 1000],
       ["Legendă", 3000],
     ]);
-    expect(await db.badge.count()).toBe(10);
-    expect(await db.badge.count({ where: { manual: true } })).toBe(2);
+    // Cele 10 implicite, plus badge-ul câștigătorului clasamentului Chat Pro (manual: îl acordă aplicația).
+    expect(await db.badge.count()).toBe(11);
+    expect(await db.badge.count({ where: { manual: true } })).toBe(3);
     // Insignele implicite (specul 2026-10-07-insigne-grafice, §8.1).
     expect(await db.badge.findUniqueOrThrow({ where: { key: "vip" } })).toMatchObject({ artShape: "diamond", artTier: "platinum", artIcon: "fa-solid fa-gem" });
     expect(await db.badge.count({ where: { artShape: null } })).toBe(0);
@@ -69,7 +70,7 @@ describe("modulele Profil, Mesaje și VIP", () => {
     await seedDefaults(db, world.registry);
     await seedDefaults(db, world.registry);
 
-    expect(await db.badge.count()).toBe(10);
+    expect(await db.badge.count()).toBe(11);
     expect(await db.achievementRule.count()).toBe(11);
     expect((await db.achievementRule.findUniqueOrThrow({ where: { key: "posts_100" } })).threshold).toBe(150);
     expect(await db.rank.count()).toBe(5);

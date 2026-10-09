@@ -16,12 +16,13 @@ import { Server, type Socket } from "socket.io";
 const HEARTBEAT_MS = 30_000;
 const TYPING_THROTTLE_MS = 3_000;
 const TOPIC_ROOM = /^topic:(\d+)$/;
+const CHAT_KEY = /^[a-z0-9][a-z0-9-]{1,40}$/;
 /** Camerele cu listă de prezență: topicurile („Citesc acum”) și camerele de chat (lista celor online). */
 const TRACKED_ROOM = /^(?:topic:\d+|chat:[a-z0-9][a-z0-9-]{1,40})$/;
 /** Lista „Citesc acum” se trimite cel mult o dată pe secundă pe topic. */
 const READERS_DEBOUNCE_MS = 1_000;
 
-type SocketData = { actor: GcsActor; viewer: GcsPresenceViewer; name: string | null; lastTyping: number };
+type SocketData = { actor: GcsActor; viewer: GcsPresenceViewer; name: string | null; lastTyping: number; lastChatTyping: number };
 type GcsSocket = Socket<Record<string, never>, Record<string, never>, Record<string, never>, SocketData>;
 
 export type GcsRealtimeServer = {
@@ -112,7 +113,7 @@ export function createRealtimeServer(opts: { services: GcsServices; secret: stri
       const name = actor.userId
         ? ((await services.db.user.findUnique({ where: { id: actor.userId }, select: { name: true } }))?.name ?? null)
         : null;
-      socket.data = { actor, viewer: actor.userId ? { userId: actor.userId } : { guestId: claims.guestId }, name, lastTyping: 0 };
+      socket.data = { actor, viewer: actor.userId ? { userId: actor.userId } : { guestId: claims.guestId }, name, lastTyping: 0, lastChatTyping: 0 };
       next();
     })().catch((error: unknown) => {
       log("Autentificarea socket-ului a eșuat", error);
@@ -165,6 +166,21 @@ export function createRealtimeServer(opts: { services: GcsServices; secret: stri
           if (ok) socket.to(room).emit("typing", { topicId, userId: actor.userId, name: socket.data.name });
         })
         .catch(() => {});
+    });
+
+    // „scrie…” în chat (Chat Pro): doar membrii din camera de chat, cu aplicația pornită; numele e porecla din chat.
+    socket.on("chat:typing", (key: unknown) => {
+      if (!actor.userId || typeof key !== "string" || !CHAT_KEY.test(key)) return;
+      const room = `chat:${key}`;
+      if (!socket.rooms.has(room)) return;
+      const now = Date.now();
+      if (now - socket.data.lastChatTyping < TYPING_THROTTLE_MS) return;
+      socket.data.lastChatTyping = now;
+      void (async () => {
+        if (!(await services.chatPro.active())) return;
+        const name = await services.chatPro.displayName(actor.userId!);
+        socket.to(room).emit("chat:typing", { channel: key, userId: actor.userId, name });
+      })().catch(() => {});
     });
 
     socket.on("presence:ping", () => {

@@ -161,6 +161,25 @@ describe("gcs-realtime", () => {
     expect(await fromGuest).toBeNull();
   });
 
+  test("„scrie…” în chat: doar cu Chat Pro pornit, spre ceilalți din cameră, cu porecla din chat", async () => {
+    const ana = await member("Ana");
+    const bogdan = await member("Bogdan");
+    for (const s of [ana, bogdan]) expect(await join(s, "chat:general")).toEqual({ ok: true });
+    const off = next(bogdan, "chat:typing");
+    ana.emit("chat:typing", "general");
+    expect(await off).toBeNull();
+
+    const root = await services.actors.forUser(users.Root!, "127.0.0.1");
+    await services.apps.setEnabled(root, "chat_pro", true);
+    await services.chatPro.setNickname(await services.actors.forUser(users.Ana!, "127.0.0.1"), "Anuța");
+    // Pauza dintre două semnale „scrie…” ale aceluiași socket (3 s) a început la primul semnal: un socket nou.
+    const ana2 = await member("Ana");
+    expect(await join(ana2, "chat:general")).toEqual({ ok: true });
+    const seen = next<{ channel: string; userId: string; name: string }>(bogdan, "chat:typing");
+    ana2.emit("chat:typing", "general");
+    expect(await seen).toEqual({ channel: "general", userId: users.Ana, name: "Anuța" });
+  });
+
   test("prezența: conectarea și ping-ul notează userul; cititorii topicului", async () => {
     const ana = await member("Ana");
     await join(ana, `topic:${topicId}`);

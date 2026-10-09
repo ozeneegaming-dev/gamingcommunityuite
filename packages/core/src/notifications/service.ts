@@ -171,9 +171,10 @@ export class GcsNotificationService {
     return out;
   }
 
-  async list(userId: string, opts: { unreadOnly?: boolean; before?: number; limit?: number } = {}): Promise<GcsNotificationView[]> {
+  /** Notificările userului, cele mai noi primele; `types` le restrânge la anumite tipuri (ex. panoul chat-ului). */
+  async list(userId: string, opts: { unreadOnly?: boolean; before?: number; limit?: number; types?: string[] } = {}): Promise<GcsNotificationView[]> {
     const rows = await this.deps.db.notification.findMany({
-      where: { userId, ...(opts.unreadOnly ? { readAt: null } : {}), ...(opts.before ? { id: { lt: opts.before } } : {}) },
+      where: { userId, ...(opts.unreadOnly ? { readAt: null } : {}), ...(opts.before ? { id: { lt: opts.before } } : {}), ...(opts.types ? { type: { in: opts.types } } : {}) },
       orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
       take: Math.min(opts.limit ?? 20, 100),
     });

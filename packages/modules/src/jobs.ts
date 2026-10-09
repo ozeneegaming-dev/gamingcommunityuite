@@ -14,6 +14,14 @@ export function registerAppJobs(s: GcsServices): void {
   s.vip.registerJobs(s.jobs);
   s.notificationProducers.registerJobs(s.jobs);
   s.chat.registerJobs(s.jobs);
+  // Chat Pro: câștigătorul perioadei încheiate a clasamentului (și badge-ul lui), o dată pe oră.
+  s.jobs.register({
+    name: "chat_pro.finalize",
+    everyMs: 3600_000,
+    handler: async () => {
+      if (await s.chatPro.active()) await s.chatPro.ranking.finalize();
+    },
+  });
   s.jobs.register({ name: "translate.cleanup", everyMs: 24 * 3600_000, handler: async () => void (await s.translation.cleanup()) });
   // Joburile pluginurilor (etapa 6): un singur job generic, rulat de gazda pluginurilor din worker.
   s.jobs.register({ name: PLUGIN_JOB, handler: (data) => s.plugins.runJob(data) });

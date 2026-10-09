@@ -17,8 +17,10 @@ import {
   type GcsSettingsService,
 } from "@gcs/core";
 import { normalizeUsername } from "@gcs/core";
-import type { ChatChannel, ChatRoomType, PrismaClient } from "@gcs/db";
+import type { ChatChannel, ChatRoomType, Prisma, PrismaClient } from "@gcs/db";
+import type { GcsChatProMessage } from "../chat-pro/types";
 import { toRef, userRefSelect, type GcsUserRef } from "../forums/queries";
+import { GcsChatExtensions } from "./extensions";
 import { CHAT_ACP_CHANNELS, CHAT_CONTAINER, defaultChannelPermissions } from "./index";
 import { applyWordFilter, chatEmbeds, cleanChatText, countEmoji, renderChatText, type GcsChatEmbed } from "./text";
 
@@ -72,6 +74,10 @@ export type GcsChatMessageView = {
   files: GcsChatFile[];
   /** Imaginile și clipurile YouTube din linkuri (afișate după setări). */
   embeds: GcsChatEmbed[];
+  /** Mesajul la care răspunde (Chat Pro); `null` = niciunul sau șters. */
+  replyToId: number | null;
+  /** Datele adăugate de Chat Pro (porecla, insignele, citatul, rezultatul unei comenzi); lipsesc în chat-ul standard. */
+  pro?: GcsChatProMessage;
 };
 export type GcsChatRoomInput = { name: string; type: ChatRoomType; invite?: string[] };
 export type GcsChatChannelInput = {
@@ -94,6 +100,7 @@ type ChatMessageRow = {
   author: Parameters<typeof toRef>[0] | null;
   reactions?: { userId: string; reactionId: number }[];
   files?: unknown;
+  replyToId?: number | null;
 };
 
 const isChatFile = (f: unknown): f is GcsChatFile =>
@@ -120,6 +127,7 @@ export function toChatView(m: ChatMessageRow, channel: string, viewerId: string 
     mine: viewerId ? reactions.filter((r) => r.userId === viewerId).map((r) => r.reactionId) : [],
     files: Array.isArray(m.files) ? m.files.filter(isChatFile) : [],
     embeds: chatEmbeds(m.body),
+    replyToId: m.replyToId ?? null,
   };
 }
 
@@ -158,6 +166,8 @@ export class GcsChatService {
       acp: GcsAcpRoleService;
       /** Imaginile și mesajele vocale (opțional în testele care nu le folosesc). */
       attachments?: GcsAttachmentService;
+      /** Punctele de extensie (Chat Pro); fără ele, chat-ul standard. */
+      extensions?: GcsChatExtensions;
     },
   ) {
     deps.attachments?.registerAccess(CHAT_FILE_CONTENT_TYPE, (actor, id) => this.canReadMessage(actor, Number(id)));
@@ -262,11 +272,17 @@ export class GcsChatService {
     });
   }
 
+  /** Extensiile chat-ului (Chat Pro le înregistrează aici). */
+  get extensions(): GcsChatExtensions {
+    return (this.deps.extensions ??= new GcsChatExtensions());
+  }
+
   /**
    * Trimite un mesaj: text și/sau fișiere încărcate înainte (imagini, mesaje vocale; cel mult 4, doar ale autorului,
-   * încă nelegate). Imaginile cer `chat.allow_images`, vocea `chat.voice_enabled`.
+   * încă nelegate). Imaginile cer `chat.allow_images`, vocea `chat.voice_enabled`. `replyTo`: un mesaj al aceleiași
+   * camere (răspunsul citat din Chat Pro).
    */
-  async send(actor: GcsActor, key: string, raw: unknown, opts: { files?: string[] } = {}): Promise<GcsChatMessageView> {
+  async send(actor: GcsActor, key: string, raw: unknown, opts: { files?: string[]; replyTo?: number | null } = {}): Promise<GcsChatMessageView> {
     const { db, bus, permissions, settings, rateLimiter, realtime } = this.deps;
     const channel = await this.accessible(actor, key);
     if (!actor.userId || actor.isBanned || !(await permissions.can(actor, "chat.write", chatContainer(channel.key)))) {
@@ -278,8 +294,9 @@ export class GcsChatService {
     if (fileIds.length > MAX_FILES) throw new GcsValidationError({ files: "too_many" }, { max: String(MAX_FILES) });
     if (fileIds.length > 0 && !this.deps.attachments) throw new GcsValidationError({ files: "unsupported_type" });
     await this.checkLimits(body);
-    // Fișierele se verifică înainte de flood: o încercare invalidă nu consumă mesajul permis.
+    // Fișierele și mesajul citat se verifică înainte de flood: o încercare invalidă nu consumă mesajul permis.
     const files = fileIds.length > 0 ? await this.chatFiles(actor.userId, fileIds) : [];
+    const replyToId = opts.replyTo ? await this.replyTarget(channel.id, opts.replyTo) : null;
     const mute = await this.activeMute(actor.userId, channel.id);
     if (mute) throw new GcsForbidden({ reason: "muted", ...(mute.until ? { until: mute.until.toISOString() } : {}) });
 
@@ -298,22 +315,37 @@ export class GcsChatService {
       }
     }
 
+    // Extensiile (Chat Pro): comenzile își scriu rezultatul în locul textului, datele lor rămân în `meta`.
+    const patch = await this.extensions.beforeSend({ actor, channel, body, files: fileIds.length, replyToId });
     const words = await settings.get<string[]>("chat.word_filter");
-    const filtered = applyWordFilter(body, Array.isArray(words) ? words : []);
+    const filtered = applyWordFilter(patch.body ?? body, Array.isArray(words) ? words : []);
     const authorId = actor.userId;
+    const meta = patch.meta ?? null;
     const message = await db.$transaction(async (tx) => {
       const row = await tx.chatMessage.create({
-        data: { channelId: channel.id, authorId, body: filtered, files },
+        data: { channelId: channel.id, authorId, body: filtered, files, replyToId, ...(meta ? { meta: meta as Prisma.InputJsonValue } : {}) },
         include: { author: { select: userRefSelect } },
       });
       if (files.length > 0) await this.deps.attachments!.attach(tx, fileIds, { contentType: CHAT_FILE_CONTENT_TYPE, contentId: String(row.id), ownerId: authorId });
       return row;
     });
-    const view = toChatView(message, channel.key);
-    await bus.emit({ name: "chat.message", payload: { channelKey: channel.key, messageId: message.id, authorId: actor.userId }, tags: [`chat:${channel.key}`] });
+    await this.extensions.afterSend({ actor, channel, messageId: message.id, body: filtered, meta, replyToId, createdAt: message.createdAt });
+    const [view] = await this.extensions.decorate([toChatView(message, channel.key)]);
+    await bus.emit({
+      name: "chat.message",
+      payload: { channelKey: channel.key, messageId: message.id, authorId: actor.userId, ...(meta?.bot ? { bot: true } : {}) },
+      tags: [`chat:${channel.key}`],
+    });
     await realtime.publish(`chat:${channel.key}`, "message", view);
     await this.mentions(channel, message.id, actor.userId, filtered);
-    return view;
+    return view!;
+  }
+
+  /** Mesajul citat: din aceeași cameră, neșters; altfel o eroare pe câmpul `replyTo`. */
+  private async replyTarget(channelId: number, id: number): Promise<number> {
+    const target = Number.isInteger(id) ? await this.deps.db.chatMessage.findUnique({ where: { id }, select: { channelId: true, deletedAt: true } }) : null;
+    if (!target || target.deletedAt || target.channelId !== channelId) throw new GcsValidationError({ replyTo: "invalid" });
+    return id;
   }
 
   /** Fișierele de trimis: ale autorului, încă nelegate, imagini (dacă sunt permise) sau audio (dacă vocea e pornită). */
@@ -362,9 +394,9 @@ export class GcsChatService {
       data: { body: applyWordFilter(body, Array.isArray(words) ? words : []), editedAt: new Date(now) },
       include: { author: { select: userRefSelect }, reactions: { select: { userId: true, reactionId: true } } },
     });
-    const view = toChatView(updated, channel.key);
+    const [view] = await this.extensions.decorate([toChatView(updated, channel.key)]);
     await realtime.publish(`chat:${channel.key}`, "edited", view);
-    return view;
+    return view!;
   }
 
   /** Reacție la un mesaj (setul de reacții al forumului): a doua apăsare o retrage; unică pe user și reacție. */
@@ -400,7 +432,7 @@ export class GcsChatService {
     if (messageId !== null) {
       const message = await db.chatMessage.findUnique({ where: { id: messageId }, include: { author: { select: userRefSelect } } });
       if (!message || message.deletedAt || message.channelId !== channel.id) throw new GcsNotFound();
-      pinned = toChatView(message, channel.key);
+      [pinned = null] = await this.extensions.decorate([toChatView(message, channel.key)]);
     }
     await db.$transaction(async (tx) => {
       await tx.chatChannel.update({ where: { id: channel.id }, data: { pinnedMessageId: messageId } });

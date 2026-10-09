@@ -226,6 +226,13 @@ export interface GcsModule {
     sections?: GcsAppSection[];
     /** Pagina de pornire a site-ului pe care o poate da aplicația. */
     landing?: GcsAppLanding;
+    /**
+     * Aplicațiile de care depinde (cheile modulelor, ex. Chat Pro → `chat`): cu una dintre ele oprită, aplicația nu e
+     * activă (meniu, widget-uri, pagini), iar pornirea ei cere întâi pornirea dependențelor.
+     */
+    requires?: string[];
+    /** O aplicație premium (vândută separat; licențele vin în etapa 11). Doar o marcă în catalog, fără efect încă. */
+    premium?: boolean;
   };
   /** Tipurile de widget-uri ale modulului. */
   widgets?: GcsWidgetDef[];

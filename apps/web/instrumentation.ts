@@ -30,9 +30,9 @@ export async function register(): Promise<void> {
     const { services } = await import("./lib/services");
     const { db, registry, cache } = services();
     await seedDefaults(db, registry);
-    // Seed-ul poate actualiza meniul (ex. marcajul `nav:v2`) și temele (marcajul `theme:nova`): cache-ul lor din Redis
-    // supraviețuiește repornirii.
-    await cache.invalidateTags(["nav", "themes"]);
+    // Seed-ul poate actualiza meniul (ex. marcajul `nav:v2`), temele (marcajul `theme:nova`) și aplicațiile (o aplicație
+    // nouă, ex. Chat Pro, pornește oprită): cache-ul lor din Redis supraviețuiește repornirii.
+    await cache.invalidateTags(["nav", "themes", "apps"]);
   } catch (error) {
     console.error("[GCS] Seed-ul modulelor a eșuat", error);
   }

@@ -61,6 +61,9 @@ export type GcsAppInfo = {
   access: string | null;
   sections: GcsAppSection[];
   landing: GcsAppLanding | null;
+  /** Aplicațiile de care depinde (oprită una, aceasta nu e activă). */
+  requires: string[];
+  premium: boolean;
 };
 
 /** Cine vede: actorul complet sau doar grupurile lui (meniul, widget-urile). */
@@ -105,21 +108,26 @@ export class GcsAppService {
     return new Set(keys);
   }
 
-  /** O cheie de modul e activă dacă nu e o aplicație opțională dezactivată (un modul necunoscut e inactiv). */
+  /**
+   * O cheie de modul e activă dacă nu e o aplicație opțională dezactivată și toate aplicațiile de care depinde
+   * (`app.requires`) sunt active (un modul necunoscut e inactiv).
+   */
   async enabled(key: string): Promise<boolean> {
-    const m = this.deps.registry.module(key);
-    if (!m) return false;
-    if (!m.app?.optional) return true;
-    return !(await this.disabled()).has(key);
+    return (await this.enabledFilter())(key);
   }
 
   /** Funcția de filtrare pentru mai multe chei (o singură citire). */
   async enabledFilter(): Promise<(key: string) => boolean> {
     const off = await this.disabled();
-    return (key) => {
-      const m = this.deps.registry.module(key);
-      return Boolean(m) && (!m!.app?.optional || !off.has(key));
+    const registry = this.deps.registry;
+    const active = (key: string, seen: Set<string>): boolean => {
+      const m = registry.module(key);
+      if (!m || seen.has(key)) return false;
+      if (m.app?.optional && off.has(key)) return false;
+      seen.add(key);
+      return (m.app?.requires ?? []).every((dep) => active(dep, seen));
     };
+    return (key) => active(key, new Set());
   }
 
   async list(): Promise<GcsAppView[]> {
@@ -135,6 +143,13 @@ export class GcsAppService {
     await acp.assert(actor, APPS_ACP_SECTION, "edit");
     const m = this.deps.registry.module(key);
     if (!m?.app?.optional) throw new GcsNotFound();
+    // Pornirea cere dependențele pornite (ex. Chat Pro → Chat); oprirea unei dependențe oprește singură aplicația.
+    if (enabled) {
+      const missing = (m.app.requires ?? []).filter((dep) => !this.deps.registry.module(dep));
+      const filter = await this.enabledFilter();
+      const off = (m.app.requires ?? []).filter((dep) => !filter(dep));
+      if (missing.length > 0 || off.length > 0) throw new GcsValidationError({ app: "requires" }, { requires: [...missing, ...off].join(",") });
+    }
     await db.$transaction(async (tx) => {
       await tx.app.upsert({ where: { key }, create: { key, enabled }, update: { enabled } });
       await writeAudit(tx, { actorId: actor.userId, action: "app.toggle", targetType: "app", targetId: key, after: { enabled }, ip: actor.ip });
@@ -192,6 +207,8 @@ export class GcsAppService {
         access: app.locked ? null : appAccessKey(m.key),
         sections: app.sections ?? [],
         landing: app.landing ?? null,
+        requires: app.requires ?? [],
+        premium: app.premium === true,
       };
     });
     return GcsAppService.sortByOrder(list, (a) => a.key, order);

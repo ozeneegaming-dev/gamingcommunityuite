@@ -2,6 +2,7 @@ import { GcsForbidden, GcsNotFound, type GcsActor, type GcsPermissionService } f
 import type { ChatChannel, ChatRoomType, PrismaClient } from "@gcs/db";
 import { toRef, userRefSelect, type GcsUserRef } from "../forums/queries";
 import { chatContainer, toChatView, type GcsChatMessageView } from "./chat";
+import type { GcsChatExtensions } from "./extensions";
 
 const PAGE = 30;
 
@@ -19,7 +20,12 @@ export type GcsChatAnnouncementView = { id: number; body: string; expiresAt: str
  * O cameră privată există doar pentru membrii ei (invitați și creator): pentru restul e „nu există”.
  */
 export class GcsChatQueries {
-  constructor(private readonly deps: { db: PrismaClient; permissions: GcsPermissionService }) {}
+  constructor(private readonly deps: { db: PrismaClient; permissions: GcsPermissionService; extensions?: GcsChatExtensions }) {}
+
+  /** Vederile completate de extensii (Chat Pro), dacă sunt. */
+  private decorate<T extends GcsChatMessageView[]>(views: T): Promise<T> {
+    return this.deps.extensions ? this.deps.extensions.decorate(views) : Promise.resolve(views);
+  }
 
   private async isMember(userId: string | null, channelId: number): Promise<boolean> {
     if (!userId) return false;
@@ -87,7 +93,7 @@ export class GcsChatQueries {
       take: Math.min(Math.max(limit, 1), 100),
       include: { author: { select: userRefSelect }, reactions: { select: { userId: true, reactionId: true } } },
     });
-    return rows.reverse().map((m) => toChatView(m, channel.key, viewer.userId));
+    return this.decorate(rows.reverse().map((m) => toChatView(m, channel.key, viewer.userId)));
   }
 
   /** Mesajul fixat al camerei (sau `null`). */
@@ -98,7 +104,9 @@ export class GcsChatQueries {
       where: { id: channel.pinnedMessageId },
       include: { author: { select: userRefSelect }, reactions: { select: { userId: true, reactionId: true } } },
     });
-    return m && !m.deletedAt ? toChatView(m, channel.key, viewer.userId) : null;
+    if (!m || m.deletedAt) return null;
+    const [view] = await this.decorate([toChatView(m, channel.key, viewer.userId)]);
+    return view ?? null;
   }
 
   /** Anunțurile globale active (apar în toate camerele). */

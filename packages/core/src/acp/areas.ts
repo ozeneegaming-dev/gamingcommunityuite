@@ -32,7 +32,7 @@ export const GCS_ACP_GROUP_ORDER: Record<GcsAcpArea, readonly string[]> = {
     "acp.menu.system.support",
     "acp.menu.system.conversions",
   ],
-  community: ["acp.menu.community.forums_group", "acp.menu.community.chat_group", "acp.menu.members.moderation"],
+  community: ["acp.menu.community.forums_group", "acp.menu.community.chat_group", "acp.menu.community.chat_pro_group", "acp.menu.members.moderation"],
   members: ["acp.menu.members.members", "acp.menu.members.staff", "acp.menu.members.member_settings", "acp.menu.members.achievements", "acp.menu.members.communication"],
   appearance: ["acp.menu.appearance.style", "acp.menu.appearance.layout"],
   gaming: ["acp.menu.gaming.servers_group", "acp.menu.gaming.clans_group"],

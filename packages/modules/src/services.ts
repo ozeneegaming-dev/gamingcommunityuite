@@ -88,6 +88,9 @@ import { GcsPromotionService } from "./profile/promotions";
 import { GcsProfileQueries } from "./profile/queries";
 import { GcsSocialService } from "./profile/social";
 import { GcsChatService } from "./chat/chat";
+import { GcsChatExtensions } from "./chat/extensions";
+import { GcsChatProService } from "./chat-pro/service";
+import { chatProMemberData } from "./chat-pro/memberData";
 import { GcsChatQueries } from "./chat/queries";
 import { renderChatText } from "./chat/text";
 import { canViewPost } from "./forums/content";
@@ -145,6 +148,11 @@ export type GcsServices = {
   realtimeRooms: GcsRealtimeRooms;
   notificationProducers: GcsNotificationProducers;
   chat: GcsChatService;
+  /**
+   * Chat Pro (aplicația premium, specul 2026-10-10-chat-pro): profilul de chat, clasamentul, bara de anunțuri,
+   * emoticoanele, GIF-urile, comenzile botului și istoricul, legate de chat prin punctele de extensie.
+   */
+  chatPro: GcsChatProService;
   apps: GcsAppService;
   translation: GcsTranslationService;
   widgets: GcsWidgetService;
@@ -461,8 +469,27 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   });
   notificationProducers.registerTargets();
   notificationProducers.listen(bus);
-  const chat = new GcsChatService({ db, bus, permissions, settings, rateLimiter, realtime, acp, attachments });
-  const chatQueries = new GcsChatQueries({ db, permissions });
+  // Punctele de extensie ale chat-ului (Chat Pro), împărțite de serviciu și de citiri.
+  const chatExtensions = new GcsChatExtensions();
+  const chat = new GcsChatService({ db, bus, permissions, settings, rateLimiter, realtime, acp, attachments, extensions: chatExtensions });
+  const chatQueries = new GcsChatQueries({ db, permissions, extensions: chatExtensions });
+  const chatPro = new GcsChatProService({
+    db,
+    cache,
+    settings,
+    permissions,
+    apps,
+    acp,
+    chat,
+    chatQueries,
+    attachments,
+    realtime,
+    rateLimiter,
+    notifications,
+    reports,
+    grantBadge: (userId, key, reason) => achievements.grantSystemBadge(userId, key, reason),
+  });
+  chatPro.register();
   const realtimeRooms = new GcsRealtimeRooms({ permissions, forumQueries });
   realtimeRooms.register("chat", (actor, key) => chatQueries.canRead(actor, key));
   // Aplicația Servere (etapa Gaming): statusul din Redis, citirile publice, ACP-ul și interogarea din worker.
@@ -610,6 +637,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     realtimeRooms,
     notificationProducers,
     chat,
+    chatPro,
     chatQueries,
     apps,
     translation,
@@ -721,6 +749,7 @@ function createMemberRemoval(d: {
   removal.register(profileMemberData({ db: d.db, evaluate: (userId) => d.achievements.evaluate(userId) }));
   removal.register(messageMemberData({ db: d.db, attachments: d.attachments }));
   removal.register(chatMemberData({ db: d.db, attachments: d.attachments }));
+  removal.register(chatProMemberData({ db: d.db }));
   removal.register(vipMemberData({ db: d.db, vip: d.vip }));
   removal.register(clanMemberData({ db: d.db, clans: d.clans }));
   removal.register(serverMemberData({ db: d.db, store: d.bridge.store, players: d.bridge.players }));

@@ -289,6 +289,28 @@ export class GcsAchievementService {
     await this.schedule(userId);
   }
 
+  /**
+   * Acordarea automată a unui badge de către o aplicație (ex. câștigătorul clasamentului Chat Pro), fără drept ACP:
+   * badge-ul după cheie, o singură dată pe membru (cu punctele lui), apoi evenimentul `badge.awarded`. Întoarce `false`
+   * dacă membrul îl avea deja sau badge-ul nu există.
+   */
+  async grantSystemBadge(userId: string, badgeKey: string, reason: string): Promise<boolean> {
+    const { db, bus } = this.deps;
+    const badge = await db.badge.findUnique({ where: { key: badgeKey } });
+    if (!badge) return false;
+    const granted = await db.$transaction(async (tx) => {
+      const { count } = await tx.userBadge.createMany({ data: [{ userId, badgeId: badge.id, awardedById: null, reason: reason.slice(0, 200) }], skipDuplicates: true });
+      if (count === 0) return false;
+      if (badge.points !== 0) await tx.user.update({ where: { id: userId }, data: { points: { increment: badge.points } } });
+      await writeAudit(tx, { actorId: null, action: "badge.award", targetType: "user", targetId: userId, after: { badge: badge.key, reason, system: true }, ip: null });
+      return true;
+    });
+    if (!granted) return false;
+    await bus.emit({ name: "badge.awarded", payload: { userId, badgeId: badge.id, byRule: true }, tags: userTags(userId) });
+    await this.schedule(userId);
+    return true;
+  }
+
   /** Retrage un badge (punctele primite rămân; o regulă nu-l mai acordă din nou, pentru că a rulat deja). */
   async revokeBadge(actor: GcsActor, userId: string, badgeId: number): Promise<void> {
     const { db, bus, acp } = this.deps;
