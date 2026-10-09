@@ -10,6 +10,7 @@ import { GcsThemeCssService } from "./files";
 import { GcsTemplateService } from "../templates/service";
 import {
   DEFAULT_THEME_SETTINGS,
+  NOVA_THEME_SETTINGS,
   isThemeFileUrl,
   mergeThemeObjects,
   normalizeThemeSettings,
@@ -307,10 +308,44 @@ export class GcsThemeService {
     await this.changed();
   }
 
-  /** Tema implicită, dacă nu există încă nicio temă (seed; idempotent). */
+  /**
+   * Temele incluse (seed; idempotent, specul 2026-10-10-tema-nova §3):
+   * - o instalare nouă primește „GCS Nova” (implicită) și „Clasic” (aspectul de până acum, cheia `default`);
+   * - o instalare existentă primește Nova o singură dată (marcajul `theme:nova`): tema e creată, devine implicită, iar
+   *   vechea temă implicită „Default” e redenumită „Clasic” (un nume ales de admin rămâne). Membrii care și-au ales o
+   *   temă (cookie-ul `gcs-skin`) o păstrează. Dacă adminul alege apoi altă temă implicită, seed-ul n-o mai schimbă.
+   */
   static async seedDefault(tx: Prisma.TransactionClient): Promise<void> {
-    if ((await tx.theme.count()) > 0) return;
-    const theme = await tx.theme.create({ data: { key: "default", name: "Default", isDefault: true, settings: DEFAULT_THEME_SETTINGS as unknown as Prisma.InputJsonValue } });
+    const state = await tx.systemState.upsert({ where: { id: 1 }, update: {}, create: { id: 1 } });
+    const marked = state.seedMarks.includes(NOVA_SEED_MARK);
+    const count = await tx.theme.count();
+    if (count === 0) {
+      await GcsThemeService.createBuiltIn(tx, NOVA_THEME_KEY, NOVA_THEME_NAME, NOVA_THEME_SETTINGS, true);
+      await GcsThemeService.createBuiltIn(tx, CLASSIC_THEME_KEY, CLASSIC_THEME_NAME, DEFAULT_THEME_SETTINGS, false);
+    } else if (!marked) {
+      const taken = new Set((await tx.theme.findMany({ select: { key: true } })).map((t) => t.key));
+      const key = [NOVA_THEME_KEY, `gcs-${NOVA_THEME_KEY}`].find((k) => !taken.has(k));
+      if (key) {
+        await tx.theme.updateMany({ where: { isDefault: true }, data: { isDefault: false } });
+        await GcsThemeService.createBuiltIn(tx, key, NOVA_THEME_NAME, NOVA_THEME_SETTINGS, true);
+      }
+      await tx.theme.updateMany({ where: { key: CLASSIC_THEME_KEY, name: LEGACY_THEME_NAME }, data: { name: CLASSIC_THEME_NAME } });
+    }
+    if (!marked) await tx.systemState.update({ where: { id: 1 }, data: { seedMarks: { push: NOVA_SEED_MARK } } });
+  }
+
+  private static async createBuiltIn(tx: Prisma.TransactionClient, key: string, name: string, settings: GcsThemeSettings, isDefault: boolean): Promise<void> {
+    const theme = await tx.theme.create({ data: { key, name, isDefault, settings: settings as unknown as Prisma.InputJsonValue } });
     await GcsThemeCssService.seed(tx, theme.id, "", { authorId: null, authorName: "" });
   }
 }
+
+/** Tema Nova inclusă (designul `nova`) și tema clasică (aspectul de până acum, cheia veche a temei implicite). */
+export const NOVA_THEME_KEY = "nova";
+export const NOVA_THEME_NAME = "GCS Nova";
+export const CLASSIC_THEME_KEY = "default";
+export const CLASSIC_THEME_NAME = "Clasic";
+/** Numele vechii teme implicite (redenumită „Clasic” la actualizare, dacă adminul nu i-a dat alt nume). */
+const LEGACY_THEME_NAME = "Default";
+/** Marcajul actualizării care aduce Nova pe instalările existente (`system_state.seedMarks`). */
+export const NOVA_SEED_MARK = "theme:nova";

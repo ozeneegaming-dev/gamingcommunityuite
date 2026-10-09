@@ -9,8 +9,19 @@ export const THEME_TOKENS = ["bg", "surface", "surface2", "border", "text", "mut
 export type GcsThemeToken = (typeof THEME_TOKENS)[number];
 export type GcsThemePalette = Record<GcsThemeToken, string>;
 
-/** Fonturile din care se alege (Google Fonts; primele două vin deja cu aplicația). */
-export const THEME_FONTS = ["Chakra Petch", "Manrope", "Inter", "Rajdhani", "Orbitron", "Oxanium", "Exo 2", "Montserrat", "Poppins", "Roboto"] as const;
+/**
+ * Fonturile din care se alege (Google Fonts, toate cu licență OFL / Apache). Chakra Petch, Manrope și DM Sans vin deja cu
+ * aplicația (next/font); restul se încarcă din Google Fonts doar când tema le folosește.
+ */
+export const THEME_FONTS = ["Chakra Petch", "Manrope", "DM Sans", "Inter", "Rajdhani", "Orbitron", "Oxanium", "Exo 2", "Montserrat", "Poppins", "Roboto"] as const;
+
+/**
+ * Designul temei (specul 2026-10-10-tema-nova): `classic` = aspectul de până acum, `nova` = designul gaming bleumarin +
+ * portocaliu (antetul înalt cu imagine, benzile cu iconița în cerc, subsolul bogat, sistemul de hover). Designul alege
+ * și valorile implicite ale celorlalte setări (`themeDefaults`).
+ */
+export const THEME_PRESETS = ["classic", "nova"] as const;
+export type GcsThemePreset = (typeof THEME_PRESETS)[number];
 
 /**
  * Culorile elementelor (antet, subsol, casete, butoane…), separat pentru modul întunecat și cel luminos. Valoarea e un
@@ -46,9 +57,15 @@ export type GcsThemeElements = Record<GcsThemeElementColor, string>;
 export const THEME_SCHEMES = ["site", "auto", "light", "dark"] as const;
 export const THEME_FORUM_INDEX_LAYOUTS = ["list", "grid"] as const;
 export const THEME_TOPIC_VIEWS = ["normal", "compact"] as const;
-export const THEME_BOX_SHADOWS = ["none", "soft", "strong"] as const;
+export const THEME_BOX_SHADOWS = ["none", "subtle", "soft", "strong"] as const;
+/** Stilul benzii titlurilor (Nova): fundal plin, gradient de accent din stânga sau bară de accent. */
+export const THEME_BAND_STYLES = ["solid", "gradient", "accent"] as const;
+/** Forma iconiței din bandă (Nova): cerc, pătrat rotunjit sau fără chenar. */
+export const THEME_BAND_ICONS = ["circle", "rounded", "none"] as const;
 
 export type GcsThemeSettings = {
+  /** Designul (vezi `THEME_PRESETS`). */
+  preset: GcsThemePreset;
   dark: GcsThemePalette;
   light: GcsThemePalette;
   fontDisplay: string;
@@ -91,12 +108,29 @@ export type GcsThemeSettings = {
     fontDisplayCustom: string;
     fontTextCustom: string;
   };
-  header: { height: number; heightMobile: number; navIcons: boolean; sticky: boolean };
+  header: {
+    height: number;
+    heightMobile: number;
+    navIcons: boolean;
+    sticky: boolean;
+    /** Nova: imaginea de fundal a antetului (`/files/<id>`); `null` = grafica GCS (gradient cu model tehnic). */
+    image: string | null;
+    /** Nova: cât de închis e stratul peste imagine (%). */
+    overlay: number;
+    /** Nova: modelul tehnic (grila de circuite) peste grafica implicită. */
+    pattern: boolean;
+    /** Nova: rândul cu breadcrumb-ul și căutarea, sub meniu. */
+    crumbs: boolean;
+  };
   mobileNav: { side: "left" | "right"; icons: boolean };
   boxes: { borderWidth: number; shadow: (typeof THEME_BOX_SHADOWS)[number]; clickableRows: boolean };
   sidebar: { width: number; position: "right" | "left"; sticky: boolean };
   avatars: { rounded: boolean };
   buttons: { radius: number };
+  /** Nova: benzile titlurilor (stilul) și iconița din ele (forma). */
+  bands: { style: (typeof THEME_BAND_STYLES)[number]; icon: (typeof THEME_BAND_ICONS)[number] };
+  /** Nova: efectele de hover (tranziții, mărirea pastilelor); fără ele, doar schimbările de culoare. */
+  effects: { hover: boolean };
 };
 
 export type GcsDeepPartial<T> = { [K in keyof T]?: T[K] extends Record<string, unknown> ? GcsDeepPartial<T[K]> : T[K] };
@@ -130,6 +164,7 @@ const DEFAULT_ELEMENTS: GcsThemeElements = {
 
 /** Valorile implicite: exact paleta și aspectul din machete (`tokens.css` / `themes.css` / `layout.css`). */
 export const DEFAULT_THEME_SETTINGS: GcsThemeSettings = {
+  preset: "classic",
   dark: {
     bg: "#0B0C10",
     surface: "#14161C",
@@ -180,13 +215,116 @@ export const DEFAULT_THEME_SETTINGS: GcsThemeSettings = {
   },
   layout: { forumIndex: "list", topicView: "normal", featureFirstPost: false },
   typography: { baseSize: 16, contentSize: 100, fontDisplayCustom: "", fontTextCustom: "" },
-  header: { height: 64, heightMobile: 64, navIcons: true, sticky: true },
+  header: { height: 64, heightMobile: 64, navIcons: true, sticky: true, image: null, overlay: 70, pattern: true, crumbs: true },
   mobileNav: { side: "left", icons: true },
   boxes: { borderWidth: 1, shadow: "none", clickableRows: false },
   sidebar: { width: 320, position: "right", sticky: false },
   avatars: { rounded: true },
   buttons: { radius: 10 },
+  bands: { style: "solid", icon: "circle" },
+  effects: { hover: true },
 };
+
+/**
+ * Culorile elementelor în designul Nova: titlurile și linkurile albe (accentul la hover), antetul închis peste imagine
+ * în ambele moduri, butonul secundar gri-albăstrui. Banda titlurilor rămâne `@surface2` (diferită de casetă și pagină).
+ */
+const NOVA_ELEMENTS_DARK: GcsThemeElements = {
+  ...DEFAULT_ELEMENTS,
+  heading: "#FFFFFF",
+  link: "#FFFFFF",
+  linkHover: "@accent",
+  headerBg: "@chrome",
+  headerText: "#D3D9E2",
+  footerBg: "@chrome",
+  footerText: "@text",
+  drawerBg: "@surface",
+  drawerText: "@text",
+  widgetTitle: "#FFFFFF",
+  widgetIcon: "@accentInk",
+  btnSecondaryBg: "#202630",
+  btnSecondaryText: "#FFFFFF",
+};
+
+const NOVA_ELEMENTS_LIGHT: GcsThemeElements = {
+  ...DEFAULT_ELEMENTS,
+  heading: "#0B0F17",
+  link: "@text",
+  linkHover: "@accent",
+  // Antetul rămâne închis și în modul luminos (imaginea cu stratul întunecat).
+  headerBg: "#0E121A",
+  headerText: "#D3D9E2",
+  footerBg: "@chrome",
+  footerText: "@text",
+  drawerBg: "@surface",
+  drawerText: "@text",
+  widgetTitle: "@text",
+  widgetIcon: "@accent",
+  btnSecondaryBg: "#E9EDF2",
+  btnSecondaryText: "@text",
+};
+
+/**
+ * Designul Nova (specul 2026-10-10-tema-nova): bleumarin închis + portocaliu-roșu, DM Sans 13 px, casete de 12 px cu
+ * umbră fină, butoane de 4 px, antetul înalt cu imagine. Varianta luminoasă: suprafețe deschise, același accent.
+ * `muted` e puțin mai deschis decât în referință, ca textul secundar să aibă contrast ≥ 4.5:1 pe casete.
+ */
+export const NOVA_THEME_SETTINGS: GcsThemeSettings = {
+  ...DEFAULT_THEME_SETTINGS,
+  preset: "nova",
+  dark: {
+    bg: "#0B0F17",
+    surface: "#151922",
+    surface2: "#1A1F29",
+    border: "#1E2533",
+    text: "#CED5DE",
+    muted: "#7E8999",
+    accent: "#DF390C",
+    accentInk: "#FF6A3D",
+    chrome: "#0E121A",
+    chrome2: "#10141D",
+    ok: "#2ECC71",
+    warn: "#EA6C00",
+  },
+  light: {
+    bg: "#F1F3F7",
+    surface: "#FFFFFF",
+    surface2: "#F3F5F9",
+    border: "#DCE1E9",
+    text: "#1B2230",
+    muted: "#596374",
+    accent: "#DF390C",
+    accentInk: "#C2300A",
+    chrome: "#FFFFFF",
+    chrome2: "#F7F8FA",
+    ok: "#1E9E55",
+    warn: "#B35A00",
+  },
+  fontDisplay: "DM Sans",
+  fontText: "DM Sans",
+  radius: 12,
+  width: 1400,
+  elements: { dark: NOVA_ELEMENTS_DARK, light: NOVA_ELEMENTS_LIGHT },
+  scheme: { default: "dark", toggle: true },
+  logo: { ...DEFAULT_THEME_SETTINGS.logo, font: "text", weight: 800, size: 24, textMobile: true, height: 70, heightMobile: 70 },
+  typography: { ...DEFAULT_THEME_SETTINGS.typography, baseSize: 13 },
+  header: { height: 76, heightMobile: 60, navIcons: false, sticky: false, image: null, overlay: 70, pattern: true, crumbs: true },
+  boxes: { borderWidth: 1, shadow: "subtle", clickableRows: true },
+  sidebar: { width: 340, position: "right", sticky: false },
+  buttons: { radius: 4 },
+  bands: { style: "solid", icon: "circle" },
+  effects: { hover: true },
+};
+
+/** Valorile implicite ale unui design (completarea setărilor, „Revino la implicit” din editorul vizual). */
+export function themeDefaults(preset: GcsThemePreset | undefined | null): GcsThemeSettings {
+  return preset === "nova" ? NOVA_THEME_SETTINGS : DEFAULT_THEME_SETTINGS;
+}
+
+/**
+ * Setările care schimbă ceva doar în designul Nova (editorul vizual le arată doar atunci; altfel ar fi opțiuni „moarte”).
+ */
+export const NOVA_ONLY_FIELDS: readonly string[] = ["header.image", "header.overlay", "header.pattern", "header.crumbs", "bands.style", "bands.icon", "effects.hover"];
 
 /**
  * Elementele care au mereu un fundal propriu (specul `2026-10-07-antete-titluri.md`: fiecare titlu pe banda lui).
@@ -231,6 +369,7 @@ function buildFields(): Record<string, GcsThemeField> {
     for (const e of THEME_ELEMENT_COLORS) fields[`elements.${mode}.${e}`] = { kind: "color" };
   }
   return {
+    preset: choice(THEME_PRESETS),
     ...fields,
     fontDisplay: { kind: "font" },
     fontText: { kind: "font" },
@@ -261,6 +400,10 @@ function buildFields(): Record<string, GcsThemeField> {
     "header.heightMobile": int(48, 96, "px"),
     "header.navIcons": BOOL,
     "header.sticky": BOOL,
+    "header.image": { kind: "file" },
+    "header.overlay": int(0, 95, "%", 5),
+    "header.pattern": BOOL,
+    "header.crumbs": BOOL,
     "mobileNav.side": choice(["left", "right"]),
     "mobileNav.icons": BOOL,
     "boxes.borderWidth": int(0, 4, "px"),
@@ -271,6 +414,9 @@ function buildFields(): Record<string, GcsThemeField> {
     "sidebar.sticky": BOOL,
     "avatars.rounded": BOOL,
     "buttons.radius": int(0, 24, "px"),
+    "bands.style": choice(THEME_BAND_STYLES),
+    "bands.icon": choice(THEME_BAND_ICONS),
+    "effects.hover": BOOL,
   };
 }
 
@@ -353,7 +499,9 @@ export function mergeThemeObjects<T>(base: T, patch: unknown): T {
  * opace (`THEME_OPAQUE_ELEMENTS`) salvate `transparent` primesc valoarea implicită.
  */
 export function normalizeThemeSettings(raw: unknown): GcsThemeSettings {
-  let out = structuredClone(DEFAULT_THEME_SETTINGS);
+  // Valorile care lipsesc vin din designul temei (o temă fără `preset` e una veche, deci clasică).
+  const preset = themePath(raw, "preset");
+  let out = structuredClone(themeDefaults(themeFieldError(THEME_FIELDS.preset!, preset) === null ? (preset as GcsThemePreset) : "classic"));
   for (const [path, field] of Object.entries(THEME_FIELDS)) {
     const value = themePath(raw, path);
     if (value !== undefined && themeFieldError(field, value) === null) out = withThemePath(out, path, value);

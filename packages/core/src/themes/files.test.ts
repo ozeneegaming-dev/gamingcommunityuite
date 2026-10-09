@@ -63,12 +63,12 @@ describe("GcsThemeCssService", () => {
   test("tema implicită are custom.css; salvarea sanitizează, face o versiune și schimbă CSS-ul public", async () => {
     const file = await custom();
     expect(file.locked).toBe(true);
-    const before = (await themes.active()).version;
+    const before = ((await themes.get("default"))!).version;
     const res = await css.save(root, "default", file.id, ".x { color: red; }\n</style>");
     expect(res.changed).toBe(true);
     expect(res.file.content).toBe(".x { color: red; }\n/style>");
     expect(res.removed.map((r) => r.reason)).toEqual(["html"]);
-    const theme = await themes.active();
+    const theme = (await themes.get("default"))!;
     expect(theme.version).toBe(before + 1);
     expect(themes.css(theme)).toContain("/* custom.css */\n.x { color: red; }");
     // Același conținut: nicio versiune nouă.
@@ -85,7 +85,7 @@ describe("GcsThemeCssService", () => {
     const b = await css.create(root, "default", "extra.css");
     await css.save(root, "default", a.id, ".layout{}");
     await css.save(root, "default", b.id, ".extra{}");
-    const compiled = () => themes.active().then((t) => themes.css(t));
+    const compiled = () => themes.get("default").then((t) => t!).then((t) => themes.css(t));
     expect((await compiled()).indexOf(".layout{}")).toBeLessThan((await compiled()).indexOf(".extra{}"));
     await css.move(root, "default", b.id, -1);
     expect((await css.files("default")).map((f) => f.name)).toEqual(["custom.css", "extra.css", "layout.css"]);
@@ -128,13 +128,13 @@ describe("GcsThemeCssService", () => {
     const res = await css.restore(root, "default", file.id, v1.id);
     expect(res.file.content).toBe(".v1{}");
     expect((await css.history("default", file.id)).versions[0]?.action).toBe("restore");
-    expect(themeCustomCss(await themes.active())).toBe(".v1{}");
+    expect(themeCustomCss((await themes.get("default"))!)).toBe(".v1{}");
   });
 
   test("o singură sursă: editorul vizual publică în custom.css, iar salvarea din ACP șterge CSS-ul din draft", async () => {
     await themes.saveDraft(root, "default", { customCss: ".studio{}", radius: 4 });
-    expect(themes.css(await themes.active(), { draft: true })).toContain(".studio{}");
-    expect(themes.css(await themes.active())).not.toContain(".studio{}");
+    expect(themes.css((await themes.get("default"))!, { draft: true })).toContain(".studio{}");
+    expect(themes.css((await themes.get("default"))!)).not.toContain(".studio{}");
     await themes.publish(root, "default");
     const file = await custom();
     expect(file.content).toBe(".studio{}");
@@ -143,7 +143,7 @@ describe("GcsThemeCssService", () => {
     // Un draft nou cu CSS, apoi o salvare din ACP → CSS: draft-ul își pierde CSS-ul (rămân celelalte setări).
     await themes.saveDraft(root, "default", { customCss: ".vechi{}", radius: 6 });
     await css.save(root, "default", file.id, ".acp{}");
-    const theme = await themes.active();
+    const theme = (await themes.get("default"))!;
     expect(theme.draft).toEqual({ radius: 6 });
     expect(themes.css(theme, { draft: true })).toContain(".acp{}");
     await themes.publish(root, "default");

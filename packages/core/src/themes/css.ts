@@ -1,8 +1,9 @@
 import {
-  DEFAULT_THEME_SETTINGS,
+  NOVA_THEME_SETTINGS,
   THEME_ELEMENT_COLORS,
   THEME_TOKENS,
   themeColorCss,
+  themeDefaults,
   themeElementColor,
   themeFonts,
   type GcsThemeElementColor,
@@ -122,18 +123,22 @@ export function joinThemeCssFiles(files: readonly { name: string; content: strin
 
 const palette = (p: GcsThemePalette) => THEME_TOKENS.map((k) => `  --gcs-${k}: ${p[k]};`).join("\n");
 
-/** Hover-ul butonului principal: nuanța din machete pentru accentul implicit, altfel culoarea lui, mai deschisă. */
-function primaryHover(elements: GcsThemeElements, p: GcsThemePalette, base: GcsThemePalette): string {
+/**
+ * Hover-ul butonului principal. Clasic: nuanța din machete pentru accentul implicit, altfel culoarea lui, mai deschisă.
+ * Nova: stratul de lumină al sistemului de hover (+8% alb), oricare ar fi culoarea.
+ */
+function primaryHover(elements: GcsThemeElements, p: GcsThemePalette, base: GcsThemePalette, preset: GcsThemeSettings["preset"]): string {
+  if (preset === "nova") return `color-mix(in srgb, ${themeColorCss(elements.btnPrimaryBg)} 92%, #fff)`;
   if (elements.btnPrimaryBg === "@accent" && p.accent.toUpperCase() === base.accent.toUpperCase()) return "#E23446";
   return `color-mix(in srgb, ${themeColorCss(elements.btnPrimaryBg)} 86%, #fff)`;
 }
 
 /** Variabilele culorilor de element (elementele opace nu ies niciodată `transparent`, nici din setări nenormalizate). */
-const elements = (e: GcsThemeElements, p: GcsThemePalette, base: GcsThemePalette) =>
-  [...THEME_ELEMENT_COLORS.map((k) => `  ${THEME_ELEMENT_VARS[k]}: ${themeColorCss(themeElementColor(k, e[k]))};`),`  --gcs-btn-primary-hover: ${primaryHover(e, p, base)};`].join("\n");
+const elements = (e: GcsThemeElements, p: GcsThemePalette, base: GcsThemePalette, preset: GcsThemeSettings["preset"]) =>
+  [...THEME_ELEMENT_COLORS.map((k) => `  ${THEME_ELEMENT_VARS[k]}: ${themeColorCss(themeElementColor(k, e[k]))};`), `  --gcs-btn-primary-hover: ${primaryHover(e, p, base, preset)};`].join("\n");
 
 /** Fonturile livrate cu aplicația (prin next/font) au o variabilă proprie; restul vin din Google Fonts. */
-const BUNDLED_FONTS: Record<string, string> = { "Chakra Petch": "var(--font-gcs-display)", Manrope: "var(--font-gcs-text)" };
+const BUNDLED_FONTS: Record<string, string> = { "Chakra Petch": "var(--font-gcs-display)", Manrope: "var(--font-gcs-text)", "DM Sans": "var(--font-gcs-nova)" };
 
 const fontStack = (name: string, fallback: string) => {
   const family = `"${name.replace(/["\\]/g, "")}"`;
@@ -142,6 +147,7 @@ const fontStack = (name: string, fallback: string) => {
 
 const SHADOWS: Record<GcsThemeSettings["boxes"]["shadow"], string> = {
   none: "none",
+  subtle: "0 2px 4px -1px rgb(11 15 23 / 0.1)",
   soft: "0 4px 16px rgb(0 0 0 / 0.16)",
   strong: "0 12px 34px rgb(0 0 0 / 0.34)",
 };
@@ -169,7 +175,36 @@ function sizes(s: GcsThemeSettings): string {
     `  --gcs-sidebar-w: ${s.sidebar.width}px;`,
     `  --gcs-avatar-radius: ${s.avatars.rounded ? "50%" : "18%"};`,
     `  --gcs-btn-radius: ${s.buttons.radius}px;`,
+    // Nova: imaginea antetului (un fișier al site-ului, deja validat) și stratul închis de peste ea.
+    `  --gcs-header-image: ${s.header.image ? `url("${s.header.image}")` : "none"};`,
+    `  --gcs-header-overlay: ${s.header.overlay / 100};`,
   ].join("\n");
+}
+
+/** Raza iconiței din bandă (Nova), după formă. */
+const BAND_ICON_RADIUS: Record<GcsThemeSettings["bands"]["icon"], string> = { circle: "50%", rounded: "10px", none: "0" };
+
+/**
+ * Regulile setărilor Nova (`NOVA_ONLY_FIELDS`), doar când diferă de aspectul Nova implicit. Țintesc `.gcs-nova` (clasa
+ * pusă de layout-ul site-ului pe designul Nova), deci în designul clasic nu schimbă nimic.
+ */
+function novaRules(s: GcsThemeSettings): string[] {
+  const base = NOVA_THEME_SETTINGS;
+  const rules: string[] = [];
+  if (s.bands.style === "gradient") {
+    rules.push(
+      `html:root .gcs-nova {\n  --gcs-band-bg: linear-gradient(90deg, color-mix(in srgb, var(--gcs-accent) 14%, transparent), transparent 62%), var(--gcs-box-header-bg, var(--gcs-surface2));\n}`,
+    );
+  }
+  if (s.bands.style === "accent") rules.push(`html:root .gcs-nova {\n  --gcs-band-shadow: inset 3px 0 0 var(--gcs-accent);\n}`);
+  if (s.bands.icon !== base.bands.icon) {
+    const none = s.bands.icon === "none" ? `\n  --gcs-band-icon-bg: transparent;\n  --gcs-band-icon-border: transparent;\n  --gcs-band-icon-size: 22px;` : "";
+    rules.push(`html:root .gcs-nova {\n  --gcs-band-icon-radius: ${BAND_ICON_RADIUS[s.bands.icon]};${none}\n}`);
+  }
+  if (!s.effects.hover) rules.push(`html:root .gcs-nova {\n  --gcs-hover-scale: 1;\n  --gcs-hover-lift: 0px;\n  --gcs-ease: 0s;\n}`);
+  if (!s.header.pattern) rules.push(`html:root .gcs-nova {\n  --gcs-hero-pattern: none;\n}`);
+  if (!s.header.crumbs) rules.push(`html:root .gcs-nova .gcs-crumbBar {\n  display: none;\n}`);
+  return rules;
 }
 
 /**
@@ -239,15 +274,16 @@ function fontImports(s: GcsThemeSettings): string[] {
  * Funcția e pură: editorul vizual o rulează și în browser, pentru previzualizarea live.
  */
 export function compileThemeCss(settings: GcsThemeSettings, customCss: string): string {
-  const base = DEFAULT_THEME_SETTINGS;
-  const light = `${palette(settings.light)}\n${elements(settings.elements.light, settings.light, base.light)}`;
+  const base = themeDefaults(settings.preset);
+  const light = `${palette(settings.light)}\n${elements(settings.elements.light, settings.light, base.light, settings.preset)}`;
   return [
     ...fontImports(settings),
-    `html:root {\n${palette(settings.dark)}\n${elements(settings.elements.dark, settings.dark, base.dark)}\n${sizes(settings)}\n}`,
+    `html:root {\n${palette(settings.dark)}\n${elements(settings.elements.dark, settings.dark, base.dark, settings.preset)}\n${sizes(settings)}\n}`,
     `html[data-theme="light"] {\n${light}\n}`,
     `@media (prefers-color-scheme: light) {\n  html[data-theme="auto"] {\n${light.replace(/^/gm, "  ")}\n  }\n}`,
     `.gcs-card {\n  border-radius: var(--gcs-radius);\n}`,
     ...conditionalRules(settings),
+    ...novaRules(settings),
     customCss ? `/* CSS extra */\n${sanitizeThemeCss(customCss)}` : "",
   ]
     .filter(Boolean)

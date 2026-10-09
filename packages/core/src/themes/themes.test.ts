@@ -3,7 +3,7 @@ import { createWorld, type GcsTestWorld } from "../../test/world";
 import { GcsConflict, GcsForbidden, GcsValidationError } from "../errors";
 import type { GcsActor } from "../permissions/types";
 import { compileThemeCss, sanitizeThemeCss } from "./css";
-import { GcsThemeService } from "./service";
+import { GcsThemeService, NOVA_THEME_KEY } from "./service";
 import {
   DEFAULT_THEME_SETTINGS,
   THEME_FIELDS,
@@ -18,6 +18,8 @@ import {
 
 /** Setările implicite cu o valoare schimbată la o cale. */
 const withSetting = (path: string, value: unknown): GcsThemeSettings => withThemePath(structuredClone(DEFAULT_THEME_SETTINGS), path, value);
+/** Tema „Clasic” (cheia `default`, designul de până acum); implicită e acum Nova. */
+const classic = async () => (await themes.get("default"))!;
 
 let w: GcsTestWorld;
 let themes: GcsThemeService;
@@ -215,7 +217,7 @@ describe("GcsThemeService", () => {
   test("draft-ul se îmbină în adâncime; setările noi ajung în CSS și la publicare", async () => {
     await themes.saveDraft(root, "default", { header: { height: 80 } });
     await themes.saveDraft(root, "default", { header: { sticky: false }, elements: { dark: { headerBg: "#202020" } } });
-    const t = await themes.active();
+    const t = await classic();
     expect(t.draft).toMatchObject({ header: { height: 80, sticky: false } });
     const draftCss = themes.css(t, { draft: true });
     expect(draftCss).toContain("--gcs-header-h: 80px;");
@@ -252,7 +254,7 @@ describe("GcsThemeService", () => {
     await themes.saveDraft(root, "default", { buttons: { radius: 4 } });
     await themes.discardDraft(root, "default");
     expect(await w.db.auditLog.count({ where: { action: "theme.discard" } })).toBe(1);
-    expect((await themes.active()).draft).toBeNull();
+    expect((await classic()).draft).toBeNull();
   });
 
   test("refuză culorile, fonturile și fișierele invalide", async () => {
@@ -267,7 +269,7 @@ describe("GcsThemeService", () => {
 
   test("draft-ul nu schimbă CSS-ul public; publicarea îl aplică și crește versiunea", async () => {
     await themes.saveDraft(root, "default", { dark: { accent: "#123456" }, customCss: ".z{color:blue}</style>" });
-    const before = await themes.active();
+    const before = await classic();
     expect(before.version).toBe(1);
     expect(themes.css(before)).not.toContain("#123456");
     expect(themes.css(before, { draft: true })).toContain("#123456");
@@ -276,7 +278,7 @@ describe("GcsThemeService", () => {
     const published = await themes.publish(root, "default");
     expect(published.version).toBe(2);
     expect(published.draft).toBeNull();
-    expect(themes.css(await themes.active())).toContain("--gcs-accent: #123456;");
+    expect(themes.css(await classic())).toContain("--gcs-accent: #123456;");
     expect(await w.db.auditLog.count({ where: { action: "theme.publish" } })).toBe(1);
 
     await expect(themes.publish(root, "default")).rejects.toBeInstanceOf(GcsConflict);
@@ -285,7 +287,7 @@ describe("GcsThemeService", () => {
   test("renunțarea la draft păstrează tema publicată", async () => {
     await themes.saveDraft(root, "default", { radius: 2 });
     await themes.discardDraft(root, "default");
-    const t = await themes.active();
+    const t = await classic();
     expect(t.draft).toBeNull();
     expect(t.settings.radius).toBe(DEFAULT_THEME_SETTINGS.radius);
   });
@@ -294,14 +296,17 @@ describe("GcsThemeService", () => {
     await themes.create(root, { key: "neon", name: "Neon", from: "default" });
     expect((await themes.active("neon")).key).toBe("neon");
     await themes.update(root, "neon", { enabled: false });
-    expect((await themes.active("neon")).key).toBe("default");
-    expect((await themes.active("nu-exista")).key).toBe("default");
+    expect((await themes.active("neon")).key).toBe(NOVA_THEME_KEY);
+    expect((await themes.active("nu-exista")).key).toBe(NOVA_THEME_KEY);
+    // Tema aleasă explicit de membru (ex. „Clasic”) rămâne, chiar dacă nu e cea implicită.
+    expect((await themes.active("default")).key).toBe("default");
 
-    await expect(themes.update(root, "default", { enabled: false })).rejects.toBeInstanceOf(GcsValidationError);
-    await expect(themes.remove(root, "default")).rejects.toBeInstanceOf(GcsValidationError);
+    await expect(themes.update(root, NOVA_THEME_KEY, { enabled: false })).rejects.toBeInstanceOf(GcsValidationError);
+    await expect(themes.remove(root, NOVA_THEME_KEY)).rejects.toBeInstanceOf(GcsValidationError);
 
     await themes.update(root, "neon", { isDefault: true });
     expect((await themes.active()).key).toBe("neon");
+    await themes.remove(root, NOVA_THEME_KEY);
     await themes.remove(root, "default");
     expect((await themes.list()).map((t) => t.key)).toEqual(["neon"]);
   });
