@@ -4497,7 +4497,9 @@
       "sidebar": "Боковая панель",
       "avatars": "Аватары",
       "buttons": "Кнопки",
-      "design": "Design"
+      "design": "Design",
+      "headerBuilder": "Конструктор шапки",
+      "cockpit": "Консоль Hero Cockpit"
     },
     "tabs": {
       "settings": "Настройки",
@@ -4512,7 +4514,13 @@
       "favicon": "Фавикон",
       "bands": "Title bands",
       "effects": "Effects",
-      "headerImage": "Header image"
+      "headerImage": "Header image",
+      "builderRows": "Ряды",
+      "builderMenus": "Меню",
+      "builderCustom": "Свой текст",
+      "cockpitPanels": "Панели",
+      "cockpitImage": "Фон консоли",
+      "mobileBar": "Нижняя панель"
     },
     "images": {
       "logo": "Логотип (темный режим)",
@@ -4523,7 +4531,8 @@
       "none": "Нет изображения",
       "upload": "Загрузить",
       "remove": "Убрать",
-      "headerImage": "Header background"
+      "headerImage": "Header background",
+      "cockpitImage": "Фон консоли"
     },
     "tokens": {
       "accent": "Первичный цвет",
@@ -4768,6 +4777,116 @@
       "header_crumbs": {
         "label": "Breadcrumb and search row",
         "help": "Below the menu: where you are on the site and the search field."
+      },
+      "header_rowTop": {
+        "label": "Высота верхней полосы"
+      },
+      "header_rowMain": {
+        "label": "Высота основного ряда"
+      },
+      "header_rowBottom": {
+        "label": "Высота второго ряда"
+      },
+      "header_compact": {
+        "label": "Компактная при прокрутке",
+        "help": "После 120 px шапка сжимается в закреплённую сверху полосу (логотип, меню, поиск)."
+      },
+      "header_hideOnScroll": {
+        "label": "Скрывать при прокрутке вниз",
+        "help": "Шапка исчезает при прокрутке вниз и возвращается при прокрутке вверх."
+      },
+      "header_dropdowns": {
+        "label": "Меню открываются",
+        "options": {
+          "click": "По клику",
+          "hover": "При наведении"
+        }
+      },
+      "header_mega": {
+        "label": "Мегаменю",
+        "help": "Подменю в 2 колонки с описаниями, живыми значками и нижней строкой."
+      },
+      "header_navAlign": {
+        "label": "Выравнивание меню",
+        "options": {
+          "left": "Слева",
+          "center": "По центру",
+          "right": "Справа"
+        }
+      },
+      "header_customHtml": {
+        "label": "Свой текст / HTML",
+        "help": "Элемент «Текст/HTML»: простые теги сохраняются, скрипты и стили удаляются."
+      },
+      "mobileNav_placement": {
+        "label": "Значки на телефоне",
+        "help": "Меню, аккаунт, поиск и уведомления — в шапке или в нижней панели.",
+        "options": {
+          "header": "В шапке",
+          "bottom": "В нижней панели"
+        }
+      },
+      "mobileNav_labels": {
+        "label": "Текст под значками нижней панели"
+      },
+      "mobileNav_items": {
+        "label": "Элементы нижней панели",
+        "help": "Не больше 5; «Создать» — круглая кнопка в центре.",
+        "options": {
+          "home": "Главная",
+          "forum": "Форум",
+          "servers": "Серверы",
+          "create": "Создать",
+          "messages": "Сообщения",
+          "notifications": "Уведомления",
+          "search": "Поиск",
+          "menu": "Меню",
+          "account": "Аккаунт",
+          "chat": "Чат",
+          "activity": "Активность",
+          "clans": "Кланы"
+        }
+      },
+      "cockpit_enabled": {
+        "label": "Консоль под шапкой",
+        "help": "Личная полоса, 3 панели и полосы серверов."
+      },
+      "cockpit_pages": {
+        "label": "Где показывать",
+        "options": {
+          "home": "Только на главной",
+          "all": "На всех страницах"
+        }
+      },
+      "cockpit_left": {
+        "label": "Левая панель",
+        "options": {
+          "feed": "Живая лента",
+          "live": "Сейчас в эфире",
+          "top": "Топ",
+          "featured": "Рекомендуем",
+          "none": "Ничего"
+        }
+      },
+      "cockpit_center": {
+        "label": "Центральная панель",
+        "options": {
+          "feed": "Живая лента",
+          "live": "Сейчас в эфире",
+          "top": "Топ",
+          "featured": "Рекомендуем",
+          "none": "Ничего"
+        }
+      },
+      "cockpit_right": {
+        "label": "Правая панель",
+        "options": {
+          "feed": "Живая лента",
+          "live": "Сейчас в эфире",
+          "top": "Топ",
+          "featured": "Рекомендуем",
+          "none": "Ничего"
+        }
       }
     },
     "status": {
@@ -4790,6 +4909,76 @@
       "body": "Тема содержит изменения, которые не публикуются. Если вы выходите без сохранения, они выбрасываются.",
       "leave": "Выход без экономии",
       "stay": "Продолжайте редактировать"
+    },
+    "barUp": "Выше: {item}",
+    "barDown": "Ниже: {item}",
+    "barRemove": "Убрать с панели: {item}",
+    "barAdd": "Добавить на панель…",
+    "builder": {
+      "presets": "Шаблоны",
+      "presetNames": {
+        "classic": "Nova классика",
+        "cockpit": "Cockpit",
+        "centered": "По центру",
+        "side": "Боковая панель",
+        "esports": "Esports"
+      },
+      "presetHelp": {
+        "classic": "Нынешняя шапка: логотип, меню и значки в одном ряду, ниже — хлебные крошки и поиск.",
+        "cockpit": "Логотип и действия в ряду 1, меню с мегаменю в ряду 2; на телефоне — нижняя панель.",
+        "centered": "Логотип по центру над меню.",
+        "side": "Логотип и меню в боковой панели на компьютере.",
+        "esports": "Соцсети и аккаунт сверху, меню разделено вокруг логотипа в центральном вырезе."
+      },
+      "custom": "Своя раскладка на основе «{preset}».",
+      "devices": "Устройства",
+      "deviceNames": {
+        "desktop": "Компьютер",
+        "tablet": "Планшет",
+        "mobile": "Телефон"
+      },
+      "rows": {
+        "top": "Верхняя полоса",
+        "main": "Основной ряд",
+        "bottom": "Второй ряд"
+      },
+      "zones": {
+        "left": "Слева",
+        "center": "Центр",
+        "right": "Справа"
+      },
+      "unused": "Не используются",
+      "allUsed": "Все элементы уже в шапке.",
+      "here": "Переместить сюда",
+      "toTray": "Убрать из шапки",
+      "keyboard": "Перетаскивай элементы между зонами. С клавиатуры: Enter выбирает, стрелки перемещают, Delete убирает.",
+      "chipLabel": "{element}: перетащи или используй стрелки",
+      "remove": "Убрать «{element}» из шапки",
+      "moved": "«{element}» перемещён: {place}.",
+      "removed": "«{element}» убран из шапки.",
+      "split": "Меню справа от логотипа",
+      "splitAuto": "По умолчанию вторая половина меню справа. Отметь пункты, которые хочешь там видеть.",
+      "splitHelp": "Отмеченные пункты справа от логотипа, остальные слева.",
+      "splitReset": "Разделить пополам",
+      "elements": {
+        "logo": "Логотип",
+        "nav": "Навигация",
+        "navRight": "Навигация (справа)",
+        "search": "Поиск (значок)",
+        "searchField": "Поиск (поле)",
+        "create": "Создать",
+        "messages": "Сообщения",
+        "notifications": "Уведомления",
+        "account": "Аккаунт",
+        "breadcrumb": "Хлебные крошки",
+        "serversLive": "Статус серверов",
+        "social": "Соцсети",
+        "themeToggle": "Переключатель темы",
+        "language": "Язык",
+        "custom": "Текст/HTML",
+        "chat_button": "Чат",
+        "servers_playNow": "Играть сейчас"
+      }
     }
   },
   "widgets": {

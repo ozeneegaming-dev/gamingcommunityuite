@@ -4497,7 +4497,9 @@
       "sidebar": "Bară laterală",
       "avatars": "Avatare",
       "buttons": "Butoane",
-      "design": "Design"
+      "design": "Design",
+      "headerBuilder": "Constructor antet",
+      "cockpit": "Consola Hero Cockpit"
     },
     "tabs": {
       "settings": "Setări",
@@ -4512,7 +4514,13 @@
       "favicon": "Favicon",
       "bands": "Benzile titlurilor",
       "effects": "Efecte",
-      "headerImage": "Imaginea antetului"
+      "headerImage": "Imaginea antetului",
+      "builderRows": "Rândurile",
+      "builderMenus": "Meniurile",
+      "builderCustom": "Text propriu",
+      "cockpitPanels": "Panourile",
+      "cockpitImage": "Fundalul consolei",
+      "mobileBar": "Bara de jos"
     },
     "images": {
       "logo": "Logo (mod întunecat)",
@@ -4523,7 +4531,8 @@
       "none": "Nicio imagine",
       "upload": "Încarcă",
       "remove": "Șterge",
-      "headerImage": "Fundalul antetului"
+      "headerImage": "Fundalul antetului",
+      "cockpitImage": "Fundalul consolei"
     },
     "tokens": {
       "accent": "Culoarea primară",
@@ -4768,6 +4777,116 @@
       "header_crumbs": {
         "label": "Rândul cu breadcrumb și căutare",
         "help": "Sub meniu: unde te afli pe site și câmpul de căutare."
+      },
+      "header_rowTop": {
+        "label": "Înălțimea barei de sus"
+      },
+      "header_rowMain": {
+        "label": "Înălțimea rândului principal"
+      },
+      "header_rowBottom": {
+        "label": "Înălțimea rândului secundar"
+      },
+      "header_compact": {
+        "label": "Compact la derulare",
+        "help": "După 120 px, antetul se strânge într-o bară lipită sus (logo, meniu, căutare)."
+      },
+      "header_hideOnScroll": {
+        "label": "Ascuns la derularea în jos",
+        "help": "Antetul dispare când derulezi în jos și revine când derulezi în sus."
+      },
+      "header_dropdowns": {
+        "label": "Meniurile se deschid",
+        "options": {
+          "click": "La click",
+          "hover": "La hover"
+        }
+      },
+      "header_mega": {
+        "label": "Mega meniuri",
+        "help": "Submeniurile pe 2 coloane, cu descrieri, insigne live și un rând de jos."
+      },
+      "header_navAlign": {
+        "label": "Alinierea meniului",
+        "options": {
+          "left": "Stânga",
+          "center": "Centru",
+          "right": "Dreapta"
+        }
+      },
+      "header_customHtml": {
+        "label": "Text / HTML personalizat",
+        "help": "Elementul „Text/HTML”: etichetele simple sunt păstrate, scripturile și stilurile sunt scoase."
+      },
+      "mobileNav_placement": {
+        "label": "Iconițele pe mobil",
+        "help": "Meniul, contul, căutarea și notificările stau în antet sau într-o bară jos.",
+        "options": {
+          "header": "În antet",
+          "bottom": "În bara de jos"
+        }
+      },
+      "mobileNav_labels": {
+        "label": "Textul sub iconițele barei de jos"
+      },
+      "mobileNav_items": {
+        "label": "Elementele barei de jos",
+        "help": "Cel mult 5; „Creează” stă rotund în mijloc.",
+        "options": {
+          "home": "Acasă",
+          "forum": "Forum",
+          "servers": "Servere",
+          "create": "Creează",
+          "messages": "Mesaje",
+          "notifications": "Notificări",
+          "search": "Căutare",
+          "menu": "Meniu",
+          "account": "Cont",
+          "chat": "Chat",
+          "activity": "Activitate",
+          "clans": "Clanuri"
+        }
+      },
+      "cockpit_enabled": {
+        "label": "Consola sub antet",
+        "help": "Banda personală, cele 3 panouri și benzile serverelor."
+      },
+      "cockpit_pages": {
+        "label": "Unde apare",
+        "options": {
+          "home": "Doar pe pagina principală",
+          "all": "Pe toate paginile"
+        }
+      },
+      "cockpit_left": {
+        "label": "Panoul din stânga",
+        "options": {
+          "feed": "Feed live",
+          "live": "Live acum",
+          "top": "Top",
+          "featured": "Recomandate",
+          "none": "Nimic"
+        }
+      },
+      "cockpit_center": {
+        "label": "Panoul din centru",
+        "options": {
+          "feed": "Feed live",
+          "live": "Live acum",
+          "top": "Top",
+          "featured": "Recomandate",
+          "none": "Nimic"
+        }
+      },
+      "cockpit_right": {
+        "label": "Panoul din dreapta",
+        "options": {
+          "feed": "Feed live",
+          "live": "Live acum",
+          "top": "Top",
+          "featured": "Recomandate",
+          "none": "Nimic"
+        }
       }
     },
     "status": {
@@ -4790,6 +4909,76 @@
       "body": "Tema are modificări nepublicate. Dacă ieși fără salvare, ele se pierd.",
       "leave": "Ieși fără salvare",
       "stay": "Continuă editarea"
+    },
+    "barUp": "Mută mai sus: {item}",
+    "barDown": "Mută mai jos: {item}",
+    "barRemove": "Scoate din bară: {item}",
+    "barAdd": "Adaugă în bară…",
+    "builder": {
+      "presets": "Presetări",
+      "presetNames": {
+        "classic": "Nova clasic",
+        "cockpit": "Cockpit",
+        "centered": "Centrat",
+        "side": "Panou lateral",
+        "esports": "Esports"
+      },
+      "presetHelp": {
+        "classic": "Antetul de până acum: logo, meniu și iconițele pe un rând, apoi breadcrumb-ul și căutarea.",
+        "cockpit": "Logo și acțiunile pe rândul 1, meniul cu mega meniuri pe rândul 2; pe mobil, bara de jos.",
+        "centered": "Logo-ul centrat deasupra meniului.",
+        "side": "Logo-ul și meniul într-un panou lateral, pe desktop.",
+        "esports": "Rețelele sociale și contul sus, meniul împărțit în jurul logo-ului din crestătura centrală."
+      },
+      "custom": "Aspect propriu, pornit de la „{preset}”.",
+      "devices": "Dispozitive",
+      "deviceNames": {
+        "desktop": "Desktop",
+        "tablet": "Tabletă",
+        "mobile": "Mobil"
+      },
+      "rows": {
+        "top": "Bara de sus",
+        "main": "Rândul principal",
+        "bottom": "Rândul secundar"
+      },
+      "zones": {
+        "left": "Stânga",
+        "center": "Centru",
+        "right": "Dreapta"
+      },
+      "unused": "Nefolosite",
+      "allUsed": "Toate elementele sunt în antet.",
+      "here": "Mută aici",
+      "toTray": "Scoate din antet",
+      "keyboard": "Trage elementele între zone. Cu tastatura: Enter alege, săgețile mută, Delete scoate.",
+      "chipLabel": "{element}: trage sau folosește săgețile",
+      "remove": "Scoate „{element}” din antet",
+      "moved": "„{element}” mutat în {place}.",
+      "removed": "„{element}” scos din antet.",
+      "split": "Meniul din dreapta logo-ului",
+      "splitAuto": "Implicit, a doua jumătate a meniului stă în dreapta. Bifează itemii pe care îi vrei acolo.",
+      "splitHelp": "Itemii bifați stau în dreapta logo-ului, restul în stânga.",
+      "splitReset": "Împarte în jumătăți",
+      "elements": {
+        "logo": "Logo",
+        "nav": "Navigație",
+        "navRight": "Navigație (dreapta)",
+        "search": "Căutare (iconiță)",
+        "searchField": "Căutare (câmp)",
+        "create": "Creează",
+        "messages": "Mesaje",
+        "notifications": "Notificări",
+        "account": "Cont",
+        "breadcrumb": "Breadcrumb",
+        "serversLive": "Status servere live",
+        "social": "Rețele sociale",
+        "themeToggle": "Comutator temă",
+        "language": "Limbă",
+        "custom": "Text/HTML",
+        "chat_button": "Chat",
+        "servers_playNow": "Joacă acum"
+      }
     }
   },
   "widgets": {

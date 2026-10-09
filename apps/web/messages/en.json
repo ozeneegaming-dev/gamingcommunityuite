@@ -4497,7 +4497,9 @@
       "sidebar": "Sidebar",
       "avatars": "Avatars",
       "buttons": "Buttons",
-      "design": "Design"
+      "design": "Design",
+      "headerBuilder": "Header builder",
+      "cockpit": "Hero Cockpit console"
     },
     "tabs": {
       "settings": "Settings",
@@ -4512,7 +4514,13 @@
       "favicon": "Favicon",
       "bands": "Title bands",
       "effects": "Effects",
-      "headerImage": "Header image"
+      "headerImage": "Header image",
+      "builderRows": "Rows",
+      "builderMenus": "Menus",
+      "builderCustom": "Custom text",
+      "cockpitPanels": "Panels",
+      "cockpitImage": "Console background",
+      "mobileBar": "Bottom bar"
     },
     "images": {
       "logo": "Logo (dark mode)",
@@ -4523,7 +4531,8 @@
       "none": "No image",
       "upload": "Upload",
       "remove": "Remove",
-      "headerImage": "Header background"
+      "headerImage": "Header background",
+      "cockpitImage": "Console background"
     },
     "tokens": {
       "accent": "Primary color",
@@ -4768,6 +4777,116 @@
       "header_crumbs": {
         "label": "Breadcrumb and search row",
         "help": "Below the menu: where you are on the site and the search field."
+      },
+      "header_rowTop": {
+        "label": "Top bar height"
+      },
+      "header_rowMain": {
+        "label": "Main row height"
+      },
+      "header_rowBottom": {
+        "label": "Secondary row height"
+      },
+      "header_compact": {
+        "label": "Compact on scroll",
+        "help": "After 120 px, the header shrinks into a bar stuck to the top (logo, menu, search)."
+      },
+      "header_hideOnScroll": {
+        "label": "Hide on scroll down",
+        "help": "The header hides when you scroll down and comes back when you scroll up."
+      },
+      "header_dropdowns": {
+        "label": "Menus open",
+        "options": {
+          "click": "On click",
+          "hover": "On hover"
+        }
+      },
+      "header_mega": {
+        "label": "Mega menus",
+        "help": "Submenus in 2 columns with descriptions, live badges and a footer row."
+      },
+      "header_navAlign": {
+        "label": "Menu alignment",
+        "options": {
+          "left": "Left",
+          "center": "Center",
+          "right": "Right"
+        }
+      },
+      "header_customHtml": {
+        "label": "Custom text / HTML",
+        "help": "The “Text/HTML” element: simple tags are kept, scripts and styles are removed."
+      },
+      "mobileNav_placement": {
+        "label": "Icons on phones",
+        "help": "The menu, account, search and notifications sit in the header or in a bottom bar.",
+        "options": {
+          "header": "In the header",
+          "bottom": "In the bottom bar"
+        }
+      },
+      "mobileNav_labels": {
+        "label": "Text under the bottom bar icons"
+      },
+      "mobileNav_items": {
+        "label": "Bottom bar items",
+        "help": "Up to 5; “Create” sits round in the middle.",
+        "options": {
+          "home": "Home",
+          "forum": "Forum",
+          "servers": "Servers",
+          "create": "Create",
+          "messages": "Messages",
+          "notifications": "Notifications",
+          "search": "Search",
+          "menu": "Menu",
+          "account": "Account",
+          "chat": "Chat",
+          "activity": "Activity",
+          "clans": "Clans"
+        }
+      },
+      "cockpit_enabled": {
+        "label": "Console under the header",
+        "help": "The personal strip, the 3 panels and the server strips."
+      },
+      "cockpit_pages": {
+        "label": "Where it shows",
+        "options": {
+          "home": "Home page only",
+          "all": "Every page"
+        }
+      },
+      "cockpit_left": {
+        "label": "Left panel",
+        "options": {
+          "feed": "Live feed",
+          "live": "Live now",
+          "top": "Top",
+          "featured": "Featured",
+          "none": "Nothing"
+        }
+      },
+      "cockpit_center": {
+        "label": "Center panel",
+        "options": {
+          "feed": "Live feed",
+          "live": "Live now",
+          "top": "Top",
+          "featured": "Featured",
+          "none": "Nothing"
+        }
+      },
+      "cockpit_right": {
+        "label": "Right panel",
+        "options": {
+          "feed": "Live feed",
+          "live": "Live now",
+          "top": "Top",
+          "featured": "Featured",
+          "none": "Nothing"
+        }
       }
     },
     "status": {
@@ -4790,6 +4909,76 @@
       "body": "The theme has changes that are not published. If you exit without saving, they are discarded.",
       "leave": "Exit without saving",
       "stay": "Keep editing"
+    },
+    "barUp": "Move up: {item}",
+    "barDown": "Move down: {item}",
+    "barRemove": "Remove from the bar: {item}",
+    "barAdd": "Add to the bar…",
+    "builder": {
+      "presets": "Presets",
+      "presetNames": {
+        "classic": "Nova classic",
+        "cockpit": "Cockpit",
+        "centered": "Centered",
+        "side": "Side panel",
+        "esports": "Esports"
+      },
+      "presetHelp": {
+        "classic": "The current header: logo, menu and icons on one row, then the breadcrumb and search.",
+        "cockpit": "Logo and actions on row 1, the menu with mega menus on row 2; on phones, the bottom bar.",
+        "centered": "The logo centered above the menu.",
+        "side": "The logo and menu in a side panel, on desktop.",
+        "esports": "Social links and the account on top, the menu split around the logo in the central notch."
+      },
+      "custom": "Custom layout, started from “{preset}”.",
+      "devices": "Devices",
+      "deviceNames": {
+        "desktop": "Desktop",
+        "tablet": "Tablet",
+        "mobile": "Mobile"
+      },
+      "rows": {
+        "top": "Top bar",
+        "main": "Main row",
+        "bottom": "Secondary row"
+      },
+      "zones": {
+        "left": "Left",
+        "center": "Center",
+        "right": "Right"
+      },
+      "unused": "Unused",
+      "allUsed": "Every element is in the header.",
+      "here": "Move here",
+      "toTray": "Remove from the header",
+      "keyboard": "Drag elements between zones. With the keyboard: Enter picks, the arrows move, Delete removes.",
+      "chipLabel": "{element}: drag or use the arrow keys",
+      "remove": "Remove “{element}” from the header",
+      "moved": "“{element}” moved to {place}.",
+      "removed": "“{element}” removed from the header.",
+      "split": "Menu to the right of the logo",
+      "splitAuto": "By default, the second half of the menu sits on the right. Tick the items you want there.",
+      "splitHelp": "Ticked items sit to the right of the logo, the rest on the left.",
+      "splitReset": "Split in halves",
+      "elements": {
+        "logo": "Logo",
+        "nav": "Navigation",
+        "navRight": "Navigation (right)",
+        "search": "Search (icon)",
+        "searchField": "Search (field)",
+        "create": "Create",
+        "messages": "Messages",
+        "notifications": "Notifications",
+        "account": "Account",
+        "breadcrumb": "Breadcrumb",
+        "serversLive": "Live server status",
+        "social": "Social links",
+        "themeToggle": "Theme switch",
+        "language": "Language",
+        "custom": "Text/HTML",
+        "chat_button": "Chat",
+        "servers_playNow": "Play now"
+      }
     }
   },
   "widgets": {

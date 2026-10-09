@@ -711,3 +711,162 @@ input[type="checkbox"].gcs-themeStudio__switch:checked::after {
     transition: none;
   }
 }
+
+/* ─── Constructorul de antet (Nova): presetările, dispozitivele, grila cu drag & drop, tava ─────────────── */
+.gcs-hbEdit {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.gcs-hbEdit__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 9px;
+  background: var(--gcs-st-rail);
+}
+.gcs-hbEdit__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gcs-hbEdit__row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.gcs-hbEdit__rowName {
+  font: 700 10.5px var(--gcs-font-text);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gcs-st-muted);
+}
+.gcs-hbEdit__zones {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+.gcs-hbEdit__zone,
+.gcs-hbEdit__tray {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 4px;
+  min-height: 44px;
+  padding: 5px;
+  border-radius: 8px;
+  border: 1px dashed var(--gcs-st-line);
+  background: var(--gcs-st-rail);
+  transition: border-color 0.15s, background-color 0.15s;
+}
+.gcs-hbEdit__tray {
+  flex-direction: column;
+}
+.gcs-hbEdit__trayItems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.gcs-hbEdit__zone--over {
+  border-color: var(--gcs-st-accent);
+  background: color-mix(in srgb, var(--gcs-st-accent) 12%, var(--gcs-st-rail));
+}
+.gcs-hbEdit__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--gcs-st-line);
+  background: var(--gcs-st-panel2);
+  color: var(--gcs-st-text);
+  font: 600 11.5px var(--gcs-font-text);
+  cursor: grab;
+  user-select: none;
+}
+.gcs-hbEdit__chip:focus-visible {
+  outline: 2px solid var(--gcs-st-accent);
+  outline-offset: 1px;
+}
+.gcs-hbEdit__chip--picked {
+  border-color: var(--gcs-st-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--gcs-st-accent) 35%, transparent);
+}
+.gcs-hbEdit__grip {
+  color: var(--gcs-st-muted);
+  font-size: 10px;
+}
+.gcs-hbEdit__remove {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--gcs-st-muted);
+  cursor: pointer;
+}
+.gcs-hbEdit__remove:hover {
+  color: var(--gcs-st-danger);
+}
+.gcs-hbEdit__here {
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--gcs-st-accent);
+  background: transparent;
+  color: var(--gcs-st-accent);
+  font: 700 11px var(--gcs-font-text);
+  cursor: pointer;
+}
+.gcs-hbEdit__empty {
+  font-size: 11px;
+  color: color-mix(in srgb, var(--gcs-st-muted) 70%, transparent);
+}
+.gcs-hbEdit__split {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--gcs-st-line);
+}
+.gcs-hbEdit__splitItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.gcs-themeStudio__barItems {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gcs-themeStudio__barList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-themeStudio__barItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px 4px 10px;
+  border-radius: 8px;
+  background: var(--gcs-st-rail);
+}
+.gcs-themeStudio__barItem > span {
+  flex: 1;
+}
+.gcs-themeStudio__textarea {
+  height: auto;
+  min-height: 84px;
+  padding: 8px 10px;
+  resize: vertical;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12.5px;
+}

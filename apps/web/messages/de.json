@@ -4497,7 +4497,9 @@
       "sidebar": "Seitenleiste",
       "avatars": "Avatare",
       "buttons": "Knöpfe",
-      "design": "Design"
+      "design": "Design",
+      "headerBuilder": "Header-Baukasten",
+      "cockpit": "Hero-Cockpit-Konsole"
     },
     "tabs": {
       "settings": "Einstellungen",
@@ -4512,7 +4514,13 @@
       "favicon": "Favicon",
       "bands": "Title bands",
       "effects": "Effects",
-      "headerImage": "Header image"
+      "headerImage": "Header image",
+      "builderRows": "Zeilen",
+      "builderMenus": "Menüs",
+      "builderCustom": "Eigener Text",
+      "cockpitPanels": "Bereiche",
+      "cockpitImage": "Hintergrund der Konsole",
+      "mobileBar": "Untere Leiste"
     },
     "images": {
       "logo": "Logo (dunkler Modus)",
@@ -4523,7 +4531,8 @@
       "none": "Kein Bild",
       "upload": "Upload",
       "remove": "Entfernen",
-      "headerImage": "Header background"
+      "headerImage": "Header background",
+      "cockpitImage": "Hintergrund der Konsole"
     },
     "tokens": {
       "accent": "Primärfarbe",
@@ -4768,6 +4777,116 @@
       "header_crumbs": {
         "label": "Breadcrumb and search row",
         "help": "Below the menu: where you are on the site and the search field."
+      },
+      "header_rowTop": {
+        "label": "Höhe der oberen Leiste"
+      },
+      "header_rowMain": {
+        "label": "Höhe der Hauptzeile"
+      },
+      "header_rowBottom": {
+        "label": "Höhe der zweiten Zeile"
+      },
+      "header_compact": {
+        "label": "Kompakt beim Scrollen",
+        "help": "Nach 120 px wird der Header zu einer oben fixierten Leiste (Logo, Menü, Suche)."
+      },
+      "header_hideOnScroll": {
+        "label": "Beim Herunterscrollen ausblenden",
+        "help": "Der Header verschwindet beim Herunterscrollen und kommt beim Hochscrollen zurück."
+      },
+      "header_dropdowns": {
+        "label": "Menüs öffnen sich",
+        "options": {
+          "click": "Per Klick",
+          "hover": "Beim Darüberfahren"
+        }
+      },
+      "header_mega": {
+        "label": "Mega-Menüs",
+        "help": "Untermenüs in 2 Spalten mit Beschreibungen, Live-Abzeichen und einer Fußzeile."
+      },
+      "header_navAlign": {
+        "label": "Ausrichtung des Menüs",
+        "options": {
+          "left": "Links",
+          "center": "Mitte",
+          "right": "Rechts"
+        }
+      },
+      "header_customHtml": {
+        "label": "Eigener Text / HTML",
+        "help": "Das Element „Text/HTML“: einfache Tags bleiben, Skripte und Stile werden entfernt."
+      },
+      "mobileNav_placement": {
+        "label": "Symbole auf dem Handy",
+        "help": "Menü, Konto, Suche und Benachrichtigungen im Header oder in einer unteren Leiste.",
+        "options": {
+          "header": "Im Header",
+          "bottom": "In der unteren Leiste"
+        }
+      },
+      "mobileNav_labels": {
+        "label": "Text unter den Symbolen der unteren Leiste"
+      },
+      "mobileNav_items": {
+        "label": "Elemente der unteren Leiste",
+        "help": "Höchstens 5; „Erstellen“ sitzt rund in der Mitte.",
+        "options": {
+          "home": "Start",
+          "forum": "Forum",
+          "servers": "Server",
+          "create": "Erstellen",
+          "messages": "Nachrichten",
+          "notifications": "Benachrichtigungen",
+          "search": "Suche",
+          "menu": "Menü",
+          "account": "Konto",
+          "chat": "Chat",
+          "activity": "Aktivität",
+          "clans": "Clans"
+        }
+      },
+      "cockpit_enabled": {
+        "label": "Konsole unter dem Header",
+        "help": "Der persönliche Streifen, die 3 Bereiche und die Serverstreifen."
+      },
+      "cockpit_pages": {
+        "label": "Wo sie erscheint",
+        "options": {
+          "home": "Nur auf der Startseite",
+          "all": "Auf allen Seiten"
+        }
+      },
+      "cockpit_left": {
+        "label": "Linker Bereich",
+        "options": {
+          "feed": "Live-Feed",
+          "live": "Jetzt live",
+          "top": "Top",
+          "featured": "Empfohlen",
+          "none": "Nichts"
+        }
+      },
+      "cockpit_center": {
+        "label": "Mittlerer Bereich",
+        "options": {
+          "feed": "Live-Feed",
+          "live": "Jetzt live",
+          "top": "Top",
+          "featured": "Empfohlen",
+          "none": "Nichts"
+        }
+      },
+      "cockpit_right": {
+        "label": "Rechter Bereich",
+        "options": {
+          "feed": "Live-Feed",
+          "live": "Jetzt live",
+          "top": "Top",
+          "featured": "Empfohlen",
+          "none": "Nichts"
+        }
       }
     },
     "status": {
@@ -4790,6 +4909,76 @@
       "body": "Das Thema hat Änderungen, die nicht veröffentlicht werden. Wenn Sie aussteigen, ohne zu sparen, werden sie verworfen.",
       "leave": "Ausstieg ohne Sparen",
       "stay": "Keep Edited"
+    },
+    "barUp": "Nach oben: {item}",
+    "barDown": "Nach unten: {item}",
+    "barRemove": "Aus der Leiste entfernen: {item}",
+    "barAdd": "Zur Leiste hinzufügen…",
+    "builder": {
+      "presets": "Vorlagen",
+      "presetNames": {
+        "classic": "Nova klassisch",
+        "cockpit": "Cockpit",
+        "centered": "Zentriert",
+        "side": "Seitenleiste",
+        "esports": "Esports"
+      },
+      "presetHelp": {
+        "classic": "Der bisherige Header: Logo, Menü und Symbole in einer Zeile, darunter Breadcrumb und Suche.",
+        "cockpit": "Logo und Aktionen in Zeile 1, das Menü mit Mega-Menüs in Zeile 2; auf dem Handy die untere Leiste.",
+        "centered": "Das Logo zentriert über dem Menü.",
+        "side": "Logo und Menü in einer Seitenleiste, auf dem Desktop.",
+        "esports": "Soziale Links und Konto oben, das Menü geteilt um das Logo in der mittleren Kerbe."
+      },
+      "custom": "Eigenes Layout, ausgehend von „{preset}“.",
+      "devices": "Geräte",
+      "deviceNames": {
+        "desktop": "Desktop",
+        "tablet": "Tablet",
+        "mobile": "Handy"
+      },
+      "rows": {
+        "top": "Obere Leiste",
+        "main": "Hauptzeile",
+        "bottom": "Zweite Zeile"
+      },
+      "zones": {
+        "left": "Links",
+        "center": "Mitte",
+        "right": "Rechts"
+      },
+      "unused": "Nicht verwendet",
+      "allUsed": "Alle Elemente sind im Header.",
+      "here": "Hierher verschieben",
+      "toTray": "Aus dem Header entfernen",
+      "keyboard": "Ziehe Elemente zwischen den Zonen. Mit der Tastatur: Enter wählt, die Pfeile verschieben, Entf entfernt.",
+      "chipLabel": "{element}: ziehen oder Pfeiltasten nutzen",
+      "remove": "„{element}“ aus dem Header entfernen",
+      "moved": "„{element}“ nach {place} verschoben.",
+      "removed": "„{element}“ aus dem Header entfernt.",
+      "split": "Menü rechts vom Logo",
+      "splitAuto": "Standardmäßig steht die zweite Hälfte des Menüs rechts. Hake die Einträge an, die du dort haben willst.",
+      "splitHelp": "Angehakte Einträge stehen rechts vom Logo, der Rest links.",
+      "splitReset": "In Hälften teilen",
+      "elements": {
+        "logo": "Logo",
+        "nav": "Navigation",
+        "navRight": "Navigation (rechts)",
+        "search": "Suche (Symbol)",
+        "searchField": "Suche (Feld)",
+        "create": "Erstellen",
+        "messages": "Nachrichten",
+        "notifications": "Benachrichtigungen",
+        "account": "Konto",
+        "breadcrumb": "Breadcrumb",
+        "serversLive": "Live-Serverstatus",
+        "social": "Soziale Netzwerke",
+        "themeToggle": "Theme-Schalter",
+        "language": "Sprache",
+        "custom": "Text/HTML",
+        "chat_button": "Chat",
+        "servers_playNow": "Jetzt spielen"
+      }
     }
   },
   "widgets": {

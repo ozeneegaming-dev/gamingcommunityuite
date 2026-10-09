@@ -4497,7 +4497,9 @@
       "sidebar": "Barre latérale",
       "avatars": "Avatars",
       "buttons": "Boutons",
-      "design": "Design"
+      "design": "Design",
+      "headerBuilder": "Constructeur d'en-tête",
+      "cockpit": "Console Hero Cockpit"
     },
     "tabs": {
       "settings": "Paramètres",
@@ -4512,7 +4514,13 @@
       "favicon": "Favicon",
       "bands": "Title bands",
       "effects": "Effects",
-      "headerImage": "Header image"
+      "headerImage": "Header image",
+      "builderRows": "Rangées",
+      "builderMenus": "Menus",
+      "builderCustom": "Texte personnalisé",
+      "cockpitPanels": "Panneaux",
+      "cockpitImage": "Fond de la console",
+      "mobileBar": "Barre du bas"
     },
     "images": {
       "logo": "Logo (mode noir)",
@@ -4523,7 +4531,8 @@
       "none": "Aucune image",
       "upload": "Envoi",
       "remove": "Retirer",
-      "headerImage": "Header background"
+      "headerImage": "Header background",
+      "cockpitImage": "Fond de la console"
     },
     "tokens": {
       "accent": "Couleur primaire",
@@ -4768,6 +4777,116 @@
       "header_crumbs": {
         "label": "Breadcrumb and search row",
         "help": "Below the menu: where you are on the site and the search field."
+      },
+      "header_rowTop": {
+        "label": "Hauteur de la barre du haut"
+      },
+      "header_rowMain": {
+        "label": "Hauteur de la rangée principale"
+      },
+      "header_rowBottom": {
+        "label": "Hauteur de la rangée secondaire"
+      },
+      "header_compact": {
+        "label": "Compact au défilement",
+        "help": "Après 120 px, l'en-tête se réduit en une barre fixée en haut (logo, menu, recherche)."
+      },
+      "header_hideOnScroll": {
+        "label": "Masquer en descendant",
+        "help": "L'en-tête disparaît quand tu descends et revient quand tu remontes."
+      },
+      "header_dropdowns": {
+        "label": "Les menus s'ouvrent",
+        "options": {
+          "click": "Au clic",
+          "hover": "Au survol"
+        }
+      },
+      "header_mega": {
+        "label": "Méga-menus",
+        "help": "Sous-menus sur 2 colonnes avec descriptions, badges en direct et une rangée de pied."
+      },
+      "header_navAlign": {
+        "label": "Alignement du menu",
+        "options": {
+          "left": "Gauche",
+          "center": "Centre",
+          "right": "Droite"
+        }
+      },
+      "header_customHtml": {
+        "label": "Texte / HTML personnalisé",
+        "help": "L'élément « Texte/HTML » : les balises simples sont gardées, les scripts et styles retirés."
+      },
+      "mobileNav_placement": {
+        "label": "Icônes sur mobile",
+        "help": "Le menu, le compte, la recherche et les notifications sont dans l'en-tête ou dans une barre en bas.",
+        "options": {
+          "header": "Dans l'en-tête",
+          "bottom": "Dans la barre du bas"
+        }
+      },
+      "mobileNav_labels": {
+        "label": "Texte sous les icônes de la barre du bas"
+      },
+      "mobileNav_items": {
+        "label": "Éléments de la barre du bas",
+        "help": "Au plus 5 ; « Créer » est rond au milieu.",
+        "options": {
+          "home": "Accueil",
+          "forum": "Forum",
+          "servers": "Serveurs",
+          "create": "Créer",
+          "messages": "Messages",
+          "notifications": "Notifications",
+          "search": "Recherche",
+          "menu": "Menu",
+          "account": "Compte",
+          "chat": "Chat",
+          "activity": "Activité",
+          "clans": "Clans"
+        }
+      },
+      "cockpit_enabled": {
+        "label": "Console sous l'en-tête",
+        "help": "La bande personnelle, les 3 panneaux et les bandes des serveurs."
+      },
+      "cockpit_pages": {
+        "label": "Où elle apparaît",
+        "options": {
+          "home": "Seulement sur la page d'accueil",
+          "all": "Sur toutes les pages"
+        }
+      },
+      "cockpit_left": {
+        "label": "Panneau de gauche",
+        "options": {
+          "feed": "Fil en direct",
+          "live": "En direct",
+          "top": "Top",
+          "featured": "À la une",
+          "none": "Rien"
+        }
+      },
+      "cockpit_center": {
+        "label": "Panneau du centre",
+        "options": {
+          "feed": "Fil en direct",
+          "live": "En direct",
+          "top": "Top",
+          "featured": "À la une",
+          "none": "Rien"
+        }
+      },
+      "cockpit_right": {
+        "label": "Panneau de droite",
+        "options": {
+          "feed": "Fil en direct",
+          "live": "En direct",
+          "top": "Top",
+          "featured": "À la une",
+          "none": "Rien"
+        }
       }
     },
     "status": {
@@ -4790,6 +4909,76 @@
       "body": "Le thème a des changements qui ne sont pas publiés. Si vous sortez sans enregistrer, ils sont jetés.",
       "leave": "Sortie sans enregistrement",
       "stay": "Continuer à éditer"
+    },
+    "barUp": "Monter : {item}",
+    "barDown": "Descendre : {item}",
+    "barRemove": "Retirer de la barre : {item}",
+    "barAdd": "Ajouter à la barre…",
+    "builder": {
+      "presets": "Préréglages",
+      "presetNames": {
+        "classic": "Nova classique",
+        "cockpit": "Cockpit",
+        "centered": "Centré",
+        "side": "Panneau latéral",
+        "esports": "Esports"
+      },
+      "presetHelp": {
+        "classic": "L'en-tête actuel : logo, menu et icônes sur une rangée, puis le fil d'Ariane et la recherche.",
+        "cockpit": "Logo et actions sur la rangée 1, le menu avec méga-menus sur la rangée 2 ; sur mobile, la barre du bas.",
+        "centered": "Le logo centré au-dessus du menu.",
+        "side": "Le logo et le menu dans un panneau latéral, sur ordinateur.",
+        "esports": "Réseaux sociaux et compte en haut, le menu partagé autour du logo dans l'encoche centrale."
+      },
+      "custom": "Disposition personnalisée, à partir de « {preset} ».",
+      "devices": "Appareils",
+      "deviceNames": {
+        "desktop": "Ordinateur",
+        "tablet": "Tablette",
+        "mobile": "Mobile"
+      },
+      "rows": {
+        "top": "Barre du haut",
+        "main": "Rangée principale",
+        "bottom": "Rangée secondaire"
+      },
+      "zones": {
+        "left": "Gauche",
+        "center": "Centre",
+        "right": "Droite"
+      },
+      "unused": "Non utilisés",
+      "allUsed": "Tous les éléments sont dans l'en-tête.",
+      "here": "Déplacer ici",
+      "toTray": "Retirer de l'en-tête",
+      "keyboard": "Fais glisser les éléments entre les zones. Au clavier : Entrée choisit, les flèches déplacent, Suppr retire.",
+      "chipLabel": "{element} : fais glisser ou utilise les flèches",
+      "remove": "Retirer « {element} » de l'en-tête",
+      "moved": "« {element} » déplacé vers {place}.",
+      "removed": "« {element} » retiré de l'en-tête.",
+      "split": "Menu à droite du logo",
+      "splitAuto": "Par défaut, la seconde moitié du menu est à droite. Coche les éléments que tu veux là.",
+      "splitHelp": "Les éléments cochés sont à droite du logo, le reste à gauche.",
+      "splitReset": "Partager en deux",
+      "elements": {
+        "logo": "Logo",
+        "nav": "Navigation",
+        "navRight": "Navigation (droite)",
+        "search": "Recherche (icône)",
+        "searchField": "Recherche (champ)",
+        "create": "Créer",
+        "messages": "Messages",
+        "notifications": "Notifications",
+        "account": "Compte",
+        "breadcrumb": "Fil d'Ariane",
+        "serversLive": "Statut des serveurs en direct",
+        "social": "Réseaux sociaux",
+        "themeToggle": "Bascule de thème",
+        "language": "Langue",
+        "custom": "Texte/HTML",
+        "chat_button": "Chat",
+        "servers_playNow": "Jouer maintenant"
+      }
     }
   },
   "widgets": {
