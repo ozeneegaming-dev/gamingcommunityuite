@@ -57,7 +57,9 @@
     "pageEditor": "Редактор страниц",
     "metaDescription": "{name}: a gaming community with forums, chat and members.",
     "deletedMember": "Deleted member",
-    "crumbs": "You are here"
+    "crumbs": "You are here",
+    "collapse": "Collapse {title}",
+    "expand": "Expand {title}"
   },
   "auth": {
     "login": {
@@ -3984,7 +3986,8 @@
     "apply": "Применить",
     "menu": "Умеренные инструменты",
     "confirmDelete": "Постоянно удалять тему и все ее посты?",
-    "done": "Готово"
+    "done": "Готово",
+    "cancel": "Cancel"
   },
   "search": {
     "title": "Поиск",
@@ -4604,7 +4607,8 @@
       "recentTopics": "Последние темы",
       "recentPosts": "Последние посты",
       "topPosters": "Лучшие плакаты",
-      "featuredTopics": "Избранные темы"
+      "featuredTopics": "Избранные темы",
+      "featuredCarousel": "Featured carousel"
     },
     "chat": {
       "shoutbox": "Шутбокс"
@@ -4639,7 +4643,8 @@
         "recentTopics": "На форуме начались последние темы.",
         "recentPosts": "Последние ответы с отрывком.",
         "topPosters": "Члены с наибольшим количеством должностей за выбранный период.",
-        "featuredTopics": "Темы, представленные персоналом."
+        "featuredTopics": "Темы, представленные персоналом.",
+        "featuredCarousel": "Topics featured by the staff, in an image carousel: forum, date, title, excerpt and author."
       },
       "chat": {
         "shoutbox": "В чате, прямо на странице."
@@ -4664,6 +4669,11 @@
     },
     "clans": {
       "top": "Top clans"
+    },
+    "carousel": {
+      "prev": "Previous",
+      "next": "Next",
+      "read": "Read"
     }
   },
   "pageEditor": {
@@ -5367,7 +5377,13 @@
     "viewAll": "All servers",
     "widgetEmpty": "No servers to show.",
     "playersZero": "No players",
-    "adminsOnline": "{count, plural, one {Admin online} few {# admins online} many {# admins online} other {# admins online}}"
+    "adminsOnline": "{count, plural, one {Admin online} few {# admins online} many {# admins online} other {# admins online}}",
+    "join": "Connect",
+    "totals": {
+      "servers": "Servers",
+      "players": "Players",
+      "fill": "Fill"
+    }
   },
   "clans": {
     "title": "Clans",

@@ -1,4 +1,4 @@
-import { docSnippet } from "../content-text";
+import { docFirstImage, docSnippet } from "../content-text";
 import { rankLabel, type GcsRankDirectory, type GcsRankLabel } from "../profile/display";
 import {
   GcsForbidden,
@@ -155,6 +155,19 @@ export type GcsTopicPage = {
 };
 
 export type GcsTagPage = { tag: { name: string; slug: string }; topics: GcsTopicRow[]; pagination: GcsPagination };
+
+/** Un card al caruselului topicurilor recomandate. */
+export type GcsFeaturedSlide = {
+  id: number;
+  title: string;
+  slug: string;
+  createdAt: string;
+  user: GcsUserRef | null;
+  forum: { id: number; name: string; slug: string; color: string | null } | null;
+  excerpt: string;
+  /** Prima imagine din primul mesaj (`/files/<id>` sau `https://`), altfel `null`. */
+  image: string | null;
+};
 
 type TreeForum = {
   id: number;
@@ -581,6 +594,42 @@ export class GcsForumQueries {
       createdAt: r.createdAt.toISOString(),
       user: r.authorId ? (users.get(r.authorId) ?? null) : null,
     }));
+  }
+
+  /**
+   * Caruselul topicurilor recomandate (`featured`) din forumurile citibile, cele mai noi primele: forumul (pastila),
+   * data, titlul, extrasul și prima imagine din primul mesaj (sau `null`: cardul primește un gradient), autorul.
+   */
+  async featuredCarousel(actor: GcsActor, limit: number): Promise<GcsFeaturedSlide[]> {
+    const tree = await this.tree();
+    const { readable } = await this.access(actor, tree);
+    if (readable.size === 0) return [];
+    const rows = await this.deps.db.topic.findMany({
+      where: { forumId: { in: [...readable] }, visibility: "VISIBLE", featured: true },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: limit,
+      select: { id: true, title: true, slug: true, createdAt: true, authorId: true, forumId: true, firstPostId: true },
+    });
+    const firstIds = rows.map((r) => r.firstPostId).filter((id): id is number => id !== null);
+    const [users, posts] = await Promise.all([
+      this.users(rows.map((r) => r.authorId)),
+      firstIds.length > 0 ? this.deps.db.post.findMany({ where: { id: { in: firstIds } }, select: { id: true, contentJson: true } }) : Promise.resolve([]),
+    ]);
+    const content = new Map(posts.map((p) => [p.id, p.contentJson]));
+    return rows.map((r) => {
+      const forum = tree.byId.get(r.forumId);
+      const json = r.firstPostId !== null ? content.get(r.firstPostId) : undefined;
+      return {
+        id: r.id,
+        title: r.title,
+        slug: r.slug,
+        createdAt: r.createdAt.toISOString(),
+        user: r.authorId ? (users.get(r.authorId) ?? null) : null,
+        forum: forum ? { id: forum.id, name: forum.name, slug: forum.slug, color: forum.color ?? null } : null,
+        excerpt: json ? docSnippet(json, 180) : "",
+        image: json ? docFirstImage(json) : null,
+      };
+    });
   }
 
   /**

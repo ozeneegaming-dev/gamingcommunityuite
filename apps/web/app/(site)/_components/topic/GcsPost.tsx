@@ -3,6 +3,7 @@ import type { GcsClanTag, GcsPostbitData, GcsPostView } from "@gcs/modules";
 import { GcsAvatar, GcsBadgeArt, GcsClanTag as GcsClanPlate, GcsTooltip, GcsUserLink } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import { getFormatter, getTranslations } from "next-intl/server";
+import type { CSSProperties } from "react";
 import { memberHref, postHref } from "@/lib/forum-urls";
 import { postbitVars } from "@/lib/template-data";
 import { siteTemplate } from "@/lib/templates";
@@ -11,6 +12,9 @@ import { pluginHookHtml } from "@/lib/plugins";
 import { GcsDeletedPostbit } from "../GcsDeletedMember";
 import { GcsTranslateButton, type GcsTranslateLabels } from "../GcsTranslateButton";
 import { GcsPostContent, type GcsPostContentProps } from "./GcsPostContent";
+
+/** Grupurile staff-ului (postările lor au chenarul colorat). */
+const STAFF_GROUPS = new Set(["root_admin", "admin", "super_moderator", "moderator"]);
 
 type Props = {
   topicId: number;
@@ -42,6 +46,8 @@ export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, 
       : t("edited", { when: date(post.editedAt) })
     : null;
   const own = actorId !== null && actorId === author?.id;
+  // Postările staff-ului au chenarul în culoarea grupului autorului (designul Nova).
+  const staffColor = postbit && STAFF_GROUPS.has(postbit.group.key) ? (postbit.group.color ?? "var(--gcs-accent)") : null;
 
   const article = (
     <article
@@ -50,6 +56,7 @@ export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, 
       data-testid="gcs-post"
       data-post-id={post.id}
       data-post-number={post.number}
+      {...(staffColor ? { "data-staff": "", style: { "--gcs-post-group": staffColor } as CSSProperties } : {})}
     >
       <div className="gcs-post__author gcs-postbit" data-testid="gcs-postbit">
         {author ? <GcsPostbit author={author} data={postbit} clan={clan} post={{ id: post.id, number: post.number }} topicId={topicId} /> : <GcsDeletedPostbit />}

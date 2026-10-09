@@ -16,7 +16,7 @@ import {
   faThumbtackSlash,
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
-import { GcsButton, GcsIconSvg } from "@gcs/ui";
+import { GcsButton, GcsIconSvg, GcsModal } from "@gcs/ui";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
@@ -55,6 +55,7 @@ export function GcsTopicModMenu({ topicId, forumId, forumHref, powers, flags, fo
   const [mergeTarget, setMergeTarget] = useState("");
   const [splitTitle, setSplitTitle] = useState("");
   const [splitForum, setSplitForum] = useState(String(forumId));
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   function run<T>(action: () => Promise<Result<T>>, after?: (data: T) => void) {
     setError(null);
@@ -72,11 +73,15 @@ export function GcsTopicModMenu({ topicId, forumId, forumHref, powers, flags, fo
     locked: [faLock, faLockOpen],
     featured: [faStar, faStar],
   };
+  /** Culoarea plăcii (designul Nova): evidențierea verde, ascunderea portocalie, restul mov. */
+  const flagTone: Record<"pinned" | "locked" | "featured", GcsModTone> = { pinned: "other", locked: "other", featured: "feature" };
   const flag = (name: "pinned" | "locked" | "featured", on: string, off: string, power: string) =>
     has(powers, power) && (
       <GcsButton
         variant="ghost"
         size="sm"
+        className="gcs-modTile"
+        data-tone={flagTone[name]}
         icon={<GcsIconSvg icon={flagIcons[name][flags[name] ? 1 : 0]} />}
         disabled={pending}
         onClick={() => run(() => setTopicFlagAction({ topicIds: [topicId], flag: name, value: !flags[name] }))}
@@ -95,7 +100,8 @@ export function GcsTopicModMenu({ topicId, forumId, forumHref, powers, flags, fo
         {t("menu")}
       </summary>
       <div className="gcs-modMenu__body">
-        <div className="gcs-modMenu__row">
+        {/* Plăcile acțiunilor rapide (în designul Nova, colorate la hover după tipul acțiunii). */}
+        <div className="gcs-modMenu__row gcs-modTiles">
           {flag("pinned", t("pin"), t("unpin"), "pin")}
           {flag("locked", t("lock"), t("unlock"), "lock")}
           {flag("featured", t("feature"), t("unfeature"), "feature")}
@@ -103,6 +109,8 @@ export function GcsTopicModMenu({ topicId, forumId, forumHref, powers, flags, fo
             <GcsButton
               variant="ghost"
               size="sm"
+              className="gcs-modTile"
+              data-tone="hide"
               icon={<GcsIconSvg icon={flags.hidden ? faEye : faEyeSlash} />}
               disabled={pending}
               onClick={() => run(() => setTopicsHiddenAction({ topicIds: [topicId], hidden: !flags.hidden }))}
@@ -111,13 +119,7 @@ export function GcsTopicModMenu({ topicId, forumId, forumHref, powers, flags, fo
             </GcsButton>
           )}
           {has(powers, "delete") && (
-            <GcsButton
-              variant="ghost"
-              size="sm"
-              icon={<GcsIconSvg icon={faTrash} />}
-              disabled={pending}
-              onClick={() => window.confirm(t("confirmDelete")) && run(() => deleteTopicAction({ topicId }), () => window.location.assign(forumHref))}
-            >
+            <GcsButton variant="ghost" size="sm" className="gcs-modTile" data-tone="delete" icon={<GcsIconSvg icon={faTrash} />} disabled={pending} onClick={() => setConfirmDelete(true)}>
               {t("delete")}
             </GcsButton>
           )}
@@ -138,7 +140,7 @@ export function GcsTopicModMenu({ topicId, forumId, forumHref, powers, flags, fo
                   </option>
                 ))}
             </select>
-            <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faRightLeft} />} disabled={!moveTo || pending} onClick={() => run(() => moveTopicsAction({ topicIds: [topicId], forumId: Number(moveTo) }))}>
+            <GcsButton variant="ghost" size="sm" className="gcs-modTile" data-tone="move" icon={<GcsIconSvg icon={faRightLeft} />} disabled={!moveTo || pending} onClick={() => run(() => moveTopicsAction({ topicIds: [topicId], forumId: Number(moveTo) }))}>
               {t("move")}
             </GcsButton>
           </div>
@@ -159,6 +161,8 @@ export function GcsTopicModMenu({ topicId, forumId, forumHref, powers, flags, fo
             <GcsButton
               variant="ghost"
               size="sm"
+              className="gcs-modTile"
+              data-tone="other"
               icon={<GcsIconSvg icon={faCodeMerge} />}
               disabled={!mergeTarget || pending}
               onClick={() => run(() => mergeTopicAction({ topicId, target: mergeTarget }), (d) => window.location.assign(d.href))}
@@ -193,6 +197,8 @@ export function GcsTopicModMenu({ topicId, forumId, forumHref, powers, flags, fo
             <GcsButton
               variant="ghost"
               size="sm"
+              className="gcs-modTile"
+              data-tone="other"
               icon={<GcsIconSvg icon={faScissors} />}
               disabled={!splitTitle || pending}
               onClick={() =>
@@ -212,6 +218,29 @@ export function GcsTopicModMenu({ topicId, forumId, forumHref, powers, flags, fo
           </p>
         )}
       </div>
+      {confirmDelete && (
+        // Confirmarea ștergerii, în pagină (nu `window.confirm`).
+        <GcsModal title={t("delete")} icon={<GcsIconSvg icon={faTrash} />} onClose={() => setConfirmDelete(false)} closeLabel={t("cancel")} size="sm">
+          <p style={{ marginTop: 0 }}>{t("confirmDelete")}</p>
+          <div className="gcs-dialog__actions">
+            <GcsButton
+              variant="primary"
+              icon={<GcsIconSvg icon={faTrash} />}
+              disabled={pending}
+              onClick={() => run(() => deleteTopicAction({ topicId }), () => window.location.assign(forumHref))}
+              data-testid="gcs-topic-delete-confirm"
+            >
+              {t("delete")}
+            </GcsButton>
+            <GcsButton variant="ghost" onClick={() => setConfirmDelete(false)}>
+              {t("cancel")}
+            </GcsButton>
+          </div>
+        </GcsModal>
+      )}
     </details>
   );
 }
+
+/** Tipul unei acțiuni de moderare (culoarea plăcii în designul Nova). */
+export type GcsModTone = "feature" | "move" | "hide" | "delete" | "other";

@@ -57,7 +57,9 @@
     "pageEditor": "Page editor",
     "metaDescription": "{name}: a gaming community with forums, chat and members.",
     "deletedMember": "Deleted member",
-    "crumbs": "You are here"
+    "crumbs": "You are here",
+    "collapse": "Collapse {title}",
+    "expand": "Expand {title}"
   },
   "auth": {
     "login": {
@@ -3984,7 +3986,8 @@
     "apply": "Apply",
     "menu": "Moderation tools",
     "confirmDelete": "Permanently delete the topic and all its posts?",
-    "done": "Done"
+    "done": "Done",
+    "cancel": "Cancel"
   },
   "search": {
     "title": "Search",
@@ -4604,7 +4607,8 @@
       "recentTopics": "Recent topics",
       "recentPosts": "Recent posts",
       "topPosters": "Top posters",
-      "featuredTopics": "Featured topics"
+      "featuredTopics": "Featured topics",
+      "featuredCarousel": "Featured carousel"
     },
     "chat": {
       "shoutbox": "Shoutbox"
@@ -4639,7 +4643,8 @@
         "recentTopics": "The latest topics started on the forum.",
         "recentPosts": "The latest replies, with an excerpt.",
         "topPosters": "Members with the most posts over the chosen period.",
-        "featuredTopics": "Topics featured by the staff."
+        "featuredTopics": "Topics featured by the staff.",
+        "featuredCarousel": "Topics featured by the staff, in an image carousel: forum, date, title, excerpt and author."
       },
       "chat": {
         "shoutbox": "A chat room, right on the page."
@@ -4664,6 +4669,11 @@
     },
     "clans": {
       "top": "Top clans"
+    },
+    "carousel": {
+      "prev": "Previous",
+      "next": "Next",
+      "read": "Read"
     }
   },
   "pageEditor": {
@@ -5367,7 +5377,13 @@
     "viewAll": "All servers",
     "widgetEmpty": "No servers to show.",
     "playersZero": "No players",
-    "adminsOnline": "{count, plural, one {Admin online} other {# admins online}}"
+    "adminsOnline": "{count, plural, one {Admin online} other {# admins online}}",
+    "join": "Connect",
+    "totals": {
+      "servers": "Servers",
+      "players": "Players",
+      "fill": "Fill"
+    }
   },
   "clans": {
     "title": "Clans",

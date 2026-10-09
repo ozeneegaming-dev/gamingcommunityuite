@@ -59,26 +59,26 @@ export function GcsModBar({ formId, powers, forums, savedActions }: Props) {
       </span>
       {has(powers, "pin") && (
         <>
-          <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faThumbtack} />} disabled={!count || pending} onClick={() => run((topicIds) => setTopicFlagAction({ topicIds, flag: "pinned", value: true }))}>
+          <GcsButton variant="ghost" size="sm" className="gcs-modTile" data-tone="other" icon={<GcsIconSvg icon={faThumbtack} />} disabled={!count || pending} onClick={() => run((topicIds) => setTopicFlagAction({ topicIds, flag: "pinned", value: true }))}>
             {t("pin")}
           </GcsButton>
-          <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faThumbtackSlash} />} disabled={!count || pending} onClick={() => run((topicIds) => setTopicFlagAction({ topicIds, flag: "pinned", value: false }))}>
+          <GcsButton variant="ghost" size="sm" className="gcs-modTile" data-tone="other" icon={<GcsIconSvg icon={faThumbtackSlash} />} disabled={!count || pending} onClick={() => run((topicIds) => setTopicFlagAction({ topicIds, flag: "pinned", value: false }))}>
             {t("unpin")}
           </GcsButton>
         </>
       )}
       {has(powers, "lock") && (
         <>
-          <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faLock} />} disabled={!count || pending} onClick={() => run((topicIds) => setTopicFlagAction({ topicIds, flag: "locked", value: true }))}>
+          <GcsButton variant="ghost" size="sm" className="gcs-modTile" data-tone="other" icon={<GcsIconSvg icon={faLock} />} disabled={!count || pending} onClick={() => run((topicIds) => setTopicFlagAction({ topicIds, flag: "locked", value: true }))}>
             {t("lock")}
           </GcsButton>
-          <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faLockOpen} />} disabled={!count || pending} onClick={() => run((topicIds) => setTopicFlagAction({ topicIds, flag: "locked", value: false }))}>
+          <GcsButton variant="ghost" size="sm" className="gcs-modTile" data-tone="other" icon={<GcsIconSvg icon={faLockOpen} />} disabled={!count || pending} onClick={() => run((topicIds) => setTopicFlagAction({ topicIds, flag: "locked", value: false }))}>
             {t("unlock")}
           </GcsButton>
         </>
       )}
       {has(powers, "hide") && (
-        <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faEyeSlash} />} disabled={!count || pending} onClick={() => run((topicIds) => setTopicsHiddenAction({ topicIds, hidden: true }))}>
+        <GcsButton variant="ghost" size="sm" className="gcs-modTile" data-tone="hide" icon={<GcsIconSvg icon={faEyeSlash} />} disabled={!count || pending} onClick={() => run((topicIds) => setTopicsHiddenAction({ topicIds, hidden: true }))}>
           {t("hide")}
         </GcsButton>
       )}
@@ -95,7 +95,7 @@ export function GcsModBar({ formId, powers, forums, savedActions }: Props) {
               </option>
             ))}
           </select>
-          <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faRightLeft} />} disabled={!count || !moveTo || pending} onClick={() => run((topicIds) => moveTopicsAction({ topicIds, forumId: Number(moveTo) }))}>
+          <GcsButton variant="ghost" size="sm" className="gcs-modTile" data-tone="move" icon={<GcsIconSvg icon={faRightLeft} />} disabled={!count || !moveTo || pending} onClick={() => run((topicIds) => moveTopicsAction({ topicIds, forumId: Number(moveTo) }))}>
             {t("move")}
           </GcsButton>
         </span>
@@ -116,6 +116,8 @@ export function GcsModBar({ formId, powers, forums, savedActions }: Props) {
           <GcsButton
             variant="ghost"
             size="sm"
+            className="gcs-modTile"
+            data-tone="other"
             icon={<GcsIconSvg icon={faPlay} />}
             disabled={!count || !actionId || pending}
             onClick={() => run((topicIds) => applySavedActionAction({ actionId: Number(actionId), topicIds }))}

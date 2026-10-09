@@ -2,6 +2,7 @@ import type { GcsIndexCategory } from "@gcs/modules";
 import { GcsIcon, isGcsIcon } from "@gcs/ui/icons";
 import Link from "next/link";
 import { forumHref } from "@/lib/forum-urls";
+import { GcsCollapseToggle } from "../GcsCollapseToggle";
 import { GcsForumRow } from "./GcsForumRow";
 
 /** Iconița implicită a unei categorii fără iconiță aleasă în ACP. */
@@ -26,6 +27,7 @@ export function GcsCategoryCard({ category }: { category: GcsIndexCategory }) {
         <h2 id={`gcs-cat-${category.id}`} className="gcs-display gcs-category__title">
           <Link href={forumHref(category)}>{category.name}</Link>
         </h2>
+        <GcsCollapseToggle storageKey={`cat-${category.id}`} title={category.name} />
       </header>
       {category.forums.map((f) => (
         <GcsForumRow key={f.id} forum={f} accent={category.color} />

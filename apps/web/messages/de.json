@@ -57,7 +57,9 @@
     "pageEditor": "Seite Editor",
     "metaDescription": "{name}: a gaming community with forums, chat and members.",
     "deletedMember": "Deleted member",
-    "crumbs": "You are here"
+    "crumbs": "You are here",
+    "collapse": "Collapse {title}",
+    "expand": "Expand {title}"
   },
   "auth": {
     "login": {
@@ -3984,7 +3986,8 @@
     "apply": "Anwenden",
     "menu": "Moderationswerkzeuge",
     "confirmDelete": "Löschen Sie das Thema und alle seine Posts dauerhaft?",
-    "done": "Fertig"
+    "done": "Fertig",
+    "cancel": "Cancel"
   },
   "search": {
     "title": "Suchen",
@@ -4604,7 +4607,8 @@
       "recentTopics": "Aktuelle Themen",
       "recentPosts": "Aktuelle Stellen",
       "topPosters": "Top-Poster",
-      "featuredTopics": "Ausgewählte Themen"
+      "featuredTopics": "Ausgewählte Themen",
+      "featuredCarousel": "Featured carousel"
     },
     "chat": {
       "shoutbox": "Shoutbox"
@@ -4639,7 +4643,8 @@
         "recentTopics": "Die neuesten Themen begannen im Forum.",
         "recentPosts": "Die letzten Antworten, mit einem Auszug.",
         "topPosters": "Mitglieder mit den meisten Posts im gewählten Zeitraum.",
-        "featuredTopics": "Themen des Personals."
+        "featuredTopics": "Themen des Personals.",
+        "featuredCarousel": "Topics featured by the staff, in an image carousel: forum, date, title, excerpt and author."
       },
       "chat": {
         "shoutbox": "Ein chat-raum, direkt auf der seite."
@@ -4664,6 +4669,11 @@
     },
     "clans": {
       "top": "Top clans"
+    },
+    "carousel": {
+      "prev": "Previous",
+      "next": "Next",
+      "read": "Read"
     }
   },
   "pageEditor": {
@@ -5367,7 +5377,13 @@
     "viewAll": "All servers",
     "widgetEmpty": "No servers to show.",
     "playersZero": "No players",
-    "adminsOnline": "{count, plural, one {Admin online} other {# admins online}}"
+    "adminsOnline": "{count, plural, one {Admin online} other {# admins online}}",
+    "join": "Connect",
+    "totals": {
+      "servers": "Servers",
+      "players": "Players",
+      "fill": "Fill"
+    }
   },
   "clans": {
     "title": "Clans",

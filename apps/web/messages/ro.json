@@ -57,7 +57,9 @@
     "pageEditor": "Editor pagină",
     "metaDescription": "{name}: comunitate de gaming cu forum, chat și membri.",
     "deletedMember": "Membru șters",
-    "crumbs": "Unde te afli"
+    "crumbs": "Unde te afli",
+    "collapse": "Restrânge {title}",
+    "expand": "Extinde {title}"
   },
   "auth": {
     "login": {
@@ -3984,7 +3986,8 @@
     "apply": "Aplică",
     "menu": "Unelte de moderare",
     "confirmDelete": "Ștergi definitiv topicul cu toate postările?",
-    "done": "Gata"
+    "done": "Gata",
+    "cancel": "Anulează"
   },
   "search": {
     "title": "Căutare",
@@ -4604,7 +4607,8 @@
       "recentTopics": "Topicuri recente",
       "recentPosts": "Postări recente",
       "topPosters": "Top posteri",
-      "featuredTopics": "Topicuri promovate"
+      "featuredTopics": "Topicuri promovate",
+      "featuredCarousel": "Carusel recomandate"
     },
     "chat": {
       "shoutbox": "Shoutbox"
@@ -4639,7 +4643,8 @@
         "recentTopics": "Ultimele topicuri pornite pe forum.",
         "recentPosts": "Ultimele răspunsuri, cu un fragment din text.",
         "topPosters": "Membrii cu cele mai multe postări, pe perioada aleasă.",
-        "featuredTopics": "Topicurile promovate de staff."
+        "featuredTopics": "Topicurile promovate de staff.",
+        "featuredCarousel": "Topicurile evidențiate de staff, într-un carusel cu imagini: forumul, data, titlul, extrasul și autorul."
       },
       "chat": {
         "shoutbox": "O cameră de chat, direct pe pagină."
@@ -4664,6 +4669,11 @@
     },
     "clans": {
       "top": "Top clanuri"
+    },
+    "carousel": {
+      "prev": "Înapoi",
+      "next": "Înainte",
+      "read": "Citește"
     }
   },
   "pageEditor": {
@@ -5367,7 +5377,13 @@
     "viewAll": "Toate serverele",
     "widgetEmpty": "Niciun server de afișat.",
     "playersZero": "Fără jucători",
-    "adminsOnline": "{count, plural, one {Admin online} few {# admini online} other {# de admini online}}"
+    "adminsOnline": "{count, plural, one {Admin online} few {# admini online} other {# de admini online}}",
+    "join": "Conectează-te",
+    "totals": {
+      "servers": "Servere",
+      "players": "Jucători",
+      "fill": "Ocupare"
+    }
   },
   "clans": {
     "title": "Clanuri",

@@ -75,6 +75,16 @@ export const forumWidgets: GcsWidgetDef[] = [
     ],
   }),
   widget({ key: "forums.featuredTopics", labelKey: "widgets.forums.featuredTopics", descriptionKey: "widgets.desc.forums.featuredTopics", icon: "fa-solid fa-star", defaultConfig: { limit: 5 }, fields: [limitField()] }),
+  // Caruselul topicurilor recomandate (specul 2026-10-10-tema-nova §7): carduri cu imagine, pe lățimea paginii.
+  widget({
+    key: "forums.featuredCarousel",
+    labelKey: "widgets.forums.featuredCarousel",
+    descriptionKey: "widgets.desc.forums.featuredCarousel",
+    icon: "fa-solid fa-images",
+    zones: ["top", "bottom"],
+    defaultConfig: { limit: 8 },
+    fields: [limitField(12)],
+  }),
 ];
 
 /** Shoutbox-ul: o cameră de chat aleasă (gol = primul canal marcat „pe pagina principală”). */

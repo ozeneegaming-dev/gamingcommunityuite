@@ -507,3 +507,164 @@ a.gcs-statsTile__inner:focus-visible {
     font-size: 13px;
   }
 }
+
+/* ─── Caruselul topicurilor recomandate (`forums.featuredCarousel`) ──────────────────────────────────────── */
+.gcs-carousel {
+  min-width: 0;
+}
+.gcs-carousel__frame {
+  position: relative;
+}
+.gcs-carousel__track {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 2px;
+  padding: 2px;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.gcs-carousel__track::-webkit-scrollbar {
+  display: none;
+}
+.gcs-carousel__track:focus-visible {
+  outline: 2px solid var(--gcs-accent);
+  outline-offset: 2px;
+}
+.gcs-carousel__card {
+  position: relative;
+  flex: 0 0 min(560px, 86%);
+  min-height: 220px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  box-sizing: border-box;
+  overflow: hidden;
+  border-radius: var(--gcs-radius, 12px);
+  border: 1px solid var(--gcs-border);
+  background: var(--gcs-surface);
+  color: #fff;
+  isolation: isolate;
+}
+/* Imaginea (sau gradientul) pe tot cardul, cu un strat închis pentru text. */
+.gcs-carousel__art {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+}
+.gcs-carousel__art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgb(11 15 23 / 0.35), rgb(11 15 23 / 0.82) 70%, rgb(11 15 23 / 0.94));
+}
+.gcs-carousel__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.gcs-carousel__pill {
+  display: inline-flex;
+  align-items: center;
+  max-width: 60%;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: var(--gcs-accent);
+  font-size: 11.5px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-root a.gcs-carousel__pill {
+  color: #fff;
+}
+.gcs-carousel__date {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: rgb(255 255 255 / 0.85);
+}
+.gcs-carousel__title {
+  margin: auto 0 0;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.gcs-root .gcs-carousel__title a {
+  color: #fff;
+}
+.gcs-carousel__excerpt {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: rgb(255 255 255 / 0.78);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.gcs-carousel__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid rgb(255 255 255 / 0.14);
+}
+.gcs-carousel__author {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 12.5px;
+}
+.gcs-carousel__read {
+  flex: none;
+}
+.gcs-carousel__nav {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  margin-top: -18px;
+  border-radius: 50%;
+  border: 1px solid rgb(255 255 255 / 0.18);
+  background: rgb(11 15 23 / 0.75);
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.gcs-carousel__nav:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+.gcs-carousel__nav--prev {
+  left: 8px;
+}
+.gcs-carousel__nav--next {
+  right: 8px;
+}
+@media (max-width: 640px) {
+  .gcs-carousel__card {
+    flex-basis: 88%;
+    min-height: 200px;
+  }
+  .gcs-carousel__title {
+    font-size: 17px;
+  }
+}

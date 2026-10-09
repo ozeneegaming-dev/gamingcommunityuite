@@ -469,13 +469,156 @@
   display: flex;
   flex-direction: column;
 }
+/*
+ * Rândul unui server (specul 2026-10-10-tema-nova §6): pe o coloană îngustă (bara laterală) numele și inelul de ocupare
+ * sus, „Conectează-te”, adresa și butoanele dedesubt; pe o coloană lată (container ≥ 560 px), totul pe un rând.
+ */
+.gcs-serverWidget {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 .gcs-serverRow {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "main main ring"
+    "connect address actions"
+    "bar bar bar";
   gap: 6px 10px;
   align-items: center;
   padding: 10px 0;
   border-top: 1px solid var(--gcs-border);
+}
+.gcs-serverRow__main {
+  grid-area: main;
+}
+.gcs-serverRow__connect {
+  grid-area: connect;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 4px;
+  background: var(--gcs-btn-secondary-bg, var(--gcs-surface2));
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.gcs-root a.gcs-serverRow__connect {
+  color: var(--gcs-btn-secondary-text, var(--gcs-text));
+}
+.gcs-serverRow__connect svg {
+  font-size: 9px;
+}
+.gcs-serverRow__address {
+  grid-area: address;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gcs-text);
+  font-variant-numeric: tabular-nums;
+}
+.gcs-serverRow__game {
+  flex: none;
+  display: inline-flex;
+  color: var(--gcs-accentInk);
+  font-size: 13px;
+}
+.gcs-serverRow > .gcs-serverRing {
+  grid-area: ring;
+}
+.gcs-serverRow > .gcs-serverRow__actions {
+  grid-area: actions;
+}
+.gcs-serverRow > .gcs-serverRow__bar {
+  grid-area: bar;
+}
+@container (min-width: 560px) {
+  .gcs-serverRow {
+    grid-template-columns: minmax(0, 1.3fr) auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "main connect address ring actions";
+    gap: 10px 16px;
+  }
+  .gcs-serverRow > .gcs-serverRow__bar {
+    display: none;
+  }
+}
+/* Inelul de ocupare: arcul în culoarea stării, procentul în mijloc. */
+.gcs-serverRing {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  flex: none;
+}
+.gcs-serverRing svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+.gcs-serverRing circle {
+  fill: none;
+  stroke-width: 3.5;
+}
+.gcs-serverRing__track {
+  stroke: var(--gcs-border);
+}
+.gcs-serverRing__value {
+  stroke: var(--gcs-accent);
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.4s ease;
+}
+.gcs-serverRing[data-state="offline"] .gcs-serverRing__value,
+.gcs-serverRing[data-state="unknown"] .gcs-serverRing__value {
+  stroke: var(--gcs-muted);
+}
+.gcs-serverRing__text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--gcs-text);
+}
+/* Totalurile: serverele, jucătorii, ocuparea, fiecare cu numărul într-o pastilă colorată. */
+.gcs-serverTotals {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 10px 0 0;
+  border-top: 1px solid var(--gcs-border);
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-serverTotals__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.gcs-serverTotals__value {
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--gcs-accent) 45%, transparent);
+  background: color-mix(in srgb, var(--gcs-accent) 18%, transparent);
+  color: var(--gcs-text);
+  font-variant-numeric: tabular-nums;
+}
+.gcs-serverTotals__value--ok {
+  border-color: color-mix(in srgb, var(--gcs-ok) 45%, transparent);
+  background: color-mix(in srgb, var(--gcs-ok) 18%, transparent);
+}
+.gcs-serverTotals__value--info {
+  border-color: color-mix(in srgb, #3498db 45%, transparent);
+  background: color-mix(in srgb, #3498db 18%, transparent);
 }
 .gcs-serverRow:first-child {
   border-top: 0;
@@ -544,7 +687,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gcs-serverBar__fill {
+  .gcs-serverBar__fill,
+  .gcs-serverRing__value {
     transition: none;
   }
 }

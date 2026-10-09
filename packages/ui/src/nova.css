@@ -31,6 +31,18 @@
   --gcs-warm: #ea6c00;
   /* Rândul de sub antet (breadcrumb + căutare). */
   --gcs-crumb-h: 58px;
+  /*
+   * Iconițele implicite ale benzilor fără iconiță proprie (Font Awesome Free, CC BY 4.0), gri neutru: se citesc pe
+   * cercul închis și pe cel deschis. Contextul alege glifa (`--gcs-band-glyph`).
+   */
+  --gcs-glyph-crosshairs: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 576 512'%3E%3Cpath fill='%238792A2' d='M288-16c17.7 0 32 14.3 32 32l0 18.3c98.1 14 175.7 91.6 189.7 189.7l18.3 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-18.3 0c-14 98.1-91.6 175.7-189.7 189.7l0 18.3c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-18.3C157.9 463.7 80.3 386.1 66.3 288L48 288c-17.7 0-32-14.3-32-32s14.3-32 32-32l18.3 0C80.3 125.9 157.9 48.3 256 34.3L256 16c0-17.7 14.3-32 32-32zM131.2 288c12.7 62.7 62.1 112.1 124.8 124.8l0-12.8c0-17.7 14.3-32 32-32s32 14.3 32 32l0 12.8c62.7-12.7 112.1-62.1 124.8-124.8L432 288c-17.7 0-32-14.3-32-32s14.3-32 32-32l12.8 0C432.1 161.3 382.7 111.9 320 99.2l0 12.8c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-12.8C193.3 111.9 143.9 161.3 131.2 224l12.8 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-12.8 0zM288 208a48 48 0 1 1 0 96 48 48 0 1 1 0-96z'/%3E%3C/svg%3E");
+  --gcs-glyph-comments: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 576 512'%3E%3Cpath fill='%238792A2' d='M384 144c0 97.2-86 176-192 176-26.7 0-52.1-5-75.2-14L35.2 349.2c-9.3 4.9-20.7 3.2-28.2-4.2s-9.2-18.9-4.2-28.2l35.6-67.2C14.3 220.2 0 183.6 0 144 0 46.8 86-32 192-32S384 46.8 384 144zm0 368c-94.1 0-172.4-62.1-188.8-144 120-1.5 224.3-86.9 235.8-202.7 83.3 19.2 145 88.3 145 170.7 0 39.6-14.3 76.2-38.4 105.6l35.6 67.2c4.9 9.3 3.2 20.7-4.2 28.2s-18.9 9.2-28.2 4.2L459.2 498c-23.1 9-48.5 14-75.2 14z'/%3E%3C/svg%3E");
+  --gcs-glyph-circle-info: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%238792A2' d='M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zM224 160a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zm-8 64l48 0c13.3 0 24 10.7 24 24l0 88 8 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-80 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l24 0 0-64-24 0c-13.3 0-24-10.7-24-24s10.7-24 24-24z'/%3E%3C/svg%3E");
+  --gcs-glyph-reply: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%238792A2' d='M204.2 18.4c12 5 19.8 16.6 19.8 29.6l0 80 112 0c97.2 0 176 78.8 176 176 0 113.3-81.5 163.9-100.2 174.1-2.5 1.4-5.3 1.9-8.1 1.9-10.9 0-19.7-8.9-19.7-19.7 0-7.5 4.3-14.4 9.8-19.5 9.4-8.8 22.2-26.4 22.2-56.7 0-53-43-96-96-96l-96 0 0 80c0 12.9-7.8 24.6-19.8 29.6s-25.7 2.2-34.9-6.9l-160-160c-12.5-12.5-12.5-32.8 0-45.3l160-160c9.2-9.2 22.9-11.9 34.9-6.9z'/%3E%3C/svg%3E");
+  --gcs-glyph-poll: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath fill='%238792A2' d='M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l320 0c35.3 0 64-28.7 64-64l0-320c0-35.3-28.7-64-64-64L64 32zm56 192c13.3 0 24 10.7 24 24l0 112c0 13.3-10.7 24-24 24s-24-10.7-24-24l0-112c0-13.3 10.7-24 24-24zm184 88c0-13.3 10.7-24 24-24s24 10.7 24 24l0 48c0 13.3-10.7 24-24 24s-24-10.7-24-24l0-48zM224 128c13.3 0 24 10.7 24 24l0 208c0 13.3-10.7 24-24 24s-24-10.7-24-24l0-208c0-13.3 10.7-24 24-24z'/%3E%3C/svg%3E");
+  --gcs-glyph-bell: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath fill='%238792A2' d='M224 0c-17.7 0-32 14.3-32 32l0 3.2C119 50 64 114.6 64 192l0 21.7c0 48.1-16.4 94.8-46.4 132.4L7.8 358.3C2.7 364.6 0 372.4 0 380.5 0 400.1 15.9 416 35.5 416l376.9 0c19.6 0 35.5-15.9 35.5-35.5 0-8.1-2.7-15.9-7.8-22.2l-9.8-12.2C400.4 308.5 384 261.8 384 213.7l0-21.7c0-77.4-55-142-128-156.8l0-3.2c0-17.7-14.3-32-32-32zM162 464c7.1 27.6 32.2 48 62 48s54.9-20.4 62-48l-124 0z'/%3E%3C/svg%3E");
+  --gcs-glyph-users: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 576 512'%3E%3Cpath fill='%238792A2' d='M64 128a112 112 0 1 1 224 0 112 112 0 1 1 -224 0zM0 464c0-97.2 78.8-176 176-176s176 78.8 176 176l0 6c0 23.2-18.8 42-42 42L42 512c-23.2 0-42-18.8-42-42l0-6zM432 64a96 96 0 1 1 0 192 96 96 0 1 1 0-192zm0 240c79.5 0 144 64.5 144 144l0 22.4c0 23-18.6 41.6-41.6 41.6l-144.8 0c6.6-12.5 10.4-26.8 10.4-42l0-6c0-51.5-17.4-98.9-46.5-136.7 22.6-14.7 49.6-23.3 78.5-23.3z'/%3E%3C/svg%3E");
+  --gcs-glyph-bullhorn: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%238792A2' d='M461.2 18.9C472.7 24 480 35.4 480 48l0 416c0 12.6-7.3 24-18.8 29.1s-24.8 3.2-34.3-5.1l-46.6-40.7c-43.6-38.1-98.7-60.3-156.4-63l0 95.7c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-96C57.3 384 0 326.7 0 256S57.3 128 128 128l84.5 0c61.8-.2 121.4-22.7 167.9-63.3l46.6-40.7c9.4-8.3 22.9-10.2 34.3-5.1zM224 320l0 .2c70.3 2.7 137.8 28.5 192 73.4l0-275.3c-54.2 44.9-121.7 70.7-192 73.4L224 320z'/%3E%3C/svg%3E");
   /* Modelul tehnic peste grafica antetului (circuite fine), desenat aici, fără imagini externe. */
   --gcs-hero-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.055' stroke-width='1'%3E%3Cpath d='M0 80h46l12-12h44l12 12h46M80 0v34l12 12v68l-12 12v34M0 20h20l10 10v20M160 140h-20l-10-10v-20'/%3E%3Ccircle cx='46' cy='80' r='2.5'/%3E%3Ccircle cx='114' cy='80' r='2.5'/%3E%3Ccircle cx='80' cy='34' r='2.5'/%3E%3Ccircle cx='80' cy='126' r='2.5'/%3E%3Ccircle cx='30' cy='50' r='2'/%3E%3Ccircle cx='130' cy='110' r='2'/%3E%3C/g%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='10' cy='10' r='1'/%3E%3Ccircle cx='150' cy='10' r='1'/%3E%3Ccircle cx='10' cy='150' r='1'/%3E%3Ccircle cx='150' cy='150' r='1'/%3E%3C/g%3E%3C/svg%3E");
 }
@@ -656,6 +668,761 @@
 }
 .gcs-nova .gcs-modal__close:hover {
   background: var(--gcs-hover-light);
+  color: #fff;
+}
+
+/* ─── Titlurile paginilor și ale secțiunilor: iconița în cerc ───────────────────────────────────────────── */
+
+.gcs-nova .gcs-pageHeader__title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.gcs-nova .gcs-pageHeader__title > svg.gcs-hIcon {
+  box-sizing: border-box;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 11px;
+  margin: 0;
+  border-radius: var(--gcs-band-icon-radius);
+  background: color-mix(in srgb, var(--gcs-accent) 14%, var(--gcs-band-icon-bg));
+  border: 1px solid color-mix(in srgb, var(--gcs-accent) 30%, transparent);
+  color: var(--gcs-accentInk);
+}
+/* Grupurile din pagina Staff, secțiunile de profil: aceeași bandă cu iconița în cerc. */
+.gcs-nova .gcs-staffGroup__title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  font-size: 16px;
+  background: var(--gcs-band-bg);
+  box-shadow: var(--gcs-band-shadow);
+}
+.gcs-nova .gcs-staffGroup__title > svg.gcs-hIcon,
+.gcs-nova .gcs-staffGroup__title > .gcs-icon:first-child {
+  box-sizing: border-box;
+  width: var(--gcs-band-icon-size);
+  height: var(--gcs-band-icon-size);
+  padding: 10px;
+  margin: 0;
+  border-radius: var(--gcs-band-icon-radius);
+  border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+  background: color-mix(in srgb, currentColor 14%, var(--gcs-band-icon-bg));
+}
+
+/*
+ * Titlurile fără iconiță proprie primesc una implicită, după context (cercul benzii, cu o glifă neutră): widget-urile și
+ * cardurile laterale, dialogurile, răspunsul rapid, sondajul, notificările, regulile, titlurile paginilor, chat-ul.
+ */
+.gcs-nova :is(
+    .gcs-sideCard > .gcs-sideCard__title,
+    .gcs-titleBand,
+    .gcs-modal__title,
+    .gcs-dialog .gcs-dialog__title,
+    .gcs-replyBox__title,
+    .gcs-poll > .gcs-poll__question,
+    .gcs-notifPanel__head > h2,
+    .gcs-rules > .gcs-rules__head > h2,
+    .gcs-pageHeader__title,
+    .gcs-chat__heading,
+    .gcs-profileSection__title
+  ):not(:has(svg, img, .gcs-forumIcon, .gcs-chat__headingIcon, .gcs-widgetTitle__icon)) {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.gcs-nova :is(
+    .gcs-sideCard > .gcs-sideCard__title,
+    .gcs-titleBand,
+    .gcs-modal__title,
+    .gcs-dialog .gcs-dialog__title,
+    .gcs-replyBox__title,
+    .gcs-poll > .gcs-poll__question,
+    .gcs-notifPanel__head > h2,
+    .gcs-rules > .gcs-rules__head > h2,
+    .gcs-pageHeader__title,
+    .gcs-chat__heading,
+    .gcs-profileSection__title
+  ):not(:has(svg, img, .gcs-forumIcon, .gcs-chat__headingIcon, .gcs-widgetTitle__icon))::before {
+  content: "";
+  box-sizing: border-box;
+  flex: none;
+  width: var(--gcs-band-icon-size);
+  height: var(--gcs-band-icon-size);
+  border-radius: var(--gcs-band-icon-radius);
+  border: 1px solid var(--gcs-band-icon-border);
+  background: var(--gcs-band-glyph, var(--gcs-glyph-crosshairs)) center / 14px 14px no-repeat, var(--gcs-band-icon-bg);
+}
+.gcs-nova :is(.gcs-modal__title, .gcs-dialog .gcs-dialog__title, .gcs-rules > .gcs-rules__head > h2) {
+  --gcs-band-glyph: var(--gcs-glyph-circle-info);
+}
+.gcs-nova .gcs-replyBox__title {
+  --gcs-band-glyph: var(--gcs-glyph-reply);
+}
+.gcs-nova .gcs-poll > .gcs-poll__question {
+  --gcs-band-glyph: var(--gcs-glyph-poll);
+}
+.gcs-nova .gcs-notifPanel__head > h2 {
+  --gcs-band-glyph: var(--gcs-glyph-bell);
+}
+.gcs-nova :is(.gcs-pageHeader__title, .gcs-chat__heading) {
+  --gcs-band-glyph: var(--gcs-glyph-comments);
+}
+.gcs-nova .gcs-profileSection__title {
+  --gcs-band-glyph: var(--gcs-glyph-users);
+}
+.gcs-nova .gcs-pageHeader__title::before {
+  width: 40px;
+  height: 40px;
+  background-size: 16px 16px, auto;
+}
+
+/* ─── Sistemul de hover: rândurile, meniurile, tab-urile, „cipurile” de navigare secundară ──────────────── */
+
+/* Rândurile clicabile urcă pe suprafața mai deschisă. */
+.gcs-nova :is(.gcs-forumRow, .gcs-topicRow, .gcs-widgetRow, .gcs-stream__item, .gcs-inbox__item, .gcs-board__table tbody tr, .gcs-table__row, .gcs-serverRow, .gcs-clanWidget__row) {
+  transition: background-color var(--gcs-ease);
+}
+.gcs-nova :is(.gcs-forumRow, .gcs-topicRow, .gcs-stream__item, .gcs-inbox__item, .gcs-board__table tbody tr, .gcs-table__row, .gcs-serverRow):hover {
+  background: var(--gcs-raise);
+}
+/* Navigarea secundară ca „cipuri”: la hover și activ, fundal și chenar de accent, iar iconița se umple cu accentul. */
+.gcs-nova .gcs-segLinks {
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.gcs-nova .gcs-segLink,
+.gcs-nova .gcs-root a.gcs-segLink,
+.gcs-nova .gcs-root a.gcs-settingsNav__link,
+.gcs-nova .gcs-settingsNav__link,
+.gcs-nova .gcs-root a.gcs-toggleLink {
+  min-height: 38px;
+  padding: 0 14px 0 6px;
+  gap: 10px;
+  border-radius: 6px;
+  border: 1px solid var(--gcs-border);
+  background: var(--gcs-surface);
+  color: var(--gcs-text);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  box-shadow: none;
+  transition: background-color var(--gcs-ease), border-color var(--gcs-ease), color var(--gcs-ease);
+}
+.gcs-nova .gcs-root a.gcs-toggleLink {
+  padding-left: 12px;
+}
+/* Iconița cipului stă într-o cutiuță care se umple cu accentul. */
+.gcs-nova :is(.gcs-segLink, .gcs-settingsNav__link) > svg:first-child {
+  box-sizing: border-box;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  padding: 6px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--gcs-text) 7%, transparent);
+  color: var(--gcs-text);
+  transition: background-color var(--gcs-ease), color var(--gcs-ease);
+}
+.gcs-nova :is(.gcs-segLink, .gcs-settingsNav__link):not(:has(> svg:first-child)) {
+  padding-left: 14px;
+}
+.gcs-nova .gcs-root a:is(.gcs-segLink, .gcs-settingsNav__link, .gcs-toggleLink):hover,
+.gcs-nova .gcs-root a:is(.gcs-segLink--active, .gcs-settingsNav__link--active),
+.gcs-nova :is(.gcs-segLink--active, .gcs-settingsNav__link--active),
+.gcs-nova .gcs-root a.gcs-toggleLink[data-active] {
+  color: #fff;
+  background: color-mix(in srgb, var(--gcs-accent) 22%, var(--gcs-surface));
+  border-color: var(--gcs-accent);
+  box-shadow: none;
+}
+.gcs-nova :is(.gcs-segLink, .gcs-settingsNav__link):is(:hover, .gcs-segLink--active, .gcs-settingsNav__link--active) > svg:first-child {
+  background: var(--gcs-accent);
+  color: #fff;
+}
+/* Tab-urile (profilul, clasamentul serverelor): text cu linia de accent; hover = nuanță de 5%. */
+.gcs-nova .gcs-tab,
+.gcs-nova .gcs-root a.gcs-tab {
+  border-radius: 6px 6px 0 0;
+  font-size: 13px;
+  transition: background-color var(--gcs-ease), color var(--gcs-ease), border-color var(--gcs-ease);
+}
+.gcs-nova .gcs-tab:hover {
+  background: var(--gcs-hover-tint);
+  color: var(--gcs-heading, var(--gcs-text));
+}
+/* Paginarea: pătrățele de 4 px, pagina curentă plină cu accentul. */
+.gcs-nova .gcs-pagination__link {
+  border-radius: 4px;
+  transition: background-color var(--gcs-ease), color var(--gcs-ease), border-color var(--gcs-ease);
+}
+.gcs-nova .gcs-pagination__link[aria-current="page"] {
+  background: var(--gcs-accent);
+  border-color: var(--gcs-accent);
+  color: #fff;
+}
+/* Controalele care apar la hover: bifele de moderare din rânduri, săgețile de restrângere. */
+.gcs-nova .gcs-topicRow .gcs-modCheck {
+  opacity: 0.35;
+  transition: opacity var(--gcs-ease);
+}
+.gcs-nova .gcs-topicRow:hover .gcs-modCheck,
+.gcs-nova .gcs-modCheck:checked,
+.gcs-nova .gcs-modCheck:focus-visible {
+  opacity: 1;
+}
+
+/* ─── Săgeata de restrângere (categorii, widget-uri) ───────────────────────────────────────────────────── */
+
+.gcs-collapseToggle {
+  display: none;
+}
+.gcs-nova .gcs-collapseToggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--gcs-muted);
+  font-size: 12px;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity var(--gcs-ease), background-color var(--gcs-ease), color var(--gcs-ease), transform var(--gcs-ease);
+}
+.gcs-nova :is(.gcs-category__header, .gcs-sideCard):hover .gcs-collapseToggle,
+.gcs-nova .gcs-collapseToggle:focus-visible {
+  opacity: 1;
+}
+.gcs-nova .gcs-collapseToggle:hover {
+  background: var(--gcs-hover-light);
+  color: #fff;
+}
+.gcs-nova .gcs-collapseToggle[aria-expanded="false"] svg {
+  transform: rotate(-90deg);
+}
+/* În widget-uri săgeata stă în bandă, în dreapta titlului (poziționată, în afara titlului). */
+.gcs-nova .gcs-sideCard:has(> .gcs-collapseToggle) {
+  position: relative;
+}
+.gcs-nova .gcs-sideCard > .gcs-collapseToggle {
+  position: absolute;
+  top: 16px;
+  right: 12px;
+}
+.gcs-nova .gcs-sideCard:has(> .gcs-collapseToggle) > .gcs-sideCard__title {
+  padding-right: 52px;
+}
+.gcs-nova .gcs-card[data-collapsed] > :not(:first-child):not(.gcs-collapseToggle) {
+  display: none;
+}
+.gcs-nova .gcs-card[data-collapsed] > :first-child {
+  border-bottom: 0;
+  border-radius: var(--gcs-band-radius);
+}
+@media (hover: none) {
+  .gcs-nova .gcs-collapseToggle {
+    opacity: 1;
+  }
+}
+
+/* ─── Indexul forumului: categoriile, rândurile forumurilor, subforumurile ─────────────────────────────── */
+
+.gcs-nova .gcs-forumRow {
+  gap: 18px;
+  padding: 20px 22px;
+  border-bottom-color: var(--gcs-box-border, var(--gcs-border));
+}
+/* Iconițele forumurilor: glife portocalii, fără fundal (culoarea forumului, dacă are). */
+.gcs-nova .gcs-forumRow__icon {
+  width: 40px;
+  height: 40px;
+  background: none !important;
+}
+.gcs-nova .gcs-forumRow__icon .gcs-forumIcon {
+  font-size: 26px !important;
+}
+.gcs-nova .gcs-forumRow__title,
+.gcs-nova .gcs-root .gcs-forumRow__title a {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gcs-heading, #fff);
+}
+.gcs-nova .gcs-root .gcs-forumRow__title a:hover {
+  color: var(--gcs-link-hover, var(--gcs-accent));
+}
+.gcs-nova .gcs-forumRow__desc {
+  font-size: 12.5px;
+  color: var(--gcs-muted);
+}
+/* Subforumurile: „cipuri” cu o săgeată de accent, pe un rând care se rupe. */
+.gcs-nova .gcs-forumRow__subs {
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 8px;
+}
+.gcs-nova .gcs-forumRow__subs li {
+  gap: 6px;
+}
+.gcs-nova .gcs-forumRow__subs li > .gcs-forumIcon,
+.gcs-nova .gcs-forumRow__subCount {
+  display: none;
+}
+.gcs-nova .gcs-forumRow__subs li::before {
+  content: "→";
+  color: var(--gcs-accent);
+  font-weight: 700;
+}
+.gcs-nova .gcs-root .gcs-forumRow__subs a {
+  color: var(--gcs-heading, var(--gcs-text));
+  font-weight: 600;
+  font-size: 12.5px;
+}
+.gcs-nova .gcs-root .gcs-forumRow__subs a:hover {
+  color: var(--gcs-accent);
+}
+/* Contoarele: numărul alb, eticheta mică. */
+.gcs-nova .gcs-forumRow__stats strong {
+  color: var(--gcs-heading, #fff);
+  font-size: 14px;
+}
+.gcs-nova .gcs-forumRow__stats {
+  font-size: 11.5px;
+  color: var(--gcs-muted);
+}
+.gcs-nova .gcs-forumRow__lastTitle {
+  font-weight: 600;
+  font-size: 13px;
+}
+.gcs-nova .gcs-root .gcs-forumRow__lastTitle {
+  color: var(--gcs-heading, #fff);
+}
+
+/* ─── Lista topicurilor ─────────────────────────────────────────────────────────────────────────────────── */
+
+.gcs-nova .gcs-topicRow {
+  padding: 16px 22px;
+  border-bottom-color: var(--gcs-box-border, var(--gcs-border));
+}
+.gcs-nova .gcs-topicRow__title,
+.gcs-nova .gcs-root .gcs-topicRow__title a {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--gcs-heading, #fff);
+}
+.gcs-nova .gcs-root .gcs-topicRow__title a:hover {
+  color: var(--gcs-link-hover, var(--gcs-accent));
+}
+.gcs-nova .gcs-topicRow__meta {
+  font-size: 12px;
+}
+
+/* ─── Topicul: cardul postării, autorul cu coperta în spatele avatarului, postările staff-ului ──────────── */
+
+.gcs-nova .gcs-post {
+  border-radius: var(--gcs-radius, 12px);
+  overflow: hidden;
+}
+/* Postările staff-ului: chenarul și o lumină fină în culoarea grupului. */
+.gcs-nova .gcs-post[data-staff] {
+  border-color: color-mix(in srgb, var(--gcs-post-group) 70%, var(--gcs-border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gcs-post-group) 25%, transparent), 0 10px 30px -12px color-mix(in srgb, var(--gcs-post-group) 45%, transparent);
+}
+.gcs-nova .gcs-post__author.gcs-postbit {
+  background: color-mix(in srgb, var(--gcs-bg) 35%, var(--gcs-surface));
+}
+.gcs-nova .gcs-post__head {
+  border-bottom-color: var(--gcs-box-border, var(--gcs-border));
+}
+.gcs-nova .gcs-post__date {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--gcs-border);
+  background: var(--gcs-surface2);
+  font-size: 12px;
+}
+.gcs-nova .gcs-postBody {
+  font-size: calc(14px * var(--gcs-content-scale, 1));
+  line-height: 1.7;
+}
+
+/* ─── Moderarea: plăci colorate după tipul acțiunii ───────────────────────────────────────────────────── */
+
+.gcs-nova .gcs-modTiles {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+.gcs-nova .gcs-modTile {
+  --gcs-tone: #9b59b6;
+  justify-content: flex-start;
+  min-height: 42px;
+  border: 1px solid var(--gcs-border);
+  background: var(--gcs-surface2);
+  color: var(--gcs-text);
+}
+.gcs-nova .gcs-modTile[data-tone="feature"] {
+  --gcs-tone: #2ecc71;
+}
+.gcs-nova .gcs-modTile[data-tone="move"] {
+  --gcs-tone: #3498db;
+}
+.gcs-nova .gcs-modTile[data-tone="hide"] {
+  --gcs-tone: #e67e22;
+}
+.gcs-nova .gcs-modTile[data-tone="delete"] {
+  --gcs-tone: #e74c3c;
+}
+.gcs-nova .gcs-modTile .gcs-btn__icon {
+  color: var(--gcs-tone);
+  transition: color var(--gcs-ease);
+}
+.gcs-nova .gcs-modTile:hover:not(:disabled),
+.gcs-nova .gcs-modTile:focus-visible {
+  background: color-mix(in srgb, var(--gcs-tone) 25%, transparent);
+  border-color: var(--gcs-tone);
+  color: #fff;
+}
+.gcs-nova .gcs-modBar {
+  gap: 8px;
+}
+.gcs-nova .gcs-modBar .gcs-modTile {
+  min-height: 34px;
+}
+
+/* ─── Widget-urile ────────────────────────────────────────────────────────────────────────────────────── */
+
+.gcs-nova .gcs-widgetRow__title {
+  font-size: 13px;
+  color: var(--gcs-heading, #fff);
+}
+.gcs-nova a.gcs-widgetRow__title:hover {
+  color: var(--gcs-accent);
+}
+.gcs-nova .gcs-widgetRow {
+  border-top-color: var(--gcs-box-border, var(--gcs-border));
+}
+.gcs-nova .gcs-statGrid > div {
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--gcs-bg) 40%, var(--gcs-surface));
+  border: 1px solid var(--gcs-border);
+}
+/* Panoul de statistici: banda cu iconița în cerc (fără bara de accent), plăcile ca în restul casetelor. */
+.gcs-nova .gcs-statsPanel__head {
+  border-left: 0;
+  padding: 16px 20px;
+  background: var(--gcs-band-bg);
+}
+.gcs-nova .gcs-statsPanel__title .gcs-widgetTitle__icon {
+  color: var(--gcs-accentInk);
+}
+.gcs-nova .gcs-statsPanel__toggle {
+  border-radius: 50%;
+  transition: background-color var(--gcs-ease), color var(--gcs-ease), border-color var(--gcs-ease);
+}
+/* Anunțul (erou): gradient bleumarin cu lumina de accent. */
+.gcs-nova .gcs-announcement {
+  background:
+    radial-gradient(ellipse 60% 120% at 100% 0%, color-mix(in srgb, var(--gcs-accent) 22%, transparent), transparent 60%),
+    linear-gradient(135deg, color-mix(in srgb, var(--gcs-accent) 10%, var(--gcs-surface)), var(--gcs-surface) 60%);
+  border-color: color-mix(in srgb, var(--gcs-accent) 25%, var(--gcs-border));
+}
+
+/* ─── Chat-ul și shoutbox-ul: aceeași bandă, iconița în cerc ───────────────────────────────────────────── */
+
+.gcs-nova .gcs-chat__head {
+  padding: 12px 16px 12px 20px;
+  background: var(--gcs-band-bg);
+}
+.gcs-nova .gcs-chat__headingIcon {
+  box-sizing: border-box;
+  width: var(--gcs-band-icon-size);
+  height: var(--gcs-band-icon-size);
+  border-radius: var(--gcs-band-icon-radius);
+  border: 1px solid var(--gcs-band-icon-border);
+  background: var(--gcs-band-icon-bg);
+  color: var(--gcs-accentInk);
+  font-size: 14px;
+}
+.gcs-nova .gcs-chat__heading,
+.gcs-nova .gcs-chat__heading.gcs-sideCard__title {
+  font-size: 16px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.gcs-nova .gcs-chat__headButton {
+  border-radius: 50%;
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  padding: 0;
+  font-size: 13px;
+  border-color: var(--gcs-border);
+  transition: background-color var(--gcs-ease), color var(--gcs-ease), border-color var(--gcs-ease);
+}
+.gcs-nova .gcs-chat__headButton--text {
+  width: auto;
+  border-radius: 6px;
+  padding: 0 12px;
+}
+.gcs-nova .gcs-chat__headButton:hover {
+  background: color-mix(in srgb, var(--gcs-box-bg, var(--gcs-surface)) 92%, #fff);
+  border-color: var(--gcs-border);
+  color: #fff;
+}
+
+/* ─── Membrii, staff-ul, profilul: avatarele staff-ului și ale profilului pătrate rotunjite ────────────── */
+
+.gcs-nova .gcs-memberCard {
+  border-radius: var(--gcs-radius, 12px);
+  transition: border-color var(--gcs-ease), transform var(--gcs-ease), box-shadow var(--gcs-ease);
+}
+.gcs-nova .gcs-memberCard:hover {
+  border-color: color-mix(in srgb, var(--gcs-accent) 45%, var(--gcs-border));
+  transform: translateY(var(--gcs-hover-lift));
+  box-shadow: 0 12px 30px -14px rgb(0 0 0 / 0.6);
+}
+.gcs-nova :is(.gcs-staffGroup, .gcs-profileHeader) :is(.gcs-avatarFrame, .gcs-avatar),
+.gcs-nova .gcs-staffGroup .gcs-avatarFrame::before {
+  border-radius: 16px;
+}
+.gcs-nova .gcs-profileHeader {
+  border-radius: var(--gcs-radius, 12px);
+  overflow: hidden;
+}
+
+/* ─── Serverele: rândurile ca plăci închise, inelul de ocupare, totalurile ──────────────────────────────── */
+
+.gcs-nova .gcs-serverList {
+  gap: 6px;
+}
+.gcs-nova .gcs-serverRow {
+  padding: 10px 12px;
+  border: 1px solid var(--gcs-box-border, var(--gcs-border));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--gcs-bg) 45%, var(--gcs-surface));
+}
+.gcs-nova .gcs-serverRow:first-child {
+  padding-top: 10px;
+  border-top: 1px solid var(--gcs-box-border, var(--gcs-border));
+}
+.gcs-nova .gcs-serverRow[data-state="online"] .gcs-serverRow__name .gcs-dot {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gcs-ok) 22%, transparent);
+}
+.gcs-nova .gcs-serverRow__name {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.gcs-nova .gcs-root .gcs-serverRow__name a {
+  color: var(--gcs-heading, #fff);
+}
+.gcs-nova .gcs-serverRow__connect {
+  transition: background-color var(--gcs-ease), color var(--gcs-ease);
+}
+.gcs-nova .gcs-root a.gcs-serverRow__connect:hover {
+  background: color-mix(in srgb, var(--gcs-btn-secondary-bg, var(--gcs-surface2)) 92%, #fff);
+  color: #fff;
+}
+.gcs-nova .gcs-serverRow__actions .gcs-iconBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  background: var(--gcs-btn-secondary-bg, var(--gcs-surface2));
+  color: var(--gcs-text);
+}
+.gcs-nova .gcs-serverRow__actions .gcs-iconBtn:hover {
+  background: color-mix(in srgb, var(--gcs-btn-secondary-bg, var(--gcs-surface2)) 92%, #fff);
+  color: #fff;
+}
+.gcs-nova .gcs-serverTotals {
+  border-top-color: var(--gcs-box-border, var(--gcs-border));
+}
+
+/* ─── Caruselul recomandatelor: cardul se ridică, imaginea se apropie ──────────────────────────────────── */
+
+.gcs-nova .gcs-carousel__card {
+  border-color: var(--gcs-box-border, var(--gcs-border));
+  box-shadow: var(--gcs-box-shadow, none);
+  transition: transform var(--gcs-ease), border-color var(--gcs-ease);
+}
+.gcs-nova .gcs-carousel__art {
+  transition: transform 0.4s ease;
+}
+.gcs-nova .gcs-carousel__card:hover {
+  border-color: color-mix(in srgb, var(--gcs-accent) 50%, var(--gcs-border));
+}
+.gcs-nova .gcs-carousel__card:hover .gcs-carousel__art {
+  transform: scale(calc(1 + (var(--gcs-hover-scale) - 1) * 0.6));
+}
+.gcs-nova .gcs-carousel__nav {
+  transition: background-color var(--gcs-ease), border-color var(--gcs-ease);
+}
+.gcs-nova .gcs-carousel__nav:hover {
+  background: var(--gcs-accent);
+  border-color: var(--gcs-accent);
+}
+
+/* ─── Mențiunile (v2): pastilele grupurilor, lista de sugestii, cardul grupului ────────────────────────── */
+
+.gcs-nova .gcs-groupMention {
+  border-radius: var(--gcs-pill-radius);
+  padding: 0 0.45em;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gcs-gm-color, var(--gcs-accent)) 55%, transparent);
+  transition: opacity var(--gcs-ease);
+}
+.gcs-nova .gcs-groupMention:hover {
+  opacity: 0.8;
+}
+.gcs-nova .gcs-mentionList {
+  border-radius: 10px;
+  border-color: var(--gcs-box-border, var(--gcs-border));
+  box-shadow: 0 18px 44px -10px rgb(0 0 0 / 0.6);
+}
+.gcs-nova .gcs-mentionList__item {
+  border-radius: 6px;
+  font-size: 13px;
+  transition: background-color var(--gcs-ease);
+}
+.gcs-nova .gcs-mentionList__item:hover {
+  background: var(--gcs-hover-tint);
+}
+.gcs-nova .gcs-mentionList li[aria-selected="true"] > .gcs-mentionList__item {
+  background: color-mix(in srgb, var(--gcs-accent) 16%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gcs-accent) 45%, transparent);
+}
+.gcs-nova .gcs-mentionList__group {
+  border-radius: var(--gcs-pill-radius);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gcs-gm-color, var(--gcs-accent)) 45%, transparent);
+}
+.gcs-nova .gcs-groupCard,
+.gcs-nova .gcs-hoverCard {
+  border-radius: 12px;
+  border-color: var(--gcs-box-border, var(--gcs-border));
+}
+.gcs-nova .gcs-groupCard__band {
+  border-bottom-width: 1px;
+}
+.gcs-nova .gcs-groupCard__icon {
+  border-radius: var(--gcs-band-icon-radius);
+}
+
+/* ─── Subsolul: coloana „Despre”, pastilele de linkuri, bara de jos ────────────────────────────────────── */
+
+.gcs-nova .gcs-siteFooter {
+  margin-top: 40px;
+  border-top: 1px solid var(--gcs-box-border, var(--gcs-border));
+  background:
+    radial-gradient(ellipse 50% 80% at 0% 0%, color-mix(in srgb, var(--gcs-accent) 7%, transparent), transparent 60%),
+    var(--gcs-footer-bg, var(--gcs-chrome));
+}
+.gcs-nova .gcs-siteFooter__inner {
+  padding: 34px 24px 22px;
+  gap: 26px;
+}
+.gcs-nova .gcs-siteFooter__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gcs-heading, #fff);
+  margin-bottom: 6px;
+}
+.gcs-nova .gcs-siteFooter__accent,
+.gcs-nova .gcs-siteFooter__hl {
+  color: var(--gcs-accent);
+}
+.gcs-nova .gcs-siteFooter__text {
+  color: var(--gcs-footer-text, var(--gcs-text));
+  font-size: 13px;
+}
+.gcs-nova .gcs-siteFooter__cta,
+.gcs-nova .gcs-siteFooter__pill {
+  border-color: var(--gcs-box-border, var(--gcs-border));
+  background: var(--gcs-surface);
+  transition: border-color var(--gcs-ease), transform var(--gcs-ease), background-color var(--gcs-ease), color var(--gcs-ease);
+}
+.gcs-nova .gcs-siteFooter__pill {
+  min-height: 36px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--gcs-btn-secondary-bg, var(--gcs-surface2)) 70%, var(--gcs-surface));
+  font-weight: 500;
+}
+.gcs-nova .gcs-siteFooter__pillIcon {
+  color: var(--gcs-text);
+  transition: color var(--gcs-ease);
+}
+/* Pastila la hover: chenar de accent, o mărire ușoară și iconița în accent. */
+.gcs-nova .gcs-root a.gcs-siteFooter__pill:hover,
+.gcs-nova .gcs-root a.gcs-siteFooter__pill:focus-visible {
+  border-color: var(--gcs-accent);
+  color: var(--gcs-heading, #fff);
+  transform: scale(var(--gcs-hover-scale));
+}
+.gcs-nova a.gcs-siteFooter__pill:hover .gcs-siteFooter__pillIcon {
+  color: var(--gcs-accent);
+}
+.gcs-nova .gcs-root a.gcs-siteFooter__cta:hover {
+  border-color: var(--gcs-accent);
+  color: var(--gcs-heading, #fff);
+}
+.gcs-nova .gcs-siteFooter__ctaIcon {
+  color: var(--gcs-accent);
+}
+.gcs-nova .gcs-siteFooter__bar {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border-color: var(--gcs-box-border, var(--gcs-border));
+  background: var(--gcs-surface);
+}
+.gcs-nova .gcs-siteFooter__powered,
+.gcs-nova .gcs-siteFooter__copy {
+  font-size: 12.5px;
+  color: var(--gcs-footer-text, var(--gcs-text));
+}
+.gcs-nova .gcs-siteFooter__powered a {
+  color: var(--gcs-heading, #fff);
+}
+.gcs-nova .gcs-siteFooter__socialLink {
+  width: 30px;
+  height: 30px;
+  transition: transform var(--gcs-ease), filter var(--gcs-ease);
+}
+.gcs-nova .gcs-siteFooter__socialLink:hover {
+  transform: translateY(var(--gcs-hover-lift)) scale(var(--gcs-hover-scale));
+  filter: brightness(1.15);
+}
+.gcs-nova .gcs-root a.gcs-siteFooter__barLink,
+.gcs-nova summary.gcs-siteFooter__barLink {
+  color: var(--gcs-footer-text, var(--gcs-text));
+  transition: color var(--gcs-ease);
+}
+.gcs-nova .gcs-root a.gcs-siteFooter__barLink:hover,
+.gcs-nova summary.gcs-siteFooter__barLink:hover {
+  color: var(--gcs-accent);
+}
+.gcs-nova .gcs-siteFooter__scheme {
+  padding: 3px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--gcs-bg) 50%, var(--gcs-surface));
+}
+.gcs-nova .gcs-siteFooter__scheme .gcs-seg {
+  border-radius: 6px;
+}
+.gcs-nova .gcs-siteFooter__scheme .gcs-seg--active {
+  background: var(--gcs-accent);
   color: #fff;
 }
 

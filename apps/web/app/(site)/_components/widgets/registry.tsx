@@ -1,22 +1,25 @@
 import { GCS_RICH_FIELDS, richFieldHtml, sanitizeContentHtml, type GcsActor } from "@gcs/core";
 import { POLL_INTERVAL_SETTING, type GcsUserRef } from "@gcs/modules";
 import { GcsAvatar, GcsBadge, GcsButton, GcsCard, GcsClanTag, GcsUserLink } from "@gcs/ui";
+import { GcsIcon } from "@gcs/ui/icons";
 import Link from "next/link";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
-import { memberHref, postHref, topicHref } from "@/lib/forum-urls";
+import { forumHref, memberHref, postHref, topicHref } from "@/lib/forum-urls";
 import { onlineView } from "@/lib/online";
 import { cardData, initialStatuses } from "@/lib/servers";
 import { widgetCardVars } from "@/lib/template-data";
 import { siteTemplate } from "@/lib/templates";
 import { services } from "@/lib/services";
 import { GcsShoutbox } from "../chat/GcsShoutbox";
+import { GcsCollapseToggle } from "../GcsCollapseToggle";
 import { GcsClanLogo } from "../clans/GcsClanLogo";
 import { GcsRelTime } from "../forum/GcsRelTime";
 import { GcsServerLiveProvider } from "../servers/GcsServerLive";
 import { GcsServerWidgetList } from "../servers/GcsServerWidgetList";
 import { GcsWhoIsOnline } from "../forum/GcsWhoIsOnline";
 import { GcsGroupLegend, GcsStatsPanel, GcsWhoWasOnline } from "./GcsStatsPanel";
+import { GcsCarousel } from "./GcsCarousel";
 import { GcsWidgetTitle, widgetIcon } from "./GcsWidgetTitle";
 
 export type GcsWidgetRenderProps = { id: string; config: Record<string, unknown>; actor: GcsActor };
@@ -43,6 +46,8 @@ async function GcsWidgetCard({ id, type, config, title, extra, children, testId 
       <GcsWidgetTitle id={headingId} icon={widgetIcon(type, config)} extra={extra}>
         {title}
       </GcsWidgetTitle>
+      {/* Săgeata de restrângere stă în bandă (poziționată din CSS), în afara titlului. */}
+      <GcsCollapseToggle storageKey={`widget-${id}`} title={title} />
       {children}
     </section>
   );
@@ -316,6 +321,64 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
           </ul>
         )}
       </GcsWidgetCard>
+    );
+  },
+
+  // Caruselul topicurilor recomandate: carduri cu imaginea primului mesaj (sau un gradient generat), forumul, data,
+  // titlul, extrasul, autorul și „Citește”. Fără topicuri recomandate nu se afișează nimic.
+  "forums.featuredCarousel": async ({ id, config, actor }) => {
+    const [t, format, slides] = await Promise.all([getTranslations("widgets"), getFormatter(), services().forumQueries.featuredCarousel(actor, limitOf(config, 8))]);
+    if (slides.length === 0) return null;
+    const headingId = `gcs-widget-${id}`;
+    return (
+      <section className="gcs-carousel gcs-widget" aria-labelledby={headingId} data-widget="forums.featuredCarousel" data-testid="gcs-widget-carousel">
+        <h2 id={headingId} className="gcs-srOnly">
+          {t("forums.featuredCarousel")}
+        </h2>
+        <GcsCarousel label={t("forums.featuredCarousel")} labels={{ prev: t("carousel.prev"), next: t("carousel.next") }}>
+          {slides.map((s) => {
+            // Fără imagine: un gradient din culoarea forumului (sau din id-ul topicului), cu lumina de accent.
+            const hue = (s.id * 47) % 360;
+            const art = s.image
+              ? { backgroundImage: `url(${JSON.stringify(s.image)})` }
+              : { backgroundImage: `radial-gradient(ellipse 80% 90% at 85% 0%, ${s.forum?.color ?? `hsl(${hue} 70% 45%)`}55, transparent 60%), linear-gradient(135deg, hsl(${hue} 45% 18%), hsl(${(hue + 40) % 360} 40% 9%))` };
+            return (
+              <article key={s.id} className="gcs-carousel__card" data-testid="gcs-carousel-card" data-image={s.image ? "" : undefined}>
+                <span className="gcs-carousel__art" style={art} aria-hidden="true" />
+                <div className="gcs-carousel__top">
+                  {s.forum && (
+                    <Link href={forumHref(s.forum)} className="gcs-carousel__pill" style={s.forum.color ? { background: s.forum.color } : undefined}>
+                      {s.forum.name}
+                    </Link>
+                  )}
+                  <span className="gcs-carousel__date">
+                    <GcsIcon name="fa-regular fa-calendar" />
+                    {format.dateTime(new Date(s.createdAt), { day: "numeric", month: "long" })}
+                  </span>
+                </div>
+                <h3 className="gcs-carousel__title">
+                  <Link href={topicHref(s)}>{s.title}</Link>
+                </h3>
+                {s.excerpt && <p className="gcs-carousel__excerpt">{s.excerpt}</p>}
+                <div className="gcs-carousel__foot">
+                  {s.user ? (
+                    <span className="gcs-carousel__author">
+                      <GcsAvatar name={s.user.name} size="s" userId={s.user.id} {...(s.user.image ? { src: s.user.image } : {})} />
+                      <GcsUserLink userId={s.user.id} name={s.user.name} nameKey={s.user.nameKey} href={memberHref(s.user)} />
+                    </span>
+                  ) : (
+                    <span />
+                  )}
+                  <Link href={topicHref(s)} className="gcs-btn gcs-btn--primary gcs-btn--sm gcs-carousel__read" aria-label={`${t("carousel.read")}: ${s.title}`}>
+                    {t("carousel.read")}
+                    <GcsIcon name="fa-solid fa-arrow-right" />
+                  </Link>
+                </div>
+              </article>
+            );
+          })}
+        </GcsCarousel>
+      </section>
     );
   },
 

@@ -57,7 +57,9 @@
     "pageEditor": "Éditeur de page",
     "metaDescription": "{name}: a gaming community with forums, chat and members.",
     "deletedMember": "Deleted member",
-    "crumbs": "You are here"
+    "crumbs": "You are here",
+    "collapse": "Collapse {title}",
+    "expand": "Expand {title}"
   },
   "auth": {
     "login": {
@@ -3984,7 +3986,8 @@
     "apply": "Appliquer",
     "menu": "Outils de modulation",
     "confirmDelete": "Supprimer définitivement le sujet et tous ses messages?",
-    "done": "Terminé"
+    "done": "Terminé",
+    "cancel": "Cancel"
   },
   "search": {
     "title": "Rechercher",
@@ -4604,7 +4607,8 @@
       "recentTopics": "Thèmes récents",
       "recentPosts": "Postes récents",
       "topPosters": "Meilleures affiches",
-      "featuredTopics": "Thèmes en vedette"
+      "featuredTopics": "Thèmes en vedette",
+      "featuredCarousel": "Featured carousel"
     },
     "chat": {
       "shoutbox": "Boîte à déchets"
@@ -4639,7 +4643,8 @@
         "recentTopics": "Les derniers sujets ont commencé sur le forum.",
         "recentPosts": "Les dernières réponses, avec un extrait.",
         "topPosters": "Membres ayant le plus de postes au cours de la période choisie.",
-        "featuredTopics": "Sujets abordés par le personnel."
+        "featuredTopics": "Sujets abordés par le personnel.",
+        "featuredCarousel": "Topics featured by the staff, in an image carousel: forum, date, title, excerpt and author."
       },
       "chat": {
         "shoutbox": "Une salle de discussion, juste sur la page."
@@ -4664,6 +4669,11 @@
     },
     "clans": {
       "top": "Top clans"
+    },
+    "carousel": {
+      "prev": "Previous",
+      "next": "Next",
+      "read": "Read"
     }
   },
   "pageEditor": {
@@ -5367,7 +5377,13 @@
     "viewAll": "All servers",
     "widgetEmpty": "No servers to show.",
     "playersZero": "No players",
-    "adminsOnline": "{count, plural, one {Admin online} many {# admins online} other {# admins online}}"
+    "adminsOnline": "{count, plural, one {Admin online} many {# admins online} other {# admins online}}",
+    "join": "Connect",
+    "totals": {
+      "servers": "Servers",
+      "players": "Players",
+      "fill": "Fill"
+    }
   },
   "clans": {
     "title": "Clans",
