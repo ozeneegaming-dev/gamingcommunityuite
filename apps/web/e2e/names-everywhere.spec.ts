@@ -229,3 +229,23 @@ test("numele au stilul grupului și efectul VIP peste tot, pe tema închisă și
   }
   expect(failures).toEqual([]);
 });
+
+test("butoanele Nova: stratul de sticlă (sweep) umple butonul la hover, pe cel plin și pe cel secundar", async () => {
+  await rootPage.goto(topicUrl);
+  const cases: [string, Locator][] = [
+    ["primary", rootPage.locator("#reply .gcs-btn--primary").first()],
+    ["secondary", rootPage.locator(".gcs-btn--ghost:visible").first()],
+  ];
+  for (const [kind, btn] of cases) {
+    await expect(btn, kind).toBeVisible();
+    expect(await btn.evaluate((el) => getComputedStyle(el).backgroundSize), kind).toBe("0% 100%");
+    await btn.hover();
+    // Tranziția durează 1,2 s (cu un mic recul la intrare).
+    await rootPage.waitForTimeout(1_400);
+    const after = await btn.evaluate((el) => ({ size: getComputedStyle(el).backgroundSize, image: getComputedStyle(el).backgroundImage }));
+    expect(after.size, kind).toBe("100% 100%");
+    expect(after.image, kind).toMatch(/linear-gradient/);
+    await shot(btn, `button-hover-${kind}`);
+    await rootPage.mouse.move(0, 0);
+  }
+});

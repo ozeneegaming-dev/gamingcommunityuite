@@ -77,4 +77,21 @@ describe("contestațiile și reclamațiile (§14)", () => {
     await expect(make()).rejects.toMatchObject({ fields: { kind: "too_many_open" } });
     await expect(w.bridge.tickets.create(w.guest, { kind: "CHEATER", serverId: server.id, targetName: "X", title: "Titlu", content: doc("x") })).rejects.toMatchObject({ code: "forbidden" });
   });
+
+  it("mențiunile din tichet și din răspunsurile publice (nu din notele interne) pleacă spre notificări, după id", async () => {
+    const server = await w.bridgeServer();
+    const seen: Record<string, unknown>[] = [];
+    w.bus.on("mentions.created", async (e) => void seen.push(e.payload));
+    const content = {
+      type: "doc",
+      content: [{ type: "paragraph", content: [{ type: "text", text: "uitați-vă " }, { type: "mention", attrs: { id: w.root.userId, label: "Fondator", kind: "user" } }] }],
+    };
+    const { id } = await w.bridge.tickets.create(w.member, { kind: "CHEATER", serverId: server.id, targetName: "Suspect", title: "Wallhack", content });
+    expect(seen).toEqual([expect.objectContaining({ targetType: "servers.ticket", targetId: String(id), userIds: [w.root.userId], type: "forums.mention" })]);
+    expect((await w.db.gameTicket.findUniqueOrThrow({ where: { id } })).contentHtml).toContain(`data-user-id="${w.root.userId}"`);
+    await w.bridge.tickets.reply(w.root, id, { content, internal: true });
+    expect(seen).toHaveLength(1);
+    await w.bridge.tickets.reply(w.root, id, { content });
+    expect(seen).toHaveLength(2);
+  });
 });
