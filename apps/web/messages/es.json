@@ -3014,7 +3014,13 @@
         "widgets": "Widgets",
         "permissions": "Permissions",
         "none": "nothing",
-        "lockedNote": "Core app: part of the platform, so it can't be turned off or uninstalled."
+        "lockedNote": "Core app: part of the platform, so it can't be turned off or uninstalled.",
+        "requires": "Depends on",
+        "edition": "Edition"
+      },
+      "premium": {
+        "label": "Premium",
+        "title": "Premium app: sold separately (licences come with redistribution)."
       }
     },
     "footer": {

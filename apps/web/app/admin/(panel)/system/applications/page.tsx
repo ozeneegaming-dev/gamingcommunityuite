@@ -123,6 +123,10 @@ export default async function AcpApplicationsPage() {
             <Fact label={t("details.author")}>{VENDOR}</Fact>
             <Fact label={t("details.status")}>{t(`status.${statusOf(a)}`)}</Fact>
             {a.landing && <Fact label={t("details.landing")}>{a.landing.home ? "/" : a.landing.href}</Fact>}
+            {a.requires.length > 0 && (
+              <Fact label={t("details.requires")}>{a.requires.map((k) => label(catalog.find((c) => c.key === k)?.labelKey ?? k)).join(", ")}</Fact>
+            )}
+            {a.premium && <Fact label={t("details.edition")}>{t("premium.label")}</Fact>}
           </dl>
           <h3 className="gcs-appDetails__title">{t("details.adds")}</h3>
           {adds(m, a.sections.map((s) => `${label(s.labelKey)} (${s.href})`))}
@@ -143,6 +147,7 @@ export default async function AcpApplicationsPage() {
         version: GCS_APP_VERSION,
         author: VENDOR,
         certificate: null,
+        premium: a.premium,
         status: statusOf(a),
         autoDisabled: false,
         error: null,

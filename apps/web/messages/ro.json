@@ -3014,7 +3014,13 @@
         "widgets": "Widget-uri",
         "permissions": "Permisiuni",
         "none": "nimic",
-        "lockedNote": "Aplicație de bază: face parte din platformă, deci nu se oprește și nu se dezinstalează."
+        "lockedNote": "Aplicație de bază: face parte din platformă, deci nu se oprește și nu se dezinstalează.",
+        "requires": "Depinde de",
+        "edition": "Ediția"
+      },
+      "premium": {
+        "label": "Premium",
+        "title": "Aplicație premium: se vinde separat (licențele vin odată cu redistribuirea)."
       }
     },
     "footer": {

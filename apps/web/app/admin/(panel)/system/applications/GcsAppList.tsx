@@ -58,6 +58,8 @@ export type GcsAppRow = {
   version: string;
   author: string;
   certificate: { signed: boolean; keyId: string | null } | null;
+  /** O aplicație premium (vândută separat; licențele vin în etapa 11). */
+  premium?: boolean;
   status: "active" | "stopped" | "locked" | "removed";
   autoDisabled: boolean;
   error: string | null;
@@ -435,6 +437,11 @@ function AppRow({ row, first, last, reorderable, onMove, handlers, hasDetails }:
           <span className="gcs-appRow__title">
             <strong className="gcs-appRow__label">
               {row.name}
+              {row.premium && (
+                <GcsBadge tone="warn" icon={<GcsIconSvg icon={faCertificate} />} title={t("premium.title")} data-testid="gcs-app-premium">
+                  {t("premium.label")}
+                </GcsBadge>
+              )}
               {row.certificate &&
                 (row.certificate.signed ? (
                   <GcsBadge tone="info" icon={<GcsIconSvg icon={faCertificate} />} title={t("certified.title", { keyId: row.certificate.keyId ?? "" })} data-testid="gcs-plugin-cert">
