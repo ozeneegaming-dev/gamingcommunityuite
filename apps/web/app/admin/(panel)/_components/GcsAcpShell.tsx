@@ -1,65 +1,59 @@
 "use client";
 
 import { faBars } from "@fortawesome/free-solid-svg-icons";
+import { acpAreaForPath } from "@gcs/core/acp-areas";
 import { cx, GcsIconSvg } from "@gcs/ui";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { ACP_AREA_COOKIE, ACP_COLUMN_COOKIE, ACP_NAV_COOKIE_MAX_AGE } from "./acp-nav";
 import { GcsAcpNavProvider } from "./GcsAcpBreadcrumb";
-import { GcsAcpSidebar } from "./GcsAcpSidebar";
-import { activeGroup, activeItem, type GcsAcpNavGroup, type GcsAcpNavItem } from "./types";
+import { GcsAcpColumn } from "./GcsAcpColumn";
+import { GcsAcpRail } from "./GcsAcpRail";
+import type { GcsAcpNavArea, GcsAcpNavItem } from "./types";
 
-/** Cheia din localStorage pentru sidebar-ul restrâns (o preferință a browserului, nu a contului). */
-const COLLAPSED_KEY = "gcs-acp-sidebar";
 const MOBILE_QUERY = "(max-width: 900px)";
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 type Props = {
-  groups: GcsAcpNavGroup[];
+  areas: GcsAcpNavArea[];
   dashboard: GcsAcpNavItem | null;
+  /** Din cookie-uri: ultima zonă afișată și coloana restrânsă (prima randare e deja cea corectă). */
+  initialArea: string | null;
+  initialCollapsed: boolean;
   brand: ReactNode;
+  siteName: string;
   adminCard: ReactNode;
   /** Bara de sus, în dreapta hamburgerului: căutarea, „Vezi site-ul”, notificările, tema, contul. */
   topbar: ReactNode;
-  labels: { nav: string; menu: string; closeMenu: string; drawer: string; breadcrumb: string; home: string };
+  labels: { rail: string; menu: string; closeMenu: string; collapse: string; drawer: string; breadcrumb: string; home: string; skip: string };
   children: ReactNode;
 };
 
-function readCollapsed(): boolean {
-  try {
-    return window.localStorage.getItem(COLLAPSED_KEY) === "collapsed";
-  } catch {
-    return false;
-  }
-}
-
-function writeCollapsed(collapsed: boolean): void {
-  try {
-    window.localStorage.setItem(COLLAPSED_KEY, collapsed ? "collapsed" : "expanded");
-  } catch {
-    // Stocare indisponibilă (mod privat): alegerea ține doar până la reîncărcare.
-  }
+function writeCookie(name: string, value: string): void {
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/admin; max-age=${ACP_NAV_COOKIE_MAX_AGE}; samesite=lax`;
 }
 
 /**
- * Structura ACP (etapa 6 §1.1, după Nalika): sidebar-ul închis la culoare, bara de sus și conținutul. Pe desktop,
- * hamburgerul restrânge sidebar-ul la iconițe (ținut minte în localStorage; serverul randează mereu extins); pe
- * ecrane înguste deschide sertarul, cu fundal, focus captiv și Escape pentru închidere.
+ * Structura ACP (specul 2026-10-09-acp-navigatie-aplicatii §1): bara de iconițe cu zonele, coloana a doua cu paginile
+ * zonei, bara de sus și conținutul. Coloana arată zona paginii curente (pe Dashboard, ultima zonă folosită); se
+ * restrânge din hamburger sau din antetul ei. Pe ecrane înguste, bara și coloana devin un sertar (dialog modal), cu
+ * focus captiv și Escape pentru închidere.
  */
-export function GcsAcpShell({ groups, dashboard, brand, adminCard, topbar, labels, children }: Props) {
+export function GcsAcpShell({ areas, dashboard, initialArea, initialCollapsed, brand, siteName, adminCard, topbar, labels, children }: Props) {
   const pathname = usePathname();
-  const sidebar = useRef<HTMLElement>(null);
+  const side = useRef<HTMLElement>(null);
   const toggle = useRef<HTMLButtonElement>(null);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(initialCollapsed);
   const [mobile, setMobile] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const activeKey = activeItem([...groups.flatMap((g) => g.sections), ...(dashboard ? [{ app: "", title: "", items: [dashboard] }] : [])], pathname);
-  const currentGroup = activeGroup(groups, pathname);
-  const [open, setOpen] = useState<Set<string>>(() => new Set(currentGroup ? [currentGroup] : []));
+  const current = useMemo(() => acpAreaForPath(areas, pathname), [areas, pathname]);
+  const known = (key: string | null) => (key && areas.some((a) => a.key === key) ? key : null);
+  const [selected, setSelected] = useState<string | null>(() => current?.area ?? known(initialArea) ?? areas[0]?.key ?? null);
+  const dashboardActive = dashboard !== null && pathname === dashboard.href;
 
-  // Preferința salvată și lățimea ecranului se citesc doar în browser (după hidratare).
+  // Lățimea ecranului se citește doar în browser (după hidratare).
   useEffect(() => {
-    setCollapsed(readCollapsed());
     const query = window.matchMedia(MOBILE_QUERY);
     const update = () => setMobile(query.matches);
     update();
@@ -67,11 +61,14 @@ export function GcsAcpShell({ groups, dashboard, brand, adminCard, topbar, label
     return () => query.removeEventListener("change", update);
   }, []);
 
-  // La navigare: grupul paginii curente se deschide, iar sertarul se închide.
+  // La navigare: coloana arată zona paginii noi (ținută minte), iar sertarul se închide.
   useEffect(() => {
-    if (currentGroup) setOpen((prev) => (prev.has(currentGroup) ? prev : new Set(prev).add(currentGroup)));
+    if (current) {
+      setSelected(current.area);
+      writeCookie(ACP_AREA_COOKIE, current.area);
+    }
     setDrawerOpen(false);
-  }, [pathname, currentGroup]);
+  }, [pathname, current]);
 
   const closeDrawer = useCallback(() => {
     setDrawerOpen(false);
@@ -81,8 +78,8 @@ export function GcsAcpShell({ groups, dashboard, brand, adminCard, topbar, label
   // Sertarul deschis: focusul intră în el, rămâne captiv (Tab / Shift+Tab), Escape îl închide.
   useEffect(() => {
     if (!mobile || !drawerOpen) return;
-    const root = sidebar.current;
-    root?.querySelector<HTMLElement>(FOCUSABLE)?.focus();
+    const root = side.current;
+    root?.querySelector<HTMLElement>('[data-rail-item][tabindex="0"]')?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
@@ -106,61 +103,84 @@ export function GcsAcpShell({ groups, dashboard, brand, adminCard, topbar, label
     return () => document.removeEventListener("keydown", onKey);
   }, [mobile, drawerOpen, closeDrawer]);
 
-  function onMenuButton() {
-    if (mobile) {
-      setDrawerOpen((v) => !v);
-      return;
-    }
-    const next = !collapsed;
+  function setColumn(next: boolean) {
     setCollapsed(next);
-    writeCollapsed(next);
+    writeCookie(ACP_COLUMN_COOKIE, next ? "collapsed" : "expanded");
   }
 
-  function onToggleGroup(id: string) {
-    // Restrâns: un click pe grup readuce sidebar-ul la lățimea întreagă, cu grupul deschis.
-    if (collapsed && !mobile) {
-      setCollapsed(false);
-      writeCollapsed(false);
-      setOpen((prev) => new Set(prev).add(id));
-      return;
+  function onMenuButton() {
+    if (mobile) setDrawerOpen((v) => !v);
+    else setColumn(!collapsed);
+  }
+
+  function onSelect(area: string) {
+    setSelected(area);
+    writeCookie(ACP_AREA_COOKIE, area);
+    // Restrânsă, coloana se redeschide cu zona aleasă.
+    if (collapsed && !mobile) setColumn(false);
+  }
+
+  function onHideColumn() {
+    if (mobile) closeDrawer();
+    else {
+      setColumn(true);
+      toggle.current?.focus();
     }
-    setOpen((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
   }
 
   const nav = useMemo(
-    () => ({ groups, home: { href: dashboard?.href ?? "/admin", label: labels.home }, labels: { breadcrumb: labels.breadcrumb } }),
-    [groups, dashboard, labels.home, labels.breadcrumb],
+    () => ({ areas, home: { href: dashboard?.href ?? "/admin", label: labels.home }, labels: { breadcrumb: labels.breadcrumb } }),
+    [areas, dashboard, labels.home, labels.breadcrumb],
   );
-  const isCollapsed = collapsed && !mobile;
+  // Fără nicio zonă (ex. un admin cu drept doar pe Dashboard), coloana lipsește.
+  const columnOpen = areas.length > 0 && (mobile || !collapsed);
+  const modal = mobile && drawerOpen;
+  const area = areas.find((a) => a.key === selected) ?? null;
 
   return (
     <GcsAcpNavProvider value={nav}>
-      <div className={cx("gcs-acpShell", isCollapsed && "gcs-acpShell--collapsed")}>
+      <a href="#gcs-acp-content" className="gcs-skipLink" data-testid="gcs-acp-skip">
+        {labels.skip}
+      </a>
+      <div className={cx("gcs-acpShell", !columnOpen && "gcs-acpShell--collapsed")}>
         <div
-          className={cx("gcs-acpShell__backdrop", mobile && drawerOpen && "gcs-acpShell__backdrop--open")}
+          className={cx("gcs-acpShell__backdrop", modal && "gcs-acpShell__backdrop--open")}
           aria-hidden="true"
           data-testid="gcs-acp-backdrop"
           onClick={closeDrawer}
         />
-        <GcsAcpSidebar
-          ref={sidebar}
-          groups={groups}
-          dashboard={dashboard}
-          activeKey={activeKey}
-          activeGroupId={currentGroup}
-          open={open}
-          onToggleGroup={onToggleGroup}
-          collapsed={collapsed}
-          drawer={{ mobile, open: drawerOpen, onClose: closeDrawer }}
-          brand={brand}
-          adminCard={adminCard}
-          labels={{ nav: labels.nav, closeMenu: labels.closeMenu, drawer: labels.drawer }}
-        />
+        <aside
+          ref={side}
+          id="gcs-acp-sidebar"
+          className={cx("gcs-acpSide", modal && "gcs-acpSide--open")}
+          data-testid="gcs-acp-sidebar"
+          data-collapsed={columnOpen ? "false" : "true"}
+          {...(modal ? { role: "dialog", "aria-modal": true, "aria-label": labels.drawer } : {})}
+          inert={mobile && !drawerOpen}
+        >
+          <GcsAcpRail
+            areas={areas}
+            dashboard={dashboard}
+            selected={selected}
+            current={current?.area ?? null}
+            dashboardActive={dashboardActive}
+            columnOpen={columnOpen}
+            onSelect={onSelect}
+            brand={brand}
+            labels={{ rail: labels.rail }}
+          />
+          <div className="gcs-acpSide__column" hidden={!columnOpen}>
+            <GcsAcpColumn
+              area={area}
+              activeKey={current?.item ?? null}
+              siteName={siteName}
+              mobile={mobile}
+              onHide={onHideColumn}
+              adminCard={adminCard}
+              labels={{ collapse: labels.collapse, closeMenu: labels.closeMenu }}
+            />
+          </div>
+        </aside>
         <div className="gcs-acpMain">
           <header className="gcs-acpTop">
             <button
@@ -177,7 +197,9 @@ export function GcsAcpShell({ groups, dashboard, brand, adminCard, topbar, label
             </button>
             {topbar}
           </header>
-          <main className="gcs-acpContent">{children}</main>
+          <main id="gcs-acp-content" tabIndex={-1} className="gcs-acpContent">
+            {children}
+          </main>
         </div>
       </div>
     </GcsAcpNavProvider>

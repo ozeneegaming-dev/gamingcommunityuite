@@ -41,6 +41,8 @@ describe("pluginul de exemplu, de la zip la dezinstalare, fără repornire", () 
     expect(services.registry.widgetDef(WIDGET)?.def).toMatchObject({ icon: "fa-solid fa-hand", labelKey: "pluginText.gcs.hello.widget.title" });
     expect(services.registry.permissionDef("plugin.gcs.hello.view")).toMatchObject({ scope: "group", labelKey: "pluginText.gcs.hello.permissions.view" });
     expect(services.registry.acpMenu().flatMap((s) => s.items).find((i) => i.section === "plugin.gcs.hello")).toMatchObject({ href: "/admin/plugins/gcs.hello" });
+    // Navigația ACP: paginile pluginului sunt în zona Aplicații, sub numele lui.
+    expect(services.registry.acpMenu().find((s) => s.items.some((i) => i.section === "plugin.gcs.hello"))).toMatchObject({ area: "apps" });
     const messages = services.plugins.messages("ro") as { gcs: { hello: Record<string, unknown> } };
     expect(messages.gcs.hello).toMatchObject({ _name: "Hello", widget: { title: "Hello" } });
   });

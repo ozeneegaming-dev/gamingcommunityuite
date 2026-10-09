@@ -314,7 +314,7 @@
         "overview": "Prezentare",
         "dashboard": "Dashboard",
         "files": "Fișiere",
-        "site_features": "Funcții site",
+        "site_features": "Aplicații și integrări",
         "applications": "Aplicații și pluginuri",
         "integrations": "Integrări",
         "menu_manager": "Manager meniu",
@@ -331,7 +331,7 @@
         "settings_2fa": "Autentificare 2FA",
         "settings_advanced": "Avansat",
         "settings_pwa": "Web App (PWA)",
-        "discovery": "Descoperire conținut",
+        "discovery": "Descoperire",
         "search": "Căutare",
         "streams": "Stream-uri",
         "rss": "RSS",
@@ -340,7 +340,7 @@
         "ads": "Reclame",
         "seo": "SEO",
         "share": "Share",
-        "support": "Suport",
+        "support": "Întreținere",
         "status": "Stare sistem",
         "logs": "Jurnale sistem",
         "cache": "Golire cache",
@@ -349,7 +349,9 @@
         "porting": "Portare plugin",
         "settings_languages": "Limbi și traducere",
         "hooks": "Hook-uri",
-        "settings_rules": "Reguli comunitate"
+        "settings_rules": "Reguli comunitate",
+        "apps_manage": "Gestionare",
+        "apps_dev": "Dezvoltare"
       },
       "members": {
         "members": "Membri",
@@ -378,7 +380,8 @@
         "moderators": "Moderatori",
         "acp_roles": "Administratori și roluri ACP",
         "staff_page": "Pagina Staff",
-        "bulk_mail": "Email în masă"
+        "bulk_mail": "Email în masă",
+        "communication": "Comunicare"
       },
       "community": {
         "forums_group": "Forumuri",
@@ -404,7 +407,9 @@
         "themes": "Teme",
         "widgets": "Widget-uri",
         "templates": "Șabloane",
-        "css": "CSS"
+        "css": "CSS",
+        "style": "Teme și stil",
+        "layout": "Pagini și meniuri"
       },
       "gaming": {
         "servers_group": "Servere",
@@ -416,6 +421,19 @@
         "server_admins": "Admini servere",
         "server_maps": "Hărți",
         "servers_bridge": "Bridge și ELO"
+      },
+      "stats": {
+        "overview_group": "Prezentare",
+        "overview": "Prezentare generală",
+        "activity": "Activitate",
+        "registrations": "Înregistrări",
+        "members": "Activitate membri",
+        "content": "Activitate conținut",
+        "online": "Online",
+        "apps": "Aplicații",
+        "vip": "VIP",
+        "servers": "Servere",
+        "clans": "Clanuri"
       }
     },
     "comingSoon": {
@@ -2801,6 +2819,27 @@
         "prev": "Pagina anterioară",
         "next": "Pagina următoare",
         "page": "Pagina {page} din {pages}"
+      }
+    },
+    "areasNav": "Zonele ACP",
+    "collapseMenu": "Restrânge meniul",
+    "skipToContent": "Sari la conținut",
+    "areas": {
+      "system": "Sistem",
+      "community": "Comunitate",
+      "members": "Membri",
+      "appearance": "Aspect",
+      "gaming": "Gaming",
+      "vip": "VIP & Magazin",
+      "stats": "Statistici",
+      "apps": "Aplicații"
+    },
+    "stats": {
+      "title": "Prezentare generală",
+      "description": "Cifrele de acum ale fiecărei aplicații active. Rapoartele pe perioade sunt în pregătire.",
+      "empty": "Nicio aplicație activă nu are încă statistici.",
+      "modules": {
+        "forums": "Forum"
       }
     }
   },

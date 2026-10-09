@@ -59,6 +59,8 @@ const acpMenu: GcsAcpMenuSection[] = [
       { key: SERVER_MAPS_ACP_SECTION, labelKey: "acp.menu.gaming.server_maps", href: "/admin/gaming/server-maps", section: SERVER_MAPS_ACP_SECTION, icon: "fa-solid fa-map" },
       { key: "gaming.servers_settings", labelKey: "acp.menu.gaming.servers_settings", href: "/admin/settings/servers", section: "system.settings_servers", icon: "fa-solid fa-sliders" },
       { key: "gaming.servers_bridge_settings", labelKey: "acp.menu.gaming.servers_bridge", href: `/admin/settings/${BRIDGE_SETTINGS_SECTION}`, section: `system.settings_${BRIDGE_SETTINGS_SECTION}`, icon: "fa-solid fa-plug" },
+      // Raportul serverelor din zona Statistici („în curând”).
+      { key: "stats.servers", labelKey: "acp.menu.stats.servers", href: "/admin/stats/servers", section: "stats.servers", icon: "fa-solid fa-server", area: "stats", group: "acp.menu.stats.apps" },
     ],
   },
 ];

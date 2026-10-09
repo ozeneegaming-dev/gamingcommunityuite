@@ -28,8 +28,18 @@ export interface GcsPermissionDef {
 export type GcsAcpApp = "system" | "community" | "members" | "vip" | "gaming" | "pages" | "stats" | "appearance";
 
 /**
+ * O zonă din bara de iconițe a ACP-ului (specul 2026-10-09-acp-navigatie-aplicatii §1.2). Dashboard-ul nu e o zonă: are
+ * linkul lui, deasupra zonelor.
+ */
+export type GcsAcpArea = "system" | "community" | "members" | "appearance" | "gaming" | "vip" | "stats" | "apps";
+
+/**
  * O intrare din meniul ACP. `section` e cheia folosită de rolurile ACP; `icon` e o iconiță Font Awesome Free
  * după nume (`fa-solid fa-users`), randată în submeniu, în căutare și în titlul paginii.
+ *
+ * `area` și `group` (opționale) mută intrarea în altă zonă sau sub alt titlu de grup decât ale secțiunii ei (ex.
+ * statisticile unei aplicații, în zona Statistici). `alias`: o scurtătură spre o pagină care stă în altă zonă; nu
+ * decide zona paginii curente.
  */
 export interface GcsAcpMenuItem {
   key: string;
@@ -37,13 +47,21 @@ export interface GcsAcpMenuItem {
   href: string;
   section: string;
   icon?: string;
+  area?: GcsAcpArea;
+  group?: string;
+  alias?: boolean;
 }
 
-/** O secțiune din meniul ACP (spec §12.1), cu iconița opțională a titlului. */
+/**
+ * O secțiune din meniul ACP (spec §12.1), cu iconița opțională a titlului. `title` (cheie de traducere) e titlul grupului
+ * din coloana a doua a navigației; `group` îl înlocuiește, dacă e dat. `area` lipsă = zona aplicației (`app`).
+ */
 export interface GcsAcpMenuSection {
   app: GcsAcpApp;
   title: string;
   icon?: string;
+  area?: GcsAcpArea;
+  group?: string;
   items: GcsAcpMenuItem[];
 }
 

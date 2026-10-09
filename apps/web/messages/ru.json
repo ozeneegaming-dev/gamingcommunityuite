@@ -314,7 +314,7 @@
         "overview": "Обзор",
         "dashboard": "Панель",
         "files": "Файлы",
-        "site_features": "Особенности сайта",
+        "site_features": "Apps & integrations",
         "applications": "Приложения и плагины",
         "integrations": "Интеграция",
         "menu_manager": "Менеджер меню",
@@ -331,7 +331,7 @@
         "settings_2fa": "Двухфакторная аутентификация",
         "settings_advanced": "Дополнительно",
         "settings_pwa": "Веб-приложение (PWA)",
-        "discovery": "Открытие контента",
+        "discovery": "Discovery",
         "search": "Поиск",
         "streams": "Потоки",
         "rss": "RSS",
@@ -340,7 +340,7 @@
         "ads": "Реклама",
         "seo": "SEO",
         "share": "Поделиться",
-        "support": "Поддержка",
+        "support": "Maintenance",
         "status": "Состояние системы",
         "logs": "Системные журналы",
         "cache": "Очистить кэш",
@@ -349,7 +349,9 @@
         "porting": "Plugin porting",
         "settings_languages": "Языки и перевод",
         "hooks": "Крюки",
-        "settings_rules": "Community rules"
+        "settings_rules": "Community rules",
+        "apps_manage": "Management",
+        "apps_dev": "Development"
       },
       "members": {
         "members": "Участники",
@@ -378,7 +380,8 @@
         "moderators": "Модераторы",
         "acp_roles": "Администраторы и роли ACP",
         "staff_page": "Страница персонала",
-        "bulk_mail": "Большая почта"
+        "bulk_mail": "Большая почта",
+        "communication": "Communication"
       },
       "community": {
         "forums_group": "Форумы",
@@ -404,7 +407,9 @@
         "themes": "Темы",
         "widgets": "Виджеты",
         "templates": "Шаблоны",
-        "css": "CSS"
+        "css": "CSS",
+        "style": "Themes & style",
+        "layout": "Pages & menus"
       },
       "gaming": {
         "servers_group": "Servers",
@@ -416,6 +421,19 @@
         "server_admins": "Server admins",
         "server_maps": "Maps",
         "servers_bridge": "Bridge and ELO"
+      },
+      "stats": {
+        "overview_group": "Overview",
+        "overview": "Overview",
+        "activity": "Activity",
+        "registrations": "Registrations",
+        "members": "Member activity",
+        "content": "Content activity",
+        "online": "Online",
+        "apps": "Apps",
+        "vip": "VIP",
+        "servers": "Servers",
+        "clans": "Clans"
       }
     },
     "comingSoon": {
@@ -2801,6 +2819,27 @@
         "prev": "Previous page",
         "next": "Next page",
         "page": "Page {page} of {pages}"
+      }
+    },
+    "areasNav": "ACP areas",
+    "collapseMenu": "Collapse menu",
+    "skipToContent": "Skip to content",
+    "areas": {
+      "system": "System",
+      "community": "Community",
+      "members": "Members",
+      "appearance": "Appearance",
+      "gaming": "Gaming",
+      "vip": "VIP & Store",
+      "stats": "Statistics",
+      "apps": "Apps"
+    },
+    "stats": {
+      "title": "Overview",
+      "description": "Current figures for each active app. Reports over time are on the way.",
+      "empty": "No active app has statistics yet.",
+      "modules": {
+        "forums": "Forum"
       }
     }
   },

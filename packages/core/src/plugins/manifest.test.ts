@@ -135,6 +135,14 @@ describe("manifestul unui plugin", () => {
     expect(issues(api({ acp: "root" }))).toContain("routes.api.0.acp:invalid_value");
   });
 
+  test("paginile ACP își pot alege zona și grupul din navigația ACP", () => {
+    const acp = (route: Record<string, unknown>) => testManifest({ capabilities: ["widgets", "acp"], routes: { acp: [{ path: "/", label: "Panou", ...route }] } });
+    const ok = parsePluginManifest(acp({ area: "gaming", group: "Turnee" }));
+    expect(ok.ok).toBe(true);
+    if (ok.ok) expect(ok.manifest.routes.acp[0]).toMatchObject({ area: "gaming", group: "Turnee" });
+    expect(issues(acp({ area: "nicaieri" }))).toContain("routes.acp.0.area:invalid_value");
+  });
+
   test("rutele: căi simple, cu parametri, fără duplicate", () => {
     const routes = (pages: unknown[]) => testManifest({ capabilities: ["widgets", "pages"], routes: { pages } });
     expect(issues(routes([{ path: "/" }, { path: "/item/:id" }]))).toEqual([]);

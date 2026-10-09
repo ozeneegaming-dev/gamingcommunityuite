@@ -135,6 +135,9 @@ export function pluginModule(key: string, manifest: GcsPluginManifest, texts: Gc
       href: `/admin/plugins/${key}${r.path === "/" ? "" : r.path}`,
       section: pluginAcpSection(key),
       icon: pluginIcon(r.icon ?? manifest.icon),
+      // Navigația ACP: implicit zona Aplicații, sub numele pluginului; manifestul poate alege altă zonă / alt grup.
+      ...(r.area ? { area: r.area } : {}),
+      ...(r.group ? { group: texts.labelKey(r.group) } : {}),
     }));
 
   return {
@@ -148,7 +151,7 @@ export function pluginModule(key: string, manifest: GcsPluginManifest, texts: Gc
       labelKey: texts.labelKey(p.label),
       default: p.default,
     })),
-    acpMenu: acpItems.length > 0 ? [{ app: "system", title: texts.nameKey, icon: pluginIcon(manifest.icon), items: acpItems }] : [],
+    acpMenu: acpItems.length > 0 ? [{ app: "system", area: "apps", title: texts.nameKey, icon: pluginIcon(manifest.icon), items: acpItems }] : [],
     widgets,
     app: { optional: false, labelKey: texts.nameKey, icon: pluginIcon(manifest.icon) },
   };

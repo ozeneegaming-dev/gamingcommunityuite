@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { GCS_ACP_AREAS } from "../acp/areas";
 import { isPluginKey, PLUGIN_CAPABILITIES, PLUGIN_EVENTS, PLUGIN_FILTER_POINTS, PLUGIN_HOOK_POINTS, PLUGIN_MEDIA_CAPS, type GcsPluginCapability } from "./catalog";
 import { isValidSemverRange, parseSemver } from "./semver";
 
@@ -131,7 +132,8 @@ export const pluginManifestSchema = z.strictObject({
   routes: z
     .strictObject({
       pages: z.array(z.strictObject({ path: route, title: label.optional(), permission: localKey.optional() })).max(30).default([]),
-      acp: z.array(z.strictObject({ path: route, label, icon: icon.optional() })).max(20).default([]),
+      /** `area` / `group`: zona și titlul grupului din navigația ACP (lipsă: zona Aplicații, sub numele pluginului). */
+      acp: z.array(z.strictObject({ path: route, label, icon: icon.optional(), area: z.enum(GCS_ACP_AREAS).optional(), group: label.optional() })).max(20).default([]),
       api: z
         .array(
           z.strictObject({

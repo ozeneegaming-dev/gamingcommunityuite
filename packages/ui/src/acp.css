@@ -1,10 +1,11 @@
 /*
- * ACP-ul modern (etapa 6 §1, după Nalika): paleta bleumarin, sidebar-ul pe grupuri care se restrânge la iconițe,
- * bara de sus, antetul de pagină, cardurile KPI, graficele, listele rapide, formularele pe rânduri și comutatoarele.
+ * ACP-ul modern (etapa 6 §1): paleta bleumarin, navigația pe două niveluri (bara de iconițe și coloana a doua, specul
+ * 2026-10-09-acp-navigatie-aplicatii), bara de sus, antetul de pagină, cardurile KPI, graficele, listele rapide,
+ * formularele pe rânduri și comutatoarele.
  *
  * Tokenurile: `.gcs-acp` redefinește tokenurile comune (`--gcs-bg`, `--gcs-surface`…) cu paleta bleumarin, deci
  * cardurile, câmpurile și tabelele existente o preiau automat. `data-theme="light"` (sau `auto` cu sistemul pe
- * luminos) are varianta luminoasă; sidebar-ul rămâne închis la culoare în ambele.
+ * luminos) are varianta luminoasă; bara de iconițe rămâne închisă la culoare în ambele.
  */
 
 /* ─── Tokeni ──────────────────────────────────────────────────────────────── */
@@ -130,15 +131,69 @@
   }
 }
 
-/* ─── Shell: sidebar + coloana principală ─────────────────────────────────── */
+/* ─── Shell: bara de iconițe, coloana a doua și coloana principală ─────────── */
+
+/*
+ * Navigația pe două niveluri (specul 2026-10-09-acp-navigatie-aplicatii §1): bara de iconițe rămâne închisă la culoare
+ * în ambele teme, coloana a doua urmează tema. Zona afișată în coloană e un „tab” care se lipește de coloană (aceeași
+ * culoare, colțuri concave spre ea), ca legătura dintre cele două niveluri să se vadă; zona paginii curente are semnul
+ * roșu de pe marginea barei.
+ */
+.gcs-acp {
+  --gcs-acp-rail: #0E1830;
+  --gcs-acp-railText: #9AA8C6;
+  --gcs-acp-railHover: rgba(255, 255, 255, 0.06);
+  --gcs-acp-col: #1A2845;
+  --gcs-acp-colText: #D6DDEB;
+  --gcs-acp-colMuted: #8494B3;
+  --gcs-acp-colHover: rgba(255, 255, 255, 0.05);
+  --gcs-acp-colActive: rgba(255, 255, 255, 0.09);
+  --gcs-acp-colLine: rgba(255, 255, 255, 0.07);
+}
+.gcs-acp[data-theme="light"] {
+  --gcs-acp-col: #FFFFFF;
+  --gcs-acp-colText: #24304B;
+  --gcs-acp-colMuted: #66748E;
+  --gcs-acp-colHover: #F0F3F8;
+  --gcs-acp-colActive: #E9EEF6;
+  --gcs-acp-colLine: #E0E6EF;
+}
+@media (prefers-color-scheme: light) {
+  .gcs-acp[data-theme="auto"] {
+    --gcs-acp-col: #FFFFFF;
+    --gcs-acp-colText: #24304B;
+    --gcs-acp-colMuted: #66748E;
+    --gcs-acp-colHover: #F0F3F8;
+    --gcs-acp-colActive: #E9EEF6;
+    --gcs-acp-colLine: #E0E6EF;
+  }
+}
 
 .gcs-acpShell {
-  --gcs-acp-sideW: 264px;
+  --gcs-acp-railW: 84px;
+  --gcs-acp-colW: 256px;
   display: flex;
   min-height: 100vh;
 }
-.gcs-acpShell--collapsed {
-  --gcs-acp-sideW: 76px;
+
+/* „Sari la conținut”: ascuns până primește focusul. */
+.gcs-acp a.gcs-skipLink {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--gcs-accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  transform: translateY(-200%);
+}
+.gcs-acp a.gcs-skipLink:focus {
+  transform: none;
+  outline: 2px solid #fff;
+  outline-offset: 2px;
 }
 
 .gcs-acpSide {
@@ -146,300 +201,322 @@
   top: 0;
   z-index: 30;
   flex: none;
-  width: var(--gcs-acp-sideW);
-  height: 100vh;
   display: flex;
-  flex-direction: column;
-  overflow: hidden auto;
-  background: var(--gcs-acp-side);
-  color: var(--gcs-acp-sideText);
-  box-shadow: 1px 0 0 rgba(0, 0, 0, 0.18);
-  transition: width 0.2s ease;
+  height: 100vh;
+}
+.gcs-acpSide__column {
+  display: flex;
+}
+.gcs-acpSide__column[hidden] {
+  display: none;
+}
+/* Coloana restrânsă: rămâne doar bara, cu umbra ei spre conținut. */
+.gcs-acpShell--collapsed .gcs-acpRail {
+  box-shadow: 1px 0 0 rgba(0, 0, 0, 0.22);
 }
 
-.gcs-acpSide__brand {
+/* Bara de iconițe. */
+.gcs-acpRail {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  width: var(--gcs-acp-railW);
+  overflow: hidden auto;
+  background: var(--gcs-acp-rail);
+  color: var(--gcs-acp-railText);
+  scrollbar-width: none;
+}
+.gcs-acpRail__brand {
+  flex: none;
+  display: grid;
+  place-items: center;
+  height: 64px;
+}
+.gcs-acp a.gcs-acpRail__logo {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--gcs-accent), color-mix(in srgb, var(--gcs-accent) 55%, #7B57C9));
+  color: #fff;
+  font: 700 19px var(--gcs-font-display);
+}
+.gcs-acpRail__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 6px 0 20px;
+  list-style: none;
+}
+.gcs-acpRail__item,
+.gcs-acp a.gcs-acpRail__item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  box-sizing: border-box;
+  width: calc(100% - 12px);
+  min-height: 58px;
+  margin: 0 6px;
+  padding: 8px 2px 7px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--gcs-acp-railText);
+  font: 600 10.5px/1.2 var(--gcs-font-text);
+  text-align: center;
+  cursor: pointer;
+}
+.gcs-acpRail__item:hover,
+.gcs-acp a.gcs-acpRail__item:hover {
+  background: var(--gcs-acp-railHover);
+  color: #fff;
+}
+.gcs-acpRail__icon {
+  font-size: 18px;
+}
+.gcs-acpRail__label {
+  display: -webkit-box;
+  max-width: 100%;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.gcs-acpRail__item--selected,
+.gcs-acpRail__item--selected:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: #fff;
+}
+/* Tab-ul: zona afișată în coloana deschisă se lipește de ea. */
+.gcs-acpRail__item.gcs-acpRail__item--tab,
+.gcs-acpRail__item.gcs-acpRail__item--tab:hover {
+  z-index: 1;
+  width: calc(100% - 6px);
+  margin-right: 0;
+  border-radius: 12px 0 0 12px;
+  background: var(--gcs-acp-col);
+  color: var(--gcs-acp-colText);
+}
+.gcs-acpRail__item--tab .gcs-acpRail__icon {
+  color: var(--gcs-accentInk);
+}
+.gcs-acpRail__item--tab::before,
+.gcs-acpRail__item--tab::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+}
+.gcs-acpRail__item--tab::before {
+  top: -12px;
+  background: radial-gradient(circle at 0 0, transparent 11.5px, var(--gcs-acp-col) 12px);
+}
+.gcs-acpRail__item--tab::after {
+  bottom: -12px;
+  background: radial-gradient(circle at 0 100%, transparent 11.5px, var(--gcs-acp-col) 12px);
+}
+/* Zona paginii curente: semnul de pe marginea barei. */
+.gcs-acpRail__mark {
+  position: absolute;
+  top: 50%;
+  left: -6px;
+  width: 4px;
+  height: 0;
+  border-radius: 0 4px 4px 0;
+  background: var(--gcs-accent);
+  transform: translateY(-50%);
+  transition: height 0.18s ease;
+}
+.gcs-acpRail__item--current .gcs-acpRail__mark {
+  height: 28px;
+}
+.gcs-acpRail__item--current:not(.gcs-acpRail__item--tab),
+.gcs-acp a.gcs-acpRail__item--current {
+  color: #fff;
+}
+.gcs-acpRail :focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -2px;
+}
+.gcs-acpRail .gcs-acpRail__item--tab:focus-visible {
+  outline-color: var(--gcs-accent);
+}
+
+/* Coloana a doua. */
+.gcs-acpCol {
+  display: flex;
+  flex-direction: column;
+  width: var(--gcs-acp-colW);
+  height: 100%;
+  background: var(--gcs-acp-col);
+  color: var(--gcs-acp-colText);
+  box-shadow: 1px 0 0 var(--gcs-acp-colLine);
+}
+.gcs-acpCol__head {
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  min-height: 64px;
-  padding: 0 16px;
-  background: var(--gcs-acp-side2);
+  height: 64px;
+  padding: 0 10px 0 20px;
+  border-bottom: 1px solid var(--gcs-acp-colLine);
   box-sizing: border-box;
 }
-.gcs-acp a.gcs-acpSide__logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.gcs-acpCol__site {
   min-width: 0;
-  color: #fff;
-}
-.gcs-acpSide__mark {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--gcs-accent), color-mix(in srgb, var(--gcs-accent) 55%, #7B57C9));
-  color: #fff;
-  font: 700 18px var(--gcs-font-display);
-}
-.gcs-acpSide__site {
   overflow: hidden;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.02em;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.gcs-acpSide__close {
-  display: none;
-  color: var(--gcs-acp-sideText);
+.gcs-acpCol .gcs-acpCol__hide {
+  flex: none;
+  color: var(--gcs-acp-colMuted);
 }
-.gcs-acpSide__close:hover {
-  background: var(--gcs-acp-sideHover);
-  color: #fff;
+.gcs-acpCol .gcs-acpCol__hide:hover {
+  background: var(--gcs-acp-colHover);
+  color: var(--gcs-acp-colText);
 }
-
-/* Cardul adminului: avatar, nume, rolul ACP. */
-.gcs-acpSide__admin {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 20px 16px 16px;
-  border-bottom: 1px solid var(--gcs-acp-sideLine);
-  text-align: center;
+.gcs-acpCol__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 22px 12px 28px;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
-.gcs-acpSide__avatar {
-  display: inline-flex;
-  padding: 3px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--gcs-acp-c1), var(--gcs-acp-c2));
-}
-.gcs-acpSide__avatar .gcs-avatar {
-  border-color: var(--gcs-acp-side);
-}
-.gcs-acpSide__who {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  min-width: 0;
-  max-width: 100%;
-}
-.gcs-acpSide__name {
-  max-width: 100%;
-  overflow: hidden;
-  color: #fff;
-  font-size: 15px;
+.gcs-acpCol__title {
+  margin: 0 10px 4px;
+  color: var(--gcs-acp-colText);
+  font-size: 22px;
   font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.15;
 }
-.gcs-acpSide__role,
-.gcs-acpSide__twofa {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--gcs-acp-sideMuted);
-  font-size: 12px;
-  font-weight: 600;
+.gcs-acpCol__group {
+  margin-top: 20px;
 }
-.gcs-acpSide__twofa {
-  color: var(--gcs-acp-good);
+.gcs-acpCol__heading {
+  margin: 0 10px 6px;
+  color: var(--gcs-acp-colMuted);
+  font: 800 10.5px/1.3 var(--gcs-font-text);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
-
-/* Meniul pe grupuri. */
-.gcs-acpNav {
-  padding: 10px 10px 28px;
-}
-.gcs-acpNav__list,
-.gcs-acpNav__items {
+.gcs-acpCol__items {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.gcs-acpNav__list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.gcs-acp a.gcs-acpNav__top,
-.gcs-acpNav__toggle {
+.gcs-acp a.gcs-acpCol__link {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
-  width: 100%;
-  min-height: 44px;
-  padding: 0 12px;
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
-  color: var(--gcs-acp-sideText);
-  font: 600 14px var(--gcs-font-text);
-  text-align: left;
-  cursor: pointer;
-  box-sizing: border-box;
+  gap: 10px;
+  min-height: 34px;
+  padding: 0 10px;
+  border-radius: 8px;
+  color: var(--gcs-acp-colText);
+  font-size: 13.5px;
+  font-weight: 500;
 }
-.gcs-acp a.gcs-acpNav__top:hover,
-.gcs-acpNav__toggle:hover {
-  background: var(--gcs-acp-sideHover);
-  color: #fff;
+.gcs-acp a.gcs-acpCol__link:hover {
+  background: var(--gcs-acp-colHover);
+  color: var(--gcs-acp-colText);
 }
-.gcs-acp a.gcs-acpNav__top--active,
-.gcs-acp a.gcs-acpNav__top--active:hover {
+.gcs-acp a.gcs-acpCol__link--active,
+.gcs-acp a.gcs-acpCol__link--active:hover {
+  background: var(--gcs-acp-colActive);
+  font-weight: 700;
+}
+.gcs-acp a.gcs-acpCol__link--active::before {
+  content: "";
+  position: absolute;
+  top: 7px;
+  bottom: 7px;
+  left: 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
   background: var(--gcs-accent);
-  color: #fff;
 }
-.gcs-acpNav__icon {
+.gcs-acpCol__icon {
   flex: none;
-  width: 20px;
-  font-size: 17px;
-  color: var(--gcs-acp-sideMuted);
+  width: 16px;
+  color: var(--gcs-acp-colMuted);
+  font-size: 13px;
 }
-.gcs-acpNav__top:hover .gcs-acpNav__icon,
-.gcs-acpNav__toggle:hover .gcs-acpNav__icon,
-.gcs-acpNav__top--active .gcs-acpNav__icon {
-  color: inherit;
+.gcs-acpCol__link:hover .gcs-acpCol__icon,
+.gcs-acpCol__link--active .gcs-acpCol__icon {
+  color: var(--gcs-accentInk);
 }
-.gcs-acpNav__group--current > .gcs-acpNav__toggle {
-  color: #fff;
-}
-.gcs-acpNav__group--current > .gcs-acpNav__toggle .gcs-acpNav__icon {
-  color: var(--gcs-acp-c1);
-}
-.gcs-acpNav__label {
-  flex: 1 1 auto;
+.gcs-acpCol__label {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.gcs-acpNav__chevron {
-  flex: none;
-  font-size: 11px;
-  color: var(--gcs-acp-sideMuted);
-  transform: rotate(90deg);
-  transition: transform 0.18s ease;
-}
-.gcs-acpNav__toggle[aria-expanded="true"] .gcs-acpNav__chevron {
-  transform: none;
-}
-.gcs-acpNav__panel {
-  margin: 2px 0 8px 21px;
-  padding-left: 10px;
-  border-left: 1px solid var(--gcs-acp-sideLine);
-}
-.gcs-acpNav__panel[hidden] {
-  display: none;
-}
-.gcs-acpNav__sectionTitle {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 10px 10px 4px;
-  color: var(--gcs-acp-sideMuted);
-  font-size: 10.5px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-.gcs-acpNav__sectionIcon {
-  flex: none;
-  font-size: 11px;
-}
-.gcs-acp a.gcs-acpNav__link {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 36px;
-  padding: 0 10px;
-  border-radius: 8px;
-  color: var(--gcs-acp-sideText);
-  font-size: 13.5px;
-  font-weight: 500;
-}
-.gcs-acp a.gcs-acpNav__link:hover {
-  background: var(--gcs-acp-sideHover);
-  color: #fff;
-}
-.gcs-acp a.gcs-acpNav__link--active,
-.gcs-acp a.gcs-acpNav__link--active:hover {
-  background: var(--gcs-acp-sideActive);
-  box-shadow: inset 3px 0 0 var(--gcs-accent);
-  color: #fff;
-  font-weight: 700;
-}
-.gcs-acpNav__itemIcon {
-  flex: none;
-  width: 16px;
-  font-size: 13px;
-  color: var(--gcs-acp-sideMuted);
-}
-.gcs-acpNav__link:hover .gcs-acpNav__itemIcon,
-.gcs-acpNav__link--active .gcs-acpNav__itemIcon {
-  color: var(--gcs-accentInk);
-}
-.gcs-acpSide :focus-visible {
-  outline: 2px solid #fff;
+.gcs-acpCol :focus-visible {
+  outline: 2px solid var(--gcs-accent);
   outline-offset: -2px;
 }
 
-/* Restrâns: doar iconițe, cu tooltip-uri. Etichetele rămân în DOM (numele accesibile). */
-.gcs-acpSide--collapsed {
-  overflow: visible;
+/* Cardul adminului, la baza coloanei. */
+.gcs-acpCol__foot {
+  flex: none;
+  padding: 12px 14px;
+  border-top: 1px solid var(--gcs-acp-colLine);
 }
-.gcs-acpSide--collapsed .gcs-acpSide__brand {
-  justify-content: center;
-  padding: 0;
+.gcs-acpAdmin {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
 }
-.gcs-acpSide--collapsed .gcs-acpSide__site,
-.gcs-acpSide--collapsed .gcs-acpSide__who,
-.gcs-acpSide--collapsed .gcs-acpNav__chevron,
-.gcs-acpSide--collapsed .gcs-acpNav__panel {
-  display: none;
+.gcs-acpAdmin__avatar {
+  display: inline-flex;
+  flex: none;
+  padding: 2px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gcs-acp-c1), var(--gcs-acp-c2));
 }
-.gcs-acpSide--collapsed .gcs-acpSide__admin {
-  padding: 14px 0;
+.gcs-acpAdmin__avatar .gcs-avatar {
+  border-color: var(--gcs-acp-col);
 }
-.gcs-acpSide--collapsed .gcs-acpNav__label {
-  position: absolute;
-  width: 1px;
-  height: 1px;
+.gcs-acpAdmin__who {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.gcs-acpAdmin__name,
+.gcs-acpAdmin__role {
   overflow: hidden;
-  clip: rect(0 0 0 0);
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
-.gcs-acpSide--collapsed a.gcs-acpNav__top,
-.gcs-acpSide--collapsed .gcs-acpNav__toggle {
-  justify-content: center;
-  padding: 0;
+.gcs-acpAdmin__name {
+  font-size: 13.5px;
+  font-weight: 700;
 }
-.gcs-acpSide--collapsed [data-tooltip]::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  top: 50%;
-  left: calc(100% + 14px);
-  z-index: 70;
-  padding: 6px 10px;
-  border-radius: 7px;
-  background: var(--gcs-acp-tooltip);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  color: #fff;
-  font: 600 12px var(--gcs-font-text);
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(-4px, -50%);
-  transition: opacity 0.12s ease, transform 0.12s ease;
+.gcs-acpAdmin__role {
+  color: var(--gcs-acp-colMuted);
+  font-size: 12px;
 }
-.gcs-acpSide--collapsed [data-tooltip]:hover::after,
-.gcs-acpSide--collapsed [data-tooltip]:focus-visible::after {
-  opacity: 1;
-  transform: translate(0, -50%);
+.gcs-acpAdmin__twofa {
+  flex: none;
+  color: var(--gcs-acp-good);
+  font-size: 14px;
 }
 
 .gcs-acpShell__backdrop {
@@ -451,6 +528,9 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
+}
+#gcs-acp-content:focus {
+  outline: none;
 }
 
 /* ─── Bara de sus ─────────────────────────────────────────────────────────── */
@@ -1292,14 +1372,22 @@ input[type="checkbox"].gcs-switch:checked::before,
   transform: translateX(20px);
 }
 
-/* ─── Mobil: sertarul ─────────────────────────────────────────────────────── */
+/* ─── Mobil: sertarul cu bara și coloana ─────────────────────────────────── */
 
 @media (max-width: 900px) {
+  .gcs-acpShell {
+    --gcs-acp-railW: 76px;
+    --gcs-acp-colW: min(272px, calc(94vw - 76px));
+  }
+  .gcs-acpRail__item,
+  .gcs-acp a.gcs-acpRail__item {
+    font-size: 10px;
+  }
   .gcs-acpSide {
     position: fixed;
     inset: 0 auto 0 0;
     z-index: 60;
-    width: min(300px, 86vw);
+    height: 100%;
     transform: translateX(-100%);
     transition: transform 0.22s ease;
   }
@@ -1307,8 +1395,9 @@ input[type="checkbox"].gcs-switch:checked::before,
     transform: none;
     box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
   }
-  .gcs-acpSide__close {
-    display: inline-flex;
+  /* În sertar, coloana e mereu deschisă. */
+  .gcs-acpSide__column[hidden] {
+    display: flex;
   }
   .gcs-acpShell__backdrop--open {
     position: fixed;
@@ -1706,11 +1795,71 @@ input[type="checkbox"].gcs-switch:checked::before,
   font-variant-numeric: tabular-nums;
 }
 
+/* ─── Statistici → Prezentare generală: plăcile aplicațiilor ────────────────── */
+
+.gcs-acpStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: 20px;
+  align-items: start;
+}
+.gcs-acpTiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 16px;
+  list-style: none;
+}
+.gcs-acpTile {
+  --gcs-tile: var(--gcs-acp-c3);
+}
+.gcs-acpTile__inner,
+.gcs-acp a.gcs-acpTile__inner {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  align-items: center;
+  height: 100%;
+  padding: 14px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 12px;
+  background: var(--gcs-surface2);
+  color: var(--gcs-text);
+  box-sizing: border-box;
+}
+.gcs-acp a.gcs-acpTile__inner:hover {
+  border-color: color-mix(in srgb, var(--gcs-tile) 55%, var(--gcs-border));
+  color: var(--gcs-text);
+}
+.gcs-acpTile__icon {
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--gcs-tile) 18%, transparent);
+  color: var(--gcs-tile);
+  font-size: 17px;
+}
+.gcs-acpTile__value {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.gcs-acpTile__label {
+  color: var(--gcs-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .gcs-acpSide,
-  .gcs-acpNav__chevron,
+  .gcs-acpRail__mark,
   .gcs-acpKpi__bar > span,
-  .gcs-acpSide--collapsed [data-tooltip]::after,
   input[type="checkbox"].gcs-switch::before,
   .gcs-acp input[type="checkbox"][role="switch"]::before {
     transition: none;

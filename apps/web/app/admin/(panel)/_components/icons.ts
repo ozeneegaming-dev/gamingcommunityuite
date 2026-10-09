@@ -2,24 +2,24 @@ import {
   faChartLine,
   faComments,
   faCrown,
-  faFileLines,
   faGamepad,
+  faGaugeHigh,
   faGears,
   faPalette,
-  faRightLeft,
+  faPuzzlePiece,
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
 import type { GcsAcpIconDef } from "./types";
 
-/** Iconițele Font Awesome ale grupurilor din sidebar-ul ACP (importate individual: componentele client le folosesc direct). */
-export const ACP_APP_ICONS: Record<string, GcsAcpIconDef> = {
+/** Iconițele Font Awesome ale zonelor din bara ACP (importate individual: componentele client le folosesc direct). */
+export const ACP_AREA_ICONS: Record<string, GcsAcpIconDef> = {
+  dashboard: faGaugeHigh,
   system: faGears,
   community: faComments,
   members: faUsers,
-  vip: faCrown,
-  gaming: faGamepad,
-  pages: faFileLines,
-  stats: faChartLine,
   appearance: faPalette,
-  conversions: faRightLeft,
+  gaming: faGamepad,
+  vip: faCrown,
+  stats: faChartLine,
+  apps: faPuzzlePiece,
 };

@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./themes": "./src/themes/shared.ts",
+    "./acp-areas": "./src/acp/areas.ts",
     "./diff": "./src/templates/diff.ts",
     "./rich-fields": "./src/content/richFields.ts",
     "./test/redis": "./test/redis.ts",

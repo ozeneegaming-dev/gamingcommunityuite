@@ -1,6 +1,6 @@
 import { communityRulesSetting } from "../community/rules";
 import { coreWidgets } from "../widgets";
-import type { GcsAcpApp, GcsAcpMenuSection, GcsModule, GcsPermissionDef, GcsSettingDef } from "@gcs/core";
+import type { GcsAcpApp, GcsAcpArea, GcsAcpMenuSection, GcsModule, GcsPermissionDef, GcsSettingDef } from "@gcs/core";
 
 /** Grupurile create la instalare (spec §6.1). */
 export const DEFAULT_GROUP_KEYS = [
@@ -159,12 +159,17 @@ const permissions: GcsPermissionDef[] = [
 
 type MenuItem = [key: string, href: string, icon: string];
 
-/** O secțiune a meniului ACP: titlul și intrările, fiecare cu iconița ei Font Awesome. */
-function menuSection(app: GcsAcpApp, group: string, icon: string, items: MenuItem[]): GcsAcpMenuSection {
+/**
+ * O secțiune a meniului ACP: titlul și intrările, fiecare cu iconița ei Font Awesome. `area` / `title` mută secțiunea în
+ * altă zonă a navigației sau sub alt titlu de grup (specul 2026-10-09-acp-navigatie-aplicatii §1.2); cheile intrărilor
+ * și ale secțiunilor (drepturile ACP) rămân ale aplicației `app`.
+ */
+function menuSection(app: GcsAcpApp, group: string, icon: string, items: MenuItem[], opts: { area?: GcsAcpArea; title?: string } = {}): GcsAcpMenuSection {
   return {
     app,
-    title: `acp.menu.${app}.${group}`,
+    title: opts.title ?? `acp.menu.${app}.${group}`,
     icon,
+    ...(opts.area ? { area: opts.area } : {}),
     items: items.map(([key, href, itemIcon]) => ({
       key: `${app}.${key}`,
       labelKey: `acp.menu.${app}.${key}`,
@@ -175,17 +180,20 @@ function menuSection(app: GcsAcpApp, group: string, icon: string, items: MenuIte
   };
 }
 
-/** Meniul ACP din spec §12.1, pentru aplicațiile Sistem și Membri. */
+/**
+ * Meniul ACP al nucleului (spec §12.1), pe zonele și grupurile navigației (specul 2026-10-09-acp-navigatie-aplicatii
+ * §1.2). Dashboard-ul (`/admin`) are linkul lui în bara de iconițe.
+ */
 const acpMenu: GcsAcpMenuSection[] = [
+  // ─── Sistem ───
   menuSection("system", "overview", "fa-solid fa-gauge", [
     ["dashboard", "/admin", "fa-solid fa-gauge-high"],
     ["files", "/admin/system/files", "fa-solid fa-folder-open"],
+    ["status", "/admin/system/status", "fa-solid fa-heart-pulse"],
   ]),
   menuSection("system", "site_features", "fa-solid fa-puzzle-piece", [
     ["applications", "/admin/system/applications", "fa-solid fa-cubes"],
-    ["hooks", "/admin/system/hooks", "fa-solid fa-code-branch"],
     ["integrations", "/admin/system/integrations", "fa-solid fa-plug"],
-    ["menu_manager", "/admin/system/menu", "fa-solid fa-bars-staggered"],
     ["api", "/admin/system/api", "fa-solid fa-code"],
     ["webhooks", "/admin/system/webhooks", "fa-solid fa-satellite-dish"],
     ["rss_import", "/admin/system/rss-import", "fa-solid fa-square-rss"],
@@ -214,16 +222,28 @@ const acpMenu: GcsAcpMenuSection[] = [
     ["seo", "/admin/system/seo", "fa-solid fa-magnifying-glass-chart"],
     ["share", "/admin/system/share", "fa-solid fa-share-nodes"],
   ]),
-  menuSection("system", "support", "fa-solid fa-life-ring", [
-    ["status", "/admin/system/status", "fa-solid fa-heart-pulse"],
+  menuSection("system", "support", "fa-solid fa-screwdriver-wrench", [
     ["logs", "/admin/logs", "fa-solid fa-clipboard-list"],
     ["cache", "/admin/system/cache", "fa-solid fa-bolt"],
   ]),
-  menuSection("system", "conversions", "fa-solid fa-right-left", [
-    ["import", "/admin/system/import", "fa-solid fa-file-import"],
-    ["porting", "/admin/system/porting", "fa-solid fa-code-compare"],
-  ]),
+  menuSection("system", "conversions", "fa-solid fa-right-left", [["import", "/admin/system/import", "fa-solid fa-file-import"]]),
 
+  // ─── Comunitate: moderarea (secțiunile aplicației Membri); Forumurile și Chat-ul vin din modulele lor ───
+  menuSection(
+    "members",
+    "moderation",
+    "fa-solid fa-gavel",
+    [
+      ["queue", "/admin/members/moderation/queue", "fa-solid fa-inbox"],
+      ["reports", "/admin/members/moderation/reports", "fa-solid fa-flag"],
+      ["antispam", "/admin/members/moderation/antispam", "fa-solid fa-shield-virus"],
+      ["warnings", "/admin/members/moderation/warnings", "fa-solid fa-triangle-exclamation"],
+      ["tickets", "/admin/members/moderation/tickets", "fa-solid fa-ticket"],
+    ],
+    { area: "community" },
+  ),
+
+  // ─── Membri ───
   menuSection("members", "members", "fa-solid fa-users", [
     ["members", "/admin/members", "fa-solid fa-user"],
     ["groups", "/admin/groups", "fa-solid fa-users"],
@@ -231,11 +251,10 @@ const acpMenu: GcsAcpMenuSection[] = [
     ["ip_tools", "/admin/members/ip-tools", "fa-solid fa-network-wired"],
     ["gdpr", "/admin/members/gdpr", "fa-solid fa-scale-balanced"],
   ]),
-  menuSection("members", "achievements", "fa-solid fa-trophy", [
-    ["achievement_rules", "/admin/members/achievements/rules", "fa-solid fa-list-check"],
-    ["ranks", "/admin/members/achievements/ranks", "fa-solid fa-ranking-star"],
-    ["badges", "/admin/members/achievements/badges", "fa-solid fa-award"],
-    ["achievement_settings", "/admin/members/achievements/settings", "fa-solid fa-sliders"],
+  menuSection("members", "staff", "fa-solid fa-user-tie", [
+    ["moderators", "/admin/members/staff/moderators", "fa-solid fa-user-shield"],
+    ["acp_roles", "/admin/staff/roles", "fa-solid fa-user-lock"],
+    ["staff_page", "/admin/members/staff/page", "fa-solid fa-address-book"],
   ]),
   menuSection("members", "member_settings", "fa-solid fa-user-gear", [
     ["profiles", "/admin/members/settings/profiles", "fa-solid fa-id-card"],
@@ -244,27 +263,63 @@ const acpMenu: GcsAcpMenuSection[] = [
     ["bans", "/admin/members/settings/bans", "fa-solid fa-ban"],
     ["referral", "/admin/members/settings/referral", "fa-solid fa-user-plus"],
   ]),
-  menuSection("members", "moderation", "fa-solid fa-gavel", [
-    ["queue", "/admin/members/moderation/queue", "fa-solid fa-inbox"],
-    ["reports", "/admin/members/moderation/reports", "fa-solid fa-flag"],
-    ["antispam", "/admin/members/moderation/antispam", "fa-solid fa-shield-virus"],
-    ["warnings", "/admin/members/moderation/warnings", "fa-solid fa-triangle-exclamation"],
-    ["tickets", "/admin/members/moderation/tickets", "fa-solid fa-ticket"],
+  menuSection("members", "achievements", "fa-solid fa-trophy", [
+    ["achievement_rules", "/admin/members/achievements/rules", "fa-solid fa-list-check"],
+    ["ranks", "/admin/members/achievements/ranks", "fa-solid fa-ranking-star"],
+    ["badges", "/admin/members/achievements/badges", "fa-solid fa-award"],
+    ["achievement_settings", "/admin/members/achievements/settings", "fa-solid fa-sliders"],
   ]),
-  menuSection("members", "staff", "fa-solid fa-user-tie", [
-    ["moderators", "/admin/members/staff/moderators", "fa-solid fa-user-shield"],
-    ["acp_roles", "/admin/staff/roles", "fa-solid fa-user-lock"],
-    ["staff_page", "/admin/members/staff/page", "fa-solid fa-address-book"],
-  ]),
-  menuSection("members", "bulk_mail", "fa-solid fa-envelopes-bulk", [["bulk_mail", "/admin/members/bulk-mail", "fa-solid fa-envelopes-bulk"]]),
+  menuSection("members", "communication", "fa-solid fa-envelopes-bulk", [["bulk_mail", "/admin/members/bulk-mail", "fa-solid fa-envelopes-bulk"]]),
 
-  // Etapa 5: temele și widget-urile se editează direct pe site; aici sunt listele și linkurile spre editoare.
-  menuSection("appearance", "appearance", "fa-solid fa-palette", [
+  // ─── Aspect. Etapa 5: temele și widget-urile se editează direct pe site; aici sunt listele și linkurile spre editoare ───
+  menuSection("appearance", "style", "fa-solid fa-palette", [
     ["themes", "/admin/appearance/themes", "fa-solid fa-brush"],
     ["templates", "/admin/appearance/templates", "fa-solid fa-file-code"],
     ["css", "/admin/appearance/css", "fa-brands fa-css3-alt"],
-    ["widgets", "/admin/appearance/widgets", "fa-solid fa-table-cells-large"],
   ]),
+  menuSection("appearance", "layout", "fa-solid fa-table-cells-large", [["widgets", "/admin/appearance/widgets", "fa-solid fa-table-cells-large"]]),
+  // Managerul meniului principal: secțiunea `system.menu_manager`, afișată lângă widget-uri.
+  menuSection("system", "layout", "fa-solid fa-table-cells-large", [["menu_manager", "/admin/system/menu", "fa-solid fa-bars-staggered"]], {
+    area: "appearance",
+    title: "acp.menu.appearance.layout",
+  }),
+
+  // ─── Statistici: prezentarea (pagina reală) și rapoartele care vin („în curând”); aplicațiile își aduc rapoartele ───
+  menuSection("stats", "overview_group", "fa-solid fa-chart-pie", [["overview", "/admin/stats", "fa-solid fa-chart-pie"]]),
+  menuSection("stats", "activity", "fa-solid fa-chart-line", [
+    ["registrations", "/admin/stats/registrations", "fa-solid fa-user-plus"],
+    ["members", "/admin/stats/members", "fa-solid fa-users-viewfinder"],
+    ["content", "/admin/stats/content", "fa-solid fa-comments"],
+    ["online", "/admin/stats/online", "fa-solid fa-signal"],
+  ]),
+
+  // ─── Aplicații: scurtătura spre lista aplicațiilor și uneltele pentru pluginuri; pluginurile își adaugă grupurile ───
+  {
+    app: "system",
+    area: "apps",
+    title: "acp.menu.system.apps_manage",
+    icon: "fa-solid fa-cubes",
+    items: [
+      {
+        key: "system.applications_shortcut",
+        labelKey: "acp.menu.system.applications",
+        href: "/admin/system/applications",
+        section: "system.applications",
+        icon: "fa-solid fa-cubes",
+        alias: true,
+      },
+    ],
+  },
+  menuSection(
+    "system",
+    "apps_dev",
+    "fa-solid fa-code",
+    [
+      ["hooks", "/admin/system/hooks", "fa-solid fa-code-branch"],
+      ["porting", "/admin/system/porting", "fa-solid fa-code-compare"],
+    ],
+    { area: "apps" },
+  ),
 ];
 
 /** Modulul „core”: setările, permisiunile de grup și meniul ACP de bază. */

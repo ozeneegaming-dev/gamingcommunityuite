@@ -55,8 +55,8 @@ describe("coreModule", () => {
     expect(acp?.default).toEqual({ root_admin: true, admin: true });
   });
 
-  test("meniul ACP acoperă aplicațiile system, members și appearance, cu chei unice", () => {
-    expect(new Set(coreModule.acpMenu.map((s) => s.app))).toEqual(new Set(["system", "members", "appearance"]));
+  test("meniul ACP acoperă aplicațiile system, members, appearance și stats, cu chei unice", () => {
+    expect(new Set(coreModule.acpMenu.map((s) => s.app))).toEqual(new Set(["system", "members", "appearance", "stats"]));
     const items = coreModule.acpMenu.flatMap((s) => s.items);
     expect(new Set(items.map((i) => i.key)).size).toBe(items.length);
     for (const item of items) expect(item.href.startsWith("/admin")).toBe(true);

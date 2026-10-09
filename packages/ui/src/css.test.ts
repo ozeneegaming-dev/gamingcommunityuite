@@ -38,9 +38,9 @@ describe("CSS-ul design system-ului", () => {
     expect(css).toContain('[data-theme="auto"]');
   });
 
-  test("acp.css are shell-ul ACP (sidebar, bara de sus, antetul de pagină), tema luminoasă și reduced-motion", () => {
+  test("acp.css are shell-ul ACP (bara de iconițe, coloana a doua, bara de sus, antetul de pagină), tema luminoasă și reduced-motion", () => {
     const css = read("./acp.css");
-    for (const cls of [".gcs-acpSide", ".gcs-acpSide--collapsed", ".gcs-acpNav__link--active", ".gcs-acpTop", ".gcs-acpPageHead", ".gcs-acpKpi", ".gcs-acpWidget__header", ".gcs-switch"]) {
+    for (const cls of [".gcs-acpSide", ".gcs-acpRail__item--tab", ".gcs-acpRail__item--current", ".gcs-acpCol__link--active", ".gcs-acpShell--collapsed", ".gcs-skipLink", ".gcs-acpTop", ".gcs-acpPageHead", ".gcs-acpKpi", ".gcs-acpWidget__header", ".gcs-switch"]) {
       expect(css).toContain(cls);
     }
     expect(css).toContain('.gcs-acp[data-theme="light"]');
