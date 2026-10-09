@@ -59,7 +59,27 @@
     "deletedMember": "Deleted member",
     "crumbs": "You are here",
     "collapse": "Collapse {title}",
-    "expand": "Expand {title}"
+    "expand": "Expand {title}",
+    "navDesc": {
+      "forum": "Las conversaciones de la comunidad, por categorías",
+      "chat": "Habla en vivo con la comunidad",
+      "members": "Busca miembros por nombre, grupo o juego",
+      "staff": "El equipo, sus funciones y el contacto",
+      "activity": "Todo lo que ha pasado últimamente en el sitio",
+      "membersAll": "La lista completa de miembros",
+      "membersOnline": "Quién está en el sitio ahora mismo",
+      "leaderboard": "Los miembros más activos y los rankings",
+      "vip": "Planes, ventajas y lo que obtienes",
+      "rules": "Las normas del foro y de los servidores",
+      "servers": "Estado en vivo, jugadores, conexión con un clic",
+      "clans": "Equipos, reclutamiento y guerras de clanes",
+      "serversAll": "Estado en vivo, jugadores, conexión con un clic",
+      "serversLeaderboard": "Más bajas, horas jugadas, ELO de la temporada",
+      "serversMatches": "Partidas en vivo, ELO e historial de partidas",
+      "bans": "La lista de sanciones y las apelaciones",
+      "serverAdmins": "Qué miembros del equipo están en los servidores",
+      "serverTickets": "Apela una sanción o denuncia a un jugador"
+    }
   },
   "auth": {
     "login": {
@@ -1411,7 +1431,12 @@
       "remove": "Quitar",
       "save": "Guardar el menú",
       "saved": "El menú ha sido guardado.",
-      "newItem": "Nuevo artículo"
+      "newItem": "Nuevo artículo",
+      "mega": "Megamenú",
+      "description": "Descripción",
+      "descriptionHint": "Una línea bajo el título en el megamenú (diseño Nova). Vacío = la descripción predeterminada de los elementos automáticos.",
+      "badge": "Insignia",
+      "badgeHint": "p. ej. NUEVO"
     },
     "languages": {
       "title": "Idiomas activos",

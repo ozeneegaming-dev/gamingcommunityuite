@@ -205,6 +205,37 @@ describe("meniu", () => {
     expect(isSafeHref("https://x.ro/a")).toBe(true);
     for (const bad of ["data:text/html,x", "/\\evil", "", "ftp://x"]) expect(isSafeHref(bad)).toBe(false);
   });
+
+  test("mega meniul: descrierea pe limbi și insigna fixă; itemii cu cheie primesc cheia descrierii implicite", async () => {
+    await nav.save(root, [
+      {
+        label: { ro: "Gaming" },
+        children: [
+          { label: { key: "site.nav.servers" }, href: "/servers" },
+          { label: { ro: "Mix" }, description: { ro: "Meciuri live și ELO", en: "Live matches and ELO", fr: "  " }, badge: "NOU", href: "/mix" },
+        ],
+      },
+    ]);
+    const [gaming] = await nav.tree(member, "en");
+    expect(gaming!.description).toBeNull();
+    expect(gaming!.children.map((c) => [c.description, c.badge])).toEqual([
+      [{ key: "site.navDesc.servers" }, null],
+      [{ text: "Live matches and ELO" }, "NOU"],
+    ]);
+    // Textele goale nu se salvează; editorul primește descrierea și insigna înapoi.
+    const edit = await nav.editable();
+    expect(edit[0]!.children[1]).toMatchObject({ description: { ro: "Meciuri live și ELO", en: "Live matches and ELO" }, badge: "NOU" });
+
+    const fields = (items: Parameters<GcsNavService["save"]>[1]) =>
+      nav.save(root, items).then(
+        () => null,
+        (e: { fields?: Record<string, string> }) => e.fields,
+      );
+    expect(await fields([{ label: { ro: "x" }, href: "/a", description: { ro: "x".repeat(101) } }])).toEqual({ "items.0.description": "invalid" });
+    expect(await fields([{ label: { ro: "x" }, href: "/a", description: { xx: "nu" } }])).toEqual({ "items.0.description": "invalid" });
+    expect(await fields([{ label: { ro: "x" }, href: "/a", badge: "<b>" }])).toEqual({ "items.0.badge": "invalid" });
+    expect(await fields([{ label: { ro: "x" }, href: "/a", badge: "FOARTE LUNGĂ INSIGNĂ" }])).toEqual({ "items.0.badge": "invalid" });
+  });
 });
 
 describe("câmpurile și layout-ul implicit", () => {

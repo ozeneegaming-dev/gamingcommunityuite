@@ -13,6 +13,10 @@ type Item = {
   /** Eticheta tradusă automat (cheia unui modul); textele scrise de admin au prioritate. */
   labelKey: string | null;
   texts: Record<string, string>;
+  /** Descrierea din mega meniu, pe limbi (goală = cea implicită a itemilor automați). */
+  descTexts: Record<string, string>;
+  /** Insigna fixă din mega meniu („NOU”). */
+  badge: string;
   icon: string | null;
   href: string;
   appKey: string | null;
@@ -42,6 +46,11 @@ export type GcsMenuEditorLabels = {
   save: string;
   saved: string;
   newItem: string;
+  mega: string;
+  description: string;
+  descriptionHint: string;
+  badge: string;
+  badgeHint: string;
 };
 
 let counter = 0;
@@ -54,6 +63,8 @@ function fromEdit(it: GcsNavItemEdit): Item {
     uid: uid(),
     labelKey: key ?? null,
     texts: key ? {} : { ...label },
+    descTexts: { ...((it.description ?? {}) as Record<string, string>) },
+    badge: it.badge ?? "",
     icon: it.icon ?? null,
     href: it.href ?? "",
     appKey: it.appKey ?? null,
@@ -67,8 +78,11 @@ function fromEdit(it: GcsNavItemEdit): Item {
 function toInput(it: Item): GcsNavItemInput {
   const texts = Object.fromEntries(Object.entries(it.texts).filter(([, v]) => v.trim()));
   const label: GcsNavLabel = Object.keys(texts).length > 0 || !it.labelKey ? texts : { key: it.labelKey };
+  const description = Object.fromEntries(Object.entries(it.descTexts).filter(([, v]) => v.trim()));
   return {
     label,
+    description: Object.keys(description).length > 0 ? description : null,
+    badge: it.badge.trim() || null,
     icon: it.icon,
     href: it.href.trim() || null,
     appKey: it.appKey,
@@ -102,7 +116,7 @@ export function GcsMenuEditor({
   const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, start] = useTransition();
 
-  const blank = (): Item => ({ uid: uid(), labelKey: null, texts: { [locales[0]?.code ?? "ro"]: labels.newItem }, icon: null, href: "/", appKey: null, groups: [], newTab: false, enabled: true, children: [] });
+  const blank = (): Item => ({ uid: uid(), labelKey: null, texts: { [locales[0]?.code ?? "ro"]: labels.newItem }, descTexts: {}, badge: "", icon: null, href: "/", appKey: null, groups: [], newTab: false, enabled: true, children: [] });
 
   /** Aplică `fn` pe lista care conține itemul `id` (rădăcina sau copiii unui item). */
   const update = (fn: (list: Item[], index: number) => Item[], id: string) =>
@@ -163,6 +177,29 @@ export function GcsMenuEditor({
             {labels.enabled}
           </label>
         </div>
+        {/* Mega meniul (designul Nova): o descriere de un rând sub titlu și o insignă fixă. */}
+        <fieldset className="gcs-menuEditor__labels gcs-menuEditor__mega">
+          <legend>{labels.mega}</legend>
+          <p className="gcs-muted" style={{ margin: 0, fontSize: 12 }}>{labels.descriptionHint}</p>
+          {locales.map((l) => (
+            <label key={l.code} className="gcs-field">
+              <span className="gcs-muted">
+                {labels.description} ({l.label})
+              </span>
+              <input
+                className="gcs-input"
+                value={it.descTexts[l.code] ?? ""}
+                maxLength={100}
+                onChange={(e) => patch(it.uid, { descTexts: { ...it.descTexts, [l.code]: e.target.value } })}
+                data-testid={`gcs-menu-desc-${l.code}`}
+              />
+            </label>
+          ))}
+          <label className="gcs-field">
+            <span>{labels.badge}</span>
+            <input className="gcs-input" value={it.badge} maxLength={12} placeholder={labels.badgeHint} onChange={(e) => patch(it.uid, { badge: e.target.value })} data-testid="gcs-menu-badge" />
+          </label>
+        </fieldset>
         <fieldset className="gcs-menuEditor__groups">
           <legend>{labels.groups}</legend>
           <p className="gcs-muted" style={{ margin: 0, fontSize: 12 }}>{labels.groupsHint}</p>

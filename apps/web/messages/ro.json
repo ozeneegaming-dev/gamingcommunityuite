@@ -59,7 +59,27 @@
     "deletedMember": "Membru șters",
     "crumbs": "Unde te afli",
     "collapse": "Restrânge {title}",
-    "expand": "Extinde {title}"
+    "expand": "Extinde {title}",
+    "navDesc": {
+      "forum": "Discuțiile comunității, pe categorii",
+      "chat": "Discută live cu comunitatea",
+      "members": "Caută membri după nume, grup sau joc",
+      "staff": "Echipa, responsabilitățile și contactul",
+      "activity": "Tot ce s-a întâmplat recent pe site",
+      "membersAll": "Lista completă a membrilor",
+      "membersOnline": "Cine e pe site chiar acum",
+      "leaderboard": "Cei mai activi membri și top-urile",
+      "vip": "Planuri, beneficii și ce primești",
+      "rules": "Regulile forumului și ale serverelor",
+      "servers": "Status live, jucători, conectare dintr-un click",
+      "clans": "Echipe, recrutări și războaie între clanuri",
+      "serversAll": "Status live, jucători, conectare dintr-un click",
+      "serversLeaderboard": "Top kills, ore jucate, ELO pe sezon",
+      "serversMatches": "Meciuri live, ELO și istoricul meciurilor",
+      "bans": "Lista sancțiunilor și contestațiile",
+      "serverAdmins": "Cine din staff e pe servere",
+      "serverTickets": "Contestă o sancțiune sau raportează un jucător"
+    }
   },
   "auth": {
     "login": {
@@ -1411,7 +1431,12 @@
       "remove": "Șterge",
       "save": "Salvează meniul",
       "saved": "Meniul a fost salvat.",
-      "newItem": "Item nou"
+      "newItem": "Item nou",
+      "mega": "Mega meniu",
+      "description": "Descriere",
+      "descriptionHint": "Un rând sub titlu în mega meniu (designul Nova). Gol = descrierea implicită a itemilor automați.",
+      "badge": "Insignă",
+      "badgeHint": "ex. NOU"
     },
     "languages": {
       "title": "Limbile active",

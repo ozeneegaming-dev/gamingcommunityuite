@@ -59,7 +59,27 @@
     "deletedMember": "Deleted member",
     "crumbs": "You are here",
     "collapse": "Collapse {title}",
-    "expand": "Expand {title}"
+    "expand": "Expand {title}",
+    "navDesc": {
+      "forum": "Les discussions de la communauté, par catégorie",
+      "chat": "Discute en direct avec la communauté",
+      "members": "Trouve des membres par nom, groupe ou jeu",
+      "staff": "L'équipe, ses rôles et le contact",
+      "activity": "Tout ce qui s'est passé récemment sur le site",
+      "membersAll": "La liste complète des membres",
+      "membersOnline": "Qui est sur le site en ce moment",
+      "leaderboard": "Les membres les plus actifs et les classements",
+      "vip": "Formules, avantages et ce que tu obtiens",
+      "rules": "Les règles du forum et des serveurs",
+      "servers": "Statut en direct, joueurs, connexion en un clic",
+      "clans": "Équipes, recrutement et guerres de clans",
+      "serversAll": "Statut en direct, joueurs, connexion en un clic",
+      "serversLeaderboard": "Meilleurs frags, heures jouées, ELO de la saison",
+      "serversMatches": "Matchs en direct, ELO et historique des matchs",
+      "bans": "La liste des sanctions et les contestations",
+      "serverAdmins": "Quels membres de l'équipe sont sur les serveurs",
+      "serverTickets": "Conteste une sanction ou signale un joueur"
+    }
   },
   "auth": {
     "login": {
@@ -1411,7 +1431,12 @@
       "remove": "Retirer",
       "save": "Enregistrer le menu",
       "saved": "Le menu a été enregistré.",
-      "newItem": "Nouveau poste"
+      "newItem": "Nouveau poste",
+      "mega": "Méga-menu",
+      "description": "Description",
+      "descriptionHint": "Une ligne sous le titre dans le méga-menu (design Nova). Vide = la description par défaut des éléments automatiques.",
+      "badge": "Badge",
+      "badgeHint": "ex. NOUVEAU"
     },
     "languages": {
       "title": "Langues actives",

@@ -26,11 +26,56 @@ export const NAV_MARKS: readonly string[] = ["nav:v2", "nav:v3", "nav:v4", "nav:
 
 /** Eticheta unui item: cheie de traducere (itemii impliciți) sau text pe limbi (itemii adăugați de admin). */
 export type GcsNavLabel = { key: string } | Partial<Record<string, string>>;
-export type GcsNavItemInput = { label: GcsNavLabel; icon?: string | null; href?: string | null; appKey?: string | null; groups?: number[]; newTab?: boolean; enabled?: boolean; children?: GcsNavItemInput[] };
-export type GcsNavItemView = { id: number; label: { key: string } | { text: string }; icon: string | null; href: string; newTab: boolean; children: GcsNavItemView[] };
+/** Descrierea de un rând din mega meniu (text pe limbi); `null` = cea implicită (după cheia etichetei). */
+export type GcsNavDescription = Partial<Record<string, string>>;
+export type GcsNavItemInput = {
+  label: GcsNavLabel;
+  description?: GcsNavDescription | null;
+  /** Insigna fixă din mega meniu (ex. „NOU”), cel mult 12 caractere. */
+  badge?: string | null;
+  icon?: string | null;
+  href?: string | null;
+  appKey?: string | null;
+  groups?: number[];
+  newTab?: boolean;
+  enabled?: boolean;
+  children?: GcsNavItemInput[];
+};
+export type GcsNavItemView = {
+  id: number;
+  label: { key: string } | { text: string };
+  /** Descrierea (textul adminului) sau cheia ei implicită (`site.navDesc.<x>` pentru `site.nav.<x>`; poate lipsi din traduceri). */
+  description: { key: string } | { text: string } | null;
+  badge: string | null;
+  icon: string | null;
+  href: string;
+  newTab: boolean;
+  children: GcsNavItemView[];
+};
 export type GcsNavItemEdit = Omit<GcsNavItemInput, "children" | "label"> & { id: number; label: GcsNavLabel; children: GcsNavItemEdit[] };
 
-type Row = { id: number; parentId: number | null; position: number; label: Prisma.JsonValue; icon: string | null; href: string | null; appKey: string | null; groups: number[]; newTab: boolean; enabled: boolean };
+type Row = {
+  id: number;
+  parentId: number | null;
+  position: number;
+  label: Prisma.JsonValue;
+  description?: Prisma.JsonValue | null;
+  badge?: string | null;
+  icon: string | null;
+  href: string | null;
+  appKey: string | null;
+  groups: number[];
+  newTab: boolean;
+  enabled: boolean;
+};
+
+const DESCRIPTION_MAX = 100;
+const BADGE_RE = /^[\p{L}\p{N}][\p{L}\p{N} .!+#%-]{0,11}$/u;
+
+/** Cheia descrierii implicite a unei etichete cu cheie (`site.nav.servers` → `site.navDesc.servers`). */
+export function navDescriptionKey(labelKey: string): string | null {
+  return labelKey.includes(".nav.") ? labelKey.replace(".nav.", ".navDesc.") : null;
+}
 
 /**
  * Ordinea aplicațiilor în meniul principal (specul 2026-10-09-acp-navigatie-aplicatii §2.7): itemii legați de aplicații
@@ -49,6 +94,13 @@ export function reorderAppItems<T extends { appKey: string | null }>(rows: reado
     out[slot] = apps[n]!;
   });
   return out;
+}
+
+/** Descrierea de salvat: doar textele nevide (un obiect gol = fără descriere). */
+function descriptionValue(d: GcsNavDescription | null | undefined): GcsNavDescription | null {
+  if (!d) return null;
+  const texts = Object.fromEntries(Object.entries(d).filter(([, t]) => typeof t === "string" && t.trim() !== "").map(([l, t]) => [l, t!.trim()]));
+  return Object.keys(texts).length > 0 ? texts : null;
 }
 
 /** Linkurile permise: căi interne (`/…`, fără `//`) sau adrese http(s). */
@@ -109,7 +161,10 @@ export class GcsNavService {
         .flatMap((r) => {
           const label = GcsNavService.label(r.label, locale, siteLocale);
           if (!label) return [];
-          return [{ id: r.id, label, icon: r.icon, href: r.href ?? "#", newTab: r.newTab, children: parentId === null ? build(r.id) : [] }];
+          const own = r.description ? GcsNavService.label(r.description, locale, siteLocale) : null;
+          const fallbackKey = "key" in label ? navDescriptionKey(label.key) : null;
+          const description = own && "text" in own ? own : fallbackKey ? { key: fallbackKey } : null;
+          return [{ id: r.id, label, description, badge: r.badge ?? null, icon: r.icon, href: r.href ?? "#", newTab: r.newTab, children: parentId === null ? build(r.id) : [] }];
         });
     return build(null);
   }
@@ -123,6 +178,8 @@ export class GcsNavService {
         .map((r) => ({
           id: r.id,
           label: (r.label ?? {}) as GcsNavLabel,
+          description: (r.description ?? null) as GcsNavDescription | null,
+          badge: r.badge ?? null,
           icon: r.icon,
           href: r.href,
           appKey: r.appKey,
@@ -150,6 +207,13 @@ export class GcsNavService {
         }
       }
       if (it.icon != null && !this.deps.isIcon(it.icon)) throw new GcsValidationError({ [`${at}.icon`]: "invalid" });
+      if (it.description != null) {
+        const texts = typeof it.description === "object" && !Array.isArray(it.description) ? Object.entries(it.description) : null;
+        if (!texts || !texts.every(([l, t]) => LABEL_LOCALES.includes(l) && typeof t === "string" && t.length <= DESCRIPTION_MAX && ![...t].some((c) => c.charCodeAt(0) < 32))) {
+          throw new GcsValidationError({ [`${at}.description`]: "invalid" });
+        }
+      }
+      if (it.badge != null && (typeof it.badge !== "string" || !BADGE_RE.test(it.badge))) throw new GcsValidationError({ [`${at}.badge`]: "invalid" });
       const children = it.children ?? [];
       if (children.length === 0 && !isSafeHref(it.href)) throw new GcsValidationError({ [`${at}.href`]: "invalid" });
       if (it.href != null && !isSafeHref(it.href)) throw new GcsValidationError({ [`${at}.href`]: "invalid" });
@@ -177,6 +241,8 @@ export class GcsNavService {
               parentId,
               position,
               label: it.label as Prisma.InputJsonValue,
+              ...(descriptionValue(it.description) ? { description: descriptionValue(it.description) as Prisma.InputJsonValue } : {}),
+              badge: it.badge?.trim() || null,
               icon: it.icon ?? null,
               href: it.href ?? null,
               appKey: it.appKey ?? null,

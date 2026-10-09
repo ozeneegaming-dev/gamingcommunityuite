@@ -59,7 +59,27 @@
     "deletedMember": "Deleted member",
     "crumbs": "You are here",
     "collapse": "Collapse {title}",
-    "expand": "Expand {title}"
+    "expand": "Expand {title}",
+    "navDesc": {
+      "forum": "Community discussions, by category",
+      "chat": "Talk live with the community",
+      "members": "Find members by name, group or game",
+      "staff": "The team, their roles and how to reach them",
+      "activity": "Everything that happened on the site lately",
+      "membersAll": "The full member list",
+      "membersOnline": "Who is on the site right now",
+      "leaderboard": "The most active members and the top lists",
+      "vip": "Plans, perks and what you get",
+      "rules": "Forum and server rules",
+      "servers": "Live status, players, one-click connect",
+      "clans": "Teams, recruitment and clan wars",
+      "serversAll": "Live status, players, one-click connect",
+      "serversLeaderboard": "Top kills, hours played, season ELO",
+      "serversMatches": "Live matches, ELO and match history",
+      "bans": "The sanctions list and appeals",
+      "serverAdmins": "Which staff members are on the servers",
+      "serverTickets": "Appeal a sanction or report a player"
+    }
   },
   "auth": {
     "login": {
@@ -1411,7 +1431,12 @@
       "remove": "Remove",
       "save": "Save menu",
       "saved": "The menu has been saved.",
-      "newItem": "New item"
+      "newItem": "New item",
+      "mega": "Mega menu",
+      "description": "Description",
+      "descriptionHint": "One line under the title in the mega menu (Nova design). Empty = the default description of automatic items.",
+      "badge": "Badge",
+      "badgeHint": "e.g. NEW"
     },
     "languages": {
       "title": "Active languages",
