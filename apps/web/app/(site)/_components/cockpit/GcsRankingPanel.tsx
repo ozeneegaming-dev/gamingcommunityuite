@@ -6,7 +6,7 @@ import { formatOnlineDuration } from "@gcs/modules/online-format";
 import { GcsAvatar, GcsIconSvg, GcsUserLink } from "@gcs/ui";
 import { useFormatter, useTranslations } from "next-intl";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { medalFor, periodless, type GcsRankingMetric, type GcsRankingResult, type GcsRankingRow } from "@/lib/ranking";
 import { useRealtime } from "../realtime/GcsRealtimeProvider";
 
@@ -81,21 +81,21 @@ export function GcsRankingPanel({ initial, metrics, variant, testId = "gcs-ranki
 
   return (
     <div className={`gcs-rank gcs-rank--${variant}`} data-testid={testId} aria-busy={busy || undefined}>
-      <div className="gcs-seg gcs-rank__metrics" role="tablist" aria-label={t("metricLabel")}>
+      <div className="gcs-hbSeg gcs-rank__metrics" role="tablist" aria-label={t("metricLabel")} style={{ "--i": Math.max(0, metrics.indexOf(metric)), "--n": metrics.length } as CSSProperties}>
         {metrics.map((m) => (
-          <button key={m} type="button" role="tab" aria-selected={m === metric} className={`gcs-seg__btn${m === metric ? " gcs-seg__btn--on" : ""}`} onClick={() => setMetric(m)} data-testid={`${testId}-metric-${m}`}>
+          <button key={m} type="button" role="tab" aria-selected={m === metric} className={`gcs-hbSeg__btn${m === metric ? " gcs-hbSeg__btn--on" : ""}`} onClick={() => setMetric(m)} data-testid={`${testId}-metric-${m}`}>
             {metricLabel(m)}
           </button>
         ))}
       </div>
-      <div className="gcs-seg gcs-rank__periods" role="group" aria-label={t("periodLabel")}>
+      <div className="gcs-hbSeg gcs-rank__periods" role="group" aria-label={t("periodLabel")} data-off={periodless(metric) ? "" : undefined} style={{ "--i": Math.max(0, PERIODS.indexOf(period)), "--n": PERIODS.length } as CSSProperties}>
         {PERIODS.map((p) => (
           <button
             key={p}
             type="button"
             aria-pressed={!periodless(metric) && p === period}
             disabled={periodless(metric)}
-            className={`gcs-seg__btn${!periodless(metric) && p === period ? " gcs-seg__btn--on" : ""}`}
+            className={`gcs-hbSeg__btn${!periodless(metric) && p === period ? " gcs-hbSeg__btn--on" : ""}`}
             onClick={() => setPeriod(p)}
             data-testid={`${testId}-period-${p}`}
           >

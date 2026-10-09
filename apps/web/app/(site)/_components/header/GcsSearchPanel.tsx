@@ -179,7 +179,7 @@ export function GcsSearchPanel({ variant = "icon", shortcut = true }: { variant?
 
           <div className="gcs-sp__scopes" role="group" aria-label={t("scopeLabel")}>
             {scopes.map((s) => (
-              <button key={s} type="button" className="gcs-chip gcs-sp__scope" aria-pressed={s === scope} onClick={() => setScope(s)} data-testid={`gcs-search-scope-${s}`}>
+              <button key={s} type="button" className="gcs-sp__scope" aria-pressed={s === scope} onClick={() => setScope(s)} data-testid={`gcs-search-scope-${s}`}>
                 {t(`scopes.${s}`)}
               </button>
             ))}

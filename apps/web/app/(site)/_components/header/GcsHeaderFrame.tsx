@@ -163,7 +163,7 @@ export function GcsHeaderFrame({
               data-collapsed={compact && !compacted.moved && row !== compacted.row ? "" : undefined}
               data-nav-row={row === compacted.row ? "" : undefined}
             >
-              <div className="gcs-hb__inner">
+              <div className={`gcs-hb__inner${arrangement[row].center.length > 0 ? " gcs-hb__inner--center" : ""}`}>
                 {HEADER_ZONES.map((zone) => (
                   <div key={zone} className={`gcs-hb__zone gcs-hb__zone--${zone}`} data-zone={zone}>
                     {arrangement[row][zone].map((key) => element(key, row, zone))}

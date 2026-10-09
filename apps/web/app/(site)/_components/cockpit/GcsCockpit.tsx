@@ -79,9 +79,9 @@ function FeedPanel({ initial }: { initial: GcsFeedItem[] }) {
       <PanelHead icon={faSatelliteDish} title={t("title")}>
         <span className="gcs-ck__liveDot" aria-hidden="true" />
       </PanelHead>
-      <div className="gcs-seg gcs-ck__tabs" role="tablist" aria-label={t("title")}>
+      <div className="gcs-hbSeg gcs-ck__tabs" role="tablist" aria-label={t("title")} style={{ "--i": FEED_TABS.indexOf(tab), "--n": FEED_TABS.length } as CSSProperties}>
         {FEED_TABS.map((k) => (
-          <button key={k} type="button" role="tab" aria-selected={k === tab} className={`gcs-seg__btn${k === tab ? " gcs-seg__btn--on" : ""}`} onClick={() => setTab(k)} data-testid={`gcs-cockpit-feed-tab-${k}`}>
+          <button key={k} type="button" role="tab" aria-selected={k === tab} className={`gcs-hbSeg__btn${k === tab ? " gcs-hbSeg__btn--on" : ""}`} onClick={() => setTab(k)} data-testid={`gcs-cockpit-feed-tab-${k}`}>
             {t(`tabs.${k}`)}
           </button>
         ))}
@@ -379,7 +379,7 @@ function CockpitView({ data, siteName }: { data: GcsCockpitData; siteName: strin
           </span>
           <b className="gcs-ck__bandTitle">{t("title")}</b>
           {servers && (
-            <span className="gcs-chip gcs-ck__chip">
+            <span className="gcs-ck__chip">
               <GcsIconSvg icon={faServer} />
               {t("playersOnServers", { count: players })}
             </span>

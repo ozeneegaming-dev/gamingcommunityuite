@@ -4799,7 +4799,8 @@
       "newMembers": "Новые члены",
       "statsPanel": "Группа по статистике",
       "onlineDay": "Кто был онлайн (24 часа)",
-      "groupLegend": "Легенда группы"
+      "groupLegend": "Легенда группы",
+      "ranking": "Рейтинг"
     },
     "forums": {
       "stats": "Статистика",
@@ -4819,12 +4820,15 @@
       "period": "Период",
       "channel": "Комната для чатов",
       "icon": "Икона (например, fa-solid fa-star; empty = default)",
-      "game": "Game"
+      "game": "Game",
+      "metric": "Показатель по умолчанию"
     },
     "periods": {
       "week": "на этой неделе",
       "month": "в этом месяце",
-      "all": "все время"
+      "all": "все время",
+      "day": "сегодня",
+      "year": "в этом году"
     },
     "empty": "Пока ничего.",
     "posts": "{count, plural, one {# пост} few {# посты} many {# посты} other {# посты}}",
@@ -4835,7 +4839,8 @@
         "statsPanel": "Общественные деятели, которые онлайн и легенда группы.",
         "onlineDay": "Участники, которые были активны в течение последних 24 часов.",
         "groupLegend": "Общественные группы, с их названиями.",
-        "newMembers": "Новейшие зарегистрированные участники."
+        "newMembers": "Новейшие зарегистрированные участники.",
+        "ranking": "Лучшие участники по сообщениям, темам, репутации или времени онлайн за сегодня, неделю, месяц, год или за всё время."
       },
       "forums": {
         "stats": "Количество тем, постов и членов.",
@@ -4873,6 +4878,12 @@
       "prev": "Previous",
       "next": "Next",
       "read": "Read"
+    },
+    "metrics": {
+      "posts": "Сообщения",
+      "topics": "Темы",
+      "reputation": "Репутация",
+      "online": "Время онлайн"
     }
   },
   "pageEditor": {
@@ -6779,6 +6790,294 @@
       "prev": "Previous page",
       "next": "Next page",
       "page": "Page {page} of {pages}"
+    }
+  },
+  "header": {
+    "or": "или",
+    "chat": "Чат",
+    "playNow": "Играть сейчас",
+    "social": {
+      "follow": "Мы в соцсетях"
+    },
+    "search": {
+      "open": "Поиск (Ctrl K)",
+      "dialog": "Поиск",
+      "close": "Закрыть поиск",
+      "placeholder": "Ищи темы, участников, серверы, игроков…",
+      "scopeLabel": "Где искать",
+      "scopes": {
+        "all": "Всё",
+        "topics": "Темы",
+        "posts": "Сообщения",
+        "members": "Участники",
+        "servers": "Серверы",
+        "players": "Игроки",
+        "clans": "Кланы"
+      },
+      "filters": "Фильтры",
+      "forum": "Форум",
+      "forumAll": "Все",
+      "author": "Автор",
+      "period": "Период",
+      "periods": {
+        "any": "За всё время",
+        "day": "Сегодня",
+        "week": "На этой неделе",
+        "month": "В этом месяце",
+        "year": "В этом году"
+      },
+      "titles": "Только в заголовках",
+      "quick": "Быстрые результаты",
+      "recent": "Недавние запросы",
+      "noRecent": "Запросов пока нет.",
+      "typing": "Введи хотя бы 2 буквы.",
+      "loading": "Идёт поиск…",
+      "empty": "Быстрых результатов нет. Нажми Enter для полного поиска.",
+      "limited": "Слишком много запросов; попробуй через минуту.",
+      "hints": "Enter = все результаты · ↑↓ = навигация · Esc = закрыть",
+      "advanced": "Расширенный поиск",
+      "tags": {
+        "topic": "ТЕМА",
+        "post": "СООБЩЕНИЕ",
+        "member": "УЧАСТНИК",
+        "server": "СЕРВЕР",
+        "player": "ИГРОК",
+        "clan": "КЛАН"
+      }
+    },
+    "create": {
+      "button": "Создать",
+      "menu": "Создать",
+      "loading": "Загрузка…",
+      "empty": "Здесь нечего создать.",
+      "forumsHeading": "Новая тема в…",
+      "items": {
+        "topicIn": "Новая тема в {forum}",
+        "message": "Личное сообщение",
+        "clan": "Новый клан",
+        "ticket": "Апелляция или жалоба",
+        "sanction": "Наказание на сервере",
+        "forum": "{forum}"
+      }
+    },
+    "messages": {
+      "label": "Сообщения",
+      "unread": "{count, plural, one {Сообщения, # непрочитанное} few {Сообщения, # непрочитанных} many {Сообщения, # непрочитанных} other {Сообщения, # непрочитанных}}",
+      "new": "Новое сообщение",
+      "empty": "Диалогов пока нет.",
+      "seeAll": "Все сообщения"
+    },
+    "account": {
+      "menu": "Меню аккаунта",
+      "ring": "Меню аккаунта, уровень {level}, {percent}% до уровня {next}",
+      "ringMax": "Меню аккаунта, уровень {level}",
+      "levelShort": "УР {level}",
+      "toNext": "{percent}% до ур. {level}",
+      "level": "Уровень {level}",
+      "levelRank": "Уровень {level} · {rank}",
+      "remaining": {
+        "xp": "{count, plural, one {Осталось # XP до ранга «{rank}»} few {Осталось # XP до ранга «{rank}»} many {Осталось # XP до ранга «{rank}»} other {Осталось # XP до ранга «{rank}»}}",
+        "posts": "{count, plural, one {Осталось # сообщение до ранга «{rank}»} few {Осталось # сообщения до ранга «{rank}»} many {Осталось # сообщений до ранга «{rank}»} other {Осталось # сообщения до ранга «{rank}»}}",
+        "reputation": "{count, plural, one {Остался # балл репутации до ранга «{rank}»} few {Осталось # балла репутации до ранга «{rank}»} many {Осталось # баллов репутации до ранга «{rank}»} other {Осталось # балла репутации до ранга «{rank}»}}"
+      },
+      "maxLevel": "Ты достиг самого высокого ранга.",
+      "units": {
+        "xp": "XP",
+        "posts": "сообщений",
+        "reputation": "репутации"
+      },
+      "stats": {
+        "posts": "Сообщения",
+        "reputation": "Репутация",
+        "elo": "ELO микс"
+      },
+      "status": {
+        "label": "Статус",
+        "online": "В сети",
+        "invisible": "Невидимка"
+      },
+      "sections": {
+        "content": "Мой контент",
+        "gaming": "Игры",
+        "settings": "Настройки",
+        "staff": "Команда"
+      },
+      "items": {
+        "profile": "Мой профиль",
+        "content": "Мой контент",
+        "attachments": "Мои вложения",
+        "following": "Мои подписки",
+        "player": "Профиль игрока и статистика",
+        "clan": "Мой клан",
+        "linked": "Связанные аккаунты",
+        "account": "Настройки аккаунта",
+        "notifications": "Уведомления",
+        "privacy": "Приватность и игнор",
+        "vipStudio": "VIP-студия",
+        "moderation": "Очередь модерации",
+        "themeEditor": "Изменить тему",
+        "pageEditor": "Изменить страницу",
+        "acp": "Панель администратора (ACP)"
+      },
+      "theme": {
+        "label": "Тема",
+        "dark": "Тёмная",
+        "light": "Светлая"
+      },
+      "language": "Язык",
+      "logout": "Выйти"
+    },
+    "nav": {
+      "badges": {
+        "online": "{count} В СЕТИ",
+        "live": "{count} LIVE"
+      },
+      "footer": {
+        "servers": "{servers, plural, one {# сервер} few {# сервера} many {# серверов} other {# сервера}} · {players, plural, one {# игрок} few {# игрока} many {# игроков} other {# игрока}} сейчас в сети",
+        "community": "{members, plural, one {# участник} few {# участника} many {# участников} other {# участника}} · {online} сейчас в сети",
+        "vip": "Поддержи сообщество и получи бонусы на сайте и на серверах"
+      },
+      "cta": {
+        "online": "Кто в сети",
+        "vip": "Стать VIP"
+      }
+    },
+    "live": {
+      "servers": "{count, plural, one {# сервер в сети} few {# сервера в сети} many {# серверов в сети} other {# сервера в сети}}",
+      "players": "{count, plural, one {# игрок} few {# игрока} many {# игроков} other {# игрока}}",
+      "matches": "{count, plural, one {# матч в эфире} few {# матча в эфире} many {# матчей в эфире} other {# матча в эфире}}"
+    },
+    "theme": {
+      "toDark": "Включить тёмную тему",
+      "toLight": "Включить светлую тему"
+    },
+    "mobileBar": {
+      "label": "Навигация",
+      "items": {
+        "home": "Главная",
+        "forum": "Форум",
+        "servers": "Серверы",
+        "create": "Создать",
+        "messages": "Сообщения",
+        "notifications": "Уведомления",
+        "search": "Поиск",
+        "menu": "Меню",
+        "account": "Аккаунт",
+        "chat": "Чат",
+        "activity": "Активность",
+        "clans": "Кланы"
+      }
+    }
+  },
+  "cockpit": {
+    "label": "Консоль сообщества",
+    "title": "Сейчас в сообществе",
+    "welcome": "С возвращением,",
+    "welcomeGuest": "Добро пожаловать",
+    "unread": "{count, plural, one {# непрочитанная тема} few {# непрочитанные темы} many {# непрочитанных тем} other {# непрочитанной темы}}",
+    "friends": "{count, plural, one {# друг в сети} few {# друга в сети} many {# друзей в сети} other {# друга в сети}}",
+    "friendsPlaying": "{count, plural, one {# играет на {server}} few {# играют на {server}} many {# играют на {server}} other {# играют на {server}}}",
+    "rank": "Ранг: {rank}",
+    "level": "Уровень {level}",
+    "units": {
+      "xp": "XP",
+      "posts": "сообщений",
+      "reputation": "репутации"
+    },
+    "myProfile": "Мой профиль",
+    "playersOnServers": "{count, plural, one {# игрок на серверах} few {# игрока на серверах} many {# игроков на серверах} other {# игрока на серверах}}",
+    "allActivity": "Вся активность",
+    "cards": "Панели консоли",
+    "card": "Панель {n} из {total}",
+    "feed": {
+      "title": "Живая лента",
+      "tabs": {
+        "all": "Всё",
+        "forum": "Форум",
+        "servers": "Серверы",
+        "mix": "Микс"
+      },
+      "kinds": {
+        "topic": "создал тему «{topic}»",
+        "reply": "ответил в «{topic}»",
+        "status": "опубликовал статус",
+        "member": "присоединился к сообществу",
+        "server": "зашёл на {server}",
+        "mix": "победил на {server} ({score})",
+        "mixElo": "победил на {server} ({score}) · {elo} ELO"
+      },
+      "tags": {
+        "forum": "ФОРУМ",
+        "server": "СЕРВЕР",
+        "mix": "МИКС",
+        "new": "НОВОЕ"
+      },
+      "empty": "Пока ничего нового."
+    },
+    "live": {
+      "title": "Сейчас в эфире",
+      "badge": "LIVE",
+      "round": "раунд {round}",
+      "score": "Счёт {a}:{b}",
+      "watch": "Смотреть (HLTV)",
+      "connect": "Подключиться",
+      "all": "Все матчи",
+      "nothing": "Сейчас нет матчей в эфире.",
+      "featured": "Рекомендуем",
+      "noFeatured": "Пока нет рекомендуемых тем.",
+      "matches": "Матчи в эфире ({count})"
+    },
+    "top": {
+      "title": "Топ",
+      "metricLabel": "Рейтинг по",
+      "periodLabel": "Период",
+      "metrics": {
+        "posts": "Авторы",
+        "topics": "Темы",
+        "reputation": "Репутация",
+        "online": "Время онлайн",
+        "players": "Игроки",
+        "clans": "Кланы"
+      },
+      "widgetMetrics": {
+        "posts": "Сообщения",
+        "topics": "Темы",
+        "reputation": "Репутация",
+        "online": "Время онлайн",
+        "players": "Игроки",
+        "clans": "Кланы"
+      },
+      "periods": {
+        "day": "Сегодня",
+        "week": "Нед.",
+        "month": "Месяц",
+        "year": "Год",
+        "all": "Всё"
+      },
+      "places": {
+        "gold": "1-е место, золото",
+        "silver": "2-е место, серебро",
+        "bronze": "3-е место, бронза"
+      },
+      "place": "Место {rank}",
+      "values": {
+        "posts": "{count, plural, one {# сообщение} few {# сообщения} many {# сообщений} other {# сообщения}}",
+        "topics": "{count, plural, one {# тема} few {# темы} many {# тем} other {# темы}}",
+        "reputation": "+{value}",
+        "players": "ELO {value}",
+        "clans": "{value} очк."
+      },
+      "empty": "За этот период в рейтинге никого нет.",
+      "message": "Написать {name}",
+      "you": "Ты: место {rank} · {value}",
+      "youNone": "Тебя пока нет в рейтинге.",
+      "full": "Полный рейтинг"
+    },
+    "servers": {
+      "strip": "{name}, {players} из {max} игроков, {map}",
+      "offline": "{name}, не в сети",
+      "off": "не в сети",
+      "playNow": "Играть сейчас"
     }
   }
 }

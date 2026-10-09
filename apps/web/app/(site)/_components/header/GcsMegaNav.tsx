@@ -115,6 +115,9 @@ function MoreItem({ items, label }: { items: GcsMegaEntry[]; label: string }) {
 
 function Bar({ items, label, moreLabel, home, search, testId }: Props & { search: string }) {
   const pathname = usePathname();
+  // Panoul lateral (desktop): meniul e vertical, deci toți itemii rămân (fără „Mai mult”).
+  const { preset, device } = useHeaderState();
+  const vertical = preset === "side" && device === "desktop";
   const { isActive, href } = navActive(items, pathname === "/" && home ? home : pathname, search);
   const nav = useRef<HTMLElement>(null);
   const [fit, setFit] = useState<number | null>(null);
@@ -123,6 +126,10 @@ function Bar({ items, label, moreLabel, home, search, testId }: Props & { search
   useLayoutEffect(() => {
     const el = nav.current;
     if (!el) return;
+    if (vertical) {
+      setFit(items.length);
+      return;
+    }
     const measure = () => {
       const width = (n: Element | null) => n?.getBoundingClientRect().width ?? 0;
       const gap = Number.parseFloat(getComputedStyle(el).columnGap) || 0;
@@ -137,7 +144,7 @@ function Bar({ items, label, moreLabel, home, search, testId }: Props & { search
       alive = false;
       observer.disconnect();
     };
-  }, [items]);
+  }, [items, vertical]);
 
   const slot = (hidden: boolean) => ({ className: `gcs-hb__navSlot${hidden ? " gcs-hb__navSlot--hidden" : ""}`, "aria-hidden": hidden || undefined, inert: hidden || undefined });
   const overflow = items.slice(shown);
