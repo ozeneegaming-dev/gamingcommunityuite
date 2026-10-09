@@ -339,9 +339,10 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
           {slides.map((s) => {
             // Fără imagine: un gradient din culoarea forumului (sau din id-ul topicului), cu lumina de accent.
             const hue = (s.id * 47) % 360;
+            const glow = s.forum?.color && /^#[0-9a-f]{6}$/i.test(s.forum.color) ? `${s.forum.color}66` : `hsl(${hue} 75% 50% / 0.4)`;
             const art = s.image
               ? { backgroundImage: `url(${JSON.stringify(s.image)})` }
-              : { backgroundImage: `radial-gradient(ellipse 80% 90% at 85% 0%, ${s.forum?.color ?? `hsl(${hue} 70% 45%)`}55, transparent 60%), linear-gradient(135deg, hsl(${hue} 45% 18%), hsl(${(hue + 40) % 360} 40% 9%))` };
+              : { backgroundImage: `radial-gradient(ellipse 80% 90% at 85% 0%, ${glow}, transparent 60%), linear-gradient(135deg, hsl(${hue} 45% 22%), hsl(${(hue + 40) % 360} 40% 10%))` };
             return (
               <article key={s.id} className="gcs-carousel__card" data-testid="gcs-carousel-card" data-image={s.image ? "" : undefined}>
                 <span className="gcs-carousel__art" style={art} aria-hidden="true" />

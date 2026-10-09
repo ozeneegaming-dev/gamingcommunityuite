@@ -6,7 +6,7 @@ const SAVED = "Draft salvat. Vizitatorii văd modificările doar după ce salvez
 const PUBLISHED = "Salvat: tema e publicată pentru toți.";
 
 /** CSS-ul publicat al temei implicite (ce primesc vizitatorii). */
-const publicCss = async (page: Page) => (await page.request.get("/gcs-theme.css?t=default")).text();
+const publicCss = async (page: Page) => (await page.request.get("/gcs-theme.css?t=nova")).text();
 /** Prima valoare a unei variabile din CSS-ul publicat (blocul întunecat, `html:root`). */
 const cssVar = (css: string, name: string) => new RegExp(`${name}: ([^;]+);`).exec(css)?.[1] ?? null;
 
@@ -32,19 +32,19 @@ test("editorul vizual: previzualizare live, ieșire cu confirmare, salvare și r
   await enterAcpAsRoot(page, `Studio${id}`, `studio-${id}@example.com`);
 
   const before = await publicCss(page);
-  expect(cssVar(before, "--gcs-header-h"), "tema implicită pornește cu antetul implicit").toBe("64px");
-  expect(cssVar(before, "--gcs-accent")?.toUpperCase(), "tema implicită pornește cu accentul implicit").toBe("#D62839");
+  expect(cssVar(before, "--gcs-header-h"), "tema implicită pornește cu antetul implicit").toBe("76px");
+  expect(cssVar(before, "--gcs-accent")?.toUpperCase(), "tema implicită pornește cu accentul implicit").toBe("#DF390C");
 
   await page.goto("/admin/appearance/themes");
   await page.getByTestId("gcs-acp-theme-visual").first().click();
-  await expect(page).toHaveURL(/\/admin\/theme-editor\/default$/);
+  await expect(page).toHaveURL(/\/admin\/theme-editor\/nova$/);
   await expect(page.getByTestId("gcs-theme-studio")).toBeVisible();
   await expect(page.getByRole("button", { name: "Salvează și publică" })).toBeDisabled();
 
   // Previzualizarea: site-ul public în iframe, cu puntea editorului.
   const frame = await previewFrame(page);
   await expect(frame.getByTestId("gcs-brand")).toBeVisible();
-  await expect.poll(() => rootVar(frame, "--gcs-header-h")).toBe("64PX");
+  await expect.poll(() => rootVar(frame, "--gcs-header-h")).toBe("76PX");
 
   // Un interval: înălțimea antetului (Antet → Antet desktop).
   await page.getByTestId("gcs-studio-nav-header").click();
@@ -67,7 +67,7 @@ test("editorul vizual: previzualizare live, ieșire cu confirmare, salvare și r
   // Draft-ul se salvează singur, dar vizitatorii încă văd tema publicată.
   const status = page.getByTestId("gcs-studio-status");
   await expect(status).toHaveText(SAVED);
-  expect(cssVar(await publicCss(page), "--gcs-header-h")).toBe("64px");
+  expect(cssVar(await publicCss(page), "--gcs-header-h")).toBe("76px");
 
   // Ieșirea cu modificări nesalvate cere confirmare; „Continuă editarea” rămâne în editor.
   await page.getByTestId("gcs-studio-exit").click();
@@ -75,7 +75,7 @@ test("editorul vizual: previzualizare live, ieșire cu confirmare, salvare și r
   await expect(dialog).toBeVisible();
   await dialog.getByTestId("gcs-studio-exit-stay").click();
   await expect(dialog).toHaveCount(0);
-  await expect(page).toHaveURL(/\/admin\/theme-editor\/default$/);
+  await expect(page).toHaveURL(/\/admin\/theme-editor\/nova$/);
 
   // „Salvează” publică tema: CSS-ul public are valorile noi.
   await page.getByTestId("gcs-studio-save").click();
@@ -87,26 +87,26 @@ test("editorul vizual: previzualizare live, ieșire cu confirmare, salvare și r
   // Revenirea la valorile implicite (butonul de lângă fiecare setare), apoi salvare.
   await page.getByTestId("gcs-studio-back").click();
   await page.getByTestId("gcs-studio-revert-color-accent").click();
-  await expect.poll(() => rootVar(frame, "--gcs-accent")).toBe("#D62839");
+  await expect.poll(() => rootVar(frame, "--gcs-accent")).toBe("#DF390C");
   await page.getByTestId("gcs-studio-back").click();
   await page.getByTestId("gcs-studio-nav-header").click();
   await page.getByTestId("gcs-studio-nav-headerDesktop").click();
   await page.getByTestId("gcs-studio-revert-header_height").click();
-  await expect.poll(() => rootVar(frame, "--gcs-header-h")).toBe("64PX");
+  await expect.poll(() => rootVar(frame, "--gcs-header-h")).toBe("76PX");
   await expect(status).toHaveText(SAVED);
   await page.getByTestId("gcs-studio-save").click();
   await expect(status).toHaveText(PUBLISHED);
   const restored = await publicCss(page);
-  expect(cssVar(restored, "--gcs-header-h")).toBe("64px");
-  expect(cssVar(restored, "--gcs-accent")?.toUpperCase()).toBe("#D62839");
+  expect(cssVar(restored, "--gcs-header-h")).toBe("76px");
+  expect(cssVar(restored, "--gcs-accent")?.toUpperCase()).toBe("#DF390C");
 
-  // O modificare la care se renunță: „Ieși fără salvare” șterge draft-ul, tema publicată rămâne.
-  await page.getByTestId("gcs-studio-field-header_sticky").uncheck();
+  // O modificare la care se renunță: „Ieși fără salvare” șterge draft-ul, tema publicată rămâne (Nova: antetul nu e fix).
+  await page.getByTestId("gcs-studio-field-header_sticky").check();
   await expect(status).toHaveText(SAVED);
   await page.getByTestId("gcs-studio-exit").click();
   await page.getByTestId("gcs-studio-exit-discard").click();
   await expect(page).toHaveURL(/\/admin\/appearance\/themes$/);
-  expect(await publicCss(page)).not.toContain("position: relative");
+  expect(await publicCss(page)).toContain("position: relative");
   await expect(page.getByTestId("gcs-acp-theme").first().getByText("Modificări nepublicate")).toHaveCount(0);
 });
 

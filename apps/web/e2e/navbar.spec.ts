@@ -30,6 +30,8 @@ test("meniul userului se folosește din tastatură; tema și limba se schimbă d
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
 
+  // Limba: meniul din bara de jos a subsolului (designul Nova).
+  await footer.getByTestId("gcs-footer-language").evaluate((d) => void ((d as HTMLDetailsElement).open = true));
   await footer.getByRole("button", { name: "EN" }).click();
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   // Membri e acum un submeniu (buton): eticheta lui e tradusă.
@@ -49,9 +51,16 @@ test("meniul implicit: Forum, Servere, Clanuri, Activitate, Chat, Membri (cu Sta
   for (const name of ["Forum", "Clanuri", "Activitate", "Chat"]) await expect(nav.getByRole("link", { name, exact: true })).toBeVisible();
   // Servere are submeniu (paginile punții, `nav:v6`): e un buton.
   await expect(nav.getByRole("button", { name: "Servere", exact: true })).toBeVisible();
-  await page.getByTestId("gcs-nav-more").click();
-  for (const name of ["Clasament", "VIP"]) await expect(page.getByRole("menu", { name: "Mai mult" }).getByRole("menuitem", { name })).toBeVisible();
-  await page.keyboard.press("Escape");
+  // Clasament și VIP: pe bară, dacă încap (meniul Nova e mai compact), altfel în „Mai mult”.
+  await page.setViewportSize({ width: 1060, height: 900 });
+  const more = page.getByTestId("gcs-nav-more");
+  for (const name of ["Clasament", "VIP"]) {
+    if (await nav.getByRole("link", { name, exact: true }).isVisible()) continue;
+    await more.click();
+    await expect(page.getByRole("menu", { name: "Mai mult" }).getByRole("menuitem", { name })).toBeVisible();
+    await page.keyboard.press("Escape");
+  }
+  await page.setViewportSize({ width: 1600, height: 900 });
   await nav.getByRole("button", { name: "Membri" }).click();
   await expect(page.getByRole("menu", { name: "Membri" }).getByRole("menuitem", { name: "Staff" })).toBeVisible();
 });

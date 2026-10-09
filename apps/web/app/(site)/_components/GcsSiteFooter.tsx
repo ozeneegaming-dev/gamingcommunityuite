@@ -86,7 +86,7 @@ export async function GcsSiteFooter() {
         title={l.label}
       >
         {l.code.toUpperCase()}
-        {withNames && <span className="gcs-siteFooter__langName">{l.label}</span>}
+        {withNames && <span className="gcs-siteFooter__langName"> {l.label}</span>}
       </button>
     ));
   // Slotul `language` (șabloanele modificate): butoanele limbilor, pe un rând.

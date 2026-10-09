@@ -59,7 +59,7 @@ describe("zonele ACP ale aplicației", () => {
       ],
       appearance: [
         ["acp.menu.appearance.style", ["appearance.themes", "appearance.templates", "appearance.css"]],
-        ["acp.menu.appearance.layout", ["appearance.widgets", "system.menu_manager"]],
+        ["acp.menu.appearance.layout", ["appearance.widgets", "appearance.footer", "system.menu_manager"]],
       ],
       gaming: [
         ["acp.menu.gaming.servers_group", ["gaming.servers", "gaming.server_admins", "gaming.server_maps", "gaming.servers_settings", "gaming.servers_bridge_settings"]],

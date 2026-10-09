@@ -3,7 +3,7 @@ import { uid } from "./forum-fixtures";
 import { enterAcpAsRoot, sql, useFreshIp } from "./helpers";
 
 /** CSS-ul publicat al temei implicite (ce primesc vizitatorii). */
-const publicCss = async (page: Page) => (await page.request.get(`/gcs-theme.css?t=default&r=${Date.now()}`)).text();
+const publicCss = async (page: Page) => (await page.request.get(`/gcs-theme.css?t=nova&r=${Date.now()}`)).text();
 
 /** Documentul din iframe-ul previzualizării. */
 async function previewFrame(page: Page): Promise<Frame> {

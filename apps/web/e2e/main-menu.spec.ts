@@ -24,12 +24,16 @@ test.describe("meniul principal", () => {
     // Servere are submeniu (paginile punții, `nav:v6`): e un buton.
     await expect(nav.getByRole("button", { name: "Servere", exact: true })).toBeVisible();
     // Staff a trecut în submeniul Membri. Cu aplicațiile Gaming (Servere, Clanuri), bara implicită are 8 itemi: ultimii
-    // (Clasament, VIP) trec în „Mai mult” la lățimea paginii.
+    // (Clasament, VIP) stau pe bară dacă încap (meniul compact al designului Nova), altfel trec în „Mai mult”.
     await expect(nav.getByRole("link", { name: "Staff" })).toHaveCount(0);
-    await expect(page.getByTestId("gcs-nav-more")).toBeVisible();
-    await page.getByTestId("gcs-nav-more").click();
-    await expect(page.getByRole("menu", { name: "Mai mult" }).getByRole("menuitem", { name: "VIP" })).toBeVisible();
-    await page.keyboard.press("Escape");
+    const more = page.getByTestId("gcs-nav-more");
+    if (await nav.getByRole("link", { name: "VIP", exact: true }).isVisible()) {
+      await expect(more).toBeHidden();
+    } else {
+      await more.click();
+      await expect(page.getByRole("menu", { name: "Mai mult" }).getByRole("menuitem", { name: "VIP" })).toBeVisible();
+      await page.keyboard.press("Escape");
+    }
 
     const trigger = nav.getByRole("button", { name: "Membri" });
     await trigger.focus();
@@ -49,11 +53,18 @@ test.describe("meniul principal", () => {
     await expect(page.getByRole("menuitem", { name: "Toți membrii" })).not.toHaveAttribute("aria-current", "page");
     await page.keyboard.press("Escape");
 
-    // Clasament (din „Mai mult”) aprinde doar „Mai mult”, nu și Membri.
-    await page.getByTestId("gcs-nav-more").click();
-    await page.getByRole("menu", { name: "Mai mult" }).getByRole("menuitem", { name: "Clasament" }).click();
-    await expect(page).toHaveURL(/\/leaderboard$/);
-    await expect(page.getByTestId("gcs-nav-more")).toHaveClass(/gcs-nav__link--active/);
+    // Clasament (pe bară sau din „Mai mult”) aprinde doar butonul lui, nu și Membri (unde apare și în submeniu).
+    const ranking = nav.getByRole("link", { name: "Clasament", exact: true });
+    if (await ranking.isVisible()) {
+      await ranking.click();
+      await expect(page).toHaveURL(/\/leaderboard$/);
+      await expect(nav.getByRole("link", { name: "Clasament", exact: true })).toHaveClass(/gcs-nav__link--active/);
+    } else {
+      await page.getByTestId("gcs-nav-more").click();
+      await page.getByRole("menu", { name: "Mai mult" }).getByRole("menuitem", { name: "Clasament" }).click();
+      await expect(page).toHaveURL(/\/leaderboard$/);
+      await expect(page.getByTestId("gcs-nav-more")).toHaveClass(/gcs-nav__link--active/);
+    }
     await expect(nav.getByRole("button", { name: "Membri" })).not.toHaveClass(/gcs-nav__link--active/);
   });
 

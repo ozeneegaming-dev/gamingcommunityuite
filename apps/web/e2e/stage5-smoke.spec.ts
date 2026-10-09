@@ -51,8 +51,11 @@ test("etapa 5: header și login în popup → widget-uri și statistici → limb
   });
 
   await test.step("limbile: engleza din footer schimbă interfața, apoi înapoi în română", async () => {
+    // Limba: meniul din bara de jos a subsolului (designul Nova).
+    await page.getByTestId("gcs-footer-language").evaluate((d) => void ((d as HTMLDetailsElement).open = true));
     await page.locator(".gcs-siteFooter").getByRole("button", { name: "EN" }).click();
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
+    await page.getByTestId("gcs-footer-language").evaluate((d) => void ((d as HTMLDetailsElement).open = true));
     await page.locator(".gcs-siteFooter").getByRole("button", { name: "RO" }).click();
     await expect(page.locator("html")).toHaveAttribute("lang", "ro");
   });
