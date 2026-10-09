@@ -3,6 +3,8 @@ import { buildVipStudio } from "@gcs/plugin-sdk/vip-studio";
 import { parseMemberAppearance, pluginSchema, type GcsActor } from "@gcs/core";
 import sharp from "sharp";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { nameStyleData, V2_NAME_STYLES } from "../../../plugin-sdk/plugins/vip-studio/src/presets";
+import PLUGIN_MANIFEST from "../../../plugin-sdk/plugins/vip-studio/plugin.json";
 import { closePluginServices, createPluginServices, resetPluginWorld, TEST_SIGN } from "../../test/pluginWorld";
 import type { GcsServices } from "../services";
 
@@ -18,7 +20,7 @@ let groups: Record<string, number>;
 beforeAll(async () => {
   ({ services, configDir } = await createPluginServices());
   ({ root, member, guest, groups } = await resetPluginWorld(services, [KEY]));
-  // Versiunea instalată întâi e „1.0.0”; un test de la final o actualizează la versiunea curentă (1.0.1).
+  // Versiunea instalată întâi e „1.0.0”; un test de la final o actualizează la versiunea curentă (plugin.json).
   const zip = await buildVipStudio({ sign: TEST_SIGN, version: "1.0.0" });
   const { id, report } = await services.pluginAdmin.stage(root, { fileName: "gcs.vip_studio.zip", data: zip });
   expect(report.checks.filter((c) => c.level === "error")).toEqual([]);
@@ -263,7 +265,7 @@ describe("Studio VIP: instalat ca plugin semnat", () => {
     expect(html(await page(member))).toContain('value="neon_tub" checked name="nameStyle"');
   });
 
-  test("actualizarea 1.0.0 → 1.0.1: stilurile vechi neschimbate fac loc catalogului nou, alegerile membrilor se mută", async () => {
+  test("actualizarea 1.0.0 → versiunea curentă: stilurile vechi fac loc catalogului nou, cele neschimbate primesc variantele noi", async () => {
     const schema = pluginSchema(KEY);
     // Două stiluri din catalogul 1: „Rubin” neschimbat și „Puls”, redenumit de admin.
     const v1 = (effect: string, colors: string[]) => JSON.stringify({ effect, variants: [{ key: "default", colors }], angle: 90, animation: "none", speed: "normal", bold: true, italic: false });
@@ -273,12 +275,17 @@ describe("Studio VIP: instalat ca plugin semnat", () => {
       v1("pulse", ["#FF0000"]),
     );
     await services.db.$executeRawUnsafe(`INSERT INTO "${schema}".loadouts (user_id, data) VALUES ($1, $2::jsonb) ON CONFLICT (user_id) DO UPDATE SET data = EXCLUDED.data`, root.userId, JSON.stringify({ nameStyle: "ruby" }));
+    // Catalogul 2: „Scanare” cu variantele de atunci (neschimbat de admin) și „Glitch RGB” redenumit de admin.
+    const v2 = (key: string) => JSON.stringify(nameStyleData(V2_NAME_STYLES.get(key)!));
+    await services.db.$executeRawUnsafe(`UPDATE "${schema}".items SET data = $1::jsonb WHERE kind = 'name_style' AND key = 'scanare'`, v2("scanare"));
+    await services.db.$executeRawUnsafe(`UPDATE "${schema}".items SET data = $1::jsonb, name = 'Glitch-ul meu' WHERE kind = 'name_style' AND key = 'glitch_rgb'`, v2("glitch_rgb"));
+    await services.db.$executeRawUnsafe(`DELETE FROM "${schema}".items WHERE kind = 'name_style' AND key LIKE 'tx\\_%'`);
     await services.db.$executeRawUnsafe(`UPDATE "${schema}".meta SET value = '1'::jsonb WHERE key = 'presets_version'`);
     const zip = await buildVipStudio({ sign: TEST_SIGN });
-    const { id } = await services.pluginAdmin.stage(root, { fileName: "gcs.vip_studio-1.0.1.zip", data: zip });
+    const { id } = await services.pluginAdmin.stage(root, { fileName: `gcs.vip_studio-${PLUGIN_MANIFEST.version}.zip`, data: zip });
     expect(await services.pluginAdmin.install(root, id, { twoFactorVerified: true, typedKey: KEY })).toEqual({ key: KEY, mode: "update" });
     await services.plugins.reconcile();
-    expect((await services.pluginAdmin.get(KEY))?.version).toBe("1.0.1");
+    expect((await services.pluginAdmin.get(KEY))?.version).toBe(PLUGIN_MANIFEST.version);
     // Prima pagină după actualizare face trecerea.
     const list = html(await acpPage("/name-styles"));
     expect(list).not.toContain('data-gcsp-item="ruby"');
@@ -288,6 +295,13 @@ describe("Studio VIP: instalat ca plugin semnat", () => {
     expect(row?.data).toMatchObject({ nameStyle: "stacojiu", nameVariant: "default" });
     // Datele de dinainte (ramele încărcate, echipamentele) rămân.
     expect(list).toContain("Foc viu");
+    // Catalogul 3: categoria „Efecte text” e adăugată, „Scanare” are variantele noi, „Glitch RGB” (schimbat) nu.
+    const variants = async (key: string) =>
+      (await services.db.$queryRawUnsafe<{ data: { variants: { key: string }[] } }[]>(`SELECT data FROM "${schema}".items WHERE kind = 'name_style' AND key = $1`, key))[0]?.data.variants.map((x) => x.key);
+    expect(await variants("scanare")).toEqual(expect.arrayContaining(["cyan", "green", "red", "purple", "gold", "white", "rainbow"]));
+    expect(await variants("glitch_rgb")).toEqual(["white", "green", "orange"]);
+    expect(list).toContain('data-gcsp-item="tx_obsidian"');
+    expect(list).toContain("Efecte text");
   });
 
   test("dezinstalarea completă șterge aspectul și fișierele pluginului", async () => {

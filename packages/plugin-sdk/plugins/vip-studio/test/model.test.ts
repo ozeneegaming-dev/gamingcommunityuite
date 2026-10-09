@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { bannerLook, nameLook, vars } from "../src/html";
+import { bannerLook, nameInner, nameLook, vars } from "../src/html";
 import { LEGACY_NAME_MAP, LEGACY_NAME_STYLES } from "../src/presets";
 import { nameFromFile, EFFECTS, inkFor, mediaIdOf, mediaIdsOf, mediaUrl, parseItemData, plainText, youtubeId, type NameStyleData } from "../src/model";
 import { ART_KEYS, defaultPresets } from "../src/presets";
@@ -9,6 +9,56 @@ import { WEAPON_ART } from "../art/weapons";
 
 const A = "/plugins/gcs.vip_studio/assets";
 const M = "/plugins/gcs.vip_studio/media";
+
+describe("catalogul 3: „Efecte text” și variantele de culoare", () => {
+  const styles = defaultPresets().filter((p) => p.kind === "name_style");
+  const data = (key: string) => styles.find((p) => p.key === key)?.data as NameStyleData | undefined;
+
+  test("categoria nouă: cel puțin 40 de stiluri, toate valide, cu variante (cel mult 12)", () => {
+    const text = styles.filter((p) => p.category === "Efecte text");
+    expect(text.length).toBeGreaterThanOrEqual(40);
+    for (const p of text) {
+      expect(p.key.startsWith("tx_")).toBe(true);
+      const d = p.data as NameStyleData;
+      expect([p.key, d.variants.length >= 1 && d.variants.length <= 12]).toEqual([p.key, true]);
+      expect(EFFECTS).toContain(d.effect);
+    }
+  });
+
+  test("stilurile cerute: oglinda neagră, cameleonul, sclipirea în cruce, glitch-ul scanat, literele care alunecă, vidul, unda de lumină, valul de litere", () => {
+    for (const [key, effect] of [
+      ["tx_obsidian", "obsidian"],
+      ["tx_cameleon", "cameleon"],
+      ["tx_sclipire", "sclipire"],
+      ["tx_glitch_scan", "glitch_scan"],
+      ["tx_magnetic", "magnetic"],
+      ["tx_vid", "vid"],
+      ["tx_unda", "unda"],
+      ["tx_val_litere", "val_litere"],
+    ] as const) {
+      expect([key, data(key)?.effect]).toEqual([key, effect]);
+    }
+  });
+
+  test("varianta curcubeu a stilului Electric are toate cele cinci culori; stilurile cu bandă oferă setul obișnuit", () => {
+    expect(data("electric_neon")?.variants.find((x) => x.key === "rainbow")?.colors).toHaveLength(5);
+    const usual = ["blue", "cyan", "gold", "green", "orange", "pink", "purple", "red", "white"];
+    // Stilurile cu bandă de culori (în afară de cele tematice: bani, val de dragoste, holografic, culoare plină).
+    const themed = new Set(["bani", "val_dragoste", "holografic", "culoare_plina", "lumini_oras", "aur_curat", "flacara_vie", "infern"]);
+    for (const p of styles.filter((s) => (s.data as NameStyleData).variants.length > 1 && !themed.has(s.key) && s.category !== "Efecte text")) {
+      const keys = (p.data as NameStyleData).variants.map((x) => x.key);
+      const missing = usual.filter((k) => !keys.includes(k));
+      expect([p.key, missing.length <= 2]).toEqual([p.key, true]);
+    }
+  });
+
+  test("previzualizarea numelui: textul simplu și literele separate, ascunse cititoarelor de ecran", () => {
+    expect(nameInner("Ana B")).toBe(
+      '<span class="gcs-name__t">Ana B</span><span class="gcs-name__ls" aria-hidden="true"><b style="--i:0" data-c="A"></b><b style="--i:1" data-c="n"></b><b style="--i:2" data-c="a"></b><b style="--i:3" data-c=" "></b><b style="--i:4" data-c="B"></b></span>',
+    );
+    expect(nameInner("<x>")).toContain('data-c="&lt;"');
+  });
+});
 
 describe("catalogul: validarea datelor", () => {
   test("toate presetările sunt valide, cu chei unice pe tip, și au desen", () => {

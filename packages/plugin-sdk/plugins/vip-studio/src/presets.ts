@@ -8,8 +8,10 @@ import { ASSET_BASE, inkFor, VARIANTS, type Animation, type Effect, type Kind, t
 /**
  * Versiunea catalogului implicit: crește când se adaugă presetări noi (se inserează doar cele lipsă). Versiunea 2
  * (pluginul 1.0.1) înlocuiește stilurile de nume din versiunea 1 cu catalogul nou, pe categorii (`upgradeNameStyles`).
+ * Versiunea 3 (pluginul 1.1.0) adaugă categoria „Efecte text” și variantele de culoare care lipseau din stilurile cu
+ * bandă de culori (`refreshNameStyles`: doar stilurile neschimbate de admin).
  */
-export const PRESETS_VERSION = 2;
+export const PRESETS_VERSION = 3;
 
 export type Preset = { kind: Kind; key: string; name: string; category?: string; data: Record<string, unknown>; plans?: string[] };
 
@@ -90,7 +92,7 @@ const ALL_KEYS = ["red", "blue", "cyan", "gold", "green", "orange", "pink", "pur
  * Catalogul de stiluri de nume (versiunea 2): efecte originale GCS, pe categorii, cele mai multe cu bandă de variante.
  * Efectele le desenează GCS (lista albă `appearance`); aici doar efectul, culorile, viteza și stilul literei.
  */
-const NAME_STYLES: NameDef[] = [
+const NAME_STYLES_V2: NameDef[] = [
   // Neon
   { key: "neon_tub", name: "Tub de neon", category: "Neon", effect: "neon", variants: singles(...ALL_KEYS) },
   { key: "lumini_oras", name: "Lumini de oraș", category: "Neon", effect: "citylights", variants: [v("pink", "#FF71CE", "#01CDFE", "#B967FF"), v("cyan", "#01CDFE", "#B967FF", "#FF71CE"), v("gold", "#FFD34D", "#FF71CE", "#01CDFE")] },
@@ -142,6 +144,165 @@ const NAME_STYLES: NameDef[] = [
   { key: "ocean_adanc", name: "Ocean", category: "Clasic", colors: ["#2193B0", "#6DD5ED"] },
   { key: "aurora_boreala", name: "Auroră", category: "Clasic", effect: "shimmer", colors: ["#00F5A0", "#00D9F5", "#7B2FF7"], speed: "slow" },
 ];
+
+/**
+ * Variantele comune ale efectelor cu mai multe culori: culoarea principală, una deschisă și una închisă (efectele
+ * folosesc a doua și a treia pentru straturi, umbre și accente). Curcubeul are cinci culori.
+ */
+const PAL: Record<string, string[]> = {
+  red: ["#FF3B4E", "#FF9AA6", "#B3122B"],
+  blue: ["#4F8BFF", "#A9C7FF", "#1E3A8A"],
+  cyan: ["#22D3EE", "#A5F3FC", "#0E7490"],
+  gold: ["#FFD34D", "#FFF1B8", "#B45309"],
+  green: ["#4ADE80", "#BBF7D0", "#15803D"],
+  orange: ["#FF9F43", "#FFD2A6", "#C2410C"],
+  pink: ["#FF6FC8", "#FFC2E2", "#BE185D"],
+  purple: ["#B57BFF", "#E3CCFF", "#5B21B6"],
+  white: ["#F8FAFC", "#CBD5E1", "#64748B"],
+  rainbow: ["#FF4D4D", "#FFB020", "#3DDC97", "#38BDF8", "#A78BFA"],
+};
+const pal = (...keys: string[]) => keys.map((key) => v(key, ...PAL[key]!));
+/** Setul obișnuit al variantelor (banda de culori). */
+const STD = ["pink", "cyan", "gold", "green", "purple", "red", "blue", "orange", "white", "rainbow"];
+/** Varianta „clasic” a efectelor cu straturi colorate (alb, roșu-roz, cyan), ca un glitch RGB. */
+const CLASSIC = v("classic", "#F8FAFC", "#FF2E63", "#08D9D6");
+/** Paletele focului (flacără, jar), pe culori. */
+const FIRE: Record<string, string[]> = {
+  orange: ["#FFE066", "#FF8C00", "#E63946"],
+  red: ["#FFD6A5", "#FF3B30", "#7F1D1D"],
+  blue: ["#E0F2FE", "#38BDF8", "#1D4ED8"],
+  green: ["#ECFCCB", "#84CC16", "#166534"],
+  purple: ["#F5D0FE", "#C026D3", "#581C87"],
+  pink: ["#FFE4F2", "#FF4FA3", "#9D174D"],
+  cyan: ["#E0FFFF", "#22D3EE", "#155E75"],
+  gold: ["#FFF7D6", "#FFC300", "#B45309"],
+};
+const fire = (...keys: string[]) => keys.map((key) => v(key, ...FIRE[key]!));
+
+/**
+ * Categoria „Efecte text” (catalogul 3): efecte noi ale GCS, cele mai multe adaptate dintr-o bibliotecă de efecte text
+ * CSS cu licență MIT (creditul e în `THIRD-PARTY-NOTICES.md`, nu în interfață). Cheile au prefixul `tx_`.
+ */
+const TEXT = "Efecte text";
+const tx = (effect: Effect, name: string, variants: { key: string; colors: string[] }[], extra: Partial<NameDef> = {}): NameDef => ({ key: `tx_${effect}`, name, category: TEXT, effect, variants, ...extra });
+const TEXT_STYLES: NameDef[] = [
+  tx("obsidian", "Oglindă neagră", singles("white", "red", "cyan", "gold", "purple", "green", "blue", "pink")),
+  tx("cameleon", "Cameleon", singles("green", "cyan", "pink", "gold", "purple", "red")),
+  tx("sclipire", "Sclipire în cruce", singles("gold", "white", "cyan", "pink", "purple", "blue", "green", "red")),
+  tx("glitch_scan", "Glitch scanat", [CLASSIC, ...pal("cyan", "green", "red", "purple", "gold", "pink", "white")]),
+  tx("magnetic", "Magnetic", pal(...STD)),
+  tx("vid", "Vid", singles("purple", "red", "cyan", "green", "blue", "pink", "gold", "orange")),
+  tx("unda", "Undă de lumină", pal(...STD)),
+  tx("val_litere", "Val de litere", pal(...STD)),
+  tx("boreal", "Boreal", [v("cyan", "#00F5A0", "#00D9F5", "#7B2FF7"), ...pal("pink", "gold", "green", "purple", "red", "blue", "orange", "white")]),
+  tx("lichid", "Lichid", pal("cyan", "blue", "green", "pink", "purple", "gold", "red", "orange", "white")),
+  tx("scaner", "Scaner", pal("red", "cyan", "green", "gold", "purple", "pink", "blue", "white")),
+  tx("jar", "Jar mocnit", fire("orange", "red", "blue", "green", "purple", "pink", "cyan", "gold")),
+  tx("ecou", "Ecou", [v("pink", "#F8FAFC", "#FF4FD8", "#4FF8FF"), ...pal("cyan", "gold", "green", "purple", "red", "blue", "orange", "white")]),
+  tx("feliat", "Feliat", [CLASSIC, ...pal(...STD.filter((k) => k !== "rainbow"))]),
+  tx("tremur", "Tremur", pal(...STD)),
+  tx("anaglif", "Anaglif 3D", [v("classic", "#F8FAFC", "#FF3355", "#33DDFF"), ...pal("pink", "gold", "green", "purple", "blue", "orange")]),
+  tx("fosfor", "Fosfor", pal("green", "cyan", "gold", "orange", "red", "pink", "purple", "white")),
+  tx("reflector", "Reflector", pal(...STD)),
+  tx("elastic", "Elastic", pal(...STD)),
+  tx("puls_cardiac", "Puls cardiac", pal("red", "pink", "purple", "cyan", "gold", "green", "blue", "orange", "white")),
+  tx("marker", "Marker", pal("gold", "pink", "cyan", "green", "purple", "orange", "red", "blue")),
+  tx("cadran", "Cadran solar", pal("orange", "gold", "red", "pink", "purple", "blue", "cyan", "green", "white")),
+  tx("negativ", "Negativ", pal("white", "cyan", "pink", "gold", "green", "purple", "red")),
+  tx("holograma", "Hologramă", [v("cyan", "#E0FFFF", "#FF4FD8", "#4FF8FF"), ...pal("pink", "gold", "green", "purple", "blue", "red", "white")]),
+  tx("folie", "Folie aurie", [v("gold", "#F2C15D", "#FFF4B8", "#7A4A08"), v("white", "#E2E8F0", "#F8FAFC", "#475569"), v("pink", "#F4C4B4", "#FFE4E6", "#9F4F5B"), v("orange", "#E7A86B", "#FFE2C2", "#8C4A1E"), ...pal("green", "blue", "purple", "red")]),
+  tx("pixeli", "Pixeli", [CLASSIC, ...pal("cyan", "pink", "gold", "green", "purple", "red", "white")]),
+  tx("praf_stele", "Praf de stele", pal("purple", "blue", "cyan", "pink", "gold", "green", "red", "white", "rainbow")),
+  tx("vapori", "Vapori", [v("pink", "#F8FAFC", "#FF71CE", "#01CDFE"), ...pal("cyan", "gold", "green", "purple", "red", "blue", "orange", "white")]),
+  tx("plasa", "Plasă de lumină", pal("pink", "cyan", "purple", "gold", "green", "blue", "red", "orange", "rainbow")),
+  tx("irizat", "Irizat", pal("pink", "cyan", "purple", "gold", "green", "blue", "white", "rainbow")),
+  tx("sticla", "Sticlă", pal("white", "cyan", "blue", "pink", "purple", "green", "gold", "red")),
+  tx("flux_date", "Flux de date", pal("green", "cyan", "blue", "purple", "pink", "gold", "red", "orange", "rainbow")),
+  tx("prisma", "Prismă", [CLASSIC, ...pal("cyan", "pink", "gold", "green", "purple", "red", "blue")]),
+  tx("laser", "Laser", pal("red", "cyan", "green", "pink", "purple", "gold", "blue", "orange", "white")),
+  tx("microcip", "Microcip", pal("green", "cyan", "gold", "blue", "purple", "pink", "red", "orange")),
+  tx("termic", "Termic", pal("gold", "pink", "cyan", "purple", "green", "red")),
+  tx("semnal", "Semnal", [CLASSIC, ...pal("cyan", "green", "red", "purple", "gold", "pink", "white")]),
+  tx("portal", "Portal", pal("purple", "pink", "cyan", "gold", "green", "blue", "red", "orange", "rainbow")),
+  tx("duoton", "Duoton", [CLASSIC, ...pal("pink", "cyan", "gold", "green", "purple", "blue", "orange")]),
+  tx("eclipsa", "Eclipsă", pal("gold", "orange", "red", "purple", "cyan", "pink", "green", "blue", "white")),
+  tx("voal", "Voal de lumină", pal("orange", "pink", "gold", "cyan", "purple", "green", "red", "blue")),
+  tx("marmura", "Marmură", [v("white", "#64748B", "#94A3B8", "#475569"), ...pal("gold", "pink", "cyan", "green", "purple", "blue", "red")]),
+  tx("unde", "Unde", pal("cyan", "blue", "green", "purple", "pink", "gold", "red", "white")),
+  tx("fantoma", "Scriere fantomă", pal("white", "cyan", "purple", "pink", "gold", "green", "blue", "red")),
+  tx("lenticular", "Lenticular", pal("pink", "cyan", "purple", "gold", "green", "blue", "red", "rainbow")),
+  tx("caustic", "Lumini subacvatice", pal("cyan", "blue", "green", "purple", "pink", "gold", "white")),
+  tx("focus", "Focalizare", pal(...STD)),
+  tx("spectru", "Spectru", pal("rainbow", "pink", "cyan", "gold", "green", "purple", "red", "blue", "orange", "white")),
+  tx("pop", "Pop", pal(...STD)),
+  tx("topire", "Topire", pal("orange", "red", "pink", "purple", "cyan", "gold", "green", "blue", "white")),
+  tx("cinetic", "Cinetic", pal(...STD)),
+  tx("orbite", "Orbite", pal(...STD)),
+  tx("paralaxa", "Paralaxă", [CLASSIC, ...pal("pink", "cyan", "gold", "green", "purple", "red", "blue", "orange")]),
+  tx("ploaie_litere", "Ploaie de litere", pal("green", "cyan", "purple", "pink", "gold", "red", "blue", "white")),
+  tx("zootrop", "Zootrop", pal(...STD)),
+  tx("pendul", "Pendul", pal(...STD)),
+  tx("fum", "Fum", pal("white", "purple", "cyan", "pink", "gold", "green", "red", "blue")),
+  tx("kilovolt", "Kilovolt", pal("cyan", "blue", "purple", "gold", "green", "pink", "red", "white")),
+  tx("spargere", "Spargere", pal(...STD)),
+  tx("karaoke", "Karaoke", pal("pink", "cyan", "gold", "green", "purple", "red", "blue", "orange", "rainbow")),
+  tx("retro", "Retro 70", [v("orange", "#FFE6BD", "#F6B33D", "#B23A28"), ...pal("pink", "cyan", "gold", "green", "purple", "red", "blue")]),
+  tx("mercur", "Mercur", [v("white", "#F4F7FF", "#94A3B8", "#475569"), ...pal("gold", "cyan", "pink", "purple", "green", "blue", "red")]),
+];
+
+/**
+ * Catalogul 3: variantele care lipseau din stilurile cu bandă de culori, ca fiecare să ofere setul obișnuit acolo unde
+ * are sens (albastru, cyan, auriu, verde, portocaliu, roz, mov, roșu, alb, curcubeu). Variantele existente rămân la
+ * fel (alegerile membrilor rămân valabile); cele noi se adaugă la final.
+ */
+const MORE_VARIANTS: Record<string, string[]> = {
+  respiratie: ["rainbow"],
+  lumini_oras: ["purple", "green", "red"],
+  aura_palida: ["purple", "green", "red", "blue", "orange"],
+  flacara_vie: ["red", "pink", "cyan", "gold"],
+  infern: ["red", "pink", "cyan", "gold"],
+  aur_curat: ["red", "blue", "purple", "green"],
+  crom_lustruit: ["cyan", "purple", "pink", "orange"],
+  relief_3d: ["red", "purple", "pink", "orange", "blue"],
+  contur_viu: ["green", "purple", "pink", "rainbow"],
+  glitch_rgb: ["red", "blue", "purple", "pink", "cyan"],
+  digital: ["blue", "purple", "orange", "pink"],
+  masina_de_scris: ["cyan", "red", "pink", "purple", "orange", "blue"],
+  scanare: ["gold", "white", "pink", "orange", "blue", "rainbow"],
+  ploaie_digitala: ["purple", "gold", "blue", "pink", "white"],
+  oglinda_sparta: ["gold", "green", "pink", "orange", "blue"],
+  taietura: ["green", "purple", "pink", "white", "blue", "orange"],
+  tinta: ["gold", "purple", "blue", "white", "pink", "orange"],
+  holografic: ["cyan", "gold"],
+  raza_verticala: ["cyan", "blue", "pink", "white", "orange", "rainbow"],
+  licar: ["red", "green", "purple", "blue", "orange"],
+  reflex: ["red", "green", "purple", "blue", "orange"],
+  cosmic: ["cyan", "gold", "green", "red"],
+  plasma_vie: ["blue", "purple", "red", "cyan", "rainbow"],
+  fulger: ["red", "green", "pink", "orange", "rainbow"],
+  umbre_dansante: ["red", "blue", "purple", "pink", "cyan"],
+  val_dragoste: ["gold", "orange"],
+  acid: ["cyan", "pink", "red", "gold"],
+  ger_cristal: ["blue", "pink", "green", "gold"],
+};
+
+/** Un stil cu variantele care îi lipseau (o culoare pentru efectele cu o culoare, paleta pentru celelalte). */
+function withMoreVariants(def: NameDef): NameDef {
+  const more = MORE_VARIANTS[def.key];
+  if (!more || !def.variants) return def;
+  const have = new Set(def.variants.map((x) => x.key));
+  const single = def.variants.every((x) => x.colors.length === 1);
+  const fiery = def.effect === "fire" || def.effect === "inferno";
+  const add = more.filter((k) => !have.has(k)).map((k) => (single ? singles(k)[0]! : fiery && FIRE[k] ? fire(k)[0]! : pal(k)[0]!));
+  return { ...def, variants: [...def.variants, ...add] };
+}
+
+/** Stilurile catalogului 2 (înainte de variantele adăugate): ce se compară la actualizare. */
+export const V2_NAME_STYLES: ReadonlyMap<string, NameDef> = new Map<string, NameDef>();
+
+/** Catalogul 3: stilurile de dinainte, cu variantele adăugate, apoi „Efecte text”. */
+for (const def of NAME_STYLES_V2) if (MORE_VARIANTS[def.key]) (V2_NAME_STYLES as Map<string, NameDef>).set(def.key, def);
+const NAME_STYLES: NameDef[] = [...NAME_STYLES_V2.map(withMoreVariants), ...TEXT_STYLES];
 
 /**
  * Unde merg alegerile membrilor de pe stilurile versiunii 1: stilul nou cel mai apropiat și, opțional, varianta (altfel

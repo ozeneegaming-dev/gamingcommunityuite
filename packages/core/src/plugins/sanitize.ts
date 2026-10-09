@@ -108,6 +108,10 @@ export const PLUGIN_GCS_MEMBER_CLASSES = [
   // Previzualizările efectelor numelui și ale stilurilor CSS ale pluginurilor (GCS 0.7.1).
   "gcs-nfx",
   "gcs-nfx--*",
+  // Markup-ul comun al numelui (GCS 0.8.0): textul simplu și literele efectelor pe litere.
+  "gcs-name",
+  "gcs-name__t",
+  "gcs-name__ls",
   "gcs-nameStyle--*",
   "gcs-bannerStyle--*",
 ];
@@ -287,7 +291,8 @@ export function sanitizePluginHtml(html: string, opts: GcsPluginHtmlOptions = {}
       meter: ["value", "min", "max", "low", "high", "optimum"],
       ...(page ? PAGE_ATTRIBUTES : {}),
       // `data-text`: textul dublat de efectele numelui (straturile `::before` / `::after`, doar ca text).
-      "*": ["class", "title", "lang", "dir", "role", "aria-*", "data-gcsp-*", "data-text", "style"],
+      // `data-c`: litera desenată a unui nume (efectele pe litere), doar ca text.
+      "*": ["class", "title", "lang", "dir", "role", "aria-*", "data-gcsp-*", "data-text", "data-c", "style"],
     },
     allowedClasses: { "*": ["gcsp-*", ...PLUGIN_GCS_CLASSES, ...PLUGIN_GCS_MEMBER_CLASSES] },
     allowedSchemes: ["http", "https", "mailto"],

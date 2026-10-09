@@ -2,12 +2,12 @@
   "manifestVersion": 1,
   "key": "gcs.vip_studio",
   "name": "Studio VIP",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "author": { "name": "GamingCommunitySuite", "url": "https://gamingcommunitysuite.com" },
   "description": "Studioul de personalizare VIP: stilul numelui (cu variante de culoare), rame de avatar, bannere, fundaluri de card, arma preferată, fundal video pe profil, citat, temă și melodia profilului, cu previzualizare live; cataloagele se gestionează din ACP.",
   "icon": "fa-solid fa-crown",
   "license": "Proprietary",
-  "minGcs": "0.7.1",
+  "minGcs": "0.8.0",
   "capabilities": ["db", "events", "widgets", "pages", "acp", "api", "menus", "jobs", "settings", "permissions", "hooks", "client-css", "client-js", "media", "appearance"],
   "settings": {
     "tabs": [

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { compileAppearanceCss, nameEffectOf } from "./appearance";
 import { compileNameEffectsCss, LETTER_EFFECTS, NAME_EFFECTS, nameEffectUsesLetters, nameVars, styledNameSelectors } from "./nameEffects";
+import { EFFECTS as VIP_STUDIO_EFFECTS } from "../../../plugin-sdk/plugins/vip-studio/src/model";
 import { TEXT_EFFECTS } from "./nameEffectsText";
 
 const previews = compileNameEffectsCss([], { previews: true });
@@ -40,6 +41,10 @@ describe("efectele numelui", () => {
     expect(nameEffectUsesLetters("unda")).toBe(true);
     expect(nameEffectUsesLetters("neon")).toBe(false);
     expect(LETTER_EFFECTS.length).toBeGreaterThanOrEqual(15);
+  });
+
+  test("Studio VIP cunoaște exact lista albă a GCS (aceleași chei, în aceeași ordine)", () => {
+    expect([...VIP_STUDIO_EFFECTS]).toEqual([...NAME_EFFECTS]);
   });
 
   test("efectele pe litere: textul simplu rămâne pentru cititoarele de ecran, literele desenate din `data-c`", () => {

@@ -5,7 +5,7 @@
  * live, numărătoarea modificărilor, ferestrele, tragerea fundalului, player-ul și încărcarea pe loturi.
  */
 import type { GcsPluginContext, GcsPluginUser, GcsPluginVipPlan } from "../../../../src/index";
-import { attrs, bannerLook, DEFAULT_BANNER, esc, icon, nameLook, vars, type Look } from "../html";
+import { attrs, bannerLook, DEFAULT_BANNER, esc, icon, nameInner, nameLook, vars, type Look } from "../html";
 import { bannerLabelFor, LABEL_MAX, QUOTE_MAX, type Catalog, type Loadout } from "../loadout";
 import {
   inkFor,
@@ -168,7 +168,7 @@ function namePanel(input: StudioInput): string {
       value: "",
       checked: !loadout.nameStyle,
       label: ctx.t("studio.name.default"),
-      art: `<span ${nameAttrs(defLook, user.name)}>${esc(user.name)}</span>`,
+      art: `<span ${nameAttrs(defLook, user.name)}>${nameInner(user.name)}</span>`,
       index: 0,
     }),
   );
@@ -185,7 +185,7 @@ function namePanel(input: StudioInput): string {
         value: item.key,
         checked: selected,
         label: item.name,
-        art: `<span ${nameAttrs(look, user.name)}>${esc(user.name)}</span>${multi ? `<span class="gcsp-tile__count">${esc(ctx.t("studio.name.variants", { count: d.variants.length }))}</span>` : ""}`,
+        art: `<span ${nameAttrs(look, user.name)}>${nameInner(user.name)}</span>${multi ? `<span class="gcsp-tile__count">${esc(ctx.t("studio.name.variants", { count: d.variants.length }))}</span>` : ""}`,
         item,
         extraClass: multi ? "gcsp-tile--variants" : "",
         index: i + 1,
@@ -413,7 +413,7 @@ function preview(input: StudioInput): string {
   const nl = cur.style && cur.variant ? nameLook(cur.style.data as NameStyleData, cur.variant, cur.style.key) : groupNameLook(user);
   const bl = cur.banner ? bannerLook(cur.banner.data as BannerData, cur.banner.key) : defaultBannerLook(input);
   const label = bannerLabelFor(loadout, access);
-  const name = `<span ${nameAttrs(nl, user.name)} data-gcsp-pv="name">${esc(user.name)}</span>`;
+  const name = `<span ${nameAttrs(nl, user.name)} data-gcsp-pv="name">${nameInner(user.name)}</span>`;
   const pill = `<span ${lookAttrs(bl)} data-gcsp-pv="banner">${esc(label)}</span>`;
   const weapon = cur.weapon?.data as WeaponData | undefined;
   const card = cur.card?.data as CardData | undefined;
@@ -544,7 +544,7 @@ export function renderStudio(input: StudioInput): string {
     `<header class="gcsp-hero"><div class="gcsp-hero__copy">` +
     `<p class="gcsp-hero__lede">${esc(ctx.t("studio.lede"))}</p>${planBadge}</div>` +
     `<div class="gcsp-plate" aria-live="polite"><span class="gcsp-plate__caption">${esc(ctx.t("studio.identity"))}</span>` +
-    `<span ${nameAttrs(nl, user.name)} data-gcsp-pv="name">${esc(user.name)}</span><span ${lookAttrs(bl)} data-gcsp-pv="banner">${esc(bannerLabelFor(input.loadout, access))}</span></div></header>`;
+    `<span ${nameAttrs(nl, user.name)} data-gcsp-pv="name">${nameInner(user.name)}</span><span ${lookAttrs(bl)} data-gcsp-pv="banner">${esc(bannerLabelFor(input.loadout, access))}</span></div></header>`;
 
   const modes =
     `<fieldset class="gcsp-modes"><legend class="gcsp-sr">${esc(ctx.t("studio.modes.legend"))}</legend>` +

@@ -569,7 +569,8 @@
       "bulk_upload": "a încărcat în bloc",
       "css_create": "a adăugat stilul CSS",
       "css_update": "a modificat stilul CSS",
-      "presets_upgrade": "a actualizat catalogul de stiluri"
+      "presets_upgrade": "a actualizat catalogul de stiluri",
+      "presets_refresh": "a adăugat variantele de culoare noi în catalogul de stiluri"
     },
     "bulk": {
       "title": "Încarcă de pe calculator (mai multe odată)",

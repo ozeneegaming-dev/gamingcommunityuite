@@ -6,7 +6,7 @@
 import type { GcsPluginContext, GcsPluginUser, GcsPluginVipPlan } from "../../../../src/index";
 import type { BulkReport } from "../bulk";
 import { CSS_TEMPLATES, type CssDraft, type CssKind } from "../cssStyles";
-import { attrs, bannerLook, esc, icon, nameLook, vars } from "../html";
+import { attrs, bannerLook, esc, icon, nameInner, nameLook, vars } from "../html";
 import type { Loadout } from "../loadout";
 import {
   ANIMATIONS,
@@ -94,7 +94,7 @@ export function itemArt(item: Item, user: GcsPluginUser | null): string {
       const l = nameLook(d, d.variants[0]!, item.key);
       const dots = d.variants.length > 1 ? `<span class="gcsp-dots">${d.variants.map((v) => `<span class="gcsp-swatch__dot gcsp-swatch__dot--n${Math.min(v.colors.length, 5)}" style="${esc(vars(Object.fromEntries(v.colors.slice(0, 5).map((c, i) => [`c${i + 1}`, c]))))}"></span>`).join("")}</span>` : "";
       const text = user?.name ?? item.name;
-      return `<span class="${esc(l.cls)}" style="${esc(l.style)}" data-text="${esc(text)}">${esc(text)}</span>${dots}`;
+      return `<span class="${esc(l.cls)}" style="${esc(l.style)}" data-text="${esc(text)}">${nameInner(text)}</span>${dots}`;
     }
     case "banner": {
       const l = bannerLook(item.data as BannerData, item.key);
@@ -293,7 +293,7 @@ export function renderCssForm(
   const previewStyle = kind === "name_style" ? vars({ "nfx-c1": color }) : "";
   const sampleEl = (size: string) =>
     kind === "name_style"
-      ? `<span class="${esc(shown ?? "")}" style="${esc(previewStyle)}" data-text="${esc(sample)}" data-gcsp-size="${size}">${esc(sample)}</span>`
+      ? `<span class="${esc(shown ?? "")}" style="${esc(previewStyle)}" data-text="${esc(sample)}" data-gcsp-size="${size}">${nameInner(sample)}</span>`
       : `<span class="${esc(shown ?? "")}">VIP Gold</span>`;
   const preview = shown
     ? `<section class="gcsp-acpBox gcsp-cssPreview"><h3>${esc(ctx.t(previewClass ? "acp.css.previewDraft" : "acp.css.previewSaved"))}</h3><div class="gcsp-cssPreview__stages">` +

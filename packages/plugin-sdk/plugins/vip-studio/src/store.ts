@@ -5,7 +5,7 @@
 import type { GcsPluginContext } from "../../../src/index";
 import type { Loadout } from "./loadout";
 import { mediaIdsOf, parseItemData, PLAN_KEY, type Category, type Item, type ItemData, type Kind, type NameStyleData } from "./model";
-import { defaultPresets, LEGACY_NAME_MAP, LEGACY_NAME_STYLES, nameStyleData, PRESETS_VERSION } from "./presets";
+import { defaultPresets, LEGACY_NAME_MAP, LEGACY_NAME_STYLES, nameStyleData, PRESETS_VERSION, V2_NAME_STYLES } from "./presets";
 
 type ItemRow = {
   id: number;
@@ -60,7 +60,37 @@ export async function ensureSeeded(ctx: GcsPluginContext): Promise<void> {
     if (moved.users > 0) await ctx.jobs.enqueue("reconcile", {});
     if (moved.replaced > 0) await audit(ctx, "presets_upgrade", `${moved.replaced}/${moved.users}`);
   }
+  // Catalogul 3: stilurile de dinainte, neschimbate de admin, primesc variantele de culoare noi.
+  if (stored >= 1 && stored < 3) {
+    const refreshed = await refreshNameStyles(ctx);
+    if (refreshed > 0) await audit(ctx, "presets_refresh", String(refreshed));
+  }
   seededVersion = PRESETS_VERSION;
+}
+
+/**
+ * Actualizarea la catalogul 3 (pluginul 1.1.0): stilurile cu bandă de culori pe care adminul nu le-a schimbat (datele
+ * identice cu cele din catalogul 2) primesc variantele care le lipseau; cele existente rămân la fel, deci alegerile
+ * membrilor rămân valabile. Stilurile schimbate de admin rămân neatinse. Idempotentă.
+ */
+export async function refreshNameStyles(ctx: GcsPluginContext): Promise<number> {
+  const current = new Map((await listItems(ctx, "name_style")).map((i) => [i.key, i]));
+  const presets = new Map(defaultPresets().filter((p) => p.kind === "name_style").map((p) => [p.key, p]));
+  const statements: { sql: string; params: unknown[] }[] = [];
+  for (const [key, old] of V2_NAME_STYLES) {
+    const item = current.get(key);
+    const next = presets.get(key);
+    if (!item || !next) continue;
+    const before = parseItemData("name_style", nameStyleData(old));
+    // Neschimbat de admin: același nume, aceleași date, pentru toți VIP-ii, activ și nerestras.
+    const untouched = before.ok && item.name === old.name && JSON.stringify(item.data) === JSON.stringify(before.data) && item.plans.length === 0 && item.enabled && !item.retired;
+    if (!untouched) continue;
+    const parsed = parseItemData("name_style", next.data);
+    if (!parsed.ok || JSON.stringify(parsed.data) === JSON.stringify(item.data)) continue;
+    statements.push({ sql: "UPDATE items SET data = $2::jsonb WHERE id = $1", params: [item.id, JSON.stringify(parsed.data)] });
+  }
+  if (statements.length > 0) await ctx.db.batch(statements);
+  return statements.length;
 }
 
 /**

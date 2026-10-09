@@ -48,6 +48,7 @@ const FILE_RULES: RegExp[] = [
   /^gcs-signature\.json$/,
   /^(?:README|CHANGELOG)\.md$/,
   /^LICENSE(?:\.md|\.txt)?$/,
+  /^THIRD-PARTY-NOTICES(?:\.md|\.txt)?$/,
 ];
 
 const isUtf8 = (buf: Buffer) => Buffer.from(buf.toString("utf8"), "utf8").equals(buf);

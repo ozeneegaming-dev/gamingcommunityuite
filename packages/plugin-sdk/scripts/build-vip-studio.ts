@@ -90,7 +90,7 @@ export async function buildVipStudio(opts: GcsBuildVipStudioOptions = {}): Promi
   const all = await readPluginDir(VIP_STUDIO_DIR);
   const files = new Map<string, Buffer>();
   for (const [name, data] of all) {
-    if (name === "plugin.json" || name === "README.md" || /^lang\/[a-z]{2}\.json$/.test(name) || /^migrations\/[^/]+\.sql$/.test(name) || name === "assets/vip.css") files.set(name, data);
+    if (name === "plugin.json" || name === "README.md" || name === "THIRD-PARTY-NOTICES.md" || /^lang\/[a-z]{2}\.json$/.test(name) || /^migrations\/[^/]+\.sql$/.test(name) || name === "assets/vip.css") files.set(name, data);
   }
   if (opts.version || opts.noScripts) {
     const manifest = JSON.parse(await readFile(path.join(VIP_STUDIO_DIR, "plugin.json"), "utf8")) as { version: string; capabilities: string[]; client: { styles: string[]; scripts?: string[] } };

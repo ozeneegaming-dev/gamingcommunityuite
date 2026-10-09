@@ -24,6 +24,24 @@ export function vars(map: Record<string, string | number | null | undefined>): s
     .join(";");
 }
 
+type Segmenter = { segment(input: string): Iterable<{ segment: string }> };
+const segmenter: Segmenter | null = (() => {
+  const Ctor = (Intl as unknown as { Segmenter?: new (locale?: string, opts?: { granularity: "grapheme" }) => Segmenter }).Segmenter;
+  return Ctor ? new Ctor(undefined, { granularity: "grapheme" }) : null;
+})();
+
+/**
+ * Conținutul unui nume în previzualizări: textul simplu (citit de cititoarele de ecran) și literele separate, ascunse
+ * lor; GCS arată literele doar pentru efectele pe litere (aceeași structură ca numele de pe site, `GcsMemberName`).
+ * Previzualizarea schimbă efectul fără să refacă HTML-ul, deci literele sunt mereu acolo.
+ */
+export function nameInner(text: string): string {
+  const list = segmenter ? Array.from(segmenter.segment(text), (s) => s.segment) : Array.from(text);
+  if (list.length === 0 || list.length > 40) return esc(text);
+  const letters = list.map((c, i) => `<b style="--i:${i}" data-c="${esc(/^\s+$/.test(c) ? " " : c)}"></b>`).join("");
+  return `<span class="gcs-name__t">${esc(text)}</span><span class="gcs-name__ls" aria-hidden="true">${letters}</span>`;
+}
+
 /** O iconiță Font Awesome (GCS o transformă în SVG). */
 export const icon = (name: string) => `<gcs-icon name="${esc(name)}"></gcs-icon>`;
 

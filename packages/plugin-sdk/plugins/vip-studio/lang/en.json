@@ -569,7 +569,8 @@
       "bulk_upload": "bulk-uploaded",
       "css_create": "added the CSS style",
       "css_update": "changed the CSS style",
-      "presets_upgrade": "upgraded the style catalogue"
+      "presets_upgrade": "upgraded the style catalogue",
+      "presets_refresh": "added the new colour variants to the style catalogue"
     },
     "bulk": {
       "title": "Upload from your computer (several at once)",

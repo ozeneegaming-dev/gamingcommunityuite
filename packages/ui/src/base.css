@@ -316,7 +316,7 @@ textarea.gcs-input {
   font: inherit;
   cursor: pointer;
 }
-:where(.gcs-name) .gcs-name__ls {
+:where(.gcs-name__ls) {
   display: none;
 }
 
