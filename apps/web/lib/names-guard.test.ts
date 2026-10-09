@@ -36,6 +36,7 @@ const COMPONENT = "packages/ui/src/components/GcsMemberName.tsx";
 const GROUP_STYLE_FILES = new Set([
   "apps/web/app/(site)/_components/widgets/GcsStatsPanel.tsx",
   "apps/web/app/(site)/staff/page.tsx",
+  "apps/web/app/(site)/members/page.tsx",
   "apps/web/app/(site)/vip/page.tsx",
   "apps/web/app/(site)/_components/settings/GcsSettingsForms.tsx",
   "apps/web/app/admin/(panel)/community/chat/settings/page.tsx",

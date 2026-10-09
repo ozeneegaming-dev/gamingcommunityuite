@@ -6743,5 +6743,17 @@
       "next": "Next page",
       "page": "Page {page} of {pages}"
     }
+  },
+  "groups": {
+    "pill": {
+      "aria": "Members of the {name} group",
+      "members": "{count, plural, one {# member} other {# members}}",
+      "secondary": "({count} as a secondary group)",
+      "allSecondary": "all as a secondary group",
+      "online": "{count} online now"
+    },
+    "secondaryTitle": "Secondary groups",
+    "secondaryTag": "secondary",
+    "primaryTag": "primary"
   }
 }

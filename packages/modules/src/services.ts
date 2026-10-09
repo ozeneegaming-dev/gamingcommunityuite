@@ -126,6 +126,7 @@ import type { GcsClanGameStatsSource } from "./clans/gameStats";
 import { registerClanNotifications } from "./clans/notify";
 import { GcsClanQueries } from "./clans/queries";
 import { CLAN_BANNER, CLAN_LOGO, GcsClanService } from "./clans/service";
+import { GcsGroupDirectory } from "./profile/groupDirectory";
 
 export type GcsServices = {
   db: PrismaClient;
@@ -144,6 +145,8 @@ export type GcsServices = {
   groupMentions: GcsGroupMentionService;
   /** Grupul afișat al membrilor (stilul numelui): prioritatea grupurilor, alegerea membrului, setările de afișare. */
   groupDisplay: GcsGroupDisplayService;
+  /** Grupurile pentru pastile, legendă și paginile de membri: lista, numărătorile din cache, grupurile membrilor. */
+  groupDirectory: GcsGroupDirectory;
   members: GcsMemberDirectory;
   notifications: GcsNotificationService;
   realtime: GcsRealtime;
@@ -353,6 +356,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const groupMentions = new GcsGroupMentionService({ db, cache, redis });
   const groupDisplay = new GcsGroupDisplayService({ db, cache, bus });
   groupDisplay.listen();
+  const groupDirectory = new GcsGroupDirectory({ db, cache, display: groupDisplay });
   const apps = new GcsAppService({ db, cache, bus, registry, acp, permissions, settings });
   const members = new GcsMemberDirectory({ db });
   const notifications = new GcsNotificationService({ db, bus, cache, registry });
@@ -471,6 +475,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     jobs,
     baseUrl: async () => baseUrl(await settings.get<string>("site.url")),
     groupMentions,
+    groupDirectory,
   });
   notificationProducers.registerTargets();
   notificationProducers.listen(bus);
@@ -636,6 +641,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     groups,
     groupMentions,
     groupDisplay,
+    groupDirectory,
     members,
     notifications,
     realtime,
@@ -653,8 +659,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     themeCss: new GcsThemeCssService({ db, bus, acp }),
     templates,
     stats: new GcsStatsService({ db, cache, registry, apps }),
-    postbit: new GcsPostbitService({ db, cache, permissions, settings }),
-    memberList: new GcsMemberList({ db, permissions, ranks }),
+    postbit: new GcsPostbitService({ db, cache, permissions, settings, groups: groupDirectory }),
+    memberList: new GcsMemberList({ db, permissions, ranks, groups: groupDirectory }),
     mentionQueries: new GcsMentionQueries({ db, cache, permissions, groupMentions }),
     activity: new GcsActivityStream({ db, cache, permissions, social }),
     leaderboard: new GcsLeaderboard({ db, cache, permissions }),

@@ -26,10 +26,10 @@ body {
 .gcs-root a {
   text-decoration: none;
 }
-.gcs-root a:where(:not(.gcs-name)) {
+.gcs-root a:where(:not(.gcs-name, [data-group-pill])) {
   color: var(--gcs-link, var(--gcs-accentInk));
 }
-.gcs-root a:where(:not(.gcs-name)):hover {
+.gcs-root a:where(:not(.gcs-name, [data-group-pill])):hover {
   color: var(--gcs-link-hover, var(--gcs-accentInk));
 }
 

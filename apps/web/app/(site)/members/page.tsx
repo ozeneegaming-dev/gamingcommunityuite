@@ -8,6 +8,8 @@ import { currentActor } from "@/lib/actor";
 import { services } from "@/lib/services";
 import { GcsPagination } from "../_components/forum/GcsPagination";
 import { GcsMemberCard } from "../_components/members/GcsMemberCard";
+import { notFound } from "next/navigation";
+import type { CSSProperties } from "react";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("members"))("title") };
@@ -23,6 +25,9 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
   const { memberList } = services();
   const sort: GcsMemberSort = GCS_MEMBER_SORTS.includes(sp.sort as GcsMemberSort) ? (sp.sort as GcsMemberSort) : "joined";
   const groupId = sp.group && /^\d+$/.test(sp.group) ? Number(sp.group) : null;
+  // Pagina membrilor unui grup (linkul pastilelor): doar grupurile publice; un grup ascuns sau inexistent → 404.
+  const group = groupId ? await services().groupDirectory.group(groupId) : null;
+  if (groupId && (!group || !group.public)) notFound();
   const online = sp.online === "1";
   const page = sp.page && /^\d+$/.test(sp.page) ? Number(sp.page) : 1;
   const result = await memberList.list(actor, { q: sp.q ?? "", groupId, sort, online, page }).catch((error: unknown) => {
@@ -52,10 +57,22 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
   return (
     <>
       <header className="gcs-pageHeader">
-        <h1 className="gcs-display gcs-pageHeader__title">
-          <GcsIcon name="fa-solid fa-users" className="gcs-hIcon" />
-          {t("title")} <span className="gcs-muted" style={{ fontSize: 18 }}>({result.pagination.total})</span>
-        </h1>
+        {group ? (
+          <h1
+            className={`gcs-display gcs-pageHeader__title gcs-groupHeading gcs-name--${group.key}`}
+            style={group.color ? ({ "--gcs-gp-color": group.color } as CSSProperties) : undefined}
+            data-testid="gcs-members-group-heading"
+          >
+            <GcsIcon name={group.icon ?? "fa-solid fa-users"} className="gcs-hIcon" />
+            {group.name} <span className="gcs-muted" style={{ fontSize: 18 }}>({result.pagination.total})</span>
+          </h1>
+        ) : (
+          <h1 className="gcs-display gcs-pageHeader__title">
+            <GcsIcon name="fa-solid fa-users" className="gcs-hIcon" />
+            {t("title")} <span className="gcs-muted" style={{ fontSize: 18 }}>({result.pagination.total})</span>
+          </h1>
+        )}
+        {group?.description && <p className="gcs-muted gcs-groupHeading__desc">{group.description}</p>}
       </header>
       <form className="gcs-card gcs-memberFilters" action="/members" role="search" aria-label={t("filters")}>
         <label className="gcs-field">

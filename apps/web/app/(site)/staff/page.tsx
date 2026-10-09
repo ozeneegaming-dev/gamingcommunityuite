@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
 import { services } from "@/lib/services";
 import { GcsMemberCard } from "../_components/members/GcsMemberCard";
+import { GcsGroupLink } from "@/lib/group-pills";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("members"))("staffTitle") };
@@ -45,7 +46,10 @@ export default async function StaffPage() {
       {groups.map((g) => (
         <section key={g.id} className="gcs-staffGroup" aria-labelledby={`gcs-staff-${g.key}`} data-testid="gcs-staff-group" data-group={g.key}>
           <h2 id={`gcs-staff-${g.key}`} className={`gcs-display gcs-staffGroup__title gcs-name--${g.key}`}>
-            <GcsIcon name={isGcsIcon(g.icon) ? g.icon : "fa-solid fa-user-shield"} /> {g.name} <span className="gcs-muted">({g.members.length})</span>
+            <GcsGroupLink groupId={g.id} bare className="gcs-staffGroup__link" data-testid="gcs-staff-group-link">
+              <GcsIcon name={isGcsIcon(g.icon) ? g.icon : "fa-solid fa-user-shield"} /> {g.name}
+            </GcsGroupLink>{" "}
+            <span className="gcs-muted">({g.members.length})</span>
           </h2>
           <div className="gcs-memberGrid">
             {g.members.map((m) => (

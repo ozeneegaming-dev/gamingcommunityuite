@@ -13,6 +13,7 @@ import { GcsDeletedPostbit } from "../GcsDeletedMember";
 import { GcsTranslateButton, type GcsTranslateLabels } from "../GcsTranslateButton";
 import { GcsPostContent, type GcsPostContentProps } from "./GcsPostContent";
 import { GcsMemberLink } from "@/lib/member-names";
+import { GcsGroupLink } from "@/lib/group-pills";
 
 /** Grupurile staff-ului (postările lor au chenarul colorat). */
 const STAFF_GROUPS = new Set(["root_admin", "admin", "super_moderator", "moderator"]);
@@ -145,6 +146,7 @@ async function GcsPostbit({
   const custom = await siteTemplate("postbit.author", postbitVars(author, data, post, clan), {}, { "postbit.after_fields": plugins.join("") });
   if (custom) return custom;
   const t = await getTranslations("topic.author");
+  const tg = await getTranslations("groups");
   const format = await getFormatter();
   // Aspectul publicat de pluginuri (Studio VIP): banner-ul în bara grupului, fundalul în caseta avatarului, arma în rânduri.
   const look = await memberLook(author.id);
@@ -218,15 +220,31 @@ async function GcsPostbit({
         </div>
       </div>
 
-      <span
-        className={`gcs-postbit__group${banner || look?.banner ? " gcs-postbit__group--colored" : ""}${look?.banner ? " gcs-fx" : ""}${look?.banner?.className ? ` ${look.banner.className}` : ""}`}
-        style={look?.banner ? look.banner.style : banner ? { background: banner } : undefined}
-        data-testid="gcs-postbit-group"
-        {...(look?.banner ? { "data-vip": "banner" } : {})}
-      >
-        {data?.group.icon && <GcsIcon name={data.group.icon} />}
-        <span>{look?.banner?.label ?? groupLabel}</span>
-      </span>
+      {/* Grupul afișat: bara plină (sau banner-ul VIP), link spre membrii grupului, cu tooltip-ul numărătorii. */}
+      {data ? (
+        <GcsGroupLink
+          groupId={data.group.id}
+          bare
+          className={`gcs-postbit__group${banner || look?.banner ? " gcs-postbit__group--colored" : ""}${look?.banner ? " gcs-fx" : ""}${look?.banner?.className ? ` ${look.banner.className}` : ""}`}
+          style={look?.banner ? look.banner.style : banner ? { background: banner } : undefined}
+          data-testid="gcs-postbit-group"
+          {...(look?.banner ? { "data-vip": "banner" } : {})}
+        >
+          {data.group.icon && <GcsIcon name={data.group.icon} />}
+          <span>{look?.banner?.label ?? groupLabel}</span>
+        </GcsGroupLink>
+      ) : (
+        <span className="gcs-postbit__group" data-testid="gcs-postbit-group">
+          <span>{groupLabel}</span>
+        </span>
+      )}
+      {data && data.secondaryGroups.length > 0 && (
+        <div className="gcs-postbit__secondaryGroups" aria-label={tg("secondaryTitle")} data-testid="gcs-postbit-secondary-groups">
+          {data.secondaryGroups.map((g) => (
+            <GcsGroupLink key={g.id} groupId={g.id} size="sm" />
+          ))}
+        </div>
+      )}
 
       {(data || author.rank) && (
         <div className="gcs-postbit__rankBox" data-testid="gcs-postbit-xp">

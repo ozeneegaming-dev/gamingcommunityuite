@@ -6743,5 +6743,17 @@
       "next": "Next page",
       "page": "Page {page} of {pages}"
     }
+  },
+  "groups": {
+    "pill": {
+      "aria": "Участники группы {name}",
+      "members": "{count, plural, one {# участник} few {# участника} many {# участников} other {# участника}}",
+      "secondary": "({count} как дополнительная группа)",
+      "allSecondary": "все как дополнительная группа",
+      "online": "{count} сейчас онлайн"
+    },
+    "secondaryTitle": "Дополнительные группы",
+    "secondaryTag": "дополнительная",
+    "primaryTag": "основная"
   }
 }

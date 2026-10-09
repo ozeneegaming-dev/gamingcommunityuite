@@ -224,6 +224,31 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Grupul afișat e un link spre membrii grupului: bara ocupă tot rândul și cu tooltip-ul în jur. */
+.gcs-tooltipWrap:has(> .gcs-postbit__group) {
+  display: flex;
+  width: 100%;
+}
+a.gcs-postbit__group {
+  text-decoration: none;
+  transition: filter var(--gcs-motion-fast, 0.2s) var(--gcs-motion-ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+a.gcs-postbit__group:hover,
+a.gcs-postbit__group:focus-visible {
+  filter: brightness(1.1);
+}
+a.gcs-postbit__group:focus-visible {
+  outline: 2px solid var(--gcs-accent);
+  outline-offset: 2px;
+}
+/* Rândul grupurilor secundare: pastile mici, sub grupul afișat. */
+.gcs-postbit__secondaryGroups {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 6px;
+}
 .gcs-postbit__group--colored {
   border-color: transparent;
   color: #fff;

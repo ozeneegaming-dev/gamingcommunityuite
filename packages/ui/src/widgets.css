@@ -456,6 +456,58 @@ a.gcs-statsTile__inner:focus-visible {
   display: inline-flex;
   font-size: 11px;
 }
+/* Pastila e un link spre membrii grupului: la hover / focus, nuanța mai puternică și o strălucire în culoarea lui. */
+a.gcs-legend__pill {
+  text-decoration: none;
+  transition:
+    background-color var(--gcs-motion-fast, 0.2s) var(--gcs-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    box-shadow var(--gcs-motion-fast, 0.2s) var(--gcs-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    transform var(--gcs-motion-fast, 0.2s) var(--gcs-motion-ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+a.gcs-legend__pill:hover,
+a.gcs-legend__pill:focus-visible {
+  background-color: color-mix(in srgb, var(--gcs-group) 30%, transparent);
+  border-color: color-mix(in srgb, var(--gcs-group) 60%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--gcs-group) 45%, transparent);
+  transform: translateY(-1px);
+}
+a.gcs-legend__pill:focus-visible {
+  outline: 2px solid var(--gcs-group);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  a.gcs-legend__pill {
+    transition: none;
+  }
+  a.gcs-legend__pill:hover,
+  a.gcs-legend__pill:focus-visible {
+    transform: none;
+  }
+}
+
+/* Titlul paginii membrilor unui grup: numele și iconița în culoarea grupului. */
+.gcs-groupHeading .gcs-hIcon {
+  color: var(--gcs-gp-color, var(--gcs-accent));
+}
+.gcs-groupHeading__desc {
+  margin: 4px 0 0;
+}
+/* Eticheta „principal” / „secundar” din lista membrilor unui grup. */
+.gcs-memberCard__tag {
+  align-self: center;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--gcs-muted) 18%, transparent);
+  color: var(--gcs-muted);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.7;
+  text-transform: lowercase;
+}
+.gcs-memberCard__tag--primary {
+  background: color-mix(in srgb, var(--gcs-accent) 18%, transparent);
+  color: var(--gcs-accentInk, var(--gcs-accent));
+}
 
 /* Widget-urile separate „Cine e online” / „Cine a fost online”, în coloană. */
 .gcs-onlineRecord {

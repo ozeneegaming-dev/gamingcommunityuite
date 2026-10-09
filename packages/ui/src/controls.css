@@ -130,6 +130,129 @@ select option {
 }
 
 /*
+ * Pastila unui grup (`GcsGroupPill`): un link spre membrii grupului, în culoarea lui (`--gcs-gp-color`), cu focus
+ * vizibil. La hover / focus: nuanța mai puternică, chenarul în culoarea grupului, o strălucire și o ridicare de 1 px.
+ */
+.gcs-groupPill {
+  --gcs-gp: var(--gcs-gp-color, var(--gcs-accent));
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  max-width: 100%;
+  padding: 0 0.6em;
+  border: 1px solid color-mix(in srgb, var(--gcs-gp) 42%, transparent);
+  border-radius: 4px;
+  background-color: color-mix(in srgb, var(--gcs-gp) 14%, transparent);
+  color: color-mix(in srgb, var(--gcs-gp) 72%, var(--gcs-text));
+  font-weight: 700;
+  line-height: 1.7;
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: middle;
+  transition:
+    background-color var(--gcs-motion-fast, 0.2s) var(--gcs-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    border-color var(--gcs-motion-fast, 0.2s) var(--gcs-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    box-shadow var(--gcs-motion-fast, 0.2s) var(--gcs-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    transform var(--gcs-motion-fast, 0.2s) var(--gcs-motion-ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+.gcs-root a.gcs-groupPill,
+.gcs-root a.gcs-groupPill:hover {
+  color: color-mix(in srgb, var(--gcs-gp) 72%, var(--gcs-text));
+}
+.gcs-groupPill--sm {
+  font-size: 11px;
+  padding: 0 0.5em;
+}
+.gcs-groupPill--md {
+  font-size: 12px;
+}
+.gcs-groupPill--lg {
+  font-size: 13px;
+  padding: 0.15em 0.8em;
+}
+.gcs-groupPill--filled {
+  background-color: var(--gcs-gp);
+  border-color: var(--gcs-gp);
+}
+.gcs-root a.gcs-groupPill--filled,
+.gcs-root a.gcs-groupPill--filled:hover,
+.gcs-groupPill--filled {
+  color: #fff;
+}
+.gcs-groupPill__icon {
+  display: inline-flex;
+  flex: none;
+}
+.gcs-groupPill__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+a.gcs-groupPill:hover,
+a.gcs-groupPill:focus-visible,
+[data-group-pill]:focus-visible {
+  background-color: color-mix(in srgb, var(--gcs-gp) 30%, transparent);
+  border-color: color-mix(in srgb, var(--gcs-gp) 60%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--gcs-gp) 45%, transparent);
+  transform: translateY(-1px);
+}
+a.gcs-groupPill--filled:hover,
+a.gcs-groupPill--filled:focus-visible {
+  background-color: color-mix(in srgb, var(--gcs-gp) 82%, #fff);
+}
+a[data-group-pill]:focus-visible,
+[data-group-pill][tabindex]:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--gcs-gp-color, var(--gcs-accent)) 80%, #fff);
+  outline-offset: 2px;
+}
+/* Tooltip-ul pastilelor de grup: rândurile (descrierea, numărătoarea, detaliul unei aplicații), intrarea înclinată. */
+.gcs-tooltip--group {
+  z-index: 90;
+  text-align: center;
+  animation: gcs-tip-skew var(--gcs-motion-base, 0.2s) var(--gcs-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)) both;
+}
+.gcs-groupTip {
+  display: grid;
+  gap: 2px;
+}
+.gcs-groupTip__line {
+  display: block;
+  font-weight: 500;
+  opacity: 0.85;
+}
+.gcs-groupTip__line--last,
+.gcs-groupTip__line:only-child {
+  font-weight: 700;
+  opacity: 1;
+}
+@keyframes gcs-tip-skew {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px) skewX(-8deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) skewX(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gcs-groupPill {
+    transition: none;
+  }
+  a.gcs-groupPill:hover,
+  a.gcs-groupPill:focus-visible {
+    transform: none;
+  }
+  .gcs-tooltip--group {
+    animation: gcs-tip-fade 0.15s linear both;
+  }
+}
+@keyframes gcs-tip-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/*
  * Dialogurile native (`<dialog>` deschis cu `showModal()`: regulile chatului, raportarea, istoricul editărilor) se
  * centrează prin `margin: auto`, pe care resetarea CSS globală (`margin: 0`) o anulează: fără regula asta apar în colț.
  */

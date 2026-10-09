@@ -2,6 +2,7 @@ import { GcsForbidden, normalizeUsername, type GcsActor, type GcsPermissionServi
 import type { Prisma, PrismaClient } from "@gcs/db";
 import { toRef, userRefSelect, type GcsPagination, type GcsUserRef } from "../forums/queries";
 import { rankLabel, type GcsRankDirectory, type GcsRankLabel } from "./display";
+import type { GcsGroupDirectory } from "./groupDirectory";
 import { normalizePrivacy } from "./privacy";
 
 export const MEMBERS_PER_PAGE = 24;
@@ -11,7 +12,9 @@ export type GcsMemberSort = (typeof GCS_MEMBER_SORTS)[number];
 
 /** Un membru în listă (card): grupul, rangul, contoarele, data înscrierii și statusul online. */
 export type GcsMemberCard = GcsUserRef & {
-  group: { name: string; color: string | null };
+  group: { id: number; name: string; color: string | null };
+  /** În lista unui grup: membrul îl are ca grup secundar (eticheta „secundar”). */
+  secondary?: boolean;
   rank: GcsRankLabel | null;
   customTitle: string | null;
   postsCount: number;
@@ -43,7 +46,7 @@ type CardRow = Prisma.UserGetPayload<{ select: typeof cardSelect }>;
  * Accesul cere `core.members_list`. Căutarea merge fără diacritice (pe numele normalizat).
  */
 export class GcsMemberList {
-  constructor(private readonly deps: { db: PrismaClient; permissions: GcsPermissionService; ranks: GcsRankDirectory }) {}
+  constructor(private readonly deps: { db: PrismaClient; permissions: GcsPermissionService; ranks: GcsRankDirectory; groups?: GcsGroupDirectory }) {}
 
   private async assertAccess(viewer: GcsActor): Promise<void> {
     if (viewer.isBanned || !(await this.deps.permissions.can(viewer, "core.members_list"))) throw new GcsForbidden({ permission: "core.members_list" });
@@ -53,7 +56,7 @@ export class GcsMemberList {
     const privacy = normalizePrivacy(row.privacy);
     return {
       ...toRef(row),
-      group: { name: row.primaryGroup.title ?? row.primaryGroup.name, color: row.primaryGroup.color },
+      group: { id: row.primaryGroupId, name: row.primaryGroup.title ?? row.primaryGroup.name, color: row.primaryGroup.color },
       rank: rankLabel(ranks, row.rankId, row.primaryGroupId),
       customTitle: row.customTitle,
       postsCount: row.postsCount,
@@ -73,10 +76,12 @@ export class GcsMemberList {
     const hidden = query.online
       ? (await db.user.findMany({ where: { lastActiveAt: { gte: since }, privacy: { path: ["showOnline"], equals: false } }, select: { id: true } })).map((u) => u.id)
       : [];
+    // Membrii grupului: principal sau secundar (linkul unei pastile de grup), sau doar principal dacă grupul cere.
+    const group = query.groupId && this.deps.groups ? await this.deps.groups.group(query.groupId) : null;
+    const primaryOnly = group?.primaryOnly === true;
     const where: Prisma.UserWhereInput = {
       ...(q ? { nameNormalized: { contains: q } } : {}),
-      // Membrii grupului: principal sau secundar (linkul „Vezi toți” din cardul unui grup menționat).
-      ...(query.groupId ? { OR: [{ primaryGroupId: query.groupId }, { groups: { some: { groupId: query.groupId } } }] } : {}),
+      ...(query.groupId ? (primaryOnly ? { primaryGroupId: query.groupId } : { OR: [{ primaryGroupId: query.groupId }, { groups: { some: { groupId: query.groupId } } }] }) : {}),
       ...(query.online ? { lastActiveAt: { gte: since }, ...(hidden.length ? { id: { notIn: hidden } } : {}) } : {}),
     };
     const sort = query.sort ?? "joined";
@@ -94,7 +99,7 @@ export class GcsMemberList {
       db.user.findMany({ where, orderBy, skip: (page - 1) * MEMBERS_PER_PAGE, take: MEMBERS_PER_PAGE, select: cardSelect }),
       ranks.data(),
     ]);
-    const members = rows.map((r) => this.card(r, rankData, now));
+    const members = rows.map((r) => ({ ...this.card(r, rankData, now), ...(query.groupId ? { secondary: r.primaryGroupId !== query.groupId } : {}) }));
     return { members, pagination: { page, pages: Math.max(1, Math.ceil(total / MEMBERS_PER_PAGE)), perPage: MEMBERS_PER_PAGE, total } };
   }
 

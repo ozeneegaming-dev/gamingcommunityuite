@@ -183,7 +183,8 @@ describe("postbit-ul: șablonul implicit `postbit.author`", () => {
   } satisfies GcsPostAuthor;
   const data: GcsPostbitData = {
     customTitle: null,
-    group: { key: "admin", name: "Administrator", color: "#D62839", icon: null, banner: null },
+    group: { id: 2, key: "admin", name: "Administrator", color: "#D62839", icon: null, banner: null },
+    secondaryGroups: [],
     vip: false,
     vipName: null,
     secondaryGroup: null,

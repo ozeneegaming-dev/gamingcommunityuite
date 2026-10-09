@@ -3,6 +3,8 @@ import { memberLook } from "@/lib/member-look";
 import { services } from "@/lib/services";
 import { hoverCardVars } from "@/lib/template-data";
 import { siteTemplateHtml } from "@/lib/templates";
+import { groupPillProps } from "@/lib/group-pills";
+import { namesHtml } from "@/lib/member-names";
 
 export const dynamic = "force-dynamic";
 
@@ -18,8 +20,22 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if (!card) return new Response(null, { status: 404 });
   // Tagul clanului lângă nume (aplicația Clanuri, dacă opțiunile îl arată pe hover card).
   const clan = (await services().clanQueries.tagsFor([card.user.id], "hovercard")).get(card.user.id) ?? null;
-  const html = await siteTemplateHtml("members.hover_card", hoverCardVars(card, clan));
+  const rawHtml = await siteTemplateHtml("members.hover_card", hoverCardVars(card, clan));
+  // Numele din șablon: markup-ul comun (stilul de acum, literele efectelor pe litere).
+  const html = rawHtml === null ? null : await namesHtml(rawHtml);
   // Aspectul publicat de pluginuri (Studio VIP): banner-ul, fundalul copertei și arma, cu stilurile calculate de GCS.
   const look = await memberLook(card.user.id);
-  return Response.json({ ...card, clan, html, look: look ? { banner: look.banner, card: look.card, flair: look.flair } : null }, { headers: { "Cache-Control": "private, no-store" } });
+  // Grupul afișat și grupurile secundare: pastile-link spre membrii grupului, cu tooltip-ul numărătorii.
+  const mg = (await services().groupDirectory.memberGroups([card.user.id])).get(card.user.id);
+  const pill = async (groupId: number) => {
+    const p = await groupPillProps(groupId);
+    return p ? { id: p.group.id, name: p.group.name, color: p.group.color, href: p.href ?? null, tooltip: p.tooltip ?? [], ariaLabel: p.ariaLabel ?? p.group.name } : null;
+  };
+  const shown = mg ? await pill(mg.shown.id) : null;
+  const secondaryGroups = mg ? (await Promise.all(mg.secondary.map((g) => pill(g.id)))).filter((g) => g !== null) : [];
+  const user = shown ? { ...card.user, group: { ...card.user.group, ...shown, name: mg!.shown.title ?? shown.name } } : card.user;
+  return Response.json(
+    { ...card, user, secondaryGroups, clan, html, look: look ? { banner: look.banner, card: look.card, flair: look.flair } : null },
+    { headers: { "Cache-Control": "private, no-store" } },
+  );
 }

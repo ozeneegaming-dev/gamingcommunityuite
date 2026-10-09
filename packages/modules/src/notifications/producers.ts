@@ -21,6 +21,7 @@ import type { GcsConversationService } from "../messages/conversations";
 import { docSnippet } from "../content-text";
 import { STEAM_PLACEHOLDER_DOMAIN } from "../profile/profile";
 import { digestMail, notificationMail, type GcsNotificationMailItem } from "./emails";
+import type { GcsGroupDirectory } from "../profile/groupDirectory";
 
 export const NOTIFY_FANOUT_JOB = "notifications.fanout";
 export const NOTIFY_EMAIL_JOB = "notifications.email";
@@ -69,6 +70,8 @@ export class GcsNotificationProducers {
       baseUrl: () => Promise<string>;
       /** Mențiunile de grup (Mențiuni v2); lipsă = fără notificări pentru grupuri. */
       groupMentions?: GcsGroupMentionService;
+      /** Setările de afișare ale grupurilor („doar membrii cu grupul principal”). */
+      groupDirectory?: GcsGroupDirectory;
     },
   ) {}
 
@@ -290,9 +293,11 @@ export class GcsNotificationProducers {
       if (!group || !group.mentionable || !group.settings.notify) continue;
       const limit = group.settings.notifyLimit;
       const picked: string[] = [];
+      // Membrii grupului: principal sau secundar, sau doar principal dacă grupul cere („doar grupul principal”).
+      const primaryOnly = (await this.deps.groupDirectory?.group(groupId))?.primaryOnly === true;
       for (let offset = 0; picked.length < limit && offset < GROUP_SCAN_MAX; offset += GROUP_BATCH) {
         const batch = await db.user.findMany({
-          where: { OR: [{ primaryGroupId: groupId }, { groups: { some: { groupId } } }] },
+          where: primaryOnly ? { primaryGroupId: groupId } : { OR: [{ primaryGroupId: groupId }, { groups: { some: { groupId } } }] },
           orderBy: [{ lastActiveAt: { sort: "desc", nulls: "last" } }, { id: "asc" }],
           skip: offset,
           take: GROUP_BATCH,

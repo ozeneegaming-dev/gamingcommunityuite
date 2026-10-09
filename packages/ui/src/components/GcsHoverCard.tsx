@@ -3,6 +3,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { GcsAvatar } from "./GcsAvatar";
 import { GcsBadgeArt } from "./GcsBadgeArt";
 import { GcsMemberName } from "./GcsMemberName";
+import { GcsGroupPill } from "./GcsGroupPill";
 
 export type GcsHoverCardData = {
   user: {
@@ -17,7 +18,8 @@ export type GcsHoverCardData = {
     cover: string | null;
     /** Poziția verticală a copertei (0–100 %), aleasă de membru; implicit 50. */
     coverPositionY?: number;
-    group: { name: string; color: string | null };
+    /** Grupul afișat; cu `id`, pastila e un link spre membrii lui (`href`), cu tooltip-ul numărătorii. */
+    group: { id?: number; name: string; color: string | null; href?: string | null; tooltip?: string[]; ariaLabel?: string };
     rank: { name: string; icon: string | null } | null;
   };
   stats: { posts: number; reputation: number; followers: number; joinedAt: string };
@@ -32,6 +34,8 @@ export type GcsHoverCardData = {
   look?: { banner: { label: string; style: CSSProperties; className?: string } | null; card: CSSProperties | null; flair: { icon: string; label: string } | null } | null;
   /** Tagul clanului membrului (aplicația Clanuri, dacă opțiunile îl arată pe hover card). */
   clan?: GcsClanTagData | null;
+  /** Grupurile secundare vizibile (pastilele mici de după grupul afișat). */
+  secondaryGroups?: { id: number; name: string; color: string | null; href: string | null; tooltip: string[]; ariaLabel: string }[];
 };
 
 export type GcsHoverCardLabels = { posts: string; reputation: string; followers: string; online: string; joined: string; weapon?: string };
@@ -94,11 +98,28 @@ export function GcsHoverCard({
             <div className="gcs-hoverCard__meta">
               {data.clan && <GcsClanTag clan={data.clan} size="sm" testId="gcs-hover-clan" />}
               {/* Banner-ul VIP înlocuiește pastila grupului când e același plan (fără dublură). */}
-              {!(look?.banner && sameLabel(look.banner.label, user.group.name)) && (
-                <span className="gcs-badge gcs-hoverCard__group" style={{ "--gcs-hoverCard-group": user.group.color ?? "var(--gcs-muted)" } as CSSProperties}>
-                  {user.group.name}
-                </span>
-              )}
+              {!(look?.banner && sameLabel(look.banner.label, user.group.name)) &&
+                (user.group.id ? (
+                  <GcsGroupPill
+                    bare
+                    className="gcs-badge gcs-hoverCard__group"
+                    style={{ "--gcs-hoverCard-group": user.group.color ?? "var(--gcs-muted)" } as CSSProperties}
+                    group={{ id: user.group.id, name: user.group.name, color: user.group.color }}
+                    href={user.group.href ?? null}
+                    {...(user.group.tooltip ? { tooltip: user.group.tooltip } : {})}
+                    {...(user.group.ariaLabel ? { ariaLabel: user.group.ariaLabel } : {})}
+                    data-testid="gcs-hover-group"
+                  >
+                    {user.group.name}
+                  </GcsGroupPill>
+                ) : (
+                  <span className="gcs-badge gcs-hoverCard__group" style={{ "--gcs-hoverCard-group": user.group.color ?? "var(--gcs-muted)" } as CSSProperties}>
+                    {user.group.name}
+                  </span>
+                ))}
+              {data.secondaryGroups?.map((g) => (
+                <GcsGroupPill key={g.id} group={g} href={g.href} tooltip={g.tooltip} ariaLabel={g.ariaLabel} size="sm" data-testid="gcs-hover-secondary-group" />
+              ))}
               {look?.banner && (
                 <span className={`gcs-vipPill gcs-fx${look.banner.className ? ` ${look.banner.className}` : ""}`} style={look.banner.style} data-testid="gcs-hover-vip-banner">
                   {look.banner.label}

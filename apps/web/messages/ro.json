@@ -6743,5 +6743,17 @@
       "next": "Pagina următoare",
       "page": "Pagina {page} din {pages}"
     }
+  },
+  "groups": {
+    "pill": {
+      "aria": "Membrii grupului {name}",
+      "members": "{count, plural, one {# membru} few {# membri} other {# de membri}}",
+      "secondary": "({count} ca grup secundar)",
+      "allSecondary": "toți ca grup secundar",
+      "online": "{count} online acum"
+    },
+    "secondaryTitle": "Grupuri secundare",
+    "secondaryTag": "secundar",
+    "primaryTag": "principal"
   }
 }

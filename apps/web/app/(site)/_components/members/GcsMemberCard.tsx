@@ -4,13 +4,14 @@ import { getFormatter, getTranslations } from "next-intl/server";
 import { memberHref, tint } from "@/lib/forum-urls";
 import { memberCardVars } from "@/lib/template-data";
 import { siteTemplate } from "@/lib/templates";
+import { GcsGroupLink } from "@/lib/group-pills";
 
 /** Cardul unui membru (listele `/members` și `/staff`): avatar cu ramă și online, grup, rang, contoare, înscriere. */
 export async function GcsMemberCard({ member }: { member: Card }) {
   // Șablonul `members.card`, dacă tema l-a modificat.
   const custom = await siteTemplate("members.card", memberCardVars(member));
   if (custom) return custom;
-  const [t, format] = await Promise.all([getTranslations("members"), getFormatter()]);
+  const [t, tg, format] = await Promise.all([getTranslations("members"), getTranslations("groups"), getFormatter()]);
   return (
     <article className="gcs-card gcs-memberCard" data-testid="gcs-member-card">
       <span className="gcs-memberCard__avatar">
@@ -21,9 +22,14 @@ export async function GcsMemberCard({ member }: { member: Card }) {
         <GcsMemberName userId={member.id} name={member.name} nameKey={member.nameKey} href={memberHref(member)} />
       </strong>
       {member.customTitle && <span className="gcs-postbit__title">{member.customTitle}</span>}
-      <span className="gcs-badge" style={member.group.color ? { background: tint(member.group.color, 0.16), color: member.group.color } : undefined}>
+      <GcsGroupLink groupId={member.group.id} bare className="gcs-badge" style={member.group.color ? { background: tint(member.group.color, 0.16), color: member.group.color } : undefined}>
         {member.group.name}
-      </span>
+      </GcsGroupLink>
+      {member.secondary !== undefined && (
+        <span className={`gcs-memberCard__tag${member.secondary ? "" : " gcs-memberCard__tag--primary"}`} data-testid="gcs-member-group-tag">
+          {member.secondary ? tg("secondaryTag") : tg("primaryTag")}
+        </span>
+      )}
       {member.rank && <span className="gcs-post__rank">{member.rank.name}</span>}
       <dl className="gcs-memberCard__stats">
         <div>

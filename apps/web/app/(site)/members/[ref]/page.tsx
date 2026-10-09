@@ -21,6 +21,7 @@ import { GcsTranslateButton } from "../../_components/GcsTranslateButton";
 import { GcsDeletedMember } from "../../_components/GcsDeletedMember";
 import { translateLabels } from "@/lib/translate";
 import { GcsMemberLink } from "@/lib/member-names";
+import { GcsGroupLink } from "@/lib/group-pills";
 
 const TABS = ["activity", "about", "games", "followers", "badges", "warnings"] as const;
 type Tab = (typeof TABS)[number];
@@ -82,6 +83,10 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
   // Aspectul publicat de pluginuri (Studio VIP): doar adăugiri în locurile existente ale profilului (fundal, rama,
   // pastila banner-ului, arma în statistici, citatul și melodia), iar tema prin variabile CSS.
   const look = await memberLook(user.id);
+  // Grupul afișat (pastila mare) și grupurile secundare vizibile (pastilele mici), linkuri spre membrii lor.
+  const memberGroups = (await services().groupDirectory.memberGroups([user.id])).get(user.id);
+  const shownGroup = memberGroups?.shown ?? null;
+  const secondaryGroups = memberGroups?.secondary ?? [];
   const tv = look ? await getTranslations("profile.vip") : null;
   // Clanurile membrului (aplicația Clanuri): tagul lângă nume și insigna clanului, după opțiuni.
   const clans = await services().clanQueries.memberClans(user.id);
@@ -135,11 +140,12 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
           {user.bio && <span style={{ color: "var(--gcs-muted)", fontSize: 14 }}>„{user.bio}”</span>}
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {/* Banner-ul VIP înlocuiește pastila grupului când e același plan (fără dublură). */}
-            {!(look?.banner && look.banner.label.trim().toLowerCase() === user.group.name.trim().toLowerCase()) && (
-              <span className="gcs-badge" style={{ background: tint(user.group.color, 0.16), color: user.group.color ?? "var(--gcs-muted)" }}>
-                {user.group.name}
-              </span>
+            {!(look?.banner && look.banner.label.trim().toLowerCase() === (shownGroup?.name ?? user.group.name).trim().toLowerCase()) && shownGroup && (
+              <GcsGroupLink groupId={shownGroup.id} size="lg" variant="filled" data-testid="gcs-profile-group" />
             )}
+            {secondaryGroups.map((g) => (
+              <GcsGroupLink key={g.id} groupId={g.id} size="sm" data-testid="gcs-profile-secondary-group" />
+            ))}
             {look?.banner && (
               <span className={`gcs-vipPill gcs-fx${look.banner.className ? ` ${look.banner.className}` : ""}`} style={look.banner.style} data-testid="gcs-profile-vip-banner">
                 {look.banner.label}

@@ -1,5 +1,5 @@
 import { groupLegend, whoWasOnline, type GcsLegendGroup, type GcsWhoWasOnline } from "@gcs/modules";
-import { GcsAvatar, GcsMemberName } from "@gcs/ui";
+import { GcsAvatar, GcsGroupPill, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import Link from "next/link";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
@@ -10,6 +10,8 @@ import { services } from "@/lib/services";
 import { GcsWhoIsOnline } from "../forum/GcsWhoIsOnline";
 import { GcsStatsPanelFrame } from "./GcsStatsPanelFrame";
 import { GcsWidgetTitle, widgetIcon } from "./GcsWidgetTitle";
+import { groupPillProps } from "@/lib/group-pills";
+import { renderGroupLegend } from "@/lib/group-legend";
 
 /** „Cine a fost online” (24 h): lista e aceeași pentru toți vizitatorii, deci se calculează cel mult o dată pe minut. */
 async function cachedWhoWasOnline(): Promise<GcsWhoWasOnline> {
@@ -60,20 +62,37 @@ async function DayDots({ view }: { view: GcsWhoWasOnline }) {
   );
 }
 
-/** Pastilele legendei: conturul și textul în culoarea grupului, cu iconița și numele (stilul grupului). */
-function LegendPills({ groups, testId }: { groups: GcsLegendGroup[]; testId?: string }) {
+/**
+ * Legenda simplă (pachetul standard): pastilele în culoarea grupului, cu iconița și numele; fiecare e un link spre
+ * membrii grupului (`GcsGroupPill`), cu tooltip-ul numărătorii. O aplicație (Grupuri Pro) o poate înlocui prin
+ * registrul legendei (`renderGroupLegend`).
+ */
+async function LegendPills({ groups, testId }: { groups: GcsLegendGroup[]; testId?: string }) {
+  const pills = await Promise.all(groups.map((g) => groupPillProps(g.id)));
   return (
     <ul className="gcs-legend" data-testid={testId}>
-      {groups.map((g) => (
-        <li key={g.id} className="gcs-legend__pill" style={cssVar("--gcs-group", g.color)}>
-          {g.icon && (
-            <span className="gcs-legend__icon" aria-hidden="true">
-              <GcsIcon name={g.icon} />
-            </span>
-          )}
-          <span className={`gcs-legend__name gcs-name--${g.key}`}>{g.name}</span>
-        </li>
-      ))}
+      {groups.map((g, i) => {
+        const p = pills[i];
+        return (
+          <li key={g.id}>
+            <GcsGroupPill
+              bare
+              className="gcs-legend__pill"
+              style={cssVar("--gcs-group", g.color)}
+              group={{ id: g.id, name: g.name, color: g.color }}
+              href={p ? p.href : null}
+              {...(p ? { tooltip: p.tooltip, ariaLabel: p.ariaLabel } : {})}
+            >
+              {g.icon && (
+                <span className="gcs-legend__icon" aria-hidden="true">
+                  <GcsIcon name={g.icon} />
+                </span>
+              )}
+              <span className={`gcs-legend__name gcs-name--${g.key}`}>{g.name}</span>
+            </GcsGroupPill>
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -101,7 +120,7 @@ export async function GcsGroupLegend({ id, config }: { id: string; config?: Reco
       <GcsWidgetTitle id={`gcs-widget-${id}`} icon={widgetIcon("core.groupLegend", config)}>
         {t("legend")}
       </GcsWidgetTitle>
-      <LegendPills groups={groups} />
+      {(await renderGroupLegend({ groups, place: "widget" })) ?? <LegendPills groups={groups} />}
     </section>
   );
 }
@@ -229,7 +248,7 @@ export async function GcsStatsPanel({ id, config }: { id: string; config?: Recor
             <GcsIcon name="fa-solid fa-users" />
             {tp("legendTitle")}
           </h3>
-          <LegendPills groups={legend} testId="gcs-legend" />
+          {(await renderGroupLegend({ groups: legend, place: "panel" })) ?? <LegendPills groups={legend} testId="gcs-legend" />}
         </section>
       )}
     </GcsStatsPanelFrame>

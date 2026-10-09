@@ -1,6 +1,7 @@
 import type { GcsActor, GcsCache, GcsPermissionService, GcsSettingsService } from "@gcs/core";
 import type { FieldVisibility, PrismaClient, ProfileFieldType } from "@gcs/db";
 import { badgeArtSrc } from "@gcs/ui/badge-art";
+import type { GcsGroupDirectory } from "./groupDirectory";
 import { normalizePrivacy } from "./privacy";
 
 /** „Online” în postbit = activitate în ultimele 5 minute (ca prezența din etapa 4). */
@@ -19,7 +20,10 @@ export type GcsPostbitBadge = { key: string; name: string; description: string; 
 /** Tot ce arată cardul autorului lângă o postare (specul etapei 5, „Postbit”). */
 export type GcsPostbitData = {
   customTitle: string | null;
-  group: { key: string; name: string; color: string | null; icon: string | null; banner: string | null };
+  /** Grupul afișat (cel care dă stilul numelui: prioritatea sau alegerea membrului), cu banner-ul lui. */
+  group: { id: number; key: string; name: string; color: string | null; icon: string | null; banner: string | null };
+  /** Grupurile secundare vizibile (pastilele mici de sub grupul afișat), după prioritate. */
+  secondaryGroups: { id: number; name: string; color: string | null; icon: string | null }[];
   vip: boolean;
   /** Numele planului VIP activ (grupul abonamentului), dacă există. */
   vipName: string | null;
@@ -78,7 +82,7 @@ export function xpProgress(points: number, ladder: Rung[]): GcsPostbitData["xp"]
  * rangurilor vin din cache. Câmpurile respectă vizibilitatea lor (public / membri / staff).
  */
 export class GcsPostbitService {
-  constructor(private readonly deps: { db: PrismaClient; cache: GcsCache; permissions: GcsPermissionService; settings: GcsSettingsService }) {}
+  constructor(private readonly deps: { db: PrismaClient; cache: GcsCache; permissions: GcsPermissionService; settings: GcsSettingsService; groups?: GcsGroupDirectory }) {}
 
   /** Câmpurile marcate „în postbit”, în ordinea din ACP (`postbit.fields`), apoi după poziție. */
   async fieldDefs(): Promise<FieldDef[]> {
@@ -127,7 +131,7 @@ export class GcsPostbitService {
     const [defs, ladder] = await Promise.all([this.fieldDefs(), this.ladder()]);
     const xpLadder = ladder.flatMap((r) => (r.minPoints === null ? [] : [{ name: r.name, minPoints: r.minPoints }]));
     const levels = new Map(ladder.map((r, i) => [r.id, i + 1]));
-    const [users, vips, counts, recent, values, seeStaff, topics, secondary, statuses] = await Promise.all([
+    const [users, vips, counts, recent, values, seeStaff, topics, secondary, statuses, memberGroups] = await Promise.all([
       db.user.findMany({
         where: { id: { in: ids } },
         select: {
@@ -193,6 +197,7 @@ export class GcsPostbitService {
           AND s."parentId" IS NULL
           AND s."visibility" = 'VISIBLE'
         ORDER BY s."profileUserId", s."createdAt" DESC, s."id" DESC`,
+      this.deps.groups ? this.deps.groups.memberGroups(ids) : Promise.resolve(new Map<string, never>()),
     ]);
 
     const vipMap = new Map(vips.map((v) => [v.userId, v]));
@@ -215,9 +220,14 @@ export class GcsPostbitService {
       // Motto-ul (de pe perete) și coperta: doar dacă profilul e vizibil viewer-ului („doar urmăritori” → doar autorului).
       const profileVisible = own || privacy.profile === "PUBLIC" || (privacy.profile === "MEMBERS" && viewer.userId !== null);
       const motto = profileVisible ? mottoText(mottoMap.get(u.id) ?? "") : null;
+      const mg = memberGroups.get(u.id);
+      const shown = mg?.shown;
       out.set(u.id, {
         customTitle: u.customTitle,
-        group: { key: u.primaryGroup.key, name: u.primaryGroup.title ?? u.primaryGroup.name, color: u.primaryGroup.color, icon: u.primaryGroup.icon, banner: u.primaryGroup.banner },
+        group: shown
+          ? { id: shown.id, key: shown.key, name: shown.title ?? shown.name, color: shown.color, icon: shown.icon, banner: shown.banner }
+          : { id: u.primaryGroupId, key: u.primaryGroup.key, name: u.primaryGroup.title ?? u.primaryGroup.name, color: u.primaryGroup.color, icon: u.primaryGroup.icon, banner: u.primaryGroup.banner },
+        secondaryGroups: (mg?.secondary ?? []).map((g) => ({ id: g.id, name: g.title ?? g.name, color: g.color, icon: g.icon })),
         vip: vip !== undefined,
         vipName: vip ? (vip.group.title ?? vip.group.name) : null,
         secondaryGroup: second ? (second.group.title ?? second.group.name) : null,

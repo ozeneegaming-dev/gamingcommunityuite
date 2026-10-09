@@ -16,13 +16,15 @@ export type GcsTooltipProps = {
   /** Elementul pe care apare (un singur element care primește focus, ex. un buton sau un link). */
   children: ReactElement<TriggerProps>;
   side?: "top" | "bottom";
+  /** O clasă în plus pentru bulă (ex. `gcs-tooltip--group`, tooltip-ul pastilelor de grup). */
+  className?: string;
 };
 
 /**
  * Tooltip accesibil (spec etapa 5): apare la hover și la focus din tastatură, e legat de element prin
  * `aria-describedby` și dispare cu Escape.
  */
-export function GcsTooltip({ content, children, side = "top" }: GcsTooltipProps) {
+export function GcsTooltip({ content, children, side = "top", className }: GcsTooltipProps) {
   const id = useId();
   const [open, setOpen] = useState(false);
   if (!isValidElement(children)) return children;
@@ -55,7 +57,7 @@ export function GcsTooltip({ content, children, side = "top" }: GcsTooltipProps)
     >
       {trigger}
       {open && (
-        <span role="tooltip" id={id} className={`gcs-tooltip gcs-tooltip--${side}`}>
+        <span role="tooltip" id={id} className={`gcs-tooltip gcs-tooltip--${side}${className ? ` ${className}` : ""}`}>
           {content}
         </span>
       )}

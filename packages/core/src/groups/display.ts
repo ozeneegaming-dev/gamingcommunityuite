@@ -25,6 +25,7 @@ export const GROUP_DISPLAY_SETTING = {
   showSecondary: "display.show_secondary",
   primaryOnly: "display.primary_only",
   description: "display.description",
+  public: "display.public",
 } as const;
 export const GROUP_DISPLAY_KEYS: readonly string[] = Object.values(GROUP_DISPLAY_SETTING);
 export const GROUP_DESCRIPTION_MAX = 120;
@@ -41,6 +42,8 @@ export type GcsGroupDisplaySettings = {
   primaryOnly: boolean;
   /** „Descriere scurtă (tooltip)”: primul rând al tooltip-ului pastilei. */
   description: string;
+  /** Grup public: pagina membrilor lui (`/members?group=<id>`) există, iar pastilele lui sunt linkuri. */
+  public: boolean;
 };
 
 /** Grupurile de staff (prioritate mare), în ordinea lor. */
@@ -49,7 +52,7 @@ const STAFF_PRIORITY: Record<string, number> = { root_admin: 100, admin: 90, sup
 /** Valorile implicite: staff-ul sus, VIP-urile după, ceilalți jos; vizitatorii și banații la zero. */
 export function defaultDisplaySettings(group: { key: string; isVip: boolean }): GcsGroupDisplaySettings {
   const priority = STAFF_PRIORITY[group.key] ?? (group.isVip ? 50 : group.key === "guest" || group.key === "banned" ? 0 : 10);
-  return { priority, selectable: false, showSecondary: group.key !== "guest", primaryOnly: false, description: "" };
+  return { priority, selectable: false, showSecondary: group.key !== "guest", primaryOnly: false, description: "", public: group.key !== "guest" };
 }
 
 /** Un text simplu: fără caractere de control, cu spațiile strânse, cel mult `max` caractere. */
@@ -73,6 +76,7 @@ export function displaySettingsOf(group: { key: string; isVip: boolean }, stored
     showSecondary: bool(GROUP_DISPLAY_SETTING.showSecondary, d.showSecondary),
     primaryOnly: bool(GROUP_DISPLAY_SETTING.primaryOnly, d.primaryOnly),
     description: plain(stored.get(GROUP_DISPLAY_SETTING.description), GROUP_DESCRIPTION_MAX) ?? d.description,
+    public: bool(GROUP_DISPLAY_SETTING.public, d.public),
   };
 }
 
@@ -236,7 +240,7 @@ export class GcsGroupDisplayService {
       if (!Number.isInteger(input.priority) || input.priority < GROUP_PRIORITY_RANGE.min || input.priority > GROUP_PRIORITY_RANGE.max) errors.priority = "invalid_range";
       else values.push([GROUP_DISPLAY_SETTING.priority, input.priority]);
     }
-    for (const k of ["selectable", "showSecondary", "primaryOnly"] as const) {
+    for (const k of ["selectable", "showSecondary", "primaryOnly", "public"] as const) {
       if (input[k] === undefined) continue;
       if (typeof input[k] !== "boolean") errors[k] = "invalid_type";
       else values.push([GROUP_DISPLAY_SETTING[k], input[k]]);
