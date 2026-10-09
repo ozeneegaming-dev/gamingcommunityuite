@@ -6,6 +6,7 @@ import { GcsConflict, GcsForbidden, GcsNotFound, GcsValidationError } from "../e
 import type { GcsEventBus } from "../events";
 import type { GcsPermissionService } from "../permissions/service";
 import type { GcsActor } from "../permissions/types";
+import { GROUP_MENTION_KEYS, GROUP_MENTION_LIMITS, GROUP_MENTION_NEVER, GROUP_MENTION_SETTING, toMentionGroups, type GcsGroupMentionSettings } from "./mentions";
 import { isHexColor, type GcsNameStyle } from "./nameStyles";
 import { assertCanManageUser, losesRootOnPrimaryChange, losesRootOnSecondaryRemoval } from "./rootGuard";
 
@@ -64,7 +65,11 @@ export class GcsGroupService {
       // permisiunile pe containere ale grupului „member”), apoi adminul le ajustează.
       const template = await tx.group.findUnique({ where: { key: "member" }, select: { id: true } });
       if (template) {
-        const settings = await tx.groupSetting.findMany({ where: { groupId: template.id }, select: { key: true, value: true } });
+        // Fără setările de mențiune: un grup nou nu poate fi menționat până nu o permite adminul.
+        const settings = await tx.groupSetting.findMany({
+          where: { groupId: template.id, key: { notIn: [...GROUP_MENTION_KEYS] } },
+          select: { key: true, value: true },
+        });
         await tx.groupSetting.createMany({
           data: settings.map((s) => ({ groupId: group.id, key: s.key, value: s.value as Prisma.InputJsonValue })),
         });
@@ -127,6 +132,51 @@ export class GcsGroupService {
       await this.audit(tx, actor, "group.setting", groupId, { [key]: before?.value ?? null }, { [key]: value });
     });
     await this.changed([groupId]);
+  }
+
+  /**
+   * Secțiunea „Mențiuni” a grupului (specul 2026-10-10-mentiuni-v2): poate fi menționat, cine îl poate menționa,
+   * notificarea membrilor, câți membri cel mult și pauza dintre mențiuni. Vizitatorii și Banat nu pot fi activați.
+   */
+  async setMentionSettings(groupId: number, input: GcsGroupMentionSettings, actor: GcsActor): Promise<GcsGroupMentionSettings> {
+    await this.authorize(actor);
+    const errors: Record<string, string> = {};
+    const { notifyLimit: nl, cooldownMinutes: cd } = GROUP_MENTION_LIMITS;
+    if (!Number.isInteger(input.notifyLimit) || input.notifyLimit < nl.min || input.notifyLimit > nl.max) errors.notifyLimit = "invalid_value";
+    if (!Number.isInteger(input.cooldownMinutes) || input.cooldownMinutes < cd.min || input.cooldownMinutes > cd.max) errors.cooldownMinutes = "invalid_value";
+    if (!Array.isArray(input.allowedGroupIds) || !input.allowedGroupIds.every(Number.isInteger)) errors.allowedGroupIds = "invalid_choice";
+    if (Object.keys(errors).length > 0) throw new GcsValidationError(errors);
+    const next: GcsGroupMentionSettings = {
+      enabled: input.enabled === true,
+      allowedGroupIds: [...new Set(input.allowedGroupIds)].sort((a, b) => a - b),
+      notify: input.notify === true,
+      notifyLimit: input.notifyLimit,
+      cooldownMinutes: input.cooldownMinutes,
+    };
+
+    await this.deps.db.$transaction(async (tx) => {
+      const group = await this.findGroup(tx, groupId);
+      assertCanTouchGroup(group, actor);
+      if (next.enabled && GROUP_MENTION_NEVER.includes(group.key)) throw new GcsValidationError({ enabled: "not_mentionable" });
+      const all = await tx.group.findMany({ select: { id: true, key: true, name: true, color: true, icon: true, inLegend: true } });
+      const known = new Set(all.map((g) => g.id));
+      if (!next.allowedGroupIds.every((id) => known.has(id))) throw new GcsValidationError({ allowedGroupIds: "invalid_choice" });
+      const rows = await tx.groupSetting.findMany({ where: { groupId, key: { in: [...GROUP_MENTION_KEYS] } }, select: { groupId: true, key: true, value: true } });
+      const before = toMentionGroups(all, rows).find((g) => g.id === groupId)!.settings;
+      const values: Record<string, Prisma.InputJsonValue> = {
+        [GROUP_MENTION_SETTING.enabled]: next.enabled,
+        [GROUP_MENTION_SETTING.allowedGroups]: next.allowedGroupIds,
+        [GROUP_MENTION_SETTING.notify]: next.notify,
+        [GROUP_MENTION_SETTING.notifyLimit]: next.notifyLimit,
+        [GROUP_MENTION_SETTING.cooldownMinutes]: next.cooldownMinutes,
+      };
+      for (const [key, value] of Object.entries(values)) {
+        await tx.groupSetting.upsert({ where: { groupId_key: { groupId, key } }, create: { groupId, key, value }, update: { value } });
+      }
+      await this.audit(tx, actor, "group.mentions", groupId, before, next);
+    });
+    await this.changed([groupId]);
+    return next;
   }
 
   /** Înlocuiește matricea unui container: `matrix[groupId]` = cheile de permisiune permise grupului. */

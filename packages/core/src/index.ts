@@ -35,6 +35,7 @@ export * from "./errors";
 export * from "./email/send";
 export * from "./events";
 export * from "./groups/banner";
+export * from "./groups/mentions";
 export * from "./groups/nameStyles";
 export * from "./groups/rootGuard";
 export * from "./groups/service";

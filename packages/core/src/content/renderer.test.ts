@@ -61,11 +61,58 @@ describe("GcsContentRenderer — randare", () => {
     );
   });
 
-  test("mențiune → link către profil; id-ul e extras", () => {
+  test("mențiune → link către profil (cu `data-user-id` pentru hover card); id-ul e extras", () => {
     const out = render(doc(p({ type: "mention", attrs: { id: "user_1", label: "Krypt" } })));
-    expect(out.html).toBe('<p><a class="gcs-userLink gcs-mention" href="/members/user_1" data-user="user_1">@Krypt</a></p>');
+    expect(out.html).toBe('<p><a class="gcs-userLink gcs-mention" href="/members/user_1" data-user="user_1" data-user-id="user_1">@Krypt</a></p>');
     expect(out.mentions).toEqual(["user_1"]);
+    expect(out.groupMentions).toEqual([]);
     expect(out.text).toBe("@Krypt");
+  });
+
+  test("mențiune cu `kind: user` (formatul nou) = mențiunea unui membru", () => {
+    const out = render(doc(p({ type: "mention", attrs: { id: "user_1", label: "Krypt", kind: "user" } })));
+    expect(out.html).toContain('data-user-id="user_1"');
+    expect(out.mentions).toEqual(["user_1"]);
+    expect(out.json.content![0]!.content![0]).toEqual({ type: "mention", attrs: { id: "user_1", label: "Krypt", kind: "user" } });
+  });
+
+  test("mențiunea unui grup permis → pastila grupului, cu numele curent al grupului", () => {
+    const groups = new Map([["5", { name: "Moderator" }]]);
+    const out = render(doc(p(text("Salut "), { type: "mention", attrs: { id: "5", label: "Mods vechi", kind: "group" } })), { groups });
+    expect(out.html).toBe('<p>Salut <a class="gcs-groupMention" href="/members?group=5" data-group-id="5">@Moderator</a></p>');
+    expect(out.groupMentions).toEqual([5]);
+    expect(out.mentions).toEqual([]);
+    expect(out.text).toBe("Salut @Moderator");
+    expect(out.json.content![0]!.content![1]).toEqual({ type: "mention", attrs: { id: "5", label: "Moderator", kind: "group" } });
+  });
+
+  test("mențiunea unui grup nepermis (sau fără lista de grupuri) devine text simplu, și în JSON", () => {
+    const d = doc(p({ type: "mention", attrs: { id: "7", label: "Admin", kind: "group" } }, text(" ajutor")));
+    for (const out of [render(d), render(d, { groups: new Map([["5", { name: "Moderator" }]]) })]) {
+      expect(out.html).toBe("<p>@Admin ajutor</p>");
+      expect(out.groupMentions).toEqual([]);
+      expect(out.json.content![0]!.content).toEqual([{ type: "text", text: "@Admin" }, { type: "text", text: " ajutor" }]);
+      expect(out.text).toBe("@Admin ajutor");
+    }
+  });
+
+  test("numele lung al unui grup e scurtat la 40 de caractere în eticheta salvată", () => {
+    const groups = new Map([["5", { name: "G".repeat(64) }]]);
+    const out = render(doc(p({ type: "mention", attrs: { id: "5", label: "G", kind: "group" } })), { groups });
+    expect(out.json.content![0]!.content![0]!.attrs!.label).toBe("G".repeat(40));
+  });
+
+  test("un `kind` necunoscut sau un id de grup invalid → refuzat", () => {
+    expectInvalid(doc(p({ type: "mention", attrs: { id: "5", label: "X", kind: "role" } })));
+    expectInvalid(doc(p({ type: "mention", attrs: { id: "5\" onmouseover=\"x", label: "X", kind: "group" } })));
+  });
+
+  test("HTML-ul vechi (salvat înainte de `data-user-id`) trece neschimbat prin sanitizer; atributele noi sunt permise", () => {
+    const old = '<p><a class="gcs-userLink gcs-mention" href="/members/u1" data-user="u1">@Ana</a></p>';
+    expect(sanitizeContentHtml(old)).toBe(old);
+    const pill = '<p><a class="gcs-groupMention" href="/members?group=5" data-group-id="5">@Moderator</a></p>';
+    expect(sanitizeContentHtml(pill)).toBe(pill);
+    expect(sanitizeContentHtml('<a class="gcs-groupMention" data-group-id="5" onmouseover="x" style="color:red">@X</a>')).toBe('<a class="gcs-groupMention" data-group-id="5">@X</a>');
   });
 
   test("citatul unei postări are autorul și id-ul postării", () => {
@@ -239,7 +286,19 @@ describe("contentRefs", () => {
         { type: "quote", attrs: { postId: "x", authorName: "C" }, content: [] },
       ],
     };
-    expect(contentRefs(doc)).toEqual({ mentions: ["u1", "u2"], quotes: [7] });
-    expect(contentRefs(null)).toEqual({ mentions: [], quotes: [] });
+    expect(contentRefs(doc)).toEqual({ mentions: ["u1", "u2"], groups: [], quotes: [7] });
+    expect(contentRefs(null)).toEqual({ mentions: [], groups: [], quotes: [] });
+  });
+
+  test("mențiunile de grup sunt separate de cele ale membrilor (și ignorate în citate)", () => {
+    const group = (id: string) => ({ type: "mention", attrs: { id, label: `G${id}`, kind: "group" } });
+    const doc = {
+      type: "doc",
+      content: [
+        { type: "paragraph", content: [group("5"), { type: "mention", attrs: { id: "u1", label: "Ana", kind: "user" } }, group("5"), group("x")] },
+        { type: "quote", attrs: { postId: 7, authorName: "Ana" }, content: [{ type: "paragraph", content: [group("9")] }] },
+      ],
+    };
+    expect(contentRefs(doc)).toEqual({ mentions: ["u1"], groups: [5], quotes: [7] });
   });
 });

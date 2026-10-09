@@ -19,6 +19,11 @@ export type GcsRenderOptions = {
   siteHost: string;
   /** Texte traduse: `quoteWrote` conține `{name}`. */
   labels: { quoteWrote: string; spoiler: string };
+  /**
+   * Grupurile pe care autorul le poate menționa (id → numele curent), calculate de apelant (`GcsGroupMentionService`).
+   * O mențiune de grup care nu e aici (sau fără listă: semnături, importuri…) devine text simplu `@Nume`.
+   */
+  groups?: ReadonlyMap<string, { name: string }>;
 };
 
 export type GcsRendered = {
@@ -26,10 +31,19 @@ export type GcsRendered = {
   html: string;
   /** Textul simplu: pentru căutare, OpenGraph și lungimea maximă. */
   text: string;
+  /** Membrii menționați (mențiunile fără `kind` sau cu `kind: "user"`). */
   mentions: string[];
+  /** Grupurile menționate (doar cele permise, păstrate ca pastile). */
+  groupMentions: number[];
   attachments: string[];
   quotes: number[];
 };
+
+/** Tipul unei mențiuni: un membru (implicit, și pentru conținutul vechi fără `kind`) sau un grup. */
+export const GCS_MENTION_KINDS = ["user", "group"] as const;
+export type GcsMentionKind = (typeof GCS_MENTION_KINDS)[number];
+/** Eticheta salvată a unei mențiuni (numele membrului sau al grupului). */
+const MENTION_LABEL_MAX = 40;
 
 const MAX_NODES = 10_000;
 const MAX_DEPTH = 20;
@@ -93,7 +107,7 @@ export const GCS_DOC_NODES: Record<string, NodeSpec> = {
   hardBreak: { group: "inline" },
   mention: {
     group: "inline",
-    attrs: { id: isId, label: isText(40, 1), mentionSuggestionChar: optional((v) => v === "@") },
+    attrs: { id: isId, label: isText(MENTION_LABEL_MAX, 1), mentionSuggestionChar: optional((v) => v === "@"), kind: optional(oneOf(GCS_MENTION_KINDS)) },
     required: ["id", "label"],
   },
 };
@@ -215,6 +229,22 @@ function hasContent(n: GcsDocNode): boolean {
   return (n.content ?? []).some(hasContent);
 }
 
+/**
+ * Mențiunile de grup (Mențiuni v2): cele permise primesc numele curent al grupului (autorul nu poate pune altă
+ * etichetă pe pastilă); celelalte devin text simplu `@Nume`, și în JSON-ul salvat.
+ */
+function resolveGroupMentions(doc: GcsDoc, groups: ReadonlyMap<string, { name: string }> | undefined): GcsDoc {
+  const walk = (n: GcsDocNode): GcsDocNode => {
+    if (n.type === "mention" && n.attrs?.kind === "group") {
+      const group = groups?.get(String(n.attrs.id));
+      if (!group) return { type: "text", text: `@${String(n.attrs.label)}` };
+      return { ...n, attrs: { ...n.attrs, label: group.name.slice(0, MENTION_LABEL_MAX) } };
+    }
+    return n.content ? { ...n, content: n.content.map(walk) } : n;
+  };
+  return walk(doc) as GcsDoc;
+}
+
 function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
@@ -226,6 +256,7 @@ const SANDBOX = "allow-scripts allow-same-origin allow-popups allow-presentation
 function toHtml(doc: GcsDoc, opts: GcsRenderOptions) {
   const text: string[] = [];
   const mentions = new Set<string>();
+  const groupMentions = new Set<number>();
   const attachments = new Set<string>();
   const quotes = new Set<number>();
 
@@ -291,9 +322,16 @@ function toHtml(doc: GcsDoc, opts: GcsRenderOptions) {
         return "<br>";
       case "mention": {
         const id = String(a.id);
-        mentions.add(id);
         text.push(`@${a.label}`);
-        return `<a class="gcs-userLink gcs-mention" href="/members/${esc(id)}" data-user="${esc(id)}">@${esc(String(a.label))}</a>`;
+        // Doar grupurile permise ajung aici ca mențiuni de grup (`resolveGroupMentions`); culoarea și iconița vin din
+        // CSS-ul generat (`/gcs-names.css`), deci rămân la zi și pentru conținutul salvat.
+        if (a.kind === "group") {
+          groupMentions.add(Number(id));
+          return `<a class="gcs-groupMention" href="/members?group=${esc(id)}" data-group-id="${esc(id)}">@${esc(String(a.label))}</a>`;
+        }
+        mentions.add(id);
+        // `data-user`: formatul vechi (HTML-ul deja salvat îl are doar pe acesta); `data-user-id`: hover card-ul.
+        return `<a class="gcs-userLink gcs-mention" href="/members/${esc(id)}" data-user="${esc(id)}" data-user-id="${esc(id)}">@${esc(String(a.label))}</a>`;
       }
       case "image": {
         const src = a.attachmentId ? `/files/${String(a.attachmentId)}` : String(a.src);
@@ -334,6 +372,7 @@ function toHtml(doc: GcsDoc, opts: GcsRenderOptions) {
     html,
     text: text.join("").replace(/[ \t]+\n/g, "\n").replace(/\n{2,}/g, "\n").trim(),
     mentions: [...mentions],
+    groupMentions: [...groupMentions],
     attachments: [...attachments],
     quotes: [...quotes],
   };
@@ -347,7 +386,7 @@ const SANITIZE: sanitizeHtml.IOptions & { allowedEmptyAttributes: string[] } = {
     "blockquote", "span", "details", "summary", "img", "div", "iframe", "sub", "sup", "mark",
   ],
   allowedAttributes: {
-    a: ["href", "rel", "target", "class", "data-user"],
+    a: ["href", "rel", "target", "class", "data-user", "data-user-id", "data-group-id"],
     img: ["src", "alt", "width", "height", "loading", "class"],
     iframe: ["src", "title", "loading", "allowfullscreen", "sandbox"],
     blockquote: ["class", "data-post"],
@@ -392,23 +431,27 @@ export function sanitizeContentHtml(html: string): string {
  */
 export class GcsContentRenderer {
   render(raw: unknown, opts: GcsRenderOptions): GcsRendered {
-    const json = validate(raw);
+    const json = resolveGroupMentions(validate(raw), opts.groups);
     const out = toHtml(json, opts);
     return { json, ...out, html: sanitizeHtml(out.html, SANITIZE) };
   }
 }
 
 /**
- * Mențiunile și citatele dintr-un document salvat, pentru notificări. Ce e în interiorul unui citat nu contează
- * (cine e menționat în textul citat a fost deja notificat de postarea originală).
+ * Mențiunile (membri și grupuri) și citatele dintr-un document salvat, pentru notificări. Ce e în interiorul unui citat
+ * nu contează (cine e menționat în textul citat a fost deja notificat de postarea originală).
  */
-export function contentRefs(json: unknown): { mentions: string[]; quotes: number[] } {
+export function contentRefs(json: unknown): { mentions: string[]; groups: number[]; quotes: number[] } {
   const mentions = new Set<string>();
+  const groups = new Set<number>();
   const quotes = new Set<number>();
   const walk = (n: unknown, depth: number) => {
     if (depth > 50 || typeof n !== "object" || n === null) return;
     const node = n as GcsDocNode;
-    if (node.type === "mention" && typeof node.attrs?.id === "string") mentions.add(node.attrs.id);
+    if (node.type === "mention" && typeof node.attrs?.id === "string") {
+      if (node.attrs.kind !== "group") mentions.add(node.attrs.id);
+      else if (/^\d{1,9}$/.test(node.attrs.id)) groups.add(Number(node.attrs.id));
+    }
     if (node.type === "quote") {
       const postId = Number(node.attrs?.postId);
       if (Number.isSafeInteger(postId) && postId > 0) quotes.add(postId);
@@ -417,5 +460,5 @@ export function contentRefs(json: unknown): { mentions: string[]; quotes: number
     if (Array.isArray(node.content)) for (const c of node.content) walk(c, depth + 1);
   };
   walk(json, 0);
-  return { mentions: [...mentions], quotes: [...quotes] };
+  return { mentions: [...mentions], groups: [...groups], quotes: [...quotes] };
 }
