@@ -1,6 +1,6 @@
 import { CLAN_LINK_KINDS, type GcsClanManage, type GcsUserRef } from "@gcs/modules";
 import { parseRef } from "@gcs/modules/slug";
-import { GcsAvatar, GcsClanTag, GcsUserLink } from "@gcs/ui";
+import { GcsAvatar, GcsClanTag, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -36,7 +36,7 @@ function Who({ user }: { user: GcsUserRef }) {
   return (
     <>
       <GcsAvatar name={user.name} size="s" userId={user.id} {...(user.image ? { src: user.image } : {})} {...(user.frameKey ? { frame: user.frameKey } : {})} />
-      <GcsUserLink userId={user.id} name={user.name} nameKey={user.nameKey} href={memberHref(user)} />
+      <GcsMemberName userId={user.id} name={user.name} nameKey={user.nameKey} href={memberHref(user)} />
     </>
   );
 }

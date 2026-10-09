@@ -12,7 +12,7 @@ import {
   type GcsChatProColorElement,
   type GcsChatProLayout,
 } from "@gcs/modules/chat-pro-prefs";
-import { GcsBadgeArt, GcsButton, GcsIconSvg, GcsModal, GcsUserLink, type GcsIconSvgProps } from "@gcs/ui";
+import { GcsBadgeArt, GcsButton, GcsIconSvg, GcsModal, GcsMemberName, type GcsIconSvgProps } from "@gcs/ui";
 import { useTranslations } from "next-intl";
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { memberHref } from "@/lib/forum-urls";
@@ -322,7 +322,7 @@ export function GcsChatProSettings(props: {
           <ul className="gcs-chatPro__ignored">
             {ignored.map((u) => (
               <li key={u.id}>
-                <GcsUserLink userId={u.id} name={u.name} nameKey={u.nameKey} href={memberHref(u)} />
+                <GcsMemberName userId={u.id} name={u.name} nameKey={u.nameKey} href={memberHref(u)} />
                 <GcsButton variant="ghost" size="sm" onClick={() => void ignoreChatUser({ userId: u.id, ignore: false }).then((r) => r.ok && setIgnored(ignored.filter((x) => x.id !== u.id)))}>
                   {t("unignore")}
                 </GcsButton>

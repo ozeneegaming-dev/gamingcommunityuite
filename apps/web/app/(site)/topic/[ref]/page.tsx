@@ -1,5 +1,5 @@
 import { parseRef } from "@gcs/modules";
-import { GcsBadge, GcsButton, GcsCard, GcsUserLink } from "@gcs/ui";
+import { GcsBadge, GcsButton, GcsCard, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -23,6 +23,7 @@ import { translateLabels } from "@/lib/translate";
 import { GcsTopicModMenu, SPLIT_FORM_ID } from "../../_components/topic/GcsTopicModMenu";
 import { GcsWidgetPage } from "../../_components/widgets/GcsWidgetPage";
 import { GcsDeletedMember } from "../../_components/GcsDeletedMember";
+import { namesHtml } from "@/lib/member-names";
 
 type Props = { params: Promise<{ ref: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -74,6 +75,9 @@ export default async function TopicPage({ params, searchParams }: Props) {
   }
   const { topic, forum } = data;
   if (ref.slug !== topic.slug) permanentRedirect(topicHref(topic, page));
+  // Mențiunile din conținutul salvat: stilul numelui de acum (grupul afișat, efectul VIP pe litere).
+  const postHtml = await namesHtml(data.posts.map((p) => p.html));
+  data.posts.forEach((p, i) => (p.html = postHtml[i]!));
 
   const visibleIds = data.posts.filter((p) => p.visibility === "VISIBLE").map((p) => p.id);
   const ignored = new Set(await social.ignoredIds(actor.userId, "posts"));
@@ -116,7 +120,7 @@ export default async function TopicPage({ params, searchParams }: Props) {
           <div className="gcs-topicMeta">
             <span>
               {t("startedBy")}{" "}
-              {topic.author ? <GcsUserLink userId={topic.author.id} name={topic.author.name} nameKey={topic.author.nameKey} href={memberHref(topic.author)} /> : <GcsDeletedMember />} ·{" "}
+              {topic.author ? <GcsMemberName userId={topic.author.id} name={topic.author.name} nameKey={topic.author.nameKey} href={memberHref(topic.author)} /> : <GcsDeletedMember />} ·{" "}
               {format.dateTime(new Date(topic.createdAt), { dateStyle: "medium" })}
             </span>
             <span>

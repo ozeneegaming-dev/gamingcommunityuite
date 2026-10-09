@@ -1,4 +1,4 @@
-import { GcsCard, GcsUserLink } from "@gcs/ui";
+import { GcsCard, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -70,7 +70,7 @@ export default async function AcpVipSubscribersPage({ searchParams }: Props) {
         {rows.map((s) => (
           <div key={s.id} className="gcs-settingsList__row" style={{ padding: "6px 16px" }} data-testid="gcs-acp-vip-subscriber">
             <span style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-              <GcsUserLink userId={s.user.id} name={s.user.name} nameKey={s.user.primaryGroup.key} href={`/admin/members/${s.user.id}`} />
+              <GcsMemberName userId={s.user.id} name={s.user.name} nameKey={s.user.primaryGroup.key} href={`/admin/members/${s.user.id}`} />
               <span className="gcs-muted" style={{ fontSize: 13 }}>
                 · {s.group.name} · {s.expiresAt ? t("expiresOn", { date: format.dateTime(s.expiresAt, { dateStyle: "medium" }) }) : t("permanent")} · {t(`sources.${s.source}`)}
               </span>

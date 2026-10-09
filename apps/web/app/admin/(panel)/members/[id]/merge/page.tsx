@@ -1,5 +1,5 @@
 import { MEMBER_REMOVAL_ACP_SECTION, normalizeUsername, type GcsMergePreview } from "@gcs/core";
-import { GcsAvatar, GcsButton, GcsUserLink } from "@gcs/ui";
+import { GcsAvatar, GcsButton, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -90,7 +90,7 @@ export default async function AcpMemberMergePage({ params, searchParams }: Props
                 {results.map((m) => (
                   <li key={m.id} className="gcs-removalNote" style={{ alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }}>
                     <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-                      <GcsUserLink userId={m.id} name={m.name} nameKey={m.primaryGroup.key} href={`/admin/members/${m.id}`} />
+                      <GcsMemberName userId={m.id} name={m.name} nameKey={m.primaryGroup.key} href={`/admin/members/${m.id}`} />
                       <span style={{ color: "var(--gcs-muted)", fontSize: 12.5, overflowWrap: "anywhere" }}>
                         {m.email} · {m.primaryGroup.name}
                       </span>

@@ -1,7 +1,7 @@
 "use client";
 
 import type { GcsUserRef } from "@gcs/modules";
-import { GcsUserLink } from "@gcs/ui";
+import { GcsMemberName } from "@gcs/ui";
 import { useEffect, useState } from "react";
 import { memberHref } from "@/lib/forum-urls";
 import { useRealtime } from "../realtime/GcsRealtimeProvider";
@@ -69,7 +69,7 @@ export function GcsTopicLive({ topicId, viewerId, initialReaders, unreadHref, la
           <span className="gcs-muted">{labels.readers}</span>{" "}
           {others.map((u, i) => (
             <span key={u.id}>
-              <GcsUserLink userId={u.id} name={u.name} nameKey={u.nameKey} href={memberHref(u)} />
+              <GcsMemberName userId={u.id} name={u.name} nameKey={u.nameKey} href={memberHref(u)} />
               {i < others.length - 1 ? ", " : ""}
             </span>
           ))}

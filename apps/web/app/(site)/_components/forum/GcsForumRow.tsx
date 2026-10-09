@@ -1,5 +1,5 @@
 import type { GcsForumRow as Row } from "@gcs/modules";
-import { GcsAvatar, GcsUserLink } from "@gcs/ui";
+import { GcsAvatar, GcsMemberName } from "@gcs/ui";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { forumHref, memberHref, tint, topicHref } from "@/lib/forum-urls";
@@ -80,7 +80,7 @@ export async function GcsForumRow({ forum, accent }: { forum: Row; accent: strin
                   {forum.last.user && (
                     <>
                       {t("byWord")}{" "}
-                      <GcsUserLink
+                      <GcsMemberName
                         userId={forum.last.user.id}
                         name={forum.last.user.name}
                         nameKey={forum.last.user.nameKey}

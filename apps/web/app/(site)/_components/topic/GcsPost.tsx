@@ -1,6 +1,6 @@
 import { isSafeBanner, type GcsReactionView } from "@gcs/core";
 import type { GcsClanTag, GcsPostbitData, GcsPostView } from "@gcs/modules";
-import { GcsAvatar, GcsBadgeArt, GcsClanTag as GcsClanPlate, GcsTooltip, GcsUserLink } from "@gcs/ui";
+import { GcsAvatar, GcsBadgeArt, GcsClanTag as GcsClanPlate, GcsTooltip, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import { getFormatter, getTranslations } from "next-intl/server";
 import type { CSSProperties } from "react";
@@ -190,7 +190,7 @@ async function GcsPostbit({
         </span>
         <div className="gcs-postbit__identity">
           <span className="gcs-post__authorName">
-            <GcsUserLink userId={author.id} name={author.name} nameKey={author.nameKey} href={profile} />
+            <GcsMemberName userId={author.id} name={author.name} nameKey={author.nameKey} href={profile} size="full" />
           </span>
           {clan && (
             <span className="gcs-postbit__clan" data-testid="gcs-postbit-clan">

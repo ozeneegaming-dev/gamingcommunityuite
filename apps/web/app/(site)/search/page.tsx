@@ -1,5 +1,5 @@
 import { GcsRateLimited, GcsValidationError } from "@gcs/core";
-import { GcsButton, GcsCard, GcsUserLink } from "@gcs/ui";
+import { GcsButton, GcsCard, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -136,7 +136,7 @@ export default async function SearchPage({ searchParams }: Props) {
               <p className="gcs-searchResult__meta">
                 {r.author && (
                   <>
-                    <GcsUserLink userId={r.author.id} name={r.author.name} nameKey={r.author.nameKey} href={memberHref(r.author)} />
+                    <GcsMemberName userId={r.author.id} name={r.author.name} nameKey={r.author.nameKey} href={memberHref(r.author)} />
                     {" · "}
                   </>
                 )}

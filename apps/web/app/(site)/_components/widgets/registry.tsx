@@ -1,6 +1,6 @@
 import { GCS_RICH_FIELDS, richFieldHtml, sanitizeContentHtml, type GcsActor } from "@gcs/core";
 import { POLL_INTERVAL_SETTING, type GcsUserRef } from "@gcs/modules";
-import { GcsAvatar, GcsBadge, GcsButton, GcsCard, GcsClanTag, GcsUserLink } from "@gcs/ui";
+import { GcsAvatar, GcsBadge, GcsButton, GcsCard, GcsClanTag, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import Link from "next/link";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
@@ -69,7 +69,7 @@ function RowMeta({ user, children }: { user: GcsUserRef | null; children: ReactN
     <span className="gcs-widgetRow__meta">
       {user && (
         <>
-          <GcsUserLink userId={user.id} name={user.name} nameKey={user.nameKey} href={memberHref(user)} />
+          <GcsMemberName userId={user.id} name={user.name} nameKey={user.nameKey} href={memberHref(user)} />
           <span aria-hidden="true">·</span>
         </>
       )}
@@ -95,7 +95,7 @@ function announcementHtml(body: unknown): string {
 }
 
 /** Numele unui membru cu link spre profil (fără stilul grupului: datele vin din intrarea de admin). */
-function GcsUserLinkPlain({ user }: { user: { id: string; name: string } }) {
+function GcsMemberLinkPlain({ user }: { user: { id: string; name: string } }) {
   return <Link href={memberHref(user)}>{user.name}</Link>;
 }
 
@@ -164,7 +164,7 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
                 <RowAvatar user={m.user} />
                 <span className="gcs-widgetRow__body">
                   <span className="gcs-widgetRow__title">
-                    <GcsUserLink userId={m.user.id} name={m.user.name} nameKey={m.user.nameKey} href={memberHref(m.user)} />
+                    <GcsMemberName userId={m.user.id} name={m.user.name} nameKey={m.user.nameKey} href={memberHref(m.user)} />
                   </span>
                   <RowMeta user={null}>
                     <GcsRelTime at={m.joinedAt} />
@@ -204,7 +204,7 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
             <span className="gcs-widgetRow__body">
               <span className="gcs-widgetRow__meta">{t("newest")}</span>
               <span className="gcs-widgetRow__title">
-                <GcsUserLink userId={newest.id} name={newest.name} nameKey={newest.nameKey} href={memberHref(newest)} />
+                <GcsMemberName userId={newest.id} name={newest.name} nameKey={newest.nameKey} href={memberHref(newest)} />
               </span>
             </span>
           </div>
@@ -285,7 +285,7 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
                 <RowAvatar user={r.user} />
                 <span className="gcs-widgetRow__body">
                   <span className="gcs-widgetRow__title">
-                    <GcsUserLink userId={r.user.id} name={r.user.name} nameKey={r.user.nameKey} href={memberHref(r.user)} />
+                    <GcsMemberName userId={r.user.id} name={r.user.name} nameKey={r.user.nameKey} href={memberHref(r.user)} />
                   </span>
                   <span className="gcs-widgetRow__meta">{t("posts", { count: r.posts })}</span>
                 </span>
@@ -365,7 +365,7 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
                   {s.user ? (
                     <span className="gcs-carousel__author">
                       <GcsAvatar name={s.user.name} size="s" userId={s.user.id} {...(s.user.image ? { src: s.user.image } : {})} />
-                      <GcsUserLink userId={s.user.id} name={s.user.name} nameKey={s.user.nameKey} href={memberHref(s.user)} />
+                      <GcsMemberName userId={s.user.id} name={s.user.name} nameKey={s.user.nameKey} href={memberHref(s.user)} />
                     </span>
                   ) : (
                     <span />
@@ -426,7 +426,7 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
             {list.map((a) => (
               <li key={`${a.server.id}-${a.adminId ?? `p${a.playerId}`}`} className="gcs-adminRow" data-state="online" data-testid="gcs-widget-admin">
                 <span className="gcs-dot" aria-hidden="true" />
-                <span className="gcs-adminRow__name">{a.user ? <GcsUserLinkPlain user={a.user} /> : a.name}</span>
+                <span className="gcs-adminRow__name">{a.user ? <GcsMemberLinkPlain user={a.user} /> : a.name}</span>
                 <span className="gcs-adminRow__meta">
                   {a.since ? tb("since", { server: a.server.name, time: format.relativeTime(new Date(a.since)) }) : a.server.name}
                 </span>

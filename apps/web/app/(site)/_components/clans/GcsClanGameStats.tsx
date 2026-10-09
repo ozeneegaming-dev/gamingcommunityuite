@@ -1,5 +1,5 @@
 import { kdRatio, type GcsClanDetails } from "@gcs/modules";
-import { GcsUserLink } from "@gcs/ui";
+import { GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
@@ -44,7 +44,7 @@ export async function GcsClanGameStats({ clan }: { clan: GcsClanDetails }) {
         <ul className="gcs-clanTopics" aria-label={t("top")}>
           {game.members.map((m) => (
             <li key={m.user.id}>
-              <GcsUserLink userId={m.user.id} name={m.user.name} nameKey={m.user.nameKey} href={memberHref(m.user)} />
+              <GcsMemberName userId={m.user.id} name={m.user.name} nameKey={m.user.nameKey} href={memberHref(m.user)} />
               <span className="gcs-muted">{t("memberLine", { hours: hours(m.stats.playtimeSeconds), kd: format.number(kdRatio(m.stats), { maximumFractionDigits: 2 }) })}</span>
             </li>
           ))}

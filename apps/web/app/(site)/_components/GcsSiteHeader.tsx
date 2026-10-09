@@ -1,7 +1,7 @@
 import { pluginRegistryKey, type GcsThemeView } from "@gcs/core";
 import { communityRules, RULES_HREF } from "@gcs/modules";
 import { GcsIcon } from "@gcs/ui/icons";
-import { GcsAvatar, GcsButton } from "@gcs/ui";
+import { GcsAvatar, GcsButton, GcsMemberName } from "@gcs/ui";
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
@@ -152,9 +152,7 @@ export async function GcsSiteHeader() {
                 trigger={
                   <>
                     <GcsAvatar name={user.name} size="s" userId={user.id} {...(user.image ? { src: user.image } : {})} {...(user.frameKey ? { frame: user.frameKey } : {})} />
-                    <span className={`gcs-userMenu__name gcs-name--${user.nameKey}`} data-testid="gcs-header-user" data-name-user={user.id} data-text={user.name}>
-                      {user.name}
-                    </span>
+                    <GcsMemberName userId={user.id} name={user.name} nameKey={user.nameKey} size="full" className="gcs-userMenu__name" data-testid="gcs-header-user" />
                     <GcsIcon name="fa-solid fa-chevron-down" className="gcs-navbar__caret" />
                   </>
                 }

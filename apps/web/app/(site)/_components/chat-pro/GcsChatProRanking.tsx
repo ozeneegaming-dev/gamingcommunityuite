@@ -2,7 +2,7 @@
 
 import { faCalendarDay, faCrown, faFire, faTrophy, faUser } from "@fortawesome/free-solid-svg-icons";
 import type { GcsChatProRankRow, GcsChatProRanking } from "@gcs/modules";
-import { GcsAvatar, GcsIconSvg, GcsUserLink } from "@gcs/ui";
+import { GcsAvatar, GcsIconSvg, GcsMemberName } from "@gcs/ui";
 import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { memberHref } from "@/lib/forum-urls";
@@ -39,7 +39,7 @@ export function GcsChatProRanking({ ranking, loadedAt }: { ranking: GcsChatProRa
     <div className="gcs-chatPro__rankRow" data-testid={testId}>
       <GcsAvatar name={row.user.name} userId={row.user.id} src={row.user.image ?? undefined} size="s" />
       <span className="gcs-chatPro__rankWho">
-        <GcsUserLink userId={row.user.id} name={row.user.name} nameKey={row.user.nameKey} href={memberHref(row.user)} />
+        <GcsMemberName userId={row.user.id} name={row.user.name} nameKey={row.user.nameKey} href={memberHref(row.user)} />
         <span className="gcs-chatPro__rankCount">{t("messages", { count: row.messages })}</span>
       </span>
     </div>
@@ -65,7 +65,7 @@ export function GcsChatProRanking({ ranking, loadedAt }: { ranking: GcsChatProRa
               <li key={place} className={`gcs-chatPro__step gcs-chatPro__step--${place}`} data-testid={`gcs-chatpro-podium-${place}`}>
                 {place === 1 && <GcsIconSvg icon={faCrown} className="gcs-chatPro__crown" />}
                 <GcsAvatar name={row.user.name} userId={row.user.id} src={row.user.image ?? undefined} size={place === 1 ? "l" : "m"} />
-                <GcsUserLink userId={row.user.id} name={row.user.name} nameKey={row.user.nameKey} href={memberHref(row.user)} />
+                <GcsMemberName userId={row.user.id} name={row.user.name} nameKey={row.user.nameKey} href={memberHref(row.user)} />
                 <span className="gcs-chatPro__rankCount">{t("messages", { count: row.messages })}</span>
                 <span className="gcs-chatPro__place" aria-label={t("place", { place })}>
                   {place}

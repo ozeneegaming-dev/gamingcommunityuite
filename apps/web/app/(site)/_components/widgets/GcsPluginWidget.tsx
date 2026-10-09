@@ -3,6 +3,7 @@ import { getLocale } from "next-intl/server";
 import type { ReactNode } from "react";
 import { pluginHost, safeModeActive } from "@/lib/plugins";
 import { GcsWidgetTitle, widgetIcon } from "./GcsWidgetTitle";
+import { namesHtml } from "@/lib/member-names";
 
 /** Tipurile de widget ale pluginurilor: `plugin.<vendor>.<nume>.<widget>`. */
 export const isPluginWidget = (type: string) => type.startsWith("plugin.");
@@ -32,7 +33,7 @@ export async function renderPluginWidget(p: GcsWidgetPlacementView, actor: GcsAc
         {plugins.widgetTitle(p.type, locale) ?? p.type}
       </GcsWidgetTitle>
       {/* HTML-ul pluginului, trecut prin sanitizer (listă albă) de gazda pluginurilor. */}
-      <div className="gcs-pluginWidget__body" dangerouslySetInnerHTML={{ __html: out.html }} />
+      <div className="gcs-pluginWidget__body" dangerouslySetInnerHTML={{ __html: await namesHtml(out.html) }} />
     </section>
   );
 }

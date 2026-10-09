@@ -1,5 +1,5 @@
 import { ACP_WIDGETS, checkHealth, serviceStatus, type GcsAcpWidget } from "@gcs/core";
-import { GcsAvatar, GcsButton, GcsCard, GcsUserLink } from "@gcs/ui";
+import { GcsAvatar, GcsButton, GcsCard, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -232,7 +232,7 @@ export default async function AcpDashboardPage() {
           <ul className="gcs-acpList">
             {admins.map((a) => (
               <Row key={a.id}>
-                <GcsUserLink userId={a.id} name={a.name} nameKey={a.groupKey} href={`/admin/members/${a.id}`} />
+                <GcsMemberName userId={a.id} name={a.name} nameKey={a.groupKey} href={`/admin/members/${a.id}`} />
               </Row>
             ))}
           </ul>

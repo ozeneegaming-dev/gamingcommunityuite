@@ -1,6 +1,6 @@
 import { GCS_HISTORY_RANGES, POLL_INTERVAL_SETTING, type GcsHistoryRange } from "@gcs/modules";
 import { parseRef } from "@gcs/modules/slug";
-import { GcsUserLink } from "@gcs/ui";
+import { GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -270,7 +270,7 @@ export default async function ServerPage({ params, searchParams }: Props) {
               <p style={{ margin: 0, lineHeight: 1.8 }} data-testid="gcs-server-admins">
                 {server.admins.map((a, i) => (
                   <span key={a.id}>
-                    <GcsUserLink userId={a.id} name={a.name} nameKey={a.nameKey} href={memberHref(a)} />
+                    <GcsMemberName userId={a.id} name={a.name} nameKey={a.nameKey} href={memberHref(a)} />
                     {i < server.admins.length - 1 ? ", " : ""}
                   </span>
                 ))}

@@ -1,6 +1,6 @@
 "use client";
 
-import { GcsUserLink } from "@gcs/ui";
+import { GcsMemberName } from "@gcs/ui";
 import { useTranslations } from "next-intl";
 import { useEffect, useState, type ReactNode } from "react";
 import type { GcsOnlineView } from "@/lib/online";
@@ -30,7 +30,7 @@ function NameList({ view, className }: { view: GcsOnlineView; className: string 
     <p className={className} data-testid="gcs-online-members">
       {view.members.map((m, i) => (
         <span key={m.id}>
-          <GcsUserLink userId={m.id} name={m.name} nameKey={m.nameKey} href={memberHref(m)} />
+          <GcsMemberName userId={m.id} name={m.name} nameKey={m.nameKey} href={memberHref(m)} />
           {i < view.members.length - 1 ? ", " : ""}
         </span>
       ))}

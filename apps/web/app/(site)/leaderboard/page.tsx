@@ -1,6 +1,6 @@
 import { GcsError } from "@gcs/core";
 import { GCS_LEADERBOARD_METRICS, GCS_LEADERBOARD_PERIODS, type GcsLeaderboardMetric, type GcsLeaderboardPeriod, type GcsLeaderboardRow } from "@gcs/modules";
-import { GcsAvatar, GcsCard, GcsUserLink } from "@gcs/ui";
+import { GcsAvatar, GcsCard, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -58,7 +58,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
   const podium = rows.slice(0, 3);
   const rest = rows.slice(3);
   const value = (n: number) => format.number(n);
-  const member = (r: GcsLeaderboardRow) => <GcsUserLink userId={r.user.id} name={r.user.name} nameKey={r.user.nameKey} href={memberHref(r.user)} />;
+  const member = (r: GcsLeaderboardRow) => <GcsMemberName userId={r.user.id} name={r.user.name} nameKey={r.user.nameKey} href={memberHref(r.user)} />;
   // Culoarea grupului doar pe iconiță: textul rămâne lizibil și pe tema luminoasă (culorile grupurilor sunt pentru fundal închis).
   const group = (r: GcsLeaderboardRow) => (
     <span className="gcs-board__group">

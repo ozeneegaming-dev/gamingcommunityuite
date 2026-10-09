@@ -4,7 +4,7 @@ import { faFaceSmile, faTrashCan } from "@fortawesome/free-regular-svg-icons";
 import { faBullhorn, faCommentSlash, faGear, faPen, faScroll, faThumbtack, faUserSlash, faVolumeHigh, faVolumeXmark } from "@fortawesome/free-solid-svg-icons";
 import type { GcsErrorPayload } from "@gcs/core";
 import type { GcsChatAnnouncementView, GcsChatConfig, GcsChatMessageView, GcsChatReactionCount } from "@gcs/modules";
-import { GcsAvatar, GcsButton, GcsIconSvg, GcsUserLink, playNotificationSound, type GcsIconSvgProps } from "@gcs/ui";
+import { GcsAvatar, GcsButton, GcsIconSvg, GcsMemberName, playNotificationSound, type GcsIconSvgProps } from "@gcs/ui";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { memberHref } from "@/lib/forum-urls";
@@ -455,7 +455,7 @@ export function GcsChatRoom(props: Props) {
         <div className="gcs-chat__pinned" data-testid="gcs-chat-pinned">
           <GcsIconSvg icon={faThumbtack} className="gcs-chat__barIcon" />
           <strong>{labels.pinned}</strong>
-          {pinned.author && <GcsUserLink userId={pinned.author.id} name={pinned.author.name} nameKey={pinned.author.nameKey} href={memberHref(pinned.author)} />}
+          {pinned.author && <GcsMemberName userId={pinned.author.id} name={pinned.author.name} nameKey={pinned.author.nameKey} href={memberHref(pinned.author)} />}
           <span className="gcs-chat__body" dangerouslySetInnerHTML={{ __html: pinned.html }} />
           {canAnnounce && (
             <button type="button" className="gcs-linkButton" onClick={() => run(() => pinChatMessage({ channel: channel.key, id: null }), () => setPinned(null))}>
@@ -501,17 +501,16 @@ export function GcsChatRoom(props: Props) {
               <div className="gcs-chat__main">
                 <div className="gcs-chat__meta">
                   {author ? (
-                    <button
-                      type="button"
-                      className={`gcs-chat__name gcs-name--${author.nameKey}`}
-                      data-user-id={author.id}
+                    <GcsMemberName
+                      userId={author.id}
+                      name={author.name}
+                      nameKey={author.nameKey}
+                      className="gcs-chat__name"
                       title={t("mentionHint", { name: author.name })}
                       disabled={blocked}
                       onClick={() => composer.current?.mention(author.name)}
                       data-testid="gcs-chat-name"
-                    >
-                      {author.name}
-                    </button>
+                    />
                   ) : (
                     <span className="gcs-deletedMember" data-testid="gcs-deleted-member">
                       {labels.deletedMember}

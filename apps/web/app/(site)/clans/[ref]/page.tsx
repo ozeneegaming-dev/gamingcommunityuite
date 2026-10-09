@@ -1,6 +1,6 @@
 import { CLAN_LINK_KINDS, type GcsClanDetails } from "@gcs/modules";
 import { parseRef } from "@gcs/modules/slug";
-import { GcsAvatar, GcsClanTag, GcsUserLink } from "@gcs/ui";
+import { GcsAvatar, GcsClanTag, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -167,7 +167,7 @@ export default async function ClanPage({ params }: Props) {
                         <li key={m.user.id} className="gcs-clanRoster__member" data-testid="gcs-clan-member">
                           <GcsAvatar name={m.user.name} size="s" userId={m.user.id} {...(m.user.image ? { src: m.user.image } : {})} {...(m.user.frameKey ? { frame: m.user.frameKey } : {})} />
                           <span className="gcs-clanRoster__who">
-                            <GcsUserLink userId={m.user.id} name={m.user.name} nameKey={m.user.nameKey} href={memberHref(m.user)} />
+                            <GcsMemberName userId={m.user.id} name={m.user.name} nameKey={m.user.nameKey} href={memberHref(m.user)} />
                             <span className="gcs-clanRoster__since">{t("since", { date: date(m.joinedAt) })}</span>
                           </span>
                         </li>
@@ -196,7 +196,7 @@ export default async function ClanPage({ params }: Props) {
                   <li key={`${a.at}-${i}`}>
                     <span>
                       {a.user ? (
-                        t.rich(`activity.${a.kind}`, { name: () => <GcsUserLink userId={a.user!.id} name={a.user!.name} nameKey={a.user!.nameKey} href={memberHref(a.user!)} /> })
+                        t.rich(`activity.${a.kind}`, { name: () => <GcsMemberName userId={a.user!.id} name={a.user!.name} nameKey={a.user!.nameKey} href={memberHref(a.user!)} /> })
                       ) : (
                         t(`activity.${a.kind}Anon`)
                       )}

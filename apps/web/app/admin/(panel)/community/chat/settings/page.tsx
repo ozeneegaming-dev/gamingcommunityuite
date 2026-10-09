@@ -1,6 +1,6 @@
 import { APPS_ACP_SECTION, GCS_RICH_FIELDS } from "@gcs/core";
 import { CHAT_ACP_SETTINGS, CHAT_CONTAINER } from "@gcs/modules";
-import { GcsCard, GcsUserLink } from "@gcs/ui";
+import { GcsCard, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -261,7 +261,7 @@ export default async function AcpChatSettingsPage() {
           <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
             {mutes.map((m) => (
               <li key={m.id} style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }} data-testid="gcs-acp-mute">
-                <GcsUserLink userId={m.user.id} name={m.user.name} nameKey={m.user.nameKey} href={memberHref(m.user)} />
+                <GcsMemberName userId={m.user.id} name={m.user.name} nameKey={m.user.nameKey} href={memberHref(m.user)} />
                 <span className="gcs-muted">{m.channel ? `#${m.channel}` : t("allChannels")}</span>
                 <span className="gcs-muted">
                   {m.until ? t("until", { date: format.dateTime(new Date(m.until), { dateStyle: "medium", timeStyle: "short" }) }) : t("permanent")}

@@ -1,5 +1,5 @@
 import { GcsNotFound } from "@gcs/core";
-import { GcsAvatar, GcsCard, GcsUserLink } from "@gcs/ui";
+import { GcsAvatar, GcsCard, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -70,7 +70,7 @@ export default async function ConversationPage({ params, searchParams }: Props) 
                 {m.author ? (
                   <>
                     <GcsAvatar name={m.author.name} size="s" {...(m.author.image ? { src: m.author.image } : {})} {...(m.author.frameKey ? { frame: m.author.frameKey } : {})} />
-                    <GcsUserLink userId={m.author.id} name={m.author.name} nameKey={m.author.nameKey} href={memberHref(m.author)} />
+                    <GcsMemberName userId={m.author.id} name={m.author.name} nameKey={m.author.nameKey} href={memberHref(m.author)} />
                   </>
                 ) : (
                   <GcsDeletedMember withIcon />
@@ -114,7 +114,7 @@ export default async function ConversationPage({ params, searchParams }: Props) 
               {view.participants.map((p) => (
                 <li key={p.id}>
                   <GcsAvatar name={p.name} size="s" {...(p.image ? { src: p.image } : {})} {...(p.frameKey ? { frame: p.frameKey } : {})} />
-                  <GcsUserLink userId={p.id} name={p.name} nameKey={p.nameKey} href={memberHref(p)} />
+                  <GcsMemberName userId={p.id} name={p.name} nameKey={p.nameKey} href={memberHref(p)} />
                   {p.id === view.starterId && <span className="gcs-muted" style={{ fontSize: 12 }}>· {t("starter")}</span>}
                 </li>
               ))}

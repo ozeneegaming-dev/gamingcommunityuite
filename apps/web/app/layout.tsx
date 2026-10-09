@@ -3,7 +3,9 @@ import { Chakra_Petch, DM_Sans, Manrope } from "next/font/google";
 import { headers } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
+import { GcsNameFxProvider } from "@gcs/ui";
 import { themeMode, viewerTheme } from "@/lib/appearance";
+import { nameLetterUsers } from "@/lib/member-names";
 import type { ReactNode } from "react";
 import { services } from "@/lib/services";
 import { siteBaseUrl } from "@/lib/seo";
@@ -52,6 +54,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     "0",
   );
   const theme = await viewerTheme();
+  // Membrii cu efecte de nume pe litere (Studio VIP): aceeași versiune ca `/gcs-names.css`.
+  const letters = await nameLetterUsers();
   // Designul temei (ex. `gcs-nova`) doar pe paginile site-ului: ACP-ul și editoarele lui au designul lor.
   const site = (await headers()).get(SITE_AREA_HEADER) !== "admin";
   const design = site ? designClass(theme.shown.settings.preset) : null;
@@ -69,7 +73,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         )}
       </head>
       <body className="gcs-root">
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          <GcsNameFxProvider letters={letters}>{children}</GcsNameFxProvider>
+        </NextIntlClientProvider>
         {/* Previzualizarea editorului vizual de temă (iframe): primește draft-ul live prin postMessage. */}
         {theme.preview && <GcsThemePreviewBridge />}
       </body>

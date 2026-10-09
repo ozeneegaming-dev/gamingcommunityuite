@@ -1,4 +1,4 @@
-import { GcsBadge, GcsCard, GcsUserLink } from "@gcs/ui";
+import { GcsBadge, GcsCard, GcsMemberName } from "@gcs/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
@@ -53,7 +53,7 @@ export default async function AcpQueuePage() {
                 <GcsBadge tone={p.isTopic ? "warn" : "info"}>{p.isTopic ? t("topic") : t("reply")}</GcsBadge>
                 <Link href={postHref(p.topicId, p.postId)}>{p.topicTitle}</Link>
                 <span className="gcs-muted">{t("in", { forum: p.forumName })}</span>
-                {p.author && <GcsUserLink userId={p.author.id} name={p.author.name} nameKey={p.author.nameKey} href={`/admin/members/${p.author.id}`} />}
+                {p.author && <GcsMemberName userId={p.author.id} name={p.author.name} nameKey={p.author.nameKey} href={`/admin/members/${p.author.id}`} />}
                 <span className="gcs-muted">{format.relativeTime(new Date(p.createdAt))}</span>
               </div>
               <div className="gcs-postBody" dangerouslySetInnerHTML={{ __html: p.html }} />

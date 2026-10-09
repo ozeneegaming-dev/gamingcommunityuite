@@ -1,5 +1,5 @@
 import { GCS_ACTIVITY_FILTERS, type GcsActivityFilter, type GcsStreamItem, type GcsUserRef } from "@gcs/modules";
-import { GcsAvatar, GcsButton, GcsCard, GcsUserLink } from "@gcs/ui";
+import { GcsAvatar, GcsButton, GcsCard, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -68,7 +68,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
     day.items.push(item);
   }
 
-  const who = (u: GcsUserRef | null) => (u ? <GcsUserLink userId={u.id} name={u.name} nameKey={u.nameKey} href={memberHref(u)} /> : <strong>{t("deletedUser")}</strong>);
+  const who = (u: GcsUserRef | null) => (u ? <GcsMemberName userId={u.id} name={u.name} nameKey={u.nameKey} href={memberHref(u)} /> : <strong>{t("deletedUser")}</strong>);
   const line = (item: GcsStreamItem): ReactNode => {
     const user = () => who(item.user);
     if (item.kind === "topic" || item.kind === "reply") {

@@ -8,6 +8,7 @@ import { cache } from "react";
 import { requireAcpSection } from "@/lib/acp";
 import { pluginHost, pluginKeyParam, pluginQuery, safeModeActive } from "@/lib/plugins";
 import { GcsAcpTitle } from "../../../_components/GcsAcpTitle";
+import { GcsNamePreviewsCss, namesHtml } from "@/lib/member-names";
 
 type Props = { params: Promise<{ plugin: string; path?: string[] }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -64,10 +65,11 @@ export default async function AcpPluginPage(props: Props) {
       {result.styles.map((href) => (
         <link key={href} rel="stylesheet" href={href} precedence="gcs-plugins" />
       ))}
+      <GcsNamePreviewsCss />
       <GcsAcpTitle icon={result.icon}>{result.title}</GcsAcpTitle>
       <GcsCard as="section" className="gcs-pluginPage" style={{ padding: 20 }} data-testid="gcs-acp-plugin-page" data-plugin={key}>
         {/* HTML-ul pluginului, trecut prin sanitizer (listă albă) de gazda pluginurilor. */}
-        <div dangerouslySetInnerHTML={{ __html: result.html }} />
+        <div dangerouslySetInnerHTML={{ __html: await namesHtml(result.html) }} />
       </GcsCard>
     </>
   );

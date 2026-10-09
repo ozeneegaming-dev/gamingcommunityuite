@@ -1,5 +1,5 @@
 import { MEMBER_REMOVAL_ACP_SECTION } from "@gcs/core";
-import { GcsAvatar, GcsBadge, GcsCard, GcsUserLink } from "@gcs/ui";
+import { GcsAvatar, GcsBadge, GcsCard, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -221,7 +221,7 @@ export default async function AcpMemberPage({ params }: Props) {
           {member.sharedIpAccounts.length === 0 && <p style={muted}>{t("ips.sharedNone")}</p>}
           {member.sharedIpAccounts.map((a) => (
             <div key={a.id} style={listRow}>
-              <GcsUserLink userId={a.id} name={a.name} nameKey={a.groupKey} href={`/admin/members/${a.id}`} />
+              <GcsMemberName userId={a.id} name={a.name} nameKey={a.groupKey} href={`/admin/members/${a.id}`} />
               <span style={muted}>{a.ip}</span>
             </div>
           ))}

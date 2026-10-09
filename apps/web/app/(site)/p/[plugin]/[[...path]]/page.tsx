@@ -6,6 +6,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { cache } from "react";
 import { currentActor } from "@/lib/actor";
 import { pluginHost, pluginKeyParam, pluginQuery, safeModeActive } from "@/lib/plugins";
+import { GcsNamePreviewsCss, namesHtml } from "@/lib/member-names";
 
 type Props = { params: Promise<{ plugin: string; path?: string[] }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -60,6 +61,7 @@ export default async function PluginSitePage(props: Props) {
       {result.styles.map((href) => (
         <link key={href} rel="stylesheet" href={href} precedence="gcs-plugins" />
       ))}
+      <GcsNamePreviewsCss />
       {result.scripts.map((src) => (
         <script key={src} src={src} async />
       ))}
@@ -71,7 +73,7 @@ export default async function PluginSitePage(props: Props) {
       </header>
       <GcsCard as="section" className="gcs-pluginPage" style={{ padding: 24 }} data-testid="gcs-plugin-page" data-plugin={key}>
         {/* HTML-ul pluginului, trecut prin sanitizer (listă albă) de gazda pluginurilor. */}
-        <div dangerouslySetInnerHTML={{ __html: result.html }} />
+        <div dangerouslySetInnerHTML={{ __html: await namesHtml(result.html) }} />
       </GcsCard>
     </>
   );

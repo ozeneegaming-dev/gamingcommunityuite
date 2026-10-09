@@ -1,6 +1,6 @@
 import type { GcsLockedBadge, GcsProfileView } from "@gcs/modules";
 import { parseUserRef, slugify } from "@gcs/modules/slug";
-import { GcsAvatar, GcsBadgeArt, GcsCard, GcsClanTag, GcsUserLink } from "@gcs/ui";
+import { GcsAvatar, GcsBadgeArt, GcsCard, GcsClanTag, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -121,9 +121,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         )}
         <div className="gcs-profileHeader__identity">
           <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-            <h1 className={`gcs-display gcs-name--${user.nameKey}`} style={{ margin: 0, fontSize: 40, letterSpacing: ".02em" }} data-testid="gcs-profile-name" data-name-user={user.id} data-text={user.name}>
-              {user.name}
-            </h1>
+            <GcsMemberName as="h1" userId={user.id} name={user.name} nameKey={user.nameKey} size="full" className="gcs-display" style={{ margin: 0, fontSize: 40, letterSpacing: ".02em" }} data-testid="gcs-profile-name" />
             {clans.tagOnName && clans.clans[0] && <GcsClanTag clan={clans.clans[0]} testId="gcs-profile-clan-tag" />}
             {profile.online.online && (
               <span style={{ fontSize: 13, color: "var(--gcs-ok)", display: "flex", alignItems: "center", gap: 6 }}>
@@ -538,7 +536,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
           {followers?.users.map((u) => (
             <li key={u.id}>
               <GcsAvatar name={u.name} size="m" {...(u.image ? { src: u.image } : {})} {...(u.frameKey ? { frame: u.frameKey } : {})} />
-              <GcsUserLink userId={u.id} name={u.name} nameKey={u.nameKey} href={memberHref(u)} />
+              <GcsMemberName userId={u.id} name={u.name} nameKey={u.nameKey} href={memberHref(u)} />
             </li>
           ))}
         </ul>
@@ -677,7 +675,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         {a ? <GcsAvatar name={a.name} size="m" {...(a.image ? { src: a.image } : {})} {...(a.frameKey ? { frame: a.frameKey } : {})} /> : <span className="gcs-avatar gcs-avatar--m" />}
         <div style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
           <span style={{ fontSize: 13 }}>
-            {a ? <GcsUserLink userId={a.id} name={a.name} nameKey={a.nameKey} href={`/members/${a.id}-${slugify(a.name)}`} /> : <GcsDeletedMember />}{" "}
+            {a ? <GcsMemberName userId={a.id} name={a.name} nameKey={a.nameKey} href={`/members/${a.id}-${slugify(a.name)}`} /> : <GcsDeletedMember />}{" "}
             <span className="gcs-muted">· {relative(entry.createdAt)}</span>
             {entry.visibility !== "VISIBLE" && <span className="gcs-muted"> · {t("wall.hidden")}</span>}
           </span>

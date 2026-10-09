@@ -1,4 +1,4 @@
-import { GcsCard, GcsUserLink } from "@gcs/ui";
+import { GcsCard, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -121,7 +121,7 @@ export default async function ChatHistoryPage({ searchParams }: { searchParams: 
             <tbody>
               {data.rows.map((r) => (
                 <tr key={r.id} data-testid="gcs-chat-history-row">
-                  <td>{r.author ? <GcsUserLink userId={r.author.id} name={r.author.name} nameKey={r.author.nameKey} href={memberHref(r.author)} /> : <span className="gcs-deletedMember">{t("deletedMember")}</span>}</td>
+                  <td>{r.author ? <GcsMemberName userId={r.author.id} name={r.author.name} nameKey={r.author.nameKey} href={memberHref(r.author)} /> : <span className="gcs-deletedMember">{t("deletedMember")}</span>}</td>
                   {/* HTML-ul produs de server din text (escapat; doar linkurile http(s) devin <a>). */}
                   <td className="gcs-chatHistory__content" dangerouslySetInnerHTML={{ __html: r.html }} />
                   <td className="gcs-chatHistory__num">

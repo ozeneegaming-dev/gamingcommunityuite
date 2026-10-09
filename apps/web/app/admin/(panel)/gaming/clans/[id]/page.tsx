@@ -1,5 +1,5 @@
 import { CLANS_ACP_SECTION } from "@gcs/modules";
-import { GcsCard, GcsClanTag, GcsUserLink } from "@gcs/ui";
+import { GcsCard, GcsClanTag, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -110,7 +110,7 @@ export default async function AcpClanPage({ params }: Props) {
           {members.map((m) => (
             <li key={m.user.id} className="gcs-acpList__row">
               <span className="gcs-acpList__main">
-                <GcsUserLink userId={m.user.id} name={m.user.name} nameKey={m.user.nameKey} href={memberHref(m.user)} />
+                <GcsMemberName userId={m.user.id} name={m.user.name} nameKey={m.user.nameKey} href={memberHref(m.user)} />
               </span>
               <span className="gcs-acpList__meta">
                 {t(`roles.${m.role}`)} — {format.dateTime(new Date(m.joinedAt), { dateStyle: "medium" })}
@@ -154,7 +154,7 @@ export default async function AcpClanPage({ params }: Props) {
             <li key={a.id} className="gcs-acpList__row">
               <span className="gcs-acpList__main">
                 <span className="gcs-acpList__code">{a.action}</span>
-                {a.actor ? <GcsUserLink userId={a.actor.id} name={a.actor.name} nameKey={a.actor.nameKey} href={memberHref(a.actor)} /> : <span className="gcs-muted">{t("system")}</span>}
+                {a.actor ? <GcsMemberName userId={a.actor.id} name={a.actor.name} nameKey={a.actor.nameKey} href={memberHref(a.actor)} /> : <span className="gcs-muted">{t("system")}</span>}
               </span>
               <span className="gcs-acpList__meta">{date(a.at)}</span>
             </li>

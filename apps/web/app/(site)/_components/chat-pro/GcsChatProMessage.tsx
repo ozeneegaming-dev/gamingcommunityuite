@@ -14,7 +14,7 @@ import {
   faUserSlash,
 } from "@fortawesome/free-solid-svg-icons";
 import type { GcsChatMessageView, GcsChatProBot, GcsChatProPrefs, GcsRpsChoice } from "@gcs/modules";
-import { GcsAvatar, GcsBadgeArt, GcsButton, GcsIconSvg, type GcsIconSvgProps } from "@gcs/ui";
+import { GcsAvatar, GcsBadgeArt, GcsButton, GcsIconSvg, GcsMemberName, type GcsIconSvgProps } from "@gcs/ui";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { memberHref } from "@/lib/forum-urls";
@@ -214,9 +214,16 @@ export function GcsChatProMessage(props: {
         {!grouped && (
           <div className="gcs-chatPro__meta">
             {author ? (
-              <button type="button" className={`gcs-chat__name gcs-chatPro__name gcs-name--${author.nameKey}`} data-user-id={author.id} title={tm("mentionHint", { name })} onClick={() => actions.mention(name)} data-testid="gcs-chat-name">
-                {name}
-              </button>
+              <GcsMemberName
+                userId={author.id}
+                name={author.name}
+                label={name}
+                nameKey={author.nameKey}
+                className="gcs-chat__name gcs-chatPro__name"
+                title={tm("mentionHint", { name })}
+                onClick={() => actions.mention(name)}
+                data-testid="gcs-chat-name"
+              />
             ) : (
               <span className="gcs-deletedMember" data-testid="gcs-deleted-member">
                 {props.labels.deletedMember}

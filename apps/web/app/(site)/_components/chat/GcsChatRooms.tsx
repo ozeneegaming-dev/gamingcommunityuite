@@ -1,7 +1,7 @@
 "use client";
 
 import type { GcsUserRef } from "@gcs/modules";
-import { GcsButton, GcsUserLink } from "@gcs/ui";
+import { GcsButton, GcsMemberName } from "@gcs/ui";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { memberHref } from "@/lib/forum-urls";
@@ -205,7 +205,7 @@ export function GcsChatOnline({ channel, initial, title, nobody }: { channel: st
         <ul className="gcs-recentList">
           {users.map((u) => (
             <li key={u.id}>
-              <GcsUserLink userId={u.id} name={u.name} nameKey={u.nameKey} href={memberHref(u)} />
+              <GcsMemberName userId={u.id} name={u.name} nameKey={u.nameKey} href={memberHref(u)} />
             </li>
           ))}
         </ul>

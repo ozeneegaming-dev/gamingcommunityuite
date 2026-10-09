@@ -1,5 +1,5 @@
 import { groupLegend, whoWasOnline, type GcsLegendGroup, type GcsWhoWasOnline } from "@gcs/modules";
-import { GcsAvatar, GcsUserLink } from "@gcs/ui";
+import { GcsAvatar, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import Link from "next/link";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
@@ -41,7 +41,7 @@ function DayNames({ view, nobody, testId }: { view: GcsWhoWasOnline; nobody: str
     <p className="gcs-onlineBlock__names" data-testid={testId}>
       {view.members.map((m, i) => (
         <span key={m.id}>
-          <GcsUserLink userId={m.id} name={m.name} nameKey={m.nameKey} href={memberHref(m)} />
+          <GcsMemberName userId={m.id} name={m.name} nameKey={m.nameKey} href={memberHref(m)} />
           {i < view.members.length - 1 ? ", " : ""}
         </span>
       ))}
@@ -177,7 +177,7 @@ export async function GcsStatsPanel({ id, config }: { id: string; config?: Recor
                   {tp("newMember")}
                 </span>
                 <span className="gcs-statsTile__name">
-                  <GcsUserLink userId={newest.id} name={newest.name} nameKey={newest.nameKey} href={memberHref(newest)} />
+                  <GcsMemberName userId={newest.id} name={newest.name} nameKey={newest.nameKey} href={memberHref(newest)} />
                 </span>
                 {newest.joinedAt && (
                   <span className="gcs-statsTile__date">

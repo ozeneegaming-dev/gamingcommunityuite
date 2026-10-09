@@ -1,5 +1,5 @@
 import { CLANS_ACP_SECTION, GCS_CLAN_ACP_FILTERS, type GcsClanAcpFilter } from "@gcs/modules";
-import { GcsCard, GcsClanTag, GcsUserLink } from "@gcs/ui";
+import { GcsCard, GcsClanTag, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -80,7 +80,7 @@ export default async function AcpClansPage({ searchParams }: Props) {
                     <span className="gcs-acpList__sub">
                       {c.leader ? (
                         <>
-                          {t("leader")}: <GcsUserLink userId={c.leader.id} name={c.leader.name} nameKey={c.leader.nameKey} href={memberHref(c.leader)} />
+                          {t("leader")}: <GcsMemberName userId={c.leader.id} name={c.leader.name} nameKey={c.leader.nameKey} href={memberHref(c.leader)} />
                         </>
                       ) : (
                         t("noLeader")

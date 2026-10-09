@@ -10,6 +10,7 @@ import { currentActor } from "@/lib/actor";
 import { forumHref } from "@/lib/forum-urls";
 import { pluginHookHtml } from "@/lib/plugins";
 import { services } from "@/lib/services";
+import { GcsNamePreviewsCss, namesHtml } from "@/lib/member-names";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("vipPage"))("title") };
@@ -155,7 +156,8 @@ export default async function VipPage() {
       )}
       {pluginBlocks.length > 0 && (
         <div className="gcs-pluginHook gcs-vipPluginBlocks" data-hook="vip.page">
-          {pluginBlocks.map((html, i) => (
+          <GcsNamePreviewsCss />
+          {(await namesHtml(pluginBlocks)).map((html, i) => (
             // HTML-ul pluginului, trecut prin sanitizer (listă albă) de gazda pluginurilor.
             <div key={i} dangerouslySetInnerHTML={{ __html: html }} />
           ))}

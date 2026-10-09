@@ -1,5 +1,5 @@
 import type { GcsMemberCard as Card } from "@gcs/modules";
-import { GcsAvatar, GcsUserLink } from "@gcs/ui";
+import { GcsAvatar, GcsMemberName } from "@gcs/ui";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { memberHref, tint } from "@/lib/forum-urls";
 import { memberCardVars } from "@/lib/template-data";
@@ -18,7 +18,7 @@ export async function GcsMemberCard({ member }: { member: Card }) {
         {member.online && <span className="gcs-postbit__online" role="img" aria-label={t("online")} title={t("online")} />}
       </span>
       <strong className="gcs-memberCard__name">
-        <GcsUserLink userId={member.id} name={member.name} nameKey={member.nameKey} href={memberHref(member)} />
+        <GcsMemberName userId={member.id} name={member.name} nameKey={member.nameKey} href={memberHref(member)} />
       </strong>
       {member.customTitle && <span className="gcs-postbit__title">{member.customTitle}</span>}
       <span className="gcs-badge" style={member.group.color ? { background: tint(member.group.color, 0.16), color: member.group.color } : undefined}>

@@ -1,5 +1,5 @@
 import type { GcsTopicRow as Row } from "@gcs/modules";
-import { GcsAvatar, GcsBadge, GcsUserLink } from "@gcs/ui";
+import { GcsAvatar, GcsBadge, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
@@ -48,7 +48,7 @@ export async function GcsTopicRow({ topic, select }: { topic: Row; select?: Reac
         </span>
         <span className="gcs-topicRow__meta">
           {t("byWord")}{" "}
-          {topic.author ? <GcsUserLink userId={topic.author.id} name={topic.author.name} nameKey={topic.author.nameKey} href={memberHref(topic.author)} /> : <GcsDeletedMember />}
+          {topic.author ? <GcsMemberName userId={topic.author.id} name={topic.author.name} nameKey={topic.author.nameKey} href={memberHref(topic.author)} /> : <GcsDeletedMember />}
           {" · "}
           <GcsRelTime at={topic.createdAt} />
           {topic.tags.map((tag) => (
@@ -70,7 +70,7 @@ export async function GcsTopicRow({ topic, select }: { topic: Row; select?: Reac
       </div>
       <div className="gcs-topicRow__last">
         {topic.last.user && (
-          <GcsUserLink userId={topic.last.user.id} name={topic.last.user.name} nameKey={topic.last.user.nameKey} href={memberHref(topic.last.user)} />
+          <GcsMemberName userId={topic.last.user.id} name={topic.last.user.name} nameKey={topic.last.user.nameKey} href={memberHref(topic.last.user)} />
         )}
         <GcsRelTime at={topic.last.at} />
       </div>

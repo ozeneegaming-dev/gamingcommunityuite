@@ -4,7 +4,7 @@ import { faArrowDown, faBullhorn, faClockRotateLeft, faGear, faPowerOff, faScrol
 import type { GcsErrorPayload } from "@gcs/core";
 import type { GcsChatAnnouncementView, GcsChatMessageView, GcsChatProGif, GcsChatProPrefs, GcsChatReactionCount } from "@gcs/modules";
 import { chatProStyleVars, mergeChatProPrefs } from "@gcs/modules/chat-pro-prefs";
-import { GcsButton, GcsIconSvg, GcsModal, GcsUserLink, gcsToast, playNotificationSound } from "@gcs/ui";
+import { GcsButton, GcsIconSvg, GcsModal, GcsMemberName, gcsToast, playNotificationSound } from "@gcs/ui";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition, type CSSProperties, type ReactNode } from "react";
 import { memberHref } from "@/lib/forum-urls";
@@ -544,7 +544,7 @@ export function GcsChatProRoom(props: Props) {
             <div className="gcs-chat__pinned" data-testid="gcs-chat-pinned">
               <GcsIconSvg icon={faThumbtack} className="gcs-chat__barIcon" />
               <strong>{labels.pinned}</strong>
-              {pinned.author && <GcsUserLink userId={pinned.author.id} name={pinned.author.name} nameKey={pinned.author.nameKey} href={memberHref(pinned.author)} />}
+              {pinned.author && <GcsMemberName userId={pinned.author.id} name={pinned.author.name} nameKey={pinned.author.nameKey} href={memberHref(pinned.author)} />}
               {/* HTML-ul mesajului fixat: textul escapat de server (`renderChatText`), ca în lista de mesaje. */}
               <span className="gcs-chat__body" dangerouslySetInnerHTML={{ __html: pinned.html }} />
               {canAnnounce && (
