@@ -18,6 +18,8 @@ export const THEME_PREVIEW_HEADER = "x-gcs-theme-preview";
  * are designul lui.
  */
 export const SITE_AREA_HEADER = "x-gcs-area";
+/** Header-ul intern cu calea cererii (pus de proxy; valoarea venită din afară e suprascrisă). */
+export const SITE_PATH_HEADER = "x-gcs-path";
 export const siteAreaFor = (pathname: string): "admin" | "site" => (pathname === "/admin" || pathname.startsWith("/admin/") ? "admin" : "site");
 
 /** Clasa `<html>` a designului unei teme (`classic` nu are clasă: e aspectul de bază). */

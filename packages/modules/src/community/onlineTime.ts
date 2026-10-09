@@ -2,6 +2,7 @@ import type { GcsJobQueue, GcsMemberDataHandler, GcsSettingsService } from "@gcs
 import { Prisma, type PrismaClient } from "@gcs/db";
 import type Redis from "ioredis";
 import { addDays, dayKey } from "../chat-pro/period";
+export { formatOnlineDuration } from "./onlineFormat";
 
 /**
  * Timpul online al membrilor (specul 2026-10-10-hero-cockpit §4, „Timp online”): fiecare semn de prezență (cererile
@@ -45,16 +46,6 @@ const PERIOD_DAYS: Record<Exclude<GcsOnlinePeriod, "all">, number> = { day: 1, w
 /** Prima zi inclusă într-o perioadă (`null` = de la început). */
 export function onlinePeriodStart(today: string, period: GcsOnlinePeriod): string | null {
   return period === "all" ? null : addDays(today, -(PERIOD_DAYS[period] - 1));
-}
-
-/** Durata ca text scurt: „1h 35m”, „37m”, „45s” (fără zile: orele cresc peste 24). */
-export function formatOnlineDuration(seconds: number): string {
-  const s = Math.max(0, Math.floor(seconds));
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  if (h > 0) return `${h}h ${String(m).padStart(2, "0")}m`;
-  if (m > 0) return `${m}m`;
-  return `${s}s`;
 }
 
 export class GcsOnlineTime {
