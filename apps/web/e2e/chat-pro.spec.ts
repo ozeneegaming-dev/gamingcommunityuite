@@ -52,6 +52,10 @@ test.afterAll(async () => {
   for (const key of ["chat_pro.vote_enabled", "chat_pro.vote_text", "chat_pro.vote_url", "chat_pro.count_cooldown"]) await resetSetting(key).catch(() => {});
   await sql(`DELETE FROM chat_pro_bar_items`).catch(() => {});
   await sql(`DELETE FROM chat_emote_packs`).catch(() => {});
+  // Mesajele acestui fișier nu rămân în canalul General (alte specuri caută mesaje după text).
+  await sql(
+    `DELETE FROM chat_messages WHERE "authorId" IN (SELECT id FROM users WHERE email LIKE 'cp-%' OR email LIKE 'shot-%' OR email LIKE 'img-c-%' OR email LIKE 'cproot-%')`,
+  ).catch(() => {});
 });
 
 test("ACP: pornirea, mementoul de vot, bara de anunțuri și emoticoanele; membrul le vede și le folosește, comenzile, clasamentul, istoricul", async ({ page, context, browser }) => {
@@ -326,7 +330,7 @@ test("capturi Chat Pro", async ({ browser, request }) => {
   const q = room(a).getByTestId("gcs-chat-msg").filter({ hasText: "Cine intră diseară" });
   await q.hover();
   await q.getByTestId("gcs-chatpro-reply").click();
-  await send(a, "Eu intru după 21:00, facem echipă? https://youtu.be/dQw4w9WgXcQ");
+  await send(a, "Eu intru după 21:00, facem echipă? https://youtu.be/aqz-KE-bpKQ");
   await room(a).getByTestId("gcs-chat-file").setInputFiles({ name: "captura.png", mimeType: "image/png", buffer: PNG });
   await room(a).getByTestId("gcs-chat-input").fill("Captura de aseară 🎮");
   await room(a).getByRole("button", { name: "Trimite" }).click();
@@ -334,20 +338,6 @@ test("capturi Chat Pro", async ({ browser, request }) => {
   await send(b, `/rps @Nova${id}`, /îl provoacă pe/);
   await a.reload();
   await expect(a.getByTestId("gcs-chatpro-ranking")).toBeVisible();
-  // Depanare: stilul textului cu link (spațiul dintre text și link).
-  console.log(
-    "DEBUG",
-    await room(a)
-      .getByTestId("gcs-chat-msg")
-      .filter({ hasText: "facem echipă" })
-      .locator(".gcs-chatPro__body")
-      .evaluate((el) => {
-        const link = el.querySelector("a");
-        const cs = getComputedStyle(el);
-        const ls = link ? getComputedStyle(link) : null;
-        return JSON.stringify({ html: el.innerHTML, align: cs.textAlign, word: cs.wordSpacing, display: cs.display, link: ls && { display: ls.display, ml: ls.marginLeft, pl: ls.paddingLeft, float: ls.cssFloat, pos: ls.position } });
-      }),
-  );
 
   const shot = async (page: Page, name: string, full = false) => {
     await page.waitForTimeout(400);

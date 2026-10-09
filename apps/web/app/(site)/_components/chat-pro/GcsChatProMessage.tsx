@@ -258,7 +258,7 @@ export function GcsChatProMessage(props: {
           ) : (
             // HTML-ul vine de la server: textul escapat de `renderChatText` (doar linkurile http(s) devin <a>) și emoticoanele
             // (`renderEmotes`: coduri [a-z0-9_] și adrese /files/<id> din baza de date). Nimic din text nu ajunge nescapat.
-            m.body && <div className="gcs-chat__body gcs-chatPro__body" dangerouslySetInnerHTML={{ __html: m.html }} />
+            m.body && <div className="gcs-chatPro__text" dangerouslySetInnerHTML={{ __html: m.html }} />
           ))}
         <GcsChatMedia
           files={m.files ?? []}

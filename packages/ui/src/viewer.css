@@ -213,8 +213,8 @@
 
 /* ─── Imaginile care se deschid în vizualizator ─────────────────────────────────────────────────────── */
 
-/* Imaginile mari din postări: micșorate la înălțimea ecranului, cu cursorul de mărire. */
-.gcs-postBody img.gcs-postImage {
+/* Imaginile mari din postări: micșorate la înălțimea ecranului, cu cursorul de mărire (semnăturile au limita lor). */
+.gcs-postBody:not(.gcs-post__signature) img.gcs-postImage {
   max-height: min(70vh, 640px);
   width: auto;
   object-fit: contain;

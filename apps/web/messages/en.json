@@ -3268,7 +3268,8 @@
       "birthdayDate": "Date of birth",
       "birthdayVisible": "Show my birthday (without the year) on my profile and in the chat",
       "birthdayHint": "The year never shows; the chat's /zi-de-nastere command lists you only if ticked.",
-      "birthdayClear": "Clear date"
+      "birthdayClear": "Clear date",
+      "birthdaySave": "Save birthday"
     },
     "pm": {
       "messages_per_page": "Messages per page in a conversation"

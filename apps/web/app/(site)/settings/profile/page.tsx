@@ -67,7 +67,7 @@ export default async function ProfileSettingsPage() {
       <GcsBirthdayForm
         date={user.birthday ? user.birthday.toISOString().slice(0, 10) : null}
         visible={user.birthdayVisible}
-        labels={{ title: t("birthday"), date: t("birthdayDate"), visible: t("birthdayVisible"), hint: t("birthdayHint"), save: t("save"), saved: t("saved"), clear: t("birthdayClear") }}
+        labels={{ title: t("birthday"), date: t("birthdayDate"), visible: t("birthdayVisible"), hint: t("birthdayHint"), save: t("birthdaySave"), saved: t("saved"), clear: t("birthdayClear") }}
       />
     </div>
   );

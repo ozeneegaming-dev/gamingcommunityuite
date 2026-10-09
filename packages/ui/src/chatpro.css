@@ -171,11 +171,11 @@
   font-size: 11px;
   color: var(--gcs-muted);
 }
-.gcs-chatPro__body {
+.gcs-chatPro__text {
   margin: 0;
   color: inherit;
 }
-.gcs-chatPro__body a {
+.gcs-chatPro__text a {
   color: var(--cp-link);
 }
 .gcs-chatPro .gcs-emote {
@@ -500,10 +500,10 @@
   margin-right: 8px;
   vertical-align: baseline;
 }
-.gcs-chatPro--stream .gcs-chatPro__body {
+.gcs-chatPro--stream .gcs-chatPro__text {
   display: inline;
 }
-.gcs-chatPro--stream .gcs-chatPro__main > :not(.gcs-chatPro__meta, .gcs-chatPro__body) {
+.gcs-chatPro--stream .gcs-chatPro__main > :not(.gcs-chatPro__meta, .gcs-chatPro__text) {
   margin-top: 4px;
 }
 
@@ -561,7 +561,7 @@
 }
 .gcs-chatPro--bubbles .gcs-chatPro__msg--own .gcs-chatPro__time,
 .gcs-chatPro--bubbles .gcs-chatPro__msg--own .gcs-chatPro__edited,
-.gcs-chatPro--bubbles .gcs-chatPro__msg--own .gcs-chatPro__body a {
+.gcs-chatPro--bubbles .gcs-chatPro__msg--own .gcs-chatPro__text a {
   color: inherit;
 }
 .gcs-chatPro--bubbles .gcs-chatPro__msg--own .gcs-chatPro__name {
@@ -1595,8 +1595,8 @@
     order: -1;
   }
 }
-/* Telefoanele: avatar mai mic, uneltele mesajului în colț (nu mai mănâncă din lățimea textului). */
-@media (max-width: 600px) {
+/* Chat îngust (telefoanele, shoutbox-ul din coloana laterală): avatar mai mic, uneltele mesajului în colț. */
+@container chatpro (max-width: 560px) {
   .gcs-chatPro__msg {
     grid-template-columns: 30px minmax(0, 1fr);
     gap: 8px;
@@ -1615,6 +1615,10 @@
     position: absolute;
     top: 4px;
     right: 4px;
+    padding: 1px;
+    border: 1px solid var(--cp-line);
+    border-radius: 8px;
+    background: var(--gcs-surface);
   }
   .gcs-chatPro__tool {
     width: 24px;
