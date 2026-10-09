@@ -45,6 +45,11 @@ export class GcsReactionService {
     this.contents.set(contentType, content);
   }
 
+  /** Autorul unui conținut cu reacții (`null` dacă tipul nu e înregistrat sau conținutul nu mai există). */
+  async authorOf(contentType: string, contentId: string): Promise<string | null> {
+    return (await this.contents.get(contentType)?.author(contentId)) ?? null;
+  }
+
   /** Reacțiile active, în ordinea din ACP (din cache). */
   async list(): Promise<GcsReactionView[]> {
     const cached = await this.deps.cache.get<GcsReactionView[]>(CACHE_KEY);
