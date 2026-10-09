@@ -82,7 +82,7 @@ describe("profilul la unirea conturilor", () => {
 
     await w.s.memberRemoval.requestMerge(root, source.userId!, target.userId!);
 
-    expect(await w.s.db.statusUpdate.count({ where: { profileUserId: target.userId } })).toBe(1);
+    expect(await w.s.db.statusUpdate.count({ where: { profileUserId: target.userId! } })).toBe(1);
     expect(await w.s.db.statusUpdate.count({ where: { authorId: target.userId } })).toBe(1);
     const ignores = await w.s.db.userIgnore.findMany({ select: { userId: true, ignoredId: true } });
     expect(ignores).toEqual(expect.arrayContaining([{ userId: target.userId, ignoredId: other.userId }, { userId: other.userId, ignoredId: target.userId }]));

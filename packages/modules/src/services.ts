@@ -58,6 +58,7 @@ import { chatMemberData } from "./chat/memberData";
 import { vipMemberData } from "./vip/memberData";
 import { clanMemberData } from "./clans/memberData";
 import { serverMemberData } from "./servers/bridge/memberData";
+import { importerMemberData } from "./importer/memberData";
 import { PrismaClient } from "@gcs/db";
 import { templateComponents, withEmailLayout } from "./templates/components";
 import { isGcsIcon, resolveIcon } from "@gcs/ui/icon-registry";
@@ -710,6 +711,7 @@ function createMemberRemoval(d: {
   removal.register(vipMemberData({ db: d.db, vip: d.vip }));
   removal.register(clanMemberData({ db: d.db, clans: d.clans }));
   removal.register(serverMemberData({ db: d.db, store: d.bridge.store, players: d.bridge.players }));
+  removal.register(importerMemberData({ db: d.db }));
   removal.register(notificationDataHandler({ db: d.db }));
   removal.register(accountDataHandler({ db: d.db }));
   removal.register(fileDataHandler({ db: d.db, attachments: d.attachments }));

@@ -70,17 +70,25 @@ export function GcsDeleteAccount({
             {pending}
           </p>
           <div>
-            <GcsButton variant="primary" icon={<GcsIconSvg icon={faRotateLeft} />} disabled={cancel.pending} onClick={() => cancel.run(() => cancelAccountDeletion({}))}>
+            <GcsButton
+              variant="primary"
+              icon={<GcsIconSvg icon={faRotateLeft} />}
+              disabled={cancel.pending}
+              onClick={() => {
+                request.setStatus(null);
+                cancel.run(() => cancelAccountDeletion({}));
+              }}
+            >
               {labels.cancel}
             </GcsButton>
           </div>
-          <GcsStatus status={cancel.status} />
         </>
       ) : (
         <form
           style={{ display: "flex", flexDirection: "column", gap: 12 }}
           onSubmit={(e) => {
             e.preventDefault();
+            cancel.setStatus(null);
             request.run(() => requestAccountDeletion({ password, code, confirm }), () => {
               setPassword("");
               setCode("");
@@ -129,9 +137,10 @@ export function GcsDeleteAccount({
               </div>
             </>
           )}
-          <GcsStatus status={request.status} />
         </form>
       )}
+      {/* Mesajul ultimei acțiuni rămâne vizibil și după ce pagina trece între cele două stări (cerere ↔ fără cerere). */}
+      <GcsStatus status={cancel.status ?? request.status} />
     </section>
   );
 }

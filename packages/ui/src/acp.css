@@ -1413,9 +1413,15 @@ input[type="checkbox"].gcs-switch:checked::before,
   color: var(--gcs-muted);
   font-size: 13px;
 }
-.gcs-dangerZone .gcs-btn--ghost {
+.gcs-dangerZone .gcs-btn.gcs-btn--ghost,
+.gcs-root .gcs-dangerZone a.gcs-btn--ghost {
   color: var(--gcs-acp-bad);
   border-color: color-mix(in srgb, var(--gcs-acp-bad) 55%, transparent);
+}
+.gcs-dangerZone .gcs-btn.gcs-btn--ghost:hover,
+.gcs-root .gcs-dangerZone a.gcs-btn--ghost:hover {
+  background: color-mix(in srgb, var(--gcs-acp-bad) 14%, var(--gcs-surface2));
+  color: var(--gcs-acp-bad);
 }
 
 /* Banda unei operații în curs (fișa membrului, pagina de progres). */

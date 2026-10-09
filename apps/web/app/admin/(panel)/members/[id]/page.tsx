@@ -91,7 +91,7 @@ export default async function AcpMemberPage({ params }: Props) {
           {removal.status !== "SCHEDULED" && <Link href={`/admin/members/removals/${removal.id}`}>{tr("viewProgress")}</Link>}
         </p>
       )}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20, alignItems: "start" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 340px), 1fr))", gap: 20, alignItems: "start" }}>
         <Section title={t("groups.title")} icon="fa-solid fa-users">
           <GcsActionForm action={setPrimaryGroup.bind(null, member.id)} submitLabel={t("groups.save")} submitKind="save">
             <label className="gcs-field">
@@ -226,7 +226,7 @@ export default async function AcpMemberPage({ params }: Props) {
           ))}
         </Section>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(380px, 1fr))", gap: 16, alignItems: "start" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 380px), 1fr))", gap: 16, alignItems: "start" }}>
         <MemberProfileSections userId={member.id} />
       </div>
       <Section title={t("perms.title")} icon="fa-solid fa-key">

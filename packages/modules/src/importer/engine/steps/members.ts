@@ -93,7 +93,8 @@ export async function importMembers(s: GcsStepContext): Promise<void> {
     (c, l) => s.adapter.members(c, l),
     300,
     async (rows) => {
-      const existing = await s.map.get("member", rows.map((r) => r.id));
+      // Și membrii cu contul șters între timp: legătura rămâne, deci nu se recreează.
+      const existing = await s.map.get("member", rows.map((r) => r.id), { includeDeleted: true });
       if (rows.some((r) => r.birthday && !existing.has(r.id))) birthdayFieldId ??= await birthdayField(s);
       await lookups.load(s.collectRefs(lookups, rows.map((r) => r.signature)));
       const created: { member: SrcMember; userId: string }[] = [];

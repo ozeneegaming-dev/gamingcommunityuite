@@ -1,4 +1,5 @@
 import { GcsForumCounters } from "../../../forums/counters";
+import { IMPORT_DELETED_MEMBER } from "../map";
 import type { GcsStepContext } from "../context";
 import { IMPORT_TX } from "../context";
 
@@ -12,8 +13,9 @@ export async function finalizeImport(s: GcsStepContext): Promise<void> {
   const { db, permissions, bus } = s.deps;
   const counters = new GcsForumCounters();
   const source = s.map.source;
+  // Fără membrii cu contul șters între timp (legătura lor nu mai dă un cont).
   const ids = async (type: string) =>
-    (await db.importMap.findMany({ where: { source, type }, select: { targetId: true } })).map((r) => r.targetId);
+    (await db.importMap.findMany({ where: { source, type }, select: { targetId: true } })).map((r) => r.targetId).filter((id) => !id.startsWith(IMPORT_DELETED_MEMBER));
   const [topicIds, forumIds, userIds, statusIds] = await Promise.all([ids("topic"), ids("forum"), ids("member"), ids("status")]);
   const topics = topicIds.map(Number);
   const forums = forumIds.map(Number).filter((n) => Number.isInteger(n));
