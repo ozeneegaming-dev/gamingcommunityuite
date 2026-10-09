@@ -10,7 +10,7 @@ const gold = {
 describe("compileNameStylesCss", () => {
   test("vip_gold: gradient animat, ca în machetă", () => {
     const css = compileNameStylesCss([gold]);
-    expect(css).toContain("a.gcs-name--vip_gold:hover{");
+    expect(css).toContain(":is(.gcs-root,#gcs-names) .gcs-name--vip_gold{");
     expect(css).toContain("background:linear-gradient(90deg,#F4B740,#FFF0B8,#E8961C,#F4B740)");
     expect(css).toContain("background-clip:text");
     expect(css).toContain("animation:gcsShimmer");
@@ -22,13 +22,19 @@ describe("compileNameStylesCss", () => {
       { key: "admin", color: "#FF4D57", nameStyle: { glow: "#FF4D57", bold: true, italic: true } },
     ]);
     expect(css).toContain(
-      "{color:#FF4D57;text-shadow:0 0 10px rgba(255,77,87,.55);font-weight:700;font-style:italic}",
+      "{color:#FF4D57;-webkit-text-fill-color:currentColor;text-shadow:0 0 10px rgba(255,77,87,.55);font-weight:700;font-style:italic}",
     );
   });
 
-  test("stilul bate culoarea generală a linkurilor (`.gcs-root a`, și la hover): numele-link își păstrează culoarea grupului", () => {
+  test("stilul bate culorile linkurilor din teme (Nova, Clasic, CSS-ul temei), și la hover: specificitate de ID", () => {
     const css = compileNameStylesCss([{ key: "member", color: "#ECEDF1", nameStyle: null }]);
-    expect(css).toContain(".gcs-name--member,.gcs-root a.gcs-name--member,.gcs-root a.gcs-name--member:hover{color:#ECEDF1");
+    // `:is(.gcs-root,#gcs-names)` are specificitatea unui ID (orice regulă de temă pe clase pierde), fără `!important`.
+    expect(css).toContain(".gcs-name--member,:is(.gcs-root,#gcs-names) .gcs-name--member{color:#ECEDF1;-webkit-text-fill-color:currentColor");
+  });
+
+  test("gradientul: textul transparent și fundalul tăiat pe litere, oricum ar fi setată umplerea de temă", () => {
+    const css = compileNameStylesCss([gold]);
+    expect(css).toContain("color:transparent;-webkit-text-fill-color:transparent");
   });
 
   test("culoarea din nameStyle are prioritate față de culoarea grupului", () => {

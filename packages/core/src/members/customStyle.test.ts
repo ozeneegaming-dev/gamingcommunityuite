@@ -91,12 +91,12 @@ describe("stilurile CSS scrise de admin: compilarea", () => {
     const cls = customStyleClass(KEY, "name", "flacara");
     expect(cls).toBe("gcs-nameStyle--gcs-vip_studio--flacara");
     const prefix = customStylePrefix(KEY, "name", "flacara");
-    const css = compileCustomStyle(r.style, { selectors: [`.gcs-root .${cls}`, '.gcs-root :is(a.gcs-userLink[data-user-id="u1"],[data-name-user="u1"])'], prefix });
-    expect(css).toContain(`.gcs-root .${cls},.gcs-root :is(a.gcs-userLink[data-user-id="u1"],[data-name-user="u1"]){color:#ffd166;`);
+    const css = compileCustomStyle(r.style, { selectors: [`:is(.gcs-root,#gcs-names) .${cls}`, ':is(.gcs-root,#gcs-names) :is(.gcs-userLink[data-user-id="u1"],[data-name-user="u1"])'], prefix });
+    expect(css).toContain(`:is(.gcs-root,#gcs-names) .${cls},:is(.gcs-root,#gcs-names) :is(.gcs-userLink[data-user-id="u1"],[data-name-user="u1"]){color:#ffd166;`);
     expect(css).toContain(`animation:${prefix}flicker 1.4s ease-in-out infinite alternate`);
     // Animațiile GCS (gcsNfx*) rămân cum sunt; doar cele proprii primesc prefixul.
     expect(css).toContain(`animation:${prefix}rise 2s linear infinite, gcsNfxBlink 1s steps(1) infinite`);
-    expect(css).toContain(`.gcs-root .${cls}::after,`);
+    expect(css).toContain(`:is(.gcs-root,#gcs-names) .${cls}::after,`);
     expect(css).toContain(`@keyframes ${prefix}flicker{from{opacity:1}50%, 75%{opacity:.82}to{opacity:1}}`);
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)\{[^}]*\{animation:none!important;transition:none!important\}\}/);
     expect(css).not.toContain("@keyframes flicker");
@@ -112,9 +112,9 @@ describe("stilurile CSS scrise de admin: compilarea", () => {
       ],
       { previews: true, styles: [{ pluginKey: KEY, kind: "name", key: "verde", style: r.style }, { pluginKey: KEY, kind: "banner", key: "verde", style: r.style }] },
     );
-    expect(css).toContain('.gcs-root .gcs-nameStyle--gcs-vip_studio--verde,.gcs-root :is(a.gcs-userLink[data-user-id="u1"],[data-name-user="u1"]){color:#00ff88');
+    expect(css).toContain(':is(.gcs-root,#gcs-names) .gcs-nameStyle--gcs-vip_studio--verde,:is(.gcs-root,#gcs-names) :is(.gcs-userLink[data-user-id="u1"],[data-name-user="u1"]){color:#00ff88');
     expect(css).not.toContain('[data-user-id="u2"],[data-name-user="u2"]){color:#00ff88');
-    expect(css).toContain(".gcs-root .gcs-bannerStyle--gcs-vip_studio--verde{color:#00ff88");
+    expect(css).toContain(":is(.gcs-root,#gcs-names) .gcs-bannerStyle--gcs-vip_studio--verde{color:#00ff88");
     // Stilul vine după efecte, deci câștigă la aceeași specificitate.
     expect(css.indexOf("gcs-nameStyle--gcs-vip_studio--verde")).toBeGreaterThan(css.indexOf("@keyframes gcsNfxFlow"));
   });

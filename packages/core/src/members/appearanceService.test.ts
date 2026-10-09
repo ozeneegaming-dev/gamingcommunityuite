@@ -46,6 +46,20 @@ describe("aspectul membrilor publicat de pluginuri", () => {
     const css = await service.css();
     expect(css).toContain(`[data-user-id="${u.id}"]`);
     expect(css).toContain("--nfx-c1:#FF0000");
+    // Doar cadrele-cheie folosite de membri (nu toate efectele).
+    expect(css).not.toContain("@keyframes gcsNfxWave{");
+    expect(await service.letterUsers()).toEqual([]);
+  });
+
+  test("efectele pe litere: membrii lor sunt listați (componenta numelui le separă literele)", async () => {
+    const u = await w.createUser("Litera", "vip_gold");
+    await service.set(KEY, u.id, { name: { fill: { colors: ["#22D3EE"] }, effect: "val_litere" } });
+    expect(await service.letterUsers()).toContain(u.id);
+    const css = await service.css();
+    expect(css).toContain("@keyframes gcsNfxWave{");
+    expect(css).toContain(`[data-user-id="${u.id}"],[data-name-user="${u.id}"]) .gcs-name__ls>b{animation:gcsNfxWave`);
+    await service.set(KEY, u.id, { name: { fill: { colors: ["#22D3EE"] }, effect: "neon" } });
+    expect(await service.letterUsers()).not.toContain(u.id);
   });
 
   test("o formă invalidă e refuzată cu câmpurile; un user inexistent → not_found", async () => {
@@ -106,10 +120,14 @@ describe("stilurile CSS scrise de admini", () => {
     const look = await service.forUser(u.id);
     expect(look?.name?.styleClass).toBe("gcs-nameStyle--acme-looks--neon_mov");
     const css = await service.css();
-    expect(css).toContain(`.gcs-root .gcs-nameStyle--acme-looks--neon_mov,.gcs-root :is(a.gcs-userLink[data-user-id="${u.id}"],[data-name-user="${u.id}"]){color:#c084fc`);
+    expect(css).toContain(`:is(.gcs-root,#gcs-names) :is(.gcs-userLink[data-user-id="${u.id}"],[data-name-user="${u.id}"]){color:#c084fc`);
     expect(css).toContain("@keyframes gcsu-acme_looks-name-neon_mov-puls{");
-    // Clasele de previzualizare ale efectelor apar cât timp pluginul cu `appearance` e activ.
-    expect(css).toContain(".gcs-nfx--inferno");
+    // Clasele de previzualizare (efectele, stilurile pluginului) sunt în foaia separată, doar pentru paginile pluginurilor.
+    expect(css).not.toContain(".gcs-nfx--inferno");
+    const previews = await service.css({ previews: true });
+    expect(previews).toContain(".gcs-nfx--inferno");
+    expect(previews).toContain(":is(.gcs-root,#gcs-names) .gcs-nameStyle--acme-looks--neon_mov{color:#c084fc");
+    expect(previews).not.toContain(`data-user-id="${u.id}"`);
     expect(await service.listStyles(KEY, "name")).toMatchObject([{ kind: "name", key: "neon_mov", className: "gcs-nameStyle--acme-looks--neon_mov" }]);
     // Ștergerea: stilul dispare din CSS (numele revine la culorile de bază).
     expect(await service.setStyle(KEY, "name", "neon_mov", null, { userId: admin.id })).toMatchObject({ ok: true });

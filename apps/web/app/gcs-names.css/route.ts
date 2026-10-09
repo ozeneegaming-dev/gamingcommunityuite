@@ -11,9 +11,16 @@ export const dynamic = "force-dynamic";
  * Apoi pastilele mențiunilor de grup (culoarea și iconița fiecărui grup, Mențiuni v2) și, la final, aspectul publicat
  * de pluginuri (Studio VIP): numele și ramele per membru (`data-user-id`).
  */
-export async function GET(): Promise<Response> {
+export async function GET(req: Request): Promise<Response> {
   // Aspectul ține cont doar de pluginurile încărcate: gazda trebuie să fi pornit.
   await pluginHost();
+  // `?previews=1`: clasele de previzualizare ale efectelor (doar paginile pluginurilor și pagina VIP le încarcă).
+  if (new URL(req.url).searchParams.get("previews") === "1") {
+    const css = await services()
+      .appearance.css({ previews: true })
+      .catch(() => "");
+    return new Response(css, { headers: { "Content-Type": "text/css; charset=utf-8", "Cache-Control": "public, max-age=60" } });
+  }
   const [cosmetics, groupMentions, appearance] = await Promise.all([
     services().cosmetics.css(),
     groupMentionsCss().catch(() => ""),

@@ -6,7 +6,6 @@ import { GcsButton } from "./GcsButton";
 import { GcsCard } from "./GcsCard";
 import { GcsField } from "./GcsField";
 import { GcsTable } from "./GcsTable";
-import { GcsUserLink } from "./GcsUserLink";
 
 afterEach(() => {
   cleanup();
@@ -88,16 +87,6 @@ describe("GcsAvatar", () => {
   test("cu src afișează imaginea, cu numele ca text alternativ", () => {
     render(<GcsAvatar name="Krypt" size="s" src="https://cdn.example/k.png" />);
     expect(screen.getByRole("img", { name: "Krypt" }).getAttribute("src")).toBe("https://cdn.example/k.png");
-  });
-});
-
-describe("GcsUserLink", () => {
-  test('nameKey="vip_gold" → clasa gcs-name--vip_gold', () => {
-    render(<GcsUserLink userId="u1" name="ShadowRO" nameKey="vip_gold" href="/members/u1-shadowro" />);
-    const link = screen.getByRole("link", { name: "ShadowRO" });
-    expect(link.className).toBe("gcs-userLink gcs-name--vip_gold");
-    expect(link.getAttribute("href")).toBe("/members/u1-shadowro");
-    expect(link.getAttribute("data-user-id")).toBe("u1");
   });
 });
 

@@ -11,7 +11,7 @@ import {
   type GcsHtmlNode,
 } from "@gcs/core";
 import { templateComponents, templateIconSvg, type GcsCardView, type GcsClanTag as GcsClanTagView, type GcsPostAuthor, type GcsPostbitData } from "@gcs/modules";
-import { GcsAvatar, GcsClanTag, GcsHoverCard, GcsUserLink } from "@gcs/ui";
+import { GcsAvatar, GcsClanTag, GcsHoverCard, GcsMemberName } from "@gcs/ui";
 import { GcsIconSvg } from "@gcs/ui/icons";
 import { resolveIcon } from "@gcs/ui/icon-registry";
 import { createElement, type ReactElement } from "react";
@@ -38,7 +38,7 @@ describe("componentele șabloanelor produc același markup ca cele React", () =>
   });
 
   test("numele stilizat (linkul cu hover card)", () => {
-    expect(tree(usernameHtml(user, {}))).toEqual(tree(react(createElement(GcsUserLink, { userId: "u1", name: "Ana Maria", nameKey: "admin", href: "/members/u1-ana-maria" }))));
+    expect(tree(usernameHtml(user, {}))).toEqual(tree(react(createElement(GcsMemberName, { userId: "u1", name: "Ana Maria", nameKey: "admin", href: "/members/u1-ana-maria" }))));
   });
 
   test("iconițele Font Awesome", () => {

@@ -100,9 +100,9 @@ describe("aspectul membrilor: validarea", () => {
 describe("aspectul membrilor: CSS-ul", () => {
   test("numele: per user, cu gradient, animație și oprire sub reduced-motion", () => {
     const css = compileAppearanceCss([{ userId: "u1", appearance: { name: { fill: { colors: ["#FF0044", "#7A5CFF"] }, effect: "shimmer" } } }]);
-    expect(css).toContain('.gcs-root :is(a.gcs-userLink[data-user-id="u1"],[data-name-user="u1"])');
+    expect(css).toContain(':is(.gcs-root,#gcs-names) :is(.gcs-userLink[data-user-id="u1"],[data-name-user="u1"])');
     // Culorile ca variabile; gradientul le folosește prin cernelurile temei (închise automat pe tema deschisă).
-    expect(css).toContain("--nfx-c1:#FF0044;--nfx-c2:#7A5CFF;--nfx-grad:linear-gradient(90deg,var(--nfx-i1),var(--nfx-i2),var(--nfx-i1))");
+    expect(css).toContain("--nfx-c1:#FF0044;--nfx-c2:#7A5CFF;--nfx-cyc:gcsNfxCycle2;--nfx-cyg:currentColor;--nfx-grad:linear-gradient(90deg,var(--nfx-i1),var(--nfx-i2),var(--nfx-i1))");
     expect(css).toContain("animation:gcsNfxFlow calc(3.6s*var(--nfx-sp,1)) linear infinite");
     expect(css).toContain("prefers-reduced-motion: reduce");
   });

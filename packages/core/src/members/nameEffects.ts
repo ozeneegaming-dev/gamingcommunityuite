@@ -16,7 +16,12 @@
  * pseudo-elemente (`::before`, `::after`), fără evenimente de mouse, poziționate absolut (nu mută nimic din pagină).
  */
 
-export const NAME_EFFECTS = [
+import { NAME_SCOPE } from "./memberName";
+import { TEXT_EFFECTS, TEXT_FX, TEXT_KEYFRAMES } from "./nameEffectsText";
+import { black, cycle, d, DECOR, dots, dropGlow, g, gc, GRAD_TEXT, i, sheen, TEXT_LAYER, white, type Fx } from "./nameFxKit";
+
+/** Efectele originale (până la categoria „Efecte text”). */
+const CORE_EFFECTS = [
   "none",
   "gradient",
   "shimmer",
@@ -52,58 +57,13 @@ export const NAME_EFFECTS = [
   "outline",
   "extrude",
 ] as const;
+/** Lista albă a efectelor: cele originale și categoria „Efecte text” (`nameEffectsText.ts`). */
+export const NAME_EFFECTS = [...CORE_EFFECTS, ...TEXT_EFFECTS] as const;
 export type GcsNameEffect = (typeof NAME_EFFECTS)[number];
-
-type Fx = {
-  /** Peste tot (și în liste). */
-  base: string[];
-  /** Doar în locurile mari: elementul și cele două pseudo-elemente. */
-  rich?: { self?: string[]; before?: string[]; after?: string[] };
-};
-
-// ─── Ajutoare ───
-
-/** Durata unei animații, cu viteza aleasă (`--nfx-sp`: 1 normal, 1.6 lent, 0.55 rapid). */
-const d = (seconds: number) => `calc(${seconds}s*var(--nfx-sp,1))`;
-/** Cerneala culorii n (închisă automat pe tema deschisă). */
-const i = (n: number) => `var(--nfx-i${n})`;
-/** Strălucirea, cu opacitatea dată (mai slabă pe tema deschisă). */
-const g = (pct: number, color = "var(--nfx-g)") => `color-mix(in srgb,${color} calc(var(--nfx-ga,1)*${pct}%),transparent)`;
-/** Deschide o culoare (miezul fierbinte al unui neon), doar pe tema închisă: pe cea deschisă rămâne cerneala. */
-const white = (color: string, pct: number) => `color-mix(in oklab,${color},#fff calc(var(--nfx-dk,1)*${pct}%))`;
-const black = (color: string, pct: number) => `color-mix(in oklab,${color},#000 ${pct}%)`;
-/** Sclipirea albă care trece peste litere: mai discretă pe tema deschisă (altfel literele ar dispărea pe alb). */
-const sheen = (alpha: number) => `rgb(255 255 255/calc(${alpha} * (.35 + .65 * var(--nfx-dk,1))))`;
-
-/** Textul în gradientul culorilor (umplerea transparentă, fundalul tăiat pe litere). */
-const GRAD_TEXT = ["background-image:var(--nfx-grad)", "background-size:200% 100%", "-webkit-background-clip:text", "background-clip:text", "color:transparent", "-webkit-text-fill-color:transparent"];
-/** Un strat cu textul numelui (din `data-text`), ascuns cititoarelor de ecran (`/ ""`). */
-const TEXT_LAYER = [
-  "content:attr(data-text)",
-  'content:attr(data-text) / ""',
-  "position:absolute",
-  "left:0",
-  "top:0",
-  "width:100%",
-  "height:100%",
-  "pointer-events:none",
-  "white-space:nowrap",
-  "background:none",
-  "-webkit-text-fill-color:currentColor",
-  "text-shadow:none",
-  "filter:none",
-];
-/** Un pseudo-element decorativ (particule, iconițe): invizibil în repaus, deci ascuns și sub reduced-motion. */
-const DECOR = ['content:""', 'content:"" / ""', "position:absolute", "pointer-events:none", "opacity:0"];
-/** O strălucire pe text în gradient (text-shadow s-ar vedea prin literele transparente). */
-const dropGlow = (px: number, pct: number) => `filter:drop-shadow(0 0 ${px}px ${g(pct)})`;
-
-/** Puncte (particule) desenate ca gradiente radiale, într-un singur strat. */
-const dots = (color: string, list: [number, number, number][]) => list.map(([x, y, r]) => `radial-gradient(circle at ${x}% ${y}%,${color} 0 ${r}px,transparent ${r + 0.8}px)`).join(",");
 
 // ─── Efectele ───
 
-const FX: Record<GcsNameEffect, Fx> = {
+const CORE_FX: Record<(typeof CORE_EFFECTS)[number], Fx> = {
   none: { base: [] },
 
   /** Gradient fix (fără mișcare): numele cu mai multe culori și fără efect. */
@@ -117,15 +77,15 @@ const FX: Record<GcsNameEffect, Fx> = {
 
   /** Respirație: strălucirea crește și scade încet. */
   pulse: {
-    base: [`color:${white(i(1), 12)}`, `animation:gcsNfxBreath ${d(2.6)} ease-in-out infinite`],
+    base: [`color:${white(i(1), 12)}`, `animation:gcsNfxBreath ${d(2.6)} ease-in-out infinite,${cycle(8)}`],
   },
 
   /** Tub de neon: miez aproape alb, halou în trei straturi și pâlpâirea unui tub care bâzâie. */
   neon: {
     base: [
       `color:${white(i(1), 55)}`,
-      `text-shadow:0 0 1px ${white(i(1), 70)},0 0 4px ${g(95)},0 0 11px ${g(80)},0 0 22px ${g(55)},0 0 38px ${g(30)}`,
-      `animation:gcsNfxFlicker ${d(5.5)} linear infinite`,
+      `text-shadow:0 0 1px var(--nfx-cyg,${white(i(1), 70)}),0 0 4px ${gc(95)},0 0 11px ${gc(80)},0 0 22px ${gc(55)},0 0 38px ${gc(30)}`,
+      `animation:gcsNfxFlicker ${d(5.5)} linear infinite,${cycle(8)}`,
     ],
   },
 
@@ -330,7 +290,7 @@ const FX: Record<GcsNameEffect, Fx> = {
 
   /** Electric: neon care arde constant și scapără din când în când, cu un arc peste litere. */
   electric: {
-    base: [`color:${white(i(1), 40)}`, `text-shadow:0 0 2px ${white(i(1), 60)},0 0 8px ${g(90)},0 0 18px ${g(60)}`, `animation:gcsNfxZap ${d(3.2)} linear infinite`],
+    base: [`color:${white(i(1), 40)}`, `text-shadow:0 0 2px var(--nfx-cyg,${white(i(1), 60)}),0 0 8px ${gc(90)},0 0 18px ${gc(60)}`, `animation:gcsNfxZap ${d(3.2)} linear infinite,${cycle(8)}`],
     rich: {
       after: [
         ...DECOR,
@@ -366,7 +326,7 @@ const FX: Record<GcsNameEffect, Fx> = {
 
   /** Fulger: text albastru electric și un fulger mic lângă nume care scapără dublu. */
   lightning: {
-    base: [`color:${white(i(1), 35)}`, `text-shadow:0 0 4px ${g(90)},0 0 14px ${g(55)}`, `animation:gcsNfxFlash ${d(4)} linear infinite`],
+    base: [`color:${white(i(1), 35)}`, `text-shadow:0 0 4px ${gc(90)},0 0 14px ${gc(55)}`, `animation:gcsNfxFlash ${d(4)} linear infinite,${cycle(8)}`],
     rich: {
       after: [
         ...DECOR,
@@ -588,6 +548,12 @@ const FX: Record<GcsNameEffect, Fx> = {
   },
 };
 
+const FX: Record<GcsNameEffect, Fx> = { ...CORE_FX, ...TEXT_FX };
+
+/** Efectele desenate pe litere (componenta numelui separă literele doar pentru membrii care au ales unul). */
+export const LETTER_EFFECTS: readonly GcsNameEffect[] = NAME_EFFECTS.filter((e) => FX[e].letter !== undefined);
+export const nameEffectUsesLetters = (effect: string): boolean => (LETTER_EFFECTS as readonly string[]).includes(effect);
+
 // ─── Cadrele-cheie (o singură dată, în CSS-ul static) ───
 
 const e3d = (dir: 1 | -1) => {
@@ -601,7 +567,7 @@ const city = (n: number) => `text-shadow:0 0 .05em ${white(i(n), 60)},0 0 .25em 
 
 const KEYFRAMES = [
   "@keyframes gcsNfxFlow{to{background-position:200% 0}}",
-  `@keyframes gcsNfxBreath{0%,100%{text-shadow:0 0 .08em ${g(45)},0 0 .2em ${g(20)}}50%{text-shadow:0 0 .2em ${g(95)},0 0 .5em ${g(70)},0 0 1em ${g(40)}}}`,
+  `@keyframes gcsNfxBreath{0%,100%{text-shadow:0 0 .08em ${gc(45)},0 0 .2em ${gc(20)}}50%{text-shadow:0 0 .2em ${gc(95)},0 0 .5em ${gc(70)},0 0 1em ${gc(40)}}}`,
   "@keyframes gcsNfxFlicker{0%,18%,21%,23%,54%,57%,100%{opacity:1}19.5%,22%{opacity:.4}55.5%{opacity:.75}}",
   `@keyframes gcsNfxGlitchShadow{0%,86%,100%{text-shadow:.06em 0 ${g(70, i(2))},-.06em 0 ${g(70, i(3))}}88%{text-shadow:-.12em .03em ${g(85, i(2))},.12em -.03em ${g(85, i(3))}}92%{text-shadow:.1em -.03em ${g(85, i(2))},-.08em .03em ${g(85, i(3))}}}`,
   "@keyframes gcsNfxJitter{0%,86%,100%{transform:none}88%{transform:translate(.04em,-.02em) skewX(-8deg)}90%{transform:translate(-.05em,.02em)}93%{transform:translate(.02em,0) skewX(5deg)}}",
@@ -627,10 +593,10 @@ const KEYFRAMES = [
   `@keyframes gcsNfxHit{0%,70%,76%,100%{text-shadow:0 0 6px ${g(45)}}71%{text-shadow:.08em 0 ${g(90, i(2))},-.08em 0 ${g(90, i(3))}}73%{text-shadow:-.06em 0 ${g(90, i(2))},.06em 0 ${g(90, i(3))}}}`,
   "@keyframes gcsNfxLock{0%{transform:translateY(-50%) rotate(0) scale(1.35);opacity:.35}35%,68%{transform:translateY(-50%) rotate(90deg) scale(1);opacity:1}71%{transform:translateY(-50%) translateX(.06em) rotate(90deg) scale(.9)}74%{transform:translateY(-50%) translateX(-.05em) rotate(90deg) scale(1.05)}100%{transform:translateY(-50%) rotate(180deg) scale(1.35);opacity:.35}}",
   "@keyframes gcsNfxFloat{0%{opacity:0;transform:translateY(.4em) scale(.7)}25%{opacity:1}100%{opacity:0;transform:translateY(-1.5em) scale(1.1)}}",
-  `@keyframes gcsNfxZap{0%,44%,49%,53%,100%{opacity:1;text-shadow:0 0 2px ${white(i(1), 60)},0 0 8px ${g(90)},0 0 18px ${g(60)}}45%,51%{opacity:1;text-shadow:0 0 2px #fff,0 0 10px #fff,0 0 22px ${g(100)},0 0 42px ${g(85)}}47%{opacity:.6}}`,
+  `@keyframes gcsNfxZap{0%,44%,49%,53%,100%{opacity:1;text-shadow:0 0 2px var(--nfx-cyg,${white(i(1), 60)}),0 0 8px ${gc(90)},0 0 18px ${gc(60)}}45%,51%{opacity:1;text-shadow:0 0 2px #fff,0 0 10px #fff,0 0 22px ${gc(100)},0 0 42px ${gc(85)}}47%{opacity:.6}}`,
   "@keyframes gcsNfxArc{0%,44%,54%,100%{opacity:0}45%{opacity:1;transform:scaleY(1)}47%{opacity:.2;transform:scaleY(-1)}50%{opacity:.95;transform:scaleY(1)}}",
   "@keyframes gcsNfxRipple{0%,100%{transform:scaleY(-.75) translateX(0)}50%{transform:scaleY(-.75) translateX(.04em) skewX(-4deg)}}",
-  `@keyframes gcsNfxFlash{0%,58%,64%,100%{text-shadow:0 0 4px ${g(90)},0 0 14px ${g(55)}}59%,62%{text-shadow:0 0 3px #fff,0 0 12px ${g(100)},0 0 28px ${g(80)}}}`,
+  `@keyframes gcsNfxFlash{0%,58%,64%,100%{text-shadow:0 0 4px ${gc(90)},0 0 14px ${gc(55)}}59%,62%{text-shadow:0 0 3px #fff,0 0 12px ${gc(100)},0 0 28px ${gc(80)}}}`,
   "@keyframes gcsNfxBolt{0%,57%,66%,100%{opacity:.22}58%,63%{opacity:1}60%{opacity:.3}}",
   "@keyframes gcsNfxBlade{0%,50%{background-size:0% .08em;background-position:0 52%}62%,80%{background-size:100% .08em;background-position:0 52%}92%,100%{background-size:0% .08em;background-position:100% 52%}}",
   "@keyframes gcsNfxSlideA{0%,58%,92%,100%{transform:none}66%,82%{transform:translateX(-.09em)}}",
@@ -644,6 +610,12 @@ const KEYFRAMES = [
   "@keyframes gcsNfxPlasma{0%{background-position:0% 50%,0 0}100%{background-position:200% 50%,-200% 0}}",
   `@keyframes gcsNfxStroke{0%,100%{-webkit-text-stroke-color:${i(1)}}33%{-webkit-text-stroke-color:${i(2)}}66%{-webkit-text-stroke-color:${i(3)}}}`,
   `@keyframes gcsNfxTilt{0%,100%{${e3d(1)}}50%{${e3d(-1)}}}`,
+  // Ciclul culorilor (curcubeul pe efectele cu o culoare plină): 2–5 culori, fiecare câte o parte egală din timp.
+  ...[2, 3, 4, 5].map((n) => {
+    const steps = Array.from({ length: n }, (_, k) => `${Math.round((k * 100) / n)}%{color:${white(i(k + 1), 30)}}`);
+    return `@keyframes gcsNfxCycle${n}{${steps.join("")}100%{color:${white(i(1), 30)}}}`;
+  }),
+  ...TEXT_KEYFRAMES,
 ];
 
 // ─── Compunerea ───
@@ -654,8 +626,10 @@ const USER_ID = /^[A-Za-z0-9_-]{1,64}$/;
 /** Selectorul numelui unui membru (oriunde apare) și al locurilor mari (cu decorațiile efectului). */
 export function nameSelectors(userId: string): { all: string; rich: string } {
   return {
-    all: `.gcs-root :is(a.gcs-userLink[data-user-id="${userId}"],[data-name-user="${userId}"])`,
-    rich: `.gcs-root :is(.gcs-post__authorName a.gcs-userLink[data-user-id="${userId}"],[data-name-user="${userId}"])[data-text]`,
+    all: `${NAME_SCOPE} :is(.gcs-userLink[data-user-id="${userId}"],[data-name-user="${userId}"])`,
+    // Locurile mari: numele în varianta „full” (postbit, profil, hover card, meniul userului), autorul din postbit și
+    // numele fără link (`data-name-user`, din șabloanele vechi).
+    rich: `${NAME_SCOPE} :is(.gcs-post__authorName .gcs-userLink[data-user-id="${userId}"],[data-name-fx="full"][data-user-id="${userId}"],[data-name-user="${userId}"])[data-text]`,
   };
 }
 
@@ -682,6 +656,8 @@ export function nameVars(opts: { colors: string[]; glow?: string; speed?: number
   const out = colors.map((c, k) => `--nfx-c${k + 1}:${c}`);
   if (opts.glow && HEX.test(opts.glow)) out.push(`--nfx-gc:${opts.glow}`, "--nfx-glow:1");
   if (opts.speed && opts.speed !== 1) out.push(`--nfx-sp:${opts.speed}`);
+  // Mai multe culori: efectele cu o culoare plină trec prin ele (iar strălucirea le urmează, fără o strălucire aleasă).
+  if (colors.length >= 2) out.push(`--nfx-cyc:gcsNfxCycle${colors.length}`, ...(opts.glow && HEX.test(opts.glow) ? [] : ["--nfx-cyg:currentColor"]));
   out.push(`--nfx-grad:${nameGradient(colors.length, opts.angle ?? 90)}`);
   if (opts.bold === false) out.push("font-weight:600");
   if (opts.italic) out.push("font-style:italic");
@@ -695,10 +671,14 @@ export function nameVars(opts: { colors: string[]; glow?: string; speed?: number
 function withoutShadowLeak(fx: Fx): Fx {
   const fix = (decls: string[] | undefined) =>
     decls && decls.includes("-webkit-text-fill-color:transparent") && !decls.some((x) => x.startsWith("text-shadow:")) ? [...decls, "text-shadow:none"] : decls;
-  return { base: fix(fx.base)!, ...(fx.rich ? { rich: { ...fx.rich, self: fix(fx.rich.self) } } : {}) };
+  return { ...fx, base: fix(fx.base)!, ...(fx.rich ? { rich: { ...fx.rich, self: fix(fx.rich.self) } } : {}) };
 }
 
 const rule = (selectors: string[], decls: string[] | undefined) => (decls && decls.length && selectors.length ? `${selectors.join(",")}{${decls.join(";")}}` : "");
+/** Literele desenate ale numelor (`.gcs-name__ls > b`), cu un sufix (`:nth-child(…)`, `::before`). */
+const letters = (selectors: string[], suffix = "") => selectors.map((s) => `${s} .gcs-name__ls>b${suffix}`);
+/** Ascuns vizual, dar citit de cititoarele de ecran (numele întreg, când se desenează pe litere). */
+const SR_ONLY = ["position:absolute", "width:1px", "height:1px", "margin:-1px", "padding:0", "overflow:hidden", "clip-path:inset(50%)", "white-space:nowrap", "border:0"];
 const pseudo = (selectors: string[], p: "::before" | "::after") => selectors.map((s) => `${s}${p}`);
 
 /** Variabilele implicite (nivelul `:where`, ușor de suprascris) și cernelurile pe tema închisă / deschisă. */
@@ -752,16 +732,17 @@ const COMMON = [
  */
 export function compileNameEffectsCss(names: GcsStyledName[], opts: { previews: boolean }): string {
   const parts: string[] = [];
-  const preview = (e: GcsNameEffect) => (opts.previews ? [`.gcs-root .gcs-nfx.${nameEffectClass(e)}`] : []);
-  const previewRich = (e: GcsNameEffect) => (opts.previews ? [`.gcs-root .gcs-nfx.${nameEffectClass(e)}[data-text]`] : []);
-  const allTargets = [...(opts.previews ? [".gcs-root .gcs-nfx"] : []), ...names.map((n) => n.all)];
+  const preview = (e: GcsNameEffect) => (opts.previews ? [`${NAME_SCOPE} .gcs-nfx.${nameEffectClass(e)}`] : []);
+  const previewRich = (e: GcsNameEffect) => (opts.previews ? [`${NAME_SCOPE} .gcs-nfx.${nameEffectClass(e)}[data-text]`] : []);
+  const allTargets = [...(opts.previews ? [`${NAME_SCOPE} .gcs-nfx`] : []), ...names.map((n) => n.all)];
   if (allTargets.length === 0) return "";
   parts.push(varsCss(allTargets));
   parts.push(rule(allTargets, COMMON));
   if (opts.previews) {
-    for (let n = 1; n <= 5; n++) parts.push(`.gcs-root .gcs-nfx.gcs-nfx--n${n}{--nfx-grad:${nameGradient(n)}}`);
-    parts.push(".gcs-root .gcs-nfx.gcs-nfx--light{font-weight:600}", ".gcs-root .gcs-nfx.gcs-nfx--italic{font-style:italic}");
+    for (let n = 1; n <= 5; n++) parts.push(`${NAME_SCOPE} .gcs-nfx.gcs-nfx--n${n}{--nfx-grad:${nameGradient(n)}${n >= 2 ? `;--nfx-cyc:gcsNfxCycle${n};--nfx-cyg:currentColor` : ""}}`);
+    parts.push(`${NAME_SCOPE} .gcs-nfx.gcs-nfx--light{font-weight:600}`, `${NAME_SCOPE} .gcs-nfx.gcs-nfx--italic{font-style:italic}`);
   }
+  const letterTargets: string[] = [];
   for (const effect of NAME_EFFECTS) {
     const fx = withoutShadowLeak(FX[effect]);
     const users = names.filter((n) => n.effect === effect);
@@ -774,11 +755,30 @@ export function compileNameEffectsCss(names: GcsStyledName[], opts: { previews: 
       parts.push(rule(pseudo(rich, "::before"), fx.rich.before));
       parts.push(rule(pseudo(rich, "::after"), fx.rich.after));
     }
+    if (fx.letter) {
+      letterTargets.push(...base);
+      parts.push(rule(letters(base), fx.letter));
+      parts.push(rule(letters(rich), fx.letterRich));
+      for (const [nth, decls] of Object.entries(fx.letterNth ?? {})) parts.push(rule(letters(base, `:nth-child(${nth})`), decls));
+    }
+  }
+  // Literele separate: textul simplu rămâne pentru cititoarele de ecran (ascuns vizual), literele desenate apar.
+  if (letterTargets.length > 0) {
+    parts.push(rule(letterTargets.map((t) => `${t} .gcs-name__t`), SR_ONLY));
+    parts.push(rule(letterTargets.map((t) => `${t} .gcs-name__ls`), ["display:inline", "white-space:nowrap"]));
+    parts.push(rule(letters(letterTargets), ["display:inline-block", "font:inherit", "white-space:pre"]));
+    parts.push(rule(letters(letterTargets, "::before"), ["content:attr(data-c)", 'content:attr(data-c) / ""']));
   }
   // Variabilele fiecărui membru: după regulile comune (aceeași specificitate, deci câștigă).
   for (const n of names) parts.push(rule([n.all], n.vars));
-  parts.push(...KEYFRAMES);
-  const moving = [...allTargets, ...allTargets.map((t) => `${t}::before`), ...allTargets.map((t) => `${t}::after`)];
+  // Doar cadrele-cheie folosite (pe un site, membrii aleg câteva efecte din zeci).
+  const used = new Set([...parts.join("\n").matchAll(/\b(gcsNfx[A-Za-z0-9]+)\b/g)].map((m) => m[1]!));
+  const cycles = parts.some((p) => p.includes("--nfx-cyc"));
+  parts.push(...KEYFRAMES.filter((k) => {
+    const name = /^@keyframes (gcsNfx[A-Za-z0-9]+)\{/.exec(k)?.[1] ?? "";
+    return used.has(name) || (cycles && name.startsWith("gcsNfxCycle"));
+  }));
+  const moving = [...allTargets, ...allTargets.map((t) => `${t}::before`), ...allTargets.map((t) => `${t}::after`), ...letters(allTargets)];
   parts.push(`@media (prefers-reduced-motion: reduce){${moving.join(",")}{animation:none!important;transition:none!important}${allTargets.join(",")}{clip-path:none!important;-webkit-mask-image:none!important;mask-image:none!important}}`);
   return parts.filter(Boolean).join("\n");
 }

@@ -19,11 +19,17 @@ body {
   min-height: 100vh;
 }
 
+/*
+ * Culoarea linkurilor nu se aplică numelor de membri (`.gcs-name`): numele au culoarea grupului sau efectul VIP, din
+ * CSS-ul generat (`/gcs-names.css`). `:where()` păstrează specificitatea regulii de bază.
+ */
 .gcs-root a {
-  color: var(--gcs-link, var(--gcs-accentInk));
   text-decoration: none;
 }
-.gcs-root a:hover {
+.gcs-root a:where(:not(.gcs-name)) {
+  color: var(--gcs-link, var(--gcs-accentInk));
+}
+.gcs-root a:where(:not(.gcs-name)):hover {
   color: var(--gcs-link-hover, var(--gcs-accentInk));
 }
 
@@ -293,6 +299,25 @@ textarea.gcs-input {
 
 .gcs-userLink {
   font-weight: 600;
+}
+
+/*
+ * Numele unui membru (componenta comună `GcsMemberName`, `{% username %}`, pluginurile): fără stil de grup, culoarea
+ * linkurilor (specificitate zero, deci orice stil generat câștigă). Ca buton (chat: click = mențiune), arată ca un
+ * link. Literele separate (efectele pe litere) apar doar când efectul membrului le cere (regulile generate).
+ */
+:where(.gcs-name) {
+  color: var(--gcs-link, var(--gcs-accentInk));
+}
+:where(button.gcs-name) {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+:where(.gcs-name) .gcs-name__ls {
+  display: none;
 }
 
 .gcs-avatarFrame {

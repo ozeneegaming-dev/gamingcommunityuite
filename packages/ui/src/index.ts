@@ -12,7 +12,7 @@ export { placeHoverCard, type GcsHoverCardPlacement } from "./components/hoverCa
 export { GcsBadgeArt, type GcsBadgeArtProps, type GcsBadgeArtSource } from "./components/GcsBadgeArt";
 export { GcsField, type GcsFieldProps } from "./components/GcsField";
 export { GcsTable, type GcsTableColumn, type GcsTableProps } from "./components/GcsTable";
-export { GcsUserLink, type GcsUserLinkProps } from "./components/GcsUserLink";
+export { GcsMemberName, GcsNameFxProvider, useNameLetters, type GcsMemberNameProps } from "./components/GcsMemberName";
 export { GcsDropdown, type GcsDropdownItem, type GcsDropdownProps } from "./components/GcsDropdown";
 export { GcsIconPicker, type GcsIconPickerMatch, type GcsIconPickerProps } from "./components/GcsIconPicker";
 export { GcsModal, type GcsModalProps } from "./components/GcsModal";

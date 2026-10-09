@@ -93,7 +93,7 @@ html.gcs-nova[data-theme="light"] {
 .gcs-nova .gcs-root a {
   transition: color var(--gcs-ease), background-color var(--gcs-ease), border-color var(--gcs-ease), opacity var(--gcs-ease);
 }
-.gcs-nova .gcs-root a:hover {
+.gcs-nova .gcs-root a:where(:not(.gcs-name)):hover {
   color: var(--gcs-link-hover, var(--gcs-accent));
 }
 /* Linkurile din conținutul scris de membri: subliniate discret (altfel ar semăna cu textul alb). */

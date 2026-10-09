@@ -9,6 +9,7 @@
     "./acp-areas": "./src/acp/areas.ts",
     "./diff": "./src/templates/diff.ts",
     "./rich-fields": "./src/content/richFields.ts",
+    "./member-name": "./src/members/memberName.ts",
     "./test/redis": "./test/redis.ts",
     "./test/redisSetup": "./test/redisSetup.ts",
     "./test/world": "./test/world.ts",

@@ -1,8 +1,9 @@
+import { memberNameHtml } from "../members/memberName";
 import { escapeHtml, isPlainData, toText } from "./values";
 
 /**
  * Componentele platformei din șabloane (`{% avatar %}`, `{% username %}`, `{% time %}`, `{% icon %}`): produc exact
- * markup-ul componentelor React (`GcsAvatar`, `GcsUserLink`, `GcsRelTime`), ca un șablon pornit de la cel implicit să
+ * markup-ul componentelor React (`GcsAvatar`, `GcsMemberName`, `GcsRelTime`), ca un șablon pornit de la cel implicit să
  * arate la fel. Toate valorile sunt escapate; ieșirea trece oricum prin sanitizer.
  */
 export type GcsTemplateComponents = {
@@ -57,13 +58,26 @@ export function avatarHtml(user: Record<string, unknown>, opts: Record<string, u
   return `<span class="${frameCls}" style="width:${px}px;height:${px}px">${inner}</span>`;
 }
 
+/**
+ * `{% username user %}`: numele cu markup-ul comun (`memberNameHtml`, ca `GcsMemberName`). Opțiuni: `class`,
+ * `size: "full"` (locurile mari, cu decorațiile efectului) și `hovercard: false` (fără alt hover card, în card).
+ */
 export function usernameHtml(user: Record<string, unknown>, opts: Record<string, unknown>): string {
   const name = toText(user.name);
   if (!name) return "";
   const nameKey = typeof user.nameKey === "string" && KEY_RE.test(user.nameKey) ? user.nameKey : "member";
-  const extra = typeof opts.class === "string" && CLASS_RE.test(opts.class) ? ` ${opts.class.trim()}` : "";
+  const extra = typeof opts.class === "string" && CLASS_RE.test(opts.class) ? opts.class.trim() : "";
   const id = toText(user.id);
-  return `<a href="${attr(safeHref(user.url))}" class="gcs-userLink gcs-name--${nameKey}${extra}"${id ? ` data-user-id="${attr(id)}"` : ""} data-text="${attr(name)}">${escapeHtml(name)}</a>`;
+  return memberNameHtml({
+    id: id || null,
+    name,
+    nameKey,
+    href: safeHref(user.url),
+    className: extra,
+    size: opts.size === "full" ? "full" : "inline",
+    hoverCard: opts.hovercard !== false,
+    title: opts.title === true ? name : null,
+  });
 }
 
 export function timeHtml(date: Date, relative: string, title: string): string {

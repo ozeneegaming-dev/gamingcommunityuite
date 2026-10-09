@@ -1,3 +1,5 @@
+import { NAME_SCOPE } from "../members/memberName";
+
 /** Stilul numelui unui grup (spec §9). Se compilează în clasa `.gcs-name--<key>`. */
 export type GcsNameStyle = {
   color?: string;
@@ -38,6 +40,7 @@ function ruleFor(group: GcsNameStyleGroup): { css: string; animated: boolean } |
       "-webkit-background-clip:text",
       "background-clip:text",
       "color:transparent",
+      "-webkit-text-fill-color:transparent",
     );
     if (style.animated) {
       decls.push("animation:gcsShimmer 3s linear infinite");
@@ -45,19 +48,19 @@ function ruleFor(group: GcsNameStyleGroup): { css: string; animated: boolean } |
     }
   } else {
     const color = isHexColor(style.color) ? style.color : isHexColor(group.color) ? group.color : null;
-    if (color) decls.push(`color:${color}`);
+    if (color) decls.push(`color:${color}`, "-webkit-text-fill-color:currentColor");
   }
 
   if (isHexColor(style.glow)) decls.push(`text-shadow:0 0 10px ${hexToRgba(style.glow, ".55")}`);
   decls.push(`font-weight:${style.bold ? 700 : 600}`);
   if (style.italic) decls.push("font-style:italic");
 
-  // Numele sunt de obicei linkuri: selectorii cu `.gcs-root a` (și `:hover`) bat culoarea generală a linkurilor,
-  // altfel toate numele ar avea culoarea linkurilor, iar gradientele n-ar mai apărea.
+  // Numele sunt de obicei linkuri: prefixul cu specificitate de ID (`NAME_SCOPE`) bate culorile linkurilor din teme și
+  // din pagini (și la hover), altfel numele ar lua culoarea linkurilor, iar gradientele n-ar mai apărea.
   const k = group.key;
-  let css = `.gcs-name--${k},.gcs-root a.gcs-name--${k},.gcs-root a.gcs-name--${k}:hover{${decls.join(";")}}`;
+  let css = `.gcs-name--${k},${NAME_SCOPE} .gcs-name--${k}{${decls.join(";")}}`;
   if (typeof style.icon === "string" && SAFE_ICON.test(style.icon)) {
-    css += `.gcs-name--${group.key}::before{content:"${style.icon}";margin-right:.25em}`;
+    css += `.gcs-name--${group.key}::before,${NAME_SCOPE} .gcs-name--${group.key}::before{content:"${style.icon}";margin-right:.25em}`;
   }
   return { css, animated };
 }

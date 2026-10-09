@@ -2,6 +2,7 @@ import { GcsClanTag, type GcsClanTagData } from "./GcsClanTag";
 import type { CSSProperties, ReactNode } from "react";
 import { GcsAvatar } from "./GcsAvatar";
 import { GcsBadgeArt } from "./GcsBadgeArt";
+import { GcsMemberName } from "./GcsMemberName";
 
 export type GcsHoverCardData = {
   user: {
@@ -89,9 +90,7 @@ export function GcsHoverCard({
             <GcsAvatar name={user.name} size="l" userId={user.id} {...(user.image ? { src: user.image } : {})} {...(user.frameKey ? { frame: user.frameKey } : {})} />
           </span>
           <div className="gcs-hoverCard__identity">
-            <a href={`/members/${user.id}-${user.slug}`} className={`gcs-userLink gcs-name--${user.nameKey} gcs-hoverCard__name`} title={user.name} data-name-user={user.id} data-text={user.name}>
-              {user.name}
-            </a>
+            <GcsMemberName userId={user.id} name={user.name} nameKey={user.nameKey} href={`/members/${user.id}-${user.slug}`} size="full" hoverCard={false} className="gcs-hoverCard__name" title={user.name} />
             <div className="gcs-hoverCard__meta">
               {data.clan && <GcsClanTag clan={data.clan} size="sm" testId="gcs-hover-clan" />}
               {/* Banner-ul VIP înlocuiește pastila grupului când e același plan (fără dublură). */}

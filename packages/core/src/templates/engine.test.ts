@@ -184,7 +184,11 @@ describe("limbajul", () => {
 
   test("componentele platformei", () => {
     const user = { id: "u1", name: "Ana <x>", url: "/members/u1-ana", nameKey: "admin", image: null, frameKey: null };
-    expect(render('{% username user %}', { user })).toBe('<a href="/members/u1-ana" class="gcs-userLink gcs-name--admin" data-user-id="u1" data-text="Ana &lt;x&gt;">Ana &lt;x&gt;</a>');
+    expect(render('{% username user %}', { user })).toBe('<a class="gcs-userLink gcs-name gcs-name--admin" href="/members/u1-ana" data-user-id="u1" data-text="Ana &lt;x&gt;">Ana &lt;x&gt;</a>');
+    // Varianta mare (decorațiile efectului) și numele din hover card (fără alt hover card).
+    expect(render('{% username user, class: "gcs-hoverCard__name", size: "full", hovercard: false %}', { user })).toBe(
+      '<a class="gcs-userLink gcs-name gcs-name--admin gcs-hoverCard__name" href="/members/u1-ana" data-name-user="u1" data-text="Ana &lt;x&gt;" data-name-fx="full">Ana &lt;x&gt;</a>',
+    );
     expect(render('{% avatar user, size: "s" %}', { user })).toBe(
       '<span class="gcs-avatar gcs-avatar--s" data-avatar-user="u1" style="width:34px;height:34px;background:#5A2D6E;font-size:14px"><span aria-hidden="true">A</span><span class="gcs-srOnly">Ana &lt;x&gt;</span></span>',
     );

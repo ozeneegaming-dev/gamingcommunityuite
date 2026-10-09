@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { GcsAvatar } from "./GcsAvatar";
+import { GcsMemberName } from "./GcsMemberName";
 
 /** Datele SVG ale iconiței grupului (rezolvată pe server din numele Font Awesome). */
 export type GcsGroupCardIcon = { width: number; height: number; path: string };
@@ -84,9 +85,7 @@ export function GcsGroupCard({ data, labels, format }: { data: GcsGroupCardData;
                     <GcsAvatar name={m.name} size="xs" {...(m.image ? { src: m.image } : {})} />
                     {m.online && <span className="gcs-groupCard__dot" role="img" aria-label={labels.online} />}
                   </span>
-                  <a href={m.href} className={`gcs-userLink gcs-name--${m.nameKey}`} data-name-user={m.id} data-text={m.name}>
-                    {m.name}
-                  </a>
+                  <GcsMemberName userId={m.id} name={m.name} nameKey={m.nameKey} href={m.href} hoverCard={false} />
                 </li>
               ))}
             </ul>

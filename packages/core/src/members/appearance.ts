@@ -1,4 +1,5 @@
 import { compileCustomStyle, CUSTOM_STYLE_KEY, customStyleClass, customStylePrefix, type GcsParsedCustomStyle } from "./customStyle";
+import { NAME_SCOPE } from "./memberName";
 import { compileNameEffectsCss, NAME_EFFECTS, nameVars, styledNameSelectors, type GcsNameEffect, type GcsStyledName } from "./nameEffects";
 
 export { NAME_EFFECTS, type GcsNameEffect } from "./nameEffects";
@@ -373,7 +374,7 @@ export type GcsCompiledStyleInput = { pluginKey: string; kind: "name" | "banner"
  * care nu sunt linkuri (titlul profilului, meniul userului), marcate cu `data-name-user` (fără hover card).
  */
 export function nameSelector(userId: string): string {
-  return `.gcs-root :is(a.gcs-userLink[data-user-id="${userId}"],[data-name-user="${userId}"])`;
+  return `${NAME_SCOPE} :is(.gcs-userLink[data-user-id="${userId}"],[data-name-user="${userId}"])`;
 }
 
 /** Atributul avatarelor unui membru (rama pluginului); nu e `data-user-id`, ca avatarul să nu deschidă hover card-ul. */
@@ -421,14 +422,14 @@ export function compileAppearanceCss(entries: { userId: string; appearance: GcsM
   if (effects) parts.push(effects);
   for (const st of opts.styles ?? []) {
     const cls = customStyleClass(st.pluginKey, st.kind, st.key);
-    const selectors = [...(opts.previews ? [`.gcs-root .${cls}`] : []), ...(st.kind === "name" ? (styleUsers.get(cls) ?? []) : [`.gcs-root .${cls}`])];
+    const selectors = [...(opts.previews ? [`${NAME_SCOPE} .${cls}`] : []), ...(st.kind === "name" ? (styleUsers.get(cls) ?? []) : [`${NAME_SCOPE} .${cls}`])];
     const css = compileCustomStyle(st.style, { selectors: [...new Set(selectors)], prefix: customStylePrefix(st.pluginKey, st.kind, st.key) });
     if (css) parts.push(css);
   }
   parts.push(...frames);
   if (parts.length === 0) return "";
   parts.push(
-    "@media (prefers-reduced-motion: reduce){.gcs-root :is(a.gcs-userLink[data-user-id],[data-name-user]),.gcs-root :is(a.gcs-userLink[data-user-id],[data-name-user])::after{animation:none}}",
+    `@media (prefers-reduced-motion: reduce){${NAME_SCOPE} :is(.gcs-userLink[data-user-id],[data-name-user]),${NAME_SCOPE} :is(.gcs-userLink[data-user-id],[data-name-user])::after{animation:none}}`,
   );
   return parts.join("\n");
 }

@@ -169,7 +169,7 @@ const POSTBIT_AUTHOR = `<div class="gcs-postbit__top">
   {% if author.cover %}<span class="gcs-postbit__cover" aria-hidden="true" style="background: center {{ author.coverPositionY }}% / cover no-repeat url({{ author.cover }})" data-testid="gcs-postbit-cover"></span>{% endif %}
   <span class="gcs-postbit__avatar">{% avatar author, size: "l" %}</span>
   <div class="gcs-postbit__identity">
-    <span class="gcs-post__authorName">{% username author %}</span>
+    <span class="gcs-post__authorName">{% username author, size: "full" %}</span>
     {% if author.clan %}<span class="gcs-postbit__clan" data-testid="gcs-postbit-clan"><a class="gcs-clanTag gcs-clanTag--sm" style="--gcs-clan-color: {{ author.clan.color }}; --gcs-clan-color2: {{ author.clan.color2 }}; --gcs-clan-ink: {{ author.clan.ink }}" href="{{ author.clan.url }}" title="{{ author.clan.name }}" aria-label="[{{ author.clan.tag }}] {{ author.clan.name }}">{{ author.clan.tag }}</a><span class="gcs-postbit__clanName">{{ author.clan.name }}</span></span>{% endif %}
     <span class="gcs-postbit__secondary"{% if author.vip %} data-testid="gcs-postbit-vip"{% endif %}>{{ author.secondary }}</span>
     {% if author.customTitle %}
@@ -308,7 +308,7 @@ const HOVER_CARD = `<div class="gcs-card gcs-hoverCard" role="dialog" aria-label
     <div class="gcs-hoverCard__head">
       <span class="gcs-hoverCard__avatar">{% avatar user, size: "l" %}</span>
       <div class="gcs-hoverCard__identity">
-        <a href="{{ user.url }}" class="gcs-userLink gcs-name--{{ user.nameKey }} gcs-hoverCard__name" title="{{ user.name }}" data-name-user="{{ user.id }}" data-text="{{ user.name }}">{{ user.name }}</a>
+        {% username user, class: "gcs-hoverCard__name", size: "full", hovercard: false, title: true %}
         <div class="gcs-hoverCard__meta">
           {% if clan %}<a class="gcs-clanTag gcs-clanTag--sm" style="--gcs-clan-color: {{ clan.color }}; --gcs-clan-color2: {{ clan.color2 }}; --gcs-clan-ink: {{ clan.ink }}" href="{{ clan.url }}" title="{{ clan.name }}" aria-label="[{{ clan.tag }}] {{ clan.name }}" data-testid="gcs-hover-clan">{{ clan.tag }}</a>{% endif %}
           <span class="gcs-badge gcs-hoverCard__group" style="--gcs-hoverCard-group: {{ user.group.color | default: "var(--gcs-muted)" }}">{{ user.group.name }}</span>

@@ -241,7 +241,8 @@ describe("Studio VIP: instalat ca plugin semnat", () => {
     await api(member, "/save", { nameStyle: key, nameVariant: `${key}:default` });
     expect((await services.appearance.forUser(member.userId!))?.name).toMatchObject({ style: key, styleClass: `gcs-nameStyle--gcs-vip_studio--${key}` });
     const names = await services.appearance.css();
-    expect(names).toContain(`.gcs-root .gcs-nameStyle--gcs-vip_studio--${key},.gcs-root :is(a.gcs-userLink[data-user-id="${member.userId}"]`);
+    expect(names).toContain(`:is(.gcs-root,#gcs-names) :is(.gcs-userLink[data-user-id="${member.userId}"]`);
+    expect(await services.appearance.css({ previews: true })).toContain(`:is(.gcs-root,#gcs-names) .gcs-nameStyle--gcs-vip_studio--${key}{`);
     expect(names).toContain(`@keyframes gcsu-gcs_vip_studio-name-${key}-palpaie{`);
     // Înapoi la alegerile de dinainte (testele următoare le folosesc).
     await api(member, "/save", { nameStyle: "neon_tub", nameVariant: "neon_tub:cyan", banner: "gold_shine", quote: "Joc pentru echipă" });
