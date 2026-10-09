@@ -203,7 +203,8 @@ test("setările membrului: căutarea, aranjamentele, culorile, porecla și oprir
 
   // Oprirea chat-ului pentru membru și repornirea lui.
   await dialog.getByTestId("gcs-chatpro-settings-account").click();
-  await dialog.getByTestId("gcs-chatpro-pref-disabled").check();
+  // Un click (nu `check`): comutatorul dispare odată cu chat-ul oprit.
+  await dialog.getByTestId("gcs-chatpro-pref-disabled").click();
   await expect(a.getByTestId("gcs-chatpro-disabled")).toBeVisible();
   await a.getByRole("button", { name: "Pornește chat-ul" }).click();
   await expect(room(a).getByTestId("gcs-chat-input")).toBeVisible();
@@ -221,7 +222,8 @@ test("doi membri: răspunsul citat și notificarea, piatră-hârtie-foarfecă, �
   const question = room(b).getByTestId("gcs-chat-msg").filter({ hasText: `întrebare ${id}` });
   await expect(question).toBeVisible({ timeout: 10_000 });
 
-  // „scrie…” ajunge la celălalt.
+  // „scrie…” ajunge la celălalt (semnalul pleacă cel mult o dată la 3 s; ultimul a plecat la mesajul de mai sus).
+  await a.waitForTimeout(3_200);
   await room(a).getByTestId("gcs-chat-input").fill("încep să scriu");
   await expect(b.getByTestId("gcs-chatpro-typing")).toHaveText(`CpA${id} scrie…`, { timeout: 10_000 });
   await room(a).getByTestId("gcs-chat-input").fill("");
@@ -275,7 +277,7 @@ test("vizualizatorul de imagini: galeria topicului, legenda, mărirea, tastatura
   await expect(viewer).toBeVisible();
   await expect(page.getByTestId("gcs-viewer-counter")).toHaveText("1 din 2");
   await expect(page.getByTestId("gcs-viewer-caption")).toContainText(`de Img${id}`);
-  await expect(page.getByTestId("gcs-viewer-caption").getByRole("link", { name: "Vezi conținutul" })).toHaveAttribute("href", /#post-\d+/);
+  await expect(page.getByTestId("gcs-viewer-caption").getByRole("link", { name: "Vezi conținutul" })).toHaveAttribute("href", /^\/topic\/\d+\/post\/\d+$/);
   await expect(page.getByTestId("gcs-viewer-download")).toHaveAttribute("download", "");
   await page.keyboard.press("ArrowRight");
   await expect(page.getByTestId("gcs-viewer-counter")).toHaveText("2 din 2");
