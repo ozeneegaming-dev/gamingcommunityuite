@@ -214,9 +214,13 @@ test("serverul: imaginea hărții, „Admin online”, meciul live, clasamentul,
     await page.goto("/servers");
     const external = card.getByTestId("gcs-server-map-image");
     await expect(external).toHaveAttribute("data-kind", "direct");
-    await expect(external.locator("img")).toHaveAttribute("src", "https://imagini.exemplu.test/cs2/de_mirage.jpg");
-    await expect(external.locator("img")).toHaveAttribute("referrerpolicy", "no-referrer");
-    await expect(external.locator("img")).toHaveAttribute("loading", "lazy");
+    // Pe card imaginea e încadrată: un fundal estompat + imaginea clară (amândouă de la aceeași adresă).
+    await expect(external.locator("img")).toHaveCount(2);
+    for (const img of await external.locator("img").all()) {
+      await expect(img).toHaveAttribute("src", "https://imagini.exemplu.test/cs2/de_mirage.jpg");
+      await expect(img).toHaveAttribute("referrerpolicy", "no-referrer");
+      await expect(img).toHaveAttribute("loading", "lazy");
+    }
   } finally {
     await resetSetting("servers.map_template_cs2");
   }
