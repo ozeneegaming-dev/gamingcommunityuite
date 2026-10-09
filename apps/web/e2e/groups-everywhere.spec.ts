@@ -72,7 +72,8 @@ test("un grup creat acum în ACP: pastila e link spre membrii lui, cu tooltip-ul
   await tester.goto(`/members/${testerId}`);
   const pill = tester.getByTestId("gcs-profile-secondary-group").filter({ hasText: testersName });
   await expect(pill).toHaveAttribute("href", `/members?group=${testersId}`);
-  await expect(pill).toHaveAttribute("aria-label", new RegExp(`Membrii grupului ${testersName} · 1 membru · \\d+ online acum`));
+  // Singurul membru îl are ca grup secundar: „1 membru, toți ca grup secundar · 1 online acum”.
+  await expect(pill).toHaveAttribute("aria-label", new RegExp(`Membrii grupului ${testersName} · 1 membru, toți ca grup secundar · \\d+ online acum`));
   await pill.hover();
   await expect(tester.locator(".gcs-tooltip--group")).toContainText("1 membru");
   await shot(tester, "tooltip-new-group");
@@ -179,15 +180,23 @@ test("Grupuri Pro: oprită → legenda simplă și 404; pornită → legenda pe 
   await test.step("„Vezi toate grupurile” → pagina grupurilor: rândurile se deschid, filtrul secundar", async () => {
     await page.getByTestId("gcs-legend-pro-all").click();
     await expect(page).toHaveURL(/\/members\/groups$/);
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Grupurile comunității");
+    await expect(page.locator(".gcs-groupsPage h1")).toContainText("Grupurile comunității");
     const row = page.getByTestId("gcs-groups-row-root_admin");
     const head = row.getByRole("button");
     await expect(head).toHaveAttribute("aria-expanded", "false");
     await head.click();
     await expect(head).toHaveAttribute("aria-expanded", "true");
-    await expect(row.getByTestId("gcs-groups-member").filter({ hasText: rootName })).toBeVisible();
+    await expect(row.getByTestId("gcs-groups-member").first()).toBeVisible();
     await expect(row.getByRole("link", { name: /Toți membrii grupului/ })).toHaveAttribute("href", `/members?group=${await groupId("root_admin")}`);
     await shot(page, "groups-page");
+    // Căutarea după un membru: grupurile lui, deschise, cu el în listă.
+    await page.getByTestId("gcs-groups-search").fill(rootName);
+    await page.getByTestId("gcs-groups-search").press("Enter");
+    await expect(page).toHaveURL(new RegExp(`q=${rootName}`));
+    const found = page.getByTestId("gcs-groups-row-root_admin");
+    await expect(found.getByRole("button")).toHaveAttribute("aria-expanded", "true");
+    await expect(found.getByTestId("gcs-groups-member").filter({ hasText: rootName })).toBeVisible();
+    await page.goto("/members/groups");
     await page.getByTestId("gcs-groups-scope").getByRole("link", { name: "Doar secundar" }).click();
     await expect(page).toHaveURL(/scope=secondary/);
     await expect(page.getByTestId(`gcs-groups-row-${(await sql<{ key: string }>(`SELECT key FROM groups WHERE id = $1`, [testersId]))[0]!.key}`)).toBeVisible();

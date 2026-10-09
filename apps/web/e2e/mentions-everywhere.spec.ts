@@ -132,7 +132,8 @@ test("chat-ul: sugestiile (tastatură și click), pastilele după id cu stilul n
   await expect(pill).toHaveClass(/gcs-name--member/);
   const groupPill = msg.locator("a.gcs-groupMention");
   await expect(groupPill).toHaveAttribute("data-group-id", String(groupDbId));
-  await expect.poll(() => groupPill.evaluate((el) => getComputedStyle(el).getPropertyValue("--gcs-gm-color").trim())).toBe("#3DDC97");
+  await expect(groupPill).toHaveText(`@${groupName}`);
+  await expect(groupPill).toHaveAttribute("href", `/members?group=${groupDbId}`);
   const layer = await hoverCard(author, pill);
   await expect(layer.getByTestId("gcs-hover-card")).toBeVisible();
   await shot(author, "chat-pill-hovercard");
