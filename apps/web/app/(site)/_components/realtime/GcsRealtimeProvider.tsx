@@ -39,7 +39,8 @@ export function GcsRealtimeProvider({ children }: { children: ReactNode }) {
   const [connected, setConnected] = useState(false);
   const socketRef = useRef<Socket | null>(null);
   const listeners = useRef(new Map<string, Set<Listener>>());
-  const rooms = useRef(new Set<string>());
+  /** Camerele cerute și câte componente le cer (două liste de servere pe aceeași pagină nu se încurcă la plecare). */
+  const rooms = useRef(new Map<string, number>());
 
   const dispatch = useCallback((event: string, data: unknown) => {
     for (const fn of listeners.current.get(event) ?? []) fn(data);
@@ -74,7 +75,7 @@ export function GcsRealtimeProvider({ children }: { children: ReactNode }) {
       socket.on("connect", () => {
         setConnected(true);
         document.documentElement.dataset.realtime = "on";
-        for (const room of rooms.current) socket!.emit("join", room, noop);
+        for (const room of rooms.current.keys()) socket!.emit("join", room, noop);
         if (everConnected) dispatch("resync", null);
         everConnected = true;
       });
@@ -101,12 +102,17 @@ export function GcsRealtimeProvider({ children }: { children: ReactNode }) {
     () => ({
       connected,
       join: (room) => {
-        rooms.current.add(room);
+        rooms.current.set(room, (rooms.current.get(room) ?? 0) + 1);
         const socket = socketRef.current;
         if (!socket?.connected) return Promise.resolve(false);
         return new Promise((resolve) => socket.emit("join", room, (r: { ok?: boolean } | undefined) => resolve(r?.ok === true)));
       },
       leave: (room) => {
+        const left = (rooms.current.get(room) ?? 1) - 1;
+        if (left > 0) {
+          rooms.current.set(room, left);
+          return;
+        }
         rooms.current.delete(room);
         socketRef.current?.emit("leave", room);
       },

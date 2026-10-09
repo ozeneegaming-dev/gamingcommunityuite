@@ -62,7 +62,7 @@ export function GcsAccountMenu({
   mode: "dark" | "light" | "auto";
   locales: { code: string; label: string }[];
   locale: string;
-  /** Doar avatarul cu inelul (mobil, Esports): fără nume și progres. */
+  /** Esports: inelul mai mic și numele, fără linia de progres și săgeată (pe mobil, doar avatarul). */
   compactTrigger?: boolean;
 }) {
   const t = useTranslations("header.account");
@@ -81,7 +81,8 @@ export function GcsAccountMenu({
   const { level, user } = data;
   const next = level.next;
   const unit = (u: "xp" | "posts" | "reputation") => t(`units.${u}`);
-  const short = compactTrigger || device === "mobile";
+  const short = device === "mobile";
+  const slim = compactTrigger && !short;
 
   const changeStatus = (s: "online" | "invisible") =>
     start(async () => {
@@ -122,9 +123,9 @@ export function GcsAccountMenu({
   const ringLabel = next ? t("ring", { level: level.level, percent: level.percent, next: next.level }) : t("ringMax", { level: level.level });
 
   return (
-    <div className={`gcs-hb__pop gcs-am${short ? " gcs-am--short" : ""}`} {...pop.rootProps}>
+    <div className={`gcs-hb__pop gcs-am${short ? " gcs-am--short" : ""}${slim ? " gcs-am--slim" : ""}`} {...pop.rootProps}>
       <button {...pop.triggerProps} className="gcs-am__trigger" aria-label={ringLabel} aria-haspopup="dialog" data-testid="gcs-user-menu-trigger">
-        <GcsXpRing percent={next ? level.percent : level.level > 0 ? 100 : 0} level={level.level} size={short ? 44 : 52}>
+        <GcsXpRing percent={next ? level.percent : level.level > 0 ? 100 : 0} level={level.level} size={short ? 44 : slim ? 40 : 52}>
           <GcsAvatar name={user.name} size="m" userId={user.id} {...(user.image ? { src: user.image } : {})} />
         </GcsXpRing>
         {!short && (
@@ -132,10 +133,10 @@ export function GcsAccountMenu({
             <span className={`gcs-am__name gcs-name--${user.nameKey}`} data-name-user={user.id} data-text={user.name} data-testid="gcs-header-user">
               {user.name}
             </span>
-            {next && <span className="gcs-am__toNext">{t("toNext", { percent: level.percent, level: next.level })}</span>}
+            {next && !slim && <span className="gcs-am__toNext">{t("toNext", { percent: level.percent, level: next.level })}</span>}
           </span>
         )}
-        {!short && <GcsIconSvg icon={faChevronDown} className="gcs-am__chev" />}
+        {!short && !slim && <GcsIconSvg icon={faChevronDown} className="gcs-am__chev" />}
       </button>
       {pop.mounted && (
         <div {...pop.panelProps} role="dialog" aria-label={t("menu")} className="gcs-hb__panel gcs-am__panel" data-testid="gcs-account-menu">
