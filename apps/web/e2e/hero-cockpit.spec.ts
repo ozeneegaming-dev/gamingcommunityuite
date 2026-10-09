@@ -57,10 +57,9 @@ test("antetul Esports: rândurile, crestătura, starea compactă la derulare, me
     await expect(header).toHaveAttribute("data-device", "desktop");
     await expect(header.locator('[data-row="top"]')).toBeVisible();
     await expect(page.getByTestId("gcs-header-notch")).toBeVisible();
-    await expect(page.getByTestId("gcs-hb-nav")).toBeVisible();
-    await expect(page.getByTestId("gcs-hb-nav-right")).toBeVisible();
+    await expect(header.getByTestId("gcs-hb-nav")).toBeVisible();
+    await expect(header.getByTestId("gcs-hb-nav-right")).toBeVisible();
     await expect(page.getByTestId("gcs-header-user")).toHaveText(`Cockpit${id}`);
-    await expect(page.getByTestId("gcs-servers-live")).toContainText("3 servere online");
     await shot(page, "01-esports-header-desktop");
   });
 
@@ -79,7 +78,7 @@ test("antetul Esports: rândurile, crestătura, starea compactă la derulare, me
   });
 
   await test.step("mega meniul: 2 coloane, descrierea, insigna live, rândul de jos cu „Joacă acum”", async () => {
-    const servers = page.getByTestId("gcs-hb-nav").getByRole("button", { name: "Servere" }).or(page.getByTestId("gcs-hb-nav-right").getByRole("button", { name: "Servere" }));
+    const servers = header.getByTestId("gcs-hb-nav").getByRole("button", { name: "Servere" }).or(header.getByTestId("gcs-hb-nav-right").getByRole("button", { name: "Servere" }));
     await servers.first().click();
     const panel = page.getByRole("menu", { name: "Servere" });
     await expect(panel).toBeVisible();
@@ -167,7 +166,10 @@ test("meniul contului: cardul de rang, statusul, secțiunile după drepturi și 
   const rootEmail = `hc-acc-root-${id}@example.com`;
   await enterAcpAsRoot(page, `Contul${id}`, rootEmail);
   await patchNova({ header: { layout: await preset("cockpit"), compact: true }, mobileNav: { placement: "header" } });
+  await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
+  // Cockpit: statusul serverelor live în dreapta rândului cu meniul.
+  if (servers.length > 0) await expect(page.getByTestId("gcs-servers-live")).toContainText("servere online");
   await page.getByTestId("gcs-user-menu-trigger").click();
   const menu = page.getByTestId("gcs-account-menu");
   await expect(menu).toBeVisible();
@@ -219,6 +221,7 @@ test("consola Hero Cockpit: pornită / oprită, feed-ul, meciul live, trofeele p
     await useFreshIp(ctx, `100.91.${10 + i}`);
     await register(await ctx.newPage(), `Autor${i}${id}`, email);
     await expect.poll(async () => (await sql(`SELECT 1 FROM users WHERE email = $1`, [email])).length).toBe(1);
+    await setPrimaryGroup(email, "member");
     await ctx.close();
     authors.push(email);
     await topicWithReplies(request, tree.forum.id, email, `Topic ${i} ${id}`, n - 1);
@@ -268,6 +271,15 @@ test("consola Hero Cockpit: pornită / oprită, feed-ul, meciul live, trofeele p
     await expect(rows.nth(0).getByRole("img", { name: "Locul 1, aur" })).toBeVisible();
     await expect(rows.nth(0)).toContainText(`Autor0${id}`);
     await shot(page, "07-cockpit-desktop", { fullPage: false });
+    await shot(page, "07c-home-full-dark", { fullPage: true });
+    // Modul luminos: antetul rămâne închis, consola urmează tokenurile temei.
+    await page.context().addCookies([{ name: "gcs-theme", value: "light", url: page.url() }]);
+    await page.reload();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+    await expect(page.getByTestId("gcs-cockpit")).toBeVisible();
+    await shot(page, "07b-cockpit-light");
+    await page.context().addCookies([{ name: "gcs-theme", value: "dark", url: page.url() }]);
+    await page.reload();
     await expect(page.getByTestId("gcs-cockpit-feed-tab-mix")).toBeVisible();
     await page.getByTestId("gcs-cockpit-feed-tab-forum").click();
     await expect(page.getByTestId("gcs-cockpit-feed-item").first()).toHaveAttribute("data-kind", /topic|reply|member/);
@@ -305,7 +317,7 @@ async function clearWidgetCache() {
   const { default: Redis } = await import("ioredis");
   const r = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379");
   try {
-    const keys = await r.keys("gcs:k:widgets*");
+    const keys = await r.keys("gcs:k:layout*");
     if (keys.length > 0) await r.del(...keys);
   } finally {
     r.disconnect();

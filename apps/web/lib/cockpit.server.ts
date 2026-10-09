@@ -1,7 +1,7 @@
 import "server-only";
 import type { GcsActor } from "@gcs/core";
 import type { GcsThemeSettings } from "@gcs/core/themes";
-import { levelProgress, normalizePrivacy, POLL_INTERVAL_SETTING, type GcsServerView, type GcsUserRef } from "@gcs/modules";
+import { levelProgress, normalizePrivacy, pickRank, POLL_INTERVAL_SETTING, type GcsServerView, type GcsUserRef } from "@gcs/modules";
 import { matchHref, serverHref } from "../app/(site)/_components/servers/types";
 import type { GcsCockpitData, GcsCockpitFeatured, GcsCockpitMatch, GcsCockpitUser, GcsFeedItem, GcsFeedTab } from "./cockpit";
 import { memberHref, postHref, topicHref } from "./forum-urls";
@@ -191,7 +191,7 @@ async function welcome(actor: GcsActor): Promise<GcsCockpitData["welcome"]> {
       : [];
     friends = { online: shown.length, playing: playing.length, server: playing[0]?.server.name ?? null };
   }
-  return { user: ref(display), unread: topics.size, friends, level: levelProgress(user, ladder) };
+  return { user: ref(display), unread: topics.size, friends, level: levelProgress({ ...user, rankId: user.rankId ?? pickRank(ladder, user) }, ladder) };
 }
 
 /**

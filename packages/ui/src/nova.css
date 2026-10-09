@@ -4008,6 +4008,7 @@ html.gcs-nova[data-theme="light"] .gcs-ckWrap {
   }
   .gcs-nova .gcs-ck__panels > .gcs-ck__panel {
     flex: 0 0 82%;
+    align-self: flex-start;
     scroll-snap-align: start;
   }
   /* Cardul LIVE stă primul (ordinea vizuală), oricare ar fi panoul ales. */

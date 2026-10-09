@@ -35,7 +35,7 @@ export function GcsXpRing({ percent, level, children, size = 52 }: { percent: nu
     <span className="gcs-xpRing" style={{ width: size, height: size }}>
       <svg viewBox="0 0 52 52" aria-hidden="true" className="gcs-xpRing__svg">
         <circle cx="26" cy="26" r={RING_R} className="gcs-xpRing__track" />
-        <circle cx="26" cy="26" r={RING_R} className="gcs-xpRing__fill" strokeDasharray={`${dash} ${RING_C}`} transform="rotate(-90 26 26)" />
+        {dash > 0 && <circle cx="26" cy="26" r={RING_R} className="gcs-xpRing__fill" strokeDasharray={`${dash} ${RING_C}`} transform="rotate(-90 26 26)" />}
       </svg>
       <span className="gcs-xpRing__avatar">{children}</span>
       {level > 0 && <span className="gcs-xpRing__level">{t("levelShort", { level })}</span>}

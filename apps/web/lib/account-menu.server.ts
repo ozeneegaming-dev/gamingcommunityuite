@@ -1,6 +1,6 @@
 import "server-only";
 import type { GcsActor } from "@gcs/core";
-import { levelProgress, normalizePrivacy, type GcsLevelProgress } from "@gcs/modules";
+import { levelProgress, normalizePrivacy, pickRank, type GcsLevelProgress } from "@gcs/modules";
 import { playerHref } from "../app/(site)/_components/servers/types";
 import { memberHref } from "./forum-urls";
 import { services } from "./services";
@@ -95,7 +95,7 @@ export async function accountMenuData(actor: GcsActor, staffLinks: { themeEditor
     user: { id: display.id, name: display.name, nameKey: display.nameKey, image: display.image, frameKey: display.frameKey, href },
     groups,
     status: normalizePrivacy(user.privacy).showOnline ? "online" : "invisible",
-    level: levelProgress(user, ladder),
+    level: levelProgress({ ...user, rankId: user.rankId ?? pickRank(ladder, user) }, ladder),
     stats: { posts: user.postsCount, reputation: user.reputation, elo: card?.elo ?? null },
     sections: [
       { key: "content", items: content },

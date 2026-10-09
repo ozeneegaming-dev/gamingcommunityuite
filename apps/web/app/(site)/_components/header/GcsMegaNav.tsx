@@ -3,8 +3,8 @@
 import { faChevronDown, faEllipsis } from "@fortawesome/free-solid-svg-icons";
 import { GcsIconSvg } from "@gcs/ui";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { fitCount, navActive } from "@/lib/nav-match";
 import { useHeaderPopover } from "./GcsHeaderPopover";
 import { useHeaderState } from "./header-context";
@@ -113,8 +113,20 @@ function MoreItem({ items, label }: { items: GcsMegaEntry[]; label: string }) {
   );
 }
 
-function Bar({ items, label, moreLabel, home, search, testId }: Props & { search: string }) {
+/**
+ * Parametrii adresei (pentru linkul activ cu parametri, ex. „Online acum”), citiți în browser după fiecare pagină.
+ * Fără `useSearchParams`: acela cere un Suspense, iar rezerva randată pe server lăsa o copie ascunsă a meniului.
+ */
+function useLocationSearch(): string {
   const pathname = usePathname();
+  const [search, setSearch] = useState("");
+  useEffect(() => setSearch(window.location.search.replace(/^\?/, "")), [pathname]);
+  return search;
+}
+
+function Bar({ items, label, moreLabel, home, testId }: Props) {
+  const pathname = usePathname();
+  const search = useLocationSearch();
   // Panoul lateral (desktop): meniul e vertical, deci toți itemii rămân (fără „Mai mult”).
   const { preset, device } = useHeaderState();
   const vertical = preset === "side" && device === "desktop";
@@ -169,20 +181,11 @@ function Bar({ items, label, moreLabel, home, search, testId }: Props & { search
   );
 }
 
-function BarWithParams(props: Props) {
-  const params = useSearchParams();
-  return <Bar {...props} search={params.toString()} />;
-}
-
 /**
  * Meniul principal al antetului construit (desktop): itemii cu submeniu devin mega meniuri (2 coloane: iconița, titlul,
  * descrierea de un rând, insigna live; jos, o linie live și un îndemn) sau liste simple; ce nu încape trece în
  * „Mai mult”. Meniul împărțit (Esports) folosește două instanțe, stânga și dreapta logo-ului.
  */
 export function GcsMegaNav(props: Props) {
-  return (
-    <Suspense fallback={<Bar {...props} search="" />}>
-      <BarWithParams {...props} />
-    </Suspense>
-  );
+  return <Bar {...props} />;
 }

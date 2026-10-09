@@ -71,6 +71,9 @@ export async function seedServers(list: { name: string; game: "cs16" | "cs2"; pl
       await r.multi().set(`gcs:servers:status:${id}`, JSON.stringify(status), "EX", 3600).hset("gcs:servers:next", String(id), String(Date.now() + 3_600_000)).hset("gcs:servers:fails", String(id), "0").exec();
       out.push({ id, name: s.name });
     }
+    // Lista serverelor e în cache (adăugarea din ACP o invalidează; aici scriem direct în bază).
+    const keys = await r.keys("gcs:k:servers*");
+    if (keys.length > 0) await r.del(...keys);
   } finally {
     r.disconnect();
   }
@@ -84,6 +87,8 @@ export async function removeServers(list: SeededServer[]): Promise<void> {
   const r = await redis();
   try {
     await r.del(...ids.map((id) => `gcs:servers:status:${id}`), ...ids.map((id) => `gcs:bridge:match:${id}`));
+    const keys = await r.keys("gcs:k:servers*");
+    if (keys.length > 0) await r.del(...keys);
   } finally {
     r.disconnect();
   }
