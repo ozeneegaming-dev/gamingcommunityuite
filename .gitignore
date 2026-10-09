@@ -14,3 +14,7 @@ test-results/
 .e2e/
 .gcs-config/
 apps/web/cli/dist/
+
+# Claude Code: setări locale și worktree-urile agenților
+.claude/settings.local.json
+.claude/worktrees/
