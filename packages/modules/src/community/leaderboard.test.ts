@@ -3,6 +3,7 @@ import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createProfileWorld, type GcsProfileWorld } from "../../test/profileWorld";
 import { doc } from "../../test/world";
 import { GcsLeaderboard, type GcsLeaderboardMetric, type GcsLeaderboardPeriod } from "./leaderboard";
+import { GcsOnlineTime } from "./onlineTime";
 
 let w: GcsProfileWorld;
 let board: GcsLeaderboard;
@@ -132,5 +133,58 @@ describe("clasamentul", () => {
     expect((await board.top(w.guest, "xp", "all")).map((r) => r.value)).toEqual([3]);
     await w.cache.invalidateTags([`user:${a.userId}`]);
     expect((await board.top(w.guest, "xp", "all")).map((r) => r.value)).toEqual([9]);
+  });
+});
+
+describe("clasamentul: topicuri, azi, timpul online și locul tău (Hero Cockpit)", () => {
+  test("topicurile vizibile pornite în perioadă; „azi” începe la miezul nopții în fusul orar al site-ului", async () => {
+    const [a, b] = [await player("Alfa"), await player("Beta")];
+    const datedTopic = async (actor: GcsActor, at: Date) => {
+      const t = await post(actor, at);
+      await w.db.topic.update({ where: { id: t.topicId }, data: { createdAt: at } });
+    };
+    await datedTopic(a, new Date());
+    await datedTopic(a, daysAgo(3));
+    await datedTopic(b, daysAgo(40));
+    expect(await standings(w.member, "topics", "day")).toEqual(["Alfa=1#1"]);
+    expect(await standings(w.member, "topics", "week")).toEqual(["Alfa=2#1"]);
+    expect(await standings(w.member, "topics", "year")).toEqual(["Alfa=2#1", "Beta=1#2"]);
+    expect(await standings(w.member, "topics", "all")).toEqual(["Alfa=2#1", "Beta=1#2"]);
+    expect(await standings(w.member, "posts", "day")).toEqual(["Alfa=1#1"]);
+  });
+
+  test("timpul online: din zilele salvate, fără statusul ascuns; locul viewer-ului", async () => {
+    const online = new GcsOnlineTime({ db: w.db, redis: w.redis, settings: w.settings });
+    const timed = new GcsLeaderboard({ db: w.db, cache: w.cache, permissions: w.permissions, settings: w.settings, onlineTime: online });
+    const [a, b, c] = [await player("Alfa"), await player("Beta"), await player("Gama")];
+    const today = await online.today();
+    await w.db.memberOnlineDay.createMany({
+      data: [
+        { userId: a.userId!, day: today, seconds: 600 },
+        { userId: b.userId!, day: today, seconds: 3600 },
+        { userId: c.userId!, day: today, seconds: 1800 },
+        { userId: a.userId!, day: "2020-01-01", seconds: 9000 },
+      ],
+    });
+    await w.profiles.updatePrivacy(c, { profile: "PUBLIC", messages: "MEMBERS", wall: "MEMBERS", showOnline: false });
+    await w.cache.invalidateTags(["leaderboard"]);
+    expect((await timed.top(w.member, "online", "day")).map((r) => `${r.user.name}=${r.value}#${r.rank}`)).toEqual(["Beta=3600#1", "Alfa=600#2"]);
+    await w.cache.invalidateTags(["leaderboard"]);
+    expect((await timed.top(w.member, "online", "all")).map((r) => `${r.user.name}=${r.value}`)).toEqual(["Alfa=9600", "Beta=3600"]);
+    expect(await timed.place(a, "online", "day")).toEqual({ rank: 2, value: 600 });
+    expect(await timed.place(c, "online", "day")).toBeNull();
+    expect(await timed.place(w.guest, "online", "day")).toBeNull();
+    // Fără serviciul de timp online, măsura e goală (nu o eroare).
+    expect(await board.top(w.member, "online", "week")).toEqual([]);
+  });
+
+  test("locul viewer-ului: egalitățile au același loc", async () => {
+    const [a, b, c] = [await player("Alfa"), await player("Beta"), await player("Gama")];
+    await w.db.user.update({ where: { id: a.userId! }, data: { reputation: 40 } });
+    await w.db.user.update({ where: { id: b.userId! }, data: { reputation: 90 } });
+    await w.db.user.update({ where: { id: c.userId! }, data: { reputation: 40 } });
+    expect(await board.place(c, "reputation", "all")).toEqual({ rank: 2, value: 40 });
+    expect(await board.place(b, "reputation", "all")).toEqual({ rank: 1, value: 90 });
+    expect(await board.place(w.member, "reputation", "all")).toBeNull();
   });
 });

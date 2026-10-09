@@ -2750,6 +2750,9 @@
         "chat_pro": {
           "days": "Days with messages in the chat ranking",
           "wins": "Chat ranking periods won"
+        },
+        "online_time": {
+          "days": "Tage mit Online-Zeit in der Rangliste"
         }
       },
       "steps": {
@@ -2766,7 +2769,8 @@
         "notifications": "Notifications",
         "account": "Account data",
         "files": "Files",
-        "chat_pro": "Chat Pro"
+        "chat_pro": "Chat Pro",
+        "online_time": "Online-Zeit"
       },
       "notes": {
         "topic_replies": "Their topics have {count} replies by other members: with “Delete content too” they are deleted as well.",
@@ -5391,7 +5395,9 @@
     "lead": {
       "week": "The most active members of the last 7 days, by {metric}.",
       "month": "The most active members of the last 30 days, by {metric}.",
-      "all": "The best members of all time, by {metric}."
+      "all": "The best members of all time, by {metric}.",
+      "day": "Die aktivsten Mitglieder von heute, nach {metric}.",
+      "year": "Die aktivsten Mitglieder des letzten Jahres, nach {metric}."
     },
     "metricLabel": "Measure",
     "periodLabel": "Period",
@@ -5399,18 +5405,24 @@
       "reputation": "Reputation",
       "posts": "Posts",
       "xp": "XP",
-      "solutions": "Solutions"
+      "solutions": "Solutions",
+      "topics": "Themen",
+      "online": "Online-Zeit"
     },
     "metricLower": {
       "reputation": "reputation",
       "posts": "posts",
       "xp": "XP",
-      "solutions": "solutions"
+      "solutions": "solutions",
+      "topics": "Themen",
+      "online": "Online-Zeit"
     },
     "period": {
       "week": "This week",
       "month": "This month",
-      "all": "All time"
+      "all": "All time",
+      "day": "Heute",
+      "year": "Jahr"
     },
     "podium": "Podium",
     "place": "Place {rank}",

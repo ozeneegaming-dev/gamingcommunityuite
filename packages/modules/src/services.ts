@@ -112,6 +112,7 @@ import { GcsImportService } from "./importer/service";
 import { GcsPortingService } from "./porting/service";
 import { GcsActivityStream } from "./community/activity";
 import { GcsLeaderboard } from "./community/leaderboard";
+import { GcsOnlineTime, onlineTimeMemberData } from "./community/onlineTime";
 import { GcsVipPublic } from "./vip/public";
 import { GcsServerPoller } from "./servers/poller";
 import { GcsServerQueries } from "./servers/queries";
@@ -216,8 +217,10 @@ export type GcsServices = {
   porting: GcsPortingService;
   /** Fluxul de activitate (`/activity`). */
   activity: GcsActivityStream;
-  /** Clasamentul (`/leaderboard`). */
+  /** Clasamentul (`/leaderboard`, widget-ul „Clasament”, panoul „Top” al consolei). */
   leaderboard: GcsLeaderboard;
+  /** Timpul online al membrilor pe zile (clasamentul „Timp online”). */
+  onlineTime: GcsOnlineTime;
   /** Pagina publică a planurilor VIP (`/vip`). */
   vipPublic: GcsVipPublic;
   /** Serverele de joc din ACP (Gaming → Servere): adăugare, editare, ordine, „Testează”. */
@@ -354,9 +357,12 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const bans = new GcsBanService({ db, cache, bus, acp });
   const warnings = new GcsWarningService({ db, bus, acp, bans });
   const realtime = new GcsRealtime(redis);
+  // Timpul online pe zile: fiecare semn de prezență al unui membru adaugă pauza scurtă de la semnul precedent.
+  const onlineTime = new GcsOnlineTime({ db, redis, settings });
   // Recordul de prezență se păstrează și în baza de date (cheie internă, nu apare în ACP), ca să supraviețuiască Redis-ului.
   const presence = new GcsPresenceService({
     redis,
+    onUserTouch: (userId, now) => onlineTime.heartbeat(userId, now),
     // Scrierile concurente nu pot coborî recordul: se actualizează doar dacă numărul e mai mare.
     persistRecord: async (r) => {
       const value = JSON.stringify({ count: r.count, at: r.at.toISOString() });
@@ -651,7 +657,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     memberList: new GcsMemberList({ db, permissions, ranks }),
     mentionQueries: new GcsMentionQueries({ db, cache, permissions, groupMentions }),
     activity: new GcsActivityStream({ db, cache, permissions, social }),
-    leaderboard: new GcsLeaderboard({ db, cache, permissions }),
+    leaderboard: new GcsLeaderboard({ db, cache, permissions, settings, onlineTime }),
+    onlineTime,
     // Fără magazin încă: planurile au butonul „Contactează staff-ul” (`checkout` vine odată cu plățile).
     vipPublic: new GcsVipPublic({ db, registry, permissions, settings, vip, checkout: null }),
     bans,
@@ -750,6 +757,7 @@ function createMemberRemoval(d: {
   removal.register(messageMemberData({ db: d.db, attachments: d.attachments }));
   removal.register(chatMemberData({ db: d.db, attachments: d.attachments }));
   removal.register(chatProMemberData({ db: d.db }));
+  removal.register(onlineTimeMemberData({ db: d.db }));
   removal.register(vipMemberData({ db: d.db, vip: d.vip }));
   removal.register(clanMemberData({ db: d.db, clans: d.clans }));
   removal.register(serverMemberData({ db: d.db, store: d.bridge.store, players: d.bridge.players }));

@@ -2750,6 +2750,9 @@
         "chat_pro": {
           "days": "Zile cu mesaje în clasamentul chat-ului",
           "wins": "Perioade câștigate în chat"
+        },
+        "online_time": {
+          "days": "Zile cu timp online în clasament"
         }
       },
       "steps": {
@@ -2766,7 +2769,8 @@
         "notifications": "Notificări",
         "account": "Date de cont",
         "files": "Fișiere",
-        "chat_pro": "Chat Pro"
+        "chat_pro": "Chat Pro",
+        "online_time": "Timp online"
       },
       "notes": {
         "topic_replies": "Topicurile lui au {count} răspunsuri ale altor membri: în modul „Șterge și conținutul” se șterg și ele.",
@@ -5391,7 +5395,9 @@
     "lead": {
       "week": "Cei mai activi membri din ultimele 7 zile, după {metric}.",
       "month": "Cei mai activi membri din ultimele 30 de zile, după {metric}.",
-      "all": "Cei mai buni membri dintotdeauna, după {metric}."
+      "all": "Cei mai buni membri dintotdeauna, după {metric}.",
+      "day": "Cei mai activi membri de azi, după {metric}.",
+      "year": "Cei mai activi membri din ultimul an, după {metric}."
     },
     "metricLabel": "Măsura",
     "periodLabel": "Perioada",
@@ -5399,18 +5405,24 @@
       "reputation": "Reputație",
       "posts": "Postări",
       "xp": "XP",
-      "solutions": "Soluții"
+      "solutions": "Soluții",
+      "topics": "Topicuri",
+      "online": "Timp online"
     },
     "metricLower": {
       "reputation": "reputație",
       "posts": "postări",
       "xp": "XP",
-      "solutions": "soluții"
+      "solutions": "soluții",
+      "topics": "topicuri",
+      "online": "timpul online"
     },
     "period": {
       "week": "Săptămâna",
       "month": "Luna",
-      "all": "Tot timpul"
+      "all": "Tot timpul",
+      "day": "Azi",
+      "year": "Anul"
     },
     "podium": "Podiumul",
     "place": "Locul {rank}",

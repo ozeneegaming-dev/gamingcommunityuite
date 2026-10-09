@@ -1,53 +1,114 @@
-import { GcsForbidden, type GcsActor, type GcsCache, type GcsPermissionService } from "@gcs/core";
+import { GcsForbidden, type GcsActor, type GcsCache, type GcsPermissionService, type GcsSettingsService } from "@gcs/core";
 import { Prisma, type PrismaClient } from "@gcs/db";
+import { secondsSinceMidnight } from "../chat-pro/period";
 import { toRef, userRefSelect, type GcsUserRef } from "../forums/queries";
+import type { GcsOnlineTime } from "./onlineTime";
 import { notBannedSql, pgTimestamp, profileAudience, profileVisibleSql, type GcsProfileAudience } from "./sql";
 
-export const GCS_LEADERBOARD_METRICS = ["reputation", "posts", "xp", "solutions"] as const;
+/**
+ * Măsurile clasamentului. `topics` = topicurile vizibile pornite; `online` = timpul online (secunde, din
+ * `member_online_days`; Hero Cockpit).
+ */
+export const GCS_LEADERBOARD_METRICS = ["reputation", "posts", "topics", "online", "xp", "solutions"] as const;
 export type GcsLeaderboardMetric = (typeof GCS_LEADERBOARD_METRICS)[number];
-export const GCS_LEADERBOARD_PERIODS = ["week", "month", "all"] as const;
+/** Perioadele: azi (de la miezul nopții, în fusul orar al site-ului), ultimele 7 / 30 / 365 de zile, tot timpul. */
+export const GCS_LEADERBOARD_PERIODS = ["day", "week", "month", "year", "all"] as const;
 export type GcsLeaderboardPeriod = (typeof GCS_LEADERBOARD_PERIODS)[number];
 export const LEADERBOARD_SIZE = 50;
 const TTL = 300;
+/** „Azi” și timpul online se schimbă repede: cache scurt. */
+const SHORT_TTL = 60;
 const DAY = 86_400_000;
-/** Perioadele: ultimele 7, respectiv 30 de zile (ca widget-ul „Top posteri”). */
-const PERIOD_DAYS: Record<Exclude<GcsLeaderboardPeriod, "all">, number> = { week: 7, month: 30 };
-/** Contorul userului folosit la „Tot timpul”. */
-const COUNTER: Record<GcsLeaderboardMetric, string> = { reputation: "reputation", posts: "postsCount", xp: "points", solutions: "solutionsCount" };
+const PERIOD_DAYS: Record<"week" | "month" | "year", number> = { week: 7, month: 30, year: 365 };
+/** Contorul userului folosit la „Tot timpul” (măsurile fără contor se calculează din tabele). */
+const COUNTER: Partial<Record<GcsLeaderboardMetric, string>> = { reputation: "reputation", posts: "postsCount", xp: "points", solutions: "solutionsCount" };
 
 /** Un loc în clasament: locul (egalitățile au același loc), valoarea, userul și grupul lui principal. */
 export type GcsLeaderboardRow = { rank: number; value: number; user: GcsUserRef; group: { name: string; color: string | null; icon: string | null } };
 
+/** Locul viewer-ului (rândul „Tu: locul X”); `null` = fără valoare în perioadă. */
+export type GcsLeaderboardPlace = { rank: number; value: number };
+
 const rowSelect = { ...userRefSelect, primaryGroup: { select: { key: true, name: true, title: true, color: true, icon: true } } } as const satisfies Prisma.UserSelect;
 
 /**
- * Clasamentul (`/leaderboard`): primii 50 după reputație, postări, XP (realizări) sau soluții, pe săptămână, lună sau
- * tot timpul. Pe perioade, valorile se calculează din ce s-a creat în perioadă (reacțiile primite, postările vizibile din
- * topicuri vizibile, punctele din jurnalul realizărilor, răspunsurile marcate soluție); „tot timpul” folosește contoarele.
- * Doar valori pozitive, fără membrii banați, cu regula de vizibilitate a profilului; accesul cere `core.members_list`
- * (ca lista de membri). Cache 5 minute pe (măsură, perioadă, public), tag `leaderboard` și `user:<id>`.
+ * Clasamentul (`/leaderboard`, widget-ul „Clasament”, panoul „Top” din consolă): primii 50 după reputație, postări,
+ * topicuri, timp online, XP (realizări) sau soluții, pe zi, săptămână, lună, an sau tot timpul. Pe perioade, valorile se
+ * calculează din ce s-a creat în perioadă (reacțiile primite, postările și topicurile vizibile, punctele din jurnalul
+ * realizărilor, răspunsurile marcate soluție, zilele de timp online); „tot timpul” folosește contoarele. Doar valori
+ * pozitive, fără membrii banați, cu regula de vizibilitate a profilului; la timpul online, fără cei cu statusul ascuns.
+ * Accesul cere `core.members_list` (ca lista de membri). Cache pe (măsură, perioadă, public), tag `leaderboard`.
  */
 export class GcsLeaderboard {
-  constructor(private readonly deps: { db: PrismaClient; cache: GcsCache; permissions: GcsPermissionService }) {}
+  constructor(
+    private readonly deps: {
+      db: PrismaClient;
+      cache: GcsCache;
+      permissions: GcsPermissionService;
+      /** Fusul orar al site-ului pentru „azi” (fără setări: UTC). */
+      settings?: GcsSettingsService;
+      /** Timpul online pe zile (fără el, măsura `online` e goală). */
+      onlineTime?: GcsOnlineTime;
+    },
+  ) {}
+
+  private async guard(viewer: GcsActor): Promise<GcsProfileAudience> {
+    const { permissions } = this.deps;
+    if (viewer.isBanned || !(await permissions.can(viewer, "core.members_list"))) throw new GcsForbidden({ permission: "core.members_list" });
+    return profileAudience(permissions, viewer);
+  }
 
   async top(viewer: GcsActor, metric: GcsLeaderboardMetric, period: GcsLeaderboardPeriod, now = Date.now()): Promise<GcsLeaderboardRow[]> {
-    const { cache, permissions } = this.deps;
-    if (viewer.isBanned || !(await permissions.can(viewer, "core.members_list"))) throw new GcsForbidden({ permission: "core.members_list" });
-    const audience = await profileAudience(permissions, viewer);
+    const { cache } = this.deps;
+    const audience = await this.guard(viewer);
     const key = `leaderboard:${metric}:${period}:${audience}`;
     const cached = await cache.get<GcsLeaderboardRow[]>(key);
     if (cached) return cached;
     const rows = await this.compute(metric, period, audience, now);
-    await cache.set(key, rows, { ttlSec: TTL, tags: ["leaderboard", ...rows.map((r) => `user:${r.user.id}`)] });
+    const ttlSec = period === "day" || metric === "online" ? SHORT_TTL : TTL;
+    await cache.set(key, rows, { ttlSec, tags: ["leaderboard", ...rows.map((r) => `user:${r.user.id}`)] });
     return rows;
   }
 
-  private values(metric: GcsLeaderboardMetric, period: GcsLeaderboardPeriod, now: number): Prisma.Sql {
-    if (period === "all") {
-      const col = Prisma.raw(`"${COUNTER[metric]}"`);
+  /** Locul viewer-ului în clasament (același calcul, fără limita de 50); `null` pentru vizitatori sau fără valoare. */
+  async place(viewer: GcsActor, metric: GcsLeaderboardMetric, period: GcsLeaderboardPeriod, now = Date.now()): Promise<GcsLeaderboardPlace | null> {
+    const audience = await this.guard(viewer);
+    if (!viewer.userId) return null;
+    const values = await this.values(metric, period, now);
+    const rows = await this.deps.db.$queryRaw<{ value: number; above: number }[]>`
+      WITH v AS (
+        SELECT v.id, v.value::int AS value FROM (${values}) v
+        JOIN users u ON u.id = v.id
+        WHERE v.value > 0 AND ${notBannedSql(Prisma.sql`u`)} ${profileVisibleSql(Prisma.sql`u`, audience)} ${this.extraSql(metric)}
+      )
+      SELECT me.value, (SELECT count(*)::int FROM v WHERE v.value > me.value) AS above FROM v me WHERE me.id = ${viewer.userId}`;
+    const me = rows[0];
+    return me ? { rank: Number(me.above) + 1, value: Number(me.value) } : null;
+  }
+
+  /** Momentul de început al perioadei (pentru „azi”: miezul nopții în fusul orar al site-ului). */
+  private async since(period: Exclude<GcsLeaderboardPeriod, "all">, now: number): Promise<Date> {
+    if (period !== "day") return new Date(now - PERIOD_DAYS[period] * DAY);
+    const tz = this.deps.settings ? await this.deps.settings.get<string>("site.timezone").catch(() => "UTC") : "UTC";
+    return new Date(now - secondsSinceMidnight(new Date(now), tz) * 1000);
+  }
+
+  /** Condiții în plus pe măsură: timpul online nu arată membrii cu statusul ascuns. */
+  private extraSql(metric: GcsLeaderboardMetric): Prisma.Sql {
+    return metric === "online" ? Prisma.sql`AND COALESCE(u.privacy->>'showOnline', 'true') <> 'false'` : Prisma.empty;
+  }
+
+  private async values(metric: GcsLeaderboardMetric, period: GcsLeaderboardPeriod, now: number): Promise<Prisma.Sql> {
+    if (metric === "online") {
+      if (!this.deps.onlineTime) return Prisma.sql`SELECT NULL::text AS id, 0 AS value WHERE false`;
+      return this.deps.onlineTime.valuesSql(period, now);
+    }
+    const counter = COUNTER[metric];
+    if (period === "all" && counter) {
+      const col = Prisma.raw(`"${counter}"`);
       return Prisma.sql`SELECT c.id, c.${col} AS value FROM users c WHERE c.${col} > 0`;
     }
-    const since = Prisma.sql`${pgTimestamp(new Date(now - PERIOD_DAYS[period] * DAY))}::timestamp`;
+    const since = period === "all" ? Prisma.sql`'-infinity'::timestamp` : Prisma.sql`${pgTimestamp(await this.since(period, now))}::timestamp`;
     // `contentId` e text (orice tip de conținut): convertit doar când e un număr, în CASE (ordinea evaluării e garantată).
     const numericId = Prisma.sql`(CASE WHEN cr."contentId" ~ '^[0-9]{1,9}$' THEN cr."contentId"::int END)`;
     switch (metric) {
@@ -56,6 +117,11 @@ export class GcsLeaderboard {
           FROM posts p JOIN topics t ON t.id = p."topicId"
           WHERE p.visibility = 'VISIBLE' AND t.visibility = 'VISIBLE' AND p."createdAt" >= ${since} AND p."authorId" IS NOT NULL
           GROUP BY p."authorId"`;
+      case "topics":
+        return Prisma.sql`SELECT t."authorId" AS id, count(*)::int AS value
+          FROM topics t
+          WHERE t.visibility = 'VISIBLE' AND t."createdAt" >= ${since} AND t."authorId" IS NOT NULL
+          GROUP BY t."authorId"`;
       case "reputation":
         return Prisma.sql`SELECT x.id, sum(x.weight)::int AS value FROM (
             SELECT p."authorId" AS id, r.weight FROM content_reactions cr
@@ -79,9 +145,9 @@ export class GcsLeaderboard {
   private async compute(metric: GcsLeaderboardMetric, period: GcsLeaderboardPeriod, audience: GcsProfileAudience, now: number): Promise<GcsLeaderboardRow[]> {
     const { db } = this.deps;
     const top = await db.$queryRaw<{ id: string; value: number }[]>`
-      SELECT v.id, v.value::int AS value FROM (${this.values(metric, period, now)}) v
+      SELECT v.id, v.value::int AS value FROM (${await this.values(metric, period, now)}) v
       JOIN users u ON u.id = v.id
-      WHERE v.value > 0 AND ${notBannedSql(Prisma.sql`u`)} ${profileVisibleSql(Prisma.sql`u`, audience)}
+      WHERE v.value > 0 AND ${notBannedSql(Prisma.sql`u`)} ${profileVisibleSql(Prisma.sql`u`, audience)} ${this.extraSql(metric)}
       ORDER BY v.value DESC, u."createdAt" ASC, u.id ASC
       LIMIT ${LEADERBOARD_SIZE}`;
     if (top.length === 0) return [];

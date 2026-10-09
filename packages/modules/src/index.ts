@@ -69,6 +69,7 @@ export * from "./importer";
 export * from "./porting";
 export * from "./community/activity";
 export * from "./community/leaderboard";
+export * from "./community/onlineTime";
 export * from "./community/rules";
 export * from "./community/footer";
 export * from "./vip/public";
