@@ -186,12 +186,10 @@ test("widget-ul „Servere” pe pagina principală; aplicația dezactivată dis
   // Aplicația dezactivată: meniul, widget-ul, pagina și ruta API dispar pentru un membru.
   const app = async (enabled: boolean) => {
     await page.goto("/admin/system/applications");
-    const card = page.getByTestId("gcs-acp-app-servers");
-    const box = card.getByRole("checkbox");
-    if (enabled) await box.check();
-    else await box.uncheck();
-    await card.getByRole("button", { name: "Salvează" }).click();
-    await expect(card.getByRole("status")).toBeVisible();
+    const row = page.getByTestId("gcs-app-servers");
+    await row.getByRole("switch", { name: "Servere pornită" }).click();
+    if (!enabled) await page.getByTestId("gcs-app-confirm-ok").click();
+    await expect(row.getByTestId("gcs-app-status")).toHaveText(enabled ? "Activă" : "Oprită");
   };
   await app(false);
   const other = await browser.newContext();

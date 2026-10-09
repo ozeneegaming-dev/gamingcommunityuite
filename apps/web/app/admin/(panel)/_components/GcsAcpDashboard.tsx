@@ -14,7 +14,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { faChevronDown, faChevronRight, faGripVertical, faRightLeft } from "@fortawesome/free-solid-svg-icons";
 import type { GcsAcpLayout, GcsAcpWidget } from "@gcs/core";
 import { GcsIconSvg } from "@gcs/ui";
-import { useState, useTransition, type CSSProperties, type ReactNode } from "react";
+import { useId, useState, useTransition, type CSSProperties, type ReactNode } from "react";
 import { saveAcpLayout } from "../actions";
 
 type Column = "main" | "side";
@@ -34,6 +34,8 @@ type Props = {
 export function GcsAcpDashboard({ layout, widgets, labels }: Props) {
   const [state, setState] = useState(layout);
   const [, startTransition] = useTransition();
+  // Id stabil pentru dnd-kit (server = client): altfel `aria-describedby` al mânerelor diferă la hidratare.
+  const dndId = useId();
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -100,7 +102,7 @@ export function GcsAcpDashboard({ layout, widgets, labels }: Props) {
   );
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+    <DndContext id={dndId} sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "flex-start" }}>
         {column("main", { flex: "999 1 560px" })}
         {column("side", { flex: "1 1 320px" })}

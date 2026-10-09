@@ -11,14 +11,14 @@ test("dezactivarea aplicației Chat ascunde meniul și shoutbox-ul, iar /chat d�
   await useFreshIp(context, "100.72.0");
   const id = uid();
   await enterAcpAsRoot(page, `AppAdm${id}`, `appadm-${id}@example.com`);
+  // ACP → Aplicații: comutatorul se aplică imediat; oprirea cere confirmare (dialogul din pagină).
   const app = async (enabled: boolean) => {
     await page.goto("/admin/system/applications");
-    const card = page.getByTestId("gcs-acp-app-chat");
-    const box = card.getByRole("checkbox");
-    if (enabled) await box.check();
-    else await box.uncheck();
-    await card.getByRole("button", { name: "Salvează" }).click();
-    await expect(card.getByRole("status")).toBeVisible();
+    const row = page.getByTestId("gcs-app-chat");
+    await row.getByRole("switch", { name: "Chat pornită" }).click();
+    if (!enabled) await page.getByTestId("gcs-app-confirm-ok").click();
+    await expect(row.getByTestId("gcs-app-status")).toHaveText(enabled ? "Activă" : "Oprită");
+    await expect(page.getByTestId("gcs-apps-notice")).toHaveText(enabled ? "Chat a fost pornită." : "Chat a fost oprită.");
   };
 
   await app(false);

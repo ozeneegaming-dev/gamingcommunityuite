@@ -39,7 +39,7 @@ test("Root Admin instalează pluginul din ACP; widget-ul, pagina și postbit-ul 
 
   // 1. Încărcarea: raportul verificărilor, capabilitățile și avertismentul pentru pachetul nesemnat.
   await page.goto("/admin/system/applications");
-  await expect(page.getByTestId("gcs-acp-app-chat")).toBeVisible();
+  await expect(page.getByTestId("gcs-app-chat")).toBeVisible();
   await page.getByTestId("gcs-plugin-upload").locator('input[type="file"]').setInputFiles(ZIP);
   await page.getByTestId("gcs-plugin-upload").getByRole("button", { name: "Încarcă și verifică" }).click();
   await expect(page).toHaveURL(/\/admin\/system\/applications\/install\/[a-z0-9]+$/);
@@ -55,6 +55,11 @@ test("Root Admin instalează pluginul din ACP; widget-ul, pagina și postbit-ul 
   await confirm.getByRole("button", { name: "Instalează pluginul" }).click();
   await expect(page).toHaveURL(new RegExp(`/admin/system/applications/plugins/${KEY.replace(".", "\\.")}$`));
   await expect(page.getByTestId("gcs-plugin-header").getByTestId("gcs-plugin-status")).toHaveText("Activ");
+  // Exportul pachetului (ACP → Aplicații → ⋯): arhiva instalată.
+  const exported = await page.request.get(`/api/acp/plugins/${KEY}/package`);
+  expect(exported.status()).toBe(200);
+  expect(exported.headers()["content-type"]).toBe("application/zip");
+  expect(exported.headers()["content-disposition"]).toContain(`${KEY}-1.0.0.zip`);
 
   // 3. Widget-ul, pus din „Editează pagina” în coloana din dreapta a paginii principale.
   await page.goto("/");
@@ -91,10 +96,13 @@ test("Root Admin instalează pluginul din ACP; widget-ul, pagina și postbit-ul 
   await expect(guestPage.getByTestId("gcs-plugin-forbidden")).toBeVisible();
   await guest.close();
 
-  // 6. Dezactivat din listă: widget-ul și pagina dispar, fără repornire.
+  // 6. Oprit din listă (cu confirmarea din pagină): widget-ul și pagina dispar, fără repornire.
   await page.goto("/admin/system/applications");
-  await page.getByTestId(`gcs-plugin-toggle-${KEY}`).uncheck();
-  await expect(page.getByTestId(`gcs-plugin-${KEY}`).getByTestId("gcs-plugin-status")).toHaveText("Dezactivat");
+  const row = page.getByTestId(`gcs-app-${KEY}`);
+  await expect(row.getByTestId("gcs-plugin-cert")).toHaveText("Necertificat");
+  await page.getByTestId(`gcs-plugin-toggle-${KEY}`).click();
+  await page.getByTestId("gcs-app-confirm-ok").click();
+  await expect(row.getByTestId("gcs-app-status")).toHaveText("Oprită");
   await page.goto("/");
   await expect(page.locator(WIDGET)).toHaveCount(0);
   expect((await page.goto(`/p/${KEY}`))?.status()).toBe(404);
@@ -108,7 +116,7 @@ test("Root Admin instalează pluginul din ACP; widget-ul, pagina și postbit-ul 
   page.once("dialog", (d) => void d.accept());
   await manage.getByRole("button", { name: "Dezinstalează" }).click();
   await expect(page).toHaveURL(/\/admin\/system\/applications$/);
-  await expect(page.getByTestId(`gcs-plugin-${KEY}`)).toHaveCount(0);
+  await expect(page.getByTestId(`gcs-app-${KEY}`)).toHaveCount(0);
   expect(await sql(`SELECT 1 FROM plugins WHERE key = $1`, [KEY])).toEqual([]);
   expect(await sql(`SELECT 1 FROM widget_placements WHERE type LIKE 'plugin.%'`)).toEqual([]);
   expect(await sql(`SELECT 1 FROM pg_namespace WHERE nspname = 'plugin_gcs__hello'`)).toEqual([]);

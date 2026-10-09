@@ -1856,9 +1856,576 @@ input[type="checkbox"].gcs-switch:checked::before,
   font-weight: 600;
 }
 
+/* ─── ACP → Sistem → Aplicații: lista aplicațiilor și a pluginurilor ───────── */
+
+/*
+ * Specul 2026-10-09-acp-navigatie-aplicatii §2: rânduri compacte pe coloane (ordinea, aplicația, versiunea, autorul,
+ * starea, acțiunile). Pornirea (★) e singurul accent de culoare al listei; o aplicație restricționată pe grup are
+ * lacătul închis, în galbenul avertismentelor. Sub 860 px (lățimea conținutului), rândul se așază pe două niveluri.
+ */
+.gcs-appNotice {
+  margin: 0;
+  color: var(--gcs-ok);
+  font-size: 13px;
+  font-weight: 600;
+}
+.gcs-appNotice:empty {
+  display: none;
+}
+.gcs-appNotice--error {
+  color: var(--gcs-acp-bad);
+}
+
+.gcs-acp .gcs-appCard {
+  overflow: visible;
+}
+.gcs-appCard__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-appCard__count {
+  margin-left: 2px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--gcs-surface2);
+  color: var(--gcs-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.gcs-appCard__landing {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--gcs-muted);
+  font-size: 13px;
+}
+.gcs-appCard__star {
+  color: var(--gcs-acp-c4);
+}
+
+.gcs-appList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-appItem {
+  position: relative;
+  border-bottom: 1px solid var(--gcs-border);
+  background: var(--gcs-surface);
+}
+.gcs-appItem:last-child {
+  border-bottom: 0;
+  border-radius: 0 0 12px 12px;
+}
+.gcs-appItem--dragging {
+  z-index: 5;
+  box-shadow: 0 14px 34px rgba(5, 12, 28, 0.35);
+}
+
+.gcs-appRow {
+  display: grid;
+  /* Coloana acțiunilor are lățimea fixă (★, 🔒, comutatorul, ▸, ⋯): capul de coloane rămâne aliniat cu rândurile. */
+  grid-template-columns: 52px minmax(0, 1fr) 92px minmax(0, 168px) 120px 200px;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 8px 14px 8px 6px;
+}
+.gcs-appRow--head {
+  min-height: 0;
+  padding-top: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--gcs-border);
+  color: var(--gcs-muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.gcs-appRow--head .gcs-appRow__name {
+  padding-left: 52px;
+}
+
+.gcs-appRow__order {
+  display: flex;
+  align-items: center;
+}
+.gcs-appRow__grip,
+.gcs-appRow__move {
+  display: inline-grid;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--gcs-muted);
+  cursor: pointer;
+}
+.gcs-appRow__grip {
+  width: 24px;
+  height: 40px;
+  cursor: grab;
+  touch-action: none;
+}
+.gcs-appRow__moves {
+  display: flex;
+  flex-direction: column;
+}
+.gcs-appRow__move {
+  width: 24px;
+  height: 20px;
+  font-size: 11px;
+}
+.gcs-appRow__grip:hover,
+.gcs-appRow__move:hover:not(:disabled) {
+  background: var(--gcs-surface2);
+  color: var(--gcs-text);
+}
+.gcs-appRow__move:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.gcs-appRow__name {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.gcs-appRow__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--gcs-accent) 13%, var(--gcs-surface2));
+  color: var(--gcs-accentInk);
+  font-size: 17px;
+}
+.gcs-appItem[data-status="stopped"] .gcs-appRow__icon,
+.gcs-appItem[data-status="removed"] .gcs-appRow__icon {
+  background: var(--gcs-surface2);
+  color: var(--gcs-muted);
+}
+.gcs-appRow__title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.gcs-appRow__label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 14.5px;
+  font-weight: 700;
+}
+.gcs-appRow__desc {
+  overflow: hidden;
+  color: var(--gcs-muted);
+  font-size: 12.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-appRow__byline {
+  display: none;
+  gap: 10px;
+  color: var(--gcs-muted);
+  font-size: 12px;
+}
+.gcs-appRow__error {
+  color: var(--gcs-warn);
+  font-size: 12px;
+}
+.gcs-appRow__version {
+  color: var(--gcs-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.gcs-appRow__author {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-appRow__status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+.gcs-appRow__auto {
+  color: var(--gcs-warn);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.gcs-appRow__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+
+/* Butoanele-iconiță ale rândului (și declanșatorul meniului „⋯”). */
+.gcs-appBtn,
+.gcs-dropdown__trigger.gcs-appBtn {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gcs-muted);
+  font-size: 15px;
+  cursor: pointer;
+}
+.gcs-appBtn:hover:not(:disabled),
+.gcs-dropdown__trigger.gcs-appBtn[aria-expanded="true"] {
+  background: var(--gcs-surface2);
+  color: var(--gcs-text);
+}
+.gcs-appBtn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.gcs-appBtn--landing,
+.gcs-appBtn--landing:disabled {
+  color: var(--gcs-acp-c4);
+  opacity: 1;
+}
+.gcs-appBtn--restricted {
+  color: var(--gcs-warn);
+}
+.gcs-appBtn--empty {
+  visibility: hidden;
+}
+.gcs-appBtn--expand svg {
+  transition: transform 0.18s ease;
+}
+.gcs-appBtn--expand[aria-expanded="true"] svg {
+  transform: rotate(90deg);
+}
+.gcs-appSwitch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+}
+.gcs-appSwitch--empty {
+  visibility: hidden;
+  height: 1px;
+}
+.gcs-appRow :focus-visible,
+.gcs-appSections :focus-visible {
+  outline: 2px solid var(--gcs-accent);
+  outline-offset: 1px;
+}
+
+/* Secțiunile unei aplicații (▸). */
+.gcs-appSections {
+  padding: 4px 14px 12px 70px;
+  border-top: 1px solid var(--gcs-border);
+  background: var(--gcs-surface2);
+}
+.gcs-appSections[hidden] {
+  display: none;
+}
+.gcs-appSections__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-appSection {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) minmax(0, 1.2fr) 34px;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  border-bottom: 1px dashed var(--gcs-border);
+}
+.gcs-appSection:last-child {
+  border-bottom: 0;
+}
+.gcs-appSection__icon {
+  color: var(--gcs-muted);
+  text-align: center;
+}
+.gcs-appSection__name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.gcs-acp .gcs-appSection__name a {
+  color: var(--gcs-text);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.gcs-appSection__out {
+  margin-left: 6px;
+  color: var(--gcs-muted);
+  font-size: 10px;
+}
+.gcs-appSection__path {
+  overflow: hidden;
+  color: var(--gcs-muted);
+  font-size: 11.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-appSection__perm {
+  color: var(--gcs-muted);
+  font-size: 12.5px;
+}
+.gcs-appSections__empty {
+  margin: 10px 0 0;
+  color: var(--gcs-muted);
+  font-size: 13px;
+}
+
+/* Dialogurile: confirmarea, accesul pe grup, dezinstalarea, detaliile. */
+.gcs-appDialog__text {
+  margin: 0 0 14px;
+  color: var(--gcs-muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.gcs-appDialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+.gcs-appDialog__error {
+  margin: 10px 0 0;
+  color: var(--gcs-acp-bad);
+  font-size: 13px;
+  font-weight: 600;
+}
+.gcs-appAccess__quick {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.gcs-appAccess__groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.gcs-appAccess__group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.gcs-appAccess__group:has(input:checked) {
+  border-color: color-mix(in srgb, var(--gcs-ok) 50%, var(--gcs-border));
+  background: color-mix(in srgb, var(--gcs-ok) 8%, transparent);
+}
+.gcs-appAccess__group--fixed {
+  cursor: default;
+}
+.gcs-appAccess__group small {
+  margin-left: auto;
+  color: var(--gcs-muted);
+  font-size: 11px;
+}
+.gcs-appUninstall {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gcs-appUninstall .gcs-appDialog__text {
+  margin: 0;
+}
+.gcs-appUninstall__removes {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+.gcs-appDetails__desc {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.gcs-appDetails__facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px 16px;
+  margin: 0 0 6px;
+}
+.gcs-appDetails__facts dt,
+.gcs-appDetails__adds dt {
+  color: var(--gcs-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.gcs-appDetails__facts dd {
+  margin: 2px 0 0;
+  font-size: 14px;
+  overflow-wrap: break-word;
+}
+.gcs-appDetails__title {
+  margin: 18px 0 8px;
+  font-size: 14px;
+}
+.gcs-appDetails__adds {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+.gcs-appDetails__adds dd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 0;
+}
+.gcs-appDetails__adds dd > span {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--gcs-surface2);
+  font-size: 12.5px;
+}
+.gcs-appDetails__adds dd > span.gcs-muted {
+  padding: 0;
+  background: none;
+}
+.gcs-appDetails__note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0 0;
+  color: var(--gcs-muted);
+  font-size: 13px;
+}
+
+/* „Verifică actualizări”: dezactivat până la licențe, cu explicația ca tooltip (la hover și la focus). */
+.gcs-appUpdates {
+  position: relative;
+  display: inline-flex;
+  border-radius: 10px;
+}
+.gcs-appUpdates:focus-visible {
+  outline: 2px solid var(--gcs-accent);
+  outline-offset: 2px;
+}
+.gcs-appUpdates__tip {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 50;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--gcs-acp-tooltip);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+.gcs-appUpdates:hover .gcs-appUpdates__tip,
+.gcs-appUpdates:focus-visible .gcs-appUpdates__tip {
+  opacity: 1;
+}
+
+@container (max-width: 860px) {
+  .gcs-appRow--head {
+    display: none;
+  }
+  .gcs-appRow {
+    grid-template-columns: 26px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "order name status"
+      "order actions actions";
+    row-gap: 6px;
+    padding-right: 10px;
+  }
+  .gcs-appRow__order {
+    grid-area: order;
+    flex-direction: column;
+    align-self: start;
+  }
+  .gcs-appRow__grip {
+    height: 28px;
+  }
+  .gcs-appRow__name {
+    grid-area: name;
+    align-items: flex-start;
+  }
+  .gcs-appRow__status {
+    grid-area: status;
+    align-items: flex-end;
+    align-self: start;
+  }
+  .gcs-appRow__actions {
+    grid-area: actions;
+  }
+  .gcs-appRow__version,
+  .gcs-appRow__author {
+    display: none;
+  }
+  .gcs-appRow__byline {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .gcs-appRow__desc {
+    display: -webkit-box;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  .gcs-appSections {
+    padding-left: 14px;
+  }
+  .gcs-appSection {
+    grid-template-columns: 24px minmax(0, 1fr) 34px;
+    grid-template-areas:
+      "icon name lock"
+      "icon perm lock";
+    row-gap: 2px;
+    padding: 8px 0;
+  }
+  .gcs-appSection__icon {
+    grid-area: icon;
+  }
+  .gcs-appSection__name {
+    grid-area: name;
+  }
+  .gcs-appSection__perm {
+    grid-area: perm;
+  }
+  .gcs-appSection > .gcs-appBtn {
+    grid-area: lock;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .gcs-acpSide,
   .gcs-acpRail__mark,
+  .gcs-appBtn--expand svg,
+  .gcs-appUpdates__tip,
   .gcs-acpKpi__bar > span,
   input[type="checkbox"].gcs-switch::before,
   .gcs-acp input[type="checkbox"][role="switch"]::before {

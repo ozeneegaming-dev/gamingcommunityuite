@@ -1,6 +1,6 @@
 "use server";
 
-import { APPS_ACP_SECTION, GCS_WIDGET_PAGES, MENUS_ACP_SECTION, THEMES_ACP_SECTION, WIDGETS_ACP_SECTION, type GcsNavItemInput, type GcsResult } from "@gcs/core";
+import { GCS_WIDGET_PAGES, MENUS_ACP_SECTION, THEMES_ACP_SECTION, WIDGETS_ACP_SECTION, type GcsNavItemInput, type GcsResult } from "@gcs/core";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { assertAcpAction } from "@/lib/acp";
@@ -9,15 +9,6 @@ import { PAGE_EDIT_COOKIE } from "@/lib/appearance";
 import { services } from "@/lib/services";
 
 const cookieOpts = { path: "/", sameSite: "lax" as const, httpOnly: true, secure: process.env.NODE_ENV === "production", maxAge: 60 * 60 * 12 };
-
-// ─── Aplicații ───────────────────────────────────────────────────────────────
-
-export async function setAppEnabled(key: string, fd: FormData): Promise<GcsResult<null>> {
-  return runAcpAction(APPS_ACP_SECTION, "edit", async (actor) => {
-    await services().apps.setEnabled(actor, key, fd.get("enabled") === "on");
-    return null;
-  });
-}
 
 // ─── Teme ────────────────────────────────────────────────────────────────────
 
