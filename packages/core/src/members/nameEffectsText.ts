@@ -18,7 +18,10 @@ import { black, d, DECOR, g, i, sheen, TEXT_LAYER, white, type Fx } from "./name
 const CLIP = ["-webkit-background-clip:text", "background-clip:text", "color:transparent", "-webkit-text-fill-color:transparent"];
 /** O culoare cu transparență (fix, nu depinde de temă). */
 const mix = (c: string, pct: number) => `color-mix(in srgb,${c} ${pct}%,transparent)`;
-/** Un strat cu textul dublat, umplut cu un fundal tăiat pe litere (după `TEXT_LAYER`, care pune umplerea plină). */
+/**
+ * Un strat cu textul dublat, umplut cu un fundal tăiat pe litere: după `TEXT_LAYER` (care pune umplerea plină) și după
+ * fundal (shorthand-ul `background` resetează tăierea).
+ */
 const LAYER_CLIP = ["color:transparent", "-webkit-text-fill-color:transparent", "-webkit-background-clip:text", "background-clip:text"];
 /** Amplitudinea mișcărilor pe verticală: mică în liste, mai mare în locurile mari. */
 const amp = (k: number) => `calc(var(--nfx-amp,.12em)*${k})`;
@@ -140,8 +143,8 @@ export const TEXT_FX: Record<GcsTextEffect, Fx> = {
       "background-size:250% 100%,100% 100%",
       "background-position:150% 0,0 0",
       ...CLIP,
-      `-webkit-text-stroke:max(.5px,.02em) ${mix(i(1), 60)}`,
-      `filter:drop-shadow(0 0 .18em ${g(40)})`,
+      `-webkit-text-stroke:max(.6px,.035em) ${mix(i(1), 85)}`,
+      `filter:drop-shadow(0 0 1px ${g(70)}) drop-shadow(0 0 .2em ${g(45)})`,
       `animation:gcsNfxSheen ${d(3.2)} ease-in-out infinite`,
     ],
     rich: {
@@ -269,7 +272,7 @@ export const TEXT_FX: Record<GcsTextEffect, Fx> = {
         ...DECOR,
         "opacity:1",
         "inset:-.05em -.1em",
-        "background:repeating-linear-gradient(0deg,transparent 0 .07em,rgba(0,0,0,.38) .07em .14em)",
+        "background:repeating-linear-gradient(0deg,transparent 0 .07em,rgb(0 0 0/calc(.38*var(--nfx-dk,1))) .07em .14em)",
         `animation:gcsNfxCrtRoll ${d(6)} linear infinite`,
       ],
     },
@@ -294,7 +297,7 @@ export const TEXT_FX: Record<GcsTextEffect, Fx> = {
   marker: {
     base: [
       `color:${i(1)}`,
-      `background-image:linear-gradient(100deg,${g(85, i(2))},${g(60, i(2))})`,
+      `background-image:linear-gradient(100deg,${g(55, i(3))},${g(35, i(3))})`,
       "background-repeat:no-repeat",
       "background-position:0 62%",
       "background-size:0% 46%",
@@ -329,7 +332,7 @@ export const TEXT_FX: Record<GcsTextEffect, Fx> = {
     rich: {
       self: ["isolation:isolate"],
       before: [...TEXT_LAYER, `color:${i(2)}`, "clip-path:inset(0 0 52% 0)", "opacity:.58", `animation:gcsNfxHoloSplit ${d(2.8)} steps(1) infinite`],
-      after: [...TEXT_LAYER, ...LAYER_CLIP, `background:repeating-linear-gradient(0deg,${mix(i(1), 70)} 0 .035em,transparent .035em .13em)`, "opacity:.48", `animation:gcsNfxHoloLines ${d(1.2)} linear infinite`],
+      after: [...TEXT_LAYER, `background:repeating-linear-gradient(0deg,${mix(i(1), 70)} 0 .035em,transparent .035em .13em)`, ...LAYER_CLIP, "opacity:.48", `animation:gcsNfxHoloLines ${d(1.2)} linear infinite`],
     },
   },
 
@@ -400,7 +403,7 @@ export const TEXT_FX: Record<GcsTextEffect, Fx> = {
     base: [`color:${mix(i(1), 65)}`, `-webkit-text-stroke:max(.5px,.025em) ${mix(i(1), 60)}`, "display:inline-block", `animation:gcsNfxGlass ${d(3.4)} ease-in-out infinite`],
     rich: {
       before: [...TEXT_LAYER, `color:${i(3)}`, "opacity:.34", "filter:blur(.1em)", "transform:translate(.13em,.17em)"],
-      after: [...TEXT_LAYER, ...LAYER_CLIP, "background:linear-gradient(115deg,transparent 22%,#fff 44%,transparent 62%) 110% 0/260% 100%", "opacity:.55", `animation:gcsNfxGlassSheen ${d(2.7)} ease-in-out infinite`],
+      after: [...TEXT_LAYER, "background:linear-gradient(115deg,transparent 22%,#fff 44%,transparent 62%) 110% 0/260% 100%", ...LAYER_CLIP, "opacity:.55", `animation:gcsNfxGlassSheen ${d(2.7)} ease-in-out infinite`],
     },
   },
 
@@ -492,7 +495,7 @@ export const TEXT_FX: Record<GcsTextEffect, Fx> = {
   portal: {
     base: [`background-image:conic-gradient(from 0deg,${i(2)},${i(1)},${i(3)},${i(2)})`, ...CLIP, `animation:gcsNfxHue ${d(3.6)} linear infinite`],
     rich: {
-      after: [...TEXT_LAYER, ...LAYER_CLIP, "background:radial-gradient(circle,transparent 0 30%,#fff 34% 36%,transparent 40% 100%)", "opacity:.72", `animation:gcsNfxPortalPulse ${d(1.8)} ease-in-out infinite`],
+      after: [...TEXT_LAYER, "background:radial-gradient(circle,transparent 0 30%,#fff 34% 36%,transparent 40% 100%)", ...LAYER_CLIP, "opacity:.72", `animation:gcsNfxPortalPulse ${d(1.8)} ease-in-out infinite`],
     },
   },
 
@@ -532,12 +535,12 @@ export const TEXT_FX: Record<GcsTextEffect, Fx> = {
       self: ["isolation:isolate"],
       before: [
         ...TEXT_LAYER,
-        ...LAYER_CLIP,
         `background:linear-gradient(118deg,transparent 12%,${i(2)} 34%,${white(i(2), 50)} 44%,#fff 48%,transparent 62%) 120% 0/240% 100%`,
+        ...LAYER_CLIP,
         "mix-blend-mode:screen",
         `animation:gcsNfxLeakA ${d(4.4)} ease-in-out infinite`,
       ],
-      after: [...TEXT_LAYER, ...LAYER_CLIP, `background:linear-gradient(248deg,transparent 18%,${i(3)} 38%,${i(2)} 48%,transparent 68%) -20% 0/240% 100%`, "mix-blend-mode:screen", `animation:gcsNfxLeakB ${d(5.6)} ease-in-out infinite`],
+      after: [...TEXT_LAYER, `background:linear-gradient(248deg,transparent 18%,${i(3)} 38%,${i(2)} 48%,transparent 68%) -20% 0/240% 100%`, ...LAYER_CLIP, "mix-blend-mode:screen", `animation:gcsNfxLeakB ${d(5.6)} ease-in-out infinite`],
     },
   },
 
@@ -559,15 +562,15 @@ export const TEXT_FX: Record<GcsTextEffect, Fx> = {
     rich: {
       before: [
         ...TEXT_LAYER,
-        ...LAYER_CLIP,
         `background:repeating-radial-gradient(circle at 50% 55%,transparent 0 .2em,${white(i(3), 40)} .23em .3em,transparent .33em .53em)`,
+        ...LAYER_CLIP,
         "opacity:.9",
         `animation:gcsNfxRings ${d(2.4)} linear infinite`,
       ],
       after: [
         ...TEXT_LAYER,
-        ...LAYER_CLIP,
         `background:repeating-radial-gradient(circle at 50% 55%,transparent 0 .27em,${i(2)} .3em .37em,transparent .4em .67em)`,
+        ...LAYER_CLIP,
         "opacity:.55",
         "mix-blend-mode:screen",
         `animation:gcsNfxRings ${d(2.4)} linear infinite reverse`,
@@ -714,7 +717,7 @@ export const TEXT_FX: Record<GcsTextEffect, Fx> = {
     base: [`color:${i(1)}`],
     rich: { self: RICH_AMP },
     letter: [`animation:gcsNfxGlyphRain ${d(2.4)} cubic-bezier(.25,.8,.25,1) infinite`, "animation-delay:calc(var(--i)*.12s)"],
-    letterRich: [`text-shadow:0 -.4em 0 ${mix(i(3), 45)},0 -.8em 0 ${mix(i(2), 28)}`],
+    letterRich: [`text-shadow:0 -.28em 0 ${mix(i(3), 30)},0 -.56em 0 ${mix(i(2), 14)}`],
     letterNth: { even: [`color:${i(3)}`] },
   },
 
