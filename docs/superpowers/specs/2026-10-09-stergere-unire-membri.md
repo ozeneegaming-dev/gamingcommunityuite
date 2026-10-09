@@ -169,9 +169,11 @@ interface GcsMemberDataHandler {
 
 Fiecare lot e idempotent: lucrează doar pe rândurile rămase (ce s-a mutat / șters nu mai apare), iar transferurile de
 contoare se fac „adaugă la țintă și golește sursa” în aceeași tranzacție. Ordinea înregistrării = ordinea pașilor:
-reacții → urmăriri → forum → profil → mesaje → chat → VIP → clanuri → servere → notificări → moderare → fișiere; apoi
-pasul final al nucleului (bannurile pe email / IP desprinse, IP-urile din jurnal golite, rândul `users` șters,
-evenimentele).
+reacții → urmăriri → forum → profil → mesaje → chat → VIP → clanuri → servere → harta importului → notificări → date de
+cont → fișiere; apoi pasul final al nucleului (rândul `users` șters, jurnalul, evenimentele).
+
+Harta importului (`import_map`, tipul `member`): la ștergere legătura devine `deleted:<id>` (o rulare nouă a importului
+nu recreează membrul și îi importă conținutul fără autor), la unire trece pe țintă.
 
 ### 6.3 Serviciul și joburile
 
@@ -210,4 +212,7 @@ Toate trei se adaugă la evenimentele livrate pluginurilor.
   sweep-ul).
 - E2E: staff-ul șterge un membru păstrând conținutul (postarea arată „Membru șters”, membrul nu mai poate intra); unește
   un cont doar-Steam cu contul principal (contul principal intră acum cu acel Steam; postările s-au mutat); un membru
-  cere ștergerea și o anulează. Capturi ale ecranelor noi din ACP (dark / light, 375 px).
+  cere ștergerea și o anulează. Capturi ale ecranelor noi din ACP (dark / light, 375 px, fără defilare orizontală).
+- Login-ul cu Steam în E2E trece prin callback-ul real: doar în instanțele de test (`GCS_TEST_ROUTES=1`), verificarea
+  `check_authentication` merge la un verificator fals pornit de `e2e/run.mts` (`GCS_STEAM_OPENID_CHECK_URL`), care
+  acceptă doar răspunsurile semnate cu secretul de unică folosință al rulării.
