@@ -3269,7 +3269,7 @@
       "birthdayVisible": "Arată ziua de naștere (fără an) pe profil și în chat",
       "birthdayHint": "Anul nu apare nicăieri; comanda /zi-de-nastere din chat te anunță doar dacă bifezi.",
       "birthdayClear": "Șterge data",
-      "birthdaySave": "Salvează ziua de naștere"
+      "birthdaySave": "Actualizează ziua de naștere"
     },
     "pm": {
       "messages_per_page": "Mesaje pe pagină într-o conversație"
