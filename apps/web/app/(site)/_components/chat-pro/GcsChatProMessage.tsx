@@ -16,7 +16,7 @@ import {
 import type { GcsChatMessageView, GcsChatProBot, GcsChatProPrefs, GcsRpsChoice } from "@gcs/modules";
 import { GcsAvatar, GcsBadgeArt, GcsButton, GcsIconSvg, GcsMemberName, type GcsIconSvgProps } from "@gcs/ui";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { memberHref } from "@/lib/forum-urls";
 import { openImageViewer } from "@/lib/image-viewer";
 import { GcsChatMedia } from "../chat/GcsChatMedia";
@@ -89,7 +89,19 @@ function GcsBotCard({ bot, name, viewerId, onAnswer }: { bot: GcsChatProBot; nam
   let body: ReactNode;
   if (bot.command === "roll") body = t("roll", { name, result: bot.result, max: bot.max });
   else if (bot.command === "iq") body = `${t("iq", { name, value: bot.value })} ${t(bot.value >= 140 ? "iqHigh" : bot.value >= 90 ? "iqMid" : "iqLow")}`;
-  else if (bot.command === "birthday") body = bot.users.length > 0 ? t("birthday", { names: bot.users.map((u) => u.name).join(", ") }) : t("noBirthday");
+  else if (bot.command === "birthday")
+    body =
+      bot.users.length > 0
+        ? t.rich("birthday", {
+            names: () =>
+              bot.users.map((u, i) => (
+                <Fragment key={u.id}>
+                  {i > 0 && ", "}
+                  <GcsMemberName userId={u.id} name={u.name} nameKey={u.nameKey} href={memberHref(u)} />
+                </Fragment>
+              )),
+          })
+        : t("noBirthday");
   else {
     const emoji = (c: GcsRpsChoice) => RPS.find((r) => r.key === c)!.emoji;
     body = (

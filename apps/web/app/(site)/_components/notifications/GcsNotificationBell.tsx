@@ -2,7 +2,7 @@
 
 import { faBellSlash } from "@fortawesome/free-regular-svg-icons";
 import { faArrowRight, faBell, faCheckDouble, faSpinner } from "@fortawesome/free-solid-svg-icons";
-import { GcsIconSvg } from "@gcs/ui";
+import { GcsIconSvg, GcsNamedText } from "@gcs/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
@@ -135,7 +135,9 @@ export function GcsNotificationBell({ initialUnread, labels }: { initialUnread: 
                       void openItem(item);
                     }}
                   >
-                    <span className="gcs-notifItem__text">{item.text}</span>
+                    <span className="gcs-notifItem__text">
+                      <GcsNamedText text={item.text} user={item.actor} />
+                    </span>
                     {item.snippet && <span className="gcs-notifItem__snippet">{item.snippet}</span>}
                     <time className="gcs-notifItem__time" dateTime={item.updatedAt}>
                       {new Date(item.updatedAt).toLocaleString()}

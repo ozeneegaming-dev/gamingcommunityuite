@@ -1,4 +1,4 @@
-import { GcsButton } from "@gcs/ui";
+import { GcsButton, GcsNamedText } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -49,7 +49,9 @@ export default async function NotificationsPage({ searchParams }: { searchParams
           {shown.map((n) => (
             <li key={n.id}>
               <a href={`/notifications/${n.id}`} className={`gcs-notifItem${n.read ? "" : " gcs-notifItem--unread"}`}>
-                <span className="gcs-notifItem__text">{n.text}</span>
+                <span className="gcs-notifItem__text">
+                  <GcsNamedText text={n.text} user={n.actor} />
+                </span>
                 {n.snippet && <span className="gcs-notifItem__snippet">{n.snippet}</span>}
                 <time className="gcs-notifItem__time" dateTime={n.updatedAt}>
                   {format.relativeTime(new Date(n.updatedAt))}

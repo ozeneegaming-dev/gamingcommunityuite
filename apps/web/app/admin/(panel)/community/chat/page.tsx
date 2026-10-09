@@ -8,6 +8,7 @@ import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { createChatChannel, deleteChatChannel, removeAnnouncement, updateChatChannel } from "./actions";
 import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
+import { GcsMemberLink } from "@/lib/member-names";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.chat"))("title") };
@@ -23,7 +24,7 @@ export default async function AcpChatChannelsPage() {
   const t = await getTranslations("acp.chat");
   const { db, chatQueries } = services();
   const [channels, announcements] = await Promise.all([
-    db.chatChannel.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }], include: { owner: { select: { name: true } } } }),
+    db.chatChannel.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }], include: { owner: { select: { id: true, name: true } } } }),
     chatQueries.announcements(),
   ]);
 
@@ -71,7 +72,7 @@ export default async function AcpChatChannelsPage() {
             <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
               <strong>#{c.key}</strong>
               {c.type === "PRIVATE" && <span className="gcs-badge">{t("private")}</span>}
-              {c.owner && <span className="gcs-muted">{t("owner", { name: c.owner.name })}</span>}
+              {c.owner && <span className="gcs-muted">{t.rich("owner", { name: () => <GcsMemberLink user={c.owner!} /> })}</span>}
               <Link href={`/admin/permissions/chat/${c.key}`}>{t("permissions")}</Link>
             </div>
             <div style={ROW}>

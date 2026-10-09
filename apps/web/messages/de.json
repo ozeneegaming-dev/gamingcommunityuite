@@ -978,7 +978,7 @@
       "title": "Meldungen",
       "empty": "Keine offenen Berichte.",
       "reasons": "Gründe",
-      "by": "von {name}",
+      "by": "von <name></name>",
       "close": "Schließen",
       "hide": "Inhalt ausblenden und schließen",
       "open": "View post"
@@ -1302,7 +1302,7 @@
       "permanent": "dauerhaft",
       "lift": "Aufheben",
       "private": "Privat",
-      "owner": "erstellt von {name}",
+      "owner": "erstellt von <name></name>",
       "announcements": "Globale Ankündigungen",
       "noAnnouncements": "Keine aktiven Ankündigungen.",
       "noExpiry": "bis zum entfernen",
@@ -3974,7 +3974,7 @@
     "history": "Verlauf",
     "more": "Mehr Maßnahmen",
     "edited": "Bearbeitet {when}",
-    "editedBy": "Herausgegeben von {name} {when}",
+    "editedBy": "Herausgegeben von <name></name> {when}",
     "save": "Speichern",
     "cancel": "Abbrechen",
     "titleLabel": "Titel des Themas",
@@ -4080,7 +4080,7 @@
       "mentionGroup": "Group",
       "mentionOnline": "Online"
     },
-    "ignored": "Sie ignorieren {name}. Postsendung",
+    "ignored": "Sie ignorieren <name></name>. Postsendung",
     "live": {
       "readers": "Lesen Sie jetzt:",
       "guests": "{count} Gäste",
@@ -4208,7 +4208,7 @@
     "report": "Melden",
     "reportReason": "Warum berichten Sie über diese Nachricht?",
     "reported": "Berichterstattung",
-    "readBy": "Gelesen von {names}",
+    "readBy": "Gelesen von <names></names>",
     "participants": "Teilnehmer · {count}",
     "starter": "beginn des gesprächs",
     "invite": "Einladen",
@@ -5596,7 +5596,7 @@
       "requestsTitle": "{count,plural,one{One join request} other{# join requests} =0{Join requests}}",
       "requestMeta": "Sent on {date}, expires on {expires}",
       "invitesTitle": "Invitations",
-      "inviteMeta": "Invited by {name}, expires on {expires}",
+      "inviteMeta": "Invited by <name></name>, expires on {expires}",
       "inviteMetaAnon": "Expires on {expires}",
       "inviteLabel": "Invite a member",
       "invitePlaceholder": "Member name",
@@ -5660,7 +5660,7 @@
     },
     "invites": {
       "title": "{count,plural,one{One invitation} other{# invitations}}",
-      "from": "from {name}"
+      "from": "from <name></name>"
     },
     "filters": {
       "label": "Clan filters",
@@ -6233,7 +6233,7 @@
       },
       "emptyHandle": "No tickets to handle.",
       "emptyMine": "You have not opened any ticket.",
-      "by": "by {name}",
+      "by": "by <name></name>",
       "target": "about {name}",
       "activity": "active {time}",
       "statusNames": {
@@ -6243,7 +6243,7 @@
         "REJECTED": "Rejected",
         "CLOSED": "Closed"
       },
-      "assignedTo": "Taken by {name}",
+      "assignedTo": "Taken by <name></name>",
       "unassigned": "Not taken"
     },
     "ticketForm": {
@@ -6305,7 +6305,7 @@
       "released": "{who} released the ticket.",
       "took": "{who} took the ticket.",
       "assigned": "{who} assigned the ticket to {to}.",
-      "openedBy": "opened by {name}, {date}",
+      "openedBy": "opened by <name></name>, {date}",
       "original": "Original message",
       "thread": "Discussion",
       "internalNote": "Internal note",
@@ -6512,7 +6512,7 @@
       "iqHigh": "Bot-certified genius.",
       "iqMid": "Enough for a clutch.",
       "iqLow": "At least they have team spirit.",
-      "birthday": "Happy birthday: {names}!",
+      "birthday": "Happy birthday: <names></names>!",
       "noBirthday": "Nobody celebrates a birthday today.",
       "rps": "{name} challenges {opponent} to rock-paper-scissors.",
       "rpsChoose": "Choose",

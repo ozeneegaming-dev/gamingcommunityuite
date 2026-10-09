@@ -12,6 +12,7 @@ import { GcsSlowModeControl } from "../_components/chat/GcsSlowModeControl";
 import { chatRoomProps } from "../_components/chat/chat-data";
 import { GcsChatProRoom } from "../_components/chat-pro/GcsChatProRoom";
 import { chatProRoomProps, usesChatPro } from "../_components/chat-pro/chat-pro-data";
+import { GcsMemberLink } from "@/lib/member-names";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("chat"))("title"), robots: { index: false } };
@@ -123,7 +124,9 @@ export default async function ChatPage({ searchParams }: { searchParams: Promise
           <h2 className="gcs-display gcs-sideCard__title">{t("rooms.members")}</h2>
           <ul className="gcs-recentList">
             {members.map((m) => (
-              <li key={m.id}>{m.name}</li>
+              <li key={m.id}>
+                <GcsMemberLink user={m} />
+              </li>
             ))}
           </ul>
         </section>

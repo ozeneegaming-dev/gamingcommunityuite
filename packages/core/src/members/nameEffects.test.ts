@@ -82,6 +82,9 @@ describe("efectele numelui", () => {
     expect(css).toContain(`${sels.rich}::before{`);
     expect(sels.rich).toContain(".gcs-post__authorName");
     expect(sels.rich.endsWith("[data-text]")).toBe(true);
+    // Varianta mare a componentei comune; un nume fără link al componentei, mic (ex. într-o notificare), nu.
+    expect(sels.rich).toContain('[data-name-fx="full"]:is([data-user-id="u1"],[data-name-user="u1"])');
+    expect(sels.rich).toContain('[data-name-user="u1"]:not(.gcs-name)');
     // Fără previzualizări: nicio clasă `.gcs-nfx`.
     expect(css).not.toContain(".gcs-nfx");
     expect(styledNameSelectors('"]{}*{x')).toBeNull();

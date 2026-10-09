@@ -12,6 +12,7 @@ import { services } from "@/lib/services";
 import { GcsTicketControls } from "../../../_components/servers/GcsTicketControls";
 import { GcsTicketReply } from "../../../_components/servers/GcsTicketForm";
 import { playerHref, sanctionHref } from "../../../_components/servers/types";
+import { GcsMemberLink } from "@/lib/member-names";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -93,7 +94,7 @@ export default async function TicketPage({ params }: Props) {
             <span className="gcs-ticketStatus" data-status={ticket.status} data-testid="gcs-ticket-status">
               {tk(`statusNames.${ticket.status}`)}
             </span>
-            <span>{t("openedBy", { name: ticket.author.name, date: when(ticket.createdAt) })}</span>
+            <span>{t.rich("openedBy", { name: () => <GcsMemberLink user={ticket.author} />, date: when(ticket.createdAt) })}</span>
           </p>
         </div>
       </header>
@@ -102,7 +103,7 @@ export default async function TicketPage({ params }: Props) {
         <div className="gcs-serverLayout__main">
           <GcsCard as="article" className="gcs-ticketPost" aria-label={t("original")}>
             <header className="gcs-titleBand gcs-ticketPost__head">
-              <Link href={memberHref(ticket.author)}>{ticket.author.name}</Link>
+              <GcsMemberLink user={ticket.author} />
               <time dateTime={ticket.createdAt}>{when(ticket.createdAt)}</time>
             </header>
             {/* HTML-ul vine din renderer-ul platformei (documentul editorului validat și sanitizat la salvare, ca postările). */}
@@ -118,7 +119,7 @@ export default async function TicketPage({ params }: Props) {
                 m.kind === "MESSAGE" ? (
                   <li key={m.id} className={`gcs-card gcs-ticketPost${m.internal ? " gcs-ticketPost--internal" : ""}`} data-testid={m.internal ? "gcs-ticket-internal-note" : "gcs-ticket-message"}>
                     <header className="gcs-titleBand gcs-ticketPost__head">
-                      {m.author ? <Link href={memberHref(m.author)}>{m.author.name}</Link> : <span>{t("system")}</span>}
+                      {m.author ? <GcsMemberLink user={m.author} /> : <span>{t("system")}</span>}
                       {m.internal && (
                         <span className="gcs-ticketPost__internal">
                           <GcsIcon name="fa-solid fa-lock" />

@@ -11,6 +11,7 @@ import { forumHref, memberHref } from "@/lib/forum-urls";
 import { services } from "@/lib/services";
 import { GcsClanForm } from "../../../_components/clans/GcsClanForm";
 import { GcsClanDangerZone, GcsClanForumButton, GcsClanInvites, GcsClanMembersTable, GcsClanRequestList } from "../../../_components/clans/GcsClanManage";
+import { GcsMemberLink } from "@/lib/member-names";
 
 type Props = { params: Promise<{ ref: string }>; searchParams: Promise<{ tab?: string }> };
 
@@ -150,7 +151,7 @@ export default async function ClanManagePage({ params, searchParams }: Props) {
                   id: r.id,
                   name: r.user.name,
                   message: "",
-                  meta: r.invitedBy ? t("inviteMeta", { name: r.invitedBy.name, expires: date(r.expiresAt) }) : t("inviteMetaAnon", { expires: date(r.expiresAt) }),
+                  meta: r.invitedBy ? t.rich("inviteMeta", { name: () => <GcsMemberLink user={r.invitedBy!} />, expires: date(r.expiresAt) }) : t("inviteMetaAnon", { expires: date(r.expiresAt) }),
                   link: <Who user={r.user} />,
                 }))}
               />

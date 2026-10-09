@@ -20,6 +20,7 @@ import { GcsWallComposer, GcsWallItemActions } from "../../_components/profile/G
 import { GcsTranslateButton } from "../../_components/GcsTranslateButton";
 import { GcsDeletedMember } from "../../_components/GcsDeletedMember";
 import { translateLabels } from "@/lib/translate";
+import { GcsMemberLink } from "@/lib/member-names";
 
 const TABS = ["activity", "about", "games", "followers", "badges", "warnings"] as const;
 type Tab = (typeof TABS)[number];
@@ -622,7 +623,14 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
           <div key={w.id} className="gcs-profileField">
             <span>
               {w.reason}
-              {w.issuedBy ? ` · ${w.issuedBy.name}` : ""}
+              {w.issuedBy ? (
+                <>
+                  {" · "}
+                  <GcsMemberLink user={w.issuedBy} />
+                </>
+              ) : (
+                ""
+              )}
             </span>
             <span>
               {t("warningPoints", { count: w.points })} · {format.dateTime(w.createdAt, { dateStyle: "medium" })}
@@ -637,7 +645,9 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
     <figure className="gcs-card gcs-vipQuote" data-testid="gcs-profile-quote">
       <GcsIcon name="fa-solid fa-quote-left" className="gcs-vipQuote__icon" />
       <blockquote>{look.profile.quote}</blockquote>
-      <figcaption>— {user.name}</figcaption>
+      <figcaption>
+        — <GcsMemberName userId={user.id} name={user.name} nameKey={user.nameKey} />
+      </figcaption>
     </figure>
   ) : null;
   const vipSong =

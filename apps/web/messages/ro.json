@@ -978,7 +978,7 @@
       "title": "Rapoarte",
       "empty": "Niciun raport deschis.",
       "reasons": "Motive",
-      "by": "de {name}",
+      "by": "de <name></name>",
       "close": "Închide",
       "hide": "Ascunde conținutul și închide",
       "open": "Vezi postarea"
@@ -1302,7 +1302,7 @@
       "permanent": "permanent",
       "lift": "Ridică",
       "private": "Privată",
-      "owner": "creată de {name}",
+      "owner": "creată de <name></name>",
       "announcements": "Anunțuri globale",
       "noAnnouncements": "Niciun anunț activ.",
       "noExpiry": "până la ștergere",
@@ -3974,7 +3974,7 @@
     "history": "Istoric",
     "more": "Mai multe acțiuni",
     "edited": "Editat {when}",
-    "editedBy": "Editat de {name} {when}",
+    "editedBy": "Editat de <name></name> {when}",
     "save": "Salvează",
     "cancel": "Anulează",
     "titleLabel": "Titlul topicului",
@@ -4080,7 +4080,7 @@
       "mentionGroup": "Grup",
       "mentionOnline": "Online"
     },
-    "ignored": "Ai ignorat pe {name}. Arată postarea",
+    "ignored": "Ai ignorat pe <name></name>. Arată postarea",
     "live": {
       "readers": "Citesc acum:",
       "guests": "{count} vizitatori",
@@ -4208,7 +4208,7 @@
     "report": "Raportează",
     "reportReason": "De ce raportezi acest mesaj?",
     "reported": "Raportat",
-    "readBy": "Citit de {names}",
+    "readBy": "Citit de <names></names>",
     "participants": "Participanți · {count}",
     "starter": "a început conversația",
     "invite": "Invită",
@@ -5596,7 +5596,7 @@
       "requestsTitle": "{count, plural, =0 {Cereri de intrare} one {O cerere de intrare} few {# cereri de intrare} other {# de cereri de intrare}}",
       "requestMeta": "Trimisă pe {date}, expiră pe {expires}",
       "invitesTitle": "Invitații",
-      "inviteMeta": "Invitat de {name}, expiră pe {expires}",
+      "inviteMeta": "Invitat de <name></name>, expiră pe {expires}",
       "inviteMetaAnon": "Expiră pe {expires}",
       "inviteLabel": "Invită un membru",
       "invitePlaceholder": "Numele membrului",
@@ -5660,7 +5660,7 @@
     },
     "invites": {
       "title": "{count, plural, one {O invitație} few {# invitații} other {# de invitații}}",
-      "from": "de la {name}"
+      "from": "de la <name></name>"
     },
     "filters": {
       "label": "Filtrele clanurilor",
@@ -6233,7 +6233,7 @@
       },
       "emptyHandle": "Niciun tichet de tratat.",
       "emptyMine": "Nu ai deschis niciun tichet.",
-      "by": "de {name}",
+      "by": "de <name></name>",
       "target": "despre {name}",
       "activity": "activ {time}",
       "statusNames": {
@@ -6243,7 +6243,7 @@
         "REJECTED": "Respins",
         "CLOSED": "Închis"
       },
-      "assignedTo": "Preluat de {name}",
+      "assignedTo": "Preluat de <name></name>",
       "unassigned": "Nepreluat"
     },
     "ticketForm": {
@@ -6305,7 +6305,7 @@
       "released": "{who} a eliberat tichetul.",
       "took": "{who} a preluat tichetul.",
       "assigned": "{who} a atribuit tichetul lui {to}.",
-      "openedBy": "deschis de {name}, {date}",
+      "openedBy": "deschis de <name></name>, {date}",
       "original": "Mesajul inițial",
       "thread": "Discuția",
       "internalNote": "Notă internă",
@@ -6512,7 +6512,7 @@
       "iqHigh": "Geniu confirmat de bot.",
       "iqMid": "Suficient pentru un clutch.",
       "iqLow": "Măcar are spirit de echipă.",
-      "birthday": "La mulți ani: {names}!",
+      "birthday": "La mulți ani: <names></names>!",
       "noBirthday": "Azi nu își serbează nimeni ziua de naștere.",
       "rps": "{name} îl provoacă pe {opponent} la piatră-hârtie-foarfecă.",
       "rpsChoose": "Alege",

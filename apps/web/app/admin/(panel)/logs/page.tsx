@@ -7,6 +7,7 @@ import { getFormatter, getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsAcpTitle } from "../_components/GcsAcpTitle";
+import { GcsMemberLink } from "@/lib/member-names";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.logs"))("title") };
@@ -92,7 +93,7 @@ export default async function AcpLogsPage({ searchParams }: Props) {
             <details key={item.id} style={{ borderBottom: "1px solid var(--gcs-border)" }} data-action={item.action}>
               <summary style={{ cursor: "pointer", display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", padding: "10px 16px", fontSize: 13.5 }}>
                 <span style={{ color: "var(--gcs-muted)", minWidth: 150 }}>{format.dateTime(item.createdAt, { dateStyle: "short", timeStyle: "medium" })}</span>
-                <span style={{ fontWeight: 600, minWidth: 120 }}>{item.actorName ?? t("system")}</span>
+                <span style={{ fontWeight: 600, minWidth: 120 }}>{item.actorId && item.actorName ? <GcsMemberLink user={{ id: item.actorId, name: item.actorName }} href={`/admin/members/${item.actorId}`} /> : (item.actorName ?? t("system"))}</span>
                 <code style={{ color: "var(--gcs-accentInk)" }}>{item.action}</code>
                 <span style={{ color: "var(--gcs-muted)" }}>
                   {item.targetType}:{item.targetId}

@@ -1,7 +1,7 @@
 "use client";
 
 import { faFlag, faPaperPlane, faRightFromBracket, faUserPlus, faXmark } from "@fortawesome/free-solid-svg-icons";
-import { GcsButton, GcsIconSvg } from "@gcs/ui";
+import { GcsButton, GcsIconSvg, GcsMemberName } from "@gcs/ui";
 import { GcsEditor, type GcsEditorHandle } from "@gcs/ui/editor";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
@@ -9,7 +9,7 @@ import { useErrorMessage } from "@/lib/use-error-message";
 import { inviteToConversation, leaveConversation, replyToConversation, reportMessage, startConversation } from "../../messages-actions";
 import { useEditorLabels } from "../topic/useEditorLabels";
 
-type Picked = { id: string; name: string };
+type Picked = { id: string; name: string; nameKey?: string | null };
 
 /** Destinatari: „chip”-uri + căutare după nume (sugestiile din `/api/forums/mentions`). */
 export function GcsUserPicker({ value, onChange, label, placeholder, removeLabel }: { value: Picked[]; onChange: (v: Picked[]) => void; label: string; placeholder: string; removeLabel: string }) {
@@ -41,7 +41,7 @@ export function GcsUserPicker({ value, onChange, label, placeholder, removeLabel
       <div className="gcs-userPicker">
         {value.map((u) => (
           <span key={u.id} className="gcs-chip" data-testid="gcs-recipient">
-            {u.name}
+            <GcsMemberName userId={u.id} name={u.name} nameKey={u.nameKey ?? null} />
             <button type="button" aria-label={`${removeLabel} ${u.name}`} onClick={() => onChange(value.filter((v) => v.id !== u.id))}>
               <GcsIconSvg icon={faXmark} />
             </button>
@@ -70,7 +70,7 @@ export function GcsUserPicker({ value, onChange, label, placeholder, removeLabel
           {visible.map((u) => (
             <li key={u.id} role="option" aria-selected={false}>
               <button type="button" onClick={() => add(u)}>
-                {u.name}
+                <GcsMemberName userId={u.id} name={u.name} nameKey={u.nameKey ?? null} />
               </button>
             </li>
           ))}

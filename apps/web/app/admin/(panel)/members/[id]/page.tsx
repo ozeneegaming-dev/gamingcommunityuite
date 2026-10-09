@@ -14,6 +14,7 @@ import { MemberProfileSections } from "./MemberProfileSections";
 import { addSecondaryGroup, banMember, liftBan, removeSecondaryGroup, setPrimaryGroup, warnMember } from "../actions";
 import { saveMemberPermissions } from "./actions";
 import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
+import { GcsMemberLink } from "@/lib/member-names";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -69,7 +70,7 @@ export default async function AcpMemberPage({ params }: Props) {
         <GcsAvatar name={member.name} size="l" {...(member.image ? { src: member.image } : {})} />
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <GcsAcpTitle icon="fa-solid fa-user" variant="plain">
-            <span className={`gcs-name--${member.primaryGroup.key}`}>{member.name}</span>
+            <GcsMemberLink user={member} href={null} size="full" />
           </GcsAcpTitle>
           <span style={muted}>
             {member.primaryGroup.name} · {t("info.email")}: {member.email} · {t("info.twoFactor")}: {member.twoFactorEnabled ? t("info.yes") : t("info.no")}
@@ -221,7 +222,7 @@ export default async function AcpMemberPage({ params }: Props) {
           {member.sharedIpAccounts.length === 0 && <p style={muted}>{t("ips.sharedNone")}</p>}
           {member.sharedIpAccounts.map((a) => (
             <div key={a.id} style={listRow}>
-              <GcsMemberName userId={a.id} name={a.name} nameKey={a.groupKey} href={`/admin/members/${a.id}`} />
+              <GcsMemberLink user={a} href={`/admin/members/${a.id}`} />
               <span style={muted}>{a.ip}</span>
             </div>
           ))}

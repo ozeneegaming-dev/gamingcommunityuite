@@ -11,6 +11,7 @@ import { GcsAcpPageHeader } from "../../../_components/GcsAcpPageHeader";
 import { GcsRemovalForm } from "../../_removal/GcsRemovalForm";
 import { GcsRemovalItems, GcsRemovalNotes, GcsRemovalSection } from "../../_removal/GcsRemovalSummary";
 import { mergeMembers } from "../../removal-actions";
+import { GcsMemberLink } from "@/lib/member-names";
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ target?: string }> };
 
@@ -90,7 +91,7 @@ export default async function AcpMemberMergePage({ params, searchParams }: Props
                 {results.map((m) => (
                   <li key={m.id} className="gcs-removalNote" style={{ alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }}>
                     <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-                      <GcsMemberName userId={m.id} name={m.name} nameKey={m.primaryGroup.key} href={`/admin/members/${m.id}`} />
+                      <GcsMemberLink user={m} href={`/admin/members/${m.id}`} />
                       <span style={{ color: "var(--gcs-muted)", fontSize: 12.5, overflowWrap: "anywhere" }}>
                         {m.email} · {m.primaryGroup.name}
                       </span>

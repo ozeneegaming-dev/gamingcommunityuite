@@ -9,6 +9,7 @@ import { memberHref } from "@/lib/forum-urls";
 import { services } from "@/lib/services";
 import { playtimeText } from "../../_components/servers/GcsBridgeBits";
 import { isBridgeGameKey } from "../../_components/servers/types";
+import { GcsMemberLink } from "@/lib/member-names";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("bridge.admins"))("title") };
@@ -75,7 +76,7 @@ export default async function ServerAdminsPage({ searchParams }: { searchParams:
                   <span className="gcs-dot" aria-hidden="true" />
                   {a.online ? t("online") : a.seen24h ? t("seen24h") : a.seen7d ? t("seen7d") : a.inactive ? t("inactive") : t("away")}
                 </span>
-                <h2 className="gcs-display gcs-presenceCard__name">{a.user ? <Link href={memberHref(a.user)}>{a.name}</Link> : a.name}</h2>
+                <h2 className="gcs-display gcs-presenceCard__name">{a.user ? <GcsMemberLink user={a.user} label={a.name} size="full" /> : a.name}</h2>
                 <span className="gcs-presenceCard__role">
                   {a.label ?? <code>{a.flags}</code>}
                   <span className="gcs-presenceCard__where">{a.server ? a.server.name : t("allServersShort")}</span>

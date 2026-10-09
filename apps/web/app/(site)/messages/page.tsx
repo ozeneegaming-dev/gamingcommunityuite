@@ -7,6 +7,8 @@ import { getFormatter, getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
 import { pageParam } from "@/lib/forum-page";
 import { services } from "@/lib/services";
+import { GcsMemberLink } from "@/lib/member-names";
+import { Fragment } from "react";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("messages"))("title"), robots: { index: false } };
@@ -52,11 +54,25 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
                     {c.unread && <span className="gcs-dot gcs-dot--unread" aria-label={t("unread")} />} {c.title}
                   </Link>
                   <span className="gcs-muted" style={{ fontSize: 13 }}>
-                    {others.map((p) => p.name).join(", ") || t("onlyYou")}
+                    {others.length > 0
+                      ? others.map((p, i) => (
+                          <Fragment key={p.id}>
+                            {i > 0 && ", "}
+                            <GcsMemberLink user={p} />
+                          </Fragment>
+                        ))
+                      : t("onlyYou")}
                   </span>
                   {c.last && (
                     <span className="gcs-inbox__snippet">
-                      {c.last.author ? `${c.last.author.name}: ` : ""}
+                      {c.last.author ? (
+                        <>
+                          <GcsMemberLink user={c.last.author} href={null} />
+                          {": "}
+                        </>
+                      ) : (
+                        ""
+                      )}
                       {c.last.snippet}
                     </span>
                   )}

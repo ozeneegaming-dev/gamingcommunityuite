@@ -10,6 +10,7 @@ import { pageParam } from "@/lib/forum-page";
 import { services } from "@/lib/services";
 import { GcsPagination } from "../../_components/forum/GcsPagination";
 import { ticketPageHref } from "../../_components/servers/types";
+import { GcsMemberLink } from "@/lib/member-names";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("bridge.tickets"))("title") };
@@ -122,7 +123,7 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
                     {x.title}
                   </Link>
                   <span className="gcs-ticketList__meta">
-                    {scope === "handle" && <span>{t("by", { name: x.author.name })}</span>}
+                    {scope === "handle" && <span>{t.rich("by", { name: () => <GcsMemberLink user={x.author} /> })}</span>}
                     {x.server && <span>{x.server.name}</span>}
                     {x.targetName && <span>{t("target", { name: x.targetName })}</span>}
                     <span>{t("activity", { time: format.relativeTime(new Date(x.lastActivityAt)) })}</span>
@@ -132,7 +133,7 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
                   <span className="gcs-ticketStatus" data-status={x.status}>
                     {t(`statusNames.${x.status}`)}
                   </span>
-                  <span className="gcs-ticketList__assignee">{x.assignee ? t("assignedTo", { name: x.assignee.name }) : t("unassigned")}</span>
+                  <span className="gcs-ticketList__assignee">{x.assignee ? t.rich("assignedTo", { name: () => <GcsMemberLink user={x.assignee!} /> }) : t("unassigned")}</span>
                 </span>
               </li>
             ))}

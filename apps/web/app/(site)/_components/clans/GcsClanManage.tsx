@@ -2,7 +2,7 @@
 
 import { faArrowDown, faArrowUp, faBan, faCheck, faComments, faCrown, faPaperPlane, faPlus, faRotateLeft, faTrash, faUserMinus, faXmark } from "@fortawesome/free-solid-svg-icons";
 import type { GcsResult } from "@gcs/core";
-import { GcsButton, GcsIconSvg } from "@gcs/ui";
+import { GcsButton, GcsIconSvg, GcsMemberName } from "@gcs/ui";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useState, useTransition, type ReactNode } from "react";
@@ -120,7 +120,7 @@ export function GcsClanMembersTable({
   );
 }
 
-export type GcsManageRequest = { id: number; name: string; message: string; meta: string; link: ReactNode };
+export type GcsManageRequest = { id: number; name: string; message: string; meta: ReactNode; link: ReactNode };
 
 /** Cererile de intrare în așteptare: acceptă / refuză. */
 export function GcsClanRequestList({ requests }: { requests: GcsManageRequest[] }) {
@@ -156,7 +156,7 @@ export function GcsClanInvites({ clanId, invites }: { clanId: number; invites: G
   const t = useTranslations("clans.manage");
   const { pending, run, message } = useRun();
   const [query, setQuery] = useState("");
-  const [found, setFound] = useState<{ id: string; name: string }[]>([]);
+  const [found, setFound] = useState<{ id: string; name: string; nameKey?: string | null }[]>([]);
 
   useEffect(() => {
     const q = query.trim();
@@ -167,7 +167,7 @@ export function GcsClanInvites({ clanId, invites }: { clanId: number; invites: G
     const controller = new AbortController();
     const timer = setTimeout(() => {
       fetch(`/api/forums/mentions?q=${encodeURIComponent(q)}`, { signal: controller.signal })
-        .then((r) => (r.ok ? (r.json() as Promise<{ users: { id: string; name: string }[] }>) : { users: [] }))
+        .then((r) => (r.ok ? (r.json() as Promise<{ users: { id: string; name: string; nameKey?: string | null }[] }>) : { users: [] }))
         .then((d) => setFound(d.users))
         .catch(() => {});
     }, 200);
@@ -205,7 +205,7 @@ export function GcsClanInvites({ clanId, invites }: { clanId: number; invites: G
             <li key={u.id}>
               <button type="button" className="gcs-btn gcs-btn--ghost gcs-btn--sm" onClick={() => setQuery(u.name)}>
                 <GcsIconSvg icon={faPlus} />
-                {u.name}
+                <GcsMemberName userId={u.id} name={u.name} nameKey={u.nameKey ?? null} />
               </button>
             </li>
           ))}

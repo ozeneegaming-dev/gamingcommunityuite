@@ -2,7 +2,7 @@
 
 import { faDiscord, faGoogle, faSteam } from "@fortawesome/free-brands-svg-icons";
 import { faEnvelope, faFloppyDisk, faKey, faLink, faLinkSlash, faPaperPlane, faRotateLeft, faUserCheck, faUserPlus } from "@fortawesome/free-solid-svg-icons";
-import { GcsAvatar, GcsButton, GcsIconSvg } from "@gcs/ui";
+import { GcsAvatar, GcsButton, GcsIconSvg, GcsMemberName } from "@gcs/ui";
 import { useEffect, useState } from "react";
 import {
   changePassword,
@@ -16,6 +16,7 @@ import {
 import { authClient } from "@/lib/auth-client";
 import { GcsStatus } from "./GcsStatus";
 import { useSettingsAction } from "./useSettingsAction";
+import { memberHref } from "@/lib/forum-urls";
 
 const ACCENT_PRESETS = ["#D62839", "#B794FF", "#5EA2FF", "#3DDC97", "#F4B740", "#FF7AC6", "#22D3EE"];
 
@@ -173,7 +174,7 @@ export function GcsPrivacyForm({ privacy, labels }: { privacy: Privacy; labels: 
 }
 
 /** Setări → Ignorați: lista și adăugarea după nume (cu sugestii din `/api/forums/mentions`). */
-export function GcsIgnoredForm({ ignored, labels }: { ignored: { id: string; name: string; posts: boolean; messages: boolean }[]; labels: Record<string, string> }) {
+export function GcsIgnoredForm({ ignored, labels }: { ignored: { id: string; name: string; nameKey?: string | null; posts: boolean; messages: boolean }[]; labels: Record<string, string> }) {
   const { pending, status, run } = useSettingsAction(labels.saved!);
   const [name, setName] = useState("");
   const [posts, setPosts] = useState(true);
@@ -234,7 +235,7 @@ export function GcsIgnoredForm({ ignored, labels }: { ignored: { id: string; nam
           {ignored.map((u) => (
             <li key={u.id}>
               <span>
-                <strong>{u.name}</strong>{" "}
+                <GcsMemberName userId={u.id} name={u.name} nameKey={u.nameKey ?? null} href={memberHref(u)} />{" "}
                 <span className="gcs-muted">
                   · {[u.posts ? labels.posts : null, u.messages ? labels.messages : null].filter(Boolean).join(", ")}
                 </span>

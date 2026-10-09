@@ -45,6 +45,22 @@ export type GcsMemberNameProps = Omit<HTMLAttributes<HTMLElement>, "className" |
 };
 
 /**
+ * Un text tradus care conține deja numele unui membru (ex. „Ana a răspuns…” într-o notificare): numele apare cu
+ * componenta comună (fără link: textul e de obicei deja un link), restul rămâne text.
+ */
+export function GcsNamedText({ text, user }: { text: string; user: { id: string; name: string; nameKey?: string | null } | null }) {
+  const at = user && user.name ? text.indexOf(user.name) : -1;
+  if (!user || at < 0) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, at)}
+      <GcsMemberName userId={user.id} name={user.name} nameKey={user.nameKey ?? null} />
+      {text.slice(at + user.name.length)}
+    </>
+  );
+}
+
+/**
  * Numele unui membru, la fel peste tot: același markup ca `memberNameHtml` din `@gcs/core` (șabloane, pluginuri,
  * conținutul salvat). Un link spre profil (cu hover card), un text simplu sau, în chat, un buton (click = mențiune).
  * Efectele pe litere (Studio VIP) primesc literele separate, cu numele întreg păstrat pentru cititoarele de ecran.

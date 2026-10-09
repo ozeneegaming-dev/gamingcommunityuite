@@ -12,6 +12,7 @@ import { pluginHookHtml } from "@/lib/plugins";
 import { GcsDeletedPostbit } from "../GcsDeletedMember";
 import { GcsTranslateButton, type GcsTranslateLabels } from "../GcsTranslateButton";
 import { GcsPostContent, type GcsPostContentProps } from "./GcsPostContent";
+import { GcsMemberLink } from "@/lib/member-names";
 
 /** Grupurile staff-ului (postările lor au chenarul colorat). */
 const STAFF_GROUPS = new Set(["root_admin", "admin", "super_moderator", "moderator"]);
@@ -42,7 +43,7 @@ export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, 
   const date = (iso: string) => format.dateTime(new Date(iso), { dateStyle: "medium", timeStyle: "short" });
   const edited = post.editedAt
     ? post.editedBy && post.editedBy.id !== author?.id
-      ? t("editedBy", { name: post.editedBy.name, when: date(post.editedAt) })
+      ? t.rich("editedBy", { name: () => <GcsMemberLink user={post.editedBy!} />, when: date(post.editedAt) })
       : t("edited", { when: date(post.editedAt) })
     : null;
   const own = actorId !== null && actorId === author?.id;
@@ -100,7 +101,7 @@ export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, 
   if (!ignored || !author) return article;
   return (
     <details className="gcs-post--ignored" data-testid="gcs-post-ignored">
-      <summary className="gcs-card gcs-post--ignoredSummary">{t("ignored", { name: author.name })}</summary>
+      <summary className="gcs-card gcs-post--ignoredSummary">{t.rich("ignored", { name: () => <GcsMemberName userId={author.id} name={author.name} nameKey={author.nameKey} /> })}</summary>
       {article}
     </details>
   );

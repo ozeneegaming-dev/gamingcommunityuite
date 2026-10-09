@@ -12,6 +12,7 @@ import { GcsPagination } from "../_components/forum/GcsPagination";
 import { GcsPlayerLink, GcsSanctionStatus, GcsSanctionType } from "../_components/servers/GcsBridgeBits";
 import { GcsSanctionTime } from "../_components/servers/GcsSanctionTime";
 import { isBridgeGameKey, sanctionHref } from "../_components/servers/types";
+import { GcsMemberLink } from "@/lib/member-names";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("bridge.bans"))("title") };
@@ -165,7 +166,7 @@ export default async function BansPage({ searchParams }: { searchParams: Promise
                     <Link href={sanctionHref(s.id)}>{s.reason}</Link>
                   </td>
                   <td data-label={t("col.scope")}>{s.scope === "GLOBAL" ? <span className="gcs-banScope gcs-banScope--global">{t("global")}</span> : (s.server?.name ?? "—")}</td>
-                  <td data-label={t("col.admin")}>{s.admin.name}</td>
+                  <td data-label={t("col.admin")}>{s.admin.userId ? <GcsMemberLink user={{ id: s.admin.userId, name: s.admin.name }} /> : s.admin.name}</td>
                   <td data-label={t("col.time")}>
                     <GcsSanctionTime sanction={s} now={now} />
                     <span className="gcs-banTable__date">{format.dateTime(new Date(s.createdAt), { dateStyle: "medium" })}</span>

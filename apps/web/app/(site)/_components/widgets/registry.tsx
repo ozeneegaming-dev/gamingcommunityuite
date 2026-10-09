@@ -21,6 +21,7 @@ import { GcsWhoIsOnline } from "../forum/GcsWhoIsOnline";
 import { GcsGroupLegend, GcsStatsPanel, GcsWhoWasOnline } from "./GcsStatsPanel";
 import { GcsCarousel } from "./GcsCarousel";
 import { GcsWidgetTitle, widgetIcon } from "./GcsWidgetTitle";
+import { GcsMemberLink } from "@/lib/member-names";
 
 export type GcsWidgetRenderProps = { id: string; config: Record<string, unknown>; actor: GcsActor };
 type Renderer = (p: GcsWidgetRenderProps) => Promise<ReactNode>;
@@ -94,10 +95,6 @@ function announcementHtml(body: unknown): string {
   return sanitizeContentHtml(html);
 }
 
-/** Numele unui membru cu link spre profil (fără stilul grupului: datele vin din intrarea de admin). */
-function GcsMemberLinkPlain({ user }: { user: { id: string; name: string } }) {
-  return <Link href={memberHref(user)}>{user.name}</Link>;
-}
 
 /** Randarea fiecărui tip de widget (după cheia din `GcsWidgetDef`). Un tip necunoscut nu se randează. */
 export const WIDGET_RENDERERS: Record<string, Renderer> = {
@@ -426,7 +423,7 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
             {list.map((a) => (
               <li key={`${a.server.id}-${a.adminId ?? `p${a.playerId}`}`} className="gcs-adminRow" data-state="online" data-testid="gcs-widget-admin">
                 <span className="gcs-dot" aria-hidden="true" />
-                <span className="gcs-adminRow__name">{a.user ? <GcsMemberLinkPlain user={a.user} /> : a.name}</span>
+                <span className="gcs-adminRow__name">{a.user ? <GcsMemberLink user={a.user} /> : a.name}</span>
                 <span className="gcs-adminRow__meta">
                   {a.since ? tb("since", { server: a.server.name, time: format.relativeTime(new Date(a.since)) }) : a.server.name}
                 </span>

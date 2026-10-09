@@ -7,6 +7,7 @@ import { requireAcpSection } from "@/lib/acp";
 import { pageParam } from "@/lib/forum-page";
 import { services } from "@/lib/services";
 import { GcsAcpTitle } from "../../_components/GcsAcpTitle";
+import { GcsMemberLink } from "@/lib/member-names";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.vip"))("historyTitle") };
@@ -40,7 +41,7 @@ export default async function AcpVipHistoryPage({ searchParams }: { searchParams
         {rows.map((h) => (
           <div key={h.id} className="gcs-settingsList__row" style={{ padding: "6px 16px", fontSize: 13 }} data-testid="gcs-acp-vip-log">
             <span>
-              <Link href={`/admin/members/${h.userId}`}>{users.get(h.userId) ?? h.userId}</Link> · <strong>{tm(`actions.${h.action}`)}</strong> · {h.group?.name ?? "—"}
+              <GcsMemberLink user={{ id: h.userId, name: users.get(h.userId) ?? h.userId }} href={`/admin/members/${h.userId}`} /> · <strong>{tm(`actions.${h.action}`)}</strong> · {h.group?.name ?? "—"}
               {h.expiresAt ? ` · ${tm("until", { date: format.dateTime(h.expiresAt, { dateStyle: "medium" }) })}` : ""}
               {h.note ? ` · ${h.note}` : ""}
               {h.actorId ? ` · ${t("by", { name: users.get(h.actorId) ?? "?" })}` : ` · ${t("bySystem")}`}

@@ -16,6 +16,7 @@ import { GcsAcpDashboard } from "./_components/GcsAcpDashboard";
 import { GcsAcpPageHeader } from "./_components/GcsAcpPageHeader";
 import { AdminNotesWidget } from "./_components/widgets/AdminNotesWidget";
 import { RegistrationsWidget } from "./_components/widgets/RegistrationsWidget";
+import { GcsMemberLink } from "@/lib/member-names";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("acp.dashboard");
@@ -154,7 +155,7 @@ export default async function AcpDashboardPage() {
             <ul className="gcs-acpList">
               {expiring.map((s) => (
                 <Row key={s.id} meta={`${s.group.name} · ${s.expiresAt ? format.relativeTime(s.expiresAt) : "—"}`}>
-                  <Link href={`/admin/members/${s.user.id}`}>{s.user.name}</Link>
+                  <GcsMemberLink user={s.user} href={`/admin/members/${s.user.id}`} />
                 </Row>
               ))}
             </ul>
@@ -232,7 +233,7 @@ export default async function AcpDashboardPage() {
           <ul className="gcs-acpList">
             {admins.map((a) => (
               <Row key={a.id}>
-                <GcsMemberName userId={a.id} name={a.name} nameKey={a.groupKey} href={`/admin/members/${a.id}`} />
+                <GcsMemberLink user={a} href={`/admin/members/${a.id}`} />
               </Row>
             ))}
           </ul>
@@ -264,9 +265,7 @@ export default async function AcpDashboardPage() {
               {overview.latestMembers.map((m) => (
                 <Row key={m.id} meta={ago(m.createdAt)}>
                   <GcsAvatar name={m.name} size="xs" {...(m.image ? { src: m.image } : {})} />
-                  <Link href={`/admin/members/${m.id}`} className={`gcs-name--${m.groupKey}`}>
-                    {m.name}
-                  </Link>
+                  <GcsMemberLink user={m} href={`/admin/members/${m.id}`} />
                   <span className="gcs-acpList__sub">{m.groupName}</span>
                 </Row>
               ))}
@@ -291,7 +290,14 @@ export default async function AcpDashboardPage() {
                     {p.topicTitle}
                     <span className="gcs-acpList__sub">
                       {p.isTopic ? w("pending_content", "topic") : w("pending_content", "reply")} · {p.forumName}
-                      {p.author ? ` · ${p.author.name}` : ""}
+                      {p.author ? (
+                        <>
+                          {" · "}
+                          <GcsMemberName userId={p.author.id} name={p.author.name} nameKey={p.author.nameKey} />
+                        </>
+                      ) : (
+                        ""
+                      )}
                     </span>
                   </span>
                 </Row>
@@ -343,7 +349,8 @@ export default async function AcpDashboardPage() {
                   <GcsIcon name="fa-solid fa-pen-to-square" className="gcs-acpList__icon" />
                   <span className="gcs-acpList__text">
                     <span>
-                      <strong>{a.actorName ?? w("acp_log", "system")}</strong> <code className="gcs-acpList__code">{a.action}</code>
+                      <strong>{a.actorId && a.actorName ? <GcsMemberLink user={{ id: a.actorId, name: a.actorName }} href={`/admin/members/${a.actorId}`} /> : (a.actorName ?? w("acp_log", "system"))}</strong>{" "}
+                      <code className="gcs-acpList__code">{a.action}</code>
                     </span>
                     <span className="gcs-acpList__sub">
                       {a.targetType} #{a.targetId}

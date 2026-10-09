@@ -9,6 +9,7 @@ import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { extendSubscription, revokeSubscription } from "../actions";
 import { GcsAcpTitle } from "../../_components/GcsAcpTitle";
+import { GcsMemberLink } from "@/lib/member-names";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.vip"))("subscribersTitle") };
@@ -70,7 +71,7 @@ export default async function AcpVipSubscribersPage({ searchParams }: Props) {
         {rows.map((s) => (
           <div key={s.id} className="gcs-settingsList__row" style={{ padding: "6px 16px" }} data-testid="gcs-acp-vip-subscriber">
             <span style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-              <GcsMemberName userId={s.user.id} name={s.user.name} nameKey={s.user.primaryGroup.key} href={`/admin/members/${s.user.id}`} />
+              <GcsMemberLink user={s.user} href={`/admin/members/${s.user.id}`} />
               <span className="gcs-muted" style={{ fontSize: 13 }}>
                 · {s.group.name} · {s.expiresAt ? t("expiresOn", { date: format.dateTime(s.expiresAt, { dateStyle: "medium" }) }) : t("permanent")} · {t(`sources.${s.source}`)}
               </span>

@@ -11,6 +11,7 @@ import { services } from "@/lib/services";
 import { GcsIdentityTag, GcsPlayerLink, GcsSanctionStatus, GcsSanctionType } from "../../_components/servers/GcsBridgeBits";
 import { GcsSanctionForm, GcsSanctionLift } from "../../_components/servers/GcsSanctionForm";
 import { GcsSanctionTime } from "../../_components/servers/GcsSanctionTime";
+import { GcsMemberLink } from "@/lib/member-names";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -131,7 +132,7 @@ export default async function SanctionPage({ params }: Props) {
               <dt>{t("expires")}</dt>
               <dd>{s.expiresAt ? date(s.expiresAt) : t("permanent")}</dd>
               <dt>{t("admin")}</dt>
-              <dd>{s.admin.name}</dd>
+              <dd>{s.admin.userId ? <GcsMemberLink user={{ id: s.admin.userId, name: s.admin.name }} /> : s.admin.name}</dd>
               <dt>{t("source")}</dt>
               <dd>{t(`sources.${s.source}`)}</dd>
               {s.lifted && (

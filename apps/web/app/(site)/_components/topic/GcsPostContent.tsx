@@ -48,7 +48,7 @@ export type GcsPostContentProps = {
     visibility: "VISIBLE" | "PENDING" | "HIDDEN";
     date: string;
     dateIso: string;
-    edited: string | null;
+    edited: ReactNode;
     hiddenReason: string | null;
     authorId: string | null;
     authorName: string;

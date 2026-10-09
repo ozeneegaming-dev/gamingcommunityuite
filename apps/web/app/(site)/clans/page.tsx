@@ -14,6 +14,7 @@ import { GcsClanInviteButtons } from "../_components/clans/GcsClanActions";
 import { GcsClanGrid } from "../_components/clans/GcsClanGrid";
 import { GcsClanLogo } from "../_components/clans/GcsClanLogo";
 import { GcsPagination } from "../_components/forum/GcsPagination";
+import { GcsMemberLink } from "@/lib/member-names";
 
 export async function generateMetadata(): Promise<Metadata> {
   // Aleasă ca pagină de pornire, are aceeași adresă canonică pe `/` și pe /clans: `/`.
@@ -96,7 +97,7 @@ export default async function ClansPage({ searchParams }: { searchParams: Promis
                 <GcsClanLogo clan={inv.clan} size="s" />
                 <GcsClanTag clan={inv.clan} size="sm" />
                 <Link href={inv.clan.href}>{inv.clan.name}</Link>
-                {inv.invitedBy && <span className="gcs-muted">{t("invites.from", { name: inv.invitedBy.name })}</span>}
+                {inv.invitedBy && <span className="gcs-muted">{t.rich("invites.from", { name: () => <GcsMemberLink user={inv.invitedBy!} /> })}</span>}
               </div>
               <GcsClanInviteButtons clanId={inv.clan.id} />
             </div>

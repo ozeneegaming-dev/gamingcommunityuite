@@ -6,6 +6,7 @@ import { getFormatter, getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsAcpTitle } from "../_components/GcsAcpTitle";
+import { GcsMemberLink } from "@/lib/member-names";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.members"))("title") };
@@ -72,7 +73,7 @@ export default async function AcpMembersPage({ searchParams }: Props) {
             {
               key: "name",
               header: t("columns.name"),
-              render: (m) => <GcsMemberName userId={m.id} name={m.name} nameKey={m.primaryGroup.key} href={`/admin/members/${m.id}`} />,
+              render: (m) => <GcsMemberLink user={m} href={`/admin/members/${m.id}`} />,
             },
             { key: "email", header: t("columns.email") },
             { key: "primaryGroup", header: t("columns.group"), render: (m) => m.primaryGroup.name },

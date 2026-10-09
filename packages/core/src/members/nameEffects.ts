@@ -629,7 +629,9 @@ export function nameSelectors(userId: string): { all: string; rich: string } {
     all: `${NAME_SCOPE} :is(.gcs-userLink[data-user-id="${userId}"],[data-name-user="${userId}"])`,
     // Locurile mari: numele în varianta „full” (postbit, profil, hover card, meniul userului), autorul din postbit și
     // numele fără link (`data-name-user`, din șabloanele vechi).
-    rich: `${NAME_SCOPE} :is(.gcs-post__authorName .gcs-userLink[data-user-id="${userId}"],[data-name-fx="full"][data-user-id="${userId}"],[data-name-user="${userId}"])[data-text]`,
+    // Componenta comună: varianta mare doar cu `data-name-fx="full"`; markup-ul vechi fără `.gcs-name` (șabloane
+    // modificate): numele fără link erau mereu în locurile mari.
+    rich: `${NAME_SCOPE} :is(.gcs-post__authorName .gcs-userLink[data-user-id="${userId}"],[data-name-fx="full"]:is([data-user-id="${userId}"],[data-name-user="${userId}"]),[data-name-user="${userId}"]:not(.gcs-name))[data-text]`,
   };
 }
 

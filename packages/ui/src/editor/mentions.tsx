@@ -5,6 +5,7 @@ import { ReactRenderer } from "@tiptap/react";
 import { forwardRef, useEffect, useImperativeHandle, useState, type CSSProperties } from "react";
 import { GcsAvatar } from "../components/GcsAvatar";
 import { GcsClanTag, type GcsClanTagData } from "../components/GcsClanTag";
+import { GcsMemberName } from "../components/GcsMemberName";
 
 /** Datele SVG ale unei iconițe Font Awesome (rezolvată pe server), ca lista să n-aibă nevoie de registrul de iconițe. */
 export type GcsMentionIcon = { width: number; height: number; path: string };
@@ -109,7 +110,7 @@ export const GcsMentionList = forwardRef<ListHandle, ListProps>(function GcsMent
                     <GcsAvatar name={item.label} size="s" {...(item.image ? { src: item.image } : {})} />
                     {item.online && <span className="gcs-mentionList__online" role="img" aria-label={labels.online} title={labels.online} />}
                   </span>
-                  <span className={`gcs-mentionList__name${item.nameKey ? ` gcs-name--${item.nameKey}` : ""}`}>@{item.label}</span>
+                  <GcsMemberName userId={item.id} name={item.label} label={`@${item.label}`} nameKey={item.nameKey} className="gcs-mentionList__name" />
                   {item.clan && <GcsClanTag clan={item.clan} size="sm" plain className="gcs-mentionList__clan" />}
                 </>
               )}

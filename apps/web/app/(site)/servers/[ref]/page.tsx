@@ -20,6 +20,7 @@ import { GcsMatchBoard } from "../../_components/servers/GcsMatchBoard";
 import { GcsMatchRows } from "../../_components/servers/GcsMatchRows";
 import { GcsMapPicture, mapPicture } from "../../_components/servers/GcsMapPicture";
 import { isBridgeGameKey, serverHref } from "../../_components/servers/types";
+import { GcsMemberLink } from "@/lib/member-names";
 
 type Props = { params: Promise<{ ref: string }>; searchParams: Promise<{ range?: string }> };
 
@@ -299,7 +300,7 @@ export default async function ServerPage({ params, searchParams }: Props) {
                 {admins.map((a) => (
                   <li key={a.id} className="gcs-adminRow" data-state={a.online ? "online" : "away"}>
                     <span className="gcs-dot" aria-hidden="true" />
-                    <span className="gcs-adminRow__name">{a.user ? <Link href={memberHref(a.user)}>{a.name}</Link> : a.name}</span>
+                    <span className="gcs-adminRow__name">{a.user ? <GcsMemberLink user={a.user} label={a.name} /> : a.name}</span>
                     <span className="gcs-adminRow__meta">
                       {a.online && a.online.serverId === server.id
                         ? a.online.since

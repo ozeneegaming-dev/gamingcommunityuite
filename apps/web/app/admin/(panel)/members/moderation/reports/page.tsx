@@ -8,6 +8,7 @@ import { services } from "@/lib/services";
 import { GcsActionForm } from "../../../_components/GcsActionForm";
 import { closeReport } from "../../../moderation-actions";
 import { GcsAcpTitle } from "../../../_components/GcsAcpTitle";
+import { GcsMemberLink } from "@/lib/member-names";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.reports"))("title") };
@@ -45,7 +46,7 @@ export default async function AcpReportsPage() {
                   <li key={reason.id}>
                     {reason.reason}{" "}
                     <span className="gcs-muted">
-                      {reason.reporter ? t("by", { name: reason.reporter.name }) : ""} · {format.relativeTime(new Date(reason.createdAt))}
+                      {reason.reporter ? t.rich("by", { name: () => <GcsMemberLink user={reason.reporter!} /> }) : ""} · {format.relativeTime(new Date(reason.createdAt))}
                     </span>
                   </li>
                 ))}

@@ -17,6 +17,7 @@ import { GcsEloChart, GcsFormGuide, GcsIdentityTag, GcsSanctionStatus, GcsSancti
 import { GcsMatchRows } from "../../../_components/servers/GcsMatchRows";
 import { GcsMapPicture, mapPicture } from "../../../_components/servers/GcsMapPicture";
 import { playerHref, sanctionHref } from "../../../_components/servers/types";
+import { GcsMemberLink } from "@/lib/member-names";
 
 const TABS = ["overview", "classic", "mix", "matches", "weapons", "maps", "sanctions"] as const;
 type Tab = (typeof TABS)[number];
@@ -105,10 +106,10 @@ export default async function PlayerProfilePage({ params, searchParams }: Props)
               <dt>{t("member")}</dt>
               <dd data-testid="gcs-player-member">
                 {profile.user ? (
-                  <Link href={memberHref(profile.user)}>
+                  <>
                     <GcsIcon name="fa-solid fa-user" className="gcs-hIcon" />
-                    {profile.user.name}
-                  </Link>
+                    <GcsMemberLink user={profile.user} />
+                  </>
                 ) : (
                   <span className="gcs-muted">{t("noAccount")}</span>
                 )}

@@ -1,7 +1,9 @@
 import "server-only";
 import { decorateMemberNamesHtml, memberUserIdsInHtml } from "@gcs/core";
 import { memberNameKeys } from "@gcs/modules";
+import { GcsMemberName, type GcsMemberNameProps } from "@gcs/ui";
 import { cache } from "react";
+import { memberHref } from "./forum-urls";
 import { pluginHost, safeModeActive } from "./plugins";
 import { services } from "./services";
 
@@ -46,6 +48,42 @@ export async function namesHtml(html: string | string[]): Promise<string | strin
   const set = new Set(letters);
   const out = list.map((h) => decorateMemberNamesHtml(h, { keys, letters: set }));
   return Array.isArray(html) ? out : out[0]!;
+}
+
+/**
+ * Cheia stilului unui membru, cerută dintr-o componentă: cererile din aceeași randare se adună într-o singură
+ * interogare (o listă de 50 de nume = o interogare), o dată pe request.
+ */
+const nameKeyLoader = cache(() => {
+  const known = new Map<string, Promise<string | undefined>>();
+  let queue: { id: string; resolve: (key: string | undefined) => void }[] = [];
+  let flushing: Promise<void> | null = null;
+  const flush = async () => {
+    await new Promise((r) => setTimeout(r, 0));
+    const batch = queue;
+    queue = [];
+    flushing = null;
+    const keys = await memberNameKeys(services().db, batch.map((b) => b.id)).catch(() => new Map<string, string>());
+    for (const b of batch) b.resolve(keys.get(b.id));
+  };
+  return (id: string): Promise<string | undefined> => {
+    let p = known.get(id);
+    if (!p) {
+      p = new Promise((resolve) => queue.push({ id, resolve }));
+      known.set(id, p);
+      flushing ??= flush();
+    }
+    return p;
+  };
+});
+
+/**
+ * Numele unui membru din date care au doar id și nume (admini de server, tichete, bannuri, ACP): componenta comună,
+ * cu cheia stilului adusă pe server. `label`: alt text vizibil (ex. numele din joc al unui admin legat de cont).
+ */
+export async function GcsMemberLink({ user, href, ...props }: { user: { id: string; name: string } } & Omit<GcsMemberNameProps, "userId" | "name" | "nameKey" | "onClick">) {
+  const nameKey = await nameKeyLoader()(user.id);
+  return <GcsMemberName {...props} userId={user.id} name={user.name} nameKey={nameKey ?? null} href={href === undefined ? memberHref(user) : href} />;
 }
 
 /** Foaia cu clasele de previzualizare ale efectelor (paginile pluginurilor, pagina VIP), cu versiunea aspectului. */

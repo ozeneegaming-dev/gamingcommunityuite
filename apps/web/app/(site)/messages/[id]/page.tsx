@@ -13,6 +13,8 @@ import { translateLabels } from "@/lib/translate";
 import { GcsDeletedMember } from "../../_components/GcsDeletedMember";
 import { GcsTranslateButton } from "../../_components/GcsTranslateButton";
 import { GcsConversationReply, GcsConversationTools, GcsRefreshAfterRead, GcsReportMessageButton } from "../../_components/messages/GcsMessageForms";
+import { GcsMemberLink } from "@/lib/member-names";
+import { Fragment } from "react";
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ page?: string }> };
 
@@ -99,7 +101,15 @@ export default async function ConversationPage({ params, searchParams }: Props) 
           {view.readBy.length > 0 && (
             <p className="gcs-muted" style={{ margin: 0, fontSize: 13 }} data-testid="gcs-read-by">
               <GcsIcon name="fa-solid fa-check-double" className="gcs-hIcon" />
-              {t("readBy", { names: view.readBy.map((u) => u.name).join(", ") })}
+              {t.rich("readBy", {
+                names: () =>
+                  view.readBy.map((u, i) => (
+                    <Fragment key={u.id}>
+                      {i > 0 && ", "}
+                      <GcsMemberLink user={u} />
+                    </Fragment>
+                  )),
+              })}
             </p>
           )}
           <GcsConversationReply conversationId={id} labels={{ send: t("send"), sending: t("sending"), reply: t("reply") }} />

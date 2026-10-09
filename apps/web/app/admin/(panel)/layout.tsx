@@ -19,6 +19,7 @@ import { ACP_AREA_COOKIE, ACP_COLUMN_COOKIE } from "./_components/acp-nav";
 import { ACP_THEME_COOKIE, ACP_THEMES, type GcsAcpTheme } from "./_components/acp-theme";
 import { GcsAcpThemeSwitch } from "./_components/GcsAcpThemeSwitch";
 import type { GcsAcpIconDef, GcsAcpNavArea, GcsAcpNavItem } from "./_components/types";
+import { GcsMemberLink } from "@/lib/member-names";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("acp");
@@ -83,9 +84,7 @@ export default async function AcpPanelLayout({ children }: { children: ReactNode
     <div className="gcs-acpAdmin" data-testid="gcs-acp-admin-card">
       <span className="gcs-acpAdmin__avatar">{avatar("s")}</span>
       <span className="gcs-acpAdmin__who">
-        <span className={`gcs-acpAdmin__name gcs-name--${user.primaryGroup.key}`} data-testid="gcs-acp-user">
-          {user.name}
-        </span>
+        <GcsMemberLink user={user} href={null} className="gcs-acpAdmin__name" data-testid="gcs-acp-user" />
         <span className="gcs-acpAdmin__role">{role}</span>
       </span>
       <span className="gcs-acpAdmin__twofa" title={t("acp.header.twoFactorOn")}>
@@ -138,7 +137,7 @@ export default async function AcpPanelLayout({ children }: { children: ReactNode
           trigger={
             <>
               {avatar("s")}
-              <span className="gcs-acpTop__accountName">{user.name}</span>
+              <GcsMemberLink user={user} href={null} className="gcs-acpTop__accountName" />
             </>
           }
           profileHref={memberHref(user)}

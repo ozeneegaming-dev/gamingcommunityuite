@@ -1,7 +1,7 @@
 "use client";
 
 import { faBell } from "@fortawesome/free-regular-svg-icons";
-import { GcsAvatar, GcsIconSvg } from "@gcs/ui";
+import { GcsAvatar, GcsIconSvg, GcsNamedText } from "@gcs/ui";
 import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { loadChatNotifications, markChatNotificationsRead, type GcsChatNotificationItem } from "../../chat-pro-actions";
@@ -84,7 +84,9 @@ export function GcsChatProNotifications({ bump }: { bump: number }) {
                   <a href={n.href} className="gcs-chatPro__notifItem">
                     {n.actor ? <GcsAvatar name={n.actor.name} userId={n.actor.id} src={n.actor.image ?? undefined} size="s" /> : <span className="gcs-avatar gcs-avatar--s" />}
                     <span>
-                      <strong>{t(`types.${n.type === "chat_pro.reply" ? "reply" : "mention"}`, { name: n.actor?.name ?? "—", room: n.title })}</strong>
+                      <strong>
+                        <GcsNamedText text={t(`types.${n.type === "chat_pro.reply" ? "reply" : "mention"}`, { name: n.actor?.name ?? "—", room: n.title })} user={n.actor} />
+                      </strong>
                       {n.snippet && <span className="gcs-chatPro__notifSnippet">{n.snippet}</span>}
                       <time dateTime={n.at}>{format.relativeTime(new Date(n.at))}</time>
                     </span>
