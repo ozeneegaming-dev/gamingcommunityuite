@@ -212,6 +212,85 @@ export class GcsVipService {
     jobs.register({ name: VIP_SWEEP_JOB, everyMs: SWEEP_EVERY_MS, handler: async () => void (await this.sweep()) });
   }
 
+  // ─── Ștergerea și unirea conturilor (specul 2026-10-09-stergere-unire-membri) ─────
+
+  /**
+   * Ce se întâmplă cu VIP-ul la unire: se păstrează abonamentul activ mai lung (permanent > dată mai târzie; la egalitate,
+   * al țintei). `moves` = al sursei trece pe țintă (închizându-l pe al țintei, dacă exista).
+   */
+  async mergeOutcome(sourceId: string, targetId: string): Promise<{ outcome: "none" | "moves" | "kept"; source: VipSubscription | null; target: VipSubscription | null }> {
+    const [source, target] = await Promise.all([this.active(sourceId), this.active(targetId)]);
+    if (!source) return { outcome: "none", source, target };
+    if (!target) return { outcome: "moves", source, target };
+    const longer = target.expiresAt !== null && (source.expiresAt === null || source.expiresAt > target.expiresAt);
+    return { outcome: longer ? "moves" : "kept", source, target };
+  }
+
+  /**
+   * Unirea: abonamentul activ mai lung rămâne pe țintă (cu grupul VIP aplicat ca la acordare: principal sau secundar), cel
+   * scurt se închide (`REVOKED`, nota `merged`); istoricul sursei (abonamente închise, `vip_log`) trece la țintă. Întoarce
+   * câte rânduri s-au schimbat (0 = nimic de făcut; idempotent: sursa nu mai are abonament activ după prima rulare).
+   */
+  async mergeAccounts(sourceId: string, targetId: string): Promise<number> {
+    const { db, bus, membership } = this.deps;
+    const { outcome, source, target } = await this.mergeOutcome(sourceId, targetId);
+    let changedGroups: number[] = [];
+    let moved: VipSubscription | null = null;
+    if (outcome !== "none" && source) {
+      const result = await db.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM users WHERE id IN (${sourceId}, ${targetId}) FOR UPDATE`;
+        const { count } = await tx.vipSubscription.updateMany({ where: { id: source.id, status: "ACTIVE" }, data: { status: "REVOKED" } });
+        if (count === 0) return { changed: [] as number[], sub: null };
+        await this.log(tx, source, "REVOKE", null, "merged");
+        if (outcome === "kept") return { changed: [] as number[], sub: null };
+        const changed = new Set<number>([source.groupId]);
+        if (target) for (const id of (await this.end(tx, target, "REVOKED", null, "merged")) ?? []) changed.add(id);
+        if (source.madePrimary) {
+          const u = await tx.user.findUniqueOrThrow({ where: { id: targetId }, select: { primaryGroup: { select: { isVip: true } } } });
+          const old = await membership.setPrimary(tx, targetId, source.groupId, { savePrevious: !u.primaryGroup.isVip });
+          if (old !== null) changed.add(old);
+        } else {
+          await membership.addSecondary(tx, targetId, source.groupId);
+        }
+        const sub = await tx.vipSubscription.create({
+          data: {
+            userId: targetId,
+            groupId: source.groupId,
+            startsAt: source.startsAt,
+            expiresAt: source.expiresAt,
+            source: source.source,
+            grantedById: source.grantedById,
+            madePrimary: source.madePrimary,
+            warnedAt: source.warnedAt,
+          },
+        });
+        await this.log(tx, sub, "GRANT", null, "merged");
+        return { changed: [...changed], sub };
+      });
+      changedGroups = result.changed;
+      moved = result.sub;
+    }
+    // Istoricul: abonamentele închise și jurnalul VIP al sursei.
+    const history = await db.$transaction(async (tx) => {
+      const subs = await tx.vipSubscription.updateMany({ where: { userId: sourceId, status: { not: "ACTIVE" } }, data: { userId: targetId } });
+      const log = await tx.vipLog.updateMany({ where: { userId: sourceId }, data: { userId: targetId } });
+      return subs.count + log.count;
+    });
+    if (moved) {
+      await membership.notify(targetId, changedGroups);
+      await bus.emit({ name: "vip.granted", payload: { userId: targetId, groupId: moved.groupId, subscriptionId: moved.id }, tags: userTags(targetId) });
+    }
+    return history + (outcome === "none" ? 0 : 1);
+  }
+
+  /** Ștergerea contului: abonamentele și istoricul VIP al membrului (grupurile dispar odată cu rândul userului). */
+  async purgeAccount(userId: string): Promise<number> {
+    const { db } = this.deps;
+    const log = await db.vipLog.deleteMany({ where: { userId } });
+    const subs = await db.vipSubscription.deleteMany({ where: { userId } });
+    return log.count + subs.count;
+  }
+
   // ─── Citiri pentru ACP și profil ─────────────────────────────────────────
 
   subscribers(opts: { groupId?: number; expiringDays?: number; page: number; perPage?: number }) {
