@@ -55,6 +55,8 @@ const labels: GcsEditorLabels = {
   uploading: "Se încarcă…",
   uploadFailed: "Încărcarea a eșuat",
   noMentions: "Niciun membru",
+  mentionGroup: "Grup",
+  mentionOnline: "Online",
 };
 
 function headless(content: string) {

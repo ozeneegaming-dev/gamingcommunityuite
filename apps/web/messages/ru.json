@@ -160,7 +160,8 @@
       "removal_in_progress": "The account already has a deletion or merge in progress.",
       "removal_started": "The operation has already started and can no longer be cancelled.",
       "removal_not_failed": "Only a failed operation can be retried.",
-      "reauth_required": "To confirm, sign in again."
+      "reauth_required": "To confirm, sign in again.",
+      "group_mention_cooldown": "You mentioned this group recently: wait a few minutes before mentioning it again."
     },
     "fields": {
       "invalid_color": "Недействительный цвет (#RRGGBB)",
@@ -262,7 +263,8 @@
       "rcon_needs_address": "HLTV rcon needs the HLTV address",
       "not_configured": "The demo source is not configured",
       "confirm_mismatch": "The name you typed does not match.",
-      "same_account": "Choose an account other than the source."
+      "same_account": "Choose an account other than the source.",
+      "not_mentionable": "This group cannot be mentioned."
     }
   },
   "acp": {
@@ -759,6 +761,19 @@
         "bannerHint": "Цвет (#D62839) или градиент между двумя цветами.",
         "inLegend": "Показано в легенде группы",
         "save": "Сохранить"
+      },
+      "mentions": {
+        "title": "Mentions",
+        "hint": "When enabled, members of the groups ticked below can write @Group in posts and private messages, and the members of this group get a notification.",
+        "enabled": "Can be mentioned",
+        "allowed": "Who may mention this group",
+        "rootAlways": "Root Admin can mention any enabled group.",
+        "notify": "Notify the members",
+        "limit": "Maximum members notified",
+        "cooldown": "Pause between mentions by the same member (minutes)",
+        "cooldownHint": "0 = no pause.",
+        "never": "Guests and banned members cannot be mentioned.",
+        "save": "Save mentions"
       }
     },
     "permissions": {
@@ -3829,7 +3844,9 @@
       "fullscreen": "Полный экран",
       "exitFullscreen": "Выход полный экран",
       "characters": "{count} персонажи",
-      "charactersMax": "{count}/{max} символы"
+      "charactersMax": "{count}/{max} символы",
+      "mentionGroup": "Group",
+      "mentionOnline": "Online"
     },
     "ignored": "Вы игнорируете {name}. Показать пост",
     "live": {
@@ -3933,7 +3950,13 @@
     "follow": "Подписаться",
     "unfollow": "Отписаться",
     "message": "Сообщение",
-    "weapon": "Weapon"
+    "weapon": "Weapon",
+    "group": {
+      "members": "Members",
+      "online": "Online now",
+      "seeAll": "See all",
+      "empty": "This group has no members yet."
+    }
   },
   "messages": {
     "title": "Сообщения",
@@ -3993,7 +4016,8 @@
         "expired": "VIP истекает"
       },
       "core": {
-        "warning": "Предупреждения"
+        "warning": "Предупреждения",
+        "group_mention": "Group mentions"
       },
       "chat": {
         "mention": "Чат упоминает"

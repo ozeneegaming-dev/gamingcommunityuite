@@ -51,6 +51,8 @@ const KEYS = [
   "uploading",
   "uploadFailed",
   "noMentions",
+  "mentionGroup",
+  "mentionOnline",
 ] as const satisfies readonly (keyof GcsEditorLabels)[];
 
 // Toate textele editorului trebuie traduse: o cheie lipsă din listă ar da `undefined` (ex. eticheta unui câmp).

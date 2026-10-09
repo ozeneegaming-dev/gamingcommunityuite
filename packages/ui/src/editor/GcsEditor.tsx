@@ -99,6 +99,9 @@ export type GcsEditorLabels = {
   uploading: string;
   uploadFailed: string;
   noMentions: string;
+  /** Lista de mențiuni: eticheta unui grup și a punctului „online”. */
+  mentionGroup: string;
+  mentionOnline: string;
 };
 
 /** Butoanele barei de unelte (varianta compactă alege dintre ele; fiecare apare doar dacă schema îl permite). */
@@ -207,7 +210,7 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
     immediatelyRender: false,
     extensions: gcsEditorExtensions({
       placeholder: labels.placeholder,
-      ...(mentionUrl ? { mention: gcsMentionSuggestion(mentionUrl, labels.noMentions) } : {}),
+      ...(mentionUrl ? { mention: gcsMentionSuggestion(mentionUrl, { empty: labels.noMentions, group: labels.mentionGroup, online: labels.mentionOnline }) } : {}),
       ...(maxLength ? { maxLength } : {}),
       ...(allow ? { allow } : {}),
     }),

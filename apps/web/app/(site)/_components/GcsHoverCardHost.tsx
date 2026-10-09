@@ -1,23 +1,48 @@
 "use client";
 
 import { faEnvelope, faUserMinus, faUserPlus } from "@fortawesome/free-solid-svg-icons";
-import { GcsButton, GcsHoverCard, GcsIconSvg, placeHoverCard, type GcsHoverCardData, type GcsHoverCardLabels, type GcsHoverCardPlacement } from "@gcs/ui";
+import {
+  GcsButton,
+  GcsGroupCard,
+  GcsHoverCard,
+  GcsIconSvg,
+  placeHoverCard,
+  type GcsGroupCardData,
+  type GcsGroupCardLabels,
+  type GcsHoverCardData,
+  type GcsHoverCardLabels,
+  type GcsHoverCardPlacement,
+} from "@gcs/ui";
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { hoverAnchorKey, hoverAnchorOf } from "@/lib/hover-anchor";
 import { followUser } from "../profile-actions";
 
 /** `html`: markup-ul din șablonul `members.hover_card` al temei (deja sanitizat pe server), dacă tema l-a modificat. */
 type CardData = GcsHoverCardData & { viewer: { isSelf: boolean; isFollowing: boolean; canMessage: boolean; canFollow: boolean }; html?: string | null };
-type Labels = GcsHoverCardLabels & { follow: string; unfollow: string; message: string };
+type Labels = GcsHoverCardLabels & { follow: string; unfollow: string; message: string; group: GcsGroupCardLabels };
 
 const OPEN_DELAY = 300;
 const CLOSE_GRACE = 150;
 const LONG_PRESS = 500;
 const CLIENT_TTL = 5 * 60_000;
+/** Cardul unui grup (membrii online se schimbă des): păstrat mai puțin în client. */
+const GROUP_TTL = 60_000;
 
 /** Cache-ul din client (5 minute), comun tuturor cardurilor din pagină. `null` = profil invizibil. */
 const cache = new Map<string, { at: number; data: CardData | null }>();
+const groupCache = new Map<string, { at: number; data: GcsGroupCardData | null }>();
+
+async function loadGroup(groupId: string): Promise<GcsGroupCardData | null> {
+  const hit = groupCache.get(groupId);
+  if (hit && Date.now() - hit.at < GROUP_TTL) return hit.data;
+  const res = await fetch(`/api/groups/${encodeURIComponent(groupId)}/card`, { credentials: "same-origin" });
+  const data = res.ok ? ((await res.json()) as GcsGroupCardData) : null;
+  groupCache.set(groupId, { at: Date.now(), data });
+  return data;
+}
+
 
 async function load(userId: string, fresh = false): Promise<CardData | null> {
   const hit = cache.get(userId);
@@ -28,7 +53,9 @@ async function load(userId: string, fresh = false): Promise<CardData | null> {
   return data;
 }
 
-type Open = { userId: string; anchor: HTMLElement; data: CardData };
+type Open =
+  | { kind: "user"; key: string; userId: string; anchor: HTMLElement; data: CardData }
+  | { kind: "group"; key: string; groupId: string; anchor: HTMLElement; data: GcsGroupCardData };
 
 /**
  * Cardul din șablonul temei: HTML-ul sanitizat pe server (fără scripturi sau atribute `on*`), cu butoanele React puse
@@ -49,8 +76,9 @@ function TemplatedCard({ html, actions }: { html: string; actions: ReactNode }) 
 }
 
 /**
- * Hover card-ul pe orice nume de membru (`[data-user-id]`, spec §8): apare după 300 ms de hover sau focus,
- * rămâne deschis cât timp mouse-ul e pe el, se închide cu Escape. Pe ecrane tactile: apăsare lungă.
+ * Hover card-ul pe orice nume de membru (`[data-user-id]`, spec §8) și pe @mențiuni (membri și grupuri, Mențiuni v2):
+ * apare după 300 ms de hover sau focus, rămâne deschis cât timp mouse-ul e pe el, se închide cu Escape. Pe ecrane
+ * tactile: apăsare lungă.
  */
 export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: string }) {
   const [open, setOpen] = useState<Open | null>(null);
@@ -74,16 +102,24 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
   const keepOpen = () => clearTimeout(closeTimer.current);
 
   const show = useCallback((anchor: HTMLElement, delay: number) => {
-    const userId = anchor.dataset.userId;
-    if (!userId) return;
+    const key = hoverAnchorKey(anchor);
+    if (!key) return;
     clearTimeout(openTimer.current);
     keepOpen();
-    if (current.current?.userId === userId) return;
+    if (current.current?.key === key) return;
     openTimer.current = setTimeout(async () => {
-      const data = await load(userId).catch(() => null);
+      const id = key.slice(2);
+      if (key.startsWith("g:")) {
+        const data = await loadGroup(id).catch(() => null);
+        if (!data || !anchor.isConnected) return;
+        setPlace(null);
+        setOpen({ kind: "group", key, groupId: id, anchor, data });
+        return;
+      }
+      const data = await load(id).catch(() => null);
       if (!data || !anchor.isConnected) return;
       setPlace(null);
-      setOpen({ userId, anchor, data });
+      setOpen({ kind: "user", key, userId: id, anchor, data });
     }, delay);
   }, []);
 
@@ -110,7 +146,7 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
   }, [open]);
 
   useEffect(() => {
-    const anchorOf = (e: Event) => (e.target instanceof Element ? (e.target.closest("[data-user-id]") as HTMLElement | null) : null);
+    const anchorOf = (e: Event) => hoverAnchorOf(e.target);
     const inCard = (e: Event) => e.target instanceof Element && e.target.closest(".gcs-hoverCardLayer") !== null;
     const onOver = (e: PointerEvent) => {
       if (e.pointerType === "touch") return;
@@ -188,8 +224,23 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
   }, [show, scheduleClose]);
 
   if (!open) return null;
-  const { data } = open;
   const number = (n: number) => new Intl.NumberFormat(locale).format(n);
+  const layerProps = {
+    ref: layer,
+    className: "gcs-hoverCardLayer",
+    style: { top: place?.top ?? 0, left: place?.left ?? 0, ...(place?.maxHeight != null ? { maxHeight: place.maxHeight, overflowY: "auto" as const } : {}) },
+    "data-side": place?.side ?? "pending",
+    onPointerEnter: keepOpen,
+    onPointerLeave: scheduleClose,
+  };
+  if (open.kind === "group") {
+    return (
+      <div {...layerProps}>
+        <GcsGroupCard data={open.data} labels={labels.group} format={{ number }} />
+      </div>
+    );
+  }
+  const { data } = open;
   const year = (iso: string) => String(new Date(iso).getFullYear());
 
   const toggleFollow = () =>
@@ -200,7 +251,7 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
       // Cardul din șablon e randat pe server: îl cerem din nou, cu numărul nou de urmăritori.
       if (data.html) next = (await load(open.userId, true).catch(() => null)) ?? next;
       cache.set(open.userId, { at: Date.now(), data: next });
-      setOpen((o) => (o ? { ...o, data: next } : o));
+      setOpen((o) => (o?.kind === "user" ? { ...o, data: next } : o));
     });
 
   const actions =
@@ -226,14 +277,7 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
     ) : undefined;
 
   return (
-    <div
-      ref={layer}
-      className="gcs-hoverCardLayer"
-      style={{ top: place?.top ?? 0, left: place?.left ?? 0, ...(place?.maxHeight != null ? { maxHeight: place.maxHeight, overflowY: "auto" } : {}) }}
-      data-side={place?.side ?? "pending"}
-      onPointerEnter={keepOpen}
-      onPointerLeave={scheduleClose}
-    >
+    <div {...layerProps}>
       {data.html ? <TemplatedCard html={data.html} actions={actions} /> : <GcsHoverCard data={data} labels={labels} format={{ number, year }} actions={actions} />}
     </div>
   );

@@ -4,6 +4,7 @@ import type { GcsCache } from "../cache";
 import { contentRefs } from "../content/renderer";
 import { GcsRateLimited } from "../errors";
 import type { GcsActor } from "../permissions/types";
+import { isHexColor } from "./nameStyles";
 
 /**
  * Mențiunile de grup (specul 2026-10-10-mentiuni-v2): setările fiecărui grup, ca rânduri `group_settings` cu cheile
@@ -175,4 +176,36 @@ export function toMentionGroups(groups: GroupRow[], rows: { groupId: number; key
     const settings = mentionSettingsOf(g.key, stored, staffIds);
     return { ...g, settings, mentionable: settings.enabled && !GROUP_MENTION_NEVER.includes(g.key) };
   });
+}
+
+/** Datele SVG ale unei iconițe (Font Awesome, rezolvată de apelant din numele salvat pe grup). */
+export type GcsSvgIcon = { width: number; height: number; path: string };
+
+/** Doar comenzi și numere de cale SVG: nimic din afara lor nu ajunge în CSS. */
+const SVG_PATH = /^[MmLlHhVvCcSsQqTtAaZz0-9.,\s-]{1,20000}$/;
+
+function svgUrl(icon: GcsSvgIcon | null | undefined): string | null {
+  if (!icon || !Number.isInteger(icon.width) || !Number.isInteger(icon.height) || !SVG_PATH.test(icon.path)) return null;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${icon.width} ${icon.height}"><path d="${icon.path}"/></svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
+
+/**
+ * CSS-ul pastilelor de grup (`.gcs-groupMention[data-group-id]`), servit cu stilurile de nume (`/gcs-names.css`):
+ * culoarea grupului (`--gcs-gm-color`) și iconița lui ca mască SVG (`--gcs-gm-icon`), cu `defaultIcon` pentru grupurile
+ * fără iconiță. Culorile sunt validate `#RRGGBB`, căile SVG au doar caractere de cale, id-urile sunt numere întregi.
+ */
+export function compileGroupMentionCss(groups: { id: number; color: string | null; icon: GcsSvgIcon | null }[], defaultIcon: GcsSvgIcon | null): string {
+  const parts: string[] = [];
+  const fallback = svgUrl(defaultIcon);
+  if (fallback) parts.push(`.gcs-groupMention{--gcs-gm-icon:${fallback};--gcs-gm-before:""}`);
+  for (const g of groups) {
+    if (!Number.isInteger(g.id)) continue;
+    const decls: string[] = [];
+    if (isHexColor(g.color)) decls.push(`--gcs-gm-color:${g.color}`);
+    const icon = svgUrl(g.icon);
+    if (icon) decls.push(`--gcs-gm-icon:${icon}`, `--gcs-gm-before:""`);
+    if (decls.length > 0) parts.push(`.gcs-groupMention[data-group-id="${g.id}"]{${decls.join(";")}}`);
+  }
+  return parts.join("\n");
 }

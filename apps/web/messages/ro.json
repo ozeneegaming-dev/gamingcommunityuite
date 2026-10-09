@@ -160,7 +160,8 @@
       "removal_in_progress": "Contul are deja o ștergere sau o unire în curs.",
       "removal_started": "Operația a pornit deja și nu mai poate fi anulată.",
       "removal_not_failed": "Doar o operație eșuată poate fi reluată.",
-      "reauth_required": "Pentru confirmare, intră din nou în cont."
+      "reauth_required": "Pentru confirmare, intră din nou în cont.",
+      "group_mention_cooldown": "Ai menționat acest grup de curând: așteaptă câteva minute înainte să-l menționezi din nou."
     },
     "fields": {
       "invalid_color": "Culoare invalidă (#RRGGBB)",
@@ -262,7 +263,8 @@
       "rcon_needs_address": "Rcon-ul HLTV cere adresa HLTV",
       "not_configured": "Sursa demo-urilor nu e configurată",
       "confirm_mismatch": "Numele scris nu se potrivește.",
-      "same_account": "Alege alt cont decât sursa."
+      "same_account": "Alege alt cont decât sursa.",
+      "not_mentionable": "Acest grup nu poate fi menționat."
     }
   },
   "acp": {
@@ -759,6 +761,19 @@
         "bannerHint": "O culoare (#D62839) sau un gradient între două culori.",
         "inLegend": "Apare în legenda grupurilor",
         "save": "Salvează"
+      },
+      "mentions": {
+        "title": "Mențiuni",
+        "hint": "Cu mențiunile active, membrii grupurilor bifate mai jos pot scrie @Grup în postări și mesaje private, iar membrii acestui grup primesc o notificare.",
+        "enabled": "Poate fi menționat",
+        "allowed": "Cine poate menționa acest grup",
+        "rootAlways": "Root Admin poate menționa orice grup activ.",
+        "notify": "Notifică membrii",
+        "limit": "Câți membri primesc cel mult notificarea",
+        "cooldown": "Pauza dintre mențiunile aceluiași membru (minute)",
+        "cooldownHint": "0 = fără pauză.",
+        "never": "Vizitatorii și membrii banați nu pot fi menționați.",
+        "save": "Salvează mențiunile"
       }
     },
     "permissions": {
@@ -3829,7 +3844,9 @@
       "fullscreen": "Tot ecranul",
       "exitFullscreen": "Ieși din tot ecranul",
       "characters": "{count} caractere",
-      "charactersMax": "{count} / {max} caractere"
+      "charactersMax": "{count} / {max} caractere",
+      "mentionGroup": "Grup",
+      "mentionOnline": "Online"
     },
     "ignored": "Ai ignorat pe {name}. Arată postarea",
     "live": {
@@ -3933,7 +3950,13 @@
     "follow": "Urmărește",
     "unfollow": "Nu mai urmări",
     "message": "Mesaj",
-    "weapon": "Arma"
+    "weapon": "Arma",
+    "group": {
+      "members": "Membri",
+      "online": "Online acum",
+      "seeAll": "Vezi toți",
+      "empty": "Grupul nu are încă membri."
+    }
   },
   "messages": {
     "title": "Mesaje",
@@ -3993,7 +4016,8 @@
         "expired": "VIP expirat"
       },
       "core": {
-        "warning": "Avertismente"
+        "warning": "Avertismente",
+        "group_mention": "Mențiuni prin grup"
       },
       "chat": {
         "mention": "Mențiuni în chat"

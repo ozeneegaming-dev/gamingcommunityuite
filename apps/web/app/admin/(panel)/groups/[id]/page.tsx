@@ -1,4 +1,4 @@
-import type { GcsNameStyle } from "@gcs/core";
+import { GROUP_MENTION_LIMITS, GROUP_MENTION_NEVER, type GcsNameStyle } from "@gcs/core";
 import { GcsCard, GcsIconPicker } from "@gcs/ui";
 import { isGcsIcon } from "@gcs/ui/icon-registry";
 import { GcsIcon } from "@gcs/ui/icons";
@@ -11,7 +11,7 @@ import { requireAcpSection } from "@/lib/acp";
 import { permissionLabel } from "@/lib/permission-label";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
-import { deleteGroup, updateGroupDetails, updateGroupLook, updateGroupSettings, updateGroupStyle } from "../actions";
+import { deleteGroup, updateGroupDetails, updateGroupLook, updateGroupMentions, updateGroupSettings, updateGroupStyle } from "../actions";
 import { NameStyleEditor } from "./NameStyleEditor";
 import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 
@@ -41,9 +41,15 @@ const checkbox = { width: 18, height: 18, accentColor: "var(--gcs-accent)" } as 
 export default async function AcpGroupPage({ params }: Props) {
   await requireAcpSection("members.groups");
   const id = Number((await params).id);
-  const { db, registry } = services();
+  const { db, registry, groupMentions } = services();
   const group = Number.isInteger(id) ? await db.group.findUnique({ where: { id }, include: { settings: true } }) : null;
   if (!group) notFound();
+  // Mențiuni v2: setările efective ale grupului și grupurile care pot primi dreptul de a-l menționa.
+  const [mention, allGroups] = await Promise.all([
+    groupMentions.group(group.id),
+    db.group.findMany({ where: { key: { notIn: [...GROUP_MENTION_NEVER] } }, orderBy: [{ position: "asc" }, { id: "asc" }], select: { id: true, key: true, name: true } }),
+  ]);
+  const neverMentionable = GROUP_MENTION_NEVER.includes(group.key);
   const t = await getTranslations("acp.group");
   const tAll = await getTranslations();
   const saved = (await getTranslations("acp"))("saved");
@@ -129,6 +135,71 @@ export default async function AcpGroupPage({ params }: Props) {
                 saved,
               }}
             />
+          </Section>
+
+          <Section title={t("mentions.title")} icon="fa-solid fa-at">
+            {neverMentionable || !mention ? (
+              <p style={{ margin: 0, color: "var(--gcs-muted)", fontSize: 14 }} data-testid="gcs-group-mentions-never">
+                {t("mentions.never")}
+              </p>
+            ) : (
+              <GcsActionForm action={updateGroupMentions.bind(null, group.id)} submitLabel={t("mentions.save")} submitKind="save">
+                <p style={{ margin: 0, color: "var(--gcs-muted)", fontSize: 13 }}>{t("mentions.hint")}</p>
+                <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, minHeight: 36 }}>
+                  <input type="checkbox" name="mentionEnabled" defaultChecked={mention.settings.enabled} style={checkbox} />
+                  {t("mentions.enabled")}
+                </label>
+                <fieldset className="gcs-appAccess__groups" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 150px), 1fr))" }}>
+                  <legend style={{ fontSize: 14, marginBottom: 8, padding: 0 }}>{t("mentions.allowed")}</legend>
+                  {allGroups.map((g) =>
+                    g.key === "root_admin" ? (
+                      <label key={g.id} className="gcs-appAccess__group gcs-appAccess__group--fixed" title={t("mentions.rootAlways")}>
+                        <input type="checkbox" checked disabled readOnly />
+                        <span>{g.name}</span>
+                      </label>
+                    ) : (
+                      <label key={g.id} className="gcs-appAccess__group">
+                        <input type="checkbox" name="mentionAllowed" value={g.id} defaultChecked={mention.settings.allowedGroupIds.includes(g.id)} />
+                        <span>{g.name}</span>
+                      </label>
+                    ),
+                  )}
+                </fieldset>
+                <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, minHeight: 36 }}>
+                  <input type="checkbox" name="mentionNotify" defaultChecked={mention.settings.notify} style={checkbox} />
+                  {t("mentions.notify")}
+                </label>
+                <label className="gcs-field">
+                  {t("mentions.limit")}
+                  <input
+                    className="gcs-input"
+                    type="number"
+                    name="mentionLimit"
+                    min={GROUP_MENTION_LIMITS.notifyLimit.min}
+                    max={GROUP_MENTION_LIMITS.notifyLimit.max}
+                    step={1}
+                    required
+                    defaultValue={mention.settings.notifyLimit}
+                    style={{ maxWidth: 180 }}
+                  />
+                </label>
+                <label className="gcs-field">
+                  {t("mentions.cooldown")}
+                  <input
+                    className="gcs-input"
+                    type="number"
+                    name="mentionCooldown"
+                    min={GROUP_MENTION_LIMITS.cooldownMinutes.min}
+                    max={GROUP_MENTION_LIMITS.cooldownMinutes.max}
+                    step={1}
+                    required
+                    defaultValue={mention.settings.cooldownMinutes}
+                    style={{ maxWidth: 180 }}
+                  />
+                  <span className="gcs-field__hint">{t("mentions.cooldownHint")}</span>
+                </label>
+              </GcsActionForm>
+            )}
           </Section>
 
           <Section title={t("delete.title")} icon="fa-solid fa-trash">

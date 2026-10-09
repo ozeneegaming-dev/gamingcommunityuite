@@ -93,6 +93,27 @@ export const GcsEmbed = Node.create({
   },
 });
 
+/**
+ * Mențiunea (Mențiuni v2): `kind` = `user` (implicit, și pentru conținutul vechi) sau `group`. Pastila unui grup are în
+ * editor aceleași clase și `data-group-id` ca pe site, deci culoarea și iconița grupului vin din același CSS generat.
+ */
+export const GcsMention = Mention.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      kind: {
+        default: null,
+        parseHTML: (el) => {
+          const kind = el.getAttribute("data-kind");
+          return kind === "user" || kind === "group" ? kind : null;
+        },
+        renderHTML: (a) =>
+          a.kind === "group" ? { "data-kind": "group", class: "gcs-groupMention", "data-group-id": a.id as string } : a.kind === "user" ? { "data-kind": "user" } : {},
+      },
+    };
+  },
+});
+
 /** Imaginea dintr-un atașament: în JSON apare doar `attachmentId` (fără `src`), ca serverul să o lege de postare. */
 export const GcsImage = Image.extend({
   addAttributes() {
@@ -205,7 +226,7 @@ export function gcsEditorExtensions(opts: { placeholder: string; mention?: Parti
     ...(node("embed") ? [GcsEmbed] : []),
     ...(node("mention")
       ? [
-          Mention.configure({
+          GcsMention.configure({
             HTMLAttributes: { class: "gcs-mention" },
             renderText: ({ node: n }) => `@${(n.attrs.label as string | null) ?? ""}`,
             ...(opts.mention ? { suggestion: opts.mention } : {}),

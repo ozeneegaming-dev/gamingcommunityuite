@@ -90,6 +90,27 @@ export async function updateGroupSettings(groupId: number, fd: FormData): Promis
   });
 }
 
+/**
+ * Secțiunea „Mențiuni” (Mențiuni v2): poate fi menționat, cine îl poate menționa (`mentionAllowed`, câte un id de grup),
+ * notificarea membrilor, câți membri cel mult și pauza dintre mențiuni. Checkbox-urile lipsă înseamnă `false`.
+ */
+export async function updateGroupMentions(groupId: number, fd: FormData): Promise<GcsResult<null>> {
+  return runAcpAction(SECTION, "edit", async (actor) => {
+    await services().groups.setMentionSettings(
+      groupId,
+      {
+        enabled: fd.get("mentionEnabled") === "on",
+        allowedGroupIds: fd.getAll("mentionAllowed").map((v) => Number(v)),
+        notify: fd.get("mentionNotify") === "on",
+        notifyLimit: intField(fd, "mentionLimit"),
+        cooldownMinutes: intField(fd, "mentionCooldown"),
+      },
+      actor,
+    );
+    return null;
+  });
+}
+
 export async function deleteGroup(groupId: number): Promise<GcsResult<null>> {
   return runAcpAction(SECTION, "delete", async (actor) => {
     await services().groups.delete(groupId, actor);

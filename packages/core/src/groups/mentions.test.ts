@@ -2,7 +2,7 @@ import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createWorld, type GcsTestWorld } from "../../test/world";
 import { GcsForbidden, GcsRateLimited, GcsValidationError } from "../errors";
 import type { GcsActor } from "../permissions/types";
-import { GcsGroupMentionService, GROUP_MENTION_SETTING, normalizeGroupName, type GcsGroupMentionSettings } from "./mentions";
+import { compileGroupMentionCss, GcsGroupMentionService, GROUP_MENTION_SETTING, normalizeGroupName, type GcsGroupMentionSettings } from "./mentions";
 
 let w: GcsTestWorld;
 let mentions: GcsGroupMentionService;
@@ -145,4 +145,21 @@ test("normalizeGroupName: fără diacritice, spații și majuscule", () => {
   expect(normalizeGroupName("Super Moderator")).toBe("supermoderator");
   expect(normalizeGroupName("Membru nou")).toBe("membrunou");
   expect(normalizeGroupName("Ștefăniță")).toBe("stefanita");
+});
+
+test("compileGroupMentionCss: culoarea și iconița fiecărui grup, cu valorile validate", () => {
+  const icon = { width: 512, height: 512, path: "M0 0h512v512H0z" };
+  const css = compileGroupMentionCss(
+    [
+      { id: 5, color: "#5EA2FF", icon },
+      { id: 6, color: "red;background:url(x)", icon: { width: 1, height: 1, path: '"/><script>' } },
+      { id: 7, color: null, icon: null },
+    ],
+    icon,
+  );
+  const url = `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M0 0h512v512H0z"/></svg>')}")`;
+  expect(css.split("\n")).toEqual([
+    `.gcs-groupMention{--gcs-gm-icon:${url};--gcs-gm-before:""}`,
+    `.gcs-groupMention[data-group-id="5"]{--gcs-gm-color:#5EA2FF;--gcs-gm-icon:${url};--gcs-gm-before:""}`,
+  ]);
 });

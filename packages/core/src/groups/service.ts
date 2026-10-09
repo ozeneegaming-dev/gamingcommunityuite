@@ -142,8 +142,8 @@ export class GcsGroupService {
     await this.authorize(actor);
     const errors: Record<string, string> = {};
     const { notifyLimit: nl, cooldownMinutes: cd } = GROUP_MENTION_LIMITS;
-    if (!Number.isInteger(input.notifyLimit) || input.notifyLimit < nl.min || input.notifyLimit > nl.max) errors.notifyLimit = "invalid_value";
-    if (!Number.isInteger(input.cooldownMinutes) || input.cooldownMinutes < cd.min || input.cooldownMinutes > cd.max) errors.cooldownMinutes = "invalid_value";
+    if (!Number.isInteger(input.notifyLimit) || input.notifyLimit < nl.min || input.notifyLimit > nl.max) errors.notifyLimit = "invalid_range";
+    if (!Number.isInteger(input.cooldownMinutes) || input.cooldownMinutes < cd.min || input.cooldownMinutes > cd.max) errors.cooldownMinutes = "invalid_range";
     if (!Array.isArray(input.allowedGroupIds) || !input.allowedGroupIds.every(Number.isInteger)) errors.allowedGroupIds = "invalid_choice";
     if (Object.keys(errors).length > 0) throw new GcsValidationError(errors);
     const next: GcsGroupMentionSettings = {

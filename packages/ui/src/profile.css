@@ -248,6 +248,141 @@
   }
 }
 
+/*
+ * Cardul unui grup menționat (Mențiuni v2): același strat ca hover card-ul unui membru. Banda are culoarea sau banner-ul
+ * grupului, cu iconița pe un cerc; dedesubt numele stilizat, descrierea, contoarele și primii membri.
+ */
+.gcs-groupCard {
+  width: 300px;
+}
+.gcs-groupCard__band {
+  position: relative;
+  height: 56px;
+  background: var(--gcs-groupCard-band, linear-gradient(120deg, color-mix(in srgb, var(--gcs-groupCard-color, var(--gcs-accent)) 70%, transparent), color-mix(in srgb, var(--gcs-groupCard-color, var(--gcs-accent)) 18%, transparent)));
+  border-bottom: 2px solid var(--gcs-groupCard-color, var(--gcs-accent));
+}
+.gcs-groupCard__icon {
+  position: absolute;
+  left: 16px;
+  bottom: -22px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--gcs-surface);
+  border: 2px solid var(--gcs-groupCard-color, var(--gcs-accent));
+  color: var(--gcs-groupCard-color, var(--gcs-accentInk));
+}
+.gcs-groupCard__icon svg {
+  width: 20px;
+  height: 20px;
+}
+.gcs-groupCard__initial {
+  font: 700 18px var(--gcs-font-display);
+}
+.gcs-groupCard__body {
+  padding: 28px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gcs-groupCard__identity {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.gcs-groupCard__name {
+  align-self: flex-start;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--gcs-font-display);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+}
+.gcs-groupCard__title,
+.gcs-groupCard__empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--gcs-muted);
+}
+.gcs-groupCard__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 10px 0;
+  border-block: 1px solid var(--gcs-border);
+  font-size: 11px;
+  text-align: center;
+  color: var(--gcs-muted);
+}
+.gcs-groupCard__stats > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.gcs-groupCard__stats strong {
+  font-family: var(--gcs-font-display);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  color: var(--gcs-text);
+}
+.gcs-groupCard__onlineStat span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.gcs-groupCard__onlineStat .gcs-dot,
+.gcs-groupCard__dot {
+  background: var(--gcs-ok);
+}
+.gcs-groupCard__members {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 10px;
+}
+.gcs-groupCard__member {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 13px;
+}
+.gcs-groupCard__member > a {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-groupCard__avatar {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+}
+.gcs-groupCard__dot {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid var(--gcs-surface);
+}
+.gcs-groupCard__all {
+  align-self: flex-start;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gcs-accentInk);
+}
+
 /* ─── Pagina de profil (macheta Profil) ──────────────────────────────────── */
 
 /* Titlul cardurilor profilului și ale conversațiilor (banda lui e în `titles.css`). */

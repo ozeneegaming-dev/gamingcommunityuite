@@ -42,6 +42,35 @@ describe("editor ↔ renderer", () => {
     expect(out.html).toContain('<iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"');
     editor.destroy();
   });
+
+  test("mențiunile din editor (membru și grup, Mențiuni v2) sunt acceptate de server; HTML-ul editorului se citește înapoi", () => {
+    const editor = new Editor({ element: document.createElement("div"), extensions: gcsEditorExtensions({ placeholder: "" }) });
+    editor.commands.setContent({
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          content: [
+            { type: "mention", attrs: { id: "5", label: "Moderator", kind: "group", mentionSuggestionChar: "@" } },
+            { type: "text", text: " și " },
+            { type: "mention", attrs: { id: "user_1", label: "Krypt", kind: "user", mentionSuggestionChar: "@" } },
+          ],
+        },
+      ],
+    });
+    // Copiat și lipit: tipul mențiunii rămâne (din `data-kind`).
+    editor.commands.setContent(editor.getHTML());
+    const out = new GcsContentRenderer().render(editor.getJSON(), {
+      embeds: [],
+      siteHost: "forum.test",
+      labels: { quoteWrote: "{name} a scris:", spoiler: "Spoiler" },
+      groups: new Map([["5", { name: "Moderator" }]]),
+    });
+    expect(out.groupMentions).toEqual([5]);
+    expect(out.mentions).toEqual(["user_1"]);
+    expect(out.html).toContain('<a class="gcs-groupMention" href="/members?group=5" data-group-id="5">@Moderator</a>');
+    editor.destroy();
+  });
 });
 
 /**

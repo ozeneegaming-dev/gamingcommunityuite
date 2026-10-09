@@ -71,6 +71,7 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
           unfollow: t("unfollow"),
           message: t("message"),
           weapon: t("weapon"),
+          group: { members: t("group.members"), online: t("group.online"), seeAll: t("group.seeAll"), empty: t("group.empty") },
         }}
       />
     </GcsRealtimeProvider>
