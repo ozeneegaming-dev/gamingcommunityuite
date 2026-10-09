@@ -29,12 +29,10 @@
 }
 .gcs-chatPro__body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto;
+  width: 100%;
   container-type: inline-size;
   container-name: chatpro;
-}
-.gcs-chatPro--withSide .gcs-chatPro__body {
-  grid-template-columns: minmax(0, 1fr) 300px;
 }
 .gcs-chatPro__conv {
   display: flex;
@@ -42,6 +40,7 @@
   min-width: 0;
 }
 .gcs-chatPro__side {
+  width: 300px;
   border-left: 1px solid var(--cp-line);
   background: var(--cp-rank-bg, color-mix(in srgb, var(--gcs-surface2) 50%, var(--cp-surface)));
   min-width: 0;
@@ -49,25 +48,16 @@
   flex-direction: column;
   gap: 0;
 }
-/* Coloana laterală dispare unde nu e loc (shoutbox-ul în coloana îngustă, telefoanele). */
-@container chatpro (max-width: 640px) {
-  .gcs-chatPro--withSide .gcs-chatPro__body {
-    grid-template-columns: minmax(0, 1fr);
-  }
+/* Unde nu e loc (coloana îngustă, telefoanele), panoul trece sub conversație. */
+@container chatpro (max-width: 680px) {
   .gcs-chatPro__side {
+    grid-column: 1 / -1;
+    width: auto;
     border-left: 0;
     border-top: 1px solid var(--cp-line);
   }
 }
-@media (max-width: 760px) {
-  .gcs-chatPro--withSide .gcs-chatPro__body {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .gcs-chatPro__side {
-    border-left: 0;
-    border-top: 1px solid var(--cp-line);
-  }
-}
+/* În shoutbox (widget), panoul apare doar când widget-ul e lat (zona de sus / jos). */
 .gcs-chatPro--compact .gcs-chatPro__side {
   display: none;
 }
@@ -503,10 +493,18 @@
   height: 24px !important;
 }
 .gcs-chatPro--stream .gcs-chatPro__main {
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 2px 8px;
+  display: block;
+}
+.gcs-chatPro--stream .gcs-chatPro__meta {
+  display: inline-flex;
+  margin-right: 8px;
+  vertical-align: baseline;
+}
+.gcs-chatPro--stream .gcs-chatPro__body {
+  display: inline;
+}
+.gcs-chatPro--stream .gcs-chatPro__main > :not(.gcs-chatPro__meta, .gcs-chatPro__body) {
+  margin-top: 4px;
 }
 
 /* Coloane: numele într-o coloană fixă, textul în a doua, ora la dreapta. */
@@ -543,17 +541,16 @@
 
 /* Bule: mesajele proprii în dreapta, pe accent. */
 .gcs-chatPro--bubbles .gcs-chatPro__msg {
+  align-self: flex-start;
+  width: fit-content;
+  min-width: min(220px, 100%);
   max-width: 82%;
-  justify-self: start;
+  grid-template-columns: 40px auto auto;
   border-radius: 16px 16px 16px 4px;
 }
-.gcs-chatPro--bubbles .gcs-chatPro__list {
-  display: grid;
-  align-content: start;
-}
 .gcs-chatPro--bubbles .gcs-chatPro__msg--own {
-  justify-self: end;
-  grid-template-columns: minmax(0, 1fr) auto;
+  align-self: flex-end;
+  grid-template-columns: auto auto;
   border-radius: 16px 16px 4px 16px;
   border-color: transparent;
   background: var(--cp-msg-bg, color-mix(in srgb, var(--cp-accent-ui) 80%, var(--gcs-surface)));
@@ -997,9 +994,10 @@
 }
 .gcs-chatPro__rankHead {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 6px 8px;
 }
 .gcs-chatPro__rankTitle {
   margin: 0;
@@ -1044,6 +1042,23 @@
   background: var(--gcs-surface);
   text-align: center;
   font-size: 12px;
+}
+.gcs-chatPro__step .gcs-avatar,
+.gcs-chatPro__step .gcs-avatarFrame {
+  width: 42px !important;
+  height: 42px !important;
+  font-size: 16px;
+}
+.gcs-chatPro__step--1 .gcs-avatar,
+.gcs-chatPro__step--1 .gcs-avatarFrame {
+  width: 54px !important;
+  height: 54px !important;
+  font-size: 20px;
+}
+.gcs-chatPro__rankRow .gcs-avatar,
+.gcs-chatPro__rankRow .gcs-avatarFrame {
+  width: 30px !important;
+  height: 30px !important;
 }
 .gcs-chatPro__step .gcs-userLink {
   max-width: 100%;
@@ -1153,6 +1168,41 @@
 }
 .gcs-chatPro__offBox p {
   margin: 0;
+}
+
+/*
+ * Comutatoarele din Chat Pro (setările, chat-ul oprit): stilul de comutator câștigă peste stilul general al bifelor
+ * (`controls.css`, încărcat după `realtime.css`).
+ */
+.gcs-chatPro input[type="checkbox"].gcs-chat__switch {
+  width: 44px;
+  height: 24px;
+  display: inline-block;
+  border: 1px solid var(--gcs-border);
+  border-radius: 999px;
+  background: var(--gcs-surface2);
+}
+.gcs-chatPro input[type="checkbox"].gcs-chat__switch::before {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  clip-path: none;
+  background: var(--gcs-muted);
+  transform: none;
+  transition:
+    transform 0.15s,
+    background 0.15s;
+}
+.gcs-chatPro input[type="checkbox"].gcs-chat__switch:checked {
+  border-color: var(--gcs-accent);
+  background: var(--gcs-accent);
+}
+.gcs-chatPro input[type="checkbox"].gcs-chat__switch:checked::before {
+  background: #fff;
+  transform: translateX(20px);
 }
 
 /* ─── Setările membrului (modalul) ─────────────────────────────────────────────────────────────────── */
@@ -1540,6 +1590,47 @@
 @media (max-width: 1100px) {
   .gcs-chatPage--pro {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .gcs-chatPage--pro > .gcs-chatPage__main {
+    order: -1;
+  }
+}
+/* Telefoanele: avatar mai mic, uneltele mesajului în colț (nu mai mănâncă din lățimea textului). */
+@media (max-width: 600px) {
+  .gcs-chatPro__msg {
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 8px;
+    padding: 8px 10px;
+  }
+  .gcs-chatPro__avatar,
+  .gcs-chatPro__avatar .gcs-avatar,
+  .gcs-chatPro__avatar .gcs-avatarFrame {
+    width: 30px !important;
+    height: 30px !important;
+  }
+  .gcs-chatPro__meta {
+    padding-right: 74px;
+  }
+  .gcs-chatPro__tools {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+  }
+  .gcs-chatPro__tool {
+    width: 24px;
+    height: 24px;
+  }
+  .gcs-chatPro--bubbles .gcs-chatPro__msg {
+    grid-template-columns: 30px auto;
+  }
+  .gcs-chatPro--bubbles .gcs-chatPro__msg--own {
+    grid-template-columns: auto;
+  }
+  .gcs-chatPro .gcs-chatPro__list {
+    padding: 8px;
+  }
+  .gcs-chatPro__bar {
+    margin: 8px 8px 0;
   }
 }
 .gcs-chatHistory {

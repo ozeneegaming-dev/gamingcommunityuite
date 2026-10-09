@@ -334,6 +334,20 @@ test("capturi Chat Pro", async ({ browser, request }) => {
   await send(b, `/rps @Nova${id}`, /îl provoacă pe/);
   await a.reload();
   await expect(a.getByTestId("gcs-chatpro-ranking")).toBeVisible();
+  // Depanare: stilul textului cu link (spațiul dintre text și link).
+  console.log(
+    "DEBUG",
+    await room(a)
+      .getByTestId("gcs-chat-msg")
+      .filter({ hasText: "facem echipă" })
+      .locator(".gcs-chatPro__body")
+      .evaluate((el) => {
+        const link = el.querySelector("a");
+        const cs = getComputedStyle(el);
+        const ls = link ? getComputedStyle(link) : null;
+        return JSON.stringify({ html: el.innerHTML, align: cs.textAlign, word: cs.wordSpacing, display: cs.display, link: ls && { display: ls.display, ml: ls.marginLeft, pl: ls.paddingLeft, float: ls.cssFloat, pos: ls.position } });
+      }),
+  );
 
   const shot = async (page: Page, name: string, full = false) => {
     await page.waitForTimeout(400);
@@ -384,11 +398,13 @@ test("capturi Chat Pro", async ({ browser, request }) => {
     await a.getByTestId(`gcs-chatpro-layout-${layout}`).click();
     await a.keyboard.press("Escape");
     await shot(a, `09-layout-${layout}-dark`);
+    await a.waitForTimeout(600);
   }
   await room(a).getByTestId("gcs-chat-settings").click();
   await a.getByTestId("gcs-chatpro-settings-layout").click();
   await a.getByTestId("gcs-chatpro-layout-cards").click();
   await a.keyboard.press("Escape");
+  await a.waitForTimeout(1_000);
   // Tema Clasic (aspectul de până acum) rămâne folosibilă.
   await mode(a, "dark", "default");
   await a.goto("/chat");
@@ -405,6 +421,8 @@ test("capturi Chat Pro", async ({ browser, request }) => {
   await shot(a, "11-viewer-desktop");
   await a.keyboard.press("Escape");
   await a.setViewportSize({ width: 375, height: 812 });
+  // Pe ecranele mici imaginile stau după „Arată media” (preferința implicită).
+  await room(a).getByTestId("gcs-chat-media-toggle").last().click();
   await room(a).getByTestId("gcs-chat-image").last().click();
   await shot(a, "11-viewer-375");
   await a.keyboard.press("Escape");
