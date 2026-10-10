@@ -59,7 +59,8 @@
     "deletedMember": "Deleted member",
     "crumbs": "You are here",
     "collapse": "Collapse {title}",
-    "expand": "Expand {title}"
+    "expand": "Expand {title}",
+    "skin": "Forum theme"
   },
   "auth": {
     "login": {
@@ -282,7 +283,10 @@
       "requires": "Turn on the apps it depends on first.",
       "before_start": "The end must be after the start.",
       "invalid_date": "The date isn't valid.",
-      "invalid_value": "The value isn't valid."
+      "invalid_value": "The value isn't valid.",
+      "invalid_key": "Invalid key (lowercase letters, digits and dashes, 2–32 characters).",
+      "invalid_theme_package": "The file is not a valid GCS theme package.",
+      "unsupported_theme_package": "The theme package is for another version of the platform."
     }
   },
   "acp": {
@@ -1383,7 +1387,12 @@
       "confirmDelete": "Delete this theme? Members who used it will see the default theme.",
       "create": "New theme",
       "copyFrom": "Copied from",
-      "fromDefaults": "Default values"
+      "fromDefaults": "Default values",
+      "export": "Export",
+      "import": "Import a theme",
+      "importHint": "Upload a .gcs-theme.json file (exported from another site or received separately). The imported theme starts disabled: check it in the visual editor, then tick “Enabled” or “Default theme”. Images (logo, header) are added from the visual editor.",
+      "importFile": "Theme file (.gcs-theme.json)",
+      "importSubmit": "Import theme"
     },
     "widgetsAdmin": {
       "title": "Widgets",

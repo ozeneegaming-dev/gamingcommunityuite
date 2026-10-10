@@ -7,7 +7,7 @@ import { getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
-import { createTheme, deleteTheme, updateTheme } from "../actions";
+import { createTheme, deleteTheme, importTheme, updateTheme } from "../actions";
 import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -15,8 +15,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * ACP → Aspect → Teme (specul etapei 5): lista temelor (implicită, activă), duplicarea, ștergerea și linkul spre
- * editorul vizual (culorile, fonturile, logo-ul și restul se editează acolo, cu previzualizare live).
+ * ACP → Aspect → Teme (specul etapei 5): lista temelor (implicită, activă), duplicarea, ștergerea, exportul și importul
+ * unui pachet de temă (`.gcs-theme.json`) și linkul spre editorul vizual (culorile, fonturile, logo-ul și restul se editează acolo, cu previzualizare live).
  */
 export default async function AcpThemesPage() {
   await requireAcpSection(THEMES_ACP_SECTION);
@@ -59,6 +59,11 @@ export default async function AcpThemesPage() {
                 {t("visualEditor")}
               </Link>
             </GcsButton>
+            <GcsButton asChild variant="ghost" size="sm" icon={<GcsIcon name="fa-solid fa-file-export" />}>
+              <a href={`/api/themes/export?key=${encodeURIComponent(theme.key)}`} download={`${theme.key}.gcs-theme.json`} data-testid="gcs-acp-theme-export">
+                {t("export")}
+              </a>
+            </GcsButton>
             {!theme.isDefault && (
               <GcsActionForm action={deleteTheme.bind(null, theme.key)} submitLabel={t("delete")} submitKind="delete" variant="ghost" compact confirm={t("confirmDelete")}>
                 {null}
@@ -67,6 +72,21 @@ export default async function AcpThemesPage() {
           </div>
         </GcsCard>
       ))}
+      <GcsCard as="section" aria-labelledby="gcs-theme-import" style={{ padding: 16 }}>
+        <h2 id="gcs-theme-import" className="gcs-acpWidget__title" style={{ marginBottom: 6 }}>
+          <GcsAcpTitleIcon name="fa-solid fa-file-import" />
+          {t("import")}
+        </h2>
+        <p className="gcs-muted" style={{ margin: "0 0 12px" }}>
+          {t("importHint")}
+        </p>
+        <GcsActionForm action={importTheme} submitLabel={t("importSubmit")} submitIcon={<GcsIcon name="fa-solid fa-upload" />}>
+          <label className="gcs-field" style={{ maxWidth: 360 }}>
+            {t("importFile")}
+            <input className="gcs-input" type="file" name="file" accept=".json,application/json" required data-testid="gcs-acp-theme-import-file" />
+          </label>
+        </GcsActionForm>
+      </GcsCard>
       <GcsCard as="section" aria-labelledby="gcs-theme-new" style={{ padding: 16 }}>
         <h2 id="gcs-theme-new" className="gcs-acpWidget__title" style={{ marginBottom: 12 }}>
           <GcsAcpTitleIcon name="fa-solid fa-plus" />

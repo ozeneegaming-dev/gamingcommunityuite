@@ -59,7 +59,8 @@
     "deletedMember": "Deleted member",
     "crumbs": "You are here",
     "collapse": "Collapse {title}",
-    "expand": "Expand {title}"
+    "expand": "Expand {title}",
+    "skin": "Forum-Thema"
   },
   "auth": {
     "login": {
@@ -282,7 +283,10 @@
       "requires": "Turn on the apps it depends on first.",
       "before_start": "The end must be after the start.",
       "invalid_date": "The date isn't valid.",
-      "invalid_value": "The value isn't valid."
+      "invalid_value": "The value isn't valid.",
+      "invalid_key": "Ungültiger Schlüssel (Kleinbuchstaben, Ziffern und Bindestriche, 2–32 Zeichen).",
+      "invalid_theme_package": "Die Datei ist kein gültiges GCS-Themenpaket.",
+      "unsupported_theme_package": "Das Themenpaket ist für eine andere Version der Plattform."
     }
   },
   "acp": {
@@ -1383,7 +1387,12 @@
       "confirmDelete": "Löschen Sie dieses Thema? Mitglieder, die es verwendet haben, sehen das standardthema.",
       "create": "Neues Thema",
       "copyFrom": "Kopiert von",
-      "fromDefaults": "Standardwerte"
+      "fromDefaults": "Standardwerte",
+      "export": "Exportieren",
+      "import": "Thema importieren",
+      "importHint": "Lade eine .gcs-theme.json-Datei hoch (von einer anderen Seite exportiert oder separat erhalten). Das importierte Thema ist zunächst deaktiviert: prüfe es im visuellen Editor und aktiviere dann „Aktiv“ oder „Standardthema“. Bilder (Logo, Header) werden im visuellen Editor hinzugefügt.",
+      "importFile": "Themendatei (.gcs-theme.json)",
+      "importSubmit": "Thema importieren"
     },
     "widgetsAdmin": {
       "title": "Widgets",

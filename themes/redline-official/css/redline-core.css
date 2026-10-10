@@ -1,0 +1,295 @@
+/*
+ * RED-LINE OFFICIAL — temă gaming „cyber neon” (mov electric + cyan) pentru GamingCommunitySuite.
+ * Fișierul 1/3: variabilele, fundalul paginii, tipografia, antetul, rândul breadcrumb + căutare și sertarul de pe mobil.
+ *
+ * Construită peste designul Nova (setarea `preset: nova`): totul stă sub `html.gcs-nova`, deci nu atinge ACP-ul.
+ * Culorile vin din paleta temei (`--gcs-accent` = mov, `--gcs-accentInk` = cyan), deci se schimbă din editorul vizual.
+ */
+
+html.gcs-nova {
+  /* Cele două neoane și strălucirile lor. */
+  --rl-purple: var(--gcs-accent);
+  --rl-cyan: var(--gcs-accentInk);
+  --rl-glow-purple: color-mix(in srgb, var(--rl-purple) 55%, transparent);
+  --rl-glow-cyan: color-mix(in srgb, var(--rl-cyan) 45%, transparent);
+  /* Linia neon (antet, subsol, benzi): mov spre cyan. */
+  --rl-line: linear-gradient(90deg, transparent, var(--rl-purple) 18%, var(--rl-cyan) 50%, var(--rl-purple) 82%, transparent);
+  --rl-line-solid: linear-gradient(90deg, var(--rl-purple), var(--rl-cyan));
+  /* Grila tehnică din fundal. */
+  --rl-grid: color-mix(in srgb, var(--rl-purple) 7%, transparent);
+  --rl-grid-size: 44px;
+  /* Suprafața „sticlă” (casete, meniuri). */
+  --rl-glass: color-mix(in srgb, var(--gcs-surface) 88%, transparent);
+  --rl-edge: color-mix(in srgb, #fff 5%, transparent);
+  /* Antetul rămâne închis în ambele moduri. */
+  --rl-hdr-bg: #0a0814;
+  --rl-hdr-text: #cfc8ea;
+  /* Cyan-ul din antet (antetul e închis și în modul luminos, unde cyan-ul paletei e mai închis, pentru text pe alb). */
+  --rl-hdr-cyan: var(--rl-cyan);
+  /* Fontul titlurilor, cu majuscule și spațiere (stilul esports). */
+  --rl-display-spacing: 0.06em;
+  /* Sistemul de hover Nova, puțin mai vioi. */
+  --gcs-ease: 0.2s;
+  --gcs-hover-lift: -2px;
+  --gcs-pill-radius: 4px;
+  --gcs-warm: #ffb020;
+  --gcs-crumb-h: 60px;
+  /* Iconița din bandă: pătrat rotunjit cu gradient mov și glifă cyan. */
+  --gcs-band-icon-bg: linear-gradient(135deg, color-mix(in srgb, var(--rl-purple) 32%, var(--gcs-surface)), color-mix(in srgb, var(--rl-purple) 10%, var(--gcs-surface)));
+  --gcs-band-icon-border: color-mix(in srgb, var(--rl-purple) 45%, transparent);
+  --gcs-raise: color-mix(in srgb, var(--rl-purple) 7%, var(--gcs-surface2));
+  --gcs-hover-light: color-mix(in srgb, var(--rl-cyan) 10%, transparent);
+  --gcs-hover-tint: color-mix(in srgb, var(--rl-purple) 10%, transparent);
+  scrollbar-color: color-mix(in srgb, var(--rl-purple) 60%, var(--gcs-surface2)) var(--gcs-bg);
+}
+
+/* Varianta luminoasă: aceleași neoane, strălucirile mai discrete, grila abia vizibilă. */
+html.gcs-nova[data-theme="light"] {
+  --rl-glow-purple: color-mix(in srgb, var(--rl-purple) 30%, transparent);
+  --rl-glow-cyan: color-mix(in srgb, var(--rl-cyan) 25%, transparent);
+  --rl-grid: color-mix(in srgb, var(--rl-purple) 5%, transparent);
+  --rl-glass: color-mix(in srgb, var(--gcs-surface) 94%, transparent);
+  --rl-edge: color-mix(in srgb, #fff 60%, transparent);
+  --gcs-band-icon-bg: linear-gradient(135deg, color-mix(in srgb, var(--rl-purple) 18%, #fff), color-mix(in srgb, var(--rl-purple) 6%, #fff));
+  --gcs-band-icon-border: color-mix(in srgb, var(--rl-purple) 30%, transparent);
+  --rl-hdr-cyan: #22e4ff;
+}
+@media (prefers-color-scheme: light) {
+  html.gcs-nova[data-theme="auto"] {
+    --rl-glow-purple: color-mix(in srgb, var(--rl-purple) 30%, transparent);
+    --rl-glow-cyan: color-mix(in srgb, var(--rl-cyan) 25%, transparent);
+    --rl-grid: color-mix(in srgb, var(--rl-purple) 5%, transparent);
+    --rl-glass: color-mix(in srgb, var(--gcs-surface) 94%, transparent);
+    --rl-edge: color-mix(in srgb, #fff 60%, transparent);
+    --gcs-band-icon-bg: linear-gradient(135deg, color-mix(in srgb, var(--rl-purple) 18%, #fff), color-mix(in srgb, var(--rl-purple) 6%, #fff));
+    --gcs-band-icon-border: color-mix(in srgb, var(--rl-purple) 30%, transparent);
+    --rl-hdr-cyan: #22e4ff;
+  }
+}
+
+/* ─── Fundalul paginii: grila tehnică și două lumini neon fixe ─────────────────────────────────────────── */
+
+html.gcs-nova .gcs-root {
+  background-color: var(--gcs-body-bg, var(--gcs-bg));
+  background-image:
+    radial-gradient(ellipse 60% 45% at 100% 0%, color-mix(in srgb, var(--rl-purple) 14%, transparent), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 0% 100%, color-mix(in srgb, var(--rl-cyan) 8%, transparent), transparent 70%),
+    linear-gradient(var(--rl-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--rl-grid) 1px, transparent 1px);
+  background-size: auto, auto, var(--rl-grid-size) var(--rl-grid-size), var(--rl-grid-size) var(--rl-grid-size);
+  background-attachment: fixed;
+}
+html.gcs-nova body {
+  font-size: var(--gcs-base-size, 14px);
+}
+html.gcs-nova ::selection {
+  background: color-mix(in srgb, var(--rl-purple) 55%, transparent);
+  color: #fff;
+}
+html.gcs-nova ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+html.gcs-nova ::-webkit-scrollbar-track {
+  background: var(--gcs-bg);
+}
+html.gcs-nova ::-webkit-scrollbar-thumb {
+  border: 2px solid var(--gcs-bg);
+  border-radius: 999px;
+  background: linear-gradient(var(--rl-purple), color-mix(in srgb, var(--rl-purple) 50%, var(--rl-cyan)));
+}
+html.gcs-nova :focus-visible {
+  outline: 2px solid var(--rl-cyan);
+  outline-offset: 2px;
+}
+
+/* Titlurile: fontul de afișare, apăsat, cu spațiere. */
+html.gcs-nova :is(h1, h2, h3, .gcs-display) {
+  font-family: var(--gcs-font-display);
+  letter-spacing: 0.01em;
+}
+
+/* ─── Antetul: violet profund, grila, lumina mov / cyan și linia neon jos ─────────────────────────────── */
+
+html.gcs-nova .gcs-siteHeader {
+  background-color: var(--gcs-header-bg, var(--rl-hdr-bg));
+  background-image:
+    linear-gradient(to bottom, rgb(10 8 20 / calc(var(--gcs-header-overlay, 0.6) * 0.5)), rgb(10 8 20 / var(--gcs-header-overlay, 0.6)) 65%, var(--gcs-hero-end)),
+    linear-gradient(color-mix(in srgb, var(--rl-purple) 9%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--rl-purple) 9%, transparent) 1px, transparent 1px),
+    radial-gradient(ellipse 50% 160% at 85% -30%, color-mix(in srgb, var(--rl-purple) 55%, transparent), transparent 65%),
+    radial-gradient(ellipse 35% 120% at 10% -40%, color-mix(in srgb, var(--rl-hdr-cyan) 28%, transparent), transparent 62%),
+    var(--gcs-header-image, none),
+    linear-gradient(160deg, #1a1033 0%, #0d0a1c 55%, #07060d 100%);
+  background-size: auto, 32px 32px, 32px 32px, auto, auto, cover, auto;
+  background-position: center, center top, center top, center, center, center, center;
+  background-repeat: no-repeat, repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+}
+html.gcs-nova .gcs-siteHeader::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--rl-line);
+  background-size: 200% 100%;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--rl-hdr-cyan) 45%, transparent);
+  animation: rl-scan 8s linear infinite;
+  pointer-events: none;
+}
+@keyframes rl-scan {
+  from {
+    background-position: 0% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+html.gcs-nova .gcs-siteHeader--scrolled {
+  background-color: color-mix(in srgb, var(--gcs-header-bg, var(--rl-hdr-bg)) 90%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+/* Logo-ul: marcajul hexagonal mov → cyan și numele cu majuscule. */
+html.gcs-nova .gcs-brand__mark {
+  width: 42px;
+  height: 42px;
+  border-radius: 0;
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+  background: linear-gradient(135deg, var(--rl-purple), var(--rl-hdr-cyan));
+  box-shadow: none;
+  filter: drop-shadow(0 0 10px var(--rl-glow-purple));
+}
+html.gcs-nova .gcs-brand__mark > span {
+  font-family: var(--gcs-font-display);
+  font-weight: 700;
+  font-size: 20px;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+}
+html.gcs-nova .gcs-brand__name {
+  font-family: var(--gcs-logo-font, var(--gcs-font-display));
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: linear-gradient(90deg, #fff 55%, color-mix(in srgb, var(--rl-hdr-cyan) 80%, #fff));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+html.gcs-nova .gcs-brand__slogan {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 10.5px;
+  color: color-mix(in srgb, var(--rl-hdr-cyan) 70%, var(--rl-hdr-text));
+}
+
+/* Meniul principal: majuscule, hover cu nuanța mov, activul cu linia cyan care strălucește. */
+html.gcs-nova .gcs-navbar__menu .gcs-nav__link,
+html.gcs-nova .gcs-root .gcs-navbar__menu a.gcs-nav__link {
+  font-family: var(--gcs-font-display);
+  font-size: 14.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--rl-display-spacing);
+  border-radius: 6px;
+}
+html.gcs-nova .gcs-siteHeader .gcs-navbar__menu .gcs-nav__link:hover,
+html.gcs-nova .gcs-siteHeader .gcs-navbar__menu .gcs-nav__link[aria-expanded="true"] {
+  color: #fff;
+  background: color-mix(in srgb, var(--rl-purple) 22%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rl-purple) 40%, transparent);
+}
+html.gcs-nova .gcs-siteHeader .gcs-navbar__menu .gcs-nav__link--active {
+  color: #fff;
+  background: linear-gradient(to top, color-mix(in srgb, var(--rl-hdr-cyan) 16%, transparent), transparent 70%);
+  box-shadow: inset 0 -2px 0 var(--rl-hdr-cyan), 0 6px 14px -8px color-mix(in srgb, var(--rl-hdr-cyan) 45%, transparent);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--rl-hdr-cyan) 45%, transparent);
+}
+/* Iconițele din dreapta: pătrate rotunjite cu chenar mov la hover. */
+html.gcs-nova .gcs-siteHeader .gcs-headerIcon {
+  border-radius: 8px;
+  border: 1px solid transparent;
+}
+html.gcs-nova .gcs-siteHeader .gcs-headerIcon:hover,
+html.gcs-nova .gcs-siteHeader .gcs-headerIcon[aria-expanded="true"] {
+  color: #fff;
+  background: color-mix(in srgb, var(--rl-purple) 22%, transparent);
+  border-color: color-mix(in srgb, var(--rl-purple) 50%, transparent);
+  box-shadow: 0 0 14px -4px var(--rl-glow-purple);
+}
+html.gcs-nova .gcs-headerIcon__count {
+  background: var(--rl-hdr-cyan);
+  color: #07060d;
+  font-weight: 800;
+  box-shadow: 0 0 0 2px var(--rl-hdr-bg), 0 0 10px color-mix(in srgb, var(--rl-hdr-cyan) 45%, transparent);
+}
+html.gcs-nova .gcs-siteHeader .gcs-userMenu__trigger {
+  border-radius: 8px;
+  border-color: color-mix(in srgb, var(--rl-purple) 35%, transparent);
+  background: color-mix(in srgb, #000 30%, transparent);
+}
+html.gcs-nova .gcs-siteHeader .gcs-userMenu__trigger:hover {
+  border-color: var(--rl-hdr-cyan);
+  box-shadow: 0 0 14px -4px color-mix(in srgb, var(--rl-hdr-cyan) 45%, transparent);
+}
+
+/* ─── Rândul breadcrumb + căutare ───────────────────────────────────────────────────────────────────────── */
+
+html.gcs-nova .gcs-crumbBar .gcs-breadcrumb li:last-child,
+html.gcs-nova .gcs-crumbBar .gcs-breadcrumb li:last-child a {
+  color: var(--rl-hdr-cyan);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--rl-hdr-cyan) 45%, transparent);
+}
+html.gcs-nova .gcs-breadcrumb li + li::before {
+  border-color: var(--rl-purple);
+  opacity: 1;
+}
+html.gcs-nova .gcs-crumbBar__input {
+  border-radius: 8px;
+  border-color: color-mix(in srgb, var(--rl-purple) 35%, transparent);
+  background: color-mix(in srgb, #07060d 65%, transparent);
+  backdrop-filter: blur(6px);
+}
+html.gcs-nova .gcs-crumbBar__input:focus {
+  border-color: var(--rl-hdr-cyan);
+  background: color-mix(in srgb, #07060d 80%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rl-hdr-cyan) 18%, transparent), 0 0 18px -4px color-mix(in srgb, var(--rl-hdr-cyan) 45%, transparent);
+}
+html.gcs-nova .gcs-crumbBar__go:hover {
+  color: var(--rl-hdr-cyan);
+}
+
+/* ─── Sertarul de pe mobil ──────────────────────────────────────────────────────────────────────────────── */
+
+html.gcs-nova .gcs-drawer__panel {
+  background:
+    radial-gradient(ellipse 80% 40% at 0% 0%, color-mix(in srgb, var(--rl-purple) 18%, transparent), transparent 70%),
+    var(--gcs-drawer-bg, var(--gcs-surface));
+  border-right-color: color-mix(in srgb, var(--rl-purple) 35%, var(--gcs-border));
+  box-shadow: 10px 0 40px -10px var(--rl-glow-purple);
+}
+html.gcs-nova .gcs-root a.gcs-drawer__link {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-family: var(--gcs-font-display);
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+html.gcs-nova .gcs-root a.gcs-drawer__link:hover,
+html.gcs-nova .gcs-root a.gcs-drawer__link--active {
+  color: #fff;
+  border-color: color-mix(in srgb, var(--rl-purple) 50%, transparent);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--rl-purple) 28%, transparent), transparent);
+  box-shadow: inset 3px 0 0 var(--rl-cyan);
+}
+html.gcs-nova[data-theme="light"] .gcs-root a.gcs-drawer__link:hover,
+html.gcs-nova[data-theme="light"] .gcs-root a.gcs-drawer__link--active {
+  color: var(--gcs-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.gcs-nova .gcs-siteHeader::after {
+    animation: none;
+  }
+}

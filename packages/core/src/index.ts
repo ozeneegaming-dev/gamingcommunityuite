@@ -74,6 +74,7 @@ export * from "./themes/settings";
 export * from "./themes/css";
 export * from "./themes/service";
 export * from "./themes/files";
+export * from "./themes/package";
 export * from "./templates/parser";
 export * from "./templates/values";
 export * from "./templates/components";

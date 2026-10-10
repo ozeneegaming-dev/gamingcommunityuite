@@ -4,12 +4,12 @@ import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { currentActor } from "@/lib/actor";
-import { themeMode } from "@/lib/appearance";
+import { themeMode, viewerTheme } from "@/lib/appearance";
 import { footerView } from "@/lib/footer";
 import { localeOptions } from "@/lib/locales";
 import { services } from "@/lib/services";
 import { siteTemplate } from "@/lib/templates";
-import { setLocale, setThemeMode } from "../actions";
+import { setLocale, setSkinChoice, setThemeMode } from "../actions";
 import { GcsPoweredGuard } from "./GcsPoweredGuard";
 
 /** Iconițele modurilor temei din footer. */
@@ -57,7 +57,7 @@ function FooterTitle({ id, title, accent }: { id: string; title: string; accent:
  */
 export async function GcsSiteFooter() {
   const actor = await currentActor();
-  const [t, tf, locale, mode, locales, siteName, view] = await Promise.all([
+  const [t, tf, locale, mode, locales, siteName, view, skins, viewer] = await Promise.all([
     getTranslations("site"),
     getTranslations("footer"),
     getLocale(),
@@ -65,6 +65,11 @@ export async function GcsSiteFooter() {
     localeOptions(),
     services().settings.get<string>("site.name"),
     footerView(actor),
+    services()
+      .themes.list()
+      .then((all) => all.filter((x) => x.enabled))
+      .catch(() => []),
+    viewerTheme(),
   ]);
   const { config, socials } = view;
   const year = new Date().getFullYear();
@@ -111,8 +116,35 @@ export async function GcsSiteFooter() {
       </form>
     </details>
   ) : null;
+  // Meniul temelor (doar cu cel puțin două teme active): oricine schimbă tema direct din forum, fără Setări → Aspect.
+  const skinMenu =
+    skins.length > 1 ? (
+      // Cheia = tema afișată: după alegere meniul se reface închis.
+      <details key={viewer.theme.key} className="gcs-siteFooter__menu" data-testid="gcs-footer-skin">
+        <summary className="gcs-siteFooter__barLink">
+          <GcsIcon name="fa-solid fa-palette" />
+          {t("skin")}
+          <span className="gcs-siteFooter__code">{viewer.theme.name}</span>
+        </summary>
+        <form action={setSkinChoice} aria-label={t("skin")} className="gcs-seg__group gcs-siteFooter__menuList">
+          {skins.map((x) => (
+            <button
+              key={x.key}
+              type="submit"
+              name="skin"
+              value={x.key}
+              className={x.key === viewer.theme.key ? "gcs-seg gcs-seg--active" : "gcs-seg"}
+              aria-pressed={x.key === viewer.theme.key}
+            >
+              <span className="gcs-themeSwatch" style={{ background: x.settings.dark.accent }} aria-hidden="true" />
+              {x.name}
+            </button>
+          ))}
+        </form>
+      </details>
+    ) : null;
   // Comutatorul de mod; tema îl poate ascunde (editorul vizual: „Mod luminos/întunecat”), iar subsolul îl poate opri.
-  const scheme = bottom.theme ? (
+  const modeSwitch = bottom.theme ? (
     <form action={setThemeMode} aria-label={t("theme")} className="gcs-seg__group gcs-siteFooter__scheme">
       {(["dark", "light", "auto"] as const).map((m) => (
         <button key={m} type="submit" name="mode" value={m} className={m === mode ? "gcs-seg gcs-seg--active" : "gcs-seg"} aria-pressed={m === mode} title={t(`themes.${m}`)}>
@@ -122,6 +154,14 @@ export async function GcsSiteFooter() {
       ))}
     </form>
   ) : null;
+  // Slotul `scheme`: meniul temelor și comutatorul de mod (șabloanele modificate le primesc pe amândouă).
+  const scheme =
+    skinMenu || modeSwitch ? (
+      <>
+        {skinMenu}
+        {modeSwitch}
+      </>
+    ) : null;
   const powered = (
     <p className="gcs-siteFooter__powered" data-gcs-powered="">
       <GcsIcon name="fa-solid fa-copyright" />

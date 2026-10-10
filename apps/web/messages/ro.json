@@ -59,7 +59,8 @@
     "deletedMember": "Membru șters",
     "crumbs": "Unde te afli",
     "collapse": "Restrânge {title}",
-    "expand": "Extinde {title}"
+    "expand": "Extinde {title}",
+    "skin": "Tema forumului"
   },
   "auth": {
     "login": {
@@ -282,7 +283,10 @@
       "requires": "Pornește întâi aplicațiile de care depinde.",
       "before_start": "Sfârșitul trebuie să fie după început.",
       "invalid_date": "Data nu e validă.",
-      "invalid_value": "Valoarea nu e validă."
+      "invalid_value": "Valoarea nu e validă.",
+      "invalid_key": "Cheie invalidă (litere mici, cifre și minus, 2–32 de caractere).",
+      "invalid_theme_package": "Fișierul nu e un pachet de temă GCS valid.",
+      "unsupported_theme_package": "Pachetul de temă e pentru altă versiune a platformei."
     }
   },
   "acp": {
@@ -1383,7 +1387,12 @@
       "confirmDelete": "Ștergi tema? Membrii care o foloseau vor vedea tema implicită.",
       "create": "Temă nouă",
       "copyFrom": "Copiată din",
-      "fromDefaults": "Valorile implicite"
+      "fromDefaults": "Valorile implicite",
+      "export": "Exportă",
+      "import": "Importă o temă",
+      "importHint": "Încarcă un fișier .gcs-theme.json (exportat de pe alt site sau primit separat). Tema importată apare inactivă: verific-o în editorul vizual, apoi bifează „Activă” sau „Tema implicită”. Imaginile (logo, antet) se adaugă din editorul vizual.",
+      "importFile": "Fișierul temei (.gcs-theme.json)",
+      "importSubmit": "Importă tema"
     },
     "widgetsAdmin": {
       "title": "Widget-uri",

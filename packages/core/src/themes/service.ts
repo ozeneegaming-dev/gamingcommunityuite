@@ -7,6 +7,7 @@ import type { GcsEventBus } from "../events";
 import type { GcsActor } from "../permissions/types";
 import { compileThemeCss, CUSTOM_CSS_FILE, joinThemeCssFiles, sanitizeThemeCss } from "./css";
 import { GcsThemeCssService } from "./files";
+import { buildThemePackage, parseThemePackage, themePackageFiles, type GcsThemePackage } from "./package";
 import { GcsTemplateService } from "../templates/service";
 import {
   DEFAULT_THEME_SETTINGS,
@@ -270,6 +271,44 @@ export class GcsThemeService {
     });
     await this.changed();
     return toView(row);
+  }
+
+  /** Pachetul unei teme (ACP → Aspect → Teme → Exportă): setările și fișierele CSS publicate, fără imaginile site-ului. */
+  async exportPackage(actor: GcsActor, key: string): Promise<GcsThemePackage> {
+    await this.deps.acp.assert(actor, THEMES_ACP_SECTION, "view");
+    const theme = await this.get(key);
+    if (!theme) throw new GcsNotFound();
+    return buildThemePackage(theme);
+  }
+
+  /**
+   * Importă un pachet de temă (ACP → Aspect → Teme → Importă) ca temă nouă, inactivă și neimplicită (adminul o verifică
+   * în editorul vizual, apoi o pornește). Cheia ocupată primește un sufix (`-2`, `-3`…); CSS-ul trece prin sanitizare.
+   */
+  async importPackage(actor: GcsActor, raw: unknown): Promise<GcsThemeView> {
+    const { db, acp } = this.deps;
+    await acp.assert(actor, THEMES_ACP_SECTION, "edit");
+    const parsed = parseThemePackage(raw);
+    if (!parsed.ok) throw new GcsValidationError(parsed.errors);
+    const pkg = parsed.value;
+    const taken = new Set((await db.theme.findMany({ select: { key: true } })).map((t) => t.key));
+    const key = [pkg.key, ...Array.from({ length: 98 }, (_, i) => `${pkg.key.slice(0, 29)}-${i + 2}`)].find((k) => !taken.has(k));
+    if (!key) throw new GcsValidationError({ key: "taken" });
+    // Valorile lipsă vin din designul pachetului (`preset`), ca la orice temă salvată.
+    const settings = normalizeThemeSettings(pkg.settings);
+    const authorName = actor.userId ? ((await db.user.findUnique({ where: { id: actor.userId }, select: { name: true } }))?.name ?? "") : "";
+    const row = await db.$transaction(async (tx) => {
+      const r = await tx.theme.create({ data: { key, name: pkg.name, enabled: false, settings: settings as unknown as Prisma.InputJsonValue } });
+      for (const [position, f] of themePackageFiles(pkg).entries()) {
+        const content = sanitizeThemeCss(f.content);
+        const file = await tx.themeCssFile.create({ data: { themeId: r.id, name: f.name, position, content } });
+        await tx.themeCssVersion.create({ data: { fileId: file.id, content, action: "import", authorId: actor.userId, authorName } });
+      }
+      await writeAudit(tx, { actorId: actor.userId, action: "theme.import", targetType: "theme", targetId: key, after: { name: pkg.name, files: pkg.cssFiles.map((f) => f.name) }, ip: actor.ip });
+      return r;
+    });
+    await this.changed();
+    return toView({ ...row, cssFiles: themePackageFiles(pkg).map((f) => ({ name: f.name, content: sanitizeThemeCss(f.content) })) });
   }
 
   async update(actor: GcsActor, key: string, patch: { name?: string; enabled?: boolean; isDefault?: boolean }): Promise<void> {
