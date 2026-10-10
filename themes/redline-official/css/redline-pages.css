@@ -1,0 +1,300 @@
+/*
+ * RED-LINE OFFICIAL — fișierul 3/3: indexul forumului, topicurile, postările, widget-urile, membrii, clasamentul,
+ * serverele, chat-ul, subsolul și ecranele mici.
+ */
+
+/* ─── Indexul forumului: rândurile se aprind cu bara cyan, iconițele strălucesc ────────────────────────── */
+
+html.gcs-nova :is(.gcs-forumRow, .gcs-topicRow) {
+  position: relative;
+  transition: background-color var(--gcs-ease), box-shadow var(--gcs-ease);
+}
+html.gcs-nova :is(.gcs-forumRow, .gcs-topicRow, .gcs-stream__item, .gcs-inbox__item, .gcs-table__row, .gcs-serverRow):hover {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--rl-purple) 12%, transparent), transparent 70%), var(--gcs-raise);
+  box-shadow: inset 3px 0 0 var(--rl-cyan);
+}
+html.gcs-nova .gcs-forumRow__icon .gcs-forumIcon {
+  color: var(--rl-cyan);
+  filter: drop-shadow(0 0 8px var(--rl-glow-cyan));
+  transition: transform var(--gcs-ease), filter var(--gcs-ease);
+}
+html.gcs-nova .gcs-forumRow:hover .gcs-forumRow__icon .gcs-forumIcon {
+  transform: scale(var(--gcs-hover-scale));
+  filter: drop-shadow(0 0 12px var(--rl-glow-cyan));
+}
+html.gcs-nova .gcs-forumRow__title,
+html.gcs-nova .gcs-root .gcs-forumRow__title a {
+  font-family: var(--gcs-font-display);
+  font-size: 17px;
+  letter-spacing: 0.02em;
+}
+html.gcs-nova .gcs-root .gcs-forumRow__title a:hover,
+html.gcs-nova .gcs-root .gcs-topicRow__title a:hover {
+  color: var(--rl-cyan);
+  text-shadow: 0 0 12px var(--rl-glow-cyan);
+}
+html.gcs-nova .gcs-forumRow__subs li::before {
+  content: "›";
+  color: var(--rl-cyan);
+  font-size: 15px;
+  line-height: 1;
+}
+html.gcs-nova .gcs-root .gcs-forumRow__subs a:hover {
+  color: var(--rl-cyan);
+}
+html.gcs-nova .gcs-forumRow__stats strong {
+  font-family: var(--gcs-font-display);
+  font-size: 17px;
+  color: var(--gcs-heading, #fff);
+}
+
+/* ─── Lista topicurilor ─────────────────────────────────────────────────────────────────────────────────── */
+
+html.gcs-nova .gcs-topicRow__title,
+html.gcs-nova .gcs-root .gcs-topicRow__title a {
+  font-size: 15px;
+}
+html.gcs-nova .gcs-topicList__header {
+  border-bottom: 1px solid color-mix(in srgb, var(--rl-purple) 22%, var(--gcs-border));
+}
+
+/* ─── Topicul: cardul postării cu muchia neon, autorul pe fundal mov adânc ────────────────────────────── */
+
+html.gcs-nova .gcs-post {
+  border-color: color-mix(in srgb, var(--rl-purple) 18%, var(--gcs-box-border, var(--gcs-border)));
+  transition: border-color var(--gcs-ease), box-shadow var(--gcs-ease);
+}
+html.gcs-nova .gcs-post:hover {
+  border-color: color-mix(in srgb, var(--rl-purple) 40%, var(--gcs-border));
+}
+html.gcs-nova .gcs-post__author.gcs-postbit {
+  background:
+    radial-gradient(ellipse 120% 50% at 50% 0%, color-mix(in srgb, var(--rl-purple) 18%, transparent), transparent 70%),
+    color-mix(in srgb, var(--gcs-bg) 40%, var(--gcs-surface));
+  border-right: 1px solid color-mix(in srgb, var(--rl-purple) 18%, var(--gcs-border));
+}
+html.gcs-nova .gcs-post__head {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--rl-purple) 8%, transparent), transparent 60%);
+}
+html.gcs-nova .gcs-post__date {
+  border-color: color-mix(in srgb, var(--rl-purple) 25%, var(--gcs-border));
+  font-family: var(--gcs-font-display);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+html.gcs-nova .gcs-post[data-post-number="1"] {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--rl-purple) 25%, transparent), 0 16px 40px -20px var(--rl-glow-purple);
+}
+html.gcs-nova .gcs-postBody blockquote {
+  border-left: 3px solid var(--rl-purple);
+  background: color-mix(in srgb, var(--rl-purple) 7%, transparent);
+  border-radius: 0 8px 8px 0;
+}
+html.gcs-nova .gcs-postBody :is(pre, code) {
+  border-color: color-mix(in srgb, var(--rl-purple) 25%, var(--gcs-border));
+}
+html.gcs-nova .gcs-post__signature {
+  border-top-color: color-mix(in srgb, var(--rl-purple) 20%, var(--gcs-border));
+}
+
+/* ─── Widget-urile, anunțul, statisticile ──────────────────────────────────────────────────────────────── */
+
+html.gcs-nova a.gcs-widgetRow__title:hover {
+  color: var(--rl-cyan);
+}
+html.gcs-nova .gcs-statGrid > div {
+  border-color: color-mix(in srgb, var(--rl-purple) 22%, var(--gcs-border));
+  background: linear-gradient(160deg, color-mix(in srgb, var(--rl-purple) 10%, var(--gcs-surface)), color-mix(in srgb, var(--gcs-bg) 40%, var(--gcs-surface)));
+}
+html.gcs-nova .gcs-statGrid strong {
+  font-family: var(--gcs-font-display);
+  color: var(--rl-cyan);
+  text-shadow: 0 0 12px var(--rl-glow-cyan);
+}
+html.gcs-nova .gcs-announcement {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 55% 130% at 100% 0%, color-mix(in srgb, var(--rl-purple) 32%, transparent), transparent 62%),
+    radial-gradient(ellipse 40% 100% at 0% 100%, color-mix(in srgb, var(--rl-cyan) 14%, transparent), transparent 60%),
+    linear-gradient(135deg, color-mix(in srgb, var(--rl-purple) 12%, var(--gcs-surface)), var(--gcs-surface) 65%);
+  border-color: color-mix(in srgb, var(--rl-purple) 40%, var(--gcs-border));
+}
+html.gcs-nova .gcs-announcement::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: var(--rl-line);
+  pointer-events: none;
+}
+
+/* ─── Membrii, caruselul, clasamentul: cardurile se ridică cu strălucirea mov ──────────────────────────── */
+
+html.gcs-nova .gcs-memberCard:hover,
+html.gcs-nova .gcs-carousel__card:hover {
+  border-color: var(--rl-purple);
+  box-shadow: 0 14px 34px -16px rgb(0 0 0 / 0.7), 0 0 26px -10px var(--rl-glow-purple);
+}
+html.gcs-nova .gcs-profileHeader {
+  border: 1px solid color-mix(in srgb, var(--rl-purple) 30%, var(--gcs-border));
+  box-shadow: 0 0 40px -20px var(--rl-glow-purple);
+}
+html.gcs-nova .gcs-podium__place {
+  box-shadow: 0 0 24px -12px var(--gcs-medal);
+}
+html.gcs-nova .gcs-board__table thead th {
+  font-family: var(--gcs-font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--rl-cyan);
+}
+
+/* ─── Serverele: butonul de conectare cyan ─────────────────────────────────────────────────────────────── */
+
+html.gcs-nova .gcs-serverRow__name {
+  font-family: var(--gcs-font-display);
+  letter-spacing: 0.02em;
+}
+html.gcs-nova .gcs-serverRow__connect {
+  border-color: color-mix(in srgb, var(--rl-cyan) 50%, transparent);
+  color: var(--rl-cyan);
+}
+html.gcs-nova .gcs-serverRow__connect:hover {
+  background: color-mix(in srgb, var(--rl-cyan) 14%, transparent);
+  box-shadow: 0 0 16px -6px var(--rl-glow-cyan);
+}
+
+/* ─── Chat-ul și shoutbox-ul ───────────────────────────────────────────────────────────────────────────── */
+
+html.gcs-nova .gcs-chat__head {
+  background: var(--gcs-band-bg);
+  box-shadow: var(--gcs-band-shadow);
+}
+html.gcs-nova .gcs-chat__headingIcon {
+  color: var(--rl-cyan);
+  background: var(--gcs-band-icon-bg);
+  border-color: var(--gcs-band-icon-border);
+}
+html.gcs-nova .gcs-chat__heading {
+  font-family: var(--gcs-font-display);
+  text-transform: uppercase;
+  letter-spacing: var(--rl-display-spacing);
+}
+
+/* ─── Subsolul: linia neon sus, luminile, pastilele cu chenar cyan ─────────────────────────────────────── */
+
+html.gcs-nova .gcs-siteFooter {
+  position: relative;
+  border-top: 0;
+  background:
+    radial-gradient(ellipse 45% 90% at 0% 0%, color-mix(in srgb, var(--rl-purple) 14%, transparent), transparent 65%),
+    radial-gradient(ellipse 35% 80% at 100% 100%, color-mix(in srgb, var(--rl-cyan) 8%, transparent), transparent 65%),
+    var(--gcs-footer-bg, var(--gcs-chrome));
+}
+html.gcs-nova .gcs-siteFooter::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: var(--rl-line);
+  box-shadow: 0 0 14px var(--rl-glow-purple);
+  pointer-events: none;
+}
+html.gcs-nova .gcs-siteFooter__title {
+  font-family: var(--gcs-font-display);
+  font-size: 17px;
+  text-transform: uppercase;
+  letter-spacing: var(--rl-display-spacing);
+}
+html.gcs-nova .gcs-siteFooter__accent,
+html.gcs-nova .gcs-siteFooter__hl {
+  color: var(--rl-cyan);
+}
+html.gcs-nova .gcs-siteFooter__pill {
+  border-color: color-mix(in srgb, var(--rl-purple) 22%, var(--gcs-border));
+}
+html.gcs-nova .gcs-root a.gcs-siteFooter__pill:hover,
+html.gcs-nova .gcs-root a.gcs-siteFooter__pill:focus-visible,
+html.gcs-nova .gcs-root a.gcs-siteFooter__cta:hover {
+  border-color: var(--rl-cyan);
+  box-shadow: 0 0 16px -6px var(--rl-glow-cyan);
+}
+html.gcs-nova a.gcs-siteFooter__pill:hover .gcs-siteFooter__pillIcon,
+html.gcs-nova .gcs-siteFooter__ctaIcon {
+  color: var(--rl-cyan);
+}
+html.gcs-nova .gcs-siteFooter__bar {
+  border-color: color-mix(in srgb, var(--rl-purple) 25%, var(--gcs-border));
+  background: var(--rl-glass);
+}
+html.gcs-nova .gcs-root a.gcs-siteFooter__barLink:hover,
+html.gcs-nova summary.gcs-siteFooter__barLink:hover {
+  color: var(--rl-cyan);
+}
+html.gcs-nova .gcs-siteFooter__menuList {
+  border-color: color-mix(in srgb, var(--rl-purple) 35%, var(--gcs-border));
+  box-shadow: 0 16px 40px -10px rgb(0 0 0 / 0.6), 0 0 20px -10px var(--rl-glow-purple);
+}
+html.gcs-nova .gcs-siteFooter__scheme .gcs-seg--active {
+  background: linear-gradient(135deg, var(--rl-purple), color-mix(in srgb, var(--rl-purple) 60%, var(--rl-cyan)));
+}
+html.gcs-nova .gcs-siteFooter__powered a {
+  color: var(--rl-cyan);
+}
+
+/* ─── Modul luminos: textele cyan devin mov (cyan-ul deschis nu se citește pe alb) ─────────────────────── */
+
+html.gcs-nova[data-theme="light"] :is(.gcs-crumbBar .gcs-breadcrumb li:last-child, .gcs-statGrid strong) {
+  text-shadow: none;
+}
+html.gcs-nova[data-theme="light"] .gcs-root :is(.gcs-forumRow__title a, .gcs-topicRow__title a):hover {
+  color: var(--rl-purple);
+  text-shadow: none;
+}
+html.gcs-nova[data-theme="light"] .gcs-tab[aria-selected="true"] {
+  text-shadow: none;
+}
+@media (prefers-color-scheme: light) {
+  html.gcs-nova[data-theme="auto"] :is(.gcs-crumbBar .gcs-breadcrumb li:last-child, .gcs-statGrid strong, .gcs-tab[aria-selected="true"]) {
+    text-shadow: none;
+  }
+  html.gcs-nova[data-theme="auto"] .gcs-root :is(.gcs-forumRow__title a, .gcs-topicRow__title a):hover {
+    color: var(--rl-purple);
+    text-shadow: none;
+  }
+}
+
+/* ─── Ecranele mici ─────────────────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 760px) {
+  html.gcs-nova {
+    --rl-grid-size: 32px;
+  }
+  html.gcs-nova .gcs-root {
+    background-attachment: scroll;
+  }
+  html.gcs-nova .gcs-pageHeader__title {
+    font-size: 21px;
+  }
+  html.gcs-nova :is(.gcs-category__title, .gcs-sideCard__title, .gcs-widgetTitle, .gcs-topicList__header h2) {
+    font-size: 15.5px;
+  }
+  html.gcs-nova .gcs-brand__mark {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* ─── Mișcarea redusă: fără ridicări și măriri ─────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  html.gcs-nova :is(.gcs-btn--primary, .gcs-forumRow__icon .gcs-forumIcon):hover,
+  html.gcs-nova .gcs-forumRow:hover .gcs-forumRow__icon .gcs-forumIcon {
+    transform: none;
+  }
+}

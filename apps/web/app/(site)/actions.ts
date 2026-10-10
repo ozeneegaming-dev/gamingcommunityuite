@@ -4,7 +4,7 @@ import { cookies, headers } from "next/headers";
 import { GCS_LOCALES, LOCALE_COOKIE, type GcsLocale } from "@/i18n";
 import { currentActor } from "@/lib/actor";
 import { isSameOrigin } from "@/lib/actions";
-import { isThemeMode, THEME_COOKIE } from "@/lib/appearance";
+import { isThemeMode, SKIN_COOKIE, THEME_COOKIE } from "@/lib/appearance";
 import { services } from "@/lib/services";
 
 /**
@@ -28,6 +28,29 @@ export async function setLocale(formData: FormData): Promise<void> {
   const actor = await currentActor();
   if (actor.userId) {
     await db.$executeRaw`UPDATE users SET prefs = prefs || jsonb_build_object('locale', ${locale as string}::text) WHERE id = ${actor.userId}`;
+  }
+}
+
+/**
+ * Schimbă tema site-ului din subsol (meniul „Tema forumului”), fără JavaScript: doar dintre temele active; cookie pentru
+ * oricine, plus preferința membrului (ca alegerea din Setări → Aspect).
+ */
+export async function setSkinChoice(formData: FormData): Promise<void> {
+  if (!isSameOrigin(await headers())) return;
+  const key = formData.get("skin");
+  if (typeof key !== "string" || !/^[a-z0-9][a-z0-9-]{1,31}$/.test(key)) return;
+  const { themes, db } = services();
+  if (!(await themes.get(key))?.enabled) return;
+  (await cookies()).set(SKIN_COOKIE, key, {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: "lax",
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+  });
+  const actor = await currentActor();
+  if (actor.userId) {
+    await db.$executeRaw`UPDATE users SET prefs = prefs || jsonb_build_object('skin', ${key}::text) WHERE id = ${actor.userId}`;
   }
 }
 

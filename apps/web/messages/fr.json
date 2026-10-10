@@ -59,7 +59,8 @@
     "deletedMember": "Deleted member",
     "crumbs": "You are here",
     "collapse": "Collapse {title}",
-    "expand": "Expand {title}"
+    "expand": "Expand {title}",
+    "skin": "Thème du forum"
   },
   "auth": {
     "login": {
@@ -282,7 +283,10 @@
       "requires": "Turn on the apps it depends on first.",
       "before_start": "The end must be after the start.",
       "invalid_date": "The date isn't valid.",
-      "invalid_value": "The value isn't valid."
+      "invalid_value": "The value isn't valid.",
+      "invalid_key": "Clé invalide (minuscules, chiffres et tirets, 2 à 32 caractères).",
+      "invalid_theme_package": "Le fichier n’est pas un paquet de thème GCS valide.",
+      "unsupported_theme_package": "Le paquet de thème est destiné à une autre version de la plateforme."
     }
   },
   "acp": {
@@ -1383,7 +1387,12 @@
       "confirmDelete": "Supprimer ce thème ? Les membres qui l'ont utilisé verront le thème par défaut.",
       "create": "Nouveau thème",
       "copyFrom": "Copie de",
-      "fromDefaults": "Valeurs par défaut"
+      "fromDefaults": "Valeurs par défaut",
+      "export": "Exporter",
+      "import": "Importer un thème",
+      "importHint": "Envoyez un fichier .gcs-theme.json (exporté d’un autre site ou reçu séparément). Le thème importé est désactivé : vérifiez-le dans l’éditeur visuel, puis cochez « Actif » ou « Thème par défaut ». Les images (logo, en-tête) s’ajoutent depuis l’éditeur visuel.",
+      "importFile": "Fichier du thème (.gcs-theme.json)",
+      "importSubmit": "Importer le thème"
     },
     "widgetsAdmin": {
       "title": "Widgets",
