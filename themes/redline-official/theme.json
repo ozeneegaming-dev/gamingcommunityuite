@@ -3,7 +3,7 @@
   "name": "RED-LINE OFFICIAL",
   "description": "Temă gaming cyber neon (mov electric + cyan): antet cu grilă și linie neon animată, benzi cu majuscule, butoane cu strălucire, rânduri care se aprind la hover, mod întunecat și luminos.",
   "author": "RED-LINE",
-  "cssFiles": ["redline-core.css", "redline-components.css", "redline-pages.css"],
+  "cssFiles": ["redline-core.css", "redline-components.css", "redline-pages.css", "redline-fx.css"],
   "settings": {
     "preset": "nova",
     "dark": {

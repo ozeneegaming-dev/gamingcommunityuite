@@ -30,7 +30,7 @@
 
 ## 3. Tema RED-LINE OFFICIAL (`themes/redline-official/`)
 
-- Sursele: `theme.json` (numele, cheia, setările) și `css/` (trei fișiere); `node themes/build.mjs redline-official`
+- Sursele: `theme.json` (numele, cheia, setările) și `css/` (patru fișiere); `node themes/build.mjs redline-official`
   scrie pachetul `redline-official.gcs-theme.json` (cel încărcat în ACP). Testul pachetelor verifică faptul că pachetul
   e valid, la zi cu sursele, că sanitizarea nu scoate nimic și că toate regulile stau sub `html.gcs-nova`.
 - Construită peste designul Nova (`preset: nova`: antetul înalt, rândul breadcrumb + căutare, benzile, subsolul bogat,
@@ -43,6 +43,12 @@
   - benzile cu gradient mov și bara cyan, iconițele în pătrate rotunjite; butoanele principale în gradient cu
     strălucire; câmpurile cu focus cyan; rândurile forumului / topicurilor se aprind cu bara cyan la hover;
   - postările cu autorul pe fundal mov adânc, prima postare evidențiată; subsolul cu linia neon și pastilele cyan;
-  - antetul rămâne închis și în modul luminos (cu un cyan propriu); pe telefon, titlurile și grila se micșorează.
+  - antetul rămâne închis și în modul luminos (cu un cyan propriu); pe telefon, titlurile și grila se micșorează;
+  - stratul „HUD” (`redline-fx.css`, ultimul): casetele din sticlă cu chenar în gradient mov → cyan și colțuri de
+    țintă, benzile cu dungi tehnice și linia care se aprinde la hover, forumurile ca plăci separate cu iconița în
+    hexagon, butoanele principale cu colțuri tăiate și reflex de lumină, aurora din antet, titlurile paginilor și
+    statisticile în gradient, inelul neon al avatarelor, liniile de scanare (doar în modul întunecat).
+- Meniul principal se remăsoară și când fonturile Google ale temei termină de încărcat (`loadingdone`), nu doar la
+  `document.fonts.ready` (care se poate rezolva înainte ca ele să fie cerute): butoanele nu se mai suprapun.
 - Setările temei rămân editabile din editorul vizual (culorile, fonturile, logo-ul, imaginea antetului…). Excepție:
   stilul benzilor e dat de CSS-ul temei (setarea „Stilul benzilor” nu-l schimbă).

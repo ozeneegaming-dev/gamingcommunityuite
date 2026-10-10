@@ -18,7 +18,7 @@ const themeCard = (page: Page, name: string) => page.getByTestId("gcs-acp-theme"
  * Pachetele de temă (ACP → Aspect → Teme): adminul încarcă `.gcs-theme.json`, tema apare inactivă, o pornește, iar
  * oricine o alege din subsolul forumului („Tema forumului”); exportul descarcă același pachet. La final tema e ștearsă.
  */
-test("adminul importă RED-LINE OFFICIAL din fișier, o pornește și o alege din subsolul forumului", async ({ page, context, request }) => {
+test("adminul importă RED-LINE OFFICIAL din fișier, o pornește și o alege din subsolul forumului", async ({ page, context, request, browser }) => {
   test.setTimeout(180_000);
   await useFreshIp(context, "100.71.0");
   const id = uid();
@@ -40,7 +40,7 @@ test("adminul importă RED-LINE OFFICIAL din fișier, o pornește și o alege di
   const pkg = (await exported.json()) as { format: string; name: string; cssFiles: { name: string }[] };
   expect(pkg.format).toBe("gcs-theme");
   expect(pkg.name).toBe("RED-LINE OFFICIAL");
-  expect(pkg.cssFiles.map((f) => f.name)).toEqual(["redline-core.css", "redline-components.css", "redline-pages.css"]);
+  expect(pkg.cssFiles.map((f) => f.name)).toEqual(["redline-core.css", "redline-components.css", "redline-pages.css", "redline-fx.css"]);
 
   // Tema pornită apare în meniul „Tema forumului” din subsol.
   await card.getByLabel("Activă (membrii o pot alege)").check();
@@ -59,28 +59,42 @@ test("adminul importă RED-LINE OFFICIAL din fișier, o pornește și o alege di
   await expect.poll(() => page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--gcs-accent").trim())).toBe("#8B3DFF");
   await expect(menu.locator("summary")).toContainText("RED-LINE OFFICIAL");
   await expect(menu).not.toHaveAttribute("open", "");
-  await shot(page, "redline-home");
 
-  await page.goto(`/forum/${tree.forum.id}-${tree.forum.slug}`);
-  await expect(page.getByText(`Turneu RED-LINE ${id}`).first()).toBeVisible();
-  await shot(page, "redline-forum");
-  await page.goto(topic.url);
-  await expect(page.getByText("Răspunsul 2").first()).toBeVisible();
-  await shot(page, "redline-topic");
+  // Vizitatorul alege și el tema din subsol (capturile: contextul lui, fără antetele de test, încarcă fonturile Google).
+  const visitorContext = await browser.newContext({ viewport: { width: 1280, height: 720 } });
+  const visitor = await visitorContext.newPage();
+  await visitor.goto("/");
+  const visitorMenu = visitor.getByTestId("gcs-footer-skin");
+  await visitorMenu.locator("summary").click();
+  await visitorMenu.getByRole("button", { name: "RED-LINE OFFICIAL" }).click();
+  await expect(visitor.locator('link[href*="/gcs-theme.css?t=redline-official"]')).toHaveCount(1);
+  await visitor.evaluate(() => document.fonts.ready);
+  await shot(visitor, "redline-home");
+
+  await visitor.goto(`/forum/${tree.forum.id}-${tree.forum.slug}`);
+  await expect(visitor.getByText(`Turneu RED-LINE ${id}`).first()).toBeVisible();
+  await visitor.evaluate(() => document.fonts.ready);
+  await shot(visitor, "redline-forum");
+  await visitor.goto(topic.url);
+  await expect(visitor.getByText("Răspunsul 2").first()).toBeVisible();
+  await visitor.evaluate(() => document.fonts.ready);
+  await shot(visitor, "redline-topic");
 
   // Modul luminos (antetul rămâne închis).
-  await page.goto("/");
-  await page.locator(".gcs-siteFooter__scheme button[value=light]").click();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-  await shot(page, "redline-home-light");
-  await page.locator(".gcs-siteFooter__scheme button[value=dark]").click();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await visitor.goto("/");
+  await visitor.locator(".gcs-siteFooter__scheme button[value=light]").click();
+  await expect(visitor.locator("html")).toHaveAttribute("data-theme", "light");
+  await visitor.evaluate(() => document.fonts.ready);
+  await shot(visitor, "redline-home-light");
+  await visitor.locator(".gcs-siteFooter__scheme button[value=dark]").click();
+  await expect(visitor.locator("html")).toHaveAttribute("data-theme", "dark");
 
   // Pe telefon.
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
-  await shot(page, "redline-mobile");
-  await page.setViewportSize({ width: 1280, height: 720 });
+  await visitor.setViewportSize({ width: 390, height: 844 });
+  await visitor.goto("/");
+  await visitor.evaluate(() => document.fonts.ready);
+  await shot(visitor, "redline-mobile");
+  await visitorContext.close();
 
   // Înapoi la Nova, apoi tema importată e ștearsă.
   await menu.locator("summary").click();

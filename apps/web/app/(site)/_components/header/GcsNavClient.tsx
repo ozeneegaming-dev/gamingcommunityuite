@@ -92,12 +92,15 @@ function NavBar({ items, label, moreLabel, home, search }: NavProps & { search: 
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(el);
-    // Fonturile temei se încarcă după prima randare și schimbă lățimea butoanelor.
+    // Fonturile temei se încarcă după prima randare și schimbă lățimea butoanelor. `ready` se poate rezolva înainte ca
+    // fonturile Google ale temei să fie cerute, deci remăsurăm și la fiecare încărcare terminată (`loadingdone`).
     let alive = true;
     void document.fonts?.ready.then(() => alive && measure());
+    document.fonts?.addEventListener?.("loadingdone", measure);
     return () => {
       alive = false;
       observer.disconnect();
+      document.fonts?.removeEventListener?.("loadingdone", measure);
     };
   }, [items]);
 
