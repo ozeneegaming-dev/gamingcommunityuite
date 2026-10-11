@@ -1,0 +1,99 @@
+{
+  "manifestVersion": 1,
+  "key": "gcs.tickets",
+  "name": "Tickete suport",
+  "version": "1.0.0",
+  "author": { "name": "GamingCommunitySuite", "url": "https://gamingcommunitysuite.com" },
+  "description": "Sistem de tickete de suport: membrii deschid tickete pe categorii, staff-ul le preia, răspunde (și cu note interne), schimbă starea și prioritatea; coada staff-ului cu filtre, widget și statistici în ACP.",
+  "icon": "fa-solid fa-ticket",
+  "license": "MIT",
+  "minGcs": "0.7.1",
+  "capabilities": ["db", "widgets", "pages", "acp", "api", "menus", "jobs", "settings", "permissions", "client-css"],
+  "settings": {
+    "tabs": [
+      {
+        "key": "general",
+        "label": "settings.tabs.general",
+        "icon": "fa-solid fa-sliders",
+        "fields": [
+          {
+            "type": "textarea",
+            "key": "categories",
+            "label": "settings.categories",
+            "hint": "settings.categoriesHint",
+            "default": "Suport general\nProbleme cu contul\nReclamație jucător\nCerere unban\nDonații și VIP\nBug pe site",
+            "maxLength": 2000
+          },
+          { "type": "textarea", "key": "intro", "label": "settings.intro", "hint": "settings.introHint", "default": "", "maxLength": 2000 },
+          { "type": "number", "key": "maxOpen", "label": "settings.maxOpen", "hint": "settings.maxOpenHint", "default": 3, "min": 1, "max": 50, "unlimited": true },
+          { "type": "toggle", "key": "memberPriority", "label": "settings.memberPriority", "hint": "settings.memberPriorityHint", "default": true }
+        ]
+      },
+      {
+        "key": "workflow",
+        "label": "settings.tabs.workflow",
+        "icon": "fa-solid fa-diagram-project",
+        "fields": [
+          { "type": "toggle", "key": "allowReopen", "label": "settings.allowReopen", "hint": "settings.allowReopenHint", "default": true },
+          { "type": "number", "key": "autoCloseDays", "label": "settings.autoCloseDays", "hint": "settings.autoCloseDaysHint", "default": 7, "min": 1, "max": 90, "unit": "settings.days", "unlimited": true },
+          { "type": "number", "key": "pageSize", "label": "settings.pageSize", "default": 20, "min": 5, "max": 100 }
+        ]
+      }
+    ]
+  },
+  "permissions": [
+    {
+      "key": "create",
+      "scope": "group",
+      "label": "permissions.create",
+      "default": {
+        "root_admin": true,
+        "admin": true,
+        "super_moderator": true,
+        "moderator": true,
+        "member": true,
+        "new_member": true,
+        "vip_bronze": true,
+        "vip_silver": true,
+        "vip_gold": true,
+        "vip_legend": true
+      }
+    },
+    {
+      "key": "manage",
+      "scope": "group",
+      "label": "permissions.manage",
+      "default": { "root_admin": true, "admin": true, "super_moderator": true, "moderator": true }
+    }
+  ],
+  "widgets": [
+    {
+      "key": "tickets",
+      "label": "widget.title",
+      "description": "widget.description",
+      "icon": "fa-solid fa-ticket",
+      "zones": ["sidebar", "top", "bottom"],
+      "fields": [{ "type": "number", "key": "limit", "label": "widget.limit", "min": 1, "max": 15 }],
+      "defaultConfig": { "limit": 5 }
+    }
+  ],
+  "routes": {
+    "pages": [
+      { "path": "/", "title": "page.list" },
+      { "path": "/new", "title": "page.new", "permission": "create" },
+      { "path": "/t/:id", "title": "page.ticket" }
+    ],
+    "acp": [{ "path": "/", "label": "acp.menu", "icon": "fa-solid fa-ticket" }],
+    "api": [
+      { "path": "/create", "methods": ["POST"], "permission": "create" },
+      { "path": "/t/:id/reply", "methods": ["POST"] },
+      { "path": "/t/:id/status", "methods": ["POST"] },
+      { "path": "/t/:id/manage", "methods": ["POST"], "permission": "manage" }
+    ]
+  },
+  "jobs": [{ "key": "autoclose", "everyMinutes": 60, "label": "jobs.autoclose" }],
+  "menus": {
+    "user": [{ "key": "tickets", "label": "menu.user", "href": "/p/gcs.tickets", "icon": "fa-solid fa-ticket", "permission": "create" }]
+  },
+  "client": { "styles": ["assets/tickets.css"] }
+}
