@@ -13,6 +13,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strings"
 	"time"
 
@@ -38,6 +39,9 @@ type Client interface {
 
 // ErrNoAI means neither Claude Code nor an API key is available.
 var ErrNoAI = errors.New("AI-ul nu e configurat: instalează Claude Code (abonamentul tău) sau pune o cheie API în Setări")
+
+// ClaudePath, when set, is used instead of searching for Claude Code.
+var ClaudePath string
 
 // New picks a backend. mode: "auto" (API key if given, else Claude Code), "claude", "api", "off".
 func New(mode, apiKey, model string) (Client, error) {
@@ -68,27 +72,69 @@ func New(mode, apiKey, model string) (Client, error) {
 	return nil, ErrNoAI
 }
 
-// FindClaudeCode locates the `claude` command (Claude Code).
+// FindClaudeCode locates the `claude` command (Claude Code): PATH, the native installer, npm, and the copy the
+// Claude desktop app keeps for its Code tab.
 func FindClaudeCode() (string, error) {
+	if ClaudePath != "" {
+		if st, err := os.Stat(ClaudePath); err == nil && !st.IsDir() {
+			return ClaudePath, nil
+		}
+	}
 	if p, err := exec.LookPath("claude"); err == nil {
 		return p, nil
 	}
+	exeName := "claude"
+	if runtime.GOOS == "windows" {
+		exeName = "claude.exe"
+	}
 	var cands []string
-	if home, err := os.UserHomeDir(); err == nil {
-		cands = append(cands, filepath.Join(home, ".local", "bin", "claude"), filepath.Join(home, ".claude", "local", "claude"))
-		if runtime.GOOS == "windows" {
-			cands = append(cands,
-				filepath.Join(home, ".local", "bin", "claude.exe"),
-				filepath.Join(os.Getenv("APPDATA"), "npm", "claude.cmd"),
-				filepath.Join(os.Getenv("LOCALAPPDATA"), "Programs", "claude", "claude.exe"))
+	home, _ := os.UserHomeDir()
+	if home != "" {
+		cands = append(cands, filepath.Join(home, ".local", "bin", exeName), filepath.Join(home, ".claude", "local", exeName), filepath.Join(home, ".claude", "local", "claude"))
+	}
+	var globs []string
+	if runtime.GOOS == "windows" {
+		appdata, local := os.Getenv("APPDATA"), os.Getenv("LOCALAPPDATA")
+		cands = append(cands,
+			filepath.Join(appdata, "npm", "claude.cmd"),
+			filepath.Join(local, "Programs", "claude", "claude.exe"),
+			filepath.Join(local, "Programs", "Claude Code", "claude.exe"),
+			filepath.Join(home, "AppData", "Roaming", "npm", "claude.cmd"),
+			filepath.Join(home, ".bun", "bin", "claude.exe"),
+			filepath.Join(home, ".volta", "bin", "claude.exe"))
+		for _, root := range []string{appdata, local} {
+			if root == "" {
+				continue
+			}
+			globs = append(globs,
+				filepath.Join(root, "Claude", "claude-code", "*", "claude.exe"),
+				filepath.Join(root, "Claude", "claude-code", "*", "*", "claude.exe"),
+				filepath.Join(root, "Claude", "claude-code-vm", "*", "claude.exe"),
+				filepath.Join(root, "AnthropicClaude", "app-*", "resources", "*", "claude.exe"),
+				filepath.Join(root, "AnthropicClaude", "app-*", "resources", "*", "*", "claude.exe"),
+				filepath.Join(root, "Claude", "*", "claude.exe"),
+				filepath.Join(root, "Programs", "Claude*", "*", "claude.exe"))
 		}
+	} else {
+		globs = append(globs,
+			filepath.Join(home, "Library", "Application Support", "Claude", "claude-code", "*", "claude"),
+			filepath.Join(home, ".config", "Claude", "claude-code", "*", "claude"))
 	}
 	for _, c := range cands {
 		if st, err := os.Stat(c); err == nil && !st.IsDir() {
 			return c, nil
 		}
 	}
-	return "", errors.New("Claude Code nu e instalat pe acest calculator (claude.ai/download) — sau pune o cheie API în Setări")
+	for _, g := range globs {
+		matches, _ := filepath.Glob(g)
+		sort.Strings(matches)
+		for i := len(matches) - 1; i >= 0; i-- { // newest version folder first
+			if st, err := os.Stat(matches[i]); err == nil && !st.IsDir() {
+				return matches[i], nil
+			}
+		}
+	}
+	return "", errors.New("nu găsesc Claude Code pe acest calculator. Instalează-l o dată din PowerShell: irm https://claude.ai/install.ps1 | iex — apoi scrie claude și conectează-te cu contul tău (sau pune o cheie API în Setări)")
 }
 
 // ---- Claude Code (subscription) ----

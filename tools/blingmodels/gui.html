@@ -156,6 +156,24 @@ select.inp:focus, input.inp:focus { outline: none; border-color: var(--a2); }
 .btn.ok { border-color: #34e39b66; color: var(--ok); }
 .msg { position: absolute; left: 50%; top: 18px; transform: translateX(-50%); background: #0e1018f2; border: 1px solid var(--line2); border-radius: 12px; padding: 10px 16px; font-size: 13px; z-index: 6; max-width: 80%; }
 .msg.err { border-color: #ff7b9366; color: #ffb3c1; }
+/* quick fixes: turn the model and convert again */
+let flipUD = false, flipFB = false;
+function addRot(axis) {
+  const v = ($("rotate").value || "0 0 0").split(/[\s,]+/).map(Number);
+  while (v.length < 3) v.push(0);
+  v[axis] = ((v[axis] || 0) + 180) % 360;
+  $("rotate").value = v.join(" ");
+}
+function quickFix(kind) {
+  const r = results[current];
+  const weapon = r && /arm/i.test(r.kind);
+  if (weapon) { if (kind === "updown") flipUD = !flipUD; else flipFB = !flipFB; }
+  else addRot(kind === "updown" ? 0 : 2);
+  if (!$("go").disabled) $("go").click(); else toast("Adaugă din nou modelul în fereastră, apoi apasă Convertește.", true);
+}
+$("flipUD").onclick = () => quickFix("updown");
+$("flipFB").onclick = () => quickFix("frontback");
+
 /* assistant */
 .chatbtn { position: absolute; right: 18px; bottom: 64px; height: 42px; padding: 0 16px; border-radius: 999px; border: 0; background: var(--grad); color: #fff; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 10px 30px -8px #8b5cffcc; z-index: 4; }
 .chatbtn svg { width: 18px; height: 18px; }
@@ -312,6 +330,8 @@ select.inp:focus, input.inp:focus { outline: none; border-color: var(--a2); }
           <div class="stats" id="mStats"></div>
         </div>
         <div class="tools">
+          <button class="btn" id="flipUD" title="Întoarce sus-jos și convertește din nou">⇅ Sus-jos</button>
+          <button class="btn" id="flipFB" title="Întoarce față-spate și convertește din nou">⇄ Față-spate</button>
           <button class="btn ico" id="spinBtn" title="Rotire automată"><svg><use href="#i-rot"/></svg></button>
           <button class="btn ico" id="logBtn" title="Jurnal"><svg><use href="#i-log"/></svg></button>
           <button class="btn" id="folderBtn"><svg><use href="#i-folder"/></svg>Folder</button>
@@ -361,6 +381,7 @@ select.inp:focus, input.inp:focus { outline: none; border-color: var(--a2); }
     </div>
     <div class="row" style="margin-top:10px"><input class="inp" id="apiKey" type="password" placeholder="Cheie API (sk-ant-…) — rămâne doar pe calculatorul tău"><button class="btn" id="keySave">Salvează</button></div>
     <div class="status" id="aiStatus"></div>
+    <div class="row" style="margin-top:10px"><input class="inp" id="claudePath" placeholder="Calea către claude.exe (doar dacă nu e găsit singur)"><button class="btn" id="claudeSave">Salvează</button></div>
     <p class="small">Cu abonamentul Claude: blingmodels folosește comanda <b>claude</b> (Claude Code). Dacă nu e găsită, instaleaz-o o dată din PowerShell cu <code>irm https://claude.ai/install.ps1 | iex</code>, apoi scrie <code>claude</code> și conectează-te cu contul tău.</p>
   </div>
 </div>
@@ -474,6 +495,7 @@ $("go").onclick = async () => {
   fd.append("genanim", (mode === "prop" || mode === "auto") ? $("genanim").value : "");
   fd.append("ai", $("aiAuto").checked && aiReady() ? "1" : "0");
   fd.append("review", $("aiReview").checked && aiReady() ? "1" : "0");
+  fd.append("flip", [flipUD ? "updown" : "", flipFB ? "frontback" : ""].join(" ").trim());
   fd.append("nofit", $("nofit").checked ? "1" : "0"); fd.append("anims", $("anims").checked ? "1" : "0"); fd.append("double", $("double").checked ? "1" : "0");
   setBusy(true);
   try { showResult(await (await api("/convert", { method: "POST", body: fd })).json()); }
@@ -703,6 +725,7 @@ function renderSettings() {
   st.className = "status " + (aiReady() ? "ok" : "bad");
   st.textContent = aiReady() ? `✓ AI pregătit: ${state.aiName}` : (state.aiMode === "off" ? "AI oprit." : "✗ " + (state.aiError || "neconfigurat"));
   if (!state.claudeCode && state.aiMode === "claude") st.textContent += " — Claude Code nu e instalat.";
+  $("claudePath").value = state.claudePath || "";
 }
 async function saveSettings(obj) {
   const r = await api("/settings", { method: "POST", body: JSON.stringify(obj) });
@@ -716,6 +739,7 @@ $("setClose").onclick = () => $("settings").classList.add("hidden");
 $("settings").onclick = (e) => { if (e.target.id === "settings") $("settings").classList.add("hidden"); };
 $("csSave").onclick = () => saveSettings({ cstrike: $("csPath").value });
 $("csScan").onclick = async () => loadState(await (await api("/rescan")).json());
+$("claudeSave").onclick = () => saveSettings({ claude: $("claudePath").value });
 $("aiModes").onclick = (e) => { const b = e.target.closest(".radio"); if (b) saveSettings({ aiMode: b.dataset.v }); };
 $("keySave").onclick = () => { const k = $("apiKey").value.trim(); $("apiKey").value = ""; saveSettings({ apiKey: k, ...(k ? { aiMode: "api" } : {}) }); };
 let toastTimer;
@@ -746,6 +770,24 @@ function updateInstall() {
 }
 const installHandler = $("installBtn").onclick;
 
+/* quick fixes: turn the model and convert again */
+let flipUD = false, flipFB = false;
+function addRot(axis) {
+  const v = ($("rotate").value || "0 0 0").split(/[\s,]+/).map(Number);
+  while (v.length < 3) v.push(0);
+  v[axis] = ((v[axis] || 0) + 180) % 360;
+  $("rotate").value = v.join(" ");
+}
+function quickFix(kind) {
+  const r = results[current];
+  const weapon = r && /arm/i.test(r.kind);
+  if (weapon) { if (kind === "updown") flipUD = !flipUD; else flipFB = !flipFB; }
+  else addRot(kind === "updown" ? 0 : 2);
+  if (!$("go").disabled) $("go").click(); else toast("Adaugă din nou modelul în fereastră, apoi apasă Convertește.", true);
+}
+$("flipUD").onclick = () => quickFix("updown");
+$("flipFB").onclick = () => quickFix("frontback");
+
 /* assistant */
 $("chatBtn").onclick = () => { $("chat").classList.remove("hidden"); $("chatBtn").classList.add("hidden"); $("chatIn").focus(); };
 $("chatClose").onclick = () => { $("chat").classList.add("hidden"); $("chatBtn").classList.remove("hidden"); };
@@ -757,7 +799,7 @@ function bubble(text, who, extra) {
 function uiState() {
   const r = results[current];
   return { mode, ref: ($("ref").selectedOptions[0] || {}).textContent || "", rotate: $("rotate").value, maxtris: $("maxtris").value, height: $("height").value,
-    name: $("name").value, double: $("double").checked, nofit: $("nofit").checked, anims: $("anims").checked, genanim: $("genanim").value,
+    flip: [flipUD ? "updown" : "", flipFB ? "frontback" : ""].join(" ").trim(), name: $("name").value, double: $("double").checked, nofit: $("nofit").checked, anims: $("anims").checked, genanim: $("genanim").value,
     files: files.map((f) => f.path.split("/").pop()), game: state && state.cstrike, result: r ? { name: r.name, kind: r.kind, tris: r.tris, bones: r.bones, animations: (r.seqs || []).length, installed: !!r.installed } : null };
 }
 function applySettings(st) {
@@ -773,6 +815,7 @@ function applySettings(st) {
     else if (["rotate", "maxtris", "height", "name", "keep"].includes(k)) { $(k).value = v; done.push(`${k}: ${v}`); }
     else if (["double", "nofit", "anims"].includes(k)) { $(k).checked = v === "1" || v === true || v === "true"; done.push(`${k}: ${$(k).checked ? "da" : "nu"}`); }
     else if (k === "genanim") { $("genanim").value = v; done.push("animație: " + v); }
+    else if (k === "flip") { flipUD = /updown/.test(v); flipFB = /frontback/.test(v); done.push("întoarcere: " + (v || "nimic")); }
   }
   renderFiles();
   return done;

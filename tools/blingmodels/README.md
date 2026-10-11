@@ -26,6 +26,8 @@ Funcții:
 - **Potrivirea oaselor.** Când nici numele, nici forma nu spun ce oase are modelul, AI-ul le potrivește.
 - **Asistent în fereastră.** Îi scrii, de exemplu, „e întors”, „fă-l armă de AK” sau „e prea mare”, iar el schimbă setările și refă conversia.
 
+Dacă programul nu găsește singur Claude Code, pune calea către `claude.exe` în Setări → AI.
+
 Fără AI programul merge la fel. AI-ul doar alege și verifică în locul tău.
 
 ## Formate acceptate
@@ -92,6 +94,7 @@ Opțiunile se scriu în linia de comandă, înainte sau după fișiere, sau în 
 | `-double` | toate suprafețele subțiri sunt desenate pe ambele fețe |
 | `-genanim spin\|bob\|spinbob\|sway\|pulse` | animație generată pentru obiecte statice |
 | `-ai` | AI: recunoaștere, referință, orientare și verificare (din linia de comandă) |
+| `-flip "updown frontback"` | arma întoarsă: sus-jos și/sau față-spate (în fereastră: butoanele ⇅ și ⇄) |
 | `-nopause` | nu mai așteaptă Enter la final |
 | `-console` | dublu-click arată doar ajutorul, fără fereastră |
 

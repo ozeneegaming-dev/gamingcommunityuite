@@ -33,6 +33,7 @@ type options struct {
 	anims, noPause, preview, noFit, console, double       bool
 	genanim                                               string
 	useAI                                                 bool
+	flip                                                  string
 	aiRot                                                 *vmath.Mat3 // orientation chosen by the AI (kept for a retry)
 	postRotate                                            string      // AI review correction, applied last
 }
@@ -130,6 +131,7 @@ Opțiuni (pot fi puse și în blingmodels.ini lângă exe, ca nume=valoare):
   -double                        toate suprafețele subțiri desenate pe ambele fețe
   -genanim spin|bob|spinbob|sway|pulse  animație generată pentru obiecte statice
   -ai                            AI: recunoaște, alege referința din joc, orientează și verifică
+  -flip "updown frontback"       armă întoarsă: sus-jos și/sau față-spate (după potrivire)
   -nopause                       nu aștepta Enter la final
   -console                       fără fereastră (dublu-click arată doar acest ajutor)
 `)
@@ -174,6 +176,7 @@ func newFlagSet(o *options) *flag.FlagSet {
 	fs.BoolVar(&o.double, "double", false, "")
 	fs.StringVar(&o.genanim, "genanim", "", "")
 	fs.BoolVar(&o.useAI, "ai", false, "")
+	fs.StringVar(&o.flip, "flip", "", "")
 	fs.Usage = func() {}
 	return fs
 }
@@ -630,7 +633,7 @@ func convertAttempt(o *options, input string, donor *mdl.Model, donorPath string
 	switch {
 	case donor != nil && mode != "prop":
 		dm := map[string]convert.DonorMode{"player": convert.DonorPlayer, "v": convert.DonorView, "p": convert.DonorWorld, "w": convert.DonorWorld}[mode]
-		dopts := convert.DonorOptions{Mode: dm, Name: name + ".mdl", MaxTexture: texSide, Keep: o.keep, AutoRotate: !o.noFit && !aiOriented}
+		dopts := convert.DonorOptions{Mode: dm, Name: name + ".mdl", MaxTexture: texSide, Keep: o.keep, AutoRotate: !o.noFit && !aiOriented, Flip: o.flip}
 		if aiNow.client != nil {
 			dopts.MapBones = aiMapBones
 		}
@@ -641,6 +644,9 @@ func convertAttempt(o *options, input string, donor *mdl.Model, donorPath string
 	default:
 		if mode == "w" {
 			scene.LayFlat()
+			for _, f := range strings.Fields(o.flip) {
+				scene.FlipWeapon(f)
+			}
 			size := o.size
 			mn, mx := scene.Bounds()
 			if long := math.Max(mx[0]-mn[0], math.Max(mx[1]-mn[1], mx[2]-mn[2])); long > 1e-9 {

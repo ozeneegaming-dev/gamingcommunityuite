@@ -456,3 +456,38 @@ func TestWeaponPartFollowsDonorBone(t *testing.T) {
 		t.Fatalf("%d triangles on the magazine bone, want 12", n)
 	}
 }
+
+func TestFitToPicksTheRightSideUp(t *testing.T) {
+	gun := func() []Tri {
+		body := box(vmath.Vec3{0, -1, 0}, vmath.Vec3{30, 1, 3}, 0, 0)
+		mag := box(vmath.Vec3{8, -0.8, -7}, vmath.Vec3{11, 0.8, 0}, 0, 0)
+		stock := box(vmath.Vec3{-8, -1, -2}, vmath.Vec3{0, 1, 3}, 0, 0)
+		for i := range mag {
+			mag[i].Part = "mag"
+		}
+		return append(append(body, mag...), stock...)
+	}
+	target := gun()
+	for _, flip := range []vmath.Vec3{{180, 0, 0}, {0, 0, 180}, {180, 0, 180}, {0, 0, 0}} {
+		s := &Scene{Bones: []SBone{{Name: "root", Parent: -1, Rest: vmath.BoneIdentity()}}, Tris: gun()}
+		s.Transform(identity3(), 1.7, vmath.Vec3{5, 3, 2})
+		s.RotateDegrees(flip)
+		s.FitTo(target, true)
+		var magZ, magX float64
+		n := 0
+		for _, tr := range s.Tris {
+			if tr.Part == "mag" {
+				for _, c := range tr.C {
+					magZ += c.Pos[2]
+					magX += c.Pos[0]
+					n++
+				}
+			}
+		}
+		magZ /= float64(n)
+		magX /= float64(n)
+		if magZ > -1 || magX < 5 || magX > 14 {
+			t.Fatalf("flip %v: magazine ended at x=%.1f z=%.1f (want under the gun, near x=9.5)", flip, magX, magZ)
+		}
+	}
+}

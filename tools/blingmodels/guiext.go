@@ -63,6 +63,7 @@ type guiState struct {
 	AIMode     string            `json:"aiMode"`
 	HasKey     bool              `json:"hasKey"`
 	ClaudeCode bool              `json:"claudeCode"`
+	ClaudePath string            `json:"claudePath"`
 	AIName     string            `json:"aiName"`
 	AIError    string            `json:"aiError,omitempty"`
 	AIAuto     bool              `json:"aiAuto"`
@@ -81,8 +82,8 @@ func buildState() guiState {
 	if st.Cstrike != "" {
 		st.Refs = listRefs(st.Cstrike)
 	}
-	if _, err := ai.FindClaudeCode(); err == nil {
-		st.ClaudeCode = true
+	if p, err := ai.FindClaudeCode(); err == nil {
+		st.ClaudeCode, st.ClaudePath = true, p
 	}
 	if c, err := ai.New(st.AIMode, cfg.APIKey, cfg.AIModel); err == nil {
 		st.AIName = c.Name()
@@ -143,6 +144,7 @@ func registerExtra(mux *http.ServeMux, guard func(http.HandlerFunc) http.Handler
 			APIKey   *string `json:"apiKey"`
 			AIAuto   *bool   `json:"aiAuto"`
 			AIReview *bool   `json:"aiReview"`
+			Claude   *string `json:"claude"`
 		}
 		if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<16)).Decode(&in); err != nil {
 			jsonError(w, "date invalide")
@@ -174,6 +176,27 @@ func registerExtra(mux *http.ServeMux, guard func(http.HandlerFunc) http.Handler
 		}
 		if in.AIAuto != nil {
 			cfg.AIAuto = in.AIAuto
+		}
+		if in.Claude != nil {
+			p := strings.Trim(strings.TrimSpace(*in.Claude), `"`)
+			if p != "" {
+				if st, err := os.Stat(p); err == nil && st.IsDir() {
+					for _, n := range []string{"claude.exe", "claude.cmd", "claude"} {
+						if fileExists(filepath.Join(p, n)) {
+							p = filepath.Join(p, n)
+							break
+						}
+					}
+				}
+				if st, err := os.Stat(p); err != nil || st.IsDir() {
+					jsonError(w, "nu găsesc claude.exe la calea asta")
+					return
+				}
+			}
+			cfg.Claude = p
+			if p != "" && (cfg.AIMode == "" || cfg.AIMode == "off") {
+				cfg.AIMode = "auto"
+			}
 		}
 		if in.AIReview != nil {
 			cfg.AIReview = in.AIReview

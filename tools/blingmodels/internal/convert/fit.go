@@ -201,7 +201,9 @@ func triCloud(tris []Tri) ([]vmath.Vec3, []float64) {
 }
 
 // FitTo moves, turns and scales the scene onto a target shape (the weapon it replaces): principal axes aligned,
-// longest side matched. With autoRotate off, only the size and center are matched.
+// longest side matched. A principal frame leaves each axis' direction open, so the four ways of laying the new
+// weapon along the old one's axes are compared and the one that covers the old weapon best wins (magazine down,
+// barrel forward). With autoRotate off, only the size and center are matched.
 func (s *Scene) FitTo(target []Tri, autoRotate bool) {
 	sp, sw := triCloud(s.Tris)
 	tp, tw := triCloud(target)
@@ -210,26 +212,100 @@ func (s *Scene) FitTo(target []Tri, autoRotate bool) {
 	}
 	src := principalFrame(sp, sw)
 	dst := principalFrame(tp, tw)
-	r := identity3()
-	if autoRotate {
-		r = dst.axes.Mul(src.axes.Transpose())
-	}
-	// Size: the longest principal extent.
 	scale := 1.0
 	if src.extent[0] > 1e-9 {
 		scale = dst.extent[0] / src.extent[0]
 	}
-	if !autoRotate {
+	r := identity3()
+	if autoRotate {
+		base := dst.axes.Mul(src.axes.Transpose())
+		// 180° turns about the target's principal axes keep the axes aligned.
+		flips := []vmath.Mat3{identity3(), {{1, 0, 0}, {0, -1, 0}, {0, 0, -1}}, {{-1, 0, 0}, {0, 1, 0}, {0, 0, -1}}, {{-1, 0, 0}, {0, -1, 0}, {0, 0, 1}}}
+		ss := samplePoints(sp, sw, 1200)
+		ts := samplePoints(tp, tw, 1200)
+		best := math.Inf(1)
+		for _, f := range flips {
+			cand := dst.axes.Mul(f).Mul(dst.axes.Transpose()).Mul(base)
+			moved := make([]vmath.Vec3, len(ss))
+			for i, p := range ss {
+				moved[i] = cand.MulVec(p.Sub(src.center)).Scale(scale).Add(dst.center)
+			}
+			if d := chamfer(moved, ts); d < best {
+				best, r = d, cand
+			}
+		}
+	} else {
 		smn, smx := s.Bounds()
 		tmn, tmx := boundsOf(target)
 		sExt, tExt := smx.Sub(smn), tmx.Sub(tmn)
 		if l := math.Max(sExt[0], math.Max(sExt[1], sExt[2])); l > 1e-9 {
 			scale = math.Max(tExt[0], math.Max(tExt[1], tExt[2])) / l
 		}
+		src.center = smn.Add(smx).Scale(0.5)
+		dst.center = tmn.Add(tmx).Scale(0.5)
 	}
 	// Move the source center onto the origin, turn and scale, then onto the target center.
 	s.Transform(identity3(), 1, src.center.Scale(-1))
 	s.Transform(r, scale, dst.center)
+}
+
+// samplePoints picks up to n points, favoring large triangles (deterministic).
+func samplePoints(pts []vmath.Vec3, w []float64, n int) []vmath.Vec3 {
+	if len(pts) <= n {
+		return pts
+	}
+	var total float64
+	for _, x := range w {
+		total += x
+	}
+	out := make([]vmath.Vec3, 0, n)
+	step := total / float64(n)
+	acc, next := 0.0, step/2
+	for i, p := range pts {
+		acc += w[i]
+		for acc >= next && len(out) < n {
+			out = append(out, p)
+			next += step
+		}
+	}
+	return out
+}
+
+// chamfer is the mean distance from each point to the other set, both ways.
+func chamfer(a, b []vmath.Vec3) float64 {
+	near := func(from, to []vmath.Vec3) float64 {
+		var sum float64
+		for _, p := range from {
+			best := math.Inf(1)
+			for _, q := range to {
+				d := p.Sub(q)
+				if dd := d.Dot(d); dd < best {
+					best = dd
+				}
+			}
+			sum += math.Sqrt(best)
+		}
+		return sum / float64(len(from))
+	}
+	return near(a, b) + near(b, a)
+}
+
+// FlipWeapon turns the scene 180° around its center: "updown" (about the barrel axis X) or "frontback" (about the
+// vertical axis Z).
+func (s *Scene) FlipWeapon(kind string) {
+	var r vmath.Mat3
+	switch kind {
+	case "updown":
+		r = vmath.Mat3{{1, 0, 0}, {0, -1, 0}, {0, 0, -1}}
+	case "frontback":
+		r = vmath.Mat3{{-1, 0, 0}, {0, -1, 0}, {0, 0, 1}}
+	default:
+		return
+	}
+	mn, mx := s.Bounds()
+	c := mn.Add(mx).Scale(0.5)
+	s.Transform(identity3(), 1, c.Scale(-1))
+	s.Transform(r, 1, c)
 }
 
 func boundsOf(tris []Tri) (vmath.Vec3, vmath.Vec3) {

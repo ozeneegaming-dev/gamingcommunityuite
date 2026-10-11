@@ -2,6 +2,9 @@ package main
 
 import (
 	"encoding/json"
+
+	"blingmodels/internal/ai"
+
 	"fmt"
 	"io"
 	"os"
@@ -18,6 +21,7 @@ type config struct {
 	AIMode   string `json:"aiMode,omitempty"`   // "auto", "claude" (Claude Code, subscription), "api", "off"
 	APIKey   string `json:"apiKey,omitempty"`   // Claude API key, stored only on this computer
 	AIModel  string `json:"aiModel,omitempty"`  // empty = default
+	Claude   string `json:"claude,omitempty"`   // path to claude(.exe), when it is not found on its own
 	AIAuto   *bool  `json:"aiAuto,omitempty"`   // AI matching + orientation on each conversion
 	AIReview *bool  `json:"aiReview,omitempty"` // AI quality check after each conversion
 }
@@ -35,6 +39,7 @@ func loadConfig() config {
 	if data, err := os.ReadFile(configPath()); err == nil {
 		json.Unmarshal(data, &c)
 	}
+	ai.ClaudePath = c.Claude
 	return c
 }
 

@@ -361,6 +361,7 @@ func guiConvert(base *options, outDir string, r *http.Request) guiResult {
 		o.name = v
 	}
 	o.genanim = f("genanim")
+	o.flip = f("flip")
 	if ref := f("ref"); ref != "" {
 		low := strings.ToLower(ref)
 		if fileExists(ref) && (strings.HasSuffix(low, ".mdl") || strings.HasSuffix(low, ".mdl"+backupSuffix)) {

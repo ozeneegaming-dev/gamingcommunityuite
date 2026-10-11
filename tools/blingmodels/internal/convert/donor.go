@@ -42,6 +42,8 @@ type DonorOptions struct {
 	Keep string
 	// MapBones (optional, AI) matches bone names when the built-in rules do not recognize the skeleton.
 	MapBones func(src, dst []string) (map[string]string, error)
+	// Flip turns the fitted weapon 180°: "updown", "frontback" or both (space separated).
+	Flip string
 	// AutoRotate turns the new weapon onto the old one (principal axes); off = only size and position are matched.
 	AutoRotate bool
 }
@@ -404,6 +406,9 @@ func BuildWithDonor(s *Scene, donor *mdl.Model, o DonorOptions) (*mdl.Model, []s
 			}
 		}
 		s.FitTo(weapon, o.AutoRotate)
+		for _, f := range strings.Fields(o.Flip) {
+			s.FlipWeapon(f)
+		}
 		// Moving parts (magazine, slide, bolt…) go to the donor bone that animates the same part.
 		partBone := map[string]int{}
 		for b, bone := range donor.Bones {
