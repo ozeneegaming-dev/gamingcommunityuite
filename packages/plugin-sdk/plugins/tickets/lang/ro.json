@@ -1,0 +1,202 @@
+{
+  "settings": {
+    "tabs": {
+      "general": "General",
+      "workflow": "Flux de lucru"
+    },
+    "categories": "Categoriile ticketelor",
+    "categoriesHint": "Câte una pe rând (cel mult 30). Membrii aleg una când deschid un ticket.",
+    "intro": "Textul de deasupra formularului",
+    "introHint": "Opțional: ce trebuie să scrie membrii în ticket (ex. numele din joc, serverul, dovezi). Un rând gol desparte paragrafele.",
+    "maxOpen": "Tickete deschise odată, per membru",
+    "maxOpenHint": "Câte tickete nerezolvate poate avea un membru în același timp.",
+    "memberPriority": "Membrii aleg prioritatea",
+    "memberPriorityHint": "Scăzută, normală sau ridicată; „urgent” rămâne doar pentru staff.",
+    "allowReopen": "Membrii pot redeschide ticketele închise",
+    "allowReopenHint": "Cu un răspuns nou sau cu butonul „Redeschide”.",
+    "autoCloseDays": "Închidere automată după răspuns",
+    "autoCloseDaysHint": "Un ticket „Răspuns” se închide singur dacă membrul nu mai scrie în acest interval.",
+    "days": "zile",
+    "pageSize": "Tickete pe pagină"
+  },
+  "permissions": {
+    "create": "Poate deschide tickete de suport",
+    "manage": "Gestionează ticketele (staff): coada, răspunsuri, note interne, stare, responsabil"
+  },
+  "widget": {
+    "title": "Tickete suport",
+    "description": "Pentru staff: coada (în așteptare, nepreluate, ale mele) și ticketele active; pentru membri: ticketele lor.",
+    "limit": "Câte tickete",
+    "queueEmpty": "Niciun ticket activ. Bravo!",
+    "openQueue": "Deschide coada",
+    "mineEmpty": "Nu ai tickete active.",
+    "guest": "Autentifică-te ca să deschizi un ticket de suport."
+  },
+  "menu": {
+    "user": "Tickete suport"
+  },
+  "jobs": {
+    "autoclose": "Închide ticketele răspunse fără reacție"
+  },
+  "page": {
+    "list": "Tickete suport",
+    "new": "Ticket nou",
+    "ticket": "Ticket"
+  },
+  "status": {
+    "open": "În așteptare",
+    "in_progress": "În lucru",
+    "answered": "Răspuns",
+    "closed": "Închis"
+  },
+  "priority": {
+    "low": "Scăzută",
+    "normal": "Normală",
+    "high": "Ridicată",
+    "urgent": "Urgentă"
+  },
+  "user": {
+    "deleted": "Membru șters",
+    "system": "Sistem"
+  },
+  "list": {
+    "title": "Ticketele mele",
+    "desc": "Cererile tale către staff: vezi răspunsurile și starea fiecăruia.",
+    "queueTitle": "Coada de tickete",
+    "queueDesc": "Toate ticketele membrilor: cele urgente și în așteptare apar primele.",
+    "new": "Deschide un ticket",
+    "tabs": "Vizualizare",
+    "queue": "Coada staff",
+    "mine": "Ticketele mele",
+    "unread": "Mesaje noi",
+    "empty": "Nu ai niciun ticket aici.",
+    "emptyQueue": "Niciun ticket nu se potrivește filtrelor.",
+    "guest": "Autentifică-te ca să deschizi un ticket de suport sau să le vezi pe ale tale.",
+    "prev": "Înapoi",
+    "next": "Înainte",
+    "pages": "Pagini",
+    "pageOf": "Pagina {page} din {pages}"
+  },
+  "filter": {
+    "status": "Stare",
+    "active": "Active",
+    "all": "Toate",
+    "category": "Categorie",
+    "anyCategory": "Toate categoriile",
+    "assignee": "Responsabil",
+    "anyone": "Oricine",
+    "me": "Preluate de mine",
+    "unassigned": "Nepreluate",
+    "search": "Caută",
+    "searchHint": "Subiect sau #număr",
+    "apply": "Filtrează"
+  },
+  "stats": {
+    "waiting": "În așteptare",
+    "unassigned": "Nepreluate",
+    "mine": "Ale mele"
+  },
+  "new": {
+    "desc": "Descrie problema cât mai clar: staff-ul îți răspunde aici, iar ticketul rămâne privat între tine și staff.",
+    "category": "Categorie",
+    "priority": "Prioritate",
+    "subject": "Subiect",
+    "subjectHint": "Pe scurt, despre ce e vorba",
+    "body": "Mesaj",
+    "bodyHint": "Detaliile: ce s-a întâmplat, când, pe ce server, linkuri spre dovezi…",
+    "cancel": "Renunță",
+    "submit": "Trimite ticketul",
+    "limit": "Ai deja {max} tickete deschise. Așteaptă rezolvarea unuia sau închide-l pe cel care nu mai e nevoie.",
+    "limitHint": "Ai {open} din {max} tickete deschise."
+  },
+  "ticket": {
+    "back": "Înapoi la tickete",
+    "openedBy": "Deschis de",
+    "details": "Detalii",
+    "status": "Stare",
+    "priority": "Prioritate",
+    "category": "Categorie",
+    "owner": "Membru",
+    "assignee": "Responsabil",
+    "unassigned": "Nepreluat",
+    "created": "Deschis",
+    "updated": "Ultima activitate",
+    "closedAt": "Închis",
+    "staff": "Staff",
+    "internal": "Notă internă",
+    "close": "Închide ticketul",
+    "closeHint": "Problema s-a rezolvat? Închide ticketul.",
+    "reopen": "Redeschide ticketul",
+    "closedFinal": "Ticketul e închis. Deschide unul nou dacă mai ai nevoie de ajutor."
+  },
+  "reply": {
+    "title": "Răspunde",
+    "reopenTitle": "Răspunde și redeschide",
+    "reopenHint": "Ticketul e închis: un răspuns nou îl redeschide.",
+    "placeholder": "Scrie răspunsul…",
+    "internal": "Notă internă (o vede doar staff-ul)",
+    "then": "Apoi starea",
+    "auto": "Automat",
+    "submit": "Trimite"
+  },
+  "manage": {
+    "title": "Gestionare",
+    "keep": "{name} (rămâne)",
+    "takeMe": "Preiau eu",
+    "unassign": "Fără responsabil",
+    "save": "Salvează"
+  },
+  "event": {
+    "status": "{who} a schimbat starea în „{value}”",
+    "priority": "{who} a schimbat prioritatea în „{value}”",
+    "category": "{who} a mutat ticketul în „{value}”",
+    "assign": "{who} a dat ticketul lui {value}",
+    "unassign": "{who} a scos responsabilul",
+    "autoclose": "Ticketul s-a închis automat (fără răspuns de la membru)"
+  },
+  "done": {
+    "created": "Ticketul a fost trimis. Staff-ul îți răspunde aici.",
+    "replied": "Răspunsul a fost trimis.",
+    "noted": "Nota internă a fost salvată.",
+    "closed": "Ticketul a fost închis.",
+    "reopened": "Ticketul a fost redeschis.",
+    "updated": "Ticketul a fost actualizat.",
+    "unchanged": "Nimic de schimbat."
+  },
+  "error": {
+    "guest": "Autentifică-te ca să deschizi un ticket.",
+    "invalid_subject": "Subiectul trebuie să aibă între 4 și 120 de caractere.",
+    "invalid_body": "Mesajul trebuie să aibă între 2 și 8000 de caractere.",
+    "invalid_category": "Alege o categorie din listă.",
+    "invalid_priority": "Prioritate necunoscută.",
+    "invalid_status": "Stare necunoscută.",
+    "invalid_assignee": "Responsabil necunoscut.",
+    "limit": "Ai atins numărul maxim de tickete deschise.",
+    "closed": "Ticketul e închis și nu mai poate fi redeschis."
+  },
+  "unit": {
+    "min": "min",
+    "h": "h",
+    "d": "zile"
+  },
+  "acp": {
+    "menu": "Tickete suport",
+    "title": "Tickete suport",
+    "hint": "Statisticile ticketelor. Răspunsurile se dau din coada de pe site; categoriile, limitele și închiderea automată sunt în setările pluginului.",
+    "totalTickets": "Tickete în total",
+    "firstResponse": "Timp mediu până la primul răspuns",
+    "last7": "Deschise în ultimele 7 zile",
+    "closed7": "Închise în ultimele 7 zile",
+    "byCategory": "Pe categorii",
+    "byStaff": "Pe responsabili",
+    "category": "Categorie",
+    "staff": "Responsabil",
+    "active": "Active",
+    "closed": "Închise",
+    "total": "Total",
+    "recent": "Activitate recentă",
+    "none": "Încă nimic.",
+    "openQueue": "Deschide coada pe site",
+    "settings": "Setările pluginului"
+  }
+}

@@ -1,0 +1,202 @@
+{
+  "settings": {
+    "tabs": {
+      "general": "General",
+      "workflow": "Workflow"
+    },
+    "categories": "Ticket categories",
+    "categoriesHint": "One per line (up to 30). Members pick one when they open a ticket.",
+    "intro": "Text above the form",
+    "introHint": "Optional: what members should include (e.g. in-game name, server, evidence). A blank line separates paragraphs.",
+    "maxOpen": "Open tickets at once, per member",
+    "maxOpenHint": "How many unresolved tickets a member can have at the same time.",
+    "memberPriority": "Members choose the priority",
+    "memberPriorityHint": "Low, normal or high; “urgent” stays staff-only.",
+    "allowReopen": "Members can reopen closed tickets",
+    "allowReopenHint": "With a new reply or the “Reopen” button.",
+    "autoCloseDays": "Auto-close after an answer",
+    "autoCloseDaysHint": "An “Answered” ticket closes by itself if the member does not write back within this time.",
+    "days": "days",
+    "pageSize": "Tickets per page"
+  },
+  "permissions": {
+    "create": "Can open support tickets",
+    "manage": "Manages tickets (staff): queue, replies, internal notes, status, assignee"
+  },
+  "widget": {
+    "title": "Support tickets",
+    "description": "For staff: the queue (waiting, unassigned, mine) and active tickets; for members: their own tickets.",
+    "limit": "How many tickets",
+    "queueEmpty": "No active tickets. Well done!",
+    "openQueue": "Open the queue",
+    "mineEmpty": "You have no active tickets.",
+    "guest": "Sign in to open a support ticket."
+  },
+  "menu": {
+    "user": "Support tickets"
+  },
+  "jobs": {
+    "autoclose": "Close answered tickets with no reaction"
+  },
+  "page": {
+    "list": "Support tickets",
+    "new": "New ticket",
+    "ticket": "Ticket"
+  },
+  "status": {
+    "open": "Waiting",
+    "in_progress": "In progress",
+    "answered": "Answered",
+    "closed": "Closed"
+  },
+  "priority": {
+    "low": "Low",
+    "normal": "Normal",
+    "high": "High",
+    "urgent": "Urgent"
+  },
+  "user": {
+    "deleted": "Deleted member",
+    "system": "System"
+  },
+  "list": {
+    "title": "My tickets",
+    "desc": "Your requests to the staff: see the replies and the status of each one.",
+    "queueTitle": "Ticket queue",
+    "queueDesc": "Every member ticket: urgent and waiting ones come first.",
+    "new": "Open a ticket",
+    "tabs": "View",
+    "queue": "Staff queue",
+    "mine": "My tickets",
+    "unread": "New messages",
+    "empty": "You have no tickets here.",
+    "emptyQueue": "No ticket matches the filters.",
+    "guest": "Sign in to open a support ticket or see your own.",
+    "prev": "Previous",
+    "next": "Next",
+    "pages": "Pages",
+    "pageOf": "Page {page} of {pages}"
+  },
+  "filter": {
+    "status": "Status",
+    "active": "Active",
+    "all": "All",
+    "category": "Category",
+    "anyCategory": "All categories",
+    "assignee": "Assignee",
+    "anyone": "Anyone",
+    "me": "Assigned to me",
+    "unassigned": "Unassigned",
+    "search": "Search",
+    "searchHint": "Subject or #number",
+    "apply": "Filter"
+  },
+  "stats": {
+    "waiting": "Waiting",
+    "unassigned": "Unassigned",
+    "mine": "Mine"
+  },
+  "new": {
+    "desc": "Describe the problem as clearly as you can: the staff replies here, and the ticket stays private between you and the staff.",
+    "category": "Category",
+    "priority": "Priority",
+    "subject": "Subject",
+    "subjectHint": "In short, what is it about",
+    "body": "Message",
+    "bodyHint": "The details: what happened, when, on which server, links to evidence…",
+    "cancel": "Cancel",
+    "submit": "Send ticket",
+    "limit": "You already have {max} open tickets. Wait for one to be solved, or close the one you no longer need.",
+    "limitHint": "You have {open} of {max} open tickets."
+  },
+  "ticket": {
+    "back": "Back to tickets",
+    "openedBy": "Opened by",
+    "details": "Details",
+    "status": "Status",
+    "priority": "Priority",
+    "category": "Category",
+    "owner": "Member",
+    "assignee": "Assignee",
+    "unassigned": "Unassigned",
+    "created": "Opened",
+    "updated": "Last activity",
+    "closedAt": "Closed",
+    "staff": "Staff",
+    "internal": "Internal note",
+    "close": "Close ticket",
+    "closeHint": "Problem solved? Close the ticket.",
+    "reopen": "Reopen ticket",
+    "closedFinal": "This ticket is closed. Open a new one if you still need help."
+  },
+  "reply": {
+    "title": "Reply",
+    "reopenTitle": "Reply and reopen",
+    "reopenHint": "The ticket is closed: a new reply reopens it.",
+    "placeholder": "Write your reply…",
+    "internal": "Internal note (staff only)",
+    "then": "Then status",
+    "auto": "Automatic",
+    "submit": "Send"
+  },
+  "manage": {
+    "title": "Manage",
+    "keep": "{name} (keep)",
+    "takeMe": "Assign to me",
+    "unassign": "No assignee",
+    "save": "Save"
+  },
+  "event": {
+    "status": "{who} changed the status to “{value}”",
+    "priority": "{who} changed the priority to “{value}”",
+    "category": "{who} moved the ticket to “{value}”",
+    "assign": "{who} assigned the ticket to {value}",
+    "unassign": "{who} removed the assignee",
+    "autoclose": "The ticket closed automatically (no reply from the member)"
+  },
+  "done": {
+    "created": "Your ticket was sent. The staff will reply here.",
+    "replied": "Your reply was sent.",
+    "noted": "The internal note was saved.",
+    "closed": "The ticket was closed.",
+    "reopened": "The ticket was reopened.",
+    "updated": "The ticket was updated.",
+    "unchanged": "Nothing to change."
+  },
+  "error": {
+    "guest": "Sign in to open a ticket.",
+    "invalid_subject": "The subject must be 4 to 120 characters long.",
+    "invalid_body": "The message must be 2 to 8000 characters long.",
+    "invalid_category": "Pick a category from the list.",
+    "invalid_priority": "Unknown priority.",
+    "invalid_status": "Unknown status.",
+    "invalid_assignee": "Unknown assignee.",
+    "limit": "You reached the maximum number of open tickets.",
+    "closed": "This ticket is closed and cannot be reopened."
+  },
+  "unit": {
+    "min": "min",
+    "h": "h",
+    "d": "days"
+  },
+  "acp": {
+    "menu": "Support tickets",
+    "title": "Support tickets",
+    "hint": "Ticket statistics. Replies are given from the queue on the site; categories, limits and auto-close are in the plugin settings.",
+    "totalTickets": "Tickets in total",
+    "firstResponse": "Average time to first reply",
+    "last7": "Opened in the last 7 days",
+    "closed7": "Closed in the last 7 days",
+    "byCategory": "By category",
+    "byStaff": "By assignee",
+    "category": "Category",
+    "staff": "Assignee",
+    "active": "Active",
+    "closed": "Closed",
+    "total": "Total",
+    "recent": "Recent activity",
+    "none": "Nothing yet.",
+    "openQueue": "Open the queue on the site",
+    "settings": "Plugin settings"
+  }
+}
