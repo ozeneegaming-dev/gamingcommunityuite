@@ -325,6 +325,9 @@ func BuildWithDonor(s *Scene, donor *mdl.Model, o DonorOptions) (*mdl.Model, []s
 	var kept []Tri
 	switch o.Mode {
 	case DonorPlayer:
+		if msg := s.orientBody(); msg != "" {
+			notes = append(notes, msg)
+		}
 		s.fitHeight(dtris)
 		srcNames := make([]string, len(s.Bones))
 		srcParent := make([]int, len(s.Bones))
@@ -342,9 +345,11 @@ func BuildWithDonor(s *Scene, donor *mdl.Model, o DonorOptions) (*mdl.Model, []s
 			dpos[i] = world[i].T
 		}
 		dmn, dmx := boundsOf(dtris)
-		dstKeys := geoClassifyBones(dpos, dstParent, dmn, dmx)
+		// CS players use Biped names (left/right are certain); helper bones are left out by the name rules. The
+		// shape is the fallback for skeletons with other names.
+		dstKeys := classifyAll(dstNames)
 		if !coreKeys(dstKeys) {
-			dstKeys = classifyAll(dstNames)
+			dstKeys = geoClassifyBones(dpos, dstParent, dmn, dmx)
 		}
 		var srcKeys map[int]boneKey
 		how := ""

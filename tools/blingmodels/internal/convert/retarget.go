@@ -770,3 +770,126 @@ func rotationBetween(a, b vmath.Vec3) vmath.Mat3 {
 		{v[2]*v[0]*k - v[1], v[2]*v[1]*k + v[0], v[2]*v[2]*k + c},
 	}
 }
+
+// orientBody turns a rigged body so it stands up (+Z) and faces +X with its left side on +Y, judging from its
+// skeleton rather than from how the file happens to be oriented: "up" is the axis along which the skeleton reads
+// as a body (pelvis below head), left/right come from the bone names when they say it, otherwise from where the
+// toes point. Returns a description, or "" when nothing could be judged.
+func (s *Scene) orientBody() string {
+	n := len(s.Bones)
+	if n < 8 {
+		return ""
+	}
+	pos := make([]vmath.Vec3, n)
+	parents := make([]int, n)
+	names := make([]string, n)
+	for i, b := range s.Bones {
+		pos[i], parents[i], names[i] = b.Rest.T, b.Parent, b.Name
+	}
+	mn, mx := s.Bounds()
+	center := mn.Add(mx).Scale(0.5)
+	axes := []vmath.Vec3{{0, 0, 1}, {0, 0, -1}, {0, 1, 0}, {0, -1, 0}, {1, 0, 0}, {-1, 0, 0}}
+	// rotationTo returns a rotation taking up→Z (any forward).
+	rotUp := func(up vmath.Vec3) vmath.Mat3 { return rotationBetween(up, vmath.Vec3{0, 0, 1}) }
+	keysFor := func(r vmath.Mat3) map[int]boneKey {
+		rp := make([]vmath.Vec3, n)
+		var rmn, rmx vmath.Vec3
+		rmn = vmath.Vec3{math.Inf(1), math.Inf(1), math.Inf(1)}
+		rmx = rmn.Scale(-1)
+		for i, p := range pos {
+			rp[i] = r.MulVec(p.Sub(center))
+		}
+		for _, t := range s.Tris {
+			for _, c := range t.C {
+				q := r.MulVec(c.Pos.Sub(center))
+				rmn, rmx = rmn.Min(q), rmx.Max(q)
+			}
+		}
+		return geoClassifyBones(rp, parents, rmn, rmx)
+	}
+	nameKeys := classifyAll(names)
+	var up vmath.Vec3
+	byNames := coreKeys(nameKeys)
+	if byNames {
+		// Up from the names: head above pelvis.
+		var pel, head vmath.Vec3
+		for i, k := range nameKeys {
+			switch k.part {
+			case "pelvis":
+				pel = pos[i]
+			case "head":
+				head = pos[i]
+			}
+		}
+		d := head.Sub(pel)
+		best := 0.0
+		for _, a := range axes {
+			if v := d.Dot(a); v > best {
+				best, up = v, a
+			}
+		}
+	} else {
+		for _, a := range axes {
+			if coreKeys(keysFor(rotUp(a))) {
+				up = a
+				break
+			}
+		}
+	}
+	if up == (vmath.Vec3{}) {
+		return ""
+	}
+	r := rotUp(up)
+	// Left: from names (L minus R limbs), else from the toes (they point forward).
+	var left, fwd vmath.Vec3
+	if byNames {
+		var l, rr vmath.Vec3
+		nl, nr := 0, 0
+		for i, k := range nameKeys {
+			if k.part == "upperarm" || k.part == "thigh" || k.part == "hand" || k.part == "foot" {
+				if k.side == "L" {
+					l, nl = l.Add(r.MulVec(pos[i])), nl+1
+				} else if k.side == "R" {
+					rr, nr = rr.Add(r.MulVec(pos[i])), nr+1
+				}
+			}
+		}
+		if nl > 0 && nr > 0 {
+			left = l.Scale(1 / float64(nl)).Sub(rr.Scale(1 / float64(nr)))
+		}
+	} else {
+		keys := keysFor(r)
+		for i, k := range keys {
+			if k.part == "toe" {
+				if p := parents[i]; p >= 0 {
+					fwd = fwd.Add(r.MulVec(pos[i]).Sub(r.MulVec(pos[p])))
+				}
+			}
+		}
+	}
+	left[2], fwd[2] = 0, 0
+	switch {
+	case left.Len() > 1e-6:
+		left = left.Norm()
+		fwd = left.Cross(vmath.Vec3{0, 0, 1})
+	case fwd.Len() > 1e-6:
+		fwd = fwd.Norm()
+	default:
+		fwd = vmath.Vec3{1, 0, 0} // keep the file's facing
+	}
+	// Turn about Z so fwd → +X.
+	yaw := math.Atan2(fwd[1], fwd[0])
+	rz := vmath.QuatMat3(vmath.AngleQuaternion(vmath.Vec3{0, 0, -yaw}))
+	full := rz.Mul(r)
+	if full == identity3() {
+		return "orientarea modelului e bună"
+	}
+	s.Transform(full, 1, vmath.Vec3{})
+	how := "după vârfurile picioarelor"
+	if byNames {
+		how = "după numele oaselor"
+	} else if fwd == (vmath.Vec3{1, 0, 0}) {
+		how = "doar sus-jos"
+	}
+	return "am întors corpul în picioare, cu fața înainte (" + how + ")"
+}
