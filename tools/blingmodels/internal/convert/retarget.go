@@ -25,8 +25,21 @@ var (
 	reAllDigits = regexp.MustCompile(`\d+`)
 )
 
+// reHelper matches helper bones that sit next to the real ones (CS 1.6 "-- L Elbow", "-- L Forearm twist",
+// Unreal "upperarm_twist_01_l", Rigify "MCH-…", end bones…): they must never stand in for a limb.
+var reHelper = regexp.MustCompile(`(?i)(^\s*--|twist|helper|smooth|inside|outside|butt|bicep|knuckle|nub$|_end$|\bend$|headtop|\bik\b|_ik|ik_|pole|ctrl|control|corrective|roll|dummy|weapon|attach|\bprop|elbow|knee|wrist|null)`)
+
 // classifyBone guesses what a bone is from its name (Mixamo, Biped/CS, Blender Rigify/metarig, Unity, Unreal…).
 func classifyBone(name string) (boneKey, bool) {
+	return classifyBoneStyle(name, false)
+}
+
+// classifyBoneStyle: oldBiped is the Half-Life era naming ("Bip01 L Arm", "L Arm1", "L Arm2", "L Leg", "L Leg1" =
+// clavicle, upper arm, forearm, thigh, calf).
+func classifyBoneStyle(name string, oldBiped bool) (boneKey, bool) {
+	if reHelper.MatchString(name) {
+		return boneKey{}, false
+	}
 	n := strings.ToLower(name)
 	for _, p := range []string{"mixamorig:", "mixamorig_", "mixamorig", "armature|", "valvebiped.", "def-", "def_", "org-", "mch-", "j_bip_", "j_"} {
 		n = strings.ReplaceAll(n, p, "")
@@ -67,6 +80,25 @@ func classifyBone(name string) (boneKey, bool) {
 		return false
 	}
 	k := boneKey{side: side, index: -1, seg: 0}
+	if oldBiped && side != "" {
+		switch {
+		case regexp.MustCompile(`^arm$`).MatchString(flat):
+			k.part = "clavicle"
+			return k, true
+		case regexp.MustCompile(`^arm1$`).MatchString(flat):
+			k.part = "upperarm"
+			return k, true
+		case regexp.MustCompile(`^arm2$`).MatchString(flat):
+			k.part = "forearm"
+			return k, true
+		case regexp.MustCompile(`^leg$`).MatchString(flat):
+			k.part = "thigh"
+			return k, true
+		case regexp.MustCompile(`^leg1$`).MatchString(flat):
+			k.part = "calf"
+			return k, true
+		}
+	}
 	fingerIdx := func() int {
 		switch {
 		case has("thumb"):
@@ -107,13 +139,13 @@ func classifyBone(name string) (boneKey, bool) {
 		k.part = "toe"
 	case has("foot", "ankle"):
 		k.part = "foot"
-	case has("calf", "shin", "knee", "lowerleg", "leg") && !has("upleg", "upperleg", "thigh"):
+	case has("calf", "shin", "lowerleg", "leg") && !has("upleg", "upperleg", "thigh"):
 		k.part = "calf"
 	case has("thigh", "upleg", "upperleg"):
 		k.part = "thigh"
-	case has("hand", "wrist", "palm"):
+	case has("hand", "palm"):
 		k.part = "hand"
-	case has("forearm", "lowerarm", "elbow"):
+	case has("forearm", "lowerarm"):
 		k.part = "forearm"
 	case has("upperarm", "arm") && side != "":
 		k.part = "upperarm"
@@ -150,13 +182,37 @@ func MapBones(src, dst []string, srcParent, dstParent []int) map[int]int {
 }
 
 func classifyAll(names []string) map[int]boneKey {
+	old := false
+	for _, n := range names {
+		if regexp.MustCompile(`(?i)\b[lr] (arm1|leg1)$`).MatchString(strings.TrimSpace(n)) {
+			old = true
+		}
+	}
 	out := map[int]boneKey{}
 	for i, n := range names {
-		if k, ok := classifyBone(n); ok {
+		if k, ok := classifyBoneStyle(n, old); ok {
 			out[i] = k
 		}
 	}
 	return out
+}
+
+// coreKeys reports whether classified bones include everything a CS player animation drives.
+func coreKeys(keys map[int]boneKey) bool {
+	have := map[string]bool{}
+	for _, k := range keys {
+		key := k.part
+		if k.side != "" {
+			key = k.side + " " + k.part
+		}
+		have[key] = true
+	}
+	for _, need := range []string{"pelvis", "head", "L upperarm", "R upperarm", "L forearm", "R forearm", "L thigh", "R thigh", "L calf", "R calf"} {
+		if !have[need] {
+			return false
+		}
+	}
+	return true
 }
 
 // mapKeys matches classified source bones to classified donor bones. Spines are matched by order; fingers by finger
@@ -247,17 +303,36 @@ func mapKeys(sk, dk map[int]boneKey, srcParent, dstParent []int) map[int]int {
 // along each chain the bones are, in order, thigh/calf/foot/toe and clavicle/upperarm/forearm/hand. The model must
 // stand upright facing +X (left side = +Y), as the scene is after loading.
 func (s *Scene) geoClassify() map[int]boneKey {
-	n := len(s.Bones)
+	pos := make([]vmath.Vec3, len(s.Bones))
+	parents := make([]int, len(s.Bones))
+	for i, b := range s.Bones {
+		pos[i], parents[i] = b.Rest.T, b.Parent
+	}
+	mn, mx := s.Bounds()
+	return geoClassifyBones(pos, parents, mn, mx)
+}
+
+// geoClassifyBones is geoClassify for any skeleton: bone positions (reference pose), parents, and the bounds of the
+// body (used for its height and left/right middle).
+func geoClassifyBones(bonePos []vmath.Vec3, parents []int, mn, mx vmath.Vec3) map[int]boneKey {
+	n := len(bonePos)
 	if n < 8 {
 		return nil
 	}
 	children := make([][]int, n)
-	for i, b := range s.Bones {
-		if b.Parent >= 0 {
-			children[b.Parent] = append(children[b.Parent], i)
+	for i, p := range parents {
+		if p >= 0 && p < n {
+			children[p] = append(children[p], i)
 		}
 	}
-	pos := func(i int) vmath.Vec3 { return s.Bones[i].Rest.T }
+	pos := func(i int) vmath.Vec3 { return bonePos[i] }
+	depthOf := func(i int) int {
+		d := 0
+		for p := parents[i]; p >= 0 && d < 256; p = parents[p] {
+			d++
+		}
+		return d
+	}
 	// Subtree extents.
 	minZ, maxZ, maxAbsY := make([]float64, n), make([]float64, n), make([]float64, n)
 	var ext func(i int)
@@ -271,12 +346,11 @@ func (s *Scene) geoClassify() map[int]boneKey {
 			maxAbsY[i] = math.Max(maxAbsY[i], maxAbsY[c])
 		}
 	}
-	for i, b := range s.Bones {
-		if b.Parent < 0 {
+	for i, p := range parents {
+		if p < 0 {
 			ext(i)
 		}
 	}
-	mn, mx := s.Bounds()
 	h := mx[2] - mn[2]
 	if h <= 0 {
 		return nil
@@ -286,7 +360,7 @@ func (s *Scene) geoClassify() map[int]boneKey {
 	pelvis := -1
 	var legs []int
 	spineStart := -1
-	for i := 1; i < n; i++ {
+	for i := 0; i < n; i++ {
 		var down []int
 		up := -1
 		for _, c := range children[i] {
@@ -297,7 +371,7 @@ func (s *Scene) geoClassify() map[int]boneKey {
 				up = c
 			}
 		}
-		if len(down) >= 2 && up >= 0 && (pelvis < 0 || s.depth(i) < s.depth(pelvis)) {
+		if len(down) >= 2 && up >= 0 && (pelvis < 0 || depthOf(i) < depthOf(pelvis)) {
 			pelvis, legs, spineStart = i, down, up
 		}
 	}
@@ -399,21 +473,40 @@ func (s *Scene) geoClassify() map[int]boneKey {
 				continue
 			}
 			chain := significant(follow(c, func(a, d int) bool { return maxAbsY[a] > maxAbsY[d] }))
-			// The hand is where the chain branches into fingers (or its last bone).
-			handAt := len(chain) - 1
+			sd := side(chain[len(chain)-1])
+			names := []string{"hand", "forearm", "upperarm", "clavicle"}
+			// The hand is where the chain branches into fingers.
+			handAt := -1
 			for k, x := range chain {
 				if k >= 2 && len(children[x]) >= 3 {
 					handAt = k
 					break
 				}
 			}
-			if handAt > 4 {
-				handAt = 4
-			}
-			sd := side(chain[handAt])
-			names := []string{"hand", "forearm", "upperarm", "clavicle"}
-			for k := handAt; k >= 0 && handAt-k < 4; k-- {
-				keys[chain[k]] = boneKey{part: names[handAt-k], side: sd, index: -1}
+			if handAt >= 0 {
+				if handAt > 4 {
+					handAt = 4
+				}
+				sd = side(chain[handAt])
+				for k := handAt; k >= 0 && handAt-k < 4; k-- {
+					keys[chain[k]] = boneKey{part: names[handAt-k], side: sd, index: -1}
+				}
+			} else {
+				// No finger branch: name from the shoulder down. A short first bone in a long chain is a clavicle.
+				start := 0
+				if len(chain) >= 4 {
+					l0 := pos(chain[1]).Sub(pos(chain[0])).Len()
+					l1 := pos(chain[2]).Sub(pos(chain[1])).Len()
+					if l0 < 0.6*l1 {
+						keys[chain[0]] = boneKey{part: "clavicle", side: sd, index: -1}
+						start = 1
+					}
+				}
+				top := []string{"upperarm", "forearm", "hand"}
+				for k := start; k < len(chain) && k-start < 3; k++ {
+					keys[chain[k]] = boneKey{part: top[k-start], side: sd, index: -1}
+				}
+				handAt = min(len(chain)-1, start+2)
 			}
 			// Everything past the hand (fingers) follows the hand.
 			var fingers func(x int)
@@ -490,7 +583,27 @@ func CoreMapped(m map[int]int, src []string) bool {
 // retargetPlayer poses a rigged body into the donor's reference pose and binds it to the donor bones: every source
 // bone follows its mapped donor bone (unmapped bones follow their nearest mapped ancestor); each part is turned so
 // its bone points where the donor's bone points and stretched along it to the donor's bone length.
-func (s *Scene) retargetPlayer(donorWorld []vmath.Bone, donorParent []int, mapping map[int]int) {
+func (s *Scene) retargetPlayer(donorWorld []vmath.Bone, donorParent []int, mapping map[int]int, dstKeys map[int]boneKey) {
+	// The bone that continues a body part's chain: its direction is what gets aligned (a spine follows the next spine
+	// bone or the neck, never a shoulder).
+	next := map[string][]string{
+		"pelvis": {"spine"}, "spine": {"spine", "neck", "head"}, "neck": {"neck", "head"},
+		"clavicle": {"upperarm"}, "upperarm": {"forearm"}, "forearm": {"hand"}, "hand": {"finger"},
+		"thigh": {"calf"}, "calf": {"foot"}, "foot": {"toe"}, "finger": {"finger"},
+	}
+	continues := func(d, dc int) bool {
+		k, ok1 := dstKeys[d]
+		kc, ok2 := dstKeys[dc]
+		if !ok1 || !ok2 || (k.side != "" && kc.side != "" && k.side != kc.side) {
+			return false
+		}
+		for _, p := range next[k.part] {
+			if p == kc.part {
+				return true
+			}
+		}
+		return false
+	}
 	n := len(s.Bones)
 	// Donor bone for every source bone (inherited from the nearest mapped ancestor).
 	target := make([]int, n)
@@ -564,6 +677,9 @@ func (s *Scene) retargetPlayer(donorWorld []vmath.Bone, donorParent []int, mappi
 			if onChain {
 				score += 1e6
 			}
+			if continues(d, dc) {
+				score += 1e9
+			}
 			if score > bestLen {
 				bestLen, srcDir, dstDir = score, sd, dd
 			}
@@ -579,28 +695,45 @@ func (s *Scene) retargetPlayer(donorWorld []vmath.Bone, donorParent []int, mappi
 		}
 		defs[b] = df
 	}
-	apply := func(c *Corner) {
-		b := c.Bone
-		if b < 0 || b >= n || owner[b] < 0 {
-			return
-		}
+	deformPoint := func(b int, p, nrm vmath.Vec3) (vmath.Vec3, vmath.Vec3) {
 		df := defs[owner[b]]
-		v := c.Pos.Sub(df.srcHead)
+		v := p.Sub(df.srcHead)
 		if df.axis != (vmath.Vec3{}) {
 			along := df.axis.Scale(v.Dot(df.axis))
 			v = v.Sub(along).Add(along.Scale(df.k))
 		}
-		c.Pos = df.dstHead.Add(df.r.MulVec(v))
-		c.Normal = df.r.MulVec(c.Normal)
-		c.Bone = target[b]
+		return df.dstHead.Add(df.r.MulVec(v)), df.r.MulVec(nrm)
 	}
+	usable := func(b int) bool { return b >= 0 && b < n && owner[b] >= 0 }
 	for i := range s.Tris {
 		for k := range s.Tris[i].C {
-			if s.Tris[i].C[k].Bone < 0 || s.Tris[i].C[k].Bone >= n || owner[s.Tris[i].C[k].Bone] < 0 {
-				s.Tris[i].C[k].Bone = -1 // fixed below by the nearest-vertex binding
+			c := &s.Tris[i].C[k]
+			// Blend the re-posing of every bone the vertex follows (smooth joints), then bind it to the donor
+			// bone of its strongest one.
+			var pos, nrm vmath.Vec3
+			var total float64
+			for _, w := range c.W {
+				if w.W <= 0 || !usable(w.Bone) {
+					continue
+				}
+				p, q := deformPoint(w.Bone, c.Pos, c.Normal)
+				pos, nrm = pos.Add(p.Scale(w.W)), nrm.Add(q.Scale(w.W))
+				total += w.W
+			}
+			switch {
+			case total > 0:
+				c.Pos, c.Normal = pos.Scale(1/total), nrm.Norm()
+			case usable(c.Bone):
+				c.Pos, c.Normal = deformPoint(c.Bone, c.Pos, c.Normal)
+			default:
+				c.Bone = -1 // fixed by the nearest-vertex binding
 				continue
 			}
-			apply(&s.Tris[i].C[k])
+			if usable(c.Bone) {
+				c.Bone = target[c.Bone]
+			} else {
+				c.Bone = -1
+			}
 		}
 	}
 }

@@ -336,39 +336,61 @@ func BuildWithDonor(s *Scene, donor *mdl.Model, o DonorOptions) (*mdl.Model, []s
 		for i, b := range donor.Bones {
 			dstNames[i], dstParent[i] = b.Name, int(b.Parent)
 		}
-		mapping := map[int]int{}
+		// The original's skeleton is read from its shape first (immune to helper bones and naming styles).
+		dpos := make([]vmath.Vec3, len(world))
+		for i := range world {
+			dpos[i] = world[i].T
+		}
+		dmn, dmx := boundsOf(dtris)
+		dstKeys := geoClassifyBones(dpos, dstParent, dmn, dmx)
+		if !coreKeys(dstKeys) {
+			dstKeys = classifyAll(dstNames)
+		}
+		var srcKeys map[int]boneKey
+		how := ""
 		if len(s.Bones) > 8 {
-			mapping = MapBones(srcNames, dstNames, srcParent, dstParent)
-			if !CoreMapped(mapping, srcNames) {
-				// Names unknown: recognize the skeleton from its shape.
-				if geo := s.geoClassify(); geo != nil {
-					if gm := mapKeys(geo, classifyAll(dstNames), srcParent, dstParent); coreMappedKeys(gm, geo) {
-						mapping = gm
-						notes = append(notes, "oasele au fost recunoscute după poziție (numele lor nu spuneau nimic)")
-					}
-				}
-			}
-			if !CoreMapped(mapping, srcNames) && !coreMappedKeys(mapping, s.geoClassify()) && o.MapBones != nil {
-				if byName, err := o.MapBones(srcNames, dstNames); err == nil {
-					idx := map[string]int{}
-					for i, n := range dstNames {
-						idx[strings.ToLower(n)] = i
-					}
-					for i, n := range srcNames {
-						if d, ok := idx[strings.ToLower(byName[n])]; ok {
-							mapping[i] = d
-						}
-					}
-					notes = append(notes, "oasele au fost potrivite cu ajutorul AI")
-				} else {
-					notes = append(notes, "AI-ul nu a putut potrivi oasele: "+err.Error())
+			srcKeys = classifyAll(srcNames)
+			how = "după numele oaselor"
+			if !coreKeys(srcKeys) {
+				if g := s.geoClassify(); coreKeys(g) {
+					srcKeys, how = g, "după poziția oaselor (numele nu spuneau nimic)"
 				}
 			}
 		}
-		if CoreMapped(mapping, srcNames) || coreMappedKeys(mapping, s.geoClassify()) {
-			s.retargetPlayer(world, dstParent, mapping)
-			s.bindNearest(dtris, true)
-			notes = append(notes, fmt.Sprintf("scheletul modelului (%d oase) a fost potrivit pe cel original: %d oase legate, corpul adus în poza originalului (%d animații)", len(s.Bones)-1, len(mapping), len(donor.Sequences)))
+		mapping := map[int]int{}
+		if coreKeys(srcKeys) && coreKeys(dstKeys) {
+			mapping = mapKeys(srcKeys, dstKeys, srcParent, dstParent)
+		}
+		matched := coreMappedKeys(mapping, srcKeys)
+		if !matched && len(s.Bones) > 8 && o.MapBones != nil {
+			if byName, err := o.MapBones(srcNames, dstNames); err == nil {
+				idx := map[string]int{}
+				for i, n := range dstNames {
+					idx[strings.ToLower(n)] = i
+				}
+				mapping = map[int]int{}
+				for i, n := range srcNames {
+					if d, ok := idx[strings.ToLower(byName[n])]; ok {
+						mapping[i] = d
+					}
+				}
+				matched, how = len(mapping) >= 10, "cu ajutorul AI"
+			} else {
+				notes = append(notes, "AI-ul nu a putut potrivi oasele: "+err.Error())
+			}
+		}
+		if matched {
+			before := append([]Tri(nil), s.Tris...)
+			s.retargetPlayer(world, dstParent, mapping, dstKeys)
+			if bad := stretched(before, s.Tris); bad > 0.06 {
+				// Safety net: a broken result is worse than a simple one.
+				s.Tris = before
+				s.bindNearest(dtris, false)
+				notes = append(notes, fmt.Sprintf("potrivirea scheletului ar fi deformat modelul (%.0f%% triunghiuri întinse); am legat corpul după poziție", bad*100))
+			} else {
+				s.bindNearest(dtris, true)
+				notes = append(notes, fmt.Sprintf("scheletul modelului (%d oase) a fost recunoscut %s și potrivit pe cel original (%d oase legate); corpul e adus în poza originalului (%d animații)", len(s.Bones)-1, how, len(mapping), len(donor.Sequences)))
+			}
 		} else {
 			s.bindNearest(dtris, false)
 			if len(s.Bones) > 8 {
@@ -504,4 +526,21 @@ func partGroup(name string) string {
 		}
 	}
 	return ""
+}
+
+// stretched is the share of triangles whose longest edge grew more than 2.5 times (a sign of a broken retarget).
+func stretched(before, after []Tri) float64 {
+	if len(before) == 0 || len(before) != len(after) {
+		return 0
+	}
+	longest := func(t Tri) float64 {
+		return math.Max(t.C[0].Pos.Sub(t.C[1].Pos).Len(), math.Max(t.C[1].Pos.Sub(t.C[2].Pos).Len(), t.C[2].Pos.Sub(t.C[0].Pos).Len()))
+	}
+	bad := 0
+	for i := range before {
+		if l0 := longest(before[i]); l0 > 1e-6 && longest(after[i]) > 2.5*l0+0.5 {
+			bad++
+		}
+	}
+	return float64(bad) / float64(len(before))
 }

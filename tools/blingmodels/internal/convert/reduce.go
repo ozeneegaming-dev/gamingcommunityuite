@@ -35,7 +35,7 @@ func (s *Scene) Simplify(target int) {
 		st.Mat, st.Double, st.Part = t.Mat, t.Double, t.Part
 		for k, c := range t.C {
 			st.V[k] = weld(c.Pos)
-			st.C[k] = simplify.Corner{UV: c.UV, Normal: c.Normal, Bone: c.Bone}
+			st.C[k] = simplify.Corner{UV: c.UV, Normal: c.Normal, Bone: c.Bone, W: c.W}
 		}
 		if st.V[0] == st.V[1] || st.V[1] == st.V[2] || st.V[0] == st.V[2] {
 			continue
@@ -48,7 +48,7 @@ func (s *Scene) Simplify(target int) {
 		var t Tri
 		t.Mat, t.Double, t.Part = st.Mat, st.Double, st.Part
 		for k := 0; k < 3; k++ {
-			t.C[k] = Corner{Pos: pos[st.V[k]], Normal: st.C[k].Normal, UV: st.C[k].UV, Bone: st.C[k].Bone}
+			t.C[k] = Corner{Pos: pos[st.V[k]], Normal: st.C[k].Normal, UV: st.C[k].UV, Bone: st.C[k].Bone, W: st.C[k].W}
 		}
 		if !degenerate(t) {
 			out = append(out, t)

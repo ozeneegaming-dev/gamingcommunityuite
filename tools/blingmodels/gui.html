@@ -118,6 +118,7 @@ canvas:active { cursor: grabbing; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .busy p { text-align: center; color: var(--dim); margin: 0; }
 .busy b { display: block; color: var(--text); font-size: 15px; margin-bottom: 4px; }
+#busyLine { display: block; max-width: 520px; font-size: 12.5px; }
 
 .dock { border-top: 1px solid var(--line); background: var(--panel); display: flex; gap: 10px; padding: 10px 14px; align-items: center; min-height: 74px; overflow-x: auto; }
 .thumb { flex: none; display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel2); cursor: pointer; max-width: 240px; }
@@ -360,7 +361,7 @@ $("flipFB").onclick = () => quickFix("frontback");
         </div>
         <form id="chatForm"><textarea id="chatIn" placeholder="Scrie aici… (Enter trimite)"></textarea><button title="Trimite"><svg><use href="#i-send"/></svg></button></form>
       </div>
-      <div class="busy hidden" id="busy"><div><div class="spin"></div><p><b>Se convertește…</b>Modelele mari sau cele prin Blender pot dura un minut.</p></div></div>
+      <div class="busy hidden" id="busy"><div><div class="spin"></div><p><b>Se convertește… <span id="busyTime" style="color:var(--dim);font-weight:500"></span></b><span id="busyLine">Pornesc…</span></p></div></div>
     </div>
     <div class="dock" id="dock"><span class="hint" id="dockHint">Modelele convertite apar aici.</span></div>
   </main>
@@ -498,10 +499,26 @@ $("go").onclick = async () => {
   fd.append("flip", [flipUD ? "updown" : "", flipFB ? "frontback" : ""].join(" ").trim());
   fd.append("nofit", $("nofit").checked ? "1" : "0"); fd.append("anims", $("anims").checked ? "1" : "0"); fd.append("double", $("double").checked ? "1" : "0");
   setBusy(true);
-  try { showResult(await (await api("/convert", { method: "POST", body: fd })).json()); }
+  try { showResult(await followJob(await (await api("/convert", { method: "POST", body: fd })).json())); }
   catch (err) { $("log").textContent = "Programul nu mai răspunde. Pornește din nou blingmodels.exe.\n" + err; $("log").classList.remove("hidden"); }
   finally { setBusy(false); }
 };
+// followJob waits for a background conversion, showing its latest log line while it works.
+async function followJob(start) {
+  if (start.done) return start.result;
+  const id = start.job;
+  let fails = 0;
+  for (;;) {
+    await new Promise((r) => setTimeout(r, 1000));
+    let st;
+    try { st = await (await api(`/job?id=${id}`)).json(); fails = 0; }
+    catch (e) { if (++fails > 20) throw e; continue; }
+    const lines = (st.log || "").trim().split("\n").filter(Boolean);
+    $("busyLine").textContent = lines.length ? lines[lines.length - 1].trim() : "Pornesc…";
+    $("busyTime").textContent = st.seconds + " s";
+    if (st.done) return st.result;
+  }
+}
 function fmtSize(n) { return n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.ceil(n / 1024) + " KB"; }
 function renderDock() {
   const dock = $("dock");
@@ -842,7 +859,7 @@ $("chatIn").onkeydown = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preve
 $("msgs").onclick = (e) => { if (e.target.classList.contains("sug")) sendChat(e.target.textContent); };
 loadState();
 renderFiles();
-if (INITIAL) { setBusy(true); api("/initial").then((r) => r.json()).then(showResult).finally(() => setBusy(false)); }
+if (INITIAL) { setBusy(true); api("/initial").then((r) => r.json()).then(followJob).then(showResult).finally(() => setBusy(false)); }
 </script>
 </body>
 </html>

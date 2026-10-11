@@ -10,11 +10,18 @@ import (
 	"blingmodels/internal/vmath"
 )
 
+// Weight is one bone's share in a skinned vertex.
+type Weight struct {
+	Bone int
+	W    float64
+}
+
 // Corner attributes travel with the triangle corners; the simplifier only moves positions.
 type Corner struct {
 	UV     [2]float64
 	Normal vmath.Vec3
 	Bone   int
+	W      [4]Weight
 }
 
 type Tri struct {

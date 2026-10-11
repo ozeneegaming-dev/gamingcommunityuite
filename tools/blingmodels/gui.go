@@ -84,27 +84,40 @@ func runGUI(o *options, initial []string) error {
 			http.Error(w, "POST", http.StatusMethodNotAllowed)
 			return
 		}
-		mu.Lock()
-		defer mu.Unlock()
-		res := guiConvert(o, outDir, r)
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(res)
+		body, errRes := guiConvert(o, outDir, r)
+		if errRes != nil {
+			writeJSON(w, map[string]any{"done": true, "result": errRes})
+			return
+		}
+		writeJSON(w, map[string]string{"job": startJob(&mu, body)})
+	}))
+	// Conversions run in the background (with AI they can take minutes); the window asks how far they got.
+	mux.HandleFunc("/job", guard(func(w http.ResponseWriter, r *http.Request) {
+		j := getJob(r.URL.Query().Get("id"))
+		if j == nil {
+			writeJSON(w, map[string]any{"done": true, "result": guiResult{Log: "Conversia nu mai există (programul a fost repornit?)."}})
+			return
+		}
+		writeJSON(w, j.status())
 	}))
 	// Files dropped on the exe in Explorer: converted once, when the window asks.
 	var initialOnce sync.Once
 	mux.HandleFunc("/initial", guard(func(w http.ResponseWriter, r *http.Request) {
-		res := guiResult{}
+		id := ""
 		initialOnce.Do(func() {
-			mu.Lock()
-			defer mu.Unlock()
-			o2 := *o
-			o2.out, o2.noPause = outDir, true
-			cfg := loadConfig()
-			setupAI(boolOr(cfg.AIAuto, true), boolOr(cfg.AIReview, true))
-			res = guiRun(&o2, outDir, initial)
+			id = startJob(&mu, func(live io.Writer) guiResult {
+				o2 := *o
+				o2.out, o2.noPause = outDir, true
+				cfg := loadConfig()
+				setupAI(boolOr(cfg.AIAuto, true), boolOr(cfg.AIReview, true))
+				return guiRun(&o2, outDir, initial, live)
+			})
 		})
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(res)
+		if id == "" {
+			writeJSON(w, map[string]any{"done": true, "result": guiResult{}})
+			return
+		}
+		writeJSON(w, map[string]string{"job": id})
 	}))
 	// The window pings while it is open; when it closes, the program ends.
 	alive := make(chan bool, 8)
@@ -292,10 +305,10 @@ type guiOutput struct {
 
 // guiConvert saves the uploaded files (keeping their names, so a .gltf finds its .bin and textures) and runs the same
 // conversion as drag & drop on the exe.
-func guiConvert(base *options, outDir string, r *http.Request) guiResult {
-	fail := func(msg string) guiResult {
+func guiConvert(base *options, outDir string, r *http.Request) (func(io.Writer) guiResult, *guiResult) {
+	fail := func(msg string) (func(io.Writer) guiResult, *guiResult) {
 		fmt.Fprintln(out, "EROARE:", msg)
-		return guiResult{Log: "EROARE: " + msg}
+		return nil, &guiResult{Log: "EROARE: " + msg}
 	}
 	if err := r.ParseMultipartForm(64 << 20); err != nil {
 		return fail("încărcarea fișierelor a eșuat: " + err.Error())
@@ -305,7 +318,12 @@ func guiConvert(base *options, outDir string, r *http.Request) guiResult {
 	if err != nil {
 		return fail(err.Error())
 	}
-	defer os.RemoveAll(dir)
+	keepDir := false
+	defer func() {
+		if !keepDir {
+			os.RemoveAll(dir)
+		}
+	}()
 
 	var inputs []string
 	for _, fh := range r.MultipartForm.File["files"] {
@@ -368,15 +386,20 @@ func guiConvert(base *options, outDir string, r *http.Request) guiResult {
 			o.donor = ref
 		}
 	}
-	setupAI(f("ai") == "1", f("review") == "1")
-	return guiRun(&o, outDir, inputs)
+	useAI, useReview := f("ai") == "1", f("review") == "1"
+	keepDir = true // the job removes the uploaded files when it ends
+	return func(live io.Writer) guiResult {
+		defer os.RemoveAll(dir)
+		setupAI(useAI, useReview)
+		return guiRun(&o, outDir, inputs, live)
+	}, nil
 }
 
 // guiRun converts and describes the written files for the window.
-func guiRun(o *options, outDir string, inputs []string) guiResult {
+func guiRun(o *options, outDir string, inputs []string, live io.Writer) guiResult {
 	var logBuf bytes.Buffer
 	prev := out
-	out = io.MultiWriter(&logBuf, prev)
+	out = io.MultiWriter(&logBuf, live, prev)
 	defer func() { out = prev }()
 	failed, written := run(o, inputs)
 	res := guiResult{OK: failed == 0 && len(written) > 0}

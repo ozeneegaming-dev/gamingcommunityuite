@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"blingmodels/internal/gltf"
+	"blingmodels/internal/simplify"
 	"blingmodels/internal/vmath"
 )
 
@@ -19,7 +20,13 @@ type Corner struct {
 	Normal vmath.Vec3
 	UV     [2]float64
 	Bone   int
+	// W keeps the skin weights (up to 4 bones, largest first) for re-posing; the engine itself binds each vertex
+	// to Bone only.
+	W [4]Weight
 }
+
+// Weight is one bone's share in a skinned vertex.
+type Weight = simplify.Weight
 
 type Tri struct {
 	C   [3]Corner
@@ -374,16 +381,30 @@ func LoadScene(d *gltf.Doc, o LoadOptions) (*Scene, error) {
 					jointNode := -1
 					if vi < len(joints) {
 						best := -1.0
+						var ws []Weight
 						for k, j := range joints[vi] {
 							w := 1.0
 							if vi < len(weights) && k < len(weights[vi]) {
 								w = weights[vi][k]
 							}
-							if w > best && j >= 0 && j < len(skin.Joints) {
+							if j >= 0 && j < len(skin.Joints) {
 								if b, ok := nodeBone[skin.Joints[j]]; ok {
-									best, c.Bone, jointNode = w, b, skin.Joints[j]
+									if w > 0 {
+										ws = append(ws, Weight{Bone: b, W: w})
+									}
+									if w > best {
+										best, c.Bone, jointNode = w, b, skin.Joints[j]
+									}
 								}
 							}
+						}
+						sort.Slice(ws, func(a, b int) bool { return ws[a].W > ws[b].W })
+						var total float64
+						for k := 0; k < len(ws) && k < 4; k++ {
+							total += ws[k].W
+						}
+						for k := 0; k < len(ws) && k < 4 && total > 0; k++ {
+							c.W[k] = Weight{Bone: ws[k].Bone, W: ws[k].W / total}
 						}
 					}
 					skinM := vmath.Mat4Identity()
