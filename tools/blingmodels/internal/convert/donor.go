@@ -325,6 +325,14 @@ func BuildWithDonor(s *Scene, donor *mdl.Model, o DonorOptions) (*mdl.Model, []s
 	var kept []Tri
 	switch o.Mode {
 	case DonorPlayer:
+		if len(s.Bones) <= 8 {
+			// No usable skeleton (a statue-like export): build one from the shape.
+			if msg, err := s.AutoRig(); err == nil {
+				notes = append(notes, msg)
+			} else {
+				notes = append(notes, "nu am putut construi scheletul: "+err.Error())
+			}
+		}
 		if msg := s.orientBody(); msg != "" {
 			notes = append(notes, msg)
 		}
