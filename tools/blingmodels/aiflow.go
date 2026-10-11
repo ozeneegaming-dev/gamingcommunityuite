@@ -29,9 +29,9 @@ const aiSystem = `You are the vision assistant inside blingmodels, a converter o
 
 // quickModel builds a small, untextured-safe model of the scene for renders (textures at 128 px).
 func quickModel(s *convert.Scene) (*mdl.Model, error) {
-	c := *s
-	c.Clips = nil
-	return convert.BuildProp(&c, convert.BuildOptions{Name: "ai.mdl", MaxTexture: 128})
+	c := s.Clone()
+	c.Simplify(8000) // enough for a picture, and within the engine's limits
+	return convert.BuildProp(c, convert.BuildOptions{Name: "ai.mdl", MaxTexture: 128})
 }
 
 var axisNames = []string{"+X", "-X", "+Y", "-Y", "+Z", "-Z"}

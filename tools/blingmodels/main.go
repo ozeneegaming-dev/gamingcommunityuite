@@ -597,7 +597,7 @@ func convertAttempt(o *options, input string, donor *mdl.Model, donorPath string
 
 	maxTris := o.maxTris
 	if maxTris <= 0 {
-		maxTris = map[string]int{"prop": 12000, "player": 6000, "v": 8000, "p": 3000, "w": 3000}[mode]
+		maxTris = map[string]int{"prop": 12000, "player": 9000, "v": 8000, "p": 3000, "w": 3000}[mode]
 	}
 	scene.Simplify(maxTris)
 	if len(scene.Tris) < origTris {

@@ -481,6 +481,7 @@ func (s *Scene) autoRigOnce() (string, error) {
 			c.Bone = w[0].Bone
 		}
 	}
+	// (surface smoothing of weights was tried: it drags rib-cage skin along with a raised arm)
 	return fmt.Sprintf("modelul nu avea schelet: i-am construit unul (%d oase: picioare, coloană, cap, brațe) și am legat pielea", len(s.Bones)-1), nil
 }
 
@@ -565,4 +566,100 @@ func shoulderBlend(w [4]Weight, p vmath.Vec3, armSide string, cy, h float64, ind
 	// largest first, so Bone (the engine's single bone) is the strongest
 	sort.Slice(out[:], func(a, b int) bool { return out[a].W > out[b].W })
 	return out
+}
+
+// smoothWeights spreads skin weights over the surface (each pass mixes every vertex with its neighbours), so the
+// change from one bone to the next is gradual: joints bend like a hand-made rig instead of tearing at a seam.
+// Only connected surface is mixed, so a hand resting on a hip does not stick to it.
+func (s *Scene) smoothWeights(passes int) {
+	type key [3]float32
+	keyOf := func(p vmath.Vec3) key { return key{float32(p[0]), float32(p[1]), float32(p[2])} }
+	idx := map[key]int{}
+	var weights []map[int]float64
+	for _, t := range s.Tris {
+		for _, c := range t.C {
+			k := keyOf(c.Pos)
+			if _, ok := idx[k]; ok {
+				continue
+			}
+			m := map[int]float64{}
+			for _, w := range c.W {
+				if w.W > 0 {
+					m[w.Bone] += w.W
+				}
+			}
+			idx[k] = len(weights)
+			weights = append(weights, m)
+		}
+	}
+	nbr := make([]map[int]bool, len(weights))
+	for i := range nbr {
+		nbr[i] = map[int]bool{}
+	}
+	for _, t := range s.Tris {
+		var v [3]int
+		for k, c := range t.C {
+			v[k] = idx[keyOf(c.Pos)]
+		}
+		for a := 0; a < 3; a++ {
+			for b := 0; b < 3; b++ {
+				if a != b {
+					nbr[v[a]][v[b]] = true
+				}
+			}
+		}
+	}
+	for pass := 0; pass < passes; pass++ {
+		next := make([]map[int]float64, len(weights))
+		for i, m := range weights {
+			out := map[int]float64{}
+			for b, w := range m {
+				out[b] += 0.5 * w
+			}
+			if n := len(nbr[i]); n > 0 {
+				for j := range nbr[i] {
+					for b, w := range weights[j] {
+						out[b] += 0.5 * w / float64(n)
+					}
+				}
+			} else {
+				for b, w := range m {
+					out[b] += 0.5 * w
+				}
+			}
+			next[i] = out
+		}
+		weights = next
+	}
+	for i := range s.Tris {
+		for k := range s.Tris[i].C {
+			c := &s.Tris[i].C[k]
+			m := weights[idx[keyOf(c.Pos)]]
+			type bw struct {
+				b int
+				w float64
+			}
+			var list []bw
+			for b, w := range m {
+				list = append(list, bw{b, w})
+			}
+			sort.Slice(list, func(a, b int) bool {
+				if list[a].w != list[b].w {
+					return list[a].w > list[b].w
+				}
+				return list[a].b < list[b].b
+			})
+			var total float64
+			for n := 0; n < len(list) && n < 4; n++ {
+				total += list[n].w
+			}
+			var w [4]Weight
+			for n := 0; n < len(list) && n < 4 && total > 0; n++ {
+				w[n] = Weight{Bone: list[n].b, W: list[n].w / total}
+			}
+			if total > 0 {
+				c.W, c.Bone = w, w[0].Bone
+			}
+		}
+	}
 }

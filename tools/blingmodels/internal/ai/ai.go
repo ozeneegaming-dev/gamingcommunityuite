@@ -22,8 +22,9 @@ import (
 	"github.com/anthropics/anthropic-sdk-go/shared/constant"
 )
 
-// DefaultModel is used with an API key unless another model is configured.
-const DefaultModel = "claude-opus-5-5"
+// DefaultModel is used unless another model is configured: Claude Haiku 5.5, fast and light on the subscription's
+// limits (the person chose it for blingmodels).
+const DefaultModel = "claude-haiku-5-5"
 
 // Image is a PNG with a caption the prompt can refer to.
 type Image struct {
@@ -61,13 +62,13 @@ func New(mode, apiKey, model string) (Client, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &cliClient{exe: exe}, nil
+		return &cliClient{exe: exe, model: model}, nil
 	}
 	if apiKey != "" {
 		return &apiClient{key: apiKey, model: model}, nil
 	}
 	if exe, err := FindClaudeCode(); err == nil {
-		return &cliClient{exe: exe}, nil
+		return &cliClient{exe: exe, model: model}, nil
 	}
 	return nil, ErrNoAI
 }
@@ -139,9 +140,9 @@ func FindClaudeCode() (string, error) {
 
 // ---- Claude Code (subscription) ----
 
-type cliClient struct{ exe string }
+type cliClient struct{ exe, model string }
 
-func (c *cliClient) Name() string { return "Claude Code (abonament)" }
+func (c *cliClient) Name() string { return "Claude Code (abonament, " + c.model + ")" }
 
 func (c *cliClient) Ask(ctx context.Context, system, prompt string, images []Image) (string, error) {
 	dir, err := os.MkdirTemp("", "blingmodels-ai-")
@@ -166,19 +167,26 @@ func (c *cliClient) Ask(ctx context.Context, system, prompt string, images []Ima
 	b.WriteString(prompt)
 	ctx, cancel := context.WithTimeout(ctx, 4*time.Minute)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, c.exe, "-p", "--output-format", "json", "--allowedTools", "Read", "--add-dir", dir)
+	cmd := exec.CommandContext(ctx, c.exe, "-p", "--output-format", "json", "--model", c.model, "--allowedTools", "Read", "--add-dir", dir)
 	cmd.Dir = dir
 	cmd.Stdin = strings.NewReader(b.String())
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr
 	hideWindow(cmd)
 	if err := cmd.Run(); err != nil {
+		// The JSON answer carries the reason in "result" (not logged in, usage limit, …).
+		var res struct {
+			Result string `json:"result"`
+		}
+		if json.Unmarshal(stdout.Bytes(), &res) == nil && strings.TrimSpace(res.Result) != "" {
+			return "", fmt.Errorf("Claude Code: %s", strings.TrimSpace(res.Result))
+		}
 		msg := strings.TrimSpace(stderr.String())
 		if msg == "" {
 			msg = strings.TrimSpace(stdout.String())
 		}
-		if len(msg) > 400 {
-			msg = msg[:400]
+		if len(msg) > 600 {
+			msg = msg[:600]
 		}
 		return "", fmt.Errorf("Claude Code a dat eroare: %v %s", err, msg)
 	}
