@@ -407,11 +407,43 @@ func LoadScene(d *gltf.Doc, o LoadOptions) (*Scene, error) {
 							c.W[k] = Weight{Bone: ws[k].Bone, W: ws[k].W / total}
 						}
 					}
+					// Linear blend skinning in the rest pose, exactly like glTF viewers: every joint's
+					// share counts (with only the strongest joint, a body whose rest pose differs from its
+					// bind pose — typical of models taken from games — falls apart into shards).
+					jointMat := func(node int) vmath.Mat4 {
+						m := rest[node]
+						if ibm, ok := jointIBM[node]; ok {
+							m = m.Mul(ibm)
+						}
+						return m
+					}
 					skinM := vmath.Mat4Identity()
 					if jointNode >= 0 {
-						skinM = rest[jointNode]
-						if ibm, ok := jointIBM[jointNode]; ok {
-							skinM = skinM.Mul(ibm)
+						skinM = jointMat(jointNode)
+					}
+					if vi < len(joints) && vi < len(weights) {
+						var acc vmath.Mat4
+						var total float64
+						for k, j := range joints[vi] {
+							if k >= len(weights[vi]) || weights[vi][k] <= 0 || j < 0 || j >= len(skin.Joints) {
+								continue
+							}
+							node := skin.Joints[j]
+							if node < 0 || node >= len(rest) {
+								continue
+							}
+							w := weights[vi][k]
+							m := jointMat(node)
+							for e := range acc {
+								acc[e] += m[e] * w
+							}
+							total += w
+						}
+						if total > 1e-6 {
+							for e := range acc {
+								acc[e] /= total
+							}
+							skinM = acc
 						}
 					}
 					if skinM.Det3() < 0 {

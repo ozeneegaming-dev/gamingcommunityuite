@@ -2,6 +2,7 @@ package convert
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"strings"
 	"testing"
@@ -117,4 +118,49 @@ func TestRetargetSamples(t *testing.T) {
 	t.Log(notes)
 	data, _ = out.Encode()
 	os.WriteFile(dir+"/../retarget_fig.mdl", data, 0o644)
+}
+
+// TestPosedRestStaysWhole: a skinned body whose rest pose differs from its bind pose (bent joints, as in models
+// taken from games) must not tear: triangles keep about their size.
+func TestPosedRestStaysWhole(t *testing.T) {
+	dir := os.Getenv("BLINGMODELS_SAMPLES")
+	if dir == "" {
+		t.Skip("set BLINGMODELS_SAMPLES")
+	}
+	d, err := gltf.Load(dir + "/CesiumMan.glb")
+	if err != nil {
+		t.Fatal(err)
+	}
+	bind, _ := LoadScene(d, LoadOptions{})
+	// Bend every joint by 35° about its local X.
+	for i := range d.Nodes {
+		n := &d.Nodes[i]
+		if len(n.Matrix) == 0 && n.Mesh == nil && i != 0 {
+			q := vmath.Quat{0.3007, 0, 0, 0.9537}
+			if len(n.Rotation) == 4 {
+				q = vmath.Quat{n.Rotation[0], n.Rotation[1], n.Rotation[2], n.Rotation[3]}.Mul(q)
+			}
+			n.Rotation = []float64{q[0], q[1], q[2], q[3]}
+		}
+	}
+	posed, err := LoadScene(d, LoadOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(bind.Tris) != len(posed.Tris) {
+		t.Fatal("triangle count changed")
+	}
+	longest := func(tr Tri) float64 {
+		return math.Max(tr.C[0].Pos.Sub(tr.C[1].Pos).Len(), math.Max(tr.C[1].Pos.Sub(tr.C[2].Pos).Len(), tr.C[2].Pos.Sub(tr.C[0].Pos).Len()))
+	}
+	bad := 0
+	for i := range bind.Tris {
+		if longest(posed.Tris[i]) > 2*longest(bind.Tris[i])+0.3 {
+			bad++
+		}
+	}
+	t.Logf("%d of %d triangles stretched", bad, len(bind.Tris))
+	if float64(bad) > 0.01*float64(len(bind.Tris)) {
+		t.Fatalf("posed rest tears the mesh: %d stretched triangles", bad)
+	}
 }
