@@ -9,11 +9,15 @@
 | `.glb`, `.gltf` (recomandat de pe Sketchfab) | nimic în plus |
 | `.blend`, `.fbx`, `.obj`, `.dae`, `.usdz` | Blender instalat (gratuit, blender.org); îl găsește singur |
 
-Fișierele `.gltf` vin într-o arhivă `.zip`. Dezarhivează tot conținutul ei, apoi trage fișierul `.gltf`.
-
 ## Cum se folosește
 
-Trage fișierele peste `blingmodels.exe`. Rezultatul apare în folderul `blingmodels_out`, lângă fișierul tras, împreună cu o imagine `_preview.png` (vedere din față, din lateral și din 3/4).
+**Dublu-click pe `blingmodels.exe`.** Se deschide fereastra programului în browser. Tragi fișierele în ea, alegi tipul modelului și apeși **Convertește**. Terminalul negru care se deschide odată cu fereastra trebuie lăsat deschis cât lucrezi.
+
+Merge și direct: tragi fișierele peste `blingmodels.exe`.
+
+Arhiva `.zip` descărcată de pe Sketchfab poate fi trasă așa cum e, fără dezarhivare.
+
+În fereastră, rezultatul se salvează în `blingmodels_out`, lângă exe. Dacă tragi fișierele direct peste exe, rezultatul apare în folderul `blingmodels_out`, lângă fișierul tras, împreună cu o imagine `_preview.png` (vedere din față, din lateral și din 3/4).
 
 | Ce vrei | Ce tragi peste exe | Unde copiezi rezultatul |
 | --- | --- | --- |
@@ -56,6 +60,7 @@ Opțiunile se scriu în linia de comandă, înainte sau după fișiere, sau în 
 | `-name`, `-out` | numele fișierului rezultat și folderul în care se scrie |
 | `-blender cale` | calea spre `blender.exe`, dacă nu e găsit singur |
 | `-nopause` | nu mai așteaptă Enter la final |
+| `-console` | dublu-click arată doar ajutorul, fără fereastră |
 
 ## Ce face automat
 

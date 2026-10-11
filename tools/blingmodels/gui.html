@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>blingmodels</title>
+<style>
+:root {
+  --bg: #07060d; --surface: #110f1c; --surface2: #171428; --border: #262140; --text: #e4e1f2; --muted: #9a93b8;
+  --purple: #8b3dff; --cyan: #22e4ff; --ok: #2bf59b; --bad: #ff4d6d;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: radial-gradient(1200px 600px at 10% -10%, #1d1240 0%, transparent 60%), var(--bg); color: var(--text);
+  font: 15px/1.5 system-ui, "Segoe UI", Roboto, sans-serif; min-height: 100vh; }
+.wrap { max-width: 980px; margin: 0 auto; padding: 28px 16px 60px; }
+header { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+.logo { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; font-weight: 800; font-size: 22px;
+  background: linear-gradient(135deg, var(--purple), var(--cyan)); color: #07060d; box-shadow: 0 0 24px #8b3dff66; }
+h1 { margin: 0; font-size: 24px; letter-spacing: .5px; }
+h1 small { font-size: 13px; color: var(--muted); font-weight: 500; margin-left: 6px; }
+.sub { color: var(--muted); margin: 2px 0 0; font-size: 14px; }
+.card { background: color-mix(in srgb, var(--surface) 92%, transparent); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 16px; }
+.drop { border: 2px dashed #3a3160; border-radius: 14px; padding: 34px 16px; text-align: center; cursor: pointer; transition: .15s;
+  background: linear-gradient(180deg, #15112a, #100d1e); }
+.drop:hover, .drop.over { border-color: var(--cyan); box-shadow: 0 0 0 4px #22e4ff22, inset 0 0 40px #8b3dff22; }
+.drop b { font-size: 18px; display: block; margin-bottom: 4px; }
+.drop span { color: var(--muted); font-size: 14px; }
+.files { list-style: none; padding: 0; margin: 14px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.files li { background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; padding: 4px 6px 4px 12px; font-size: 13px; display: flex; gap: 6px; align-items: center; }
+.files li.model { border-color: #8b3dff88; }
+.files li.donor { border-color: #22e4ff88; }
+.files button { background: none; border: 0; color: var(--muted); cursor: pointer; font-size: 15px; line-height: 1; padding: 0 4px; }
+.tag { font-size: 11px; padding: 1px 7px; border-radius: 999px; background: #22e4ff22; color: var(--cyan); }
+.tag.m { background: #8b3dff33; color: #c8a8ff; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+label { display: flex; flex-direction: column; gap: 5px; font-size: 13px; color: var(--muted); }
+select, input[type=text], input[type=number] { background: var(--surface2); color: var(--text); border: 1px solid var(--border); border-radius: 9px; padding: 9px 10px; font: inherit; }
+select:focus, input:focus { outline: 2px solid #22e4ff66; border-color: var(--cyan); }
+.check { flex-direction: row; align-items: center; gap: 8px; color: var(--text); }
+details summary { cursor: pointer; color: var(--muted); margin: 4px 0 12px; }
+.modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 14px; }
+.mode { border: 1px solid var(--border); background: var(--surface2); border-radius: 11px; padding: 10px; cursor: pointer; text-align: left; color: var(--text); font: inherit; }
+.mode b { display: block; font-size: 14px; }
+.mode small { color: var(--muted); font-size: 12px; }
+.mode.on { border-color: var(--purple); box-shadow: 0 0 0 1px var(--purple), 0 0 18px #8b3dff44; }
+.need { font-size: 13px; color: var(--cyan); margin: -4px 0 12px; min-height: 1em; }
+.go { width: 100%; border: 0; border-radius: 12px; padding: 14px; font: 700 17px system-ui, sans-serif; letter-spacing: .5px; cursor: pointer; color: #fff;
+  background: linear-gradient(90deg, var(--purple), #5b5cff 60%, var(--cyan)); box-shadow: 0 0 26px #8b3dff55; }
+.go:disabled { opacity: .5; cursor: default; }
+.go.busy { background: linear-gradient(90deg, #3b2a6d, #22406d); }
+pre { background: #0a0814; border: 1px solid var(--border); border-radius: 10px; padding: 12px; white-space: pre-wrap; font: 12.5px/1.45 ui-monospace, Consolas, monospace; color: #cfc8ea; max-height: 320px; overflow: auto; margin: 0; }
+.result { display: grid; grid-template-columns: 1fr; gap: 10px; border: 1px solid #2bf59b55; border-radius: 12px; padding: 12px; margin-bottom: 12px; background: #0f1a18; }
+.result img { width: 100%; border-radius: 8px; border: 1px solid var(--border); background: #101018; }
+.result h3 { margin: 0; font-size: 16px; color: var(--ok); }
+.result .hint { color: var(--muted); font-size: 13px; }
+.result .hint code { color: var(--text); background: var(--surface2); padding: 1px 6px; border-radius: 5px; }
+.btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { border: 1px solid var(--border); background: var(--surface2); color: var(--text); padding: 8px 12px; border-radius: 9px; cursor: pointer; text-decoration: none; font-size: 14px; }
+.btn:hover { border-color: var(--cyan); }
+.err { color: var(--bad); font-weight: 600; }
+.foot { color: var(--muted); font-size: 12.5px; text-align: center; margin-top: 18px; }
+.hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">B</div>
+    <div>
+      <h1>blingmodels <small>v{{VERSION}}</small></h1>
+      <p class="sub">Modele de pe Sketchfab → Counter-Strike 1.6 (.mdl). Totul rulează pe calculatorul tău.</p>
+    </div>
+  </header>
+
+  <div class="card">
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Adaugă fișiere">
+      <b>Trage aici fișierele</b>
+      <span>.glb · .gltf · .zip descărcat de pe Sketchfab · .blend · .usdz · .fbx · .obj — și, pentru arme/jucători, modelul original din CS (.mdl)<br>sau dă click ca să alegi</span>
+    </div>
+    <input type="file" id="pick" multiple class="hidden">
+    <ul class="files" id="files"></ul>
+  </div>
+
+  <div class="card">
+    <div class="modes" id="modes">
+      <button class="mode on" data-mode="auto"><b>Automat</b><small>după fișiere</small></button>
+      <button class="mode" data-mode="prop"><b>Obiect / decor</b><small>orice model, animat sau nu</small></button>
+      <button class="mode" data-mode="v"><b>Armă v_</b><small>la persoana întâi</small></button>
+      <button class="mode" data-mode="p"><b>Armă p_</b><small>în mâna altora</small></button>
+      <button class="mode" data-mode="w"><b>Armă w_</b><small>pe jos</small></button>
+      <button class="mode" data-mode="player"><b>Jucător</b><small>cu animațiile originale</small></button>
+    </div>
+    <p class="need" id="need"></p>
+    <details>
+      <summary>Setări avansate</summary>
+      <div class="grid">
+        <label>Rotire în grade „x y z” (dacă iese întors)<input type="text" id="rotate" placeholder="ex. 0 0 180"></label>
+        <label>Triunghiuri maxime (gol = automat)<input type="number" id="maxtris" min="100" step="100" placeholder="automat"></label>
+        <label>Înălțime în unități (decor; jucător = 72)<input type="number" id="height" min="1" placeholder="automat"></label>
+        <label>Nume fișier rezultat<input type="text" id="name" placeholder="automat"></label>
+        <label>v_: ce păstrez din original (regex)<input type="text" id="keep" placeholder="mâinile, automat"></label>
+        <label class="check"><input type="checkbox" id="nofit"> Armele nu se rotesc automat peste cea veche</label>
+        <label class="check"><input type="checkbox" id="anims" checked> Animații la decor</label>
+      </div>
+    </details>
+    <button class="go" id="go" disabled>Convertește</button>
+  </div>
+
+  <div id="results"></div>
+  <div class="card hidden" id="logCard"><pre id="log"></pre></div>
+  <p class="foot">Fișierele convertite se salvează în <b>{{OUTDIR}}</b> · <a href="#" id="openOut" style="color:var(--cyan)">deschide folderul</a> · Închide terminalul negru când ai terminat.</p>
+</div>
+<script>
+const TOKEN = "{{TOKEN}}";
+const $ = (id) => document.getElementById(id);
+let files = []; // {file, path}
+let mode = "auto";
+const modelExt = /\.(glb|gltf|zip|blend|fbx|obj|dae|usdz|usd|usdc|usda)$/i;
+
+function render() {
+  const ul = $("files");
+  ul.innerHTML = "";
+  const extra = files.filter((f) => !modelExt.test(f.path) && !/\.mdl$/i.test(f.path)).length;
+  files.forEach((f, i) => {
+    if (!modelExt.test(f.path) && !/\.mdl$/i.test(f.path)) return;
+    const li = document.createElement("li");
+    const isDonor = /\.mdl$/i.test(f.path);
+    li.className = isDonor ? "donor" : "model";
+    const tag = document.createElement("span");
+    tag.className = isDonor ? "tag" : "tag m";
+    tag.textContent = isDonor ? "original CS" : "model nou";
+    const name = document.createElement("span");
+    name.textContent = f.path.split("/").pop();
+    const x = document.createElement("button");
+    x.textContent = "×";
+    x.title = "Scoate";
+    x.onclick = () => { files.splice(i, 1); render(); };
+    li.append(tag, name, x);
+    ul.append(li);
+  });
+  if (extra) {
+    const li = document.createElement("li");
+    li.textContent = `+ ${extra} fișier(e) însoțitoare (texturi, .bin)`;
+    ul.append(li);
+  }
+  const hasModel = files.some((f) => modelExt.test(f.path));
+  const donor = files.find((f) => /\.mdl$/i.test(f.path) && !/t\.mdl$/i.test(f.path));
+  $("go").disabled = !hasModel;
+  let need = "";
+  if (["v", "p", "player"].includes(mode) && !donor) {
+    need = mode === "player" ? "Adaugă și modelul de jucător original din CS (ex. gign.mdl și gignT.mdl din cstrike/models/player/gign)."
+      : `Adaugă și arma originală din CS (ex. ${mode}_ak47.mdl din cstrike/models) — de la ea se păstrează animațiile.`;
+  } else if (mode === "auto" && donor) {
+    need = `Original: ${donor.path.split("/").pop()} — tipul se alege după numele lui.`;
+  } else if (mode === "w" && !donor) {
+    need = "Fără original: arma e pusă culcată pe sol. Cu w_…mdl original se potrivește exact peste cea veche.";
+  }
+  $("need").textContent = need;
+}
+
+function add(list) {
+  for (const it of list) {
+    if (!files.some((f) => f.path === it.path && f.file.size === it.file.size)) files.push(it);
+  }
+  render();
+}
+
+async function walk(entry, prefix) {
+  if (entry.isFile) {
+    const file = await new Promise((res, rej) => entry.file(res, rej));
+    return [{ file, path: prefix + file.name }];
+  }
+  if (entry.isDirectory) {
+    const reader = entry.createReader();
+    let out = [], batch;
+    do {
+      batch = await new Promise((res, rej) => reader.readEntries(res, rej));
+      for (const e of batch) out = out.concat(await walk(e, prefix + entry.name + "/"));
+    } while (batch.length);
+    return out;
+  }
+  return [];
+}
+
+const drop = $("drop");
+drop.onclick = () => $("pick").click();
+drop.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") $("pick").click(); };
+$("pick").onchange = (e) => { add([...e.target.files].map((file) => ({ file, path: file.name }))); e.target.value = ""; };
+["dragenter", "dragover"].forEach((t) => document.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach((t) => document.addEventListener(t, (e) => { e.preventDefault(); if (t === "drop" || e.target === document.documentElement) drop.classList.remove("over"); }));
+document.addEventListener("drop", async (e) => {
+  const items = [...(e.dataTransfer.items || [])];
+  const entries = items.map((i) => i.webkitGetAsEntry && i.webkitGetAsEntry()).filter(Boolean);
+  if (entries.length) {
+    let all = [];
+    for (const en of entries) all = all.concat(await walk(en, ""));
+    add(all);
+  } else {
+    add([...e.dataTransfer.files].map((file) => ({ file, path: file.name })));
+  }
+});
+
+$("modes").onclick = (e) => {
+  const b = e.target.closest(".mode");
+  if (!b) return;
+  document.querySelectorAll(".mode").forEach((m) => m.classList.toggle("on", m === b));
+  mode = b.dataset.mode;
+  render();
+};
+
+$("openOut").onclick = (e) => { e.preventDefault(); fetch("/open", { headers: { "X-Token": TOKEN } }); };
+
+function fmtSize(n) { return n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.ceil(n / 1024) + " KB"; }
+
+$("go").onclick = async () => {
+  const fd = new FormData();
+  for (const f of files) fd.append("files", f.file, f.path);
+  fd.append("mode", mode);
+  fd.append("rotate", $("rotate").value);
+  fd.append("maxtris", $("maxtris").value);
+  fd.append("height", $("height").value);
+  fd.append("name", $("name").value);
+  fd.append("keep", $("keep").value);
+  fd.append("nofit", $("nofit").checked ? "1" : "0");
+  fd.append("anims", $("anims").checked ? "1" : "0");
+  const go = $("go");
+  go.disabled = true; go.classList.add("busy"); go.textContent = "Se convertește…";
+  $("logCard").classList.remove("hidden");
+  $("log").textContent = "Se lucrează… (modelele mari sau cele prin Blender pot dura un minut)";
+  try {
+    const r = await fetch("/convert", { method: "POST", body: fd, headers: { "X-Token": TOKEN } });
+    const res = await r.json();
+    $("log").textContent = res.log;
+    const box = $("results");
+    for (const o of (res.outputs || []).reverse()) {
+      const div = document.createElement("div");
+      div.className = "result";
+      const q = encodeURIComponent(o.path);
+      div.innerHTML = `<h3></h3>${o.preview ? `<img alt="previzualizare" src="/file?t=${TOKEN}&p=${encodeURIComponent(o.preview)}&r=${Date.now()}">` : ""}
+        <div class="hint">Copiază fișierul în <code></code> (fă o copie a originalului înainte).</div>
+        <div class="btns"><a class="btn" href="/file?t=${TOKEN}&dl=1&p=${q}">Descarcă .mdl</a><button class="btn">Deschide folderul</button></div>`;
+      div.querySelector("h3").textContent = `✓ ${o.name} · ${fmtSize(o.size)}`;
+      div.querySelector("code").textContent = o.hint;
+      div.querySelector("button").onclick = () => fetch(`/open?p=${q}`, { headers: { "X-Token": TOKEN } });
+      box.prepend(div);
+    }
+    if (!res.ok && !(res.outputs || []).length) {
+      const p = document.createElement("p");
+      p.className = "err card";
+      p.textContent = "Conversia nu a reușit — vezi mesajele de mai jos.";
+      box.prepend(p);
+    }
+  } catch (err) {
+    $("log").textContent = "Programul nu mai răspunde. A fost închis terminalul negru? Pornește din nou blingmodels.exe.\n" + err;
+  } finally {
+    go.classList.remove("busy"); go.textContent = "Convertește"; render();
+  }
+};
+render();
+</script>
+</body>
+</html>

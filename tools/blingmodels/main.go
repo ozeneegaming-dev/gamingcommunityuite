@@ -4,9 +4,11 @@
 package main
 
 import (
+	"archive/zip"
 	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"math"
 	"os"
 	"path/filepath"
@@ -28,25 +30,37 @@ type options struct {
 	mode, donor, name, out, blender, origin, keep, rotate string
 	scale, height, size, fps                              float64
 	maxTris, tex, maxFPS                                  int
-	anims, noPause, preview, noFit                        bool
+	anims, noPause, preview, noFit, console               bool
 }
 
-var boolFlags = map[string]bool{"anims": true, "nopause": true, "preview": true, "nofit": true}
+var boolFlags = map[string]bool{"anims": true, "nopause": true, "preview": true, "nofit": true, "console": true}
+
+// out receives all messages (the console, or the window's log).
+var out io.Writer = os.Stdout
 
 func main() {
 	o, inputs, err := parseArgs(os.Args[1:])
 	if err != nil {
-		fmt.Println("Eroare:", err)
+		fmt.Fprintln(out, "Eroare:", err)
 		pause(o)
 		os.Exit(2)
 	}
-	fmt.Printf("blingmodels %s — modele Sketchfab → Counter-Strike 1.6 (.mdl)\n\n", version)
+	fmt.Fprintf(out, "blingmodels %s — modele Sketchfab → Counter-Strike 1.6 (.mdl)\n\n", version)
 	if len(inputs) == 0 {
-		usage()
-		pause(o)
+		if o.console {
+			usage()
+			pause(o)
+			return
+		}
+		// Double-click: the window with drag & drop opens in the browser.
+		if err := runGUI(o); err != nil {
+			fmt.Fprintln(out, "Nu am putut deschide fereastra:", err)
+			usage()
+			pause(o)
+		}
 		return
 	}
-	failed := run(o, inputs)
+	failed, _ := run(o, inputs)
 	pause(o)
 	if failed > 0 {
 		os.Exit(1)
@@ -54,8 +68,9 @@ func main() {
 }
 
 func usage() {
-	fmt.Print(`Cum se folosește:
-  • Trage fișierul descărcat de pe Sketchfab (.glb, .gltf, .blend, .usdz…) peste blingmodels.exe.
+	fmt.Fprint(out, `Cum se folosește:
+  • Dublu-click pe blingmodels.exe deschide fereastra cu drag & drop (în browser).
+  • Sau trage fișierul descărcat de pe Sketchfab (.glb, .gltf, .zip, .blend, .usdz…) peste blingmodels.exe.
   • Obiect / decor (prop): trage doar modelul → iese un .mdl gata de pus în cstrike/models.
   • Armă sau jucător: trage modelul nou ÎMPREUNĂ cu modelul original din CS pe care îl înlocuiești
       v_ak47.mdl  → armă la persoana întâi (mâinile originale rămân, animațiile rămân)
@@ -83,6 +98,7 @@ Opțiuni (pot fi puse și în blingmodels.ini lângă exe, ca nume=valoare):
   -preview=false                 fără imaginea de previzualizare .png
   -blender cale\blender.exe      unde e Blender, dacă nu e găsit singur
   -nopause                       nu aștepta Enter la final
+  -console                       fără fereastră (dublu-click arată doar acest ajutor)
 `)
 }
 
@@ -95,7 +111,7 @@ func pause(o *options) {
 			return
 		}
 	}
-	fmt.Print("\nApasă Enter pentru a închide…")
+	fmt.Fprint(out, "\nApasă Enter pentru a închide…")
 	bufio.NewReader(os.Stdin).ReadString('\n')
 }
 
@@ -121,6 +137,7 @@ func newFlagSet(o *options) *flag.FlagSet {
 	fs.BoolVar(&o.noPause, "nopause", false, "")
 	fs.BoolVar(&o.preview, "preview", true, "")
 	fs.BoolVar(&o.noFit, "nofit", false, "")
+	fs.BoolVar(&o.console, "console", false, "")
 	fs.Usage = func() {}
 	return fs
 }
@@ -200,7 +217,34 @@ func parseRotate(s string) (vmath.Vec3, error) {
 	return r, nil
 }
 
-func run(o *options, inputs []string) int {
+// modelExts are the files run converts; anything else dropped (.bin, textures) only travels with a .gltf.
+func isModelFile(path string) bool {
+	ext := strings.ToLower(filepath.Ext(path))
+	return ext == ".glb" || ext == ".gltf" || ext == ".mdl" || ext == ".zip" || convert.BlenderFormats[ext]
+}
+
+// run converts every model among inputs (an original CS .mdl among them is the donor) and returns how many failed
+// and the written files.
+func run(o *options, inputs []string) (int, []string) {
+	var expanded []string
+	for _, in := range inputs {
+		if !strings.EqualFold(filepath.Ext(in), ".zip") {
+			expanded = append(expanded, in)
+			continue
+		}
+		// Sketchfab's glTF download is a .zip (scene.gltf + scene.bin + textures/).
+		found, cleanup, err := extractZip(in)
+		if err != nil {
+			fmt.Fprintf(out, "Nu pot deschide %s: %v\n", filepath.Base(in), err)
+			continue
+		}
+		defer cleanup()
+		if len(found) == 0 {
+			fmt.Fprintf(out, "În %s nu e niciun model (.gltf, .glb, .blend…)\n", filepath.Base(in))
+		}
+		expanded = append(expanded, found...)
+	}
+	inputs = expanded
 	donorPath := o.donor
 	var models []string
 	for _, in := range inputs {
@@ -209,7 +253,7 @@ func run(o *options, inputs []string) int {
 				continue // gignT.mdl, read together with gign.mdl
 			}
 			if donorPath != "" && donorPath != in {
-				fmt.Printf("Atenție: am primit mai multe modele originale; îl folosesc pe %s\n", filepath.Base(donorPath))
+				fmt.Fprintf(out, "Atenție: am primit mai multe modele originale; îl folosesc pe %s\n", filepath.Base(donorPath))
 				continue
 			}
 			donorPath = in
@@ -218,37 +262,109 @@ func run(o *options, inputs []string) int {
 		models = append(models, in)
 	}
 	if len(models) == 0 {
-		fmt.Println("Nu am primit niciun model de convertit (.glb, .gltf, .blend, .usdz…).")
+		fmt.Fprintln(out, "Nu am primit niciun model de convertit (.glb, .gltf, .zip de pe Sketchfab, .blend, .usdz…).")
 		if donorPath != "" {
-			fmt.Println("Ai tras doar modelul original din CS; trage-l împreună cu modelul nou.")
+			fmt.Fprintln(out, "Ai dat doar modelul original din CS; adaugă și modelul nou.")
 		}
-		return 1
+		return 1, nil
 	}
 	var donor *mdl.Model
 	if donorPath != "" {
 		var err error
 		if donor, err = convert.LoadDonor(donorPath); err != nil {
-			fmt.Println("Eroare la modelul original:", err)
-			return 1
+			fmt.Fprintln(out, "Eroare la modelul original:", err)
+			return 1, nil
 		}
-		fmt.Printf("Model original: %s (%d oase, %d animații)\n", filepath.Base(donorPath), len(donor.Bones), len(donor.Sequences))
+		fmt.Fprintf(out, "Model original: %s (%d oase, %d animații)\n", filepath.Base(donorPath), len(donor.Bones), len(donor.Sequences))
 	}
 	failed := 0
+	var written []string
 	for _, in := range models {
 		start := time.Now()
-		fmt.Printf("\n→ %s\n", filepath.Base(in))
-		out, err := convertOne(o, in, donor, donorPath)
+		fmt.Fprintf(out, "\n→ %s\n", filepath.Base(in))
+		path, err := convertOne(o, in, donor, donorPath)
 		if err != nil {
-			fmt.Println("  EROARE:", err)
+			fmt.Fprintln(out, "  EROARE:", err)
 			failed++
 			continue
 		}
-		fmt.Printf("  Gata în %.1fs: %s\n", time.Since(start).Seconds(), out)
+		written = append(written, path)
+		fmt.Fprintf(out, "  Gata în %.1fs: %s\n", time.Since(start).Seconds(), path)
 	}
 	if failed > 0 {
-		fmt.Printf("\n%d fișier(e) nu au putut fi convertite.\n", failed)
+		fmt.Fprintf(out, "\n%d fișier(e) nu au putut fi convertite.\n", failed)
 	}
-	return failed
+	return failed, written
+}
+
+// extractZip unpacks an archive into a temporary folder and returns the model files in it (one per folder, the
+// .gltf/.glb first).
+func extractZip(path string) ([]string, func(), error) {
+	zr, err := zip.OpenReader(path)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer zr.Close()
+	dir, err := os.MkdirTemp("", "blingmodels-zip-")
+	if err != nil {
+		return nil, nil, err
+	}
+	cleanup := func() { os.RemoveAll(dir) }
+	var total int64
+	var found []string
+	for _, f := range zr.File {
+		name := filepath.FromSlash(f.Name)
+		if f.FileInfo().IsDir() || strings.Contains(f.Name, "..") || filepath.IsAbs(name) || strings.HasPrefix(f.Name, "__MACOSX") {
+			continue
+		}
+		total += int64(f.UncompressedSize64)
+		if total > 2<<30 {
+			cleanup()
+			return nil, nil, fmt.Errorf("arhiva e prea mare")
+		}
+		dst := filepath.Join(dir, name)
+		if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
+			cleanup()
+			return nil, nil, err
+		}
+		rc, err := f.Open()
+		if err != nil {
+			cleanup()
+			return nil, nil, err
+		}
+		w, err := os.Create(dst)
+		if err == nil {
+			_, err = io.Copy(w, rc)
+			w.Close()
+		}
+		rc.Close()
+		if err != nil {
+			cleanup()
+			return nil, nil, err
+		}
+		if ext := strings.ToLower(filepath.Ext(dst)); isModelFile(dst) && ext != ".zip" {
+			found = append(found, dst)
+		}
+	}
+	// Prefer glTF/GLB over other formats exported next to it (Sketchfab zips sometimes carry both).
+	byDir := map[string][]string{}
+	for _, f := range found {
+		byDir[filepath.Dir(f)] = append(byDir[filepath.Dir(f)], f)
+	}
+	var out []string
+	for _, f := range found {
+		group := byDir[filepath.Dir(f)]
+		hasGLTF := false
+		for _, g := range group {
+			e := strings.ToLower(filepath.Ext(g))
+			hasGLTF = hasGLTF || e == ".gltf" || e == ".glb"
+		}
+		e := strings.ToLower(filepath.Ext(f))
+		if e == ".mdl" || !hasGLTF || e == ".gltf" || e == ".glb" {
+			out = append(out, f)
+		}
+	}
+	return out, cleanup, nil
 }
 
 // isTextureFile reports whether path is the T.mdl companion of another dropped model.
@@ -348,7 +464,7 @@ func convertOne(o *options, input string, donor *mdl.Model, donorPath string) (s
 	}
 	src := input
 	if convert.BlenderFormats[strings.ToLower(filepath.Ext(input))] {
-		fmt.Println("  Deschid fișierul în Blender…")
+		fmt.Fprintln(out, "  Deschid fișierul în Blender…")
 		glb, cleanup, err := convert.ViaBlender(input, o.blender)
 		if err != nil {
 			return "", err
@@ -378,9 +494,9 @@ func convertOne(o *options, input string, donor *mdl.Model, donorPath string) (s
 	}
 	scene.Simplify(maxTris)
 	if len(scene.Tris) < origTris {
-		fmt.Printf("  Triunghiuri: %d → %d (simplificat pentru CS 1.6)\n", origTris, len(scene.Tris))
+		fmt.Fprintf(out, "  Triunghiuri: %d → %d (simplificat pentru CS 1.6)\n", origTris, len(scene.Tris))
 	} else {
-		fmt.Printf("  Triunghiuri: %d\n", origTris)
+		fmt.Fprintf(out, "  Triunghiuri: %d\n", origTris)
 	}
 	texSide := o.tex
 	if (mode == "p" || mode == "w") && o.tex == 512 {
@@ -490,18 +606,18 @@ func convertOne(o *options, input string, donor *mdl.Model, donorPath string) (s
 			}
 		}
 	}
-	fmt.Printf("  Tip: %s | %d triunghiuri, %d vârfuri, %d texturi, %d oase, %d animații, %d KB\n",
+	fmt.Fprintf(out, "  Tip: %s | %d triunghiuri, %d vârfuri, %d texturi, %d oase, %d animații, %d KB\n",
 		modeLabel(mode, donor != nil), tris, verts, len(back.Textures), len(back.Bones), len(back.Sequences), (len(data)+1023)/1024)
 	for _, n := range notes {
-		fmt.Println("  •", n)
+		fmt.Fprintln(out, "  •", n)
 	}
 	if o.preview {
 		png := strings.TrimSuffix(outPath, ".mdl") + "_preview.png"
 		if err := preview.Render(back, png); err == nil {
-			fmt.Println("  Previzualizare:", png)
+			fmt.Fprintln(out, "  Previzualizare:", png)
 		}
 	}
-	fmt.Println("  Copiază în:", installHint(mode, name))
+	fmt.Fprintln(out, "  Copiază în:", installHint(mode, name))
 	return outPath, nil
 }
 
