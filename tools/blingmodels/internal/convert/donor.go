@@ -40,6 +40,8 @@ type DonorOptions struct {
 	MaxTexture int
 	// Keep, for v_ models, matches bone or texture names of the parts to keep (the hands); empty = built-in rules.
 	Keep string
+	// MapBones (optional, AI) matches bone names when the built-in rules do not recognize the skeleton.
+	MapBones func(src, dst []string) (map[string]string, error)
 	// AutoRotate turns the new weapon onto the old one (principal axes); off = only size and position are matched.
 	AutoRotate bool
 }
@@ -51,8 +53,9 @@ func LoadDonor(path string) (*mdl.Model, error) {
 		return nil, err
 	}
 	var texData []byte
-	ext := filepath.Ext(path)
-	base := strings.TrimSuffix(path, ext)
+	orig := strings.TrimSuffix(path, ".blingbak") // a blingmodels backup of the original
+	ext := filepath.Ext(orig)
+	base := strings.TrimSuffix(orig, ext)
 	for _, cand := range []string{base + "T" + ext, base + "t" + ext, base + "T.MDL", base + "t.mdl"} {
 		if b, err := os.ReadFile(cand); err == nil {
 			texData = b
@@ -199,7 +202,7 @@ func splitHands(m *mdl.Model, tris []Tri, keep string) (kept, weapon []Tri, err 
 // fitPlayer scales the new body to the donor's height, stands it on the donor's feet and binds every vertex to the
 // bone of the nearest donor vertex (compared in box-normalized space, so a slimmer or wider body still finds the
 // matching limb).
-func (s *Scene) fitPlayer(donor []Tri) {
+func (s *Scene) fitHeight(donor []Tri) {
 	dmn, dmx := boundsOf(donor)
 	smn, smx := s.Bounds()
 	if smx[2]-smn[2] > 1e-9 {
@@ -209,7 +212,13 @@ func (s *Scene) fitPlayer(donor []Tri) {
 		s.Transform(identity3(), 1, sc.Scale(-1))
 		s.Transform(identity3(), scale, vmath.Vec3{dc[0], dc[1], dc[2]})
 	}
-	smn, smx = s.Bounds()
+}
+
+// bindNearest binds vertices to the bone of the nearest donor vertex; with onlyUnbound, only corners whose Bone is
+// -1 (left over by the skeleton matching).
+func (s *Scene) bindNearest(donor []Tri, onlyUnbound bool) {
+	dmn, dmx := boundsOf(donor)
+	smn, smx := s.Bounds()
 	type pv struct {
 		p    vmath.Vec3
 		bone int
@@ -278,6 +287,9 @@ func (s *Scene) fitPlayer(donor []Tri) {
 	cache := map[vmath.Vec3]int{}
 	for i := range s.Tris {
 		for k := range s.Tris[i].C {
+			if onlyUnbound && s.Tris[i].C[k].Bone >= 0 {
+				continue
+			}
 			p := s.Tris[i].C[k].Pos
 			b, ok := cache[p]
 			if !ok {
@@ -311,8 +323,58 @@ func BuildWithDonor(s *Scene, donor *mdl.Model, o DonorOptions) (*mdl.Model, []s
 	var kept []Tri
 	switch o.Mode {
 	case DonorPlayer:
-		s.fitPlayer(dtris)
-		notes = append(notes, fmt.Sprintf("corpul nou e legat de scheletul original (%d oase, %d animații)", len(donor.Bones), len(donor.Sequences)))
+		s.fitHeight(dtris)
+		srcNames := make([]string, len(s.Bones))
+		srcParent := make([]int, len(s.Bones))
+		for i, b := range s.Bones {
+			srcNames[i], srcParent[i] = b.Name, b.Parent
+		}
+		dstNames := make([]string, len(donor.Bones))
+		dstParent := make([]int, len(donor.Bones))
+		for i, b := range donor.Bones {
+			dstNames[i], dstParent[i] = b.Name, int(b.Parent)
+		}
+		mapping := map[int]int{}
+		if len(s.Bones) > 8 {
+			mapping = MapBones(srcNames, dstNames, srcParent, dstParent)
+			if !CoreMapped(mapping, srcNames) {
+				// Names unknown: recognize the skeleton from its shape.
+				if geo := s.geoClassify(); geo != nil {
+					if gm := mapKeys(geo, classifyAll(dstNames), srcParent, dstParent); coreMappedKeys(gm, geo) {
+						mapping = gm
+						notes = append(notes, "oasele au fost recunoscute după poziție (numele lor nu spuneau nimic)")
+					}
+				}
+			}
+			if !CoreMapped(mapping, srcNames) && !coreMappedKeys(mapping, s.geoClassify()) && o.MapBones != nil {
+				if byName, err := o.MapBones(srcNames, dstNames); err == nil {
+					idx := map[string]int{}
+					for i, n := range dstNames {
+						idx[strings.ToLower(n)] = i
+					}
+					for i, n := range srcNames {
+						if d, ok := idx[strings.ToLower(byName[n])]; ok {
+							mapping[i] = d
+						}
+					}
+					notes = append(notes, "oasele au fost potrivite cu ajutorul AI")
+				} else {
+					notes = append(notes, "AI-ul nu a putut potrivi oasele: "+err.Error())
+				}
+			}
+		}
+		if CoreMapped(mapping, srcNames) || coreMappedKeys(mapping, s.geoClassify()) {
+			s.retargetPlayer(world, dstParent, mapping)
+			s.bindNearest(dtris, true)
+			notes = append(notes, fmt.Sprintf("scheletul modelului (%d oase) a fost potrivit pe cel original: %d oase legate, corpul adus în poza originalului (%d animații)", len(s.Bones)-1, len(mapping), len(donor.Sequences)))
+		} else {
+			s.bindNearest(dtris, false)
+			if len(s.Bones) > 8 {
+				notes = append(notes, "scheletul modelului nu seamănă cu unul de om; corpul e legat după poziție (iese bine dacă stă în aceeași poză ca originalul)")
+			} else {
+				notes = append(notes, "modelul nu are schelet; corpul e legat după poziție de oasele originalului (iese bine dacă stă în aceeași poză ca originalul)")
+			}
+		}
 	case DonorView, DonorWorld:
 		weapon := dtris
 		if o.Mode == DonorView {
@@ -342,12 +404,32 @@ func BuildWithDonor(s *Scene, donor *mdl.Model, o DonorOptions) (*mdl.Model, []s
 			}
 		}
 		s.FitTo(weapon, o.AutoRotate)
+		// Moving parts (magazine, slide, bolt…) go to the donor bone that animates the same part.
+		partBone := map[string]int{}
+		for b, bone := range donor.Bones {
+			if g := partGroup(bone.Name); g != "" && !handBones.MatchString(bone.Name+" ") {
+				if _, ok := partBone[g]; !ok {
+					partBone[g] = b
+				}
+			}
+		}
+		moved := map[string]int{}
 		for i := range s.Tris {
+			bone := main
+			if g := partGroup(s.Tris[i].Part); g != "" {
+				if b, ok := partBone[g]; ok {
+					bone = b
+					moved[g]++
+				}
+			}
 			for k := range s.Tris[i].C {
-				s.Tris[i].C[k].Bone = main
+				s.Tris[i].C[k].Bone = bone
 			}
 		}
 		notes = append(notes, fmt.Sprintf("arma nouă e pusă peste cea veche și legată de osul %q", donor.Bones[main].Name))
+		for g, n := range moved {
+			notes = append(notes, fmt.Sprintf("piesa „%s” (%d triunghiuri) se mișcă cu osul %q din original", partLabel[g], n, donor.Bones[partBone[g]].Name))
+		}
 	}
 
 	// Textures: the new materials first, then the donor textures the kept parts use.
@@ -393,4 +475,28 @@ func BuildWithDonor(s *Scene, donor *mdl.Model, o DonorOptions) (*mdl.Model, []s
 		out.Hitboxes = hitboxes(parts, len(donor.Bones))
 	}
 	return &out, notes, nil
+}
+
+var partGroups = []struct {
+	group string
+	re    *regexp.Regexp
+}{
+	{"mag", regexp.MustCompile(`(?i)(mag|clip|ammo|cartridge|incarcator)`)},
+	{"slide", regexp.MustCompile(`(?i)(slide|bolt|charg|cocking|pump|carrier|handle|lever)`)},
+	{"trigger", regexp.MustCompile(`(?i)trigger`)},
+	{"hammer", regexp.MustCompile(`(?i)hammer`)},
+	{"cylinder", regexp.MustCompile(`(?i)(cylinder|drum)`)},
+	{"pin", regexp.MustCompile(`(?i)(\bpin\b|spoon)`)},
+}
+
+var partLabel = map[string]string{"mag": "încărcător", "slide": "închizător", "trigger": "trăgaci", "hammer": "cocoș", "cylinder": "butoiaș", "pin": "cui/siguranță"}
+
+// partGroup tells which moving weapon part a node or bone name is ("" = the weapon body).
+func partGroup(name string) string {
+	for _, g := range partGroups {
+		if g.re.MatchString(name) {
+			return g.group
+		}
+	}
+	return ""
 }

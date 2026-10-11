@@ -401,3 +401,58 @@ func TestDoubleSidedSheetGetsBackFaces(t *testing.T) {
 		t.Fatalf("got %d triangles, want 16 (both sides)", n)
 	}
 }
+
+func TestGenerateSpinPlaysInEngine(t *testing.T) {
+	s := &Scene{
+		Bones:     []SBone{{Name: "root", Parent: -1, Rest: vmath.BoneIdentity()}},
+		Materials: []Material{{Name: "m", Factor: [4]float64{1, 1, 0, 1}}},
+		Tris:      box(vmath.Vec3{-4, -2, 0}, vmath.Vec3{4, 2, 6}, 0, 0),
+	}
+	if !s.GenerateAnim("spinbob") {
+		t.Fatal("not generated")
+	}
+	m, err := BuildProp(s, BuildOptions{Name: "spin.mdl"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, _ := m.Encode()
+	back, err := mdl.Decode(data, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	quarter := enginePose(back, 0, 15) // a quarter turn
+	if d := quarter[1].R[0][0]; math.Abs(d) > 0.05 {
+		t.Fatalf("bone not turned a quarter at frame 15 (cos = %.3f)", d)
+	}
+}
+
+func TestWeaponPartFollowsDonorBone(t *testing.T) {
+	donor := donorView(t)
+	donor.Bones = append(donor.Bones, mdl.Bone{Name: "magazine", Parent: 2, Controller: [6]int32{-1, -1, -1, -1, -1, -1}, Scale: [6]float32{1, 1, 1, 0.0001, 0.0001, 0.0001}})
+	for si := range donor.Sequences {
+		for bl := range donor.Sequences[si].Anims {
+			donor.Sequences[si].Anims[bl] = append(donor.Sequences[si].Anims[bl], [6][]int16{})
+		}
+	}
+	gun := &Scene{Bones: []SBone{{Name: "root", Parent: -1, Rest: vmath.BoneIdentity()}}, Materials: []Material{{Name: "g", Factor: [4]float64{1, 1, 1, 1}}}}
+	body := box(vmath.Vec3{0, -1, 0}, vmath.Vec3{30, 1, 3}, 0, 0)
+	mag := box(vmath.Vec3{10, -0.8, -6}, vmath.Vec3{13, 0.8, 0}, 0, 0)
+	for i := range mag {
+		mag[i].Part = "Magazine_01 mesh"
+	}
+	gun.Tris = append(body, mag...)
+	out, notes, err := BuildWithDonor(gun, donor, DonorOptions{Mode: DonorView, Name: "v.mdl", AutoRotate: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(notes)
+	n := 0
+	for _, tr := range DonorTris(out, DonorBoneWorld(out)) {
+		if tr.C[0].Bone == 3 {
+			n++
+		}
+	}
+	if n != 12 {
+		t.Fatalf("%d triangles on the magazine bone, want 12", n)
+	}
+}

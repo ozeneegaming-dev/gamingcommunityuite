@@ -136,6 +136,65 @@ canvas:active { cursor: grabbing; }
 .dropall div { border: 2px dashed var(--a2); border-radius: 24px; padding: 60px 80px; text-align: center; color: var(--text); font-size: 20px; font-weight: 600; }
 .dropall svg { width: 46px; height: 46px; color: var(--a3); display: block; margin: 0 auto 12px; }
 .hidden { display: none !important; }
+.brand .gear { margin-left: auto; width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel2); cursor: pointer; display: grid; place-items: center; color: var(--dim); }
+.brand .gear:hover { color: var(--text); border-color: var(--line2); }
+.brand .gear svg { width: 17px; height: 17px; }
+select.inp, input.inp { width: 100%; background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; color: var(--text); font: inherit; font-size: 13px; }
+select.inp:focus, input.inp:focus { outline: none; border-color: var(--a2); }
+.game { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--dim); margin-bottom: 8px; }
+.game .ok { color: var(--ok); }
+.game .bad { color: #ffc46b; }
+.game code { color: var(--text); font: 11.5px ui-monospace, Consolas, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.game a { color: var(--a3); cursor: pointer; white-space: nowrap; }
+.aibox { margin-top: 18px; border: 1px solid var(--line); border-radius: var(--r); padding: 12px; background: linear-gradient(135deg, #8b5cff14, #22d3ee0d); }
+.aibox h3 { margin: 0 0 8px; font-size: 13px; display: flex; align-items: center; gap: 7px; }
+.aibox h3 svg { color: var(--a2); width: 16px; height: 16px; }
+.aibox .who { margin-left: auto; font-weight: 500; font-size: 11px; color: var(--dim); }
+.aibox .who.bad { color: #ffc46b; cursor: pointer; text-decoration: underline; }
+.aibox label { display: flex; align-items: center; gap: 8px; font-size: 12.5px; margin-top: 6px; cursor: pointer; }
+.aibox input { accent-color: var(--a2); width: 15px; height: 15px; }
+.btn.ok { border-color: #34e39b66; color: var(--ok); }
+.msg { position: absolute; left: 50%; top: 18px; transform: translateX(-50%); background: #0e1018f2; border: 1px solid var(--line2); border-radius: 12px; padding: 10px 16px; font-size: 13px; z-index: 6; max-width: 80%; }
+.msg.err { border-color: #ff7b9366; color: #ffb3c1; }
+/* assistant */
+.chatbtn { position: absolute; right: 18px; bottom: 64px; height: 42px; padding: 0 16px; border-radius: 999px; border: 0; background: var(--grad); color: #fff; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 10px 30px -8px #8b5cffcc; z-index: 4; }
+.chatbtn svg { width: 18px; height: 18px; }
+.chat { position: absolute; top: 12px; right: 12px; bottom: 12px; width: min(380px, calc(100% - 24px)); background: #0d0f16f7; backdrop-filter: blur(14px); border: 1px solid var(--line2); border-radius: 16px; display: flex; flex-direction: column; z-index: 5; box-shadow: 0 30px 80px -20px #000; }
+.chat header { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--line); font-weight: 600; }
+.chat header svg { color: var(--a2); }
+.chat header button { margin-left: auto; background: none; border: 0; color: var(--dim); cursor: pointer; display: grid; }
+.chat .msgs { flex: 1; overflow: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.bubble { max-width: 88%; padding: 9px 12px; border-radius: 14px; font-size: 13px; line-height: 1.45; white-space: pre-wrap; }
+.bubble.me { align-self: flex-end; background: #2a2150; border-bottom-right-radius: 4px; }
+.bubble.ai { align-self: flex-start; background: var(--panel2); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.bubble.ai small { display: block; color: var(--a3); margin-top: 6px; font-size: 11.5px; }
+.chat form { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--line); }
+.chat textarea { flex: 1; resize: none; height: 42px; background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; color: var(--text); font: inherit; font-size: 13px; }
+.chat textarea:focus { outline: none; border-color: var(--a2); }
+.chat form button { width: 42px; border: 0; border-radius: 12px; background: var(--grad); color: #fff; cursor: pointer; display: grid; place-items: center; }
+.sugs { display: flex; flex-wrap: wrap; gap: 6px; }
+.sug { font-size: 12px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line2); background: none; color: var(--dim); cursor: pointer; }
+.sug:hover { color: var(--text); border-color: var(--a2); }
+/* settings */
+.modal { position: fixed; inset: 0; background: #05060acc; backdrop-filter: blur(6px); display: grid; place-items: center; z-index: 20; padding: 16px; }
+.dialog { width: min(560px, 100%); max-height: 90vh; overflow: auto; background: var(--panel); border: 1px solid var(--line2); border-radius: 18px; padding: 20px; }
+.dialog h2 { margin: 0 0 4px; font-size: 18px; display: flex; align-items: center; }
+.dialog h2 button { margin-left: auto; background: none; border: 0; color: var(--dim); cursor: pointer; display: grid; }
+.dialog h4 { margin: 18px 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 1.1px; color: var(--dim); }
+.dialog p.small { margin: 6px 0 0; font-size: 12px; color: var(--faint); }
+.row { display: flex; gap: 8px; }
+.row .btn { height: 38px; background: var(--panel2); }
+.found { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.found button { text-align: left; background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; color: var(--text); cursor: pointer; font: 12px ui-monospace, Consolas, monospace; }
+.found button.on { border-color: var(--ok); }
+.radios { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.radio { border: 1px solid var(--line); background: var(--panel2); border-radius: 12px; padding: 10px 12px; cursor: pointer; text-align: left; color: var(--text); }
+.radio b { display: block; font-size: 13px; }
+.radio small { color: var(--dim); font-size: 11.5px; }
+.radio.on { border-color: var(--a2); box-shadow: 0 0 0 1px var(--a2) inset; }
+.status { margin-top: 10px; font-size: 12.5px; padding: 8px 10px; border-radius: 10px; background: var(--panel2); border: 1px solid var(--line); }
+.status.ok { color: var(--ok); }
+.status.bad { color: #ffc46b; }
 </style>
 </head>
 <body>
@@ -157,6 +216,11 @@ canvas:active { cursor: grabbing; }
   <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></symbol>
   <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
   <symbol id="i-log" viewBox="0 0 24 24"><path d="M5 6h14M5 12h14M5 18h9"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></symbol>
+  <symbol id="i-ai" viewBox="0 0 24 24"><path d="M12 2l1.8 4.6L18.5 8.5l-4.7 1.8L12 15l-1.8-4.7L5.5 8.5l4.7-1.9zM5 15l.9 2.1L8 18l-2.1.9L5 21l-.9-2.1L2 18l2.1-.9zM18 14l.7 1.6 1.6.7-1.6.7-.7 1.6-.7-1.6-1.6-.7 1.6-.7z"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-2.5-6.5z"/></symbol>
+  <symbol id="i-game" viewBox="0 0 24 24"><rect x="2.5" y="7" width="19" height="10" rx="5"/><path d="M7.5 10.5v3M6 12h3M15.5 11h.01M18 13h.01"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M4 9h11a5 5 0 010 10h-4M4 9l4-4M4 9l4 4"/></symbol>
   <symbol id="i-rot" viewBox="0 0 24 24"><path d="M20 12a8 8 0 11-2.3-5.6M20 4v4h-4"/></symbol>
 </svg>
 
@@ -165,6 +229,7 @@ canvas:active { cursor: grabbing; }
     <div class="brand">
       <div class="mark"><svg><use href="#i-prop"/></svg></div>
       <div><h1>blingmodels</h1><p>Sketchfab → Counter-Strike 1.6 · v{{VERSION}}</p></div>
+      <button class="gear" id="gearBtn" title="Setări (joc, AI)"><svg><use href="#i-gear"/></svg></button>
     </div>
     <div class="scroll">
       <section class="step">
@@ -190,6 +255,25 @@ canvas:active { cursor: grabbing; }
         </div>
         <p class="note" id="note"></p>
       </section>
+
+      <section class="step" id="refStep">
+        <h2><i>3</i>Model de referință din CS</h2>
+        <div class="game" id="gameLine"></div>
+        <select class="inp" id="ref"></select>
+        <p class="note" id="refNote">De la el rămân scheletul, toate animațiile, hitbox-urile și sunetele.</p>
+      </section>
+
+      <section class="step" id="animStep">
+        <h2><i>3</i>Animație pentru obiect</h2>
+        <select class="inp" id="genanim"></select>
+        <p class="note">Folosită doar dacă modelul nu are deja animații.</p>
+      </section>
+
+      <div class="aibox">
+        <h3><svg><use href="#i-ai"/></svg>AI<span class="who" id="aiWho">…</span></h3>
+        <label><input type="checkbox" id="aiAuto"> Recunoaște modelul, alege referința și îl întoarce corect</label>
+        <label><input type="checkbox" id="aiReview"> Verifică rezultatul și repară automat</label>
+      </div>
 
       <details>
         <summary><svg><use href="#i-chev"/></svg>Setări avansate</summary>
@@ -231,7 +315,8 @@ canvas:active { cursor: grabbing; }
           <button class="btn ico" id="spinBtn" title="Rotire automată"><svg><use href="#i-rot"/></svg></button>
           <button class="btn ico" id="logBtn" title="Jurnal"><svg><use href="#i-log"/></svg></button>
           <button class="btn" id="folderBtn"><svg><use href="#i-folder"/></svg>Folder</button>
-          <a class="btn primary" id="dlBtn"><svg><use href="#i-dl"/></svg>Descarcă .mdl</a>
+          <a class="btn" id="dlBtn"><svg><use href="#i-dl"/></svg>.mdl</a>
+          <button class="btn primary" id="installBtn"><svg><use href="#i-game"/></svg>Pune în joc</button>
         </div>
       </div>
       <div class="where hidden" id="where"><span>Copiază în</span><code id="mHint"></code><button class="btn" id="copyBtn"><svg><use href="#i-copy"/></svg>Copiază</button></div>
@@ -240,10 +325,44 @@ canvas:active { cursor: grabbing; }
         <button class="btn" id="playBtn" title="Pornește / oprește"><svg><use href="#i-pause"/></svg></button>
       </div>
       <pre class="log hidden" id="log"></pre>
+      <div class="msg hidden" id="toast"></div>
+      <button class="chatbtn" id="chatBtn"><svg><use href="#i-ai"/></svg>Asistent AI</button>
+      <div class="chat hidden" id="chat">
+        <header><svg><use href="#i-ai"/></svg>Asistent AI<button id="chatClose" title="Închide"><svg><use href="#i-x"/></svg></button></header>
+        <div class="msgs" id="msgs">
+          <div class="bubble ai">Salut! Spune-mi ce vrei să faci cu modelul. De exemplu: „fă-l armă pentru AK”, „e întors, rotește-l”, „e prea mare”, „de ce lipsește fața?”.
+            <div class="sugs" style="margin-top:8px">
+              <button class="sug">Ce fel de model e ăsta?</button>
+              <button class="sug">Fă-l jucător CT</button>
+              <button class="sug">Nu se vede bine în joc, repară</button>
+            </div>
+          </div>
+        </div>
+        <form id="chatForm"><textarea id="chatIn" placeholder="Scrie aici… (Enter trimite)"></textarea><button title="Trimite"><svg><use href="#i-send"/></svg></button></form>
+      </div>
       <div class="busy hidden" id="busy"><div><div class="spin"></div><p><b>Se convertește…</b>Modelele mari sau cele prin Blender pot dura un minut.</p></div></div>
     </div>
     <div class="dock" id="dock"><span class="hint" id="dockHint">Modelele convertite apar aici.</span></div>
   </main>
+</div>
+<div class="modal hidden" id="settings">
+  <div class="dialog">
+    <h2>Setări<button id="setClose" title="Închide"><svg><use href="#i-x"/></svg></button></h2>
+    <h4>Jocul Counter-Strike 1.6</h4>
+    <div class="row"><input class="inp" id="csPath" placeholder="ex. D:\Counter-Strike 1.6\cstrike"><button class="btn" id="csSave">Salvează</button><button class="btn" id="csScan">Caută</button></div>
+    <p class="small">Folderul <b>cstrike</b> al jocului sau al serverului. De acolo iau modelele originale și acolo pun modelele noi (cu copie de siguranță).</p>
+    <div class="found" id="csFound"></div>
+    <h4>AI</h4>
+    <div class="radios" id="aiModes">
+      <button class="radio" data-v="auto"><b>Automat</b><small>cheia API dacă ai pus-o, altfel Claude Code</small></button>
+      <button class="radio" data-v="claude"><b>Claude Code</b><small>folosește abonamentul tău Claude</small></button>
+      <button class="radio" data-v="api"><b>Cheie API</b><small>plătești după folosire (console.anthropic.com)</small></button>
+      <button class="radio" data-v="off"><b>Oprit</b><small>fără AI</small></button>
+    </div>
+    <div class="row" style="margin-top:10px"><input class="inp" id="apiKey" type="password" placeholder="Cheie API (sk-ant-…) — rămâne doar pe calculatorul tău"><button class="btn" id="keySave">Salvează</button></div>
+    <div class="status" id="aiStatus"></div>
+    <p class="small">Cu abonamentul Claude: blingmodels folosește comanda <b>claude</b> (Claude Code). Dacă nu e găsită, instaleaz-o o dată din PowerShell cu <code>irm https://claude.ai/install.ps1 | iex</code>, apoi scrie <code>claude</code> și conectează-te cu contul tău.</p>
+  </div>
 </div>
 <div class="dropall" id="dropall"><div><svg><use href="#i-up"/></svg>Lasă fișierele aici</div></div>
 
@@ -282,16 +401,17 @@ function renderFiles() {
   $("go").disabled = !hasModel;
   const note = $("note");
   note.className = "note";
-  if (["v", "p", "player"].includes(mode) && !donor) {
+  renderRef();
+  const refSel = $("ref").value;
+  if (["v", "p", "player"].includes(mode) && !donor && !refSel) {
     note.className = "note warn";
-    note.textContent = mode === "player" ? "Adaugă și jucătorul original din CS (ex. gign.mdl + gignT.mdl) — de la el rămân animațiile."
-      : `Adaugă și arma originală din CS (ex. ${mode}_ak47.mdl) — de la ea rămân animațiile.`;
+    note.textContent = "Alege mai jos modelul de referință din CS — de la el rămân animațiile.";
   } else if (donor) {
     note.textContent = `Original: ${donor.path.split("/").pop()} — scheletul și animațiile lui rămân.`;
   } else if (mode === "w") {
     note.textContent = "Fără original, arma e pusă culcată pe sol.";
   } else {
-    note.textContent = mode === "auto" ? "Tipul se alege singur după fișiere." : "";
+    note.textContent = mode === "auto" ? (aiOn() ? "AI-ul recunoaște singur modelul și alege referința." : "Tipul se alege după fișiere (sau alege-l tu).") : "";
   }
 }
 function addFiles(list) {
@@ -349,6 +469,11 @@ $("go").onclick = async () => {
   const v = (id) => $(id).value;
   fd.append("mode", mode); fd.append("rotate", v("rotate")); fd.append("maxtris", v("maxtris")); fd.append("height", v("height"));
   fd.append("name", v("name")); fd.append("keep", v("keep"));
+  const dropped = files.some((f) => mdlRe.test(f.path));
+  if (!dropped && $("ref").value && mode !== "prop") fd.append("ref", $("ref").value);
+  fd.append("genanim", (mode === "prop" || mode === "auto") ? $("genanim").value : "");
+  fd.append("ai", $("aiAuto").checked && aiReady() ? "1" : "0");
+  fd.append("review", $("aiReview").checked && aiReady() ? "1" : "0");
   fd.append("nofit", $("nofit").checked ? "1" : "0"); fd.append("anims", $("anims").checked ? "1" : "0"); fd.append("double", $("double").checked ? "1" : "0");
   setBusy(true);
   try { showResult(await (await api("/convert", { method: "POST", body: fd })).json()); }
@@ -386,6 +511,7 @@ function select(i) {
   seq.innerHTML = "";
   (r.seqs || []).forEach((s, k) => { const o = document.createElement("option"); o.value = k; o.textContent = s; seq.append(o); });
   loadMesh(r, 0);
+  updateInstall();
 }
 $("folderBtn").onclick = () => { const r = results[current]; if (r) api(`/open?p=${encodeURIComponent(r.path)}`); };
 $("copyBtn").onclick = async () => { try { await navigator.clipboard.writeText($("mHint").textContent); $("copyBtn").lastChild.textContent = "Copiat"; setTimeout(() => ($("copyBtn").lastChild.textContent = "Copiază"), 1400); } catch {} };
@@ -498,6 +624,180 @@ $("playBtn").onclick = () => { playing = !playing; $("playBtn").innerHTML = icon
 setInterval(() => api("/ping").catch(() => {}), 5000);
 api("/ping");
 addEventListener("pagehide", () => navigator.sendBeacon(`/ping?t=${TOKEN}&bye=1`));
+
+/* ---------- game, references, settings, AI ---------- */
+let state = null;
+const kindLabel = { v: "Arme v_ (persoana întâi)", p: "Arme p_ (în mâna altora)", w: "Arme w_ (pe jos)", player: "Jucători" };
+function aiReady() { return state && !state.aiError && state.aiMode !== "off"; }
+function aiOn() { return aiReady() && $("aiAuto").checked; }
+async function loadState(s) {
+  state = s || await (await api("/state")).json();
+  renderGame(); renderRef(); renderAI(); renderSettings(); renderFiles();
+  if (state.scanning) setTimeout(() => loadState(), 1500);
+}
+function renderGame() {
+  const g = $("gameLine");
+  if (state.cstrike) g.innerHTML = `<span class="ok">●</span><code title=""></code><a id="gChange">schimbă</a>`;
+  else if (state.scanning) g.innerHTML = `<span>⏳</span><code>Caut jocul pe calculator…</code>`;
+  else g.innerHTML = `<span class="bad">●</span><code>Nu am găsit jocul</code><a id="gChange">alege folderul</a>`;
+  const c = g.querySelector("code"); if (state.cstrike) { c.textContent = state.cstrike; c.title = state.cstrike; }
+  const ch = $("gChange"); if (ch) ch.onclick = openSettings;
+}
+function renderRef() {
+  if (!state) return;
+  const sel = $("ref"), keep = sel.value;
+  $("refStep").classList.toggle("hidden", mode === "prop");
+  $("animStep").classList.toggle("hidden", !(mode === "prop" || mode === "auto"));
+  sel.innerHTML = "";
+  const first = document.createElement("option");
+  first.value = "";
+  first.textContent = mode === "auto" ? (aiOn() ? "✨ AI alege singur" : "— fără referință (obiect) —") : "— alege —";
+  sel.append(first);
+  const kinds = mode === "auto" ? ["player", "v", "p", "w"] : [mode];
+  for (const k of kinds) {
+    const list = (state.refs || []).filter((r) => r.kind === k);
+    if (!list.length) continue;
+    const og = document.createElement("optgroup");
+    og.label = kindLabel[k];
+    for (const r of list) {
+      const o = document.createElement("option");
+      o.value = r.path;
+      o.textContent = (k === "player" ? r.name : r.file) + (r.bak ? "  (deja înlocuit — folosesc originalul salvat)" : "");
+      og.append(o);
+    }
+    sel.append(og);
+  }
+  if ([...sel.options].some((o) => o.value === keep)) sel.value = keep;
+  const n = (state.refs || []).length;
+  $("refNote").textContent = !state.cstrike ? "Alege folderul jocului în Setări ca să apară modelele originale (sau trage un .mdl original la fișiere)."
+    : n ? "De la el rămân scheletul, toate animațiile, hitbox-urile și sunetele." : "În folderul jocului nu am găsit modele.";
+}
+$("ref").onchange = () => renderFiles();
+function renderAI() {
+  const who = $("aiWho");
+  who.className = "who" + (aiReady() ? "" : " bad");
+  who.textContent = aiReady() ? state.aiName : (state.aiMode === "off" ? "oprit" : "neconfigurat");
+  who.onclick = aiReady() ? null : openSettings;
+  $("aiAuto").checked = state.aiAuto; $("aiReview").checked = state.aiReview;
+  $("aiAuto").disabled = $("aiReview").disabled = !aiReady();
+  const g = $("genanim");
+  if (!g.options.length) {
+    const opts = [["none", "Fără animație"], ["auto", "✨ AI alege potrivită"], ...Object.entries(state.genAnims)];
+    for (const [v, t] of opts) { const o = document.createElement("option"); o.value = v; o.textContent = t[0].toUpperCase() + t.slice(1); g.append(o); }
+  }
+}
+["aiAuto", "aiReview"].forEach((id) => $(id).onchange = () => api("/settings", { method: "POST", body: JSON.stringify({ [id]: $(id).checked }) }).then(() => renderFiles()));
+function renderSettings() {
+  $("csPath").value = state.cstrike || "";
+  const f = $("csFound"); f.innerHTML = "";
+  for (const p of state.found || []) {
+    const b = document.createElement("button");
+    b.textContent = p; b.className = p === state.cstrike ? "on" : "";
+    b.onclick = () => saveSettings({ cstrike: p });
+    f.append(b);
+  }
+  if (state.scanning) { const d = document.createElement("div"); d.className = "small"; d.textContent = "Caut…"; f.append(d); }
+  document.querySelectorAll("#aiModes .radio").forEach((r) => r.classList.toggle("on", r.dataset.v === state.aiMode));
+  $("apiKey").placeholder = state.hasKey ? "Cheie salvată ✓ (scrie alta ca s-o schimbi)" : "Cheie API (sk-ant-…) — rămâne doar pe calculatorul tău";
+  const st = $("aiStatus");
+  st.className = "status " + (aiReady() ? "ok" : "bad");
+  st.textContent = aiReady() ? `✓ AI pregătit: ${state.aiName}` : (state.aiMode === "off" ? "AI oprit." : "✗ " + (state.aiError || "neconfigurat"));
+  if (!state.claudeCode && state.aiMode === "claude") st.textContent += " — Claude Code nu e instalat.";
+}
+async function saveSettings(obj) {
+  const r = await api("/settings", { method: "POST", body: JSON.stringify(obj) });
+  const j = await r.json();
+  if (!r.ok) { toast(j.error || "Eroare", true); return; }
+  loadState(j);
+}
+function openSettings() { $("settings").classList.remove("hidden"); }
+$("gearBtn").onclick = openSettings;
+$("setClose").onclick = () => $("settings").classList.add("hidden");
+$("settings").onclick = (e) => { if (e.target.id === "settings") $("settings").classList.add("hidden"); };
+$("csSave").onclick = () => saveSettings({ cstrike: $("csPath").value });
+$("csScan").onclick = async () => loadState(await (await api("/rescan")).json());
+$("aiModes").onclick = (e) => { const b = e.target.closest(".radio"); if (b) saveSettings({ aiMode: b.dataset.v }); };
+$("keySave").onclick = () => { const k = $("apiKey").value.trim(); $("apiKey").value = ""; saveSettings({ apiKey: k, ...(k ? { aiMode: "api" } : {}) }); };
+let toastTimer;
+function toast(text, err) {
+  const t = $("toast"); t.textContent = text; t.className = "msg" + (err ? " err" : "");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add("hidden"), 5000);
+}
+$("installBtn").onclick = async () => {
+  const r = results[current]; if (!r) return;
+  const res = await api("/install", { method: "POST", body: JSON.stringify({ path: r.path }) });
+  const j = await res.json();
+  if (!res.ok) { toast(j.error, true); if (/Setări/.test(j.error)) openSettings(); return; }
+  r.installed = true; r.installedAt = j.dst;
+  toast(`✓ Pus în joc: ${j.dst}` + (j.backup ? " — originalul e păstrat; îl poți restaura oricând." : ""));
+  updateInstall();
+};
+function updateInstall() {
+  const r = results[current], b = $("installBtn");
+  if (!r) return;
+  b.innerHTML = r.installed ? `${icon("undo")}Restaurează originalul` : `${icon("game")}Pune în joc`;
+  b.className = r.installed ? "btn" : "btn primary";
+  b.onclick = r.installed ? async () => {
+    const res = await api("/restore", { method: "POST", body: JSON.stringify({ path: r.path }) });
+    const j = await res.json();
+    if (!res.ok) { toast(j.error, true); return; }
+    r.installed = false; toast("Originalul a fost pus înapoi în joc."); updateInstall(); $("installBtn").onclick = installHandler;
+  } : installHandler;
+}
+const installHandler = $("installBtn").onclick;
+
+/* assistant */
+$("chatBtn").onclick = () => { $("chat").classList.remove("hidden"); $("chatBtn").classList.add("hidden"); $("chatIn").focus(); };
+$("chatClose").onclick = () => { $("chat").classList.add("hidden"); $("chatBtn").classList.remove("hidden"); };
+function bubble(text, who, extra) {
+  const b = document.createElement("div"); b.className = "bubble " + who; b.textContent = text;
+  if (extra) { const s = document.createElement("small"); s.textContent = extra; b.append(s); }
+  $("msgs").append(b); $("msgs").scrollTop = 1e9; return b;
+}
+function uiState() {
+  const r = results[current];
+  return { mode, ref: ($("ref").selectedOptions[0] || {}).textContent || "", rotate: $("rotate").value, maxtris: $("maxtris").value, height: $("height").value,
+    name: $("name").value, double: $("double").checked, nofit: $("nofit").checked, anims: $("anims").checked, genanim: $("genanim").value,
+    files: files.map((f) => f.path.split("/").pop()), game: state && state.cstrike, result: r ? { name: r.name, kind: r.kind, tris: r.tris, bones: r.bones, animations: (r.seqs || []).length, installed: !!r.installed } : null };
+}
+function applySettings(st) {
+  const done = [];
+  for (const [k, v] of Object.entries(st || {})) {
+    if (k === "mode") { const t = document.querySelector(`.type[data-mode="${v}"]`); if (t) { t.click(); done.push("tip: " + t.textContent.trim()); } }
+    else if (k === "ref") {
+      renderRef();
+      const want = String(v).toLowerCase().replace(/\.mdl$/, "");
+      const o = [...$("ref").options].find((o) => o.value && (o.textContent.toLowerCase().startsWith(want) || o.value.toLowerCase().includes(want + ".mdl")));
+      if (o) { $("ref").value = o.value; done.push("referință: " + o.textContent); } else if (!v) { $("ref").value = ""; }
+    }
+    else if (["rotate", "maxtris", "height", "name", "keep"].includes(k)) { $(k).value = v; done.push(`${k}: ${v}`); }
+    else if (["double", "nofit", "anims"].includes(k)) { $(k).checked = v === "1" || v === true || v === "true"; done.push(`${k}: ${$(k).checked ? "da" : "nu"}`); }
+    else if (k === "genanim") { $("genanim").value = v; done.push("animație: " + v); }
+  }
+  renderFiles();
+  return done;
+}
+async function sendChat(text) {
+  if (!text.trim()) return;
+  bubble(text, "me");
+  const wait = bubble("…", "ai");
+  try {
+    const r = results[current];
+    const res = await api("/assistant", { method: "POST", body: JSON.stringify({ message: text, state: uiState(), log: $("log").textContent, preview: r && r.preview }) });
+    const j = await res.json();
+    wait.remove();
+    const done = applySettings(j.settings);
+    bubble(j.reply || j.error || "…", "ai", done.length ? "Am setat: " + done.join(", ") : "");
+    if (j.convert) {
+      if (!$("go").disabled) { bubble("Convertesc acum…", "ai"); $("go").click(); }
+      else bubble("Adaugă întâi modelul (trage-l în fereastră), apoi îl convertesc.", "ai");
+    }
+  } catch (e) { wait.textContent = "Eroare: " + e; }
+}
+$("chatForm").onsubmit = (e) => { e.preventDefault(); const t = $("chatIn").value; $("chatIn").value = ""; sendChat(t); };
+$("chatIn").onkeydown = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("chatForm").requestSubmit(); } };
+$("msgs").onclick = (e) => { if (e.target.classList.contains("sug")) sendChat(e.target.textContent); };
+loadState();
 renderFiles();
 if (INITIAL) { setBusy(true); api("/initial").then((r) => r.json()).then(showResult).finally(() => setBusy(false)); }
 </script>

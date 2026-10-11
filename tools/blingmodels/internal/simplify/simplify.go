@@ -22,6 +22,7 @@ type Tri struct {
 	C      [3]Corner
 	Mat    int
 	Double bool
+	Part   string
 }
 
 type quadric [10]float64
@@ -145,7 +146,7 @@ func Reduce(pos []vmath.Vec3, tris []Tri, target int) ([]vmath.Vec3, []Tri) {
 					first = &tr.C[k]
 					continue
 				}
-				if math.Abs(c.UV[0]-first.UV[0]) > 1e-6 || math.Abs(c.UV[1]-first.UV[1]) > 1e-6 || c.Bone != first.Bone || tr.Mat != t[vtris[v][0]].Mat {
+				if math.Abs(c.UV[0]-first.UV[0]) > 1e-6 || math.Abs(c.UV[1]-first.UV[1]) > 1e-6 || c.Bone != first.Bone || tr.Mat != t[vtris[v][0]].Mat || tr.Part != t[vtris[v][0]].Part {
 					locked[v] = true
 				}
 			}

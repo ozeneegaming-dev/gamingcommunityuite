@@ -27,6 +27,8 @@ type Tri struct {
 	// Double: also drawn from the back (open surfaces of double-sided materials); the back face is added last, in
 	// Geometry, so simplification sees each surface once.
 	Double bool
+	// Part names the glTF node/mesh the triangle came from (weapon parts: magazine, slide…).
+	Part string
 	// ST, when HasST is set, are texel coordinates used as they are (triangles kept from an original model).
 	ST    [3][2]int16
 	HasST bool
@@ -416,6 +418,7 @@ func LoadScene(d *gltf.Doc, o LoadOptions) (*Scene, error) {
 					tri.C[1], tri.C[2] = tri.C[2], tri.C[1]
 				}
 				tri.Mat = mat
+				tri.Part = node.Name + " " + mesh.Name
 				if len(norms) == 0 {
 					fn := tri.C[1].Pos.Sub(tri.C[0].Pos).Cross(tri.C[2].Pos.Sub(tri.C[0].Pos)).Norm()
 					for k := range tri.C {
@@ -687,4 +690,12 @@ func isOpen(tris []Tri) bool {
 		}
 	}
 	return len(edges) > 0 && float64(border)/float64(len(edges)) > 0.03
+}
+
+// Clone copies the geometry and skeleton (materials and images are shared; animations are left out).
+func (s *Scene) Clone() *Scene {
+	c := &Scene{Materials: s.Materials}
+	c.Bones = append([]SBone(nil), s.Bones...)
+	c.Tris = append([]Tri(nil), s.Tris...)
+	return c
 }

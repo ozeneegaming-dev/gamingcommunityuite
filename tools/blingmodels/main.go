@@ -31,9 +31,13 @@ type options struct {
 	scale, height, size, fps                              float64
 	maxTris, tex, maxFPS                                  int
 	anims, noPause, preview, noFit, console, double       bool
+	genanim                                               string
+	useAI                                                 bool
+	aiRot                                                 *vmath.Mat3 // orientation chosen by the AI (kept for a retry)
+	postRotate                                            string      // AI review correction, applied last
 }
 
-var boolFlags = map[string]bool{"anims": true, "nopause": true, "preview": true, "nofit": true, "console": true, "double": true}
+var boolFlags = map[string]bool{"anims": true, "nopause": true, "preview": true, "nofit": true, "console": true, "double": true, "ai": true}
 
 // lastMode/lastDonor describe the latest conversion (shown in the window).
 var (
@@ -78,6 +82,14 @@ func main() {
 		}
 		return
 	}
+	if o.useAI {
+		setupAI(true, true)
+		if aiNow.client == nil {
+			fmt.Fprintln(out, "AI indisponibil: instalează Claude Code sau pune cheia API în Setări (fereastra programului).")
+		}
+	} else {
+		setupAI(false, false) // still lists the game's reference models
+	}
 	failed, _ := run(o, inputs)
 	pause(o)
 	if failed > 0 {
@@ -116,6 +128,8 @@ Opțiuni (pot fi puse și în blingmodels.ini lângă exe, ca nume=valoare):
   -preview=false                 fără imaginea de previzualizare .png
   -blender cale\blender.exe      unde e Blender, dacă nu e găsit singur
   -double                        toate suprafețele subțiri desenate pe ambele fețe
+  -genanim spin|bob|spinbob|sway|pulse  animație generată pentru obiecte statice
+  -ai                            AI: recunoaște, alege referința din joc, orientează și verifică
   -nopause                       nu aștepta Enter la final
   -console                       fără fereastră (dublu-click arată doar acest ajutor)
 `)
@@ -158,6 +172,8 @@ func newFlagSet(o *options) *flag.FlagSet {
 	fs.BoolVar(&o.noFit, "nofit", false, "")
 	fs.BoolVar(&o.console, "console", false, "")
 	fs.BoolVar(&o.double, "double", false, "")
+	fs.StringVar(&o.genanim, "genanim", "", "")
+	fs.BoolVar(&o.useAI, "ai", false, "")
 	fs.Usage = func() {}
 	return fs
 }
@@ -474,11 +490,17 @@ func safeName(s string) string {
 }
 
 func convertOne(o *options, input string, donor *mdl.Model, donorPath string) (string, error) {
-	mode, err := pickMode(o, donor, donorPath, input)
-	if err != nil {
-		return "", err
-	}
-	lastMode, lastDonor = mode, donor != nil
+	oc := *o // the AI may change the mode for this file only
+	return convertAttempt(&oc, input, donor, donorPath, 0)
+}
+
+// donorStem is the original model's name (v_ak47 for v_ak47.mdl or its backup v_ak47.mdl.blingbak).
+func donorStem(p string) string {
+	b := strings.TrimSuffix(filepath.Base(p), backupSuffix)
+	return strings.TrimSuffix(b, filepath.Ext(b))
+}
+
+func convertAttempt(o *options, input string, donor *mdl.Model, donorPath string, attempt int) (string, error) {
 	rot, err := parseRotate(o.rotate)
 	if err != nil {
 		return "", err
@@ -499,7 +521,7 @@ func convertOne(o *options, input string, donor *mdl.Model, donorPath string) (s
 	if err != nil {
 		return "", err
 	}
-	scene, err := convert.LoadScene(doc, convert.LoadOptions{Scale: o.scale, FPS: o.fps, MaxFPS: o.maxFPS, Anims: o.anims && mode == "prop", DoubleSided: o.double})
+	scene, err := convert.LoadScene(doc, convert.LoadOptions{Scale: o.scale, FPS: o.fps, MaxFPS: o.maxFPS, Anims: o.anims, DoubleSided: o.double})
 	if err != nil {
 		return "", err
 	}
@@ -507,7 +529,68 @@ func convertOne(o *options, input string, donor *mdl.Model, donorPath string) (s
 		return "", fmt.Errorf("fișierul nu conține niciun triunghi vizibil")
 	}
 	origTris := len(scene.Tris)
+	if n := len(scene.Clips); n > 0 {
+		fmt.Fprintf(out, "  Animații găsite în fișier: %d\n", n)
+	}
+	if nb := len(scene.Bones) - 1; nb > 0 {
+		fmt.Fprintf(out, "  Schelet găsit: %d oase\n", nb)
+	}
 	scene.RotateDegrees(rot)
+	source := scene.Clone()
+
+	// AI: what is it, which original does it replace, which way does it face.
+	aiOriented := false
+	if o.aiRot != nil {
+		scene.Transform(*o.aiRot, 1, vmath.Vec3{})
+		aiOriented = true
+	}
+	genanim := o.genanim
+	if aiNow.client != nil && aiNow.auto && attempt == 0 {
+		fmt.Fprintf(out, "  AI (%s) analizează modelul…\n", aiNow.client.Name())
+		if a, err := aiAnalyze(scene, filepath.Base(input), o.mode); err != nil {
+			fmt.Fprintln(out, "  • AI indisponibil:", err)
+		} else {
+			fmt.Fprintf(out, "  • AI: %s (tip %s%s, sigur %.0f%%)\n", a.Notes, a.Type, ifs(a.Weapon != "", ", "+a.Weapon, ""), a.Confidence*100)
+			if o.mode == "auto" && donor == nil {
+				switch a.Type {
+				case "v", "p", "w", "player":
+					if r, ok := refByFile(a.Reference); ok && (r.Kind == a.Type) {
+						if d, err := convert.LoadDonor(r.Path); err == nil {
+							donor, donorPath = d, r.Path
+							o.mode = a.Type
+							fmt.Fprintf(out, "  • AI a ales referința %s (%d animații)\n", r.File, len(d.Sequences))
+						}
+					} else if a.Type == "w" {
+						o.mode = "w"
+					} else {
+						fmt.Fprintf(out, "  • AI crede că e %s, dar nu am găsit referința în joc; îl fac obiect (alege referința manual)\n", modeLabel(a.Type, true))
+					}
+				}
+			}
+			if strings.TrimSpace(o.rotate) == "" {
+				if r, ok := a.orientation(); ok {
+					if r != (vmath.Mat3{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}) {
+						scene.Transform(r, 1, vmath.Vec3{})
+						fmt.Fprintln(out, "  • AI a întors modelul cu fața înainte și în picioare")
+					}
+					rr := r
+					o.aiRot = &rr
+					aiOriented = true
+				}
+			}
+			if genanim == "auto" {
+				genanim = a.Animation
+			}
+		}
+	}
+	if pr, err := parseRotate(o.postRotate); err == nil {
+		scene.RotateDegrees(pr)
+	}
+	mode, err := pickMode(o, donor, donorPath, input)
+	if err != nil {
+		return "", err
+	}
+	lastMode, lastDonor = mode, donor != nil
 
 	maxTris := o.maxTris
 	if maxTris <= 0 {
@@ -519,6 +602,11 @@ func convertOne(o *options, input string, donor *mdl.Model, donorPath string) (s
 	} else {
 		fmt.Fprintf(out, "  Triunghiuri: %d\n", origTris)
 	}
+	if mode == "prop" && genanim != "" && genanim != "auto" && genanim != "none" {
+		if scene.GenerateAnim(genanim) {
+			fmt.Fprintf(out, "  • Animație generată: %s\n", convert.GenAnimKinds[genanim])
+		}
+	}
 	texSide := o.tex
 	if (mode == "p" || mode == "w") && o.tex == 512 {
 		texSide = 256
@@ -527,7 +615,7 @@ func convertOne(o *options, input string, donor *mdl.Model, donorPath string) (s
 	name := o.name
 	if name == "" {
 		if donorPath != "" && mode != "prop" {
-			name = strings.TrimSuffix(filepath.Base(donorPath), filepath.Ext(donorPath))
+			name = donorStem(donorPath)
 		} else {
 			name = strings.TrimSuffix(filepath.Base(input), filepath.Ext(input))
 		}
@@ -542,7 +630,11 @@ func convertOne(o *options, input string, donor *mdl.Model, donorPath string) (s
 	switch {
 	case donor != nil && mode != "prop":
 		dm := map[string]convert.DonorMode{"player": convert.DonorPlayer, "v": convert.DonorView, "p": convert.DonorWorld, "w": convert.DonorWorld}[mode]
-		model, notes, err = convert.BuildWithDonor(scene, donor, convert.DonorOptions{Mode: dm, Name: name + ".mdl", MaxTexture: texSide, Keep: o.keep, AutoRotate: !o.noFit})
+		dopts := convert.DonorOptions{Mode: dm, Name: name + ".mdl", MaxTexture: texSide, Keep: o.keep, AutoRotate: !o.noFit && !aiOriented}
+		if aiNow.client != nil {
+			dopts.MapBones = aiMapBones
+		}
+		model, notes, err = convert.BuildWithDonor(scene, donor, dopts)
 		if err != nil {
 			return "", err
 		}
@@ -639,6 +731,35 @@ func convertOne(o *options, input string, donor *mdl.Model, donorPath string) (s
 		}
 	}
 	fmt.Fprintln(out, "  Copiază în:", installHint(mode, name))
+	if aiNow.client != nil && aiNow.review {
+		fmt.Fprintln(out, "  AI verifică rezultatul…")
+		r, err := aiReview(back, source, modeLabel(mode, donor != nil))
+		switch {
+		case err != nil:
+			fmt.Fprintln(out, "  • AI indisponibil:", err)
+		case r.OK && len(r.Problems) == 0:
+			fmt.Fprintln(out, "  • AI: arată bine.", r.Summary)
+		default:
+			for _, p := range r.Problems {
+				fmt.Fprintln(out, "  • AI a observat:", p)
+			}
+			if attempt == 0 && r.hasFixes() {
+				o2 := *o
+				o2.mode = mode
+				o2.double = o.double || r.Fixes.Double
+				o2.postRotate = r.Fixes.Rotate
+				if r.Fixes.MaxTris > 0 {
+					o2.maxTris = r.Fixes.MaxTris
+				}
+				if r.Fixes.Height > 0 {
+					o2.height = r.Fixes.Height
+				}
+				o2.noFit = o.noFit || r.Fixes.NoFit
+				fmt.Fprintln(out, "  • AI repară și convertește din nou…")
+				return convertAttempt(&o2, input, donor, donorPath, 1)
+			}
+		}
+	}
 	return outPath, nil
 }
 
@@ -667,4 +788,11 @@ func installHint(mode, name string) string {
 		return fmt.Sprintf(`cstrike\models\%s.mdl (sau un subfolder, apoi în hartă/plugin)`, name)
 	}
 	return fmt.Sprintf(`cstrike\models\%s.mdl`, name)
+}
+
+func ifs(c bool, a, b string) string {
+	if c {
+		return a
+	}
+	return b
 }

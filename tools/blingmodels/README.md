@@ -2,6 +2,32 @@
 
 `blingmodels.exe` transformă modelele descărcate de pe Sketchfab în modele pentru **Counter-Strike 1.6** (fișiere `.mdl`, versiunea 10 GoldSrc).
 
+## Ce face
+
+- **Găsește jocul singur** pe orice partiție (`C:`, `D:`…), inclusiv în bibliotecile Steam, și îți dă lista modelelor originale (`v_ak47`, `gign`…) ca referință.
+- **Jucători.** Dacă modelul de pe Sketchfab are schelet, programul îl recunoaște fie după numele oaselor (Mixamo, Biped, Rigify, Unreal), fie după poziția lor, când numele nu spun nimic. Apoi potrivește scheletul pe cel din CS și aduce corpul în poza originalului. Jucătorul primește toate animațiile originale: mers, sărit, tras, ghemuit.
+- **Arme.** Mâinile originale rămân, arma nouă se potrivește peste cea veche, iar piesele care au nume (încărcător, închizător, trăgaci) se mișcă cu oasele lor la reîncărcare.
+- **Obiecte.** Păstrează animațiile din fișier sau le generează: rotire, plutire, legănare, puls.
+- **Pune modelul în joc** cu un singur buton, cu copie de siguranță a originalului, și îl poate restaura oricând.
+
+## AI
+
+Din fereastră, de la butonul de **Setări**, alegi cum lucrează AI-ul:
+
+| Mod | Ce îți trebuie |
+| --- | --- |
+| **Claude Code** | abonamentul tău Claude; programul folosește comanda `claude` (o instalezi o dată din PowerShell cu `irm https://claude.ai/install.ps1 \| iex`, apoi scrii `claude` și te conectezi) |
+| **Cheie API** | o cheie de pe console.anthropic.com; plătești după folosire |
+
+Funcții:
+- **Recunoaștere și referință.** AI-ul se uită la model din 6 unghiuri, spune ce e (jucător, AK-47, M4…) și alege singur referința din joc.
+- **Orientare automată.** Întoarce modelul cu fața înainte și în picioare, fără `-rotate`.
+- **Verificare și reparare.** Compară rezultatul, așa cum îl desenează CS, cu originalul. Dacă vede piese lipsă, model întors sau mărime greșită, repară și convertește din nou.
+- **Potrivirea oaselor.** Când nici numele, nici forma nu spun ce oase are modelul, AI-ul le potrivește.
+- **Asistent în fereastră.** Îi scrii, de exemplu, „e întors”, „fă-l armă de AK” sau „e prea mare”, iar el schimbă setările și refă conversia.
+
+Fără AI programul merge la fel. AI-ul doar alege și verifică în locul tău.
+
 ## Formate acceptate
 
 | Format | Ce îți trebuie |
@@ -64,6 +90,8 @@ Opțiunile se scriu în linia de comandă, înainte sau după fișiere, sau în 
 | `-name`, `-out` | numele fișierului rezultat și folderul în care se scrie |
 | `-blender cale` | calea spre `blender.exe`, dacă nu e găsit singur |
 | `-double` | toate suprafețele subțiri sunt desenate pe ambele fețe |
+| `-genanim spin\|bob\|spinbob\|sway\|pulse` | animație generată pentru obiecte statice |
+| `-ai` | AI: recunoaștere, referință, orientare și verificare (din linia de comandă) |
 | `-nopause` | nu mai așteaptă Enter la final |
 | `-console` | dublu-click arată doar ajutorul, fără fereastră |
 

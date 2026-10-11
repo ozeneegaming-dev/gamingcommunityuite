@@ -63,6 +63,7 @@ func runGUI(o *options, initial []string) error {
 			h(w, r)
 		}
 	}
+	registerExtra(mux, guard, outDir, &mu)
 	mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusNoContent) })
 	mux.HandleFunc("/", guard(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
@@ -98,6 +99,8 @@ func runGUI(o *options, initial []string) error {
 			defer mu.Unlock()
 			o2 := *o
 			o2.out, o2.noPause = outDir, true
+			cfg := loadConfig()
+			setupAI(boolOr(cfg.AIAuto, true), boolOr(cfg.AIReview, true))
 			res = guiRun(&o2, outDir, initial)
 		})
 		w.Header().Set("Content-Type", "application/json")
@@ -284,6 +287,7 @@ type guiOutput struct {
 	Texts   int      `json:"textures"`
 	Seqs    []string `json:"seqs"`
 	Kind    string   `json:"kind"`
+	Rel     string   `json:"rel"` // path under cstrike/models
 }
 
 // guiConvert saves the uploaded files (keeping their names, so a .gltf finds its .bin and textures) and runs the same
@@ -356,6 +360,14 @@ func guiConvert(base *options, outDir string, r *http.Request) guiResult {
 	if v := f("name"); v != "" {
 		o.name = v
 	}
+	o.genanim = f("genanim")
+	if ref := f("ref"); ref != "" {
+		low := strings.ToLower(ref)
+		if fileExists(ref) && (strings.HasSuffix(low, ".mdl") || strings.HasSuffix(low, ".mdl"+backupSuffix)) {
+			o.donor = ref
+		}
+	}
+	setupAI(f("ai") == "1", f("review") == "1")
 	return guiRun(&o, outDir, inputs)
 }
 
@@ -374,6 +386,9 @@ func guiRun(o *options, outDir string, inputs []string) guiResult {
 		}
 		if pv := strings.TrimSuffix(p, ".mdl") + "_preview.png"; fileExists(pv) {
 			g.Preview = pv
+		}
+		if rel, err := filepath.Rel(outDir, p); err == nil {
+			g.Rel = filepath.ToSlash(rel)
 		}
 		if rel, err := filepath.Rel(outDir, p); err == nil && strings.HasPrefix(filepath.ToSlash(rel), "player/") {
 			g.Hint = `cstrike\models\` + rel

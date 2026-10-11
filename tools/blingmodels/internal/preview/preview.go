@@ -3,6 +3,7 @@
 package preview
 
 import (
+	"bytes"
 	"image"
 	"image/color"
 	"image/png"
@@ -27,11 +28,32 @@ func Render(m *mdl.Model, path string) error {
 	return png.Encode(f, img)
 }
 
+var defaultEyes = []vmath.Vec3{{1, 0, 0.15}, {0, -1, 0.15}, {1, -1, 0.6}} // front, side, 3/4
+
 // Image renders the three views side by side, in the reference pose.
-func Image(m *mdl.Model) *image.NRGBA { return draw(m, convert.DonorBoneWorld(m)) }
+func Image(m *mdl.Model) *image.NRGBA { return draw(m, convert.DonorBoneWorld(m), defaultEyes, true) }
 
 // ImageAt renders the model posed at a frame of a sequence, the way the engine computes it.
-func ImageAt(m *mdl.Model, seq, frame int) *image.NRGBA { return draw(m, Pose(m, seq, frame)) }
+func ImageAt(m *mdl.Model, seq, frame int) *image.NRGBA {
+	return draw(m, Pose(m, seq, frame), defaultEyes, true)
+}
+
+// AxisEyes look at the model from +X, -X, +Y, -Y, +Z (above) and -Z (below).
+var AxisEyes = []vmath.Vec3{{1, 0, 0}, {-1, 0, 0}, {0, 1, 0}, {0, -1, 0}, {0, 0.0001, 1}, {0, 0.0001, -1}}
+
+// Views renders one PNG per eye direction. cull draws only front faces (what the game shows); without it every
+// face is drawn (what glTF viewers show).
+func Views(m *mdl.Model, eyes []vmath.Vec3, cull bool) [][]byte {
+	var out [][]byte
+	bones := convert.DonorBoneWorld(m)
+	for _, e := range eyes {
+		img := draw(m, bones, []vmath.Vec3{e}, cull)
+		var buf bytes.Buffer
+		png.Encode(&buf, img)
+		out = append(out, buf.Bytes())
+	}
+	return out
+}
 
 // Pose returns bone transforms at a frame: value + raw * scale, Euler angles to a rotation, parent chain.
 func Pose(m *mdl.Model, seq, frame int) []vmath.Bone {
@@ -56,11 +78,11 @@ func Pose(m *mdl.Model, seq, frame int) []vmath.Bone {
 	return world
 }
 
-func draw(m *mdl.Model, bones []vmath.Bone) *image.NRGBA {
+func draw(m *mdl.Model, bones []vmath.Bone, views []vmath.Vec3, cull bool) *image.NRGBA {
 	tris := convert.DonorTris(m, bones)
-	img := image.NewNRGBA(image.Rect(0, 0, panel*3, panel))
+	img := image.NewNRGBA(image.Rect(0, 0, panel*len(views), panel))
 	for y := 0; y < panel; y++ {
-		for x := 0; x < panel*3; x++ {
+		for x := 0; x < panel*len(views); x++ {
 			g := uint8(24 + 10*y/panel)
 			img.SetNRGBA(x, y, color.NRGBA{g, g, g + 8, 255})
 		}
@@ -68,7 +90,6 @@ func draw(m *mdl.Model, bones []vmath.Bone) *image.NRGBA {
 	if len(tris) == 0 {
 		return img
 	}
-	views := []vmath.Vec3{{1, 0, 0.15}, {0, -1, 0.15}, {1, -1, 0.6}} // eye directions: front, side, 3/4
 	mn := vmath.Vec3{math.Inf(1), math.Inf(1), math.Inf(1)}
 	mx := mn.Scale(-1)
 	for _, t := range tris {
@@ -85,7 +106,11 @@ func draw(m *mdl.Model, bones []vmath.Bone) *image.NRGBA {
 	for vi, eye := range views {
 		e := eye.Norm()
 		f := e.Scale(-1)
-		right := f.Cross(vmath.Vec3{0, 0, 1}).Norm()
+		upHint := vmath.Vec3{0, 0, 1}
+		if math.Abs(e[2]) > 0.99 {
+			upHint = vmath.Vec3{1, 0, 0} // looking straight down/up: the model's front points up in the image
+		}
+		right := f.Cross(upHint).Norm()
 		up := right.Cross(f)
 		scale := float64(panel) * 0.45 / radius
 		ox := float64(vi*panel) + panel/2
@@ -109,7 +134,7 @@ func draw(m *mdl.Model, bones []vmath.Bone) *image.NRGBA {
 			maxY := int(math.Min(panel-1, math.Ceil(math.Max(sy[0], math.Max(sy[1], sy[2])))))
 			area := (sx[1]-sx[0])*(sy[2]-sy[0]) - (sx[2]-sx[0])*(sy[1]-sy[0])
 			// The engine draws front faces only (counter-clockwise here, with y pointing down: negative area).
-			if area > -1e-9 {
+			if cull && area > -1e-9 || math.Abs(area) < 1e-9 {
 				continue
 			}
 			for py := minY; py <= maxY; py++ {
