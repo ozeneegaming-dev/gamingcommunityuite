@@ -30,10 +30,16 @@ type options struct {
 	mode, donor, name, out, blender, origin, keep, rotate string
 	scale, height, size, fps                              float64
 	maxTris, tex, maxFPS                                  int
-	anims, noPause, preview, noFit, console               bool
+	anims, noPause, preview, noFit, console, double       bool
 }
 
-var boolFlags = map[string]bool{"anims": true, "nopause": true, "preview": true, "nofit": true, "console": true}
+var boolFlags = map[string]bool{"anims": true, "nopause": true, "preview": true, "nofit": true, "console": true, "double": true}
+
+// lastMode/lastDonor describe the latest conversion (shown in the window).
+var (
+	lastMode  string
+	lastDonor bool
+)
 
 // out receives all messages (the console, or the window's log).
 var out io.Writer = os.Stdout
@@ -41,19 +47,31 @@ var out io.Writer = os.Stdout
 func main() {
 	o, inputs, err := parseArgs(os.Args[1:])
 	if err != nil {
+		if !hasConsole {
+			showError("blingmodels: " + err.Error())
+			os.Exit(2)
+		}
 		fmt.Fprintln(out, "Eroare:", err)
 		pause(o)
 		os.Exit(2)
 	}
+	if !hasConsole {
+		o.noPause = true
+	}
 	fmt.Fprintf(out, "blingmodels %s — modele Sketchfab → Counter-Strike 1.6 (.mdl)\n\n", version)
-	if len(inputs) == 0 {
-		if o.console {
-			usage()
-			pause(o)
-			return
-		}
-		// Double-click: the window with drag & drop opens in the browser.
-		if err := runGUI(o); err != nil {
+	// Double-click, or files dropped on the exe in Explorer: the app window opens (with those files converted).
+	// From a command prompt with files: plain console conversion.
+	if len(inputs) == 0 && o.console {
+		usage()
+		pause(o)
+		return
+	}
+	if len(inputs) == 0 || !hasConsole {
+		if err := runGUI(o, inputs); err != nil {
+			if !hasConsole {
+				showError("blingmodels nu a putut deschide fereastra: " + err.Error())
+				os.Exit(1)
+			}
 			fmt.Fprintln(out, "Nu am putut deschide fereastra:", err)
 			usage()
 			pause(o)
@@ -97,6 +115,7 @@ Opțiuni (pot fi puse și în blingmodels.ini lângă exe, ca nume=valoare):
   -fps 30 / -maxfps 60           cadre pe secundă la animații
   -preview=false                 fără imaginea de previzualizare .png
   -blender cale\blender.exe      unde e Blender, dacă nu e găsit singur
+  -double                        toate suprafețele subțiri desenate pe ambele fețe
   -nopause                       nu aștepta Enter la final
   -console                       fără fereastră (dublu-click arată doar acest ajutor)
 `)
@@ -138,6 +157,7 @@ func newFlagSet(o *options) *flag.FlagSet {
 	fs.BoolVar(&o.preview, "preview", true, "")
 	fs.BoolVar(&o.noFit, "nofit", false, "")
 	fs.BoolVar(&o.console, "console", false, "")
+	fs.BoolVar(&o.double, "double", false, "")
 	fs.Usage = func() {}
 	return fs
 }
@@ -458,6 +478,7 @@ func convertOne(o *options, input string, donor *mdl.Model, donorPath string) (s
 	if err != nil {
 		return "", err
 	}
+	lastMode, lastDonor = mode, donor != nil
 	rot, err := parseRotate(o.rotate)
 	if err != nil {
 		return "", err
@@ -478,7 +499,7 @@ func convertOne(o *options, input string, donor *mdl.Model, donorPath string) (s
 	if err != nil {
 		return "", err
 	}
-	scene, err := convert.LoadScene(doc, convert.LoadOptions{Scale: o.scale, FPS: o.fps, MaxFPS: o.maxFPS, Anims: o.anims && mode == "prop"})
+	scene, err := convert.LoadScene(doc, convert.LoadOptions{Scale: o.scale, FPS: o.fps, MaxFPS: o.maxFPS, Anims: o.anims && mode == "prop", DoubleSided: o.double})
 	if err != nil {
 		return "", err
 	}

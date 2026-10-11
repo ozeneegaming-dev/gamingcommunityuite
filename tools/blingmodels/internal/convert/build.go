@@ -217,6 +217,7 @@ type normKey struct {
 // Geometry builds body parts from triangles: vertices in bone space, normals grouped by mesh, triangle strips, and a
 // new body part whenever a submodel would pass 2048 vertices or normals.
 func Geometry(tris []Tri, boneWorld []vmath.Bone, textures []mdl.Texture, plans []texPlan, skinRefOf func(mat int) int, namePrefix string) ([]mdl.BodyPart, error) {
+	tris = withBackFaces(tris)
 	inv := make([]vmath.Bone, len(boneWorld))
 	for i, b := range boneWorld {
 		inv[i] = b.Inverse()

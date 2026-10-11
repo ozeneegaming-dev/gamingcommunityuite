@@ -32,7 +32,7 @@ func (s *Scene) Simplify(target int) {
 	tris := make([]simplify.Tri, 0, len(s.Tris))
 	for _, t := range s.Tris {
 		var st simplify.Tri
-		st.Mat = t.Mat
+		st.Mat, st.Double = t.Mat, t.Double
 		for k, c := range t.C {
 			st.V[k] = weld(c.Pos)
 			st.C[k] = simplify.Corner{UV: c.UV, Normal: c.Normal, Bone: c.Bone}
@@ -46,7 +46,7 @@ func (s *Scene) Simplify(target int) {
 	out := make([]Tri, 0, len(tris))
 	for _, st := range tris {
 		var t Tri
-		t.Mat = st.Mat
+		t.Mat, t.Double = st.Mat, st.Double
 		for k := 0; k < 3; k++ {
 			t.C[k] = Corner{Pos: pos[st.V[k]], Normal: st.C[k].Normal, UV: st.C[k].UV, Bone: st.C[k].Bone}
 		}

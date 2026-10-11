@@ -360,3 +360,44 @@ func TestSimplifyKeepsShape(t *testing.T) {
 		t.Fatalf("area %.3f, want %d (holes or folds)", area, n*n)
 	}
 }
+
+func TestOrientFacesFixesInsideOut(t *testing.T) {
+	inside := box(vmath.Vec3{-5, -5, 0}, vmath.Vec3{5, 5, 20}, 0, 0)
+	for i := range inside {
+		inside[i].C[1], inside[i].C[2] = inside[i].C[2], inside[i].C[1]
+		for k := range inside[i].C {
+			inside[i].C[k].Normal = inside[i].C[k].Normal.Scale(-1)
+		}
+	}
+	fixed := orientFaces(inside, true)
+	for _, tr := range fixed {
+		fn := tr.C[1].Pos.Sub(tr.C[0].Pos).Cross(tr.C[2].Pos.Sub(tr.C[0].Pos))
+		c := tr.C[0].Pos.Add(tr.C[1].Pos).Add(tr.C[2].Pos).Scale(1.0 / 3).Sub(vmath.Vec3{0, 0, 10})
+		if fn.Dot(c) <= 0 || tr.C[0].Normal.Dot(fn) <= 0 {
+			t.Fatalf("face still points inward")
+		}
+		if tr.Double {
+			t.Fatalf("a closed box needs no back faces")
+		}
+	}
+}
+
+func TestDoubleSidedSheetGetsBackFaces(t *testing.T) {
+	var sheet []Tri
+	c := func(x, y float64) Corner {
+		return Corner{Pos: vmath.Vec3{x, y, 0}, Normal: vmath.Vec3{0, 0, 1}, UV: [2]float64{x / 4, y / 4}}
+	}
+	for i := 0; i < 4; i++ {
+		x := float64(i)
+		sheet = append(sheet, Tri{C: [3]Corner{c(x, 0), c(x+1, 0), c(x+1, 1)}}, Tri{C: [3]Corner{c(x, 0), c(x+1, 1), c(x, 1)}})
+	}
+	sheet = orientFaces(sheet, true)
+	s := &Scene{Bones: []SBone{{Name: "root", Parent: -1, Rest: vmath.BoneIdentity()}}, Materials: []Material{{Name: "cape", Factor: [4]float64{1, 0, 0, 1}}}, Tris: sheet}
+	m, err := BuildProp(s, BuildOptions{Name: "cape.mdl"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n := m.BodyParts[0].Models[0].Meshes[0].NumTris; n != 16 {
+		t.Fatalf("got %d triangles, want 16 (both sides)", n)
+	}
+}

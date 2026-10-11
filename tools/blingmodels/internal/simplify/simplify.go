@@ -18,9 +18,10 @@ type Corner struct {
 }
 
 type Tri struct {
-	V   [3]int // vertex indices
-	C   [3]Corner
-	Mat int
+	V      [3]int // vertex indices
+	C      [3]Corner
+	Mat    int
+	Double bool
 }
 
 type quadric [10]float64

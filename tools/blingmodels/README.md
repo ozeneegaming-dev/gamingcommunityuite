@@ -11,9 +11,13 @@
 
 ## Cum se folosește
 
-**Dublu-click pe `blingmodels.exe`.** Se deschide fereastra programului în browser. Tragi fișierele în ea, alegi tipul modelului și apeși **Convertește**. Terminalul negru care se deschide odată cu fereastra trebuie lăsat deschis cât lucrezi.
+**Dublu-click pe `blingmodels.exe`.** Se deschide fereastra programului:
+- în stânga tragi fișierele, alegi tipul modelului și apeși **Convertește**;
+- în dreapta vezi modelul în 3D exact cum îl desenează jocul: îl rotești cu mouse-ul, faci zoom cu rotița și pornești animațiile.
 
-Merge și direct: tragi fișierele peste `blingmodels.exe`.
+Fereastra folosește Edge sau Chrome, în mod aplicație. Când o închizi, programul se oprește.
+
+Merge și direct: tragi fișierele peste `blingmodels.exe`, iar fereastra se deschide cu ele deja convertite. Dacă dai comanda dintr-un Command Prompt, cu fișiere, conversia se face în consolă.
 
 Arhiva `.zip` descărcată de pe Sketchfab poate fi trasă așa cum e, fără dezarhivare.
 
@@ -59,6 +63,7 @@ Opțiunile se scriu în linia de comandă, înainte sau după fișiere, sau în 
 | `-anims=false` | decorul iese fără animații |
 | `-name`, `-out` | numele fișierului rezultat și folderul în care se scrie |
 | `-blender cale` | calea spre `blender.exe`, dacă nu e găsit singur |
+| `-double` | toate suprafețele subțiri sunt desenate pe ambele fețe |
 | `-nopause` | nu mai așteaptă Enter la final |
 | `-console` | dublu-click arată doar ajutorul, fără fereastră |
 
@@ -77,6 +82,10 @@ Opțiunile se scriu în linia de comandă, înainte sau după fișiere, sau în 
 - **Oase și animații.**
   - Fiecare vârf e legat de osul cu greutatea cea mai mare, cum cere GoldSrc.
   - Animațiile glTF devin secvențe.
+- **Fețe întoarse.** CS 1.6 desenează doar fața din față a fiecărei suprafețe, în timp ce Sketchfab le desenează pe amândouă. Programul face trei lucruri:
+  - întoarce piesele exportate pe dos (haine, armuri, încălțări);
+  - desenează pe ambele fețe suprafețele subțiri cu material dublu (pelerine, aripi, frunze);
+  - cu opțiunea `-double`, desenează pe ambele fețe toate suprafețele subțiri.
 - **Verificare.** Fiecare `.mdl` scris e recitit și verificat.
 
 ## Limite cunoscute
@@ -100,5 +109,5 @@ Se compilează cu Go 1.24 și doar biblioteca standard:
 ```sh
 cd tools/blingmodels
 go test ./...
-GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o blingmodels.exe .
+GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -H windowsgui" -o blingmodels.exe .
 ```

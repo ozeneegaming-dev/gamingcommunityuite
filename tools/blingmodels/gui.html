@@ -6,257 +6,500 @@
 <title>blingmodels</title>
 <style>
 :root {
-  --bg: #07060d; --surface: #110f1c; --surface2: #171428; --border: #262140; --text: #e4e1f2; --muted: #9a93b8;
-  --purple: #8b3dff; --cyan: #22e4ff; --ok: #2bf59b; --bad: #ff4d6d;
+  --bg: #08090d; --panel: #0f1117; --panel2: #151821; --line: #222632; --line2: #2c3140;
+  --text: #eef0f6; --dim: #8d93a6; --faint: #5d6377;
+  --a1: #ff3d6e; --a2: #8b5cff; --a3: #22d3ee; --ok: #34e39b;
+  --grad: linear-gradient(120deg, var(--a1), var(--a2) 55%, var(--a3));
+  --r: 14px;
 }
 * { box-sizing: border-box; }
-body { margin: 0; background: radial-gradient(1200px 600px at 10% -10%, #1d1240 0%, transparent 60%), var(--bg); color: var(--text);
-  font: 15px/1.5 system-ui, "Segoe UI", Roboto, sans-serif; min-height: 100vh; }
-.wrap { max-width: 980px; margin: 0 auto; padding: 28px 16px 60px; }
-header { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
-.logo { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; font-weight: 800; font-size: 22px;
-  background: linear-gradient(135deg, var(--purple), var(--cyan)); color: #07060d; box-shadow: 0 0 24px #8b3dff66; }
-h1 { margin: 0; font-size: 24px; letter-spacing: .5px; }
-h1 small { font-size: 13px; color: var(--muted); font-weight: 500; margin-left: 6px; }
-.sub { color: var(--muted); margin: 2px 0 0; font-size: 14px; }
-.card { background: color-mix(in srgb, var(--surface) 92%, transparent); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 16px; }
-.drop { border: 2px dashed #3a3160; border-radius: 14px; padding: 34px 16px; text-align: center; cursor: pointer; transition: .15s;
-  background: linear-gradient(180deg, #15112a, #100d1e); }
-.drop:hover, .drop.over { border-color: var(--cyan); box-shadow: 0 0 0 4px #22e4ff22, inset 0 0 40px #8b3dff22; }
-.drop b { font-size: 18px; display: block; margin-bottom: 4px; }
-.drop span { color: var(--muted); font-size: 14px; }
-.files { list-style: none; padding: 0; margin: 14px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
-.files li { background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; padding: 4px 6px 4px 12px; font-size: 13px; display: flex; gap: 6px; align-items: center; }
-.files li.model { border-color: #8b3dff88; }
-.files li.donor { border-color: #22e4ff88; }
-.files button { background: none; border: 0; color: var(--muted); cursor: pointer; font-size: 15px; line-height: 1; padding: 0 4px; }
-.tag { font-size: 11px; padding: 1px 7px; border-radius: 999px; background: #22e4ff22; color: var(--cyan); }
-.tag.m { background: #8b3dff33; color: #c8a8ff; }
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
-label { display: flex; flex-direction: column; gap: 5px; font-size: 13px; color: var(--muted); }
-select, input[type=text], input[type=number] { background: var(--surface2); color: var(--text); border: 1px solid var(--border); border-radius: 9px; padding: 9px 10px; font: inherit; }
-select:focus, input:focus { outline: 2px solid #22e4ff66; border-color: var(--cyan); }
-.check { flex-direction: row; align-items: center; gap: 8px; color: var(--text); }
-details summary { cursor: pointer; color: var(--muted); margin: 4px 0 12px; }
-.modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 14px; }
-.mode { border: 1px solid var(--border); background: var(--surface2); border-radius: 11px; padding: 10px; cursor: pointer; text-align: left; color: var(--text); font: inherit; }
-.mode b { display: block; font-size: 14px; }
-.mode small { color: var(--muted); font-size: 12px; }
-.mode.on { border-color: var(--purple); box-shadow: 0 0 0 1px var(--purple), 0 0 18px #8b3dff44; }
-.need { font-size: 13px; color: var(--cyan); margin: -4px 0 12px; min-height: 1em; }
-.go { width: 100%; border: 0; border-radius: 12px; padding: 14px; font: 700 17px system-ui, sans-serif; letter-spacing: .5px; cursor: pointer; color: #fff;
-  background: linear-gradient(90deg, var(--purple), #5b5cff 60%, var(--cyan)); box-shadow: 0 0 26px #8b3dff55; }
-.go:disabled { opacity: .5; cursor: default; }
-.go.busy { background: linear-gradient(90deg, #3b2a6d, #22406d); }
-pre { background: #0a0814; border: 1px solid var(--border); border-radius: 10px; padding: 12px; white-space: pre-wrap; font: 12.5px/1.45 ui-monospace, Consolas, monospace; color: #cfc8ea; max-height: 320px; overflow: auto; margin: 0; }
-.result { display: grid; grid-template-columns: 1fr; gap: 10px; border: 1px solid #2bf59b55; border-radius: 12px; padding: 12px; margin-bottom: 12px; background: #0f1a18; }
-.result img { width: 100%; border-radius: 8px; border: 1px solid var(--border); background: #101018; }
-.result h3 { margin: 0; font-size: 16px; color: var(--ok); }
-.result .hint { color: var(--muted); font-size: 13px; }
-.result .hint code { color: var(--text); background: var(--surface2); padding: 1px 6px; border-radius: 5px; }
-.btns { display: flex; gap: 8px; flex-wrap: wrap; }
-.btn { border: 1px solid var(--border); background: var(--surface2); color: var(--text); padding: 8px 12px; border-radius: 9px; cursor: pointer; text-decoration: none; font-size: 14px; }
-.btn:hover { border-color: var(--cyan); }
-.err { color: var(--bad); font-weight: 600; }
-.foot { color: var(--muted); font-size: 12.5px; text-align: center; margin-top: 18px; }
-.hidden { display: none; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 "Segoe UI Variable Text", "Segoe UI", Inter, system-ui, sans-serif; overflow: hidden; }
+button { font: inherit; color: inherit; }
+svg { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+.app { display: grid; grid-template-columns: 360px 1fr; height: 100vh; }
+@media (max-width: 860px) { body { overflow: auto; } .app { grid-template-columns: 1fr; height: auto; } .stage { min-height: 70vh; } }
+
+/* side */
+.side { background: var(--panel); border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+.brand { display: flex; align-items: center; gap: 12px; padding: 18px 20px 14px; }
+.mark { width: 36px; height: 36px; border-radius: 10px; background: var(--grad); display: grid; place-items: center; box-shadow: 0 6px 24px -6px #8b5cffaa; }
+.mark svg { width: 20px; height: 20px; stroke: #fff; stroke-width: 2.2; }
+.brand h1 { font-size: 17px; margin: 0; letter-spacing: .2px; }
+.brand p { margin: 0; color: var(--dim); font-size: 12px; }
+.scroll { flex: 1; overflow: auto; padding: 4px 20px 16px; }
+.step { margin-top: 18px; }
+.step h2 { display: flex; align-items: center; gap: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--dim); margin: 0 0 10px; font-weight: 600; }
+.step h2 i { font-style: normal; width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center; background: var(--panel2); border: 1px solid var(--line2); color: var(--text); font-size: 11px; }
+
+.drop { border: 1.5px dashed var(--line2); border-radius: var(--r); padding: 22px 14px; text-align: center; cursor: pointer; background: var(--panel2); transition: border-color .15s, background .15s; }
+.drop:hover { border-color: var(--a2); background: #171a26; }
+.drop .ic { width: 42px; height: 42px; margin: 0 auto 8px; border-radius: 12px; display: grid; place-items: center; background: #1c2030; color: var(--a3); }
+.drop .ic svg { width: 22px; height: 22px; }
+.drop b { display: block; font-size: 14px; }
+.drop span { color: var(--faint); font-size: 12px; }
+.chips { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.chip { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 10px; background: var(--panel2); border: 1px solid var(--line); font-size: 13px; }
+.chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--a2); flex: none; }
+.chip.donor .dot { background: var(--a3); }
+.chip .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip small { color: var(--faint); font-size: 11px; }
+.chip button { background: none; border: 0; color: var(--faint); cursor: pointer; padding: 0 2px; display: grid; }
+.chip button:hover { color: var(--a1); }
+
+.types { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.type { background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 6px 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: .15s; }
+.type svg { width: 22px; height: 22px; color: var(--dim); }
+.type b { font-size: 12px; font-weight: 600; }
+.type:hover { border-color: var(--line2); background: #191c27; }
+.type.on { border-color: transparent; background: linear-gradient(var(--panel2), var(--panel2)) padding-box, var(--grad) border-box; border: 1px solid transparent; }
+.type.on svg { color: var(--text); }
+.note { margin: 10px 0 0; font-size: 12.5px; color: var(--dim); min-height: 18px; }
+.note.warn { color: #ffc46b; }
+
+details { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; }
+summary { cursor: pointer; color: var(--dim); font-size: 13px; list-style: none; display: flex; align-items: center; gap: 6px; }
+summary::-webkit-details-marker { display: none; }
+summary svg { transition: transform .15s; }
+details[open] summary svg { transform: rotate(90deg); }
+.fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.fields label { display: flex; flex-direction: column; gap: 4px; font-size: 11.5px; color: var(--dim); }
+.fields label.full { grid-column: 1 / -1; }
+.fields input[type=text], .fields input[type=number] { background: var(--panel2); border: 1px solid var(--line); border-radius: 9px; padding: 8px 9px; color: var(--text); font: inherit; font-size: 13px; }
+.fields input:focus { outline: none; border-color: var(--a2); }
+.tog { flex-direction: row !important; align-items: center; gap: 8px !important; color: var(--text) !important; font-size: 12.5px !important; grid-column: 1 / -1; cursor: pointer; }
+.tog input { accent-color: var(--a2); width: 15px; height: 15px; }
+
+.actions { padding: 14px 20px 18px; border-top: 1px solid var(--line); }
+.go { width: 100%; height: 46px; border: 0; border-radius: 12px; background: var(--grad); color: #fff; font-weight: 700; font-size: 15px; letter-spacing: .3px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 10px 30px -10px #8b5cffcc; transition: filter .15s, opacity .15s; }
+.go:hover { filter: brightness(1.08); }
+.go:disabled { opacity: .35; cursor: default; filter: none; box-shadow: none; }
+.go svg { width: 18px; height: 18px; }
+.out { margin-top: 10px; font-size: 11.5px; color: var(--faint); display: flex; gap: 6px; align-items: center; }
+.out a { color: var(--dim); cursor: pointer; text-decoration: underline; text-decoration-color: var(--line2); }
+
+/* stage */
+.stage { position: relative; min-width: 0; display: flex; flex-direction: column; background: radial-gradient(900px 500px at 60% 35%, #161a2a 0%, var(--bg) 70%); }
+.view { position: relative; flex: 1; min-height: 0; }
+canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; outline: none; }
+canvas:active { cursor: grabbing; }
+.empty { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; pointer-events: none; }
+.empty .big { width: 84px; height: 84px; border-radius: 24px; margin: 0 auto 16px; display: grid; place-items: center; background: #121522; border: 1px solid var(--line); color: var(--a2); }
+.empty .big svg { width: 38px; height: 38px; stroke-width: 1.4; }
+.empty h3 { margin: 0 0 6px; font-size: 18px; font-weight: 600; }
+.empty p { margin: 0; color: var(--dim); max-width: 380px; }
+
+.hud { position: absolute; left: 18px; top: 16px; right: 18px; display: flex; justify-content: space-between; gap: 12px; pointer-events: none; }
+.hud > * { pointer-events: auto; }
+.info { background: #0e1018d9; backdrop-filter: blur(10px); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; max-width: 460px; }
+.info .t { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; }
+.info .t svg { color: var(--ok); }
+.info .k { color: var(--dim); font-size: 12px; margin-top: 2px; }
+.stats { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.stat { font-size: 11.5px; padding: 3px 8px; border-radius: 999px; background: var(--panel2); border: 1px solid var(--line); color: var(--dim); }
+.stat b { color: var(--text); font-weight: 600; }
+.tools { display: flex; gap: 8px; align-items: flex-start; }
+.btn { height: 36px; padding: 0 13px; border-radius: 10px; background: #0e1018d9; backdrop-filter: blur(10px); border: 1px solid var(--line); cursor: pointer; display: inline-flex; align-items: center; gap: 7px; font-size: 13px; text-decoration: none; color: var(--text); white-space: nowrap; }
+.btn:hover { border-color: var(--line2); background: #151826; }
+.btn.primary { background: var(--grad); border: 0; font-weight: 600; }
+.btn svg { width: 16px; height: 16px; }
+.btn.ico { width: 36px; padding: 0; justify-content: center; }
+
+.where { position: absolute; left: 18px; bottom: 16px; background: #0e1018d9; backdrop-filter: blur(10px); border: 1px solid var(--line); border-radius: 12px; padding: 8px 8px 8px 12px; display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--dim); max-width: calc(100% - 36px); }
+.where code { color: var(--text); font: 12.5px ui-monospace, Consolas, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.where .btn { height: 28px; padding: 0 9px; font-size: 12px; }
+.anim { position: absolute; right: 18px; bottom: 16px; display: flex; align-items: center; gap: 8px; background: #0e1018d9; backdrop-filter: blur(10px); border: 1px solid var(--line); border-radius: 12px; padding: 6px; }
+.anim select { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; font: inherit; font-size: 12.5px; max-width: 200px; }
+.anim .btn { height: 30px; width: 30px; padding: 0; justify-content: center; }
+
+.busy { position: absolute; inset: 0; display: grid; place-items: center; background: #08090dcc; backdrop-filter: blur(4px); }
+.spin { width: 54px; height: 54px; border-radius: 50%; border: 3px solid var(--line2); border-top-color: var(--a2); border-right-color: var(--a1); animation: spin .9s linear infinite; margin: 0 auto 14px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.busy p { text-align: center; color: var(--dim); margin: 0; }
+.busy b { display: block; color: var(--text); font-size: 15px; margin-bottom: 4px; }
+
+.dock { border-top: 1px solid var(--line); background: var(--panel); display: flex; gap: 10px; padding: 10px 14px; align-items: center; min-height: 74px; overflow-x: auto; }
+.thumb { flex: none; display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel2); cursor: pointer; max-width: 240px; }
+.thumb img { width: 46px; height: 46px; object-fit: cover; object-position: 0 50%; border-radius: 8px; background: #0b0d14; }
+.thumb b { display: block; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.thumb small { color: var(--faint); font-size: 11px; }
+.thumb.on { border-color: var(--a2); box-shadow: 0 0 0 1px var(--a2) inset; }
+.dock .sp { flex: 1; }
+.dock .hint { color: var(--faint); font-size: 12.5px; }
+.err { color: #ff7b93; }
+
+.log { position: absolute; left: 18px; right: 18px; bottom: 64px; max-height: 45%; overflow: auto; background: #0b0c12f2; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font: 12px/1.5 ui-monospace, Consolas, monospace; color: #c4c9d8; white-space: pre-wrap; margin: 0; }
+
+.dropall { position: fixed; inset: 0; z-index: 10; background: #08090de6; display: none; place-items: center; }
+.dropall.on { display: grid; }
+.dropall div { border: 2px dashed var(--a2); border-radius: 24px; padding: 60px 80px; text-align: center; color: var(--text); font-size: 20px; font-weight: 600; }
+.dropall svg { width: 46px; height: 46px; color: var(--a3); display: block; margin: 0 auto 12px; }
+.hidden { display: none !important; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div class="logo">B</div>
-    <div>
-      <h1>blingmodels <small>v{{VERSION}}</small></h1>
-      <p class="sub">Modele de pe Sketchfab → Counter-Strike 1.6 (.mdl). Totul rulează pe calculatorul tău.</p>
-    </div>
-  </header>
+<svg style="display:none">
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 15V3M7 8l5-5 5 5M4 15v4a2 2 0 002 2h12a2 2 0 002-2v-4"/></symbol>
+  <symbol id="i-auto" viewBox="0 0 24 24"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9zM19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></symbol>
+  <symbol id="i-prop" viewBox="0 0 24 24"><path d="M12 2.5l8.5 4.8v9.4L12 21.5l-8.5-4.8V7.3zM12 21.5V12M20.5 7.3L12 12 3.5 7.3"/></symbol>
+  <symbol id="i-v" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="1.6"/><path d="M12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4"/></symbol>
+  <symbol id="i-p" viewBox="0 0 24 24"><path d="M3 8.5h15.5l2.5-2v4.5h-5l-1.5 2v7h-4.5v-4H7.5l-1.5-3H3z"/></symbol>
+  <symbol id="i-w" viewBox="0 0 24 24"><path d="M2 19h20M3 15.5h11l2.5-2.5H21v2.5h-3l-1 1"/><path d="M6 15.5l-1 3.5"/></symbol>
+  <symbol id="i-player" viewBox="0 0 24 24"><circle cx="12" cy="5.5" r="3"/><path d="M5 22v-3a7 7 0 0114 0v3M8 12.5l-3 3M16 12.5l3 3"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></symbol>
+  <symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 6.5A1.5 1.5 0 014.5 5H9l2 2.5h8.5A1.5 1.5 0 0121 9v9.5a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 18.5z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.5L16 9.5"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5.5A1.5 1.5 0 0014.5 4h-9A1.5 1.5 0 004 5.5v9A1.5 1.5 0 005.5 16H8"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+  <symbol id="i-log" viewBox="0 0 24 24"><path d="M5 6h14M5 12h14M5 18h9"/></symbol>
+  <symbol id="i-rot" viewBox="0 0 24 24"><path d="M20 12a8 8 0 11-2.3-5.6M20 4v4h-4"/></symbol>
+</svg>
 
-  <div class="card">
-    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Adaugă fișiere">
-      <b>Trage aici fișierele</b>
-      <span>.glb · .gltf · .zip descărcat de pe Sketchfab · .blend · .usdz · .fbx · .obj — și, pentru arme/jucători, modelul original din CS (.mdl)<br>sau dă click ca să alegi</span>
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <div class="mark"><svg><use href="#i-prop"/></svg></div>
+      <div><h1>blingmodels</h1><p>Sketchfab → Counter-Strike 1.6 · v{{VERSION}}</p></div>
     </div>
-    <input type="file" id="pick" multiple class="hidden">
-    <ul class="files" id="files"></ul>
-  </div>
+    <div class="scroll">
+      <section class="step">
+        <h2><i>1</i>Fișiere</h2>
+        <div class="drop" id="drop" tabindex="0" role="button">
+          <div class="ic"><svg><use href="#i-up"/></svg></div>
+          <b>Trage modelul aici</b>
+          <span>.glb · .gltf · .zip Sketchfab · .blend · .usdz · .fbx</span>
+        </div>
+        <input type="file" id="pick" multiple class="hidden">
+        <div class="chips" id="chips"></div>
+      </section>
 
-  <div class="card">
-    <div class="modes" id="modes">
-      <button class="mode on" data-mode="auto"><b>Automat</b><small>după fișiere</small></button>
-      <button class="mode" data-mode="prop"><b>Obiect / decor</b><small>orice model, animat sau nu</small></button>
-      <button class="mode" data-mode="v"><b>Armă v_</b><small>la persoana întâi</small></button>
-      <button class="mode" data-mode="p"><b>Armă p_</b><small>în mâna altora</small></button>
-      <button class="mode" data-mode="w"><b>Armă w_</b><small>pe jos</small></button>
-      <button class="mode" data-mode="player"><b>Jucător</b><small>cu animațiile originale</small></button>
+      <section class="step">
+        <h2><i>2</i>Ce fel de model</h2>
+        <div class="types" id="types">
+          <button class="type on" data-mode="auto"><svg><use href="#i-auto"/></svg><b>Automat</b></button>
+          <button class="type" data-mode="prop"><svg><use href="#i-prop"/></svg><b>Obiect</b></button>
+          <button class="type" data-mode="player"><svg><use href="#i-player"/></svg><b>Jucător</b></button>
+          <button class="type" data-mode="v"><svg><use href="#i-v"/></svg><b>Armă v_</b></button>
+          <button class="type" data-mode="p"><svg><use href="#i-p"/></svg><b>Armă p_</b></button>
+          <button class="type" data-mode="w"><svg><use href="#i-w"/></svg><b>Armă w_</b></button>
+        </div>
+        <p class="note" id="note"></p>
+      </section>
+
+      <details>
+        <summary><svg><use href="#i-chev"/></svg>Setări avansate</summary>
+        <div class="fields">
+          <label>Rotire „x y z”<input type="text" id="rotate" placeholder="0 0 180"></label>
+          <label>Triunghiuri max.<input type="number" id="maxtris" min="100" step="100" placeholder="automat"></label>
+          <label>Înălțime (unități)<input type="number" id="height" min="1" placeholder="automat"></label>
+          <label>Nume fișier<input type="text" id="name" placeholder="automat"></label>
+          <label class="full">v_: păstrează din original (regex)<input type="text" id="keep" placeholder="mâinile (automat)"></label>
+          <label class="tog"><input type="checkbox" id="double"> Toate suprafețele subțiri pe ambele fețe</label>
+          <label class="tog"><input type="checkbox" id="nofit"> Nu roti arma automat peste cea veche</label>
+          <label class="tog"><input type="checkbox" id="anims" checked> Păstrează animațiile (obiecte)</label>
+        </div>
+      </details>
     </div>
-    <p class="need" id="need"></p>
-    <details>
-      <summary>Setări avansate</summary>
-      <div class="grid">
-        <label>Rotire în grade „x y z” (dacă iese întors)<input type="text" id="rotate" placeholder="ex. 0 0 180"></label>
-        <label>Triunghiuri maxime (gol = automat)<input type="number" id="maxtris" min="100" step="100" placeholder="automat"></label>
-        <label>Înălțime în unități (decor; jucător = 72)<input type="number" id="height" min="1" placeholder="automat"></label>
-        <label>Nume fișier rezultat<input type="text" id="name" placeholder="automat"></label>
-        <label>v_: ce păstrez din original (regex)<input type="text" id="keep" placeholder="mâinile, automat"></label>
-        <label class="check"><input type="checkbox" id="nofit"> Armele nu se rotesc automat peste cea veche</label>
-        <label class="check"><input type="checkbox" id="anims" checked> Animații la decor</label>
+    <div class="actions">
+      <button class="go" id="go" disabled><svg><use href="#i-bolt"/></svg><span>Convertește</span></button>
+      <div class="out"><svg><use href="#i-folder"/></svg><span title="{{OUTDIR}}">Se salvează în blingmodels_out</span> · <a id="openOut">deschide</a></div>
+    </div>
+  </aside>
+
+  <main class="stage">
+    <div class="view" id="view">
+      <canvas id="gl" tabindex="0"></canvas>
+      <div class="empty" id="empty">
+        <div>
+          <div class="big"><svg><use href="#i-prop"/></svg></div>
+          <h3>Niciun model încă</h3>
+          <p>Trage un model în fereastră, alege tipul și apasă Convertește. Aici îl vezi exact cum îl desenează jocul.</p>
+        </div>
       </div>
-    </details>
-    <button class="go" id="go" disabled>Convertește</button>
-  </div>
-
-  <div id="results"></div>
-  <div class="card hidden" id="logCard"><pre id="log"></pre></div>
-  <p class="foot">Fișierele convertite se salvează în <b>{{OUTDIR}}</b> · <a href="#" id="openOut" style="color:var(--cyan)">deschide folderul</a> · Închide terminalul negru când ai terminat.</p>
+      <div class="hud hidden" id="hud">
+        <div class="info">
+          <div class="t"><svg><use href="#i-check"/></svg><span id="mName"></span></div>
+          <div class="k" id="mKind"></div>
+          <div class="stats" id="mStats"></div>
+        </div>
+        <div class="tools">
+          <button class="btn ico" id="spinBtn" title="Rotire automată"><svg><use href="#i-rot"/></svg></button>
+          <button class="btn ico" id="logBtn" title="Jurnal"><svg><use href="#i-log"/></svg></button>
+          <button class="btn" id="folderBtn"><svg><use href="#i-folder"/></svg>Folder</button>
+          <a class="btn primary" id="dlBtn"><svg><use href="#i-dl"/></svg>Descarcă .mdl</a>
+        </div>
+      </div>
+      <div class="where hidden" id="where"><span>Copiază în</span><code id="mHint"></code><button class="btn" id="copyBtn"><svg><use href="#i-copy"/></svg>Copiază</button></div>
+      <div class="anim hidden" id="anim">
+        <select id="seq"></select>
+        <button class="btn" id="playBtn" title="Pornește / oprește"><svg><use href="#i-pause"/></svg></button>
+      </div>
+      <pre class="log hidden" id="log"></pre>
+      <div class="busy hidden" id="busy"><div><div class="spin"></div><p><b>Se convertește…</b>Modelele mari sau cele prin Blender pot dura un minut.</p></div></div>
+    </div>
+    <div class="dock" id="dock"><span class="hint" id="dockHint">Modelele convertite apar aici.</span></div>
+  </main>
 </div>
-<script>
-const TOKEN = "{{TOKEN}}";
-const $ = (id) => document.getElementById(id);
-let files = []; // {file, path}
-let mode = "auto";
-const modelExt = /\.(glb|gltf|zip|blend|fbx|obj|dae|usdz|usd|usdc|usda)$/i;
+<div class="dropall" id="dropall"><div><svg><use href="#i-up"/></svg>Lasă fișierele aici</div></div>
 
-function render() {
-  const ul = $("files");
-  ul.innerHTML = "";
-  const extra = files.filter((f) => !modelExt.test(f.path) && !/\.mdl$/i.test(f.path)).length;
+<script>
+"use strict";
+const TOKEN = "{{TOKEN}}", INITIAL = "{{INITIAL}}" === "1";
+const $ = (id) => document.getElementById(id);
+const api = (path, opts = {}) => fetch(path, { ...opts, headers: { "X-Token": TOKEN, ...(opts.headers || {}) } });
+const modelRe = /\.(glb|gltf|zip|blend|fbx|obj|dae|usdz|usd|usdc|usda)$/i, mdlRe = /\.mdl$/i;
+let files = [], mode = "auto", results = [], current = -1;
+
+/* ---------- files ---------- */
+function icon(id) { return `<svg><use href="#i-${id}"/></svg>`; }
+function renderFiles() {
+  const box = $("chips");
+  box.innerHTML = "";
+  const extra = files.filter((f) => !modelRe.test(f.path) && !mdlRe.test(f.path)).length;
   files.forEach((f, i) => {
-    if (!modelExt.test(f.path) && !/\.mdl$/i.test(f.path)) return;
-    const li = document.createElement("li");
-    const isDonor = /\.mdl$/i.test(f.path);
-    li.className = isDonor ? "donor" : "model";
-    const tag = document.createElement("span");
-    tag.className = isDonor ? "tag" : "tag m";
-    tag.textContent = isDonor ? "original CS" : "model nou";
-    const name = document.createElement("span");
-    name.textContent = f.path.split("/").pop();
-    const x = document.createElement("button");
-    x.textContent = "×";
-    x.title = "Scoate";
-    x.onclick = () => { files.splice(i, 1); render(); };
-    li.append(tag, name, x);
-    ul.append(li);
+    const isModel = modelRe.test(f.path), isDonor = mdlRe.test(f.path);
+    if (!isModel && !isDonor) return;
+    const el = document.createElement("div");
+    el.className = "chip" + (isDonor ? " donor" : "");
+    el.innerHTML = `<span class="dot"></span><span class="nm"></span><small>${isDonor ? "original CS" : "model nou"}</small><button title="Scoate">${icon("x")}</button>`;
+    el.querySelector(".nm").textContent = f.path.split("/").pop();
+    el.querySelector("button").onclick = () => { files.splice(i, 1); renderFiles(); };
+    box.append(el);
   });
   if (extra) {
-    const li = document.createElement("li");
-    li.textContent = `+ ${extra} fișier(e) însoțitoare (texturi, .bin)`;
-    ul.append(li);
+    const el = document.createElement("div");
+    el.className = "chip";
+    el.innerHTML = `<span class="dot" style="background:var(--faint)"></span><span class="nm">+ ${extra} fișiere însoțitoare</span><small>texturi, .bin</small>`;
+    box.append(el);
   }
-  const hasModel = files.some((f) => modelExt.test(f.path));
-  const donor = files.find((f) => /\.mdl$/i.test(f.path) && !/t\.mdl$/i.test(f.path));
+  const hasModel = files.some((f) => modelRe.test(f.path));
+  const donor = files.find((f) => mdlRe.test(f.path) && !/t\.mdl$/i.test(f.path));
   $("go").disabled = !hasModel;
-  let need = "";
+  const note = $("note");
+  note.className = "note";
   if (["v", "p", "player"].includes(mode) && !donor) {
-    need = mode === "player" ? "Adaugă și modelul de jucător original din CS (ex. gign.mdl și gignT.mdl din cstrike/models/player/gign)."
-      : `Adaugă și arma originală din CS (ex. ${mode}_ak47.mdl din cstrike/models) — de la ea se păstrează animațiile.`;
-  } else if (mode === "auto" && donor) {
-    need = `Original: ${donor.path.split("/").pop()} — tipul se alege după numele lui.`;
-  } else if (mode === "w" && !donor) {
-    need = "Fără original: arma e pusă culcată pe sol. Cu w_…mdl original se potrivește exact peste cea veche.";
-  }
-  $("need").textContent = need;
-}
-
-function add(list) {
-  for (const it of list) {
-    if (!files.some((f) => f.path === it.path && f.file.size === it.file.size)) files.push(it);
-  }
-  render();
-}
-
-async function walk(entry, prefix) {
-  if (entry.isFile) {
-    const file = await new Promise((res, rej) => entry.file(res, rej));
-    return [{ file, path: prefix + file.name }];
-  }
-  if (entry.isDirectory) {
-    const reader = entry.createReader();
-    let out = [], batch;
-    do {
-      batch = await new Promise((res, rej) => reader.readEntries(res, rej));
-      for (const e of batch) out = out.concat(await walk(e, prefix + entry.name + "/"));
-    } while (batch.length);
-    return out;
-  }
-  return [];
-}
-
-const drop = $("drop");
-drop.onclick = () => $("pick").click();
-drop.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") $("pick").click(); };
-$("pick").onchange = (e) => { add([...e.target.files].map((file) => ({ file, path: file.name }))); e.target.value = ""; };
-["dragenter", "dragover"].forEach((t) => document.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add("over"); }));
-["dragleave", "drop"].forEach((t) => document.addEventListener(t, (e) => { e.preventDefault(); if (t === "drop" || e.target === document.documentElement) drop.classList.remove("over"); }));
-document.addEventListener("drop", async (e) => {
-  const items = [...(e.dataTransfer.items || [])];
-  const entries = items.map((i) => i.webkitGetAsEntry && i.webkitGetAsEntry()).filter(Boolean);
-  if (entries.length) {
-    let all = [];
-    for (const en of entries) all = all.concat(await walk(en, ""));
-    add(all);
+    note.className = "note warn";
+    note.textContent = mode === "player" ? "Adaugă și jucătorul original din CS (ex. gign.mdl + gignT.mdl) — de la el rămân animațiile."
+      : `Adaugă și arma originală din CS (ex. ${mode}_ak47.mdl) — de la ea rămân animațiile.`;
+  } else if (donor) {
+    note.textContent = `Original: ${donor.path.split("/").pop()} — scheletul și animațiile lui rămân.`;
+  } else if (mode === "w") {
+    note.textContent = "Fără original, arma e pusă culcată pe sol.";
   } else {
-    add([...e.dataTransfer.files].map((file) => ({ file, path: file.name })));
+    note.textContent = mode === "auto" ? "Tipul se alege singur după fișiere." : "";
   }
+}
+function addFiles(list) {
+  for (const it of list) if (!files.some((f) => f.path === it.path && f.file.size === it.file.size)) files.push(it);
+  renderFiles();
+}
+async function walk(entry, prefix) {
+  if (entry.isFile) { const file = await new Promise((res, rej) => entry.file(res, rej)); return [{ file, path: prefix + file.name }]; }
+  if (!entry.isDirectory) return [];
+  const reader = entry.createReader();
+  let out = [], batch;
+  do {
+    batch = await new Promise((res, rej) => reader.readEntries(res, rej));
+    for (const e of batch) out = out.concat(await walk(e, prefix + entry.name + "/"));
+  } while (batch.length);
+  return out;
+}
+$("drop").onclick = () => $("pick").click();
+$("drop").onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") $("pick").click(); };
+$("pick").onchange = (e) => { addFiles([...e.target.files].map((file) => ({ file, path: file.name }))); e.target.value = ""; };
+let dragDepth = 0;
+document.addEventListener("dragenter", (e) => { e.preventDefault(); dragDepth++; $("dropall").classList.add("on"); });
+document.addEventListener("dragleave", (e) => { e.preventDefault(); if (--dragDepth <= 0) { dragDepth = 0; $("dropall").classList.remove("on"); } });
+document.addEventListener("dragover", (e) => e.preventDefault());
+document.addEventListener("drop", async (e) => {
+  e.preventDefault(); dragDepth = 0; $("dropall").classList.remove("on");
+  const entries = [...(e.dataTransfer.items || [])].map((i) => i.webkitGetAsEntry && i.webkitGetAsEntry()).filter(Boolean);
+  if (entries.length) { let all = []; for (const en of entries) all = all.concat(await walk(en, "")); addFiles(all); }
+  else addFiles([...e.dataTransfer.files].map((file) => ({ file, path: file.name })));
 });
-
-$("modes").onclick = (e) => {
-  const b = e.target.closest(".mode");
-  if (!b) return;
-  document.querySelectorAll(".mode").forEach((m) => m.classList.toggle("on", m === b));
-  mode = b.dataset.mode;
-  render();
+$("types").onclick = (e) => {
+  const b = e.target.closest(".type"); if (!b) return;
+  document.querySelectorAll(".type").forEach((t) => t.classList.toggle("on", t === b));
+  mode = b.dataset.mode; renderFiles();
 };
+$("openOut").onclick = () => api("/open");
 
-$("openOut").onclick = (e) => { e.preventDefault(); fetch("/open", { headers: { "X-Token": TOKEN } }); };
-
-function fmtSize(n) { return n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.ceil(n / 1024) + " KB"; }
-
+/* ---------- convert ---------- */
+function setBusy(on) { $("busy").classList.toggle("hidden", !on); $("go").disabled = on || !files.some((f) => modelRe.test(f.path)); }
+function showResult(res) {
+  $("log").textContent = res.log || "";
+  const outs = res.outputs || [];
+  if (!outs.length) {
+    $("log").classList.remove("hidden");
+    $("dockHint").innerHTML = `<span class="err">Conversia nu a reușit — motivul e în jurnal.</span>`;
+    return;
+  }
+  results = outs.concat(results);
+  renderDock();
+  select(0);
+}
 $("go").onclick = async () => {
   const fd = new FormData();
   for (const f of files) fd.append("files", f.file, f.path);
-  fd.append("mode", mode);
-  fd.append("rotate", $("rotate").value);
-  fd.append("maxtris", $("maxtris").value);
-  fd.append("height", $("height").value);
-  fd.append("name", $("name").value);
-  fd.append("keep", $("keep").value);
-  fd.append("nofit", $("nofit").checked ? "1" : "0");
-  fd.append("anims", $("anims").checked ? "1" : "0");
-  const go = $("go");
-  go.disabled = true; go.classList.add("busy"); go.textContent = "Se convertește…";
-  $("logCard").classList.remove("hidden");
-  $("log").textContent = "Se lucrează… (modelele mari sau cele prin Blender pot dura un minut)";
-  try {
-    const r = await fetch("/convert", { method: "POST", body: fd, headers: { "X-Token": TOKEN } });
-    const res = await r.json();
-    $("log").textContent = res.log;
-    const box = $("results");
-    for (const o of (res.outputs || []).reverse()) {
-      const div = document.createElement("div");
-      div.className = "result";
-      const q = encodeURIComponent(o.path);
-      div.innerHTML = `<h3></h3>${o.preview ? `<img alt="previzualizare" src="/file?t=${TOKEN}&p=${encodeURIComponent(o.preview)}&r=${Date.now()}">` : ""}
-        <div class="hint">Copiază fișierul în <code></code> (fă o copie a originalului înainte).</div>
-        <div class="btns"><a class="btn" href="/file?t=${TOKEN}&dl=1&p=${q}">Descarcă .mdl</a><button class="btn">Deschide folderul</button></div>`;
-      div.querySelector("h3").textContent = `✓ ${o.name} · ${fmtSize(o.size)}`;
-      div.querySelector("code").textContent = o.hint;
-      div.querySelector("button").onclick = () => fetch(`/open?p=${q}`, { headers: { "X-Token": TOKEN } });
-      box.prepend(div);
-    }
-    if (!res.ok && !(res.outputs || []).length) {
-      const p = document.createElement("p");
-      p.className = "err card";
-      p.textContent = "Conversia nu a reușit — vezi mesajele de mai jos.";
-      box.prepend(p);
-    }
-  } catch (err) {
-    $("log").textContent = "Programul nu mai răspunde. A fost închis terminalul negru? Pornește din nou blingmodels.exe.\n" + err;
-  } finally {
-    go.classList.remove("busy"); go.textContent = "Convertește"; render();
-  }
+  const v = (id) => $(id).value;
+  fd.append("mode", mode); fd.append("rotate", v("rotate")); fd.append("maxtris", v("maxtris")); fd.append("height", v("height"));
+  fd.append("name", v("name")); fd.append("keep", v("keep"));
+  fd.append("nofit", $("nofit").checked ? "1" : "0"); fd.append("anims", $("anims").checked ? "1" : "0"); fd.append("double", $("double").checked ? "1" : "0");
+  setBusy(true);
+  try { showResult(await (await api("/convert", { method: "POST", body: fd })).json()); }
+  catch (err) { $("log").textContent = "Programul nu mai răspunde. Pornește din nou blingmodels.exe.\n" + err; $("log").classList.remove("hidden"); }
+  finally { setBusy(false); }
 };
-render();
+function fmtSize(n) { return n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.ceil(n / 1024) + " KB"; }
+function renderDock() {
+  const dock = $("dock");
+  dock.innerHTML = "";
+  results.forEach((r, i) => {
+    const el = document.createElement("div");
+    el.className = "thumb" + (i === current ? " on" : "");
+    el.innerHTML = `${r.preview ? `<img alt="">` : ""}<div><b></b><small></small></div>`;
+    if (r.preview) el.querySelector("img").src = `/file?t=${TOKEN}&p=${encodeURIComponent(r.preview)}`;
+    el.querySelector("b").textContent = r.name;
+    el.querySelector("small").textContent = `${r.tris.toLocaleString("ro")} triunghiuri · ${fmtSize(r.size)}`;
+    el.onclick = () => select(i);
+    dock.append(el);
+  });
+}
+function select(i) {
+  current = i;
+  const r = results[i];
+  renderDock();
+  $("empty").classList.add("hidden");
+  ["hud", "where"].forEach((id) => $(id).classList.remove("hidden"));
+  $("mName").textContent = r.name;
+  $("mKind").textContent = r.kind;
+  const st = [["triunghiuri", r.tris], ["vârfuri", r.verts], ["texturi", r.textures], ["oase", r.bones], ["animații", (r.seqs || []).length], ["", fmtSize(r.size)]];
+  $("mStats").innerHTML = st.map(([k, v]) => `<span class="stat"><b>${typeof v === "number" ? v.toLocaleString("ro") : v}</b> ${k}</span>`).join("");
+  $("mHint").textContent = r.hint;
+  $("dlBtn").href = `/file?t=${TOKEN}&dl=1&p=${encodeURIComponent(r.path)}`;
+  const seq = $("seq");
+  seq.innerHTML = "";
+  (r.seqs || []).forEach((s, k) => { const o = document.createElement("option"); o.value = k; o.textContent = s; seq.append(o); });
+  loadMesh(r, 0);
+}
+$("folderBtn").onclick = () => { const r = results[current]; if (r) api(`/open?p=${encodeURIComponent(r.path)}`); };
+$("copyBtn").onclick = async () => { try { await navigator.clipboard.writeText($("mHint").textContent); $("copyBtn").lastChild.textContent = "Copiat"; setTimeout(() => ($("copyBtn").lastChild.textContent = "Copiază"), 1400); } catch {} };
+$("logBtn").onclick = () => $("log").classList.toggle("hidden");
+$("seq").onchange = () => { const r = results[current]; if (r) loadMesh(r, +$("seq").value); };
+
+/* ---------- 3D view (the engine's look: front faces only, palette textures) ---------- */
+const canvas = $("gl");
+const gl = canvas.getContext("webgl", { antialias: true, alpha: false });
+let mesh = null, playing = true, autoSpin = true, yaw = 0.6, pitch = 0.18, dist = 1, frameT = 0;
+const VS = `attribute vec3 p; attribute vec3 n; attribute vec2 uv; uniform mat4 mvp; varying vec3 vn; varying vec2 vuv;
+  void main(){ vn = n; vuv = uv; gl_Position = mvp * vec4(p, 1.0); }`;
+const FS = `precision mediump float; uniform sampler2D tex; uniform vec3 L; varying vec3 vn; varying vec2 vuv;
+  void main(){ vec4 c = texture2D(tex, vuv); if (c.a < 0.5) discard; float d = max(dot(normalize(vn), L), 0.0);
+  gl_FragColor = vec4(c.rgb * (0.42 + 0.7 * d), 1.0); }`;
+const GVS = `attribute vec3 p; uniform mat4 mvp; void main(){ gl_Position = mvp * vec4(p, 1.0); }`;
+const GFS = `precision mediump float; uniform vec4 col; void main(){ gl_FragColor = col; }`;
+function prog(vs, fs) {
+  const p = gl.createProgram();
+  for (const [t, src] of [[gl.VERTEX_SHADER, vs], [gl.FRAGMENT_SHADER, fs]]) { const s = gl.createShader(t); gl.shaderSource(s, src); gl.compileShader(s); gl.attachShader(p, s); }
+  gl.linkProgram(p); return p;
+}
+const P = gl && prog(VS, FS), G = gl && prog(GVS, GFS);
+function b64f(s) { const bin = atob(s); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Float32Array(u.buffer); }
+function buf(data) { const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW); return b; }
+async function loadMesh(r, seq) {
+  if (!gl) return;
+  const res = await api(`/mesh?p=${encodeURIComponent(r.path)}&seq=${seq}`);
+  if (!res.ok) return;
+  const d = await res.json();
+  const texs = await Promise.all(d.textures.map((url) => new Promise((ok) => {
+    const img = new Image(); img.onload = () => {
+      const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      ok(t);
+    }; img.src = url;
+  })));
+  const frames = d.frames.map((f) => buf(b64f(f)));
+  let minZ = Infinity; const f0 = b64f(d.frames[0]); for (let i = 2; i < f0.length; i += 3) minZ = Math.min(minZ, f0[i]);
+  if (mesh) { mesh.frames.forEach((b) => gl.deleteBuffer(b)); mesh.texs.forEach((t) => gl.deleteTexture(t)); }
+  const keepView = mesh && mesh.path === r.path;
+  mesh = { path: r.path, groups: d.groups, texs, frames, uv: buf(b64f(d.uv)), n: buf(b64f(d.normals)), fps: d.fps, c: d.center, rad: d.radius, minZ, grid: gridBuf(d.center, d.radius, minZ) };
+  if (!keepView) { dist = d.radius * 3.4; yaw = 0.6; pitch = 0.18; }
+  frameT = 0;
+  $("anim").classList.toggle("hidden", !(results[current].seqs || []).length || (results[current].seqs.length < 2 && frames.length < 2));
+}
+function gridBuf(c, rad, z) {
+  const pts = [], n = 10, s = rad * 1.6;
+  for (let i = -n; i <= n; i++) { const t = (i / n) * s; pts.push(c[0] - s, c[1] + t, z, c[0] + s, c[1] + t, z, c[0] + t, c[1] - s, z, c[0] + t, c[1] + s, z); }
+  return { b: buf(new Float32Array(pts)), n: pts.length / 3 };
+}
+function mul(a, b) { const o = new Float32Array(16); for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { let s = 0; for (let k = 0; k < 4; k++) s += a[k * 4 + j] * b[i * 4 + k]; o[i * 4 + j] = s; } return o; }
+function persp(fov, asp, near, far) { const f = 1 / Math.tan(fov / 2), nf = 1 / (near - far); return new Float32Array([f / asp, 0, 0, 0, 0, f, 0, 0, 0, 0, (far + near) * nf, -1, 0, 0, 2 * far * near * nf, 0]); }
+function lookAt(e, c, up) {
+  let z = [e[0] - c[0], e[1] - c[1], e[2] - c[2]]; const zl = Math.hypot(...z); z = z.map((v) => v / zl);
+  let x = [up[1] * z[2] - up[2] * z[1], up[2] * z[0] - up[0] * z[2], up[0] * z[1] - up[1] * z[0]]; const xl = Math.hypot(...x); x = x.map((v) => v / xl);
+  const y = [z[1] * x[2] - z[2] * x[1], z[2] * x[0] - z[0] * x[2], z[0] * x[1] - z[1] * x[0]];
+  const d = (a) => -(a[0] * e[0] + a[1] * e[1] + a[2] * e[2]);
+  return new Float32Array([x[0], y[0], z[0], 0, x[1], y[1], z[1], 0, x[2], y[2], z[2], 0, d(x), d(y), d(z), 1]);
+}
+let last = performance.now();
+function draw(now) {
+  requestAnimationFrame(draw);
+  if (!gl) return;
+  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  const w = canvas.clientWidth * devicePixelRatio | 0, h = canvas.clientHeight * devicePixelRatio | 0;
+  if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+  gl.viewport(0, 0, w, h);
+  gl.clearColor(0.043, 0.047, 0.07, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  if (!mesh) return;
+  if (autoSpin && !dragging) yaw += dt * 0.35;
+  if (playing) frameT += dt;
+  const fi = mesh.frames.length > 1 ? Math.floor(frameT * mesh.fps) % mesh.frames.length : 0;
+  const c = [mesh.c[0], mesh.c[1], mesh.c[2]];
+  const eye = [c[0] + dist * Math.cos(pitch) * Math.cos(yaw), c[1] + dist * Math.cos(pitch) * Math.sin(yaw), c[2] + dist * Math.sin(pitch)];
+  const view = lookAt(eye, c, [0, 0, 1]);
+  const mvp = mul(persp(0.75, w / Math.max(1, h), mesh.rad * 0.02, mesh.rad * 40), view);
+  gl.enable(gl.DEPTH_TEST);
+  // grid
+  gl.useProgram(G);
+  gl.uniformMatrix4fv(gl.getUniformLocation(G, "mvp"), false, mvp);
+  gl.uniform4f(gl.getUniformLocation(G, "col"), 0.16, 0.18, 0.26, 1);
+  gl.bindBuffer(gl.ARRAY_BUFFER, mesh.grid.b);
+  const gp = gl.getAttribLocation(G, "p"); gl.enableVertexAttribArray(gp); gl.vertexAttribPointer(gp, 3, gl.FLOAT, false, 0, 0);
+  gl.drawArrays(gl.LINES, 0, mesh.grid.n);
+  gl.disableVertexAttribArray(gp);
+  // model: front faces only, like the game
+  gl.enable(gl.CULL_FACE); gl.cullFace(gl.BACK); gl.frontFace(gl.CCW);
+  gl.useProgram(P);
+  gl.uniformMatrix4fv(gl.getUniformLocation(P, "mvp"), false, mvp);
+  const L = [Math.cos(yaw + 0.8), Math.sin(yaw + 0.8), 0.9], ll = Math.hypot(...L);
+  gl.uniform3f(gl.getUniformLocation(P, "L"), L[0] / ll, L[1] / ll, L[2] / ll);
+  const attr = (name, b, size) => { const a = gl.getAttribLocation(P, name); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.enableVertexAttribArray(a); gl.vertexAttribPointer(a, size, gl.FLOAT, false, 0, 0); };
+  attr("p", mesh.frames[fi], 3); attr("n", mesh.n, 3); attr("uv", mesh.uv, 2);
+  for (const g of mesh.groups) { gl.bindTexture(gl.TEXTURE_2D, mesh.texs[g.tex]); gl.drawArrays(gl.TRIANGLES, g.first, g.count); }
+  gl.disable(gl.CULL_FACE);
+}
+requestAnimationFrame(draw);
+let dragging = false, px = 0, py = 0;
+canvas.addEventListener("pointerdown", (e) => { dragging = true; px = e.clientX; py = e.clientY; canvas.setPointerCapture(e.pointerId); });
+canvas.addEventListener("pointermove", (e) => { if (!dragging) return; yaw -= (e.clientX - px) * 0.008; pitch = Math.max(-1.45, Math.min(1.45, pitch + (e.clientY - py) * 0.008)); px = e.clientX; py = e.clientY; });
+canvas.addEventListener("pointerup", () => { dragging = false; });
+canvas.addEventListener("wheel", (e) => { e.preventDefault(); if (mesh) dist = Math.max(mesh.rad * 0.4, Math.min(mesh.rad * 12, dist * Math.exp(e.deltaY * 0.001))); }, { passive: false });
+$("spinBtn").onclick = () => { autoSpin = !autoSpin; $("spinBtn").style.borderColor = autoSpin ? "" : "var(--a2)"; };
+$("playBtn").onclick = () => { playing = !playing; $("playBtn").innerHTML = icon(playing ? "pause" : "play"); };
+
+/* ---------- lifetime: the program ends when this window closes ---------- */
+setInterval(() => api("/ping").catch(() => {}), 5000);
+api("/ping");
+addEventListener("pagehide", () => navigator.sendBeacon(`/ping?t=${TOKEN}&bye=1`));
+renderFiles();
+if (INITIAL) { setBusy(true); api("/initial").then((r) => r.json()).then(showResult).finally(() => setBusy(false)); }
 </script>
 </body>
 </html>

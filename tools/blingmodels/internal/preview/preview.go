@@ -108,7 +108,8 @@ func draw(m *mdl.Model, bones []vmath.Bone) *image.NRGBA {
 			minY := int(math.Max(0, math.Floor(math.Min(sy[0], math.Min(sy[1], sy[2])))))
 			maxY := int(math.Min(panel-1, math.Ceil(math.Max(sy[0], math.Max(sy[1], sy[2])))))
 			area := (sx[1]-sx[0])*(sy[2]-sy[0]) - (sx[2]-sx[0])*(sy[1]-sy[0])
-			if math.Abs(area) < 1e-9 {
+			// The engine draws front faces only (counter-clockwise here, with y pointing down: negative area).
+			if area > -1e-9 {
 				continue
 			}
 			for py := minY; py <= maxY; py++ {

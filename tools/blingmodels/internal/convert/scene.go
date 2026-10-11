@@ -24,6 +24,9 @@ type Corner struct {
 type Tri struct {
 	C   [3]Corner
 	Mat int
+	// Double: also drawn from the back (open surfaces of double-sided materials); the back face is added last, in
+	// Geometry, so simplification sees each surface once.
+	Double bool
 	// ST, when HasST is set, are texel coordinates used as they are (triangles kept from an original model).
 	ST    [3][2]int16
 	HasST bool
@@ -66,6 +69,8 @@ type LoadOptions struct {
 	FPS    float64
 	MaxFPS int
 	Anims  bool
+	// DoubleSided draws every open surface from both sides (not only materials marked double-sided).
+	DoubleSided bool
 }
 
 func toGSBone(m vmath.Mat4, scale float64) vmath.Bone {
@@ -253,7 +258,8 @@ func LoadScene(d *gltf.Doc, o LoadOptions) (*Scene, error) {
 		return matIndex[key], texCoordOf(d, key)
 	}
 
-	// Triangles.
+	// Triangles. skinMats marks bones whose skinning transform mirrors (negative scale).
+	skinMats := map[int]bool{}
 	for ni, node := range d.Nodes {
 		if !visible[ni] || node.Mesh == nil || *node.Mesh < 0 || *node.Mesh >= len(d.Meshes) {
 			continue
@@ -264,6 +270,7 @@ func LoadScene(d *gltf.Doc, o LoadOptions) (*Scene, error) {
 		normalM := world.NormalMatrix()
 		mirrored := !skinned && world.Det3() < 0
 		for _, prim := range mesh.Primitives {
+			primStart := len(sc.Tris)
 			mode := 4
 			if prim.Mode != nil {
 				mode = *prim.Mode
@@ -384,6 +391,9 @@ func LoadScene(d *gltf.Doc, o LoadOptions) (*Scene, error) {
 							skinM = skinM.Mul(ibm)
 						}
 					}
+					if skinM.Det3() < 0 {
+						skinMats[c.Bone] = true
+					}
 					c.Pos = toGSPoint(skinM.Apply(p), o.Scale)
 					c.Normal = toGSDir(skinM.NormalMatrix().MulVec(n))
 				} else {
@@ -415,8 +425,13 @@ func LoadScene(d *gltf.Doc, o LoadOptions) (*Scene, error) {
 				if degenerate(tri) {
 					continue
 				}
+				if skinned && skinDet(skinMats, tri) < 0 {
+					tri.C[1], tri.C[2] = tri.C[2], tri.C[1] // mirrored joint transform
+				}
 				sc.Tris = append(sc.Tris, tri)
 			}
+			doubleSided := prim.Material != nil && *prim.Material >= 0 && *prim.Material < len(d.Materials) && d.Materials[*prim.Material].DoubleSided
+			sc.Tris = append(sc.Tris[:primStart], orientFaces(sc.Tris[primStart:], doubleSided || o.DoubleSided)...)
 		}
 	}
 	if len(sc.Tris) == 0 {
@@ -541,4 +556,135 @@ func (s *Scene) Bounds() (vmath.Vec3, vmath.Vec3) {
 		}
 	}
 	return mn, mx
+}
+
+// skinDet is negative when the triangle's first corner was skinned through a mirroring transform.
+func skinDet(mirror map[int]bool, t Tri) float64 {
+	if mirror[t.C[0].Bone] {
+		return -1
+	}
+	return 1
+}
+
+// orientFaces fixes a primitive's faces for an engine that draws only front faces (GoldSrc), while glTF viewers
+// often draw both sides and hide mistakes:
+//   - a piece whose faces point inward overall (clothes, armor exported inside out) is flipped;
+//   - normals pointing inward are turned around (lighting);
+//   - open surfaces of double-sided materials (capes, wings, leaves, hair cards) get a back face.
+func orientFaces(tris []Tri, doubleSided bool) []Tri {
+	if len(tris) == 0 {
+		return tris
+	}
+	var center vmath.Vec3
+	var total float64
+	for _, t := range tris {
+		a := t.C[1].Pos.Sub(t.C[0].Pos).Cross(t.C[2].Pos.Sub(t.C[0].Pos)).Len() / 2
+		center = center.Add(t.C[0].Pos.Add(t.C[1].Pos).Add(t.C[2].Pos).Scale(a / 3))
+		total += a
+	}
+	if total <= 0 {
+		return tris
+	}
+	center = center.Scale(1 / total)
+	// Outwardness: do faces (winding) and normals point away from the piece's center?
+	var wind, wabs, norm, nabs float64
+	for _, t := range tris {
+		fn := t.C[1].Pos.Sub(t.C[0].Pos).Cross(t.C[2].Pos.Sub(t.C[0].Pos))
+		area := fn.Len() / 2
+		if area <= 0 {
+			continue
+		}
+		fn = fn.Norm()
+		dir := t.C[0].Pos.Add(t.C[1].Pos).Add(t.C[2].Pos).Scale(1.0 / 3).Sub(center).Norm()
+		d := fn.Dot(dir) * area
+		wind += d
+		wabs += math.Abs(d)
+		vn := t.C[0].Normal.Add(t.C[1].Normal).Add(t.C[2].Normal).Norm()
+		dn := vn.Dot(dir) * area
+		norm += dn
+		nabs += math.Abs(dn)
+	}
+	inward := wabs > 0 && wind/wabs < -0.15
+	if !isOpen(tris) {
+		// Closed shape: the signed volume is the reliable test.
+		var vol, vabs float64
+		for _, t := range tris {
+			a, b, c := t.C[0].Pos.Sub(center), t.C[1].Pos.Sub(center), t.C[2].Pos.Sub(center)
+			v := a.Dot(b.Cross(c))
+			vol += v
+			vabs += math.Abs(v)
+		}
+		inward = vabs > 0 && vol/vabs < -0.1
+	}
+	if inward {
+		for i := range tris {
+			tris[i].C[1], tris[i].C[2] = tris[i].C[2], tris[i].C[1]
+		}
+	}
+	if nabs > 0 && norm/nabs < -0.15 {
+		for i := range tris {
+			for k := range tris[i].C {
+				tris[i].C[k].Normal = tris[i].C[k].Normal.Scale(-1)
+			}
+		}
+	}
+	// Normals that disagree with the (fixed) winding get the face's side, so lighting matches what is drawn.
+	for i := range tris {
+		t := &tris[i]
+		fn := t.C[1].Pos.Sub(t.C[0].Pos).Cross(t.C[2].Pos.Sub(t.C[0].Pos))
+		for k := range t.C {
+			if t.C[k].Normal.Dot(fn) < 0 && math.Abs(t.C[k].Normal.Dot(fn.Norm())) > 0.5 {
+				t.C[k].Normal = t.C[k].Normal.Scale(-1)
+			}
+		}
+	}
+	if doubleSided && isOpen(tris) {
+		for i := range tris {
+			tris[i].Double = true
+		}
+	}
+	return tris
+}
+
+// withBackFaces adds the back side of every Double triangle.
+func withBackFaces(tris []Tri) []Tri {
+	out := tris
+	for _, t := range tris {
+		if !t.Double {
+			continue
+		}
+		b := t
+		b.Double = false
+		b.C[1], b.C[2] = t.C[2], t.C[1]
+		b.ST[1], b.ST[2] = t.ST[2], t.ST[1]
+		for k := range b.C {
+			b.C[k].Normal = b.C[k].Normal.Scale(-1)
+		}
+		out = append(out, b)
+	}
+	return out
+}
+
+// isOpen reports whether a surface has a real border (more than 3% of its edges used by one triangle only): a thin
+// sheet rather than a closed shape, so its back side can be seen.
+func isOpen(tris []Tri) bool {
+	type ek struct{ a, b [3]float32 }
+	key := func(p vmath.Vec3) [3]float32 { return [3]float32{float32(p[0]), float32(p[1]), float32(p[2])} }
+	edges := map[ek]int{}
+	for _, t := range tris {
+		for k := 0; k < 3; k++ {
+			a, b := key(t.C[k].Pos), key(t.C[(k+1)%3].Pos)
+			if b[0] < a[0] || b[0] == a[0] && (b[1] < a[1] || b[1] == a[1] && b[2] < a[2]) {
+				a, b = b, a
+			}
+			edges[ek{a, b}]++
+		}
+	}
+	border := 0
+	for _, n := range edges {
+		if n == 1 {
+			border++
+		}
+	}
+	return len(edges) > 0 && float64(border)/float64(len(edges)) > 0.03
 }
