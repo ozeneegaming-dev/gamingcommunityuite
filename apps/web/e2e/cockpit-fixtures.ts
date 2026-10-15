@@ -134,5 +134,6 @@ export async function shot(page: Page, name: string, opts: { fullPage?: boolean 
   const dir = process.env.GCS_SHOTS_DIR;
   if (!dir) return;
   mkdirSync(dir, { recursive: true });
-  await page.screenshot({ path: path.join(dir, `${name}.png`), fullPage: opts.fullPage ?? false });
+  // Animațiile de intrare (rândurile topului, feed-ul) duc la starea finală, ca imaginea să arate pagina așezată.
+  await page.screenshot({ path: path.join(dir, `${name}.png`), fullPage: opts.fullPage ?? false, animations: "disabled" });
 }
