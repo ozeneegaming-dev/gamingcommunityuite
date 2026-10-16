@@ -11,7 +11,8 @@
     "./map-images": "./src/servers/bridge/mapImages.ts",
     "./chat-pro-prefs": "./src/chat-pro/prefs.ts",
     "./online-format": "./src/community/onlineFormat.ts",
-    "./groups-pro-legend": "./src/groups-pro/legend.ts"
+    "./groups-pro-legend": "./src/groups-pro/legend.ts",
+    "./field-groups": "./src/profile/fieldGroups.ts"
   },
   "scripts": {
     "lint": "eslint .",

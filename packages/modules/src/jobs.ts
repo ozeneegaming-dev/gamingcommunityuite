@@ -38,4 +38,6 @@ export function registerAppJobs(s: GcsServices): void {
   s.clans.registerJobs(s.jobs);
   // Ștergerea și unirea conturilor: rularea operațiilor și cererile ajunse la termen (5 min).
   s.memberRemoval.registerJobs(s.jobs);
+  // Profil gaming v2: datele Steam / FACEIT ale membrilor cu Steam legat (la cerere și o rundă orară).
+  s.externalProfiles.registerJobs(s.jobs);
 }

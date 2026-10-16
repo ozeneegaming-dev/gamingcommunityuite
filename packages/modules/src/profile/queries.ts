@@ -53,11 +53,14 @@ export type GcsProfileView = {
 export type GcsCardView = {
   /** `cover`: URL-ul copertei; `coverPositionY`: poziția ei verticală salvată (0–100 %), ca pe profil. */
   user: GcsUserDisplay & { slug: string; bio: string; accentColor: string | null; cover: string | null; coverPositionY: number };
-  stats: { posts: number; reputation: number; followers: number; joinedAt: string };
+  /** `points`: XP-ul (nivelul din hover card v2); opțional pentru intrările vechi din cache. */
+  stats: { posts: number; reputation: number; followers: number; joinedAt: string; points?: number };
   online: GcsOnline;
   badges: GcsBadgeView[];
   fields: { label: string; value: string }[];
   viewer: { isSelf: boolean; isFollowing: boolean; canMessage: boolean; canFollow: boolean };
+  /** Rangul obținut (nivelul din hover card v2). */
+  rankId?: number | null;
 };
 
 export type GcsActivityItem =
@@ -206,8 +209,8 @@ export class GcsProfileQueries {
   /** Datele comune ale cardului (fără partea care depinde de viewer), cache 60 s pe tag-ul `user:{id}`. */
   private async cardBase(userId: string): Promise<CardBase | null> {
     const { db, cache } = this.deps;
-    // `v2`: vizualizarea badge-urilor are insigna (`art`); intrările vechi din cache nu o au.
-    const key = `profile:card:v2:${userId}`;
+    // `v3`: ultimele 5 insigne și XP-ul (hover card v2); intrările vechi din cache nu le au.
+    const key = `profile:card:v3:${userId}`;
     const cached = await cache.get<CardBase>(key);
     if (cached) return cached;
     const user = await db.user.findUnique({
@@ -224,7 +227,8 @@ export class GcsProfileQueries {
         followersCount: true,
         createdAt: true,
         lastActiveAt: true,
-        badges: { include: { badge: true }, orderBy: { createdAt: "desc" }, take: 3 },
+        points: true,
+        badges: { include: { badge: true }, orderBy: { createdAt: "desc" }, take: 5 },
         profileValues: { where: { field: { showOnCard: true, visibility: "PUBLIC" } }, include: { field: true } },
       },
     });
@@ -249,7 +253,7 @@ export class GcsProfileQueries {
       primaryGroupId: user.primaryGroupId,
       lastActiveAt: user.lastActiveAt?.toISOString() ?? null,
       privacy: user.privacy,
-      stats: { posts: user.postsCount, reputation: user.reputation, followers: user.followersCount, joinedAt: user.createdAt.toISOString() },
+      stats: { posts: user.postsCount, reputation: user.reputation, followers: user.followersCount, joinedAt: user.createdAt.toISOString(), points: user.points },
       badges: user.badges.map(badgeView),
       fields: user.profileValues
         .filter((v) => v.value !== "")
@@ -277,6 +281,7 @@ export class GcsProfileQueries {
       badges: base.badges,
       fields: base.fields,
       viewer: { isSelf, isFollowing, canMessage, canFollow: viewer.userId !== null && !isSelf },
+      rankId: base.rankId,
     };
   }
 
@@ -351,6 +356,46 @@ export class GcsProfileQueries {
       .slice(0, limit);
     const more = posts.length === limit || badges.length === limit;
     return { items, next: more && items.length > 0 ? items[items.length - 1]!.at : null };
+  }
+
+  /**
+   * Tabul „Articole” (profil gaming v2): topicurile pornite de membru, doar din forumurile pe care viewer-ul le poate
+   * citi, cele mai noi primele, 20 pe pagină. `null` = profil invizibil.
+   */
+  async topics(viewer: GcsActor, userId: string, page: number): Promise<{ items: { id: number; title: string; slug: string; createdAt: string; replies: number; views: number; snippet: string; forum: string }[]; total: number; pages: number } | null> {
+    const { db, permissions, profiles } = this.deps;
+    const owner = await db.user.findUnique({ where: { id: userId }, select: { id: true, privacy: true } });
+    if (!owner || !(await profiles.canView(viewer, owner))) return null;
+    const forums = await db.forum.findMany({ select: { id: true } });
+    const readable = [...(await permissions.filterContainers(viewer, "forums.read", forums.map((f) => forumContainer(f.id))))].map(Number);
+    const perPage = 20;
+    const where: Prisma.TopicWhereInput = { authorId: userId, visibility: "VISIBLE", forumId: { in: readable } };
+    const [rows, total] = await Promise.all([
+      db.topic.findMany({
+        where,
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        skip: (Math.max(1, page) - 1) * perPage,
+        take: perPage,
+        select: { id: true, title: true, slug: true, createdAt: true, repliesCount: true, viewsCount: true, firstPostId: true, forum: { select: { name: true } } },
+      }),
+      db.topic.count({ where }),
+    ]);
+    const firstIds = rows.map((t) => t.firstPostId).filter((id): id is number => id !== null);
+    const bodies = new Map((firstIds.length > 0 ? await db.post.findMany({ where: { id: { in: firstIds } }, select: { id: true, contentHtml: true } }) : []).map((p) => [p.id, p.contentHtml]));
+    return {
+      items: rows.map((t) => ({
+        id: t.id,
+        title: t.title,
+        slug: t.slug,
+        createdAt: t.createdAt.toISOString(),
+        replies: t.repliesCount,
+        views: t.viewsCount,
+        snippet: snippetOf(t.firstPostId !== null ? (bodies.get(t.firstPostId) ?? "") : "", 220),
+        forum: t.forum.name,
+      })),
+      total,
+      pages: Math.max(1, Math.ceil(total / perPage)),
+    };
   }
 
   async followers(viewer: GcsActor, userId: string, page: number): Promise<{ users: GcsUserDisplay[]; total: number; pages: number } | null> {

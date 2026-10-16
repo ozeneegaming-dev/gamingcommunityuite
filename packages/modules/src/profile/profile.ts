@@ -22,12 +22,15 @@ import {
 import { Prisma, type FieldVisibility, type PrismaClient, type ProfileField } from "@gcs/db";
 import { RENDER_LABELS } from "../forums/labels";
 import { emailChangeMail } from "./emails";
+import { cleanHandle, contactLink } from "./fieldGroups";
 import { isValidPrivacy, normalizePrivacy, type GcsPrivacy } from "./privacy";
 
 export const USER_AVATAR = "user.avatar";
 export const USER_COVER = "user.cover";
 /** Conturile create prin Steam nu au email; primesc unul placeholder (etapa 1). */
 export const STEAM_PLACEHOLDER_DOMAIN = "@steam.invalid";
+/** Anul-marcaj al zilelor de naștere salvate fără an (bisect: 29 februarie rămâne valid). */
+export const BIRTHDAY_NO_YEAR = 1904;
 
 const BIO_MAX = 160;
 const EMAIL_TOKEN_HOURS = 24;
@@ -44,6 +47,11 @@ export type GcsVisibleField = {
   /** Câmpurile „Text lung”: HTML-ul sanitizat (formatat cu editorul, sau textul vechi ca paragrafe). */
   html?: string;
   showOnCard: boolean;
+  /** Profil gaming v2: grupul câmpului, iconița și, la câmpurile de contact, linkul construit din handle. */
+  groupId?: number | null;
+  icon?: string | null;
+  link?: string | null;
+  position?: number;
 };
 
 /** O valoare validată: textul simplu și, la câmpurile „Text lung” scrise în editor, documentul și HTML-ul. */
@@ -149,11 +157,21 @@ export class GcsProfileService {
         // Valorile vechi (fără HTML) se afișează ca paragrafe: conversie la citire.
         ...(r.field.type === "TEXTAREA" ? { html: r.html || richFieldHtml(r.value, GCS_RICH_FIELDS.profileText) } : {}),
         showOnCard: r.field.showOnCard,
+        groupId: r.field.groupId,
+        icon: r.field.icon,
+        link: r.field.linkTemplate ? contactLink(r.field.linkTemplate, r.value) : null,
+        position: r.field.position,
       }));
   }
 
+  /** Serverele comunității pe care un membru le poate alege („Server preferat”): numele serverelor active. */
+  async serverOptions(): Promise<string[]> {
+    const rows = await this.deps.db.gameServer.findMany({ where: { enabled: true }, orderBy: [{ position: "asc" }, { id: "asc" }], select: { name: true } });
+    return [...new Set(rows.map((r) => r.name))];
+  }
+
   /** Validează o valoare pentru tipul câmpului; întoarce valoarea curățată sau codul erorii. */
-  private validate(field: ProfileField, raw: unknown): FieldValue | { error: string } {
+  private validate(field: ProfileField, raw: unknown, servers: string[] = []): FieldValue | { error: string } {
     // „Text lung” scris în editor: documentul trece prin validatorul conținutului și prin profilul câmpului.
     if (field.type === "TEXTAREA" && isRichDoc(raw)) {
       try {
@@ -171,7 +189,14 @@ export class GcsProfileService {
       .trim();
     if (value === "") return field.required ? { error: "required" } : { value };
     if (value.length > field.maxLength) return { error: "too_long" };
+    // Câmpurile de contact: doar handle-ul (fără @ sau adresa copiată); linkul se construiește la afișare.
+    if (field.linkTemplate && field.type === "TEXT") {
+      const handle = cleanHandle(value);
+      return handle ? { value: handle } : { error: "invalid_handle" };
+    }
     switch (field.type) {
+      case "SERVER_SELECT":
+        return servers.includes(value) ? { value } : { error: "invalid_choice" };
       case "URL": {
         if (!URL.canParse(value)) return { error: "invalid_url" };
         const protocol = new URL(value).protocol;
@@ -200,13 +225,14 @@ export class GcsProfileService {
     );
     const errors: Record<string, string> = {};
     const writes: (FieldValue & { field: ProfileField })[] = [];
+    const servers = Object.keys(values).some((k) => byKey.get(k)?.type === "SERVER_SELECT") ? await this.serverOptions() : [];
     for (const [key, raw] of Object.entries(values)) {
       const field = byKey.get(key);
       if (!field) {
         errors[key] = "unknown";
         continue;
       }
-      const result = this.validate(field, raw);
+      const result = this.validate(field, raw, servers);
       if ("error" in result) errors[key] = result.error;
       else writes.push({ field, ...result });
     }
@@ -245,18 +271,28 @@ export class GcsProfileService {
   /**
    * Ziua de naștere a membrului (`YYYY-MM-DD` sau `null` = ștearsă) și dacă e publică: pe profil (ziua și luna, fără an)
    * și în comanda `/zi-de-nastere` din Chat Pro. Anul trebuie să fie între 1900 și anul curent, data nu poate fi în viitor.
+   * Anul e opțional (profil gaming v2): `MM-DD` se salvează pe anul-marcaj `NO_YEAR` (bisect, ca 29 februarie să fie
+   * valid), iar anul nu se arată niciodată.
    */
-  async setBirthday(actor: GcsActor, input: { date: string | null; visible: boolean }): Promise<void> {
+  async setBirthday(actor: GcsActor, input: { date: string | null; visible: boolean; showYear?: boolean }): Promise<void> {
     if (!actor.userId || actor.isBanned) throw new GcsForbidden({ reason: "guest" });
     let birthday: Date | null = null;
+    let withYear = false;
     if (input.date) {
-      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(input.date);
-      const d = m ? new Date(`${input.date}T00:00:00Z`) : null;
-      const valid = d !== null && !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === input.date && Number(m![1]) >= 1900 && d.getTime() <= Date.now();
+      const noYear = /^(\d{2})-(\d{2})$/.test(input.date);
+      const iso = noYear ? `${BIRTHDAY_NO_YEAR}-${input.date}` : input.date;
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+      const d = m ? new Date(`${iso}T00:00:00Z`) : null;
+      const valid = d !== null && !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === iso && (noYear || (Number(m![1]) >= 1900 && Number(m![1]) !== BIRTHDAY_NO_YEAR)) && d.getTime() <= Date.now();
       if (!valid) throw new GcsValidationError({ birthday: "invalid_date" });
       birthday = d;
+      withYear = !noYear;
     }
-    await this.deps.db.user.update({ where: { id: actor.userId }, data: { birthday, birthdayVisible: birthday !== null && input.visible === true } });
+    // Anul e opțional pe profil (grupul „De bază”): ascuns implicit, arătat doar la cerere.
+    await this.deps.db.user.update({
+      where: { id: actor.userId },
+      data: { birthday, birthdayVisible: birthday !== null && input.visible === true, birthdayShowYear: withYear && input.showYear === true },
+    });
     await this.changed(actor.userId, actor, false, "birthday");
   }
 

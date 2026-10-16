@@ -107,6 +107,11 @@ const acpMenu: GcsAcpMenuSection[] = [
 /** Modulul Forum (specul etapei 2). */
 export const forumsModule: GcsModule = {
   key: "forums",
+  // Profil gaming v2: activitatea membrului și topicurile pornite de el („Articole”).
+  profileTabs: [
+    { key: "activity", labelKey: "profile.tabs.activity", icon: "fa-solid fa-chart-line", position: 0 },
+    { key: "articles", labelKey: "profile.tabs.articles", icon: "fa-solid fa-newspaper", position: 50 },
+  ],
   permissions,
   settings,
   acpMenu,

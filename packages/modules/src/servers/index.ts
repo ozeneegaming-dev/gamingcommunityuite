@@ -73,6 +73,8 @@ const acpMenu: GcsAcpMenuSection[] = [
  */
 export const serversModule: GcsModule = {
   key: "servers",
+  // Profil gaming v2: skin-urile membrului (deocamdată un tab-ciornă, doar cu aplicația Servere pornită).
+  profileTabs: [{ key: "skins", labelKey: "profile.tabs.skins", icon: "fa-solid fa-gun", position: 60 }],
   app: {
     optional: true,
     labelKey: "apps.servers",

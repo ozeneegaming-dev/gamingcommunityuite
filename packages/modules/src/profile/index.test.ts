@@ -40,7 +40,32 @@ describe("modulele Profil, Mesaje și VIP", () => {
     expect(await db.badge.count({ where: { artShape: null } })).toBe(0);
     expect(await db.achievementRule.count({ where: { badgeId: { not: null } } })).toBe(8);
     expect(await db.achievementRule.count({ where: { trigger: { in: ["EACH_POST", "EACH_REACTION_RECEIVED", "EACH_SOLUTION"] } } })).toBe(3);
-    expect((await db.profileField.findMany({ orderBy: { position: "asc" } })).map((f) => f.key)).toEqual(["country", "platform", "twitch"]);
+    expect((await db.profileField.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] })).map((f) => f.key)).toEqual([
+      "country",
+      "platform",
+      "twitch",
+      "favorite_server",
+      "gear_cpu",
+      "gear_gpu",
+      "gear_ram",
+      "gear_phone",
+      "gear_os",
+      "gear_laptop",
+      "description",
+      "contact_youtube",
+      "contact_instagram",
+      "contact_tiktok",
+      "contact_x",
+    ]);
+    // Profil gaming v2: grupurile implicite, cu câmpurile vechi mutate o singură dată în ele.
+    const groups = await db.profileFieldGroup.findMany({ orderBy: { position: "asc" }, include: { fields: { select: { key: true }, orderBy: { position: "asc" } } } });
+    expect(groups.map((g) => [g.key, g.fields.map((f) => f.key)])).toEqual([
+      ["basic", ["country", "platform"]],
+      ["about_me", ["favorite_server"]],
+      ["gear", ["gear_cpu", "gear_gpu", "gear_ram", "gear_phone", "gear_os", "gear_laptop"]],
+      ["description", ["description"]],
+      ["contact", ["twitch", "contact_youtube", "contact_instagram", "contact_tiktok", "contact_x"]],
+    ]);
     expect((await db.avatarFrame.findMany({ orderBy: { position: "asc" } })).map((f) => f.key)).toEqual(["fire", "gold", "neon"]);
     expect(await db.nameStyle.count()).toBe(3);
   });
@@ -66,6 +91,9 @@ describe("modulele Profil, Mesaje și VIP", () => {
     await db.achievementRule.update({ where: { key: "posts_100" }, data: { threshold: 150 } });
     await db.rank.deleteMany({ where: { name: "Elită" } });
     await db.avatarFrame.update({ where: { key: "fire" }, data: { name: "Foc" } });
+    // Un grup șters și un câmp mutat de admin rămân așa.
+    await db.profileFieldGroup.delete({ where: { key: "gear" } });
+    await db.profileField.update({ where: { key: "country" }, data: { groupId: null } });
 
     await seedDefaults(db, world.registry);
     await seedDefaults(db, world.registry);
@@ -75,5 +103,8 @@ describe("modulele Profil, Mesaje și VIP", () => {
     expect((await db.achievementRule.findUniqueOrThrow({ where: { key: "posts_100" } })).threshold).toBe(150);
     expect(await db.rank.count()).toBe(5);
     expect((await db.avatarFrame.findUniqueOrThrow({ where: { key: "fire" } })).name).toBe("Foc");
+    expect(await db.profileFieldGroup.findUnique({ where: { key: "gear" } })).toBeNull();
+    expect((await db.profileField.findUniqueOrThrow({ where: { key: "country" } })).groupId).toBeNull();
+    expect(await db.profileField.count({ where: { key: { startsWith: "gear_" } } })).toBe(6);
   });
 });

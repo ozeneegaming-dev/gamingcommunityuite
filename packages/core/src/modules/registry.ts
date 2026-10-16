@@ -256,7 +256,15 @@ export interface GcsModule {
    * `GcsPermissionService` pe membru; modulul cheamă `invalidateMemberGrants` la orice schimbare care le afectează.
    */
   memberGrants?: (ctx: GcsMemberGrantsContext, userId: string) => Promise<GcsMemberGrant[]>;
+  /**
+   * Taburile modulului pe profilul public (profil gaming v2): apar doar cu aplicația modulului pornită; site-ul le
+   * desenează după cheie și poate ascunde un tab fără date pentru membrul respectiv (ex. Steam nelegat).
+   */
+  profileTabs?: GcsProfileTabDef[];
 }
+
+/** Un tab al profilului public adus de un modul. `position`: ordinea între taburi (cele de bază au 10, 20, 70, 80, 90). */
+export type GcsProfileTabDef = { key: string; labelKey: string; icon: string; position: number };
 
 export class GcsModuleRegistry {
   private readonly modules: GcsModule[] = [];
@@ -342,6 +350,15 @@ export class GcsModuleRegistry {
   /** Tipurile de widget-uri, cu modulul care le declară (cheile sunt unice). */
   widgetDefs(): { module: string; def: GcsWidgetDef }[] {
     return this.modules.flatMap((m) => (m.widgets ?? []).map((def) => ({ module: m.key, def })));
+  }
+
+  /** Taburile profilului aduse de module (cu modulul fiecăruia), în ordinea `position`; o cheie repetată o păstrează pe prima. */
+  profileTabs(): { module: string; def: GcsProfileTabDef }[] {
+    const seen = new Set<string>();
+    return this.modules
+      .flatMap((m) => (m.profileTabs ?? []).map((def) => ({ module: m.key, def })))
+      .filter((t) => (seen.has(t.def.key) ? false : (seen.add(t.def.key), true)))
+      .sort((a, b) => a.def.position - b.def.position);
   }
 
   widgetDef(key: string): { module: string; def: GcsWidgetDef } | undefined {

@@ -88,6 +88,12 @@ import { GcsProfileService } from "./profile/profile";
 import { GcsPromotionService } from "./profile/promotions";
 import { GcsProfileQueries } from "./profile/queries";
 import { GcsSocialService } from "./profile/social";
+import { registerCardContributions } from "./profile/cardContributions";
+import { GcsDeviceService } from "./profile/devices";
+import { GcsExternalProfiles } from "./profile/external";
+import { GcsProfileExtras } from "./profile/extras";
+import { GcsHoverCardLoader } from "./profile/hoverCard";
+import { GcsMemberPrefsService } from "./profile/memberPrefs";
 import { GcsChatService } from "./chat/chat";
 import { GcsChatExtensions } from "./chat/extensions";
 import { GcsChatProService } from "./chat-pro/service";
@@ -216,6 +222,12 @@ export type GcsServices = {
   vip: GcsVipService;
   ranks: GcsRankDirectory;
   profileQueries: GcsProfileQueries;
+  /** Profil gaming v2: hover card v2 (cipurile și statusul aplicațiilor), coloana profilului, Steam / FACEIT, dispozitivele, preferințele. */
+  hoverCards: GcsHoverCardLoader;
+  profileExtras: GcsProfileExtras;
+  externalProfiles: GcsExternalProfiles;
+  devices: GcsDeviceService;
+  memberPrefs: GcsMemberPrefsService;
   conversations: GcsConversationService;
   conversationQueries: GcsConversationQueries;
   /** Pluginurile încărcate în acest proces (hook-uri, widget-uri, pagini…), etapa 6. */
@@ -582,6 +594,14 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   };
   const clans = new GcsClanService({ db, cache, bus, settings, permissions, acp, apps, actors, attachments, rateLimiter, gameStats: clanGameStats });
   const clanQueries = new GcsClanQueries({ db, cache, permissions, settings, apps, clans, gameStats: clanGameStats });
+  // Profil gaming v2: hover card v2 cu cipurile și statusul aplicațiilor (Clanuri, Servere, VIP), coloana profilului,
+  // conturile externe (Steam, FACEIT, aduse de worker), dispozitivele și preferințele contului.
+  const hoverCards = new GcsHoverCardLoader({ db, permissions, queries: profileQueries, social, apps });
+  registerCardContributions(hoverCards, { db, clanQueries, bridgeQueries: bridge.queries, serverQueries });
+  const profileExtras = new GcsProfileExtras({ db, cache, settings, queries: profileQueries, acp });
+  const externalProfiles = new GcsExternalProfiles({ db, settings, jobs });
+  const devices = new GcsDeviceService({ db, mailer, settings, baseUrl: async () => baseUrl(await settings.get<string>("site.url")) });
+  const memberPrefs = new GcsMemberPrefsService({ db, bus });
   attachments.registerAccess(CLAN_LOGO, (actor, id) => clanQueries.canSeeClan(actor, Number(id)));
   attachments.registerAccess(CLAN_BANNER, (actor, id) => clanQueries.canSeeClan(actor, Number(id)));
   registerClanNotifications({ db, bus, notifications, clanQueries, actors });
@@ -735,6 +755,11 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     vip,
     ranks,
     profileQueries,
+    hoverCards,
+    profileExtras,
+    externalProfiles,
+    devices,
+    memberPrefs,
     conversations,
     conversationQueries: new GcsConversationQueries({ db, settings, profileQueries }),
     plugins,

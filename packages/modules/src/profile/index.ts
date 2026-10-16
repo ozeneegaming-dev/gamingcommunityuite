@@ -37,6 +37,10 @@ const settings: GcsSettingDef[] = [
   { key: "profile.signature_max_chars", type: "number", default: 500, section: "profiles", labelKey: "settings.profile.signature_max_chars", validate: between(0, 5000) },
   // Imaginile din semnătură (adrese https, afișate mici; 0 = niciuna), specul 2026-10-07-editor-campuri.
   { key: "profile.signature_max_images", type: "number", default: 1, section: "profiles", labelKey: "settings.profile.signature_max_images", validate: (v) => (Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 5 ? null : "invalid_range") },
+  // Profil gaming v2: cheia FACEIT Data API (tabul FACEIT CS2 apare doar cu ea) și pragul insignei automate „Sponsor”
+  // (suma donațiilor, în unități întregi ale monedei; 0 = fără insignă).
+  { key: "profile.faceit_api_key", type: "secret", default: "", section: "profiles", labelKey: "settings.profile.faceit_api_key", validate: (v) => (typeof v === "string" && v.length <= 200 ? null : "too_long") },
+  { key: "profile.sponsor_min_amount", type: "number", default: 50, section: "profiles", labelKey: "settings.profile.sponsor_min_amount", validate: between(0, 1_000_000) },
   // Ordinea câmpurilor din postbit (cheile câmpurilor); cele marcate „în postbit” și nelistate vin la final (etapa 5).
   {
     key: "postbit.fields",
@@ -54,6 +58,11 @@ const settings: GcsSettingDef[] = [
  */
 export const profileModule: GcsModule = {
   key: "profile",
+  // Profil gaming v2: conturile externe legate (apar doar cu datele aduse și cu tabul lăsat vizibil de membru).
+  profileTabs: [
+    { key: "steam", labelKey: "profile.tabs.steam", icon: "fa-brands fa-steam", position: 30 },
+    { key: "faceit", labelKey: "profile.tabs.faceit", icon: "fa-solid fa-trophy", position: 40 },
+  ],
   permissions,
   settings,
   acpMenu: [],

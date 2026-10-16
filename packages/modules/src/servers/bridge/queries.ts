@@ -57,6 +57,12 @@ export type GcsUserGameCard = {
   matches: number;
 };
 
+/**
+ * Statisticile membrului pe fiecare server vizibil (banda „pe servere” a profilului v2): locul, uciderile, decesele,
+ * K/D și punctele (scorul clasamentului), însumate peste identitățile lui legate.
+ */
+export type GcsUserServerStat = { serverId: number; server: string; slug: string; place: number | null; kills: number; deaths: number; kd: number; points: number; playtime: number };
+
 /** Un jucător găsit (formularele reclamației și sancțiunii); fără IP-uri. */
 export type GcsPlayerHit = { id: number; name: string; kind: GamePlayerKind; value: string; trust: string; lastSeenAt: string };
 
@@ -235,6 +241,31 @@ export class GcsBridgeQueries {
       elo: rating && rating.matches > 0 ? rating.elo : null,
       matches: rating?.matches ?? 0,
     };
+  }
+
+  /** Statisticile pe servere ale unui membru (doar serverele vizibile viewer-ului), serverele cu cel mai mult joc primele. */
+  async userServerStats(actor: GcsActor, userId: string): Promise<GcsUserServerStat[]> {
+    if (!(await this.canViewStats(actor))) return [];
+    const visible = await this.deps.visibleServers(actor);
+    if (visible.length === 0) return [];
+    const { db } = this.deps;
+    const rows = await db.gamePlayerStat.findMany({
+      where: { serverId: { in: visible }, player: { userId } },
+      select: { serverId: true, kills: true, deaths: true, score: true, rank: true, playtime: true, server: { select: { name: true, slug: true, position: true } } },
+    });
+    const by = new Map<number, GcsUserServerStat & { position: number }>();
+    for (const r of rows) {
+      const s = by.get(r.serverId) ?? { serverId: r.serverId, server: r.server.name, slug: r.server.slug, position: r.server.position, place: null, kills: 0, deaths: 0, kd: 0, points: 0, playtime: 0 };
+      s.kills += r.kills;
+      s.deaths += r.deaths;
+      s.points += r.score;
+      s.playtime += r.playtime;
+      if (r.rank !== null) s.place = s.place === null ? r.rank : Math.min(s.place, r.rank);
+      by.set(r.serverId, s);
+    }
+    return [...by.values()]
+      .map(({ position: _p, ...s }) => ({ ...s, kd: Math.round((s.kills / Math.max(1, s.deaths)) * 100) / 100 }))
+      .sort((a, b) => b.playtime - a.playtime || a.serverId - b.serverId);
   }
 
   /** Căutarea jucătorilor după nume sau ID (formularele reclamației și sancțiunii); fără IP-uri. */

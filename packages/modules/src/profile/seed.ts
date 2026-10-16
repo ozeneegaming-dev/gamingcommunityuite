@@ -1,5 +1,6 @@
 import type { GcsSeedContext } from "@gcs/core";
 import type { AchievementTrigger, Prisma } from "@gcs/db";
+import { DEFAULT_FIELD_GROUPS, DEFAULT_GROUP_FIELDS, LEGACY_FIELD_GROUPS } from "./fieldGroups";
 
 /** Rangurile implicite (specul etapei 3, §2): doar pe postări. Ordinea dă ierarhia. */
 export const DEFAULT_RANKS = [
@@ -72,6 +73,8 @@ const NAME_STYLE_GROUPS = ["vip_gold", "vip_legend"];
 
 /** Marcajul că rangurile implicite au fost create o dată (rangurile nu au cheie: fără marcaj, seed-ul nu știe ce a șters adminul). */
 const RANKS_SEEDED = "seed.profile.ranks";
+/** Marcajul grupurilor de câmpuri (profil gaming v2). */
+const FIELD_GROUPS_SEEDED = "seed.profile.field_groups";
 
 /** Datele implicite ale profilului. Idempotent: nu suprascrie și nu recreează ce s-a schimbat sau șters din ACP. */
 export async function seedProfile({ tx, groupIds }: GcsSeedContext): Promise<void> {
@@ -103,6 +106,21 @@ export async function seedProfile({ tx, groupIds }: GcsSeedContext): Promise<voi
   });
 
   await tx.profileField.createMany({ data: DEFAULT_PROFILE_FIELDS, skipDuplicates: true });
+
+  // Profil gaming v2: grupurile câmpurilor și câmpurile lor, o singură dată (ce șterge sau mută adminul rămâne așa).
+  if (!(await tx.setting.findUnique({ where: { key: FIELD_GROUPS_SEEDED } }))) {
+    await tx.profileFieldGroup.createMany({ data: DEFAULT_FIELD_GROUPS, skipDuplicates: true });
+    const groups = new Map((await tx.profileFieldGroup.findMany({ select: { id: true, key: true } })).map((g) => [g.key, g.id]));
+    await tx.profileField.createMany({
+      data: DEFAULT_GROUP_FIELDS.map(({ group, ...f }) => ({ ...f, groupId: groups.get(group) ?? null })),
+      skipDuplicates: true,
+    });
+    for (const [key, group] of Object.entries(LEGACY_FIELD_GROUPS)) {
+      const groupId = groups.get(group);
+      if (groupId !== undefined) await tx.profileField.updateMany({ where: { key, groupId: null }, data: { groupId } });
+    }
+    await tx.setting.create({ data: { key: FIELD_GROUPS_SEEDED, value: true } });
+  }
 
   await tx.avatarFrame.createMany({
     data: DEFAULT_FRAMES.map((f, position) => ({
