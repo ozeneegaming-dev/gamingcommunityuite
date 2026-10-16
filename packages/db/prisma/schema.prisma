@@ -143,6 +143,16 @@ model User {
   chatModGrantsGiven      ChatModeratorGrant[]     @relation("ChatModGrantedBy")
   /// Timpul online pe zile (clasamentul „Timp online”, Hero Cockpit).
   onlineDays              MemberOnlineDay[]
+  /// Profil gaming v2: dispozitivele cu care membrul a intrat în cont, vizitele pe profiluri, datele externe cache-uite
+  /// (Steam, FACEIT) și donațiile (insigna automată „Sponsor”).
+  devices                 UserDevice[]
+  profileVisits           ProfileVisit[]           @relation("ProfileVisitProfile")
+  profileVisitsMade       ProfileVisit[]           @relation("ProfileVisitVisitor")
+  externalProfiles        ExternalProfile[]
+  donations               MemberDonation[]
+
+  /// Ziua de naștere: anul e opțional pe profil (`false` = doar ziua și luna).
+  birthdayShowYear Boolean @default(false)
 
   @@index([primaryGroupId])
   @@map("users")
@@ -829,6 +839,22 @@ enum ProfileFieldType {
   SELECT
   /// Etapa 5: select cu o imagine pe opțiune (ex. „Armă favorită”).
   IMAGE_SELECT
+  /// Profil gaming v2: alegerea unui server al comunității (aplicația Servere); valoarea e numele serverului.
+  SERVER_SELECT
+}
+
+/// Un grup de câmpuri de profil (ACP → Membri → Profiluri), cu textul de ajutor din formularul „Editează profilul”.
+model ProfileFieldGroup {
+  id       Int     @id @default(autoincrement())
+  key      String  @unique
+  label    String
+  helper   String  @default("")
+  icon     String?
+  position Int     @default(0)
+
+  fields ProfileField[]
+
+  @@map("profile_field_groups")
 }
 
 /// Tabul în care apare câmpul pe profil.
@@ -860,7 +886,13 @@ model ProfileField {
   icon          String?
   showInPostbit Boolean             @default(false)
   optionImages  Json                @default("{}")
+  /// Profil gaming v2: grupul câmpului, textul de ajutor și, la câmpurile de contact, adresa construită din handle
+  /// (`https://twitch.tv/{handle}`): membrul scrie doar handle-ul.
+  groupId       Int?
+  helper        String              @default("")
+  linkTemplate  String?
 
+  group  ProfileFieldGroup?  @relation(fields: [groupId], references: [id], onDelete: SetNull)
   values ProfileFieldValue[]
 
   @@map("profile_fields")
@@ -2914,4 +2946,78 @@ model MemberRemoval {
   @@index([userId])
   @@index([createdAt])
   @@map("member_removals")
+}
+
+// ─── Profil gaming v2 (hover card v2, profilul public v2, setările contului v2) ───────────────────
+
+/// Un dispozitiv cu care membrul a intrat în cont (Setări → Dispozitive): browserul și sistemul (din user-agent), metoda
+/// de autentificare, IP-ul și locația aproximativă (țara, din antetul proxy-ului). `autoLogin: false` = sesiunile noi de
+/// pe dispozitiv expiră după câteva ore (fără „ține-mă minte”).
+model UserDevice {
+  id          String   @id @default(cuid())
+  userId      String
+  /// Amprenta dispozitivului: hash-ul (membru, browser, sistem).
+  key         String
+  browser     String
+  os          String
+  method      String
+  ip          String?
+  location    String?
+  autoLogin   Boolean  @default(true)
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
+  @@index([userId, lastSeenAt])
+  @@map("user_devices")
+}
+
+/// Ultima vizită a unui membru pe profilul altuia (caseta „Vizitatori recenți”, cu opțiunea de confidențialitate).
+model ProfileVisit {
+  profileUserId String
+  visitorId     String
+  visitedAt     DateTime @default(now())
+
+  profile User @relation("ProfileVisitProfile", fields: [profileUserId], references: [id], onDelete: Cascade)
+  visitor User @relation("ProfileVisitVisitor", fields: [visitorId], references: [id], onDelete: Cascade)
+
+  @@id([profileUserId, visitorId])
+  @@index([profileUserId, visitedAt])
+  @@index([visitorId])
+  @@map("profile_visits")
+}
+
+/// Datele unui cont extern legat (Steam, FACEIT), aduse de worker și cache-uite: doar ce ține de contul legat de membru.
+model ExternalProfile {
+  userId    String
+  provider  String
+  data      Json     @default("{}")
+  fetchedAt DateTime @default(now())
+  /// Ultima eroare a citirii (cheia lipsă, profil privat, limită de cereri); datele vechi rămân.
+  error     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, provider])
+  @@index([provider, fetchedAt])
+  @@map("external_profiles")
+}
+
+/// O donație a unui membru (înregistrată de echipă din ACP sau de magazin): peste pragul din setări, insigna „Sponsor”.
+model MemberDonation {
+  id          Int      @id @default(autoincrement())
+  userId      String
+  /// Suma, în subunități (bani / cenți).
+  amount      Int
+  currency    String   @default("EUR")
+  note        String   @default("")
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("member_donations")
 }
