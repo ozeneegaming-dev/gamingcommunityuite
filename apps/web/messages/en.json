@@ -80,7 +80,19 @@
       "serverAdmins": "Which staff members are on the servers",
       "serverTickets": "Appeal a sanction or report a player"
     },
-    "skin": "Forum theme"
+    "skin": "Forum theme",
+    "announcementBar": {
+      "region": "Announcement",
+      "dismiss": "Dismiss the announcement",
+      "show": "Show announcement {n}"
+    },
+    "scrollRail": {
+      "group": "Page navigation",
+      "up": "Up",
+      "upHint": "Back to the top",
+      "down": "Down",
+      "downHint": "Go to the bottom"
+    }
   },
   "auth": {
     "login": {
@@ -475,7 +487,9 @@
         "css": "CSS",
         "style": "Themes & style",
         "layout": "Pages & menus",
-        "footer": "Footer"
+        "footer": "Footer",
+        "content": "Content",
+        "announcement_bar": "Announcement bar"
       },
       "gaming": {
         "servers_group": "Servers",
@@ -3437,6 +3451,57 @@
       "saved": "Saved",
       "saveGrant": "Save access",
       "addGrant": "Add moderator"
+    },
+    "announcementBar": {
+      "title": "Announcement bar",
+      "intro": "The slim bar above the content, on the whole site and in every theme. Several active bars rotate.",
+      "preview": "View on the site",
+      "empty": "No bars yet.",
+      "add": "Add a bar",
+      "bar": "Bar {n}",
+      "enabled": "Active",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "remove": "Delete the bar",
+      "label": "Label (pill)",
+      "labelPlaceholder": "e.g. NEWS",
+      "text": "Text",
+      "style": "Style",
+      "styles": {
+        "accent": "Accent (theme colour)",
+        "info": "Info",
+        "warning": "Warning"
+      },
+      "cta": {
+        "on": "With a button",
+        "label": "Button text",
+        "href": "Button address"
+      },
+      "link": {
+        "on": "With a link",
+        "label": "Link text",
+        "href": "Link address"
+      },
+      "pages": "Pages",
+      "pageOptions": {
+        "all": "All pages",
+        "home": "Home page only",
+        "forum": "The forum (and the home page)"
+      },
+      "startsAt": "Starts at (optional)",
+      "endsAt": "Ends at (optional)",
+      "guests": "Guests see it",
+      "members": "Members see it",
+      "dismissible": "Can be dismissed (remembered for each member / guest)",
+      "groups": "Only members of these groups (none selected = all members):",
+      "rotate": "Bar rotation (seconds)",
+      "rotateHelp": "Between {min} and {max} seconds; rotation pauses while the pointer is on the bar.",
+      "save": "Save",
+      "saved": "The announcement bars were saved.",
+      "removeTitle": "Delete the bar?",
+      "removeBody": "The bar “{text}” disappears from the site after saving.",
+      "removeConfirm": "Delete",
+      "cancel": "Cancel"
     }
   },
   "settings": {
@@ -4489,7 +4554,10 @@
       "cta": "Create account"
     },
     "byWord": "by",
-    "topicsCount": "{count, plural, one {# topic} other {# topics}}"
+    "topicsCount": "{count, plural, one {# topic} other {# topics}}",
+    "statsOf": "Statistics of the forum {name}",
+    "statsTopics": "{count, plural, one {<b>#</b> topic} other {<b>#</b> topics}}",
+    "statsPosts": "{count, plural, one {<b>#</b> reply} other {<b>#</b> replies}}"
   },
   "topic": {
     "reply": "Reply",
@@ -5213,7 +5281,8 @@
       "buttons": "Buttons",
       "design": "Design",
       "headerBuilder": "Header builder",
-      "cockpit": "Hero Cockpit console"
+      "cockpit": "Hero Cockpit console",
+      "interface": "Interface"
     },
     "tabs": {
       "settings": "Settings",
@@ -5234,7 +5303,10 @@
       "builderCustom": "Custom text",
       "cockpitPanels": "Panels",
       "cockpitImage": "Console background",
-      "mobileBar": "Bottom bar"
+      "mobileBar": "Bottom bar",
+      "lists": "Lists",
+      "loader": "Loader",
+      "scroll": "Scrolling"
     },
     "images": {
       "logo": "Logo (dark mode)",
@@ -5601,6 +5673,63 @@
           "featured": "Featured",
           "none": "Nothing"
         }
+      },
+      "layout_fullWidth": {
+        "label": "Full-width page",
+        "help": "No maximum width: the content fills the screen."
+      },
+      "layout_topicSnippet": {
+        "label": "Snippet in the topic list",
+        "help": "The start of the first post under each topic title."
+      },
+      "lists_layout": {
+        "label": "List layout",
+        "help": "Forums and widget items as separate cards or as a continuous list.",
+        "options": {
+          "cards": "Separate cards",
+          "list": "Continuous list"
+        }
+      },
+      "lists_stats": {
+        "label": "Forum statistics",
+        "help": "Each forum's topics and replies: in the row, in a bubble on hover, or hidden.",
+        "options": {
+          "visible": "Visible",
+          "hover": "On hover",
+          "hidden": "Hidden"
+        }
+      },
+      "loader_style": {
+        "label": "Loader style",
+        "help": "The loader in buttons, lists, modals and chat.",
+        "options": {
+          "ring": "Ring",
+          "dualRing": "Dual ring",
+          "arc": "Arc",
+          "dots": "Dots",
+          "pulse": "Pulse",
+          "bars": "Bars",
+          "wave": "Wave",
+          "orbit": "Orbit",
+          "square": "Square",
+          "ripple": "Ripple",
+          "flip": "Flip",
+          "chase": "Chase",
+          "grid": "Grid",
+          "hourglass": "Hourglass",
+          "dash": "Dash",
+          "comet": "Comet",
+          "bounce": "Bounce",
+          "slash": "Slashes"
+        }
+      },
+      "scroll_rail": {
+        "label": "“Up / Down” rail",
+        "help": "The buttons left of the content that appear after a short scroll."
+      },
+      "scroll_bar": {
+        "label": "Accent-coloured scrollbar",
+        "help": "The slim bar shows how far you scrolled the page."
       }
     },
     "status": {
@@ -5695,6 +5824,10 @@
         "chat_button": "Chat",
         "servers_playNow": "Play now"
       }
+    },
+    "paletteHelper": {
+      "button": "Generate the palette from background + accent",
+      "help": "Computes readable surfaces, borders and texts for the edited mode (contrast ≥ 4.5:1)."
     }
   },
   "widgets": {
@@ -5705,7 +5838,8 @@
       "statsPanel": "Statistics panel",
       "onlineDay": "Who was online (24 h)",
       "groupLegend": "Group legend",
-      "ranking": "Ranking"
+      "ranking": "Ranking",
+      "guestCta": "Guest block"
     },
     "forums": {
       "stats": "Statistics",
@@ -5745,7 +5879,8 @@
         "onlineDay": "Members who were active in the last 24 hours.",
         "groupLegend": "The community groups, with their name styles.",
         "newMembers": "The newest registered members.",
-        "ranking": "Top members by posts, topics, reputation or time online, for today, the week, month, year or all time."
+        "ranking": "Top members by posts, topics, reputation or time online, for today, the week, month, year or all time.",
+        "guestCta": "Sign up, sign in and one-click login. Only guests see it."
       },
       "forums": {
         "stats": "The number of topics, posts and members.",
@@ -5882,7 +6017,9 @@
       "daySummary": "Members active in the last 24 hours",
       "dayList": "List of recently active users",
       "dayNobody": "No visible members active in the last 24 hours.",
-      "legendTitle": "Member group legend"
+      "legendTitle": "Member group legend",
+      "seeAllOnlineHint": "See who is online now",
+      "seeAllDayHint": "See who was online"
     }
   },
   "members": {
@@ -7801,7 +7938,8 @@
       "unread": "{count, plural, one {Messages, # unread} other {Messages, # unread}}",
       "new": "New message",
       "empty": "No conversations yet.",
-      "seeAll": "All messages"
+      "seeAll": "All messages",
+      "loading": "Loading messages…"
     },
     "account": {
       "menu": "Account menu",
@@ -8068,5 +8206,27 @@
       "empty": "No group matches the search.",
       "noMembers": "The group has no members here."
     }
+  },
+  "guestCta": {
+    "reply": {
+      "title": "Create an account or sign in to comment",
+      "subtitle": "You need to be a member of the community to leave a reply.",
+      "loginText": "Sign in and continue the discussion."
+    },
+    "widget": {
+      "title": "Join the community",
+      "subtitle": "With an account you can post, chat and play with us.",
+      "loginText": "Sign in and pick up where you left off."
+    },
+    "register": {
+      "title": "Create an account",
+      "text": "It takes less than a minute. It's free.",
+      "button": "Sign up"
+    },
+    "login": {
+      "title": "Already have an account?",
+      "button": "Sign in"
+    },
+    "social": "or in one click with"
   }
 }

@@ -80,7 +80,19 @@
       "serverAdmins": "Wer vom Team auf den Servern ist",
       "serverTickets": "Eine Sanktion anfechten oder einen Spieler melden"
     },
-    "skin": "Forum-Thema"
+    "skin": "Forum-Thema",
+    "announcementBar": {
+      "region": "Ankündigung",
+      "dismiss": "Ankündigung schließen",
+      "show": "Ankündigung {n} anzeigen"
+    },
+    "scrollRail": {
+      "group": "Seitennavigation",
+      "up": "Hoch",
+      "upHint": "Zum Seitenanfang",
+      "down": "Runter",
+      "downHint": "Zum Seitenende"
+    }
   },
   "auth": {
     "login": {
@@ -475,7 +487,9 @@
         "css": "CSS",
         "style": "Themes & style",
         "layout": "Pages & menus",
-        "footer": "Footer"
+        "footer": "Footer",
+        "content": "Inhalte",
+        "announcement_bar": "Ankündigungsleiste"
       },
       "gaming": {
         "servers_group": "Servers",
@@ -3437,6 +3451,57 @@
       "saved": "Gespeichert",
       "saveGrant": "Zugang speichern",
       "addGrant": "Moderator hinzufügen"
+    },
+    "announcementBar": {
+      "title": "Ankündigungsleiste",
+      "intro": "Die schmale Leiste über dem Inhalt, auf der ganzen Seite und in jedem Theme. Mehrere aktive Leisten wechseln sich ab.",
+      "preview": "Auf der Seite ansehen",
+      "empty": "Noch keine Leiste.",
+      "add": "Leiste hinzufügen",
+      "bar": "Leiste {n}",
+      "enabled": "Aktiv",
+      "moveUp": "Nach oben",
+      "moveDown": "Nach unten",
+      "remove": "Leiste löschen",
+      "label": "Etikett (Pille)",
+      "labelPlaceholder": "z. B. NEWS",
+      "text": "Text",
+      "style": "Stil",
+      "styles": {
+        "accent": "Akzent (Themenfarbe)",
+        "info": "Info",
+        "warning": "Warnung"
+      },
+      "cta": {
+        "on": "Mit Button",
+        "label": "Button-Text",
+        "href": "Button-Adresse"
+      },
+      "link": {
+        "on": "Mit Link",
+        "label": "Link-Text",
+        "href": "Link-Adresse"
+      },
+      "pages": "Seiten",
+      "pageOptions": {
+        "all": "Alle Seiten",
+        "home": "Nur die Startseite",
+        "forum": "Das Forum (und die Startseite)"
+      },
+      "startsAt": "Beginnt am (optional)",
+      "endsAt": "Endet am (optional)",
+      "guests": "Gäste sehen sie",
+      "members": "Mitglieder sehen sie",
+      "dismissible": "Kann geschlossen werden (für jedes Mitglied / jeden Gast gemerkt)",
+      "groups": "Nur Mitglieder dieser Gruppen (keine gewählt = alle Mitglieder):",
+      "rotate": "Wechsel der Leisten (Sekunden)",
+      "rotateHelp": "Zwischen {min} und {max} Sekunden; der Wechsel pausiert, solange der Zeiger auf der Leiste ist.",
+      "save": "Speichern",
+      "saved": "Die Ankündigungsleisten wurden gespeichert.",
+      "removeTitle": "Leiste löschen?",
+      "removeBody": "Die Leiste „{text}“ verschwindet nach dem Speichern von der Seite.",
+      "removeConfirm": "Löschen",
+      "cancel": "Abbrechen"
     }
   },
   "settings": {
@@ -4489,7 +4554,10 @@
       "cta": "Konto erstellen"
     },
     "byWord": "durch",
-    "topicsCount": "{count, plural, one {# Thema} other {# Themen}}"
+    "topicsCount": "{count, plural, one {# Thema} other {# Themen}}",
+    "statsOf": "Statistik des Forums {name}",
+    "statsTopics": "{count, plural, one {<b>#</b> Thema} other {<b>#</b> Themen}}",
+    "statsPosts": "{count, plural, one {<b>#</b> Antwort} other {<b>#</b> Antworten}}"
   },
   "topic": {
     "reply": "Antworten",
@@ -5213,7 +5281,8 @@
       "buttons": "Knöpfe",
       "design": "Design",
       "headerBuilder": "Header-Baukasten",
-      "cockpit": "Hero-Cockpit-Konsole"
+      "cockpit": "Hero-Cockpit-Konsole",
+      "interface": "Oberfläche"
     },
     "tabs": {
       "settings": "Einstellungen",
@@ -5234,7 +5303,10 @@
       "builderCustom": "Eigener Text",
       "cockpitPanels": "Bereiche",
       "cockpitImage": "Hintergrund der Konsole",
-      "mobileBar": "Untere Leiste"
+      "mobileBar": "Untere Leiste",
+      "lists": "Listen",
+      "loader": "Ladeanzeige",
+      "scroll": "Scrollen"
     },
     "images": {
       "logo": "Logo (dunkler Modus)",
@@ -5601,6 +5673,63 @@
           "featured": "Empfohlen",
           "none": "Nichts"
         }
+      },
+      "layout_fullWidth": {
+        "label": "Seite in voller Breite",
+        "help": "Ohne maximale Breite: der Inhalt füllt den Bildschirm."
+      },
+      "layout_topicSnippet": {
+        "label": "Auszug in der Themenliste",
+        "help": "Der Anfang des ersten Beitrags unter jedem Thementitel."
+      },
+      "lists_layout": {
+        "label": "Listenlayout",
+        "help": "Foren und Widget-Einträge als einzelne Karten oder als durchgehende Liste.",
+        "options": {
+          "cards": "Einzelne Karten",
+          "list": "Durchgehende Liste"
+        }
+      },
+      "lists_stats": {
+        "label": "Forenstatistik",
+        "help": "Themen und Antworten jedes Forums: in der Zeile, in einer Blase beim Hover oder ausgeblendet.",
+        "options": {
+          "visible": "Sichtbar",
+          "hover": "Beim Hover",
+          "hidden": "Ausgeblendet"
+        }
+      },
+      "loader_style": {
+        "label": "Stil der Ladeanzeige",
+        "help": "Die Ladeanzeige in Buttons, Listen, Dialogen und im Chat.",
+        "options": {
+          "ring": "Ring",
+          "dualRing": "Doppelring",
+          "arc": "Bogen",
+          "dots": "Punkte",
+          "pulse": "Puls",
+          "bars": "Balken",
+          "wave": "Welle",
+          "orbit": "Umlaufbahn",
+          "square": "Quadrat",
+          "ripple": "Wellenringe",
+          "flip": "Kippkarte",
+          "chase": "Verfolgung",
+          "grid": "Raster",
+          "hourglass": "Sanduhr",
+          "dash": "Strich",
+          "comet": "Komet",
+          "bounce": "Ball",
+          "slash": "Schrägstriche"
+        }
+      },
+      "scroll_rail": {
+        "label": "Leiste „Hoch / Runter“",
+        "help": "Die Buttons links vom Inhalt, die nach kurzem Scrollen erscheinen."
+      },
+      "scroll_bar": {
+        "label": "Scrollleiste in der Akzentfarbe",
+        "help": "Die schmale Leiste zeigt, wie weit du gescrollt hast."
       }
     },
     "status": {
@@ -5695,6 +5824,10 @@
         "chat_button": "Chat",
         "servers_playNow": "Jetzt spielen"
       }
+    },
+    "paletteHelper": {
+      "button": "Palette aus Hintergrund + Akzent erzeugen",
+      "help": "Berechnet lesbare Flächen, Rahmen und Texte für den bearbeiteten Modus (Kontrast ≥ 4,5:1)."
     }
   },
   "widgets": {
@@ -5705,7 +5838,8 @@
       "statsPanel": "Statistisches Gremium",
       "onlineDay": "Wer war online (24 h)",
       "groupLegend": "Gruppenlegende",
-      "ranking": "Rangliste"
+      "ranking": "Rangliste",
+      "guestCta": "Gästeblock"
     },
     "forums": {
       "stats": "Statistiken",
@@ -5745,7 +5879,8 @@
         "onlineDay": "Mitglieder, die in den letzten 24 Stunden aktiv waren.",
         "groupLegend": "Die Community-Gruppen, mit ihren Namensstilen.",
         "newMembers": "Die neuesten registrierten Mitglieder.",
-        "ranking": "Top-Mitglieder nach Beiträgen, Themen, Reputation oder Online-Zeit, für heute, die Woche, den Monat, das Jahr oder insgesamt."
+        "ranking": "Top-Mitglieder nach Beiträgen, Themen, Reputation oder Online-Zeit, für heute, die Woche, den Monat, das Jahr oder insgesamt.",
+        "guestCta": "Registrierung, Anmeldung und Ein-Klick-Login. Nur Gäste sehen ihn."
       },
       "forums": {
         "stats": "Die Anzahl der Themen, Posts und Mitglieder.",
@@ -5882,7 +6017,9 @@
       "daySummary": "Aktive Mitglieder in den letzten 24 Stunden",
       "dayList": "Liste der kürzlich aktiven Benutzer",
       "dayNobody": "Keine sichtbaren Mitglieder in den letzten 24 Stunden aktiv.",
-      "legendTitle": "Legende der Mitgliedsgruppe"
+      "legendTitle": "Legende der Mitgliedsgruppe",
+      "seeAllOnlineHint": "Sieh, wer gerade online ist",
+      "seeAllDayHint": "Sieh, wer online war"
     }
   },
   "members": {
@@ -7801,7 +7938,8 @@
       "unread": "{count, plural, one {Nachrichten, # ungelesen} other {Nachrichten, # ungelesen}}",
       "new": "Neue Nachricht",
       "empty": "Noch keine Unterhaltungen.",
-      "seeAll": "Alle Nachrichten"
+      "seeAll": "Alle Nachrichten",
+      "loading": "Nachrichten werden geladen…"
     },
     "account": {
       "menu": "Kontomenü",
@@ -8068,5 +8206,27 @@
       "empty": "Keine Gruppe passt zur Suche.",
       "noMembers": "Die Gruppe hat hier keine Mitglieder."
     }
+  },
+  "guestCta": {
+    "reply": {
+      "title": "Erstelle ein Konto oder melde dich an, um zu kommentieren",
+      "subtitle": "Du musst Mitglied der Community sein, um eine Antwort zu schreiben.",
+      "loginText": "Melde dich an und diskutiere weiter."
+    },
+    "widget": {
+      "title": "Werde Teil der Community",
+      "subtitle": "Mit einem Konto kannst du posten, chatten und mit uns spielen.",
+      "loginText": "Melde dich an und mach dort weiter, wo du aufgehört hast."
+    },
+    "register": {
+      "title": "Konto erstellen",
+      "text": "Dauert weniger als eine Minute. Kostenlos.",
+      "button": "Registrieren"
+    },
+    "login": {
+      "title": "Schon ein Konto?",
+      "button": "Anmelden"
+    },
+    "social": "oder mit einem Klick über"
   }
 }

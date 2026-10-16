@@ -80,7 +80,19 @@
       "serverAdmins": "Quels membres de l'équipe sont sur les serveurs",
       "serverTickets": "Conteste une sanction ou signale un joueur"
     },
-    "skin": "Thème du forum"
+    "skin": "Thème du forum",
+    "announcementBar": {
+      "region": "Annonce",
+      "dismiss": "Fermer l’annonce",
+      "show": "Afficher l’annonce {n}"
+    },
+    "scrollRail": {
+      "group": "Navigation dans la page",
+      "up": "Haut",
+      "upHint": "En haut de la page",
+      "down": "Bas",
+      "downHint": "En bas de la page"
+    }
   },
   "auth": {
     "login": {
@@ -475,7 +487,9 @@
         "css": "CSS",
         "style": "Themes & style",
         "layout": "Pages & menus",
-        "footer": "Footer"
+        "footer": "Footer",
+        "content": "Contenu",
+        "announcement_bar": "Barre d’annonce"
       },
       "gaming": {
         "servers_group": "Servers",
@@ -3437,6 +3451,57 @@
       "saved": "Enregistré",
       "saveGrant": "Enregistrer l’accès",
       "addGrant": "Ajouter le modérateur"
+    },
+    "announcementBar": {
+      "title": "Barre d’annonce",
+      "intro": "La barre fine au-dessus du contenu, sur tout le site et dans chaque thème. Plusieurs barres actives se relaient.",
+      "preview": "Voir sur le site",
+      "empty": "Aucune barre pour l’instant.",
+      "add": "Ajouter une barre",
+      "bar": "Barre {n}",
+      "enabled": "Active",
+      "moveUp": "Monter",
+      "moveDown": "Descendre",
+      "remove": "Supprimer la barre",
+      "label": "Étiquette (pastille)",
+      "labelPlaceholder": "p. ex. ANNONCE",
+      "text": "Texte",
+      "style": "Style",
+      "styles": {
+        "accent": "Accent (couleur du thème)",
+        "info": "Information",
+        "warning": "Avertissement"
+      },
+      "cta": {
+        "on": "Avec un bouton",
+        "label": "Texte du bouton",
+        "href": "Adresse du bouton"
+      },
+      "link": {
+        "on": "Avec un lien",
+        "label": "Texte du lien",
+        "href": "Adresse du lien"
+      },
+      "pages": "Pages",
+      "pageOptions": {
+        "all": "Toutes les pages",
+        "home": "Page d’accueil uniquement",
+        "forum": "Le forum (et la page d’accueil)"
+      },
+      "startsAt": "Commence le (facultatif)",
+      "endsAt": "Se termine le (facultatif)",
+      "guests": "Visible pour les visiteurs",
+      "members": "Visible pour les membres",
+      "dismissible": "Peut être fermée (mémorisé pour chaque membre / visiteur)",
+      "groups": "Seulement les membres de ces groupes (aucun choisi = tous les membres) :",
+      "rotate": "Rotation des barres (secondes)",
+      "rotateHelp": "Entre {min} et {max} secondes ; la rotation s’arrête tant que le pointeur est sur la barre.",
+      "save": "Enregistrer",
+      "saved": "Les barres d’annonce ont été enregistrées.",
+      "removeTitle": "Supprimer la barre ?",
+      "removeBody": "La barre « {text} » disparaît du site après l’enregistrement.",
+      "removeConfirm": "Supprimer",
+      "cancel": "Annuler"
     }
   },
   "settings": {
@@ -4489,7 +4554,10 @@
       "cta": "Créer un compte"
     },
     "byWord": "par",
-    "topicsCount": "{count, plural, one {Sujet #} many {Sujets #} other {Sujets #}}"
+    "topicsCount": "{count, plural, one {Sujet #} many {Sujets #} other {Sujets #}}",
+    "statsOf": "Statistiques du forum {name}",
+    "statsTopics": "{count, plural, one {<b>#</b> sujet} many {<b>#</b> sujets} other {<b>#</b> sujets}}",
+    "statsPosts": "{count, plural, one {<b>#</b> réponse} many {<b>#</b> réponses} other {<b>#</b> réponses}}"
   },
   "topic": {
     "reply": "Répondre",
@@ -5213,7 +5281,8 @@
       "buttons": "Boutons",
       "design": "Design",
       "headerBuilder": "Constructeur d'en-tête",
-      "cockpit": "Console Hero Cockpit"
+      "cockpit": "Console Hero Cockpit",
+      "interface": "Interface"
     },
     "tabs": {
       "settings": "Paramètres",
@@ -5234,7 +5303,10 @@
       "builderCustom": "Texte personnalisé",
       "cockpitPanels": "Panneaux",
       "cockpitImage": "Fond de la console",
-      "mobileBar": "Barre du bas"
+      "mobileBar": "Barre du bas",
+      "lists": "Listes",
+      "loader": "Indicateur de chargement",
+      "scroll": "Défilement"
     },
     "images": {
       "logo": "Logo (mode noir)",
@@ -5601,6 +5673,63 @@
           "featured": "À la une",
           "none": "Rien"
         }
+      },
+      "layout_fullWidth": {
+        "label": "Page pleine largeur",
+        "help": "Sans largeur maximale : le contenu occupe tout l’écran."
+      },
+      "layout_topicSnippet": {
+        "label": "Extrait dans la liste des sujets",
+        "help": "Le début du premier message sous le titre de chaque sujet."
+      },
+      "lists_layout": {
+        "label": "Aspect des listes",
+        "help": "Les forums et les éléments des widgets en cartes séparées ou en liste continue.",
+        "options": {
+          "cards": "Cartes séparées",
+          "list": "Liste continue"
+        }
+      },
+      "lists_stats": {
+        "label": "Statistiques du forum",
+        "help": "Les sujets et réponses de chaque forum : dans la ligne, dans une bulle au survol ou masqués.",
+        "options": {
+          "visible": "Visibles",
+          "hover": "Au survol",
+          "hidden": "Masquées"
+        }
+      },
+      "loader_style": {
+        "label": "Style de l’indicateur de chargement",
+        "help": "L’indicateur des boutons, listes, fenêtres et du chat.",
+        "options": {
+          "ring": "Anneau",
+          "dualRing": "Double anneau",
+          "arc": "Arc",
+          "dots": "Points",
+          "pulse": "Pulsation",
+          "bars": "Barres",
+          "wave": "Vague",
+          "orbit": "Orbite",
+          "square": "Carré",
+          "ripple": "Ondes",
+          "flip": "Bascule",
+          "chase": "Poursuite",
+          "grid": "Grille",
+          "hourglass": "Sablier",
+          "dash": "Tiret",
+          "comet": "Comète",
+          "bounce": "Balle",
+          "slash": "Barres obliques"
+        }
+      },
+      "scroll_rail": {
+        "label": "Rail « Haut / Bas »",
+        "help": "Les boutons à gauche du contenu, qui apparaissent après un petit défilement."
+      },
+      "scroll_bar": {
+        "label": "Barre de défilement couleur d’accent",
+        "help": "La barre fine montre jusqu’où tu as défilé."
       }
     },
     "status": {
@@ -5695,6 +5824,10 @@
         "chat_button": "Chat",
         "servers_playNow": "Jouer maintenant"
       }
+    },
+    "paletteHelper": {
+      "button": "Générer la palette depuis le fond + l’accent",
+      "help": "Calcule des surfaces, bordures et textes lisibles pour le mode modifié (contraste ≥ 4,5:1)."
     }
   },
   "widgets": {
@@ -5705,7 +5838,8 @@
       "statsPanel": "Groupe statistique",
       "onlineDay": "Qui était en ligne (24 h)",
       "groupLegend": "Légende du groupe",
-      "ranking": "Classement"
+      "ranking": "Classement",
+      "guestCta": "Bloc pour les visiteurs"
     },
     "forums": {
       "stats": "Statistiques",
@@ -5745,7 +5879,8 @@
         "onlineDay": "Membres actifs au cours des dernières 24 heures.",
         "groupLegend": "Les groupes communautaires, avec leur style de nom.",
         "newMembers": "Les nouveaux membres inscrits.",
-        "ranking": "Les meilleurs membres par messages, sujets, réputation ou temps en ligne, pour aujourd'hui, la semaine, le mois, l'année ou depuis toujours."
+        "ranking": "Les meilleurs membres par messages, sujets, réputation ou temps en ligne, pour aujourd'hui, la semaine, le mois, l'année ou depuis toujours.",
+        "guestCta": "Inscription, connexion et connexion en un clic. Seuls les visiteurs le voient."
       },
       "forums": {
         "stats": "Nombre de sujets, de postes et de membres.",
@@ -5882,7 +6017,9 @@
       "daySummary": "Membres actifs au cours des dernières 24 heures",
       "dayList": "Liste des utilisateurs récemment actifs",
       "dayNobody": "Aucun membre visible actif au cours des dernières 24 heures.",
-      "legendTitle": "Légende du groupe membre"
+      "legendTitle": "Légende du groupe membre",
+      "seeAllOnlineHint": "Voir qui est en ligne maintenant",
+      "seeAllDayHint": "Voir qui a été en ligne"
     }
   },
   "members": {
@@ -7801,7 +7938,8 @@
       "unread": "{count, plural, one {Messages, # non lu} many {Messages, # non lus} other {Messages, # non lus}}",
       "new": "Nouveau message",
       "empty": "Aucune conversation pour l'instant.",
-      "seeAll": "Tous les messages"
+      "seeAll": "Tous les messages",
+      "loading": "Chargement des messages…"
     },
     "account": {
       "menu": "Menu du compte",
@@ -8068,5 +8206,27 @@
       "empty": "Aucun groupe ne correspond à la recherche.",
       "noMembers": "Le groupe n’a pas de membres ici."
     }
+  },
+  "guestCta": {
+    "reply": {
+      "title": "Crée un compte ou connecte-toi pour commenter",
+      "subtitle": "Tu dois être membre de la communauté pour répondre.",
+      "loginText": "Connecte-toi et poursuis la discussion."
+    },
+    "widget": {
+      "title": "Rejoins la communauté",
+      "subtitle": "Avec un compte, tu peux publier, discuter et jouer avec nous.",
+      "loginText": "Connecte-toi et reprends là où tu t’étais arrêté."
+    },
+    "register": {
+      "title": "Créer un compte",
+      "text": "Moins d’une minute. C’est gratuit.",
+      "button": "S’inscrire"
+    },
+    "login": {
+      "title": "Déjà un compte ?",
+      "button": "Se connecter"
+    },
+    "social": "ou en un clic avec"
   }
 }

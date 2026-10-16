@@ -80,7 +80,19 @@
       "serverAdmins": "Cine din staff e pe servere",
       "serverTickets": "Contestă o sancțiune sau raportează un jucător"
     },
-    "skin": "Tema forumului"
+    "skin": "Tema forumului",
+    "announcementBar": {
+      "region": "Anunț",
+      "dismiss": "Închide anunțul",
+      "show": "Arată anunțul {n}"
+    },
+    "scrollRail": {
+      "group": "Navigare în pagină",
+      "up": "Sus",
+      "upHint": "La începutul paginii",
+      "down": "Jos",
+      "downHint": "La finalul paginii"
+    }
   },
   "auth": {
     "login": {
@@ -475,7 +487,9 @@
         "css": "CSS",
         "style": "Teme și stil",
         "layout": "Pagini și meniuri",
-        "footer": "Subsol"
+        "footer": "Subsol",
+        "content": "Conținut",
+        "announcement_bar": "Bară de anunț"
       },
       "gaming": {
         "servers_group": "Servere",
@@ -3437,6 +3451,57 @@
       "saved": "Salvat",
       "saveGrant": "Salvează accesul",
       "addGrant": "Adaugă moderatorul"
+    },
+    "announcementBar": {
+      "title": "Bară de anunț",
+      "intro": "Bara subțire de deasupra conținutului, pe tot site-ul și în orice temă. Mai multe bare active se rotesc.",
+      "preview": "Vezi pe site",
+      "empty": "Nicio bară încă.",
+      "add": "Adaugă o bară",
+      "bar": "Bara {n}",
+      "enabled": "Activă",
+      "moveUp": "Mută mai sus",
+      "moveDown": "Mută mai jos",
+      "remove": "Șterge bara",
+      "label": "Eticheta (pastila)",
+      "labelPlaceholder": "ex. ANUNȚ",
+      "text": "Textul",
+      "style": "Stilul",
+      "styles": {
+        "accent": "Accent (culoarea temei)",
+        "info": "Informare",
+        "warning": "Avertisment"
+      },
+      "cta": {
+        "on": "Cu buton",
+        "label": "Textul butonului",
+        "href": "Adresa butonului"
+      },
+      "link": {
+        "on": "Cu link",
+        "label": "Textul linkului",
+        "href": "Adresa linkului"
+      },
+      "pages": "Paginile",
+      "pageOptions": {
+        "all": "Toate paginile",
+        "home": "Doar prima pagină",
+        "forum": "Forumul (și prima pagină)"
+      },
+      "startsAt": "Începe la (opțional)",
+      "endsAt": "Se termină la (opțional)",
+      "guests": "Vizitatorii o văd",
+      "members": "Membrii o văd",
+      "dismissible": "Se poate închide (ținut minte pentru fiecare membru / vizitator)",
+      "groups": "Doar membrii din aceste grupuri (niciunul ales = toți membrii):",
+      "rotate": "Rotirea barelor (secunde)",
+      "rotateHelp": "Între {min} și {max} secunde; rotirea se oprește cât timp cursorul e pe bară.",
+      "save": "Salvează",
+      "saved": "Barele de anunț au fost salvate.",
+      "removeTitle": "Ștergi bara?",
+      "removeBody": "Bara „{text}” dispare de pe site după salvare.",
+      "removeConfirm": "Șterge",
+      "cancel": "Anulează"
     }
   },
   "settings": {
@@ -4489,7 +4554,10 @@
       "cta": "Creează cont"
     },
     "byWord": "de",
-    "topicsCount": "{count, plural, one {# topic} few {# topicuri} other {# de topicuri}}"
+    "topicsCount": "{count, plural, one {# topic} few {# topicuri} other {# de topicuri}}",
+    "statsOf": "Statisticile forumului {name}",
+    "statsTopics": "{count, plural, one {<b>#</b> topic} few {<b>#</b> topicuri} other {<b>#</b> de topicuri}}",
+    "statsPosts": "{count, plural, one {<b>#</b> răspuns} few {<b>#</b> răspunsuri} other {<b>#</b> de răspunsuri}}"
   },
   "topic": {
     "reply": "Răspunde",
@@ -5213,7 +5281,8 @@
       "buttons": "Butoane",
       "design": "Design",
       "headerBuilder": "Constructor antet",
-      "cockpit": "Consola Hero Cockpit"
+      "cockpit": "Consola Hero Cockpit",
+      "interface": "Interfață"
     },
     "tabs": {
       "settings": "Setări",
@@ -5234,7 +5303,10 @@
       "builderCustom": "Text propriu",
       "cockpitPanels": "Panourile",
       "cockpitImage": "Fundalul consolei",
-      "mobileBar": "Bara de jos"
+      "mobileBar": "Bara de jos",
+      "lists": "Listele",
+      "loader": "Loaderul",
+      "scroll": "Derularea"
     },
     "images": {
       "logo": "Logo (mod întunecat)",
@@ -5601,6 +5673,63 @@
           "featured": "Recomandate",
           "none": "Nimic"
         }
+      },
+      "layout_fullWidth": {
+        "label": "Pagina pe toată lățimea",
+        "help": "Fără lățimea maximă: conținutul ține tot ecranul."
+      },
+      "layout_topicSnippet": {
+        "label": "Fragment în lista topicurilor",
+        "help": "Începutul primei postări sub titlul fiecărui topic."
+      },
+      "lists_layout": {
+        "label": "Aspectul listelor",
+        "help": "Forumurile și elementele widget-urilor ca și carduri separate sau ca listă continuă.",
+        "options": {
+          "cards": "Carduri separate",
+          "list": "Listă continuă"
+        }
+      },
+      "lists_stats": {
+        "label": "Statistici forum",
+        "help": "Topicurile și răspunsurile fiecărui forum: în rând, într-o bulă la hover sau ascunse.",
+        "options": {
+          "visible": "Vizibile",
+          "hover": "La hover",
+          "hidden": "Ascunse"
+        }
+      },
+      "loader_style": {
+        "label": "Stil loader",
+        "help": "Loaderul din butoane, liste, modale și chat.",
+        "options": {
+          "ring": "Inel",
+          "dualRing": "Inel dublu",
+          "arc": "Arc",
+          "dots": "Puncte",
+          "pulse": "Puls",
+          "bars": "Bare",
+          "wave": "Val",
+          "orbit": "Orbită",
+          "square": "Pătrat",
+          "ripple": "Unde",
+          "flip": "Plăcuță",
+          "chase": "Urmărire",
+          "grid": "Grilă",
+          "hourglass": "Clepsidră",
+          "dash": "Liniuță",
+          "comet": "Cometă",
+          "bounce": "Minge",
+          "slash": "Bare oblice"
+        }
+      },
+      "scroll_rail": {
+        "label": "Banda „Sus / Jos”",
+        "help": "Butoanele din stânga conținutului, care apar după o mică derulare."
+      },
+      "scroll_bar": {
+        "label": "Bara de derulare în culoarea accentului",
+        "help": "Bara subțire arată cât ai derulat din pagină."
       }
     },
     "status": {
@@ -5695,6 +5824,10 @@
         "chat_button": "Chat",
         "servers_playNow": "Joacă acum"
       }
+    },
+    "paletteHelper": {
+      "button": "Generează paleta din fundal + accent",
+      "help": "Calculează suprafețele, chenarele și textele modului editat, lizibile (contrast ≥ 4.5:1)."
     }
   },
   "widgets": {
@@ -5705,7 +5838,8 @@
       "statsPanel": "Panou de statistici",
       "onlineDay": "Cine a fost online (24 h)",
       "groupLegend": "Legenda grupurilor",
-      "ranking": "Clasament"
+      "ranking": "Clasament",
+      "guestCta": "Bloc pentru vizitatori"
     },
     "forums": {
       "stats": "Statistici",
@@ -5745,7 +5879,8 @@
         "onlineDay": "Membrii care au fost activi în ultimele 24 de ore.",
         "groupLegend": "Grupurile comunității, cu stilul numelor lor.",
         "newMembers": "Cei mai noi membri înregistrați.",
-        "ranking": "Top membri după postări, topicuri, reputație sau timp online, pe zi, săptămână, lună, an sau tot timpul."
+        "ranking": "Top membri după postări, topicuri, reputație sau timp online, pe zi, săptămână, lună, an sau tot timpul.",
+        "guestCta": "Înregistrarea, autentificarea și conectarea dintr-un click. Doar vizitatorii îl văd."
       },
       "forums": {
         "stats": "Numărul de topicuri, postări și membri.",
@@ -5882,7 +6017,9 @@
       "daySummary": "Membri activi în ultimele 24 de ore",
       "dayList": "Lista utilizatorilor activi recent",
       "dayNobody": "Niciun membru vizibil activ în ultimele 24 de ore.",
-      "legendTitle": "Legendă grupuri membri"
+      "legendTitle": "Legendă grupuri membri",
+      "seeAllOnlineHint": "Vezi cine este online acum",
+      "seeAllDayHint": "Vezi cine a fost online"
     }
   },
   "members": {
@@ -7801,7 +7938,8 @@
       "unread": "{count, plural, one {Mesaje, # necitit} few {Mesaje, # necitite} other {Mesaje, # de necitite}}",
       "new": "Mesaj nou",
       "empty": "Nicio conversație încă.",
-      "seeAll": "Toate mesajele"
+      "seeAll": "Toate mesajele",
+      "loading": "Se încarcă mesajele…"
     },
     "account": {
       "menu": "Meniul contului",
@@ -8068,5 +8206,27 @@
       "empty": "Niciun grup nu se potrivește căutării.",
       "noMembers": "Grupul nu are membri aici."
     }
+  },
+  "guestCta": {
+    "reply": {
+      "title": "Creează un cont sau autentifică-te ca să comentezi",
+      "subtitle": "Trebuie să fii membru al comunității ca să lași un răspuns.",
+      "loginText": "Intră și continuă discuția."
+    },
+    "widget": {
+      "title": "Alătură-te comunității",
+      "subtitle": "Cu un cont poți posta, intra pe chat și juca alături de noi.",
+      "loginText": "Intră și continuă de unde ai rămas."
+    },
+    "register": {
+      "title": "Creează un cont",
+      "text": "Durează mai puțin de un minut. E gratuit.",
+      "button": "Înregistrează-te"
+    },
+    "login": {
+      "title": "Ai deja cont?",
+      "button": "Intră în cont"
+    },
+    "social": "sau dintr-un click cu"
   }
 }
