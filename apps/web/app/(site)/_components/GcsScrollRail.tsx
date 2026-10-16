@@ -42,7 +42,21 @@ export function GcsScrollRail({ labels }: { labels: Labels }) {
 
   const go = (to: "top" | "bottom") => {
     const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    window.scrollTo({ top: to === "top" ? 0 : document.documentElement.scrollHeight, behavior: smooth ? "smooth" : "auto" });
+    const target = () => (to === "top" ? 0 : document.documentElement.scrollHeight);
+    window.scrollTo({ top: target(), behavior: smooth ? "smooth" : "auto" });
+    if (to !== "bottom") return;
+    // Pagina poate crește în timpul derulării (conținut în flux, imagini): la final, încă o dată până jos.
+    let tries = 0;
+    const settle = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      if (window.scrollY >= max - END || ++tries > 3) return window.removeEventListener("scrollend", settle);
+      window.scrollTo({ top: target(), behavior: "auto" });
+    };
+    window.addEventListener("scrollend", settle);
+    window.setTimeout(() => {
+      settle();
+      window.removeEventListener("scrollend", settle);
+    }, 1500);
   };
 
   return (
