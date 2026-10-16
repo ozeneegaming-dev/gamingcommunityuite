@@ -1751,8 +1751,40 @@
     },
     "notifications": {
       "title": "Notificări",
-      "hint": "Valorile implicite pentru fiecare tip de notificare. Membrii le pot schimba din Setări → Notificări.",
-      "save": "Salvează"
+      "hint": "Valorile implicite pentru fiecare tip și canal. Un canal blocat („Forțat” sau „Dezactivat”) nu mai poate fi schimbat de membri; restul îl aleg ei din Setări → Notificări.",
+      "save": "Salvează",
+      "defaultsTitle": "Valorile implicite pe tipuri și canale",
+      "lock": "Blocare",
+      "lockNone": "Membrul alege",
+      "lockForced": "Forțat",
+      "lockDisabled": "Dezactivat",
+      "resetMembers": "Resetează la implicit pentru toți membrii",
+      "resetMembersConfirm": "Alegerile tuturor membrilor se șterg și toți vor folosi valorile implicite de mai sus. Acțiunea nu se poate anula.",
+      "resetDefaults": "Resetează valorile implicite",
+      "resetDefaultsConfirm": "Toate tipurile revin la valorile aplicațiilor lor, fără blocări. Continui?",
+      "scheduleTitle": "Programul emailurilor",
+      "days": {
+        "0": "Duminică",
+        "1": "Luni",
+        "2": "Marți",
+        "3": "Miercuri",
+        "4": "Joi",
+        "5": "Vineri",
+        "6": "Sâmbătă"
+      },
+      "pruneTitle": "Curățenie",
+      "pruneHint": "Serviciul de fundal șterge zilnic notificările vechi.",
+      "statsTitle": "Statistici (ultimele {days} zile)",
+      "statsClicked": "{clicked} deschise · {rate}",
+      "statsSent": "Trimise",
+      "statsOpened": "Deschise",
+      "statsRate": "Rată",
+      "emailsOffTitle": "Oprește toate emailurile unui membru",
+      "emailsOffHint": "Membrul nu mai primește niciun email de notificare (nici pe cele forțate, nici rezumatul), de exemplu când adresa lui respinge mesajele.",
+      "emailsOffButton": "Oprește toate emailurile",
+      "emailsOffConfirm": "Membrul nu va mai primi niciun email de notificare până când îi repornești emailurile. Continui?",
+      "emailsOffMember": "Numele sau emailul membrului",
+      "emailsOnButton": "Repornește emailurile"
     },
     "themes": {
       "title": "Teme",
@@ -4134,7 +4166,7 @@
     },
     "notifications": {
       "title": "Notificări",
-      "hint": "Alege ce notificări primești pe site și pe email. Digestul zilnic adună într-un singur email ce n-ai citit.",
+      "hint": "Alege, pentru fiecare tip, pe ce canale primești notificările: pe site (clopoțelul), toast, email și web push. „Doar important” lasă să treacă doar notificările importante (ex. mesajele private, mențiunile directe).",
       "saved": "Preferințele au fost salvate.",
       "save": "Salvează",
       "type": "Tip",
@@ -4147,7 +4179,58 @@
       "alertsTitle": "Alerte pe site",
       "toasts": "Arată notificările noi în colțul ecranului",
       "sound": "Redă un sunet scurt la notificările noi",
-      "alertsSave": "Salvează alertele"
+      "alertsSave": "Salvează alertele",
+      "emailsOffNotice": "Un administrator a oprit toate emailurile de notificare pentru contul tău.",
+      "state_on": "Pornit",
+      "state_important": "Doar important",
+      "state_off": "Oprit",
+      "legend_on": "primești toate notificările tipului",
+      "legend_important": "doar pe cele importante",
+      "legend_off": "niciuna",
+      "channel_site": "Pe site",
+      "channel_toast": "Toast",
+      "channel_email": "Email",
+      "channel_push": "Push",
+      "emailMode": "Mod email",
+      "allInCategory": "Toate din categorie",
+      "importantType": "Notificările acestui tip sunt importante",
+      "lockForced": "Forțat de administrator (mereu pornit)",
+      "lockDisabled": "Dezactivat de administrator",
+      "mode_instant": "Imediat",
+      "mode_daily": "Digest zilnic",
+      "mode_weekly": "Digest săptămânal",
+      "reset": "Resetează la implicit",
+      "resetConfirm": "Toate alegerile tale revin la valorile implicite ale site-ului. Continui?",
+      "resetDone": "Preferințele au revenit la valorile implicite.",
+      "cancel": "Renunță",
+      "weekly_enabled": "Trimite rezumatul săptămânal „Ce ai ratat” (membrii îl pot opri din setări)",
+      "weekly_day": "Ziua rezumatului săptămânal",
+      "weekly_hour": "Ora rezumatului săptămânal (0–23, în fusul orar al site-ului)",
+      "prune_days": "Șterge notificările citite după (zile)",
+      "prune_unread": "Șterge și notificările necitite mai vechi de atâtea zile",
+      "push": {
+        "title": "Web push pe acest dispozitiv",
+        "hint": "Primești notificările și cu site-ul închis, ca notificări ale sistemului. Permisiunea se cere doar de aici; ce tipuri pleacă pe push alegi în tabelul de mai jos.",
+        "state": {
+          "loading": "Se verifică…",
+          "unsupported": "Browserul acesta nu suportă web push.",
+          "default": "Permisiunea nu a fost cerută încă.",
+          "denied": "Notificările sunt blocate în browser.",
+          "granted": "Permis, dar acest dispozitiv nu e abonat.",
+          "subscribed": "Activ pe acest dispozitiv."
+        },
+        "unavailable": "Web push nu e încă disponibil pe acest site (cheile se generează la pornirea serviciului de fundal).",
+        "enable": "Activează notificările push",
+        "disable": "Dezactivează pe acest dispozitiv",
+        "deniedHelp": "Permite notificările pentru acest site din setările browserului, apoi reîncarcă pagina.",
+        "failed": "Abonarea a eșuat. Încearcă din nou.",
+        "devices": "{count, plural, one {# dispozitiv abonat} few {# dispozitive abonate} other {# de dispozitive abonate}}",
+        "noDevices": "Niciun dispozitiv abonat.",
+        "since": "abonat pe {date}",
+        "lastUsed": "ultimul mesaj {date}",
+        "remove": "Scoate dispozitivul",
+        "thisDevice": "acest dispozitiv"
+      }
     },
     "chat": {
       "word_filter": "Cuvinte filtrate în chat (înlocuite cu ***)",
@@ -5291,7 +5374,8 @@
       "core": {
         "warning": "Avertismente",
         "group_mention": "Mențiuni prin grup",
-        "group_expired": "Grupurile temporare care au expirat"
+        "group_expired": "Grupurile temporare care au expirat",
+        "weekly_digest": "Rezumatul săptămânal „Ce ai ratat”"
       },
       "chat": {
         "mention": "Mențiuni în chat",
@@ -5312,6 +5396,62 @@
       "chat_pro": {
         "reply": "Răspunsuri în chat"
       }
+    },
+    "settingsLink": "Setările notificărilor",
+    "loading": "Se încarcă notificările…",
+    "emptyMentions": "Nu ai mențiuni.",
+    "emptyUnread": "Nu ai notificări necitite.",
+    "important": "Important",
+    "unread": "necitită",
+    "tabsLabel": "Categoriile notificărilor",
+    "tabs": {
+      "all": "Toate",
+      "mentions": "Mențiuni"
+    },
+    "filter": {
+      "label": "Filtru",
+      "all": "Toate",
+      "unread": "Necitite",
+      "read": "Citite"
+    },
+    "deleteRead": "Șterge citite",
+    "deleteReadConfirm": "Ștergi notificările citite din acest tab? Nu se mai pot recupera.",
+    "cancel": "Renunță",
+    "markRead": "Marchează citită",
+    "markUnread": "Marchează necitită",
+    "delete": "Șterge notificarea",
+    "sections": {
+      "today": "Azi",
+      "yesterday": "Ieri",
+      "week": "Săptămâna aceasta",
+      "older": "Mai vechi"
+    },
+    "category": {
+      "content": "Conținut",
+      "social": "Social",
+      "messages": "Mesaje",
+      "moderation": "Moderare",
+      "chat": "Chat",
+      "servers": "Servere",
+      "clans": "Clanuri",
+      "vip": "VIP",
+      "achievements": "Realizări",
+      "system": "Sistem"
+    },
+    "weekly": {
+      "link": "Ce ai ratat",
+      "title": "Ce ai ratat",
+      "back": "Notificări",
+      "settings": "Preferințe",
+      "intro": "Ce s-a întâmplat în comunitate din {since} încoace.",
+      "empty": "Nimic de recuperat săptămâna aceasta. Ești la zi!",
+      "topics": "Topicurile săptămânii",
+      "replies": "{count, plural, one {# răspuns} few {# răspunsuri} other {# de răspunsuri}}",
+      "mentions": "{count, plural, one {O mențiune necitită} few {# mențiuni necitite} other {# de mențiuni necitite}}",
+      "allMentions": "Toate mențiunile",
+      "servers": "Serverele săptămânii",
+      "peak": "vârf {peak}/{max} jucători",
+      "matches": "{count, plural, one {# meci} few {# meciuri} other {# de meciuri}}"
     }
   },
   "chat": {

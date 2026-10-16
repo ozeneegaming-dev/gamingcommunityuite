@@ -1751,8 +1751,40 @@
     },
     "notifications": {
       "title": "Notifications",
-      "hint": "Default values for each notification type. Members can change them in Settings → Notifications.",
-      "save": "Save"
+      "hint": "The defaults for every type and channel. A locked channel (“Forced” or “Disabled”) can't be changed by members; they pick the rest in Settings → Notifications.",
+      "save": "Save",
+      "defaultsTitle": "Defaults by type and channel",
+      "lock": "Lock",
+      "lockNone": "Member chooses",
+      "lockForced": "Forced",
+      "lockDisabled": "Disabled",
+      "resetMembers": "Reset to defaults for all members",
+      "resetMembersConfirm": "Every member's choices are deleted and everyone will use the defaults above. This can't be undone.",
+      "resetDefaults": "Reset the defaults",
+      "resetDefaultsConfirm": "Every type goes back to its app's values, with no locks. Continue?",
+      "scheduleTitle": "Email schedule",
+      "days": {
+        "0": "Sunday",
+        "1": "Monday",
+        "2": "Tuesday",
+        "3": "Wednesday",
+        "4": "Thursday",
+        "5": "Friday",
+        "6": "Saturday"
+      },
+      "pruneTitle": "Cleanup",
+      "pruneHint": "The background service deletes old notifications every day.",
+      "statsTitle": "Statistics (last {days} days)",
+      "statsClicked": "{clicked} opened · {rate}",
+      "statsSent": "Sent",
+      "statsOpened": "Opened",
+      "statsRate": "Rate",
+      "emailsOffTitle": "Stop all emails for a member",
+      "emailsOffHint": "The member gets no notification emails at all (not even forced ones or the digest), for example when their address bounces.",
+      "emailsOffButton": "Stop all emails",
+      "emailsOffConfirm": "The member won't get any notification email until you turn their emails back on. Continue?",
+      "emailsOffMember": "Member name or email",
+      "emailsOnButton": "Turn emails back on"
     },
     "themes": {
       "title": "Themes",
@@ -4134,7 +4166,7 @@
     },
     "notifications": {
       "title": "Notifications",
-      "hint": "Choose which notifications you get on the site and by email. The daily digest collects everything you haven't read into one email.",
+      "hint": "For each type, choose the channels you get notifications on: on site (the bell), toast, email and web push. “Important only” lets only important notifications through (e.g. private messages, direct mentions).",
       "saved": "Preferences saved.",
       "save": "Save",
       "type": "Type",
@@ -4147,7 +4179,58 @@
       "alertsTitle": "On-site alerts",
       "toasts": "Show new notifications in the corner of the screen",
       "sound": "Play a short sound for new notifications",
-      "alertsSave": "Save alerts"
+      "alertsSave": "Save alerts",
+      "emailsOffNotice": "An administrator has turned off all notification emails for your account.",
+      "state_on": "On",
+      "state_important": "Important only",
+      "state_off": "Off",
+      "legend_on": "you get every notification of the type",
+      "legend_important": "only the important ones",
+      "legend_off": "none",
+      "channel_site": "On site",
+      "channel_toast": "Toast",
+      "channel_email": "Email",
+      "channel_push": "Push",
+      "emailMode": "Email mode",
+      "allInCategory": "All in category",
+      "importantType": "Notifications of this type are important",
+      "lockForced": "Forced by an administrator (always on)",
+      "lockDisabled": "Disabled by an administrator",
+      "mode_instant": "Instant",
+      "mode_daily": "Daily digest",
+      "mode_weekly": "Weekly digest",
+      "reset": "Reset to defaults",
+      "resetConfirm": "All your choices go back to the site defaults. Continue?",
+      "resetDone": "Your preferences are back to the defaults.",
+      "cancel": "Cancel",
+      "weekly_enabled": "Send the weekly digest “What you missed” (members can turn it off in their settings)",
+      "weekly_day": "Weekly digest day",
+      "weekly_hour": "Weekly digest hour (0–23, in the site's time zone)",
+      "prune_days": "Delete read notifications after (days)",
+      "prune_unread": "Also delete unread notifications older than that",
+      "push": {
+        "title": "Web push on this device",
+        "hint": "Get notifications even with the site closed, as system notifications. Permission is only asked from here; pick which types go out by push in the table below.",
+        "state": {
+          "loading": "Checking…",
+          "unsupported": "This browser doesn't support web push.",
+          "default": "Permission hasn't been asked yet.",
+          "denied": "Notifications are blocked in the browser.",
+          "granted": "Allowed, but this device isn't subscribed.",
+          "subscribed": "Active on this device."
+        },
+        "unavailable": "Web push isn't available on this site yet (the keys are created when the background service starts).",
+        "enable": "Turn on push notifications",
+        "disable": "Turn off on this device",
+        "deniedHelp": "Allow notifications for this site in your browser settings, then reload the page.",
+        "failed": "Subscribing failed. Please try again.",
+        "devices": "{count, plural, one {# subscribed device} other {# subscribed devices}}",
+        "noDevices": "No subscribed devices.",
+        "since": "subscribed on {date}",
+        "lastUsed": "last message {date}",
+        "remove": "Remove device",
+        "thisDevice": "this device"
+      }
     },
     "chat": {
       "word_filter": "Filtered chat words (replaced with ***)",
@@ -5291,7 +5374,8 @@
       "core": {
         "warning": "Warnings",
         "group_mention": "Group mentions",
-        "group_expired": "Temporary groups that expired"
+        "group_expired": "Temporary groups that expired",
+        "weekly_digest": "Weekly digest “What you missed”"
       },
       "chat": {
         "mention": "Chat mentions",
@@ -5312,6 +5396,62 @@
       "chat_pro": {
         "reply": "Chat replies"
       }
+    },
+    "settingsLink": "Notification settings",
+    "loading": "Loading notifications…",
+    "emptyMentions": "You have no mentions.",
+    "emptyUnread": "You have no unread notifications.",
+    "important": "Important",
+    "unread": "unread",
+    "tabsLabel": "Notification categories",
+    "tabs": {
+      "all": "All",
+      "mentions": "Mentions"
+    },
+    "filter": {
+      "label": "Filter",
+      "all": "All",
+      "unread": "Unread",
+      "read": "Read"
+    },
+    "deleteRead": "Delete read",
+    "deleteReadConfirm": "Delete the read notifications in this tab? They can't be recovered.",
+    "cancel": "Cancel",
+    "markRead": "Mark as read",
+    "markUnread": "Mark as unread",
+    "delete": "Delete notification",
+    "sections": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "week": "This week",
+      "older": "Older"
+    },
+    "category": {
+      "content": "Content",
+      "social": "Social",
+      "messages": "Messages",
+      "moderation": "Moderation",
+      "chat": "Chat",
+      "servers": "Servers",
+      "clans": "Clans",
+      "vip": "VIP",
+      "achievements": "Achievements",
+      "system": "System"
+    },
+    "weekly": {
+      "link": "What you missed",
+      "title": "What you missed",
+      "back": "Notifications",
+      "settings": "Preferences",
+      "intro": "What happened in the community since {since}.",
+      "empty": "Nothing to catch up on this week. You're all set!",
+      "topics": "Topics of the week",
+      "replies": "{count, plural, one {# reply} other {# replies}}",
+      "mentions": "{count, plural, one {One unread mention} other {# unread mentions}}",
+      "allMentions": "All mentions",
+      "servers": "Servers of the week",
+      "peak": "peak {peak}/{max} players",
+      "matches": "{count, plural, one {# match} other {# matches}}"
     }
   },
   "chat": {

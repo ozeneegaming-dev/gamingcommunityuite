@@ -1751,8 +1751,40 @@
     },
     "notifications": {
       "title": "Notificaciones",
-      "hint": "Valores predeterminados para cada tipo de notificación. Los miembros pueden cambiarlos en Ajustes → Notificaciones.",
-      "save": "Guardar"
+      "hint": "Los valores predeterminados de cada tipo y canal. Un canal bloqueado («Forzado» o «Desactivado») no lo pueden cambiar los miembros; el resto lo eligen en Ajustes → Notificaciones.",
+      "save": "Guardar",
+      "defaultsTitle": "Valores predeterminados por tipo y canal",
+      "lock": "Bloqueo",
+      "lockNone": "Elige el miembro",
+      "lockForced": "Forzado",
+      "lockDisabled": "Desactivado",
+      "resetMembers": "Restablecer para todos los miembros",
+      "resetMembersConfirm": "Se borran las elecciones de todos los miembros y todos usarán los valores predeterminados de arriba. No se puede deshacer.",
+      "resetDefaults": "Restablecer los valores predeterminados",
+      "resetDefaultsConfirm": "Cada tipo vuelve a los valores de su aplicación, sin bloqueos. ¿Continuar?",
+      "scheduleTitle": "Calendario de correos",
+      "days": {
+        "0": "Domingo",
+        "1": "Lunes",
+        "2": "Martes",
+        "3": "Miércoles",
+        "4": "Jueves",
+        "5": "Viernes",
+        "6": "Sábado"
+      },
+      "pruneTitle": "Limpieza",
+      "pruneHint": "El servicio en segundo plano borra cada día las notificaciones antiguas.",
+      "statsTitle": "Estadísticas (últimos {days} días)",
+      "statsClicked": "{clicked} abiertas · {rate}",
+      "statsSent": "Enviadas",
+      "statsOpened": "Abiertas",
+      "statsRate": "Tasa",
+      "emailsOffTitle": "Detener todos los correos de un miembro",
+      "emailsOffHint": "El miembro no recibe ningún correo de notificación (ni los forzados ni el resumen), por ejemplo cuando su dirección rechaza los mensajes.",
+      "emailsOffButton": "Detener todos los correos",
+      "emailsOffConfirm": "El miembro no recibirá ningún correo de notificación hasta que vuelvas a activarlos. ¿Continuar?",
+      "emailsOffMember": "Nombre o correo del miembro",
+      "emailsOnButton": "Reactivar los correos"
     },
     "themes": {
       "title": "Temas",
@@ -4134,7 +4166,7 @@
     },
     "notifications": {
       "title": "Notificaciones",
-      "hint": "Elija las notificaciones que reciba en el sitio y por correo electrónico. El digestivo diario recoge todo lo que no has leído en un email.",
+      "hint": "Elige, para cada tipo, en qué canales recibes las notificaciones: en el sitio (la campana), toast, correo y web push. «Solo importantes» deja pasar solo las notificaciones importantes (p. ej. mensajes privados, menciones directas).",
       "saved": "Preferencias salvadas.",
       "save": "Guardar",
       "type": "Tipo",
@@ -4147,7 +4179,58 @@
       "alertsTitle": "Alertas in situ",
       "toasts": "Mostrar nuevas notificaciones en la esquina de la pantalla",
       "sound": "Juega un sonido corto para nuevas notificaciones",
-      "alertsSave": "Guardar alertas"
+      "alertsSave": "Guardar alertas",
+      "emailsOffNotice": "Un administrador ha desactivado todos los correos de notificación de tu cuenta.",
+      "state_on": "Activado",
+      "state_important": "Solo importantes",
+      "state_off": "Desactivado",
+      "legend_on": "recibes todas las notificaciones del tipo",
+      "legend_important": "solo las importantes",
+      "legend_off": "ninguna",
+      "channel_site": "En el sitio",
+      "channel_toast": "Toast",
+      "channel_email": "Correo",
+      "channel_push": "Push",
+      "emailMode": "Modo de correo",
+      "allInCategory": "Toda la categoría",
+      "importantType": "Las notificaciones de este tipo son importantes",
+      "lockForced": "Forzado por un administrador (siempre activado)",
+      "lockDisabled": "Desactivado por un administrador",
+      "mode_instant": "Inmediato",
+      "mode_daily": "Resumen diario",
+      "mode_weekly": "Resumen semanal",
+      "reset": "Restablecer valores predeterminados",
+      "resetConfirm": "Todas tus elecciones vuelven a los valores predeterminados del sitio. ¿Continuar?",
+      "resetDone": "Tus preferencias han vuelto a los valores predeterminados.",
+      "cancel": "Cancelar",
+      "weekly_enabled": "Enviar el resumen semanal «Lo que te perdiste» (los miembros pueden desactivarlo en sus ajustes)",
+      "weekly_day": "Día del resumen semanal",
+      "weekly_hour": "Hora del resumen semanal (0–23, en la zona horaria del sitio)",
+      "prune_days": "Borrar las notificaciones leídas después de (días)",
+      "prune_unread": "Borrar también las notificaciones sin leer más antiguas",
+      "push": {
+        "title": "Web push en este dispositivo",
+        "hint": "Recibe notificaciones incluso con el sitio cerrado, como notificaciones del sistema. El permiso solo se pide desde aquí; en la tabla de abajo eliges qué tipos se envían por push.",
+        "state": {
+          "loading": "Comprobando…",
+          "unsupported": "Este navegador no admite web push.",
+          "default": "Todavía no se ha pedido el permiso.",
+          "denied": "Las notificaciones están bloqueadas en el navegador.",
+          "granted": "Permitido, pero este dispositivo no está suscrito.",
+          "subscribed": "Activo en este dispositivo."
+        },
+        "unavailable": "El web push aún no está disponible en este sitio (las claves se crean al arrancar el servicio en segundo plano).",
+        "enable": "Activar las notificaciones push",
+        "disable": "Desactivar en este dispositivo",
+        "deniedHelp": "Permite las notificaciones de este sitio en los ajustes del navegador y recarga la página.",
+        "failed": "La suscripción ha fallado. Inténtalo de nuevo.",
+        "devices": "{count, plural, one {# dispositivo suscrito} many {# dispositivos suscritos} other {# dispositivos suscritos}}",
+        "noDevices": "Ningún dispositivo suscrito.",
+        "since": "suscrito el {date}",
+        "lastUsed": "último mensaje {date}",
+        "remove": "Quitar dispositivo",
+        "thisDevice": "este dispositivo"
+      }
     },
     "chat": {
       "word_filter": "Palabras filtradas de chat (sustituidas por ***)",
@@ -5291,7 +5374,8 @@
       "core": {
         "warning": "Advertencias",
         "group_mention": "Group mentions",
-        "group_expired": "Grupos temporales caducados"
+        "group_expired": "Grupos temporales caducados",
+        "weekly_digest": "Resumen semanal «Lo que te perdiste»"
       },
       "chat": {
         "mention": "Menciones de chat",
@@ -5312,6 +5396,62 @@
       "chat_pro": {
         "reply": "Chat replies"
       }
+    },
+    "settingsLink": "Ajustes de notificaciones",
+    "loading": "Cargando notificaciones…",
+    "emptyMentions": "No tienes menciones.",
+    "emptyUnread": "No tienes notificaciones sin leer.",
+    "important": "Importante",
+    "unread": "sin leer",
+    "tabsLabel": "Categorías de notificaciones",
+    "tabs": {
+      "all": "Todas",
+      "mentions": "Menciones"
+    },
+    "filter": {
+      "label": "Filtro",
+      "all": "Todas",
+      "unread": "Sin leer",
+      "read": "Leídas"
+    },
+    "deleteRead": "Borrar leídas",
+    "deleteReadConfirm": "¿Borrar las notificaciones leídas de esta pestaña? No se pueden recuperar.",
+    "cancel": "Cancelar",
+    "markRead": "Marcar como leída",
+    "markUnread": "Marcar como no leída",
+    "delete": "Borrar notificación",
+    "sections": {
+      "today": "Hoy",
+      "yesterday": "Ayer",
+      "week": "Esta semana",
+      "older": "Anteriores"
+    },
+    "category": {
+      "content": "Contenido",
+      "social": "Social",
+      "messages": "Mensajes",
+      "moderation": "Moderación",
+      "chat": "Chat",
+      "servers": "Servidores",
+      "clans": "Clanes",
+      "vip": "VIP",
+      "achievements": "Logros",
+      "system": "Sistema"
+    },
+    "weekly": {
+      "link": "Lo que te perdiste",
+      "title": "Lo que te perdiste",
+      "back": "Notificaciones",
+      "settings": "Preferencias",
+      "intro": "Lo que pasó en la comunidad desde el {since}.",
+      "empty": "No hay nada que ponerse al día esta semana. ¡Estás al día!",
+      "topics": "Temas de la semana",
+      "replies": "{count, plural, one {# respuesta} many {# respuestas} other {# respuestas}}",
+      "mentions": "{count, plural, one {Una mención sin leer} many {# menciones sin leer} other {# menciones sin leer}}",
+      "allMentions": "Todas las menciones",
+      "servers": "Servidores de la semana",
+      "peak": "pico de {peak}/{max} jugadores",
+      "matches": "{count, plural, one {# partida} many {# partidas} other {# partidas}}"
     }
   },
   "chat": {
