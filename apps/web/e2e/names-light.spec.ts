@@ -57,7 +57,7 @@ test("un membru simplu are numele lizibil pe temele luminoase (Nova și clasic) 
   const page = await context.newPage();
   // Membrul (grupul Membru) se uită la lista membrilor grupului lui.
   await member(page, name, email);
-  const [{ id: groupId }] = await sql<{ id: number }>(`SELECT id FROM groups WHERE key = 'member'`);
+  const groupId = (await sql<{ id: number }>(`SELECT id FROM groups WHERE key = 'member'`))[0]!.id;
   const url = new URL(test.info().project.use.baseURL ?? "http://localhost:3100");
 
   for (const skin of [null, CLASSIC] as const) {
