@@ -2270,7 +2270,7 @@
   padding: 0 22px;
   border: 0;
   border-radius: 6px;
-  background-color: var(--gcs-accent);
+  background-color: var(--gcs-accent-fill, var(--gcs-accent));
   color: #fff;
   font: inherit;
   font-size: 14px;
@@ -2349,7 +2349,7 @@
 }
 .gcs-chHist__pg--on {
   border-color: var(--gcs-accent);
-  background-color: var(--gcs-accent);
+  background-color: var(--gcs-accent-fill, var(--gcs-accent));
   color: #fff;
   cursor: default;
 }

@@ -259,7 +259,7 @@ html[data-theme="light"] {
 }
 .gcs-podium__avatar {
   display: inline-flex;
-  border-radius: 50%;
+  border-radius: var(--gcs-avatar-radius, 50%);
   box-shadow: 0 0 0 3px var(--gcs-medal);
 }
 .gcs-podium__id {

@@ -1,0 +1,251 @@
+/*
+ * Bara de anunț subțire (deasupra conținutului) și blocul pentru vizitatori: componentele SISTEMULUI, în orice temă,
+ * pe tokenurile temei (macheta HomeComplete „ANUNȚ · … · Înscrie echipa”; macheta GuestCta).
+ */
+
+/* ─── Bara de anunț ──────────────────────────────────────────────────────────────────────────────── */
+.gcs-annBar {
+  --gcs-ann: var(--gcs-accent);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 9px 12px 9px 16px;
+  border: 1px solid color-mix(in srgb, var(--gcs-ann) 45%, transparent);
+  border-radius: 6px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--gcs-ann) 22%, transparent), color-mix(in srgb, var(--gcs-box-bg, var(--gcs-surface)) 95%, transparent) 40%), var(--gcs-box-bg, var(--gcs-surface));
+  color: var(--gcs-heading, var(--gcs-text));
+}
+.gcs-annBar--info {
+  --gcs-ann: #4fa3ff;
+}
+.gcs-annBar--warning {
+  --gcs-ann: var(--gcs-warn);
+}
+.gcs-annBar__slide {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  animation: gcs-ann-in var(--gcs-motion-base, 0.25s) var(--gcs-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)) both;
+}
+.gcs-annBar__label {
+  flex: none;
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: var(--gcs-ann);
+  color: #fff;
+  font: 700 10px/1.2 var(--gcs-font-text);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.gcs-annBar--accent .gcs-annBar__label {
+  background: var(--gcs-accent-fill, var(--gcs-accent));
+}
+.gcs-annBar--warning .gcs-annBar__label {
+  color: #111;
+}
+.gcs-annBar__text {
+  flex: 1 1 240px;
+  min-width: 0;
+  font: 600 14px/1.4 var(--gcs-font-text);
+}
+.gcs-root a.gcs-annBar__link {
+  flex: none;
+  color: var(--gcs-accentInk, var(--gcs-accent));
+  font: 700 13px var(--gcs-font-text);
+  text-decoration: none;
+}
+.gcs-root a.gcs-annBar__link:hover,
+.gcs-root a.gcs-annBar__link:focus-visible {
+  color: var(--gcs-link-hover, var(--gcs-accent));
+  text-decoration: underline;
+}
+.gcs-annBar__arrow {
+  display: inline-block;
+  transition: transform var(--gcs-motion-fast, 0.2s) var(--gcs-motion-ease, ease);
+}
+a:hover > .gcs-annBar__arrow {
+  transform: translateX(3px);
+}
+.gcs-annBar__cta {
+  flex: none;
+}
+.gcs-annBar__tools {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.gcs-annBar__dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--gcs-text) 25%, transparent);
+  cursor: pointer;
+}
+.gcs-annBar__dot[aria-current="true"] {
+  background: var(--gcs-ann);
+}
+.gcs-annBar__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background-color: transparent;
+  color: var(--gcs-muted);
+  cursor: pointer;
+}
+.gcs-annBar__close:hover,
+.gcs-annBar__close:focus-visible {
+  border-color: var(--gcs-hover-border, var(--gcs-border));
+  color: var(--gcs-heading, var(--gcs-text));
+}
+@keyframes gcs-ann-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@media (max-width: 640px) {
+  .gcs-annBar {
+    align-items: flex-start;
+    padding: 10px;
+  }
+  .gcs-annBar__text {
+    flex-basis: 100%;
+    font-size: 13px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gcs-annBar__slide {
+    animation-name: gcs-tip-fade;
+  }
+  .gcs-annBar__arrow {
+    transition: none;
+  }
+}
+
+/* ─── Blocul pentru vizitatori (macheta GuestCta) ───────────────────────────────────────────────── */
+.gcs-guestCta {
+  overflow: hidden;
+  padding: 0;
+}
+.gcs-guestCta__head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 22px 20px 18px;
+  border-bottom: 1px solid var(--gcs-box-border, var(--gcs-border));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--gcs-accent) 16%, transparent), transparent);
+  text-align: center;
+}
+.gcs-guestCta__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--gcs-accent) 50%, transparent);
+  background: color-mix(in srgb, var(--gcs-accent) 14%, transparent);
+  color: var(--gcs-accentInk, var(--gcs-accent));
+  font-size: 18px;
+}
+.gcs-guestCta__title {
+  margin: 0;
+  font: 700 20px/1.3 var(--gcs-font-display);
+  color: var(--gcs-heading, var(--gcs-text));
+}
+.gcs-guestCta__sub {
+  margin: 0;
+  color: var(--gcs-muted);
+  font-size: 13px;
+}
+.gcs-guestCta__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  padding: 18px;
+}
+.gcs-guestCta__card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid var(--gcs-list-row-border, var(--gcs-border));
+  background: var(--gcs-list-well, var(--gcs-surface2));
+}
+.gcs-guestCta__cardHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.gcs-guestCta__cardIcon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--gcs-accent) 45%, transparent);
+  background: color-mix(in srgb, var(--gcs-accent) 14%, transparent);
+  color: var(--gcs-accentInk, var(--gcs-accent));
+  font-size: 17px;
+}
+.gcs-guestCta__card--login .gcs-guestCta__cardIcon {
+  border-color: var(--gcs-border);
+  background: var(--gcs-btn-secondary-bg, var(--gcs-surface2));
+  color: var(--gcs-text);
+}
+.gcs-guestCta__cardTitle {
+  display: block;
+  font: 700 16px var(--gcs-font-text);
+  color: var(--gcs-heading, var(--gcs-text));
+}
+.gcs-guestCta__cardText {
+  display: block;
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-guestCta__card .gcs-btn {
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+}
+.gcs-guestCta__social {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 18px 20px;
+  color: var(--gcs-muted);
+  font-size: 12px;
+}
+@media (max-width: 640px) {
+  .gcs-guestCta__grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding: 12px;
+  }
+  .gcs-guestCta__card {
+    padding: 14px;
+  }
+  .gcs-guestCta__title {
+    font-size: 17px;
+  }
+}

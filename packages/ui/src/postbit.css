@@ -609,7 +609,7 @@ a.gcs-postbit__group:focus-visible {
 }
 .gcs-post__actions .gcs-btn--primary.gcs-post__action {
   border-color: var(--gcs-accent);
-  background: var(--gcs-accent);
+  background: var(--gcs-accent-fill, var(--gcs-accent));
   color: #fff;
 }
 .gcs-post__like svg {

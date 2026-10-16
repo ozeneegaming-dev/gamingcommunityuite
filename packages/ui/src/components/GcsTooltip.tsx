@@ -1,6 +1,8 @@
 "use client";
 
-import { cloneElement, isValidElement, useId, useState, type FocusEvent, type MouseEvent, type ReactElement, type ReactNode } from "react";
+import { cloneElement, isValidElement, useEffect, useId, useLayoutEffect, useRef, useState, type FocusEvent, type MouseEvent, type ReactElement, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { positionTooltip, tooltipContainer } from "./tooltipPlace";
 
 type TriggerProps = {
   "aria-describedby"?: string;
@@ -20,20 +22,48 @@ export type GcsTooltipProps = {
   className?: string;
 };
 
+/** `useLayoutEffect` doar în browser (pe server avertizează). */
+const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+
 /**
- * Tooltip accesibil (spec etapa 5): apare la hover și la focus din tastatură, e legat de element prin
- * `aria-describedby` și dispare cu Escape.
+ * Tooltip-ul sistemului (unul singur pe tot site-ul, în orice temă): o bulă mică, închisă, cu săgeată și intrarea
+ * înclinată. Apare la hover și la focus din tastatură, e legat de element prin `aria-describedby` și dispare cu Escape.
+ * Bula stă în `<body>` (sau în dialogul modal deschis), cu poziție fixă: nu o taie nici meniurile deschise, nici
+ * panourile cu `overflow`. Elementele simple (`title`, `data-tip`, butoanele doar cu iconiță) îl primesc automat prin
+ * `GcsTooltipHost`.
  */
 export function GcsTooltip({ content, children, side = "top", className }: GcsTooltipProps) {
   const id = useId();
-  const [open, setOpen] = useState(false);
+  // Unde stă bula cât e deschisă (`null` = închisă): `<body>` sau dialogul modal care conține elementul.
+  const [host, setHost] = useState<HTMLElement | null>(null);
+  const open = host !== null;
+  const setOpen = (on: boolean, el?: Element) => setHost(on && el ? tooltipContainer(el) : null);
+  const wrap = useRef<HTMLSpanElement>(null);
+  const bubble = useRef<HTMLSpanElement>(null);
+
+  useIsoLayoutEffect(() => {
+    if (open && wrap.current && bubble.current) positionTooltip(wrap.current, bubble.current, side);
+  }, [open, side, content]);
+
+  // La derulare sau redimensionare bula s-ar desprinde de element: se închide.
+  useEffect(() => {
+    if (!open) return;
+    const close = () => setHost(null);
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
+    return () => {
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
+    };
+  }, [open]);
+
   if (!isValidElement(children)) return children;
   const props = children.props;
   const trigger = cloneElement(children, {
     "aria-describedby": [props["aria-describedby"], open ? id : undefined].filter(Boolean).join(" ") || undefined,
     onMouseEnter: (e: MouseEvent) => {
       props.onMouseEnter?.(e);
-      setOpen(true);
+      setOpen(true, e.currentTarget as Element);
     },
     onMouseLeave: (e: MouseEvent) => {
       props.onMouseLeave?.(e);
@@ -41,7 +71,7 @@ export function GcsTooltip({ content, children, side = "top", className }: GcsTo
     },
     onFocus: (e: FocusEvent) => {
       props.onFocus?.(e);
-      setOpen(true);
+      setOpen(true, e.currentTarget as Element);
     },
     onBlur: (e: FocusEvent) => {
       props.onBlur?.(e);
@@ -50,17 +80,20 @@ export function GcsTooltip({ content, children, side = "top", className }: GcsTo
   });
   return (
     <span
+      ref={wrap}
       className="gcs-tooltipWrap"
       onKeyDown={(e) => {
-        if (e.key === "Escape") setOpen(false);
+        if (e.key === "Escape") setHost(null);
       }}
     >
       {trigger}
-      {open && (
-        <span role="tooltip" id={id} className={`gcs-tooltip gcs-tooltip--${side}${className ? ` ${className}` : ""}`}>
-          {content}
-        </span>
-      )}
+      {host &&
+        createPortal(
+          <span ref={bubble} role="tooltip" id={id} className={`gcs-tooltip gcs-tooltip--${side}${className ? ` ${className}` : ""}`}>
+            {content}
+          </span>,
+          host,
+        )}
     </span>
   );
 }

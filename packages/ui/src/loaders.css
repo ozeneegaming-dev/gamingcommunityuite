@@ -1,0 +1,484 @@
+/*
+ * Loaderele sistemului (`GcsSpinner`: butoane, liste, modale, chat), în ORICE temă, pe tokenurile temei. Stilul vine din
+ * setarea temei „Stil loader” (atributul `data-gcs-loader` de pe `<html>`); fără atribut (ACP, înainte de instalare),
+ * inelul. CSS-ul nostru, pur, inspirat de colecția de loadere CSS (MIT) creditată în THIRD-PARTY-NOTICES.md.
+ *
+ * Markup-ul e același pentru toate stilurile: `.gcs-spinner` cu trei `.gcs-spinner__i`; fiecare stil folosește ce-i
+ * trebuie (pseudo-elementele, copiii). Culoarea: `--gcs-spinner-color` (în butoane, culoarea textului), altfel accentul.
+ */
+.gcs-spinner {
+  --gcs-sp: var(--gcs-spinner-size, 20px);
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: var(--gcs-sp);
+  height: var(--gcs-sp);
+  vertical-align: middle;
+  color: var(--gcs-spinner-color, var(--gcs-accentInk, var(--gcs-accent)));
+}
+.gcs-spinner--sm {
+  --gcs-sp: 14px;
+}
+.gcs-spinner--lg {
+  --gcs-sp: 36px;
+}
+.gcs-spinner::before,
+.gcs-spinner::after,
+.gcs-spinner__i,
+.gcs-spinner__i::before {
+  content: "";
+  position: absolute;
+  box-sizing: border-box;
+}
+.gcs-spinner__i {
+  display: none;
+}
+.gcs-spinner__i::before {
+  display: none;
+}
+/* Blocul de încărcare al unei liste / al unui panou: loaderul centrat, cu textul lui. */
+.gcs-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 18px;
+  color: var(--gcs-muted);
+  font-size: 13px;
+}
+.gcs-btn .gcs-spinner,
+button .gcs-spinner {
+  --gcs-spinner-color: currentColor;
+  --gcs-sp: 1.1em;
+}
+
+/* ─── Implicit: inelul (stilul „ring”) ─────────────────────────────────────────────────────────────── */
+.gcs-spinner::before {
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, currentColor 22%, transparent);
+  border-top-color: currentColor;
+  animation: gcs-ld-spin 0.8s linear infinite;
+}
+
+/* Celelalte stiluri pornesc de la zero (fără inelul implicit); `:where` ține specificitatea mică, sub cea a stilurilor. */
+:where(:root[data-gcs-loader]:not([data-gcs-loader="ring"])) .gcs-spinner::before,
+:where(:root[data-gcs-loader]:not([data-gcs-loader="ring"])) .gcs-spinner::after {
+  inset: auto;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  animation: none;
+}
+
+/* dualRing: două inele în sensuri opuse. */
+:root[data-gcs-loader="dualRing"] .gcs-spinner::before {
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-bottom-color: currentColor;
+  animation: gcs-ld-spin 1s linear infinite;
+}
+:root[data-gcs-loader="dualRing"] .gcs-spinner::after {
+  inset: 26%;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-left-color: color-mix(in srgb, currentColor 70%, transparent);
+  border-right-color: color-mix(in srgb, currentColor 70%, transparent);
+  animation: gcs-ld-spin 0.7s linear infinite reverse;
+}
+
+/* arc: un sfert de inel care accelerează. */
+:root[data-gcs-loader="arc"] .gcs-spinner::before {
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: currentColor;
+  border-right-color: currentColor;
+  animation: gcs-ld-spin 0.9s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite;
+}
+
+/* dots: trei puncte care cresc pe rând. */
+:root[data-gcs-loader="dots"] .gcs-spinner__i {
+  display: block;
+  top: 37.5%;
+  width: 25%;
+  height: 25%;
+  border-radius: 50%;
+  background: currentColor;
+  animation: gcs-ld-dot 1s ease-in-out infinite;
+}
+:root[data-gcs-loader="dots"] .gcs-spinner__i:nth-child(1) {
+  left: 0;
+}
+:root[data-gcs-loader="dots"] .gcs-spinner__i:nth-child(2) {
+  left: 37.5%;
+  animation-delay: 0.16s;
+}
+:root[data-gcs-loader="dots"] .gcs-spinner__i:nth-child(3) {
+  left: 75%;
+  animation-delay: 0.32s;
+}
+
+/* pulse: un disc care se umflă și se stinge. */
+:root[data-gcs-loader="pulse"] .gcs-spinner::before {
+  inset: 0;
+  border-radius: 50%;
+  background: currentColor;
+  animation: gcs-ld-pulse 1.1s ease-out infinite;
+}
+
+/* bars: trei bare verticale (egalizator). */
+:root[data-gcs-loader="bars"] .gcs-spinner__i {
+  display: block;
+  top: 8%;
+  bottom: 8%;
+  width: 20%;
+  border-radius: 1px;
+  background: currentColor;
+  animation: gcs-ld-bars 0.9s ease-in-out infinite;
+}
+:root[data-gcs-loader="bars"] .gcs-spinner__i:nth-child(1) {
+  left: 4%;
+}
+:root[data-gcs-loader="bars"] .gcs-spinner__i:nth-child(2) {
+  left: 40%;
+  animation-delay: 0.12s;
+}
+:root[data-gcs-loader="bars"] .gcs-spinner__i:nth-child(3) {
+  left: 76%;
+  animation-delay: 0.24s;
+}
+
+/* wave: trei puncte care sar în val. */
+:root[data-gcs-loader="wave"] .gcs-spinner__i {
+  display: block;
+  top: 40%;
+  width: 22%;
+  height: 22%;
+  border-radius: 50%;
+  background: currentColor;
+  animation: gcs-ld-wave 0.9s ease-in-out infinite;
+}
+:root[data-gcs-loader="wave"] .gcs-spinner__i:nth-child(1) {
+  left: 2%;
+}
+:root[data-gcs-loader="wave"] .gcs-spinner__i:nth-child(2) {
+  left: 39%;
+  animation-delay: 0.12s;
+}
+:root[data-gcs-loader="wave"] .gcs-spinner__i:nth-child(3) {
+  left: 76%;
+  animation-delay: 0.24s;
+}
+
+/* orbit: un punct care orbitează pe un inel discret. */
+:root[data-gcs-loader="orbit"] .gcs-spinner::after {
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+}
+:root[data-gcs-loader="orbit"] .gcs-spinner::before {
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 12%, currentColor 0 12%, transparent 14%);
+  animation: gcs-ld-spin 1s linear infinite;
+}
+
+/* square: un pătrat care se rotește și își rotunjește colțurile. */
+:root[data-gcs-loader="square"] .gcs-spinner::before {
+  inset: 18%;
+  border-radius: 2px;
+  background: currentColor;
+  animation: gcs-ld-morph 1.4s ease-in-out infinite;
+}
+
+/* ripple: două unde care pornesc din centru. */
+:root[data-gcs-loader="ripple"] .gcs-spinner::before,
+:root[data-gcs-loader="ripple"] .gcs-spinner::after {
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  animation: gcs-ld-ripple 1.3s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+:root[data-gcs-loader="ripple"] .gcs-spinner::after {
+  animation-delay: -0.65s;
+}
+
+/* flip: o plăcuță care se întoarce în 3D. */
+:root[data-gcs-loader="flip"] .gcs-spinner::before {
+  inset: 12%;
+  border-radius: 2px;
+  background: currentColor;
+  animation: gcs-ld-flip 1.2s ease-in-out infinite;
+}
+
+/* chase: trei puncte care se urmăresc pe cerc. */
+:root[data-gcs-loader="chase"] .gcs-spinner__i {
+  display: block;
+  inset: 0;
+  animation: gcs-ld-spin 1.4s cubic-bezier(0.6, 0.1, 0.4, 0.9) infinite;
+}
+:root[data-gcs-loader="chase"] .gcs-spinner__i::before {
+  display: block;
+  top: 0;
+  left: 39%;
+  width: 22%;
+  height: 22%;
+  border-radius: 50%;
+  background: currentColor;
+}
+:root[data-gcs-loader="chase"] .gcs-spinner__i:nth-child(2) {
+  animation-delay: -0.12s;
+  opacity: 0.7;
+}
+:root[data-gcs-loader="chase"] .gcs-spinner__i:nth-child(3) {
+  animation-delay: -0.24s;
+  opacity: 0.4;
+}
+
+/* grid: trei rânduri de câte trei pătrățele care se aprind pe rând. */
+:root[data-gcs-loader="grid"] .gcs-spinner__i {
+  display: block;
+  left: 0;
+  right: 0;
+  height: 28%;
+  background: linear-gradient(90deg, currentColor 0 28%, transparent 28% 36%, currentColor 36% 64%, transparent 64% 72%, currentColor 72%);
+  animation: gcs-ld-fade 1s ease-in-out infinite;
+}
+:root[data-gcs-loader="grid"] .gcs-spinner__i:nth-child(1) {
+  top: 0;
+}
+:root[data-gcs-loader="grid"] .gcs-spinner__i:nth-child(2) {
+  top: 36%;
+  animation-delay: 0.15s;
+}
+:root[data-gcs-loader="grid"] .gcs-spinner__i:nth-child(3) {
+  top: 72%;
+  animation-delay: 0.3s;
+}
+
+/* hourglass: clepsidra din două triunghiuri care se întoarce. */
+:root[data-gcs-loader="hourglass"] .gcs-spinner::before {
+  inset: 0;
+  border-radius: 50%;
+  border: calc(var(--gcs-sp) / 2) solid;
+  border-color: currentColor transparent;
+  animation: gcs-ld-hourglass 1.2s infinite;
+}
+
+/* dash: o liniuță care străbate o pistă. */
+:root[data-gcs-loader="dash"] .gcs-spinner {
+  width: calc(var(--gcs-sp) * 2);
+}
+:root[data-gcs-loader="dash"] .gcs-spinner::after {
+  left: 0;
+  right: 0;
+  top: calc(50% - 1.5px);
+  height: 3px;
+  border-radius: 2px;
+  background: color-mix(in srgb, currentColor 22%, transparent);
+}
+:root[data-gcs-loader="dash"] .gcs-spinner::before {
+  left: 0;
+  top: calc(50% - 1.5px);
+  width: 36%;
+  height: 3px;
+  border-radius: 2px;
+  background: currentColor;
+  animation: gcs-ld-dash 1s ease-in-out infinite alternate;
+}
+
+/* comet: o cometă cu coada în gradient. */
+:root[data-gcs-loader="comet"] .gcs-spinner::before {
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 90deg, transparent 0 30%, currentColor);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+  animation: gcs-ld-spin 0.75s linear infinite;
+}
+
+/* bounce: o minge care sare, cu umbra de dedesubt. */
+:root[data-gcs-loader="bounce"] .gcs-spinner::before {
+  left: 30%;
+  top: 0;
+  width: 40%;
+  height: 40%;
+  border-radius: 50%;
+  background: currentColor;
+  animation: gcs-ld-bounce 0.7s cubic-bezier(0.5, 0, 0.5, 1) infinite alternate;
+}
+:root[data-gcs-loader="bounce"] .gcs-spinner::after {
+  left: 25%;
+  bottom: 0;
+  width: 50%;
+  height: 10%;
+  border-radius: 50%;
+  background: color-mix(in srgb, currentColor 35%, transparent);
+  animation: gcs-ld-shadow 0.7s cubic-bezier(0.5, 0, 0.5, 1) infinite alternate;
+}
+
+/* slash: trei bare oblice care clipesc pe rând (accentul „gaming”). */
+:root[data-gcs-loader="slash"] .gcs-spinner__i {
+  display: block;
+  top: 0;
+  bottom: 0;
+  width: 20%;
+  background: currentColor;
+  transform: skewX(-20deg);
+  animation: gcs-ld-fade 0.9s ease-in-out infinite;
+}
+:root[data-gcs-loader="slash"] .gcs-spinner__i:nth-child(1) {
+  left: 8%;
+}
+:root[data-gcs-loader="slash"] .gcs-spinner__i:nth-child(2) {
+  left: 40%;
+  animation-delay: 0.15s;
+}
+:root[data-gcs-loader="slash"] .gcs-spinner__i:nth-child(3) {
+  left: 72%;
+  animation-delay: 0.3s;
+}
+
+@keyframes gcs-ld-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes gcs-ld-dot {
+  0%,
+  80%,
+  100% {
+    transform: scale(0.4);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes gcs-ld-pulse {
+  from {
+    transform: scale(0.15);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+@keyframes gcs-ld-bars {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+@keyframes gcs-ld-wave {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-70%);
+  }
+}
+@keyframes gcs-ld-morph {
+  0% {
+    transform: rotate(0);
+    border-radius: 2px;
+  }
+  50% {
+    transform: rotate(180deg);
+    border-radius: 50%;
+  }
+  100% {
+    transform: rotate(360deg);
+    border-radius: 2px;
+  }
+}
+@keyframes gcs-ld-ripple {
+  from {
+    transform: scale(0.1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+@keyframes gcs-ld-flip {
+  0% {
+    transform: perspective(60px) rotateX(0) rotateY(0);
+  }
+  50% {
+    transform: perspective(60px) rotateX(-180deg) rotateY(0);
+  }
+  100% {
+    transform: perspective(60px) rotateX(-180deg) rotateY(-180deg);
+  }
+}
+@keyframes gcs-ld-fade {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes gcs-ld-hourglass {
+  0% {
+    transform: rotate(0);
+    animation-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+  }
+  50% {
+    transform: rotate(900deg);
+    animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+  }
+  100% {
+    transform: rotate(1800deg);
+  }
+}
+@keyframes gcs-ld-dash {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(178%);
+  }
+}
+@keyframes gcs-ld-bounce {
+  from {
+    transform: translateY(0) scale(1.05, 0.9);
+  }
+  to {
+    transform: translateY(140%) scale(0.95, 1.05);
+  }
+}
+@keyframes gcs-ld-shadow {
+  from {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  to {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+/* Mișcare redusă: doar opacitatea (loaderul pulsează pe loc). */
+@media (prefers-reduced-motion: reduce) {
+  .gcs-spinner::before,
+  .gcs-spinner::after,
+  .gcs-spinner__i,
+  .gcs-spinner__i::before {
+    animation: gcs-ld-fade 1.4s ease-in-out infinite !important;
+    transform: none !important;
+  }
+}

@@ -21,4 +21,7 @@ export { GcsImageViewer, type GcsImageViewerLabels, type GcsImageViewerProps } f
 export type { GcsViewerImage } from "./components/imageViewer";
 export { dismissToast, gcsToast, GcsToastHost, playNotificationSound, type GcsToastInput } from "./components/GcsToast";
 export { GcsTooltip, type GcsTooltipProps } from "./components/GcsTooltip";
+export { GcsTooltipHost, autoTipText } from "./components/GcsTooltipHost";
+export { placeTooltip, positionTooltip, type GcsTipPlacement } from "./components/tooltipPlace";
+export { GcsSpinner, type GcsSpinnerProps } from "./components/GcsSpinner";
 export { GcsIconSvg, type GcsIconSvgProps } from "./icons/svg";

@@ -290,9 +290,6 @@
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
   animation: gcs-motion-drop var(--gcs-motion-base, 0.2s) var(--gcs-motion-ease, ease) both;
 }
-.gcs-legendPro .gcs-tooltip {
-  z-index: 60;
-}
 .gcs-legendPro__menuHead {
   display: flex;
   align-items: center;
@@ -422,7 +419,7 @@
 }
 .gcs-root a.gcs-groupsPage__segItem--on,
 .gcs-groupsPage__segItem--on {
-  background-color: var(--gcs-accent);
+  background-color: var(--gcs-accent-fill, var(--gcs-accent));
   color: #fff;
 }
 .gcs-groupsPage__chips {

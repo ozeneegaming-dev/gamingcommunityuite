@@ -418,6 +418,20 @@ input[type="checkbox"].gcs-themeStudio__switch:checked::after {
   font-size: 12px;
   color: var(--gcs-st-muted);
 }
+/* Ajutorul de paletă (tab-ul „Culori” al paletei): butonul și explicația. */
+.gcs-themeStudio__paletteHelper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 12px;
+  padding: 10px;
+  border: 1px dashed var(--gcs-st-border, var(--gcs-border));
+  border-radius: 8px;
+}
+.gcs-themeStudio__paletteHelper p {
+  margin: 0;
+  font-size: 12px;
+}
 
 /* Culorile. */
 .gcs-themeStudio__colorRow {

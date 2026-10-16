@@ -201,7 +201,7 @@
   box-sizing: border-box;
   padding: 0 4px;
   border-radius: 9px;
-  background: var(--gcs-accent);
+  background: var(--gcs-accent-fill, var(--gcs-accent));
   color: #fff;
   font: 700 10px/17px var(--gcs-font-text);
   text-align: center;
@@ -593,7 +593,7 @@
 }
 :root .gcs-mega__badge--live {
   color: #fff;
-  background: var(--gcs-accent);
+  background: var(--gcs-accent-fill, var(--gcs-accent));
 }
 :root .gcs-mega__badge--new {
   color: #ffd36a;
@@ -974,7 +974,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  border-radius: var(--gcs-avatar-radius, 50%);
   overflow: hidden;
 }
 :root .gcs-xpRing__avatar .gcs-avatar,
@@ -1182,7 +1182,7 @@
   cursor: pointer;
 }
 :root .gcs-am__seg > button[aria-pressed="true"] {
-  background-color: var(--gcs-accent);
+  background-color: var(--gcs-accent-fill, var(--gcs-accent));
   color: #fff;
 }
 :root .gcs-am__lang select {

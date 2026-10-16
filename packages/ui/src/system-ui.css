@@ -394,7 +394,7 @@
   justify-content: center;
   border: 0;
   border-radius: 50%;
-  background: var(--gcs-accent);
+  background: var(--gcs-accent-fill, var(--gcs-accent));
   color: #fff;
   font-size: 20px;
   box-shadow: 0 6px 20px color-mix(in srgb, var(--gcs-accent) 60%, transparent);
@@ -1098,7 +1098,7 @@
   flex: none;
 }
 :root .gcs-rank__row[data-medal] .gcs-rank__avatar {
-  border-radius: 50%;
+  border-radius: var(--gcs-avatar-radius, 50%);
   box-shadow: 0 0 0 2px var(--gcs-surface), 0 0 0 3px var(--m);
 }
 :root .gcs-rank__avatar--blank {
@@ -1107,7 +1107,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  border-radius: var(--gcs-avatar-radius, 50%);
   background: var(--gcs-ui-blank);
   color: var(--gcs-ui-strong);
   font: 700 11px var(--gcs-font-text);

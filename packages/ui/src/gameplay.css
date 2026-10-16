@@ -2344,7 +2344,7 @@ html[data-theme="light"] {
   color: inherit;
 }
 .gcs-linkedAccount__tag--game {
-  background: var(--gcs-accent);
+  background: var(--gcs-accent-fill, var(--gcs-accent));
   color: #fff;
 }
 

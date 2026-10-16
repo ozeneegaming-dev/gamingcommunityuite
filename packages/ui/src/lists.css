@@ -1,0 +1,311 @@
+/*
+ * Listele sistemului (în ORICE temă, pe tokenurile temei): setarea temei „Aspectul listelor” (`data-gcs-lists` pe
+ * `<html>`: `cards` = carduri separate, `list` = listă continuă) și „Statistici forum” (`data-gcs-stats`: `visible`,
+ * `hover`, `hidden`). Macheta CardRows: fiecare forum dintr-o categorie e un card (raza 4 px, chenar de 1 px, 8 px
+ * între ele) pe un „puț” puțin mai închis, cu o bară mică în culoarea forumului; elementele widget-urilor din bara
+ * laterală sunt carduri în aceleași culori. Hover-ul schimbă doar fundalul (fără ridicare, fără chenar de accent).
+ */
+:root {
+  --gcs-list-well: color-mix(in srgb, var(--gcs-bg) 62%, var(--gcs-box-bg, var(--gcs-surface)));
+  --gcs-list-row-bg: var(--gcs-box-bg, var(--gcs-surface));
+  --gcs-list-row-border: color-mix(in srgb, var(--gcs-box-border, var(--gcs-border)) 85%, var(--gcs-text));
+  --gcs-list-row-hover: color-mix(in srgb, var(--gcs-text) 4%, var(--gcs-list-row-bg));
+}
+
+/* Puțul categoriei: în lista continuă doar un container (rândurile lipite, ca până acum). */
+.gcs-category__well {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ─── Carduri separate ───────────────────────────────────────────────────────────────────────────── */
+:root[data-gcs-lists="cards"] :is(.gcs-category, .gcs-forumIndex .gcs-sideCard, .gcs-forumSidebar .gcs-sideCard) {
+  border-radius: 6px;
+}
+:root[data-gcs-lists="cards"] .gcs-category__well {
+  gap: 8px;
+  padding: 10px;
+  background: var(--gcs-list-well);
+}
+:root[data-gcs-lists="cards"] .gcs-category__well > .gcs-forumRow {
+  position: relative;
+  padding: 14px 18px;
+  border: 1px solid var(--gcs-list-row-border);
+  border-radius: 4px;
+  background-color: var(--gcs-list-row-bg);
+}
+:root[data-gcs-lists="cards"] .gcs-category__well > .gcs-forumRow:hover {
+  background-color: var(--gcs-list-row-hover);
+}
+/* Bara mică din stânga, în culoarea forumului: 3 × 26 px, centrată, 75%, fără strălucire. */
+:root[data-gcs-lists="cards"] .gcs-category__well > .gcs-forumRow::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 50%;
+  width: 3px;
+  height: 26px;
+  border-radius: 0 2px 2px 0;
+  background: var(--gcs-forum-color, var(--gcs-accent));
+  opacity: 0.75;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+/* Glifa forumului, estompată (culoarea forumului rămâne pe bară); plăcuțele de iconiță cu raza de 6 px. */
+:root[data-gcs-lists="cards"] .gcs-category__well .gcs-forumRow__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  background: none !important;
+}
+:root[data-gcs-lists="cards"] .gcs-category__well .gcs-forumRow__icon .gcs-forumIcon {
+  color: var(--gcs-muted) !important;
+  font-size: 24px !important;
+}
+/* Banda categoriei: pătratul de accent al iconiței și butonul rotund de restrângere, mereu vizibil. */
+:root[data-gcs-lists="cards"] .gcs-category__icon {
+  border-radius: 6px;
+}
+:root[data-gcs-lists="cards"] .gcs-category__header .gcs-collapseToggle {
+  opacity: 1;
+  background-color: color-mix(in srgb, var(--gcs-text) 9%, transparent);
+  color: var(--gcs-heading, var(--gcs-text));
+}
+:root[data-gcs-lists="cards"] .gcs-category__header .gcs-collapseToggle:hover {
+  background-color: color-mix(in srgb, var(--gcs-text) 16%, transparent);
+}
+/* Subforumurile pe 2 coloane, cu puncte mici și „…” la nevoie. */
+:root[data-gcs-lists="cards"] .gcs-category__well .gcs-forumRow__subs {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  max-width: 480px;
+  gap: 3px 16px;
+  margin-top: 8px;
+}
+:root[data-gcs-lists="cards"] .gcs-category__well .gcs-forumRow__subs li {
+  gap: 7px;
+}
+:root[data-gcs-lists="cards"] .gcs-category__well .gcs-forumRow__subs li > .gcs-forumIcon,
+:root[data-gcs-lists="cards"] .gcs-category__well .gcs-forumRow__subCount {
+  display: none;
+}
+:root[data-gcs-lists="cards"] .gcs-category__well .gcs-forumRow__subs li::before {
+  content: "";
+  flex: none;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--gcs-accent);
+  opacity: 0.85;
+}
+:root[data-gcs-lists="cards"] .gcs-root .gcs-category__well .gcs-forumRow__subs a {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Contoarele aliniate la dreapta, unul sub altul („N topicuri” / „N răspunsuri”), cu numerele în accent. */
+:root[data-gcs-lists="cards"] .gcs-category__well .gcs-forumRow__stats {
+  width: 116px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  text-align: right;
+}
+:root[data-gcs-lists="cards"] .gcs-category__well .gcs-forumRow__stats > div {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 4px;
+}
+:root[data-gcs-lists="cards"] .gcs-category__well .gcs-forumRow__stats strong {
+  color: var(--gcs-accentInk, var(--gcs-accent));
+  font-size: 13px;
+}
+:root[data-gcs-lists="cards"] .gcs-category__well .gcs-forumRow__last {
+  width: 220px;
+}
+
+/* Elementele widget-urilor din bara laterală: carduri în aceleași culori ca rândurile categoriilor. */
+:root[data-gcs-lists="cards"] .gcs-sideCard .gcs-widgetList {
+  gap: 8px;
+  padding: 10px;
+  border-radius: 4px;
+  background: var(--gcs-list-well);
+}
+:root[data-gcs-lists="cards"] .gcs-sideCard .gcs-widgetList > .gcs-widgetRow {
+  padding: 9px 12px;
+  border: 1px solid var(--gcs-list-row-border);
+  border-radius: 4px;
+  background-color: var(--gcs-list-row-bg);
+}
+:root[data-gcs-lists="cards"] .gcs-sideCard .gcs-widgetList > .gcs-widgetRow:hover {
+  background-color: var(--gcs-list-row-hover);
+}
+
+/* ─── Ultimul mesaj: avatarul (rotund sau pătrat, după setarea avatarelor), titlul, „de <nume>”, ceasul ───────── */
+.gcs-forumRow__when {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.gcs-forumRow__when > .gcs-icon {
+  font-size: 0.92em;
+  opacity: 0.8;
+}
+
+/* ─── Statisticile forumului: butonul pătrat și bula ─────────────────────────────────────────────── */
+.gcs-forumRow__statsTool {
+  position: relative;
+  display: none;
+  flex: none;
+  align-self: center;
+}
+:root[data-gcs-lists="cards"]:not([data-gcs-stats="hidden"]) .gcs-forumRow__statsTool,
+:root[data-gcs-stats="hover"] .gcs-forumRow__statsTool {
+  display: inline-flex;
+}
+.gcs-forumRow__statsBtn {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--gcs-accent) 55%, transparent);
+  border-radius: 4px;
+  background-color: color-mix(in srgb, var(--gcs-accent) 16%, transparent);
+  color: var(--gcs-accentInk, var(--gcs-accent));
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color var(--gcs-ease, 0.2s), border-color var(--gcs-ease, 0.2s), color var(--gcs-ease, 0.2s);
+}
+.gcs-forumRow__statsBtn:hover,
+.gcs-forumRow__statsBtn:focus-visible,
+.gcs-forumRow__statsBtn[aria-expanded="true"] {
+  background-color: var(--gcs-accent-fill, var(--gcs-accent));
+  border-color: var(--gcs-accent-fill, var(--gcs-accent));
+  color: #fff;
+}
+/* Bula: stânga butonului (nu iese din caseta categoriei, care taie conținutul), cu săgeata spre buton. */
+.gcs-forumRow__bubble {
+  position: absolute;
+  right: calc(100% + 10px);
+  top: 50%;
+  z-index: 5;
+  display: none;
+  gap: 2px 12px;
+  padding: 7px 11px;
+  border: 1px solid #222a39;
+  border-radius: 5px;
+  background: #0b0f17;
+  color: #c6ceda;
+  font: 600 12px/1.35 var(--gcs-font-text, system-ui, sans-serif);
+  white-space: nowrap;
+  box-shadow: 0 8px 22px rgb(0 0 0 / 0.42);
+  transform: translateY(-50%);
+  transform-origin: right center;
+  pointer-events: none;
+}
+.gcs-forumRow__bubble::after {
+  content: "";
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  background: inherit;
+  border: 1px solid #222a39;
+  border-left: 0;
+  border-bottom: 0;
+  transform: translateY(-50%) rotate(45deg);
+}
+.gcs-forumRow__bubble b {
+  color: #fff;
+}
+.gcs-forumRow__bubble > span {
+  display: block;
+}
+:root:not([data-gcs-stats="hidden"]) .gcs-forumRow[data-stats-open] .gcs-forumRow__bubble,
+:root[data-gcs-stats="hover"] .gcs-forumRow:is(:hover, :focus-within) .gcs-forumRow__bubble {
+  display: grid;
+  animation: gcs-bubble-skew var(--gcs-motion-base, 0.22s) var(--gcs-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)) both;
+}
+@keyframes gcs-bubble-skew {
+  from {
+    opacity: 0;
+    transform: translate(6px, -50%) skewX(-12deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root .gcs-forumRow .gcs-forumRow__bubble {
+    animation: gcs-tip-fade 0.15s linear both;
+  }
+}
+
+/* „La hover” și „Ascunse”: contoarele nu mai stau în rând (la hover le arată bula). */
+:root:is([data-gcs-stats="hover"], [data-gcs-stats="hidden"]) .gcs-forumRow__stats {
+  display: none;
+}
+
+/* ─── Telefon: cardurile mai strânse; contoarele și ultimul mesaj sub titlu ──────────────────────────────── */
+@media (max-width: 640px) {
+  :root[data-gcs-lists="cards"] .gcs-category__well {
+    gap: 6px;
+    padding: 8px;
+  }
+  :root[data-gcs-lists="cards"] .gcs-category__well > .gcs-forumRow {
+    padding: 12px 12px 12px 14px;
+  }
+  :root[data-gcs-lists="cards"] .gcs-category__well .gcs-forumRow__icon {
+    width: 28px;
+    height: 28px;
+  }
+  :root[data-gcs-lists="cards"] .gcs-category__well .gcs-forumRow__icon .gcs-forumIcon {
+    font-size: 19px !important;
+  }
+  :root[data-gcs-lists="cards"] .gcs-category__well .gcs-forumRow__stats {
+    width: auto;
+    flex-direction: row;
+    gap: 10px;
+  }
+  :root[data-gcs-lists="cards"] .gcs-category__well .gcs-forumRow__last {
+    flex: 1 1 0;
+    width: auto;
+  }
+  /* Bula se deschide spre dreapta butonului (în stânga n-ar mai avea loc). */
+  .gcs-forumRow__bubble {
+    right: auto;
+    left: calc(100% + 10px);
+  }
+  .gcs-forumRow__bubble::after {
+    right: auto;
+    left: -5px;
+    border: 1px solid #222a39;
+    border-right: 0;
+    border-top: 0;
+  }
+}
+
+/* ─── Fragmentul primei postări în lista topicurilor (setarea „Fragment în lista topicurilor”) ──────────────── */
+.gcs-topicRow__snippet {
+  margin: 2px 0;
+  color: var(--gcs-muted);
+  font-size: 12.5px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+:root[data-gcs-snippet="off"] .gcs-topicRow__snippet {
+  display: none;
+}
