@@ -81,6 +81,8 @@ export type GcsTopicRow = {
   viewsCount: number;
   last: { at: string; user: GcsUserRef | null };
   unread: boolean;
+  /** Începutul primei postări (setarea temei „Fragment în lista topicurilor”); `null` = necerut sau gol. */
+  snippet?: string | null;
 };
 
 export type GcsForumPage = {
@@ -272,7 +274,8 @@ export class GcsForumQueries {
     return categories;
   }
 
-  async forum(actor: GcsActor, forumId: number, opts: { page: number; prefixId?: number }): Promise<GcsForumPage> {
+  /** `snippets`: începutul primei postări a fiecărui topic (setarea temei „Fragment în lista topicurilor”). */
+  async forum(actor: GcsActor, forumId: number, opts: { page: number; prefixId?: number; snippets?: boolean }): Promise<GcsForumPage> {
     const { db, settings } = this.deps;
     const tree = await this.tree();
     const node = tree.byId.get(forumId);
@@ -302,17 +305,23 @@ export class GcsForumQueries {
         ])
       : [0, []];
     const subtreeIds = tree.subtree(forumId).filter((f) => readable.has(f.id)).map((f) => f.id);
-    const [posters, unreadTopics, unreadForums] = await Promise.all([
+    const firstIds = opts.snippets ? rows.map((t) => t.firstPostId).filter((id): id is number => id !== null) : [];
+    const [posters, unreadTopics, unreadForums, firstPosts] = await Promise.all([
       this.users(rows.map((t) => t.lastPosterId)),
       this.deps.readMarkers.unreadTopicIds(actor.userId, rows.filter((t) => t.visibility === "VISIBLE")),
       this.deps.readMarkers.unreadForumIds(actor.userId, subtreeIds.filter((id) => id !== forumId)),
+      firstIds.length > 0 ? db.post.findMany({ where: { id: { in: firstIds }, visibility: "VISIBLE" }, select: { id: true, contentJson: true } }) : [],
     ]);
+    const snippets = new Map(firstPosts.map((p) => [p.id, docSnippet(p.contentJson, 160)]));
 
     return {
       forum: { id: node.id, type: node.type, name: node.name, slug: node.slug, description: node.description, linkUrl: node.linkUrl, icon: node.icon, color: node.color },
       breadcrumb: this.crumbs(tree, forumId, viewable),
       subforums: tree.childrenOf(forumId).filter((f) => viewable.has(f.id)).map((f) => this.row(tree, f, viewable, readable, unreadForums)),
-      topics: rows.map((t) => topicRow(t, posters, unreadTopics)),
+      topics: rows.map((t) => {
+        const row = topicRow(t, posters, unreadTopics);
+        return opts.snippets ? { ...row, snippet: (t.firstPostId !== null ? snippets.get(t.firstPostId) : null) || null } : row;
+      }),
       pagination: paginate(opts.page, perPage, total),
       canCreate: hostsTopics && actor.userId !== null && (await this.deps.permissions.can(actor, "forums.create", forumContainer(forumId))),
       modPowers,
@@ -613,7 +622,7 @@ export class GcsForumQueries {
     const firstIds = rows.map((r) => r.firstPostId).filter((id): id is number => id !== null);
     const [users, posts] = await Promise.all([
       this.users(rows.map((r) => r.authorId)),
-      firstIds.length > 0 ? this.deps.db.post.findMany({ where: { id: { in: firstIds } }, select: { id: true, contentJson: true } }) : Promise.resolve([]),
+      firstIds.length > 0 ? this.deps.db.post.findMany({ where: { id: { in: firstIds }, visibility: "VISIBLE" }, select: { id: true, contentJson: true } }) : Promise.resolve([]),
     ]);
     const content = new Map(posts.map((p) => [p.id, p.contentJson]));
     return rows.map((r) => {

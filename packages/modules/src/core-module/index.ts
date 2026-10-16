@@ -1,4 +1,5 @@
 import { FOOTER_SETTING, SOCIAL_NETWORKS, footerConfigError } from "../community/footer";
+import { ANNOUNCEMENT_SETTING, announcementConfigError } from "../community/announcement";
 import { communityRulesSetting } from "../community/rules";
 import { coreWidgets } from "../widgets";
 import { DEFAULT_THEME_TOGGLE, THEME_TOGGLE_SETTING, themeTogglePairError, APP_SETTING_DEFS, type GcsAcpApp, type GcsAcpArea, type GcsAcpMenuSection, type GcsModule, type GcsPermissionDef, type GcsSettingDef } from "@gcs/core";
@@ -58,6 +59,8 @@ const settings: GcsSettingDef[] = [
   ...SOCIAL_NETWORKS.map((n) => setting(n.setting, "string", "", "general", isUrlOrEmpty)),
   // Subsolul (ACP → Aspect → Subsol); `null` = valorile implicite, construite din aplicațiile instalate.
   setting(FOOTER_SETTING, "json", null, "footer", footerConfigError),
+  // Bara de anunț de deasupra conținutului (ACP → Aspect → Conținut → Bară de anunț); `null` = nicio bară.
+  setting(ANNOUNCEMENT_SETTING, "json", null, "announcement", announcementConfigError),
   setting("email.smtp_host", "string", "", "email"),
   setting("email.smtp_port", "number", 587, "email", isPort),
   setting("email.smtp_user", "string", "", "email"),
@@ -289,6 +292,8 @@ const acpMenu: GcsAcpMenuSection[] = [
     // Subsolul site-ului: coloana „Despre”, coloanele de linkuri și bara de jos (specul 2026-10-10-tema-nova §5).
     ["footer", "/admin/appearance/footer", "fa-solid fa-shoe-prints"],
   ]),
+  // Conținutul de pe tot site-ul, în orice temă: bara de anunț subțire de deasupra conținutului.
+  menuSection("appearance", "content", "fa-solid fa-bullhorn", [["announcement_bar", "/admin/appearance/announcement-bar", "fa-solid fa-bullhorn"]]),
   // Managerul meniului principal: secțiunea `system.menu_manager`, afișată lângă widget-uri.
   menuSection("system", "layout", "fa-solid fa-table-cells-large", [["menu_manager", "/admin/system/menu", "fa-solid fa-bars-staggered"]], {
     area: "appearance",

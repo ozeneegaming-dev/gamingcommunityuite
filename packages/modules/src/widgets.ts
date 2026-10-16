@@ -46,6 +46,8 @@ export const coreWidgets: GcsWidgetDef[] = [
   widget({ key: "core.statsPanel", labelKey: "widgets.core.statsPanel", descriptionKey: "widgets.desc.core.statsPanel", icon: "fa-solid fa-rocket", zones: ["top", "bottom"], defaultConfig: {} }),
   widget({ key: "core.onlineDay", labelKey: "widgets.core.onlineDay", descriptionKey: "widgets.desc.core.onlineDay", icon: "fa-solid fa-clock", defaultConfig: {} }),
   widget({ key: "core.groupLegend", labelKey: "widgets.core.groupLegend", descriptionKey: "widgets.desc.core.groupLegend", icon: "fa-solid fa-users-rectangle", defaultConfig: {} }),
+  // Blocul pentru vizitatori (macheta GuestCta): înregistrare, autentificare și conectarea dintr-un click; membrii nu-l văd.
+  widget({ key: "core.guestCta", labelKey: "widgets.core.guestCta", descriptionKey: "widgets.desc.core.guestCta", icon: "fa-solid fa-user-plus", iconOverride: false, defaultConfig: {} }),
   widget({ key: "core.newMembers", labelKey: "widgets.core.newMembers", descriptionKey: "widgets.desc.core.newMembers", icon: "fa-solid fa-user-plus", defaultConfig: { limit: 5 }, fields: [limitField()] }),
   // „Clasament” (specul 2026-10-10-hero-cockpit §4): un singur widget cu tab-urile măsurilor și perioada; amplasarea
   // alege doar ce se vede la început.

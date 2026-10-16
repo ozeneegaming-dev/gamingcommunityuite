@@ -12,7 +12,8 @@
     "./chat-pro-prefs": "./src/chat-pro/prefs.ts",
     "./online-format": "./src/community/onlineFormat.ts",
     "./groups-pro-legend": "./src/groups-pro/legend.ts",
-    "./field-groups": "./src/profile/fieldGroups.ts"
+    "./field-groups": "./src/profile/fieldGroups.ts",
+    "./announcement": "./src/community/announcement.ts"
   },
   "scripts": {
     "lint": "eslint .",

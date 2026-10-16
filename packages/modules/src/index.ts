@@ -88,6 +88,7 @@ export * from "./community/leaderboard";
 export * from "./community/onlineTime";
 export * from "./community/rules";
 export * from "./community/footer";
+export * from "./community/announcement";
 export * from "./vip/public";
 export { serversModule } from "./servers";
 export * from "./servers/games";
