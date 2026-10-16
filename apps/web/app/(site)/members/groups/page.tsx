@@ -27,6 +27,8 @@ export default async function GroupsPage({ searchParams }: { searchParams: Promi
   const { apps, permissions, groupsPro, groupDirectory } = services();
   if (!(await apps.canAccess(actor, "groups_pro"))) notFound();
   if (actor.isBanned || !(await permissions.can(actor, "core.members_list"))) notFound();
+  // Pagina poate fi oprită din ACP → Membri → Legenda grupurilor.
+  if (!(await groupsPro.display()).groupsPage) notFound();
   const sp = await searchParams;
   const scope: GcsGroupsScope = SCOPES.includes(sp.scope as GcsGroupsScope) ? (sp.scope as GcsGroupsScope) : "all";
   const q = (sp.q ?? "").slice(0, 40);

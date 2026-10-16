@@ -151,3 +151,112 @@ describe("CSS-ul design system-ului", () => {
     });
   });
 });
+
+describe("sweep.css: sweep-ul și hover-ul butoanelor, în orice temă", () => {
+  const strip = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, "");
+  const css = strip(read("./sweep.css"));
+  const SWEPT = [
+    "gcs-sweep",
+    "gcs-btn",
+    "gcs-iconBtn",
+    "gcs-headerIcon",
+    "gcs-userMenu__trigger",
+    "gcs-seg",
+    "gcs-tab",
+    "gcs-pagination__link",
+    "gcs-segLink",
+    "gcs-settingsNav__link",
+    "gcs-toggleLink",
+    "gcs-chip",
+    "gcs-dropdown__item",
+    "gcs-mentionList__item",
+  ];
+  /** Lista unui selector, despărțită la virgulele din afara parantezelor. */
+  const splitTop = (list: string) => {
+    const out: string[] = [];
+    let depth = 0;
+    let cur = "";
+    for (const ch of list) {
+      if (ch === "(") depth++;
+      if (ch === ")") depth--;
+      if (ch === "," && depth === 0) {
+        out.push(cur.trim());
+        cur = "";
+      } else cur += ch;
+    }
+    out.push(cur.trim());
+    return out;
+  };
+  /** Ultimul compus al unui selector (elementul țintit); combinatorii din paranteze nu contează. */
+  const target = (sel: string) => {
+    let depth = 0;
+    let start = 0;
+    for (let i = 0; i < sel.length; i++) {
+      const ch = sel[i]!;
+      if (ch === "(") depth++;
+      if (ch === ")") depth--;
+      if (depth === 0 && /[\s>+~]/.test(ch)) start = i + 1;
+    }
+    return sel.slice(start);
+  };
+
+  test("e comun: nu depinde de `.gcs-nova`, acoperă toate butoanele, tab-urile, cipurile și itemii meniurilor", () => {
+    expect(css).not.toContain("gcs-nova");
+    for (const cls of SWEPT) expect(css).toMatch(new RegExp(`\\.${cls}(?![\\w-])`));
+  });
+
+  test("stratul: imagine de fundal 0% → 100% de la stânga; intrarea cu recul, ieșirea ease-out, 1,2 s", () => {
+    expect(css).toMatch(/background-image: linear-gradient\(var\(--gcs-sweep, rgb\(255 255 255 \/ 0\.08\)\)/);
+    expect(css).toContain("background-position: left center;");
+    expect(css).toMatch(/background-size: 0% 100%;\s*transition:\s*background-size 1\.2s ease-out/);
+    expect(css).toMatch(/:is\(:hover, :focus-visible\):not\(:disabled\) \{\s*background-size: 100% 100%;\s*transition:\s*background-size 1\.2s cubic-bezier\(0\.52, 1\.64, 0\.37, 0\.66\)/);
+  });
+
+  test("„reduced motion” oprește sweep-ul", () => {
+    expect(css).toMatch(/prefers-reduced-motion: reduce\) \{[\s\S]*background-image: none;\s*transition: none;/);
+  });
+
+  test("se încarcă pentru toate temele, după designul Nova; nova.css și base.css nu mai au propriul sweep", () => {
+    const globals = read("../../../apps/web/app/globals.css");
+    const at = (f: string) => globals.indexOf(`@import "@gcs/ui/${f}";`);
+    expect(at("nova.css")).toBeGreaterThan(-1);
+    expect(at("sweep.css")).toBeGreaterThan(at("nova.css"));
+    expect(strip(read("./nova.css"))).not.toContain("background-size: 0% 100%");
+    expect(strip(read("./base.css"))).not.toContain(".gcs-sweep");
+  });
+
+  test("temele reglează doar culoarea: 8% alb pe întunecat, 7% din culoarea textului pe luminos (și în ACP)", () => {
+    const themes = strip(read("./themes.css"));
+    expect(themes).toMatch(/:root \{[^}]*--gcs-sweep: rgb\(255 255 255 \/ 0\.08\);/);
+    expect(themes).toMatch(/\[data-theme="light"\] \{[^}]*--gcs-sweep: color-mix\(in srgb, var\(--gcs-text\) 7%, transparent\);/);
+    expect(themes).toMatch(/\[data-theme="auto"\] \{[^}]*--gcs-sweep: color-mix\(in srgb, var\(--gcs-text\) 7%, transparent\);/);
+    expect(strip(read("./acp.css"))).toMatch(/\.gcs-acp\[data-theme="light"\] \{[^}]*--gcs-sweep: color-mix\(in srgb, var\(--gcs-text\) 7%, transparent\);/);
+  });
+
+  test("numele simple (aproape albe) urmează textul temei pe luminos, inclusiv în ACP; antetul închis Nova le păstrează", () => {
+    const themes = strip(read("./themes.css"));
+    expect(themes).toMatch(/\[data-theme="light"\] \{[^}]*--gcs-name-plain: var\(--gcs-text\);/);
+    expect(themes).toMatch(/\[data-theme="auto"\] \{[^}]*--gcs-name-plain: var\(--gcs-text\);/);
+    expect(themes).not.toMatch(/:root \{[^}]*--gcs-name-plain/);
+    const acp = strip(read("./acp.css"));
+    expect(acp).toMatch(/\.gcs-acp\[data-theme="light"\] \{[^}]*--gcs-name-plain: var\(--gcs-text\);/);
+    expect(acp).toMatch(/\.gcs-acp \{[^}]*--gcs-name-plain: initial;/);
+    expect(strip(read("./nova.css"))).toMatch(/\.gcs-nova \.gcs-siteHeader \.gcs-userMenu__trigger \{[^}]*--gcs-name-plain: initial;/);
+  });
+
+  test("nicio regulă de hover a elementelor cu sweep nu folosește `background:` (ar șterge stratul)", () => {
+    const re = new RegExp(`\\.(${SWEPT.join("|")})(?![\\w]|-[\\w])`);
+    const files = ["base.css", "controls.css", "forum.css", "community.css", "profile.css", "acp.css", "nova.css", "groups-pro.css", "layout.css", "widgets.css"];
+    const bad: string[] = [];
+    for (const f of files) {
+      for (const m of strip(read(`./${f}`)).matchAll(/([^{}@;]+)\{([^{}]*)\}/g)) {
+        if (!/(^|[;\s])background\s*:/.test(m[2]!)) continue;
+        for (const sel of splitTop(m[1]!)) {
+          const t = target(sel);
+          if (re.test(t) && /:hover|:focus/.test(t)) bad.push(`${f}: ${sel}`);
+        }
+      }
+    }
+    expect(bad).toEqual([]);
+  });
+});

@@ -1,5 +1,5 @@
 import { GcsError } from "@gcs/core";
-import { GCS_LEADERBOARD_METRICS, GCS_LEADERBOARD_PERIODS, type GcsLeaderboardMetric, type GcsLeaderboardPeriod, type GcsLeaderboardRow } from "@gcs/modules";
+import { formatOnlineDuration, GCS_LEADERBOARD_METRICS, GCS_LEADERBOARD_PERIODS, type GcsLeaderboardMetric, type GcsLeaderboardPeriod, type GcsLeaderboardRow } from "@gcs/modules";
 import { GcsAvatar, GcsCard, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
@@ -18,12 +18,15 @@ type Search = { metric?: string; period?: string };
 const METRIC_ICONS: Record<GcsLeaderboardMetric, string> = {
   reputation: "fa-solid fa-heart",
   posts: "fa-solid fa-comments",
+  topics: "fa-solid fa-file-lines",
+  online: "fa-solid fa-clock",
   xp: "fa-solid fa-star",
   solutions: "fa-solid fa-circle-check",
 };
 
 /**
- * `/leaderboard`: primii 50 după reputație, postări, XP sau soluții, pe săptămână / lună / tot timpul. Podiumul arată
+ * `/leaderboard`: primii 50 după reputație, postări, topicuri, timp online, XP sau soluții, pe zi / săptămână / lună /
+ * an / tot timpul. Podiumul arată
  * primele trei locuri (ordinea vizuală 2-1-3), tabelul restul; rândul viewer-ului e evidențiat.
  */
 export default async function LeaderboardPage({ searchParams }: { searchParams: Promise<Search> }) {
@@ -57,7 +60,8 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
   };
   const podium = rows.slice(0, 3);
   const rest = rows.slice(3);
-  const value = (n: number) => format.number(n);
+  // Timpul online e în secunde: „1h 35m”.
+  const value = (n: number) => (metric === "online" ? formatOnlineDuration(n) : format.number(n));
   const member = (r: GcsLeaderboardRow) => <GcsMemberName userId={r.user.id} name={r.user.name} nameKey={r.user.nameKey} href={memberHref(r.user)} />;
   // Culoarea grupului doar pe iconiță: textul rămâne lizibil și pe tema luminoasă (culorile grupurilor sunt pentru fundal închis).
   const group = (r: GcsLeaderboardRow) => (

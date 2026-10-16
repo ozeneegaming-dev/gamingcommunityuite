@@ -224,5 +224,7 @@ export class GcsBridgeMatches {
     await store.saveMatch(live.serverId, open ? live : null);
     await realtime.publish(`servers:${live.serverId}`, SERVER_MATCH_EVENT, live);
     if (live.id !== null) await realtime.publish(matchRoom(live.id), MATCH_STATE_EVENT, live);
+    // Un meci încheiat apare în „Feed live” (tab-ul Mix) al consolei: semnalul fără date, pentru toți.
+    if (live.status === "ended") await realtime.publish("presence", "activity:new", { kind: "mix" });
   }
 }

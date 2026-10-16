@@ -25,6 +25,8 @@ export function registerAppJobs(s: GcsServices): void {
     },
   });
   s.jobs.register({ name: "translate.cleanup", everyMs: 24 * 3600_000, handler: async () => void (await s.translation.cleanup()) });
+  // Timpul online: totalurile zilei copiate din Redis în baza de date (5 min).
+  s.onlineTime.registerJobs(s.jobs);
   // Joburile pluginurilor (etapa 6): un singur job generic, rulat de gazda pluginurilor din worker.
   s.jobs.register({ name: PLUGIN_JOB, handler: (data) => s.plugins.runJob(data) });
   s.importer.registerJobs(s.jobs);

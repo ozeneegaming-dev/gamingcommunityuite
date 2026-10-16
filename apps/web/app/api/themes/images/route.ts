@@ -19,11 +19,13 @@ const SLOTS: Record<string, { upload: "logo" | "favicon" | "header"; draft: (url
   logoMobile: { upload: "logo", draft: (url) => ({ logo: { imageMobile: url } }) },
   logoMobileLight: { upload: "logo", draft: (url) => ({ logo: { imageMobileLight: url } }) },
   headerImage: { upload: "header", draft: (url) => ({ header: { image: url } }) },
+  // Fundalul consolei Hero Cockpit (designul Nova; implicit grafica GCS, fără imagini ale altora).
+  cockpitImage: { upload: "header", draft: (url) => ({ cockpit: { image: url } }) },
 };
 
 /**
  * O imagine a unei teme, din editorul de pe site sau din editorul vizual (specul etapei 5): `multipart/form-data` cu
- * `file`, `kind` (`logo` | `favicon` | `logoLight` | `logoMobile` | `logoMobileLight` | `headerImage`) și `theme` (cheia). Imaginea
+ * `file`, `kind` (`logo` | `favicon` | `logoLight` | `logoMobile` | `logoMobileLight` | `headerImage` | `cockpitImage`) și `theme` (cheia). Imaginea
  * intră în draft-ul temei; răspunde cu `GcsResult<{ url, css }>` (CSS-ul draft-ului, pentru previzualizare).
  */
 export async function POST(req: Request): Promise<Response> {

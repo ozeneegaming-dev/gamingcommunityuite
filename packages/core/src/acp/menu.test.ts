@@ -59,6 +59,29 @@ describe("buildAcpMenu", () => {
       "acp.menu.members.staff",
     ]);
   });
+
+  test("paginile unei aplicații apar doar cu aplicația pornită și accesibilă adminului", () => {
+    const r = registry();
+    r.register({
+      key: "groups_pro",
+      settings: [],
+      permissions: [],
+      eventListeners: [],
+      acpMenu: [
+        {
+          app: "members",
+          title: "acp.menu.members.members",
+          items: [{ key: "members.groups_legend", labelKey: "l", href: "/admin/members/groups-legend", section: "members.groups", app: "groups_pro" }],
+        },
+      ],
+    });
+    const rights = { "members.groups": right };
+    const keys = (menu: ReturnType<typeof buildAcpMenu>) => menu.flatMap((s) => s.items.map((i) => i.key));
+    expect(keys(buildAcpMenu(r, rights, () => false))).toEqual(["members.groups"]);
+    expect(keys(buildAcpMenu(r, rights, (app) => app === "groups_pro"))).toEqual(["members.groups", "members.groups_legend"]);
+    // Fără filtru (ex. lista tuturor paginilor), toate intrările.
+    expect(keys(buildAcpMenu(r, rights))).toEqual(["members.groups", "members.groups_legend"]);
+  });
 });
 
 describe("acpAppEntries", () => {

@@ -1,26 +1,24 @@
-import type { GcsModule, GcsSeedContext, GcsSettingDef } from "@gcs/core";
+import type { GcsAcpMenuSection, GcsModule, GcsSeedContext, GcsSettingDef } from "@gcs/core";
+import { DEFAULT_LEGEND_CATEGORIES, DEFAULT_LEGEND_DISPLAY, validLegendCategories, validLegendDisplay } from "./legend";
+
+export * from "./legend";
 
 export const GROUPS_PRO_APP = "groups_pro";
 
 /** Setarea cu categoriile legendei (ordinea lor e ordinea din legendă). */
 export const LEGEND_CATEGORIES_SETTING = "groups_pro.legend_categories";
-/** Setările de grup ale legendei: categoria (cheia ei; `""` = grupul nu apare) și grupul sub care apare (id sau `null`). */
+/** Setarea cu opțiunile de afișare ale legendei (coloane, numărători, grupurile goale, butonul și pagina grupurilor). */
+export const LEGEND_DISPLAY_SETTING = "groups_pro.legend_display";
+/**
+ * Setările de grup ale legendei: categoria (cheia ei; `""` = grupul nu apare), grupul sub care apare (id sau `null`) și
+ * poziția (ordinea din pagina ACP „Legenda grupurilor”; fără ea, „Prioritate afișare”).
+ */
 export const LEGEND_CATEGORY_KEY = "legend.category";
 export const LEGEND_PARENT_KEY = "legend.parent";
+export const LEGEND_POSITION_KEY = "legend.position";
 
-/** O categorie a legendei: cheia și eticheta (`""` = eticheta implicită tradusă, pentru categoriile implicite). */
-export type GcsLegendCategory = { key: string; label: string };
-
-/** Categoriile implicite (etichetele traduse: `groupsPro.category.<cheie>`); serverele vin mai târziu. */
-export const DEFAULT_LEGEND_CATEGORIES: readonly GcsLegendCategory[] = [
-  { key: "staff", label: "" },
-  { key: "moderators", label: "" },
-  { key: "vip", label: "" },
-  { key: "members", label: "" },
-];
-export const LEGEND_CATEGORY_MAX = 12;
-export const LEGEND_LABEL_MAX = 32;
-const CATEGORY_KEY_RE = /^[a-z0-9_]{1,24}$/;
+/** Pagina ACP „Legenda grupurilor” (ACP → Membri), vizibilă doar cu aplicația pornită și accesibilă adminului. */
+export const GROUPS_LEGEND_ACP_HREF = "/admin/members/groups-legend";
 
 /** Grupurile tehnice: nu apar în legendă (implicit), orice ar fi în ACP. */
 const HIDDEN_BY_DEFAULT = new Set(["guest", "banned"]);
@@ -40,20 +38,6 @@ export function defaultLegendCategory(group: { key: string; isVip: boolean }): s
   return "members";
 }
 
-/** Validarea listei de categorii: 1–12, chei unice `[a-z0-9_]`, etichete scurte. */
-export function validLegendCategories(v: unknown): v is GcsLegendCategory[] {
-  if (!Array.isArray(v) || v.length === 0 || v.length > LEGEND_CATEGORY_MAX) return false;
-  const keys = new Set<string>();
-  for (const c of v) {
-    if (typeof c !== "object" || c === null) return false;
-    const { key, label } = c as Record<string, unknown>;
-    if (typeof key !== "string" || !CATEGORY_KEY_RE.test(key) || keys.has(key)) return false;
-    if (typeof label !== "string" || label.length > LEGEND_LABEL_MAX) return false;
-    keys.add(key);
-  }
-  return true;
-}
-
 const settings: GcsSettingDef[] = [
   {
     key: LEGEND_CATEGORIES_SETTING,
@@ -62,6 +46,36 @@ const settings: GcsSettingDef[] = [
     section: "groups_pro",
     labelKey: "settings.groups_pro.legend_categories",
     validate: (v) => (validLegendCategories(v) ? null : "invalid_value"),
+  },
+  {
+    key: LEGEND_DISPLAY_SETTING,
+    type: "json",
+    default: { ...DEFAULT_LEGEND_DISPLAY },
+    section: "groups_pro",
+    labelKey: "settings.groups_pro.legend_display",
+    validate: (v) => (validLegendDisplay(v) ? null : "invalid_value"),
+  },
+];
+
+/**
+ * ACP → Membri → „Legenda grupurilor”: categoriile, locul grupurilor și opțiunile de afișare, cu previzualizare. Dreptul
+ * e cel al grupurilor (`members.groups`); intrarea apare doar cu aplicația pornită și accesibilă adminului (`app`).
+ */
+const acpMenu: GcsAcpMenuSection[] = [
+  {
+    app: "members",
+    title: "acp.menu.members.members",
+    icon: "fa-solid fa-users",
+    items: [
+      {
+        key: "members.groups_legend",
+        labelKey: "acp.menu.members.groups_legend",
+        href: GROUPS_LEGEND_ACP_HREF,
+        section: "members.groups",
+        icon: "fa-solid fa-layer-group",
+        app: GROUPS_PRO_APP,
+      },
+    ],
   },
 ];
 
@@ -81,9 +95,10 @@ async function seedGroupsPro({ tx }: GcsSeedContext): Promise<void> {
 
 /**
  * Grupuri Pro (specul 2026-10-10-nume-mentiuni-grupuri-peste-tot, aplicație premium): legenda grupurilor pe categorii
- * definite de admin (carduri cu numărători, grupuri legate sub un grup părinte, tooltip-uri) și pagina
- * `/members/groups` („Grupurile comunității”). Oprită, legenda rămâne cea simplă din pachetul standard, iar pagina dă 404.
- * Numele stilizate, pastilele-link, tooltip-ul cu numărători și grupurile secundare rămân în pachetul standard.
+ * definite de admin (carduri cu numărători, grupuri legate sub un grup părinte, tooltip-uri), pagina ACP „Legenda
+ * grupurilor” și pagina `/members/groups` („Grupurile comunității”). Oprită, legenda rămâne cea simplă din pachetul
+ * standard, iar paginile dau 404. Numele stilizate, pastilele-link, tooltip-ul cu numărători și grupurile secundare
+ * rămân în pachetul standard.
  */
 export const groupsProModule: GcsModule = {
   key: GROUPS_PRO_APP,
@@ -94,10 +109,11 @@ export const groupsProModule: GcsModule = {
     descriptionKey: "apps.descriptions.groups_pro",
     routes: ["/members/groups"],
     premium: true,
+    settingsHref: GROUPS_LEGEND_ACP_HREF,
   },
   permissions: [],
   settings,
-  acpMenu: [],
+  acpMenu,
   eventListeners: [],
   seed: seedGroupsPro,
 };

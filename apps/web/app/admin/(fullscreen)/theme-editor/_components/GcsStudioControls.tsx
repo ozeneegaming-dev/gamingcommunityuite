@@ -1,8 +1,8 @@
 "use client";
 
-import { THEME_FIELDS, THEME_TOKENS, isThemeHex, themeElementAllowsTransparent, type GcsThemePalette, type GcsThemeToken } from "@gcs/core/themes";
+import { MOBILE_BAR_ITEMS, MOBILE_BAR_MAX, THEME_FIELDS, THEME_TOKENS, isThemeHex, themeElementAllowsTransparent, type GcsMobileBarItem, type GcsThemePalette, type GcsThemeToken } from "@gcs/core/themes";
 import { GcsIconSvg } from "@gcs/ui";
-import { faArrowUpFromBracket, faCheck, faChevronRight, faClockRotateLeft, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faArrowDown, faArrowUp, faArrowUpFromBracket, faCheck, faChevronRight, faClockRotateLeft, faTrash, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useTranslations } from "next-intl";
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { fieldKey, type GcsStudioColorRef, type GcsStudioImageSlot } from "./studio-panels";
@@ -107,7 +107,78 @@ export function GcsStudioSettingRow({
         </select>
       );
       break;
+    case "barItems": {
+      // Bara de jos de pe mobil: elementele alese, în ordine (sus / jos / scoate), și cele care se mai pot adăuga.
+      const list = (Array.isArray(value) ? value : []) as GcsMobileBarItem[];
+      const swap = (i: number, j: number) => {
+        const next = [...list];
+        [next[i], next[j]] = [next[j]!, next[i]!];
+        onChange(next);
+      };
+      const rest = MOBILE_BAR_ITEMS.filter((k) => !list.includes(k));
+      control = (
+        <div className="gcs-themeStudio__barItems" data-testid={testId}>
+          <ol className="gcs-themeStudio__barList">
+            {list.map((k, i) => (
+              <li key={k} className="gcs-themeStudio__barItem">
+                <span>{t(`fields.${key}.options.${k}`)}</span>
+                <button type="button" className="gcs-themeStudio__revert" aria-label={t("barUp", { item: t(`fields.${key}.options.${k}`) })} disabled={i === 0} onClick={() => swap(i, i - 1)}>
+                  <GcsIconSvg icon={faArrowUp} />
+                </button>
+                <button type="button" className="gcs-themeStudio__revert" aria-label={t("barDown", { item: t(`fields.${key}.options.${k}`) })} disabled={i === list.length - 1} onClick={() => swap(i, i + 1)}>
+                  <GcsIconSvg icon={faArrowDown} />
+                </button>
+                <button
+                  type="button"
+                  className="gcs-themeStudio__revert"
+                  aria-label={t("barRemove", { item: t(`fields.${key}.options.${k}`) })}
+                  disabled={list.length <= 1}
+                  onClick={() => onChange(list.filter((x) => x !== k))}
+                  data-testid={`${testId}-remove-${k}`}
+                >
+                  <GcsIconSvg icon={faXmark} />
+                </button>
+              </li>
+            ))}
+          </ol>
+          {list.length < MOBILE_BAR_MAX && rest.length > 0 && (
+            <select
+              id={id}
+              className="gcs-themeStudio__input"
+              value=""
+              onChange={(e) => e.target.value && onChange([...list, e.target.value as GcsMobileBarItem])}
+              aria-label={t("barAdd")}
+              data-testid={`${testId}-add`}
+            >
+              <option value="">{t("barAdd")}</option>
+              {rest.map((k) => (
+                <option key={k} value={k}>
+                  {t(`fields.${key}.options.${k}`)}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+      );
+      break;
+    }
     case "text":
+      // Textele lungi (HTML-ul propriu din antet) într-o zonă de text.
+      if (field.max > 200) {
+        control = (
+          <textarea
+            id={id}
+            className="gcs-themeStudio__input gcs-themeStudio__textarea"
+            value={String(value ?? "")}
+            maxLength={field.max}
+            rows={4}
+            onChange={(e) => onChange(e.target.value)}
+            data-testid={testId}
+          />
+        );
+        break;
+      }
+    // falls through
     case "fontName":
       control = (
         <input

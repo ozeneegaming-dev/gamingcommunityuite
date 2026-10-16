@@ -68,6 +68,8 @@ export interface GcsAcpMenuItem {
   area?: GcsAcpArea;
   group?: string;
   alias?: boolean;
+  /** Pagina unei aplicații opționale (cheia modulului): apare doar cu aplicația pornită și accesibilă adminului. */
+  app?: string;
 }
 
 /**
@@ -233,6 +235,8 @@ export interface GcsModule {
     requires?: string[];
     /** O aplicație premium (vândută separat; licențele vin în etapa 11). Doar o marcă în catalog, fără efect încă. */
     premium?: boolean;
+    /** Pagina ACP cu setările aplicației (linkul „Setări” din ACP → Aplicații). */
+    settingsHref?: string;
   };
   /** Tipurile de widget-uri ale modulului. */
   widgets?: GcsWidgetDef[];

@@ -92,21 +92,9 @@ body {
 }
 
 /*
- * Utilitarul sweep-ului: un strat de sticlă (8% alb) care umple elementul de la stânga la hover / focus. Designul Nova
- * îl pune pe toate butoanele (vezi `nova.css`); aici, pentru orice alt element care îl vrea.
+ * Sweep-ul butoanelor (stratul de sticlă de la hover) și utilitarul lui pentru orice alt element stau în `sweep.css`,
+ * comun tuturor temelor. Regulile de hover de mai jos setează `background-color`, niciodată `background`.
  */
-.gcs-sweep {
-  background-image: linear-gradient(var(--gcs-sweep, rgb(255 255 255 / 0.08)), var(--gcs-sweep, rgb(255 255 255 / 0.08)));
-  background-repeat: no-repeat;
-  background-position: left center;
-  background-size: 0% 100%;
-  transition: background-size 1.2s ease-out;
-}
-.gcs-sweep:is(:hover, :focus-visible) {
-  background-size: 100% 100%;
-  transition: background-size 1.2s cubic-bezier(0.52, 1.64, 0.37, 0.66);
-}
-/* Cu „reduced motion”, regula globală de mai jos scurtează tranzițiile (stratul apare direct). */
 
 /* ─── Butoane ─────────────────────────────────────────────────────────────── */
 
@@ -130,7 +118,7 @@ body {
   color: var(--gcs-btn-primary-text, #fff);
 }
 .gcs-btn--primary:hover {
-  background: var(--gcs-btn-primary-hover, #E23446);
+  background-color: var(--gcs-btn-primary-hover, #E23446);
   color: var(--gcs-btn-primary-text, #fff);
 }
 .gcs-btn--ghost,
@@ -140,7 +128,7 @@ body {
   border: 1px solid var(--gcs-border);
 }
 .gcs-btn--ghost:hover {
-  background: var(--gcs-border);
+  background-color: var(--gcs-border);
   color: var(--gcs-btn-secondary-text, var(--gcs-text));
 }
 /* `sm` doar în zone dense (ACP); ținta de click rămâne ≥ 44px prin padding-ul containerului. */
@@ -167,7 +155,7 @@ body {
   justify-content: center;
 }
 .gcs-iconBtn:hover {
-  background: var(--gcs-border);
+  background-color: var(--gcs-border);
   color: var(--gcs-text);
 }
 

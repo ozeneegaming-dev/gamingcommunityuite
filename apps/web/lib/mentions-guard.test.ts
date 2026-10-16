@@ -38,6 +38,7 @@ const RAW_HTML: Record<string, string> = {
   "apps/web/app/(site)/_components/chat-pro/GcsChatProRoom.tsx": "mesajul fixat (decorat pe server) și regulile (fără mențiuni)",
   "apps/web/app/(site)/_components/GcsHoverCardHost.tsx": "șablonul hover card-ului: namesHtml în /api/users/[id]/card",
   "apps/web/app/(site)/_components/GcsTranslateButton.tsx": "traducerea: textul tradus, fără pastile",
+  "apps/web/app/(site)/_components/header/GcsHeaderBuilder.tsx": "HTML-ul propriu al temei în header (sanitizeContentHtml, scris de admini): fără mențiuni",
   "apps/web/app/(site)/_components/topic/GcsPost.tsx": "HTML-ul pluginurilor (sanitizat de gazdă)",
   "apps/web/app/(site)/_components/topic/GcsPostContent.tsx": "postările și reviziile: namesHtml în pagina topicului",
   "apps/web/app/(site)/_components/widgets/GcsPluginWidget.tsx": "namesHtml",

@@ -60,6 +60,26 @@
     "crumbs": "You are here",
     "collapse": "Collapse {title}",
     "expand": "Expand {title}",
+    "navDesc": {
+      "forum": "Обсуждения сообщества по категориям",
+      "chat": "Общайся с сообществом в реальном времени",
+      "members": "Ищи участников по имени, группе или игре",
+      "staff": "Команда, её обязанности и контакты",
+      "activity": "Всё, что недавно произошло на сайте",
+      "membersAll": "Полный список участников",
+      "membersOnline": "Кто сейчас на сайте",
+      "leaderboard": "Самые активные участники и рейтинги",
+      "vip": "Тарифы, преимущества и что ты получаешь",
+      "rules": "Правила форума и серверов",
+      "servers": "Статус онлайн, игроки, подключение в один клик",
+      "clans": "Команды, набор и войны кланов",
+      "serversAll": "Статус онлайн, игроки, подключение в один клик",
+      "serversLeaderboard": "Топ по фрагам, сыгранным часам, ELO сезона",
+      "serversMatches": "Матчи в прямом эфире, ELO и история матчей",
+      "bans": "Список наказаний и апелляции",
+      "serverAdmins": "Кто из команды сейчас на серверах",
+      "serverTickets": "Оспорь наказание или пожалуйся на игрока"
+    },
     "skin": "Тема форума"
   },
   "auth": {
@@ -416,7 +436,8 @@
         "acp_roles": "Администраторы и роли ACP",
         "staff_page": "Страница персонала",
         "bulk_mail": "Большая почта",
-        "communication": "Communication"
+        "communication": "Communication",
+        "groups_legend": "Легенда групп"
       },
       "community": {
         "forums_group": "Форумы",
@@ -1454,7 +1475,12 @@
       "remove": "Убрать",
       "save": "Сохранить меню",
       "saved": "Меню было сохранено.",
-      "newItem": "Новый пункт"
+      "newItem": "Новый пункт",
+      "mega": "Мегаменю",
+      "description": "Описание",
+      "descriptionHint": "Одна строка под заголовком в мегаменю (дизайн Nova). Пусто = описание по умолчанию для автоматических пунктов.",
+      "badge": "Значок",
+      "badgeHint": "напр. НОВОЕ"
     },
     "languages": {
       "title": "Активные языки",
@@ -2793,6 +2819,9 @@
         "chat_pro": {
           "days": "Days with messages in the chat ranking",
           "wins": "Chat ranking periods won"
+        },
+        "online_time": {
+          "days": "Дни со временем онлайн в рейтинге"
         }
       },
       "steps": {
@@ -2809,7 +2838,8 @@
         "notifications": "Notifications",
         "account": "Account data",
         "files": "Files",
-        "chat_pro": "Chat Pro"
+        "chat_pro": "Chat Pro",
+        "online_time": "Время онлайн"
       },
       "notes": {
         "topic_replies": "Their topics have {count} replies by other members: with “Delete content too” they are deleted as well.",
@@ -3064,7 +3094,9 @@
       "premium": {
         "label": "Premium",
         "title": "Premium app: sold separately (licences come with redistribution)."
-      }
+      },
+      "settings": "Настройки",
+      "settingsOf": "Настройки приложения {name}"
     },
     "footer": {
       "title": "Footer",
@@ -3226,6 +3258,71 @@
         "confirmPack": "The pack “{name}” and all its emotes are deleted permanently.",
         "confirmEmote": "{name} is deleted permanently; old messages keep the code text."
       }
+    },
+    "groupsLegend": {
+      "title": "Легенда групп",
+      "intro": "Категории легенды в панели статистики, место каждой группы и то, что показывает легенда. Изменения появятся на сайте после «Сохранить».",
+      "viewSite": "Открыть сайт",
+      "categories": "Категории",
+      "categoriesHint": "Перетащите категорию (или используйте стрелки), чтобы переместить её. Оставьте название пустым, чтобы сохранить переведённую подпись.",
+      "categoryName": "Название категории",
+      "newCategory": "Новая категория",
+      "addCategory": "Добавить категорию",
+      "groups": "Группы",
+      "groupsHint": "Перетащите группу в другую категорию, на другую группу (она встанет перед ней) или в зону под группой, чтобы сделать её связанной группой в её списке. С клавиатуры: стрелки, «Категория» и «Под группой».",
+      "tray": "Не показаны",
+      "trayHint": "Группы здесь не отображаются в легенде.",
+      "hiddenTag": "скрыта",
+      "childrenOf": "Группы, связанные с {name}",
+      "dropChild": "Отпустите здесь: связать с {name}",
+      "emptyColumn": "Перетащите группу сюда",
+      "dropEnd": "Отпустите здесь: в конец",
+      "display": "Отображение",
+      "columns": "Колонки",
+      "options": {
+        "memberCounts": "Число участников",
+        "memberCountsHint": "У каждой группы и категории.",
+        "onlineCounts": "Сколько онлайн",
+        "onlineCountsHint": "Зелёная точка рядом с каждой группой.",
+        "countSecondary": "Учитывать дополнительных участников",
+        "countSecondaryHint": "Участники, у которых группа дополнительная.",
+        "hideEmpty": "Скрывать пустые группы",
+        "hideEmptyHint": "Группы без участников не показываются.",
+        "seeAll": "Кнопка «Все группы»",
+        "seeAllHint": "В заголовке легенды (нужна страница групп).",
+        "groupsPage": "Страница групп",
+        "groupsPageHint": "/members/groups — «Группы сообщества»."
+      },
+      "save": "Сохранить",
+      "saved": "Легенда сохранена.",
+      "discard": "Отменить изменения",
+      "discardTitle": "Отменить изменения?",
+      "discardBody": "Редактор вернётся к сохранённой легенде. Несохранённые изменения будут потеряны.",
+      "discardConfirm": "Отменить",
+      "unsaved": "Есть несохранённые изменения",
+      "upToDate": "Всё сохранено",
+      "preview": "Предпросмотр",
+      "previewHint": "Легенда панели статистики с вашими несохранёнными изменениями.",
+      "previewEmpty": "Легенда пуста: ни одна группа не показывается.",
+      "icon": "Значок категории",
+      "cancel": "Отмена",
+      "deleteTitle": "Удалить категорию «{name}»?",
+      "deleteBody": "Её группы (и связанные с ними) перейдут в «Не показаны». Удаление применится после «Сохранить».",
+      "deleteConfirm": "Удалить категорию",
+      "dragCategory": "Перетащить категорию {name}",
+      "moveUp": "Переместить {name} выше",
+      "moveDown": "Переместить {name} ниже",
+      "rename": "Название категории {name}",
+      "groupCount": "{count, plural, one {# группа} few {# группы} many {# групп} other {# группы}}",
+      "show": "Показать категорию {name}",
+      "hide": "Скрыть категорию {name}",
+      "delete": "Удалить категорию {name}",
+      "dragGroup": "Перетащить группу {name}",
+      "members": "{count, plural, one {# участник} few {# участника} many {# участников} other {# участника}}",
+      "moveTo": "Категория группы {name}",
+      "parentOf": "Группа, под которой показана {name}",
+      "noParent": "Отдельная строка",
+      "under": "Под {name}"
     },
     "chatMod": {
       "moderationTitle": "Модерация чата",
@@ -3402,7 +3499,9 @@
       "notifications": "Уведомления",
       "language": "Язык и часовой пояс",
       "signature": "Подпись",
-      "security": "Безопасность"
+      "security": "Безопасность",
+      "following": "Мои подписки",
+      "attachments": "Мои вложения"
     },
     "appearance": {
       "title": "Оформление",
@@ -3675,8 +3774,22 @@
       "emote_max_kb": "Maximum emote size (KB)",
       "emote_max_side": "Maximum emote side (px)"
     },
+    "following": {
+      "title": "Мои подписки",
+      "intro": "Участники, темы и форумы, на которые ты подписан (ты получаешь о них уведомления).",
+      "empty": "Ты пока ни на что не подписан.",
+      "members": "{count, plural, one {Участники (#)} few {Участники (#)} many {Участники (#)} other {Участники (#)}}",
+      "topics": "{count, plural, one {Темы (#)} few {Темы (#)} many {Темы (#)} other {Темы (#)}}",
+      "forums": "{count, plural, one {Форумы (#)} few {Форумы (#)} many {Форумы (#)} other {Форумы (#)}}"
+    },
+    "attachments": {
+      "title": "Мои вложения",
+      "intro": "{count, plural, one {Ты загрузил # файл.} few {Ты загрузил # файла.} many {Ты загрузил # файлов.} other {Ты загрузил # файла.}} Новые сверху.",
+      "empty": "Ты ещё не загрузил ни одного файла."
+    },
     "groups_pro": {
-      "legend_categories": "Категории легенды групп"
+      "legend_categories": "Категории легенды групп",
+      "legend_display": "Отображение легенды групп"
     }
   },
   "permissions": {
@@ -4783,7 +4896,9 @@
       "sidebar": "Боковая панель",
       "avatars": "Аватары",
       "buttons": "Кнопки",
-      "design": "Design"
+      "design": "Design",
+      "headerBuilder": "Конструктор шапки",
+      "cockpit": "Консоль Hero Cockpit"
     },
     "tabs": {
       "settings": "Настройки",
@@ -4798,7 +4913,13 @@
       "favicon": "Фавикон",
       "bands": "Title bands",
       "effects": "Effects",
-      "headerImage": "Header image"
+      "headerImage": "Header image",
+      "builderRows": "Ряды",
+      "builderMenus": "Меню",
+      "builderCustom": "Свой текст",
+      "cockpitPanels": "Панели",
+      "cockpitImage": "Фон консоли",
+      "mobileBar": "Нижняя панель"
     },
     "images": {
       "logo": "Логотип (темный режим)",
@@ -4809,7 +4930,8 @@
       "none": "Нет изображения",
       "upload": "Загрузить",
       "remove": "Убрать",
-      "headerImage": "Header background"
+      "headerImage": "Header background",
+      "cockpitImage": "Фон консоли"
     },
     "tokens": {
       "accent": "Первичный цвет",
@@ -5054,6 +5176,116 @@
       "header_crumbs": {
         "label": "Breadcrumb and search row",
         "help": "Below the menu: where you are on the site and the search field."
+      },
+      "header_rowTop": {
+        "label": "Высота верхней полосы"
+      },
+      "header_rowMain": {
+        "label": "Высота основного ряда"
+      },
+      "header_rowBottom": {
+        "label": "Высота второго ряда"
+      },
+      "header_compact": {
+        "label": "Компактная при прокрутке",
+        "help": "После 120 px шапка сжимается в закреплённую сверху полосу (логотип, меню, поиск)."
+      },
+      "header_hideOnScroll": {
+        "label": "Скрывать при прокрутке вниз",
+        "help": "Шапка исчезает при прокрутке вниз и возвращается при прокрутке вверх."
+      },
+      "header_dropdowns": {
+        "label": "Меню открываются",
+        "options": {
+          "click": "По клику",
+          "hover": "При наведении"
+        }
+      },
+      "header_mega": {
+        "label": "Мегаменю",
+        "help": "Подменю в 2 колонки с описаниями, живыми значками и нижней строкой."
+      },
+      "header_navAlign": {
+        "label": "Выравнивание меню",
+        "options": {
+          "left": "Слева",
+          "center": "По центру",
+          "right": "Справа"
+        }
+      },
+      "header_customHtml": {
+        "label": "Свой текст / HTML",
+        "help": "Элемент «Текст/HTML»: простые теги сохраняются, скрипты и стили удаляются."
+      },
+      "mobileNav_placement": {
+        "label": "Значки на телефоне",
+        "help": "Меню, аккаунт, поиск и уведомления — в шапке или в нижней панели.",
+        "options": {
+          "header": "В шапке",
+          "bottom": "В нижней панели"
+        }
+      },
+      "mobileNav_labels": {
+        "label": "Текст под значками нижней панели"
+      },
+      "mobileNav_items": {
+        "label": "Элементы нижней панели",
+        "help": "Не больше 5; «Создать» — круглая кнопка в центре.",
+        "options": {
+          "home": "Главная",
+          "forum": "Форум",
+          "servers": "Серверы",
+          "create": "Создать",
+          "messages": "Сообщения",
+          "notifications": "Уведомления",
+          "search": "Поиск",
+          "menu": "Меню",
+          "account": "Аккаунт",
+          "chat": "Чат",
+          "activity": "Активность",
+          "clans": "Кланы"
+        }
+      },
+      "cockpit_enabled": {
+        "label": "Консоль под шапкой",
+        "help": "Личная полоса, 3 панели и полосы серверов."
+      },
+      "cockpit_pages": {
+        "label": "Где показывать",
+        "options": {
+          "home": "Только на главной",
+          "all": "На всех страницах"
+        }
+      },
+      "cockpit_left": {
+        "label": "Левая панель",
+        "options": {
+          "feed": "Живая лента",
+          "live": "Сейчас в эфире",
+          "top": "Топ",
+          "featured": "Рекомендуем",
+          "none": "Ничего"
+        }
+      },
+      "cockpit_center": {
+        "label": "Центральная панель",
+        "options": {
+          "feed": "Живая лента",
+          "live": "Сейчас в эфире",
+          "top": "Топ",
+          "featured": "Рекомендуем",
+          "none": "Ничего"
+        }
+      },
+      "cockpit_right": {
+        "label": "Правая панель",
+        "options": {
+          "feed": "Живая лента",
+          "live": "Сейчас в эфире",
+          "top": "Топ",
+          "featured": "Рекомендуем",
+          "none": "Ничего"
+        }
       }
     },
     "status": {
@@ -5076,6 +5308,76 @@
       "body": "Тема содержит изменения, которые не публикуются. Если вы выходите без сохранения, они выбрасываются.",
       "leave": "Выход без экономии",
       "stay": "Продолжайте редактировать"
+    },
+    "barUp": "Выше: {item}",
+    "barDown": "Ниже: {item}",
+    "barRemove": "Убрать с панели: {item}",
+    "barAdd": "Добавить на панель…",
+    "builder": {
+      "presets": "Шаблоны",
+      "presetNames": {
+        "classic": "Nova классика",
+        "cockpit": "Cockpit",
+        "centered": "По центру",
+        "side": "Боковая панель",
+        "esports": "Esports"
+      },
+      "presetHelp": {
+        "classic": "Нынешняя шапка: логотип, меню и значки в одном ряду, ниже — хлебные крошки и поиск.",
+        "cockpit": "Логотип и действия в ряду 1, меню с мегаменю в ряду 2; на телефоне — нижняя панель.",
+        "centered": "Логотип по центру над меню.",
+        "side": "Логотип и меню в боковой панели на компьютере.",
+        "esports": "Соцсети и аккаунт сверху, меню разделено вокруг логотипа в центральном вырезе."
+      },
+      "custom": "Своя раскладка на основе «{preset}».",
+      "devices": "Устройства",
+      "deviceNames": {
+        "desktop": "Компьютер",
+        "tablet": "Планшет",
+        "mobile": "Телефон"
+      },
+      "rows": {
+        "top": "Верхняя полоса",
+        "main": "Основной ряд",
+        "bottom": "Второй ряд"
+      },
+      "zones": {
+        "left": "Слева",
+        "center": "Центр",
+        "right": "Справа"
+      },
+      "unused": "Не используются",
+      "allUsed": "Все элементы уже в шапке.",
+      "here": "Переместить сюда",
+      "toTray": "Убрать из шапки",
+      "keyboard": "Перетаскивай элементы между зонами. С клавиатуры: Enter выбирает, стрелки перемещают, Delete убирает.",
+      "chipLabel": "{element}: перетащи или используй стрелки",
+      "remove": "Убрать «{element}» из шапки",
+      "moved": "«{element}» перемещён: {place}.",
+      "removed": "«{element}» убран из шапки.",
+      "split": "Меню справа от логотипа",
+      "splitAuto": "По умолчанию вторая половина меню справа. Отметь пункты, которые хочешь там видеть.",
+      "splitHelp": "Отмеченные пункты справа от логотипа, остальные слева.",
+      "splitReset": "Разделить пополам",
+      "elements": {
+        "logo": "Логотип",
+        "nav": "Навигация",
+        "navRight": "Навигация (справа)",
+        "search": "Поиск (значок)",
+        "searchField": "Поиск (поле)",
+        "create": "Создать",
+        "messages": "Сообщения",
+        "notifications": "Уведомления",
+        "account": "Аккаунт",
+        "breadcrumb": "Хлебные крошки",
+        "serversLive": "Статус серверов",
+        "social": "Соцсети",
+        "themeToggle": "Переключатель темы",
+        "language": "Язык",
+        "custom": "Текст/HTML",
+        "chat_button": "Чат",
+        "servers_playNow": "Играть сейчас"
+      }
     }
   },
   "widgets": {
@@ -5085,7 +5387,8 @@
       "newMembers": "Новые члены",
       "statsPanel": "Группа по статистике",
       "onlineDay": "Кто был онлайн (24 часа)",
-      "groupLegend": "Легенда группы"
+      "groupLegend": "Легенда группы",
+      "ranking": "Рейтинг"
     },
     "forums": {
       "stats": "Статистика",
@@ -5105,12 +5408,15 @@
       "period": "Период",
       "channel": "Комната для чатов",
       "icon": "Икона (например, fa-solid fa-star; empty = default)",
-      "game": "Game"
+      "game": "Game",
+      "metric": "Показатель по умолчанию"
     },
     "periods": {
       "week": "на этой неделе",
       "month": "в этом месяце",
-      "all": "все время"
+      "all": "все время",
+      "day": "сегодня",
+      "year": "в этом году"
     },
     "empty": "Пока ничего.",
     "posts": "{count, plural, one {# пост} few {# посты} many {# посты} other {# посты}}",
@@ -5121,7 +5427,8 @@
         "statsPanel": "Общественные деятели, которые онлайн и легенда группы.",
         "onlineDay": "Участники, которые были активны в течение последних 24 часов.",
         "groupLegend": "Общественные группы, с их названиями.",
-        "newMembers": "Новейшие зарегистрированные участники."
+        "newMembers": "Новейшие зарегистрированные участники.",
+        "ranking": "Лучшие участники по сообщениям, темам, репутации или времени онлайн за сегодня, неделю, месяц, год или за всё время."
       },
       "forums": {
         "stats": "Количество тем, постов и членов.",
@@ -5159,6 +5466,12 @@
       "prev": "Previous",
       "next": "Next",
       "read": "Read"
+    },
+    "metrics": {
+      "posts": "Сообщения",
+      "topics": "Темы",
+      "reputation": "Репутация",
+      "online": "Время онлайн"
     }
   },
   "pageEditor": {
@@ -5706,7 +6019,9 @@
     "lead": {
       "week": "The most active members of the last 7 days, by {metric}.",
       "month": "The most active members of the last 30 days, by {metric}.",
-      "all": "The best members of all time, by {metric}."
+      "all": "The best members of all time, by {metric}.",
+      "day": "Самые активные участники сегодня, по показателю «{metric}».",
+      "year": "Самые активные участники за последний год, по показателю «{metric}»."
     },
     "metricLabel": "Measure",
     "periodLabel": "Period",
@@ -5714,18 +6029,24 @@
       "reputation": "Reputation",
       "posts": "Posts",
       "xp": "XP",
-      "solutions": "Solutions"
+      "solutions": "Solutions",
+      "topics": "Темы",
+      "online": "Время онлайн"
     },
     "metricLower": {
       "reputation": "reputation",
       "posts": "posts",
       "xp": "XP",
-      "solutions": "solutions"
+      "solutions": "solutions",
+      "topics": "темы",
+      "online": "время онлайн"
     },
     "period": {
       "week": "This week",
       "month": "This month",
-      "all": "All time"
+      "all": "All time",
+      "day": "Сегодня",
+      "year": "Год"
     },
     "podium": "Podium",
     "place": "Place {rank}",
@@ -7088,6 +7409,294 @@
       "viewInChat": "Показать в чате",
       "deleteTitle": "Удалить сообщение?",
       "deleteBody": "Сообщение исчезнет из чата и истории."
+    }
+  },
+  "header": {
+    "or": "или",
+    "chat": "Чат",
+    "playNow": "Играть сейчас",
+    "social": {
+      "follow": "Мы в соцсетях"
+    },
+    "search": {
+      "open": "Поиск (Ctrl K)",
+      "dialog": "Поиск",
+      "close": "Закрыть поиск",
+      "placeholder": "Ищи темы, участников, серверы, игроков…",
+      "scopeLabel": "Где искать",
+      "scopes": {
+        "all": "Всё",
+        "topics": "Темы",
+        "posts": "Сообщения",
+        "members": "Участники",
+        "servers": "Серверы",
+        "players": "Игроки",
+        "clans": "Кланы"
+      },
+      "filters": "Фильтры",
+      "forum": "Форум",
+      "forumAll": "Все",
+      "author": "Автор",
+      "period": "Период",
+      "periods": {
+        "any": "За всё время",
+        "day": "Сегодня",
+        "week": "На этой неделе",
+        "month": "В этом месяце",
+        "year": "В этом году"
+      },
+      "titles": "Только в заголовках",
+      "quick": "Быстрые результаты",
+      "recent": "Недавние запросы",
+      "noRecent": "Запросов пока нет.",
+      "typing": "Введи хотя бы 2 буквы.",
+      "loading": "Идёт поиск…",
+      "empty": "Быстрых результатов нет. Нажми Enter для полного поиска.",
+      "limited": "Слишком много запросов; попробуй через минуту.",
+      "hints": "Enter = все результаты · ↑↓ = навигация · Esc = закрыть",
+      "advanced": "Расширенный поиск",
+      "tags": {
+        "topic": "ТЕМА",
+        "post": "СООБЩЕНИЕ",
+        "member": "УЧАСТНИК",
+        "server": "СЕРВЕР",
+        "player": "ИГРОК",
+        "clan": "КЛАН"
+      }
+    },
+    "create": {
+      "button": "Создать",
+      "menu": "Создать",
+      "loading": "Загрузка…",
+      "empty": "Здесь нечего создать.",
+      "forumsHeading": "Новая тема в…",
+      "items": {
+        "topicIn": "Новая тема в {forum}",
+        "message": "Личное сообщение",
+        "clan": "Новый клан",
+        "ticket": "Апелляция или жалоба",
+        "sanction": "Наказание на сервере",
+        "forum": "{forum}"
+      }
+    },
+    "messages": {
+      "label": "Сообщения",
+      "unread": "{count, plural, one {Сообщения, # непрочитанное} few {Сообщения, # непрочитанных} many {Сообщения, # непрочитанных} other {Сообщения, # непрочитанных}}",
+      "new": "Новое сообщение",
+      "empty": "Диалогов пока нет.",
+      "seeAll": "Все сообщения"
+    },
+    "account": {
+      "menu": "Меню аккаунта",
+      "ring": "Меню аккаунта, уровень {level}, {percent}% до уровня {next}",
+      "ringMax": "Меню аккаунта, уровень {level}",
+      "levelShort": "УР {level}",
+      "toNext": "{percent}% до ур. {level}",
+      "level": "Уровень {level}",
+      "levelRank": "Уровень {level} · {rank}",
+      "remaining": {
+        "xp": "{count, plural, one {Осталось # XP до ранга «{rank}»} few {Осталось # XP до ранга «{rank}»} many {Осталось # XP до ранга «{rank}»} other {Осталось # XP до ранга «{rank}»}}",
+        "posts": "{count, plural, one {Осталось # сообщение до ранга «{rank}»} few {Осталось # сообщения до ранга «{rank}»} many {Осталось # сообщений до ранга «{rank}»} other {Осталось # сообщения до ранга «{rank}»}}",
+        "reputation": "{count, plural, one {Остался # балл репутации до ранга «{rank}»} few {Осталось # балла репутации до ранга «{rank}»} many {Осталось # баллов репутации до ранга «{rank}»} other {Осталось # балла репутации до ранга «{rank}»}}"
+      },
+      "maxLevel": "Ты достиг самого высокого ранга.",
+      "units": {
+        "xp": "XP",
+        "posts": "сообщений",
+        "reputation": "репутации"
+      },
+      "stats": {
+        "posts": "Сообщения",
+        "reputation": "Репутация",
+        "elo": "ELO микс"
+      },
+      "status": {
+        "label": "Статус",
+        "online": "В сети",
+        "invisible": "Невидимка"
+      },
+      "sections": {
+        "content": "Мой контент",
+        "gaming": "Игры",
+        "settings": "Настройки",
+        "staff": "Команда"
+      },
+      "items": {
+        "profile": "Мой профиль",
+        "content": "Мой контент",
+        "attachments": "Мои вложения",
+        "following": "Мои подписки",
+        "player": "Профиль игрока и статистика",
+        "clan": "Мой клан",
+        "linked": "Связанные аккаунты",
+        "account": "Настройки аккаунта",
+        "notifications": "Уведомления",
+        "privacy": "Приватность и игнор",
+        "vipStudio": "VIP-студия",
+        "moderation": "Очередь модерации",
+        "themeEditor": "Изменить тему",
+        "pageEditor": "Изменить страницу",
+        "acp": "Панель администратора (ACP)"
+      },
+      "theme": {
+        "label": "Тема",
+        "dark": "Тёмная",
+        "light": "Светлая"
+      },
+      "language": "Язык",
+      "logout": "Выйти"
+    },
+    "nav": {
+      "badges": {
+        "online": "{count} В СЕТИ",
+        "live": "{count} LIVE"
+      },
+      "footer": {
+        "servers": "{servers, plural, one {# сервер} few {# сервера} many {# серверов} other {# сервера}} · {players, plural, one {# игрок} few {# игрока} many {# игроков} other {# игрока}} сейчас в сети",
+        "community": "{members, plural, one {# участник} few {# участника} many {# участников} other {# участника}} · {online} сейчас в сети",
+        "vip": "Поддержи сообщество и получи бонусы на сайте и на серверах"
+      },
+      "cta": {
+        "online": "Кто в сети",
+        "vip": "Стать VIP"
+      }
+    },
+    "live": {
+      "servers": "{count, plural, one {# сервер в сети} few {# сервера в сети} many {# серверов в сети} other {# сервера в сети}}",
+      "players": "{count, plural, one {# игрок} few {# игрока} many {# игроков} other {# игрока}}",
+      "matches": "{count, plural, one {# матч в эфире} few {# матча в эфире} many {# матчей в эфире} other {# матча в эфире}}"
+    },
+    "theme": {
+      "toDark": "Включить тёмную тему",
+      "toLight": "Включить светлую тему"
+    },
+    "mobileBar": {
+      "label": "Навигация",
+      "items": {
+        "home": "Главная",
+        "forum": "Форум",
+        "servers": "Серверы",
+        "create": "Создать",
+        "messages": "Сообщения",
+        "notifications": "Уведомления",
+        "search": "Поиск",
+        "menu": "Меню",
+        "account": "Аккаунт",
+        "chat": "Чат",
+        "activity": "Активность",
+        "clans": "Кланы"
+      }
+    }
+  },
+  "cockpit": {
+    "label": "Консоль сообщества",
+    "title": "Сейчас в сообществе",
+    "welcome": "С возвращением,",
+    "welcomeGuest": "Добро пожаловать",
+    "unread": "{count, plural, one {# непрочитанная тема} few {# непрочитанные темы} many {# непрочитанных тем} other {# непрочитанной темы}}",
+    "friends": "{count, plural, one {# друг в сети} few {# друга в сети} many {# друзей в сети} other {# друга в сети}}",
+    "friendsPlaying": "{count, plural, one {# играет на {server}} few {# играют на {server}} many {# играют на {server}} other {# играют на {server}}}",
+    "rank": "Ранг: {rank}",
+    "level": "Уровень {level}",
+    "units": {
+      "xp": "XP",
+      "posts": "сообщений",
+      "reputation": "репутации"
+    },
+    "myProfile": "Мой профиль",
+    "playersOnServers": "{count, plural, one {# игрок на серверах} few {# игрока на серверах} many {# игроков на серверах} other {# игрока на серверах}}",
+    "allActivity": "Вся активность",
+    "cards": "Панели консоли",
+    "card": "Панель {n} из {total}",
+    "feed": {
+      "title": "Живая лента",
+      "tabs": {
+        "all": "Всё",
+        "forum": "Форум",
+        "servers": "Серверы",
+        "mix": "Микс"
+      },
+      "kinds": {
+        "topic": "создал тему «{topic}»",
+        "reply": "ответил в «{topic}»",
+        "status": "опубликовал статус",
+        "member": "присоединился к сообществу",
+        "server": "зашёл на {server}",
+        "mix": "победил на {server} ({score})",
+        "mixElo": "победил на {server} ({score}) · {elo} ELO"
+      },
+      "tags": {
+        "forum": "ФОРУМ",
+        "server": "СЕРВЕР",
+        "mix": "МИКС",
+        "new": "НОВОЕ"
+      },
+      "empty": "Пока ничего нового."
+    },
+    "live": {
+      "title": "Сейчас в эфире",
+      "badge": "LIVE",
+      "round": "раунд {round}",
+      "score": "Счёт {a}:{b}",
+      "watch": "Смотреть (HLTV)",
+      "connect": "Подключиться",
+      "all": "Все матчи",
+      "nothing": "Сейчас нет матчей в эфире.",
+      "featured": "Рекомендуем",
+      "noFeatured": "Пока нет рекомендуемых тем.",
+      "matches": "Матчи в эфире ({count})"
+    },
+    "top": {
+      "title": "Топ",
+      "metricLabel": "Рейтинг по",
+      "periodLabel": "Период",
+      "metrics": {
+        "posts": "Авторы",
+        "topics": "Темы",
+        "reputation": "Репутация",
+        "online": "Время онлайн",
+        "players": "Игроки",
+        "clans": "Кланы"
+      },
+      "widgetMetrics": {
+        "posts": "Сообщения",
+        "topics": "Темы",
+        "reputation": "Репутация",
+        "online": "Время онлайн",
+        "players": "Игроки",
+        "clans": "Кланы"
+      },
+      "periods": {
+        "day": "Сегодня",
+        "week": "Нед.",
+        "month": "Месяц",
+        "year": "Год",
+        "all": "Всё"
+      },
+      "places": {
+        "gold": "1-е место, золото",
+        "silver": "2-е место, серебро",
+        "bronze": "3-е место, бронза"
+      },
+      "place": "Место {rank}",
+      "values": {
+        "posts": "{count, plural, one {# сообщение} few {# сообщения} many {# сообщений} other {# сообщения}}",
+        "topics": "{count, plural, one {# тема} few {# темы} many {# тем} other {# темы}}",
+        "reputation": "+{value}",
+        "players": "ELO {value}",
+        "clans": "{value} очк."
+      },
+      "empty": "За этот период в рейтинге никого нет.",
+      "message": "Написать {name}",
+      "you": "Ты: место {rank} · {value}",
+      "youNone": "Тебя пока нет в рейтинге.",
+      "full": "Полный рейтинг"
+    },
+    "servers": {
+      "strip": "{name}, {players} из {max} игроков, {map}",
+      "offline": "{name}, не в сети",
+      "off": "не в сети",
+      "playNow": "Играть сейчас"
     }
   },
   "groups": {

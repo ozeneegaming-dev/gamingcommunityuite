@@ -22,6 +22,9 @@ import { GcsGroupLegend, GcsStatsPanel, GcsWhoWasOnline } from "./GcsStatsPanel"
 import { GcsCarousel } from "./GcsCarousel";
 import { GcsWidgetTitle, widgetIcon } from "./GcsWidgetTitle";
 import { GcsMemberLink } from "@/lib/member-names";
+import { GcsRankingPanel } from "../cockpit/GcsRankingPanel";
+import { WIDGET_METRICS } from "@/lib/ranking";
+import { isRankingMetric, isRankingPeriod, rankingRows } from "@/lib/ranking.server";
 
 export type GcsWidgetRenderProps = { id: string; config: Record<string, unknown>; actor: GcsActor };
 type Renderer = (p: GcsWidgetRenderProps) => Promise<ReactNode>;
@@ -290,6 +293,17 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
             ))}
           </ol>
         )}
+      </GcsWidgetCard>
+    );
+  },
+
+  "core.ranking": async ({ id, config, actor }) => {
+    const metric = isRankingMetric(config.metric) && WIDGET_METRICS.includes(config.metric) ? config.metric : "posts";
+    const period = isRankingPeriod(config.period) ? config.period : "day";
+    const [t, initial] = await Promise.all([getTranslations("widgets"), rankingRows(actor, metric, period, 5)]);
+    return (
+      <GcsWidgetCard id={id} type="core.ranking" config={config} title={t("core.ranking")} testId="gcs-widget-ranking">
+        <GcsRankingPanel initial={initial} metrics={[...WIDGET_METRICS]} variant="widget" testId="gcs-ranking-widget" />
       </GcsWidgetCard>
     );
   },

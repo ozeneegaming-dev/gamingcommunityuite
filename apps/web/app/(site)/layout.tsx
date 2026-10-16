@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { Suspense, type ReactNode } from "react";
 import { GcsDesignSync } from "./_components/GcsDesignSync";
+import { GcsCockpitSlot } from "./_components/cockpit/GcsCockpitSlot";
 import { GcsNavProgress } from "./_components/GcsNavProgress";
 import { GcsHoverCardHost } from "./_components/GcsHoverCardHost";
 import { GcsImageViewerHost } from "./_components/GcsImageViewerHost";
@@ -44,6 +45,10 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
         <GcsNavProgress />
       </Suspense>
       <GcsSiteHeader />
+      {/* Consola Hero Cockpit (designul Nova, pornită din temă): sub antet, pe pagina principală sau pe toate. */}
+      <Suspense fallback={null}>
+        <GcsCockpitSlot />
+      </Suspense>
       <main className="gcs-siteMain" style={{ maxWidth: "var(--gcs-page-width, 1320px)", margin: "0 auto", padding: 24, display: "flex", flexDirection: "column", gap: 24 }}>
         {email?.endsWith(STEAM_PLACEHOLDER_DOMAIN) && (
           <p role="status" className="gcs-notice gcs-notice--warn" data-testid="gcs-steam-email-banner">

@@ -39,6 +39,7 @@
     "./chatmod.css": "./src/chatmod.css",
     "./groups-pro.css": "./src/groups-pro.css",
     "./nova.css": "./src/nova.css",
+    "./sweep.css": "./src/sweep.css",
     "./icons": "./src/icons/index.tsx",
     "./icon-registry": "./src/icons/registry.ts",
     "./badge-art": "./src/badges/index.ts",

@@ -71,6 +71,8 @@ export type GcsAppRow = {
   accessNote: string | null;
   sections: GcsAppSectionRow[];
   manageHref: string | null;
+  /** Pagina ACP cu setările aplicației (linkul „Setări” de pe rând), doar cu aplicația pornită. */
+  settingsHref?: string | null;
   exportHref: string | null;
   uninstall: { removes: string[]; key: string } | null;
 };
@@ -391,6 +393,7 @@ function AppRow({ row, first, last, reorderable, onMove, handlers, hasDetails }:
   const menu: GcsDropdownItem[] = [
     ...(hasDetails ? [{ kind: "action" as const, label: t("menu.details"), icon: <GcsIconSvg icon={faCircleInfo} />, onSelect: () => handlers.onDetails(row), testId: `gcs-app-details-${row.id}` }] : []),
     ...(row.manageHref ? [{ kind: "link" as const, label: t("menu.manage"), href: row.manageHref, icon: <GcsIconSvg icon={faSliders} />, testId: `gcs-plugin-manage-${row.id}` }] : []),
+    ...(row.settingsHref ? [{ kind: "link" as const, label: t("settings"), href: row.settingsHref, icon: <GcsIconSvg icon={faSliders} />, testId: `gcs-app-menu-settings-${row.id}` }] : []),
     ...(row.kind === "plugin" && row.status !== "removed" && handlers.canEdit
       ? [{ kind: "action" as const, label: t("menu.update"), icon: <GcsIconSvg icon={faRotate} />, onSelect: () => handlers.onUpdate(row), testId: `gcs-plugin-update-${row.id}` }]
       : []),
@@ -454,6 +457,12 @@ function AppRow({ row, first, last, reorderable, onMove, handlers, hasDetails }:
                 ))}
             </strong>
             {row.description && <span className="gcs-appRow__desc">{row.description}</span>}
+            {row.settingsHref && (
+              <a href={row.settingsHref} className="gcs-appRow__settings" aria-label={t("settingsOf", { name: row.name })} data-testid={`gcs-app-settings-${row.id}`}>
+                <GcsIconSvg icon={faSliders} />
+                {t("settings")}
+              </a>
+            )}
             {/* Pe ecrane înguste, versiunea și autorul stau sub nume (coloanele lor dispar). */}
             <span className="gcs-appRow__byline">
               <span>v{row.version}</span>

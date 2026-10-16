@@ -46,4 +46,11 @@ describe("evenimentele live ale topicului", () => {
     await settle();
     expect(received.filter((m) => m.event === "post:new").map((m) => (m.data as { postId: number }).postId)).toEqual([pending.postId]);
   });
+
+  test("o postare vizibilă trimite și semnalul consolei (activitate nouă), fără date despre ea", async () => {
+    const tree = await w.createTree();
+    await w.topics.create(w.root, { forumId: tree.forum.id, title: "Semnal", content: doc("x") });
+    await settle();
+    expect(received.filter((m) => m.event === "activity:new")).toEqual([{ room: "presence", event: "activity:new", data: { kind: "forum" } }]);
+  });
 });

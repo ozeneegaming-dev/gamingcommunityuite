@@ -3,4 +3,5 @@
  * Exportată ca `@gcs/core/themes`, pentru editorul vizual (previzualizarea live compilată ca pe server).
  */
 export * from "./settings";
+export * from "./headerBuilder";
 export * from "./css";

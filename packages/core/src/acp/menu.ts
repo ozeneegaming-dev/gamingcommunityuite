@@ -5,13 +5,14 @@ import type { GcsAcpRights } from "./roles";
 export const GCS_ACP_APP_ORDER: GcsAcpApp[] = ["system", "community", "members", "vip", "gaming", "pages", "stats", "appearance"];
 
 /**
- * Meniul ACP vizibil pentru un admin: doar intrările a căror secțiune are dreptul `view`.
+ * Meniul ACP vizibil pentru un admin: doar intrările a căror secțiune are dreptul `view` și, pentru paginile unei
+ * aplicații (`item.app`), doar cu aplicația pornită și accesibilă lui (`canUseApp`; fără el, toate).
  * Secțiunile (și deci aplicațiile) rămase fără intrări sunt ascunse.
  */
-export function buildAcpMenu(registry: GcsModuleRegistry, rights: GcsAcpRights): GcsAcpMenuSection[] {
+export function buildAcpMenu(registry: GcsModuleRegistry, rights: GcsAcpRights, canUseApp?: (app: string) => boolean): GcsAcpMenuSection[] {
   const menu: GcsAcpMenuSection[] = [];
   for (const section of registry.acpMenu()) {
-    const items = section.items.filter((item) => rights[item.section]?.view === true);
+    const items = section.items.filter((item) => rights[item.section]?.view === true && (!item.app || !canUseApp || canUseApp(item.app)));
     if (items.length > 0) menu.push({ ...section, items });
   }
   return menu;

@@ -6,7 +6,7 @@
  *
  * Hover (regula proprietarului): elementele de meniu primesc 3% alb și scale(1.01), cele distructive o nuanță roșie;
  * pastilele, culoarea lor la 30% / bordura la 60% cu strălucire și -1px; rândurile și cardurile, doar fundalul. Peste
- * toate elementele de tip buton, „glass sweep”-ul (`.gcs-sweep`, din `base.css`): regulile de hover folosesc
+ * toate elementele de tip buton, „glass sweep”-ul (`.gcs-sweep`, din `sweep.css`): regulile de hover folosesc
  * `background-color`, niciodată prescurtarea `background`, ca stratul să rămână sub text.
  */
 
@@ -26,43 +26,7 @@
   --cm-line: var(--gcs-border);
 }
 
-/* Glass sweep: regulile vechi ale uneltelor din chat (`background: none` / hover cu `background`) l-ar șterge. */
-.gcs-chat .gcs-sweep,
-.gcs-chatMod .gcs-sweep,
-.gcs-chatModDialog .gcs-sweep,
-.gcs-chatModCard .gcs-sweep,
-.gcs-chatHistory .gcs-sweep,
-.gcs-hoverCard__chatMod .gcs-sweep,
-.gcs-acpChatMod .gcs-sweep {
-  background-image: linear-gradient(var(--gcs-sweep, rgb(255 255 255 / 0.08)), var(--gcs-sweep, rgb(255 255 255 / 0.08)));
-  background-repeat: no-repeat;
-  background-position: left center;
-  background-size: 0% 100%;
-  transition:
-    background-size 1.2s ease-out,
-    background-color var(--gcs-motion-base) ease,
-    border-color var(--gcs-motion-base) ease,
-    color var(--gcs-motion-base) ease,
-    box-shadow var(--gcs-motion-base) ease,
-    transform var(--gcs-motion-base) var(--gcs-motion-ease);
-}
-.gcs-chat .gcs-sweep:is(:hover, :focus-visible),
-.gcs-chatMod .gcs-sweep:is(:hover, :focus-visible),
-.gcs-chatModDialog .gcs-sweep:is(:hover, :focus-visible),
-.gcs-chatModCard .gcs-sweep:is(:hover, :focus-visible),
-.gcs-chatHistory .gcs-sweep:is(:hover, :focus-visible),
-.gcs-hoverCard__chatMod .gcs-sweep:is(:hover, :focus-visible),
-.gcs-acpChatMod .gcs-sweep:is(:hover, :focus-visible) {
-  background-image: linear-gradient(var(--gcs-sweep, rgb(255 255 255 / 0.08)), var(--gcs-sweep, rgb(255 255 255 / 0.08)));
-  background-size: 100% 100%;
-  transition:
-    background-size 1.2s cubic-bezier(0.52, 1.64, 0.37, 0.66),
-    background-color var(--gcs-motion-base) ease,
-    border-color var(--gcs-motion-base) ease,
-    color var(--gcs-motion-base) ease,
-    box-shadow var(--gcs-motion-base) ease,
-    transform var(--gcs-motion-base) var(--gcs-motion-ease);
-}
+/* Glass sweep-ul (`.gcs-sweep`) vine din `sweep.css` (global, încărcat ultimul), peste fundalurile uneltelor din chat. */
 
 /* ─── Meniul „⋯” ──────────────────────────────────────────────────────────────────────────────── */
 

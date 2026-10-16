@@ -1,3 +1,4 @@
+import { headerBuilderError, type GcsHeaderBuilder } from "@gcs/core/themes";
 /**
  * Protocolul `postMessage` dintre editorul vizual de temă și previzualizarea din `iframe` (aceeași origine).
  * Editorul trimite CSS-ul compilat al draft-ului, modul de culori editat și textul logo-ului; previzualizarea anunță
@@ -18,6 +19,8 @@ export const THEME_PREVIEW_HEADER = "x-gcs-theme-preview";
  * are designul lui.
  */
 export const SITE_AREA_HEADER = "x-gcs-area";
+/** Header-ul intern cu calea cererii (pus de proxy; valoarea venită din afară e suprascrisă). */
+export const SITE_PATH_HEADER = "x-gcs-path";
 export const siteAreaFor = (pathname: string): "admin" | "site" => (pathname === "/admin" || pathname.startsWith("/admin/") ? "admin" : "site");
 
 /** Clasa `<html>` a designului unei teme (`classic` nu are clasă: e aspectul de bază). */
@@ -49,6 +52,8 @@ export type GcsStudioApplyMessage = {
   logo?: { text: string; slogan: string };
   /** Designul temei editate (`classic` / `nova`): previzualizarea schimbă clasa de pe `<html>`. */
   preset?: string;
+  /** Constructorul de antet (Nova): aspectul și opțiunile, aplicate live de antetul construit. */
+  header?: { layout: GcsHeaderBuilder; options: Record<string, unknown> };
 };
 
 export type GcsPreviewReadyMessage = {
@@ -67,7 +72,8 @@ export const isStudioApplyMessage = (d: unknown): d is GcsStudioApplyMessage => 
     typeof m.css === "string" &&
     (m.mode === undefined || m.mode === "dark" || m.mode === "light") &&
     (m.preset === undefined || m.preset === "classic" || m.preset === "nova") &&
-    (logo === undefined || (!!logo && typeof logo.text === "string" && typeof logo.slogan === "string"))
+    (logo === undefined || (!!logo && typeof logo.text === "string" && typeof logo.slogan === "string")) &&
+    (m.header === undefined || (!!m.header && typeof m.header === "object" && headerBuilderError((m.header as Record<string, unknown>).layout) === null))
   );
 };
 

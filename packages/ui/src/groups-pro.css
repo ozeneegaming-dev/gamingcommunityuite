@@ -79,23 +79,45 @@
 
 /* ─── Legenda: cardurile categoriilor ─────────────────────────────────────── */
 
+/* Coloanele: 2, 3 (implicit) sau 4, după opțiunea din ACP → Membri → Legenda grupurilor; mai puține pe ecrane înguste. */
 .gcs-legendPro {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
-.gcs-legendPro__widget .gcs-legendPro {
+.gcs-legendPro[data-columns="2"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.gcs-legendPro[data-columns="4"] {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.gcs-legendPro__widget .gcs-legendPro,
+.gcs-legendPro__widget .gcs-legendPro[data-columns] {
   grid-template-columns: minmax(0, 1fr);
 }
 @media (max-width: 980px) {
-  .gcs-legendPro {
+  .gcs-legendPro,
+  .gcs-legendPro[data-columns] {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 @media (max-width: 600px) {
-  .gcs-legendPro {
+  .gcs-legendPro,
+  .gcs-legendPro[data-columns] {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+/* Iconița categoriei, în locul barei de accent din titlul cardului. */
+.gcs-legendPro__catIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--gcs-accent) 16%, transparent);
+  color: var(--gcs-accentInk);
+  font-size: 11px;
 }
 .gcs-legendPro__card {
   display: flex;

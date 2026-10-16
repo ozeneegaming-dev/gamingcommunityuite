@@ -1,7 +1,19 @@
 "use client";
 
 import type { GcsResult } from "@gcs/core";
-import { CUSTOM_CSS_FILE, compileThemeCss, joinThemeCssFiles, themeDefaults, themePath, withThemePath, type GcsThemeSettings } from "@gcs/core/themes";
+import {
+  CUSTOM_CSS_FILE,
+  compileThemeCss,
+  headerLayoutIsPreset,
+  joinThemeCssFiles,
+  themeDefaults,
+  themePath,
+  withThemePath,
+  type GcsHeaderBuilder,
+  type GcsHeaderDevice,
+  type GcsHeaderPreset,
+  type GcsThemeSettings,
+} from "@gcs/core/themes";
 import { GcsIconSvg, GcsModal } from "@gcs/ui";
 import {
   faArrowRightFromBracket,
@@ -28,7 +40,8 @@ import { useErrorMessage } from "@/lib/use-error-message";
 import { isPreviewReadyMessage, STUDIO_MESSAGE_SOURCE, type GcsStudioApplyMessage } from "@/lib/theme-preview";
 import { discardThemeStudio, publishThemeStudio, saveThemeStudioDraft } from "../actions";
 import { GcsStudioColorRow, GcsStudioColorSelector, GcsStudioImageRow, GcsStudioSettingRow, colorLabel } from "./GcsStudioControls";
-import { CSS_ROW_ICON, STUDIO_PANELS, colorPath, parentPanel, studioItemVisible, type GcsStudioColorRef, type GcsStudioImageSlot, type GcsStudioPanelId } from "./studio-panels";
+import { GcsHeaderBuilderEditor } from "./GcsHeaderBuilderEditor";
+import { CSS_ROW_ICON, STUDIO_PANELS, colorPath, parentPanel, studioItemVisible, studioPanelVisible, type GcsStudioColorRef, type GcsStudioImageSlot, type GcsStudioPanelId } from "./studio-panels";
 
 export type GcsThemeStudioValue = { settings: GcsThemeSettings; customCss: string; logoUrl: string | null; faviconUrl: string | null };
 
@@ -55,13 +68,35 @@ function imageUrl(v: GcsThemeStudioValue, slot: GcsStudioImageSlot): string | nu
       return v.settings.logo.imageMobileLight;
     case "headerImage":
       return v.settings.header.image;
+    case "cockpitImage":
+      return v.settings.cockpit.image;
   }
+}
+
+/** Antetul de până acum (Nova clasic neatins) e randat de alt component: trecerea la / de la el reîncarcă previzualizarea. */
+const legacyHeader = (b: GcsHeaderBuilder) => b.preset === "classic" && headerLayoutIsPreset(b);
+
+/** Opțiunile antetului construit trimise previzualizării (aceleași nume ca în `GcsHeaderFrame`). */
+function headerOptions(s: GcsThemeSettings): Record<string, unknown> {
+  return {
+    rowTop: s.header.rowTop,
+    rowMain: s.header.rowMain,
+    rowBottom: s.header.rowBottom,
+    sticky: s.header.sticky,
+    compact: s.header.compact,
+    hideOnScroll: s.header.hideOnScroll,
+    dropdowns: s.header.dropdowns,
+    mega: s.header.mega,
+    navAlign: s.header.navAlign,
+    placement: s.mobileNav.placement,
+  };
 }
 
 function withImage(v: GcsThemeStudioValue, slot: GcsStudioImageSlot, url: string | null): GcsThemeStudioValue {
   if (slot === "logo") return { ...v, logoUrl: url };
   if (slot === "favicon") return { ...v, faviconUrl: url };
   if (slot === "headerImage") return { ...v, settings: withThemePath(v.settings, "header.image", url) };
+  if (slot === "cockpitImage") return { ...v, settings: withThemePath(v.settings, "cockpit.image", url) };
   const key = slot === "logoLight" ? "imageLight" : slot === "logoMobile" ? "imageMobile" : "imageMobileLight";
   return { ...v, settings: withThemePath(v.settings, `logo.${key}`, url) };
 }
@@ -172,6 +207,7 @@ export function GcsThemeStudio({
   previewUrl,
   cssFiles,
   initial,
+  navItems = [],
 }: {
   themeKey: string;
   themeName: string;
@@ -182,6 +218,8 @@ export function GcsThemeStudio({
   /** Fișierele CSS publicate ale temei (`custom.css` e înlocuit de valoarea din dialog). */
   cssFiles: { name: string; content: string }[];
   initial: GcsThemeStudioValue;
+  /** Itemii de pe primul nivel ai meniului (constructorul de antet: meniul împărțit). */
+  navItems?: { id: number; label: string }[];
 }) {
   const t = useTranslations("themeStudio");
   const errorMessage = useErrorMessage();
@@ -191,6 +229,7 @@ export function GcsThemeStudio({
   const latest = useRef(initial);
   const [mode, setMode] = useState<Mode>("dark");
   const [size, setSize] = useState<Size>("desktop");
+  const [builderDevice, setBuilderDevice] = useState<GcsHeaderDevice>("desktop");
   const [stack, setStack] = useState<GcsStudioPanelId[]>(["start"]);
   const [colorTarget, setColorTarget] = useState<GcsStudioColorRef | null>(null);
   const [tab, setTab] = useState<"settings" | "colors">("settings");
@@ -220,9 +259,10 @@ export function GcsThemeStudio({
       mode,
       logo: { text: value.settings.logo.text, slogan: value.settings.logo.slogan },
       preset: value.settings.preset,
+      ...(value.settings.preset === "nova" ? { header: { layout: value.settings.header.layout, options: headerOptions(value.settings) } } : {}),
     };
     win.postMessage(message, window.location.origin);
-  }, [css, mode, value.settings.logo.text, value.settings.logo.slogan, value.settings.preset]);
+  }, [css, mode, value.settings]);
 
   useEffect(() => postPreview(), [postPreview]);
 
@@ -295,6 +335,22 @@ export function GcsThemeStudio({
   );
 
   const setSetting = (path: string, v: unknown) => update((cur) => ({ ...cur, settings: withThemePath(cur.settings, path, v) }));
+
+  /**
+   * Un aspect nou al antetului. O presetare aplicată își aduce și navigarea de pe mobil (Cockpit: bara de jos). Trecerea
+   * de la / la antetul clasic neatins (alt component) reîncarcă previzualizarea după salvare.
+   */
+  const setHeaderLayout = (next: GcsHeaderBuilder, preset?: GcsHeaderPreset) =>
+    update((cur) => {
+      if (legacyHeader(cur.settings.header.layout) !== legacyHeader(next)) reloadAfterSave.current = true;
+      let settings = withThemePath(cur.settings, "header.layout", next);
+      if (preset) settings = withThemePath(settings, "mobileNav.placement", preset === "cockpit" ? "bottom" : "header");
+      return { ...cur, settings };
+    });
+  const pickDevice = (d: GcsHeaderDevice) => {
+    setBuilderDevice(d);
+    setSize(d);
+  };
 
   // ─── Imaginile ─────────────────────────────────────────────────────────────
   const upload = async (slot: GcsStudioImageSlot, file: File) => {
@@ -438,6 +494,7 @@ export function GcsThemeStudio({
       <nav className="gcs-themeStudio__nav" aria-label={title}>
         {panel.rows.map((row, i) => {
           if (row.type === "separator") return <hr key={`s${i}`} className="gcs-themeStudio__sep" />;
+          if (row.type === "nav" && !studioPanelVisible(row.panel, value.settings.preset)) return null;
           const isCss = row.type === "css";
           const icon = isCss ? CSS_ROW_ICON : STUDIO_PANELS[row.panel].icon;
           const label = isCss ? t("customCss") : t(`panels.${row.panel}`);
@@ -463,6 +520,9 @@ export function GcsThemeStudio({
     title = t(`panels.${current}`);
     body = (
       <>
+        {panel.builder === "header" && value.settings.preset === "nova" && (
+          <GcsHeaderBuilderEditor value={value.settings.header.layout} device={builderDevice} onDevice={pickDevice} onChange={setHeaderLayout} navItems={navItems} />
+        )}
         {hasSettings && hasColors && (
           <div className="gcs-themeStudio__tabs" role="tablist" aria-label={title}>
             {(["settings", "colors"] as const).map((id) => (

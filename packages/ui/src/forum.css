@@ -216,7 +216,7 @@
 }
 .gcs-mentionList [aria-selected="true"] .gcs-mentionList__item,
 .gcs-mentionList__item:hover {
-  background: var(--gcs-surface2);
+  background-color: var(--gcs-surface2);
 }
 .gcs-mentionList__empty {
   padding: 8px 10px;
@@ -857,7 +857,7 @@
 }
 .gcs-headerIcon:hover {
   color: var(--gcs-text);
-  background: var(--gcs-surface2);
+  background-color: var(--gcs-surface2);
 }
 .gcs-headerIcon__count {
   position: absolute;
