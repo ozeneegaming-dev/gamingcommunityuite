@@ -24,7 +24,8 @@ import type { GcsErrorPayload, GcsResult } from "@gcs/core";
 import type { GcsChatEphemeral, GcsChatGrantView, GcsChatMessageView, GcsChatModCard, GcsChatModMenu, GcsChatRight, GcsChatSystemLine, GcsChatViewerState } from "@gcs/modules";
 import { GcsButton, GcsIconSvg, GcsMemberName, GcsModal, gcsToast, type GcsIconSvgProps } from "@gcs/ui";
 import { useFormatter, useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from "react";
+import { createPortal } from "react-dom";
 import { memberHref } from "@/lib/forum-urls";
 import { useErrorMessage } from "@/lib/use-error-message";
 import {
@@ -224,12 +225,48 @@ export function GcsChatModMenu(props: {
   on: GcsChatModMenuHandlers;
   onClose: () => void;
   className?: string;
+  /** Ref-ul panoului (pentru închiderea la click în afară): meniul stă într-un portal, nu în mesaj. */
+  panelRef?: RefObject<HTMLDivElement | null>;
 }) {
   const { m, own, mod, on, onClose } = props;
   const t = useTranslations("chat.mod");
   const dur = useDuration();
   const [sub, setSub] = useState<string | null>(null);
-  const box = useRef<HTMLDivElement>(null);
+  const box = useRef<HTMLDivElement | null>(null);
+  const spot = useRef<HTMLSpanElement>(null);
+  const [place, setPlace] = useState<{ top: number; left: number; maxHeight?: number; subRight: boolean } | null>(null);
+  const setBox = useCallback(
+    (el: HTMLDivElement | null) => {
+      box.current = el;
+      if (props.panelRef) (props.panelRef as { current: HTMLDivElement | null }).current = el;
+    },
+    [props.panelRef],
+  );
+  // Meniul e fix, deasupra listei (lista derulează și l-ar tăia): sub butonul „⋯”, sau deasupra lui când nu e loc;
+  // urmează derularea. Lângă marginea stângă, submeniurile se deschid în dreapta.
+  useLayoutEffect(() => {
+    const update = () => {
+      const anchor = spot.current?.parentElement?.parentElement ?? spot.current?.parentElement;
+      const el = box.current;
+      if (!anchor || !el) return;
+      const r = anchor.getBoundingClientRect();
+      const w = el.offsetWidth;
+      const h = el.scrollHeight;
+      const vh = window.innerHeight;
+      let top = r.bottom + 4;
+      if (top + h > vh - 8) top = r.top - h - 4 >= 8 ? r.top - h - 4 : Math.max(8, vh - h - 8);
+      const left = Math.min(Math.max(8, r.right - w), document.documentElement.clientWidth - w - 8);
+      const next = { top, left, ...(h > vh - 16 ? { maxHeight: vh - 16 } : {}), subRight: left < 180 };
+      setPlace((p) => (p && p.top === next.top && p.left === next.left && p.maxHeight === next.maxHeight && p.subRight === next.subRight ? p : next));
+    };
+    update();
+    window.addEventListener("scroll", update, true);
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update, true);
+      window.removeEventListener("resize", update);
+    };
+  }, [sub]);
   const rights = new Set(mod.rights);
   const author = m.author;
   const staff = rights.size > 0;
@@ -264,7 +301,7 @@ export function GcsChatModMenu(props: {
     member.push({ key: "profile", label: t("profile"), icon: faUser, href: memberHref(author) });
     if (mod.history) member.push({ key: "history", label: t("history"), icon: faClockRotateLeft, href: `/chat/history?member=${encodeURIComponent(author.name)}` });
     member.push({ key: "card", label: t("card"), icon: faShieldHalved, onSelect: on.card, testId: "gcs-chatmod-card" });
-    const durations = (kind: "mute" | "kick" | "ban") => DURATIONS[kind].map((mins) => ({ key: String(mins), label: dur(mins), onSelect: run(() => on.open(kind, mins)) }));
+    const durations = (kind: "mute" | "kick" | "ban") => DURATIONS[kind].map((mins) => ({ key: mins === null ? "forever" : String(mins), label: dur(mins), onSelect: run(() => on.open(kind, mins)) }));
     if (rights.has("warn")) moderation.push({ key: "warn", label: t("warn"), icon: faTriangleExclamation, tone: "warn", onSelect: () => on.open("warn"), testId: "gcs-chatmod-warn" });
     if (rights.has("mute")) moderation.push({ key: "mute", label: t("mute"), icon: faCommentSlash, tone: "warn", sub: { label: t("muteFor"), items: durations("mute") }, testId: "gcs-chatmod-mute" });
     if (rights.has("kick")) moderation.push({ key: "kick", label: t("kick"), icon: faRightFromBracket, tone: "warn", sub: { label: t("kickFor"), items: durations("kick") }, testId: "gcs-chatmod-kick" });
@@ -310,9 +347,12 @@ export function GcsChatModMenu(props: {
     : [{ key: "all", items: [...basic, ...message, ...tail] }];
 
   const focusables = () => [...(box.current?.querySelectorAll<HTMLElement>(":scope > [role=menuitem], :scope > .gcs-chatMod__wrap > [role=menuitem]") ?? [])];
+  const focused = useRef(false);
   useEffect(() => {
+    if (!place || focused.current) return;
+    focused.current = true;
     focusables()[0]?.focus({ preventScroll: true });
-  }, []);
+  }, [place]);
   const onKey = (e: KeyboardEvent<HTMLDivElement>) => {
     const list = focusables();
     const i = list.indexOf(document.activeElement as HTMLElement);
@@ -405,8 +445,16 @@ export function GcsChatModMenu(props: {
     );
   };
 
-  return (
-    <div ref={box} className={`gcs-chatMod${props.className ? ` ${props.className}` : ""}`} role="menu" aria-label={t("title")} onKeyDown={onKey} data-testid="gcs-chatmod-menu">
+  const menu = (
+    <div
+      ref={setBox}
+      className={`gcs-chatMod${place?.subRight ? " gcs-chatMod--subRight" : ""}${props.className ? ` ${props.className}` : ""}`}
+      role="menu"
+      aria-label={t("title")}
+      onKeyDown={onKey}
+      style={{ position: "fixed", top: place?.top ?? 0, left: place?.left ?? 0, visibility: place ? "visible" : "hidden", ...(place?.maxHeight ? { maxHeight: place.maxHeight, overflowY: "auto" as const } : {}) }}
+      data-testid="gcs-chatmod-menu"
+    >
       {sections
         .filter((s) => s.items.length > 0)
         .map((s, i) => [
@@ -419,6 +467,12 @@ export function GcsChatModMenu(props: {
           ...s.items.map(itemEl),
         ])}
     </div>
+  );
+  return (
+    <>
+      <span ref={spot} className="gcs-chatMod__spot" aria-hidden="true" />
+      {typeof document === "undefined" ? null : createPortal(menu, document.body)}
+    </>
   );
 }
 
@@ -771,16 +825,15 @@ export function GcsChatHiddenTag({ m }: { m: GcsChatMessageView }) {
 /** „Ai mute până la HH:MM” cu numărătoarea inversă (sau permanent), în locul câmpului de scris. */
 export function GcsChatMutedNote({ mute, remaining }: { mute: { reason: string; until: string | null }; remaining: number | null }) {
   const t = useTranslations("chat.mod");
-  const format = useFormatter();
   return (
     <p className="gcs-chat__note gcs-chat__note--warn gcs-chatMuted" role="status" data-testid="gcs-chat-muted">
       <GcsIconSvg icon={faCommentSlash} />
-      <span>
-        {mute.until ? t("mutedUntil", { time: format.dateTime(new Date(mute.until), { timeStyle: "short" }) }) : t("mutedForever")}
+      <span suppressHydrationWarning>
+        {mute.until ? t("mutedUntil", { time: new Date(mute.until).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) }) : t("mutedForever")}
         {mute.reason && ` · ${mute.reason}`}
       </span>
       {remaining !== null && (
-        <span className="gcs-chatMuted__left" role="timer" aria-live="off" data-testid="gcs-chat-mute-countdown">
+        <span className="gcs-chatMuted__left" role="timer" aria-live="off" data-testid="gcs-chat-mute-countdown" suppressHydrationWarning>
           {clock(remaining)}
         </span>
       )}
@@ -791,15 +844,14 @@ export function GcsChatMutedNote({ mute, remaining }: { mute: { reason: string; 
 /** Panoul camerei pentru un membru scos (kick) sau banat din chat: motivul și cât mai durează. */
 export function GcsChatBlocked({ block }: { block: NonNullable<GcsChatViewerState["block"]> }) {
   const t = useTranslations("chat.mod");
-  const format = useFormatter();
   const left = useRemaining(block.until);
   return (
     <div className="gcs-chatBlocked" role="alert" data-testid="gcs-chat-blocked" data-kind={block.kind}>
       <GcsIconSvg icon={block.kind === "ban" ? faBan : faRightFromBracket} className="gcs-chatBlocked__icon" />
       <strong>{block.kind === "ban" ? t("blocked.ban") : t("blocked.kick")}</strong>
       {block.reason && <span>{t("blocked.reason", { reason: block.reason })}</span>}
-      <span className="gcs-muted">
-        {block.until ? t("until", { time: format.dateTime(new Date(block.until), { dateStyle: "short", timeStyle: "short" }) }) : t("dur.forever")}
+      <span className="gcs-muted" suppressHydrationWarning>
+        {block.until ? t("until", { time: new Date(block.until).toLocaleString([], { dateStyle: "short", timeStyle: "short" }) }) : t("dur.forever")}
         {left !== null && ` · ${clock(left)}`}
       </span>
     </div>

@@ -177,13 +177,15 @@ export function GcsChatRoom(props: Props) {
   const composer = useRef<GcsChatComposerHandle>(null);
   const soundRef = useRef(true);
   const menuRef = useRef<HTMLDivElement>(null);
+  const pickerRef = useRef<HTMLSpanElement>(null);
   const menuTrigger = useRef<HTMLButtonElement>(null);
   const prefsRef = useRef<HTMLDivElement>(null);
   const prefsTrigger = useRef<HTMLButtonElement>(null);
   const prefsId = useId();
   const closeMenu = useCallback(() => setMenu(null), []);
   const closePrefs = useCallback(() => setPrefsOpen(false), []);
-  useDismiss(menu !== null, menuRef, closeMenu, menuTrigger);
+  useDismiss(menu?.kind === "more", menuRef, closeMenu, menuTrigger);
+  useDismiss(menu?.kind === "react", pickerRef, closeMenu, menuTrigger);
   useDismiss(prefsOpen, prefsRef, closePrefs, prefsTrigger);
   /** Înălțimea listei înainte de adăugarea mesajelor vechi (ca poziția să nu sară). */
   const keepScroll = useRef<number | null>(null);
@@ -647,7 +649,7 @@ export function GcsChatRoom(props: Props) {
                   </span>
                 )}
                 {open === "react" && (
-                  <span className="gcs-chat__pickerList" role="group" aria-label={labels.react}>
+                  <span ref={pickerRef} className="gcs-chat__pickerList" role="group" aria-label={labels.react}>
                     {reactions.map((r) => (
                       <button key={r.id} type="button" className="gcs-sweep" title={r.label} aria-label={r.label} onClick={() => react(m.id, r.id)}>
                         {r.symbol}
@@ -662,8 +664,9 @@ export function GcsChatRoom(props: Props) {
                   tool(labels.react, faFaceSmile, () => setMenu(open === "react" ? null : { kind: "react", id: m.id }), { expanded: open === "react", trigger: open === "react" })}
                 {viewerId !== null && tool(ts("more"), faEllipsis, () => setMenu(open === "more" ? null : { kind: "more", id: m.id }), { expanded: open === "more", trigger: open === "more", testId: "gcs-chat-more" })}
                 {open === "more" && (
-                  <div ref={menuRef} className="gcs-chatMod__anchor">
+                  <div className="gcs-chatMod__anchor">
                     <GcsChatModMenu
+                      panelRef={menuRef}
                       m={m}
                       own={own}
                       channel={channel.key}

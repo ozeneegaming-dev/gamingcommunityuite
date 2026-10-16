@@ -77,9 +77,13 @@ test("chat v3: avatar și culoarea grupului, mențiune, emoticon, YouTube, imagi
 
   // Curățenie: autorul își șterge mesajele de test.
   for (const text of [`poza ${run}`, `clip ${run}`, `@SmkMem${run}`]) {
-    await room(a).getByTestId("gcs-chat-msg").filter({ hasText: text }).getByRole("button", { name: "Șterge" }).click();
+    const own = room(a).getByTestId("gcs-chat-msg").filter({ hasText: text });
+    await own.getByTestId("gcs-chat-more").click();
+    await own.getByTestId("gcs-chatpro-delete").click();
     await expect(room(b).getByTestId("gcs-chat-msg").filter({ hasText: text })).toHaveCount(0, { timeout: 10_000 });
   }
-  await room(b).getByTestId("gcs-chat-msg").filter({ hasText: `salut ${run}` }).getByRole("button", { name: "Șterge" }).click();
+  const last = room(b).getByTestId("gcs-chat-msg").filter({ hasText: `salut ${run}` });
+  await last.getByTestId("gcs-chat-more").click();
+  await last.getByTestId("gcs-chatpro-delete").click();
   for (const p of [a, b]) await p.context().close();
 });

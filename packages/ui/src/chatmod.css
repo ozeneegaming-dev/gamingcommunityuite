@@ -11,6 +11,7 @@
  */
 
 .gcs-chat,
+.gcs-chatMod,
 .gcs-chatModDialog,
 .gcs-chatModCard,
 .gcs-chatHistory,
@@ -27,6 +28,7 @@
 
 /* Glass sweep: regulile vechi ale uneltelor din chat (`background: none` / hover cu `background`) l-ar șterge. */
 .gcs-chat .gcs-sweep,
+.gcs-chatMod .gcs-sweep,
 .gcs-chatModDialog .gcs-sweep,
 .gcs-chatModCard .gcs-sweep,
 .gcs-chatHistory .gcs-sweep,
@@ -45,6 +47,7 @@
     transform var(--gcs-motion-base) var(--gcs-motion-ease);
 }
 .gcs-chat .gcs-sweep:is(:hover, :focus-visible),
+.gcs-chatMod .gcs-sweep:is(:hover, :focus-visible),
 .gcs-chatModDialog .gcs-sweep:is(:hover, :focus-visible),
 .gcs-chatModCard .gcs-sweep:is(:hover, :focus-visible),
 .gcs-chatHistory .gcs-sweep:is(:hover, :focus-visible),
@@ -73,13 +76,16 @@
 .gcs-chatPro__msg:has(.gcs-chatMod) {
   z-index: 25;
 }
+/* Locul meniului (lângă „⋯”); meniul însuși stă într-un portal, fix, peste listă (lista derulează și l-ar tăia). */
 .gcs-chatMod__anchor {
   position: absolute;
-  top: calc(100% + 4px);
+  top: 100%;
   right: 0;
-  z-index: 40;
+  width: 0;
+  height: 0;
 }
 .gcs-chatMod {
+  z-index: 60;
   display: flex;
   flex-direction: column;
   width: 236px;
@@ -179,12 +185,20 @@
     transform: none;
   }
 }
-@container chatpro (max-width: 420px) {
-  .gcs-chatMod__sub {
-    right: auto;
-    left: 12px;
-    top: calc(100% + 2px);
-  }
+/* Lângă marginea stângă a ecranului, submeniurile se deschid în dreapta meniului. */
+.gcs-chatMod--subRight .gcs-chatMod__sub {
+  right: auto;
+  left: calc(100% + 6px);
+}
+/* Linkurile din meniu (profilul, istoricul, „Ban pe site…”) păstrează culorile meniului, nu pe ale linkurilor. */
+.gcs-chatMod .gcs-chatMod__item {
+  color: var(--gcs-text);
+}
+.gcs-chatMod .gcs-chatMod__item--warn {
+  color: var(--cm-warn);
+}
+.gcs-chatMod .gcs-chatMod__item--danger {
+  color: var(--cm-danger);
 }
 
 /* ─── Mesajele ascunse, evidențiate, liniile de sistem și rezultatele efemere ───────────────────────── */
@@ -565,14 +579,23 @@
   margin-left: auto;
 }
 
-/* Acțiunile rapide din cardul membrului (deschis din chat). */
-.gcs-hoverCard__chatMod {
-  display: flex;
+/* Acțiunile rapide din cardul membrului (deschis din chat): pe un rând al lor, sub „Urmărește” / „Mesaj”. */
+.gcs-hoverCard__actions:has(.gcs-hoverCard__chatMod) {
   flex-wrap: wrap;
+}
+.gcs-hoverCard__actions > .gcs-hoverCard__chatMod {
+  flex: 1 0 100%;
+  display: flex;
   gap: 6px;
-  width: 100%;
   padding-top: 8px;
   border-top: 1px solid var(--gcs-border);
+}
+.gcs-hoverCard__chatMod .gcs-btn {
+  flex: 1;
+  min-width: 0;
+  justify-content: center;
+  padding-inline: 8px;
+  white-space: nowrap;
 }
 
 @media (prefers-reduced-motion: reduce) {

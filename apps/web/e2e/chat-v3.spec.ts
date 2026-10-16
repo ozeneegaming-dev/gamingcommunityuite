@@ -87,7 +87,9 @@ test("avatarul și numele în culoarea grupului; click pe nume → mențiune; em
   await expect(withImage.locator('img[src^="/files/"]')).toBeVisible({ timeout: 5_000 });
 
   // Autorul își șterge mesajul; dispare și la celălalt.
-  await room(a).getByTestId("gcs-chat-msg").filter({ hasText: `poza ${id}` }).getByRole("button", { name: "Șterge" }).click();
+  const own = room(a).getByTestId("gcs-chat-msg").filter({ hasText: `poza ${id}` });
+  await own.getByTestId("gcs-chat-more").click();
+  await own.getByTestId("gcs-chatpro-delete").click();
   await expect(withImage).toHaveCount(0, { timeout: 5_000 });
   for (const p of [a, b]) await p.context().close();
 });

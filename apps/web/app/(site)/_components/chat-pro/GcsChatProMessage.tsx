@@ -292,8 +292,9 @@ export function GcsChatProMessage(props: {
         {media.length > 0 && tool(t("enlarge"), faExpand, () => openImageViewer(media.map((src) => ({ src, caption: { author: name, date: m.createdAt } }))), { testId: "gcs-chatpro-enlarge" })}
         {hasMore && tool(t("more"), faEllipsis, () => setMenu(menu === "more" ? null : "more"), { trigger: menu === "more", expanded: menu === "more", testId: "gcs-chatpro-more" })}
         {menu === "more" && (
-          <div ref={menuRef} className="gcs-chatMod__anchor">
+          <div className="gcs-chatMod__anchor">
             <GcsChatModMenu
+              panelRef={menuRef}
               m={m}
               own={own}
               channel={props.channel}
