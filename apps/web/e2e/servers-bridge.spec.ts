@@ -4,7 +4,7 @@ import { readZip } from "@gcs/plugin-sdk/zip";
 import { expect, test, type Page } from "@playwright/test";
 import { GcsMockServer, httpTransport, startA2sResponder } from "../../../servers-plugins/mock/gcs-mock-server.mjs";
 import { uid } from "./forum-fixtures";
-import { enterAcpAsRoot, resetSetting, sql, useFreshIp } from "./helpers";
+import { clearServersCache, enterAcpAsRoot, resetSetting, sql, useFreshIp } from "./helpers";
 
 /**
  * Puntea cu serverele de joc (specul 2026-10-08-servere-bridge §18, E2E minimal): cheia creată în ACP (arătată o singură
@@ -36,12 +36,14 @@ test.beforeAll(async () => {
     [27_100 + Math.floor(Math.random() * 800), NAME, `mix-e2e-${id}`],
   );
   serverId = rows[0]!.id;
+  await clearServersCache();
 });
 
 test.afterAll(async () => {
   // Serverul (cu cheile, sesiunile, statisticile și meciurile lui, în cascadă) dispare după test.
   await sql(`DELETE FROM game_sanctions WHERE "serverId" = $1`, [serverId]);
   await sql(`DELETE FROM game_servers WHERE id = $1`, [serverId]);
+  await clearServersCache();
 });
 
 test("ACP: cheia API (o singură dată), scenariul complet al serverului fals, starea punții și meciul încheiat", async ({ page, context, baseURL }) => {

@@ -574,10 +574,11 @@ test("meniul: Servere e un submeniu cu paginile punții", async ({ page, context
   await expect(nav).toHaveAttribute("data-ready", "");
   await nav.getByRole("button", { name: "Servere" }).click();
   const menu = page.getByRole("menu", { name: "Servere" });
-  await expect(menu.getByRole("menuitem")).toHaveText(["Toate serverele", "Clasamente", "Meciuri mix", "Banuri", "Admini", "Contestații"]);
+  // Mega meniul: titlul, apoi descrierea (și insigna live) pe fiecare item.
+  await expect(menu.getByRole("menuitem")).toHaveText([/^Toate serverele/, /^Clasamente/, /^Meciuri mix/, /^Banuri/, /^Admini/, /^Contestații/]);
   await menu.getByRole("menuitem", { name: "Banuri" }).click();
   await expect(page).toHaveURL(/\/bans$/);
-  await expect(nav.getByRole("button", { name: "Servere" })).toHaveClass(/gcs-nav__link--active/);
+  await expect(nav.getByRole("button", { name: "Servere" })).toHaveClass(/gcs-hb__nav--active/);
 });
 
 test("capturile: temele întunecată și luminoasă, desktop și 375 px", async ({ page, context }) => {
