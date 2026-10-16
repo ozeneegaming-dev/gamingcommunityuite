@@ -1,0 +1,1038 @@
+/*
+ * Profil gaming v2 — stilurile de sistem (globale, pe tokenurile temei, în orice temă: Clasic, Nova, pachetele importate):
+ * hover card v2, profilul public v2 (taburile aplicațiilor, banda pe servere, Steam, FACEIT, coloana) și setările
+ * contului v2. Temele doar restilizează. Regulile de hover setează `background-color`, niciodată `background` (sweep-ul).
+ */
+
+/* ─── Hover card v2 ─────────────────────────────────────────────────────────────────────────────── */
+
+/* Apariția: opacitate + 6 px de alunecare (în jos sub nume, în sus deasupra); „reduced motion” = doar opacitatea. */
+@keyframes gcs-motion-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .gcs-hoverCardLayer[data-side="below"] {
+    animation: gcs-motion-drop var(--gcs-motion-base) var(--gcs-motion-ease) both;
+  }
+  .gcs-hoverCardLayer[data-side="above"] {
+    animation: gcs-motion-rise var(--gcs-motion-base) var(--gcs-motion-ease) both;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gcs-hoverCardLayer[data-side="below"],
+  .gcs-hoverCardLayer[data-side="above"] {
+    animation: gcs-motion-fade var(--gcs-motion-base) linear both;
+  }
+}
+
+.gcs-hoverCard--v2 .gcs-hoverCard__cover {
+  height: 64px;
+}
+.gcs-hoverCard--v2 .gcs-hoverCard__body {
+  gap: 10px;
+  padding: 0 14px 14px;
+}
+.gcs-hoverCard--v2 .gcs-hoverCard__identity {
+  padding-top: 8px;
+}
+/* Inelul în culoarea grupului; urmează forma avatarului (rotund sau pătrat, `--gcs-avatar-radius`). */
+.gcs-hoverCard--v2 .gcs-hoverCard__avatar {
+  box-shadow: 0 0 0 2px var(--gcs-hoverCard-ring, var(--gcs-accent));
+}
+.gcs-hoverCard__dot {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  width: 12px;
+  height: 12px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 2px solid var(--gcs-surface);
+  background: var(--gcs-ok);
+}
+
+.gcs-hoverCard__status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gcs-text);
+}
+.gcs-hoverCard__statusDot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gcs-muted);
+}
+.gcs-hoverCard__status:is([data-kind="online"], [data-kind="playing"]) .gcs-hoverCard__statusDot {
+  background: var(--gcs-ok);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--gcs-ok) 60%, transparent);
+}
+.gcs-hoverCard__status[data-kind="lastVisit"] {
+  color: var(--gcs-muted);
+}
+.gcs-hoverCard__server {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--gcs-motion-fast) ease;
+}
+.gcs-hoverCard__server:is(:hover, :focus-visible),
+.gcs-hoverCard__more:is(:hover, :focus-visible) {
+  color: var(--gcs-accent);
+}
+
+/* Cipurile aplicațiilor (clan, ELO, VIP): culoarea proprie la hover — 30% fundal, 60% chenar, strălucire, −1 px. */
+.gcs-hoverCard__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.gcs-hoverCard__chip {
+  --gcs-hoverCard-chip: var(--gcs-accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 22px;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0 8px;
+  border-radius: 4px;
+  border: 1px solid var(--gcs-border);
+  background-color: color-mix(in srgb, var(--gcs-text) 4%, var(--gcs-surface));
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gcs-text);
+  transition:
+    background-color var(--gcs-motion-fast) ease,
+    border-color var(--gcs-motion-fast) ease,
+    box-shadow var(--gcs-motion-fast) ease,
+    transform var(--gcs-motion-fast) ease;
+}
+.gcs-hoverCard__chip > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-hoverCard__chip--clan {
+  padding-left: 3px;
+}
+.gcs-hoverCard__chip--vip {
+  border-color: color-mix(in srgb, var(--gcs-hoverCard-chip) 50%, transparent);
+  color: color-mix(in srgb, var(--gcs-hoverCard-chip) 70%, var(--gcs-text));
+}
+.gcs-hoverCard__chip:hover {
+  background-color: color-mix(in srgb, var(--gcs-hoverCard-chip) 30%, transparent);
+  border-color: color-mix(in srgb, var(--gcs-hoverCard-chip) 60%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--gcs-hoverCard-chip) 35%, transparent);
+  transform: translateY(-1px);
+}
+
+/* Nivelul: „Nivel N · Rang”, procentul și bara de XP spre rangul următor (accentul temei). */
+.gcs-hoverCard__level {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gcs-muted);
+}
+.gcs-hoverCard__levelHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.gcs-hoverCard__levelHead strong {
+  color: var(--gcs-text);
+  font-weight: 700;
+}
+.gcs-hoverCard__bar,
+.gcs-xpBar {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--gcs-text) 12%, transparent);
+}
+.gcs-hoverCard__bar > span,
+.gcs-xpBar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--gcs-accent), color-mix(in srgb, var(--gcs-accent) 55%, #fff));
+}
+@media (prefers-reduced-motion: no-preference) {
+  .gcs-hoverCard__bar > span,
+  .gcs-xpBar > span {
+    animation: gcs-xp-grow var(--gcs-motion-slow) var(--gcs-motion-ease) both;
+    transform-origin: left center;
+  }
+}
+@keyframes gcs-xp-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* Ultimele insigne + „toate →”; miniaturile se măresc ușor la hover. */
+.gcs-hoverCard__badgeRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.gcs-hoverCard__badgeLabel {
+  flex: none;
+  font-size: 11px;
+  color: var(--gcs-muted);
+}
+.gcs-hoverCard__badgeRow .gcs-hoverCard__badges {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+  overflow: hidden;
+}
+.gcs-hoverCard__badgeRow .gcs-badgeArt {
+  transition: transform var(--gcs-motion-fast) ease;
+}
+.gcs-hoverCard__badgeRow .gcs-badgeArt__item:hover .gcs-badgeArt {
+  transform: scale(1.08);
+}
+.gcs-hoverCard__more {
+  flex: none;
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gcs-accentInk, var(--gcs-accent));
+  text-decoration: none;
+}
+
+/* Acțiunile: Mesaj / Urmărește / Conținutul lui / Ignoră (iconiță) și slotul de extensie (ex. moderarea din chat). */
+.gcs-hoverCard--v2 .gcs-hoverCard__actions {
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--gcs-border);
+}
+.gcs-hoverCard--v2 .gcs-hoverCard__actions > * {
+  flex: 1 1 auto;
+}
+.gcs-hoverCard--v2 .gcs-hoverCard__actions > .gcs-tooltipWrap {
+  flex: none;
+}
+.gcs-hoverCard__actions:empty {
+  display: none;
+}
+.gcs-hoverCard__iconBtn {
+  min-width: 32px;
+  padding-inline: 8px;
+  justify-content: center;
+}
+.gcs-hoverCard__iconBtn[aria-pressed="true"] {
+  color: var(--gcs-accentInk, var(--gcs-accent));
+  border-color: color-mix(in srgb, var(--gcs-accent) 55%, transparent);
+}
+
+/* ─── Utilitare comune ─────────────────────────────────────────────────────────────────────────── */
+
+.gcs-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.92em;
+  overflow-wrap: anywhere;
+}
+/* Un panou care se deschide cu înălțime + opacitate („arată mai mult”); „reduced motion” = doar opacitatea. */
+.gcs-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows var(--gcs-motion-slow) var(--gcs-motion-ease),
+    opacity var(--gcs-motion-slow) var(--gcs-motion-ease);
+}
+.gcs-collapse > * {
+  min-height: 0;
+  overflow: hidden;
+}
+.gcs-collapse[data-open="true"] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gcs-collapse {
+    transition: opacity var(--gcs-motion-base) linear;
+  }
+}
+/* Linkul din dreapta unei benzi de titlu (ex. „Profilul Steam ↗”). */
+.gcs-titleBand__link {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--gcs-font-text);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--gcs-muted);
+  text-decoration: none;
+  transition: color var(--gcs-motion-fast) ease;
+}
+.gcs-titleBand__link:is(:hover, :focus-visible) {
+  color: var(--gcs-accent);
+}
+/* Starea unui lucru (ban / fără ban, victorie / înfrângere): verde = în regulă, roșu = problemă. */
+.gcs-statusChip {
+  --gcs-status: var(--gcs-ok);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 4px;
+  border: 1px solid color-mix(in srgb, var(--gcs-status) 45%, transparent);
+  background-color: color-mix(in srgb, var(--gcs-status) 12%, transparent);
+  color: color-mix(in srgb, var(--gcs-status) 75%, var(--gcs-text));
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.gcs-statusChip[data-state="bad"] {
+  --gcs-status: var(--gcs-danger, #e5484d);
+}
+
+/* ─── Profilul public v2 ──────────────────────────────────────────────────────────────────────── */
+
+/* Banda „pe servere”: taburile serverelor (cross-fade la schimbare) și cele 5 cifre cu linkul clasamentului. */
+.gcs-serverStrip {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.gcs-serverStrip__tabs {
+  display: flex;
+  gap: 2px;
+  padding: 0 12px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-serverStrip__tab {
+  flex: none;
+  border: 0;
+  background-color: transparent;
+  cursor: pointer;
+  min-height: 42px;
+  font: inherit;
+  font-weight: 700;
+}
+.gcs-serverStrip__tab:not(.gcs-tab--active):hover {
+  background-color: rgb(255 255 255 / 0.05);
+}
+.gcs-serverStrip__panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  padding: 14px 18px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .gcs-serverStrip__panel {
+    animation: gcs-motion-fade var(--gcs-motion-base) var(--gcs-motion-ease) both;
+  }
+}
+.gcs-serverStrip__stats {
+  flex: 1 1 420px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+.gcs-serverStrip__stats > div {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--gcs-border);
+  background-color: color-mix(in srgb, var(--gcs-text) 3%, transparent);
+}
+.gcs-serverStrip__stats dt {
+  font-size: 11px;
+  color: var(--gcs-muted);
+}
+.gcs-serverStrip__stats dd {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--gcs-text);
+}
+.gcs-serverStrip__stats > div[data-stat="place"] dd {
+  color: var(--gcs-accentInk, var(--gcs-accent));
+}
+@media (max-width: 640px) {
+  .gcs-serverStrip__stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Conturile externe (Steam, FACEIT): antetul cu statusul, grila cu ID-urile / statisticile, listele de jocuri. */
+.gcs-external {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.gcs-external__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.gcs-external__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--gcs-muted);
+}
+.gcs-external__status .gcs-dot {
+  background: var(--gcs-muted);
+}
+.gcs-external__status:not([data-status="offline"]) {
+  color: var(--gcs-ok);
+}
+.gcs-external__status:not([data-status="offline"]) .gcs-dot {
+  background: var(--gcs-ok);
+}
+.gcs-external__level {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--gcs-accent) 45%, transparent);
+  background-color: color-mix(in srgb, var(--gcs-accent) 12%, transparent);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gcs-text);
+}
+.gcs-external__name {
+  font-size: 14px;
+}
+.gcs-external__grid,
+.gcs-external__totals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+  gap: 8px;
+  margin: 0;
+}
+.gcs-external__grid > div,
+.gcs-external__totals > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--gcs-border);
+  background-color: color-mix(in srgb, var(--gcs-text) 3%, transparent);
+}
+.gcs-external__grid dt,
+.gcs-external__totals dt {
+  font-size: 11px;
+  color: var(--gcs-muted);
+}
+.gcs-external__grid dd,
+.gcs-external__totals dd {
+  margin: 0;
+  font-weight: 700;
+  min-width: 0;
+}
+.gcs-external__grid--stats dd,
+.gcs-external__totals dd {
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+.gcs-external__bans {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.gcs-external__sub {
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gcs-text);
+}
+.gcs-external__games ul,
+ul.gcs-external__games,
+.gcs-showMore__list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-external__games li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 4px;
+  border-bottom: 1px solid var(--gcs-border);
+  font-size: 13px;
+  min-width: 0;
+  transition: background-color var(--gcs-motion-fast) ease;
+}
+.gcs-external__games li:hover {
+  background-color: color-mix(in srgb, var(--gcs-text) 4%, transparent);
+}
+.gcs-external__games li > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-showMore__toggle {
+  margin-top: 8px;
+  align-self: flex-start;
+}
+.gcs-external__updated {
+  margin: 0;
+  font-size: 12px;
+}
+.gcs-external__elo {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.gcs-external__elo strong {
+  font-size: 26px;
+  font-variant-numeric: tabular-nums;
+}
+/* Nivelul FACEIT: un cerc cu cifra, pe accentul temei (fără culorile mărcii). */
+.gcs-faceitLevel {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid var(--gcs-accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--gcs-accent) 35%, transparent);
+  font-family: var(--gcs-font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--gcs-text);
+}
+.gcs-faceitRecent {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-faceitRecent li {
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 4px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--gcs-text);
+  background-color: color-mix(in srgb, var(--gcs-ok) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gcs-ok) 50%, transparent);
+}
+.gcs-faceitRecent li[data-result="L"] {
+  background-color: color-mix(in srgb, var(--gcs-danger, #e5484d) 22%, transparent);
+  border-color: color-mix(in srgb, var(--gcs-danger, #e5484d) 50%, transparent);
+}
+.gcs-eloChart {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.gcs-eloChart svg {
+  width: 100%;
+  height: 140px;
+  display: block;
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--gcs-text) 3%, transparent);
+}
+.gcs-eloChart__line {
+  stroke: var(--gcs-accent);
+  stroke-width: 2.5;
+  vector-effect: non-scaling-stroke;
+}
+.gcs-eloChart__area {
+  fill: color-mix(in srgb, var(--gcs-accent) 14%, transparent);
+}
+.gcs-eloChart__dot {
+  fill: var(--gcs-surface);
+  stroke: var(--gcs-accent);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+.gcs-eloChart figcaption {
+  font-size: 11px;
+  text-align: right;
+}
+
+/* Coloana: realizările (reputația, nivelul, locul, „Sponsor”), grupurile câmpurilor, urmăritorii, vizitatorii. */
+.gcs-achievements__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+}
+.gcs-achievements__head strong {
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+}
+.gcs-achievements__head .gcs-rep--pos {
+  color: var(--gcs-ok);
+}
+.gcs-achievements__head .gcs-rep--neg {
+  color: var(--gcs-accentInk);
+}
+.gcs-achievements__level {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 700;
+}
+.gcs-achievements__all {
+  align-self: flex-start;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gcs-accentInk, var(--gcs-accent));
+  text-decoration: none;
+}
+.gcs-achievements__all:is(:hover, :focus-visible) {
+  color: var(--gcs-accent);
+}
+/* Insigna automată „Sponsor” (din donații): pastila în culoarea accentului; hover = 30% / 60% + strălucire, −1 px. */
+.gcs-sponsorBadge {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--gcs-accent) 55%, transparent);
+  background-color: color-mix(in srgb, var(--gcs-accent) 16%, transparent);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gcs-text);
+  transition:
+    background-color var(--gcs-motion-fast) ease,
+    border-color var(--gcs-motion-fast) ease,
+    box-shadow var(--gcs-motion-fast) ease,
+    transform var(--gcs-motion-fast) ease;
+}
+.gcs-sponsorBadge:hover {
+  background-color: color-mix(in srgb, var(--gcs-accent) 30%, transparent);
+  border-color: color-mix(in srgb, var(--gcs-accent) 60%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--gcs-accent) 35%, transparent);
+  transform: translateY(-1px);
+}
+.gcs-profileGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--gcs-border);
+}
+.gcs-profileGroup__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gcs-muted);
+}
+.gcs-avatarRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-avatarRow li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  text-align: center;
+}
+.gcs-avatarRow__name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.gcs-visitorList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-visitorList li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 13px;
+}
+.gcs-visitorList li > .gcs-muted {
+  margin-left: auto;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.gcs-articleList {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-articleList__item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--gcs-border);
+  transition: background-color var(--gcs-motion-fast) ease;
+}
+.gcs-articleList__item:hover {
+  background-color: color-mix(in srgb, var(--gcs-text) 3%, transparent);
+}
+.gcs-articleList__title {
+  font-weight: 700;
+  font-size: 15px;
+}
+.gcs-articleList__snippet {
+  margin: 0;
+  font-size: 13px;
+  color: var(--gcs-muted);
+  overflow-wrap: anywhere;
+}
+.gcs-articleList__meta {
+  font-size: 12px;
+}
+.gcs-articleList__pages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 12px 20px;
+}
+
+/* ─── Setările contului v2 ────────────────────────────────────────────────────────────────────── */
+
+.gcs-overviewHead {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.gcs-overviewHead .gcs-avatar {
+  width: 72px !important;
+  height: 72px !important;
+}
+.gcs-overviewHead__id {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.gcs-overviewHead__name {
+  font-family: var(--gcs-font-display);
+  font-size: 22px;
+  font-weight: 700;
+}
+.gcs-completion__pct {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+.gcs-completion__bar {
+  height: 8px;
+  border-radius: 4px;
+}
+.gcs-completion__steps,
+.gcs-rulesList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+.gcs-rulesList {
+  padding-left: 18px;
+  list-style: disc;
+}
+.gcs-completion__steps a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+}
+.gcs-connectionCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-connectionCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--gcs-border);
+  background-color: color-mix(in srgb, var(--gcs-text) 3%, transparent);
+  transition: background-color var(--gcs-motion-fast) ease;
+}
+.gcs-connectionCard:hover {
+  background-color: color-mix(in srgb, var(--gcs-text) 6%, transparent);
+}
+.gcs-connectionCard__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  font-size: 18px;
+  color: var(--gcs-text);
+  background-color: color-mix(in srgb, var(--gcs-accent) 14%, transparent);
+}
+.gcs-connectionCard__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+  font-size: 13px;
+}
+.gcs-connectionCard__on {
+  color: var(--gcs-ok);
+  font-weight: 700;
+}
+.gcs-quickLinks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-quickLink {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--gcs-border);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--gcs-text);
+  text-decoration: none;
+  transition:
+    background-color var(--gcs-motion-fast) ease,
+    border-color var(--gcs-motion-fast) ease,
+    color var(--gcs-motion-fast) ease;
+}
+.gcs-quickLink:is(:hover, :focus-visible) {
+  background-color: rgb(255 255 255 / 0.03);
+  border-color: color-mix(in srgb, var(--gcs-text) 25%, var(--gcs-border));
+  color: var(--gcs-accent);
+}
+.gcs-prefToggle {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.gcs-optionList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gcs-optionRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--gcs-border);
+  cursor: pointer;
+  transition:
+    background-color var(--gcs-motion-fast) ease,
+    border-color var(--gcs-motion-fast) ease;
+}
+.gcs-optionRow:hover {
+  background-color: rgb(255 255 255 / 0.03);
+}
+.gcs-optionRow--active,
+.gcs-optionRow:has(input:checked) {
+  border-color: color-mix(in srgb, var(--gcs-accent) 60%, transparent);
+  background-color: color-mix(in srgb, var(--gcs-accent) 8%, transparent);
+}
+.gcs-optionRow input {
+  margin-top: 3px;
+  accent-color: var(--gcs-accent);
+}
+.gcs-optionRow__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+}
+.gcs-deviceList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-deviceList__item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--gcs-border);
+}
+.gcs-deviceList__item[data-current] {
+  border-color: color-mix(in srgb, var(--gcs-accent) 55%, transparent);
+}
+.gcs-deviceList__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.gcs-deviceList__current {
+  background-color: color-mix(in srgb, var(--gcs-accent) 18%, transparent);
+  color: var(--gcs-text);
+}
+.gcs-deviceList__meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 6px 12px;
+  margin: 0;
+  font-size: 13px;
+}
+.gcs-deviceList__meta dt {
+  font-size: 11px;
+  color: var(--gcs-muted);
+}
+.gcs-deviceList__meta dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+/* „Editează profilul”: grupurile din ACP, textul de ajutor, ziua de naștere, câmpurile de contact (prefix + handle). */
+.gcs-fieldGroup__helper {
+  margin: -4px 0 0;
+}
+.gcs-birthdayForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gcs-birthdayForm__title {
+  font-weight: 700;
+  font-size: 13px;
+}
+.gcs-birthdayForm__row {
+  display: grid;
+  grid-template-columns: minmax(0, 90px) minmax(0, 1fr) minmax(0, 130px);
+  gap: 8px;
+}
+@media (max-width: 420px) {
+  .gcs-birthdayForm__row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.gcs-handleInput {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0;
+  min-width: 0;
+}
+.gcs-handleInput__prefix {
+  display: inline-flex;
+  align-items: center;
+  align-self: stretch;
+  padding: 0 10px;
+  border: 1px solid var(--gcs-border);
+  border-right: 0;
+  border-radius: 8px 0 0 8px;
+  background-color: color-mix(in srgb, var(--gcs-text) 5%, transparent);
+  font-size: 13px;
+  color: var(--gcs-muted);
+  white-space: nowrap;
+  max-width: 55%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gcs-handleInput > .gcs-input {
+  flex: 1 1 140px;
+  min-width: 0;
+  border-radius: 0 8px 8px 0;
+}
+.gcs-handleInput__preview {
+  flex-basis: 100%;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--gcs-muted);
+  overflow-wrap: anywhere;
+}
+.gcs-acpFieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--gcs-border);
+}

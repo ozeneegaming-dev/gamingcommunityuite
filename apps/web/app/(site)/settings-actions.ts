@@ -154,6 +154,35 @@ async function currentSessionId(): Promise<string | null> {
   return session?.session.id ?? null;
 }
 
+/**
+ * Preferințele contului v2 (Vizualizarea conținutului, Semnătura, Dispozitivele, Steam / FACEIT, Confidențialitatea):
+ * doar câmpurile trimise se schimbă.
+ */
+export const saveMemberPrefs = gcsAction(
+  z
+    .object({
+      topicOpen: z.enum(["unread", "start", "last"]),
+      showSignatures: z.boolean(),
+      newDeviceEmail: z.boolean(),
+      steamTab: z.boolean(),
+      faceitTab: z.boolean(),
+      showVisitors: z.boolean(),
+      recordVisits: z.boolean(),
+    })
+    .partial(),
+  async (input, { actor }) => {
+    const prefs = await services().memberPrefs.set(actor, input);
+    // Tabul Steam / FACEIT a devenit vizibil: datele se cer din nou.
+    if (actor.userId && (input.steamTab || input.faceitTab)) await services().externalProfiles.requestRefresh(actor.userId, input.steamTab ? "steam" : "faceit").catch(() => {});
+    return prefs;
+  },
+);
+
+/** Autentificarea automată pe un dispozitiv (Setări → Dispozitive); oprită, sesiunile lui (în afară de cea curentă) se închid. */
+export const setDeviceAutoLogin = gcsAction(z.object({ id: z.string().min(1).max(40), autoLogin: z.boolean() }), async ({ id, autoLogin }, { actor }) => {
+  await services().devices.setAutoLogin(actor, id, autoLogin, await currentSessionId());
+});
+
 const DELETE_LIMIT = { window: 15 * 60, max: 5 };
 
 /**

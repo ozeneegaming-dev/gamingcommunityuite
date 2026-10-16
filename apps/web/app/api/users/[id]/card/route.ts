@@ -16,7 +16,8 @@ export const dynamic = "force-dynamic";
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
   const { id } = await params;
   if (!/^[a-z0-9]{8,40}$/i.test(id)) return new Response(null, { status: 404 });
-  const card = await services().profileQueries.card(await currentActor(), id);
+  // Hover card v2: cardul de bază plus nivelul, statusul (online / pe server / ultima vizită) și cipurile aplicațiilor.
+  const card = await services().hoverCards.load(await currentActor(), id);
   if (!card) return new Response(null, { status: 404 });
   // Tagul clanului lângă nume (aplicația Clanuri, dacă opțiunile îl arată pe hover card).
   const clan = (await services().clanQueries.tagsFor([card.user.id], "hovercard")).get(card.user.id) ?? null;

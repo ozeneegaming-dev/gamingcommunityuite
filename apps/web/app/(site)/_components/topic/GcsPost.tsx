@@ -32,12 +32,14 @@ type Props = {
   translate?: GcsTranslateLabels | null;
   /** Cardul autorului (etapa 5): grupul, XP-ul, insignele, câmpurile, online. */
   postbit?: GcsPostbitData | null;
+  /** Semnătura autorului (Setări → Semnătură: „arată semnăturile celorlalți”; propria semnătură apare mereu). */
+  showSignature?: boolean;
   /** Tagul clanului autorului (aplicația Clanuri, dacă opțiunile îl arată în postbit). */
   clan?: GcsClanTag | null;
 };
 
 /** O postare (macheta Topic): coloana autorului (server) și conținutul cu acțiunile (client). */
-export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, can, actorId, ignored = false, translate = null, postbit = null, clan = null }: Props) {
+export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, can, actorId, ignored = false, translate = null, postbit = null, clan = null, showSignature = true }: Props) {
   const t = await getTranslations("topic");
   const format = await getFormatter();
   const author = post.author;
@@ -91,7 +93,7 @@ export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, 
         can={{ ...can, react: can.react && !own, report: can.report && !own, edit: post.canEdit, hide: post.canHide }}
         extras={translate && post.visibility === "VISIBLE" && !own ? <GcsTranslateButton contentType="forums.post" contentId={post.id} labels={translate} /> : null}
         signature={
-          author?.signatureHtml && post.visibility === "VISIBLE" ? (
+          showSignature && author?.signatureHtml && post.visibility === "VISIBLE" ? (
             // Semnătura: HTML-ul produs și sanitizat de renderer la salvare (Setări → Semnătură).
             <GcsNamedHtml className="gcs-post__signature gcs-postBody" data-testid="gcs-post-signature" html={author.signatureHtml} />
           ) : null

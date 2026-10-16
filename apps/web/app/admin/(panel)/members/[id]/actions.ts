@@ -50,6 +50,21 @@ export async function awardBadge(userId: string, fd: FormData): Promise<GcsResul
   });
 }
 
+/** O donație înregistrată de echipă (profil gaming v2): peste pragul din ACP → Profiluri, insigna automată „Sponsor”. */
+export async function addDonation(userId: string, fd: FormData): Promise<GcsResult<null>> {
+  return runAcpAction(SECTION, "edit", async (actor) => {
+    await services().profileExtras.addDonation(actor, userId, { amount: Number(field(fd, "amount").replace(",", ".")), currency: field(fd, "currency") || "EUR", note: field(fd, "note") });
+    return null;
+  });
+}
+
+export async function deleteDonation(id: number): Promise<GcsResult<null>> {
+  return runAcpAction(SECTION, "edit", async (actor) => {
+    await services().profileExtras.deleteDonation(actor, id);
+    return null;
+  });
+}
+
 export async function revokeBadge(userId: string, badgeId: number): Promise<GcsResult<null>> {
   return runAcpAction(SECTION, "edit", async (actor) => {
     await services().achievements.revokeBadge(actor, userId, badgeId);

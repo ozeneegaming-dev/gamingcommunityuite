@@ -12,7 +12,7 @@ import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { MemberProfileSections } from "./MemberProfileSections";
 import { addSecondaryGroup, banMember, liftBan, removeSecondaryGroup, setPrimaryGroup, warnMember } from "../actions";
-import { saveMemberPermissions } from "./actions";
+import { addDonation, deleteDonation, saveMemberPermissions } from "./actions";
 import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 import { GcsMemberLink } from "@/lib/member-names";
 
@@ -62,6 +62,7 @@ export default async function AcpMemberPage({ params, searchParams }: Props) {
   const now = new Date();
   const secondaryIds = new Set(member.secondaryGroups.map((g) => g.id));
   const addable = groups.filter((g) => g.id !== member.primaryGroup.id && !secondaryIds.has(g.id));
+  const [donations, sponsor] = await Promise.all([services().profileExtras.donations(member.id), services().profileExtras.sponsor(member.id)]);
 
   return (
     <>
@@ -233,6 +234,38 @@ export default async function AcpMemberPage({ params, searchParams }: Props) {
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 380px), 1fr))", gap: 16, alignItems: "start" }}>
         <MemberProfileSections userId={member.id} />
+        {/* Profil gaming v2: donațiile membrului (insigna automată „Sponsor” peste pragul din ACP → Profiluri). */}
+        <Section title={t("donations.title")} icon="fa-solid fa-hand-holding-heart">
+          <p style={muted}>{sponsor.sponsor ? t("donations.sponsor") : t("donations.hint")}</p>
+          {donations.map((d) => (
+            <div key={d.id} style={listRow} data-testid="gcs-member-donation">
+              <span>
+                <strong>{format.number(d.amount / 100, { style: "currency", currency: d.currency })}</strong>
+                {d.note && <span style={muted}> · {d.note}</span>}
+              </span>
+              <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <span style={muted}>{format.dateTime(d.createdAt, { dateStyle: "medium" })}</span>
+                <GcsActionForm compact variant="ghost" action={deleteDonation.bind(null, d.id)} submitLabel={t("donations.delete")} submitKind="delete" confirm={t("donations.confirmDelete")} />
+              </span>
+            </div>
+          ))}
+          <GcsActionForm action={addDonation.bind(null, member.id)} submitLabel={t("donations.add")} submitKind="create" variant="ghost">
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
+              <label className="gcs-field" style={{ width: 120 }}>
+                {t("donations.amount")}
+                <input className="gcs-input" name="amount" inputMode="decimal" required data-testid="gcs-donation-amount" />
+              </label>
+              <label className="gcs-field" style={{ width: 90 }}>
+                {t("donations.currency")}
+                <input className="gcs-input" name="currency" defaultValue="EUR" maxLength={3} required />
+              </label>
+              <label className="gcs-field" style={{ flex: "1 1 160px" }}>
+                {t("donations.note")}
+                <input className="gcs-input" name="note" maxLength={200} />
+              </label>
+            </div>
+          </GcsActionForm>
+        </Section>
       </div>
       <Section title={t("perms.title")} icon="fa-solid fa-key">
         <p style={muted}>{t("perms.hint")}</p>

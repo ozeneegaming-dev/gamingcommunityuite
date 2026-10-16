@@ -33,7 +33,31 @@ export async function saveProfileField(id: number | null, fd: FormData): Promise
       icon: field(fd, "icon") || null,
       showInPostbit: fd.get("showInPostbit") === "on",
       optionImages: optionImages(field(fd, "optionImages")),
+      groupId: field(fd, "groupId") ? Number(field(fd, "groupId")) : null,
+      helper: field(fd, "helper"),
+      linkTemplate: field(fd, "linkTemplate") || null,
     });
+    return null;
+  });
+}
+
+/** Un grup de câmpuri (profil gaming v2): cheia, titlul, textul de ajutor din formularul membrului, iconița și ordinea. */
+export async function saveProfileFieldGroup(id: number | null, fd: FormData): Promise<GcsResult<null>> {
+  return runAcpAction(PROFILES_ACP_SECTION, "edit", async (actor) => {
+    await services().profileFields.saveGroup(actor, id, {
+      key: field(fd, "key").trim(),
+      label: field(fd, "label"),
+      helper: field(fd, "helper"),
+      icon: field(fd, "icon") || null,
+      position: intField(fd, "position"),
+    });
+    return null;
+  });
+}
+
+export async function deleteProfileFieldGroup(id: number): Promise<GcsResult<null>> {
+  return runAcpAction(PROFILES_ACP_SECTION, "delete", async (actor) => {
+    await services().profileFields.deleteGroup(actor, id);
     return null;
   });
 }
@@ -64,6 +88,11 @@ export async function saveProfileSettings(fd: FormData): Promise<GcsResult<null>
     const { settings } = services();
     await settings.set("profile.cover_max_mb", Number(field(fd, "coverMaxMb")), actor);
     await settings.set("profile.wall_enabled", fd.get("wallEnabled") === "on", actor);
+    // Profil gaming v2: pragul insignei „Sponsor” și cheia FACEIT (goală = neschimbată; „șterge” o golește).
+    if (fd.has("sponsorMin")) await settings.set("profile.sponsor_min_amount", Number(field(fd, "sponsorMin")), actor);
+    const faceit = field(fd, "faceitKey").trim();
+    if (fd.get("faceitClear") === "on") await settings.set("profile.faceit_api_key", "", actor);
+    else if (faceit) await settings.set("profile.faceit_api_key", faceit, actor);
     return null;
   });
 }

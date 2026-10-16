@@ -38,6 +38,7 @@
     "./chatpro.css": "./src/chatpro.css",
     "./chatmod.css": "./src/chatmod.css",
     "./groups-pro.css": "./src/groups-pro.css",
+    "./member.css": "./src/member.css",
     "./nova.css": "./src/nova.css",
     "./sweep.css": "./src/sweep.css",
     "./icons": "./src/icons/index.tsx",

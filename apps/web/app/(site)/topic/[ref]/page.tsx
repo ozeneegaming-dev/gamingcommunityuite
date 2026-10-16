@@ -3,7 +3,9 @@ import { GcsBadge, GcsButton, GcsCard, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound, permanentRedirect } from "next/navigation";
+import { notFound, permanentRedirect, redirect } from "next/navigation";
+import { topicOpenPlan } from "@/lib/topic-open";
+import { GcsScrollToPost } from "../../_components/topic/GcsScrollToPost";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
 import { forumQuery, moveTargets, pageParam } from "@/lib/forum-page";
@@ -57,9 +59,15 @@ const has = (powers: string[], power: string) => powers.includes("*") || powers.
 export default async function TopicPage({ params, searchParams }: Props) {
   const ref = parseRef((await params).ref);
   if (!ref) notFound();
-  const page = pageParam((await searchParams).page);
+  const sp = await searchParams;
+  const page = pageParam(sp.page);
   const actor = await currentActor();
   const { forumQueries, readMarkers, permissions, social } = services();
+  // Setări → Vizualizarea conținutului: deschis din altă pagină, topicul sare la prima necitită / ultima postare.
+  const openPlan = await topicOpenPlan(actor, ref.id, { hasPage: sp.page !== undefined });
+  if (openPlan.kind === "redirect") redirect(openPlan.href);
+  // Setări → Semnătură: „arată semnăturile celorlalți” (implicit da).
+  const showSignatures = actor.userId ? (await services().memberPrefs.get(actor.userId)).showSignatures : true;
   const t = await getTranslations("topic");
   const tf = await getTranslations("forum");
   const format = await getFormatter();
@@ -182,6 +190,7 @@ export default async function TopicPage({ params, searchParams }: Props) {
         labels={Object.fromEntries(["readers", "guests", "typing", "typingMany", "newPosts", "newPost", "show"].map((k) => [k, tl.raw(k) as string])) as Parameters<typeof GcsTopicLive>[0]["labels"]}
       />
       <GcsPagination pagination={data.pagination} href={(p) => topicHref(topic, p)} />
+      {openPlan.kind === "focus" && <GcsScrollToPost postId={openPlan.postId} />}
       <div className="gcs-postList" data-gcs-gallery="topic">
         {data.posts.map((post) => (
           <GcsPost
@@ -196,6 +205,7 @@ export default async function TopicPage({ params, searchParams }: Props) {
             translate={translate}
             postbit={post.author ? (postbits.get(post.author.id) ?? null) : null}
             clan={post.author ? (clanTags.get(post.author.id) ?? null) : null}
+            showSignature={showSignatures || (post.author !== null && post.author.id === actor.userId)}
             can={{
               react: actor.userId !== null && post.visibility === "VISIBLE",
               quote: data.canReply,

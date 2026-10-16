@@ -2,7 +2,7 @@ import { canViewPost, parseRef } from "@gcs/modules";
 import { currentActor } from "@/lib/actor";
 import { topicHref } from "@/lib/forum-urls";
 import { services } from "@/lib/services";
-import { localRedirect } from "@/lib/redirect";
+import { jumpRedirect } from "@/lib/topic-open";
 
 export const dynamic = "force-dynamic";
 
@@ -19,5 +19,5 @@ export async function GET(req: Request, { params }: Props): Promise<Response> {
 
   const target = await readMarkers.firstUnread(actor, ref.id);
   const href = target ? `${topicHref({ id: ref.id, slug: topic.slug }, target.page)}#post-${target.postId}` : topicHref({ id: ref.id, slug: topic.slug });
-  return localRedirect(href);
+  return jumpRedirect(href, ref.id);
 }

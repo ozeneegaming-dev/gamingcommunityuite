@@ -5,7 +5,7 @@ import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { currentActor } from "@/lib/actor";
 import { GcsSettingsNav } from "../_components/settings/GcsSettingsNav";
-import { SETTINGS_SECTIONS } from "../_components/settings/sections";
+import { SETTINGS_SECTIONS, settingsHref } from "../_components/settings/sections";
 
 /** Setările contului (specul etapei 3, §8; etapa 5: meniu cu iconițe și secțiuni noi): doar pentru membri autentificați. */
 export default async function SettingsLayout({ children }: { children: ReactNode }) {
@@ -21,7 +21,7 @@ export default async function SettingsLayout({ children }: { children: ReactNode
             {t("title")}
           </h1>
         </header>
-        <GcsSettingsNav label={t("title")} items={SETTINGS_SECTIONS.map(([s, icon]) => ({ href: `/settings/${s}`, label: t(`nav.${s}`), icon: <GcsIcon name={icon} /> }))} />
+        <GcsSettingsNav label={t("title")} items={SETTINGS_SECTIONS.map(([s, icon]) => ({ href: settingsHref(s), label: t(`nav.${s}`), icon: <GcsIcon name={icon} /> }))} />
       </aside>
       <GcsCard as="section" className="gcs-settingsCard" style={{ minWidth: 0 }}>
         {children}

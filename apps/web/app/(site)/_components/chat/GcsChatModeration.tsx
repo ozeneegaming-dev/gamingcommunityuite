@@ -27,6 +27,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { memberHref } from "@/lib/forum-urls";
+import { registerHoverCardActions, type GcsHoverCardActionContext } from "@/lib/hover-card-actions";
 import { useErrorMessage } from "@/lib/use-error-message";
 import {
   banChatUser,
@@ -190,6 +191,45 @@ export function useChatModeration(opts: { channel: string; viewerId: string | nu
     nodes,
   };
 }
+
+// ─── Acțiunile rapide din cardul membrului (slotul `hoverCardActions`) ─────────────────────────
+
+const QUICK_ICONS = { mute: faCommentSlash, kick: faRightFromBracket, warn: faTriangleExclamation } as const;
+
+/**
+ * Mute / Kick / Avertisment în hover card-ul unui membru, când cardul e deschis din camera în care viewer-ul moderează
+ * (rădăcina camerei are `data-gcs-chat-mod`, vezi `rootAttrs`): fiecare buton cere camerei dialogul de moderare.
+ */
+function GcsChatHoverActions({ ctx }: { ctx: GcsHoverCardActionContext }) {
+  const tm = useTranslations("chat.mod");
+  const root = ctx.anchor.closest<HTMLElement>("[data-gcs-chat-mod]");
+  if (!root || ctx.isSelf) return null;
+  const quick = (root.dataset.gcsChatMod ?? "").split(",").filter((a): a is GcsChatModRequest["action"] => a === "mute" || a === "kick" || a === "warn");
+  if (quick.length === 0) return null;
+  return (
+    <span className="gcs-hoverCard__chatMod" data-testid="gcs-hover-chatmod">
+      {quick.map((a) => (
+        <GcsButton
+          key={a}
+          variant="ghost"
+          size="sm"
+          className="gcs-sweep"
+          icon={<GcsIconSvg icon={QUICK_ICONS[a]} />}
+          onClick={() => {
+            const detail: GcsChatModRequest = { action: a, userId: ctx.userId, name: ctx.name, channel: root.dataset.gcsChatChannel ?? "" };
+            ctx.close();
+            document.dispatchEvent(new CustomEvent(CHAT_MOD_EVENT, { detail }));
+          }}
+          data-testid={`gcs-hover-chatmod-${a}`}
+        >
+          {tm(a)}
+        </GcsButton>
+      ))}
+    </span>
+  );
+}
+
+registerHoverCardActions("chat.moderation", GcsChatHoverActions, 50);
 
 // ─── Meniul „⋯” ─────────────────────────────────────────────────────────────────────────────────
 

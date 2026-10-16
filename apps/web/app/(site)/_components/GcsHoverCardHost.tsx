@@ -1,28 +1,39 @@
 "use client";
 
-import { faCommentSlash, faEnvelope, faRightFromBracket, faTriangleExclamation, faUserMinus, faUserPlus } from "@fortawesome/free-solid-svg-icons";
+import { faBan, faEnvelope, faFileLines, faUserMinus, faUserPlus } from "@fortawesome/free-solid-svg-icons";
 import {
   GcsButton,
   GcsGroupCard,
   GcsHoverCard,
   GcsIconSvg,
+  GcsTooltip,
   placeHoverCard,
   type GcsGroupCardData,
   type GcsGroupCardLabels,
   type GcsHoverCardData,
   type GcsHoverCardLabels,
   type GcsHoverCardPlacement,
+  type GcsHoverCardV2,
+  type GcsHoverCardV2Labels,
 } from "@gcs/ui";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { hoverAnchorKey, hoverAnchorOf, OPEN_CARD_EVENT } from "@/lib/hover-anchor";
-import { followUser } from "../profile-actions";
-import { CHAT_MOD_EVENT, type GcsChatModRequest } from "./chat/GcsChatModeration";
+import { hoverCardActionProviders } from "@/lib/hover-card-actions";
+import { followUser, ignoreUser } from "../profile-actions";
 
-/** `html`: markup-ul din șablonul `members.hover_card` al temei (deja sanitizat pe server), dacă tema l-a modificat. */
-type CardData = GcsHoverCardData & { viewer: { isSelf: boolean; isFollowing: boolean; canMessage: boolean; canFollow: boolean }; html?: string | null };
+/**
+ * `html`: markup-ul din șablonul `members.hover_card` al temei (deja sanitizat pe server), dacă tema l-a modificat.
+ * Câmpurile v2 (nivelul, statusul, cipurile, „Conținutul lui”, Ignoră) vin din `GcsHoverCardLoader`.
+ */
+type CardData = GcsHoverCardData &
+  Partial<Pick<GcsHoverCardV2, "level" | "status" | "chips" | "profileHref">> & {
+    viewer: { isSelf: boolean; isFollowing: boolean; canMessage: boolean; canFollow: boolean; isIgnored?: boolean; canIgnore?: boolean };
+    contentHref?: string;
+    html?: string | null;
+  };
 type Labels = GcsHoverCardLabels & { follow: string; unfollow: string; message: string; group: GcsGroupCardLabels };
 
 const OPEN_DELAY = 300;
@@ -86,8 +97,6 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
   /** Locul cardului, calculat după mărimea lui măsurată; `null` = încă nemăsurat (stratul e ascuns). */
   const [place, setPlace] = useState<GcsHoverCardPlacement | null>(null);
   const layer = useRef<HTMLDivElement>(null);
-  const [pending, startTransition] = useTransition();
-  const tm = useTranslations("chat.mod");
   const openTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const suppressClick = useRef(false);
@@ -194,12 +203,31 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
       }
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && current.current) {
-        const anchor = current.current.anchor;
+      const now = current.current;
+      if (e.key === "Escape" && now) {
+        const anchor = now.anchor;
         cancelOpen();
         setOpen(null);
         suppressFocus.current = true;
         anchor.focus();
+        return;
+      }
+      // Tastatura: Tab de pe nume intră în card (primul buton / link); Tab după ultimul element (sau Shift+Tab de pe
+      // primul) revine pe nume și închide cardul, ca ordinea paginii să continue de acolo.
+      if (e.key !== "Tab" || !now) return;
+      const focusables = [...(document.querySelector(".gcs-hoverCardLayer")?.querySelectorAll<HTMLElement>("a[href], button:not(:disabled), [tabindex]:not([tabindex='-1'])") ?? [])];
+      if (focusables.length === 0) return;
+      const active = document.activeElement;
+      if (active === now.anchor && !e.shiftKey) {
+        e.preventDefault();
+        keepOpen();
+        focusables[0]!.focus();
+      } else if ((active === focusables.at(-1) && !e.shiftKey) || (active === focusables[0] && e.shiftKey)) {
+        e.preventDefault();
+        cancelOpen();
+        setOpen(null);
+        suppressFocus.current = true;
+        now.anchor.focus();
       }
     };
     const onScroll = () => setOpen(null);
@@ -249,72 +277,128 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
       </div>
     );
   }
-  const { data } = open;
+  const update = (next: CardData) => {
+    cache.set(open.userId, { at: Date.now(), data: next });
+    setOpen((o) => (o?.kind === "user" && o.userId === open.userId ? { ...o, data: next } : o));
+  };
+  return (
+    <div {...layerProps}>
+      <MemberCard userId={open.userId} anchor={open.anchor} data={open.data} labels={labels} locale={locale} onUpdate={update} onClose={() => setOpen(null)} />
+    </div>
+  );
+}
+
+/**
+ * Cardul unui membru (hover card v2): datele, acțiunile Mesaj / Urmărește / Conținutul lui / Ignoră și slotul de extensie
+ * (`hoverCardActions`: ex. Mute / Kick / Avertisment din chat).
+ */
+function MemberCard({
+  userId,
+  anchor,
+  data,
+  labels,
+  locale,
+  onUpdate,
+  onClose,
+}: {
+  userId: string;
+  anchor: HTMLElement;
+  data: CardData;
+  labels: Labels;
+  locale: string;
+  onUpdate: (next: CardData) => void;
+  onClose: () => void;
+}) {
+  const t = useTranslations("hoverCard");
+  const format = useFormatter();
+  const [pending, startTransition] = useTransition();
+  const number = (n: number) => new Intl.NumberFormat(locale).format(n);
   const year = (iso: string) => String(new Date(iso).getFullYear());
+  const relative = (iso: string) => format.relativeTime(new Date(iso));
 
   const toggleFollow = () =>
     startTransition(async () => {
-      const res = await followUser({ userId: open.userId, follow: !data.viewer.isFollowing });
+      const res = await followUser({ userId, follow: !data.viewer.isFollowing });
       if (!res.ok) return;
       let next: CardData = { ...data, stats: { ...data.stats, followers: res.data.followers }, viewer: { ...data.viewer, isFollowing: res.data.following } };
       // Cardul din șablon e randat pe server: îl cerem din nou, cu numărul nou de urmăritori.
-      if (data.html) next = (await load(open.userId, true).catch(() => null)) ?? next;
-      cache.set(open.userId, { at: Date.now(), data: next });
-      setOpen((o) => (o?.kind === "user" ? { ...o, data: next } : o));
+      if (data.html) next = (await load(userId, true).catch(() => null)) ?? next;
+      onUpdate(next);
+    });
+  const toggleIgnore = () =>
+    startTransition(async () => {
+      const ignore = !data.viewer.isIgnored;
+      const res = await ignoreUser({ userId, posts: ignore, messages: ignore });
+      if (res.ok) onUpdate({ ...data, viewer: { ...data.viewer, isIgnored: ignore } });
     });
 
-  // Deschis din chat de cineva care moderează camera: acțiunile rapide (Mute, Kick, Avertisment) deschid dialogul camerei.
-  const chatRoot = open.anchor.closest<HTMLElement>("[data-gcs-chat-mod]");
-  const quick = chatRoot && !data.viewer.isSelf ? (chatRoot.dataset.gcsChatMod ?? "").split(",").filter((a): a is GcsChatModRequest["action"] => a === "mute" || a === "kick" || a === "warn") : [];
-  const quickIcons = { mute: faCommentSlash, kick: faRightFromBracket, warn: faTriangleExclamation } as const;
-  const quickActions =
-    quick.length > 0 ? (
-      <span className="gcs-hoverCard__chatMod" data-testid="gcs-hover-chatmod">
-        {quick.map((a) => (
-          <GcsButton
-            key={a}
-            variant="ghost"
-            size="sm"
-            className="gcs-sweep"
-            icon={<GcsIconSvg icon={quickIcons[a]} />}
-            onClick={() => {
-              const detail: GcsChatModRequest = { action: a, userId: open.userId, name: data.user.name, channel: chatRoot!.dataset.gcsChatChannel ?? "" };
-              setOpen(null);
-              document.dispatchEvent(new CustomEvent(CHAT_MOD_EVENT, { detail }));
-            }}
-            data-testid={`gcs-hover-chatmod-${a}`}
-          >
-            {tm(a === "warn" ? "warn" : a)}
-          </GcsButton>
-        ))}
-      </span>
-    ) : null;
-  const actions =
-    data.viewer.canFollow || data.viewer.canMessage || quickActions ? (
-      <>
-        {data.viewer.canFollow && (
-          <GcsButton
-            variant={data.viewer.isFollowing ? "ghost" : "primary"}
-            icon={<GcsIconSvg icon={data.viewer.isFollowing ? faUserMinus : faUserPlus} />}
-            onClick={toggleFollow}
+  const v2: GcsHoverCardV2 | null = data.level && data.status && data.chips ? { level: data.level, status: data.status, chips: data.chips, profileHref: data.profileHref ?? `/members/${userId}-${data.user.slug}` } : null;
+  const v2Labels: GcsHoverCardV2Labels = {
+    onlineNow: t("v2.onlineNow"),
+    playing: (server) => t("v2.playing", { server }),
+    lastVisit: (time) => t("v2.lastVisit", { time }),
+    level: (level, rank) => (rank ? t("v2.levelRank", { level, rank }) : t("v2.level", { level })),
+    maxLevel: t("v2.maxLevel"),
+    nextLevel: (name) => t("v2.nextLevel", { name }),
+    elo: (elo, tier) => t("v2.elo", { elo, tier: t(`v2.tiers.${tier}`) }),
+    vip: t("v2.vip"),
+    badges: t("v2.badges"),
+    allBadges: t("v2.allBadges"),
+  };
+  const ctx = { userId, name: data.user.name, anchor, isSelf: data.viewer.isSelf, close: onClose };
+  const extensions = hoverCardActionProviders().map(({ key, Provider }) => <Provider key={key} ctx={ctx} />);
+  const contentHref = data.contentHref ?? null;
+  const actions = (
+    <>
+      {data.viewer.canMessage && (
+        <GcsButton variant="primary" size="sm" asChild icon={<GcsIconSvg icon={faEnvelope} />}>
+          <Link href={`/messages/new?to=${encodeURIComponent(userId)}`} data-testid="gcs-hover-message">
+            {labels.message}
+          </Link>
+        </GcsButton>
+      )}
+      {data.viewer.canFollow && (
+        <GcsButton
+          variant="ghost"
+          size="sm"
+          icon={<GcsIconSvg icon={data.viewer.isFollowing ? faUserMinus : faUserPlus} />}
+          onClick={toggleFollow}
+          disabled={pending}
+          aria-pressed={data.viewer.isFollowing}
+          data-testid="gcs-hover-follow"
+        >
+          {data.viewer.isFollowing ? labels.unfollow : labels.follow}
+        </GcsButton>
+      )}
+      {v2 && contentHref && (
+        <GcsButton variant="ghost" size="sm" asChild icon={<GcsIconSvg icon={faFileLines} />}>
+          <Link href={contentHref} data-testid="gcs-hover-content">
+            {t("v2.content")}
+          </Link>
+        </GcsButton>
+      )}
+      {v2 && data.viewer.canIgnore && (
+        <GcsTooltip content={data.viewer.isIgnored ? t("v2.unignore") : t("v2.ignore")}>
+          <button
+            type="button"
+            className="gcs-btn gcs-btn--ghost gcs-btn--sm gcs-hoverCard__iconBtn"
+            onClick={toggleIgnore}
             disabled={pending}
-            data-testid="gcs-hover-follow"
+            aria-pressed={data.viewer.isIgnored === true}
+            aria-label={data.viewer.isIgnored ? t("v2.unignore") : t("v2.ignore")}
+            data-testid="gcs-hover-ignore"
           >
-            {data.viewer.isFollowing ? labels.unfollow : labels.follow}
-          </GcsButton>
-        )}
-        {data.viewer.canMessage && (
-          <GcsButton variant="ghost" asChild icon={<GcsIconSvg icon={faEnvelope} />}>
-            <Link href={`/messages/new?to=${encodeURIComponent(open.userId)}`}>{labels.message}</Link>
-          </GcsButton>
-        )}
-        {quickActions}
-      </>
-    ) : undefined;
-
-  return (
-    <div {...layerProps}>
-      {data.html ? <TemplatedCard html={data.html} actions={actions} /> : <GcsHoverCard data={data} labels={labels} format={{ number, year }} actions={actions} />}
-    </div>
+            <GcsIconSvg icon={faBan} />
+          </button>
+        </GcsTooltip>
+      )}
+      {extensions}
+    </>
+  );
+  const hasActions = data.viewer.canFollow || data.viewer.canMessage || (v2 !== null && contentHref !== null) || hoverCardActionProviders().length > 0;
+  return data.html ? (
+    <TemplatedCard html={data.html} actions={hasActions ? actions : null} />
+  ) : (
+    <GcsHoverCard data={{ ...data, v2 }} labels={labels} v2Labels={v2Labels} format={{ number, year, relative }} {...(hasActions ? { actions } : {})} />
   );
 }

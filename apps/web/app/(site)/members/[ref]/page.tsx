@@ -1,5 +1,8 @@
-import type { GcsLockedBadge, GcsProfileView } from "@gcs/modules";
+import { BIRTHDAY_NO_YEAR, groupFields, type GcsLockedBadge, type GcsProfileView } from "@gcs/modules";
 import { parseUserRef, slugify } from "@gcs/modules/slug";
+import { profileTabs } from "@/lib/profile-tabs";
+import { GcsFaceitTab, GcsSteamTab } from "../../_components/profile/GcsProfileExternal";
+import { GcsServerStatsStrip } from "../../_components/profile/GcsServerStatsStrip";
 import { GcsAvatar, GcsBadgeArt, GcsCard, GcsClanTag, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
@@ -23,18 +26,20 @@ import { translateLabels } from "@/lib/translate";
 import { GcsMemberLink, GcsNamedHtml } from "@/lib/member-names";
 import { GcsGroupLink } from "@/lib/group-pills";
 
-const TABS = ["activity", "about", "games", "followers", "badges", "warnings"] as const;
-type Tab = (typeof TABS)[number];
+/** Tabul unei pagini de profil: cheia unui tab de bază sau a unuia adus de o aplicație (`GcsModule.profileTabs`). */
+type Tab = string;
 
-/** Iconițele taburilor profilului (și ale titlurilor secțiunilor lor). */
-const TAB_ICONS: Record<Tab, string> = {
+/** Iconițele taburilor de bază (și ale titlurilor secțiunilor lor); taburile aplicațiilor își aduc iconița. */
+const TAB_ICONS = {
   activity: "fa-solid fa-chart-line",
   about: "fa-solid fa-circle-info",
   games: "fa-solid fa-gamepad",
   followers: "fa-solid fa-user-group",
   badges: "fa-solid fa-award",
   warnings: "fa-solid fa-triangle-exclamation",
-};
+  articles: "fa-solid fa-newspaper",
+  skins: "fa-solid fa-gun",
+} as const;
 
 type Props = { params: Promise<{ ref: string }>; searchParams: Promise<{ tab?: string; page?: string; before?: string }> };
 
@@ -70,16 +75,26 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
   const { parsed, actor, profile } = data;
   const translate = await translateLabels(actor);
   const { user, stats, viewer } = profile;
-  const tab: Tab = TABS.includes(query.tab as Tab) && (query.tab !== "warnings" || viewer.canSeeWarnings) ? (query.tab as Tab) : "activity";
-  if (parsed.slug !== user.slug) permanentRedirect(`/members/${user.id}-${user.slug}${tab !== "activity" ? `?tab=${tab}` : ""}`);
+  // Taburile vizibile (cele de bază și ale aplicațiilor pornite); un tab necunoscut sau ascuns → Activitate (primul).
+  const tabs = await profileTabs(actor, { userId: user.id, isSelf: viewer.isSelf, canSeeWarnings: viewer.canSeeWarnings });
+  const firstTab = tabs[0]?.key ?? "about";
+  const tab: Tab = tabs.some((x) => x.key === query.tab) ? query.tab! : firstTab;
+  if (parsed.slug !== user.slug) permanentRedirect(`/members/${user.id}-${user.slug}${tab !== firstTab ? `?tab=${tab}` : ""}`);
+  // Vizitatorii recenți: vizita se notează (o dată la 10 minute, după preferințele vizitatorului).
+  await services()
+    .profileExtras.recordVisit(actor, user.id)
+    .catch(() => false);
 
   const t = await getTranslations("profile");
+  const tAll = await getTranslations();
   const format = await getFormatter();
-  const tabHref = (k: Tab) => `/members/${user.id}-${user.slug}${k === "activity" ? "" : `?tab=${k}`}`;
+  const tabHref = (k: Tab) => `/members/${user.id}-${user.slug}${k === firstTab ? "" : `?tab=${k}`}`;
   const relative = (iso: string) => format.relativeTime(new Date(iso));
   const accent = user.accentColor ?? "#D62839";
   const about = profile.fields.filter((f) => f.section === "ABOUT");
   const games = profile.fields.filter((f) => f.section === "GAMES");
+  /** Câmpurile tabului Jocuri fără grup: rămân în caseta conturilor legate. */
+  const gamesLoose = games.filter((f) => f.groupId == null);
   // Aspectul publicat de pluginuri (Studio VIP): doar adăugiri în locurile existente ale profilului (fundal, rama,
   // pastila banner-ului, arma în statistici, citatul și melodia), iar tema prin variabile CSS.
   const look = await memberLook(user.id);
@@ -94,8 +109,21 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
   const game = await services().bridge.queries.userCard(actor, user.id);
   const tr = await getTranslations("clans.roles");
   const tViewer = await getTranslations("imageViewer");
-  const birthdayRow = await services().db.user.findUnique({ where: { id: user.id }, select: { birthday: true, birthdayVisible: true } });
+  const birthdayRow = await services().db.user.findUnique({ where: { id: user.id }, select: { birthday: true, birthdayVisible: true, birthdayShowYear: true } });
   const birthday = birthdayRow?.birthdayVisible && birthdayRow.birthday ? birthdayRow.birthday : null;
+  // Anul doar dacă membrul l-a dat și a ales să-l arate (grupul „De bază”).
+  const birthdayYear = birthday && birthdayRow?.birthdayShowYear && birthday.getUTCFullYear() !== BIRTHDAY_NO_YEAR;
+  // Coloana v2: realizările, grupurile câmpurilor, urmăritorii, vizitatorii; banda statisticilor pe servere.
+  const { profileExtras, profileFields, apps, bridge: bridgeSvc } = services();
+  const usable = await apps.accessFilter(actor);
+  const [achievements, fieldGroups, visitors, followerPreview, serverStats] = await Promise.all([
+    profileExtras.achievements(actor, user.id),
+    profileFields.groups(),
+    profileExtras.visitors(actor, user.id),
+    services().profileQueries.followers(actor, user.id, 1),
+    usable("servers") ? bridgeSvc.queries.userServerStats(actor, user.id).catch(() => []) : Promise.resolve([]),
+  ]);
+  const visitorUsers = visitors && visitors.length > 0 ? await services().profileQueries.userDisplays(visitors.map((v) => v.id)) : new Map();
 
   const header = (
     <section
@@ -235,11 +263,11 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
           </div>
         )}
       </dl>
-      <nav aria-label={t("tabsLabel")} className="gcs-tabs">
-        {TABS.filter((k) => k !== "warnings" || viewer.canSeeWarnings).map((k) => (
-          <Link key={k} href={tabHref(k)} className={`gcs-tab${k === tab ? " gcs-tab--active" : ""}`} aria-current={k === tab ? "page" : undefined}>
-            <GcsIcon name={TAB_ICONS[k]} className="gcs-tab__icon" />
-            {t(`tabs.${k}`)}
+      <nav aria-label={t("tabsLabel")} className="gcs-tabs" data-testid="gcs-profile-tabs">
+        {tabs.map((k) => (
+          <Link key={k.key} href={tabHref(k.key)} className={`gcs-tab${k.key === tab ? " gcs-tab--active" : ""}`} aria-current={k.key === tab ? "page" : undefined} data-tab={k.key}>
+            <GcsIcon name={k.icon} className="gcs-tab__icon" />
+            {tAll(k.labelKey)}
           </Link>
         ))}
       </nav>
@@ -257,7 +285,12 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
       <div key={f.key} className="gcs-profileField">
         <span>{f.label}</span>
         <span>
-          {f.type === "URL" ? (
+          {f.link ? (
+            // Contact: linkul construit din handle-ul scris de membru.
+            <a href={f.link} rel="nofollow ugc noopener" target="_blank" data-testid="gcs-profile-contact-link">
+              {f.icon && <GcsIcon name={f.icon} className="gcs-hIcon" />}@{f.value}
+            </a>
+          ) : f.type === "URL" ? (
             <a href={f.value} rel="nofollow ugc noopener" target="_blank">
               {linkText}
             </a>
@@ -268,30 +301,45 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
       </div>
     );
 
+  // Câmpurile pe grupurile din ACP (De bază, Despre mine, Echipamentul meu, Descriere, Contact); cele din tabul Jocuri
+  // fără grup rămân în caseta conturilor.
+  const grouped = groupFields(
+    fieldGroups,
+    about.concat(games.filter((f) => f.groupId != null)),
+    (s) => (s === "ABOUT" ? t("tabs.about") : t("tabs.games")),
+  );
   const aboutCard = (
-    <GcsCard as="section" className="gcs-titledBox" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <GcsCard as="section" className="gcs-titledBox gcs-profileGroups" style={{ display: "flex", flexDirection: "column", gap: 12 }} data-testid="gcs-profile-about">
       <h2 className="gcs-display gcs-titleBand gcs-cardTitle">
         <GcsIcon name={TAB_ICONS.about} className="gcs-hIcon" />
         {t("tabs.about")}
       </h2>
-      {about.length === 0 && (
-        <span className="gcs-muted">
-          <GcsIcon name="fa-regular fa-rectangle-list" className="gcs-emptyIcon" />
-          {t("noFields")}
-        </span>
-      )}
-      {about.map((f) => fieldRow(f, f.value))}
       <div className="gcs-profileField">
         <span>{t("stats.joined")}</span>
         <span>{format.dateTime(new Date(stats.joinedAt), { dateStyle: "long" })}</span>
       </div>
       {birthday && (
-        // Ziua de naștere publică: ziua și luna, fără an.
+        // Ziua de naștere publică: ziua și luna; anul doar dacă membrul a ales să-l arate.
         <div className="gcs-profileField" data-testid="gcs-profile-birthday">
           <span>{t("birthday")}</span>
-          <span>{format.dateTime(birthday, { day: "numeric", month: "long", timeZone: "UTC" })}</span>
+          <span>{format.dateTime(birthday, { day: "numeric", month: "long", ...(birthdayYear ? { year: "numeric" } : {}), timeZone: "UTC" })}</span>
         </div>
       )}
+      {grouped.length === 0 && (
+        <span className="gcs-muted">
+          <GcsIcon name="fa-regular fa-rectangle-list" className="gcs-emptyIcon" />
+          {t("noFields")}
+        </span>
+      )}
+      {grouped.map((g) => (
+        <section key={g.group.key} className="gcs-profileGroup" aria-label={g.group.label} data-testid="gcs-profile-field-group" data-group={g.group.key}>
+          <h3 className="gcs-profileGroup__title">
+            {g.group.icon && <GcsIcon name={g.group.icon} className="gcs-hIcon" />}
+            {g.group.label}
+          </h3>
+          {g.fields.map((f) => fieldRow(f, f.value.replace(/^https?:\/\//, "")))}
+        </section>
+      ))}
     </GcsCard>
   );
 
@@ -301,7 +349,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         <GcsIcon name={TAB_ICONS.games} className="gcs-hIcon" />
         {t("linkedAccounts")}
       </h2>
-      {profile.accounts.length === 0 && games.length === 0 && !game && (
+      {profile.accounts.length === 0 && gamesLoose.length === 0 && !game && (
         <span className="gcs-muted">
           <GcsIcon name="fa-solid fa-link-slash" className="gcs-emptyIcon" />
           {t("noAccounts")}
@@ -326,7 +374,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
           </div>
         </div>
       ))}
-      {games.map((f) => fieldRow(f, f.value.replace(/^https?:\/\//, "")))}
+      {gamesLoose.map((f) => fieldRow(f, f.value.replace(/^https?:\/\//, "")))}
       {game && (
         <Link href={playerHref({ id: game.player.id, name: game.player.name || game.player.value })} className="gcs-linkedAccount gcs-linkedAccount--player" data-testid="gcs-profile-player-link">
           <span className="gcs-display gcs-linkedAccount__tag gcs-linkedAccount__tag--game">
@@ -384,13 +432,43 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
     return trigger === "IS_VIP" ? t("badgeReq.IS_VIP") : t(`badgeReq.${trigger}`, { count: threshold });
   };
 
-  /** Coloana laterală: primele 6 insigne (48 px) cu numele. */
+  /**
+   * Coloana laterală: caseta realizărilor (reputația și nivelul, locul n/N, ultimele insigne, insigna automată „Sponsor”
+   * din donații peste prag).
+   */
+  const ta = await getTranslations("profile.achievements");
   const badgesCompact = (
-    <GcsCard as="section" className="gcs-titledBox" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <GcsCard as="section" className="gcs-titledBox gcs-achievements" style={{ display: "flex", flexDirection: "column", gap: 12 }} data-testid="gcs-profile-achievements">
       <h2 className="gcs-display gcs-titleBand gcs-cardTitle">
-        <GcsIcon name={TAB_ICONS.badges} className="gcs-hIcon" />
-        {t("badgesCount", { count: profile.badges.length })}
+        <GcsIcon name="fa-solid fa-medal" className="gcs-hIcon" />
+        {ta("title")}
       </h2>
+      {achievements && (
+        <>
+          <div className="gcs-achievements__head">
+            <strong className={`gcs-display ${achievements.reputation >= 0 ? "gcs-rep--pos" : "gcs-rep--neg"}`} data-testid="gcs-achievements-reputation">
+              {achievements.reputation > 0 ? "+" : ""}
+              {format.number(achievements.reputation)}
+            </strong>
+            <span className="gcs-muted">{t("stats.reputation")}</span>
+            <span className="gcs-achievements__level" data-testid="gcs-achievements-level">
+              {achievements.level.rank ? ta("levelRank", { level: achievements.level.level, rank: achievements.level.rank }) : ta("level", { level: achievements.level.level })}
+            </span>
+          </div>
+          <div className="gcs-xpBar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={achievements.level.percent} aria-label={achievements.level.next ? ta("next", { name: achievements.level.next.name }) : ta("max")}>
+            <span style={{ width: `${achievements.level.percent}%` }} />
+          </div>
+          <p className="gcs-muted" style={{ margin: 0, fontSize: 13 }} data-testid="gcs-achievements-rank">
+            {ta("rank", { position: format.number(achievements.rank.position), total: format.number(achievements.rank.total) })}
+          </p>
+          {achievements.sponsor && (
+            <span className="gcs-sponsorBadge" data-testid="gcs-profile-sponsor">
+              <GcsIcon name="fa-solid fa-hand-holding-heart" />
+              {ta("sponsor")}
+            </span>
+          )}
+        </>
+      )}
       {profile.badges.length === 0 && (
         <span className="gcs-muted">
           <GcsIcon name="fa-regular fa-star" className="gcs-emptyIcon" />
@@ -398,17 +476,89 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         </span>
       )}
       <ul className="gcs-badgeGrid gcs-badgeGrid--compact" data-testid="gcs-profile-badges">
-        {profile.badges.slice(0, 6).map((b) => (
+        {(achievements?.badges ?? profile.badges.slice(0, 5)).map((b) => (
           <li key={b.key} className="gcs-badgeGrid__item" title={b.description || undefined}>
             <GcsBadgeArt badge={b} size={48} decorative />
             <span>{b.name}</span>
           </li>
         ))}
       </ul>
+      {profile.badges.length > 0 && (
+        <Link href={tabHref("badges")} className="gcs-achievements__all">
+          {t("badgesCount", { count: profile.badges.length })}
+          <span aria-hidden="true"> →</span>
+        </Link>
+      )}
     </GcsCard>
   );
 
-  let main: React.ReactNode;
+  /** Celelalte grupuri ale membrului (pastilele secundare), urmăritorii (primii 8) și vizitatorii recenți. */
+  const groupsCard =
+    secondaryGroups.length > 0 ? (
+      <GcsCard as="section" className="gcs-titledBox" style={{ display: "flex", flexDirection: "column", gap: 10 }} data-testid="gcs-profile-groups">
+        <h2 className="gcs-display gcs-titleBand gcs-cardTitle">
+          <GcsIcon name="fa-solid fa-users" className="gcs-hIcon" />
+          {ta("groups")}
+        </h2>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {secondaryGroups.map((g) => (
+            <GcsGroupLink key={g.id} groupId={g.id} size="sm" />
+          ))}
+        </div>
+      </GcsCard>
+    ) : null;
+  const followersCard =
+    followerPreview && followerPreview.total > 0 ? (
+      <GcsCard as="section" className="gcs-titledBox" style={{ display: "flex", flexDirection: "column", gap: 10 }} data-testid="gcs-profile-followers-box">
+        <h2 className="gcs-display gcs-titleBand gcs-cardTitle">
+          <GcsIcon name={TAB_ICONS.followers} className="gcs-hIcon" />
+          {t("followersCount", { count: followerPreview.total })}
+        </h2>
+        <ul className="gcs-avatarRow">
+          {followerPreview.users.slice(0, 8).map((u) => (
+            <li key={u.id}>
+              <GcsAvatar name={u.name} size="m" userId={u.id} {...(u.image ? { src: u.image } : {})} />
+              <GcsMemberName userId={u.id} name={u.name} nameKey={u.nameKey} href={memberHref(u)} className="gcs-avatarRow__name" />
+            </li>
+          ))}
+        </ul>
+        <Link href={tabHref("followers")} className="gcs-achievements__all">
+          {ta("allFollowers")}
+          <span aria-hidden="true"> →</span>
+        </Link>
+      </GcsCard>
+    ) : null;
+  const visitorsCard =
+    visitors !== null ? (
+      <GcsCard as="section" className="gcs-titledBox" style={{ display: "flex", flexDirection: "column", gap: 10 }} data-testid="gcs-profile-visitors">
+        <h2 className="gcs-display gcs-titleBand gcs-cardTitle">
+          <GcsIcon name="fa-solid fa-shoe-prints" className="gcs-hIcon" />
+          {ta("visitors")}
+        </h2>
+        {visitors.length === 0 && <span className="gcs-muted">{ta("noVisitors")}</span>}
+        <ul className="gcs-visitorList">
+          {visitors.map((v) => {
+            const u = visitorUsers.get(v.id);
+            if (!u) return null;
+            return (
+              <li key={v.id} data-testid="gcs-profile-visitor">
+                <GcsAvatar name={u.name} size="s" userId={u.id} {...(u.image ? { src: u.image } : {})} />
+                <GcsMemberName userId={u.id} name={u.name} nameKey={u.nameKey} href={memberHref(u)} />
+                <span className="gcs-muted">{relative(v.at)}</span>
+              </li>
+            );
+          })}
+        </ul>
+        {viewer.isSelf && (
+          <Link href="/settings/privacy" className="gcs-achievements__all">
+            <GcsIcon name="fa-solid fa-user-shield" className="gcs-hIcon" />
+            {ta("visitorsPrivacy")}
+          </Link>
+        )}
+      </GcsCard>
+    ) : null;
+
+  let main: React.ReactNode = null;
   if (tab === "activity") {
     const activity = await services().profileQueries.activity(actor, user.id, query.before ? { before: query.before } : {});
     main = (
@@ -525,6 +675,67 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         {accountsCard}
       </>
     );
+  } else if (tab === "steam") {
+    // Tabul Steam: datele aduse de worker (o cerere nouă dacă sunt vechi); până atunci, un mesaj de așteptare.
+    const entry = await services().externalProfiles.steam(user.id);
+    main = <GcsSteamTab entry={entry} pending />;
+  } else if (tab === "faceit") {
+    const entry = await services().externalProfiles.faceit(user.id);
+    main = entry ? <GcsFaceitTab entry={entry} /> : null;
+  } else if (tab === "articles") {
+    const tt = await getTranslations("profile.articles");
+    const topics = await services().profileQueries.topics(actor, user.id, pageParam(query.page));
+    main = (
+      <GcsCard as="section" style={{ overflow: "hidden" }} data-testid="gcs-profile-articles">
+        <h2 className="gcs-display gcs-titleBand gcs-cardTitle">
+          <GcsIcon name={TAB_ICONS.articles} className="gcs-hIcon" />
+          {tt("title", { count: topics?.total ?? 0 })}
+        </h2>
+        {topics?.items.length === 0 && (
+          <p className="gcs-muted" style={{ padding: "16px 20px", margin: 0 }}>
+            <GcsIcon name="fa-regular fa-newspaper" className="gcs-emptyIcon" />
+            {tt("empty")}
+          </p>
+        )}
+        <ul className="gcs-articleList">
+          {topics?.items.map((a) => (
+            <li key={a.id} className="gcs-articleList__item" data-testid="gcs-profile-article">
+              <Link href={topicHref({ id: a.id, slug: a.slug })} className="gcs-articleList__title">
+                {a.title}
+              </Link>
+              {a.snippet && <p className="gcs-articleList__snippet">{a.snippet}</p>}
+              <span className="gcs-muted gcs-articleList__meta">
+                {a.forum} · {relative(a.createdAt)} · {tt("replies", { count: a.replies })} · {tt("views", { count: a.views })}
+              </span>
+            </li>
+          ))}
+        </ul>
+        {topics && topics.pages > 1 && (
+          <nav className="gcs-articleList__pages" aria-label={tt("pages")}>
+            {Array.from({ length: topics.pages }, (_, i) => i + 1).map((p) => (
+              <Link key={p} href={`${tabHref("articles")}${tabHref("articles").includes("?") ? "&" : "?"}page=${p}`} className={`gcs-pagination__link${p === pageParam(query.page) ? " gcs-pagination__link--active" : ""}`} aria-current={p === pageParam(query.page) ? "page" : undefined}>
+                {p}
+              </Link>
+            ))}
+          </nav>
+        )}
+      </GcsCard>
+    );
+  } else if (tab === "skins") {
+    // Skin-urile (aplicația Servere): deocamdată un tab-ciornă, până vine inventarul din pluginul serverelor.
+    const ts = await getTranslations("profile.skins");
+    main = (
+      <GcsCard as="section" className="gcs-titledBox" style={{ display: "flex", flexDirection: "column", gap: 12 }} data-testid="gcs-profile-skins">
+        <h2 className="gcs-display gcs-titleBand gcs-cardTitle">
+          <GcsIcon name={TAB_ICONS.skins} className="gcs-hIcon" />
+          {ts("title")}
+        </h2>
+        <p className="gcs-muted" style={{ margin: 0 }}>
+          <GcsIcon name="fa-solid fa-person-digging" className="gcs-emptyIcon" />
+          {ts("soon")}
+        </p>
+      </GcsCard>
+    );
   } else if (tab === "followers") {
     const followers = await services().profileQueries.followers(actor, user.id, pageParam(query.page));
     main = (
@@ -611,7 +822,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         )}
       </GcsCard>
     );
-  } else {
+  } else if (tab === "warnings" && viewer.canSeeWarnings) {
     const warnings = (await services().profileQueries.warnings(actor, user.id)) ?? [];
     main = (
       <GcsCard as="section" className="gcs-titledBox" style={{ display: "flex", flexDirection: "column", gap: 12 }} data-testid="gcs-profile-warnings">
@@ -647,6 +858,25 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
     );
   }
 
+  // Banda „pe servere” (aplicația Servere): un tab pe server cu locul, uciderile, decesele, K/D, punctele și clasamentul.
+  const tsv = await getTranslations("profile.servers");
+  const serverStrip =
+    serverStats.length > 0 ? (
+      <GcsServerStatsStrip
+        items={serverStats.map((s) => ({
+          serverId: s.serverId,
+          server: s.server,
+          place: s.place === null ? "—" : `#${format.number(s.place)}`,
+          kills: format.number(s.kills),
+          deaths: format.number(s.deaths),
+          kd: format.number(s.kd, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+          points: format.number(s.points),
+          rankingHref: `/servers/leaderboard?server=${s.serverId}`,
+        }))}
+        labels={{ title: tsv("title"), place: tsv("place"), kills: tsv("kills"), deaths: tsv("deaths"), kd: tsv("kd"), points: tsv("points"), ranking: tsv("ranking") }}
+      />
+    ) : null;
+
   const vipQuote = look?.profile.quote ? (
     <figure className="gcs-card gcs-vipQuote" data-testid="gcs-profile-quote">
       <GcsIcon name="fa-solid fa-quote-left" className="gcs-vipQuote__icon" />
@@ -668,12 +898,16 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         <GcsProfileBackdrop {...look.profile.background} labels={{ pause: tv("bgPause"), play: tv("bgPlay") }} />
       )}
       {header}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "flex-start" }}>
+      {serverStrip}
+      <div className="gcs-profileColumns" style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "flex-start" }}>
         <aside style={{ flex: "1 1 340px", minWidth: 0, display: "flex", flexDirection: "column", gap: 20 }}>
           {vipSong}
+          {tab !== "badges" && badgesCompact}
           {aboutCard}
           {tab !== "games" && accountsCard}
-          {tab !== "badges" && badgesCompact}
+          {groupsCard}
+          {tab !== "followers" && followersCard}
+          {visitorsCard}
         </aside>
         <div style={{ flex: "999 1 640px", minWidth: 0, display: "flex", flexDirection: "column", gap: 20 }}>
           {vipQuote}

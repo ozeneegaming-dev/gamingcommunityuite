@@ -29,6 +29,8 @@
 @import "@gcs/ui/chatpro.css";
 @import "@gcs/ui/chatmod.css";
 @import "@gcs/ui/groups-pro.css";
+/* Profil gaming v2 (hover card v2, profilul public și setările contului v2): global, pe tokenurile temei. */
+@import "@gcs/ui/member.css";
 /* Ultimul: banda titlurilor (fiecare titlu pe fundalul lui) peste regulile componentelor. */
 @import "@gcs/ui/titles.css";
 /* Designul Nova (tema implicită „GCS Nova”): totul sub `.gcs-nova`, pus pe `<html>` doar pe paginile site-ului. */

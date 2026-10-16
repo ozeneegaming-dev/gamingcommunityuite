@@ -7,12 +7,15 @@ import { services } from "@/lib/services";
 
 const userId = z.string().min(8).max(40).regex(/^[a-z0-9]+$/i);
 
-/** Urmărește / nu mai urmărește un membru (profil, hover card). Întoarce numărul nou de urmăritori. */
-/** Ziua de naștere (Setări → Profil) și dacă e publică; `date: null` o șterge. */
-export const saveBirthday = gcsAction(z.object({ date: z.string().max(10).nullable(), visible: z.boolean() }), async (input, { actor }) => {
+/**
+ * Ziua de naștere (Setări → Profil, grupul „De bază”) și dacă e publică; `date: null` o șterge. Anul e opțional
+ * (`MM-DD`), iar `showYear` îl arată pe profil.
+ */
+export const saveBirthday = gcsAction(z.object({ date: z.string().max(10).nullable(), visible: z.boolean(), showYear: z.boolean().optional() }), async (input, { actor }) => {
   await services().profiles.setBirthday(actor, input);
 });
 
+/** Urmărește / nu mai urmărește un membru (profil, hover card). Întoarce numărul nou de urmăritori. */
 export const followUser = gcsAction(z.object({ userId, follow: z.boolean() }), async (input, { actor }) => {
   const { social, db } = services();
   if (input.follow) await social.follow(actor, input.userId);

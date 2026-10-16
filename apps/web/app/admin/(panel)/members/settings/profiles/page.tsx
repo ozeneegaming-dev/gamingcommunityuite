@@ -5,7 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../../_components/GcsActionForm";
-import { deleteProfileField, savePostbitOrder, saveProfileField, saveProfileSettings } from "./actions";
+import { deleteProfileField, deleteProfileFieldGroup, savePostbitOrder, saveProfileField, saveProfileFieldGroup, saveProfileSettings } from "./actions";
 import { GcsAcpTitle, GcsAcpTitleIcon } from "../../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -16,13 +16,40 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function AcpProfilesPage() {
   await requireAcpSection(PROFILES_ACP_SECTION);
   const t = await getTranslations("acp.profiles");
-  const { profiles, settings } = services();
-  const [fields, coverMaxMb, wallEnabled, postbitOrder] = await Promise.all([
+  const { profiles, settings, profileFields } = services();
+  const [fields, coverMaxMb, wallEnabled, postbitOrder, groups, sponsorMin, faceitKey] = await Promise.all([
     profiles.fields(),
     settings.get<number>("profile.cover_max_mb"),
     settings.get<boolean>("profile.wall_enabled"),
     settings.get<string[]>("postbit.fields"),
+    profileFields.groups(),
+    settings.get<number>("profile.sponsor_min_amount"),
+    settings.get<string>("profile.faceit_api_key"),
   ]);
+  const groupForm = (g?: (typeof groups)[number]) => (
+    <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
+      <label className="gcs-field" style={{ width: 150 }}>
+        {t("key")}
+        <input className="gcs-input" name="key" defaultValue={g?.key ?? ""} required pattern="[a-z0-9_]{2,40}" readOnly={Boolean(g)} />
+      </label>
+      <label className="gcs-field" style={{ width: 200 }}>
+        {t("label")}
+        <input className="gcs-input" name="label" defaultValue={g?.label ?? ""} required maxLength={60} />
+      </label>
+      <label className="gcs-field" style={{ flex: "1 1 260px" }}>
+        {t("groups.helper")}
+        <input className="gcs-input" name="helper" defaultValue={g?.helper ?? ""} maxLength={300} placeholder={t("groups.helperHint")} />
+      </label>
+      <label className="gcs-field" style={{ width: 90 }}>
+        {t("position")}
+        <input className="gcs-input" name="position" type="number" defaultValue={g?.position ?? groups.length} />
+      </label>
+      <div className="gcs-field" role="group" aria-label={t("icon")}>
+        <span>{t("icon")}</span>
+        <GcsIconPicker name="icon" value={g?.icon ?? null} searchUrl="/api/icons/search" labels={{ search: t("iconSearch"), none: t("iconNone"), noResults: t("iconNoResults") }} />
+      </div>
+    </div>
+  );
   const postbitFields = fields
     .filter((f) => f.showInPostbit)
     .sort((a, b) => {
@@ -48,7 +75,7 @@ export default async function AcpProfilesPage() {
         <label className="gcs-field" style={{ width: 150 }}>
           {t("type")}
           <select className="gcs-input" name="type" defaultValue={f?.type ?? "TEXT"}>
-            {(["TEXT", "TEXTAREA", "URL", "NUMBER", "SELECT", "IMAGE_SELECT"] as const).map((k) => (
+            {(["TEXT", "TEXTAREA", "URL", "NUMBER", "SELECT", "IMAGE_SELECT", "SERVER_SELECT"] as const).map((k) => (
               <option key={k} value={k}>
                 {t(`types.${k}`)}
               </option>
@@ -81,6 +108,30 @@ export default async function AcpProfilesPage() {
           <input className="gcs-input" name="position" type="number" defaultValue={f?.position ?? fields.length} />
         </label>
       </div>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
+        <label className="gcs-field" style={{ width: 200 }}>
+          {t("groups.group")}
+          <select className="gcs-input" name="groupId" defaultValue={f?.groupId ? String(f.groupId) : ""} data-testid="gcs-acp-field-group">
+            <option value="">{t("groups.none")}</option>
+            {groups.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="gcs-field" style={{ flex: "1 1 260px" }}>
+          {t("fieldHelper")}
+          <input className="gcs-input" name="helper" defaultValue={f?.helper ?? ""} maxLength={300} placeholder={t("fieldHelperHint")} />
+        </label>
+        <label className="gcs-field" style={{ flex: "1 1 260px" }}>
+          {t("linkTemplate")}
+          <input className="gcs-input" name="linkTemplate" defaultValue={f?.linkTemplate ?? ""} placeholder="https://x.com/{handle}" data-testid="gcs-acp-field-template" />
+        </label>
+      </div>
+      <p className="gcs-field__hint" style={{ margin: 0 }}>
+        {t("linkTemplateHint")}
+      </p>
       <label className="gcs-field">
         {t("options")}
         <input className="gcs-input" name="options" defaultValue={f?.options.join(", ") ?? ""} placeholder={t("optionsHint")} />
@@ -127,7 +178,51 @@ export default async function AcpProfilesPage() {
               <input type="checkbox" name="wallEnabled" defaultChecked={wallEnabled} />
               {t("wallEnabled")}
             </label>
+            <label className="gcs-field" style={{ width: 220 }}>
+              {t("sponsorMin")}
+              <input className="gcs-input" name="sponsorMin" type="number" step="1" min={0} max={1000000} defaultValue={sponsorMin} />
+            </label>
+            <label className="gcs-field" style={{ width: 280 }}>
+              {t("faceitKey")}
+              <input className="gcs-input" name="faceitKey" type="password" autoComplete="off" placeholder={faceitKey ? t("faceitKeySet") : t("faceitKeyEmpty")} data-testid="gcs-acp-faceit-key" />
+            </label>
+            {faceitKey && (
+              <label className="gcs-check">
+                <input type="checkbox" name="faceitClear" />
+                {t("faceitClear")}
+              </label>
+            )}
           </div>
+          <p className="gcs-field__hint" style={{ margin: 0 }}>
+            {t("faceitHint")}
+          </p>
+        </GcsActionForm>
+      </GcsCard>
+      {/* Profil gaming v2: grupurile câmpurilor (titlul și textul de ajutor din „Editează profilul”). */}
+      <GcsCard as="section" aria-labelledby="gcs-field-groups" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }} data-testid="gcs-acp-field-groups">
+        <h2 id="gcs-field-groups" className="gcs-acpWidget__title">
+          <GcsAcpTitleIcon name="fa-solid fa-layer-group" />
+          {t("groups.title")}
+        </h2>
+        <p className="gcs-muted" style={{ margin: 0 }}>
+          {t("groups.hint")}
+        </p>
+        {groups.map((g) => (
+          <div key={g.id} className="gcs-acpFieldGroup" data-testid="gcs-acp-field-group-row">
+            <GcsActionForm action={saveProfileFieldGroup.bind(null, g.id)} submitLabel={t("save")} submitKind="save" compact>
+              {groupForm(g)}
+            </GcsActionForm>
+            <GcsActionForm action={deleteProfileFieldGroup.bind(null, g.id)} submitLabel={t("delete")} submitKind="delete" variant="ghost" compact confirm={t("groups.confirmDelete")}>
+              {null}
+            </GcsActionForm>
+          </div>
+        ))}
+        <h3 className="gcs-acpWidget__title" style={{ fontSize: 14 }}>
+          <GcsAcpTitleIcon name="fa-solid fa-plus" />
+          {t("groups.add")}
+        </h3>
+        <GcsActionForm action={saveProfileFieldGroup.bind(null, null)} submitLabel={t("groups.add")} submitKind="create">
+          {groupForm()}
         </GcsActionForm>
       </GcsCard>
       <GcsCard as="section" aria-labelledby="gcs-postbit-order" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }} data-testid="gcs-acp-postbit">

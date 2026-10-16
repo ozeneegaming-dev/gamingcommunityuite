@@ -90,6 +90,26 @@ function createAuth(config: GcsAuthConfig) {
           },
         },
       },
+      // Setări → Dispozitive (setările contului v2): fiecare autentificare notează dispozitivul (browser, sistem, metoda,
+      // țara dată de proxy), trimite emailul „dispozitiv nou” și scurtează sesiunea pe un dispozitiv fără autentificare
+      // automată. O eroare nu oprește autentificarea.
+      session: {
+        create: {
+          after: async (session, ctx) => {
+            const headers = ctx?.headers ?? ctx?.request?.headers ?? null;
+            await services()
+              .devices.recordLogin({
+                userId: session.userId,
+                sessionId: session.id,
+                userAgent: session.userAgent ?? null,
+                ip: session.ipAddress ?? null,
+                country: headers?.get("cf-ipcountry") ?? null,
+                path: ctx?.path ?? null,
+              })
+              .catch(() => {});
+          },
+        },
+      },
     },
     rateLimit: {
       enabled: process.env.GCS_DISABLE_RATE_LIMIT !== "1",

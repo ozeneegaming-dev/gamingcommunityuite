@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
 import { services } from "@/lib/services";
 import { GcsSignatureForm } from "../../_components/settings/GcsSettingsExtra";
+import { GcsPrefToggle } from "../../_components/settings/GcsSettingsV2";
 import { GcsIcon } from "@gcs/ui/icons";
 import { SETTINGS_ICONS } from "../../_components/settings/sections";
 import { GcsNamedHtml } from "@/lib/member-names";
@@ -19,10 +20,11 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function SignatureSettingsPage() {
   const actor = await currentActor();
   const { db, profiles } = services();
-  const [t, user, limits] = await Promise.all([
+  const [t, user, limits, prefs] = await Promise.all([
     getTranslations("settings.signature"),
     db.user.findUniqueOrThrow({ where: { id: actor.userId! }, select: { signatureJson: true, signatureHtml: true } }),
     profiles.signatureLimits(actor),
+    services().memberPrefs.get(actor.userId!),
   ]);
   const max = limits.maxChars;
   return (
@@ -31,6 +33,22 @@ export default async function SignatureSettingsPage() {
         <GcsIcon name={SETTINGS_ICONS.signature} className="gcs-hIcon" />
         {t("title")}
       </h2>
+      {/* Setările contului v2: regulile semnăturii și „arată semnăturile celorlalți”. */}
+      <section className="gcs-settingsFieldset" aria-labelledby="gcs-signature-rules" data-testid="gcs-signature-rules">
+        <h3 id="gcs-signature-rules" className="gcs-settingsSubtitle">
+          <GcsIcon name="fa-solid fa-scale-balanced" className="gcs-hIcon" />
+          {t("rules.title")}
+        </h3>
+        <ul className="gcs-rulesList">
+          <li>{max > 0 ? t("rules.chars", { max }) : t("rules.off")}</li>
+          <li>{limits.maxImages > 0 ? t("rules.images", { images: limits.maxImages }) : t("rules.noImages")}</li>
+          <li>{t("rules.noVideo")}</li>
+          <li>{t("rules.links")}</li>
+          <li>{t("rules.mentions")}</li>
+          <li>{t("rules.conduct")}</li>
+        </ul>
+      </section>
+      <GcsPrefToggle name="showSignatures" value={prefs.showSignatures} label={t("showOthers")} hint={t("showOthersHint")} saved={t("saved")} />
       <GcsSignatureForm
         initial={(user.signatureJson as JSONContent | null) ?? null}
         maxLength={max}

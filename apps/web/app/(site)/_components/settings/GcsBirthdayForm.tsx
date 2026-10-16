@@ -1,72 +1,81 @@
 "use client";
 
-import { GcsButton } from "@gcs/ui";
-import { useState, useTransition } from "react";
-import { useErrorMessage } from "@/lib/use-error-message";
-import { saveBirthday } from "../../profile-actions";
+export type GcsBirthdayLabels = { title: string; day: string; month: string; year: string; yearHint: string; visible: string; showYear: string; hint: string; months: string[] };
+export type GcsBirthdayState = { day: string; month: string; year: string; visible: boolean; showYear: boolean };
 
-type Labels = { title: string; date: string; visible: string; hint: string; save: string; saved: string; clear: string };
+/** Anul-marcaj al zilelor salvate fără an (vezi `BIRTHDAY_NO_YEAR` în `@gcs/modules`). */
+const NO_YEAR = "1904";
+const pad = (n: number | string) => String(n).padStart(2, "0");
 
-/** Ziua de naștere (Setări → Profil): data și dacă e publică (pe profil, fără an, și în `/zi-de-nastere` din chat). */
-export function GcsBirthdayForm({ date, visible, labels }: { date: string | null; visible: boolean; labels: Labels }) {
-  const errorMessage = useErrorMessage();
-  const [value, setValue] = useState(date ?? "");
-  const [show, setShow] = useState(visible);
-  const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
-  const [pending, start] = useTransition();
-  const save = (next: string) =>
-    start(async () => {
-      const res = await saveBirthday({ date: next || null, visible: show });
-      setStatus(res.ok ? { ok: true, text: labels.saved } : { ok: false, text: errorMessage(res.error) });
-    });
+/** Starea inițială din data salvată (`YYYY-MM-DD`; anul-marcaj = fără an). */
+export function birthdayState(date: string | null, visible: boolean, showYear: boolean): GcsBirthdayState {
+  const [y, m, d] = date ? date.split("-") : ["", "", ""];
+  return { day: d ? String(Number(d)) : "", month: m ? String(Number(m)) : "", year: y && y !== NO_YEAR ? y : "", visible, showYear };
+}
+
+/** Valoarea trimisă: `YYYY-MM-DD`, `MM-DD` (fără an) sau `null` (ștearsă / incompletă). */
+export function birthdayValue(s: GcsBirthdayState): string | null {
+  if (!s.day || !s.month) return null;
+  return s.year ? `${s.year}-${pad(s.month)}-${pad(s.day)}` : `${pad(s.month)}-${pad(s.day)}`;
+}
+
+/**
+ * Ziua de naștere în grupul „De bază” din „Editează profilul”: ziua și luna, anul opțional, dacă e publică (pe profil și
+ * în `/zi-de-nastere` din chat) și dacă anul apare pe profil. Se salvează odată cu restul profilului.
+ */
+export function GcsBirthdayFields({ value, onChange, labels }: { value: GcsBirthdayState; onChange: (next: GcsBirthdayState) => void; labels: GcsBirthdayLabels }) {
+  const set = (patch: Partial<GcsBirthdayState>) => onChange({ ...value, ...patch });
   return (
-    <form
-      className="gcs-card gcs-settingsCard"
-      style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }}
-      onSubmit={(e) => {
-        e.preventDefault();
-        save(value);
-      }}
-      data-testid="gcs-birthday-form"
-    >
-      <h3 className="gcs-settingsTitle" style={{ margin: 0 }}>
-        {labels.title}
-      </h3>
-      <label className="gcs-field" style={{ maxWidth: 260 }}>
-        {labels.date}
-        <input className="gcs-input" type="date" value={value} max={new Date().toISOString().slice(0, 10)} min="1900-01-01" onChange={(e) => setValue(e.target.value)} data-testid="gcs-birthday-date" />
-      </label>
+    <div className="gcs-birthdayForm" role="group" aria-label={labels.title} data-testid="gcs-birthday-form">
+      <span className="gcs-birthdayForm__title">{labels.title}</span>
+      <div className="gcs-birthdayForm__row">
+        <label className="gcs-field">
+          {labels.day}
+          <select className="gcs-input" value={value.day} onChange={(e) => set({ day: e.target.value })} data-testid="gcs-birthday-day">
+            <option value="">—</option>
+            {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="gcs-field">
+          {labels.month}
+          <select className="gcs-input" value={value.month} onChange={(e) => set({ month: e.target.value })} data-testid="gcs-birthday-month">
+            <option value="">—</option>
+            {labels.months.map((name, i) => (
+              <option key={name} value={i + 1}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="gcs-field">
+          {labels.year}
+          <input
+            className="gcs-input"
+            inputMode="numeric"
+            maxLength={4}
+            placeholder={labels.yearHint}
+            value={value.year}
+            onChange={(e) => {
+              const year = e.target.value.replace(/\D/g, "").slice(0, 4);
+              set({ year, ...(year === "" ? { showYear: false } : {}) });
+            }}
+            data-testid="gcs-birthday-year"
+          />
+        </label>
+      </div>
       <label className="gcs-check">
-        <input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} data-testid="gcs-birthday-visible" />
+        <input type="checkbox" checked={value.visible} onChange={(e) => set({ visible: e.target.checked })} data-testid="gcs-birthday-visible" />
         {labels.visible}
       </label>
-      <p className="gcs-muted" style={{ margin: 0, fontSize: 13 }}>
-        {labels.hint}
-      </p>
-      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-        <GcsButton type="submit" variant="primary" size="sm" disabled={pending} data-testid="gcs-birthday-save">
-          {labels.save}
-        </GcsButton>
-        {value && (
-          <GcsButton
-            type="button"
-            variant="ghost"
-            size="sm"
-            disabled={pending}
-            onClick={() => {
-              setValue("");
-              save("");
-            }}
-          >
-            {labels.clear}
-          </GcsButton>
-        )}
-        {status && (
-          <span role={status.ok ? "status" : "alert"} className={status.ok ? "gcs-muted" : undefined} style={{ fontSize: 13 }}>
-            {status.text}
-          </span>
-        )}
-      </div>
-    </form>
+      <label className="gcs-check">
+        <input type="checkbox" checked={value.showYear} disabled={value.year === ""} onChange={(e) => set({ showYear: e.target.checked })} data-testid="gcs-birthday-show-year" />
+        {labels.showYear}
+      </label>
+      <p className="gcs-field__hint">{labels.hint}</p>
+    </div>
   );
 }
