@@ -93,6 +93,8 @@ import { GcsChatExtensions } from "./chat/extensions";
 import { GcsChatProService } from "./chat-pro/service";
 import { chatProMemberData } from "./chat-pro/memberData";
 import { GcsChatQueries } from "./chat/queries";
+import { GcsChatModeration } from "./chat/moderation";
+import { GcsChatRights } from "./chat/rights";
 import { renderChatText } from "./chat/text";
 import { canViewPost } from "./forums/content";
 import { GcsNotificationProducers } from "./notifications/producers";
@@ -160,6 +162,8 @@ export type GcsServices = {
   realtimeRooms: GcsRealtimeRooms;
   notificationProducers: GcsNotificationProducers;
   chat: GcsChatService;
+  /** Moderarea chat-ului (staff și accesul de moderator în chat): sancțiuni, jurnal, `/acces`, liniile de sistem. */
+  chatModeration: GcsChatModeration;
   /**
    * Chat Pro (aplicația premium, specul 2026-10-10-chat-pro): profilul de chat, clasamentul, bara de anunțuri,
    * emoticoanele, GIF-urile, comenzile botului și istoricul, legate de chat prin punctele de extensie.
@@ -505,10 +509,13 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const chatExtensions = new GcsChatExtensions();
   // Mențiunile din textul simplu (chat, statusuri): după id, cu setările de mențiune ale grupurilor.
   const textMentions = new GcsTextMentions({ db, groupMentions });
-  const chat = new GcsChatService({ db, bus, permissions, settings, rateLimiter, realtime, acp, attachments, extensions: chatExtensions, textMentions, groupMentions });
+  // Drepturile de moderare (grupuri + accesul de moderator) și sancțiunile, aceleași pentru scriere și citire.
+  const chatRights = new GcsChatRights({ db, permissions });
+  const chat = new GcsChatService({ db, bus, permissions, settings, rateLimiter, realtime, acp, attachments, extensions: chatExtensions, textMentions, groupMentions, rights: chatRights });
   // Stilul numelor din pastilele mențiunilor (decorarea de bază, înaintea extensiilor); `appearance` e creat mai jos.
   chatExtensions.useBase(chatMentionNames({ db, letterUsers: () => appearance.letterUsers() }));
-  const chatQueries = new GcsChatQueries({ db, permissions, extensions: chatExtensions });
+  const chatQueries = new GcsChatQueries({ db, permissions, extensions: chatExtensions, rights: chatRights });
+  const chatModeration = new GcsChatModeration({ db, permissions, settings, realtime, acp, chat, warnings, notifications, reports });
   const chatPro = new GcsChatProService({
     db,
     cache,
@@ -679,6 +686,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     chat,
     chatPro,
     chatQueries,
+    chatModeration,
     apps,
     translation,
     widgets: new GcsWidgetService({ db, cache, bus, registry, acp, apps }),

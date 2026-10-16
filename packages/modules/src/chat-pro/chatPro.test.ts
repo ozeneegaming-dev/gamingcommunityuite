@@ -295,9 +295,12 @@ describe("clasamentul", () => {
       ["Ana", 2],
     ]);
     expect(r.spammer?.user.name).toBe("Bogdan");
-    expect(r.me).toMatchObject({ position: 3, today: 2, period: 2 });
+    // „Față de perioada trecută”: mesajele perioadei anterioare (Ana: 10).
+    expect(r.me).toMatchObject({ position: 3, today: 2, period: 2, previous: 10 });
     expect(r.resetsIn).toBeGreaterThan(0);
-    expect(r.lastWinner).toMatchObject({ user: { name: "Cezar" }, messages: 30 });
+    // Ultimul câștigător, cu insigna primită (badge-ul câștigătorului, ca medalion).
+    expect(r.lastWinner).toMatchObject({ user: { name: "Cezar" }, messages: 30, badge: { key: "chat_pro_winner" } });
+    expect(r.lastWinner?.badge?.art).toMatch(/^data:image\/svg\+xml|^\//);
     const badge = await w.db.badge.findUniqueOrThrow({ where: { key: "chat_pro_winner" } });
     expect(await w.db.userBadge.count({ where: { userId: c.userId!, badgeId: badge.id } })).toBe(1);
     // Idempotent: a doua citire nu mai creează nimic.
@@ -340,6 +343,30 @@ describe("bara de anunțuri și istoricul", () => {
     expect((await pro.history.page(a, { member: "bobo" })).rows.map((r) => r.author?.name)).toEqual(["Bogdan", "Bogdan"]);
     expect((await pro.history.page(a, { from: "2000-01-01", to: "2000-01-02" })).total).toBe(0);
     await expect(pro.history.page(w.guest, {})).rejects.toBeInstanceOf(GcsForbidden);
+  });
+
+  test("istoricul: ascunsele doar pentru staff, la cerere; GIF-urile ca miniaturi (fără adresă); grupul autorului; exportul CSV cu permisiune", async () => {
+    await enable();
+    const a = await member("Ana");
+    const hidden = await chat.send(a, "general", "reclamă");
+    await noFlood(a);
+    await chat.send(a, "general", "uite https://media.giphy.com/media/abc123/giphy.gif haha");
+    await w.db.chatMessage.update({ where: { id: hidden.id }, data: { hiddenAt: new Date(), hiddenById: w.moderator.userId } });
+    const mine = await pro.history.page(a, { hidden: true });
+    expect(mine.rows.map((r) => r.body)).not.toContain("reclamă");
+    expect(mine.can).toMatchObject({ hidden: false, export: false });
+    const gif = mine.rows[0]!;
+    expect(gif.embeds).toEqual([{ kind: "image", url: "https://media.giphy.com/media/abc123/giphy.gif" }]);
+    expect(gif.html).toBe("uite haha");
+    expect(gif.group).toMatchObject({ name: expect.any(String) });
+    const staff = await pro.history.page(w.moderator, { hidden: true });
+    expect(staff.can).toMatchObject({ hidden: true, export: true });
+    expect(staff.rows.find((r) => r.body === "reclamă")?.hidden).toMatchObject({ by: { name: "NeoX" } });
+    expect((await pro.history.page(w.moderator, {})).rows.map((r) => r.body)).not.toContain("reclamă");
+    const csv = await pro.history.exportCsv(w.moderator, { hidden: true });
+    expect(csv.split("\r\n")[0]).toBe("id,room,member,message,created_at,edited_at,hidden");
+    expect(csv).toContain("reclamă");
+    await expect(pro.history.exportCsv(a, {})).rejects.toBeInstanceOf(GcsForbidden);
   });
 });
 

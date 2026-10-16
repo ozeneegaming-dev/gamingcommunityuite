@@ -1,8 +1,10 @@
 import type { GcsCache, GcsRedisRateLimiter, GcsSettingsService } from "@gcs/core";
 import { Prisma, type PrismaClient } from "@gcs/db";
-import { toRef, userRefSelect, type GcsUserRef } from "../forums/queries";
+import { toRef, userRefSelect } from "../forums/queries";
 import { addDays, dayKey, daysBetween, previousPeriod, rankingPeriod, secondsSinceMidnight, weekStart, type GcsRankingPeriod } from "./period";
-import type { GcsChatProRanking, GcsChatProRankRow } from "./types";
+import { badgeArtSrc } from "@gcs/ui/badge-art";
+import { CHAT_PRO_WINNER_BADGE } from "./index";
+import type { GcsChatProLastWinner, GcsChatProRanking, GcsChatProRankRow } from "./types";
 
 export const RANKING_TAG = "chat_pro_ranking";
 const TOP = 3;
@@ -100,12 +102,18 @@ export class GcsChatProRankingService {
     if (best && this.deps.awardWinner) await this.deps.awardWinner(best.user.id, prev);
   }
 
-  /** Ultimul câștigător (cel mai recent rând cu un membru), sau `null`. */
-  async lastWinner(): Promise<{ user: GcsUserRef; messages: number; start: string; end: string } | null> {
-    const cached = await this.deps.cache.get<{ v: { user: GcsUserRef; messages: number; start: string; end: string } | null }>("chat_pro:last_winner");
+  /** Ultimul câștigător (cel mai recent rând cu un membru) și insigna primită, sau `null`. */
+  async lastWinner(): Promise<GcsChatProLastWinner | null> {
+    const cached = await this.deps.cache.get<{ v: GcsChatProLastWinner | null }>("chat_pro:last_winner");
     if (cached) return cached.v;
-    const row = await this.deps.db.chatProWinner.findFirst({ where: { userId: { not: null } }, orderBy: { periodStart: "desc" }, include: { user: { select: userRefSelect } } });
-    const v = row?.user ? { user: toRef(row.user), messages: row.messages, start: row.periodStart, end: row.periodEnd } : null;
+    const { db } = this.deps;
+    const row = await db.chatProWinner.findFirst({ where: { userId: { not: null } }, orderBy: { periodStart: "desc" }, include: { user: { select: userRefSelect } } });
+    let v: GcsChatProLastWinner | null = null;
+    if (row?.user) {
+      const b = await db.badge.findUnique({ where: { key: CHAT_PRO_WINNER_BADGE } });
+      const badge = b ? { key: b.key, name: b.name, art: badgeArtSrc(b), image: b.imageAttachmentId ? `/files/${b.imageAttachmentId}` : null } : null;
+      v = { user: toRef(row.user), messages: row.messages, start: row.periodStart, end: row.periodEnd, badge };
+    }
     await this.deps.cache.set("chat_pro:last_winner", { v }, { ttlSec: 300, tags: [RANKING_TAG] });
     return v;
   }
@@ -114,7 +122,7 @@ export class GcsChatProRankingService {
   async view(viewerId: string | null, now = new Date()): Promise<GcsChatProRanking> {
     const { cache } = this.deps;
     await this.finalize(now);
-    const { today, period, timeZone } = await this.current(now);
+    const { today, period, timeZone, resetDay } = await this.current(now);
     const key = `chat_pro:ranking:${period.start}:${today}`;
     let shared = await cache.get<Pick<GcsChatProRanking, "top" | "spammer">>(key);
     if (!shared) {
@@ -125,12 +133,14 @@ export class GcsChatProRankingService {
     const resetsIn = Math.max(0, daysBetween(today, period.next) * 86_400 - secondsSinceMidnight(now, timeZone));
     let me: GcsChatProRanking["me"] = null;
     if (viewerId) {
-      const [todayCount, periodCount, week] = await Promise.all([
+      const prev = previousPeriod(period, resetDay);
+      const [todayCount, periodCount, week, previous] = await Promise.all([
         this.sum(viewerId, today, today),
         this.sum(viewerId, period.start, period.end),
         this.sum(viewerId, weekStart(today), addDays(weekStart(today), 6)),
+        this.sum(viewerId, prev.start, prev.end),
       ]);
-      me = { position: periodCount > 0 ? await this.position(periodCount, period) : null, today: todayCount, period: periodCount, week };
+      me = { position: periodCount > 0 ? await this.position(periodCount, period) : null, today: todayCount, period: periodCount, week, previous };
     }
     return { period: { start: period.start, end: period.end, kind: period.kind }, resetsIn, ...shared, lastWinner: await this.lastWinner(), me };
   }

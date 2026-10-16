@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, test } from "vitest";
-import { hoverAnchorKey, hoverAnchorOf } from "./hover-anchor";
+import { hoverAnchorKey, hoverAnchorOf, OPEN_CARD_EVENT, openMemberCard } from "./hover-anchor";
 
 function html(markup: string): HTMLElement {
   const box = document.createElement("div");
@@ -38,5 +38,18 @@ describe("ce deschide hover card-ul", () => {
     expect(hoverAnchorOf(box.querySelector("[data-user]"))).toBeNull();
     expect(hoverAnchorOf(box.querySelector("p"))).toBeNull();
     expect(hoverAnchorOf(null)).toBeNull();
+  });
+});
+
+describe("deschiderea cardului la click", () => {
+  test("`openMemberCard` cere gazdei cardul ancorei, pe loc", () => {
+    const box = html('<button type="button" data-user-id="u7">Ana</button>');
+    const seen: HTMLElement[] = [];
+    const listen = (e: Event) => seen.push((e as CustomEvent<{ anchor: HTMLElement }>).detail.anchor);
+    document.addEventListener(OPEN_CARD_EVENT, listen);
+    openMemberCard(box.querySelector("button")!);
+    document.removeEventListener(OPEN_CARD_EVENT, listen);
+    expect(seen).toHaveLength(1);
+    expect(hoverAnchorKey(seen[0]!)).toBe("u:u7");
   });
 });

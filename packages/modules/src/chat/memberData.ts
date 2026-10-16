@@ -10,6 +10,9 @@ const BULK = 5000;
  * - Ștergerea: mesajele rămân ca „Membru șters” sau, în modul „Șterge și conținutul”, se șterg cu fișierele lor; camerele
  *   private ale membrului rămân fără proprietar; reacțiile, mute-urile și locurile în camere dispar odată cu rândul userului.
  * - Unirea: mesajele, reacțiile, camerele (membru, proprietar) și mute-urile trec la țintă, fără dubluri.
+ * - Moderarea: sancțiunile (kick, ban, slow mode) și accesul de moderator dispar cu userul la ștergere (cascadă), iar
+ *   urmele lui ca moderator (cine a ascuns / ridicat / anulat) rămân fără autor. La unire, sancțiunile, jurnalul și
+ *   liniile de sistem trec la țintă; accesul de moderator al sursei trece doar dacă ținta nu are deja unul.
  */
 export function chatMemberData(deps: { db: PrismaClient; attachments?: Pick<GcsAttachmentService, "deleteFor"> }): GcsMemberDataHandler {
   const { db } = deps;
@@ -38,7 +41,11 @@ export function chatMemberData(deps: { db: PrismaClient; attachments?: Pick<GcsA
         (await db.$executeRaw`UPDATE chat_messages SET "deletedById" = NULL WHERE "deletedById" = ${userId}`) +
         (await db.$executeRaw`UPDATE chat_mutes SET "createdById" = NULL WHERE "createdById" = ${userId}`) +
         (await db.$executeRaw`UPDATE chat_announcements SET "createdById" = NULL WHERE "createdById" = ${userId}`) +
-        (await db.$executeRaw`UPDATE chat_room_members SET "invitedById" = NULL WHERE "invitedById" = ${userId}`)
+        (await db.$executeRaw`UPDATE chat_room_members SET "invitedById" = NULL WHERE "invitedById" = ${userId}`) +
+        (await db.$executeRaw`UPDATE chat_messages SET "hiddenById" = NULL WHERE "hiddenById" = ${userId}`) +
+        (await db.$executeRaw`UPDATE chat_sanctions SET "createdById" = NULL WHERE "createdById" = ${userId}`) +
+        (await db.$executeRaw`UPDATE chat_sanctions SET "liftedById" = NULL WHERE "liftedById" = ${userId}`) +
+        (await db.$executeRaw`UPDATE chat_mod_log SET "undoneById" = NULL WHERE "undoneById" = ${userId}`)
       );
     },
     async merge({ sourceId, targetId }) {
@@ -59,6 +66,21 @@ export function chatMemberData(deps: { db: PrismaClient; attachments?: Pick<GcsA
         n += await tx.$executeRaw`UPDATE chat_messages SET "deletedById" = ${targetId} WHERE "deletedById" = ${sourceId}`;
         n += await tx.$executeRaw`UPDATE chat_mutes SET "createdById" = ${targetId} WHERE "createdById" = ${sourceId}`;
         n += await tx.$executeRaw`UPDATE chat_room_members SET "invitedById" = ${targetId} WHERE "invitedById" = ${sourceId}`;
+        // Moderarea: sancțiunile, jurnalul, liniile de sistem și accesul de moderator.
+        n += (await tx.chatSanction.updateMany({ where: { userId: sourceId }, data: { userId: targetId } })).count;
+        n += (await tx.chatSanction.updateMany({ where: { createdById: sourceId }, data: { createdById: targetId } })).count;
+        n += (await tx.chatSanction.updateMany({ where: { liftedById: sourceId }, data: { liftedById: targetId } })).count;
+        n += (await tx.chatModLog.updateMany({ where: { actorId: sourceId }, data: { actorId: targetId } })).count;
+        n += (await tx.chatModLog.updateMany({ where: { targetId: sourceId }, data: { targetId } })).count;
+        n += (await tx.chatModLog.updateMany({ where: { undoneById: sourceId }, data: { undoneById: targetId } })).count;
+        n += await tx.$executeRaw`UPDATE chat_messages SET "hiddenById" = ${targetId} WHERE "hiddenById" = ${sourceId}`;
+        n += await tx.$executeRaw`
+          UPDATE chat_messages SET meta = jsonb_set(meta, '{system,targetId}', to_jsonb(${targetId}::text))
+          WHERE meta -> 'system' ->> 'targetId' = ${sourceId}`;
+        const hasGrant = await tx.chatModeratorGrant.findUnique({ where: { userId: targetId }, select: { id: true } });
+        if (hasGrant) n += (await tx.chatModeratorGrant.deleteMany({ where: { userId: sourceId } })).count;
+        else n += (await tx.chatModeratorGrant.updateMany({ where: { userId: sourceId }, data: { userId: targetId } })).count;
+        n += (await tx.chatModeratorGrant.updateMany({ where: { grantedById: sourceId }, data: { grantedById: targetId } })).count;
         return n;
       });
     },

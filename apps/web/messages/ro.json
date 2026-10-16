@@ -186,7 +186,15 @@
       "removal_not_failed": "Doar o operație eșuată poate fi reluată.",
       "reauth_required": "Pentru confirmare, intră din nou în cont.",
       "group_mention_cooldown": "Ai menționat acest grup de curând: așteaptă câteva minute înainte să-l menționezi din nou.",
-      "not_opponent": "Doar membrul provocat poate răspunde."
+      "not_opponent": "Doar membrul provocat poate răspunde.",
+      "muted": "Ai mute în chat.",
+      "not_author": "Poți edita doar mesajele tale.",
+      "target_is_staff": "Nu poți acționa asupra altui membru al staff-ului.",
+      "target_outranks": "Membrul are un rang mai mare decât tine.",
+      "chat_banned": "Ai ban din chat.",
+      "chat_kicked": "Ai fost scos din chat pentru o vreme.",
+      "system_line": "Liniile de sistem nu se pot edita.",
+      "right_not_held": "Nu poți da un drept pe care nu-l ai."
     },
     "fields": {
       "invalid_color": "Culoare invalidă (#RRGGBB)",
@@ -307,7 +315,10 @@
       "invalid_key": "Cheie invalidă (litere mici, cifre și minus, 2–32 de caractere).",
       "invalid_theme_package": "Fișierul nu e un pachet de temă GCS valid.",
       "unsupported_theme_package": "Pachetul de temă e pentru altă versiune a platformei.",
-      "same_theme": "Alege două teme diferite."
+      "same_theme": "Alege două teme diferite.",
+      "member_not_found": "Membrul nu există.",
+      "member_required": "Scrie membrul (@nume).",
+      "room_not_found": "Camera nu există."
     }
   },
   "acp": {
@@ -441,7 +452,9 @@
         "chat_pro_group": "Chat Pro",
         "chat_pro_settings": "Setări Chat Pro",
         "chat_pro_bar": "Bara de anunțuri",
-        "chat_pro_emotes": "Emoticoane"
+        "chat_pro_emotes": "Emoticoane",
+        "chat_moderation": "Moderare",
+        "chat_moderators": "Moderatori"
       },
       "vip": {
         "vip_group": "VIP",
@@ -3320,6 +3333,76 @@
       "parentOf": "Grupul sub care apare {name}",
       "noParent": "Rând propriu",
       "under": "Sub {name}"
+    },
+    "chatMod": {
+      "moderationTitle": "Moderarea chat-ului",
+      "presetsTitle": "Motive gata scrise",
+      "reasonsHint": "Un motiv pe rând; apar ca butoane în dialogurile de moderare.",
+      "announceGrants": "Linie publică în chat când cineva primește acces de moderator",
+      "save": "Salvează",
+      "activeTitle": "Sancțiuni active",
+      "noActive": "Nicio sancțiune activă.",
+      "colMember": "Membru",
+      "colKind": "Sancțiune",
+      "colRoom": "Cameră",
+      "colUntil": "Până la",
+      "colReason": "Motiv",
+      "colBy": "Dată de",
+      "lift": "Ridică",
+      "liftTitle": "Ridici sancțiunea?",
+      "liftBody": "{name} va putea scrie din nou în chat imediat.",
+      "logTitle": "Jurnal moderare chat",
+      "noLog": "Nicio acțiune de moderare încă.",
+      "colWhen": "Când",
+      "colWho": "Cine",
+      "colWhat": "Ce",
+      "colWhom": "Cui",
+      "colMessage": "Mesaj",
+      "undone": "anulată",
+      "undo": "Anulează",
+      "undoTitle": "Anulezi sancțiunea?",
+      "undoBody": "Sancțiunea lui {name} se ridică acum.",
+      "pages": "Paginile jurnalului",
+      "prev": "Înapoi",
+      "next": "Înainte",
+      "page": "Pagina {page} din {pages}",
+      "system": "Sistem",
+      "cancel": "Renunță",
+      "moderatorsTitle": "Moderatori de chat",
+      "moderatorsIntro": "Acces de moderator doar în chat, dat unui membru (și cu /acces din chat). Drepturile efective sunt cele ale grupurilor plus accesul de aici.",
+      "grantsTitle": "{count, plural, one {# acces activ} few {# accese active} other {# de accese active}}",
+      "noGrants": "Niciun acces de moderator în chat.",
+      "rights": "Drepturi",
+      "rooms": "Camere",
+      "roomsHint": "Nicio cameră bifată = toate camerele.",
+      "expiry": "Expiră",
+      "expiries": {
+        "none": "Niciodată",
+        "1d": "Peste o zi",
+        "7d": "Peste 7 zile",
+        "30d": "Peste 30 de zile",
+        "custom": "La o dată aleasă"
+      },
+      "colGrantedBy": "Dat de",
+      "revoke": "Revocă",
+      "revokeTitle": "Retragi accesul?",
+      "revokeBody": "{name} pierde accesul de moderator în chat.",
+      "edit": "Editează",
+      "editTitle": "Accesul lui {name}",
+      "addTitle": "Adaugă moderator de chat",
+      "member": "Membru",
+      "searchMember": "Caută membrul după nume",
+      "removeMember": "Alege alt membru",
+      "pickMember": "Alege membrul.",
+      "preset": "Set de drepturi",
+      "presets": {
+        "full": "Complet",
+        "mute_kick": "Doar mute + kick",
+        "custom": "Personalizat"
+      },
+      "saved": "Salvat",
+      "saveGrant": "Salvează accesul",
+      "addGrant": "Adaugă moderatorul"
     }
   },
   "settings": {
@@ -3563,7 +3646,9 @@
       "voice_max_seconds": "Durata maximă a unui mesaj vocal (secunde)",
       "giphy_key": "Cheia API GIPHY (fără cheie, /giphy e oprit)",
       "show_rules": "Arată linkul spre reguli în antetul chat-ului",
-      "flood_seconds": "Flood control (secunde între mesaje, 0 = niciunul)"
+      "flood_seconds": "Flood control (secunde între mesaje, 0 = niciunul)",
+      "mod_reasons": "Motivele gata scrise ale moderării",
+      "announce_grants": "Linie publică în chat când cineva primește acces de moderator"
     },
     "i18n": {
       "locales": "Limbile oferite membrilor",
@@ -3781,7 +3866,18 @@
       "flood_seconds": "Pauză între mesajele de chat (secunde)",
       "create_public": "Creează camere de chat publice",
       "create_private": "Creează camere de chat private (cu invitați)",
-      "announce": "Fixează mesaje și publică anunțuri în chat"
+      "announce": "Fixează mesaje și publică anunțuri în chat",
+      "edit_any": "Editează orice mesaj din chat (fără limită de timp)",
+      "pin": "Fixează mesaje în chat",
+      "hide": "Ascunde mesaje din chat",
+      "delete_any": "Șterge orice mesaj din chat",
+      "purge_user": "Șterge mesajele unui membru din chat (ultima oră / 24 de ore / toate)",
+      "warn": "Dă avertismente din chat",
+      "mute": "Dă mute în chat",
+      "kick": "Scoate membri din chat (kick)",
+      "ban": "Dă ban din chat",
+      "slow_user": "Slow mode personal în chat",
+      "grant_access": "Dă acces de moderator în chat"
     },
     "servers": {
       "view": "Vede serverele de joc",
@@ -3805,7 +3901,8 @@
     },
     "app_access": "Poate accesa aplicația {app}",
     "chat_pro": {
-      "history": "Vede istoricul chat-ului (/chat/history)"
+      "history": "Vede istoricul chat-ului (/chat/history)",
+      "history_export": "Exportă istoricul chat-ului (CSV)"
     }
   },
   "profile": {
@@ -4417,7 +4514,9 @@
         "group_mention": "Mențiuni prin grup"
       },
       "chat": {
-        "mention": "Mențiuni în chat"
+        "mention": "Mențiuni în chat",
+        "sanction": "Sancțiuni în chat (mute, kick, ban)",
+        "access": "Accesul de moderator în chat"
       },
       "clans": {
         "invite": "Invitații în clanuri",
@@ -4547,7 +4646,183 @@
       "suggestions": "Sugestii de emoticoane",
       "showMedia": "Arată media"
     },
-    "deletedMember": "Membru șters"
+    "deletedMember": "Membru șters",
+    "mod": {
+      "title": "Acțiuni pe mesaj",
+      "more": "Mai multe",
+      "copied": "Copiat",
+      "reply": "Răspunde",
+      "react": "Reacționează",
+      "edit": "Editează",
+      "pin": "Fixează în chat",
+      "hide": "Ascunde",
+      "unhide": "Arată din nou",
+      "copyText": "Copiază textul",
+      "copyLink": "Copiază linkul",
+      "profile": "Vezi profilul",
+      "history": "Istoricul lui în chat",
+      "card": "Fișa de moderare",
+      "warn": "Avertisment",
+      "mute": "Mute",
+      "kick": "Kick din chat",
+      "ban": "Ban din chat",
+      "siteBan": "Ban pe site…",
+      "siteBanReason": "Chat: „{excerpt}” ({link})",
+      "purge": "Șterge mesajele lui",
+      "slow": "Slow mode personal",
+      "delete": "Șterge mesajul",
+      "ignore": "Ignoră",
+      "report": "Raportează",
+      "muteFor": "Mute pentru",
+      "kickFor": "Kick pentru",
+      "banFor": "Ban pentru",
+      "purgeFrom": "Șterge mesajele din",
+      "slowEvery": "Un mesaj la",
+      "seconds": "{count, plural, one {# secundă} few {# secunde} other {# de secunde}}",
+      "window": {
+        "1h": "Ultima oră",
+        "24h": "Ultimele 24 de ore",
+        "all": "Toate"
+      },
+      "sections": {
+        "message": "Mesaj",
+        "member": "Membru",
+        "moderation": "Moderare"
+      },
+      "dur": {
+        "forever": "permanent",
+        "days": "{count, plural, one {# zi} few {# zile} other {# de zile}}",
+        "hours": "{count, plural, one {# oră} few {# ore} other {# de ore}}",
+        "minutes": "{count, plural, one {# minut} few {# minute} other {# de minute}}"
+      },
+      "dialog": {
+        "warn": "Avertisment pentru {name}",
+        "mute": "Mute pentru {name}",
+        "kick": "Kick din chat pentru {name}",
+        "ban": "Ban din chat pentru {name}",
+        "slow": "Slow mode personal pentru {name}",
+        "purge": "Șterge mesajele lui {name}"
+      },
+      "done": {
+        "warn": "{name} a primit un avertisment.",
+        "mute": "{name} a primit mute.",
+        "kick": "{name} a fost scos din chat.",
+        "ban": "{name} a primit ban din chat.",
+        "slow": "{name} are slow mode personal.",
+        "purge": "Mesajele lui {name} au fost șterse."
+      },
+      "confirm": {
+        "warn": "Dă avertismentul",
+        "mute": "Dă mute",
+        "kick": "Scoate din chat",
+        "ban": "Dă ban din chat",
+        "slow": "Pornește slow mode",
+        "purge": "Șterge mesajele"
+      },
+      "cancel": "Renunță",
+      "close": "Închide",
+      "evidence": "Mesajul se atașează ca dovadă.",
+      "interval": "Interval",
+      "duration": "Durată",
+      "points": "Puncte",
+      "reason": "Motiv",
+      "reasonPlaceholder": "Scrie motivul sau alege unul de mai jos",
+      "presets": "Motive gata scrise",
+      "everywhere": "În tot chat-ul (toate camerele)",
+      "announce": "Anunță în chat",
+      "notify": "Notifică membrul",
+      "cardTitle": "Fișa de moderare: {name}",
+      "warnings": "Avertismente",
+      "activePoints": "{count, plural, one {# punct activ} few {# puncte active} other {# de puncte active}}",
+      "none": "Nimic deocamdată.",
+      "sanctions": "Sancțiuni active",
+      "kinds": {
+        "mute": "Mute",
+        "kick": "Kick",
+        "ban": "Ban din chat",
+        "slow": "Slow mode"
+      },
+      "until": "până la {time}",
+      "lift": "Ridică",
+      "recent": "Ultimele acțiuni",
+      "actions": {
+        "edit": "Mesaj editat",
+        "pin": "Mesaj fixat",
+        "hide": "Mesaj ascuns",
+        "unhide": "Mesaj arătat din nou",
+        "delete": "Mesaj șters",
+        "purge": "Mesaje șterse",
+        "warn": "Avertisment",
+        "mute": "Mute",
+        "unmute": "Mute ridicat",
+        "kick": "Kick",
+        "ban": "Ban din chat",
+        "slow": "Slow mode personal",
+        "lift": "Sancțiune ridicată",
+        "grant": "Acces de moderator dat",
+        "revoke": "Acces de moderator retras",
+        "expire": "Acces de moderator expirat"
+      },
+      "rights": {
+        "edit_any": "Editare",
+        "pin": "Fixare",
+        "hide": "Ascundere",
+        "delete_any": "Ștergere",
+        "purge_user": "Ștergere în masă",
+        "warn": "Avertisment",
+        "mute": "Mute",
+        "kick": "Kick",
+        "ban": "Ban",
+        "slow_user": "Slow mode"
+      },
+      "allRooms": "toate camerele",
+      "system": {
+        "mute": "<target></target> a primit mute {duration}{suffix}",
+        "kick": "<target></target> a fost scos din chat pentru {duration}{suffix}",
+        "ban": "<target></target> a primit ban din chat ({duration}){suffix}",
+        "warn": "<target></target> a primit un avertisment{suffix}",
+        "grant": "<target></target> a primit acces de moderator în chat de la <actor></actor>",
+        "revoke": "<actor></actor> i-a retras lui <target></target> accesul de moderator în chat"
+      },
+      "ephemeral": {
+        "granted": "Acces dat lui <target></target>",
+        "revoked": "Accesul lui <target></target> a fost retras.",
+        "list": "{count, plural, one {# moderator de chat} few {# moderatori de chat} other {# de moderatori de chat}}",
+        "listEmpty": "Niciun acces de moderator activ.",
+        "onlyYou": "Doar tu vezi asta"
+      },
+      "hiddenTag": "Ascuns",
+      "hiddenBy": "Ascuns de {name}",
+      "mutedUntil": "Ai mute până la {time}",
+      "mutedForever": "Ai mute permanent",
+      "blocked": {
+        "kick": "Ai fost scos din chat",
+        "ban": "Ai ban din chat",
+        "reason": "Motiv: {reason}"
+      },
+      "slowNote": "Slow mode personal: un mesaj la {seconds} secunde."
+    },
+    "commands": {
+      "title": "Comandă",
+      "examples": "Exemple:",
+      "rights": "Drepturi",
+      "durations": "Durată",
+      "rooms": "Camere",
+      "acces": {
+        "usage": "@membru [drepturi] [durată] [#cameră]",
+        "description": "Dă acces de moderator în chat"
+      },
+      "revoca": {
+        "usage": "@membru",
+        "description": "Retrage accesul de moderator în chat"
+      },
+      "roll": {
+        "usage": "[max]"
+      },
+      "rps": {
+        "usage": "@membru [piatră|hârtie|foarfecă]"
+      }
+    }
   },
   "online": {
     "title": "Cine e online",
@@ -6939,7 +7214,18 @@
       "thisWeek": "Săptămâna aceasta",
       "resetDays": "{count, plural, one {# zi până la resetare} few {# zile până la resetare} other {# de zile până la resetare}}",
       "resetHours": "{count, plural, one {# oră până la resetare} few {# ore până la resetare} other {# de ore până la resetare}}",
-      "resetMinutes": "{count, plural, one {# minut până la resetare} few {# minute până la resetare} other {# de minute până la resetare}}"
+      "resetMinutes": "{count, plural, one {# minut până la resetare} few {# minute până la resetare} other {# de minute până la resetare}}",
+      "freePlace": "Loc liber",
+      "messagesToday": "{count, plural, one {# mesaj azi} few {# mesaje azi} other {# de mesaje azi}}",
+      "winnerOfMonth": "Câștigătorul lunii {month} · {count, plural, one {# mesaj} few {# mesaje} other {# de mesaje}}",
+      "winnerOfWeek": "Câștigătorul săptămânii trecute · {count, plural, one {# mesaj} few {# mesaje} other {# de mesaje}}",
+      "badge": "Insignă",
+      "yourStats": "Statisticile tale",
+      "thisMonth": "Mesaje luna asta",
+      "thisWeekPeriod": "Mesaje săptămâna asta",
+      "vsPrevious": "Față de perioada trecută",
+      "new": "nou",
+      "guestHint": "<link>Conectează-te</link> ca să-ți vezi poziția și mesajele."
     },
     "notifications": {
       "open": "Notificările chat-ului",
@@ -7117,7 +7403,27 @@
       "pages": "Paginile istoricului",
       "prev": "Pagina anterioară",
       "next": "Pagina următoare",
-      "page": "Pagina {page} din {pages}"
+      "page": "Pagina {page} din {pages}",
+      "textPlaceholder": "Caută în mesaje",
+      "memberPlaceholder": "Nume sau poreclă",
+      "room": "Cameră",
+      "allRooms": "Toate",
+      "staff": "Staff",
+      "showHidden": "Arată și ascunse",
+      "export": "Exportă CSV",
+      "last": "Ultima pagină",
+      "jumpTitle": "Sari la pagina",
+      "go": "Mergi",
+      "perPage": "{count, plural, one {# mesaj} few {# mesaje} other {# de mesaje}} · {size} pe pagină",
+      "colTimeId": "Ora · ID",
+      "openImage": "Deschide imaginea",
+      "voice": "Mesaj vocal",
+      "edited": "editat",
+      "copyLink": "Copiază linkul mesajului",
+      "copied": "Linkul a fost copiat",
+      "viewInChat": "Vezi în chat",
+      "deleteTitle": "Ștergi mesajul?",
+      "deleteBody": "Mesajul dispare din chat și din istoric."
     }
   },
   "header": {

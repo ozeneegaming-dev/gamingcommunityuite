@@ -1,7 +1,7 @@
 "use server";
 
 import { GcsValidationError, type GcsResult } from "@gcs/core";
-import { CHAT_ACP_CHANNELS, CHAT_ACP_SETTINGS, CHAT_CONTAINER, CHAT_DISPLAY_SETTINGS } from "@gcs/modules";
+import { CHAT_ACP_CHANNELS, CHAT_ACP_MODERATION, CHAT_ACP_MODERATORS, CHAT_ACP_SETTINGS, CHAT_CONTAINER, CHAT_DISPLAY_SETTINGS, CHAT_MODERATION_SETTINGS } from "@gcs/modules";
 import { field, intField, runAcpAction } from "@/lib/acp-actions";
 import { services } from "@/lib/services";
 import { saveSettingDefs } from "@/lib/settings-save";
@@ -124,6 +124,56 @@ export async function liftChatMute(id: number): Promise<GcsResult<null>> {
 export async function removeAnnouncement(id: number): Promise<GcsResult<null>> {
   return runAcpAction(CHAT_ACP_CHANNELS, "delete", async (actor) => {
     await services().chat.removeAnnouncement(actor, id);
+    return null;
+  });
+}
+
+// ─── Moderarea chat-ului (ACP → Chat → Moderare / Moderatori) ─────────────────────────────────────────
+
+/** Motivele gata scrise (unul pe rând) și linia publică la un acces de moderator dat. */
+export async function saveChatModSettings(fd: FormData): Promise<GcsResult<null>> {
+  return runAcpAction(CHAT_ACP_MODERATION, "edit", async (actor) => {
+    const reasons = field(fd, "reasons")
+      .split(/\r?\n/)
+      .map((r) => r.trim())
+      .filter(Boolean);
+    fd.set("setting:chat.mod_reasons", JSON.stringify([...new Set(reasons)]));
+    await saveSettingDefs(CHAT_MODERATION_SETTINGS, fd, actor);
+    return null;
+  });
+}
+
+/** „Ridică” o sancțiune activă (mute, kick, ban, slow mode). */
+export async function liftChatSanctionAcp(ref: string): Promise<GcsResult<null>> {
+  return runAcpAction(CHAT_ACP_MODERATION, "edit", async (actor) => {
+    if (!/^(mute|sanction):\d+$/.test(ref)) throw new GcsValidationError({ ref: "invalid" });
+    await services().chatModeration.lift(actor, ref);
+    return null;
+  });
+}
+
+/** „Anulează” din jurnal: ridică sancțiunea rândului (mute, kick, ban). */
+export async function undoChatModLog(id: number): Promise<GcsResult<null>> {
+  return runAcpAction(CHAT_ACP_MODERATION, "edit", async (actor) => {
+    await services().chatModeration.undo(actor, id);
+    return null;
+  });
+}
+
+/** Dă sau schimbă accesul de moderator în chat al unui membru (drepturi, camere, expirare). */
+export async function saveChatGrant(input: { userId: string; rights: string[]; rooms: string[]; expiresAt: string | null }): Promise<GcsResult<null>> {
+  return runAcpAction(CHAT_ACP_MODERATORS, "edit", async (actor) => {
+    const expiresAt = input.expiresAt ? new Date(input.expiresAt) : null;
+    if (expiresAt && Number.isNaN(expiresAt.getTime())) throw new GcsValidationError({ expiresAt: "invalid_date" });
+    await services().chatModeration.grant(actor, { userId: String(input.userId), rights: input.rights.map(String), rooms: input.rooms.map(String), expiresAt });
+    return null;
+  });
+}
+
+/** Retrage accesul de moderator în chat. */
+export async function revokeChatGrant(userId: string): Promise<GcsResult<null>> {
+  return runAcpAction(CHAT_ACP_MODERATORS, "edit", async (actor) => {
+    await services().chatModeration.revoke(actor, String(userId));
     return null;
   });
 }

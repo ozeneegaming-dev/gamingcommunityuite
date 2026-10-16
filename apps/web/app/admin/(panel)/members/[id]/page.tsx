@@ -16,7 +16,7 @@ import { saveMemberPermissions } from "./actions";
 import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 import { GcsMemberLink } from "@/lib/member-names";
 
-type Props = { params: Promise<{ id: string }> };
+type Props = { params: Promise<{ id: string }>; searchParams?: Promise<{ ban?: string; reason?: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const user = await services().db.user.findUnique({ where: { id: (await params).id }, select: { name: true } });
@@ -40,9 +40,12 @@ function Section({ title, icon, children }: { title: string; icon: string; child
 const muted = { color: "var(--gcs-muted)", fontSize: 13 } as const;
 const listRow = { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "8px 0", borderBottom: "1px solid var(--gcs-border)", fontSize: 13 } as const;
 
-export default async function AcpMemberPage({ params }: Props) {
+export default async function AcpMemberPage({ params, searchParams }: Props) {
   const panel = await requireAcpSection("members.members");
   const { id } = await params;
+  // „Ban pe site…” din meniul de moderare al chat-ului: motivul vine completat, cu mesajul ca dovadă.
+  const sp = (await searchParams) ?? {};
+  const banReason = typeof sp.reason === "string" ? sp.reason.slice(0, 500) : "";
   const { members, db, memberRemoval } = services();
   const member = await members.detail(id);
   if (!member) notFound();
@@ -142,7 +145,7 @@ export default async function AcpMemberPage({ params }: Props) {
           <GcsActionForm action={banMember.bind(null, member.id)} submitLabel={t("ban.submit")} submitKind="ban">
             <label className="gcs-field">
               {t("ban.reason")}
-              <input className="gcs-input" name="reason" required maxLength={500} />
+              <input className="gcs-input" name="reason" required maxLength={500} defaultValue={banReason} autoFocus={sp.ban === "1"} data-testid="gcs-acp-ban-reason" />
             </label>
             <label className="gcs-field">
               {t("ban.duration")}

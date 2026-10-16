@@ -16,6 +16,8 @@ const MEMBERS = { ...STAFF, ...VIPS, member: true, new_member: true } as const;
 const permissions: GcsPermissionDef[] = [
   // Pagina `/chat/history` (doar mesajele camerelor pe care membrul le poate citi).
   { key: "chat_pro.history", scope: "group", labelKey: "permissions.chat_pro.history", default: { ...MEMBERS } },
+  // Exportul CSV al istoricului (staff-ul).
+  { key: "chat_pro.history_export", scope: "group", labelKey: "permissions.chat_pro.history_export", default: { ...STAFF } },
 ];
 
 const int = (min: number, max: number) => (v: unknown) => (Number.isInteger(v) && (v as number) >= min && (v as number) <= max ? null : "invalid_range");

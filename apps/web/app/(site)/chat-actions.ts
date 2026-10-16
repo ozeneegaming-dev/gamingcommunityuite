@@ -58,11 +58,76 @@ export const deleteChatMessage = gcsAction(z.object({ id: z.number().int().posit
   await services().chat.delete(actor, id);
 });
 
-/** Mute pe canal sau pe toate (`channel: null`); `minutes: null` = permanent. */
+const userId = z.string().min(8).max(40);
+/** Opțiunile dialogurilor de moderare: motivul, „Anunță în chat”, „Notifică membrul”, mesajul de unde vine. */
+const modOptions = {
+  reason: z.string().max(200),
+  announce: z.boolean().optional(),
+  notify: z.boolean().optional(),
+  messageId: z.number().int().positive().nullable().optional(),
+};
+
+/** Mute pe canal (sau pe toate, `everywhere`); `minutes: null` = permanent; linia de sistem și notificarea, după opțiuni. */
 export const muteChatUser = gcsAction(
-  z.object({ userId: z.string().min(8).max(40), channel: channel.nullable(), minutes: z.number().int().positive().max(525_600).nullable(), reason: z.string().max(200) }),
-  async ({ userId, channel, minutes, reason }, { actor }) => services().chat.mute(actor, userId, { channelKey: channel, minutes, reason }),
+  z.object({ userId, channel: channel.nullable(), minutes: z.number().int().positive().max(525_600).nullable(), everywhere: z.boolean().optional(), ...modOptions }),
+  async ({ userId, channel, minutes, everywhere, ...opts }, { actor }) => services().chatModeration.mute(actor, userId, { channelKey: channel, minutes, everywhere: everywhere ?? channel === null, ...opts }),
 );
+
+/** Kick din cameră (sau din tot chat-ul) pentru N minute. */
+export const kickChatUser = gcsAction(
+  z.object({ userId, channel, minutes: z.number().int().positive().max(10_080), everywhere: z.boolean().optional(), ...modOptions }),
+  async ({ userId, channel, ...opts }, { actor }) => services().chatModeration.kick(actor, userId, { channelKey: channel, ...opts }),
+);
+
+/** Ban doar din chat (toate camerele); `minutes: null` = permanent. */
+export const banChatUser = gcsAction(
+  z.object({ userId, channel, minutes: z.number().int().positive().max(525_600).nullable(), ...modOptions }),
+  async ({ userId, channel, ...opts }, { actor }) => services().chatModeration.ban(actor, userId, { channelKey: channel, ...opts }),
+);
+
+/** Slow mode personal: un mesaj la `seconds` secunde, pentru `minutes` (`null` = până e ridicat). */
+export const slowChatUser = gcsAction(
+  z.object({ userId, channel, seconds: z.number().int().min(5).max(3600), minutes: z.number().int().positive().max(525_600).nullable(), ...modOptions }),
+  async ({ userId, channel, ...opts }, { actor }) => services().chatModeration.slowUser(actor, userId, { channelKey: channel, ...opts }),
+);
+
+/** Avertisment (sistemul de avertismente al site-ului), cu mesajul ca dovadă. */
+export const warnChatUser = gcsAction(
+  z.object({ userId, channel, points: z.number().int().min(1).max(10).optional(), ...modOptions }),
+  async ({ userId, channel, ...opts }, { actor }) => services().chatModeration.warn(actor, userId, { channelKey: channel, ...opts }),
+);
+
+/** Șterge mesajele unui membru din cameră: ultima oră, ultimele 24 de ore sau toate. */
+export const purgeChatUser = gcsAction(
+  z.object({ userId, channel, window: z.enum(["1h", "24h", "all"]), reason: z.string().max(200).optional() }),
+  async ({ userId, channel, window, reason }, { actor }) => services().chatModeration.purge(actor, userId, channel, window, { reason: reason ?? "" }),
+);
+
+/** Ascunde (sau arată din nou) un mesaj. */
+export const hideChatMessage = gcsAction(z.object({ id: z.number().int().positive(), hidden: z.boolean() }), async ({ id, hidden }, { actor }) => {
+  await services().chatModeration.hide(actor, id, hidden);
+});
+
+/** Ridică o sancțiune (`mute:<id>` / `sanction:<id>`): fișa de moderare și ACP-ul. */
+export const liftChatSanction = gcsAction(z.object({ ref: z.string().regex(/^(mute|sanction):\d+$/) }), async ({ ref }, { actor }) => {
+  await services().chatModeration.lift(actor, ref);
+});
+
+/** Fișa de moderare a unui membru (avertismente, sancțiuni active, ultimele acțiuni). */
+export const loadChatModCard = gcsAction(z.object({ userId, channel }), async ({ userId, channel }, { actor }) => services().chatModeration.card(actor, userId, channel));
+
+/** Meniul și starea viewer-ului într-o cameră (reîncărcate live, la un acces de moderator dat sau retras). */
+export const loadChatModState = gcsAction(z.object({ channel }), async ({ channel }, { actor }) => {
+  await assertChatEnabled(actor);
+  const { chatModeration } = services();
+  const [menu, state] = await Promise.all([chatModeration.menu(actor, channel), chatModeration.viewerState(actor, channel)]);
+  return { menu, state };
+});
+
+/** Raportează un mesaj moderatorilor (chat-ul standard și Chat Pro). */
+export const reportChat = gcsAction(z.object({ id: z.number().int().positive(), reason: z.string().min(3).max(500) }), async ({ id, reason }, { actor }) => {
+  await services().chatModeration.report(actor, id, reason);
+});
 
 export const unmuteChatUser = gcsAction(z.object({ id: z.number().int().positive() }), async ({ id }, { actor }) => {
   await services().chat.unmute(actor, id);

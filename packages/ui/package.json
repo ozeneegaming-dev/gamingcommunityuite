@@ -36,6 +36,7 @@
     "./titles.css": "./src/titles.css",
     "./viewer.css": "./src/viewer.css",
     "./chatpro.css": "./src/chatpro.css",
+    "./chatmod.css": "./src/chatmod.css",
     "./groups-pro.css": "./src/groups-pro.css",
     "./system-ui.css": "./src/system-ui.css",
     "./header-menus.css": "./src/header-menus.css",

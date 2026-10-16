@@ -1,28 +1,32 @@
 "use client";
 
 import type { GcsMentionHint } from "@gcs/core/text-mentions";
-import { faFaceSmile, faTrashCan } from "@fortawesome/free-regular-svg-icons";
-import { faBullhorn, faCommentSlash, faGear, faPen, faScroll, faThumbtack, faUserSlash, faVolumeHigh, faVolumeXmark } from "@fortawesome/free-solid-svg-icons";
+import { faFaceSmile } from "@fortawesome/free-regular-svg-icons";
+import { faBullhorn, faEllipsis, faGaugeSimple, faGear, faScroll, faThumbtack, faVolumeHigh, faVolumeXmark } from "@fortawesome/free-solid-svg-icons";
 import type { GcsErrorPayload } from "@gcs/core";
-import type { GcsChatAnnouncementView, GcsChatConfig, GcsChatMessageView, GcsChatReactionCount } from "@gcs/modules";
+import type { GcsChatAnnouncementView, GcsChatConfig, GcsChatEphemeral, GcsChatMessageView, GcsChatReactionCount, GcsChatSystemLine as GcsSystemLineData, GcsChatViewerState } from "@gcs/modules";
 import { GcsAvatar, GcsButton, GcsIconSvg, GcsMemberName, playNotificationSound, type GcsIconSvgProps } from "@gcs/ui";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { memberHref } from "@/lib/forum-urls";
 import { useErrorMessage } from "@/lib/use-error-message";
-import {
-  deleteChatMessage,
-  editChatMessage,
-  ignoreChatUser,
-  loadChatMessages,
-  muteChatUser,
-  pinChatMessage,
-  reactChatMessage,
-  sendChatMessage,
-} from "../../chat-actions";
+import { deleteChatMessage, editChatMessage, ignoreChatUser, loadChatMessages, pinChatMessage, reactChatMessage, sendChatMessage } from "../../chat-actions";
 import { useRealtime } from "../realtime/GcsRealtimeProvider";
 import { GcsChatComposer, type GcsChatComposerHandle } from "./GcsChatComposer";
 import { GcsChatMedia } from "./GcsChatMedia";
+import {
+  GcsChatBlocked,
+  GcsChatEphemeralLine,
+  GcsChatHiddenTag,
+  GcsChatModMenu,
+  GcsChatMutedNote,
+  GcsChatReportDialog,
+  GcsChatSystemLine,
+  hideMessage,
+  useAccessCommands,
+  useChatModeration,
+  type GcsChatRoomMod,
+} from "./GcsChatModeration";
 import { useDismiss } from "./use-dismiss";
 
 export type GcsChatRoomLabels = {
@@ -77,19 +81,43 @@ type Props = {
   toolbar?: ReactNode;
   /** Linkul rotiței spre setările din ACP (staff-ul cu acces); fără el, rotița deschide preferințele viewer-ului. */
   settingsHref?: string | null;
+  /** Meniul de moderare al camerei (drepturile viewer-ului, motivele, „Ban pe site…”, istoricul). */
+  mod: GcsChatRoomMod;
+  /** Starea viewer-ului: mute, kick / ban, slow mode personal. */
+  state: GcsChatViewerState;
+  /** Mesajul spre care s-a deschis camera (`?m=<id>`): derulat în vedere și evidențiat. */
+  focusId?: number | null;
 };
+
+/** Hide / unhide / purge, aplicate pe lista unei camere (live). */
+export function applyModerationEvent(
+  list: GcsChatMessageView[],
+  event: "hidden" | "purged",
+  data: unknown,
+  channel: string,
+  seesHidden: boolean,
+): GcsChatMessageView[] | null {
+  if (event === "purged") {
+    const d = data as { channel?: string; ids?: number[] } | null;
+    if (d?.channel !== channel || !Array.isArray(d.ids)) return null;
+    const ids = new Set(d.ids);
+    return list.filter((m) => !ids.has(m.id));
+  }
+  const d = data as { id?: number; channel?: string; hidden?: boolean; at?: string | null; by?: GcsChatMessageView["author"]; message?: GcsChatMessageView | null } | null;
+  if (!d?.id || d.channel !== channel) return null;
+  if (d.hidden) {
+    if (!seesHidden) return list.filter((m) => m.id !== d.id);
+    return list.map((m) => (m.id === d.id ? { ...m, hidden: { at: d.at ?? new Date().toISOString(), byId: d.by?.id ?? null, by: d.by ?? null } } : m));
+  }
+  if (list.some((m) => m.id === d.id)) return list.map((m) => (m.id === d.id ? { ...m, hidden: undefined } : m));
+  if (!d.message) return null;
+  return [...list, { ...d.message, mine: [] }].sort((a, b) => a.id - b.id);
+}
 
 const MAX_KEPT = 300;
 const EDIT_WINDOW_MS = 5 * 60_000;
 const SOUND_KEY = "gcs-chat-sound";
 const AVATARS_KEY = "gcs-chat-avatars";
-/** Duratele de mute din meniul moderatorului (minute; `null` = permanent). */
-const MUTE_CHOICES: { key: string; minutes: number | null }[] = [
-  { key: "10m", minutes: 10 },
-  { key: "1h", minutes: 60 },
-  { key: "1d", minutes: 1440 },
-  { key: "forever", minutes: null },
-];
 
 /** O preferință a viewer-ului din browser (`on` implicit). */
 function readPref(key: string): boolean {
@@ -117,15 +145,23 @@ function writePref(key: string, on: boolean): void {
  * periodic.
  */
 export function GcsChatRoom(props: Props) {
-  const { channel, initial, canModerate, canAnnounce = false, viewerId, reactions, mute, labels, config, compact, title, toolbar, settingsHref = null } = props;
+  const { channel, initial, viewerId, reactions, labels, config, compact, title, toolbar, settingsHref = null } = props;
   const t = useTranslations("chat.ui");
+  const ts = useTranslations("chat.mod");
   const [messages, setMessages] = useState(initial);
   const [pinned, setPinned] = useState(props.pinned ?? null);
   const [announcements, setAnnouncements] = useState(props.announcements ?? []);
   const [ignored, setIgnored] = useState(() => new Set(props.ignored ?? []));
   const [editing, setEditing] = useState<{ id: number; body: string } | null>(null);
-  /** Meniul deschis al unui mesaj: reacțiile sau duratele de mute. */
-  const [menu, setMenu] = useState<{ kind: "react" | "mute"; id: number } | null>(null);
+  /** Meniul deschis al unui mesaj: reacțiile sau meniul „⋯”. */
+  const [menu, setMenu] = useState<{ kind: "react" | "more"; id: number } | null>(null);
+  const [ephemerals, setEphemerals] = useState<{ key: number; e: GcsChatEphemeral }[]>([]);
+  const [report, setReport] = useState<number | null>(null);
+  const moderation = useChatModeration({ channel: channel.key, viewerId, mod: props.mod, state: props.state });
+  const { rights, state } = moderation;
+  const mute = state.mute;
+  const seesHidden = rights.has("hide");
+  const accessCommands = useAccessCommands(moderation.mod.rooms ?? [channel.key]);
   const [error, setError] = useState<string | null>(null);
   const [slow, setSlow] = useState(channel.slowModeSeconds);
   const [hasOlder, setHasOlder] = useState(initial.length >= config.pageSize);
@@ -140,14 +176,16 @@ export function GcsChatRoom(props: Props) {
   const listRef = useRef<HTMLOListElement>(null);
   const composer = useRef<GcsChatComposerHandle>(null);
   const soundRef = useRef(true);
-  const menuRef = useRef<HTMLSpanElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const pickerRef = useRef<HTMLSpanElement>(null);
   const menuTrigger = useRef<HTMLButtonElement>(null);
   const prefsRef = useRef<HTMLDivElement>(null);
   const prefsTrigger = useRef<HTMLButtonElement>(null);
   const prefsId = useId();
   const closeMenu = useCallback(() => setMenu(null), []);
   const closePrefs = useCallback(() => setPrefsOpen(false), []);
-  useDismiss(menu !== null, menuRef, closeMenu, menuTrigger);
+  useDismiss(menu?.kind === "more", menuRef, closeMenu, menuTrigger);
+  useDismiss(menu?.kind === "react", pickerRef, closeMenu, menuTrigger);
   useDismiss(prefsOpen, prefsRef, closePrefs, prefsTrigger);
   /** Înălțimea listei înainte de adăugarea mesajelor vechi (ca poziția să nu sară). */
   const keepScroll = useRef<number | null>(null);
@@ -225,13 +263,37 @@ export function GcsChatRoom(props: Props) {
         const s = (data as { slowModeSeconds?: number } | null)?.slowModeSeconds;
         if (typeof s === "number") setSlow(s);
       }),
+      realtime.on("hidden", (data) => setMessages((list) => applyModerationEvent(list, "hidden", data, channel.key, seesHidden) ?? list)),
+      realtime.on("purged", (data) => setMessages((list) => applyModerationEvent(list, "purged", data, channel.key, seesHidden) ?? list)),
       realtime.on("resync", () => void reload()),
     ];
     return () => {
       for (const off of offs) off();
       realtime.leave(room);
     };
-  }, [realtime, room, channel.key, merge, reload, viewerId]);
+  }, [realtime, room, channel.key, merge, reload, viewerId, seesHidden]);
+
+  // Scos (kick) sau banat din chat: lista se golește și camera live se părăsește pe loc.
+  const blocked = state.block !== null;
+  useEffect(() => {
+    if (!blocked) return;
+    setMessages([]);
+    realtime.leave(room);
+  }, [blocked, realtime, room]);
+  const wasBlocked = useRef(blocked);
+  useEffect(() => {
+    // Sancțiunea ridicată: mesajele revin.
+    if (wasBlocked.current && !blocked) void reload();
+    wasBlocked.current = blocked;
+  }, [blocked, reload]);
+
+  // `?m=<id>`: mesajul căutat apare în vedere, evidențiat.
+  useEffect(() => {
+    if (!props.focusId) return;
+    const el = listRef.current?.querySelector<HTMLElement>(`[data-message-id="${props.focusId}"]`);
+    el?.scrollIntoView({ block: "center" });
+    el?.classList.add("gcs-chat__msg--focus");
+  }, []);
 
   // Fără live: reîncărcare periodică (intervalul din ACP).
   useEffect(() => {
@@ -305,6 +367,12 @@ export function GcsChatRoom(props: Props) {
       return false;
     }
     setError(null);
+    // O comandă de moderare (`/acces`): rezultatul îl vede doar autorul, sub mesaje.
+    const eph = res.data.ephemeral;
+    if (eph) {
+      setEphemerals((list) => [...list, { key: Date.now(), e: eph }].slice(-3));
+      return true;
+    }
     merge([res.data]);
     const el = listRef.current;
     if (el) requestAnimationFrame(() => (el.scrollTop = top ? 0 : el.scrollHeight));
@@ -337,8 +405,8 @@ export function GcsChatRoom(props: Props) {
 
   const time = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: config.timeFormat === "12h" });
 
-  const blocked = mute !== null || !channel.canWrite;
-  const canReact = viewerId !== null && !blocked;
+  const muted = mute !== null || !channel.canWrite || blocked;
+  const canReact = viewerId !== null && !muted;
   const visible = messages.filter((m) => !m.author || !ignored.has(m.author.id));
   const shown = top ? [...visible].reverse() : visible;
   const hideAvatars = config.hideAvatars || !avatars;
@@ -348,11 +416,12 @@ export function GcsChatRoom(props: Props) {
     <GcsChatComposer
       ref={composer}
       channel={channel.key}
-      disabled={blocked}
+      disabled={muted}
       busy={pending}
       config={config}
       labels={{ placeholder: labels.placeholder, send: labels.send, input: labels.input }}
       placement={top ? "below" : "above"}
+      commands={moderation.mod.canGrant ? accessCommands : undefined}
       onSend={send}
       onError={showError}
     />
@@ -365,10 +434,11 @@ export function GcsChatRoom(props: Props) {
   );
 
   /** Un buton-iconiță din uneltele unui mesaj (numele accesibil e și tooltip-ul). */
-  const tool = (label: string, icon: GcsIconSvgProps["icon"], onClick: () => void, extra: { expanded?: boolean; trigger?: boolean } = {}) => (
+  const tool = (label: string, icon: GcsIconSvgProps["icon"], onClick: () => void, extra: { expanded?: boolean; trigger?: boolean; testId?: string } = {}) => (
     <button
       type="button"
-      className="gcs-chat__toolBtn"
+      className="gcs-chat__toolBtn gcs-sweep"
+      {...(extra.testId ? { "data-testid": extra.testId } : {})}
       aria-label={label}
       title={label}
       onClick={onClick}
@@ -384,6 +454,7 @@ export function GcsChatRoom(props: Props) {
     <div
       className={`gcs-chat${compact ? " gcs-chat--compact" : ""}${hideAvatars ? " gcs-chat--noAvatars" : ""}${top ? " gcs-chat--newestTop" : ""}`}
       data-testid={`gcs-chat-${channel.key}`}
+      {...moderation.rootAttrs}
     >
       <header className="gcs-chat__head">
         <div className="gcs-chat__title">{title}</div>
@@ -458,15 +529,16 @@ export function GcsChatRoom(props: Props) {
           <strong>{labels.pinned}</strong>
           {pinned.author && <GcsMemberName userId={pinned.author.id} name={pinned.author.name} nameKey={pinned.author.nameKey} href={memberHref(pinned.author)} />}
           <span className="gcs-chat__body" dangerouslySetInnerHTML={{ __html: pinned.html }} />
-          {canAnnounce && (
+          {rights.has("pin") && (
             <button type="button" className="gcs-linkButton" onClick={() => run(() => pinChatMessage({ channel: channel.key, id: null }), () => setPinned(null))}>
               {labels.unpin}
             </button>
           )}
         </div>
       )}
-      {top && composerEl}
-      {!top && olderButton}
+      {blocked && state.block && <GcsChatBlocked block={state.block} />}
+      {top && !blocked && composerEl}
+      {!top && !blocked && olderButton}
       <ol
         ref={listRef}
         className="gcs-chat__list"
@@ -476,16 +548,17 @@ export function GcsChatRoom(props: Props) {
         aria-relevant="additions"
         onScroll={onScroll}
       >
-        {shown.length === 0 && <li className="gcs-chat__empty">{labels.empty}</li>}
+        {shown.length === 0 && !blocked && <li className="gcs-chat__empty">{labels.empty}</li>}
         {shown.map((m) => {
+          if (m.system) return <GcsChatSystemLine key={m.id} m={m as GcsChatMessageView & { system: GcsSystemLineData }} time={time(m.createdAt)} deletedMember={labels.deletedMember} />;
           const own = viewerId !== null && m.author?.id === viewerId;
-          const canEdit = own && !blocked && Date.now() - new Date(m.createdAt).getTime() < EDIT_WINDOW_MS;
+          const canEdit = own && !muted && Date.now() - new Date(m.createdAt).getTime() < EDIT_WINDOW_MS;
           const author = m.author;
           const open = menu?.id === m.id ? menu.kind : null;
           return (
             <li
               key={m.id}
-              className={`gcs-chat__msg${own ? " gcs-chat__msg--own" : ""}`}
+              className={`gcs-chat__msg${own ? " gcs-chat__msg--own" : ""}${m.hidden ? " gcs-chat__msg--hidden" : ""}`}
               data-testid="gcs-chat-msg"
               data-message-id={m.id}
               data-gcs-caption-author={author?.name ?? labels.deletedMember}
@@ -508,7 +581,7 @@ export function GcsChatRoom(props: Props) {
                       nameKey={author.nameKey}
                       className="gcs-chat__name"
                       title={t("mentionHint", { name: author.name })}
-                      disabled={blocked}
+                      disabled={muted}
                       onClick={() => composer.current?.mention(author.name)}
                       data-testid="gcs-chat-name"
                     />
@@ -521,6 +594,7 @@ export function GcsChatRoom(props: Props) {
                     {time(m.createdAt)}
                   </time>
                   {m.editedAt && <span className="gcs-chat__edited">({labels.edited})</span>}
+                  <GcsChatHiddenTag m={m} />
                 </div>
                 {editing?.id === m.id ? (
                   <form
@@ -574,29 +648,13 @@ export function GcsChatRoom(props: Props) {
                     })}
                   </span>
                 )}
-                {open !== null && (
-                  <span ref={menuRef} className={`gcs-chat__pickerList${open === "mute" ? " gcs-chat__pickerList--text" : ""}`} role="group" aria-label={open === "react" ? labels.react : labels.mute}>
-                    {open === "react"
-                      ? reactions.map((r) => (
-                          <button key={r.id} type="button" title={r.label} aria-label={r.label} onClick={() => react(m.id, r.id)}>
-                            {r.symbol}
-                          </button>
-                        ))
-                      : author &&
-                        MUTE_CHOICES.map((c) => (
-                          <button
-                            key={c.key}
-                            type="button"
-                            onClick={() =>
-                              run(
-                                () => muteChatUser({ userId: author.id, channel: channel.key, minutes: c.minutes, reason: "" }),
-                                () => setMenu(null),
-                              )
-                            }
-                          >
-                            {t(`muteFor.${c.key}`)}
-                          </button>
-                        ))}
+                {open === "react" && (
+                  <span ref={pickerRef} className="gcs-chat__pickerList" role="group" aria-label={labels.react}>
+                    {reactions.map((r) => (
+                      <button key={r.id} type="button" className="gcs-sweep" title={r.label} aria-label={r.label} onClick={() => react(m.id, r.id)}>
+                        {r.symbol}
+                      </button>
+                    ))}
                   </span>
                 )}
               </div>
@@ -604,28 +662,37 @@ export function GcsChatRoom(props: Props) {
                 {canReact &&
                   reactions.length > 0 &&
                   tool(labels.react, faFaceSmile, () => setMenu(open === "react" ? null : { kind: "react", id: m.id }), { expanded: open === "react", trigger: open === "react" })}
-                {canEdit && editing?.id !== m.id && m.body && tool(labels.edit, faPen, () => setEditing({ id: m.id, body: m.body }))}
-                {canAnnounce && !compact && tool(labels.pin, faThumbtack, () => run(() => pinChatMessage({ channel: channel.key, id: m.id }), () => setPinned(m)))}
-                {canModerate &&
-                  author &&
-                  !own &&
-                  tool(labels.mute, faCommentSlash, () => setMenu(open === "mute" ? null : { kind: "mute", id: m.id }), { expanded: open === "mute", trigger: open === "mute" })}
-                {(canModerate || own) &&
-                  tool(labels.delete, faTrashCan, () => run(() => deleteChatMessage({ id: m.id }), () => setMessages((list) => list.filter((x) => x.id !== m.id))))}
-                {viewerId !== null &&
-                  author &&
-                  !own &&
-                  !canModerate &&
-                  tool(t("block"), faUserSlash, () =>
-                    run(
-                      () => ignoreChatUser({ userId: author.id, ignore: true }),
-                      () => setIgnored((s) => new Set(s).add(author.id)),
-                    ),
-                  )}
+                {viewerId !== null && tool(ts("more"), faEllipsis, () => setMenu(open === "more" ? null : { kind: "more", id: m.id }), { expanded: open === "more", trigger: open === "more", testId: "gcs-chat-more" })}
+                {open === "more" && (
+                  <div className="gcs-chatMod__anchor">
+                    <GcsChatModMenu
+                      panelRef={menuRef}
+                      m={m}
+                      own={own}
+                      channel={channel.key}
+                      mod={moderation.mod}
+                      canEditOwn={canEdit}
+                      onClose={closeMenu}
+                      on={{
+                        ...(canReact && reactions.length > 0 ? { react: () => setMenu({ kind: "react", id: m.id }) } : {}),
+                        ...(m.body && editing?.id !== m.id ? { edit: () => setEditing({ id: m.id, body: m.body }) } : {}),
+                        pin: () => run(() => pinChatMessage({ channel: channel.key, id: m.id }), () => setPinned(m)),
+                        remove: () => run(() => deleteChatMessage({ id: m.id }), () => setMessages((list) => list.filter((x) => x.id !== m.id))),
+                        hide: (hidden) => hideMessage(m.id, hidden, (e) => setError(message(e))),
+                        ...(author && !own ? { ignore: () => run(() => ignoreChatUser({ userId: author.id, ignore: true }), () => setIgnored((s) => new Set(s).add(author.id))), report: () => setReport(m.id) } : {}),
+                        open: (kind, preset) => author && moderation.open(kind, { userId: author.id, name: author.name, messageId: m.id, body: m.body }, preset),
+                        card: () => author && moderation.openCard({ userId: author.id, name: author.name, messageId: m.id }),
+                      }}
+                    />
+                  </div>
+                )}
               </span>
             </li>
           );
         })}
+        {ephemerals.map((x) => (
+          <GcsChatEphemeralLine key={x.key} e={x.e} onDismiss={() => setEphemerals((list) => list.filter((y) => y.key !== x.key))} />
+        ))}
         {top && hasOlder && <li className="gcs-chat__olderRow">{olderButton}</li>}
       </ol>
       {slow > 0 && (
@@ -633,19 +700,20 @@ export function GcsChatRoom(props: Props) {
           {labels.slowMode.replace("{seconds}", String(slow))}
         </p>
       )}
-      {mute ? (
-        <p className="gcs-chat__note gcs-chat__note--warn" role="status" data-testid="gcs-chat-muted">
-          {labels.muted.replace("{until}", mute.until ? new Date(mute.until).toLocaleString() : "∞").replace("{reason}", mute.reason || "—")}
+      {state.slowSeconds > 0 && !blocked && (
+        <p className="gcs-chat__note" data-testid="gcs-chat-slowuser">
+          <GcsIconSvg icon={faGaugeSimple} /> {ts("slowNote", { seconds: state.slowSeconds })}
         </p>
-      ) : (
-        !channel.canWrite && <p className="gcs-chat__note">{labels.readOnly}</p>
       )}
-      {!top && composerEl}
+      {blocked ? null : mute ? <GcsChatMutedNote mute={mute} remaining={moderation.remaining} /> : !channel.canWrite && <p className="gcs-chat__note">{labels.readOnly}</p>}
+      {!top && !blocked && composerEl}
       {error && (
         <p role="alert" className="gcs-chat__note gcs-chat__note--warn">
           {error}
         </p>
       )}
+      {moderation.nodes}
+      {report !== null && <GcsChatReportDialog id={report} onClose={() => setReport(null)} />}
     </div>
   );
 }

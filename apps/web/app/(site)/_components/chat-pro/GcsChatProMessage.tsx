@@ -1,25 +1,15 @@
 "use client";
 
-import { faFaceSmile, faFlag, faTrashCan } from "@fortawesome/free-regular-svg-icons";
-import {
-  faCommentSlash,
-  faEllipsis,
-  faExpand,
-  faGlobe,
-  faPen,
-  faReply,
-  faSeedling,
-  faThumbtack,
-  faTrophy,
-  faUserSlash,
-} from "@fortawesome/free-solid-svg-icons";
+import { faFaceSmile } from "@fortawesome/free-regular-svg-icons";
+import { faEllipsis, faExpand, faGlobe, faReply, faSeedling, faTrophy } from "@fortawesome/free-solid-svg-icons";
 import type { GcsChatMessageView, GcsChatProBot, GcsChatProPrefs, GcsRpsChoice } from "@gcs/modules";
-import { GcsAvatar, GcsBadgeArt, GcsButton, GcsIconSvg, GcsMemberName, type GcsIconSvgProps } from "@gcs/ui";
+import { GcsAvatar, GcsBadgeArt, GcsIconSvg, GcsMemberName, type GcsIconSvgProps } from "@gcs/ui";
 import { useTranslations } from "next-intl";
 import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { memberHref } from "@/lib/forum-urls";
 import { openImageViewer } from "@/lib/image-viewer";
 import { GcsChatMedia } from "../chat/GcsChatMedia";
+import { GcsChatHiddenTag, GcsChatModMenu, type GcsChatModKind, type GcsChatRoomMod } from "../chat/GcsChatModeration";
 import { useDismiss } from "../chat/use-dismiss";
 
 export type GcsChatProMessageActions = {
@@ -28,7 +18,10 @@ export type GcsChatProMessageActions = {
   edit: () => void;
   remove: () => void;
   pin: () => void;
-  mute: (minutes: number | null) => void;
+  hide: (hidden: boolean) => void;
+  /** Un dialog de moderare (avertisment, mute, kick, ban, slow mode, ștergerea mesajelor lui), cu durata aleasă. */
+  moderate: (kind: GcsChatModKind, preset?: number | string | null) => void;
+  card: () => void;
   ignore: () => void;
   report: () => void;
   mention: (name: string) => void;
@@ -39,12 +32,6 @@ const RPS: { key: GcsRpsChoice; emoji: string }[] = [
   { key: "rock", emoji: "✊" },
   { key: "paper", emoji: "✋" },
   { key: "scissors", emoji: "✌️" },
-];
-const MUTES: { key: string; minutes: number | null }[] = [
-  { key: "10m", minutes: 10 },
-  { key: "1h", minutes: 60 },
-  { key: "1d", minutes: 1440 },
-  { key: "forever", minutes: null },
 ];
 const previews = new Map<string, Promise<{ host: string; title: string; site: string | null } | null>>();
 
@@ -155,14 +142,17 @@ export function GcsChatProMessage(props: {
   time: string;
   labels: { edited: string; deletedMember: string };
   reactions: { id: number; symbol: string; label: string }[];
-  can: { react: boolean; edit: boolean; pin: boolean; moderate: boolean; delete: boolean; ignore: boolean; report: boolean; reply: boolean };
+  can: { react: boolean; edit: boolean; ignore: boolean; report: boolean; reply: boolean };
+  /** Meniul de moderare al camerei (drepturile viewer-ului) și camera. */
+  mod: GcsChatRoomMod;
+  channel: string;
   editor?: ReactNode;
   actions: GcsChatProMessageActions;
 }) {
   const { m, own, mentioned, grouped, viewerId, prefs, can, actions } = props;
   const t = useTranslations("chatPro.message");
   const tm = useTranslations("chat.ui");
-  const [menu, setMenu] = useState<"react" | "more" | "mute" | null>(null);
+  const [menu, setMenu] = useState<"react" | "more" | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const close = useCallback(() => setMenu(null), []);
@@ -179,7 +169,7 @@ export function GcsChatProMessage(props: {
   const tool = (label: string, icon: GcsIconSvgProps["icon"], onClick: () => void, extra: { testId?: string; trigger?: boolean; expanded?: boolean } = {}) => (
     <button
       type="button"
-      className="gcs-chatPro__tool"
+      className="gcs-chatPro__tool gcs-sweep"
       aria-label={label}
       title={label}
       onClick={onClick}
@@ -189,26 +179,11 @@ export function GcsChatProMessage(props: {
       <GcsIconSvg icon={icon} />
     </button>
   );
-  const item = (label: string, icon: GcsIconSvgProps["icon"], onClick: () => void, testId?: string) => (
-    <button
-      type="button"
-      role="menuitem"
-      className="gcs-chatPro__menuItem"
-      onClick={() => {
-        setMenu(null);
-        onClick();
-      }}
-      {...(testId ? { "data-testid": testId } : {})}
-    >
-      <GcsIconSvg icon={icon} />
-      {label}
-    </button>
-  );
-  const hasMore = can.edit || can.pin || can.moderate || can.delete || can.ignore || can.report;
+  const hasMore = viewerId !== null;
 
   return (
     <li
-      className={`gcs-chatPro__msg${own ? " gcs-chatPro__msg--own" : ""}${mentioned ? " gcs-chatPro__msg--mention" : ""}${grouped ? " gcs-chatPro__msg--grouped" : ""}${bot ? " gcs-chatPro__msg--bot" : ""}`}
+      className={`gcs-chatPro__msg${own ? " gcs-chatPro__msg--own" : ""}${mentioned ? " gcs-chatPro__msg--mention" : ""}${grouped ? " gcs-chatPro__msg--grouped" : ""}${bot ? " gcs-chatPro__msg--bot" : ""}${m.hidden ? " gcs-chatPro__msg--hidden" : ""}`}
       data-testid="gcs-chat-msg"
       data-message-id={m.id}
       data-gcs-caption-author={name}
@@ -262,6 +237,7 @@ export function GcsChatProMessage(props: {
               {props.time}
             </time>
             {m.editedAt && <span className="gcs-chatPro__edited">({props.labels.edited})</span>}
+            <GcsChatHiddenTag m={m} />
           </div>
         )}
         {m.pro?.replyTo && (
@@ -314,16 +290,41 @@ export function GcsChatProMessage(props: {
         {can.reply && tool(t("reply"), faReply, actions.reply, { testId: "gcs-chatpro-reply" })}
         {can.react && props.reactions.length > 0 && tool(t("react"), faFaceSmile, () => setMenu(menu === "react" ? null : "react"), { trigger: menu === "react", expanded: menu === "react" })}
         {media.length > 0 && tool(t("enlarge"), faExpand, () => openImageViewer(media.map((src) => ({ src, caption: { author: name, date: m.createdAt } }))), { testId: "gcs-chatpro-enlarge" })}
-        {hasMore && tool(t("more"), faEllipsis, () => setMenu(menu === "more" || menu === "mute" ? null : "more"), { trigger: menu === "more" || menu === "mute", expanded: menu === "more", testId: "gcs-chatpro-more" })}
-        {menu && (
-          <div ref={menuRef} className="gcs-chatPro__menu" role="menu" aria-label={menu === "react" ? t("react") : t("more")}>
+        {hasMore && tool(t("more"), faEllipsis, () => setMenu(menu === "more" ? null : "more"), { trigger: menu === "more", expanded: menu === "more", testId: "gcs-chatpro-more" })}
+        {menu === "more" && (
+          <div className="gcs-chatMod__anchor">
+            <GcsChatModMenu
+              panelRef={menuRef}
+              m={m}
+              own={own}
+              channel={props.channel}
+              mod={props.mod}
+              canEditOwn={can.edit}
+              onClose={close}
+              on={{
+                ...(can.reply && !bot ? { reply: actions.reply } : {}),
+                ...(can.react && props.reactions.length > 0 ? { react: () => setMenu("react") } : {}),
+                ...(m.body && !bot ? { edit: actions.edit } : {}),
+                pin: actions.pin,
+                remove: actions.remove,
+                hide: actions.hide,
+                ...(can.ignore ? { ignore: actions.ignore } : {}),
+                ...(can.report ? { report: actions.report } : {}),
+                open: actions.moderate,
+                card: actions.card,
+              }}
+            />
+          </div>
+        )}
+        {menu === "react" && (
+          <div ref={menuRef} className="gcs-chatPro__menu" role="menu" aria-label={t("react")}>
             {menu === "react" &&
               props.reactions.map((r) => (
                 <button
                   key={r.id}
                   type="button"
                   role="menuitem"
-                  className="gcs-chatPro__reactPick"
+                  className="gcs-chatPro__reactPick gcs-sweep"
                   title={r.label}
                   aria-label={r.label}
                   onClick={() => {
@@ -333,36 +334,6 @@ export function GcsChatProMessage(props: {
                 >
                   {r.symbol}
                 </button>
-              ))}
-            {menu === "more" && (
-              <>
-                {can.edit && item(t("edit"), faPen, actions.edit)}
-                {can.pin && item(t("pin"), faThumbtack, actions.pin)}
-                {can.moderate && (
-                  <button type="button" role="menuitem" className="gcs-chatPro__menuItem" onClick={() => setMenu("mute")}>
-                    <GcsIconSvg icon={faCommentSlash} />
-                    {t("mute")}
-                  </button>
-                )}
-                {can.ignore && item(t("ignore"), faUserSlash, actions.ignore, "gcs-chatpro-ignore")}
-                {can.report && item(t("report"), faFlag, actions.report, "gcs-chatpro-report")}
-                {can.delete && item(t("delete"), faTrashCan, actions.remove, "gcs-chatpro-delete")}
-              </>
-            )}
-            {menu === "mute" &&
-              MUTES.map((c) => (
-                <GcsButton
-                  key={c.key}
-                  variant="ghost"
-                  size="sm"
-                  role="menuitem"
-                  onClick={() => {
-                    setMenu(null);
-                    actions.mute(c.minutes);
-                  }}
-                >
-                  {tm(`muteFor.${c.key}`)}
-                </GcsButton>
               ))}
           </div>
         )}

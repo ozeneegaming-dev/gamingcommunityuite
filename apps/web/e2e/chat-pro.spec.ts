@@ -254,7 +254,8 @@ test("doi membri: răspunsul citat și notificarea, piatră-hârtie-foarfecă, �
   const theirs = room(a).getByTestId("gcs-chat-msg").filter({ hasText: `răspuns ${id}` });
   await theirs.hover();
   await theirs.getByTestId("gcs-chatpro-more").click();
-  await theirs.getByTestId("gcs-chatpro-report").click();
+  // Meniul „⋯” stă într-un portal (peste listă): elementele lui se caută în pagină.
+  await a.getByTestId("gcs-chatpro-report").click();
   const report = a.getByRole("dialog", { name: "Raportează mesajul" });
   await report.getByTestId("gcs-chatpro-report-reason").fill("Spam în chat");
   await report.getByTestId("gcs-chatpro-report-send").click();

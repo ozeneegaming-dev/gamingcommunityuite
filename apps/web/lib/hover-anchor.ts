@@ -18,3 +18,11 @@ export function hoverAnchorKey(el: HTMLElement): string | null {
   const userId = el.dataset.userId ?? el.dataset.user;
   return userId ? `u:${userId}` : null;
 }
+
+/** Evenimentul cu care o componentă cere deschiderea imediată a cardului unui element-ancoră (ex. click pe un avatar). */
+export const OPEN_CARD_EVENT = "gcs:hover-card";
+
+/** Deschide pe loc cardul ancorei (un element cu `data-user-id`), fără întârzierea hover-ului. */
+export function openMemberCard(anchor: HTMLElement): void {
+  document.dispatchEvent(new CustomEvent(OPEN_CARD_EVENT, { detail: { anchor } }));
+}

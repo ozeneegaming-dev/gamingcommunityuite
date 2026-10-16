@@ -186,7 +186,15 @@
       "removal_not_failed": "Only a failed operation can be retried.",
       "reauth_required": "To confirm, sign in again.",
       "group_mention_cooldown": "You mentioned this group recently: wait a few minutes before mentioning it again.",
-      "not_opponent": "Only the challenged member can answer."
+      "not_opponent": "Only the challenged member can answer.",
+      "muted": "Du bist im Chat stummgeschaltet.",
+      "not_author": "Du kannst nur deine eigenen Nachrichten bearbeiten.",
+      "target_is_staff": "Du kannst nicht gegen ein anderes Teammitglied vorgehen.",
+      "target_outranks": "Dieses Mitglied hat einen höheren Rang als du.",
+      "chat_banned": "Du bist im Chat gesperrt.",
+      "chat_kicked": "Du wurdest für eine Weile aus dem Chat geworfen.",
+      "system_line": "Systemzeilen können nicht bearbeitet werden.",
+      "right_not_held": "Du kannst kein Recht vergeben, das du nicht hast."
     },
     "fields": {
       "invalid_color": "Ungültige Farbe (#RRGGBB)",
@@ -307,7 +315,10 @@
       "invalid_key": "Ungültiger Schlüssel (Kleinbuchstaben, Ziffern und Bindestriche, 2–32 Zeichen).",
       "invalid_theme_package": "Die Datei ist kein gültiges GCS-Themenpaket.",
       "unsupported_theme_package": "Das Themenpaket ist für eine andere Version der Plattform.",
-      "same_theme": "Wähle zwei verschiedene Themes."
+      "same_theme": "Wähle zwei verschiedene Themes.",
+      "member_not_found": "Dieses Mitglied gibt es nicht.",
+      "member_required": "Gib das Mitglied an (@name).",
+      "room_not_found": "Diesen Raum gibt es nicht."
     }
   },
   "acp": {
@@ -441,7 +452,9 @@
         "chat_pro_group": "Chat Pro",
         "chat_pro_settings": "Chat Pro settings",
         "chat_pro_bar": "Announcement bar",
-        "chat_pro_emotes": "Emotes"
+        "chat_pro_emotes": "Emotes",
+        "chat_moderation": "Moderation",
+        "chat_moderators": "Moderatoren"
       },
       "vip": {
         "vip_group": "VIP",
@@ -3320,6 +3333,76 @@
       "parentOf": "Gruppe, unter der {name} erscheint",
       "noParent": "Eigene Zeile",
       "under": "Unter {name}"
+    },
+    "chatMod": {
+      "moderationTitle": "Chat-Moderation",
+      "presetsTitle": "Vorgefertigte Gründe",
+      "reasonsHint": "Ein Grund pro Zeile; sie erscheinen als Schaltflächen in den Moderationsdialogen.",
+      "announceGrants": "Öffentliche Chatzeile, wenn jemand Moderatorzugang erhält",
+      "save": "Speichern",
+      "activeTitle": "Aktive Sanktionen",
+      "noActive": "Keine aktiven Sanktionen.",
+      "colMember": "Mitglied",
+      "colKind": "Sanktion",
+      "colRoom": "Raum",
+      "colUntil": "Bis",
+      "colReason": "Grund",
+      "colBy": "Erteilt von",
+      "lift": "Aufheben",
+      "liftTitle": "Sanktion aufheben?",
+      "liftBody": "{name} kann sofort wieder im Chat schreiben.",
+      "logTitle": "Chat-Moderationsprotokoll",
+      "noLog": "Noch keine Moderationsaktionen.",
+      "colWhen": "Wann",
+      "colWho": "Wer",
+      "colWhat": "Was",
+      "colWhom": "Wen",
+      "colMessage": "Nachricht",
+      "undone": "rückgängig gemacht",
+      "undo": "Rückgängig",
+      "undoTitle": "Sanktion rückgängig machen?",
+      "undoBody": "Die Sanktion von {name} wird jetzt aufgehoben.",
+      "pages": "Protokollseiten",
+      "prev": "Zurück",
+      "next": "Weiter",
+      "page": "Seite {page} von {pages}",
+      "system": "System",
+      "cancel": "Abbrechen",
+      "moderatorsTitle": "Chat-Moderatoren",
+      "moderatorsIntro": "Moderatorzugang nur im Chat, für ein Mitglied (auch mit /acces im Chat). Die wirksamen Rechte sind die Gruppenrechte plus der hier erteilte Zugang.",
+      "grantsTitle": "{count, plural, one {# aktiver Zugang} other {# aktive Zugänge}}",
+      "noGrants": "Kein Moderatorzugang im Chat.",
+      "rights": "Rechte",
+      "rooms": "Räume",
+      "roomsHint": "Kein Raum ausgewählt = alle Räume.",
+      "expiry": "Läuft ab",
+      "expiries": {
+        "none": "Nie",
+        "1d": "In einem Tag",
+        "7d": "In 7 Tagen",
+        "30d": "In 30 Tagen",
+        "custom": "An einem gewählten Datum"
+      },
+      "colGrantedBy": "Erteilt von",
+      "revoke": "Entziehen",
+      "revokeTitle": "Zugang entziehen?",
+      "revokeBody": "{name} verliert den Moderatorzugang im Chat.",
+      "edit": "Bearbeiten",
+      "editTitle": "Zugang von {name}",
+      "addTitle": "Chat-Moderator hinzufügen",
+      "member": "Mitglied",
+      "searchMember": "Mitglied nach Namen suchen",
+      "removeMember": "Anderes Mitglied wählen",
+      "pickMember": "Wähle das Mitglied.",
+      "preset": "Rechtesatz",
+      "presets": {
+        "full": "Vollständig",
+        "mute_kick": "Nur Stumm + Rauswurf",
+        "custom": "Benutzerdefiniert"
+      },
+      "saved": "Gespeichert",
+      "saveGrant": "Zugang speichern",
+      "addGrant": "Moderator hinzufügen"
     }
   },
   "settings": {
@@ -3563,7 +3646,9 @@
       "voice_max_seconds": "Maximale Sprachnachrichtenlänge (Sekunden)",
       "giphy_key": "GIPHY API-Schlüssel (ohne Schlüssel, /giphy ist aus)",
       "show_rules": "Zeigen Sie den Regellink im Chat-Header an",
-      "flood_seconds": "Hochwassersteuerung (Sekunden zwischen Nachrichten, 0 = keine)"
+      "flood_seconds": "Hochwassersteuerung (Sekunden zwischen Nachrichten, 0 = keine)",
+      "mod_reasons": "Vorgefertigte Moderationsgründe",
+      "announce_grants": "Öffentliche Chatzeile, wenn jemand Moderatorzugang erhält"
     },
     "i18n": {
       "locales": "Sprachen, die den Mitgliedern angeboten werden",
@@ -3781,7 +3866,18 @@
       "flood_seconds": "Pause zwischen Chat-Nachrichten (Sekunden)",
       "create_public": "Öffentliche chat-räume erstellen",
       "create_private": "Erstellen Sie private Chat-Räume (mit Einladungen)",
-      "announce": "Pin Nachrichten und veröffentlichen Chat-Ankündigungen"
+      "announce": "Pin Nachrichten und veröffentlichen Chat-Ankündigungen",
+      "edit_any": "Jede Chat-Nachricht bearbeiten (ohne Zeitlimit)",
+      "pin": "Chat-Nachrichten anheften",
+      "hide": "Chat-Nachrichten ausblenden",
+      "delete_any": "Jede Chat-Nachricht löschen",
+      "purge_user": "Chat-Nachrichten eines Mitglieds löschen (letzte Stunde / 24 Stunden / alle)",
+      "warn": "Verwarnungen aus dem Chat erteilen",
+      "mute": "Mitglieder im Chat stummschalten",
+      "kick": "Mitglieder aus dem Chat werfen",
+      "ban": "Mitglieder im Chat sperren",
+      "slow_user": "Persönlicher Slow-Mode im Chat",
+      "grant_access": "Moderatorzugang im Chat erteilen"
     },
     "servers": {
       "view": "Sees the game servers",
@@ -3805,7 +3901,8 @@
     },
     "app_access": "Can access the {app} app",
     "chat_pro": {
-      "history": "Can view the chat history (/chat/history)"
+      "history": "Can view the chat history (/chat/history)",
+      "history_export": "Chatverlauf exportieren (CSV)"
     }
   },
   "profile": {
@@ -4417,7 +4514,9 @@
         "group_mention": "Group mentions"
       },
       "chat": {
-        "mention": "Chat Erwähnungen"
+        "mention": "Chat Erwähnungen",
+        "sanction": "Chat-Sanktionen (Stumm, Rauswurf, Sperre)",
+        "access": "Moderatorzugang im Chat"
       },
       "clans": {
         "invite": "Clan invitations",
@@ -4547,7 +4646,183 @@
       "suggestions": "Emote suggestions",
       "showMedia": "Show media"
     },
-    "deletedMember": "Deleted member"
+    "deletedMember": "Deleted member",
+    "mod": {
+      "title": "Aktionen zur Nachricht",
+      "more": "Mehr",
+      "copied": "Kopiert",
+      "reply": "Antworten",
+      "react": "Reagieren",
+      "edit": "Bearbeiten",
+      "pin": "Im Chat anheften",
+      "hide": "Ausblenden",
+      "unhide": "Wieder anzeigen",
+      "copyText": "Text kopieren",
+      "copyLink": "Link kopieren",
+      "profile": "Profil ansehen",
+      "history": "Sein Chatverlauf",
+      "card": "Moderationsakte",
+      "warn": "Verwarnung",
+      "mute": "Stummschalten",
+      "kick": "Aus dem Chat werfen",
+      "ban": "Chat-Sperre",
+      "siteBan": "Auf der Seite sperren…",
+      "siteBanReason": "Chat: „{excerpt}“ ({link})",
+      "purge": "Seine Nachrichten löschen",
+      "slow": "Persönlicher Slow-Mode",
+      "delete": "Nachricht löschen",
+      "ignore": "Ignorieren",
+      "report": "Melden",
+      "muteFor": "Stummschalten für",
+      "kickFor": "Rauswerfen für",
+      "banFor": "Sperren für",
+      "purgeFrom": "Nachrichten löschen aus",
+      "slowEvery": "Eine Nachricht alle",
+      "seconds": "{count, plural, one {# Sekunde} other {# Sekunden}}",
+      "window": {
+        "1h": "Der letzten Stunde",
+        "24h": "Den letzten 24 Stunden",
+        "all": "Alle"
+      },
+      "sections": {
+        "message": "Nachricht",
+        "member": "Mitglied",
+        "moderation": "Moderation"
+      },
+      "dur": {
+        "forever": "dauerhaft",
+        "days": "{count, plural, one {# Tag} other {# Tage}}",
+        "hours": "{count, plural, one {# Stunde} other {# Stunden}}",
+        "minutes": "{count, plural, one {# Minute} other {# Minuten}}"
+      },
+      "dialog": {
+        "warn": "Verwarnung für {name}",
+        "mute": "{name} stummschalten",
+        "kick": "{name} aus dem Chat werfen",
+        "ban": "{name} im Chat sperren",
+        "slow": "Persönlicher Slow-Mode für {name}",
+        "purge": "Nachrichten von {name} löschen"
+      },
+      "done": {
+        "warn": "{name} wurde verwarnt.",
+        "mute": "{name} wurde stummgeschaltet.",
+        "kick": "{name} wurde aus dem Chat geworfen.",
+        "ban": "{name} wurde im Chat gesperrt.",
+        "slow": "{name} ist im persönlichen Slow-Mode.",
+        "purge": "Die Nachrichten von {name} wurden gelöscht."
+      },
+      "confirm": {
+        "warn": "Verwarnen",
+        "mute": "Stummschalten",
+        "kick": "Rauswerfen",
+        "ban": "Im Chat sperren",
+        "slow": "Slow-Mode starten",
+        "purge": "Nachrichten löschen"
+      },
+      "cancel": "Abbrechen",
+      "close": "Schließen",
+      "evidence": "Die Nachricht wird als Beweis angehängt.",
+      "interval": "Intervall",
+      "duration": "Dauer",
+      "points": "Punkte",
+      "reason": "Grund",
+      "reasonPlaceholder": "Grund eingeben oder unten auswählen",
+      "presets": "Vorgefertigte Gründe",
+      "everywhere": "Im ganzen Chat (alle Räume)",
+      "announce": "Im Chat ankündigen",
+      "notify": "Mitglied benachrichtigen",
+      "cardTitle": "Moderationsakte: {name}",
+      "warnings": "Verwarnungen",
+      "activePoints": "{count, plural, one {# aktiver Punkt} other {# aktive Punkte}}",
+      "none": "Noch nichts.",
+      "sanctions": "Aktive Sanktionen",
+      "kinds": {
+        "mute": "Stumm",
+        "kick": "Rauswurf",
+        "ban": "Chat-Sperre",
+        "slow": "Slow-Mode"
+      },
+      "until": "bis {time}",
+      "lift": "Aufheben",
+      "recent": "Letzte Aktionen",
+      "actions": {
+        "edit": "Nachricht bearbeitet",
+        "pin": "Nachricht angeheftet",
+        "hide": "Nachricht ausgeblendet",
+        "unhide": "Nachricht wieder angezeigt",
+        "delete": "Nachricht gelöscht",
+        "purge": "Nachrichten gelöscht",
+        "warn": "Verwarnung",
+        "mute": "Stummschaltung",
+        "unmute": "Stummschaltung aufgehoben",
+        "kick": "Rauswurf",
+        "ban": "Chat-Sperre",
+        "slow": "Persönlicher Slow-Mode",
+        "lift": "Sanktion aufgehoben",
+        "grant": "Moderatorzugang erteilt",
+        "revoke": "Moderatorzugang entzogen",
+        "expire": "Moderatorzugang abgelaufen"
+      },
+      "rights": {
+        "edit_any": "Bearbeiten",
+        "pin": "Anheften",
+        "hide": "Ausblenden",
+        "delete_any": "Löschen",
+        "purge_user": "Massenlöschung",
+        "warn": "Verwarnung",
+        "mute": "Stumm",
+        "kick": "Rauswurf",
+        "ban": "Sperre",
+        "slow_user": "Slow-Mode"
+      },
+      "allRooms": "alle Räume",
+      "system": {
+        "mute": "<target></target> wurde stummgeschaltet: {duration}{suffix}",
+        "kick": "<target></target> wurde für {duration} aus dem Chat geworfen{suffix}",
+        "ban": "<target></target> wurde im Chat gesperrt ({duration}){suffix}",
+        "warn": "<target></target> wurde verwarnt{suffix}",
+        "grant": "<target></target> hat von <actor></actor> Moderatorzugang im Chat erhalten",
+        "revoke": "<actor></actor> hat <target></target> den Moderatorzugang im Chat entzogen"
+      },
+      "ephemeral": {
+        "granted": "Zugang erteilt an <target></target>",
+        "revoked": "Der Zugang von <target></target> wurde entzogen.",
+        "list": "{count, plural, one {# Chat-Moderator} other {# Chat-Moderatoren}}",
+        "listEmpty": "Kein aktiver Moderatorzugang.",
+        "onlyYou": "Nur du siehst das"
+      },
+      "hiddenTag": "Ausgeblendet",
+      "hiddenBy": "Ausgeblendet von {name}",
+      "mutedUntil": "Du bist stummgeschaltet bis {time}",
+      "mutedForever": "Du bist dauerhaft stummgeschaltet",
+      "blocked": {
+        "kick": "Du wurdest aus dem Chat geworfen",
+        "ban": "Du bist im Chat gesperrt",
+        "reason": "Grund: {reason}"
+      },
+      "slowNote": "Persönlicher Slow-Mode: eine Nachricht alle {seconds} Sekunden."
+    },
+    "commands": {
+      "title": "Befehl",
+      "examples": "Beispiele:",
+      "rights": "Rechte",
+      "durations": "Dauer",
+      "rooms": "Räume",
+      "acces": {
+        "usage": "@mitglied [rechte] [dauer] [#raum]",
+        "description": "Moderatorzugang im Chat erteilen"
+      },
+      "revoca": {
+        "usage": "@mitglied",
+        "description": "Moderatorzugang im Chat entziehen"
+      },
+      "roll": {
+        "usage": "[max]"
+      },
+      "rps": {
+        "usage": "@mitglied [stein|papier|schere]"
+      }
+    }
   },
   "online": {
     "title": "Wer ist online",
@@ -6923,23 +7198,34 @@
       "next": "Next announcement"
     },
     "ranking": {
-      "title": "Most active in chat",
-      "period": "Period: {start} – {end}",
-      "empty": "No counted messages in this period yet.",
-      "podium": "Period podium",
-      "place": "Place {place}",
-      "messages": "{count, plural, one {# message} other {# messages}}",
-      "spammer": "Spammer of the day",
-      "nobodyToday": "Nobody has written today.",
-      "lastWinner": "Last winner",
-      "noWinner": "No winner yet.",
-      "myPosition": "Your position",
-      "today": "Messages today",
-      "thisPeriod": "Messages this period",
-      "thisWeek": "This week",
-      "resetDays": "{count, plural, one {# day to reset} other {# days to reset}}",
-      "resetHours": "{count, plural, one {# hour to reset} other {# hours to reset}}",
-      "resetMinutes": "{count, plural, one {# minute to reset} other {# minutes to reset}}"
+      "title": "Die Aktivsten im Chat",
+      "period": "Zeitraum: {start} – {end}",
+      "empty": "In diesem Zeitraum wurden noch keine Nachrichten gezählt.",
+      "podium": "Podium des Zeitraums",
+      "place": "Platz {place}",
+      "messages": "{count, plural, one {# Nachricht} other {# Nachrichten}}",
+      "spammer": "Spammer des Tages",
+      "nobodyToday": "Heute hat noch niemand geschrieben.",
+      "lastWinner": "Letzter Gewinner",
+      "noWinner": "Noch kein Gewinner.",
+      "myPosition": "Deine Position",
+      "today": "Nachrichten heute",
+      "thisPeriod": "Nachrichten im Zeitraum",
+      "thisWeek": "Diese Woche",
+      "resetDays": "{count, plural, one {Noch # Tag bis zum Reset} other {Noch # Tage bis zum Reset}}",
+      "resetHours": "{count, plural, one {Noch # Stunde bis zum Reset} other {Noch # Stunden bis zum Reset}}",
+      "resetMinutes": "{count, plural, one {Noch # Minute bis zum Reset} other {Noch # Minuten bis zum Reset}}",
+      "freePlace": "Freier Platz",
+      "messagesToday": "{count, plural, one {# Nachricht heute} other {# Nachrichten heute}}",
+      "winnerOfMonth": "Gewinner im {month} · {count, plural, one {# Nachricht} other {# Nachrichten}}",
+      "winnerOfWeek": "Gewinner der letzten Woche · {count, plural, one {# Nachricht} other {# Nachrichten}}",
+      "badge": "Abzeichen",
+      "yourStats": "Deine Statistik",
+      "thisMonth": "Nachrichten diesen Monat",
+      "thisWeekPeriod": "Nachrichten diese Woche",
+      "vsPrevious": "Ggü. letzter Periode",
+      "new": "neu",
+      "guestHint": "<link>Melde dich an</link>, um deine Position und Nachrichten zu sehen."
     },
     "notifications": {
       "open": "Chat notifications",
@@ -7094,30 +7380,50 @@
       "disableHint": "The chat disappears from your pages; you can turn it back on anytime."
     },
     "historyPage": {
-      "title": "Chat history",
-      "back": "Back to the chat",
-      "forbidden": "You don't have access to the chat history.",
-      "totalMessages": "Messages",
-      "totalUsers": "Members who wrote",
-      "totalEdited": "Edited messages",
-      "search": "Search the history",
-      "text": "Text",
-      "member": "Member (name or nickname)",
-      "from": "From",
-      "to": "To",
-      "submit": "Search",
+      "title": "Chatverlauf",
+      "back": "Zurück zum Chat",
+      "forbidden": "Du hast keinen Zugriff auf den Chatverlauf.",
+      "totalMessages": "Archivierte Nachrichten",
+      "totalUsers": "Autoren",
+      "totalEdited": "Bearbeitete Nachrichten",
+      "search": "Im Chatverlauf suchen",
+      "text": "Nachricht",
+      "member": "Mitglied",
+      "from": "Von",
+      "to": "Bis",
+      "submit": "Suchen",
       "found": "{count, plural, one {# message found} other {# messages found}}",
-      "empty": "No messages match the search.",
-      "colMember": "Member",
-      "colContent": "Message",
+      "empty": "Keine Nachricht gefunden.",
+      "colMember": "Mitglied",
+      "colContent": "Nachricht",
       "colTime": "Time",
       "colNumber": "Message #",
       "colEdited": "Edited",
-      "deletedMember": "Deleted member",
-      "pages": "History pages",
+      "deletedMember": "Gelöschtes Mitglied",
+      "pages": "Seiten",
       "prev": "Previous page",
-      "next": "Next page",
-      "page": "Page {page} of {pages}"
+      "next": "Weiter",
+      "page": "Seite {page} von {pages}",
+      "textPlaceholder": "Nachrichten durchsuchen",
+      "memberPlaceholder": "Name oder Spitzname",
+      "room": "Raum",
+      "allRooms": "Alle",
+      "staff": "Team",
+      "showHidden": "Auch ausgeblendete zeigen",
+      "export": "CSV exportieren",
+      "last": "Letzte Seite",
+      "jumpTitle": "Zur Seite springen",
+      "go": "Los",
+      "perPage": "{count, plural, one {# Nachricht} other {# Nachrichten}} · {size} pro Seite",
+      "colTimeId": "Zeit · ID",
+      "openImage": "Bild öffnen",
+      "voice": "Sprachnachricht",
+      "edited": "bearbeitet",
+      "copyLink": "Link zur Nachricht kopieren",
+      "copied": "Link kopiert",
+      "viewInChat": "Im Chat ansehen",
+      "deleteTitle": "Nachricht löschen?",
+      "deleteBody": "Die Nachricht verschwindet aus dem Chat und dem Verlauf."
     }
   },
   "header": {

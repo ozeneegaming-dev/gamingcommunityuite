@@ -14,6 +14,8 @@ export function registerAppJobs(s: GcsServices): void {
   s.vip.registerJobs(s.jobs);
   s.notificationProducers.registerJobs(s.jobs);
   s.chat.registerJobs(s.jobs);
+  // Moderarea chat-ului: expirarea accesului de moderator, a mute-urilor și a sancțiunilor (la minut).
+  s.chatModeration.registerJobs(s.jobs);
   // Chat Pro: câștigătorul perioadei încheiate a clasamentului (și badge-ul lui), o dată pe oră.
   s.jobs.register({
     name: "chat_pro.finalize",

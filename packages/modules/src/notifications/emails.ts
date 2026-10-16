@@ -56,6 +56,8 @@ const TEXTS: Record<string, Record<Locale, (a: string, t: string, n: number, dat
   },
   "vip.granted": { ro: (_a, t) => `Ai primit ${t}`, en: (_a, t) => `You received ${t}` },
   "vip.expired": { ro: (_a, t) => `${t} a expirat`, en: (_a, t) => `Your ${t} has expired` },
+  "chat.sanction": { ro: (_a, _t, _n, d) => chatSanctionText("ro", d), en: (_a, _t, _n, d) => chatSanctionText("en", d) },
+  "chat.access": { ro: (_a, _t, _n, d) => chatAccessText("ro", d), en: (_a, _t, _n, d) => chatAccessText("en", d) },
   "core.warning": { ro: (_a, t) => `Ai primit un avertisment: ${t}`, en: (_a, t) => `You received a warning: ${t}` },
   "clans.invite": { ro: (a, t) => `${a} te-a invitat în clanul „${t}”`, en: (a, t) => `${a} invited you to the clan “${t}”` },
   "clans.request": {
@@ -68,6 +70,39 @@ const TEXTS: Record<string, Record<Locale, (a: string, t: string, n: number, dat
     en: (_a, t, _n, d) => (d.kind === "approved" ? `Your clan “${t}” was approved` : `Your clan “${t}” was rejected${d.reason ? `: ${String(d.reason)}` : ""}`),
   },
 };
+
+/** O durată în minute, pe înțeles („15 minute”, „2 ore”, „3 zile”); `null` = permanent. */
+function duration(minutes: unknown, l: Locale): string {
+  if (typeof minutes !== "number" || !Number.isFinite(minutes) || minutes <= 0) return l === "en" ? "permanently" : "permanent";
+  const [n, unit] = minutes % 1440 === 0 ? [minutes / 1440, "d"] : minutes % 60 === 0 ? [minutes / 60, "h"] : [minutes, "m"];
+  const ro: Record<string, [string, string]> = { d: ["zi", "zile"], h: ["oră", "ore"], m: ["minut", "minute"] };
+  const en: Record<string, [string, string]> = { d: ["day", "days"], h: ["hour", "hours"], m: ["minute", "minutes"] };
+  const [one, many] = (l === "en" ? en : ro)[unit as string]!;
+  return l === "en" ? `for ${n} ${n === 1 ? one : many}` : `${n} ${n === 1 ? one : many}`;
+}
+
+const reasonText = (d: Record<string, unknown>) => (typeof d.reason === "string" && d.reason ? `: ${d.reason}` : "");
+
+/** Sancțiunile din chat (`chat.sanction`), după `data.kind`. */
+function chatSanctionText(l: Locale, d: Record<string, unknown>): string {
+  const t = duration(d.minutes, l);
+  const r = reasonText(d);
+  const texts: Record<string, Record<Locale, string>> = {
+    mute: { ro: `Ai primit mute în chat (${t})${r}`, en: `You were muted in chat ${t}${r}` },
+    kick: { ro: `Ai fost scos din chat (${t})${r}`, en: `You were kicked from chat ${t}${r}` },
+    ban: { ro: `Ai primit ban din chat (${t})${r}`, en: `You were banned from chat ${t}${r}` },
+    slow: { ro: `Ai primit slow mode în chat: un mesaj la ${String(d.seconds ?? "?")} secunde${r}`, en: `You are in slow mode in chat: one message every ${String(d.seconds ?? "?")} seconds${r}` },
+  };
+  return texts[typeof d.kind === "string" ? d.kind : ""]?.[l] ?? (l === "en" ? "A chat moderator acted on your account" : "Un moderator de chat a acționat asupra contului tău");
+}
+
+/** Accesul de moderator în chat (`chat.access`): dat, retras sau expirat. */
+function chatAccessText(l: Locale, d: Record<string, unknown>): string {
+  if (d.kind === "revoked") return l === "en" ? "Your chat moderator access was revoked" : "Accesul tău de moderator în chat a fost retras";
+  if (d.kind === "expired") return l === "en" ? "Your chat moderator access has expired" : "Accesul tău de moderator în chat a expirat";
+  const t = typeof d.minutes === "number" ? (l === "en" ? ` ${duration(d.minutes, l)}` : ` pentru ${duration(d.minutes, l)}`) : "";
+  return l === "en" ? `You received chat moderator access${t}` : `Ai primit acces de moderator în chat${t}`;
+}
 
 /** Numele grupului menționat, salvat în notificare (`data.group`). */
 const groupName = (d: Record<string, unknown>) => (typeof d.group === "string" && d.group ? d.group : "…");
