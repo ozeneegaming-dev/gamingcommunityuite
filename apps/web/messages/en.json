@@ -317,7 +317,9 @@
       "unsupported_theme_package": "The theme package is for another version of the platform.",
       "member_not_found": "That member doesn't exist.",
       "member_required": "Name the member (@name).",
-      "room_not_found": "That room doesn't exist."
+      "room_not_found": "That room doesn't exist.",
+      "invalid_handle": "Type only the username (letters, digits, dot, dash, underscore).",
+      "invalid_link_template": "The template must be an https address with '{handle}' exactly once, on “Text” fields only."
     }
   },
   "acp": {
@@ -757,6 +759,17 @@
         "inherit": "Inherited",
         "allow": "Yes",
         "deny": "No"
+      },
+      "donations": {
+        "title": "Donations",
+        "hint": "Donations recorded by the team. Above the threshold in ACP → Profiles, the member automatically gets the “Sponsor” badge.",
+        "sponsor": "The member has the “Sponsor” badge.",
+        "delete": "Delete",
+        "confirmDelete": "Delete the donation?",
+        "add": "Add a donation",
+        "amount": "Amount",
+        "currency": "Currency",
+        "note": "Note"
       }
     },
     "groups": {
@@ -1226,7 +1239,8 @@
         "URL": "Link",
         "NUMBER": "Number",
         "SELECT": "List",
-        "IMAGE_SELECT": "Select with images"
+        "IMAGE_SELECT": "Select with images",
+        "SERVER_SELECT": "Community server"
       },
       "sections": {
         "ABOUT": "About",
@@ -1247,7 +1261,27 @@
       "postbitTitle": "Postbit",
       "postbitHint": "Fields marked “Show in postbit” appear on the author card in topics, in the order below.",
       "postbitSave": "Save order",
-      "postbitPosition": "Position for {field}"
+      "postbitPosition": "Position for {field}",
+      "groups": {
+        "title": "Field groups",
+        "hint": "The groups in “Edit profile” and in the profile column, with the help text shown to members. Fields without a group appear in their section.",
+        "helper": "Help text",
+        "helperHint": "What the member should fill in here",
+        "add": "Add a group",
+        "confirmDelete": "Delete the group? Its fields stay, without a group.",
+        "group": "Group",
+        "none": "No group"
+      },
+      "fieldHelper": "Field help text",
+      "fieldHelperHint": "Shown under the field, in the form",
+      "linkTemplate": "Contact link (optional)",
+      "linkTemplateHint": "“Text” fields only: the member types the handle and the link is built from the template (https, with '{handle}').",
+      "sponsorMin": "“Sponsor” badge from (total donations)",
+      "faceitKey": "FACEIT Data API key",
+      "faceitKeySet": "Set (type another one to change it)",
+      "faceitKeyEmpty": "Missing: the FACEIT tab is hidden",
+      "faceitClear": "Remove the FACEIT key",
+      "faceitHint": "Create the key in the FACEIT developer portal (server-side key). Without it, the FACEIT tab does not appear."
     },
     "memberProfile": {
       "profileTitle": "Profile",
@@ -3409,7 +3443,9 @@
       "smtp_port": "SMTP port",
       "smtp_user": "SMTP username",
       "smtp_pass": "SMTP password",
-      "from": "Sender address"
+      "from": "Sender address",
+      "title": "Email",
+      "hint": "We send a confirmation link to the new address; the old one stays until you confirm."
     },
     "auth": {
       "registration_open": "Registration open",
@@ -3479,7 +3515,15 @@
       "birthdayVisible": "Show my birthday (without the year) on my profile and in the chat",
       "birthdayHint": "The year never shows; the chat's /zi-de-nastere command lists you only if ticked.",
       "birthdayClear": "Clear date",
-      "birthdaySave": "Update birthday"
+      "birthdaySave": "Update birthday",
+      "locale": "en-GB",
+      "birthdayDay": "Day",
+      "birthdayMonth": "Month",
+      "birthdayYear": "Year (optional)",
+      "birthdayYearHint": "e.g. 1998",
+      "birthdayShowYear": "Also show the year on my profile",
+      "faceit_api_key": "FACEIT Data API key",
+      "sponsor_min_amount": "“Sponsor” badge threshold (total donations)"
     },
     "pm": {
       "messages_per_page": "Messages per page in a conversation"
@@ -3501,7 +3545,16 @@
       "signature": "Signature",
       "security": "Security",
       "following": "Following",
-      "attachments": "My attachments"
+      "attachments": "My attachments",
+      "overview": "Overview",
+      "email": "Email",
+      "devices": "Devices",
+      "content": "Content view",
+      "steam": "Steam",
+      "discord": "Discord",
+      "google": "Google",
+      "apps": "Authorised apps",
+      "chat": "Chat"
     },
     "appearance": {
       "title": "Appearance",
@@ -3540,7 +3593,14 @@
       "messages_NOBODY": "Nobody",
       "wall_MEMBERS": "Any member",
       "wall_FOLLOWED": "Only people I follow",
-      "wall_NOBODY": "Nobody"
+      "wall_NOBODY": "Nobody",
+      "visitors": {
+        "title": "Profile visitors",
+        "show": "Show the “Recent visitors” box on my profile",
+        "showHint": "When off, only you see the box.",
+        "record": "My visits appear on other profiles",
+        "recordHint": "With your presence hidden, your visits never appear."
+      }
     },
     "ignored": {
       "title": "Ignored members",
@@ -3638,7 +3698,14 @@
       "show_rules": "Show the rules link in the chat header",
       "flood_seconds": "Flood control (seconds between messages, 0 = none)",
       "mod_reasons": "Preset moderation reasons",
-      "announce_grants": "Public chat line when someone receives moderator access"
+      "announce_grants": "Public chat line when someone receives moderator access",
+      "title": "Chat",
+      "off": "The chat is not enabled on this site.",
+      "intro": "Sound, mentions and ignored members are changed in the chat and on the pages below.",
+      "introPro": "Message layout, colours, sounds and the bot are changed in the chat, from the room settings button.",
+      "open": "Open the chat",
+      "ignored": "Ignored members",
+      "notifications": "Mention notifications"
     },
     "i18n": {
       "locales": "Languages offered to members",
@@ -3681,7 +3748,20 @@
       "save": "Save signature",
       "remove": "Remove signature",
       "saved": "Your signature has been saved.",
-      "preview": "Preview"
+      "preview": "Preview",
+      "rules": {
+        "title": "Signature rules",
+        "chars": "At most {max} characters of text.",
+        "off": "Signatures are not allowed for your group or on this site.",
+        "images": "At most {images} small images, from https addresses only.",
+        "noImages": "No images.",
+        "noVideo": "No video or large headings.",
+        "links": "Links get “nofollow”.",
+        "mentions": "Mentions show as pills and do not send notifications.",
+        "conduct": "No ads, offensive content or links to other communities."
+      },
+      "showOthers": "Show other members' signatures under posts",
+      "showOthersHint": "You always see your own signature."
     },
     "rules": {
       "content": "Community rules"
@@ -3745,7 +3825,17 @@
     },
     "apps": {
       "landing": "Landing app",
-      "order": "App order"
+      "order": "App order",
+      "title": "Authorised apps",
+      "intro": "The external services you used to sign in. You can unlink them any time from their page.",
+      "empty": "No external service is linked to your account.",
+      "since": "Authorised since {date}",
+      "access": {
+        "steam": "Access: your SteamID and public profile.",
+        "discord": "Access: your Discord name and id.",
+        "google": "Access: your name and email address."
+      },
+      "configure": "Configure"
     },
     "social": {
       "facebook": "Facebook (page address)",
@@ -3790,6 +3880,85 @@
     "groups_pro": {
       "legend_categories": "Group legend categories",
       "legend_display": "Group legend display"
+    },
+    "overview": {
+      "title": "Overview",
+      "noEmail": "No email address",
+      "changeEmail": "Change email",
+      "addEmail": "Add an email",
+      "completion": "Profile completion",
+      "complete": "Your profile is complete. Well done!",
+      "steps": {
+        "avatar": "Upload an avatar",
+        "bio": "Write a short bio",
+        "cover": "Pick a cover",
+        "birthday": "Add your birthday",
+        "signature": "Create a signature",
+        "linkedAccount": "Link an account (Steam, Discord or Google)",
+        "fields": "Fill in your profile fields"
+      },
+      "linked": "Linked accounts",
+      "connected": "Connected",
+      "notConnected": "Not connected",
+      "unavailable": "Not available on this site",
+      "configure": "Configure",
+      "quick": "Shortcuts",
+      "myProfile": "My profile"
+    },
+    "devices": {
+      "title": "Devices",
+      "locale": "en-GB",
+      "newDeviceEmail": "Email me when I sign in from a new device",
+      "newDeviceEmailHint": "If it was not you, change your password and turn off automatic sign-in on that device.",
+      "saved": "Saved.",
+      "recent": "Devices from the last 90 days",
+      "methods": {
+        "password": "Email and password",
+        "discord": "Discord",
+        "google": "Google",
+        "steam": "Steam",
+        "other": "Other method"
+      },
+      "current": "This device",
+      "method": "Sign-in",
+      "location": "Approximate location",
+      "ip": "IP",
+      "firstSeen": "First seen",
+      "lastSeen": "Last seen",
+      "autoLogin": "Automatic sign-in on this device",
+      "autoLoginHint": "Off: the device is signed out now, and the next sign-in only lasts a few hours.",
+      "empty": "No devices in the last 90 days."
+    },
+    "content": {
+      "title": "Content view",
+      "legend": "When I open a topic from a list",
+      "save": "Save",
+      "saved": "Saved.",
+      "unread": "At the first unread post",
+      "unreadHint": "Continue where you left off.",
+      "start": "At the beginning",
+      "startHint": "Topics always open at the first post (default).",
+      "last": "At the last post",
+      "lastHint": "Jump straight to the newest reply."
+    },
+    "connections": {
+      "linkedSince": "Your {name} account is linked since {date}.",
+      "notLinked": "Your {name} account is not linked.",
+      "about": {
+        "steam": "With Steam you can sign in, your game account is linked to your identity on the servers, and your profile can show the Steam tab.",
+        "discord": "With Discord you can sign in quickly; we only use the account name and id.",
+        "google": "With Google you can sign in quickly; we only use your name and email address."
+      },
+      "link": "Link {name}",
+      "unlink": "Unlink",
+      "saved": "Saved.",
+      "unavailable": "This method is not enabled on the site.",
+      "profileTabs": "Profile tabs",
+      "steamTab": "Show the Steam tab on my profile",
+      "steamTabHint": "Status, level, SteamIDs, bans and games, fetched from Steam periodically.",
+      "steamOff": "The site has no Steam Web API key yet: the tab is hidden.",
+      "faceitTab": "Show the FACEIT tab on my profile",
+      "faceitTabHint": "Your FACEIT CS2 level, ELO, stats and matches."
     }
   },
   "permissions": {
@@ -3921,7 +4090,11 @@
       "games": "Games & accounts",
       "followers": "Followers",
       "badges": "Badges",
-      "warnings": "Warnings"
+      "warnings": "Warnings",
+      "steam": "Steam",
+      "faceit": "FACEIT",
+      "articles": "Articles",
+      "skins": "Skins"
     },
     "noFields": "Nothing filled in yet.",
     "linkedAccounts": "Linked accounts",
@@ -3996,7 +4169,111 @@
       "open": "Player profile",
       "playerProfile": "Player profile"
     },
-    "birthday": "Birthday"
+    "birthday": "Birthday",
+    "external": {
+      "updated": "Updated {time}",
+      "errors": {
+        "no_key": "the API key is missing",
+        "unauthorized": "the API key was rejected",
+        "rate_limited": "too many requests, we will retry later",
+        "other": "the data could not be fetched right now"
+      }
+    },
+    "steam": {
+      "title": "Steam account",
+      "open": "Steam profile",
+      "pending": "We are fetching this member's Steam data. Come back in a few minutes.",
+      "empty": "No Steam data yet.",
+      "hours": "{hours} h",
+      "inGame": "In game: {game}",
+      "status": {
+        "online": "Online",
+        "offline": "Offline",
+        "busy": "Busy",
+        "away": "Away",
+        "snooze": "Snooze",
+        "trade": "Looking to trade",
+        "play": "Looking to play"
+      },
+      "level": "Steam level {level}",
+      "age": "Account age",
+      "years": "{count, plural, one {# year} other {# years}}",
+      "lastOnline": "Last online",
+      "now": "now",
+      "bans": {
+        "title": "Bans",
+        "vac": "{count, plural, one {# VAC ban} other {# VAC bans}}",
+        "noVac": "No VAC ban",
+        "game": "{count, plural, one {# game ban} other {# game bans}}",
+        "noGame": "No game ban",
+        "community": "Community ban",
+        "noCommunity": "No community ban",
+        "since": "last one {days} days ago"
+      },
+      "private": "The Steam profile is private: games and hours are not public.",
+      "games": "Games",
+      "totalHours": "Total hours",
+      "twoWeeks": "Last 2 weeks",
+      "recent": "Recently played",
+      "recentHours": "{recent} h in 2 weeks · {total} h total",
+      "byHours": "Games by hours",
+      "more": "Show more",
+      "less": "Show less"
+    },
+    "faceit": {
+      "title": "FACEIT CS2",
+      "open": "FACEIT profile",
+      "level": "FACEIT level {level}",
+      "ranking": "#{position} of {total} in the community",
+      "recent": "Last 5 results",
+      "win": "Win",
+      "loss": "Loss",
+      "w": "W",
+      "l": "L",
+      "matches": "Matches",
+      "winRate": "Win rate",
+      "kd": "K/D",
+      "hs": "Headshot %",
+      "adr": "ADR",
+      "longestStreak": "Longest streak",
+      "currentStreak": "Current streak",
+      "history": "ELO history",
+      "matchesTitle": "Recent matches"
+    },
+    "articles": {
+      "title": "{count, plural, one {# article} other {# articles}}",
+      "empty": "No topics started yet.",
+      "replies": "{count, plural, one {# reply} other {# replies}}",
+      "views": "{count, plural, one {# view} other {# views}}",
+      "pages": "Article pages"
+    },
+    "skins": {
+      "title": "Skins",
+      "soon": "The skin inventory from the community servers is coming soon."
+    },
+    "achievements": {
+      "title": "Achievements",
+      "level": "Level {level}",
+      "levelRank": "Level {level} · {rank}",
+      "next": "Progress to {name}",
+      "max": "Max level",
+      "rank": "Rank {position} of {total} by reputation",
+      "sponsor": "Sponsor",
+      "groups": "Other groups",
+      "allFollowers": "All followers",
+      "visitors": "Recent visitors",
+      "noVisitors": "No visitors yet.",
+      "visitorsPrivacy": "Who sees visitors"
+    },
+    "servers": {
+      "title": "Server stats",
+      "place": "Place",
+      "kills": "Kills",
+      "deaths": "Deaths",
+      "kd": "K/D",
+      "points": "Points",
+      "ranking": "Server ranking"
+    }
   },
   "maintenance": {
     "title": "Maintenance",
@@ -4437,6 +4714,31 @@
       "online": "Online now",
       "seeAll": "See all",
       "empty": "This group has no members yet."
+    },
+    "v2": {
+      "onlineNow": "Online now",
+      "playing": "Playing on {server}",
+      "lastVisit": "Last visit: {time}",
+      "level": "Level {level}",
+      "levelRank": "Level {level} · {rank}",
+      "maxLevel": "Max level",
+      "nextLevel": "Progress to {name}",
+      "elo": "ELO {elo} · {tier}",
+      "tiers": {
+        "iron": "Iron",
+        "bronze": "Bronze",
+        "silver": "Silver",
+        "gold": "Gold",
+        "platinum": "Platinum",
+        "diamond": "Diamond",
+        "elite": "Elite"
+      },
+      "vip": "VIP",
+      "badges": "Badges",
+      "allBadges": "all",
+      "content": "Their content",
+      "ignore": "Ignore",
+      "unignore": "Stop ignoring"
     }
   },
   "messages": {

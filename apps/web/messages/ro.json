@@ -317,7 +317,9 @@
       "unsupported_theme_package": "Pachetul de temă e pentru altă versiune a platformei.",
       "member_not_found": "Membrul nu există.",
       "member_required": "Scrie membrul (@nume).",
-      "room_not_found": "Camera nu există."
+      "room_not_found": "Camera nu există.",
+      "invalid_handle": "Scrie doar numele de utilizator (litere, cifre, punct, minus, liniuță jos).",
+      "invalid_link_template": "Șablonul trebuie să fie o adresă https cu '{handle}' o singură dată, doar la câmpurile „Text”."
     }
   },
   "acp": {
@@ -757,6 +759,17 @@
         "inherit": "Moștenit",
         "allow": "Da",
         "deny": "Nu"
+      },
+      "donations": {
+        "title": "Donații",
+        "hint": "Donațiile înregistrate de echipă. Peste pragul din ACP → Profiluri, membrul primește automat insigna „Sponsor”.",
+        "sponsor": "Membrul are insigna „Sponsor”.",
+        "delete": "Șterge",
+        "confirmDelete": "Ștergi donația?",
+        "add": "Adaugă o donație",
+        "amount": "Suma",
+        "currency": "Moneda",
+        "note": "Notă"
       }
     },
     "groups": {
@@ -1226,7 +1239,8 @@
         "URL": "Link",
         "NUMBER": "Număr",
         "SELECT": "Listă",
-        "IMAGE_SELECT": "Select cu imagini"
+        "IMAGE_SELECT": "Select cu imagini",
+        "SERVER_SELECT": "Server al comunității"
       },
       "sections": {
         "ABOUT": "Despre",
@@ -1247,7 +1261,27 @@
       "postbitTitle": "Postbit",
       "postbitHint": "Câmpurile marcate „Afișează în postbit” apar pe cardul autorului din topicuri, în ordinea de mai jos.",
       "postbitSave": "Salvează ordinea",
-      "postbitPosition": "Poziția pentru {field}"
+      "postbitPosition": "Poziția pentru {field}",
+      "groups": {
+        "title": "Grupurile câmpurilor",
+        "hint": "Grupurile din „Editează profilul” și din coloana profilului, cu textul de ajutor arătat membrilor. Câmpurile fără grup apar la secțiunea lor.",
+        "helper": "Text de ajutor",
+        "helperHint": "Ce trebuie să completeze membrul aici",
+        "add": "Adaugă un grup",
+        "confirmDelete": "Ștergi grupul? Câmpurile lui rămân, fără grup.",
+        "group": "Grup",
+        "none": "Fără grup"
+      },
+      "fieldHelper": "Text de ajutor al câmpului",
+      "fieldHelperHint": "Apare sub câmp, în formular",
+      "linkTemplate": "Link de contact (opțional)",
+      "linkTemplateHint": "Doar la câmpurile „Text”: membrul scrie handle-ul, iar linkul se construiește din șablon (https, cu '{handle}').",
+      "sponsorMin": "Insigna „Sponsor” de la (suma donațiilor)",
+      "faceitKey": "Cheia FACEIT Data API",
+      "faceitKeySet": "Setată (scrie alta ca s-o schimbi)",
+      "faceitKeyEmpty": "Lipsește: tabul FACEIT e ascuns",
+      "faceitClear": "Șterge cheia FACEIT",
+      "faceitHint": "Cheia se creează în portalul pentru dezvoltatori FACEIT (cheie de server). Fără ea, tabul FACEIT nu apare."
     },
     "memberProfile": {
       "profileTitle": "Profil",
@@ -3409,7 +3443,9 @@
       "smtp_port": "Port SMTP",
       "smtp_user": "Utilizator SMTP",
       "smtp_pass": "Parolă SMTP",
-      "from": "Adresa expeditorului"
+      "from": "Adresa expeditorului",
+      "title": "Email",
+      "hint": "Îți trimitem un link de confirmare pe adresa nouă; adresa veche rămâne până confirmi."
     },
     "auth": {
       "registration_open": "Înregistrări deschise",
@@ -3479,7 +3515,15 @@
       "birthdayVisible": "Arată ziua de naștere (fără an) pe profil și în chat",
       "birthdayHint": "Anul nu apare nicăieri; comanda /zi-de-nastere din chat te anunță doar dacă bifezi.",
       "birthdayClear": "Șterge data",
-      "birthdaySave": "Actualizează ziua de naștere"
+      "birthdaySave": "Actualizează ziua de naștere",
+      "locale": "ro-RO",
+      "birthdayDay": "Ziua",
+      "birthdayMonth": "Luna",
+      "birthdayYear": "Anul (opțional)",
+      "birthdayYearHint": "ex. 1998",
+      "birthdayShowYear": "Arată și anul pe profil",
+      "faceit_api_key": "Cheia FACEIT Data API",
+      "sponsor_min_amount": "Pragul insignei „Sponsor” (suma donațiilor)"
     },
     "pm": {
       "messages_per_page": "Mesaje pe pagină într-o conversație"
@@ -3501,7 +3545,16 @@
       "signature": "Semnătură",
       "security": "Securitate",
       "following": "Ce urmăresc",
-      "attachments": "Atașamentele mele"
+      "attachments": "Atașamentele mele",
+      "overview": "Prezentare generală",
+      "email": "Email",
+      "devices": "Dispozitive",
+      "content": "Vizualizarea conținutului",
+      "steam": "Steam",
+      "discord": "Discord",
+      "google": "Google",
+      "apps": "Aplicații autorizate",
+      "chat": "Chat"
     },
     "appearance": {
       "title": "Aspect",
@@ -3540,7 +3593,14 @@
       "messages_NOBODY": "Nimeni",
       "wall_MEMBERS": "Orice membru",
       "wall_FOLLOWED": "Doar cei pe care îi urmăresc",
-      "wall_NOBODY": "Nimeni"
+      "wall_NOBODY": "Nimeni",
+      "visitors": {
+        "title": "Vizitatorii profilului",
+        "show": "Arată caseta „Vizitatori recenți” pe profilul meu",
+        "showHint": "Oprită, caseta o vezi doar tu.",
+        "record": "Vizitele mele apar pe profilurile celorlalți",
+        "recordHint": "Cu prezența ascunsă, vizitele tale nu apar oricum."
+      }
     },
     "ignored": {
       "title": "Membri ignorați",
@@ -3638,7 +3698,14 @@
       "show_rules": "Arată linkul spre reguli în antetul chat-ului",
       "flood_seconds": "Flood control (secunde între mesaje, 0 = niciunul)",
       "mod_reasons": "Motivele gata scrise ale moderării",
-      "announce_grants": "Linie publică în chat când cineva primește acces de moderator"
+      "announce_grants": "Linie publică în chat când cineva primește acces de moderator",
+      "title": "Chat",
+      "off": "Chat-ul nu e pornit pe acest site.",
+      "intro": "Sunetul, mențiunile și membrii ignorați se schimbă din chat și din paginile de mai jos.",
+      "introPro": "Aranjamentul mesajelor, culorile, sunetele și botul se schimbă din chat, din butonul de setări al camerei.",
+      "open": "Deschide chat-ul",
+      "ignored": "Membri ignorați",
+      "notifications": "Notificările mențiunilor"
     },
     "i18n": {
       "locales": "Limbile oferite membrilor",
@@ -3681,7 +3748,20 @@
       "save": "Salvează semnătura",
       "remove": "Șterge semnătura",
       "saved": "Semnătura a fost salvată.",
-      "preview": "Previzualizare"
+      "preview": "Previzualizare",
+      "rules": {
+        "title": "Regulile semnăturii",
+        "chars": "Cel mult {max} de caractere de text.",
+        "off": "Semnăturile nu sunt permise pentru grupul tău sau pe acest site.",
+        "images": "Cel mult {images} imagini mici, doar din adrese https.",
+        "noImages": "Fără imagini.",
+        "noVideo": "Fără video sau titluri mari.",
+        "links": "Linkurile primesc „nofollow”.",
+        "mentions": "Mențiunile apar ca pastile, fără să trimită notificări.",
+        "conduct": "Fără reclame, conținut ofensator sau linkuri către alte comunități."
+      },
+      "showOthers": "Arată semnăturile celorlalți sub postări",
+      "showOthersHint": "Propria semnătură o vezi mereu."
     },
     "rules": {
       "content": "Regulile comunității"
@@ -3745,7 +3825,17 @@
     },
     "apps": {
       "landing": "Aplicația de pornire",
-      "order": "Ordinea aplicațiilor"
+      "order": "Ordinea aplicațiilor",
+      "title": "Aplicații autorizate",
+      "intro": "Serviciile externe pe care le-ai folosit ca să intri în cont. Le poți dezlega oricând de pe pagina lor.",
+      "empty": "Niciun serviciu extern legat de cont.",
+      "since": "Autorizat din {date}",
+      "access": {
+        "steam": "Acces: SteamID-ul și profilul public.",
+        "discord": "Acces: numele și id-ul contului Discord.",
+        "google": "Acces: numele și adresa de email."
+      },
+      "configure": "Configurează"
     },
     "social": {
       "facebook": "Facebook (adresa paginii)",
@@ -3790,6 +3880,85 @@
     "groups_pro": {
       "legend_categories": "Categoriile legendei grupurilor",
       "legend_display": "Afișarea legendei grupurilor"
+    },
+    "overview": {
+      "title": "Prezentare generală",
+      "noEmail": "Nicio adresă de email",
+      "changeEmail": "Schimbă emailul",
+      "addEmail": "Adaugă un email",
+      "completion": "Profil completat",
+      "complete": "Profilul tău e complet. Bravo!",
+      "steps": {
+        "avatar": "Încarcă un avatar",
+        "bio": "Scrie o descriere scurtă",
+        "cover": "Alege o copertă",
+        "birthday": "Adaugă ziua de naștere",
+        "signature": "Creează o semnătură",
+        "linkedAccount": "Leagă un cont (Steam, Discord sau Google)",
+        "fields": "Completează câmpurile profilului"
+      },
+      "linked": "Conturi legate",
+      "connected": "Conectat",
+      "notConnected": "Neconectat",
+      "unavailable": "Indisponibil pe acest site",
+      "configure": "Configurează",
+      "quick": "Scurtături",
+      "myProfile": "Profilul meu"
+    },
+    "devices": {
+      "title": "Dispozitive",
+      "locale": "ro-RO",
+      "newDeviceEmail": "Trimite-mi un email când intru de pe un dispozitiv nou",
+      "newDeviceEmailHint": "Dacă nu ai fost tu, schimbă-ți parola și oprește autentificarea automată pe dispozitivul acela.",
+      "saved": "Salvat.",
+      "recent": "Dispozitivele din ultimele 90 de zile",
+      "methods": {
+        "password": "Email și parolă",
+        "discord": "Discord",
+        "google": "Google",
+        "steam": "Steam",
+        "other": "Altă metodă"
+      },
+      "current": "Acest dispozitiv",
+      "method": "Autentificare",
+      "location": "Locație aproximativă",
+      "ip": "IP",
+      "firstSeen": "Prima dată",
+      "lastSeen": "Ultima dată",
+      "autoLogin": "Autentificare automată pe acest dispozitiv",
+      "autoLoginHint": "Oprită: dispozitivul e deconectat acum, iar la următoarea intrare rămâi conectat doar câteva ore.",
+      "empty": "Niciun dispozitiv în ultimele 90 de zile."
+    },
+    "content": {
+      "title": "Vizualizarea conținutului",
+      "legend": "Când deschid un topic dintr-o listă",
+      "save": "Salvează",
+      "saved": "Salvat.",
+      "unread": "La prima postare necitită",
+      "unreadHint": "Continui de unde ai rămas.",
+      "start": "La început",
+      "startHint": "Topicul se deschide mereu de la prima postare (implicit).",
+      "last": "La ultima postare",
+      "lastHint": "Sari direct la cel mai nou răspuns."
+    },
+    "connections": {
+      "linkedSince": "Contul {name} e legat din {date}.",
+      "notLinked": "Contul {name} nu e legat.",
+      "about": {
+        "steam": "Cu Steam te poți autentifica, contul de joc se leagă de identitatea ta de pe servere, iar profilul poate arăta tabul Steam.",
+        "discord": "Cu Discord te poți autentifica rapid; folosim doar numele și id-ul contului.",
+        "google": "Cu Google te poți autentifica rapid; folosim doar numele și adresa de email."
+      },
+      "link": "Leagă {name}",
+      "unlink": "Dezleagă",
+      "saved": "Salvat.",
+      "unavailable": "Această metodă nu e pornită pe site.",
+      "profileTabs": "Taburile de pe profil",
+      "steamTab": "Arată tabul Steam pe profilul meu",
+      "steamTabHint": "Statusul, nivelul, SteamID-urile, banurile și jocurile, aduse periodic din Steam.",
+      "steamOff": "Site-ul nu are încă o cheie Steam Web API: tabul nu apare.",
+      "faceitTab": "Arată tabul FACEIT pe profilul meu",
+      "faceitTabHint": "Nivelul, ELO-ul, statisticile și meciurile tale CS2 de pe FACEIT."
     }
   },
   "permissions": {
@@ -3921,7 +4090,11 @@
       "games": "Jocuri & conturi",
       "followers": "Urmăritori",
       "badges": "Badge-uri",
-      "warnings": "Avertismente"
+      "warnings": "Avertismente",
+      "steam": "Steam",
+      "faceit": "FACEIT",
+      "articles": "Articole",
+      "skins": "Skins"
     },
     "noFields": "Nimic completat încă.",
     "linkedAccounts": "Conturi legate",
@@ -3996,7 +4169,111 @@
       "open": "Profilul de jucător",
       "playerProfile": "Profilul de jucător"
     },
-    "birthday": "Ziua de naștere"
+    "birthday": "Ziua de naștere",
+    "external": {
+      "updated": "Actualizat {time}",
+      "errors": {
+        "no_key": "cheia API lipsește",
+        "unauthorized": "cheia API nu e acceptată",
+        "rate_limited": "prea multe cereri, reîncercăm mai târziu",
+        "other": "datele nu au putut fi aduse acum"
+      }
+    },
+    "steam": {
+      "title": "Contul Steam",
+      "open": "Profilul Steam",
+      "pending": "Aducem datele Steam ale membrului. Revino în câteva minute.",
+      "empty": "Nu avem încă datele Steam.",
+      "hours": "{hours} ore",
+      "inGame": "În joc: {game}",
+      "status": {
+        "online": "Online",
+        "offline": "Offline",
+        "busy": "Ocupat",
+        "away": "Plecat",
+        "snooze": "Inactiv",
+        "trade": "Caută schimburi",
+        "play": "Caută joc"
+      },
+      "level": "Nivel Steam {level}",
+      "age": "Vechimea contului",
+      "years": "{count, plural, one {# an} few {# ani} other {# de ani}}",
+      "lastOnline": "Ultima dată online",
+      "now": "acum",
+      "bans": {
+        "title": "Banuri",
+        "vac": "{count, plural, one {# ban VAC} few {# banuri VAC} other {# de banuri VAC}}",
+        "noVac": "Fără ban VAC",
+        "game": "{count, plural, one {# ban de joc} few {# banuri de joc} other {# de banuri de joc}}",
+        "noGame": "Fără ban de joc",
+        "community": "Ban în comunitate",
+        "noCommunity": "Fără ban în comunitate",
+        "since": "ultimul acum {days} zile"
+      },
+      "private": "Profilul Steam e privat: jocurile și orele nu sunt publice.",
+      "games": "Jocuri",
+      "totalHours": "Ore în total",
+      "twoWeeks": "Ultimele 2 săptămâni",
+      "recent": "Jucate recent",
+      "recentHours": "{recent} ore în 2 săptămâni · {total} ore în total",
+      "byHours": "Jocurile, după ore",
+      "more": "Arată mai mult",
+      "less": "Arată mai puțin"
+    },
+    "faceit": {
+      "title": "FACEIT CS2",
+      "open": "Profilul FACEIT",
+      "level": "Nivel FACEIT {level}",
+      "ranking": "Locul #{position} din {total} în comunitate",
+      "recent": "Ultimele 5 rezultate",
+      "win": "Victorie",
+      "loss": "Înfrângere",
+      "w": "V",
+      "l": "Î",
+      "matches": "Meciuri",
+      "winRate": "Rată de victorii",
+      "kd": "K/D",
+      "hs": "Headshot %",
+      "adr": "ADR",
+      "longestStreak": "Cea mai lungă serie",
+      "currentStreak": "Seria actuală",
+      "history": "Istoricul ELO",
+      "matchesTitle": "Meciuri recente"
+    },
+    "articles": {
+      "title": "{count, plural, one {# articol} few {# articole} other {# de articole}}",
+      "empty": "Niciun topic pornit încă.",
+      "replies": "{count, plural, one {# răspuns} few {# răspunsuri} other {# de răspunsuri}}",
+      "views": "{count, plural, one {# vizualizare} few {# vizualizări} other {# de vizualizări}}",
+      "pages": "Paginile articolelor"
+    },
+    "skins": {
+      "title": "Skins",
+      "soon": "Inventarul skin-urilor de pe serverele comunității vine curând."
+    },
+    "achievements": {
+      "title": "Realizări",
+      "level": "Nivel {level}",
+      "levelRank": "Nivel {level} · {rank}",
+      "next": "Progresul spre {name}",
+      "max": "Nivel maxim",
+      "rank": "Locul {position} din {total} după reputație",
+      "sponsor": "Sponsor",
+      "groups": "Alte grupuri",
+      "allFollowers": "Toți urmăritorii",
+      "visitors": "Vizitatori recenți",
+      "noVisitors": "Niciun vizitator încă.",
+      "visitorsPrivacy": "Cine vede vizitatorii"
+    },
+    "servers": {
+      "title": "Statistici pe servere",
+      "place": "Loc",
+      "kills": "Ucideri",
+      "deaths": "Decese",
+      "kd": "K/D",
+      "points": "Puncte",
+      "ranking": "Clasamentul serverului"
+    }
   },
   "maintenance": {
     "title": "Mentenanță",
@@ -4437,6 +4714,31 @@
       "online": "Online acum",
       "seeAll": "Vezi toți",
       "empty": "Grupul nu are încă membri."
+    },
+    "v2": {
+      "onlineNow": "Online acum",
+      "playing": "Joacă pe {server}",
+      "lastVisit": "Ultima vizită: {time}",
+      "level": "Nivel {level}",
+      "levelRank": "Nivel {level} · {rank}",
+      "maxLevel": "Nivel maxim",
+      "nextLevel": "Progresul spre {name}",
+      "elo": "ELO {elo} · {tier}",
+      "tiers": {
+        "iron": "Fier",
+        "bronze": "Bronz",
+        "silver": "Argint",
+        "gold": "Aur",
+        "platinum": "Platină",
+        "diamond": "Diamant",
+        "elite": "Elită"
+      },
+      "vip": "VIP",
+      "badges": "Insigne",
+      "allBadges": "toate",
+      "content": "Conținutul lui",
+      "ignore": "Ignoră",
+      "unignore": "Nu mai ignora"
     }
   },
   "messages": {
