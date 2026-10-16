@@ -72,16 +72,19 @@ test("valoarea implicită de email schimbată în ACP se vede în setările unui
   const id = uid();
   await enterAcpAsRoot(page, `RootN${id}`, `root-n${id}@example.com`);
   await page.goto("/admin/members/settings/notifications");
-  const row = page.getByTestId("gcs-acp-notif-profile.badge");
-  await row.getByRole("combobox").selectOption("DIGEST");
-  await page.getByRole("button", { name: "Salvează" }).click();
+  // Notificări v2: emailul pe canale (pornit / doar important / oprit), cu modul lui.
+  const email = page.getByTestId("gcs-acp-notif-profile.badge-email");
+  await email.selectOption("on");
+  await page.getByRole("button", { name: "Salvează" }).first().click();
   await expect(page.getByRole("status").filter({ hasText: "Salvat" }).first()).toBeVisible();
 
   const m = await memberPage(browser, `Nou${id}`, `notif-def-${id}@example.com`, "100.67.2");
   await m.goto("/settings/notifications");
-  await expect(m.getByTestId("gcs-pref-profile.badge").getByRole("combobox")).toHaveValue("DIGEST");
+  await expect(m.getByTestId("gcs-pref-profile.badge-email")).toHaveValue("on");
   await m.context().close();
-  await sql(`UPDATE notification_defaults SET email = 'OFF' WHERE type = 'profile.badge'`);
+  await email.selectOption("off");
+  await page.getByRole("button", { name: "Salvează" }).first().click();
+  await expect(page.getByRole("status").filter({ hasText: "Salvat" }).first()).toBeVisible();
 
   await page.goto("/admin");
   await expect.poll(async () => Number(await page.getByTestId("gcs-online-users-count").textContent())).toBeGreaterThanOrEqual(1);

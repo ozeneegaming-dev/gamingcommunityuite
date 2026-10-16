@@ -60,12 +60,13 @@ test("preferința Site oprită pentru răspunsuri → nicio notificare nouă", a
 
   await page.goto("/settings/notifications");
   const row = page.getByTestId("gcs-pref-forums.reply");
-  await row.getByRole("checkbox").uncheck();
+  await row.getByTestId("gcs-pref-forums.reply-site").selectOption("off");
   await page.getByRole("button", { name: "Salvează", exact: true }).click();
   await expect(page.getByTestId("gcs-settings-status")).toHaveText("Preferințele au fost salvate.");
 
+  // Notificări v2: fără site, nimic în clopoțel (toast-ul / emailul au canalele lor).
   await fixture(request, { action: "reply", topicId: topic.topicId, text: "Nu trebuie să ajungă", authorEmail: b });
-  await expect.poll(async () => (await sql(`SELECT 1 FROM notifications WHERE "userId" = $1`, [await userId(a)])).length).toBe(0);
+  await expect.poll(async () => (await sql(`SELECT 1 FROM notifications WHERE "userId" = $1 AND site`, [await userId(a)])).length).toBe(0);
 });
 
 test("un mesaj privat nou crește plicul live", async ({ page, request, context }) => {
