@@ -170,7 +170,8 @@ describe("compileThemeCss (setările noi)", () => {
     expect(css).toContain("--gcs-box-header-bg: var(--gcs-surface2);");
     expect(css).toContain("--gcs-btn-primary-text: #FFFFFF;");
     // Butonul plin se luminează cu un strat alb (regula de hover a sistemului, în orice temă).
-    expect(css).toContain("--gcs-btn-primary-hover: color-mix(in srgb, var(--gcs-accent) 92%, #fff);");
+    // Fundalul: accentul sau nuanța lui lizibilă cu textul alb (≥ 4.5:1, și la hover).
+    expect(css).toMatch(/--gcs-btn-primary-hover: color-mix\(in srgb, (var\(--gcs-accent\)|#[0-9A-F]{6}) 92%, #fff\);/);
     expect(css).toContain("--gcs-header-h: 64px;");
     expect(css).toContain("--gcs-logo-max-h: 42px;");
     expect(css).toContain("--gcs-base-size: 1rem;");
@@ -188,7 +189,11 @@ describe("compileThemeCss (setările noi)", () => {
     const [dark, rest] = css.split('html[data-theme="light"]');
     expect(dark).toContain("--gcs-header-bg: var(--gcs-chrome);");
     expect(rest).toContain("--gcs-header-bg: #ABCDEF;");
-    expect(compileThemeCss(withSetting("elements.dark.btnPrimaryBg", "#00AA55"), "")).toContain("--gcs-btn-primary-hover: color-mix(in srgb, #00AA55 92%, #fff);");
+    // Un verde prea deschis pentru textul alb primește nuanța lizibilă (≥ 4.5:1), și fundalul, și hover-ul.
+    const green = compileThemeCss(withSetting("elements.dark.btnPrimaryBg", "#00AA55"), "");
+    expect(green).toMatch(/--gcs-btn-primary-hover: color-mix\(in srgb, #[0-9A-F]{6} 92%, #fff\);/);
+    expect(green).not.toContain("--gcs-btn-primary-bg: #00AA55;");
+    expect(compileThemeCss(withSetting("elements.dark.btnPrimaryBg", "#7A1020"), "")).toContain("--gcs-btn-primary-hover: color-mix(in srgb, #7A1020 92%, #fff);");
   });
 
   test("dimensiunile, fonturile personalizate și regulile condiționale", () => {
@@ -209,7 +214,7 @@ describe("compileThemeCss (setările noi)", () => {
     expect(css).toContain("--gcs-content-scale: 1.2;");
     expect(css).toContain("family=Open+Sans");
     expect(css).toContain('--gcs-font-text: "Open Sans", system-ui, sans-serif;');
-    expect(css).toContain("html:root .gcs-forumIndex .gcs-category {");
+    expect(css).toContain("html:root .gcs-forumIndex .gcs-category__well {");
     expect(css).toContain('.gcs-post[data-post-number="1"]');
     expect(css).toContain("flex-direction: row-reverse;");
     expect(css).toContain("top: calc(var(--gcs-header-h) + 16px);");

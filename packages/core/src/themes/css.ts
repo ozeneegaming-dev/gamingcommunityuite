@@ -10,6 +10,7 @@ import {
   type GcsThemePalette,
   type GcsThemeSettings,
 } from "./settings";
+import { isHex6, readableFill } from "./palette";
 
 /**
  * Variabilele CSS ale culorilor de element (folosite de `base.css`, `layout.css`, `forum.css`, `widgets.css`, cu
@@ -128,9 +129,33 @@ const palette = (p: GcsThemePalette) => THEME_TOKENS.map((k) => `  --gcs-${k}: $
  */
 const primaryHover = (elements: GcsThemeElements): string => `color-mix(in srgb, ${themeColorCss(elements.btnPrimaryBg)} 92%, #fff)`;
 
-/** Variabilele culorilor de element (elementele opace nu ies niciodată `transparent`, nici din setări nenormalizate). */
-const elements = (e: GcsThemeElements) =>
-  [...THEME_ELEMENT_COLORS.map((k) => `  ${THEME_ELEMENT_VARS[k]}: ${themeColorCss(themeElementColor(k, e[k]))};`), `  --gcs-btn-primary-hover: ${primaryHover(e)};`].join("\n");
+/** Valoarea hex a unei culori de element (`@token` → culoarea din paletă); `null` = transparent sau necunoscută. */
+const resolveHex = (value: string, p: GcsThemePalette): string | null => {
+  const v = value.startsWith("@") ? (p[value.slice(1) as keyof GcsThemePalette] ?? "") : value;
+  return isHex6(v) ? v : null;
+};
+
+/**
+ * Fundalul plin al butonului principal, lizibil (≥ 4.5:1 cu textul lui, și în starea de hover): o nuanță a accentului
+ * doar pentru buton; culoarea mărcii rămâne neschimbată în paletă. Fără valori hex rezolvabile, rămâne valoarea aleasă.
+ */
+function primaryFill(e: GcsThemeElements, p: GcsThemePalette): string {
+  const bg = resolveHex(e.btnPrimaryBg, p);
+  const text = resolveHex(e.btnPrimaryText, p);
+  if (!bg || !text) return themeColorCss(e.btnPrimaryBg);
+  const fill = readableFill(bg, text);
+  return fill === bg.toUpperCase() ? themeColorCss(e.btnPrimaryBg) : fill;
+}
+
+/**
+ * Variabilele culorilor de element (elementele opace nu ies niciodată `transparent`, nici din setări nenormalizate).
+ * `--gcs-accent-fill`: accentul ca fundal plin sub text alb (pagina curentă, butonul statisticilor), lizibil ≥ 4.5:1.
+ */
+const elements = (e: GcsThemeElements, p: GcsThemePalette) => {
+  const fill = primaryFill(e, p);
+  const vars = THEME_ELEMENT_COLORS.map((k) => `  ${THEME_ELEMENT_VARS[k]}: ${k === "btnPrimaryBg" ? fill : themeColorCss(themeElementColor(k, e[k]))};`);
+  return [...vars, `  --gcs-btn-primary-hover: ${primaryHover({ ...e, btnPrimaryBg: fill })};`, `  --gcs-accent-fill: ${readableFill(p.accent, "#FFFFFF")};`].join("\n");
+};
 
 /** Fonturile livrate cu aplicația (prin next/font) au o variabilă proprie; restul vin din Google Fonts. */
 const BUNDLED_FONTS: Record<string, string> = { "Chakra Petch": "var(--font-gcs-display)", Manrope: "var(--font-gcs-text)", "DM Sans": "var(--font-gcs-nova)" };
@@ -154,7 +179,8 @@ function sizes(s: GcsThemeSettings): string {
     `  --gcs-font-display: ${fontStack(fonts.display, "sans-serif")};`,
     `  --gcs-font-text: ${fontStack(fonts.text, "system-ui, sans-serif")};`,
     `  --gcs-radius: ${s.radius}px;`,
-    `  --gcs-page-width: ${s.width}px;`,
+    // Lățimea completă: pagina ține toată lățimea ecranului (fără lățimea maximă).
+    `  --gcs-page-width: ${s.layout.fullWidth ? "100%" : `${s.width}px`};`,
     `  --gcs-base-size: ${s.typography.baseSize / 16}rem;`,
     `  --gcs-content-scale: ${s.typography.contentSize / 100};`,
     `  --gcs-header-h: ${s.header.height}px;`,
@@ -259,8 +285,7 @@ function conditionalRules(s: GcsThemeSettings): string[] {
   }
   if (s.layout.forumIndex === "grid") {
     rules.push(
-      `html:root .gcs-forumIndex .gcs-category {\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));\n}`,
-      `html:root .gcs-forumIndex .gcs-category__header {\n  grid-column: 1 / -1;\n}`,
+      `html:root .gcs-forumIndex .gcs-category__well {\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));\n}`,
       `html:root .gcs-forumIndex .gcs-forumRow {\n  flex-direction: column;\n  align-items: flex-start;\n  border-bottom: 0;\n  border-top: 1px solid var(--gcs-border);\n  border-right: 1px solid var(--gcs-border);\n}`,
       `html:root .gcs-forumIndex .gcs-forumRow__main {\n  flex: 1 1 auto;\n  width: 100%;\n}`,
       `html:root .gcs-forumIndex .gcs-forumRow__stats,\nhtml:root .gcs-forumIndex .gcs-forumRow__last {\n  width: 100%;\n}`,
@@ -294,10 +319,10 @@ function fontImports(s: GcsThemeSettings): string[] {
  * Funcția e pură: editorul vizual o rulează și în browser, pentru previzualizarea live.
  */
 export function compileThemeCss(settings: GcsThemeSettings, customCss: string): string {
-  const light = `${palette(settings.light)}\n${elements(settings.elements.light)}`;
+  const light = `${palette(settings.light)}\n${elements(settings.elements.light, settings.light)}`;
   return [
     ...fontImports(settings),
-    `html:root {\n${palette(settings.dark)}\n${elements(settings.elements.dark)}\n${sizes(settings)}\n}`,
+    `html:root {\n${palette(settings.dark)}\n${elements(settings.elements.dark, settings.dark)}\n${sizes(settings)}\n}`,
     `html[data-theme="light"] {\n${light}\n}`,
     `@media (prefers-color-scheme: light) {\n  html[data-theme="auto"] {\n${light.replace(/^/gm, "  ")}\n  }\n}`,
     `.gcs-card {\n  border-radius: var(--gcs-radius);\n}`,

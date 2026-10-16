@@ -152,7 +152,8 @@ describe("designul Nova: CSS-ul compilat", () => {
     const css = compileThemeCss(NOVA_THEME_SETTINGS, "");
     expect(css).toContain("--gcs-font-text: var(--font-gcs-nova), \"DM Sans\", system-ui, sans-serif;");
     expect(css).not.toContain("fonts.googleapis.com");
-    expect(css).toContain("--gcs-btn-primary-hover: color-mix(in srgb, var(--gcs-accent) 92%, #fff);");
+    // Fundalul: accentul sau nuanța lui lizibilă cu textul alb (≥ 4.5:1, și la hover).
+    expect(css).toMatch(/--gcs-btn-primary-hover: color-mix\(in srgb, (var\(--gcs-accent\)|#[0-9A-F]{6}) 92%, #fff\);/);
     expect(css).toContain("--gcs-box-shadow: 0 2px 4px -1px rgb(11 15 23 / 0.1);");
     expect(css).toContain("--gcs-btn-radius: 4px;");
     expect(css).toContain("--gcs-base-size: 0.8125rem;");
@@ -185,7 +186,8 @@ describe("designul Nova: CSS-ul compilat", () => {
 
   test("designul clasic: fără decorul GCS; butonul plin se luminează la hover, ca în orice temă", () => {
     const css = compileThemeCss(DEFAULT_THEME_SETTINGS, "");
-    expect(css).toContain("--gcs-btn-primary-hover: color-mix(in srgb, var(--gcs-accent) 92%, #fff);");
+    // Fundalul: accentul sau nuanța lui lizibilă cu textul alb (≥ 4.5:1, și la hover).
+    expect(css).toMatch(/--gcs-btn-primary-hover: color-mix\(in srgb, (var\(--gcs-accent\)|#[0-9A-F]{6}) 92%, #fff\);/);
     expect(css).not.toContain(".gcs-nova");
     expect(css).not.toContain("--font-gcs-nova");
   });

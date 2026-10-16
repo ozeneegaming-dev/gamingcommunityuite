@@ -77,6 +77,8 @@ export * from "./themes/settings";
 export * from "./themes/headerBuilder";
 export * from "./themes/css";
 export * from "./themes/toggle";
+export * from "./themes/palette";
+export * from "./themes/attrs";
 export * from "./themes/service";
 export * from "./themes/files";
 export * from "./themes/package";

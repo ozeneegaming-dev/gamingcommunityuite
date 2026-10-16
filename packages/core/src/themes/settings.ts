@@ -80,6 +80,35 @@ export const THEME_NAV_ALIGNS = ["left", "center", "right"] as const;
 export const THEME_MOBILE_PLACEMENTS = ["header", "bottom"] as const;
 /** Consola de sub antet (Hero Cockpit): doar pe pagina principală sau pe toate paginile. */
 export const THEME_COCKPIT_PAGES = ["home", "all"] as const;
+/** „Aspectul listelor” (sistemul): fiecare rând e un card separat sau rândurile lipite, despărțite de o linie. */
+export const THEME_LIST_LAYOUTS = ["cards", "list"] as const;
+/** „Statistici forum” (sistemul): contoarele în rând, într-o bulă la hover / focus, sau ascunse. */
+export const THEME_FORUM_STATS = ["visible", "hover", "hidden"] as const;
+/**
+ * „Stil loader” (sistemul): loaderele CSS (`GcsSpinner`), CSS-ul nostru din `loaders.css`. Prima cheie e cea implicită
+ * a temelor clasice.
+ */
+export const THEME_LOADERS = [
+  "ring",
+  "dualRing",
+  "arc",
+  "dots",
+  "pulse",
+  "bars",
+  "wave",
+  "orbit",
+  "square",
+  "ripple",
+  "flip",
+  "chase",
+  "grid",
+  "hourglass",
+  "dash",
+  "comet",
+  "bounce",
+  "slash",
+] as const;
+export type GcsThemeLoader = (typeof THEME_LOADERS)[number];
 
 export type GcsThemeSettings = {
   /** Designul (vezi `THEME_PRESETS`). */
@@ -116,7 +145,17 @@ export type GcsThemeSettings = {
     forumIndex: (typeof THEME_FORUM_INDEX_LAYOUTS)[number];
     topicView: (typeof THEME_TOPIC_VIEWS)[number];
     featureFirstPost: boolean;
+    /** Pagina pe toată lățimea ecranului (fără lățimea maximă `width`). */
+    fullWidth: boolean;
+    /** Lista topicurilor arată începutul primei postări sub titlu. */
+    topicSnippet: boolean;
   };
+  /** Listele (forumurile, elementele widget-urilor): carduri separate sau listă continuă; contoarele forumurilor. */
+  lists: { layout: (typeof THEME_LIST_LAYOUTS)[number]; stats: (typeof THEME_FORUM_STATS)[number] };
+  /** Loaderul site-ului (butoane, liste, modale, chat). */
+  loader: { style: GcsThemeLoader };
+  /** Banda „Sus / Jos” din stânga și bara de derulare în culoarea accentului (progresul paginii). */
+  scroll: { rail: boolean; bar: boolean };
   typography: {
     /** Mărimea textului de bază (px, raportată la 16 px = mărimea aleasă de browser). */
     baseSize: number;
@@ -269,7 +308,10 @@ export const DEFAULT_THEME_SETTINGS: GcsThemeSettings = {
     height: 66,
     heightMobile: 66,
   },
-  layout: { forumIndex: "list", topicView: "normal", featureFirstPost: false },
+  layout: { forumIndex: "list", topicView: "normal", featureFirstPost: false, fullWidth: false, topicSnippet: false },
+  lists: { layout: "list", stats: "visible" },
+  loader: { style: "ring" },
+  scroll: { rail: true, bar: true },
   typography: { baseSize: 16, contentSize: 100, fontDisplayCustom: "", fontTextCustom: "" },
   header: {
     height: 64,
@@ -405,6 +447,9 @@ export const NOVA_THEME_SETTINGS: GcsThemeSettings = {
   buttons: { radius: 4 },
   bands: { style: "solid", icon: "circle" },
   effects: { hover: true },
+  // Designul GCS livrează rândurile ca și carduri separate (macheta CardRows) și loaderul cu bare.
+  lists: { layout: "cards", stats: "visible" },
+  loader: { style: "bars" },
 };
 
 /** Valorile implicite ale unui design (completarea setărilor, „Revino la implicit” din editorul vizual). */
@@ -508,6 +553,13 @@ function buildFields(): Record<string, GcsThemeField> {
     "layout.forumIndex": choice(THEME_FORUM_INDEX_LAYOUTS),
     "layout.topicView": choice(THEME_TOPIC_VIEWS),
     "layout.featureFirstPost": BOOL,
+    "layout.fullWidth": BOOL,
+    "layout.topicSnippet": BOOL,
+    "lists.layout": choice(THEME_LIST_LAYOUTS),
+    "lists.stats": choice(THEME_FORUM_STATS),
+    "loader.style": choice(THEME_LOADERS),
+    "scroll.rail": BOOL,
+    "scroll.bar": BOOL,
     "typography.baseSize": int(12, 20, "px"),
     "typography.contentSize": int(80, 150, "%", 5),
     "typography.fontDisplayCustom": { kind: "fontName" },

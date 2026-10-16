@@ -247,8 +247,8 @@ describe("constructorul de antet: CSS-ul temei", () => {
       expect(off, preset).toContain("html:root {\n  --gcs-hover-scale: 1;\n  --gcs-hover-lift: 0px;\n  --gcs-ease: 0s;\n}");
       expect(compileThemeCss(withThemePath(base, "header.navIcons", false), ""), preset).toContain(".gcs-hb__navBar .gcs-hb__nav > .gcs-icon:not(.gcs-hb__caret)");
       expect(compileThemeCss(base, ""), preset).not.toContain("--gcs-hover-scale: 1;");
-      // Butonul plin se luminează (strat alb), în orice design.
-      expect(compileThemeCss(base, ""), preset).toContain("--gcs-btn-primary-hover: color-mix(in srgb, var(--gcs-accent) 92%, #fff);");
+      // Butonul plin se luminează (strat alb), în orice design; fundalul e accentul sau nuanța lui lizibilă (≥ 4.5:1).
+      expect(compileThemeCss(base, ""), preset).toMatch(/--gcs-btn-primary-hover: color-mix\(in srgb, (var\(--gcs-accent\)|#[0-9A-F]{6}) 92%, #fff\);/);
     }
   });
 
