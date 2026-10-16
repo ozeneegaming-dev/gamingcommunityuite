@@ -37,6 +37,8 @@
     "./viewer.css": "./src/viewer.css",
     "./chatpro.css": "./src/chatpro.css",
     "./groups-pro.css": "./src/groups-pro.css",
+    "./system-ui.css": "./src/system-ui.css",
+    "./header-menus.css": "./src/header-menus.css",
     "./nova.css": "./src/nova.css",
     "./sweep.css": "./src/sweep.css",
     "./icons": "./src/icons/index.tsx",
