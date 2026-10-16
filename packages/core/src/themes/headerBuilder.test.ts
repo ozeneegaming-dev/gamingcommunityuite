@@ -6,6 +6,7 @@ import {
   MOBILE_BAR_ITEMS,
   compactHeaderLayout,
   headerBuilderError,
+  headerNavHalves,
   headerLayoutIsPreset,
   headerPreset,
   isHeaderElementKey,
@@ -204,6 +205,12 @@ describe("constructorul de antet: meniul împărțit (Esports)", () => {
     expect(splitNavItems(items, [5, 1])).toEqual({ left: [{ id: 2 }, { id: 3 }, { id: 4 }], right: [{ id: 1 }, { id: 5 }] });
     // Id-uri care nu mai există sunt ignorate.
     expect(splitNavItems(items, [99])).toEqual({ left: items, right: [] });
+  });
+  test("jumătățile urmează aspectul curent (și draftul previzualizării): fără „navRight” pe desktop, totul în stânga", () => {
+    const esports = headerPreset("esports");
+    expect(headerNavHalves(esports, items)).toEqual(splitNavItems(items, null));
+    expect(headerNavHalves({ ...esports, split: [2] }, items)).toEqual({ left: [{ id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }], right: [{ id: 2 }] });
+    expect(headerNavHalves(headerPreset("basic"), items)).toEqual({ left: items, right: [] });
   });
 });
 

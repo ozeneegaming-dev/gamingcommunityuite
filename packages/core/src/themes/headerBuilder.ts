@@ -268,6 +268,14 @@ export function splitNavItems<T extends { id: number }>(items: readonly T[], spl
   return { left: items.filter((i) => !right.has(i.id)), right: items.filter((i) => right.has(i.id)) };
 }
 
+/**
+ * Jumătățile meniului pentru un aspect: împărțit doar când „Navigație (dreapta)” e pusă în antetul de desktop.
+ * Se calculează din aspectul curent (și din draftul previzualizării live), nu doar din cel publicat.
+ */
+export function headerNavHalves<T extends { id: number }>(layout: GcsHeaderBuilder, items: readonly T[]): { left: T[]; right: T[] } {
+  return placedHeaderElements(layout.desktop).includes("navRight") ? splitNavItems(items, layout.split) : { left: [...items], right: [] };
+}
+
 // ─── Consola de sub antet (Hero Cockpit) ────────────────────────────────────
 
 /** Ce poate sta în fiecare din cele 3 panouri ale consolei. */

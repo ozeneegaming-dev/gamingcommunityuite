@@ -21,12 +21,6 @@ export function GcsNavElement({ bar, drawer }: { bar: ReactNode; drawer: ReactNo
   return <>{device === "desktop" ? bar : drawer}</>;
 }
 
-/** Partea dreaptă a meniului împărțit: doar pe desktop (pe ecranele mici, sertarul are tot meniul). */
-export function GcsDesktopOnly({ children }: { children: ReactNode }) {
-  const { device } = useHeaderState();
-  return device === "desktop" ? <>{children}</> : null;
-}
-
 function Summary({ matches }: { matches: number }) {
   const t = useTranslations("header.live");
   const statuses = useServerStatuses();
