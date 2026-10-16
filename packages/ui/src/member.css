@@ -235,6 +235,13 @@
 .gcs-hoverCard--v2 .gcs-hoverCard__actions > * {
   flex: 1 1 auto;
 }
+/* Butoanele compacte (ca în machetă): Mesaj, Urmărește și Conținutul lui încap pe un rând lângă Ignoră. */
+.gcs-hoverCard--v2 .gcs-hoverCard__actions > .gcs-btn {
+  min-height: 30px;
+  padding-inline: 8px;
+  gap: 5px;
+  font-size: 12px;
+}
 .gcs-hoverCard--v2 .gcs-hoverCard__actions > .gcs-tooltipWrap {
   flex: none;
 }
@@ -263,9 +270,11 @@
   display: grid;
   grid-template-rows: 0fr;
   opacity: 0;
+  visibility: hidden;
   transition:
     grid-template-rows var(--gcs-motion-slow) var(--gcs-motion-ease),
-    opacity var(--gcs-motion-slow) var(--gcs-motion-ease);
+    opacity var(--gcs-motion-slow) var(--gcs-motion-ease),
+    visibility 0s linear var(--gcs-motion-slow);
 }
 .gcs-collapse > * {
   min-height: 0;
@@ -274,6 +283,8 @@
 .gcs-collapse[data-open="true"] {
   grid-template-rows: 1fr;
   opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
 }
 @media (prefers-reduced-motion: reduce) {
   .gcs-collapse {

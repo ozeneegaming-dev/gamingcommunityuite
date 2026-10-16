@@ -104,6 +104,10 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
   const suppressFocus = useRef(false);
   const current = useRef<Open | null>(null);
   current.current = open;
+  /** Ancora a cărei deschidere așteaptă (întârzierea de 300 ms). */
+  const pending = useRef<HTMLElement | null>(null);
+  /** De unde a venit ultima cerere de deschidere: mouse-ul sau focusul din tastatură. */
+  const pendingSource = useRef<"pointer" | "focus">("pointer");
 
   const cancelOpen = () => clearTimeout(openTimer.current);
   const scheduleClose = useCallback(() => {
@@ -112,12 +116,14 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
   }, []);
   const keepOpen = () => clearTimeout(closeTimer.current);
 
-  const show = useCallback((anchor: HTMLElement, delay: number) => {
+  const show = useCallback((anchor: HTMLElement, delay: number, source: "pointer" | "focus" = "pointer") => {
     const key = hoverAnchorKey(anchor);
     if (!key) return;
     clearTimeout(openTimer.current);
     keepOpen();
     if (current.current?.key === key) return;
+    pending.current = anchor;
+    pendingSource.current = source;
     openTimer.current = setTimeout(async () => {
       const id = key.slice(2);
       if (key.startsWith("g:")) {
@@ -150,9 +156,12 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
     const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(update);
     observer?.observe(el);
     window.addEventListener("resize", update);
+    // Derularea (inclusiv o schimbare mică de înălțime a paginii) mută cardul după nume, nu îl închide.
+    window.addEventListener("scroll", update, { passive: true });
     return () => {
       observer?.disconnect();
       window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update);
     };
   }, [open]);
 
@@ -167,8 +176,10 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
     };
     const onOut = (e: PointerEvent) => {
       if (e.pointerType === "touch") return;
-      if (anchorOf(e) || inCard(e)) {
-        cancelOpen();
+      const a = anchorOf(e);
+      if (a || inCard(e)) {
+        // Doar deschiderea ancorei părăsite se anulează (ex. pagina derulată sub mouse nu anulează cardul cerut din tastatură).
+        if (!a || a === pending.current) cancelOpen();
         scheduleClose();
       }
     };
@@ -178,8 +189,10 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
         return;
       }
       const a = anchorOf(e);
-      if (a) show(a, OPEN_DELAY);
-      else if (!inCard(e)) {
+      if (a) show(a, OPEN_DELAY, "focus");
+      else if (!inCard(e) && pendingSource.current === "focus") {
+        // Focusul a plecat de pe nume (Tab mai departe): cardul cerut din tastatură se închide. Unul deschis cu mouse-ul
+        // rămâne (ex. chat-ul care își mută singur focusul în câmpul de scris).
         cancelOpen();
         scheduleClose();
       }
@@ -230,7 +243,13 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
         now.anchor.focus();
       }
     };
-    const onScroll = () => setOpen(null);
+    // Cardul se închide doar când numele a ieșit din ecran (altfel stratul se mută odată cu el, vezi efectul de așezare).
+    const onScroll = () => {
+      const a = current.current?.anchor;
+      if (!a) return;
+      const r = a.getBoundingClientRect();
+      if (!a.isConnected || r.bottom < 0 || r.top > window.innerHeight) setOpen(null);
+    };
     // `openMemberCard`: un click pe un avatar (ex. podiumul din chat) deschide cardul pe loc.
     const onRequest = (e: Event) => {
       const anchor = (e as CustomEvent<{ anchor?: unknown }>).detail?.anchor;

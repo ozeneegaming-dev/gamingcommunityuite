@@ -194,7 +194,8 @@ test.describe("setările din etapa 5", () => {
       await page.goto("/settings/profile");
       await page.getByRole("textbox", { name: `Despre mine ${id}` }).click();
       await page.keyboard.type("Joc CS2 ");
-      await page.getByRole("button", { name: "Bold", exact: true }).click();
+      // Formularul are și câmpul implicit „Descriere” (tot „Text lung”): bara de unelte a câmpului acestuia.
+      await page.locator(".gcs-field", { has: page.getByRole("textbox", { name: `Despre mine ${id}` }) }).getByRole("button", { name: "Bold", exact: true }).click();
       await page.keyboard.type("în fiecare seară");
       await page.getByRole("button", { name: "Salvează", exact: true }).click();
       await expect(page.getByTestId("gcs-settings-status")).toHaveText("Salvat.");

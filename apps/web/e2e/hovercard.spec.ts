@@ -55,6 +55,8 @@ async function openCard(page: Page, name: Locator): Promise<Locator> {
 
 test("coperta apare în postbit și în hover card, cu poziția salvată; numele stă sub copertă; statusul online apare o dată", async ({ page, request, browser }) => {
   const id = uid();
+  // Hover card v2 e mai înalt (status, cipuri, nivel, insigne): fereastra îi lasă loc sub primul nume.
+  await page.setViewportSize({ width: 1280, height: 1000 });
   const { forum } = await forumTree(request);
   const author = await memberInNewContext(browser, `Banner${id}`, `banner-${id}@example.com`, "198.51.100");
   await uploadCover(author, 30);
