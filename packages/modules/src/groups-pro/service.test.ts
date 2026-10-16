@@ -2,7 +2,7 @@ import { GcsGroupDisplayService, GcsValidationError, type GcsActor } from "@gcs/
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createForumWorld, type GcsForumWorld } from "../../test/world";
 import { GcsGroupDirectory } from "../profile/groupDirectory";
-import { defaultLegendCategory, GROUPS_PRO_APP, LEGEND_CATEGORY_KEY, validLegendCategories } from "./index";
+import { addCategory, defaultLegendCategory, GROUPS_PRO_APP, LEGEND_CATEGORY_KEY, LEGEND_TRAY, moveGroup, setDisplay, updateCategory, validLegendCategories } from "./index";
 import { GcsGroupsProService } from "./service";
 
 let w: GcsForumWorld;
@@ -89,7 +89,41 @@ describe("Grupuri Pro: categoriile legendei", () => {
     await expect(pro.setPlace(b.id, { category: "members", parentId: a.id }, root)).rejects.toBeInstanceOf(GcsValidationError);
     // Ascuns din legendă.
     await pro.setPlace(b.id, { category: "", parentId: null }, root);
-    expect((await pro.places()).get(b.id)).toEqual({ category: "", parentId: null });
+    expect((await pro.places()).get(b.id)).toEqual({ category: "", parentId: null, position: null });
+  });
+
+  test("pagina ACP „Legenda grupurilor”: salvarea categoriilor, a locurilor și a opțiunilor; legenda le urmează", async () => {
+    await w.db.group.updateMany({ where: { key: { not: "admin" } }, data: { inLegend: true } });
+    await w.db.group.updateMany({ where: { key: "admin" }, data: { inLegend: false } });
+    await w.cache.invalidateTags(["name-styles"]);
+    await w.createUser("Ana", "admin");
+    let tree = (await pro.editor()).tree;
+    // Admin e ascuns din legendă (setarea grupului): stă în „Neafișate”.
+    expect(tree.lists[LEGEND_TRAY]!.map((s) => s.id)).toContain(w.groups.admin!);
+    tree = addCategory(tree, "Echipa");
+    tree = moveGroup(tree, w.groups.admin!, { category: "echipa", parentId: null, index: 0 });
+    tree = moveGroup(tree, w.groups.moderator!, { category: "echipa", parentId: w.groups.admin!, index: 0 });
+    tree = updateCategory(tree, "members", { hidden: true });
+    tree = setDisplay(setDisplay(tree, "memberCounts", false), "columns", 4);
+    await pro.saveLayout(tree, root);
+
+    expect((await pro.categories()).map((c) => c.key)).toEqual(["staff", "moderators", "vip", "members", "echipa"]);
+    expect(await pro.display()).toMatchObject({ memberCounts: false, columns: 4 });
+    expect((await w.db.group.findUnique({ where: { id: w.groups.admin! } }))?.inLegend).toBe(true);
+    const places = await pro.places();
+    expect(places.get(w.groups.moderator!)).toMatchObject({ category: "echipa", parentId: w.groups.admin! });
+    const legend = await pro.legend();
+    expect(legend.map((c) => c.key)).toEqual(["staff", "moderators", "vip", "echipa"]);
+    const echipa = legend.find((c) => c.key === "echipa")!;
+    expect(echipa.groups.map((g) => [g.key, g.children.map((x) => x.key)])).toEqual([["admin", ["moderator"]]]);
+    expect(echipa.members).toBe(1);
+    // Editorul pornește din ce s-a salvat.
+    expect((await pro.editor()).tree.lists.echipa).toEqual([{ id: w.groups.admin!, children: [w.groups.moderator!] }]);
+
+    // Un arbore stricat (grup necunoscut, două niveluri) nu se salvează.
+    const bad = { ...tree, lists: { ...tree.lists, echipa: [{ id: 999_999, children: [] }] } };
+    await expect(pro.saveLayout(bad, root)).rejects.toBeInstanceOf(GcsValidationError);
+    await expect(pro.saveLayout({ nope: true }, root)).rejects.toBeInstanceOf(GcsValidationError);
   });
 
   test("pagina grupurilor: filtrul principal / secundar, căutarea și „doar principal”", async () => {

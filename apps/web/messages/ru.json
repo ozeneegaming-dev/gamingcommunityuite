@@ -425,7 +425,8 @@
         "acp_roles": "Администраторы и роли ACP",
         "staff_page": "Страница персонала",
         "bulk_mail": "Большая почта",
-        "communication": "Communication"
+        "communication": "Communication",
+        "groups_legend": "Легенда групп"
       },
       "community": {
         "forums_group": "Форумы",
@@ -3080,7 +3081,9 @@
       "premium": {
         "label": "Premium",
         "title": "Premium app: sold separately (licences come with redistribution)."
-      }
+      },
+      "settings": "Настройки",
+      "settingsOf": "Настройки приложения {name}"
     },
     "footer": {
       "title": "Footer",
@@ -3242,6 +3245,71 @@
         "confirmPack": "The pack “{name}” and all its emotes are deleted permanently.",
         "confirmEmote": "{name} is deleted permanently; old messages keep the code text."
       }
+    },
+    "groupsLegend": {
+      "title": "Легенда групп",
+      "intro": "Категории легенды в панели статистики, место каждой группы и то, что показывает легенда. Изменения появятся на сайте после «Сохранить».",
+      "viewSite": "Открыть сайт",
+      "categories": "Категории",
+      "categoriesHint": "Перетащите категорию (или используйте стрелки), чтобы переместить её. Оставьте название пустым, чтобы сохранить переведённую подпись.",
+      "categoryName": "Название категории",
+      "newCategory": "Новая категория",
+      "addCategory": "Добавить категорию",
+      "groups": "Группы",
+      "groupsHint": "Перетащите группу в другую категорию, на другую группу (она встанет перед ней) или в зону под группой, чтобы сделать её связанной группой в её списке. С клавиатуры: стрелки, «Категория» и «Под группой».",
+      "tray": "Не показаны",
+      "trayHint": "Группы здесь не отображаются в легенде.",
+      "hiddenTag": "скрыта",
+      "childrenOf": "Группы, связанные с {name}",
+      "dropChild": "Отпустите здесь: связать с {name}",
+      "emptyColumn": "Перетащите группу сюда",
+      "dropEnd": "Отпустите здесь: в конец",
+      "display": "Отображение",
+      "columns": "Колонки",
+      "options": {
+        "memberCounts": "Число участников",
+        "memberCountsHint": "У каждой группы и категории.",
+        "onlineCounts": "Сколько онлайн",
+        "onlineCountsHint": "Зелёная точка рядом с каждой группой.",
+        "countSecondary": "Учитывать дополнительных участников",
+        "countSecondaryHint": "Участники, у которых группа дополнительная.",
+        "hideEmpty": "Скрывать пустые группы",
+        "hideEmptyHint": "Группы без участников не показываются.",
+        "seeAll": "Кнопка «Все группы»",
+        "seeAllHint": "В заголовке легенды (нужна страница групп).",
+        "groupsPage": "Страница групп",
+        "groupsPageHint": "/members/groups — «Группы сообщества»."
+      },
+      "save": "Сохранить",
+      "saved": "Легенда сохранена.",
+      "discard": "Отменить изменения",
+      "discardTitle": "Отменить изменения?",
+      "discardBody": "Редактор вернётся к сохранённой легенде. Несохранённые изменения будут потеряны.",
+      "discardConfirm": "Отменить",
+      "unsaved": "Есть несохранённые изменения",
+      "upToDate": "Всё сохранено",
+      "preview": "Предпросмотр",
+      "previewHint": "Легенда панели статистики с вашими несохранёнными изменениями.",
+      "previewEmpty": "Легенда пуста: ни одна группа не показывается.",
+      "icon": "Значок категории",
+      "cancel": "Отмена",
+      "deleteTitle": "Удалить категорию «{name}»?",
+      "deleteBody": "Её группы (и связанные с ними) перейдут в «Не показаны». Удаление применится после «Сохранить».",
+      "deleteConfirm": "Удалить категорию",
+      "dragCategory": "Перетащить категорию {name}",
+      "moveUp": "Переместить {name} выше",
+      "moveDown": "Переместить {name} ниже",
+      "rename": "Название категории {name}",
+      "groupCount": "{count, plural, one {# группа} few {# группы} many {# групп} other {# группы}}",
+      "show": "Показать категорию {name}",
+      "hide": "Скрыть категорию {name}",
+      "delete": "Удалить категорию {name}",
+      "dragGroup": "Перетащить группу {name}",
+      "members": "{count, plural, one {# участник} few {# участника} many {# участников} other {# участника}}",
+      "moveTo": "Категория группы {name}",
+      "parentOf": "Группа, под которой показана {name}",
+      "noParent": "Отдельная строка",
+      "under": "Под {name}"
     }
   },
   "settings": {
@@ -3635,7 +3703,8 @@
       "empty": "Ты ещё не загрузил ни одного файла."
     },
     "groups_pro": {
-      "legend_categories": "Категории легенды групп"
+      "legend_categories": "Категории легенды групп",
+      "legend_display": "Отображение легенды групп"
     }
   },
   "permissions": {

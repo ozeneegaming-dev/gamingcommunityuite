@@ -1,0 +1,107 @@
+/*
+ * Sweep-ul și tranzițiile de hover, comune tuturor temelor (nu doar designului Nova): un strat de sticlă care umple
+ * elementul de la stânga la hover / focus, pe toate butoanele (normale și cu iconiță), pătratele din antet, tab-urile și
+ * segmentele, paginarea, cipurile, itemii meniurilor, ai dropdown-urilor și ai sugestiilor. Utilitarul `.gcs-sweep` îl
+ * pune pe orice alt element.
+ *
+ * - Stratul e un `background-image` (sub text, peste culoarea de fundal), cu `background-size` 0% → 100% de la stânga:
+ *   la intrare 1,2 s cu un mic recul (`cubic-bezier(.52,1.64,.37,.66)`), la ieșire 1,2 s `ease-out`.
+ * - Temele reglează doar culoarea stratului, `--gcs-sweep` (`themes.css`: 8% alb pe întunecat, 7% din culoarea textului
+ *   pe luminos). Regulile de hover ale temelor setează `background-color`, niciodată `background` (l-ar șterge).
+ * - Fișierul se încarcă ultimul (`globals.css`), iar `:root body` dă regulilor specificitatea de care au nevoie peste
+ *   fundalurile componentelor (`.gcs-root a.gcs-btn--primary`) și tranzițiile designurilor (`.gcs-nova .gcs-btn`).
+ * - Cu „reduced motion”, sweep-ul e oprit.
+ */
+:root body
+  :is(
+    .gcs-sweep,
+    .gcs-btn,
+    .gcs-iconBtn,
+    .gcs-headerIcon,
+    .gcs-userMenu__trigger,
+    .gcs-seg,
+    .gcs-tab,
+    .gcs-pagination__link,
+    .gcs-segLink,
+    .gcs-settingsNav__link,
+    .gcs-toggleLink,
+    .gcs-chip,
+    .gcs-dropdown__item,
+    .gcs-mentionList__item,
+    .gcs-legendPro__info,
+    .gcs-legendPro__toggle,
+    .gcs-legendPro__menuItem,
+    .gcs-groupsPage__segItem,
+    .gcs-groupsPage__chip
+  ) {
+  background-image: linear-gradient(var(--gcs-sweep, rgb(255 255 255 / 0.08)), var(--gcs-sweep, rgb(255 255 255 / 0.08)));
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 0% 100%;
+  transition:
+    background-size 1.2s ease-out,
+    background-color var(--gcs-ease, 0.18s),
+    color var(--gcs-ease, 0.18s),
+    border-color var(--gcs-ease, 0.18s),
+    box-shadow var(--gcs-ease, 0.18s),
+    transform var(--gcs-ease, 0.18s);
+}
+:root body
+  :is(
+    .gcs-sweep,
+    .gcs-btn,
+    .gcs-iconBtn,
+    .gcs-headerIcon,
+    .gcs-userMenu__trigger,
+    .gcs-seg,
+    .gcs-tab,
+    .gcs-pagination__link,
+    .gcs-segLink,
+    .gcs-settingsNav__link,
+    .gcs-toggleLink,
+    .gcs-chip,
+    .gcs-dropdown__item,
+    .gcs-mentionList__item,
+    .gcs-legendPro__info,
+    .gcs-legendPro__toggle,
+    .gcs-legendPro__menuItem,
+    .gcs-groupsPage__segItem,
+    .gcs-groupsPage__chip
+  ):is(:hover, :focus-visible):not(:disabled) {
+  background-size: 100% 100%;
+  transition:
+    background-size 1.2s cubic-bezier(0.52, 1.64, 0.37, 0.66),
+    background-color var(--gcs-ease, 0.18s),
+    color var(--gcs-ease, 0.18s),
+    border-color var(--gcs-ease, 0.18s),
+    box-shadow var(--gcs-ease, 0.18s),
+    transform var(--gcs-ease, 0.18s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root body
+    :is(
+      .gcs-sweep,
+      .gcs-btn,
+      .gcs-iconBtn,
+      .gcs-headerIcon,
+      .gcs-userMenu__trigger,
+      .gcs-seg,
+      .gcs-tab,
+      .gcs-pagination__link,
+      .gcs-segLink,
+      .gcs-settingsNav__link,
+      .gcs-toggleLink,
+      .gcs-chip,
+      .gcs-dropdown__item,
+      .gcs-mentionList__item,
+      .gcs-legendPro__info,
+      .gcs-legendPro__toggle,
+      .gcs-legendPro__menuItem,
+      .gcs-groupsPage__segItem,
+      .gcs-groupsPage__chip
+    ) {
+    background-image: none;
+    transition: none;
+  }
+}

@@ -425,7 +425,8 @@
         "acp_roles": "Administratoren und AKP-Rollen",
         "staff_page": "Personalseite",
         "bulk_mail": "Massengutpost",
-        "communication": "Communication"
+        "communication": "Communication",
+        "groups_legend": "Gruppenlegende"
       },
       "community": {
         "forums_group": "Foren",
@@ -3080,7 +3081,9 @@
       "premium": {
         "label": "Premium",
         "title": "Premium app: sold separately (licences come with redistribution)."
-      }
+      },
+      "settings": "Einstellungen",
+      "settingsOf": "Einstellungen von {name}"
     },
     "footer": {
       "title": "Footer",
@@ -3242,6 +3245,71 @@
         "confirmPack": "The pack “{name}” and all its emotes are deleted permanently.",
         "confirmEmote": "{name} is deleted permanently; old messages keep the code text."
       }
+    },
+    "groupsLegend": {
+      "title": "Gruppenlegende",
+      "intro": "Die Kategorien der Legende im Statistikbereich, der Platz jeder Gruppe und was die Legende zeigt. Änderungen erscheinen nach „Speichern“ auf der Seite.",
+      "viewSite": "Seite ansehen",
+      "categories": "Kategorien",
+      "categoriesHint": "Ziehe eine Kategorie (oder nutze die Pfeile), um sie zu verschieben. Lass den Namen leer, um die übersetzte Bezeichnung zu behalten.",
+      "categoryName": "Name der Kategorie",
+      "newCategory": "Neue Kategorie",
+      "addCategory": "Kategorie hinzufügen",
+      "groups": "Gruppen",
+      "groupsHint": "Ziehe eine Gruppe in eine andere Kategorie, auf eine andere Gruppe (sie kommt davor) oder in den Bereich unter einer Gruppe, damit sie eine verknüpfte Gruppe in deren Dropdown wird. Per Tastatur: die Pfeile, „Kategorie“ und „Unter Gruppe“.",
+      "tray": "Nicht angezeigt",
+      "trayHint": "Gruppen hier erscheinen nicht in der Legende.",
+      "hiddenTag": "ausgeblendet",
+      "childrenOf": "Mit {name} verknüpfte Gruppen",
+      "dropChild": "Hier ablegen: verknüpft mit {name}",
+      "emptyColumn": "Gruppe hierher ziehen",
+      "dropEnd": "Hier ablegen: am Ende",
+      "display": "Anzeige",
+      "columns": "Spalten",
+      "options": {
+        "memberCounts": "Mitgliederzahlen",
+        "memberCountsHint": "Bei jeder Gruppe und Kategorie.",
+        "onlineCounts": "Online-Zahlen",
+        "onlineCountsHint": "Der grüne Punkt neben jeder Gruppe.",
+        "countSecondary": "Sekundäre Mitglieder zählen",
+        "countSecondaryHint": "Mitglieder, die die Gruppe als Sekundärgruppe haben.",
+        "hideEmpty": "Leere Gruppen ausblenden",
+        "hideEmptyHint": "Gruppen ohne Mitglieder erscheinen nicht.",
+        "seeAll": "Schaltfläche „Alle Gruppen ansehen“",
+        "seeAllHint": "Im Kopf der Legende (braucht die Gruppenseite).",
+        "groupsPage": "Gruppenseite",
+        "groupsPageHint": "/members/groups — „Gruppen der Community“."
+      },
+      "save": "Speichern",
+      "saved": "Die Legende wurde gespeichert.",
+      "discard": "Änderungen verwerfen",
+      "discardTitle": "Änderungen verwerfen?",
+      "discardBody": "Der Editor kehrt zur gespeicherten Legende zurück. Nicht gespeicherte Änderungen gehen verloren.",
+      "discardConfirm": "Verwerfen",
+      "unsaved": "Nicht gespeicherte Änderungen",
+      "upToDate": "Alles gespeichert",
+      "preview": "Vorschau",
+      "previewHint": "Die Legende des Statistikbereichs mit deinen ungespeicherten Änderungen.",
+      "previewEmpty": "Die Legende ist leer: keine Gruppe wird angezeigt.",
+      "icon": "Symbol der Kategorie",
+      "cancel": "Abbrechen",
+      "deleteTitle": "Kategorie „{name}“ löschen?",
+      "deleteBody": "Ihre Gruppen (und deren verknüpfte Gruppen) kommen nach „Nicht angezeigt“. Das Löschen gilt beim „Speichern“.",
+      "deleteConfirm": "Kategorie löschen",
+      "dragCategory": "Kategorie {name} ziehen",
+      "moveUp": "{name} nach oben",
+      "moveDown": "{name} nach unten",
+      "rename": "Name der Kategorie {name}",
+      "groupCount": "{count, plural, one {# Gruppe} other {# Gruppen}}",
+      "show": "Kategorie {name} anzeigen",
+      "hide": "Kategorie {name} ausblenden",
+      "delete": "Kategorie {name} löschen",
+      "dragGroup": "Gruppe {name} ziehen",
+      "members": "{count, plural, one {# Mitglied} other {# Mitglieder}}",
+      "moveTo": "Kategorie von {name}",
+      "parentOf": "Gruppe, unter der {name} erscheint",
+      "noParent": "Eigene Zeile",
+      "under": "Unter {name}"
     }
   },
   "settings": {
@@ -3635,7 +3703,8 @@
       "empty": "Du hast noch keine Datei hochgeladen."
     },
     "groups_pro": {
-      "legend_categories": "Kategorien der Gruppenlegende"
+      "legend_categories": "Kategorien der Gruppenlegende",
+      "legend_display": "Anzeige der Gruppenlegende"
     }
   },
   "permissions": {

@@ -425,7 +425,8 @@
         "acp_roles": "Administrateurs et rôles ACP",
         "staff_page": "Page du personnel",
         "bulk_mail": "Messagerie en vrac",
-        "communication": "Communication"
+        "communication": "Communication",
+        "groups_legend": "Légende des groupes"
       },
       "community": {
         "forums_group": "Forums",
@@ -3080,7 +3081,9 @@
       "premium": {
         "label": "Premium",
         "title": "Premium app: sold separately (licences come with redistribution)."
-      }
+      },
+      "settings": "Paramètres",
+      "settingsOf": "Paramètres de {name}"
     },
     "footer": {
       "title": "Footer",
@@ -3242,6 +3245,71 @@
         "confirmPack": "The pack “{name}” and all its emotes are deleted permanently.",
         "confirmEmote": "{name} is deleted permanently; old messages keep the code text."
       }
+    },
+    "groupsLegend": {
+      "title": "Légende des groupes",
+      "intro": "Les catégories de la légende du panneau de statistiques, la place de chaque groupe et ce que montre la légende. Les modifications arrivent sur le site après « Enregistrer ».",
+      "viewSite": "Voir le site",
+      "categories": "Catégories",
+      "categoriesHint": "Fais glisser une catégorie (ou utilise les flèches) pour la déplacer. Laisse le nom vide pour garder le libellé traduit.",
+      "categoryName": "Nom de la catégorie",
+      "newCategory": "Nouvelle catégorie",
+      "addCategory": "Ajouter la catégorie",
+      "groups": "Groupes",
+      "groupsHint": "Fais glisser un groupe vers une autre catégorie, sur un autre groupe (il passe devant) ou dans la zone sous un groupe pour en faire un groupe lié dans son menu. Au clavier : les flèches, « Catégorie » et « Sous le groupe ».",
+      "tray": "Non affichés",
+      "trayHint": "Les groupes ici n’apparaissent pas dans la légende.",
+      "hiddenTag": "masquée",
+      "childrenOf": "Groupes liés à {name}",
+      "dropChild": "Dépose ici : lié à {name}",
+      "emptyColumn": "Dépose un groupe ici",
+      "dropEnd": "Dépose ici : à la fin",
+      "display": "Affichage",
+      "columns": "Colonnes",
+      "options": {
+        "memberCounts": "Nombre de membres",
+        "memberCountsHint": "Sur chaque groupe et chaque catégorie.",
+        "onlineCounts": "Membres en ligne",
+        "onlineCountsHint": "Le point vert à côté de chaque groupe.",
+        "countSecondary": "Compter les membres secondaires",
+        "countSecondaryHint": "Les membres qui ont le groupe comme groupe secondaire.",
+        "hideEmpty": "Masquer les groupes vides",
+        "hideEmptyHint": "Les groupes sans membres n’apparaissent pas.",
+        "seeAll": "Bouton « Voir tous les groupes »",
+        "seeAllHint": "Dans l’en-tête de la légende (nécessite la page des groupes).",
+        "groupsPage": "Page des groupes",
+        "groupsPageHint": "/members/groups — « Groupes de la communauté »."
+      },
+      "save": "Enregistrer",
+      "saved": "La légende a été enregistrée.",
+      "discard": "Annuler les modifications",
+      "discardTitle": "Annuler tes modifications ?",
+      "discardBody": "L’éditeur revient à la légende enregistrée. Les modifications non enregistrées sont perdues.",
+      "discardConfirm": "Annuler les modifications",
+      "unsaved": "Modifications non enregistrées",
+      "upToDate": "Tout est enregistré",
+      "preview": "Aperçu",
+      "previewHint": "La légende du panneau de statistiques, avec tes modifications non enregistrées.",
+      "previewEmpty": "La légende est vide : aucun groupe n’est affiché.",
+      "icon": "Icône de la catégorie",
+      "cancel": "Annuler",
+      "deleteTitle": "Supprimer la catégorie « {name} » ?",
+      "deleteBody": "Ses groupes (et leurs groupes liés) passent dans « Non affichés ». La suppression s’applique à l’enregistrement.",
+      "deleteConfirm": "Supprimer la catégorie",
+      "dragCategory": "Faire glisser la catégorie {name}",
+      "moveUp": "Monter {name}",
+      "moveDown": "Descendre {name}",
+      "rename": "Nom de la catégorie {name}",
+      "groupCount": "{count, plural, one {# groupe} many {# groupes} other {# groupes}}",
+      "show": "Afficher la catégorie {name}",
+      "hide": "Masquer la catégorie {name}",
+      "delete": "Supprimer la catégorie {name}",
+      "dragGroup": "Faire glisser le groupe {name}",
+      "members": "{count, plural, one {# membre} many {# membres} other {# membres}}",
+      "moveTo": "Catégorie de {name}",
+      "parentOf": "Groupe sous lequel apparaît {name}",
+      "noParent": "Ligne propre",
+      "under": "Sous {name}"
     }
   },
   "settings": {
@@ -3635,7 +3703,8 @@
       "empty": "Tu n'as encore envoyé aucun fichier."
     },
     "groups_pro": {
-      "legend_categories": "Catégories de la légende des groupes"
+      "legend_categories": "Catégories de la légende des groupes",
+      "legend_display": "Affichage de la légende des groupes"
     }
   },
   "permissions": {

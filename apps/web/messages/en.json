@@ -425,7 +425,8 @@
         "acp_roles": "Administrators and ACP roles",
         "staff_page": "Staff page",
         "bulk_mail": "Bulk mail",
-        "communication": "Communication"
+        "communication": "Communication",
+        "groups_legend": "Group legend"
       },
       "community": {
         "forums_group": "Forums",
@@ -3080,7 +3081,9 @@
       "premium": {
         "label": "Premium",
         "title": "Premium app: sold separately (licences come with redistribution)."
-      }
+      },
+      "settings": "Settings",
+      "settingsOf": "{name} settings"
     },
     "footer": {
       "title": "Footer",
@@ -3242,6 +3245,71 @@
         "confirmPack": "The pack “{name}” and all its emotes are deleted permanently.",
         "confirmEmote": "{name} is deleted permanently; old messages keep the code text."
       }
+    },
+    "groupsLegend": {
+      "title": "Group legend",
+      "intro": "The legend categories in the stats panel, where each group goes and what the legend shows. Changes reach the site after “Save”.",
+      "viewSite": "View site",
+      "categories": "Categories",
+      "categoriesHint": "Drag a category (or use the arrows) to move it. Leave the name empty to keep the translated label.",
+      "categoryName": "Category name",
+      "newCategory": "New category",
+      "addCategory": "Add category",
+      "groups": "Groups",
+      "groupsHint": "Drag a group to another category, onto another group (it goes before it) or into the zone below a group to make it a linked group in its dropdown. With the keyboard: the arrows, “Category” and “Under group”.",
+      "tray": "Not shown",
+      "trayHint": "Groups here do not appear in the legend.",
+      "hiddenTag": "hidden",
+      "childrenOf": "Groups linked to {name}",
+      "dropChild": "Drop here: linked to {name}",
+      "emptyColumn": "Drop a group here",
+      "dropEnd": "Drop here: at the end",
+      "display": "Display",
+      "columns": "Columns",
+      "options": {
+        "memberCounts": "Member counts",
+        "memberCountsHint": "On every group and category.",
+        "onlineCounts": "Online counts",
+        "onlineCountsHint": "The green dot next to each group.",
+        "countSecondary": "Count secondary members",
+        "countSecondaryHint": "Members who have the group as a secondary group.",
+        "hideEmpty": "Hide empty groups",
+        "hideEmptyHint": "Groups without members are left out.",
+        "seeAll": "“See all groups” button",
+        "seeAllHint": "In the legend header (needs the groups page).",
+        "groupsPage": "Groups page",
+        "groupsPageHint": "/members/groups — “Community groups”."
+      },
+      "save": "Save",
+      "saved": "The legend was saved.",
+      "discard": "Discard changes",
+      "discardTitle": "Discard your changes?",
+      "discardBody": "The editor goes back to the saved legend. Unsaved changes are lost.",
+      "discardConfirm": "Discard",
+      "unsaved": "Unsaved changes",
+      "upToDate": "Everything is saved",
+      "preview": "Preview",
+      "previewHint": "The stats panel legend, with your unsaved changes.",
+      "previewEmpty": "The legend is empty: no group is shown.",
+      "icon": "Category icon",
+      "cancel": "Cancel",
+      "deleteTitle": "Delete the “{name}” category?",
+      "deleteBody": "Its groups (and their linked groups) move to “Not shown”. The deletion applies on “Save”.",
+      "deleteConfirm": "Delete category",
+      "dragCategory": "Drag the {name} category",
+      "moveUp": "Move {name} up",
+      "moveDown": "Move {name} down",
+      "rename": "Name of the {name} category",
+      "groupCount": "{count, plural, one {# group} other {# groups}}",
+      "show": "Show the {name} category",
+      "hide": "Hide the {name} category",
+      "delete": "Delete the {name} category",
+      "dragGroup": "Drag the {name} group",
+      "members": "{count, plural, one {# member} other {# members}}",
+      "moveTo": "Category of {name}",
+      "parentOf": "Group {name} appears under",
+      "noParent": "Own row",
+      "under": "Under {name}"
     }
   },
   "settings": {
@@ -3635,7 +3703,8 @@
       "empty": "You haven't uploaded any file yet."
     },
     "groups_pro": {
-      "legend_categories": "Group legend categories"
+      "legend_categories": "Group legend categories",
+      "legend_display": "Group legend display"
     }
   },
   "permissions": {

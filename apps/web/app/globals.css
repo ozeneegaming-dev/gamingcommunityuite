@@ -32,6 +32,8 @@
 @import "@gcs/ui/titles.css";
 /* Designul Nova (tema implicită „GCS Nova”): totul sub `.gcs-nova`, pus pe `<html>` doar pe paginile site-ului. */
 @import "@gcs/ui/nova.css";
+/* La final, pentru toate temele: sweep-ul și tranzițiile de hover ale butoanelor, tab-urilor, cipurilor și meniurilor. */
+@import "@gcs/ui/sweep.css";
 
 /* Componentele Gcs* din @gcs/ui folosesc utilitare Tailwind; sursele lor trebuie scanate. */
 @source "../../../packages/ui/src";

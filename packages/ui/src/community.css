@@ -44,7 +44,7 @@ html[data-theme="light"] {
 }
 .gcs-root a.gcs-segLink:hover {
   color: var(--gcs-text);
-  background: var(--gcs-surface2);
+  background-color: var(--gcs-surface2);
 }
 .gcs-root a.gcs-segLink--active,
 .gcs-segLink--active {

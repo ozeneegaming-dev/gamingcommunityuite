@@ -425,7 +425,8 @@
         "acp_roles": "Administradores y funciones de ACP",
         "staff_page": "Página del personal",
         "bulk_mail": "Correo a granel",
-        "communication": "Communication"
+        "communication": "Communication",
+        "groups_legend": "Leyenda de grupos"
       },
       "community": {
         "forums_group": "Foros",
@@ -3080,7 +3081,9 @@
       "premium": {
         "label": "Premium",
         "title": "Premium app: sold separately (licences come with redistribution)."
-      }
+      },
+      "settings": "Ajustes",
+      "settingsOf": "Ajustes de {name}"
     },
     "footer": {
       "title": "Footer",
@@ -3242,6 +3245,71 @@
         "confirmPack": "The pack “{name}” and all its emotes are deleted permanently.",
         "confirmEmote": "{name} is deleted permanently; old messages keep the code text."
       }
+    },
+    "groupsLegend": {
+      "title": "Leyenda de grupos",
+      "intro": "Las categorías de la leyenda del panel de estadísticas, el lugar de cada grupo y lo que muestra la leyenda. Los cambios llegan al sitio tras «Guardar».",
+      "viewSite": "Ver el sitio",
+      "categories": "Categorías",
+      "categoriesHint": "Arrastra una categoría (o usa las flechas) para moverla. Deja el nombre vacío para mantener la etiqueta traducida.",
+      "categoryName": "Nombre de la categoría",
+      "newCategory": "Nueva categoría",
+      "addCategory": "Añadir categoría",
+      "groups": "Grupos",
+      "groupsHint": "Arrastra un grupo a otra categoría, sobre otro grupo (queda delante) o a la zona bajo un grupo para convertirlo en grupo vinculado en su desplegable. Con el teclado: las flechas, «Categoría» y «Bajo el grupo».",
+      "tray": "No mostrados",
+      "trayHint": "Los grupos de aquí no aparecen en la leyenda.",
+      "hiddenTag": "oculta",
+      "childrenOf": "Grupos vinculados a {name}",
+      "dropChild": "Suelta aquí: vinculado a {name}",
+      "emptyColumn": "Arrastra un grupo aquí",
+      "dropEnd": "Suelta aquí: al final",
+      "display": "Visualización",
+      "columns": "Columnas",
+      "options": {
+        "memberCounts": "Número de miembros",
+        "memberCountsHint": "En cada grupo y categoría.",
+        "onlineCounts": "Miembros en línea",
+        "onlineCountsHint": "El punto verde junto a cada grupo.",
+        "countSecondary": "Contar miembros secundarios",
+        "countSecondaryHint": "Miembros que tienen el grupo como secundario.",
+        "hideEmpty": "Ocultar grupos vacíos",
+        "hideEmptyHint": "Los grupos sin miembros no aparecen.",
+        "seeAll": "Botón «Ver todos los grupos»",
+        "seeAllHint": "En la cabecera de la leyenda (necesita la página de grupos).",
+        "groupsPage": "Página de grupos",
+        "groupsPageHint": "/members/groups — «Grupos de la comunidad»."
+      },
+      "save": "Guardar",
+      "saved": "La leyenda se ha guardado.",
+      "discard": "Descartar cambios",
+      "discardTitle": "¿Descartar los cambios?",
+      "discardBody": "El editor vuelve a la leyenda guardada. Los cambios sin guardar se pierden.",
+      "discardConfirm": "Descartar",
+      "unsaved": "Cambios sin guardar",
+      "upToDate": "Todo guardado",
+      "preview": "Vista previa",
+      "previewHint": "La leyenda del panel de estadísticas, con tus cambios sin guardar.",
+      "previewEmpty": "La leyenda está vacía: no se muestra ningún grupo.",
+      "icon": "Icono de la categoría",
+      "cancel": "Cancelar",
+      "deleteTitle": "¿Eliminar la categoría «{name}»?",
+      "deleteBody": "Sus grupos (y los vinculados) pasan a «No mostrados». La eliminación se aplica al «Guardar».",
+      "deleteConfirm": "Eliminar categoría",
+      "dragCategory": "Arrastrar la categoría {name}",
+      "moveUp": "Subir {name}",
+      "moveDown": "Bajar {name}",
+      "rename": "Nombre de la categoría {name}",
+      "groupCount": "{count, plural, one {# grupo} many {# grupos} other {# grupos}}",
+      "show": "Mostrar la categoría {name}",
+      "hide": "Ocultar la categoría {name}",
+      "delete": "Eliminar la categoría {name}",
+      "dragGroup": "Arrastrar el grupo {name}",
+      "members": "{count, plural, one {# miembro} many {# miembros} other {# miembros}}",
+      "moveTo": "Categoría de {name}",
+      "parentOf": "Grupo bajo el que aparece {name}",
+      "noParent": "Fila propia",
+      "under": "Bajo {name}"
     }
   },
   "settings": {
@@ -3635,7 +3703,8 @@
       "empty": "Aún no has subido ningún archivo."
     },
     "groups_pro": {
-      "legend_categories": "Categorías de la leyenda de grupos"
+      "legend_categories": "Categorías de la leyenda de grupos",
+      "legend_display": "Visualización de la leyenda de grupos"
     }
   },
   "permissions": {

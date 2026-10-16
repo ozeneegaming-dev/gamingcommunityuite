@@ -25,6 +25,28 @@ function hexToRgba(hex: string, alpha: string): string {
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
 }
 
+/** Luminanța relativă (WCAG) a unei culori `#RRGGBB`. */
+function luminance(hex: string): number {
+  const n = Number.parseInt(hex.slice(1), 16);
+  const lin = (c: number) => {
+    const s = c / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * lin((n >> 16) & 255) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
+}
+
+/**
+ * O culoare de nume „simplă”: aproape albă și neutră (ex. Membru, `#ECEDF1`, adică textul temei închise). Pe cardurile
+ * deschise ale temelor luminoase n-ar avea contrast, deci urmează culoarea textului temei (`--gcs-name-plain`). Culorile
+ * grupurilor (și cele deschise, dar colorate sau mai închise, ca argintiul VIP) rămân cum sunt.
+ */
+export function isPlainNameColor(hex: string): boolean {
+  if (!isHexColor(hex)) return false;
+  const n = Number.parseInt(hex.slice(1), 16);
+  const channels = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  return luminance(hex) >= 0.8 && Math.max(...channels) - Math.min(...channels) <= 32;
+}
+
 function ruleFor(group: GcsNameStyleGroup): { css: string; animated: boolean } | null {
   if (!GROUP_KEY.test(group.key)) return null;
   const style = group.nameStyle ?? {};
@@ -48,7 +70,8 @@ function ruleFor(group: GcsNameStyleGroup): { css: string; animated: boolean } |
     }
   } else {
     const color = isHexColor(style.color) ? style.color : isHexColor(group.color) ? group.color : null;
-    if (color) decls.push(`color:${color}`, "-webkit-text-fill-color:currentColor");
+    // Pe temele luminoase `--gcs-name-plain` e textul temei; pe cele închise lipsește și rămâne culoarea grupului.
+    if (color) decls.push(`color:${isPlainNameColor(color) ? `var(--gcs-name-plain, ${color})` : color}`, "-webkit-text-fill-color:currentColor");
   }
 
   if (isHexColor(style.glow)) decls.push(`text-shadow:0 0 10px ${hexToRgba(style.glow, ".55")}`);

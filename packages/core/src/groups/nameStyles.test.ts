@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { compileNameStylesCss } from "./nameStyles";
+import { compileNameStylesCss, isPlainNameColor } from "./nameStyles";
 
 const gold = {
   key: "vip_gold",
@@ -27,9 +27,31 @@ describe("compileNameStylesCss", () => {
   });
 
   test("stilul bate culorile linkurilor din teme (Nova, Clasic, CSS-ul temei), și la hover: specificitate de ID", () => {
-    const css = compileNameStylesCss([{ key: "member", color: "#ECEDF1", nameStyle: null }]);
+    const css = compileNameStylesCss([{ key: "admin", color: "#FF4D57", nameStyle: null }]);
     // `:is(.gcs-root,#gcs-names)` are specificitatea unui ID (orice regulă de temă pe clase pierde), fără `!important`.
-    expect(css).toContain(".gcs-name--member,:is(.gcs-root,#gcs-names) .gcs-name--member{color:#ECEDF1;-webkit-text-fill-color:currentColor");
+    expect(css).toContain(".gcs-name--admin,:is(.gcs-root,#gcs-names) .gcs-name--admin{color:#FF4D57;-webkit-text-fill-color:currentColor");
+  });
+
+  test("numele simple, aproape albe (Membru: textul temei închise), urmează textul temei pe cele luminoase", () => {
+    const css = compileNameStylesCss([
+      { key: "member", color: "#ECEDF1", nameStyle: null },
+      { key: "white", color: "#FFFFFF", nameStyle: null },
+    ]);
+    // Pe temele luminoase `--gcs-name-plain` e culoarea textului; pe cele închise lipsește, deci rămâne culoarea grupului.
+    expect(css).toContain(".gcs-name--member{color:var(--gcs-name-plain, #ECEDF1);-webkit-text-fill-color:currentColor");
+    expect(css).toContain(".gcs-name--white{color:var(--gcs-name-plain, #FFFFFF);");
+  });
+
+  test("culorile grupurilor rămân cum sunt (și cele deschise, dar colorate sau mai închise, ca argintiul VIP)", () => {
+    expect(isPlainNameColor("#ECEDF1")).toBe(true);
+    expect(isPlainNameColor("#FFFFFF")).toBe(true);
+    for (const c of ["#D8DFEA", "#A1A7B4", "#FFF0B8", "#F4B740", "#5EA2FF", "#FF4D57", "#6B7280"]) expect(isPlainNameColor(c), c).toBe(false);
+    const css = compileNameStylesCss([
+      { key: "vip_silver", color: "#D8DFEA", nameStyle: { color: "#D8DFEA" } },
+      { key: "guest", color: "#A1A7B4", nameStyle: null },
+    ]);
+    expect(css).not.toContain("--gcs-name-plain");
+    expect(css).toContain("{color:#D8DFEA;");
   });
 
   test("gradientul: textul transparent și fundalul tăiat pe litere, oricum ar fi setată umplerea de temă", () => {
@@ -38,8 +60,8 @@ describe("compileNameStylesCss", () => {
   });
 
   test("culoarea din nameStyle are prioritate față de culoarea grupului", () => {
-    const css = compileNameStylesCss([{ key: "member", color: "#111111", nameStyle: { color: "#ECEDF1" } }]);
-    expect(css).toContain("color:#ECEDF1");
+    const css = compileNameStylesCss([{ key: "member", color: "#111111", nameStyle: { color: "#5EA2FF" } }]);
+    expect(css).toContain("color:#5EA2FF");
     expect(css).not.toContain("#111111");
   });
 
