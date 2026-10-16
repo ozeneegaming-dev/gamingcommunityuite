@@ -4,12 +4,15 @@ import { faRightToBracket } from "@fortawesome/free-solid-svg-icons";
 import { GcsButton, GcsField, GcsIconSvg } from "@gcs/ui";
 import { useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
+import { useHydrated } from "@/lib/use-hydrated";
 import { acpReauth } from "../actions";
 
 export function ReauthForm({ askPassword }: { askPassword: boolean }) {
   const t = useTranslations("acp.reauth");
   const [error, setError] = useState<"invalid" | "rate_limited" | null>(null);
   const [pending, setPending] = useState(false);
+  // Până la hidratare, trimiterea nativă ar ocoli `onSubmit`: butonul așteaptă React.
+  const hydrated = useHydrated();
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -23,7 +26,7 @@ export function ReauthForm({ askPassword }: { askPassword: boolean }) {
   }
 
   return (
-    <form onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <form method="post" onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {askPassword && (
         <GcsField label={t("password")}>
           <input name="password" type="password" autoComplete="current-password" required autoFocus />
@@ -37,7 +40,7 @@ export function ReauthForm({ askPassword }: { askPassword: boolean }) {
           {t(`errors.${error}`)}
         </p>
       )}
-      <GcsButton variant="primary" type="submit" disabled={pending} icon={<GcsIconSvg icon={faRightToBracket} />}>
+      <GcsButton variant="primary" type="submit" disabled={pending || !hydrated} icon={<GcsIconSvg icon={faRightToBracket} />}>
         {t("submit")}
       </GcsButton>
     </form>

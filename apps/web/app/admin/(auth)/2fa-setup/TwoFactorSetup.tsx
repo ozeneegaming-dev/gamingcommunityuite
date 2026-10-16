@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import QRCode from "qrcode";
 import { useState, type FormEvent } from "react";
 import { authClient } from "@/lib/auth-client";
+import { useHydrated } from "@/lib/use-hydrated";
 
 type Enrollment = { qr: string; secret: string; backupCodes: string[] };
 
@@ -18,6 +19,8 @@ export function TwoFactorSetup({ askPassword, doneHref = "/admin/reauth" }: { as
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [error, setError] = useState<"password" | "code" | "generic" | null>(null);
   const [pending, setPending] = useState(false);
+  // Până la hidratare, trimiterea nativă ar ocoli `onSubmit`: butonul așteaptă React.
+  const hydrated = useHydrated();
 
   async function onStart(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -53,14 +56,14 @@ export function TwoFactorSetup({ askPassword, doneHref = "/admin/reauth" }: { as
 
   if (!enrollment) {
     return (
-      <form onSubmit={onStart} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <form method="post" onSubmit={onStart} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {askPassword && (
           <GcsField label={t("password")}>
             <input name="password" type="password" autoComplete="current-password" required autoFocus />
           </GcsField>
         )}
         {errorBox}
-        <GcsButton variant="primary" type="submit" disabled={pending} icon={<GcsIconSvg icon={faQrcode} />}>
+        <GcsButton variant="primary" type="submit" disabled={pending || !hydrated} icon={<GcsIconSvg icon={faQrcode} />}>
           {t("start")}
         </GcsButton>
       </form>
@@ -68,7 +71,7 @@ export function TwoFactorSetup({ askPassword, doneHref = "/admin/reauth" }: { as
   }
 
   return (
-    <form onSubmit={onVerify} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <form method="post" onSubmit={onVerify} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <img src={enrollment.qr} alt={t("qr")} width={200} height={200} style={{ alignSelf: "center", borderRadius: 12 }} />
       <div className="gcs-field">
         <span>{t("secret")}</span>
@@ -88,7 +91,7 @@ export function TwoFactorSetup({ askPassword, doneHref = "/admin/reauth" }: { as
         <input name="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9 ]{6,7}" required autoFocus />
       </GcsField>
       {errorBox}
-      <GcsButton variant="primary" type="submit" disabled={pending} icon={<GcsIconSvg icon={faCircleCheck} />}>
+      <GcsButton variant="primary" type="submit" disabled={pending || !hydrated} icon={<GcsIconSvg icon={faCircleCheck} />}>
         {t("verify")}
       </GcsButton>
     </form>
