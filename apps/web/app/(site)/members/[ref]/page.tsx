@@ -25,6 +25,7 @@ import { GcsDeletedMember } from "../../_components/GcsDeletedMember";
 import { translateLabels } from "@/lib/translate";
 import { GcsMemberLink, GcsNamedHtml } from "@/lib/member-names";
 import { GcsGroupLink } from "@/lib/group-pills";
+import { GcsMemberPanelBody, GcsProfilePanelCard, memberPanels } from "@/lib/member-panels";
 
 /** Tabul unei pagini de profil: cheia unui tab de bază sau a unuia adus de o aplicație (`GcsModule.profileTabs`). */
 type Tab = string;
@@ -267,7 +268,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         {tabs.map((k) => (
           <Link key={k.key} href={tabHref(k.key)} className={`gcs-tab${k.key === tab ? " gcs-tab--active" : ""}`} aria-current={k.key === tab ? "page" : undefined} data-tab={k.key}>
             <GcsIcon name={k.icon} className="gcs-tab__icon" />
-            {tAll(k.labelKey)}
+            {k.label ?? tAll(k.labelKey)}
           </Link>
         ))}
       </nav>
@@ -721,6 +722,18 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
         )}
       </GcsCard>
     );
+  } else if (tabs.find((x) => x.key === tab)?.panel) {
+    // Membri v2: un tab adus de o aplicație sau de un plugin prin punctul de extensie al panourilor de membru.
+    const p = (await memberPanels("profile", actor)).find((x) => x.key === tab)!;
+    main = (
+      <GcsCard as="section" className="gcs-titledBox" style={{ display: "flex", flexDirection: "column", gap: 12 }} data-testid={`gcs-profile-panel-${p.key}`}>
+        <h2 className="gcs-display gcs-titleBand gcs-cardTitle">
+          <GcsIcon name={p.icon} className="gcs-hIcon" />
+          {p.label}
+        </h2>
+        <GcsMemberPanelBody panel={p} userId={user.id} surface="profile" viewer={actor} />
+      </GcsCard>
+    );
   } else if (tab === "skins") {
     // Skin-urile (aplicația Servere): deocamdată un tab-ciornă, până vine inventarul din pluginul serverelor.
     const ts = await getTranslations("profile.skins");
@@ -906,6 +919,12 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
           {aboutCard}
           {tab !== "games" && accountsCard}
           {groupsCard}
+          {/* Membri v2: cardurile aduse de aplicații / pluginuri (ex. ELO-ul mix, clanul), doar cu aplicația pornită. */}
+          {(await memberPanels("profile", actor))
+            .filter((p) => p.kind === "card")
+            .map((p) => (
+              <GcsProfilePanelCard key={p.key} panel={p} userId={user.id} viewer={actor} />
+            ))}
           {tab !== "followers" && followersCard}
           {visitorsCard}
         </aside>

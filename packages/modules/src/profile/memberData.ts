@@ -17,6 +17,24 @@ export function profileMemberData(deps: { db: PrismaClient; evaluate?: (userId: 
   const { db } = deps;
   return {
     key: "profile",
+    /** GDPR (Membri v2): câmpurile profilului, statusurile scrise, insignele, ignorările și semnătura. */
+    async export(userId) {
+      const [fields, statuses, badges, ignores, user] = await Promise.all([
+        db.profileFieldValue.findMany({ where: { userId }, select: { value: true, field: { select: { key: true, label: true } } } }),
+        db.statusUpdate.findMany({ where: { authorId: userId }, orderBy: { id: "asc" }, select: { id: true, profileUserId: true, contentHtml: true, createdAt: true } }),
+        db.userBadge.findMany({ where: { userId }, select: { createdAt: true, badge: { select: { name: true } } } }),
+        db.userIgnore.findMany({ where: { userId }, select: { ignoredId: true, posts: true, messages: true, createdAt: true } }),
+        db.user.findUnique({ where: { id: userId }, select: { signatureHtml: true, accentColor: true } }),
+      ]);
+      return {
+        fields: fields.map((f) => ({ key: f.field.key, label: f.field.label, value: f.value })),
+        statuses,
+        badges: badges.map((b) => ({ name: b.badge.name, awardedAt: b.createdAt })),
+        ignores,
+        signatureHtml: user?.signatureHtml ?? "",
+        accentColor: user?.accentColor ?? null,
+      };
+    },
     async summary(userId) {
       const [statuses, wall, badges, fields, ignores] = await Promise.all([
         db.statusUpdate.count({ where: { authorId: userId, NOT: { profileUserId: userId } } }),

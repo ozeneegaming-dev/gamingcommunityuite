@@ -85,7 +85,7 @@ export class GcsPromotionService {
 
     const changedGroups = await db.$transaction(async (tx) => {
       if (!rule.asPrimary) {
-        return (await membership.addSecondary(tx, userId, rule.toGroupId)) ? [rule.toGroupId] : [];
+        return (await membership.addSecondary(tx, userId, rule.toGroupId, { source: "promotion" })) ? [rule.toGroupId] : [];
       }
       if (vipPrimary) {
         // Rămâne VIP; la expirare revine la grupul promovat.

@@ -1,6 +1,8 @@
 import { GcsMemberRemovalService, type GcsActor, type GcsMemberDataHandler } from "@gcs/core";
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "vitest";
+import { readZip } from "@gcs/plugin-sdk/zip";
 import { GcsForumCounters } from "../src/forums/counters";
+import { gdprExportZip } from "../src/profile/gdprExport";
 import { createRemovalWorld, type GcsRemovalWorld } from "./removalWorld";
 import { doc, snapshotCounters } from "./world";
 
@@ -132,5 +134,35 @@ describe("ștergerea unui cont plin", () => {
     expect(await w.s.db.warning.count({ where: { userId: target.userId! } })).toBe(1);
     expect(await w.s.db.attachment.count({ where: { ownerId: target.userId } })).toBe(1);
     await expectCountersConsistent();
+  });
+});
+
+describe("exportul GDPR (Membri v2)", () => {
+  test("arhiva are un JSON pe aplicație și sumarul; fără parolă sau secrete; intră în jurnal", async () => {
+    const other = await w.user("Celalalt");
+    const { user } = await richAccount("Exportat", other);
+    await w.s.db.account.create({ data: { userId: user.userId!, accountId: user.userId!, providerId: "credential", password: "hash-secret" } });
+    const { fileName, data } = await gdprExportZip(w.s.memberRemoval, root, user.userId!);
+    expect(fileName).toMatch(/^gdpr-Exportat-\d{4}-\d{2}-\d{2}\.zip$/);
+    const files = readZip(data);
+    expect([...files.keys()].sort()).toEqual(expect.arrayContaining(["account.json", "forums.json", "profile.json", "messages.json", "chat.json", "summary.json"]));
+    const account = JSON.parse(files.get("account.json")!.toString("utf8")) as Record<string, unknown>;
+    expect(account).toMatchObject({ name: "Exportat", accounts: [{ providerId: "credential" }] });
+    const all = [...files.values()].map((b) => b.toString("utf8")).join("\n");
+    expect(all).not.toContain("hash-secret");
+    const forums = JSON.parse(files.get("forums.json")!.toString("utf8")) as { topics: unknown[]; posts: unknown[] };
+    expect(forums.topics).toHaveLength(1);
+    expect(forums.posts).toHaveLength(2);
+    const messages = JSON.parse(files.get("messages.json")!.toString("utf8")) as { messages: { contentHtml: string }[] };
+    // Doar mesajele scrise de el, nu și răspunsurile celuilalt.
+    expect(messages.messages.map((m) => m.contentHtml)).toEqual(["m"]);
+    const summary = JSON.parse(files.get("summary.json")!.toString("utf8")) as { apps: Record<string, Record<string, number>> };
+    expect(summary.apps.clans).toBeDefined();
+    expect(await w.s.db.auditLog.count({ where: { action: "member.gdpr_export", targetId: user.userId! } })).toBe(1);
+  });
+
+  test("fără dreptul pe Cereri GDPR → refuzat", async () => {
+    const member = await w.user("Curios");
+    await expect(gdprExportZip(w.s.memberRemoval, member, root.userId!)).rejects.toMatchObject({ code: "forbidden" });
   });
 });

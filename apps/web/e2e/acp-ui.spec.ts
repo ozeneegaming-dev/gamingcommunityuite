@@ -51,7 +51,7 @@ test("o permisiune individuală din fișa membrului îi permite să creeze o cam
   await expect(m.getByTestId("gcs-chat-create")).toHaveCount(0);
 
   const [row] = await sql<{ id: string }>(`SELECT id FROM users WHERE email = $1`, [`permmem-${id}@example.com`]);
-  await page.goto(`/admin/members/${row!.id}`);
+  await page.goto(`/admin/members/${row!.id}?tab=permissions`);
   const perms = page.getByTestId("gcs-member-permissions");
   await perms.locator('select[name="perm:chat.create_private"]').selectOption("true");
   await page.getByRole("button", { name: "Salvează permisiunile" }).click();

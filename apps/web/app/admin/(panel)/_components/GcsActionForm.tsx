@@ -25,6 +25,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
 import { useErrorMessage } from "@/lib/use-error-message";
+import { GcsConfirmDialog } from "./GcsConfirmDialog";
 
 /** Iconițele butonului de trimitere după tipul acțiunii (se pot folosi și din componentele server, ca text). */
 const SUBMIT_ICONS = {
@@ -76,10 +77,20 @@ export function GcsActionForm({ action, submitLabel, submitKind, submitIcon, var
   const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, setPending] = useState(false);
 
+  // Confirmarea în pagină (niciodată `window.confirm`): formularul așteaptă „Confirmă” din dialog.
+  const [asking, setAsking] = useState<FormData | null>(null);
+
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (confirm && !window.confirm(confirm)) return;
     const fd = new FormData(e.currentTarget);
+    if (confirm) {
+      setAsking(fd);
+      return;
+    }
+    await run(fd);
+  }
+
+  async function run(fd: FormData) {
     setPending(true);
     setStatus(null);
     const result = await action(fd);
@@ -112,6 +123,21 @@ export function GcsActionForm({ action, submitLabel, submitKind, submitIcon, var
           </span>
         )}
       </div>
+      {asking && confirm && (
+        <GcsConfirmDialog
+          title={submitLabel}
+          body={confirm}
+          confirmLabel={submitLabel}
+          danger={submitKind === "delete" || submitKind === "ban" || submitKind === "remove" || submitKind === "revoke"}
+          busy={pending}
+          onCancel={() => setAsking(null)}
+          onConfirm={() => {
+            const fd = asking;
+            setAsking(null);
+            void run(fd);
+          }}
+        />
+      )}
     </form>
   );
 }

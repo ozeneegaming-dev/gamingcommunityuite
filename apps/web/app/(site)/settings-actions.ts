@@ -212,6 +212,13 @@ export const requestAccountDeletion = gcsAction(
   },
 );
 
+/** Membri v2: membrul intră într-un grup public (opt-in) sau iese din el (Setări → Grupuri). */
+export const toggleOptInGroup = gcsAction(z.object({ groupId: z.number().int().positive(), join: z.boolean() }), async ({ groupId, join }, { actor }) => {
+  const { optInGroups } = services();
+  if (join) await optInGroups.join(actor, groupId);
+  else await optInGroups.leave(actor, groupId);
+});
+
 /** Membrul își anulează cererea de ștergere (în perioada de răzgândire). */
 export const cancelAccountDeletion = gcsAction(z.object({}), async (_input, { actor, ip }) => {
   if (!actor.userId) throw new GcsForbidden({ reason: "guest" });

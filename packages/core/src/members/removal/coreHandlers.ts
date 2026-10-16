@@ -243,6 +243,49 @@ export function accountDataHandler(deps: { db: PrismaClient }): GcsMemberDataHan
         return n;
       });
     },
+    /** GDPR: contul (fără parola și secretele 2FA), grupurile, sesiunile, dispozitivele, IP-urile, avertismentele și bannurile. */
+    async export(userId) {
+      const user = await db.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          emailVerified: true,
+          locale: true,
+          timezone: true,
+          twoFactorEnabled: true,
+          createdAt: true,
+          lastActiveAt: true,
+          lastIp: true,
+          registrationIp: true,
+          bio: true,
+          customTitle: true,
+          birthday: true,
+          privacy: true,
+          prefs: true,
+          postsCount: true,
+          reputation: true,
+          points: true,
+          primaryGroup: { select: { name: true } },
+          groups: { select: { source: true, expiresAt: true, addedAt: true, group: { select: { name: true } } } },
+          accounts: { select: { providerId: true, createdAt: true } },
+          sessions: { select: { ipAddress: true, userAgent: true, createdAt: true, expiresAt: true } },
+          devices: { select: { browser: true, os: true, method: true, ip: true, location: true, firstSeenAt: true, lastSeenAt: true } },
+          warnings: { select: { points: true, reason: true, createdAt: true, expiresAt: true } },
+          bans: { select: { type: true, reason: true, createdAt: true, expiresAt: true, liftedAt: true } },
+          donations: { select: { amount: true, currency: true, note: true, createdAt: true } },
+        },
+      });
+      if (!user) return null;
+      const { groups, primaryGroup, ...rest } = user;
+      return {
+        ...rest,
+        primaryGroup: primaryGroup.name,
+        secondaryGroups: groups.map((g) => ({ name: g.group.name, source: g.source, expiresAt: g.expiresAt, addedAt: g.addedAt })),
+        reports: await db.report.findMany({ where: { reporterId: userId }, select: { contentType: true, contentId: true, reason: true, createdAt: true } }),
+      };
+    },
   };
 }
 

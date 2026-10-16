@@ -261,10 +261,32 @@ export interface GcsModule {
    * desenează după cheie și poate ascunde un tab fără date pentru membrul respectiv (ex. Steam nelegat).
    */
   profileTabs?: GcsProfileTabDef[];
+  /**
+   * Cardurile și taburile modulului pe fișa membrului din ACP și pe profilul public (Membri v2): apar singure când
+   * aplicația modulului e pornită și dispar când e oprită sau dezinstalată (conturile legate, identitățile de joc, ELO,
+   * sancțiunile de pe servere, clanul). Site-ul le desenează după cheie.
+   */
+  memberPanels?: GcsMemberPanelDef[];
 }
 
 /** Un tab al profilului public adus de un modul. `position`: ordinea între taburi (cele de bază au 10, 20, 70, 80, 90). */
 export type GcsProfileTabDef = { key: string; labelKey: string; icon: string; position: number };
+
+/** Unde apare un panou de membru: fișa din ACP sau profilul public. */
+export type GcsMemberPanelSurface = "acp" | "profile";
+
+/**
+ * Un panou de membru (Membri v2): `card` (pe tabul Prezentare al fișei ACP / în coloana profilului) sau `tab` (un tab
+ * propriu). `position` ordonează panourile între ele (cardurile de bază ale fișei au 10–90).
+ */
+export type GcsMemberPanelDef = {
+  key: string;
+  labelKey: string;
+  icon: string;
+  position: number;
+  kind: "card" | "tab";
+  surfaces: readonly GcsMemberPanelSurface[];
+};
 
 export class GcsModuleRegistry {
   private readonly modules: GcsModule[] = [];
@@ -358,6 +380,15 @@ export class GcsModuleRegistry {
     return this.modules
       .flatMap((m) => (m.profileTabs ?? []).map((def) => ({ module: m.key, def })))
       .filter((t) => (seen.has(t.def.key) ? false : (seen.add(t.def.key), true)))
+      .sort((a, b) => a.def.position - b.def.position);
+  }
+
+  /** Panourile de membru ale modulelor pentru o suprafață (fișa ACP sau profilul), în ordinea pozițiilor; cheile unice. */
+  memberPanels(surface: GcsMemberPanelSurface): { module: string; def: GcsMemberPanelDef }[] {
+    const seen = new Set<string>();
+    return this.modules
+      .flatMap((m) => (m.memberPanels ?? []).filter((d) => d.surfaces.includes(surface)).map((def) => ({ module: m.key, def })))
+      .filter((p) => (seen.has(p.def.key) ? false : (seen.add(p.def.key), true)))
       .sort((a, b) => a.def.position - b.def.position);
   }
 

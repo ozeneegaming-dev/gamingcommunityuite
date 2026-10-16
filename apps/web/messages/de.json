@@ -194,7 +194,15 @@
       "chat_banned": "Du bist im Chat gesperrt.",
       "chat_kicked": "Du wurdest für eine Weile aus dem Chat geworfen.",
       "system_line": "Systemzeilen können nicht bearbeitet werden.",
-      "right_not_held": "Du kannst kein Recht vergeben, das du nicht hast."
+      "right_not_held": "Du kannst kein Recht vergeben, das du nicht hast.",
+      "no_password": "Dieses Konto hat kein Passwort (Anmeldung über Steam, Discord oder Google).",
+      "root_only": "Nur ein Root-Admin kann das tun.",
+      "assigned_group": "Diese Gruppe wurde vom Team oder einer App vergeben; du kannst sie hier nicht verlassen.",
+      "not_opt_in": "Dieser Gruppe kann man nicht selbst beitreten.",
+      "already_member": "Du bist bereits in dieser Gruppe.",
+      "already_primary": "Das ist bereits deine Hauptgruppe.",
+      "members_only": "Melde dich zuerst an.",
+      "self": "Das kannst du nicht mit deinem eigenen Konto tun."
     },
     "fields": {
       "invalid_color": "Ungültige Farbe (#RRGGBB)",
@@ -320,7 +328,16 @@
       "room_not_found": "Diesen Raum gibt es nicht.",
       "invalid_handle": "Gib nur den Benutzernamen ein (Buchstaben, Ziffern, Punkt, Bindestrich, Unterstrich).",
       "invalid_link_template": "Die Vorlage muss eine https-Adresse mit genau einmal '{handle}' sein, nur bei „Text“-Feldern.",
-      "same_theme": "Wähle zwei verschiedene Themes."
+      "same_theme": "Wähle zwei verschiedene Themes.",
+      "csv_header": "Die CSV-Datei braucht die Spalten name, email und password.",
+      "group_staff": "Eine Team-Gruppe kann nicht öffentlich sein.",
+      "group_vip": "Eine VIP-Gruppe kann nicht öffentlich sein.",
+      "group_protected": "Diese Gruppe kann nicht öffentlich sein.",
+      "username_taken": "Dieser Name ist bereits vergeben.",
+      "email_taken": "Diese E-Mail wird bereits von einem anderen Konto verwendet.",
+      "email_invalid": "Die E-Mail-Adresse ist ungültig.",
+      "group_unknown": "Unbekannte Gruppe.",
+      "separator_top": "Ein Trenner kann nur zwischen Unterpunkten stehen."
     }
   },
   "acp": {
@@ -684,14 +701,129 @@
         "email": "E-Mail",
         "group": "Primärgruppe",
         "joined": "Beigetreten",
-        "lastActive": "Zuletzt aktiv"
+        "lastActive": "Zuletzt aktiv",
+        "ip": "IP",
+        "posts": "Beiträge"
       },
       "empty": "Keine Mitglieder gefunden",
       "total": "{count, plural, one {# Mitglied} other {# Mitglieder}}",
       "prev": "Vorherige Seite",
       "next": "Nächste Seite",
       "page": "Seite {page} von {pages}",
-      "never": "nie"
+      "never": "nie",
+      "description": "Jedes Konto suchen, filtern und verwalten: Gruppen, Bestätigung, Sperren und Exporte.",
+      "reset": "Zurücksetzen",
+      "pages": "Seiten",
+      "secondaryCount": "{count, plural, one {# Nebengruppe} other {# Nebengruppen}}",
+      "quick": {
+        "label": "Schnellfilter",
+        "all": "Alle",
+        "online": "Online",
+        "new": "Neu",
+        "unvalidated": "Unbestätigt",
+        "banned": "Gesperrt",
+        "spammers": "Spammer",
+        "staff": "Team"
+      },
+      "advanced": {
+        "title": "Erweiterte Suche",
+        "scope": "Gruppe als",
+        "scopeAny": "Haupt- oder Nebengruppe",
+        "scopePrimary": "Hauptgruppe",
+        "scopeSecondary": "Nebengruppe",
+        "ip": "IP-Adresse",
+        "login": "Anmeldemethode",
+        "any": "Beliebig",
+        "logins": {
+          "credential": "Passwort",
+          "steam": "Steam",
+          "discord": "Discord",
+          "google": "Google"
+        },
+        "twoFactor": "Zwei-Faktor (2FA)",
+        "tfaOn": "Aktiv",
+        "tfaOff": "Inaktiv",
+        "country": "Land (2 Buchstaben)",
+        "joined": "Registriert",
+        "joinedFrom": "Registriert ab",
+        "joinedTo": "Registriert bis",
+        "active": "Letzter Besuch",
+        "activeFrom": "Letzter Besuch ab",
+        "activeTo": "Letzter Besuch bis",
+        "posts": "Beiträge",
+        "postsMin": "Beiträge, mindestens",
+        "postsMax": "Beiträge, höchstens",
+        "min": "min",
+        "max": "max"
+      },
+      "status": {
+        "banned": "gesperrt",
+        "spammer": "Spammer",
+        "unvalidated": "unbestätigt"
+      },
+      "bulk": {
+        "title": "Massenaktionen",
+        "selected": "{count, plural, =0 {Keine ausgewählt} one {# ausgewählt} other {# ausgewählt}}",
+        "scope": "Anwenden auf",
+        "scopeSelected": "Ausgewählte Mitglieder",
+        "scopeFiltered": "Alle gefilterten ({count})",
+        "action": "Aktion",
+        "ops": {
+          "add_secondary": "Nebengruppe hinzufügen",
+          "remove_secondary": "Nebengruppe entfernen",
+          "set_primary": "In Hauptgruppe verschieben",
+          "validate": "Bestätigen",
+          "ban": "Sperren",
+          "delete": "Konten löschen"
+        },
+        "group": "Gruppe",
+        "expiresAt": "Läuft ab am (leer = nie)",
+        "reason": "Grund",
+        "duration": "Dauer",
+        "durations": {
+          "permanent": "Dauerhaft",
+          "d1": "1 Tag",
+          "d7": "7 Tage",
+          "d30": "30 Tage"
+        },
+        "mode": "Inhalte",
+        "modes": {
+          "keep": "Inhalte behalten (als gelöschtes Mitglied)",
+          "delete": "Auch Inhalte löschen"
+        },
+        "apply": "Anwenden",
+        "none": "Wähle mindestens ein Mitglied aus.",
+        "done": "Fertig: {changed} geändert, {skipped} übersprungen.",
+        "confirm": "„{action}“ für {count, plural, one {# Mitglied} other {# Mitglieder}}?",
+        "confirmDelete": "{count, plural, one {# Konto} other {# Konten}} löschen? Jede Löschung startet die Kontoentfernung (Fortschritt auf der DSGVO-Seite).",
+        "confirmOk": "Bestätigen ({count})",
+        "selectAll": "Alle auf dieser Seite auswählen",
+        "select": "{name} auswählen"
+      },
+      "tools": {
+        "create": {
+          "open": "Neues Mitglied",
+          "title": "Neues Mitglied",
+          "name": "Name",
+          "email": "E-Mail",
+          "password": "Passwort (mindestens 8 Zeichen)",
+          "group": "Hauptgruppe",
+          "submit": "Mitglied erstellen"
+        },
+        "import": {
+          "open": "CSV importieren",
+          "title": "Mitglieder aus CSV importieren",
+          "hint": "Ein Mitglied pro Zeile; die erste Zeile ist die Kopfzeile. Die Spalte group ist optional (Schlüssel oder Name der Gruppe, Standard: Mitglied).",
+          "file": "CSV-Datei",
+          "noFile": "Wähle eine CSV-Datei.",
+          "submit": "Importieren",
+          "created": "{count, plural, one {# Mitglied erstellt} other {# Mitglieder erstellt}}",
+          "lineError": "Zeile {line}: {code}"
+        },
+        "export": "CSV exportieren",
+        "close": "Schließen",
+        "cancel": "Abbrechen"
+      }
     },
     "member": {
       "back": "Zurück zu den Mitgliedern",
@@ -712,7 +844,23 @@
         "add": "Sekundäre Gruppe hinzufügen",
         "addSubmit": "Hinzufügen",
         "remove": "{group} entfernen",
-        "save": "Primäre Gruppe retten"
+        "save": "Primäre Gruppe retten",
+        "expires": "läuft ab am {date}",
+        "noExpiry": "ohne Ablauf",
+        "sources": {
+          "manual": "manuell",
+          "store": "aus dem Shop",
+          "servers": "aus der Server-App",
+          "promotion": "Beförderung",
+          "optin": "selbst beigetreten",
+          "vip": "VIP",
+          "import": "importiert",
+          "other": "aus einer App"
+        },
+        "extend": "Ablauf setzen",
+        "expiresAt": "Ablauf von {group}",
+        "expiresAtLabel": "Läuft ab am",
+        "expiryHint": "Leer = ohne Ablauf. Eine befristete Gruppe wird automatisch entfernt und das Mitglied benachrichtigt."
       },
       "ban": {
         "title": "Sperren",
@@ -771,6 +919,130 @@
         "amount": "Betrag",
         "currency": "Währung",
         "note": "Notiz"
+      },
+      "tabs": {
+        "label": "Bereiche des Mitglieds",
+        "overview": "Übersicht",
+        "profile": "Profil",
+        "activity": "Aktivität",
+        "permissions": "Berechtigungen",
+        "log": "Protokoll"
+      },
+      "identity": {
+        "title": "Identität",
+        "banned": "Gesperrt",
+        "spammer": "Spammer",
+        "validated": "Bestätigt",
+        "unvalidated": "Unbestätigt",
+        "locked": "2FA gesperrt",
+        "passwordReset": "Passwortänderung angefordert",
+        "posts": "Beiträge",
+        "ip": "Letzte IP",
+        "logins": "Anmeldemethoden",
+        "loginMethods": {
+          "credential": "Passwort",
+          "steam": "Steam",
+          "discord": "Discord",
+          "google": "Google",
+          "other": "Andere"
+        }
+      },
+      "actions": {
+        "title": "Kontoaktionen",
+        "validate": "Bestätigen",
+        "validateConfirm": "Die E-Mail als vom Team bestätigt markieren?",
+        "spammer": "Als Spammer markieren",
+        "spammerConfirm": "Dieses Mitglied als Spammer markieren? Das Konto wird auch dauerhaft gesperrt.",
+        "unspammer": "Kein Spammer",
+        "unspammerConfirm": "Spammer-Markierung entfernen? Die Sperre bleibt, bis du sie aufhebst.",
+        "unlock": "2FA entsperren",
+        "unlockConfirm": "Die Sperre nach falschen Codes bei der Zwei-Faktor-Anmeldung aufheben?",
+        "resetPassword": "Passwortänderung erzwingen",
+        "resetPasswordConfirm": "Das Mitglied überall abmelden und beim nächsten Besuch ein neues Passwort verlangen?",
+        "disable2fa": "2FA deaktivieren",
+        "disable2faConfirm": "Zwei-Faktor-Anmeldung für dieses Mitglied deaktivieren? Nur wenn es keinen Zugang mehr zur Authenticator-App hat.",
+        "ban": "Sperren",
+        "gdpr": "DSGVO-Export",
+        "hint": "Jede Aktion wird protokolliert. Zusammenführen und Löschen haben eigene Bestätigungsseiten."
+      },
+      "cards": {
+        "activity": "Aktivität (30 Tage)",
+        "activityDay": "{day}: {posts} Beiträge, {chat} Chat-Nachrichten",
+        "activityPosts": "{count, plural, one {# Beitrag} other {# Beiträge}}",
+        "activityChat": "{count, plural, one {# Chat-Nachricht} other {# Chat-Nachrichten}}",
+        "content": "Inhalte pro App",
+        "contentEmpty": "Noch keine Inhalte.",
+        "rank": "Rang und Punkte",
+        "rankName": "Rang",
+        "points": "Punkte",
+        "reputation": "Ansehen",
+        "posts": "Beiträge",
+        "badges": "Abzeichen",
+        "badgesEmpty": "Noch keine Abzeichen.",
+        "manage": "Verwalten",
+        "vip": "VIP",
+        "vipUntil": "bis {date}",
+        "vipPermanent": "dauerhaft",
+        "vipNone": "Kein aktives VIP.",
+        "quotas": "Kontingente",
+        "quota": {
+          "conversations": "Private Unterhaltungen",
+          "storage": "Hochgeladene Dateien",
+          "upload": "Maximale Dateigröße",
+          "signature": "Länge der Signatur"
+        },
+        "unlimited": "unbegrenzt",
+        "unit": {
+          "count": "{value}",
+          "mb": "{value} MB",
+          "chars": "{value} Zeichen"
+        },
+        "warnPoints": "{count, plural, one {# aktiver Verwarnungspunkt} other {# aktive Verwarnungspunkte}}"
+      },
+      "activity": {
+        "chart": "Aktivität (90 Tage)",
+        "posts": "Neueste Beiträge",
+        "devices": "Geräte",
+        "none": "Noch nichts."
+      },
+      "log": {
+        "title": "Kontoprotokoll",
+        "empty": "Noch keine Einträge.",
+        "self": "vom Mitglied",
+        "by": "von {name}",
+        "system": "vom System",
+        "all": "Vollständiges Protokoll öffnen"
+      },
+      "panels": {
+        "connections": "Verknüpfte Konten",
+        "game_identities": "Spielidentitäten",
+        "mix_elo": "Mix-ELO",
+        "server_sanctions": "Server-Sanktionen",
+        "clan_membership": "Clan",
+        "empty": "Nichts anzuzeigen.",
+        "providers": {
+          "steam": "Steam",
+          "discord": "Discord",
+          "google": "Google",
+          "other": "Andere"
+        },
+        "linkedOn": "verknüpft am {date}",
+        "lastSeen": "zuletzt gesehen am {date}",
+        "elo": {
+          "elo": "ELO",
+          "peak": "Höchstwert",
+          "record": "S–N–U",
+          "matches": "Spiele"
+        },
+        "allServers": "Alle Server",
+        "until": "bis {date}",
+        "permanent": "dauerhaft",
+        "joinedOn": "beigetreten am {date}",
+        "clanRoles": {
+          "LEADER": "Anführer",
+          "OFFICER": "Offizier",
+          "MEMBER": "Mitglied"
+        }
       }
     },
     "groups": {
@@ -870,6 +1142,12 @@
         "parentNone": "In eigener Zeile",
         "parentHint": "Eine verknüpfte Gruppe erscheint in der Liste, die sich in der Zeile der gewählten Gruppe öffnet (gleiche Kategorie).",
         "save": "Legende speichern"
+      },
+      "optIn": {
+        "title": "Öffentliche Gruppe",
+        "label": "Mitglieder können dieser Gruppe selbst beitreten und sie verlassen",
+        "hint": "Erscheint in Einstellungen → Gruppen als Nebengruppe. Nicht für Team-, VIP- oder geschützte Gruppen.",
+        "save": "Speichern"
       }
     },
     "permissions": {
@@ -1524,7 +1802,91 @@
       "description": "Beschreibung",
       "descriptionHint": "Eine Zeile unter dem Titel im Mega-Menü. Leer = die Standardbeschreibung automatischer Einträge.",
       "badge": "Abzeichen",
-      "badgeHint": "z. B. NEU"
+      "badgeHint": "z. B. NEU",
+      "v2": {
+        "saving": "Wird gespeichert…",
+        "stateDraft": "Unveröffentlichter Entwurf",
+        "statePublished": "Veröffentlicht",
+        "draftSaved": "Entwurf gespeichert",
+        "publish": "Veröffentlichen",
+        "discard": "Verwerfen",
+        "restore": "Standard wiederherstellen",
+        "published": "Das Menü wurde veröffentlicht.",
+        "discarded": "Der Entwurf wurde verworfen.",
+        "restored": "Das Standardmenü ist jetzt der Entwurf. Prüfe die Vorschau und veröffentliche dann.",
+        "confirm": {
+          "publish": "Entwurf veröffentlichen? Alle Besucher sehen das neue Menü.",
+          "discard": "Entwurf verwerfen? Deine unveröffentlichten Änderungen gehen verloren.",
+          "restore": "Den Entwurf durch das Standardmenü der Apps ersetzen? Deine eigenen Einträge fallen aus dem Entwurf."
+        },
+        "tree": "Menüeinträge",
+        "add": "Eintrag hinzufügen",
+        "dragHint": "Ziehen zum Sortieren. Nach rechts ziehen, um einen Eintrag unter den darüber zu setzen, nach links, um ihn zurück auf die erste Ebene zu holen.",
+        "panel": "Eintrag bearbeiten",
+        "pick": "Wähle einen Eintrag zum Bearbeiten.",
+        "editTitle": "Eintrag bearbeiten",
+        "close": "Schließen",
+        "separator": "Trenner",
+        "untitled": "Ohne Titel",
+        "newItem": "Neuer Eintrag",
+        "drag": "{name} verschieben",
+        "active": "{name} ist aktiv",
+        "more": "Weitere Aktionen für {name}",
+        "kinds": {
+          "link": "Eigener Link",
+          "app": "App-Seite",
+          "dropdown": "Dropdown-Gruppe",
+          "separator": "Trenner"
+        },
+        "kind": "Art des Eintrags",
+        "appPage": "App-Seite",
+        "appPick": "Seite wählen…",
+        "languages": "Sprachen",
+        "labelIn": "Bezeichnung ({lang})",
+        "descriptionIn": "Beschreibung im Mega-Menü ({lang})",
+        "hrefOptional": "Link (optional für eine Gruppe)",
+        "badgeTitle": "Abzeichen und Hervorhebung",
+        "badgeText": "Festes Abzeichen",
+        "counter": "Live-Zähler",
+        "noCounter": "Kein Zähler",
+        "counters": {
+          "online": "Gerade online",
+          "topics_today": "Neue Themen heute",
+          "members_today": "Neue Mitglieder heute"
+        },
+        "highlight": "Hervorhebung",
+        "highlights": {
+          "none": "Keine",
+          "accent": "Akzentfarbe",
+          "glow": "Leuchten"
+        },
+        "visibility": "Sichtbarkeit",
+        "audience": "Wer sieht es",
+        "audiences": {
+          "all": "Alle",
+          "guests": "Nur Gäste",
+          "members": "Nur Mitglieder"
+        },
+        "actions": {
+          "edit": "Bearbeiten",
+          "child": "Unterpunkt hinzufügen",
+          "separator": "Trenner hinzufügen",
+          "up": "Nach oben",
+          "down": "Nach unten",
+          "indent": "Unter den Eintrag darüber setzen",
+          "outdent": "Auf die erste Ebene",
+          "duplicate": "Duplizieren",
+          "remove": "Löschen"
+        },
+        "preview": "Live-Vorschau",
+        "device": "Gerät",
+        "devices": {
+          "desktop": "Desktop",
+          "mobile": "Mobil"
+        },
+        "reload": "Vorschau neu laden",
+        "previewHint": "Die Vorschau zeigt den echten Kopfbereich der Seite mit dem Entwurf; nur du siehst ihn, bis du veröffentlichst."
+      }
     },
     "languages": {
       "title": "Aktive Sprachen",
@@ -2008,7 +2370,8 @@
           "vip_page": "On the public VIP page (/vip), below the plans.",
           "user_deleting": "An account starts being deleted (the plugin deletes the member's data).",
           "user_deleted": "An account was deleted.",
-          "user_merged": "An account was merged into another (the plugin moves its data to the target account)."
+          "user_merged": "An account was merged into another (the plugin moves its data to the target account).",
+          "member_panel": "Karten und Tabs auf der ACP-Mitgliederseite und im Profil (in memberPanels deklariert)."
         }
       }
     },
@@ -3437,6 +3800,37 @@
       "saved": "Gespeichert",
       "saveGrant": "Zugang speichern",
       "addGrant": "Moderator hinzufügen"
+    },
+    "confirm": {
+      "cancel": "Abbrechen"
+    },
+    "staffPage": {
+      "title": "Team-Seite",
+      "description": "Die Reihenfolge der Bereiche auf /staff, ihr Titelband, das Kartenlayout sowie Beschreibung und Aufgaben jedes Mitglieds.",
+      "view": "/staff ansehen",
+      "sections": "Bereiche",
+      "sectionsHint": "Jede Team-Gruppe ist ein Bereich. Ziehen zum Sortieren; Detailliert = große Karten, 2 pro Reihe; Kompakt = kleine Karten für untere Ebenen.",
+      "saved": "Gespeichert",
+      "save": "Bereiche speichern",
+      "drag": "{name} verschieben",
+      "titleLabel": "Titel für {group}",
+      "layout": "Layout",
+      "layouts": {
+        "detailed": "Detailliert",
+        "compact": "Kompakt"
+      },
+      "visible": "{group} auf /staff anzeigen",
+      "visibleShort": "Sichtbar",
+      "members": "{count, plural, one {# Mitglied} other {# Mitglieder}}",
+      "moveUp": "{name} nach oben",
+      "moveDown": "{name} nach unten",
+      "order": "Reihenfolge der Mitglieder",
+      "dutiesCount": "{count, plural, one {# Aufgabe} other {# Aufgaben}}",
+      "noDuties": "noch keine Aufgaben",
+      "saveMember": "Speichern",
+      "descriptionLabel": "Beschreibung",
+      "dutiesLabel": "Aufgaben (eine pro Zeile)",
+      "dutiesPlaceholder": "Meldungen\nServer-Sperren\nEvents"
     }
   },
   "settings": {
@@ -3564,7 +3958,8 @@
       "discord": "Discord",
       "google": "Google",
       "apps": "Autorisierte Apps",
-      "chat": "Chat"
+      "chat": "Chat",
+      "groups": "Gruppen"
     },
     "appearance": {
       "title": "Darstellung",
@@ -3669,7 +4064,8 @@
         "requested": "Your request was recorded.",
         "banner": "Your account will be deleted on {date}.",
         "bannerLink": "Cancel deletion"
-      }
+      },
+      "passwordResetRequired": "Das Team hat dich gebeten, dein Passwort zu ändern. Lege unten ein neues fest, um fortzufahren."
     },
     "notifications": {
       "title": "Benachrichtigungen",
@@ -3972,6 +4368,19 @@
     },
     "themes": {
       "toggle": "Dunkel/Hell-Schalter (Theme-Paar)"
+    },
+    "groups": {
+      "title": "Gruppen",
+      "hint": "Öffentliche Gruppen, denen du selbst beitreten oder die du verlassen kannst. Sie erscheinen als Nebengruppen in deinem Profil.",
+      "empty": "Es gibt noch keine öffentlichen Gruppen.",
+      "joined": "Du bist {group} beigetreten.",
+      "left": "Du hast {group} verlassen.",
+      "primary": "Deine Hauptgruppe",
+      "member": "Du bist in dieser Gruppe",
+      "assigned": "Vom Team oder einer App vergeben",
+      "notMember": "Kein Mitglied",
+      "join": "Beitreten",
+      "leave": "Verlassen"
     }
   },
   "permissions": {
@@ -4813,7 +5222,8 @@
       },
       "core": {
         "warning": "Verwarnungen",
-        "group_mention": "Group mentions"
+        "group_mention": "Group mentions",
+        "group_expired": "Abgelaufene befristete Gruppen"
       },
       "chat": {
         "mention": "Chat Erwähnungen",
@@ -8067,6 +8477,60 @@
       "allMembers": "Alle Mitglieder der Gruppe",
       "empty": "Keine Gruppe passt zur Suche.",
       "noMembers": "Die Gruppe hat hier keine Mitglieder."
+    }
+  },
+  "staffPage": {
+    "lead": "Die Leute, die die Community führen, wofür jeder zuständig ist und wie du sie erreichst.",
+    "count": "{count, plural, one {# Mitglied} other {# Mitglieder}}",
+    "message": "Nachricht",
+    "profile": "Profil",
+    "contactOn": "{name} auf {service}",
+    "online": "Online",
+    "noDescription": "Noch keine Beschreibung.",
+    "duties": "Aufgaben"
+  },
+  "onlinePage": {
+    "title": "Wer ist online",
+    "lead": "{count, plural, one {# Besucher gerade} other {# Besucher gerade}}",
+    "record": "Rekord: {count} am {date}",
+    "filterLabel": "Anzeigen",
+    "filters": {
+      "all": "Alle",
+      "members": "Mitglieder",
+      "staff": "Team",
+      "guests": "Gäste"
+    },
+    "empty": "Gerade ist niemand hier.",
+    "staffBadge": "Team",
+    "hiddenBadge": "versteckt",
+    "guest": "Gast",
+    "hiddenCount": "{count, plural, one {# Mitglied mit verstecktem Status} other {# Mitglieder mit verstecktem Status}}",
+    "where": {
+      "unknown": "Irgendwo auf der Seite",
+      "index": "Auf der Startseite",
+      "topic": "Sieht das Thema",
+      "forum": "Liest das Forum",
+      "profile": "Sieht sich das Profil an von",
+      "topicHidden": "Sieht ein Thema",
+      "forumHidden": "Liest ein Forum",
+      "profileHidden": "Sieht sich ein Profil an",
+      "members": "Durchsucht die Mitglieder",
+      "staff": "Auf der Team-Seite",
+      "online": "Auf dieser Seite",
+      "chat": "Im Chat",
+      "messages": "In privaten Nachrichten",
+      "search": "Sucht",
+      "settings": "In den Kontoeinstellungen",
+      "page": "Liest eine Seite",
+      "app": "In {app}"
+    },
+    "apps": {
+      "servers": "Server",
+      "clans": "Clans",
+      "vip": "VIP",
+      "leaderboard": "Rangliste",
+      "activity": "Aktivität",
+      "plugin": "einer App"
     }
   }
 }

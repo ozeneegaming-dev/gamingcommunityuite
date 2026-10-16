@@ -48,6 +48,8 @@ import {
   followDataHandler,
   notificationDataHandler,
   reactionDataHandler,
+  GcsMemberAdmin,
+  GcsOptInGroups,
   type GcsFileStore,
   type GcsMailer,
   type GcsModule,
@@ -139,6 +141,9 @@ import { GcsGroupDirectory } from "./profile/groupDirectory";
 import { GcsGroupsProService } from "./groups-pro/service";
 import { GcsTextMentions } from "./profile/textMentions";
 import { chatMentionNames } from "./chat/mentionNames";
+import { GcsStaffPage } from "./profile/staffPage";
+import { GcsWhereabouts } from "./community/whereabouts";
+import { GcsMemberPanelData } from "./profile/memberPanels";
 
 export type GcsServices = {
   db: PrismaClient;
@@ -272,6 +277,16 @@ export type GcsServices = {
    * Cont, jobul și pașii aplicațiilor (fiecare își tratează datele în `memberData.ts`).
    */
   memberRemoval: GcsMemberRemovalService;
+  /** Membri v2: acțiunile pe cont din ACP (crearea, CSV, validarea, spammerii, deblocarea, parola, 2FA). */
+  memberAdmin: GcsMemberAdmin;
+  /** Membri v2: grupurile publice (opt-in) din Setări → Grupuri. */
+  optInGroups: GcsOptInGroups;
+  /** Membri v2: pagina Staff (/staff) și editorul ei din ACP. */
+  staffPage: GcsStaffPage;
+  /** Membri v2: unde e fiecare vizitator pe site (/online). */
+  whereabouts: GcsWhereabouts;
+  /** Membri v2: datele panourilor de membru aduse de aplicații (conturi legate, identități de joc, ELO, sancțiuni, clan). */
+  memberPanels: GcsMemberPanelData;
 };
 
 /** Golește cache-ul Redis al paginilor (cheile și seturile de tag-uri `gcs:k:*`, `gcs:tag:*`), fără cozi și limite. */
@@ -680,6 +695,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     template.length > 64 * 1024 ? "" : renderTemplate(template, data, { locale: await settings.get<string>("site.locale"), components: templateComponents() }),
   );
 
+  const memberList = new GcsMemberList({ db, permissions, ranks, groups: groupDirectory });
   const services: GcsServices = {
     db,
     redis,
@@ -716,7 +732,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     templates,
     stats: new GcsStatsService({ db, cache, registry, apps }),
     postbit: new GcsPostbitService({ db, cache, permissions, settings, groups: groupDirectory }),
-    memberList: new GcsMemberList({ db, permissions, ranks, groups: groupDirectory }),
+    memberList,
     mentionQueries: new GcsMentionQueries({ db, cache, permissions, groupMentions }),
     activity: new GcsActivityStream({ db, cache, permissions, social }),
     leaderboard: new GcsLeaderboard({ db, cache, permissions, settings, onlineTime }),
@@ -793,6 +809,11 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     clanQueries,
     clanAdmin: new GcsClanAdmin({ db, acp, settings, permissions, bus, registry, clans }),
     memberRemoval: createMemberRemoval({ db, bus, acp, settings, jobs, reactions, attachments, posting, achievements, vip, clans, bridge }),
+    memberAdmin: new GcsMemberAdmin({ db, bus, acp, bans }),
+    optInGroups: new GcsOptInGroups({ db, bus, permissions }),
+    staffPage: new GcsStaffPage({ db, bus, acp, permissions, members: memberList }),
+    whereabouts: new GcsWhereabouts({ redis }),
+    memberPanels: new GcsMemberPanelData({ db }),
   };
   registerAppJobs(services);
   return services;

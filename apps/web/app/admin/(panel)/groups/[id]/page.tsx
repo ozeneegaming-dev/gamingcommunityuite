@@ -19,7 +19,7 @@ import { requireAcpSection } from "@/lib/acp";
 import { permissionLabel } from "@/lib/permission-label";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
-import { deleteGroup, updateGroupDetails, updateGroupDisplay, updateGroupLegend, updateGroupLook, updateGroupMentions, updateGroupSettings, updateGroupStyle } from "../actions";
+import { deleteGroup, updateGroupDetails, updateGroupDisplay, updateGroupLegend, updateGroupLook, updateGroupMentions, updateGroupOptIn, updateGroupSettings, updateGroupStyle } from "../actions";
 import { NameStyleEditor } from "./NameStyleEditor";
 import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 
@@ -140,6 +140,17 @@ export default async function AcpGroupPage({ params }: Props) {
                 <input type="checkbox" name="inLegend" defaultChecked={group.inLegend} style={checkbox} />
                 {t("look.inLegend")}
               </label>
+            </GcsActionForm>
+          </Section>
+
+          {/* Membri v2: grupul public (opt-in): membrii intră / ies singuri din Setări → Grupuri. */}
+          <Section title={t("optIn.title")} icon="fa-solid fa-people-group">
+            <GcsActionForm action={updateGroupOptIn.bind(null, group.id)} submitLabel={t("optIn.save")} submitKind="save">
+              <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, minHeight: 36 }}>
+                <input type="checkbox" name="optIn" defaultChecked={group.optIn} style={checkbox} data-testid="gcs-group-optin" />
+                {t("optIn.label")}
+              </label>
+              <span className="gcs-field__hint">{t("optIn.hint")}</span>
             </GcsActionForm>
           </Section>
 

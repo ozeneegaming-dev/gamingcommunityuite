@@ -55,6 +55,8 @@ async function clanStatTiles({ db }: GcsStatsContext): Promise<GcsStatTile[]> {
  */
 export const clansModule: GcsModule = {
   key: "clans",
+  // Membri v2: clanul membrului, pe fișa ACP și pe profil (doar cu aplicația Clanuri pornită).
+  memberPanels: [{ key: "clan_membership", labelKey: "acp.member.panels.clan_membership", icon: "fa-solid fa-shield-halved", position: 140, kind: "card", surfaces: ["acp", "profile"] }],
   app: {
     optional: true,
     labelKey: "apps.clans",

@@ -154,7 +154,18 @@ model User {
   /// Ziua de naștere: anul e opțional pe profil (`false` = doar ziua și luna).
   birthdayShowYear Boolean @default(false)
 
+  /// Membri v2: marcat ca spammer din ACP (filtrul „Spammeri”; contul e și banat).
+  isSpammer                Boolean       @default(false)
+  /// Membri v2: echipa a cerut schimbarea parolei; până o schimbă, membrul e trimis la Setări → Cont.
+  passwordResetRequestedAt DateTime?
+  /// Membri v2: ultimul IP văzut (actualizat odată cu `lastActiveAt`), coloana „IP” din lista ACP.
+  lastIp                   String?
+  /// Pagina Staff v2: descrierea și responsabilitățile membrului de staff.
+  staffProfile             StaffProfile?
+
   @@index([primaryGroupId])
+  @@index([createdAt])
+  @@index([lastActiveAt])
   @@map("users")
 }
 
@@ -255,21 +266,64 @@ model Group {
   vipLog               VipLog[]
   /// VIP pe serverele de joc (flag-urile grupului pe fiecare server).
   gameVipMappings      GameVipMapping[]
+  /// Pagina Staff v2: secțiunea grupului pe /staff (titlul, aspectul, ordinea).
+  staffSection         StaffSection?
+
+  /// Membri v2: grup public (opt-in): membrii se pot înscrie / retrage singuri din Setări → Grupuri, ca grup secundar.
+  optIn Boolean @default(false)
 
   @@map("groups")
 }
 
 /// Grupurile secundare ale unui user.
 model UserGroup {
-  userId  String
-  groupId Int
+  userId    String
+  groupId   Int
+  /// Membri v2: de unde vine grupul — `manual` (ACP), `store` (Magazin), `servers` (aplicația Servere), `promotion`,
+  /// `optin` (membrul s-a înscris), `vip`, `import`. Aplicațiile pot folosi și cheia lor.
+  source    String    @default("manual")
+  /// Grupul temporar: la această dată jobul `groups.secondary_expiry` îl scoate și anunță membrul (`null` = permanent).
+  expiresAt DateTime?
+  addedAt   DateTime  @default(now())
+  addedById String?
 
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@id([userId, groupId])
   @@index([groupId])
+  @@index([expiresAt])
   @@map("user_groups")
+}
+
+/// Pagina Staff v2: o secțiune de pe /staff = un grup de staff, cu titlul ei (bandă), aspectul cardurilor și ordinea.
+model StaffSection {
+  id       Int     @id @default(autoincrement())
+  groupId  Int     @unique
+  /// Titlul afișat pe bandă (`null` = numele grupului).
+  title    String?
+  /// `detailed` (card mare, 2 pe rând) sau `compact`.
+  layout   String  @default("detailed")
+  position Int     @default(0)
+  enabled  Boolean @default(true)
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@map("staff_sections")
+}
+
+/// Pagina Staff v2: descrierea (text formatat) și responsabilitățile unui membru al echipei, ordinea lui în secțiune.
+model StaffProfile {
+  userId          String   @id
+  descriptionJson Json?
+  descriptionHtml String   @default("")
+  duties          String[] @default([])
+  position        Int      @default(0)
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("staff_profiles")
 }
 
 model GroupSetting {
@@ -1488,12 +1542,31 @@ model NavItem {
   groups      Int[]
   newTab      Boolean @default(false)
   enabled     Boolean @default(true)
+  /// Manager meniu v2: tipul itemului — `link` (link propriu), `app` (o pagină a unei aplicații), `dropdown` (grup cu
+  /// subitemi), `separator` (linie între subitemi).
+  kind        String  @default("link")
+  /// Cine îl vede (pe lângă grupuri): `all`, `guests` (doar vizitatorii), `members` (doar membrii autentificați).
+  audience    String  @default("all")
+  /// Insigna live (un contor al unei aplicații, ex. `online`), în locul insignei fixe.
+  counter     String?
+  /// Stilul de evidențiere (`accent`, `glow`); `null` = normal.
+  highlight   String?
 
   parent   NavItem?  @relation("NavTree", fields: [parentId], references: [id], onDelete: Cascade)
   children NavItem[] @relation("NavTree")
 
   @@index([parentId, position])
   @@map("nav_items")
+}
+
+/// Manager meniu v2: ciorna meniului (arborele nepublicat). „Publică” o scrie în `nav_items`, „Renunță” o șterge.
+model NavDraft {
+  id          Int      @id @default(1)
+  items       Json
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+
+  @@map("nav_drafts")
 }
 
 /// O temă: tokenurile (dark + light), fonturile, raza, lățimea, logo, favicon; `draft` = modificările nepublicate.

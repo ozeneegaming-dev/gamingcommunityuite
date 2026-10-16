@@ -145,6 +145,32 @@ export class GcsMemberRemovalService {
     return { items, total: items.reduce((s, i) => s + i.count, 0) };
   }
 
+  /** Ce are membrul în fiecare aplicație (cardul „Conținut pe aplicații” din fișa ACP); doar citire, fără drept propriu. */
+  async contentSummary(userId: string): Promise<GcsRemovalItem[]> {
+    return (await this.collect(userId)).items;
+  }
+
+  /**
+   * Exportul GDPR al datelor personale (Membri v2; dreptul de acces din GDPR): un fișier JSON pe aplicație (`export` al
+   * handler-ului, altfel numerele din `summary`), plus `summary.json`. Cere dreptul pe Cereri GDPR și protecția Root;
+   * intră în jurnal.
+   */
+  async exportData(actor: GcsActor, userId: string): Promise<{ user: GcsRemovalUser; files: { name: string; data: unknown }[] }> {
+    await this.deps.acp.assert(actor, GDPR_ACP_SECTION, "view");
+    await assertCanManageUser(this.deps.db, actor, userId);
+    const user = await this.loadUser(userId);
+    const files: { name: string; data: unknown }[] = [];
+    const summary: Record<string, Record<string, number>> = {};
+    for (const h of this.steps) {
+      const items = await h.summary(userId);
+      summary[h.key] = Object.fromEntries(items.map((i) => [i.key, i.count]));
+      if (h.export) files.push({ name: `${h.key}.json`, data: await h.export(userId) });
+    }
+    files.push({ name: "summary.json", data: { exportedAt: this.now().toISOString(), user: { id: user.id, name: user.name, email: user.email }, apps: summary } });
+    await writeAudit(this.deps.db, { actorId: actor.userId, action: "member.gdpr_export", targetType: "user", targetId: userId, ip: actor.ip });
+    return { user, files };
+  }
+
   /** Ce are membrul și ce se va întâmpla (ecranul de confirmare al ștergerii). */
   async preview(actor: GcsActor, userId: string): Promise<GcsRemovalPreview> {
     await this.assertRight(actor);
