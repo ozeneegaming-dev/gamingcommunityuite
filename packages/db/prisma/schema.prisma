@@ -3078,19 +3078,81 @@ model ExternalProfile {
   @@map("external_profiles")
 }
 
-/// O donație a unui membru (înregistrată de echipă din ACP sau de magazin): peste pragul din setări, insigna „Sponsor”.
+/// Starea unei donații: confirmată de echipă (intră în obiective, clasamente și insigna „Sponsor”), în așteptare
+/// („Am donat” trimis de un membru) sau respinsă.
+enum DonationStatus {
+  CONFIRMED
+  PENDING
+  REJECTED
+}
+
+/// Perioada unui obiectiv de donații: luna calendaristică (cu reînnoire lunară opțională) sau un interval ales.
+enum DonationGoalPeriod {
+  MONTHLY
+  CUSTOM
+}
+
+/// O donație (VIP clasic › Donații): înregistrată de echipă din ACP, trimisă de un membru („Am donat”, cu o referință de
+/// verificat) sau, mai târziu, adusă de un procesator de plăți (`source` + `externalId`, idempotent). Nu se păstrează
+/// niciodată date de card. Fără cont (`userId` gol), donatorul are doar un nume; un cont șters lasă donația fără membru.
+/// Peste pragul din setări, insigna „Sponsor”.
 model MemberDonation {
-  id          Int      @id @default(autoincrement())
-  userId      String
+  id          Int            @id @default(autoincrement())
+  userId      String?
+  /// Numele afișat al unui donator fără cont (gol = „Anonim”).
+  donorName   String         @default("")
   /// Suma, în subunități (bani / cenți).
   amount      Int
-  currency    String   @default("EUR")
-  note        String   @default("")
+  currency    String         @default("EUR")
+  note        String         @default("")
+  /// Metoda (o etichetă liberă: PayPal, Revolut, transfer bancar…).
+  method      String         @default("")
+  /// Referința dată de membru la „Am donat” (ex. id-ul tranzacției), pentru verificarea echipei.
+  reference   String         @default("")
+  /// Numele ascuns în paginile publice („Anonim”); donația intră totuși în progresul obiectivelor.
+  anonymous   Boolean        @default(false)
+  status      DonationStatus @default(CONFIRMED)
+  /// De unde vine: `manual` (ACP), `member` („Am donat”) sau cheia procesatorului de plăți.
+  source      String         @default("manual")
+  /// Id-ul plății la procesator (unic pe `source`), ca notificările repetate să nu dubleze donația.
+  externalId  String?
+  /// Data donației (perioada obiectivelor și a clasamentelor).
+  donatedAt   DateTime       @default(now())
   createdById String?
-  createdAt   DateTime @default(now())
+  reviewedById String?
+  reviewedAt  DateTime?
+  /// Motivul respingerii (îl vede membrul în notificare).
+  rejectReason String        @default("")
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @default(now()) @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
+  @@unique([source, externalId])
   @@index([userId])
+  @@index([status, donatedAt])
   @@map("member_donations")
+}
+
+/// Un obiectiv de donații („Obiectivul lunii”): titlul, ținta, moneda, perioada (luna, reînnoită lunar sau nu, ori un
+/// interval) și grupurile care îl văd (gol = toată lumea). Progresul = donațiile confirmate din perioadă, în moneda lui.
+model DonationGoal {
+  id        Int                @id @default(autoincrement())
+  title     String
+  /// Ținta, în subunități.
+  target    Int
+  currency  String             @default("EUR")
+  period    DonationGoalPeriod @default(MONTHLY)
+  /// Prima zi (luna ei, pentru `MONTHLY`) și ultima zi inclusă (doar `CUSTOM`), în fusul orar al site-ului.
+  startsOn  DateTime           @db.Date
+  endsOn    DateTime?          @db.Date
+  /// `MONTHLY`: obiectivul trece singur în luna următoare (progresul pornește de la zero în fiecare lună).
+  autoRenew Boolean            @default(true)
+  groupIds  Int[]              @default([])
+  enabled   Boolean            @default(true)
+  position  Int                @default(0)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @default(now()) @updatedAt
+
+  @@map("donation_goals")
 }
