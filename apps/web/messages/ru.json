@@ -59,7 +59,8 @@
     "deletedMember": "Deleted member",
     "crumbs": "You are here",
     "collapse": "Collapse {title}",
-    "expand": "Expand {title}"
+    "expand": "Expand {title}",
+    "skin": "Тема форума"
   },
   "auth": {
     "login": {
@@ -282,7 +283,10 @@
       "requires": "Turn on the apps it depends on first.",
       "before_start": "The end must be after the start.",
       "invalid_date": "The date isn't valid.",
-      "invalid_value": "The value isn't valid."
+      "invalid_value": "The value isn't valid.",
+      "invalid_key": "Неверный ключ (строчные буквы, цифры и дефисы, 2–32 символа).",
+      "invalid_theme_package": "Файл не является корректным пакетом темы GCS.",
+      "unsupported_theme_package": "Пакет темы предназначен для другой версии платформы."
     }
   },
   "acp": {
@@ -1404,7 +1408,12 @@
       "confirmDelete": "Удалить эту тему? Участники, которые использовали его, увидят тему по умолчанию.",
       "create": "Новая тема",
       "copyFrom": "Копирован из",
-      "fromDefaults": "Значения по умолчанию"
+      "fromDefaults": "Значения по умолчанию",
+      "export": "Экспорт",
+      "import": "Импорт темы",
+      "importHint": "Загрузите файл .gcs-theme.json (экспортированный с другого сайта или полученный отдельно). Импортированная тема сначала выключена: проверьте её в визуальном редакторе, затем отметьте «Активна» или «Тема по умолчанию». Изображения (логотип, шапка) добавляются в визуальном редакторе.",
+      "importFile": "Файл темы (.gcs-theme.json)",
+      "importSubmit": "Импортировать тему"
     },
     "widgetsAdmin": {
       "title": "Виджеты",

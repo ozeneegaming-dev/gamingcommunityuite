@@ -59,7 +59,8 @@
     "deletedMember": "Deleted member",
     "crumbs": "You are here",
     "collapse": "Collapse {title}",
-    "expand": "Expand {title}"
+    "expand": "Expand {title}",
+    "skin": "Tema del foro"
   },
   "auth": {
     "login": {
@@ -282,7 +283,10 @@
       "requires": "Turn on the apps it depends on first.",
       "before_start": "The end must be after the start.",
       "invalid_date": "The date isn't valid.",
-      "invalid_value": "The value isn't valid."
+      "invalid_value": "The value isn't valid.",
+      "invalid_key": "Clave no válida (minúsculas, dígitos y guiones, 2–32 caracteres).",
+      "invalid_theme_package": "El archivo no es un paquete de tema GCS válido.",
+      "unsupported_theme_package": "El paquete de tema es para otra versión de la plataforma."
     }
   },
   "acp": {
@@ -1404,7 +1408,12 @@
       "confirmDelete": "Eliminar este tema? Los miembros que lo utilizaron verán el tema predeterminado.",
       "create": "Nuevo tema",
       "copyFrom": "Copiado de",
-      "fromDefaults": "Valores predeterminados"
+      "fromDefaults": "Valores predeterminados",
+      "export": "Exportar",
+      "import": "Importar un tema",
+      "importHint": "Sube un archivo .gcs-theme.json (exportado de otro sitio o recibido aparte). El tema importado empieza desactivado: revísalo en el editor visual y luego marca «Activo» o «Tema predeterminado». Las imágenes (logo, cabecera) se añaden desde el editor visual.",
+      "importFile": "Archivo del tema (.gcs-theme.json)",
+      "importSubmit": "Importar tema"
     },
     "widgetsAdmin": {
       "title": "Widgets",

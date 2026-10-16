@@ -1,0 +1,283 @@
+/*
+ * RED-LINE OFFICIAL — fișierul 4/4: stratul „HUD” (ultimul, peste celelalte): casetele din sticlă cu chenar în
+ * gradient neon și colțuri de țintă, benzile cu dungi tehnice, forumurile ca plăci cu iconița în hexagon, butoanele
+ * cu colțuri tăiate și reflexul de lumină, aurora din antet, liniile de scanare și strălucirile.
+ */
+
+html.gcs-nova {
+  /* Chenarul casetelor: mov în colțul de sus, cyan în cel de jos, aproape stins la mijloc. */
+  --rl-frame: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--rl-purple) 75%, transparent),
+    color-mix(in srgb, var(--rl-purple) 14%, transparent) 28%,
+    color-mix(in srgb, var(--rl-cyan) 8%, transparent) 72%,
+    color-mix(in srgb, var(--rl-cyan) 60%, transparent)
+  );
+  /* Colțurile tăiate (butoane, plăci). */
+  --rl-cut: 10px;
+  --rl-chamfer: polygon(var(--rl-cut) 0, 100% 0, 100% calc(100% - var(--rl-cut)), calc(100% - var(--rl-cut)) 100%, 0 100%, 0 var(--rl-cut));
+  /* Dungile tehnice din capătul benzilor. */
+  --rl-stripes: repeating-linear-gradient(-55deg, color-mix(in srgb, var(--rl-purple) 22%, transparent) 0 2px, transparent 2px 9px);
+}
+
+/* ─── Casetele: sticlă cu chenar în gradient neon ─────────────────────────────────────────────────────── */
+
+html.gcs-nova .gcs-card:where(:not(.gcs-post, .gcs-announcement, .gcs-pageHeader, .gcs-profileHeader, .gcs-hoverCard)) {
+  border-color: transparent;
+  background:
+    linear-gradient(var(--gcs-box-bg, var(--gcs-surface)), var(--gcs-box-bg, var(--gcs-surface))) padding-box,
+    var(--rl-frame) border-box;
+  box-shadow: inset 0 1px 0 var(--rl-edge), 0 18px 40px -28px var(--rl-glow-purple), var(--gcs-box-shadow, none);
+}
+
+/* Colțurile de țintă (HUD) pe casetele mari: două paranteze cyan, sus-stânga și jos-dreapta. */
+html.gcs-nova :is(.gcs-category, .gcs-sideCard, .gcs-topicList, .gcs-titledBox, .gcs-statsPanel, .gcs-board, .gcs-chatCard) {
+  position: relative;
+}
+html.gcs-nova :is(.gcs-category, .gcs-sideCard, .gcs-topicList, .gcs-titledBox, .gcs-statsPanel, .gcs-board, .gcs-chatCard)::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: 3;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--rl-cyan), var(--rl-cyan)) top left / 18px 2px no-repeat,
+    linear-gradient(var(--rl-cyan), var(--rl-cyan)) top left / 2px 18px no-repeat,
+    linear-gradient(var(--rl-purple), var(--rl-purple)) bottom right / 18px 2px no-repeat,
+    linear-gradient(var(--rl-purple), var(--rl-purple)) bottom right / 2px 18px no-repeat;
+  filter: drop-shadow(0 0 4px var(--rl-glow-cyan));
+  opacity: 0.9;
+}
+
+/* ─── Benzile: gradientul mov, dungile tehnice în dreapta, linia care se aprinde la hover ───────────────── */
+
+html.gcs-nova {
+  --gcs-band-bg:
+    var(--rl-stripes) right center / 160px 100% no-repeat,
+    linear-gradient(90deg, color-mix(in srgb, var(--rl-purple) 24%, transparent), color-mix(in srgb, var(--rl-purple) 5%, transparent) 55%, transparent),
+    var(--gcs-box-header-bg, var(--gcs-surface2));
+}
+html.gcs-nova :is(.gcs-category__title, .gcs-sideCard__title, .gcs-widgetTitle, .gcs-topicList__header h2) {
+  text-shadow: 0 0 18px color-mix(in srgb, var(--rl-purple) 45%, transparent);
+}
+html.gcs-nova :is(.gcs-category__header, .gcs-topicList__header) {
+  position: relative;
+}
+html.gcs-nova :is(.gcs-category__header, .gcs-topicList__header)::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: var(--rl-line-solid);
+  transform: scaleX(0.18);
+  transform-origin: left;
+  transition: transform 0.5s ease;
+  pointer-events: none;
+}
+html.gcs-nova :is(.gcs-category, .gcs-topicList):hover :is(.gcs-category__header, .gcs-topicList__header)::before {
+  transform: scaleX(1);
+}
+
+/* ─── Forumurile ca plăci separate, iconița în hexagon ─────────────────────────────────────────────────── */
+
+html.gcs-nova .gcs-category {
+  padding-bottom: 8px;
+}
+html.gcs-nova .gcs-category .gcs-forumRow {
+  margin: 8px 10px 0;
+  border: 1px solid color-mix(in srgb, var(--rl-purple) 16%, var(--gcs-border));
+  border-radius: 10px;
+  background: linear-gradient(100deg, color-mix(in srgb, var(--rl-purple) 6%, var(--gcs-surface2)), var(--gcs-surface) 60%);
+  transition: border-color var(--gcs-ease), box-shadow var(--gcs-ease), transform var(--gcs-ease), background-color var(--gcs-ease);
+}
+html.gcs-nova .gcs-category .gcs-forumRow:hover {
+  border-color: color-mix(in srgb, var(--rl-cyan) 60%, transparent);
+  background: linear-gradient(100deg, color-mix(in srgb, var(--rl-purple) 18%, var(--gcs-surface2)), var(--gcs-surface) 70%);
+  box-shadow: inset 3px 0 0 var(--rl-cyan), 0 10px 30px -18px var(--rl-glow-cyan);
+  transform: translateX(3px);
+}
+html.gcs-nova .gcs-forumRow__icon {
+  width: 50px;
+  height: 50px;
+  flex: none;
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--rl-purple) 55%, var(--gcs-surface)), color-mix(in srgb, var(--rl-purple) 15%, var(--gcs-surface)) 70%) !important;
+  transition: background var(--gcs-ease);
+}
+html.gcs-nova .gcs-forumRow__icon .gcs-forumIcon {
+  font-size: 22px !important;
+  color: var(--rl-cyan);
+}
+html.gcs-nova .gcs-forumRow:hover .gcs-forumRow__icon {
+  background: linear-gradient(135deg, var(--rl-purple), color-mix(in srgb, var(--rl-purple) 40%, var(--rl-cyan))) !important;
+}
+html.gcs-nova .gcs-forumRow:hover .gcs-forumRow__icon .gcs-forumIcon {
+  color: #fff;
+}
+
+/* ─── Butoanele: colțuri tăiate și reflexul de lumină care trece la hover ───────────────────────────────── */
+
+html.gcs-nova :is(.gcs-btn--primary, .gcs-root a.gcs-btn--primary) {
+  overflow: hidden;
+  border-radius: 2px;
+  clip-path: var(--rl-chamfer);
+  padding-inline: 20px;
+}
+html.gcs-nova :is(.gcs-btn--primary, .gcs-root a.gcs-btn--primary)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 25%, rgb(255 255 255 / 0.38) 48%, transparent 70%);
+  transform: translateX(-130%);
+  transition: transform 0.65s ease;
+  pointer-events: none;
+}
+html.gcs-nova :is(.gcs-btn--primary, .gcs-root a.gcs-btn--primary):hover::after {
+  transform: translateX(130%);
+}
+html.gcs-nova .gcs-pagination__link[aria-current="page"],
+html.gcs-nova .gcs-siteFooter__scheme .gcs-seg--active {
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+  border-radius: 2px;
+}
+
+/* ─── Antetul: aurora care se mișcă încet, titlurile paginilor în gradient ─────────────────────────────── */
+
+html.gcs-nova .gcs-siteHeader::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(closest-side, color-mix(in srgb, var(--rl-purple) 45%, transparent), transparent) 0 0 / 50% 220% no-repeat,
+    radial-gradient(closest-side, color-mix(in srgb, var(--rl-hdr-cyan) 26%, transparent), transparent) 0 0 / 40% 200% no-repeat;
+  opacity: 0.55;
+  mix-blend-mode: screen;
+  animation: rl-aurora 18s ease-in-out infinite alternate;
+}
+@keyframes rl-aurora {
+  0% {
+    background-position: 110% -60%, -20% 140%;
+  }
+  50% {
+    background-position: 40% -40%, 60% 120%;
+  }
+  100% {
+    background-position: -10% -70%, 120% 150%;
+  }
+}
+html.gcs-nova .gcs-siteHeader__inner {
+  position: relative;
+  z-index: 5;
+}
+html.gcs-nova .gcs-pageHeader__title {
+  background: linear-gradient(90deg, var(--gcs-heading, #fff) 40%, color-mix(in srgb, var(--rl-cyan) 85%, var(--gcs-heading, #fff)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+html.gcs-nova .gcs-pageHeader {
+  border-color: transparent;
+  background:
+    radial-gradient(ellipse 45% 140% at 100% 0%, color-mix(in srgb, var(--rl-purple) 26%, transparent), transparent 70%) padding-box,
+    var(--rl-stripes) right center / 220px 100% no-repeat padding-box,
+    linear-gradient(var(--gcs-box-header-bg, var(--gcs-surface2)), var(--gcs-box-header-bg, var(--gcs-surface2))) padding-box,
+    var(--rl-frame) border-box;
+}
+
+/* ─── Statisticile: numerele mari, în gradient ─────────────────────────────────────────────────────────── */
+
+html.gcs-nova .gcs-statGrid strong {
+  font-size: 1.6em;
+  line-height: 1.1;
+  background: linear-gradient(180deg, #fff, var(--rl-cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 0 10px var(--rl-glow-cyan));
+}
+html.gcs-nova .gcs-forumRow__stats strong {
+  color: var(--rl-cyan);
+}
+
+/* ─── Avatarele din postări: inel în gradient (ramele VIP rămân ale lor) ───────────────────────────────── */
+
+html.gcs-nova .gcs-postbit .gcs-avatar:not(.gcs-avatarFrame > .gcs-avatar) {
+  box-shadow: 0 0 0 2px var(--gcs-surface), 0 0 0 4px var(--rl-purple), 0 0 22px -2px var(--rl-glow-purple);
+}
+
+/* ─── Liniile de scanare peste pagină (doar în modul întunecat, abia vizibile) ─────────────────────────── */
+
+html.gcs-nova[data-theme="dark"] .gcs-root::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgb(255 255 255 / 0.018) 0 1px, transparent 1px 3px);
+}
+
+/* ─── Modul luminos: chenarele și strălucirile mai blânde ──────────────────────────────────────────────── */
+
+html.gcs-nova[data-theme="light"] {
+  --rl-frame: linear-gradient(135deg, color-mix(in srgb, var(--rl-purple) 45%, transparent), color-mix(in srgb, var(--rl-purple) 12%, transparent) 30%, color-mix(in srgb, var(--rl-cyan) 10%, transparent) 70%, color-mix(in srgb, var(--rl-cyan) 40%, transparent));
+  --rl-stripes: repeating-linear-gradient(-55deg, color-mix(in srgb, var(--rl-purple) 12%, transparent) 0 2px, transparent 2px 9px);
+}
+html.gcs-nova[data-theme="light"] :is(.gcs-category__title, .gcs-sideCard__title, .gcs-widgetTitle, .gcs-topicList__header h2) {
+  text-shadow: none;
+}
+html.gcs-nova[data-theme="light"] .gcs-statGrid strong {
+  background: linear-gradient(180deg, var(--rl-purple), var(--rl-cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: none;
+}
+@media (prefers-color-scheme: light) {
+  html.gcs-nova[data-theme="auto"] {
+    --rl-frame: linear-gradient(135deg, color-mix(in srgb, var(--rl-purple) 45%, transparent), color-mix(in srgb, var(--rl-purple) 12%, transparent) 30%, color-mix(in srgb, var(--rl-cyan) 10%, transparent) 70%, color-mix(in srgb, var(--rl-cyan) 40%, transparent));
+    --rl-stripes: repeating-linear-gradient(-55deg, color-mix(in srgb, var(--rl-purple) 12%, transparent) 0 2px, transparent 2px 9px);
+  }
+  html.gcs-nova[data-theme="auto"] :is(.gcs-category__title, .gcs-sideCard__title, .gcs-widgetTitle, .gcs-topicList__header h2) {
+    text-shadow: none;
+  }
+  html.gcs-nova[data-theme="auto"] .gcs-statGrid strong {
+    background: linear-gradient(180deg, var(--rl-purple), var(--rl-cyan));
+    -webkit-background-clip: text;
+    background-clip: text;
+    filter: none;
+  }
+}
+
+/* ─── Ecranele mici ─────────────────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 760px) {
+  html.gcs-nova .gcs-category .gcs-forumRow {
+    margin: 6px 6px 0;
+  }
+  html.gcs-nova .gcs-forumRow__icon {
+    width: 38px;
+    height: 38px;
+  }
+  html.gcs-nova .gcs-forumRow__icon .gcs-forumIcon {
+    font-size: 17px !important;
+  }
+}
+
+/* ─── Mișcarea redusă ───────────────────────────────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  html.gcs-nova .gcs-siteHeader::before {
+    animation: none;
+  }
+  html.gcs-nova .gcs-category .gcs-forumRow:hover {
+    transform: none;
+  }
+  html.gcs-nova :is(.gcs-btn--primary, .gcs-root a.gcs-btn--primary)::after {
+    transition: none;
+  }
+}

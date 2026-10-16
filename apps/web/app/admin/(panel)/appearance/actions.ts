@@ -1,6 +1,6 @@
 "use server";
 
-import { GCS_WIDGET_PAGES, MENUS_ACP_SECTION, THEMES_ACP_SECTION, WIDGETS_ACP_SECTION, type GcsNavItemInput, type GcsResult } from "@gcs/core";
+import { GCS_WIDGET_PAGES, GcsValidationError, MAX_THEME_PACKAGE_BYTES, MENUS_ACP_SECTION, THEMES_ACP_SECTION, WIDGETS_ACP_SECTION, type GcsNavItemInput, type GcsResult } from "@gcs/core";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { assertAcpAction } from "@/lib/acp";
@@ -24,6 +24,23 @@ export async function createTheme(fd: FormData): Promise<GcsResult<null>> {
   return runAcpAction(THEMES_ACP_SECTION, "edit", async (actor) => {
     const from = field(fd, "from");
     await services().themes.create(actor, { key: field(fd, "key").trim().toLowerCase(), name: field(fd, "name"), ...(from ? { from } : {}) });
+    return null;
+  });
+}
+
+/** Importă o temă dintr-un fișier `.gcs-theme.json` (exportat din altă temă sau livrat separat). */
+export async function importTheme(fd: FormData): Promise<GcsResult<null>> {
+  return runAcpAction(THEMES_ACP_SECTION, "edit", async (actor) => {
+    const file = fd.get("file");
+    if (!(file instanceof File) || file.size === 0) throw new GcsValidationError({ file: "required" });
+    if (file.size > MAX_THEME_PACKAGE_BYTES) throw new GcsValidationError({ file: "too_large" });
+    let raw: unknown;
+    try {
+      raw = JSON.parse(await file.text());
+    } catch {
+      throw new GcsValidationError({ file: "invalid_theme_package" });
+    }
+    await services().themes.importPackage(actor, raw);
     return null;
   });
 }
