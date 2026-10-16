@@ -38,6 +38,7 @@
     "./chatpro.css": "./src/chatpro.css",
     "./chatmod.css": "./src/chatmod.css",
     "./groups-pro.css": "./src/groups-pro.css",
+    "./donations.css": "./src/donations.css",
     "./member.css": "./src/member.css",
     "./system-ui.css": "./src/system-ui.css",
     "./header-menus.css": "./src/header-menus.css",

@@ -88,8 +88,7 @@ export async function saveProfileSettings(fd: FormData): Promise<GcsResult<null>
     const { settings } = services();
     await settings.set("profile.cover_max_mb", Number(field(fd, "coverMaxMb")), actor);
     await settings.set("profile.wall_enabled", fd.get("wallEnabled") === "on", actor);
-    // Profil gaming v2: pragul insignei „Sponsor” și cheia FACEIT (goală = neschimbată; „șterge” o golește).
-    if (fd.has("sponsorMin")) await settings.set("profile.sponsor_min_amount", Number(field(fd, "sponsorMin")), actor);
+    // Profil gaming v2: cheia FACEIT (goală = neschimbată; „șterge” o golește). Pragul insignei „Sponsor” e în Donații › Setări.
     const faceit = field(fd, "faceitKey").trim();
     if (fd.get("faceitClear") === "on") await settings.set("profile.faceit_api_key", "", actor);
     else if (faceit) await settings.set("profile.faceit_api_key", faceit, actor);

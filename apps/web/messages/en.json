@@ -21,7 +21,8 @@
       "serversMatches": "Mix matches",
       "bans": "Bans",
       "serverAdmins": "Admins",
-      "serverTickets": "Appeals"
+      "serverTickets": "Appeals",
+      "donations": "Donations"
     },
     "acp": "ACP",
     "myProfile": "My profile",
@@ -214,7 +215,10 @@
       "already_member": "You are already in this group.",
       "already_primary": "This is already your primary group.",
       "members_only": "Sign in first.",
-      "self": "You cannot do this to your own account."
+      "self": "You cannot do this to your own account.",
+      "donation_reviewed": "The donation was already reviewed.",
+      "donation_pending_limit": "You already have pending requests; wait for them to be confirmed.",
+      "donations_closed": "Reporting donations is turned off right now."
     },
     "fields": {
       "invalid_color": "Invalid color (#RRGGBB)",
@@ -494,7 +498,11 @@
         "history": "History",
         "name_styles": "Name styles",
         "frames": "Avatar frames",
-        "page": "VIP page"
+        "page": "VIP page",
+        "donations_group": "Donations",
+        "donations": "Donations",
+        "donation_goals": "Goals",
+        "donation_settings": "Donation settings"
       },
       "appearance": {
         "appearance": "Appearance",
@@ -925,14 +933,20 @@
       },
       "donations": {
         "title": "Donations",
-        "hint": "Donations recorded by the team. Above the threshold in ACP → Profiles, the member automatically gets the “Sponsor” badge.",
+        "hint": "The member’s donations, with their status. Above the threshold in Donations › Settings, the member automatically gets the “Sponsor” badge.",
         "sponsor": "The member has the “Sponsor” badge.",
         "delete": "Delete",
         "confirmDelete": "Delete the donation?",
         "add": "Add a donation",
-        "amount": "Amount",
-        "currency": "Currency",
-        "note": "Note"
+        "all": "All donations →",
+        "anonymous": "anonymous",
+        "confirm": "Confirm",
+        "confirmBody": "Confirm the donation? It counts towards goals and the top, and the member gets a notification.",
+        "status": {
+          "CONFIRMED": "confirmed",
+          "PENDING": "pending",
+          "REJECTED": "rejected"
+        }
       },
       "tabs": {
         "label": "Member sections",
@@ -1237,7 +1251,8 @@
         "servers": "Servers",
         "clans": "Clans",
         "servers_bridge": "Bridge and ELO",
-        "gdpr": "GDPR requests"
+        "gdpr": "GDPR requests",
+        "donations": "Donations"
       },
       "save": "Save settings",
       "secretSet": "•••• saved (leave empty to keep the value)",
@@ -1569,12 +1584,13 @@
       "fieldHelperHint": "Shown under the field, in the form",
       "linkTemplate": "Contact link (optional)",
       "linkTemplateHint": "“Text” fields only: the member types the handle and the link is built from the template (https, with '{handle}').",
-      "sponsorMin": "“Sponsor” badge from (total donations)",
       "faceitKey": "FACEIT Data API key",
       "faceitKeySet": "Set (type another one to change it)",
       "faceitKeyEmpty": "Missing: the FACEIT tab is hidden",
       "faceitClear": "Remove the FACEIT key",
-      "faceitHint": "Create the key in the FACEIT developer portal (server-side key). Without it, the FACEIT tab does not appear."
+      "faceitHint": "Create the key in the FACEIT developer portal (server-side key). Without it, the FACEIT tab does not appear.",
+      "sponsorMoved": "The “Sponsor” badge threshold (and its period) is set in",
+      "sponsorLink": "VIP & Shop › Donations › Settings"
     },
     "memberProfile": {
       "profileTitle": "Profile",
@@ -3896,6 +3912,110 @@
       "removeBody": "The bar “{text}” disappears from the site after saving.",
       "removeConfirm": "Delete",
       "cancel": "Cancel"
+    },
+    "donations": {
+      "title": "Donations",
+      "editTitle": "Edit donation",
+      "back": "Back to donations",
+      "save": "Save",
+      "kpi": {
+        "pending": "Pending requests",
+        "month": "Confirmed this month",
+        "goals": "Goals",
+        "goalsHint": "Goal progress"
+      },
+      "filters": {
+        "status": "Status",
+        "all": "All",
+        "q": "Search",
+        "qHint": "Member, name or reference",
+        "method": "Method",
+        "from": "From",
+        "to": "To",
+        "apply": "Filter"
+      },
+      "csv": "Export CSV",
+      "add": "Add a donation",
+      "addSubmit": "Add donation",
+      "list": "Donation list",
+      "empty": "No donations for the chosen filters.",
+      "noName": "No name",
+      "anonymous": "Anonymous",
+      "ref": "ref. {ref}",
+      "sources": {
+        "member": "sent by the member (“I donated”)",
+        "provider": "via {source}"
+      },
+      "rejectedBecause": "rejected: {reason}",
+      "confirm": "Confirm",
+      "confirmBody": "Confirm the donation of {amount}? It counts towards goals, the top and the “Sponsor” badge, and the donor gets a notification.",
+      "reject": "Reject",
+      "rejectBody": "Reject the request? The member gets a notification with the reason you write.",
+      "reason": "Reason (optional)",
+      "edit": "Edit",
+      "editLabel": "Edit donation #{id}",
+      "delete": "Delete",
+      "deleteBody": "Delete the donation for good? It leaves the goals and the top.",
+      "pages": "List pages",
+      "prev": "Previous page",
+      "next": "Next page",
+      "fields": {
+        "member": "Member",
+        "memberHint": "Member name (empty = no account)",
+        "donorName": "Donor name without an account",
+        "donorNameHint": "Empty = Anonymous",
+        "amount": "Amount",
+        "currency": "Currency",
+        "date": "Date",
+        "method": "Method",
+        "reference": "Payment reference",
+        "note": "Note",
+        "status": "Status",
+        "anonymous": "Anonymous on public pages",
+        "notify": "Notify the donor on confirmation"
+      },
+      "goals": {
+        "title": "Donation goals",
+        "editTitle": "Edit goal",
+        "back": "Back to goals",
+        "save": "Save",
+        "lead": "A goal’s progress = the confirmed donations of its period, in its currency. The “Monthly goal” widget shows the first active goal by default.",
+        "list": "Goal list",
+        "empty": "No goals yet.",
+        "states": {
+          "upcoming": "Upcoming",
+          "active": "Active",
+          "ended": "Ended"
+        },
+        "disabled": "Off",
+        "monthlyRenew": "Monthly, renews",
+        "monthlyOnce": "A single month",
+        "custom": "Date range",
+        "everyone": "Everyone",
+        "donors": "{count, plural, one {# donor} other {# donors}}",
+        "target": "Target: {amount}",
+        "edit": "Edit",
+        "editLabel": "Edit the goal {title}",
+        "delete": "Delete",
+        "deleteBody": "Delete the goal “{title}”? The donations stay.",
+        "add": "Add a goal",
+        "addSubmit": "Add goal",
+        "fields": {
+          "title": "Title",
+          "titleHint": "e.g. Server costs",
+          "target": "Target",
+          "currency": "Currency",
+          "period": "Period",
+          "monthly": "Monthly (calendar month)",
+          "custom": "Chosen date range",
+          "startsOn": "Starts on",
+          "endsOn": "Ends on (date range only)",
+          "autoRenew": "Renews every month",
+          "enabled": "On",
+          "groups": "Visible to",
+          "groupsHint": "No group ticked = everyone."
+        }
+      }
     }
   },
   "settings": {
@@ -3950,7 +4070,10 @@
       "unicode": "Any alphabet",
       "optional": "Optional",
       "direct": "Direct: the browser loads the image from the address (nothing copied to the site)",
-      "copy": "Copy: images are downloaded and kept on the site"
+      "copy": "Copy: images are downloaded and kept on the site",
+      "all": "All time",
+      "year": "Current year",
+      "month": "Current month"
     },
     "forums": {
       "posts_per_page": "Posts per page",
@@ -3992,7 +4115,7 @@
       "birthdayYearHint": "e.g. 1998",
       "birthdayShowYear": "Also show the year on my profile",
       "faceit_api_key": "FACEIT Data API key",
-      "sponsor_min_amount": "“Sponsor” badge threshold (total donations)"
+      "sponsor_min_amount": "“Sponsor” badge threshold (confirmed donations, in the main currency; 0 = off)"
     },
     "pm": {
       "messages_per_page": "Messages per page in a conversation"
@@ -4446,6 +4569,14 @@
       "notMember": "Not a member",
       "join": "Join",
       "leave": "Leave"
+    },
+    "donations": {
+      "external_url": "External donation link (the community’s payment page; empty = instructions only)",
+      "instructions": "Donation instructions (the /donatii page)",
+      "currency": "Main currency (3-letter code, e.g. RON, EUR)",
+      "methods": "Suggested methods (comma separated)",
+      "member_submit": "Members can report a donation (“I donated”)",
+      "sponsor_period": "“Sponsor” badge period"
     }
   },
   "permissions": {
@@ -5311,6 +5442,11 @@
       },
       "chat_pro": {
         "reply": "Chat replies"
+      },
+      "donations": {
+        "confirmed": "Your confirmed donations",
+        "rejected": "Your unconfirmed donations",
+        "submitted": "New donations to confirm (staff)"
       }
     }
   },
@@ -6270,7 +6406,10 @@
       "channel": "Chat room",
       "icon": "Icon (e.g. fa-solid fa-star; empty = default)",
       "game": "Game",
-      "metric": "Measure shown first"
+      "metric": "Measure shown first",
+      "goal": "Goal",
+      "lastDonor": "Latest donor",
+      "donorCount": "Donor count"
     },
     "periods": {
       "week": "this week",
@@ -6309,6 +6448,9 @@
       },
       "clans": {
         "top": "The top clans in the ranking, with members and points."
+      },
+      "vip": {
+        "donationGoal": "A donation goal’s progress, the donors and the “Support the community” button."
       }
     },
     "servers": {
@@ -6334,6 +6476,13 @@
       "topics": "Topics",
       "reputation": "Reputation",
       "online": "Time online"
+    },
+    "vip": {
+      "donationGoal": "Monthly goal"
+    },
+    "choices": {
+      "show": "Shown",
+      "hide": "Hidden"
     }
   },
   "pageEditor": {
@@ -6395,7 +6544,8 @@
     "addTo": "Add to zone:",
     "dragHint": "Drag a widget onto the page or use the + button.",
     "dropHere": "Drag widgets here",
-    "done": "Finish editing"
+    "done": "Finish editing",
+    "defaultGoal": "First active goal"
   },
   "stats": {
     "title": "Community statistics",
@@ -8692,5 +8842,76 @@
       "button": "Sign in"
     },
     "social": "or in one click with"
+  },
+  "donations": {
+    "title": "Donations",
+    "lead": "The community runs on your donations: the servers, the domain and everything running here. Thank you to every supporter!",
+    "goalTitle": "Monthly goal",
+    "noGoal": "No active goal right now.",
+    "anonymous": "Anonymous",
+    "cta": "Support the community",
+    "ctaExternal": "Support the community (opens in a new tab)",
+    "progressLabel": "Progress of the goal {title}",
+    "progressText": "{percent}%: {raised} of {target}",
+    "donors": "{count, plural, one {# donor} other {# donors}}",
+    "last": "latest:",
+    "periodRange": "{start} – {end}",
+    "renews": "renews monthly",
+    "percent": "{percent}%",
+    "states": {
+      "upcoming": "Upcoming",
+      "active": "Active",
+      "ended": "Ended"
+    },
+    "tabs": {
+      "label": "Donors",
+      "latest": "Latest donations",
+      "top": "Top donors"
+    },
+    "periods": {
+      "label": "Period",
+      "month": "Month",
+      "year": "Year",
+      "all": "All"
+    },
+    "emptyLatest": "No confirmed donations yet.",
+    "emptyTop": "No public donations in the chosen period.",
+    "place": "Place {rank}",
+    "count": "{count, plural, one {# donation} other {# donations}}",
+    "hall": {
+      "title": "Supporters’ hall of fame",
+      "lead": "The people keeping the community alive, from the start until today.",
+      "empty": "You can be the first supporter.",
+      "since": "since {date}"
+    },
+    "how": {
+      "title": "How to donate",
+      "default": "Contact the staff for the payment details. After you donate, report it below with the payment reference."
+    },
+    "form": {
+      "title": "I donated",
+      "lead": "Already donated? Send us the payment reference; the staff checks and confirms it.",
+      "guest": "Donated? Sign in to report your donation for confirmation.",
+      "login": "Sign in",
+      "amount": "Amount",
+      "currency": "Currency",
+      "method": "Method",
+      "date": "Date",
+      "reference": "Payment reference",
+      "referenceHint": "e.g. the transaction ID or the name on the transfer, so the staff can find the payment.",
+      "note": "Note (optional)",
+      "anonymous": "Show me as “Anonymous” on public pages",
+      "noCard": "Never write card details here, only the payment reference.",
+      "submit": "Send",
+      "sent": "Thank you! The request reached the staff; you will get a notification once it is confirmed."
+    },
+    "mine": {
+      "title": "My donations"
+    },
+    "status": {
+      "CONFIRMED": "Confirmed",
+      "PENDING": "Pending",
+      "REJECTED": "Rejected"
+    }
   }
 }

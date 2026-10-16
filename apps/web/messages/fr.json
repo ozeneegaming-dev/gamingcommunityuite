@@ -21,7 +21,8 @@
       "serversMatches": "Mix matches",
       "bans": "Bans",
       "serverAdmins": "Admins",
-      "serverTickets": "Appeals"
+      "serverTickets": "Appeals",
+      "donations": "Dons"
     },
     "acp": "ACP",
     "myProfile": "Mon profil",
@@ -214,7 +215,10 @@
       "already_member": "Tu es déjà dans ce groupe.",
       "already_primary": "C'est déjà ton groupe principal.",
       "members_only": "Connecte-toi d'abord.",
-      "self": "Tu ne peux pas faire cela sur ton propre compte."
+      "self": "Tu ne peux pas faire cela sur ton propre compte.",
+      "donation_reviewed": "Le don a déjà été vérifié.",
+      "donation_pending_limit": "Tu as déjà des demandes en attente ; attends leur confirmation.",
+      "donations_closed": "Le signalement des dons est désactivé pour le moment."
     },
     "fields": {
       "invalid_color": "Couleur non valide (#RRGBB)",
@@ -494,7 +498,11 @@
         "history": "Historique",
         "name_styles": "Styles de noms",
         "frames": "Cadres Avatar",
-        "page": "VIP page"
+        "page": "VIP page",
+        "donations_group": "Dons",
+        "donations": "Dons",
+        "donation_goals": "Objectifs",
+        "donation_settings": "Paramètres des dons"
       },
       "appearance": {
         "appearance": "Apparence",
@@ -925,14 +933,20 @@
       },
       "donations": {
         "title": "Dons",
-        "hint": "Dons enregistrés par l’équipe. Au-delà du seuil de ACP → Profils, le membre reçoit automatiquement le badge « Sponsor ».",
+        "hint": "Les dons du membre, avec leur statut. Au-dessus du seuil de Dons › Paramètres, le membre reçoit automatiquement le badge « Sponsor ».",
         "sponsor": "Le membre a le badge « Sponsor ».",
         "delete": "Supprimer",
         "confirmDelete": "Supprimer le don ?",
         "add": "Ajouter un don",
-        "amount": "Montant",
-        "currency": "Devise",
-        "note": "Note"
+        "all": "Tous les dons →",
+        "anonymous": "anonyme",
+        "confirm": "Confirmer",
+        "confirmBody": "Confirmer le don ? Il compte pour les objectifs et le classement, et le membre reçoit une notification.",
+        "status": {
+          "CONFIRMED": "confirmé",
+          "PENDING": "en attente",
+          "REJECTED": "refusé"
+        }
       },
       "tabs": {
         "label": "Sections du membre",
@@ -1237,7 +1251,8 @@
         "servers": "Servers",
         "clans": "Clans",
         "servers_bridge": "Bridge and ELO",
-        "gdpr": "GDPR requests"
+        "gdpr": "GDPR requests",
+        "donations": "Dons"
       },
       "save": "Enregistrer les paramètres",
       "secretSet": "•••• enregistré (laissez vide pour conserver la valeur)",
@@ -1569,12 +1584,13 @@
       "fieldHelperHint": "Affiché sous le champ, dans le formulaire",
       "linkTemplate": "Lien de contact (facultatif)",
       "linkTemplateHint": "Uniquement pour les champs « Texte » : le membre saisit son identifiant et le lien est construit à partir du modèle (https, avec '{handle}').",
-      "sponsorMin": "Badge « Sponsor » à partir de (total des dons)",
       "faceitKey": "Clé FACEIT Data API",
       "faceitKeySet": "Définie (saisis-en une autre pour la changer)",
       "faceitKeyEmpty": "Absente : l’onglet FACEIT est masqué",
       "faceitClear": "Supprimer la clé FACEIT",
-      "faceitHint": "Crée la clé dans le portail des développeurs FACEIT (clé côté serveur). Sans elle, l’onglet FACEIT n’apparaît pas."
+      "faceitHint": "Crée la clé dans le portail des développeurs FACEIT (clé côté serveur). Sans elle, l’onglet FACEIT n’apparaît pas.",
+      "sponsorMoved": "Le seuil du badge « Sponsor » (et sa période) se règle dans",
+      "sponsorLink": "VIP & Boutique › Dons › Paramètres"
     },
     "memberProfile": {
       "profileTitle": "Profil",
@@ -3896,6 +3912,110 @@
       "removeBody": "La barre « {text} » disparaît du site après l’enregistrement.",
       "removeConfirm": "Supprimer",
       "cancel": "Annuler"
+    },
+    "donations": {
+      "title": "Dons",
+      "editTitle": "Modifier le don",
+      "back": "Retour aux dons",
+      "save": "Enregistrer",
+      "kpi": {
+        "pending": "Demandes en attente",
+        "month": "Confirmé ce mois-ci",
+        "goals": "Objectifs",
+        "goalsHint": "Progression des objectifs"
+      },
+      "filters": {
+        "status": "Statut",
+        "all": "Tous",
+        "q": "Rechercher",
+        "qHint": "Membre, nom ou référence",
+        "method": "Méthode",
+        "from": "Du",
+        "to": "Au",
+        "apply": "Filtrer"
+      },
+      "csv": "Exporter en CSV",
+      "add": "Ajouter un don",
+      "addSubmit": "Ajouter le don",
+      "list": "Liste des dons",
+      "empty": "Aucun don pour les filtres choisis.",
+      "noName": "Sans nom",
+      "anonymous": "Anonyme",
+      "ref": "réf. {ref}",
+      "sources": {
+        "member": "envoyé par le membre (« J’ai fait un don »)",
+        "provider": "via {source}"
+      },
+      "rejectedBecause": "refusé : {reason}",
+      "confirm": "Confirmer",
+      "confirmBody": "Confirmer le don de {amount} ? Il compte pour les objectifs, le classement et le badge « Sponsor », et le donateur reçoit une notification.",
+      "reject": "Refuser",
+      "rejectBody": "Refuser la demande ? Le membre reçoit une notification avec le motif indiqué.",
+      "reason": "Motif (facultatif)",
+      "edit": "Modifier",
+      "editLabel": "Modifier le don n° {id}",
+      "delete": "Supprimer",
+      "deleteBody": "Supprimer définitivement le don ? Il sort des objectifs et du classement.",
+      "pages": "Pages de la liste",
+      "prev": "Page précédente",
+      "next": "Page suivante",
+      "fields": {
+        "member": "Membre",
+        "memberHint": "Nom du membre (vide = sans compte)",
+        "donorName": "Nom du donateur sans compte",
+        "donorNameHint": "Vide = Anonyme",
+        "amount": "Montant",
+        "currency": "Devise",
+        "date": "Date",
+        "method": "Méthode",
+        "reference": "Référence du paiement",
+        "note": "Note",
+        "status": "Statut",
+        "anonymous": "Anonyme sur les pages publiques",
+        "notify": "Prévenir le donateur à la confirmation"
+      },
+      "goals": {
+        "title": "Objectifs de dons",
+        "editTitle": "Modifier l’objectif",
+        "back": "Retour aux objectifs",
+        "save": "Enregistrer",
+        "lead": "La progression d’un objectif = les dons confirmés de sa période, dans sa devise. Le widget « Objectif du mois » affiche par défaut le premier objectif actif.",
+        "list": "Liste des objectifs",
+        "empty": "Aucun objectif pour l’instant.",
+        "states": {
+          "upcoming": "Bientôt",
+          "active": "Actif",
+          "ended": "Terminé"
+        },
+        "disabled": "Désactivé",
+        "monthlyRenew": "Mensuel, se renouvelle",
+        "monthlyOnce": "Un seul mois",
+        "custom": "Période",
+        "everyone": "Tout le monde",
+        "donors": "{count, plural, one {# donateur} many {# donateurs} other {# donateurs}}",
+        "target": "Cible : {amount}",
+        "edit": "Modifier",
+        "editLabel": "Modifier l’objectif {title}",
+        "delete": "Supprimer",
+        "deleteBody": "Supprimer l’objectif « {title} » ? Les dons restent.",
+        "add": "Ajouter un objectif",
+        "addSubmit": "Ajouter l’objectif",
+        "fields": {
+          "title": "Titre",
+          "titleHint": "p. ex. Paiement des serveurs",
+          "target": "Cible",
+          "currency": "Devise",
+          "period": "Période",
+          "monthly": "Mensuel (mois calendaire)",
+          "custom": "Période choisie",
+          "startsOn": "Commence le",
+          "endsOn": "Se termine le (période uniquement)",
+          "autoRenew": "Se renouvelle chaque mois",
+          "enabled": "Activé",
+          "groups": "Visible pour",
+          "groupsHint": "Aucun groupe coché = tout le monde."
+        }
+      }
     }
   },
   "settings": {
@@ -3950,7 +4070,10 @@
       "unicode": "Any alphabet",
       "optional": "Optional",
       "direct": "Direct: the browser loads the image from the address (nothing copied to the site)",
-      "copy": "Copy: images are downloaded and kept on the site"
+      "copy": "Copy: images are downloaded and kept on the site",
+      "all": "Depuis toujours",
+      "year": "Année en cours",
+      "month": "Mois en cours"
     },
     "forums": {
       "posts_per_page": "Postes par page",
@@ -3992,7 +4115,7 @@
       "birthdayYearHint": "ex. 1998",
       "birthdayShowYear": "Afficher aussi l’année sur mon profil",
       "faceit_api_key": "Clé FACEIT Data API",
-      "sponsor_min_amount": "Seuil du badge « Sponsor » (total des dons)"
+      "sponsor_min_amount": "Seuil du badge « Sponsor » (dons confirmés, dans la devise principale ; 0 = désactivé)"
     },
     "pm": {
       "messages_per_page": "Messages par page dans une conversation"
@@ -4446,6 +4569,14 @@
       "notMember": "Pas membre",
       "join": "Rejoindre",
       "leave": "Quitter"
+    },
+    "donations": {
+      "external_url": "Lien externe pour les dons (la page de paiement de la communauté ; vide = instructions seulement)",
+      "instructions": "Instructions pour faire un don (page /donatii)",
+      "currency": "Devise principale (code à 3 lettres, p. ex. RON, EUR)",
+      "methods": "Méthodes proposées (séparées par des virgules)",
+      "member_submit": "Les membres peuvent signaler un don (« J’ai fait un don »)",
+      "sponsor_period": "Période du badge « Sponsor »"
     }
   },
   "permissions": {
@@ -5311,6 +5442,11 @@
       },
       "chat_pro": {
         "reply": "Chat replies"
+      },
+      "donations": {
+        "confirmed": "Tes dons confirmés",
+        "rejected": "Tes dons non confirmés",
+        "submitted": "Nouveaux dons à confirmer (équipe)"
       }
     }
   },
@@ -6270,7 +6406,10 @@
       "channel": "Salle de discussion",
       "icon": "Icône (par exemple fa-solid fa-star; vide = par défaut)",
       "game": "Game",
-      "metric": "Mesure affichée en premier"
+      "metric": "Mesure affichée en premier",
+      "goal": "Objectif",
+      "lastDonor": "Dernier donateur",
+      "donorCount": "Nombre de donateurs"
     },
     "periods": {
       "week": "cette semaine",
@@ -6309,6 +6448,9 @@
       },
       "clans": {
         "top": "The top clans in the ranking, with members and points."
+      },
+      "vip": {
+        "donationGoal": "La progression d’un objectif de dons, les donateurs et le bouton « Soutenir la communauté »."
       }
     },
     "servers": {
@@ -6334,6 +6476,13 @@
       "topics": "Sujets",
       "reputation": "Réputation",
       "online": "Temps en ligne"
+    },
+    "vip": {
+      "donationGoal": "Objectif du mois"
+    },
+    "choices": {
+      "show": "Affiché",
+      "hide": "Masqué"
     }
   },
   "pageEditor": {
@@ -6395,7 +6544,8 @@
     "addTo": "Ajouter à la zone:",
     "dragHint": "Faites glisser un widget sur la page ou utilisez le bouton +.",
     "dropHere": "Faites glisser les Widgets ici",
-    "done": "Terminer l'édition"
+    "done": "Terminer l'édition",
+    "defaultGoal": "Premier objectif actif"
   },
   "stats": {
     "title": "Statistiques communautaires",
@@ -8692,5 +8842,76 @@
       "button": "Se connecter"
     },
     "social": "ou en un clic avec"
+  },
+  "donations": {
+    "title": "Dons",
+    "lead": "La communauté vit grâce à vos dons : les serveurs, le domaine et tout ce qui tourne ici. Merci à chaque soutien !",
+    "goalTitle": "Objectif du mois",
+    "noGoal": "Aucun objectif actif pour le moment.",
+    "anonymous": "Anonyme",
+    "cta": "Soutenir la communauté",
+    "ctaExternal": "Soutenir la communauté (s’ouvre dans un nouvel onglet)",
+    "progressLabel": "Progression de l’objectif {title}",
+    "progressText": "{percent} % : {raised} sur {target}",
+    "donors": "{count, plural, one {# donateur} many {# donateurs} other {# donateurs}}",
+    "last": "dernier :",
+    "periodRange": "{start} – {end}",
+    "renews": "se renouvelle chaque mois",
+    "percent": "{percent} %",
+    "states": {
+      "upcoming": "Bientôt",
+      "active": "Actif",
+      "ended": "Terminé"
+    },
+    "tabs": {
+      "label": "Donateurs",
+      "latest": "Derniers dons",
+      "top": "Top donateurs"
+    },
+    "periods": {
+      "label": "Période",
+      "month": "Mois",
+      "year": "Année",
+      "all": "Tout"
+    },
+    "emptyLatest": "Pas encore de dons confirmés.",
+    "emptyTop": "Aucun don public sur la période choisie.",
+    "place": "Place {rank}",
+    "count": "{count, plural, one {# don} many {# dons} other {# dons}}",
+    "hall": {
+      "title": "Panthéon des soutiens",
+      "lead": "Celles et ceux qui font vivre la communauté, depuis le début jusqu’à aujourd’hui.",
+      "empty": "Tu peux être le premier soutien.",
+      "since": "depuis {date}"
+    },
+    "how": {
+      "title": "Comment faire un don",
+      "default": "Contacte l’équipe pour les informations de paiement. Après ton don, signale-le ci-dessous avec la référence du paiement."
+    },
+    "form": {
+      "title": "J’ai fait un don",
+      "lead": "Déjà fait un don ? Envoie-nous la référence du paiement ; l’équipe la vérifie et la confirme.",
+      "guest": "Tu as fait un don ? Connecte-toi pour le signaler et le faire confirmer.",
+      "login": "Connexion",
+      "amount": "Montant",
+      "currency": "Devise",
+      "method": "Méthode",
+      "date": "Date",
+      "reference": "Référence du paiement",
+      "referenceHint": "p. ex. l’identifiant de la transaction ou le nom du virement, pour que l’équipe trouve le paiement.",
+      "note": "Note (facultatif)",
+      "anonymous": "M’afficher comme « Anonyme » sur les pages publiques",
+      "noCard": "N’écris jamais de données de carte ici, seulement la référence du paiement.",
+      "submit": "Envoyer",
+      "sent": "Merci ! La demande est arrivée à l’équipe ; tu recevras une notification à la confirmation."
+    },
+    "mine": {
+      "title": "Mes dons"
+    },
+    "status": {
+      "CONFIRMED": "Confirmé",
+      "PENDING": "En attente",
+      "REJECTED": "Refusé"
+    }
   }
 }
