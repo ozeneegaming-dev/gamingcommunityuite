@@ -88,7 +88,7 @@ export class GcsChatProService {
       awardWinner: (userId, period) => this.awardWinner(userId, period),
     });
     this.bar = new GcsChatProBar({ db, cache, acp, realtime });
-    this.history = new GcsChatHistory({ db, permissions, chatQueries });
+    this.history = new GcsChatHistory({ db, permissions, chatQueries, rights: deps.chat.rights, emotes: () => this.emotes.map() });
   }
 
   /** Leagă Chat Pro de chat (extensia) și de rapoarte (mesajele de chat devin raportabile). */

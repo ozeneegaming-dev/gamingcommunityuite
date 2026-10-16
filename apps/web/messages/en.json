@@ -3775,7 +3775,8 @@
     },
     "app_access": "Can access the {app} app",
     "chat_pro": {
-      "history": "Can view the chat history (/chat/history)"
+      "history": "Can view the chat history (/chat/history)",
+      "history_export": "Export the chat history (CSV)"
     }
   },
   "profile": {
@@ -7066,7 +7067,27 @@
       "pages": "History pages",
       "prev": "Previous page",
       "next": "Next page",
-      "page": "Page {page} of {pages}"
+      "page": "Page {page} of {pages}",
+      "textPlaceholder": "Search messages",
+      "memberPlaceholder": "Name or nickname",
+      "room": "Room",
+      "allRooms": "All",
+      "staff": "Staff",
+      "showHidden": "Show hidden too",
+      "export": "Export CSV",
+      "last": "Last page",
+      "jumpTitle": "Go to page",
+      "go": "Go",
+      "perPage": "{count, plural, one {# message} other {# messages}} · {size} per page",
+      "colTimeId": "Time · ID",
+      "openImage": "Open the image",
+      "voice": "Voice message",
+      "edited": "edited",
+      "copyLink": "Copy the message link",
+      "copied": "Link copied",
+      "viewInChat": "View in chat",
+      "deleteTitle": "Delete this message?",
+      "deleteBody": "The message disappears from the chat and the history."
     }
   },
   "groups": {

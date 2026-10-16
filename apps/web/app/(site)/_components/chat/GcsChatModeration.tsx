@@ -672,13 +672,12 @@ function GcsChatModCardDialog({ target, channel, onClose }: { target: Target; ch
 const name = (u: { id: string; name: string; nameKey?: string | null } | null, fallback: string) =>
   u ? <GcsMemberName userId={u.id} name={u.name} nameKey={u.nameKey ?? undefined} href={memberHref(u as Parameters<typeof memberHref>[0])} /> : <span className="gcs-deletedMember">{fallback}</span>;
 
-/** Linia verde a moderării („X a primit mute 15 minute: spam”, „X a primit acces de moderator în chat de la Y · …”). */
-export function GcsChatSystemLine({ m, time, deletedMember }: { m: GcsChatMessageView & { system: GcsChatSystemLine }; time: string; deletedMember: string }) {
+/** Textul unei linii de sistem (în chat și în istoric), cu numele stilizate. */
+export function GcsChatSystemText({ system: s, author, deletedMember }: { system: GcsChatSystemLine; author: GcsChatMessageView["author"]; deletedMember: string }) {
   const t = useTranslations("chat.mod");
   const dur = useDuration();
-  const s = m.system;
   const target = () => name(s.target, deletedMember);
-  const actor = () => name(m.author, deletedMember);
+  const actor = () => name(author, deletedMember);
   const suffix = s.reason ? `: ${s.reason}` : "";
   let text: ReactNode;
   if (s.kind === "grant") {
@@ -691,12 +690,19 @@ export function GcsChatSystemLine({ m, time, deletedMember }: { m: GcsChatMessag
     );
   } else if (s.kind === "revoke") text = t.rich("system.revoke", { target, actor });
   else text = t.rich(`system.${s.kind}`, { target, duration: dur(s.minutes), suffix });
+  return <>{text}</>;
+}
+
+/** Linia verde a moderării („X a primit mute 15 minute: spam”, „X a primit acces de moderator în chat de la Y · …”). */
+export function GcsChatSystemLine({ m, time, deletedMember }: { m: GcsChatMessageView & { system: GcsChatSystemLine }; time: string; deletedMember: string }) {
   return (
-    <li className="gcs-chatSys" data-testid="gcs-chat-sysline" data-kind={s.kind} data-message-id={m.id}>
+    <li className="gcs-chatSys" data-testid="gcs-chat-sysline" data-kind={m.system.kind} data-message-id={m.id}>
       <span className="gcs-chatSys__icon" aria-hidden="true">
         <GcsIconSvg icon={faShieldHalved} />
       </span>
-      <span className="gcs-chatSys__text">{text}</span>
+      <span className="gcs-chatSys__text">
+        <GcsChatSystemText system={m.system} author={m.author} deletedMember={deletedMember} />
+      </span>
       <time className="gcs-chatSys__time" dateTime={m.createdAt} suppressHydrationWarning>
         {time}
       </time>

@@ -3775,7 +3775,8 @@
     },
     "app_access": "Poate accesa aplicația {app}",
     "chat_pro": {
-      "history": "Vede istoricul chat-ului (/chat/history)"
+      "history": "Vede istoricul chat-ului (/chat/history)",
+      "history_export": "Exportă istoricul chat-ului (CSV)"
     }
   },
   "profile": {
@@ -7066,7 +7067,27 @@
       "pages": "Paginile istoricului",
       "prev": "Pagina anterioară",
       "next": "Pagina următoare",
-      "page": "Pagina {page} din {pages}"
+      "page": "Pagina {page} din {pages}",
+      "textPlaceholder": "Caută în mesaje",
+      "memberPlaceholder": "Nume sau poreclă",
+      "room": "Cameră",
+      "allRooms": "Toate",
+      "staff": "Staff",
+      "showHidden": "Arată și ascunse",
+      "export": "Exportă CSV",
+      "last": "Ultima pagină",
+      "jumpTitle": "Sari la pagina",
+      "go": "Mergi",
+      "perPage": "{count, plural, one {# mesaj} few {# mesaje} other {# de mesaje}} · {size} pe pagină",
+      "colTimeId": "Ora · ID",
+      "openImage": "Deschide imaginea",
+      "voice": "Mesaj vocal",
+      "edited": "editat",
+      "copyLink": "Copiază linkul mesajului",
+      "copied": "Linkul a fost copiat",
+      "viewInChat": "Vezi în chat",
+      "deleteTitle": "Ștergi mesajul?",
+      "deleteBody": "Mesajul dispare din chat și din istoric."
     }
   },
   "groups": {
