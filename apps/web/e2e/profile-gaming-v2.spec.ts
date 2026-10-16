@@ -124,7 +124,8 @@ test("hover card v2: din mențiune, din nume și din pagina grupurilor; Ignoră 
     await setApp("groups_pro", true);
     try {
       await page.goto(`/members/groups?q=Star${id}`);
-      await page.addStyleTag({ content: ":root { --gcs-avatar-radius: 6px; }" });
+      // O temă cu avatare pătrate (tokenul `--gcs-avatar-radius`), peste orice valoare a temei curente.
+      await page.addStyleTag({ content: "html, html body, html body * { --gcs-avatar-radius: 6px !important; }" });
       const name = page.getByTestId("gcs-groups-member").filter({ hasText: `Star${id}` }).first().locator("[data-user-id]").first();
       const layer = await openCard(page, name);
       await expectFullCard(layer, `Star${id}`);
@@ -333,4 +334,31 @@ test("Setări: prezentarea generală, dispozitivele (cu autentificarea automată
     await page.getByRole("link", { name: `Topic lung ${id}` }).first().click();
     await expect(page).toHaveURL(new RegExp(`${topic.url}$`));
   });
+});
+
+test("la 375 px: profilul, setările și hover card-ul încap fără derulare orizontală; tema deschisă", async ({ page }) => {
+  const id = uid();
+  const email = `mob-${id}@example.com`;
+  await member(page, `Mob${id}`, email);
+  const uidOf = await userId(email);
+  await page.setViewportSize({ width: 375, height: 812 });
+  const noOverflow = async () => expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+  for (const [url, name] of [
+    [`/members/${uidOf}-mob${id}`, "mobile-profile"],
+    ["/settings", "mobile-settings-overview"],
+    ["/settings/profile", "mobile-settings-edit-profile"],
+    ["/settings/devices", "mobile-settings-devices"],
+  ] as const) {
+    await page.goto(url);
+    await noOverflow();
+    await shot(page, name);
+  }
+  // Tema deschisă: aceleași componente pe tokenurile temei.
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(`/members/${uidOf}-mob${id}`);
+  await page.evaluate(() => document.documentElement.setAttribute("data-theme", "light"));
+  await shot(page, "profile-light");
+  await page.goto("/settings");
+  await page.evaluate(() => document.documentElement.setAttribute("data-theme", "light"));
+  await shot(page, "settings-overview-light");
 });
