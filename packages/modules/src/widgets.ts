@@ -174,6 +174,36 @@ export const serverWidgets: GcsWidgetDef[] = [
   }),
 ];
 
+const showField = (key: string, labelKey: string): GcsWidgetField => ({
+  key,
+  labelKey,
+  type: "select",
+  options: [
+    { value: "show", labelKey: "widgets.choices.show" },
+    { value: "hide", labelKey: "widgets.choices.hide" },
+  ],
+});
+
+/**
+ * „Obiectivul lunii” (VIP clasic › Donații): titlul obiectivului, bara de progres în culoarea accentului, „640 / 1.000
+ * lei”, donatorii și ultimul donator, butonul „Susține comunitatea”. Câmpurile: obiectivul (gol = primul activ vizibil),
+ * ultimul donator și numărul donatorilor (afișate sau ascunse).
+ */
+export const donationWidgets: GcsWidgetDef[] = [
+  widget({
+    key: "vip.donationGoal",
+    labelKey: "widgets.vip.donationGoal",
+    descriptionKey: "widgets.desc.vip.donationGoal",
+    icon: "fa-solid fa-hand-holding-heart",
+    defaultConfig: { goal: "", lastDonor: "show", donorCount: "show" },
+    fields: [
+      { key: "goal", labelKey: "widgets.fields.goal", type: "select", optionsFrom: "donations.goals" },
+      showField("lastDonor", "widgets.fields.lastDonor"),
+      showField("donorCount", "widgets.fields.donorCount"),
+    ],
+  }),
+];
+
 /**
  * Widget-ul aplicației Clanuri (specul 2026-10-08-clanuri §12): primele clanuri din clasament (locul, logo-ul, tagul,
  * numele, membrii, punctele). Câmpul: câte clanuri.

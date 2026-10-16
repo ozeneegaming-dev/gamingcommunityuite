@@ -274,7 +274,7 @@ export function accountDataHandler(deps: { db: PrismaClient }): GcsMemberDataHan
           devices: { select: { browser: true, os: true, method: true, ip: true, location: true, firstSeenAt: true, lastSeenAt: true } },
           warnings: { select: { points: true, reason: true, createdAt: true, expiresAt: true } },
           bans: { select: { type: true, reason: true, createdAt: true, expiresAt: true, liftedAt: true } },
-          donations: { select: { amount: true, currency: true, note: true, createdAt: true } },
+          donations: { select: { amount: true, currency: true, method: true, status: true, anonymous: true, reference: true, note: true, donatedAt: true, createdAt: true } },
         },
       });
       if (!user) return null;

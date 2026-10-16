@@ -56,6 +56,13 @@ const TEXTS: Record<string, Record<Locale, (a: string, t: string, n: number, dat
   },
   "vip.granted": { ro: (_a, t) => `Ai primit ${t}`, en: (_a, t) => `You received ${t}` },
   "vip.expired": { ro: (_a, t) => `${t} a expirat`, en: (_a, t) => `Your ${t} has expired` },
+  // Donațiile (VIP clasic): titlul e suma („50 RON”).
+  "donations.confirmed": { ro: (_a, t) => `Donația ta de ${t} a fost confirmată. Mulțumim!`, en: (_a, t) => `Your donation of ${t} was confirmed. Thank you!` },
+  "donations.rejected": {
+    ro: (_a, t, _n, d) => `Donația ta de ${t} nu a fost confirmată${d.reason ? `: ${String(d.reason)}` : ""}`,
+    en: (_a, t, _n, d) => `Your donation of ${t} was not confirmed${d.reason ? `: ${String(d.reason)}` : ""}`,
+  },
+  "donations.submitted": { ro: (a, t) => `${a} a trimis o donație de ${t} de confirmat`, en: (a, t) => `${a} sent a donation of ${t} to confirm` },
   "core.group_expired": { ro: (_a, t) => `Grupul ${t} a expirat`, en: (_a, t) => `Your ${t} group has expired` },
   "chat.sanction": { ro: (_a, _t, _n, d) => chatSanctionText("ro", d), en: (_a, _t, _n, d) => chatSanctionText("en", d) },
   "chat.access": { ro: (_a, _t, _n, d) => chatAccessText("ro", d), en: (_a, _t, _n, d) => chatAccessText("en", d) },

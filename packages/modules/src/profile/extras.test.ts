@@ -1,4 +1,4 @@
-import { GcsForbidden, type GcsActor } from "@gcs/core";
+import type { GcsActor } from "@gcs/core";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createProfileWorld, type GcsProfileWorld } from "../../test/profileWorld";
 import { GcsProfileExtras } from "./extras";
@@ -6,15 +6,14 @@ import { GcsMemberPrefsService } from "./memberPrefs";
 
 let w: GcsProfileWorld;
 let extras: GcsProfileExtras;
-let admin: GcsActor;
 let visitor: GcsActor;
+let sponsorId: string | null;
 
 beforeEach(async () => {
   w = await createProfileWorld();
-  await w.grantAdmin(["members.members"]);
-  admin = await w.actorFor(await w.createUser("Casier", "admin"));
+  sponsorId = null;
   visitor = await w.actorFor(await w.createUser("Vizitator", "member"));
-  extras = new GcsProfileExtras({ db: w.db, cache: w.cache, settings: w.settings, queries: w.profileQueries, acp: w.acp });
+  extras = new GcsProfileExtras({ db: w.db, cache: w.cache, queries: w.profileQueries, sponsor: async (id) => ({ total: 0, sponsor: id === sponsorId }) });
 });
 
 afterAll(async () => {
@@ -35,19 +34,10 @@ describe("caseta realizărilor", () => {
     expect(box!.badges.map((b) => b.key)).toEqual([badge.key]);
   });
 
-  test("insigna „Sponsor”: automată peste pragul din setări (0 = oprită); donațiile doar din ACP", async () => {
-    await w.settings.set("profile.sponsor_min_amount", 20, w.root);
-    await extras.addDonation(admin, w.member.userId!, { amount: 15, currency: "eur", note: "  mulțumim " });
-    expect(await extras.sponsor(w.member.userId!)).toEqual({ total: 1500, sponsor: false });
-    await extras.addDonation(admin, w.member.userId!, { amount: 5.5, currency: "EUR", note: "" });
-    expect(await extras.sponsor(w.member.userId!)).toEqual({ total: 2050, sponsor: true });
+  test("insigna „Sponsor” vine din donații (pragul și perioada: vezi donations.test.ts)", async () => {
+    expect((await extras.achievements(w.guest, w.member.userId!))?.sponsor).toBe(false);
+    sponsorId = w.member.userId!;
     expect((await extras.achievements(w.guest, w.member.userId!))?.sponsor).toBe(true);
-    expect((await extras.donations(w.member.userId!))[1]).toMatchObject({ currency: "EUR", note: "mulțumim", amount: 1500 });
-    await w.settings.set("profile.sponsor_min_amount", 0, w.root);
-    expect((await extras.sponsor(w.member.userId!)).sponsor).toBe(false);
-    await expect(extras.addDonation(w.member, w.member.userId!, { amount: 100, currency: "EUR", note: "" })).rejects.toBeInstanceOf(GcsForbidden);
-    await expect(extras.addDonation(admin, w.member.userId!, { amount: -1, currency: "EURO", note: "" })).rejects.toMatchObject({ fields: { amount: "invalid_range", currency: "invalid" } });
-    expect(await w.db.auditLog.count({ where: { action: "member.donation.add" } })).toBe(2);
   });
 });
 
