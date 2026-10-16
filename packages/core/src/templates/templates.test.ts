@@ -136,15 +136,15 @@ describe("șabloanele implicite", () => {
 
 describe("GcsTemplateService", () => {
   test("arborele arată starea fiecărui șablon pe temă", async () => {
-    const tree = await templates.tree("default");
+    const tree = await templates.tree("gcs-dark");
     expect(tree.map((e) => e.def.key)).toEqual(DEFAULT_TEMPLATES.map((d) => d.key));
     expect(tree.every((e) => e.status === "default")).toBe(true);
-    await templates.save(root, "default", ROW, "<p>{{ forum.name }}</p>");
-    expect((await templates.tree("default")).find((e) => e.def.key === ROW)?.status).toBe("modified");
+    await templates.save(root, "gcs-dark", ROW, "<p>{{ forum.name }}</p>");
+    expect((await templates.tree("gcs-dark")).find((e) => e.def.key === ROW)?.status).toBe("modified");
   });
 
   test("salvarea validează sintaxa (eroarea are rândul și coloana)", async () => {
-    const err = await templates.save(root, "default", ROW, "<p>\n  {{ forum.name | nope }}</p>").catch((e: unknown) => e);
+    const err = await templates.save(root, "gcs-dark", ROW, "<p>\n  {{ forum.name | nope }}</p>").catch((e: unknown) => e);
     expect(err).toBeInstanceOf(GcsValidationError);
     expect((err as GcsValidationError).fields).toEqual({ source: "template_syntax" });
     expect((err as GcsValidationError).params).toMatchObject({ error: "unknown_filter", line: "2", column: "19", detail: "nope" });
@@ -152,19 +152,19 @@ describe("GcsTemplateService", () => {
   });
 
   test("cheile necunoscute, temele inexistente și membrii fără drept sunt refuzați", async () => {
-    await expect(templates.save(root, "default", "nu.exista", "x")).rejects.toBeInstanceOf(GcsNotFound);
+    await expect(templates.save(root, "gcs-dark", "nu.exista", "x")).rejects.toBeInstanceOf(GcsNotFound);
     await expect(templates.save(root, "nu-exista", ROW, "x")).rejects.toBeInstanceOf(GcsNotFound);
-    await expect(templates.save(member, "default", ROW, "x")).rejects.toBeInstanceOf(GcsForbidden);
-    await expect(templates.revert(member, "default", ROW)).rejects.toBeInstanceOf(GcsForbidden);
+    await expect(templates.save(member, "gcs-dark", ROW, "x")).rejects.toBeInstanceOf(GcsForbidden);
+    await expect(templates.revert(member, "gcs-dark", ROW)).rejects.toBeInstanceOf(GcsForbidden);
   });
 
   test("salvarea face o versiune și o intrare în jurnal; site-ul vede imediat suprascrierea (cache invalidat)", async () => {
-    expect(await templates.overrides("default")).toEqual({});
-    await templates.save(root, "default", ROW, "<p>A</p>");
-    expect((await templates.overrides("default"))[ROW]?.source).toBe("<p>A</p>");
-    await templates.save(root, "default", ROW, "<p>B</p>");
-    expect((await templates.overrides("default"))[ROW]?.source).toBe("<p>B</p>");
-    const detail = await templates.detail("default", ROW);
+    expect(await templates.overrides("gcs-dark")).toEqual({});
+    await templates.save(root, "gcs-dark", ROW, "<p>A</p>");
+    expect((await templates.overrides("gcs-dark"))[ROW]?.source).toBe("<p>A</p>");
+    await templates.save(root, "gcs-dark", ROW, "<p>B</p>");
+    expect((await templates.overrides("gcs-dark"))[ROW]?.source).toBe("<p>B</p>");
+    const detail = await templates.detail("gcs-dark", ROW);
     expect(detail.versions.map((v) => [v.action, v.source, v.authorName])).toEqual([
       ["save", "<p>B</p>", "Root"],
       ["save", "<p>A</p>", "Root"],
@@ -174,50 +174,50 @@ describe("GcsTemplateService", () => {
   });
 
   test("randarea pe temă: includerile cad pe șabloanele implicite, ieșirea e sanitizată", async () => {
-    expect(await templates.render("default", ROW, {})).toBeNull();
-    await templates.save(root, "default", "postbit.author", '<div onclick="x()">{{ author.name }}<script>alert(1)</script>{% include "postbit.fields" %}</div>');
-    const html = await templates.render("default", "postbit.author", { author: { name: "Ana", fields: [{ key: "k", label: "L", icon: "fa-solid fa-link", type: "TEXT", value: "V" }] } });
+    expect(await templates.render("gcs-dark", ROW, {})).toBeNull();
+    await templates.save(root, "gcs-dark", "postbit.author", '<div onclick="x()">{{ author.name }}<script>alert(1)</script>{% include "postbit.fields" %}</div>');
+    const html = await templates.render("gcs-dark", "postbit.author", { author: { name: "Ana", fields: [{ key: "k", label: "L", icon: "fa-solid fa-link", type: "TEXT", value: "V" }] } });
     expect(html).toContain("Ana");
     expect(html).toContain('data-field="k"');
     expect(html).not.toMatch(/onclick|<script|alert/);
     // Previzualizarea: sursa nesalvată, fără să atingă baza.
-    expect(await templates.render("default", ROW, { forum: { name: "X" } }, { source: "<b>{{ forum.name }}</b>" })).toBe("<b>X</b>");
+    expect(await templates.render("gcs-dark", ROW, { forum: { name: "X" } }, { source: "<b>{{ forum.name }}</b>" })).toBe("<b>X</b>");
   });
 
   test("„Revino la original” șterge suprascrierea, istoricul rămâne; o versiune se poate restaura", async () => {
-    await templates.save(root, "default", ROW, "<p>A</p>");
-    await templates.revert(root, "default", ROW);
-    expect(await templates.overrides("default")).toEqual({});
-    const detail = await templates.detail("default", ROW);
+    await templates.save(root, "gcs-dark", ROW, "<p>A</p>");
+    await templates.revert(root, "gcs-dark", ROW);
+    expect(await templates.overrides("gcs-dark")).toEqual({});
+    const detail = await templates.detail("gcs-dark", ROW);
     expect(detail.status).toBe("default");
     expect(detail.versions.map((v) => v.action)).toEqual(["revert", "save"]);
     const saved = detail.versions.find((v) => v.action === "save")!;
-    expect(await templates.restore(root, "default", saved.id)).toBe(ROW);
-    expect((await templates.overrides("default"))[ROW]?.source).toBe("<p>A</p>");
-    expect((await templates.detail("default", ROW)).versions[0]?.action).toBe("restore");
+    expect(await templates.restore(root, "gcs-dark", saved.id)).toBe(ROW);
+    expect((await templates.overrides("gcs-dark"))[ROW]?.source).toBe("<p>A</p>");
+    expect((await templates.detail("gcs-dark", ROW)).versions[0]?.action).toBe("restore");
     expect(await w.db.auditLog.count({ where: { action: "theme.template.revert" } })).toBe(1);
   });
 
   test("o versiune nouă a originalului marchează suprascrierea „necesită revizuire”, până la revizuire", async () => {
-    await templates.save(root, "default", ROW, "<p>A</p>");
+    await templates.save(root, "gcs-dark", ROW, "<p>A</p>");
     // Ca după o actualizare GCS: suprascrierea pornise de la o versiune mai veche a originalului.
     await w.db.themeTemplate.updateMany({ data: { baseVersion: 0, baseSource: "vechi" } });
     await w.cache.invalidateTags(["templates"]);
-    expect((await templates.detail("default", ROW)).status).toBe("review");
-    expect((await templates.tree("default")).find((e) => e.def.key === ROW)?.status).toBe("review");
-    await templates.markReviewed(root, "default", ROW);
-    const detail = await templates.detail("default", ROW);
+    expect((await templates.detail("gcs-dark", ROW)).status).toBe("review");
+    expect((await templates.tree("gcs-dark")).find((e) => e.def.key === ROW)?.status).toBe("review");
+    await templates.markReviewed(root, "gcs-dark", ROW);
+    const detail = await templates.detail("gcs-dark", ROW);
     expect(detail.status).toBe("modified");
     expect(detail.override?.baseSource).toBe(defaultTemplate(ROW)!.source);
     expect(detail.override?.source).toBe("<p>A</p>");
   });
 
   test("o temă nouă copiază suprascrierile temei sursă; ștergerea temei le șterge", async () => {
-    await templates.save(root, "default", ROW, "<p>A</p>");
-    await themes.create(root, { key: "neon", name: "Neon", from: "default" });
+    await templates.save(root, "gcs-dark", ROW, "<p>A</p>");
+    await themes.create(root, { key: "neon", name: "Neon", from: "gcs-dark" });
     expect((await templates.overrides("neon"))[ROW]?.source).toBe("<p>A</p>");
     await templates.save(root, "neon", ROW, "<p>N</p>");
-    expect((await templates.overrides("default"))[ROW]?.source).toBe("<p>A</p>");
+    expect((await templates.overrides("gcs-dark"))[ROW]?.source).toBe("<p>A</p>");
     await themes.remove(root, "neon");
     expect(await w.db.themeTemplate.count()).toBe(1);
     expect(await w.db.themeTemplateVersion.count({ where: { theme: { key: "neon" } } })).toBe(0);

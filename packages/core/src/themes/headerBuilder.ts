@@ -1,12 +1,13 @@
 /**
  * Constructorul de antet (specul 2026-10-10-hero-cockpit §9): o grilă cu 3 rânduri (bara de sus, rândul principal,
  * rândul secundar) × 3 zone (stânga, centru, dreapta), separat pentru desktop, tabletă și mobil. Elementele (logo,
- * meniu, căutare, acțiunile contului…) se mută între zone, rânduri sau în tava „nefolosite”. Presetările (Nova clasic,
- * Cockpit, Centrat, Panou lateral, Esports) sunt aspecte gata făcute ale aceleiași grile. Modul e pur (fără Node):
- * îl folosesc serverul (validarea temei), antetul site-ului și editorul vizual.
+ * meniu, căutare, acțiunile contului…) se mută între zone, rânduri sau în tava „nefolosite”. Presetările (Clasic,
+ * Standard, Cockpit, Centrat, Panou lateral, Esports) sunt aspecte gata făcute ale aceleiași grile. Constructorul e
+ * antetul SISTEMULUI: îl randează orice temă (designul temei schimbă doar aspectul, nu și funcțiile). Modul e pur
+ * (fără Node): îl folosesc serverul (validarea temei), antetul site-ului și editorul vizual.
  */
 
-export const HEADER_PRESETS = ["classic", "cockpit", "centered", "side", "esports"] as const;
+export const HEADER_PRESETS = ["basic", "classic", "cockpit", "centered", "side", "esports"] as const;
 export type GcsHeaderPreset = (typeof HEADER_PRESETS)[number];
 
 export const HEADER_ROWS = ["top", "main", "bottom"] as const;
@@ -80,10 +81,19 @@ const layout = (top: Z, main: Z, bottom: Z): GcsHeaderDeviceLayout => ({ top: zo
 
 /** Pe tabletă și mobil, meniul devine butonul sertarului (☰), deci stă la începutul rândului. */
 const PRESETS: Record<GcsHeaderPreset, () => Omit<GcsHeaderBuilder, "preset">> = {
-  // Antetul de până acum: logo + meniu + iconițele pe un rând, apoi breadcrumb-ul și căutarea.
+  // „Clasic”: antetul temelor clasice de până acum, pe un singur rând: logo + meniu în stânga; în dreapta căutarea
+  // (iconița), notificările, mesajele și contul (vizitatorii: Înregistrare / Autentificare). Implicit pe designul clasic.
+  basic: () => ({
+    desktop: layout({}, { left: ["logo", "nav"], right: ["search", "notifications", "messages", "account"] }, {}),
+    tablet: layout({}, { left: ["nav", "logo"], right: ["search", "notifications", "messages", "account"] }, {}),
+    mobile: layout({}, { left: ["nav", "logo"], right: ["search", "notifications", "messages", "account"] }, {}),
+    split: null,
+  }),
+  // „Standard”: logo + meniu + luna / soarele (perechea de teme) + iconițele pe un rând, apoi breadcrumb-ul și câmpul de
+  // căutare (implicit pe designul GCS: GCS Dark ↔ GCS White).
   classic: () => ({
-    desktop: layout({}, { left: ["logo", "nav"], right: ["notifications", "messages", "account"] }, { left: ["breadcrumb"], right: ["searchField"] }),
-    tablet: layout({}, { left: ["nav", "logo"], right: ["search", "notifications", "messages", "account"] }, { left: ["breadcrumb"] }),
+    desktop: layout({}, { left: ["logo", "nav"], right: ["themeToggle", "notifications", "messages", "account"] }, { left: ["breadcrumb"], right: ["searchField"] }),
+    tablet: layout({}, { left: ["nav", "logo"], right: ["search", "themeToggle", "notifications", "messages", "account"] }, { left: ["breadcrumb"] }),
     mobile: layout({}, { left: ["nav", "logo"], right: ["search", "notifications", "messages", "account"] }, {}),
     split: null,
   }),
@@ -203,9 +213,16 @@ export function moveHeaderElement(device: GcsHeaderDeviceLayout, key: GcsHeaderE
   return out;
 }
 
+/** JSON cu cheile obiectelor în ordine (aspectele citite din `jsonb` au altă ordine a cheilor). */
+const canonical = (v: unknown): string =>
+  Array.isArray(v) ? `[${v.map(canonical).join(",")}]` : v && typeof v === "object" ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canonical((v as Record<string, unknown>)[k])}`).join(",")}}` : JSON.stringify(v);
+
+/** Două aspecte de antet sunt la fel (aceleași elemente în aceleași locuri), oricare ar fi ordinea cheilor. */
+export const sameHeaderLayout = (a: GcsHeaderBuilder, b: GcsHeaderBuilder): boolean => canonical(a) === canonical(b);
+
 /** Aspectul e exact cel al presetării lui (nimic mutat, meniul împărțit implicit). */
 export function headerLayoutIsPreset(b: GcsHeaderBuilder): boolean {
-  return JSON.stringify(b) === JSON.stringify(headerPreset(b.preset));
+  return sameHeaderLayout(b, headerPreset(b.preset));
 }
 
 // ─── Starea compactă (la derulare) ──────────────────────────────────────────

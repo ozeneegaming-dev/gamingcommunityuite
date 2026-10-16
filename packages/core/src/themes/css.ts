@@ -3,7 +3,6 @@ import {
   THEME_ELEMENT_COLORS,
   THEME_TOKENS,
   themeColorCss,
-  themeDefaults,
   themeElementColor,
   themeFonts,
   type GcsThemeElementColor,
@@ -124,18 +123,14 @@ export function joinThemeCssFiles(files: readonly { name: string; content: strin
 const palette = (p: GcsThemePalette) => THEME_TOKENS.map((k) => `  --gcs-${k}: ${p[k]};`).join("\n");
 
 /**
- * Hover-ul butonului principal. Clasic: nuanța din machete pentru accentul implicit, altfel culoarea lui, mai deschisă.
- * Nova: stratul de lumină al sistemului de hover (+8% alb), oricare ar fi culoarea.
+ * Hover-ul butonului principal, în orice temă (regula de hover a sistemului): butonul plin se luminează cu un strat
+ * alb (+8%), nu se închide niciodată, oricare ar fi culoarea lui.
  */
-function primaryHover(elements: GcsThemeElements, p: GcsThemePalette, base: GcsThemePalette, preset: GcsThemeSettings["preset"]): string {
-  if (preset === "nova") return `color-mix(in srgb, ${themeColorCss(elements.btnPrimaryBg)} 92%, #fff)`;
-  if (elements.btnPrimaryBg === "@accent" && p.accent.toUpperCase() === base.accent.toUpperCase()) return "#E23446";
-  return `color-mix(in srgb, ${themeColorCss(elements.btnPrimaryBg)} 86%, #fff)`;
-}
+const primaryHover = (elements: GcsThemeElements): string => `color-mix(in srgb, ${themeColorCss(elements.btnPrimaryBg)} 92%, #fff)`;
 
 /** Variabilele culorilor de element (elementele opace nu ies niciodată `transparent`, nici din setări nenormalizate). */
-const elements = (e: GcsThemeElements, p: GcsThemePalette, base: GcsThemePalette, preset: GcsThemeSettings["preset"]) =>
-  [...THEME_ELEMENT_COLORS.map((k) => `  ${THEME_ELEMENT_VARS[k]}: ${themeColorCss(themeElementColor(k, e[k]))};`), `  --gcs-btn-primary-hover: ${primaryHover(e, p, base, preset)};`].join("\n");
+const elements = (e: GcsThemeElements) =>
+  [...THEME_ELEMENT_COLORS.map((k) => `  ${THEME_ELEMENT_VARS[k]}: ${themeColorCss(themeElementColor(k, e[k]))};`), `  --gcs-btn-primary-hover: ${primaryHover(e)};`].join("\n");
 
 /** Fonturile livrate cu aplicația (prin next/font) au o variabilă proprie; restul vin din Google Fonts. */
 const BUNDLED_FONTS: Record<string, string> = { "Chakra Petch": "var(--font-gcs-display)", Manrope: "var(--font-gcs-text)", "DM Sans": "var(--font-gcs-nova)" };
@@ -185,11 +180,22 @@ function sizes(s: GcsThemeSettings): string {
 const BAND_ICON_RADIUS: Record<GcsThemeSettings["bands"]["icon"], string> = { circle: "50%", rounded: "10px", none: "0" };
 
 /**
- * Regulile setărilor Nova (`NOVA_ONLY_FIELDS`), doar când diferă de aspectul Nova implicit. Țintesc `.gcs-nova` (clasa
- * pusă de layout-ul site-ului pe designul Nova), deci în designul clasic nu schimbă nimic.
+ * Regulile FUNCȚIONALE ale setărilor de sistem (în orice temă, pe `html`): efectele de hover oprite = fără mărire,
+ * fără ridicare și fără tranziții (doar schimbările de culoare).
+ */
+function systemRules(s: GcsThemeSettings): string[] {
+  const rules: string[] = [];
+  if (!s.effects.hover) rules.push(`html:root {\n  --gcs-hover-scale: 1;\n  --gcs-hover-lift: 0px;\n  --gcs-ease: 0s;\n}`);
+  return rules;
+}
+
+/**
+ * Emițătorul regulilor DECORATIVE ale designului GCS (`NOVA_ONLY_FIELDS`: benzile, iconița din bandă, grafica
+ * antetului), doar când diferă de aspectul implicit. Țintesc `.gcs-nova` (clasa designului), deci pe alt design nu
+ * schimbă nimic: e singurul loc (cu `designClass`) unde contează designul, și doar pentru decor.
  */
 function novaRules(s: GcsThemeSettings): string[] {
-  // Pe o temă clasică regulile n-ar avea efect (clasa `gcs-nova` lipsește): CSS-ul ei rămâne cel de până acum.
+  // Pe alt design regulile n-ar avea efect (clasa `gcs-nova` lipsește): CSS-ul lui rămâne cel de până acum.
   if (s.preset !== "nova") return [];
   const base = NOVA_THEME_SETTINGS;
   const rules: string[] = [];
@@ -203,7 +209,6 @@ function novaRules(s: GcsThemeSettings): string[] {
     const none = s.bands.icon === "none" ? `\n  --gcs-band-icon-bg: transparent;\n  --gcs-band-icon-border: transparent;\n  --gcs-band-icon-size: 22px;` : "";
     rules.push(`html.gcs-nova {\n  --gcs-band-icon-radius: ${BAND_ICON_RADIUS[s.bands.icon]};${none}\n}`);
   }
-  if (!s.effects.hover) rules.push(`html.gcs-nova {\n  --gcs-hover-scale: 1;\n  --gcs-hover-lift: 0px;\n  --gcs-ease: 0s;\n}`);
   if (!s.header.pattern) rules.push(`html.gcs-nova {\n  --gcs-hero-pattern: none;\n}`);
   // Fără rândul de sub meniu, căutarea revine ca iconiță în antet (și pe desktop).
   if (!s.header.crumbs) rules.push(`html.gcs-nova .gcs-crumbBar {\n  display: none;\n}`, `html.gcs-nova .gcs-siteHeader__tools .gcs-headerSearch {\n  display: flex;\n}`);
@@ -289,15 +294,15 @@ function fontImports(s: GcsThemeSettings): string[] {
  * Funcția e pură: editorul vizual o rulează și în browser, pentru previzualizarea live.
  */
 export function compileThemeCss(settings: GcsThemeSettings, customCss: string): string {
-  const base = themeDefaults(settings.preset);
-  const light = `${palette(settings.light)}\n${elements(settings.elements.light, settings.light, base.light, settings.preset)}`;
+  const light = `${palette(settings.light)}\n${elements(settings.elements.light)}`;
   return [
     ...fontImports(settings),
-    `html:root {\n${palette(settings.dark)}\n${elements(settings.elements.dark, settings.dark, base.dark, settings.preset)}\n${sizes(settings)}\n}`,
+    `html:root {\n${palette(settings.dark)}\n${elements(settings.elements.dark)}\n${sizes(settings)}\n}`,
     `html[data-theme="light"] {\n${light}\n}`,
     `@media (prefers-color-scheme: light) {\n  html[data-theme="auto"] {\n${light.replace(/^/gm, "  ")}\n  }\n}`,
     `.gcs-card {\n  border-radius: var(--gcs-radius);\n}`,
     ...conditionalRules(settings),
+    ...systemRules(settings),
     ...novaRules(settings),
     customCss ? `/* CSS extra */\n${sanitizeThemeCss(customCss)}` : "",
   ]

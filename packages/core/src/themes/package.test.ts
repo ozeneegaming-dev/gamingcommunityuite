@@ -80,12 +80,12 @@ describe("parseThemePackage", () => {
 
 describe("GcsThemeService: import / export", () => {
   test("exportul are setările și fișierele CSS, fără imagini; importul îl reface ca temă nouă, inactivă", async () => {
-    await themes.saveDraft(root, "nova", { header: { image: "/files/hero1" }, dark: { accent: "#8B5CF6" } });
-    await themes.publish(root, "nova");
-    const file = await css.create(root, "nova", "extra.css");
-    await css.save(root, "nova", file.id, ".gcs-nova .gcs-btn { letter-spacing: 1px; }");
+    await themes.saveDraft(root, "gcs-dark", { header: { image: "/files/hero1" }, dark: { accent: "#8B5CF6" } });
+    await themes.publish(root, "gcs-dark");
+    const file = await css.create(root, "gcs-dark", "extra.css");
+    await css.save(root, "gcs-dark", file.id, ".gcs-nova .gcs-btn { letter-spacing: 1px; }");
 
-    const exported = await themes.exportPackage(root, "nova");
+    const exported = await themes.exportPackage(root, "gcs-dark");
     expect(exported.format).toBe(THEME_PACKAGE_FORMAT);
     expect(exported.settings.header?.image).toBeNull();
     expect(exported.settings.dark?.accent).toBe("#8B5CF6");
@@ -93,12 +93,12 @@ describe("GcsThemeService: import / export", () => {
 
     // Cheia ocupată primește un sufix.
     const imported = await themes.importPackage(root, JSON.parse(JSON.stringify(exported)));
-    expect(imported.key).toBe("nova-2");
+    expect(imported.key).toBe("gcs-dark-2");
     expect(imported.enabled).toBe(false);
     expect(imported.isDefault).toBe(false);
     expect(imported.settings.dark.accent).toBe("#8B5CF6");
     expect(imported.settings.header.image).toBeNull();
-    const files = await css.files("nova-2");
+    const files = await css.files("gcs-dark-2");
     expect(files.map((f) => f.name)).toEqual(["custom.css", "extra.css"]);
     expect(files[1]!.content).toContain("letter-spacing: 1px");
     expect((await w.db.auditLog.findMany({ where: { action: "theme.import" } })).length).toBe(1);
@@ -118,12 +118,12 @@ describe("GcsThemeService: import / export", () => {
     const before = await w.db.theme.count();
     await expect(themes.importPackage(root, pkg({ settings: { radius: 99 } }))).rejects.toBeInstanceOf(GcsValidationError);
     await expect(themes.importPackage(member, pkg())).rejects.toBeInstanceOf(GcsForbidden);
-    await expect(themes.exportPackage(member, "nova")).rejects.toBeInstanceOf(GcsForbidden);
+    await expect(themes.exportPackage(member, "gcs-dark")).rejects.toBeInstanceOf(GcsForbidden);
     expect(await w.db.theme.count()).toBe(before);
   });
 
   test("exportul și importul păstrează tema identică (dus-întors)", async () => {
-    const nova = (await themes.get("nova"))!;
+    const nova = (await themes.get("gcs-dark"))!;
     const again = await themes.importPackage(root, buildThemePackage(nova));
     expect(again.settings).toEqual(nova.settings);
   });

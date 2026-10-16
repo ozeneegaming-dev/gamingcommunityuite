@@ -9,8 +9,11 @@ import { compileThemeCss, CUSTOM_CSS_FILE, joinThemeCssFiles, sanitizeThemeCss }
 import { GcsThemeCssService } from "./files";
 import { buildThemePackage, parseThemePackage, themePackageFiles, type GcsThemePackage } from "./package";
 import { GcsTemplateService } from "../templates/service";
+import { HEADER_DEVICES, HEADER_ROWS, HEADER_ZONES, headerLayoutIsPreset, headerPreset, sameHeaderLayout, type GcsHeaderBuilder } from "./headerBuilder";
 import {
   DEFAULT_THEME_SETTINGS,
+  GCS_DARK_THEME_SETTINGS,
+  GCS_WHITE_THEME_SETTINGS,
   NOVA_THEME_SETTINGS,
   isThemeFileUrl,
   mergeThemeObjects,
@@ -121,7 +124,9 @@ export class GcsThemeService {
   /** Tema activă pentru viewer: cea aleasă de el (dacă e activă), altfel cea implicită, altfel valorile implicite. */
   async active(preferred?: string | null): Promise<GcsThemeView> {
     const all = await this.list();
-    const pick = (preferred && all.find((t) => t.key === preferred && t.enabled)) || all.find((t) => t.isDefault) || all[0];
+    // O cheie veche (cookie-ul `gcs-skin` de dinaintea redenumirii „GCS Nova” → „GCS Dark”) duce la tema nouă.
+    const wanted = preferred && !all.some((t) => t.key === preferred) ? (LEGACY_THEME_KEYS[preferred] ?? preferred) : preferred;
+    const pick = (wanted && all.find((t) => t.key === wanted && t.enabled)) || all.find((t) => t.isDefault) || all[0];
     return (
       pick ?? {
         key: "default",
@@ -348,19 +353,26 @@ export class GcsThemeService {
   }
 
   /**
-   * Temele incluse (seed; idempotent, specul 2026-10-10-tema-nova §3):
-   * - o instalare nouă primește „GCS Nova” (implicită) și „Clasic” (aspectul de până acum, cheia `default`);
-   * - o instalare existentă primește Nova o singură dată (marcajul `theme:nova`): tema e creată, devine implicită, iar
-   *   vechea temă implicită „Default” e redenumită „Clasic” (un nume ales de admin rămâne). Membrii care și-au ales o
-   *   temă (cookie-ul `gcs-skin`) o păstrează. Dacă adminul alege apoi altă temă implicită, seed-ul n-o mai schimbă.
+   * Temele incluse (seed; idempotent):
+   * - o instalare nouă primește „GCS Dark” (implicită, doar întunecată) și „GCS White” (activă, doar luminoasă), perechea
+   *   comutatorului lună / soare; tema „Clasic” nu se mai instalează (specul system-ui, 2026-10-16);
+   * - o instalare de dinaintea Nova primește Nova o singură dată (marcajul `theme:nova`, specul 2026-10-10-tema-nova
+   *   §3), apoi trece prin migrarea de mai jos;
+   * - migrarea `theme:gcs-dark` (o singură dată): „GCS Nova” devine „GCS Dark” (cheia `gcs-dark`, aceleași setări,
+   *   fișiere CSS, șabloane; doar modul devine fix, întunecat), alegerea membrilor (`prefs.skin`) o urmează, „GCS White”
+   *   se adaugă dacă lipsește, iar temele clasice cu antetul neatins primesc aspectul „Clasic” al constructorului.
+   *   Temele existente (inclusiv „Clasic”) rămân, cu tot cu datele lor.
    */
   static async seedDefault(tx: Prisma.TransactionClient): Promise<void> {
     const state = await tx.systemState.upsert({ where: { id: 1 }, update: {}, create: { id: 1 } });
     const marked = state.seedMarks.includes(NOVA_SEED_MARK);
     const count = await tx.theme.count();
     if (count === 0) {
-      await GcsThemeService.createBuiltIn(tx, NOVA_THEME_KEY, NOVA_THEME_NAME, NOVA_THEME_SETTINGS, true);
-      await GcsThemeService.createBuiltIn(tx, CLASSIC_THEME_KEY, CLASSIC_THEME_NAME, DEFAULT_THEME_SETTINGS, false);
+      await GcsThemeService.createBuiltIn(tx, GCS_DARK_THEME_KEY, GCS_DARK_THEME_NAME, GCS_DARK_THEME_SETTINGS, true);
+      await GcsThemeService.createBuiltIn(tx, GCS_WHITE_THEME_KEY, GCS_WHITE_THEME_NAME, GCS_WHITE_THEME_SETTINGS, false);
+      const marks = [NOVA_SEED_MARK, GCS_DARK_SEED_MARK].filter((m) => !state.seedMarks.includes(m));
+      if (marks.length > 0) await tx.systemState.update({ where: { id: 1 }, data: { seedMarks: { push: marks } } });
+      return;
     } else if (!marked) {
       const taken = new Set((await tx.theme.findMany({ select: { key: true } })).map((t) => t.key));
       const key = [NOVA_THEME_KEY, `gcs-${NOVA_THEME_KEY}`].find((k) => !taken.has(k));
@@ -371,6 +383,50 @@ export class GcsThemeService {
       await tx.theme.updateMany({ where: { key: CLASSIC_THEME_KEY, name: LEGACY_THEME_NAME }, data: { name: CLASSIC_THEME_NAME } });
     }
     if (!marked) await tx.systemState.update({ where: { id: 1 }, data: { seedMarks: { push: NOVA_SEED_MARK } } });
+    if (!state.seedMarks.includes(GCS_DARK_SEED_MARK)) {
+      await GcsThemeService.migrateGcsDark(tx);
+      await tx.systemState.update({ where: { id: 1 }, data: { seedMarks: { push: GCS_DARK_SEED_MARK } } });
+    }
+  }
+
+  /** Migrarea `theme:gcs-dark` (vezi `seedDefault`). */
+  private static async migrateGcsDark(tx: Prisma.TransactionClient): Promise<void> {
+    const rows = await tx.theme.findMany({ select: { id: true, key: true, name: true, settings: true } });
+    const taken = new Set(rows.map((r) => r.key));
+    const isNovaDesign = (settings: unknown) => normalizeThemeSettings(settings).preset === NOVA_THEME_SETTINGS.preset;
+    // Tema Nova inclusă: cheia `nova` (sau alternativa `gcs-nova`, când `nova` era ocupată de altă temă).
+    const nova = [NOVA_THEME_KEY, `gcs-${NOVA_THEME_KEY}`].map((k) => rows.find((r) => r.key === k)).find((r) => r && isNovaDesign(r.settings));
+    if (nova && !taken.has(GCS_DARK_THEME_KEY)) {
+      const raw = nova.settings as Record<string, unknown>;
+      const header = raw.header && typeof raw.header === "object" ? (raw.header as Record<string, unknown>) : null;
+      // Antetul „Standard” neatins primește și luna / soarele (comutatorul perechii), ca pe o instalare nouă.
+      const standard = header?.layout !== undefined && sameHeaderLayout(normalizeThemeSettings(raw).header.layout, legacyStandardLayout());
+      const settings = {
+        ...raw,
+        scheme: { ...GCS_DARK_THEME_SETTINGS.scheme },
+        ...(standard && header ? { header: { ...header, layout: headerPreset("classic") } } : {}),
+      };
+      await tx.theme.update({
+        where: { id: nova.id },
+        data: { key: GCS_DARK_THEME_KEY, ...(nova.name === NOVA_THEME_NAME ? { name: GCS_DARK_THEME_NAME } : {}), settings: settings as Prisma.InputJsonValue },
+      });
+      taken.delete(nova.key);
+      taken.add(GCS_DARK_THEME_KEY);
+      // Membrii care aleseseră Nova o păstrează, sub cheia nouă.
+      await tx.$executeRaw`UPDATE users SET prefs = prefs || jsonb_build_object('skin', ${GCS_DARK_THEME_KEY}::text) WHERE prefs->>'skin' = ${nova.key}`;
+    }
+    if (!taken.has(GCS_WHITE_THEME_KEY)) await GcsThemeService.createBuiltIn(tx, GCS_WHITE_THEME_KEY, GCS_WHITE_THEME_NAME, GCS_WHITE_THEME_SETTINGS, false);
+    // Temele clasice: antetul neatins („Standard”, valoarea implicită de până acum) devine aspectul „Clasic” al
+    // constructorului, identic cu antetul lor de până acum (o temă clasică nu putea schimba aspectul constructorului).
+    for (const r of rows) {
+      const raw = r.settings as Record<string, unknown> | null;
+      const header = raw && typeof raw.header === "object" && raw.header ? (raw.header as Record<string, unknown>) : null;
+      if (isNovaDesign(r.settings) || !header || !header.layout) continue;
+      const layout = normalizeThemeSettings(r.settings).header.layout;
+      if (layout.preset !== "classic" || !headerLayoutIsPreset(layout)) continue;
+      const settings = { ...raw, header: { ...header, layout: headerPreset("basic") } };
+      await tx.theme.update({ where: { id: r.id }, data: { settings: settings as Prisma.InputJsonValue } });
+    }
   }
 
   private static async createBuiltIn(tx: Prisma.TransactionClient, key: string, name: string, settings: GcsThemeSettings, isDefault: boolean): Promise<void> {
@@ -379,7 +435,24 @@ export class GcsThemeService {
   }
 }
 
-/** Tema Nova inclusă (designul `nova`) și tema clasică (aspectul de până acum, cheia veche a temei implicite). */
+/** Aspectul „Standard” de dinaintea comutatorului lună / soare din antet (pentru migrare). */
+function legacyStandardLayout(): GcsHeaderBuilder {
+  const p = headerPreset("classic");
+  for (const d of HEADER_DEVICES) for (const r of HEADER_ROWS) for (const z of HEADER_ZONES) p[d][r][z] = p[d][r][z].filter((k) => k !== "themeToggle");
+  return p;
+}
+
+/** Temele incluse: „GCS Dark” (implicită) și „GCS White”, perechea comutatorului lună / soare. */
+export const GCS_DARK_THEME_KEY = "gcs-dark";
+export const GCS_DARK_THEME_NAME = "GCS Dark";
+export const GCS_WHITE_THEME_KEY = "gcs-white";
+export const GCS_WHITE_THEME_NAME = "GCS White";
+/** Marcajul migrării „GCS Nova” → „GCS Dark” + „GCS White” (`system_state.seedMarks`). */
+export const GCS_DARK_SEED_MARK = "theme:gcs-dark";
+/** Cheile vechi ale temelor incluse → cheile noi (cookie-urile `gcs-skin` rămase de dinaintea redenumirii). */
+export const LEGACY_THEME_KEYS: Readonly<Record<string, string>> = { nova: GCS_DARK_THEME_KEY, "gcs-nova": GCS_DARK_THEME_KEY };
+
+/** Vechea temă Nova inclusă (cheia de dinaintea „GCS Dark”) și tema clasică (instalările vechi o păstrează). */
 export const NOVA_THEME_KEY = "nova";
 export const NOVA_THEME_NAME = "GCS Nova";
 export const CLASSIC_THEME_KEY = "default";

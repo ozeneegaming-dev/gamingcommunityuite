@@ -17,7 +17,7 @@ import {
   type GcsHeaderBuilder,
 } from "./headerBuilder";
 import { compileThemeCss } from "./css";
-import { NOVA_THEME_SETTINGS, normalizeThemeSettings, themeSettingsErrors, withThemePath } from "./settings";
+import { DEFAULT_THEME_SETTINGS, NOVA_THEME_SETTINGS, THEME_PRESETS, normalizeThemeSettings, themeDefaults, themeSettingsErrors, withThemePath } from "./settings";
 
 const clone = <T>(v: T): T => structuredClone(v);
 
@@ -46,6 +46,20 @@ describe("constructorul de antet: elementele și presetările", () => {
         expect(placedHeaderElements(p[device])).toEqual(expect.arrayContaining(["logo", "nav"]));
       }
     }
+  });
+
+  test("„Clasic” = antetul clasic de până acum: un rând (logo + meniu; căutarea, notificările, mesajele, contul), sertarul pe ecranele mici", () => {
+    // Antetul temelor clasice de dinainte de constructor (`GcsSiteHeader`, ramura clasică): pe desktop logo-ul și meniul,
+    // apoi uneltele (căutarea extensibilă, clopoțelul, mesajele, meniul userului); pe tabletă / mobil butonul sertarului
+    // înaintea logo-ului; fără rândul cu breadcrumb-ul (ascuns pe designul clasic).
+    const today = {
+      top: { left: [], center: [], right: [] },
+      main: { left: ["logo", "nav"], center: [], right: ["search", "notifications", "messages", "account"] },
+      bottom: { left: [], center: [], right: [] },
+    };
+    const small = { ...today, main: { ...today.main, left: ["nav", "logo"] } };
+    expect(headerPreset("basic")).toEqual({ preset: "basic", desktop: today, tablet: small, mobile: small, split: null });
+    expect(HEADER_PRESETS[0]).toBe("basic");
   });
 
   test("Cockpit: logo + acțiunile în rândul 1, meniul în rândul 2 cu statusul serverelor în dreapta", () => {
@@ -194,7 +208,9 @@ describe("constructorul de antet: meniul împărțit (Esports)", () => {
 });
 
 describe("setările temei: antetul, bara de jos și consola", () => {
-  test("valorile Nova implicite sunt valide; antetul rămâne „Nova clasic”, consola oprită", () => {
+  test("valorile implicite: designul clasic pornește de la „Clasic” (64 px), designul GCS de la „Standard”; consola oprită", () => {
+    expect(DEFAULT_THEME_SETTINGS.header.layout).toEqual(headerPreset("basic"));
+    expect(DEFAULT_THEME_SETTINGS.header.rowMain).toBe(64);
     expect(NOVA_THEME_SETTINGS.header.layout.preset).toBe("classic");
     expect(NOVA_THEME_SETTINGS.cockpit.enabled).toBe(false);
     expect(NOVA_THEME_SETTINGS.cockpit.pages).toBe("home");
@@ -224,6 +240,25 @@ describe("setările temei: antetul, bara de jos și consola", () => {
 });
 
 describe("constructorul de antet: CSS-ul temei", () => {
+  test("setările funcționale se emit pentru ORICE design (pe `html`, nu doar pe designul GCS)", () => {
+    for (const preset of THEME_PRESETS) {
+      const base = clone(themeDefaults(preset));
+      const off = compileThemeCss(withThemePath(base, "effects.hover", false), "");
+      expect(off, preset).toContain("html:root {\n  --gcs-hover-scale: 1;\n  --gcs-hover-lift: 0px;\n  --gcs-ease: 0s;\n}");
+      expect(compileThemeCss(withThemePath(base, "header.navIcons", false), ""), preset).toContain(".gcs-hb__navBar .gcs-hb__nav > .gcs-icon:not(.gcs-hb__caret)");
+      expect(compileThemeCss(base, ""), preset).not.toContain("--gcs-hover-scale: 1;");
+      // Butonul plin se luminează (strat alb), în orice design.
+      expect(compileThemeCss(base, ""), preset).toContain("--gcs-btn-primary-hover: color-mix(in srgb, var(--gcs-accent) 92%, #fff);");
+    }
+  });
+
+  test("decorul designului GCS (benzile, grafica antetului) rămâne doar pe el", () => {
+    const decor = (preset: (typeof THEME_PRESETS)[number]) => compileThemeCss(withThemePath(withThemePath(clone(themeDefaults(preset)), "bands.style", "accent"), "header.pattern", false), "");
+    expect(decor("nova")).toContain("html.gcs-nova {\n  --gcs-band-shadow");
+    expect(decor("nova")).toContain("--gcs-hero-pattern: none;");
+    expect(decor("classic")).not.toContain("gcs-nova");
+  });
+
   test("fără iconițe în meniu: ascunse și în bara constructorului, nu doar în antetul clasic", () => {
     const off = compileThemeCss(withThemePath(clone(NOVA_THEME_SETTINGS), "header.navIcons", false), "");
     expect(off).toContain(".gcs-hb__navBar .gcs-hb__nav > .gcs-icon:not(.gcs-hb__caret)");

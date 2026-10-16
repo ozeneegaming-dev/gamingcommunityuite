@@ -1,10 +1,16 @@
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createWorld, type GcsTestWorld } from "../../test/world";
 import { compileThemeCss } from "./css";
-import { CLASSIC_THEME_KEY, GcsThemeService, NOVA_SEED_MARK, NOVA_THEME_KEY } from "./service";
+import { headerPreset } from "./headerBuilder";
+import { GcsThemeCssService } from "./files";
+import { GCS_DARK_SEED_MARK, GCS_DARK_THEME_KEY, GCS_WHITE_THEME_KEY, GcsThemeService, NOVA_SEED_MARK, NOVA_THEME_KEY } from "./service";
 import {
   DEFAULT_THEME_SETTINGS,
+  GCS_DARK_THEME_SETTINGS,
+  GCS_WHITE_THEME_SETTINGS,
   NOVA_ONLY_FIELDS,
+  themeHasDesignDecor,
+  themeSingleScheme,
   NOVA_THEME_SETTINGS,
   THEME_FIELDS,
   THEME_FONTS,
@@ -92,6 +98,25 @@ describe("designul Nova: setările", () => {
     for (const path of NOVA_ONLY_FIELDS) expect(THEME_FIELDS[path], path).toBeDefined();
   });
 
+  test("doar decorul e al designului GCS; funcțiile (antetul, consola, bara de jos, efectele) sunt ale sistemului", () => {
+    expect([...NOVA_ONLY_FIELDS].sort()).toEqual(["bands.icon", "bands.style", "header.crumbs", "header.image", "header.overlay", "header.pattern"]);
+    for (const path of ["header.layout", "header.dropdowns", "header.mega", "cockpit.enabled", "mobileNav.placement", "mobileNav.items", "effects.hover"]) {
+      expect(NOVA_ONLY_FIELDS, path).not.toContain(path);
+    }
+    expect(themeHasDesignDecor("nova")).toBe(true);
+    expect(themeHasDesignDecor("classic")).toBe(false);
+  });
+
+  test("GCS Dark: doar întunecată; GCS White: doar luminoasă, cu paleta luminoasă a designului; restul identic", () => {
+    expect(themeSingleScheme(GCS_DARK_THEME_SETTINGS)).toBe("dark");
+    expect(themeSingleScheme(GCS_WHITE_THEME_SETTINGS)).toBe("light");
+    expect(themeSingleScheme(NOVA_THEME_SETTINGS)).toBeNull();
+    expect(GCS_WHITE_THEME_SETTINGS.light).toEqual(NOVA_THEME_SETTINGS.light);
+    expect({ ...GCS_DARK_THEME_SETTINGS, scheme: null }).toEqual({ ...NOVA_THEME_SETTINGS, scheme: null });
+    expect(themeSettingsErrors(GCS_DARK_THEME_SETTINGS)).toEqual({});
+    expect(themeSettingsErrors(GCS_WHITE_THEME_SETTINGS)).toEqual({});
+  });
+
   test("contrastul: textul, textul secundar, linkurile și butonul principal se citesc în ambele moduri", () => {
     for (const mode of ["dark", "light"] as const) {
       const p = NOVA_THEME_SETTINGS[mode];
@@ -156,9 +181,9 @@ describe("designul Nova: CSS-ul compilat", () => {
     expect(compileThemeCss(nova("bands.icon", "rounded"), "")).toContain("--gcs-band-icon-radius: 10px;");
   });
 
-  test("designul clasic nu se schimbă: hover-ul din machete și aceleași variabile", () => {
+  test("designul clasic: fără decorul GCS; butonul plin se luminează la hover, ca în orice temă", () => {
     const css = compileThemeCss(DEFAULT_THEME_SETTINGS, "");
-    expect(css).toContain("--gcs-btn-primary-hover: #E23446;");
+    expect(css).toContain("--gcs-btn-primary-hover: color-mix(in srgb, var(--gcs-accent) 92%, #fff);");
     expect(css).not.toContain(".gcs-nova");
     expect(css).not.toContain("--font-gcs-nova");
   });
@@ -169,10 +194,10 @@ describe("temele incluse: instalare nouă și actualizare", () => {
 
   beforeEach(async () => {
     w = await createWorld([]);
-    // Lumea de test are deja seed-ul: pornim de la o bază fără teme și fără marcajul Nova.
+    // Lumea de test are deja seed-ul: pornim de la o bază fără teme și fără marcajele temelor.
     await w.db.theme.deleteMany();
     const state = await w.db.systemState.findUniqueOrThrow({ where: { id: 1 } });
-    await w.db.systemState.update({ where: { id: 1 }, data: { seedMarks: state.seedMarks.filter((m) => m !== NOVA_SEED_MARK) } });
+    await w.db.systemState.update({ where: { id: 1 }, data: { seedMarks: state.seedMarks.filter((m) => m !== NOVA_SEED_MARK && m !== GCS_DARK_SEED_MARK) } });
   });
 
   afterAll(async () => {
@@ -180,51 +205,109 @@ describe("temele incluse: instalare nouă și actualizare", () => {
   });
 
   const seed = () => w.db.$transaction((tx) => GcsThemeService.seedDefault(tx));
-  const rows = () => w.db.theme.findMany({ orderBy: { key: "asc" }, select: { key: true, name: true, isDefault: true, enabled: true, settings: true } });
+  const rows = () => w.db.theme.findMany({ orderBy: { key: "asc" }, select: { id: true, key: true, name: true, isDefault: true, enabled: true, settings: true } });
+  const marks = async () => (await w.db.systemState.findUniqueOrThrow({ where: { id: 1 } })).seedMarks;
+  /** O instalare de dinaintea redenumirii: „GCS Nova” (implicită, cu CSS și un șablon propriu) și „Clasic”. */
+  async function legacyInstall(novaKey = NOVA_THEME_KEY) {
+    // Antetul „Standard” de atunci: fără luna / soarele (comutatorul perechii a venit odată cu GCS Dark / White).
+    const standard = headerPreset("classic");
+    for (const d of ["desktop", "tablet", "mobile"] as const) for (const r of ["top", "main", "bottom"] as const) for (const z of ["left", "center", "right"] as const) standard[d][r][z] = standard[d][r][z].filter((k) => k !== "themeToggle");
+    const settings = withThemePath(withThemePath(structuredClone(NOVA_THEME_SETTINGS), "dark.accent", "#123456"), "header.layout", standard);
+    const nova = await w.db.theme.create({ data: { key: novaKey, name: "GCS Nova", isDefault: true, settings: settings as never } });
+    await w.db.$transaction((tx) => GcsThemeCssService.seed(tx, nova.id, ".gcs-card { outline: 1px solid red; }", { authorId: null, authorName: "" }));
+    await w.db.themeTemplate.create({ data: { themeId: nova.id, key: "forum.row", source: "<div>{{ forum.title }}</div>", baseVersion: 1, baseSource: "" } });
+    const classic = await w.db.theme.create({ data: { key: "default", name: "Clasic", settings: DEFAULT_THEME_SETTINGS as never } });
+    await w.db.systemState.update({ where: { id: 1 }, data: { seedMarks: { push: NOVA_SEED_MARK } } });
+    return { nova, classic };
+  }
 
-  test("o instalare nouă primește GCS Nova (implicită) și Clasic; seed-ul repetat nu schimbă nimic", async () => {
+  test("o instalare nouă primește GCS Dark (implicită) și GCS White (activă), fără „Clasic”; seed-ul repetat nu schimbă nimic", async () => {
     await seed();
     await seed();
     const themes = await rows();
-    expect(themes.map((t) => [t.key, t.name, t.isDefault])).toEqual([
-      [CLASSIC_THEME_KEY, "Clasic", false],
-      [NOVA_THEME_KEY, "GCS Nova", true],
+    expect(themes.map((t) => [t.key, t.name, t.isDefault, t.enabled])).toEqual([
+      [GCS_DARK_THEME_KEY, "GCS Dark", true, true],
+      [GCS_WHITE_THEME_KEY, "GCS White", false, true],
     ]);
-    expect(normalizeThemeSettings(themes.find((t) => t.key === NOVA_THEME_KEY)!.settings).preset).toBe("nova");
-    expect(normalizeThemeSettings(themes.find((t) => t.key === CLASSIC_THEME_KEY)!.settings)).toEqual(DEFAULT_THEME_SETTINGS);
-    expect((await w.db.systemState.findUniqueOrThrow({ where: { id: 1 } })).seedMarks.filter((m) => m === NOVA_SEED_MARK)).toHaveLength(1);
+    expect(normalizeThemeSettings(themes[0]!.settings)).toEqual(GCS_DARK_THEME_SETTINGS);
+    expect(normalizeThemeSettings(themes[1]!.settings)).toEqual(GCS_WHITE_THEME_SETTINGS);
+    expect((await marks()).filter((m) => m === GCS_DARK_SEED_MARK)).toHaveLength(1);
     // Fiecare temă are fișierul `custom.css` al editorului vizual.
     expect(await w.db.themeCssFile.count({ where: { name: "custom.css" } })).toBe(2);
   });
 
-  test("o instalare existentă primește Nova o singură dată; vechea temă devine „Clasic”, alegerea ulterioară a adminului rămâne", async () => {
-    await w.db.theme.create({ data: { key: "default", name: "Default", isDefault: true, settings: DEFAULT_THEME_SETTINGS as never } });
-    await w.db.theme.create({ data: { key: "neon", name: "Neon", settings: DEFAULT_THEME_SETTINGS as never } });
+  test("migrarea: „GCS Nova” devine „GCS Dark” cu aceleași setări, CSS, șabloane și alegerea membrilor; GCS White se adaugă", async () => {
+    const { nova, classic } = await legacyInstall();
+    const ana = await w.createUser("Ana", "member");
+    const ion = await w.createUser("Ion", "member");
+    await w.db.$executeRaw`UPDATE users SET prefs = prefs || jsonb_build_object('skin', 'nova') WHERE id = ${ana.id}`;
+    await w.db.$executeRaw`UPDATE users SET prefs = prefs || jsonb_build_object('skin', 'default') WHERE id = ${ion.id}`;
     await seed();
-    let themes = await rows();
+    await seed();
+
+    const themes = await rows();
     expect(themes.map((t) => [t.key, t.name, t.isDefault])).toEqual([
       ["default", "Clasic", false],
-      ["neon", "Neon", false],
-      [NOVA_THEME_KEY, "GCS Nova", true],
+      [GCS_DARK_THEME_KEY, "GCS Dark", true],
+      [GCS_WHITE_THEME_KEY, "GCS White", false],
     ]);
-    // Adminul revine la tema clasică: la repornire seed-ul nu mai schimbă tema implicită.
-    await w.db.theme.updateMany({ data: { isDefault: false } });
-    await w.db.theme.update({ where: { key: "default" }, data: { isDefault: true } });
-    await seed();
-    themes = await rows();
-    expect(themes.filter((t) => t.isDefault).map((t) => t.key)).toEqual(["default"]);
-    expect(themes).toHaveLength(3);
+    const dark = themes.find((t) => t.key === GCS_DARK_THEME_KEY)!;
+    // Același rând (același id): fișierele CSS și șabloanele merg cu el; setările rămân, doar modul devine fix.
+    expect(dark.id).toBe(nova.id);
+    const s = normalizeThemeSettings(dark.settings);
+    expect(s.dark.accent).toBe("#123456");
+    expect(s.preset).toBe("nova");
+    expect(themeSingleScheme(s)).toBe("dark");
+    // Antetul „Standard” neatins primește luna / soarele.
+    expect(s.header.layout).toEqual(headerPreset("classic"));
+    expect(s.header.layout.desktop.main.right).toContain("themeToggle");
+    expect((await w.db.themeCssFile.findFirstOrThrow({ where: { themeId: nova.id, name: "custom.css" } })).content).toContain("outline: 1px solid red");
+    expect(await w.db.themeTemplate.count({ where: { themeId: nova.id, key: "forum.row" } })).toBe(1);
+    // Membrii care aleseseră Nova o păstrează sub cheia nouă; ceilalți rămân la alegerea lor.
+    const prefs = async (id: string) => ((await w.db.user.findUniqueOrThrow({ where: { id }, select: { prefs: true } })).prefs as Record<string, unknown>).skin;
+    expect(await prefs(ana.id)).toBe(GCS_DARK_THEME_KEY);
+    expect(await prefs(ion.id)).toBe("default");
+    // Tema „Clasic” păstrează totul; antetul ei neatins devine aspectul „Clasic” al constructorului (același antet).
+    const kept = themes.find((t) => t.key === "default")!;
+    expect(kept.id).toBe(classic.id);
+    expect(normalizeThemeSettings(kept.settings).header.layout).toEqual(headerPreset("basic"));
+    expect((await marks()).filter((m) => m === GCS_DARK_SEED_MARK)).toHaveLength(1);
   });
 
-  test("un nume ales de admin pentru vechea temă rămâne; o cheie `nova` ocupată primește alternativa", async () => {
+  test("cookie-ul vechi (`gcs-skin=nova`) duce la GCS Dark", async () => {
+    await legacyInstall();
+    await seed();
+    const themes = new GcsThemeService({ db: w.db, cache: w.cache, bus: w.bus, acp: w.acp });
+    expect((await themes.active("nova")).key).toBe(GCS_DARK_THEME_KEY);
+    expect((await themes.active("default")).key).toBe("default");
+  });
+
+  test("o instalare de dinaintea Nova: Nova se creează o dată, apoi devine GCS Dark; numele ales de admin rămâne", async () => {
     await w.db.theme.create({ data: { key: "default", name: "Tema mea", isDefault: true, settings: DEFAULT_THEME_SETTINGS as never } });
-    await w.db.theme.create({ data: { key: "nova", name: "Nova veche", settings: DEFAULT_THEME_SETTINGS as never } });
+    await w.db.theme.create({ data: { key: "neon", name: "Neon", settings: withThemePath(structuredClone(DEFAULT_THEME_SETTINGS), "header.layout", headerPreset("esports")) as never } });
     await seed();
     const themes = await rows();
     expect(themes.map((t) => [t.key, t.name, t.isDefault])).toEqual([
       ["default", "Tema mea", false],
-      ["gcs-nova", "GCS Nova", true],
-      ["nova", "Nova veche", false],
+      [GCS_DARK_THEME_KEY, "GCS Dark", true],
+      [GCS_WHITE_THEME_KEY, "GCS White", false],
+      ["neon", "Neon", false],
+    ]);
+    // Un antet ales de admin (aici Esports) nu e atins de migrare.
+    expect(normalizeThemeSettings(themes.find((t) => t.key === "neon")!.settings).header.layout.preset).toBe("esports");
+  });
+
+  test("o cheie `nova` a altei teme rămâne; tema inclusă (`gcs-nova`) devine GCS Dark; o cheie `gcs-white` ocupată nu se suprascrie", async () => {
+    await legacyInstall("gcs-nova");
+    await w.db.theme.create({ data: { key: "nova", name: "Nova veche", settings: DEFAULT_THEME_SETTINGS as never } });
+    await w.db.theme.create({ data: { key: GCS_WHITE_THEME_KEY, name: "Albă proprie", settings: DEFAULT_THEME_SETTINGS as never } });
+    await seed();
+    const themes = await rows();
+    expect(themes.map((t) => [t.key, t.name])).toEqual([
+      ["default", "Clasic"],
+      [GCS_DARK_THEME_KEY, "GCS Dark"],
+      [GCS_WHITE_THEME_KEY, "Albă proprie"],
+      ["nova", "Nova veche"],
     ]);
   });
 });
