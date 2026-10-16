@@ -8,6 +8,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { GcsNotificationBell } from "@/app/(site)/_components/notifications/GcsNotificationBell";
+import { notificationIcons } from "@/app/(site)/_components/notifications/notification-icons";
 import { requireAcpPanel } from "@/lib/acp";
 import { memberHref } from "@/lib/forum-urls";
 import { services } from "@/lib/services";
@@ -114,16 +115,7 @@ export default async function AcpPanelLayout({ children }: { children: ReactNode
           <GcsIcon name="fa-solid fa-arrow-up-right-from-square" />
           <span className="gcs-acpTop__linkText">{t("acp.header.viewSite")}</span>
         </Link>
-        <GcsNotificationBell
-          initialUnread={unread}
-          labels={{
-            title: t("notifications.title"),
-            unread: t.raw("notifications.unreadLabel") as string,
-            empty: t("notifications.empty"),
-            markAll: t("notifications.markAll"),
-            seeAll: t("notifications.seeAll"),
-          }}
-        />
+        <GcsNotificationBell initialUnread={unread} icons={await notificationIcons()} />
         <GcsAcpThemeSwitch
           initial={theme}
           labels={{

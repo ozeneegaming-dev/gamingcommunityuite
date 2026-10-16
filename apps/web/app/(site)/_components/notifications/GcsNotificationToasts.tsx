@@ -6,24 +6,26 @@ import type { GcsNotificationItem } from "@/lib/notifications";
 import { useRealtime } from "../realtime/GcsRealtimeProvider";
 
 /**
- * Toast-urile notificărilor (specul etapei 5): la o notificare nouă (evenimentul live `notification` cu `created`),
- * textul tradus vine din `/api/notifications` și apare în colțul din dreapta jos, cu un sunet scurt generat în browser.
- * Ambele se pot opri din Setări → Notificări.
+ * Toast-urile notificărilor (specul etapei 5, Notificări v2): la o notificare nouă cu canalul „toast” pornit (evenimentul
+ * live `notification` cu `created` și `toast`), textul tradus vine din `/api/notifications?id=…` și apare în colțul din
+ * dreapta jos, cu un sunet scurt generat în browser. Comutatoarele generale (toast-uri, sunet) sunt în Setări → Notificări;
+ * canalul pe tip îl alege membrul în tabelul de acolo. Click pe toast → notificarea, numărată pe canalul „toast”.
  */
 export function GcsNotificationToasts({ toasts, sound, closeLabel }: { toasts: boolean; sound: boolean; closeLabel: string }) {
   const realtime = useRealtime();
   useEffect(() => {
     if (!toasts && !sound) return;
     return realtime.on("notification", (data) => {
-      const created = (data as { created?: unknown } | null)?.created;
-      if (typeof created !== "number") return;
+      const payload = (data as { created?: unknown; toast?: unknown } | null) ?? {};
+      const created = payload.created;
+      if (typeof created !== "number" || payload.toast === false) return;
       if (sound) playNotificationSound();
       if (!toasts) return;
-      void fetch("/api/notifications", { cache: "no-store" })
+      void fetch(`/api/notifications?id=${created}`, { cache: "no-store" })
         .then((r) => (r.ok ? (r.json() as Promise<{ items: GcsNotificationItem[] }>) : null))
         .then((res) => {
           const item = res?.items.find((i) => i.id === created);
-          if (item) gcsToast({ title: item.text, ...(item.snippet ? { body: item.snippet } : {}), href: item.href });
+          if (item) gcsToast({ title: item.text, ...(item.snippet ? { body: item.snippet } : {}), href: `/notifications/${item.id}?via=toast` });
         })
         .catch(() => {});
     });

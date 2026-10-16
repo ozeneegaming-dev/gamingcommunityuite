@@ -74,6 +74,12 @@ const FUNCTIONAL = [
   /^gcs-scrollRail/,
   /^gcs-annBar/,
   /^gcs-guestCta/,
+  // Notificări v2: clopoțelul, pagina, tabelul canalelor, web push, rezumatul săptămânal și cardurile ACP.
+  /^gcs-notif/,
+  /^gcs-prefGrid/,
+  /^gcs-pushCard/,
+  /^gcs-weekly/,
+  /^gcs-acpNotif/,
 ];
 /**
  * Clase care apar sub `.gcs-nova` doar ca decor (modificatori fără CSS de bază propriu): grafica antetului „Standard”
@@ -93,7 +99,13 @@ describe("system UI: CSS-ul componentelor funcționale e al sistemului", () => {
   });
 
   test("fișierele sistemului nu depind de design: fără `.gcs-nova` în system-ui.css, header-menus.css, sweep.css și fișierele pachetului de finisare", () => {
-    for (const f of ["system-ui.css", "header-menus.css", "sweep.css", "lists.css", "loaders.css", "scroll.css", "announce.css"]) expect(selectors(ui(f)).filter((s) => s.includes("gcs-nova"))).toEqual([]);
+    for (const f of ["system-ui.css", "header-menus.css", "sweep.css", "lists.css", "loaders.css", "scroll.css", "announce.css", "notifications.css"]) expect(selectors(ui(f)).filter((s) => s.includes("gcs-nova"))).toEqual([]);
+  });
+
+  test("notificările v2 sunt ale sistemului: dropdown-ul clopoțelului, pagina, tabelul canalelor, web push", () => {
+    for (const c of ["gcs-notifMenu__panel", "gcs-notifTabs__tab", "gcs-notifRow", "gcs-notifFilter", "gcs-prefGrid__row", "gcs-pushCard", "gcs-weekly", "gcs-acpNotif__card"]) {
+      expect(systemClasses.has(c), c).toBe(true);
+    }
   });
 
   test("antetul construit, panourile, consola și bara de jos au CSS-ul de bază în sistem", () => {
@@ -114,7 +126,7 @@ describe("system UI: CSS-ul componentelor funcționale e al sistemului", () => {
     expect(at("system-ui.css")).toBeGreaterThan(at("titles.css"));
     expect(at("header-menus.css")).toBeGreaterThan(at("system-ui.css"));
     expect(at("nova.css")).toBeGreaterThan(at("header-menus.css"));
-    for (const f of ["lists.css", "loaders.css", "scroll.css", "announce.css"]) {
+    for (const f of ["lists.css", "loaders.css", "scroll.css", "announce.css", "notifications.css"]) {
       expect(at(f), f).toBeGreaterThan(at("header-menus.css"));
       expect(at(f), f).toBeLessThan(at("nova.css"));
     }

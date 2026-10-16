@@ -15,6 +15,7 @@ import { localeOptions } from "@/lib/locales";
 import { services } from "@/lib/services";
 import { GcsAuthLink } from "../GcsAuthModal";
 import { GcsNotificationBell } from "../notifications/GcsNotificationBell";
+import { notificationIcons } from "../notifications/notification-icons";
 import { GcsAccountMenu } from "./GcsAccountMenu";
 import { GcsCreateMenu } from "./GcsCreateMenu";
 import { GcsHeaderFrame } from "./GcsHeaderFrame";
@@ -74,9 +75,8 @@ type Props = {
  */
 export async function GcsHeaderBuilder({ actor, theme, siteName, brand, menu, landing, user, counts, staff, userExtra = [] }: Props) {
   const s = theme.settings;
-  const [t, tn, th, locale, h, locales, mode, socials, servers, toggle] = await Promise.all([
+  const [t, th, locale, h, locales, mode, socials, servers, toggle] = await Promise.all([
     getTranslations("site"),
-    getTranslations("notifications"),
     getTranslations("header"),
     getLocale(),
     headers(),
@@ -139,12 +139,7 @@ export async function GcsHeaderBuilder({ actor, theme, siteName, brand, menu, la
   if (user && account) {
     parts.create = <GcsCreateMenu icons={icons} />;
     parts.messages = <GcsMessagesMenu initialUnread={counts.messages} />;
-    parts.notifications = (
-      <GcsNotificationBell
-        initialUnread={counts.notifications}
-        labels={{ title: tn("title"), unread: tn.raw("unreadLabel") as string, empty: tn("empty"), markAll: tn("markAll"), seeAll: tn("seeAll") }}
-      />
-    );
+    parts.notifications = <GcsNotificationBell initialUnread={counts.notifications} icons={await notificationIcons()} />;
     parts.account = (
       <GcsAccountMenu
         data={account}
