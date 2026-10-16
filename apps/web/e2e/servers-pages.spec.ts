@@ -465,7 +465,8 @@ test("contestația: membrul sancționat contestă, staff-ul preia, nota internă
 
   // Staff-ul: coada „De tratat”, preluarea, nota internă și răspunsul public, apoi acceptarea cu ridicarea banului.
   await staff.goto("/servers/tickets?scope=handle");
-  await staff.getByTestId("gcs-ticket-row").filter({ hasText: "Nu am folosit wallhack" }).getByRole("link").click();
+  // Rândul are și linkurile membrilor (autorul, responsabilul): se deschide titlul.
+  await staff.getByTestId("gcs-ticket-row").filter({ hasText: "Nu am folosit wallhack" }).getByRole("link", { name: "Nu am folosit wallhack" }).click();
   await staff.getByTestId("gcs-ticket-take").click();
   await expect(staff.getByTestId("gcs-ticket-assignee-name")).toHaveText(ROOT);
   await staff.getByTestId("gcs-ticket-internal").locator("input").check();
