@@ -1,4 +1,4 @@
-import { THEMES_ACP_SECTION } from "@gcs/core";
+import { normalizeThemeTogglePair, THEME_TOGGLE_SETTING, THEMES_ACP_SECTION } from "@gcs/core";
 import { GcsButton, GcsCard } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
@@ -7,7 +7,7 @@ import { getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
-import { createTheme, deleteTheme, importTheme, updateTheme } from "../actions";
+import { createTheme, deleteTheme, importTheme, saveThemeToggle, updateTheme } from "../actions";
 import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -20,7 +20,14 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 export default async function AcpThemesPage() {
   await requireAcpSection(THEMES_ACP_SECTION);
-  const [t, themes] = await Promise.all([getTranslations("acp.themes"), services().themes.list()]);
+  const [t, themes, rawPair] = await Promise.all([
+    getTranslations("acp.themes"),
+    services().themes.list(),
+    services()
+      .settings.get<unknown>(THEME_TOGGLE_SETTING)
+      .catch(() => null),
+  ]);
+  const pair = normalizeThemeTogglePair(rawPair);
   return (
     <>
       <GcsAcpTitle icon="fa-solid fa-brush">
@@ -72,6 +79,37 @@ export default async function AcpThemesPage() {
           </div>
         </GcsCard>
       ))}
+      {/* Comutatorul lună / soare (antetul, meniul contului, subsolul): perechea de teme, în orice temă. */}
+      <GcsCard as="section" aria-labelledby="gcs-theme-toggle" style={{ padding: 16 }} data-testid="gcs-acp-theme-toggle">
+        <h2 id="gcs-theme-toggle" className="gcs-acpWidget__title" style={{ marginBottom: 6 }}>
+          <GcsAcpTitleIcon name="fa-solid fa-circle-half-stroke" />
+          {t("toggle.title")}
+        </h2>
+        <p className="gcs-muted" style={{ margin: "0 0 12px" }}>
+          {t("toggle.hint")}
+        </p>
+        <GcsActionForm action={saveThemeToggle} submitLabel={t("save")} submitKind="save">
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
+            <label className="gcs-checkRow">
+              <input type="checkbox" name="enabled" defaultChecked={pair.enabled} data-testid="gcs-acp-theme-toggle-enabled" />
+              {t("toggle.enabled")}
+            </label>
+            {(["dark", "light"] as const).map((side) => (
+              <label key={side} className="gcs-field" style={{ width: 220 }}>
+                {t(`toggle.${side}`)}
+                <select className="gcs-input" name={side} defaultValue={pair[side]} data-testid={`gcs-acp-theme-toggle-${side}`}>
+                  {!themes.some((x) => x.key === pair[side]) && <option value={pair[side]}>{t("toggle.missing", { key: pair[side] })}</option>}
+                  {themes.map((x) => (
+                    <option key={x.key} value={x.key}>
+                      {x.enabled ? x.name : t("toggle.disabled", { name: x.name })}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ))}
+          </div>
+        </GcsActionForm>
+      </GcsCard>
       <GcsCard as="section" aria-labelledby="gcs-theme-import" style={{ padding: 16 }}>
         <h2 id="gcs-theme-import" className="gcs-acpWidget__title" style={{ marginBottom: 6 }}>
           <GcsAcpTitleIcon name="fa-solid fa-file-import" />

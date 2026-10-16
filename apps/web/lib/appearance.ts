@@ -1,5 +1,15 @@
 import "server-only";
-import { DEFAULT_THEME_SETTINGS, THEMES_ACP_SECTION, WIDGETS_ACP_SECTION, type GcsThemeView } from "@gcs/core";
+import {
+  activeThemeTogglePair,
+  DEFAULT_THEME_SETTINGS,
+  normalizeThemeTogglePair,
+  THEME_TOGGLE_SETTING,
+  THEMES_ACP_SECTION,
+  themeSingleScheme,
+  themeToggleState,
+  WIDGETS_ACP_SECTION,
+  type GcsThemeView,
+} from "@gcs/core";
 import { cookies, headers } from "next/headers";
 import { cache } from "react";
 import { getAcpContext } from "./acp";
@@ -13,13 +23,17 @@ export type GcsThemeMode = (typeof THEME_MODES)[number];
 export const isThemeMode = (v: unknown): v is GcsThemeMode => THEME_MODES.includes(v as GcsThemeMode);
 
 /**
- * Modul temei (dark / light / auto): alegerea vizitatorului (cookie), altfel modul implicit al temei (editorul
- * vizual, „Mod luminos/întunecat”), altfel setarea `site.theme` din ACP.
+ * Modul temei (dark / light / auto): o temă cu un singur mod (ex. GCS Dark, GCS White) îl impune; altfel alegerea
+ * vizitatorului (cookie), altfel modul implicit al temei (editorul vizual, „Mod luminos/întunecat”), altfel setarea
+ * `site.theme` din ACP.
  */
 export async function themeMode(): Promise<GcsThemeMode> {
+  const shown = (await viewerTheme()).shown.settings;
+  const single = themeSingleScheme(shown);
+  if (single) return single;
   const fromCookie = (await cookies()).get(THEME_COOKIE)?.value;
   if (isThemeMode(fromCookie)) return fromCookie;
-  const fromTheme = (await viewerTheme()).shown.settings.scheme.default;
+  const fromTheme = shown.scheme.default;
   if (isThemeMode(fromTheme)) return fromTheme;
   const fromSettings = await services()
     .settings.get<string>("site.theme")
@@ -70,10 +84,42 @@ export const viewerTheme = cache(async (): Promise<GcsViewerTheme> => {
     if (edited) {
       return { theme: edited, shown: themes.withDraft(edited), inlineCss: themes.css(edited, { draft: true }), canEdit, preview: true };
     }
-    const theme = await themes.active(jar.get(SKIN_COOKIE)?.value ?? null);
+    // Membrii: tema din preferințe (`prefs.skin`, îi urmează pe orice dispozitiv); vizitatorii: cookie-ul.
+    const fromPrefs = actor.userId ? await memberSkin(actor.userId) : null;
+    const theme = await themes.active(fromPrefs ?? jar.get(SKIN_COOKIE)?.value ?? null);
     return { theme, shown: theme, inlineCss: null, canEdit, preview: false };
   } catch {
     return { theme: FALLBACK_THEME, shown: FALLBACK_THEME, inlineCss: null, canEdit: false, preview: false };
+  }
+});
+
+/** Tema aleasă de membru (`users.prefs.skin`), dacă există. */
+async function memberSkin(userId: string): Promise<string | null> {
+  const user = await services().db.user.findUnique({ where: { id: userId }, select: { prefs: true } });
+  const skin = user?.prefs && typeof user.prefs === "object" ? (user.prefs as Record<string, unknown>).skin : null;
+  return typeof skin === "string" && /^[a-z0-9][a-z0-9-]{1,31}$/.test(skin) ? skin : null;
+}
+
+/**
+ * Comutatorul lună / soare (în orice temă): perechea de teme din ACP → Aspect → Teme. `null` = fără pereche (oprită,
+ * incompletă, previzualizarea editorului vizual) sau o temă din afara perechii cu ambele moduri (comutatorul ei de mod). `side` = tema afișată (întunecată /
+ * luminoasă), `target` = tema spre care trece.
+ */
+export type GcsThemeToggle = { side: "dark" | "light"; target: string; dark: string; light: string };
+
+export const viewerThemeToggle = cache(async (): Promise<GcsThemeToggle | null> => {
+  try {
+    const { shown, preview } = await viewerTheme();
+    if (preview) return null;
+    const { settings, themes } = services();
+    const [raw, all, mode] = await Promise.all([settings.get<unknown>(THEME_TOGGLE_SETTING).catch(() => null), themes.list(), themeMode()]);
+    const pair = activeThemeTogglePair(normalizeThemeTogglePair(raw), all);
+    if (!pair) return null;
+    // O temă din afara perechii care are ambele moduri își păstrează comutatorul de mod (fără salt la altă temă).
+    if (shown.key !== pair.dark && shown.key !== pair.light && !themeSingleScheme(shown.settings)) return null;
+    return { ...pair, ...themeToggleState(pair, shown.key, mode === "light" ? "light" : "dark") };
+  } catch {
+    return null;
   }
 });
 

@@ -7,18 +7,28 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useTransition, type ReactNode } from "react";
 import type { GcsAccountMenuData } from "@/lib/account-menu.server";
+import type { GcsThemeToggle } from "@/lib/appearance";
 import { authClient } from "@/lib/auth-client";
 import { useErrorMessage } from "@/lib/use-error-message";
 import { setLocale, setThemeMode } from "../../actions";
 import { openPageEditor } from "../../edit-actions";
 import { setPresenceStatus } from "../../header-actions";
 import { GcsCountUp } from "./GcsCountUp";
+import { useThemeSwitch } from "./GcsHeaderBits";
 import { useHeaderPopover } from "./GcsHeaderPopover";
 import { useHeaderState } from "./header-context";
 
 /** Paginile cu zone de widget-uri (ca în meniul userului clasic). */
 const WIDGET_PATHS = /^\/(?:$|forum\/|topic\/)/;
 const RING_R = 23;
+/** Atributele `data-testid` ale itemilor (aceleași ca în meniul userului de dinainte, folosite de teste și de pluginuri). */
+const ITEM_TEST_IDS: Record<string, string> = {
+  profile: "gcs-menu-profile",
+  account: "gcs-menu-settings",
+  themeEditor: "gcs-menu-theme-editor",
+  acp: "gcs-menu-acp",
+  moderation: "gcs-menu-moderation",
+};
 const RING_C = 2 * Math.PI * RING_R;
 
 const form = (name: string, value: string) => {
@@ -56,8 +66,17 @@ export function GcsAccountMenu({
   locale,
   icons,
   compactTrigger = false,
+  toggle = null,
+  modeSwitch = true,
+  extra = [],
 }: {
   data: GcsAccountMenuData;
+  /** Comutatorul lună / soare (perechea de teme); `null` = fără pereche. */
+  toggle?: GcsThemeToggle | null;
+  /** Fără pereche: tema permite comutarea întunecat / luminos a aceluiași aspect (setarea temei). */
+  modeSwitch?: boolean;
+  /** Intrările pluginurilor în meniul userului (`menus("user")`), cu iconița randată pe server. */
+  extra?: { key: string; label: string; href: string; icon: ReactNode }[];
   /** Iconițele itemilor (randate pe server, după numele Font Awesome). */
   icons: Record<string, ReactNode>;
   mode: "dark" | "light" | "auto";
@@ -76,6 +95,7 @@ export function GcsAccountMenu({
   const [theme, setTheme] = useState(mode);
   const [, start] = useTransition();
   const pop = useHeaderPopover({ mode: dropdowns, trap: true });
+  const pair = useThemeSwitch(toggle);
   useEffect(() => setStatus(data.status), [data.status]);
   useEffect(() => pop.close(false), [pathname]);
 
@@ -125,7 +145,7 @@ export function GcsAccountMenu({
 
   return (
     <div className={`gcs-hb__pop gcs-am${short ? " gcs-am--short" : ""}${slim ? " gcs-am--slim" : ""}`} {...pop.rootProps}>
-      <button {...pop.triggerProps} className="gcs-am__trigger" aria-label={ringLabel} aria-haspopup="dialog" data-testid="gcs-user-menu-trigger">
+      <button {...pop.triggerProps} className="gcs-am__trigger" aria-label={ringLabel} aria-haspopup="dialog" data-testid="gcs-user-menu">
         <GcsXpRing percent={next ? level.percent : level.level > 0 ? 100 : 0} level={level.level} size={short ? 44 : slim ? 40 : 52}>
           <GcsAvatar name={user.name} size="m" userId={user.id} {...(user.image ? { src: user.image } : {})} />
         </GcsXpRing>
@@ -227,7 +247,7 @@ export function GcsAccountMenu({
                     <span className="gcs-hb__menuLabel">{t(`items.${it.key}`)}</span>
                   </button>
                 ) : (
-                  <Link key={it.key} href={it.href} className="gcs-hb__menuItem" onClick={() => pop.close(false)} data-testid={`gcs-account-${it.key}`}>
+                  <Link key={it.key} href={it.href} className="gcs-hb__menuItem" onClick={() => pop.close(false)} data-testid={ITEM_TEST_IDS[it.key] ?? `gcs-account-${it.key}`}>
                     <span className="gcs-hb__menuIcon" aria-hidden="true">
                       {icons[it.icon]}
                     </span>
@@ -239,17 +259,44 @@ export function GcsAccountMenu({
               )}
             </nav>
           ))}
+          {extra.length > 0 && (
+            <nav className="gcs-am__section" aria-label={t("sections.apps")} data-testid="gcs-account-section-apps">
+              <span className="gcs-am__sectionTitle">{t("sections.apps")}</span>
+              {extra.map((it) => (
+                <Link key={it.key} href={it.href} className="gcs-hb__menuItem" onClick={() => pop.close(false)} data-testid={`gcs-menu-plugin-${it.key}`}>
+                  <span className="gcs-hb__menuIcon" aria-hidden="true">
+                    {it.icon}
+                  </span>
+                  <span className="gcs-hb__menuLabel">{it.label}</span>
+                </Link>
+              ))}
+            </nav>
+          )}
           <div className="gcs-am__foot">
-            <span className="gcs-am__seg" role="group" aria-label={t("theme.label")}>
-              <button type="button" aria-pressed={theme !== "light"} onClick={() => changeTheme("dark")} data-testid="gcs-account-theme-dark">
-                <GcsIconSvg icon={faMoon} />
-                {t("theme.dark")}
-              </button>
-              <button type="button" aria-pressed={theme === "light"} onClick={() => changeTheme("light")} data-testid="gcs-account-theme-light">
-                <GcsIconSvg icon={faSun} />
-                {t("theme.light")}
-              </button>
-            </span>
+            {toggle ? (
+              // Perechea de teme (GCS Dark ↔ GCS White sau cea aleasă în ACP): butonul celeilalte teme o deschide.
+              <span className="gcs-am__seg" role="group" aria-label={t("theme.label")}>
+                <button type="button" aria-pressed={toggle.side === "dark"} disabled={pair.pending} onClick={() => toggle.side !== "dark" && pair.go()} data-testid="gcs-account-theme-dark">
+                  <GcsIconSvg icon={faMoon} />
+                  {t("theme.dark")}
+                </button>
+                <button type="button" aria-pressed={toggle.side === "light"} disabled={pair.pending} onClick={() => toggle.side !== "light" && pair.go()} data-testid="gcs-account-theme-light">
+                  <GcsIconSvg icon={faSun} />
+                  {t("theme.light")}
+                </button>
+              </span>
+            ) : modeSwitch ? (
+              <span className="gcs-am__seg" role="group" aria-label={t("theme.label")}>
+                <button type="button" aria-pressed={theme !== "light"} onClick={() => changeTheme("dark")} data-testid="gcs-account-theme-dark">
+                  <GcsIconSvg icon={faMoon} />
+                  {t("theme.dark")}
+                </button>
+                <button type="button" aria-pressed={theme === "light"} onClick={() => changeTheme("light")} data-testid="gcs-account-theme-light">
+                  <GcsIconSvg icon={faSun} />
+                  {t("theme.light")}
+                </button>
+              </span>
+            ) : null}
             <label className="gcs-am__lang">
               <span className="gcs-srOnly">{t("language")}</span>
               <select value={locale} onChange={(e) => changeLocale(e.target.value)} data-testid="gcs-account-language">

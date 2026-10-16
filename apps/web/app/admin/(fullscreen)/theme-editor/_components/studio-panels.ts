@@ -20,7 +20,7 @@ import {
   faWandMagicSparkles,
   faGauge,
 } from "@fortawesome/free-solid-svg-icons";
-import { NOVA_ONLY_FIELDS } from "@gcs/core/themes";
+import { NOVA_ONLY_FIELDS, themeHasDesignDecor } from "@gcs/core/themes";
 
 /** Locurile imaginilor din temă (același nume ca `kind` din `/api/themes/images`). */
 export type GcsStudioImageSlot = "logo" | "logoLight" | "logoMobile" | "logoMobileLight" | "favicon" | "headerImage" | "cockpitImage";
@@ -29,17 +29,18 @@ export type GcsStudioImageSlot = "logo" | "logoLight" | "logoMobile" | "logoMobi
 export type GcsStudioColorRef = { kind: "token"; token: GcsThemeToken } | { kind: "element"; key: GcsThemeElementColor };
 
 /** Un rând din tab-ul „Setări”: o setare (calea ei), o imagine sau un subtitlu. */
-export type GcsStudioSettingItem = string | { image: GcsStudioImageSlot } | { heading: string; nova?: true };
+export type GcsStudioSettingItem = string | { image: GcsStudioImageSlot } | { heading: string; decor?: true };
 
 /**
- * Rândul apare pentru designul temei editate: setările, imaginile și subtitlurile designului Nova (`NOVA_ONLY_FIELDS`,
- * imaginea antetului, subtitlurile marcate `nova`) doar când tema e Nova; altfel ar fi opțiuni fără efect.
+ * Rândul apare pentru designul temei editate. Funcțiile (constructorul de antet, consola, bara de jos, efectele) sunt
+ * ale sistemului și apar în orice temă; doar decorul designului GCS (`NOVA_ONLY_FIELDS`: benzile, grafica antetului,
+ * subtitlurile marcate `decor`) apare doar pe el, altfel ar fi opțiuni fără efect.
  */
 export function studioItemVisible(item: GcsStudioSettingItem, preset: string): boolean {
-  if (preset === "nova") return true;
+  if (themeHasDesignDecor(preset)) return true;
   if (typeof item === "string") return !NOVA_ONLY_FIELDS.includes(item);
-  if ("image" in item) return item.image !== "headerImage" && item.image !== "cockpitImage";
-  return !item.nova;
+  if ("image" in item) return item.image !== "headerImage";
+  return !item.decor;
 }
 
 export type GcsStudioPanelId =
@@ -74,13 +75,13 @@ export type GcsStudioPanel = {
   colors?: GcsStudioColorRef[];
   /** Un editor propriu deasupra setărilor (constructorul de antet: grila cu drag & drop). */
   builder?: "header";
-  /** Panoul are doar setări Nova: rândul spre el apare doar pe temele Nova. */
-  nova?: true;
+  /** Panoul are doar decor al designului GCS: rândul spre el apare doar pe acest design. */
+  decor?: true;
 };
 
-/** Rândul spre un panou apare pentru designul temei editate (panourile Nova doar pe Nova). */
+/** Rândul spre un panou apare pentru designul temei editate (panourile de decor doar pe designul lor). */
 export function studioPanelVisible(id: GcsStudioPanelId, preset: string): boolean {
-  return preset === "nova" || !STUDIO_PANELS[id].nova;
+  return themeHasDesignDecor(preset) || !STUDIO_PANELS[id].decor;
 }
 
 const token = (t: GcsThemeToken): GcsStudioColorRef => ({ kind: "token", token: t });
@@ -112,7 +113,7 @@ export const STUDIO_PANELS: Record<GcsStudioPanelId, GcsStudioPanel> = {
   },
   design: {
     icon: faWandMagicSparkles,
-    settings: ["preset", { heading: "bands", nova: true }, "bands.style", "bands.icon", { heading: "effects", nova: true }, "effects.hover"],
+    settings: ["preset", { heading: "bands", decor: true }, "bands.style", "bands.icon", { heading: "effects" }, "effects.hover"],
   },
   palette: {
     icon: faPalette,
@@ -149,33 +150,31 @@ export const STUDIO_PANELS: Record<GcsStudioPanelId, GcsStudioPanel> = {
     colors: [token("text"), token("muted"), element("heading"), element("link"), element("linkHover")],
   },
   header: { icon: faWindowMaximize, rows: [nav("headerBuilder"), nav("headerDesktop"), nav("headerMobile")] },
-  // Constructorul de antet (Nova): grila pe dispozitive, presetările și opțiunile rândurilor și ale meniurilor.
+  // Constructorul de antet (sistemul, orice temă): grila pe dispozitive, presetările, rândurile și meniurile.
   headerBuilder: {
     icon: faTableCellsLarge,
-    nova: true,
     builder: "header",
     settings: [
-      { heading: "builderRows", nova: true },
+      { heading: "builderRows" },
       "header.rowTop",
       "header.rowMain",
       "header.rowBottom",
       "header.sticky",
       "header.compact",
       "header.hideOnScroll",
-      { heading: "builderMenus", nova: true },
+      { heading: "builderMenus" },
       "header.navIcons",
       "header.dropdowns",
       "header.mega",
       "header.navAlign",
-      { heading: "builderCustom", nova: true },
+      { heading: "builderCustom" },
       "header.customHtml",
     ],
   },
-  // Consola Hero Cockpit de sub antet (Nova): pornită, pe ce pagini, ce panou în fiecare loc, imaginea de fundal.
+  // Consola Hero Cockpit de sub antet (sistemul, orice temă): pornită, pe ce pagini, ce panou în fiecare loc, imaginea.
   cockpit: {
     icon: faGauge,
-    nova: true,
-    settings: ["cockpit.enabled", "cockpit.pages", { heading: "cockpitPanels", nova: true }, "cockpit.left", "cockpit.center", "cockpit.right", { heading: "cockpitImage", nova: true }, { image: "cockpitImage" }],
+    settings: ["cockpit.enabled", "cockpit.pages", { heading: "cockpitPanels" }, "cockpit.left", "cockpit.center", "cockpit.right", { heading: "cockpitImage" }, { image: "cockpitImage" }],
   },
   headerDesktop: {
     icon: faDesktop,
@@ -184,7 +183,7 @@ export const STUDIO_PANELS: Record<GcsStudioPanelId, GcsStudioPanel> = {
       "header.navIcons",
       "header.sticky",
       "header.crumbs",
-      { heading: "headerImage", nova: true },
+      { heading: "headerImage", decor: true },
       { image: "headerImage" },
       "header.overlay",
       "header.pattern",
@@ -195,7 +194,7 @@ export const STUDIO_PANELS: Record<GcsStudioPanelId, GcsStudioPanel> = {
   footer: { icon: faGripLines, settings: ["scheme.toggle"], colors: [element("footerBg"), element("footerText")] },
   mobileNav: {
     icon: faMobileScreen,
-    settings: ["mobileNav.side", "mobileNav.icons", { heading: "mobileBar", nova: true }, "mobileNav.placement", "mobileNav.labels", "mobileNav.items"],
+    settings: ["mobileNav.side", "mobileNav.icons", { heading: "mobileBar" }, "mobileNav.placement", "mobileNav.labels", "mobileNav.items"],
     colors: [element("drawerBg"), element("drawerText")],
   },
   global: { icon: faRectangleList, rows: [nav("body"), nav("boxes"), nav("sidebar"), nav("avatars"), nav("buttons")] },

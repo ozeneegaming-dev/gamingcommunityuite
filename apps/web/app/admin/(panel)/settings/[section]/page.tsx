@@ -35,6 +35,8 @@ export default async function AcpSettingsPage({ params }: Props) {
   if (section === "apps") redirect("/admin/system/applications");
   // Subsolul are pagina lui (coloane de linkuri, iconițe), sub Aspect.
   if (section === "footer") redirect("/admin/appearance/footer");
+  // Perechea comutatorului lună / soare se alege în pagina temelor.
+  if (section === "themes") redirect("/admin/appearance/themes");
   const { registry, settings, db } = services();
   const defs = registry.settingDefs().filter((d) => d.section === section);
 

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { currentActor } from "@/lib/actor";
-import { themeMode, viewerTheme } from "@/lib/appearance";
+import { themeMode, viewerTheme, viewerThemeToggle } from "@/lib/appearance";
 import { footerView } from "@/lib/footer";
 import { localeOptions } from "@/lib/locales";
 import { services } from "@/lib/services";
@@ -57,7 +57,7 @@ function FooterTitle({ id, title, accent }: { id: string; title: string; accent:
  */
 export async function GcsSiteFooter() {
   const actor = await currentActor();
-  const [t, tf, locale, mode, locales, siteName, view, skins, viewer] = await Promise.all([
+  const [t, tf, locale, mode, locales, siteName, view, skins, viewer, toggle] = await Promise.all([
     getTranslations("site"),
     getTranslations("footer"),
     getLocale(),
@@ -70,6 +70,7 @@ export async function GcsSiteFooter() {
       .then((all) => all.filter((x) => x.enabled))
       .catch(() => []),
     viewerTheme(),
+    viewerThemeToggle(),
   ]);
   const { config, socials } = view;
   const year = new Date().getFullYear();
@@ -143,8 +144,20 @@ export async function GcsSiteFooter() {
         </form>
       </details>
     ) : null;
-  // Comutatorul de mod; tema îl poate ascunde (editorul vizual: „Mod luminos/întunecat”), iar subsolul îl poate opri.
-  const modeSwitch = bottom.theme ? (
+  // Comutatorul lună / soare: cu perechea de teme din ACP (implicit GCS Dark ↔ GCS White) trece între cele două teme
+  // (merge și fără JavaScript); fără pereche, comutatorul de mod al temei (tema îl poate ascunde, subsolul îl poate opri).
+  const pairSwitch =
+    bottom.theme && toggle ? (
+      <form action={setSkinChoice} aria-label={t("theme")} className="gcs-seg__group gcs-siteFooter__pair" data-testid="gcs-footer-theme-pair">
+        {(["dark", "light"] as const).map((m) => (
+          <button key={m} type="submit" name="skin" value={toggle[m]} className={m === toggle.side ? "gcs-seg gcs-seg--active" : "gcs-seg"} aria-pressed={m === toggle.side} title={t(`themes.${m}`)}>
+            <GcsIcon name={THEME_ICONS[m]} />
+            <span className="gcs-siteFooter__schemeText">{t(`themes.${m}`)}</span>
+          </button>
+        ))}
+      </form>
+    ) : null;
+  const modeSwitch = pairSwitch ?? (bottom.theme ? (
     <form action={setThemeMode} aria-label={t("theme")} className="gcs-seg__group gcs-siteFooter__scheme">
       {(["dark", "light", "auto"] as const).map((m) => (
         <button key={m} type="submit" name="mode" value={m} className={m === mode ? "gcs-seg gcs-seg--active" : "gcs-seg"} aria-pressed={m === mode} title={t(`themes.${m}`)}>
@@ -153,7 +166,7 @@ export async function GcsSiteFooter() {
         </button>
       ))}
     </form>
-  ) : null;
+  ) : null);
   // Slotul `scheme`: meniul temelor și comutatorul de mod (șabloanele modificate le primesc pe amândouă).
   const scheme =
     skinMenu || modeSwitch ? (

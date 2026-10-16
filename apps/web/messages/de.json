@@ -306,7 +306,8 @@
       "invalid_value": "The value isn't valid.",
       "invalid_key": "Ungültiger Schlüssel (Kleinbuchstaben, Ziffern und Bindestriche, 2–32 Zeichen).",
       "invalid_theme_package": "Die Datei ist kein gültiges GCS-Themenpaket.",
-      "unsupported_theme_package": "Das Themenpaket ist für eine andere Version der Plattform."
+      "unsupported_theme_package": "Das Themenpaket ist für eine andere Version der Plattform.",
+      "same_theme": "Wähle zwei verschiedene Themes."
     }
   },
   "acp": {
@@ -1434,7 +1435,16 @@
       "import": "Thema importieren",
       "importHint": "Lade eine .gcs-theme.json-Datei hoch (von einer anderen Seite exportiert oder separat erhalten). Das importierte Thema ist zunächst deaktiviert: prüfe es im visuellen Editor und aktiviere dann „Aktiv“ oder „Standardthema“. Bilder (Logo, Header) werden im visuellen Editor hinzugefügt.",
       "importFile": "Themendatei (.gcs-theme.json)",
-      "importSubmit": "Thema importieren"
+      "importSubmit": "Thema importieren",
+      "toggle": {
+        "title": "Dunkel/Hell-Schalter",
+        "hint": "Mond / Sonne in der Kopfzeile, im Kontomenü und in der Fußzeile wechseln zwischen diesen beiden Themes (für Mitglieder gespeichert, für Gäste per Cookie). Ist der Schalter aus oder fehlt ein Theme bzw. ist es deaktiviert, wird der Knopf ausgeblendet.",
+        "enabled": "Schalter aktiv",
+        "dark": "Dunkles Theme (Mond)",
+        "light": "Helles Theme (Sonne)",
+        "missing": "{key} (fehlt)",
+        "disabled": "{name} (deaktiviert)"
+      }
     },
     "widgetsAdmin": {
       "title": "Widgets",
@@ -1465,7 +1475,7 @@
       "newItem": "Neuer Posten",
       "mega": "Mega-Menü",
       "description": "Beschreibung",
-      "descriptionHint": "Eine Zeile unter dem Titel im Mega-Menü (Nova-Design). Leer = die Standardbeschreibung automatischer Einträge.",
+      "descriptionHint": "Eine Zeile unter dem Titel im Mega-Menü. Leer = die Standardbeschreibung automatischer Einträge.",
       "badge": "Abzeichen",
       "badgeHint": "z. B. NEU"
     },
@@ -3705,6 +3715,9 @@
     "groups_pro": {
       "legend_categories": "Kategorien der Gruppenlegende",
       "legend_display": "Anzeige der Gruppenlegende"
+    },
+    "themes": {
+      "toggle": "Dunkel/Hell-Schalter (Theme-Paar)"
     }
   },
   "permissions": {
@@ -4862,10 +4875,10 @@
       },
       "preset": {
         "label": "Theme design",
-        "help": "Nova: tall header with an image, titles with a round icon, a rich footer and hover effects. Classic: the previous look.",
+        "help": "GCS: Kopfzeile mit Bild, Titel mit rundem Symbol, reichhaltige Fußzeile und Hover-Effekte. Klassisch: das bisherige Aussehen. Die Funktionen (Kopfzeile, Menüs, Konsole, untere Leiste) sind in beiden gleich.",
         "options": {
           "classic": "Classic",
-          "nova": "Nova"
+          "nova": "GCS"
         }
       },
       "bands_style": {
@@ -5041,14 +5054,16 @@
     "builder": {
       "presets": "Vorlagen",
       "presetNames": {
-        "classic": "Nova klassisch",
+        "basic": "Klassisch",
+        "classic": "Standard",
         "cockpit": "Cockpit",
         "centered": "Zentriert",
         "side": "Seitenleiste",
         "esports": "Esports"
       },
       "presetHelp": {
-        "classic": "Der bisherige Header: Logo, Menü und Symbole in einer Zeile, darunter Breadcrumb und Suche.",
+        "basic": "Die Kopfzeile der klassischen Themes: Logo, Menü, Suche, Benachrichtigungen, Nachrichten und Konto in einer Zeile.",
+        "classic": "Logo, Menü und Symbole in einer Zeile, darunter Brotkrumen und Suchfeld.",
         "cockpit": "Logo und Aktionen in Zeile 1, das Menü mit Mega-Menüs in Zeile 2; auf dem Handy die untere Leiste.",
         "centered": "Das Logo zentriert über dem Menü.",
         "side": "Logo und Menü in einer Seitenleiste, auf dem Desktop.",
@@ -7213,7 +7228,8 @@
         "content": "Meine Inhalte",
         "gaming": "Gaming",
         "settings": "Einstellungen",
-        "staff": "Team"
+        "staff": "Team",
+        "apps": "Apps"
       },
       "items": {
         "profile": "Mein Profil",

@@ -3,12 +3,13 @@
 import { faBars, faBell, faComments, faEnvelope, faHouse, faMagnifyingGlass, faMoon, faPlus, faServer, faSun, faUser, faBolt, faPeopleGroup, faCommentDots } from "@fortawesome/free-solid-svg-icons";
 import type { GcsMobileBarItem } from "@gcs/core/themes";
 import type { GcsServerLive } from "@gcs/modules";
-import { GcsIconSvg } from "@gcs/ui";
+import { GcsIconSvg, GcsTooltip } from "@gcs/ui";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useState, useTransition, type ReactNode } from "react";
-import { setThemeMode } from "../../actions";
+import type { GcsThemeToggle as GcsThemeToggleState } from "@/lib/appearance";
+import { setSkinChoice, setThemeMode } from "../../actions";
 import { useRealtime } from "../realtime/GcsRealtimeProvider";
 import { GcsServerLiveProvider, useServerStatuses } from "../servers/GcsServerLive";
 import { GcsCountUp } from "./GcsCountUp";
@@ -51,32 +52,69 @@ export function GcsServersLiveSummary({ statuses, pollSeconds, matches }: { stat
   );
 }
 
-/** Comutatorul temei (întunecată / luminoasă), ca element de antet. */
-export function GcsThemeToggle({ mode }: { mode: "dark" | "light" | "auto" }) {
+/**
+ * Trece la cealaltă temă a perechii lună / soare (ACP → Aspect → Teme): preferința membrului și cookie-ul (vizitatori),
+ * apoi pagina se reîncarcă cu tema nouă (CSS-ul, designul și modul ei).
+ */
+export function useThemeSwitch(toggle: GcsThemeToggleState | null) {
+  const [pending, start] = useTransition();
+  const go = () => {
+    if (!toggle) return;
+    start(async () => {
+      const fd = new FormData();
+      fd.set("skin", toggle.target);
+      await setSkinChoice(fd);
+      window.location.reload();
+    });
+  };
+  return { pending, go };
+}
+
+/**
+ * Comutatorul lună / soare, ca element de antet: trece între cele două teme ale perechii. Fără pereche, pe o temă cu
+ * ambele moduri comută modul ei (`mode`); altfel nu apare.
+ */
+export function GcsThemeToggle({ toggle, mode = null }: { toggle: GcsThemeToggleState | null; mode?: "dark" | "light" | "auto" | null }) {
   const t = useTranslations("header.theme");
-  const router = useRouter();
+  const { pending, go } = useThemeSwitch(toggle);
+  if (!toggle) return mode ? <GcsModeToggle mode={mode} /> : null;
+  const label = t(toggle.side === "light" ? "toDark" : "toLight");
+  return (
+    <GcsTooltip content={label} side="bottom">
+      <button type="button" className="gcs-hb__sq" aria-label={label} onClick={go} disabled={pending} data-side={toggle.side} data-testid="gcs-header-theme">
+        <GcsIconSvg icon={toggle.side === "light" ? faMoon : faSun} />
+      </button>
+    </GcsTooltip>
+  );
+}
+
+/** Comutatorul de mod (întunecat / luminos) al aceleiași teme, pentru temele din afara perechii cu ambele moduri. */
+function GcsModeToggle({ mode }: { mode: "dark" | "light" | "auto" }) {
+  const t = useTranslations("header.theme");
   const [current, setCurrent] = useState(mode);
   const [, start] = useTransition();
   const next = current === "light" ? "dark" : "light";
+  const label = t(next === "dark" ? "toDark" : "toLight");
   return (
-    <button
-      type="button"
-      className="gcs-hb__sq"
-      aria-label={t(next === "dark" ? "toDark" : "toLight")}
-      onClick={() =>
-        start(async () => {
-          setCurrent(next);
-          document.documentElement.dataset.theme = next;
-          const fd = new FormData();
-          fd.set("mode", next);
-          await setThemeMode(fd);
-          router.refresh();
-        })
-      }
-      data-testid="gcs-header-theme"
-    >
-      <GcsIconSvg icon={current === "light" ? faMoon : faSun} />
-    </button>
+    <GcsTooltip content={label} side="bottom">
+      <button
+        type="button"
+        className="gcs-hb__sq"
+        aria-label={label}
+        onClick={() =>
+          start(async () => {
+            setCurrent(next);
+            document.documentElement.dataset.theme = next;
+            const fd = new FormData();
+            fd.set("mode", next);
+            await setThemeMode(fd);
+          })
+        }
+        data-testid="gcs-header-theme"
+      >
+        <GcsIconSvg icon={current === "light" ? faMoon : faSun} />
+      </button>
+    </GcsTooltip>
   );
 }
 
