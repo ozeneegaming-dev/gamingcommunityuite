@@ -1,6 +1,17 @@
 "use server";
 
-import { GCS_WIDGET_PAGES, GcsValidationError, MAX_THEME_PACKAGE_BYTES, MENUS_ACP_SECTION, THEMES_ACP_SECTION, WIDGETS_ACP_SECTION, type GcsNavItemInput, type GcsResult } from "@gcs/core";
+import {
+  GCS_WIDGET_PAGES,
+  GcsValidationError,
+  MAX_THEME_PACKAGE_BYTES,
+  MENUS_ACP_SECTION,
+  THEME_TOGGLE_SETTING,
+  THEMES_ACP_SECTION,
+  themeTogglePairError,
+  WIDGETS_ACP_SECTION,
+  type GcsNavItemInput,
+  type GcsResult,
+} from "@gcs/core";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { assertAcpAction } from "@/lib/acp";
@@ -41,6 +52,24 @@ export async function importTheme(fd: FormData): Promise<GcsResult<null>> {
       throw new GcsValidationError({ file: "invalid_theme_package" });
     }
     await services().themes.importPackage(actor, raw);
+    return null;
+  });
+}
+
+/**
+ * „Comutator întunecat/luminos”: perechea de teme a lunii / soarelui din antet, meniul contului și subsol. Ambele teme
+ * trebuie să existe și să fie diferite; o temă dezactivată mai târziu ascunde comutatorul (fără erori).
+ */
+export async function saveThemeToggle(fd: FormData): Promise<GcsResult<null>> {
+  return runAcpAction(THEMES_ACP_SECTION, "edit", async (actor) => {
+    const { themes, settings } = services();
+    const pair = { enabled: fd.get("enabled") === "on", dark: field(fd, "dark"), light: field(fd, "light") };
+    const error = themeTogglePairError(pair);
+    if (error) throw new GcsValidationError({ [error === "same_theme" ? "light" : "dark"]: error });
+    const keys = new Set((await themes.list()).map((t) => t.key));
+    if (!keys.has(pair.dark)) throw new GcsValidationError({ dark: "invalid_choice" });
+    if (!keys.has(pair.light)) throw new GcsValidationError({ light: "invalid_choice" });
+    await settings.set(THEME_TOGGLE_SETTING, pair, actor);
     return null;
   });
 }

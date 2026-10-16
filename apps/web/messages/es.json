@@ -319,7 +319,8 @@
       "member_required": "Indica el miembro (@nombre).",
       "room_not_found": "Esa sala no existe.",
       "invalid_handle": "Escribe solo el nombre de usuario (letras, números, punto, guion, guion bajo).",
-      "invalid_link_template": "La plantilla debe ser una dirección https con '{handle}' una sola vez, solo en campos «Texto»."
+      "invalid_link_template": "La plantilla debe ser una dirección https con '{handle}' una sola vez, solo en campos «Texto».",
+      "same_theme": "Elige dos temas distintos."
     }
   },
   "acp": {
@@ -1481,7 +1482,16 @@
       "import": "Importar un tema",
       "importHint": "Sube un archivo .gcs-theme.json (exportado de otro sitio o recibido aparte). El tema importado empieza desactivado: revísalo en el editor visual y luego marca «Activo» o «Tema predeterminado». Las imágenes (logo, cabecera) se añaden desde el editor visual.",
       "importFile": "Archivo del tema (.gcs-theme.json)",
-      "importSubmit": "Importar tema"
+      "importSubmit": "Importar tema",
+      "toggle": {
+        "title": "Interruptor oscuro/claro",
+        "hint": "La luna / el sol del encabezado, del menú de la cuenta y del pie cambian entre estos dos temas (se guarda para los miembros y, con una cookie, para los visitantes). Con el interruptor apagado o con un tema ausente o desactivado, el botón no aparece.",
+        "enabled": "Interruptor activado",
+        "dark": "Tema oscuro (luna)",
+        "light": "Tema claro (sol)",
+        "missing": "{key} (no existe)",
+        "disabled": "{name} (desactivado)"
+      }
     },
     "widgetsAdmin": {
       "title": "Widgets",
@@ -1512,7 +1522,7 @@
       "newItem": "Nuevo artículo",
       "mega": "Megamenú",
       "description": "Descripción",
-      "descriptionHint": "Una línea bajo el título en el megamenú (diseño Nova). Vacío = la descripción predeterminada de los elementos automáticos.",
+      "descriptionHint": "Una línea bajo el título en el megamenú. Vacío = la descripción predeterminada de los elementos automáticos.",
       "badge": "Insignia",
       "badgeHint": "p. ej. NUEVO"
     },
@@ -3959,6 +3969,9 @@
       "steamOff": "El sitio aún no tiene una clave de Steam Web API: la pestaña está oculta.",
       "faceitTab": "Mostrar la pestaña FACEIT en mi perfil",
       "faceitTabHint": "Tu nivel, ELO, estadísticas y partidas de FACEIT CS2."
+    },
+    "themes": {
+      "toggle": "Interruptor oscuro/claro (par de temas)"
     }
   },
   "permissions": {
@@ -5439,10 +5452,10 @@
       },
       "preset": {
         "label": "Theme design",
-        "help": "Nova: tall header with an image, titles with a round icon, a rich footer and hover effects. Classic: the previous look.",
+        "help": "GCS: encabezado con imagen, títulos con icono redondo, pie completo y efectos al pasar el ratón. Clásico: el aspecto anterior. Las funciones (encabezado, menús, consola, barra inferior) son las mismas en ambos.",
         "options": {
           "classic": "Classic",
-          "nova": "Nova"
+          "nova": "GCS"
         }
       },
       "bands_style": {
@@ -5618,14 +5631,16 @@
     "builder": {
       "presets": "Ajustes predefinidos",
       "presetNames": {
-        "classic": "Nova clásico",
+        "basic": "Clásico",
+        "classic": "Estándar",
         "cockpit": "Cockpit",
         "centered": "Centrado",
         "side": "Panel lateral",
         "esports": "Esports"
       },
       "presetHelp": {
-        "classic": "La cabecera actual: logo, menú e iconos en una fila, después la ruta y la búsqueda.",
+        "basic": "El encabezado de los temas clásicos: logo, menú, búsqueda, notificaciones, mensajes y cuenta en una sola fila.",
+        "classic": "Logo, menú e iconos en una fila, luego la ruta de navegación y el campo de búsqueda.",
         "cockpit": "Logo y acciones en la fila 1, el menú con megamenús en la fila 2; en el móvil, la barra inferior.",
         "centered": "El logo centrado sobre el menú.",
         "side": "El logo y el menú en un panel lateral, en escritorio.",
@@ -7821,7 +7836,8 @@
         "content": "Mi contenido",
         "gaming": "Gaming",
         "settings": "Ajustes",
-        "staff": "Equipo"
+        "staff": "Equipo",
+        "apps": "Aplicaciones"
       },
       "items": {
         "profile": "Mi perfil",

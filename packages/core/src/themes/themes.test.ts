@@ -3,7 +3,8 @@ import { createWorld, type GcsTestWorld } from "../../test/world";
 import { GcsConflict, GcsForbidden, GcsValidationError } from "../errors";
 import type { GcsActor } from "../permissions/types";
 import { compileThemeCss, sanitizeThemeCss } from "./css";
-import { GcsThemeService, NOVA_THEME_KEY } from "./service";
+import { GcsThemeCssService } from "./files";
+import { GCS_DARK_THEME_KEY, GcsThemeService } from "./service";
 import {
   DEFAULT_THEME_SETTINGS,
   THEME_FIELDS,
@@ -18,7 +19,7 @@ import {
 
 /** Setările implicite cu o valoare schimbată la o cale. */
 const withSetting = (path: string, value: unknown): GcsThemeSettings => withThemePath(structuredClone(DEFAULT_THEME_SETTINGS), path, value);
-/** Tema „Clasic” (cheia `default`, designul de până acum); implicită e acum Nova. */
+/** O temă „Clasic” (cheia `default`, designul clasic), ca pe instalările vechi; implicită e GCS Dark. */
 const classic = async () => (await themes.get("default"))!;
 
 let w: GcsTestWorld;
@@ -29,7 +30,12 @@ let member: GcsActor;
 beforeEach(async () => {
   w = await createWorld([]);
   themes = new GcsThemeService({ db: w.db, cache: w.cache, bus: w.bus, acp: w.acp });
-  await w.db.$transaction((tx) => GcsThemeService.seedDefault(tx));
+  await w.db.$transaction(async (tx) => {
+    await GcsThemeService.seedDefault(tx);
+    // Instalările noi nu mai au „Clasic”; testele de mai jos o creează, ca o instalare veche.
+    const t = await tx.theme.create({ data: { key: "default", name: "Clasic", settings: DEFAULT_THEME_SETTINGS as never } });
+    await GcsThemeCssService.seed(tx, t.id, "", { authorId: null, authorName: "" });
+  });
   root = await w.actorFor(await w.createUser("Root", "root_admin"));
   member = await w.actorFor(await w.createUser("Ana", "member"));
 });
@@ -163,7 +169,8 @@ describe("compileThemeCss (setările noi)", () => {
     expect(css).toContain("--gcs-drawer-text: var(--gcs-accentInk);");
     expect(css).toContain("--gcs-box-header-bg: var(--gcs-surface2);");
     expect(css).toContain("--gcs-btn-primary-text: #FFFFFF;");
-    expect(css).toContain("--gcs-btn-primary-hover: #E23446;");
+    // Butonul plin se luminează cu un strat alb (regula de hover a sistemului, în orice temă).
+    expect(css).toContain("--gcs-btn-primary-hover: color-mix(in srgb, var(--gcs-accent) 92%, #fff);");
     expect(css).toContain("--gcs-header-h: 64px;");
     expect(css).toContain("--gcs-logo-max-h: 42px;");
     expect(css).toContain("--gcs-base-size: 1rem;");
@@ -181,7 +188,7 @@ describe("compileThemeCss (setările noi)", () => {
     const [dark, rest] = css.split('html[data-theme="light"]');
     expect(dark).toContain("--gcs-header-bg: var(--gcs-chrome);");
     expect(rest).toContain("--gcs-header-bg: #ABCDEF;");
-    expect(compileThemeCss(withSetting("elements.dark.btnPrimaryBg", "#00AA55"), "")).toContain("--gcs-btn-primary-hover: color-mix(in srgb, #00AA55 86%, #fff);");
+    expect(compileThemeCss(withSetting("elements.dark.btnPrimaryBg", "#00AA55"), "")).toContain("--gcs-btn-primary-hover: color-mix(in srgb, #00AA55 92%, #fff);");
   });
 
   test("dimensiunile, fonturile personalizate și regulile condiționale", () => {
@@ -296,19 +303,19 @@ describe("GcsThemeService", () => {
     await themes.create(root, { key: "neon", name: "Neon", from: "default" });
     expect((await themes.active("neon")).key).toBe("neon");
     await themes.update(root, "neon", { enabled: false });
-    expect((await themes.active("neon")).key).toBe(NOVA_THEME_KEY);
-    expect((await themes.active("nu-exista")).key).toBe(NOVA_THEME_KEY);
+    expect((await themes.active("neon")).key).toBe(GCS_DARK_THEME_KEY);
+    expect((await themes.active("nu-exista")).key).toBe(GCS_DARK_THEME_KEY);
     // Tema aleasă explicit de membru (ex. „Clasic”) rămâne, chiar dacă nu e cea implicită.
     expect((await themes.active("default")).key).toBe("default");
 
-    await expect(themes.update(root, NOVA_THEME_KEY, { enabled: false })).rejects.toBeInstanceOf(GcsValidationError);
-    await expect(themes.remove(root, NOVA_THEME_KEY)).rejects.toBeInstanceOf(GcsValidationError);
+    await expect(themes.update(root, GCS_DARK_THEME_KEY, { enabled: false })).rejects.toBeInstanceOf(GcsValidationError);
+    await expect(themes.remove(root, GCS_DARK_THEME_KEY)).rejects.toBeInstanceOf(GcsValidationError);
 
     await themes.update(root, "neon", { isDefault: true });
     expect((await themes.active()).key).toBe("neon");
-    await themes.remove(root, NOVA_THEME_KEY);
+    await themes.remove(root, GCS_DARK_THEME_KEY);
     await themes.remove(root, "default");
-    expect((await themes.list()).map((t) => t.key)).toEqual(["neon"]);
+    expect((await themes.list()).map((t) => t.key)).toEqual(["neon", "gcs-white"]);
   });
 
   test("cheile invalide sau duplicate sunt refuzate", async () => {

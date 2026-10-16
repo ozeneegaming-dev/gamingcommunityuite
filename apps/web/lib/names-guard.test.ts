@@ -92,7 +92,8 @@ describe("numele membrilor trec prin componenta comună", () => {
       "apps/web/app/(site)/_components/members/GcsMemberCard.tsx",
       "apps/web/app/(site)/_components/chat/GcsChatRoom.tsx",
       "apps/web/app/(site)/_components/chat-pro/GcsChatProMessage.tsx",
-      "apps/web/app/(site)/_components/GcsSiteHeader.tsx",
+      // Meniul userului din antet (constructorul de antet, în orice temă).
+      "apps/web/app/(site)/_components/header/GcsAccountMenu.tsx",
       "apps/web/app/(site)/members/[ref]/page.tsx",
       "packages/ui/src/components/GcsHoverCard.tsx",
       "packages/ui/src/editor/mentionList.tsx",

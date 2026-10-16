@@ -69,17 +69,18 @@ describe("CSS-ul design system-ului", () => {
     const selectors = [...css.matchAll(/(?:^|[{};])\s*([^{}@;]+)\{/g)].flatMap((m) => splitTop(m[1]!)).filter((s) => s && !/^(from|to|\d+%)$/.test(s));
 
     test("totul e sub `.gcs-nova` (designul clasic și ACP-ul nu sunt atinse)", () => {
-      const outside = selectors.filter((s) => !s.includes(".gcs-nova") && s !== ".gcs-collapseToggle");
+      const outside = selectors.filter((s) => !s.includes(".gcs-nova"));
       expect(outside).toEqual([]);
       expect(css).not.toMatch(/\.gcs-acp/);
     });
 
-    test("plăcile de moderare au culorile cerute; mișcarea redusă oprește transformările", () => {
+    test("plăcile de moderare (ale sistemului, în orice temă) au culorile cerute; mișcarea redusă oprește transformările", () => {
+      const sys = read("./system-ui.css").replace(/\/\*[\s\S]*?\*\//g, "");
       for (const [tone, color] of [["feature", "#2ecc71"], ["move", "#3498db"], ["hide", "#e67e22"], ["delete", "#e74c3c"]]) {
-        expect(css).toMatch(new RegExp(`\\.gcs-modTile\\[data-tone="${tone}"\\] \\{\\s*--gcs-tone: ${color};`));
+        expect(sys).toMatch(new RegExp(`\\.gcs-modTile\\[data-tone="${tone}"\\] \\{\\s*--gcs-tone: ${color};`));
       }
-      expect(css).toMatch(/\.gcs-modTile \{[^}]*--gcs-tone: #9b59b6;/);
-      expect(css).toMatch(/prefers-reduced-motion: reduce\) \{\s*\.gcs-nova \{[^}]*--gcs-hover-scale: 1;[^}]*--gcs-ease: 0s;/);
+      expect(sys).toMatch(/\.gcs-modTile \{[^}]*--gcs-tone: #9b59b6;/);
+      expect(sys).toMatch(/prefers-reduced-motion: reduce\) \{\s*:root \{[^}]*--gcs-hover-scale: 1;[^}]*--gcs-ease: 0s;/);
     });
 
     test("varianta luminoasă își are variabilele (și în modul „auto” cu sistemul luminos)", () => {
@@ -246,7 +247,7 @@ describe("sweep.css: sweep-ul și hover-ul butoanelor, în orice temă", () => {
 
   test("nicio regulă de hover a elementelor cu sweep nu folosește `background:` (ar șterge stratul)", () => {
     const re = new RegExp(`\\.(${SWEPT.join("|")})(?![\\w]|-[\\w])`);
-    const files = ["base.css", "controls.css", "forum.css", "community.css", "profile.css", "acp.css", "nova.css", "groups-pro.css", "layout.css", "widgets.css"];
+    const files = ["base.css", "controls.css", "forum.css", "community.css", "profile.css", "acp.css", "nova.css", "groups-pro.css", "layout.css", "widgets.css", "system-ui.css", "header-menus.css"];
     const bad: string[] = [];
     for (const f of files) {
       for (const m of strip(read(`./${f}`)).matchAll(/([^{}@;]+)\{([^{}]*)\}/g)) {

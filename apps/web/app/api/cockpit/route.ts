@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request): Promise<Response> {
   const { shown } = await viewerTheme();
   const settings = shown.settings.cockpit;
-  if (shown.settings.preset !== "nova" || !settings.enabled) return Response.json({ error: "not_found" }, { status: 404 });
+  if (!settings.enabled) return Response.json({ error: "not_found" }, { status: 404 });
   const actor = await currentActor();
   const headers = { "Cache-Control": "private, no-store" };
   const feed = new URL(req.url).searchParams.get("feed");

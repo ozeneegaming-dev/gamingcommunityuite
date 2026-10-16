@@ -5,3 +5,4 @@
 export * from "./settings";
 export * from "./headerBuilder";
 export * from "./css";
+export * from "./toggle";

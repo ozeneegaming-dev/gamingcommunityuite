@@ -221,7 +221,7 @@ test("numele au stilul grupului și efectul VIP peste tot, pe tema închisă și
       await page.goto("/");
       const el = page.getByTestId("gcs-header-user");
       await expect(el).toBeVisible();
-      await shot(page.locator(".gcs-siteHeader .gcs-userMenu__trigger").first(), `user-menu-${kind}-${theme}`);
+      await shot(page.getByTestId("gcs-user-menu").first(), `user-menu-${kind}-${theme}`);
       const l = await look(el);
       const ok = kind === "root" ? /linear-gradient/.test(l.image) && l.clip === "text" : /linear-gradient/.test(l.image) && l.clip === "text" && /gcsNfxFlow/.test(l.animation);
       if (!ok) failures.push(`user-menu/${kind}/${theme}: ${JSON.stringify(l)}`);

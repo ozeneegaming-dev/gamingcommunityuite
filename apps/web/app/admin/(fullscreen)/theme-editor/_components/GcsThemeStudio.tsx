@@ -4,7 +4,6 @@ import type { GcsResult } from "@gcs/core";
 import {
   CUSTOM_CSS_FILE,
   compileThemeCss,
-  headerLayoutIsPreset,
   joinThemeCssFiles,
   themeDefaults,
   themePath,
@@ -73,8 +72,6 @@ function imageUrl(v: GcsThemeStudioValue, slot: GcsStudioImageSlot): string | nu
   }
 }
 
-/** Antetul de până acum (Nova clasic neatins) e randat de alt component: trecerea la / de la el reîncarcă previzualizarea. */
-const legacyHeader = (b: GcsHeaderBuilder) => b.preset === "classic" && headerLayoutIsPreset(b);
 
 /** Opțiunile antetului construit trimise previzualizării (aceleași nume ca în `GcsHeaderFrame`). */
 function headerOptions(s: GcsThemeSettings): Record<string, unknown> {
@@ -259,7 +256,8 @@ export function GcsThemeStudio({
       mode,
       logo: { text: value.settings.logo.text, slogan: value.settings.logo.slogan },
       preset: value.settings.preset,
-      ...(value.settings.preset === "nova" ? { header: { layout: value.settings.header.layout, options: headerOptions(value.settings) } } : {}),
+      // Constructorul de antet e al sistemului: previzualizarea lui merge în orice temă.
+      header: { layout: value.settings.header.layout, options: headerOptions(value.settings) },
     };
     win.postMessage(message, window.location.origin);
   }, [css, mode, value.settings]);
@@ -336,13 +334,9 @@ export function GcsThemeStudio({
 
   const setSetting = (path: string, v: unknown) => update((cur) => ({ ...cur, settings: withThemePath(cur.settings, path, v) }));
 
-  /**
-   * Un aspect nou al antetului. O presetare aplicată își aduce și navigarea de pe mobil (Cockpit: bara de jos). Trecerea
-   * de la / la antetul clasic neatins (alt component) reîncarcă previzualizarea după salvare.
-   */
+  /** Un aspect nou al antetului. O presetare aplicată își aduce și navigarea de pe mobil (Cockpit: bara de jos). */
   const setHeaderLayout = (next: GcsHeaderBuilder, preset?: GcsHeaderPreset) =>
     update((cur) => {
-      if (legacyHeader(cur.settings.header.layout) !== legacyHeader(next)) reloadAfterSave.current = true;
       let settings = withThemePath(cur.settings, "header.layout", next);
       if (preset) settings = withThemePath(settings, "mobileNav.placement", preset === "cockpit" ? "bottom" : "header");
       return { ...cur, settings };
@@ -520,7 +514,7 @@ export function GcsThemeStudio({
     title = t(`panels.${current}`);
     body = (
       <>
-        {panel.builder === "header" && value.settings.preset === "nova" && (
+        {panel.builder === "header" && (
           <GcsHeaderBuilderEditor value={value.settings.header.layout} device={builderDevice} onDevice={pickDevice} onChange={setHeaderLayout} navItems={navItems} />
         )}
         {hasSettings && hasColors && (

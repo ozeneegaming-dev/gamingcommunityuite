@@ -319,7 +319,8 @@
       "member_required": "Scrie membrul (@nume).",
       "room_not_found": "Camera nu există.",
       "invalid_handle": "Scrie doar numele de utilizator (litere, cifre, punct, minus, liniuță jos).",
-      "invalid_link_template": "Șablonul trebuie să fie o adresă https cu '{handle}' o singură dată, doar la câmpurile „Text”."
+      "invalid_link_template": "Șablonul trebuie să fie o adresă https cu '{handle}' o singură dată, doar la câmpurile „Text”.",
+      "same_theme": "Alege două teme diferite."
     }
   },
   "acp": {
@@ -1481,7 +1482,16 @@
       "import": "Importă o temă",
       "importHint": "Încarcă un fișier .gcs-theme.json (exportat de pe alt site sau primit separat). Tema importată apare inactivă: verific-o în editorul vizual, apoi bifează „Activă” sau „Tema implicită”. Imaginile (logo, antet) se adaugă din editorul vizual.",
       "importFile": "Fișierul temei (.gcs-theme.json)",
-      "importSubmit": "Importă tema"
+      "importSubmit": "Importă tema",
+      "toggle": {
+        "title": "Comutator întunecat/luminos",
+        "hint": "Luna / soarele din antet, din meniul contului și din subsol trec între aceste două teme (alegerea se salvează pentru membri și, prin cookie, pentru vizitatori). Cu comutatorul oprit sau cu o temă lipsă ori dezactivată, butonul nu mai apare.",
+        "enabled": "Comutatorul e pornit",
+        "dark": "Tema întunecată (luna)",
+        "light": "Tema luminoasă (soarele)",
+        "missing": "{key} (lipsește)",
+        "disabled": "{name} (dezactivată)"
+      }
     },
     "widgetsAdmin": {
       "title": "Widget-uri",
@@ -1512,7 +1522,7 @@
       "newItem": "Item nou",
       "mega": "Mega meniu",
       "description": "Descriere",
-      "descriptionHint": "Un rând sub titlu în mega meniu (designul Nova). Gol = descrierea implicită a itemilor automați.",
+      "descriptionHint": "Un rând sub titlu în mega meniu. Gol = descrierea implicită a itemilor automați.",
       "badge": "Insignă",
       "badgeHint": "ex. NOU"
     },
@@ -3959,6 +3969,9 @@
       "steamOff": "Site-ul nu are încă o cheie Steam Web API: tabul nu apare.",
       "faceitTab": "Arată tabul FACEIT pe profilul meu",
       "faceitTabHint": "Nivelul, ELO-ul, statisticile și meciurile tale CS2 de pe FACEIT."
+    },
+    "themes": {
+      "toggle": "Comutatorul întunecat/luminos (perechea de teme)"
     }
   },
   "permissions": {
@@ -5439,10 +5452,10 @@
       },
       "preset": {
         "label": "Designul temei",
-        "help": "Nova: antetul înalt cu imagine, titlurile cu iconița în cerc, subsolul bogat și efectele de hover. Clasic: aspectul de până acum.",
+        "help": "GCS: antetul cu imagine, titlurile cu iconița în cerc, subsolul bogat și efectele de hover. Clasic: aspectul de până acum. Funcțiile (antetul, meniurile, consola, bara de jos) sunt aceleași în ambele.",
         "options": {
           "classic": "Clasic",
-          "nova": "Nova"
+          "nova": "GCS"
         }
       },
       "bands_style": {
@@ -5618,14 +5631,16 @@
     "builder": {
       "presets": "Presetări",
       "presetNames": {
-        "classic": "Nova clasic",
+        "basic": "Clasic",
+        "classic": "Standard",
         "cockpit": "Cockpit",
         "centered": "Centrat",
         "side": "Panou lateral",
         "esports": "Esports"
       },
       "presetHelp": {
-        "classic": "Antetul de până acum: logo, meniu și iconițele pe un rând, apoi breadcrumb-ul și căutarea.",
+        "basic": "Antetul temelor clasice: logo, meniu, căutarea, notificările, mesajele și contul, pe un singur rând.",
+        "classic": "Logo, meniu și iconițele pe un rând, apoi breadcrumb-ul și câmpul de căutare.",
         "cockpit": "Logo și acțiunile pe rândul 1, meniul cu mega meniuri pe rândul 2; pe mobil, bara de jos.",
         "centered": "Logo-ul centrat deasupra meniului.",
         "side": "Logo-ul și meniul într-un panou lateral, pe desktop.",
@@ -7821,7 +7836,8 @@
         "content": "Conținutul meu",
         "gaming": "Gaming",
         "settings": "Setări",
-        "staff": "Staff"
+        "staff": "Staff",
+        "apps": "Aplicații"
       },
       "items": {
         "profile": "Profilul meu",

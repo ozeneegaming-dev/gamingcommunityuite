@@ -319,7 +319,8 @@
       "member_required": "Name the member (@name).",
       "room_not_found": "That room doesn't exist.",
       "invalid_handle": "Type only the username (letters, digits, dot, dash, underscore).",
-      "invalid_link_template": "The template must be an https address with '{handle}' exactly once, on “Text” fields only."
+      "invalid_link_template": "The template must be an https address with '{handle}' exactly once, on “Text” fields only.",
+      "same_theme": "Pick two different themes."
     }
   },
   "acp": {
@@ -1481,7 +1482,16 @@
       "import": "Import a theme",
       "importHint": "Upload a .gcs-theme.json file (exported from another site or received separately). The imported theme starts disabled: check it in the visual editor, then tick “Enabled” or “Default theme”. Images (logo, header) are added from the visual editor.",
       "importFile": "Theme file (.gcs-theme.json)",
-      "importSubmit": "Import theme"
+      "importSubmit": "Import theme",
+      "toggle": {
+        "title": "Dark/light switch",
+        "hint": "The moon / sun in the header, the account menu and the footer switches between these two themes (saved for members and, with a cookie, for guests). When the switch is off or a theme is missing or disabled, the button is hidden.",
+        "enabled": "Switch enabled",
+        "dark": "Dark theme (moon)",
+        "light": "Light theme (sun)",
+        "missing": "{key} (missing)",
+        "disabled": "{name} (disabled)"
+      }
     },
     "widgetsAdmin": {
       "title": "Widgets",
@@ -1512,7 +1522,7 @@
       "newItem": "New item",
       "mega": "Mega menu",
       "description": "Description",
-      "descriptionHint": "One line under the title in the mega menu (Nova design). Empty = the default description of automatic items.",
+      "descriptionHint": "One line under the title in the mega menu. Empty = the default description of automatic items.",
       "badge": "Badge",
       "badgeHint": "e.g. NEW"
     },
@@ -3959,6 +3969,9 @@
       "steamOff": "The site has no Steam Web API key yet: the tab is hidden.",
       "faceitTab": "Show the FACEIT tab on my profile",
       "faceitTabHint": "Your FACEIT CS2 level, ELO, stats and matches."
+    },
+    "themes": {
+      "toggle": "Dark/light switch (theme pair)"
     }
   },
   "permissions": {
@@ -5439,10 +5452,10 @@
       },
       "preset": {
         "label": "Theme design",
-        "help": "Nova: tall header with an image, titles with a round icon, a rich footer and hover effects. Classic: the previous look.",
+        "help": "GCS: header with an image, titles with a round icon, a rich footer and hover effects. Classic: the previous look. Features (header, menus, console, bottom bar) are the same in both.",
         "options": {
           "classic": "Classic",
-          "nova": "Nova"
+          "nova": "GCS"
         }
       },
       "bands_style": {
@@ -5618,14 +5631,16 @@
     "builder": {
       "presets": "Presets",
       "presetNames": {
-        "classic": "Nova classic",
+        "basic": "Classic",
+        "classic": "Standard",
         "cockpit": "Cockpit",
         "centered": "Centered",
         "side": "Side panel",
         "esports": "Esports"
       },
       "presetHelp": {
-        "classic": "The current header: logo, menu and icons on one row, then the breadcrumb and search.",
+        "basic": "The classic themes' header: logo, menu, search, notifications, messages and account on a single row.",
+        "classic": "Logo, menu and icons on one row, then the breadcrumb and the search field.",
         "cockpit": "Logo and actions on row 1, the menu with mega menus on row 2; on phones, the bottom bar.",
         "centered": "The logo centered above the menu.",
         "side": "The logo and menu in a side panel, on desktop.",
@@ -7821,7 +7836,8 @@
         "content": "My content",
         "gaming": "Gaming",
         "settings": "Settings",
-        "staff": "Staff"
+        "staff": "Staff",
+        "apps": "Apps"
       },
       "items": {
         "profile": "My profile",

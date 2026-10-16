@@ -280,9 +280,11 @@ export const DEFAULT_THEME_SETTINGS: GcsThemeSettings = {
     overlay: 70,
     pattern: true,
     crumbs: true,
-    layout: headerPreset("classic"),
+    // Antetul sistemului (constructorul) în aspectul „Clasic”: un rând, ca antetul temelor clasice de până acum.
+    layout: headerPreset("basic"),
     rowTop: 44,
-    rowMain: 76,
+    // Rândul principal al antetului clasic de până acum (64 px).
+    rowMain: 64,
     rowBottom: 56,
     compact: false,
     hideOnScroll: false,
@@ -395,6 +397,8 @@ export const NOVA_THEME_SETTINGS: GcsThemeSettings = {
     rowMain: 94,
     rowBottom: 58,
     compact: true,
+    // Aspectul „Standard”: logo + meniu + iconițele, apoi breadcrumb-ul și câmpul de căutare.
+    layout: headerPreset("classic"),
   },
   boxes: { borderWidth: 1, shadow: "subtle", clickableRows: true },
   sidebar: { width: 340, position: "right", sticky: false },
@@ -409,36 +413,30 @@ export function themeDefaults(preset: GcsThemePreset | undefined | null): GcsThe
 }
 
 /**
- * Setările care schimbă ceva doar în designul Nova (editorul vizual le arată doar atunci; altfel ar fi opțiuni „moarte”).
+ * Setările care sunt DOAR decor al designului GCS (`preset: "nova"`): stilul benzilor, iconița din bandă și grafica
+ * antetului (imaginea, stratul, modelul tehnic, rândul vechi cu breadcrumb). Editorul vizual le arată doar pe acest
+ * design (în rest ar fi opțiuni „moarte”). Tot ce e funcție (constructorul de antet, consola, bara de jos, modul
+ * meniurilor, efectele de hover, modurile listelor) ține de sistem și merge în orice temă.
  */
-export const NOVA_ONLY_FIELDS: readonly string[] = [
-  "header.image",
-  "header.overlay",
-  "header.pattern",
-  "header.crumbs",
-  "bands.style",
-  "bands.icon",
-  "effects.hover",
-  "header.layout",
-  "header.rowTop",
-  "header.rowMain",
-  "header.rowBottom",
-  "header.compact",
-  "header.hideOnScroll",
-  "header.dropdowns",
-  "header.mega",
-  "header.navAlign",
-  "header.customHtml",
-  "mobileNav.placement",
-  "mobileNav.labels",
-  "mobileNav.items",
-  "cockpit.enabled",
-  "cockpit.pages",
-  "cockpit.left",
-  "cockpit.center",
-  "cockpit.right",
-  "cockpit.image",
-];
+export const NOVA_ONLY_FIELDS: readonly string[] = ["header.image", "header.overlay", "header.pattern", "header.crumbs", "bands.style", "bands.icon"];
+
+/** Designul are decor propriu (benzile, grafica antetului): editorul îi arată setările din `NOVA_ONLY_FIELDS`. */
+export const themeHasDesignDecor = (preset: string | undefined | null): boolean => preset === "nova";
+
+/**
+ * Temele incluse (specul system-ui, 2026-10-16): „GCS Dark” (doar întunecată, implicită la instalare) și „GCS White”
+ * (doar luminoasă), același design (`preset: "nova"`), fiecare cu paleta ei, editată separat. Comutatorul lună / soare
+ * trece de la una la alta (perechea din ACP → Aspect → Teme).
+ */
+// Antetul „Standard” rămâne în flux și are înălțimea antetului designului de până acum (76 px, fără bara compactă).
+const GCS_HEADER: GcsThemeSettings["header"] = { ...NOVA_THEME_SETTINGS.header, compact: false, rowMain: 76 };
+export const GCS_DARK_THEME_SETTINGS: GcsThemeSettings = { ...NOVA_THEME_SETTINGS, header: GCS_HEADER, scheme: { default: "dark", toggle: false } };
+/** „GCS White”: paleta luminoasă a designului (modul e mereu „light”, deci paleta `light` e cea afișată). */
+export const GCS_WHITE_THEME_SETTINGS: GcsThemeSettings = { ...NOVA_THEME_SETTINGS, header: GCS_HEADER, scheme: { default: "light", toggle: false } };
+
+/** Modul unei teme cu un singur mod (fără comutatorul întunecat / luminos al aceleiași teme); altfel `null`. */
+export const themeSingleScheme = (s: Pick<GcsThemeSettings, "scheme">): "dark" | "light" | null =>
+  !s.scheme.toggle && (s.scheme.default === "dark" || s.scheme.default === "light") ? s.scheme.default : null;
 
 /**
  * Elementele care au mereu un fundal propriu (specul `2026-10-07-antete-titluri.md`: fiecare titlu pe banda lui).

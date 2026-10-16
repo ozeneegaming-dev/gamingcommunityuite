@@ -86,12 +86,12 @@ function MegaItem({ item, active, activeHref }: { item: GcsMegaEntry; active: bo
 }
 
 /** „Mai mult”: itemii care nu încap pe bară, într-o listă simplă. */
-function MoreItem({ items, label }: { items: GcsMegaEntry[]; label: string }) {
+function MoreItem({ items, label, active, activeHref }: { items: GcsMegaEntry[]; label: string; active: boolean; activeHref: string | null }) {
   const { dropdowns } = useHeaderState();
   const pop = useHeaderPopover({ mode: dropdowns, menu: true });
   return (
     <div className="gcs-hb__pop" {...pop.rootProps}>
-      <button {...pop.triggerProps} className="gcs-hb__nav" aria-haspopup="menu" data-testid="gcs-nav-more">
+      <button {...pop.triggerProps} className={`gcs-hb__nav${active ? " gcs-hb__nav--active" : ""}`} aria-haspopup="menu" data-testid="gcs-nav-more">
         <GcsIconSvg icon={faEllipsis} />
         <span>{label}</span>
       </button>
@@ -99,7 +99,15 @@ function MoreItem({ items, label }: { items: GcsMegaEntry[]; label: string }) {
         <div {...pop.panelProps} role="menu" aria-label={label} className="gcs-hb__panel gcs-hb__menu">
           {items.flatMap((i) =>
             (i.children.length > 0 ? i.children : [i]).map((c) => (
-              <Link key={`${i.id}-${c.id}`} href={c.href} role="menuitem" className="gcs-hb__menuItem" onClick={() => pop.close(false)} {...linkProps(c)}>
+              <Link
+                key={`${i.id}-${c.id}`}
+                href={c.href}
+                role="menuitem"
+                className="gcs-hb__menuItem"
+                aria-current={c.href === activeHref ? "page" : undefined}
+                onClick={() => pop.close(false)}
+                {...linkProps(c)}
+              >
                 <span className="gcs-hb__menuIcon" aria-hidden="true">
                   {c.icon}
                 </span>
@@ -175,7 +183,8 @@ function Bar({ items, label, moreLabel, home, testId }: Props) {
         </div>
       ))}
       <div data-nav-more="" {...slot(overflow.length === 0)}>
-        <MoreItem items={overflow} label={moreLabel} />
+        {/* Pagina curentă e în „Mai mult”: butonul lui e activ. */}
+        <MoreItem items={overflow} label={moreLabel} active={overflow.some((i) => isActive(i))} activeHref={href} />
       </div>
     </nav>
   );

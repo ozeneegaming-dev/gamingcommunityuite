@@ -98,8 +98,8 @@ test("adminul importă RED-LINE OFFICIAL din fișier, o pornește și o alege di
 
   // Înapoi la Nova, apoi tema importată e ștearsă.
   await menu.locator("summary").click();
-  await menu.getByRole("button", { name: "GCS Nova" }).click();
-  await expect(page.locator('link[href*="/gcs-theme.css?t=nova"]')).toHaveCount(1);
+  await menu.getByRole("button", { name: "GCS Dark" }).click();
+  await expect(page.locator('link[href*="/gcs-theme.css?t=gcs-dark"]')).toHaveCount(1);
   await page.goto("/admin/appearance/themes");
   page.once("dialog", (d) => void d.accept());
   await themeCard(page, "RED-LINE OFFICIAL").getByRole("button", { name: "Șterge" }).click();

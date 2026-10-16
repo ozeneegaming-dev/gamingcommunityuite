@@ -1,7 +1,7 @@
 import { FOOTER_SETTING, SOCIAL_NETWORKS, footerConfigError } from "../community/footer";
 import { communityRulesSetting } from "../community/rules";
 import { coreWidgets } from "../widgets";
-import { APP_SETTING_DEFS, type GcsAcpApp, type GcsAcpArea, type GcsAcpMenuSection, type GcsModule, type GcsPermissionDef, type GcsSettingDef } from "@gcs/core";
+import { DEFAULT_THEME_TOGGLE, THEME_TOGGLE_SETTING, themeTogglePairError, APP_SETTING_DEFS, type GcsAcpApp, type GcsAcpArea, type GcsAcpMenuSection, type GcsModule, type GcsPermissionDef, type GcsSettingDef } from "@gcs/core";
 
 /** Grupurile create la instalare (spec §6.1). */
 export const DEFAULT_GROUP_KEYS = [
@@ -52,6 +52,8 @@ const settings: GcsSettingDef[] = [
   { ...setting("site.locale", "string", "ro", "general", oneOf([...GCS_LOCALE_KEYS])), options: [...GCS_LOCALE_KEYS] },
   setting("site.timezone", "string", "Europe/Bucharest", "general", notEmpty),
   { ...setting("site.theme", "string", "dark", "general", oneOf(["dark", "light", "auto"])), options: ["dark", "light", "auto"] },
+  // Comutatorul lună / soare: perechea de teme (ACP → Aspect → Teme); implicit GCS Dark ↔ GCS White.
+  setting(THEME_TOGGLE_SETTING, "json", DEFAULT_THEME_TOGGLE, "themes", themeTogglePairError),
   // Profilurile sociale ale comunității (cercurile colorate din subsol); goale = ascunse.
   ...SOCIAL_NETWORKS.map((n) => setting(n.setting, "string", "", "general", isUrlOrEmpty)),
   // Subsolul (ACP → Aspect → Subsol); `null` = valorile implicite, construite din aplicațiile instalate.

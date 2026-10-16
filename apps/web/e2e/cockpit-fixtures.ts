@@ -4,7 +4,7 @@ import type { Page } from "@playwright/test";
 import { sql } from "./helpers";
 
 /**
- * Datele testelor Hero Cockpit (antetul construit, consola, clasamentul): setările temei implicite (`nova`) schimbate
+ * Datele testelor Hero Cockpit (antetul construit, consola, clasamentul): setările temei implicite (`gcs-dark`) schimbate
  * direct în bază (și refăcute după test), servere cu status în Redis și un meci mix live.
  */
 
@@ -26,7 +26,7 @@ export async function clearThemeCache(): Promise<void> {
 
 /** Setările publicate ale temei implicite Nova (pentru refacere după test). */
 export async function novaSettings(): Promise<Record<string, unknown>> {
-  const [row] = await sql<{ settings: Record<string, unknown> }>(`SELECT settings FROM themes WHERE key = 'nova'`);
+  const [row] = await sql<{ settings: Record<string, unknown> }>(`SELECT settings FROM themes WHERE key = 'gcs-dark'`);
   return row?.settings ?? {};
 }
 
@@ -35,12 +35,12 @@ export async function patchNova(patch: Record<string, Record<string, unknown>>):
   const current = await novaSettings();
   const next: Record<string, unknown> = { ...current };
   for (const [k, v] of Object.entries(patch)) next[k] = { ...((current[k] as Record<string, unknown> | undefined) ?? {}), ...v };
-  await sql(`UPDATE themes SET settings = $1::jsonb, draft = NULL, version = version + 1 WHERE key = 'nova'`, [JSON.stringify(next)]);
+  await sql(`UPDATE themes SET settings = $1::jsonb, draft = NULL, version = version + 1 WHERE key = 'gcs-dark'`, [JSON.stringify(next)]);
   await clearThemeCache();
 }
 
 export async function restoreNova(settings: Record<string, unknown>): Promise<void> {
-  await sql(`UPDATE themes SET settings = $1::jsonb, draft = NULL, version = version + 1 WHERE key = 'nova'`, [JSON.stringify(settings)]);
+  await sql(`UPDATE themes SET settings = $1::jsonb, draft = NULL, version = version + 1 WHERE key = 'gcs-dark'`, [JSON.stringify(settings)]);
   await clearThemeCache();
 }
 

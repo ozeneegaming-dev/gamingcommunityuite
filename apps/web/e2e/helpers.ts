@@ -57,7 +57,7 @@ export async function login(page: Page, email: string, password = PASSWORD): Pro
 /** Ieșire din cont: așteptăm reîncărcarea paginii, ca navigările următoare să nu se suprapună cu ea. */
 export async function logout(page: Page): Promise<void> {
   await page.getByTestId("gcs-user-menu").click();
-  await page.getByRole("menuitem", { name: "Ieșire" }).click();
+  await page.getByTestId("gcs-menu-logout").click();
   await expect(page.getByRole("link", { name: "Autentificare" })).toBeVisible();
 }
 

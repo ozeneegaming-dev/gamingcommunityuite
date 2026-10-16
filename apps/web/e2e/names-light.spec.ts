@@ -47,7 +47,7 @@ const luminance = (rgb: string) => {
 };
 const colorOf = (l: Locator) => l.evaluate((el) => getComputedStyle(el).color);
 
-test("un membru simplu are numele lizibil pe temele luminoase (Nova și clasic) și culoarea grupului pe cele închise", async ({ browser }) => {
+test("un membru simplu are numele lizibil pe temele luminoase (GCS White și clasic) și culoarea grupului pe cele închise", async ({ browser }) => {
   test.setTimeout(120_000);
   const id = uid();
   const name = `Simplu${id}`;
@@ -62,19 +62,21 @@ test("un membru simplu are numele lizibil pe temele luminoase (Nova și clasic) 
 
   for (const skin of [null, CLASSIC] as const) {
     for (const mode of ["light", "dark"] as const) {
+      // Designul GCS: GCS Dark (doar întunecată, implicită) și GCS White (doar luminoasă); clasicul are ambele moduri.
+      const chosen = skin ?? (mode === "light" ? "gcs-white" : null);
       await context.clearCookies({ name: "gcs-skin" });
       await context.addCookies([
         { name: "gcs-theme", value: mode, domain: url.hostname, path: "/" },
-        ...(skin ? [{ name: "gcs-skin", value: skin, domain: url.hostname, path: "/" }] : []),
+        ...(chosen ? [{ name: "gcs-skin", value: chosen, domain: url.hostname, path: "/" }] : []),
       ]);
       await page.goto(`/members?group=${groupId}`);
       const link = page.locator("a.gcs-name--member:visible", { hasText: name }).first();
       await expect(link).toBeVisible();
       const color = await colorOf(link);
-      const label = `${skin ?? "nova"}/${mode}: ${color}`;
+      const label = `${chosen ?? "gcs-dark"}/${mode}: ${color}`;
       if (mode === "light") expect(luminance(color), label).toBeLessThan(0.2);
       else expect(color, label).toBe("rgb(236, 237, 241)");
-      if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `names-plain-${skin ? "classic" : "nova"}-${mode}.png`) });
+      if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `names-plain-${skin ? "classic" : "gcs"}-${mode}.png`) });
     }
   }
   await context.close();

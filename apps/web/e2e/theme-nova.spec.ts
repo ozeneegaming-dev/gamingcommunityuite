@@ -3,8 +3,8 @@ import { fixture, topicWithReplies, uid } from "./forum-fixtures";
 import { enterAcpAsRoot, resetSetting, setSetting, useFreshIp } from "./helpers";
 
 /**
- * Tema implicită „GCS Nova” (specul 2026-10-10-tema-nova): designul pe paginile site-ului (nu în ACP), antetul cu
- * rândul breadcrumb + căutare, subsolul configurabil din ACP (cu mențiunea produsului protejată), plăcile de moderare.
+ * Tema implicită „GCS Dark” (designul GCS, specul 2026-10-10-tema-nova): designul pe paginile site-ului (nu în ACP),
+ * antetul „Standard” al constructorului (breadcrumb + câmpul de căutare), subsolul configurabil din ACP (cu mențiunea produsului protejată), plăcile de moderare.
  * Cu `GCS_SHOTS_DIR`, salvează și capturi (întunecat / luminos, desktop / 375 px) ale paginilor principale.
  */
 
@@ -33,7 +33,7 @@ test("Nova: designul pe site (nu în ACP), antetul, subsolul din ACP și plăcil
     await expect(page.locator("html")).toHaveClass(/gcs-nova/);
     await expect(trail(page)).toBeVisible();
     await expect(trail(page)).toContainText("Acasă");
-    await expect(page.getByTestId("gcs-crumb-search")).toBeVisible();
+    await expect(page.getByTestId("gcs-search-open").filter({ visible: true }).first()).toBeVisible();
     await page.getByRole("link", { name: "Activitate", exact: true }).first().click();
     await expect(trail(page)).toContainText("Activitate");
     await page.goto("/admin");

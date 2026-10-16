@@ -43,7 +43,11 @@ test("A scrie lui B și C; B citește și răspunde; C pleacă; A îl invită pe
   // B vede conversația necitită, o deschide; A vede „Citit de B”.
   await b.goto("/");
   await expect(b.getByTestId("gcs-header-unread")).toHaveText("1");
+  // Mesajele din antet: panoul cu ultimele conversații, apoi „Toate mesajele”.
   await b.getByTestId("gcs-header-messages").click();
+  await expect(b.getByTestId("gcs-messages-panel").getByTestId("gcs-messages-item")).toHaveCount(1);
+  await b.keyboard.press("Escape");
+  await b.goto("/messages");
   await b.getByTestId("gcs-inbox-item").getByRole("link", { name: `Echipa ${id}` }).click();
   await expect(b.getByTestId("gcs-message")).toHaveCount(1);
   await expect(b.getByTestId("gcs-header-unread")).toHaveCount(0);

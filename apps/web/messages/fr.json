@@ -319,7 +319,8 @@
       "member_required": "Indique le membre (@nom).",
       "room_not_found": "Ce salon n’existe pas.",
       "invalid_handle": "Saisis uniquement le nom d’utilisateur (lettres, chiffres, point, tiret, tiret bas).",
-      "invalid_link_template": "Le modèle doit être une adresse https avec '{handle}' une seule fois, uniquement pour les champs « Texte »."
+      "invalid_link_template": "Le modèle doit être une adresse https avec '{handle}' une seule fois, uniquement pour les champs « Texte ».",
+      "same_theme": "Choisis deux thèmes différents."
     }
   },
   "acp": {
@@ -1481,7 +1482,16 @@
       "import": "Importer un thème",
       "importHint": "Envoyez un fichier .gcs-theme.json (exporté d’un autre site ou reçu séparément). Le thème importé est désactivé : vérifiez-le dans l’éditeur visuel, puis cochez « Actif » ou « Thème par défaut ». Les images (logo, en-tête) s’ajoutent depuis l’éditeur visuel.",
       "importFile": "Fichier du thème (.gcs-theme.json)",
-      "importSubmit": "Importer le thème"
+      "importSubmit": "Importer le thème",
+      "toggle": {
+        "title": "Bascule sombre/clair",
+        "hint": "La lune / le soleil de l’en-tête, du menu du compte et du pied de page passent d’un de ces deux thèmes à l’autre (enregistré pour les membres et, par cookie, pour les visiteurs). Bascule désactivée, thème manquant ou désactivé : le bouton disparaît.",
+        "enabled": "Bascule activée",
+        "dark": "Thème sombre (lune)",
+        "light": "Thème clair (soleil)",
+        "missing": "{key} (manquant)",
+        "disabled": "{name} (désactivé)"
+      }
     },
     "widgetsAdmin": {
       "title": "Widgets",
@@ -1512,7 +1522,7 @@
       "newItem": "Nouveau poste",
       "mega": "Méga-menu",
       "description": "Description",
-      "descriptionHint": "Une ligne sous le titre dans le méga-menu (design Nova). Vide = la description par défaut des éléments automatiques.",
+      "descriptionHint": "Une ligne sous le titre dans le méga-menu. Vide = la description par défaut des éléments automatiques.",
       "badge": "Badge",
       "badgeHint": "ex. NOUVEAU"
     },
@@ -3959,6 +3969,9 @@
       "steamOff": "Le site n’a pas encore de clé Steam Web API : l’onglet est masqué.",
       "faceitTab": "Afficher l’onglet FACEIT sur mon profil",
       "faceitTabHint": "Ton niveau, ton ELO, tes statistiques et tes matchs FACEIT CS2."
+    },
+    "themes": {
+      "toggle": "Bascule sombre/clair (paire de thèmes)"
     }
   },
   "permissions": {
@@ -5439,10 +5452,10 @@
       },
       "preset": {
         "label": "Theme design",
-        "help": "Nova: tall header with an image, titles with a round icon, a rich footer and hover effects. Classic: the previous look.",
+        "help": "GCS : en-tête avec image, titres avec icône ronde, pied de page riche et effets au survol. Classique : l’aspect précédent. Les fonctions (en-tête, menus, console, barre du bas) sont les mêmes dans les deux.",
         "options": {
           "classic": "Classic",
-          "nova": "Nova"
+          "nova": "GCS"
         }
       },
       "bands_style": {
@@ -5618,14 +5631,16 @@
     "builder": {
       "presets": "Préréglages",
       "presetNames": {
-        "classic": "Nova classique",
+        "basic": "Classique",
+        "classic": "Standard",
         "cockpit": "Cockpit",
         "centered": "Centré",
         "side": "Panneau latéral",
         "esports": "Esports"
       },
       "presetHelp": {
-        "classic": "L'en-tête actuel : logo, menu et icônes sur une rangée, puis le fil d'Ariane et la recherche.",
+        "basic": "L’en-tête des thèmes classiques : logo, menu, recherche, notifications, messages et compte sur une seule ligne.",
+        "classic": "Logo, menu et icônes sur une ligne, puis le fil d’Ariane et le champ de recherche.",
         "cockpit": "Logo et actions sur la rangée 1, le menu avec méga-menus sur la rangée 2 ; sur mobile, la barre du bas.",
         "centered": "Le logo centré au-dessus du menu.",
         "side": "Le logo et le menu dans un panneau latéral, sur ordinateur.",
@@ -7821,7 +7836,8 @@
         "content": "Mon contenu",
         "gaming": "Gaming",
         "settings": "Paramètres",
-        "staff": "Équipe"
+        "staff": "Équipe",
+        "apps": "Applications"
       },
       "items": {
         "profile": "Mon profil",

@@ -6,7 +6,7 @@ const SAVED = "Draft salvat. Vizitatorii văd modificările doar după ce salvez
 const PUBLISHED = "Salvat: tema e publicată pentru toți.";
 
 /** CSS-ul publicat al temei implicite (ce primesc vizitatorii). */
-const publicCss = async (page: Page) => (await page.request.get("/gcs-theme.css?t=nova")).text();
+const publicCss = async (page: Page) => (await page.request.get("/gcs-theme.css?t=gcs-dark")).text();
 /** Prima valoare a unei variabile din CSS-ul publicat (blocul întunecat, `html:root`). */
 const cssVar = (css: string, name: string) => new RegExp(`${name}: ([^;]+);`).exec(css)?.[1] ?? null;
 
@@ -37,7 +37,7 @@ test("editorul vizual: previzualizare live, ieșire cu confirmare, salvare și r
 
   await page.goto("/admin/appearance/themes");
   await page.getByTestId("gcs-acp-theme-visual").first().click();
-  await expect(page).toHaveURL(/\/admin\/theme-editor\/nova$/);
+  await expect(page).toHaveURL(/\/admin\/theme-editor\/gcs-dark$/);
   await expect(page.getByTestId("gcs-theme-studio")).toBeVisible();
   await expect(page.getByRole("button", { name: "Salvează și publică" })).toBeDisabled();
 
@@ -52,7 +52,8 @@ test("editorul vizual: previzualizare live, ieșire cu confirmare, salvare și r
   await expect(page.getByTestId("gcs-studio-revert-header_height")).toHaveCount(0);
   await page.getByTestId("gcs-studio-field-header_height").fill("80");
   await expect.poll(() => rootVar(frame, "--gcs-header-h")).toBe("80PX");
-  await expect.poll(() => frame.evaluate(() => document.querySelector(".gcs-siteHeader__inner")!.getBoundingClientRect().height)).toBeGreaterThanOrEqual(80);
+  // Antetul e constructorul (în orice temă): înălțimea lui vine din rândurile lui; `--gcs-header-h` dă limita logo-ului.
+  await expect(frame.getByTestId("gcs-header-builder")).toBeVisible();
   await expect(page.getByTestId("gcs-studio-revert-header_height")).toBeVisible();
 
   // O culoare: culoarea primară a paletei (modul întunecat), din selector.
@@ -75,7 +76,7 @@ test("editorul vizual: previzualizare live, ieșire cu confirmare, salvare și r
   await expect(dialog).toBeVisible();
   await dialog.getByTestId("gcs-studio-exit-stay").click();
   await expect(dialog).toHaveCount(0);
-  await expect(page).toHaveURL(/\/admin\/theme-editor\/nova$/);
+  await expect(page).toHaveURL(/\/admin\/theme-editor\/gcs-dark$/);
 
   // „Salvează” publică tema: CSS-ul public are valorile noi.
   await page.getByTestId("gcs-studio-save").click();

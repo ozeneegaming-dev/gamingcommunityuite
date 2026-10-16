@@ -6,7 +6,7 @@ import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { accountMenuData } from "@/lib/account-menu.server";
-import { themeMode } from "@/lib/appearance";
+import { themeMode, viewerThemeToggle } from "@/lib/appearance";
 import { footerSocials } from "@/lib/footer";
 import { guessDevice } from "@/lib/header-device";
 import { liveBadge, megaFooter, pickPlayNow, type GcsLiveSummary } from "@/lib/live-summary";
@@ -62,17 +62,19 @@ type Props = {
   user: GcsUserDisplay | null;
   counts: { messages: number; notifications: number };
   staff: { themeEditor: string | null; pageEditor: boolean };
+  /** Intrările pluginurilor în meniul contului (`menus("user")`). */
+  userExtra?: { key: string; label: string; href: string; icon: ReactNode }[];
 };
 
 /**
- * Antetul construit (designul Nova, constructorul de antet; specul 2026-10-10-hero-cockpit §1–3, §9): aici se randează
+ * Antetul construit (antetul sistemului, în orice temă; constructorul de antet, specul 2026-10-10-hero-cockpit §1–3, §9): aici se randează
  * o singură dată fiecare element (logo, meniul cu mega meniuri, căutarea, „Creează”, mesajele, notificările, contul,
  * breadcrumb-ul, statusul serverelor, rețelele sociale, tema, limba, textul propriu și elementele aplicațiilor), iar
  * `GcsHeaderFrame` le așază după aspectul temei pentru dispozitivul curent.
  */
-export async function GcsHeaderBuilder({ actor, theme, siteName, brand, menu, landing, user, counts, staff }: Props) {
+export async function GcsHeaderBuilder({ actor, theme, siteName, brand, menu, landing, user, counts, staff, userExtra = [] }: Props) {
   const s = theme.settings;
-  const [t, tn, th, locale, h, locales, mode, socials, servers] = await Promise.all([
+  const [t, tn, th, locale, h, locales, mode, socials, servers, toggle] = await Promise.all([
     getTranslations("site"),
     getTranslations("notifications"),
     getTranslations("header"),
@@ -82,6 +84,7 @@ export async function GcsHeaderBuilder({ actor, theme, siteName, brand, menu, la
     themeMode(),
     footerSocials(),
     visibleServers(actor),
+    viewerThemeToggle(),
   ]);
   const { apps, settings } = services();
   const usable = await apps.accessFilter(actor);
@@ -130,7 +133,7 @@ export async function GcsHeaderBuilder({ actor, theme, siteName, brand, menu, la
     search: <GcsSearchPanel variant="icon" />,
     searchField: <GcsSearchPanel variant="field" />,
     breadcrumb: <GcsCrumbTrail items={menu} home={landing} labels={{ home: t("home"), trail: t("crumbs") }} />,
-    themeToggle: <GcsThemeToggle mode={mode} />,
+    themeToggle: <GcsThemeToggle toggle={toggle} mode={s.scheme.toggle ? mode : null} />,
     language: <GcsGuestPrefs locales={locales} currentLocale={locale} labels={{ language: t("language") }} />,
   };
   if (user && account) {
@@ -142,7 +145,19 @@ export async function GcsHeaderBuilder({ actor, theme, siteName, brand, menu, la
         labels={{ title: tn("title"), unread: tn.raw("unreadLabel") as string, empty: tn("empty"), markAll: tn("markAll"), seeAll: tn("seeAll") }}
       />
     );
-    parts.account = <GcsAccountMenu data={account} icons={icons} mode={mode} locales={locales} locale={locale} compactTrigger={s.header.layout.preset === "esports"} />;
+    parts.account = (
+      <GcsAccountMenu
+        data={account}
+        icons={icons}
+        mode={mode}
+        locales={locales}
+        locale={locale}
+        compactTrigger={s.header.layout.preset === "esports"}
+        toggle={toggle}
+        modeSwitch={s.scheme.toggle}
+        extra={userExtra}
+      />
+    );
   } else {
     parts.account = (
       <span className="gcs-hb__auth">

@@ -41,7 +41,7 @@ test("adminul încarcă logo-ul din editorul vizual deschis din meniu; vizitator
   await page.goto("/");
   await page.getByTestId("gcs-user-menu").click();
   await page.getByTestId("gcs-menu-theme-editor").click();
-  await expect(page).toHaveURL(/\/admin\/theme-editor\/nova$/);
+  await expect(page).toHaveURL(/\/admin\/theme-editor\/gcs-dark$/);
   await expect(page.getByTestId("gcs-theme-studio")).toBeVisible();
   const status = page.getByTestId("gcs-studio-status");
 

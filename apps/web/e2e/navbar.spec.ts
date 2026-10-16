@@ -2,8 +2,11 @@ import { expect, test } from "@playwright/test";
 import { member, uid } from "./forum-fixtures";
 import { sql, useFreshIp } from "./helpers";
 
-/** Header-ul nou (specul etapei 5): meniul principal, meniul userului, limba și tema (din footer) și sertarul de pe mobil. */
-test("meniul userului se folosește din tastatură; tema și limba se schimbă din footer și rămân", async ({ page, context }) => {
+/**
+ * Header-ul (constructorul de antet, același în orice temă): meniul principal, meniul contului, limba și tema (din
+ * subsol: comutatorul lună / soare trece între GCS Dark și GCS White) și sertarul de pe mobil.
+ */
+test("meniul contului se folosește din tastatură; tema și limba se schimbă din footer și rămân", async ({ page, context }) => {
   await useFreshIp(context, "100.69.0");
   const id = uid();
   await member(page, `Nav${id}`, `nav-${id}@example.com`);
@@ -11,21 +14,21 @@ test("meniul userului se folosește din tastatură; tema și limba se schimbă d
 
   const trigger = page.getByTestId("gcs-user-menu");
   await trigger.focus();
-  await page.keyboard.press("ArrowDown");
-  const menu = page.getByRole("menu", { name: "Meniul contului" });
+  await page.keyboard.press("Enter");
+  const menu = page.getByRole("dialog", { name: "Meniul contului" });
   await expect(menu).toBeVisible();
-  await expect(menu.getByRole("menuitem", { name: "Profilul meu" })).toBeFocused();
+  await expect(menu.getByTestId("gcs-menu-profile")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(menu).toBeHidden();
   await expect(trigger).toBeFocused();
-
-  // Tema și limba nu mai sunt în meniul userului, ci în footer.
   await trigger.click();
-  await expect(menu.getByRole("menuitem", { name: "Ieșire" })).toBeVisible();
-  await expect(menu.getByText("Luminoasă")).toHaveCount(0);
+  await expect(menu.getByTestId("gcs-menu-logout")).toBeVisible();
   await page.keyboard.press("Escape");
+
+  // Subsolul: soarele trece la tema luminoasă a perechii (GCS White), alegerea rămâne după reîncărcare.
   const footer = page.locator(".gcs-siteFooter");
   await footer.getByRole("button", { name: "Luminoasă" }).click();
+  await expect(page.locator('link[rel="stylesheet"][href*="gcs-theme.css?t=gcs-white"]')).toHaveCount(1);
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
@@ -36,8 +39,8 @@ test("meniul userului se folosește din tastatură; tema și limba se schimbă d
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   // Membri e acum un submeniu (buton): eticheta lui e tradusă.
   await expect(page.getByRole("navigation", { name: "Main" }).getByRole("button", { name: "Members" })).toBeVisible();
-  const [row] = await sql<{ prefs: { locale?: string; theme?: string } }>(`SELECT prefs FROM users WHERE email = $1`, [`nav-${id}@example.com`]);
-  expect(row!.prefs).toMatchObject({ locale: "en", theme: "light" });
+  const [row] = await sql<{ prefs: { locale?: string; skin?: string } }>(`SELECT prefs FROM users WHERE email = $1`, [`nav-${id}@example.com`]);
+  expect(row!.prefs).toMatchObject({ locale: "en", skin: "gcs-white" });
 });
 
 test("meniul implicit: Forum, Servere, Clanuri, Activitate, Chat, Membri (cu Staff în submeniu); Clasament și VIP în „Mai mult”", async ({ page, context }) => {
@@ -52,12 +55,13 @@ test("meniul implicit: Forum, Servere, Clanuri, Activitate, Chat, Membri (cu Sta
   // Servere are submeniu (paginile punții, `nav:v6`): e un buton.
   await expect(nav.getByRole("button", { name: "Servere", exact: true })).toBeVisible();
   // Clasament și VIP: pe bară, dacă încap (meniul Nova e mai compact), altfel în „Mai mult”.
-  await page.setViewportSize({ width: 1060, height: 900 });
+  await page.setViewportSize({ width: 1100, height: 900 });
   const more = page.getByTestId("gcs-nav-more");
   for (const name of ["Clasament", "VIP"]) {
     if (await nav.getByRole("link", { name, exact: true }).isVisible()) continue;
     await more.click();
-    await expect(page.getByRole("menu", { name: "Mai mult" }).getByRole("menuitem", { name })).toBeVisible();
+    // Clasament apare și ca item, și în submeniul Membri (ambele în „Mai mult” când nu încap).
+    await expect(page.getByRole("menu", { name: "Mai mult" }).getByRole("menuitem", { name }).first()).toBeVisible();
     await page.keyboard.press("Escape");
   }
   await page.setViewportSize({ width: 1600, height: 900 });
