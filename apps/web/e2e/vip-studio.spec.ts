@@ -176,7 +176,7 @@ test("Root Admin instalează Studio VIP semnat și adaugă o ramă nouă din ACP
 
   // Meniul principal: „Studio VIP” apare în bara site-ului imediat după instalare.
   await page.goto("/");
-  await expect(page.locator("header.gcs-siteHeader").locator(`a[href="/p/${KEY}"]`).first()).toBeAttached();
+  await expect(page.locator("header.gcs-hb").locator(`a[href="/p/${KEY}"]`).first()).toBeAttached();
 });
 
 test("ACP: mai multe rame animate odată (APNG), duplicatul sărit, servite ca WebP animat", async () => {
@@ -416,6 +416,6 @@ test("meniul: „Studio VIP” e și în sertarul de pe mobil și dispare când 
   await expect(page.getByTestId(`gcs-plugin-toggle-${KEY}`)).not.toBeChecked();
   await expect.poll(async () => {
     await page.goto("/");
-    return page.locator("header.gcs-siteHeader").locator(`a[href="/p/${KEY}"]`).count();
+    return page.locator("header.gcs-hb").locator(`a[href="/p/${KEY}"]`).count();
   }, { timeout: 20_000 }).toBe(0);
 });

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { patchNova, preset, novaSettings, removeServers, restoreNova, seedLiveMatch, seedServers, shot, type SeededServer } from "./cockpit-fixtures";
+import { clearThemeCache, patchNova, preset, novaSettings, removeServers, restoreNova, seedLiveMatch, seedServers, shot, type SeededServer } from "./cockpit-fixtures";
 import { forumTree, topicWithReplies, uid } from "./forum-fixtures";
 import { enterAcpAsRoot, register, setPrimaryGroup, sql, useFreshIp, userId } from "./helpers";
 
@@ -170,7 +170,7 @@ test("meniul contului: cardul de rang, statusul, secțiunile după drepturi și 
   await page.goto("/");
   // Cockpit: statusul serverelor live în dreapta rândului cu meniul.
   if (servers.length > 0) await expect(page.getByTestId("gcs-servers-live")).toContainText("servere online");
-  await page.getByTestId("gcs-user-menu-trigger").click();
+  await page.getByTestId("gcs-user-menu").click();
   const menu = page.getByTestId("gcs-account-menu");
   await expect(menu).toBeVisible();
   await expect(menu.getByRole("link", { name: `Contul${id}` })).toBeVisible();
@@ -199,7 +199,7 @@ test("meniul contului: cardul de rang, statusul, secțiunile după drepturi și 
   await newMember(p2, `Membru${id}`, `hc-acc-m-${id}@example.com`);
   await p2.setViewportSize({ width: 1440, height: 900 });
   await p2.goto("/");
-  await p2.getByTestId("gcs-user-menu-trigger").click();
+  await p2.getByTestId("gcs-user-menu").click();
   const m2 = p2.getByTestId("gcs-account-menu");
   await expect(m2.getByTestId("gcs-account-section-content")).toBeVisible();
   await expect(m2.getByTestId("gcs-account-section-staff")).toHaveCount(0);
@@ -272,13 +272,18 @@ test("consola Hero Cockpit: pornită / oprită, feed-ul, meciul live, trofeele p
     await expect(rows.nth(0)).toContainText(`Autor0${id}`);
     await shot(page, "07-cockpit-desktop", { fullPage: false });
     await shot(page, "07c-home-full-dark", { fullPage: true });
-    // Modul luminos: antetul rămâne închis, consola urmează tokenurile temei.
-    await page.context().addCookies([{ name: "gcs-theme", value: "light", url: page.url() }]);
+    // Tema luminoasă a perechii (GCS White, aceeași consolă): antetul rămâne închis, consola urmează tokenurile temei.
+    const [white] = await sql<{ settings: Record<string, unknown> }>(`SELECT settings FROM themes WHERE key = 'gcs-white'`);
+    await sql(`UPDATE themes SET settings = jsonb_set(settings, '{cockpit}', (SELECT settings->'cockpit' FROM themes WHERE key = 'gcs-dark')) WHERE key = 'gcs-white'`);
+    await clearThemeCache();
+    await page.context().addCookies([{ name: "gcs-skin", value: "gcs-white", url: page.url() }]);
     await page.reload();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
     await expect(page.getByTestId("gcs-cockpit")).toBeVisible();
     await shot(page, "07b-cockpit-light");
-    await page.context().addCookies([{ name: "gcs-theme", value: "dark", url: page.url() }]);
+    await page.context().clearCookies({ name: "gcs-skin" });
+    await sql(`UPDATE themes SET settings = $1::jsonb WHERE key = 'gcs-white'`, [JSON.stringify(white!.settings)]);
+    await clearThemeCache();
     await page.reload();
     await expect(page.getByTestId("gcs-cockpit-feed-tab-mix")).toBeVisible();
     await page.getByTestId("gcs-cockpit-feed-tab-forum").click();
@@ -366,7 +371,7 @@ test("editorul vizual: constructorul de antet (presetările, drag & drop), live 
   await enterAcpAsRoot(page, `Editor${id}`, `hc-ed-${id}@example.com`);
   await restoreNova(saved);
   await page.setViewportSize({ width: 1600, height: 950 });
-  await page.goto("/admin/theme-editor/nova");
+  await page.goto("/admin/theme-editor/gcs-dark");
   await page.getByTestId("gcs-studio-nav-header").click();
   await page.getByTestId("gcs-studio-nav-headerBuilder").click();
   const editor = page.getByTestId("gcs-header-builder-editor");
