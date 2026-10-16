@@ -121,7 +121,8 @@ export class GcsVipService {
         const old = await membership.setPrimary(tx, input.userId, input.groupId, { savePrevious: !u.primaryGroup.isVip });
         if (old !== null) changed.add(old);
       } else {
-        await membership.addSecondary(tx, input.userId, input.groupId);
+        // Membri v2: sursa apare în ACP; expirarea o ține abonamentul VIP (jobul VIP scoate grupul).
+        await membership.addSecondary(tx, input.userId, input.groupId, { source: "vip" });
       }
       const sub = await tx.vipSubscription.create({
         data: {
@@ -250,7 +251,7 @@ export class GcsVipService {
           const old = await membership.setPrimary(tx, targetId, source.groupId, { savePrevious: !u.primaryGroup.isVip });
           if (old !== null) changed.add(old);
         } else {
-          await membership.addSecondary(tx, targetId, source.groupId);
+          await membership.addSecondary(tx, targetId, source.groupId, { source: "vip" });
         }
         const sub = await tx.vipSubscription.create({
           data: {

@@ -51,6 +51,11 @@ export interface GcsMemberDataHandler {
   erase(ctx: GcsEraseContext): Promise<number>;
   /** Un lot de unire; întoarce câte rânduri a procesat (0 = pasul e gata). */
   merge(ctx: GcsMergeContext): Promise<number>;
+  /**
+   * GDPR (Membri v2): datele personale ale membrului în aplicație, ca JSON (fișierul `<cheie>.json` din arhiva de export).
+   * Lipsă = arhiva are doar numerele din `summary`.
+   */
+  export?(userId: string): Promise<unknown>;
 }
 
 /** Progresul unui pas, salvat în `member_removals.steps`. */

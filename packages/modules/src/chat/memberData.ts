@@ -18,6 +18,10 @@ export function chatMemberData(deps: { db: PrismaClient; attachments?: Pick<GcsA
   const { db } = deps;
   return {
     key: "chat",
+    /** GDPR (Membri v2): mesajele de chat scrise de membru (cele șterse nu). */
+    async export(userId) {
+      return { messages: await db.chatMessage.findMany({ where: { authorId: userId, deletedAt: null }, orderBy: { id: "asc" }, take: 50_000, select: { id: true, channelId: true, body: true, createdAt: true } }) };
+    },
     async summary(userId) {
       const [messages, rooms] = await Promise.all([db.chatMessage.count({ where: { authorId: userId } }), db.chatChannel.count({ where: { ownerId: userId } })]);
       return [

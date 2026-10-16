@@ -124,6 +124,14 @@ export class GcsNotificationProducers {
         return sub ? { title: sub.group.name, href: "/settings" } : null;
       },
     });
+    // Membri v2: grupul secundar expirat (titlul = numele grupului, linkul = membrii grupului).
+    notifications.registerTarget("core.group", {
+      canView: async () => true,
+      describe: async (id) => {
+        const group = await db.group.findUnique({ where: { id: Number(id) }, select: { id: true, name: true } });
+        return group ? { title: group.name, href: `/members?group=${group.id}` } : null;
+      },
+    });
     notifications.registerTarget("core.warning", {
       canView: async (userId, id) => (await db.warning.findUnique({ where: { id }, select: { userId: true } }))?.userId === userId,
       describe: async (id) => {
@@ -243,6 +251,11 @@ export class GcsNotificationProducers {
         await notifications.notify({ userIds: [userId], type, targetType: "vip.subscription", targetId: String(e.payload.subscriptionId), actorId: null, ...(data ? { data } : {}) });
       });
     }
+    bus.on("group.secondary_expired", async (e) => {
+      const userId = str(e.payload.userId);
+      if (!userId || typeof e.payload.groupId !== "number") return;
+      await notifications.notify({ userIds: [userId], type: "core.group_expired", targetType: "core.group", targetId: String(e.payload.groupId), actorId: null });
+    });
     // Avertismentul nu are actor: un user care ignoră moderatorul îl primește oricum.
     bus.on("user.warned", async (e) => {
       const userId = str(e.payload.userId);
