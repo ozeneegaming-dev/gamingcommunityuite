@@ -2715,11 +2715,15 @@ input[type="checkbox"].gcs-switch:checked::before,
 }
 .gcs-legendEditor__groupMoves {
   flex-basis: 100%;
+  flex-wrap: wrap;
   justify-content: flex-end;
+  min-width: 0;
 }
 .gcs-legendEditor__select {
+  flex: 1 1 90px;
   width: auto;
-  max-width: 150px;
+  min-width: 0;
+  max-width: 100%;
   height: 30px;
   padding: 0 6px;
   font-size: 12px;

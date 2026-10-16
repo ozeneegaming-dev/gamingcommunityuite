@@ -162,8 +162,8 @@ test("Legenda grupurilor: categorie nouă, grup tras în ea, grup legat, număr�
     await expect(card.getByTestId("gcs-legend-pro-row").filter({ hasText: "Admin" })).toBeVisible();
     await expect(legend.getByTestId("gcs-legend-pro-members")).toHaveCount(0);
     await expect(legend.getByTestId("gcs-legend-pro-online")).toHaveCount(0);
-    // Moderatori a rămas fără grupuri: categoria lipsește.
-    await expect(legend.locator('[data-category="moderators"]')).toHaveCount(0);
+    // Moderator nu mai e în categoria Moderatori (a rămas acolo doar Super Moderator).
+    await expect(legend.locator('[data-category="moderators"] .gcs-legendPro__name', { hasText: /^Moderator$/ })).toHaveCount(0);
     await card.getByTestId("gcs-legend-pro-toggle").click();
     await expect(card.getByTestId("gcs-legend-pro-menu")).toContainText("Moderator");
     await shot(page.locator('[data-widget="core.statsPanel"]:visible'), "site");

@@ -225,7 +225,7 @@ function LegendRow({ row, labels, counts }: { row: GcsLegendProItem; labels: { l
         <div id={menuId} className="gcs-legendPro__menu" role="group" aria-label={labels.toggle.replace("{name}", row.name)} data-testid="gcs-legend-pro-menu">
           <div className="gcs-legendPro__menuHead">
             <span>{labels.linked}</span>
-            <b>{row.linkedTotal}</b>
+            {counts.members && <b>{row.linkedTotal}</b>}
           </div>
           {row.children.map((child) => (
             <GcsGroupPill

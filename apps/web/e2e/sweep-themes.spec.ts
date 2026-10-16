@@ -68,8 +68,8 @@ for (const mode of ["dark", "light"] as const) {
     await expect.poll(async () => (await look(btn)).size, { timeout: 3_000 }).toBe("100% 100%");
     const after = await look(btn);
     expect(after.image).toMatch(/linear-gradient/);
-    // Culoarea stratului vine din temă: 8% alb pe întunecat, din culoarea textului pe luminos.
-    if (mode === "dark") expect(after.sweep).toMatch(/255 255 255 \/ 0\.08|rgba\(255, 255, 255, 0\.08\)/);
+    // Culoarea stratului vine din temă: 8% alb pe întunecat (minificat: `#ffffff14`), din culoarea textului pe luminos.
+    if (mode === "dark") expect(after.sweep).toMatch(/255 255 255 \/ 0?\.08|rgba\(255, 255, 255, 0\.08\)|#ffffff14/i);
     else expect(after.sweep).toContain("color-mix");
     if (SHOTS) await btn.screenshot({ path: path.join(SHOTS, `sweep-classic-${mode}.png`) });
     await page.mouse.move(0, 0);
