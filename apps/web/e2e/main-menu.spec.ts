@@ -39,7 +39,8 @@ test.describe("meniul principal", () => {
     await trigger.focus();
     await page.keyboard.press("ArrowDown");
     const menu = page.getByRole("menu", { name: "Membri" });
-    await expect(menu.getByRole("menuitem")).toHaveText(["Toți membrii", "Online acum", "Staff", "Clasament"]);
+    // Mega meniul: titlul, apoi descrierea (și insigna live) pe fiecare item.
+    await expect(menu.getByRole("menuitem")).toHaveText([/^Toți membrii/, /^Online acum/, /^Staff/, /^Clasament/]);
     await expect(menu.getByRole("menuitem", { name: "Toți membrii" })).toBeFocused();
     await page.keyboard.press("ArrowDown");
     await expect(menu.getByRole("menuitem", { name: "Online acum" })).toBeFocused();
@@ -47,7 +48,7 @@ test.describe("meniul principal", () => {
     await expect(page).toHaveURL(/\/members\?online=1$/);
 
     // Starea activă: butonul Membri și, în submeniu, „Online acum” (nu și „Toți membrii”).
-    await expect(nav.getByRole("button", { name: "Membri" })).toHaveClass(/gcs-nav__link--active/);
+    await expect(nav.getByRole("button", { name: "Membri" })).toHaveClass(/gcs-hb__nav--active/);
     await nav.getByRole("button", { name: "Membri" }).click();
     await expect(page.getByRole("menuitem", { name: "Online acum" })).toHaveAttribute("aria-current", "page");
     await expect(page.getByRole("menuitem", { name: "Toți membrii" })).not.toHaveAttribute("aria-current", "page");
@@ -58,14 +59,14 @@ test.describe("meniul principal", () => {
     if (await ranking.isVisible()) {
       await ranking.click();
       await expect(page).toHaveURL(/\/leaderboard$/);
-      await expect(nav.getByRole("link", { name: "Clasament", exact: true })).toHaveClass(/gcs-nav__link--active/);
+      await expect(nav.getByRole("link", { name: "Clasament", exact: true })).toHaveClass(/gcs-hb__nav--active/);
     } else {
       await page.getByTestId("gcs-nav-more").click();
       await page.getByRole("menu", { name: "Mai mult" }).getByRole("menuitem", { name: "Clasament" }).click();
       await expect(page).toHaveURL(/\/leaderboard$/);
-      await expect(page.getByTestId("gcs-nav-more")).toHaveClass(/gcs-nav__link--active/);
+      await expect(page.getByTestId("gcs-nav-more")).toHaveClass(/gcs-hb__nav--active/);
     }
-    await expect(nav.getByRole("button", { name: "Membri" })).not.toHaveClass(/gcs-nav__link--active/);
+    await expect(nav.getByRole("button", { name: "Membri" })).not.toHaveClass(/gcs-hb__nav--active/);
   });
 
   test("pe lățimi medii, butoanele care nu încap trec în „Mai mult”", async ({ page, context }) => {
@@ -87,7 +88,7 @@ test.describe("meniul principal", () => {
     // Pagina curentă e în „Mai mult”: butonul lui e activ. Antetul vine în flux (Suspense): până când React îl
     // dezvăluie, butonul există de două ori (o copie ascunsă).
     await expect(page.getByTestId("gcs-nav-more")).toHaveCount(1);
-    await expect(page.getByTestId("gcs-nav-more")).toHaveClass(/gcs-nav__link--active/);
+    await expect(page.getByTestId("gcs-nav-more")).toHaveClass(/gcs-hb__nav--active/);
 
     // Mai lat: încap mai mulți itemi în bară (VIP rămâne în „Mai mult”: bara implicită are 8 itemi).
     const narrow = await nav.getByRole("link").count();

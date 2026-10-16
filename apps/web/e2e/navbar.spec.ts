@@ -28,7 +28,7 @@ test("meniul contului se folosește din tastatură; tema și limba se schimbă d
   // Subsolul: soarele trece la tema luminoasă a perechii (GCS White), alegerea rămâne după reîncărcare.
   const footer = page.locator(".gcs-siteFooter");
   await footer.getByRole("button", { name: "Luminoasă" }).click();
-  await expect(page.locator('link[href*="gcs-theme.css?t=gcs-white"]')).toHaveCount(1);
+  await expect(page.locator('link[rel="stylesheet"][href*="gcs-theme.css?t=gcs-white"]')).toHaveCount(1);
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
@@ -55,12 +55,13 @@ test("meniul implicit: Forum, Servere, Clanuri, Activitate, Chat, Membri (cu Sta
   // Servere are submeniu (paginile punții, `nav:v6`): e un buton.
   await expect(nav.getByRole("button", { name: "Servere", exact: true })).toBeVisible();
   // Clasament și VIP: pe bară, dacă încap (meniul Nova e mai compact), altfel în „Mai mult”.
-  await page.setViewportSize({ width: 1060, height: 900 });
+  await page.setViewportSize({ width: 1100, height: 900 });
   const more = page.getByTestId("gcs-nav-more");
   for (const name of ["Clasament", "VIP"]) {
     if (await nav.getByRole("link", { name, exact: true }).isVisible()) continue;
     await more.click();
-    await expect(page.getByRole("menu", { name: "Mai mult" }).getByRole("menuitem", { name })).toBeVisible();
+    // Clasament apare și ca item, și în submeniul Membri (ambele în „Mai mult” când nu încap).
+    await expect(page.getByRole("menu", { name: "Mai mult" }).getByRole("menuitem", { name }).first()).toBeVisible();
     await page.keyboard.press("Escape");
   }
   await page.setViewportSize({ width: 1600, height: 900 });

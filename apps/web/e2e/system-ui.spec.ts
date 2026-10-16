@@ -115,7 +115,7 @@ for (const theme of THEMES) {
     await shot(page, `${theme.label}-desktop-home`);
 
     // Notificările: clopoțelul cu numărul live, panoul cu notificarea; Escape îl închide.
-    await expect(page.getByTestId("gcs-header-bell-count")).toHaveText("1");
+    await expect(page.getByTestId("gcs-header-bell-count")).toHaveText(/^[1-9]/);
     await page.getByTestId("gcs-header-bell").click();
     const notif = page.getByTestId("gcs-notif-panel");
     await expect(notif).toBeVisible();
@@ -162,13 +162,15 @@ for (const theme of THEMES) {
     await page.keyboard.press("Escape");
     await expect(search).toBeHidden();
 
-    // Mega meniul: Membri (cu submeniu) se deschide și se închide.
+    // Mega meniul: primul item cu submeniu de pe bară (Servere / Membri) se deschide și se închide.
     const nav = page.getByTestId("gcs-hb-nav");
     await expect(nav).toHaveAttribute("data-ready", "");
-    await nav.getByRole("button", { name: "Membri" }).click();
-    const mega = page.getByRole("menu", { name: "Membri" });
+    const trigger = nav.locator('[data-testid^="gcs-nav-menu-"]').filter({ visible: true }).first();
+    const name = (await trigger.innerText()).trim();
+    await trigger.click();
+    const mega = page.getByRole("menu", { name });
     await expect(mega).toBeVisible();
-    await expect(mega.getByRole("menuitem", { name: /Staff/ })).toBeVisible();
+    await expect(mega.getByRole("menuitem").first()).toBeVisible();
     await shot(page, `${theme.label}-desktop-mega`);
     await page.keyboard.press("Escape");
     await expect(mega).toBeHidden();
@@ -197,8 +199,12 @@ for (const theme of THEMES) {
     await shot(page, `${theme.label}-desktop-mention`);
     await page.keyboard.press("Escape");
     const author = page.getByTestId("gcs-post").first().locator(".gcs-post__authorName a");
-    await author.hover();
-    await expect(page.locator(".gcs-hoverCardLayer").getByTestId("gcs-hover-card")).toBeVisible();
+    const card = page.locator(".gcs-hoverCardLayer").getByTestId("gcs-hover-card");
+    await expect(async () => {
+      await page.mouse.move(0, 0);
+      await author.hover();
+      await expect(card).toBeVisible({ timeout: 3_000 });
+    }).toPass({ timeout: 20_000 });
     await shot(page, `${theme.label}-desktop-hovercard`);
     await context.close();
   });

@@ -47,8 +47,19 @@ export function useHeaderPopover({ mode = "click", trap = false, menu = false, o
     const onDown = (e: MouseEvent) => {
       if (!root.current?.contains(e.target as Node)) setOpenState(false);
     };
+    // Escape închide panoul și când focusul nu e în el (ex. deschis din bara de jos sau cu Ctrl+K, înainte de focus).
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      const inside = root.current?.contains(document.activeElement);
+      setOpenState(false);
+      if (inside) trigger.current?.focus();
+    };
     document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onEsc);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onEsc);
+    };
   }, [open]);
 
   // La deschidere: focusul pe primul câmp (căutarea) sau pe primul item.
