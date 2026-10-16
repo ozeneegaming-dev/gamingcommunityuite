@@ -75,9 +75,11 @@
 :root[data-gcs-lists="cards"] .gcs-category__header .gcs-collapseToggle:hover {
   background-color: color-mix(in srgb, var(--gcs-text) 16%, transparent);
 }
-/* Subforumurile pe 2 coloane, cu puncte mici și „…” la nevoie. */
+/*
+ * Subforumurile pe coloanele alese în ACP (setarea forumului, implicit 2), cu puncte mici și „…” la nevoie; o singură
+ * coloană aleasă rămâne îngustă.
+ */
 :root[data-gcs-lists="cards"] .gcs-category__well .gcs-forumRow__subs {
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   max-width: 480px;
   gap: 3px 16px;
   margin-top: 8px;

@@ -96,9 +96,11 @@ test("aspectul listelor: carduri separate (designul GCS) și listă continuă (C
   await c.row.hover();
   await expect.poll(() => style(c.row, "background-color")).not.toBe(before);
   expect(await style(c.row, "transform")).toBe("none");
-  // Subforumurile pe 2 coloane, cu puncte.
+  // Subforumurile pe coloanele alese în ACP (setarea forumului), cu puncte.
   const subs = c.row.getByTestId("gcs-subforums");
-  expect((await style(subs, "grid-template-columns")).split(" ").length).toBe(2);
+  const columns = Number(await subs.getAttribute("data-columns"));
+  expect((await style(subs, "grid-template-columns")).split(" ").length).toBe(columns);
+  expect(await style(subs.getByRole("listitem").first(), "content", "::before")).toBe('""');
   // Butonul pătrat de 26 px deschide bula cu contoarele.
   const btn = c.row.getByTestId("gcs-forum-stats-btn");
   await expect(btn).toBeVisible();

@@ -9,15 +9,20 @@ import { positionTooltip, tooltipContainer } from "./tooltipPlace";
  * nativ e înlocuit cât timp bula e afișată) și butoanele / linkurile doar cu iconiță, după `aria-label`.
  */
 const TARGET = "[data-tip], [title], button[aria-label], a[aria-label], [role='button'][aria-label]";
-/** Zone fără tooltip-ul automat: componentele cu `GcsTooltip` propriu și cele care îl refuză explicit. */
-const SKIP = "[data-gcs-tip-off], .gcs-tooltipWrap";
+/** Zonele care refuză explicit tooltip-ul automat. */
+const SKIP = "[data-gcs-tip-off]";
+/**
+ * Elementul are deja `GcsTooltip` propriu: e copilul direct al învelișului lui. Restul conținutului din înveliș (ex.
+ * panoul unui meniu din antet) primește tooltip-ul automat ca oriunde.
+ */
+const WRAPPED = ".gcs-tooltipWrap";
 
 type Tip = { el: Element; text: string; host: HTMLElement };
 
 /** Textul tooltip-ului automat pentru un element (sau `null` = nu primește). */
 export function autoTipText(el: Element): string | null {
   // `title`-ul unui iframe îl descrie pentru cititoarele de ecran; nu e un tooltip.
-  if (el.closest(SKIP) || el.tagName === "IFRAME") return null;
+  if (el.closest(SKIP) || el.parentElement?.matches(WRAPPED) || el.tagName === "IFRAME") return null;
   const dataTip = el.getAttribute("data-tip")?.trim();
   if (dataTip) return dataTip;
   const title = (el.getAttribute("title") ?? el.getAttribute("data-gcs-title"))?.trim();

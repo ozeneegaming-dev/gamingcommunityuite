@@ -37,6 +37,7 @@ describe("tooltip-urile automate", () => {
       <button id="c" aria-label="Închide"><svg></svg></button>
       <button id="d" aria-label="Trimite">Trimite</button>
       <button id="f" aria-label="Mesaje: 3 necitite"><svg></svg><span>3</span></button>
+      <span class="gcs-tooltipWrap"><button id="g" title="Are tooltip propriu"></button><div><time id="h" title="16 oct."></time></div></span>
       <div data-gcs-tip-off><button id="e" title="Nu"></button></div>`;
     const get = (id: string) => document.getElementById(id)!;
     expect(autoTipText(get("a"))).toBe("Sus");
@@ -44,6 +45,9 @@ describe("tooltip-urile automate", () => {
     expect(autoTipText(get("c"))).toBe("Închide");
     expect(autoTipText(get("d"))).toBeNull();
     expect(autoTipText(get("f"))).toBe("Mesaje: 3 necitite");
+    // Declanșatorul unui `GcsTooltip` nu primește și tooltip-ul automat; conținutul unui meniu din înveliș, da.
+    expect(autoTipText(get("g"))).toBeNull();
+    expect(autoTipText(get("h"))).toBe("16 oct.");
     expect(autoTipText(get("e"))).toBeNull();
   });
 
