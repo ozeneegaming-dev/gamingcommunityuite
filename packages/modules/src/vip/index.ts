@@ -1,3 +1,4 @@
+import { vipAchievementEvents } from "./achievementEvents";
 import { isSafeHref, type GcsAcpMenuSection, type GcsModule, type GcsPermissionDef, type GcsSettingDef } from "@gcs/core";
 import { VIP_CONTACT_SETTING, VIP_INTRO_SETTING } from "./public";
 import { vipStatTiles } from "./stats";
@@ -61,6 +62,7 @@ const acpMenu: GcsAcpMenuSection[] = [
 /** Modulul VIP (specul etapei 3): niveluri, abonamente cu expirare, istoric. */
 export const vipModule: GcsModule = {
   key: "vip",
+  achievementEvents: vipAchievementEvents,
   app: {
     optional: true,
     labelKey: "apps.vip",

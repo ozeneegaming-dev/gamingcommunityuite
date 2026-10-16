@@ -10,6 +10,10 @@ import {
   type GcsJobQueue,
 } from "@gcs/core";
 import type { AchievementTrigger, PrismaClient, Rank } from "@gcs/db";
+import type { GcsModuleRegistry, GcsRealtime } from "@gcs/core";
+import type { GcsMembership } from "./membership";
+import { applyRankPerks, rankEmblemArt, rankMetrics, rankQualifies, usedMetrics, type GcsLadderRankV2, type GcsRankStats } from "./rankLadder";
+import { badgeArtSrc } from "@gcs/ui/badge-art";
 
 export const ACHIEVEMENTS_JOB = "achievements.evaluate";
 export const RANKS_RECOMPUTE_JOB = "achievements.recompute_ranks";
@@ -26,13 +30,21 @@ const MAX_PASSES = 5;
 const BATCH = 500;
 
 type EachTrigger = Extract<AchievementTrigger, "EACH_POST" | "EACH_REACTION_RECEIVED" | "EACH_SOLUTION">;
-export type GcsThresholdTrigger = Exclude<AchievementTrigger, EachTrigger>;
+export type GcsThresholdTrigger = Exclude<AchievementTrigger, EachTrigger | "EVENT">;
 type ThresholdTrigger = GcsThresholdTrigger;
 export const THRESHOLD_TRIGGERS: ThresholdTrigger[] = ["POSTS_COUNT", "REPUTATION", "POINTS", "MEMBER_DAYS", "SOLUTIONS_COUNT", "IS_VIP"];
 
 export type GcsUserStats = { postsCount: number; reputation: number; points: number; solutionsCount: number; memberDays: number; isVip: boolean };
 
 const userTags = (id: string) => [`user:${id}`];
+
+/** Dependențele rangurilor moderne (metricile aplicațiilor, avantajele, toast-ul live). */
+export type GcsRankingDeps = {
+  registry: GcsModuleRegistry;
+  enabledFilter?: () => Promise<(key: string) => boolean>;
+  membership: GcsMembership;
+  realtime?: Pick<GcsRealtime, "publish"> | null;
+};
 
 /** Valoarea unui user pentru un trigger cu prag. */
 export function statFor(trigger: ThresholdTrigger, s: GcsUserStats): number {
@@ -52,12 +64,14 @@ export function statFor(trigger: ThresholdTrigger, s: GcsUserStats): number {
   }
 }
 
-/** Cel mai înalt rang (ultimul după `position`) cu toate pragurile completate atinse; `null` dacă niciunul. */
-export function pickRank(ranks: Pick<Rank, "id" | "position" | "minPosts" | "minPoints" | "minReputation">[], s: Pick<GcsUserStats, "postsCount" | "points" | "reputation">): number | null {
-  const ok = (min: number | null, value: number) => min === null || value >= min;
+/**
+ * Cel mai înalt rang (ultimul după `position`) cu pragurile atinse (toate sau oricare, după `match`, inclusiv criteriile
+ * aplicațiilor din `metrics`); `null` dacă niciunul.
+ */
+export function pickRank(ranks: GcsLadderRankV2[], s: GcsRankStats): number | null {
   let best: { id: number; position: number } | null = null;
   for (const r of ranks) {
-    if (ok(r.minPosts, s.postsCount) && ok(r.minPoints, s.points) && ok(r.minReputation, s.reputation)) {
+    if (rankQualifies(r, s)) {
       if (!best || r.position > best.position || (r.position === best.position && r.id > best.id)) best = r;
     }
   }
@@ -192,16 +206,49 @@ export class GcsAchievementService {
     for (const fn of this.afterEvaluate) await fn(userId);
   }
 
-  async recomputeRank(userId: string, ranks?: Rank[]): Promise<number | null> {
+  /** Rangurile moderne: metricile aplicațiilor, avantajele (grupuri secundare) și toast-ul live de urcare. */
+  private ranking: GcsRankingDeps | null = null;
+
+  configureRanks(ranking: GcsRankingDeps): void {
+    this.ranking = ranking;
+  }
+
+  /** Metricile aplicațiilor cerute de criteriile rangurilor, pentru un membru. */
+  async rankMetricsFor(userId: string, ranks: Pick<Rank, "criteria">[]): Promise<Record<string, number>> {
+    const keys = usedMetrics(ranks);
+    if (!this.ranking || keys.length === 0) return {};
+    const enabled = (await this.ranking.enabledFilter?.()) ?? (() => true);
+    return rankMetrics({ db: this.deps.db, registry: this.ranking.registry, enabled }, userId, keys);
+  }
+
+  /** Schimbă rangul unui membru: avantajele (în tranzacție), apoi evenimentele și, la urcare, toast-ul live. */
+  private async changeRank(userId: string, list: Rank[], previousRankId: number | null, rankId: number | null): Promise<void> {
     const { db, bus } = this.deps;
+    const prev = list.find((r) => r.id === previousRankId) ?? null;
+    const next = list.find((r) => r.id === rankId) ?? null;
+    const perks = await db.$transaction(async (tx) => {
+      await tx.user.update({ where: { id: userId }, data: { rankId } });
+      return this.ranking ? applyRankPerks(tx, this.ranking.membership, userId, prev, next) : { groups: [], badgeId: null, revokedBadgeId: null };
+    });
+    if (perks.groups.length > 0 && this.ranking) await this.ranking.membership.notify(userId, perks.groups);
+    if (perks.revokedBadgeId !== null) await bus.emit({ name: "badge.revoked", payload: { userId, badgeId: perks.revokedBadgeId }, tags: userTags(userId) });
+    if (perks.badgeId !== null) await bus.emit({ name: "badge.awarded", payload: { userId, badgeId: perks.badgeId, byRule: true }, tags: userTags(userId) });
+    const up = next !== null && (prev === null || next.position > prev.position || (next.position === prev.position && next.id > prev.id));
+    await bus.emit({ name: "rank.changed", payload: { userId, rankId, previousRankId, up }, tags: userTags(userId) });
+    if (up && next && this.ranking?.realtime) {
+      const sorted = [...list].sort((a, b) => a.position - b.position || a.id - b.id);
+      const level = sorted.findIndex((r) => r.id === next.id) + 1;
+      await this.ranking.realtime.publish(`user:${userId}`, "rank-up", { rankId: next.id, name: next.name, level, art: badgeArtSrc(rankEmblemArt(next, level - 1)), animated: next.animated });
+    }
+  }
+
+  async recomputeRank(userId: string, ranks?: Rank[]): Promise<number | null> {
+    const { db } = this.deps;
     const list = ranks ?? (await db.rank.findMany());
     const user = await db.user.findUnique({ where: { id: userId }, select: { rankId: true, postsCount: true, points: true, reputation: true } });
     if (!user) return null;
-    const rankId = pickRank(list, user);
-    if (rankId !== user.rankId) {
-      await db.user.update({ where: { id: userId }, data: { rankId } });
-      await bus.emit({ name: "rank.changed", payload: { userId, rankId, previousRankId: user.rankId }, tags: userTags(userId) });
-    }
+    const rankId = pickRank(list, { ...user, metrics: await this.rankMetricsFor(userId, list) });
+    if (rankId !== user.rankId) await this.changeRank(userId, list, user.rankId, rankId);
     return rankId;
   }
 
@@ -209,6 +256,8 @@ export class GcsAchievementService {
   async recomputeAllRanks(): Promise<number> {
     const { db, bus } = this.deps;
     const ranks = await db.rank.findMany();
+    const withMetrics = usedMetrics(ranks).length > 0;
+    const withPerks = ranks.some((r) => r.perkGroupId !== null || r.perkBadgeId !== null || r.perkNameStyleId !== null);
     let cursor: string | undefined;
     let changed = 0;
     for (;;) {
@@ -221,10 +270,12 @@ export class GcsAchievementService {
       if (users.length === 0) break;
       const byRank = new Map<number | null, string[]>();
       for (const u of users) {
-        const rankId = pickRank(ranks, u);
+        const rankId = pickRank(ranks, { ...u, ...(withMetrics ? { metrics: await this.rankMetricsFor(u.id, ranks) } : {}) });
         if (rankId === u.rankId) continue;
-        byRank.set(rankId, [...(byRank.get(rankId) ?? []), u.id]);
         changed++;
+        // Cu avantaje, fiecare schimbare trece prin grupuri / badge-uri; altfel, actualizarea în lot.
+        if (withPerks) await this.changeRank(u.id, ranks, u.rankId, rankId);
+        else byRank.set(rankId, [...(byRank.get(rankId) ?? []), u.id]);
       }
       for (const [rankId, ids] of byRank) await db.user.updateMany({ where: { id: { in: ids } }, data: { rankId } });
       cursor = users[users.length - 1]!.id;

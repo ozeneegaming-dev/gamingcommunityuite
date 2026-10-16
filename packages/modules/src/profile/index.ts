@@ -1,3 +1,4 @@
+import { coreAchievementEvents } from "./achievementEvents";
 import type { GcsModule, GcsPermissionDef, GcsSettingDef } from "@gcs/core";
 import { seedProfileDemo } from "./demo";
 import { seedProfile } from "./seed";
@@ -41,6 +42,16 @@ const settings: GcsSettingDef[] = [
   // (suma donațiilor, în unități întregi ale monedei; 0 = fără insignă).
   { key: "profile.faceit_api_key", type: "secret", default: "", section: "profiles", labelKey: "settings.profile.faceit_api_key", validate: (v) => (typeof v === "string" && v.length <= 200 ? null : "too_long") },
   { key: "profile.sponsor_min_amount", type: "number", default: 50, section: "profiles", labelKey: "settings.profile.sponsor_min_amount", validate: between(0, 1_000_000) },
+  // Realizări v2: grupurile excluse din reguli (nu primesc nimic) și pragul badge-urilor rare (% din membri).
+  {
+    key: "achievements.excluded_groups",
+    type: "json",
+    default: [],
+    section: "achievements",
+    labelKey: "settings.achievements.excluded_groups",
+    validate: (v) => (Array.isArray(v) && v.length <= 100 && v.every((x) => Number.isInteger(x) && (x as number) > 0) ? null : "invalid_choice"),
+  },
+  { key: "achievements.rare_percent", type: "number", default: 5, section: "achievements", labelKey: "settings.achievements.rare_percent", validate: between(0.1, 100) },
   // Ordinea câmpurilor din postbit (cheile câmpurilor); cele marcate „în postbit” și nelistate vin la final (etapa 5).
   {
     key: "postbit.fields",
@@ -58,6 +69,7 @@ const settings: GcsSettingDef[] = [
  */
 export const profileModule: GcsModule = {
   key: "profile",
+  achievementEvents: coreAchievementEvents,
   // Profil gaming v2: conturile externe legate (apar doar cu datele aduse și cu tabul lăsat vizibil de membru).
   profileTabs: [
     { key: "steam", labelKey: "profile.tabs.steam", icon: "fa-brands fa-steam", position: 30 },

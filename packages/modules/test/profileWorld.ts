@@ -1,6 +1,7 @@
 import { GcsNotificationService, GcsRealtime, type GcsMail } from "@gcs/core";
 import { GcsAchievementService } from "../src/profile/achievements";
 import { GcsAchievementAdmin } from "../src/profile/achievementsAdmin";
+import { GcsAchievementRules, systemActor } from "../src/profile/achievementRules";
 import { GcsCosmeticsService } from "../src/profile/cosmetics";
 import { GcsRankDirectory } from "../src/profile/display";
 import { GcsProfileFieldAdmin } from "../src/profile/fieldsAdmin";
@@ -50,7 +51,6 @@ export async function createProfileWorld() {
   // Fără coadă: evaluarea (jobul din worker) se apelează direct în teste; punctele pe acțiune vin din ascultători.
   const achievements = new GcsAchievementService({ db: world.db, bus: world.bus, acp: world.acp, jobs: null });
   achievements.listen(world.bus);
-  const achievementAdmin = new GcsAchievementAdmin({ db: world.db, bus: world.bus, acp: world.acp, achievements, jobs: null, attachments: world.attachments });
   const membership = new GcsMembership({ bus: world.bus, permissions: world.permissions });
   const promotions = new GcsPromotionService({ db: world.db, bus: world.bus, acp: world.acp, membership });
   achievements.onEvaluated(async (userId) => void (await promotions.evaluateUser(userId)));
@@ -65,6 +65,27 @@ export async function createProfileWorld() {
   });
   cosmetics.listen(world.bus);
   const vip = new GcsVipService({ db: world.db, bus: world.bus, permissions: world.permissions, settings: world.settings, membership });
+  // Realizări v2: aplicațiile oprite (`appsOff`), mesajele live publicate (`published`) și motorul regulilor.
+  const appsOff = new Set<string>();
+  const published: { room: string; event: string; data: unknown }[] = [];
+  const liveRecorder = { publish: async (room: string, event: string, data: unknown) => void published.push({ room, event, data }) };
+  const enabledFilter = async () => (key: string) => !appsOff.has(key);
+  const achievementRules = new GcsAchievementRules({
+    db: world.db,
+    bus: world.bus,
+    registry: world.registry,
+    enabledFilter,
+    setting: (key) => world.settings.get(key),
+    membership,
+    realtime: liveRecorder,
+    jobs: null,
+    schedule: async () => {},
+    grantVip: async (userId, groupId, days) => void (await vip.grant(await systemActor(world.db), { userId, groupId, days, asPrimary: false })),
+  });
+  achievementRules.listen(world.bus);
+  achievements.configureRanks({ registry: world.registry, enabledFilter, membership, realtime: liveRecorder });
+  achievements.onEvaluated(async (userId) => void (await achievementRules.evaluateValues(userId)));
+  const achievementAdmin = new GcsAchievementAdmin({ db: world.db, bus: world.bus, acp: world.acp, achievements, jobs: null, attachments: world.attachments, rules: achievementRules });
   const ranks = new GcsRankDirectory({ db: world.db, cache: world.cache });
   const profileQueries = new GcsProfileQueries({ db: world.db, cache: world.cache, permissions: world.permissions, profiles, social, ranks });
   const conversations = new GcsConversationService({
@@ -114,7 +135,7 @@ export async function createProfileWorld() {
     await world.redis.del(`gcs:rl:wall-post:${actor.userId}`);
   }
 
-  return { ...world, outbox, mailer, profiles, social, profileFields: new GcsProfileFieldAdmin({ db: world.db, bus: world.bus, acp: world.acp }), achievements, achievementAdmin, membership, promotions, cosmetics, vip, ranks, profileQueries, conversations, conversationQueries, notifications, producers, realtime, moderator, clearWallFlood, clearPmFlood };
+  return { ...world, outbox, mailer, profiles, social, profileFields: new GcsProfileFieldAdmin({ db: world.db, bus: world.bus, acp: world.acp }), achievements, achievementAdmin, achievementRules, appsOff, published, membership, promotions, cosmetics, vip, ranks, profileQueries, conversations, conversationQueries, notifications, producers, realtime, moderator, clearWallFlood, clearPmFlood };
 }
 
 export type GcsProfileWorld = Awaited<ReturnType<typeof createProfileWorld>>;

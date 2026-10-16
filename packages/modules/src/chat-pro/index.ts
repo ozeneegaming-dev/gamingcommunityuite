@@ -1,3 +1,4 @@
+import { chatProAchievementEvents } from "./achievementEvents";
 import type { GcsAcpMenuSection, GcsModule, GcsPermissionDef, GcsSeedContext, GcsSettingDef } from "@gcs/core";
 import { CHAT_PRO_COMMANDS, type GcsChatProCommand } from "./prefs";
 
@@ -113,6 +114,7 @@ async function seedChatPro({ tx }: GcsSeedContext): Promise<void> {
  */
 export const chatProModule: GcsModule = {
   key: CHAT_PRO_APP,
+  achievementEvents: chatProAchievementEvents,
   app: {
     optional: true,
     labelKey: "apps.chat_pro",

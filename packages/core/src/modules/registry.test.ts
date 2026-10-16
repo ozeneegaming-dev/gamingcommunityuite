@@ -94,3 +94,19 @@ describe("panourile de membru (Membri v2)", () => {
     expect(registry.memberPanels("profile").map((p) => p.def.key)).toEqual(["clan"]);
   });
 });
+
+describe("evenimentele de realizări (Realizări v2)", () => {
+  test("adunate din module, cu modulul lor; o cheie repetată o păstrează pe prima; unregister le scoate", () => {
+    const registry = new GcsModuleRegistry();
+    const ev = (key: string) => ({ key, labelKey: `x.${key}`, icon: "fa-solid fa-star", kind: "count" as const });
+    registry.register(mod("forums", { achievementEvents: [ev("forums.post"), ev("forums.topic")] }));
+    registry.register(mod("servers", { achievementEvents: [ev("servers.kills"), ev("forums.post")] }));
+    expect(registry.achievementEvents().map((e) => [e.module, e.def.key])).toEqual([
+      ["forums", "forums.post"],
+      ["forums", "forums.topic"],
+      ["servers", "servers.kills"],
+    ]);
+    registry.unregister("servers");
+    expect(registry.achievementEvents().map((e) => e.def.key)).toEqual(["forums.post", "forums.topic"]);
+  });
+});

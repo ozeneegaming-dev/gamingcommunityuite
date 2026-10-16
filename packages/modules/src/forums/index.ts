@@ -1,3 +1,4 @@
+import { forumAchievementEvents } from "./achievementEvents";
 import type { GcsAcpMenuSection, GcsModule, GcsPermissionDef, GcsSettingDef } from "@gcs/core";
 import { forumWidgets } from "../widgets";
 import { forumStatTiles } from "./stats";
@@ -107,6 +108,7 @@ const acpMenu: GcsAcpMenuSection[] = [
 /** Modulul Forum (specul etapei 2). */
 export const forumsModule: GcsModule = {
   key: "forums",
+  achievementEvents: forumAchievementEvents,
   // Profil gaming v2: activitatea membrului și topicurile pornite de el („Articole”).
   profileTabs: [
     { key: "activity", labelKey: "profile.tabs.activity", icon: "fa-solid fa-chart-line", position: 0 },
