@@ -295,9 +295,12 @@ describe("clasamentul", () => {
       ["Ana", 2],
     ]);
     expect(r.spammer?.user.name).toBe("Bogdan");
-    expect(r.me).toMatchObject({ position: 3, today: 2, period: 2 });
+    // „Față de perioada trecută”: mesajele perioadei anterioare (Ana: 10).
+    expect(r.me).toMatchObject({ position: 3, today: 2, period: 2, previous: 10 });
     expect(r.resetsIn).toBeGreaterThan(0);
-    expect(r.lastWinner).toMatchObject({ user: { name: "Cezar" }, messages: 30 });
+    // Ultimul câștigător, cu insigna primită (badge-ul câștigătorului, ca medalion).
+    expect(r.lastWinner).toMatchObject({ user: { name: "Cezar" }, messages: 30, badge: { key: "chat_pro_winner" } });
+    expect(r.lastWinner?.badge?.art).toMatch(/^data:image\/svg\+xml|^\//);
     const badge = await w.db.badge.findUniqueOrThrow({ where: { key: "chat_pro_winner" } });
     expect(await w.db.userBadge.count({ where: { userId: c.userId!, badgeId: badge.id } })).toBe(1);
     // Idempotent: a doua citire nu mai creează nimic.

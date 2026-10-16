@@ -6603,7 +6603,18 @@
       "thisWeek": "Săptămâna aceasta",
       "resetDays": "{count, plural, one {# zi până la resetare} few {# zile până la resetare} other {# de zile până la resetare}}",
       "resetHours": "{count, plural, one {# oră până la resetare} few {# ore până la resetare} other {# de ore până la resetare}}",
-      "resetMinutes": "{count, plural, one {# minut până la resetare} few {# minute până la resetare} other {# de minute până la resetare}}"
+      "resetMinutes": "{count, plural, one {# minut până la resetare} few {# minute până la resetare} other {# de minute până la resetare}}",
+      "freePlace": "Loc liber",
+      "messagesToday": "{count, plural, one {# mesaj azi} few {# mesaje azi} other {# de mesaje azi}}",
+      "winnerOfMonth": "Câștigătorul lunii {month} · {count, plural, one {# mesaj} few {# mesaje} other {# de mesaje}}",
+      "winnerOfWeek": "Câștigătorul săptămânii trecute · {count, plural, one {# mesaj} few {# mesaje} other {# de mesaje}}",
+      "badge": "Insignă",
+      "yourStats": "Statisticile tale",
+      "thisMonth": "Mesaje luna asta",
+      "thisWeekPeriod": "Mesaje săptămâna asta",
+      "vsPrevious": "Față de perioada trecută",
+      "new": "nou",
+      "guestHint": "<link>Conectează-te</link> ca să-ți vezi poziția și mesajele."
     },
     "notifications": {
       "open": "Notificările chat-ului",

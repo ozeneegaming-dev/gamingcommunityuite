@@ -40,7 +40,7 @@
   min-width: 0;
 }
 .gcs-chatPro__side {
-  width: 300px;
+  width: 290px;
   border-left: 1px solid var(--cp-line);
   background: var(--cp-rank-bg, color-mix(in srgb, var(--gcs-surface2) 50%, var(--cp-surface)));
   min-width: 0;
@@ -55,6 +55,11 @@
     width: auto;
     border-left: 0;
     border-top: 1px solid var(--cp-line);
+  }
+  .gcs-chatPro__side .gcs-cpRank {
+    width: 100%;
+    max-width: 420px;
+    margin-inline: auto;
   }
 }
 /* În shoutbox (widget), panoul apare doar când widget-ul e lat (zona de sus / jos). */
@@ -984,175 +989,612 @@
   background: color-mix(in srgb, var(--gcs-accent) 8%, transparent);
 }
 
-/* ─── Clasamentul și provocările (coloana laterală) ───────────────────────────────────────────────── */
+/* ─── Clasamentul („Cei mai activi în chat”, coloana laterală, compact 290 px) ───────────────────────────
+ * Aurul, argintul și bronzul vin din tokenii medaliilor (`community.css`) și se folosesc doar pentru podium, medalii și
+ * insignă; restul urmează accentul temei. Plăcile statisticilor au culorile lor de stare (`--cp-stat-*`), din temă.
+ */
 
-.gcs-chatPro__ranking {
+.gcs-cpRank {
+  --cp-gold: var(--gcs-medal-gold, #f4b740);
+  --cp-silver: var(--gcs-medal-silver, #d8dfea);
+  --cp-bronze: var(--gcs-medal-bronze, #cd7f32);
+  --cp-stat-pos: var(--cp-gold);
+  --cp-stat-today: var(--gcs-info, #5ea2ff);
+  --cp-stat-period: var(--gcs-ok, #3ddc97);
+  --cp-stat-trend: var(--gcs-special, #d27cff);
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px;
+  overflow: hidden;
+  background:
+    radial-gradient(260px 200px at 50% 22%, color-mix(in srgb, var(--cp-gold) 13%, transparent), transparent 70%),
+    radial-gradient(300px 220px at 50% 100%, color-mix(in srgb, var(--gcs-accent) 8%, transparent), transparent 70%);
+  font-size: 12px;
 }
-.gcs-chatPro__rankHead {
+.gcs-cpRank__head {
+  position: relative;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px 8px;
-}
-.gcs-chatPro__rankTitle {
-  margin: 0;
-  display: inline-flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 8px;
+  padding: 12px 12px 6px;
+}
+.gcs-cpRank__watermark {
+  position: absolute;
+  right: -6px;
+  top: -4px;
+  width: 64px;
+  height: 50px;
+  opacity: 0.07;
+  pointer-events: none;
+}
+.gcs-cpRank__watermark path {
+  fill: none;
+  stroke: var(--gcs-text);
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+}
+.gcs-cpRank__title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 14px;
   font-weight: 700;
   color: var(--gcs-heading, var(--gcs-text));
 }
-.gcs-chatPro__rankTitle svg {
-  color: #f4b740;
+.gcs-cpRank__trophy {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  color: var(--cp-gold);
+  background: color-mix(in srgb, var(--cp-gold) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--cp-gold) 45%, transparent);
 }
-.gcs-chatPro__pill {
-  padding: 3px 9px;
-  border: 1px solid var(--cp-line);
+.gcs-cpRank__reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
   border-radius: 999px;
-  background: var(--gcs-surface);
-  font-size: 11px;
+  background: color-mix(in srgb, var(--gcs-accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gcs-accent) 40%, transparent);
+  color: var(--gcs-accentInk);
+  font-size: 10.5px;
   font-weight: 600;
   white-space: nowrap;
 }
-.gcs-chatPro__podium {
-  list-style: none;
+
+/* Podiumul: fasciculul de lumină, sclipirile și cele trei socluri (2 · 1 · 3). */
+.gcs-cpRank__stage {
+  position: relative;
+  height: 172px;
+  margin: 0 10px;
+}
+.gcs-cpRank__beam {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 130px;
+  height: 140px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--cp-gold) 24%, transparent), transparent);
+  clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%);
+  pointer-events: none;
+}
+.gcs-cpRank__spark {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--cp-gold) 55%, white);
+  animation: gcs-cpRank-shine 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+.gcs-cpRank__spark--0 {
+  left: 30%;
+  top: 20px;
+}
+.gcs-cpRank__spark--1 {
+  left: 68%;
+  top: 22px;
+  animation-delay: 0.6s;
+}
+.gcs-cpRank__spark--2 {
+  left: 58%;
+  top: 46px;
+  animation-delay: 1.2s;
+}
+.gcs-cpRank__spark--3 {
+  left: 40%;
+  top: 64px;
+  animation-delay: 1.8s;
+}
+.gcs-cpRank__podium {
+  position: absolute;
+  inset: 0;
   margin: 0;
   padding: 0;
+  list-style: none;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 31% 38% 31%;
   align-items: end;
-  gap: 6px;
 }
-.gcs-chatPro__step {
-  position: relative;
+.gcs-cpRank__place {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   min-width: 0;
-  padding: 10px 4px 8px;
-  border: 1px solid var(--cp-line);
-  border-radius: 10px;
-  background: var(--gcs-surface);
   text-align: center;
-  font-size: 12px;
 }
-.gcs-chatPro__step .gcs-avatar,
-.gcs-chatPro__step .gcs-avatarFrame {
-  width: 42px !important;
-  height: 42px !important;
-  font-size: 16px;
+.gcs-cpRank__place--1 {
+  position: relative;
+  z-index: 2;
 }
-.gcs-chatPro__step--1 .gcs-avatar,
-.gcs-chatPro__step--1 .gcs-avatarFrame {
-  width: 54px !important;
-  height: 54px !important;
-  font-size: 20px;
+.gcs-cpRank__crown {
+  width: 24px;
+  height: 17px;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--cp-gold) 80%, transparent));
+  animation: gcs-cpRank-float 2.6s ease-in-out infinite;
 }
-.gcs-chatPro__rankRow .gcs-avatar,
-.gcs-chatPro__rankRow .gcs-avatarFrame {
-  width: 30px !important;
-  height: 30px !important;
+.gcs-cpRank__crownFill {
+  fill: var(--cp-gold);
+  stroke: color-mix(in srgb, var(--cp-gold) 60%, black);
+  stroke-width: 1;
 }
-.gcs-chatPro__step .gcs-userLink {
+.gcs-cpRank__crownGem {
+  fill: var(--gcs-accent);
+}
+.gcs-cpRank__medal {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--gcs-font-display);
+}
+.gcs-cpRank__place--2 .gcs-cpRank__medal {
+  background: linear-gradient(160deg, color-mix(in srgb, var(--cp-silver) 70%, white), color-mix(in srgb, var(--cp-silver) 60%, black));
+  color: #1b2130;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--cp-silver) 45%, transparent);
+}
+.gcs-cpRank__place--3 .gcs-cpRank__medal {
+  background: linear-gradient(160deg, color-mix(in srgb, var(--cp-bronze) 65%, white), color-mix(in srgb, var(--cp-bronze) 65%, black));
+  color: #2a1608;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--cp-bronze) 45%, transparent);
+}
+
+/* Avatarele: pătrate rotunjite, cu rama metalului locului; click → cardul membrului. */
+.gcs-cpRank__face {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  padding: 0;
+  border: 2px solid var(--gcs-border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--gcs-surface2);
+  cursor: pointer;
+  animation: gcs-cpRank-pop 0.55s var(--gcs-motion-ease) 0.35s both;
+  transition:
+    transform var(--gcs-motion-base) var(--gcs-motion-ease),
+    box-shadow var(--gcs-motion-base);
+}
+.gcs-cpRank__face:hover,
+.gcs-cpRank__face:focus-visible {
+  transform: scale(1.06);
+}
+.gcs-cpRank__face .gcs-avatar,
+.gcs-cpRank__face .gcs-avatarFrame {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 0 !important;
+}
+.gcs-cpRank__face--1 {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  border-color: var(--cp-gold);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--cp-gold) 25%, transparent),
+    0 0 24px color-mix(in srgb, var(--cp-gold) 55%, transparent);
+}
+.gcs-cpRank__face--2,
+.gcs-cpRank__face--3 {
+  width: 36px;
+  height: 36px;
+}
+.gcs-cpRank__face--2 {
+  border-color: var(--cp-silver);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--cp-silver) 30%, transparent);
+}
+.gcs-cpRank__face--3 {
+  border-color: var(--cp-bronze);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--cp-bronze) 30%, transparent);
+}
+.gcs-cpRank__face--ghost {
+  border-style: dashed;
+  background: transparent;
+  box-shadow: none;
+  cursor: default;
+  animation: none;
+}
+.gcs-cpRank__face--spam,
+.gcs-cpRank__face--win {
+  width: 32px;
+  height: 32px;
+}
+.gcs-cpRank__face--spam {
+  border-color: var(--gcs-accent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--gcs-accent) 50%, transparent);
+}
+.gcs-cpRank__face--win {
+  border-color: var(--cp-gold);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--cp-gold) 45%, transparent);
+}
+.gcs-cpRank__name {
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: 11.5px;
   font-weight: 700;
 }
-.gcs-chatPro__step--1 {
-  padding-top: 18px;
-  border-color: color-mix(in srgb, #f4b740 65%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, #f4b740 16%, var(--gcs-surface)), var(--gcs-surface));
+.gcs-cpRank__place--1 .gcs-cpRank__name {
+  font-size: 12.5px;
 }
-.gcs-chatPro__step--2 {
-  border-color: color-mix(in srgb, #c0c7d1 55%, transparent);
+.gcs-cpRank__count {
+  font-size: 10px;
+  color: var(--gcs-muted);
 }
-.gcs-chatPro__step--3 {
-  border-color: color-mix(in srgb, #cd7f32 55%, transparent);
+.gcs-cpRank__place--1 > .gcs-cpRank__count {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--cp-gold);
 }
-.gcs-chatPro__step--empty {
-  min-height: 70px;
-  border-style: dashed;
-  background: none;
+
+/* Soclurile: înălțimi diferite, se ridică la încărcare; locul 1 are lauri. */
+.gcs-cpRank__ped {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px 4px 0 0;
+  font-family: var(--gcs-font-display);
+  font-weight: 700;
+  transform-origin: bottom;
+  animation: gcs-cpRank-rise 0.6s var(--gcs-motion-ease) both;
 }
-.gcs-chatPro__crown {
-  position: absolute;
-  top: -9px;
-  color: #f4b740;
+.gcs-cpRank__ped b {
+  position: relative;
+}
+.gcs-cpRank__place--1 .gcs-cpRank__ped {
+  height: 38px;
+  font-size: 21px;
+  color: color-mix(in srgb, var(--cp-gold) 35%, black);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--cp-gold) 75%, white), color-mix(in srgb, var(--cp-gold) 80%, black));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.7),
+    0 0 20px color-mix(in srgb, var(--cp-gold) 30%, transparent);
+}
+.gcs-cpRank__place--2 .gcs-cpRank__ped {
+  height: 26px;
   font-size: 15px;
+  color: #2a3140;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--cp-silver) 90%, white), color-mix(in srgb, var(--cp-silver) 55%, black));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6);
+  animation-delay: 0.15s;
 }
-.gcs-chatPro__place {
+.gcs-cpRank__place--3 .gcs-cpRank__ped {
+  height: 19px;
+  font-size: 13px;
+  color: #3a1e0a;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--cp-bronze) 80%, white), color-mix(in srgb, var(--cp-bronze) 65%, black));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.5);
+  animation-delay: 0.3s;
+}
+.gcs-cpRank__place--empty .gcs-cpRank__ped {
+  opacity: 0.45;
+}
+.gcs-cpRank__laurel {
   position: absolute;
-  top: 4px;
-  left: 6px;
-  font-size: 11px;
-  font-weight: 800;
+  width: 50px;
+  height: 32px;
+}
+.gcs-cpRank__laurel path {
+  fill: none;
+  stroke: color-mix(in srgb, var(--cp-gold) 45%, black);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+.gcs-cpRank__rule {
+  height: 1px;
+  margin: 0 10px;
+  background: linear-gradient(90deg, transparent, var(--cp-line, var(--gcs-border)), transparent);
+}
+.gcs-cpRank__empty {
+  margin: 0;
+  padding: 0 12px;
+  font-size: 11.5px;
   color: var(--gcs-muted);
 }
-.gcs-chatPro__rankCount {
-  font-size: 11px;
-  color: var(--gcs-muted);
+.gcs-cpRank__sec .gcs-cpRank__empty {
+  padding: 0;
 }
-.gcs-chatPro__rankBlock {
+
+/* Secțiunile: spammer-ul zilei, ultimul câștigător, statisticile. */
+.gcs-cpRank__sec {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding-top: 8px;
-  border-top: 1px solid var(--cp-line);
+  gap: 7px;
+  padding: 8px 12px 4px;
 }
-.gcs-chatPro__rankSub {
+.gcs-cpRank__sec:last-child {
+  padding-bottom: 12px;
+}
+.gcs-cpRank__secTitle {
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--gcs-font-display);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gcs-heading, var(--gcs-text));
+}
+.gcs-cpRank__secIcon {
+  display: inline-flex;
+  flex: none;
+}
+.gcs-cpRank__secIcon--flame {
+  color: var(--gcs-accentInk);
+}
+.gcs-cpRank__secIcon--crown {
+  width: 15px;
+  height: 11px;
+}
+.gcs-cpRank__secIcon--bars {
+  color: var(--gcs-accentInk);
+}
+.gcs-cpRank__card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--cp-line, var(--gcs-border));
+  background: var(--gcs-surface);
+  overflow: hidden;
+  transition:
+    border-color var(--gcs-motion-base),
+    box-shadow var(--gcs-motion-base),
+    background-color var(--gcs-motion-base);
+}
+.gcs-cpRank__card--spam {
+  background-image: linear-gradient(90deg, color-mix(in srgb, var(--gcs-accent) 12%, transparent), transparent 70%);
+}
+.gcs-cpRank__card--spam:hover {
+  border-color: color-mix(in srgb, var(--gcs-accent) 60%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--gcs-accent) 18%, transparent);
+}
+.gcs-cpRank__card--win {
+  border-color: color-mix(in srgb, var(--cp-gold) 35%, transparent);
+  background-image: linear-gradient(90deg, color-mix(in srgb, var(--cp-gold) 14%, transparent), transparent 70%);
+}
+.gcs-cpRank__card--win:hover {
+  border-color: color-mix(in srgb, var(--cp-gold) 70%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--cp-gold) 20%, transparent);
+}
+.gcs-cpRank__who {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.gcs-cpRank__who .gcs-cpRank__name {
+  font-size: 12.5px;
+}
+.gcs-cpRank__who .gcs-cpRank__count {
+  font-size: 11px;
+}
+.gcs-cpRank__ghostIcon {
+  flex: none;
+  opacity: 0.14;
+}
+.gcs-cpRank__winFace {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+}
+.gcs-cpRank__miniCrown {
+  position: absolute;
+  left: 50%;
+  top: -8px;
+  width: 14px;
+  height: 10px;
+  transform: translateX(-50%);
+}
+.gcs-cpRank__medallion {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.gcs-cpRank__medallionArt {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--gcs-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  justify-content: center;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--cp-gold) 40%, white), var(--cp-gold) 60%, color-mix(in srgb, var(--cp-gold) 50%, black));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--cp-gold) 50%, transparent);
 }
-.gcs-chatPro__rankRow {
+.gcs-cpRank__medallionLabel {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cp-gold);
+}
+
+/* Statisticile tale: 2 × 2 plăci colorate, cu iconița mare și estompată în fundal; se ridică și strălucesc la hover. */
+.gcs-cpRank__tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.gcs-cpRank__tile {
+  --c: var(--cp-stat-pos);
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
   min-width: 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--c) 16%, transparent), color-mix(in srgb, var(--c) 4%, transparent)),
+    var(--gcs-surface);
+  border: 1px solid color-mix(in srgb, var(--c) 45%, transparent);
+  color: var(--c);
+  animation: gcs-cpRank-in 0.45s var(--gcs-motion-ease) both;
+  transition:
+    transform var(--gcs-motion-base) var(--gcs-motion-ease),
+    box-shadow var(--gcs-motion-base),
+    border-color var(--gcs-motion-base);
 }
-.gcs-chatPro__rankWho {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  font-size: 13px;
+.gcs-cpRank__tile--today {
+  --c: var(--cp-stat-today);
+  animation-delay: 0.06s;
 }
-.gcs-chatPro__stats {
-  margin: 0;
+.gcs-cpRank__tile--period {
+  --c: var(--cp-stat-period);
+  animation-delay: 0.12s;
+}
+.gcs-cpRank__tile--trend {
+  --c: var(--cp-stat-trend);
+  animation-delay: 0.18s;
+}
+.gcs-cpRank__tile:hover {
+  transform: translateY(-2px);
+  border-color: var(--c);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--c) 22%, transparent);
+}
+.gcs-cpRank__tileIcon {
+  flex: none;
+  transition: transform var(--gcs-motion-base) var(--gcs-motion-ease);
+}
+.gcs-cpRank__tile:hover .gcs-cpRank__tileIcon {
+  transform: scale(1.15) rotate(-6deg);
+}
+.gcs-cpRank__tileText {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding-top: 8px;
-  border-top: 1px solid var(--cp-line);
-  font-size: 12px;
+  min-width: 0;
 }
-.gcs-chatPro__stats > div {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-}
-.gcs-chatPro__stats dt {
-  color: var(--gcs-muted);
-}
-.gcs-chatPro__stats dd {
-  margin: 0;
-  font-weight: 700;
-  color: var(--cp-link);
+.gcs-cpRank__tileText b {
+  font-family: var(--gcs-font-display);
+  font-size: 16px;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
+}
+.gcs-cpRank__tileText span {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--gcs-muted);
+  line-height: 1.2;
+}
+.gcs-cpRank__tileBg {
+  position: absolute;
+  right: -6px;
+  bottom: -8px;
+  color: var(--gcs-text);
+  opacity: 0.08;
+  pointer-events: none;
+}
+
+@keyframes gcs-cpRank-shine {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+@keyframes gcs-cpRank-rise {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes gcs-cpRank-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes gcs-cpRank-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes gcs-cpRank-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gcs-cpRank__spark,
+  .gcs-cpRank__crown,
+  .gcs-cpRank__ped,
+  .gcs-cpRank__face,
+  .gcs-cpRank__tile {
+    animation: none !important;
+  }
+  .gcs-cpRank__face:hover,
+  .gcs-cpRank__tile:hover,
+  .gcs-cpRank__tile:hover .gcs-cpRank__tileIcon {
+    transform: none;
+  }
 }
 
 /* ─── Chat-ul oprit de membru ─────────────────────────────────────────────────────────────────────── */

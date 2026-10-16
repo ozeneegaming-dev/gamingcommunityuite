@@ -59,10 +59,18 @@ export type GcsChatProRanking = {
   top: GcsChatProRankRow[];
   /** „Spammer-ul zilei”: cele mai multe mesaje azi. */
   spammer: GcsChatProRankRow | null;
-  /** Câștigătorul perioadei anterioare. */
-  lastWinner: { user: GcsUserRef; messages: number; start: string; end: string } | null;
-  /** Statisticile viewer-ului (lipsesc pentru vizitatori). */
-  me: { position: number | null; today: number; period: number; week: number } | null;
+  /** Câștigătorul perioadei anterioare, cu insigna primită (badge-ul câștigătorului; `null` dacă a fost șters). */
+  lastWinner: GcsChatProLastWinner | null;
+  /** Statisticile viewer-ului (lipsesc pentru vizitatori); `previous` = mesajele lui din perioada anterioară. */
+  me: { position: number | null; today: number; period: number; week: number; previous: number } | null;
+};
+
+export type GcsChatProLastWinner = {
+  user: GcsUserRef;
+  messages: number;
+  start: string;
+  end: string;
+  badge: { key: string; name: string; art: string; image: string | null } | null;
 };
 
 /** Setările Chat Pro trimise clientului (fără chei secrete). */

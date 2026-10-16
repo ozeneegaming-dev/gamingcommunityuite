@@ -16,7 +16,7 @@ import {
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { hoverAnchorKey, hoverAnchorOf } from "@/lib/hover-anchor";
+import { hoverAnchorKey, hoverAnchorOf, OPEN_CARD_EVENT } from "@/lib/hover-anchor";
 import { followUser } from "../profile-actions";
 
 /** `html`: markup-ul din șablonul `members.hover_card` al temei (deja sanitizat pe server), dacă tema l-a modificat. */
@@ -200,6 +200,12 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
       }
     };
     const onScroll = () => setOpen(null);
+    // `openMemberCard`: un click pe un avatar (ex. podiumul din chat) deschide cardul pe loc.
+    const onRequest = (e: Event) => {
+      const anchor = (e as CustomEvent<{ anchor?: unknown }>).detail?.anchor;
+      if (anchor instanceof HTMLElement) show(anchor, 0);
+    };
+    document.addEventListener(OPEN_CARD_EVENT, onRequest);
     document.addEventListener("pointerover", onOver);
     document.addEventListener("pointerout", onOut);
     document.addEventListener("focusin", onFocusIn);
@@ -210,6 +216,7 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
     document.addEventListener("keydown", onKey);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
+      document.removeEventListener(OPEN_CARD_EVENT, onRequest);
       document.removeEventListener("pointerover", onOver);
       document.removeEventListener("pointerout", onOut);
       document.removeEventListener("focusin", onFocusIn);
