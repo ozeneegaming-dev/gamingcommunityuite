@@ -251,7 +251,8 @@ export function GcsChatModMenu(props: {
       if (!anchor || !el) return;
       const r = anchor.getBoundingClientRect();
       const w = el.offsetWidth;
-      const h = el.scrollHeight;
+      // `offsetHeight`: fără submeniul deschis (absolut, ar mări `scrollHeight` și meniul ar sări).
+      const h = el.offsetHeight;
       const vh = window.innerHeight;
       let top = r.bottom + 4;
       if (top + h > vh - 8) top = r.top - h - 4 >= 8 ? r.top - h - 4 : Math.max(8, vh - h - 8);
@@ -266,7 +267,7 @@ export function GcsChatModMenu(props: {
       window.removeEventListener("scroll", update, true);
       window.removeEventListener("resize", update);
     };
-  }, [sub]);
+  }, []);
   const rights = new Set(mod.rights);
   const author = m.author;
   const staff = rights.size > 0;

@@ -79,11 +79,11 @@ test("chat v3: avatar și culoarea grupului, mențiune, emoticon, YouTube, imagi
   for (const text of [`poza ${run}`, `clip ${run}`, `@SmkMem${run}`]) {
     const own = room(a).getByTestId("gcs-chat-msg").filter({ hasText: text });
     await own.getByTestId("gcs-chat-more").click();
-    await own.getByTestId("gcs-chatpro-delete").click();
+    await a.getByTestId("gcs-chatpro-delete").click();
     await expect(room(b).getByTestId("gcs-chat-msg").filter({ hasText: text })).toHaveCount(0, { timeout: 10_000 });
   }
   const last = room(b).getByTestId("gcs-chat-msg").filter({ hasText: `salut ${run}` });
   await last.getByTestId("gcs-chat-more").click();
-  await last.getByTestId("gcs-chatpro-delete").click();
+  await b.getByTestId("gcs-chatpro-delete").click();
   for (const p of [a, b]) await p.context().close();
 });

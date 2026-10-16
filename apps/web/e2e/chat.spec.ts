@@ -32,12 +32,13 @@ test("B scrie în shoutbox → apare la A; moderatorul șterge → dispare; mute
   await expect(msgAtMod).toBeVisible();
   // Meniul „⋯” al moderatorului: Mute ▸ 15 minute → dialogul (motivul, „Anunță în chat”) → confirmă; apoi „Șterge mesajul”.
   await msgAtMod.getByTestId("gcs-chat-more").click();
-  await msgAtMod.getByTestId("gcs-chatmod-mute").hover();
-  await msgAtMod.getByTestId("gcs-chatmod-mute-15").click();
+  // Meniul stă într-un portal (peste listă), deci se caută în pagină.
+  await mod.getByTestId("gcs-chatmod-mute").hover();
+  await mod.getByTestId("gcs-chatmod-mute-15").click();
   await mod.getByTestId("gcs-chatmod-dialog-mute").getByTestId("gcs-chatmod-confirm").click();
   await expect(mod.getByTestId("gcs-chatmod-dialog-mute")).toHaveCount(0);
   await msgAtMod.getByTestId("gcs-chat-more").click();
-  await msgAtMod.getByTestId("gcs-chatpro-delete").click();
+  await mod.getByTestId("gcs-chatpro-delete").click();
   await expect(msgAtA).toHaveCount(0, { timeout: 5_000 });
 
   await b.reload();
@@ -139,7 +140,7 @@ test("chat v2: camera privată cu invitat, mențiune, reacție, editare live și
   const msgAtVip = room(vip).getByTestId("gcs-chat-msg").filter({ hasText: "intrăm la 9?" });
   await expect(msgAtVip.getByTestId("gcs-chat-reactions")).toContainText("1", { timeout: 10_000 });
   await msgAtVip.getByTestId("gcs-chat-more").click();
-  await msgAtVip.getByTestId("gcs-chatmod-edit").click();
+  await vip.getByTestId("gcs-chatmod-edit").click();
   await room(vip).getByLabel("Editează mesajul").fill(`@Inv${id} intrăm la 10?`);
   await room(vip).getByRole("button", { name: "Salvează" }).click();
   await expect(room(inv).getByTestId("gcs-chat-msg").filter({ hasText: "intrăm la 10?" })).toContainText("editat", { timeout: 10_000 });

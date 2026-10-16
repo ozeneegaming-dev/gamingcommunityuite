@@ -89,7 +89,7 @@ test("avatarul și numele în culoarea grupului; click pe nume → mențiune; em
   // Autorul își șterge mesajul; dispare și la celălalt.
   const own = room(a).getByTestId("gcs-chat-msg").filter({ hasText: `poza ${id}` });
   await own.getByTestId("gcs-chat-more").click();
-  await own.getByTestId("gcs-chatpro-delete").click();
+  await a.getByTestId("gcs-chatpro-delete").click();
   await expect(withImage).toHaveCount(0, { timeout: 5_000 });
   for (const p of [a, b]) await p.context().close();
 });
