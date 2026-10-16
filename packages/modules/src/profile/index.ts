@@ -1,4 +1,5 @@
 import { coreAchievementEvents } from "./achievementEvents";
+import { profileWidgets } from "../widgets";
 import type { GcsModule, GcsPermissionDef, GcsSettingDef } from "@gcs/core";
 import { seedProfileDemo } from "./demo";
 import { seedProfile } from "./seed";
@@ -70,6 +71,9 @@ const settings: GcsSettingDef[] = [
 export const profileModule: GcsModule = {
   key: "profile",
   achievementEvents: coreAchievementEvents,
+  widgets: profileWidgets,
+  // Coloana din dreapta a paginii de start (macheta HomeComplete): „Ultimele realizări”.
+  widgetLayout: { index: [{ zone: "sidebar", type: "profile.recentBadges" }] },
   // Profil gaming v2: conturile externe legate (apar doar cu datele aduse și cu tabul lăsat vizibil de membru).
   profileTabs: [
     { key: "steam", labelKey: "profile.tabs.steam", icon: "fa-brands fa-steam", position: 30 },

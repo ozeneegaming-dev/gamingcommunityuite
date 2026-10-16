@@ -197,7 +197,8 @@ export class GcsNotificationProducers {
     });
     bus.on("rank.changed", async (e) => {
       const userId = str(e.payload.userId);
-      if (!userId || typeof e.payload.rankId !== "number") return;
+      // Doar urcarea în rang anunță membrul (coborârea, după editarea pragurilor, nu).
+      if (!userId || typeof e.payload.rankId !== "number" || e.payload.up === false) return;
       const rank = await db.rank.findUnique({ where: { id: e.payload.rankId }, select: { name: true } });
       if (rank) await notifications.notify({ userIds: [userId], type: "profile.badge", targetType: "profile.user", targetId: userId, actorId: null, data: { title: rank.name } });
     });

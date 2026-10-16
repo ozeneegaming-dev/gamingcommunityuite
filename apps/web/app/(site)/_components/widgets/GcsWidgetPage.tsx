@@ -166,7 +166,9 @@ async function GcsPageEditorHost({ page, actor, children }: { page: GcsWidgetPag
                   options:
                     f.optionsFrom === "chat.channels"
                       ? [{ value: "", label: t("defaultChannel") }, ...channels.map((c) => ({ value: c.key, label: c.name }))]
-                      : (f.options ?? []).map((o) => ({ value: o.value, label: label(o.labelKey) })),
+                      : f.optionsFrom === "groups"
+                        ? [{ value: "", label: t("allGroups") }, ...groups.map((g) => ({ value: String(g.id), label: g.name }))]
+                        : (f.options ?? []).map((o) => ({ value: o.value, label: label(o.labelKey) })),
                 };
             }
           }),

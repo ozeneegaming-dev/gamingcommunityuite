@@ -1,6 +1,7 @@
 import type { GcsAchievementEventDef, GcsAchievementOccurrence, GcsActor, GcsEventBus, GcsJobQueue, GcsModuleRegistry, GcsRealtime } from "@gcs/core";
 import type { AchievementRule, Prisma, PrismaClient } from "@gcs/db";
 import type { GcsMembership } from "./membership";
+import { toRef, userRefSelect } from "../forums/queries";
 
 /**
  * Realizări v2: constructorul de reguli „Când → Și → Atunci” (ACP → Membri → Realizări → Reguli).
@@ -461,11 +462,11 @@ export class GcsAchievementRules {
         id: true,
         lastAwardedAt: true,
         timesAwarded: true,
-        user: { select: { id: true, name: true } },
+        user: { select: userRefSelect },
         badge: { select: { id: true, key: true, name: true, description: true, color: true, symbol: true, manual: true, artShape: true, artTier: true, artIcon: true, imageAttachmentId: true } },
       },
     });
-    return rows;
+    return rows.map((r) => ({ ...r, user: toRef(r.user) }));
   }
 }
 

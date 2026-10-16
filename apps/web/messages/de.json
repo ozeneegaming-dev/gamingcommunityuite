@@ -337,7 +337,8 @@
       "email_taken": "Diese E-Mail wird bereits von einem anderen Konto verwendet.",
       "email_invalid": "Die E-Mail-Adresse ist ungültig.",
       "group_unknown": "Unbekannte Gruppe.",
-      "separator_top": "Ein Trenner kann nur zwischen Unterpunkten stehen."
+      "separator_top": "Ein Trenner kann nur zwischen Unterpunkten stehen.",
+      "invalid_file": "Die Datei ist kein gültiger Export."
     }
   },
   "acp": {
@@ -1471,6 +1472,141 @@
         "image": "Custom image (optional)",
         "imageHint": "PNG, JPEG, WebP or GIF. Replaces the drawn emblem.",
         "removeImage": "Remove the custom image"
+      },
+      "v2": {
+        "help": "Baue Regeln als Sätze: Wenn etwas passiert (die Ereignisse kommen von den aktiven Apps) → Und die Bedingungen → Dann die Belohnungen. Eine deaktivierte App nimmt ihre Ereignisse mit.",
+        "classicTitle": "Klassische Regeln (Schwellen und Punkte pro Aktion)",
+        "coreApp": "Community",
+        "builderTitle": "Neue Regel",
+        "editTitle": "Regel bearbeiten",
+        "noEvents": "Keine App mit Ereignissen ist aktiv.",
+        "when": "Wenn",
+        "and": "Und",
+        "then": "Dann",
+        "event": "Ereignis",
+        "mode": "Modus",
+        "modeNth": "zum n-ten Mal",
+        "modeEvery": "alle",
+        "n": "Anzahl",
+        "reachLabel": "erreicht",
+        "windowDays": "In den letzten (Tagen)",
+        "anytime": "jederzeit",
+        "moreConditions": "Weitere Bedingungen (Foren, Server, Gruppen)",
+        "onlyForums": "Nur in den Foren",
+        "onlyServers": "Nur auf den Servern",
+        "onlyGroups": "Nur für die Gruppen",
+        "otherReward": "Auch {who} belohnen",
+        "ruleName": "Name der Regel",
+        "enabled": "Aktiv",
+        "saveRule": "Regel speichern",
+        "addRule": "Regel hinzufügen",
+        "cancel": "Abbrechen",
+        "saved": "Die Regel wurde gespeichert.",
+        "rewardPoints": "Punkte",
+        "rewardBadge": "Abzeichen",
+        "rewardGroup": "Sekundäre Gruppe",
+        "rewardGroupDays": "Tage (leer = dauerhaft)",
+        "permanent": "dauerhaft",
+        "rewardVip": "VIP-Tage (Stufe)",
+        "rewardVipDays": "VIP-Tage",
+        "rewardNameStyle": "Namensstil",
+        "none": "— keine —",
+        "listTitle": "Regeln ({count})",
+        "gamingPack": "Gaming-Paket",
+        "gamingPackBody": "Importiert fertige Regeln für Forum, Chat, Server und Clans mit ihren Abzeichen. Regeln deaktivierter Apps werden übersprungen.",
+        "gamingPackImport": "Paket importieren",
+        "export": "JSON exportieren",
+        "import": "JSON importieren",
+        "empty": "Noch keine Regeln. Baue oben eine oder importiere das „Gaming-Paket“.",
+        "toggle": "„{name}“ ein- / ausschalten",
+        "unavailable": "Die App dieses Ereignisses ist deaktiviert.",
+        "edit": "Bearbeiten",
+        "editNamed": "„{name}“ bearbeiten",
+        "copy": "Kopieren",
+        "copyNamed": "„{name}“ kopieren",
+        "delete": "Löschen",
+        "deleteNamed": "„{name}“ löschen",
+        "deleteTitle": "Regel löschen?",
+        "deleteBody": "„{name}“ wird endgültig gelöscht. Bereits Vergebenes bleibt.",
+        "imported": "Importiert: {created} Regeln, {badges} neue Abzeichen ({skipped} übersprungen).",
+        "s": {
+          "reach": "erreicht {n}",
+          "every": "alle {n}",
+          "nth": "zum {n}. Mal",
+          "forums": "in {list}",
+          "servers": "auf {list}",
+          "groups": "nur {list}",
+          "window": "innerhalb von {days} Tagen",
+          "points": "{n} Punkte",
+          "badge": "Abzeichen „{name}“",
+          "group": "Gruppe {name}",
+          "groupDays": "Gruppe {name} ({days} Tage)",
+          "vip": "{name} {days} Tage",
+          "nameStyle": "Stil „{name}“"
+        },
+        "settingsTitle": "Regeln: Einstellungen",
+        "excludedGroups": "Ausgeschlossene Gruppen",
+        "excludedHelp": "Mitglieder dieser Gruppen erhalten nichts aus Regeln (z. B. Testkonten oder Bots).",
+        "rarePercent": "Abzeichen ist selten unter (% der Mitglieder)",
+        "recalcTitle": "Neuberechnung im Hintergrund",
+        "recalcHelp": "Wendet die Regeln auf alle Mitglieder an (nach einer neuen Regel oder einem Import). Läuft im Worker; du kannst die Seite schließen.",
+        "recalcProgress": "Fortschritt der Neuberechnung",
+        "recalcIdle": "Noch keine Neuberechnung.",
+        "recalcState": {
+          "queued": "In der Warteschlange…",
+          "running": "{done} / {total} Mitglieder · {awarded} Belohnungen",
+          "done": "Fertig: {done} / {total} Mitglieder · {awarded} Belohnungen"
+        },
+        "recalcStart": "Jetzt neu berechnen",
+        "ladderTitle": "Rangleiter",
+        "presets": "Vorgefertigte Leitern",
+        "members": "Mitglieder",
+        "noThreshold": "keine Schwelle (Basisrang)",
+        "moveUpRank": "Nach oben",
+        "moveDownRank": "Nach unten",
+        "moveUpNamed": "„{name}“ nach oben",
+        "moveDownNamed": "„{name}“ nach unten",
+        "unranked": "Ohne Rang: {count}",
+        "presetTitle": "Leiter „{name}“ anwenden?",
+        "presetBody": "Die aktuellen Ränge werden durch die der Leiter ersetzt; Mitglieder erhalten die neuen Ränge bei der Neuberechnung.",
+        "presetApply": "Leiter ersetzen",
+        "ranksImported": "Importiert: {created} Ränge ({skipped} übersprungen).",
+        "importRanksBody": "Importiert die Ränge aus der Datei.",
+        "replaceLadder": "Aktuelle Leiter ersetzen",
+        "thrPoints": "{n} XP",
+        "thrPosts": "{n} Beiträge",
+        "thrRep": "{n} Reputation",
+        "or": "oder",
+        "match": "Schwellen",
+        "matchAll": "alle",
+        "matchAny": "beliebige",
+        "criteria": "App-Kriterien",
+        "criterionMetric": "Kriterium {n}",
+        "criterionMin": "Minimum für Kriterium {n}",
+        "appOff": "App deaktiviert",
+        "tier": "Emblemstufe",
+        "auto": "automatisch",
+        "tiers": {
+          "bronze": "Bronze",
+          "silver": "Silber",
+          "gold": "Gold",
+          "platinum": "Platin",
+          "diamond": "Diamant",
+          "master": "Meister",
+          "legend": "Legende"
+        },
+        "animated": "Dezente Animation",
+        "emblemImage": "Eigenes Emblem (optional)",
+        "removeImage": "Eigenes Emblem entfernen",
+        "perkGroup": "Vorteil: Gruppe",
+        "perkBadge": "Vorteil: Abzeichen",
+        "perkNameStyle": "Vorteil: Namensstil",
+        "ranksHelp": "Ein Mitglied erhält den höchsten Rang, dessen Schwellen erreicht sind (alle oder beliebige). App-Kriterien (gespielte Stunden, ELO, Mitgliedstage…) kommen zu den Schwellen hinzu. Vorteile gibt es beim Aufstieg; sie werden beim Verlust des Rangs entfernt.",
+        "preset": {
+          "community": "Community (XP)",
+          "gaming": "Gaming (XP + Server)",
+          "veteran": "Veteranen (Beiträge + Mitgliedschaft)"
+        }
       }
     },
     "promotions": {
@@ -4381,6 +4517,10 @@
       "notMember": "Kein Mitglied",
       "join": "Beitreten",
       "leave": "Verlassen"
+    },
+    "achievements": {
+      "excluded_groups": "Von Regeln ausgeschlossene Gruppen",
+      "rare_percent": "Schwelle für seltene Abzeichen (%)"
     }
   },
   "permissions": {
@@ -4695,6 +4835,12 @@
       "kd": "K/D",
       "points": "Punkte",
       "ranking": "Server-Rangliste"
+    },
+    "rankUp": {
+      "kicker": "Neuer Rang!",
+      "title": "Du hast {name} erreicht",
+      "level": "Stufe {level}",
+      "close": "Schließen"
     }
   },
   "maintenance": {
@@ -6136,7 +6282,9 @@
       "channel": "Chat-Raum",
       "icon": "Icon (z. B. fa-solid fa-star; leer = standard)",
       "game": "Game",
-      "metric": "Zuerst angezeigtes Maß"
+      "metric": "Zuerst angezeigtes Maß",
+      "rare": "Welche Abzeichen",
+      "group": "Nur Mitglieder der Gruppe"
     },
     "periods": {
       "week": "diese woche",
@@ -6174,6 +6322,9 @@
       },
       "clans": {
         "top": "The top clans in the ranking, with members and points."
+      },
+      "profile": {
+        "recentBadges": "Kürzlich erhaltene Abzeichen der Mitglieder, live."
       }
     },
     "servers": {
@@ -6199,6 +6350,17 @@
       "topics": "Themen",
       "reputation": "Reputation",
       "online": "Online-Zeit"
+    },
+    "profile": {
+      "recentBadges": "Neueste Erfolge"
+    },
+    "rare": {
+      "all": "Alle",
+      "only": "Nur seltene"
+    },
+    "recentBadges": {
+      "empty": "Noch keine Erfolge.",
+      "received": "erhielt"
     }
   },
   "pageEditor": {
@@ -6260,7 +6422,8 @@
     "addTo": "Zu Zone hinzufügen:",
     "dragHint": "Ziehen Sie ein Widget auf die Seite oder verwenden Sie den +-Button.",
     "dropHere": "Drag Widgets hier",
-    "done": "Endbearbeitung"
+    "done": "Endbearbeitung",
+    "allGroups": "Alle Gruppen"
   },
   "stats": {
     "title": "Gemeinschaftsstatistiken",
@@ -8531,6 +8694,49 @@
       "leaderboard": "Rangliste",
       "activity": "Aktivität",
       "plugin": "einer App"
+    }
+  },
+  "achievements": {
+    "events": {
+      "forums": {
+        "post": "Schreibt einen Beitrag",
+        "topic": "Eröffnet ein Thema",
+        "reaction_received": "Erhält eine positive Reaktion",
+        "solution": "Seine Antwort wird als Lösung markiert",
+        "reputation": "Reputation erreicht"
+      },
+      "chat": {
+        "message": "Sendet eine Chat-Nachricht"
+      },
+      "chat_pro": {
+        "ranking_winner": "Gewinnt die Chat-Rangliste"
+      },
+      "servers": {
+        "kills": "Kills auf den Servern",
+        "headshots": "Headshots auf den Servern",
+        "hours": "Gespielte Stunden auf den Servern",
+        "mix_wins": "Mix-Siege",
+        "elo": "Mix-ELO",
+        "first_connect": "Erste Verbindung zu einem Server"
+      },
+      "clans": {
+        "join": "Tritt einem Clan bei",
+        "create": "Gründet einen Clan (genehmigt)",
+        "war_win": "Gewinnt einen Clan-War"
+      },
+      "vip": {
+        "subscribed": "Erhält ein VIP-Abo"
+      },
+      "core": {
+        "member_days": "Tage als Mitglied",
+        "profile_completed": "Vervollständigt sein Profil",
+        "steam_linked": "Verknüpft sein Steam-Konto",
+        "birthday": "Feiert Geburtstag"
+      }
+    },
+    "other": {
+      "reactionGiver": "wer die Reaktion gegeben hat",
+      "topicAuthor": "der Autor des Themas"
     }
   }
 }

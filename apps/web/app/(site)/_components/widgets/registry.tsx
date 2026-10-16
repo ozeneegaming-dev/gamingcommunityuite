@@ -20,6 +20,8 @@ import { GcsServerWidgetList } from "../servers/GcsServerWidgetList";
 import { GcsWhoIsOnline } from "../forum/GcsWhoIsOnline";
 import { GcsGroupLegend, GcsStatsPanel, GcsWhoWasOnline } from "./GcsStatsPanel";
 import { GcsCarousel } from "./GcsCarousel";
+import { GcsRecentBadges } from "./GcsRecentBadges";
+import { recentBadges, recentBadgesQuery } from "@/lib/recent-badges";
 import { GcsWidgetTitle, widgetIcon } from "./GcsWidgetTitle";
 import { GcsMemberLink } from "@/lib/member-names";
 import { GcsRankingPanel } from "../cockpit/GcsRankingPanel";
@@ -150,6 +152,18 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
   "core.statsPanel": async ({ id, config }) => <GcsStatsPanel id={id} config={config} />,
   "core.onlineDay": async ({ id, config }) => <GcsWhoWasOnline id={id} config={config} />,
   "core.groupLegend": async ({ id, config }) => <GcsGroupLegend id={id} config={config} />,
+
+  // Realizări v2: ultimele badge-uri primite, cu actualizare live (camera `feed:badges`).
+  "profile.recentBadges": async ({ id, config }) => {
+    const q = recentBadgesQuery(config);
+    const [t, items] = await Promise.all([getTranslations("widgets"), recentBadges(q)]);
+    const query = new URLSearchParams({ limit: String(q.limit), ...(q.rareOnly ? { rare: "1" } : {}), ...(q.groupId ? { group: String(q.groupId) } : {}) }).toString();
+    return (
+      <GcsWidgetCard id={id} type="profile.recentBadges" config={config} title={t("profile.recentBadges")} testId="gcs-widget-recent-badges">
+        <GcsRecentBadges initial={items} query={query} />
+      </GcsWidgetCard>
+    );
+  },
 
   "core.newMembers": async ({ id, config }) => {
     const [t, list] = await Promise.all([getTranslations("widgets"), services().forumQueries.newMembers(limitOf(config, 5))]);

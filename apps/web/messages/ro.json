@@ -337,7 +337,8 @@
       "email_taken": "Emailul e deja folosit de alt cont.",
       "email_invalid": "Adresa de email nu e validă.",
       "group_unknown": "Grup necunoscut.",
-      "separator_top": "Un separator poate sta doar între subitemi."
+      "separator_top": "Un separator poate sta doar între subitemi.",
+      "invalid_file": "Fișierul nu e un export valid."
     }
   },
   "acp": {
@@ -1471,6 +1472,141 @@
         "image": "Imagine proprie (opțional)",
         "imageHint": "PNG, JPEG, WebP sau GIF. Înlocuiește insigna desenată.",
         "removeImage": "Elimină imaginea proprie"
+      },
+      "v2": {
+        "help": "Construiește reguli ca propoziții: Când se întâmplă ceva (evenimentele vin de la aplicațiile pornite) → Și condițiile → Atunci recompensele. O aplicație oprită își ia evenimentele cu ea.",
+        "classicTitle": "Reguli clasice (praguri și puncte pe acțiune)",
+        "coreApp": "Comunitate",
+        "builderTitle": "Regulă nouă",
+        "editTitle": "Editează regula",
+        "noEvents": "Nicio aplicație cu evenimente nu e pornită.",
+        "when": "Când",
+        "and": "Și",
+        "then": "Atunci",
+        "event": "Evenimentul",
+        "mode": "Modul",
+        "modeNth": "a n-a oară",
+        "modeEvery": "la fiecare",
+        "n": "Numărul",
+        "reachLabel": "ajunge la",
+        "windowDays": "În ultimele (zile)",
+        "anytime": "oricând",
+        "moreConditions": "Mai multe condiții (forumuri, servere, grupuri)",
+        "onlyForums": "Doar în forumurile",
+        "onlyServers": "Doar pe serverele",
+        "onlyGroups": "Doar pentru grupurile",
+        "otherReward": "Recompensă și pentru {who}",
+        "ruleName": "Numele regulii",
+        "enabled": "Pornită",
+        "saveRule": "Salvează regula",
+        "addRule": "Adaugă regula",
+        "cancel": "Renunță",
+        "saved": "Regula a fost salvată.",
+        "rewardPoints": "Puncte",
+        "rewardBadge": "Badge",
+        "rewardGroup": "Grup secundar",
+        "rewardGroupDays": "Zile (gol = permanent)",
+        "permanent": "permanent",
+        "rewardVip": "Zile VIP (nivel)",
+        "rewardVipDays": "Zile VIP",
+        "rewardNameStyle": "Stil de nume",
+        "none": "— niciunul —",
+        "listTitle": "Reguli ({count})",
+        "gamingPack": "Pachet Gaming",
+        "gamingPackBody": "Importă regulile gata făcute pentru forum, chat, servere și clanuri, cu badge-urile lor. Regulile aplicațiilor oprite se sar.",
+        "gamingPackImport": "Importă pachetul",
+        "export": "Exportă JSON",
+        "import": "Importă JSON",
+        "empty": "Nicio regulă încă. Construiește una mai sus sau importă „Pachet Gaming”.",
+        "toggle": "Pornește / oprește „{name}”",
+        "unavailable": "Aplicația acestui eveniment e oprită.",
+        "edit": "Editează",
+        "editNamed": "Editează „{name}”",
+        "copy": "Copiază",
+        "copyNamed": "Copiază „{name}”",
+        "delete": "Șterge",
+        "deleteNamed": "Șterge „{name}”",
+        "deleteTitle": "Ștergi regula?",
+        "deleteBody": "„{name}” dispare definitiv. Ce s-a acordat deja rămâne.",
+        "imported": "Importat: {created} reguli, {badges} badge-uri noi ({skipped} sărite).",
+        "s": {
+          "reach": "ajunge la {n}",
+          "every": "la fiecare {n}",
+          "nth": "a {n}-a oară",
+          "forums": "în {list}",
+          "servers": "pe {list}",
+          "groups": "doar {list}",
+          "window": "în {days} zile",
+          "points": "{n} puncte",
+          "badge": "badge „{name}”",
+          "group": "grupul {name}",
+          "groupDays": "grupul {name} ({days} zile)",
+          "vip": "{name} {days} zile",
+          "nameStyle": "stilul „{name}”"
+        },
+        "settingsTitle": "Reguli: setări",
+        "excludedGroups": "Grupuri excluse",
+        "excludedHelp": "Membrii acestor grupuri nu primesc nimic din reguli (de ex. conturile de test sau boții).",
+        "rarePercent": "Badge rar sub (% din membri)",
+        "recalcTitle": "Recalculare în fundal",
+        "recalcHelp": "Aplică regulile tuturor membrilor (după o regulă nouă sau un import). Rulează în worker; poți închide pagina.",
+        "recalcProgress": "Progresul recalculării",
+        "recalcIdle": "Nicio recalculare încă.",
+        "recalcState": {
+          "queued": "În așteptare…",
+          "running": "{done} / {total} membri · {awarded} recompense",
+          "done": "Gata: {done} / {total} membri · {awarded} recompense"
+        },
+        "recalcStart": "Recalculează acum",
+        "ladderTitle": "Scara rangurilor",
+        "presets": "Scări prestabilite",
+        "members": "membri",
+        "noThreshold": "fără prag (rangul de bază)",
+        "moveUpRank": "Mai sus",
+        "moveDownRank": "Mai jos",
+        "moveUpNamed": "Mută „{name}” mai sus",
+        "moveDownNamed": "Mută „{name}” mai jos",
+        "unranked": "Fără rang: {count}",
+        "presetTitle": "Aplici scara „{name}”?",
+        "presetBody": "Rangurile actuale se înlocuiesc cu cele ale scării; membrii primesc rangurile noi la recalculare.",
+        "presetApply": "Înlocuiește scara",
+        "ranksImported": "Importat: {created} ranguri ({skipped} sărite).",
+        "importRanksBody": "Importă rangurile din fișier.",
+        "replaceLadder": "Înlocuiește scara actuală",
+        "thrPoints": "{n} XP",
+        "thrPosts": "{n} postări",
+        "thrRep": "{n} reputație",
+        "or": "sau",
+        "match": "Pragurile",
+        "matchAll": "toate",
+        "matchAny": "oricare",
+        "criteria": "Criteriile aplicațiilor",
+        "criterionMetric": "Criteriul {n}",
+        "criterionMin": "Minimul criteriului {n}",
+        "appOff": "aplicație oprită",
+        "tier": "Treapta emblemei",
+        "auto": "automat",
+        "tiers": {
+          "bronze": "Bronz",
+          "silver": "Argint",
+          "gold": "Aur",
+          "platinum": "Platină",
+          "diamond": "Diamant",
+          "master": "Maestru",
+          "legend": "Legendă"
+        },
+        "animated": "Animație discretă",
+        "emblemImage": "Emblemă proprie (opțional)",
+        "removeImage": "Scoate emblema proprie",
+        "perkGroup": "Avantaj: grup",
+        "perkBadge": "Avantaj: badge",
+        "perkNameStyle": "Avantaj: stil de nume",
+        "ranksHelp": "Membrul primește cel mai înalt rang ale cărui praguri sunt atinse (toate sau oricare). Criteriile aplicațiilor (ore jucate, ELO, vechime…) se adaugă pragurilor. Avantajele se dau la urcare și se retrag la pierderea rangului.",
+        "preset": {
+          "community": "Comunitate (XP)",
+          "gaming": "Gaming (XP + servere)",
+          "veteran": "Veterani (postări + vechime)"
+        }
       }
     },
     "promotions": {
@@ -4381,6 +4517,10 @@
       "notMember": "Nu ești membru",
       "join": "Intră",
       "leave": "Ieși"
+    },
+    "achievements": {
+      "excluded_groups": "Grupuri excluse din reguli",
+      "rare_percent": "Pragul badge-urilor rare (%)"
     }
   },
   "permissions": {
@@ -4695,6 +4835,12 @@
       "kd": "K/D",
       "points": "Puncte",
       "ranking": "Clasamentul serverului"
+    },
+    "rankUp": {
+      "kicker": "Rang nou!",
+      "title": "Ai urcat la {name}",
+      "level": "Nivelul {level}",
+      "close": "Închide"
     }
   },
   "maintenance": {
@@ -6136,7 +6282,9 @@
       "channel": "Camera de chat",
       "icon": "Iconiță (ex. fa-solid fa-star; gol = cea implicită)",
       "game": "Jocul",
-      "metric": "Măsura afișată la început"
+      "metric": "Măsura afișată la început",
+      "rare": "Ce badge-uri",
+      "group": "Doar membrii grupului"
     },
     "periods": {
       "week": "săptămâna aceasta",
@@ -6174,6 +6322,9 @@
       },
       "clans": {
         "top": "Primele clanuri din clasament, cu membrii și punctele."
+      },
+      "profile": {
+        "recentBadges": "Badge-urile primite recent de membri, live."
       }
     },
     "servers": {
@@ -6199,6 +6350,17 @@
       "topics": "Topicuri",
       "reputation": "Reputație",
       "online": "Timp online"
+    },
+    "profile": {
+      "recentBadges": "Ultimele realizări"
+    },
+    "rare": {
+      "all": "Toate",
+      "only": "Doar cele rare"
+    },
+    "recentBadges": {
+      "empty": "Nicio realizare încă.",
+      "received": "a primit"
     }
   },
   "pageEditor": {
@@ -6260,7 +6422,8 @@
     "addTo": "Adaugă în zona:",
     "dragHint": "Trage un widget pe pagină sau folosește butonul +.",
     "dropHere": "Trage widget-urile aici",
-    "done": "Termină editarea"
+    "done": "Termină editarea",
+    "allGroups": "Toate grupurile"
   },
   "stats": {
     "title": "Statisticile comunității",
@@ -8531,6 +8694,49 @@
       "leaderboard": "Clasament",
       "activity": "Activitate",
       "plugin": "o aplicație"
+    }
+  },
+  "achievements": {
+    "events": {
+      "forums": {
+        "post": "Scrie o postare",
+        "topic": "Deschide un topic",
+        "reaction_received": "Primește o reacție pozitivă",
+        "solution": "Răspunsul lui e marcat rezolvare",
+        "reputation": "Reputația ajunge la"
+      },
+      "chat": {
+        "message": "Trimite un mesaj în chat"
+      },
+      "chat_pro": {
+        "ranking_winner": "Câștigă clasamentul de chat"
+      },
+      "servers": {
+        "kills": "Ucideri pe servere",
+        "headshots": "Headshot-uri pe servere",
+        "hours": "Ore jucate pe servere",
+        "mix_wins": "Victorii în mix",
+        "elo": "ELO în mix",
+        "first_connect": "Prima conectare pe un server"
+      },
+      "clans": {
+        "join": "Intră într-un clan",
+        "create": "Creează un clan (aprobat)",
+        "war_win": "Câștigă un clan war"
+      },
+      "vip": {
+        "subscribed": "Primește un abonament VIP"
+      },
+      "core": {
+        "member_days": "Zile de membru",
+        "profile_completed": "Își completează profilul",
+        "steam_linked": "Își leagă contul Steam",
+        "birthday": "Își serbează ziua de naștere"
+      }
+    },
+    "other": {
+      "reactionGiver": "cine a dat reacția",
+      "topicAuthor": "autorul topicului"
     }
   }
 }

@@ -1,0 +1,520 @@
+/*
+ * Realizări v2 (funcții de sistem, în orice temă; temele doar le restilizează): constructorul de reguli și lista lor
+ * din ACP, scara rangurilor, emblemele rangurilor (cu animația discretă a rangurilor de vârf), widget-ul „Ultimele
+ * realizări”, toast-ul de urcare în rang și bara de progres a recalculării. Culorile vin din tokenii temei (accentul,
+ * suprafețele, textul); metalele apar doar în desenul emblemelor.
+ */
+
+/* ─── Constructorul „Când → Și → Atunci” ─────────────────────────────────── */
+.gcs-ruleB,
+.gcs-ruleList,
+.gcs-rankLadder {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gcs-ruleB__step {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background-color: color-mix(in srgb, var(--gcs-surface2, var(--gcs-surface)) 60%, transparent);
+}
+.gcs-ruleB__step--then {
+  border-color: color-mix(in srgb, var(--gcs-accent) 35%, var(--gcs-border));
+}
+.gcs-ruleB__word {
+  align-self: center;
+  min-width: 64px;
+  font: 700 12px/1 var(--gcs-font-display, inherit);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gcs-accent);
+}
+.gcs-ruleB__text {
+  align-self: center;
+  color: var(--gcs-muted);
+}
+.gcs-ruleB__field {
+  width: 190px;
+}
+.gcs-ruleB__field--sm {
+  width: 110px;
+}
+.gcs-ruleB__field--grow {
+  flex: 1 1 240px;
+  width: auto;
+}
+.gcs-ruleB__mode {
+  width: auto;
+}
+.gcs-ruleB__reward {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+  flex: 1 1 100%;
+}
+.gcs-ruleB__more > summary {
+  cursor: pointer;
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 8px;
+  color: var(--gcs-muted);
+}
+.gcs-ruleB__more > summary:hover {
+  color: var(--gcs-accent);
+}
+.gcs-ruleB__more[open] > summary {
+  margin-bottom: 8px;
+}
+.gcs-ruleB__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  border: 0;
+  margin: 0 0 8px;
+  padding: 0;
+}
+.gcs-ruleB__chips > legend {
+  width: 100%;
+  margin-bottom: 4px;
+  font-size: 13px;
+  color: var(--gcs-muted);
+}
+.gcs-ruleB__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.gcs-ruleB__chip > input {
+  accent-color: var(--gcs-accent);
+}
+.gcs-ruleB__chip.is-on,
+.gcs-ruleB__chip:has(input:checked) {
+  background-color: color-mix(in srgb, var(--gcs-accent) 30%, transparent);
+  border-color: color-mix(in srgb, var(--gcs-accent) 60%, transparent);
+}
+.gcs-ruleB__preview {
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--gcs-accent);
+  border-radius: 6px;
+  background-color: color-mix(in srgb, var(--gcs-accent) 8%, transparent);
+  font-size: 14px;
+}
+.gcs-ruleB__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+}
+.gcs-ruleB__notice {
+  margin: 0;
+  color: var(--gcs-ok);
+}
+
+/* ─── Lista regulilor (propoziții scurte) ────────────────────────────────── */
+.gcs-ruleList__head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.gcs-ruleList__tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.gcs-ruleList__items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.gcs-ruleList__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+.gcs-ruleList__row:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+.gcs-ruleList__row.is-off {
+  opacity: 0.6;
+}
+.gcs-ruleList__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.gcs-ruleList__sentence {
+  font-size: 13px;
+  color: var(--gcs-muted);
+  overflow-wrap: anywhere;
+}
+.gcs-ruleList__warn {
+  font-size: 12px;
+  color: var(--gcs-warn);
+}
+.gcs-ruleList__actions {
+  display: flex;
+  gap: 2px;
+  flex: none;
+}
+.gcs-ruleList__switch {
+  flex: none;
+  position: relative;
+  width: 38px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--gcs-border);
+  border-radius: 999px;
+  background-color: var(--gcs-surface2, var(--gcs-surface));
+  cursor: pointer;
+}
+.gcs-ruleList__switch > span {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: var(--gcs-muted);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+.gcs-ruleList__switch[aria-checked="true"] {
+  background-color: color-mix(in srgb, var(--gcs-accent) 35%, transparent);
+  border-color: color-mix(in srgb, var(--gcs-accent) 60%, transparent);
+}
+.gcs-ruleList__switch[aria-checked="true"] > span {
+  transform: translateX(16px);
+  background-color: var(--gcs-accent);
+}
+.gcs-ruleList__switch:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ─── Recalcularea ───────────────────────────────────────────────────────── */
+.gcs-recalc {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+.gcs-recalc__bar {
+  width: 100%;
+  max-width: 480px;
+}
+.gcs-recalc__line {
+  margin: 0;
+  font-size: 13px;
+}
+
+/* ─── Scara rangurilor ───────────────────────────────────────────────────── */
+.gcs-rankLadder__preset {
+  width: 210px;
+}
+.gcs-rankLadder__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gcs-rankCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 12px;
+  background-color: var(--gcs-surface);
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+.gcs-rankCard:hover {
+  background-color: color-mix(in srgb, var(--gcs-surface) 92%, #fff);
+}
+.gcs-rankCard.is-dragging {
+  opacity: 0.5;
+}
+.gcs-rankCard__grip {
+  cursor: grab;
+  color: var(--gcs-muted);
+}
+.gcs-rankCard__level {
+  width: 26px;
+  text-align: center;
+  font: 700 13px/1 var(--gcs-font-display, inherit);
+  color: var(--gcs-muted);
+}
+.gcs-rankCard__body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+.gcs-rankCard__name {
+  font-size: 15px;
+}
+.gcs-rankCard__summary {
+  font-size: 13px;
+  color: var(--gcs-muted);
+}
+.gcs-rankCard__perks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.gcs-rankCard__perk {
+  font-size: 11px;
+}
+.gcs-rankCard__count {
+  flex: none;
+  color: var(--gcs-text);
+  text-decoration: none;
+  font-size: 13px;
+}
+.gcs-rankCard__count:hover {
+  color: var(--gcs-accent);
+}
+.gcs-rankLadder__unranked {
+  margin: 0;
+  font-size: 13px;
+}
+.gcs-rankForm__criteria {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 0;
+}
+.gcs-rankForm__criteria > legend {
+  font-size: 13px;
+  color: var(--gcs-muted);
+  padding: 0 4px;
+}
+
+/* ─── Emblema rangului (animația discretă a rangurilor de vârf) ──────────── */
+.gcs-rankEmblem {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+.gcs-rankEmblem--animated::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--gcs-accent) 35%, transparent), transparent 70%);
+  animation: gcs-rank-glow 2.8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+.gcs-rankEmblem--animated > img {
+  animation: gcs-rank-float 3.6s ease-in-out infinite;
+}
+@keyframes gcs-rank-glow {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+@keyframes gcs-rank-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+/* ─── Widget-ul „Ultimele realizări” ─────────────────────────────────────── */
+.gcs-recentBadges__row {
+  align-items: center;
+}
+.gcs-recentBadges__row.is-new {
+  animation: gcs-recent-in 0.45s ease-out both;
+}
+.gcs-recentBadges__medal {
+  display: inline-flex;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+}
+.gcs-recentBadges__medal:hover,
+.gcs-recentBadges__medal:focus-visible {
+  transform: scale(1.08);
+}
+.gcs-recentBadges__text {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.gcs-recentBadges__verb {
+  color: var(--gcs-muted);
+}
+.gcs-recentBadges__badge {
+  color: var(--gcs-text);
+}
+.gcs-recentBadges__times {
+  color: var(--gcs-accent);
+  font-weight: 700;
+}
+@keyframes gcs-recent-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ─── Toast-ul de urcare în rang ─────────────────────────────────────────── */
+.gcs-rankUp {
+  position: fixed;
+  z-index: 1200;
+  left: 50%;
+  bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: min(420px, calc(100vw - 32px));
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--gcs-accent) 55%, var(--gcs-border));
+  border-radius: 16px;
+  background-color: var(--gcs-surface);
+  color: var(--gcs-text);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35), 0 0 0 4px color-mix(in srgb, var(--gcs-accent) 14%, transparent);
+  transform: translateX(-50%);
+  animation: gcs-rankup-in 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  overflow: hidden;
+}
+.gcs-rankUp__text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+.gcs-rankUp__kicker {
+  font: 700 11px/1 var(--gcs-font-display, inherit);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gcs-accent);
+}
+.gcs-rankUp__name {
+  font-size: 17px;
+}
+.gcs-rankUp__level {
+  font-size: 13px;
+  color: var(--gcs-muted);
+}
+.gcs-rankUp__close {
+  align-self: flex-start;
+}
+.gcs-rankUp__sparks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.gcs-rankUp__sparks > i {
+  position: absolute;
+  left: calc(8% + var(--i) * 9%);
+  bottom: -6px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: var(--gcs-accent);
+  opacity: 0;
+  animation: gcs-rankup-spark 1.6s ease-out calc(var(--i) * 0.08s) 2;
+}
+@keyframes gcs-rankup-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+@keyframes gcs-rankup-spark {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  20% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-70px);
+  }
+}
+
+@media (max-width: 480px) {
+  .gcs-ruleList__row,
+  .gcs-rankCard {
+    flex-wrap: wrap;
+  }
+  .gcs-ruleB__field,
+  .gcs-rankLadder__preset {
+    width: 100%;
+  }
+  .gcs-ruleB__word {
+    width: 100%;
+  }
+}
+
+/* Mișcare redusă: doar opacitatea (fără plutire, scântei sau alunecare). */
+@media (prefers-reduced-motion: reduce) {
+  .gcs-rankEmblem--animated::after,
+  .gcs-rankEmblem--animated > img,
+  .gcs-rankUp__sparks > i {
+    animation: none;
+  }
+  .gcs-rankUp {
+    animation: gcs-fade-only 0.3s ease both;
+  }
+  .gcs-recentBadges__row.is-new {
+    animation: gcs-fade-only 0.3s ease both;
+  }
+  .gcs-recentBadges__medal:hover {
+    transform: none;
+  }
+}
+@keyframes gcs-fade-only {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

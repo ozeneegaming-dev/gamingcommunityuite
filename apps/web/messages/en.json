@@ -337,7 +337,8 @@
       "email_taken": "This email is already used by another account.",
       "email_invalid": "The email address is not valid.",
       "group_unknown": "Unknown group.",
-      "separator_top": "A separator can only sit between sub-items."
+      "separator_top": "A separator can only sit between sub-items.",
+      "invalid_file": "The file is not a valid export."
     }
   },
   "acp": {
@@ -1471,6 +1472,141 @@
         "image": "Custom image (optional)",
         "imageHint": "PNG, JPEG, WebP or GIF. Replaces the drawn emblem.",
         "removeImage": "Remove the custom image"
+      },
+      "v2": {
+        "help": "Build rules as sentences: When something happens (events come from the enabled apps) → And the conditions → Then the rewards. A disabled app takes its events with it.",
+        "classicTitle": "Classic rules (thresholds and points per action)",
+        "coreApp": "Community",
+        "builderTitle": "New rule",
+        "editTitle": "Edit rule",
+        "noEvents": "No app with events is enabled.",
+        "when": "When",
+        "and": "And",
+        "then": "Then",
+        "event": "Event",
+        "mode": "Mode",
+        "modeNth": "the nth time",
+        "modeEvery": "every",
+        "n": "Number",
+        "reachLabel": "reaches",
+        "windowDays": "Within the last (days)",
+        "anytime": "any time",
+        "moreConditions": "More conditions (forums, servers, groups)",
+        "onlyForums": "Only in the forums",
+        "onlyServers": "Only on the servers",
+        "onlyGroups": "Only for the groups",
+        "otherReward": "Also reward {who}",
+        "ruleName": "Rule name",
+        "enabled": "Enabled",
+        "saveRule": "Save rule",
+        "addRule": "Add rule",
+        "cancel": "Cancel",
+        "saved": "The rule was saved.",
+        "rewardPoints": "Points",
+        "rewardBadge": "Badge",
+        "rewardGroup": "Secondary group",
+        "rewardGroupDays": "Days (empty = permanent)",
+        "permanent": "permanent",
+        "rewardVip": "VIP days (tier)",
+        "rewardVipDays": "VIP days",
+        "rewardNameStyle": "Name style",
+        "none": "— none —",
+        "listTitle": "Rules ({count})",
+        "gamingPack": "Gaming pack",
+        "gamingPackBody": "Imports ready-made rules for the forum, chat, servers and clans, with their badges. Rules of disabled apps are skipped.",
+        "gamingPackImport": "Import the pack",
+        "export": "Export JSON",
+        "import": "Import JSON",
+        "empty": "No rules yet. Build one above or import the “Gaming pack”.",
+        "toggle": "Turn “{name}” on / off",
+        "unavailable": "The app of this event is disabled.",
+        "edit": "Edit",
+        "editNamed": "Edit “{name}”",
+        "copy": "Copy",
+        "copyNamed": "Copy “{name}”",
+        "delete": "Delete",
+        "deleteNamed": "Delete “{name}”",
+        "deleteTitle": "Delete the rule?",
+        "deleteBody": "“{name}” is deleted for good. What it already awarded stays.",
+        "imported": "Imported: {created} rules, {badges} new badges ({skipped} skipped).",
+        "s": {
+          "reach": "reaches {n}",
+          "every": "every {n}",
+          "nth": "time number {n}",
+          "forums": "in {list}",
+          "servers": "on {list}",
+          "groups": "only {list}",
+          "window": "within {days} days",
+          "points": "{n} points",
+          "badge": "badge “{name}”",
+          "group": "group {name}",
+          "groupDays": "group {name} ({days} days)",
+          "vip": "{name} {days} days",
+          "nameStyle": "style “{name}”"
+        },
+        "settingsTitle": "Rules: settings",
+        "excludedGroups": "Excluded groups",
+        "excludedHelp": "Members of these groups get nothing from rules (e.g. test accounts or bots).",
+        "rarePercent": "Badge is rare below (% of members)",
+        "recalcTitle": "Background recalculation",
+        "recalcHelp": "Applies the rules to every member (after a new rule or an import). It runs in the worker; you can close the page.",
+        "recalcProgress": "Recalculation progress",
+        "recalcIdle": "No recalculation yet.",
+        "recalcState": {
+          "queued": "Queued…",
+          "running": "{done} / {total} members · {awarded} rewards",
+          "done": "Done: {done} / {total} members · {awarded} rewards"
+        },
+        "recalcStart": "Recalculate now",
+        "ladderTitle": "Rank ladder",
+        "presets": "Preset ladders",
+        "members": "members",
+        "noThreshold": "no threshold (base rank)",
+        "moveUpRank": "Move up",
+        "moveDownRank": "Move down",
+        "moveUpNamed": "Move “{name}” up",
+        "moveDownNamed": "Move “{name}” down",
+        "unranked": "Without a rank: {count}",
+        "presetTitle": "Apply the “{name}” ladder?",
+        "presetBody": "The current ranks are replaced by the ladder's ranks; members get the new ranks on recalculation.",
+        "presetApply": "Replace the ladder",
+        "ranksImported": "Imported: {created} ranks ({skipped} skipped).",
+        "importRanksBody": "Imports the ranks from the file.",
+        "replaceLadder": "Replace the current ladder",
+        "thrPoints": "{n} XP",
+        "thrPosts": "{n} posts",
+        "thrRep": "{n} reputation",
+        "or": "or",
+        "match": "Thresholds",
+        "matchAll": "all",
+        "matchAny": "any",
+        "criteria": "App criteria",
+        "criterionMetric": "Criterion {n}",
+        "criterionMin": "Minimum for criterion {n}",
+        "appOff": "app disabled",
+        "tier": "Emblem tier",
+        "auto": "automatic",
+        "tiers": {
+          "bronze": "Bronze",
+          "silver": "Silver",
+          "gold": "Gold",
+          "platinum": "Platinum",
+          "diamond": "Diamond",
+          "master": "Master",
+          "legend": "Legend"
+        },
+        "animated": "Subtle animation",
+        "emblemImage": "Custom emblem (optional)",
+        "removeImage": "Remove the custom emblem",
+        "perkGroup": "Perk: group",
+        "perkBadge": "Perk: badge",
+        "perkNameStyle": "Perk: name style",
+        "ranksHelp": "A member gets the highest rank whose thresholds are met (all or any). App criteria (hours played, ELO, membership days…) add to the thresholds. Perks are given on rank-up and removed when the rank is lost.",
+        "preset": {
+          "community": "Community (XP)",
+          "gaming": "Gaming (XP + servers)",
+          "veteran": "Veterans (posts + membership)"
+        }
       }
     },
     "promotions": {
@@ -4381,6 +4517,10 @@
       "notMember": "Not a member",
       "join": "Join",
       "leave": "Leave"
+    },
+    "achievements": {
+      "excluded_groups": "Groups excluded from rules",
+      "rare_percent": "Rare badge threshold (%)"
     }
   },
   "permissions": {
@@ -4695,6 +4835,12 @@
       "kd": "K/D",
       "points": "Points",
       "ranking": "Server ranking"
+    },
+    "rankUp": {
+      "kicker": "New rank!",
+      "title": "You reached {name}",
+      "level": "Level {level}",
+      "close": "Close"
     }
   },
   "maintenance": {
@@ -6136,7 +6282,9 @@
       "channel": "Chat room",
       "icon": "Icon (e.g. fa-solid fa-star; empty = default)",
       "game": "Game",
-      "metric": "Measure shown first"
+      "metric": "Measure shown first",
+      "rare": "Which badges",
+      "group": "Only members of the group"
     },
     "periods": {
       "week": "this week",
@@ -6174,6 +6322,9 @@
       },
       "clans": {
         "top": "The top clans in the ranking, with members and points."
+      },
+      "profile": {
+        "recentBadges": "Badges members earned recently, live."
       }
     },
     "servers": {
@@ -6199,6 +6350,17 @@
       "topics": "Topics",
       "reputation": "Reputation",
       "online": "Time online"
+    },
+    "profile": {
+      "recentBadges": "Latest achievements"
+    },
+    "rare": {
+      "all": "All",
+      "only": "Only rare ones"
+    },
+    "recentBadges": {
+      "empty": "No achievements yet.",
+      "received": "earned"
     }
   },
   "pageEditor": {
@@ -6260,7 +6422,8 @@
     "addTo": "Add to zone:",
     "dragHint": "Drag a widget onto the page or use the + button.",
     "dropHere": "Drag widgets here",
-    "done": "Finish editing"
+    "done": "Finish editing",
+    "allGroups": "All groups"
   },
   "stats": {
     "title": "Community statistics",
@@ -8531,6 +8694,49 @@
       "leaderboard": "Leaderboard",
       "activity": "Activity",
       "plugin": "an app"
+    }
+  },
+  "achievements": {
+    "events": {
+      "forums": {
+        "post": "Writes a post",
+        "topic": "Starts a topic",
+        "reaction_received": "Receives a positive reaction",
+        "solution": "Their answer is marked as the solution",
+        "reputation": "Reputation reaches"
+      },
+      "chat": {
+        "message": "Sends a chat message"
+      },
+      "chat_pro": {
+        "ranking_winner": "Wins the chat ranking"
+      },
+      "servers": {
+        "kills": "Kills on the servers",
+        "headshots": "Headshots on the servers",
+        "hours": "Hours played on the servers",
+        "mix_wins": "Mix wins",
+        "elo": "Mix ELO",
+        "first_connect": "First connection to a server"
+      },
+      "clans": {
+        "join": "Joins a clan",
+        "create": "Creates a clan (approved)",
+        "war_win": "Wins a clan war"
+      },
+      "vip": {
+        "subscribed": "Gets a VIP subscription"
+      },
+      "core": {
+        "member_days": "Days as a member",
+        "profile_completed": "Completes their profile",
+        "steam_linked": "Links their Steam account",
+        "birthday": "Celebrates their birthday"
+      }
+    },
+    "other": {
+      "reactionGiver": "whoever gave the reaction",
+      "topicAuthor": "the topic author"
     }
   }
 }

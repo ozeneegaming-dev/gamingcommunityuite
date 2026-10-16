@@ -37,7 +37,7 @@ test("adminul aranjează widget-urile; vizitatorul vede aranjarea, fără widget
   const top = page.getByTestId("gcs-zone-top");
   const sidebar = page.getByTestId("gcs-zone-sidebar");
   const bottom = page.getByTestId("gcs-zone-bottom");
-  await expect.poll(() => editorOrder(sidebar)).toEqual(["chat.shoutbox", "forums.recentTopics"]);
+  await expect.poll(() => editorOrder(sidebar)).toEqual(["chat.shoutbox", "forums.recentTopics", "profile.recentBadges"]);
   await expect.poll(() => editorOrder(bottom)).toEqual(["core.statsPanel"]);
 
   // Panoul de statistici în zona de sus (din selectorul de zonă al widget-ului).
@@ -103,7 +103,7 @@ test("adminul aranjează widget-urile; vizitatorul vede aranjarea, fără widget
   await page.getByTestId("gcs-page-editor-default").click();
   await page.getByTestId("gcs-page-editor-default-confirm").click();
   await expect(page.getByTestId("gcs-page-editor-status")).toHaveText("Pagina a revenit la widget-urile implicite.");
-  await expect.poll(() => editorOrder(sidebar)).toEqual(["chat.shoutbox", "forums.recentTopics"]);
+  await expect.poll(() => editorOrder(sidebar)).toEqual(["chat.shoutbox", "forums.recentTopics", "profile.recentBadges"]);
   await expect.poll(() => editorOrder(bottom)).toEqual(["core.statsPanel"]);
   await page.getByTestId("gcs-page-editor-done").click();
   await expect(editor).toHaveCount(0);

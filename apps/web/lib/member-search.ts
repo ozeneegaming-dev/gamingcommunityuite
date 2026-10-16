@@ -41,6 +41,8 @@ export function parseMemberSearch(sp: GcsMemberSearchParams): GcsMemberListQuery
   if (af) q.activeFrom = af;
   const at = date(one(sp.activeTo), true);
   if (at) q.activeTo = at;
+  const rank = int(one(sp.rank));
+  if (rank) q.rankId = rank;
   const pmin = int(one(sp.postsMin));
   if (pmin !== undefined) q.postsMin = pmin;
   const pmax = int(one(sp.postsMax));
@@ -72,6 +74,7 @@ export function memberSearchParams(q: Partial<GcsMemberListQuery>): URLSearchPar
   set("joinedTo", ymd(q.joinedTo));
   set("activeFrom", ymd(q.activeFrom));
   set("activeTo", ymd(q.activeTo));
+  set("rank", q.rankId);
   set("postsMin", q.postsMin);
   set("postsMax", q.postsMax);
   set("sort", q.sort);
@@ -82,5 +85,5 @@ export function memberSearchParams(q: Partial<GcsMemberListQuery>): URLSearchPar
 
 /** Câte criterii de căutare avansată sunt active (insigna de pe „Căutare avansată”). */
 export function advancedCount(q: GcsMemberSearch): number {
-  return [q.groupId, q.ip, q.loginMethod, q.twoFactor, q.country, q.joinedFrom ?? q.joinedTo, q.activeFrom ?? q.activeTo, q.postsMin ?? q.postsMax].filter((v) => v !== undefined).length;
+  return [q.groupId, q.ip, q.loginMethod, q.twoFactor, q.country, q.joinedFrom ?? q.joinedTo, q.activeFrom ?? q.activeTo, q.postsMin ?? q.postsMax, q.rankId].filter((v) => v !== undefined).length;
 }
