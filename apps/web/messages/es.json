@@ -335,7 +335,8 @@
       "username_taken": "Este nombre ya está en uso.",
       "email_taken": "Este correo ya lo usa otra cuenta.",
       "email_invalid": "La dirección de correo no es válida.",
-      "group_unknown": "Grupo desconocido."
+      "group_unknown": "Grupo desconocido.",
+      "separator_top": "Un separador solo puede ir entre subelementos."
     }
   },
   "acp": {
@@ -1791,7 +1792,91 @@
       "description": "Descripción",
       "descriptionHint": "Una línea bajo el título en el megamenú (diseño Nova). Vacío = la descripción predeterminada de los elementos automáticos.",
       "badge": "Insignia",
-      "badgeHint": "p. ej. NUEVO"
+      "badgeHint": "p. ej. NUEVO",
+      "v2": {
+        "saving": "Guardando…",
+        "stateDraft": "Borrador sin publicar",
+        "statePublished": "Publicado",
+        "draftSaved": "Borrador guardado",
+        "publish": "Publicar",
+        "discard": "Descartar",
+        "restore": "Restaurar predeterminado",
+        "published": "El menú se ha publicado.",
+        "discarded": "El borrador se ha descartado.",
+        "restored": "El menú predeterminado es ahora el borrador. Revisa la vista previa y publica.",
+        "confirm": {
+          "publish": "¿Publicar el borrador? Todos los visitantes verán el menú nuevo.",
+          "discard": "¿Descartar el borrador? Se pierden los cambios sin publicar.",
+          "restore": "¿Sustituir el borrador por el menú predeterminado de las aplicaciones? Tus elementos propios salen del borrador."
+        },
+        "tree": "Elementos del menú",
+        "add": "Añadir elemento",
+        "dragHint": "Arrastra para ordenar. Arrastra a la derecha para poner un elemento bajo el de arriba, a la izquierda para devolverlo al primer nivel.",
+        "panel": "Editar elemento",
+        "pick": "Elige un elemento para editarlo.",
+        "editTitle": "Editar elemento",
+        "close": "Cerrar",
+        "separator": "Separador",
+        "untitled": "Sin título",
+        "newItem": "Elemento nuevo",
+        "drag": "Mover {name}",
+        "active": "{name} está activo",
+        "more": "Más acciones para {name}",
+        "kinds": {
+          "link": "Enlace propio",
+          "app": "Página de una aplicación",
+          "dropdown": "Grupo desplegable",
+          "separator": "Separador"
+        },
+        "kind": "Tipo de elemento",
+        "appPage": "Página de la aplicación",
+        "appPick": "Elige una página…",
+        "languages": "Idiomas",
+        "labelIn": "Etiqueta ({lang})",
+        "descriptionIn": "Descripción del megamenú ({lang})",
+        "hrefOptional": "Enlace (opcional para un grupo)",
+        "badgeTitle": "Insignia y resaltado",
+        "badgeText": "Insignia fija",
+        "counter": "Contador en vivo",
+        "noCounter": "Sin contador",
+        "counters": {
+          "online": "En línea ahora",
+          "topics_today": "Temas nuevos hoy",
+          "members_today": "Miembros nuevos hoy"
+        },
+        "highlight": "Resaltado",
+        "highlights": {
+          "none": "Ninguno",
+          "accent": "Color de acento",
+          "glow": "Brillo"
+        },
+        "visibility": "Visibilidad",
+        "audience": "Quién lo ve",
+        "audiences": {
+          "all": "Todos",
+          "guests": "Solo invitados",
+          "members": "Solo miembros"
+        },
+        "actions": {
+          "edit": "Editar",
+          "child": "Añadir subelemento",
+          "separator": "Añadir separador",
+          "up": "Subir",
+          "down": "Bajar",
+          "indent": "Poner bajo el elemento de arriba",
+          "outdent": "Mover al primer nivel",
+          "duplicate": "Duplicar",
+          "remove": "Eliminar"
+        },
+        "preview": "Vista previa en vivo",
+        "device": "Dispositivo",
+        "devices": {
+          "desktop": "Escritorio",
+          "mobile": "Móvil"
+        },
+        "reload": "Recargar la vista previa",
+        "previewHint": "La vista previa muestra la cabecera real del sitio con el borrador; solo tú la ves hasta que publiques."
+      }
     },
     "languages": {
       "title": "Idiomas activos",

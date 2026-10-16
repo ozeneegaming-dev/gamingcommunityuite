@@ -4,6 +4,7 @@ import { clientIp } from "./lib/actor";
 import { getAuth } from "./lib/auth";
 import { gcsConfigDir } from "./lib/config";
 import { isMaintenanceExempt } from "./lib/maintenance";
+import { NAV_PREVIEW_COOKIE, NAV_PREVIEW_HEADER, NAV_PREVIEW_PARAM, navPreviewFor } from "./lib/nav-preview";
 import { isRootAdmin, SAFE_MODE_COOKIE, SAFE_MODE_PARAM } from "./lib/plugins";
 import { services } from "./lib/services";
 import { previewKeyFor, SITE_AREA_HEADER, SITE_PATH_HEADER, siteAreaFor, THEME_PREVIEW_COOKIE, THEME_PREVIEW_HEADER, THEME_PREVIEW_PARAM } from "./lib/theme-preview";
@@ -157,10 +158,18 @@ function withThemePreview(request: NextRequest, rewrite: URL | null = null): Nex
   const param = request.nextUrl.searchParams.get(THEME_PREVIEW_PARAM);
   const key = previewKeyFor(param, request.cookies.get(THEME_PREVIEW_COOKIE)?.value, request.headers.get("sec-fetch-dest"));
   if (key) headers.set(THEME_PREVIEW_HEADER, key);
+  // Manager meniu v2: previzualizarea ciornei meniului (același mecanism; header-ul venit din afară e șters).
+  headers.delete(NAV_PREVIEW_HEADER);
+  const navParam = request.nextUrl.searchParams.get(NAV_PREVIEW_PARAM);
+  const navPreview = navPreviewFor(navParam, request.cookies.get(NAV_PREVIEW_COOKIE)?.value, request.headers.get("sec-fetch-dest"));
+  if (navPreview) headers.set(NAV_PREVIEW_HEADER, "1");
   // Aplicația de pornire: `/` rescris intern spre pagina ei (cu aceleași headere ale cererii).
   const response = rewrite ? NextResponse.rewrite(rewrite, { request: { headers } }) : NextResponse.next({ request: { headers } });
   if (param !== null && key) {
     response.cookies.set(THEME_PREVIEW_COOKIE, key, { path: "/", httpOnly: true, sameSite: "strict", secure: process.env.NODE_ENV === "production" });
+  }
+  if (navParam !== null && navPreview) {
+    response.cookies.set(NAV_PREVIEW_COOKIE, "1", { path: "/", httpOnly: true, sameSite: "strict", secure: process.env.NODE_ENV === "production" });
   }
   return response;
 }

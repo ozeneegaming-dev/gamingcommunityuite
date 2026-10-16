@@ -950,11 +950,271 @@ th[aria-sort="descending"] .gcs-sortLink__icon {
   font-size: 13px;
 }
 
+/* ─── Manager meniu v2 ──────────────────────────────────────────────────────────────────────────── */
+
+/* Separatorul dintre subitemi (linkul `#gcs-separator`): o linie, în orice antet (clasic, Nova, sertarul de pe mobil). */
+a[href="#gcs-separator"] {
+  display: block;
+  height: 1px;
+  min-height: 0;
+  margin: 6px 10px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  background-color: var(--gcs-border);
+  background-image: none;
+  font-size: 0;
+  line-height: 0;
+  pointer-events: none;
+}
+a[href="#gcs-separator"] * {
+  display: none;
+}
+
+.gcs-menuMgr {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.gcs-menuMgr__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.gcs-menuMgr__state {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--gcs-border);
+  color: var(--gcs-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.gcs-menuMgr__state--draft {
+  border-color: color-mix(in srgb, var(--gcs-warn) 60%, transparent);
+  background-color: color-mix(in srgb, var(--gcs-warn) 14%, transparent);
+  color: var(--gcs-text);
+}
+.gcs-menuMgr__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 380px);
+  gap: 16px;
+  align-items: start;
+}
+.gcs-menuMgr__tree {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.gcs-menuMgr__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-menuMgr__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  border: 1px solid var(--gcs-border);
+  background-color: var(--gcs-surface);
+  transition:
+    background-color var(--gcs-motion-base) var(--gcs-motion-ease),
+    border-color var(--gcs-motion-base) var(--gcs-motion-ease);
+}
+.gcs-menuMgr__row:hover {
+  background-color: var(--gcs-surface2);
+}
+.gcs-menuMgr__row--selected {
+  border-color: var(--gcs-accent);
+  background-color: color-mix(in srgb, var(--gcs-accent) 8%, var(--gcs-surface));
+}
+.gcs-menuMgr__row--dragging {
+  opacity: 0.7;
+  z-index: 2;
+}
+.gcs-menuMgr__row--off .gcs-menuMgr__name {
+  color: var(--gcs-muted);
+  text-decoration: line-through;
+}
+.gcs-menuMgr__row--sep .gcs-menuMgr__name {
+  color: var(--gcs-muted);
+  font-style: italic;
+}
+.gcs-menuMgr__grip {
+  cursor: grab;
+  touch-action: none;
+}
+.gcs-menuMgr__label {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: 34px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background-color: transparent;
+  color: var(--gcs-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.gcs-menuMgr__label:hover {
+  background-color: color-mix(in srgb, var(--gcs-text) 3%, transparent);
+}
+.gcs-menuMgr__name {
+  font-weight: 700;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.gcs-menuMgr__kind,
+.gcs-menuMgr__badge {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  border: 1px solid var(--gcs-border);
+  color: var(--gcs-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.gcs-menuMgr__badge {
+  border-color: color-mix(in srgb, var(--gcs-accent) 55%, transparent);
+  background-color: color-mix(in srgb, var(--gcs-accent) 14%, transparent);
+  color: var(--gcs-text);
+}
+.gcs-menuMgr__switch {
+  display: inline-flex;
+  align-items: center;
+}
+.gcs-menuMgr__hint {
+  margin: 0;
+  color: var(--gcs-muted);
+  font-size: 12px;
+}
+.gcs-menuMgr__panel {
+  position: sticky;
+  top: 16px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--gcs-border);
+  background-color: var(--gcs-surface);
+  min-width: 0;
+}
+.gcs-menuMgr__editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: gcs-md-fade var(--gcs-motion-slow) var(--gcs-motion-ease) both;
+}
+.gcs-menuMgr__editorHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.gcs-menuMgr__fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  min-width: 0;
+}
+.gcs-menuMgr__fieldset > legend {
+  padding: 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.gcs-menuMgr__langs {
+  padding: 0;
+  border-top: 0;
+  border-bottom: 1px solid var(--gcs-border);
+  overflow-x: auto;
+  flex-wrap: nowrap;
+}
+.gcs-menuMgr__langs .gcs-tab {
+  min-height: 34px;
+  padding: 0 10px;
+  border-top: 0;
+  border-left: 0;
+  border-right: 0;
+  background-color: transparent;
+  cursor: pointer;
+  font: 700 12px var(--gcs-font-text);
+}
+.gcs-menuMgr__langs .gcs-tab:not(.gcs-tab--active):hover {
+  background-color: color-mix(in srgb, var(--gcs-text) 5%, transparent);
+}
+.gcs-menuMgr__row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.gcs-menuMgr__groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+}
+.gcs-menuMgr__preview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gcs-menuMgr__previewBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.gcs-menuMgr__frameWrap {
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--gcs-border);
+  background-color: var(--gcs-bg);
+  transition: max-width var(--gcs-motion-slow) var(--gcs-motion-ease);
+}
+.gcs-menuMgr__frameWrap--desktop {
+  max-width: 100%;
+}
+.gcs-menuMgr__frameWrap--mobile {
+  max-width: 390px;
+  margin: 0 auto;
+  width: 100%;
+}
+.gcs-menuMgr__frame {
+  display: block;
+  width: 100%;
+  height: 460px;
+  border: 0;
+}
+
 /* ─── Ecrane mici ───────────────────────────────────────────────────────────────────────────────── */
 
 @media (max-width: 900px) {
-  .gcs-memberHead {
+  .gcs-memberHead,
+  .gcs-menuMgr__layout {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .gcs-menuMgr__panel {
+    position: static;
   }
   .gcs-staffSection--detailed .gcs-staffSection__grid {
     grid-template-columns: minmax(0, 1fr);

@@ -335,7 +335,8 @@
       "username_taken": "Dieser Name ist bereits vergeben.",
       "email_taken": "Diese E-Mail wird bereits von einem anderen Konto verwendet.",
       "email_invalid": "Die E-Mail-Adresse ist ungültig.",
-      "group_unknown": "Unbekannte Gruppe."
+      "group_unknown": "Unbekannte Gruppe.",
+      "separator_top": "Ein Trenner kann nur zwischen Unterpunkten stehen."
     }
   },
   "acp": {
@@ -1791,7 +1792,91 @@
       "description": "Beschreibung",
       "descriptionHint": "Eine Zeile unter dem Titel im Mega-Menü (Nova-Design). Leer = die Standardbeschreibung automatischer Einträge.",
       "badge": "Abzeichen",
-      "badgeHint": "z. B. NEU"
+      "badgeHint": "z. B. NEU",
+      "v2": {
+        "saving": "Wird gespeichert…",
+        "stateDraft": "Unveröffentlichter Entwurf",
+        "statePublished": "Veröffentlicht",
+        "draftSaved": "Entwurf gespeichert",
+        "publish": "Veröffentlichen",
+        "discard": "Verwerfen",
+        "restore": "Standard wiederherstellen",
+        "published": "Das Menü wurde veröffentlicht.",
+        "discarded": "Der Entwurf wurde verworfen.",
+        "restored": "Das Standardmenü ist jetzt der Entwurf. Prüfe die Vorschau und veröffentliche dann.",
+        "confirm": {
+          "publish": "Entwurf veröffentlichen? Alle Besucher sehen das neue Menü.",
+          "discard": "Entwurf verwerfen? Deine unveröffentlichten Änderungen gehen verloren.",
+          "restore": "Den Entwurf durch das Standardmenü der Apps ersetzen? Deine eigenen Einträge fallen aus dem Entwurf."
+        },
+        "tree": "Menüeinträge",
+        "add": "Eintrag hinzufügen",
+        "dragHint": "Ziehen zum Sortieren. Nach rechts ziehen, um einen Eintrag unter den darüber zu setzen, nach links, um ihn zurück auf die erste Ebene zu holen.",
+        "panel": "Eintrag bearbeiten",
+        "pick": "Wähle einen Eintrag zum Bearbeiten.",
+        "editTitle": "Eintrag bearbeiten",
+        "close": "Schließen",
+        "separator": "Trenner",
+        "untitled": "Ohne Titel",
+        "newItem": "Neuer Eintrag",
+        "drag": "{name} verschieben",
+        "active": "{name} ist aktiv",
+        "more": "Weitere Aktionen für {name}",
+        "kinds": {
+          "link": "Eigener Link",
+          "app": "App-Seite",
+          "dropdown": "Dropdown-Gruppe",
+          "separator": "Trenner"
+        },
+        "kind": "Art des Eintrags",
+        "appPage": "App-Seite",
+        "appPick": "Seite wählen…",
+        "languages": "Sprachen",
+        "labelIn": "Bezeichnung ({lang})",
+        "descriptionIn": "Beschreibung im Mega-Menü ({lang})",
+        "hrefOptional": "Link (optional für eine Gruppe)",
+        "badgeTitle": "Abzeichen und Hervorhebung",
+        "badgeText": "Festes Abzeichen",
+        "counter": "Live-Zähler",
+        "noCounter": "Kein Zähler",
+        "counters": {
+          "online": "Gerade online",
+          "topics_today": "Neue Themen heute",
+          "members_today": "Neue Mitglieder heute"
+        },
+        "highlight": "Hervorhebung",
+        "highlights": {
+          "none": "Keine",
+          "accent": "Akzentfarbe",
+          "glow": "Leuchten"
+        },
+        "visibility": "Sichtbarkeit",
+        "audience": "Wer sieht es",
+        "audiences": {
+          "all": "Alle",
+          "guests": "Nur Gäste",
+          "members": "Nur Mitglieder"
+        },
+        "actions": {
+          "edit": "Bearbeiten",
+          "child": "Unterpunkt hinzufügen",
+          "separator": "Trenner hinzufügen",
+          "up": "Nach oben",
+          "down": "Nach unten",
+          "indent": "Unter den Eintrag darüber setzen",
+          "outdent": "Auf die erste Ebene",
+          "duplicate": "Duplizieren",
+          "remove": "Löschen"
+        },
+        "preview": "Live-Vorschau",
+        "device": "Gerät",
+        "devices": {
+          "desktop": "Desktop",
+          "mobile": "Mobil"
+        },
+        "reload": "Vorschau neu laden",
+        "previewHint": "Die Vorschau zeigt den echten Kopfbereich der Seite mit dem Entwurf; nur du siehst ihn, bis du veröffentlichst."
+      }
     },
     "languages": {
       "title": "Aktive Sprachen",

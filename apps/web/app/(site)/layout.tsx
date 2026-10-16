@@ -11,6 +11,8 @@ import { GcsSiteFooter } from "./_components/GcsSiteFooter";
 import { GcsSiteHeader } from "./_components/GcsSiteHeader";
 import { GcsWhereBeacon } from "./_components/GcsWhereBeacon";
 import { passwordResetGate } from "@/lib/password-reset-gate";
+import { registerNavHooks } from "@/lib/nav-preview.server";
+import { GcsNavHighlights } from "./_components/GcsNavHighlights";
 import { GcsNotificationToasts } from "./_components/notifications/GcsNotificationToasts";
 import { GcsRealtimeProvider } from "./_components/realtime/GcsRealtimeProvider";
 import { currentActor } from "@/lib/actor";
@@ -23,6 +25,8 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
   const [t, locale, actor] = await Promise.all([getTranslations("hoverCard"), getLocale(), currentActor()]);
   // Membri v2: resetarea parolei cerută de staff trimite membrul la Setări → Cont până o schimbă.
   await passwordResetGate(actor.userId);
+  // Manager meniu v2: previzualizarea ciornei și contoarele insignelor, legate de serviciul meniului înaintea antetului.
+  registerNavHooks();
   // Conturile create prin Steam au un email placeholder: le cerem unul real (specul etapei 3, §8).
   const email = actor.userId ? (await services().db.user.findUnique({ where: { id: actor.userId }, select: { email: true } }))?.email : null;
   const [tb, alerts, tc, tp, safeMode, { preview, shown }, deletion, format, tv] = await Promise.all([
@@ -49,6 +53,7 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
         <GcsNavProgress />
       </Suspense>
       <GcsSiteHeader />
+      <GcsNavHighlights actor={actor} locale={locale} />
       {/* Consola Hero Cockpit (designul Nova, pornită din temă): sub antet, pe pagina principală sau pe toate. */}
       <Suspense fallback={null}>
         <GcsCockpitSlot />

@@ -335,7 +335,8 @@
       "username_taken": "Ce nom est déjà pris.",
       "email_taken": "Cet e-mail est déjà utilisé par un autre compte.",
       "email_invalid": "L'adresse e-mail n'est pas valide.",
-      "group_unknown": "Groupe inconnu."
+      "group_unknown": "Groupe inconnu.",
+      "separator_top": "Un séparateur ne peut se trouver qu'entre des sous-éléments."
     }
   },
   "acp": {
@@ -1791,7 +1792,91 @@
       "description": "Description",
       "descriptionHint": "Une ligne sous le titre dans le méga-menu (design Nova). Vide = la description par défaut des éléments automatiques.",
       "badge": "Badge",
-      "badgeHint": "ex. NOUVEAU"
+      "badgeHint": "ex. NOUVEAU",
+      "v2": {
+        "saving": "Enregistrement…",
+        "stateDraft": "Brouillon non publié",
+        "statePublished": "Publié",
+        "draftSaved": "Brouillon enregistré",
+        "publish": "Publier",
+        "discard": "Abandonner",
+        "restore": "Restaurer par défaut",
+        "published": "Le menu a été publié.",
+        "discarded": "Le brouillon a été abandonné.",
+        "restored": "Le menu par défaut est maintenant le brouillon. Vérifie l'aperçu, puis publie.",
+        "confirm": {
+          "publish": "Publier le brouillon ? Tous les visiteurs verront le nouveau menu.",
+          "discard": "Abandonner le brouillon ? Les modifications non publiées sont perdues.",
+          "restore": "Remplacer le brouillon par le menu par défaut des applications ? Tes propres éléments sortent du brouillon."
+        },
+        "tree": "Éléments du menu",
+        "add": "Ajouter un élément",
+        "dragHint": "Glisse pour réordonner. Glisse vers la droite pour placer un élément sous celui du dessus, vers la gauche pour le remettre au premier niveau.",
+        "panel": "Modifier l'élément",
+        "pick": "Choisis un élément pour le modifier.",
+        "editTitle": "Modifier l'élément",
+        "close": "Fermer",
+        "separator": "Séparateur",
+        "untitled": "Sans titre",
+        "newItem": "Nouvel élément",
+        "drag": "Déplacer {name}",
+        "active": "{name} est actif",
+        "more": "Plus d'actions pour {name}",
+        "kinds": {
+          "link": "Lien personnalisé",
+          "app": "Page d'une application",
+          "dropdown": "Groupe déroulant",
+          "separator": "Séparateur"
+        },
+        "kind": "Type d'élément",
+        "appPage": "Page de l'application",
+        "appPick": "Choisis une page…",
+        "languages": "Langues",
+        "labelIn": "Libellé ({lang})",
+        "descriptionIn": "Description du méga-menu ({lang})",
+        "hrefOptional": "Lien (facultatif pour un groupe)",
+        "badgeTitle": "Badge et mise en avant",
+        "badgeText": "Badge fixe",
+        "counter": "Compteur en direct",
+        "noCounter": "Aucun compteur",
+        "counters": {
+          "online": "En ligne maintenant",
+          "topics_today": "Nouveaux sujets aujourd'hui",
+          "members_today": "Nouveaux membres aujourd'hui"
+        },
+        "highlight": "Mise en avant",
+        "highlights": {
+          "none": "Aucune",
+          "accent": "Couleur d'accent",
+          "glow": "Lueur"
+        },
+        "visibility": "Visibilité",
+        "audience": "Qui le voit",
+        "audiences": {
+          "all": "Tout le monde",
+          "guests": "Invités uniquement",
+          "members": "Membres uniquement"
+        },
+        "actions": {
+          "edit": "Modifier",
+          "child": "Ajouter un sous-élément",
+          "separator": "Ajouter un séparateur",
+          "up": "Monter",
+          "down": "Descendre",
+          "indent": "Placer sous l'élément du dessus",
+          "outdent": "Remettre au premier niveau",
+          "duplicate": "Dupliquer",
+          "remove": "Supprimer"
+        },
+        "preview": "Aperçu en direct",
+        "device": "Appareil",
+        "devices": {
+          "desktop": "Ordinateur",
+          "mobile": "Mobile"
+        },
+        "reload": "Recharger l'aperçu",
+        "previewHint": "L'aperçu montre le vrai en-tête du site avec le brouillon ; toi seul le vois jusqu'à la publication."
+      }
     },
     "languages": {
       "title": "Langues actives",

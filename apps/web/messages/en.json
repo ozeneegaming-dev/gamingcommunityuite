@@ -335,7 +335,8 @@
       "username_taken": "This name is already taken.",
       "email_taken": "This email is already used by another account.",
       "email_invalid": "The email address is not valid.",
-      "group_unknown": "Unknown group."
+      "group_unknown": "Unknown group.",
+      "separator_top": "A separator can only sit between sub-items."
     }
   },
   "acp": {
@@ -1791,7 +1792,91 @@
       "description": "Description",
       "descriptionHint": "One line under the title in the mega menu (Nova design). Empty = the default description of automatic items.",
       "badge": "Badge",
-      "badgeHint": "e.g. NEW"
+      "badgeHint": "e.g. NEW",
+      "v2": {
+        "saving": "Saving…",
+        "stateDraft": "Unpublished draft",
+        "statePublished": "Published",
+        "draftSaved": "Draft saved",
+        "publish": "Publish",
+        "discard": "Discard",
+        "restore": "Restore default",
+        "published": "The menu has been published.",
+        "discarded": "The draft has been discarded.",
+        "restored": "The default menu is now the draft. Check the preview, then publish.",
+        "confirm": {
+          "publish": "Publish the draft? Every visitor will see the new menu.",
+          "discard": "Discard the draft? Your unpublished changes are lost.",
+          "restore": "Replace the draft with the default menu of the apps? Your own items are dropped from the draft."
+        },
+        "tree": "Menu items",
+        "add": "Add item",
+        "dragHint": "Drag to reorder. Drag right to place an item under the one above it, left to move it back to the first level.",
+        "panel": "Edit item",
+        "pick": "Select an item to edit it.",
+        "editTitle": "Edit item",
+        "close": "Close",
+        "separator": "Separator",
+        "untitled": "Untitled",
+        "newItem": "New item",
+        "drag": "Drag {name}",
+        "active": "{name} is active",
+        "more": "More actions for {name}",
+        "kinds": {
+          "link": "Custom link",
+          "app": "App page",
+          "dropdown": "Dropdown group",
+          "separator": "Separator"
+        },
+        "kind": "Item type",
+        "appPage": "App page",
+        "appPick": "Choose a page…",
+        "languages": "Languages",
+        "labelIn": "Label ({lang})",
+        "descriptionIn": "Mega-menu description ({lang})",
+        "hrefOptional": "Link (optional for a group)",
+        "badgeTitle": "Badge and highlight",
+        "badgeText": "Fixed badge",
+        "counter": "Live counter",
+        "noCounter": "No counter",
+        "counters": {
+          "online": "Online now",
+          "topics_today": "New topics today",
+          "members_today": "New members today"
+        },
+        "highlight": "Highlight",
+        "highlights": {
+          "none": "None",
+          "accent": "Accent colour",
+          "glow": "Glow"
+        },
+        "visibility": "Visibility",
+        "audience": "Who sees it",
+        "audiences": {
+          "all": "Everyone",
+          "guests": "Guests only",
+          "members": "Members only"
+        },
+        "actions": {
+          "edit": "Edit",
+          "child": "Add sub-item",
+          "separator": "Add separator",
+          "up": "Move up",
+          "down": "Move down",
+          "indent": "Place under the item above",
+          "outdent": "Move to the first level",
+          "duplicate": "Duplicate",
+          "remove": "Delete"
+        },
+        "preview": "Live preview",
+        "device": "Device",
+        "devices": {
+          "desktop": "Desktop",
+          "mobile": "Mobile"
+        },
+        "reload": "Reload the preview",
+        "previewHint": "The preview shows the site's real header with the draft; only you see it until you publish."
+      }
     },
     "languages": {
       "title": "Active languages",

@@ -335,7 +335,8 @@
       "username_taken": "Numele e deja folosit.",
       "email_taken": "Emailul e deja folosit de alt cont.",
       "email_invalid": "Adresa de email nu e validă.",
-      "group_unknown": "Grup necunoscut."
+      "group_unknown": "Grup necunoscut.",
+      "separator_top": "Un separator poate sta doar între subitemi."
     }
   },
   "acp": {
@@ -1791,7 +1792,91 @@
       "description": "Descriere",
       "descriptionHint": "Un rând sub titlu în mega meniu (designul Nova). Gol = descrierea implicită a itemilor automați.",
       "badge": "Insignă",
-      "badgeHint": "ex. NOU"
+      "badgeHint": "ex. NOU",
+      "v2": {
+        "saving": "Se salvează…",
+        "stateDraft": "Ciornă nepublicată",
+        "statePublished": "Publicat",
+        "draftSaved": "Ciornă salvată",
+        "publish": "Publică",
+        "discard": "Renunță",
+        "restore": "Restaurează implicit",
+        "published": "Meniul a fost publicat.",
+        "discarded": "Ciorna a fost ștearsă.",
+        "restored": "Meniul implicit e acum ciorna. Verifică previzualizarea, apoi publică.",
+        "confirm": {
+          "publish": "Publici ciorna? Toți vizitatorii vor vedea meniul nou.",
+          "discard": "Renunți la ciornă? Schimbările nepublicate se pierd.",
+          "restore": "Înlocuiești ciorna cu meniul implicit al aplicațiilor? Itemii tăi proprii dispar din ciornă."
+        },
+        "tree": "Itemii meniului",
+        "add": "Adaugă item",
+        "dragHint": "Trage ca să schimbi ordinea. Trage spre dreapta ca să pui un item sub cel de deasupra, spre stânga ca să-l scoți pe primul nivel.",
+        "panel": "Editează itemul",
+        "pick": "Alege un item ca să-l editezi.",
+        "editTitle": "Editează itemul",
+        "close": "Închide",
+        "separator": "Separator",
+        "untitled": "Fără titlu",
+        "newItem": "Item nou",
+        "drag": "Mută {name}",
+        "active": "{name} e activ",
+        "more": "Mai multe acțiuni pentru {name}",
+        "kinds": {
+          "link": "Link propriu",
+          "app": "Pagina unei aplicații",
+          "dropdown": "Grup (dropdown)",
+          "separator": "Separator"
+        },
+        "kind": "Tipul itemului",
+        "appPage": "Pagina aplicației",
+        "appPick": "Alege o pagină…",
+        "languages": "Limbi",
+        "labelIn": "Eticheta ({lang})",
+        "descriptionIn": "Descrierea din mega meniu ({lang})",
+        "hrefOptional": "Link (opțional pentru un grup)",
+        "badgeTitle": "Insignă și evidențiere",
+        "badgeText": "Insignă fixă",
+        "counter": "Contor live",
+        "noCounter": "Fără contor",
+        "counters": {
+          "online": "Online acum",
+          "topics_today": "Topicuri noi azi",
+          "members_today": "Membri noi azi"
+        },
+        "highlight": "Evidențiere",
+        "highlights": {
+          "none": "Fără",
+          "accent": "Culoarea de accent",
+          "glow": "Strălucire"
+        },
+        "visibility": "Vizibilitate",
+        "audience": "Cine îl vede",
+        "audiences": {
+          "all": "Toți",
+          "guests": "Doar vizitatorii",
+          "members": "Doar membrii"
+        },
+        "actions": {
+          "edit": "Editează",
+          "child": "Adaugă subitem",
+          "separator": "Adaugă separator",
+          "up": "Mută mai sus",
+          "down": "Mută mai jos",
+          "indent": "Pune sub itemul de deasupra",
+          "outdent": "Mută pe primul nivel",
+          "duplicate": "Duplică",
+          "remove": "Șterge"
+        },
+        "preview": "Previzualizare live",
+        "device": "Dispozitiv",
+        "devices": {
+          "desktop": "Desktop",
+          "mobile": "Mobil"
+        },
+        "reload": "Reîncarcă previzualizarea",
+        "previewHint": "Previzualizarea arată antetul real al site-ului cu ciorna; doar tu o vezi până publici."
+      }
     },
     "languages": {
       "title": "Limbile active",
