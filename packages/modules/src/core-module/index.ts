@@ -361,6 +361,8 @@ export const coreModule: GcsModule = {
     { key: "core.warning", labelKey: "notifications.type.core.warning", important: true, defaultEmail: "INSTANT" },
     // Mențiuni v2: un membru a menționat un grup din care faci parte (postare sau mesaj privat).
     { key: "core.group_mention", labelKey: "notifications.type.core.group_mention", important: false, defaultEmail: "DIGEST" },
+    // Membri v2: un grup secundar temporar a expirat (jobul `groups.secondary_expiry`).
+    { key: "core.group_expired", labelKey: "notifications.type.core.group_expired", important: false, defaultEmail: "INSTANT" },
   ],
   eventListeners: [],
   widgets: coreWidgets,

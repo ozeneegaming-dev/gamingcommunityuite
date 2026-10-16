@@ -65,7 +65,8 @@ export class GcsActorResolver {
     if (ipBanned) return this.guest(req.ip, true, now);
 
     if (!user.lastActiveAt || now.getTime() - user.lastActiveAt.getTime() > ACTIVITY_THROTTLE_MS) {
-      await db.user.update({ where: { id: user.id }, data: { lastActiveAt: now } });
+      // Membri v2: și ultimul IP văzut (coloana „IP” din lista ACP).
+      await db.user.update({ where: { id: user.id }, data: { lastActiveAt: now, lastIp: req.ip || null } });
     }
 
     await this.touchPresence({ userId: user.id }, now);

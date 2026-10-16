@@ -63,6 +63,8 @@ export const profileModule: GcsModule = {
     { key: "steam", labelKey: "profile.tabs.steam", icon: "fa-brands fa-steam", position: 30 },
     { key: "faceit", labelKey: "profile.tabs.faceit", icon: "fa-solid fa-trophy", position: 40 },
   ],
+  // Membri v2: conturile legate (Steam, Discord, Google) pe fișa membrului din ACP.
+  memberPanels: [{ key: "connections", labelKey: "acp.member.panels.connections", icon: "fa-solid fa-link", position: 100, kind: "card", surfaces: ["acp"] }],
   permissions,
   settings,
   acpMenu: [],

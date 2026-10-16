@@ -41,6 +41,7 @@
     "./member.css": "./src/member.css",
     "./system-ui.css": "./src/system-ui.css",
     "./header-menus.css": "./src/header-menus.css",
+    "./members.css": "./src/members.css",
     "./nova.css": "./src/nova.css",
     "./sweep.css": "./src/sweep.css",
     "./icons": "./src/icons/index.tsx",

@@ -125,6 +125,14 @@ export function forumMemberData(posting: GcsForumPosting): GcsMemberDataHandler 
         { key: "forums.pollVotes", count: votes },
       ];
     },
+    /** GDPR (Membri v2): topicurile și postările membrului (textul afișat, fără IP-urile altora). */
+    async export(userId) {
+      const [topics, posts] = await Promise.all([
+        db.topic.findMany({ where: { authorId: userId }, orderBy: { id: "asc" }, select: { id: true, title: true, forumId: true, createdAt: true } }),
+        db.post.findMany({ where: { authorId: userId }, orderBy: { id: "asc" }, select: { id: true, topicId: true, createdAt: true, contentHtml: true, ip: true } }),
+      ]);
+      return { topics, posts };
+    },
     async deleteNotes(userId) {
       // Răspunsurile altor membri din topicurile lui: se șterg doar în modul „Șterge și conținutul”.
       const replies = await db.post.count({ where: { topic: { authorId: userId }, OR: [{ authorId: null }, { authorId: { not: userId } }] } });

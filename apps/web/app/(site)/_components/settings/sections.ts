@@ -17,6 +17,8 @@ export const SETTINGS_SECTIONS = [
   ["apps", "fa-solid fa-plug-circle-check"],
   ["chat", "fa-solid fa-comments"],
   ["privacy", "fa-solid fa-user-shield"],
+  // Membri v2: grupurile publice (opt-in).
+  ["groups", "fa-solid fa-people-group"],
   ["notifications", "fa-solid fa-bell"],
   ["appearance", "fa-solid fa-palette"],
   ["language", "fa-solid fa-language"],

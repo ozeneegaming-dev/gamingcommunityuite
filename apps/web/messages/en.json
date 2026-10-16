@@ -194,7 +194,15 @@
       "chat_banned": "You are banned from chat.",
       "chat_kicked": "You were kicked from chat for a while.",
       "system_line": "System lines can't be edited.",
-      "right_not_held": "You can't give a right you don't have."
+      "right_not_held": "You can't give a right you don't have.",
+      "no_password": "This account has no password (it signs in with Steam, Discord or Google).",
+      "root_only": "Only a Root Admin can do this.",
+      "assigned_group": "This group was given by the team or by an app; you cannot leave it from here.",
+      "not_opt_in": "This group is not open for joining.",
+      "already_member": "You are already in this group.",
+      "already_primary": "This is already your primary group.",
+      "members_only": "Sign in first.",
+      "self": "You cannot do this to your own account."
     },
     "fields": {
       "invalid_color": "Invalid color (#RRGGBB)",
@@ -320,7 +328,16 @@
       "room_not_found": "That room doesn't exist.",
       "invalid_handle": "Type only the username (letters, digits, dot, dash, underscore).",
       "invalid_link_template": "The template must be an https address with '{handle}' exactly once, on “Text” fields only.",
-      "same_theme": "Pick two different themes."
+      "same_theme": "Pick two different themes.",
+      "csv_header": "The CSV file needs the columns name, email and password.",
+      "group_staff": "A staff group cannot be public.",
+      "group_vip": "A VIP group cannot be public.",
+      "group_protected": "This group cannot be public.",
+      "username_taken": "This name is already taken.",
+      "email_taken": "This email is already used by another account.",
+      "email_invalid": "The email address is not valid.",
+      "group_unknown": "Unknown group.",
+      "separator_top": "A separator can only sit between sub-items."
     }
   },
   "acp": {
@@ -684,14 +701,129 @@
         "email": "Email",
         "group": "Primary group",
         "joined": "Joined",
-        "lastActive": "Last active"
+        "lastActive": "Last active",
+        "ip": "IP",
+        "posts": "Posts"
       },
       "empty": "No members found",
       "total": "{count, plural, one {# member} other {# members}}",
       "prev": "Previous page",
       "next": "Next page",
       "page": "Page {page} of {pages}",
-      "never": "never"
+      "never": "never",
+      "description": "Search, filter and manage every account: groups, validation, bans and exports.",
+      "reset": "Reset",
+      "pages": "Pages",
+      "secondaryCount": "{count, plural, one {# secondary group} other {# secondary groups}}",
+      "quick": {
+        "label": "Quick filters",
+        "all": "All",
+        "online": "Online",
+        "new": "New",
+        "unvalidated": "Unvalidated",
+        "banned": "Banned",
+        "spammers": "Spammers",
+        "staff": "Staff"
+      },
+      "advanced": {
+        "title": "Advanced search",
+        "scope": "Group as",
+        "scopeAny": "Primary or secondary",
+        "scopePrimary": "Primary",
+        "scopeSecondary": "Secondary",
+        "ip": "IP address",
+        "login": "Sign-in method",
+        "any": "Any",
+        "logins": {
+          "credential": "Password",
+          "steam": "Steam",
+          "discord": "Discord",
+          "google": "Google"
+        },
+        "twoFactor": "Two-factor (2FA)",
+        "tfaOn": "Enabled",
+        "tfaOff": "Disabled",
+        "country": "Country (2 letters)",
+        "joined": "Joined",
+        "joinedFrom": "Joined from",
+        "joinedTo": "Joined until",
+        "active": "Last visit",
+        "activeFrom": "Last visit from",
+        "activeTo": "Last visit until",
+        "posts": "Posts",
+        "postsMin": "Posts, at least",
+        "postsMax": "Posts, at most",
+        "min": "min",
+        "max": "max"
+      },
+      "status": {
+        "banned": "banned",
+        "spammer": "spammer",
+        "unvalidated": "unvalidated"
+      },
+      "bulk": {
+        "title": "Bulk actions",
+        "selected": "{count, plural, =0 {None selected} one {# selected} other {# selected}}",
+        "scope": "Apply to",
+        "scopeSelected": "Selected members",
+        "scopeFiltered": "All filtered ({count})",
+        "action": "Action",
+        "ops": {
+          "add_secondary": "Add secondary group",
+          "remove_secondary": "Remove secondary group",
+          "set_primary": "Move to primary group",
+          "validate": "Validate",
+          "ban": "Ban",
+          "delete": "Delete accounts"
+        },
+        "group": "Group",
+        "expiresAt": "Expires on (empty = never)",
+        "reason": "Reason",
+        "duration": "Duration",
+        "durations": {
+          "permanent": "Permanent",
+          "d1": "1 day",
+          "d7": "7 days",
+          "d30": "30 days"
+        },
+        "mode": "Content",
+        "modes": {
+          "keep": "Keep content (as Deleted member)",
+          "delete": "Delete content too"
+        },
+        "apply": "Apply",
+        "none": "Select at least one member.",
+        "done": "Done: {changed} changed, {skipped} skipped.",
+        "confirm": "„{action}” for {count, plural, one {# member} other {# members}}?",
+        "confirmDelete": "Delete {count, plural, one {# account} other {# accounts}}? Each deletion starts the account removal (with progress in the GDPR page).",
+        "confirmOk": "Confirm ({count})",
+        "selectAll": "Select all on this page",
+        "select": "Select {name}"
+      },
+      "tools": {
+        "create": {
+          "open": "New member",
+          "title": "New member",
+          "name": "Name",
+          "email": "Email",
+          "password": "Password (at least 8 characters)",
+          "group": "Primary group",
+          "submit": "Create member"
+        },
+        "import": {
+          "open": "Import CSV",
+          "title": "Import members from CSV",
+          "hint": "One member per row; the first row is the header. The group column is optional (group key or name, default Member).",
+          "file": "CSV file",
+          "noFile": "Choose a CSV file.",
+          "submit": "Import",
+          "created": "{count, plural, one {# member created} other {# members created}}",
+          "lineError": "Line {line}: {code}"
+        },
+        "export": "Export CSV",
+        "close": "Close",
+        "cancel": "Cancel"
+      }
     },
     "member": {
       "back": "Back to members",
@@ -712,7 +844,23 @@
         "add": "Add secondary group",
         "addSubmit": "Add",
         "remove": "Remove {group}",
-        "save": "Save primary group"
+        "save": "Save primary group",
+        "expires": "expires on {date}",
+        "noExpiry": "no expiry",
+        "sources": {
+          "manual": "manual",
+          "store": "from the Store",
+          "servers": "from the Servers app",
+          "promotion": "promotion",
+          "optin": "joined by the member",
+          "vip": "VIP",
+          "import": "imported",
+          "other": "from an app"
+        },
+        "extend": "Set expiry",
+        "expiresAt": "Expiry of {group}",
+        "expiresAtLabel": "Expires on",
+        "expiryHint": "Empty = no expiry. A temporary group is removed automatically and the member is notified."
       },
       "ban": {
         "title": "Ban",
@@ -771,6 +919,130 @@
         "amount": "Amount",
         "currency": "Currency",
         "note": "Note"
+      },
+      "tabs": {
+        "label": "Member sections",
+        "overview": "Overview",
+        "profile": "Profile",
+        "activity": "Activity",
+        "permissions": "Permissions",
+        "log": "Log"
+      },
+      "identity": {
+        "title": "Identity",
+        "banned": "Banned",
+        "spammer": "Spammer",
+        "validated": "Validated",
+        "unvalidated": "Unvalidated",
+        "locked": "2FA locked",
+        "passwordReset": "Password reset requested",
+        "posts": "Posts",
+        "ip": "Last IP",
+        "logins": "Sign-in methods",
+        "loginMethods": {
+          "credential": "Password",
+          "steam": "Steam",
+          "discord": "Discord",
+          "google": "Google",
+          "other": "Other"
+        }
+      },
+      "actions": {
+        "title": "Account actions",
+        "validate": "Validate",
+        "validateConfirm": "Mark the email as confirmed by the team?",
+        "spammer": "Flag as spammer",
+        "spammerConfirm": "Flag this member as a spammer? The account is also banned permanently.",
+        "unspammer": "Not a spammer",
+        "unspammerConfirm": "Remove the spammer flag? The ban stays until you lift it.",
+        "unlock": "Unlock 2FA",
+        "unlockConfirm": "Clear the wrong-code lock of the two-factor sign-in?",
+        "resetPassword": "Force password reset",
+        "resetPasswordConfirm": "Sign the member out everywhere and require a new password at the next visit?",
+        "disable2fa": "Disable 2FA",
+        "disable2faConfirm": "Disable two-factor sign-in for this member? Use it only when they lost access to their authenticator.",
+        "ban": "Ban",
+        "gdpr": "GDPR export",
+        "hint": "Every action goes into the log. Merge and delete open their own confirmation pages."
+      },
+      "cards": {
+        "activity": "Activity (30 days)",
+        "activityDay": "{day}: {posts} posts, {chat} chat messages",
+        "activityPosts": "{count, plural, one {# post} other {# posts}}",
+        "activityChat": "{count, plural, one {# chat message} other {# chat messages}}",
+        "content": "Content per app",
+        "contentEmpty": "No content yet.",
+        "rank": "Rank and points",
+        "rankName": "Rank",
+        "points": "Points",
+        "reputation": "Reputation",
+        "posts": "Posts",
+        "badges": "Badges",
+        "badgesEmpty": "No badges yet.",
+        "manage": "Manage",
+        "vip": "VIP",
+        "vipUntil": "until {date}",
+        "vipPermanent": "permanent",
+        "vipNone": "No active VIP.",
+        "quotas": "Quotas",
+        "quota": {
+          "conversations": "Private conversations",
+          "storage": "Uploaded files",
+          "upload": "Max file size",
+          "signature": "Signature length"
+        },
+        "unlimited": "unlimited",
+        "unit": {
+          "count": "{value}",
+          "mb": "{value} MB",
+          "chars": "{value} characters"
+        },
+        "warnPoints": "{count, plural, one {# active warning point} other {# active warning points}}"
+      },
+      "activity": {
+        "chart": "Activity (90 days)",
+        "posts": "Latest posts",
+        "devices": "Devices",
+        "none": "Nothing yet."
+      },
+      "log": {
+        "title": "Account log",
+        "empty": "No entries yet.",
+        "self": "by the member",
+        "by": "by {name}",
+        "system": "by the system",
+        "all": "Open the full log"
+      },
+      "panels": {
+        "connections": "Linked accounts",
+        "game_identities": "Game identities",
+        "mix_elo": "Mix ELO",
+        "server_sanctions": "Server sanctions",
+        "clan_membership": "Clan",
+        "empty": "Nothing to show.",
+        "providers": {
+          "steam": "Steam",
+          "discord": "Discord",
+          "google": "Google",
+          "other": "Other"
+        },
+        "linkedOn": "linked on {date}",
+        "lastSeen": "last seen on {date}",
+        "elo": {
+          "elo": "ELO",
+          "peak": "Peak",
+          "record": "W–L–D",
+          "matches": "Matches"
+        },
+        "allServers": "All servers",
+        "until": "until {date}",
+        "permanent": "permanent",
+        "joinedOn": "joined on {date}",
+        "clanRoles": {
+          "LEADER": "Leader",
+          "OFFICER": "Officer",
+          "MEMBER": "Member"
+        }
       }
     },
     "groups": {
@@ -870,6 +1142,12 @@
         "parentNone": "On its own row",
         "parentHint": "A linked group appears in the list that opens from the chosen group’s row (same category).",
         "save": "Save legend"
+      },
+      "optIn": {
+        "title": "Public group",
+        "label": "Members can join and leave this group by themselves",
+        "hint": "It appears in Settings → Groups as a secondary group. Not available for staff, VIP or protected groups.",
+        "save": "Save"
       }
     },
     "permissions": {
@@ -1524,7 +1802,91 @@
       "description": "Description",
       "descriptionHint": "One line under the title in the mega menu. Empty = the default description of automatic items.",
       "badge": "Badge",
-      "badgeHint": "e.g. NEW"
+      "badgeHint": "e.g. NEW",
+      "v2": {
+        "saving": "Saving…",
+        "stateDraft": "Unpublished draft",
+        "statePublished": "Published",
+        "draftSaved": "Draft saved",
+        "publish": "Publish",
+        "discard": "Discard",
+        "restore": "Restore default",
+        "published": "The menu has been published.",
+        "discarded": "The draft has been discarded.",
+        "restored": "The default menu is now the draft. Check the preview, then publish.",
+        "confirm": {
+          "publish": "Publish the draft? Every visitor will see the new menu.",
+          "discard": "Discard the draft? Your unpublished changes are lost.",
+          "restore": "Replace the draft with the default menu of the apps? Your own items are dropped from the draft."
+        },
+        "tree": "Menu items",
+        "add": "Add item",
+        "dragHint": "Drag to reorder. Drag right to place an item under the one above it, left to move it back to the first level.",
+        "panel": "Edit item",
+        "pick": "Select an item to edit it.",
+        "editTitle": "Edit item",
+        "close": "Close",
+        "separator": "Separator",
+        "untitled": "Untitled",
+        "newItem": "New item",
+        "drag": "Drag {name}",
+        "active": "{name} is active",
+        "more": "More actions for {name}",
+        "kinds": {
+          "link": "Custom link",
+          "app": "App page",
+          "dropdown": "Dropdown group",
+          "separator": "Separator"
+        },
+        "kind": "Item type",
+        "appPage": "App page",
+        "appPick": "Choose a page…",
+        "languages": "Languages",
+        "labelIn": "Label ({lang})",
+        "descriptionIn": "Mega-menu description ({lang})",
+        "hrefOptional": "Link (optional for a group)",
+        "badgeTitle": "Badge and highlight",
+        "badgeText": "Fixed badge",
+        "counter": "Live counter",
+        "noCounter": "No counter",
+        "counters": {
+          "online": "Online now",
+          "topics_today": "New topics today",
+          "members_today": "New members today"
+        },
+        "highlight": "Highlight",
+        "highlights": {
+          "none": "None",
+          "accent": "Accent colour",
+          "glow": "Glow"
+        },
+        "visibility": "Visibility",
+        "audience": "Who sees it",
+        "audiences": {
+          "all": "Everyone",
+          "guests": "Guests only",
+          "members": "Members only"
+        },
+        "actions": {
+          "edit": "Edit",
+          "child": "Add sub-item",
+          "separator": "Add separator",
+          "up": "Move up",
+          "down": "Move down",
+          "indent": "Place under the item above",
+          "outdent": "Move to the first level",
+          "duplicate": "Duplicate",
+          "remove": "Delete"
+        },
+        "preview": "Live preview",
+        "device": "Device",
+        "devices": {
+          "desktop": "Desktop",
+          "mobile": "Mobile"
+        },
+        "reload": "Reload the preview",
+        "previewHint": "The preview shows the site's real header with the draft; only you see it until you publish."
+      }
     },
     "languages": {
       "title": "Active languages",
@@ -2008,7 +2370,8 @@
           "vip_page": "On the public VIP page (/vip), below the plans.",
           "user_deleting": "An account starts being deleted (the plugin deletes the member's data).",
           "user_deleted": "An account was deleted.",
-          "user_merged": "An account was merged into another (the plugin moves its data to the target account)."
+          "user_merged": "An account was merged into another (the plugin moves its data to the target account).",
+          "member_panel": "Cards and tabs on the ACP member page and on profiles (declared in memberPanels)."
         }
       }
     },
@@ -3437,6 +3800,37 @@
       "saved": "Saved",
       "saveGrant": "Save access",
       "addGrant": "Add moderator"
+    },
+    "confirm": {
+      "cancel": "Cancel"
+    },
+    "staffPage": {
+      "title": "Staff page",
+      "description": "The order of the sections on /staff, their title band, the card layout and each member's description and duties.",
+      "view": "View /staff",
+      "sections": "Sections",
+      "sectionsHint": "Each staff group is a section. Drag to reorder; Detailed = large cards, 2 per row; Compact = small cards for lower tiers.",
+      "saved": "Saved",
+      "save": "Save sections",
+      "drag": "Drag {name}",
+      "titleLabel": "Title of {group}",
+      "layout": "Layout",
+      "layouts": {
+        "detailed": "Detailed",
+        "compact": "Compact"
+      },
+      "visible": "Show {group} on /staff",
+      "visibleShort": "Visible",
+      "members": "{count, plural, one {# member} other {# members}}",
+      "moveUp": "Move {name} up",
+      "moveDown": "Move {name} down",
+      "order": "Member order",
+      "dutiesCount": "{count, plural, one {# duty} other {# duties}}",
+      "noDuties": "no duties yet",
+      "saveMember": "Save",
+      "descriptionLabel": "Description",
+      "dutiesLabel": "Duties (one per line)",
+      "dutiesPlaceholder": "Reports\nServer bans\nEvents"
     }
   },
   "settings": {
@@ -3564,7 +3958,8 @@
       "discord": "Discord",
       "google": "Google",
       "apps": "Authorised apps",
-      "chat": "Chat"
+      "chat": "Chat",
+      "groups": "Groups"
     },
     "appearance": {
       "title": "Appearance",
@@ -3669,7 +4064,8 @@
         "requested": "Your request was recorded.",
         "banner": "Your account will be deleted on {date}.",
         "bannerLink": "Cancel deletion"
-      }
+      },
+      "passwordResetRequired": "The team asked you to change your password. Set a new one below to continue."
     },
     "notifications": {
       "title": "Notifications",
@@ -3972,6 +4368,19 @@
     },
     "themes": {
       "toggle": "Dark/light switch (theme pair)"
+    },
+    "groups": {
+      "title": "Groups",
+      "hint": "Public groups you can join or leave by yourself. They show up as secondary groups on your profile.",
+      "empty": "There are no public groups yet.",
+      "joined": "You joined {group}.",
+      "left": "You left {group}.",
+      "primary": "Your primary group",
+      "member": "You are in this group",
+      "assigned": "Given by the team or an app",
+      "notMember": "Not a member",
+      "join": "Join",
+      "leave": "Leave"
     }
   },
   "permissions": {
@@ -4813,7 +5222,8 @@
       },
       "core": {
         "warning": "Warnings",
-        "group_mention": "Group mentions"
+        "group_mention": "Group mentions",
+        "group_expired": "Temporary groups that expired"
       },
       "chat": {
         "mention": "Chat mentions",
@@ -8067,6 +8477,60 @@
       "allMembers": "All group members",
       "empty": "No group matches the search.",
       "noMembers": "The group has no members here."
+    }
+  },
+  "staffPage": {
+    "lead": "The people who run the community, what each one handles and how to reach them.",
+    "count": "{count, plural, one {# member} other {# members}}",
+    "message": "Message",
+    "profile": "Profile",
+    "contactOn": "{name} on {service}",
+    "online": "Online",
+    "noDescription": "No description yet.",
+    "duties": "Duties"
+  },
+  "onlinePage": {
+    "title": "Who is online",
+    "lead": "{count, plural, one {# visitor right now} other {# visitors right now}}",
+    "record": "record: {count} on {date}",
+    "filterLabel": "Show",
+    "filters": {
+      "all": "All",
+      "members": "Members",
+      "staff": "Staff",
+      "guests": "Guests"
+    },
+    "empty": "Nobody is around right now.",
+    "staffBadge": "staff",
+    "hiddenBadge": "hidden",
+    "guest": "Guest",
+    "hiddenCount": "{count, plural, one {# member with a hidden status} other {# members with a hidden status}}",
+    "where": {
+      "unknown": "Somewhere on the site",
+      "index": "On the home page",
+      "topic": "Viewing the topic",
+      "forum": "Reading the forum",
+      "profile": "Viewing the profile of",
+      "topicHidden": "Viewing a topic",
+      "forumHidden": "Reading a forum",
+      "profileHidden": "Viewing a profile",
+      "members": "Browsing the members",
+      "staff": "On the staff page",
+      "online": "On this page",
+      "chat": "In the chat",
+      "messages": "In private messages",
+      "search": "Searching",
+      "settings": "In account settings",
+      "page": "Reading a page",
+      "app": "In {app}"
+    },
+    "apps": {
+      "servers": "Servers",
+      "clans": "Clans",
+      "vip": "VIP",
+      "leaderboard": "Leaderboard",
+      "activity": "Activity",
+      "plugin": "an app"
     }
   }
 }

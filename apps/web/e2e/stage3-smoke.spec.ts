@@ -90,7 +90,7 @@ test("etapa 3: profil + badge → VIP din ACP → ramă → hover card → conve
     await page.getByRole("button", { name: "Intră în ACP" }).click();
     await expect(page).toHaveURL(/\/admin$/);
 
-    await page.goto(`/admin/members/${await idOf("Mara3")}`);
+    await page.goto(`/admin/members/${await idOf("Mara3")}?tab=profile`);
     const vip = page.getByTestId("gcs-acp-member-vip");
     await vip.getByLabel("Nivel").selectOption({ label: "VIP Gold" });
     await vip.getByLabel("Zile").fill("30");
@@ -180,7 +180,7 @@ test("etapa 3: profil + badge → VIP din ACP → ramă → hover card → conve
     await expect(post.locator(".gcs-post__authorName a")).toHaveClass(/gcs-name--member/);
     await expect(post.locator(".gcs-avatarFrame--gold")).toHaveCount(0);
 
-    await page.goto(`/admin/members/${maraId}`);
+    await page.goto(`/admin/members/${maraId}?tab=profile`);
     await expect(page.getByTestId("gcs-acp-member-vip").getByText("Expirat")).toBeVisible();
   });
 

@@ -75,6 +75,12 @@ export const serversModule: GcsModule = {
   key: "servers",
   // Profil gaming v2: skin-urile membrului (deocamdată un tab-ciornă, doar cu aplicația Servere pornită).
   profileTabs: [{ key: "skins", labelKey: "profile.tabs.skins", icon: "fa-solid fa-gun", position: 60 }],
+  // Membri v2: identitățile de joc, ELO-ul mix și sancțiunile de pe servere, pe fișa ACP (ELO și pe profil).
+  memberPanels: [
+    { key: "game_identities", labelKey: "acp.member.panels.game_identities", icon: "fa-solid fa-id-badge", position: 110, kind: "card", surfaces: ["acp"] },
+    { key: "mix_elo", labelKey: "acp.member.panels.mix_elo", icon: "fa-solid fa-chart-simple", position: 120, kind: "card", surfaces: ["acp", "profile"] },
+    { key: "server_sanctions", labelKey: "acp.member.panels.server_sanctions", icon: "fa-solid fa-gavel", position: 130, kind: "tab", surfaces: ["acp"] },
+  ],
   app: {
     optional: true,
     labelKey: "apps.servers",

@@ -42,6 +42,14 @@ export async function updateGroupLook(groupId: number, fd: FormData): Promise<Gc
   });
 }
 
+/** Membri v2: grupul public (opt-in); doar un grup eligibil (nu staff, nu VIP, nu protejat). */
+export async function updateGroupOptIn(groupId: number, fd: FormData): Promise<GcsResult<null>> {
+  return runAcpAction(SECTION, "edit", async (actor) => {
+    await services().groups.update(groupId, { optIn: fd.get("optIn") === "on" }, actor);
+    return null;
+  });
+}
+
 /** Stilul numelui: culoarea (și ca `Group.color`), gradientul, strălucirea, grosimea, înclinarea și iconița. */
 export async function updateGroupStyle(groupId: number, style: GcsNameStyle): Promise<GcsResult<null>> {
   return runAcpAction(SECTION, "edit", async (actor) => {
