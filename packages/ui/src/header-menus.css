@@ -902,7 +902,7 @@
   position: absolute;
   inset: 0;
 }
-:root .gcs-msgMenu__item :is(.gcs-userLink, .gcs-avatar, .gcs-msgMenu__time[title]) {
+:root .gcs-msgMenu__item :is(.gcs-userLink, .gcs-avatar, .gcs-msgMenu__time) {
   position: relative;
   z-index: 1;
 }
