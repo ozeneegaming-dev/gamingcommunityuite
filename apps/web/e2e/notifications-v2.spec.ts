@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { expect, test, type Browser, type Page } from "@playwright/test";
+import { clearThemeCache } from "./cockpit-fixtures";
 import { fixture, forumTree, member, topicWithReplies, uid } from "./forum-fixtures";
 import { enterAcpAsRoot, sql, userId, useFreshIp } from "./helpers";
 
@@ -139,6 +140,39 @@ test("clopoțelul: taburile Toate / Mențiuni, „Marchează toate citite” pe 
   expect(box!.x).toBeGreaterThanOrEqual(0);
   expect(box!.x + box!.width).toBeLessThanOrEqual(375);
   await shot(page, "bell-375");
+});
+
+test("clopoțelul e al sistemului: același dropdown în GCS White (luminos) și într-o temă cu designul clasic", async ({ page }) => {
+  const CLASSIC = "e2e-notif-clasic";
+  await sql(
+    `INSERT INTO themes (key, name, "isDefault", enabled, settings, "updatedAt") VALUES ($1, 'Clasic Notificări', false, true, $2::jsonb, now())
+     ON CONFLICT (key) DO UPDATE SET enabled = true, settings = EXCLUDED.settings, "updatedAt" = now()`,
+    [CLASSIC, JSON.stringify({ preset: "classic" })],
+  );
+  await clearThemeCache();
+  try {
+    const s = await setup(page, "100.71.7");
+    await s.reply("Pentru teme", true);
+    for (const skin of ["gcs-white", CLASSIC]) {
+      await page.context().addCookies([{ name: "gcs-skin", value: skin, url: page.url() }]);
+      await page.goto("/");
+      await expect(page.locator('link[rel="stylesheet"][href*="gcs-theme.css"]')).toHaveAttribute("href", new RegExp(`t=${skin}`));
+      await expect(page.getByTestId("gcs-header-bell-count")).toHaveText(/^[1-9]/, { timeout: 15_000 });
+      await page.getByTestId("gcs-header-bell").click();
+      const panel = page.getByTestId("gcs-notif-panel");
+      await expect(panel).toBeVisible();
+      await expect(panel.getByTestId("gcs-notif-tab-mentions")).toBeVisible();
+      await expect(panel.getByTestId("gcs-notif-item").first()).toContainText(`${s.bName} te-a menționat`);
+      // Panoul are fundalul și chenarul sistemului (tokenurile temei), nu doar pe cele ale designului GCS.
+      expect(await panel.evaluate((el) => getComputedStyle(el).position)).toBe("absolute");
+      await shot(page, `bell-${skin}`);
+      await page.keyboard.press("Escape");
+      await expect(panel).toBeHidden();
+    }
+  } finally {
+    await sql(`DELETE FROM themes WHERE key = $1`, [CLASSIC]);
+    await clearThemeCache();
+  }
 });
 
 test("pagina notificărilor: taburi cu necitite, filtrul citite / necitite, gruparea, citită / necitită, ștergerea cu confirmare", async ({ page, browser }) => {

@@ -38,6 +38,9 @@ describe("categoriile notificărilor", () => {
     expect(notificationCategoryOf("chat", { key: "chat.sanction" })).toBe("moderation");
     expect(notificationCategoryOf("plugin.x", { key: "x.thing" })).toBe("system");
     expect(notificationCategoryOf("plugin.x", { key: "x.thing", category: "vip" })).toBe("vip");
+    // Prefixul cheii bate modulul: o realizare declarată de modulul profilului e în Realizări.
+    expect(notificationCategoryOf("profile", { key: "achievements.rank_up" })).toBe("achievements");
+    expect(notificationCategoryOf("messages", { key: "pm.message" })).toBe("messages");
   });
 
   test("catalogul: categoriile cu tipuri, în ordinea pozițiilor; o categorie necunoscută cade în Sistem", () => {

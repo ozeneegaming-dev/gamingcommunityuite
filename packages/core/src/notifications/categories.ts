@@ -38,16 +38,22 @@ const TYPE_CATEGORIES: Record<string, string> = {
   "chat.sanction": "moderation",
 };
 
-/** Categoria implicită a tipurilor unui modul (după cheia modulului). */
+/**
+ * Categoria implicită după prefixul cheii tipului (ex. `achievements.rank_up` → Realizări, chiar dacă tipul e declarat
+ * de modulul profilului), apoi după cheia modulului care îl declară.
+ */
 const MODULE_CATEGORIES: Record<string, string> = {
   forums: "content",
   profile: "social",
   messages: "messages",
+  pm: "messages",
   vip: "vip",
+  donations: "vip",
   chat: "chat",
   chat_pro: "chat",
   clans: "clans",
   servers: "servers",
+  achievements: "achievements",
   core: "system",
 };
 
@@ -70,7 +76,7 @@ export type GcsNotificationCatalogCategory = GcsNotificationCategoryDef & { type
 
 /** Categoria rezolvată a unui tip. */
 export function notificationCategoryOf(moduleKey: string, def: Pick<GcsNotificationTypeDef, "key" | "category">): string {
-  return def.category ?? TYPE_CATEGORIES[def.key] ?? MODULE_CATEGORIES[moduleKey] ?? MODULE_CATEGORIES[def.key.split(".")[0] ?? ""] ?? FALLBACK_NOTIFICATION_CATEGORY;
+  return def.category ?? TYPE_CATEGORIES[def.key] ?? MODULE_CATEGORIES[def.key.split(".")[0] ?? ""] ?? MODULE_CATEGORIES[moduleKey] ?? FALLBACK_NOTIFICATION_CATEGORY;
 }
 
 /** Tipul e o mențiune (apare în tabul Mențiuni). */
