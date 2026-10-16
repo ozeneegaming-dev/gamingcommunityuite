@@ -62,6 +62,12 @@ export default async function AccountSettingsPage({ searchParams }: { searchPara
         <GcsIcon name={SETTINGS_ICONS.account} className="gcs-hIcon" />
         {t("title")}
       </h2>
+      {/* Membri v2: echipa a cerut schimbarea parolei (până atunci, site-ul trimite aici). */}
+      {(await services().memberAdmin.passwordResetPending(actor.userId!)) && (
+        <p role="alert" className="gcs-notice gcs-notice--warn" data-testid="gcs-password-reset-banner">
+          {t("passwordResetRequired")}
+        </p>
+      )}
       {result === "changed" && (
         <p role="status" className="gcs-notice" data-testid="gcs-email-changed">
           {t("emailChanged")}

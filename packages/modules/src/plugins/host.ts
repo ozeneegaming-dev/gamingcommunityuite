@@ -926,6 +926,32 @@ export class GcsPluginHost {
     return [...this.loaded.values()].some((l) => l.row.manifest.hooks.some((h) => h.point === point) && this.hookEnabled(l.row.key, point));
   }
 
+  /**
+   * Panourile de membru ale pluginurilor încărcate pentru o suprafață (Membri v2: fișa ACP, profilul), cu eticheta în
+   * limba cerută. Fără punctul `member.panel` pornit, pluginul nu are panouri.
+   */
+  memberPanels(surface: "acp" | "profile", locale: string): { plugin: string; key: string; label: string; icon: string; kind: "card" | "tab"; position: number }[] {
+    return [...this.loaded.values()]
+      .filter((l) => this.hookEnabled(l.row.key, "member.panel") && l.row.manifest.hooks.some((h) => h.point === "member.panel"))
+      .flatMap((l) =>
+        l.row.manifest.memberPanels
+          .filter((p) => (p.surfaces as string[]).includes(surface))
+          .map((p) => ({ plugin: l.row.key, key: p.key, label: l.texts.text(p.label, locale), icon: pluginIcon(p.icon), kind: p.kind, position: p.position })),
+      )
+      .sort((a, b) => a.position - b.position || a.plugin.localeCompare(b.plugin));
+  }
+
+  /** HTML-ul unui panou de membru al unui plugin (sanitizat); gol la eroare sau timeout. */
+  async renderMemberPanel(plugin: string, panel: string, data: { userId: string; surface: "acp" | "profile" }, input: { actor: GcsActor; locale: string }): Promise<string> {
+    const l = this.loaded.get(plugin);
+    if (!l || !l.row.manifest.memberPanels.some((p) => p.key === panel) || !this.hookEnabled(plugin, "member.panel")) return "";
+    try {
+      return await this.html(l, await this.invoke(l, "hook", "member.panel", { panel, userId: data.userId, surface: data.surface }, { actor: input.actor, locale: input.locale }));
+    } catch {
+      return "";
+    }
+  }
+
   /** Intrările pluginurilor în meniul site-ului sau al userului, vizibile pentru actor. */
   async menus(area: "site" | "user", actor: GcsActor, locale: string): Promise<GcsPluginMenuEntry[]> {
     const out: GcsPluginMenuEntry[] = [];

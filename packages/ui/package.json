@@ -45,6 +45,7 @@
     "./loaders.css": "./src/loaders.css",
     "./scroll.css": "./src/scroll.css",
     "./announce.css": "./src/announce.css",
+    "./members.css": "./src/members.css",
     "./nova.css": "./src/nova.css",
     "./sweep.css": "./src/sweep.css",
     "./icons": "./src/icons/index.tsx",

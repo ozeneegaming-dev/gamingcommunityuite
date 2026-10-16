@@ -8,7 +8,8 @@ import type { GcsPermissionService } from "../permissions/service";
 import type { GcsActor } from "../permissions/types";
 import { GROUP_MENTION_KEYS, GROUP_MENTION_LIMITS, GROUP_MENTION_NEVER, GROUP_MENTION_SETTING, toMentionGroups, type GcsGroupMentionSettings } from "./mentions";
 import { isHexColor, type GcsNameStyle } from "./nameStyles";
-import { assertCanManageUser, losesRootOnPrimaryChange, losesRootOnSecondaryRemoval } from "./rootGuard";
+import { staffGroupIds } from "../members/directory";
+import { assertCanManageUser, losesRootOnPrimaryChange, losesRootOnSecondaryRemoval, rootUsersWhere } from "./rootGuard";
 
 export type GcsGroupInput = {
   name?: string;
@@ -21,7 +22,48 @@ export type GcsGroupInput = {
   icon?: string | null;
   banner?: string | null;
   inLegend?: boolean;
+  /** Membri v2: grup public (opt-in), la care membrii se înscriu singuri; doar grupurile eligibile (`optInBlocked`). */
+  optIn?: boolean;
 };
+
+/** Opțiunile unui grup secundar dat din ACP sau de o aplicație (Membri v2). */
+export type GcsSecondaryOptions = {
+  /** Expirarea (în viitor); `null` = fără expirare; lipsă = neschimbată (la un grup deja avut). */
+  expiresAt?: Date | null;
+  /** Sursa (`manual`, `store`, `servers`…): o cheie scurtă. */
+  source?: string;
+};
+
+/** Câți membri primește cel mult o acțiune în masă. */
+export const BULK_MAX = 500;
+/** Expirarea cea mai îndepărtată a unui grup temporar (10 ani). */
+const MAX_EXPIRY_MS = 3650 * 86_400_000;
+const SOURCE_RE = /^[a-z][a-z0-9_]{0,31}$/;
+
+function validExpiry(value: Date | null | undefined): Date | null | undefined {
+  if (value === undefined || value === null) return value;
+  const t = value.getTime();
+  if (!Number.isFinite(t) || t <= Date.now() || t > Date.now() + MAX_EXPIRY_MS) throw new GcsValidationError({ expiresAt: "invalid_range" });
+  return value;
+}
+
+function validSource(source: string): string {
+  if (!SOURCE_RE.test(source)) throw new GcsValidationError({ source: "invalid_choice" });
+  return source;
+}
+
+const sameDate = (a: Date | null, b: Date | null) => (a?.getTime() ?? null) === (b?.getTime() ?? null);
+
+/**
+ * Grupurile care nu pot fi publice (opt-in): cele protejate (staff, Membru, Banat, Vizitator), VIP și orice grup cu acces
+ * la moderare sau la ACP. Întoarce motivul sau `null`.
+ */
+export function optInBlocked(group: Pick<Group, "id" | "isProtected" | "isVip">, staffIds: readonly number[]): string | null {
+  if (group.isProtected) return "group_protected";
+  if (group.isVip) return "group_vip";
+  if (staffIds.includes(group.id)) return "group_staff";
+  return null;
+}
 
 /** Forma unei iconițe Font Awesome (`fa-solid fa-crown`); existența ei o verifică ACP-ul cu registrul de iconițe. */
 const ICON_NAME = /^fa-(?:solid|regular|brands) fa-[a-z0-9-]{1,50}$/;
@@ -49,6 +91,7 @@ export class GcsGroupService {
   async create(input: GcsGroupInput & { name: string }, actor: GcsActor): Promise<Group> {
     await this.authorize(actor);
     const data = validateInput(input);
+    if (data.optIn && data.isVip) throw new GcsValidationError({ optIn: "group_vip" });
     const group = await this.deps.db.$transaction(async (tx) => {
       const last = await tx.group.aggregate({ _max: { position: true } });
       // Cheia finală depinde de id, deci grupul se creează cu o cheie temporară unică.
@@ -92,6 +135,10 @@ export class GcsGroupService {
     const group = await this.deps.db.$transaction(async (tx) => {
       const before = await this.findGroup(tx, id);
       assertCanTouchGroup(before, actor);
+      if (data.optIn === true) {
+        const blocked = optInBlocked(before, await staffGroupIds(tx));
+        if (blocked) throw new GcsValidationError({ optIn: blocked });
+      }
       const after = await tx.group.update({ where: { id }, data });
       await this.audit(tx, actor, "group.update", id, snapshot(before), snapshot(after));
       return after;
@@ -231,26 +278,46 @@ export class GcsGroupService {
     }
   }
 
-  async addSecondary(userId: string, groupId: number, actor: GcsActor): Promise<void> {
+  /**
+   * Adaugă un grup secundar (Membri v2: cu expirare opțională și sursa). Dacă membrul îl are deja, se actualizează doar
+   * expirarea dată (prelungire sau „fără expirare” cu `null`). Întoarce `true` dacă s-a schimbat ceva.
+   */
+  async addSecondary(userId: string, groupId: number, actor: GcsActor, opts: GcsSecondaryOptions = {}): Promise<boolean> {
     await this.authorize(actor);
+    const expiresAt = validExpiry(opts.expiresAt);
+    const source = validSource(opts.source ?? "manual");
     const added = await this.deps.db.$transaction(async (tx) => {
       const user = await tx.user.findUnique({ where: { id: userId } });
       if (!user) throw new GcsNotFound({ entity: "user" });
       assertCanTouchGroup(await this.findGroup(tx, groupId), actor);
       await assertCanManageUser(tx, actor, userId);
       if (user.primaryGroupId === groupId) return false;
-      const { count } = await tx.userGroup.createMany({ data: [{ userId, groupId }], skipDuplicates: true });
-      if (count === 0) return false;
-      await this.audit(tx, actor, "user.secondary_add", userId, undefined, { groupId }, "user");
+      const existing = await tx.userGroup.findUnique({ where: { userId_groupId: { userId, groupId } } });
+      if (existing) {
+        if (opts.expiresAt === undefined || sameDate(existing.expiresAt, expiresAt ?? null)) return false;
+        await tx.userGroup.update({ where: { userId_groupId: { userId, groupId } }, data: { expiresAt: expiresAt ?? null } });
+        await this.audit(tx, actor, "user.secondary_expiry", userId, { groupId, expiresAt: existing.expiresAt }, { groupId, expiresAt: expiresAt ?? null }, "user");
+        return true;
+      }
+      await tx.userGroup.create({ data: { userId, groupId, source, expiresAt: expiresAt ?? null, addedById: actor.userId } });
+      await this.audit(tx, actor, "user.secondary_add", userId, undefined, { groupId, source, expiresAt: expiresAt ?? null }, "user");
       return true;
     });
     if (added) {
       await this.changed([groupId], [`user:${userId}`]);
       await this.userGroupsChanged(userId);
     }
+    return added;
   }
 
-  async removeSecondary(userId: string, groupId: number, actor: GcsActor): Promise<void> {
+  /** Schimbă expirarea unui grup secundar existent (`null` = permanent). */
+  async setSecondaryExpiry(userId: string, groupId: number, expiresAt: Date | null, actor: GcsActor): Promise<void> {
+    const exists = await this.deps.db.userGroup.findUnique({ where: { userId_groupId: { userId, groupId } }, select: { userId: true } });
+    if (!exists) throw new GcsNotFound({ entity: "user_group" });
+    await this.addSecondary(userId, groupId, actor, { expiresAt });
+  }
+
+  async removeSecondary(userId: string, groupId: number, actor: GcsActor): Promise<boolean> {
     await this.authorize(actor);
     const removed = await this.deps.db.$transaction(async (tx) => {
       const removesRoot = await losesRootOnSecondaryRemoval(tx, userId, groupId);
@@ -264,6 +331,84 @@ export class GcsGroupService {
       await this.changed([groupId], [`user:${userId}`]);
       await this.userGroupsChanged(userId);
     }
+    return removed;
+  }
+
+  /**
+   * Acțiunile în masă din ACP → Membri (Membri v2): același grup adăugat / scos ca secundar sau dat ca principal pentru mai
+   * mulți membri. Fiecare membru trece prin aceleași verificări (protecția Root, ultimul Root); cei refuzați se numără în
+   * `skipped`, restul se aplică. Cel mult `BULK_MAX` membri pe apel.
+   */
+  async bulk(
+    userIds: string[],
+    op: { kind: "add_secondary"; groupId: number; expiresAt?: Date | null } | { kind: "remove_secondary"; groupId: number } | { kind: "set_primary"; groupId: number },
+    actor: GcsActor,
+  ): Promise<{ changed: number; skipped: number }> {
+    await this.authorize(actor);
+    const ids = [...new Set(userIds)];
+    if (ids.length === 0 || ids.length > BULK_MAX) throw new GcsValidationError({ userIds: "invalid_range" }, { max: String(BULK_MAX) });
+    await this.deps.db.$transaction(async (tx) => assertCanTouchGroup(await this.findGroup(tx, op.groupId), actor));
+    if (op.kind === "add_secondary") validExpiry(op.expiresAt);
+    let changed = 0;
+    let skipped = 0;
+    for (const id of ids) {
+      try {
+        const did =
+          op.kind === "add_secondary"
+            ? await this.addSecondary(id, op.groupId, actor, op.expiresAt !== undefined ? { expiresAt: op.expiresAt } : {})
+            : op.kind === "remove_secondary"
+              ? await this.removeSecondary(id, op.groupId, actor)
+              : await this.setPrimaryChanged(id, op.groupId, actor);
+        if (did) changed++;
+        else skipped++;
+      } catch (error) {
+        if (error instanceof GcsForbidden || error instanceof GcsConflict || error instanceof GcsNotFound) skipped++;
+        else throw error;
+      }
+    }
+    return { changed, skipped };
+  }
+
+  private async setPrimaryChanged(userId: string, groupId: number, actor: GcsActor): Promise<boolean> {
+    const before = await this.deps.db.user.findUnique({ where: { id: userId }, select: { primaryGroupId: true } });
+    if (!before) throw new GcsNotFound({ entity: "user" });
+    if (before.primaryGroupId === groupId) return false;
+    await this.setPrimary(userId, groupId, actor);
+    return true;
+  }
+
+  /**
+   * Jobul `groups.secondary_expiry` (Membri v2): scoate grupurile secundare temporare ajunse la expirare, scrie jurnalul și
+   * emite `group.secondary_expired` pentru fiecare (notificarea membrului). Fără actor: e o operație a sistemului. Un
+   * Root Admin nu-și pierde ultimul acces Root așa (rândul rămâne și se reîncearcă după ce mai există un Root).
+   */
+  async expireSecondary(now = new Date(), limit = 500): Promise<{ userId: string; groupId: number }[]> {
+    const { db, bus } = this.deps;
+    const due = await db.userGroup.findMany({
+      where: { expiresAt: { lte: now } },
+      select: { userId: true, groupId: true, expiresAt: true, source: true, group: { select: { name: true } } },
+      orderBy: { expiresAt: "asc" },
+      take: limit,
+    });
+    const removed: { userId: string; groupId: number }[] = [];
+    for (const row of due) {
+      const ok = await db.$transaction(async (tx) => {
+        if (await losesRootOnSecondaryRemoval(tx, row.userId, row.groupId)) {
+          const rootId = (await tx.group.findUniqueOrThrow({ where: { key: "root_admin" }, select: { id: true } })).id;
+          if ((await tx.user.count({ where: rootUsersWhere(rootId) })) <= 1) return false;
+        }
+        const { count } = await tx.userGroup.deleteMany({ where: { userId: row.userId, groupId: row.groupId, expiresAt: { lte: now } } });
+        if (count === 0) return false;
+        await writeAudit(tx, { actorId: null, action: "user.secondary_expired", targetType: "user", targetId: row.userId, before: { groupId: row.groupId, expiresAt: row.expiresAt, source: row.source } });
+        return true;
+      });
+      if (!ok) continue;
+      removed.push({ userId: row.userId, groupId: row.groupId });
+      await bus.emit({ name: "group.secondary_expired", payload: { userId: row.userId, groupId: row.groupId, groupName: row.group.name }, tags: [`user:${row.userId}`] });
+      await this.userGroupsChanged(row.userId);
+    }
+    if (removed.length > 0) await this.changed([...new Set(removed.map((r) => r.groupId))], removed.map((r) => `user:${r.userId}`));
+    return removed;
   }
 
   /** Ordinea grupurilor (ACP → Grupuri, drag & drop): `order` conține toate grupurile, în ordinea nouă. */
@@ -355,6 +500,7 @@ type GcsGroupData = {
   icon?: string | null;
   banner?: string | null;
   inLegend?: boolean;
+  optIn?: boolean;
 };
 
 function validateInput(input: GcsGroupInput): GcsGroupData {
@@ -389,6 +535,7 @@ function validateInput(input: GcsGroupInput): GcsGroupData {
     data.banner = input.banner;
   }
   if (input.inLegend !== undefined) data.inLegend = input.inLegend;
+  if (input.optIn !== undefined) data.optIn = input.optIn;
   if (input.position !== undefined) {
     if (!Number.isInteger(input.position)) errors.position = "invalid_type";
     data.position = input.position;
@@ -415,6 +562,7 @@ function snapshot(g: Group) {
     icon: g.icon,
     banner: g.banner,
     inLegend: g.inLegend,
+    optIn: g.optIn,
     position: g.position,
   };
 }

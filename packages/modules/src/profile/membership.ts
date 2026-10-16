@@ -23,10 +23,11 @@ export class GcsMembership {
     return user.primaryGroupId;
   }
 
-  async addSecondary(tx: Tx, userId: string, groupId: number): Promise<boolean> {
+  /** Membri v2: `source` (ex. `promotion`, `vip`, `store`, `servers`) și expirarea opțională apar în ACP la grupul secundar. */
+  async addSecondary(tx: Tx, userId: string, groupId: number, opts: { source?: string; expiresAt?: Date | null } = {}): Promise<boolean> {
     const user = await tx.user.findUnique({ where: { id: userId }, select: { primaryGroupId: true } });
     if (!user || user.primaryGroupId === groupId) return false;
-    const { count } = await tx.userGroup.createMany({ data: [{ userId, groupId }], skipDuplicates: true });
+    const { count } = await tx.userGroup.createMany({ data: [{ userId, groupId, source: opts.source ?? "manual", expiresAt: opts.expiresAt ?? null }], skipDuplicates: true });
     return count > 0;
   }
 

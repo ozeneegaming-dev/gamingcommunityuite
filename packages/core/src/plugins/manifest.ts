@@ -151,6 +151,23 @@ export const pluginManifestSchema = z.strictObject({
   events: z.array(z.enum(PLUGIN_EVENTS)).max(PLUGIN_EVENTS.length).default([]),
   filters: z.array(z.strictObject({ point: z.enum(PLUGIN_FILTER_POINTS), priority })).max(PLUGIN_FILTER_POINTS.length).default([]),
   hooks: z.array(z.strictObject({ point: z.enum(PLUGIN_HOOK_POINTS), priority })).max(PLUGIN_HOOK_POINTS.length).default([]),
+  /**
+   * Membri v2: cardurile și taburile pluginului pe fișa membrului din ACP și pe profilul public. Conținutul vine din
+   * punctul `member.panel` (declarat în `hooks`); apar doar cât pluginul e pornit.
+   */
+  memberPanels: z
+    .array(
+      z.strictObject({
+        key: localKey,
+        label,
+        icon: icon.default("fa-solid fa-puzzle-piece"),
+        kind: z.enum(["card", "tab"]).default("card"),
+        surfaces: z.array(z.enum(["acp", "profile"])).min(1).max(2),
+        position: z.number().int().min(0).max(1000).default(100),
+      }),
+    )
+    .max(10)
+    .default([]),
   jobs: z.array(z.strictObject({ key: localKey, everyMinutes: z.number().int().min(5).max(10080).optional(), label: label.optional() })).max(20).default([]),
   menus: z.strictObject({ site: z.array(menuEntry).max(10).default([]), user: z.array(menuEntry).max(10).default([]) }).default({ site: [], user: [] }),
   /** Fișierele media proprii (capabilitatea `media`): tipurile acceptate și limitele lor, sub plafoanele nucleului. */
@@ -247,6 +264,8 @@ function crossCheck(m: GcsPluginManifest): GcsPluginManifestIssue[] {
   for (const d of duplicates(m.filters.map((f) => f.point))) issues.push({ path: `filters.${d}`, code: "duplicate_key" });
   for (const d of duplicates(m.hooks.map((h) => h.point))) issues.push({ path: `hooks.${d}`, code: "duplicate_key" });
   for (const d of duplicates(m.jobs.map((j) => j.key))) issues.push({ path: `jobs.${d}`, code: "duplicate_key" });
+  for (const d of duplicates(m.memberPanels.map((p) => p.key))) issues.push({ path: `memberPanels.${d}`, code: "duplicate_key" });
+  if (m.memberPanels.length > 0 && !m.hooks.some((h) => h.point === "member.panel")) issues.push({ path: "memberPanels", code: "missing_hook:member.panel" });
 
   // Meniurile site-ului și ale userului duc doar spre paginile pluginului.
   const own = `/p/${m.key}`;

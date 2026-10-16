@@ -1,55 +1,75 @@
-import { MENUS_ACP_SECTION, type GcsNavItemEdit } from "@gcs/core";
+import { MENUS_ACP_SECTION, NAV_COUNTERS, type GcsNavItemEdit } from "@gcs/core";
 import { GcsCard } from "@gcs/ui";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
 import { localeOptions } from "@/lib/locales";
 import { services } from "@/lib/services";
-import { GcsMenuEditor } from "./GcsMenuEditor";
 import { GcsAcpTitle } from "../../_components/GcsAcpTitle";
+import { GcsMenuManager, type GcsMenuAppPage } from "./GcsMenuManager";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.menuManager"))("title") };
 }
 
-/** ACP → Sistem → Manager meniu (specul etapei 5): meniul principal al site-ului. */
+/**
+ * ACP → Aspect → Manager meniu (Manager meniu v2): arborele compact cu drag & drop, panoul de editare, ciorna cu
+ * previzualizarea antetului real (desktop / mobil), „Publică” / „Renunță” și restaurarea meniului implicit.
+ */
 export default async function AcpMenuManagerPage() {
   await requireAcpSection(MENUS_ACP_SECTION);
-  const { nav, db } = services();
-  const [t, tAll, items, locales, groups] = await Promise.all([
+  const { nav, db, registry, apps } = services();
+  const [t, tAll, published, draft, locales, groups, enabled] = await Promise.all([
     getTranslations("acp.menuManager"),
     getTranslations(),
     nav.editable(),
+    nav.draft(),
     localeOptions(),
     db.group.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }], select: { id: true, name: true } }),
+    apps.enabledFilter(),
   ]);
+  const items = draft?.items ?? published;
+  const label = (key: string) => (tAll.has(key) ? tAll(key) : key);
   // Etichetele automate (cheile modulelor), traduse în limba adminului, ca editorul să le poată arăta.
   const keys = new Set<string>();
   const collect = (list: GcsNavItemEdit[]) => {
     for (const it of list) {
-      const label = it.label as Record<string, string>;
-      if ("key" in label && label.key) keys.add(label.key);
+      const l = it.label as Record<string, string>;
+      if ("key" in l && l.key) keys.add(l.key);
       collect(it.children);
     }
   };
   collect(items);
-  const autoLabels = Object.fromEntries([...keys].map((k) => [k, tAll.has(k) ? tAll(k) : k]));
-  const keysOf = ["add", "addChild", "label", "autoLabel", "href", "icon", "iconSearch", "iconNone", "iconNoResults", "groups", "groupsHint", "newTab", "enabled", "up", "down", "remove", "save", "saved", "newItem", "mega", "description", "descriptionHint", "badge", "badgeHint"] as const;
+  // Paginile aplicațiilor (alegerea „Pagina unei aplicații”): itemii impliciți ai modulelor, cu subitemii lor.
+  const appPages: GcsMenuAppPage[] = [];
+  for (const m of registry.all()) {
+    if (!m.app || !m.nav) continue;
+    if (m.app.optional && !enabled(m.key)) continue;
+    for (const n of m.nav) {
+      appPages.push({ appKey: m.key, label: label(n.labelKey), href: n.href, icon: n.icon, labelKey: n.labelKey });
+      keys.add(n.labelKey);
+      for (const c of n.children ?? []) {
+        appPages.push({ appKey: m.key, label: `${label(n.labelKey)} › ${label(c.labelKey)}`, href: c.href, icon: c.icon, labelKey: c.labelKey });
+        keys.add(c.labelKey);
+      }
+    }
+  }
+  const autoLabels = Object.fromEntries([...keys].map((k) => [k, label(k)]));
   return (
     <>
-      <GcsAcpTitle icon="fa-solid fa-bars-staggered">
+      <GcsAcpTitle icon="fa-solid fa-bars-staggered" description={t("hint")}>
         {t("title")}
       </GcsAcpTitle>
-      <p className="gcs-muted" style={{ margin: 0 }}>
-        {t("hint")}
-      </p>
       <GcsCard as="section" aria-label={t("title")} style={{ padding: 16 }}>
-        <GcsMenuEditor
+        <GcsMenuManager
+          key={draft ? `draft-${draft.updatedAt.getTime()}` : `published-${JSON.stringify(published).length}`}
           initial={items}
+          hasDraft={!!draft}
           locales={locales.map((l) => ({ code: l.code, label: l.label }))}
           autoLabels={autoLabels}
           groups={groups}
-          labels={Object.fromEntries(keysOf.map((k) => [k, t.raw(k) as string])) as Parameters<typeof GcsMenuEditor>[0]["labels"]}
+          appPages={appPages}
+          counters={NAV_COUNTERS.map((k) => ({ key: k, label: t(`v2.counters.${k}`) }))}
         />
       </GcsCard>
     </>

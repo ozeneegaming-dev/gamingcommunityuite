@@ -80,3 +80,17 @@ describe("GcsModuleRegistry", () => {
     expect(registry.permissionsFingerprint()).toBe(loaded);
   });
 });
+
+describe("panourile de membru (Membri v2)", () => {
+  test("pe suprafață, în ordinea pozițiilor, cu modulul lor; cheile duplicate se ignoră", () => {
+    const registry = new GcsModuleRegistry();
+    const panel = (key: string, position: number, surfaces: ("acp" | "profile")[], kind: "card" | "tab" = "card") => ({ key, labelKey: `x.${key}`, icon: "fa-solid fa-star", position, kind, surfaces });
+    registry.register(mod("clans", { memberPanels: [panel("clan", 50, ["acp", "profile"])] }));
+    registry.register(mod("servers", { memberPanels: [panel("sanctions", 30, ["acp"], "tab"), panel("clan", 10, ["acp"])] }));
+    expect(registry.memberPanels("acp").map((p) => [p.module, p.def.key])).toEqual([
+      ["servers", "sanctions"],
+      ["clans", "clan"],
+    ]);
+    expect(registry.memberPanels("profile").map((p) => p.def.key)).toEqual(["clan"]);
+  });
+});

@@ -56,8 +56,9 @@ test("un abonat care expiră în 2 zile apare în widget; „Retrage” din list
 
   await page.goto("/admin/vip/subscribers?expiring=1");
   const row = page.getByTestId("gcs-acp-vip-subscriber").filter({ hasText: `Soon${id}` });
-  page.once("dialog", (d) => void d.accept());
   await row.getByRole("button", { name: "Retrage" }).click();
+  // Confirmarea e în pagină (Membri v2: niciodată `confirm()`).
+  await page.getByTestId("gcs-confirm-ok").click();
   await expect(row).toHaveCount(0);
 
   await page.goto("/admin/vip/history");

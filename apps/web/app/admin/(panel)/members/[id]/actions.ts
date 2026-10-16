@@ -65,6 +65,43 @@ export async function deleteDonation(id: number): Promise<GcsResult<null>> {
   });
 }
 
+// ─── Membri v2: „Acțiuni cont” ─────────────────────────────────────────────────────────────────────────────
+
+export async function validateMember(userId: string): Promise<GcsResult<null>> {
+  return runAcpAction(SECTION, "edit", async (actor) => {
+    await services().memberAdmin.validate(actor, [userId]);
+    return null;
+  });
+}
+
+export async function setSpammer(userId: string, flag: boolean): Promise<GcsResult<null>> {
+  return runAcpAction(SECTION, "edit", async (actor) => {
+    await services().memberAdmin.setSpammer(actor, userId, flag);
+    return null;
+  });
+}
+
+export async function unlockMember(userId: string): Promise<GcsResult<null>> {
+  return runAcpAction(SECTION, "edit", async (actor) => {
+    await services().memberAdmin.unlock(actor, userId);
+    return null;
+  });
+}
+
+export async function forcePasswordReset(userId: string): Promise<GcsResult<null>> {
+  return runAcpAction(SECTION, "edit", async (actor) => {
+    await services().memberAdmin.requestPasswordReset(actor, userId);
+    return null;
+  });
+}
+
+export async function disableMemberTwoFactor(userId: string): Promise<GcsResult<null>> {
+  return runAcpAction(SECTION, "edit", async (actor) => {
+    await services().memberAdmin.disableTwoFactor(actor, userId);
+    return null;
+  });
+}
+
 export async function revokeBadge(userId: string, badgeId: number): Promise<GcsResult<null>> {
   return runAcpAction(SECTION, "edit", async (actor) => {
     await services().achievements.revokeBadge(actor, userId, badgeId);

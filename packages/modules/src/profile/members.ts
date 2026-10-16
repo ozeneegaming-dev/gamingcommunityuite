@@ -103,6 +103,17 @@ export class GcsMemberList {
     return { members, pagination: { page, pages: Math.max(1, Math.ceil(total / MEMBERS_PER_PAGE)), perPage: MEMBERS_PER_PAGE, total } };
   }
 
+  /** Cardurile unor membri (pagina Staff v2, lista „Cine e online”), în ordinea dată; fără verificarea accesului. */
+  async cards(ids: readonly string[], now = Date.now()): Promise<GcsMemberCard[]> {
+    if (ids.length === 0) return [];
+    const [rows, rankData] = await Promise.all([this.deps.db.user.findMany({ where: { id: { in: [...ids] } }, select: cardSelect }), this.deps.ranks.data()]);
+    const byId = new Map(rows.map((r) => [r.id, r]));
+    return ids.flatMap((id) => {
+      const row = byId.get(id);
+      return row ? [this.card(row, rankData, now)] : [];
+    });
+  }
+
   /** Grupurile pentru filtrul listei (fără Vizitator). */
   async groups(): Promise<{ id: number; name: string }[]> {
     return this.deps.db.group.findMany({ where: { key: { notIn: ["guest"] } }, orderBy: [{ position: "asc" }, { id: "asc" }], select: { id: true, name: true } });

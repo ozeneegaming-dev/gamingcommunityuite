@@ -28,6 +28,19 @@ export const NAV_MARKS: readonly string[] = ["nav:v2", "nav:v3", "nav:v4", "nav:
 export type GcsNavLabel = { key: string } | Partial<Record<string, string>>;
 /** Descrierea de un rând din mega meniu (text pe limbi); `null` = cea implicită (după cheia etichetei). */
 export type GcsNavDescription = Partial<Record<string, string>>;
+/** Manager meniu v2: tipurile de itemi. */
+export const NAV_KINDS = ["link", "app", "dropdown", "separator"] as const;
+export type GcsNavKind = (typeof NAV_KINDS)[number];
+/** Cine vede un item, pe lângă grupuri. */
+export const NAV_AUDIENCES = ["all", "guests", "members"] as const;
+export type GcsNavAudience = (typeof NAV_AUDIENCES)[number];
+/** Stilurile de evidențiere. */
+export const NAV_HIGHLIGHTS = ["accent", "glow"] as const;
+/** Contoarele live pentru insignă (calculate de site, vezi `setCounterResolver`). */
+export const NAV_COUNTERS = ["online", "topics_today", "members_today"] as const;
+/** Linkul unui separator: header-ul îl desenează ca linie (stilul comun `members.css`). */
+export const NAV_SEPARATOR_HREF = "#gcs-separator";
+
 export type GcsNavItemInput = {
   label: GcsNavLabel;
   description?: GcsNavDescription | null;
@@ -39,6 +52,10 @@ export type GcsNavItemInput = {
   groups?: number[];
   newTab?: boolean;
   enabled?: boolean;
+  kind?: GcsNavKind;
+  audience?: GcsNavAudience;
+  counter?: string | null;
+  highlight?: string | null;
   children?: GcsNavItemInput[];
 };
 export type GcsNavItemView = {
@@ -50,6 +67,9 @@ export type GcsNavItemView = {
   icon: string | null;
   href: string;
   newTab: boolean;
+  /** Manager meniu v2: stilul de evidențiere (`accent`, `glow`) și separatorul dintre subitemi. */
+  highlight?: string | null;
+  separator?: boolean;
   children: GcsNavItemView[];
 };
 export type GcsNavItemEdit = Omit<GcsNavItemInput, "children" | "label"> & { id: number; label: GcsNavLabel; children: GcsNavItemEdit[] };
@@ -67,7 +87,14 @@ type Row = {
   groups: number[];
   newTab: boolean;
   enabled: boolean;
+  kind?: string;
+  audience?: string;
+  counter?: string | null;
+  highlight?: string | null;
 };
+
+/** Valoarea unui contor pentru un viewer (`null` = fără insignă). */
+export type GcsNavCounterResolver = (key: string, viewer: GcsAppViewer) => Promise<number | null>;
 
 const DESCRIPTION_MAX = 100;
 const BADGE_RE = /^[\p{L}\p{N}][\p{L}\p{N} .!+#%-]{0,11}$/u;
@@ -93,6 +120,17 @@ export function reorderAppItems<T extends { appKey: string | null }>(rows: reado
   slots.forEach((slot, n) => {
     out[slot] = apps[n]!;
   });
+  return out;
+}
+
+/** Fără separatori la capetele listei și fără doi la rând. */
+function trimSeparators(list: GcsNavItemView[]): GcsNavItemView[] {
+  const out: GcsNavItemView[] = [];
+  for (const it of list) {
+    if (it.separator && (out.length === 0 || out[out.length - 1]!.separator)) continue;
+    out.push(it);
+  }
+  while (out.length > 0 && out[out.length - 1]!.separator) out.pop();
   return out;
 }
 
@@ -148,30 +186,101 @@ export class GcsNavService {
     return text ? { text } : null;
   }
 
+  // ─── Manager meniu v2: ciorna, previzualizarea și contoarele ─────────────────────────────────────────────
+
+  private previewResolver: (() => Promise<boolean>) | null = null;
+  private counterResolver: GcsNavCounterResolver | null = null;
+
+  /**
+   * Cine vede ciorna în locul meniului publicat (previzualizarea din managerul de meniu, în `iframe`): site-ul dă o
+   * funcție care verifică cererea curentă (parametrul de previzualizare, dreptul de editare, poarta ACP).
+   */
+  setPreviewResolver(fn: (() => Promise<boolean>) | null): void {
+    this.previewResolver = fn;
+  }
+
+  /** Valorile contoarelor live (insigna „counter”), date de site. */
+  setCounterResolver(fn: GcsNavCounterResolver | null): void {
+    this.counterResolver = fn;
+  }
+
+  /** Rândurile ciornei (id-uri negative, sintetice), sau `null` fără ciornă. */
+  private async draftRows(): Promise<Row[] | null> {
+    const draft = await this.deps.db.navDraft.findUnique({ where: { id: 1 } });
+    if (!draft || !Array.isArray(draft.items)) return null;
+    const out: Row[] = [];
+    let next = -1;
+    const walk = (list: GcsNavItemInput[], parentId: number | null) => {
+      for (const [position, it] of list.entries()) {
+        const id = next--;
+        out.push({
+          id,
+          parentId,
+          position,
+          label: (it.label ?? {}) as Prisma.JsonValue,
+          description: (descriptionValue(it.description) ?? null) as Prisma.JsonValue,
+          badge: it.badge?.trim() || null,
+          icon: it.icon ?? null,
+          href: it.href ?? null,
+          appKey: it.appKey ?? null,
+          groups: it.groups ?? [],
+          newTab: it.newTab ?? false,
+          enabled: it.enabled ?? true,
+          kind: it.kind ?? "link",
+          audience: it.audience ?? "all",
+          counter: it.counter ?? null,
+          highlight: it.highlight ?? null,
+        });
+        walk(it.children ?? [], id);
+      }
+    };
+    walk(draft.items as unknown as GcsNavItemInput[], null);
+    return out;
+  }
+
   /** Meniul văzut de viewer, în limba lui (textele fără traducere cad pe limba site-ului, apoi pe oricare). */
   async tree(viewer: GcsAppViewer, locale: string, siteLocale = "ro"): Promise<GcsNavItemView[]> {
     // Itemii legați de o aplicație: doar dacă e pornită și (cu acces pe grup) accesibilă viewer-ului.
     const usable = await this.deps.apps.accessFilter(viewer);
-    const rows = (await this.rows()).filter(
-      (r) => r.enabled && (!r.appKey || usable(r.appKey)) && (r.groups.length === 0 || r.groups.some((g) => viewer.groupIds.includes(g))),
+    const preview = this.previewResolver ? await this.previewResolver().catch(() => false) : false;
+    const source = (preview ? await this.draftRows() : null) ?? (await this.rows());
+    const member = !!viewer.userId;
+    const rows = source.filter(
+      (r) =>
+        r.enabled &&
+        (!r.appKey || usable(r.appKey)) &&
+        (r.groups.length === 0 || r.groups.some((g) => viewer.groupIds.includes(g))) &&
+        (r.audience !== "guests" || !member) &&
+        (r.audience !== "members" || member),
     );
+    const counters = new Map<string, number | null>();
+    for (const key of new Set(rows.map((r) => r.counter).filter((c): c is string => !!c))) {
+      counters.set(key, this.counterResolver ? await this.counterResolver(key, viewer).catch(() => null) : null);
+    }
     const build = (parentId: number | null): GcsNavItemView[] =>
       rows
         .filter((r) => r.parentId === parentId)
-        .flatMap((r) => {
+        .flatMap((r): GcsNavItemView[] => {
+          // Separatorul: doar între subitemi; header-ul îl desenează ca linie (linkul `#gcs-separator`).
+          if (r.kind === "separator") {
+            return parentId === null ? [] : [{ id: r.id, label: { text: "" }, description: null, badge: null, icon: null, href: NAV_SEPARATOR_HREF, newTab: false, separator: true, children: [] }];
+          }
           const label = GcsNavService.label(r.label, locale, siteLocale);
           if (!label) return [];
           const own = r.description ? GcsNavService.label(r.description, locale, siteLocale) : null;
           const fallbackKey = "key" in label ? navDescriptionKey(label.key) : null;
           const description = own && "text" in own ? own : fallbackKey ? { key: fallbackKey } : null;
-          return [{ id: r.id, label, description, badge: r.badge ?? null, icon: r.icon, href: r.href ?? "#", newTab: r.newTab, children: parentId === null ? build(r.id) : [] }];
+          const count = r.counter ? counters.get(r.counter) : null;
+          const badge = count !== null && count !== undefined ? (count > 0 ? (count > 999 ? "999+" : String(count)) : null) : (r.badge ?? null);
+          const children = parentId === null ? build(r.id) : [];
+          // Un grup (dropdown) fără subitemi vizibili nu apare.
+          if (r.kind === "dropdown" && children.filter((c) => !c.separator).length === 0) return [];
+          return [{ id: r.id, label, description, badge, icon: r.icon, href: r.href ?? "#", newTab: r.newTab, highlight: r.highlight ?? null, children: trimSeparators(children) }];
         });
     return build(null);
   }
 
-  /** Arborele complet, pentru editor (cu itemii ascunși și dezactivați). */
-  async editable(): Promise<GcsNavItemEdit[]> {
-    const rows = await this.rows();
+  private static editTree(rows: Row[]): GcsNavItemEdit[] {
     const build = (parentId: number | null): GcsNavItemEdit[] =>
       rows
         .filter((r) => r.parentId === parentId)
@@ -186,9 +295,24 @@ export class GcsNavService {
           groups: r.groups,
           newTab: r.newTab,
           enabled: r.enabled,
+          kind: (NAV_KINDS as readonly string[]).includes(r.kind ?? "") && !(r.kind === "link" && r.appKey) ? (r.kind as GcsNavKind) : r.appKey ? "app" : "link",
+          audience: (NAV_AUDIENCES as readonly string[]).includes(r.audience ?? "") ? (r.audience as GcsNavAudience) : "all",
+          counter: r.counter ?? null,
+          highlight: r.highlight ?? null,
           children: build(r.id),
         }));
     return build(null);
+  }
+
+  /** Arborele complet, pentru editor (cu itemii ascunși și dezactivați). */
+  async editable(): Promise<GcsNavItemEdit[]> {
+    return GcsNavService.editTree(await this.rows());
+  }
+
+  /** Ciorna managerului de meniu (arborele nepublicat) și data ei, sau `null`. */
+  async draft(): Promise<{ items: GcsNavItemEdit[]; updatedAt: Date } | null> {
+    const [rows, row] = await Promise.all([this.draftRows(), this.deps.db.navDraft.findUnique({ where: { id: 1 }, select: { updatedAt: true } })]);
+    return rows && row ? { items: GcsNavService.editTree(rows), updatedAt: row.updatedAt } : null;
   }
 
   private validate(items: GcsNavItemInput[], groupIds: Set<number>, depth = 1, path = "items"): number {
@@ -196,6 +320,20 @@ export class GcsNavService {
     let count = 0;
     items.forEach((it, i) => {
       const at = `${path}.${i}`;
+      const kind = it?.kind ?? "link";
+      if (!(NAV_KINDS as readonly string[]).includes(kind)) throw new GcsValidationError({ [`${at}.kind`]: "invalid_choice" });
+      if (it.audience != null && !(NAV_AUDIENCES as readonly string[]).includes(it.audience)) throw new GcsValidationError({ [`${at}.audience`]: "invalid_choice" });
+      if (it.counter != null && !(NAV_COUNTERS as readonly string[]).includes(it.counter)) throw new GcsValidationError({ [`${at}.counter`]: "invalid_choice" });
+      if (it.highlight != null && !(NAV_HIGHLIGHTS as readonly string[]).includes(it.highlight)) throw new GcsValidationError({ [`${at}.highlight`]: "invalid_choice" });
+      if (!(it.groups ?? []).every((g) => groupIds.has(g))) throw new GcsValidationError({ [`${at}.groups`]: "invalid" });
+      const children = it.children ?? [];
+      if (kind === "separator") {
+        // Separatorul: doar ca subitem, fără etichetă, link sau subitemi.
+        if (depth === 1) throw new GcsValidationError({ [`${at}.kind`]: "separator_top" });
+        if (children.length > 0) throw new GcsValidationError({ [`${at}.children`]: "invalid" });
+        count += 1;
+        return;
+      }
       const label = it?.label as Record<string, unknown> | undefined;
       if (!label || typeof label !== "object") throw new GcsValidationError({ [`${at}.label`]: "required" });
       if ("key" in label) {
@@ -214,41 +352,49 @@ export class GcsNavService {
         }
       }
       if (it.badge != null && (typeof it.badge !== "string" || !BADGE_RE.test(it.badge))) throw new GcsValidationError({ [`${at}.badge`]: "invalid" });
-      const children = it.children ?? [];
-      if (children.length === 0 && !isSafeHref(it.href)) throw new GcsValidationError({ [`${at}.href`]: "invalid" });
+      if (kind !== "dropdown" && children.length === 0 && !isSafeHref(it.href)) throw new GcsValidationError({ [`${at}.href`]: "invalid" });
       if (it.href != null && !isSafeHref(it.href)) throw new GcsValidationError({ [`${at}.href`]: "invalid" });
+      if (kind === "app" && it.appKey == null) throw new GcsValidationError({ [`${at}.appKey`]: "required" });
       if (it.appKey != null && !this.deps.registry.module(it.appKey)) throw new GcsValidationError({ [`${at}.appKey`]: "invalid" });
-      if (!(it.groups ?? []).every((g) => groupIds.has(g))) throw new GcsValidationError({ [`${at}.groups`]: "invalid" });
       if (children.length > 0 && depth >= MAX_DEPTH) throw new GcsValidationError({ [`${at}.children`]: "too_deep" });
       count += 1 + this.validate(children, groupIds, depth + 1, `${at}.children`);
     });
     return count;
   }
 
+  private async validateAll(items: GcsNavItemInput[]): Promise<void> {
+    const groupIds = new Set((await this.deps.db.group.findMany({ select: { id: true } })).map((g) => g.id));
+    if (this.validate(items, groupIds) > MAX_ITEMS) throw new GcsValidationError({ items: "too_many" });
+  }
+
   /** Înlocuiește meniul (ordinea din liste = ordinea afișată). */
   async save(actor: GcsActor, items: GcsNavItemInput[]): Promise<void> {
     const { db, acp, bus } = this.deps;
     await acp.assert(actor, MENUS_ACP_SECTION, "edit");
-    const groupIds = new Set((await db.group.findMany({ select: { id: true } })).map((g) => g.id));
-    if (this.validate(items, groupIds) > MAX_ITEMS) throw new GcsValidationError({ items: "too_many" });
+    await this.validateAll(items);
     const before = await this.editable();
     await db.$transaction(async (tx) => {
       await tx.navItem.deleteMany({});
       const create = async (list: GcsNavItemInput[], parentId: number | null) => {
         for (const [position, it] of list.entries()) {
+          const separator = it.kind === "separator";
           const row = await tx.navItem.create({
             data: {
               parentId,
               position,
-              label: it.label as Prisma.InputJsonValue,
-              ...(descriptionValue(it.description) ? { description: descriptionValue(it.description) as Prisma.InputJsonValue } : {}),
-              badge: it.badge?.trim() || null,
-              icon: it.icon ?? null,
-              href: it.href ?? null,
-              appKey: it.appKey ?? null,
+              label: (separator ? {} : it.label) as Prisma.InputJsonValue,
+              ...(!separator && descriptionValue(it.description) ? { description: descriptionValue(it.description) as Prisma.InputJsonValue } : {}),
+              badge: separator ? null : it.badge?.trim() || null,
+              icon: separator ? null : (it.icon ?? null),
+              href: separator ? null : (it.href ?? null),
+              appKey: separator ? null : (it.appKey ?? null),
               groups: [...new Set(it.groups ?? [])],
-              newTab: it.newTab ?? false,
+              newTab: !separator && (it.newTab ?? false),
               enabled: it.enabled ?? true,
+              kind: it.kind ?? (it.appKey ? "app" : "link"),
+              audience: it.audience ?? "all",
+              counter: separator ? null : (it.counter ?? null),
+              highlight: separator ? null : (it.highlight ?? null),
             },
           });
           await create(it.children ?? [], row.id);
@@ -258,6 +404,43 @@ export class GcsNavService {
       await writeAudit(tx, { actorId: actor.userId, action: "nav.save", targetType: "settings", targetId: "nav", before, after: items, ip: actor.ip });
     });
     await bus.emit({ name: "nav.updated", payload: {}, tags: [CACHE_TAG] });
+  }
+
+  /** Salvează ciorna (validată ca meniul publicat); site-ul o vede doar în previzualizare. */
+  async saveDraft(actor: GcsActor, items: GcsNavItemInput[]): Promise<void> {
+    const { db, acp } = this.deps;
+    await acp.assert(actor, MENUS_ACP_SECTION, "edit");
+    await this.validateAll(items);
+    const json = items as unknown as Prisma.InputJsonValue;
+    await db.navDraft.upsert({ where: { id: 1 }, create: { id: 1, items: json, updatedById: actor.userId }, update: { items: json, updatedById: actor.userId } });
+  }
+
+  /** „Publică”: ciorna devine meniul site-ului (cu jurnal), apoi se șterge. */
+  async publishDraft(actor: GcsActor): Promise<boolean> {
+    const draft = await this.deps.db.navDraft.findUnique({ where: { id: 1 } });
+    if (!draft) return false;
+    await this.save(actor, draft.items as unknown as GcsNavItemInput[]);
+    await this.deps.db.navDraft.deleteMany({ where: { id: 1 } });
+    return true;
+  }
+
+  /** „Renunță”: ciorna se șterge, meniul publicat rămâne. */
+  async discardDraft(actor: GcsActor): Promise<void> {
+    await this.deps.acp.assert(actor, MENUS_ACP_SECTION, "edit");
+    await this.deps.db.navDraft.deleteMany({ where: { id: 1 } });
+  }
+
+  /** „Restaurează meniul implicit”: meniul implicit al modulelor devine ciorna (se publică după previzualizare). */
+  async restoreDefaultsToDraft(actor: GcsActor): Promise<void> {
+    const items: GcsNavItemInput[] = navDefaults(this.deps.registry, "current").map((n) => ({
+      label: { key: n.labelKey },
+      icon: n.icon,
+      href: n.href,
+      appKey: n.appKey,
+      kind: n.appKey ? "app" : "link",
+      children: (n.children ?? []).map((c) => ({ label: { key: c.labelKey }, icon: c.icon, href: c.href })),
+    }));
+    await this.saveDraft(actor, items);
   }
 
   /** Aplică ordinea aplicațiilor (ACP → Aplicații) itemilor lor de pe primul nivel (`reorderAppItems`). */
@@ -391,7 +574,7 @@ function navDefaults(registry: GcsModuleRegistry, which: "current" | "previous")
 
 async function createDefaults(tx: Prisma.TransactionClient, items: NavDefaultItem[], start: number, enabled: boolean): Promise<void> {
   for (const [i, n] of items.entries()) {
-    const row = await tx.navItem.create({ data: { position: start + i, label: { key: n.labelKey }, icon: n.icon, href: n.href, appKey: n.appKey, groups: [], enabled } });
+    const row = await tx.navItem.create({ data: { position: start + i, label: { key: n.labelKey }, icon: n.icon, href: n.href, appKey: n.appKey, kind: n.appKey ? "app" : "link", groups: [], enabled } });
     for (const [position, c] of (n.children ?? []).entries()) {
       await tx.navItem.create({ data: { parentId: row.id, position, label: { key: c.labelKey }, icon: c.icon, href: c.href, groups: [] } });
     }

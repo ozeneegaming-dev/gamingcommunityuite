@@ -56,6 +56,7 @@ const TEXTS: Record<string, Record<Locale, (a: string, t: string, n: number, dat
   },
   "vip.granted": { ro: (_a, t) => `Ai primit ${t}`, en: (_a, t) => `You received ${t}` },
   "vip.expired": { ro: (_a, t) => `${t} a expirat`, en: (_a, t) => `Your ${t} has expired` },
+  "core.group_expired": { ro: (_a, t) => `Grupul ${t} a expirat`, en: (_a, t) => `Your ${t} group has expired` },
   "chat.sanction": { ro: (_a, _t, _n, d) => chatSanctionText("ro", d), en: (_a, _t, _n, d) => chatSanctionText("en", d) },
   "chat.access": { ro: (_a, _t, _n, d) => chatAccessText("ro", d), en: (_a, _t, _n, d) => chatAccessText("en", d) },
   "core.warning": { ro: (_a, t) => `Ai primit un avertisment: ${t}`, en: (_a, t) => `You received a warning: ${t}` },

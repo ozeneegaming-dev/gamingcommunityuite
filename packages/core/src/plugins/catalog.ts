@@ -111,7 +111,11 @@ export const PLUGIN_FILTER_POINTS = ["post.before_save"] as const;
 export type GcsPluginFilterPoint = (typeof PLUGIN_FILTER_POINTS)[number];
 
 /** Punctele de extensie din interfață (HTML inserat; aceleași nume le vor folosi și șabloanele). */
-export const PLUGIN_HOOK_POINTS = ["postbit.after_fields", "vip.page"] as const;
+/**
+ * `member.panel` (Membri v2): conținutul panourilor declarate în `memberPanels` (fișa ACP a membrului, profilul); datele
+ * apelului: `{ panel, userId, surface }`.
+ */
+export const PLUGIN_HOOK_POINTS = ["postbit.after_fields", "vip.page", "member.panel"] as const;
 export type GcsPluginHookPoint = (typeof PLUGIN_HOOK_POINTS)[number];
 
 /**

@@ -28,6 +28,14 @@ export function messageMemberData(deps: { db: PrismaClient; attachments: Pick<Gc
 
   return {
     key: "messages",
+    /** GDPR (Membri v2): conversațiile membrului (titlul) și mesajele scrise de el; mesajele celorlalți nu intră. */
+    async export(userId) {
+      const [conversations, messages] = await Promise.all([
+        db.conversationParticipant.findMany({ where: { userId }, select: { conversation: { select: { id: true, title: true, createdAt: true } } } }),
+        db.conversationMessage.findMany({ where: { authorId: userId }, orderBy: { id: "asc" }, select: { id: true, conversationId: true, contentHtml: true, createdAt: true, ip: true } }),
+      ]);
+      return { conversations: conversations.map((c) => c.conversation), messages };
+    },
     async summary(userId) {
       const [conversations, messages] = await Promise.all([
         db.conversationParticipant.count({ where: { userId } }),

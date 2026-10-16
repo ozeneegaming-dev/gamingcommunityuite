@@ -206,7 +206,15 @@
       "chat_banned": "Ai ban din chat.",
       "chat_kicked": "Ai fost scos din chat pentru o vreme.",
       "system_line": "Liniile de sistem nu se pot edita.",
-      "right_not_held": "Nu poți da un drept pe care nu-l ai."
+      "right_not_held": "Nu poți da un drept pe care nu-l ai.",
+      "no_password": "Contul nu are parolă (intră cu Steam, Discord sau Google).",
+      "root_only": "Doar un Root Admin poate face asta.",
+      "assigned_group": "Grupul a fost dat de echipă sau de o aplicație; nu-l poți părăsi de aici.",
+      "not_opt_in": "Grupul nu e deschis pentru înscriere.",
+      "already_member": "Ești deja în acest grup.",
+      "already_primary": "E deja grupul tău principal.",
+      "members_only": "Autentifică-te mai întâi.",
+      "self": "Nu poți face asta propriului cont."
     },
     "fields": {
       "invalid_color": "Culoare invalidă (#RRGGBB)",
@@ -332,7 +340,16 @@
       "room_not_found": "Camera nu există.",
       "invalid_handle": "Scrie doar numele de utilizator (litere, cifre, punct, minus, liniuță jos).",
       "invalid_link_template": "Șablonul trebuie să fie o adresă https cu '{handle}' o singură dată, doar la câmpurile „Text”.",
-      "same_theme": "Alege două teme diferite."
+      "same_theme": "Alege două teme diferite.",
+      "csv_header": "Fișierul CSV trebuie să aibă coloanele name, email și password.",
+      "group_staff": "Un grup de staff nu poate fi public.",
+      "group_vip": "Un grup VIP nu poate fi public.",
+      "group_protected": "Acest grup nu poate fi public.",
+      "username_taken": "Numele e deja folosit.",
+      "email_taken": "Emailul e deja folosit de alt cont.",
+      "email_invalid": "Adresa de email nu e validă.",
+      "group_unknown": "Grup necunoscut.",
+      "separator_top": "Un separator poate sta doar între subitemi."
     }
   },
   "acp": {
@@ -698,14 +715,129 @@
         "email": "Email",
         "group": "Grup principal",
         "joined": "Înregistrat",
-        "lastActive": "Ultima activitate"
+        "lastActive": "Ultima activitate",
+        "ip": "IP",
+        "posts": "Postări"
       },
       "empty": "Niciun membru găsit",
       "total": "{count, plural, one {# membru} few {# membri} other {# de membri}}",
       "prev": "Pagina anterioară",
       "next": "Pagina următoare",
       "page": "Pagina {page} din {pages}",
-      "never": "niciodată"
+      "never": "niciodată",
+      "description": "Caută, filtrează și administrează orice cont: grupuri, validare, bannuri și exporturi.",
+      "reset": "Resetează",
+      "pages": "Pagini",
+      "secondaryCount": "{count, plural, one {# grup secundar} few {# grupuri secundare} other {# de grupuri secundare}}",
+      "quick": {
+        "label": "Filtre rapide",
+        "all": "Toți",
+        "online": "Online",
+        "new": "Noi",
+        "unvalidated": "Nevalidați",
+        "banned": "Banați",
+        "spammers": "Spammeri",
+        "staff": "Staff"
+      },
+      "advanced": {
+        "title": "Căutare avansată",
+        "scope": "Grupul ca",
+        "scopeAny": "Principal sau secundar",
+        "scopePrimary": "Principal",
+        "scopeSecondary": "Secundar",
+        "ip": "Adresa IP",
+        "login": "Metoda de autentificare",
+        "any": "Oricare",
+        "logins": {
+          "credential": "Parolă",
+          "steam": "Steam",
+          "discord": "Discord",
+          "google": "Google"
+        },
+        "twoFactor": "Autentificare în doi pași (2FA)",
+        "tfaOn": "Activă",
+        "tfaOff": "Inactivă",
+        "country": "Țara (2 litere)",
+        "joined": "Înscriere",
+        "joinedFrom": "Înscris de la",
+        "joinedTo": "Înscris până la",
+        "active": "Ultima vizită",
+        "activeFrom": "Ultima vizită de la",
+        "activeTo": "Ultima vizită până la",
+        "posts": "Postări",
+        "postsMin": "Postări, cel puțin",
+        "postsMax": "Postări, cel mult",
+        "min": "min",
+        "max": "max"
+      },
+      "status": {
+        "banned": "banat",
+        "spammer": "spammer",
+        "unvalidated": "nevalidat"
+      },
+      "bulk": {
+        "title": "Acțiuni în masă",
+        "selected": "{count, plural, =0 {Niciunul selectat} one {# selectat} few {# selectați} other {# de selectați}}",
+        "scope": "Aplică pe",
+        "scopeSelected": "Membrii selectați",
+        "scopeFiltered": "Toți cei filtrați ({count})",
+        "action": "Acțiune",
+        "ops": {
+          "add_secondary": "Adaugă grup secundar",
+          "remove_secondary": "Scoate grupul secundar",
+          "set_primary": "Mută în grupul principal",
+          "validate": "Validează",
+          "ban": "Banează",
+          "delete": "Șterge conturile"
+        },
+        "group": "Grupul",
+        "expiresAt": "Expiră pe (gol = niciodată)",
+        "reason": "Motiv",
+        "duration": "Durată",
+        "durations": {
+          "permanent": "Permanent",
+          "d1": "1 zi",
+          "d7": "7 zile",
+          "d30": "30 de zile"
+        },
+        "mode": "Conținutul",
+        "modes": {
+          "keep": "Păstrează conținutul (ca Membru șters)",
+          "delete": "Șterge și conținutul"
+        },
+        "apply": "Aplică",
+        "none": "Selectează cel puțin un membru.",
+        "done": "Gata: {changed} schimbați, {skipped} săriți.",
+        "confirm": "„{action}” pentru {count, plural, one {# membru} few {# membri} other {# de membri}}?",
+        "confirmDelete": "Ștergi {count, plural, one {# cont} few {# conturi} other {# de conturi}}? Fiecare ștergere pornește operația de ștergere a contului (progresul în pagina Cereri GDPR).",
+        "confirmOk": "Confirmă ({count})",
+        "selectAll": "Selectează tot de pe pagină",
+        "select": "Selectează {name}"
+      },
+      "tools": {
+        "create": {
+          "open": "Membru nou",
+          "title": "Membru nou",
+          "name": "Nume",
+          "email": "Email",
+          "password": "Parolă (cel puțin 8 caractere)",
+          "group": "Grup principal",
+          "submit": "Creează membrul"
+        },
+        "import": {
+          "open": "Import CSV",
+          "title": "Importă membri din CSV",
+          "hint": "Un membru pe rând; primul rând e antetul. Coloana group e opțională (cheia sau numele grupului, implicit Membru).",
+          "file": "Fișierul CSV",
+          "noFile": "Alege un fișier CSV.",
+          "submit": "Importă",
+          "created": "{count, plural, one {# membru creat} few {# membri creați} other {# de membri creați}}",
+          "lineError": "Rândul {line}: {code}"
+        },
+        "export": "Export CSV",
+        "close": "Închide",
+        "cancel": "Renunță"
+      }
     },
     "member": {
       "back": "Înapoi la membri",
@@ -726,7 +858,23 @@
         "add": "Adaugă grup secundar",
         "addSubmit": "Adaugă",
         "remove": "Scoate {group}",
-        "save": "Salvează grupul principal"
+        "save": "Salvează grupul principal",
+        "expires": "expiră pe {date}",
+        "noExpiry": "fără expirare",
+        "sources": {
+          "manual": "manual",
+          "store": "din Magazin",
+          "servers": "din aplicația Servere",
+          "promotion": "promovare",
+          "optin": "s-a înscris singur",
+          "vip": "VIP",
+          "import": "importat",
+          "other": "dintr-o aplicație"
+        },
+        "extend": "Setează expirarea",
+        "expiresAt": "Expirarea grupului {group}",
+        "expiresAtLabel": "Expiră pe",
+        "expiryHint": "Gol = fără expirare. Un grup temporar se scoate singur, iar membrul primește o notificare."
       },
       "ban": {
         "title": "Ban",
@@ -785,6 +933,130 @@
         "amount": "Suma",
         "currency": "Moneda",
         "note": "Notă"
+      },
+      "tabs": {
+        "label": "Secțiunile membrului",
+        "overview": "Prezentare",
+        "profile": "Profil",
+        "activity": "Activitate",
+        "permissions": "Permisiuni",
+        "log": "Jurnal"
+      },
+      "identity": {
+        "title": "Identitate",
+        "banned": "Banat",
+        "spammer": "Spammer",
+        "validated": "Validat",
+        "unvalidated": "Nevalidat",
+        "locked": "2FA blocat",
+        "passwordReset": "Resetare parolă cerută",
+        "posts": "Postări",
+        "ip": "Ultimul IP",
+        "logins": "Metode de autentificare",
+        "loginMethods": {
+          "credential": "Parolă",
+          "steam": "Steam",
+          "discord": "Discord",
+          "google": "Google",
+          "other": "Altele"
+        }
+      },
+      "actions": {
+        "title": "Acțiuni cont",
+        "validate": "Validează",
+        "validateConfirm": "Marchezi emailul ca fiind confirmat de echipă?",
+        "spammer": "Marchează spammer",
+        "spammerConfirm": "Marchezi membrul ca spammer? Contul e și banat permanent.",
+        "unspammer": "Nu e spammer",
+        "unspammerConfirm": "Scoți marcajul de spammer? Bannul rămâne până îl ridici.",
+        "unlock": "Deblochează 2FA",
+        "unlockConfirm": "Ștergi blocarea după coduri greșite la autentificarea în doi pași?",
+        "resetPassword": "Resetează parola",
+        "resetPasswordConfirm": "Deloghezi membrul de peste tot și îi ceri o parolă nouă la următoarea vizită?",
+        "disable2fa": "Dezactivează 2FA",
+        "disable2faConfirm": "Dezactivezi autentificarea în doi pași pentru acest membru? Doar dacă nu mai are acces la aplicația de coduri.",
+        "ban": "Ban",
+        "gdpr": "Export GDPR",
+        "hint": "Fiecare acțiune intră în jurnal. Unirea și ștergerea au paginile lor de confirmare."
+      },
+      "cards": {
+        "activity": "Activitate (30 de zile)",
+        "activityDay": "{day}: {posts} postări, {chat} mesaje în chat",
+        "activityPosts": "{count, plural, one {# postare} few {# postări} other {# de postări}}",
+        "activityChat": "{count, plural, one {# mesaj în chat} few {# mesaje în chat} other {# de mesaje în chat}}",
+        "content": "Conținut pe aplicații",
+        "contentEmpty": "Încă nu are conținut.",
+        "rank": "Rang și puncte",
+        "rankName": "Rang",
+        "points": "Puncte",
+        "reputation": "Reputație",
+        "posts": "Postări",
+        "badges": "Insigne",
+        "badgesEmpty": "Încă nu are insigne.",
+        "manage": "Administrează",
+        "vip": "VIP",
+        "vipUntil": "până pe {date}",
+        "vipPermanent": "permanent",
+        "vipNone": "Fără VIP activ.",
+        "quotas": "Cote",
+        "quota": {
+          "conversations": "Conversații private",
+          "storage": "Fișiere încărcate",
+          "upload": "Mărimea maximă a unui fișier",
+          "signature": "Lungimea semnăturii"
+        },
+        "unlimited": "nelimitat",
+        "unit": {
+          "count": "{value}",
+          "mb": "{value} MB",
+          "chars": "{value} caractere"
+        },
+        "warnPoints": "{count, plural, one {# punct de avertisment activ} few {# puncte de avertisment active} other {# de puncte de avertisment active}}"
+      },
+      "activity": {
+        "chart": "Activitate (90 de zile)",
+        "posts": "Ultimele postări",
+        "devices": "Dispozitive",
+        "none": "Nimic încă."
+      },
+      "log": {
+        "title": "Jurnalul contului",
+        "empty": "Nicio intrare încă.",
+        "self": "de membru",
+        "by": "de {name}",
+        "system": "de sistem",
+        "all": "Deschide jurnalul complet"
+      },
+      "panels": {
+        "connections": "Conturi legate",
+        "game_identities": "Identități de joc",
+        "mix_elo": "ELO mix",
+        "server_sanctions": "Sancțiuni pe servere",
+        "clan_membership": "Clan",
+        "empty": "Nimic de arătat.",
+        "providers": {
+          "steam": "Steam",
+          "discord": "Discord",
+          "google": "Google",
+          "other": "Altul"
+        },
+        "linkedOn": "legat pe {date}",
+        "lastSeen": "văzut ultima dată pe {date}",
+        "elo": {
+          "elo": "ELO",
+          "peak": "Maxim",
+          "record": "V–Î–E",
+          "matches": "Meciuri"
+        },
+        "allServers": "Toate serverele",
+        "until": "până pe {date}",
+        "permanent": "permanent",
+        "joinedOn": "în clan din {date}",
+        "clanRoles": {
+          "LEADER": "Lider",
+          "OFFICER": "Ofițer",
+          "MEMBER": "Membru"
+        }
       }
     },
     "groups": {
@@ -884,6 +1156,12 @@
         "parentNone": "Pe rândul lui",
         "parentHint": "Un grup legat apare în lista care se deschide de pe rândul grupului ales (din aceeași categorie).",
         "save": "Salvează legenda"
+      },
+      "optIn": {
+        "title": "Grup public",
+        "label": "Membrii pot intra și ieși singuri din acest grup",
+        "hint": "Apare în Setări → Grupuri, ca grup secundar. Nu e disponibil pentru grupurile de staff, VIP sau protejate.",
+        "save": "Salvează"
       }
     },
     "permissions": {
@@ -1538,7 +1816,91 @@
       "description": "Descriere",
       "descriptionHint": "Un rând sub titlu în mega meniu. Gol = descrierea implicită a itemilor automați.",
       "badge": "Insignă",
-      "badgeHint": "ex. NOU"
+      "badgeHint": "ex. NOU",
+      "v2": {
+        "saving": "Se salvează…",
+        "stateDraft": "Ciornă nepublicată",
+        "statePublished": "Publicat",
+        "draftSaved": "Ciornă salvată",
+        "publish": "Publică",
+        "discard": "Renunță",
+        "restore": "Restaurează implicit",
+        "published": "Meniul a fost publicat.",
+        "discarded": "Ciorna a fost ștearsă.",
+        "restored": "Meniul implicit e acum ciorna. Verifică previzualizarea, apoi publică.",
+        "confirm": {
+          "publish": "Publici ciorna? Toți vizitatorii vor vedea meniul nou.",
+          "discard": "Renunți la ciornă? Schimbările nepublicate se pierd.",
+          "restore": "Înlocuiești ciorna cu meniul implicit al aplicațiilor? Itemii tăi proprii dispar din ciornă."
+        },
+        "tree": "Itemii meniului",
+        "add": "Adaugă item",
+        "dragHint": "Trage ca să schimbi ordinea. Trage spre dreapta ca să pui un item sub cel de deasupra, spre stânga ca să-l scoți pe primul nivel.",
+        "panel": "Editează itemul",
+        "pick": "Alege un item ca să-l editezi.",
+        "editTitle": "Editează itemul",
+        "close": "Închide",
+        "separator": "Separator",
+        "untitled": "Fără titlu",
+        "newItem": "Item nou",
+        "drag": "Mută {name}",
+        "active": "{name} e activ",
+        "more": "Mai multe acțiuni pentru {name}",
+        "kinds": {
+          "link": "Link propriu",
+          "app": "Pagina unei aplicații",
+          "dropdown": "Grup (dropdown)",
+          "separator": "Separator"
+        },
+        "kind": "Tipul itemului",
+        "appPage": "Pagina aplicației",
+        "appPick": "Alege o pagină…",
+        "languages": "Limbi",
+        "labelIn": "Eticheta ({lang})",
+        "descriptionIn": "Descrierea din mega meniu ({lang})",
+        "hrefOptional": "Link (opțional pentru un grup)",
+        "badgeTitle": "Insignă și evidențiere",
+        "badgeText": "Insignă fixă",
+        "counter": "Contor live",
+        "noCounter": "Fără contor",
+        "counters": {
+          "online": "Online acum",
+          "topics_today": "Topicuri noi azi",
+          "members_today": "Membri noi azi"
+        },
+        "highlight": "Evidențiere",
+        "highlights": {
+          "none": "Fără",
+          "accent": "Culoarea de accent",
+          "glow": "Strălucire"
+        },
+        "visibility": "Vizibilitate",
+        "audience": "Cine îl vede",
+        "audiences": {
+          "all": "Toți",
+          "guests": "Doar vizitatorii",
+          "members": "Doar membrii"
+        },
+        "actions": {
+          "edit": "Editează",
+          "child": "Adaugă subitem",
+          "separator": "Adaugă separator",
+          "up": "Mută mai sus",
+          "down": "Mută mai jos",
+          "indent": "Pune sub itemul de deasupra",
+          "outdent": "Mută pe primul nivel",
+          "duplicate": "Duplică",
+          "remove": "Șterge"
+        },
+        "preview": "Previzualizare live",
+        "device": "Dispozitiv",
+        "devices": {
+          "desktop": "Desktop",
+          "mobile": "Mobil"
+        },
+        "reload": "Reîncarcă previzualizarea",
+        "previewHint": "Previzualizarea arată antetul real al site-ului cu ciorna; doar tu o vezi până publici."
+      }
     },
     "languages": {
       "title": "Limbile active",
@@ -2022,7 +2384,8 @@
           "vip_page": "Pe pagina publică VIP (/vip), sub planuri.",
           "user_deleting": "Un cont începe să fie șters (pluginul își șterge datele membrului).",
           "user_deleted": "Un cont a fost șters.",
-          "user_merged": "Un cont a fost unit cu altul (pluginul își mută datele în contul țintă)."
+          "user_merged": "Un cont a fost unit cu altul (pluginul își mută datele în contul țintă).",
+          "member_panel": "Carduri și taburi pe fișa membrului din ACP și pe profil (declarate în memberPanels)."
         }
       }
     },
@@ -3452,6 +3815,37 @@
       "saveGrant": "Salvează accesul",
       "addGrant": "Adaugă moderatorul"
     },
+    "confirm": {
+      "cancel": "Renunță"
+    },
+    "staffPage": {
+      "title": "Pagina Staff",
+      "description": "Ordinea secțiunilor de pe /staff, banda cu titlul lor, aspectul cardurilor și descrierea și responsabilitățile fiecărui membru.",
+      "view": "Vezi /staff",
+      "sections": "Secțiuni",
+      "sectionsHint": "Fiecare grup de staff e o secțiune. Trage ca să schimbi ordinea; Detaliat = carduri mari, 2 pe rând; Compact = carduri mici pentru nivelurile de jos.",
+      "saved": "Salvat",
+      "save": "Salvează secțiunile",
+      "drag": "Mută {name}",
+      "titleLabel": "Titlul pentru {group}",
+      "layout": "Aspect",
+      "layouts": {
+        "detailed": "Detaliat",
+        "compact": "Compact"
+      },
+      "visible": "Arată {group} pe /staff",
+      "visibleShort": "Vizibilă",
+      "members": "{count, plural, one {# membru} few {# membri} other {# de membri}}",
+      "moveUp": "Mută {name} mai sus",
+      "moveDown": "Mută {name} mai jos",
+      "order": "Ordinea membrilor",
+      "dutiesCount": "{count, plural, one {# responsabilitate} few {# responsabilități} other {# de responsabilități}}",
+      "noDuties": "fără responsabilități încă",
+      "saveMember": "Salvează",
+      "descriptionLabel": "Descriere",
+      "dutiesLabel": "Responsabilități (una pe rând)",
+      "dutiesPlaceholder": "Reclamații\nBan-uri pe servere\nEvenimente"
+    },
     "announcementBar": {
       "title": "Bară de anunț",
       "intro": "Bara subțire de deasupra conținutului, pe tot site-ul și în orice temă. Mai multe bare active se rotesc.",
@@ -3629,7 +4023,8 @@
       "discord": "Discord",
       "google": "Google",
       "apps": "Aplicații autorizate",
-      "chat": "Chat"
+      "chat": "Chat",
+      "groups": "Grupuri"
     },
     "appearance": {
       "title": "Aspect",
@@ -3734,7 +4129,8 @@
         "requested": "Cererea a fost înregistrată.",
         "banner": "Contul tău va fi șters pe {date}.",
         "bannerLink": "Anulează ștergerea"
-      }
+      },
+      "passwordResetRequired": "Echipa ți-a cerut să-ți schimbi parola. Pune una nouă mai jos ca să continui."
     },
     "notifications": {
       "title": "Notificări",
@@ -4037,6 +4433,19 @@
     },
     "themes": {
       "toggle": "Comutatorul întunecat/luminos (perechea de teme)"
+    },
+    "groups": {
+      "title": "Grupuri",
+      "hint": "Grupurile publice în care poți intra sau din care poți ieși singur. Apar ca grupuri secundare pe profilul tău.",
+      "empty": "Încă nu există grupuri publice.",
+      "joined": "Ai intrat în {group}.",
+      "left": "Ai ieșit din {group}.",
+      "primary": "Grupul tău principal",
+      "member": "Ești în acest grup",
+      "assigned": "Dat de echipă sau de o aplicație",
+      "notMember": "Nu ești membru",
+      "join": "Intră",
+      "leave": "Ieși"
     }
   },
   "permissions": {
@@ -4881,7 +5290,8 @@
       },
       "core": {
         "warning": "Avertismente",
-        "group_mention": "Mențiuni prin grup"
+        "group_mention": "Mențiuni prin grup",
+        "group_expired": "Grupurile temporare care au expirat"
       },
       "chat": {
         "mention": "Mențiuni în chat",
@@ -8205,6 +8615,60 @@
       "allMembers": "Toți membrii grupului",
       "empty": "Niciun grup nu se potrivește căutării.",
       "noMembers": "Grupul nu are membri aici."
+    }
+  },
+  "staffPage": {
+    "lead": "Oamenii care conduc comunitatea, de ce se ocupă fiecare și cum îi găsești.",
+    "count": "{count, plural, one {# membru} few {# membri} other {# de membri}}",
+    "message": "Mesaj",
+    "profile": "Profil",
+    "contactOn": "{name} pe {service}",
+    "online": "Online",
+    "noDescription": "Încă fără descriere.",
+    "duties": "Responsabilități"
+  },
+  "onlinePage": {
+    "title": "Cine e online",
+    "lead": "{count, plural, one {# vizitator acum} few {# vizitatori acum} other {# de vizitatori acum}}",
+    "record": "record: {count} pe {date}",
+    "filterLabel": "Arată",
+    "filters": {
+      "all": "Toți",
+      "members": "Membri",
+      "staff": "Staff",
+      "guests": "Vizitatori"
+    },
+    "empty": "Nu e nimeni pe site acum.",
+    "staffBadge": "staff",
+    "hiddenBadge": "ascuns",
+    "guest": "Vizitator",
+    "hiddenCount": "{count, plural, one {# membru cu statusul ascuns} few {# membri cu statusul ascuns} other {# de membri cu statusul ascuns}}",
+    "where": {
+      "unknown": "Undeva pe site",
+      "index": "Pe pagina principală",
+      "topic": "Vede topicul",
+      "forum": "Citește forumul",
+      "profile": "Se uită la profilul lui",
+      "topicHidden": "Vede un topic",
+      "forumHidden": "Citește un forum",
+      "profileHidden": "Se uită la un profil",
+      "members": "Răsfoiește membrii",
+      "staff": "Pe pagina staff-ului",
+      "online": "Pe această pagină",
+      "chat": "În chat",
+      "messages": "În mesajele private",
+      "search": "Caută",
+      "settings": "În setările contului",
+      "page": "Citește o pagină",
+      "app": "În {app}"
+    },
+    "apps": {
+      "servers": "Servere",
+      "clans": "Clanuri",
+      "vip": "VIP",
+      "leaderboard": "Clasament",
+      "activity": "Activitate",
+      "plugin": "o aplicație"
     }
   },
   "guestCta": {

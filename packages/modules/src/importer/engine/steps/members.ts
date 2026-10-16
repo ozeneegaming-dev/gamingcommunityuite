@@ -133,7 +133,7 @@ export async function importMembers(s: GcsStepContext): Promise<void> {
             select: { id: true },
           });
           const secondary = [...new Set(m.secondaryGroupIds.map((g) => Number(groupMap.get(g))).filter((g) => Number.isInteger(g) && g !== primaryGroupId))];
-          if (secondary.length > 0) await tx.userGroup.createMany({ data: secondary.map((groupId) => ({ userId: user.id, groupId })), skipDuplicates: true });
+          if (secondary.length > 0) await tx.userGroup.createMany({ data: secondary.map((groupId) => ({ userId: user.id, groupId, source: "import" })), skipDuplicates: true });
           if (m.password) {
             let stored: string | null = null;
             try {
