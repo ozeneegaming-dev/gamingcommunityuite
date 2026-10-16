@@ -3,6 +3,7 @@ import type { ChatChannel, ChatRoomType, PrismaClient } from "@gcs/db";
 import { toRef, userRefSelect, type GcsUserRef } from "../forums/queries";
 import { chatContainer, toChatView, type GcsChatMessageView } from "./chat";
 import type { GcsChatExtensions } from "./extensions";
+import { GcsChatRights } from "./rights";
 
 const PAGE = 30;
 
@@ -20,7 +21,12 @@ export type GcsChatAnnouncementView = { id: number; body: string; expiresAt: str
  * O cameră privată există doar pentru membrii ei (invitați și creator): pentru restul e „nu există”.
  */
 export class GcsChatQueries {
-  constructor(private readonly deps: { db: PrismaClient; permissions: GcsPermissionService; extensions?: GcsChatExtensions }) {}
+  /** Drepturile de moderare (mesajele ascunse) și sancțiunile (kick, ban din chat). */
+  readonly rights: GcsChatRights;
+
+  constructor(private readonly deps: { db: PrismaClient; permissions: GcsPermissionService; extensions?: GcsChatExtensions; rights?: GcsChatRights }) {
+    this.rights = deps.rights ?? new GcsChatRights({ db: deps.db, permissions: deps.permissions });
+  }
 
   /** Vederile completate de extensii (Chat Pro), dacă sunt. */
   private decorate<T extends GcsChatMessageView[]>(views: T): Promise<T> {
@@ -38,6 +44,8 @@ export class GcsChatQueries {
     const channel = await this.deps.db.chatChannel.findUnique({ where: { key }, select: { id: true, enabled: true, type: true } });
     if (channel?.enabled !== true) return false;
     if (channel.type === "PRIVATE" && !(await this.isMember(viewer.userId, channel.id))) return false;
+    // Un membru scos (kick) sau banat din chat nu mai poate intra în cameră, nici la reconectarea live.
+    if (await this.rights.block(viewer.userId, channel.id)) return false;
     return this.deps.permissions.can(viewer, "chat.read", chatContainer(key));
   }
 
@@ -76,6 +84,8 @@ export class GcsChatQueries {
     // O cameră privată nu-și dezvăluie existența celor din afară.
     if (channel.type === "PRIVATE" && !(await this.isMember(viewer.userId, channel.id))) throw new GcsNotFound();
     if (viewer.isBanned || !(await this.deps.permissions.can(viewer, "chat.read", chatContainer(key)))) throw new GcsForbidden({ permission: "chat.read" });
+    const block = await this.rights.block(viewer.userId, channel.id);
+    if (block) throw new GcsForbidden({ reason: block.kind === "ban" ? "chat_banned" : "chat_kicked", ...(block.until ? { until: block.until } : {}) });
     return channel;
   }
 
@@ -84,11 +94,15 @@ export class GcsChatQueries {
     return this.history(viewer, key, null, limit);
   }
 
-  /** Mesajele dinaintea lui `beforeId` (derularea în sus), cele mai vechi primele, cu reacțiile lor. */
+  /**
+   * Mesajele dinaintea lui `beforeId` (derularea în sus), cele mai vechi primele, cu reacțiile lor. Mesajele ascunse de
+   * staff apar doar celor cu dreptul `hide` pe cameră (marcate `hidden`).
+   */
   async history(viewer: GcsActor, key: string, beforeId: number | null, limit = PAGE): Promise<GcsChatMessageView[]> {
     const channel = await this.assertRead(viewer, key);
+    const seesHidden = await this.rights.has(viewer, "hide", key);
     const rows = await this.deps.db.chatMessage.findMany({
-      where: { channelId: channel.id, deletedAt: null, ...(beforeId ? { id: { lt: beforeId } } : {}) },
+      where: { channelId: channel.id, deletedAt: null, ...(seesHidden ? {} : { hiddenAt: null }), ...(beforeId ? { id: { lt: beforeId } } : {}) },
       orderBy: { id: "desc" },
       take: Math.min(Math.max(limit, 1), 100),
       include: { author: { select: userRefSelect }, reactions: { select: { userId: true, reactionId: true } } },
@@ -104,7 +118,7 @@ export class GcsChatQueries {
       where: { id: channel.pinnedMessageId },
       include: { author: { select: userRefSelect }, reactions: { select: { userId: true, reactionId: true } } },
     });
-    if (!m || m.deletedAt) return null;
+    if (!m || m.deletedAt || (m.hiddenAt && !(await this.rights.has(viewer, "hide", key)))) return null;
     const [view] = await this.decorate([toChatView(m, channel.key, viewer.userId)]);
     return view ?? null;
   }

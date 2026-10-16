@@ -44,6 +44,18 @@ describe("GcsWarningService", () => {
     await expect(w.warnings.activePoints(target.id)).resolves.toBe(1);
   });
 
+  test("dovada se păstrează; `authorized` lasă apelantul să-și verifice dreptul, protecția Root rămâne", async () => {
+    const mod = await w.actorFor(await w.createUser("Mod", "moderator"));
+    const target = await w.createUser("Tinta", "member");
+    // Fără dreptul ACP: refuzat; cu dreptul verificat de apelant (ex. `chat.warn`): acceptat, cu dovada.
+    await expect(w.warnings.warn({ userId: target.id, points: 1, reason: "spam" }, mod)).rejects.toThrow();
+    const evidence = { type: "chat.message", id: 7, channel: "general", body: "reclamă" };
+    const { warning } = await w.warnings.warn({ userId: target.id, points: 1, reason: "spam", evidence }, mod, { authorized: true });
+    expect(warning.evidence).toEqual(evidence);
+    const root = await w.createUser("Root", "root_admin");
+    await expect(w.warnings.warn({ userId: root.id, points: 1, reason: "x" }, mod, { authorized: true })).rejects.toMatchObject({ params: { reason: "root_protected" } });
+  });
+
   test("pragul BAN dă un ban permanent pe cont", async () => {
     const root = await w.actorFor(await w.createUser("Root", "root_admin"));
     const target = await w.createUser("Tinta", "member");

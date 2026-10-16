@@ -22,6 +22,9 @@ import type { ChatChannel, ChatRoomType, Prisma, PrismaClient } from "@gcs/db";
 import type { GcsChatProMessage } from "../chat-pro/types";
 import { toRef, userRefSelect, type GcsUserRef } from "../forums/queries";
 import { GcsChatExtensions } from "./extensions";
+import type { GcsChatEphemeral, GcsChatHidden, GcsChatSystemLine } from "./moderation-types";
+import { writeChatModLog } from "./modlog";
+import { GcsChatRights, isChatRight } from "./rights";
 import { CHAT_ACP_CHANNELS, CHAT_CONTAINER, defaultChannelPermissions } from "./index";
 import { applyWordFilter, chatEmbeds, cleanChatText, countEmoji, renderChatText, type GcsChatEmbed } from "./text";
 
@@ -81,6 +84,12 @@ export type GcsChatMessageView = {
   pro?: GcsChatProMessage;
   /** Mențiunile hotărâte la trimitere (membri și grupuri, după id): pastilele din `html` și evidențierea din Chat Pro. */
   mentions?: GcsTextMention[];
+  /** Mesajul e ascuns de staff (apare doar celor cu dreptul `hide`, estompat, cu „ascuns de X”). */
+  hidden?: GcsChatHidden;
+  /** O linie de sistem a moderării (mute, kick, ban, acces de moderator). */
+  system?: GcsChatSystemLine;
+  /** Rezultatul unei comenzi de moderare, doar pentru autor (mesajul nu există în cameră). */
+  ephemeral?: GcsChatEphemeral;
 };
 export type GcsChatRoomInput = { name: string; type: ChatRoomType; invite?: string[] };
 export type GcsChatChannelInput = {
@@ -105,7 +114,27 @@ type ChatMessageRow = {
   files?: unknown;
   replyToId?: number | null;
   meta?: unknown;
+  hiddenAt?: Date | null;
+  hiddenById?: string | null;
 };
+
+/** Linia de sistem salvată în `meta.system` (fără membrul țintă, completat la citire). */
+export function chatSystemOf(meta: unknown): GcsChatSystemLine | null {
+  if (typeof meta !== "object" || meta === null || Array.isArray(meta)) return null;
+  const s = (meta as { system?: unknown }).system;
+  if (typeof s !== "object" || s === null) return null;
+  const v = s as Record<string, unknown>;
+  const kinds = ["mute", "kick", "ban", "warn", "grant", "revoke"];
+  if (typeof v.kind !== "string" || !kinds.includes(v.kind) || typeof v.targetId !== "string") return null;
+  return {
+    kind: v.kind as GcsChatSystemLine["kind"],
+    targetId: v.targetId,
+    target: null,
+    minutes: typeof v.minutes === "number" ? v.minutes : null,
+    reason: typeof v.reason === "string" ? v.reason : "",
+    ...(Array.isArray(v.rights) ? { rights: v.rights.filter(isChatRight) } : {}),
+  };
+}
 
 /** Mențiunile salvate în `meta.mentions` al unui mesaj. */
 export function chatMentionsOf(meta: unknown): GcsTextMention[] {
@@ -125,6 +154,7 @@ function countReactions(rows: { reactionId: number }[]): GcsChatReactionCount[] 
 export function toChatView(m: ChatMessageRow, channel: string, viewerId: string | null = null): GcsChatMessageView {
   const reactions = m.reactions ?? [];
   const mentions = chatMentionsOf(m.meta);
+  const system = chatSystemOf(m.meta);
   return {
     id: m.id,
     channel,
@@ -139,6 +169,8 @@ export function toChatView(m: ChatMessageRow, channel: string, viewerId: string 
     files: Array.isArray(m.files) ? m.files.filter(isChatFile) : [],
     embeds: chatEmbeds(m.body),
     replyToId: m.replyToId ?? null,
+    ...(m.hiddenAt ? { hidden: { at: m.hiddenAt.toISOString(), byId: m.hiddenById ?? null, by: null } } : {}),
+    ...(system ? { system } : {}),
   };
 }
 
@@ -166,6 +198,9 @@ function rulesHtml(value: unknown): string {
  * canale din ACP; retenție zilnică. Mesajele noi și ștergerile pleacă live în camera `chat:{cheie}`.
  */
 export class GcsChatService {
+  /** Drepturile de moderare și sancțiunile active (aceleași pentru citiri și pentru moderare). */
+  readonly rights: GcsChatRights;
+
   constructor(
     private readonly deps: {
       db: PrismaClient;
@@ -183,8 +218,11 @@ export class GcsChatService {
       textMentions?: GcsTextMentions;
       /** Pauza dintre mențiunile aceluiași grup (setările `mentions.*` ale grupului). */
       groupMentions?: GcsGroupMentionService;
+      /** Drepturile de moderare (grupuri + accesul de moderator) și sancțiunile; implicit, create aici. */
+      rights?: GcsChatRights;
     },
   ) {
+    this.rights = deps.rights ?? new GcsChatRights({ db: deps.db, permissions: deps.permissions });
     deps.attachments?.registerAccess(CHAT_FILE_CONTENT_TYPE, (actor, id) => this.canReadMessage(actor, Number(id)));
   }
 
@@ -268,6 +306,9 @@ export class GcsChatService {
       if (!member) throw new GcsNotFound();
     }
     if (actor.isBanned || !(await this.deps.permissions.can(actor, "chat.read", chatContainer(channel.key)))) throw new GcsForbidden({ permission: "chat.read" });
+    // Kick (din cameră sau din tot chat-ul) și banul din chat: verificate și la API, nu doar în interfață.
+    const block = await this.rights.block(actor.userId, channel.id);
+    if (block) throw new GcsForbidden({ reason: block.kind === "ban" ? "chat_banned" : "chat_kicked", ...(block.until ? { until: block.until } : {}) });
     return channel;
   }
 
@@ -304,6 +345,11 @@ export class GcsChatService {
       throw new GcsForbidden({ permission: "chat.write" });
     }
     const body = cleanChatText(typeof raw === "string" ? raw : "");
+    // Comenzile chat-ului standard (`/acces`, `/revoca`): rezultatul e doar al autorului, nimic nu se salvează.
+    if (body.startsWith("/") && (opts.files ?? []).length === 0) {
+      const ephemeral = await this.extensions.command({ actor, channel, body, mentions: opts.mentions ?? [] });
+      if (ephemeral) return { id: 0, channel: channel.key, author: null, body: "", html: "", createdAt: new Date().toISOString(), editedAt: null, reactions: [], mine: [], files: [], embeds: [], replyToId: null, ephemeral };
+    }
     const fileIds = [...new Set(opts.files ?? [])];
     if (!body && fileIds.length === 0) throw new GcsValidationError({ body: "required" });
     if (fileIds.length > MAX_FILES) throw new GcsValidationError({ files: "too_many" }, { max: String(MAX_FILES) });
@@ -316,6 +362,12 @@ export class GcsChatService {
     if (mute) throw new GcsForbidden({ reason: "muted", ...(mute.until ? { until: mute.until.toISOString() } : {}) });
 
     const moderator = await this.canModerate(actor);
+    // Slow mode-ul personal (moderarea): peste slow mode-ul camerei, pentru oricine îl are.
+    const personal = await this.rights.slow(actor.userId);
+    if (personal && personal.seconds > 0) {
+      const res = await rateLimiter.consume(`chat-slowuser:${actor.userId}`, { window: personal.seconds, max: 1 });
+      if (!res.allowed) throw new GcsRateLimited({ retryAfter: String(res.retryAfter), reason: "slow_mode" });
+    }
     if (channel.slowModeSeconds > 0 && !moderator) {
       const res = await rateLimiter.consume(`chat-slow:${channel.id}:${actor.userId}`, { window: channel.slowModeSeconds, max: 1 });
       if (!res.allowed) throw new GcsRateLimited({ retryAfter: String(res.retryAfter), reason: "slow_mode" });
@@ -409,15 +461,22 @@ export class GcsChatService {
     await this.deps.bus.emit({ name: "chat.mention", payload: { channelKey: channel.key, messageId, authorId, userIds }, tags: [] });
   }
 
-  /** Editarea propriului mesaj, în 5 minute; mesajul e marcat „editat”. */
+  /**
+   * Editarea unui mesaj: autorul, în 5 minute; staff-ul cu `chat.edit_any` (sau accesul de moderator cu dreptul),
+   * orice mesaj și fără limită de timp, cu jurnal. Mesajul e marcat „editat”; liniile de sistem nu se editează.
+   */
   async edit(actor: GcsActor, messageId: number, raw: unknown, now = Date.now()): Promise<GcsChatMessageView> {
     const { db, settings, realtime } = this.deps;
     const message = await db.chatMessage.findUnique({ where: { id: messageId }, include: { channel: { select: { key: true } } } });
     if (!message || message.deletedAt) throw new GcsNotFound();
-    if (!actor.userId || message.authorId !== actor.userId || actor.isBanned) throw new GcsForbidden({ reason: "not_author" });
-    if (now - message.createdAt.getTime() > CHAT_EDIT_WINDOW_MS) throw new GcsForbidden({ reason: "edit_window" });
+    if (!actor.userId || actor.isBanned) throw new GcsForbidden({ reason: "not_author" });
+    if (chatSystemOf(message.meta)) throw new GcsForbidden({ reason: "system_line" });
+    const own = message.authorId === actor.userId;
+    const any = await this.rights.has(actor, "edit_any", message.channel.key);
+    if (!own && !any) throw new GcsForbidden({ reason: "not_author" });
+    if (!any && now - message.createdAt.getTime() > CHAT_EDIT_WINDOW_MS) throw new GcsForbidden({ reason: "edit_window" });
     const channel = await this.accessible(actor, message.channel.key);
-    const mute = await this.activeMute(actor.userId, channel.id);
+    const mute = own ? await this.activeMute(actor.userId, channel.id) : null;
     if (mute) throw new GcsForbidden({ reason: "muted" });
     const body = cleanChatText(typeof raw === "string" ? raw : "");
     if (!body && !(Array.isArray(message.files) && message.files.length > 0)) throw new GcsValidationError({ body: "required" });
@@ -428,6 +487,10 @@ export class GcsChatService {
       data: { body: applyWordFilter(body, Array.isArray(words) ? words : []), editedAt: new Date(now) },
       include: { author: { select: userRefSelect }, reactions: { select: { userId: true, reactionId: true } } },
     });
+    if (!own) {
+      await writeChatModLog(db, { actorId: actor.userId, action: "edit", targetId: message.authorId, channelKey: channel.key, messageId, data: { before: message.body } });
+      await writeAudit(db, { actorId: actor.userId, action: "chat.message.edit", targetType: "chat_message", targetId: String(messageId), before: { body: message.body }, after: { body: updated.body }, ip: actor.ip });
+    }
     const [view] = await this.extensions.decorate([toChatView(updated, channel.key)]);
     await realtime.publish(`chat:${channel.key}`, "edited", view);
     return view!;
@@ -457,10 +520,10 @@ export class GcsChatService {
     if (!actor.userId || actor.isBanned || !(await this.deps.permissions.can(actor, "chat.announce"))) throw new GcsForbidden({ permission: "chat.announce" });
   }
 
-  /** Fixează un mesaj al camerei (sau scoate fixarea cu `null`). */
+  /** Fixează un mesaj al camerei (sau scoate fixarea cu `null`): `chat.pin` (și în shoutbox). */
   async pin(actor: GcsActor, key: string, messageId: number | null): Promise<void> {
     const { db, realtime } = this.deps;
-    await this.assertAnnouncer(actor);
+    await this.rights.assert(actor, "pin", key);
     const channel = await this.accessible(actor, key);
     let pinned: GcsChatMessageView | null = null;
     if (messageId !== null) {
@@ -471,6 +534,7 @@ export class GcsChatService {
     await db.$transaction(async (tx) => {
       await tx.chatChannel.update({ where: { id: channel.id }, data: { pinnedMessageId: messageId } });
       await writeAudit(tx, { actorId: actor.userId, action: "chat.pin", targetType: "chat_channel", targetId: channel.key, after: { messageId }, ip: actor.ip });
+      await writeChatModLog(tx, { actorId: actor.userId, action: "pin", channelKey: channel.key, messageId, data: { pinned: messageId !== null } });
     });
     await realtime.publish(`chat:${channel.key}`, "pinned", { channel: channel.key, message: pinned });
   }
@@ -609,15 +673,16 @@ export class GcsChatService {
     await realtime.publish(`chat:${channel.key}`, "channel", { enabled: false, deleted: true });
   }
 
-  /** Ștergere (moderatorul sau autorul): mesajul rămâne în bază, ascuns, și dispare live din canal. */
+  /** Ștergere (autorul sau staff-ul cu `chat.delete_any`): mesajul rămâne în bază, șters, și dispare live din canal. */
   async delete(actor: GcsActor, messageId: number): Promise<void> {
     const { db, bus, realtime } = this.deps;
     const message = Number.isInteger(messageId) ? await db.chatMessage.findUnique({ where: { id: messageId }, include: { channel: { select: { key: true } } } }) : null;
     const own = message !== null && actor.userId !== null && !actor.isBanned && message.authorId === actor.userId;
-    if (!own) await this.assertModerator(actor);
+    if (!own) await this.rights.assert(actor, "delete_any", message?.channel.key ?? null);
     if (!message || message.deletedAt) throw new GcsNotFound();
     await db.$transaction(async (tx) => {
       await tx.chatMessage.update({ where: { id: messageId }, data: { deletedAt: new Date(), deletedById: actor.userId } });
+      if (!own) await writeChatModLog(tx, { actorId: actor.userId, action: "delete", targetId: message.authorId, channelKey: message.channel.key, messageId, data: { body: message.body } });
       await writeAudit(tx, {
         actorId: actor.userId,
         action: "chat.message.delete",
@@ -633,14 +698,10 @@ export class GcsChatService {
 
   /** Mute pe un canal (`channelKey`) sau pe toate (`null`); `minutes: null` = permanent. */
   async mute(actor: GcsActor, userId: string, input: { channelKey: string | null; minutes: number | null; reason: string }): Promise<{ id: number }> {
-    const { db, permissions } = this.deps;
-    await this.assertModerator(actor);
-    if (userId === actor.userId) throw new GcsValidationError({ userId: "self" });
-    const target = await db.user.findUnique({ where: { id: userId }, select: { id: true, primaryGroupId: true, groups: { select: { groupId: true } } } });
-    if (!target) throw new GcsNotFound();
-    // Un moderator nu poate da mute altui membru al staff-ului.
-    const targetActor: GcsActor = { userId, groupIds: [target.primaryGroupId, ...target.groups.map((g) => g.groupId)], primaryGroupId: target.primaryGroupId, isBanned: false, ip: "" };
-    if (await permissions.can(targetActor, "chat.moderate")) throw new GcsForbidden({ reason: "target_is_staff" });
+    const { db } = this.deps;
+    await this.rights.assert(actor, "mute", input.channelKey);
+    // Nu pe sine, nu pe Root Admin, nu pe un membru de rang mai mare și nici pe alt membru al staff-ului de același rang.
+    await this.rights.assertCanTarget(actor, userId);
     if (input.minutes !== null && (!Number.isInteger(input.minutes) || input.minutes < 1 || input.minutes > 525_600)) {
       throw new GcsValidationError({ minutes: "invalid_range" });
     }
@@ -650,21 +711,27 @@ export class GcsChatService {
     const mute = await db.$transaction(async (tx) => {
       const row = await tx.chatMute.create({ data: { userId, channelId: channel?.id ?? null, until, reason, createdById: actor.userId } });
       await writeAudit(tx, { actorId: actor.userId, action: "chat.mute", targetType: "user", targetId: userId, after: { channel: channel?.key ?? null, until, reason }, ip: actor.ip });
+      await writeChatModLog(tx, { actorId: actor.userId, action: "mute", targetId: userId, channelKey: channel?.key ?? null, reason, data: { minutes: input.minutes }, ref: `mute:${row.id}` });
       return row;
     });
+    await this.deps.realtime.publish(`user:${userId}`, "chat:sanction", { kind: "mute", channel: channel?.key ?? null, until: until?.toISOString() ?? null, reason, active: true });
     await this.deps.bus.emit({ name: "chat.muted", payload: { userId, channelKey: channel?.key ?? null }, tags: [`user:${userId}`] });
     return { id: mute.id };
   }
 
+  /** Ridică un mute (`chat.mute`); live, membrul își recapătă câmpul de scris. */
   async unmute(actor: GcsActor, muteId: number): Promise<void> {
     const { db } = this.deps;
-    await this.assertModerator(actor);
-    const mute = await db.chatMute.findUnique({ where: { id: muteId } });
+    const mute = await db.chatMute.findUnique({ where: { id: muteId }, include: { channel: { select: { key: true } } } });
+    await this.rights.assert(actor, "mute", mute?.channel?.key ?? null);
     if (!mute) throw new GcsNotFound();
     await db.$transaction(async (tx) => {
       await tx.chatMute.delete({ where: { id: muteId } });
       await writeAudit(tx, { actorId: actor.userId, action: "chat.unmute", targetType: "user", targetId: mute.userId, before: mute, ip: actor.ip });
+      await writeChatModLog(tx, { actorId: actor.userId, action: "unmute", targetId: mute.userId, channelKey: mute.channel?.key ?? null });
+      await tx.chatModLog.updateMany({ where: { ref: `mute:${muteId}`, undoneAt: null }, data: { undoneAt: new Date(), undoneById: actor.userId } });
     });
+    await this.deps.realtime.publish(`user:${mute.userId}`, "chat:sanction", { kind: "mute", channel: mute.channel?.key ?? null, until: null, reason: "", active: false });
   }
 
   async setSlowMode(actor: GcsActor, key: string, seconds: number): Promise<void> {

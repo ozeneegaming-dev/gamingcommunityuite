@@ -5,9 +5,13 @@ import { seedChatDemo } from "./seed";
 export const CHAT_CONTAINER = "chat";
 export const CHAT_ACP_CHANNELS = "community.chat_channels";
 export const CHAT_ACP_SETTINGS = "community.chat_settings";
+/** ACP → Chat → Moderare (motivele, jurnalul, sancțiunile active) și Moderatori (accesul de moderator în chat). */
+export const CHAT_ACP_MODERATION = "community.chat_moderation";
+export const CHAT_ACP_MODERATORS = "community.chat_moderators";
 
 const ADMINS = { root_admin: true, admin: true } as const;
 const STAFF = { ...ADMINS, super_moderator: true, moderator: true } as const;
+const SENIOR = { ...ADMINS, super_moderator: true } as const;
 const VIPS = { vip_bronze: true, vip_silver: true, vip_gold: true, vip_legend: true } as const;
 /** Toate grupurile cu cont (fără Vizitator și Banat): vizitatorii nu văd chat-ul (decizie de produs, etapa 4). */
 const MEMBERS = { ...STAFF, ...VIPS, member: true, new_member: true } as const;
@@ -27,6 +31,19 @@ const permissions: GcsPermissionDef[] = [
   { key: "chat.create_public", scope: "group", labelKey: "permissions.chat.create_public", default: { ...ADMINS } },
   { key: "chat.create_private", scope: "group", labelKey: "permissions.chat.create_private", default: { ...STAFF, ...VIPS } },
   { key: "chat.announce", scope: "group", labelKey: "permissions.chat.announce", default: { ...STAFF } },
+  // Moderarea granulară (staff și accesul de moderator în chat). Root Admin le are pe toate; moderatorii, cele obișnuite.
+  { key: "chat.edit_any", scope: "group", labelKey: "permissions.chat.edit_any", default: { ...SENIOR } },
+  { key: "chat.pin", scope: "group", labelKey: "permissions.chat.pin", default: { ...STAFF } },
+  { key: "chat.hide", scope: "group", labelKey: "permissions.chat.hide", default: { ...STAFF } },
+  { key: "chat.delete_any", scope: "group", labelKey: "permissions.chat.delete_any", default: { ...STAFF } },
+  { key: "chat.purge_user", scope: "group", labelKey: "permissions.chat.purge_user", default: { ...SENIOR } },
+  { key: "chat.warn", scope: "group", labelKey: "permissions.chat.warn", default: { ...STAFF } },
+  { key: "chat.mute", scope: "group", labelKey: "permissions.chat.mute", default: { ...STAFF } },
+  { key: "chat.kick", scope: "group", labelKey: "permissions.chat.kick", default: { ...STAFF } },
+  { key: "chat.ban", scope: "group", labelKey: "permissions.chat.ban", default: { ...SENIOR } },
+  { key: "chat.slow_user", scope: "group", labelKey: "permissions.chat.slow_user", default: { ...STAFF } },
+  // Dă acces de moderator în chat (ACP → Chat → Moderatori și `/acces`).
+  { key: "chat.grant_access", scope: "group", labelKey: "permissions.chat.grant_access", default: { ...ADMINS } },
   // Secunde între două mesaje. Mai puțin e mai permisiv, deci câștigă minimul.
   {
     key: "chat.flood_seconds",
@@ -86,8 +103,21 @@ export const CHAT_DISPLAY_SETTINGS: GcsSettingDef[] = [
   chatSetting("giphy_key", "secret", ""),
 ];
 
+/** Motivele gata scrise din dialogurile de moderare (editabile în ACP → Chat → Moderare). */
+export const CHAT_MOD_REASONS_DEFAULT = ["Spam", "Flood", "Limbaj vulgar", "Jigniri", "Reclamă"];
+
+/** Setările moderării chat-ului (ACP → Chat → Moderare). */
+export const CHAT_MODERATION_SETTINGS: GcsSettingDef[] = [
+  chatSetting("mod_reasons", "json", CHAT_MOD_REASONS_DEFAULT, {
+    validate: (v) => (Array.isArray(v) && v.length <= 30 && v.every((r) => typeof r === "string" && r.trim().length > 0 && r.length <= 80) ? null : "invalid_value"),
+  }),
+  // Linia de sistem publică la un acces de moderator dat („X a primit acces de moderator în chat de la Y”).
+  chatSetting("announce_grants", "boolean", true),
+];
+
 const settings: GcsSettingDef[] = [
   ...CHAT_DISPLAY_SETTINGS,
+  ...CHAT_MODERATION_SETTINGS,
   {
     key: "chat.word_filter",
     type: "json",
@@ -120,6 +150,20 @@ const acpMenu: GcsAcpMenuSection[] = [
         section: CHAT_ACP_SETTINGS,
         icon: "fa-solid fa-gear",
       },
+      {
+        key: CHAT_ACP_MODERATION,
+        labelKey: "acp.menu.community.chat_moderation",
+        href: "/admin/community/chat/moderation",
+        section: CHAT_ACP_MODERATION,
+        icon: "fa-solid fa-shield-halved",
+      },
+      {
+        key: CHAT_ACP_MODERATORS,
+        labelKey: "acp.menu.community.chat_moderators",
+        href: "/admin/community/chat/moderators",
+        section: CHAT_ACP_MODERATORS,
+        icon: "fa-solid fa-user-shield",
+      },
     ],
   },
 ];
@@ -151,7 +195,12 @@ export const chatModule: GcsModule = {
   settings,
   acpMenu,
   eventListeners: [],
-  notificationTypes: [{ key: "chat.mention", labelKey: "notifications.type.chat.mention", important: false, defaultEmail: "OFF" }],
+  notificationTypes: [
+    { key: "chat.mention", labelKey: "notifications.type.chat.mention", important: false, defaultEmail: "OFF" },
+    // Moderarea: mute / kick / ban / slow mode primite și accesul de moderator în chat (dat, retras, expirat).
+    { key: "chat.sanction", labelKey: "notifications.type.chat.sanction", important: true, defaultEmail: "OFF" },
+    { key: "chat.access", labelKey: "notifications.type.chat.access", important: false, defaultEmail: "OFF" },
+  ],
   widgets: chatWidgets,
   seed: seedChat,
   seedDemo: seedChatDemo,

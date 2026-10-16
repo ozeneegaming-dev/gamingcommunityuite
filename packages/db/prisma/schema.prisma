@@ -135,6 +135,12 @@ model User {
   chatProProfile          ChatProProfile?
   chatProStats            ChatProDailyStat[]
   chatProWins             ChatProWinner[]
+  /// Moderarea chat-ului: sancțiunile primite (kick, ban, slow mode personal), jurnalul și accesul de moderator dat.
+  chatSanctions           ChatSanction[]           @relation("ChatSanctioned")
+  chatModActions          ChatModLog[]             @relation("ChatModActor")
+  chatModTargeted         ChatModLog[]             @relation("ChatModTarget")
+  chatModGrant            ChatModeratorGrant?      @relation("ChatModGrant")
+  chatModGrantsGiven      ChatModeratorGrant[]     @relation("ChatModGrantedBy")
 
   @@index([primaryGroupId])
   @@map("users")
@@ -340,6 +346,8 @@ model Warning {
   reason     String
   expiresAt  DateTime?
   issuedById String?
+  /// Dovada (ex. mesajul de chat avertizat: `{ type: "chat.message", id, channel, body }`).
+  evidence   Json?
   createdAt  DateTime  @default(now())
 
   user     User  @relation("WarningTarget", fields: [userId], references: [id], onDelete: Cascade)
@@ -1259,9 +1267,10 @@ model ChatChannel {
   pinnedMessageId Int?
   createdAt       DateTime     @default(now())
 
-  messages ChatMessage[]
-  mutes    ChatMute[]
-  members  ChatRoomMember[]
+  messages  ChatMessage[]
+  mutes     ChatMute[]
+  sanctions ChatSanction[]
+  members   ChatRoomMember[]
   owner    User?            @relation("ChatRoomOwner", fields: [ownerId], references: [id], onDelete: SetNull)
 
   @@map("chat_channels")
@@ -1282,6 +1291,9 @@ model ChatMessage {
   replyToId   Int?
   /// Datele extensiilor (Chat Pro): `{ first?, bot? }`; chat-ul standard le ignoră.
   meta        Json?
+  /// Moderarea: mesajul ascuns de staff (membrii nu-l mai văd; staff-ul îl vede estompat, cu „ascuns de X”).
+  hiddenAt    DateTime?
+  hiddenById  String?
 
   channel   ChatChannel           @relation(fields: [channelId], references: [id], onDelete: Cascade)
   author    User?                 @relation("ChatAuthor", fields: [authorId], references: [id], onDelete: SetNull)
@@ -1313,6 +1325,88 @@ model ChatMute {
 
   @@index([userId, until])
   @@map("chat_mutes")
+}
+
+/// Felul unei sancțiuni de chat (mute-ul are tabelul lui, `chat_mutes`).
+enum ChatSanctionKind {
+  /// Scos dintr-o cameră (`channelId`) sau din tot chat-ul, pentru N minute.
+  KICK
+  /// Ban doar din chat (toate camerele), temporar sau permanent.
+  BAN
+  /// Slow mode personal: cel mult un mesaj la `seconds` secunde.
+  SLOW
+}
+
+/**
+ * O sancțiune de chat (kick, ban din chat, slow mode personal): pe o cameră sau pe tot chat-ul (`channelId` null);
+ * `until` null = permanentă. Ridicată din ACP sau la expirare (jobul de moderare): `liftedAt`.
+ */
+model ChatSanction {
+  id          Int              @id @default(autoincrement())
+  kind        ChatSanctionKind
+  userId      String
+  channelId   Int?
+  until       DateTime?
+  seconds     Int              @default(0)
+  reason      String           @default("")
+  createdById String?
+  createdAt   DateTime         @default(now())
+  liftedAt    DateTime?
+  liftedById  String?
+
+  user    User         @relation("ChatSanctioned", fields: [userId], references: [id], onDelete: Cascade)
+  channel ChatChannel? @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@index([userId, kind])
+  @@index([until])
+  @@map("chat_sanctions")
+}
+
+/**
+ * Jurnalul moderării chat-ului (ACP → Chat → Moderare): cine, ce, cui, motivul, mesajul și, pentru mute / kick / ban,
+ * sancțiunea (`ref`: `mute:<id>` sau `sanction:<id>`) care se poate anula.
+ */
+model ChatModLog {
+  id         Int       @id @default(autoincrement())
+  actorId    String?
+  action     String
+  targetId   String?
+  channelKey String?
+  messageId  Int?
+  reason     String    @default("")
+  data       Json?
+  ref        String?
+  undoneAt   DateTime?
+  undoneById String?
+  createdAt  DateTime  @default(now())
+
+  actor  User? @relation("ChatModActor", fields: [actorId], references: [id], onDelete: SetNull)
+  target User? @relation("ChatModTarget", fields: [targetId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([targetId])
+  @@map("chat_mod_log")
+}
+
+/**
+ * Accesul de moderator în chat dat unui membru (din ACP sau cu `/acces`): drepturile (`chat.<drept>`), camerele
+ * (goale = toate) și expirarea. Drepturile efective = permisiunile grupurilor SAU un acces activ.
+ */
+model ChatModeratorGrant {
+  id          Int       @id @default(autoincrement())
+  userId      String    @unique
+  rights      String[]  @default([])
+  rooms       String[]  @default([])
+  expiresAt   DateTime?
+  grantedById String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user      User  @relation("ChatModGrant", fields: [userId], references: [id], onDelete: Cascade)
+  grantedBy User? @relation("ChatModGrantedBy", fields: [grantedById], references: [id], onDelete: SetNull)
+
+  @@index([expiresAt])
+  @@map("chat_moderator_grants")
 }
 
 // ─── UI modern și personalizare (etapa 5, specul etapei §4) ──────────────────

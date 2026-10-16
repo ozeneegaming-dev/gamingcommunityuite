@@ -1,4 +1,4 @@
-import type { PrismaClient, Warning, WarningAction } from "@gcs/db";
+import type { Prisma, PrismaClient, Warning, WarningAction } from "@gcs/db";
 import type { GcsAcpRoleService } from "../acp/roles";
 import { writeAudit } from "../audit";
 import { GcsValidationError } from "../errors";
@@ -7,7 +7,14 @@ import { assertCanManageUser } from "../groups/rootGuard";
 import type { GcsActor } from "../permissions/types";
 import type { GcsBanService } from "./bans";
 
-export type GcsWarningInput = { userId: string; points: number; reason: string; expiresAt?: Date | null };
+export type GcsWarningInput = {
+  userId: string;
+  points: number;
+  reason: string;
+  expiresAt?: Date | null;
+  /** Dovada atașată (ex. mesajul de chat avertizat), păstrată cu avertismentul. */
+  evidence?: Record<string, unknown> | null;
+};
 
 const ACP_SECTION = "members.warnings";
 const MAX_POINTS = 100;
@@ -30,12 +37,17 @@ export class GcsWarningService {
     return sum._sum.points ?? 0;
   }
 
+  /**
+   * Un avertisment nou. Dreptul implicit e cel din ACP (`members.warnings`); `opts.authorized` îl lasă apelantului care
+   * și-a verificat propriul drept (ex. `chat.warn` în chat). Protecția Root Admin rămâne oricum.
+   */
   async warn(
     input: GcsWarningInput,
     actor: GcsActor,
+    opts: { authorized?: boolean } = {},
   ): Promise<{ warning: Warning; actionTaken: WarningAction | null }> {
     const { db, bus } = this.deps;
-    await this.deps.acp.assert(actor, ACP_SECTION, "edit");
+    if (!opts.authorized) await this.deps.acp.assert(actor, ACP_SECTION, "edit");
     const reason = input.reason.trim();
     const errors: Record<string, string> = {};
     if (!Number.isInteger(input.points) || input.points < 1 || input.points > MAX_POINTS) errors.points = "invalid_points";
@@ -51,6 +63,7 @@ export class GcsWarningService {
           reason,
           expiresAt: input.expiresAt ?? null,
           issuedById: actor.userId,
+          ...(input.evidence ? { evidence: input.evidence as Prisma.InputJsonValue } : {}),
         },
       });
       await writeAudit(tx, {
@@ -58,7 +71,7 @@ export class GcsWarningService {
         action: "user.warn",
         targetType: "user",
         targetId: input.userId,
-        after: { points: warning.points, reason: warning.reason },
+        after: { points: warning.points, reason: warning.reason, ...(input.evidence ? { evidence: input.evidence } : {}) },
         ip: actor.ip,
       });
       return warning;

@@ -1,6 +1,11 @@
-import type { GcsActor } from "@gcs/core";
+import type { GcsActor, GcsMentionHint } from "@gcs/core";
 import type { ChatChannel } from "@gcs/db";
 import type { GcsChatMessageView } from "./chat";
+import type { GcsChatEphemeral } from "./moderation-types";
+
+/** O comandă a chat-ului standard (ex. `/acces`): rulează în locul trimiterii și întoarce un rezultat doar pentru autor. */
+export type GcsChatCommandContext = { actor: GcsActor; channel: Pick<ChatChannel, "id" | "key" | "type">; body: string; mentions: GcsMentionHint[] };
+export type GcsChatCommandHandler = (ctx: GcsChatCommandContext) => Promise<GcsChatEphemeral | null>;
 
 /** Ce vede o extensie înainte de salvarea unui mesaj: textul curățat (după limite, mute, slow mode și flood). */
 export type GcsChatSendContext = {
@@ -49,6 +54,23 @@ export interface GcsChatExtension {
 export class GcsChatExtensions {
   private list: GcsChatExtension[] = [];
   private base: ((views: GcsChatMessageView[]) => Promise<void>)[] = [];
+  private commands: GcsChatCommandHandler[] = [];
+
+  /**
+   * O comandă mereu activă (moderarea: `/acces`, `/revoca`): primul handler care întoarce un rezultat oprește trimiterea
+   * (mesajul nu se salvează, rezultatul îl vede doar autorul).
+   */
+  useCommand(handler: GcsChatCommandHandler): void {
+    this.commands.push(handler);
+  }
+
+  async command(ctx: GcsChatCommandContext): Promise<GcsChatEphemeral | null> {
+    for (const h of this.commands) {
+      const res = await h(ctx);
+      if (res) return res;
+    }
+    return null;
+  }
 
   /** Înregistrează (sau înlocuiește, după cheie) o extensie. */
   use(ext: GcsChatExtension): void {
