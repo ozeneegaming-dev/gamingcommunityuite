@@ -76,6 +76,7 @@
   --gcs-muted: #9AA8C3;
   --gcs-chrome: #1B2A47;
   --gcs-chrome2: #15223B;
+  --gcs-sweep: rgb(255 255 255 / 0.08);
   color-scheme: dark;
 
   min-height: 100vh;
@@ -103,6 +104,7 @@
   --gcs-acp-c6: #D64541;
   --gcs-acp-good: #16804F;
   --gcs-acp-bad: #C62828;
+  --gcs-sweep: color-mix(in srgb, var(--gcs-text) 7%, transparent);
   color-scheme: light;
 }
 
@@ -127,6 +129,7 @@
     --gcs-acp-c6: #D64541;
     --gcs-acp-good: #16804F;
     --gcs-acp-bad: #C62828;
+    --gcs-sweep: color-mix(in srgb, var(--gcs-text) 7%, transparent);
     color-scheme: light;
   }
 }
@@ -1509,7 +1512,7 @@ input[type="checkbox"].gcs-switch:checked::before,
 }
 .gcs-dangerZone .gcs-btn.gcs-btn--ghost:hover,
 .gcs-root .gcs-dangerZone a.gcs-btn--ghost:hover {
-  background: color-mix(in srgb, var(--gcs-acp-bad) 14%, var(--gcs-surface2));
+  background-color: color-mix(in srgb, var(--gcs-acp-bad) 14%, var(--gcs-surface2));
   color: var(--gcs-acp-bad);
 }
 

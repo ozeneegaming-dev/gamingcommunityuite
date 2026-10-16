@@ -384,7 +384,7 @@ dialog:modal {
 }
 .gcs-dropdown__item:hover,
 .gcs-dropdown__item:focus-visible {
-  background: var(--gcs-surface2);
+  background-color: var(--gcs-surface2);
   outline: none;
 }
 /* Linkul paginii curente (ex. în submeniurile meniului principal): bara de accent din stânga. */

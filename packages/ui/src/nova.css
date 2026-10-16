@@ -1736,77 +1736,7 @@ html.gcs-nova[data-theme="light"] {
   animation: gcs-motion-drop var(--gcs-motion-base) var(--gcs-motion-ease) both;
 }
 
-/* ─── Sweep-ul butoanelor: un strat de sticlă (8% alb) care umple butonul de la stânga la hover / focus ──── */
-
-/*
- * Pe toate butoanele: cele normale și cele cu iconiță, pătratele din antet, tab-urile și segmentele, paginarea, cipurile,
- * itemii meniurilor și ai sugestiilor. Stratul e un `background-image` (sub text, peste culoarea de fundal); regulile de
- * hover ale butoanelor setează `background-color`, nu `background`, ca să nu-l șteargă. Utilitarul `.gcs-sweep` (în
- * `base.css`) îl pune pe orice alt element. La ieșire stratul se retrage lin; la intrare vine cu un mic recul.
- */
-html.gcs-nova
-  :is(
-    .gcs-btn,
-    .gcs-iconBtn,
-    .gcs-headerIcon,
-    .gcs-userMenu__trigger,
-    .gcs-seg,
-    .gcs-tab,
-    .gcs-pagination__link,
-    .gcs-segLink,
-    .gcs-settingsNav__link,
-    .gcs-toggleLink,
-    .gcs-chip,
-    .gcs-dropdown__item,
-    .gcs-mentionList__item,
-    .gcs-legendPro__info,
-    .gcs-legendPro__toggle,
-    .gcs-legendPro__menuItem,
-    .gcs-groupsPage__segItem,
-    .gcs-groupsPage__chip
-  ) {
-  background-image: linear-gradient(var(--gcs-sweep, rgb(255 255 255 / 0.08)), var(--gcs-sweep, rgb(255 255 255 / 0.08)));
-  background-repeat: no-repeat;
-  background-position: left center;
-  background-size: 0% 100%;
-  transition:
-    background-size 1.2s ease-out,
-    background-color var(--gcs-ease, 0.18s),
-    color var(--gcs-ease, 0.18s),
-    border-color var(--gcs-ease, 0.18s),
-    box-shadow var(--gcs-ease, 0.18s),
-    transform var(--gcs-ease, 0.18s);
-}
-html.gcs-nova
-  :is(
-    .gcs-btn,
-    .gcs-iconBtn,
-    .gcs-headerIcon,
-    .gcs-userMenu__trigger,
-    .gcs-seg,
-    .gcs-tab,
-    .gcs-pagination__link,
-    .gcs-segLink,
-    .gcs-settingsNav__link,
-    .gcs-toggleLink,
-    .gcs-chip,
-    .gcs-dropdown__item,
-    .gcs-mentionList__item,
-    .gcs-legendPro__info,
-    .gcs-legendPro__toggle,
-    .gcs-legendPro__menuItem,
-    .gcs-groupsPage__segItem,
-    .gcs-groupsPage__chip
-  ):is(:hover, :focus-visible):not(:disabled) {
-  background-size: 100% 100%;
-  transition:
-    background-size 1.2s cubic-bezier(0.52, 1.64, 0.37, 0.66),
-    background-color var(--gcs-ease, 0.18s),
-    color var(--gcs-ease, 0.18s),
-    border-color var(--gcs-ease, 0.18s),
-    box-shadow var(--gcs-ease, 0.18s),
-    transform var(--gcs-ease, 0.18s);
-}
+/* Sweep-ul butoanelor (stratul de sticlă de la hover) e comun tuturor temelor, în `sweep.css`; Nova îi dă doar culoarea. */
 
 /* ─── Mișcarea redusă: fără transformări și tranziții ───────────────────────────────────────────────────── */
 
@@ -1816,15 +1746,11 @@ html.gcs-nova
     --gcs-hover-lift: 0px;
     --gcs-ease: 0s;
   }
-  /* Doar opacitatea: panourile apar fără alunecare, sweep-ul apare direct, itemii nu se măresc. */
+  /* Doar opacitatea: panourile apar fără alunecare, itemii nu se măresc (sweep-ul e oprit în `sweep.css`). */
   .gcs-nova .gcs-hoverCard,
   .gcs-nova .gcs-groupCard,
   .gcs-nova .gcs-mentionList {
     animation-name: gcs-motion-fade;
-  }
-  html.gcs-nova :is(.gcs-btn, .gcs-iconBtn, .gcs-headerIcon, .gcs-userMenu__trigger, .gcs-seg, .gcs-tab, .gcs-pagination__link, .gcs-segLink, .gcs-settingsNav__link, .gcs-toggleLink, .gcs-chip, .gcs-dropdown__item, .gcs-mentionList__item, .gcs-legendPro__info, .gcs-legendPro__toggle, .gcs-legendPro__menuItem, .gcs-groupsPage__segItem, .gcs-groupsPage__chip),
-  html.gcs-nova :is(.gcs-btn, .gcs-iconBtn, .gcs-headerIcon, .gcs-userMenu__trigger, .gcs-seg, .gcs-tab, .gcs-pagination__link, .gcs-segLink, .gcs-settingsNav__link, .gcs-toggleLink, .gcs-chip, .gcs-dropdown__item, .gcs-mentionList__item, .gcs-legendPro__info, .gcs-legendPro__toggle, .gcs-legendPro__menuItem, .gcs-groupsPage__segItem, .gcs-groupsPage__chip):is(:hover, :focus-visible) {
-    transition: none;
   }
   .gcs-nova .gcs-dropdown__item:is(:hover, :focus-visible),
   .gcs-nova .gcs-mentionList__item:hover {

@@ -727,7 +727,7 @@
 }
 .gcs-settingsNav__link:hover {
   color: var(--gcs-text);
-  background: var(--gcs-surface2);
+  background-color: var(--gcs-surface2);
 }
 .gcs-settingsNav__link--active {
   color: var(--gcs-text);
