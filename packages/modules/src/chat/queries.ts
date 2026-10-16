@@ -110,6 +110,24 @@ export class GcsChatQueries {
     return this.decorate(rows.reverse().map((m) => toChatView(m, channel.key, viewer.userId)));
   }
 
+  /**
+   * Mesajele din jurul unui mesaj („Vezi în chat”, linkul copiat): jumătate până la el (inclusiv), jumătate după, în
+   * ordine. Un mesaj care nu e în cameră → ultimele mesaje.
+   */
+  async around(viewer: GcsActor, key: string, messageId: number, limit = PAGE): Promise<GcsChatMessageView[]> {
+    const channel = await this.assertRead(viewer, key);
+    const seesHidden = await this.rights.has(viewer, "hide", key);
+    const base = { channelId: channel.id, deletedAt: null, ...(seesHidden ? {} : { hiddenAt: null }) };
+    if (!(await this.deps.db.chatMessage.findFirst({ where: { ...base, id: messageId }, select: { id: true } }))) return this.history(viewer, key, null, limit);
+    const half = Math.max(5, Math.floor(Math.min(limit, 100) / 2));
+    const include = { author: { select: userRefSelect }, reactions: { select: { userId: true, reactionId: true } } };
+    const [before, after] = await Promise.all([
+      this.deps.db.chatMessage.findMany({ where: { ...base, id: { lte: messageId } }, orderBy: { id: "desc" }, take: half, include }),
+      this.deps.db.chatMessage.findMany({ where: { ...base, id: { gt: messageId } }, orderBy: { id: "asc" }, take: half, include }),
+    ]);
+    return this.decorate([...before.reverse(), ...after].map((m) => toChatView(m, channel.key, viewer.userId)));
+  }
+
   /** Mesajul fixat al camerei (sau `null`). */
   async pinned(viewer: GcsActor, key: string): Promise<GcsChatMessageView | null> {
     const channel = await this.assertRead(viewer, key);

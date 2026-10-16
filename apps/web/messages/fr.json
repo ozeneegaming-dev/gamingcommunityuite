@@ -166,7 +166,15 @@
       "removal_not_failed": "Only a failed operation can be retried.",
       "reauth_required": "To confirm, sign in again.",
       "group_mention_cooldown": "You mentioned this group recently: wait a few minutes before mentioning it again.",
-      "not_opponent": "Only the challenged member can answer."
+      "not_opponent": "Only the challenged member can answer.",
+      "muted": "Tu es muet dans le chat.",
+      "not_author": "Tu ne peux modifier que tes propres messages.",
+      "target_is_staff": "Tu ne peux pas agir sur un autre membre du staff.",
+      "target_outranks": "Ce membre a un rang supérieur au tien.",
+      "chat_banned": "Tu es banni du chat.",
+      "chat_kicked": "Tu as été expulsé du chat pour un moment.",
+      "system_line": "Les lignes système ne peuvent pas être modifiées.",
+      "right_not_held": "Tu ne peux pas donner un droit que tu n’as pas."
     },
     "fields": {
       "invalid_color": "Couleur non valide (#RRGBB)",
@@ -286,7 +294,10 @@
       "invalid_value": "The value isn't valid.",
       "invalid_key": "Clé invalide (minuscules, chiffres et tirets, 2 à 32 caractères).",
       "invalid_theme_package": "Le fichier n’est pas un paquet de thème GCS valide.",
-      "unsupported_theme_package": "Le paquet de thème est destiné à une autre version de la plateforme."
+      "unsupported_theme_package": "Le paquet de thème est destiné à une autre version de la plateforme.",
+      "member_not_found": "Ce membre n’existe pas.",
+      "member_required": "Indique le membre (@nom).",
+      "room_not_found": "Ce salon n’existe pas."
     }
   },
   "acp": {
@@ -419,7 +430,9 @@
         "chat_pro_group": "Chat Pro",
         "chat_pro_settings": "Chat Pro settings",
         "chat_pro_bar": "Announcement bar",
-        "chat_pro_emotes": "Emotes"
+        "chat_pro_emotes": "Emotes",
+        "chat_moderation": "Modération",
+        "chat_moderators": "Modérateurs"
       },
       "vip": {
         "vip_group": "VIP",
@@ -3213,6 +3226,76 @@
         "confirmPack": "The pack “{name}” and all its emotes are deleted permanently.",
         "confirmEmote": "{name} is deleted permanently; old messages keep the code text."
       }
+    },
+    "chatMod": {
+      "moderationTitle": "Modération du chat",
+      "presetsTitle": "Motifs prédéfinis",
+      "reasonsHint": "Un motif par ligne ; ils apparaissent comme boutons dans les dialogues de modération.",
+      "announceGrants": "Ligne publique dans le chat quand quelqu’un reçoit l’accès modérateur",
+      "save": "Enregistrer",
+      "activeTitle": "Sanctions actives",
+      "noActive": "Aucune sanction active.",
+      "colMember": "Membre",
+      "colKind": "Sanction",
+      "colRoom": "Salon",
+      "colUntil": "Jusqu’à",
+      "colReason": "Motif",
+      "colBy": "Donnée par",
+      "lift": "Lever",
+      "liftTitle": "Lever la sanction ?",
+      "liftBody": "{name} pourra de nouveau écrire dans le chat tout de suite.",
+      "logTitle": "Journal de modération du chat",
+      "noLog": "Aucune action de modération pour l’instant.",
+      "colWhen": "Quand",
+      "colWho": "Qui",
+      "colWhat": "Quoi",
+      "colWhom": "À qui",
+      "colMessage": "Message",
+      "undone": "annulée",
+      "undo": "Annuler",
+      "undoTitle": "Annuler la sanction ?",
+      "undoBody": "La sanction de {name} est levée maintenant.",
+      "pages": "Pages du journal",
+      "prev": "Précédent",
+      "next": "Suivant",
+      "page": "Page {page} sur {pages}",
+      "system": "Système",
+      "cancel": "Annuler",
+      "moderatorsTitle": "Modérateurs du chat",
+      "moderatorsIntro": "Accès modérateur uniquement dans le chat, donné à un membre (aussi avec /acces dans le chat). Les droits effectifs sont ceux des groupes plus l’accès donné ici.",
+      "grantsTitle": "{count, plural, one {# accès actif} many {# accès actifs} other {# accès actifs}}",
+      "noGrants": "Aucun accès modérateur dans le chat.",
+      "rights": "Droits",
+      "rooms": "Salons",
+      "roomsHint": "Aucun salon coché = tous les salons.",
+      "expiry": "Expire",
+      "expiries": {
+        "none": "Jamais",
+        "1d": "Dans un jour",
+        "7d": "Dans 7 jours",
+        "30d": "Dans 30 jours",
+        "custom": "À une date choisie"
+      },
+      "colGrantedBy": "Donné par",
+      "revoke": "Retirer",
+      "revokeTitle": "Retirer l’accès ?",
+      "revokeBody": "{name} perd l’accès modérateur du chat.",
+      "edit": "Modifier",
+      "editTitle": "Accès de {name}",
+      "addTitle": "Ajouter un modérateur du chat",
+      "member": "Membre",
+      "searchMember": "Chercher le membre par nom",
+      "removeMember": "Choisir un autre membre",
+      "pickMember": "Choisis le membre.",
+      "preset": "Ensemble de droits",
+      "presets": {
+        "full": "Complet",
+        "mute_kick": "Muet + expulsion seulement",
+        "custom": "Personnalisé"
+      },
+      "saved": "Enregistré",
+      "saveGrant": "Enregistrer l’accès",
+      "addGrant": "Ajouter le modérateur"
     }
   },
   "settings": {
@@ -3454,7 +3537,9 @@
       "voice_max_seconds": "Longueur maximale du message vocal (secondes)",
       "giphy_key": "Clé API GIPHY (sans clé, /giphy est désactivé)",
       "show_rules": "Afficher le lien des règles dans l'en-tête de chat",
-      "flood_seconds": "Contrôle des crues (secondes entre les messages, 0 = aucune)"
+      "flood_seconds": "Contrôle des crues (secondes entre les messages, 0 = aucune)",
+      "mod_reasons": "Motifs de modération prédéfinis",
+      "announce_grants": "Ligne publique dans le chat quand quelqu’un reçoit l’accès modérateur"
     },
     "i18n": {
       "locales": "Langues offertes aux membres",
@@ -3655,7 +3740,18 @@
       "flood_seconds": "Pause entre les messages de chat (secondes)",
       "create_public": "Créer des salles de chat public",
       "create_private": "Créer des salons de chat privés (avec invitations)",
-      "announce": "Épingler les messages et publier les annonces de chat"
+      "announce": "Épingler les messages et publier les annonces de chat",
+      "edit_any": "Modifier n’importe quel message du chat (sans limite de temps)",
+      "pin": "Épingler des messages du chat",
+      "hide": "Masquer des messages du chat",
+      "delete_any": "Supprimer n’importe quel message du chat",
+      "purge_user": "Supprimer les messages d’un membre dans le chat (dernière heure / 24 heures / tous)",
+      "warn": "Donner des avertissements depuis le chat",
+      "mute": "Rendre des membres muets dans le chat",
+      "kick": "Expulser des membres du chat",
+      "ban": "Bannir des membres du chat",
+      "slow_user": "Mode lent personnel dans le chat",
+      "grant_access": "Donner l’accès modérateur du chat"
     },
     "servers": {
       "view": "Sees the game servers",
@@ -4291,7 +4387,9 @@
         "group_mention": "Group mentions"
       },
       "chat": {
-        "mention": "Discussion mentions"
+        "mention": "Discussion mentions",
+        "sanction": "Sanctions du chat (muet, expulsion, ban)",
+        "access": "Accès modérateur du chat"
       },
       "clans": {
         "invite": "Clan invitations",
@@ -4421,7 +4519,183 @@
       "suggestions": "Emote suggestions",
       "showMedia": "Show media"
     },
-    "deletedMember": "Deleted member"
+    "deletedMember": "Deleted member",
+    "mod": {
+      "title": "Actions sur le message",
+      "more": "Plus",
+      "copied": "Copié",
+      "reply": "Répondre",
+      "react": "Réagir",
+      "edit": "Modifier",
+      "pin": "Épingler dans le chat",
+      "hide": "Masquer",
+      "unhide": "Afficher à nouveau",
+      "copyText": "Copier le texte",
+      "copyLink": "Copier le lien",
+      "profile": "Voir le profil",
+      "history": "Son historique du chat",
+      "card": "Fiche de modération",
+      "warn": "Avertissement",
+      "mute": "Rendre muet",
+      "kick": "Expulser du chat",
+      "ban": "Bannir du chat",
+      "siteBan": "Bannir du site…",
+      "siteBanReason": "Chat : « {excerpt} » ({link})",
+      "purge": "Supprimer ses messages",
+      "slow": "Mode lent personnel",
+      "delete": "Supprimer le message",
+      "ignore": "Ignorer",
+      "report": "Signaler",
+      "muteFor": "Muet pendant",
+      "kickFor": "Expulser pendant",
+      "banFor": "Bannir pendant",
+      "purgeFrom": "Supprimer les messages de",
+      "slowEvery": "Un message toutes les",
+      "seconds": "{count, plural, one {# seconde} many {# secondes} other {# secondes}}",
+      "window": {
+        "1h": "La dernière heure",
+        "24h": "Les dernières 24 heures",
+        "all": "Tous"
+      },
+      "sections": {
+        "message": "Message",
+        "member": "Membre",
+        "moderation": "Modération"
+      },
+      "dur": {
+        "forever": "définitivement",
+        "days": "{count, plural, one {# jour} many {# jours} other {# jours}}",
+        "hours": "{count, plural, one {# heure} many {# heures} other {# heures}}",
+        "minutes": "{count, plural, one {# minute} many {# minutes} other {# minutes}}"
+      },
+      "dialog": {
+        "warn": "Avertissement pour {name}",
+        "mute": "Rendre {name} muet",
+        "kick": "Expulser {name} du chat",
+        "ban": "Bannir {name} du chat",
+        "slow": "Mode lent personnel pour {name}",
+        "purge": "Supprimer les messages de {name}"
+      },
+      "done": {
+        "warn": "{name} a reçu un avertissement.",
+        "mute": "{name} est muet.",
+        "kick": "{name} a été expulsé du chat.",
+        "ban": "{name} a été banni du chat.",
+        "slow": "{name} est en mode lent personnel.",
+        "purge": "Les messages de {name} ont été supprimés."
+      },
+      "confirm": {
+        "warn": "Avertir",
+        "mute": "Rendre muet",
+        "kick": "Expulser du chat",
+        "ban": "Bannir du chat",
+        "slow": "Activer le mode lent",
+        "purge": "Supprimer les messages"
+      },
+      "cancel": "Annuler",
+      "close": "Fermer",
+      "evidence": "Le message est joint comme preuve.",
+      "interval": "Intervalle",
+      "duration": "Durée",
+      "points": "Points",
+      "reason": "Motif",
+      "reasonPlaceholder": "Écris un motif ou choisis-en un ci-dessous",
+      "presets": "Motifs prédéfinis",
+      "everywhere": "Dans tout le chat (tous les salons)",
+      "announce": "Annoncer dans le chat",
+      "notify": "Prévenir le membre",
+      "cardTitle": "Fiche de modération : {name}",
+      "warnings": "Avertissements",
+      "activePoints": "{count, plural, one {# point actif} many {# points actifs} other {# points actifs}}",
+      "none": "Rien pour l’instant.",
+      "sanctions": "Sanctions actives",
+      "kinds": {
+        "mute": "Muet",
+        "kick": "Expulsion",
+        "ban": "Ban du chat",
+        "slow": "Mode lent"
+      },
+      "until": "jusqu’à {time}",
+      "lift": "Lever",
+      "recent": "Dernières actions",
+      "actions": {
+        "edit": "Message modifié",
+        "pin": "Message épinglé",
+        "hide": "Message masqué",
+        "unhide": "Message réaffiché",
+        "delete": "Message supprimé",
+        "purge": "Messages supprimés",
+        "warn": "Avertissement",
+        "mute": "Muet",
+        "unmute": "Muet levé",
+        "kick": "Expulsion",
+        "ban": "Ban du chat",
+        "slow": "Mode lent personnel",
+        "lift": "Sanction levée",
+        "grant": "Accès modérateur donné",
+        "revoke": "Accès modérateur retiré",
+        "expire": "Accès modérateur expiré"
+      },
+      "rights": {
+        "edit_any": "Modifier",
+        "pin": "Épingler",
+        "hide": "Masquer",
+        "delete_any": "Supprimer",
+        "purge_user": "Suppression en masse",
+        "warn": "Avertissement",
+        "mute": "Muet",
+        "kick": "Expulsion",
+        "ban": "Ban",
+        "slow_user": "Mode lent"
+      },
+      "allRooms": "tous les salons",
+      "system": {
+        "mute": "<target></target> est muet {duration}{suffix}",
+        "kick": "<target></target> a été expulsé du chat pour {duration}{suffix}",
+        "ban": "<target></target> a été banni du chat ({duration}){suffix}",
+        "warn": "<target></target> a reçu un avertissement{suffix}",
+        "grant": "<target></target> a reçu l’accès modérateur du chat de la part de <actor></actor>",
+        "revoke": "<actor></actor> a retiré à <target></target> l’accès modérateur du chat"
+      },
+      "ephemeral": {
+        "granted": "Accès donné à <target></target>",
+        "revoked": "L’accès de <target></target> a été retiré.",
+        "list": "{count, plural, one {# modérateur du chat} many {# modérateurs du chat} other {# modérateurs du chat}}",
+        "listEmpty": "Aucun accès modérateur actif.",
+        "onlyYou": "Toi seul vois ceci"
+      },
+      "hiddenTag": "Masqué",
+      "hiddenBy": "Masqué par {name}",
+      "mutedUntil": "Tu es muet jusqu’à {time}",
+      "mutedForever": "Tu es muet définitivement",
+      "blocked": {
+        "kick": "Tu as été expulsé du chat",
+        "ban": "Tu es banni du chat",
+        "reason": "Motif : {reason}"
+      },
+      "slowNote": "Mode lent personnel : un message toutes les {seconds} secondes."
+    },
+    "commands": {
+      "title": "Commande",
+      "examples": "Exemples :",
+      "rights": "Droits",
+      "durations": "Durée",
+      "rooms": "Salons",
+      "acces": {
+        "usage": "@membre [droits] [durée] [#salon]",
+        "description": "Donner l’accès modérateur du chat"
+      },
+      "revoca": {
+        "usage": "@membre",
+        "description": "Retirer l’accès modérateur du chat"
+      },
+      "roll": {
+        "usage": "[max]"
+      },
+      "rps": {
+        "usage": "@membre [pierre|papier|ciseaux]"
+      }
+    }
   },
   "online": {
     "title": "Qui est en ligne ",

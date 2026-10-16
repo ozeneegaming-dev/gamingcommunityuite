@@ -27,6 +27,7 @@
 @import "@gcs/ui/gameplay.css";
 @import "@gcs/ui/viewer.css";
 @import "@gcs/ui/chatpro.css";
+@import "@gcs/ui/chatmod.css";
 @import "@gcs/ui/groups-pro.css";
 /* Ultimul: banda titlurilor (fiecare titlu pe fundalul lui) peste regulile componentelor. */
 @import "@gcs/ui/titles.css";

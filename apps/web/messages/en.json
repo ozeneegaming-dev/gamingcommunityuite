@@ -166,7 +166,15 @@
       "removal_not_failed": "Only a failed operation can be retried.",
       "reauth_required": "To confirm, sign in again.",
       "group_mention_cooldown": "You mentioned this group recently: wait a few minutes before mentioning it again.",
-      "not_opponent": "Only the challenged member can answer."
+      "not_opponent": "Only the challenged member can answer.",
+      "muted": "You are muted in chat.",
+      "not_author": "You can only edit your own messages.",
+      "target_is_staff": "You can't act on another staff member.",
+      "target_outranks": "This member outranks you.",
+      "chat_banned": "You are banned from chat.",
+      "chat_kicked": "You were kicked from chat for a while.",
+      "system_line": "System lines can't be edited.",
+      "right_not_held": "You can't give a right you don't have."
     },
     "fields": {
       "invalid_color": "Invalid color (#RRGGBB)",
@@ -286,7 +294,10 @@
       "invalid_value": "The value isn't valid.",
       "invalid_key": "Invalid key (lowercase letters, digits and dashes, 2–32 characters).",
       "invalid_theme_package": "The file is not a valid GCS theme package.",
-      "unsupported_theme_package": "The theme package is for another version of the platform."
+      "unsupported_theme_package": "The theme package is for another version of the platform.",
+      "member_not_found": "That member doesn't exist.",
+      "member_required": "Name the member (@name).",
+      "room_not_found": "That room doesn't exist."
     }
   },
   "acp": {
@@ -419,7 +430,9 @@
         "chat_pro_group": "Chat Pro",
         "chat_pro_settings": "Chat Pro settings",
         "chat_pro_bar": "Announcement bar",
-        "chat_pro_emotes": "Emotes"
+        "chat_pro_emotes": "Emotes",
+        "chat_moderation": "Moderation",
+        "chat_moderators": "Moderators"
       },
       "vip": {
         "vip_group": "VIP",
@@ -3213,6 +3226,76 @@
         "confirmPack": "The pack “{name}” and all its emotes are deleted permanently.",
         "confirmEmote": "{name} is deleted permanently; old messages keep the code text."
       }
+    },
+    "chatMod": {
+      "moderationTitle": "Chat moderation",
+      "presetsTitle": "Preset reasons",
+      "reasonsHint": "One reason per line; they show up as buttons in the moderation dialogs.",
+      "announceGrants": "Public chat line when someone receives moderator access",
+      "save": "Save",
+      "activeTitle": "Active sanctions",
+      "noActive": "No active sanctions.",
+      "colMember": "Member",
+      "colKind": "Sanction",
+      "colRoom": "Room",
+      "colUntil": "Until",
+      "colReason": "Reason",
+      "colBy": "Given by",
+      "lift": "Lift",
+      "liftTitle": "Lift this sanction?",
+      "liftBody": "{name} will be able to write in chat again right away.",
+      "logTitle": "Chat moderation log",
+      "noLog": "No moderation actions yet.",
+      "colWhen": "When",
+      "colWho": "Who",
+      "colWhat": "What",
+      "colWhom": "Whom",
+      "colMessage": "Message",
+      "undone": "undone",
+      "undo": "Undo",
+      "undoTitle": "Undo this sanction?",
+      "undoBody": "{name}'s sanction is lifted now.",
+      "pages": "Log pages",
+      "prev": "Previous",
+      "next": "Next",
+      "page": "Page {page} of {pages}",
+      "system": "System",
+      "cancel": "Cancel",
+      "moderatorsTitle": "Chat moderators",
+      "moderatorsIntro": "Moderator access in chat only, given to a member (also with /acces in chat). Effective rights are the group rights plus the access given here.",
+      "grantsTitle": "{count, plural, one {# active access} other {# active accesses}}",
+      "noGrants": "No chat moderator access.",
+      "rights": "Rights",
+      "rooms": "Rooms",
+      "roomsHint": "No room checked = all rooms.",
+      "expiry": "Expires",
+      "expiries": {
+        "none": "Never",
+        "1d": "In a day",
+        "7d": "In 7 days",
+        "30d": "In 30 days",
+        "custom": "On a chosen date"
+      },
+      "colGrantedBy": "Given by",
+      "revoke": "Revoke",
+      "revokeTitle": "Revoke this access?",
+      "revokeBody": "{name} loses chat moderator access.",
+      "edit": "Edit",
+      "editTitle": "{name}'s access",
+      "addTitle": "Add chat moderator",
+      "member": "Member",
+      "searchMember": "Search the member by name",
+      "removeMember": "Pick another member",
+      "pickMember": "Pick the member.",
+      "preset": "Set of rights",
+      "presets": {
+        "full": "Full",
+        "mute_kick": "Mute + kick only",
+        "custom": "Custom"
+      },
+      "saved": "Saved",
+      "saveGrant": "Save access",
+      "addGrant": "Add moderator"
     }
   },
   "settings": {
@@ -3454,7 +3537,9 @@
       "voice_max_seconds": "Maximum voice message length (seconds)",
       "giphy_key": "GIPHY API key (without a key, /giphy is off)",
       "show_rules": "Show the rules link in the chat header",
-      "flood_seconds": "Flood control (seconds between messages, 0 = none)"
+      "flood_seconds": "Flood control (seconds between messages, 0 = none)",
+      "mod_reasons": "Preset moderation reasons",
+      "announce_grants": "Public chat line when someone receives moderator access"
     },
     "i18n": {
       "locales": "Languages offered to members",
@@ -3655,7 +3740,18 @@
       "flood_seconds": "Pause between chat messages (seconds)",
       "create_public": "Create public chat rooms",
       "create_private": "Create private chat rooms (with invites)",
-      "announce": "Pin messages and publish chat announcements"
+      "announce": "Pin messages and publish chat announcements",
+      "edit_any": "Edit any chat message (no time limit)",
+      "pin": "Pin chat messages",
+      "hide": "Hide chat messages",
+      "delete_any": "Delete any chat message",
+      "purge_user": "Delete a member's chat messages (last hour / 24 hours / all)",
+      "warn": "Give warnings from chat",
+      "mute": "Mute members in chat",
+      "kick": "Kick members from chat",
+      "ban": "Ban members from chat",
+      "slow_user": "Personal slow mode in chat",
+      "grant_access": "Give chat moderator access"
     },
     "servers": {
       "view": "Sees the game servers",
@@ -4291,7 +4387,9 @@
         "group_mention": "Group mentions"
       },
       "chat": {
-        "mention": "Chat mentions"
+        "mention": "Chat mentions",
+        "sanction": "Chat sanctions (mute, kick, ban)",
+        "access": "Chat moderator access"
       },
       "clans": {
         "invite": "Clan invitations",
@@ -4421,7 +4519,183 @@
       "suggestions": "Emote suggestions",
       "showMedia": "Show media"
     },
-    "deletedMember": "Deleted member"
+    "deletedMember": "Deleted member",
+    "mod": {
+      "title": "Message actions",
+      "more": "More",
+      "copied": "Copied",
+      "reply": "Reply",
+      "react": "React",
+      "edit": "Edit",
+      "pin": "Pin in chat",
+      "hide": "Hide",
+      "unhide": "Show again",
+      "copyText": "Copy text",
+      "copyLink": "Copy link",
+      "profile": "View profile",
+      "history": "Their chat history",
+      "card": "Moderation record",
+      "warn": "Warning",
+      "mute": "Mute",
+      "kick": "Kick from chat",
+      "ban": "Ban from chat",
+      "siteBan": "Ban from the site…",
+      "siteBanReason": "Chat: “{excerpt}” ({link})",
+      "purge": "Delete their messages",
+      "slow": "Personal slow mode",
+      "delete": "Delete message",
+      "ignore": "Ignore",
+      "report": "Report",
+      "muteFor": "Mute for",
+      "kickFor": "Kick for",
+      "banFor": "Ban for",
+      "purgeFrom": "Delete messages from",
+      "slowEvery": "One message every",
+      "seconds": "{count, plural, one {# second} other {# seconds}}",
+      "window": {
+        "1h": "The last hour",
+        "24h": "The last 24 hours",
+        "all": "All"
+      },
+      "sections": {
+        "message": "Message",
+        "member": "Member",
+        "moderation": "Moderation"
+      },
+      "dur": {
+        "forever": "permanently",
+        "days": "{count, plural, one {# day} other {# days}}",
+        "hours": "{count, plural, one {# hour} other {# hours}}",
+        "minutes": "{count, plural, one {# minute} other {# minutes}}"
+      },
+      "dialog": {
+        "warn": "Warning for {name}",
+        "mute": "Mute {name}",
+        "kick": "Kick {name} from chat",
+        "ban": "Ban {name} from chat",
+        "slow": "Personal slow mode for {name}",
+        "purge": "Delete {name}'s messages"
+      },
+      "done": {
+        "warn": "{name} received a warning.",
+        "mute": "{name} was muted.",
+        "kick": "{name} was kicked from chat.",
+        "ban": "{name} was banned from chat.",
+        "slow": "{name} is in personal slow mode.",
+        "purge": "{name}'s messages were deleted."
+      },
+      "confirm": {
+        "warn": "Give warning",
+        "mute": "Mute",
+        "kick": "Kick from chat",
+        "ban": "Ban from chat",
+        "slow": "Start slow mode",
+        "purge": "Delete messages"
+      },
+      "cancel": "Cancel",
+      "close": "Close",
+      "evidence": "The message is attached as evidence.",
+      "interval": "Interval",
+      "duration": "Duration",
+      "points": "Points",
+      "reason": "Reason",
+      "reasonPlaceholder": "Write a reason or pick one below",
+      "presets": "Preset reasons",
+      "everywhere": "In the whole chat (all rooms)",
+      "announce": "Announce in chat",
+      "notify": "Notify the member",
+      "cardTitle": "Moderation record: {name}",
+      "warnings": "Warnings",
+      "activePoints": "{count, plural, one {# active point} other {# active points}}",
+      "none": "Nothing yet.",
+      "sanctions": "Active sanctions",
+      "kinds": {
+        "mute": "Mute",
+        "kick": "Kick",
+        "ban": "Chat ban",
+        "slow": "Slow mode"
+      },
+      "until": "until {time}",
+      "lift": "Lift",
+      "recent": "Recent actions",
+      "actions": {
+        "edit": "Message edited",
+        "pin": "Message pinned",
+        "hide": "Message hidden",
+        "unhide": "Message shown again",
+        "delete": "Message deleted",
+        "purge": "Messages deleted",
+        "warn": "Warning",
+        "mute": "Mute",
+        "unmute": "Mute lifted",
+        "kick": "Kick",
+        "ban": "Chat ban",
+        "slow": "Personal slow mode",
+        "lift": "Sanction lifted",
+        "grant": "Moderator access given",
+        "revoke": "Moderator access revoked",
+        "expire": "Moderator access expired"
+      },
+      "rights": {
+        "edit_any": "Edit",
+        "pin": "Pin",
+        "hide": "Hide",
+        "delete_any": "Delete",
+        "purge_user": "Bulk delete",
+        "warn": "Warning",
+        "mute": "Mute",
+        "kick": "Kick",
+        "ban": "Ban",
+        "slow_user": "Slow mode"
+      },
+      "allRooms": "all rooms",
+      "system": {
+        "mute": "<target></target> was muted {duration}{suffix}",
+        "kick": "<target></target> was kicked from chat for {duration}{suffix}",
+        "ban": "<target></target> was banned from chat ({duration}){suffix}",
+        "warn": "<target></target> received a warning{suffix}",
+        "grant": "<target></target> received chat moderator access from <actor></actor>",
+        "revoke": "<actor></actor> revoked <target></target>'s chat moderator access"
+      },
+      "ephemeral": {
+        "granted": "Access given to <target></target>",
+        "revoked": "<target></target>'s access was revoked.",
+        "list": "{count, plural, one {# chat moderator} other {# chat moderators}}",
+        "listEmpty": "No active moderator access.",
+        "onlyYou": "Only you can see this"
+      },
+      "hiddenTag": "Hidden",
+      "hiddenBy": "Hidden by {name}",
+      "mutedUntil": "You are muted until {time}",
+      "mutedForever": "You are muted permanently",
+      "blocked": {
+        "kick": "You were kicked from chat",
+        "ban": "You are banned from chat",
+        "reason": "Reason: {reason}"
+      },
+      "slowNote": "Personal slow mode: one message every {seconds} seconds."
+    },
+    "commands": {
+      "title": "Command",
+      "examples": "Examples:",
+      "rights": "Rights",
+      "durations": "Duration",
+      "rooms": "Rooms",
+      "acces": {
+        "usage": "@member [rights] [duration] [#room]",
+        "description": "Give chat moderator access"
+      },
+      "revoca": {
+        "usage": "@member",
+        "description": "Revoke chat moderator access"
+      },
+      "roll": {
+        "usage": "[max]"
+      },
+      "rps": {
+        "usage": "@member [rock|paper|scissors]"
+      }
+    }
   },
   "online": {
     "title": "Who's online",

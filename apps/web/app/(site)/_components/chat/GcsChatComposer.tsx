@@ -6,7 +6,7 @@ import type { GcsAttachmentInfo, GcsErrorPayload, GcsResult } from "@gcs/core";
 import type { GcsChatConfig, GcsGif } from "@gcs/modules";
 import { GcsIconSvg } from "@gcs/ui";
 import { useTranslations } from "next-intl";
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { GcsChatEmojiPicker } from "./GcsChatEmojiPicker";
 import { useDismiss } from "./use-dismiss";
 import { useMentionInput } from "@gcs/ui/mention-input";
@@ -24,6 +24,18 @@ export type GcsChatComposerHandle = {
 
 /** O sugestie a completării automate (ex. `:cod:` al unui emoticon): valoarea inserată și ce se afișează. */
 export type GcsComposerSuggestion = { key: string; value: string; label: ReactNode };
+
+/**
+ * O comandă din paleta „/” a câmpului: numele, felul de folosire, descrierea, exemplele și sugestiile pentru argumente
+ * (ex. drepturile, duratele, camerele lui `/acces`). Membrii (`@`) vin din sugestiile de mențiuni, ca peste tot.
+ */
+export type GcsComposerCommand = {
+  name: string;
+  usage: string;
+  description: string;
+  examples?: string[];
+  hints?: { key: string; label: string; items: { value: string; label?: string }[] }[];
+};
 
 /**
  * Extensiile câmpului de mesaj (Chat Pro). Fără ele, câmpul e exact cel al chat-ului standard.
@@ -54,6 +66,8 @@ type Props = {
   onError: (error: GcsErrorPayload | string | null) => void;
   /** Extensiile Chat Pro (lipsă = chat-ul standard). */
   ext?: GcsChatComposerExtensions;
+  /** Comenzile permise viewer-ului: „/” la începutul mesajului deschide paleta lor. */
+  commands?: GcsComposerCommand[];
 };
 
 type Pending = { id: string; url: string; name: string };
@@ -78,7 +92,8 @@ async function uploadChatFile(channel: string, file: Blob, name: string): Promis
  * trimite oricum).
  */
 export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function GcsChatComposer(props, ref) {
-  const { channel, disabled, busy, config, labels, onSend, onError, placement = "above", ext } = props;
+  const { channel, disabled, busy, config, labels, onSend, onError, placement = "above", ext, commands } = props;
+  const tk = useTranslations("chat.commands");
   const t = useTranslations("chat.ui");
   const [text, setText] = useState("");
   const [files, setFiles] = useState<Pending[]>([]);
@@ -149,6 +164,41 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
     requestAnimationFrame(() => {
       inputRef.current?.focus();
       inputRef.current?.setSelectionRange(pos, pos);
+    });
+  };
+
+  // ─── Paleta de comenzi („/” la început): numele comenzilor, apoi sugestiile pentru argumente ───────────
+  const [cmdActive, setCmdActive] = useState(0);
+  const [cmdDismissed, setCmdDismissed] = useState<string | null>(null);
+  const palette = useMemo(() => {
+    if (!commands || commands.length === 0 || disabled || cmdDismissed === text) return null;
+    const byName = /^\/([\w-]*)$/.exec(text);
+    if (byName) {
+      const q = byName[1]!.toLowerCase();
+      const list = commands.filter((c) => c.name.startsWith(q));
+      return list.length > 0 ? { mode: "name" as const, list } : null;
+    }
+    const withArgs = /^\/([\w-]+)\s([\s\S]*)$/.exec(text);
+    const cmd = withArgs ? commands.find((c) => c.name === withArgs[1]!.toLowerCase()) : undefined;
+    if (!withArgs || !cmd) return null;
+    const token = /(\S*)$/.exec(withArgs[2]!)![1]!;
+    // `@nume`: sugestiile de mențiuni (aceeași listă ca peste tot) au întâietate.
+    if (token.startsWith("@")) return null;
+    const used = new Set(withArgs[2]!.split(/\s+/).filter(Boolean));
+    const groups = (cmd.hints ?? [])
+      .map((g) => ({ ...g, items: g.items.filter((i) => !used.has(i.value) && i.value.toLowerCase().startsWith(token.toLowerCase())) }))
+      .filter((g) => g.items.length > 0);
+    return { mode: "args" as const, cmd, token, groups };
+  }, [commands, disabled, cmdDismissed, text]);
+  const paletteItems = palette ? (palette.mode === "name" ? palette.list.map((c) => `/${c.name}`) : palette.groups.flatMap((g) => g.items.map((i) => i.value))) : [];
+  useEffect(() => setCmdActive(palette?.mode === "name" ? 0 : -1), [palette?.mode, paletteItems.length]);
+  const pickPalette = (value: string) => {
+    if (!palette) return;
+    const next = palette.mode === "name" ? `${value} ` : `${text.slice(0, text.length - palette.token.length)}${value} `;
+    setText(next);
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      inputRef.current?.setSelectionRange(next.length, next.length);
     });
   };
 
@@ -369,6 +419,78 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
         </p>
       )}
       {ext?.before}
+      {palette && (
+        <div className={`gcs-chat__panel gcs-chatCmd gcs-chat__panel--${placement}`} role="listbox" aria-label={tk("title")} data-testid="gcs-chat-commands">
+          {palette.mode === "name" ? (
+            <>
+              <span className="gcs-chatCmd__head">{tk("title")}</span>
+              {palette.list.map((c, i) => (
+                <button
+                  key={c.name}
+                  type="button"
+                  role="option"
+                  aria-selected={i === cmdActive}
+                  tabIndex={-1}
+                  className={`gcs-chatCmd__item gcs-sweep${i === cmdActive ? " gcs-chatCmd__item--on" : ""}`}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => pickPalette(`/${c.name}`)}
+                  data-testid={`gcs-chat-command-${c.name}`}
+                >
+                  <b>/{c.name}</b>
+                  <span className="gcs-chatCmd__usage">{c.usage}</span>
+                  <span className="gcs-chatCmd__desc">{c.description}</span>
+                </button>
+              ))}
+            </>
+          ) : (
+            <>
+              <span className="gcs-chatCmd__head">{tk("title")}</span>
+              <span className="gcs-chatCmd__item gcs-chatCmd__item--static">
+                <b>/{palette.cmd.name}</b>
+                <span className="gcs-chatCmd__usage">{palette.cmd.usage}</span>
+                <span className="gcs-chatCmd__desc">{palette.cmd.description}</span>
+              </span>
+              {palette.cmd.examples && palette.cmd.examples.length > 0 && (
+                <span className="gcs-chatCmd__examples">
+                  <span className="gcs-chatCmd__muted">{tk("examples")}</span>
+                  {palette.cmd.examples.map((x) => (
+                    <code key={x}>{x}</code>
+                  ))}
+                </span>
+              )}
+              {(() => {
+                let n = -1;
+                return palette.groups.map((g) => (
+                  <span key={g.key} className="gcs-chatCmd__group">
+                    <span className="gcs-chatCmd__head">{g.label}</span>
+                    <span className="gcs-chatCmd__chips">
+                      {g.items.map((it) => {
+                        n += 1;
+                        const on = n === cmdActive;
+                        return (
+                          <button
+                            key={it.value}
+                            type="button"
+                            role="option"
+                            aria-selected={on}
+                            tabIndex={-1}
+                            className={`gcs-chatCmd__chip gcs-sweep${on ? " gcs-chatCmd__chip--on" : ""}`}
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => pickPalette(it.value)}
+                            title={it.label}
+                          >
+                            {it.value}
+                          </button>
+                        );
+                      })}
+                    </span>
+                  </span>
+                ));
+              })()}
+            </>
+          )}
+        </div>
+      )}
       {suggestions && (
         <ul className={`gcs-chat__panel gcs-chatPro__suggest gcs-chat__panel--${placement}`} role="listbox" aria-label={t("suggestions")} data-testid="gcs-chat-suggest">
           {suggestions.items.map((s, i) => (
@@ -399,6 +521,24 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
             }}
             onKeyDown={(e) => {
               if (mention.onKeyDown(e)) return;
+              if (palette && paletteItems.length > 0) {
+                const n = paletteItems.length;
+                if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+                  e.preventDefault();
+                  setCmdActive((i) => (e.key === "ArrowDown" ? (i + 1) % n : (i <= 0 ? n : i) - 1));
+                  return;
+                }
+                if ((e.key === "Enter" || e.key === "Tab") && (cmdActive >= 0 || e.key === "Tab")) {
+                  e.preventDefault();
+                  pickPalette(paletteItems[Math.max(0, cmdActive)]!);
+                  return;
+                }
+              }
+              if (palette && e.key === "Escape") {
+                e.preventDefault();
+                setCmdDismissed(text);
+                return;
+              }
               if (!suggestions) return;
               const n = suggestions.items.length;
               if (e.key === "ArrowDown" || e.key === "ArrowUp") {
@@ -416,7 +556,7 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
               setSuggestions(null);
               mention.onBlur();
             }}
-            {...(suggestions ? { role: "combobox", "aria-expanded": true, "aria-autocomplete": "list" as const } : mention.open ? { role: "combobox", ...mention.aria } : {})}
+            {...(suggestions || palette ? { role: "combobox", "aria-expanded": true, "aria-autocomplete": "list" as const } : mention.open ? { role: "combobox", ...mention.aria } : {})}
             onPaste={(e) => {
               const pasted = [...e.clipboardData.files];
               if (pasted.some((f) => f.type.startsWith("image/"))) {

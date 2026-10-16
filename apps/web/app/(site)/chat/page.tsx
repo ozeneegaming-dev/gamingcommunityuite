@@ -24,7 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
  * formularul de anunț global (staff). Cu Chat Pro pornit (specul 2026-10-10-chat-pro), camera e cea Chat Pro (cu
  * panoul de clasament în dreapta ei), iar lista celor online și anunțul trec sub camere.
  */
-export default async function ChatPage({ searchParams }: { searchParams: Promise<{ c?: string }> }) {
+export default async function ChatPage({ searchParams }: { searchParams: Promise<{ c?: string; m?: string }> }) {
   const actor = await currentActor();
   if (!actor.userId) redirect("/login");
   const { chatQueries, chat, permissions, apps } = services();
@@ -59,13 +59,16 @@ export default async function ChatPage({ searchParams }: { searchParams: Promise
       </>
     );
   }
-  const wanted = (await searchParams).c;
+  const sp = await searchParams;
+  const wanted = sp.c;
+  // `?m=<id>`: „Vezi în chat” / linkul copiat al unui mesaj (camera se deschide în jurul lui).
+  const around = sp.m && /^\d{1,10}$/.test(sp.m) ? Number(sp.m) : null;
   const channel = wanted ? channels.find((c) => c.key === wanted) : channels[0];
   if (!channel) notFound();
   const isPrivate = channel.type === "PRIVATE";
   const pro = await usesChatPro(actor);
   const [props, canModerate, online, members] = await Promise.all([
-    pro ? chatProRoomProps(actor, channel) : chatRoomProps(actor, channel),
+    pro ? chatProRoomProps(actor, channel, { around }) : chatRoomProps(actor, channel, { around }),
     chat.canModerate(actor),
     roomOnlineView(`chat:${channel.key}`),
     isPrivate ? chatQueries.roomMembers(actor, channel.key) : Promise.resolve([]),

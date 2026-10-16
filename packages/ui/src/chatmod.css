@@ -1,0 +1,715 @@
+/*
+ * Moderarea chat-ului (chat-ul standard și Chat Pro): meniul „⋯” grupat cu submeniuri, dialogurile acțiunilor, fișa de
+ * moderare, liniile de sistem, rezultatele efemere ale comenzilor, mesajele ascunse, mute-ul cu numărătoare, panoul
+ * de kick / ban, paleta de comenzi „/” și acțiunile rapide din cardul membrului. Doar tokenii temei (accent, stare),
+ * deci merge în Nova și Clasic, întunecat și luminos.
+ *
+ * Hover (regula proprietarului): elementele de meniu primesc 3% alb și scale(1.01), cele distructive o nuanță roșie;
+ * pastilele, culoarea lor la 30% / bordura la 60% cu strălucire și -1px; rândurile și cardurile, doar fundalul. Peste
+ * toate elementele de tip buton, „glass sweep”-ul (`.gcs-sweep`, din `base.css`): regulile de hover folosesc
+ * `background-color`, niciodată prescurtarea `background`, ca stratul să rămână sub text.
+ */
+
+.gcs-chat,
+.gcs-chatModDialog,
+.gcs-chatModCard,
+.gcs-chatHistory,
+.gcs-hoverCard__chatMod,
+.gcs-acpChatMod {
+  --cm-hover: color-mix(in srgb, var(--gcs-text) 3%, transparent);
+  --cm-hover-strong: color-mix(in srgb, var(--gcs-text) 7%, transparent);
+  --cm-danger: var(--gcs-danger, #ff6b6b);
+  --cm-warn: var(--gcs-warn, #f4b740);
+  --cm-ok: var(--gcs-ok, #3ddc97);
+  --cm-panel: var(--gcs-surface2);
+  --cm-line: var(--gcs-border);
+}
+
+/* Glass sweep: regulile vechi ale uneltelor din chat (`background: none` / hover cu `background`) l-ar șterge. */
+.gcs-chat .gcs-sweep,
+.gcs-chatModDialog .gcs-sweep,
+.gcs-chatModCard .gcs-sweep,
+.gcs-chatHistory .gcs-sweep,
+.gcs-hoverCard__chatMod .gcs-sweep,
+.gcs-acpChatMod .gcs-sweep {
+  background-image: linear-gradient(var(--gcs-sweep, rgb(255 255 255 / 0.08)), var(--gcs-sweep, rgb(255 255 255 / 0.08)));
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 0% 100%;
+  transition:
+    background-size 1.2s ease-out,
+    background-color var(--gcs-motion-base) ease,
+    border-color var(--gcs-motion-base) ease,
+    color var(--gcs-motion-base) ease,
+    box-shadow var(--gcs-motion-base) ease,
+    transform var(--gcs-motion-base) var(--gcs-motion-ease);
+}
+.gcs-chat .gcs-sweep:is(:hover, :focus-visible),
+.gcs-chatModDialog .gcs-sweep:is(:hover, :focus-visible),
+.gcs-chatModCard .gcs-sweep:is(:hover, :focus-visible),
+.gcs-chatHistory .gcs-sweep:is(:hover, :focus-visible),
+.gcs-hoverCard__chatMod .gcs-sweep:is(:hover, :focus-visible),
+.gcs-acpChatMod .gcs-sweep:is(:hover, :focus-visible) {
+  background-image: linear-gradient(var(--gcs-sweep, rgb(255 255 255 / 0.08)), var(--gcs-sweep, rgb(255 255 255 / 0.08)));
+  background-size: 100% 100%;
+  transition:
+    background-size 1.2s cubic-bezier(0.52, 1.64, 0.37, 0.66),
+    background-color var(--gcs-motion-base) ease,
+    border-color var(--gcs-motion-base) ease,
+    color var(--gcs-motion-base) ease,
+    box-shadow var(--gcs-motion-base) ease,
+    transform var(--gcs-motion-base) var(--gcs-motion-ease);
+}
+
+/* ─── Meniul „⋯” ──────────────────────────────────────────────────────────────────────────────── */
+
+.gcs-chat__tools:has(.gcs-chatMod__anchor),
+.gcs-chatPro__tools:has(.gcs-chatMod__anchor) {
+  opacity: 1;
+  visibility: visible;
+  z-index: 30;
+}
+.gcs-chat__msg:has(.gcs-chatMod),
+.gcs-chatPro__msg:has(.gcs-chatMod) {
+  z-index: 25;
+}
+.gcs-chatMod__anchor {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 40;
+}
+.gcs-chatMod {
+  display: flex;
+  flex-direction: column;
+  width: 236px;
+  padding: 6px;
+  border: 1px solid var(--cm-line, var(--gcs-border));
+  border-radius: 6px;
+  background: var(--gcs-surface2);
+  box-shadow: 0 18px 44px rgb(0 0 0 / 0.45);
+  text-align: left;
+  animation: gcs-motion-drop var(--gcs-motion-slow) var(--gcs-motion-ease);
+}
+.gcs-chatMod__head {
+  padding: 7px 8px 3px;
+  font-family: var(--gcs-font-display);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gcs-muted);
+}
+.gcs-chatMod__sep {
+  height: 1px;
+  margin: 5px 4px;
+  background: var(--gcs-border);
+}
+.gcs-chatMod__item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 4px;
+  background-color: transparent;
+  color: var(--gcs-text);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.gcs-chatMod__item .gcs-icon {
+  flex: none;
+  width: 13px;
+}
+.gcs-chatMod__item:is(:hover, :focus-visible),
+.gcs-chatMod__item--on {
+  background-color: var(--cm-hover);
+  transform: scale(1.01);
+  color: var(--gcs-text);
+  outline: none;
+}
+.gcs-chatMod__item--warn,
+.gcs-chatMod__item--warn:is(:hover, :focus-visible) {
+  color: var(--cm-warn);
+}
+.gcs-chatMod__item--danger,
+.gcs-chatMod__item--danger:is(:hover, :focus-visible) {
+  color: var(--cm-danger);
+}
+.gcs-chatMod__item--danger:is(:hover, :focus-visible) {
+  background-color: color-mix(in srgb, var(--cm-danger) 12%, transparent);
+}
+.gcs-chatMod__chev {
+  margin-left: auto;
+  width: 10px !important;
+  opacity: 0.8;
+}
+.gcs-chatMod__wrap {
+  position: relative;
+  display: block;
+}
+/* Submeniul se deschide lângă meniu (în stânga lui: meniul stă lângă marginea dreaptă a mesajului). */
+.gcs-chatMod__sub {
+  position: absolute;
+  right: calc(100% + 6px);
+  top: -6px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  width: 160px;
+  padding: 6px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 6px;
+  background: var(--gcs-surface2);
+  box-shadow: 0 14px 34px rgb(0 0 0 / 0.45);
+  animation: gcs-cm-side var(--gcs-motion-slow) var(--gcs-motion-ease);
+}
+@keyframes gcs-cm-side {
+  from {
+    opacity: 0;
+    transform: translateX(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@container chatpro (max-width: 420px) {
+  .gcs-chatMod__sub {
+    right: auto;
+    left: 12px;
+    top: calc(100% + 2px);
+  }
+}
+
+/* ─── Mesajele ascunse, evidențiate, liniile de sistem și rezultatele efemere ───────────────────────── */
+
+.gcs-chat__msg--hidden,
+.gcs-chatPro__msg--hidden {
+  opacity: 0.55;
+  outline: 1px dashed color-mix(in srgb, var(--cm-warn) 55%, transparent);
+  outline-offset: -2px;
+}
+.gcs-chat__msg--hidden:hover,
+.gcs-chatPro__msg--hidden:hover {
+  opacity: 0.8;
+}
+.gcs-chatHiddenTag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 5px;
+  border: 1px solid var(--cm-warn);
+  border-radius: 3px;
+  color: var(--cm-warn);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.gcs-chatHiddenTag__by {
+  text-transform: none;
+  font-weight: 600;
+}
+.gcs-chat__msg--focus,
+.gcs-chatPro__msg--focus {
+  animation: gcs-cm-focus 2.4s ease-out;
+}
+@keyframes gcs-cm-focus {
+  0%,
+  40% {
+    background-color: color-mix(in srgb, var(--gcs-accent) 18%, transparent);
+    box-shadow: inset 3px 0 0 var(--gcs-accent);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: inset 3px 0 0 transparent;
+  }
+}
+.gcs-chatSys {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 8px;
+  padding: 8px 12px;
+  border: 1px dashed color-mix(in srgb, var(--cm-ok) 40%, transparent);
+  border-radius: 4px;
+  background-color: color-mix(in srgb, var(--cm-ok) 6%, transparent);
+  color: var(--gcs-text);
+  font-size: 12.5px;
+  animation: gcs-motion-drop var(--gcs-motion-slow) var(--gcs-motion-ease);
+}
+.gcs-chatSys__icon {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background-color: color-mix(in srgb, var(--cm-ok) 14%, transparent);
+  color: var(--cm-ok);
+  font-size: 11px;
+}
+.gcs-chatSys__text {
+  flex: 1;
+  min-width: 0;
+}
+.gcs-chatSys__time {
+  flex: none;
+  color: var(--gcs-muted);
+  font-size: 11px;
+}
+.gcs-chatSys--ephemeral {
+  border-color: color-mix(in srgb, var(--gcs-accent) 45%, transparent);
+  background-color: color-mix(in srgb, var(--gcs-accent) 7%, transparent);
+}
+.gcs-chatSys--ephemeral .gcs-chatSys__icon {
+  background-color: color-mix(in srgb, var(--gcs-accent) 14%, transparent);
+  color: var(--gcs-accentInk);
+}
+.gcs-chatSys__only {
+  display: block;
+  margin-top: 2px;
+  color: var(--gcs-muted);
+  font-size: 10.5px;
+}
+.gcs-chatSys__list {
+  margin: 4px 0 0;
+  padding-left: 16px;
+}
+.gcs-chatSys__dismiss {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 4px;
+  background-color: transparent;
+  color: var(--gcs-muted);
+  cursor: pointer;
+}
+.gcs-chatSys__dismiss:is(:hover, :focus-visible) {
+  border-color: color-mix(in srgb, var(--gcs-text) 35%, transparent);
+  color: var(--gcs-text);
+}
+
+/* ─── Starea viewer-ului: mute cu numărătoare, kick / ban ───────────────────────────────────────────── */
+
+.gcs-chatMuted {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.gcs-chatMuted > span:first-of-type {
+  flex: 1;
+  min-width: 0;
+}
+.gcs-chatMuted__left {
+  flex: none;
+  padding: 2px 8px;
+  border: 1px solid color-mix(in srgb, var(--cm-warn) 50%, transparent);
+  border-radius: 999px;
+  font-family: var(--gcs-font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+.gcs-chatBlocked {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 12px;
+  padding: 22px 16px;
+  border: 1px dashed color-mix(in srgb, var(--cm-danger) 50%, transparent);
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--cm-danger) 6%, transparent);
+  text-align: center;
+  animation: gcs-motion-drop var(--gcs-motion-slow) var(--gcs-motion-ease);
+}
+.gcs-chatBlocked__icon {
+  font-size: 22px;
+  color: var(--cm-danger);
+}
+
+/* ─── Paleta de comenzi „/” ───────────────────────────────────────────────────────────────────────── */
+
+.gcs-chatCmd {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: min(440px, 100%);
+  padding: 6px;
+  animation: gcs-motion-drop var(--gcs-motion-slow) var(--gcs-motion-ease);
+}
+.gcs-chatCmd__head {
+  padding: 6px 8px 2px;
+  font-family: var(--gcs-font-display);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gcs-muted);
+}
+.gcs-chatCmd__item {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 4px;
+  background-color: transparent;
+  color: var(--gcs-text);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.gcs-chatCmd__item b {
+  color: var(--gcs-accentInk);
+}
+.gcs-chatCmd__item:is(:hover, :focus-visible) {
+  background-color: var(--cm-hover);
+  transform: scale(1.01);
+}
+.gcs-chatCmd__item--on {
+  background-color: color-mix(in srgb, var(--gcs-accent) 15%, transparent);
+}
+.gcs-chatCmd__item--static {
+  cursor: default;
+  background-color: color-mix(in srgb, var(--gcs-accent) 10%, transparent);
+}
+.gcs-chatCmd__usage,
+.gcs-chatCmd__muted {
+  color: var(--gcs-muted);
+  font-weight: 500;
+}
+.gcs-chatCmd__desc {
+  margin-left: auto;
+  color: var(--gcs-muted);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+.gcs-chatCmd__examples {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px 6px;
+  font-size: 11.5px;
+}
+.gcs-chatCmd__examples code {
+  padding: 2px 6px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 3px;
+  background-color: var(--gcs-surface);
+  font-size: 11px;
+}
+.gcs-chatCmd__group {
+  display: flex;
+  flex-direction: column;
+}
+.gcs-chatCmd__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 2px 8px 6px;
+}
+.gcs-chatCmd__chip {
+  height: 26px;
+  padding: 0 9px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 999px;
+  background-color: var(--gcs-surface);
+  color: var(--gcs-text);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.gcs-chatCmd__chip:is(:hover, :focus-visible),
+.gcs-chatCmd__chip--on {
+  border-color: color-mix(in srgb, var(--gcs-accent) 60%, transparent);
+  background-color: color-mix(in srgb, var(--gcs-accent) 30%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--gcs-accent) 30%, transparent);
+  transform: translateY(-1px);
+}
+
+/* ─── Dialogurile acțiunilor și fișa de moderare ─────────────────────────────────────────────────────── */
+
+.gcs-chatModDialog__form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gcs-chatModDialog__group {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gcs-chatModDialog__group legend,
+.gcs-chatModDialog__reason {
+  font-family: var(--gcs-font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gcs-muted);
+}
+.gcs-chatModDialog__reason .gcs-input {
+  margin-top: 6px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: inherit;
+}
+.gcs-chatModDialog__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.gcs-chatModDialog__chip {
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 999px;
+  background-color: var(--gcs-surface);
+  color: var(--gcs-text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.gcs-chatModDialog__chip:is(:hover, :focus-visible) {
+  border-color: color-mix(in srgb, var(--gcs-text) 40%, transparent);
+  color: var(--gcs-heading, var(--gcs-text));
+}
+.gcs-chatModDialog__chip--on,
+.gcs-chatModDialog__chip--on:is(:hover, :focus-visible) {
+  border-color: var(--gcs-accent);
+  background-color: color-mix(in srgb, var(--gcs-accent) 14%, transparent);
+  color: var(--gcs-heading, var(--gcs-text));
+}
+.gcs-chatModDialog__quote {
+  margin: 0;
+  padding: 8px 10px;
+  border-left: 3px solid var(--gcs-accent);
+  border-radius: 4px;
+  background-color: var(--gcs-surface);
+  font-size: 12.5px;
+}
+.gcs-chatModDialog__note {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--gcs-muted);
+  font-size: 11px;
+}
+.gcs-chatModDialog__error {
+  margin: 0;
+  color: var(--cm-danger);
+}
+.gcs-chatModDialog__danger.gcs-btn {
+  background-color: var(--cm-danger);
+  border-color: var(--cm-danger);
+}
+.gcs-chatModCard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.gcs-chatModCard__title {
+  margin: 0 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.gcs-chatModCard__count {
+  padding: 1px 7px;
+  border: 1px solid color-mix(in srgb, var(--cm-warn) 60%, transparent);
+  border-radius: 999px;
+  color: var(--cm-warn);
+  font-size: 11px;
+}
+.gcs-chatModCard__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12.5px;
+}
+.gcs-chatModCard__list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  background-color: var(--gcs-surface);
+}
+.gcs-chatModCard__list li:hover {
+  background-color: var(--cm-hover-strong);
+}
+.gcs-chatModCard__list .gcs-btn {
+  margin-left: auto;
+}
+
+/* Acțiunile rapide din cardul membrului (deschis din chat). */
+.gcs-hoverCard__chatMod {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+  padding-top: 8px;
+  border-top: 1px solid var(--gcs-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gcs-chatMod,
+  .gcs-chatMod__sub,
+  .gcs-chatSys,
+  .gcs-chatBlocked,
+  .gcs-chatCmd {
+    animation: gcs-motion-fade var(--gcs-motion-base) ease;
+  }
+  .gcs-chatMod__item:is(:hover, :focus-visible),
+  .gcs-chatMod__item--on,
+  .gcs-chatCmd__item:is(:hover, :focus-visible),
+  .gcs-chatCmd__chip:is(:hover, :focus-visible),
+  .gcs-chatCmd__chip--on {
+    transform: none;
+  }
+  .gcs-chat__msg--focus,
+  .gcs-chatPro__msg--focus {
+    animation: none;
+    background-color: color-mix(in srgb, var(--gcs-accent) 12%, transparent);
+  }
+}
+
+/* ─── ACP → Chat → Moderare / Moderatori ──────────────────────────────────────────────────────────── */
+
+.gcs-acpChatMod {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 1100px;
+}
+.gcs-acpChatMod__title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 28px;
+  font-weight: 700;
+}
+.gcs-acpChatMod__intro {
+  margin: -6px 0 0;
+}
+.gcs-acpChatMod__card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+.gcs-acpChatMod__card .gcs-acpWidget__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.gcs-acpChatMod .gcs-table__row:hover {
+  background-color: var(--cm-hover-strong);
+}
+.gcs-acpChatMod__kind {
+  display: inline-flex;
+  padding: 1px 8px;
+  border: 1px solid color-mix(in srgb, var(--cm-warn) 60%, transparent);
+  border-radius: 999px;
+  color: var(--cm-warn);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.gcs-acpChatMod__kind--ban {
+  border-color: color-mix(in srgb, var(--cm-danger) 60%, transparent);
+  color: var(--cm-danger);
+}
+.gcs-acpChatMod__rights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.gcs-acpChatMod__right {
+  padding: 1px 7px;
+  border: 1px solid color-mix(in srgb, var(--gcs-accent) 60%, transparent);
+  border-radius: 999px;
+  background-color: color-mix(in srgb, var(--gcs-accent) 12%, transparent);
+  font-size: 11px;
+  font-weight: 700;
+  transition:
+    background-color var(--gcs-motion-base),
+    box-shadow var(--gcs-motion-base),
+    transform var(--gcs-motion-base);
+}
+.gcs-acpChatMod__right:hover {
+  background-color: color-mix(in srgb, var(--gcs-accent) 30%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--gcs-accent) 30%, transparent);
+  transform: translateY(-1px);
+}
+.gcs-acpChatMod__actions {
+  white-space: nowrap;
+}
+.gcs-acpChatMod__actions > * + * {
+  margin-left: 6px;
+}
+.gcs-acpChatMod__pager {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.gcs-acpChatMod__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.gcs-acpChatMod__found {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.gcs-acpChatMod__set {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+}
+.gcs-acpChatMod__set legend {
+  width: 100%;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+.gcs-acpChatMod__set .gcs-field__hint {
+  width: 100%;
+}
+.gcs-acpChatMod__set:disabled {
+  opacity: 0.6;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gcs-acpChatMod__right:hover {
+    transform: none;
+  }
+}

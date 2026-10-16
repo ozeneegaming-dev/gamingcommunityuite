@@ -166,7 +166,15 @@
       "removal_not_failed": "Only a failed operation can be retried.",
       "reauth_required": "To confirm, sign in again.",
       "group_mention_cooldown": "You mentioned this group recently: wait a few minutes before mentioning it again.",
-      "not_opponent": "Only the challenged member can answer."
+      "not_opponent": "Only the challenged member can answer.",
+      "muted": "У тебя мут в чате.",
+      "not_author": "Можно изменять только свои сообщения.",
+      "target_is_staff": "Нельзя действовать против другого члена команды.",
+      "target_outranks": "У этого участника ранг выше твоего.",
+      "chat_banned": "У тебя бан в чате.",
+      "chat_kicked": "Тебя на время удалили из чата.",
+      "system_line": "Системные строки нельзя изменить.",
+      "right_not_held": "Нельзя выдать право, которого у тебя нет."
     },
     "fields": {
       "invalid_color": "Недействительный цвет (#RRGGBB)",
@@ -286,7 +294,10 @@
       "invalid_value": "The value isn't valid.",
       "invalid_key": "Неверный ключ (строчные буквы, цифры и дефисы, 2–32 символа).",
       "invalid_theme_package": "Файл не является корректным пакетом темы GCS.",
-      "unsupported_theme_package": "Пакет темы предназначен для другой версии платформы."
+      "unsupported_theme_package": "Пакет темы предназначен для другой версии платформы.",
+      "member_not_found": "Такого участника нет.",
+      "member_required": "Укажи участника (@имя).",
+      "room_not_found": "Такой комнаты нет."
     }
   },
   "acp": {
@@ -419,7 +430,9 @@
         "chat_pro_group": "Chat Pro",
         "chat_pro_settings": "Chat Pro settings",
         "chat_pro_bar": "Announcement bar",
-        "chat_pro_emotes": "Emotes"
+        "chat_pro_emotes": "Emotes",
+        "chat_moderation": "Модерация",
+        "chat_moderators": "Модераторы"
       },
       "vip": {
         "vip_group": "VIP",
@@ -3213,6 +3226,76 @@
         "confirmPack": "The pack “{name}” and all its emotes are deleted permanently.",
         "confirmEmote": "{name} is deleted permanently; old messages keep the code text."
       }
+    },
+    "chatMod": {
+      "moderationTitle": "Модерация чата",
+      "presetsTitle": "Готовые причины",
+      "reasonsHint": "Одна причина на строку; они появляются кнопками в диалогах модерации.",
+      "announceGrants": "Публичная строка в чате, когда кто-то получает доступ модератора",
+      "save": "Сохранить",
+      "activeTitle": "Активные санкции",
+      "noActive": "Активных санкций нет.",
+      "colMember": "Участник",
+      "colKind": "Санкция",
+      "colRoom": "Комната",
+      "colUntil": "До",
+      "colReason": "Причина",
+      "colBy": "Выдал",
+      "lift": "Снять",
+      "liftTitle": "Снять санкцию?",
+      "liftBody": "{name} сразу сможет снова писать в чате.",
+      "logTitle": "Журнал модерации чата",
+      "noLog": "Действий модерации пока нет.",
+      "colWhen": "Когда",
+      "colWho": "Кто",
+      "colWhat": "Что",
+      "colWhom": "Кому",
+      "colMessage": "Сообщение",
+      "undone": "отменено",
+      "undo": "Отменить",
+      "undoTitle": "Отменить санкцию?",
+      "undoBody": "Санкция {name} снимается сейчас.",
+      "pages": "Страницы журнала",
+      "prev": "Назад",
+      "next": "Вперёд",
+      "page": "Страница {page} из {pages}",
+      "system": "Система",
+      "cancel": "Отмена",
+      "moderatorsTitle": "Модераторы чата",
+      "moderatorsIntro": "Доступ модератора только в чате, выданный участнику (также командой /acces в чате). Действующие права — права групп плюс доступ, выданный здесь.",
+      "grantsTitle": "{count, plural, one {# активный доступ} few {# активных доступа} many {# активных доступов} other {# активного доступа}}",
+      "noGrants": "Нет доступов модератора в чате.",
+      "rights": "Права",
+      "rooms": "Комнаты",
+      "roomsHint": "Ни одна комната не отмечена = все комнаты.",
+      "expiry": "Истекает",
+      "expiries": {
+        "none": "Никогда",
+        "1d": "Через день",
+        "7d": "Через 7 дней",
+        "30d": "Через 30 дней",
+        "custom": "В выбранную дату"
+      },
+      "colGrantedBy": "Выдал",
+      "revoke": "Отозвать",
+      "revokeTitle": "Отозвать доступ?",
+      "revokeBody": "{name} теряет доступ модератора в чате.",
+      "edit": "Изменить",
+      "editTitle": "Доступ {name}",
+      "addTitle": "Добавить модератора чата",
+      "member": "Участник",
+      "searchMember": "Найди участника по имени",
+      "removeMember": "Выбрать другого участника",
+      "pickMember": "Выбери участника.",
+      "preset": "Набор прав",
+      "presets": {
+        "full": "Полный",
+        "mute_kick": "Только мут + кик",
+        "custom": "Свой"
+      },
+      "saved": "Сохранено",
+      "saveGrant": "Сохранить доступ",
+      "addGrant": "Добавить модератора"
     }
   },
   "settings": {
@@ -3454,7 +3537,9 @@
       "voice_max_seconds": "Максимальная длина голосового сообщения (секунды)",
       "giphy_key": "GIPHY API (без ключа /giphy выключен)",
       "show_rules": "Показать ссылку правил в заголовке чата",
-      "flood_seconds": "Управление наводнением (секунды между сообщениями, 0 = нет)"
+      "flood_seconds": "Управление наводнением (секунды между сообщениями, 0 = нет)",
+      "mod_reasons": "Готовые причины модерации",
+      "announce_grants": "Публичная строка в чате, когда кто-то получает доступ модератора"
     },
     "i18n": {
       "locales": "Языки, предлагаемые членам",
@@ -3655,7 +3740,18 @@
       "flood_seconds": "Пауза между сообщениями чата (секунды)",
       "create_public": "Создавайте публичные чаты",
       "create_private": "Создание частных чатов (с приглашениями)",
-      "announce": "Pin-сообщения и публикации объявлений в чате"
+      "announce": "Pin-сообщения и публикации объявлений в чате",
+      "edit_any": "Изменять любые сообщения в чате (без ограничения по времени)",
+      "pin": "Закреплять сообщения в чате",
+      "hide": "Скрывать сообщения в чате",
+      "delete_any": "Удалять любые сообщения в чате",
+      "purge_user": "Удалять сообщения участника в чате (за час / 24 часа / все)",
+      "warn": "Выдавать предупреждения из чата",
+      "mute": "Давать мут в чате",
+      "kick": "Кикать участников из чата",
+      "ban": "Банить в чате",
+      "slow_user": "Личный медленный режим в чате",
+      "grant_access": "Выдавать доступ модератора в чате"
     },
     "servers": {
       "view": "Sees the game servers",
@@ -4291,7 +4387,9 @@
         "group_mention": "Group mentions"
       },
       "chat": {
-        "mention": "Чат упоминает"
+        "mention": "Чат упоминает",
+        "sanction": "Санкции в чате (мут, кик, бан)",
+        "access": "Доступ модератора в чате"
       },
       "clans": {
         "invite": "Clan invitations",
@@ -4421,7 +4519,183 @@
       "suggestions": "Emote suggestions",
       "showMedia": "Show media"
     },
-    "deletedMember": "Deleted member"
+    "deletedMember": "Deleted member",
+    "mod": {
+      "title": "Действия с сообщением",
+      "more": "Ещё",
+      "copied": "Скопировано",
+      "reply": "Ответить",
+      "react": "Реакция",
+      "edit": "Изменить",
+      "pin": "Закрепить в чате",
+      "hide": "Скрыть",
+      "unhide": "Показать снова",
+      "copyText": "Копировать текст",
+      "copyLink": "Копировать ссылку",
+      "profile": "Профиль",
+      "history": "Его история в чате",
+      "card": "Карточка модерации",
+      "warn": "Предупреждение",
+      "mute": "Мут",
+      "kick": "Кик из чата",
+      "ban": "Бан в чате",
+      "siteBan": "Бан на сайте…",
+      "siteBanReason": "Чат: «{excerpt}» ({link})",
+      "purge": "Удалить его сообщения",
+      "slow": "Личный медленный режим",
+      "delete": "Удалить сообщение",
+      "ignore": "Игнорировать",
+      "report": "Пожаловаться",
+      "muteFor": "Мут на",
+      "kickFor": "Кик на",
+      "banFor": "Бан на",
+      "purgeFrom": "Удалить сообщения за",
+      "slowEvery": "Одно сообщение раз в",
+      "seconds": "{count, plural, one {# секунду} few {# секунды} many {# секунд} other {# секунды}}",
+      "window": {
+        "1h": "Последний час",
+        "24h": "Последние 24 часа",
+        "all": "Все"
+      },
+      "sections": {
+        "message": "Сообщение",
+        "member": "Участник",
+        "moderation": "Модерация"
+      },
+      "dur": {
+        "forever": "навсегда",
+        "days": "{count, plural, one {# день} few {# дня} many {# дней} other {# дня}}",
+        "hours": "{count, plural, one {# час} few {# часа} many {# часов} other {# часа}}",
+        "minutes": "{count, plural, one {# минута} few {# минуты} many {# минут} other {# минуты}}"
+      },
+      "dialog": {
+        "warn": "Предупреждение для {name}",
+        "mute": "Мут для {name}",
+        "kick": "Кик из чата для {name}",
+        "ban": "Бан в чате для {name}",
+        "slow": "Личный медленный режим для {name}",
+        "purge": "Удалить сообщения {name}"
+      },
+      "done": {
+        "warn": "{name} получил предупреждение.",
+        "mute": "{name} получил мут.",
+        "kick": "{name} удалён из чата.",
+        "ban": "{name} получил бан в чате.",
+        "slow": "У {name} личный медленный режим.",
+        "purge": "Сообщения {name} удалены."
+      },
+      "confirm": {
+        "warn": "Предупредить",
+        "mute": "Дать мут",
+        "kick": "Кикнуть",
+        "ban": "Забанить в чате",
+        "slow": "Включить медленный режим",
+        "purge": "Удалить сообщения"
+      },
+      "cancel": "Отмена",
+      "close": "Закрыть",
+      "evidence": "Сообщение прикрепляется как доказательство.",
+      "interval": "Интервал",
+      "duration": "Длительность",
+      "points": "Баллы",
+      "reason": "Причина",
+      "reasonPlaceholder": "Напиши причину или выбери ниже",
+      "presets": "Готовые причины",
+      "everywhere": "Во всём чате (все комнаты)",
+      "announce": "Объявить в чате",
+      "notify": "Уведомить участника",
+      "cardTitle": "Карточка модерации: {name}",
+      "warnings": "Предупреждения",
+      "activePoints": "{count, plural, one {# активный балл} few {# активных балла} many {# активных баллов} other {# активного балла}}",
+      "none": "Пока ничего.",
+      "sanctions": "Активные санкции",
+      "kinds": {
+        "mute": "Мут",
+        "kick": "Кик",
+        "ban": "Бан в чате",
+        "slow": "Медленный режим"
+      },
+      "until": "до {time}",
+      "lift": "Снять",
+      "recent": "Последние действия",
+      "actions": {
+        "edit": "Сообщение изменено",
+        "pin": "Сообщение закреплено",
+        "hide": "Сообщение скрыто",
+        "unhide": "Сообщение снова показано",
+        "delete": "Сообщение удалено",
+        "purge": "Сообщения удалены",
+        "warn": "Предупреждение",
+        "mute": "Мут",
+        "unmute": "Мут снят",
+        "kick": "Кик",
+        "ban": "Бан в чате",
+        "slow": "Личный медленный режим",
+        "lift": "Санкция снята",
+        "grant": "Выдан доступ модератора",
+        "revoke": "Доступ модератора отозван",
+        "expire": "Доступ модератора истёк"
+      },
+      "rights": {
+        "edit_any": "Изменение",
+        "pin": "Закрепление",
+        "hide": "Скрытие",
+        "delete_any": "Удаление",
+        "purge_user": "Массовое удаление",
+        "warn": "Предупреждение",
+        "mute": "Мут",
+        "kick": "Кик",
+        "ban": "Бан",
+        "slow_user": "Медленный режим"
+      },
+      "allRooms": "все комнаты",
+      "system": {
+        "mute": "<target></target> получил мут: {duration}{suffix}",
+        "kick": "<target></target> удалён из чата на {duration}{suffix}",
+        "ban": "<target></target> получил бан в чате ({duration}){suffix}",
+        "warn": "<target></target> получил предупреждение{suffix}",
+        "grant": "<target></target> получил доступ модератора в чате от <actor></actor>",
+        "revoke": "<actor></actor> отозвал у <target></target> доступ модератора в чате"
+      },
+      "ephemeral": {
+        "granted": "Доступ выдан: <target></target>",
+        "revoked": "Доступ <target></target> отозван.",
+        "list": "{count, plural, one {# модератор чата} few {# модератора чата} many {# модераторов чата} other {# модератора чата}}",
+        "listEmpty": "Нет активных доступов модератора.",
+        "onlyYou": "Это видишь только ты"
+      },
+      "hiddenTag": "Скрыто",
+      "hiddenBy": "Скрыл {name}",
+      "mutedUntil": "У тебя мут до {time}",
+      "mutedForever": "У тебя бессрочный мут",
+      "blocked": {
+        "kick": "Тебя удалили из чата",
+        "ban": "У тебя бан в чате",
+        "reason": "Причина: {reason}"
+      },
+      "slowNote": "Личный медленный режим: одно сообщение раз в {seconds} с."
+    },
+    "commands": {
+      "title": "Команда",
+      "examples": "Примеры:",
+      "rights": "Права",
+      "durations": "Длительность",
+      "rooms": "Комнаты",
+      "acces": {
+        "usage": "@участник [права] [срок] [#комната]",
+        "description": "Выдать доступ модератора в чате"
+      },
+      "revoca": {
+        "usage": "@участник",
+        "description": "Отозвать доступ модератора в чате"
+      },
+      "roll": {
+        "usage": "[макс]"
+      },
+      "rps": {
+        "usage": "@участник [камень|бумага|ножницы]"
+      }
+    }
   },
   "online": {
     "title": "Кто онлайн",

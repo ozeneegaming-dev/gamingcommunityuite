@@ -34,10 +34,10 @@ export async function usesChatPro(actor: GcsActor): Promise<boolean> {
 }
 
 /** Tot ce primește `GcsChatProRoom`: proprietățile camerei standard și datele Chat Pro. */
-export async function chatProRoomProps(actor: GcsActor, channel: GcsChatChannelView) {
+export async function chatProRoomProps(actor: GcsActor, channel: GcsChatChannelView, opts: { around?: number | null } = {}) {
   const { chatPro, db } = services();
   const [base, config, me, emotes, bar, ranking, badges, canHistory, viewer] = await Promise.all([
-    chatRoomProps(actor, channel),
+    chatRoomProps(actor, channel, opts),
     chatPro.config(),
     actor.userId ? chatPro.me(actor.userId) : Promise.resolve(null),
     chatPro.emotes.packs(),

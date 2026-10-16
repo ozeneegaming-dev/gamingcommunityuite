@@ -1,6 +1,6 @@
 "use client";
 
-import { faEnvelope, faUserMinus, faUserPlus } from "@fortawesome/free-solid-svg-icons";
+import { faCommentSlash, faEnvelope, faRightFromBracket, faTriangleExclamation, faUserMinus, faUserPlus } from "@fortawesome/free-solid-svg-icons";
 import {
   GcsButton,
   GcsGroupCard,
@@ -14,10 +14,12 @@ import {
   type GcsHoverCardPlacement,
 } from "@gcs/ui";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { hoverAnchorKey, hoverAnchorOf, OPEN_CARD_EVENT } from "@/lib/hover-anchor";
 import { followUser } from "../profile-actions";
+import { CHAT_MOD_EVENT, type GcsChatModRequest } from "./chat/GcsChatModeration";
 
 /** `html`: markup-ul din șablonul `members.hover_card` al temei (deja sanitizat pe server), dacă tema l-a modificat. */
 type CardData = GcsHoverCardData & { viewer: { isSelf: boolean; isFollowing: boolean; canMessage: boolean; canFollow: boolean }; html?: string | null };
@@ -85,6 +87,7 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
   const [place, setPlace] = useState<GcsHoverCardPlacement | null>(null);
   const layer = useRef<HTMLDivElement>(null);
   const [pending, startTransition] = useTransition();
+  const tm = useTranslations("chat.mod");
   const openTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const suppressClick = useRef(false);
@@ -260,8 +263,34 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
       setOpen((o) => (o?.kind === "user" ? { ...o, data: next } : o));
     });
 
+  // Deschis din chat de cineva care moderează camera: acțiunile rapide (Mute, Kick, Avertisment) deschid dialogul camerei.
+  const chatRoot = open.anchor.closest<HTMLElement>("[data-gcs-chat-mod]");
+  const quick = chatRoot && !data.viewer.isSelf ? (chatRoot.dataset.gcsChatMod ?? "").split(",").filter((a): a is GcsChatModRequest["action"] => a === "mute" || a === "kick" || a === "warn") : [];
+  const quickIcons = { mute: faCommentSlash, kick: faRightFromBracket, warn: faTriangleExclamation } as const;
+  const quickActions =
+    quick.length > 0 ? (
+      <span className="gcs-hoverCard__chatMod" data-testid="gcs-hover-chatmod">
+        {quick.map((a) => (
+          <GcsButton
+            key={a}
+            variant="ghost"
+            size="sm"
+            className="gcs-sweep"
+            icon={<GcsIconSvg icon={quickIcons[a]} />}
+            onClick={() => {
+              const detail: GcsChatModRequest = { action: a, userId: open.userId, name: data.user.name, channel: chatRoot!.dataset.gcsChatChannel ?? "" };
+              setOpen(null);
+              document.dispatchEvent(new CustomEvent(CHAT_MOD_EVENT, { detail }));
+            }}
+            data-testid={`gcs-hover-chatmod-${a}`}
+          >
+            {tm(a === "warn" ? "warn" : a)}
+          </GcsButton>
+        ))}
+      </span>
+    ) : null;
   const actions =
-    data.viewer.canFollow || data.viewer.canMessage ? (
+    data.viewer.canFollow || data.viewer.canMessage || quickActions ? (
       <>
         {data.viewer.canFollow && (
           <GcsButton
@@ -279,6 +308,7 @@ export function GcsHoverCardHost({ labels, locale }: { labels: Labels; locale: s
             <Link href={`/messages/new?to=${encodeURIComponent(open.userId)}`}>{labels.message}</Link>
           </GcsButton>
         )}
+        {quickActions}
       </>
     ) : undefined;
 
