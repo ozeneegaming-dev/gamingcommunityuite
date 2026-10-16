@@ -45,11 +45,14 @@ const nextConfig: NextConfig = {
       },
       // Previzualizarea editorului vizual de temă rulează într-un iframe pe aceeași origine: doar pentru cererile ei
       // (parametrul sau cookie-ul de previzualizare) `DENY` devine `SAMEORIGIN`. Ultima regulă potrivită câștigă.
-      ...["query", "cookie"].map((type) => ({
-        source: "/:path*",
-        has: [{ type: type as "query" | "cookie", key: "gcs-theme-preview" }],
-        headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }],
-      })),
+      // Același lucru pentru previzualizarea managerului de meniu (Manager meniu v2: `gcs-nav-preview`).
+      ...["gcs-theme-preview", "gcs-nav-preview"].flatMap((key) =>
+        ["query", "cookie"].map((type) => ({
+          source: "/:path*",
+          has: [{ type: type as "query" | "cookie", key }],
+          headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }],
+        })),
+      ),
     ];
   },
   turbopack: {

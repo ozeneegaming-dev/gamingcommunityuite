@@ -63,7 +63,7 @@ test("acordarea „VIP Gold 30 de zile” din fișa membrului stilizează numele
 
   await enterAcpAsRoot(page, `RootVip${id}`, `root-vip-${id}@example.com`);
   const [row] = await sql<{ id: string }>(`SELECT id FROM users WHERE email = $1`, [`vip-${id}@example.com`]);
-  await page.goto(`/admin/members/${row!.id}`);
+  await page.goto(`/admin/members/${row!.id}?tab=profile`);
   const vip = page.getByTestId("gcs-acp-member-vip");
   await vip.getByLabel("Nivel").selectOption({ label: "VIP Gold" });
   await vip.getByLabel("Zile").fill("30");
