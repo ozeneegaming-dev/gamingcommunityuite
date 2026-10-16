@@ -428,8 +428,8 @@ export const themeHasDesignDecor = (preset: string | undefined | null): boolean 
  * (doar luminoasă), același design (`preset: "nova"`), fiecare cu paleta ei, editată separat. Comutatorul lună / soare
  * trece de la una la alta (perechea din ACP → Aspect → Teme).
  */
-// Antetul „Standard” rămâne în flux, ca antetul designului de până acum (fără bara compactă lipită sus).
-const GCS_HEADER: GcsThemeSettings["header"] = { ...NOVA_THEME_SETTINGS.header, compact: false };
+// Antetul „Standard” rămâne în flux și are înălțimea antetului designului de până acum (76 px, fără bara compactă).
+const GCS_HEADER: GcsThemeSettings["header"] = { ...NOVA_THEME_SETTINGS.header, compact: false, rowMain: 76 };
 export const GCS_DARK_THEME_SETTINGS: GcsThemeSettings = { ...NOVA_THEME_SETTINGS, header: GCS_HEADER, scheme: { default: "dark", toggle: false } };
 /** „GCS White”: paleta luminoasă a designului (modul e mereu „light”, deci paleta `light` e cea afișată). */
 export const GCS_WHITE_THEME_SETTINGS: GcsThemeSettings = { ...NOVA_THEME_SETTINGS, header: GCS_HEADER, scheme: { default: "light", toggle: false } };

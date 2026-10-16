@@ -112,7 +112,7 @@ describe("designul Nova: setările", () => {
     expect(themeSingleScheme(GCS_WHITE_THEME_SETTINGS)).toBe("light");
     expect(themeSingleScheme(NOVA_THEME_SETTINGS)).toBeNull();
     expect(GCS_WHITE_THEME_SETTINGS.light).toEqual(NOVA_THEME_SETTINGS.light);
-    expect({ ...GCS_DARK_THEME_SETTINGS, scheme: null, header: { ...GCS_DARK_THEME_SETTINGS.header, compact: true } }).toEqual({ ...NOVA_THEME_SETTINGS, scheme: null });
+    expect({ ...GCS_DARK_THEME_SETTINGS, scheme: null, header: { ...GCS_DARK_THEME_SETTINGS.header, compact: true, rowMain: 94 } }).toEqual({ ...NOVA_THEME_SETTINGS, scheme: null });
     // Antetul „Standard” în flux, ca antetul designului de până acum.
     expect(GCS_DARK_THEME_SETTINGS.header.compact).toBe(false);
     expect(themeSettingsErrors(GCS_DARK_THEME_SETTINGS)).toEqual({});
@@ -264,6 +264,7 @@ describe("temele incluse: instalare nouă și actualizare", () => {
     expect(s.header.layout).toEqual(headerPreset("classic"));
     expect(s.header.layout.desktop.main.right).toContain("themeToggle");
     expect(s.header.compact).toBe(false);
+    expect(s.header.rowMain).toBe(76);
     expect((await w.db.themeCssFile.findFirstOrThrow({ where: { themeId: nova.id, name: "custom.css" } })).content).toContain("outline: 1px solid red");
     expect(await w.db.themeTemplate.count({ where: { themeId: nova.id, key: "forum.row" } })).toBe(1);
     // Membrii care aleseseră Nova o păstrează sub cheia nouă; ceilalți rămân la alegerea lor.

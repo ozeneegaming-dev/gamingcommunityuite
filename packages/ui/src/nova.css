@@ -1575,22 +1575,6 @@ html.gcs-nova[data-theme="light"] {
 .gcs-nova .gcs-chatPro__side {
   background: var(--cp-rank-bg, var(--gcs-band-bg));
 }
-.gcs-nova .gcs-chatPro__rankTitle svg {
-  box-sizing: border-box;
-  width: 30px;
-  height: 30px;
-  padding: 7px;
-  border-radius: var(--gcs-band-icon-radius);
-  border: 1px solid var(--gcs-band-icon-border);
-  background: var(--gcs-band-icon-bg);
-}
-.gcs-nova .gcs-chatPro__step {
-  background: var(--gcs-raise);
-  transition: transform var(--gcs-ease), border-color var(--gcs-ease);
-}
-.gcs-nova .gcs-chatPro__step:hover {
-  transform: translateY(var(--gcs-hover-lift));
-}
 .gcs-nova .gcs-chatPro__bar {
   border-radius: var(--gcs-pill-radius);
   background:

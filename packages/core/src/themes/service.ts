@@ -405,7 +405,7 @@ export class GcsThemeService {
       const settings = {
         ...raw,
         scheme: { ...GCS_DARK_THEME_SETTINGS.scheme },
-        ...(standard && header ? { header: { ...header, layout: headerPreset("classic"), compact: false } } : {}),
+        ...(standard && header ? { header: { ...header, layout: headerPreset("classic"), compact: false, ...(header.rowMain === NOVA_THEME_SETTINGS.header.rowMain ? { rowMain: 76 } : {}) } } : {}),
       };
       await tx.theme.update({
         where: { id: nova.id },
