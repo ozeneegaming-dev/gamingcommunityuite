@@ -30,7 +30,7 @@ describe("schema etapa 4", () => {
   test("preferințele sunt unice pe (user, tip), cu valorile implicite", async () => {
     const u = await user();
     const pref = await db.notificationPreference.create({ data: { userId: u.id, type: "forums.reply" } });
-    expect(pref).toMatchObject({ site: true, email: "DIGEST" });
+    expect(pref).toMatchObject({ channels: {} });
     await expect(db.notificationPreference.create({ data: { userId: u.id, type: "forums.reply" } })).rejects.toThrow();
   });
 

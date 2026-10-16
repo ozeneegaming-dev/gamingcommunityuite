@@ -129,6 +129,9 @@ model User {
   // Timp real (etapa 4).
   notifications           Notification[]
   notificationPreferences NotificationPreference[]
+  /// Notificări v2: abonamentele web push (pe dispozitiv) și setările de livrare ale membrului (ex. emailurile oprite din ACP).
+  pushSubscriptions       PushSubscription[]
+  notificationMember      NotificationMember?
   chatMessages            ChatMessage[]            @relation("ChatAuthor")
   chatMutes               ChatMute[]               @relation("ChatMuted")
   /// Chat Pro (aplicația premium): profilul de chat, statisticile zilnice și perioadele câștigate.
@@ -1281,15 +1284,13 @@ model AvatarFrame {
 
 // ─── Timp real (etapa 4, specul etapei §4) ───────────────────────────────────
 
-enum NotificationEmail {
-  OFF
-  INSTANT
-  DIGEST
-}
-
 /**
  * O notificare. Notificările necitite de același fel, pe același conținut, se grupează (`groupKey`; index unic
  * parțial `WHERE readAt IS NULL`, în migrație): `count` crește, iar `actorIds` ține ultimii actori.
+ *
+ * Notificări v2: `site` = apare în clopoțel și pe pagina notificărilor (una trimisă doar ca toast / email / push e
+ * creată deja citită, fără grupare); `important` = a trecut și prin canalele „doar important”; `channels` = canalele pe
+ * care a plecat (`toast`, `push`, `email`: modul); `clickedAt` = deschisă din clopoțel, pagină, toast, email sau push.
  */
 model Notification {
   id         Int       @id @default(autoincrement())
@@ -1303,6 +1304,10 @@ model Notification {
   data       Json
   readAt     DateTime?
   emailedAt  DateTime?
+  site       Boolean   @default(true)
+  important  Boolean   @default(false)
+  channels   Json      @default("{}")
+  clickedAt  DateTime?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
@@ -1310,14 +1315,19 @@ model Notification {
 
   @@index([userId, readAt, updatedAt])
   @@index([readAt, emailedAt])
+  @@index([updatedAt])
   @@map("notifications")
 }
 
+/**
+ * Alegerile unui membru pentru un tip (Notificări v2): doar canalele schimbate față de valorile implicite,
+ * `{ site, toast, email, push: "on" | "important" | "off", emailMode: "instant" | "daily" | "weekly" }`.
+ */
 model NotificationPreference {
-  userId String
-  type   String
-  site   Boolean           @default(true)
-  email  NotificationEmail @default(DIGEST)
+  userId    String
+  type      String
+  channels  Json     @default("{}")
+  updatedAt DateTime @default(now()) @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1326,14 +1336,65 @@ model NotificationPreference {
 }
 
 /**
- * Valorile implicite pe tip (ACP → Membri → Setări membri → Notificări).
+ * Valorile implicite pe tip (ACP → Membri → Setări membri → Notificări): canalele (aceeași formă ca la membri) și
+ * blocările (`{ <canal>: "forced" | "disabled" }`). Un tip fără rând folosește valorile declarate de modulul lui.
  */
 model NotificationDefault {
-  type  String            @id
-  site  Boolean           @default(true)
-  email NotificationEmail @default(DIGEST)
+  type      String   @id
+  channels  Json     @default("{}")
+  locks     Json     @default("{}")
+  updatedAt DateTime @default(now()) @updatedAt
 
   @@map("notification_defaults")
+}
+
+/**
+ * Livrarea notificărilor pentru un membru (Notificări v2): „Oprește toate emailurile” (din ACP, cu cine și când) și
+ * ultima trimitere a rezumatului săptămânal „Ce ai ratat”.
+ */
+model NotificationMember {
+  userId        String    @id
+  emailsOff     Boolean   @default(false)
+  emailsOffAt   DateTime?
+  emailsOffById String?
+  weeklySentAt  DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_members")
+}
+
+/**
+ * Un abonament web push (un browser / dispozitiv al membrului). `endpoint` e adresa serviciului de push al browserului;
+ * `p256dh` și `auth` sunt cheile publice ale abonamentului (criptarea mesajului). După prea multe eșecuri se șterge.
+ */
+model PushSubscription {
+  id         Int       @id @default(autoincrement())
+  userId     String
+  endpoint   String    @unique
+  p256dh     String
+  auth       String
+  userAgent  String    @default("")
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  failures   Int       @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}
+
+/** Statisticile notificărilor pe zi, tip și canal (ACP): câte au plecat și câte au fost deschise. */
+model NotificationStat {
+  day     DateTime @db.Date
+  type    String
+  channel String
+  sent    Int      @default(0)
+  clicked Int      @default(0)
+
+  @@id([day, type, channel])
+  @@map("notification_stats")
 }
 
 /**
