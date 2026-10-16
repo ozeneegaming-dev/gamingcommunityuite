@@ -1,4 +1,4 @@
-import { headerBuilderError, THEME_PRESETS, type GcsHeaderBuilder } from "@gcs/core/themes";
+import { headerBuilderError, isThemeHtmlAttrs, THEME_PRESETS, type GcsHeaderBuilder, type GcsThemeHtmlAttrs } from "@gcs/core/themes";
 /**
  * Protocolul `postMessage` dintre editorul vizual de temă și previzualizarea din `iframe` (aceeași origine).
  * Editorul trimite CSS-ul compilat al draft-ului, modul de culori editat și textul logo-ului; previzualizarea anunță
@@ -54,6 +54,8 @@ export type GcsStudioApplyMessage = {
   preset?: string;
   /** Constructorul de antet (Nova): aspectul și opțiunile, aplicate live de antetul construit. */
   header?: { layout: GcsHeaderBuilder; options: Record<string, unknown> };
+  /** Atributele setărilor de sistem de pe `<html>` (vezi `themeHtmlAttrs`), aplicate live. */
+  attrs?: GcsThemeHtmlAttrs;
 };
 
 export type GcsPreviewReadyMessage = {
@@ -73,7 +75,8 @@ export const isStudioApplyMessage = (d: unknown): d is GcsStudioApplyMessage => 
     (m.mode === undefined || m.mode === "dark" || m.mode === "light") &&
     (m.preset === undefined || (THEME_PRESETS as readonly unknown[]).includes(m.preset)) &&
     (logo === undefined || (!!logo && typeof logo.text === "string" && typeof logo.slogan === "string")) &&
-    (m.header === undefined || (!!m.header && typeof m.header === "object" && headerBuilderError((m.header as Record<string, unknown>).layout) === null))
+    (m.header === undefined || (!!m.header && typeof m.header === "object" && headerBuilderError((m.header as Record<string, unknown>).layout) === null)) &&
+    (m.attrs === undefined || isThemeHtmlAttrs(m.attrs))
   );
 };
 

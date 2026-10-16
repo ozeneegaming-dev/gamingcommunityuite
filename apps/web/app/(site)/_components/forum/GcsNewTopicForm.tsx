@@ -224,7 +224,7 @@ export function GcsNewTopicForm({ forum, prefixes, tagsMax, canPoll, maxLength }
         </p>
       )}
       <div>
-        <GcsButton variant="primary" type="submit" disabled={sending} icon={<GcsIconSvg icon={faPaperPlane} />}>
+        <GcsButton variant="primary" type="submit" loading={sending} icon={<GcsIconSvg icon={faPaperPlane} />}>
           {sending ? t("sending") : t("submit")}
         </GcsButton>
       </div>

@@ -74,7 +74,7 @@ export function GcsReplyBox({ topicId, forumId, maxUploadMb, maxLength }: { topi
         footer={<span>{maxUploadMb === -1 ? t("footerUnlimited") : t("footer", { mb: maxUploadMb })}</span>}
       />
       <div className="gcs-replyBox__actions">
-        <GcsButton variant="primary" className="gcs-replyBox__send" onClick={send} disabled={sending} icon={<GcsIconSvg icon={faPaperPlane} />}>
+        <GcsButton variant="primary" className="gcs-replyBox__send" onClick={send} loading={sending} icon={<GcsIconSvg icon={faPaperPlane} />}>
           {sending ? t("sending") : t("send")}
         </GcsButton>
       </div>

@@ -4,8 +4,10 @@ import type { GcsResult } from "@gcs/core";
 import {
   CUSTOM_CSS_FILE,
   compileThemeCss,
+  derivePalette,
   joinThemeCssFiles,
   themeDefaults,
+  themeHtmlAttrs,
   themePath,
   withThemePath,
   type GcsHeaderBuilder,
@@ -28,6 +30,7 @@ import {
   faRotateLeft,
   faSliders,
   faTabletScreenButton,
+  faWandMagicSparkles,
   faCheck,
   faTriangleExclamation,
   faUpRightFromSquare,
@@ -258,6 +261,8 @@ export function GcsThemeStudio({
       preset: value.settings.preset,
       // Constructorul de antet e al sistemului: previzualizarea lui merge în orice temă.
       header: { layout: value.settings.header.layout, options: headerOptions(value.settings) },
+      // Setările de sistem citite din atributele de pe <html> (listele, statisticile, loaderul, banda de derulare).
+      attrs: themeHtmlAttrs(value.settings),
     };
     win.postMessage(message, window.location.origin);
   }, [css, mode, value.settings]);
@@ -333,6 +338,15 @@ export function GcsThemeStudio({
   );
 
   const setSetting = (path: string, v: unknown) => update((cur) => ({ ...cur, settings: withThemePath(cur.settings, path, v) }));
+
+  /** Generatorul de paletă: din fundal + accent, suprafețele, chenarul și textele modului editat (o singură modificare). */
+  const generatePalette = () =>
+    update((cur) => {
+      const p = cur.settings[mode];
+      let settings = cur.settings;
+      for (const [k, v] of Object.entries(derivePalette(p.bg, p.accent, mode))) settings = withThemePath(settings, `${mode}.${k}`, v);
+      return { ...cur, settings };
+    });
 
   /** Un aspect nou al antetului. O presetare aplicată își aduce și navigarea de pe mobil (Cockpit: bara de jos). */
   const setHeaderLayout = (next: GcsHeaderBuilder, preset?: GcsHeaderPreset) =>
@@ -540,6 +554,16 @@ export function GcsThemeStudio({
         ) : (
           <div className="gcs-themeStudio__colors">
             {modeNote}
+            {current === "palette" && (
+              // Ajutorul de paletă: restul culorilor calculate din fundal și accent (lizibile, ≥ 4.5:1).
+              <div className="gcs-themeStudio__paletteHelper">
+                <button type="button" className="gcs-themeStudio__btn" onClick={generatePalette} data-testid="gcs-studio-palette-generate">
+                  <GcsIconSvg icon={faWandMagicSparkles} />
+                  {t("paletteHelper.button")}
+                </button>
+                <p className="gcs-themeStudio__muted">{t("paletteHelper.help")}</p>
+              </div>
+            )}
             {colorRows}
           </div>
         )}

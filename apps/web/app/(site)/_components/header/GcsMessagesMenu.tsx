@@ -1,7 +1,7 @@
 "use client";
 
-import { faArrowRight, faEnvelope, faPenToSquare, faSpinner } from "@fortawesome/free-solid-svg-icons";
-import { GcsAvatar, GcsIconSvg, GcsMemberName } from "@gcs/ui";
+import { faArrowRight, faEnvelope, faPenToSquare } from "@fortawesome/free-solid-svg-icons";
+import { GcsAvatar, GcsIconSvg, GcsMemberName, GcsSpinner } from "@gcs/ui";
 import { useFormatter, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -77,8 +77,8 @@ export function GcsMessagesMenu({ initialUnread }: { initialUnread: number }) {
             </Link>
           </div>
           {items === null ? (
-            <p className="gcs-hb__panelNote" aria-busy="true">
-              <GcsIconSvg icon={faSpinner} className="gcs-spin" />
+            <p className="gcs-hb__panelNote gcs-loading" aria-busy="true">
+              <GcsSpinner label={t("loading")} />
             </p>
           ) : items.length === 0 ? (
             <p className="gcs-hb__panelNote">{t("empty")}</p>
@@ -90,7 +90,8 @@ export function GcsMessagesMenu({ initialUnread }: { initialUnread: number }) {
                   <span className="gcs-msgMenu__text">
                     <span className="gcs-msgMenu__line">
                       {c.user && <GcsMemberName userId={c.user.id} name={c.user.name} nameKey={c.user.nameKey} href={memberHref(c.user)} />}
-                      <time className="gcs-msgMenu__time" dateTime={c.at}>
+                      {/* Data exactă în tooltip-ul sistemului (merge și în meniul deschis). */}
+                      <time className="gcs-msgMenu__time" dateTime={c.at} title={format.dateTime(new Date(c.at), { dateStyle: "medium", timeStyle: "short" })} data-testid="gcs-messages-time">
                         {format.relativeTime(new Date(c.at))}
                       </time>
                     </span>

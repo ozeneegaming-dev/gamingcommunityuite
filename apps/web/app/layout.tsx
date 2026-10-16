@@ -3,7 +3,8 @@ import { Chakra_Petch, DM_Sans, Manrope } from "next/font/google";
 import { headers } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
-import { GcsNameFxProvider } from "@gcs/ui";
+import { themeHtmlAttrs } from "@gcs/core/themes";
+import { GcsNameFxProvider, GcsTooltipHost } from "@gcs/ui";
 import { themeMode, viewerTheme } from "@/lib/appearance";
 import { nameLetterUsers } from "@/lib/member-names";
 import type { ReactNode } from "react";
@@ -59,8 +60,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   // Designul temei (ex. `gcs-nova`) doar pe paginile site-ului: ACP-ul și editoarele lui au designul lor.
   const site = (await headers()).get(SITE_AREA_HEADER) !== "admin";
   const design = site ? designClass(theme.shown.settings.preset) : null;
+  // Setările de sistem ale temei care schimbă aspectul componentelor (listele, loaderul, banda de derulare…).
+  const attrs = site ? themeHtmlAttrs(theme.shown.settings) : {};
   return (
-    <html lang={locale} data-theme={await themeMode()} className={[display.variable, text.variable, nova.variable, design].filter(Boolean).join(" ")}>
+    <html lang={locale} data-theme={await themeMode()} className={[display.variable, text.variable, nova.variable, design].filter(Boolean).join(" ")} {...attrs}>
       <head>
         {/* Stilurile de nume și ramele de avatar, generate din ACP (spec §9). */}
         <link rel="stylesheet" href={`/gcs-names.css?v=${version}`} />
@@ -76,6 +79,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <NextIntlClientProvider>
           <GcsNameFxProvider letters={letters}>{children}</GcsNameFxProvider>
         </NextIntlClientProvider>
+        {/* Tooltip-ul sistemului pe tot site-ul (și în ACP): `title`, `data-tip` și butoanele doar cu iconiță. */}
+        <GcsTooltipHost />
         {/* Previzualizarea editorului vizual de temă (iframe): primește draft-ul live prin postMessage. */}
         {theme.preview && <GcsThemePreviewBridge />}
       </body>

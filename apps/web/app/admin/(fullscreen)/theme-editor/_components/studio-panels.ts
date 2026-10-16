@@ -19,6 +19,7 @@ import {
   faTableList,
   faWandMagicSparkles,
   faGauge,
+  faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
 import { NOVA_ONLY_FIELDS, themeHasDesignDecor } from "@gcs/core/themes";
 
@@ -63,7 +64,8 @@ export type GcsStudioPanelId =
   | "boxes"
   | "sidebar"
   | "avatars"
-  | "buttons";
+  | "buttons"
+  | "interface";
 
 export type GcsStudioNavRow = { type: "nav"; panel: GcsStudioPanelId } | { type: "css" } | { type: "separator" };
 
@@ -143,7 +145,19 @@ export const STUDIO_PANELS: Record<GcsStudioPanelId, GcsStudioPanel> = {
       { image: "favicon" },
     ],
   },
-  layouts: { icon: faTableColumns, settings: ["layout.forumIndex", "layout.topicView", "layout.featureFirstPost"] },
+  layouts: {
+    icon: faTableColumns,
+    settings: [
+      "layout.forumIndex",
+      "layout.topicView",
+      "layout.featureFirstPost",
+      "layout.topicSnippet",
+      // Listele (sistemul, orice temă): carduri separate sau listă continuă; contoarele forumurilor.
+      { heading: "lists" },
+      "lists.layout",
+      "lists.stats",
+    ],
+  },
   typography: {
     icon: faTextHeight,
     settings: ["fontDisplay", "typography.fontDisplayCustom", "fontText", "typography.fontTextCustom", "typography.baseSize", "typography.contentSize"],
@@ -197,8 +211,8 @@ export const STUDIO_PANELS: Record<GcsStudioPanelId, GcsStudioPanel> = {
     settings: ["mobileNav.side", "mobileNav.icons", { heading: "mobileBar" }, "mobileNav.placement", "mobileNav.labels", "mobileNav.items"],
     colors: [element("drawerBg"), element("drawerText")],
   },
-  global: { icon: faRectangleList, rows: [nav("body"), nav("boxes"), nav("sidebar"), nav("avatars"), nav("buttons")] },
-  body: { icon: faTableList, settings: ["width"], colors: [element("bodyBg")] },
+  global: { icon: faRectangleList, rows: [nav("body"), nav("boxes"), nav("sidebar"), nav("avatars"), nav("buttons"), nav("interface")] },
+  body: { icon: faTableList, settings: ["width", "layout.fullWidth"], colors: [element("bodyBg")] },
   boxes: {
     icon: faBorderAll,
     settings: ["radius", "boxes.borderWidth", "boxes.shadow", "boxes.clickableRows"],
@@ -207,6 +221,8 @@ export const STUDIO_PANELS: Record<GcsStudioPanelId, GcsStudioPanel> = {
   sidebar: { icon: faTableCellsLarge, settings: ["sidebar.width", "sidebar.position", "sidebar.sticky"] },
   avatars: { icon: faCircleUser, settings: ["avatars.rounded"] },
   buttons: { icon: faHandPointer, settings: ["buttons.radius"], colors: [element("btnPrimaryBg"), element("btnPrimaryText"), element("btnSecondaryBg"), element("btnSecondaryText")] },
+  // Interfața (sistemul, orice temă): stilul loader-ului, banda „Sus / Jos” și bara de derulare în culoarea accentului.
+  interface: { icon: faSpinner, settings: [{ heading: "loader" }, "loader.style", { heading: "scroll" }, "scroll.rail", "scroll.bar"] },
 };
 
 /** Iconița rândului „CSS personalizat”. */

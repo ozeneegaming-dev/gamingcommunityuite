@@ -5,7 +5,10 @@ import { getTranslations } from "next-intl/server";
 import { forumHref, memberHref, tint, topicHref } from "@/lib/forum-urls";
 import { forumRowVars } from "@/lib/template-data";
 import { siteTemplate } from "@/lib/templates";
+import { GcsIcon } from "@gcs/ui/icons";
+import type { CSSProperties } from "react";
 import { GcsForumIcon } from "./GcsForumIcon";
+import { GcsForumStatsButton } from "./GcsForumStatsButton";
 import { GcsRelTime } from "./GcsRelTime";
 
 /**
@@ -21,7 +24,8 @@ export async function GcsForumRow({ forum, accent }: { forum: Row; accent: strin
   const external = forum.type === "LINK";
 
   return (
-    <div className="gcs-forumRow" data-testid="gcs-forum-row">
+    // `--gcs-forum-color`: bara mică din stânga, în aspectul „Carduri separate”.
+    <div className="gcs-forumRow" data-testid="gcs-forum-row" style={forum.color || accent ? ({ "--gcs-forum-color": forum.color ?? accent } as CSSProperties) : undefined}>
       <span className="gcs-forumRow__icon" style={{ background: tint(color) }}>
         <GcsForumIcon icon={external ? "fa-solid fa-link" : forum.icon} color={color} />
       </span>
@@ -66,6 +70,16 @@ export async function GcsForumRow({ forum, accent }: { forum: Row; accent: strin
         </div>
       )}
       {!external && (
+        // Butonul pătrat și bula statisticilor (carduri separate; „Statistici forum: La hover”).
+        <span className="gcs-forumRow__statsTool">
+          <GcsForumStatsButton label={t("statsOf", { name: forum.name })} bubbleId={`gcs-forum-stats-${forum.id}`} />
+          <span className="gcs-forumRow__bubble" id={`gcs-forum-stats-${forum.id}`} role="note" data-testid="gcs-forum-bubble">
+            <span>{t.rich("statsTopics", { count: forum.topicsCount, b: (c) => <b>{c}</b> })}</span>
+            <span>{t.rich("statsPosts", { count: forum.postsCount, b: (c) => <b>{c}</b> })}</span>
+          </span>
+        </span>
+      )}
+      {!external && (
         <div className="gcs-forumRow__last">
           {forum.last ? (
             <>
@@ -89,7 +103,10 @@ export async function GcsForumRow({ forum, accent }: { forum: Row; accent: strin
                       ·{" "}
                     </>
                   )}
-                  <GcsRelTime at={forum.last.at} />
+                  <span className="gcs-forumRow__when">
+                    <GcsIcon name="fa-regular fa-clock" />
+                    <GcsRelTime at={forum.last.at} />
+                  </span>
                 </span>
               </div>
             </>

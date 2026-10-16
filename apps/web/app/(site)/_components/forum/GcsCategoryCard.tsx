@@ -29,9 +29,12 @@ export function GcsCategoryCard({ category }: { category: GcsIndexCategory }) {
         </h2>
         <GcsCollapseToggle storageKey={`cat-${category.id}`} title={category.name} />
       </header>
-      {category.forums.map((f) => (
-        <GcsForumRow key={f.id} forum={f} accent={category.color} />
-      ))}
+      {/* Puțul categoriei: în aspectul „Carduri separate” fiecare forum e un card pe un fundal puțin mai închis. */}
+      <div className="gcs-category__well">
+        {category.forums.map((f) => (
+          <GcsForumRow key={f.id} forum={f} accent={category.color} />
+        ))}
+      </div>
     </section>
   );
 }

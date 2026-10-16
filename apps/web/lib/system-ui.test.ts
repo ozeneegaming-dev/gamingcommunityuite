@@ -66,6 +66,14 @@ const FUNCTIONAL = [
   /^gcs-statsPanel/,
   /^gcs-server(Row|List|Totals)/,
   /^gcs-chatPro/,
+  // Pachetul de finisare: listele, statisticile forumurilor, loaderele, banda de derulare, bara de anunț, blocul vizitatorilor.
+  /^gcs-category__well/,
+  /^gcs-forumRow__(statsTool|statsBtn|bubble|when)/,
+  /^gcs-spinner/,
+  /^gcs-loading/,
+  /^gcs-scrollRail/,
+  /^gcs-annBar/,
+  /^gcs-guestCta/,
 ];
 /**
  * Clase care apar sub `.gcs-nova` doar ca decor (modificatori fără CSS de bază propriu): grafica antetului „Standard”
@@ -84,12 +92,18 @@ describe("system UI: CSS-ul componentelor funcționale e al sistemului", () => {
     expect(novaOnly).toEqual([]);
   });
 
-  test("fișierele sistemului nu depind de design: fără `.gcs-nova` în system-ui.css, header-menus.css, sweep.css", () => {
-    for (const f of ["system-ui.css", "header-menus.css", "sweep.css"]) expect(selectors(ui(f)).filter((s) => s.includes("gcs-nova"))).toEqual([]);
+  test("fișierele sistemului nu depind de design: fără `.gcs-nova` în system-ui.css, header-menus.css, sweep.css și fișierele pachetului de finisare", () => {
+    for (const f of ["system-ui.css", "header-menus.css", "sweep.css", "lists.css", "loaders.css", "scroll.css", "announce.css"]) expect(selectors(ui(f)).filter((s) => s.includes("gcs-nova"))).toEqual([]);
   });
 
   test("antetul construit, panourile, consola și bara de jos au CSS-ul de bază în sistem", () => {
     for (const c of ["gcs-hb", "gcs-hb__panel", "gcs-hb__menuItem", "gcs-mega__panel", "gcs-msgMenu__panel", "gcs-am__panel", "gcs-sp__panel", "gcs-mbar", "gcs-ck", "gcs-rank__row", "gcs-collapseToggle", "gcs-modTile"]) {
+      expect(systemClasses.has(c), c).toBe(true);
+    }
+  });
+
+  test("pachetul de finisare e al sistemului: listele, statisticile, tooltip-ul, loaderele, banda de derulare, bara de anunț, blocul vizitatorilor", () => {
+    for (const c of ["gcs-category__well", "gcs-forumRow__statsBtn", "gcs-forumRow__bubble", "gcs-tooltip", "gcs-spinner", "gcs-scrollRail", "gcs-scrollRail__btn", "gcs-annBar", "gcs-guestCta"]) {
       expect(systemClasses.has(c), c).toBe(true);
     }
   });
@@ -100,6 +114,10 @@ describe("system UI: CSS-ul componentelor funcționale e al sistemului", () => {
     expect(at("system-ui.css")).toBeGreaterThan(at("titles.css"));
     expect(at("header-menus.css")).toBeGreaterThan(at("system-ui.css"));
     expect(at("nova.css")).toBeGreaterThan(at("header-menus.css"));
+    for (const f of ["lists.css", "loaders.css", "scroll.css", "announce.css"]) {
+      expect(at(f), f).toBeGreaterThan(at("header-menus.css"));
+      expect(at(f), f).toBeLessThan(at("nova.css"));
+    }
     expect(at("sweep.css")).toBeGreaterThan(at("nova.css"));
   });
 });

@@ -17,6 +17,8 @@ function apply(m: GcsStudioApplyMessage) {
   if (m.mode) document.documentElement.dataset.theme = m.mode;
   // Designul temei (Nova / clasic): markup-ul e același, doar clasa de pe `<html>` se schimbă.
   if (m.preset) document.documentElement.classList.toggle("gcs-nova", designClass(m.preset) === "gcs-nova");
+  // Setările de sistem din atributele de pe <html> (listele, statisticile, loaderul, banda de derulare): live.
+  if (m.attrs) for (const [name, value] of Object.entries(m.attrs)) document.documentElement.setAttribute(name, value);
   // Constructorul de antet: antetul construit își schimbă aspectul și opțiunile live.
   if (m.header) window.dispatchEvent(new CustomEvent("gcs:header-preview", { detail: m.header }));
   const logo = m.logo;

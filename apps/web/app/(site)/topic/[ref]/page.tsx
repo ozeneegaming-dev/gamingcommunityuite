@@ -12,6 +12,7 @@ import { forumQuery, moveTargets, pageParam } from "@/lib/forum-page";
 import { forumHref, memberHref, tagHref, tint, topicHref } from "@/lib/forum-urls";
 import { services } from "@/lib/services";
 import { excerpt, firstImage, guestActor } from "@/lib/seo";
+import { GcsGuestCta } from "../../_components/GcsGuestCta";
 import { registerTopicView } from "@/lib/topic-views";
 import { GcsBreadcrumb } from "../../_components/forum/GcsBreadcrumb";
 import { GcsFollowButton } from "../../_components/forum/GcsForumButtons";
@@ -228,6 +229,9 @@ export default async function TopicPage({ params, searchParams }: Props) {
           maxUploadMb={typeof maxUploadMb === "number" ? maxUploadMb : 0}
           maxLength={await services().settings.get<number>("forums.post_max_chars")}
         />
+      ) : !actor.userId && !topic.locked ? (
+        // Vizitatorii: blocul cu înregistrarea, autentificarea și conectarea dintr-un click (macheta GuestCta).
+        <GcsGuestCta variant="reply" returnTo={topicHref(topic)} headingId="gcs-guest-cta-reply" />
       ) : (
         <GcsCard style={{ padding: 18, color: "var(--gcs-muted)" }} data-testid="gcs-no-reply">
           {topic.locked ? (

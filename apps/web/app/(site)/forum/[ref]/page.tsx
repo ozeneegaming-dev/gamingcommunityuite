@@ -6,6 +6,7 @@ import Link from "next/link";
 import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
+import { viewerTheme } from "@/lib/appearance";
 import { forumQuery, moveTargets, pageParam } from "@/lib/forum-page";
 import { forumHref, newTopicHref } from "@/lib/forum-urls";
 import { services } from "@/lib/services";
@@ -44,7 +45,9 @@ export default async function ForumPage({ params, searchParams }: Props) {
   const { forumQueries, follows, prefixes, moderation } = services();
   const t = await getTranslations("forum");
 
-  const data = await forumQuery(() => forumQueries.forum(actor, ref.id, { page, ...(sp.prefix ? { prefixId } : {}) }));
+  // Setarea temei „Fragment în lista topicurilor”: începutul primei postări sub titlul fiecărui topic.
+  const snippets = (await viewerTheme()).shown.settings.layout.topicSnippet;
+  const data = await forumQuery(() => forumQueries.forum(actor, ref.id, { page, snippets, ...(sp.prefix ? { prefixId } : {}) }));
   if (data === "forbidden") {
     return (
       <GcsCard style={{ padding: 24 }} role="alert">

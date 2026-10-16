@@ -4,7 +4,7 @@ import { faFaceSmile, faImage } from "@fortawesome/free-regular-svg-icons";
 import { faArrowTurnDown, faMagnifyingGlass, faMicrophone, faStop, faXmark } from "@fortawesome/free-solid-svg-icons";
 import type { GcsAttachmentInfo, GcsErrorPayload, GcsResult } from "@gcs/core";
 import type { GcsChatConfig, GcsGif } from "@gcs/modules";
-import { GcsIconSvg } from "@gcs/ui";
+import { GcsIconSvg, GcsSpinner } from "@gcs/ui";
 import { useTranslations } from "next-intl";
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { GcsChatEmojiPicker } from "./GcsChatEmojiPicker";
@@ -396,6 +396,11 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
               <GcsIconSvg icon={faMagnifyingGlass} />
             </button>
           </form>
+          {gifLoading && (
+            <p className="gcs-chat__note gcs-loading">
+              <GcsSpinner size="sm" />
+            </p>
+          )}
           {gifs && gifs.length === 0 && !gifLoading && <p className="gcs-chat__note">{t("gifNone")}</p>}
           <div className="gcs-chat__gifGrid">
             {(gifs ?? []).map((g) => (
@@ -632,8 +637,10 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
           aria-label={labels.send}
           title={labels.send}
           disabled={off || recording !== null || (!text.trim() && files.length === 0)}
+          aria-busy={busy || uploading || undefined}
         >
-          <GcsIconSvg icon={faArrowTurnDown} className="gcs-chat__sendIcon" />
+          {/* Cât se trimite mesajul sau se încarcă un fișier: loaderul temei („Stil loader”). */}
+          {busy || uploading ? <GcsSpinner size="sm" /> : <GcsIconSvg icon={faArrowTurnDown} className="gcs-chat__sendIcon" />}
         </button>
       </form>
     </div>

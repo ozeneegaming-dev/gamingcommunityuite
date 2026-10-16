@@ -46,6 +46,12 @@ export async function GcsTopicRow({ topic, select }: { topic: Row; select?: Reac
             </Link>
           )}
         </span>
+        {topic.snippet && (
+          // Fragmentul primei postări (setarea temei; atributul `data-gcs-snippet` îl ascunde live în previzualizare).
+          <p className="gcs-topicRow__snippet" data-testid="gcs-topic-snippet">
+            {topic.snippet}
+          </p>
+        )}
         <span className="gcs-topicRow__meta">
           {t("byWord")}{" "}
           {topic.author ? <GcsMemberName userId={topic.author.id} name={topic.author.name} nameKey={topic.author.nameKey} href={memberHref(topic.author)} /> : <GcsDeletedMember />}

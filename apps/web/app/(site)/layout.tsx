@@ -9,19 +9,23 @@ import { GcsHoverCardHost } from "./_components/GcsHoverCardHost";
 import { GcsImageViewerHost } from "./_components/GcsImageViewerHost";
 import { GcsSiteFooter } from "./_components/GcsSiteFooter";
 import { GcsSiteHeader } from "./_components/GcsSiteHeader";
+import { GcsAnnouncementBar } from "./_components/GcsAnnouncementBar";
+import { GcsScrollRail } from "./_components/GcsScrollRail";
 import { GcsNotificationToasts } from "./_components/notifications/GcsNotificationToasts";
 import { GcsRealtimeProvider } from "./_components/realtime/GcsRealtimeProvider";
 import { currentActor } from "@/lib/actor";
 import { alertPrefs, viewerTheme } from "@/lib/appearance";
+import { announcementView } from "@/lib/announcement";
 import { safeModeActive } from "@/lib/plugins";
 import { services } from "@/lib/services";
 import { designClass } from "@/lib/theme-preview";
+import { themeHtmlAttrs } from "@gcs/core/themes";
 
 export default async function SiteLayout({ children, modal }: { children: ReactNode; modal: ReactNode }) {
   const [t, locale, actor] = await Promise.all([getTranslations("hoverCard"), getLocale(), currentActor()]);
   // Conturile create prin Steam au un email placeholder: le cerem unul real (specul etapei 3, §8).
   const email = actor.userId ? (await services().db.user.findUnique({ where: { id: actor.userId }, select: { email: true } }))?.email : null;
-  const [tb, alerts, tc, tp, safeMode, { preview, shown }, deletion, format, tv] = await Promise.all([
+  const [tb, alerts, tc, tp, safeMode, { preview, shown }, deletion, format, tv, announcements] = await Promise.all([
     getTranslations("settings.account"),
     alertPrefs(actor.userId),
     getTranslations("site"),
@@ -32,6 +36,8 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
     actor.userId ? services().memberRemoval.pendingFor(actor.userId) : null,
     getFormatter(),
     getTranslations("imageViewer"),
+    // Bara de anunț (ACP → Aspect → Conținut): barele acestui membru / vizitator, fără cele închise.
+    announcementView(actor),
   ]);
   const viewerLabels = Object.fromEntries(
     (["dialog", "close", "prev", "next", "zoomIn", "zoomOut", "original", "download", "thumbnails", "counter", "by", "source", "enlarge"] as const).map((k) => [k, tv.raw(k) as string]),
@@ -39,7 +45,7 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
   return (
     <GcsRealtimeProvider>
       {/* Clasa designului temei pe `<html>` (pusă și de layout-ul rădăcină; aici, după navigarea din ACP). */}
-      <GcsDesignSync design={designClass(shown.settings.preset)} />
+      <GcsDesignSync design={designClass(shown.settings.preset)} attrs={themeHtmlAttrs(shown.settings)} />
       {/* `useSearchParams` cere un Suspense: bara nu blochează randarea paginii. */}
       <Suspense fallback={null}>
         <GcsNavProgress />
@@ -67,8 +73,20 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
             {tp("banner")} <a href="?safe=0">{tp("exit")}</a>
           </p>
         )}
+        {announcements.bars.length > 0 && (
+          <GcsAnnouncementBar
+            bars={announcements.bars}
+            rotateSeconds={announcements.rotateSeconds}
+            viewerKey={announcements.viewerKey}
+            labels={{ region: tc("announcementBar.region"), dismiss: tc("announcementBar.dismiss"), show: tc.raw("announcementBar.show") as string }}
+          />
+        )}
         {children}
       </main>
+      {/* Banda „Sus / Jos” din stânga (setarea temei o poate ascunde). */}
+      <GcsScrollRail
+        labels={{ group: tc("scrollRail.group"), up: tc("scrollRail.up"), upHint: tc("scrollRail.upHint"), down: tc("scrollRail.down"), downHint: tc("scrollRail.downHint") }}
+      />
       <GcsSiteFooter />
       {modal}
       {/* În previzualizarea editoarelor (iframe) nu apar notificările adminului. */}

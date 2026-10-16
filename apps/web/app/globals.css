@@ -36,6 +36,11 @@
 /* Componentele sistemului (în orice temă, pe tokenurile temei): antetul construit cu panourile lui, consola, bara de jos. */
 @import "@gcs/ui/system-ui.css";
 @import "@gcs/ui/header-menus.css";
+/* Pachetul de finisare (orice temă): listele (carduri / listă, statisticile), loaderele, derularea, bara de anunț și blocul pentru vizitatori. */
+@import "@gcs/ui/lists.css";
+@import "@gcs/ui/loaders.css";
+@import "@gcs/ui/scroll.css";
+@import "@gcs/ui/announce.css";
 /* Designul GCS (temele GCS Dark / GCS White): doar aspectul, sub `.gcs-nova`, pus pe `<html>` doar pe paginile site-ului. */
 @import "@gcs/ui/nova.css";
 /* La final, pentru toate temele: sweep-ul și tranzițiile de hover ale butoanelor, tab-urilor, cipurilor și meniurilor. */

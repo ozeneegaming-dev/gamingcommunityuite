@@ -20,6 +20,7 @@ import { GcsServerWidgetList } from "../servers/GcsServerWidgetList";
 import { GcsWhoIsOnline } from "../forum/GcsWhoIsOnline";
 import { GcsGroupLegend, GcsStatsPanel, GcsWhoWasOnline } from "./GcsStatsPanel";
 import { GcsCarousel } from "./GcsCarousel";
+import { GcsGuestCta } from "../GcsGuestCta";
 import { GcsWidgetTitle, widgetIcon } from "./GcsWidgetTitle";
 import { GcsMemberLink } from "@/lib/member-names";
 import { GcsRankingPanel } from "../cockpit/GcsRankingPanel";
@@ -149,6 +150,8 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
 
   "core.statsPanel": async ({ id, config }) => <GcsStatsPanel id={id} config={config} />,
   "core.onlineDay": async ({ id, config }) => <GcsWhoWasOnline id={id} config={config} />,
+  // Doar vizitatorii îl văd (membrii sunt deja înăuntru).
+  "core.guestCta": async ({ id, actor }) => (actor.userId ? null : <GcsGuestCta variant="widget" headingId={`gcs-widget-${id}`} />),
   "core.groupLegend": async ({ id, config }) => <GcsGroupLegend id={id} config={config} />,
 
   "core.newMembers": async ({ id, config }) => {

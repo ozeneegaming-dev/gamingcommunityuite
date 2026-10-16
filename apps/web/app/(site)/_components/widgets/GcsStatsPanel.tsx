@@ -173,7 +173,8 @@ export async function GcsStatsPanel({ id, config }: { id: string; config?: Recor
             </>
           );
           return (
-            <li key={tile.key} className="gcs-statsTile" data-tile={tile.key} style={cssVar("--gcs-tile", tile.color)}>
+            // Plăcile în tonurile accentului temei (regula culorilor: decorul urmează accentul), nu în culorile aplicațiilor.
+            <li key={tile.key} className="gcs-statsTile" data-tile={tile.key}>
               {tile.href ? (
                 <Link href={tile.href} className="gcs-statsTile__inner">
                   {body}
@@ -217,8 +218,9 @@ export async function GcsStatsPanel({ id, config }: { id: string; config?: Recor
         headingId={`${headingId}-online`}
         labels={{ title: tOnline("title"), summary: tOnline.raw("summary") as string, record: tOnline.raw("record") as string, nobody: tOnline("nobody") }}
         action={
-          <Link href="/members?online=1" className="gcs-onlineBlock__btn gcs-onlineBlock__btn--now" data-testid="gcs-stats-all-online">
+          <Link href="/members?online=1" className="gcs-btn gcs-btn--primary gcs-onlineBlock__btn gcs-onlineBlock__btn--now" data-tip={tp("seeAllOnlineHint")} data-testid="gcs-stats-all-online">
             {tp("seeAll")}
+            <GcsIcon name="fa-solid fa-chevron-right" className="gcs-onlineBlock__chevron" />
           </Link>
         }
       />
@@ -236,8 +238,9 @@ export async function GcsStatsPanel({ id, config }: { id: string; config?: Recor
           <DayNames view={day} nobody={tp("dayNobody")} testId="gcs-online-day-members" />
         </div>
         <div className="gcs-onlineBlock__action">
-          <Link href="/members" className="gcs-onlineBlock__btn gcs-onlineBlock__btn--day" data-testid="gcs-stats-all-day">
+          <Link href="/members" className="gcs-btn gcs-btn--ghost gcs-onlineBlock__btn gcs-onlineBlock__btn--day" data-tip={tp("seeAllDayHint")} data-testid="gcs-stats-all-day">
             {tp("seeAll")}
+            <GcsIcon name="fa-solid fa-chevron-right" className="gcs-onlineBlock__chevron" />
           </Link>
         </div>
       </section>

@@ -1,8 +1,8 @@
 "use client";
 
 import { faBellSlash } from "@fortawesome/free-regular-svg-icons";
-import { faArrowRight, faBell, faCheckDouble, faSpinner } from "@fortawesome/free-solid-svg-icons";
-import { GcsIconSvg, GcsNamedText } from "@gcs/ui";
+import { faArrowRight, faBell, faCheckDouble } from "@fortawesome/free-solid-svg-icons";
+import { GcsIconSvg, GcsNamedText, GcsSpinner } from "@gcs/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
@@ -115,8 +115,8 @@ export function GcsNotificationBell({ initialUnread, labels }: { initialUnread: 
             )}
           </div>
           {items === null ? (
-            <p className="gcs-notifPanel__empty" aria-busy="true">
-              <GcsIconSvg icon={faSpinner} className="gcs-spin" />
+            <p className="gcs-notifPanel__empty gcs-loading" aria-busy="true">
+              <GcsSpinner />
             </p>
           ) : items.length === 0 ? (
             <p className="gcs-notifPanel__empty">
