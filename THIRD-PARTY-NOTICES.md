@@ -37,3 +37,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## CSS Tooltips and CSS Loaders
+
+CSS Tooltips and CSS Loaders by Colorion (https://www.colorion.co), MIT License (the same licence text and copyright
+as "CSS Text Effects" above).
+
+Used as inspiration for the system tooltip with the skew entrance (tooltip style #36: `packages/ui/src/controls.css`,
+`GcsTooltip`, `GcsTooltipHost`) and for the loaders of the theme setting "Stil loader" (`packages/ui/src/loaders.css`,
+`GcsSpinner`). Both were rewritten as GCS CSS: one markup for every loader, colours from the theme tokens, prefixed
+keyframes and opacity-only `prefers-reduced-motion` variants. No original source file is shipped.
