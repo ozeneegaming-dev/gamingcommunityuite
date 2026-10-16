@@ -32,7 +32,24 @@
     .gcs-legendPro__toggle,
     .gcs-legendPro__menuItem,
     .gcs-groupsPage__segItem,
-    .gcs-groupsPage__chip
+    .gcs-groupsPage__chip,
+    .gcs-pagination a,
+    .gcs-dropdown [role="menuitem"],
+    .gcs-hb__sq,
+    .gcs-hb__nav,
+    .gcs-hb__menuItem,
+    .gcs-mega__item,
+    .gcs-hbSeg__btn,
+    .gcs-sp__scope,
+    .gcs-sp__result,
+    .gcs-sp__field,
+    .gcs-am__statusBtn,
+    .gcs-am__seg > button,
+    .gcs-am__logout,
+    .gcs-ck__strip,
+    .gcs-mbar__item,
+    .gcs-hb__authLink,
+    .gcs-hb__create
   ) {
   background-image: linear-gradient(var(--gcs-sweep, rgb(255 255 255 / 0.08)), var(--gcs-sweep, rgb(255 255 255 / 0.08)));
   background-repeat: no-repeat;
@@ -66,7 +83,24 @@
     .gcs-legendPro__toggle,
     .gcs-legendPro__menuItem,
     .gcs-groupsPage__segItem,
-    .gcs-groupsPage__chip
+    .gcs-groupsPage__chip,
+    .gcs-pagination a,
+    .gcs-dropdown [role="menuitem"],
+    .gcs-hb__sq,
+    .gcs-hb__nav,
+    .gcs-hb__menuItem,
+    .gcs-mega__item,
+    .gcs-hbSeg__btn,
+    .gcs-sp__scope,
+    .gcs-sp__result,
+    .gcs-sp__field,
+    .gcs-am__statusBtn,
+    .gcs-am__seg > button,
+    .gcs-am__logout,
+    .gcs-ck__strip,
+    .gcs-mbar__item,
+    .gcs-hb__authLink,
+    .gcs-hb__create
   ):is(:hover, :focus-visible):not(:disabled) {
   background-size: 100% 100%;
   transition:
@@ -99,7 +133,24 @@
       .gcs-legendPro__toggle,
       .gcs-legendPro__menuItem,
       .gcs-groupsPage__segItem,
-      .gcs-groupsPage__chip
+      .gcs-groupsPage__chip,
+      .gcs-pagination a,
+      .gcs-dropdown [role="menuitem"],
+      .gcs-hb__sq,
+      .gcs-hb__nav,
+      .gcs-hb__menuItem,
+      .gcs-mega__item,
+      .gcs-hbSeg__btn,
+      .gcs-sp__scope,
+      .gcs-sp__result,
+      .gcs-sp__field,
+      .gcs-am__statusBtn,
+      .gcs-am__seg > button,
+      .gcs-am__logout,
+      .gcs-ck__strip,
+      .gcs-mbar__item,
+      .gcs-hb__authLink,
+      .gcs-hb__create
     ) {
     background-image: none;
     transition: none;
