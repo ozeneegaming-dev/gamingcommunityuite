@@ -1,5 +1,9 @@
+import { createHash } from "node:crypto";
 import {
   contentRefs,
+  debouncedJobId,
+  parseOverride,
+  resolveDelivery,
   type GcsActor,
   type GcsActorResolver,
   type GcsEventBus,
@@ -8,6 +12,7 @@ import {
   type GcsJobQueue,
   type GcsMailer,
   type GcsNotificationService,
+  type GcsPushService,
   type GcsRealtime,
   type GcsSettingsService,
 } from "@gcs/core";
@@ -20,14 +25,19 @@ import { slugify } from "../forums/slug";
 import type { GcsConversationService } from "../messages/conversations";
 import { docSnippet } from "../content-text";
 import { STEAM_PLACEHOLDER_DOMAIN } from "../profile/profile";
-import { digestMail, notificationMail, type GcsNotificationMailItem } from "./emails";
+import { digestMail, notificationMail, notificationText, type GcsNotificationMailItem } from "./emails";
 import type { GcsGroupDirectory } from "../profile/groupDirectory";
+import { WEEKLY_DAY_SETTING, WEEKLY_ENABLED_SETTING, WEEKLY_HOUR_SETTING } from "./settings";
+import { GcsWeeklyDigestBuilder, WEEKLY_DIGEST_TYPE, WEEKLY_TARGET, weeklyHasContent, weeklyMail, type GcsWeeklyDigest } from "./weekly";
 
 export const NOTIFY_FANOUT_JOB = "notifications.fanout";
 export const NOTIFY_EMAIL_JOB = "notifications.email";
 export const NOTIFY_DIGEST_JOB = "notifications.digest";
 export const NOTIFY_CLEANUP_JOB = "notifications.cleanup";
 export const NOTIFY_GROUP_MENTION_JOB = "notifications.group_mention";
+/** Notificări v2: web push pentru o notificare și rezumatul săptămânal „Ce ai ratat”. */
+export const NOTIFY_PUSH_JOB = "notifications.push";
+export const NOTIFY_WEEKLY_JOB = "notifications.weekly";
 
 const FANOUT_BATCH = 500;
 /** O postare cu zeci de mențiuni nu trimite zeci de notificări. */
@@ -40,6 +50,13 @@ const GROUP_SCAN_MAX = 2_000;
 const SNIPPET_MAX = 140;
 const DIGEST_CHECK_MS = 15 * 60_000;
 const DIGEST_MAX_ITEMS = 50;
+/** Câte notificări în așteptare se verifică pe membru la un digest. */
+const DIGEST_SCAN_MAX = 200;
+/** Push-urile aceluiași grup (ex. răspunsuri în rafală): cel mult unul la 30 de secunde. */
+const PUSH_DEBOUNCE_MS = 30_000;
+/** Rezumatul săptămânal: membrii activi (sau înscriși) în ultimele 60 de zile, citiți în loturi. */
+const ACTIVE_WINDOW_MS = 60 * 86_400_000;
+const WEEKLY_BATCH = 200;
 
 type FanoutKind = "reply" | "topic";
 
@@ -72,8 +89,17 @@ export class GcsNotificationProducers {
       groupMentions?: GcsGroupMentionService;
       /** Setările de afișare ale grupurilor („doar membrii cu grupul principal”). */
       groupDirectory?: GcsGroupDirectory;
+      /** Web push (Notificări v2); lipsă = fără push. */
+      push?: GcsPushService;
+      /** Aplicațiile active (momentele serverelor din rezumatul săptămânal). */
+      apps?: { enabled(key: string): Promise<boolean> };
     },
-  ) {}
+  ) {
+    this.weekly = new GcsWeeklyDigestBuilder({ db: deps.db, notifications: deps.notifications, serversEnabled: async () => (deps.apps ? deps.apps.enabled("servers") : false) });
+  }
+
+  /** Rezumatul săptămânal „Ce ai ratat”: constructorul și secțiunile aduse de aplicații (`weekly.registerSection`). */
+  readonly weekly: GcsWeeklyDigestBuilder;
 
   /** Actorul unui destinatar (fără IP: un ban pe IP nu ascunde notificările). */
   private actor(userId: string): Promise<GcsActor> {
@@ -132,6 +158,11 @@ export class GcsNotificationProducers {
         return group ? { title: group.name, href: `/members?group=${group.id}` } : null;
       },
     });
+    // Notificări v2: rezumatul săptămânal (ținta e săptămâna; linkul duce la pagina rezumatului).
+    notifications.registerTarget(WEEKLY_TARGET, {
+      canView: async () => true,
+      describe: async () => ({ title: "", href: "/notifications/weekly" }),
+    });
     notifications.registerTarget("core.warning", {
       canView: async (userId, id) => (await db.warning.findUnique({ where: { id }, select: { userId: true } }))?.userId === userId,
       describe: async (id) => {
@@ -182,7 +213,7 @@ export class GcsNotificationProducers {
       const refs = status ? contentRefs(status.contentJson) : { mentions: [] as string[], groups: [] as number[] };
       const mentioned = refs.mentions.filter((id) => id !== authorId).slice(0, MAX_REFS);
       const target = { targetType: "profile.status", targetId: String(statusId), actorId: authorId };
-      if (mentioned.length > 0) await notifications.notify({ userIds: mentioned, type: "forums.mention", ...target });
+      if (mentioned.length > 0) await notifications.notify({ userIds: mentioned, type: "forums.mention", ...target, important: true });
       const groups = refs.groups.slice(0, MAX_GROUP_REFS);
       if (groups.length > 0) await this.run(NOTIFY_GROUP_MENTION_JOB, { ...target, groups, skip: mentioned }, `notif-group-status-${statusId}`);
       if (!profileUserId || e.payload.parentId !== null || mentioned.includes(profileUserId)) return;
@@ -214,7 +245,7 @@ export class GcsNotificationProducers {
       // Mențiunile de membri: doar participanții (ceilalți nu văd conversația), cu notificarea de mențiune.
       const mentioned = message ? contentRefs(message.contentJson).mentions.filter((id) => others.includes(id)).slice(0, MAX_REFS) : [];
       if (mentioned.length > 0) {
-        await notifications.notify({ userIds: mentioned, type: "forums.mention", targetType: "pm.conversation", targetId: String(conversationId), actorId: authorId });
+        await notifications.notify({ userIds: mentioned, type: "forums.mention", targetType: "pm.conversation", targetId: String(conversationId), actorId: authorId, important: true });
       }
       const groups = message ? contentRefs(message.contentJson).groups.slice(0, MAX_GROUP_REFS) : [];
       if (groups.length > 0) {
@@ -232,7 +263,8 @@ export class GcsNotificationProducers {
       const userIds = (Array.isArray(e.payload.userIds) ? e.payload.userIds : [])
         .filter((id): id is string => typeof id === "string" && id !== authorId)
         .slice(0, MAX_REFS);
-      if (userIds.length > 0) await notifications.notify({ userIds, type, targetType, targetId, actorId: authorId });
+      // O mențiune directă e importantă (trece și prin canalele „doar important”, ex. web push).
+      if (userIds.length > 0) await notifications.notify({ userIds, type, targetType, targetId, actorId: authorId, ...(type === "forums.mention" ? { important: true } : {}) });
       const groups = (Array.isArray(e.payload.groupIds) ? e.payload.groupIds : []).filter((id): id is number => Number.isInteger(id)).slice(0, MAX_GROUP_REFS);
       const skip = (Array.isArray(e.payload.skip) ? e.payload.skip : []).filter((id): id is string => typeof id === "string");
       if (groups.length > 0) {
@@ -262,12 +294,21 @@ export class GcsNotificationProducers {
       if (userId) await notifications.notify({ userIds: [userId], type: "core.warning", targetType: "core.warning", targetId: String(e.payload.warningId), actorId: null });
     });
 
-    // Livrarea: live în camera userului; emailul imediat printr-un job (un singur email pe notificare).
+    // Livrarea (Notificări v2): live în camera userului (numărul și, dacă tipul are toast-ul pornit, toast-ul); emailul
+    // imediat și web push prin joburi (un singur email pe notificare; push-urile unui grup, cel mult unul la 30 s).
     bus.on("notification.created", async (e) => {
       const userId = e.payload.userId as string;
-      // `created`: clientul ia notificarea (tradusă în limba lui) și o arată ca toast (etapa 5).
-      await realtime.publish(`user:${userId}`, "notification", { unread: await notifications.unreadCount(userId), created: e.payload.notificationId });
-      if (e.payload.email === "INSTANT") await this.run(NOTIFY_EMAIL_JOB, { notificationId: e.payload.notificationId }, `notif-email-${String(e.payload.notificationId)}`);
+      const id = Number(e.payload.notificationId);
+      // `created`: clientul ia notificarea (tradusă în limba lui) și o arată ca toast (etapa 5) când `toast` e pornit.
+      await realtime.publish(`user:${userId}`, "notification", {
+        unread: await notifications.unreadCount(userId),
+        created: id,
+        toast: e.payload.toast !== false,
+        site: e.payload.site !== false,
+      });
+      const mode = typeof e.payload.emailMode === "string" ? e.payload.emailMode : e.payload.email === "INSTANT" ? "instant" : null;
+      if (mode === "instant") await this.run(NOTIFY_EMAIL_JOB, { notificationId: id }, `notif-email-${id}`);
+      if (e.payload.push === true && this.deps.push) await this.run(NOTIFY_PUSH_JOB, { notificationId: id }, debouncedJobId(`notif-push-${id}`, PUSH_DEBOUNCE_MS));
     });
     bus.on("notification.read", async (e) => {
       await realtime.publish(`user:${String(e.payload.userId)}`, "notification", { unread: e.payload.unread });
@@ -278,8 +319,11 @@ export class GcsNotificationProducers {
     jobs.register({ name: NOTIFY_FANOUT_JOB, handler: (data) => this.fanout(data) });
     jobs.register({ name: NOTIFY_GROUP_MENTION_JOB, handler: (data) => this.groupMentionFanout(data) });
     jobs.register({ name: NOTIFY_EMAIL_JOB, handler: async (data) => void (await this.sendInstant(Number(data.notificationId))) });
+    jobs.register({ name: NOTIFY_PUSH_JOB, handler: async (data) => void (await this.sendPush(Number(data.notificationId))) });
     jobs.register({ name: NOTIFY_DIGEST_JOB, everyMs: DIGEST_CHECK_MS, handler: async () => void (await this.digestIfDue()) });
-    jobs.register({ name: NOTIFY_CLEANUP_JOB, everyMs: 24 * 3600_000, handler: async () => void (await this.deps.notifications.cleanup()) });
+    jobs.register({ name: NOTIFY_WEEKLY_JOB, everyMs: DIGEST_CHECK_MS, handler: async () => void (await this.weeklyIfDue()) });
+    // Curățenia (Notificări v2): după `notifications.prune_days` zile, o dată pe zi.
+    jobs.register({ name: NOTIFY_CLEANUP_JOB, everyMs: 24 * 3600_000, handler: async () => void (await this.deps.notifications.prune()) });
   }
 
   /** În worker (prin coadă) sau pe loc, fără coadă. */
@@ -291,6 +335,7 @@ export class GcsNotificationProducers {
     if (name === NOTIFY_FANOUT_JOB) await this.fanout(data);
     else if (name === NOTIFY_GROUP_MENTION_JOB) await this.groupMentionFanout(data);
     else if (name === NOTIFY_EMAIL_JOB) await this.sendInstant(Number(data.notificationId));
+    else if (name === NOTIFY_PUSH_JOB) await this.sendPush(Number(data.notificationId));
   }
 
   /** O postare a devenit vizibilă: mențiunile și citatele pe loc, urmăritorii prin job. */
@@ -304,8 +349,8 @@ export class GcsNotificationProducers {
       .map((p) => p.authorId)
       .filter((id): id is string => id !== null && !mentioned.includes(id));
     const target = { targetType: "forums.post", targetId: String(postId), actorId: post.authorId };
-    await notifications.notify({ userIds: mentioned, type: "forums.mention", ...target });
-    await notifications.notify({ userIds: quotedAuthors, type: "forums.quote", ...target });
+    await notifications.notify({ userIds: mentioned, type: "forums.mention", ...target, important: true });
+    await notifications.notify({ userIds: quotedAuthors, type: "forums.quote", ...target, important: true });
     // Cine a fost deja notificat pentru mențiune sau citat nu mai primește și „răspuns nou” pentru aceeași postare.
     await this.run(NOTIFY_FANOUT_JOB, { kind, postId, skip: [...mentioned, ...quotedAuthors] }, `notif-fanout-${postId}`);
     // Mențiunile de grup (Mențiuni v2), tot prin worker: membrii grupurilor, fără cei notificați deja direct.
@@ -400,12 +445,13 @@ export class GcsNotificationProducers {
     return { site, locale, siteUrl };
   }
 
-  private async mailItems(rows: { type: string; count: number; actorIds: string[]; data: unknown }[]): Promise<GcsNotificationMailItem[]> {
+  private async mailItems(rows: { id?: number; type: string; count: number; actorIds: string[]; data: unknown }[]): Promise<GcsNotificationMailItem[]> {
     const ids = [...new Set(rows.flatMap((r) => r.actorIds))];
     const names = new Map((await this.deps.db.user.findMany({ where: { id: { in: ids } }, select: { id: true, name: true } })).map((u) => [u.id, u.name]));
     return rows.map((r) => {
       const data = (r.data ?? {}) as Record<string, unknown>;
       return {
+        ...(r.id ? { id: r.id } : {}),
         type: r.type,
         count: r.count,
         actors: r.actorIds.map((id) => names.get(id)).filter((n): n is string => !!n),
@@ -417,11 +463,14 @@ export class GcsNotificationProducers {
     });
   }
 
-  /** Emailul imediat: revendicat atomic (`emailedAt`), deci un job rulat de două ori trimite un singur email. */
+  /**
+   * Emailul imediat: revendicat atomic (`emailedAt`), deci un job rulat de două ori trimite un singur email. Doar pentru o
+   * notificare încă necitită (sau una doar pentru email / push, creată citită).
+   */
   async sendInstant(notificationId: number, now = new Date()): Promise<boolean> {
-    const { db, mailer } = this.deps;
+    const { db, mailer, notifications } = this.deps;
     if (!Number.isSafeInteger(notificationId)) return false;
-    const { count } = await db.notification.updateMany({ where: { id: notificationId, emailedAt: null, readAt: null }, data: { emailedAt: now } });
+    const { count } = await db.notification.updateMany({ where: { id: notificationId, emailedAt: null, OR: [{ readAt: null }, { site: false }] }, data: { emailedAt: now } });
     if (count === 0) return false;
     const n = await db.notification.findUniqueOrThrow({ where: { id: notificationId }, include: { user: { select: { name: true, email: true } } } });
     if (n.user.email.endsWith(STEAM_PLACEHOLDER_DOMAIN)) return false;
@@ -433,57 +482,221 @@ export class GcsNotificationProducers {
       await db.notification.updateMany({ where: { id: notificationId, emailedAt: now }, data: { emailedAt: null } });
       throw error;
     }
+    await notifications.recordSent(n.type, "email", 1, now);
     return true;
   }
 
   /**
-   * Digestul: pentru fiecare user, notificările necitite, netrimise, cu emailul pe `DIGEST`. Revendicarea e un singur
-   * `UPDATE … RETURNING` pe user, deci două rulări simultane nu trimit două emailuri.
+   * Notificările unui membru care așteaptă un digest de felul dat (`daily` / `weekly`): netrimise încă, necitite (sau
+   * doar pentru email / push), al căror email e acum pe acel mod după preferințele de acum (un email oprit între timp
+   * nu mai pleacă). Revendicarea e un singur `UPDATE … RETURNING`, deci două rulări simultane nu trimit de două ori.
    */
+  private async claimDigest(userId: string, kind: "daily" | "weekly", now: Date): Promise<{ id: number; type: string; count: number; actorIds: string[]; data: unknown }[]> {
+    const { db, notifications } = this.deps;
+    const pending = await db.notification.findMany({
+      where: { userId, emailedAt: null, OR: [{ readAt: null }, { site: false }] },
+      select: { id: true, type: true, important: true },
+      orderBy: { updatedAt: "desc" },
+      take: DIGEST_SCAN_MAX,
+    });
+    if (pending.length === 0) return [];
+    const modes = new Map<string, string | null>();
+    const keep: number[] = [];
+    for (const p of pending) {
+      const key = `${p.type}:${p.important}`;
+      if (!modes.has(key)) modes.set(key, (await notifications.deliveryFor(userId, p.type, p.important))?.email ?? null);
+      if (modes.get(key) === kind) keep.push(p.id);
+    }
+    if (keep.length === 0) return [];
+    const claimed = await db.$queryRaw<{ id: number }[]>`
+      UPDATE notifications SET "emailedAt" = ${now.toISOString()}::timestamp
+      WHERE id = ANY(${keep}::int[]) AND "emailedAt" IS NULL
+      RETURNING id`;
+    if (claimed.length === 0) return [];
+    return db.notification.findMany({ where: { id: { in: claimed.map((c) => c.id) } }, orderBy: { updatedAt: "desc" }, take: DIGEST_MAX_ITEMS });
+  }
+
+  /** Destinatarii unui digest: membrii cu notificări netrimise încă pe email (fără cei cu emailurile oprite din ACP). */
+  private async digestUsers(): Promise<string[]> {
+    const rows = await this.deps.db.notification.findMany({ where: { emailedAt: null, OR: [{ readAt: null }, { site: false }] }, distinct: ["userId"], select: { userId: true } });
+    const off = await this.deps.notifications.emailsOffAmong(rows.map((r) => r.userId));
+    return rows.map((r) => r.userId).filter((id) => !off.has(id));
+  }
+
+  /** Digestul zilnic: pentru fiecare membru, notificările lui cu emailul pe „digest zilnic”. Întoarce câte emailuri au plecat. */
   async digest(now = new Date()): Promise<number> {
-    const { db, notifications, mailer } = this.deps;
-    const users = await db.notification.findMany({ where: { readAt: null, emailedAt: null }, distinct: ["userId"], select: { userId: true } });
+    const { db, mailer, notifications } = this.deps;
     const ctx = await this.mailContext();
     let sent = 0;
-    for (const { userId } of users) {
-      const prefs = await notifications.preferences(userId);
-      const types = Object.entries(prefs)
-        .filter(([, p]) => p.email === "DIGEST")
-        .map(([t]) => t);
-      if (types.length === 0) continue;
-      const claimed = await db.$queryRaw<{ id: number }[]>`
-        UPDATE notifications SET "emailedAt" = ${now.toISOString()}::timestamp
-        WHERE "userId" = ${userId} AND "readAt" IS NULL AND "emailedAt" IS NULL AND type = ANY(${types}::text[])
-        RETURNING id`;
-      if (claimed.length === 0) continue;
-      const [user, rows] = await Promise.all([
-        db.user.findUnique({ where: { id: userId }, select: { name: true, email: true } }),
-        db.notification.findMany({ where: { id: { in: claimed.map((c) => c.id) } }, orderBy: { updatedAt: "desc" }, take: DIGEST_MAX_ITEMS }),
-      ]);
+    for (const userId of await this.digestUsers()) {
+      const rows = await this.claimDigest(userId, "daily", now);
+      if (rows.length === 0) continue;
+      const user = await db.user.findUnique({ where: { id: userId }, select: { name: true, email: true } });
       if (!user || user.email.endsWith(STEAM_PLACEHOLDER_DOMAIN)) continue;
       await mailer(digestMail({ to: user.email, name: user.name, ...ctx, items: await this.mailItems(rows) })).catch((error: unknown) => {
         console.error("[gcs] digestul nu a putut fi trimis", error);
       });
+      for (const [type, n] of countBy(rows.map((r) => r.type))) await notifications.recordSent(type, "email", n, now);
       sent++;
     }
     return sent;
   }
 
+  /** Ora și ziua locale (fusul site-ului) pentru programul digesturilor. */
+  private async localParts(now: Date): Promise<{ year: string; month: string; day: string; hour: number; weekday: number }> {
+    const timeZone = await this.deps.settings.get<string>("site.timezone");
+    const fmt = (tz: string) =>
+      new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hourCycle: "h23", weekday: "short" }).formatToParts(now);
+    let parts: Intl.DateTimeFormatPart[];
+    try {
+      parts = fmt(timeZone);
+    } catch {
+      parts = fmt("UTC");
+    }
+    const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+    const weekday = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(get("weekday"));
+    return { year: get("year"), month: get("month"), day: get("day"), hour: Number(get("hour")), weekday };
+  }
+
   /** Rulat la 15 minute: trimite digestul o dată pe zi, după ora `notifications.digest_hour` (în fusul site-ului). */
   async digestIfDue(now = new Date()): Promise<boolean> {
     const { settings, redis } = this.deps;
-    const [hour, timeZone] = await Promise.all([settings.get<number>("notifications.digest_hour"), settings.get<string>("site.timezone")]);
-    let parts: Intl.DateTimeFormatPart[];
-    try {
-      parts = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hourCycle: "h23" }).formatToParts(now);
-    } catch {
-      parts = new Intl.DateTimeFormat("en-CA", { timeZone: "UTC", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hourCycle: "h23" }).formatToParts(now);
-    }
-    const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
-    if (Number(get("hour")) < hour) return false;
-    const claimed = await redis.set(`gcs:notifications:digest:${get("year")}-${get("month")}-${get("day")}`, "1", "EX", 2 * 86_400, "NX");
+    const hour = await settings.get<number>("notifications.digest_hour");
+    const p = await this.localParts(now);
+    if (p.hour < hour) return false;
+    const claimed = await redis.set(`gcs:notifications:digest:${p.year}-${p.month}-${p.day}`, "1", "EX", 2 * 86_400, "NX");
     if (claimed !== "OK") return false;
     await this.digest(now);
     return true;
   }
+
+  /**
+   * Rulat la 15 minute: rezumatul săptămânal pleacă o dată, în ziua `notifications.weekly_day` (0 = duminică), după ora
+   * `notifications.weekly_hour` (în fusul site-ului).
+   */
+  async weeklyIfDue(now = new Date()): Promise<boolean> {
+    const { settings, redis } = this.deps;
+    const [day, hour] = await Promise.all([settings.get<number>(WEEKLY_DAY_SETTING).catch(() => 1), settings.get<number>(WEEKLY_HOUR_SETTING).catch(() => 10)]);
+    const p = await this.localParts(now);
+    if (p.weekday !== day || p.hour < hour) return false;
+    const claimed = await redis.set(`gcs:notifications:weekly:${p.year}-${p.month}-${p.day}`, "1", "EX", 8 * 86_400, "NX");
+    if (claimed !== "OK") return false;
+    await this.weeklyRun(now);
+    return true;
+  }
+
+  /**
+   * Rezumatul săptămânal „Ce ai ratat”, pentru fiecare membru activ în ultimele 60 de zile (în loturi): emailul (dacă
+   * tipul `core.weekly_digest` îi trimite email și rezumatul are ceva de arătat), cu notificările lui „săptămânale”, și
+   * rândul din clopoțel / push după canalele tipului. Cei doar cu notificări „săptămânale” primesc un digest simplu.
+   * Întoarce câte emailuri au plecat.
+   */
+  async weeklyRun(now = new Date()): Promise<number> {
+    const { db, mailer, notifications, settings } = this.deps;
+    const recapOn = (await settings.get<boolean>(WEEKLY_ENABLED_SETTING).catch(() => true)) !== false;
+    const ctx = await this.mailContext();
+    const shared = recapOn ? await this.weekly.shared(now) : null;
+    const defaults = await notifications.defaultsFor(WEEKLY_DIGEST_TYPE);
+    const since = new Date(now.getTime() - ACTIVE_WINDOW_MS);
+    const weekKey = `${now.toISOString().slice(0, 10)}`;
+    let sent = 0;
+    // Membrii cu notificări „săptămânale” în așteptare: primesc emailul și fără rezumat (sau cu rezumatul oprit).
+    const pendingUsers = new Set(await this.digestUsers());
+    const handled = new Set<string>();
+    const handle = async (user: { id: string; name: string; email: string; locale: string }) => {
+      if (handled.has(user.id)) return;
+      handled.add(user.id);
+      const off = await notifications.emailsOff(user.id);
+      const items = off || !pendingUsers.has(user.id) ? [] : await this.claimDigest(user.id, "weekly", now);
+      const mailItems = await this.mailItems(items);
+      let digest: GcsWeeklyDigest | null = null;
+      let recapEmail = false;
+      if (recapOn && shared && defaults) {
+        digest = await this.weekly.forUser(user.id, ctx.locale, now, shared);
+        if (weeklyHasContent(digest)) {
+          const pref = await db.notificationPreference.findUnique({ where: { userId_type: { userId: user.id, type: WEEKLY_DIGEST_TYPE } } });
+          const delivery = resolveDelivery(defaults, pref ? parseOverride(pref.channels) : null, { important: false, emailsOff: off });
+          recapEmail = delivery.email !== null;
+          // Rândul din clopoțel / toast / push urmează canalele tipului; emailul îl trimite rezumatul (mai jos).
+          if (delivery.site || delivery.push || delivery.toast) {
+            await notifications.notify({
+              userIds: [user.id],
+              type: WEEKLY_DIGEST_TYPE,
+              targetType: WEEKLY_TARGET,
+              targetId: weekKey,
+              actorId: null,
+              skipEmail: true,
+              data: { topics: digest.topics.length, mentions: digest.mentions.count, servers: digest.servers.length },
+            });
+          }
+        } else digest = null;
+      }
+      if ((!recapEmail || !digest) && mailItems.length === 0) return;
+      if (off || user.email.endsWith(STEAM_PLACEHOLDER_DOMAIN)) return;
+      const mail =
+        recapEmail && digest
+          ? weeklyMail({ to: user.email, name: user.name, ...ctx, digest, items: mailItems })
+          : digestMail({ to: user.email, name: user.name, ...ctx, items: mailItems });
+      await mailer(mail).catch((error: unknown) => console.error("[gcs] rezumatul săptămânal nu a putut fi trimis", error));
+      if (recapEmail && digest) await notifications.recordSent(WEEKLY_DIGEST_TYPE, "email", 1, now);
+      for (const [type, n] of countBy(items.map((r) => r.type))) await notifications.recordSent(type, "email", n, now);
+      await db.notificationMember.upsert({ where: { userId: user.id }, create: { userId: user.id, weeklySentAt: now }, update: { weeklySentAt: now } });
+      sent++;
+    };
+    const select = { id: true, name: true, email: true, locale: true } as const;
+    if (recapOn) {
+      let cursor: string | undefined;
+      for (;;) {
+        const batch = await db.user.findMany({
+          where: { OR: [{ lastActiveAt: { gte: since } }, { createdAt: { gte: since } }], primaryGroup: { key: { not: "banned" } } },
+          orderBy: { id: "asc" },
+          take: WEEKLY_BATCH,
+          ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+          select,
+        });
+        for (const u of batch) await handle(u);
+        if (batch.length < WEEKLY_BATCH) break;
+        cursor = batch[batch.length - 1]!.id;
+      }
+    }
+    // Restul: membrii (și cei inactivi) care au doar notificări „săptămânale” în așteptare.
+    const rest = [...pendingUsers].filter((id) => !handled.has(id));
+    if (rest.length > 0) for (const u of await db.user.findMany({ where: { id: { in: rest } }, select })) await handle(u);
+    return sent;
+  }
+
+  /**
+   * Web push pentru o notificare: textul în limba membrului, linkul prin `/notifications/<id>?via=push`, pe toate
+   * dispozitivele lui. Întoarce câte dispozitive l-au primit.
+   */
+  async sendPush(notificationId: number): Promise<number> {
+    const { db, notifications, push } = this.deps;
+    if (!push || !Number.isSafeInteger(notificationId)) return 0;
+    const n = await db.notification.findUnique({ where: { id: notificationId }, include: { user: { select: { locale: true } } } });
+    if (!n || (n.channels as { push?: unknown } | null)?.push !== true) return 0;
+    const [item] = await this.mailItems([n]);
+    const ctx = await this.mailContext();
+    const tag = createHash("sha256").update(`${n.userId}:${n.groupKey}`).digest("base64url").slice(0, 22);
+    const { sent } = await push.sendToUser(
+      n.userId,
+      { title: ctx.site, body: notificationText(item!, n.user.locale || ctx.locale), url: `/notifications/${n.id}?via=push`, tag },
+      { subject: await this.pushSubject(ctx.siteUrl), urgency: n.important ? "high" : "normal" },
+    );
+    if (sent > 0) await notifications.recordSent(n.type, "push", 1);
+    return sent;
+  }
+
+  /** Contactul VAPID (`sub`): adresa de email a site-ului sau adresa lui publică. */
+  private async pushSubject(siteUrl: string): Promise<string> {
+    const from = await this.deps.settings.get<string>("email.from").catch(() => "");
+    if (from && /^[^\s@]+@[^\s@]+$/.test(from)) return `mailto:${from}`;
+    return siteUrl.startsWith("https://") ? siteUrl : `mailto:admin@${URL.canParse(siteUrl) ? new URL(siteUrl).hostname : "localhost"}`;
+  }
+}
+
+/** Numărul de apariții al fiecărei valori. */
+function countBy(values: string[]): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const v of values) out.set(v, (out.get(v) ?? 0) + 1);
+  return out;
 }

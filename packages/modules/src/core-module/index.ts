@@ -2,6 +2,7 @@ import { FOOTER_SETTING, SOCIAL_NETWORKS, footerConfigError } from "../community
 import { ANNOUNCEMENT_SETTING, announcementConfigError } from "../community/announcement";
 import { communityRulesSetting } from "../community/rules";
 import { coreWidgets } from "../widgets";
+import { NOTIFICATION_SETTING_DEFS } from "../notifications/settings";
 import { DEFAULT_THEME_TOGGLE, THEME_TOGGLE_SETTING, themeTogglePairError, APP_SETTING_DEFS, type GcsAcpApp, type GcsAcpArea, type GcsAcpMenuSection, type GcsModule, type GcsPermissionDef, type GcsSettingDef } from "@gcs/core";
 
 /** Grupurile create la instalare (spec §6.1). */
@@ -85,6 +86,8 @@ const settings: GcsSettingDef[] = [
   setting("i18n.deepl_key", "secret", "", "languages"),
   // Ora (în fusul site-ului) la care pleacă digestul zilnic al notificărilor (etapa 4).
   setting("notifications.digest_hour", "number", 8, "notifications", (v) => (Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 23 ? null : "invalid_range")),
+  // Notificări v2: rezumatul săptămânal „Ce ai ratat” (ziua, ora) și curățenia notificărilor vechi.
+  ...NOTIFICATION_SETTING_DEFS,
   // Regulile comunității (pagina `/rules`), editate cu editorul postărilor în ACP → Setări → Reguli comunitate.
   communityRulesSetting,
   // Perioada de răzgândire a cererii „Șterge contul meu” (zile; 0 = la următoarea trecere a jobului), ACP → Cereri GDPR.
@@ -368,6 +371,14 @@ export const coreModule: GcsModule = {
     { key: "core.group_mention", labelKey: "notifications.type.core.group_mention", important: false, defaultEmail: "DIGEST" },
     // Membri v2: un grup secundar temporar a expirat (jobul `groups.secondary_expiry`).
     { key: "core.group_expired", labelKey: "notifications.type.core.group_expired", important: false, defaultEmail: "INSTANT" },
+    // Notificări v2: rezumatul săptămânal „Ce ai ratat” (opt-in implicit pornit: emailul săptămânal și rândul din clopoțel).
+    {
+      key: "core.weekly_digest",
+      labelKey: "notifications.type.core.weekly_digest",
+      important: false,
+      category: "system",
+      channels: { site: "on", toast: "off", email: "on", push: "off", emailMode: "weekly" },
+    },
   ],
   eventListeners: [],
   widgets: coreWidgets,

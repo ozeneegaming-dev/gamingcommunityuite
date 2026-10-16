@@ -29,7 +29,7 @@ function formatDate(value: unknown, l: Locale): string {
   return new Intl.DateTimeFormat(l === "en" ? "en-GB" : "ro-RO", { dateStyle: "long", timeStyle: "short", timeZone: "Europe/Bucharest" }).format(d);
 }
 
-const TEXTS: Record<string, Record<Locale, (a: string, t: string, n: number, data: Record<string, unknown>) => string>> = {
+const TEXTS: Record<string, Record<Locale, (a: string, t: string, n: number, data: Record<string, unknown>, first: string) => string>> = {
   "forums.mention": { ro: (a, t) => `${a} te-a menționat în „${t}”`, en: (a, t) => `${a} mentioned you in “${t}”` },
   "forums.quote": { ro: (a, t) => `${a} te-a citat în „${t}”`, en: (a, t) => `${a} quoted you in “${t}”` },
   "core.group_mention": {
@@ -37,13 +37,17 @@ const TEXTS: Record<string, Record<Locale, (a: string, t: string, n: number, dat
     en: (a, t, _n, d) => `${a} mentioned you through the group ${groupName(d)} in “${t}”`,
   },
   "forums.reply": {
-    ro: (a, t, n) => (n > 1 ? `${n} răspunsuri noi în „${t}” (ultimul: ${a})` : `${a} a răspuns în „${t}”`),
-    en: (a, t, n) => (n > 1 ? `${n} new replies in “${t}” (latest: ${a})` : `${a} replied in “${t}”`),
+    ro: (a, t, n, _d, first) => (n > 1 ? `${n} răspunsuri noi în „${t}” (ultimul: ${first})` : `${a} a răspuns în „${t}”`),
+    en: (a, t, n, _d, first) => (n > 1 ? `${n} new replies in “${t}” (latest: ${first})` : `${a} replied in “${t}”`),
   },
   "forums.topic": { ro: (a, t) => `${a} a deschis topicul „${t}”`, en: (a, t) => `${a} started the topic “${t}”` },
-  "forums.reaction": { ro: (a, t) => `${a} a reacționat la postarea ta din „${t}”`, en: (a, t) => `${a} reacted to your post in “${t}”` },
+  // Gruparea (Notificări v2): „Ana și alți 3 au reacționat”.
+  "forums.reaction": {
+    ro: (a, t, n) => `${a} ${n > 1 ? "au" : "a"} reacționat la postarea ta din „${t}”`,
+    en: (a, t) => `${a} reacted to your post in “${t}”`,
+  },
   "forums.solution": { ro: (_a, t) => `Răspunsul tău din „${t}” a fost marcat ca rezolvare`, en: (_a, t) => `Your answer in “${t}” was marked as the solution` },
-  "profile.follower": { ro: (a) => `${a} te urmărește`, en: (a) => `${a} followed you` },
+  "profile.follower": { ro: (a, _t, n) => `${a} ${n > 1 ? "te urmăresc" : "te urmărește"}`, en: (a) => `${a} followed you` },
   "profile.wall": { ro: (a) => `${a} a scris pe peretele tău`, en: (a) => `${a} posted on your wall` },
   "profile.badge": { ro: (_a, t) => `Ai primit „${t}”`, en: (_a, t) => `You earned “${t}”` },
   "pm.message": {
@@ -57,6 +61,8 @@ const TEXTS: Record<string, Record<Locale, (a: string, t: string, n: number, dat
   "vip.granted": { ro: (_a, t) => `Ai primit ${t}`, en: (_a, t) => `You received ${t}` },
   "vip.expired": { ro: (_a, t) => `${t} a expirat`, en: (_a, t) => `Your ${t} has expired` },
   "core.group_expired": { ro: (_a, t) => `Grupul ${t} a expirat`, en: (_a, t) => `Your ${t} group has expired` },
+  // Notificări v2: rezumatul săptămânal „Ce ai ratat” (numerele din `data`).
+  "core.weekly_digest": { ro: (_a, _t, _n, d) => weeklyText("ro", d), en: (_a, _t, _n, d) => weeklyText("en", d) },
   "chat.sanction": { ro: (_a, _t, _n, d) => chatSanctionText("ro", d), en: (_a, _t, _n, d) => chatSanctionText("en", d) },
   "chat.access": { ro: (_a, _t, _n, d) => chatAccessText("ro", d), en: (_a, _t, _n, d) => chatAccessText("en", d) },
   "core.warning": { ro: (_a, t) => `Ai primit un avertisment: ${t}`, en: (_a, t) => `You received a warning: ${t}` },
@@ -105,6 +111,18 @@ function chatAccessText(l: Locale, d: Record<string, unknown>): string {
   return l === "en" ? `You received chat moderator access${t}` : `Ai primit acces de moderator în chat${t}`;
 }
 
+/** Rândul rezumatului săptămânal din clopoțel: topicurile, mențiunile și serverele săptămânii. */
+function weeklyText(l: Locale, d: Record<string, unknown>): string {
+  const n = (k: string) => (typeof d[k] === "number" ? (d[k] as number) : 0);
+  const parts =
+    l === "en"
+      ? [n("topics") > 0 && `${n("topics")} popular topics`, n("mentions") > 0 && `${n("mentions")} mentions`, n("servers") > 0 && `${n("servers")} active servers`]
+      : [n("topics") > 0 && `${n("topics")} topicuri populare`, n("mentions") > 0 && `${n("mentions")} mențiuni`, n("servers") > 0 && `${n("servers")} servere active`];
+  const list = parts.filter(Boolean).join(", ");
+  if (l === "en") return list ? `What you missed this week: ${list}` : "What you missed this week";
+  return list ? `Ce ai ratat săptămâna aceasta: ${list}` : "Ce ai ratat săptămâna aceasta";
+}
+
 /** Numele grupului menționat, salvat în notificare (`data.group`). */
 const groupName = (d: Record<string, unknown>) => (typeof d.group === "string" && d.group ? d.group : "…");
 
@@ -128,16 +146,18 @@ export function notificationText(input: GcsNotificationTextInput, locale: string
   const fn = TEXTS[input.type]?.[l];
   const title = input.title || "…";
   if (!fn) return title;
-  return fn(who(input.actors, input.count, l), title, input.count, input.data ?? {});
+  return fn(who(input.actors, input.count, l), title, input.count, input.data ?? {}, input.actors[0] ?? (l === "en" ? "Someone" : "Cineva"));
 }
 
-export type GcsNotificationMailItem = GcsNotificationTextInput & { href: string; snippet?: string };
+/** Un rând de email. Cu `id`, linkul trece prin `/notifications/<id>?via=email` (marchează citită și numără deschiderea). */
+export type GcsNotificationMailItem = GcsNotificationTextInput & { href: string; snippet?: string; id?: number };
 
 const absolute = (siteUrl: string, href: string) => (/^https?:\/\//.test(href) ? href : `${siteUrl.replace(/\/$/, "")}${href}`);
+const mailHref = (item: GcsNotificationMailItem) => (item.id ? `/notifications/${item.id}?via=email` : item.href);
 
 function itemHtml(item: GcsNotificationMailItem, siteUrl: string, l: Locale): string {
   const text = escape(notificationText(item, l));
-  const link = escape(absolute(siteUrl, item.href));
+  const link = escape(absolute(siteUrl, mailHref(item)));
   const snippet = item.snippet ? `<br><span style="color:#777">${escape(item.snippet)}</span>` : "";
   return `<li><a href="${link}">${text}</a>${snippet}</li>`;
 }
@@ -146,7 +166,7 @@ function itemHtml(item: GcsNotificationMailItem, siteUrl: string, l: Locale): st
 export function notificationMail(opts: { to: string; name: string; site: string; siteUrl: string; locale: string; item: GcsNotificationMailItem }): GcsMail {
   const l = pick(opts.locale);
   const text = notificationText(opts.item, l);
-  const link = absolute(opts.siteUrl, opts.item.href);
+  const link = absolute(opts.siteUrl, mailHref(opts.item));
   const settingsLink = escape(absolute(opts.siteUrl, "/settings/notifications"));
   const footer =
     l === "en"
@@ -175,6 +195,6 @@ export function digestMail(opts: { to: string; name: string; site: string; siteU
     to: opts.to,
     subject,
     html: `<p>${l === "en" ? "Hi" : "Salut"}, ${escape(opts.name)}!</p><p>${intro}</p><ul>${opts.items.map((i) => itemHtml(i, opts.siteUrl, l)).join("")}</ul>${footer}`,
-    text: opts.items.map((i) => `- ${notificationText(i, l)}: ${absolute(opts.siteUrl, i.href)}`).join("\n"),
+    text: opts.items.map((i) => `- ${notificationText(i, l)}: ${absolute(opts.siteUrl, mailHref(i))}`).join("\n"),
   };
 }

@@ -58,6 +58,8 @@ export * from "./profile/fieldsAdmin";
 export * from "./realtime/rooms";
 export * from "./notifications/emails";
 export * from "./notifications/producers";
+export * from "./notifications/settings";
+export * from "./notifications/weekly";
 export { chatModule, CHAT_ACP_CHANNELS, CHAT_ACP_MODERATION, CHAT_ACP_MODERATORS, CHAT_ACP_SETTINGS, CHAT_CONTAINER, CHAT_DISPLAY_SETTINGS, CHAT_MODERATION_SETTINGS, CHAT_MOD_REASONS_DEFAULT } from "./chat";
 export * from "./chat/chat";
 export * from "./chat/queries";
