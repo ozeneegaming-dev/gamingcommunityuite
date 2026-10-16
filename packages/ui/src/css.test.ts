@@ -233,6 +233,16 @@ describe("sweep.css: sweep-ul și hover-ul butoanelor, în orice temă", () => {
     expect(strip(read("./acp.css"))).toMatch(/\.gcs-acp\[data-theme="light"\] \{[^}]*--gcs-sweep: color-mix\(in srgb, var\(--gcs-text\) 7%, transparent\);/);
   });
 
+  test("numele simple (aproape albe) urmează textul temei pe luminos, inclusiv în ACP; antetul închis Nova le păstrează", () => {
+    const themes = strip(read("./themes.css"));
+    expect(themes).toMatch(/\[data-theme="light"\] \{[^}]*--gcs-name-plain: var\(--gcs-text\);/);
+    expect(themes).toMatch(/\[data-theme="auto"\] \{[^}]*--gcs-name-plain: var\(--gcs-text\);/);
+    expect(themes).not.toMatch(/:root \{[^}]*--gcs-name-plain/);
+    const acp = strip(read("./acp.css"));
+    expect(acp).toMatch(/\.gcs-acp\[data-theme="light"\] \{[^}]*--gcs-name-plain: var\(--gcs-text\);/);
+    expect(acp).toMatch(/\.gcs-acp \{[^}]*--gcs-name-plain: initial;/);
+    expect(strip(read("./nova.css"))).toMatch(/\.gcs-nova \.gcs-siteHeader \.gcs-userMenu__trigger \{[^}]*--gcs-name-plain: initial;/);
+  });
 
   test("nicio regulă de hover a elementelor cu sweep nu folosește `background:` (ar șterge stratul)", () => {
     const re = new RegExp(`\\.(${SWEPT.join("|")})(?![\\w]|-[\\w])`);

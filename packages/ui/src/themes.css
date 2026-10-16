@@ -2,6 +2,8 @@
  * Temele: implicit întunecată (spec §1). `data-theme="light"` și `data-theme="auto"` (după sistem)
  * schimbă tokenurile. `--gcs-chrome*` sunt fundalurile barelor (header, meniul ACP) din machete.
  * `--gcs-sweep` e culoarea stratului de sticlă de la hover (`sweep.css`): 8% alb pe întunecat, 7% din text pe luminos.
+ * `--gcs-name-plain`: culoarea numelor simple, aproape albe (ex. Membru, CSS-ul generat al numelor); pe luminos e textul
+ * temei, ca numele să se citească pe cardurile deschise. Pe întunecat lipsește: rămâne culoarea grupului.
  */
 :root {
   --gcs-chrome: #0F1116;
@@ -20,6 +22,7 @@
   --gcs-chrome: #FFFFFF;
   --gcs-chrome2: #F8F9FB;
   --gcs-sweep: color-mix(in srgb, var(--gcs-text) 7%, transparent);
+  --gcs-name-plain: var(--gcs-text);
 }
 
 @media (prefers-color-scheme: light) {
@@ -34,5 +37,6 @@
     --gcs-chrome: #FFFFFF;
     --gcs-chrome2: #F8F9FB;
     --gcs-sweep: color-mix(in srgb, var(--gcs-text) 7%, transparent);
+    --gcs-name-plain: var(--gcs-text);
   }
 }

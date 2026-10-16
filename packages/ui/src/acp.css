@@ -77,6 +77,7 @@
   --gcs-chrome: #1B2A47;
   --gcs-chrome2: #15223B;
   --gcs-sweep: rgb(255 255 255 / 0.08);
+  --gcs-name-plain: initial;
   color-scheme: dark;
 
   min-height: 100vh;
@@ -105,6 +106,7 @@
   --gcs-acp-good: #16804F;
   --gcs-acp-bad: #C62828;
   --gcs-sweep: color-mix(in srgb, var(--gcs-text) 7%, transparent);
+  --gcs-name-plain: var(--gcs-text);
   color-scheme: light;
 }
 
@@ -130,6 +132,7 @@
     --gcs-acp-good: #16804F;
     --gcs-acp-bad: #C62828;
     --gcs-sweep: color-mix(in srgb, var(--gcs-text) 7%, transparent);
+    --gcs-name-plain: var(--gcs-text);
     color-scheme: light;
   }
 }

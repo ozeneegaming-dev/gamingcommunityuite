@@ -234,6 +234,8 @@ html.gcs-nova[data-theme="light"] {
   background-color: color-mix(in srgb, #000 20%, transparent);
   color: #fff;
   transition: border-color var(--gcs-ease), background-color var(--gcs-ease);
+  /* Antetul rămâne închis și pe varianta luminoasă: numele simplu își păstrează culoarea deschisă a grupului. */
+  --gcs-name-plain: initial;
 }
 .gcs-nova .gcs-siteHeader .gcs-userMenu__trigger:hover {
   border-color: color-mix(in srgb, #fff 22%, transparent);
