@@ -19,7 +19,7 @@ test("căutarea fără diacritice, filtrul pe grup și sortarea după postări",
 
   // Filtrul pe grup (Membru) și sortarea după postări: el e primul.
   await page.goto("/members");
-  await page.getByLabel("Grup").selectOption({ label: "Membru" });
+  await page.locator('select[name="group"]').selectOption({ label: "Membru" });
   await page.getByLabel("Ordonează după").selectOption("posts");
   await page.getByRole("button", { name: "Aplică" }).click();
   await expect(page).toHaveURL(/sort=posts/);
