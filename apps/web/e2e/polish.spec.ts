@@ -372,7 +372,11 @@ test("bara de anunț: ACP → Aspect → Conținut, vizibilă pe site în orice 
     await bar.getByTestId("gcs-ann-cta-label").fill("Înscrie echipa");
     await bar.getByTestId("gcs-ann-cta-href").fill("/forum");
     await page.getByTestId("gcs-ann-save").click();
-    await expect(page.getByText("Barele de anunț au fost salvate.")).toBeVisible();
+    await expect(page.getByTestId("gcs-ann-status")).toHaveText("Barele de anunț au fost salvate.");
+    // Salvarea: setarea `announcement.bars` are bara (normalizată, cu versiunea 1).
+    await expect
+      .poll(async () => (await sql<{ value: { bars?: { text: string; version: number }[] } }>(`SELECT value FROM settings WHERE key = 'announcement.bars'`))[0]?.value.bars?.[0])
+      .toMatchObject({ text: `Cupa de toamnă ${id}: înscrierile sunt deschise până vineri`, version: 1 });
 
     for (const [theme, ip, name] of [
       ["gcs-dark", "100.94.14", "dark"],

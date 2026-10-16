@@ -75,6 +75,8 @@ export function GcsAnnouncementEditor({ initial, groups, maxBars, rotate }: { in
   const [config, setConfig] = useState(initial);
   const [removing, setRemoving] = useState<number | null>(null);
   const [pending, start] = useTransition();
+  /** Rezultatul ultimei salvări, în pagină (ACP-ul nu are gazdă de toast-uri). */
+  const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
 
   const setBar = (i: number, patch: Partial<GcsAnnouncementBar>) => setConfig((c) => ({ ...c, bars: c.bars.map((b, j) => (j === i ? { ...b, ...patch } : b)) }));
   const move = (i: number, d: -1 | 1) =>
@@ -90,10 +92,12 @@ export function GcsAnnouncementEditor({ initial, groups, maxBars, rotate }: { in
     start(async () => {
       const res = await saveAnnouncementBars(config);
       if (!res.ok) {
+        setStatus({ ok: false, text: errorMessage(res.error) });
         gcsToast({ title: errorMessage(res.error), icon: <GcsIconSvg icon={faTriangleExclamation} /> });
         return;
       }
       setConfig(res.data);
+      setStatus({ ok: true, text: t("saved") });
       gcsToast({ title: t("saved"), icon: <GcsIconSvg icon={faCheck} /> });
       router.refresh();
     });
@@ -220,6 +224,11 @@ export function GcsAnnouncementEditor({ initial, groups, maxBars, rotate }: { in
         <GcsButton type="button" variant="primary" icon={<GcsIconSvg icon={faFloppyDisk} />} onClick={save} loading={pending} data-testid="gcs-ann-save">
           {t("save")}
         </GcsButton>
+        {status && (
+          <p role={status.ok ? "status" : "alert"} className={status.ok ? "gcs-notice" : "gcs-notice gcs-notice--error"} style={{ margin: 0 }} data-testid="gcs-ann-status">
+            {status.text}
+          </p>
+        )}
       </div>
 
       {removing !== null && (
