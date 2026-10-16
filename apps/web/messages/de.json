@@ -344,6 +344,7 @@
     "home": "ACP · {site}",
     "openMenu": "Menü",
     "closeMenu": "Schließen des Menüs",
+    "closeToast": "Benachrichtigung schließen",
     "header": {
       "search": "Durchsuchen Sie die ACP",
       "searchPlaceholder": "Sucheinstellungen, Mitglieder, Gruppen…",

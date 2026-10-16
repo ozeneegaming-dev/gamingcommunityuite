@@ -344,6 +344,7 @@
     "home": "ACP · {site}",
     "openMenu": "Meniu",
     "closeMenu": "Închide meniul",
+    "closeToast": "Închide notificarea",
     "header": {
       "search": "Căutare în ACP",
       "searchPlaceholder": "Caută setări, membri, grupuri…",
