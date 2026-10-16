@@ -79,10 +79,18 @@ export const requireAcpPanel = cache(async (): Promise<GcsAcpPanel> => {
   if (ctx.state === "forbidden") notFound();
   if (ctx.state === "need_2fa_setup") redirect("/admin/2fa-setup");
   if (ctx.state === "need_reauth") redirect("/admin/reauth");
-  const { acp, registry } = services();
-  const rights = await acp.rights(ctx.actor);
-  return { actor: ctx.actor, ip: ctx.ip, user: ctx.user, rights, menu: buildAcpMenu(registry, rights) };
+  const { acp, registry, apps } = services();
+  // Paginile aplicațiilor opționale (ex. Grupuri Pro): doar cu aplicația pornită și accesibilă adminului.
+  const [rights, canUseApp] = await Promise.all([acp.rights(ctx.actor), apps.accessFilter(ctx.actor)]);
+  return { actor: ctx.actor, ip: ctx.ip, user: ctx.user, rights, menu: buildAcpMenu(registry, rights, canUseApp) };
 });
+
+/** Ca `requireAcpSection`, pentru pagina unei aplicații opționale: oprită sau fără acces la ea → 404. */
+export async function requireAcpAppSection(app: string, section: string, right: GcsAcpRight = "view"): Promise<GcsAcpPanel> {
+  const panel = await requireAcpSection(section, right);
+  if (!(await services().apps.canAccess(panel.actor, app))) notFound();
+  return panel;
+}
 
 /** Ca `requireAcpPanel`, plus dreptul pe o secțiune; fără drept → 404. */
 export async function requireAcpSection(section: string, right: GcsAcpRight = "view"): Promise<GcsAcpPanel> {

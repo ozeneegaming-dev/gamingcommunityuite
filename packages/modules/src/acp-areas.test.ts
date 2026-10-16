@@ -52,7 +52,7 @@ describe("zonele ACP ale aplicației", () => {
         ["acp.menu.members.moderation", ["members.queue", "members.reports", "members.antispam", "members.warnings", "members.tickets"]],
       ],
       members: [
-        ["acp.menu.members.members", ["members.members", "members.groups", "members.promotions", "members.ip_tools", "members.gdpr"]],
+        ["acp.menu.members.members", ["members.members", "members.groups", "members.promotions", "members.ip_tools", "members.gdpr", "members.groups_legend"]],
         ["acp.menu.members.staff", ["members.moderators", "members.acp_roles", "members.staff_page"]],
         ["acp.menu.members.member_settings", ["members.profiles", "members.reputation", "members.notifications", "members.bans", "members.referral"]],
         ["acp.menu.members.achievements", ["members.achievement_rules", "members.ranks", "members.badges", "members.achievement_settings"]],
@@ -92,9 +92,12 @@ describe("zonele ACP ale aplicației", () => {
     expect(aliases.map((i) => i.href)).toEqual(["/admin/system/applications"]);
   });
 
-  test("cu drept doar pe Grupuri: doar zona Membri, cu o singură pagină", () => {
+  test("cu drept doar pe Grupuri: doar zona Membri, cu o singură pagină (Grupuri Pro oprită)", () => {
     const registry = createRegistry();
-    const areas = acpAreas(buildAcpMenu(registry, { "members.groups": { view: true, edit: false, delete: false } }));
+    const rights = { "members.groups": { view: true, edit: false, delete: false } };
+    const areas = acpAreas(buildAcpMenu(registry, rights, () => false));
     expect(shape(areas)).toEqual({ members: [["acp.menu.members.members", ["members.groups"]]] });
+    // Cu Grupuri Pro pornită: și „Legenda grupurilor”, cu același drept.
+    expect(shape(acpAreas(buildAcpMenu(registry, rights, () => true)))).toEqual({ members: [["acp.menu.members.members", ["members.groups", "members.groups_legend"]]] });
   });
 });

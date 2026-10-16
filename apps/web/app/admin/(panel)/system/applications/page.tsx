@@ -158,6 +158,7 @@ export default async function AcpApplicationsPage() {
         accessNote: null,
         sections,
         manageHref: null,
+        settingsHref: a.enabled && m?.app?.settingsHref ? m.app.settingsHref : null,
         exportHref: null,
         uninstall: null,
       } satisfies GcsAppRow;

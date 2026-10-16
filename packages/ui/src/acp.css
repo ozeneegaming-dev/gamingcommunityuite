@@ -2534,3 +2534,301 @@ input[type="checkbox"].gcs-switch:checked::before,
     flex-wrap: wrap;
   }
 }
+
+/* ─── ACP → Aplicații: linkul „Setări” al unei aplicații (ex. Grupuri Pro → Legenda grupurilor) ─────────── */
+
+.gcs-root a.gcs-appRow__settings {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin-top: 2px;
+  color: var(--gcs-accentInk);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.gcs-root a.gcs-appRow__settings:hover {
+  text-decoration: underline;
+}
+
+/* ─── ACP → Membri → Legenda grupurilor (Grupuri Pro): editorul și previzualizarea live ─────────────────── */
+
+.gcs-legendEditor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.9fr);
+  gap: 20px;
+  align-items: start;
+}
+.gcs-legendEditor__main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.gcs-legendEditor__section {
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  min-width: 0;
+}
+.gcs-legendEditor__section > legend {
+  padding: 0 6px;
+  font-weight: 700;
+}
+.gcs-legendEditor__cats,
+.gcs-legendEditor__list,
+.gcs-legendEditor__children {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-legendEditor__children {
+  margin-top: 6px;
+}
+.gcs-legendEditor__cat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 8px;
+  background: var(--gcs-surface);
+}
+.gcs-legendEditor__cat--dragging {
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 8px 20px rgb(0 0 0 / 0.25);
+}
+.gcs-legendEditor__cat--hidden .gcs-input {
+  opacity: 0.6;
+}
+.gcs-legendEditor__grip {
+  cursor: grab;
+  touch-action: none;
+}
+.gcs-legendEditor__moves,
+.gcs-legendEditor__groupMoves {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.gcs-legendEditor__grow {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+.gcs-legendEditor__icon {
+  color: var(--gcs-accentInk);
+}
+.gcs-legendEditor__count {
+  color: var(--gcs-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.gcs-legendEditor__add {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.gcs-legendEditor__board {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+.gcs-legendEditor__col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--gcs-surface2);
+  border: 1px solid var(--gcs-border);
+}
+.gcs-legendEditor__col--tray {
+  border-style: dashed;
+}
+.gcs-legendEditor__col--hidden {
+  opacity: 0.75;
+}
+.gcs-legendEditor__colHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  font-size: 13px;
+}
+.gcs-legendEditor__colIcon {
+  display: inline-flex;
+  color: var(--gcs-accentInk);
+}
+.gcs-legendEditor__tag {
+  margin-left: auto;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--gcs-border);
+  color: var(--gcs-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+.gcs-legendEditor__trayHint {
+  margin: 0;
+  color: var(--gcs-muted);
+  font-size: 12px;
+}
+.gcs-legendEditor__group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--gcs-border);
+  border-left: 3px solid var(--gcs-group);
+  background: var(--gcs-surface);
+}
+.gcs-legendEditor__group--child {
+  margin-left: 18px;
+}
+.gcs-legendEditor__group--over {
+  box-shadow: inset 0 2px 0 var(--gcs-accent);
+}
+.gcs-legendEditor__group--dragging {
+  opacity: 0.4;
+}
+.gcs-legendEditor__groupIcon {
+  display: inline-flex;
+  color: var(--gcs-group);
+}
+.gcs-legendEditor__groupName {
+  flex: 1;
+  min-width: 80px;
+  overflow: hidden;
+  color: var(--gcs-group);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-legendEditor__groupMoves {
+  flex-basis: 100%;
+  justify-content: flex-end;
+}
+.gcs-legendEditor__select {
+  width: auto;
+  max-width: 150px;
+  height: 30px;
+  padding: 0 6px;
+  font-size: 12px;
+}
+.gcs-legendEditor__into,
+.gcs-legendEditor__end {
+  margin-top: 4px;
+  padding: 6px;
+  border: 1px dashed var(--gcs-border);
+  border-radius: 6px;
+  color: var(--gcs-muted);
+  font-size: 11.5px;
+  text-align: center;
+}
+.gcs-legendEditor__into {
+  margin-left: 18px;
+}
+.gcs-legendEditor__into--active {
+  border-color: color-mix(in srgb, var(--gcs-accent) 50%, var(--gcs-border));
+}
+.gcs-legendEditor__into--over,
+.gcs-legendEditor__end--over {
+  border-color: var(--gcs-accent);
+  background-color: color-mix(in srgb, var(--gcs-accent) 10%, transparent);
+  color: var(--gcs-text);
+}
+.gcs-legendEditor__ghost {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border-left: 3px solid var(--gcs-group);
+  background: var(--gcs-surface);
+  color: var(--gcs-group);
+  font-weight: 700;
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.3);
+}
+.gcs-legendEditor__columns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.gcs-legendEditor__label {
+  margin-right: 6px;
+  font-weight: 600;
+}
+.gcs-legendEditor__colOpt {
+  cursor: pointer;
+  min-width: 36px;
+  justify-content: center;
+}
+.gcs-legendEditor__colOpt--on {
+  background-color: color-mix(in srgb, var(--gcs-accent) 22%, transparent);
+  color: var(--gcs-text);
+  outline: 1px solid var(--gcs-accent);
+}
+.gcs-legendEditor__colOpt:has(:focus-visible) {
+  outline: 2px solid var(--gcs-accentInk);
+}
+.gcs-legendEditor__checks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 6px 16px;
+}
+.gcs-legendEditor__checks .gcs-checkRow {
+  align-items: flex-start;
+}
+.gcs-legendEditor__checks small {
+  display: block;
+  margin: 2px 0 0;
+}
+.gcs-legendEditor__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.gcs-legendEditor__status {
+  color: var(--gcs-muted);
+  font-size: 13px;
+}
+.gcs-legendEditor__preview {
+  position: sticky;
+  top: 12px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-bg);
+}
+.gcs-legendEditor__previewTitle {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+.gcs-legendEditor__previewBox {
+  margin-top: 10px;
+}
+@media (max-width: 1200px) {
+  .gcs-legendEditor {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .gcs-legendEditor__preview {
+    position: static;
+  }
+}
+@media (max-width: 600px) {
+  .gcs-legendEditor__cat {
+    flex-wrap: wrap;
+  }
+  .gcs-legendEditor__add {
+    flex-direction: column;
+  }
+}

@@ -60,8 +60,18 @@
   grupurile legate într-un dropdown (antetul „Grupuri secundare legate · N membri în total”, Escape / click în afară).
 - **Categoriile** (setarea `groups_pro.legend_categories`): implicit Staff, Moderatori, VIP, Membri (etichete traduse);
   la instalare / actualizare, fiecare grup fără categorie primește una după tip (doar dacă nu are). ACP → grup →
-  „Legendă (Grupuri Pro)”: „Categorie în legendă” și „Apare în legendă sub grupul…”. Pagina ACP „Legenda grupurilor”
-  (gestionarea categoriilor) rămâne pe mai târziu.
+  „Legendă (Grupuri Pro)”: „Categorie în legendă” și „Apare în legendă sub grupul…”.
+- **ACP → Membri → „Legenda grupurilor”** (`/admin/members/groups-legend`, doar cu aplicația pornită și accesibilă
+  adminului — `groups_pro.app_access` —, dreptul `members.groups`; link „Setări” pe rândul aplicației din ACP →
+  Aplicații): categoriile (adaugă, redenumește — gol = eticheta tradusă —, iconiță, reordonare prin tragere sau sus / jos,
+  ascunde, șterge cu confirmare în pagină: grupurile ei trec în „Neafișate”), grupurile pe categorii (tragere între
+  categorii, pe alt grup = înaintea lui, în zona de sub un grup = grup legat în dropdown-ul lui, tăvița „Neafișate”;
+  alternativa din tastatură: sus / jos, „Categorie”, „Sub grupul”), opțiunile de afișare (setarea
+  `groups_pro.legend_display`: 2 / 3 / 4 coloane, numărul de membri, câți sunt online, membrii secundari numărați,
+  grupurile goale ascunse, butonul „Vezi toate grupurile”, pagina `/members/groups`) și previzualizarea live a legendei
+  din starea nesalvată (același model, `@gcs/modules/groups-pro-legend`). „Salvează” scrie categoriile, opțiunile și
+  locul fiecărui grup (`legend.category`, `legend.parent`, `legend.position`), pune în legendă grupurile mutate într-o
+  categorie și golește cache-ul legendei.
 - **`/members/groups`** („Grupurile comunității”): căutare (grup sau membru), filtrul Toți / Doar principal / Doar
   secundar, filtrul pe categorie, rânduri care se deschid (`aria-expanded`, înălțime + opacitate) cu membri / ca secundar
   / online și primii 12 membri cu eticheta lor, „N afișați din M” și „Toți membrii grupului →”.
@@ -102,8 +112,9 @@
 
 - **Butoane:** stratul de sticlă (8% alb) se umple de la stânga la hover / focus (`background-size` 0 → 100%, 1,2 s, cu
   recul la intrare) pe toate butoanele, butoanele-iconiță, pătratele din antet, tab-uri, paginare, cipuri, itemii
-  meniurilor și ai sugestiilor (`html.gcs-nova …`; utilitarul `.gcs-sweep` în `base.css`). Regulile de hover setează
-  `background-color`, nu `background`. Plin: aceeași culoare + umbră de accent 25%; secundar: chenarul luminat + text alb;
+  meniurilor și ai sugestiilor, în **orice temă** (`sweep.css`, încărcat ultimul; utilitarul `.gcs-sweep` tot acolo).
+  Temele reglează doar culoarea, `--gcs-sweep` (8% alb pe întunecat, 7% din text pe luminos); „reduced motion” oprește
+  sweep-ul. Regulile de hover setează `background-color`, nu `background`. Plin: aceeași culoare + umbră de accent 25%; secundar: chenarul luminat + text alb;
   tab-urile inactive 5% alb; itemii meniurilor 3% alb + `scale(1.01)`; pastilele grupurilor nuanță 30%, chenar 60%,
   strălucire 12 px, −1 px; mențiunile de grup `brightness(1.2)`.
 - **Mișcarea:** tokenurile `--gcs-motion-fast|base|slow` (.15 / .2 / .3 s) și `--gcs-motion-ease`
