@@ -47,6 +47,40 @@ export const coreWidgets: GcsWidgetDef[] = [
   widget({ key: "core.onlineDay", labelKey: "widgets.core.onlineDay", descriptionKey: "widgets.desc.core.onlineDay", icon: "fa-solid fa-clock", defaultConfig: {} }),
   widget({ key: "core.groupLegend", labelKey: "widgets.core.groupLegend", descriptionKey: "widgets.desc.core.groupLegend", icon: "fa-solid fa-users-rectangle", defaultConfig: {} }),
   widget({ key: "core.newMembers", labelKey: "widgets.core.newMembers", descriptionKey: "widgets.desc.core.newMembers", icon: "fa-solid fa-user-plus", defaultConfig: { limit: 5 }, fields: [limitField()] }),
+  // „Clasament” (specul 2026-10-10-hero-cockpit §4): un singur widget cu tab-urile măsurilor și perioada; amplasarea
+  // alege doar ce se vede la început.
+  widget({
+    key: "core.ranking",
+    labelKey: "widgets.core.ranking",
+    descriptionKey: "widgets.desc.core.ranking",
+    icon: "fa-solid fa-trophy",
+    defaultConfig: { metric: "posts", period: "day" },
+    fields: [
+      {
+        key: "metric",
+        labelKey: "widgets.fields.metric",
+        type: "select",
+        options: [
+          { value: "posts", labelKey: "widgets.metrics.posts" },
+          { value: "topics", labelKey: "widgets.metrics.topics" },
+          { value: "reputation", labelKey: "widgets.metrics.reputation" },
+          { value: "online", labelKey: "widgets.metrics.online" },
+        ],
+      },
+      {
+        key: "period",
+        labelKey: "widgets.fields.period",
+        type: "select",
+        options: [
+          { value: "day", labelKey: "widgets.periods.day" },
+          { value: "week", labelKey: "widgets.periods.week" },
+          { value: "month", labelKey: "widgets.periods.month" },
+          { value: "year", labelKey: "widgets.periods.year" },
+          { value: "all", labelKey: "widgets.periods.all" },
+        ],
+      },
+    ],
+  }),
 ];
 
 /** Widget-urile forumurilor. */

@@ -9,7 +9,8 @@
     "./slug": "./src/forums/slug.ts",
     "./clans-text": "./src/clans/text.ts",
     "./map-images": "./src/servers/bridge/mapImages.ts",
-    "./chat-pro-prefs": "./src/chat-pro/prefs.ts"
+    "./chat-pro-prefs": "./src/chat-pro/prefs.ts",
+    "./online-format": "./src/community/onlineFormat.ts"
   },
   "scripts": {
     "lint": "eslint .",

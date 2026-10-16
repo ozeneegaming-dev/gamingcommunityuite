@@ -1,7 +1,7 @@
 import { THEME_FONTS, THEMES_ACP_SECTION, themeCustomCss } from "@gcs/core";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { THEME_PREVIEW_PARAM } from "@/lib/theme-preview";
@@ -22,7 +22,20 @@ export default async function ThemeStudioPage({ params }: { params: Promise<{ ke
   const theme = await themes.get(key);
   if (!theme) notFound();
   const shown = themes.withDraft(theme);
-  const siteName = await settings.get<string>("site.name");
+  const [siteName, siteLocale, menu, tAll, locale] = await Promise.all([
+    settings.get<string>("site.name"),
+    settings.get<string>("site.locale"),
+    services().nav.editable(),
+    getTranslations(),
+    getLocale(),
+  ]);
+  // Itemii de pe primul nivel ai meniului, cu eticheta în limba adminului (meniul împărțit din constructorul de antet).
+  const navItems = menu.map((i) => {
+    const label = i.label as Record<string, string>;
+    const key = label.key;
+    const text = key ? (tAll.has(key) ? tAll(key) : key) : (label[locale] ?? label[siteLocale] ?? Object.values(label)[0] ?? "");
+    return { id: i.id, label: text };
+  });
   return (
     <GcsThemeStudio
       themeKey={theme.key}
@@ -33,6 +46,7 @@ export default async function ThemeStudioPage({ params }: { params: Promise<{ ke
       previewUrl={`/?${THEME_PREVIEW_PARAM}=${encodeURIComponent(theme.key)}`}
       cssFiles={theme.cssFiles}
       initial={{ settings: shown.settings, customCss: themeCustomCss(shown), logoUrl: shown.logoUrl, faviconUrl: shown.faviconUrl }}
+      navItems={navItems}
     />
   );
 }

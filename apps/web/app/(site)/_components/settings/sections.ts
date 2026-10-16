@@ -8,6 +8,8 @@ export const SETTINGS_SECTIONS = [
   ["notifications", "fa-solid fa-bell"],
   ["security", "fa-solid fa-shield-halved"],
   ["ignored", "fa-solid fa-user-slash"],
+  ["following", "fa-solid fa-eye"],
+  ["attachments", "fa-solid fa-paperclip"],
   ["account", "fa-solid fa-gear"],
 ] as const;
 

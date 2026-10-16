@@ -1,3 +1,14 @@
+import {
+  COCKPIT_PANELS,
+  DEFAULT_MOBILE_BAR,
+  headerBuilderError,
+  headerPreset,
+  mobileBarError,
+  type GcsCockpitPanel,
+  type GcsHeaderBuilder,
+  type GcsMobileBarItem,
+} from "./headerBuilder";
+
 /**
  * Setările unei teme: tipurile, valorile implicite, câmpurile (cu intervale și enumerări), completarea cu valorile
  * implicite și validarea. Modul e „pur” (fără Prisma sau Node): îl folosește și editorul vizual din browser
@@ -62,6 +73,13 @@ export const THEME_BOX_SHADOWS = ["none", "subtle", "soft", "strong"] as const;
 export const THEME_BAND_STYLES = ["solid", "gradient", "accent"] as const;
 /** Forma iconiței din bandă (Nova): cerc, pătrat rotunjit sau fără chenar. */
 export const THEME_BAND_ICONS = ["circle", "rounded", "none"] as const;
+/** Constructorul de antet (Nova): cum se deschid meniurile și unde se aliniază meniul. */
+export const THEME_DROPDOWN_MODES = ["click", "hover"] as const;
+export const THEME_NAV_ALIGNS = ["left", "center", "right"] as const;
+/** Navigarea pe mobil: iconițele în antet sau într-o bară jos. */
+export const THEME_MOBILE_PLACEMENTS = ["header", "bottom"] as const;
+/** Consola de sub antet (Hero Cockpit): doar pe pagina principală sau pe toate paginile. */
+export const THEME_COCKPIT_PAGES = ["home", "all"] as const;
 
 export type GcsThemeSettings = {
   /** Designul (vezi `THEME_PRESETS`). */
@@ -121,8 +139,34 @@ export type GcsThemeSettings = {
     pattern: boolean;
     /** Nova: rândul cu breadcrumb-ul și căutarea, sub meniu. */
     crumbs: boolean;
+    /** Nova: constructorul de antet (rândurile, zonele și elementele, pe dispozitive; vezi `headerBuilder.ts`). */
+    layout: GcsHeaderBuilder;
+    /** Nova: înălțimile rândurilor constructorului (bara de sus, rândul principal, rândul secundar). */
+    rowTop: number;
+    rowMain: number;
+    rowBottom: number;
+    /** Nova: la derulare, antetul se strânge într-o bară compactă, lipită sus. */
+    compact: boolean;
+    /** Nova: antetul se ascunde la derularea în jos și revine la derularea în sus. */
+    hideOnScroll: boolean;
+    /** Nova: meniurile se deschid la click sau la hover (și cu tastatura, oricum). */
+    dropdowns: (typeof THEME_DROPDOWN_MODES)[number];
+    /** Nova: submeniurile ca mega meniuri (2 coloane, descrieri, insigne live, rândul de jos). */
+    mega: boolean;
+    navAlign: (typeof THEME_NAV_ALIGNS)[number];
+    /** Nova: elementul „Text/HTML personalizat” (HTML sanitizat la afișare). */
+    customHtml: string;
   };
-  mobileNav: { side: "left" | "right"; icons: boolean };
+  mobileNav: {
+    side: "left" | "right";
+    icons: boolean;
+    /** Nova: iconițele (meniu, cont, căutare, notificări) în antet sau într-o bară jos. */
+    placement: (typeof THEME_MOBILE_PLACEMENTS)[number];
+    /** Nova: textul sub iconițele barei de jos. */
+    labels: boolean;
+    /** Nova: elementele barei de jos (1–5). */
+    items: GcsMobileBarItem[];
+  };
   boxes: { borderWidth: number; shadow: (typeof THEME_BOX_SHADOWS)[number]; clickableRows: boolean };
   sidebar: { width: number; position: "right" | "left"; sticky: boolean };
   avatars: { rounded: boolean };
@@ -131,6 +175,18 @@ export type GcsThemeSettings = {
   bands: { style: (typeof THEME_BAND_STYLES)[number]; icon: (typeof THEME_BAND_ICONS)[number] };
   /** Nova: efectele de hover (tranziții, mărirea pastilelor); fără ele, doar schimbările de culoare. */
   effects: { hover: boolean };
+  /**
+   * Nova: consola de sub antet (Hero Cockpit): banda personală, cele 3 panouri (ce widget în fiecare), benzile
+   * serverelor și imaginea de fundal (`null` = grafica GCS).
+   */
+  cockpit: {
+    enabled: boolean;
+    pages: (typeof THEME_COCKPIT_PAGES)[number];
+    left: GcsCockpitPanel;
+    center: GcsCockpitPanel;
+    right: GcsCockpitPanel;
+    image: string | null;
+  };
 };
 
 export type GcsDeepPartial<T> = { [K in keyof T]?: T[K] extends Record<string, unknown> ? GcsDeepPartial<T[K]> : T[K] };
@@ -215,14 +271,34 @@ export const DEFAULT_THEME_SETTINGS: GcsThemeSettings = {
   },
   layout: { forumIndex: "list", topicView: "normal", featureFirstPost: false },
   typography: { baseSize: 16, contentSize: 100, fontDisplayCustom: "", fontTextCustom: "" },
-  header: { height: 64, heightMobile: 64, navIcons: true, sticky: true, image: null, overlay: 70, pattern: true, crumbs: true },
-  mobileNav: { side: "left", icons: true },
+  header: {
+    height: 64,
+    heightMobile: 64,
+    navIcons: true,
+    sticky: true,
+    image: null,
+    overlay: 70,
+    pattern: true,
+    crumbs: true,
+    layout: headerPreset("classic"),
+    rowTop: 44,
+    rowMain: 76,
+    rowBottom: 56,
+    compact: false,
+    hideOnScroll: false,
+    dropdowns: "click",
+    mega: true,
+    navAlign: "left",
+    customHtml: "",
+  },
+  mobileNav: { side: "left", icons: true, placement: "header", labels: true, items: [...DEFAULT_MOBILE_BAR] },
   boxes: { borderWidth: 1, shadow: "none", clickableRows: false },
   sidebar: { width: 320, position: "right", sticky: false },
   avatars: { rounded: true },
   buttons: { radius: 10 },
   bands: { style: "solid", icon: "circle" },
   effects: { hover: true },
+  cockpit: { enabled: false, pages: "home", left: "feed", center: "live", right: "top", image: null },
 };
 
 /**
@@ -308,7 +384,18 @@ export const NOVA_THEME_SETTINGS: GcsThemeSettings = {
   scheme: { default: "dark", toggle: true },
   logo: { ...DEFAULT_THEME_SETTINGS.logo, font: "text", weight: 800, size: 24, textMobile: true, height: 70, heightMobile: 70 },
   typography: { ...DEFAULT_THEME_SETTINGS.typography, baseSize: 13 },
-  header: { height: 76, heightMobile: 60, navIcons: false, sticky: false, image: null, overlay: 70, pattern: true, crumbs: true },
+  header: {
+    ...DEFAULT_THEME_SETTINGS.header,
+    height: 76,
+    heightMobile: 60,
+    navIcons: false,
+    sticky: false,
+    // Rândurile constructorului: valorile machetei Esports (bara de sus 76, meniul 94); compact la derulare.
+    rowTop: 76,
+    rowMain: 94,
+    rowBottom: 58,
+    compact: true,
+  },
   boxes: { borderWidth: 1, shadow: "subtle", clickableRows: true },
   sidebar: { width: 340, position: "right", sticky: false },
   buttons: { radius: 4 },
@@ -324,7 +411,34 @@ export function themeDefaults(preset: GcsThemePreset | undefined | null): GcsThe
 /**
  * Setările care schimbă ceva doar în designul Nova (editorul vizual le arată doar atunci; altfel ar fi opțiuni „moarte”).
  */
-export const NOVA_ONLY_FIELDS: readonly string[] = ["header.image", "header.overlay", "header.pattern", "header.crumbs", "bands.style", "bands.icon", "effects.hover"];
+export const NOVA_ONLY_FIELDS: readonly string[] = [
+  "header.image",
+  "header.overlay",
+  "header.pattern",
+  "header.crumbs",
+  "bands.style",
+  "bands.icon",
+  "effects.hover",
+  "header.layout",
+  "header.rowTop",
+  "header.rowMain",
+  "header.rowBottom",
+  "header.compact",
+  "header.hideOnScroll",
+  "header.dropdowns",
+  "header.mega",
+  "header.navAlign",
+  "header.customHtml",
+  "mobileNav.placement",
+  "mobileNav.labels",
+  "mobileNav.items",
+  "cockpit.enabled",
+  "cockpit.pages",
+  "cockpit.left",
+  "cockpit.center",
+  "cockpit.right",
+  "cockpit.image",
+];
 
 /**
  * Elementele care au mereu un fundal propriu (specul `2026-10-07-antete-titluri.md`: fiecare titlu pe banda lui).
@@ -356,7 +470,11 @@ export type GcsThemeField =
   /** Numele unui font Google (litere, cifre, spații) sau gol. */
   | { kind: "fontName" }
   /** Un fișier public al site-ului (`/files/<id>`) sau `null`. */
-  | { kind: "file" };
+  | { kind: "file" }
+  /** Aspectul constructorului de antet (vezi `headerBuilderError`). */
+  | { kind: "headerLayout" }
+  /** Elementele barei de jos de pe mobil (vezi `mobileBarError`). */
+  | { kind: "barItems" };
 
 const int = (min: number, max: number, unit?: "px" | "%", step?: number): GcsThemeField => ({ kind: "int", min, max, ...(unit ? { unit } : {}), ...(step ? { step } : {}) });
 const choice = (options: readonly string[]): GcsThemeField => ({ kind: "enum", options });
@@ -417,6 +535,25 @@ function buildFields(): Record<string, GcsThemeField> {
     "bands.style": choice(THEME_BAND_STYLES),
     "bands.icon": choice(THEME_BAND_ICONS),
     "effects.hover": BOOL,
+    "header.layout": { kind: "headerLayout" },
+    "header.rowTop": int(32, 120, "px"),
+    "header.rowMain": int(48, 160, "px"),
+    "header.rowBottom": int(32, 120, "px"),
+    "header.compact": BOOL,
+    "header.hideOnScroll": BOOL,
+    "header.dropdowns": choice(THEME_DROPDOWN_MODES),
+    "header.mega": BOOL,
+    "header.navAlign": choice(THEME_NAV_ALIGNS),
+    "header.customHtml": { kind: "text", max: 2000 },
+    "mobileNav.placement": choice(THEME_MOBILE_PLACEMENTS),
+    "mobileNav.labels": BOOL,
+    "mobileNav.items": { kind: "barItems" },
+    "cockpit.enabled": BOOL,
+    "cockpit.pages": choice(THEME_COCKPIT_PAGES),
+    "cockpit.left": choice(COCKPIT_PANELS),
+    "cockpit.center": choice(COCKPIT_PANELS),
+    "cockpit.right": choice(COCKPIT_PANELS),
+    "cockpit.image": { kind: "file" },
   };
 }
 
@@ -459,6 +596,10 @@ export function themeFieldError(field: GcsThemeField, value: unknown): string | 
       return value === "" || (typeof value === "string" && FONT_NAME_RE.test(value)) ? null : "invalid";
     case "file":
       return isThemeFileUrl(value) ? null : "invalid";
+    case "headerLayout":
+      return headerBuilderError(value);
+    case "barItems":
+      return mobileBarError(value);
   }
 }
 

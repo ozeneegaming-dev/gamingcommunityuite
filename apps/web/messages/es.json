@@ -60,6 +60,26 @@
     "crumbs": "You are here",
     "collapse": "Collapse {title}",
     "expand": "Expand {title}",
+    "navDesc": {
+      "forum": "Las conversaciones de la comunidad, por categorías",
+      "chat": "Habla en vivo con la comunidad",
+      "members": "Busca miembros por nombre, grupo o juego",
+      "staff": "El equipo, sus funciones y el contacto",
+      "activity": "Todo lo que ha pasado últimamente en el sitio",
+      "membersAll": "La lista completa de miembros",
+      "membersOnline": "Quién está en el sitio ahora mismo",
+      "leaderboard": "Los miembros más activos y los rankings",
+      "vip": "Planes, ventajas y lo que obtienes",
+      "rules": "Las normas del foro y de los servidores",
+      "servers": "Estado en vivo, jugadores, conexión con un clic",
+      "clans": "Equipos, reclutamiento y guerras de clanes",
+      "serversAll": "Estado en vivo, jugadores, conexión con un clic",
+      "serversLeaderboard": "Más bajas, horas jugadas, ELO de la temporada",
+      "serversMatches": "Partidas en vivo, ELO e historial de partidas",
+      "bans": "La lista de sanciones y las apelaciones",
+      "serverAdmins": "Qué miembros del equipo están en los servidores",
+      "serverTickets": "Apela una sanción o denuncia a un jugador"
+    },
     "skin": "Tema del foro"
   },
   "auth": {
@@ -1441,7 +1461,12 @@
       "remove": "Quitar",
       "save": "Guardar el menú",
       "saved": "El menú ha sido guardado.",
-      "newItem": "Nuevo artículo"
+      "newItem": "Nuevo artículo",
+      "mega": "Megamenú",
+      "description": "Descripción",
+      "descriptionHint": "Una línea bajo el título en el megamenú (diseño Nova). Vacío = la descripción predeterminada de los elementos automáticos.",
+      "badge": "Insignia",
+      "badgeHint": "p. ej. NUEVO"
     },
     "languages": {
       "title": "Idiomas activos",
@@ -2780,6 +2805,9 @@
         "chat_pro": {
           "days": "Days with messages in the chat ranking",
           "wins": "Chat ranking periods won"
+        },
+        "online_time": {
+          "days": "Días con tiempo en línea en la clasificación"
         }
       },
       "steps": {
@@ -2796,7 +2824,8 @@
         "notifications": "Notifications",
         "account": "Account data",
         "files": "Files",
-        "chat_pro": "Chat Pro"
+        "chat_pro": "Chat Pro",
+        "online_time": "Tiempo en línea"
       },
       "notes": {
         "topic_replies": "Their topics have {count} replies by other members: with “Delete content too” they are deleted as well.",
@@ -3319,7 +3348,9 @@
       "notifications": "Notificaciones",
       "language": "Idioma y zona horaria",
       "signature": "Firma",
-      "security": "Seguridad"
+      "security": "Seguridad",
+      "following": "Lo que sigo",
+      "attachments": "Mis adjuntos"
     },
     "appearance": {
       "title": "Apariencia",
@@ -3589,6 +3620,19 @@
       "bar_seconds": "Announcement bar rotation (seconds)",
       "emote_max_kb": "Maximum emote size (KB)",
       "emote_max_side": "Maximum emote side (px)"
+    },
+    "following": {
+      "title": "Lo que sigo",
+      "intro": "Los miembros, temas y foros que sigues (recibes notificaciones sobre ellos).",
+      "empty": "Aún no sigues nada.",
+      "members": "{count, plural, one {Miembros (#)} many {Miembros (#)} other {Miembros (#)}}",
+      "topics": "{count, plural, one {Temas (#)} many {Temas (#)} other {Temas (#)}}",
+      "forums": "{count, plural, one {Foros (#)} many {Foros (#)} other {Foros (#)}}"
+    },
+    "attachments": {
+      "title": "Mis adjuntos",
+      "intro": "{count, plural, one {Has subido # archivo.} many {Has subido # archivos.} other {Has subido # archivos.}} Los más nuevos aparecen primero.",
+      "empty": "Aún no has subido ningún archivo."
     },
     "groups_pro": {
       "legend_categories": "Categorías de la leyenda de grupos"
@@ -4508,7 +4552,9 @@
       "sidebar": "Sidebar",
       "avatars": "Avatares",
       "buttons": "Botones",
-      "design": "Design"
+      "design": "Design",
+      "headerBuilder": "Constructor de cabecera",
+      "cockpit": "Consola Hero Cockpit"
     },
     "tabs": {
       "settings": "Ajustes",
@@ -4523,7 +4569,13 @@
       "favicon": "Favicon",
       "bands": "Title bands",
       "effects": "Effects",
-      "headerImage": "Header image"
+      "headerImage": "Header image",
+      "builderRows": "Filas",
+      "builderMenus": "Menús",
+      "builderCustom": "Texto propio",
+      "cockpitPanels": "Paneles",
+      "cockpitImage": "Fondo de la consola",
+      "mobileBar": "Barra inferior"
     },
     "images": {
       "logo": "Logo (modo oscuro)",
@@ -4534,7 +4586,8 @@
       "none": "Sin imagen",
       "upload": "Subir",
       "remove": "Quitar",
-      "headerImage": "Header background"
+      "headerImage": "Header background",
+      "cockpitImage": "Fondo de la consola"
     },
     "tokens": {
       "accent": "Color primario",
@@ -4779,6 +4832,116 @@
       "header_crumbs": {
         "label": "Breadcrumb and search row",
         "help": "Below the menu: where you are on the site and the search field."
+      },
+      "header_rowTop": {
+        "label": "Altura de la barra superior"
+      },
+      "header_rowMain": {
+        "label": "Altura de la fila principal"
+      },
+      "header_rowBottom": {
+        "label": "Altura de la fila secundaria"
+      },
+      "header_compact": {
+        "label": "Compacta al desplazarse",
+        "help": "Tras 120 px, la cabecera se reduce a una barra fija arriba (logo, menú, búsqueda)."
+      },
+      "header_hideOnScroll": {
+        "label": "Ocultar al bajar",
+        "help": "La cabecera se oculta al desplazarte hacia abajo y vuelve al subir."
+      },
+      "header_dropdowns": {
+        "label": "Los menús se abren",
+        "options": {
+          "click": "Al hacer clic",
+          "hover": "Al pasar el ratón"
+        }
+      },
+      "header_mega": {
+        "label": "Megamenús",
+        "help": "Submenús en 2 columnas con descripciones, insignias en vivo y una fila inferior."
+      },
+      "header_navAlign": {
+        "label": "Alineación del menú",
+        "options": {
+          "left": "Izquierda",
+          "center": "Centro",
+          "right": "Derecha"
+        }
+      },
+      "header_customHtml": {
+        "label": "Texto / HTML propio",
+        "help": "El elemento «Texto/HTML»: se conservan las etiquetas simples, se quitan scripts y estilos."
+      },
+      "mobileNav_placement": {
+        "label": "Iconos en el móvil",
+        "help": "El menú, la cuenta, la búsqueda y las notificaciones van en la cabecera o en una barra inferior.",
+        "options": {
+          "header": "En la cabecera",
+          "bottom": "En la barra inferior"
+        }
+      },
+      "mobileNav_labels": {
+        "label": "Texto bajo los iconos de la barra inferior"
+      },
+      "mobileNav_items": {
+        "label": "Elementos de la barra inferior",
+        "help": "Como máximo 5; «Crear» va redondo en el centro.",
+        "options": {
+          "home": "Inicio",
+          "forum": "Foro",
+          "servers": "Servidores",
+          "create": "Crear",
+          "messages": "Mensajes",
+          "notifications": "Notificaciones",
+          "search": "Buscar",
+          "menu": "Menú",
+          "account": "Cuenta",
+          "chat": "Chat",
+          "activity": "Actividad",
+          "clans": "Clanes"
+        }
+      },
+      "cockpit_enabled": {
+        "label": "Consola bajo la cabecera",
+        "help": "La franja personal, los 3 paneles y las franjas de los servidores."
+      },
+      "cockpit_pages": {
+        "label": "Dónde aparece",
+        "options": {
+          "home": "Solo en la página principal",
+          "all": "En todas las páginas"
+        }
+      },
+      "cockpit_left": {
+        "label": "Panel izquierdo",
+        "options": {
+          "feed": "Actividad en vivo",
+          "live": "En vivo",
+          "top": "Top",
+          "featured": "Destacados",
+          "none": "Nada"
+        }
+      },
+      "cockpit_center": {
+        "label": "Panel central",
+        "options": {
+          "feed": "Actividad en vivo",
+          "live": "En vivo",
+          "top": "Top",
+          "featured": "Destacados",
+          "none": "Nada"
+        }
+      },
+      "cockpit_right": {
+        "label": "Panel derecho",
+        "options": {
+          "feed": "Actividad en vivo",
+          "live": "En vivo",
+          "top": "Top",
+          "featured": "Destacados",
+          "none": "Nada"
+        }
       }
     },
     "status": {
@@ -4801,6 +4964,76 @@
       "body": "El tema tiene cambios que no se publican. Si sales sin ahorrar, son descartados.",
       "leave": "Salir sin salvar",
       "stay": "Sigue editando"
+    },
+    "barUp": "Subir: {item}",
+    "barDown": "Bajar: {item}",
+    "barRemove": "Quitar de la barra: {item}",
+    "barAdd": "Añadir a la barra…",
+    "builder": {
+      "presets": "Ajustes predefinidos",
+      "presetNames": {
+        "classic": "Nova clásico",
+        "cockpit": "Cockpit",
+        "centered": "Centrado",
+        "side": "Panel lateral",
+        "esports": "Esports"
+      },
+      "presetHelp": {
+        "classic": "La cabecera actual: logo, menú e iconos en una fila, después la ruta y la búsqueda.",
+        "cockpit": "Logo y acciones en la fila 1, el menú con megamenús en la fila 2; en el móvil, la barra inferior.",
+        "centered": "El logo centrado sobre el menú.",
+        "side": "El logo y el menú en un panel lateral, en escritorio.",
+        "esports": "Redes sociales y cuenta arriba, el menú dividido alrededor del logo en la muesca central."
+      },
+      "custom": "Diseño propio, a partir de «{preset}».",
+      "devices": "Dispositivos",
+      "deviceNames": {
+        "desktop": "Escritorio",
+        "tablet": "Tableta",
+        "mobile": "Móvil"
+      },
+      "rows": {
+        "top": "Barra superior",
+        "main": "Fila principal",
+        "bottom": "Fila secundaria"
+      },
+      "zones": {
+        "left": "Izquierda",
+        "center": "Centro",
+        "right": "Derecha"
+      },
+      "unused": "Sin usar",
+      "allUsed": "Todos los elementos están en la cabecera.",
+      "here": "Mover aquí",
+      "toTray": "Quitar de la cabecera",
+      "keyboard": "Arrastra los elementos entre zonas. Con el teclado: Enter elige, las flechas mueven, Supr quita.",
+      "chipLabel": "{element}: arrastra o usa las flechas",
+      "remove": "Quitar «{element}» de la cabecera",
+      "moved": "«{element}» movido a {place}.",
+      "removed": "«{element}» quitado de la cabecera.",
+      "split": "Menú a la derecha del logo",
+      "splitAuto": "Por defecto, la segunda mitad del menú va a la derecha. Marca los elementos que quieras allí.",
+      "splitHelp": "Los elementos marcados van a la derecha del logo, el resto a la izquierda.",
+      "splitReset": "Dividir por la mitad",
+      "elements": {
+        "logo": "Logo",
+        "nav": "Navegación",
+        "navRight": "Navegación (derecha)",
+        "search": "Búsqueda (icono)",
+        "searchField": "Búsqueda (campo)",
+        "create": "Crear",
+        "messages": "Mensajes",
+        "notifications": "Notificaciones",
+        "account": "Cuenta",
+        "breadcrumb": "Ruta",
+        "serversLive": "Estado de los servidores en vivo",
+        "social": "Redes sociales",
+        "themeToggle": "Selector de tema",
+        "language": "Idioma",
+        "custom": "Texto/HTML",
+        "chat_button": "Chat",
+        "servers_playNow": "Jugar ahora"
+      }
     }
   },
   "widgets": {
@@ -4810,7 +5043,8 @@
       "newMembers": "Nuevos miembros",
       "statsPanel": "Grupo de estadísticas",
       "onlineDay": "Quien estaba en línea (24 h)",
-      "groupLegend": "Leyenda del grupo"
+      "groupLegend": "Leyenda del grupo",
+      "ranking": "Clasificación"
     },
     "forums": {
       "stats": "Estadísticas",
@@ -4830,12 +5064,15 @@
       "period": "Período",
       "channel": "Sala de chat",
       "icon": "Icon (por ejemplo, fa-solid fa-star; vacío = predeterminado)",
-      "game": "Game"
+      "game": "Game",
+      "metric": "Medida que se muestra primero"
     },
     "periods": {
       "week": "esta semana",
       "month": "este mes",
-      "all": "todo el tiempo"
+      "all": "todo el tiempo",
+      "day": "hoy",
+      "year": "este año"
     },
     "empty": "Nada todavía.",
     "posts": "{count, plural, one {Post #} many {Puestos #} other {Puestos #}}",
@@ -4846,7 +5083,8 @@
         "statsPanel": "Figuras comunitarias, que está en línea y la leyenda del grupo.",
         "onlineDay": "Miembros activos en las últimas 24 horas.",
         "groupLegend": "Los grupos comunitarios, con sus estilos de nombre.",
-        "newMembers": "Los nuevos miembros registrados."
+        "newMembers": "Los nuevos miembros registrados.",
+        "ranking": "Los mejores miembros por mensajes, temas, reputación o tiempo en línea, de hoy, la semana, el mes, el año o de siempre."
       },
       "forums": {
         "stats": "Número de temas, puestos y miembros.",
@@ -4884,6 +5122,12 @@
       "prev": "Previous",
       "next": "Next",
       "read": "Read"
+    },
+    "metrics": {
+      "posts": "Mensajes",
+      "topics": "Temas",
+      "reputation": "Reputación",
+      "online": "Tiempo en línea"
     }
   },
   "pageEditor": {
@@ -5431,7 +5675,9 @@
     "lead": {
       "week": "The most active members of the last 7 days, by {metric}.",
       "month": "The most active members of the last 30 days, by {metric}.",
-      "all": "The best members of all time, by {metric}."
+      "all": "The best members of all time, by {metric}.",
+      "day": "Los miembros más activos de hoy, por {metric}.",
+      "year": "Los miembros más activos del último año, por {metric}."
     },
     "metricLabel": "Measure",
     "periodLabel": "Period",
@@ -5439,18 +5685,24 @@
       "reputation": "Reputation",
       "posts": "Posts",
       "xp": "XP",
-      "solutions": "Solutions"
+      "solutions": "Solutions",
+      "topics": "Temas",
+      "online": "Tiempo en línea"
     },
     "metricLower": {
       "reputation": "reputation",
       "posts": "posts",
       "xp": "XP",
-      "solutions": "solutions"
+      "solutions": "solutions",
+      "topics": "temas",
+      "online": "tiempo en línea"
     },
     "period": {
       "week": "This week",
       "month": "This month",
-      "all": "All time"
+      "all": "All time",
+      "day": "Hoy",
+      "year": "Año"
     },
     "podium": "Podium",
     "place": "Place {rank}",
@@ -6782,6 +7034,294 @@
       "prev": "Previous page",
       "next": "Next page",
       "page": "Page {page} of {pages}"
+    }
+  },
+  "header": {
+    "or": "o",
+    "chat": "Chat",
+    "playNow": "Jugar ahora",
+    "social": {
+      "follow": "Síguenos"
+    },
+    "search": {
+      "open": "Buscar (Ctrl K)",
+      "dialog": "Buscar",
+      "close": "Cerrar la búsqueda",
+      "placeholder": "Busca temas, miembros, servidores, jugadores…",
+      "scopeLabel": "Dónde buscar",
+      "scopes": {
+        "all": "Todo",
+        "topics": "Temas",
+        "posts": "Mensajes",
+        "members": "Miembros",
+        "servers": "Servidores",
+        "players": "Jugadores",
+        "clans": "Clanes"
+      },
+      "filters": "Filtros",
+      "forum": "Foro",
+      "forumAll": "Todos",
+      "author": "Autor",
+      "period": "Periodo",
+      "periods": {
+        "any": "Cuando sea",
+        "day": "Hoy",
+        "week": "Esta semana",
+        "month": "Este mes",
+        "year": "Este año"
+      },
+      "titles": "Solo en títulos",
+      "quick": "Resultados rápidos",
+      "recent": "Búsquedas recientes",
+      "noRecent": "Aún no hay búsquedas.",
+      "typing": "Escribe al menos 2 letras.",
+      "loading": "Buscando…",
+      "empty": "No hay resultados rápidos. Pulsa Enter para la búsqueda completa.",
+      "limited": "Has buscado demasiadas veces; inténtalo de nuevo en un minuto.",
+      "hints": "Enter = todos los resultados · ↑↓ = navegar · Esc = cerrar",
+      "advanced": "Búsqueda avanzada",
+      "tags": {
+        "topic": "TEMA",
+        "post": "MENSAJE",
+        "member": "MIEMBRO",
+        "server": "SERVIDOR",
+        "player": "JUGADOR",
+        "clan": "CLAN"
+      }
+    },
+    "create": {
+      "button": "Crear",
+      "menu": "Crear",
+      "loading": "Cargando…",
+      "empty": "No hay nada que crear aquí.",
+      "forumsHeading": "Nuevo tema en…",
+      "items": {
+        "topicIn": "Nuevo tema en {forum}",
+        "message": "Mensaje privado",
+        "clan": "Nuevo clan",
+        "ticket": "Apelación o denuncia",
+        "sanction": "Sanción en el servidor",
+        "forum": "{forum}"
+      }
+    },
+    "messages": {
+      "label": "Mensajes",
+      "unread": "{count, plural, one {Mensajes, # sin leer} many {Mensajes, # sin leer} other {Mensajes, # sin leer}}",
+      "new": "Nuevo mensaje",
+      "empty": "Aún no hay conversaciones.",
+      "seeAll": "Todos los mensajes"
+    },
+    "account": {
+      "menu": "Menú de la cuenta",
+      "ring": "Menú de la cuenta, nivel {level}, {percent}% hasta el nivel {next}",
+      "ringMax": "Menú de la cuenta, nivel {level}",
+      "levelShort": "NV {level}",
+      "toNext": "{percent}% hasta Nv {level}",
+      "level": "Nivel {level}",
+      "levelRank": "Nivel {level} · {rank}",
+      "remaining": {
+        "xp": "{count, plural, one {Te falta # XP para el rango «{rank}»} many {Te faltan # XP para el rango «{rank}»} other {Te faltan # XP para el rango «{rank}»}}",
+        "posts": "{count, plural, one {Te falta # mensaje para el rango «{rank}»} many {Te faltan # mensajes para el rango «{rank}»} other {Te faltan # mensajes para el rango «{rank}»}}",
+        "reputation": "{count, plural, one {Te falta # punto de reputación para el rango «{rank}»} many {Te faltan # puntos de reputación para el rango «{rank}»} other {Te faltan # puntos de reputación para el rango «{rank}»}}"
+      },
+      "maxLevel": "Has alcanzado el rango más alto.",
+      "units": {
+        "xp": "XP",
+        "posts": "mensajes",
+        "reputation": "reputación"
+      },
+      "stats": {
+        "posts": "Mensajes",
+        "reputation": "Reputación",
+        "elo": "ELO mix"
+      },
+      "status": {
+        "label": "Estado",
+        "online": "En línea",
+        "invisible": "Invisible"
+      },
+      "sections": {
+        "content": "Mi contenido",
+        "gaming": "Gaming",
+        "settings": "Ajustes",
+        "staff": "Equipo"
+      },
+      "items": {
+        "profile": "Mi perfil",
+        "content": "Mi contenido",
+        "attachments": "Mis adjuntos",
+        "following": "Lo que sigo",
+        "player": "Perfil de jugador y estadísticas",
+        "clan": "Mi clan",
+        "linked": "Cuentas vinculadas",
+        "account": "Ajustes de la cuenta",
+        "notifications": "Notificaciones",
+        "privacy": "Privacidad e ignorados",
+        "vipStudio": "Estudio VIP",
+        "moderation": "Cola de moderación",
+        "themeEditor": "Editar el tema",
+        "pageEditor": "Editar la página",
+        "acp": "Panel de administración (ACP)"
+      },
+      "theme": {
+        "label": "Tema",
+        "dark": "Oscuro",
+        "light": "Claro"
+      },
+      "language": "Idioma",
+      "logout": "Salir"
+    },
+    "nav": {
+      "badges": {
+        "online": "{count} EN LÍNEA",
+        "live": "{count} EN VIVO"
+      },
+      "footer": {
+        "servers": "{servers, plural, one {# servidor} many {# servidores} other {# servidores}} · {players, plural, one {# jugador} many {# jugadores} other {# jugadores}} en línea ahora",
+        "community": "{members, plural, one {# miembro} many {# miembros} other {# miembros}} · {online} en línea ahora",
+        "vip": "Apoya a la comunidad y obtén ventajas en el sitio y en los servidores"
+      },
+      "cta": {
+        "online": "Ver quién está en línea",
+        "vip": "Hazte VIP"
+      }
+    },
+    "live": {
+      "servers": "{count, plural, one {# servidor en línea} many {# servidores en línea} other {# servidores en línea}}",
+      "players": "{count, plural, one {# jugador} many {# jugadores} other {# jugadores}}",
+      "matches": "{count, plural, one {# partida en vivo} many {# partidas en vivo} other {# partidas en vivo}}"
+    },
+    "theme": {
+      "toDark": "Cambiar al tema oscuro",
+      "toLight": "Cambiar al tema claro"
+    },
+    "mobileBar": {
+      "label": "Navegación",
+      "items": {
+        "home": "Inicio",
+        "forum": "Foro",
+        "servers": "Servidores",
+        "create": "Crear",
+        "messages": "Mensajes",
+        "notifications": "Notificaciones",
+        "search": "Buscar",
+        "menu": "Menú",
+        "account": "Cuenta",
+        "chat": "Chat",
+        "activity": "Actividad",
+        "clans": "Clanes"
+      }
+    }
+  },
+  "cockpit": {
+    "label": "Consola de la comunidad",
+    "title": "Ahora en la comunidad",
+    "welcome": "Bienvenido de nuevo,",
+    "welcomeGuest": "Bienvenido",
+    "unread": "{count, plural, one {# tema sin leer} many {# temas sin leer} other {# temas sin leer}}",
+    "friends": "{count, plural, one {# amigo en línea} many {# amigos en línea} other {# amigos en línea}}",
+    "friendsPlaying": "{count, plural, one {# juega en {server}} many {# juegan en {server}} other {# juegan en {server}}}",
+    "rank": "Rango: {rank}",
+    "level": "Nivel {level}",
+    "units": {
+      "xp": "XP",
+      "posts": "mensajes",
+      "reputation": "reputación"
+    },
+    "myProfile": "Mi perfil",
+    "playersOnServers": "{count, plural, one {# jugador en los servidores} many {# jugadores en los servidores} other {# jugadores en los servidores}}",
+    "allActivity": "Toda la actividad",
+    "cards": "Paneles de la consola",
+    "card": "Panel {n} de {total}",
+    "feed": {
+      "title": "Actividad en vivo",
+      "tabs": {
+        "all": "Todo",
+        "forum": "Foro",
+        "servers": "Servidores",
+        "mix": "Mix"
+      },
+      "kinds": {
+        "topic": "creó el tema «{topic}»",
+        "reply": "respondió en «{topic}»",
+        "status": "publicó un estado",
+        "member": "se unió a la comunidad",
+        "server": "entró en {server}",
+        "mix": "ganó en {server} ({score})",
+        "mixElo": "ganó en {server} ({score}) · {elo} ELO"
+      },
+      "tags": {
+        "forum": "FORO",
+        "server": "SERVIDOR",
+        "mix": "MIX",
+        "new": "NUEVO"
+      },
+      "empty": "Nada nuevo por ahora."
+    },
+    "live": {
+      "title": "En vivo",
+      "badge": "EN VIVO",
+      "round": "ronda {round}",
+      "score": "Marcador {a} a {b}",
+      "watch": "Ver (HLTV)",
+      "connect": "Conectarse",
+      "all": "Todas las partidas",
+      "nothing": "No hay ninguna partida en vivo ahora.",
+      "featured": "Destacado",
+      "noFeatured": "Aún no hay temas destacados.",
+      "matches": "Partidas en vivo ({count})"
+    },
+    "top": {
+      "title": "Top",
+      "metricLabel": "Clasificación por",
+      "periodLabel": "Periodo",
+      "metrics": {
+        "posts": "Publicadores",
+        "topics": "Temas",
+        "reputation": "Reputación",
+        "online": "Tiempo en línea",
+        "players": "Jugadores",
+        "clans": "Clanes"
+      },
+      "widgetMetrics": {
+        "posts": "Mensajes",
+        "topics": "Temas",
+        "reputation": "Reputación",
+        "online": "Tiempo en línea",
+        "players": "Jugadores",
+        "clans": "Clanes"
+      },
+      "periods": {
+        "day": "Hoy",
+        "week": "Sem.",
+        "month": "Mes",
+        "year": "Año",
+        "all": "Todo"
+      },
+      "places": {
+        "gold": "Puesto 1, oro",
+        "silver": "Puesto 2, plata",
+        "bronze": "Puesto 3, bronce"
+      },
+      "place": "Puesto {rank}",
+      "values": {
+        "posts": "{count, plural, one {# mensaje} many {# mensajes} other {# mensajes}}",
+        "topics": "{count, plural, one {# tema} many {# temas} other {# temas}}",
+        "reputation": "+{value}",
+        "players": "ELO {value}",
+        "clans": "{value} pts"
+      },
+      "empty": "Nadie en la clasificación para este periodo.",
+      "message": "Enviar un mensaje a {name}",
+      "you": "Tú: puesto {rank} · {value}",
+      "youNone": "Aún no estás en la clasificación.",
+      "full": "Clasificación completa"
+    },
+    "servers": {
+      "strip": "{name}, {players} de {max} jugadores, {map}",
+      "offline": "{name}, desconectado",
+      "off": "desconectado",
+      "playNow": "Jugar ahora"
     }
   },
   "groups": {

@@ -54,6 +54,8 @@ export class GcsPresenceService {
       redis: Redis;
       persistRecord?: (r: GcsPresenceRecord) => Promise<void>;
       loadRecord?: () => Promise<GcsPresenceRecord | null>;
+      /** Un semn de prezență al unui membru (ex. timpul online pe zile); erorile nu opresc prezența. */
+      onUserTouch?: (userId: string, now: number) => Promise<unknown>;
     },
   ) {}
 
@@ -61,6 +63,11 @@ export class GcsPresenceService {
     await this.ensureRecord();
     const [kind, id] = "userId" in viewer ? ["u", viewer.userId] : ["g", viewer.guestId];
     const record = Number(await this.deps.redis.eval(TOUCH_SCRIPT, 3, USERS_KEY, GUESTS_KEY, RECORD_KEY, kind, id, now, PRESENCE_WINDOW_MS));
+    if ("userId" in viewer && this.deps.onUserTouch) {
+      await this.deps.onUserTouch(viewer.userId, now).catch((error: unknown) => {
+        console.error("[gcs] timpul online nu a putut fi notat", error);
+      });
+    }
     if (record > 0 && this.deps.persistRecord) {
       await this.deps.persistRecord({ count: record, at: new Date(now) }).catch((error: unknown) => {
         console.error("[gcs] salvarea recordului de prezență a eșuat", error);

@@ -74,6 +74,7 @@ export * from "./stats/service";
 export * from "./translate/providers";
 export * from "./translate/service";
 export * from "./themes/settings";
+export * from "./themes/headerBuilder";
 export * from "./themes/css";
 export * from "./themes/service";
 export * from "./themes/files";

@@ -34,7 +34,7 @@ export default async function AcpMenuManagerPage() {
   };
   collect(items);
   const autoLabels = Object.fromEntries([...keys].map((k) => [k, tAll.has(k) ? tAll(k) : k]));
-  const keysOf = ["add", "addChild", "label", "autoLabel", "href", "icon", "iconSearch", "iconNone", "iconNoResults", "groups", "groupsHint", "newTab", "enabled", "up", "down", "remove", "save", "saved", "newItem"] as const;
+  const keysOf = ["add", "addChild", "label", "autoLabel", "href", "icon", "iconSearch", "iconNone", "iconNoResults", "groups", "groupsHint", "newTab", "enabled", "up", "down", "remove", "save", "saved", "newItem", "mega", "description", "descriptionHint", "badge", "badgeHint"] as const;
   return (
     <>
       <GcsAcpTitle icon="fa-solid fa-bars-staggered">

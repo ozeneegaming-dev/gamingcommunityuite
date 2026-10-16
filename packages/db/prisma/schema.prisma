@@ -135,6 +135,8 @@ model User {
   chatProProfile          ChatProProfile?
   chatProStats            ChatProDailyStat[]
   chatProWins             ChatProWinner[]
+  /// Timpul online pe zile (clasamentul „Timp online”, Hero Cockpit).
+  onlineDays              MemberOnlineDay[]
 
   @@index([primaryGroupId])
   @@map("users")
@@ -1346,16 +1348,20 @@ model App {
 
 /// Meniul din header. `label`: { "ro": "...", "en": "..." } sau { "key": "cheie de traducere" } pentru cele implicite.
 model NavItem {
-  id       Int     @id @default(autoincrement())
-  parentId Int?
-  position Int     @default(0)
-  label    Json
-  icon     String?
-  href     String?
-  appKey   String?
-  groups   Int[]
-  newTab   Boolean @default(false)
-  enabled  Boolean @default(true)
+  id          Int     @id @default(autoincrement())
+  parentId    Int?
+  position    Int     @default(0)
+  label       Json
+  /// Descrierea de un rând din mega meniu: { "ro": "...", "en": "..." } (null = cea implicită, după cheia etichetei).
+  description Json?
+  /// Insigna fixă din mega meniu (ex. „NOU”); insignele live (online, live) vin din aplicații.
+  badge       String?
+  icon        String?
+  href        String?
+  appKey      String?
+  groups      Int[]
+  newTab      Boolean @default(false)
+  enabled     Boolean @default(true)
 
   parent   NavItem?  @relation("NavTree", fields: [parentId], references: [id], onDelete: Cascade)
   children NavItem[] @relation("NavTree")
@@ -1544,6 +1550,20 @@ model ChatProDailyStat {
   @@id([userId, day])
   @@index([day])
   @@map("chat_pro_daily_stats")
+}
+
+/// Timpul online al unui membru într-o zi (`day` = YYYY-MM-DD în fusul orar al site-ului), în secunde: totalurile
+/// adunate din semnele de prezență (specul 2026-10-10-hero-cockpit §4).
+model MemberOnlineDay {
+  userId  String
+  day     String
+  seconds Int    @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, day])
+  @@index([day])
+  @@map("member_online_days")
 }
 
 /// Câștigătorul unei perioade a clasamentului (`periodStart` – `periodEnd`, zile YYYY-MM-DD, inclusiv).

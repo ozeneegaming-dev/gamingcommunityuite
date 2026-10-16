@@ -60,6 +60,26 @@
     "crumbs": "Unde te afli",
     "collapse": "Restrânge {title}",
     "expand": "Extinde {title}",
+    "navDesc": {
+      "forum": "Discuțiile comunității, pe categorii",
+      "chat": "Discută live cu comunitatea",
+      "members": "Caută membri după nume, grup sau joc",
+      "staff": "Echipa, responsabilitățile și contactul",
+      "activity": "Tot ce s-a întâmplat recent pe site",
+      "membersAll": "Lista completă a membrilor",
+      "membersOnline": "Cine e pe site chiar acum",
+      "leaderboard": "Cei mai activi membri și top-urile",
+      "vip": "Planuri, beneficii și ce primești",
+      "rules": "Regulile forumului și ale serverelor",
+      "servers": "Status live, jucători, conectare dintr-un click",
+      "clans": "Echipe, recrutări și războaie între clanuri",
+      "serversAll": "Status live, jucători, conectare dintr-un click",
+      "serversLeaderboard": "Top kills, ore jucate, ELO pe sezon",
+      "serversMatches": "Meciuri live, ELO și istoricul meciurilor",
+      "bans": "Lista sancțiunilor și contestațiile",
+      "serverAdmins": "Cine din staff e pe servere",
+      "serverTickets": "Contestă o sancțiune sau raportează un jucător"
+    },
     "skin": "Tema forumului"
   },
   "auth": {
@@ -1441,7 +1461,12 @@
       "remove": "Șterge",
       "save": "Salvează meniul",
       "saved": "Meniul a fost salvat.",
-      "newItem": "Item nou"
+      "newItem": "Item nou",
+      "mega": "Mega meniu",
+      "description": "Descriere",
+      "descriptionHint": "Un rând sub titlu în mega meniu (designul Nova). Gol = descrierea implicită a itemilor automați.",
+      "badge": "Insignă",
+      "badgeHint": "ex. NOU"
     },
     "languages": {
       "title": "Limbile active",
@@ -2780,6 +2805,9 @@
         "chat_pro": {
           "days": "Zile cu mesaje în clasamentul chat-ului",
           "wins": "Perioade câștigate în chat"
+        },
+        "online_time": {
+          "days": "Zile cu timp online în clasament"
         }
       },
       "steps": {
@@ -2796,7 +2824,8 @@
         "notifications": "Notificări",
         "account": "Date de cont",
         "files": "Fișiere",
-        "chat_pro": "Chat Pro"
+        "chat_pro": "Chat Pro",
+        "online_time": "Timp online"
       },
       "notes": {
         "topic_replies": "Topicurile lui au {count} răspunsuri ale altor membri: în modul „Șterge și conținutul” se șterg și ele.",
@@ -3319,7 +3348,9 @@
       "notifications": "Notificări",
       "language": "Limbă și fus orar",
       "signature": "Semnătură",
-      "security": "Securitate"
+      "security": "Securitate",
+      "following": "Ce urmăresc",
+      "attachments": "Atașamentele mele"
     },
     "appearance": {
       "title": "Aspect",
@@ -3589,6 +3620,19 @@
       "bar_seconds": "Rotirea barei de anunțuri (secunde)",
       "emote_max_kb": "Mărimea maximă a unui emoticon (KB)",
       "emote_max_side": "Latura maximă a unui emoticon (px)"
+    },
+    "following": {
+      "title": "Ce urmăresc",
+      "intro": "Membrii, topicurile și forumurile pe care le urmărești (primești notificări despre ele).",
+      "empty": "Nu urmărești nimic încă.",
+      "members": "{count, plural, one {Membri (#)} few {Membri (#)} other {Membri (#)}}",
+      "topics": "{count, plural, one {Topicuri (#)} few {Topicuri (#)} other {Topicuri (#)}}",
+      "forums": "{count, plural, one {Forumuri (#)} few {Forumuri (#)} other {Forumuri (#)}}"
+    },
+    "attachments": {
+      "title": "Atașamentele mele",
+      "intro": "{count, plural, one {Ai încărcat # fișier.} few {Ai încărcat # fișiere.} other {Ai încărcat # de fișiere.}} Cele mai noi apar primele.",
+      "empty": "Nu ai încărcat niciun fișier încă."
     },
     "groups_pro": {
       "legend_categories": "Categoriile legendei grupurilor"
@@ -4508,7 +4552,9 @@
       "sidebar": "Bară laterală",
       "avatars": "Avatare",
       "buttons": "Butoane",
-      "design": "Design"
+      "design": "Design",
+      "headerBuilder": "Constructor antet",
+      "cockpit": "Consola Hero Cockpit"
     },
     "tabs": {
       "settings": "Setări",
@@ -4523,7 +4569,13 @@
       "favicon": "Favicon",
       "bands": "Benzile titlurilor",
       "effects": "Efecte",
-      "headerImage": "Imaginea antetului"
+      "headerImage": "Imaginea antetului",
+      "builderRows": "Rândurile",
+      "builderMenus": "Meniurile",
+      "builderCustom": "Text propriu",
+      "cockpitPanels": "Panourile",
+      "cockpitImage": "Fundalul consolei",
+      "mobileBar": "Bara de jos"
     },
     "images": {
       "logo": "Logo (mod întunecat)",
@@ -4534,7 +4586,8 @@
       "none": "Nicio imagine",
       "upload": "Încarcă",
       "remove": "Șterge",
-      "headerImage": "Fundalul antetului"
+      "headerImage": "Fundalul antetului",
+      "cockpitImage": "Fundalul consolei"
     },
     "tokens": {
       "accent": "Culoarea primară",
@@ -4779,6 +4832,116 @@
       "header_crumbs": {
         "label": "Rândul cu breadcrumb și căutare",
         "help": "Sub meniu: unde te afli pe site și câmpul de căutare."
+      },
+      "header_rowTop": {
+        "label": "Înălțimea barei de sus"
+      },
+      "header_rowMain": {
+        "label": "Înălțimea rândului principal"
+      },
+      "header_rowBottom": {
+        "label": "Înălțimea rândului secundar"
+      },
+      "header_compact": {
+        "label": "Compact la derulare",
+        "help": "După 120 px, antetul se strânge într-o bară lipită sus (logo, meniu, căutare)."
+      },
+      "header_hideOnScroll": {
+        "label": "Ascuns la derularea în jos",
+        "help": "Antetul dispare când derulezi în jos și revine când derulezi în sus."
+      },
+      "header_dropdowns": {
+        "label": "Meniurile se deschid",
+        "options": {
+          "click": "La click",
+          "hover": "La hover"
+        }
+      },
+      "header_mega": {
+        "label": "Mega meniuri",
+        "help": "Submeniurile pe 2 coloane, cu descrieri, insigne live și un rând de jos."
+      },
+      "header_navAlign": {
+        "label": "Alinierea meniului",
+        "options": {
+          "left": "Stânga",
+          "center": "Centru",
+          "right": "Dreapta"
+        }
+      },
+      "header_customHtml": {
+        "label": "Text / HTML personalizat",
+        "help": "Elementul „Text/HTML”: etichetele simple sunt păstrate, scripturile și stilurile sunt scoase."
+      },
+      "mobileNav_placement": {
+        "label": "Iconițele pe mobil",
+        "help": "Meniul, contul, căutarea și notificările stau în antet sau într-o bară jos.",
+        "options": {
+          "header": "În antet",
+          "bottom": "În bara de jos"
+        }
+      },
+      "mobileNav_labels": {
+        "label": "Textul sub iconițele barei de jos"
+      },
+      "mobileNav_items": {
+        "label": "Elementele barei de jos",
+        "help": "Cel mult 5; „Creează” stă rotund în mijloc.",
+        "options": {
+          "home": "Acasă",
+          "forum": "Forum",
+          "servers": "Servere",
+          "create": "Creează",
+          "messages": "Mesaje",
+          "notifications": "Notificări",
+          "search": "Căutare",
+          "menu": "Meniu",
+          "account": "Cont",
+          "chat": "Chat",
+          "activity": "Activitate",
+          "clans": "Clanuri"
+        }
+      },
+      "cockpit_enabled": {
+        "label": "Consola sub antet",
+        "help": "Banda personală, cele 3 panouri și benzile serverelor."
+      },
+      "cockpit_pages": {
+        "label": "Unde apare",
+        "options": {
+          "home": "Doar pe pagina principală",
+          "all": "Pe toate paginile"
+        }
+      },
+      "cockpit_left": {
+        "label": "Panoul din stânga",
+        "options": {
+          "feed": "Feed live",
+          "live": "Live acum",
+          "top": "Top",
+          "featured": "Recomandate",
+          "none": "Nimic"
+        }
+      },
+      "cockpit_center": {
+        "label": "Panoul din centru",
+        "options": {
+          "feed": "Feed live",
+          "live": "Live acum",
+          "top": "Top",
+          "featured": "Recomandate",
+          "none": "Nimic"
+        }
+      },
+      "cockpit_right": {
+        "label": "Panoul din dreapta",
+        "options": {
+          "feed": "Feed live",
+          "live": "Live acum",
+          "top": "Top",
+          "featured": "Recomandate",
+          "none": "Nimic"
+        }
       }
     },
     "status": {
@@ -4801,6 +4964,76 @@
       "body": "Tema are modificări nepublicate. Dacă ieși fără salvare, ele se pierd.",
       "leave": "Ieși fără salvare",
       "stay": "Continuă editarea"
+    },
+    "barUp": "Mută mai sus: {item}",
+    "barDown": "Mută mai jos: {item}",
+    "barRemove": "Scoate din bară: {item}",
+    "barAdd": "Adaugă în bară…",
+    "builder": {
+      "presets": "Presetări",
+      "presetNames": {
+        "classic": "Nova clasic",
+        "cockpit": "Cockpit",
+        "centered": "Centrat",
+        "side": "Panou lateral",
+        "esports": "Esports"
+      },
+      "presetHelp": {
+        "classic": "Antetul de până acum: logo, meniu și iconițele pe un rând, apoi breadcrumb-ul și căutarea.",
+        "cockpit": "Logo și acțiunile pe rândul 1, meniul cu mega meniuri pe rândul 2; pe mobil, bara de jos.",
+        "centered": "Logo-ul centrat deasupra meniului.",
+        "side": "Logo-ul și meniul într-un panou lateral, pe desktop.",
+        "esports": "Rețelele sociale și contul sus, meniul împărțit în jurul logo-ului din crestătura centrală."
+      },
+      "custom": "Aspect propriu, pornit de la „{preset}”.",
+      "devices": "Dispozitive",
+      "deviceNames": {
+        "desktop": "Desktop",
+        "tablet": "Tabletă",
+        "mobile": "Mobil"
+      },
+      "rows": {
+        "top": "Bara de sus",
+        "main": "Rândul principal",
+        "bottom": "Rândul secundar"
+      },
+      "zones": {
+        "left": "Stânga",
+        "center": "Centru",
+        "right": "Dreapta"
+      },
+      "unused": "Nefolosite",
+      "allUsed": "Toate elementele sunt în antet.",
+      "here": "Mută aici",
+      "toTray": "Scoate din antet",
+      "keyboard": "Trage elementele între zone. Cu tastatura: Enter alege, săgețile mută, Delete scoate.",
+      "chipLabel": "{element}: trage sau folosește săgețile",
+      "remove": "Scoate „{element}” din antet",
+      "moved": "„{element}” mutat în {place}.",
+      "removed": "„{element}” scos din antet.",
+      "split": "Meniul din dreapta logo-ului",
+      "splitAuto": "Implicit, a doua jumătate a meniului stă în dreapta. Bifează itemii pe care îi vrei acolo.",
+      "splitHelp": "Itemii bifați stau în dreapta logo-ului, restul în stânga.",
+      "splitReset": "Împarte în jumătăți",
+      "elements": {
+        "logo": "Logo",
+        "nav": "Navigație",
+        "navRight": "Navigație (dreapta)",
+        "search": "Căutare (iconiță)",
+        "searchField": "Căutare (câmp)",
+        "create": "Creează",
+        "messages": "Mesaje",
+        "notifications": "Notificări",
+        "account": "Cont",
+        "breadcrumb": "Breadcrumb",
+        "serversLive": "Status servere live",
+        "social": "Rețele sociale",
+        "themeToggle": "Comutator temă",
+        "language": "Limbă",
+        "custom": "Text/HTML",
+        "chat_button": "Chat",
+        "servers_playNow": "Joacă acum"
+      }
     }
   },
   "widgets": {
@@ -4810,7 +5043,8 @@
       "newMembers": "Membri noi",
       "statsPanel": "Panou de statistici",
       "onlineDay": "Cine a fost online (24 h)",
-      "groupLegend": "Legenda grupurilor"
+      "groupLegend": "Legenda grupurilor",
+      "ranking": "Clasament"
     },
     "forums": {
       "stats": "Statistici",
@@ -4830,12 +5064,15 @@
       "period": "Perioada",
       "channel": "Camera de chat",
       "icon": "Iconiță (ex. fa-solid fa-star; gol = cea implicită)",
-      "game": "Jocul"
+      "game": "Jocul",
+      "metric": "Măsura afișată la început"
     },
     "periods": {
       "week": "săptămâna aceasta",
       "month": "luna aceasta",
-      "all": "total"
+      "all": "total",
+      "day": "azi",
+      "year": "anul acesta"
     },
     "empty": "Nimic deocamdată.",
     "posts": "{count, plural, one {# postare} few {# postări} other {# de postări}}",
@@ -4846,7 +5083,8 @@
         "statsPanel": "Plăcile cu cifrele comunității, cine e online și legenda grupurilor.",
         "onlineDay": "Membrii care au fost activi în ultimele 24 de ore.",
         "groupLegend": "Grupurile comunității, cu stilul numelor lor.",
-        "newMembers": "Cei mai noi membri înregistrați."
+        "newMembers": "Cei mai noi membri înregistrați.",
+        "ranking": "Top membri după postări, topicuri, reputație sau timp online, pe zi, săptămână, lună, an sau tot timpul."
       },
       "forums": {
         "stats": "Numărul de topicuri, postări și membri.",
@@ -4884,6 +5122,12 @@
       "prev": "Înapoi",
       "next": "Înainte",
       "read": "Citește"
+    },
+    "metrics": {
+      "posts": "Postări",
+      "topics": "Topicuri",
+      "reputation": "Reputație",
+      "online": "Timp online"
     }
   },
   "pageEditor": {
@@ -5431,7 +5675,9 @@
     "lead": {
       "week": "Cei mai activi membri din ultimele 7 zile, după {metric}.",
       "month": "Cei mai activi membri din ultimele 30 de zile, după {metric}.",
-      "all": "Cei mai buni membri dintotdeauna, după {metric}."
+      "all": "Cei mai buni membri dintotdeauna, după {metric}.",
+      "day": "Cei mai activi membri de azi, după {metric}.",
+      "year": "Cei mai activi membri din ultimul an, după {metric}."
     },
     "metricLabel": "Măsura",
     "periodLabel": "Perioada",
@@ -5439,18 +5685,24 @@
       "reputation": "Reputație",
       "posts": "Postări",
       "xp": "XP",
-      "solutions": "Soluții"
+      "solutions": "Soluții",
+      "topics": "Topicuri",
+      "online": "Timp online"
     },
     "metricLower": {
       "reputation": "reputație",
       "posts": "postări",
       "xp": "XP",
-      "solutions": "soluții"
+      "solutions": "soluții",
+      "topics": "topicuri",
+      "online": "timpul online"
     },
     "period": {
       "week": "Săptămâna",
       "month": "Luna",
-      "all": "Tot timpul"
+      "all": "Tot timpul",
+      "day": "Azi",
+      "year": "Anul"
     },
     "podium": "Podiumul",
     "place": "Locul {rank}",
@@ -6782,6 +7034,294 @@
       "prev": "Pagina anterioară",
       "next": "Pagina următoare",
       "page": "Pagina {page} din {pages}"
+    }
+  },
+  "header": {
+    "or": "sau",
+    "chat": "Chat",
+    "playNow": "Joacă acum",
+    "social": {
+      "follow": "Urmărește-ne"
+    },
+    "search": {
+      "open": "Căutare (Ctrl K)",
+      "dialog": "Căutare",
+      "close": "Închide căutarea",
+      "placeholder": "Caută topicuri, membri, servere, jucători…",
+      "scopeLabel": "Unde cauți",
+      "scopes": {
+        "all": "Tot",
+        "topics": "Topicuri",
+        "posts": "Postări",
+        "members": "Membri",
+        "servers": "Servere",
+        "players": "Jucători",
+        "clans": "Clanuri"
+      },
+      "filters": "Filtre",
+      "forum": "Forum",
+      "forumAll": "Toate",
+      "author": "Autor",
+      "period": "Perioadă",
+      "periods": {
+        "any": "Oricând",
+        "day": "Azi",
+        "week": "Săptămâna asta",
+        "month": "Luna asta",
+        "year": "Anul ăsta"
+      },
+      "titles": "Doar în titluri",
+      "quick": "Rezultate rapide",
+      "recent": "Căutări recente",
+      "noRecent": "Nicio căutare încă.",
+      "typing": "Scrie cel puțin 2 litere.",
+      "loading": "Se caută…",
+      "empty": "Niciun rezultat rapid. Apasă Enter pentru căutarea completă.",
+      "limited": "Ai căutat de prea multe ori; mai încearcă peste un minut.",
+      "hints": "Enter = toate rezultatele · ↑↓ = navighează · Esc = închide",
+      "advanced": "Căutare avansată",
+      "tags": {
+        "topic": "TOPIC",
+        "post": "POSTARE",
+        "member": "MEMBRU",
+        "server": "SERVER",
+        "player": "JUCĂTOR",
+        "clan": "CLAN"
+      }
+    },
+    "create": {
+      "button": "Creează",
+      "menu": "Creează",
+      "loading": "Se încarcă…",
+      "empty": "Nu ai ce crea aici.",
+      "forumsHeading": "Topic nou în…",
+      "items": {
+        "topicIn": "Topic nou în {forum}",
+        "message": "Mesaj privat",
+        "clan": "Clan nou",
+        "ticket": "Contestație sau reclamație",
+        "sanction": "Sancțiune pe server",
+        "forum": "{forum}"
+      }
+    },
+    "messages": {
+      "label": "Mesaje",
+      "unread": "{count, plural, one {Mesaje, # necitit} few {Mesaje, # necitite} other {Mesaje, # de necitite}}",
+      "new": "Mesaj nou",
+      "empty": "Nicio conversație încă.",
+      "seeAll": "Toate mesajele"
+    },
+    "account": {
+      "menu": "Meniul contului",
+      "ring": "Meniul contului, nivel {level}, {percent}% până la nivelul {next}",
+      "ringMax": "Meniul contului, nivel {level}",
+      "levelShort": "NV {level}",
+      "toNext": "{percent}% până la Nv {level}",
+      "level": "Nivel {level}",
+      "levelRank": "Nivel {level} · {rank}",
+      "remaining": {
+        "xp": "{count, plural, one {Mai ai # XP până la rangul „{rank}”} few {Mai ai # XP până la rangul „{rank}”} other {Mai ai # de XP până la rangul „{rank}”}}",
+        "posts": "{count, plural, one {Mai ai # postare până la rangul „{rank}”} few {Mai ai # postări până la rangul „{rank}”} other {Mai ai # de postări până la rangul „{rank}”}}",
+        "reputation": "{count, plural, one {Mai ai # punct de reputație până la rangul „{rank}”} few {Mai ai # puncte de reputație până la rangul „{rank}”} other {Mai ai # de puncte de reputație până la rangul „{rank}”}}"
+      },
+      "maxLevel": "Ai atins cel mai înalt rang.",
+      "units": {
+        "xp": "XP",
+        "posts": "postări",
+        "reputation": "reputație"
+      },
+      "stats": {
+        "posts": "Postări",
+        "reputation": "Reputație",
+        "elo": "ELO mix"
+      },
+      "status": {
+        "label": "Status",
+        "online": "Online",
+        "invisible": "Invizibil"
+      },
+      "sections": {
+        "content": "Conținutul meu",
+        "gaming": "Gaming",
+        "settings": "Setări",
+        "staff": "Staff"
+      },
+      "items": {
+        "profile": "Profilul meu",
+        "content": "Conținutul meu",
+        "attachments": "Atașamentele mele",
+        "following": "Ce urmăresc",
+        "player": "Profil jucător și statistici",
+        "clan": "Clanul meu",
+        "linked": "Conturi legate",
+        "account": "Setări cont",
+        "notifications": "Notificări",
+        "privacy": "Confidențialitate și ignorați",
+        "vipStudio": "Studio VIP",
+        "moderation": "Coada de moderare",
+        "themeEditor": "Editează tema",
+        "pageEditor": "Editează pagina",
+        "acp": "Panoul de administrare (ACP)"
+      },
+      "theme": {
+        "label": "Tema",
+        "dark": "Întunecată",
+        "light": "Luminoasă"
+      },
+      "language": "Limba",
+      "logout": "Ieșire"
+    },
+    "nav": {
+      "badges": {
+        "online": "{count} ONLINE",
+        "live": "{count} LIVE"
+      },
+      "footer": {
+        "servers": "{servers, plural, one {# server} few {# servere} other {# de servere}} · {players, plural, one {# jucător} few {# jucători} other {# de jucători}} online acum",
+        "community": "{members, plural, one {# membru} few {# membri} other {# de membri}} · {online} online acum",
+        "vip": "Susține comunitatea și primește beneficii pe site și pe servere"
+      },
+      "cta": {
+        "online": "Vezi cine e online",
+        "vip": "Devino VIP"
+      }
+    },
+    "live": {
+      "servers": "{count, plural, one {# server online} few {# servere online} other {# de servere online}}",
+      "players": "{count, plural, one {# jucător} few {# jucători} other {# de jucători}}",
+      "matches": "{count, plural, one {# meci live} few {# meciuri live} other {# de meciuri live}}"
+    },
+    "theme": {
+      "toDark": "Comută pe tema întunecată",
+      "toLight": "Comută pe tema luminoasă"
+    },
+    "mobileBar": {
+      "label": "Navigare",
+      "items": {
+        "home": "Acasă",
+        "forum": "Forum",
+        "servers": "Servere",
+        "create": "Creează",
+        "messages": "Mesaje",
+        "notifications": "Notificări",
+        "search": "Căutare",
+        "menu": "Meniu",
+        "account": "Cont",
+        "chat": "Chat",
+        "activity": "Activitate",
+        "clans": "Clanuri"
+      }
+    }
+  },
+  "cockpit": {
+    "label": "Consola comunității",
+    "title": "Acum în comunitate",
+    "welcome": "Bine ai revenit,",
+    "welcomeGuest": "Bine ai venit",
+    "unread": "{count, plural, one {# topic necitit} few {# topicuri necitite} other {# de topicuri necitite}}",
+    "friends": "{count, plural, one {# prieten online} few {# prieteni online} other {# de prieteni online}}",
+    "friendsPlaying": "{count, plural, one {# joacă pe {server}} few {# joacă pe {server}} other {# joacă pe {server}}}",
+    "rank": "Rang: {rank}",
+    "level": "Nivel {level}",
+    "units": {
+      "xp": "XP",
+      "posts": "postări",
+      "reputation": "reputație"
+    },
+    "myProfile": "Profilul meu",
+    "playersOnServers": "{count, plural, one {# jucător pe servere} few {# jucători pe servere} other {# de jucători pe servere}}",
+    "allActivity": "Toată activitatea",
+    "cards": "Panourile consolei",
+    "card": "Panoul {n} din {total}",
+    "feed": {
+      "title": "Feed live",
+      "tabs": {
+        "all": "Tot",
+        "forum": "Forum",
+        "servers": "Servere",
+        "mix": "Mix"
+      },
+      "kinds": {
+        "topic": "a creat topicul „{topic}”",
+        "reply": "a răspuns în „{topic}”",
+        "status": "a scris un status",
+        "member": "s-a alăturat comunității",
+        "server": "a intrat pe {server}",
+        "mix": "a câștigat pe {server} ({score})",
+        "mixElo": "a câștigat pe {server} ({score}) · {elo} ELO"
+      },
+      "tags": {
+        "forum": "FORUM",
+        "server": "SERVER",
+        "mix": "MIX",
+        "new": "NOU"
+      },
+      "empty": "Nimic nou deocamdată."
+    },
+    "live": {
+      "title": "Live acum",
+      "badge": "LIVE",
+      "round": "runda {round}",
+      "score": "Scor {a} la {b}",
+      "watch": "Urmărește (HLTV)",
+      "connect": "Conectează-te",
+      "all": "Toate meciurile",
+      "nothing": "Niciun meci live acum.",
+      "featured": "Recomandat",
+      "noFeatured": "Niciun topic recomandat încă.",
+      "matches": "Meciuri live ({count})"
+    },
+    "top": {
+      "title": "Top",
+      "metricLabel": "Clasament după",
+      "periodLabel": "Perioada",
+      "metrics": {
+        "posts": "Postatori",
+        "topics": "Topicuri",
+        "reputation": "Reputație",
+        "online": "Timp online",
+        "players": "Jucători",
+        "clans": "Clanuri"
+      },
+      "widgetMetrics": {
+        "posts": "Postări",
+        "topics": "Topicuri",
+        "reputation": "Reputație",
+        "online": "Timp online",
+        "players": "Jucători",
+        "clans": "Clanuri"
+      },
+      "periods": {
+        "day": "Azi",
+        "week": "Săpt.",
+        "month": "Lună",
+        "year": "An",
+        "all": "Tot"
+      },
+      "places": {
+        "gold": "Locul 1, aur",
+        "silver": "Locul 2, argint",
+        "bronze": "Locul 3, bronz"
+      },
+      "place": "Locul {rank}",
+      "values": {
+        "posts": "{count, plural, one {# postare} few {# postări} other {# de postări}}",
+        "topics": "{count, plural, one {# topic} few {# topicuri} other {# de topicuri}}",
+        "reputation": "+{value}",
+        "players": "ELO {value}",
+        "clans": "{value} pct."
+      },
+      "empty": "Nimeni în clasament pentru perioada asta.",
+      "message": "Trimite mesaj lui {name}",
+      "you": "Tu: locul {rank} · {value}",
+      "youNone": "Încă nu ești în clasament.",
+      "full": "Clasament complet"
+    },
+    "servers": {
+      "strip": "{name}, {players} din {max} jucători, {map}",
+      "offline": "{name}, offline",
+      "off": "offline",
+      "playNow": "Joacă acum"
     }
   },
   "groups": {
