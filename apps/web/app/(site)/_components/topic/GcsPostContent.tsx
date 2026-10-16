@@ -16,7 +16,7 @@ import {
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import type { GcsReactionCount, GcsReactionView } from "@gcs/core";
-import { GcsBadge, GcsButton, GcsDropdown, GcsIconSvg, type GcsDropdownItem } from "@gcs/ui";
+import { GcsBadge, GcsButton, GcsDropdown, GcsIconSvg, GcsModal, type GcsDropdownItem } from "@gcs/ui";
 import { GcsEditor, type GcsEditorHandle } from "@gcs/ui/editor";
 import type { JSONContent } from "@tiptap/core";
 import { useRouter } from "next/navigation";
@@ -95,6 +95,8 @@ export function GcsPostContent(props: GcsPostContentProps) {
   const errorMessage = useErrorMessage();
   const router = useRouter();
   const [pending, start] = useTransition();
+  /** Confirmarea în pagină a unei acțiuni de moderare pe postare (ascunderea, ștergerea). */
+  const [confirm, setConfirm] = useState<"hide" | "delete" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [reactions, setReactions] = useState(props.reactions);
   const [mine, setMine] = useState(props.myReaction);
@@ -197,7 +199,8 @@ export function GcsPostContent(props: GcsPostContentProps) {
             kind: "action" as const,
             label: t("hide"),
             icon: <GcsIconSvg icon={faEyeSlash} />,
-            onSelect: () => window.confirm(t("confirmHide")) && run(() => hidePostAction({ postId: post.id })),
+            // Confirmarea, în pagină (nu `window.confirm`).
+            onSelect: () => setConfirm("hide"),
           },
         ]
       : []),
@@ -210,15 +213,56 @@ export function GcsPostContent(props: GcsPostContentProps) {
             kind: "action" as const,
             label: t("delete"),
             icon: <GcsIconSvg icon={faTrash} />,
-            onSelect: () => window.confirm(t("confirmDelete")) && run(() => deletePostAction({ postId: post.id })),
+            onSelect: () => setConfirm("delete"),
           },
         ]
       : []),
   ];
   const moreItems: GcsDropdownItem[] = [...userItems, ...(userItems.length > 0 && modItems.length > 0 ? [{ kind: "separator" as const }] : []), ...modItems];
 
+  const confirmAction = () => {
+    const action = confirm;
+    if (!action) return;
+    run(
+      () => (action === "hide" ? hidePostAction({ postId: post.id }) : deletePostAction({ postId: post.id })),
+      () => setConfirm(null),
+    );
+  };
+
   return (
     <div className="gcs-post__content">
+      {confirm && (
+        <GcsModal
+          title={t(confirm)}
+          icon={<GcsIconSvg icon={confirm === "hide" ? faEyeSlash : faTrash} />}
+          onClose={() => setConfirm(null)}
+          closeLabel={t("cancel")}
+          size="sm"
+        >
+          <p style={{ marginTop: 0 }} data-testid="gcs-post-confirm-text">
+            {t(confirm === "hide" ? "confirmHide" : "confirmDelete")}
+          </p>
+          {error && (
+            <p role="alert" className="gcs-notice gcs-notice--error">
+              {error}
+            </p>
+          )}
+          <div className="gcs-dialog__actions">
+            <GcsButton
+              variant="primary"
+              icon={<GcsIconSvg icon={confirm === "hide" ? faEyeSlash : faTrash} />}
+              loading={pending}
+              onClick={confirmAction}
+              data-testid={`gcs-post-${confirm}-confirm`}
+            >
+              {t(confirm)}
+            </GcsButton>
+            <GcsButton variant="ghost" onClick={() => setConfirm(null)}>
+              {t("cancel")}
+            </GcsButton>
+          </div>
+        </GcsModal>
+      )}
       <div className="gcs-post__head">
         <time dateTime={post.dateIso} className="gcs-post__date">
           <GcsIconSvg icon={faClock} />
@@ -274,7 +318,7 @@ export function GcsPostContent(props: GcsPostContentProps) {
                 <GcsButton variant="ghost" onClick={() => setEditing(null)}>
                   {t("cancel")}
                 </GcsButton>
-                <GcsButton variant="primary" onClick={saveEdit} disabled={pending}>
+                <GcsButton variant="primary" onClick={saveEdit} loading={pending}>
                   {t("save")}
                 </GcsButton>
               </span>

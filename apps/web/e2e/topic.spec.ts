@@ -83,9 +83,23 @@ test("autorul își editează postarea („Editat”) și și-o ascunde; alt mem
   await expect(reply).toContainText("Răspunsul 1 (corectat)");
   await expect(reply.getByText(/^Editat /)).toBeVisible();
 
-  page.once("dialog", (d) => void d.accept());
+  // „Ascunde” cere confirmarea într-un dialog din pagină (niciodată `window.confirm`).
+  let nativeDialog = false;
+  page.on("dialog", (d) => {
+    nativeDialog = true;
+    void d.dismiss();
+  });
   await reply.getByTestId("gcs-post-more").click();
   await reply.getByRole("menuitem", { name: "Ascunde" }).click();
+  const confirm = page.getByRole("dialog", { name: "Ascunde" });
+  await expect(confirm).toContainText("Ascunzi această postare?");
+  await confirm.getByRole("button", { name: "Anulează" }).last().click();
+  await expect(confirm).toHaveCount(0);
+  await expect(page.getByTestId("gcs-post")).toHaveCount(2);
+  await reply.getByTestId("gcs-post-more").click();
+  await reply.getByRole("menuitem", { name: "Ascunde" }).click();
+  await page.getByTestId("gcs-post-hide-confirm").click();
+  expect(nativeDialog).toBe(false);
   // O postare ascunsă o mai văd doar moderatorii (nici autorul).
   await expect(page.getByTestId("gcs-post")).toHaveCount(1);
 
