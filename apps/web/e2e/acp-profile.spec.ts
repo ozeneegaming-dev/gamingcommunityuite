@@ -46,8 +46,8 @@ test("un câmp nou „Discord tag” (doar membri) apare în setări și pe prof
   await expect(mara.getByTestId("gcs-settings-status")).toHaveText("Câmp obligatoriu");
 
   // Curățenie: câmpul obligatoriu nu trebuie să afecteze alte teste.
-  page.once("dialog", (d) => void d.accept());
   await card.getByRole("button", { name: "Șterge" }).click();
+  await page.getByTestId("gcs-confirm-ok").click();
   await expect(card).toHaveCount(0);
   await mara.close();
 });
@@ -75,8 +75,8 @@ test("acordarea „VIP Gold 30 de zile” din fișa membrului stilizează numele
     return name.getAttribute("class");
   }, { timeout: 2000, intervals: [200] }).toContain("gcs-name--vip_gold");
 
-  page.once("dialog", (d) => void d.accept());
   await vip.getByRole("button", { name: "Retrage VIP" }).click();
+  await page.getByTestId("gcs-confirm-ok").click();
   await expect(vip.getByTestId("gcs-acp-vip-active")).toHaveCount(0);
   await author.reload();
   await expect(name).toHaveClass(/gcs-name--member/);

@@ -9,6 +9,8 @@ import { GcsHoverCardHost } from "./_components/GcsHoverCardHost";
 import { GcsImageViewerHost } from "./_components/GcsImageViewerHost";
 import { GcsSiteFooter } from "./_components/GcsSiteFooter";
 import { GcsSiteHeader } from "./_components/GcsSiteHeader";
+import { GcsWhereBeacon } from "./_components/GcsWhereBeacon";
+import { passwordResetGate } from "@/lib/password-reset-gate";
 import { GcsNotificationToasts } from "./_components/notifications/GcsNotificationToasts";
 import { GcsRealtimeProvider } from "./_components/realtime/GcsRealtimeProvider";
 import { currentActor } from "@/lib/actor";
@@ -19,6 +21,8 @@ import { designClass } from "@/lib/theme-preview";
 
 export default async function SiteLayout({ children, modal }: { children: ReactNode; modal: ReactNode }) {
   const [t, locale, actor] = await Promise.all([getTranslations("hoverCard"), getLocale(), currentActor()]);
+  // Membri v2: resetarea parolei cerută de staff trimite membrul la Setări → Cont până o schimbă.
+  await passwordResetGate(actor.userId);
   // Conturile create prin Steam au un email placeholder: le cerem unul real (specul etapei 3, §8).
   const email = actor.userId ? (await services().db.user.findUnique({ where: { id: actor.userId }, select: { email: true } }))?.email : null;
   const [tb, alerts, tc, tp, safeMode, { preview, shown }, deletion, format, tv] = await Promise.all([
@@ -70,6 +74,8 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
         {children}
       </main>
       <GcsSiteFooter />
+      {/* Membri v2: pagina curentă pentru /online (cine e unde). */}
+      {!preview && <GcsWhereBeacon />}
       {modal}
       {/* În previzualizarea editoarelor (iframe) nu apar notificările adminului. */}
       {actor.userId && !preview && <GcsNotificationToasts toasts={alerts.toasts} sound={alerts.sound} closeLabel={tc("closeToast")} />}
