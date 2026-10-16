@@ -428,9 +428,11 @@ export const themeHasDesignDecor = (preset: string | undefined | null): boolean 
  * (doar luminoasă), același design (`preset: "nova"`), fiecare cu paleta ei, editată separat. Comutatorul lună / soare
  * trece de la una la alta (perechea din ACP → Aspect → Teme).
  */
-export const GCS_DARK_THEME_SETTINGS: GcsThemeSettings = { ...NOVA_THEME_SETTINGS, scheme: { default: "dark", toggle: false } };
+// Antetul „Standard” rămâne în flux, ca antetul designului de până acum (fără bara compactă lipită sus).
+const GCS_HEADER: GcsThemeSettings["header"] = { ...NOVA_THEME_SETTINGS.header, compact: false };
+export const GCS_DARK_THEME_SETTINGS: GcsThemeSettings = { ...NOVA_THEME_SETTINGS, header: GCS_HEADER, scheme: { default: "dark", toggle: false } };
 /** „GCS White”: paleta luminoasă a designului (modul e mereu „light”, deci paleta `light` e cea afișată). */
-export const GCS_WHITE_THEME_SETTINGS: GcsThemeSettings = { ...NOVA_THEME_SETTINGS, scheme: { default: "light", toggle: false } };
+export const GCS_WHITE_THEME_SETTINGS: GcsThemeSettings = { ...NOVA_THEME_SETTINGS, header: GCS_HEADER, scheme: { default: "light", toggle: false } };
 
 /** Modul unei teme cu un singur mod (fără comutatorul întunecat / luminos al aceleiași teme); altfel `null`. */
 export const themeSingleScheme = (s: Pick<GcsThemeSettings, "scheme">): "dark" | "light" | null =>

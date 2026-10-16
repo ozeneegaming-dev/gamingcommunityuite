@@ -129,6 +129,8 @@ export function GcsAccountMenu({
     });
   const editPage = () =>
     start(async () => {
+      // Meniul se închide, ca bara editorului și zonele paginii să rămână libere.
+      pop.close(false);
       const res = await openPageEditor({});
       if (!res.ok && res.error.params?.reason === "acp_gate") return router.push("/admin/reauth");
       if (!res.ok) return void gcsToast({ title: errorMessage(res.error) });

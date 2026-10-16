@@ -399,12 +399,13 @@ export class GcsThemeService {
     if (nova && !taken.has(GCS_DARK_THEME_KEY)) {
       const raw = nova.settings as Record<string, unknown>;
       const header = raw.header && typeof raw.header === "object" ? (raw.header as Record<string, unknown>) : null;
-      // Antetul „Standard” neatins primește și luna / soarele (comutatorul perechii), ca pe o instalare nouă.
+      // Antetul „Standard” neatins (fostul antet al designului, în flux) primește luna / soarele (comutatorul perechii)
+      // și rămâne în flux (fără bara compactă), ca pe o instalare nouă.
       const standard = header?.layout !== undefined && sameHeaderLayout(normalizeThemeSettings(raw).header.layout, legacyStandardLayout());
       const settings = {
         ...raw,
         scheme: { ...GCS_DARK_THEME_SETTINGS.scheme },
-        ...(standard && header ? { header: { ...header, layout: headerPreset("classic") } } : {}),
+        ...(standard && header ? { header: { ...header, layout: headerPreset("classic"), compact: false } } : {}),
       };
       await tx.theme.update({
         where: { id: nova.id },
