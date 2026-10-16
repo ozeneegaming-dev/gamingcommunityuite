@@ -118,11 +118,8 @@ export async function seedDefaults(db: PrismaClient, registry: GcsModuleRegistry
       if (m.seed) await m.seed({ tx, groupIds });
     }
 
-    // Valorile implicite ale notificărilor (etapa 4); cele schimbate din ACP rămân.
-    await tx.notificationDefault.createMany({
-      data: registry.notificationTypes().map((t) => ({ type: t.key, site: true, email: t.defaultEmail })),
-      skipDuplicates: true,
-    });
+    // Valorile implicite ale notificărilor (Notificări v2): fără rânduri la instalare, tipurile folosesc valorile declarate
+    // de modulele lor până le schimbă ACP-ul (o valoare nouă din cod ajunge astfel și pe site-urile existente).
 
     // Meniul principal implicit din itemii modulelor (etapa 5); un meniu editat de admin rămâne.
     // O singură dată (marcajul `nav`): un meniu golit de admin nu e refăcut la repornire.

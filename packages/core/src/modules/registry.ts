@@ -3,6 +3,7 @@ import type { Prisma, PrismaClient } from "@gcs/db";
 import type { GcsCache } from "../cache";
 import type { GcsRichFieldKey } from "../content/richFields";
 import type { GcsEvent, GcsEventBus } from "../events";
+import type { GcsTypeChannels } from "../notifications/channels";
 import type { GcsSettingDef } from "../settings/registry";
 
 /** Valorile `Group.key` (root_admin, member, vip_gold, custom_<id>…). */
@@ -111,16 +112,27 @@ export type GcsDemoContext = {
 };
 
 /**
- * Un tip de notificare. `important` = emailul implicit e imediat (ex. mesaj privat). `countEach`: grupul numără fiecare
+ * Un tip de notificare. `important`: notificările tipului sunt importante (trec și prin canalele „doar important”, ex.
+ * mesajul privat); un producător poate marca important și o notificare anume. `countEach`: grupul numără fiecare
  * eveniment (mesaje, răspunsuri), nu doar actorii distincți (reacții, urmăritori).
+ *
+ * Notificări v2: `category` = cheia categoriei (standard sau adusă de un modul, vezi `GCS_NOTIFICATION_CATEGORIES`);
+ * `channels` = valorile implicite pe canale (site, toast, email, push și modul emailului), peste cele derivate din
+ * `defaultEmail`; `mention: true` pune tipul în tabul „Mențiuni”.
  */
 export type GcsNotificationTypeDef = {
   key: string;
   labelKey: string;
   important: boolean;
-  defaultEmail: "OFF" | "INSTANT" | "DIGEST";
+  defaultEmail?: "OFF" | "INSTANT" | "DIGEST";
   countEach?: boolean;
+  category?: string;
+  channels?: Partial<GcsTypeChannels>;
+  mention?: boolean;
 };
+
+/** O categorie de notificări adusă de un modul (apare cât timp are tipuri active). Vezi `GCS_NOTIFICATION_CATEGORIES`. */
+export type GcsNotificationCategoryDef = { key: string; labelKey: string; icon: string; position: number; tab?: boolean };
 
 /** Paginile cu zone de widget-uri și zonele lor (specul etapei 5). */
 export const GCS_WIDGET_PAGES = ["index", "forum", "topic"] as const;
@@ -206,6 +218,8 @@ export interface GcsModule {
   seed?: (ctx: GcsSeedContext) => Promise<void>;
   /** Tipurile de notificări ale modulului (etapa 4): cheie, etichetă, importanță și emailul implicit. */
   notificationTypes?: GcsNotificationTypeDef[];
+  /** Categoriile de notificări noi ale modulului (Notificări v2); tipurile lui le folosesc prin `category`. */
+  notificationCategories?: GcsNotificationCategoryDef[];
   /** Conținutul de pornire ales în wizard (pasul „demo” al instalării). Idempotent. */
   seedDemo?: (ctx: GcsDemoContext) => Promise<void>;
   /**
@@ -363,6 +377,19 @@ export class GcsModuleRegistry {
 
   notificationType(key: string): GcsNotificationTypeDef | undefined {
     return this.notificationTypes().find((t) => t.key === key);
+  }
+
+  /** Tipurile de notificări cu modulul care le declară (o cheie repetată o păstrează pe prima). */
+  notificationTypeEntries(): { module: string; def: GcsNotificationTypeDef }[] {
+    const seen = new Set<string>();
+    return this.modules
+      .flatMap((m) => (m.notificationTypes ?? []).map((def) => ({ module: m.key, def })))
+      .filter((t) => (seen.has(t.def.key) ? false : (seen.add(t.def.key), true)));
+  }
+
+  /** Categoriile de notificări aduse de module (cele standard sunt în `GCS_NOTIFICATION_CATEGORIES`). */
+  notificationCategories(): GcsNotificationCategoryDef[] {
+    return this.modules.flatMap((m) => m.notificationCategories ?? []);
   }
 
   acpMenu(): GcsAcpMenuSection[] {
