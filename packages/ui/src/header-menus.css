@@ -1495,6 +1495,35 @@
   padding-right: 10px;
   font-size: 11px;
 }
+/* Pe telefon (375 px), „Înregistrare / Autentificare” ar lăți pagina: doar iconițele, textul rămâne pentru cititoarele
+   de ecran (numele linkurilor). Și înainte de hidratare (dispozitivul ghicit după user-agent), prin lățimea ecranului. */
+:root .gcs-hb[data-device="mobile"] .gcs-hb__authLink {
+  padding-right: 0;
+}
+:root .gcs-hb[data-device="mobile"] .gcs-hb__authText {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+@media (max-width: 767px) {
+  :root .gcs-hb .gcs-hb__authOr {
+    display: none;
+  }
+  :root .gcs-hb .gcs-hb__authLink {
+    padding-right: 0;
+  }
+  :root .gcs-hb .gcs-hb__authText {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
 :root .gcs-hb[data-device="mobile"] .gcs-hb__notch {
   display: none;
 }
