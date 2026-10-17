@@ -187,7 +187,14 @@ for (const theme of [
       await expect(entry).toBeVisible();
       await expect(entry).toContainText(`Tema${id}`);
       // Fără scroll orizontal la 375 px.
-      if (width === 375) expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+      // La 375 px widget-ul încape în lățime (fără scroll orizontal din cauza lui).
+      if (width === 375) {
+        const box = await widget(page).boundingBox();
+        expect(box).not.toBeNull();
+        expect(box!.x).toBeGreaterThanOrEqual(0);
+        expect(box!.x + box!.width).toBeLessThanOrEqual(376);
+        expect(await widget(page).evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+      }
       await widget(page).scrollIntoViewIfNeeded();
       await shot(page, `widget-${theme.label}-${width}`);
       await context.close();

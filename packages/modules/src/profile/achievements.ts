@@ -226,10 +226,14 @@ export class GcsAchievementService {
     const { db, bus } = this.deps;
     const prev = list.find((r) => r.id === previousRankId) ?? null;
     const next = list.find((r) => r.id === rankId) ?? null;
+    // Două evaluări simultane ale aceluiași membru: doar cea care schimbă efectiv rangul (de la cel vechi) continuă,
+    // ca avantajele, notificarea și toast-ul să apară o singură dată.
     const perks = await db.$transaction(async (tx) => {
-      await tx.user.update({ where: { id: userId }, data: { rankId } });
+      const { count } = await tx.user.updateMany({ where: { id: userId, rankId: previousRankId }, data: { rankId } });
+      if (count === 0) return null;
       return this.ranking ? applyRankPerks(tx, this.ranking.membership, userId, prev, next) : { groups: [], badgeId: null, revokedBadgeId: null };
     });
+    if (!perks) return;
     if (perks.groups.length > 0 && this.ranking) await this.ranking.membership.notify(userId, perks.groups);
     if (perks.revokedBadgeId !== null) await bus.emit({ name: "badge.revoked", payload: { userId, badgeId: perks.revokedBadgeId }, tags: userTags(userId) });
     if (perks.badgeId !== null) await bus.emit({ name: "badge.awarded", payload: { userId, badgeId: perks.badgeId, byRule: true }, tags: userTags(userId) });
