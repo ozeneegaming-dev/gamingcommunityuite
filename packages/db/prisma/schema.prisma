@@ -1359,7 +1359,7 @@ model ChatChannel {
   mutes     ChatMute[]
   sanctions ChatSanction[]
   members   ChatRoomMember[]
-  owner    User?            @relation("ChatRoomOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  owner     User?            @relation("ChatRoomOwner", fields: [ownerId], references: [id], onDelete: SetNull)
 
   @@map("chat_channels")
 }
@@ -3097,34 +3097,34 @@ enum DonationGoalPeriod {
 /// niciodată date de card. Fără cont (`userId` gol), donatorul are doar un nume; un cont șters lasă donația fără membru.
 /// Peste pragul din setări, insigna „Sponsor”.
 model MemberDonation {
-  id          Int            @id @default(autoincrement())
-  userId      String?
+  id           Int            @id @default(autoincrement())
+  userId       String?
   /// Numele afișat al unui donator fără cont (gol = „Anonim”).
-  donorName   String         @default("")
+  donorName    String         @default("")
   /// Suma, în subunități (bani / cenți).
-  amount      Int
-  currency    String         @default("EUR")
-  note        String         @default("")
+  amount       Int
+  currency     String         @default("EUR")
+  note         String         @default("")
   /// Metoda (o etichetă liberă: PayPal, Revolut, transfer bancar…).
-  method      String         @default("")
+  method       String         @default("")
   /// Referința dată de membru la „Am donat” (ex. id-ul tranzacției), pentru verificarea echipei.
-  reference   String         @default("")
+  reference    String         @default("")
   /// Numele ascuns în paginile publice („Anonim”); donația intră totuși în progresul obiectivelor.
-  anonymous   Boolean        @default(false)
-  status      DonationStatus @default(CONFIRMED)
+  anonymous    Boolean        @default(false)
+  status       DonationStatus @default(CONFIRMED)
   /// De unde vine: `manual` (ACP), `member` („Am donat”) sau cheia procesatorului de plăți.
-  source      String         @default("manual")
+  source       String         @default("manual")
   /// Id-ul plății la procesator (unic pe `source`), ca notificările repetate să nu dubleze donația.
-  externalId  String?
+  externalId   String?
   /// Data donației (perioada obiectivelor și a clasamentelor).
-  donatedAt   DateTime       @default(now())
-  createdById String?
+  donatedAt    DateTime       @default(now())
+  createdById  String?
   reviewedById String?
-  reviewedAt  DateTime?
+  reviewedAt   DateTime?
   /// Motivul respingerii (îl vede membrul în notificare).
-  rejectReason String        @default("")
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @default(now()) @updatedAt
+  rejectReason String         @default("")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @default(now()) @updatedAt
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 

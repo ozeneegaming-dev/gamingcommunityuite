@@ -492,7 +492,7 @@ export class GcsDonationService {
     if (!Number.isFinite(target) || target <= 0 || target > MAX_UNITS * 100) errors.target = "invalid_range";
     const currency = input.currency.trim() ? input.currency.trim().toUpperCase() : await this.mainCurrency();
     if (!/^[A-Z]{3}$/.test(currency)) errors.currency = "invalid";
-    const period = input.period === "CUSTOM" ? "CUSTOM" : "MONTHLY";
+    const period: "MONTHLY" | "CUSTOM" = input.period === "CUSTOM" ? "CUSTOM" : "MONTHLY";
     const isDay = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(`${v}T00:00:00Z`));
     const startsOn = input.startsOn.trim() || dayKey(this.now(), await this.timeZone());
     if (!isDay(startsOn)) errors.startsOn = "invalid_date";
