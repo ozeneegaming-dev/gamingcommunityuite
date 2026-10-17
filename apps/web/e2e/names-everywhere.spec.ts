@@ -79,6 +79,8 @@ test.afterAll(async () => {
   await rootPage.getByTestId(`gcs-app-menu-${KEY}`).click();
   await rootPage.getByTestId(`gcs-plugin-uninstall-${KEY}`).click();
   const dialog = rootPage.getByTestId("gcs-plugin-uninstall-dialog");
+  // Fără „Păstrează datele” (bifat implicit): Studio VIP pornește apoi de la zero (fără loadout-urile de aici).
+  await dialog.getByRole("switch").uncheck();
   await dialog.getByPlaceholder(KEY).fill(KEY);
   await dialog.getByTestId("gcs-plugin-uninstall-confirm").click();
   await expect.poll(async () => (await sql(`SELECT 1 FROM plugins WHERE key = $1`, [KEY])).length, { timeout: 20_000 }).toBe(0);
