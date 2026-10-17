@@ -153,6 +153,8 @@ describe("rezumatul săptămânal „Ce ai ratat”", () => {
     expect(toAna()).toHaveLength(0);
 
     // Rezumatul oprit, dar o notificare „săptămânală” nouă: pleacă digestul simplu.
+    // (Grupul deja trimis pe email nu se retrimite: Ana îl citește, iar urmăritorul nou începe un grup nou.)
+    await w.notifications.markRead(a.userId!, "all");
     const c = await member("Cezar");
     await w.social.follow(c, a.userId!);
     await w.producers.weeklyRun();
