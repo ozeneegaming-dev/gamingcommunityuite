@@ -22,7 +22,7 @@ describe("zonele ACP ale aplicației", () => {
     expect(areas.map((a) => a.key)).toEqual(["system", "community", "members", "appearance", "gaming", "vip", "stats", "apps"]);
     expect(shape(areas)).toEqual({
       system: [
-        ["acp.menu.system.overview", ["system.files", "system.status"]],
+        ["acp.menu.system.overview", ["system.files", "system.status", "system.update"]],
         ["acp.menu.system.site_features", ["system.applications", "system.integrations", "system.api", "system.webhooks", "system.rss_import"]],
         [
           "acp.menu.system.settings",
@@ -46,7 +46,7 @@ describe("zonele ACP ale aplicației", () => {
         ["acp.menu.system.conversions", ["system.import"]],
       ],
       community: [
-        ["acp.menu.community.forums_group", ["community.forums", "community.prefixes", "community.saved_actions", "community.forum_settings"]],
+        ["acp.menu.community.forums_group", ["community.forums", "community.prefixes", "community.saved_actions", "community.archive", "community.forum_settings"]],
         ["acp.menu.community.chat_group", ["community.chat_channels", "community.chat_settings", "community.chat_moderation", "community.chat_moderators"]],
         ["acp.menu.community.chat_pro_group", ["community.chat_pro_settings", "community.chat_pro_bar", "community.chat_pro_emotes"]],
         ["acp.menu.members.moderation", ["members.queue", "members.reports", "members.antispam", "members.warnings", "members.tickets"]],

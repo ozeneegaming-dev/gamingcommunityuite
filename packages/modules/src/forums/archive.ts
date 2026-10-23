@@ -53,7 +53,7 @@ const userIds = (v: unknown): string[] => (Array.isArray(v) ? [...new Set(v.filt
 const tri = (v: unknown): GcsTriState => (TRI.includes(v as GcsTriState) ? (v as GcsTriState) : "any");
 
 /** Condițiile salvate / trimise, normalizate (valorile lipsă sau greșite devin cele implicite). */
-export function normalizeConditions(raw: unknown): GcsArchiveConditions {
+export function normalizeArchiveConditions(raw: unknown): GcsArchiveConditions {
   const r = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
   return {
     lastPostDays: int(r.lastPostDays, 1, 36_500) ?? 365,
@@ -128,7 +128,7 @@ export class GcsArchiveService {
       id: r.id,
       name: r.name,
       enabled: r.enabled,
-      conditions: normalizeConditions(r.conditions),
+      conditions: normalizeArchiveConditions(r.conditions),
       exclusions: normalizeExclusions(r.exclusions),
       lastRunAt: r.lastRunAt?.toISOString() ?? null,
       lastCount: r.lastCount,
@@ -138,7 +138,7 @@ export class GcsArchiveService {
   private validate(input: GcsArchiveRuleInput): { name: string; conditions: GcsArchiveConditions; exclusions: GcsArchiveExclusions } {
     const name = input.name.trim();
     if (!name || name.length > 80) throw new GcsValidationError({ name: name ? "too_long" : "required" });
-    return { name, conditions: normalizeConditions(input.conditions), exclusions: normalizeExclusions(input.exclusions) };
+    return { name, conditions: normalizeArchiveConditions(input.conditions), exclusions: normalizeExclusions(input.exclusions) };
   }
 
   /** Câte topicuri ar arhiva acum regula (previzualizarea din ACP). */
@@ -179,7 +179,7 @@ export class GcsArchiveService {
     const touched = new Set<number>();
     const forums = new Set<number>();
     for (const rule of rules) {
-      const where = archiveWhere(normalizeConditions(rule.conditions), normalizeExclusions(rule.exclusions), now);
+      const where = archiveWhere(normalizeArchiveConditions(rule.conditions), normalizeExclusions(rule.exclusions), now);
       let count = 0;
       for (;;) {
         const batch = await db.topic.findMany({ where, select: { id: true, forumId: true }, take: BATCH });

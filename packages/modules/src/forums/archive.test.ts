@@ -1,7 +1,7 @@
 import { GcsForbidden } from "@gcs/core";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createForumWorld, doc, type GcsForumWorld } from "../../test/world";
-import { archiveWhere, GcsArchiveService, normalizeConditions, normalizeExclusions, type GcsArchiveRuleInput } from "./archive";
+import { archiveWhere, GcsArchiveService, normalizeArchiveConditions, normalizeExclusions, type GcsArchiveRuleInput } from "./archive";
 
 let w: GcsForumWorld;
 let archive: GcsArchiveService;
@@ -28,16 +28,16 @@ async function oldTopic(forumId: number, title: string, days: number, data: Reco
 const rule = (over: Partial<GcsArchiveRuleInput> = {}): GcsArchiveRuleInput => ({
   name: "Vechi",
   enabled: true,
-  conditions: normalizeConditions({ lastPostDays: 90 }),
+  conditions: normalizeArchiveConditions({ lastPostDays: 90 }),
   exclusions: normalizeExclusions({}),
   ...over,
 });
 
 describe("arhivarea automată (Forum v2)", () => {
   test("condițiile: valorile lipsă sau greșite devin cele implicite; filtrul Prisma cu excepțiile „dar nu când”", () => {
-    expect(normalizeConditions({ lastPostDays: -3, pinned: "maybe", forumIds: [1, 1, "x", 2] })).toMatchObject({ lastPostDays: 365, pinned: "any", forumIds: [1, 2] });
+    expect(normalizeArchiveConditions({ lastPostDays: -3, pinned: "maybe", forumIds: [1, 1, "x", 2] })).toMatchObject({ lastPostDays: 365, pinned: "any", forumIds: [1, 2] });
     const now = new Date("2026-10-17T00:00:00Z");
-    const where = archiveWhere(normalizeConditions({ lastPostDays: 30, locked: "yes", repliesBelow: 5 }), normalizeExclusions({ pinned: true, ratingAtLeast: 4 }), now);
+    const where = archiveWhere(normalizeArchiveConditions({ lastPostDays: 30, locked: "yes", repliesBelow: 5 }), normalizeExclusions({ pinned: true, ratingAtLeast: 4 }), now);
     expect(where).toEqual({
       AND: [{ archivedAt: null }, { lastPostAt: { lt: new Date(now.getTime() - 30 * DAY) } }, { locked: true }, { repliesCount: { lt: 5 } }],
       NOT: [{ pinned: true }, { ratingAvg: { gte: 4 } }],
@@ -78,8 +78,8 @@ describe("arhivarea automată (Forum v2)", () => {
     const a = await oldTopic(forum.id, "Puține vizualizări", 100, { viewsCount: 2 });
     const b = await oldTopic(forum.id, "Multe vizualizări", 100, { viewsCount: 900 });
     const c = await oldTopic(other.id, "Alt forum", 100);
-    await archive.save(w.root, rule({ conditions: normalizeConditions({ lastPostDays: 30, forumIds: [forum.id], viewsBelow: 100, starterIds: [w.member.userId] }) }));
-    await archive.save(w.root, rule({ name: "Oprită", enabled: false, conditions: normalizeConditions({ lastPostDays: 1 }) }));
+    await archive.save(w.root, rule({ conditions: normalizeArchiveConditions({ lastPostDays: 30, forumIds: [forum.id], viewsBelow: 100, starterIds: [w.member.userId] }) }));
+    await archive.save(w.root, rule({ name: "Oprită", enabled: false, conditions: normalizeArchiveConditions({ lastPostDays: 1 }) }));
     await archive.run(new Date(), { force: true });
     const archived = (await w.db.topic.findMany({ where: { id: { in: [a, b, c] }, archivedAt: { not: null } }, select: { id: true } })).map((t) => t.id);
     expect(archived).toEqual([a]);
