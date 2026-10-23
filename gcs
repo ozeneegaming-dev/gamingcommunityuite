@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# RED-LINE — consola de administrare (rulează pe server, din /opt/redline sau prin /usr/local/bin/gcs).
+# GamingCommunitySuite — consola de administrare (rulează pe server, din folderul instalării, ex. /opt/gcs, sau prin /usr/local/bin/gcs).
 #
 #   gcs status | install | reset-admin-password <nume> | maintenance on|off   → în containerul web
 #   gcs backup [--out <folder>] | gcs restore <fișier>                       → aici, cu docker compose
@@ -52,7 +52,7 @@ backup() {
   docker compose exec -T web tar -C /app/config -cf - . > "$work/config.tar"
   # .env conține secretele (inclusiv cheia cu care sunt criptate secretele 2FA): fără el, backup-ul nu e complet.
   cp .env "$work/env"
-  archive="$out/redline-backup-$stamp.tar.gz"
+  archive="$out/gcs-backup-$stamp.tar.gz"
   tar -C "$work" -czf "$archive" db.dump files.tar config.tar env
   chmod 600 "$archive"
   echo "Backup salvat: $archive"

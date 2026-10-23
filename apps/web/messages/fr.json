@@ -456,7 +456,8 @@
         "hooks": "Crochets",
         "settings_rules": "Community rules",
         "apps_manage": "Management",
-        "apps_dev": "Development"
+        "apps_dev": "Development",
+        "update": "Mise à jour"
       },
       "members": {
         "members": "Membres",
@@ -4309,6 +4310,36 @@
         "ratingAtLeast": "Sa note est au moins",
         "starters": "Il a été lancé par (noms, séparés par des virgules)"
       }
+    },
+    "update": {
+      "title": "Mise à jour",
+      "description": "La version installée, la licence et la mise à jour vers une nouvelle version.",
+      "version": "Version installée",
+      "license": "Licence",
+      "noLicense": "Aucune licence enregistrée sur le serveur.",
+      "licenseValid": "Valide",
+      "domains": "Domaines : {domains}",
+      "expires": "expire le {date}",
+      "noExpiry": "sans expiration",
+      "premium": "Applications premium",
+      "noPremium": "Aucune",
+      "licenseErrors": {
+        "missing": "Manquante",
+        "malformed": "Format incorrect",
+        "unknown_key": "Clé inconnue",
+        "bad_signature": "Signature invalide",
+        "expired": "Expirée",
+        "domain": "Autre domaine",
+        "revoked": "Révoquée"
+      },
+      "howTitle": "Comment mettre à jour",
+      "howBody": "La mise à jour s’exécute sur le serveur, avec le paquet de la nouvelle version téléchargé depuis ton compte client. Le site revient tout seul après le redémarrage.",
+      "steps": {
+        "backup": "Il fait une sauvegarde complète (base de données, fichiers, configuration).",
+        "verify": "Il vérifie les sommes de contrôle du nouveau paquet.",
+        "keep": "Il conserve les réglages du serveur, la configuration et les sauvegardes.",
+        "restart": "Il redémarre les services ; les migrations de la base s’exécutent automatiquement et tes données restent."
+      }
     }
   },
   "settings": {
@@ -5388,6 +5419,48 @@
         "title": "Installation terminée",
         "body": "La plateforme est prête. Entrez dans le PVA et activez la vérification en deux étapes.",
         "enter": "Entrer dans les pays ACP"
+      },
+      "license": {
+        "label": "Licence",
+        "title": "Licence GCS",
+        "body": "Saisis la clé de licence reçue à l’achat et accepte les conditions d’utilisation.",
+        "field": "Clé de licence",
+        "fieldHint": "Elle commence par « GCS1. » et se trouve dans ton compte client.",
+        "eula": "Conditions d’utilisation (CLUF)",
+        "eulaMissing": "Le texte du CLUF manque dans le paquet (EULA.md).",
+        "accept": "J’ai lu et j’accepte les conditions d’utilisation",
+        "devHint": "Mode test (hors production) : tu peux utiliser la clé {token}.",
+        "saved": "Licence vérifiée : {licensee}",
+        "errors": {
+          "missing": "Saisis la clé de licence.",
+          "malformed": "La clé n’a pas le bon format.",
+          "unknown_key": "La clé a été signée avec une clé inconnue de cette version.",
+          "bad_signature": "La signature de la clé n’est pas valide (la clé a été modifiée).",
+          "expired": "La licence a expiré.",
+          "domain": "La licence n’est pas valable pour le domaine {domain}.",
+          "revoked": "La licence a été révoquée.",
+          "eula": "Tu dois accepter les conditions d’utilisation."
+        }
+      },
+      "apps": {
+        "label": "Applications",
+        "title": "Applications",
+        "body": "Choisis les applications activées à l’installation. Celles non cochées sont installées désactivées ; tu peux les activer à tout moment dans ACP › Applications.",
+        "standard": "Applications standard",
+        "premium": "Applications premium",
+        "locked": "Toujours activée",
+        "notLicensed": "Non incluse dans la licence",
+        "landing": "Application d’accueil",
+        "landingHint": "Ce qu’un visiteur voit sur la page d’accueil du site.",
+        "requires": "Nécessite : {apps}",
+        "errors": {
+          "premium_not_licensed": "{app} n’est pas incluse dans la licence.",
+          "requires": "{app} a aussi besoin des applications dont elle dépend.",
+          "landing_invalid": "L’application d’accueil doit être cochée et avoir une page d’accueil.",
+          "unknown_app": "Application inconnue : {app}.",
+          "license": "La licence n’est plus valable : reviens à l’étape Licence."
+        },
+        "premiumBadge": "Premium"
       }
     },
     "runSteps": {
@@ -5398,7 +5471,8 @@
       "demo": "Préparation des données initiales",
       "name_styles": "Générer des styles de noms",
       "search_indexes": "Création d'index de recherche",
-      "lock": "Fin de l'installation"
+      "lock": "Fin de l'installation",
+      "apps": "Activation des applications choisies"
     },
     "checks": {
       "postgres": "Connexion PostgreSQLTM",

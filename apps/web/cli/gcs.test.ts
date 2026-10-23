@@ -58,6 +58,8 @@ afterAll(async () => {
 });
 
 const installEnv = {
+  // Licența de test (acceptată doar în afara producției).
+  GCS_INSTALL_LICENSE: "GCS-DEV-LICENSE",
   GCS_INSTALL_SITE_NAME: "Comunitatea CLI",
   GCS_INSTALL_SITE_URL: "https://forum.example.com",
   GCS_INSTALL_ADMIN_NAME: "Fondator",

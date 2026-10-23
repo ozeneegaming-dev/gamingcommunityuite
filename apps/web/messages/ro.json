@@ -456,7 +456,8 @@
         "hooks": "Hook-uri",
         "settings_rules": "Reguli comunitate",
         "apps_manage": "Gestionare",
-        "apps_dev": "Dezvoltare"
+        "apps_dev": "Dezvoltare",
+        "update": "Actualizare"
       },
       "members": {
         "members": "Membri",
@@ -4309,6 +4310,36 @@
         "ratingAtLeast": "Are nota cel puțin",
         "starters": "E pornit de (nume, cu virgulă)"
       }
+    },
+    "update": {
+      "title": "Actualizare",
+      "description": "Versiunea instalată, licența și actualizarea la o versiune nouă.",
+      "version": "Versiunea instalată",
+      "license": "Licența",
+      "noLicense": "Nicio licență salvată pe server.",
+      "licenseValid": "Validă",
+      "domains": "Domenii: {domains}",
+      "expires": "expiră pe {date}",
+      "noExpiry": "fără expirare",
+      "premium": "Aplicații premium",
+      "noPremium": "Niciuna",
+      "licenseErrors": {
+        "missing": "Lipsește",
+        "malformed": "Format greșit",
+        "unknown_key": "Cheie necunoscută",
+        "bad_signature": "Semnătură invalidă",
+        "expired": "Expirată",
+        "domain": "Alt domeniu",
+        "revoked": "Revocată"
+      },
+      "howTitle": "Cum actualizezi",
+      "howBody": "Actualizarea rulează pe server, cu pachetul noii versiuni descărcat din contul tău de client. Site-ul revine singur după repornire.",
+      "steps": {
+        "backup": "Face un backup complet (baza de date, fișierele, configurarea).",
+        "verify": "Verifică sumele de control ale pachetului nou.",
+        "keep": "Păstrează setările serverului, configurarea și backup-urile.",
+        "restart": "Repornește serviciile; migrațiile bazei de date rulează automat, iar datele rămân."
+      }
     }
   },
   "settings": {
@@ -5388,6 +5419,48 @@
         "title": "Instalare finalizată",
         "body": "Platforma e gata. Intră în ACP și activează autentificarea în doi pași.",
         "enter": "Intră în ACP"
+      },
+      "license": {
+        "label": "Licență",
+        "title": "Licența GCS",
+        "body": "Introdu cheia de licență primită la cumpărare și acceptă termenii de utilizare.",
+        "field": "Cheia de licență",
+        "fieldHint": "Începe cu „GCS1.” și o găsești în contul tău de client.",
+        "eula": "Termenii de utilizare (EULA)",
+        "eulaMissing": "Textul EULA lipsește din pachet (fișierul EULA.md).",
+        "accept": "Am citit și accept termenii de utilizare",
+        "devHint": "Mod de test (în afara producției): poți folosi cheia {token}.",
+        "saved": "Licență verificată: {licensee}",
+        "errors": {
+          "missing": "Introdu cheia de licență.",
+          "malformed": "Cheia nu are formatul corect.",
+          "unknown_key": "Cheia a fost semnată cu o cheie pe care această versiune nu o cunoaște.",
+          "bad_signature": "Semnătura cheii nu e validă (cheia a fost modificată).",
+          "expired": "Licența a expirat.",
+          "domain": "Licența nu e valabilă pentru domeniul {domain}.",
+          "revoked": "Licența a fost revocată.",
+          "eula": "Trebuie să accepți termenii de utilizare."
+        }
+      },
+      "apps": {
+        "label": "Aplicații",
+        "title": "Aplicații",
+        "body": "Alege aplicațiile pornite la instalare. Cele nebifate se instalează oprite și le poți porni oricând din ACP › Aplicații.",
+        "standard": "Aplicații standard",
+        "premium": "Aplicații premium",
+        "locked": "Mereu pornită",
+        "notLicensed": "Nu e inclusă în licență",
+        "landing": "Aplicația de pornire",
+        "landingHint": "Ce vede un vizitator pe prima pagină a site-ului.",
+        "requires": "Necesită: {apps}",
+        "errors": {
+          "premium_not_licensed": "{app} nu e inclusă în licență.",
+          "requires": "{app} are nevoie și de aplicațiile de care depinde.",
+          "landing_invalid": "Aplicația de pornire trebuie să fie bifată și să aibă o pagină de pornire.",
+          "unknown_app": "Aplicație necunoscută: {app}.",
+          "license": "Licența nu mai e valabilă: întoarce-te la pasul Licență."
+        },
+        "premiumBadge": "Premium"
       }
     },
     "runSteps": {
@@ -5398,7 +5471,8 @@
       "demo": "Pregătesc datele inițiale",
       "name_styles": "Generez stilurile numelor",
       "search_indexes": "Creez indexurile de căutare",
-      "lock": "Închei instalarea"
+      "lock": "Închei instalarea",
+      "apps": "Pornesc aplicațiile alese"
     },
     "checks": {
       "postgres": "Conexiune PostgreSQL",

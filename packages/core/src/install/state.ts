@@ -6,8 +6,11 @@ import { hashPassword, verifyPassword } from "../auth/passwords";
 import type { GcsRedisRateLimiter } from "../auth/rateLimit";
 import { GcsRateLimited } from "../errors";
 
-/** Pașii wizard-ului de instalare (spec §17.1), în ordine. */
-export const GCS_INSTALL_STEPS = ["code", "checks", "database", "site", "email", "admin", "data", "run", "done"] as const;
+/**
+ * Pașii wizard-ului de instalare, în ordine (proprietarul, 2026-10-17): Verificare sistem → Licență → Aplicații →
+ * Bază de date → (Site, Email) → Administrator → (Date inițiale) → Instalare. Codul de instalare îi precede pe toți.
+ */
+export const GCS_INSTALL_STEPS = ["code", "checks", "license", "apps", "database", "site", "email", "admin", "data", "run", "done"] as const;
 export type GcsInstallStep = (typeof GCS_INSTALL_STEPS)[number];
 
 export type GcsInstallProgress = { step: GcsInstallStep; data: Record<string, Record<string, unknown>> };
@@ -20,6 +23,7 @@ const FILES = {
   codeHash: "install_code.hash",
   session: "install_session.hash",
   finish: "install_finish.json",
+  license: "license.token",
 } as const;
 
 const sha256 = (value: string) => createHash("sha256").update(value).digest("hex");
@@ -193,6 +197,20 @@ export class GcsInstallState {
     const progress = await this.progress();
     progress.step = step;
     await writeAtomic(this.file(FILES.progress), JSON.stringify(progress, null, 2));
+  }
+
+  /** Licența instalării: doar pe server, în folderul de configurare (0600); nu ajunge niciodată în browser sau în log. */
+  async saveLicense(token: string): Promise<void> {
+    await mkdir(this.configDir, { recursive: true });
+    await writeAtomic(this.file(FILES.license), `${token.trim()}\n`, 0o600);
+  }
+
+  async readLicense(): Promise<string | null> {
+    try {
+      return (await readFile(this.file(FILES.license), "utf8")).trim() || null;
+    } catch {
+      return null;
+    }
   }
 
   async markInstalled(): Promise<void> {

@@ -266,6 +266,8 @@ async function main(): Promise<number> {
   const env: NodeJS.ProcessEnv = {
     ...process.env,
     GCS_PLUGIN_TRUSTED_KEYS: [process.env.GCS_PLUGIN_TRUSTED_KEYS, `e2e=${e2eKey.publicKeyBase64}`].filter(Boolean).join(","),
+    // Licențele de test (pasul „Licență” al installer-ului): semnate în teste cu aceeași cheie de unică folosință.
+    GCS_LICENSE_TRUSTED_KEYS: `e2e=${e2eKey.publicKeyBase64}`,
     DATABASE_URL: databaseUrl,
     REDIS_URL: redisUrl,
     GCS_BASE_URL: BASE_URL,
@@ -321,7 +323,7 @@ async function main(): Promise<number> {
   const playwright = run(
     playwrightBin,
     ["test", ...process.argv.slice(2)],
-    { ...env, ...installEnv, GCS_E2E_BASE_URL: BASE_URL, GCS_E2E_PLUGIN_KEY: e2eKeyFile, GCS_E2E_STEAM_SECRET: steamSecret },
+    { ...env, ...installEnv, GCS_E2E_BASE_URL: BASE_URL, GCS_E2E_PLUGIN_KEY: e2eKeyFile, GCS_E2E_LICENSE_KEY: e2eKeyFile, GCS_E2E_STEAM_SECRET: steamSecret },
     "inherit",
   );
   const code = await new Promise<number>((resolve) => playwright.on("exit", (c) => resolve(c ?? 1)));

@@ -1,8 +1,11 @@
 "use server";
 
 import {
+  checkLicenseOnline,
   GcsRateLimited,
   hashPassword,
+  installDomain,
+  resolveAppSelection,
   normalizeEmail,
   runChecks,
   testDatabase,
@@ -16,7 +19,7 @@ import { getTranslations } from "next-intl/server";
 import { clientIp } from "@/lib/actor";
 import { isSameOrigin } from "@/lib/actions";
 import { gcsConfigDir } from "@/lib/config";
-import { hasInstallSession, INSTALL_COOKIE, includedConnection, installState, stepIndex, stepPath } from "@/lib/install";
+import { hasInstallSession, INSTALL_COOKIE, includedConnection, installState, savedLicense, stepIndex, stepPath, verifyInstallLicense } from "@/lib/install";
 import { services } from "@/lib/services";
 
 export type GcsInstallActionResult = { ok: true; next: string } | { ok: false; errors: Record<string, string> };
@@ -77,7 +80,44 @@ export async function continueFromChecks(): Promise<GcsInstallActionResult> {
     const t = await getTranslations("install.steps.checks");
     return { ok: false, errors: { _: t("blocked") } };
   }
-  return complete("checks", "database");
+  return complete("checks", "license");
+}
+
+/**
+ * Pasul „Licență”: tokenul semnat (verificat OFFLINE: semnătura, expirarea, domeniul), apoi, dacă e configurată,
+ * verificarea online la platforma-mamă (doar o licență revocată blochează) și acceptarea EULA. Tokenul se ține doar
+ * pe server (secretele instalării); în progres rămâne doar numele licențiatului.
+ */
+export async function saveLicense(fd: FormData): Promise<GcsInstallActionResult> {
+  const denied = await guard();
+  if (denied) return { ok: false, errors: denied };
+  const t = await getTranslations("install.steps.license.errors");
+  const token = field(fd, "token");
+  const result = verifyInstallLicense(token);
+  if (!result.ok) return { ok: false, errors: { token: t(result.error, { domain: installDomain() }) } };
+  if (!result.license.dev && (await checkLicenseOnline(token, { domain: installDomain() })).status === "revoked") return { ok: false, errors: { token: t("revoked") } };
+  if (fd.get("eula") !== "on") return { ok: false, errors: { eula: t("eula") } };
+  return complete("license", "apps", { token, licensee: result.license.licensee });
+}
+
+/** Pasul „Aplicații”: aplicațiile bifate (cele premium doar dacă licența le include) și aplicația de pornire. */
+export async function saveApps(fd: FormData): Promise<GcsInstallActionResult> {
+  const denied = await guard();
+  if (denied) return { ok: false, errors: denied };
+  const t = await getTranslations("install.steps.apps.errors");
+  const licensed = await savedLicense();
+  if (!licensed) return { ok: false, errors: { _: t("license") } };
+  const selected = fd.getAll("app").filter((v): v is string => typeof v === "string");
+  const landing = field(fd, "landing");
+  const registry = services().registry;
+  const resolved = resolveAppSelection(registry, licensed.license, { selected, landing });
+  if (!resolved.ok) {
+    const tr = await getTranslations();
+    const labelKey = resolved.app ? registry.module(resolved.app)?.app?.labelKey : undefined;
+    const app = labelKey && tr.has(labelKey) ? tr(labelKey) : (resolved.app ?? "");
+    return { ok: false, errors: { _: t(resolved.error, { app }) } };
+  }
+  return complete("apps", "database", { selected: [...resolved.selection.enabled], landing: resolved.selection.landing });
 }
 
 function connectionFrom(fd: FormData): { mode: "included" | "external"; conn: GcsDbConnection | null } {
