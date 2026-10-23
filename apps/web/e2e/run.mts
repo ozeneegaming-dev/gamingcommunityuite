@@ -315,7 +315,13 @@ async function main(): Promise<number> {
     cleanups.push(() => killTree(installServer));
     // Worker-ul așteaptă `installed.lock`, apoi pornește singur (ca în Docker, pe un site proaspăt).
     startWorker(installInstanceEnv);
-    Object.assign(installEnv, { GCS_E2E_INSTALL_URL: INSTALL_URL, GCS_E2E_INSTALL_CODE: code ?? "" });
+    Object.assign(installEnv, {
+      GCS_E2E_INSTALL_URL: INSTALL_URL,
+      GCS_E2E_INSTALL_CODE: code ?? "",
+      // Pentru install.spec: readuce aplicația de pornire implicită după ce verifică alegerea (smoke-urile continuă pe instanță).
+      GCS_E2E_INSTALL_DATABASE_URL: installInstanceEnv.DATABASE_URL ?? "",
+      GCS_E2E_INSTALL_REDIS_URL: installInstanceEnv.REDIS_URL ?? "",
+    });
     await waitForHealth(HEALTH_TIMEOUT_MS, INSTALL_URL);
   }
   await waitForHealth(HEALTH_TIMEOUT_MS);

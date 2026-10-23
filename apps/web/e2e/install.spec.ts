@@ -1,7 +1,7 @@
-import { createPrivateKey } from "node:crypto";
+import { createPrivateKey, sign } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { signLicense, type GcsLicensePayload } from "@gcs/core";
 import { expect, test, type Page } from "@playwright/test";
+import pg from "pg";
 
 const CODE = process.env.GCS_E2E_INSTALL_CODE ?? "";
 const LICENSE_KEY = process.env.GCS_E2E_LICENSE_KEY ?? "";
@@ -30,9 +30,13 @@ async function setApp(page: Page, key: string, on: boolean) {
   await (on ? expect(input).toBeChecked() : expect(input).not.toBeChecked());
 }
 
-/** O licență de test, semnată cu cheia de unică folosință a rulării (de încredere doar pentru instanța de instalare). */
-function license(over: Partial<GcsLicensePayload> = {}): string {
-  const payload: GcsLicensePayload = {
+/**
+ * O licență de test, semnată cu cheia de unică folosință a rulării (de încredere doar pentru instanța de instalare).
+ * Formatul e cel din `packages/core/src/install/license.ts` (`GCS1.<payload>.<semnătura>`), semnat aici direct: un import
+ * din `@gcs/core` ar încărca nucleul ca CommonJS în procesul Playwright și ar strica importurile ESM ale altor specuri.
+ */
+function license(over: Record<string, unknown> = {}): string {
+  const payload = {
     v: 1,
     kid: "e2e",
     id: "lic-e2e",
@@ -44,7 +48,10 @@ function license(over: Partial<GcsLicensePayload> = {}): string {
     expiresAt: new Date(Date.now() + 365 * 86_400_000).toISOString(),
     ...over,
   };
-  return signLicense(payload, createPrivateKey(readFileSync(LICENSE_KEY, "utf8")));
+  const body = Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
+  const signature = sign(null, Buffer.from(`GCS-LICENSE-V1
+${body}`, "utf8"), createPrivateKey(readFileSync(LICENSE_KEY, "utf8")));
+  return `GCS1.${body}.${signature.toString("base64url")}`;
 }
 
 test("instalarea completă: licența, aplicațiile, reluare după refresh, login automat, /install blocat după final", async ({ page }) => {
@@ -200,5 +207,33 @@ test("instalarea completă: licența, aplicațiile, reluare după refresh, login
     await page.goto("/forum");
     await expect(page.getByRole("link", { name: "Anunțuri", exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Ajutor tehnic", exact: true })).toBeVisible();
+  });
+
+  await test.step("pentru smoke-uri: starea de după seed (premium oprite, restul pornite), Forumul pe /, cache-ul golit", async () => {
+    const db = new pg.Client({ connectionString: process.env.GCS_E2E_INSTALL_DATABASE_URL });
+    await db.connect();
+    try {
+      await db.query(`DELETE FROM settings WHERE key = $1`, ["apps.landing"]);
+      // Starea de după seed: aplicațiile premium (Chat Pro, Grupuri Pro) își pun singure un rând „oprită”; restul, fără rând = pornite.
+      await db.query(`DELETE FROM apps WHERE key NOT IN ($1, $2)`, ["chat_pro", "groups_pro"]);
+      await db.query(`UPDATE apps SET enabled = false WHERE key IN ($1, $2)`, ["chat_pro", "groups_pro"]);
+    } finally {
+      await db.end();
+    }
+    const { default: Redis } = await import("ioredis");
+    const redis = new Redis(process.env.GCS_E2E_INSTALL_REDIS_URL ?? "");
+    try {
+      const keys = await redis.keys("gcs:k:*");
+      if (keys.length > 0) await redis.del(...keys);
+    } finally {
+      redis.disconnect();
+    }
+    await expect
+      .poll(async () => {
+        await page.goto("/");
+        return page.getByTestId("gcs-forum-index").count();
+      }, { timeout: 30_000 })
+      .toBe(1);
+    expect((await page.goto("/clans"))?.status()).toBe(200);
   });
 });

@@ -255,6 +255,9 @@ test("numele au stilul grupului și efectul VIP peste tot, pe tema închisă și
 
 test("butoanele Nova: stratul de sticlă (sweep) umple butonul la hover, pe cel plin și pe cel secundar", async () => {
   await rootPage.goto(topicUrl);
+  // Caseta de răspuns (Forum v2) e pliată până la primul click: butoanele ei apar după deschidere.
+  await rootPage.getByTestId("gcs-reply-box").click();
+  await expect(rootPage.getByTestId("gcs-reply-box")).not.toHaveAttribute("data-collapsed", "");
   const cases: [string, Locator][] = [
     ["primary", rootPage.locator("#reply .gcs-btn--primary").first()],
     ["secondary", rootPage.locator(".gcs-btn--ghost:visible").first()],
