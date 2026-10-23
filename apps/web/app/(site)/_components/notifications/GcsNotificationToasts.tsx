@@ -4,6 +4,7 @@ import { gcsToast, GcsToastHost, playNotificationSound } from "@gcs/ui";
 import { useEffect } from "react";
 import type { GcsNotificationItem } from "@/lib/notifications";
 import { useRealtime } from "../realtime/GcsRealtimeProvider";
+import { GcsRankUpToast } from "./GcsRankUpToast";
 
 /**
  * Toast-urile notificărilor (specul etapei 5, Notificări v2): la o notificare nouă cu canalul „toast” pornit (evenimentul
@@ -30,5 +31,11 @@ export function GcsNotificationToasts({ toasts, sound, closeLabel }: { toasts: b
         .catch(() => {});
     });
   }, [realtime, toasts, sound]);
-  return toasts ? <GcsToastHost closeLabel={closeLabel} /> : null;
+  // Realizări v2: urcarea în rang are propriul toast de sărbătorire (tot cu toast-urile pornite).
+  return toasts ? (
+    <>
+      <GcsToastHost closeLabel={closeLabel} />
+      <GcsRankUpToast />
+    </>
+  ) : null;
 }

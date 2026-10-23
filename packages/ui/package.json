@@ -48,6 +48,7 @@
     "./announce.css": "./src/announce.css",
     "./notifications.css": "./src/notifications.css",
     "./members.css": "./src/members.css",
+    "./achievements.css": "./src/achievements.css",
     "./nova.css": "./src/nova.css",
     "./sweep.css": "./src/sweep.css",
     "./icons": "./src/icons/index.tsx",

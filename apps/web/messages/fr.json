@@ -353,7 +353,8 @@
       "email_taken": "Cet e-mail est déjà utilisé par un autre compte.",
       "email_invalid": "L'adresse e-mail n'est pas valide.",
       "group_unknown": "Groupe inconnu.",
-      "separator_top": "Un séparateur ne peut se trouver qu'entre des sous-éléments."
+      "separator_top": "Un séparateur ne peut se trouver qu'entre des sous-éléments.",
+      "invalid_file": "Le fichier n’est pas un export valide."
     }
   },
   "acp": {
@@ -1500,6 +1501,141 @@
         "image": "Custom image (optional)",
         "imageHint": "PNG, JPEG, WebP or GIF. Replaces the drawn emblem.",
         "removeImage": "Remove the custom image"
+      },
+      "v2": {
+        "help": "Construisez des règles comme des phrases : Quand quelque chose arrive (les événements viennent des applications activées) → Et les conditions → Alors les récompenses. Une application désactivée emporte ses événements.",
+        "classicTitle": "Règles classiques (seuils et points par action)",
+        "coreApp": "Communauté",
+        "builderTitle": "Nouvelle règle",
+        "editTitle": "Modifier la règle",
+        "noEvents": "Aucune application avec des événements n’est activée.",
+        "when": "Quand",
+        "and": "Et",
+        "then": "Alors",
+        "event": "Événement",
+        "mode": "Mode",
+        "modeNth": "la n-ième fois",
+        "modeEvery": "toutes les",
+        "n": "Nombre",
+        "reachLabel": "atteint",
+        "windowDays": "Dans les derniers (jours)",
+        "anytime": "n’importe quand",
+        "moreConditions": "Plus de conditions (forums, serveurs, groupes)",
+        "onlyForums": "Seulement dans les forums",
+        "onlyServers": "Seulement sur les serveurs",
+        "onlyGroups": "Seulement pour les groupes",
+        "otherReward": "Récompenser aussi {who}",
+        "ruleName": "Nom de la règle",
+        "enabled": "Activée",
+        "saveRule": "Enregistrer la règle",
+        "addRule": "Ajouter la règle",
+        "cancel": "Annuler",
+        "saved": "La règle a été enregistrée.",
+        "rewardPoints": "Points",
+        "rewardBadge": "Badge",
+        "rewardGroup": "Groupe secondaire",
+        "rewardGroupDays": "Jours (vide = permanent)",
+        "permanent": "permanent",
+        "rewardVip": "Jours VIP (niveau)",
+        "rewardVipDays": "Jours VIP",
+        "rewardNameStyle": "Style de nom",
+        "none": "— aucun —",
+        "listTitle": "Règles ({count})",
+        "gamingPack": "Pack Gaming",
+        "gamingPackBody": "Importe des règles prêtes pour le forum, le chat, les serveurs et les clans, avec leurs badges. Les règles des applications désactivées sont ignorées.",
+        "gamingPackImport": "Importer le pack",
+        "export": "Exporter en JSON",
+        "import": "Importer un JSON",
+        "empty": "Aucune règle pour l’instant. Construisez-en une ci-dessus ou importez le « Pack Gaming ».",
+        "toggle": "Activer / désactiver « {name} »",
+        "unavailable": "L’application de cet événement est désactivée.",
+        "edit": "Modifier",
+        "editNamed": "Modifier « {name} »",
+        "copy": "Copier",
+        "copyNamed": "Copier « {name} »",
+        "delete": "Supprimer",
+        "deleteNamed": "Supprimer « {name} »",
+        "deleteTitle": "Supprimer la règle ?",
+        "deleteBody": "« {name} » est supprimée définitivement. Ce qui a déjà été attribué reste.",
+        "imported": "Importé : {created} règles, {badges} nouveaux badges ({skipped} ignorées).",
+        "s": {
+          "reach": "atteint {n}",
+          "every": "toutes les {n} fois",
+          "nth": "la fois numéro {n}",
+          "forums": "dans {list}",
+          "servers": "sur {list}",
+          "groups": "seulement {list}",
+          "window": "en {days} jours",
+          "points": "{n} points",
+          "badge": "badge « {name} »",
+          "group": "groupe {name}",
+          "groupDays": "groupe {name} ({days} jours)",
+          "vip": "{name} {days} jours",
+          "nameStyle": "style « {name} »"
+        },
+        "settingsTitle": "Règles : paramètres",
+        "excludedGroups": "Groupes exclus",
+        "excludedHelp": "Les membres de ces groupes ne reçoivent rien des règles (p. ex. comptes de test ou bots).",
+        "rarePercent": "Badge rare en dessous de (% des membres)",
+        "recalcTitle": "Recalcul en arrière-plan",
+        "recalcHelp": "Applique les règles à tous les membres (après une nouvelle règle ou un import). Il tourne dans le worker ; vous pouvez fermer la page.",
+        "recalcProgress": "Progression du recalcul",
+        "recalcIdle": "Aucun recalcul pour l’instant.",
+        "recalcState": {
+          "queued": "En attente…",
+          "running": "{done} / {total} membres · {awarded} récompenses",
+          "done": "Terminé : {done} / {total} membres · {awarded} récompenses"
+        },
+        "recalcStart": "Recalculer maintenant",
+        "ladderTitle": "Échelle des rangs",
+        "presets": "Échelles prédéfinies",
+        "members": "membres",
+        "noThreshold": "sans seuil (rang de base)",
+        "moveUpRank": "Monter",
+        "moveDownRank": "Descendre",
+        "moveUpNamed": "Monter « {name} »",
+        "moveDownNamed": "Descendre « {name} »",
+        "unranked": "Sans rang : {count}",
+        "presetTitle": "Appliquer l’échelle « {name} » ?",
+        "presetBody": "Les rangs actuels sont remplacés par ceux de l’échelle ; les membres reçoivent les nouveaux rangs au recalcul.",
+        "presetApply": "Remplacer l’échelle",
+        "ranksImported": "Importé : {created} rangs ({skipped} ignorés).",
+        "importRanksBody": "Importe les rangs du fichier.",
+        "replaceLadder": "Remplacer l’échelle actuelle",
+        "thrPoints": "{n} XP",
+        "thrPosts": "{n} messages",
+        "thrRep": "{n} de réputation",
+        "or": "ou",
+        "match": "Seuils",
+        "matchAll": "tous",
+        "matchAny": "n’importe lequel",
+        "criteria": "Critères des applications",
+        "criterionMetric": "Critère {n}",
+        "criterionMin": "Minimum du critère {n}",
+        "appOff": "application désactivée",
+        "tier": "Niveau de l’emblème",
+        "auto": "automatique",
+        "tiers": {
+          "bronze": "Bronze",
+          "silver": "Argent",
+          "gold": "Or",
+          "platinum": "Platine",
+          "diamond": "Diamant",
+          "master": "Maître",
+          "legend": "Légende"
+        },
+        "animated": "Animation discrète",
+        "emblemImage": "Emblème personnalisé (facultatif)",
+        "removeImage": "Retirer l’emblème personnalisé",
+        "perkGroup": "Avantage : groupe",
+        "perkBadge": "Avantage : badge",
+        "perkNameStyle": "Avantage : style de nom",
+        "ranksHelp": "Un membre obtient le rang le plus élevé dont les seuils sont atteints (tous ou n’importe lequel). Les critères des applications (heures jouées, ELO, ancienneté…) s’ajoutent aux seuils. Les avantages sont donnés à la montée et retirés à la perte du rang.",
+        "preset": {
+          "community": "Communauté (XP)",
+          "gaming": "Gaming (XP + serveurs)",
+          "veteran": "Vétérans (messages + ancienneté)"
+        }
       }
     },
     "promotions": {
@@ -4660,6 +4796,10 @@
       "methods": "Méthodes proposées (séparées par des virgules)",
       "member_submit": "Les membres peuvent signaler un don (« J’ai fait un don »)",
       "sponsor_period": "Période du badge « Sponsor »"
+    },
+    "achievements": {
+      "excluded_groups": "Groupes exclus des règles",
+      "rare_percent": "Seuil des badges rares (%)"
     }
   },
   "permissions": {
@@ -4974,6 +5114,12 @@
       "kd": "K/D",
       "points": "Points",
       "ranking": "Classement du serveur"
+    },
+    "rankUp": {
+      "kicker": "Nouveau rang !",
+      "title": "Vous avez atteint {name}",
+      "level": "Niveau {level}",
+      "close": "Fermer"
     }
   },
   "maintenance": {
@@ -6549,7 +6695,9 @@
       "metric": "Mesure affichée en premier",
       "goal": "Objectif",
       "lastDonor": "Dernier donateur",
-      "donorCount": "Nombre de donateurs"
+      "donorCount": "Nombre de donateurs",
+      "rare": "Quels badges",
+      "group": "Seulement les membres du groupe"
     },
     "periods": {
       "week": "cette semaine",
@@ -6591,6 +6739,9 @@
       },
       "vip": {
         "donationGoal": "La progression d’un objectif de dons, les donateurs et le bouton « Soutenir la communauté »."
+      },
+      "profile": {
+        "recentBadges": "Les badges reçus récemment par les membres, en direct."
       }
     },
     "servers": {
@@ -6623,6 +6774,17 @@
     "choices": {
       "show": "Affiché",
       "hide": "Masqué"
+    },
+    "profile": {
+      "recentBadges": "Dernières réussites"
+    },
+    "rare": {
+      "all": "Tous",
+      "only": "Seulement les rares"
+    },
+    "recentBadges": {
+      "empty": "Aucune réussite pour l’instant.",
+      "received": "a reçu"
     }
   },
   "pageEditor": {
@@ -6685,7 +6847,8 @@
     "dragHint": "Faites glisser un widget sur la page ou utilisez le bouton +.",
     "dropHere": "Faites glisser les Widgets ici",
     "done": "Terminer l'édition",
-    "defaultGoal": "Premier objectif actif"
+    "defaultGoal": "Premier objectif actif",
+    "allGroups": "Tous les groupes"
   },
   "stats": {
     "title": "Statistiques communautaires",
@@ -9052,6 +9215,49 @@
       "CONFIRMED": "Confirmé",
       "PENDING": "En attente",
       "REJECTED": "Refusé"
+    }
+  },
+  "achievements": {
+    "events": {
+      "forums": {
+        "post": "Écrit un message",
+        "topic": "Ouvre un sujet",
+        "reaction_received": "Reçoit une réaction positive",
+        "solution": "Sa réponse est marquée comme solution",
+        "reputation": "La réputation atteint"
+      },
+      "chat": {
+        "message": "Envoie un message dans le chat"
+      },
+      "chat_pro": {
+        "ranking_winner": "Gagne le classement du chat"
+      },
+      "servers": {
+        "kills": "Éliminations sur les serveurs",
+        "headshots": "Headshots sur les serveurs",
+        "hours": "Heures jouées sur les serveurs",
+        "mix_wins": "Victoires en mix",
+        "elo": "ELO en mix",
+        "first_connect": "Première connexion à un serveur"
+      },
+      "clans": {
+        "join": "Rejoint un clan",
+        "create": "Crée un clan (approuvé)",
+        "war_win": "Gagne une clan war"
+      },
+      "vip": {
+        "subscribed": "Reçoit un abonnement VIP"
+      },
+      "core": {
+        "member_days": "Jours d’ancienneté",
+        "profile_completed": "Complète son profil",
+        "steam_linked": "Lie son compte Steam",
+        "birthday": "Fête son anniversaire"
+      }
+    },
+    "other": {
+      "reactionGiver": "la personne qui a réagi",
+      "topicAuthor": "l’auteur du sujet"
     }
   }
 }

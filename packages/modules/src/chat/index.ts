@@ -1,3 +1,4 @@
+import { chatAchievementEvents } from "./achievementEvents";
 import { GCS_RICH_FIELDS, richFieldError, type GcsAcpMenuSection, type GcsModule, type GcsPermissionDef, type GcsSettingDef, type GcsSeedContext } from "@gcs/core";
 import { chatWidgets } from "../widgets";
 import { seedChatDemo } from "./seed";
@@ -179,6 +180,7 @@ async function seedChat({ tx, groupIds }: GcsSeedContext): Promise<void> {
 /** Modulul Chat (specul etapei 4): canale cu permisiuni, mesaje live, mute, slow mode și retenție. */
 export const chatModule: GcsModule = {
   key: "chat",
+  achievementEvents: chatAchievementEvents,
   app: {
     optional: true,
     labelKey: "apps.chat",

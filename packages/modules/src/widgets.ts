@@ -218,3 +218,22 @@ export const clanWidgets: GcsWidgetDef[] = [
     fields: [limitField()],
   }),
 ];
+
+/**
+ * Widget-urile profilului (Realizări v2): „Ultimele realizări”, badge-urile primite recent (medalionul, numele stilizat,
+ * „a primit …”, timpul), cu actualizare live. Setări: câte, doar cele rare, un grup.
+ */
+export const profileWidgets: GcsWidgetDef[] = [
+  widget({
+    key: "profile.recentBadges",
+    labelKey: "widgets.profile.recentBadges",
+    descriptionKey: "widgets.desc.profile.recentBadges",
+    icon: "fa-solid fa-award",
+    defaultConfig: { limit: 5, rare: "", group: "" },
+    fields: [
+      limitField(),
+      { key: "rare", labelKey: "widgets.fields.rare", type: "select", options: [{ value: "", labelKey: "widgets.rare.all" }, { value: "1", labelKey: "widgets.rare.only" }] },
+      { key: "group", labelKey: "widgets.fields.group", type: "select", optionsFrom: "groups" },
+    ],
+  }),
+];

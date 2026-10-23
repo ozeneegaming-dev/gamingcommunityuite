@@ -37,6 +37,8 @@ export type GcsMemberSearch = {
   activeFrom?: Date;
   activeTo?: Date;
   postsMin?: number;
+  /** Realizări v2: membrii unui rang (distribuția din ACP → Ranguri). */
+  rankId?: number;
   postsMax?: number;
 };
 
@@ -113,6 +115,7 @@ export function memberSearchWhere(s: GcsMemberSearch, ctx: { now: Date; staffIds
   if (country) and.push({ devices: { some: { location: country } } });
   if (s.joinedFrom || s.joinedTo) and.push({ createdAt: { ...(s.joinedFrom ? { gte: s.joinedFrom } : {}), ...(s.joinedTo ? { lte: s.joinedTo } : {}) } });
   if (s.activeFrom || s.activeTo) and.push({ lastActiveAt: { ...(s.activeFrom ? { gte: s.activeFrom } : {}), ...(s.activeTo ? { lte: s.activeTo } : {}) } });
+  if (s.rankId !== undefined) and.push({ rankId: s.rankId });
   if (s.postsMin !== undefined || s.postsMax !== undefined) {
     and.push({ postsCount: { ...(s.postsMin !== undefined ? { gte: s.postsMin } : {}), ...(s.postsMax !== undefined ? { lte: s.postsMax } : {}) } });
   }

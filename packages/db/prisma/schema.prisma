@@ -122,6 +122,8 @@ model User {
   messagesWritten  ConversationMessage[]
   badges           UserBadge[]
   achievementLog   AchievementLog[]
+  /// Realizări v2: aparițiile numărate ale evenimentelor (regulile „a n-a oară / la fiecare n”).
+  achievementHits  AchievementOccurrence[]
   vipSubscriptions VipSubscription[]
   /// Aspectul publicat de pluginuri (capabilitatea `appearance`, Studio VIP).
   appearances      MemberAppearance[]
@@ -271,6 +273,8 @@ model Group {
   gameVipMappings      GameVipMapping[]
   /// Pagina Staff v2: secțiunea grupului pe /staff (titlul, aspectul, ordinea).
   staffSection         StaffSection?
+  /// Realizări v2: rangurile care dau grupul ca avantaj (grup secundar cât timp membrul are rangul).
+  rankPerks            Rank[]                @relation("RankPerkGroup")
 
   /// Membri v2: grup public (opt-in): membrii se pot înscrie / retrage singuri din Setări → Grupuri, ca grup secundar.
   optIn Boolean @default(false)
@@ -1062,7 +1066,8 @@ model ConversationMessage {
   @@map("conversation_messages")
 }
 
-/// Rang: pragurile null nu se cer. Se acordă cel mai înalt rang (după `position`) cu toate pragurile completate atinse.
+/// Rang: pragurile null nu se cer. Se acordă cel mai înalt rang (după `position`) cu pragurile atinse: toate (`match`
+/// = `all`) sau măcar unul (`any`), inclusiv criteriile aplicațiilor (`criteria`: `[{ metric, min }]`, ex. orele jucate).
 model Rank {
   id            Int     @id @default(autoincrement())
   name          String
@@ -1072,7 +1077,25 @@ model Rank {
   minReputation Int?
   position      Int     @default(0)
 
-  users User[]
+  /// Ranguri moderne (Realizări v2): emblema pe trepte (bronz → legendă), desenată cu insignele GCS sau încărcată.
+  emblemTier        String?
+  emblemShape       String?
+  emblemIcon        String?
+  color             String?
+  imageAttachmentId String?
+  /// Animație discretă a emblemei (rangurile de vârf; oprită la „mișcare redusă”).
+  animated          Boolean @default(false)
+  match             String  @default("all")
+  criteria          Json    @default("[]")
+  /// Avantajele rangului: un grup secundar, un badge și un stil de nume (date la urcare, retrase la pierderea rangului).
+  perkGroupId       Int?
+  perkBadgeId       Int?
+  perkNameStyleId   Int?
+
+  users         User[]
+  perkGroup     Group?     @relation("RankPerkGroup", fields: [perkGroupId], references: [id], onDelete: SetNull)
+  perkBadge     Badge?     @relation("RankPerkBadge", fields: [perkBadgeId], references: [id], onDelete: SetNull)
+  perkNameStyle NameStyle? @relation("RankPerkNameStyle", fields: [perkNameStyleId], references: [id], onDelete: SetNull)
 
   @@map("ranks")
 }
@@ -1095,8 +1118,9 @@ model Badge {
   points            Int     @default(0)
   position          Int     @default(0)
 
-  users UserBadge[]
-  rules AchievementRule[]
+  users     UserBadge[]
+  rules     AchievementRule[]
+  rankPerks Rank[]            @relation("RankPerkBadge")
 
   @@map("badges")
 }
@@ -1108,12 +1132,17 @@ model UserBadge {
   awardedById String?
   reason      String?
   createdAt   DateTime @default(now())
+  /// Realizări v2: ultima acordare și de câte ori (insignele pe perioadă, ex. „Câștigătorul zilei”, se câștigă de mai
+  /// multe ori). Widget-ul „Ultimele realizări” ordonează după ea.
+  lastAwardedAt DateTime @default(now())
+  timesAwarded  Int      @default(1)
 
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
 
   @@unique([userId, badgeId])
   @@index([badgeId])
+  @@index([lastAwardedAt])
   @@map("user_badges")
 }
 
@@ -1128,6 +1157,8 @@ enum AchievementTrigger {
   EACH_POST
   EACH_REACTION_RECEIVED
   EACH_SOLUTION
+  /// Realizări v2: o regulă din constructor („Când → Și → Atunci”) pe un eveniment din registrul aplicațiilor.
+  EVENT
 }
 
 model AchievementRule {
@@ -1140,11 +1171,36 @@ model AchievementRule {
   badgeId   Int?
   enabled   Boolean            @default(true)
   position  Int                @default(0)
+  /// Realizări v2 (`trigger` = `EVENT`): evenimentul (ex. `forums.post`), condițiile (`{ mode, n, forumIds, serverIds,
+  /// groupIds, windowDays }`) și recompensele (`{ actor, other }`; vezi `profile/achievementRules.ts`).
+  event      String?
+  conditions Json     @default("{}")
+  rewards    Json     @default("{}")
+  createdAt  DateTime @default(now())
 
-  badge Badge?           @relation(fields: [badgeId], references: [id], onDelete: SetNull)
-  log   AchievementLog[]
+  badge       Badge?                  @relation(fields: [badgeId], references: [id], onDelete: SetNull)
+  log         AchievementLog[]
+  occurrences AchievementOccurrence[]
 
+  @@index([event])
   @@map("achievement_rules")
+}
+
+/// Realizări v2: o apariție numărată a unui eveniment pentru o regulă (o singură dată pe `ref`, ex. `post:120`), pentru
+/// „a n-a oară”, „la fiecare n” și fereastra de timp.
+model AchievementOccurrence {
+  id        Int      @id @default(autoincrement())
+  ruleId    Int
+  userId    String
+  ref       String
+  createdAt DateTime @default(now())
+
+  rule AchievementRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  user User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([ruleId, userId, ref])
+  @@index([ruleId, userId, createdAt])
+  @@map("achievement_occurrences")
 }
 
 /// Ce s-a acordat prin reguli. `uniqueKey` (ex. `rule:3`, `post:120`) împiedică acordarea dublă.
@@ -1254,7 +1310,8 @@ model NameStyle {
   badgeIds  Int[]
   position  Int     @default(0)
 
-  users User[]
+  users     User[]
+  rankPerks Rank[]  @relation("RankPerkNameStyle")
 
   @@map("name_styles")
 }

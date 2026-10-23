@@ -13,6 +13,7 @@ export const SECONDARY_EXPIRY_JOB = "groups.secondary_expiry";
 export function registerAppJobs(s: GcsServices): void {
   s.jobs.register({ name: HEARTBEAT_JOB, everyMs: 60_000, handler: () => writeWorkerHeartbeat(s.redis) });
   s.achievements.registerJobs(s.jobs);
+  s.achievementRules.registerJobs(s.jobs, (userId) => s.achievements.evaluate(userId));
   s.vip.registerJobs(s.jobs);
   // Membri v2: grupurile secundare temporare ajunse la expirare se scot (membrul e anunțat), la minut.
   s.jobs.register({ name: SECONDARY_EXPIRY_JOB, everyMs: 60_000, handler: async () => void (await s.groups.expireSecondary()) });

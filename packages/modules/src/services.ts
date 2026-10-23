@@ -87,6 +87,7 @@ import { GcsCosmeticsService } from "./profile/cosmetics";
 import { GcsRankDirectory } from "./profile/display";
 import { GcsProfileFieldAdmin } from "./profile/fieldsAdmin";
 import { GcsMembership } from "./profile/membership";
+import { GcsAchievementRules, systemActor } from "./profile/achievementRules";
 import { GcsProfileService } from "./profile/profile";
 import { GcsPromotionService } from "./profile/promotions";
 import { GcsProfileQueries } from "./profile/queries";
@@ -225,6 +226,7 @@ export type GcsServices = {
   profileFields: GcsProfileFieldAdmin;
   social: GcsSocialService;
   achievements: GcsAchievementService;
+  achievementRules: GcsAchievementRules;
   achievementAdmin: GcsAchievementAdmin;
   membership: GcsMembership;
   promotions: GcsPromotionService;
@@ -519,6 +521,23 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   });
   conversations.registerContent({ reports });
   const vip = new GcsVipService({ db, bus, permissions, settings, membership });
+  // Realizări v2: regulile pe evenimentele aplicațiilor (constructorul din ACP), rangurile moderne și widget-ul live.
+  const achievementRules = new GcsAchievementRules({
+    db,
+    bus,
+    registry,
+    enabledFilter: () => apps.enabledFilter(),
+    setting: (key) => settings.get(key),
+    membership,
+    realtime,
+    jobs,
+    schedule: (userId) => achievements.schedule(userId),
+    grantVip: async (userId, groupId, days) => void (await vip.grant(await systemActor(db), { userId, groupId, days, asPrimary: false, note: "achievements" })),
+  });
+  achievementRules.listen(bus);
+  achievements.configureRanks({ registry, enabledFilter: () => apps.enabledFilter(), membership, realtime });
+  achievements.onEvaluated(async (userId) => void (await achievementRules.evaluateValues(userId)));
+  achievements.onDaily((now) => achievementRules.dailySweep(now));
 
   const profileQueries = new GcsProfileQueries({ db, cache, permissions, profiles, social, ranks });
   const forumQueries = new GcsForumQueries({ db, cache, permissions, settings, readMarkers, follows, reactions, polls, ranks });
@@ -567,11 +586,14 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     rateLimiter,
     notifications,
     reports,
-    grantBadge: (userId, key, reason) => achievements.grantSystemBadge(userId, key, reason),
+    // Câștigătorul unei perioade: insigna de perioadă (se poate câștiga din nou în altă perioadă).
+    grantBadge: (userId, key, reason) => achievementRules.grantPeriodWinner({ userId, badgeKey: key, period: reason.replace(/[^a-z0-9_:.-]+/gi, "_").slice(0, 60), reason, source: "chat_pro" }),
   });
   chatPro.register();
   const realtimeRooms = new GcsRealtimeRooms({ permissions, forumQueries });
   realtimeRooms.register("chat", (actor, key) => chatQueries.canRead(actor, key));
+  // Widget-ul „Ultimele realizări”: fluxul public al badge-urilor noi.
+  realtimeRooms.register("feed", async (_actor, id) => id === "badges");
   // Aplicația Servere (etapa Gaming): statusul din Redis, citirile publice, ACP-ul și interogarea din worker.
   const serverStore = new GcsServerStatusStore(redis);
   const serverQueries = new GcsServerQueries({ db, cache, permissions, settings, apps, store: serverStore });
@@ -778,7 +800,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     profileFields: new GcsProfileFieldAdmin({ db, bus, acp }),
     social,
     achievements,
-    achievementAdmin: new GcsAchievementAdmin({ db, bus, acp, achievements, jobs, attachments }),
+    achievementAdmin: new GcsAchievementAdmin({ db, bus, acp, achievements, jobs, attachments, rules: achievementRules }),
+    achievementRules,
     membership,
     promotions,
     cosmetics,

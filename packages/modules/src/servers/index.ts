@@ -1,3 +1,4 @@
+import { serverAchievementEvents } from "./achievementEvents";
 import type { GcsAcpMenuSection, GcsModule, GcsPermissionDef, GcsSettingDef } from "@gcs/core";
 import { serverWidgets } from "../widgets";
 import { GcsBridgeAdmins } from "./bridge/admins";
@@ -73,6 +74,7 @@ const acpMenu: GcsAcpMenuSection[] = [
  */
 export const serversModule: GcsModule = {
   key: "servers",
+  achievementEvents: serverAchievementEvents,
   // Profil gaming v2: skin-urile membrului (deocamdată un tab-ciornă, doar cu aplicația Servere pornită).
   profileTabs: [{ key: "skins", labelKey: "profile.tabs.skins", icon: "fa-solid fa-gun", position: 60 }],
   // Membri v2: identitățile de joc, ELO-ul mix și sancțiunile de pe servere, pe fișa ACP (ELO și pe profil).

@@ -6,6 +6,8 @@ import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../../_components/GcsActionForm";
 import { deleteRule, saveRule } from "../actions";
+import { normalizeConditions, normalizeRewards } from "@gcs/modules";
+import { GcsRuleBuilder, type GcsBuilderEvent, type GcsBuilderRule } from "./GcsRuleBuilder";
 import { GcsAcpTitle, GcsAcpTitleIcon } from "../../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -18,8 +20,39 @@ const TRIGGERS = ["POSTS_COUNT", "REPUTATION", "POINTS", "MEMBER_DAYS", "SOLUTIO
 export default async function AcpRulesPage() {
   await requireAcpSection(RULES_ACP_SECTION);
   const t = await getTranslations("acp.achievements");
-  const { achievementAdmin } = services();
-  const [rules, badges] = await Promise.all([achievementAdmin.rules(), achievementAdmin.badges()]);
+  const tAll = await getTranslations();
+  const { achievementAdmin, achievementRules, registry, apps, db } = services();
+  const [allRules, badges, available, on, forums, groups, nameStyles] = await Promise.all([
+    achievementAdmin.rules(),
+    achievementAdmin.badges(),
+    achievementRules.availableEvents(),
+    apps.enabledFilter(),
+    db.forum.findMany({ where: { type: "FORUM" }, orderBy: [{ position: "asc" }, { id: "asc" }], select: { id: true, name: true } }),
+    db.group.findMany({ where: { key: { notIn: ["guest", "banned"] } }, orderBy: [{ position: "asc" }, { id: "asc" }], select: { id: true, name: true, isVip: true, isProtected: true } }),
+    db.nameStyle.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }], select: { id: true, name: true } }),
+  ]);
+  const servers = on("servers") ? await db.gameServer.findMany({ orderBy: { id: "asc" }, select: { id: true, name: true } }) : null;
+  const label = (key: string) => (tAll.has(key as never) ? tAll(key as never) : key);
+  const events: GcsBuilderEvent[] = available.map(({ module, def }) => {
+    const app = registry.module(module)?.app;
+    return {
+      key: def.key,
+      label: label(def.labelKey),
+      icon: def.icon,
+      app: module,
+      appLabel: app && !app.locked ? label(app.labelKey) : t("v2.coreApp"),
+      kind: def.kind,
+      scopes: [...(def.scopes ?? [])],
+      other: def.otherLabelKey ? label(def.otherLabelKey) : null,
+    };
+  });
+  const v2: GcsBuilderRule[] = allRules
+    .filter((r) => r.trigger === "EVENT")
+    .map((r) => {
+      const kind = events.find((e) => e.key === r.event)?.kind ?? "count";
+      return { id: r.id, name: r.name, event: r.event ?? "", enabled: r.enabled, unavailable: !events.some((e) => e.key === r.event), conditions: normalizeConditions(r.conditions, kind), rewards: normalizeRewards(r.rewards) };
+    });
+  const rules = allRules.filter((r) => r.trigger !== "EVENT");
 
   const fields = (r?: (typeof rules)[number]) => (
     <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
@@ -68,6 +101,23 @@ export default async function AcpRulesPage() {
       <GcsAcpTitle icon="fa-solid fa-list-check">
         {t("rulesTitle")}
       </GcsAcpTitle>
+      <p className="gcs-muted" style={{ margin: 0 }}>
+        {t("v2.help")}
+      </p>
+      <GcsRuleBuilder
+        events={events}
+        forums={forums}
+        servers={servers}
+        groups={groups.map(({ id, name }) => ({ id, name }))}
+        rewardGroups={groups.filter((g) => !g.isProtected && !g.isVip).map(({ id, name }) => ({ id, name }))}
+        badges={badges.map((b) => ({ id: b.id, name: b.name }))}
+        nameStyles={nameStyles}
+        vipGroups={on("vip") ? groups.filter((g) => g.isVip).map(({ id, name }) => ({ id, name })) : null}
+        rules={v2}
+      />
+      <h2 className="gcs-acpWidget__title" style={{ marginTop: 8 }}>
+        {t("v2.classicTitle")}
+      </h2>
       <p className="gcs-muted" style={{ margin: 0 }}>
         {t("rulesHelp")}
       </p>

@@ -281,7 +281,51 @@ export interface GcsModule {
    * sancțiunile de pe servere, clanul). Site-ul le desenează după cheie.
    */
   memberPanels?: GcsMemberPanelDef[];
+  /**
+   * Evenimentele modulului pentru constructorul de reguli (Realizări v2): apar în ACP și declanșează reguli doar cu
+   * aplicația modulului pornită (o aplicație oprită sau dezinstalată își ia evenimentele cu ea).
+   */
+  achievementEvents?: GcsAchievementEventDef[];
 }
+
+/** Contextul funcțiilor unui eveniment de realizări (citiri în baza de date). */
+export type GcsAchievementContext = { db: PrismaClient };
+
+/**
+ * O apariție a unui eveniment de realizări: membrul (`userId`), cealaltă parte (ex. cine a dat reacția), o referință
+ * unică (`post:120`; o apariție repetată nu se numără de două ori), valoarea (evenimentele „valoare”) și locul.
+ */
+export type GcsAchievementOccurrence = {
+  userId: string;
+  otherUserId?: string | null;
+  ref: string;
+  value?: number;
+  forumId?: number | null;
+  serverId?: number | null;
+};
+
+/** Filtrele de loc ale unui eveniment (forumurile, serverele); filtrul pe grupuri e comun tuturor. */
+export type GcsAchievementScope = "forum" | "server";
+
+/**
+ * Un eveniment din registrul realizărilor (`achievementEvents`).
+ * - `kind: "count"`: fiecare apariție se numără („a n-a oară”, „la fiecare n”, într-o fereastră de timp);
+ * - `kind: "value"`: o valoare atinsă („ELO 2000”, „100 de ore jucate”), citită din apariție sau cu `current`.
+ * `sources`: evenimentele de pe bus din care vin aparițiile. `current`: valoarea de acum a membrului (recalcularea și
+ * criteriile rangurilor); `rankMetric`: valoarea poate fi un criteriu de rang. `other`: eticheta celeilalte părți
+ * (ex. „cine a dat reacția”), care poate primi propria recompensă.
+ */
+export type GcsAchievementEventDef = {
+  key: string;
+  labelKey: string;
+  icon: string;
+  kind: "count" | "value";
+  scopes?: readonly GcsAchievementScope[];
+  otherLabelKey?: string;
+  rankMetric?: boolean;
+  sources?: readonly { event: string; map: (e: GcsEvent, ctx: GcsAchievementContext) => Promise<GcsAchievementOccurrence[]> | GcsAchievementOccurrence[] }[];
+  current?: (ctx: GcsAchievementContext, userId: string, scope: { forumIds: number[]; serverIds: number[] }) => Promise<number>;
+};
 
 /** Un tab al profilului public adus de un modul. `position`: ordinea între taburi (cele de bază au 10, 20, 70, 80, 90). */
 export type GcsProfileTabDef = { key: string; labelKey: string; icon: string; position: number };
@@ -417,6 +461,14 @@ export class GcsModuleRegistry {
       .flatMap((m) => (m.memberPanels ?? []).filter((d) => d.surfaces.includes(surface)).map((def) => ({ module: m.key, def })))
       .filter((p) => (seen.has(p.def.key) ? false : (seen.add(p.def.key), true)))
       .sort((a, b) => a.def.position - b.def.position);
+  }
+
+  /** Evenimentele de realizări ale modulelor (cu modulul fiecăruia); o cheie repetată o păstrează pe prima. */
+  achievementEvents(): { module: string; def: GcsAchievementEventDef }[] {
+    const seen = new Set<string>();
+    return this.modules
+      .flatMap((m) => (m.achievementEvents ?? []).map((def) => ({ module: m.key, def })))
+      .filter((e) => (seen.has(e.def.key) ? false : (seen.add(e.def.key), true)));
   }
 
   widgetDef(key: string): { module: string; def: GcsWidgetDef } | undefined {
