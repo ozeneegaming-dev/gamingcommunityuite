@@ -1,0 +1,768 @@
+/*
+ * Notificări v2 (componente de sistem, în orice temă; doar tokenurile temei): dropdown-ul clopoțelului (taburi, rânduri,
+ * acțiuni), pagina `/notifications` (taburi, filtru, zile, rânduri cu acțiuni), rezumatul „Ce ai ratat”, tabelul
+ * canalelor din Setări și din ACP (categorii, stări, blocări), cardul web push și cardurile ACP (statistici, emailuri
+ * oprite). Hover-ul: rândurile își schimbă doar fundalul; taburile inactive 5% alb; pastilele în culoarea lor; sweep-ul
+ * de sticlă vine din `sweep.css` (`.gcs-sweep`, `.gcs-iconBtn`, `.gcs-btn`).
+ */
+
+/* ─── Taburile (dropdown și pagină) ──────────────────────────────────────────────────────────────────────── */
+:root .gcs-notifTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+:root .gcs-notifTabs__tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background-color: transparent;
+  color: var(--gcs-ui-muted);
+  font: 600 12.5px var(--gcs-font-text);
+  text-decoration: none;
+  cursor: pointer;
+}
+:root .gcs-notifTabs__tab:is(:hover, :focus-visible) {
+  background-color: var(--gcs-ui-hover-tab);
+  color: var(--gcs-ui-strong);
+}
+:root .gcs-notifTabs__tab--active,
+:root .gcs-notifTabs__tab--active:is(:hover, :focus-visible) {
+  border-color: color-mix(in srgb, var(--gcs-accent) 45%, transparent);
+  background-color: color-mix(in srgb, var(--gcs-accent) 14%, transparent);
+  color: var(--gcs-ui-strong);
+}
+:root .gcs-notifTabs__tab svg {
+  color: var(--gcs-accentInk, var(--gcs-ui-accent-ink));
+}
+:root .gcs-notifTabs__count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--gcs-accent) 45%, transparent);
+  background-color: color-mix(in srgb, var(--gcs-accent) 18%, transparent);
+  color: var(--gcs-ui-strong);
+  font-size: 11px;
+  font-weight: 700;
+  transition: background-color var(--gcs-dur), border-color var(--gcs-dur), box-shadow var(--gcs-dur), transform var(--gcs-dur);
+}
+:root .gcs-notifTabs__tab:hover .gcs-notifTabs__count {
+  background-color: color-mix(in srgb, var(--gcs-accent) 30%, transparent);
+  border-color: color-mix(in srgb, var(--gcs-accent) 60%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--gcs-accent) 40%, transparent);
+  transform: translateY(-1px);
+}
+
+/* ─── Dropdown-ul clopoțelului ───────────────────────────────────────────────────────────────────────────── */
+:root .gcs-notifMenu__panel {
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+:root .gcs-notifMenu__head strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+:root .gcs-notifMenu__tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+:root .gcs-notifMenu__markAll {
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 6px;
+  background-color: transparent;
+  cursor: pointer;
+}
+:root .gcs-notifMenu__markAll:is(:hover, :focus-visible) {
+  background-color: var(--gcs-ui-hover);
+}
+:root .gcs-notifMenu__settings {
+  color: var(--gcs-ui-muted);
+}
+:root .gcs-notifMenu__tabs {
+  padding: 0 2px;
+}
+:root .gcs-notifMenu__tabs .gcs-notifTabs__tab {
+  flex: 1;
+  justify-content: center;
+}
+/* Tabul ales: lista apare cu un cross-fade (cheia se schimbă). */
+:root .gcs-notifMenu__body {
+  max-height: min(420px, calc(100vh - 240px));
+  overflow-y: auto;
+  animation: gcs-motion-fade var(--gcs-dur) var(--gcs-ease-out) both;
+}
+:root .gcs-notifMenu__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+:root .gcs-notifMenu__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ─── Rândul unei notificări (dropdown și pagină) ────────────────────────────────────────────────────────── */
+:root .gcs-notifRow {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  color: var(--gcs-ui-text);
+  text-decoration: none;
+  transition: background-color var(--gcs-dur);
+}
+:root a.gcs-notifRow:is(:hover, :focus-visible),
+:root .gcs-notifRow--page:hover {
+  background-color: var(--gcs-ui-hover);
+  color: var(--gcs-ui-text);
+}
+:root .gcs-notifRow--unread {
+  background-color: color-mix(in srgb, var(--gcs-accent) 8%, transparent);
+}
+:root .gcs-notifRow--unread:is(:hover, :focus-visible) {
+  background-color: color-mix(in srgb, var(--gcs-accent) 12%, transparent);
+}
+:root .gcs-notifRow__lead {
+  flex: none;
+  display: inline-flex;
+}
+:root .gcs-notifRow__icon {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--gcs-accent) 40%, transparent);
+  background-color: color-mix(in srgb, var(--gcs-accent) 14%, transparent);
+  color: var(--gcs-accentInk, var(--gcs-ui-accent-ink));
+  font-size: 14px;
+}
+:root .gcs-notifRow__stack {
+  display: inline-flex;
+  width: 50px;
+}
+:root .gcs-notifRow__stack .gcs-avatar {
+  box-shadow: 0 0 0 2px var(--gcs-panel-bg, var(--gcs-surface));
+}
+:root .gcs-notifRow__stack > * + * {
+  margin-left: -12px;
+}
+:root .gcs-notifRow__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+:root .gcs-notifRow__text {
+  font-size: 13px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+:root .gcs-notifRow--unread .gcs-notifRow__text {
+  color: var(--gcs-ui-strong);
+  font-weight: 600;
+}
+:root .gcs-notifRow__link {
+  color: inherit;
+  text-decoration: none;
+}
+:root .gcs-notifRow__link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+:root .gcs-notifRow__link:is(:hover, :focus-visible) {
+  color: var(--gcs-accentInk, var(--gcs-ui-accent-ink));
+}
+:root .gcs-notifRow--page :is(.gcs-userLink, .gcs-name, .gcs-notifRow__tools) {
+  position: relative;
+  z-index: 1;
+}
+:root .gcs-notifRow__snippet {
+  font-size: 12px;
+  color: var(--gcs-ui-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:root .gcs-notifRow__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--gcs-ui-muted);
+}
+:root .gcs-notifRow__flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--gcs-accent) 45%, transparent);
+  background-color: color-mix(in srgb, var(--gcs-accent) 14%, transparent);
+  color: var(--gcs-accentInk, var(--gcs-ui-accent-ink));
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+:root .gcs-notifRow__dot {
+  flex: none;
+  align-self: center;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--gcs-accent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--gcs-accent) 55%, transparent);
+}
+:root .gcs-notifRow__tools {
+  flex: none;
+  display: inline-flex;
+  gap: 2px;
+  opacity: 0.55;
+  transition: opacity var(--gcs-dur);
+}
+:root .gcs-notifRow--page:is(:hover, :focus-within) .gcs-notifRow__tools {
+  opacity: 1;
+}
+:root .gcs-notifRow__tool--danger:is(:hover, :focus-visible) {
+  background-color: color-mix(in srgb, #ef4444 16%, transparent);
+  color: #ff8a91;
+}
+@media (hover: none) {
+  :root .gcs-notifRow__tools {
+    opacity: 1;
+  }
+}
+
+/* ─── Pagina /notifications ──────────────────────────────────────────────────────────────────────────────── */
+:root .gcs-notifPage__tabs {
+  margin: 0 0 12px;
+  padding: 6px;
+  border: 1px solid var(--gcs-ui-line);
+  border-radius: 12px;
+  background-color: var(--gcs-ui-well);
+}
+:root .gcs-notifPage__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+:root .gcs-notifFilter {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--gcs-ui-line);
+  border-radius: 9px;
+  background-color: var(--gcs-ui-well);
+}
+:root .gcs-notifFilter__item {
+  padding: 5px 12px;
+  border-radius: 7px;
+  color: var(--gcs-ui-muted);
+  font: 600 12.5px var(--gcs-font-text);
+  text-decoration: none;
+}
+:root .gcs-notifFilter__item:is(:hover, :focus-visible) {
+  background-color: var(--gcs-ui-hover-tab);
+  color: var(--gcs-ui-strong);
+}
+:root .gcs-notifFilter__item--active,
+:root .gcs-notifFilter__item--active:is(:hover, :focus-visible) {
+  background-color: var(--gcs-surface2);
+  color: var(--gcs-ui-strong);
+  box-shadow: inset 0 0 0 1px var(--gcs-ui-line);
+}
+:root .gcs-notifPage {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+:root .gcs-notifPage__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+:root .gcs-notifPage__section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  animation: gcs-motion-fade var(--gcs-dur) var(--gcs-ease-out) both;
+}
+:root .gcs-notifPage__day {
+  margin: 0;
+  font: 700 11px var(--gcs-font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gcs-ui-faint);
+}
+:root .gcs-notifPage .gcs-notifList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  background-color: var(--gcs-surface);
+}
+:root .gcs-notifPage .gcs-notifList > li + li {
+  border-top: 0;
+}
+:root .gcs-notifPage__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 28px 16px;
+  border: 1px dashed var(--gcs-ui-line);
+  border-radius: 12px;
+  color: var(--gcs-ui-muted);
+  text-align: center;
+}
+
+/* ─── „Ce ai ratat” (rezumatul săptămânal) ───────────────────────────────────────────────────────────────── */
+:root .gcs-weekly__intro {
+  margin: 0 0 14px;
+}
+:root .gcs-weekly {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 14px;
+}
+:root .gcs-weekly__card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+}
+:root .gcs-weekly__title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  color: var(--gcs-ui-strong);
+}
+:root .gcs-weekly__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding-left: 20px;
+}
+:root .gcs-weekly__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 10px;
+  font-size: 13.5px;
+}
+:root .gcs-weekly__meta {
+  font-size: 12px;
+  color: var(--gcs-ui-muted);
+}
+
+/* ─── Tabelul canalelor (Setări → Notificări și ACP) ─────────────────────────────────────────────────────── */
+:root .gcs-notifSettings {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+:root .gcs-prefGrid {
+  gap: 12px;
+}
+:root .gcs-prefGrid__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 12px;
+  color: var(--gcs-ui-muted);
+}
+:root .gcs-prefGrid__category {
+  border: 1px solid var(--gcs-ui-line);
+  border-radius: 12px;
+  background-color: var(--gcs-surface);
+  overflow: hidden;
+}
+:root .gcs-prefGrid__summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background-color: var(--gcs-ui-well);
+  color: var(--gcs-ui-strong);
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+:root .gcs-prefGrid__summary::-webkit-details-marker {
+  display: none;
+}
+:root .gcs-prefGrid__summary:is(:hover, :focus-visible) {
+  background-color: var(--gcs-ui-hover-tab);
+}
+:root .gcs-prefGrid__catIcon {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--gcs-accent) 40%, transparent);
+  background-color: color-mix(in srgb, var(--gcs-accent) 14%, transparent);
+  color: var(--gcs-accentInk, var(--gcs-ui-accent-ink));
+}
+:root .gcs-prefGrid__catName {
+  flex: 1;
+}
+:root .gcs-prefGrid__catCount {
+  font-size: 12px;
+  color: var(--gcs-ui-muted);
+}
+:root .gcs-prefGrid__summary::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform var(--gcs-dur) var(--gcs-ease-out);
+  opacity: 0.6;
+}
+:root .gcs-prefGrid__category:not([open]) > .gcs-prefGrid__summary::after {
+  transform: rotate(-45deg);
+}
+:root .gcs-prefGrid__table {
+  display: flex;
+  flex-direction: column;
+  animation: gcs-motion-fade var(--gcs-dur) var(--gcs-ease-out) both;
+}
+:root .gcs-prefGrid__row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.6fr) repeat(5, minmax(96px, 1fr));
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--gcs-ui-line);
+  transition: background-color var(--gcs-dur);
+}
+:root .gcs-prefGrid__row:not(.gcs-prefGrid__row--head):hover {
+  background-color: var(--gcs-ui-hover);
+}
+:root .gcs-prefGrid__row--head {
+  border-top: 0;
+  font: 700 10.5px var(--gcs-font-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gcs-ui-faint);
+}
+:root .gcs-prefGrid__row--bulk {
+  background-color: color-mix(in srgb, var(--gcs-accent) 5%, transparent);
+}
+:root .gcs-prefGrid__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--gcs-ui-text);
+}
+:root .gcs-prefGrid__important {
+  color: var(--gcs-accentInk, var(--gcs-ui-accent-ink));
+  font-size: 11px;
+}
+:root .gcs-prefGrid__cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+:root .gcs-prefGrid__cellLabel {
+  display: none;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gcs-ui-muted);
+}
+:root .gcs-prefGrid__select {
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+  padding: 0 8px;
+  font-size: 12.5px;
+}
+:root .gcs-prefGrid__select:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+:root .gcs-prefGrid__select--lock {
+  height: 28px;
+  font-size: 11.5px;
+  color: var(--gcs-ui-muted);
+}
+:root .gcs-prefGrid__lock {
+  position: absolute;
+  top: 50%;
+  right: 26px;
+  transform: translateY(-50%);
+  color: var(--gcs-accentInk, var(--gcs-ui-accent-ink));
+  font-size: 11px;
+  pointer-events: auto;
+}
+:root .gcs-prefGrid__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+@media (max-width: 860px) {
+  :root .gcs-prefGrid__row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 10px 12px;
+  }
+  :root .gcs-prefGrid__row--head {
+    display: none;
+  }
+  :root .gcs-prefGrid__label {
+    grid-column: 1 / -1;
+    font-weight: 600;
+  }
+  :root .gcs-prefGrid__cellLabel {
+    display: block;
+  }
+  :root .gcs-prefGrid__lock {
+    top: auto;
+    bottom: 9px;
+    transform: none;
+  }
+}
+
+/* ─── Web push (Setări → Notificări) ─────────────────────────────────────────────────────────────────────── */
+:root .gcs-pushCard {
+  padding: 16px;
+  border: 1px solid var(--gcs-ui-line);
+  border-radius: 12px;
+  background-color: var(--gcs-surface);
+}
+:root .gcs-pushCard__title,
+:root .gcs-pushCard__subtitle {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--gcs-ui-strong);
+}
+:root .gcs-pushCard__title {
+  font-size: 16px;
+}
+:root .gcs-pushCard__subtitle {
+  font-size: 13px;
+}
+:root .gcs-pushCard__state {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--gcs-ui-line);
+  background-color: var(--gcs-ui-well);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gcs-ui-text);
+}
+:root .gcs-pushCard__state--on {
+  border-color: color-mix(in srgb, var(--gcs-ok) 50%, transparent);
+  background-color: color-mix(in srgb, var(--gcs-ok) 12%, transparent);
+  color: var(--gcs-ui-strong);
+}
+:root .gcs-pushCard__state--on svg {
+  color: var(--gcs-ok);
+}
+:root .gcs-pushCard__state--denied,
+:root .gcs-pushCard__state--unsupported {
+  border-color: color-mix(in srgb, var(--gcs-warn) 50%, transparent);
+  background-color: color-mix(in srgb, var(--gcs-warn) 12%, transparent);
+}
+:root .gcs-pushCard__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+:root .gcs-pushCard__devices {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+:root .gcs-pushCard__device {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--gcs-ui-line);
+  border-radius: 9px;
+  background-color: var(--gcs-ui-well);
+  transition: background-color var(--gcs-dur);
+}
+:root .gcs-pushCard__device:hover {
+  background-color: var(--gcs-ui-hover);
+}
+:root .gcs-pushCard__deviceIcon {
+  color: var(--gcs-accentInk, var(--gcs-ui-accent-ink));
+}
+:root .gcs-pushCard__deviceText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+}
+:root .gcs-pushCard__this {
+  font-weight: 600;
+  color: var(--gcs-accentInk, var(--gcs-ui-accent-ink));
+}
+:root .gcs-pushCard__deviceMeta {
+  font-size: 11.5px;
+  color: var(--gcs-ui-muted);
+}
+:root .gcs-pushCard__remove:is(:hover, :focus-visible) {
+  background-color: color-mix(in srgb, #ef4444 16%, transparent);
+  color: #ff8a91;
+}
+
+/* ─── ACP → Notificări ───────────────────────────────────────────────────────────────────────────────────── */
+:root .gcs-acpNotif__card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+:root .gcs-acpNotif__title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  color: var(--gcs-ui-strong);
+}
+:root .gcs-acpNotif__hint {
+  margin: 0;
+}
+:root .gcs-acpNotif__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 16px;
+}
+:root .gcs-acpNotif__grid .gcs-acpNotif__card {
+  margin-bottom: 0;
+}
+:root .gcs-acpNotif__grid + .gcs-acpNotif__card {
+  margin-top: 16px;
+}
+:root .gcs-acpNotif__resets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--gcs-ui-line);
+}
+:root .gcs-prefGrid__table--acp .gcs-prefGrid__row {
+  grid-template-columns: minmax(170px, 1.4fr) repeat(5, minmax(110px, 1fr));
+}
+:root .gcs-acpNotif__tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+:root .gcs-acpNotif__tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid var(--gcs-ui-line);
+  border-left: 3px solid var(--gcs-accent);
+  border-radius: 10px;
+  background-color: var(--gcs-ui-well);
+  transition: background-color var(--gcs-dur);
+}
+:root .gcs-acpNotif__tile:hover {
+  background-color: var(--gcs-ui-hover);
+}
+:root .gcs-acpNotif__tileLabel {
+  font: 700 10.5px var(--gcs-font-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gcs-ui-faint);
+}
+:root .gcs-acpNotif__tileValue {
+  font-size: 22px;
+  color: var(--gcs-ui-strong);
+}
+:root .gcs-acpNotif__tileSub {
+  font-size: 12px;
+  color: var(--gcs-ui-muted);
+}
+:root .gcs-acpNotif__blocked {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+:root .gcs-acpNotif__blockedRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border: 1px solid var(--gcs-ui-line);
+  border-radius: 9px;
+}
+
+/* Mișcare redusă: doar opacitatea (fără alunecări sau scalări). */
+@media (prefers-reduced-motion: reduce) {
+  :root :is(.gcs-notifMenu__body, .gcs-notifPage__section, .gcs-prefGrid__table) {
+    animation-duration: 0.01ms;
+  }
+  :root :is(.gcs-notifTabs__count, .gcs-prefGrid__summary::after) {
+    transition: none;
+  }
+  :root .gcs-notifTabs__tab:hover .gcs-notifTabs__count {
+    transform: none;
+  }
+}

@@ -194,10 +194,10 @@ describe("digestul", () => {
 
   test("preferința OFF exclude tipul din digest; digestIfDue rulează o singură dată pe zi, după ora setată", async () => {
     const { a } = await setup();
-    await w.notifications.setPreferences(a.userId!, { "profile.follower": { site: true, email: "OFF" }, "profile.wall": { site: true, email: "OFF" } });
+    await w.notifications.setPreferences(a.userId!, { "profile.follower": { email: "off" }, "profile.wall": { email: "off" } });
     expect(await w.producers.digest()).toBe(0);
 
-    await w.notifications.setPreferences(a.userId!, { "profile.wall": { site: true, email: "DIGEST" } });
+    await w.notifications.setPreferences(a.userId!, { "profile.wall": { email: "on", emailMode: "daily" } });
     // 05:00 UTC = 08:00 în București (vara): ora implicită 8.
     expect(await w.producers.digestIfDue(new Date("2026-07-01T04:30:00Z"))).toBe(false);
     expect(await w.producers.digestIfDue(new Date("2026-07-01T05:10:00Z"))).toBe(true);

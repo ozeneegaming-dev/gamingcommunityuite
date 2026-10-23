@@ -20,6 +20,7 @@ import {
   GcsAppService,
   GcsNavService,
   GcsNotificationService,
+  GcsPushService,
   GcsTranslationService,
   GcsWidgetService,
   GcsThemeService,
@@ -174,6 +175,8 @@ export type GcsServices = {
   presence: GcsPresenceService;
   realtimeRooms: GcsRealtimeRooms;
   notificationProducers: GcsNotificationProducers;
+  /** Web push (Notificări v2): cheile VAPID, dispozitivele membrilor și trimiterea. */
+  push: GcsPushService;
   chat: GcsChatService;
   /** Moderarea chat-ului (staff și accesul de moderator în chat): sancțiuni, jurnal, `/acces`, liniile de sistem. */
   chatModeration: GcsChatModeration;
@@ -403,7 +406,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const groupsPro = new GcsGroupsProService({ db, cache, bus, settings, groups: groupDirectory });
   const apps = new GcsAppService({ db, cache, bus, registry, acp, permissions, settings });
   const members = new GcsMemberDirectory({ db });
-  const notifications = new GcsNotificationService({ db, bus, cache, registry });
+  const notifications = new GcsNotificationService({ db, bus, cache, registry, apps, settings });
+  const push = new GcsPushService({ db });
   const bans = new GcsBanService({ db, cache, bus, acp });
   const warnings = new GcsWarningService({ db, bus, acp, bans });
   const realtime = new GcsRealtime(redis);
@@ -533,6 +537,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     baseUrl: async () => baseUrl(await settings.get<string>("site.url")),
     groupMentions,
     groupDirectory,
+    push,
+    apps,
   });
   notificationProducers.registerTargets();
   notificationProducers.listen(bus);
@@ -726,6 +732,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     presence,
     realtimeRooms,
     notificationProducers,
+    push,
     chat,
     chatPro,
     chatQueries,

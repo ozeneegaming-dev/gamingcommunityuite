@@ -1767,8 +1767,40 @@
     },
     "notifications": {
       "title": "Benachrichtigungen",
-      "hint": "Standardwerte für jeden Benachrichtigungstyp. Mitglieder können sie in Einstellungen → Benachrichtigungen ändern.",
-      "save": "Speichern"
+      "hint": "Die Standardwerte für jeden Typ und Kanal. Einen gesperrten Kanal („Erzwungen“ oder „Deaktiviert“) können Mitglieder nicht ändern; den Rest wählen sie unter Einstellungen → Benachrichtigungen.",
+      "save": "Speichern",
+      "defaultsTitle": "Standardwerte nach Typ und Kanal",
+      "lock": "Sperre",
+      "lockNone": "Mitglied wählt",
+      "lockForced": "Erzwungen",
+      "lockDisabled": "Deaktiviert",
+      "resetMembers": "Für alle Mitglieder auf Standard zurücksetzen",
+      "resetMembersConfirm": "Die Auswahlen aller Mitglieder werden gelöscht und alle verwenden die Standardwerte oben. Das kann nicht rückgängig gemacht werden.",
+      "resetDefaults": "Standardwerte zurücksetzen",
+      "resetDefaultsConfirm": "Jeder Typ kehrt zu den Werten seiner App zurück, ohne Sperren. Fortfahren?",
+      "scheduleTitle": "E-Mail-Zeitplan",
+      "days": {
+        "0": "Sonntag",
+        "1": "Montag",
+        "2": "Dienstag",
+        "3": "Mittwoch",
+        "4": "Donnerstag",
+        "5": "Freitag",
+        "6": "Samstag"
+      },
+      "pruneTitle": "Aufräumen",
+      "pruneHint": "Der Hintergrunddienst löscht täglich alte Benachrichtigungen.",
+      "statsTitle": "Statistik (letzte {days} Tage)",
+      "statsClicked": "{clicked} geöffnet · {rate}",
+      "statsSent": "Gesendet",
+      "statsOpened": "Geöffnet",
+      "statsRate": "Quote",
+      "emailsOffTitle": "Alle E-Mails eines Mitglieds stoppen",
+      "emailsOffHint": "Das Mitglied erhält keine Benachrichtigungs-E-Mails mehr (auch keine erzwungenen und keinen Rückblick), etwa wenn seine Adresse Nachrichten abweist.",
+      "emailsOffButton": "Alle E-Mails stoppen",
+      "emailsOffConfirm": "Das Mitglied erhält keine Benachrichtigungs-E-Mail mehr, bis du seine E-Mails wieder einschaltest. Fortfahren?",
+      "emailsOffMember": "Name oder E-Mail des Mitglieds",
+      "emailsOnButton": "E-Mails wieder einschalten"
     },
     "themes": {
       "title": "Themen",
@@ -4257,7 +4289,7 @@
     },
     "notifications": {
       "title": "Benachrichtigungen",
-      "hint": "Wählen Sie aus, welche Benachrichtigungen Sie auf der Website und per E-Mail erhalten. Der tägliche Digest sammelt alles, was Sie nicht in einer E-Mail gelesen haben.",
+      "hint": "Wähle für jeden Typ, auf welchen Kanälen du Benachrichtigungen erhältst: auf der Seite (die Glocke), Toast, E-Mail und Web-Push. „Nur wichtige“ lässt nur wichtige Benachrichtigungen durch (z. B. private Nachrichten, direkte Erwähnungen).",
       "saved": "Präferenzen gespeichert.",
       "save": "Speichern",
       "type": "Typ",
@@ -4270,7 +4302,58 @@
       "alertsTitle": "Ausschreibungen vor Ort",
       "toasts": "Neue Benachrichtigungen in der Ecke des Bildschirms anzeigen",
       "sound": "Spielen Sie einen kurzen Sound für neue Benachrichtigungen",
-      "alertsSave": "Warnmeldungen speichern"
+      "alertsSave": "Warnmeldungen speichern",
+      "emailsOffNotice": "Ein Administrator hat alle Benachrichtigungs-E-Mails für dein Konto abgeschaltet.",
+      "state_on": "An",
+      "state_important": "Nur wichtige",
+      "state_off": "Aus",
+      "legend_on": "du erhältst jede Benachrichtigung des Typs",
+      "legend_important": "nur die wichtigen",
+      "legend_off": "keine",
+      "channel_site": "Auf der Seite",
+      "channel_toast": "Toast",
+      "channel_email": "E-Mail",
+      "channel_push": "Push",
+      "emailMode": "E-Mail-Modus",
+      "allInCategory": "Alle in der Kategorie",
+      "importantType": "Benachrichtigungen dieses Typs sind wichtig",
+      "lockForced": "Vom Administrator erzwungen (immer an)",
+      "lockDisabled": "Vom Administrator deaktiviert",
+      "mode_instant": "Sofort",
+      "mode_daily": "Tägliche Zusammenfassung",
+      "mode_weekly": "Wöchentliche Zusammenfassung",
+      "reset": "Auf Standard zurücksetzen",
+      "resetConfirm": "Alle deine Auswahlen kehren zu den Standardwerten der Seite zurück. Fortfahren?",
+      "resetDone": "Deine Einstellungen sind wieder auf den Standardwerten.",
+      "cancel": "Abbrechen",
+      "weekly_enabled": "Wochenrückblick „Was du verpasst hast“ senden (Mitglieder können ihn in den Einstellungen abschalten)",
+      "weekly_day": "Tag des Wochenrückblicks",
+      "weekly_hour": "Uhrzeit des Wochenrückblicks (0–23, in der Zeitzone der Seite)",
+      "prune_days": "Gelesene Benachrichtigungen löschen nach (Tagen)",
+      "prune_unread": "Auch ungelesene Benachrichtigungen löschen, die älter sind",
+      "push": {
+        "title": "Web-Push auf diesem Gerät",
+        "hint": "Erhalte Benachrichtigungen auch bei geschlossener Seite, als Systembenachrichtigungen. Die Berechtigung wird nur hier abgefragt; welche Typen per Push kommen, wählst du in der Tabelle unten.",
+        "state": {
+          "loading": "Wird geprüft…",
+          "unsupported": "Dieser Browser unterstützt kein Web-Push.",
+          "default": "Die Berechtigung wurde noch nicht angefragt.",
+          "denied": "Benachrichtigungen sind im Browser blockiert.",
+          "granted": "Erlaubt, aber dieses Gerät ist nicht abonniert.",
+          "subscribed": "Auf diesem Gerät aktiv."
+        },
+        "unavailable": "Web-Push ist auf dieser Seite noch nicht verfügbar (die Schlüssel werden beim Start des Hintergrunddienstes erstellt).",
+        "enable": "Push-Benachrichtigungen einschalten",
+        "disable": "Auf diesem Gerät ausschalten",
+        "deniedHelp": "Erlaube Benachrichtigungen für diese Seite in den Browsereinstellungen und lade die Seite neu.",
+        "failed": "Das Abonnieren ist fehlgeschlagen. Bitte versuche es erneut.",
+        "devices": "{count, plural, one {# abonniertes Gerät} other {# abonnierte Geräte}}",
+        "noDevices": "Keine abonnierten Geräte.",
+        "since": "abonniert am {date}",
+        "lastUsed": "letzte Nachricht {date}",
+        "remove": "Gerät entfernen",
+        "thisDevice": "dieses Gerät"
+      }
     },
     "chat": {
       "word_filter": "Gefilterte Chatwörter (ersetzt durch ***)",
@@ -5422,7 +5505,8 @@
       "core": {
         "warning": "Verwarnungen",
         "group_mention": "Group mentions",
-        "group_expired": "Abgelaufene befristete Gruppen"
+        "group_expired": "Abgelaufene befristete Gruppen",
+        "weekly_digest": "Wochenrückblick „Was du verpasst hast“"
       },
       "chat": {
         "mention": "Chat Erwähnungen",
@@ -5448,6 +5532,62 @@
         "rejected": "Deine nicht bestätigten Spenden",
         "submitted": "Neue Spenden zum Bestätigen (Team)"
       }
+    },
+    "settingsLink": "Benachrichtigungseinstellungen",
+    "loading": "Benachrichtigungen werden geladen…",
+    "emptyMentions": "Du hast keine Erwähnungen.",
+    "emptyUnread": "Du hast keine ungelesenen Benachrichtigungen.",
+    "important": "Wichtig",
+    "unread": "ungelesen",
+    "tabsLabel": "Kategorien der Benachrichtigungen",
+    "tabs": {
+      "all": "Alle",
+      "mentions": "Erwähnungen"
+    },
+    "filter": {
+      "label": "Filter",
+      "all": "Alle",
+      "unread": "Ungelesen",
+      "read": "Gelesen"
+    },
+    "deleteRead": "Gelesene löschen",
+    "deleteReadConfirm": "Die gelesenen Benachrichtigungen in diesem Tab löschen? Sie können nicht wiederhergestellt werden.",
+    "cancel": "Abbrechen",
+    "markRead": "Als gelesen markieren",
+    "markUnread": "Als ungelesen markieren",
+    "delete": "Benachrichtigung löschen",
+    "sections": {
+      "today": "Heute",
+      "yesterday": "Gestern",
+      "week": "Diese Woche",
+      "older": "Älter"
+    },
+    "category": {
+      "content": "Inhalte",
+      "social": "Soziales",
+      "messages": "Nachrichten",
+      "moderation": "Moderation",
+      "chat": "Chat",
+      "servers": "Server",
+      "clans": "Clans",
+      "vip": "VIP",
+      "achievements": "Erfolge",
+      "system": "System"
+    },
+    "weekly": {
+      "link": "Was du verpasst hast",
+      "title": "Was du verpasst hast",
+      "back": "Benachrichtigungen",
+      "settings": "Einstellungen",
+      "intro": "Was seit {since} in der Community passiert ist.",
+      "empty": "Diese Woche gibt es nichts nachzuholen. Du bist auf dem neuesten Stand!",
+      "topics": "Themen der Woche",
+      "replies": "{count, plural, one {# Antwort} other {# Antworten}}",
+      "mentions": "{count, plural, one {Eine ungelesene Erwähnung} other {# ungelesene Erwähnungen}}",
+      "allMentions": "Alle Erwähnungen",
+      "servers": "Server der Woche",
+      "peak": "Spitze {peak}/{max} Spieler",
+      "matches": "{count, plural, one {# Match} other {# Matches}}"
     }
   },
   "chat": {

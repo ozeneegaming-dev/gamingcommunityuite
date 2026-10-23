@@ -107,7 +107,7 @@ describe("mențiunile de grup — notificări", () => {
 
   test("„Notifică membrii” oprit: pastila rămâne, fără notificări; preferința membrului e respectată", async () => {
     const m1 = await user("Mod1", "moderator");
-    await w.notifications.setPreferences(w.moderator.userId!, { "core.group_mention": { site: false, email: "OFF" } });
+    await w.notifications.setPreferences(w.moderator.userId!, { "core.group_mention": { site: "off", toast: "off", email: "off", push: "off" } });
     const t = await topic();
     await w.posts.reply(w.root, { topicId: t.topicId, content: docWith(groupMention("moderator")) });
     expect(await groupNotified()).toEqual(ids(m1));

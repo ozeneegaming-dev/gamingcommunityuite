@@ -163,7 +163,10 @@ export function notificationDataHandler(deps: { db: PrismaClient }): GcsMemberDa
       const removed = await db.$executeRaw`DELETE FROM notifications WHERE id IN (SELECT id FROM notifications WHERE "userId" = ${userId} LIMIT ${batchSize * 20})`;
       if (removed > 0) return removed;
       const prefs = await db.notificationPreference.deleteMany({ where: { userId } });
-      return prefs.count;
+      // Notificări v2: dispozitivele web push și setările de livrare.
+      const push = await db.pushSubscription.deleteMany({ where: { userId } });
+      const member = await db.notificationMember.deleteMany({ where: { userId } });
+      return prefs.count + push.count + member.count;
     },
     async merge({ sourceId, targetId }) {
       return db.$transaction(async (tx) => {

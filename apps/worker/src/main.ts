@@ -35,6 +35,11 @@ async function main(): Promise<void> {
   await services.plugins.start().catch((error: unknown) => log("Pluginurile nu au pornit", error));
   const stopWorker = await services.jobs.start({ onError: (name, error) => log(`Jobul ${name} a eșuat`, error) });
   await writeWorkerHeartbeat(services.redis);
+  // Web push (Notificări v2): cheile VAPID se generează o singură dată și se păstrează criptate (nu apar în jurnal).
+  await services.push
+    .ensureKeys()
+    .then((created) => created && log("Cheile web push au fost generate."))
+    .catch((error: unknown) => log("Cheile web push nu au putut fi generate", error));
   // Evaluarea inițială a membrilor existenți (o singură dată; jobul verifică marcajul).
   await services.jobs.enqueue(BACKFILL_JOB, {}, { jobId: "achievements-backfill" });
   log(`Pornit; joburi: ${services.jobs.registered().map((j) => j.name).join(", ")}`);

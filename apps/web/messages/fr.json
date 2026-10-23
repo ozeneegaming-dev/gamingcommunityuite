@@ -1767,8 +1767,40 @@
     },
     "notifications": {
       "title": "Notifications",
-      "hint": "Valeurs par défaut pour chaque type de notification. Les membres peuvent les modifier dans Paramètres → Notifications.",
-      "save": "Enregistrer"
+      "hint": "Les valeurs par défaut de chaque type et canal. Un canal verrouillé (« Imposé » ou « Désactivé ») ne peut pas être modifié par les membres ; ils choisissent le reste dans Paramètres → Notifications.",
+      "save": "Enregistrer",
+      "defaultsTitle": "Valeurs par défaut par type et canal",
+      "lock": "Verrou",
+      "lockNone": "Le membre choisit",
+      "lockForced": "Imposé",
+      "lockDisabled": "Désactivé",
+      "resetMembers": "Rétablir les valeurs par défaut pour tous les membres",
+      "resetMembersConfirm": "Les choix de tous les membres sont supprimés et tous utiliseront les valeurs par défaut ci-dessus. Action irréversible.",
+      "resetDefaults": "Rétablir les valeurs par défaut",
+      "resetDefaultsConfirm": "Chaque type revient aux valeurs de son application, sans verrou. Continuer ?",
+      "scheduleTitle": "Calendrier des e-mails",
+      "days": {
+        "0": "Dimanche",
+        "1": "Lundi",
+        "2": "Mardi",
+        "3": "Mercredi",
+        "4": "Jeudi",
+        "5": "Vendredi",
+        "6": "Samedi"
+      },
+      "pruneTitle": "Nettoyage",
+      "pruneHint": "Le service d'arrière-plan supprime chaque jour les anciennes notifications.",
+      "statsTitle": "Statistiques ({days} derniers jours)",
+      "statsClicked": "{clicked} ouvertes · {rate}",
+      "statsSent": "Envoyées",
+      "statsOpened": "Ouvertes",
+      "statsRate": "Taux",
+      "emailsOffTitle": "Arrêter tous les e-mails d'un membre",
+      "emailsOffHint": "Le membre ne reçoit plus aucun e-mail de notification (ni les imposés, ni le résumé), par exemple quand son adresse rejette les messages.",
+      "emailsOffButton": "Arrêter tous les e-mails",
+      "emailsOffConfirm": "Le membre ne recevra plus aucun e-mail de notification jusqu'à ce que vous les réactiviez. Continuer ?",
+      "emailsOffMember": "Nom ou e-mail du membre",
+      "emailsOnButton": "Réactiver les e-mails"
     },
     "themes": {
       "title": "Thèmes",
@@ -4257,7 +4289,7 @@
     },
     "notifications": {
       "title": "Notifications",
-      "hint": "Choisissez les notifications que vous obtenez sur le site et par email. Le digest quotidien recueille tout ce que vous n'avez pas lu dans un email.",
+      "hint": "Choisissez, pour chaque type, les canaux sur lesquels vous recevez les notifications : sur le site (la cloche), toast, e-mail et web push. « Importantes seulement » ne laisse passer que les notifications importantes (p. ex. messages privés, mentions directes).",
       "saved": "Préférences enregistrées.",
       "save": "Enregistrer",
       "type": "Type",
@@ -4270,7 +4302,58 @@
       "alertsTitle": "Alertes sur place",
       "toasts": "Afficher les nouvelles notifications dans le coin de l'écran",
       "sound": "Jouer un court son pour les nouvelles notifications",
-      "alertsSave": "Enregistrer les alertes"
+      "alertsSave": "Enregistrer les alertes",
+      "emailsOffNotice": "Un administrateur a désactivé tous les e-mails de notification de votre compte.",
+      "state_on": "Activé",
+      "state_important": "Importantes seulement",
+      "state_off": "Désactivé",
+      "legend_on": "vous recevez toutes les notifications du type",
+      "legend_important": "seulement les importantes",
+      "legend_off": "aucune",
+      "channel_site": "Sur le site",
+      "channel_toast": "Toast",
+      "channel_email": "E-mail",
+      "channel_push": "Push",
+      "emailMode": "Mode e-mail",
+      "allInCategory": "Toute la catégorie",
+      "importantType": "Les notifications de ce type sont importantes",
+      "lockForced": "Imposé par un administrateur (toujours activé)",
+      "lockDisabled": "Désactivé par un administrateur",
+      "mode_instant": "Immédiat",
+      "mode_daily": "Résumé quotidien",
+      "mode_weekly": "Résumé hebdomadaire",
+      "reset": "Rétablir les valeurs par défaut",
+      "resetConfirm": "Tous vos choix reviennent aux valeurs par défaut du site. Continuer ?",
+      "resetDone": "Vos préférences sont revenues aux valeurs par défaut.",
+      "cancel": "Annuler",
+      "weekly_enabled": "Envoyer le résumé hebdomadaire « Ce que vous avez manqué » (les membres peuvent le désactiver dans leurs paramètres)",
+      "weekly_day": "Jour du résumé hebdomadaire",
+      "weekly_hour": "Heure du résumé hebdomadaire (0–23, dans le fuseau horaire du site)",
+      "prune_days": "Supprimer les notifications lues après (jours)",
+      "prune_unread": "Supprimer aussi les notifications non lues plus anciennes",
+      "push": {
+        "title": "Web push sur cet appareil",
+        "hint": "Recevez les notifications même site fermé, comme notifications du système. L'autorisation n'est demandée qu'ici ; choisissez dans le tableau ci-dessous les types envoyés par push.",
+        "state": {
+          "loading": "Vérification…",
+          "unsupported": "Ce navigateur ne prend pas en charge le web push.",
+          "default": "L'autorisation n'a pas encore été demandée.",
+          "denied": "Les notifications sont bloquées dans le navigateur.",
+          "granted": "Autorisé, mais cet appareil n'est pas abonné.",
+          "subscribed": "Actif sur cet appareil."
+        },
+        "unavailable": "Le web push n'est pas encore disponible sur ce site (les clés sont créées au démarrage du service d'arrière-plan).",
+        "enable": "Activer les notifications push",
+        "disable": "Désactiver sur cet appareil",
+        "deniedHelp": "Autorisez les notifications de ce site dans les paramètres du navigateur, puis rechargez la page.",
+        "failed": "L'abonnement a échoué. Réessayez.",
+        "devices": "{count, plural, one {# appareil abonné} many {# appareils abonnés} other {# appareils abonnés}}",
+        "noDevices": "Aucun appareil abonné.",
+        "since": "abonné le {date}",
+        "lastUsed": "dernier message {date}",
+        "remove": "Retirer l'appareil",
+        "thisDevice": "cet appareil"
+      }
     },
     "chat": {
       "word_filter": "Mots de chat filtrés (remplacés par ***)",
@@ -5422,7 +5505,8 @@
       "core": {
         "warning": "Avertissements",
         "group_mention": "Group mentions",
-        "group_expired": "Groupes temporaires expirés"
+        "group_expired": "Groupes temporaires expirés",
+        "weekly_digest": "Résumé hebdomadaire « Ce que vous avez manqué »"
       },
       "chat": {
         "mention": "Discussion mentions",
@@ -5448,6 +5532,62 @@
         "rejected": "Tes dons non confirmés",
         "submitted": "Nouveaux dons à confirmer (équipe)"
       }
+    },
+    "settingsLink": "Paramètres des notifications",
+    "loading": "Chargement des notifications…",
+    "emptyMentions": "Vous n'avez aucune mention.",
+    "emptyUnread": "Vous n'avez aucune notification non lue.",
+    "important": "Important",
+    "unread": "non lue",
+    "tabsLabel": "Catégories de notifications",
+    "tabs": {
+      "all": "Toutes",
+      "mentions": "Mentions"
+    },
+    "filter": {
+      "label": "Filtre",
+      "all": "Toutes",
+      "unread": "Non lues",
+      "read": "Lues"
+    },
+    "deleteRead": "Supprimer les lues",
+    "deleteReadConfirm": "Supprimer les notifications lues de cet onglet ? Elles ne pourront pas être récupérées.",
+    "cancel": "Annuler",
+    "markRead": "Marquer comme lue",
+    "markUnread": "Marquer comme non lue",
+    "delete": "Supprimer la notification",
+    "sections": {
+      "today": "Aujourd'hui",
+      "yesterday": "Hier",
+      "week": "Cette semaine",
+      "older": "Plus anciennes"
+    },
+    "category": {
+      "content": "Contenu",
+      "social": "Social",
+      "messages": "Messages",
+      "moderation": "Modération",
+      "chat": "Chat",
+      "servers": "Serveurs",
+      "clans": "Clans",
+      "vip": "VIP",
+      "achievements": "Succès",
+      "system": "Système"
+    },
+    "weekly": {
+      "link": "Ce que vous avez manqué",
+      "title": "Ce que vous avez manqué",
+      "back": "Notifications",
+      "settings": "Préférences",
+      "intro": "Ce qui s'est passé dans la communauté depuis le {since}.",
+      "empty": "Rien à rattraper cette semaine. Vous êtes à jour !",
+      "topics": "Sujets de la semaine",
+      "replies": "{count, plural, one {# réponse} many {# réponses} other {# réponses}}",
+      "mentions": "{count, plural, one {Une mention non lue} many {# mentions non lues} other {# mentions non lues}}",
+      "allMentions": "Toutes les mentions",
+      "servers": "Serveurs de la semaine",
+      "peak": "pic de {peak}/{max} joueurs",
+      "matches": "{count, plural, one {# match} many {# matchs} other {# matchs}}"
     }
   },
   "chat": {

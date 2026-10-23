@@ -45,6 +45,8 @@
 @import "@gcs/ui/announce.css";
 /* Donațiile (VIP clasic): „Obiectivul lunii”, pagina /donatii și ACP › Donații, în orice temă. */
 @import "@gcs/ui/donations.css";
+/* Notificări v2 (orice temă): clopoțelul, pagina notificărilor, tabelul canalelor, web push, cardurile ACP. */
+@import "@gcs/ui/notifications.css";
 /* Designul GCS (temele GCS Dark / GCS White): doar aspectul, sub `.gcs-nova`, pus pe `<html>` doar pe paginile site-ului. */
 @import "@gcs/ui/nova.css";
 /* La final, pentru toate temele: sweep-ul și tranzițiile de hover ale butoanelor, tab-urilor, cipurilor și meniurilor. */
