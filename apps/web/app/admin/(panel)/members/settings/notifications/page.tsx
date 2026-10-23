@@ -97,7 +97,8 @@ export default async function AcpNotificationDefaultsPage() {
                       {GCS_NOTIFY_CHANNELS.map((ch) => (
                         <span key={ch} role="cell" className="gcs-prefGrid__cell gcs-prefGrid__cell--acp">
                           <span className="gcs-prefGrid__cellLabel">{ts(`channel_${ch}`)}</span>
-                          <select className="gcs-input gcs-prefGrid__select" name={`ch:${x.key}:${ch}`} defaultValue={d[ch]} aria-label={`${ts(`channel_${ch}`)}: ${name}`} data-testid={`gcs-acp-notif-${x.key}-${ch}`}>
+                          {/* Câmpuri necontrolate: cheia cu valoarea le reface după o resetare (datele noi de la server). */}
+                          <select key={`state-${d[ch]}`} className="gcs-input gcs-prefGrid__select" name={`ch:${x.key}:${ch}`} defaultValue={d[ch]} aria-label={`${ts(`channel_${ch}`)}: ${name}`} data-testid={`gcs-acp-notif-${x.key}-${ch}`}>
                             {GCS_CHANNEL_STATES.map((s) => (
                               <option key={s} value={s}>
                                 {ts(`state_${s}`)}
@@ -105,6 +106,7 @@ export default async function AcpNotificationDefaultsPage() {
                             ))}
                           </select>
                           <select
+                            key={`lock-${d.locks[ch] ?? ""}`}
                             className="gcs-input gcs-prefGrid__select gcs-prefGrid__select--lock"
                             name={`lock:${x.key}:${ch}`}
                             defaultValue={d.locks[ch] ?? ""}
