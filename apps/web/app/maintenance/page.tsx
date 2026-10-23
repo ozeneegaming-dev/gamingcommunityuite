@@ -16,7 +16,7 @@ export default async function MaintenancePage() {
     <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
       <GcsCard as="section" style={{ maxWidth: 520, padding: "32px 36px", display: "flex", flexDirection: "column", gap: 14, alignItems: "flex-start" }}>
         <span className="gcs-display" style={{ fontSize: 22, fontWeight: 700, letterSpacing: ".06em" }}>
-          RED<span style={{ color: "var(--gcs-accentInk)" }}>-</span>LINE
+          {site}
         </span>
         <h1 className="gcs-display" style={{ margin: 0, fontSize: 30, fontWeight: 700 }}>
           {t("title")}

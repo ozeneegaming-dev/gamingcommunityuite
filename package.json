@@ -1,5 +1,6 @@
 {
   "name": "redline",
+  "version": "1.0.0",
   "private": true,
   "packageManager": "pnpm@10.28.0",
   "engines": {
@@ -12,7 +13,9 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "test:e2e": "turbo run test:e2e",
-    "gcs:port": "pnpm --filter @gcs/modules port"
+    "gcs:port": "pnpm --filter @gcs/modules port",
+    "release": "node scripts/release.mjs",
+    "release:sign": "node scripts/release-sign.mjs"
   },
   "devDependencies": {
     "turbo": "^2.5.0",

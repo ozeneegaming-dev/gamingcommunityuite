@@ -1,4 +1,4 @@
-// RED-LINE — schema nucleului (Etapa 1, Task 3).
+// GCS — schema nucleului (Etapa 1, Task 3).
 // Tabele: snake_case plural, fără prefix (spec §4).
 
 generator client {

@@ -360,7 +360,7 @@ function createFileStore(configDir: string): GcsFileStore {
       endpoint,
       accessKey: process.env.S3_ACCESS_KEY ?? "",
       secretKey: process.env.S3_SECRET_KEY ?? "",
-      bucket: process.env.S3_BUCKET ?? "redline",
+      bucket: process.env.S3_BUCKET ?? "gcs",
     });
   }
   return new GcsLocalFileStore(path.join(configDir, "files"));
