@@ -77,14 +77,25 @@ function Toast({ item, closeLabel }: { item: GcsToastItem; closeLabel: string })
   );
 }
 
+/** Host-urile montate, în ordinea montării; doar primul afișează toast-urile (site-ul și ACP-ul nu le dublează). */
+let hosts: object[] = [];
+
 /** Locul toast-urilor; se pune o singură dată în layout. Anunțate discret cititoarelor de ecran. */
 export function GcsToastHost({ closeLabel }: { closeLabel: string }) {
+  const [token] = useState(() => ({}));
+  useEffect(() => {
+    hosts = [...hosts, token];
+    emit();
+    return () => {
+      hosts = hosts.filter((h) => h !== token);
+      emit();
+    };
+  }, [token]);
   const list = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
+  const active = useSyncExternalStore(subscribe, () => hosts[0] === token, () => false);
   return (
     <div className="gcs-toastHost" aria-live="polite" aria-relevant="additions">
-      {list.map((item) => (
-        <Toast key={item.id} item={item} closeLabel={closeLabel} />
-      ))}
+      {active && list.map((item) => <Toast key={item.id} item={item} closeLabel={closeLabel} />)}
     </div>
   );
 }

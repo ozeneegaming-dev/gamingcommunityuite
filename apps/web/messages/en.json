@@ -391,6 +391,7 @@
     "home": "ACP · {site}",
     "openMenu": "Menu",
     "closeMenu": "Close menu",
+    "closeToast": "Close notification",
     "header": {
       "search": "Search the ACP",
       "searchPlaceholder": "Search settings, members, groups…",

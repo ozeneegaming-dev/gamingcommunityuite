@@ -171,4 +171,20 @@ describe("toast-uri", () => {
     act(() => dismissToast(id));
     expect(screen.queryAllByTestId("gcs-toast")).toHaveLength(0);
   });
+
+  test("două host-uri montate odată: toast-ul apare o singură dată; al doilea preia după demontarea primului", () => {
+    const first = render(<GcsToastHost closeLabel="Închide" />);
+    render(<GcsToastHost closeLabel="Close" />);
+    let id = 0;
+    act(() => {
+      id = gcsToast({ title: "O dată" });
+    });
+    expect(screen.getAllByTestId("gcs-toast")).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "Închide" })).toBeTruthy();
+
+    first.unmount();
+    expect(screen.getAllByTestId("gcs-toast")).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "Close" })).toBeTruthy();
+    act(() => dismissToast(id));
+  });
 });

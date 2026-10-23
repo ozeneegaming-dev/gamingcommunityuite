@@ -1,5 +1,5 @@
 import { ACP_DASHBOARD_HREF, acpAreas, type GcsAcpMenuSection } from "@gcs/core";
-import { GcsAvatar } from "@gcs/ui";
+import { GcsAvatar, GcsToastHost } from "@gcs/ui";
 import { resolveIcon } from "@gcs/ui/icon-registry";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
@@ -169,6 +169,8 @@ export default async function AcpPanelLayout({ children }: { children: ReactNode
         <GcsPluginNotice actor={panel.actor} />
         {children}
       </GcsAcpShell>
+      {/* Confirmările și erorile editoarelor ACP (`gcsToast`); un singur host activ odată, vezi `GcsToastHost`. */}
+      <GcsToastHost closeLabel={t("acp.closeToast")} />
     </div>
   );
 }
