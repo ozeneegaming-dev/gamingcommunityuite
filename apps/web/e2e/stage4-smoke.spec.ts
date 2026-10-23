@@ -84,9 +84,16 @@ test("etapa 4: notificări live → scrie… și postări noi → shoutbox → c
     await expect(atAna).toBeVisible({ timeout: 2_000 });
 
     const atMod = shout(mod).getByTestId("gcs-chat-msg").filter({ hasText: "Salut din shoutbox" });
-    await atMod.getByRole("button", { name: "Mute", exact: true }).click();
-    await atMod.getByRole("group", { name: "Mute" }).getByRole("button", { name: "10 min" }).click();
-    await atMod.getByRole("button", { name: "Șterge" }).click();
+    // Moderarea stă în meniul grupat „⋯” (într-un portal): Mute ▸ 15 minute → dialogul → confirmă; apoi „Șterge mesajul”.
+    await expect(atMod).toBeVisible();
+    await atMod.hover();
+    await atMod.getByTestId("gcs-chat-more").click();
+    await mod.getByTestId("gcs-chatmod-mute").hover();
+    await mod.getByTestId("gcs-chatmod-mute-15").click();
+    await mod.getByTestId("gcs-chatmod-dialog-mute").getByTestId("gcs-chatmod-confirm").click();
+    await expect(mod.getByTestId("gcs-chatmod-dialog-mute")).toHaveCount(0);
+    await atMod.getByTestId("gcs-chat-more").click();
+    await mod.getByTestId("gcs-chatpro-delete").click();
     await expect(atAna).toHaveCount(0, { timeout: 5_000 });
     await bogdan.reload();
     await expect(shout(bogdan).getByTestId("gcs-chat-input")).toBeDisabled();

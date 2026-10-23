@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
 import { authClient, authErrorKey, registerErrorField } from "@/lib/auth-client";
 import { authReturnPath } from "@/lib/auth-return";
+import { useHydrated } from "@/lib/use-hydrated";
 
 type Field = "name" | "email" | "password";
 
@@ -16,6 +17,8 @@ export function RegisterForm({ turnstileSiteKey }: { turnstileSiteKey: string | 
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<Field, string>>>({});
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  // Până la hidratare, trimiterea nativă ar ocoli `onSubmit`: butonul așteaptă React.
+  const hydrated = useHydrated();
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -46,7 +49,7 @@ export function RegisterForm({ turnstileSiteKey }: { turnstileSiteKey: string | 
   }
 
   return (
-    <form onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }} noValidate>
+    <form method="post" onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }} noValidate>
       <GcsField label={t("register.name")} hint={t("register.nameHint")} {...(fieldErrors.name ? { error: fieldErrors.name } : {})}>
         <input name="name" autoComplete="username" required minLength={3} maxLength={24} />
       </GcsField>
@@ -73,7 +76,7 @@ export function RegisterForm({ turnstileSiteKey }: { turnstileSiteKey: string | 
           {t(`errors.${error}`)}
         </p>
       )}
-      <GcsButton variant="primary" type="submit" disabled={pending} icon={<GcsIconSvg icon={faUserPlus} />}>
+      <GcsButton variant="primary" type="submit" disabled={pending || !hydrated} icon={<GcsIconSvg icon={faUserPlus} />}>
         {t("register.submit")}
       </GcsButton>
       <p style={{ margin: 0, fontSize: 14, color: "var(--gcs-muted)", textAlign: "center" }}>

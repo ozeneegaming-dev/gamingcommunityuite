@@ -465,7 +465,8 @@ test("contestația: membrul sancționat contestă, staff-ul preia, nota internă
 
   // Staff-ul: coada „De tratat”, preluarea, nota internă și răspunsul public, apoi acceptarea cu ridicarea banului.
   await staff.goto("/servers/tickets?scope=handle");
-  await staff.getByTestId("gcs-ticket-row").filter({ hasText: "Nu am folosit wallhack" }).getByRole("link").click();
+  // Rândul are și linkurile membrilor (autorul, responsabilul): se deschide titlul.
+  await staff.getByTestId("gcs-ticket-row").filter({ hasText: "Nu am folosit wallhack" }).getByRole("link", { name: "Nu am folosit wallhack" }).click();
   await staff.getByTestId("gcs-ticket-take").click();
   await expect(staff.getByTestId("gcs-ticket-assignee-name")).toHaveText(ROOT);
   await staff.getByTestId("gcs-ticket-internal").locator("input").check();
@@ -573,10 +574,11 @@ test("meniul: Servere e un submeniu cu paginile punții", async ({ page, context
   await expect(nav).toHaveAttribute("data-ready", "");
   await nav.getByRole("button", { name: "Servere" }).click();
   const menu = page.getByRole("menu", { name: "Servere" });
-  await expect(menu.getByRole("menuitem")).toHaveText(["Toate serverele", "Clasamente", "Meciuri mix", "Banuri", "Admini", "Contestații"]);
+  // Mega meniul: titlul, apoi descrierea (și insigna live) pe fiecare item.
+  await expect(menu.getByRole("menuitem")).toHaveText([/^Toate serverele/, /^Clasamente/, /^Meciuri mix/, /^Banuri/, /^Admini/, /^Contestații/]);
   await menu.getByRole("menuitem", { name: "Banuri" }).click();
   await expect(page).toHaveURL(/\/bans$/);
-  await expect(nav.getByRole("button", { name: "Servere" })).toHaveClass(/gcs-nav__link--active/);
+  await expect(nav.getByRole("button", { name: "Servere" })).toHaveClass(/gcs-hb__nav--active/);
 });
 
 test("capturile: temele întunecată și luminoasă, desktop și 375 px", async ({ page, context }) => {

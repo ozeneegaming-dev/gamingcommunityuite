@@ -74,6 +74,15 @@ test("ACP → site: culoarea grupului, matricea de permisiuni, banul și jurnalu
     await expect(member.page.getByRole("link", { name: "Autentificare" })).toBeVisible();
     await expect(member.page.getByTestId("gcs-header-user")).toHaveCount(0);
   });
+
+  // Grupul `member` e comun tuturor specurilor (ex. names-light verifică culoarea implicită): culoarea revine.
+  await test.step("culoarea implicită a grupului member revine", async () => {
+    await page.goto(`/admin/groups/${memberGroup}`);
+    const style = page.getByRole("region", { name: "Stilul numelui" });
+    await style.getByLabel("Culoare").fill("#ECEDF1");
+    await style.getByRole("button", { name: "Salvează stilul" }).click();
+    await expect(style.getByRole("status")).toHaveText("Salvat");
+  });
 });
 
 test("un Admin cu rolul „Manager VIP” nu vede aplicația Membri; /admin/members → 404", async ({ page, browser }) => {

@@ -45,7 +45,8 @@ test("Root Admin instalează Tickete suport din ACP; membrul deschide un ticket,
   await confirm.getByLabel(`Scrie cheia pluginului (${KEY}) ca să confirmi`).fill(KEY);
   await confirm.getByRole("button", { name: "Instalează pluginul" }).click();
   // Instalat („Salvat”); pagina pluginului se deschide direct (redirecționarea formularului nu e subiectul testului).
-  await expect(confirm.getByRole("status")).toHaveText("Salvat", { timeout: 30_000 });
+  // Redirecționarea poate veni înainte ca „Salvat” să fie văzut: oricare dintre ele (starea „Activ” se verifică mai jos).
+  await expect(confirm.getByRole("status").filter({ hasText: "Salvat" }).or(page.getByTestId("gcs-plugin-header")).first()).toBeVisible({ timeout: 30_000 });
   await page.goto(`/admin/system/applications/plugins/${KEY}`);
   await expect(page.getByTestId("gcs-plugin-header").getByTestId("gcs-plugin-status")).toHaveText("Activ");
 

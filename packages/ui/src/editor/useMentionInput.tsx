@@ -1,7 +1,7 @@
 "use client";
 
 import { mentionIndex, mentionQueryAt, type GcsMentionHint } from "@gcs/core/text-mentions";
-import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { GcsMentionList, mentionItems, type GcsMentionAttrs, type GcsMentionItem, type GcsMentionLabels, type GcsMentionListHandle } from "./mentionList";
 
 export type GcsMentionInputOptions = {
@@ -41,6 +41,18 @@ export function useMentionInput<T extends HTMLInputElement | HTMLTextAreaElement
 
   useEffect(() => () => clearTimeout(timer.current), []);
 
+  /** Poziția cursorului după o alegere, pusă după ce React a scris textul nou. */
+  const caret = useRef<number | null>(null);
+  const placeCaret = useCallback(() => {
+    const pos = caret.current;
+    const el = ref.current;
+    caret.current = null;
+    if (pos === null || !el) return;
+    el.focus();
+    el.setSelectionRange(pos, pos);
+  }, []);
+  useLayoutEffect(placeCaret, [value, placeCaret]);
+
   const onText = useCallback(
     (text: string, caret: number) => {
       const q = enabled ? mentionQueryAt(text, caret) : null;
@@ -74,15 +86,15 @@ export function useMentionInput<T extends HTMLInputElement | HTMLTextAreaElement
       let next = value.slice(0, state.start) + insert + value.slice(state.end);
       if (maxLength && next.length > maxLength) next = next.slice(0, maxLength);
       picked.current.set(`${attrs.kind}:${attrs.id}`, attrs);
+      // Cursorul trece după mențiune imediat ce React scrie noul text (efectul de layout de mai jos), înaintea oricărei
+      // taste următoare. Un `requestAnimationFrame` venea prea târziu: tastele scrise între timp ajungeau la final, iar
+      // cursorul era mutat înapoi în mijlocul lor.
+      caret.current = Math.min(state.start + insert.length, next.length);
       onValue(next);
       setState(null);
-      const pos = Math.min(state.start + insert.length, next.length);
-      requestAnimationFrame(() => {
-        ref.current?.focus();
-        ref.current?.setSelectionRange(pos, pos);
-      });
+      if (next === value) placeCaret();
     },
-    [state, value, onValue, maxLength],
+    [state, value, onValue, maxLength, placeCaret],
   );
 
   /** Tastele listei; `true` = tasta a fost folosită de listă (câmpul n-o mai tratează, ex. Enter nu trimite). */

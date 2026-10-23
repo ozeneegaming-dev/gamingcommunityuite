@@ -261,3 +261,13 @@ describe("sweep.css: sweep-ul și hover-ul butoanelor, în orice temă", () => {
     expect(bad).toEqual([]);
   });
 });
+
+describe("antetul pe telefon", () => {
+  test("vizitatorii: „Înregistrare / Autentificare” doar cu iconițe sub 768 px (textul rămâne pentru cititoarele de ecran)", () => {
+    const css = read("./header-menus.css");
+    const mobile = css.slice(css.indexOf("@media (max-width: 767px)"));
+    expect(mobile).toMatch(/\.gcs-hb__authText \{[^}]*clip: rect\(0 0 0 0\)/);
+    expect(mobile).toMatch(/\.gcs-hb__authOr \{\s*display: none;/);
+    expect(css).toMatch(/\[data-device="mobile"\] \.gcs-hb__authText \{[^}]*position: absolute/);
+  });
+});

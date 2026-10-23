@@ -121,6 +121,20 @@ export async function setSetting(key: string, value: unknown): Promise<void> {
   await clearSettingsCache();
 }
 
+/**
+ * Lista serverelor de joc e în cache (Redis, `servers:list`): un server adăugat direct în bază (fixture) apare pe paginile
+ * publice doar după ștergerea ei (altfel, dacă un spec anterior a umplut cache-ul, serverul nou lipsește → 404).
+ */
+export async function clearServersCache(): Promise<void> {
+  const { default: Redis } = await import("ioredis");
+  const redis = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379");
+  try {
+    await redis.del("gcs:k:servers:list");
+  } finally {
+    redis.disconnect();
+  }
+}
+
 async function clearSettingsCache(): Promise<void> {
   const { default: Redis } = await import("ioredis");
   const redis = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379");

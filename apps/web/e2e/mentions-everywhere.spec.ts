@@ -11,8 +11,7 @@ import { sql, userId, useFreshIp } from "./helpers";
  */
 const SHOTS = process.env.GCS_E2E_SHOTS ?? "";
 
-test.describe.configure({ mode: "serial" });
-
+// Testele nu depind unul de altul (doar de userii din `beforeAll`): fără `serial`, o eroare nu le oprește pe celelalte.
 const id = uid();
 const authorName = `Ana${id}`;
 const authorEmail = `ment-a-${id}@example.com`;

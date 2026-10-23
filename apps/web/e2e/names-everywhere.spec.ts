@@ -46,6 +46,9 @@ let vipPage: Page;
 const forumOf: Record<string, string> = {};
 let topicUrl = "";
 
+/** Ce a schimbat acest fișier la Studio VIP: la final, pluginul revine cum era (alte specuri îl instalează de la zero). */
+let vipStudioChange: "installed" | "enabled" | null = null;
+
 /** Studio VIP instalat și activ (încărcat din ACP, dacă nu e deja). */
 async function ensureVipStudio(page: Page): Promise<void> {
   const [row] = await sql<{ enabled: boolean }>(`SELECT enabled FROM plugins WHERE key = $1`, [KEY]);
@@ -54,14 +57,34 @@ async function ensureVipStudio(page: Page): Promise<void> {
   if (row) {
     await page.getByTestId(`gcs-plugin-toggle-${KEY}`).click();
     await expect(page.getByTestId(`gcs-plugin-toggle-${KEY}`)).toBeChecked();
+    vipStudioChange = "enabled";
     return;
   }
+  vipStudioChange = "installed";
   await page.getByTestId("gcs-plugin-upload").locator('input[type="file"]').setInputFiles(SIGNED);
   await page.getByTestId("gcs-plugin-upload").getByRole("button", { name: "Încarcă și verifică" }).click();
   await expect(page).toHaveURL(/\/admin\/system\/applications\/install\/[a-z0-9]+$/);
   await page.getByRole("button", { name: "Instalează pluginul" }).click();
   await expect(page.getByTestId("gcs-plugin-header").getByTestId("gcs-plugin-status")).toHaveText("Activ");
 }
+
+test.afterAll(async () => {
+  if (!vipStudioChange || !rootPage) return;
+  if (vipStudioChange === "enabled") {
+    await sql(`UPDATE plugins SET enabled = false WHERE key = $1`, [KEY]);
+    return;
+  }
+  // Instalat aici: dezinstalarea completă din ACP (meniul „⋯” → Dezinstalează → cheia → confirmă).
+  await rootPage.goto("/admin/system/applications");
+  await rootPage.getByTestId(`gcs-app-menu-${KEY}`).click();
+  await rootPage.getByTestId(`gcs-plugin-uninstall-${KEY}`).click();
+  const dialog = rootPage.getByTestId("gcs-plugin-uninstall-dialog");
+  // Fără „Păstrează datele” (bifat implicit): Studio VIP pornește apoi de la zero (fără loadout-urile de aici).
+  await dialog.getByRole("switch").uncheck();
+  await dialog.getByPlaceholder(KEY).fill(KEY);
+  await dialog.getByTestId("gcs-plugin-uninstall-confirm").click();
+  await expect.poll(async () => (await sql(`SELECT 1 FROM plugins WHERE key = $1`, [KEY])).length, { timeout: 20_000 }).toBe(0);
+});
 
 /** Aspectul calculat al unui nume: gradientul tăiat pe litere și animația. */
 async function look(el: Locator) {

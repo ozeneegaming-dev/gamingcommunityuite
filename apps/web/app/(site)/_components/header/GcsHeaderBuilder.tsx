@@ -163,12 +163,12 @@ export async function GcsHeaderBuilder({ actor, theme, siteName, brand, menu, la
       <span className="gcs-hb__auth">
         <GcsAuthLink href="/register" className="gcs-hb__authLink" data-testid="gcs-header-register">
           <GcsIcon name="fa-solid fa-pen" />
-          {t("register")}
+          <span className="gcs-hb__authText">{t("register")}</span>
         </GcsAuthLink>
         <span className="gcs-hb__authOr">{th("or")}</span>
         <GcsAuthLink href="/login" className="gcs-hb__authLink" data-testid="gcs-header-login">
           <GcsIcon name="fa-solid fa-right-to-bracket" />
-          {t("login")}
+          <span className="gcs-hb__authText">{t("login")}</span>
         </GcsAuthLink>
       </span>
     );

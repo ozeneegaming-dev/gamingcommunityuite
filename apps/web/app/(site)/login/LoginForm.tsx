@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
 import { authClient, authErrorKey } from "@/lib/auth-client";
 import { authReturnPath } from "@/lib/auth-return";
+import { useHydrated } from "@/lib/use-hydrated";
 
 type Props = { discordEnabled: boolean; googleEnabled?: boolean; initialError: string | null };
 
@@ -16,6 +17,8 @@ export function LoginForm({ discordEnabled, googleEnabled = false, initialError 
   const [step, setStep] = useState<"credentials" | "twoFactor">("credentials");
   const [error, setError] = useState<string | null>(initialError);
   const [pending, setPending] = useState(false);
+  // Până la hidratare, trimiterea nativă ar ocoli `onSubmit`: butonul așteaptă React.
+  const hydrated = useHydrated();
 
   // Navigare completă: header-ul (în layout-ul comun) trebuie randat din nou cu noua sesiune. Din popup, userul
   // revine pe pagina de unde l-a deschis.
@@ -60,7 +63,7 @@ export function LoginForm({ discordEnabled, googleEnabled = false, initialError 
 
   if (step === "twoFactor") {
     return (
-      <form onSubmit={onTwoFactor} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <form method="post" onSubmit={onTwoFactor} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <h2 className="gcs-display" style={{ margin: 0, fontSize: 18 }}>
           <GcsIconSvg icon={faShieldHalved} className="gcs-hIcon" />
           {t("twoFactor.title")}
@@ -74,7 +77,7 @@ export function LoginForm({ discordEnabled, googleEnabled = false, initialError 
           {t("twoFactor.trustDevice")}
         </label>
         {errorBox}
-        <GcsButton variant="primary" type="submit" disabled={pending} icon={<GcsIconSvg icon={faShieldHalved} />}>
+        <GcsButton variant="primary" type="submit" disabled={pending || !hydrated} icon={<GcsIconSvg icon={faShieldHalved} />}>
           {t("twoFactor.submit")}
         </GcsButton>
       </form>
@@ -83,7 +86,7 @@ export function LoginForm({ discordEnabled, googleEnabled = false, initialError 
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <form onSubmit={onCredentials} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <form method="post" onSubmit={onCredentials} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <GcsField label={t("login.email")}>
           <input name="email" type="email" autoComplete="email" required />
         </GcsField>
@@ -91,7 +94,7 @@ export function LoginForm({ discordEnabled, googleEnabled = false, initialError 
           <input name="password" type="password" autoComplete="current-password" required />
         </GcsField>
         {errorBox}
-        <GcsButton variant="primary" type="submit" disabled={pending} icon={<GcsIconSvg icon={faRightToBracket} />}>
+        <GcsButton variant="primary" type="submit" disabled={pending || !hydrated} icon={<GcsIconSvg icon={faRightToBracket} />}>
           {t("login.submit")}
         </GcsButton>
       </form>
