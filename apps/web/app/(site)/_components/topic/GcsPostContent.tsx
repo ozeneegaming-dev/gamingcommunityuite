@@ -81,6 +81,8 @@ export type GcsPostContentProps = {
   extras?: ReactNode;
   /** Forum v2: pastilele din antet („Autor”, „Staff”, „Recomandat”), randate pe server. */
   pills?: ReactNode;
+  /** Forum v2: votul Q&A (▲ scorul ▼), primul în antetul postării. */
+  vote?: ReactNode;
   /** Forum v2: rândul „Tu, A, B și alți N au reacționat” (primii membri care au reacționat). */
   reactors?: { users: { id: string; name: string; nameKey: string }[]; total: number; mine: boolean };
   viewerId?: string | null;
@@ -326,6 +328,7 @@ export function GcsPostContent(props: GcsPostContentProps) {
               aria-label={tm("splitSelect", { number: post.number })}
             />
           )}
+          {props.vote}
           {props.pills}
           {props.isSolved && <GcsBadge tone="ok">{t("bestAnswer")}</GcsBadge>}
           <a href={props.permalink} aria-label={t("permalink", { number: post.number })}>

@@ -81,6 +81,40 @@ export class GcsTopicToolsService {
     await this.changed(topicId, topic.forumId);
   }
 
+  /**
+   * Votul Q&A pe o postare (+1 / −1): membrii care pot citi forumul, nu pe propria postare. Același vot încă o dată îl
+   * anulează, cel opus îl schimbă. Doar în forumurile Q&A, cu setarea „Votul Q&A” pornită; topicurile arhivate nu se votează.
+   */
+  async vote(actor: GcsActor, postId: number, value: 1 | -1): Promise<{ score: number; mine: -1 | 0 | 1 }> {
+    const { db, permissions } = this.posting.deps;
+    if (value !== 1 && value !== -1) throw new GcsValidationError({ value: "invalid_choice" });
+    const post = await db.post.findUnique({
+      where: { id: postId },
+      select: { id: true, authorId: true, visibility: true, topic: { select: { id: true, forumId: true, archivedAt: true, visibility: true, forum: { select: { type: true } } } } },
+    });
+    if (!post || post.visibility !== "VISIBLE" || post.topic.visibility !== "VISIBLE") throw new GcsNotFound();
+    if (!(await permissions.can(actor, "forums.read", { type: "forum", id: String(post.topic.forumId) }))) throw new GcsNotFound();
+    if (actor.userId === null) throw new GcsForbidden({ permission: "forums.vote" });
+    if (post.topic.forum.type !== "QA") throw new GcsValidationError({ forum: "not_qa" });
+    if (!(await this.deps.settings.get<boolean>("forums.qa_voting"))) throw new GcsValidationError({ forum: "voting_off" });
+    if (post.topic.archivedAt !== null) throw new GcsValidationError({ topic: "archived" });
+    if (post.authorId === actor.userId) throw new GcsValidationError({ postId: "own_post" });
+
+    const key = { postId_userId: { postId, userId: actor.userId } };
+    const mine = await db.$transaction(async (tx) => {
+      const existing = await tx.postVote.findUnique({ where: key, select: { value: true } });
+      if (existing?.value === value) {
+        await tx.postVote.delete({ where: key });
+        return 0 as const;
+      }
+      await tx.postVote.upsert({ where: key, create: { postId, userId: actor.userId!, value }, update: { value } });
+      return value;
+    });
+    const sum = await db.postVote.aggregate({ where: { postId }, _sum: { value: true } });
+    await this.posting.deps.bus.emit({ name: "post.voted", payload: { postId, topicId: post.topic.id }, tags: [`topic:${post.topic.id}`] });
+    return { score: sum._sum.value ?? 0, mine };
+  }
+
   /** „Aprobare postări”: răspunsurile noi din topic trec prin coada de aprobare (în afară de moderatori). */
   async setRequireApproval(actor: GcsActor, topicId: number, value: boolean): Promise<void> {
     const topic = await this.topic(actor, topicId, "approve");

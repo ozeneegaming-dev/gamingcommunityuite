@@ -4101,7 +4101,8 @@
       "rating_own": "Nota cu stele: autorul își poate nota propriul topic",
       "rating_min_age_days": "Nota cu stele: vechimea minimă a contului (zile)",
       "rating_min_posts": "Nota cu stele: postările minime",
-      "archive_enabled": "Arhivarea automată (regulile din Forumuri → Arhivare)"
+      "archive_enabled": "Arhivarea automată (regulile din Forumuri → Arhivare)",
+      "qa_voting": "Votul Q&A: membrii votează postările din forumurile Q&A"
     },
     "profile": {
       "cover_max_mb": "Mărimea maximă a cover-ului (MB)",
@@ -5140,7 +5141,10 @@
     "listViews": {
       "label": "Vederea listei",
       "list": "Listă",
-      "snippet": "Cu fragment"
+      "snippet": "Cu fragment",
+      "forumsLabel": "Vederea forumurilor",
+      "rows": "Rânduri",
+      "grid": "Grilă"
     },
     "password": {
       "title": "{name} e protejat cu parolă",
@@ -5399,7 +5403,7 @@
     "archivedReply": "Topicul e arhivat: nu se mai pot adăuga răspunsuri.",
     "you": "Tu",
     "and": "și",
-    "reactedNames": "<names></names> {count, plural, one {a reacționat} other {au reacționat}}",
+    "reactedNames": "<names></names> {count, plural, one {a reacționat} few {au reacționat} other {au reacționat}}",
     "reactedNamesOthers": "<names></names> și {count, plural, one {încă un membru} few {alți #} other {alți #}} au reacționat",
     "share": {
       "label": "Distribuie",
@@ -5449,6 +5453,13 @@
       "postsCount": "{count, plural, one {# postare} few {# postări} other {# de postări}}",
       "reactions": "{count, plural, one {# reacție} few {# reacții} other {# de reacții}}",
       "noText": "(fără text)"
+    },
+    "vote": {
+      "up": "Vot pozitiv",
+      "down": "Vot negativ",
+      "score": "Scor: {score}",
+      "login": "Intră în cont ca să votezi",
+      "own": "Nu poți vota propria postare"
     }
   },
   "newTopic": {

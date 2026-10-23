@@ -5,6 +5,7 @@ import { revealHidden, TOPIC_RATING_TYPE } from "@gcs/modules";
 import * as z from "zod";
 import { gcsAction } from "@/lib/actions";
 import { rememberForumUnlock } from "@/lib/forum-access";
+import { namesHtml } from "@/lib/member-names";
 import { services } from "@/lib/services";
 
 /**
@@ -70,7 +71,8 @@ export const previewPostAction = gcsAction(z.object({ forumId: id, content: z.un
   const limit = await rateLimiter.consume(`post-preview:${actor.userId}:${ip}`, { window: 60, max: 30 });
   if (!limit.allowed) throw new GcsRateLimited({ retryAfter: String(limit.retryAfter) });
   const rendered = await posting.render(content, { actor, blocks: true });
-  return { html: revealHidden(rendered.html, rendered.hiddenParts, { userId: actor.userId, groupIds: actor.groupIds, replied: true, isAuthor: true }) };
+  // Numele din mențiuni primesc stilul comun (pastila în culoarea grupului), ca în postarea publicată.
+  return { html: await namesHtml(revealHidden(rendered.html, rendered.hiddenParts, { userId: actor.userId, groupIds: actor.groupIds, replied: true, isAuthor: true })) };
 });
 
 // ─── Regulile și parola forumului ───────────────────────────────────────────────────────────────────────
@@ -98,4 +100,10 @@ export const unlockForumAction = gcsAction(z.object({ forumId: id, password: z.s
   if (!limit.allowed) throw new GcsRateLimited({ retryAfter: String(limit.retryAfter) });
   if (!(await verifyPassword(forum.passwordHash, password))) throw new GcsValidationError({ password: "wrong_password" });
   await rememberForumUnlock(forumId, forum.passwordHash);
+});
+
+// ─── Votul Q&A ───────────────────────────────────────────────────────────────────────────────────────────
+
+export const votePostAction = gcsAction(z.object({ postId: id, value: z.union([z.literal(1), z.literal(-1)]) }), async ({ postId, value }, { actor }) => {
+  return services().topicTools.vote(actor, postId, value);
 });

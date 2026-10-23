@@ -4101,7 +4101,8 @@
       "rating_own": "Sternebewertung: Autoren können ihr eigenes Thema bewerten",
       "rating_min_age_days": "Sternebewertung: Mindestalter des Kontos (Tage)",
       "rating_min_posts": "Sternebewertung: Mindestbeiträge",
-      "archive_enabled": "Automatische Archivierung (die Regeln in Foren → Archivierung)"
+      "archive_enabled": "Automatische Archivierung (die Regeln in Foren → Archivierung)",
+      "qa_voting": "Q&A-Abstimmung: Mitglieder stimmen über Beiträge in Q&A-Foren ab"
     },
     "profile": {
       "cover_max_mb": "Maximale Abdeckungsgröße (MB)",
@@ -5140,7 +5141,10 @@
     "listViews": {
       "label": "Listenansicht",
       "list": "Liste",
-      "snippet": "Mit Auszug"
+      "snippet": "Mit Auszug",
+      "forumsLabel": "Forenansicht",
+      "rows": "Zeilen",
+      "grid": "Raster"
     },
     "password": {
       "title": "{name} ist passwortgeschützt",
@@ -5449,6 +5453,13 @@
       "postsCount": "{count, plural, one {# Beitrag} other {# Beiträge}}",
       "reactions": "{count, plural, one {# Reaktion} other {# Reaktionen}}",
       "noText": "(kein Text)"
+    },
+    "vote": {
+      "up": "Positiv bewerten",
+      "down": "Negativ bewerten",
+      "score": "Wertung: {score}",
+      "login": "Melde dich an, um abzustimmen",
+      "own": "Du kannst nicht über deinen eigenen Beitrag abstimmen"
     }
   },
   "newTopic": {

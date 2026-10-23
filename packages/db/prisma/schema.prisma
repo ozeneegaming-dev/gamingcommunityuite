@@ -62,6 +62,8 @@ model User {
   reactionsGiven ContentReaction[]
   /// Forum v2: notele date (serviciul generic `contentRating`).
   contentRatings ContentRating[]
+  /// Forum v2: voturile date pe postări Q&A.
+  postVotes      PostVote[]
   pollVotes      PollVote[]
   readMarkers    ReadMarker[]
   forumReadMarks ForumReadMark[]
@@ -736,6 +738,8 @@ model Post {
   topic     Topic          @relation(fields: [topicId], references: [id], onDelete: Cascade)
   author    User?          @relation("PostAuthor", fields: [authorId], references: [id], onDelete: SetNull)
   revisions PostRevision[]
+  /// Forum v2: voturile Q&A.
+  votes     PostVote[]
 
   @@index([topicId, visibility, id])
   @@index([authorId, createdAt])
@@ -895,7 +899,6 @@ model Reaction {
   @@map("reactions")
 }
 
-/// O reacție pe orice conținut (`forums.post`, `downloads.file`…). Una per user per conținut.
 /// Forum v2: nota (1–5 stele) dată de un membru unui conținut (serviciul generic `contentRating`: topicuri, fișiere…).
 model ContentRating {
   contentType String
@@ -912,6 +915,22 @@ model ContentRating {
   @@map("content_ratings")
 }
 
+/// Forum v2: votul unui membru pe o postare dintr-un forum Q&A (+1 / −1). Scorul postării e suma voturilor.
+model PostVote {
+  postId    Int
+  userId    String
+  value     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([postId, userId])
+  @@index([userId])
+  @@map("post_votes")
+}
+
 /// Forum v2: media și numărul notelor unui conținut, ținute la zi de serviciu (sortări, widget-ul „Cele mai bine notate”).
 model ContentRatingSummary {
   contentType String
@@ -926,6 +945,7 @@ model ContentRatingSummary {
   @@map("content_rating_summaries")
 }
 
+/// O reacție pe orice conținut (`forums.post`, `downloads.file`…). Una per user per conținut.
 model ContentReaction {
   id          Int      @id @default(autoincrement())
   contentType String

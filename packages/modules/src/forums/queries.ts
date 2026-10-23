@@ -167,7 +167,21 @@ export type GcsPostView = {
   staff: boolean;
   /** Forum v2: rândul „Tu, A, B și alți N au reacționat”: primii membri (vizitatorul primul) și totalul. */
   reactors: { users: { id: string; name: string; nameKey: string }[]; total: number; mine: boolean };
+  /** Forum v2: votul Q&A (scorul = suma voturilor, `mine` = votul vizitatorului); `null` în afara Q&A sau cu votul oprit. */
+  votes: { score: number; mine: -1 | 0 | 1 } | null;
 };
+
+/** Scorurile Q&A ale postărilor (suma voturilor) și voturile unui membru pe ele. */
+export async function postVotes(db: PrismaClient, postIds: number[], userId: string | null): Promise<{ score: Map<number, number>; mine: Map<number, -1 | 0 | 1> }> {
+  const [sums, mine] = await Promise.all([
+    db.postVote.groupBy({ by: ["postId"], where: { postId: { in: postIds } }, _sum: { value: true } }),
+    userId ? db.postVote.findMany({ where: { postId: { in: postIds }, userId }, select: { postId: true, value: true } }) : Promise.resolve([]),
+  ]);
+  return {
+    score: new Map(sums.map((r) => [r.postId, r._sum.value ?? 0])),
+    mine: new Map(mine.map((r) => [r.postId, Math.sign(r.value) as -1 | 0 | 1])),
+  };
+}
 
 /** Forum v2: mesajul unui moderator într-un topic („Adaugă mesaj”). */
 export type GcsTopicNoticeView = { id: number; html: string; tone: "info" | "warn" | "ok" | "danger"; createdAt: string; author: GcsUserRef | null };
@@ -484,6 +498,7 @@ export class GcsForumQueries {
 
     const all = recommendedRow ? [...posts, recommendedRow] : posts;
     const ids = [...new Set(all.map((p) => p.id))];
+    const votes = forum.type === "QA" && ids.length > 0 && (await settings.get<boolean>("forums.qa_voting")) ? await postVotes(db, ids, actor.userId) : null;
     const userIds = [...new Set([...all.flatMap((p) => [p.authorId, p.editedById]), ...noticeRows.map((n) => n.authorId)].filter((id): id is string => id !== null))];
     const { follows, reactions, polls } = this.deps;
     const postKeys = ids.map(String);
@@ -582,6 +597,7 @@ export class GcsForumQueries {
         ip: isGlobalMod ? (p.ip ?? null) : null,
         staff: author ? staff.has(author.primaryGroupId) : false,
         reactors: { users: ordered.slice(0, 3), total: Math.max(totalReactions, list.length), mine: reactedMine },
+        votes: votes ? { score: votes.score.get(p.id) ?? 0, mine: votes.mine.get(p.id) ?? 0 } : null,
       };
     };
     const views: GcsPostView[] = posts.map((p, i) => toView(p, (page - 1) * perPage + i + 1));

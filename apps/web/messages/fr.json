@@ -3976,11 +3976,11 @@
       "empty": "Aucune règle pour l'instant.",
       "on": "Activée",
       "off": "Désactivée",
-      "summary": "Dernier message de plus de {days} jours · archiverait {count, plural, one {# sujet} other {# sujets}} maintenant",
+      "summary": "Dernier message de plus de {days} jours · archiverait {count, plural, one {# sujet} many {# sujets} other {# sujets}} maintenant",
       "lastRun": "Dernier passage : {date} ({count})",
       "edit": "Modifier",
       "runNow": "Exécuter maintenant",
-      "runConfirm": "Archiver {count, plural, one {# sujet} other {# sujets}} maintenant ?",
+      "runConfirm": "Archiver {count, plural, one {# sujet} many {# sujets} other {# sujets}} maintenant ?",
       "delete": "Supprimer",
       "deleteConfirm": "Supprimer la règle ? Les sujets déjà archivés le restent.",
       "editTitle": "Modifier : {name}",
@@ -4101,7 +4101,8 @@
       "rating_own": "Note en étoiles : les auteurs peuvent noter leur propre sujet",
       "rating_min_age_days": "Note en étoiles : ancienneté minimum du compte (jours)",
       "rating_min_posts": "Note en étoiles : messages minimum",
-      "archive_enabled": "Archivage automatique (les règles dans Forums → Archivage)"
+      "archive_enabled": "Archivage automatique (les règles dans Forums → Archivage)",
+      "qa_voting": "Votes Q&R : les membres votent sur les messages des forums Q&R"
     },
     "profile": {
       "cover_max_mb": "Taille maximale de la couverture (MB)",
@@ -5124,7 +5125,7 @@
     "pageHint": "Page",
     "archived": "Archivé",
     "popularNow": "Populaire en ce moment",
-    "ratingLabel": "{avg} sur 5 · {count, plural, one {# vote} other {# votes}}",
+    "ratingLabel": "{avg} sur 5 · {count, plural, one {# vote} many {# votes} other {# votes}}",
     "pageEmpty": "Cette page n'a pas encore de contenu.",
     "sortLabel": "Trier",
     "sorts": {
@@ -5140,7 +5141,10 @@
     "listViews": {
       "label": "Vue de la liste",
       "list": "Liste",
-      "snippet": "Avec extrait"
+      "snippet": "Avec extrait",
+      "forumsLabel": "Affichage des forums",
+      "rows": "Lignes",
+      "grid": "Grille"
     },
     "password": {
       "title": "{name} est protégé par un mot de passe",
@@ -5399,8 +5403,8 @@
     "archivedReply": "Ce sujet est archivé : on ne peut plus y répondre.",
     "you": "Toi",
     "and": "et",
-    "reactedNames": "<names></names> {count, plural, one {a réagi} other {ont réagi}}",
-    "reactedNamesOthers": "<names></names> et {count, plural, one {une autre personne} other {# autres}} ont réagi",
+    "reactedNames": "<names></names> {count, plural, one {a réagi} many {ont réagi} other {ont réagi}}",
+    "reactedNamesOthers": "<names></names> et {count, plural, one {une autre personne} many {# autres} other {# autres}} ont réagi",
     "share": {
       "label": "Partager",
       "copy": "Copier le lien",
@@ -5411,7 +5415,7 @@
       "add": "+ Citation",
       "remove": "Retirer la citation",
       "label": "Citations choisies",
-      "insert": "Citer {count, plural, one {# message} other {# messages}}",
+      "insert": "Citer {count, plural, one {# message} many {# messages} other {# messages}}",
       "clear": "Vider les citations"
     },
     "replyBox": {
@@ -5438,17 +5442,24 @@
       "confirmDelete": "Supprimer le message du modérateur ?"
     },
     "gap": {
-      "months": "{count, plural, one {Un mois} other {# mois}} plus tard…",
-      "years": "{count, plural, one {Un an} other {# ans}} plus tard…"
+      "months": "{count, plural, one {Un mois} many {# mois} other {# mois}} plus tard…",
+      "years": "{count, plural, one {Un an} many {# ans} other {# ans}} plus tard…"
     },
     "summary": {
       "title": "Résumé du sujet",
       "posters": "Les plus actifs",
       "popular": "Messages populaires",
       "days": "Jours les plus actifs",
-      "postsCount": "{count, plural, one {# message} other {# messages}}",
-      "reactions": "{count, plural, one {# réaction} other {# réactions}}",
+      "postsCount": "{count, plural, one {# message} many {# messages} other {# messages}}",
+      "reactions": "{count, plural, one {# réaction} many {# réactions} other {# réactions}}",
       "noText": "(sans texte)"
+    },
+    "vote": {
+      "up": "Vote positif",
+      "down": "Vote négatif",
+      "score": "Score : {score}",
+      "login": "Connecte-toi pour voter",
+      "own": "Tu ne peux pas voter pour ton propre message"
     }
   },
   "newTopic": {
@@ -6728,7 +6739,7 @@
       "reputation": "Réputation",
       "online": "Temps en ligne"
     },
-    "ratingAria": "{avg} sur 5, {count, plural, one {# vote} other {# votes}}"
+    "ratingAria": "{avg} sur 5, {count, plural, one {# vote} many {# votes} other {# votes}}"
   },
   "pageEditor": {
     "title": "Modifier la page",
@@ -9088,10 +9099,10 @@
     "social": "ou en un clic avec"
   },
   "rating": {
-    "average": "{avg} sur 5 · {count, plural, one {# vote} other {# votes}}",
+    "average": "{avg} sur 5 · {count, plural, one {# vote} many {# votes} other {# votes}}",
     "decimal": ",",
     "rateThis": "Noter ce sujet",
-    "starLabel": "{value} {value, plural, one {étoile} other {étoiles}} : {label}",
+    "starLabel": "{value} {value, plural, one {étoile} many {étoiles} other {étoiles}} : {label}",
     "labels": {
       "poor": "Faible",
       "fair": "Passable",

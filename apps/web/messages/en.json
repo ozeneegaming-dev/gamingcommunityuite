@@ -4101,7 +4101,8 @@
       "rating_own": "Star rating: authors can rate their own topic",
       "rating_min_age_days": "Star rating: minimum account age (days)",
       "rating_min_posts": "Star rating: minimum posts",
-      "archive_enabled": "Automatic archiving (the rules in Forums → Archiving)"
+      "archive_enabled": "Automatic archiving (the rules in Forums → Archiving)",
+      "qa_voting": "Q&A voting: members vote on posts in Q&A forums"
     },
     "profile": {
       "cover_max_mb": "Maximum cover size (MB)",
@@ -5140,7 +5141,10 @@
     "listViews": {
       "label": "List view",
       "list": "List",
-      "snippet": "With snippet"
+      "snippet": "With snippet",
+      "forumsLabel": "Forum view",
+      "rows": "Rows",
+      "grid": "Grid"
     },
     "password": {
       "title": "{name} is password protected",
@@ -5399,7 +5403,7 @@
     "archivedReply": "This topic is archived: no more replies can be added.",
     "you": "You",
     "and": "and",
-    "reactedNames": "<names></names> reacted",
+    "reactedNames": "<names></names> {count, plural, one {reacted} other {reacted}}",
     "reactedNamesOthers": "<names></names> and {count, plural, one {one other} other {# others}} reacted",
     "share": {
       "label": "Share",
@@ -5449,6 +5453,13 @@
       "postsCount": "{count, plural, one {# post} other {# posts}}",
       "reactions": "{count, plural, one {# reaction} other {# reactions}}",
       "noText": "(no text)"
+    },
+    "vote": {
+      "up": "Upvote",
+      "down": "Downvote",
+      "score": "Score: {score}",
+      "login": "Sign in to vote",
+      "own": "You can’t vote on your own post"
     }
   },
   "newTopic": {

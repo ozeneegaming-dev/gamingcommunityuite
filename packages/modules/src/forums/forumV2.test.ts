@@ -306,3 +306,45 @@ describe("blocurile sigure: permisiunile pe grup și conținutul ascuns", () => 
     expect(groupOnly).not.toContain("<p>VIP</p>");
   });
 });
+
+describe("votul Q&A", () => {
+  test("membrii votează răspunsurile (+1 / −1, al doilea click îl anulează); scorul și votul meu apar în topic", async () => {
+    const { forum } = await w.createTree({ type: "QA" });
+    const q = await w.topics.create(w.member, { forumId: forum.id, title: "Cum setez tickrate?", content: doc("Ajutor") });
+    const helper = await newActor("Ajutor", "member");
+    const answer = await w.posts.reply(helper, { topicId: q.topicId, content: doc("Cu -tickrate 128") });
+    const ana = await newActor("Ana", "member");
+
+    expect(await tools.vote(w.member, answer.postId, 1)).toEqual({ score: 1, mine: 1 });
+    expect(await tools.vote(ana, answer.postId, 1)).toEqual({ score: 2, mine: 1 });
+    expect(await tools.vote(ana, answer.postId, -1)).toEqual({ score: 0, mine: -1 });
+    expect(await tools.vote(ana, answer.postId, -1)).toEqual({ score: 1, mine: 0 });
+
+    const page = await w.queries.topic(w.member, q.topicId, { page: 1 });
+    expect(page.posts.find((p) => p.id === answer.postId)).toMatchObject({ votes: { score: 1, mine: 1 } });
+    expect((await w.queries.topic(w.guest, q.topicId, { page: 1 })).posts.find((p) => p.id === answer.postId)).toMatchObject({ votes: { score: 1, mine: 0 } });
+  });
+
+  test("nu pe propria postare, nu ca vizitator, nu în afara Q&A, nu când setarea e oprită", async () => {
+    const { forum, category } = await w.createTree({ type: "QA" });
+    const q = await w.topics.create(w.member, { forumId: forum.id, title: "Întrebare", content: doc("?") });
+    const helper = await newActor("Ajutor", "member");
+    const answer = await w.posts.reply(helper, { topicId: q.topicId, content: doc("!") });
+    await expect(tools.vote(helper, answer.postId, 1)).rejects.toMatchObject({ fields: { postId: "own_post" } });
+    await expect(tools.vote(w.guest, answer.postId, 1)).rejects.toBeInstanceOf(GcsForbidden);
+    await expect(tools.vote(w.member, answer.postId, 2 as 1)).rejects.toMatchObject({ fields: { value: "invalid_choice" } });
+
+    const plain = await w.forums.create({ parentId: category.id, type: "FORUM", name: "Discuții" }, w.root);
+    await w.clearFlood(w.member);
+    await w.clearFlood(helper);
+    const t = await w.topics.create(w.member, { forumId: plain.id, title: "Discuție", content: doc("x") });
+    const r = await w.posts.reply(helper, { topicId: t.topicId, content: doc("y") });
+    await expect(tools.vote(w.member, r.postId, 1)).rejects.toMatchObject({ fields: { forum: "not_qa" } });
+    expect((await w.queries.topic(w.member, t.topicId, { page: 1 })).posts[1]!.votes).toBeNull();
+
+    await w.settings.set("forums.qa_voting", false, w.root);
+    await expect(tools.vote(w.member, answer.postId, 1)).rejects.toMatchObject({ fields: { forum: "voting_off" } });
+    expect((await w.queries.topic(w.member, q.topicId, { page: 1 })).posts[1]!.votes).toBeNull();
+    await expect(tools.vote(w.member, 999_999, 1)).rejects.toBeInstanceOf(GcsNotFound);
+  });
+});

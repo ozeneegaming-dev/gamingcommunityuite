@@ -13,6 +13,7 @@ import { pluginHookHtml } from "@/lib/plugins";
 import { GcsDeletedPostbit } from "../GcsDeletedMember";
 import { GcsTranslateButton, type GcsTranslateLabels } from "../GcsTranslateButton";
 import { GcsPostContent, type GcsPostContentProps } from "./GcsPostContent";
+import { GcsPostVote } from "./GcsPostVote";
 import { GcsMemberLink, GcsNamedHtml } from "@/lib/member-names";
 import { GcsGroupLink } from "@/lib/group-pills";
 
@@ -141,6 +142,16 @@ export async function GcsPost({
           attachments: post.attachments,
         }}
         isSolved={isSolved}
+        vote={
+          post.votes ? (
+            <GcsPostVote
+              postId={post.id}
+              score={post.votes.score}
+              mine={post.votes.mine}
+              disabled={actorId === null ? "guest" : own ? "own" : can.react ? null : "closed"}
+            />
+          ) : null
+        }
         reactions={post.reactions}
         myReaction={post.myReaction}
         reactionList={reactionList}

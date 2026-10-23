@@ -255,7 +255,8 @@ test("moderatorul: „Adaugă mesaj” sus în topic și răspunsul „Recomanda
   await reply.getByTestId("gcs-post-more").click();
   await page.getByTestId("gcs-post-recommend").click();
   await expect(page.getByTestId("gcs-recommended")).toContainText("Răspunsul 2");
-  await expect(reply.getByTestId("gcs-post-pill-recommended")).toBeVisible();
+  // Răspunsul apare de două ori: sus, în caseta „Recomandat”, și la locul lui (cu pastila).
+  await expect(reply.last().getByTestId("gcs-post-pill-recommended")).toBeVisible();
   await shot(page, "topic-notice-recommended");
 
   // Membrul vede mesajul și răspunsul recomandat, fără uneltele de moderare.
@@ -266,10 +267,59 @@ test("moderatorul: „Adaugă mesaj” sus în topic și răspunsul „Recomanda
   await expect(author.getByTestId("gcs-mod-notice")).toHaveCount(0);
   await author.context().close();
 
-  // Istoricul moderării al topicului.
-  await page.getByText("Unelte de moderare").click();
+  // Istoricul moderării al topicului (meniul de moderare a rămas deschis după acțiunile de mai sus).
+  if (!(await page.locator("details.gcs-modMenu").evaluate((d) => (d as HTMLDetailsElement).open))) await page.getByText("Unelte de moderare").click();
   await page.getByTestId("gcs-mod-history").click();
   const history = page.getByTestId("gcs-mod-history-list");
   await expect(history.locator('[data-action="mod.topic.notice"]')).toHaveCount(1);
   await expect(history.locator('[data-action="mod.topic.recommend"]')).toHaveCount(1);
+});
+
+test("Q&A: membrii votează răspunsurile (scorul, anularea, votul negativ), autorul nu; forumurile în grilă, la alegerea membrului", async ({ page, request, browser }) => {
+  const id = uid();
+  const t = await forumTree(request, "QA");
+  const authorEmail = `autor-qa-${id}@example.com`;
+  const author = await memberInNewContext(browser, `AutorQa${id}`, authorEmail, "198.18.74");
+  const topic = await topicWithReplies(request, t.forum.id, authorEmail, `Întrebare ${id}`, 1);
+
+  await member(page, `Votant${id}`, `votant-${id}@example.com`);
+  await page.goto(topic.url);
+  const answer = page.getByTestId("gcs-post").filter({ hasText: "Răspunsul 1" });
+  const up = answer.getByTestId("gcs-vote-up");
+  const score = answer.getByTestId("gcs-vote-score");
+  await expect(score).toHaveText("0");
+  await up.click();
+  await expect(score).toHaveText("1");
+  await expect(up).toHaveAttribute("aria-pressed", "true");
+  await page.reload();
+  await expect(score).toHaveText("1");
+  await up.click();
+  await expect(score).toHaveText("0");
+  await answer.getByTestId("gcs-vote-down").click();
+  await expect(score).toHaveText("-1");
+  await expect(answer.getByTestId("gcs-vote-down")).toHaveAttribute("aria-pressed", "true");
+  await shot(page, "qa-vote");
+
+  // Autorul răspunsului vede scorul, dar nu-și poate vota postarea.
+  await author.goto(topic.url);
+  const own = author.getByTestId("gcs-post").filter({ hasText: "Răspunsul 1" });
+  await expect(own.getByTestId("gcs-vote-score")).toHaveText("-1");
+  await expect(own.getByTestId("gcs-vote-up")).toBeDisabled();
+  await author.context().close();
+
+  // Vederea forumurilor: grila, păstrată după reîncărcare, pe o coloană la 375 px fără scroll orizontal.
+  await page.goto("/forum");
+  const index = page.getByTestId("gcs-forum-index");
+  await expect(index).toHaveAttribute("data-view", "rows");
+  await page.getByTestId("gcs-view-grid").click();
+  await expect(index).toHaveAttribute("data-view", "grid");
+  await page.reload();
+  await expect(index).toHaveAttribute("data-view", "grid");
+  await expect(index.locator(".gcs-category__well").first()).toHaveCSS("display", "grid");
+  await shot(page, "forum-index-grid");
+  await page.setViewportSize({ width: 375, height: 800 });
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  await shot(page, "forum-index-grid-375");
+  await page.getByTestId("gcs-view-rows").click();
+  await expect(index).toHaveAttribute("data-view", "rows");
 });

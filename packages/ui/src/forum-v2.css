@@ -1090,3 +1090,80 @@
     transition: opacity 0.18s;
   }
 }
+
+/* Votul Q&A (Forum v2): ▲ scorul ▼ în antetul postării; votul dat în accentul temei. */
+.gcs-postVote {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.gcs-postVote__btn {
+  width: 26px;
+  height: 26px;
+}
+.gcs-postVote__btn--on {
+  color: var(--gcs-accent);
+}
+.gcs-postVote__btn:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.gcs-postVote__score {
+  min-width: 1.6em;
+  text-align: center;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Vederea forumurilor (Forum v2): rânduri (implicit) sau grilă, alegerea membrului. În grilă, fiecare forum e o plăcuță
+ * pe coloane (cel puțin 260 px, una singură pe telefon); stilul rândurilor (lista sau cardurile temei) rămâne.
+ */
+.gcs-forumIndex__tools {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 10px;
+  padding: 10px;
+}
+.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well > .gcs-forumRow {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  min-width: 0;
+  border: 1px solid var(--gcs-border);
+  border-radius: 8px;
+}
+/* În coloană, baza flex a rândului (ex. 260 px) ar deveni înălțime: părțile plăcuței au înălțimea conținutului. */
+.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-forumRow > * {
+  flex: 0 0 auto;
+}
+.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-forumRow__main,
+.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-forumRow__last {
+  width: 100%;
+  min-width: 0;
+}
+/* Contoarele pe un rând, sub descriere. */
+.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-forumRow__stats {
+  width: auto;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 10px;
+  text-align: left;
+}
+.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-forumRow__statsTool {
+  align-self: flex-start;
+}
+/* Bara în culoarea forumului (cardurile temei): sus, în dreptul iconiței, nu la mijlocul plăcuței. */
+.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well > .gcs-forumRow::before {
+  top: 22px;
+  transform: none;
+}
+/* Subforumurile, pe o coloană în plăcuță (coloanele alese de admin sunt pentru vederea pe rânduri). */
+.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-forumRow__subs {
+  grid-template-columns: minmax(0, 1fr) !important;
+}

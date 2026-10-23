@@ -3976,11 +3976,11 @@
       "empty": "Aún no hay reglas.",
       "on": "Activada",
       "off": "Desactivada",
-      "summary": "Último mensaje de hace más de {days} días · ahora archivaría {count, plural, one {# tema} other {# temas}}",
+      "summary": "Último mensaje de hace más de {days} días · ahora archivaría {count, plural, one {# tema} many {# temas} other {# temas}}",
       "lastRun": "Última ejecución: {date} ({count})",
       "edit": "Editar",
       "runNow": "Ejecutar ahora",
-      "runConfirm": "¿Archivar ahora {count, plural, one {# tema} other {# temas}}?",
+      "runConfirm": "¿Archivar ahora {count, plural, one {# tema} many {# temas} other {# temas}}?",
       "delete": "Eliminar",
       "deleteConfirm": "¿Eliminar la regla? Los temas ya archivados siguen archivados.",
       "editTitle": "Editar: {name}",
@@ -4101,7 +4101,8 @@
       "rating_own": "Valoración: los autores pueden valorar su propio tema",
       "rating_min_age_days": "Valoración: antigüedad mínima de la cuenta (días)",
       "rating_min_posts": "Valoración: mensajes mínimos",
-      "archive_enabled": "Archivado automático (las reglas en Foros → Archivado)"
+      "archive_enabled": "Archivado automático (las reglas en Foros → Archivado)",
+      "qa_voting": "Votos de preguntas y respuestas: los miembros votan las publicaciones de los foros de preguntas"
     },
     "profile": {
       "cover_max_mb": "Tamaño máximo de cubierta (MB)",
@@ -5124,7 +5125,7 @@
     "pageHint": "Página",
     "archived": "Archivado",
     "popularNow": "Popular ahora",
-    "ratingLabel": "{avg} de 5 · {count, plural, one {# voto} other {# votos}}",
+    "ratingLabel": "{avg} de 5 · {count, plural, one {# voto} many {# votos} other {# votos}}",
     "pageEmpty": "Esta página aún no tiene contenido.",
     "sortLabel": "Ordenar",
     "sorts": {
@@ -5140,7 +5141,10 @@
     "listViews": {
       "label": "Vista de la lista",
       "list": "Lista",
-      "snippet": "Con extracto"
+      "snippet": "Con extracto",
+      "forumsLabel": "Vista de los foros",
+      "rows": "Filas",
+      "grid": "Cuadrícula"
     },
     "password": {
       "title": "{name} está protegido con contraseña",
@@ -5399,8 +5403,8 @@
     "archivedReply": "Este tema está archivado: ya no se pueden añadir respuestas.",
     "you": "Tú",
     "and": "y",
-    "reactedNames": "<names></names> {count, plural, one {ha reaccionado} other {han reaccionado}}",
-    "reactedNamesOthers": "<names></names> y {count, plural, one {otra persona} other {otros #}} han reaccionado",
+    "reactedNames": "<names></names> {count, plural, one {ha reaccionado} many {han reaccionado} other {han reaccionado}}",
+    "reactedNamesOthers": "<names></names> y {count, plural, one {otra persona} many {otros #} other {otros #}} han reaccionado",
     "share": {
       "label": "Compartir",
       "copy": "Copiar enlace",
@@ -5411,7 +5415,7 @@
       "add": "+ Cita",
       "remove": "Quitar cita",
       "label": "Citas elegidas",
-      "insert": "Citar {count, plural, one {# mensaje} other {# mensajes}}",
+      "insert": "Citar {count, plural, one {# mensaje} many {# mensajes} other {# mensajes}}",
       "clear": "Vaciar citas"
     },
     "replyBox": {
@@ -5438,17 +5442,24 @@
       "confirmDelete": "¿Eliminar el mensaje del moderador?"
     },
     "gap": {
-      "months": "{count, plural, one {Un mes} other {# meses}} después…",
-      "years": "{count, plural, one {Un año} other {# años}} después…"
+      "months": "{count, plural, one {Un mes} many {# meses} other {# meses}} después…",
+      "years": "{count, plural, one {Un año} many {# años} other {# años}} después…"
     },
     "summary": {
       "title": "Resumen del tema",
       "posters": "Más activos",
       "popular": "Mensajes populares",
       "days": "Días más activos",
-      "postsCount": "{count, plural, one {# mensaje} other {# mensajes}}",
-      "reactions": "{count, plural, one {# reacción} other {# reacciones}}",
+      "postsCount": "{count, plural, one {# mensaje} many {# mensajes} other {# mensajes}}",
+      "reactions": "{count, plural, one {# reacción} many {# reacciones} other {# reacciones}}",
       "noText": "(sin texto)"
+    },
+    "vote": {
+      "up": "Voto positivo",
+      "down": "Voto negativo",
+      "score": "Puntuación: {score}",
+      "login": "Inicia sesión para votar",
+      "own": "No puedes votar tu propia publicación"
     }
   },
   "newTopic": {
@@ -6728,7 +6739,7 @@
       "reputation": "Reputación",
       "online": "Tiempo en línea"
     },
-    "ratingAria": "{avg} de 5, {count, plural, one {# voto} other {# votos}}"
+    "ratingAria": "{avg} de 5, {count, plural, one {# voto} many {# votos} other {# votos}}"
   },
   "pageEditor": {
     "title": "Editar página",
@@ -9088,10 +9099,10 @@
     "social": "o con un clic con"
   },
   "rating": {
-    "average": "{avg} de 5 · {count, plural, one {# voto} other {# votos}}",
+    "average": "{avg} de 5 · {count, plural, one {# voto} many {# votos} other {# votos}}",
     "decimal": ",",
     "rateThis": "Valorar este tema",
-    "starLabel": "{value} {value, plural, one {estrella} other {estrellas}}: {label}",
+    "starLabel": "{value} {value, plural, one {estrella} many {estrellas} other {estrellas}}: {label}",
     "labels": {
       "poor": "Malo",
       "fair": "Aceptable",

@@ -103,6 +103,8 @@ const settings: GcsSettingDef[] = [
   postingSetting("forums.summary_min_replies", "number", 20, between(1, 100_000)),
   { ...postingSetting("forums.summary_position", "string", "top", oneOfValues(["top", "bottom"])), options: ["top", "bottom"] },
   { ...postingSetting("forums.summary_devices", "string", "all", oneOfValues(["all", "desktop"])), options: ["all", "desktop"] },
+  // Votul Q&A: membrii votează postările din forumurile Q&A (+1 / −1), scorul apare lângă postare.
+  postingSetting("forums.qa_voting", "boolean", true),
   // Fluxul RSS al fiecărui forum (`/forum/<id>/rss.xml`).
   postingSetting("forums.rss_enabled", "boolean", true),
   // Nota cu stele: schimbarea votului, nota pe propriul topic, vechimea minimă a contului (zile) și postările minime.
