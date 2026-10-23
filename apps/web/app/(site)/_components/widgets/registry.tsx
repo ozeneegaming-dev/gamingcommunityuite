@@ -24,6 +24,8 @@ import { GcsGuestCta } from "../GcsGuestCta";
 import { GcsWidgetTitle, widgetIcon } from "./GcsWidgetTitle";
 import { GcsMemberLink } from "@/lib/member-names";
 import { GcsRankingPanel } from "../cockpit/GcsRankingPanel";
+import { GcsDonationGoal } from "../donations/GcsDonationGoal";
+import { donationCta } from "@/lib/donations.server";
 import { WIDGET_METRICS } from "@/lib/ranking";
 import { isRankingMetric, isRankingPeriod, rankingRows } from "@/lib/ranking.server";
 
@@ -451,6 +453,19 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
         <Link href="/servers/admins" className="gcs-serverList__all">
           {tb("all")}
         </Link>
+      </GcsWidgetCard>
+    );
+  },
+
+  // VIP clasic › Donații: „Obiectivul lunii” (progresul live, donatorii, ultimul donator, „Susține comunitatea”). Fără
+  // obiectiv activ vizibil viewer-ului, widget-ul nu apare.
+  "vip.donationGoal": async ({ id, config, actor }) => {
+    const goalParam = typeof config.goal === "string" && /^\d{1,9}$/.test(config.goal) ? config.goal : "";
+    const [t, view, cta] = await Promise.all([getTranslations("widgets"), services().donations.goalView(actor, goalParam ? Number(goalParam) : null), donationCta()]);
+    if (!view) return null;
+    return (
+      <GcsWidgetCard id={id} type="vip.donationGoal" config={config} title={t("vip.donationGoal")} testId="gcs-widget-donation-goal">
+        <GcsDonationGoal initial={view} goalParam={goalParam} showLast={config.lastDonor !== "hide"} showCount={config.donorCount !== "hide"} cta={cta} variant="widget" />
       </GcsWidgetCard>
     );
   },

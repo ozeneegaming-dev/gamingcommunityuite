@@ -21,7 +21,8 @@
       "serversMatches": "Meciuri mix",
       "bans": "Banuri",
       "serverAdmins": "Admini",
-      "serverTickets": "Contestații"
+      "serverTickets": "Contestații",
+      "donations": "Donații"
     },
     "acp": "ACP",
     "myProfile": "Profilul meu",
@@ -214,7 +215,10 @@
       "already_member": "Ești deja în acest grup.",
       "already_primary": "E deja grupul tău principal.",
       "members_only": "Autentifică-te mai întâi.",
-      "self": "Nu poți face asta propriului cont."
+      "self": "Nu poți face asta propriului cont.",
+      "donation_reviewed": "Donația a fost deja verificată.",
+      "donation_pending_limit": "Ai deja cereri în așteptare; așteaptă confirmarea lor.",
+      "donations_closed": "Anunțarea donațiilor e oprită momentan."
     },
     "fields": {
       "invalid_color": "Culoare invalidă (#RRGGBB)",
@@ -494,7 +498,11 @@
         "history": "Istoric",
         "name_styles": "Stiluri de nume",
         "frames": "Avatar frames",
-        "page": "Pagina VIP"
+        "page": "Pagina VIP",
+        "donations_group": "Donații",
+        "donations": "Donații",
+        "donation_goals": "Obiective",
+        "donation_settings": "Setări donații"
       },
       "appearance": {
         "appearance": "Aspect",
@@ -925,14 +933,20 @@
       },
       "donations": {
         "title": "Donații",
-        "hint": "Donațiile înregistrate de echipă. Peste pragul din ACP → Profiluri, membrul primește automat insigna „Sponsor”.",
+        "hint": "Donațiile membrului, cu starea lor. Peste pragul din Donații › Setări, membrul primește automat insigna „Sponsor”.",
         "sponsor": "Membrul are insigna „Sponsor”.",
         "delete": "Șterge",
         "confirmDelete": "Ștergi donația?",
         "add": "Adaugă o donație",
-        "amount": "Suma",
-        "currency": "Moneda",
-        "note": "Notă"
+        "all": "Toate donațiile →",
+        "anonymous": "anonimă",
+        "confirm": "Confirmă",
+        "confirmBody": "Confirmi donația? Intră în obiective și în top, iar membrul primește o notificare.",
+        "status": {
+          "CONFIRMED": "confirmată",
+          "PENDING": "în așteptare",
+          "REJECTED": "respinsă"
+        }
       },
       "tabs": {
         "label": "Secțiunile membrului",
@@ -1237,7 +1251,8 @@
         "servers": "Servere",
         "clans": "Clanuri",
         "servers_bridge": "Bridge și ELO",
-        "gdpr": "Cereri GDPR"
+        "gdpr": "Cereri GDPR",
+        "donations": "Donații"
       },
       "save": "Salvează setările",
       "secretSet": "•••• salvat (lasă gol ca să păstrezi valoarea)",
@@ -1569,12 +1584,13 @@
       "fieldHelperHint": "Apare sub câmp, în formular",
       "linkTemplate": "Link de contact (opțional)",
       "linkTemplateHint": "Doar la câmpurile „Text”: membrul scrie handle-ul, iar linkul se construiește din șablon (https, cu '{handle}').",
-      "sponsorMin": "Insigna „Sponsor” de la (suma donațiilor)",
       "faceitKey": "Cheia FACEIT Data API",
       "faceitKeySet": "Setată (scrie alta ca s-o schimbi)",
       "faceitKeyEmpty": "Lipsește: tabul FACEIT e ascuns",
       "faceitClear": "Șterge cheia FACEIT",
-      "faceitHint": "Cheia se creează în portalul pentru dezvoltatori FACEIT (cheie de server). Fără ea, tabul FACEIT nu apare."
+      "faceitHint": "Cheia se creează în portalul pentru dezvoltatori FACEIT (cheie de server). Fără ea, tabul FACEIT nu apare.",
+      "sponsorMoved": "Pragul insignei „Sponsor” (și perioada lui) se setează în",
+      "sponsorLink": "VIP & Magazin › Donații › Setări"
     },
     "memberProfile": {
       "profileTitle": "Profil",
@@ -3896,6 +3912,110 @@
       "removeBody": "Bara „{text}” dispare de pe site după salvare.",
       "removeConfirm": "Șterge",
       "cancel": "Anulează"
+    },
+    "donations": {
+      "title": "Donații",
+      "editTitle": "Editează donația",
+      "back": "Înapoi la donații",
+      "save": "Salvează",
+      "kpi": {
+        "pending": "Cereri în așteptare",
+        "month": "Confirmat luna aceasta",
+        "goals": "Obiective",
+        "goalsHint": "Progresul obiectivelor"
+      },
+      "filters": {
+        "status": "Starea",
+        "all": "Toate",
+        "q": "Caută",
+        "qHint": "Membru, nume sau referință",
+        "method": "Metoda",
+        "from": "De la",
+        "to": "Până la",
+        "apply": "Filtrează"
+      },
+      "csv": "Export CSV",
+      "add": "Adaugă o donație",
+      "addSubmit": "Adaugă donația",
+      "list": "Lista donațiilor",
+      "empty": "Nicio donație pentru filtrele alese.",
+      "noName": "Fără nume",
+      "anonymous": "Anonimă",
+      "ref": "ref. {ref}",
+      "sources": {
+        "member": "trimisă de membru („Am donat”)",
+        "provider": "prin {source}"
+      },
+      "rejectedBecause": "respinsă: {reason}",
+      "confirm": "Confirmă",
+      "confirmBody": "Confirmi donația de {amount}? Intră în obiective, în top și în insigna „Sponsor”, iar donatorul primește o notificare.",
+      "reject": "Respinge",
+      "rejectBody": "Respingi cererea? Membrul primește o notificare, cu motivul scris.",
+      "reason": "Motivul (opțional)",
+      "edit": "Editează",
+      "editLabel": "Editează donația #{id}",
+      "delete": "Șterge",
+      "deleteBody": "Ștergi definitiv donația? Iese din obiective și din top.",
+      "pages": "Paginile listei",
+      "prev": "Pagina anterioară",
+      "next": "Pagina următoare",
+      "fields": {
+        "member": "Membru",
+        "memberHint": "Numele membrului (gol = fără cont)",
+        "donorName": "Numele donatorului fără cont",
+        "donorNameHint": "Gol = Anonim",
+        "amount": "Suma",
+        "currency": "Moneda",
+        "date": "Data",
+        "method": "Metoda",
+        "reference": "Referința plății",
+        "note": "Notă",
+        "status": "Starea",
+        "anonymous": "Anonimă în paginile publice",
+        "notify": "Anunță donatorul la confirmare"
+      },
+      "goals": {
+        "title": "Obiective de donații",
+        "editTitle": "Editează obiectivul",
+        "back": "Înapoi la obiective",
+        "save": "Salvează",
+        "lead": "Progresul unui obiectiv = donațiile confirmate din perioada lui, în moneda lui. Widget-ul „Obiectivul lunii” arată implicit primul obiectiv activ.",
+        "list": "Lista obiectivelor",
+        "empty": "Niciun obiectiv încă.",
+        "states": {
+          "upcoming": "În curând",
+          "active": "Activ",
+          "ended": "Încheiat"
+        },
+        "disabled": "Oprit",
+        "monthlyRenew": "Lunar, se reînnoiește",
+        "monthlyOnce": "O singură lună",
+        "custom": "Interval",
+        "everyone": "Toată lumea",
+        "donors": "{count, plural, one {# donator} few {# donatori} other {# de donatori}}",
+        "target": "Ținta: {amount}",
+        "edit": "Editează",
+        "editLabel": "Editează obiectivul {title}",
+        "delete": "Șterge",
+        "deleteBody": "Ștergi obiectivul „{title}”? Donațiile rămân.",
+        "add": "Adaugă un obiectiv",
+        "addSubmit": "Adaugă obiectivul",
+        "fields": {
+          "title": "Titlul",
+          "titleHint": "ex. Plata serverelor",
+          "target": "Ținta",
+          "currency": "Moneda",
+          "period": "Perioada",
+          "monthly": "Lunar (luna calendaristică)",
+          "custom": "Interval ales",
+          "startsOn": "Începe pe",
+          "endsOn": "Se termină pe (doar interval)",
+          "autoRenew": "Se reînnoiește lunar",
+          "enabled": "Pornit",
+          "groups": "Vizibil pentru",
+          "groupsHint": "Niciun grup bifat = toată lumea."
+        }
+      }
     }
   },
   "settings": {
@@ -3950,7 +4070,10 @@
       "unicode": "Orice alfabet",
       "optional": "La alegere",
       "direct": "Direct: browserul încarcă imaginea de la adresă (nimic copiat pe site)",
-      "copy": "Copiere: imaginile se aduc și se păstrează pe site"
+      "copy": "Copiere: imaginile se aduc și se păstrează pe site",
+      "all": "Tot timpul",
+      "year": "Anul curent",
+      "month": "Luna curentă"
     },
     "forums": {
       "posts_per_page": "Postări pe pagină",
@@ -3992,7 +4115,7 @@
       "birthdayYearHint": "ex. 1998",
       "birthdayShowYear": "Arată și anul pe profil",
       "faceit_api_key": "Cheia FACEIT Data API",
-      "sponsor_min_amount": "Pragul insignei „Sponsor” (suma donațiilor)"
+      "sponsor_min_amount": "Pragul insignei „Sponsor” (donațiile confirmate, în moneda principală; 0 = oprită)"
     },
     "pm": {
       "messages_per_page": "Mesaje pe pagină într-o conversație"
@@ -4446,6 +4569,14 @@
       "notMember": "Nu ești membru",
       "join": "Intră",
       "leave": "Ieși"
+    },
+    "donations": {
+      "external_url": "Linkul extern pentru donații (pagina de plată a comunității; gol = doar instrucțiunile)",
+      "instructions": "Instrucțiunile de donare (pagina /donatii)",
+      "currency": "Moneda principală (cod de 3 litere, ex. RON, EUR)",
+      "methods": "Metodele propuse (despărțite prin virgulă)",
+      "member_submit": "Membrii pot anunța o donație („Am donat”)",
+      "sponsor_period": "Perioada insignei „Sponsor”"
     }
   },
   "permissions": {
@@ -5311,6 +5442,11 @@
       },
       "chat_pro": {
         "reply": "Răspunsuri în chat"
+      },
+      "donations": {
+        "confirmed": "Donațiile tale confirmate",
+        "rejected": "Donațiile tale neconfirmate",
+        "submitted": "Donații noi de confirmat (echipa)"
       }
     }
   },
@@ -6270,7 +6406,10 @@
       "channel": "Camera de chat",
       "icon": "Iconiță (ex. fa-solid fa-star; gol = cea implicită)",
       "game": "Jocul",
-      "metric": "Măsura afișată la început"
+      "metric": "Măsura afișată la început",
+      "goal": "Obiectivul",
+      "lastDonor": "Ultimul donator",
+      "donorCount": "Numărul donatorilor"
     },
     "periods": {
       "week": "săptămâna aceasta",
@@ -6309,6 +6448,9 @@
       },
       "clans": {
         "top": "Primele clanuri din clasament, cu membrii și punctele."
+      },
+      "vip": {
+        "donationGoal": "Progresul unui obiectiv de donații, donatorii și butonul „Susține comunitatea”."
       }
     },
     "servers": {
@@ -6334,6 +6476,13 @@
       "topics": "Topicuri",
       "reputation": "Reputație",
       "online": "Timp online"
+    },
+    "vip": {
+      "donationGoal": "Obiectivul lunii"
+    },
+    "choices": {
+      "show": "Afișat",
+      "hide": "Ascuns"
     }
   },
   "pageEditor": {
@@ -6395,7 +6544,8 @@
     "addTo": "Adaugă în zona:",
     "dragHint": "Trage un widget pe pagină sau folosește butonul +.",
     "dropHere": "Trage widget-urile aici",
-    "done": "Termină editarea"
+    "done": "Termină editarea",
+    "defaultGoal": "Primul obiectiv activ"
   },
   "stats": {
     "title": "Statisticile comunității",
@@ -8692,5 +8842,76 @@
       "button": "Intră în cont"
     },
     "social": "sau dintr-un click cu"
+  },
+  "donations": {
+    "title": "Donații",
+    "lead": "Comunitatea se ține din donațiile voastre: serverele, domeniul și tot ce rulează aici. Mulțumim fiecărui susținător!",
+    "goalTitle": "Obiectivul lunii",
+    "noGoal": "Niciun obiectiv activ acum.",
+    "anonymous": "Anonim",
+    "cta": "Susține comunitatea",
+    "ctaExternal": "Susține comunitatea (se deschide într-o filă nouă)",
+    "progressLabel": "Progresul obiectivului {title}",
+    "progressText": "{percent}%: {raised} din {target}",
+    "donors": "{count, plural, one {# donator} few {# donatori} other {# de donatori}}",
+    "last": "ultimul:",
+    "periodRange": "{start} – {end}",
+    "renews": "se reînnoiește lunar",
+    "percent": "{percent}%",
+    "states": {
+      "upcoming": "În curând",
+      "active": "Activ",
+      "ended": "Încheiat"
+    },
+    "tabs": {
+      "label": "Donatorii",
+      "latest": "Ultimele donații",
+      "top": "Top donatori"
+    },
+    "periods": {
+      "label": "Perioada",
+      "month": "Lună",
+      "year": "An",
+      "all": "Tot"
+    },
+    "emptyLatest": "Încă nu există donații confirmate.",
+    "emptyTop": "Nicio donație publică în perioada aleasă.",
+    "place": "Locul {rank}",
+    "count": "{count, plural, one {# donație} few {# donații} other {# de donații}}",
+    "hall": {
+      "title": "Sala susținătorilor",
+      "lead": "Cei care țin comunitatea în viață, de la început până azi.",
+      "empty": "Primul susținător poți fi tu.",
+      "since": "din {date}"
+    },
+    "how": {
+      "title": "Cum donezi",
+      "default": "Contactează echipa pentru detaliile de plată. După ce donezi, anunță donația mai jos, cu referința plății."
+    },
+    "form": {
+      "title": "Am donat",
+      "lead": "Ai donat deja? Trimite-ne referința plății; echipa o verifică și o confirmă.",
+      "guest": "Ai donat? Intră în cont ca să anunți donația pentru confirmare.",
+      "login": "Autentificare",
+      "amount": "Suma",
+      "currency": "Moneda",
+      "method": "Metoda",
+      "date": "Data",
+      "reference": "Referința plății",
+      "referenceHint": "ex. id-ul tranzacției sau numele din transfer, ca echipa să găsească plata.",
+      "note": "Notă (opțional)",
+      "anonymous": "Afișează-mă „Anonim” în paginile publice",
+      "noCard": "Nu scrie niciodată date de card aici, doar referința plății.",
+      "submit": "Trimite",
+      "sent": "Mulțumim! Cererea a ajuns la echipă; primești o notificare la confirmare."
+    },
+    "mine": {
+      "title": "Donațiile mele"
+    },
+    "status": {
+      "CONFIRMED": "Confirmată",
+      "PENDING": "În așteptare",
+      "REJECTED": "Respinsă"
+    }
   }
 }

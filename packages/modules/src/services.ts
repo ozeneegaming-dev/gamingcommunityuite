@@ -94,6 +94,8 @@ import { registerCardContributions } from "./profile/cardContributions";
 import { GcsDeviceService } from "./profile/devices";
 import { GcsExternalProfiles } from "./profile/external";
 import { GcsProfileExtras } from "./profile/extras";
+import { registerDonationNotifications } from "./vip/donationNotify";
+import { GcsDonationService } from "./vip/donations";
 import { GcsHoverCardLoader } from "./profile/hoverCard";
 import { GcsMemberPrefsService } from "./profile/memberPrefs";
 import { GcsChatService } from "./chat/chat";
@@ -230,6 +232,8 @@ export type GcsServices = {
   /** Profil gaming v2: hover card v2 (cipurile și statusul aplicațiilor), coloana profilului, Steam / FACEIT, dispozitivele, preferințele. */
   hoverCards: GcsHoverCardLoader;
   profileExtras: GcsProfileExtras;
+  /** VIP clasic › Donații: donațiile (ACP, „Am donat”), obiectivele, topul și insigna „Sponsor”. */
+  donations: GcsDonationService;
   externalProfiles: GcsExternalProfiles;
   devices: GcsDeviceService;
   memberPrefs: GcsMemberPrefsService;
@@ -613,7 +617,10 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   // conturile externe (Steam, FACEIT, aduse de worker), dispozitivele și preferințele contului.
   const hoverCards = new GcsHoverCardLoader({ db, permissions, queries: profileQueries, social, apps });
   registerCardContributions(hoverCards, { db, clanQueries, bridgeQueries: bridge.queries, serverQueries });
-  const profileExtras = new GcsProfileExtras({ db, cache, settings, queries: profileQueries, acp });
+  // Donațiile (VIP clasic): mesajul de mulțumire al botului comunității nu e legat încă (vezi `thankYou`).
+  const donations = new GcsDonationService({ db, bus, settings, acp, realtime, thankYou: null });
+  registerDonationNotifications({ db, bus, notifications, acp, actors });
+  const profileExtras = new GcsProfileExtras({ db, cache, queries: profileQueries, sponsor: (userId) => donations.sponsor(userId) });
   const externalProfiles = new GcsExternalProfiles({ db, settings, jobs });
   const devices = new GcsDeviceService({ db, mailer, settings, baseUrl: async () => baseUrl(await settings.get<string>("site.url")) });
   const memberPrefs = new GcsMemberPrefsService({ db, bus });
@@ -773,6 +780,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     profileQueries,
     hoverCards,
     profileExtras,
+    donations,
     externalProfiles,
     devices,
     memberPrefs,

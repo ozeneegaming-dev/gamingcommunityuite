@@ -1,14 +1,16 @@
 import { GDPR_ACP_SECTION, MEMBER_REMOVAL_ACP_SECTION } from "@gcs/core";
+import { DONATIONS_ACP_SECTION } from "@gcs/modules";
 import { GcsAvatar, GcsBadge, GcsCard } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getFormatter, getTranslations } from "next-intl/server";
+import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { requireAcpSection } from "@/lib/acp";
 import { GcsGroupLink } from "@/lib/group-pills";
 import { memberAccountLog, memberActivity, memberQuotas, type GcsActivityDay } from "@/lib/member-dashboard";
+import { formatMoney } from "@/lib/donations";
 import { GcsMemberLink } from "@/lib/member-names";
 import { GcsMemberPanelBody, memberPanels } from "@/lib/member-panels";
 import { permissionLabel } from "@/lib/permission-label";
@@ -16,7 +18,9 @@ import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 import { addSecondaryGroup, banMember, liftBan, removeSecondaryGroup, setPrimaryGroup, setSecondaryExpiry, warnMember } from "../actions";
-import { addDonation, deleteDonation, disableMemberTwoFactor, forcePasswordReset, saveMemberPermissions, setSpammer, unlockMember, validateMember } from "./actions";
+import { addMemberDonation, confirmDonation, deleteDonation } from "../../vip/donations/actions";
+import { GcsDonationFields } from "../../vip/donations/GcsDonationFields";
+import { disableMemberTwoFactor, forcePasswordReset, saveMemberPermissions, setSpammer, unlockMember, validateMember } from "./actions";
 import { MemberProfileSections } from "./MemberProfileSections";
 
 type Props = { params: Promise<{ id: string }>; searchParams?: Promise<{ ban?: string; reason?: string; tab?: string }> };
@@ -74,7 +78,7 @@ export default async function AcpMemberPage({ params, searchParams }: Props) {
   // „Ban pe site…” din meniul de moderare al chat-ului: motivul vine completat, cu mesajul ca dovadă.
   const sp = (await searchParams) ?? {};
   const banReason = typeof sp.reason === "string" ? sp.reason.slice(0, 500) : "";
-  const { members, db, memberRemoval, acp, permissions, registry, profileExtras, vip } = services();
+  const { members, db, memberRemoval, acp, permissions, registry, donations, vip, apps } = services();
   const member = await members.detail(id);
   if (!member) notFound();
   const [t, tr, tAll, format, panels] = await Promise.all([getTranslations("acp.member"), getTranslations("acp.removal"), getTranslations(), getFormatter(), memberPanels("acp", panel.actor)]);
@@ -260,7 +264,7 @@ export default async function AcpMemberPage({ params, searchParams }: Props) {
 
   async function Overview(props: { memberId: string; member: NonNullable<Awaited<ReturnType<typeof members.detail>>>; banReason: string; autoFocusBan: boolean; panels: Awaited<ReturnType<typeof memberPanels>>; actor: typeof panel.actor }) {
     const m = props.member;
-    const [groups, activity, content, quotas, extra, badges, active, donations, sponsor] = await Promise.all([
+    const [groups, activity, content, quotas, extra, badges, active, donationRows, sponsor, donationMethods, donationCurrency, vipOn, canDonations, locale] = await Promise.all([
       db.group.findMany({ where: { key: { not: "guest" } }, orderBy: { position: "asc" }, select: { id: true, name: true } }),
       memberActivity(m.id, 30),
       memberRemoval.contentSummary(m.id),
@@ -268,8 +272,13 @@ export default async function AcpMemberPage({ params, searchParams }: Props) {
       db.user.findUniqueOrThrow({ where: { id: m.id }, select: { points: true, reputation: true, rank: { select: { name: true } } } }),
       db.userBadge.findMany({ where: { userId: m.id }, orderBy: { createdAt: "desc" }, take: 12, select: { id: true, badge: { select: { name: true } } } }),
       vip.active(m.id),
-      profileExtras.donations(m.id),
-      profileExtras.sponsor(m.id),
+      donations.mine(m.id),
+      donations.sponsor(m.id),
+      donations.methods(),
+      donations.mainCurrency(),
+      apps.enabled("vip"),
+      acp.can(props.actor, DONATIONS_ACP_SECTION, "edit"),
+      getLocale(),
     ]);
     const secondaryIds = new Set(m.secondaryGroups.map((g) => g.id));
     const addable = groups.filter((g) => g.id !== m.primaryGroup.id && !secondaryIds.has(g.id));
@@ -510,38 +519,47 @@ export default async function AcpMemberPage({ params, searchParams }: Props) {
           ))}
         </Section>
 
-        {/* Profil gaming v2: donațiile membrului (insigna automată „Sponsor” peste pragul din ACP → Profiluri). */}
-        <Section title={t("donations.title")} icon="fa-solid fa-hand-holding-heart">
-          <p className="gcs-mdCard__muted">{sponsor.sponsor ? t("donations.sponsor") : t("donations.hint")}</p>
-          {donations.map((d) => (
-            <div key={d.id} className="gcs-memberRow" data-testid="gcs-member-donation">
-              <span>
-                <strong>{format.number(d.amount / 100, { style: "currency", currency: d.currency })}</strong>
-                {d.note && <span className="gcs-mdCard__muted"> · {d.note}</span>}
-              </span>
-              <span className="gcs-memberRow__end">
-                <span className="gcs-mdCard__muted">{dateLong(d.createdAt)}</span>
-                <GcsActionForm compact variant="ghost" action={deleteDonation.bind(null, d.id)} submitLabel={t("donations.delete")} submitKind="delete" confirm={t("donations.confirmDelete")} />
-              </span>
-            </div>
-          ))}
-          <GcsActionForm action={addDonation.bind(null, m.id)} submitLabel={t("donations.add")} submitKind="create" variant="ghost">
-            <div className="gcs-memberSecondary__add">
-              <label className="gcs-field">
-                {t("donations.amount")}
-                <input className="gcs-input" name="amount" inputMode="decimal" required data-testid="gcs-donation-amount" />
-              </label>
-              <label className="gcs-field">
-                {t("donations.currency")}
-                <input className="gcs-input" name="currency" defaultValue="EUR" maxLength={3} required />
-              </label>
-              <label className="gcs-field">
-                {t("donations.note")}
-                <input className="gcs-input" name="note" maxLength={200} />
-              </label>
-            </div>
-          </GcsActionForm>
-        </Section>
+        {/* Donațiile membrului (VIP clasic › Donații): starea fiecăreia, confirmarea cererilor „Am donat”, adăugarea și
+            insigna automată „Sponsor” (pragul și perioada din Donații › Setări). Lista completă e în ACP › Donații. */}
+        {vipOn && (
+          <Section title={t("donations.title")} icon="fa-solid fa-hand-holding-heart" testId="gcs-member-donations">
+            <p className="gcs-mdCard__muted">
+              {sponsor.sponsor ? t("donations.sponsor") : t("donations.hint")}{" "}
+              <Link href={`/admin/vip/donations?q=${encodeURIComponent(m.name)}`}>{t("donations.all")}</Link>
+            </p>
+            {donationRows.map((d) => (
+              <div key={d.id} className="gcs-memberRow" data-testid="gcs-member-donation" data-status={d.status}>
+                <span>
+                  <strong>{formatMoney(d.amount, d.currency, locale)}</strong>
+                  <span className="gcs-mdCard__muted">
+                    {" "}
+                    · {t(`donations.status.${d.status}`)}
+                    {d.method && ` · ${d.method}`}
+                    {d.anonymous && ` · ${t("donations.anonymous")}`}
+                    {d.note && ` · ${d.note}`}
+                  </span>
+                </span>
+                <span className="gcs-memberRow__end">
+                  <span className="gcs-mdCard__muted">{dateLong(d.donatedAt)}</span>
+                  {canDonations && d.status === "PENDING" && (
+                    <GcsActionForm compact variant="primary" action={confirmDonation.bind(null, d.id)} submitLabel={t("donations.confirm")} submitKind="approve" confirm={t("donations.confirmBody")} />
+                  )}
+                  {canDonations && <GcsActionForm compact variant="ghost" action={deleteDonation.bind(null, d.id)} submitLabel={t("donations.delete")} submitKind="delete" confirm={t("donations.confirmDelete")} />}
+                </span>
+              </div>
+            ))}
+            {canDonations && (
+              <GcsActionForm action={addMemberDonation.bind(null, m.id)} submitLabel={t("donations.add")} submitKind="create" variant="ghost">
+                <GcsDonationFields
+                  idPrefix="gcs-member-don"
+                  methods={donationMethods}
+                  showMember={false}
+                  values={{ member: "", donorName: "", amount: "", currency: donationCurrency, donatedAt: "", method: "", reference: "", note: "", anonymous: false, status: "CONFIRMED" }}
+                />
+              </GcsActionForm>
+            )}
+          </Section>
+        )}
 
         {props.panels.map((p) => (
           <Section key={p.key} title={p.label} icon={p.icon} testId={`gcs-member-panel-${p.key}`}>

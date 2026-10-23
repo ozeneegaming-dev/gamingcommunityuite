@@ -21,7 +21,8 @@
       "serversMatches": "Mix matches",
       "bans": "Bans",
       "serverAdmins": "Admins",
-      "serverTickets": "Appeals"
+      "serverTickets": "Appeals",
+      "donations": "Donaciones"
     },
     "acp": "ACP",
     "myProfile": "Mi perfil",
@@ -214,7 +215,10 @@
       "already_member": "Ya estás en este grupo.",
       "already_primary": "Ya es tu grupo principal.",
       "members_only": "Inicia sesión primero.",
-      "self": "No puedes hacer esto con tu propia cuenta."
+      "self": "No puedes hacer esto con tu propia cuenta.",
+      "donation_reviewed": "La donación ya fue revisada.",
+      "donation_pending_limit": "Ya tienes solicitudes pendientes; espera a que se confirmen.",
+      "donations_closed": "Avisar de donaciones está desactivado por ahora."
     },
     "fields": {
       "invalid_color": "Color inválido (#RRGGBB)",
@@ -494,7 +498,11 @@
         "history": "Historial",
         "name_styles": "Estilos de nombre",
         "frames": "Marcos de Avatar",
-        "page": "VIP page"
+        "page": "VIP page",
+        "donations_group": "Donaciones",
+        "donations": "Donaciones",
+        "donation_goals": "Objetivos",
+        "donation_settings": "Ajustes de donaciones"
       },
       "appearance": {
         "appearance": "Apariencia",
@@ -925,14 +933,20 @@
       },
       "donations": {
         "title": "Donaciones",
-        "hint": "Donaciones registradas por el equipo. Por encima del umbral de ACP → Perfiles, el miembro recibe automáticamente la insignia «Patrocinador».",
+        "hint": "Las donaciones del miembro, con su estado. Por encima del umbral de Donaciones › Ajustes, el miembro recibe automáticamente la insignia «Sponsor».",
         "sponsor": "El miembro tiene la insignia «Patrocinador».",
         "delete": "Eliminar",
         "confirmDelete": "¿Eliminar la donación?",
         "add": "Añadir una donación",
-        "amount": "Importe",
-        "currency": "Moneda",
-        "note": "Nota"
+        "all": "Todas las donaciones →",
+        "anonymous": "anónima",
+        "confirm": "Confirmar",
+        "confirmBody": "¿Confirmar la donación? Cuenta para los objetivos y el top, y el miembro recibe una notificación.",
+        "status": {
+          "CONFIRMED": "confirmada",
+          "PENDING": "pendiente",
+          "REJECTED": "rechazada"
+        }
       },
       "tabs": {
         "label": "Secciones del miembro",
@@ -1237,7 +1251,8 @@
         "servers": "Servers",
         "clans": "Clans",
         "servers_bridge": "Bridge and ELO",
-        "gdpr": "GDPR requests"
+        "gdpr": "GDPR requests",
+        "donations": "Donaciones"
       },
       "save": "Guardar ajustes",
       "secretSet": "••••• guardar (dejar vacío para mantener el valor)",
@@ -1569,12 +1584,13 @@
       "fieldHelperHint": "Aparece bajo el campo, en el formulario",
       "linkTemplate": "Enlace de contacto (opcional)",
       "linkTemplateHint": "Solo en campos «Texto»: el miembro escribe el nombre de usuario y el enlace se construye con la plantilla (https, con '{handle}').",
-      "sponsorMin": "Insignia «Patrocinador» desde (total de donaciones)",
       "faceitKey": "Clave de FACEIT Data API",
       "faceitKeySet": "Configurada (escribe otra para cambiarla)",
       "faceitKeyEmpty": "Falta: la pestaña FACEIT está oculta",
       "faceitClear": "Eliminar la clave de FACEIT",
-      "faceitHint": "Crea la clave en el portal de desarrolladores de FACEIT (clave de servidor). Sin ella, la pestaña FACEIT no aparece."
+      "faceitHint": "Crea la clave en el portal de desarrolladores de FACEIT (clave de servidor). Sin ella, la pestaña FACEIT no aparece.",
+      "sponsorMoved": "El umbral de la insignia «Sponsor» (y su periodo) se configura en",
+      "sponsorLink": "VIP y Tienda › Donaciones › Ajustes"
     },
     "memberProfile": {
       "profileTitle": "Perfil",
@@ -3896,6 +3912,110 @@
       "removeBody": "La barra «{text}» desaparece del sitio al guardar.",
       "removeConfirm": "Eliminar",
       "cancel": "Cancelar"
+    },
+    "donations": {
+      "title": "Donaciones",
+      "editTitle": "Editar donación",
+      "back": "Volver a las donaciones",
+      "save": "Guardar",
+      "kpi": {
+        "pending": "Solicitudes pendientes",
+        "month": "Confirmado este mes",
+        "goals": "Objetivos",
+        "goalsHint": "Progreso de los objetivos"
+      },
+      "filters": {
+        "status": "Estado",
+        "all": "Todas",
+        "q": "Buscar",
+        "qHint": "Miembro, nombre o referencia",
+        "method": "Método",
+        "from": "Desde",
+        "to": "Hasta",
+        "apply": "Filtrar"
+      },
+      "csv": "Exportar CSV",
+      "add": "Añadir una donación",
+      "addSubmit": "Añadir donación",
+      "list": "Lista de donaciones",
+      "empty": "No hay donaciones para los filtros elegidos.",
+      "noName": "Sin nombre",
+      "anonymous": "Anónima",
+      "ref": "ref. {ref}",
+      "sources": {
+        "member": "enviada por el miembro («He donado»)",
+        "provider": "vía {source}"
+      },
+      "rejectedBecause": "rechazada: {reason}",
+      "confirm": "Confirmar",
+      "confirmBody": "¿Confirmar la donación de {amount}? Cuenta para los objetivos, el top y la insignia «Sponsor», y el donante recibe una notificación.",
+      "reject": "Rechazar",
+      "rejectBody": "¿Rechazar la solicitud? El miembro recibe una notificación con el motivo escrito.",
+      "reason": "Motivo (opcional)",
+      "edit": "Editar",
+      "editLabel": "Editar la donación #{id}",
+      "delete": "Eliminar",
+      "deleteBody": "¿Eliminar la donación definitivamente? Sale de los objetivos y del top.",
+      "pages": "Páginas de la lista",
+      "prev": "Página anterior",
+      "next": "Página siguiente",
+      "fields": {
+        "member": "Miembro",
+        "memberHint": "Nombre del miembro (vacío = sin cuenta)",
+        "donorName": "Nombre del donante sin cuenta",
+        "donorNameHint": "Vacío = Anónimo",
+        "amount": "Importe",
+        "currency": "Moneda",
+        "date": "Fecha",
+        "method": "Método",
+        "reference": "Referencia del pago",
+        "note": "Nota",
+        "status": "Estado",
+        "anonymous": "Anónima en las páginas públicas",
+        "notify": "Avisar al donante al confirmar"
+      },
+      "goals": {
+        "title": "Objetivos de donaciones",
+        "editTitle": "Editar objetivo",
+        "back": "Volver a los objetivos",
+        "save": "Guardar",
+        "lead": "El progreso de un objetivo = las donaciones confirmadas de su periodo, en su moneda. El widget «Objetivo del mes» muestra por defecto el primer objetivo activo.",
+        "list": "Lista de objetivos",
+        "empty": "Aún no hay objetivos.",
+        "states": {
+          "upcoming": "Próximamente",
+          "active": "Activo",
+          "ended": "Terminado"
+        },
+        "disabled": "Desactivado",
+        "monthlyRenew": "Mensual, se renueva",
+        "monthlyOnce": "Un solo mes",
+        "custom": "Intervalo",
+        "everyone": "Todo el mundo",
+        "donors": "{count, plural, one {# donante} many {# donantes} other {# donantes}}",
+        "target": "Meta: {amount}",
+        "edit": "Editar",
+        "editLabel": "Editar el objetivo {title}",
+        "delete": "Eliminar",
+        "deleteBody": "¿Eliminar el objetivo «{title}»? Las donaciones se mantienen.",
+        "add": "Añadir un objetivo",
+        "addSubmit": "Añadir objetivo",
+        "fields": {
+          "title": "Título",
+          "titleHint": "p. ej. Pago de los servidores",
+          "target": "Meta",
+          "currency": "Moneda",
+          "period": "Periodo",
+          "monthly": "Mensual (mes natural)",
+          "custom": "Intervalo elegido",
+          "startsOn": "Empieza el",
+          "endsOn": "Termina el (solo intervalo)",
+          "autoRenew": "Se renueva cada mes",
+          "enabled": "Activado",
+          "groups": "Visible para",
+          "groupsHint": "Ningún grupo marcado = todo el mundo."
+        }
+      }
     }
   },
   "settings": {
@@ -3950,7 +4070,10 @@
       "unicode": "Any alphabet",
       "optional": "Optional",
       "direct": "Direct: the browser loads the image from the address (nothing copied to the site)",
-      "copy": "Copy: images are downloaded and kept on the site"
+      "copy": "Copy: images are downloaded and kept on the site",
+      "all": "Todo el tiempo",
+      "year": "Año actual",
+      "month": "Mes actual"
     },
     "forums": {
       "posts_per_page": "Puestos por página",
@@ -3992,7 +4115,7 @@
       "birthdayYearHint": "p. ej. 1998",
       "birthdayShowYear": "Mostrar también el año en mi perfil",
       "faceit_api_key": "Clave de FACEIT Data API",
-      "sponsor_min_amount": "Umbral de la insignia «Patrocinador» (total de donaciones)"
+      "sponsor_min_amount": "Umbral de la insignia «Sponsor» (donaciones confirmadas, en la moneda principal; 0 = desactivada)"
     },
     "pm": {
       "messages_per_page": "Mensajes por página en una conversación"
@@ -4446,6 +4569,14 @@
       "notMember": "No eres miembro",
       "join": "Unirse",
       "leave": "Salir"
+    },
+    "donations": {
+      "external_url": "Enlace externo de donaciones (la página de pago de la comunidad; vacío = solo instrucciones)",
+      "instructions": "Instrucciones para donar (página /donatii)",
+      "currency": "Moneda principal (código de 3 letras, p. ej. RON, EUR)",
+      "methods": "Métodos sugeridos (separados por comas)",
+      "member_submit": "Los miembros pueden avisar de una donación («He donado»)",
+      "sponsor_period": "Periodo de la insignia «Sponsor»"
     }
   },
   "permissions": {
@@ -5311,6 +5442,11 @@
       },
       "chat_pro": {
         "reply": "Chat replies"
+      },
+      "donations": {
+        "confirmed": "Tus donaciones confirmadas",
+        "rejected": "Tus donaciones no confirmadas",
+        "submitted": "Nuevas donaciones por confirmar (equipo)"
       }
     }
   },
@@ -6270,7 +6406,10 @@
       "channel": "Sala de chat",
       "icon": "Icon (por ejemplo, fa-solid fa-star; vacío = predeterminado)",
       "game": "Game",
-      "metric": "Medida que se muestra primero"
+      "metric": "Medida que se muestra primero",
+      "goal": "Objetivo",
+      "lastDonor": "Último donante",
+      "donorCount": "Número de donantes"
     },
     "periods": {
       "week": "esta semana",
@@ -6309,6 +6448,9 @@
       },
       "clans": {
         "top": "The top clans in the ranking, with members and points."
+      },
+      "vip": {
+        "donationGoal": "El progreso de un objetivo de donaciones, los donantes y el botón «Apoya a la comunidad»."
       }
     },
     "servers": {
@@ -6334,6 +6476,13 @@
       "topics": "Temas",
       "reputation": "Reputación",
       "online": "Tiempo en línea"
+    },
+    "vip": {
+      "donationGoal": "Objetivo del mes"
+    },
+    "choices": {
+      "show": "Visible",
+      "hide": "Oculto"
     }
   },
   "pageEditor": {
@@ -6395,7 +6544,8 @@
     "addTo": "Añadir a la zona:",
     "dragHint": "Arrastre un widget en la página o utilice el botón +.",
     "dropHere": "Arrastre widgets aquí",
-    "done": "Edición final"
+    "done": "Edición final",
+    "defaultGoal": "Primer objetivo activo"
   },
   "stats": {
     "title": "Estadísticas comunitarias",
@@ -8692,5 +8842,76 @@
       "button": "Iniciar sesión"
     },
     "social": "o con un clic con"
+  },
+  "donations": {
+    "title": "Donaciones",
+    "lead": "La comunidad vive de vuestras donaciones: los servidores, el dominio y todo lo que funciona aquí. ¡Gracias a cada persona que nos apoya!",
+    "goalTitle": "Objetivo del mes",
+    "noGoal": "No hay ningún objetivo activo ahora.",
+    "anonymous": "Anónimo",
+    "cta": "Apoya a la comunidad",
+    "ctaExternal": "Apoya a la comunidad (se abre en una pestaña nueva)",
+    "progressLabel": "Progreso del objetivo {title}",
+    "progressText": "{percent} %: {raised} de {target}",
+    "donors": "{count, plural, one {# donante} many {# donantes} other {# donantes}}",
+    "last": "último:",
+    "periodRange": "{start} – {end}",
+    "renews": "se renueva cada mes",
+    "percent": "{percent} %",
+    "states": {
+      "upcoming": "Próximamente",
+      "active": "Activo",
+      "ended": "Terminado"
+    },
+    "tabs": {
+      "label": "Donantes",
+      "latest": "Últimas donaciones",
+      "top": "Top donantes"
+    },
+    "periods": {
+      "label": "Periodo",
+      "month": "Mes",
+      "year": "Año",
+      "all": "Todo"
+    },
+    "emptyLatest": "Aún no hay donaciones confirmadas.",
+    "emptyTop": "No hay donaciones públicas en el periodo elegido.",
+    "place": "Puesto {rank}",
+    "count": "{count, plural, one {# donación} many {# donaciones} other {# donaciones}}",
+    "hall": {
+      "title": "Salón de los que apoyan",
+      "lead": "Quienes mantienen viva la comunidad, desde el principio hasta hoy.",
+      "empty": "Puedes ser la primera persona en apoyar.",
+      "since": "desde {date}"
+    },
+    "how": {
+      "title": "Cómo donar",
+      "default": "Contacta con el equipo para los datos de pago. Después de donar, avisa abajo con la referencia del pago."
+    },
+    "form": {
+      "title": "He donado",
+      "lead": "¿Ya donaste? Envíanos la referencia del pago; el equipo la revisa y la confirma.",
+      "guest": "¿Has donado? Inicia sesión para avisar de tu donación y que la confirmen.",
+      "login": "Iniciar sesión",
+      "amount": "Importe",
+      "currency": "Moneda",
+      "method": "Método",
+      "date": "Fecha",
+      "reference": "Referencia del pago",
+      "referenceHint": "p. ej. el ID de la transacción o el nombre de la transferencia, para que el equipo encuentre el pago.",
+      "note": "Nota (opcional)",
+      "anonymous": "Muéstrame como «Anónimo» en las páginas públicas",
+      "noCard": "Nunca escribas datos de tarjeta aquí, solo la referencia del pago.",
+      "submit": "Enviar",
+      "sent": "¡Gracias! La solicitud ha llegado al equipo; recibirás una notificación cuando se confirme."
+    },
+    "mine": {
+      "title": "Mis donaciones"
+    },
+    "status": {
+      "CONFIRMED": "Confirmada",
+      "PENDING": "Pendiente",
+      "REJECTED": "Rechazada"
+    }
   }
 }

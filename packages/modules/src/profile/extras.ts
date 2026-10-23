@@ -1,4 +1,4 @@
-import { GcsNotFound, GcsValidationError, writeAudit, type GcsAcpRoleService, type GcsActor, type GcsCache, type GcsSettingsService } from "@gcs/core";
+import type { GcsActor, GcsCache } from "@gcs/core";
 import type { PrismaClient } from "@gcs/db";
 import { pickRank } from "./achievements";
 import { levelProgress, type GcsLevelProgress } from "./level";
@@ -9,11 +9,11 @@ import type { GcsBadgeView, GcsProfileQueries } from "./queries";
 /**
  * Coloana profilului public v2 (profil gaming v2 §2): caseta realizărilor (reputația și numele nivelului, locul n/N,
  * ultimele insigne, insigna automată „Sponsor” din donații peste prag), urmăritorii, vizitatorii recenți (cu opțiunea de
- * confidențialitate) și donațiile (înregistrate de echipă din ACP → Membri → fișa membrului).
+ * confidențialitate). Donațiile sunt ale aplicației VIP clasic (`GcsDonationService`): caseta primește doar insigna.
  */
 
+/** Pragul insignei „Sponsor” (unități întregi ale monedei principale; 0 = oprită), editat în Donații › Setări. */
 export const SPONSOR_MIN_SETTING = "profile.sponsor_min_amount";
-export const DONATIONS_ACP_SECTION = "members.members";
 const VISIT_THROTTLE_SEC = 600;
 const VISITORS_SHOWN = 8;
 
@@ -34,18 +34,11 @@ export class GcsProfileExtras {
     private readonly deps: {
       db: PrismaClient;
       cache: GcsCache;
-      settings: GcsSettingsService;
       queries: Pick<GcsProfileQueries, "badgeShowcase">;
-      acp: Pick<GcsAcpRoleService, "assert">;
+      /** Insigna automată „Sponsor” (donațiile confirmate peste pragul din setări; vezi `GcsDonationService.sponsor`). */
+      sponsor: (userId: string) => Promise<{ total: number; sponsor: boolean }>;
     },
   ) {}
-
-  /** Totalul donațiilor (în subunități) și dacă trece pragul insignei „Sponsor” (setarea e în unități întregi; 0 = oprit). */
-  async sponsor(userId: string): Promise<{ total: number; sponsor: boolean }> {
-    const [sum, min] = await Promise.all([this.deps.db.memberDonation.aggregate({ where: { userId }, _sum: { amount: true } }), this.deps.settings.get<number>(SPONSOR_MIN_SETTING)]);
-    const total = sum._sum.amount ?? 0;
-    return { total, sponsor: min > 0 && total >= Math.round(min * 100) };
-  }
 
   /** Caseta „Realizări”; `null` = profil invizibil pentru viewer. */
   async achievements(viewer: GcsActor, userId: string): Promise<GcsAchievementsBox | null> {
@@ -55,7 +48,7 @@ export class GcsProfileExtras {
     const [user, ladder, sponsor] = await Promise.all([
       db.user.findUniqueOrThrow({ where: { id: userId }, select: { reputation: true, points: true, postsCount: true, rankId: true } }),
       db.rank.findMany({ select: { id: true, name: true, position: true, minPosts: true, minPoints: true, minReputation: true } }),
-      this.sponsor(userId),
+      this.deps.sponsor(userId),
     ]);
     const [above, total] = await Promise.all([
       db.user.count({ where: { reputation: { gt: user.reputation }, primaryGroup: { key: { not: "banned" } } } }),
@@ -98,35 +91,5 @@ export class GcsProfileExtras {
     if (!normalizeMemberPrefs(owner.prefs).showVisitors && viewer.userId !== profileUserId) return null;
     const rows = await this.deps.db.profileVisit.findMany({ where: { profileUserId }, orderBy: { visitedAt: "desc" }, take: VISITORS_SHOWN, select: { visitorId: true, visitedAt: true } });
     return rows.map((r) => ({ id: r.visitorId, at: r.visitedAt.toISOString() }));
-  }
-
-  // ─── Donațiile ──────────────────────────────────────────────────────────────────────────────────
-
-  /** O donație înregistrată de echipă (suma în unități, ex. 25.50; moneda cu 3 litere). */
-  async addDonation(actor: GcsActor, userId: string, input: { amount: number; currency: string; note: string }): Promise<void> {
-    await this.deps.acp.assert(actor, DONATIONS_ACP_SECTION, "edit");
-    const { db } = this.deps;
-    const cents = Math.round(input.amount * 100);
-    const currency = input.currency.trim().toUpperCase();
-    const errors: Record<string, string> = {};
-    if (!Number.isFinite(cents) || cents <= 0 || cents > 100_000_000) errors.amount = "invalid_range";
-    if (!/^[A-Z]{3}$/.test(currency)) errors.currency = "invalid";
-    const note = input.note.replace(/\s+/g, " ").trim().slice(0, 200);
-    if (Object.keys(errors).length > 0) throw new GcsValidationError(errors);
-    if (!(await db.user.findUnique({ where: { id: userId }, select: { id: true } }))) throw new GcsNotFound();
-    const row = await db.memberDonation.create({ data: { userId, amount: cents, currency, note, createdById: actor.userId } });
-    await writeAudit(db, { actorId: actor.userId, action: "member.donation.add", targetType: "user", targetId: userId, after: row, ip: actor.ip });
-  }
-
-  async deleteDonation(actor: GcsActor, id: number): Promise<void> {
-    await this.deps.acp.assert(actor, DONATIONS_ACP_SECTION, "edit");
-    const before = await this.deps.db.memberDonation.findUnique({ where: { id } });
-    if (!before) throw new GcsNotFound();
-    await this.deps.db.memberDonation.delete({ where: { id } });
-    await writeAudit(this.deps.db, { actorId: actor.userId, action: "member.donation.delete", targetType: "user", targetId: before.userId, before, ip: actor.ip });
-  }
-
-  donations(userId: string) {
-    return this.deps.db.memberDonation.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 50 });
   }
 }

@@ -127,6 +127,8 @@ async function GcsPageEditorHost({ page, actor, children }: { page: GcsWidgetPag
   const placements = GCS_WIDGET_ZONES.flatMap((z) => layout[z]);
   const previews = await Promise.all(placements.map((p) => renderPlacement(p, actor, page)));
   const channels = enabled("chat") ? await chatQueries.channels(actor) : [];
+  // „Obiectivul lunii”: obiectivele de donații (gol = primul activ vizibil).
+  const goals = enabled("vip") ? await services().donations.goals() : [];
 
   const initial = Object.fromEntries(GCS_WIDGET_ZONES.map((z) => [z, [] as GcsPageEditorItem[]])) as Record<GcsWidgetZone, GcsPageEditorItem[]>;
   placements.forEach((p, i) => {
@@ -166,7 +168,9 @@ async function GcsPageEditorHost({ page, actor, children }: { page: GcsWidgetPag
                   options:
                     f.optionsFrom === "chat.channels"
                       ? [{ value: "", label: t("defaultChannel") }, ...channels.map((c) => ({ value: c.key, label: c.name }))]
-                      : (f.options ?? []).map((o) => ({ value: o.value, label: label(o.labelKey) })),
+                      : f.optionsFrom === "donations.goals"
+                        ? [{ value: "", label: t("defaultGoal") }, ...goals.map((g) => ({ value: String(g.id), label: g.title }))]
+                        : (f.options ?? []).map((o) => ({ value: o.value, label: label(o.labelKey) })),
                 };
             }
           }),

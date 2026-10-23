@@ -1,0 +1,554 @@
+/*
+ * Donațiile (VIP clasic): widget-ul „Obiectivul lunii”, pagina `/donatii` și paginile ACP › Donații. Global, în orice temă
+ * (GCS Dark, GCS White, Clasic, pachetele importate), doar pe tokenurile temei: bara de progres e în culoarea accentului,
+ * medaliile (aur / argint / bronz) doar pe primele trei locuri. Rândurile își schimbă doar fundalul la hover.
+ */
+
+/* ─── „Obiectivul lunii” ─────────────────────────────────────────────────────────────────────────── */
+.gcs-donGoal {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gcs-donGoal--widget {
+  padding: 14px 16px 16px;
+}
+.gcs-donGoal__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+.gcs-donGoal__title {
+  min-width: 0;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--gcs-text);
+  overflow-wrap: anywhere;
+}
+.gcs-donGoal--page .gcs-donGoal__title {
+  font-size: 18px;
+}
+.gcs-donGoal__amount {
+  flex: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gcs-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.gcs-donGoal--page .gcs-donGoal__amount {
+  font-size: 15px;
+  color: var(--gcs-text);
+}
+.gcs-donGoal__bar {
+  position: relative;
+  display: block;
+  height: 10px;
+  border-radius: 999px;
+  background-color: color-mix(in srgb, var(--gcs-text) 10%, var(--gcs-surface));
+  overflow: hidden;
+}
+.gcs-donGoal--page .gcs-donGoal__bar {
+  height: 14px;
+}
+/* Umplerea: de la 0 la procent, animată la afișare și la fiecare donație nouă (lățimea vine din `--gcs-don-pct`). */
+.gcs-donGoal__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--gcs-don-pct, 0%);
+  border-radius: inherit;
+  background-image: linear-gradient(90deg, var(--gcs-accent), var(--gcs-accentInk));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--gcs-accent) 45%, transparent);
+  transition: width 0.9s var(--gcs-ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+}
+/* O lumină care trece peste umplere (discretă), ca bara să pară vie. */
+.gcs-donGoal__fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(100deg, transparent 20%, rgb(255 255 255 / 0.22) 45%, transparent 70%);
+  background-size: 220% 100%;
+  animation: gcs-don-shine 2.8s ease-in-out infinite;
+}
+@keyframes gcs-don-shine {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -120% 0;
+  }
+}
+.gcs-donGoal__meta,
+.gcs-donGoal__period {
+  margin: 0;
+  font-size: 13px;
+  color: var(--gcs-muted);
+}
+.gcs-donGoal__period {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.gcs-donGoal__period > span:first-child {
+  text-transform: capitalize;
+}
+.gcs-donGoal__pct {
+  margin-left: auto;
+  font-weight: 700;
+  color: var(--gcs-accentInk);
+}
+.gcs-donGoal__cta {
+  width: 100%;
+  min-height: 40px;
+  justify-content: center;
+}
+.gcs-donGoal__ext {
+  width: 11px;
+  height: 11px;
+  opacity: 0.8;
+}
+.gcs-donName {
+  font-weight: 600;
+  color: var(--gcs-text);
+}
+.gcs-donName--anon {
+  font-style: italic;
+  color: var(--gcs-muted);
+}
+
+/* ─── Pagina `/donatii` ──────────────────────────────────────────────────────────────────────────── */
+.gcs-donPage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  gap: 16px;
+  align-items: start;
+}
+.gcs-donPage__main,
+.gcs-donPage__side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.gcs-donCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 20px;
+}
+.gcs-donCard__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gcs-text);
+}
+.gcs-donCard__title .gcs-icon {
+  color: var(--gcs-accentInk);
+}
+.gcs-donCard__lead,
+.gcs-donCard__text {
+  margin: 0;
+  font-size: 14px;
+}
+.gcs-donCard__text {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.gcs-donTabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+/* Tab-urile: conținutul nou apare cu o trecere scurtă (cu „reduced motion”, doar opacitatea). */
+.gcs-donPanel {
+  animation: gcs-don-fade var(--gcs-dur, 0.2s) var(--gcs-ease-out, ease-out) both;
+}
+@keyframes gcs-don-fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.gcs-donList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gcs-donRow {
+  --m: var(--gcs-muted);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--gcs-bg) 40%, var(--gcs-surface));
+  transition: background-color var(--gcs-dur, 0.2s);
+}
+.gcs-donRow:hover {
+  background-color: color-mix(in srgb, var(--gcs-surface2) 70%, var(--gcs-surface));
+}
+.gcs-donRow[data-medal="gold"] {
+  --m: var(--gcs-gold, #ffd36a);
+}
+.gcs-donRow[data-medal="silver"] {
+  --m: var(--gcs-silver, #d7dee8);
+}
+.gcs-donRow[data-medal="bronze"] {
+  --m: var(--gcs-bronze, #e09a5a);
+}
+.gcs-donRow[data-medal] {
+  border-color: color-mix(in srgb, var(--m) 45%, var(--gcs-border));
+}
+.gcs-donRow__avatar {
+  flex: none;
+  display: inline-flex;
+}
+.gcs-donRow__avatar--blank,
+.gcs-donHall__blank {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  color: var(--gcs-accentInk);
+  background-color: color-mix(in srgb, var(--gcs-accent) 16%, var(--gcs-surface));
+}
+.gcs-donRow__who {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-wrap: anywhere;
+}
+.gcs-donRow__when {
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-donRow__amount {
+  flex: none;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--gcs-text);
+}
+.gcs-donRow__rank {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--m);
+  border: 1px solid color-mix(in srgb, var(--m) 50%, transparent);
+  background-color: color-mix(in srgb, var(--m) 14%, transparent);
+}
+.gcs-donHall {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+.gcs-donHall__item {
+  --m: var(--gcs-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 10px;
+  text-align: center;
+  border: 1px solid var(--m);
+  border-radius: 10px;
+  background-color: color-mix(in srgb, var(--gcs-bg) 40%, var(--gcs-surface));
+  transition: background-color var(--gcs-dur, 0.2s);
+}
+.gcs-donHall__item:hover {
+  background-color: color-mix(in srgb, var(--gcs-surface2) 70%, var(--gcs-surface));
+}
+.gcs-donHall__item[data-medal="gold"] {
+  --m: color-mix(in srgb, var(--gcs-gold, #ffd36a) 55%, transparent);
+}
+.gcs-donHall__item[data-medal="silver"] {
+  --m: color-mix(in srgb, var(--gcs-silver, #d7dee8) 55%, transparent);
+}
+.gcs-donHall__item[data-medal="bronze"] {
+  --m: color-mix(in srgb, var(--gcs-bronze, #e09a5a) 55%, transparent);
+}
+.gcs-donHall__blank {
+  display: inline-flex;
+  width: 56px;
+  height: 56px;
+  font-size: 20px;
+}
+.gcs-donHall__name {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.gcs-donHall__total {
+  font-weight: 700;
+  color: var(--gcs-accentInk);
+  font-variant-numeric: tabular-nums;
+}
+.gcs-donHall__since {
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+
+/* „Am donat” */
+.gcs-donForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gcs-donForm__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.gcs-donForm__safe {
+  margin: 0;
+  font-size: 12px;
+}
+.gcs-donForm__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.gcs-donForm__ok,
+.gcs-donForm__err {
+  font-size: 13px;
+  font-weight: 600;
+}
+.gcs-donForm__ok {
+  color: var(--gcs-ok);
+}
+.gcs-donForm__err {
+  color: color-mix(in srgb, #ff4d5e 75%, var(--gcs-text));
+}
+
+/* ─── ACP › Donații ──────────────────────────────────────────────────────────────────────────────── */
+.gcs-donKpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+.gcs-donKpi {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background-color: var(--gcs-surface);
+  color: var(--gcs-text);
+  text-decoration: none;
+  transition: background-color var(--gcs-dur, 0.2s);
+}
+a.gcs-donKpi:hover {
+  background-color: var(--gcs-surface2);
+}
+.gcs-donKpi > .gcs-icon {
+  grid-row: 1 / 3;
+  font-size: 20px;
+  color: var(--gcs-accentInk);
+}
+.gcs-donKpi__value {
+  font-size: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.gcs-donKpi__label {
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-donFilters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+}
+.gcs-donFilters .gcs-field {
+  width: 180px;
+  max-width: 100%;
+}
+.gcs-donFilters__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.gcs-donAdd {
+  padding: 0;
+}
+.gcs-donAdd__summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+.gcs-donAdd__summary::-webkit-details-marker {
+  display: none;
+}
+.gcs-donAdd details[open] > form {
+  padding: 0 18px 18px;
+}
+.gcs-donFields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+}
+.gcs-donFields__wide,
+.gcs-donFields__checks {
+  grid-column: 1 / -1;
+}
+.gcs-donFields__checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.gcs-donFields__groups {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+}
+.gcs-donFields__groups > legend {
+  padding: 0 6px;
+  font-weight: 700;
+}
+.gcs-donFields__groups .gcs-muted {
+  font-size: 12px;
+}
+.gcs-donFields__groupList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.gcs-donTable {
+  overflow: hidden;
+}
+.gcs-donTable__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--gcs-border);
+  transition: background-color var(--gcs-dur, 0.2s);
+}
+.gcs-donTable__row:last-child {
+  border-bottom: 0;
+}
+.gcs-donTable__row:hover {
+  background-color: color-mix(in srgb, var(--gcs-surface2) 50%, transparent);
+}
+.gcs-donTable__main {
+  flex: 1 1 320px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.gcs-donTable__amount {
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.gcs-donTable__who {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.gcs-donTable__meta,
+.gcs-donTable__note {
+  font-size: 13px;
+  color: var(--gcs-muted);
+  overflow-wrap: anywhere;
+}
+.gcs-donTable__note {
+  color: var(--gcs-text);
+}
+.gcs-donTable__progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 420px;
+}
+.gcs-donTable__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.gcs-donTable__reason {
+  width: 170px;
+  max-width: 100%;
+}
+
+@media (max-width: 960px) {
+  .gcs-donPage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 480px) {
+  .gcs-donForm__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .gcs-donCard {
+    padding: 14px;
+  }
+  .gcs-donFilters .gcs-field {
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gcs-donGoal__fill,
+  .gcs-donRow,
+  .gcs-donHall__item {
+    transition: none;
+  }
+  .gcs-donGoal__fill::after {
+    animation: none;
+  }
+  .gcs-donPanel {
+    animation-name: gcs-don-fade-opacity;
+  }
+}
+@keyframes gcs-don-fade-opacity {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

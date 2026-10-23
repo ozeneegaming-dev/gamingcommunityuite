@@ -17,13 +17,12 @@ export default async function AcpProfilesPage() {
   await requireAcpSection(PROFILES_ACP_SECTION);
   const t = await getTranslations("acp.profiles");
   const { profiles, settings, profileFields } = services();
-  const [fields, coverMaxMb, wallEnabled, postbitOrder, groups, sponsorMin, faceitKey] = await Promise.all([
+  const [fields, coverMaxMb, wallEnabled, postbitOrder, groups, faceitKey] = await Promise.all([
     profiles.fields(),
     settings.get<number>("profile.cover_max_mb"),
     settings.get<boolean>("profile.wall_enabled"),
     settings.get<string[]>("postbit.fields"),
     profileFields.groups(),
-    settings.get<number>("profile.sponsor_min_amount"),
     settings.get<string>("profile.faceit_api_key"),
   ]);
   const groupForm = (g?: (typeof groups)[number]) => (
@@ -178,10 +177,6 @@ export default async function AcpProfilesPage() {
               <input type="checkbox" name="wallEnabled" defaultChecked={wallEnabled} />
               {t("wallEnabled")}
             </label>
-            <label className="gcs-field" style={{ width: 220 }}>
-              {t("sponsorMin")}
-              <input className="gcs-input" name="sponsorMin" type="number" step="1" min={0} max={1000000} defaultValue={sponsorMin} />
-            </label>
             <label className="gcs-field" style={{ width: 280 }}>
               {t("faceitKey")}
               <input className="gcs-input" name="faceitKey" type="password" autoComplete="off" placeholder={faceitKey ? t("faceitKeySet") : t("faceitKeyEmpty")} data-testid="gcs-acp-faceit-key" />
@@ -195,6 +190,10 @@ export default async function AcpProfilesPage() {
           </div>
           <p className="gcs-field__hint" style={{ margin: 0 }}>
             {t("faceitHint")}
+          </p>
+          {/* Pragul insignei „Sponsor” stă într-un singur loc, lângă perioada lui: Donații › Setări. */}
+          <p className="gcs-field__hint" style={{ margin: 0 }}>
+            {t("sponsorMoved")} <a href="/admin/settings/donations#profile.sponsor_min_amount">{t("sponsorLink")}</a>
           </p>
         </GcsActionForm>
       </GcsCard>

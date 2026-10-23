@@ -38,9 +38,10 @@ const settings: GcsSettingDef[] = [
   // Imaginile din semnătură (adrese https, afișate mici; 0 = niciuna), specul 2026-10-07-editor-campuri.
   { key: "profile.signature_max_images", type: "number", default: 1, section: "profiles", labelKey: "settings.profile.signature_max_images", validate: (v) => (Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 5 ? null : "invalid_range") },
   // Profil gaming v2: cheia FACEIT Data API (tabul FACEIT CS2 apare doar cu ea) și pragul insignei automate „Sponsor”
-  // (suma donațiilor, în unități întregi ale monedei; 0 = fără insignă).
+  // (suma donațiilor confirmate din perioada setată, în unități întregi ale monedei principale; 0 = fără insignă). Pragul
+  // se editează într-un singur loc: ACP › VIP & Magazin › Donații › Setări (secțiunea `donations`), lângă perioadă.
   { key: "profile.faceit_api_key", type: "secret", default: "", section: "profiles", labelKey: "settings.profile.faceit_api_key", validate: (v) => (typeof v === "string" && v.length <= 200 ? null : "too_long") },
-  { key: "profile.sponsor_min_amount", type: "number", default: 50, section: "profiles", labelKey: "settings.profile.sponsor_min_amount", validate: between(0, 1_000_000) },
+  { key: "profile.sponsor_min_amount", type: "number", default: 50, section: "donations", labelKey: "settings.profile.sponsor_min_amount", validate: between(0, 1_000_000) },
   // Ordinea câmpurilor din postbit (cheile câmpurilor); cele marcate „în postbit” și nelistate vin la final (etapa 5).
   {
     key: "postbit.fields",

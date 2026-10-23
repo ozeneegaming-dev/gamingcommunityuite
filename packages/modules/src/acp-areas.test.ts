@@ -67,7 +67,10 @@ describe("zonele ACP ale aplicației", () => {
         ["acp.menu.gaming.servers_group", ["gaming.servers", "gaming.server_admins", "gaming.server_maps", "gaming.servers_settings", "gaming.servers_bridge_settings"]],
         ["acp.menu.gaming.clans_group", ["gaming.clans", "gaming.clans_settings"]],
       ],
-      vip: [["acp.menu.vip.vip_group", ["vip.tiers", "vip.subscribers", "vip.history", "vip.name_styles", "vip.frames", "vip.page"]]],
+      vip: [
+        ["acp.menu.vip.vip_group", ["vip.tiers", "vip.subscribers", "vip.history", "vip.name_styles", "vip.frames", "vip.page"]],
+        ["acp.menu.vip.donations_group", ["vip.donations", "vip.donation_goals", "vip.donation_settings"]],
+      ],
       stats: [
         ["acp.menu.stats.overview_group", ["stats.overview"]],
         ["acp.menu.stats.activity", ["stats.registrations", "stats.members", "stats.content", "stats.online"]],

@@ -21,7 +21,8 @@
       "serversMatches": "Mix matches",
       "bans": "Bans",
       "serverAdmins": "Admins",
-      "serverTickets": "Appeals"
+      "serverTickets": "Appeals",
+      "donations": "Spenden"
     },
     "acp": "ACP",
     "myProfile": "Mein Profil",
@@ -214,7 +215,10 @@
       "already_member": "Du bist bereits in dieser Gruppe.",
       "already_primary": "Das ist bereits deine Hauptgruppe.",
       "members_only": "Melde dich zuerst an.",
-      "self": "Das kannst du nicht mit deinem eigenen Konto tun."
+      "self": "Das kannst du nicht mit deinem eigenen Konto tun.",
+      "donation_reviewed": "Die Spende wurde bereits geprüft.",
+      "donation_pending_limit": "Du hast bereits ausstehende Meldungen; warte auf ihre Bestätigung.",
+      "donations_closed": "Das Melden von Spenden ist derzeit deaktiviert."
     },
     "fields": {
       "invalid_color": "Ungültige Farbe (#RRGGBB)",
@@ -494,7 +498,11 @@
         "history": "Verlauf",
         "name_styles": "Namensstile",
         "frames": "Avatarrahmen",
-        "page": "VIP page"
+        "page": "VIP page",
+        "donations_group": "Spenden",
+        "donations": "Spenden",
+        "donation_goals": "Ziele",
+        "donation_settings": "Spendeneinstellungen"
       },
       "appearance": {
         "appearance": "Darstellung",
@@ -925,14 +933,20 @@
       },
       "donations": {
         "title": "Spenden",
-        "hint": "Vom Team erfasste Spenden. Über der Schwelle in ACP → Profile erhält das Mitglied automatisch das „Sponsor“-Abzeichen.",
+        "hint": "Die Spenden des Mitglieds mit ihrem Status. Über der Schwelle aus Spenden › Einstellungen erhält das Mitglied automatisch das „Sponsor“-Abzeichen.",
         "sponsor": "Das Mitglied hat das „Sponsor“-Abzeichen.",
         "delete": "Löschen",
         "confirmDelete": "Spende löschen?",
         "add": "Spende hinzufügen",
-        "amount": "Betrag",
-        "currency": "Währung",
-        "note": "Notiz"
+        "all": "Alle Spenden →",
+        "anonymous": "anonym",
+        "confirm": "Bestätigen",
+        "confirmBody": "Spende bestätigen? Sie zählt für die Ziele und die Bestenliste, und das Mitglied erhält eine Benachrichtigung.",
+        "status": {
+          "CONFIRMED": "bestätigt",
+          "PENDING": "ausstehend",
+          "REJECTED": "abgelehnt"
+        }
       },
       "tabs": {
         "label": "Bereiche des Mitglieds",
@@ -1237,7 +1251,8 @@
         "servers": "Servers",
         "clans": "Clans",
         "servers_bridge": "Bridge and ELO",
-        "gdpr": "GDPR requests"
+        "gdpr": "GDPR requests",
+        "donations": "Spenden"
       },
       "save": "Einstellungen speichern",
       "secretSet": "•••• gespeichert (leave empty, um den wert zu behalten)",
@@ -1569,12 +1584,13 @@
       "fieldHelperHint": "Erscheint unter dem Feld im Formular",
       "linkTemplate": "Kontaktlink (optional)",
       "linkTemplateHint": "Nur bei „Text“-Feldern: das Mitglied gibt den Handle ein, der Link entsteht aus der Vorlage (https, mit '{handle}').",
-      "sponsorMin": "„Sponsor“-Abzeichen ab (Summe der Spenden)",
       "faceitKey": "FACEIT-Data-API-Schlüssel",
       "faceitKeySet": "Gesetzt (gib einen anderen ein, um ihn zu ändern)",
       "faceitKeyEmpty": "Fehlt: der FACEIT-Tab ist ausgeblendet",
       "faceitClear": "FACEIT-Schlüssel entfernen",
-      "faceitHint": "Erstelle den Schlüssel im FACEIT-Entwicklerportal (serverseitiger Schlüssel). Ohne ihn erscheint der FACEIT-Tab nicht."
+      "faceitHint": "Erstelle den Schlüssel im FACEIT-Entwicklerportal (serverseitiger Schlüssel). Ohne ihn erscheint der FACEIT-Tab nicht.",
+      "sponsorMoved": "Die Schwelle des „Sponsor“-Abzeichens (und ihr Zeitraum) wird festgelegt unter",
+      "sponsorLink": "VIP & Shop › Spenden › Einstellungen"
     },
     "memberProfile": {
       "profileTitle": "Profil",
@@ -3896,6 +3912,110 @@
       "removeBody": "Die Leiste „{text}“ verschwindet nach dem Speichern von der Seite.",
       "removeConfirm": "Löschen",
       "cancel": "Abbrechen"
+    },
+    "donations": {
+      "title": "Spenden",
+      "editTitle": "Spende bearbeiten",
+      "back": "Zurück zu den Spenden",
+      "save": "Speichern",
+      "kpi": {
+        "pending": "Ausstehende Meldungen",
+        "month": "Diesen Monat bestätigt",
+        "goals": "Ziele",
+        "goalsHint": "Fortschritt der Ziele"
+      },
+      "filters": {
+        "status": "Status",
+        "all": "Alle",
+        "q": "Suche",
+        "qHint": "Mitglied, Name oder Referenz",
+        "method": "Methode",
+        "from": "Von",
+        "to": "Bis",
+        "apply": "Filtern"
+      },
+      "csv": "CSV exportieren",
+      "add": "Spende hinzufügen",
+      "addSubmit": "Spende hinzufügen",
+      "list": "Spendenliste",
+      "empty": "Keine Spenden für die gewählten Filter.",
+      "noName": "Ohne Namen",
+      "anonymous": "Anonym",
+      "ref": "Ref. {ref}",
+      "sources": {
+        "member": "vom Mitglied gemeldet („Ich habe gespendet“)",
+        "provider": "über {source}"
+      },
+      "rejectedBecause": "abgelehnt: {reason}",
+      "confirm": "Bestätigen",
+      "confirmBody": "Die Spende über {amount} bestätigen? Sie zählt für die Ziele, die Bestenliste und das „Sponsor“-Abzeichen, und der Spender erhält eine Benachrichtigung.",
+      "reject": "Ablehnen",
+      "rejectBody": "Meldung ablehnen? Das Mitglied erhält eine Benachrichtigung mit dem angegebenen Grund.",
+      "reason": "Grund (optional)",
+      "edit": "Bearbeiten",
+      "editLabel": "Spende #{id} bearbeiten",
+      "delete": "Löschen",
+      "deleteBody": "Spende endgültig löschen? Sie verschwindet aus den Zielen und der Bestenliste.",
+      "pages": "Seiten der Liste",
+      "prev": "Vorherige Seite",
+      "next": "Nächste Seite",
+      "fields": {
+        "member": "Mitglied",
+        "memberHint": "Name des Mitglieds (leer = ohne Konto)",
+        "donorName": "Name des Spenders ohne Konto",
+        "donorNameHint": "Leer = Anonym",
+        "amount": "Betrag",
+        "currency": "Währung",
+        "date": "Datum",
+        "method": "Methode",
+        "reference": "Zahlungsreferenz",
+        "note": "Notiz",
+        "status": "Status",
+        "anonymous": "Anonym auf öffentlichen Seiten",
+        "notify": "Spender bei Bestätigung benachrichtigen"
+      },
+      "goals": {
+        "title": "Spendenziele",
+        "editTitle": "Ziel bearbeiten",
+        "back": "Zurück zu den Zielen",
+        "save": "Speichern",
+        "lead": "Fortschritt eines Ziels = die bestätigten Spenden seines Zeitraums in seiner Währung. Das Widget „Ziel des Monats“ zeigt standardmäßig das erste aktive Ziel.",
+        "list": "Liste der Ziele",
+        "empty": "Noch keine Ziele.",
+        "states": {
+          "upcoming": "Demnächst",
+          "active": "Aktiv",
+          "ended": "Beendet"
+        },
+        "disabled": "Aus",
+        "monthlyRenew": "Monatlich, erneuert sich",
+        "monthlyOnce": "Ein einziger Monat",
+        "custom": "Zeitraum",
+        "everyone": "Alle",
+        "donors": "{count, plural, one {# Spender} other {# Spender}}",
+        "target": "Ziel: {amount}",
+        "edit": "Bearbeiten",
+        "editLabel": "Ziel {title} bearbeiten",
+        "delete": "Löschen",
+        "deleteBody": "Das Ziel „{title}“ löschen? Die Spenden bleiben erhalten.",
+        "add": "Ziel hinzufügen",
+        "addSubmit": "Ziel hinzufügen",
+        "fields": {
+          "title": "Titel",
+          "titleHint": "z. B. Serverkosten",
+          "target": "Zielbetrag",
+          "currency": "Währung",
+          "period": "Zeitraum",
+          "monthly": "Monatlich (Kalendermonat)",
+          "custom": "Gewählter Zeitraum",
+          "startsOn": "Beginnt am",
+          "endsOn": "Endet am (nur Zeitraum)",
+          "autoRenew": "Erneuert sich monatlich",
+          "enabled": "Aktiv",
+          "groups": "Sichtbar für",
+          "groupsHint": "Keine Gruppe angehakt = alle."
+        }
+      }
     }
   },
   "settings": {
@@ -3950,7 +4070,10 @@
       "unicode": "Any alphabet",
       "optional": "Optional",
       "direct": "Direct: the browser loads the image from the address (nothing copied to the site)",
-      "copy": "Copy: images are downloaded and kept on the site"
+      "copy": "Copy: images are downloaded and kept on the site",
+      "all": "Gesamter Zeitraum",
+      "year": "Aktuelles Jahr",
+      "month": "Aktueller Monat"
     },
     "forums": {
       "posts_per_page": "Beiträge pro Seite",
@@ -3992,7 +4115,7 @@
       "birthdayYearHint": "z. B. 1998",
       "birthdayShowYear": "Das Jahr auch im Profil zeigen",
       "faceit_api_key": "FACEIT-Data-API-Schlüssel",
-      "sponsor_min_amount": "Schwelle für das „Sponsor“-Abzeichen (Summe der Spenden)"
+      "sponsor_min_amount": "Schwelle des „Sponsor“-Abzeichens (bestätigte Spenden in der Hauptwährung; 0 = aus)"
     },
     "pm": {
       "messages_per_page": "Nachrichten pro Seite in einem Gespräch"
@@ -4446,6 +4569,14 @@
       "notMember": "Kein Mitglied",
       "join": "Beitreten",
       "leave": "Verlassen"
+    },
+    "donations": {
+      "external_url": "Externer Spendenlink (Zahlungsseite der Community; leer = nur Anleitung)",
+      "instructions": "Spendenanleitung (Seite /donatii)",
+      "currency": "Hauptwährung (3-stelliger Code, z. B. RON, EUR)",
+      "methods": "Vorgeschlagene Methoden (durch Kommas getrennt)",
+      "member_submit": "Mitglieder können eine Spende melden („Ich habe gespendet“)",
+      "sponsor_period": "Zeitraum des „Sponsor“-Abzeichens"
     }
   },
   "permissions": {
@@ -5311,6 +5442,11 @@
       },
       "chat_pro": {
         "reply": "Chat replies"
+      },
+      "donations": {
+        "confirmed": "Deine bestätigten Spenden",
+        "rejected": "Deine nicht bestätigten Spenden",
+        "submitted": "Neue Spenden zum Bestätigen (Team)"
       }
     }
   },
@@ -6270,7 +6406,10 @@
       "channel": "Chat-Raum",
       "icon": "Icon (z. B. fa-solid fa-star; leer = standard)",
       "game": "Game",
-      "metric": "Zuerst angezeigtes Maß"
+      "metric": "Zuerst angezeigtes Maß",
+      "goal": "Ziel",
+      "lastDonor": "Letzter Spender",
+      "donorCount": "Anzahl der Spender"
     },
     "periods": {
       "week": "diese woche",
@@ -6309,6 +6448,9 @@
       },
       "clans": {
         "top": "The top clans in the ranking, with members and points."
+      },
+      "vip": {
+        "donationGoal": "Der Fortschritt eines Spendenziels, die Spender und die Schaltfläche „Community unterstützen“."
       }
     },
     "servers": {
@@ -6334,6 +6476,13 @@
       "topics": "Themen",
       "reputation": "Reputation",
       "online": "Online-Zeit"
+    },
+    "vip": {
+      "donationGoal": "Ziel des Monats"
+    },
+    "choices": {
+      "show": "Angezeigt",
+      "hide": "Ausgeblendet"
     }
   },
   "pageEditor": {
@@ -6395,7 +6544,8 @@
     "addTo": "Zu Zone hinzufügen:",
     "dragHint": "Ziehen Sie ein Widget auf die Seite oder verwenden Sie den +-Button.",
     "dropHere": "Drag Widgets hier",
-    "done": "Endbearbeitung"
+    "done": "Endbearbeitung",
+    "defaultGoal": "Erstes aktives Ziel"
   },
   "stats": {
     "title": "Gemeinschaftsstatistiken",
@@ -8692,5 +8842,76 @@
       "button": "Anmelden"
     },
     "social": "oder mit einem Klick über"
+  },
+  "donations": {
+    "title": "Spenden",
+    "lead": "Die Community lebt von euren Spenden: die Server, die Domain und alles, was hier läuft. Danke an alle Unterstützer!",
+    "goalTitle": "Ziel des Monats",
+    "noGoal": "Gerade kein aktives Ziel.",
+    "anonymous": "Anonym",
+    "cta": "Community unterstützen",
+    "ctaExternal": "Community unterstützen (öffnet sich in einem neuen Tab)",
+    "progressLabel": "Fortschritt des Ziels {title}",
+    "progressText": "{percent} %: {raised} von {target}",
+    "donors": "{count, plural, one {# Spender} other {# Spender}}",
+    "last": "zuletzt:",
+    "periodRange": "{start} – {end}",
+    "renews": "erneuert sich monatlich",
+    "percent": "{percent} %",
+    "states": {
+      "upcoming": "Demnächst",
+      "active": "Aktiv",
+      "ended": "Beendet"
+    },
+    "tabs": {
+      "label": "Spender",
+      "latest": "Neueste Spenden",
+      "top": "Top-Spender"
+    },
+    "periods": {
+      "label": "Zeitraum",
+      "month": "Monat",
+      "year": "Jahr",
+      "all": "Gesamt"
+    },
+    "emptyLatest": "Noch keine bestätigten Spenden.",
+    "emptyTop": "Keine öffentlichen Spenden im gewählten Zeitraum.",
+    "place": "Platz {rank}",
+    "count": "{count, plural, one {# Spende} other {# Spenden}}",
+    "hall": {
+      "title": "Ruhmeshalle der Unterstützer",
+      "lead": "Die, die die Community am Leben halten, vom Anfang bis heute.",
+      "empty": "Du kannst der erste Unterstützer sein.",
+      "since": "seit {date}"
+    },
+    "how": {
+      "title": "So spendest du",
+      "default": "Kontaktiere das Team für die Zahlungsdetails. Melde deine Spende danach unten mit der Zahlungsreferenz."
+    },
+    "form": {
+      "title": "Ich habe gespendet",
+      "lead": "Schon gespendet? Schick uns die Zahlungsreferenz; das Team prüft und bestätigt sie.",
+      "guest": "Gespendet? Melde dich an, um deine Spende zur Bestätigung zu melden.",
+      "login": "Anmelden",
+      "amount": "Betrag",
+      "currency": "Währung",
+      "method": "Methode",
+      "date": "Datum",
+      "reference": "Zahlungsreferenz",
+      "referenceHint": "z. B. die Transaktions-ID oder der Name der Überweisung, damit das Team die Zahlung findet.",
+      "note": "Notiz (optional)",
+      "anonymous": "Zeig mich auf öffentlichen Seiten als „Anonym“",
+      "noCard": "Schreib hier niemals Kartendaten, nur die Zahlungsreferenz.",
+      "submit": "Senden",
+      "sent": "Danke! Die Meldung ist beim Team angekommen; du wirst bei der Bestätigung benachrichtigt."
+    },
+    "mine": {
+      "title": "Meine Spenden"
+    },
+    "status": {
+      "CONFIRMED": "Bestätigt",
+      "PENDING": "Ausstehend",
+      "REJECTED": "Abgelehnt"
+    }
   }
 }
