@@ -947,7 +947,10 @@
           "CONFIRMED": "confirmed",
           "PENDING": "pending",
           "REJECTED": "rejected"
-        }
+        },
+        "amount": "Amount",
+        "currency": "Currency",
+        "note": "Note"
       },
       "tabs": {
         "label": "Member sections",
@@ -1726,7 +1729,8 @@
       "faceitClear": "Remove the FACEIT key",
       "faceitHint": "Create the key in the FACEIT developer portal (server-side key). Without it, the FACEIT tab does not appear.",
       "sponsorMoved": "The “Sponsor” badge threshold (and its period) is set in",
-      "sponsorLink": "VIP & Shop › Donations › Settings"
+      "sponsorLink": "VIP & Shop › Donations › Settings",
+      "sponsorMin": "“Sponsor” badge from (total donations)"
     },
     "memberProfile": {
       "profileTitle": "Profile",

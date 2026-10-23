@@ -947,7 +947,10 @@
           "CONFIRMED": "confirmé",
           "PENDING": "en attente",
           "REJECTED": "refusé"
-        }
+        },
+        "amount": "Montant",
+        "currency": "Devise",
+        "note": "Note"
       },
       "tabs": {
         "label": "Sections du membre",
@@ -1726,7 +1729,8 @@
       "faceitClear": "Supprimer la clé FACEIT",
       "faceitHint": "Crée la clé dans le portail des développeurs FACEIT (clé côté serveur). Sans elle, l’onglet FACEIT n’apparaît pas.",
       "sponsorMoved": "Le seuil du badge « Sponsor » (et sa période) se règle dans",
-      "sponsorLink": "VIP & Boutique › Dons › Paramètres"
+      "sponsorLink": "VIP & Boutique › Dons › Paramètres",
+      "sponsorMin": "Badge « Sponsor » à partir de (total des dons)"
     },
     "memberProfile": {
       "profileTitle": "Profil",

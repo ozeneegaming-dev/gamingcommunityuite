@@ -947,7 +947,10 @@
           "CONFIRMED": "confirmada",
           "PENDING": "pendiente",
           "REJECTED": "rechazada"
-        }
+        },
+        "amount": "Importe",
+        "currency": "Moneda",
+        "note": "Nota"
       },
       "tabs": {
         "label": "Secciones del miembro",
@@ -1726,7 +1729,8 @@
       "faceitClear": "Eliminar la clave de FACEIT",
       "faceitHint": "Crea la clave en el portal de desarrolladores de FACEIT (clave de servidor). Sin ella, la pestaña FACEIT no aparece.",
       "sponsorMoved": "El umbral de la insignia «Sponsor» (y su periodo) se configura en",
-      "sponsorLink": "VIP y Tienda › Donaciones › Ajustes"
+      "sponsorLink": "VIP y Tienda › Donaciones › Ajustes",
+      "sponsorMin": "Insignia «Patrocinador» desde (total de donaciones)"
     },
     "memberProfile": {
       "profileTitle": "Perfil",

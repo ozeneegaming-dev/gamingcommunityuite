@@ -947,7 +947,10 @@
           "CONFIRMED": "bestätigt",
           "PENDING": "ausstehend",
           "REJECTED": "abgelehnt"
-        }
+        },
+        "amount": "Betrag",
+        "currency": "Währung",
+        "note": "Notiz"
       },
       "tabs": {
         "label": "Bereiche des Mitglieds",
@@ -1726,7 +1729,8 @@
       "faceitClear": "FACEIT-Schlüssel entfernen",
       "faceitHint": "Erstelle den Schlüssel im FACEIT-Entwicklerportal (serverseitiger Schlüssel). Ohne ihn erscheint der FACEIT-Tab nicht.",
       "sponsorMoved": "Die Schwelle des „Sponsor“-Abzeichens (und ihr Zeitraum) wird festgelegt unter",
-      "sponsorLink": "VIP & Shop › Spenden › Einstellungen"
+      "sponsorLink": "VIP & Shop › Spenden › Einstellungen",
+      "sponsorMin": "„Sponsor“-Abzeichen ab (Summe der Spenden)"
     },
     "memberProfile": {
       "profileTitle": "Profil",

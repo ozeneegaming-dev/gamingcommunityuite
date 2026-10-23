@@ -1,12 +1,21 @@
 "use client";
 
+import type { GcsHeaderBuilder } from "@gcs/core/themes";
 import { createContext, useContext } from "react";
 import type { GcsDevice } from "@/lib/header-device";
 
 /** Starea antetului construit, pentru elementele lui: dispozitivul curent, starea compactă, cum se deschid meniurile. */
-export type GcsHeaderState = { device: GcsDevice; compact: boolean; dropdowns: "click" | "hover"; mega: boolean; preset: string };
+export type GcsHeaderState = {
+  device: GcsDevice;
+  compact: boolean;
+  dropdowns: "click" | "hover";
+  mega: boolean;
+  preset: string;
+  /** Aspectul curent (cel publicat sau draftul din previzualizarea live); meniul împărțit se calculează din el. */
+  layout: GcsHeaderBuilder | null;
+};
 
-export const HeaderStateContext = createContext<GcsHeaderState>({ device: "desktop", compact: false, dropdowns: "click", mega: true, preset: "classic" });
+export const HeaderStateContext = createContext<GcsHeaderState>({ device: "desktop", compact: false, dropdowns: "click", mega: true, preset: "classic", layout: null });
 
 export function useHeaderState(): GcsHeaderState {
   return useContext(HeaderStateContext);

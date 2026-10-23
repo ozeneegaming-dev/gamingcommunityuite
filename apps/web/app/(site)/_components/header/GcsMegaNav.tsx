@@ -1,10 +1,11 @@
 "use client";
 
 import { faChevronDown, faEllipsis } from "@fortawesome/free-solid-svg-icons";
+import { headerNavHalves } from "@gcs/core/themes";
 import { GcsIconSvg } from "@gcs/ui";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { fitCount, navActive } from "@/lib/nav-match";
 import { useHeaderPopover } from "./GcsHeaderPopover";
 import { useHeaderState } from "./header-context";
@@ -193,8 +194,14 @@ function Bar({ items, label, moreLabel, home, testId }: Props) {
 /**
  * Meniul principal al antetului construit (desktop): itemii cu submeniu devin mega meniuri (2 coloane: iconița, titlul,
  * descrierea de un rând, insigna live; jos, o linie live și un îndemn) sau liste simple; ce nu încape trece în
- * „Mai mult”. Meniul împărțit (Esports) folosește două instanțe, stânga și dreapta logo-ului.
+ * „Mai mult”. Meniul împărțit (Esports) folosește două instanțe, stânga și dreapta logo-ului; jumătățile se
+ * calculează la client din aspectul curent, ca în previzualizarea editorului „Navigație (dreapta)” și itemii aleși
+ * să apară live, fără să se publice întâi. Partea dreaptă e doar pe desktop (pe ecranele mici, sertarul are tot meniul).
  */
-export function GcsMegaNav(props: Props) {
-  return <Bar {...props} />;
+export function GcsSplitNav({ side, items, ...props }: Props & { side: "left" | "right" }) {
+  const { layout, device } = useHeaderState();
+  const halves = useMemo(() => (layout ? headerNavHalves(layout, items) : { left: items, right: [] }), [layout, items]);
+  const part = halves[side];
+  if (side === "right" && (device !== "desktop" || part.length === 0)) return null;
+  return <Bar items={part} {...props} />;
 }

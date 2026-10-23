@@ -1,4 +1,4 @@
-import { sanitizeContentHtml, splitNavItems, type GcsActor, type GcsThemeView } from "@gcs/core";
+import { sanitizeContentHtml, type GcsActor, type GcsThemeView } from "@gcs/core";
 import { POLL_INTERVAL_SETTING, type GcsUserDisplay } from "@gcs/modules";
 import { GcsIcon } from "@gcs/ui/icons";
 import { headers } from "next/headers";
@@ -19,8 +19,8 @@ import { notificationIcons } from "../notifications/notification-icons";
 import { GcsAccountMenu } from "./GcsAccountMenu";
 import { GcsCreateMenu } from "./GcsCreateMenu";
 import { GcsHeaderFrame } from "./GcsHeaderFrame";
-import { GcsDesktopOnly, GcsMobileBar, GcsNavElement, GcsServersLiveSummary, GcsThemeToggle } from "./GcsHeaderBits";
-import { GcsMegaNav, type GcsMegaEntry } from "./GcsMegaNav";
+import { GcsMobileBar, GcsNavElement, GcsServersLiveSummary, GcsThemeToggle } from "./GcsHeaderBits";
+import { GcsSplitNav, type GcsMegaEntry } from "./GcsMegaNav";
 import { GcsMessagesMenu } from "./GcsMessagesMenu";
 import { GcsCrumbTrail, GcsGuestPrefs, GcsMobileNav, type GcsNavEntry } from "./GcsNavClient";
 import { GcsSearchPanel } from "./GcsSearchPanel";
@@ -98,9 +98,7 @@ export async function GcsHeaderBuilder({ actor, theme, siteName, brand, menu, la
   // Meniul: descrierile, insignele (fixe și live) și rândul de jos al mega meniurilor.
   const play = pickPlayNow(servers.map((v) => ({ id: v.id, name: v.name, connectHref: v.connectHref, online: !!v.status?.online, players: v.status?.players ?? 0, maxPlayers: v.status?.maxPlayers ?? 0 })));
   const entries = megaEntries(menu, summary, th, play?.connectHref ?? "/servers");
-  const desktop = s.header.layout.desktop;
-  const split = [desktop.top, desktop.main, desktop.bottom].some((r) => [...r.left, ...r.center, ...r.right].includes("navRight"));
-  const halves = split ? splitNavItems(entries, s.header.layout.split) : { left: entries, right: [] };
+  // Meniul împărțit (Esports) se calculează la client din aspectul curent, ca previzualizarea draftului să-l arate live.
   const navLabels = { label: t("mainNav"), moreLabel: t("nav.more"), home: landing };
 
   const parts: Record<string, ReactNode> = {
@@ -111,7 +109,7 @@ export async function GcsHeaderBuilder({ actor, theme, siteName, brand, menu, la
     ),
     nav: (
       <GcsNavElement
-        bar={<GcsMegaNav items={halves.left} {...navLabels} testId="gcs-hb-nav" />}
+        bar={<GcsSplitNav side="left" items={entries} {...navLabels} testId="gcs-hb-nav" />}
         drawer={
           <GcsMobileNav
             items={menu}
@@ -125,11 +123,7 @@ export async function GcsHeaderBuilder({ actor, theme, siteName, brand, menu, la
         }
       />
     ),
-    navRight: halves.right.length > 0 ? (
-      <GcsDesktopOnly>
-        <GcsMegaNav items={halves.right} {...navLabels} testId="gcs-hb-nav-right" />
-      </GcsDesktopOnly>
-    ) : null,
+    navRight: <GcsSplitNav side="right" items={entries} {...navLabels} testId="gcs-hb-nav-right" />,
     search: <GcsSearchPanel variant="icon" />,
     searchField: <GcsSearchPanel variant="field" />,
     breadcrumb: <GcsCrumbTrail items={menu} home={landing} labels={{ home: t("home"), trail: t("crumbs") }} />,

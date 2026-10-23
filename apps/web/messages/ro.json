@@ -947,7 +947,10 @@
           "CONFIRMED": "confirmată",
           "PENDING": "în așteptare",
           "REJECTED": "respinsă"
-        }
+        },
+        "amount": "Suma",
+        "currency": "Moneda",
+        "note": "Notă"
       },
       "tabs": {
         "label": "Secțiunile membrului",
@@ -1726,7 +1729,8 @@
       "faceitClear": "Șterge cheia FACEIT",
       "faceitHint": "Cheia se creează în portalul pentru dezvoltatori FACEIT (cheie de server). Fără ea, tabul FACEIT nu apare.",
       "sponsorMoved": "Pragul insignei „Sponsor” (și perioada lui) se setează în",
-      "sponsorLink": "VIP & Magazin › Donații › Setări"
+      "sponsorLink": "VIP & Magazin › Donații › Setări",
+      "sponsorMin": "Insigna „Sponsor” de la (suma donațiilor)"
     },
     "memberProfile": {
       "profileTitle": "Profil",

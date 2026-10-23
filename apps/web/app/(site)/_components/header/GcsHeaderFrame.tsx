@@ -115,7 +115,7 @@ export function GcsHeaderFrame({
   const helpers = HELPERS.filter((k) => !placed.has(k) && parts[k]);
   const notch = layout.preset === "esports" && device !== "mobile";
 
-  const state = useMemo<GcsHeaderState>(() => ({ device, compact, dropdowns: options.dropdowns, mega: options.mega, preset: layout.preset }), [device, compact, options.dropdowns, options.mega, layout.preset]);
+  const state = useMemo<GcsHeaderState>(() => ({ device, compact, dropdowns: options.dropdowns, mega: options.mega, preset: layout.preset, layout }), [device, compact, options.dropdowns, options.mega, layout]);
   const style = { "--hb-top": `${options.rowTop}px`, "--hb-main": `${options.rowMain}px`, "--hb-bottom": `${options.rowBottom}px` } as CSSProperties;
 
   const element = (key: GcsHeaderElement, row: GcsHeaderRow, zone: string) => {
