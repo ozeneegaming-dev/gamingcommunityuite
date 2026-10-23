@@ -200,6 +200,7 @@ const acpMenu: GcsAcpMenuSection[] = [
     ["dashboard", "/admin", "fa-solid fa-gauge-high"],
     ["files", "/admin/system/files", "fa-solid fa-folder-open"],
     ["status", "/admin/system/status", "fa-solid fa-heart-pulse"],
+    ["update", "/admin/system/update", "fa-solid fa-arrows-rotate"],
   ]),
   menuSection("system", "site_features", "fa-solid fa-puzzle-piece", [
     ["applications", "/admin/system/applications", "fa-solid fa-cubes"],

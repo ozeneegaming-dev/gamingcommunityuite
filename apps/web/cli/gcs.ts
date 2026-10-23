@@ -56,6 +56,17 @@ const FIELD_TEXT: Record<string, string> = {
   username_too_short: "minimum 3 caractere",
   username_too_long: "maximum 24 de caractere",
   username_invalid_chars: "doar litere, cifre și _ . -",
+  license_missing: "lipsește cheia de licență",
+  license_malformed: "cheia de licență nu are formatul corect",
+  license_unknown_key: "cheia de licență e semnată cu o cheie necunoscută",
+  license_bad_signature: "semnătura licenței nu e validă",
+  license_expired: "licența a expirat",
+  license_domain: "licența nu e valabilă pentru domeniul acestei instalări",
+  license_revoked: "licența a fost revocată",
+  apps_premium_not_licensed: "o aplicație premium nu e inclusă în licență",
+  apps_requires: "o aplicație are nevoie de aplicațiile de care depinde",
+  apps_landing_invalid: "aplicația de pornire trebuie să fie pornită și să aibă o pagină de pornire",
+  apps_unknown_app: "aplicație necunoscută",
 };
 
 /** Variabilele `gcs install --non-interactive`. */
@@ -75,8 +86,10 @@ export const INSTALL_ENV = {
   smtpFrom: "GCS_INSTALL_SMTP_FROM",
   databaseUrl: "GCS_INSTALL_DATABASE_URL",
   license: "GCS_INSTALL_LICENSE",
+  apps: "GCS_INSTALL_APPS",
+  landing: "GCS_INSTALL_LANDING",
 } as const;
-const REQUIRED_INSTALL: (keyof typeof INSTALL_ENV)[] = ["siteName", "adminName", "adminEmail", "adminPassword"];
+const REQUIRED_INSTALL: (keyof typeof INSTALL_ENV)[] = ["license", "siteName", "adminName", "adminEmail", "adminPassword"];
 
 function reportError(io: GcsCliIo, res: GcsCliResponse): number {
   const code = String(res.body.error ?? "internal");
@@ -90,6 +103,7 @@ function reportError(io: GcsCliIo, res: GcsCliResponse): number {
 
 async function interactiveInstall(prompt: GcsCliPrompt): Promise<Record<string, string>> {
   const values: Record<string, string> = {};
+  values.license = await prompt.input("Cheia de licență (GCS1.…)");
   values.siteName = await prompt.input("Numele site-ului", { default: "Comunitatea mea" });
   values.siteUrl = await prompt.input("Adresa site-ului (ex. https://forum.exemplu.ro)");
   values.locale = await prompt.select("Limba implicită", [

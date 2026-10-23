@@ -438,7 +438,8 @@
         "hooks": "Ganchos",
         "settings_rules": "Community rules",
         "apps_manage": "Management",
-        "apps_dev": "Development"
+        "apps_dev": "Development",
+        "update": "Actualización"
       },
       "members": {
         "members": "Miembros",
@@ -3896,6 +3897,36 @@
       "removeBody": "La barra «{text}» desaparece del sitio al guardar.",
       "removeConfirm": "Eliminar",
       "cancel": "Cancelar"
+    },
+    "update": {
+      "title": "Actualización",
+      "description": "La versión instalada, la licencia y la actualización a una versión nueva.",
+      "version": "Versión instalada",
+      "license": "Licencia",
+      "noLicense": "No hay ninguna licencia guardada en el servidor.",
+      "licenseValid": "Válida",
+      "domains": "Dominios: {domains}",
+      "expires": "caduca el {date}",
+      "noExpiry": "sin caducidad",
+      "premium": "Aplicaciones premium",
+      "noPremium": "Ninguna",
+      "licenseErrors": {
+        "missing": "Falta",
+        "malformed": "Formato incorrecto",
+        "unknown_key": "Clave desconocida",
+        "bad_signature": "Firma no válida",
+        "expired": "Caducada",
+        "domain": "Otro dominio",
+        "revoked": "Revocada"
+      },
+      "howTitle": "Cómo actualizar",
+      "howBody": "La actualización se ejecuta en el servidor, con el paquete de la nueva versión descargado de tu cuenta de cliente. El sitio vuelve solo tras el reinicio.",
+      "steps": {
+        "backup": "Hace una copia de seguridad completa (base de datos, archivos, configuración).",
+        "verify": "Comprueba las sumas de verificación del paquete nuevo.",
+        "keep": "Conserva los ajustes del servidor, la configuración y las copias de seguridad.",
+        "restart": "Reinicia los servicios; las migraciones de la base de datos se ejecutan solas y tus datos se conservan."
+      }
     }
   },
   "settings": {
@@ -4869,6 +4900,48 @@
         "title": "Instalación completa",
         "body": "La plataforma está lista. Introduzca el ACP y active la verificación de dos pasos.",
         "enter": "Introduzca el ACP"
+      },
+      "license": {
+        "label": "Licencia",
+        "title": "Licencia de GCS",
+        "body": "Introduce la clave de licencia que recibiste con la compra y acepta los términos de uso.",
+        "field": "Clave de licencia",
+        "fieldHint": "Empieza por «GCS1.» y la encuentras en tu cuenta de cliente.",
+        "eula": "Términos de uso (EULA)",
+        "eulaMissing": "Falta el texto del EULA en el paquete (EULA.md).",
+        "accept": "He leído y acepto los términos de uso",
+        "devHint": "Modo de prueba (fuera de producción): puedes usar la clave {token}.",
+        "saved": "Licencia verificada: {licensee}",
+        "errors": {
+          "missing": "Introduce la clave de licencia.",
+          "malformed": "La clave no tiene el formato correcto.",
+          "unknown_key": "La clave se firmó con una clave que esta versión no conoce.",
+          "bad_signature": "La firma de la clave no es válida (la clave se modificó).",
+          "expired": "La licencia ha caducado.",
+          "domain": "La licencia no es válida para el dominio {domain}.",
+          "revoked": "La licencia ha sido revocada.",
+          "eula": "Debes aceptar los términos de uso."
+        }
+      },
+      "apps": {
+        "label": "Aplicaciones",
+        "title": "Aplicaciones",
+        "body": "Elige las aplicaciones activadas al instalar. Las no marcadas se instalan desactivadas; puedes activarlas cuando quieras en ACP › Aplicaciones.",
+        "standard": "Aplicaciones estándar",
+        "premium": "Aplicaciones premium",
+        "locked": "Siempre activada",
+        "notLicensed": "No incluida en la licencia",
+        "landing": "Aplicación de inicio",
+        "landingHint": "Lo que ve un visitante en la página principal del sitio.",
+        "requires": "Necesita: {apps}",
+        "errors": {
+          "premium_not_licensed": "{app} no está incluida en la licencia.",
+          "requires": "{app} también necesita las aplicaciones de las que depende.",
+          "landing_invalid": "La aplicación de inicio debe estar marcada y tener una página principal.",
+          "unknown_app": "Aplicación desconocida: {app}.",
+          "license": "La licencia ya no es válida: vuelve al paso Licencia."
+        },
+        "premiumBadge": "Premium"
       }
     },
     "runSteps": {
@@ -4879,7 +4952,8 @@
       "demo": "Preparación de los datos iniciales",
       "name_styles": "Generando estilos de nombres",
       "search_indexes": "Crear índices de búsqueda",
-      "lock": "Finalización de la instalación"
+      "lock": "Finalización de la instalación",
+      "apps": "Activando las aplicaciones elegidas"
     },
     "checks": {
       "postgres": "Conexión PostgreSQL",

@@ -1,17 +1,60 @@
+import { createPrivateKey } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { signLicense, type GcsLicensePayload } from "@gcs/core";
 import { expect, test, type Page } from "@playwright/test";
 
 const CODE = process.env.GCS_E2E_INSTALL_CODE ?? "";
+const LICENSE_KEY = process.env.GCS_E2E_LICENSE_KEY ?? "";
 
-test.skip(!process.env.GCS_E2E_INSTALL_URL || !CODE, "Instanța de instalare rulează doar cu build de producție (e2e/run.mts).");
+test.skip(!process.env.GCS_E2E_INSTALL_URL || !CODE || !LICENSE_KEY, "Instanța de instalare rulează doar cu build de producție (e2e/run.mts).");
 
 const next = (page: Page) => page.getByRole("button", { name: "Continuă" }).click();
+/**
+ * Opțiunile wizard-ului sunt carduri (`.gcs-option`): căsuța nativă e ascunsă, iar un click pe card o comută, ca la un
+ * utilizator real. Starea se verifică pe căsuță (`toBeChecked`).
+ */
+const card = (page: Page, testId: string) => page.locator("label.gcs-option").filter({ has: page.getByTestId(testId) });
+/** Captură (cu `GCS_SHOTS_DIR`) pe desktop și la 375 px, unde pagina nu are scroll orizontal. */
+async function shots(page: Page, name: string) {
+  const dir = process.env.GCS_SHOTS_DIR;
+  if (dir) await page.screenshot({ path: `${dir}/${name}-desktop.png`, fullPage: true });
+  const size = page.viewportSize();
+  await page.setViewportSize({ width: 375, height: 812 });
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  if (dir) await page.screenshot({ path: `${dir}/${name}-375.png`, fullPage: true });
+  if (size) await page.setViewportSize(size);
+}
+async function setApp(page: Page, key: string, on: boolean) {
+  const input = page.getByTestId(`gcs-install-check-app-${key}`);
+  if ((await input.isChecked()) !== on) await card(page, `gcs-install-check-app-${key}`).click();
+  await (on ? expect(input).toBeChecked() : expect(input).not.toBeChecked());
+}
 
-test("instalarea completă: 9 pași, reluare după refresh, login automat, /install blocat după final", async ({ page }) => {
+/** O licență de test, semnată cu cheia de unică folosință a rulării (de încredere doar pentru instanța de instalare). */
+function license(over: Partial<GcsLicensePayload> = {}): string {
+  const payload: GcsLicensePayload = {
+    v: 1,
+    kid: "e2e",
+    id: "lic-e2e",
+    licensee: "Comunitatea E2E SRL",
+    domains: ["localhost"],
+    package: "standard",
+    apps: [],
+    issuedAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + 365 * 86_400_000).toISOString(),
+    ...over,
+  };
+  return signLicense(payload, createPrivateKey(readFileSync(LICENSE_KEY, "utf8")));
+}
+
+test("instalarea completă: licența, aplicațiile, reluare după refresh, login automat, /install blocat după final", async ({ page }) => {
+  test.setTimeout(240_000);
+
   await test.step("un site neinstalat duce la /install", async () => {
     await page.goto("/");
     await expect(page).toHaveURL(/\/install\/code$/);
     await expect(page.getByRole("heading", { name: "Cod de instalare", level: 1 })).toBeVisible();
-    await expect(page.getByText("Pasul 1 din 9")).toBeVisible();
+    await expect(page.getByText("Pasul 1 din 10")).toBeVisible();
   });
 
   await test.step("1. codul de instalare (unul greșit e refuzat)", async () => {
@@ -28,10 +71,68 @@ test("instalarea completă: 9 pași, reluare după refresh, login automat, /inst
     await expect(checks.getByText("Redis")).toBeVisible();
     await expect(checks.getByText("Folderul de configurare")).toBeVisible();
     await next(page);
+    await expect(page).toHaveURL(/\/install\/license$/);
+  });
+
+  await test.step("3. licența: formatul greșit, expirată, alt domeniu și EULA neacceptat blochează", async () => {
+    await expect(page.getByRole("heading", { name: "Licența GCS", level: 1 })).toBeVisible();
+    await expect(page.getByTestId("gcs-install-eula")).toContainText("Contract de licență");
+    const field = page.getByLabel("Cheia de licență");
+    for (const [token, message] of [
+      ["GCS1.stricat.x", "Cheia nu are formatul corect."],
+      [license({ expiresAt: new Date(Date.now() - 86_400_000).toISOString() }), "Licența a expirat."],
+      [license({ domains: ["alt-forum.ro"] }), "Licența nu e valabilă pentru domeniul localhost."],
+    ] as const) {
+      await field.fill(token);
+      await next(page);
+      await expect(page.getByText(message)).toBeVisible();
+    }
+    await field.fill(license());
+    await next(page);
+    await expect(page.getByText("Trebuie să accepți termenii de utilizare.")).toBeVisible();
+    await shots(page, "01-licenta");
+    await card(page, "gcs-install-check-eula-on").click();
+    await expect(page.getByTestId("gcs-install-check-eula-on")).toBeChecked();
+    await next(page);
+    await expect(page).toHaveURL(/\/install\/apps$/);
+  });
+
+  await test.step("4. aplicațiile cu licența standard: premium blocate, Forumul mereu pornit", async () => {
+    const premium = page.getByTestId("gcs-install-apps-premium");
+    await expect(premium.getByTestId("gcs-install-check-app-servers")).toBeDisabled();
+    await expect(premium.getByText("Nu e inclusă în licență").first()).toBeVisible();
+    await expect(page.getByTestId("gcs-install-check-app-forums")).toBeDisabled();
+    await expect(page.getByTestId("gcs-install-check-app-forums")).toBeChecked();
+  });
+
+  await test.step("înapoi la licență: una cu Servere și Chat Pro deblochează aplicațiile premium", async () => {
+    await page.getByRole("button", { name: "Înapoi" }).click();
+    await expect(page).toHaveURL(/\/install\/license$/);
+    await expect(page.getByText("Licență verificată: Comunitatea E2E SRL")).toBeVisible();
+    await page.getByLabel("Cheia de licență").fill(license({ apps: ["servers", "chat_pro"] }));
+    await next(page);
+    await expect(page).toHaveURL(/\/install\/apps$/);
+    const premium = page.getByTestId("gcs-install-apps-premium");
+    await expect(premium.getByTestId("gcs-install-check-app-servers")).toBeEnabled();
+    await expect(premium.getByTestId("gcs-install-check-app-chat_pro")).toBeEnabled();
+    await expect(premium.getByTestId("gcs-install-check-app-groups_pro")).toBeDisabled();
+    await shots(page, "02-aplicatii");
+  });
+
+  await test.step("Chat Pro fără Chat e refuzat; Servere ca aplicație de pornire, Clanurile oprite", async () => {
+    await setApp(page, "chat", false);
+    await setApp(page, "chat_pro", true);
+    await next(page);
+    await expect(page.getByText("Chat Pro are nevoie și de aplicațiile de care depinde.")).toBeVisible();
+    await setApp(page, "chat", true);
+    await setApp(page, "servers", true);
+    await setApp(page, "clans", false);
+    await page.getByLabel("Aplicația de pornire").selectOption("servers");
+    await next(page);
     await expect(page).toHaveURL(/\/install\/database$/);
   });
 
-  await test.step("3. baza de date inclusă: testul conexiunii, apoi Continuă", async () => {
+  await test.step("5. baza de date inclusă: testul conexiunii, apoi Continuă", async () => {
     await expect(page.getByRole("radio", { name: /PostgreSQL inclus/ })).toBeChecked();
     await page.getByRole("button", { name: "Testează conexiunea" }).click();
     await expect(page.getByRole("status")).toContainText("Conexiunea funcționează");
@@ -39,7 +140,7 @@ test("instalarea completă: 9 pași, reluare după refresh, login automat, /inst
     await expect(page).toHaveURL(/\/install\/site$/);
   });
 
-  await test.step("4–5. site și email", async () => {
+  await test.step("6–7. site și email", async () => {
     await page.getByLabel("Numele site-ului").fill("Comunitatea E2E");
     await next(page);
     await expect(page).toHaveURL(/\/install\/email$/);
@@ -58,7 +159,7 @@ test("instalarea completă: 9 pași, reluare după refresh, login automat, /inst
     await page.goto("/install/admin");
   });
 
-  await test.step("6. contul Root Admin (parolele trebuie să coincidă)", async () => {
+  await test.step("8. contul Root Admin (parolele trebuie să coincidă)", async () => {
     await page.getByLabel("Nume de utilizator").fill("Fondator");
     await page.getByLabel("Email").fill("fondator@example.com");
     await page.getByLabel("Parolă", { exact: true }).fill("parola-sigura-123");
@@ -70,30 +171,34 @@ test("instalarea completă: 9 pași, reluare după refresh, login automat, /inst
     await expect(page).toHaveURL(/\/install\/data$/);
   });
 
-  await test.step("7. date demo", async () => {
-    await page.getByRole("radio", { name: /Date demo/ }).check();
+  await test.step("9. date demo", async () => {
+    await page.locator("label.gcs-option").filter({ hasText: "Date demo" }).click();
+    await expect(page.getByRole("radio", { name: /Date demo/ })).toBeChecked();
     await next(page);
     await expect(page).toHaveURL(/\/install\/progress$/);
   });
 
-  await test.step("8–9. instalarea rulează și se termină; login automat în ACP", async () => {
+  await test.step("10. instalarea rulează (cu pasul aplicațiilor) și se termină; login automat în ACP", async () => {
     await page.getByRole("button", { name: "Pornește instalarea" }).click();
-    await expect(page.getByRole("status")).toContainText("Instalare finalizată", { timeout: 60_000 });
+    await expect(page.getByRole("status")).toContainText("Instalare finalizată", { timeout: 90_000 });
     await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "100");
+    await expect(page.getByTestId("gcs-install-log")).toContainText("Pornesc aplicațiile alese");
     await expect(page.getByTestId("gcs-install-log")).toContainText("Creez contul Root Admin");
     await page.getByRole("button", { name: "Intră în ACP" }).click();
     await expect(page).toHaveURL(/\/admin\/2fa-setup$/);
     await expect(page.getByRole("heading", { name: "Activează autentificarea în doi pași" })).toBeVisible();
   });
 
-  await test.step("după instalare, /install → 404, iar site-ul are numele ales", async () => {
+  await test.step("după instalare: /install → 404, prima pagină e Serverele, Clanurile sunt oprite, forumul are datele demo", async () => {
     expect((await page.goto("/install"))?.status()).toBe(404);
     expect((await page.goto("/install/code"))?.status()).toBe(404);
     await page.goto("/");
-    await expect(page).toHaveTitle("Comunitatea E2E");
-    // „Date demo”: structura din macheta Main și topicul de bun venit.
+    await expect(page).toHaveTitle(/Comunitatea E2E/);
+    await expect(page.getByTestId("gcs-servers-filter").or(page.getByTestId("gcs-servers-empty")).first()).toBeVisible();
+    await expect(page.getByTestId("gcs-forum-index")).toHaveCount(0);
+    expect((await page.goto("/clans"))?.status()).toBe(404);
+    await page.goto("/forum");
     await expect(page.getByRole("link", { name: "Anunțuri", exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Ajutor tehnic", exact: true })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Bun venit pe Comunitatea E2E!" }).first()).toBeVisible();
   });
 });

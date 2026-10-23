@@ -438,7 +438,8 @@
         "hooks": "Hooks",
         "settings_rules": "Community rules",
         "apps_manage": "Management",
-        "apps_dev": "Development"
+        "apps_dev": "Development",
+        "update": "Update"
       },
       "members": {
         "members": "Members",
@@ -3896,6 +3897,36 @@
       "removeBody": "The bar “{text}” disappears from the site after saving.",
       "removeConfirm": "Delete",
       "cancel": "Cancel"
+    },
+    "update": {
+      "title": "Update",
+      "description": "The installed version, the licence and updating to a new version.",
+      "version": "Installed version",
+      "license": "Licence",
+      "noLicense": "No licence saved on the server.",
+      "licenseValid": "Valid",
+      "domains": "Domains: {domains}",
+      "expires": "expires on {date}",
+      "noExpiry": "no expiry",
+      "premium": "Premium apps",
+      "noPremium": "None",
+      "licenseErrors": {
+        "missing": "Missing",
+        "malformed": "Wrong format",
+        "unknown_key": "Unknown key",
+        "bad_signature": "Invalid signature",
+        "expired": "Expired",
+        "domain": "Different domain",
+        "revoked": "Revoked"
+      },
+      "howTitle": "How to update",
+      "howBody": "The update runs on the server, with the new version's package downloaded from your customer account. The site comes back on its own after the restart.",
+      "steps": {
+        "backup": "It makes a full backup (database, files, configuration).",
+        "verify": "It checks the new package's checksums.",
+        "keep": "It keeps the server settings, the configuration and the backups.",
+        "restart": "It restarts the services; database migrations run automatically and your data stays."
+      }
     }
   },
   "settings": {
@@ -4869,6 +4900,48 @@
         "title": "Installation complete",
         "body": "The platform is ready. Enter the ACP and enable two-step verification.",
         "enter": "Enter the ACP"
+      },
+      "license": {
+        "label": "Licence",
+        "title": "GCS licence",
+        "body": "Enter the licence key you received with your purchase and accept the terms of use.",
+        "field": "Licence key",
+        "fieldHint": "It starts with “GCS1.” and you can find it in your customer account.",
+        "eula": "Terms of use (EULA)",
+        "eulaMissing": "The EULA text is missing from the package (EULA.md).",
+        "accept": "I have read and accept the terms of use",
+        "devHint": "Test mode (outside production): you can use the key {token}.",
+        "saved": "Licence verified: {licensee}",
+        "errors": {
+          "missing": "Enter the licence key.",
+          "malformed": "The key isn’t in the right format.",
+          "unknown_key": "The key was signed with a key this version doesn’t know.",
+          "bad_signature": "The key’s signature isn’t valid (the key was changed).",
+          "expired": "The licence has expired.",
+          "domain": "The licence isn’t valid for the domain {domain}.",
+          "revoked": "The licence has been revoked.",
+          "eula": "You need to accept the terms of use."
+        }
+      },
+      "apps": {
+        "label": "Apps",
+        "title": "Apps",
+        "body": "Choose the apps enabled at install. Unticked apps are installed switched off; you can turn them on any time in ACP › Apps.",
+        "standard": "Standard apps",
+        "premium": "Premium apps",
+        "locked": "Always on",
+        "notLicensed": "Not included in the licence",
+        "landing": "Landing app",
+        "landingHint": "What a visitor sees on the site’s front page.",
+        "requires": "Needs: {apps}",
+        "errors": {
+          "premium_not_licensed": "{app} isn’t included in the licence.",
+          "requires": "{app} also needs the apps it depends on.",
+          "landing_invalid": "The landing app must be ticked and have a front page.",
+          "unknown_app": "Unknown app: {app}.",
+          "license": "The licence is no longer valid: go back to the Licence step."
+        },
+        "premiumBadge": "Premium"
       }
     },
     "runSteps": {
@@ -4879,7 +4952,8 @@
       "demo": "Preparing the initial data",
       "name_styles": "Generating name styles",
       "search_indexes": "Creating search indexes",
-      "lock": "Finishing the installation"
+      "lock": "Finishing the installation",
+      "apps": "Enabling the chosen apps"
     },
     "checks": {
       "postgres": "PostgreSQL connection",

@@ -438,7 +438,8 @@
         "hooks": "Haken",
         "settings_rules": "Community rules",
         "apps_manage": "Management",
-        "apps_dev": "Development"
+        "apps_dev": "Development",
+        "update": "Aktualisierung"
       },
       "members": {
         "members": "Mitglieder",
@@ -3896,6 +3897,36 @@
       "removeBody": "Die Leiste „{text}“ verschwindet nach dem Speichern von der Seite.",
       "removeConfirm": "Löschen",
       "cancel": "Abbrechen"
+    },
+    "update": {
+      "title": "Aktualisierung",
+      "description": "Die installierte Version, die Lizenz und die Aktualisierung auf eine neue Version.",
+      "version": "Installierte Version",
+      "license": "Lizenz",
+      "noLicense": "Keine Lizenz auf dem Server gespeichert.",
+      "licenseValid": "Gültig",
+      "domains": "Domains: {domains}",
+      "expires": "läuft am {date} ab",
+      "noExpiry": "ohne Ablauf",
+      "premium": "Premium-Apps",
+      "noPremium": "Keine",
+      "licenseErrors": {
+        "missing": "Fehlt",
+        "malformed": "Falsches Format",
+        "unknown_key": "Unbekannter Schlüssel",
+        "bad_signature": "Ungültige Signatur",
+        "expired": "Abgelaufen",
+        "domain": "Andere Domain",
+        "revoked": "Widerrufen"
+      },
+      "howTitle": "So aktualisierst du",
+      "howBody": "Die Aktualisierung läuft auf dem Server, mit dem Paket der neuen Version aus deinem Kundenkonto. Die Seite ist nach dem Neustart von selbst wieder da.",
+      "steps": {
+        "backup": "Es erstellt ein vollständiges Backup (Datenbank, Dateien, Konfiguration).",
+        "verify": "Es prüft die Prüfsummen des neuen Pakets.",
+        "keep": "Es behält die Servereinstellungen, die Konfiguration und die Backups.",
+        "restart": "Es startet die Dienste neu; Datenbankmigrationen laufen automatisch, deine Daten bleiben erhalten."
+      }
     }
   },
   "settings": {
@@ -4869,6 +4900,48 @@
         "title": "Installation vollständig",
         "body": "Die Plattform ist bereit. Geben Sie die ACP ein und ermöglichen Sie eine zweistufige Überprüfung.",
         "enter": "AKP-Länder"
+      },
+      "license": {
+        "label": "Lizenz",
+        "title": "GCS-Lizenz",
+        "body": "Gib den Lizenzschlüssel aus deinem Kauf ein und akzeptiere die Nutzungsbedingungen.",
+        "field": "Lizenzschlüssel",
+        "fieldHint": "Er beginnt mit „GCS1.“ und steht in deinem Kundenkonto.",
+        "eula": "Nutzungsbedingungen (EULA)",
+        "eulaMissing": "Der EULA-Text fehlt im Paket (EULA.md).",
+        "accept": "Ich habe die Nutzungsbedingungen gelesen und akzeptiere sie",
+        "devHint": "Testmodus (außerhalb der Produktion): Du kannst den Schlüssel {token} verwenden.",
+        "saved": "Lizenz geprüft: {licensee}",
+        "errors": {
+          "missing": "Gib den Lizenzschlüssel ein.",
+          "malformed": "Der Schlüssel hat nicht das richtige Format.",
+          "unknown_key": "Der Schlüssel wurde mit einem dieser Version unbekannten Schlüssel signiert.",
+          "bad_signature": "Die Signatur des Schlüssels ist ungültig (der Schlüssel wurde verändert).",
+          "expired": "Die Lizenz ist abgelaufen.",
+          "domain": "Die Lizenz gilt nicht für die Domain {domain}.",
+          "revoked": "Die Lizenz wurde widerrufen.",
+          "eula": "Du musst die Nutzungsbedingungen akzeptieren."
+        }
+      },
+      "apps": {
+        "label": "Apps",
+        "title": "Apps",
+        "body": "Wähle die Apps, die bei der Installation aktiv sind. Nicht ausgewählte werden deaktiviert installiert; du kannst sie jederzeit unter ACP › Apps einschalten.",
+        "standard": "Standard-Apps",
+        "premium": "Premium-Apps",
+        "locked": "Immer aktiv",
+        "notLicensed": "Nicht in der Lizenz enthalten",
+        "landing": "Start-App",
+        "landingHint": "Was Besucher auf der Startseite sehen.",
+        "requires": "Benötigt: {apps}",
+        "errors": {
+          "premium_not_licensed": "{app} ist nicht in der Lizenz enthalten.",
+          "requires": "{app} benötigt auch die Apps, von denen es abhängt.",
+          "landing_invalid": "Die Start-App muss ausgewählt sein und eine Startseite haben.",
+          "unknown_app": "Unbekannte App: {app}.",
+          "license": "Die Lizenz ist nicht mehr gültig: Geh zurück zum Schritt Lizenz."
+        },
+        "premiumBadge": "Premium"
       }
     },
     "runSteps": {
@@ -4879,7 +4952,8 @@
       "demo": "Vorbereitung der Anfangsdaten",
       "name_styles": "Generierung von Namensstilen",
       "search_indexes": "Erstellen von Suchindizes",
-      "lock": "Abschluss der Anlage"
+      "lock": "Abschluss der Anlage",
+      "apps": "Gewählte Apps werden aktiviert"
     },
     "checks": {
       "postgres": "PostgreSQL-Verbindung",

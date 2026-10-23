@@ -35,7 +35,7 @@ export function DatabaseStep({ initial, included, labels }: Props) {
   return (
     <InstallStepForm
       action={saveDatabase}
-      backHref="/install/checks"
+      backHref="/install/apps"
       labels={{ back: labels.back, continue: labels.continue }}
       extra={
         <GcsButton variant="ghost" type="button" onClick={runTest} disabled={testing}>

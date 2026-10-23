@@ -117,3 +117,53 @@ export function InstallField({
     </div>
   );
 }
+
+/** O bifă a wizard-ului (ex. acceptarea EULA, o aplicație), cu eroarea ei. */
+export function InstallCheck({
+  name,
+  value = "on",
+  label,
+  hint,
+  defaultChecked,
+  disabled,
+  badge,
+}: {
+  name: string;
+  value?: string;
+  label: string;
+  hint?: ReactNode;
+  defaultChecked?: boolean;
+  disabled?: boolean;
+  badge?: ReactNode;
+}) {
+  const error = useInstallFieldError(name);
+  const errorId = `install-${name}-error`;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      <label className="gcs-option" style={disabled ? { opacity: 0.6, cursor: "not-allowed" } : undefined}>
+        <input
+          type="checkbox"
+          name={name}
+          value={value}
+          defaultChecked={defaultChecked}
+          disabled={disabled}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
+          data-testid={`gcs-install-check-${name}-${value}`}
+        />
+        <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontWeight: 700, fontSize: 14 }}>
+            {label}
+            {badge}
+          </span>
+          {hint && <span style={{ fontSize: 13, color: "var(--gcs-muted)" }}>{hint}</span>}
+        </span>
+      </label>
+      {error && (
+        <p id={errorId} className="gcs-field__error" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}

@@ -2,14 +2,16 @@ import {
   checkHealth,
   GcsError,
   hashPassword,
+  installAppChoices,
   normalizeEmail,
+  resolveAppSelection,
   resetRootPassword,
   validateUsername,
   type GcsActor,
   type GcsInstallInput,
 } from "@gcs/core";
 import { CLI_TOKEN_HEADER, isValidCliToken } from "@/lib/cli-token";
-import { INSTALL_VERSION, installState } from "@/lib/install";
+import { INSTALL_VERSION, installState, verifyInstallLicense } from "@/lib/install";
 import { performInstall } from "@/lib/install-run";
 import { services } from "@/lib/services";
 
@@ -39,12 +41,23 @@ async function cliInstallInput(
   if (nameError) errors.adminName = nameError;
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(adminEmail)) errors.adminEmail = "email_invalid";
   if (adminPassword.length < 8) errors.adminPassword = "password_too_short";
-  if (Object.keys(errors).length > 0) return { ok: false, fields: errors };
+  // Licența, ca la pasul „Licență” din wizard; aplicațiile: toate cele permise (sau lista dată), Forumul ca pornire implicită.
+  const licenseToken = str(args.license);
+  const licensed = verifyInstallLicense(licenseToken);
+  if (!licensed.ok) errors.license = `license_${licensed.error}`;
+  if (Object.keys(errors).length > 0 || !licensed.ok) return { ok: false, fields: errors };
+  const { registry } = services();
+  const wanted = str(args.apps);
+  const selected = wanted ? wanted.split(",").map((k) => k.trim()).filter(Boolean) : installAppChoices(registry, licensed.license).filter((c) => c.available).map((c) => c.key);
+  const apps = resolveAppSelection(registry, licensed.license, { selected, landing: str(args.landing) });
+  if (!apps.ok) return { ok: false, fields: { apps: `apps_${apps.error}` } };
 
   const input: GcsInstallInput = {
     site: { name: siteName, url: siteUrl, locale: str(args.locale) === "en" ? "en" : "ro", timezone: str(args.timezone) || "Europe/Bucharest" },
     admin: { name: adminName, email: adminEmail, passwordHash: await hashPassword(adminPassword) },
     data: str(args.data) === "empty" ? "empty" : "demo",
+    apps: apps.selection,
+    license: licenseToken,
   };
   if (str(args.smtpHost)) {
     input.email = {

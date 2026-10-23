@@ -117,8 +117,28 @@ describe("runInstall", () => {
     expect(result.admins[0]?.accounts[0]).toMatchObject({ providerId: "credential", password: passwordHash });
     expect(result.siteName).toBe("Comunitatea Test");
     await expect(state.isInstalled()).resolves.toBe(true);
-    expect(events.map((e) => e.stepKey)).toEqual(["migrate", "seed", "settings", "admin", "demo", "name_styles", "search_indexes", "lock"]);
+    expect(events.map((e) => e.stepKey)).toEqual(["migrate", "seed", "settings", "apps", "admin", "demo", "name_styles", "search_indexes", "lock"]);
     expect(events.at(-1)?.pct).toBe(100);
+  });
+
+  test("pasul „apps”: aplicațiile alese pornite, celelalte instalate oprite, aplicația de pornire; licența doar pe server", async () => {
+    const state = new GcsInstallState(dir);
+    const r = registry();
+    if (!r.settingDef("apps.landing")) {
+      r.register({ key: "apps-landing", permissions: [], acpMenu: [], eventListeners: [], settings: [{ key: "apps.landing", type: "string", default: "", section: "general", labelKey: "apps.landing" }] });
+    }
+    const token = "GCS1.payload.semnatura";
+    await runInstall(input({ apps: { enabled: ["chat"], disabled: ["servers", "clans"], landing: "servers" }, license: token }), () => {}, { databaseUrl: url, migrationsDir, registry: r, cache, bus, state });
+
+    const db = new PrismaClient({ datasourceUrl: url });
+    try {
+      const apps = Object.fromEntries((await db.app.findMany({ where: { key: { in: ["chat", "servers", "clans"] } } })).map((a) => [a.key, a.enabled]));
+      expect(apps).toEqual({ chat: true, servers: false, clans: false });
+      expect((await db.setting.findUnique({ where: { key: "apps.landing" } }))?.value).toBe("servers");
+    } finally {
+      await db.$disconnect();
+    }
+    await expect(state.readLicense()).resolves.toBe(token);
   });
 
   test("pasul „demo” apelează `seedDemo` al modulelor cu varianta aleasă și emailul adminului", async () => {
