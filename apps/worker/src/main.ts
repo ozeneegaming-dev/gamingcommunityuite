@@ -34,7 +34,7 @@ async function main(): Promise<void> {
   // Pluginurile (etapa 6): listenerii, joburile și filtrele lor rulează și aici, încărcate fără repornire.
   await services.plugins.start().catch((error: unknown) => log("Pluginurile nu au pornit", error));
   const stopWorker = await services.jobs.start({ onError: (name, error) => log(`Jobul ${name} a eșuat`, error) });
-  await writeWorkerHeartbeat(services.redis);
+  await writeWorkerHeartbeat(services.kv);
   // Web push (Notificări v2): cheile VAPID se generează o singură dată și se păstrează criptate (nu apar în jurnal).
   await services.push
     .ensureKeys()

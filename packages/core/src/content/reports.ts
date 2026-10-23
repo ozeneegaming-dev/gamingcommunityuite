@@ -1,5 +1,5 @@
 import type { PrismaClient, Report } from "@gcs/db";
-import type { GcsRedisRateLimiter } from "../auth/rateLimit";
+import type { GcsRateLimiter } from "../auth/rateLimit";
 import { writeAudit } from "../audit";
 import { GcsConflict, GcsForbidden, GcsNotFound, GcsRateLimited, GcsValidationError } from "../errors";
 import type { GcsEventBus } from "../events";
@@ -19,7 +19,7 @@ const REPORT_LIMIT = { window: 3600, max: 10 };
 export class GcsReportService {
   private readonly contents = new Map<string, GcsReportableContent>();
 
-  constructor(private readonly deps: { db: PrismaClient; bus: GcsEventBus; rateLimiter: GcsRedisRateLimiter }) {}
+  constructor(private readonly deps: { db: PrismaClient; bus: GcsEventBus; rateLimiter: GcsRateLimiter }) {}
 
   registerContent(contentType: string, content: GcsReportableContent): void {
     this.contents.set(contentType, content);

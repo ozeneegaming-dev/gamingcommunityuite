@@ -9,7 +9,7 @@ import {
   GcsReportService,
   GcsLocalFileStore,
   GcsModuleRegistry,
-  GcsRedisRateLimiter,
+  GcsRateLimiter,
   GcsSettingsService,
   type GcsActor,
   type GcsModule,
@@ -62,15 +62,15 @@ export async function snapshotCounters(db: PrismaClient) {
  */
 export async function createForumWorld(extraModules: GcsModule[] = []) {
   const world = await createWorld(extraModules, realRegistry);
-  const { db, bus, cache, permissions, registry, redis } = world;
+  const { db, bus, cache, permissions, registry, kv } = world;
 
   const settings = new GcsSettingsService({ db, cache, bus, registry });
-  const rateLimiter = new GcsRedisRateLimiter(redis);
+  const rateLimiter = new GcsRateLimiter(kv);
   const files = new GcsLocalFileStore(path.join(os.tmpdir(), `gcs-forum-files-${process.pid}`));
   const attachments = new GcsAttachmentService({ db, store: files, permissions, rateLimiter });
   // Forum v2: paginile și regulile forumurilor se randează cu editorul postărilor (blocurile staff-ului).
   const forums = new GcsForumService({ db, bus, permissions, acp: world.acp, registry, render: (content, actor) => posting.render(content, { actor, blocks: true }) });
-  const groupMentions = new GcsGroupMentionService({ db, cache, redis });
+  const groupMentions = new GcsGroupMentionService({ db, cache, kv });
   const posting = new GcsForumPosting({
     db,
     bus,
@@ -114,7 +114,7 @@ export async function createForumWorld(extraModules: GcsModule[] = []) {
 
   /** Șterge pauza de flood a unui user (testele postează mai des decât ar putea un om). */
   async function clearFlood(actor: GcsActor) {
-    await redis.del(`gcs:rl:forum-post:${actor.userId}`);
+    await kv.del(`gcs:rl:forum-post:${actor.userId}`);
   }
 
   return {

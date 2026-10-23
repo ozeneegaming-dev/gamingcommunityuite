@@ -96,7 +96,7 @@ describe("cache-ul conturilor externe (worker)", () => {
 
   afterAll(async () => {
     await w.db.$disconnect();
-    w.redis.disconnect();
+    w.kv.disconnect();
   });
 
   /** Un `fetch` fals: răspunsul după calea cererii; numără cererile. */

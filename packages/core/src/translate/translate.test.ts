@@ -1,6 +1,6 @@
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { createWorld, type GcsTestWorld } from "../../test/world";
-import { GcsRedisRateLimiter } from "../auth/rateLimit";
+import { GcsRateLimiter } from "../auth/rateLimit";
 import { GcsForbidden, GcsNotFound, GcsRateLimited } from "../errors";
 import type { GcsModule } from "../modules/registry";
 import { GcsSettingsService } from "../settings/service";
@@ -37,7 +37,7 @@ beforeEach(async () => {
     cache: w.cache,
     settings: new GcsSettingsService({ db: w.db, cache: w.cache, bus: w.bus, registry: w.registry }),
     permissions: w.permissions,
-    rateLimiter: new GcsRedisRateLimiter(w.redis),
+    rateLimiter: new GcsRateLimiter(w.kv),
     provider,
   });
   svc.registerContent("post", {
@@ -48,7 +48,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await w.db.$disconnect();
-  w.redis.disconnect();
+  w.kv.disconnect();
 });
 
 describe("GcsTranslationService", () => {
@@ -66,7 +66,7 @@ describe("GcsTranslationService", () => {
     const ana = await w.actorFor(await w.createUser("Ana", "member"));
     await svc.translate(ana, { contentType: "post", contentId: "1" }, "de");
     expect((await svc.translate(ana, { contentType: "post", contentId: "1" }, "de")).cached).toBe(true);
-    await w.redis.flushdb();
+    await w.kv.flushAll();
     expect((await svc.translate(ana, { contentType: "post", contentId: "1" }, "de")).cached).toBe(true);
     expect(calls).toHaveLength(1);
     expect(await w.db.translationCache.count()).toBe(1);
@@ -83,7 +83,7 @@ describe("GcsTranslationService", () => {
     expect(await svc.available(ana)).toBe(true);
     expect(calls).toHaveLength(0);
 
-    const off = new GcsTranslationService({ db: w.db, cache: w.cache, settings: new GcsSettingsService({ db: w.db, cache: w.cache, bus: w.bus, registry: w.registry }), permissions: w.permissions, rateLimiter: new GcsRedisRateLimiter(w.redis), provider: null });
+    const off = new GcsTranslationService({ db: w.db, cache: w.cache, settings: new GcsSettingsService({ db: w.db, cache: w.cache, bus: w.bus, registry: w.registry }), permissions: w.permissions, rateLimiter: new GcsRateLimiter(w.kv), provider: null });
     expect(await off.available(ana)).toBe(false);
   });
 

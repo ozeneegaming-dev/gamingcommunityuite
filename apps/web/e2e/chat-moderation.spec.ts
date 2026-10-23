@@ -1,3 +1,4 @@
+import { e2eKv } from "./kv";
 import { expect, test, type Browser, type Locator, type Page } from "@playwright/test";
 import { member, uid } from "./forum-fixtures";
 import { enterAcpAsRoot, resetSetting, sql, useFreshIp } from "./helpers";
@@ -16,8 +17,7 @@ async function setChatPro(enabled: boolean): Promise<void> {
 
 /** Șterge chei din Redis (cache-ul aplicațiilor, al clasamentului). */
 async function redisDel(keys: string[], pattern?: string): Promise<void> {
-  const { default: Redis } = await import("ioredis");
-  const redis = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379");
+  const redis = await e2eKv();
   try {
     if (keys.length) await redis.del(...keys);
     if (pattern) {

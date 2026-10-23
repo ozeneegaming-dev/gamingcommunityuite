@@ -1,6 +1,6 @@
 import { testDb, truncateAll } from "@gcs/db/test/helpers";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
-import { testRedis } from "../../test/redis";
+import { testKv } from "../../test/kv";
 import { GcsCache } from "../cache";
 import { GcsEventBus } from "../events";
 import { GcsModuleRegistry, type GcsMemberGrant } from "../modules/registry";
@@ -8,8 +8,8 @@ import { GcsPermissionService } from "./service";
 import type { GcsActor } from "./types";
 
 const db = testDb();
-const redis = testRedis();
-const cache = new GcsCache(redis);
+const kv = testKv();
+const cache = new GcsCache(kv);
 
 const clanForum = { type: "forum", id: "7" };
 const publicForum = { type: "forum", id: "1" };
@@ -28,7 +28,7 @@ const FORUM_ACTIONS = ["forums.view", "forums.read", "forums.reply"];
 
 beforeEach(async () => {
   await truncateAll(db);
-  await redis.flushdb();
+  await kv.flushAll();
   const make = (key: string) => db.group.create({ data: { key, name: key } }).then((r) => r.id);
   g = { member: await make("member"), banned: await make("banned"), root_admin: await make("root_admin"), guest: await make("guest") };
   grants = new Map();
@@ -54,7 +54,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await db.$disconnect();
-  redis.disconnect();
+  kv.disconnect();
 });
 
 describe("drepturile date membrilor (forumul privat al unui clan)", () => {
@@ -106,7 +106,7 @@ describe("drepturile date membrilor (forumul privat al unui clan)", () => {
     grants.set("u1", [{ ...clanForum, actions: FORUM_ACTIONS, powers: [] }]);
     await expect(perms.can(actor([g.member]), "forums.read", clanForum)).resolves.toBe(true);
     const version = await perms.currentVersion();
-    const stale = await redis.keys(`gcs:k:perm:${version}:grants:u1:*`);
+    const stale = await kv.keys(`gcs:k:perm:${version}:grants:u1:`);
     expect(stale).toHaveLength(1);
     await perms.invalidateMemberGrants(["u1"]);
     grants.delete("u1");

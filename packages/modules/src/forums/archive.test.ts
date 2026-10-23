@@ -14,7 +14,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await w.db.$disconnect();
-  w.redis.disconnect();
+  w.kv.disconnect();
 });
 
 /** Un topic cu ultima postare acum `days` zile (și câmpurile date). */

@@ -5,11 +5,11 @@ import path from "node:path";
 import sharp from "sharp";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createWorld } from "../../test/world";
-import { GcsRedisRateLimiter } from "../auth/rateLimit";
+import { GcsRateLimiter } from "../auth/rateLimit";
 import { GcsLocalFileStore } from "../content/files/localStore";
 import { GcsRateLimited, GcsValidationError } from "../errors";
 import { GcsPluginMediaService, PLUGIN_MEDIA_PENDING_MS } from "../plugins/media";
-import { testRedis } from "../../test/redis";
+import { testKv } from "../../test/kv";
 import { GcsMemberAppearanceService } from "./appearanceService";
 
 const KEY = "acme.looks";
@@ -27,7 +27,7 @@ async function plugin(key: string) {
 
 beforeEach(async () => {
   w = await createWorld();
-  service = new GcsMemberAppearanceService({ db: w.db, cache: w.cache, redis: testRedis(), bus: w.bus });
+  service = new GcsMemberAppearanceService({ db: w.db, cache: w.cache, kv: testKv(), bus: w.bus });
   active = [KEY, OTHER];
   service.setActiveProvider(() => active);
   await plugin(KEY);
@@ -138,7 +138,7 @@ describe("stilurile CSS scrise de admini", () => {
 
 describe("fișierele media ale pluginurilor (stocare)", () => {
   const decl = { image: { maxMb: 2, maxSide: 512, animated: false }, quotaMb: 1 };
-  const media = () => new GcsPluginMediaService({ db: w.db, store: new GcsLocalFileStore(dir), rateLimiter: new GcsRedisRateLimiter(testRedis()) });
+  const media = () => new GcsPluginMediaService({ db: w.db, store: new GcsLocalFileStore(dir), rateLimiter: new GcsRateLimiter(testKv()) });
   const png = (size = 64) => sharp({ create: { width: size, height: size, channels: 4, background: { r: 10, g: 200, b: 90, alpha: 1 } } }).png().toBuffer();
 
   test("încărcarea: în așteptare, păstrată de plugin, servită doar sub cheia lui", async () => {
@@ -168,7 +168,7 @@ describe("fișierele media ale pluginurilor (stocare)", () => {
     // `get` nu le are (sunt doar ale încărcării).
     expect((await svc.get(KEY, [info.id]))[0]).not.toHaveProperty("sha256");
     // ACP-ul are limita lui: 60 de încărcări pe site nu o consumă.
-    const limiter = new GcsRedisRateLimiter(testRedis());
+    const limiter = new GcsRateLimiter(testKv());
     for (let i = 0; i < 60; i++) await limiter.consume(`plugin-media:${u.id}`, { window: 3600, max: 60 });
     await expect(svc.upload(KEY, decl, { bytes }, { userId: u.id })).rejects.toBeInstanceOf(GcsRateLimited);
     await expect(svc.upload(KEY, decl, { bytes }, { userId: u.id, acp: true })).resolves.toMatchObject({ kind: "image" });

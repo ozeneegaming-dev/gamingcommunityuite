@@ -1,8 +1,10 @@
-import { PLUGIN_JOB, writeWorkerHeartbeat } from "@gcs/core";
+import { GcsSqlKv, PLUGIN_JOB, writeWorkerHeartbeat } from "@gcs/core";
 import type { GcsServices } from "./services";
 
 /** Jobul care dovedește că worker-ul procesează coada (nu doar că procesul trăiește). */
 export const HEARTBEAT_JOB = "system.heartbeat";
+/** Curățenia ediției Lite: cheile expirate din `gcs_kv` și jurnalul live mai vechi de 5 minute. */
+export const LITE_SWEEP_JOB = "system.lite_sweep";
 /** Jobul care scoate grupurile secundare temporare expirate (Membri v2). */
 export const SECONDARY_EXPIRY_JOB = "groups.secondary_expiry";
 
@@ -11,7 +13,17 @@ export const SECONDARY_EXPIRY_JOB = "groups.secondary_expiry";
  * dar rulează doar în `gcs-worker` (`services.jobs.start()`).
  */
 export function registerAppJobs(s: GcsServices): void {
-  s.jobs.register({ name: HEARTBEAT_JOB, everyMs: 60_000, handler: () => writeWorkerHeartbeat(s.redis) });
+  s.jobs.register({ name: HEARTBEAT_JOB, everyMs: 60_000, handler: () => writeWorkerHeartbeat(s.kv) });
+  if (s.edition === "lite") {
+    s.jobs.register({
+      name: LITE_SWEEP_JOB,
+      everyMs: 5 * 60_000,
+      handler: async () => {
+        if (s.kv instanceof GcsSqlKv) await s.kv.sweep();
+        await s.realtime.log.prune();
+      },
+    });
+  }
   s.achievements.registerJobs(s.jobs);
   s.achievementRules.registerJobs(s.jobs, (userId) => s.achievements.evaluate(userId));
   s.vip.registerJobs(s.jobs);

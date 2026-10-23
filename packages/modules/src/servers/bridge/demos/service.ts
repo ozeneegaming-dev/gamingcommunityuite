@@ -7,7 +7,7 @@ import path from "node:path";
 import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { createGunzip, createGzip } from "node:zlib";
-import { GcsNotFound, GcsRateLimited, GcsValidationError, writeAudit, type GcsAcpRoleService, type GcsActor, type GcsAppService, type GcsFileStore, type GcsJobQueue, type GcsPermissionService, type GcsRedisRateLimiter, type GcsSettingsService } from "@gcs/core";
+import { GcsNotFound, GcsRateLimited, GcsValidationError, writeAudit, type GcsAcpRoleService, type GcsActor, type GcsAppService, type GcsFileStore, type GcsJobQueue, type GcsPermissionService, type GcsRateLimiter, type GcsSettingsService } from "@gcs/core";
 import type { GameDemoStatus, GameMatchStatus, Prisma, PrismaClient } from "@gcs/db";
 import { SERVERS_APP } from "../../poller";
 import { SERVERS_ACP_SECTION } from "../../service";
@@ -91,7 +91,7 @@ export class GcsBridgeDemos {
       permissions: GcsPermissionService;
       acp: GcsAcpRoleService;
       apps: GcsAppService;
-      rateLimiter: GcsRedisRateLimiter;
+      rateLimiter: GcsRateLimiter;
       files: GcsFileStore;
       tv: GcsBridgeTv;
       canViewServer: (actor: GcsActor, id: number) => Promise<boolean>;

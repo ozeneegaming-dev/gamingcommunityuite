@@ -34,7 +34,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await world.db.$disconnect();
-  world.redis.disconnect();
+  world.kv.disconnect();
 });
 
 const reputation = async () => (await world.db.user.findUniqueOrThrow({ where: { id: author.userId! } })).reputation;

@@ -15,9 +15,9 @@ import {
   type GcsPushService,
   type GcsRealtime,
   type GcsSettingsService,
+  type GcsKv,
 } from "@gcs/core";
 import type { PrismaClient } from "@gcs/db";
-import type Redis from "ioredis";
 import { canViewPost } from "../forums/content";
 import { POST_CONTENT_TYPE, type GcsForumPosting } from "../forums/posting";
 import type { GcsForumQueries } from "../forums/queries";
@@ -74,7 +74,7 @@ export class GcsNotificationProducers {
   constructor(
     private readonly deps: {
       db: PrismaClient;
-      redis: Redis;
+      kv: GcsKv;
       notifications: GcsNotificationService;
       actors: GcsActorResolver;
       posting: GcsForumPosting;
@@ -560,12 +560,12 @@ export class GcsNotificationProducers {
 
   /** Rulat la 15 minute: trimite digestul o dată pe zi, după ora `notifications.digest_hour` (în fusul site-ului). */
   async digestIfDue(now = new Date()): Promise<boolean> {
-    const { settings, redis } = this.deps;
+    const { settings, kv } = this.deps;
     const hour = await settings.get<number>("notifications.digest_hour");
     const p = await this.localParts(now);
     if (p.hour < hour) return false;
-    const claimed = await redis.set(`gcs:notifications:digest:${p.year}-${p.month}-${p.day}`, "1", "EX", 2 * 86_400, "NX");
-    if (claimed !== "OK") return false;
+    const claimed = await kv.set(`gcs:notifications:digest:${p.year}-${p.month}-${p.day}`, "1", { ttlMs: 2 * 86_400_000, nx: true });
+    if (!claimed) return false;
     await this.digest(now);
     return true;
   }
@@ -575,12 +575,12 @@ export class GcsNotificationProducers {
    * `notifications.weekly_hour` (în fusul site-ului).
    */
   async weeklyIfDue(now = new Date()): Promise<boolean> {
-    const { settings, redis } = this.deps;
+    const { settings, kv } = this.deps;
     const [day, hour] = await Promise.all([settings.get<number>(WEEKLY_DAY_SETTING).catch(() => 1), settings.get<number>(WEEKLY_HOUR_SETTING).catch(() => 10)]);
     const p = await this.localParts(now);
     if (p.weekday !== day || p.hour < hour) return false;
-    const claimed = await redis.set(`gcs:notifications:weekly:${p.year}-${p.month}-${p.day}`, "1", "EX", 8 * 86_400, "NX");
-    if (claimed !== "OK") return false;
+    const claimed = await kv.set(`gcs:notifications:weekly:${p.year}-${p.month}-${p.day}`, "1", { ttlMs: 8 * 86_400_000, nx: true });
+    if (!claimed) return false;
     await this.weeklyRun(now);
     return true;
   }

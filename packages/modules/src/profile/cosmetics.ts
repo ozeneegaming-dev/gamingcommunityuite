@@ -85,7 +85,7 @@ export class GcsCosmeticsService {
       permissions: GcsPermissionService;
       acp: GcsAcpRoleService;
       attachments: GcsAttachmentService;
-      redis: { incr(key: string): Promise<number>; get(key: string): Promise<string | null> };
+      kv: { incr(key: string): Promise<number>; get(key: string): Promise<string | null> };
     },
   ) {
     deps.attachments.registerAccess("cosmetics.frame", async () => true);
@@ -93,7 +93,7 @@ export class GcsCosmeticsService {
 
   /** Versiunea CSS-ului generat (în URL-ul din layout): se schimbă la orice editare din ACP. */
   async version(): Promise<number> {
-    return Number((await this.deps.redis.get(VERSION_KEY)) ?? 0);
+    return Number((await this.deps.kv.get(VERSION_KEY)) ?? 0);
   }
 
   /** Ce stiluri și rame poate alege un user acum. */
@@ -172,7 +172,7 @@ export class GcsCosmeticsService {
     }
   }
 
-  /** CSS-ul generat: stilurile de nume ale grupurilor (etapa 1), stilurile alese de membri și ramele. Cache în Redis. */
+  /** CSS-ul generat: stilurile de nume ale grupurilor (etapa 1), stilurile alese de membri și ramele. Cache în `GcsCache`. */
   async css(): Promise<string> {
     const { db, cache } = this.deps;
     const cached = await cache.get<string>(CSS_CACHE_KEY);
@@ -194,7 +194,7 @@ export class GcsCosmeticsService {
   }
 
   private async changed(): Promise<void> {
-    await this.deps.redis.incr(VERSION_KEY);
+    await this.deps.kv.incr(VERSION_KEY);
     await this.deps.bus.emit({ name: "cosmetics.updated", payload: {}, tags: ["cosmetics", "name-styles"] });
   }
 

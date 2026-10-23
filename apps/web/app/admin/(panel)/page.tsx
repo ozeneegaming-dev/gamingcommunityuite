@@ -1,4 +1,4 @@
-import { ACP_WIDGETS, checkHealth, serviceStatus, type GcsAcpWidget } from "@gcs/core";
+import { ACP_WIDGETS, checkHealth, realtimeStatus, serviceStatus, type GcsAcpWidget } from "@gcs/core";
 import { GcsAvatar, GcsButton, GcsCard, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
@@ -73,7 +73,7 @@ function More({ href, children }: { href: string; children: ReactNode }) {
 
 export default async function AcpDashboardPage() {
   const panel = await requireAcpPanel();
-  const { acp, acpDashboard, moderation, redis, settings, vip } = services();
+  const { acp, acpDashboard, moderation, kv, edition, settings, vip } = services();
   if (!(await acp.can(panel.actor, "system.dashboard", "view"))) {
     // Un admin fără dashboard ajunge pe prima secțiune pe care o vede.
     const first = panel.menu[0]?.items[0]?.href;
@@ -100,9 +100,9 @@ export default async function AcpDashboardPage() {
       acp.can(panel.actor, "system.dashboard", "edit"),
       moderation.queueCount(panel.actor),
       moderation.queue(panel.actor, { page: 1 }),
-      serviceStatus(redis, "worker").catch(() => ({ up: false, lastBeatAt: null })),
+      serviceStatus(kv, "worker").catch(() => ({ up: false, lastBeatAt: null })),
       vip.subscribers({ expiringDays: 7, page: 1, perPage: 8 }),
-      serviceStatus(redis, "realtime").catch(() => ({ up: false, lastBeatAt: null })),
+      realtimeStatus(kv, edition).catch(() => ({ up: false, lastBeatAt: null })),
       diskUsage(),
     ]);
 

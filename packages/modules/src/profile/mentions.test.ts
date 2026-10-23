@@ -13,7 +13,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await w.db.$disconnect();
-  w.redis.disconnect();
+  w.kv.disconnect();
 });
 
 async function user(name: string, group = "member", opts: { secondary?: string[]; activeMinutesAgo?: number; hidden?: boolean } = {}) {

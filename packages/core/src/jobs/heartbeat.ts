@@ -1,13 +1,12 @@
+import type { GcsKv } from "../infra/kv";
+
 /** Cheia în care `gcs-worker` își scrie heartbeat-ul (timestamp în ms). */
 export const WORKER_HEARTBEAT_KEY = "gcs:worker:heartbeat";
 /** Fără heartbeat de 10 minute, worker-ul e considerat oprit (spec etapa 3 §5). */
 export const WORKER_STALE_MS = 10 * 60_000;
 
-/** Structural, ca `core` să nu depindă de tipurile ioredis (ioredis le satisface așa cum e). */
-export interface GcsHeartbeatRedis {
-  get(key: string): Promise<string | null>;
-  set(key: string, value: string, mode: "EX", seconds: number): Promise<unknown>;
-}
+/** Unde se scrie heartbeat-ul: `GcsKv` (Redis în VPS, baza de date în Lite). */
+export type GcsHeartbeatRedis = Pick<GcsKv, "get" | "set">;
 
 export type GcsServiceName = "worker" | "realtime";
 export type GcsServiceStatus = { up: boolean; lastBeatAt: Date | null };
@@ -22,7 +21,7 @@ export function serviceHeartbeatKey(name: GcsServiceName): string {
 }
 
 export async function writeServiceHeartbeat(redis: GcsHeartbeatRedis, name: GcsServiceName, now = Date.now()): Promise<void> {
-  await redis.set(serviceHeartbeatKey(name), String(now), "EX", 24 * 3600);
+  await redis.set(serviceHeartbeatKey(name), String(now), { ttlMs: 24 * 3600_000 });
 }
 
 export async function serviceStatus(redis: GcsHeartbeatRedis, name: GcsServiceName, now = Date.now()): Promise<GcsServiceStatus> {
@@ -38,4 +37,13 @@ export function writeWorkerHeartbeat(redis: GcsHeartbeatRedis, now = Date.now())
 
 export function workerStatus(redis: GcsHeartbeatRedis, now = Date.now()): Promise<GcsServiceStatus> {
   return serviceStatus(redis, "worker", now);
+}
+
+/**
+ * Starea serviciului live: în VPS, heartbeat-ul lui `gcs-realtime`; în Lite nu există un serviciu separat (SSE și
+ * polling rulează în procesul web), deci e pornit cât timp site-ul răspunde.
+ */
+export async function realtimeStatus(redis: GcsHeartbeatRedis, edition: "vps" | "lite", now = Date.now()): Promise<GcsServiceStatus> {
+  if (edition === "lite") return { up: true, lastBeatAt: new Date(now) };
+  return serviceStatus(redis, "realtime", now);
 }

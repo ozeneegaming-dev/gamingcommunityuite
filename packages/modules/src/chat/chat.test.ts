@@ -1,7 +1,7 @@
-import { GcsForbidden, GcsNotFound, GcsRateLimited, GcsValidationError, REALTIME_CHANNEL, type GcsActor } from "@gcs/core";
-import Redis from "ioredis";
+import { GcsForbidden, GcsNotFound, GcsRateLimited, GcsValidationError, type GcsActor } from "@gcs/core";
+import { recordRealtime } from "@gcs/core/test/realtime";
 import sharp from "sharp";
-import { afterAll, beforeEach, describe, expect, inject, test } from "vitest";
+import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createProfileWorld, type GcsProfileWorld } from "../../test/profileWorld";
 import { GcsChatService } from "./chat";
 import { searchGiphy } from "./giphy";
@@ -31,14 +31,14 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await w.db.$disconnect();
-  w.redis.disconnect();
+  w.kv.disconnect();
 });
 
 async function member(name: string, group = "member"): Promise<GcsActor> {
   return w.actorFor(await w.createUser(name, group));
 }
 
-const clear = (a: GcsActor) => w.redis.del(`gcs:rl:chat:${a.userId}`);
+const clear = (a: GcsActor) => w.kv.del(`gcs:rl:chat:${a.userId}`);
 
 describe("textul", () => {
   test("<script> e escapat, javascript: nu devine link, http(s) da", () => {
@@ -318,21 +318,11 @@ describe("GcsChatService / GcsChatQueries", () => {
   });
 
   test("publicarea ajunge pe gcs:rt", async () => {
-    const sub = new Redis(inject("redisUrl"), { db: Number(process.env.VITEST_POOL_ID ?? "1") });
-    try {
-      await sub.subscribe(REALTIME_CHANNEL);
-      // Pe canal ajung și alte mesaje (ex. notificări); așteptăm doar mesajul din camera chat-ului.
-      const got = new Promise<unknown>((resolve) =>
-        sub.on("message", (_c, raw: string) => {
-          const m = JSON.parse(raw) as { room: string };
-          if (m.room === "chat:general") resolve(m);
-        }),
-      );
-      await chat.send(w.root, "general", "live");
-      expect(await got).toEqual(expect.objectContaining({ room: "chat:general", event: "message", data: expect.objectContaining({ body: "live" }) }));
-    } finally {
-      sub.disconnect();
-    }
+    const recorder = recordRealtime();
+    await recorder.start();
+    await chat.send(w.root, "general", "live");
+    // În jurnal ajung și alte mesaje (ex. notificări); contează doar cel din camera chat-ului.
+    expect(await recorder.messages(["chat:general"])).toContainEqual(expect.objectContaining({ room: "chat:general", event: "message", data: expect.objectContaining({ body: "live" }) }));
   });
 });
 
@@ -410,13 +400,10 @@ describe("chat v2 (etapa 5)", () => {
     await chat.createChannel(w.root, { key: "offtopic", name: "Offtopic" });
     await expect(chat.announce(a, "nu am voie", 60)).rejects.toBeInstanceOf(GcsForbidden);
 
-    const sub = new Redis(inject("redisUrl"));
-    const events: { room: string; event: string }[] = [];
-    await sub.subscribe(REALTIME_CHANNEL);
-    sub.on("message", (_c, raw: string) => events.push(JSON.parse(raw) as { room: string; event: string }));
+    const recorder = recordRealtime();
+    await recorder.start();
     await chat.announce(staff, "Turneu sâmbătă la 20:00!", 120);
-    await new Promise((r) => setTimeout(r, 150));
-    sub.disconnect();
+    const events = await recorder.messages();
     expect(events.filter((e) => e.event === "announcement").map((e) => e.room).sort()).toEqual(["chat:general", "chat:offtopic"]);
     expect((await queries.announcements()).map((x) => x.body)).toEqual(["Turneu sâmbătă la 20:00!"]);
 

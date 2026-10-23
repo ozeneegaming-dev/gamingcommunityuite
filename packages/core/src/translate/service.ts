@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import type { PrismaClient } from "@gcs/db";
-import type { GcsRedisRateLimiter } from "../auth/rateLimit";
+import type { GcsRateLimiter } from "../auth/rateLimit";
 import type { GcsCache } from "../cache";
 import { sanitizeContentHtml } from "../content/renderer";
 import { GcsForbidden, GcsNotFound, GcsRateLimited, GcsValidationError } from "../errors";
@@ -34,7 +34,7 @@ export class GcsTranslationService {
       cache: GcsCache;
       settings: GcsSettingsService;
       permissions: GcsPermissionService;
-      rateLimiter: GcsRedisRateLimiter;
+      rateLimiter: GcsRateLimiter;
       /** Doar pentru teste: providerul, în locul celui din setări. */
       provider?: GcsTranslateProvider | null;
     },

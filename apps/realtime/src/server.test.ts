@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { GcsRealtime, seedDefaults, serviceStatus, signRealtimeToken, normalizeUsername } from "@gcs/core";
+import { seedDefaults, serviceStatus, signRealtimeToken, normalizeUsername } from "@gcs/core";
 import { testDbUrl, truncateAll } from "@gcs/db/test/helpers";
 // Tipul lui `inject("redisUrl")` (declarat de setup-ul Redis din core).
 import type {} from "@gcs/core/test/redis";
@@ -42,7 +42,7 @@ afterAll(async () => {
 beforeEach(async () => {
   const { db, registry } = services;
   await truncateAll(db);
-  await services.redis.flushdb();
+  await services.kv.flushAll();
   await seedDefaults(db, registry);
   const groups = Object.fromEntries((await db.group.findMany()).map((g) => [g.key, g.id]));
   users = {};
@@ -58,7 +58,7 @@ beforeEach(async () => {
   const staff = await services.forums.create({ parentId: category.id, type: "FORUM", name: "Staff" }, root);
   await services.groups.setContainerInherit("forum", String(staff.id), { inherits: false, parentId: null }, root);
   await services.groups.setContainerPermissions("forum", String(staff.id), { [groups.root_admin!]: ["forums.view", "forums.read", "forums.reply"] }, root);
-  await services.redis.del(`gcs:rl:forum-post:${root.userId}`);
+  await services.kv.del(`gcs:rl:forum-post:${root.userId}`);
   closedTopicId = (await services.topics.create(root, { forumId: staff.id, title: "Secret", content: doc("y") })).topicId;
 });
 
@@ -136,13 +136,13 @@ describe("gcs-realtime", () => {
     expect(await join(ana, `topic:${topicId}`)).toEqual({ ok: true });
     const got = next(ana, "post:new");
     const missed = next(bogdan, "post:new");
-    await new GcsRealtime(services.redis).publish(`topic:${topicId}`, "post:new", { id: 42 });
+    await services.realtime.publish(`topic:${topicId}`, "post:new", { id: 42 });
     expect(await got).toEqual({ id: 42 });
     expect(await missed).toBeNull();
 
     // Camera `user:{id}` e automată.
     const personal = next(bogdan, "notification");
-    await new GcsRealtime(services.redis).publish(`user:${users.Bogdan}`, "notification", { unread: 1 });
+    await services.realtime.publish(`user:${users.Bogdan}`, "notification", { unread: 1 });
     expect(await personal).toEqual({ unread: 1 });
   });
 
@@ -190,11 +190,11 @@ describe("gcs-realtime", () => {
   });
 
   test("heartbeat-ul marchează realtime-ul pornit", async () => {
-    await services.redis.flushdb();
+    await services.kv.flushAll();
     const second = createRealtimeServer({ services, secret: SECRET, corsOrigin: true });
     await second.listen(0);
     await new Promise((r) => setTimeout(r, 50));
-    expect(await serviceStatus(services.redis, "realtime")).toMatchObject({ up: true });
+    expect(await serviceStatus(services.kv, "realtime")).toMatchObject({ up: true });
     await second.close();
   });
 

@@ -34,5 +34,15 @@ export async function truncateAll(db: PrismaClient): Promise<void> {
     WHERE schemaname = 'public' AND tablename <> '_prisma_migrations'`;
   if (rows.length === 0) return;
   const tables = rows.map((r) => `"public"."${r.tablename}"`).join(", ");
-  await db.$executeRawUnsafe(`TRUNCATE ${tables} RESTART IDENTITY CASCADE`);
+  // Scrierile în fundal ale testului anterior (prezența, cache-ul pe driverele SQL ale ediției Lite) pot ține încă
+  // rânduri blocate: un deadlock oprește `TRUNCATE`, care se reia.
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await db.$executeRawUnsafe(`TRUNCATE ${tables} RESTART IDENTITY CASCADE`);
+      return;
+    } catch (error) {
+      if (attempt >= 5 || !/40P01|deadlock/i.test(String((error as Error).message))) throw error;
+      await new Promise((r) => setTimeout(r, 100 * attempt));
+    }
+  }
 }

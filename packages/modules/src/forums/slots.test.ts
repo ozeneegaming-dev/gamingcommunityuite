@@ -28,7 +28,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await w.db.$disconnect();
-  w.redis.disconnect();
+  w.kv.disconnect();
 });
 
 const ref = (f: { id: number; type: GcsSlotNodeRef["type"]; parentId: number | null; name: string; slug: string }): GcsSlotNodeRef => ({ id: f.id, type: f.type, parentId: f.parentId, name: f.name, slug: f.slug });

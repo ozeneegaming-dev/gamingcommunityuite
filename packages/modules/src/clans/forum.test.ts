@@ -15,7 +15,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await w.db.$disconnect();
-  w.redis.disconnect();
+  w.kv.disconnect();
 });
 
 /** Un clan activ cu forum privat (opțiunea „opțional”, cerut de lider), cu membrii dați. */

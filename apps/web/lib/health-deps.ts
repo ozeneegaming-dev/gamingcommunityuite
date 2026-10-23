@@ -1,9 +1,9 @@
 import "server-only";
-import type { GcsHealthDb, GcsHealthRedis } from "@gcs/core";
+import type { GcsHealthDb, GcsHealthKv } from "@gcs/core";
 import { services } from "./services";
 
-/** Dependențele verificate de `/api/health`: clientul Prisma și Redis-ul aplicației. */
-export function getHealthDeps(): { db: GcsHealthDb; redis: GcsHealthRedis } {
-  const { db, redis } = services();
-  return { db, redis };
+/** Dependențele verificate de `/api/health`: clientul Prisma și stocarea cheilor (Redis în VPS, baza de date în Lite). */
+export function getHealthDeps(): { db: GcsHealthDb; kv: GcsHealthKv } {
+  const { db, kv } = services();
+  return { db, kv };
 }

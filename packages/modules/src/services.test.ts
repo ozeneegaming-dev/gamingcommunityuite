@@ -33,14 +33,14 @@ describe("createGcsServices", () => {
   });
 
   test("jobul de heartbeat marchează worker-ul ca pornit", async () => {
-    await services.redis.flushdb();
+    await services.kv.flushAll();
     const job = services.jobs.registered().find((j) => j.name === HEARTBEAT_JOB)!;
     await job.handler({});
-    expect(await workerStatus(services.redis)).toMatchObject({ up: true });
+    expect(await workerStatus(services.kv)).toMatchObject({ up: true });
   });
 
   test("recordul de prezență se salvează în baza de date și nu coboară", async () => {
-    await services.redis.flushdb();
+    await services.kv.flushAll();
     await services.db.setting.deleteMany({ where: { key: PRESENCE_RECORD_SETTING } });
     const now = Date.now();
     await services.presence.touch({ userId: "rec-u1" }, now);
@@ -49,7 +49,7 @@ describe("createGcsServices", () => {
     expect(await read()).toMatchObject({ count: 2 });
 
     // Redis-ul pierdut: recordul din Redis o ia de la 1, dar cel salvat rămâne 2.
-    await services.redis.flushdb();
+    await services.kv.flushAll();
     await services.presence.touch({ userId: "rec-u3" }, now + 2);
     expect(await read()).toMatchObject({ count: 2 });
   });

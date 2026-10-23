@@ -13,6 +13,8 @@
     "./member-name": "./src/members/memberName.ts",
     "./text-mentions": "./src/members/textMentions.ts",
     "./test/redis": "./test/redis.ts",
+    "./test/kv": "./test/kv.ts",
+    "./test/realtime": "./test/realtime.ts",
     "./test/redisSetup": "./test/redisSetup.ts",
     "./test/world": "./test/world.ts",
     "./test/fixtures": "./test/fixtures.ts"

@@ -85,8 +85,8 @@ export async function POST(request: Request): Promise<Response> {
     switch (body.command) {
       case "status": {
         const installed = await state.isInstalled();
-        const { db, redis } = services();
-        const health = await checkHealth({ db, redis });
+        const { db, kv } = services();
+        const health = await checkHealth({ db, kv });
         return Response.json({ installed, version: INSTALL_VERSION, health });
       }
 

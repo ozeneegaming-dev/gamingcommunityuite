@@ -34,6 +34,7 @@ import {
   type GcsPluginMediaService,
   type GcsPluginRow,
   type GcsPluginService,
+  type GcsKv,
 } from "@gcs/core";
 import type { PrismaClient } from "@gcs/db";
 import type Redis from "ioredis";
@@ -86,7 +87,10 @@ export type GcsPluginTemplateRenderer = (plugin: string, template: string, data:
 
 export type GcsPluginHostDeps = {
   db: PrismaClient;
-  redis: Redis;
+  /** Cheile scurte (cache-ul pluginurilor, eșecurile, metricile): Redis în VPS, baza de date în Lite. */
+  kv: GcsKv;
+  /** Anunțul între procese (`PUBLISH`, doar VPS); lipsă = procesele află la reconcilierea periodică. */
+  publish?: (channel: string, message: string) => Promise<unknown>;
   bus: GcsEventBus;
   registry: GcsModuleRegistry;
   permissions: GcsPermissionService;
@@ -300,7 +304,7 @@ export class GcsPluginHost {
 
   /** Anunță toate procesele (și pe acesta) că starea pluginurilor s-a schimbat. */
   async notify(): Promise<void> {
-    await this.deps.redis.publish(PLUGINS_CHANNEL, String(Date.now())).catch(() => 0);
+    await this.deps.publish?.(PLUGINS_CHANNEL, String(Date.now())).catch(() => 0);
     await this.reconcile();
   }
 
@@ -400,7 +404,7 @@ export class GcsPluginHost {
     this.deps.registry.unregister(module.key);
     this.deps.registry.register(module);
     this.loaded.set(key, { row, sha: row.packageSha256!, settingsHash, dir, texts, module, sandbox, css, creds: undefined, failing: false, logWindow: 0, logCount: 0 });
-    await this.deps.redis.del(this.failKey(key)).catch(() => 0);
+    await this.deps.kv.del(this.failKey(key)).catch(() => 0);
     // Firul pornește acum; o eroare de pornire ajunge prin `onCrash` (se numără ca eșec și apare în jurnalul pluginului).
     this.track(sandbox.start());
   }
@@ -489,7 +493,7 @@ export class GcsPluginHost {
       this.record(l.row.key, hook, performance.now() - started, true);
       if (l.failing) {
         l.failing = false;
-        await this.deps.redis.del(this.failKey(l.row.key)).catch(() => 0);
+        await this.deps.kv.del(this.failKey(l.row.key)).catch(() => 0);
       }
       return value;
     } catch (error) {
@@ -517,11 +521,11 @@ export class GcsPluginHost {
     this.logLimited(key, "error", message, hook, ms);
     if (!counted) return;
     if (l) l.failing = true;
-    const count = await this.deps.redis.incr(this.failKey(key)).catch(() => 0);
-    await this.deps.redis.expire(this.failKey(key), 86_400).catch(() => 0);
+    const count = await this.deps.kv.incr(this.failKey(key)).catch(() => 0);
+    await this.deps.kv.expire(this.failKey(key), 86_400_000).catch(() => 0);
     const max = this.deps.maxFailures ?? PLUGIN_MAX_FAILURES_DEFAULT;
     if (count >= max) {
-      await this.deps.redis.del(this.failKey(key)).catch(() => 0);
+      await this.deps.kv.del(this.failKey(key)).catch(() => 0);
       if (await this.deps.plugins.autoDisable(key, count, `${hook}: ${message}`)) {
         console.error(`[GCS] Pluginul ${key} a fost dezactivat automat după ${count} eșecuri la rând (${hook}: ${message})`);
       }
@@ -676,17 +680,17 @@ export class GcsPluginHost {
     if (!/^[A-Za-z0-9_.:-]{1,200}$/.test(name)) throw new Error("invalid_key");
     const redisKey = `gcs:plugin:cache:${key}:${name}`;
     if (method === "cache.get") {
-      const raw = await this.deps.redis.get(redisKey);
+      const raw = await this.deps.kv.get(redisKey);
       return raw === null ? null : (JSON.parse(raw) as unknown);
     }
     if (method === "cache.delete") {
-      await this.deps.redis.del(redisKey);
+      await this.deps.kv.del(redisKey);
       return null;
     }
     const json = JSON.stringify(args[1] ?? null);
     if (json.length > CACHE_MAX_BYTES) throw new Error("value_too_large");
     const ttl = Number.isInteger(args[2]) ? Math.min(Math.max(args[2] as number, 1), 86_400) : 300;
-    await this.deps.redis.set(redisKey, json, "EX", ttl);
+    await this.deps.kv.set(redisKey, json, { ttlMs: ttl * 1000 });
     return null;
   }
 
@@ -1124,28 +1128,25 @@ export class GcsPluginHost {
     this.metrics.clear();
     for (const [key, byHook] of snapshot) {
       const redisKey = `gcs:plugin:metrics:${key}`;
-      const multi = this.deps.redis.multi();
-      for (const [hook, m] of byHook) {
-        multi.hincrby(redisKey, `${hook}|count`, m.count);
-        multi.hincrby(redisKey, `${hook}|fail`, m.failures);
-        multi.hincrby(redisKey, `${hook}|ms`, Math.round(m.totalMs));
-        multi.eval(
-          "local c = tonumber(redis.call('HGET', KEYS[1], ARGV[1]) or '0'); if tonumber(ARGV[2]) > c then redis.call('HSET', KEYS[1], ARGV[1], ARGV[2]) end; return 1",
-          1,
-          redisKey,
-          `${hook}|max`,
-          String(Math.round(m.maxMs)),
-        );
+      const { kv } = this.deps;
+      try {
+        for (const [hook, m] of byHook) {
+          await kv.hincrby(redisKey, `${hook}|count`, m.count);
+          await kv.hincrby(redisKey, `${hook}|fail`, m.failures);
+          await kv.hincrby(redisKey, `${hook}|ms`, Math.round(m.totalMs));
+          await kv.hsetMax(redisKey, `${hook}|max`, Math.round(m.maxMs));
+        }
+        await kv.expire(redisKey, 30 * 86_400_000);
+      } catch {
+        // Metricile sunt doar informative: o eroare a stocării nu oprește pluginurile.
       }
-      multi.expire(redisKey, 30 * 86_400);
-      await multi.exec().catch(() => null);
     }
   }
 
   /** Metricile pe hook ale unui plugin, din toate procesele (inclusiv cele încă neîmpinse de acest proces). */
   async hookMetrics(key: string): Promise<GcsPluginHookMetrics> {
     await this.flushMetrics();
-    const raw = await this.deps.redis.hgetall(`gcs:plugin:metrics:${key}`).catch(() => ({}) as Record<string, string>);
+    const raw = await this.deps.kv.hgetall(`gcs:plugin:metrics:${key}`).catch(() => ({}) as Record<string, string>);
     const out: GcsPluginHookMetrics = {};
     for (const [field, value] of Object.entries(raw)) {
       const at = field.lastIndexOf("|");

@@ -1,7 +1,7 @@
 import type { PrismaClient } from "@gcs/db";
 import { testDb, truncateAll } from "@gcs/db/test/helpers";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
-import { testRedis } from "../../test/redis";
+import { testKv } from "../../test/kv";
 import { GcsCache } from "../cache";
 import { GcsValidationError } from "../errors";
 import { GcsEventBus, type GcsEvent } from "../events";
@@ -10,8 +10,8 @@ import type { GcsActor } from "../permissions/types";
 import { GcsSettingsService } from "./service";
 
 const db = testDb();
-const redis = testRedis();
-const cache = new GcsCache(redis);
+const kv = testKv();
+const cache = new GcsCache(kv);
 
 // Numărăm interogările `setting.findUnique` printr-o extensie Prisma (`vi.spyOn` nu merge pe delegații Prisma).
 let findUniqueCalls = 0;
@@ -61,12 +61,12 @@ function makeService() {
 
 beforeEach(async () => {
   await truncateAll(db);
-  await redis.flushdb();
+  await kv.flushAll();
 });
 
 afterAll(async () => {
   await db.$disconnect();
-  redis.disconnect();
+  kv.disconnect();
 });
 
 describe("GcsSettingsService", () => {

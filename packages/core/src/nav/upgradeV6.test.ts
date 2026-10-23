@@ -58,7 +58,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await w.db.$disconnect();
-  w.redis.disconnect();
+  w.kv.disconnect();
 });
 
 type Item = { label: object; icon?: string; href: string; appKey?: string; enabled?: boolean; children?: Item[] };

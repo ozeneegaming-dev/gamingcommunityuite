@@ -43,7 +43,7 @@ describe("ranguri moderne (cu baza de date)", () => {
 
   afterAll(async () => {
     await w.db.$disconnect();
-    w.redis.disconnect();
+    w.kv.disconnect();
   });
 
   test("avantajele: grupul (sursa „rank”) și badge-ul se dau la urcare și se retrag la pierderea rangului", async () => {

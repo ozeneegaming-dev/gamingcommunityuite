@@ -35,15 +35,15 @@ const PNG = Buffer.from(
 
 /** Actorul unui user existent (după email); pauza de flood e ștearsă, ca testele să poată posta în ritmul lor. */
 async function actorFor(email: string): Promise<GcsActor> {
-  const { db, redis } = services();
+  const { db, rateLimiter } = services();
   const user = await db.user.findUniqueOrThrow({ where: { email: email.toLowerCase() }, include: { groups: true } });
-  await redis.del(`gcs:rl:forum-post:${user.id}`);
+  await rateLimiter.reset(`forum-post:${user.id}`);
   return { userId: user.id, groupIds: [user.primaryGroupId, ...user.groups.map((g) => g.groupId)], primaryGroupId: user.primaryGroupId, isBanned: false, ip: "e2e" };
 }
 
 /** Șterge și pauza lăsată de postarea creată, ca testul să poată posta imediat din browser. */
 async function clearFlood(actor: GcsActor): Promise<void> {
-  await services().redis.del(`gcs:rl:forum-post:${actor.userId}`);
+  await services().rateLimiter.reset(`forum-post:${actor.userId}`);
 }
 
 /** Un Root Admin „de sistem” (fără user), pentru structura forumului. */
@@ -134,7 +134,7 @@ export async function POST(req: Request): Promise<Response> {
     case "pm": {
       const actor = await actorFor(body.fromEmail);
       const to = await s.db.user.findUniqueOrThrow({ where: { email: body.toEmail.toLowerCase() } });
-      await s.redis.del(`gcs:rl:pm:${actor.userId}`);
+      await s.rateLimiter.reset(`pm:${actor.userId}`);
       return Response.json(await s.conversations.start(actor, { to: [to.id], title: body.title, content: doc(body.text) }));
     }
     case "permissions": {

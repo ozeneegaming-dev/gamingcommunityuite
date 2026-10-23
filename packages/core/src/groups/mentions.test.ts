@@ -10,13 +10,13 @@ let root: GcsActor;
 
 beforeEach(async () => {
   w = await createWorld();
-  mentions = new GcsGroupMentionService({ db: w.db, cache: w.cache, redis: w.redis });
+  mentions = new GcsGroupMentionService({ db: w.db, cache: w.cache, kv: w.kv });
   root = await w.actorFor(await w.createUser("Root", "root_admin"));
 });
 
 afterAll(async () => {
   await w.db.$disconnect();
-  w.redis.disconnect();
+  w.kv.disconnect();
 });
 
 const keys = (groups: { key: string }[]) => groups.map((g) => g.key).sort();

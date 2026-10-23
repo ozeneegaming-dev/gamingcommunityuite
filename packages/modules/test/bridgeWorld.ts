@@ -34,7 +34,7 @@ export async function createBridgeWorld() {
   const site = { url: "https://comunitate.gcs.test", releaseDir: path.resolve(__dirname, "../../../servers-plugins/release") };
   const bridge = new GcsBridge({
     db: w.db,
-    redis: w.redis,
+    kv: w.kv,
     bus: w.bus,
     settings: w.settings,
     permissions: w.permissions,

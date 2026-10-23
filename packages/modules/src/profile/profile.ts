@@ -15,7 +15,7 @@ import {
   type GcsEventBus,
   type GcsMailer,
   type GcsPermissionService,
-  type GcsRedisRateLimiter,
+  type GcsRateLimiter,
   type GcsSettingsService,
   type GcsUploadedFile,
 } from "@gcs/core";
@@ -63,7 +63,7 @@ export type GcsProfileDeps = {
   permissions: GcsPermissionService;
   settings: GcsSettingsService;
   attachments: GcsAttachmentService;
-  rateLimiter: GcsRedisRateLimiter;
+  rateLimiter: GcsRateLimiter;
   mailer: GcsMailer;
   /** Adresa publică a site-ului, pentru linkurile din emailuri. */
   baseUrl: () => Promise<string>;

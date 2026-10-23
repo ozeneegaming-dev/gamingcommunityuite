@@ -20,7 +20,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await w.db.$disconnect();
-  w.redis.disconnect();
+  w.kv.disconnect();
 });
 
 const badgeOf = async (userId: string, key: string) => w.db.userBadge.findFirst({ where: { userId, badge: { key } } });

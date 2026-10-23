@@ -26,7 +26,7 @@ export async function createServerWorld() {
   const clock = { now: Date.now() };
   const now = () => clock.now;
   const apps = new GcsAppService({ db: w.db, cache: w.cache, bus: w.bus, registry: w.registry, acp: w.acp, permissions: w.permissions, settings: w.settings });
-  const store = new GcsServerStatusStore(w.redis);
+  const store = new GcsServerStatusStore(w.kv);
   const published: GcsRealtimeMessage[] = [];
   const realtime = {
     publish: async (room: string, event: string, data: unknown) => {

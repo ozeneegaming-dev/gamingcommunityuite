@@ -1,5 +1,5 @@
 import { isIP, type BlockList } from "node:net";
-import { GcsNotFound, GcsRateLimited, GcsValidationError, writeAudit, type GcsAcpRoleService, type GcsActor, type GcsAttachmentService, type GcsEventBus, type GcsRedisRateLimiter } from "@gcs/core";
+import { GcsNotFound, GcsRateLimited, GcsValidationError, writeAudit, type GcsAcpRoleService, type GcsActor, type GcsAttachmentService, type GcsEventBus, type GcsRateLimiter } from "@gcs/core";
 import type { Prisma, PrismaClient } from "@gcs/db";
 import { slugify } from "../forums/slug";
 import { enabledGames } from "./games";
@@ -96,7 +96,7 @@ export class GcsServerService {
       bus: GcsEventBus;
       acp: GcsAcpRoleService;
       attachments: GcsAttachmentService;
-      rateLimiter: GcsRedisRateLimiter;
+      rateLimiter: GcsRateLimiter;
       store: GcsServerStatusStore;
       query?: GcsServerQueryFn;
       allow?: () => BlockList | null;

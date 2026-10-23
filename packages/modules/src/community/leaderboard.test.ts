@@ -21,7 +21,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await w.db.$disconnect();
-  w.redis.disconnect();
+  w.kv.disconnect();
 });
 
 async function player(name: string, group = "member"): Promise<GcsActor> {
@@ -154,7 +154,7 @@ describe("clasamentul: topicuri, azi, timpul online și locul tău (Hero Cockpit
   });
 
   test("timpul online: din zilele salvate, fără statusul ascuns; locul viewer-ului", async () => {
-    const online = new GcsOnlineTime({ db: w.db, redis: w.redis, settings: w.settings });
+    const online = new GcsOnlineTime({ db: w.db, kv: w.kv, settings: w.settings });
     const timed = new GcsLeaderboard({ db: w.db, cache: w.cache, permissions: w.permissions, settings: w.settings, onlineTime: online });
     const [a, b, c] = [await player("Alfa"), await player("Beta"), await player("Gama")];
     const today = await online.today();

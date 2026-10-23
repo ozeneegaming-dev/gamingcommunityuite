@@ -1,18 +1,18 @@
 import { PRESENCE_WINDOW_MS } from "@gcs/core";
-import { testRedis } from "@gcs/core/test/redis";
+import { testKv } from "@gcs/core/test/kv";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { cleanPath, describeLocation, GcsWhereabouts } from "./whereabouts";
 
-const redis = testRedis();
+const kv = testKv();
 let where: GcsWhereabouts;
 
 beforeEach(async () => {
-  await redis.flushdb();
-  where = new GcsWhereabouts({ redis });
+  await kv.flushAll();
+  where = new GcsWhereabouts({ kv });
 });
 
 afterAll(() => {
-  redis.disconnect();
+  kv.disconnect();
 });
 
 describe("locul vizitatorilor (/online)", () => {
@@ -49,6 +49,6 @@ describe("locul vizitatorilor (/online)", () => {
       ["guest", "g1", "/", "Acasă"],
     ]);
     expect(list[0]!.ip).toBe("10.0.0.1");
-    expect(await redis.hexists("gcs:presence:where", "u:old")).toBe(0);
+    expect(await kv.hmget("gcs:presence:where", ["u:old"])).toEqual([null]);
   });
 });

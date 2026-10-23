@@ -14,7 +14,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await w.db.$disconnect();
-  w.redis.disconnect();
+  w.kv.disconnect();
 });
 
 describe("layout-ul dashboard-ului", () => {
@@ -128,7 +128,7 @@ describe("datele widgeturilor", () => {
 
   test("cu prezența din Redis (etapa 4), numărul de online vine de acolo; o eroare Redis revine la lastActiveAt", async () => {
     const now = new Date("2026-10-05T10:00:00Z");
-    const presence = new GcsPresenceService({ redis: w.redis });
+    const presence = new GcsPresenceService({ kv: w.kv });
     await presence.touch({ userId: "u1" }, now.getTime());
     await presence.touch({ userId: "u2" }, now.getTime());
     await presence.touch({ guestId: "g1" }, now.getTime());

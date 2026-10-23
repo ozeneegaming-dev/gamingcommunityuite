@@ -52,7 +52,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await w.db.$disconnect();
-  w.redis.disconnect();
+  w.kv.disconnect();
 });
 
 const reply = (userIds: string[], actorId: string | null, targetId = "1", extra: { important?: boolean } = {}) =>

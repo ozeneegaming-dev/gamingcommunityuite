@@ -14,7 +14,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await w.db.$disconnect();
-  w.redis.disconnect();
+  w.kv.disconnect();
 });
 
 const topicIds = async (actor: GcsActor, q: string, extra: Record<string, unknown> = {}) =>

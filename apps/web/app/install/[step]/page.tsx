@@ -1,4 +1,4 @@
-import { GCS_DEV_LICENSE_TOKEN, installAppChoices, runChecks, type GcsInstallStep } from "@gcs/core";
+import { GCS_DEV_LICENSE_TOKEN, gcsEdition, installAppChoices, runChecks, type GcsInstallStep } from "@gcs/core";
 import { GcsBadge, GcsButton } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { ReactNode } from "react";
@@ -51,6 +51,7 @@ export default async function InstallStepPage({ params }: { params: Promise<{ st
         redisUrl: process.env.REDIS_URL,
         s3Endpoint: process.env.S3_ENDPOINT,
         configDir: gcsConfigDir(),
+        edition: gcsEdition(),
       });
       const optional = new Set(["minio", "postgres", "extensions"]);
       content = (

@@ -1,4 +1,4 @@
-import type { GcsCache, GcsRedisRateLimiter, GcsSettingsService } from "@gcs/core";
+import type { GcsCache, GcsRateLimiter, GcsSettingsService } from "@gcs/core";
 import { Prisma, type PrismaClient } from "@gcs/db";
 import { toRef, userRefSelect } from "../forums/queries";
 import { addDays, dayKey, daysBetween, previousPeriod, rankingPeriod, secondsSinceMidnight, weekStart, type GcsRankingPeriod } from "./period";
@@ -22,7 +22,7 @@ export class GcsChatProRankingService {
       db: PrismaClient;
       cache: GcsCache;
       settings: GcsSettingsService;
-      rateLimiter: GcsRedisRateLimiter;
+      rateLimiter: GcsRateLimiter;
       /** Acordă badge-ul câștigătorului (sistemul de badge-uri). */
       awardWinner?: (userId: string, period: GcsRankingPeriod) => Promise<void>;
     },

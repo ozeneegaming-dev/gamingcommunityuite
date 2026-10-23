@@ -19,7 +19,7 @@ import {
   type GcsEventBus,
   type GcsJobQueue,
   type GcsPermissionService,
-  type GcsRedisRateLimiter,
+  type GcsRateLimiter,
   type GcsSettingsService,
   type GcsUploadedFile,
 } from "@gcs/core";
@@ -121,7 +121,7 @@ export class GcsClanService {
       apps: GcsAppService;
       actors: GcsActorResolver;
       attachments: GcsAttachmentService;
-      rateLimiter: GcsRedisRateLimiter;
+      rateLimiter: GcsRateLimiter;
       /** Statisticile de joc din aplicația Servere (opționale, doar citire), pentru ponderile de joc ale clasamentului. */
       gameStats?: GcsClanGameStatsSource | null;
     },

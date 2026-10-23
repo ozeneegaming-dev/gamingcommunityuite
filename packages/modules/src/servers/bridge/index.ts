@@ -12,13 +12,13 @@ import {
   type GcsJobQueue,
   type GcsPermissionService,
   type GcsRealtime,
-  type GcsRedisRateLimiter,
+  type GcsKv,
+  type GcsRateLimiter,
   type GcsRendered,
   type GcsSettingsService,
 } from "@gcs/core";
 import type { PrismaClient } from "@gcs/db";
 import type { BlockList } from "node:net";
-import type Redis from "ioredis";
 import { serversAllowNets } from "../net";
 import type { GcsServerQueryFn } from "../poller";
 import { queryGameServer } from "../query";
@@ -55,14 +55,14 @@ const IDENTITY_MODES = ["steam", "mixed"] as const;
 
 export type GcsBridgeDeps = {
   db: PrismaClient;
-  redis: Redis;
+  kv: GcsKv;
   bus: GcsEventBus;
   settings: GcsSettingsService;
   permissions: GcsPermissionService;
   acp: GcsAcpRoleService;
   apps: GcsAppService;
   attachments: GcsAttachmentService;
-  rateLimiter: GcsRedisRateLimiter;
+  rateLimiter: GcsRateLimiter;
   realtime: GcsRealtime;
   /** Documentul editorului → JSON validat + HTML sanitizat (ca postările); cu `actor`, și mențiunile de grup. */
   render: (content: unknown, ctx?: { actor?: GcsActor; cooldown?: boolean }) => Promise<GcsRendered>;
@@ -163,8 +163,8 @@ export class GcsBridge {
   readonly demos: GcsBridgeDemos;
 
   constructor(private readonly deps: GcsBridgeDeps) {
-    const { db, redis, bus, settings, permissions, acp, apps, attachments, rateLimiter, realtime, now } = deps;
-    this.store = new GcsBridgeStore(redis);
+    const { db, kv, bus, settings, permissions, acp, apps, attachments, rateLimiter, realtime, now } = deps;
+    this.store = new GcsBridgeStore(kv);
     const store = this.store;
     this.keys = new GcsBridgeKeys({ db, acp, now });
     this.players = new GcsBridgePlayers({ db, bus, permissions, store, now });

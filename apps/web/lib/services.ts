@@ -51,7 +51,15 @@ export function services(): GcsServices {
     // încărcare (`ready`).
     void new GcsInstallState(gcsConfigDir())
       .isInstalled()
-      .then((installed) => (installed ? created.plugins.start() : undefined))
+      .then(async (installed) => {
+        if (!installed) return;
+        // Ediția Lite (un singur proces, fără gcs-worker): joburile rulează și aici, cât timp gazda ține procesul pornit;
+        // cron-ul (`/api/cron`) le duce mai departe când procesul e oprit.
+        if (created.edition === "lite") {
+          void created.jobs.start({ onError: (name, error) => console.error(`[GCS] Jobul ${name} a eșuat`, error) }).catch((error: unknown) => console.error("[GCS] Joburile nu au pornit", error));
+        }
+        await created.plugins.start();
+      })
       .catch((error: unknown) => console.error("[GCS] Pluginurile nu au pornit", error));
   }
   return globalForServices.gcsServices;

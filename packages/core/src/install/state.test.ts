@@ -2,18 +2,18 @@ import { mkdtempSync, readFileSync, rmSync, statSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterAll, afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { testRedis } from "../../test/redis";
-import { GcsRedisRateLimiter } from "../auth/rateLimit";
+import { testKv } from "../../test/kv";
+import { GcsRateLimiter } from "../auth/rateLimit";
 import { GcsRateLimited } from "../errors";
 import { ensureInstallCode, GcsInstallState, installGate, verifyInstallCode } from "./state";
 
 let dir: string;
-const redis = testRedis();
-const limiter = new GcsRedisRateLimiter(redis);
+const kv = testKv();
+const limiter = new GcsRateLimiter(kv);
 
 beforeEach(async () => {
   dir = mkdtempSync(path.join(os.tmpdir(), "gcs-install-"));
-  await redis.flushdb();
+  await kv.flushAll();
 });
 
 afterEach(() => {
@@ -22,7 +22,7 @@ afterEach(() => {
 });
 
 afterAll(() => {
-  redis.disconnect();
+  kv.disconnect();
 });
 
 describe("GcsInstallState (Review Focus #3)", () => {

@@ -9,7 +9,7 @@ import {
   type GcsEventBus,
   type GcsPermissionService,
   type GcsReactionService,
-  type GcsRedisRateLimiter,
+  type GcsRateLimiter,
   type GcsRendered,
   type GcsReportService,
   type GcsSettingsService,
@@ -30,7 +30,7 @@ export type GcsSocialDeps = {
   cache: GcsCache;
   permissions: GcsPermissionService;
   settings: GcsSettingsService;
-  rateLimiter: GcsRedisRateLimiter;
+  rateLimiter: GcsRateLimiter;
   profiles: GcsProfileService;
   /**
    * Randarea conținutului (aceeași ca la postările forumului: validare, sanitizare, lungime maximă). Cu `actor`,

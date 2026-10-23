@@ -15,7 +15,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await w.db.$disconnect();
-  w.redis.disconnect();
+  w.kv.disconnect();
 });
 
 const frame = (key: string) => w.db.avatarFrame.findUniqueOrThrow({ where: { key } });

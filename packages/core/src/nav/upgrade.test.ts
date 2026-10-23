@@ -52,7 +52,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await w.db.$disconnect();
-  w.redis.disconnect();
+  w.kv.disconnect();
 });
 
 type Dump = { label: unknown; href: string | null; enabled: boolean; appKey: string | null; children: { label: unknown; href: string | null }[] };

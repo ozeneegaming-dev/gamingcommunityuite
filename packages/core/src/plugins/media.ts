@@ -2,7 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import type { PrismaClient } from "@gcs/db";
 import { fileTypeFromBuffer } from "file-type";
 import sharp, { type Sharp } from "sharp";
-import type { GcsRedisRateLimiter } from "../auth/rateLimit";
+import type { GcsRateLimiter } from "../auth/rateLimit";
 import type { GcsByteRange, GcsFileStore } from "../content/files/store";
 import { GcsRateLimited, GcsValidationError } from "../errors";
 import { composeApng, GcsApngError, type GcsApngLimits } from "./apng";
@@ -385,7 +385,7 @@ const ids = (raw: unknown): string[] => (Array.isArray(raw) ? [...new Set(raw.fi
  * cotă, limită de rată), păstrarea sau ștergerea de către plugin, servirea publică și curățarea la dezinstalare.
  */
 export class GcsPluginMediaService {
-  constructor(private readonly deps: { db: PrismaClient; store: GcsFileStore; rateLimiter: GcsRedisRateLimiter }) {}
+  constructor(private readonly deps: { db: PrismaClient; store: GcsFileStore; rateLimiter: GcsRateLimiter }) {}
 
   /**
    * Un fișier nou, în așteptare până când pluginul îl păstrează. `uploader.acp`: încărcarea vine dintr-o rută ACP a

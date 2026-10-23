@@ -13,7 +13,7 @@ import {
   type GcsNotificationView,
   type GcsPermissionService,
   type GcsRealtime,
-  type GcsRedisRateLimiter,
+  type GcsRateLimiter,
   type GcsReportService,
   type GcsSettingsService,
 } from "@gcs/core";
@@ -69,7 +69,7 @@ export class GcsChatProService {
       chatQueries: GcsChatQueries;
       attachments: GcsAttachmentService;
       realtime: GcsRealtime;
-      rateLimiter: GcsRedisRateLimiter;
+      rateLimiter: GcsRateLimiter;
       notifications: GcsNotificationService;
       reports?: GcsReportService;
       /** Acordă un badge din sistemul de badge-uri (fără drept ACP: acordarea automată). */

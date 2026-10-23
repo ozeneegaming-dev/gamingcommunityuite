@@ -1,7 +1,7 @@
 import { testDb, truncateAll } from "@gcs/db/test/helpers";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { testRegistry } from "../../test/fixtures";
-import { testRedis } from "../../test/redis";
+import { testKv } from "../../test/kv";
 import { GcsAcpRoleService } from "../acp/roles";
 import { GcsCache } from "../cache";
 import { GcsConflict, GcsForbidden, GcsValidationError } from "../errors";
@@ -12,8 +12,8 @@ import type { GcsActor } from "../permissions/types";
 import { GcsGroupService } from "./service";
 
 const db = testDb();
-const redis = testRedis();
-const cache = new GcsCache(redis);
+const kv = testKv();
+const cache = new GcsCache(kv);
 const registry = testRegistry();
 
 let groups: Record<string, number>;
@@ -25,7 +25,7 @@ let member: GcsActor;
 
 beforeEach(async () => {
   await truncateAll(db);
-  await redis.flushdb();
+  await kv.flushAll();
   await seedDefaults(db, registry);
   groups = Object.fromEntries((await db.group.findMany()).map((g) => [g.key, g.id]));
 
@@ -46,7 +46,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await db.$disconnect();
-  redis.disconnect();
+  kv.disconnect();
 });
 
 async function createUser(name: string, primaryGroupId: number) {

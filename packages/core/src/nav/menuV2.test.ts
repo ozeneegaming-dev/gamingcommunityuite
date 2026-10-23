@@ -43,7 +43,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await w.db.$disconnect();
-  w.redis.disconnect();
+  w.kv.disconnect();
 });
 
 const hrefs = async (viewer: GcsActor) => (await nav.tree(viewer, "ro")).map((i) => [i.href, i.children.map((c) => c.href)]);

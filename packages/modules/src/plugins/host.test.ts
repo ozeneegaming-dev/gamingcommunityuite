@@ -128,7 +128,7 @@ describe("dezactivarea automată: doar eșecurile pluginului", () => {
     for (const res of await Promise.all(calls)) expect(res.status).toBe(500);
     await services.plugins.idle();
     expect((await services.pluginAdmin.logs(key)).filter((l) => l.level === "error" || l.level === "warn")).toEqual([]);
-    expect(await services.redis.get(`gcs:plugin:fail:${key}`)).toBeNull();
+    expect(await services.kv.get(`gcs:plugin:fail:${key}`)).toBeNull();
     expect(await services.pluginAdmin.get(key)).toMatchObject({ enabled: false, disabledReason: "admin" });
   });
 });

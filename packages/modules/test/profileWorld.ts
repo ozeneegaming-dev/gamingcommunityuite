@@ -1,4 +1,5 @@
 import { GcsNotificationService, GcsRealtime, type GcsMail } from "@gcs/core";
+import { testRealtimeLog } from "@gcs/core/test/realtime";
 import { GcsAchievementService } from "../src/profile/achievements";
 import { GcsAchievementAdmin } from "../src/profile/achievementsAdmin";
 import { GcsAchievementRules, systemActor } from "../src/profile/achievementRules";
@@ -61,7 +62,7 @@ export async function createProfileWorld() {
     permissions: world.permissions,
     acp: world.acp,
     attachments: world.attachments,
-    redis: world.redis,
+    kv: world.kv,
   });
   cosmetics.listen(world.bus);
   const vip = new GcsVipService({ db: world.db, bus: world.bus, permissions: world.permissions, settings: world.settings, membership });
@@ -105,10 +106,10 @@ export async function createProfileWorld() {
   const conversationQueries = new GcsConversationQueries({ db: world.db, settings: world.settings, profileQueries });
   // Notificările (etapa 4): fără coadă, deci fan-out-ul și emailurile imediate rulează pe loc.
   const notifications = new GcsNotificationService({ db: world.db, bus: world.bus, cache: world.cache, registry: world.registry });
-  const realtime = new GcsRealtime(world.redis);
+  const realtime = new GcsRealtime(testRealtimeLog());
   const producers = new GcsNotificationProducers({
     db: world.db,
-    redis: world.redis,
+    kv: world.kv,
     notifications,
     actors: world.actors,
     posting: world.posting,
@@ -127,12 +128,12 @@ export async function createProfileWorld() {
 
   /** Șterge pauza de flood la mesaje private. */
   async function clearPmFlood(actor: { userId: string | null }) {
-    await world.redis.del(`gcs:rl:pm:${actor.userId}`);
+    await world.kv.del(`gcs:rl:pm:${actor.userId}`);
   }
 
   /** Șterge pauza de flood pe perete. */
   async function clearWallFlood(actor: { userId: string | null }) {
-    await world.redis.del(`gcs:rl:wall-post:${actor.userId}`);
+    await world.kv.del(`gcs:rl:wall-post:${actor.userId}`);
   }
 
   return { ...world, outbox, mailer, profiles, social, profileFields: new GcsProfileFieldAdmin({ db: world.db, bus: world.bus, acp: world.acp }), achievements, achievementAdmin, achievementRules, appsOff, published, membership, promotions, cosmetics, vip, ranks, profileQueries, conversations, conversationQueries, notifications, producers, realtime, moderator, clearWallFlood, clearPmFlood };

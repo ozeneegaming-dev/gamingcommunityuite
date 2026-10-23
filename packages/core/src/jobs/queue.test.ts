@@ -1,11 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { inject } from "vitest";
-import { testRedis } from "../../test/redis";
+import { testKv } from "../../test/kv";
 import { WORKER_STALE_MS, workerStatus, writeWorkerHeartbeat } from "./heartbeat";
-import { debouncedJobId, GcsJobQueue } from "./queue";
+import { debouncedJobId, GcsBullJobQueue } from "./queue";
 
-let queue: GcsJobQueue;
+let queue: GcsBullJobQueue;
 let stop: (() => Promise<void>) | undefined;
 
 function redisUrl(): string {
@@ -16,7 +16,7 @@ function redisUrl(): string {
 
 beforeEach(() => {
   // O coadă cu nume unic pe test: joburile altor teste nu se amestecă.
-  queue = new GcsJobQueue({ redisUrl: redisUrl(), name: `test-${randomUUID()}` });
+  queue = new GcsBullJobQueue({ redisUrl: redisUrl(), name: `test-${randomUUID()}` });
 });
 
 afterEach(async () => {
@@ -97,12 +97,12 @@ describe("debouncedJobId", () => {
 
 describe("heartbeat-ul worker-ului", () => {
   test("fără heartbeat → oprit; după unul → pornit; după 10 minute fără → oprit", async () => {
-    const redis = testRedis();
-    await redis.flushdb();
-    expect(await workerStatus(redis)).toEqual({ up: false, lastBeatAt: null });
+    const kv = testKv();
+    await kv.flushAll();
+    expect(await workerStatus(kv)).toEqual({ up: false, lastBeatAt: null });
     const now = Date.now();
-    await writeWorkerHeartbeat(redis, now);
-    expect(await workerStatus(redis, now + 1000)).toMatchObject({ up: true });
-    expect(await workerStatus(redis, now + WORKER_STALE_MS + 1)).toMatchObject({ up: false });
+    await writeWorkerHeartbeat(kv, now);
+    expect(await workerStatus(kv, now + 1000)).toMatchObject({ up: true });
+    expect(await workerStatus(kv, now + WORKER_STALE_MS + 1)).toMatchObject({ up: false });
   });
 });

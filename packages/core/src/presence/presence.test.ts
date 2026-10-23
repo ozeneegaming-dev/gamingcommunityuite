@@ -1,21 +1,21 @@
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
-import { testRedis } from "../../test/redis";
+import { testKv } from "../../test/kv";
 import { serviceStatus, writeServiceHeartbeat } from "../jobs/heartbeat";
 import { GcsPresenceService, guestPresenceId, type GcsPresenceRecord } from "./presence";
 
-const redis = testRedis();
+const kv = testKv();
 const T0 = Date.UTC(2026, 9, 6, 12, 0, 0);
 let saved: GcsPresenceRecord[];
 let presence: GcsPresenceService;
 
 beforeEach(async () => {
-  await redis.flushdb();
+  await kv.flushAll();
   saved = [];
-  presence = new GcsPresenceService({ redis, persistRecord: async (r) => void saved.push(r) });
+  presence = new GcsPresenceService({ kv, persistRecord: async (r) => void saved.push(r) });
 });
 
 afterAll(() => {
-  redis.disconnect();
+  kv.disconnect();
 });
 
 describe("GcsPresenceService", () => {
@@ -44,7 +44,7 @@ describe("GcsPresenceService", () => {
   });
 
   test("recordul persistat se încarcă înapoi când Redis-ul e gol și nu scade", async () => {
-    const restored = new GcsPresenceService({ redis, loadRecord: async () => ({ count: 50, at: new Date(T0 - 86_400_000) }) });
+    const restored = new GcsPresenceService({ kv, loadRecord: async () => ({ count: 50, at: new Date(T0 - 86_400_000) }) });
     await restored.touch({ userId: "u1" }, T0);
     expect((await restored.online(T0)).record).toEqual({ count: 50, at: new Date(T0 - 86_400_000) });
   });
@@ -67,11 +67,11 @@ describe("GcsPresenceService", () => {
 
 describe("serviceStatus", () => {
   test("worker: 10 minute; realtime: 2 minute", async () => {
-    expect(await serviceStatus(redis, "realtime", T0)).toEqual({ up: false, lastBeatAt: null });
-    await writeServiceHeartbeat(redis, "realtime", T0);
-    await writeServiceHeartbeat(redis, "worker", T0);
-    expect((await serviceStatus(redis, "realtime", T0 + 60_000)).up).toBe(true);
-    expect((await serviceStatus(redis, "realtime", T0 + 3 * 60_000)).up).toBe(false);
-    expect((await serviceStatus(redis, "worker", T0 + 3 * 60_000)).up).toBe(true);
+    expect(await serviceStatus(kv, "realtime", T0)).toEqual({ up: false, lastBeatAt: null });
+    await writeServiceHeartbeat(kv, "realtime", T0);
+    await writeServiceHeartbeat(kv, "worker", T0);
+    expect((await serviceStatus(kv, "realtime", T0 + 60_000)).up).toBe(true);
+    expect((await serviceStatus(kv, "realtime", T0 + 3 * 60_000)).up).toBe(false);
+    expect((await serviceStatus(kv, "worker", T0 + 3 * 60_000)).up).toBe(true);
   });
 });

@@ -67,6 +67,7 @@ export * from "./messages/queries";
 export * from "./profile/achievementsAdmin";
 export * from "./profile/fieldsAdmin";
 export * from "./realtime/rooms";
+export * from "./realtime/hub";
 export * from "./notifications/emails";
 export * from "./notifications/producers";
 export * from "./notifications/settings";

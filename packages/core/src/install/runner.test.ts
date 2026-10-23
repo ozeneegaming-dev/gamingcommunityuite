@@ -7,7 +7,7 @@ import { withDatabase } from "@gcs/db/test/url";
 import pg from "pg";
 import { afterAll, afterEach, beforeEach, describe, expect, inject, test } from "vitest";
 import { testRegistry } from "../../test/fixtures";
-import { testRedis } from "../../test/redis";
+import { testKv } from "../../test/kv";
 import { hashPassword } from "../auth/passwords";
 import { GcsCache } from "../cache";
 import { GcsEventBus } from "../events";
@@ -17,8 +17,8 @@ import { GcsInstallState } from "./state";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const migrationsDir = path.resolve(here, "../../../db/prisma/migrations");
 const DB = `redline_install_${process.env.VITEST_POOL_ID ?? "1"}`;
-const redis = testRedis();
-const cache = new GcsCache(redis);
+const kv = testKv();
+const cache = new GcsCache(kv);
 const bus = new GcsEventBus({ cache });
 let dir: string;
 let url: string;
@@ -80,7 +80,7 @@ beforeEach(async () => {
   });
   url = withDatabase(inject("pgBaseUrl"), DB);
   passwordHash ??= await hashPassword("parola-sigura-123");
-  await redis.flushdb();
+  await kv.flushAll();
 });
 
 afterEach(() => {
@@ -89,7 +89,7 @@ afterEach(() => {
 
 afterAll(async () => {
   await admin((c) => c.query(`DROP DATABASE IF EXISTS "${DB}" WITH (FORCE)`));
-  redis.disconnect();
+  kv.disconnect();
 });
 
 async function inspect() {

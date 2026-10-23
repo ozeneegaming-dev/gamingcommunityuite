@@ -1,3 +1,4 @@
+import { e2eKv } from "./kv";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { expect, test, type Browser, type Locator, type Page } from "@playwright/test";
@@ -33,8 +34,7 @@ async function memberPage(browser: Browser, name: string, email: string, ip: str
 
 async function setApp(key: string, enabled: boolean): Promise<void> {
   await sql(`INSERT INTO apps (key, enabled, "updatedAt") VALUES ($1, $2, now()) ON CONFLICT (key) DO UPDATE SET enabled = EXCLUDED.enabled, "updatedAt" = now()`, [key, enabled]);
-  const { default: Redis } = await import("ioredis");
-  const redis = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379");
+  const redis = await e2eKv();
   try {
     await redis.del("gcs:k:apps:enabled", "gcs:k:groups:mentions");
   } finally {

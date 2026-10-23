@@ -8,7 +8,7 @@ import {
   type GcsAcpRoleService,
   type GcsActor,
   type GcsAppService,
-  type GcsRedisRateLimiter,
+  type GcsRateLimiter,
   type GcsSettingsService,
 } from "@gcs/core";
 import { Prisma, type GameServerEnrollment, type PrismaClient } from "@gcs/db";
@@ -104,7 +104,7 @@ type Deps = {
   apps: GcsAppService;
   settings: GcsSettingsService;
   acp: GcsAcpRoleService;
-  rateLimiter: GcsRedisRateLimiter;
+  rateLimiter: GcsRateLimiter;
   store: GcsBridgeStore;
   keys: GcsBridgeKeys;
   query: GcsServerQueryFn;

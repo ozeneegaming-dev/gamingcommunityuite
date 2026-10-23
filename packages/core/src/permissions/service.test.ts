@@ -1,6 +1,6 @@
 import { testDb, truncateAll } from "@gcs/db/test/helpers";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
-import { testRedis } from "../../test/redis";
+import { testKv } from "../../test/kv";
 import { GcsCache } from "../cache";
 import { GcsForbidden } from "../errors";
 import { GcsEventBus, type GcsEvent } from "../events";
@@ -9,8 +9,8 @@ import { GcsPermissionService } from "./service";
 import type { GcsActor } from "./types";
 
 const db = testDb();
-const redis = testRedis();
-const cache = new GcsCache(redis);
+const kv = testKv();
+const cache = new GcsCache(kv);
 
 const forum1 = { type: "forum", id: "1" };
 const forum2 = { type: "forum", id: "2" };
@@ -25,7 +25,7 @@ function actor(groupIds: number[], extra: Partial<GcsActor> = {}): GcsActor {
 
 beforeEach(async () => {
   await truncateAll(db);
-  await redis.flushdb();
+  await kv.flushAll();
 
   const make = (key: string) => db.group.create({ data: { key, name: key } }).then((r) => r.id);
   g = {
@@ -61,7 +61,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await db.$disconnect();
-  redis.disconnect();
+  kv.disconnect();
 });
 
 const allow = (groupId: number, container: { type: string; id: string }, action: string) =>

@@ -1,3 +1,4 @@
+import { e2eKv } from "./kv";
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { fixture, forumTree, member, uid } from "./forum-fixtures";
 import { enterAcpAsRoot, resetSetting, sql, useFreshIp } from "./helpers";
@@ -18,8 +19,7 @@ const PNG = Buffer.from(
 /** Pornește / oprește Chat Pro direct în baza E2E și golește cache-ul aplicațiilor (fără ACP). */
 async function setChatPro(enabled: boolean): Promise<void> {
   await sql(`INSERT INTO apps (key, enabled, "updatedAt") VALUES ('chat_pro', $1, now()) ON CONFLICT (key) DO UPDATE SET enabled = EXCLUDED.enabled, "updatedAt" = now()`, [enabled]);
-  const { default: Redis } = await import("ioredis");
-  const redis = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379");
+  const redis = await e2eKv();
   try {
     await redis.del("gcs:k:apps:enabled");
   } finally {

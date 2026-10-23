@@ -1,3 +1,4 @@
+import { e2eKv } from "./kv";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
@@ -27,8 +28,7 @@ let testersId = 0;
 
 /** Golește cache-urile grupurilor (listele, numărătorile, legenda, aplicațiile) după scrieri directe în baza E2E. */
 async function flushGroupCaches(): Promise<void> {
-  const { default: Redis } = await import("ioredis");
-  const redis = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379");
+  const redis = await e2eKv();
   try {
     const keys = await redis.keys("gcs:k:groups*");
     await redis.del("gcs:k:stats:group-legend", "gcs:k:apps:enabled", "gcs:k:groups-pro:places", ...keys);

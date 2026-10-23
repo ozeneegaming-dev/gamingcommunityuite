@@ -1,3 +1,4 @@
+import { e2eKv } from "./kv";
 import { expect, test, type Frame, type Locator, type Page } from "@playwright/test";
 import { uid } from "./forum-fixtures";
 import { enterAcpAsRoot, sql, useFreshIp } from "./helpers";
@@ -27,8 +28,7 @@ async function replaceCode(editor: Locator, text: string): Promise<void> {
 async function cleanup(prefix: string): Promise<void> {
   await sql(`DELETE FROM theme_css_files WHERE name LIKE $1`, [`${prefix}%`]);
   await sql(`UPDATE themes SET version = version + 1`);
-  const { default: Redis } = await import("ioredis");
-  const redis = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379");
+  const redis = await e2eKv();
   try {
     const keys = await redis.keys("gcs:k:themes*");
     if (keys.length > 0) await redis.del(...keys);

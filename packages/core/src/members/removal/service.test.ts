@@ -2,7 +2,7 @@ import os from "node:os";
 import path from "node:path";
 import { beforeEach, describe, expect, test } from "vitest";
 import { createWorld, type GcsTestWorld } from "../../../test/world";
-import { GcsRedisRateLimiter } from "../../auth/rateLimit";
+import { GcsRateLimiter } from "../../auth/rateLimit";
 import { GcsAttachmentService } from "../../content/files/attachments";
 import { GcsLocalFileStore } from "../../content/files/localStore";
 import { GcsReactionService } from "../../content/reactions";
@@ -46,7 +46,7 @@ beforeEach(async () => {
     db: w.db,
     store: new GcsLocalFileStore(path.join(os.tmpdir(), `gcs-removal-${process.pid}`)),
     permissions: w.permissions,
-    rateLimiter: new GcsRedisRateLimiter(w.redis),
+    rateLimiter: new GcsRateLimiter(w.kv),
   });
   authors.clear();
   events = [];

@@ -1,3 +1,4 @@
+import { e2eKv } from "./kv";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { expect, test, type Browser, type Locator, type Page } from "@playwright/test";
@@ -409,8 +410,7 @@ test("bara de anunț: ACP → Aspect → Conținut, vizibilă pe site în orice 
 });
 
 async function clearWidgetCache() {
-  const { default: Redis } = await import("ioredis");
-  const r = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379");
+  const r = await e2eKv();
   try {
     const keys = await r.keys("gcs:k:layout*");
     if (keys.length > 0) await r.del(...keys);

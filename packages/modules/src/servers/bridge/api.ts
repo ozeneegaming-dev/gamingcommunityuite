@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { GcsAppService, GcsRedisRateLimiter, GcsSettingsService } from "@gcs/core";
+import type { GcsAppService, GcsRateLimiter, GcsSettingsService } from "@gcs/core";
 import type { PrismaClient } from "@gcs/db";
 import { SERVERS_APP } from "../poller";
 import { cleanGameText } from "../text";
@@ -84,7 +84,7 @@ export class GcsBridgeApi {
       db: PrismaClient;
       apps: GcsAppService;
       settings: GcsSettingsService;
-      rateLimiter: GcsRedisRateLimiter;
+      rateLimiter: GcsRateLimiter;
       store: GcsBridgeStore;
       keys: GcsBridgeKeys;
       players: GcsBridgePlayers;

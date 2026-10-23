@@ -1,16 +1,16 @@
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
-import { testRedis } from "../test/redis";
+import { testKv } from "../test/kv";
 import { GcsCache } from "./cache";
 
-const redis = testRedis();
-const cache = new GcsCache(redis);
+const kv = testKv();
+const cache = new GcsCache(kv);
 
 beforeEach(async () => {
-  await redis.flushdb();
+  await kv.flushAll();
 });
 
 afterAll(async () => {
-  redis.disconnect();
+  kv.disconnect();
 });
 
 describe("GcsCache", () => {
@@ -45,7 +45,7 @@ describe("GcsCache", () => {
   });
 
   test("prefixul separă două cache-uri pe același Redis", async () => {
-    const other = new GcsCache(redis, "altul");
+    const other = new GcsCache(kv, "altul");
     await cache.set("k", "gcs", { ttlSec: 60, tags: ["t"] });
     await other.set("k", "altul", { ttlSec: 60, tags: ["t"] });
     await other.invalidateTags(["t"]);

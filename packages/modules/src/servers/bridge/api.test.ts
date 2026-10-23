@@ -102,7 +102,7 @@ describe("autentificarea protocolului (§5.3)", () => {
     for (let i = 0; i < 30; i++) await call(bad, { ip: "203.0.113.99" });
     expect((await call(token, { ip: "203.0.113.99" })).status).toBe(429);
     expect((await call(token)).status).toBe(200);
-    await w.redis.set(`gcs:rl:bridge-key:${keyId}`, "240", "EX", 60);
+    await w.kv.set(`gcs:rl:bridge-key:${keyId}`, "240", { ttlMs: 60_000 });
     const limited = await call(token);
     expect(limited.status).toBe(429);
     expect(Number(limited.headers["Retry-After"])).toBeGreaterThan(0);

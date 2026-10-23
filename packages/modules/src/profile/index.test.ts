@@ -11,7 +11,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await world.db.$disconnect();
-  world.redis.disconnect();
+  world.kv.disconnect();
 });
 
 describe("modulele Profil, Mesaje și VIP", () => {

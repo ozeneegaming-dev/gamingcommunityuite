@@ -67,7 +67,7 @@ describe("rehash la prima autentificare reușită", () => {
   });
   afterAll(async () => {
     await w.db.$disconnect();
-    w.redis.disconnect();
+    w.kv.disconnect();
   });
 
   test("hash-ul vechi devine Argon2id, iar parola rămâne aceeași", async () => {

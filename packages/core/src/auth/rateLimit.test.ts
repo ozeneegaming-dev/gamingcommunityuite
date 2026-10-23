@@ -1,19 +1,19 @@
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
-import { testRedis } from "../../test/redis";
-import { GcsRedisRateLimiter } from "./rateLimit";
+import { testKv } from "../../test/kv";
+import { GcsRateLimiter } from "./rateLimit";
 
-const redis = testRedis();
-const limiter = new GcsRedisRateLimiter(redis);
+const kv = testKv();
+const limiter = new GcsRateLimiter(kv);
 
 beforeEach(async () => {
-  await redis.flushdb();
+  await kv.flushAll();
 });
 
 afterAll(() => {
-  redis.disconnect();
+  kv.disconnect();
 });
 
-describe("GcsRedisRateLimiter", () => {
+describe("GcsRateLimiter", () => {
   test("5 încercări pe 15 minute: a 6-a e refuzată, cu retryAfter", async () => {
     const rule = { window: 900, max: 5 };
     for (let i = 0; i < 5; i++) {

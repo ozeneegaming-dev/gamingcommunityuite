@@ -3,7 +3,7 @@ import path from "node:path";
 import type { Prisma, PrismaClient } from "@gcs/db";
 import { fileTypeFromBuffer } from "file-type";
 import sharp from "sharp";
-import type { GcsRedisRateLimiter } from "../../auth/rateLimit";
+import type { GcsRateLimiter } from "../../auth/rateLimit";
 import { GcsForbidden, GcsNotFound, GcsRateLimited, GcsValidationError } from "../../errors";
 import type { GcsPermissionService } from "../../permissions/service";
 import type { GcsActor, GcsContainerRef } from "../../permissions/types";
@@ -97,7 +97,7 @@ export class GcsAttachmentService {
       db: PrismaClient;
       store: GcsFileStore;
       permissions: GcsPermissionService;
-      rateLimiter: GcsRedisRateLimiter;
+      rateLimiter: GcsRateLimiter;
     },
   ) {}
 

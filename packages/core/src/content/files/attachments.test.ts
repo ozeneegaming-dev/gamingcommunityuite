@@ -6,7 +6,7 @@ import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createWorld, type GcsTestWorld } from "../../../test/world";
 import { GcsForbidden, GcsNotFound, GcsRateLimited, GcsValidationError } from "../../errors";
 import type { GcsModule } from "../../modules/registry";
-import { GcsRedisRateLimiter } from "../../auth/rateLimit";
+import { GcsRateLimiter } from "../../auth/rateLimit";
 import type { GcsActor } from "../../permissions/types";
 import { GcsAttachmentService } from "./attachments";
 import { GcsLocalFileStore } from "./localStore";
@@ -52,7 +52,7 @@ beforeEach(async () => {
     db: world.db,
     store: new GcsLocalFileStore(dir),
     permissions: world.permissions,
-    rateLimiter: new GcsRedisRateLimiter(world.redis),
+    rateLimiter: new GcsRateLimiter(world.kv),
   });
   for (const action of ["test.upload", "test.download"]) {
     await world.db.containerPermission.create({
@@ -67,7 +67,7 @@ beforeEach(async () => {
 afterAll(async () => {
   await rm(dir, { recursive: true, force: true });
   await world.db.$disconnect();
-  world.redis.disconnect();
+  world.kv.disconnect();
 });
 
 describe("GcsAttachmentService.upload", () => {

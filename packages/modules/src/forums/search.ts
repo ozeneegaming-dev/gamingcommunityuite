@@ -4,7 +4,7 @@ import {
   normalizeUsername,
   type GcsActor,
   type GcsPermissionService,
-  type GcsRedisRateLimiter,
+  type GcsRateLimiter,
   type GcsSettingsService,
 } from "@gcs/core";
 import { Prisma, type PrismaClient } from "@gcs/db";
@@ -62,7 +62,7 @@ export class GcsForumSearch {
       db: PrismaClient;
       permissions: GcsPermissionService;
       settings: GcsSettingsService;
-      rateLimiter: GcsRedisRateLimiter;
+      rateLimiter: GcsRateLimiter;
     },
   ) {}
 

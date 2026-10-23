@@ -9,7 +9,7 @@ import {
   type GcsCache,
   type GcsEventBus,
   type GcsPermissionService,
-  type GcsRedisRateLimiter,
+  type GcsRateLimiter,
   type GcsRendered,
   type GcsReportService,
   type GcsSettingsService,
@@ -45,7 +45,7 @@ export class GcsConversationService {
       cache: GcsCache;
       permissions: GcsPermissionService;
       settings: GcsSettingsService;
-      rateLimiter: GcsRedisRateLimiter;
+      rateLimiter: GcsRateLimiter;
       attachments: GcsAttachmentService;
       profiles: GcsProfileService;
       social: GcsSocialService;

@@ -70,7 +70,7 @@ describe("grupul afișat (pe membri)", () => {
 
   afterAll(async () => {
     await w?.db.$disconnect();
-    w?.redis.disconnect();
+    w?.kv.disconnect();
   });
 
   test("un grup secundar cu prioritate mai mare devine grupul afișat; scoaterea lui îl readuce pe cel principal", async () => {

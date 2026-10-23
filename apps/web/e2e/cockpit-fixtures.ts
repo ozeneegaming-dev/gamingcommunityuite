@@ -1,3 +1,4 @@
+import { e2eKv } from "./kv";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import type { Page } from "@playwright/test";
@@ -5,12 +6,11 @@ import { sql } from "./helpers";
 
 /**
  * Datele testelor Hero Cockpit (antetul construit, consola, clasamentul): setările temei implicite (`gcs-dark`) schimbate
- * direct în bază (și refăcute după test), servere cu status în Redis și un meci mix live.
+ * direct în bază (și refăcute după test), servere cu status în stocarea cheilor (Redis / `gcs_kv`) și un meci mix live.
  */
 
 async function redis() {
-  const { default: Redis } = await import("ioredis");
-  return new Redis(process.env.REDIS_URL ?? "redis://localhost:6379");
+  return e2eKv();
 }
 
 /** Golește cache-ul temelor (serviciul le ține în Redis sub `gcs:k:themes*`). */
@@ -68,7 +68,9 @@ export async function seedServers(list: { name: string; game: "cs16" | "cs2"; pl
       );
       const id = row!.id;
       const status = { online: true, name: s.name, map: s.map, players: s.players, maxPlayers: s.max, bots: 0, ping: 12, version: null, playerList: null, updatedAt: new Date().toISOString(), error: null };
-      await r.multi().set(`gcs:servers:status:${id}`, JSON.stringify(status), "EX", 3600).hset("gcs:servers:next", String(id), String(Date.now() + 3_600_000)).hset("gcs:servers:fails", String(id), "0").exec();
+      await r.set(`gcs:servers:status:${id}`, JSON.stringify(status), "EX", 3600);
+      await r.hset("gcs:servers:next", String(id), String(Date.now() + 3_600_000));
+      await r.hset("gcs:servers:fails", String(id), "0");
       out.push({ id, name: s.name });
     }
     // Lista serverelor e în cache (adăugarea din ACP o invalidează; aici scriem direct în bază).

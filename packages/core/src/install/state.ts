@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { hashPassword, verifyPassword } from "../auth/passwords";
-import type { GcsRedisRateLimiter } from "../auth/rateLimit";
+import type { GcsRateLimiter } from "../auth/rateLimit";
 import { GcsRateLimited } from "../errors";
 
 /**
@@ -247,7 +247,7 @@ export async function ensureInstallCode(configDir: string): Promise<string | nul
 export async function verifyInstallCode(
   configDir: string,
   code: string,
-  opts: { ip: string; limiter: Pick<GcsRedisRateLimiter, "consume"> },
+  opts: { ip: string; limiter: Pick<GcsRateLimiter, "consume"> },
 ): Promise<boolean> {
   const limit = await opts.limiter.consume(`install-code:${opts.ip}`, CODE_RULE);
   if (!limit.allowed) throw new GcsRateLimited({ retryAfter: String(limit.retryAfter ?? CODE_RULE.window) });

@@ -2,7 +2,9 @@
 
 import {
   checkLicenseOnline,
+  GcsMemoryRateLimiter,
   GcsRateLimited,
+  gcsEdition,
   hashPassword,
   installDomain,
   resolveAppSelection,
@@ -50,7 +52,9 @@ export async function submitInstallCode(fd: FormData): Promise<GcsInstallActionR
   const h = await headers();
   if (!isSameOrigin(h)) return { ok: false, errors: { code: t("invalid") } };
   try {
-    const ok = await verifyInstallCode(gcsConfigDir(), field(fd, "code"), { ip: clientIp(h), limiter: services().rateLimiter });
+    // Ediția Lite nu are încă bază de date la acest pas: limita încercărilor stă în memoria procesului.
+    const limiter = gcsEdition() === "lite" ? installCodeLimiter : services().rateLimiter;
+    const ok = await verifyInstallCode(gcsConfigDir(), field(fd, "code"), { ip: clientIp(h), limiter });
     if (!ok) return { ok: false, errors: { code: t("invalid") } };
   } catch (error) {
     if (error instanceof GcsRateLimited) return { ok: false, errors: { code: t("rateLimited") } };
@@ -70,11 +74,13 @@ export async function submitInstallCode(fd: FormData): Promise<GcsInstallActionR
   return { ok: true, next: step === "code" ? "/install/checks" : stepPath(step) };
 }
 
+const installCodeLimiter = new GcsMemoryRateLimiter();
+
 /** Pasul „Verificare sistem”: Redis, disc și folderul de configurare sunt obligatorii (baza de date se verifică la pasul ei). */
 export async function continueFromChecks(): Promise<GcsInstallActionResult> {
   const denied = await guard();
   if (denied) return { ok: false, errors: denied };
-  const results = await runChecks({ databaseUrl: process.env.DATABASE_URL, redisUrl: process.env.REDIS_URL, s3Endpoint: process.env.S3_ENDPOINT, configDir: gcsConfigDir() });
+  const results = await runChecks({ databaseUrl: process.env.DATABASE_URL, redisUrl: process.env.REDIS_URL, s3Endpoint: process.env.S3_ENDPOINT, configDir: gcsConfigDir(), edition: gcsEdition() });
   const blocking = results.filter((r) => !r.ok && ["redis", "disk", "config_writable"].includes(r.id));
   if (blocking.length > 0) {
     const t = await getTranslations("install.steps.checks");

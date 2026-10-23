@@ -18,16 +18,48 @@ export type GcsEnqueueOptions = {
 
 const DEFAULT_QUEUE = "gcs";
 
+export type GcsJobStartOptions = { concurrency?: number; onError?: (name: string, error: unknown) => void };
+
 /**
- * Coada de joburi (spec §2.1, BullMQ peste Redis). `web` doar adaugă joburi; `gcs-worker` le rulează (`start`).
- * Logica joburilor stă în serviciile modulelor; aici se face doar programarea.
+ * Coada de joburi (spec §2.1), cu două drivere: BullMQ peste Redis (VPS, `GcsBullJobQueue`) și tabele SQL rulate de
+ * cron / în proces (Lite, `GcsSqlJobQueue`). Logica joburilor stă în serviciile modulelor; aici se face doar programarea.
  */
-export class GcsJobQueue {
-  private readonly defs = new Map<string, GcsJobDef>();
+export interface GcsJobQueue {
+  readonly driver: "bullmq" | "sql";
+  register(def: GcsJobDef): void;
+  registered(): GcsJobDef[];
+  enqueue(name: string, data?: GcsJobData, opts?: GcsEnqueueOptions): Promise<void>;
+  upsertScheduler(id: string, everyMs: number, job: { name: string; data: GcsJobData }): Promise<void>;
+  removeScheduler(id: string): Promise<void>;
+  schedulerIds(prefix: string): Promise<string[]>;
+  /** Pornește procesarea în acest proces; întoarce funcția de oprire. */
+  start(opts?: GcsJobStartOptions): Promise<() => Promise<void>>;
+  close(): Promise<void>;
+}
+
+/** Joburile declarate de module (comune ambelor drivere). */
+export abstract class GcsJobRegistry {
+  protected readonly defs = new Map<string, GcsJobDef>();
+
+  register(def: GcsJobDef): void {
+    if (this.defs.has(def.name)) throw new Error(`Jobul „${def.name}” e deja înregistrat`);
+    this.defs.set(def.name, def);
+  }
+
+  registered(): GcsJobDef[] {
+    return [...this.defs.values()];
+  }
+}
+
+/** `web` doar adaugă joburi; `gcs-worker` le rulează (`start`). */
+export class GcsBullJobQueue extends GcsJobRegistry implements GcsJobQueue {
+  readonly driver = "bullmq" as const;
   private queue: Queue | undefined;
   private connection: Redis | undefined;
 
-  constructor(private readonly opts: { redisUrl: string; name?: string; prefix?: string }) {}
+  constructor(private readonly opts: { redisUrl: string; name?: string; prefix?: string }) {
+    super();
+  }
 
   private get queueName(): string {
     return this.opts.name ?? DEFAULT_QUEUE;
@@ -51,15 +83,6 @@ export class GcsJobQueue {
       },
     });
     return this.queue;
-  }
-
-  register(def: GcsJobDef): void {
-    if (this.defs.has(def.name)) throw new Error(`Jobul „${def.name}” e deja înregistrat`);
-    this.defs.set(def.name, def);
-  }
-
-  registered(): GcsJobDef[] {
-    return [...this.defs.values()];
   }
 
   async enqueue(name: string, data: GcsJobData = {}, opts: GcsEnqueueOptions = {}): Promise<void> {
@@ -92,7 +115,7 @@ export class GcsJobQueue {
    * Pornește procesarea (doar în `gcs-worker`): programează joburile repetabile și rulează handler-ele.
    * Întoarce funcția de oprire.
    */
-  async start(opts: { concurrency?: number; onError?: (name: string, error: unknown) => void } = {}): Promise<() => Promise<void>> {
+  async start(opts: GcsJobStartOptions = {}): Promise<() => Promise<void>> {
     const queue = this.getQueue();
     for (const def of this.defs.values()) {
       if (def.everyMs || def.pattern) {

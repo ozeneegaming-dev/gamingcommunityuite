@@ -14,7 +14,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await w.db.$disconnect();
-  w.redis.disconnect();
+  w.kv.disconnect();
 });
 
 const poll = { question: "Ce hartă preferi?", options: ["Mirage", "Inferno", "Nuke"], multiple: false };

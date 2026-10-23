@@ -1,30 +1,31 @@
-import { GcsRealtime, REALTIME_CHANNEL } from "@gcs/core";
-import Redis from "ioredis";
-import { afterAll, beforeEach, describe, expect, inject, test } from "vitest";
+import { GcsRealtime, type GcsRealtimeMessage } from "@gcs/core";
+import { recordRealtime, testRealtimeLog } from "@gcs/core/test/realtime";
+import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createForumWorld, doc, type GcsForumWorld } from "../../test/world";
 import { registerLiveEvents } from "./live";
 
 let w: GcsForumWorld;
-let sub: Redis;
-let received: { room: string; event: string; data: unknown }[];
+const recorder = recordRealtime();
+let received: GcsRealtimeMessage[];
 
 beforeEach(async () => {
   w = await createForumWorld();
-  registerLiveEvents(w.bus, { db: w.db, realtime: new GcsRealtime(w.redis) });
-  sub?.disconnect();
-  sub = new Redis(inject("redisUrl"), { db: Number(process.env.VITEST_POOL_ID ?? "1") });
+  registerLiveEvents(w.bus, { db: w.db, realtime: new GcsRealtime(testRealtimeLog()) });
   received = [];
-  await sub.subscribe(REALTIME_CHANNEL);
-  sub.on("message", (_c, raw: string) => received.push(JSON.parse(raw) as (typeof received)[number]));
+  await recorder.start();
 });
 
 afterAll(async () => {
-  sub.disconnect();
   await w.db.$disconnect();
-  w.redis.disconnect();
+  w.kv.disconnect();
 });
 
-const settle = () => new Promise((r) => setTimeout(r, 100));
+/** Ce s-a publicat de la ultimul `settle` (citit din jurnalul live). */
+const settle = async () => {
+  await new Promise((r) => setTimeout(r, 50));
+  received.push(...(await recorder.messages()));
+  await recorder.start();
+};
 
 describe("evenimentele live ale topicului", () => {
   test("un răspuns vizibil → topic:{id} post:new; unul în așteptare abia la aprobare", async () => {

@@ -13,7 +13,7 @@ import {
   type GcsJobQueue,
   type GcsPermissionService,
   type GcsRealtime,
-  type GcsRedisRateLimiter,
+  type GcsRateLimiter,
   type GcsSettingsService,
 } from "@gcs/core";
 import { normalizeUsername, parseTextMentions, type GcsGroupMentionService, type GcsMentionHint, type GcsTextMention } from "@gcs/core";
@@ -207,7 +207,7 @@ export class GcsChatService {
       bus: GcsEventBus;
       permissions: GcsPermissionService;
       settings: GcsSettingsService;
-      rateLimiter: GcsRedisRateLimiter;
+      rateLimiter: GcsRateLimiter;
       realtime: GcsRealtime;
       acp: GcsAcpRoleService;
       /** Imaginile și mesajele vocale (opțional în testele care nu le folosesc). */

@@ -1,20 +1,21 @@
 /**
  * Verificarea de sănătate pentru `/api/health` (spec §17).
  *
- * Tipurile sunt structurale, ca `core` să nu depindă direct de Prisma sau ioredis:
- * `PrismaClient` și `Redis` (ioredis) le satisfac așa cum sunt.
+ * Tipurile sunt structurale, ca `core` să nu depindă direct de Prisma:
+ * `PrismaClient` și `GcsKv` (Redis în VPS, baza de date în Lite) le satisfac așa cum sunt.
  */
 export interface GcsHealthDb {
   $queryRawUnsafe(query: string): Promise<unknown>;
 }
 
-export interface GcsHealthRedis {
-  ping(): Promise<string>;
+export interface GcsHealthKv {
+  ping(): Promise<unknown>;
 }
 
 export type GcsHealthReport = {
   status: "ok" | "degraded";
   db: boolean;
+  /** Stocarea cheilor (Redis în VPS, baza de date în Lite); numele `redis` rămâne pentru CLI și ACP. */
   redis: boolean;
 };
 
@@ -36,13 +37,15 @@ async function settlesInTime(task: () => Promise<unknown>, timeoutMs: number): P
 }
 
 export async function checkHealth(
-  deps: { db: GcsHealthDb; redis: GcsHealthRedis },
+  deps: { db: GcsHealthDb; kv: GcsHealthKv },
   opts: { timeoutMs?: number } = {},
 ): Promise<GcsHealthReport> {
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const [db, redis] = await Promise.all([
     settlesInTime(() => deps.db.$queryRawUnsafe("SELECT 1"), timeoutMs),
-    settlesInTime(() => deps.redis.ping(), timeoutMs),
+    settlesInTime(async () => {
+      if ((await deps.kv.ping()) === false) throw new Error("ping");
+    }, timeoutMs),
   ]);
   return { status: db && redis ? "ok" : "degraded", db, redis };
 }

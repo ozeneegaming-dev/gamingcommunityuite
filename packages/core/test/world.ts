@@ -12,25 +12,25 @@ import { GcsWarningService } from "../src/moderation/warnings";
 import { GcsPermissionService } from "../src/permissions/service";
 import type { GcsActor } from "../src/permissions/types";
 import { testRegistry } from "./fixtures";
-import { testRedis } from "./redis";
+import { testKv } from "./kv";
 
 /**
- * Un „site” complet pentru testele de integrare din `core`: baza cu seed-ul implicit, Redis,
+ * Un „site” complet pentru testele de integrare din `core`: baza cu seed-ul implicit, cheile (`GcsKv`, Redis sau SQL),
  * serviciile legate între ele și helperi pentru useri și actori. `extraModules` se înregistrează înainte de seed;
  * `makeRegistry` înlocuiește registry-ul de test (ex. `@gcs/modules` folosește modulele reale).
  */
 export async function createWorld(extraModules: GcsModule[] = [], makeRegistry: () => GcsModuleRegistry = testRegistry) {
   const db = testDb();
-  const redis = testRedis();
+  const kv = testKv();
   await truncateAll(db);
-  await redis.flushdb();
+  await kv.flushAll();
 
   const registry = makeRegistry();
   for (const m of extraModules) registry.register(m);
   await seedDefaults(db, registry);
   const groups = Object.fromEntries((await db.group.findMany()).map((g) => [g.key, g.id])) as Record<string, number>;
 
-  const cache = new GcsCache(redis);
+  const cache = new GcsCache(kv);
   const bus = new GcsEventBus({ cache });
   const events: GcsEvent[] = [];
   for (const name of ["user.banned", "user.unbanned", "user.warned", "user.warning_action", "group.updated"]) {
@@ -84,7 +84,7 @@ export async function createWorld(extraModules: GcsModule[] = [], makeRegistry: 
 
   return {
     db,
-    redis,
+    kv,
     registry,
     groups,
     cache,

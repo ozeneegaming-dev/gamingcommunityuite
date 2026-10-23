@@ -54,13 +54,13 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await w.db.$disconnect();
-  w.redis.disconnect();
+  w.kv.disconnect();
 });
 
 async function member(name: string, group = "member"): Promise<GcsActor> {
   return w.actorFor(await w.createUser(name, group));
 }
-const noFlood = (a: GcsActor) => w.redis.del(`gcs:rl:chat:${a.userId}`);
+const noFlood = (a: GcsActor) => w.kv.del(`gcs:rl:chat:${a.userId}`);
 const enable = () => apps.setEnabled(w.root, "chat_pro", true);
 
 describe("aplicația și punctele de extensie", () => {

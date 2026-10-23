@@ -1,4 +1,4 @@
-import { GcsNotFound, GcsRateLimited, GcsValidationError, openSecret, sealSecret, writeAudit, type GcsAcpRoleService, type GcsActor, type GcsRedisRateLimiter } from "@gcs/core";
+import { GcsNotFound, GcsRateLimited, GcsValidationError, openSecret, sealSecret, writeAudit, type GcsAcpRoleService, type GcsActor, type GcsRateLimiter } from "@gcs/core";
 import type { Prisma, PrismaClient } from "@gcs/db";
 import { normalizeHost } from "../net";
 import { SERVERS_ACP_SECTION } from "../service";
@@ -117,7 +117,7 @@ export class GcsBridgeTv {
     private readonly deps: {
       db: PrismaClient;
       acp: GcsAcpRoleService;
-      rateLimiter: GcsRedisRateLimiter;
+      rateLimiter: GcsRateLimiter;
       store: GcsBridgeStore;
       /** Doar pentru teste: conectarea la sursă și garda. */
       connect?: GcsDemoConnect;

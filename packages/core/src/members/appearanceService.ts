@@ -1,6 +1,7 @@
 import type { Prisma, PrismaClient } from "@gcs/db";
 import { writeAudit } from "../audit";
 import type { GcsCache } from "../cache";
+import type { GcsKv } from "../infra/kv";
 import { GcsNotFound, GcsValidationError } from "../errors";
 import type { GcsEventBus } from "../events";
 import { compileAppearanceCss, mergeAppearances, nameEffectOf, parseMemberAppearance, type GcsCompiledStyleInput, type GcsMemberAppearance } from "./appearance";
@@ -13,7 +14,7 @@ const CSS_TTL = 3600;
 const USER_ID = /^[A-Za-z0-9_-]{1,64}$/;
 const MAX_BATCH = 200;
 
-type Redis = { incr(key: string): Promise<number>; get(key: string): Promise<string | null> };
+type Redis = Pick<GcsKv, "incr" | "get">;
 type Row = { pluginKey: string; data: GcsMemberAppearance };
 /** Rezultatul verificării unui stil CSS: erorile au linia lor (formularul din ACP le arată). */
 export type GcsCustomStyleResult = { ok: true; className: string } | { ok: false; errors: GcsCustomStyleError[] };
@@ -28,7 +29,7 @@ export class GcsMemberAppearanceService {
   /** Pluginurile active cu `appearance`, în ordinea priorității (le dă gazda pluginurilor). */
   private active: () => string[] = () => [];
 
-  constructor(private readonly deps: { db: PrismaClient; cache: GcsCache; redis: Redis; bus: GcsEventBus }) {}
+  constructor(private readonly deps: { db: PrismaClient; cache: GcsCache; kv: Redis; bus: GcsEventBus }) {}
 
   setActiveProvider(provider: () => string[]): void {
     this.active = provider;
@@ -36,11 +37,11 @@ export class GcsMemberAppearanceService {
 
   /** Versiunea CSS-ului (în URL-ul `/gcs-names.css`): crește la orice schimbare de aspect sau de pluginuri active. */
   async version(): Promise<number> {
-    return Number((await this.deps.redis.get(VERSION_KEY)) ?? 0);
+    return Number((await this.deps.kv.get(VERSION_KEY)) ?? 0);
   }
 
   async bump(): Promise<void> {
-    await this.deps.redis.incr(VERSION_KEY);
+    await this.deps.kv.incr(VERSION_KEY);
   }
 
   /** Publică (sau șterge, cu `null`) aspectul unui membru. Validarea completă; o eroare listează câmpurile. */

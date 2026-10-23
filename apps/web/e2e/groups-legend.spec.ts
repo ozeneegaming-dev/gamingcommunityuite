@@ -1,3 +1,4 @@
+import { e2eKv } from "./kv";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { categoryKeyFor } from "@gcs/modules/groups-pro-legend";
@@ -16,8 +17,7 @@ const SHOTS = process.env.GCS_E2E_SHOTS ?? "";
 test.describe.configure({ mode: "serial" });
 
 async function flushGroupCaches(): Promise<void> {
-  const { default: Redis } = await import("ioredis");
-  const redis = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379");
+  const redis = await e2eKv();
   try {
     const keys = [...(await redis.keys("gcs:k:groups*")), ...(await redis.keys("gcs:k:setting*"))];
     await redis.del("gcs:k:stats:group-legend", "gcs:k:apps:enabled", "gcs:k:groups-pro:places", ...keys);

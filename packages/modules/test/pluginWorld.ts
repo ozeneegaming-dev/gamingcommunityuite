@@ -43,9 +43,9 @@ export async function dropPluginData(services: GcsServices, keys: string[]): Pro
 
 /** Un site gol: tabelele golite, Redis gol, pluginurile descărcate, seed-ul și câțiva actori. */
 export async function resetPluginWorld(services: GcsServices, keys: string[]) {
-  const { db, redis, registry } = services;
+  const { db, kv, registry } = services;
   await truncateAll(db);
-  await redis.flushdb();
+  await kv.flushAll();
   await services.plugins.reconcile();
   await dropPluginData(services, keys);
   await seedDefaults(db, registry);

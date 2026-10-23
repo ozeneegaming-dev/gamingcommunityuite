@@ -1,6 +1,6 @@
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createWorld, type GcsTestWorld } from "../../test/world";
-import { GcsRedisRateLimiter } from "../auth/rateLimit";
+import { GcsRateLimiter } from "../auth/rateLimit";
 import { GcsConflict, GcsForbidden, GcsNotFound, GcsRateLimited, GcsValidationError } from "../errors";
 import type { GcsActor } from "../permissions/types";
 import { GcsReportService } from "./reports";
@@ -13,7 +13,7 @@ const hidden: string[] = [];
 
 beforeEach(async () => {
   world = await createWorld();
-  reports = new GcsReportService({ db: world.db, bus: world.bus, rateLimiter: new GcsRedisRateLimiter(world.redis) });
+  reports = new GcsReportService({ db: world.db, bus: world.bus, rateLimiter: new GcsRateLimiter(world.kv) });
   reporter = await world.actorFor(await world.createUser("Mara", "member"));
   mod = await world.actorFor(await world.createUser("Neo", "super_moderator"));
   hidden.length = 0;
@@ -28,7 +28,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await world.db.$disconnect();
-  world.redis.disconnect();
+  world.kv.disconnect();
 });
 
 const item = (contentId = "1", reason = "spam evident") => ({ contentType: "test.item", contentId, reason });

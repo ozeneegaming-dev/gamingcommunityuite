@@ -10,13 +10,13 @@ const MIN = 60_000;
 
 beforeEach(async () => {
   w = await createProfileWorld();
-  online = new GcsOnlineTime({ db: w.db, redis: w.redis, settings: w.settings });
+  online = new GcsOnlineTime({ db: w.db, kv: w.kv, settings: w.settings });
   await w.settings.set("site.timezone", "Europe/Bucharest", w.root);
 });
 
 afterAll(async () => {
   await w.db.$disconnect();
-  w.redis.disconnect();
+  w.kv.disconnect();
 });
 
 describe("timpul online", () => {
@@ -55,7 +55,7 @@ describe("timpul online", () => {
     await w.db.memberOnlineDay.create({ data: { userId: id, day: "2026-10-10", seconds: 3600 } });
     await online.heartbeat(id, NOON);
     await online.heartbeat(id, NOON + MIN);
-    await w.redis.hset("gcs:online:day:2026-10-10", "nu-exista", "90000");
+    await w.kv.hset("gcs:online:day:2026-10-10", { "nu-exista": "90000" });
     await online.flush(NOON + MIN, { force: true });
     expect((await w.db.memberOnlineDay.findUnique({ where: { userId_day: { userId: id, day: "2026-10-10" } } }))?.seconds).toBe(3600);
     expect(await w.db.memberOnlineDay.count({ where: { userId: "nu-exista" } })).toBe(0);

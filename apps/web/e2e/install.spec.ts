@@ -1,3 +1,4 @@
+import { e2eKv } from "./kv";
 import { createPrivateKey, sign } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
@@ -220,8 +221,7 @@ test("instalarea completă: licența, aplicațiile, reluare după refresh, login
     } finally {
       await db.end();
     }
-    const { default: Redis } = await import("ioredis");
-    const redis = new Redis(process.env.GCS_E2E_INSTALL_REDIS_URL ?? "");
+    const redis = await e2eKv(process.env.GCS_E2E_INSTALL_REDIS_URL, process.env.GCS_E2E_INSTALL_DATABASE_URL);
     try {
       const keys = await redis.keys("gcs:k:*");
       if (keys.length > 0) await redis.del(...keys);

@@ -15,7 +15,12 @@ import {
   GcsGroupDisplayService,
   GcsGroupMentionService,
   GcsGroupService,
-  GcsJobQueue,
+  createGcsInfra,
+  type GcsEdition,
+  type GcsInfra,
+  type GcsJobQueue,
+  type GcsKv,
+  type GcsLock,
   GcsLocalFileStore,
   GcsMemberDirectory,
   GcsAppService,
@@ -32,7 +37,7 @@ import {
   GcsRealtime,
   GcsPermissionService,
   GcsReactionService,
-  GcsRedisRateLimiter,
+  GcsRateLimiter,
   GcsReportService,
   GcsS3FileStore,
   GcsSettingsService,
@@ -68,7 +73,6 @@ import { importerMemberData } from "./importer/memberData";
 import { PrismaClient } from "@gcs/db";
 import { templateComponents, withEmailLayout } from "./templates/components";
 import { isGcsIcon, resolveIcon } from "@gcs/ui/icon-registry";
-import Redis from "ioredis";
 import { registerForumContent } from "./forums/content";
 import { GcsForumModerationService } from "./forums/moderation";
 import { GcsForumModeratorService } from "./forums/moderators";
@@ -116,6 +120,7 @@ import { renderChatText } from "./chat/text";
 import { canViewPost } from "./forums/content";
 import { GcsNotificationProducers } from "./notifications/producers";
 import { registerLiveEvents } from "./realtime/live";
+import { GcsRealtimeHub } from "./realtime/hub";
 import { GcsRealtimeRooms } from "./realtime/rooms";
 import { createRegistry } from "./registry";
 import { GcsVipService } from "./vip/vip";
@@ -156,7 +161,13 @@ import { GcsMemberPanelData } from "./profile/memberPanels";
 
 export type GcsServices = {
   db: PrismaClient;
-  redis: Redis;
+  /** Ediția: `vps` (Redis, BullMQ, websocket) sau `lite` (totul în baza de date, joburile prin cron). */
+  edition: GcsEdition;
+  /** Driverele de infrastructură ale ediției (în VPS și conexiunea Redis, pentru abonări). */
+  infra: GcsInfra;
+  /** Cheile scurte (contoare, prezență, lacăte): Redis în VPS, baza de date în Lite. */
+  kv: GcsKv;
+  lock: GcsLock;
   cache: GcsCache;
   bus: GcsEventBus;
   registry: GcsModuleRegistry;
@@ -180,6 +191,8 @@ export type GcsServices = {
   realtime: GcsRealtime;
   presence: GcsPresenceService;
   realtimeRooms: GcsRealtimeRooms;
+  /** Logica live comună transporturilor: websocket (`gcs-realtime`), SSE și polling (web). */
+  realtimeHub: GcsRealtimeHub;
   notificationProducers: GcsNotificationProducers;
   /** Web push (Notificări v2): cheile VAPID, dispozitivele membrilor și trimiterea. */
   push: GcsPushService;
@@ -209,7 +222,7 @@ export type GcsServices = {
   bans: GcsBanService;
   warnings: GcsWarningService;
   actors: GcsActorResolver;
-  rateLimiter: GcsRedisRateLimiter;
+  rateLimiter: GcsRateLimiter;
   files: GcsFileStore;
   attachments: GcsAttachmentService;
   forums: GcsForumService;
@@ -309,22 +322,10 @@ export type GcsServices = {
   memberPanels: GcsMemberPanelData;
 };
 
-/** Golește cache-ul Redis al paginilor (cheile și seturile de tag-uri `gcs:k:*`, `gcs:tag:*`), fără cozi și limite. */
-async function clearPageCache(redis: Redis): Promise<void> {
-  for (const pattern of ["gcs:k:*", "gcs:tag:*"]) {
-    let cursor = "0";
-    do {
-      const [next, keys] = await redis.scan(cursor, "MATCH", pattern, "COUNT", 500);
-      if (keys.length > 0) await redis.del(...keys);
-      cursor = next;
-    } while (cursor !== "0");
-  }
-}
-
 export type GcsServicesOptions = {
   /** Folderul de configurare (`GCS_CONFIG_DIR`): `.env.runtime`, fișierele locale. */
   configDir: string;
-  /** În Next.js: `revalidateTag`. În worker: nimic (paginile citesc prin cache-ul Redis, invalidat de bus). */
+  /** În Next.js: `revalidateTag`. În worker: nimic (paginile citesc prin `GcsCache`, invalidat de bus). */
   revalidate?: (tag: string) => void;
   /** Module în plus (ex. modulul de test al E2E). */
   extraModules?: GcsModule[];
@@ -362,7 +363,7 @@ function siteHost(siteUrl: string): string {
   return URL.canParse(url) ? new URL(url).host : "localhost";
 }
 
-/** Lista Redis în care ajung emailurile când rulează E2E (`GCS_TEST_ROUTES=1`), în loc de SMTP. */
+/** Lista (`GcsKv`) în care ajung emailurile când rulează E2E (`GCS_TEST_ROUTES=1`), în loc de SMTP. */
 export const TEST_OUTBOX_KEY = "gcs:test:outbox";
 /** Cheia internă (în `settings`) a recordului de utilizatori online. */
 export const PRESENCE_RECORD_SETTING = "presence.record";
@@ -394,25 +395,22 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   loadRuntimeEnv(opts.configDir);
   const databaseUrl = process.env.DATABASE_URL;
   const db = databaseUrl ? new PrismaClient({ datasourceUrl: databaseUrl }) : new PrismaClient();
-  const redisUrl = process.env.REDIS_URL ?? "redis://localhost:6379";
-  const redis = new Redis(redisUrl, { maxRetriesPerRequest: 2 });
-  // Erorile de conexiune sunt raportate de /api/health; nu trebuie să oprească procesul.
-  redis.on("error", () => {});
+  const infra = createGcsInfra({ db });
+  const { kv, jobs, lock } = infra;
 
   const registry = createRegistry(opts.extraModules);
-  const cache = new GcsCache(redis);
+  const cache = new GcsCache(kv);
   const bus = new GcsEventBus({ cache, ...(opts.revalidate ? { revalidate: opts.revalidate } : {}) });
   for (const m of registry.all()) {
     for (const listener of m.eventListeners) bus.on(listener.event, listener.handler);
   }
-  const jobs = new GcsJobQueue({ redisUrl });
 
   const settings = new GcsSettingsService({ db, cache, bus, registry });
   const permissions = new GcsPermissionService({ db, cache, bus, registry });
   const acp = new GcsAcpRoleService({ db, registry });
   const acpSearch = new GcsAcpSearch({ db, registry, acp });
   const groups = new GcsGroupService({ db, bus, permissions, acp });
-  const groupMentions = new GcsGroupMentionService({ db, cache, redis });
+  const groupMentions = new GcsGroupMentionService({ db, cache, kv });
   const groupDisplay = new GcsGroupDisplayService({ db, cache, bus });
   groupDisplay.listen();
   const groupDirectory = new GcsGroupDirectory({ db, cache, display: groupDisplay });
@@ -423,12 +421,12 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const push = new GcsPushService({ db });
   const bans = new GcsBanService({ db, cache, bus, acp });
   const warnings = new GcsWarningService({ db, bus, acp, bans });
-  const realtime = new GcsRealtime(redis);
+  const realtime = new GcsRealtime(infra.realtimeLog);
   // Timpul online pe zile: fiecare semn de prezență al unui membru adaugă pauza scurtă de la semnul precedent.
-  const onlineTime = new GcsOnlineTime({ db, redis, settings });
-  // Recordul de prezență se păstrează și în baza de date (cheie internă, nu apare în ACP), ca să supraviețuiască Redis-ului.
+  const onlineTime = new GcsOnlineTime({ db, kv, settings });
+  // Recordul de prezență se păstrează și în baza de date (cheie internă, nu apare în ACP), ca să supraviețuiască unei goliri a stocării cheilor.
   const presence = new GcsPresenceService({
-    redis,
+    kv,
     onUserTouch: (userId, now) => onlineTime.heartbeat(userId, now),
     // Scrierile concurente nu pot coborî recordul: se actualizează doar dacă numărul e mai mare.
     persistRecord: async (r) => {
@@ -446,7 +444,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   });
   const actors = new GcsActorResolver({ db, cache, presence });
   const acpDashboard = new GcsAcpDashboardService({ db, acp, presence, cache });
-  const rateLimiter = new GcsRedisRateLimiter(redis);
+  const rateLimiter = new GcsRateLimiter(kv);
   const files = createFileStore(opts.configDir);
   const attachments = new GcsAttachmentService({ db, store: files, permissions, rateLimiter });
   // Logo-ul și favicon-ul temelor sunt publice (etapa 5).
@@ -485,8 +483,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const rawMailer: GcsMailer =
     process.env.GCS_TEST_ROUTES === "1"
       ? async (mail) => {
-          await redis.lpush(TEST_OUTBOX_KEY, JSON.stringify(mail));
-          await redis.ltrim(TEST_OUTBOX_KEY, 0, 49);
+          await kv.listPush(TEST_OUTBOX_KEY, JSON.stringify(mail), 50);
         }
       : (mail) => sendEmail(mail, settings);
   const mailer = withEmailLayout(rawMailer, { db, templates, settings });
@@ -518,7 +515,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const promotions = new GcsPromotionService({ db, bus, acp, membership });
   achievements.onEvaluated(async (userId) => void (await promotions.evaluateUser(userId)));
   achievements.onDaily((now) => promotions.dailySweep(now));
-  const cosmetics = new GcsCosmeticsService({ db, bus, cache, permissions, acp, attachments, redis });
+  const cosmetics = new GcsCosmeticsService({ db, bus, cache, permissions, acp, attachments, kv });
   cosmetics.listen(bus);
   const conversations = new GcsConversationService({
     db,
@@ -562,7 +559,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const archive = new GcsArchiveService({ db, bus, acp, settings, posting });
   const notificationProducers = new GcsNotificationProducers({
     db,
-    redis,
+    kv,
     notifications,
     actors,
     posting,
@@ -614,7 +611,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   // Widget-ul „Ultimele realizări”: fluxul public al badge-urilor noi.
   realtimeRooms.register("feed", async (_actor, id) => id === "badges");
   // Aplicația Servere (etapa Gaming): statusul din Redis, citirile publice, ACP-ul și interogarea din worker.
-  const serverStore = new GcsServerStatusStore(redis);
+  const serverStore = new GcsServerStatusStore(kv);
   const serverQueries = new GcsServerQueries({ db, cache, permissions, settings, apps, store: serverStore });
   realtimeRooms.register("servers", (actor, id) => serverQueries.canJoin(actor, id));
   // Bannerul unui server se vede doar de cine vede serverul.
@@ -625,7 +622,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   // sancțiunilor (le vede cine vede sancțiunea), camera live a unui meci mix și notificările tichetelor.
   const bridge = new GcsBridge({
     db,
-    redis,
+    kv,
     bus,
     settings,
     permissions,
@@ -705,7 +702,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   // Pluginurile (etapa 6): ciclul de viață și gazda din acest proces. Gazda pornește doar unde e chemat `start()`
   // (web și `gcs-worker`); în rest doar ascultă evenimentele, fără pluginuri încărcate.
   const pluginDatabase = new GcsPluginDatabase({ databaseUrl });
-  const appearance = new GcsMemberAppearanceService({ db, cache, redis, bus });
+  const appearance = new GcsMemberAppearanceService({ db, cache, kv, bus });
   const pluginMedia = new GcsPluginMediaService({ db, store: files, rateLimiter });
   const pluginAdmin = new GcsPluginService({
     db,
@@ -725,7 +722,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   });
   const plugins = new GcsPluginHost({
     db,
-    redis,
+    kv,
     bus,
     registry,
     permissions,
@@ -740,7 +737,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     siteLocale: () => settings.get<string>("site.locale"),
     safeMode: process.env.GCS_PLUGINS_SAFE_MODE === "1",
     ...(Number(process.env.GCS_PLUGINS_MAX_FAILURES) > 0 ? { maxFailures: Number(process.env.GCS_PLUGINS_MAX_FAILURES) } : {}),
-    subscriber: () => redis.duplicate(),
+    // Anunțurile între procese (VPS); în Lite, celelalte procese află la reconcilierea periodică.
+    ...(infra.redis ? { subscriber: () => infra.redis!.duplicate(), publish: (channel: string, message: string) => infra.redis!.publish(channel, message) } : {}),
   });
   pluginRef.host = plugins;
   // `{ template, data }` întors de un plugin: motorul de șabloane (sandbox, limite de timp și iterații); rezultatul trece
@@ -752,7 +750,10 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const memberList = new GcsMemberList({ db, permissions, ranks, groups: groupDirectory });
   const services: GcsServices = {
     db,
-    redis,
+    edition: infra.edition,
+    infra,
+    kv,
+    lock,
     cache,
     bus,
     registry,
@@ -772,6 +773,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     realtime,
     presence,
     realtimeRooms,
+    realtimeHub: new GcsRealtimeHub({ db, presence, realtimeRooms, realtime, chatPro }),
     notificationProducers,
     push,
     chat,
@@ -859,7 +861,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
         const [embeds, locale, url] = await Promise.all([settings.get<string[]>("forums.embeds"), settings.get<string>("site.locale"), settings.get<string>("site.url")]);
         return { embeds, siteHost: siteHost(url), labels: RENDER_LABELS[locale] ?? RENDER_LABELS.ro! };
       },
-      clearCache: () => clearPageCache(redis),
+      clearCache: () => cache.clear(),
     }),
     porting: new GcsPortingService({ db, acp, plugins: pluginAdmin }),
     servers,
@@ -873,7 +875,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     memberAdmin: new GcsMemberAdmin({ db, bus, acp, bans }),
     optInGroups: new GcsOptInGroups({ db, bus, permissions }),
     staffPage: new GcsStaffPage({ db, bus, acp, permissions, members: memberList }),
-    whereabouts: new GcsWhereabouts({ redis }),
+    whereabouts: new GcsWhereabouts({ kv }),
     memberPanels: new GcsMemberPanelData({ db }),
   };
   registerAppJobs(services);
@@ -920,7 +922,6 @@ function createMemberRemoval(d: {
 /** Închide conexiunile (oprirea worker-ului, resetarea după instalare). */
 export async function closeGcsServices(s: GcsServices): Promise<void> {
   await s.plugins.stop().catch(() => {});
-  await s.jobs.close().catch(() => {});
+  await s.infra.close().catch(() => {});
   await s.db.$disconnect().catch(() => {});
-  s.redis.disconnect();
 }

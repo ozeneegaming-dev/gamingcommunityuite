@@ -39,9 +39,9 @@ beforeEach(async () => {
   process.env.GCS_CONFIG_DIR = dir;
   process.env.GCS_SECRET = SECRET;
   lines = { out: [], err: [] };
-  const { db, redis } = services();
+  const { db, kv } = services();
   await truncateAll(db);
-  await redis.flushdb();
+  await kv.flushAll();
 });
 
 afterEach(() => {

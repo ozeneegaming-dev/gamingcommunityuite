@@ -246,8 +246,14 @@ async function startRealtime(env: NodeJS.ProcessEnv): Promise<string> {
   return `http://localhost:${port}`;
 }
 
+/**
+ * `GCS_EDITION=lite`: ediția Lite (shared hosting) — fără Redis, fără `gcs-worker` și fără `gcs-realtime`; cheile,
+ * joburile și timpul real (SSE / polling) stau în baza de date și în procesul web.
+ */
+const LITE = process.env.GCS_EDITION === "lite";
+
 async function main(): Promise<number> {
-  const [pgUrl, redisUrl] = await Promise.all([startPostgres(), startRedis()]);
+  const [pgUrl, redisUrl] = await Promise.all([startPostgres(), LITE ? Promise.resolve("") : startRedis()]);
   const databaseUrl = await prepareDatabase(pgUrl, await startFakeTranslator());
   // Un folder de configurare „deja instalat”: testele (în afară de cele ale installer-ului) pornesc de pe un site instalat.
   const configDir = path.join(webDir, ".e2e", `config-${process.pid}`);
@@ -280,7 +286,12 @@ async function main(): Promise<number> {
     GCS_SERVERS_ALLOW_NETS: "127.0.0.1/32",
     NEXT_TELEMETRY_DISABLED: "1",
   };
-  env.GCS_REALTIME_URL = await startRealtime(env);
+  if (LITE) {
+    env.GCS_EDITION = "lite";
+    delete env.REDIS_URL;
+  } else {
+    env.GCS_REALTIME_URL = await startRealtime(env);
+  }
 
   // Implicit: build de producție + `next start` (stabil, ca în producție). `GCS_E2E_MODE=dev` folosește `next dev`;
   // `GCS_E2E_SKIP_BUILD=1` refolosește un build existent.
@@ -292,7 +303,7 @@ async function main(): Promise<number> {
   const nextArgs = mode === "start" ? ["start", "-p", String(PORT)] : ["dev", "-p", String(PORT)];
   const next = run(nextBin, nextArgs, env, process.env.GCS_E2E_VERBOSE ? "inherit" : "ignore");
   cleanups.push(() => killTree(next));
-  startWorker(env);
+  if (!LITE) startWorker(env);
 
   // Instanța pentru installer: altă bază (goală), alt folder de configurare (neinstalat), altă bază Redis.
   // Doar cu build de producție: două `next dev` nu pot rula în același proiect.
@@ -301,20 +312,22 @@ async function main(): Promise<number> {
     const installConfigDir = path.join(webDir, ".e2e", `install-config-${process.pid}`);
     mkdirSync(installConfigDir, { recursive: true });
     const code = await ensureInstallCode(installConfigDir);
-    const installRedis = new URL(redisUrl);
-    installRedis.pathname = "/2";
-    const installInstanceEnv = {
+    const installInstanceEnv: NodeJS.ProcessEnv = {
       ...env,
       DATABASE_URL: await emptyDatabase(pgUrl, "redline_e2e_install"),
-      REDIS_URL: installRedis.toString(),
       GCS_CONFIG_DIR: installConfigDir,
       GCS_BASE_URL: INSTALL_URL,
     };
-    installInstanceEnv.GCS_REALTIME_URL = await startRealtime(installInstanceEnv);
+    if (!LITE) {
+      const installRedis = new URL(redisUrl);
+      installRedis.pathname = "/2";
+      installInstanceEnv.REDIS_URL = installRedis.toString();
+      installInstanceEnv.GCS_REALTIME_URL = await startRealtime(installInstanceEnv);
+    }
     const installServer = run(nextBin, ["start", "-p", String(INSTALL_PORT)], installInstanceEnv, process.env.GCS_E2E_VERBOSE ? "inherit" : "ignore");
     cleanups.push(() => killTree(installServer));
     // Worker-ul așteaptă `installed.lock`, apoi pornește singur (ca în Docker, pe un site proaspăt).
-    startWorker(installInstanceEnv);
+    if (!LITE) startWorker(installInstanceEnv);
     Object.assign(installEnv, {
       GCS_E2E_INSTALL_URL: INSTALL_URL,
       GCS_E2E_INSTALL_CODE: code ?? "",

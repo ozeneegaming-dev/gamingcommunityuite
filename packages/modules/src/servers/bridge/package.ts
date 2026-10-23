@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { GcsNotFound, GcsRateLimited, GcsValidationError, type GcsAcpRoleService, type GcsActor, type GcsRedisRateLimiter } from "@gcs/core";
+import { GcsNotFound, GcsRateLimited, GcsValidationError, type GcsAcpRoleService, type GcsActor, type GcsRateLimiter } from "@gcs/core";
 import type { PrismaClient } from "@gcs/db";
 import { writeZip, type GcsZipEntryInput } from "@gcs/plugin-sdk/zip";
 import { SERVERS_ACP_SECTION, serverSlug } from "../service";
@@ -258,7 +258,7 @@ export class GcsBridgePackages {
     private readonly deps: {
       db: PrismaClient;
       acp: GcsAcpRoleService;
-      rateLimiter: GcsRedisRateLimiter;
+      rateLimiter: GcsRateLimiter;
       keys: GcsBridgeKeys;
       /** Folderul release-ului (`servers-plugins/release`, sau `GCS_PLUGIN_RELEASE_DIR`). */
       releaseDir: () => string;

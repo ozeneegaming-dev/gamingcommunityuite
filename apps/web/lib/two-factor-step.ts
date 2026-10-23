@@ -12,7 +12,7 @@ export type GcsTwoFactorStepResult = "ok" | "invalid" | "rate_limited";
  * pe user (rate limiter-ul comun) și protecție la reluare — un cod acceptat o dată nu mai trece a doua oară.
  */
 export async function verifyTwoFactorStep(
-  deps: Pick<GcsServices, "rateLimiter" | "redis">,
+  deps: Pick<GcsServices, "rateLimiter" | "kv">,
   userId: string,
   code: string,
   verify: (code: string) => Promise<boolean>,
@@ -22,6 +22,6 @@ export async function verifyTwoFactorStep(
   const clean = code.replace(/\s/g, "");
   if (!(await verify(clean))) return "invalid";
   // SET NX e atomic: din două cereri simultane cu același cod, doar una îl consumă.
-  const fresh = await deps.redis.set(`gcs:2fa-used:${userId}:${clean}`, "1", "EX", USED_CODE_TTL, "NX");
-  return fresh === "OK" ? "ok" : "invalid";
+  const fresh = await deps.kv.set(`gcs:2fa-used:${userId}:${clean}`, "1", { ttlMs: USED_CODE_TTL * 1000, nx: true });
+  return fresh ? "ok" : "invalid";
 }

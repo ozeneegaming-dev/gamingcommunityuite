@@ -3,6 +3,7 @@ import { SignJWT } from "jose";
 import { afterAll, describe, expect, test } from "vitest";
 import { inject } from "vitest";
 import { testRedis } from "../../test/redis";
+import { GcsRedisRealtimeLog, type GcsRealtimeLog } from "./log";
 import { GcsRealtime, parseRealtimeMessage, REALTIME_CHANNEL } from "./publish";
 import { signRealtimeToken, verifyRealtimeToken } from "./token";
 
@@ -45,12 +46,12 @@ describe("GcsRealtime.publish", () => {
     sub = new Redis(inject("redisUrl"), { db: Number(process.env.VITEST_POOL_ID ?? "1") });
     await sub.subscribe(REALTIME_CHANNEL);
     const received = new Promise<string>((resolve) => sub!.on("message", (_ch, msg) => resolve(msg)));
-    await new GcsRealtime(testRedis()).publish("topic:5", "post:new", { id: 9 });
+    await new GcsRealtime(new GcsRedisRealtimeLog(testRedis())).publish("topic:5", "post:new", { id: 9 });
     expect(parseRealtimeMessage(await received)).toEqual({ room: "topic:5", event: "post:new", data: { id: 9 } });
   });
 
   test("o eroare Redis e înghițită", async () => {
-    const broken = { publish: async () => Promise.reject(new Error("down")) };
+    const broken = { append: async () => Promise.reject(new Error("down")) } as unknown as GcsRealtimeLog;
     await expect(new GcsRealtime(broken).publish("x", "y", null)).resolves.toBeUndefined();
   });
 

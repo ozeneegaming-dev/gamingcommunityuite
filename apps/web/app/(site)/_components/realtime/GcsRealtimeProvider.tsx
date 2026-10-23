@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import type { Socket } from "socket.io-client";
+import { createRealtimeClient, type GcsRealtimeClient } from "./transports";
 
 type Listener = (data: unknown) => void;
 
@@ -18,26 +18,15 @@ export type GcsRealtimeApi = {
 const noop = () => {};
 const RealtimeContext = createContext<GcsRealtimeApi>({ connected: false, join: async () => false, leave: noop, on: () => noop, emit: noop });
 
-const PING_MS = 60_000;
-
-async function fetchToken(): Promise<{ token: string; url: string } | null> {
-  try {
-    const res = await fetch("/api/realtime/token", { cache: "no-store", credentials: "same-origin" });
-    if (!res.ok) return null;
-    return (await res.json()) as { token: string; url: string };
-  } catch {
-    return null;
-  }
-}
-
 /**
- * O singură conexiune Socket.io pe tab (specul etapei 4 §5): token de 5 minute cerut la fiecare (re)conectare,
- * reconectare cu backoff (1 s → 30 s), `presence:ping` la 60 s și `resync` după reconectare.
- * Fără serviciul realtime, pagina merge normal (`connected = false`).
+ * O singură conexiune live pe tab (specul etapei 4 §5, ediția Lite): websocket (`gcs-realtime`, ediția VPS), altfel
+ * SSE, altfel polling — aceeași interfață pentru toate componentele. Transportul se alege la pornire, în ordinea
+ * primită de la server (`/api/realtime/token`); unul care nu se conectează în câteva secunde e sărit. După o
+ * reconectare se emite `resync`. Fără niciun transport, pagina merge normal (`connected = false`).
  */
 export function GcsRealtimeProvider({ children }: { children: ReactNode }) {
   const [connected, setConnected] = useState(false);
-  const socketRef = useRef<Socket | null>(null);
+  const clientRef = useRef<GcsRealtimeClient | null>(null);
   const listeners = useRef(new Map<string, Set<Listener>>());
   /** Camerele cerute și câte componente le cer (două liste de servere pe aceeași pagină nu se încurcă la plecare). */
   const rooms = useRef(new Map<string, number>());
@@ -47,54 +36,21 @@ export function GcsRealtimeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    let disposed = false;
-    let socket: Socket | null = null;
-    let ping: ReturnType<typeof setInterval> | undefined;
-    let everConnected = false;
     // „off” până la prima conectare reușită (inclusiv când serviciul nu răspunde deloc).
     document.documentElement.dataset.realtime = "off";
-
-    void (async () => {
-      const first = await fetchToken();
-      if (!first || disposed) {
-        document.documentElement.dataset.realtime = "off";
-        return;
-      }
-      const { io } = await import("socket.io-client");
-      if (disposed) return;
-      socket = io(first.url || undefined, {
-        transports: ["websocket"],
-        reconnectionDelay: 1000,
-        reconnectionDelayMax: 30_000,
-        // Tokenul expiră în 5 minute: la fiecare (re)conectare se cere unul nou.
-        auth: (cb) => {
-          void fetchToken().then((t) => cb({ token: t?.token ?? "" }));
-        },
-      });
-      socketRef.current = socket;
-      socket.on("connect", () => {
-        setConnected(true);
-        document.documentElement.dataset.realtime = "on";
-        for (const room of rooms.current.keys()) socket!.emit("join", room, noop);
-        if (everConnected) dispatch("resync", null);
-        everConnected = true;
-      });
-      socket.on("disconnect", () => {
-        setConnected(false);
-        document.documentElement.dataset.realtime = "off";
-      });
-      socket.on("connect_error", () => {
-        document.documentElement.dataset.realtime = "off";
-      });
-      socket.onAny((event: string, data: unknown) => dispatch(event, data));
-      ping = setInterval(() => socket?.connected && socket.emit("presence:ping"), PING_MS);
-    })();
-
+    const client = createRealtimeClient({
+      rooms: () => [...rooms.current.keys()],
+      dispatch,
+      onState: (state) => {
+        setConnected(state.connected);
+        document.documentElement.dataset.realtime = state.connected ? "on" : "off";
+        if (state.transport) document.documentElement.dataset.realtimeTransport = state.transport;
+      },
+    });
+    clientRef.current = client;
     return () => {
-      disposed = true;
-      if (ping) clearInterval(ping);
-      socket?.disconnect();
-      socketRef.current = null;
+      client.close();
+      clientRef.current = null;
     };
   }, [dispatch]);
 
@@ -103,9 +59,7 @@ export function GcsRealtimeProvider({ children }: { children: ReactNode }) {
       connected,
       join: (room) => {
         rooms.current.set(room, (rooms.current.get(room) ?? 0) + 1);
-        const socket = socketRef.current;
-        if (!socket?.connected) return Promise.resolve(false);
-        return new Promise((resolve) => socket.emit("join", room, (r: { ok?: boolean } | undefined) => resolve(r?.ok === true)));
+        return clientRef.current?.join(room) ?? Promise.resolve(false);
       },
       leave: (room) => {
         const left = (rooms.current.get(room) ?? 1) - 1;
@@ -114,7 +68,7 @@ export function GcsRealtimeProvider({ children }: { children: ReactNode }) {
           return;
         }
         rooms.current.delete(room);
-        socketRef.current?.emit("leave", room);
+        clientRef.current?.leave(room);
       },
       on: (event, fn) => {
         const set = listeners.current.get(event) ?? new Set<Listener>();
@@ -123,7 +77,7 @@ export function GcsRealtimeProvider({ children }: { children: ReactNode }) {
         return () => void set.delete(fn);
       },
       emit: (event, data) => {
-        socketRef.current?.emit(event, data);
+        clientRef.current?.emit(event, data);
       },
     }),
     [connected],

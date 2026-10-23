@@ -16,7 +16,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await w.db.$disconnect();
-  w.redis.disconnect();
+  w.kv.disconnect();
 });
 
 const row = (userId: string, groupId: number) => w.db.userGroup.findUnique({ where: { userId_groupId: { userId, groupId } } });

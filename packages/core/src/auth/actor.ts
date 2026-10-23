@@ -6,7 +6,7 @@ import { guestPresenceId, type GcsPresenceService, type GcsPresenceViewer } from
 
 /** `lastActiveAt` se actualizează cel mult o dată la 5 minute (pentru „cine e online”), nu la fiecare request. */
 const ACTIVITY_THROTTLE_MS = 5 * 60_000;
-/** Prezența în Redis se notează cel mult o dată pe minut pentru același vizitator, din același proces. */
+/** Prezența se notează cel mult o dată pe minut pentru același vizitator, din același proces. */
 const PRESENCE_THROTTLE_MS = 60_000;
 const PRESENCE_MEMO_MAX = 10_000;
 
@@ -119,7 +119,7 @@ export class GcsActorResolver {
     return { userId: null, groupIds: [this.guestGroupId], primaryGroupId: this.guestGroupId, isBanned, ip };
   }
 
-  /** „Cine e online” (prezența în Redis); o eroare Redis nu oprește request-ul. */
+  /** „Cine e online” (prezența); o eroare a stocării nu oprește request-ul. */
   private async touchPresence(viewer: GcsPresenceViewer, now: Date): Promise<void> {
     if (!this.deps.presence) return;
     const id = "userId" in viewer ? `u:${viewer.userId}` : `g:${viewer.guestId}`;

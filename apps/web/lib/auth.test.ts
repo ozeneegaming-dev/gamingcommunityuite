@@ -6,13 +6,13 @@ import { resetServices, services } from "./services";
 
 // Serviciile se iau la fiecare test: alte teste (ex. instalarea din CLI) le pot recrea.
 const db = new Proxy({} as ReturnType<typeof services>["db"], { get: (_, p) => Reflect.get(services().db, p) });
-const redis = new Proxy({} as ReturnType<typeof services>["redis"], { get: (_, p) => Reflect.get(services().redis, p) });
+const kv = new Proxy({} as ReturnType<typeof services>["kv"], { get: (_, p) => Reflect.get(services().kv, p) });
 const registry = new Proxy({} as ReturnType<typeof services>["registry"], { get: (_, p) => Reflect.get(services().registry, p) });
 const BASE = "http://localhost:3000/api/auth";
 
 beforeEach(async () => {
   await truncateAll(db);
-  await redis.flushdb();
+  await kv.flushAll();
   await seedDefaults(db, registry);
 });
 

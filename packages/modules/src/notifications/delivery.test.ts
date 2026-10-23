@@ -21,7 +21,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await w.db.$disconnect();
-  w.redis.disconnect();
+  w.kv.disconnect();
 });
 
 async function member(name: string, group = "member"): Promise<GcsActor> {
@@ -191,7 +191,7 @@ describe("web push", () => {
     // Un al doilea set de producători, doar pentru trimitere (ascultătorii rămân ai lumii de test).
     const delivery = new GcsNotificationProducers({
       db: w.db,
-      redis: w.redis,
+      kv: w.kv,
       notifications: w.notifications,
       actors: w.actors,
       posting: w.posting,

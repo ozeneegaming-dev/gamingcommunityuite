@@ -60,9 +60,9 @@ export async function POST(req: Request): Promise<Response> {
     case "conversation": {
       const from = await actorFor(body.fromEmail);
       const to = await Promise.all(body.toEmails.map(async (e) => (await actorFor(e)).userId!));
-      await s.redis.del(`gcs:rl:pm:${from.userId}`);
+      await s.rateLimiter.reset(`pm:${from.userId}`);
       const res = await s.conversations.start(from, { to, title: body.title, content: doc(body.text) });
-      await s.redis.del(`gcs:rl:pm:${from.userId}`);
+      await s.rateLimiter.reset(`pm:${from.userId}`);
       return Response.json(res);
     }
     case "evaluate": {
@@ -85,7 +85,7 @@ export async function POST(req: Request): Promise<Response> {
       return Response.json({ ok: true });
     }
     case "outbox": {
-      const mails = await s.redis.lrange(TEST_OUTBOX_KEY, 0, 49);
+      const mails = await s.kv.listRange(TEST_OUTBOX_KEY, 50);
       return Response.json(mails.map((m) => JSON.parse(m) as unknown));
     }
   }

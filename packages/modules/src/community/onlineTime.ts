@@ -1,6 +1,5 @@
-import type { GcsJobQueue, GcsMemberDataHandler, GcsSettingsService } from "@gcs/core";
+import { defineKvScript, type GcsJobQueue, type GcsKv, type GcsMemberDataHandler, type GcsSettingsService } from "@gcs/core";
 import { Prisma, type PrismaClient } from "@gcs/db";
-import type Redis from "ioredis";
 import { addDays, dayKey } from "../chat-pro/period";
 export { formatOnlineDuration } from "./onlineFormat";
 
@@ -26,7 +25,8 @@ const FLUSH_KEY = "gcs:online:flush";
  * Atomic: citește ultimul semn, îl actualizează (doar înainte în timp) și adaugă pauza la totalul zilei dacă e scurtă.
  * Întoarce milisecundele adăugate.
  */
-const HEARTBEAT_SCRIPT = `
+const HEARTBEAT_SCRIPT = defineKvScript<number>({
+  lua: `
 local last = tonumber(redis.call('GET', KEYS[1]) or '0')
 local now = tonumber(ARGV[1])
 if now > last then redis.call('SET', KEYS[1], ARGV[1], 'PX', ARGV[3]) end
@@ -36,7 +36,21 @@ if last > 0 and delta > 0 and delta <= tonumber(ARGV[2]) then
   redis.call('PEXPIRE', KEYS[2], ARGV[5])
   return delta
 end
-return 0`;
+return 0`,
+  run: async (kv, [lastKey, dayKey], [nowRaw, gap, lastTtl, userId, dayTtl]) => {
+    const last = Number((await kv.get(lastKey!)) ?? 0);
+    const now = Number(nowRaw);
+    if (now > last) await kv.set(lastKey!, nowRaw!, { ttlMs: Number(lastTtl) });
+    const delta = now - last;
+    if (last > 0 && delta > 0 && delta <= Number(gap)) {
+      await kv.hincrby(dayKey!, userId!, delta);
+      await kv.expire(dayKey!, Number(dayTtl));
+      return delta;
+    }
+    return 0;
+  },
+  fromRedis: Number,
+});
 
 /** Perioadele clasamentului (zilele incluse, în fusul orar al site-ului). */
 export const GCS_ONLINE_PERIODS = ["day", "week", "month", "year", "all"] as const;
@@ -49,7 +63,7 @@ export function onlinePeriodStart(today: string, period: GcsOnlinePeriod): strin
 }
 
 export class GcsOnlineTime {
-  constructor(private readonly deps: { db: PrismaClient; redis: Redis; settings: GcsSettingsService }) {}
+  constructor(private readonly deps: { db: PrismaClient; kv: GcsKv; settings: GcsSettingsService }) {}
 
   /** Fusul orar al site-ului (un fus invalid devine UTC la calculul zilei). */
   async timeZone(): Promise<string> {
@@ -63,7 +77,7 @@ export class GcsOnlineTime {
   /** Un semn de prezență al membrului: adaugă pauza de la semnul precedent la totalul zilei (dacă e scurtă). */
   async heartbeat(userId: string, now = Date.now()): Promise<number> {
     const day = await this.today(now);
-    return Number(await this.deps.redis.eval(HEARTBEAT_SCRIPT, 2, lastKey(userId), dayHash(day), now, ONLINE_GAP_MS, LAST_TTL_MS, userId, DAY_TTL_MS));
+    return Number(await this.deps.kv.script(HEARTBEAT_SCRIPT, [lastKey(userId), dayHash(day)], [now, ONLINE_GAP_MS, LAST_TTL_MS, userId, DAY_TTL_MS]));
   }
 
   /**
@@ -71,12 +85,12 @@ export class GcsOnlineTime {
    * Membrii șterși între timp sunt ignorați. `force: false` = cel mult o dată la 30 s (citirile o cer des).
    */
   async flush(now = Date.now(), opts: { force?: boolean } = {}): Promise<number> {
-    const { db, redis } = this.deps;
-    if (!opts.force && (await redis.set(FLUSH_KEY, "1", "PX", FLUSH_LOCK_MS, "NX")) !== "OK") return 0;
+    const { db, kv } = this.deps;
+    if (!opts.force && !(await kv.set(FLUSH_KEY, "1", { ttlMs: FLUSH_LOCK_MS, nx: true }))) return 0;
     const today = await this.today(now);
     let written = 0;
     for (const day of [addDays(today, -1), today]) {
-      const totals = await redis.hgetall(dayHash(day));
+      const totals = await kv.hgetall(dayHash(day));
       const rows = Object.entries(totals)
         .map(([userId, ms]) => ({ userId, seconds: Math.floor(Number(ms) / 1000) }))
         .filter((r) => r.seconds > 0);

@@ -1,19 +1,19 @@
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
-import { testRedis } from "../test/redis";
+import { testKv } from "../test/kv";
 import { GcsCache } from "./cache";
 import { GcsEventBus, type GcsEvent } from "./events";
 
-const redis = testRedis();
-const cache = new GcsCache(redis);
+const kv = testKv();
+const cache = new GcsCache(kv);
 
 const event: GcsEvent = { name: "group.updated", payload: { groupId: 5 }, tags: ["group:5"] };
 
 beforeEach(async () => {
-  await redis.flushdb();
+  await kv.flushAll();
 });
 
 afterAll(async () => {
-  redis.disconnect();
+  kv.disconnect();
 });
 
 describe("GcsEventBus", () => {

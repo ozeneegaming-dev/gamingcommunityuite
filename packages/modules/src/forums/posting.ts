@@ -10,7 +10,7 @@ import {
   type GcsEventBus,
   type GcsGroupMentionService,
   type GcsPermissionService,
-  type GcsRedisRateLimiter,
+  type GcsRateLimiter,
   type GcsRendered,
   type GcsSettingsService,
 } from "@gcs/core";
@@ -27,7 +27,7 @@ export type GcsForumDeps = {
   bus: GcsEventBus;
   permissions: GcsPermissionService;
   settings: GcsSettingsService;
-  rateLimiter: GcsRedisRateLimiter;
+  rateLimiter: GcsRateLimiter;
   renderer: GcsContentRenderer;
   attachments: GcsAttachmentService;
   /** Host-ul public al site-ului (pentru embed-urile Twitch). */

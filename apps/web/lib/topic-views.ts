@@ -9,11 +9,11 @@ const VIEW_WINDOW_SEC = 3600;
  * (nu invalidează niciun cache: numărul apare la următoarea citire).
  */
 export async function registerTopicView(actor: GcsActor, topicId: number): Promise<void> {
-  const { redis, db } = services();
+  const { kv, db } = services();
   try {
-    const fresh = await redis.set(`gcs:view:${topicId}:${actor.userId ?? actor.ip}`, "1", "EX", VIEW_WINDOW_SEC, "NX");
-    if (fresh === "OK") await db.topic.update({ where: { id: topicId }, data: { viewsCount: { increment: 1 } } });
+    const fresh = await kv.set(`gcs:view:${topicId}:${actor.userId ?? actor.ip}`, "1", { ttlMs: VIEW_WINDOW_SEC * 1000, nx: true });
+    if (fresh) await db.topic.update({ where: { id: topicId }, data: { viewsCount: { increment: 1 } } });
   } catch {
-    // Contorul de vizualizări nu trebuie să strice pagina (ex. Redis indisponibil).
+    // Contorul de vizualizări nu trebuie să strice pagina (ex. stocarea cheilor indisponibilă).
   }
 }

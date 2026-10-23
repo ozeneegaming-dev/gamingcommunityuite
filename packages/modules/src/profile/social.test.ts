@@ -13,7 +13,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await w.db.$disconnect();
-  w.redis.disconnect();
+  w.kv.disconnect();
 });
 
 const followers = async (actor: GcsActor) => (await w.db.user.findUniqueOrThrow({ where: { id: actor.userId! } })).followersCount;

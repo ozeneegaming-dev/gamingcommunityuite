@@ -1,3 +1,4 @@
+import { e2eKv } from "./kv";
 import { expect, type BrowserContext, type Page } from "@playwright/test";
 import { generateSync } from "otplib";
 import pg from "pg";
@@ -126,8 +127,7 @@ export async function setSetting(key: string, value: unknown): Promise<void> {
  * publice doar după ștergerea ei (altfel, dacă un spec anterior a umplut cache-ul, serverul nou lipsește → 404).
  */
 export async function clearServersCache(): Promise<void> {
-  const { default: Redis } = await import("ioredis");
-  const redis = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379");
+  const redis = await e2eKv();
   try {
     await redis.del("gcs:k:servers:list");
   } finally {
@@ -136,8 +136,7 @@ export async function clearServersCache(): Promise<void> {
 }
 
 async function clearSettingsCache(): Promise<void> {
-  const { default: Redis } = await import("ioredis");
-  const redis = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379");
+  const redis = await e2eKv();
   try {
     const keys = await redis.keys("gcs:k:setting*");
     if (keys.length > 0) await redis.del(...keys);

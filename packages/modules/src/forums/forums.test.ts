@@ -12,7 +12,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await w.db.$disconnect();
-  w.redis.disconnect();
+  w.kv.disconnect();
 });
 
 const forumRef = (id: number) => ({ type: "forum", id: String(id) });

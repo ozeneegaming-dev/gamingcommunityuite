@@ -1,3 +1,4 @@
+import { e2eKv } from "./kv";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { expect, test, type Locator, type Page } from "@playwright/test";
@@ -19,8 +20,7 @@ async function shot(target: Page | Locator, name: string): Promise<void> {
 }
 
 async function redisDel(keys: string[], pattern?: string): Promise<void> {
-  const { default: Redis } = await import("ioredis");
-  const redis = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379");
+  const redis = await e2eKv();
   try {
     if (keys.length) await redis.del(...keys);
     if (pattern) {

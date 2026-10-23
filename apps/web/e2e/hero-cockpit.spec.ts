@@ -1,3 +1,4 @@
+import { e2eKv } from "./kv";
 import { expect, test, type Page } from "@playwright/test";
 import { clearThemeCache, patchNova, preset, novaSettings, removeServers, restoreNova, seedLiveMatch, seedServers, shot, type SeededServer } from "./cockpit-fixtures";
 import { forumTree, topicWithReplies, uid } from "./forum-fixtures";
@@ -148,8 +149,7 @@ test("antetul Esports: rândurile, crestătura, starea compactă la derulare, me
 
 /** Cache-ul aplicațiilor (pornite / oprite). */
 async function clearAppsCache() {
-  const { default: Redis } = await import("ioredis");
-  const r = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379");
+  const r = await e2eKv();
   try {
     const keys = [...(await r.keys("gcs:k:apps*")), ...(await r.keys("gcs:k:nav*"))];
     if (keys.length > 0) await r.del(...keys);
@@ -320,8 +320,7 @@ test("consola Hero Cockpit: pornită / oprită, feed-ul, meciul live, trofeele p
 
 /** Cache-ul layout-urilor de widget-uri. */
 async function clearWidgetCache() {
-  const { default: Redis } = await import("ioredis");
-  const r = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379");
+  const r = await e2eKv();
   try {
     const keys = await r.keys("gcs:k:layout*");
     if (keys.length > 0) await r.del(...keys);

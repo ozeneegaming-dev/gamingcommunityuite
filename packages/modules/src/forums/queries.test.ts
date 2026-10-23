@@ -16,7 +16,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await w.db.$disconnect();
-  w.redis.disconnect();
+  w.kv.disconnect();
 });
 
 async function newMember(name: string, group = "member"): Promise<GcsActor> {

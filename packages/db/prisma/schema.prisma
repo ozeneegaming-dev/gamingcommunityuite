@@ -3444,3 +3444,82 @@ model DonationGoal {
 
   @@map("donation_goals")
 }
+
+// ─── Infrastructură fără Redis (ediția Lite) ─────────────────────────────────
+// Folosite doar cu driverele SQL (`GCS_EDITION=lite`); în ediția VPS rămân goale.
+
+/// O cheie din `GcsSqlKv` (tipul: string, hash, zset, set, list). `expiresAt` în ms (null = fără expirare); o cheie
+/// expirată e ignorată la citire și ștearsă de curățenie. Elementele colecțiilor stau în `gcs_kv_items`.
+model GcsKvEntry {
+  key       String      @id @db.VarChar(255)
+  type      String      @db.VarChar(8)
+  value     String?
+  expiresAt BigInt?
+  items     GcsKvItem[]
+
+  @@index([expiresAt])
+  @@map("gcs_kv")
+}
+
+/// Un element al unei colecții din `gcs_kv`: câmpul unui hash, membrul unui set / sorted set (cu scorul) sau al unei liste.
+model GcsKvItem {
+  key   String     @db.VarChar(255)
+  field String     @db.VarChar(255)
+  value String?
+  score Float?
+  entry GcsKvEntry @relation(fields: [key], references: [key], onDelete: Cascade)
+
+  @@id([key, field])
+  @@index([key, score])
+  @@map("gcs_kv_items")
+}
+
+/// Lacătele operațiilor atomice ale `GcsSqlKv` (o cheie → una din 256 de benzi, blocată cu `FOR UPDATE`).
+model GcsKvLock {
+  stripe Int @id
+
+  @@map("gcs_kv_locks")
+}
+
+/// Un job din coada SQL (`GcsSqlJobQueue`): `jobKey` deduplică, `runAt` / `lockedUntil` în ms.
+model GcsJob {
+  id          BigInt  @id @default(autoincrement())
+  name        String  @db.VarChar(191)
+  data        String
+  jobKey      String? @unique @db.VarChar(191)
+  status      String  @default("waiting") @db.VarChar(16)
+  runAt       BigInt
+  attempts    Int     @default(0)
+  maxAttempts Int     @default(5)
+  lockedUntil BigInt?
+  lastError   String?
+  createdAt   BigInt
+
+  @@index([status, runAt])
+  @@map("gcs_jobs")
+}
+
+/// O programare repetabilă a cozii SQL (jobul unui modul sau al unui plugin): la `nextRunAt` se adaugă un job.
+model GcsJobSchedule {
+  id        String  @id @db.VarChar(191)
+  name      String  @db.VarChar(191)
+  data      String
+  everyMs   Int?
+  pattern   String? @db.VarChar(100)
+  nextRunAt BigInt
+
+  @@map("gcs_job_schedules")
+}
+
+/// Jurnalul scurt al mesajelor live (transporturile SSE și polling ale ediției Lite); păstrat câteva minute.
+model GcsRealtimeEvent {
+  id        BigInt  @id @default(autoincrement())
+  room      String  @db.VarChar(191)
+  event     String  @db.VarChar(64)
+  data      String
+  origin    String? @db.VarChar(64)
+  createdAt BigInt
+
+  @@index([createdAt])
+  @@map("gcs_realtime_events")
+}

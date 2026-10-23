@@ -24,7 +24,7 @@ export async function createRemovalWorld() {
 
   async function reset(): Promise<void> {
     await truncateAll(s.db);
-    await s.redis.flushdb();
+    await s.kv.flushAll();
     await seedDefaults(s.db, s.registry);
     groups = Object.fromEntries((await s.db.group.findMany()).map((g) => [g.key, g.id]));
   }
@@ -53,12 +53,12 @@ export async function createRemovalWorld() {
 
   /** Pauza de flood a membrului se șterge, ca testele să posteze în ritmul lor. */
   async function topic(actor: GcsActor, forumId: number, title: string, text = "Conținut", extra: { poll?: { question: string; options: string[]; multiple?: boolean } } = {}) {
-    await s.redis.del(`gcs:rl:forum-post:${actor.userId}`);
+    await s.kv.del(`gcs:rl:forum-post:${actor.userId}`);
     return s.topics.create(actor, { forumId, title, content: doc(text), ...(extra.poll ? { poll: { question: extra.poll.question, options: extra.poll.options, multiple: extra.poll.multiple ?? false } } : {}) });
   }
 
   async function reply(actor: GcsActor, topicId: number, text = "Răspuns") {
-    await s.redis.del(`gcs:rl:forum-post:${actor.userId}`);
+    await s.kv.del(`gcs:rl:forum-post:${actor.userId}`);
     return s.posts.reply(actor, { topicId, content: doc(text) });
   }
 

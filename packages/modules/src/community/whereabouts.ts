@@ -1,5 +1,4 @@
-import { PRESENCE_WINDOW_MS, type GcsPresenceViewer } from "@gcs/core";
-import type Redis from "ioredis";
+import { PRESENCE_WINDOW_MS, type GcsKv, type GcsPresenceViewer } from "@gcs/core";
 
 const WHERE_KEY = "gcs:presence:where";
 const WHERE_TIMES_KEY = "gcs:presence:where:t";
@@ -71,29 +70,33 @@ export function cleanPath(raw: unknown): string | null {
 }
 
 /**
- * Locul fiecărui vizitator pe site (/online, Membri v2), în Redis: ultima pagină văzută (calea, titlul), ora și IP-ul
+ * Locul fiecărui vizitator pe site (/online, Membri v2), în `GcsKv`: ultima pagină văzută (calea, titlul), ora și IP-ul
  * (afișat doar staff-ului). Intrările mai vechi decât fereastra de prezență (5 minute) se curăță la citire.
  */
 export class GcsWhereabouts {
-  constructor(private readonly deps: { redis: Redis }) {}
+  constructor(private readonly deps: { kv: GcsKv }) {}
 
   async note(viewer: GcsPresenceViewer, input: { path: string; title: string; ip: string | null }, now = Date.now()): Promise<void> {
     const path = cleanPath(input.path);
     if (!path) return;
     const id = "userId" in viewer ? `u:${viewer.userId}` : `g:${viewer.guestId}`;
     const value = JSON.stringify({ p: path, t: input.title.replace(/[\u0000-\u001f]/g, " ").trim().slice(0, TITLE_MAX), ip: input.ip, at: now });
-    await this.deps.redis.multi().hset(WHERE_KEY, id, value).zadd(WHERE_TIMES_KEY, now, id).exec();
+    await this.deps.kv.hset(WHERE_KEY, { [id]: value });
+    await this.deps.kv.zadd(WHERE_TIMES_KEY, now, id);
   }
 
   /** Cine e unde acum, cei mai recenți primii. */
   async list(now = Date.now()): Promise<GcsWhereEntry[]> {
-    const { redis } = this.deps;
+    const { kv } = this.deps;
     const cutoff = now - PRESENCE_WINDOW_MS;
-    const stale = await redis.zrangebyscore(WHERE_TIMES_KEY, "-inf", `(${cutoff}`);
-    if (stale.length > 0) await redis.multi().hdel(WHERE_KEY, ...stale).zrem(WHERE_TIMES_KEY, ...stale).exec();
-    const ids = await redis.zrevrangebyscore(WHERE_TIMES_KEY, "+inf", cutoff);
+    const stale = await kv.zrangeByScore(WHERE_TIMES_KEY, -Infinity, cutoff, { maxExclusive: true });
+    if (stale.length > 0) {
+      await kv.hdel(WHERE_KEY, stale);
+      await kv.zrem(WHERE_TIMES_KEY, stale);
+    }
+    const ids = await kv.zrangeByScore(WHERE_TIMES_KEY, cutoff, Infinity, { rev: true });
     if (ids.length === 0) return [];
-    const values = await redis.hmget(WHERE_KEY, ...ids);
+    const values = await kv.hmget(WHERE_KEY, ids);
     const out: GcsWhereEntry[] = [];
     ids.forEach((key, i) => {
       const raw = values[i];

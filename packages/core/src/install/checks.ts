@@ -12,6 +12,8 @@ export type GcsCheckEnv = {
   /** Endpoint-ul MinIO/S3 (ex. `http://minio:9000`). */
   s3Endpoint?: string | undefined;
   configDir: string;
+  /** Ediția Lite (shared hosting) nu are Redis și MinIO: verificările lor lipsesc. */
+  edition?: "vps" | "lite";
 };
 
 const TIMEOUT_MS = 3000;
@@ -110,6 +112,10 @@ async function checkConfigWritable(dir: string): Promise<GcsCheckResult> {
  */
 export async function runChecks(env: GcsCheckEnv & { timeoutMs?: number }): Promise<GcsCheckResult[]> {
   const timeoutMs = env.timeoutMs ?? TIMEOUT_MS;
+  if (env.edition === "lite") {
+    const [postgres, disk, config] = await Promise.all([checkPostgres(env.databaseUrl, timeoutMs), checkDisk(env.configDir), checkConfigWritable(env.configDir)]);
+    return [...postgres, disk, config];
+  }
   const [postgres, redis, minio, disk, config] = await Promise.all([
     checkPostgres(env.databaseUrl, timeoutMs),
     checkRedis(env.redisUrl, timeoutMs),

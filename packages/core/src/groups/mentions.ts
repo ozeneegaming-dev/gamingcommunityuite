@@ -1,5 +1,5 @@
 import type { PrismaClient } from "@gcs/db";
-import type Redis from "ioredis";
+import type { GcsKv } from "../infra/kv";
 import type { GcsCache } from "../cache";
 import { contentRefs } from "../content/renderer";
 import { GcsRateLimited } from "../errors";
@@ -97,7 +97,7 @@ export function normalizeGroupName(name: string): string {
  * schimbare a grupurilor, tag-ul `name-styles`), lista pentru editor și randare, pauza dintre mențiuni (Redis).
  */
 export class GcsGroupMentionService {
-  constructor(private readonly deps: { db: PrismaClient; cache: GcsCache; redis: Redis }) {}
+  constructor(private readonly deps: { db: PrismaClient; cache: GcsCache; kv: GcsKv }) {}
 
   /** Toate grupurile, în ordinea din ACP, cu setările de mențiune efective. */
   async groups(): Promise<GcsMentionGroup[]> {
@@ -150,7 +150,7 @@ export class GcsGroupMentionService {
     for (const id of new Set(groupIds)) {
       const group = groups.find((g) => g.id === id);
       if (!group || group.settings.cooldownMinutes <= 0) continue;
-      const ttl = await this.deps.redis.pttl(cooldownKey(actor.userId, id));
+      const ttl = await this.deps.kv.pttl(cooldownKey(actor.userId, id));
       if (ttl > 0) throw new GcsRateLimited({ reason: "group_mention_cooldown", retryAfter: String(Math.ceil(ttl / 1000)), group: group.name });
     }
   }
@@ -161,7 +161,7 @@ export class GcsGroupMentionService {
     const groups = await this.groups();
     for (const id of new Set(groupIds)) {
       const minutes = groups.find((g) => g.id === id)?.settings.cooldownMinutes ?? 0;
-      if (minutes > 0) await this.deps.redis.set(cooldownKey(actor.userId, id), "1", "EX", minutes * 60);
+      if (minutes > 0) await this.deps.kv.set(cooldownKey(actor.userId, id), "1", { ttlMs: minutes * 60_000 });
     }
   }
 }

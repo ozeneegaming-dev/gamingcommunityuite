@@ -4,14 +4,14 @@ import { TWO_FACTOR_STEP_RULE, verifyTwoFactorStep } from "./two-factor-step";
 
 // Serviciile se iau la fiecare test: alte teste le pot recrea.
 const deps = () => {
-  const { rateLimiter, redis } = services();
-  return { rateLimiter, redis };
+  const { rateLimiter, kv } = services();
+  return { rateLimiter, kv };
 };
 const VALID = "123456";
 const verify = async (code: string) => code === VALID;
 
 beforeEach(async () => {
-  await services().redis.flushdb();
+  await services().kv.flushAll();
 });
 
 afterAll(async () => {
