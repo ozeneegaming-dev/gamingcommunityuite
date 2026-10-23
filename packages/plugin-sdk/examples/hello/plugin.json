@@ -7,7 +7,7 @@
   "description": "Pluginul de exemplu al GamingCommunitySuite: un widget, o pagină pe site și în ACP, o setare, o permisiune și un tabel propriu.",
   "icon": "fa-solid fa-hand",
   "license": "MIT",
-  "minGcs": "0.6.0",
+  "minGcs": "0.9.0",
   "capabilities": ["db", "events", "widgets", "pages", "acp", "api", "menus", "jobs", "settings", "permissions", "hooks", "client-css"],
   "settings": {
     "tabs": [
@@ -59,7 +59,21 @@
     "api": [{ "path": "/stats", "methods": ["GET"] }]
   },
   "events": ["post.created"],
-  "hooks": [{ "point": "postbit.after_fields" }],
+  "hooks": [{ "point": "postbit.after_fields" }, { "point": "forum.list" }],
+  "forumTabs": [
+    {
+      "key": "look",
+      "label": "forum.tab",
+      "icon": "fa-solid fa-hand",
+      "types": ["FORUM", "QA", "PAGE"],
+      "description": "forum.description",
+      "fields": [
+        { "type": "text", "key": "label", "label": "forum.label", "maxLength": 20, "slot": { "slot": "forum.row.title", "as": "chip", "icon": "fa-solid fa-hand" } },
+        { "type": "color", "key": "titleColor", "label": "forum.titleColor", "css": { "var": "--gcs-forum-title-color" } },
+        { "type": "toggle", "key": "wave", "label": "forum.wave", "default": false }
+      ]
+    }
+  ],
   "jobs": [{ "key": "cleanup", "everyMinutes": 1440, "label": "jobs.cleanup" }],
   "menus": {
     "user": [{ "key": "hello", "label": "menu.user", "href": "/p/gcs.hello", "icon": "fa-solid fa-hand", "permission": "view" }]

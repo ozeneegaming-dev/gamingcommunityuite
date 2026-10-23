@@ -2,14 +2,18 @@ import {
   GcsConflict,
   GcsNotFound,
   GcsValidationError,
+  hashPassword,
+  isSafeSlotHref,
   writeAudit,
   type GcsAcpRoleService,
   type GcsActor,
   type GcsEventBus,
   type GcsModuleRegistry,
   type GcsPermissionService,
+  type GcsRendered,
 } from "@gcs/core";
-import type { Forum, ForumType, Prisma, PrismaClient } from "@gcs/db";
+import { Prisma, type Forum, type ForumType, type PrismaClient } from "@gcs/db";
+import { isTopicSort } from "./queries";
 import { isGcsIcon } from "@gcs/ui/icon-registry";
 import { GcsForumCounters } from "./counters";
 import { slugify } from "./slug";
@@ -32,6 +36,37 @@ export type GcsForumInput = {
   subforumColumns?: number;
 };
 export type GcsForumPatch = Partial<Omit<GcsForumInput, "parentId">>;
+
+/** Forum v2: conținutul unui nod „Pagină / Anunț”. `content`: documentul editorului (cu blocuri) sau `null` (gol). */
+export type GcsForumPageInput = {
+  content: unknown;
+  ctaLabel?: string | null;
+  ctaUrl?: string | null;
+  ctaIcon?: string | null;
+  allowTopics?: boolean;
+  audienceGroupIds?: number[];
+};
+
+/**
+ * Forum v2: opțiunile unui forum. `password`: `undefined` = neschimbată, `""` = scoasă, altfel parola nouă.
+ * `rules`: documentul editorului (regulile forumului) sau `null` (fără reguli).
+ */
+export type GcsForumOptionsInput = {
+  ownTopicsOnly?: boolean;
+  password?: string;
+  rulesMode?: "off" | "show" | "accept";
+  rules?: unknown;
+  defaultSort?: string;
+  pollsEnabled?: boolean;
+  tagsEnabled?: boolean;
+  minPosts?: number;
+  countPosts?: boolean;
+  autoCloseDays?: number;
+  ratingEnabled?: boolean;
+};
+
+/** Randarea conținutului de către staff (Forum v2: pagina și regulile, cu blocuri), dată de servicii. */
+export type GcsForumContentRender = (content: unknown, actor: GcsActor) => Promise<GcsRendered>;
 export type GcsForumOrderItem = { id: number; parentId: number | null; position: number };
 
 type Tx = Prisma.TransactionClient;
@@ -59,7 +94,7 @@ function validateFields(input: GcsForumPatch, type: ForumType): Record<string, s
   return errors;
 }
 
-/** Regula structurii: categoriile stau la rădăcină; forumurile, sub o categorie sau un forum (nu sub un link). */
+/** Regula structurii: categoriile stau la rădăcină; forumurile și paginile, sub o categorie, un forum sau o pagină (nu sub un link). */
 function parentError(type: ForumType, parent: ForumNode | null | undefined): string | null {
   if (parent === undefined) return "invalid_parent";
   if (type === "CATEGORY") return parent === null ? null : "invalid_parent";
@@ -81,6 +116,8 @@ export class GcsForumService {
       permissions: GcsPermissionService;
       acp: GcsAcpRoleService;
       registry: GcsModuleRegistry;
+      /** Forum v2: randarea paginilor și a regulilor (editorul cu blocuri); lipsă = conținutul nu se poate salva. */
+      render?: GcsForumContentRender;
     },
   ) {}
 
@@ -112,6 +149,8 @@ export class GcsForumService {
           position: last ? last.position + 1 : 0,
         },
       });
+      // Forum v2: o pagină nouă pornește goală (conținutul se scrie în tabul „Pagină”).
+      if (input.type === "PAGE") await tx.forumPage.create({ data: { forumId: row.id } });
       if (input.parentId !== null) {
         await tx.containerInherit.create({
           data: { containerType: CONTAINER, containerId: String(row.id), parentId: String(input.parentId), inherits: true },
@@ -154,11 +193,140 @@ export class GcsForumService {
 
     const forum = await db.$transaction(async (tx) => {
       const row = await tx.forum.update({ where: { id }, data });
+      if (type === "PAGE") await tx.forumPage.upsert({ where: { forumId: id }, create: { forumId: id }, update: {} });
       await writeAudit(tx, { actorId: actor.userId, action: "forum.update", targetType: "forum", targetId: String(id), before, after: row, ip: actor.ip });
       return row;
     });
     await this.changed([id], false);
     return forum;
+  }
+
+  /**
+   * Forum v2: pagina unui nod „Pagină / Anunț”: conținutul (editorul cu blocuri, randat și sanitizat), butonul CTA
+   * (text + link intern sau https), topicurile de dedesubt și grupurile care o văd (gol = toți cei care văd forumul).
+   */
+  async savePage(actor: GcsActor, id: number, input: GcsForumPageInput): Promise<void> {
+    const { db, acp, render } = this.deps;
+    await acp.assert(actor, FORUMS_ACP_SECTION, "edit");
+    const forum = await db.forum.findUnique({ where: { id }, select: { id: true, type: true } });
+    if (!forum) throw new GcsNotFound();
+    if (forum.type !== "PAGE") throw new GcsValidationError({ type: "invalid_type" });
+    const errors: Record<string, string> = {};
+    const label = input.ctaLabel?.trim() ?? "";
+    const url = input.ctaUrl?.trim() ?? "";
+    if (label.length > 60) errors.ctaLabel = "too_long";
+    if (url !== "" && !isSafeSlotHref(url)) errors.ctaUrl = "invalid_url";
+    if ((label === "") !== (url === "")) errors[label === "" ? "ctaLabel" : "ctaUrl"] = "required";
+    if (input.ctaIcon && !isGcsIcon(input.ctaIcon)) errors.ctaIcon = "invalid_choice";
+    const audience = [...new Set(input.audienceGroupIds ?? [])];
+    if (audience.length > 0 && (await db.group.count({ where: { id: { in: audience } } })) !== audience.length) errors.audienceGroupIds = "invalid_choice";
+    let rendered: GcsRendered | null = null;
+    if (input.content !== null && input.content !== undefined) {
+      if (!render) throw new GcsValidationError({ content: "invalid" });
+      try {
+        rendered = await render(input.content, actor);
+      } catch (error) {
+        if (error instanceof GcsValidationError) Object.assign(errors, error.fields);
+        else throw error;
+      }
+    }
+    if (Object.keys(errors).length > 0) throw new GcsValidationError(errors);
+    const data = {
+      contentJson: rendered ? (rendered.json as Prisma.InputJsonValue) : Prisma.DbNull,
+      contentHtml: rendered?.html ?? "",
+      ctaLabel: label || null,
+      ctaUrl: url || null,
+      ctaIcon: input.ctaIcon || null,
+      allowTopics: input.allowTopics ?? false,
+      audienceGroupIds: audience,
+      updatedById: actor.userId,
+    };
+    await db.$transaction(async (tx) => {
+      const before = await tx.forumPage.findUnique({ where: { forumId: id }, select: { ctaLabel: true, ctaUrl: true, allowTopics: true, audienceGroupIds: true } });
+      await tx.forumPage.upsert({ where: { forumId: id }, create: { forumId: id, ...data }, update: data });
+      await writeAudit(tx, { actorId: actor.userId, action: "forum.page.update", targetType: "forum", targetId: String(id), before, after: { ctaLabel: data.ctaLabel, ctaUrl: data.ctaUrl, allowTopics: data.allowTopics, audienceGroupIds: audience }, ip: actor.ip });
+    });
+    await this.changed([id], false);
+  }
+
+  /** Forum v2: resetează notele tuturor topicurilor din forum (ACP → Forumuri → Editează → Opțiuni). */
+  async resetRatings(actor: GcsActor, id: number): Promise<number> {
+    const { db, acp } = this.deps;
+    await acp.assert(actor, FORUMS_ACP_SECTION, "delete");
+    const forum = await db.forum.findUnique({ where: { id }, select: { id: true } });
+    if (!forum) throw new GcsNotFound();
+    const topics = (await db.topic.findMany({ where: { forumId: id, ratingCount: { gt: 0 } }, select: { id: true } })).map((t) => String(t.id));
+    const removed = await db.$transaction(async (tx) => {
+      const r = await tx.contentRating.deleteMany({ where: { contentType: "forums.topic", contentId: { in: topics } } });
+      await tx.contentRatingSummary.deleteMany({ where: { contentType: "forums.topic", contentId: { in: topics } } });
+      await tx.topic.updateMany({ where: { forumId: id }, data: { ratingAvg: 0, ratingCount: 0 } });
+      await writeAudit(tx, { actorId: actor.userId, action: "rating.reset_forum", targetType: "forum", targetId: String(id), after: { topics: topics.length, votes: r.count }, ip: actor.ip });
+      return r.count;
+    });
+    await this.deps.bus.emit({ name: "rating.changed", payload: { forumId: id }, tags: [`forum:${id}`, "forums-ratings", ...topics.slice(0, 500).map((t) => `topic:${t}`)] });
+    return removed;
+  }
+
+  /** Forum v2: opțiunile forumului (topicuri proprii, parolă, reguli, sortare, sondaje, tag-uri, praguri, notă). */
+  async saveOptions(actor: GcsActor, id: number, input: GcsForumOptionsInput): Promise<void> {
+    const { db, acp, render } = this.deps;
+    await acp.assert(actor, FORUMS_ACP_SECTION, "edit");
+    const before = await db.forum.findUnique({ where: { id } });
+    if (!before) throw new GcsNotFound();
+    const errors: Record<string, string> = {};
+    const data: Prisma.ForumUpdateInput = {};
+    if (input.ownTopicsOnly !== undefined) data.ownTopicsOnly = input.ownTopicsOnly;
+    if (input.pollsEnabled !== undefined) data.pollsEnabled = input.pollsEnabled;
+    if (input.tagsEnabled !== undefined) data.tagsEnabled = input.tagsEnabled;
+    if (input.countPosts !== undefined) data.countPosts = input.countPosts;
+    if (input.ratingEnabled !== undefined) data.ratingEnabled = input.ratingEnabled;
+    if (input.defaultSort !== undefined) {
+      if (!isTopicSort(input.defaultSort)) errors.defaultSort = "invalid_choice";
+      else data.defaultSort = input.defaultSort;
+    }
+    if (input.minPosts !== undefined) {
+      if (!Number.isInteger(input.minPosts) || input.minPosts < 0 || input.minPosts > 1_000_000) errors.minPosts = "invalid_range";
+      else data.minPosts = input.minPosts;
+    }
+    if (input.autoCloseDays !== undefined) {
+      if (!Number.isInteger(input.autoCloseDays) || input.autoCloseDays < 0 || input.autoCloseDays > 3650) errors.autoCloseDays = "invalid_range";
+      else data.autoCloseDays = input.autoCloseDays;
+    }
+    if (input.password !== undefined) {
+      if (input.password === "") data.passwordHash = null;
+      else if (input.password.length < 4 || input.password.length > 100) errors.password = "invalid_length";
+      else data.passwordHash = await hashPassword(input.password);
+    }
+    if (input.rulesMode !== undefined) {
+      if (!["off", "show", "accept"].includes(input.rulesMode)) errors.rulesMode = "invalid_choice";
+      else data.rulesMode = input.rulesMode;
+    }
+    if (input.rules !== undefined) {
+      if (input.rules === null) {
+        data.rulesJson = Prisma.DbNull;
+        data.rulesHtml = "";
+      } else if (!render) errors.rules = "invalid";
+      else {
+        try {
+          const r = await render(input.rules, actor);
+          data.rulesJson = r.json as Prisma.InputJsonValue;
+          data.rulesHtml = r.html;
+        } catch (error) {
+          if (error instanceof GcsValidationError) errors.rules = Object.values(error.fields)[0] ?? "invalid";
+          else throw error;
+        }
+      }
+    }
+    if (Object.keys(errors).length > 0) throw new GcsValidationError(errors);
+    await db.$transaction(async (tx) => {
+      const row = await tx.forum.update({ where: { id }, data });
+      // Regulile acceptate se cer din nou după o schimbare a textului lor.
+      if (input.rules !== undefined) await tx.forumRulesAcceptance.deleteMany({ where: { forumId: id } });
+      const { passwordHash: _a, rulesJson: _b, ...afterSafe } = row;
+      const { passwordHash: _c, rulesJson: _d, ...beforeSafe } = before;
+      await writeAudit(tx, { actorId: actor.userId, action: "forum.options.update", targetType: "forum", targetId: String(id), before: { ...beforeSafe, hasPassword: before.passwordHash !== null }, after: { ...afterSafe, hasPassword: row.passwordHash !== null }, ip: actor.ip });
+    });
+    await this.changed([id], false);
   }
 
   /** Ordinea și părinții (drag & drop din ACP). Refuză ciclurile și încălcările structurii. */
@@ -220,7 +388,7 @@ export class GcsForumService {
     if (topics > 0) {
       if (opts.moveContentTo === undefined) throw new GcsConflict({ reason: "has_content" });
       const dest = await db.forum.findUnique({ where: { id: opts.moveContentTo } });
-      if (!dest || dest.id === id || (dest.type !== "FORUM" && dest.type !== "QA")) throw new GcsValidationError({ moveContentTo: "invalid_choice" });
+      if (!dest || dest.id === id || (dest.type !== "FORUM" && dest.type !== "QA" && dest.type !== "PAGE")) throw new GcsValidationError({ moveContentTo: "invalid_choice" });
       target = dest.id;
     }
 

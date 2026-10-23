@@ -48,7 +48,7 @@ export default async function AcpForumsPage() {
           <div className="gcs-field">
             <label htmlFor="gcs-acp-type">{t("create.type")}</label>
             <select id="gcs-acp-type" className="gcs-input" name="type" defaultValue="FORUM">
-              {(["CATEGORY", "FORUM", "QA", "LINK"] as const).map((type) => (
+              {(["CATEGORY", "FORUM", "QA", "LINK", "PAGE"] as const).map((type) => (
                 <option key={type} value={type}>
                   {t(`types.${type}`)}
                 </option>

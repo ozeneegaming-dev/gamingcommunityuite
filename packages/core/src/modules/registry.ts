@@ -4,6 +4,7 @@ import type { GcsCache } from "../cache";
 import type { GcsRichFieldKey } from "../content/richFields";
 import type { GcsEvent, GcsEventBus } from "../events";
 import type { GcsSettingDef } from "../settings/registry";
+import { assertForumExtension, type GcsForumExtension } from "./forumSlots";
 
 /** Valorile `Group.key` (root_admin, member, vip_gold, custom_<id>…). */
 export type GroupKey = string;
@@ -267,6 +268,11 @@ export interface GcsModule {
    * sancțiunile de pe servere, clanul). Site-ul le desenează după cheie.
    */
   memberPanels?: GcsMemberPanelDef[];
+  /**
+   * Forum v2: extensiile forumului (sloturile din listă, pagina forumului, bara topicului, stilul rândurilor și taburile
+   * din formularul ACP al forumului). Apar doar cât aplicația modulului e pornită (specul `2026-10-17-forum-v2-sloturi`).
+   */
+  forumExtensions?: GcsForumExtension[];
 }
 
 /** Un tab al profilului public adus de un modul. `position`: ordinea între taburi (cele de bază au 10, 20, 70, 80, 90). */
@@ -304,6 +310,9 @@ export class GcsModuleRegistry {
     assertUnique(permissions.map((p) => p.key), this.permissions, "permisiunea");
     const widgetKeys = new Map(this.widgetDefs().map((w) => [w.def.key, w]));
     assertUnique((m.widgets ?? []).map((w) => w.key), widgetKeys, "widget-ul");
+    for (const ext of m.forumExtensions ?? []) assertForumExtension(ext);
+    const extKeys = new Map(this.forumExtensions().map((e) => [e.def.key, e]));
+    assertUnique((m.forumExtensions ?? []).map((e) => e.key), extKeys, "extensia de forum");
 
     this.modules.push(m);
     for (const s of m.settings) this.settings.set(s.key, s);
@@ -390,6 +399,17 @@ export class GcsModuleRegistry {
       .flatMap((m) => (m.memberPanels ?? []).filter((d) => d.surfaces.includes(surface)).map((def) => ({ module: m.key, def })))
       .filter((p) => (seen.has(p.def.key) ? false : (seen.add(p.def.key), true)))
       .sort((a, b) => a.def.position - b.def.position);
+  }
+
+  /**
+   * Extensiile forumului (Forum v2), cu modulul care le aduce, în ordinea `position` (apoi a înregistrării). Filtrarea
+   * după aplicațiile pornite o face apelantul (`GcsForumSlotService`).
+   */
+  forumExtensions(): { module: string; def: GcsForumExtension }[] {
+    return this.modules
+      .flatMap((m, i) => (m.forumExtensions ?? []).map((def, j) => ({ module: m.key, def, order: i * 100 + j })))
+      .sort((a, b) => (a.def.position ?? 100) - (b.def.position ?? 100) || a.order - b.order)
+      .map(({ module, def }) => ({ module, def }));
   }
 
   widgetDef(key: string): { module: string; def: GcsWidgetDef } | undefined {

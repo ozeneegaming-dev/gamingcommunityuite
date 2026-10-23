@@ -214,7 +214,15 @@
       "already_member": "Ты уже в этой группе.",
       "already_primary": "Это уже твоя основная группа.",
       "members_only": "Сначала войди.",
-      "self": "Нельзя сделать это со своим аккаунтом."
+      "self": "Нельзя сделать это со своим аккаунтом.",
+      "rules_not_accepted": "Сначала примите правила форума.",
+      "min_posts": "Чтобы писать здесь, нужно больше сообщений.",
+      "archived": "Тема в архиве: только чтение.",
+      "already_rated": "Вы уже оценили эту тему.",
+      "no_permission": "У вас нет права на это действие.",
+      "account_too_new": "Ваш аккаунт слишком новый для этого действия.",
+      "not_enough_posts": "Для этого действия нужно больше сообщений.",
+      "disabled": "Эта функция здесь выключена."
     },
     "fields": {
       "invalid_color": "Недействительный цвет (#RRGGBB)",
@@ -349,7 +357,12 @@
       "email_taken": "Этот email уже используется другим аккаунтом.",
       "email_invalid": "Неверный адрес email.",
       "group_unknown": "Неизвестная группа.",
-      "separator_top": "Разделитель может стоять только между подпунктами."
+      "separator_top": "Разделитель может стоять только между подпунктами.",
+      "block_forbidden": "Один из блоков не разрешён вашей группе.",
+      "wrong_password": "Неверный пароль.",
+      "unknown_member": "Имя не принадлежит ни одному участнику.",
+      "invalid_icon": "Иконка недействительна.",
+      "disabled": "Эта опция выключена на этом форуме."
     }
   },
   "acp": {
@@ -485,7 +498,8 @@
         "chat_pro_bar": "Announcement bar",
         "chat_pro_emotes": "Emotes",
         "chat_moderation": "Модерация",
-        "chat_moderators": "Модераторы"
+        "chat_moderators": "Модераторы",
+        "archive": "Архивирование"
       },
       "vip": {
         "vip_group": "VIP",
@@ -1261,7 +1275,8 @@
         "CATEGORY": "Категория",
         "FORUM": "Форум",
         "QA": "Q&A",
-        "LINK": "Ссылка"
+        "LINK": "Ссылка",
+        "PAGE": "Страница / Объявление"
       },
       "moveUp": "Скачать {name} Up",
       "moveDown": "Скачать {name} Down",
@@ -1311,6 +1326,55 @@
         "users": "Сообщество",
         "help": "Помощь",
         "link": "Ссылка"
+      },
+      "tabs": {
+        "label": "Разделы форума",
+        "details": "Детали",
+        "options": "Параметры",
+        "page": "Страница",
+        "plugin": "ПЛАГИН"
+      },
+      "options": {
+        "title": "Параметры форума",
+        "access": "Доступ",
+        "ownTopicsOnly": "Участники видят только свои темы",
+        "ownTopicsOnlyHint": "Модераторы видят всё; гости не видят тем. Подходит для заявок, жалоб или тикетов.",
+        "password": "Пароль (пусто = без пароля)",
+        "passwordChange": "Новый пароль (пусто = без изменений)",
+        "removePassword": "Убрать пароль",
+        "minPosts": "Минимум сообщений, чтобы писать (0 = без порога)",
+        "rules": "Правила форума",
+        "rulesMode": "Блок правил",
+        "rulesModes": {
+          "off": "Без правил",
+          "show": "Показаны сверху",
+          "accept": "Нужно принять перед публикацией"
+        },
+        "rulesText": "Текст правил",
+        "topics": "Темы",
+        "defaultSort": "Сортировка по умолчанию",
+        "pollsEnabled": "Опросы разрешены",
+        "tagsEnabled": "Теги разрешены",
+        "countPosts": "Сообщения засчитываются участнику",
+        "autoCloseDays": "Закрывать темы через N дней без ответов (0 = никогда)",
+        "rating": "Оценка звёздами",
+        "ratingEnabled": "Темы можно оценивать звёздами",
+        "ratingHint": "Группы, которые могут оценивать: <perms>матрица прав</perms> («Оценивать темы»). Изменение голоса, оценка своей темы, возраст аккаунта и минимум сообщений: <settings>настройки форума</settings>.",
+        "resetRatings": "Сбросить оценки форума",
+        "resetRatingsHint": "Удаляет все голоса тем этого форума.",
+        "resetRatingsConfirm": "Удалить все голоса на этом форуме? Это нельзя отменить."
+      },
+      "page": {
+        "title": "Страница",
+        "content": "Содержимое страницы",
+        "contentHint": "Заголовки, цветные заголовки, списки, ссылки, изображения и безопасные блоки (разделы, карточки, кнопки, шаги…).",
+        "cta": "Главная кнопка (необязательно)",
+        "ctaLabel": "Текст кнопки",
+        "ctaUrl": "Ссылка кнопки (/… или https://…)",
+        "ctaIcon": "Иконка кнопки",
+        "allowTopics": "Темы под страницей",
+        "audience": "Кто видит страницу",
+        "audienceHint": "Ни одна группа не отмечена = все, кто видит форум (его права)."
       }
     },
     "prefixes": {
@@ -2385,7 +2449,11 @@
           "user_deleting": "An account starts being deleted (the plugin deletes the member's data).",
           "user_deleted": "An account was deleted.",
           "user_merged": "An account was merged into another (the plugin moves its data to the target account).",
-          "member_panel": "Карточки и вкладки на странице участника в ACP и в профиле (объявляются в memberPanels)."
+          "member_panel": "Карточки и вкладки на странице участника в ACP и в профиле (объявляются в memberPanels).",
+          "forum_list": "Список форумов (главная, подфорумы): метки рядом с названием, строка под описанием, полоса категории и стиль строки (один вызов на страницу).",
+          "forum_page": "Карточка вверху страницы форума.",
+          "topic_bar": "Панель на странице темы, под заголовком.",
+          "forum_edit": "Содержимое вкладки плагина в ACP → Форумы → Изменить (объявлена в forumTabs)."
         }
       }
     },
@@ -3896,6 +3964,59 @@
       "removeBody": "Панель «{text}» исчезнет с сайта после сохранения.",
       "removeConfirm": "Удалить",
       "cancel": "Отмена"
+    },
+    "archive": {
+      "title": "Автоматическое архивирование",
+      "description": "Правила, которые сами отправляют старые темы в архив. Тема в архиве доступна только для чтения и может быть восстановлена в любой момент.",
+      "enabled": "Автоматическое архивирование включено (один проход в час).",
+      "disabled": "Автоматическое архивирование выключено: правила работают только через «Запустить сейчас».",
+      "settingsLink": "Настройки форума",
+      "rules": "Правила",
+      "new": "Новое правило",
+      "empty": "Правил пока нет.",
+      "on": "Вкл.",
+      "off": "Выкл.",
+      "summary": "Последнее сообщение старше {days} дн. · сейчас заархивировало бы {count, plural, one {# тему} few {# темы} many {# тем} other {# темы}}",
+      "lastRun": "Последний запуск: {date} ({count})",
+      "edit": "Изменить",
+      "runNow": "Запустить сейчас",
+      "runConfirm": "Заархивировать сейчас {count, plural, one {# тему} few {# темы} many {# тем} other {# темы}}?",
+      "delete": "Удалить",
+      "deleteConfirm": "Удалить правило? Уже заархивированные темы останутся в архиве.",
+      "editTitle": "Изменить: {name}",
+      "save": "Сохранить правило",
+      "name": "Название правила",
+      "ruleEnabled": "Правило включено",
+      "conditions": "Архивировать темы, которые…",
+      "lastPostDays": "…имеют последнее сообщение старше (дней)",
+      "forums": "Форумы",
+      "forumsHint": "Ни один форум не отмечен = все форумы.",
+      "flags": {
+        "pinned": "Закреплённые",
+        "locked": "Закрытые",
+        "hidden": "Скрытые",
+        "poll": "С опросом"
+      },
+      "tri": {
+        "any": "Любые",
+        "yes": "Только да",
+        "no": "Только нет"
+      },
+      "repliesBelow": "Меньше N ответов",
+      "viewsBelow": "Меньше N просмотров",
+      "ratingBelow": "Оценка ниже",
+      "starters": "Созданы (имена через запятую)",
+      "startersHint": "напр. Krypt, ShadowRO",
+      "exclusions": "…но не когда",
+      "not": {
+        "pinned": "Тема закреплена",
+        "locked": "Тема закрыта",
+        "poll": "В теме есть опрос",
+        "repliesAtLeast": "В ней не меньше N ответов",
+        "viewsAtLeast": "У неё не меньше N просмотров",
+        "ratingAtLeast": "Её оценка не ниже",
+        "starters": "Её создал (имена через запятую)"
+      }
     }
   },
   "settings": {
@@ -3950,14 +4071,37 @@
       "unicode": "Any alphabet",
       "optional": "Optional",
       "direct": "Direct: the browser loads the image from the address (nothing copied to the site)",
-      "copy": "Copy: images are downloaded and kept on the site"
+      "copy": "Copy: images are downloaded and kept on the site",
+      "rows": "Строки",
+      "grid": "Сетка",
+      "list": "Список",
+      "snippet": "С отрывком",
+      "top": "Сверху",
+      "bottom": "Снизу",
+      "all": "Все устройства",
+      "desktop": "Только компьютер"
     },
     "forums": {
       "posts_per_page": "Посты на странице",
       "topics_per_page": "Темы на странице",
       "post_max_chars": "Максимальная длина поста (персонажи)",
       "embeds": "Разрешенные встраивания (youtube, twitch, медаль, изображение)",
-      "revisions_visible_to_author": "Авторы видят свою историю редактирования"
+      "revisions_visible_to_author": "Авторы видят свою историю редактирования",
+      "pinned_first": "Закреплённые темы всегда первые",
+      "forum_view": "Вид форумов по умолчанию (участники могут выбрать другой)",
+      "topic_view": "Вид списка тем по умолчанию (участники могут выбрать другой)",
+      "popular_threshold": "«Популярно сейчас»: ответов за последние 24 часа (0 = выкл.)",
+      "mod_names_public": "Имя модератора показывается на сообщениях модерации",
+      "summary_enabled": "Сводка темы (самые активные, популярные сообщения, активные дни)",
+      "summary_min_replies": "Сводка появляется от N ответов",
+      "summary_position": "Положение сводки",
+      "summary_devices": "Сводка показывается на",
+      "rss_enabled": "RSS-лента для каждого форума",
+      "rating_change_vote": "Оценка звёздами: участники могут менять голос",
+      "rating_own": "Оценка звёздами: автор может оценить свою тему",
+      "rating_min_age_days": "Оценка звёздами: минимальный возраст аккаунта (дней)",
+      "rating_min_posts": "Оценка звёздами: минимум сообщений",
+      "archive_enabled": "Автоматическое архивирование (правила в Форумы → Архивирование)"
     },
     "profile": {
       "cover_max_mb": "Максимальный размер покрытия (MB)",
@@ -4497,7 +4641,17 @@
       "flood_seconds": "Задержка между сообщениями (секунды)",
       "moderate_all": "Модератор на всех форумах",
       "poll_create": "Создает опросы",
-      "tags_max": "Теги по теме (максимум)"
+      "tags_max": "Теги по теме (максимум)",
+      "rate": "Оценивать темы (звёзды)",
+      "block_section": "Блоки: раздел",
+      "block_callout": "Блоки: выноска",
+      "block_cards": "Блоки: сетка карточек",
+      "block_button": "Блоки: кнопка",
+      "block_columns": "Блоки: колонки",
+      "block_steps": "Блоки: шаги",
+      "block_progress": "Блоки: прогресс",
+      "block_hidden": "Блоки: скрытое содержимое",
+      "block_html": "Блоки: HTML (только Root Admin)"
     },
     "vip": {
       "manage": "Гранты, продления и отмены VIP"
@@ -4966,7 +5120,55 @@
     "topicsCount": "{count, plural, one {Тема #} few {Темы #} many {Темы #} other {Темы #}}",
     "statsOf": "Статистика форума {name}",
     "statsTopics": "{count, plural, one {<b>#</b> тема} few {<b>#</b> темы} many {<b>#</b> тем} other {<b>#</b> темы}}",
-    "statsPosts": "{count, plural, one {<b>#</b> ответ} few {<b>#</b> ответа} many {<b>#</b> ответов} other {<b>#</b> ответа}}"
+    "statsPosts": "{count, plural, one {<b>#</b> ответ} few {<b>#</b> ответа} many {<b>#</b> ответов} other {<b>#</b> ответа}}",
+    "pageHint": "Страница",
+    "archived": "В архиве",
+    "popularNow": "Популярно сейчас",
+    "ratingLabel": "{avg} из 5 · {count, plural, one {# голос} few {# голоса} many {# голосов} other {# голоса}}",
+    "pageEmpty": "На этой странице пока нет содержимого.",
+    "sortLabel": "Сортировка",
+    "sorts": {
+      "last": "Последний ответ",
+      "created": "Новые",
+      "replies": "Больше ответов",
+      "views": "Больше просмотров",
+      "rating": "Лучшие по оценке",
+      "title": "Название (А–Я)"
+    },
+    "fourStars": "Только 4★+",
+    "emptyRated": "Нет тем с оценкой 4★ и выше.",
+    "listViews": {
+      "label": "Вид списка",
+      "list": "Список",
+      "snippet": "С отрывком"
+    },
+    "password": {
+      "title": "{name} защищён паролем",
+      "hint": "Введите пароль форума, чтобы открыть его. Он останется открытым в этом браузере 30 дней.",
+      "label": "Пароль форума",
+      "submit": "Открыть"
+    },
+    "rules": {
+      "title": "Правила форума",
+      "accepted": "Приняты",
+      "mustAccept": "Чтобы писать здесь, нужно принять правила.",
+      "accept": "Я прочитал(а) и принимаю правила"
+    },
+    "slotsDemo": {
+      "tab": "Демо слотов",
+      "description": "Демо-расширение слотов форума: метка рядом с названием, строка под описанием, стиль строки, карточка на странице форума и панель темы.",
+      "enabled": "Показывать демо на этом форуме",
+      "badge": "Метка рядом с названием",
+      "note": "Строка под описанием",
+      "accent": "Цвет полосы (#RRGGBB)",
+      "caps": "Название заглавными буквами",
+      "headerChip": "Демо",
+      "visibleTopics": "видимых тем",
+      "cardTitle": "Демо-карточка",
+      "cardBody": "Верхняя карточка форума {name}, добавленная демо-расширением.",
+      "cardAction": "Открыть форум",
+      "barText": "Демо-панель темы #{id}"
+    }
   },
   "topic": {
     "reply": "Ответить",
@@ -5093,7 +5295,76 @@
       "characters": "{count} персонажи",
       "charactersMax": "{count}/{max} символы",
       "mentionGroup": "Group",
-      "mentionOnline": "Online"
+      "mentionOnline": "Online",
+      "blocks": {
+        "blocks": "Блоки",
+        "blockSettings": "Настройки блока",
+        "insert": "Вставить",
+        "apply": "Применить",
+        "cancel": "Отмена",
+        "type": {
+          "section": "Раздел",
+          "callout": "Выноска",
+          "cards": "Сетка карточек",
+          "button": "Кнопка",
+          "columns": "Колонки",
+          "steps": "Шаги",
+          "progress": "Прогресс",
+          "hidden": "Скрытое содержимое",
+          "html": "HTML (только Root)"
+        },
+        "node": {
+          "gcsSection": "Раздел",
+          "gcsCallout": "Выноска",
+          "gcsCardGrid": "Сетка карточек",
+          "gcsCard": "Карточка",
+          "gcsButton": "Кнопка",
+          "gcsColumns": "Колонки",
+          "gcsColumn": "Колонка",
+          "gcsSteps": "Шаги",
+          "gcsStep": "Шаг",
+          "gcsProgress": "Прогресс",
+          "gcsHidden": "Скрытое содержимое",
+          "gcsHtml": "HTML"
+        },
+        "field": {
+          "title": "Заголовок",
+          "icon": "Иконка (напр. fa-solid fa-gift)",
+          "tone": "Цвет",
+          "kind": "Тип",
+          "columns": "Колонки",
+          "subtitle": "Подзаголовок",
+          "value": "Значение",
+          "badge": "Значок",
+          "highlight": "Выделено",
+          "label": "Текст",
+          "href": "Ссылка",
+          "variant": "Стиль",
+          "max": "Максимум",
+          "mode": "Кто видит",
+          "groups": "Группы (id через запятую)",
+          "html": "HTML"
+        },
+        "option": {
+          "1": "1",
+          "2": "2",
+          "3": "3",
+          "4": "4",
+          "accent": "Акцент",
+          "neutral": "Нейтральный",
+          "ok": "Зелёный (ok)",
+          "warn": "Предупреждение",
+          "danger": "Опасность",
+          "info": "Информация",
+          "warning": "Предупреждение",
+          "success": "Успех",
+          "primary": "Заливка",
+          "ghost": "Контур",
+          "reply": "Кто ответил в теме",
+          "members": "Вошедшие участники",
+          "groups": "Определённые группы"
+        }
+      }
     },
     "ignored": "Вы игнорируете <name></name>. Показать пост",
     "live": {
@@ -5113,7 +5384,72 @@
     "reactedYou": "Вам понравился этот пост.",
     "reactedYouAndOthers": "Вам и {count, plural, one {# другой человек} few {# Другие} many {# Другие} other {# Другие}} понравился этот пост.",
     "reactedCount": "{count, plural, one {# человек} few {Люди #} many {Люди #} other {Люди #}} понравился этот пост.",
-    "quickReply": "Быстрый ответ"
+    "quickReply": "Быстрый ответ",
+    "pills": {
+      "author": "Автор",
+      "staff": "Команда",
+      "recommended": "Рекомендовано"
+    },
+    "ip": "IP: {ip}",
+    "ipTools": "Инструменты IP",
+    "recommend": "Рекомендовать ответ",
+    "unrecommend": "Убрать рекомендацию",
+    "recommendedTitle": "Ответ, рекомендованный командой",
+    "archivedNotice": "Тема в архиве с {date}: только чтение.",
+    "archivedReply": "Тема в архиве: новые ответы добавлять нельзя.",
+    "you": "Вы",
+    "and": "и",
+    "reactedNames": "<names></names> {count, plural, one {отреагировал(а)} other {отреагировали}}",
+    "reactedNamesOthers": "<names></names> и {count, plural, one {ещё # участник} few {ещё # участника} many {ещё # участников} other {ещё # участника}} отреагировали",
+    "share": {
+      "label": "Поделиться",
+      "copy": "Скопировать ссылку",
+      "copied": "Ссылка скопирована",
+      "email": "Почта"
+    },
+    "multiQuote": {
+      "add": "+ Цитата",
+      "remove": "Убрать цитату",
+      "label": "Выбранные цитаты",
+      "insert": "Цитировать {count, plural, one {# сообщение} few {# сообщения} many {# сообщений} other {# сообщения}}",
+      "clear": "Очистить цитаты"
+    },
+    "replyBox": {
+      "placeholder": "Ответить…",
+      "draftRestored": "Ваш черновик восстановлен.",
+      "discardDraft": "Удалить черновик",
+      "plainPaste": "Вставить как текст",
+      "plainPasteOn": "Вставка как текст: вкл.",
+      "preview": "Предпросмотр",
+      "closePreview": "Закрыть предпросмотр",
+      "previewDevices": "Предпросмотр на",
+      "devices": {
+        "desktop": "Компьютер",
+        "tablet": "Планшет",
+        "phone": "Телефон"
+      }
+    },
+    "notices": {
+      "label": "Сообщение модераторов",
+      "title": "Сообщение модераторов",
+      "team": "Команда модерации",
+      "delete": "Удалить сообщение",
+      "cancel": "Отмена",
+      "confirmDelete": "Удалить сообщение модератора?"
+    },
+    "gap": {
+      "months": "{count, plural, one {# месяц} few {# месяца} many {# месяцев} other {# месяца}} спустя…",
+      "years": "{count, plural, one {# год} few {# года} many {# лет} other {# года}} спустя…"
+    },
+    "summary": {
+      "title": "Сводка темы",
+      "posters": "Самые активные",
+      "popular": "Популярные сообщения",
+      "days": "Самые активные дни",
+      "postsCount": "{count, plural, one {# сообщение} few {# сообщения} many {# сообщений} other {# сообщения}}",
+      "reactions": "{count, plural, one {# реакция} few {# реакции} many {# реакций} other {# реакции}}",
+      "noText": "(без текста)"
+    }
   },
   "newTopic": {
     "title": "Новая тема в {forum}",
@@ -5164,7 +5500,62 @@
     "menu": "Умеренные инструменты",
     "confirmDelete": "Постоянно удалять тему и все ее посты?",
     "done": "Готово",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "v2": {
+      "addNotice": "Добавить сообщение",
+      "noticeTone": "Тон сообщения",
+      "tones": {
+        "info": "Информация",
+        "warn": "Предупреждение",
+        "ok": "Подтверждение",
+        "danger": "Тревога"
+      },
+      "publishNotice": "Опубликовать сообщение",
+      "approvalOn": "Одобрять сообщения",
+      "approvalOff": "Отключить одобрение",
+      "archive": "В архив",
+      "unarchive": "Восстановить из архива",
+      "resetRating": "Сбросить оценку",
+      "resetRatingConfirm": "Удалить все голоса этой темы? Оценка начнётся с нуля.",
+      "history": "История модерации",
+      "historyEmpty": "Действий модерации пока нет.",
+      "system": "Система",
+      "savedActions": "Сохранённые действия",
+      "actions": {
+        "mod": {
+          "topic": {
+            "pin": "Закреплено / откреплено",
+            "lock": "Закрыто / открыто",
+            "feature": "Выделено",
+            "move": "Перемещено",
+            "merge": "Объединено",
+            "split": "Разделено",
+            "delete": "Удалено",
+            "solved": "Лучший ответ",
+            "notice": "Сообщение модератора",
+            "notice_delete": "Сообщение модератора удалено",
+            "recommend": "Рекомендованный ответ",
+            "approval": "Одобрение сообщений",
+            "archive": "В архиве",
+            "unarchive": "Восстановлено из архива",
+            "saved_action": "Применено сохранённое действие"
+          },
+          "post": {
+            "edit": "Сообщение изменено",
+            "delete": "Сообщение удалено",
+            "restore": "Сообщение восстановлено",
+            "approve": "Сообщение одобрено",
+            "hide": "Сообщение скрыто"
+          }
+        },
+        "rating": {
+          "reset": "Оценка сброшена",
+          "vote": {
+            "remove": "Голос удалён"
+          }
+        }
+      }
+    }
   },
   "search": {
     "title": "Поиск",
@@ -6257,7 +6648,8 @@
       "recentPosts": "Последние посты",
       "topPosters": "Лучшие плакаты",
       "featuredTopics": "Избранные темы",
-      "featuredCarousel": "Featured carousel"
+      "featuredCarousel": "Featured carousel",
+      "topRated": "Лучшие по оценке"
     },
     "chat": {
       "shoutbox": "Шутбокс"
@@ -6298,7 +6690,8 @@
         "recentPosts": "Последние ответы с отрывком.",
         "topPosters": "Члены с наибольшим количеством должностей за выбранный период.",
         "featuredTopics": "Темы, представленные персоналом.",
-        "featuredCarousel": "Topics featured by the staff, in an image carousel: forum, date, title, excerpt and author."
+        "featuredCarousel": "Topics featured by the staff, in an image carousel: forum, date, title, excerpt and author.",
+        "topRated": "Темы с наибольшим числом звёзд за последний месяц (не менее 2 голосов)."
       },
       "chat": {
         "shoutbox": "В чате, прямо на странице."
@@ -6334,7 +6727,8 @@
       "topics": "Темы",
       "reputation": "Репутация",
       "online": "Время онлайн"
-    }
+    },
+    "ratingAria": "{avg} из 5, {count, plural, one {# голос} few {# голоса} many {# голосов} other {# голоса}}"
   },
   "pageEditor": {
     "title": "Редактировать страницу",
@@ -8692,5 +9086,32 @@
       "button": "Войти"
     },
     "social": "или в один клик через"
+  },
+  "rating": {
+    "average": "{avg} из 5 · {count, plural, one {# голос} few {# голоса} many {# голосов} other {# голоса}}",
+    "decimal": ",",
+    "rateThis": "Оценить тему",
+    "starLabel": "{value} {value, plural, one {звезда} few {звезды} many {звёзд} other {звезды}}: {label}",
+    "labels": {
+      "poor": "Плохо",
+      "fair": "Сносно",
+      "good": "Хорошо",
+      "great": "Очень хорошо",
+      "excellent": "Отлично"
+    },
+    "none": "Оценок пока нет",
+    "yours": "Ваша оценка: {value}★",
+    "undo": "Убрать оценку",
+    "signIn": "Войдите",
+    "signInHint": ", чтобы оценить тему.",
+    "reasons": {
+      "own_content": "Нельзя оценивать свою тему.",
+      "no_permission": "Ваша группа не может оценивать на этом форуме.",
+      "account_too_new": "Ваш аккаунт слишком новый для оценки.",
+      "not_enough_posts": "Для оценки нужно больше сообщений.",
+      "disabled": "Оценка недоступна для этой темы."
+    },
+    "distribution": "Распределение оценок",
+    "starsShort": "{value}★"
   }
 }

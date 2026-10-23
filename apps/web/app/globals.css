@@ -43,6 +43,8 @@
 @import "@gcs/ui/loaders.css";
 @import "@gcs/ui/scroll.css";
 @import "@gcs/ui/announce.css";
+/* Forum v2 (orice temă): sloturile extensiilor, paginile, nota cu stele, uneltele topicului, blocurile sigure, arhivarea. */
+@import "@gcs/ui/forum-v2.css";
 /* Designul GCS (temele GCS Dark / GCS White): doar aspectul, sub `.gcs-nova`, pus pe `<html>` doar pe paginile site-ului. */
 @import "@gcs/ui/nova.css";
 /* La final, pentru toate temele: sweep-ul și tranzițiile de hover ale butoanelor, tab-urilor, cipurilor și meniurilor. */

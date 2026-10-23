@@ -1,5 +1,5 @@
 import { GcsForbidden, GcsNotFound, GcsTagService, GcsValidationError, normalizeTag, writeAudit, type GcsActor } from "@gcs/core";
-import type { Prisma } from "@gcs/db";
+import { Prisma } from "@gcs/db";
 import { GcsPollService, validatePoll, type GcsPollInput } from "./polls";
 import { GcsForumPosting, POST_CONTENT_TYPE, WRITE_TX } from "./posting";
 import type { GcsPrefixService } from "./prefixes";
@@ -28,14 +28,16 @@ export class GcsTopicService {
     const { posting } = this;
     const { db, bus, attachments, permissions } = posting.deps;
 
-    const forum = await db.forum.findUnique({ where: { id: input.forumId } });
+    const forum = await db.forum.findUnique({ where: { id: input.forumId }, include: { page: { select: { allowTopics: true } } } });
     if (!forum) throw new GcsNotFound();
     if (!actor.userId || !(await posting.canOnForum(actor, "forums.create", forum.id))) throw new GcsForbidden({ permission: "forums.create" });
-    if (forum.type !== "FORUM" && forum.type !== "QA") throw new GcsValidationError({ forumId: "invalid_choice" });
+    // Forum v2: și o pagină („Pagină / Anunț”) cu topicuri dedesubt.
+    if (forum.type !== "FORUM" && forum.type !== "QA" && !(forum.type === "PAGE" && forum.page?.allowTopics)) throw new GcsValidationError({ forumId: "invalid_choice" });
+    await posting.checkForumOptions(actor, forum, { poll: Boolean(input.poll), tags: input.tags?.length ?? 0 });
 
     const filtered = await posting.filterContent(actor, { kind: "topic", title: input.title, content: input.content, forumId: forum.id, topicId: null, authorId: actor.userId });
     const title = posting.cleanTitle(filtered.title ?? input.title);
-    const rendered = await posting.render(filtered.content, { actor, cooldown: true });
+    const rendered = await posting.render(filtered.content, { actor, cooldown: true, blocks: true });
     if (input.prefixId != null && !(await this.extras.prefixes.allowedFor(forum.id)).some((p) => p.id === input.prefixId)) {
       throw new GcsValidationError({ prefixId: "invalid_choice" });
     }
@@ -73,6 +75,7 @@ export class GcsTopicService {
           authorId,
           contentJson: rendered.json as Prisma.InputJsonValue,
           contentHtml: rendered.html,
+          hiddenParts: rendered.hiddenParts.length > 0 ? (rendered.hiddenParts as unknown as Prisma.InputJsonValue) : Prisma.DbNull,
           visibility,
           ip: actor.ip,
         },
@@ -87,7 +90,7 @@ export class GcsTopicService {
 
       let promoted = false;
       if (!pending) {
-        await posting.counters.onTopicCreated(tx, { postId: post.id, topicId: topic.id, forumId: forum.id, authorId, createdAt: post.createdAt });
+        await posting.counters.onTopicCreated(tx, { postId: post.id, topicId: topic.id, forumId: forum.id, authorId, createdAt: post.createdAt, countPosts: forum.countPosts });
         promoted = await posting.promoteIfReady(tx, authorId);
       }
       return { topicId: topic.id, postId: post.id, promoted };

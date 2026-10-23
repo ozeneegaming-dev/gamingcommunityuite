@@ -3,7 +3,15 @@ import type { Prisma } from "@gcs/db";
 type Tx = Prisma.TransactionClient;
 
 /** O postare tocmai publicată (vizibilă). */
-export type GcsVisiblePost = { postId: number; topicId: number; forumId: number; authorId: string | null; createdAt: Date };
+export type GcsVisiblePost = {
+  postId: number;
+  topicId: number;
+  forumId: number;
+  authorId: string | null;
+  createdAt: Date;
+  /** Forum v2: postările forumului se numără la contorul membrului (opțiunea forumului; implicit da). */
+  countPosts?: boolean;
+};
 
 /**
  * Contoarele denormalizate ale forumului (specul etapei 2, §4). Singurul loc care le modifică.
@@ -20,7 +28,7 @@ export class GcsForumCounters {
   async onTopicCreated(tx: Tx, post: GcsVisiblePost): Promise<void> {
     await tx.$executeRaw`UPDATE forums SET "topicsCount" = "topicsCount" + 1 WHERE id = ${post.forumId}`;
     await this.forumPost(tx, post);
-    await this.userPost(tx, post.authorId, true);
+    await this.userPost(tx, post.authorId, post.countPosts !== false);
   }
 
   /**
@@ -33,7 +41,7 @@ export class GcsForumCounters {
       data: { repliesCount: { increment: 1 }, lastPostId: post.postId, lastPostAt: post.createdAt, lastPosterId: post.authorId },
     });
     if (topicVisible) await this.forumPost(tx, post);
-    await this.userPost(tx, post.authorId, topicVisible);
+    await this.userPost(tx, post.authorId, topicVisible && post.countPosts !== false);
   }
 
   /**
@@ -108,7 +116,8 @@ export class GcsForumCounters {
   /** Contoarele unui user, din date. */
   async recountUser(tx: Tx, userId: string): Promise<void> {
     const [postsCount, approvedPostsCount, solutions] = await Promise.all([
-      tx.post.count({ where: { authorId: userId, visibility: "VISIBLE", topic: { visibility: "VISIBLE" } } }),
+      // Forum v2: doar forumurile care numără postările (opțiunea „Numără postările”).
+      tx.post.count({ where: { authorId: userId, visibility: "VISIBLE", topic: { visibility: "VISIBLE", forum: { countPosts: true } } } }),
       tx.post.count({ where: { authorId: userId, visibility: { not: "PENDING" } } }),
       // Răspunsurile marcate „cel mai bun răspuns” (etapa 3: regula Top helper).
       tx.$queryRaw<{ n: number }[]>`SELECT count(*)::int AS n FROM topics t JOIN posts p ON p.id = t."solvedPostId" WHERE p."authorId" = ${userId}`,

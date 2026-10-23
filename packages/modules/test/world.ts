@@ -12,6 +12,7 @@ import {
   GcsRedisRateLimiter,
   GcsSettingsService,
   type GcsActor,
+  type GcsModule,
 } from "@gcs/core";
 import { createWorld } from "@gcs/core/test/world";
 import type { ForumType, PrismaClient } from "@gcs/db";
@@ -59,15 +60,16 @@ export async function snapshotCounters(db: PrismaClient) {
  * Un site de test cu modulul Forum: baza cu seed-ul real, serviciile forumului și actori gata făcuți
  * (Root Admin, membru, vizitator).
  */
-export async function createForumWorld() {
-  const world = await createWorld([], realRegistry);
+export async function createForumWorld(extraModules: GcsModule[] = []) {
+  const world = await createWorld(extraModules, realRegistry);
   const { db, bus, cache, permissions, registry, redis } = world;
 
   const settings = new GcsSettingsService({ db, cache, bus, registry });
   const rateLimiter = new GcsRedisRateLimiter(redis);
   const files = new GcsLocalFileStore(path.join(os.tmpdir(), `gcs-forum-files-${process.pid}`));
   const attachments = new GcsAttachmentService({ db, store: files, permissions, rateLimiter });
-  const forums = new GcsForumService({ db, bus, permissions, acp: world.acp, registry });
+  // Forum v2: paginile și regulile forumurilor se randează cu editorul postărilor (blocurile staff-ului).
+  const forums = new GcsForumService({ db, bus, permissions, acp: world.acp, registry, render: (content, actor) => posting.render(content, { actor, blocks: true }) });
   const groupMentions = new GcsGroupMentionService({ db, cache, redis });
   const posting = new GcsForumPosting({
     db,

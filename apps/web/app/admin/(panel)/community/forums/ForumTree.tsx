@@ -13,6 +13,7 @@ import {
   faGripVertical,
   faKey,
   faLink,
+  faBullhorn,
   faPen,
 } from "@fortawesome/free-solid-svg-icons";
 import { GcsBadge, GcsIconSvg } from "@gcs/ui";
@@ -27,7 +28,7 @@ import { reorderForums } from "./actions";
 export type ForumNode = {
   id: number;
   parentId: number | null;
-  type: "CATEGORY" | "FORUM" | "QA" | "LINK";
+  type: "CATEGORY" | "FORUM" | "QA" | "LINK" | "PAGE";
   name: string;
   slug: string;
   position: number;
@@ -35,7 +36,7 @@ export type ForumNode = {
 };
 
 /** Iconița implicită după tipul forumului, când adminul nu a ales una. */
-const TYPE_ICONS: Record<ForumNode["type"], GcsAcpIconDef> = { CATEGORY: faFolder, FORUM: faComments, QA: faCircleQuestion, LINK: faLink };
+const TYPE_ICONS: Record<ForumNode["type"], GcsAcpIconDef> = { CATEGORY: faFolder, FORUM: faComments, QA: faCircleQuestion, LINK: faLink, PAGE: faBullhorn };
 
 /** Copiii fiecărui nod, ordonați după poziție. */
 function childrenOf(nodes: ForumNode[], parentId: number | null): ForumNode[] {

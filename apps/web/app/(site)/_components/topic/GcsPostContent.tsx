@@ -14,14 +14,16 @@ import {
   faQuoteLeft,
   faRotateLeft,
   faTrash,
+  faAward,
 } from "@fortawesome/free-solid-svg-icons";
 import type { GcsReactionCount, GcsReactionView } from "@gcs/core";
-import { GcsBadge, GcsButton, GcsDropdown, GcsIconSvg, GcsModal, type GcsDropdownItem } from "@gcs/ui";
-import { GcsEditor, type GcsEditorHandle } from "@gcs/ui/editor";
+import { GcsBadge, GcsButton, GcsDropdown, GcsIconSvg, GcsMemberName, GcsModal, type GcsDropdownItem } from "@gcs/ui";
+import { GcsEditor, type GcsEditorBlock, type GcsEditorHandle } from "@gcs/ui/editor";
 import type { JSONContent } from "@tiptap/core";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
+import { memberHref } from "@/lib/forum-urls";
 import { useErrorMessage } from "@/lib/use-error-message";
 import { approvePostsAction } from "../../mod-actions";
 import {
@@ -35,8 +37,10 @@ import {
   restorePostAction,
   revisionsAction,
 } from "../../topic-actions";
+import { setRecommendedPostAction } from "../../forum-v2-actions";
+import { GcsMultiQuoteToggle } from "./GcsMultiQuote";
 import { SPLIT_FORM_ID } from "./GcsTopicModMenu";
-import { QUOTE_EVENT, useEditorLabels, type GcsQuoteDetail } from "./useEditorLabels";
+import { QUOTE_EVENT, useBlockLabels, useEditorLabels, type GcsQuoteDetail } from "./useEditorLabels";
 
 export type GcsPostContentProps = {
   topicId: number;
@@ -75,6 +79,18 @@ export type GcsPostContentProps = {
   };
   /** Sub conținut (randate pe server): butonul „Traduce”. */
   extras?: ReactNode;
+  /** Forum v2: pastilele din antet („Autor”, „Staff”, „Recomandat”), randate pe server. */
+  pills?: ReactNode;
+  /** Forum v2: rândul „Tu, A, B și alți N au reacționat” (primii membri care au reacționat). */
+  reactors?: { users: { id: string; name: string; nameKey: string }[]; total: number; mine: boolean };
+  viewerId?: string | null;
+  /** Forum v2: uneltele staff-ului de sub postare (IP-ul cu linkul spre uneltele IP). */
+  staffTools?: ReactNode;
+  /** Forum v2: „Recomandă” (răspunsul recomandat de staff) și „+ Citat” (MultiQuote). */
+  recommend?: { can: boolean; on: boolean };
+  multiQuote?: boolean;
+  /** Forum v2: familiile de blocuri permise la editare (editorul pe loc). */
+  blocks?: GcsEditorBlock[];
   /** Semnătura autorului (randată pe server), sub conținut, după separatorul punctat. */
   signature?: ReactNode;
 };
@@ -86,12 +102,33 @@ function likeReaction(list: GcsReactionView[]): GcsReactionView | undefined {
 
 type Revision = { id: number; html: string; createdAt: string; editor: string | null };
 
+/**
+ * Forum v2: „Tu, Krypt, ShadowRO și alți 56 au reacționat”: primii membri (numele stilizate, vizitatorul ca „Tu”) și
+ * restul ca număr.
+ */
+function ReactorsLine({ users, viewerId, mine, total }: { users: { id: string; name: string; nameKey: string }[]; viewerId: string | null; mine: boolean; total: number }) {
+  const t = useTranslations("topic");
+  // Vizitatorul tocmai și-a retras reacția: nu mai apare primul în listă.
+  const list = mine ? users : users.filter((u) => u.id !== viewerId);
+  const shown = list.slice(0, 3);
+  const others = Math.max(0, total - shown.length);
+  if (shown.length === 0) return <>{t("reactedCount", { count: total })}</>;
+  const names = shown.map((u, i) => (
+    <span key={u.id}>
+      {i > 0 && (i === shown.length - 1 && others === 0 ? ` ${t("and")} ` : ", ")}
+      {u.id === viewerId ? t("you") : <GcsMemberName userId={u.id} name={u.name} nameKey={u.nameKey} href={memberHref(u)} />}
+    </span>
+  ));
+  return <>{others > 0 ? t.rich("reactedNamesOthers", { names: () => <>{names}</>, count: others }) : t.rich("reactedNames", { names: () => <>{names}</>, count: shown.length })}</>;
+}
+
 /** Conținutul unei postări (macheta Topic): data, corpul, reacțiile și acțiunile, plus editarea pe loc. */
 export function GcsPostContent(props: GcsPostContentProps) {
   const { topicId, forumId, post, can } = props;
   const t = useTranslations("topic");
   const tm = useTranslations("mod");
   const labels = useEditorLabels();
+  const blockLabels = useBlockLabels();
   const errorMessage = useErrorMessage();
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -155,10 +192,9 @@ export function GcsPostContent(props: GcsPostContentProps) {
     );
   }
 
+  const quoteDetail = (): GcsQuoteDetail => ({ postId: post.id, authorId: post.authorId, authorName: post.authorName, text: body.current?.innerText.trim() ?? "" });
   function quote() {
-    const text = body.current?.innerText.trim() ?? "";
-    const detail: GcsQuoteDetail = { postId: post.id, authorId: post.authorId, authorName: post.authorName, text };
-    window.dispatchEvent(new CustomEvent(QUOTE_EVENT, { detail }));
+    window.dispatchEvent(new CustomEvent(QUOTE_EVENT, { detail: quoteDetail() }));
   }
 
   async function startEdit() {
@@ -192,6 +228,17 @@ export function GcsPostContent(props: GcsPostContentProps) {
       : []),
   ];
   const modItems: GcsDropdownItem[] = [
+    ...(props.recommend?.can && post.visibility === "VISIBLE"
+      ? [
+          {
+            kind: "action" as const,
+            label: props.recommend.on ? t("unrecommend") : t("recommend"),
+            icon: <GcsIconSvg icon={faAward} />,
+            testId: "gcs-post-recommend",
+            onSelect: () => run(() => setRecommendedPostAction({ topicId, postId: props.recommend!.on ? null : post.id })),
+          },
+        ]
+      : []),
     ...(can.edit && post.edited ? [{ kind: "action" as const, label: t("history"), icon: <GcsIconSvg icon={faClockRotateLeft} />, onSelect: () => void openHistory() }] : []),
     ...(can.hide && post.visibility !== "HIDDEN"
       ? [
@@ -279,6 +326,7 @@ export function GcsPostContent(props: GcsPostContentProps) {
               aria-label={tm("splitSelect", { number: post.number })}
             />
           )}
+          {props.pills}
           {props.isSolved && <GcsBadge tone="ok">{t("bestAnswer")}</GcsBadge>}
           <a href={props.permalink} aria-label={t("permalink", { number: post.number })}>
             {t("postNumber", { number: post.number })}
@@ -313,6 +361,7 @@ export function GcsPostContent(props: GcsPostContentProps) {
             uploadUrl="/api/forums/uploads"
             mentionUrl="/api/forums/mentions"
             initialContent={editing.json}
+            {...(props.blocks && props.blocks.length > 0 ? { blocks: props.blocks, blockLabels } : {})}
             footer={
               <span style={{ display: "flex", gap: 8 }}>
                 <GcsButton variant="ghost" onClick={() => setEditing(null)}>
@@ -344,9 +393,19 @@ export function GcsPostContent(props: GcsPostContentProps) {
       {total > 0 && (
         // Sumarul reacțiilor (bara cu accent): textul, apoi contoarele pe reacții (apăsabile, ca înainte).
         <div className="gcs-post__reactionBar">
-          <span className="gcs-post__reactionText">
+          <span className="gcs-post__reactionText" data-testid="gcs-post-reaction-text">
             <GcsIconSvg icon={faHeart} />
-            {mine !== null ? (total > 1 ? t("reactedYouAndOthers", { count: total - 1 }) : t("reactedYou")) : t("reactedCount", { count: total })}
+            {props.reactors && props.reactors.users.length > 0 ? (
+              <ReactorsLine users={props.reactors.users} viewerId={props.viewerId ?? null} mine={mine !== null} total={total} />
+            ) : mine !== null ? (
+              total > 1 ? (
+                t("reactedYouAndOthers", { count: total - 1 })
+              ) : (
+                t("reactedYou")
+              )
+            ) : (
+              t("reactedCount", { count: total })
+            )}
           </span>
           <div className="gcs-post__reactions" role="group" aria-label={t("reactions")}>
             {reactions.map((r) => {
@@ -383,6 +442,7 @@ export function GcsPostContent(props: GcsPostContentProps) {
         </p>
       )}
 
+      {props.staffTools}
       <div className="gcs-post__foot">
         <div className="gcs-post__actions" ref={actions}>
           {can.approve && post.visibility === "PENDING" && (
@@ -430,6 +490,7 @@ export function GcsPostContent(props: GcsPostContentProps) {
               {t("quoteShort")}
             </GcsButton>
           )}
+          {can.quote && props.multiQuote && <GcsMultiQuoteToggle topicId={topicId} quote={quoteDetail} />}
           {can.edit && !editing && (
             <GcsButton variant="ghost" size="sm" className="gcs-post__action" icon={<GcsIconSvg icon={faPenToSquare} />} onClick={startEdit}>
               {t("quickEdit")}

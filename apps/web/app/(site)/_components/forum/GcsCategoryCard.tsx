@@ -1,18 +1,24 @@
-import type { GcsIndexCategory } from "@gcs/modules";
+import type { GcsForumSlotBundle, GcsIndexCategory } from "@gcs/modules";
 import { GcsIcon, isGcsIcon } from "@gcs/ui/icons";
 import Link from "next/link";
 import { forumHref } from "@/lib/forum-urls";
+import { GcsSlot, slotRootProps } from "@/lib/forum-slots";
 import { GcsCollapseToggle } from "../GcsCollapseToggle";
 import { GcsForumRow } from "./GcsForumRow";
 
 /** Iconița implicită a unei categorii fără iconiță aleasă în ACP. */
 const DEFAULT_CATEGORY_ICON = "fa-solid fa-folder-open";
 
-/** O categorie cu forumurile ei (macheta Main): bara de culoare, iconița categoriei într-un pătrat de accent și titlul. */
-export function GcsCategoryCard({ category }: { category: GcsIndexCategory }) {
+/**
+ * O categorie cu forumurile ei (macheta Main): bara de culoare, iconița categoriei într-un pătrat de accent și titlul.
+ * Forum v2: stilul extensiilor pe secțiune (`category`) și slotul `category.header` în bandă, înaintea butonului de
+ * restrângere.
+ */
+export function GcsCategoryCard({ category, slots }: { category: GcsIndexCategory; slots?: Map<number, GcsForumSlotBundle> }) {
   const icon = isGcsIcon(category.icon) ? category.icon : DEFAULT_CATEGORY_ICON;
+  const own = slots?.get(category.id);
   return (
-    <section className="gcs-card gcs-category" aria-labelledby={`gcs-cat-${category.id}`}>
+    <section {...slotRootProps(own?.style, { className: "gcs-card gcs-category" })} aria-labelledby={`gcs-cat-${category.id}`} data-testid="gcs-category">
       <header className="gcs-category__header">
         <span className="gcs-category__bar" style={{ background: category.color ?? "var(--gcs-accent)" }} aria-hidden="true" />
         <span
@@ -27,12 +33,13 @@ export function GcsCategoryCard({ category }: { category: GcsIndexCategory }) {
         <h2 id={`gcs-cat-${category.id}`} className="gcs-display gcs-category__title">
           <Link href={forumHref(category)}>{category.name}</Link>
         </h2>
+        <GcsSlot slot="category.header" items={own?.header} className="gcs-category__slot" />
         <GcsCollapseToggle storageKey={`cat-${category.id}`} title={category.name} />
       </header>
       {/* Puțul categoriei: în aspectul „Carduri separate” fiecare forum e un card pe un fundal puțin mai închis. */}
       <div className="gcs-category__well">
         {category.forums.map((f) => (
-          <GcsForumRow key={f.id} forum={f} accent={category.color} />
+          <GcsForumRow key={f.id} forum={f} accent={category.color} slots={slots?.get(f.id)} />
         ))}
       </div>
     </section>

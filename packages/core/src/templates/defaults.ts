@@ -60,7 +60,7 @@ const common: V[] = [
   ["locale", "string", "Limba paginii (ro, en…)", "Page language (ro, en…)"],
 ];
 
-const FORUM_ROW = `<div class="gcs-forumRow" data-testid="gcs-forum-row">
+const FORUM_ROW = `<div class="gcs-forumRow {{ forum.ext.className }}" data-testid="gcs-forum-row" data-forum-type="{{ forum.type }}" style="{{ forum.ext.style }}">
   <span class="gcs-forumRow__icon" style="background: {{ forum.color | tint }}">
     <span class="gcs-forumIcon" style="color: {{ forum.color }}; font-size: 22px" aria-hidden="true" data-icon="{{ forum.icon }}">{% icon forum.icon %}</span>
   </span>
@@ -74,10 +74,12 @@ const FORUM_ROW = `<div class="gcs-forumRow" data-testid="gcs-forum-row">
       {% if forum.unread %}
         <span class="gcs-dot gcs-dot--unread" role="img" aria-label="{{ "forum.unread" | t }}" data-testid="gcs-unread-dot"></span>
       {% endif %}
+      {% slot "title_extra" %}
     </span>
     {% if forum.description %}
       <span class="gcs-forumRow__desc">{{ forum.description }}</span>
     {% endif %}
+    {% slot "meta" %}
     {% if forum.subforums.size > 0 %}
       <ul class="gcs-forumRow__subs" aria-label="{{ "forum.subforums" | t }}" style="grid-template-columns: repeat({{ forum.subforumColumns }}, minmax(0, 1fr))" data-columns="{{ forum.subforumColumns }}" data-testid="gcs-subforums">
         {% for sub in forum.subforums %}
@@ -409,12 +411,17 @@ export const DEFAULT_TEMPLATES: GcsTemplateDef[] = [
     key: "forum.row",
     group: "forum",
     icon: "fa-solid fa-folder",
-    version: 1,
+    // Versiunea 2 (Forum v2): sloturile extensiilor (lângă titlu, sub descriere) și stilul lor pe rândul forumului.
+    version: 2,
     title: T("Rândul unui forum", "Forum row"),
     description: T("Un forum în lista de pe pagina principală și în subforumuri.", "A forum in the index list and in subforum lists."),
     variables: vars([
       ...common,
       ["forum.id", "number", "ID-ul forumului", "Forum ID"],
+      ["forum.type", "string", "Tipul: FORUM, QA, LINK sau PAGE", "Type: FORUM, QA, LINK or PAGE"],
+      ["forum.ext.className", "string", "Clasele puse de extensii (Forum v2)", "Classes added by extensions (Forum v2)"],
+      ["forum.ext.style", "string", "Variabilele CSS puse de extensii (Forum v2)", "CSS variables added by extensions (Forum v2)"],
+      ["forum.pageTopics", "boolean", "O pagină cu topicuri dedesubt", "A page with topics below"],
       ["forum.name", "string", "Numele", "Name"],
       ["forum.description", "string", "Descrierea", "Description"],
       ["forum.url", "string", "Linkul (sau adresa externă)", "Link (or external address)"],
@@ -432,7 +439,10 @@ export const DEFAULT_TEMPLATES: GcsTemplateDef[] = [
       ["forum.last.at", "date", "Data", "Date"],
       ...userVars("forum.last.user", "Autorul ultimului mesaj (sau nil)", "Latest post author (or nil)"),
     ]),
-    slots: [],
+    slots: [
+      slot("title_extra", false, "Etichetele extensiilor, lângă titlu (Forum v2)", "Extension labels next to the title (Forum v2)"),
+      slot("meta", false, "Rândul extensiilor, sub descriere (Forum v2)", "Extension line under the description (Forum v2)"),
+    ],
     mode: "site",
     partial: false,
     source: FORUM_ROW,

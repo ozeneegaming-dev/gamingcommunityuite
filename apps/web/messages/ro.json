@@ -214,7 +214,15 @@
       "already_member": "Ești deja în acest grup.",
       "already_primary": "E deja grupul tău principal.",
       "members_only": "Autentifică-te mai întâi.",
-      "self": "Nu poți face asta propriului cont."
+      "self": "Nu poți face asta propriului cont.",
+      "rules_not_accepted": "Acceptă întâi regulile forumului.",
+      "min_posts": "Ai nevoie de mai multe postări ca să postezi aici.",
+      "archived": "Topicul e arhivat: e doar de citit.",
+      "already_rated": "Ai notat deja acest topic.",
+      "no_permission": "Nu ai dreptul pentru această acțiune.",
+      "account_too_new": "Contul tău e prea nou pentru această acțiune.",
+      "not_enough_posts": "Ai nevoie de mai multe postări pentru această acțiune.",
+      "disabled": "Funcția e oprită aici."
     },
     "fields": {
       "invalid_color": "Culoare invalidă (#RRGGBB)",
@@ -349,7 +357,12 @@
       "email_taken": "Emailul e deja folosit de alt cont.",
       "email_invalid": "Adresa de email nu e validă.",
       "group_unknown": "Grup necunoscut.",
-      "separator_top": "Un separator poate sta doar între subitemi."
+      "separator_top": "Un separator poate sta doar între subitemi.",
+      "block_forbidden": "Unul dintre blocuri nu e permis grupului tău.",
+      "wrong_password": "Parola nu e corectă.",
+      "unknown_member": "Un nume nu aparține niciunui membru.",
+      "invalid_icon": "Iconița nu e validă.",
+      "disabled": "Opțiunea e oprită pe acest forum."
     }
   },
   "acp": {
@@ -485,7 +498,8 @@
         "chat_pro_bar": "Bara de anunțuri",
         "chat_pro_emotes": "Emoticoane",
         "chat_moderation": "Moderare",
-        "chat_moderators": "Moderatori"
+        "chat_moderators": "Moderatori",
+        "archive": "Arhivare"
       },
       "vip": {
         "vip_group": "VIP",
@@ -1261,7 +1275,8 @@
         "CATEGORY": "Categorie",
         "FORUM": "Forum",
         "QA": "Q&A",
-        "LINK": "Link"
+        "LINK": "Link",
+        "PAGE": "Pagină / Anunț"
       },
       "moveUp": "Mută {name} mai sus",
       "moveDown": "Mută {name} mai jos",
@@ -1311,6 +1326,55 @@
         "users": "Comunitate",
         "help": "Ajutor",
         "link": "Link"
+      },
+      "tabs": {
+        "label": "Secțiunile forumului",
+        "details": "Detalii",
+        "options": "Opțiuni",
+        "page": "Pagină",
+        "plugin": "PLUGIN"
+      },
+      "options": {
+        "title": "Opțiunile forumului",
+        "access": "Acces",
+        "ownTopicsOnly": "Membrii văd doar topicurile lor",
+        "ownTopicsOnlyHint": "Moderatorii văd tot; vizitatorii nu văd niciun topic. Potrivit pentru cereri, reclamații sau tichete.",
+        "password": "Parolă (gol = fără parolă)",
+        "passwordChange": "Parolă nouă (gol = neschimbată)",
+        "removePassword": "Scoate parola",
+        "minPosts": "Postări minime ca să poți posta (0 = fără prag)",
+        "rules": "Regulile forumului",
+        "rulesMode": "Caseta regulilor",
+        "rulesModes": {
+          "off": "Fără reguli",
+          "show": "Afișate sus",
+          "accept": "De acceptat înainte de a posta"
+        },
+        "rulesText": "Textul regulilor",
+        "topics": "Topicuri",
+        "defaultSort": "Sortarea implicită",
+        "pollsEnabled": "Sondaje permise",
+        "tagsEnabled": "Tag-uri permise",
+        "countPosts": "Postările se numără la membru",
+        "autoCloseDays": "Închide topicurile după N zile fără răspuns (0 = niciodată)",
+        "rating": "Nota cu stele",
+        "ratingEnabled": "Topicurile se pot nota cu stele",
+        "ratingHint": "Grupurile care pot nota: <perms>matricea permisiunilor</perms> („Notează topicurile”). Schimbarea votului, nota pe propriul topic, vechimea contului și postările minime: <settings>setările forumului</settings>.",
+        "resetRatings": "Resetează notele forumului",
+        "resetRatingsHint": "Șterge toate voturile topicurilor din acest forum.",
+        "resetRatingsConfirm": "Ștergi toate voturile din acest forum? Nu se poate anula."
+      },
+      "page": {
+        "title": "Pagina",
+        "content": "Conținutul paginii",
+        "contentHint": "Titluri, titluri colorate, liste, linkuri, imagini și blocurile sigure (secțiuni, carduri, butoane, pași…).",
+        "cta": "Butonul principal (opțional)",
+        "ctaLabel": "Textul butonului",
+        "ctaUrl": "Linkul butonului (/… sau https://…)",
+        "ctaIcon": "Iconița butonului",
+        "allowTopics": "Topicuri sub pagină",
+        "audience": "Cine vede pagina",
+        "audienceHint": "Niciun grup bifat = toți cei care văd forumul (permisiunile lui)."
       }
     },
     "prefixes": {
@@ -2385,7 +2449,11 @@
           "user_deleting": "Un cont începe să fie șters (pluginul își șterge datele membrului).",
           "user_deleted": "Un cont a fost șters.",
           "user_merged": "Un cont a fost unit cu altul (pluginul își mută datele în contul țintă).",
-          "member_panel": "Carduri și taburi pe fișa membrului din ACP și pe profil (declarate în memberPanels)."
+          "member_panel": "Carduri și taburi pe fișa membrului din ACP și pe profil (declarate în memberPanels).",
+          "forum_list": "Lista forumurilor (index, subforumuri): etichete lângă titlu, un rând sub descriere, banda categoriei și stilul rândului (un apel pe pagină).",
+          "forum_page": "Un card sus pe pagina unui forum.",
+          "topic_bar": "O bară pe pagina unui topic, sub antet.",
+          "forum_edit": "Corpul unui tab al pluginului în ACP → Forumuri → Editează (declarat în forumTabs)."
         }
       }
     },
@@ -3896,6 +3964,59 @@
       "removeBody": "Bara „{text}” dispare de pe site după salvare.",
       "removeConfirm": "Șterge",
       "cancel": "Anulează"
+    },
+    "archive": {
+      "title": "Arhivare automată",
+      "description": "Regulile care arhivează singure topicurile vechi. Un topic arhivat e doar de citit și se poate restaura oricând.",
+      "enabled": "Arhivarea automată e pornită (o rundă pe oră).",
+      "disabled": "Arhivarea automată e oprită: regulile rulează doar cu „Rulează acum”.",
+      "settingsLink": "Setările forumului",
+      "rules": "Reguli",
+      "new": "Regulă nouă",
+      "empty": "Nicio regulă încă.",
+      "on": "Pornită",
+      "off": "Oprită",
+      "summary": "Ultima postare mai veche de {days} zile · acum ar arhiva {count, plural, one {# topic} few {# topicuri} other {# de topicuri}}",
+      "lastRun": "Ultima rulare: {date} ({count})",
+      "edit": "Editează",
+      "runNow": "Rulează acum",
+      "runConfirm": "Arhivezi acum {count, plural, one {# topic} few {# topicuri} other {# de topicuri}}?",
+      "delete": "Șterge",
+      "deleteConfirm": "Ștergi regula? Topicurile deja arhivate rămân arhivate.",
+      "editTitle": "Editează: {name}",
+      "save": "Salvează regula",
+      "name": "Numele regulii",
+      "ruleEnabled": "Regula e pornită",
+      "conditions": "Arhivează topicurile care…",
+      "lastPostDays": "…au ultima postare mai veche de (zile)",
+      "forums": "Forumuri",
+      "forumsHint": "Niciun forum bifat = toate forumurile.",
+      "flags": {
+        "pinned": "Fixate",
+        "locked": "Blocate",
+        "hidden": "Ascunse",
+        "poll": "Cu sondaj"
+      },
+      "tri": {
+        "any": "Oricum",
+        "yes": "Doar da",
+        "no": "Doar nu"
+      },
+      "repliesBelow": "Mai puțin de N răspunsuri",
+      "viewsBelow": "Mai puțin de N vizualizări",
+      "ratingBelow": "Nota sub",
+      "starters": "Pornite de (nume, cu virgulă)",
+      "startersHint": "ex. Krypt, ShadowRO",
+      "exclusions": "…dar nu când",
+      "not": {
+        "pinned": "Topicul e fixat",
+        "locked": "Topicul e blocat",
+        "poll": "Topicul are sondaj",
+        "repliesAtLeast": "Are cel puțin N răspunsuri",
+        "viewsAtLeast": "Are cel puțin N vizualizări",
+        "ratingAtLeast": "Are nota cel puțin",
+        "starters": "E pornit de (nume, cu virgulă)"
+      }
     }
   },
   "settings": {
@@ -3950,14 +4071,37 @@
       "unicode": "Orice alfabet",
       "optional": "La alegere",
       "direct": "Direct: browserul încarcă imaginea de la adresă (nimic copiat pe site)",
-      "copy": "Copiere: imaginile se aduc și se păstrează pe site"
+      "copy": "Copiere: imaginile se aduc și se păstrează pe site",
+      "rows": "Rânduri",
+      "grid": "Grilă",
+      "list": "Listă",
+      "snippet": "Cu fragment",
+      "top": "Sus",
+      "bottom": "Jos",
+      "all": "Toate dispozitivele",
+      "desktop": "Doar desktop"
     },
     "forums": {
       "posts_per_page": "Postări pe pagină",
       "topics_per_page": "Topicuri pe pagină",
       "post_max_chars": "Lungimea maximă a unei postări (caractere)",
       "embeds": "Embed-uri permise (youtube, twitch, medal, image)",
-      "revisions_visible_to_author": "Autorul își vede istoricul editărilor"
+      "revisions_visible_to_author": "Autorul își vede istoricul editărilor",
+      "pinned_first": "Topicurile fixate stau primele",
+      "forum_view": "Vederea implicită a forumurilor (membrul poate alege alta)",
+      "topic_view": "Vederea implicită a listei de topicuri (membrul poate alege alta)",
+      "popular_threshold": "„Popular acum”: răspunsuri în ultimele 24 de ore (0 = oprit)",
+      "mod_names_public": "Numele moderatorului apare pe mesajele de moderare",
+      "summary_enabled": "Rezumatul topicului (cei mai activi, postări populare, zile active)",
+      "summary_min_replies": "Rezumatul apare de la N răspunsuri",
+      "summary_position": "Poziția rezumatului",
+      "summary_devices": "Rezumatul apare pe",
+      "rss_enabled": "Flux RSS pentru fiecare forum",
+      "rating_change_vote": "Nota cu stele: membrii își pot schimba votul",
+      "rating_own": "Nota cu stele: autorul își poate nota propriul topic",
+      "rating_min_age_days": "Nota cu stele: vechimea minimă a contului (zile)",
+      "rating_min_posts": "Nota cu stele: postările minime",
+      "archive_enabled": "Arhivarea automată (regulile din Forumuri → Arhivare)"
     },
     "profile": {
       "cover_max_mb": "Mărimea maximă a cover-ului (MB)",
@@ -4497,7 +4641,17 @@
       "flood_seconds": "Pauză între postări (secunde)",
       "moderate_all": "Moderator pe toate forumurile",
       "poll_create": "Creează sondaje",
-      "tags_max": "Tag-uri pe topic (maxim)"
+      "tags_max": "Tag-uri pe topic (maxim)",
+      "rate": "Notează topicurile (cu stele)",
+      "block_section": "Blocuri: secțiune",
+      "block_callout": "Blocuri: casetă de atenționare",
+      "block_cards": "Blocuri: grilă de carduri",
+      "block_button": "Blocuri: buton",
+      "block_columns": "Blocuri: coloane",
+      "block_steps": "Blocuri: pași",
+      "block_progress": "Blocuri: progres",
+      "block_hidden": "Blocuri: conținut ascuns",
+      "block_html": "Blocuri: HTML (doar Root Admin)"
     },
     "vip": {
       "manage": "Acordă, prelungește și retrage VIP"
@@ -4966,7 +5120,55 @@
     "topicsCount": "{count, plural, one {# topic} few {# topicuri} other {# de topicuri}}",
     "statsOf": "Statisticile forumului {name}",
     "statsTopics": "{count, plural, one {<b>#</b> topic} few {<b>#</b> topicuri} other {<b>#</b> de topicuri}}",
-    "statsPosts": "{count, plural, one {<b>#</b> răspuns} few {<b>#</b> răspunsuri} other {<b>#</b> de răspunsuri}}"
+    "statsPosts": "{count, plural, one {<b>#</b> răspuns} few {<b>#</b> răspunsuri} other {<b>#</b> de răspunsuri}}",
+    "pageHint": "Pagină",
+    "archived": "Arhivat",
+    "popularNow": "Popular acum",
+    "ratingLabel": "{avg} din 5 · {count, plural, one {# vot} few {# voturi} other {# de voturi}}",
+    "pageEmpty": "Pagina nu are încă conținut.",
+    "sortLabel": "Sortează",
+    "sorts": {
+      "last": "Ultimul răspuns",
+      "created": "Cele mai noi",
+      "replies": "Cele mai multe răspunsuri",
+      "views": "Cele mai văzute",
+      "rating": "Cele mai bine notate",
+      "title": "Titlu (A–Z)"
+    },
+    "fourStars": "Doar 4★+",
+    "emptyRated": "Niciun topic cu nota 4★ sau mai mare.",
+    "listViews": {
+      "label": "Vederea listei",
+      "list": "Listă",
+      "snippet": "Cu fragment"
+    },
+    "password": {
+      "title": "{name} e protejat cu parolă",
+      "hint": "Scrie parola forumului ca să-l deschizi. Rămâne deblocat în acest browser 30 de zile.",
+      "label": "Parola forumului",
+      "submit": "Deblochează"
+    },
+    "rules": {
+      "title": "Regulile forumului",
+      "accepted": "Acceptate",
+      "mustAccept": "Ca să postezi aici, trebuie să accepți regulile.",
+      "accept": "Am citit și accept regulile"
+    },
+    "slotsDemo": {
+      "tab": "Demo sloturi",
+      "description": "Extensia demo a sloturilor forumului: o etichetă lângă titlu, un rând sub descriere, stilul rândului, un card pe pagina forumului și bara topicului.",
+      "enabled": "Arată demo-ul pe acest forum",
+      "badge": "Eticheta de lângă titlu",
+      "note": "Rândul de sub descriere",
+      "accent": "Culoarea barei (#RRGGBB)",
+      "caps": "Titlul cu majuscule",
+      "headerChip": "Demo",
+      "visibleTopics": "topicuri vizibile",
+      "cardTitle": "Card demo",
+      "cardBody": "Cardul de sus al forumului {name}, adus de extensia demo.",
+      "cardAction": "Deschide forumul",
+      "barText": "Bara demo a topicului #{id}"
+    }
   },
   "topic": {
     "reply": "Răspunde",
@@ -5093,7 +5295,76 @@
       "characters": "{count} caractere",
       "charactersMax": "{count} / {max} caractere",
       "mentionGroup": "Grup",
-      "mentionOnline": "Online"
+      "mentionOnline": "Online",
+      "blocks": {
+        "blocks": "Blocuri",
+        "blockSettings": "Setările blocului",
+        "insert": "Inserează",
+        "apply": "Aplică",
+        "cancel": "Anulează",
+        "type": {
+          "section": "Secțiune",
+          "callout": "Casetă de atenționare",
+          "cards": "Grilă de carduri",
+          "button": "Buton",
+          "columns": "Coloane",
+          "steps": "Pași",
+          "progress": "Progres",
+          "hidden": "Conținut ascuns",
+          "html": "HTML (doar Root)"
+        },
+        "node": {
+          "gcsSection": "Secțiune",
+          "gcsCallout": "Casetă de atenționare",
+          "gcsCardGrid": "Grilă de carduri",
+          "gcsCard": "Card",
+          "gcsButton": "Buton",
+          "gcsColumns": "Coloane",
+          "gcsColumn": "Coloană",
+          "gcsSteps": "Pași",
+          "gcsStep": "Pas",
+          "gcsProgress": "Progres",
+          "gcsHidden": "Conținut ascuns",
+          "gcsHtml": "HTML"
+        },
+        "field": {
+          "title": "Titlu",
+          "icon": "Iconiță (ex. fa-solid fa-gift)",
+          "tone": "Culoare",
+          "kind": "Tip",
+          "columns": "Coloane",
+          "subtitle": "Subtitlu",
+          "value": "Valoare",
+          "badge": "Insignă",
+          "highlight": "Evidențiat",
+          "label": "Text",
+          "href": "Link",
+          "variant": "Stil",
+          "max": "Maxim",
+          "mode": "Cine îl vede",
+          "groups": "Grupuri (id-uri, cu virgulă)",
+          "html": "HTML"
+        },
+        "option": {
+          "1": "1",
+          "2": "2",
+          "3": "3",
+          "4": "4",
+          "accent": "Accent",
+          "neutral": "Neutru",
+          "ok": "Verde (ok)",
+          "warn": "Atenționare",
+          "danger": "Pericol",
+          "info": "Informare",
+          "warning": "Atenționare",
+          "success": "Succes",
+          "primary": "Plin",
+          "ghost": "Contur",
+          "reply": "Cine a răspuns în topic",
+          "members": "Membrii logați",
+          "groups": "Anumite grupuri"
+        }
+      }
     },
     "ignored": "Ai ignorat pe <name></name>. Arată postarea",
     "live": {
@@ -5113,7 +5384,72 @@
     "reactedYou": "Tu ai apreciat acest mesaj.",
     "reactedYouAndOthers": "Tu și {count, plural, one {încă o persoană} few {alte # persoane} other {alte # de persoane}} ați apreciat acest mesaj.",
     "reactedCount": "{count, plural, one {O persoană a apreciat} few {# persoane au apreciat} other {# de persoane au apreciat}} acest mesaj.",
-    "quickReply": "Răspuns rapid"
+    "quickReply": "Răspuns rapid",
+    "pills": {
+      "author": "Autor",
+      "staff": "Staff",
+      "recommended": "Recomandat"
+    },
+    "ip": "IP: {ip}",
+    "ipTools": "Unelte IP",
+    "recommend": "Recomandă răspunsul",
+    "unrecommend": "Scoate recomandarea",
+    "recommendedTitle": "Răspuns recomandat de staff",
+    "archivedNotice": "Topic arhivat pe {date}: doar de citit.",
+    "archivedReply": "Topicul e arhivat: nu se mai pot adăuga răspunsuri.",
+    "you": "Tu",
+    "and": "și",
+    "reactedNames": "<names></names> {count, plural, one {a reacționat} other {au reacționat}}",
+    "reactedNamesOthers": "<names></names> și {count, plural, one {încă un membru} few {alți #} other {alți #}} au reacționat",
+    "share": {
+      "label": "Distribuie",
+      "copy": "Copiază linkul",
+      "copied": "Linkul a fost copiat",
+      "email": "Email"
+    },
+    "multiQuote": {
+      "add": "+ Citat",
+      "remove": "Scoate citatul",
+      "label": "Citatele alese",
+      "insert": "Citează {count, plural, one {# postare} few {# postări} other {# de postări}}",
+      "clear": "Golește citatele"
+    },
+    "replyBox": {
+      "placeholder": "Răspunde…",
+      "draftRestored": "Ciorna ta a fost restaurată.",
+      "discardDraft": "Renunță la ciornă",
+      "plainPaste": "Lipește ca text",
+      "plainPasteOn": "Lipire ca text: pornită",
+      "preview": "Previzualizare",
+      "closePreview": "Închide previzualizarea",
+      "previewDevices": "Previzualizează pe",
+      "devices": {
+        "desktop": "Desktop",
+        "tablet": "Tabletă",
+        "phone": "Telefon"
+      }
+    },
+    "notices": {
+      "label": "Mesaj de la moderatori",
+      "title": "Mesaj de la moderatori",
+      "team": "Echipa de moderare",
+      "delete": "Șterge mesajul",
+      "cancel": "Anulează",
+      "confirmDelete": "Ștergi mesajul moderatorului?"
+    },
+    "gap": {
+      "months": "{count, plural, one {O lună} few {# luni} other {# de luni}} mai târziu…",
+      "years": "{count, plural, one {Un an} few {# ani} other {# de ani}} mai târziu…"
+    },
+    "summary": {
+      "title": "Rezumatul topicului",
+      "posters": "Cei mai activi",
+      "popular": "Postări populare",
+      "days": "Zile active",
+      "postsCount": "{count, plural, one {# postare} few {# postări} other {# de postări}}",
+      "reactions": "{count, plural, one {# reacție} few {# reacții} other {# de reacții}}",
+      "noText": "(fără text)"
+    }
   },
   "newTopic": {
     "title": "Topic nou în {forum}",
@@ -5164,7 +5500,62 @@
     "menu": "Unelte de moderare",
     "confirmDelete": "Ștergi definitiv topicul cu toate postările?",
     "done": "Gata",
-    "cancel": "Anulează"
+    "cancel": "Anulează",
+    "v2": {
+      "addNotice": "Adaugă mesaj",
+      "noticeTone": "Tonul mesajului",
+      "tones": {
+        "info": "Informare",
+        "warn": "Atenționare",
+        "ok": "Confirmare",
+        "danger": "Avertisment"
+      },
+      "publishNotice": "Publică mesajul",
+      "approvalOn": "Aprobare postări",
+      "approvalOff": "Oprește aprobarea",
+      "archive": "Arhivează",
+      "unarchive": "Restaurează din arhivă",
+      "resetRating": "Resetează nota",
+      "resetRatingConfirm": "Ștergi toate voturile acestui topic? Nota pornește de la zero.",
+      "history": "Istoric moderare",
+      "historyEmpty": "Nicio acțiune de moderare încă.",
+      "system": "Sistem",
+      "savedActions": "Acțiuni salvate",
+      "actions": {
+        "mod": {
+          "topic": {
+            "pin": "Fixat / desprins",
+            "lock": "Blocat / deblocat",
+            "feature": "Evidențiat",
+            "move": "Mutat",
+            "merge": "Unit",
+            "split": "Despărțit",
+            "delete": "Șters",
+            "solved": "Cel mai bun răspuns",
+            "notice": "Mesaj de moderator",
+            "notice_delete": "Mesaj de moderator șters",
+            "recommend": "Răspuns recomandat",
+            "approval": "Aprobarea postărilor",
+            "archive": "Arhivat",
+            "unarchive": "Restaurat din arhivă",
+            "saved_action": "Acțiune salvată aplicată"
+          },
+          "post": {
+            "edit": "Postare editată",
+            "delete": "Postare ștearsă",
+            "restore": "Postare restaurată",
+            "approve": "Postare aprobată",
+            "hide": "Postare ascunsă"
+          }
+        },
+        "rating": {
+          "reset": "Notă resetată",
+          "vote": {
+            "remove": "Vot scos"
+          }
+        }
+      }
+    }
   },
   "search": {
     "title": "Căutare",
@@ -6257,7 +6648,8 @@
       "recentPosts": "Postări recente",
       "topPosters": "Top posteri",
       "featuredTopics": "Topicuri promovate",
-      "featuredCarousel": "Carusel recomandate"
+      "featuredCarousel": "Carusel recomandate",
+      "topRated": "Cele mai bine notate"
     },
     "chat": {
       "shoutbox": "Shoutbox"
@@ -6298,7 +6690,8 @@
         "recentPosts": "Ultimele răspunsuri, cu un fragment din text.",
         "topPosters": "Membrii cu cele mai multe postări, pe perioada aleasă.",
         "featuredTopics": "Topicurile promovate de staff.",
-        "featuredCarousel": "Topicurile evidențiate de staff, într-un carusel cu imagini: forumul, data, titlul, extrasul și autorul."
+        "featuredCarousel": "Topicurile evidențiate de staff, într-un carusel cu imagini: forumul, data, titlul, extrasul și autorul.",
+        "topRated": "Topicurile cu cele mai multe stele din ultima lună (cel puțin 2 voturi)."
       },
       "chat": {
         "shoutbox": "O cameră de chat, direct pe pagină."
@@ -6334,7 +6727,8 @@
       "topics": "Topicuri",
       "reputation": "Reputație",
       "online": "Timp online"
-    }
+    },
+    "ratingAria": "{avg} din 5, {count, plural, one {# vot} few {# voturi} other {# de voturi}}"
   },
   "pageEditor": {
     "title": "Editează pagina",
@@ -8692,5 +9086,32 @@
       "button": "Intră în cont"
     },
     "social": "sau dintr-un click cu"
+  },
+  "rating": {
+    "average": "{avg} din 5 · {count, plural, one {# vot} few {# voturi} other {# de voturi}}",
+    "decimal": ",",
+    "rateThis": "Notează topicul",
+    "starLabel": "{value} {value, plural, one {stea} few {stele} other {de stele}}: {label}",
+    "labels": {
+      "poor": "Slab",
+      "fair": "Acceptabil",
+      "good": "Bun",
+      "great": "Foarte bun",
+      "excellent": "Excelent"
+    },
+    "none": "Încă nicio notă",
+    "yours": "Nota ta: {value}★",
+    "undo": "Retrage nota",
+    "signIn": "Autentifică-te",
+    "signInHint": "ca să notezi topicul.",
+    "reasons": {
+      "own_content": "Nu îți poți nota propriul topic.",
+      "no_permission": "Grupul tău nu poate nota pe acest forum.",
+      "account_too_new": "Contul tău e prea nou ca să notezi.",
+      "not_enough_posts": "Ai nevoie de mai multe postări ca să notezi.",
+      "disabled": "Nota nu e disponibilă pe acest topic."
+    },
+    "distribution": "Distribuția notelor",
+    "starsShort": "{value}★"
   }
 }

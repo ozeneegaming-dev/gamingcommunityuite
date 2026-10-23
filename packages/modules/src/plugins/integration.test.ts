@@ -75,6 +75,30 @@ describe("pluginul de exemplu, de la zip la dezinstalare, fără repornire", () 
     expect(await services.plugins.asset(KEY, "assets/../plugin.json")).toBeNull();
   });
 
+  test("Forum v2: tabul „Hello” din formularul forumului și sloturile rândului (eticheta, culoarea, salutul)", async () => {
+    const category = await services.forums.create({ parentId: null, type: "CATEGORY", name: "Hello" }, root);
+    const forum = await services.forums.create({ parentId: category.id, type: "FORUM", name: "Salutări" }, root);
+    const ext = "plugin.gcs.hello";
+    const opts = { plugins: true };
+    const tab = (await services.forumSlots.editTabs(forum, opts)).find((t) => t.extension === ext);
+    expect(tab).toMatchObject({ plugin: KEY, tab: { key: "look", labelKey: "pluginText.gcs.hello.forum.tab" }, values: { label: "", wave: false } });
+    // Categoriile nu primesc tabul (tipurile din manifest).
+    expect((await services.forumSlots.editTabs(category, opts)).some((t) => t.extension === ext)).toBe(false);
+
+    await services.forumSlots.saveTab(root, { forumId: forum.id, extension: ext, tab: "look", values: { label: "Salut", titleColor: "#ff6a3d", wave: "on" } }, opts);
+    const ref = { id: forum.id, type: forum.type, parentId: category.id, name: forum.name, slug: forum.slug };
+    const row = (await services.forumSlots.list(guest, "ro", "index", [ref], opts)).get(forum.id)!;
+    expect(row.title).toEqual([{ kind: "chip", label: "Salut", icon: "fa-solid fa-hand", tone: "accent", id: "label" }]);
+    expect(row.meta).toEqual([expect.objectContaining({ kind: "html", plugin: KEY, html: expect.stringContaining("gcsp-hello__wave") })]);
+    expect(row.style.vars).toMatchObject({ "--gcs-forum-title-color": "#FF6A3D", "--gcsp-hello-wave": "1" });
+    // Rândul stilizat de plugin devine containerul CSS-ului lui (`gcsp--gcs--hello`), iar pagina îi adaugă foaia de stil.
+    expect(row.style.classes).toEqual(expect.arrayContaining(["gcsp-hello-row", "gcsp--gcs--hello"]));
+    expect(row.plugins).toEqual([KEY]);
+    expect(services.plugins.pluginStyles(KEY)).toEqual([expect.stringMatching(/^\/plugins\/gcs\.hello\/assets\/hello\.css\?v=/)]);
+    // Modul sigur: pluginurile nu contribuie nimic.
+    expect((await services.forumSlots.list(guest, "ro", "index", [ref], { plugins: false })).get(forum.id)).toBeUndefined();
+  });
+
   test("listenerul post.created scrie în tabelul propriu; API-ul îl citește", async () => {
     await services.bus.emit({ name: "post.created", payload: { postId: 41, topicId: 9, forumId: 2, pending: false, authorId: member.userId }, tags: [] });
     await services.plugins.idle();

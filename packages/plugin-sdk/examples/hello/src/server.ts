@@ -2,7 +2,7 @@
  * Pluginul de exemplu `gcs.hello`. Se compilează (esbuild) într-un singur `server.mjs`, fără importuri la rulare:
  * `pnpm --filter @gcs/plugin-sdk build:example`.
  */
-import { definePlugin, type GcsPluginContext } from "../../../src/index";
+import { definePlugin, type GcsPluginContext, type GcsPluginForumListInput, type GcsPluginForumListResult } from "../../../src/index";
 
 type LogRow = { post_id: number; topic_id: number; created_at: string };
 
@@ -73,6 +73,20 @@ export default definePlugin({
 
   hooks: {
     "postbit.after_fields": async (_data, ctx) => `<p class="gcsp-hello__badge"><gcs-icon name="fa-solid fa-hand"></gcs-icon> ${ctx.escape(ctx.t("postbit.badge"))}</p>`,
+    // Forum v2 (GCS ≥ 0.9.0): sloturile listei forumurilor, un apel pe pagină pentru toate rândurile. Eticheta și culoarea
+    // titlului vin direct din câmpurile tabului „Hello” (declarate în `forumTabs`); aici doar salutul de sub descriere.
+    "forum.list": async (data, ctx) => {
+      const input = data as unknown as GcsPluginForumListInput;
+      const out: GcsPluginForumListResult = {};
+      for (const node of input.nodes) {
+        if (node.data.wave !== true) continue;
+        out[String(node.id)] = {
+          meta: `<span class="gcsp-hello__wave"><gcs-icon name="fa-solid fa-hand"></gcs-icon> ${ctx.escape(ctx.t("forum.meta"))}</span>`,
+          style: { classes: ["gcsp-hello-row"], vars: { "--gcsp-hello-wave": "1" } },
+        };
+      }
+      return out;
+    },
   },
 
   jobs: {

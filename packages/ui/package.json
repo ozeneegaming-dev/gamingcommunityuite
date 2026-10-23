@@ -12,6 +12,7 @@
     "./editor": "./src/editor/index.ts",
     "./mention-input": "./src/editor/useMentionInput.tsx",
     "./forum.css": "./src/forum.css",
+    "./forum-v2.css": "./src/forum-v2.css",
     "./profile.css": "./src/profile.css",
     "./badges.css": "./src/badges.css",
     "./realtime.css": "./src/realtime.css",

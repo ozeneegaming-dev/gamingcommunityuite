@@ -1,4 +1,4 @@
-import type { GcsActor } from "@gcs/core";
+import { GcsValidationError, type GcsActor } from "@gcs/core";
 import type { ForumType } from "@gcs/db";
 import { services } from "@/lib/services";
 
@@ -7,7 +7,8 @@ export const dynamic = "force-dynamic";
 type Body =
   | { action: "forum"; parentId: number | null; type: ForumType; name: string; icon?: string; subforumColumns?: number }
   /** `images`: câte imagini (încărcate ca atașamente ale autorului) urmează după text (vizualizatorul de imagini). */
-  | { action: "topic"; forumId: number; title: string; text: string; authorEmail: string; tags?: string[]; images?: number }
+  /** `content`: documentul editorului ca atare (Forum v2: blocurile); o eroare de validare întoarce 422 cu câmpurile. */
+  | { action: "topic"; forumId: number; title: string; text: string; authorEmail: string; tags?: string[]; images?: number; content?: { type: string; content: unknown[] } }
   | { action: "reply"; topicId: number; text: string; authorEmail: string; mentionEmail?: string }
   | { action: "permissions"; forumId: number; groupKey: string; actions: string[] }
   | { action: "pm"; fromEmail: string; toEmail: string; title: string; text: string }
@@ -74,19 +75,24 @@ export async function POST(req: Request): Promise<Response> {
     }
     case "topic": {
       const actor = await actorFor(body.authorEmail);
-      const content = doc(body.text) as { type: string; content: unknown[] };
+      const content = body.content ?? (doc(body.text) as { type: string; content: unknown[] });
       for (let i = 0; i < (body.images ?? 0); i++) {
         const file = await s.attachments.importFile(actor.userId, { name: `poza-${i + 1}.png`, bytes: PNG }, { maxBytes: 1024 * 1024 });
         content.content.push({ type: "image", attrs: { attachmentId: file.id, alt: `Poza ${i + 1}`, width: file.width, height: file.height } });
       }
-      const res = await s.topics.create(actor, {
-        forumId: body.forumId,
-        title: body.title,
-        content,
-        ...(body.tags ? { tags: body.tags } : {}),
-      });
-      await clearFlood(actor);
-      return Response.json(res);
+      try {
+        const res = await s.topics.create(actor, {
+          forumId: body.forumId,
+          title: body.title,
+          content,
+          ...(body.tags ? { tags: body.tags } : {}),
+        });
+        await clearFlood(actor);
+        return Response.json(res);
+      } catch (error) {
+        if (error instanceof GcsValidationError) return Response.json({ fields: error.fields, params: error.params }, { status: 422 });
+        throw error;
+      }
     }
     case "reply": {
       const actor = await actorFor(body.authorEmail);

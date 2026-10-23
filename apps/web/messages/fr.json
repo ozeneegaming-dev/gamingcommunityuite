@@ -214,7 +214,15 @@
       "already_member": "Tu es déjà dans ce groupe.",
       "already_primary": "C'est déjà ton groupe principal.",
       "members_only": "Connecte-toi d'abord.",
-      "self": "Tu ne peux pas faire cela sur ton propre compte."
+      "self": "Tu ne peux pas faire cela sur ton propre compte.",
+      "rules_not_accepted": "Accepte d'abord les règles du forum.",
+      "min_posts": "Il te faut plus de messages pour publier ici.",
+      "archived": "Le sujet est archivé : lecture seule.",
+      "already_rated": "Tu as déjà noté ce sujet.",
+      "no_permission": "Tu n'as pas le droit pour cette action.",
+      "account_too_new": "Ton compte est trop récent pour cette action.",
+      "not_enough_posts": "Il te faut plus de messages pour cette action.",
+      "disabled": "Cette fonction est désactivée ici."
     },
     "fields": {
       "invalid_color": "Couleur non valide (#RRGBB)",
@@ -349,7 +357,12 @@
       "email_taken": "Cet e-mail est déjà utilisé par un autre compte.",
       "email_invalid": "L'adresse e-mail n'est pas valide.",
       "group_unknown": "Groupe inconnu.",
-      "separator_top": "Un séparateur ne peut se trouver qu'entre des sous-éléments."
+      "separator_top": "Un séparateur ne peut se trouver qu'entre des sous-éléments.",
+      "block_forbidden": "L'un des blocs n'est pas autorisé pour ton groupe.",
+      "wrong_password": "Le mot de passe n'est pas correct.",
+      "unknown_member": "Un nom n'appartient à aucun membre.",
+      "invalid_icon": "L'icône n'est pas valide.",
+      "disabled": "Cette option est désactivée sur ce forum."
     }
   },
   "acp": {
@@ -485,7 +498,8 @@
         "chat_pro_bar": "Announcement bar",
         "chat_pro_emotes": "Emotes",
         "chat_moderation": "Modération",
-        "chat_moderators": "Modérateurs"
+        "chat_moderators": "Modérateurs",
+        "archive": "Archivage"
       },
       "vip": {
         "vip_group": "VIP",
@@ -1261,7 +1275,8 @@
         "CATEGORY": "Catégorie",
         "FORUM": "Forum",
         "QA": "QUESTIONS ET RÉPONSES",
-        "LINK": "Lien"
+        "LINK": "Lien",
+        "PAGE": "Page / Annonce"
       },
       "moveUp": "Déplacez {name} vers le haut",
       "moveDown": "Déplacez {name} vers le bas",
@@ -1311,6 +1326,55 @@
         "users": "Communauté",
         "help": "Aide",
         "link": "Lien"
+      },
+      "tabs": {
+        "label": "Sections du forum",
+        "details": "Détails",
+        "options": "Options",
+        "page": "Page",
+        "plugin": "PLUGIN"
+      },
+      "options": {
+        "title": "Options du forum",
+        "access": "Accès",
+        "ownTopicsOnly": "Les membres ne voient que leurs propres sujets",
+        "ownTopicsOnlyHint": "Les modérateurs voient tout ; les visiteurs ne voient aucun sujet. Idéal pour les demandes, réclamations ou tickets.",
+        "password": "Mot de passe (vide = sans mot de passe)",
+        "passwordChange": "Nouveau mot de passe (vide = inchangé)",
+        "removePassword": "Retirer le mot de passe",
+        "minPosts": "Messages minimum pour publier (0 = sans seuil)",
+        "rules": "Règles du forum",
+        "rulesMode": "Encadré des règles",
+        "rulesModes": {
+          "off": "Pas de règles",
+          "show": "Affichées en haut",
+          "accept": "À accepter avant de publier"
+        },
+        "rulesText": "Texte des règles",
+        "topics": "Sujets",
+        "defaultSort": "Tri par défaut",
+        "pollsEnabled": "Sondages autorisés",
+        "tagsEnabled": "Tags autorisés",
+        "countPosts": "Les messages comptent pour le membre",
+        "autoCloseDays": "Fermer les sujets après N jours sans réponse (0 = jamais)",
+        "rating": "Note en étoiles",
+        "ratingEnabled": "Les sujets peuvent être notés en étoiles",
+        "ratingHint": "Groupes qui peuvent noter : <perms>matrice des permissions</perms> (« Noter les sujets »). Changer son vote, noter son propre sujet, ancienneté du compte et messages minimum : <settings>réglages du forum</settings>.",
+        "resetRatings": "Réinitialiser les notes du forum",
+        "resetRatingsHint": "Supprime tous les votes des sujets de ce forum.",
+        "resetRatingsConfirm": "Supprimer tous les votes de ce forum ? Impossible à annuler."
+      },
+      "page": {
+        "title": "La page",
+        "content": "Contenu de la page",
+        "contentHint": "Titres, titres colorés, listes, liens, images et les blocs sûrs (sections, cartes, boutons, étapes…).",
+        "cta": "Bouton principal (facultatif)",
+        "ctaLabel": "Texte du bouton",
+        "ctaUrl": "Lien du bouton (/… ou https://…)",
+        "ctaIcon": "Icône du bouton",
+        "allowTopics": "Sujets sous la page",
+        "audience": "Qui voit la page",
+        "audienceHint": "Aucun groupe coché = tous ceux qui voient le forum (ses permissions)."
       }
     },
     "prefixes": {
@@ -2385,7 +2449,11 @@
           "user_deleting": "An account starts being deleted (the plugin deletes the member's data).",
           "user_deleted": "An account was deleted.",
           "user_merged": "An account was merged into another (the plugin moves its data to the target account).",
-          "member_panel": "Cartes et onglets sur la fiche du membre dans l'ACP et sur le profil (déclarés dans memberPanels)."
+          "member_panel": "Cartes et onglets sur la fiche du membre dans l'ACP et sur le profil (déclarés dans memberPanels).",
+          "forum_list": "La liste des forums (index, sous-forums) : étiquettes à côté du titre, une ligne sous la description, la bande de la catégorie et le style de la ligne (un appel par page).",
+          "forum_page": "Une carte en haut de la page d'un forum.",
+          "topic_bar": "Une barre sur la page d'un sujet, sous l'en-tête.",
+          "forum_edit": "Le contenu d'un onglet du plugin dans ACP → Forums → Modifier (déclaré dans forumTabs)."
         }
       }
     },
@@ -3896,6 +3964,59 @@
       "removeBody": "La barre « {text} » disparaît du site après l’enregistrement.",
       "removeConfirm": "Supprimer",
       "cancel": "Annuler"
+    },
+    "archive": {
+      "title": "Archivage automatique",
+      "description": "Des règles qui archivent seules les anciens sujets. Un sujet archivé est en lecture seule et peut être restauré à tout moment.",
+      "enabled": "L'archivage automatique est activé (un passage par heure).",
+      "disabled": "L'archivage automatique est désactivé : les règles ne tournent qu'avec « Exécuter maintenant ».",
+      "settingsLink": "Réglages du forum",
+      "rules": "Règles",
+      "new": "Nouvelle règle",
+      "empty": "Aucune règle pour l'instant.",
+      "on": "Activée",
+      "off": "Désactivée",
+      "summary": "Dernier message de plus de {days} jours · archiverait {count, plural, one {# sujet} other {# sujets}} maintenant",
+      "lastRun": "Dernier passage : {date} ({count})",
+      "edit": "Modifier",
+      "runNow": "Exécuter maintenant",
+      "runConfirm": "Archiver {count, plural, one {# sujet} other {# sujets}} maintenant ?",
+      "delete": "Supprimer",
+      "deleteConfirm": "Supprimer la règle ? Les sujets déjà archivés le restent.",
+      "editTitle": "Modifier : {name}",
+      "save": "Enregistrer la règle",
+      "name": "Nom de la règle",
+      "ruleEnabled": "La règle est activée",
+      "conditions": "Archiver les sujets qui…",
+      "lastPostDays": "…ont leur dernier message de plus de (jours)",
+      "forums": "Forums",
+      "forumsHint": "Aucun forum coché = tous les forums.",
+      "flags": {
+        "pinned": "Épinglés",
+        "locked": "Verrouillés",
+        "hidden": "Masqués",
+        "poll": "Avec sondage"
+      },
+      "tri": {
+        "any": "Peu importe",
+        "yes": "Seulement oui",
+        "no": "Seulement non"
+      },
+      "repliesBelow": "Moins de N réponses",
+      "viewsBelow": "Moins de N vues",
+      "ratingBelow": "Note inférieure à",
+      "starters": "Lancés par (noms, séparés par des virgules)",
+      "startersHint": "ex. Krypt, ShadowRO",
+      "exclusions": "…mais pas quand",
+      "not": {
+        "pinned": "Le sujet est épinglé",
+        "locked": "Le sujet est verrouillé",
+        "poll": "Le sujet a un sondage",
+        "repliesAtLeast": "Il a au moins N réponses",
+        "viewsAtLeast": "Il a au moins N vues",
+        "ratingAtLeast": "Sa note est au moins",
+        "starters": "Il a été lancé par (noms, séparés par des virgules)"
+      }
     }
   },
   "settings": {
@@ -3950,14 +4071,37 @@
       "unicode": "Any alphabet",
       "optional": "Optional",
       "direct": "Direct: the browser loads the image from the address (nothing copied to the site)",
-      "copy": "Copy: images are downloaded and kept on the site"
+      "copy": "Copy: images are downloaded and kept on the site",
+      "rows": "Lignes",
+      "grid": "Grille",
+      "list": "Liste",
+      "snippet": "Avec extrait",
+      "top": "En haut",
+      "bottom": "En bas",
+      "all": "Tous les appareils",
+      "desktop": "Ordinateur uniquement"
     },
     "forums": {
       "posts_per_page": "Postes par page",
       "topics_per_page": "Thèmes par page",
       "post_max_chars": "Longueur maximale du poste (caractères)",
       "embeds": "Intégrations autorisées (youtube, interrupteur, médaille, image)",
-      "revisions_visible_to_author": "Les auteurs voient leur historique d'édition"
+      "revisions_visible_to_author": "Les auteurs voient leur historique d'édition",
+      "pinned_first": "Les sujets épinglés restent en premier",
+      "forum_view": "Vue par défaut des forums (les membres peuvent en choisir une autre)",
+      "topic_view": "Vue par défaut de la liste des sujets (les membres peuvent en choisir une autre)",
+      "popular_threshold": "« Populaire en ce moment » : réponses des dernières 24 heures (0 = désactivé)",
+      "mod_names_public": "Le nom du modérateur apparaît sur les messages de modération",
+      "summary_enabled": "Résumé du sujet (les plus actifs, messages populaires, jours les plus actifs)",
+      "summary_min_replies": "Le résumé apparaît à partir de N réponses",
+      "summary_position": "Position du résumé",
+      "summary_devices": "Le résumé apparaît sur",
+      "rss_enabled": "Flux RSS pour chaque forum",
+      "rating_change_vote": "Note en étoiles : les membres peuvent changer leur vote",
+      "rating_own": "Note en étoiles : les auteurs peuvent noter leur propre sujet",
+      "rating_min_age_days": "Note en étoiles : ancienneté minimum du compte (jours)",
+      "rating_min_posts": "Note en étoiles : messages minimum",
+      "archive_enabled": "Archivage automatique (les règles dans Forums → Archivage)"
     },
     "profile": {
       "cover_max_mb": "Taille maximale de la couverture (MB)",
@@ -4497,7 +4641,17 @@
       "flood_seconds": "Délai entre les postes (secondes)",
       "moderate_all": "Modérateur dans tous les forums",
       "poll_create": "Crée des sondages",
-      "tags_max": "Étiquettes par sujet (maximum)"
+      "tags_max": "Étiquettes par sujet (maximum)",
+      "rate": "Noter les sujets (étoiles)",
+      "block_section": "Blocs : section",
+      "block_callout": "Blocs : encadré",
+      "block_cards": "Blocs : grille de cartes",
+      "block_button": "Blocs : bouton",
+      "block_columns": "Blocs : colonnes",
+      "block_steps": "Blocs : étapes",
+      "block_progress": "Blocs : progression",
+      "block_hidden": "Blocs : contenu masqué",
+      "block_html": "Blocs : HTML (Root Admin uniquement)"
     },
     "vip": {
       "manage": "Subventions, prolongations et révocations VIP"
@@ -4966,7 +5120,55 @@
     "topicsCount": "{count, plural, one {Sujet #} many {Sujets #} other {Sujets #}}",
     "statsOf": "Statistiques du forum {name}",
     "statsTopics": "{count, plural, one {<b>#</b> sujet} many {<b>#</b> sujets} other {<b>#</b> sujets}}",
-    "statsPosts": "{count, plural, one {<b>#</b> réponse} many {<b>#</b> réponses} other {<b>#</b> réponses}}"
+    "statsPosts": "{count, plural, one {<b>#</b> réponse} many {<b>#</b> réponses} other {<b>#</b> réponses}}",
+    "pageHint": "Page",
+    "archived": "Archivé",
+    "popularNow": "Populaire en ce moment",
+    "ratingLabel": "{avg} sur 5 · {count, plural, one {# vote} other {# votes}}",
+    "pageEmpty": "Cette page n'a pas encore de contenu.",
+    "sortLabel": "Trier",
+    "sorts": {
+      "last": "Dernière réponse",
+      "created": "Plus récents",
+      "replies": "Plus de réponses",
+      "views": "Plus vus",
+      "rating": "Mieux notés",
+      "title": "Titre (A–Z)"
+    },
+    "fourStars": "Seulement 4★+",
+    "emptyRated": "Aucun sujet noté 4★ ou plus.",
+    "listViews": {
+      "label": "Vue de la liste",
+      "list": "Liste",
+      "snippet": "Avec extrait"
+    },
+    "password": {
+      "title": "{name} est protégé par un mot de passe",
+      "hint": "Saisis le mot de passe du forum pour l'ouvrir. Il reste déverrouillé dans ce navigateur pendant 30 jours.",
+      "label": "Mot de passe du forum",
+      "submit": "Déverrouiller"
+    },
+    "rules": {
+      "title": "Règles du forum",
+      "accepted": "Acceptées",
+      "mustAccept": "Pour publier ici, tu dois accepter les règles.",
+      "accept": "J'ai lu et j'accepte les règles"
+    },
+    "slotsDemo": {
+      "tab": "Démo des slots",
+      "description": "L'extension de démonstration des slots du forum : une étiquette à côté du titre, une ligne sous la description, le style de la ligne, une carte sur la page du forum et la barre du sujet.",
+      "enabled": "Afficher la démo sur ce forum",
+      "badge": "Étiquette à côté du titre",
+      "note": "Ligne sous la description",
+      "accent": "Couleur de la barre (#RRGGBB)",
+      "caps": "Titre en majuscules",
+      "headerChip": "Démo",
+      "visibleTopics": "sujets visibles",
+      "cardTitle": "Carte de démo",
+      "cardBody": "La carte en haut du forum {name}, ajoutée par l'extension de démo.",
+      "cardAction": "Ouvrir le forum",
+      "barText": "Barre de démo du sujet #{id}"
+    }
   },
   "topic": {
     "reply": "Répondre",
@@ -5093,7 +5295,76 @@
       "characters": "Caractères {count}",
       "charactersMax": "Caractères {count} / {max}",
       "mentionGroup": "Group",
-      "mentionOnline": "Online"
+      "mentionOnline": "Online",
+      "blocks": {
+        "blocks": "Blocs",
+        "blockSettings": "Réglages du bloc",
+        "insert": "Insérer",
+        "apply": "Appliquer",
+        "cancel": "Annuler",
+        "type": {
+          "section": "Section",
+          "callout": "Encadré",
+          "cards": "Grille de cartes",
+          "button": "Bouton",
+          "columns": "Colonnes",
+          "steps": "Étapes",
+          "progress": "Progression",
+          "hidden": "Contenu masqué",
+          "html": "HTML (Root uniquement)"
+        },
+        "node": {
+          "gcsSection": "Section",
+          "gcsCallout": "Encadré",
+          "gcsCardGrid": "Grille de cartes",
+          "gcsCard": "Carte",
+          "gcsButton": "Bouton",
+          "gcsColumns": "Colonnes",
+          "gcsColumn": "Colonne",
+          "gcsSteps": "Étapes",
+          "gcsStep": "Étape",
+          "gcsProgress": "Progression",
+          "gcsHidden": "Contenu masqué",
+          "gcsHtml": "HTML"
+        },
+        "field": {
+          "title": "Titre",
+          "icon": "Icône (ex. fa-solid fa-gift)",
+          "tone": "Couleur",
+          "kind": "Type",
+          "columns": "Colonnes",
+          "subtitle": "Sous-titre",
+          "value": "Valeur",
+          "badge": "Badge",
+          "highlight": "Mis en avant",
+          "label": "Texte",
+          "href": "Lien",
+          "variant": "Style",
+          "max": "Maximum",
+          "mode": "Qui le voit",
+          "groups": "Groupes (ids, séparés par des virgules)",
+          "html": "HTML"
+        },
+        "option": {
+          "1": "1",
+          "2": "2",
+          "3": "3",
+          "4": "4",
+          "accent": "Accent",
+          "neutral": "Neutre",
+          "ok": "Vert (ok)",
+          "warn": "Avertissement",
+          "danger": "Danger",
+          "info": "Info",
+          "warning": "Avertissement",
+          "success": "Succès",
+          "primary": "Plein",
+          "ghost": "Contour",
+          "reply": "Ceux qui ont répondu au sujet",
+          "members": "Membres connectés",
+          "groups": "Certains groupes"
+        }
+      }
     },
     "ignored": "Vous ignorez <name></name>. Afficher l'article",
     "live": {
@@ -5113,7 +5384,72 @@
     "reactedYou": "Tu as aimé ce post.",
     "reactedYouAndOthers": "Vous et {count, plural, one {# autre personne} many {# autres} other {# autres}} avez aimé ce post.",
     "reactedCount": "{count, plural, one {# personne} many {# personnes} other {# personnes}} a aimé ce post.",
-    "quickReply": "Réponse rapide"
+    "quickReply": "Réponse rapide",
+    "pills": {
+      "author": "Auteur",
+      "staff": "Staff",
+      "recommended": "Recommandé"
+    },
+    "ip": "IP : {ip}",
+    "ipTools": "Outils IP",
+    "recommend": "Recommander la réponse",
+    "unrecommend": "Retirer la recommandation",
+    "recommendedTitle": "Réponse recommandée par le staff",
+    "archivedNotice": "Sujet archivé le {date} : lecture seule.",
+    "archivedReply": "Ce sujet est archivé : on ne peut plus y répondre.",
+    "you": "Toi",
+    "and": "et",
+    "reactedNames": "<names></names> {count, plural, one {a réagi} other {ont réagi}}",
+    "reactedNamesOthers": "<names></names> et {count, plural, one {une autre personne} other {# autres}} ont réagi",
+    "share": {
+      "label": "Partager",
+      "copy": "Copier le lien",
+      "copied": "Lien copié",
+      "email": "E-mail"
+    },
+    "multiQuote": {
+      "add": "+ Citation",
+      "remove": "Retirer la citation",
+      "label": "Citations choisies",
+      "insert": "Citer {count, plural, one {# message} other {# messages}}",
+      "clear": "Vider les citations"
+    },
+    "replyBox": {
+      "placeholder": "Répondre…",
+      "draftRestored": "Ton brouillon a été restauré.",
+      "discardDraft": "Abandonner le brouillon",
+      "plainPaste": "Coller en texte",
+      "plainPasteOn": "Coller en texte : activé",
+      "preview": "Aperçu",
+      "closePreview": "Fermer l'aperçu",
+      "previewDevices": "Aperçu sur",
+      "devices": {
+        "desktop": "Ordinateur",
+        "tablet": "Tablette",
+        "phone": "Téléphone"
+      }
+    },
+    "notices": {
+      "label": "Message des modérateurs",
+      "title": "Message des modérateurs",
+      "team": "Équipe de modération",
+      "delete": "Supprimer le message",
+      "cancel": "Annuler",
+      "confirmDelete": "Supprimer le message du modérateur ?"
+    },
+    "gap": {
+      "months": "{count, plural, one {Un mois} other {# mois}} plus tard…",
+      "years": "{count, plural, one {Un an} other {# ans}} plus tard…"
+    },
+    "summary": {
+      "title": "Résumé du sujet",
+      "posters": "Les plus actifs",
+      "popular": "Messages populaires",
+      "days": "Jours les plus actifs",
+      "postsCount": "{count, plural, one {# message} other {# messages}}",
+      "reactions": "{count, plural, one {# réaction} other {# réactions}}",
+      "noText": "(sans texte)"
+    }
   },
   "newTopic": {
     "title": "Nouveau sujet dans {forum}",
@@ -5164,7 +5500,62 @@
     "menu": "Outils de modulation",
     "confirmDelete": "Supprimer définitivement le sujet et tous ses messages?",
     "done": "Terminé",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "v2": {
+      "addNotice": "Ajouter un message",
+      "noticeTone": "Ton du message",
+      "tones": {
+        "info": "Info",
+        "warn": "Avertissement",
+        "ok": "Confirmation",
+        "danger": "Alerte"
+      },
+      "publishNotice": "Publier le message",
+      "approvalOn": "Approuver les messages",
+      "approvalOff": "Arrêter l'approbation",
+      "archive": "Archiver",
+      "unarchive": "Restaurer depuis l'archive",
+      "resetRating": "Réinitialiser la note",
+      "resetRatingConfirm": "Supprimer tous les votes de ce sujet ? La note repart de zéro.",
+      "history": "Historique de modération",
+      "historyEmpty": "Aucune action de modération pour l'instant.",
+      "system": "Système",
+      "savedActions": "Actions enregistrées",
+      "actions": {
+        "mod": {
+          "topic": {
+            "pin": "Épinglé / désépinglé",
+            "lock": "Verrouillé / déverrouillé",
+            "feature": "Mis en avant",
+            "move": "Déplacé",
+            "merge": "Fusionné",
+            "split": "Divisé",
+            "delete": "Supprimé",
+            "solved": "Meilleure réponse",
+            "notice": "Message de modérateur",
+            "notice_delete": "Message de modérateur supprimé",
+            "recommend": "Réponse recommandée",
+            "approval": "Approbation des messages",
+            "archive": "Archivé",
+            "unarchive": "Restauré depuis l'archive",
+            "saved_action": "Action enregistrée appliquée"
+          },
+          "post": {
+            "edit": "Message modifié",
+            "delete": "Message supprimé",
+            "restore": "Message restauré",
+            "approve": "Message approuvé",
+            "hide": "Message masqué"
+          }
+        },
+        "rating": {
+          "reset": "Note réinitialisée",
+          "vote": {
+            "remove": "Vote retiré"
+          }
+        }
+      }
+    }
   },
   "search": {
     "title": "Rechercher",
@@ -6257,7 +6648,8 @@
       "recentPosts": "Postes récents",
       "topPosters": "Meilleures affiches",
       "featuredTopics": "Thèmes en vedette",
-      "featuredCarousel": "Featured carousel"
+      "featuredCarousel": "Featured carousel",
+      "topRated": "Mieux notés"
     },
     "chat": {
       "shoutbox": "Boîte à déchets"
@@ -6298,7 +6690,8 @@
         "recentPosts": "Les dernières réponses, avec un extrait.",
         "topPosters": "Membres ayant le plus de postes au cours de la période choisie.",
         "featuredTopics": "Sujets abordés par le personnel.",
-        "featuredCarousel": "Topics featured by the staff, in an image carousel: forum, date, title, excerpt and author."
+        "featuredCarousel": "Topics featured by the staff, in an image carousel: forum, date, title, excerpt and author.",
+        "topRated": "Les sujets avec le plus d'étoiles du dernier mois (au moins 2 votes)."
       },
       "chat": {
         "shoutbox": "Une salle de discussion, juste sur la page."
@@ -6334,7 +6727,8 @@
       "topics": "Sujets",
       "reputation": "Réputation",
       "online": "Temps en ligne"
-    }
+    },
+    "ratingAria": "{avg} sur 5, {count, plural, one {# vote} other {# votes}}"
   },
   "pageEditor": {
     "title": "Modifier la page",
@@ -8692,5 +9086,32 @@
       "button": "Se connecter"
     },
     "social": "ou en un clic avec"
+  },
+  "rating": {
+    "average": "{avg} sur 5 · {count, plural, one {# vote} other {# votes}}",
+    "decimal": ",",
+    "rateThis": "Noter ce sujet",
+    "starLabel": "{value} {value, plural, one {étoile} other {étoiles}} : {label}",
+    "labels": {
+      "poor": "Faible",
+      "fair": "Passable",
+      "good": "Bon",
+      "great": "Très bon",
+      "excellent": "Excellent"
+    },
+    "none": "Pas encore de note",
+    "yours": "Ta note : {value}★",
+    "undo": "Retirer la note",
+    "signIn": "Connecte-toi",
+    "signInHint": "pour noter ce sujet.",
+    "reasons": {
+      "own_content": "Tu ne peux pas noter ton propre sujet.",
+      "no_permission": "Ton groupe ne peut pas noter dans ce forum.",
+      "account_too_new": "Ton compte est trop récent pour noter.",
+      "not_enough_posts": "Il te faut plus de messages pour noter.",
+      "disabled": "La note n'est pas disponible sur ce sujet."
+    },
+    "distribution": "Répartition des notes",
+    "starsShort": "{value}★"
   }
 }

@@ -60,6 +60,8 @@ model User {
   posts          Post[]            @relation("PostAuthor")
   postRevisions  PostRevision[]
   reactionsGiven ContentReaction[]
+  /// Forum v2: notele date (serviciul generic `contentRating`).
+  contentRatings ContentRating[]
   pollVotes      PollVote[]
   readMarkers    ReadMarker[]
   forumReadMarks ForumReadMark[]
@@ -543,6 +545,8 @@ enum ForumType {
   FORUM
   LINK
   QA
+  /// Forum v2: „Pagină / Anunț”: o pagină bogată în locul listei de topicuri (opțional cu topicuri dedesubt).
+  PAGE
 }
 
 /// Starea de vizibilitate a unui topic sau a unei postări.
@@ -579,6 +583,27 @@ model Forum {
   lastTopicId     Int?
   lastPosterId    String?
   createdAt       DateTime  @default(now())
+  /// Forum v2 (opțiunile forumului): membrii văd doar topicurile lor (moderatorii văd tot).
+  ownTopicsOnly   Boolean   @default(false)
+  /// Forum v2: parola forumului (hash); null = fără parolă.
+  passwordHash    String?
+  /// Forum v2: caseta regulilor: off | show (afișată) | accept (de acceptat înainte de a posta).
+  rulesMode       String    @default("off")
+  rulesJson       Json?
+  rulesHtml       String    @default("")
+  /// Forum v2: sortarea implicită a topicurilor (last | created | replies | views | rating | title).
+  defaultSort     String    @default("last")
+  /// Forum v2: sondaje și tag-uri permise în forum.
+  pollsEnabled    Boolean   @default(true)
+  tagsEnabled     Boolean   @default(true)
+  /// Forum v2: postările minime ale autorului ca să poată posta (0 = fără prag).
+  minPosts        Int       @default(0)
+  /// Forum v2: postările din forum se numără la contorul membrului.
+  countPosts      Boolean   @default(true)
+  /// Forum v2: topicurile se închid automat după N zile fără răspuns (0 = niciodată).
+  autoCloseDays   Int       @default(0)
+  /// Forum v2: nota cu stele pe topicuri (serviciul `contentRating`).
+  ratingEnabled   Boolean   @default(false)
 
   parent      Forum?        @relation("ForumTree", fields: [parentId], references: [id], onDelete: Restrict)
   children    Forum[]       @relation("ForumTree")
@@ -588,9 +613,58 @@ model Forum {
   gameServers GameServer[]
   /// Clanul care are acest forum ca forum privat.
   clan        Clan?
+  /// Forum v2: datele extensiilor (taburile contribuite în ACP), pagina unui nod PAGE și acceptările regulilor.
+  extensions    ForumExtensionData[]
+  page          ForumPage?
+  rulesAccepted ForumRulesAcceptance[]
 
   @@index([parentId, position])
   @@map("forums")
+}
+
+/// Forum v2: datele unei extensii de forum (tab contribuit în ACP: Aspect, Server…), per forum și per extensie.
+model ForumExtensionData {
+  forumId     Int
+  key         String
+  data        Json     @default("{}")
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+
+  forum Forum @relation(fields: [forumId], references: [id], onDelete: Cascade)
+
+  @@id([forumId, key])
+  @@map("forum_extension_data")
+}
+
+/// Forum v2: conținutul unui nod „Pagină / Anunț” (`ForumType.PAGE`), butonul CTA, publicul și topicurile de dedesubt.
+model ForumPage {
+  forumId          Int      @id
+  contentJson      Json?
+  contentHtml      String   @default("")
+  ctaLabel         String?
+  ctaUrl           String?
+  ctaIcon          String?
+  allowTopics      Boolean  @default(false)
+  /// Grupurile care văd pagina (gol = toți cei care văd forumul).
+  audienceGroupIds Int[]    @default([])
+  updatedAt        DateTime @updatedAt
+  updatedById      String?
+
+  forum Forum @relation(fields: [forumId], references: [id], onDelete: Cascade)
+
+  @@map("forum_pages")
+}
+
+/// Forum v2: cine a acceptat regulile unui forum (opțiunea „Reguli: de acceptat”).
+model ForumRulesAcceptance {
+  forumId    Int
+  userId     String
+  acceptedAt DateTime @default(now())
+
+  forum Forum @relation(fields: [forumId], references: [id], onDelete: Cascade)
+
+  @@id([forumId, userId])
+  @@map("forum_rules_acceptances")
 }
 
 model Topic {
@@ -613,6 +687,16 @@ model Topic {
   viewsCount   Int                      @default(0)
   createdAt    DateTime                 @default(now())
   searchVector Unsupported("tsvector")?
+  /// Forum v2: nota medie (0 = fără voturi) și numărul voturilor (sortarea și filtrul „4★+”).
+  ratingAvg         Float     @default(0)
+  ratingCount       Int       @default(0)
+  /// Forum v2: răspunsul recomandat de staff (afișat sus, „Recomandat”).
+  recommendedPostId Int?
+  /// Forum v2: răspunsurile din acest topic trec prin aprobare.
+  requireApproval   Boolean   @default(false)
+  /// Forum v2: arhivat (doar citire, restaurabil); `archivedById` null = arhivarea automată.
+  archivedAt        DateTime?
+  archivedById      String?
 
   forum       Forum        @relation(fields: [forumId], references: [id], onDelete: Cascade)
   author      User?        @relation("TopicAuthor", fields: [authorId], references: [id], onDelete: SetNull)
@@ -621,8 +705,11 @@ model Topic {
   tags        TopicTag[]
   poll        Poll?
   readMarkers ReadMarker[]
+  notices     TopicNotice[]
 
   @@index([forumId, visibility, pinned(sort: Desc), lastPostAt(sort: Desc)])
+  /// Forum v2: „Cele mai bine notate”.
+  @@index([forumId, ratingAvg(sort: Desc)])
   @@index([authorId])
   /// Fluxul de activitate (`/activity`): topicurile noi, cele mai noi primele.
   @@index([createdAt(sort: Desc), id(sort: Desc)])
@@ -643,6 +730,8 @@ model Post {
   ip           String?
   createdAt    DateTime                 @default(now())
   searchVector Unsupported("tsvector")?
+  /// Forum v2: blocurile „conținut ascuns” scoase din `contentHtml` (id, mod, grupuri, HTML), arătate per vizitator.
+  hiddenParts  Json?
 
   topic     Topic          @relation(fields: [topicId], references: [id], onDelete: Cascade)
   author    User?          @relation("PostAuthor", fields: [authorId], references: [id], onDelete: SetNull)
@@ -653,6 +742,37 @@ model Post {
   /// Fluxul de activitate și clasamentul pe perioade (postările create recent).
   @@index([createdAt(sort: Desc), id(sort: Desc)])
   @@map("posts")
+}
+
+/// Forum v2: mesajul unui moderator într-un topic („Adaugă mesaj”), afișat sus, în culorile tonului ales.
+model TopicNotice {
+  id          Int      @id @default(autoincrement())
+  topicId     Int
+  authorId    String?
+  contentJson Json
+  contentHtml String
+  tone        String   @default("info")
+  createdAt   DateTime @default(now())
+
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@index([topicId])
+  @@map("topic_notices")
+}
+
+/// Forum v2: o regulă de arhivare automată (condiții + excepții „dar nu când”), rulată periodic de `gcs-worker`.
+model ArchiveRule {
+  id         Int       @id @default(autoincrement())
+  name       String
+  enabled    Boolean   @default(true)
+  conditions Json
+  exclusions Json      @default("{}")
+  position   Int       @default(0)
+  lastRunAt  DateTime?
+  lastCount  Int       @default(0)
+  createdAt  DateTime  @default(now())
+
+  @@map("archive_rules")
 }
 
 model PostRevision {
@@ -776,6 +896,36 @@ model Reaction {
 }
 
 /// O reacție pe orice conținut (`forums.post`, `downloads.file`…). Una per user per conținut.
+/// Forum v2: nota (1–5 stele) dată de un membru unui conținut (serviciul generic `contentRating`: topicuri, fișiere…).
+model ContentRating {
+  contentType String
+  contentId   String
+  userId      String
+  value       Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([contentType, contentId, userId])
+  @@index([userId])
+  @@map("content_ratings")
+}
+
+/// Forum v2: media și numărul notelor unui conținut, ținute la zi de serviciu (sortări, widget-ul „Cele mai bine notate”).
+model ContentRatingSummary {
+  contentType String
+  contentId   String
+  count       Int      @default(0)
+  sum         Int      @default(0)
+  avg         Float    @default(0)
+  updatedAt   DateTime @updatedAt
+
+  @@id([contentType, contentId])
+  @@index([contentType, avg(sort: Desc)])
+  @@map("content_rating_summaries")
+}
+
 model ContentReaction {
   id          Int      @id @default(autoincrement())
   contentType String

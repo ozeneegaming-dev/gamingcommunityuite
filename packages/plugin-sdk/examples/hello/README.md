@@ -13,6 +13,8 @@ Arată tot ce poate face un plugin GamingCommunitySuite:
 | tabel propriu | `plugin_gcs__hello.greetings_log` (migrația `001_init.sql`) |
 | listener | `post.created` → un rând în tabel |
 | punct de extensie | `postbit.after_fields` |
+| tab în formularul forumului (Forum v2) | ACP → Forumuri → Editează → „Hello” (`forumTabs`: eticheta lângă titlu, culoarea titlului) |
+| slot în lista forumurilor (Forum v2) | `forum.list`: salutul de sub descriere și stilul rândului |
 | job periodic | `cleanup`, zilnic |
 | meniul userului | „Hello” |
 | CSS propriu | `assets/hello.css` (închis automat în containerul pluginului) |

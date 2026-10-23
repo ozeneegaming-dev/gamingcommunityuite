@@ -1,5 +1,6 @@
 import { isSafeBanner, type GcsReactionView } from "@gcs/core";
 import type { GcsClanTag, GcsPostbitData, GcsPostView } from "@gcs/modules";
+import type { GcsEditorBlock } from "@gcs/ui/editor";
 import { GcsAvatar, GcsBadgeArt, GcsClanTag as GcsClanPlate, GcsTooltip, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import { getFormatter, getTranslations } from "next-intl/server";
@@ -36,10 +37,34 @@ type Props = {
   showSignature?: boolean;
   /** Tagul clanului autorului (aplicația Clanuri, dacă opțiunile îl arată în postbit). */
   clan?: GcsClanTag | null;
+  /** Forum v2: autorul e cel care a pornit topicul (pastila „Autor”). */
+  isTopicAuthor?: boolean;
+  /** Forum v2: răspunsul recomandat de staff (pastila „Recomandat”) și dacă vizitatorul îl poate (de)recomanda. */
+  recommended?: boolean;
+  canRecommend?: boolean;
+  /** Forum v2: blocurile permise vizitatorului la editarea pe loc. */
+  blocks?: GcsEditorBlock[];
 };
 
 /** O postare (macheta Topic): coloana autorului (server) și conținutul cu acțiunile (client). */
-export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, can, actorId, ignored = false, translate = null, postbit = null, clan = null, showSignature = true }: Props) {
+export async function GcsPost({
+  topicId,
+  forumId,
+  post,
+  isSolved,
+  reactionList,
+  can,
+  actorId,
+  ignored = false,
+  translate = null,
+  postbit = null,
+  clan = null,
+  showSignature = true,
+  isTopicAuthor = false,
+  recommended = false,
+  canRecommend = false,
+  blocks = [],
+}: Props) {
   const t = await getTranslations("topic");
   const format = await getFormatter();
   const author = post.author;
@@ -50,8 +75,38 @@ export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, 
       : t("edited", { when: date(post.editedAt) })
     : null;
   const own = actorId !== null && actorId === author?.id;
-  // Postările staff-ului au chenarul în culoarea grupului autorului (designul Nova).
-  const staffColor = postbit && STAFF_GROUPS.has(postbit.group.key) ? (postbit.group.color ?? "var(--gcs-accent)") : null;
+  // Postările staff-ului au chenarul în culoarea grupului autorului (în orice temă): grupurile de staff ale site-ului
+  // (acces la moderare / ACP) sau, pentru datele vechi, cheile implicite.
+  const isStaff = post.staff || (postbit !== null && STAFF_GROUPS.has(postbit.group.key));
+  const staffColor = isStaff ? (postbit?.group.color ?? author?.groupColor ?? "var(--gcs-accent)") : null;
+  const pills = (
+    <>
+      {isTopicAuthor && (
+        <span className="gcs-postPill gcs-postPill--author" data-testid="gcs-post-pill-author">
+          {t("pills.author")}
+        </span>
+      )}
+      {isStaff && (
+        <span className="gcs-postPill gcs-postPill--staff" style={staffColor ? ({ "--gcs-pill-color": staffColor } as CSSProperties) : undefined} data-testid="gcs-post-pill-staff">
+          {t("pills.staff")}
+        </span>
+      )}
+      {recommended && (
+        <span className="gcs-postPill gcs-postPill--recommended" data-testid="gcs-post-pill-recommended">
+          <GcsIcon name="fa-solid fa-award" />
+          {t("pills.recommended")}
+        </span>
+      )}
+    </>
+  );
+  // IP-ul postării (doar moderatorii globali îl primesc), cu linkul spre uneltele IP din ACP.
+  const staffTools = post.ip ? (
+    <p className="gcs-post__ip" data-testid="gcs-post-ip">
+      <GcsIcon name="fa-solid fa-network-wired" />
+      <span>{t("ip", { ip: post.ip })}</span>
+      <a href={`/admin/members?ip=${encodeURIComponent(post.ip)}`}>{t("ipTools")}</a>
+    </p>
+  ) : null;
 
   const article = (
     <article
@@ -92,6 +147,13 @@ export async function GcsPost({ topicId, forumId, post, isSolved, reactionList, 
         permalink={postHref(topicId, post.id)}
         can={{ ...can, react: can.react && !own, report: can.report && !own, edit: post.canEdit, hide: post.canHide }}
         extras={translate && post.visibility === "VISIBLE" && !own ? <GcsTranslateButton contentType="forums.post" contentId={post.id} labels={translate} /> : null}
+        pills={pills}
+        reactors={post.reactors}
+        viewerId={actorId}
+        staffTools={staffTools}
+        recommend={{ can: canRecommend, on: recommended }}
+        multiQuote
+        blocks={blocks}
         signature={
           showSignature && author?.signatureHtml && post.visibility === "VISIBLE" ? (
             // Semnătura: HTML-ul produs și sanitizat de renderer la salvare (Setări → Semnătură).

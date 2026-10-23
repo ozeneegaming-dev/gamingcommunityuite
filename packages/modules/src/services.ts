@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import {
   GcsAcpDashboardService,
+  GcsContentRatingService,
   GcsAcpRoleService,
   GcsAcpSearch,
   GcsActorResolver,
@@ -78,6 +79,10 @@ import { GcsForumQueries } from "./forums/queries";
 import { GcsReadMarkerService } from "./forums/readMarkers";
 import { GcsForumSearch } from "./forums/search";
 import { GcsForumService } from "./forums/forums";
+import { GcsForumSlotService } from "./forums/slots";
+import { registerTopicRatings } from "./forums/ratings";
+import { GcsTopicToolsService } from "./forums/topicTools";
+import { GcsArchiveService } from "./forums/archive";
 import { GcsTopicService } from "./forums/topics";
 import { registerAppJobs } from "./jobs";
 import { GcsAchievementService } from "./profile/achievements";
@@ -215,6 +220,12 @@ export type GcsServices = {
   search: GcsForumSearch;
   posting: GcsForumPosting;
   forumModerators: GcsForumModeratorService;
+  /** Forum v2: sloturile de extensie ale forumului (listă, pagina forumului, bara topicului, taburile din ACP). */
+  forumSlots: GcsForumSlotService;
+  /** Forum v2: nota cu stele (`contentRating`), uneltele topicului (mesaj de moderator, recomandat, istoric) și arhivarea. */
+  ratings: GcsContentRatingService;
+  topicTools: GcsTopicToolsService;
+  archive: GcsArchiveService;
   mailer: GcsMailer;
   profiles: GcsProfileService;
   profileFields: GcsProfileFieldAdmin;
@@ -432,7 +443,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   attachments.registerAccess("theme.logo", async () => true);
   attachments.registerAccess("theme.favicon", async () => true);
   attachments.registerAccess("theme.header", async () => true);
-  const forums = new GcsForumService({ db, bus, permissions, acp, registry });
+  // Forum v2: paginile („Pagină / Anunț”) și regulile forumurilor se scriu cu editorul postărilor, cu blocurile staff-ului.
+  const forums = new GcsForumService({ db, bus, permissions, acp, registry, render: (content, actor) => posting.render(content, { actor, blocks: true }) });
   const readMarkers = new GcsReadMarkerService({ db, settings });
   const follows = new GcsFollowService({ db });
   // Gazda pluginurilor se creează după serviciile pe care le folosește; filtrele de conținut o apelează la rulare.
@@ -448,6 +460,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     siteHost: async () => siteHost(await settings.get<string>("site.url")),
     contentFilter: (data, actor) => pluginRef.host!.filterPost(data, actor),
     groupMentions,
+    // Forum v2: iconițele blocurilor din postări (SVG-ul registrului Font Awesome).
+    icon: iconSvg,
   });
   const polls = new GcsPollService(posting);
   const prefixes = new GcsPrefixService({ db, bus, acp });
@@ -514,6 +528,11 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
 
   const profileQueries = new GcsProfileQueries({ db, cache, permissions, profiles, social, ranks });
   const forumQueries = new GcsForumQueries({ db, cache, permissions, settings, readMarkers, follows, reactions, polls, ranks });
+  // Forum v2: nota cu stele (serviciul generic, cu topicurile ca prim tip de conținut) și uneltele topicului.
+  const ratings = new GcsContentRatingService({ db, bus });
+  registerTopicRatings(ratings, { db, permissions, settings, posting, queries: forumQueries });
+  const topicTools = new GcsTopicToolsService(posting, { settings });
+  const archive = new GcsArchiveService({ db, bus, acp, settings, posting });
   const notificationProducers = new GcsNotificationProducers({
     db,
     redis,
@@ -759,6 +778,10 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     search: new GcsForumSearch({ db, permissions, settings, rateLimiter }),
     posting,
     forumModerators: new GcsForumModeratorService({ db, permissions, acp }),
+    forumSlots: new GcsForumSlotService({ db, cache, bus, registry, apps, acp }),
+    ratings,
+    topicTools,
+    archive,
     mailer,
     profiles,
     profileFields: new GcsProfileFieldAdmin({ db, bus, acp }),

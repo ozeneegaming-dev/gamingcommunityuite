@@ -1,4 +1,5 @@
 import {
+  GcsForbidden,
   GcsRateLimited,
   GcsSearchIndex,
   GcsValidationError,
@@ -14,6 +15,7 @@ import {
   type GcsSettingsService,
 } from "@gcs/core";
 import type { Forum, Prisma, PrismaClient } from "@gcs/db";
+import { allowedBlocks } from "./blocks";
 import { GcsForumCounters } from "./counters";
 import { RENDER_LABELS } from "./labels";
 
@@ -37,14 +39,17 @@ export type GcsForumDeps = {
   contentFilter?: <T extends GcsPostFilterInput>(data: T, actor: GcsActor) => Promise<T>;
   /** Mențiunile de grup (Mențiuni v2): ce grupuri poate menționa autorul și pauza dintre mențiuni. Lipsă = text simplu. */
   groupMentions?: GcsGroupMentionService;
+  /** Forum v2: SVG-ul unei iconițe Font Awesome (iconițele blocurilor din postări). */
+  icon?: (name: string) => string | null;
 };
 
 /**
  * Cine scrie conținutul randat (Mențiuni v2): fără `actor`, mențiunile de grup devin text simplu. `keep`: documentul
  * vechi, la o editare (pastilele deja salvate rămân). `cooldown`: verifică pauza dintre mențiuni (conținut nou, care
- * notifică membrii grupului); pauza pornește abia după salvare (`markGroupMentions`).
+ * notifică membrii grupului); pauza pornește abia după salvare (`markGroupMentions`). `blocks`: conținutul unei postări
+ * din forum (Forum v2): autorul poate folosi blocurile permise grupurilor lui (`forums.block_*`); altfel niciun bloc.
  */
-export type GcsRenderContext = { actor?: GcsActor; keep?: unknown; cooldown?: boolean };
+export type GcsRenderContext = { actor?: GcsActor; keep?: unknown; cooldown?: boolean; blocks?: boolean };
 
 /** Datele trimise filtrelor de conținut: topic nou, răspuns sau editare. */
 export type GcsPostFilterInput = {
@@ -93,6 +98,25 @@ export class GcsForumPosting {
     return (user?.approvedPostsCount ?? 0) < firstPosts;
   }
 
+  /**
+   * Forum v2: opțiunile forumului la postare. Sondajele și tag-urile oprite pe forum se refuză oricui; pragul de postări
+   * (`minPosts`) și regulile de acceptat (`rulesMode: accept`) se aplică membrilor fără puteri de moderare.
+   */
+  async checkForumOptions(actor: GcsActor, forum: Pick<Forum, "id" | "minPosts" | "rulesMode" | "pollsEnabled" | "tagsEnabled">, opts: { poll?: boolean; tags?: number } = {}): Promise<void> {
+    if (opts.poll && !forum.pollsEnabled) throw new GcsValidationError({ poll: "disabled" });
+    if ((opts.tags ?? 0) > 0 && !forum.tagsEnabled) throw new GcsValidationError({ tags: "disabled" });
+    if (!actor.userId || (forum.minPosts <= 0 && forum.rulesMode !== "accept")) return;
+    if (await this.isModerator(actor, "edit", forum.id)) return;
+    if (forum.minPosts > 0) {
+      const user = await this.deps.db.user.findUnique({ where: { id: actor.userId }, select: { postsCount: true } });
+      if ((user?.postsCount ?? 0) < forum.minPosts) throw new GcsForbidden({ reason: "min_posts", min: String(forum.minPosts) });
+    }
+    if (forum.rulesMode === "accept") {
+      const accepted = await this.deps.db.forumRulesAcceptance.findUnique({ where: { forumId_userId: { forumId: forum.id, userId: actor.userId } }, select: { forumId: true } });
+      if (!accepted) throw new GcsForbidden({ reason: "rules_not_accepted" });
+    }
+  }
+
   /** Pauza minimă între două postări ale aceluiași user (`forums.flood_seconds`). */
   async checkFlood(actor: GcsActor): Promise<void> {
     const seconds = await this.deps.permissions.groupValue<number | boolean>(actor, "forums.flood_seconds");
@@ -112,14 +136,22 @@ export class GcsForumPosting {
    */
   async render(content: unknown, ctx: GcsRenderContext = {}): Promise<GcsRendered> {
     const { settings, renderer, siteHost, groupMentions } = this.deps;
-    const [embeds, maxChars, locale, host, groups] = await Promise.all([
+    const [embeds, maxChars, locale, host, groups, blocks] = await Promise.all([
       settings.get<string[]>("forums.embeds"),
       settings.get<number>("forums.post_max_chars"),
       settings.get<string>("site.locale"),
       siteHost(),
       groupMentions && ctx.actor ? groupMentions.renderMap(ctx.actor, ctx.keep) : Promise.resolve(undefined),
+      ctx.blocks && ctx.actor ? allowedBlocks(this.deps, ctx.actor, ctx.keep) : Promise.resolve([]),
     ]);
-    const rendered = renderer.render(content, { embeds, siteHost: host, labels: RENDER_LABELS[locale] ?? RENDER_LABELS.ro!, ...(groups ? { groups } : {}) });
+    const rendered = renderer.render(content, {
+      embeds,
+      siteHost: host,
+      labels: RENDER_LABELS[locale] ?? RENDER_LABELS.ro!,
+      ...(groups ? { groups } : {}),
+      blocks,
+      ...(this.deps.icon ? { icon: this.deps.icon } : {}),
+    });
     if (rendered.text.length > maxChars) throw new GcsValidationError({ content: "too_long" }, { max: String(maxChars) });
     if (ctx.cooldown && ctx.actor && groupMentions) await groupMentions.assertCooldown(ctx.actor, rendered.groupMentions);
     return rendered;

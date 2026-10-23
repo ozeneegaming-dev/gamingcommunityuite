@@ -44,4 +44,6 @@ export function registerAppJobs(s: GcsServices): void {
   s.memberRemoval.registerJobs(s.jobs);
   // Profil gaming v2: datele Steam / FACEIT ale membrilor cu Steam legat (la cerere și o rundă orară).
   s.externalProfiles.registerJobs(s.jobs);
+  // Forum v2: arhivarea automată (orar) și închiderea topicurilor vechi (la 6 ore).
+  s.archive.registerJobs(s.jobs);
 }
