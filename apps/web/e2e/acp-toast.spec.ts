@@ -20,8 +20,17 @@ test("ACP: salvarea subsolului arată toast-ul „salvat”, cu butonul de înch
   await expect(page.locator(".gcs-acp .gcs-toastHost")).toHaveCount(1);
 
   const dir = process.env.GCS_SHOTS_DIR;
-  if (dir) await page.screenshot({ path: `${dir}/acp-footer-saved-toast.png` });
+  if (dir) {
+    await page.waitForTimeout(400); // după animația de intrare
+    await page.screenshot({ path: `${dir}/acp-footer-saved-toast.png` });
+  }
 
   await toast.getByRole("button", { name: "Închide notificarea" }).click();
   await expect(toast).toHaveCount(0);
+
+  // Subsolul rămâne implicit pentru celelalte teste (theme-nova pornește de la valorile implicite).
+  await page.getByTestId("gcs-footer-reset").click();
+  await page.getByRole("dialog").getByTestId("gcs-footer-reset-confirm").click();
+  await expect(page.getByTestId("gcs-footer-defaults")).toBeVisible();
+  await expect(page.getByTestId("gcs-toast")).toHaveCount(1);
 });
