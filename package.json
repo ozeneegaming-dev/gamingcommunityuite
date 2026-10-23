@@ -15,7 +15,8 @@
     "test:e2e": "turbo run test:e2e",
     "gcs:port": "pnpm --filter @gcs/modules port",
     "release": "node scripts/release.mjs",
-    "release:sign": "node scripts/release-sign.mjs"
+    "release:sign": "node scripts/release-sign.mjs",
+    "license:issue": "node scripts/license-issue.mjs"
   },
   "devDependencies": {
     "turbo": "^2.5.0",

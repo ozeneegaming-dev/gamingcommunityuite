@@ -5,10 +5,15 @@ import os from "node:os";
 import path from "node:path";
 import { readPluginZip, verifyPluginSignature } from "@gcs/core";
 import { afterAll, describe, expect, test } from "vitest";
-import { brandingIssues, buildRelease, checksumsFile, CLIENT_REWRITES, isShipped, sha256, writeZip } from "../../../scripts/release.mjs";
+import { brandingIssues, buildRelease, checksumsFile, CLIENT_REWRITES, isShipped, parseLicenseKeys, sha256, writeZip } from "../../../scripts/release.mjs";
 import { signRelease } from "../../../scripts/release-sign.mjs";
 
 const ROOT = path.resolve(__dirname, "../../..");
+/** O cheie publică Ed25519 de test (32 de octeți, base64). */
+const TEST_LICENSE_PUB = (() => {
+  const der = generateKeyPairSync("ed25519").publicKey.export({ format: "der", type: "spki" });
+  return der.subarray(der.length - 32).toString("base64");
+})();
 const tmp = mkdtempSync(path.join(os.tmpdir(), "gcs-release-"));
 afterAll(() => rmSync(tmp, { recursive: true, force: true }));
 
@@ -77,7 +82,7 @@ describe("release-ul (fum): construit, dezarhivat și verificat", () => {
     "pachetul standard: tar.gz + zip cu sume, conținutul complet, sumele verificate, nimic exclus, brandul GCS",
     () => {
       const out = path.join(tmp, "out");
-      const result = buildRelease({ root: ROOT, version: "9.9.9", out, premium: false });
+      const result = buildRelease({ root: ROOT, version: "9.9.9", out, premium: false, licenseKeys: { "test-lic": TEST_LICENSE_PUB } });
       for (const file of [result.tarGz, result.zip]) {
         expect(readFileSync(`${file}.sha256`, "utf8")).toBe(`${sha256(readFileSync(file))}  ${path.basename(file)}\n`);
       }
@@ -101,6 +106,9 @@ describe("release-ul (fum): construit, dezarhivat și verificat", () => {
         expect(isShipped(rel!), rel).toBe(true);
       }
       expect(read("docker-compose.yml").toString()).toMatch(/^name: gcs$/m);
+      // Cheia publică de licență e inclusă în copia clientului (sursele rămân cu lista goală).
+      expect(read("packages/core/src/install/license.ts").toString()).toContain(`export const GCS_LICENSE_KEYS: Record<string, string> = {"test-lic":"${TEST_LICENSE_PUB}"};`);
+      expect(readFileSync(path.join(ROOT, "packages/core/src/install/license.ts"), "utf8")).toContain("export const GCS_LICENSE_KEYS: Record<string, string> = {};");
       expect(brandingIssues(lines.map((l) => l.split("  ")[1]!).map((rel) => [rel, read(rel)] as [string, Buffer]))).toEqual([]);
 
       // Zip-ul: directorul central are aceleași fișiere (numărul și căile), toate sub `gcs-9.9.9/`.
@@ -120,6 +128,17 @@ describe("release-ul (fum): construit, dezarhivat și verificat", () => {
     },
     180_000,
   );
+});
+
+describe("cheia publică de licență a release-ului", () => {
+  test("fără cheie sau cu o cheie invalidă, release-ul e refuzat (un pachet fără ea ar respinge orice licență)", () => {
+    expect(() => buildRelease({ root: ROOT, version: "9.9.8", out: path.join(tmp, "no-key"), premium: false })).toThrow(/cheia publică de licență/);
+    expect(() => buildRelease({ root: ROOT, version: "9.9.8", out: path.join(tmp, "bad-key"), premium: false, licenseKeys: { "x y": TEST_LICENSE_PUB } })).toThrow(/cheie de licență invalidă/);
+    expect(() => buildRelease({ root: ROOT, version: "9.9.8", out: path.join(tmp, "bad-key2"), premium: false, licenseKeys: { ok: "scurt" } })).toThrow(/cheie de licență invalidă/);
+  });
+  test("forma din fișierul .pub.txt (`id=base64`) se citește ca hartă", () => {
+    expect(parseLicenseKeys([`gcs-lic-2026=${TEST_LICENSE_PUB}`, ` second=${TEST_LICENSE_PUB} `])).toEqual({ "gcs-lic-2026": TEST_LICENSE_PUB, second: TEST_LICENSE_PUB });
+  });
 });
 
 describe("semnarea pachetelor premium (cheie de test, generată aici)", () => {

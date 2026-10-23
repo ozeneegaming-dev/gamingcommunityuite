@@ -40,7 +40,7 @@ export const RELEASE_EXCLUDES = [
   /(^|\/)gcs-shots\//,
   /^tools\//,
   /^themes\//,
-  /^scripts\/(runner\.|check\.cmd|test-|release)/,
+  /^scripts\/(runner\.|check\.cmd|test-|release|license)/,
   /^servers-plugins\/(?!release\/)/,
   /(^|\/)e2e\//,
   /(^|\/)test\//,
@@ -117,16 +117,54 @@ and requires a valid GamingCommunitySuite licence key. Third-party components ke
 listed in THIRD-PARTY-NOTICES.md.
 `;
 
-/** Conținutul pachetului standard (cale → octeți), cu fișierele generate. */
-export function releaseFiles({ root = ROOT, version, files = projectFiles(root) }) {
+// ─── Cheia publică de licență ──────────────────────────────────────────────────────────────────────────────
+
+/** Fișierul cu cheile de licență de încredere: lista goală din surse devine, în pachet, cheile proprietarului. */
+const LICENSE_KEYS_FILE = "packages/core/src/install/license.ts";
+const LICENSE_KEYS_EMPTY = "export const GCS_LICENSE_KEYS: Record<string, string> = {};";
+
+/** Cheile de licență din forma fișierului `.pub.txt` (`id=base64`, câte una pe argument). */
+export function parseLicenseKeys(list) {
+  const out = {};
+  for (const raw of list) {
+    const item = String(raw).trim();
+    const at = item.indexOf("=");
+    if (at <= 0) throw new Error(`cheie de licență invalidă: ${item} (formatul e id=base64)`);
+    out[item.slice(0, at).trim()] = item.slice(at + 1).trim();
+  }
+  return out;
+}
+
+/** O cheie de licență: id scurt și o cheie publică Ed25519 (32 de octeți în base64). */
+function assertLicenseKeys(keys) {
+  const entries = Object.entries(keys ?? {});
+  if (entries.length === 0) {
+    throw new Error(
+      'lipsește cheia publică de licență: pnpm release -- --license-key-file "<keys/gcs-licenses-ed25519.pub.txt>" (fără ea, instalarea clientului ar respinge orice licență)',
+    );
+  }
+  for (const [id, value] of entries) {
+    if (!/^[A-Za-z0-9._-]{1,64}$/.test(id) || Buffer.from(String(value), "base64").length !== 32) throw new Error(`cheie de licență invalidă: ${id}`);
+  }
+}
+
+/** Conținutul pachetului standard (cale → octeți), cu fișierele generate și cheile de licență incluse. */
+export function releaseFiles({ root = ROOT, version, files = projectFiles(root), licenseKeys }) {
+  assertLicenseKeys(licenseKeys);
   const out = new Map();
   for (const rel of files) {
     if (!isShipped(rel)) continue;
     let data = readFileSync(path.join(root, rel));
     const rewrite = CLIENT_REWRITES[rel];
     if (rewrite) data = Buffer.from(rewrite(data.toString("utf8")), "utf8");
+    if (rel === LICENSE_KEYS_FILE) {
+      const source = data.toString("utf8");
+      if (!source.includes(LICENSE_KEYS_EMPTY)) throw new Error(`nu găsesc lista cheilor de licență în ${LICENSE_KEYS_FILE}`);
+      data = Buffer.from(source.replace(LICENSE_KEYS_EMPTY, `export const GCS_LICENSE_KEYS: Record<string, string> = ${JSON.stringify(licenseKeys)};`), "utf8");
+    }
     out.set(rel, data);
   }
+  if (!out.has(LICENSE_KEYS_FILE)) throw new Error(`lipsește din pachet: ${LICENSE_KEYS_FILE}`);
   out.set("VERSION", Buffer.from(`${version}\n`, "utf8"));
   out.set("LICENSE", Buffer.from(LICENSE_TEXT(version), "utf8"));
   for (const required of ["install.sh", "docker-compose.yml", ".env.example", "docs/INSTALL.md", "EULA.md", "THIRD-PARTY-NOTICES.md"]) {
@@ -262,13 +300,14 @@ function buildPremium(root, outDir) {
 // ─── Release-ul ────────────────────────────────────────────────────────────────────────────────────────────
 
 /** Construiește release-ul și întoarce căile scrise. */
-export function buildRelease({ root = ROOT, version, out, premium = true, files } = {}) {
+export function buildRelease({ root = ROOT, version, out, premium = true, files, licenseKeys } = {}) {
   if (!version || !/^\d+\.\d+\.\d+([-.][0-9A-Za-z.]+)?$/.test(version)) throw new Error(`versiune invalidă: ${version}`);
+  assertLicenseKeys(licenseKeys);
   const outDir = out ?? path.join(root, "dist", "release", version);
   rmSync(outDir, { recursive: true, force: true });
   mkdirSync(outDir, { recursive: true });
 
-  const content = releaseFiles({ root, version, ...(files ? { files } : {}) });
+  const content = releaseFiles({ root, version, licenseKeys, ...(files ? { files } : {}) });
   const issues = brandingIssues(content);
   if (issues.length > 0) throw new Error(`garda de branding a găsit nume interzise în pachet:\n${issues.join("\n")}`);
 
@@ -292,7 +331,12 @@ function arg(name) {
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
     const version = arg("version") ?? JSON.parse(readFileSync(path.join(ROOT, "package.json"), "utf8")).version;
-    const result = buildRelease({ version, out: arg("out"), premium: !process.argv.includes("--no-premium") });
+    // Cheile publice de licență: `--license-key id=base64` (repetabil) sau `--license-key-file <fișierul .pub.txt>`.
+    const keyArgs = process.argv.flatMap((a, i) => (a === "--license-key" ? [process.argv[i + 1]] : []));
+    const keyFile = arg("license-key-file");
+    if (keyFile) keyArgs.push(...readFileSync(keyFile, "utf8").split(/\r?\n/).filter((l) => l.trim()));
+    const licenseKeys = keyArgs.length ? parseLicenseKeys(keyArgs) : undefined;
+    const result = buildRelease({ version, out: arg("out"), premium: !process.argv.includes("--no-premium"), licenseKeys });
     console.log(`release ${version}: ${result.files} fișiere`);
     console.log(`  ${path.relative(ROOT, result.tarGz)}`);
     console.log(`  ${path.relative(ROOT, result.zip)}`);

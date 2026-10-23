@@ -8,11 +8,12 @@ export declare function brandingIssues(files: Iterable<[string, Uint8Array]>): s
 export declare function sha256(data: Uint8Array | string): string;
 export declare function checksumsFile(files: Iterable<[string, Uint8Array]>): string;
 export declare function projectFiles(root?: string): string[];
-export declare function releaseFiles(opts: { root?: string; version: string; files?: string[] }): Map<string, Buffer>;
+export declare function parseLicenseKeys(list: readonly string[]): Record<string, string>;
+export declare function releaseFiles(opts: { root?: string; version: string; files?: string[]; licenseKeys?: Record<string, string> }): Map<string, Buffer>;
 export declare function writeTarGz(entries: { name: string; data: Buffer }[]): Buffer;
 export declare function writeZip(entries: { name: string; data: Buffer }[]): Buffer;
 export declare const PREMIUM_PLUGINS: { app: string; build: string[]; dist: string; pattern: RegExp }[];
-export declare function buildRelease(opts?: { root?: string; version?: string; out?: string; premium?: boolean; files?: string[] }): {
+export declare function buildRelease(opts?: { root?: string; version?: string; out?: string; premium?: boolean; files?: string[]; licenseKeys?: Record<string, string> }): {
   outDir: string;
   tarGz: string;
   zip: string;
