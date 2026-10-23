@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { GcsValidationError } from "../errors";
+import { GCS_BLOCK_OF_NODE } from "./blocks";
 import { GCS_DOC_MARKS, GCS_DOC_NODES } from "./renderer";
 import { GCS_RICH_FIELDS, isRichDoc, plainTextToDoc, richDocIssue, richValueToDoc } from "./richFields";
 import { renderRichField, richFieldError, richFieldHtml } from "./richRender";
@@ -51,9 +52,10 @@ describe("profilurile câmpurilor", () => {
     }
   });
 
-  test("semnătura acceptă tot ce scria editorul complet, fără video", () => {
+  test("semnătura acceptă tot ce scria editorul complet, fără video și fără blocurile Forum v2 (doar în postări)", () => {
     expect(GCS_RICH_FIELDS.signature.nodes).not.toContain("embed");
-    for (const n of Object.keys(GCS_DOC_NODES).filter((k) => k !== "embed")) expect(GCS_RICH_FIELDS.signature.nodes).toContain(n);
+    for (const n of Object.keys(GCS_DOC_NODES).filter((k) => k !== "embed" && !(k in GCS_BLOCK_OF_NODE))) expect(GCS_RICH_FIELDS.signature.nodes).toContain(n);
+    for (const n of Object.keys(GCS_BLOCK_OF_NODE)) expect(GCS_RICH_FIELDS.signature.nodes).not.toContain(n);
   });
 
   test("richDocIssue: nod sau marcă nepermisă, imagine din atașamente, prea multe imagini", () => {

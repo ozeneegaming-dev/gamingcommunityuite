@@ -33,7 +33,7 @@ describe("forumsModule", () => {
 
   test("declară permisiunile pe container ale forumului", () => {
     const keys = forumsModule.permissions.filter((p) => p.scope === "container").map((p) => p.key);
-    expect(keys).toEqual(["forums.view", "forums.read", "forums.create", "forums.reply", "forums.upload", "forums.download"]);
+    expect(keys).toEqual(["forums.view", "forums.read", "forums.create", "forums.reply", "forums.upload", "forums.download", "forums.rate"]);
     for (const p of forumsModule.permissions.filter((d) => d.scope === "container")) expect(p.containerType).toBe("forum");
   });
 
