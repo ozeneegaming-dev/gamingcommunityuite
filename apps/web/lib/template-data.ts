@@ -31,12 +31,20 @@ export function userVar(u: (Pick<GcsUserRef, "id" | "name" | "image" | "nameKey"
   return { id: u.id, name: u.name, url: memberHref(u), image: u.image, nameKey: u.nameKey, frameKey: u.frameKey, groupKey: u.groupKey ?? null };
 }
 
-/** `forum.row` */
-export function forumRowVars(forum: GcsForumRow, accent: string | null) {
+/** `forum.row` (Forum v2: `style` = stilul extensiilor, ca text `--a: b; …` și clase). */
+export function forumRowVars(forum: GcsForumRow, accent: string | null, style?: { classes: string[]; vars: Record<string, string> }) {
   const external = forum.type === "LINK";
   return {
     forum: {
       id: forum.id,
+      type: forum.type,
+      ext: {
+        className: style?.classes.join(" ") ?? "",
+        style: Object.entries({ ...(forum.color || accent ? { "--gcs-forum-color": (forum.color ?? accent)! } : {}), ...(style?.vars ?? {}) })
+          .map(([k, v]) => `${k}: ${v}`)
+          .join("; "),
+      },
+      pageTopics: forum.pageTopics,
       name: forum.name,
       description: forum.description,
       url: external ? (forum.linkUrl ?? "#") : forumHref(forum),

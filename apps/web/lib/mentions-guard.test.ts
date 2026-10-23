@@ -41,9 +41,11 @@ const RAW_HTML: Record<string, string> = {
   "apps/web/app/(site)/_components/header/GcsHeaderBuilder.tsx": "HTML-ul propriu al temei în header (sanitizeContentHtml, scris de admini): fără mențiuni",
   "apps/web/app/(site)/_components/topic/GcsPost.tsx": "HTML-ul pluginurilor (sanitizat de gazdă)",
   "apps/web/app/(site)/_components/topic/GcsPostContent.tsx": "postările și reviziile: namesHtml în pagina topicului",
+  "apps/web/app/(site)/_components/topic/GcsReplyBox.tsx": "previzualizarea răspunsului: namesHtml în previewPostAction",
   "apps/web/app/(site)/_components/widgets/GcsPluginWidget.tsx": "namesHtml",
   "apps/web/app/(site)/_components/widgets/registry.tsx": "anunțul: fără mențiuni (profilul announcement)",
   "apps/web/app/admin/(panel)/plugins/[plugin]/[[...path]]/page.tsx": "namesHtml",
+  "apps/web/app/admin/(panel)/community/forums/[id]/page.tsx": "tab-urile pluginurilor din formularul forumului (sanitizat de gazdă)",
   "apps/web/app/layout.tsx": "CSS-ul temei",
   "apps/web/lib/member-names.tsx": "GcsNamedHtml (namesHtml)",
 };

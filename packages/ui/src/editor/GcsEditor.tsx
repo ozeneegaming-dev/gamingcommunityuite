@@ -40,6 +40,7 @@ import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import { forwardRef, Fragment, useEffect, useImperativeHandle, useRef, useState, type ReactNode } from "react";
 import { cx } from "../cx";
 import { GcsIconSvg } from "../icons/svg";
+import { GcsBlockTools, type GcsBlockLabels, type GcsEditorBlock } from "./blocks";
 import { clearDraft, loadDraft, saveDraft } from "./draft";
 import { GCS_EMOJI_CATEGORIES, GCS_QUICK_EMOJI, type GcsEmojiCategory } from "./emoji";
 import { GCS_EDITOR_ALIGNS, GCS_EDITOR_COLORS, GCS_EDITOR_FONT_SIZES, GCS_EDITOR_HIGHLIGHTS, gcsEditorExtensions, isEmbedUrl, isImageUrl, type GcsEditorAllow } from "./extensions";
@@ -166,6 +167,11 @@ export type GcsEditorProps = {
   maxLength?: number;
   /** La fiecare modificare: documentul (copie JSON simplă) și dacă editorul e gol. */
   onChange?: (doc: JSONContent, empty: boolean) => void;
+  /** Forum v2: familiile de blocuri permise autorului (butonul „Blocuri” și „Setările blocului”) și textele lor. */
+  blocks?: readonly GcsEditorBlock[];
+  blockLabels?: GcsBlockLabels;
+  /** Forum v2: lipirea ca text simplu (fără formatare), pornită din butonul „Lipește ca text” al paginii. */
+  plainPaste?: boolean;
   footer?: ReactNode;
   id?: string;
   className?: string;
@@ -191,7 +197,9 @@ function paragraphs(text: string): JSONContent[] {
  * sanitizează doar serverul.
  */
 export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function GcsEditor(props, ref) {
-  const { labels, forumId, uploadUrl, mentionUrl, draftKey, initialContent, maxLength, onChange, footer, id, className, allow, tools, imageUrl, compact, labelledBy } = props;
+  const { labels, forumId, uploadUrl, mentionUrl, draftKey, initialContent, maxLength, onChange, footer, id, className, allow, tools, imageUrl, compact, labelledBy, blocks, blockLabels, plainPaste } = props;
+  const plainPasteRef = useRef(plainPaste === true);
+  plainPasteRef.current = plainPaste === true;
   const fileInput = useRef<HTMLInputElement>(null);
   const draftTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [status, setStatus] = useState<string | null>(null);
@@ -213,6 +221,7 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
       ...(mentionUrl ? { mention: gcsMentionSuggestion(mentionUrl, { empty: labels.noMentions, group: labels.mentionGroup, online: labels.mentionOnline }) } : {}),
       ...(maxLength ? { maxLength } : {}),
       ...(allow ? { allow } : {}),
+      ...(blocks ? { blocks } : {}),
     }),
     content: initialContent ?? (draftKey ? loadDraft(draftKey) : null) ?? "",
     editorProps: {
@@ -226,6 +235,11 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
         const text = event.clipboardData?.getData("text/plain") ?? "";
         if (isEmbedUrl(text) && editorRef.current?.schema.nodes.embed) {
           editorRef.current?.chain().focus().insertContent({ type: "embed", attrs: { url: text.trim() } }).run();
+          return true;
+        }
+        // Forum v2: „Lipește ca text”: doar textul, paragraf cu paragraf (fără stilurile paginii din care vine).
+        if (plainPasteRef.current && text) {
+          editorRef.current?.chain().focus().insertContent(paragraphs(text)).run();
           return true;
         }
         return false;
@@ -511,6 +525,12 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
     <div className={cx("gcs-editor", compact && "gcs-editor--compact", fullscreen && "gcs-editor--fullscreen", className)}>
       <div className="gcs-editor__toolbar" role="toolbar" aria-label={labels.toolbar}>
         {toolbar}
+        {blocks && blocks.length > 0 && !allow && (
+          <>
+            <span className="gcs-editor__sep" aria-hidden="true" />
+            <GcsBlockTools editor={editor} allowed={blocks} labels={blockLabels ?? {}} />
+          </>
+        )}
         <span className="gcs-editor__spacer" />
         {item("fullscreen", tool(fullscreen ? labels.exitFullscreen : labels.fullscreen, fullscreen, () => setFullscreen((f) => !f), icon(fullscreen ? faCompress : faExpand)))}
         {uploadUrl && (

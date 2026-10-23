@@ -1,5 +1,6 @@
 import "server-only";
 import { GcsInstallState } from "@gcs/core";
+import { forumSlotsDemoModule } from "@gcs/modules";
 import { closeGcsServices, createGcsServices, type GcsServices } from "@gcs/modules/services";
 import { revalidateTag } from "next/cache";
 import { gcsConfigDir } from "./config";
@@ -32,6 +33,8 @@ function createServices(): GcsServices {
                 { key: "core.test_view", scope: "container", containerType: "test", labelKey: "permissions.core.test_view", default: {} },
               ],
             },
+            // Forum v2: extensia demo a sloturilor forumului (nu apare pe niciun forum până nu e pornită din tabul ei).
+            forumSlotsDemoModule,
           ]
         : [],
   });

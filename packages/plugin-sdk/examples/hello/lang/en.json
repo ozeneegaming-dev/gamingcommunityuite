@@ -1,7 +1,10 @@
 {
   "name": "Hello",
   "settings": {
-    "tabs": { "general": "General", "advanced": "Advanced" },
+    "tabs": {
+      "general": "General",
+      "advanced": "Advanced"
+    },
     "greeting": "Greeting message",
     "greetingHint": "Shown in the widget and on the plugin page.",
     "showCount": "Show the number of new posts",
@@ -10,7 +13,9 @@
     "keepDays": "Keep the log for",
     "days": "days"
   },
-  "permissions": { "view": "Can view the Hello plugin page" },
+  "permissions": {
+    "view": "Can view the Hello plugin page"
+  },
   "widget": {
     "title": "Hello",
     "description": "A greeting and the number of new posts seen by the plugin.",
@@ -28,7 +33,21 @@
     "today": "Today",
     "settings": "Settings are changed from the plugin page: System → Applications and plugins."
   },
-  "postbit": { "badge": "Greeted by Hello" },
-  "menu": { "user": "Hello" },
-  "jobs": { "cleanup": "Clean up the old log" }
+  "postbit": {
+    "badge": "Greeted by Hello"
+  },
+  "menu": {
+    "user": "Hello"
+  },
+  "jobs": {
+    "cleanup": "Clean up the old log"
+  },
+  "forum": {
+    "tab": "Hello",
+    "description": "The Hello plugin example for the forum slots.",
+    "label": "Hello label next to the title",
+    "titleColor": "Title colour (#RRGGBB)",
+    "wave": "Greeting under the description",
+    "meta": "Hello says hi here!"
+  }
 }

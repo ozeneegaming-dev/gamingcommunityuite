@@ -2041,7 +2041,17 @@
     "importer.fields.invalid_prefix": "4afe24bbbbdf8e2e",
     "importer.fields.invalid_path": "9d798a2850609ab9",
     "importer.fields.invalid_url": "b0924805fb8baf6a",
-    "importer.fields.too_long": "b18ef8784d34e9de"
+    "importer.fields.too_long": "b18ef8784d34e9de",
+    "settings.forums.qa_voting": "52be4a0db535284a",
+    "topic.vote.up": "c52661f1d10a409b",
+    "topic.vote.down": "fef514a08c2e58d6",
+    "topic.vote.score": "c3fbf865d654c3e7",
+    "topic.vote.login": "3fb3955ea2167dc8",
+    "topic.vote.own": "14c510187e79bc60",
+    "forum.listViews.forumsLabel": "a89be571da83dbcd",
+    "forum.listViews.rows": "52d0b35277ee4b2b",
+    "forum.listViews.grid": "701c483f813cf119",
+    "settings.choices.all_devices": "a8b16c49cb26efaa"
   },
   "es": {
     "site.myProfile": "2f3df0a939fdd38f",
@@ -4084,7 +4094,17 @@
     "importer.fields.invalid_prefix": "4afe24bbbbdf8e2e",
     "importer.fields.invalid_path": "9d798a2850609ab9",
     "importer.fields.invalid_url": "b0924805fb8baf6a",
-    "importer.fields.too_long": "b18ef8784d34e9de"
+    "importer.fields.too_long": "b18ef8784d34e9de",
+    "settings.forums.qa_voting": "52be4a0db535284a",
+    "topic.vote.up": "c52661f1d10a409b",
+    "topic.vote.down": "fef514a08c2e58d6",
+    "topic.vote.score": "c3fbf865d654c3e7",
+    "topic.vote.login": "3fb3955ea2167dc8",
+    "topic.vote.own": "14c510187e79bc60",
+    "forum.listViews.forumsLabel": "a89be571da83dbcd",
+    "forum.listViews.rows": "52d0b35277ee4b2b",
+    "forum.listViews.grid": "701c483f813cf119",
+    "settings.choices.all_devices": "a8b16c49cb26efaa"
   },
   "fr": {
     "site.myProfile": "2f3df0a939fdd38f",
@@ -6114,7 +6134,17 @@
     "importer.fields.invalid_prefix": "4afe24bbbbdf8e2e",
     "importer.fields.invalid_path": "9d798a2850609ab9",
     "importer.fields.invalid_url": "b0924805fb8baf6a",
-    "importer.fields.too_long": "b18ef8784d34e9de"
+    "importer.fields.too_long": "b18ef8784d34e9de",
+    "settings.forums.qa_voting": "52be4a0db535284a",
+    "topic.vote.up": "c52661f1d10a409b",
+    "topic.vote.down": "fef514a08c2e58d6",
+    "topic.vote.score": "c3fbf865d654c3e7",
+    "topic.vote.login": "3fb3955ea2167dc8",
+    "topic.vote.own": "14c510187e79bc60",
+    "forum.listViews.forumsLabel": "a89be571da83dbcd",
+    "forum.listViews.rows": "52d0b35277ee4b2b",
+    "forum.listViews.grid": "701c483f813cf119",
+    "settings.choices.all_devices": "a8b16c49cb26efaa"
   },
   "ru": {
     "site.myProfile": "2f3df0a939fdd38f",
@@ -8158,6 +8188,16 @@
     "importer.fields.invalid_prefix": "4afe24bbbbdf8e2e",
     "importer.fields.invalid_path": "9d798a2850609ab9",
     "importer.fields.invalid_url": "b0924805fb8baf6a",
-    "importer.fields.too_long": "b18ef8784d34e9de"
+    "importer.fields.too_long": "b18ef8784d34e9de",
+    "settings.forums.qa_voting": "52be4a0db535284a",
+    "topic.vote.up": "c52661f1d10a409b",
+    "topic.vote.down": "fef514a08c2e58d6",
+    "topic.vote.score": "c3fbf865d654c3e7",
+    "topic.vote.login": "3fb3955ea2167dc8",
+    "topic.vote.own": "14c510187e79bc60",
+    "forum.listViews.forumsLabel": "a89be571da83dbcd",
+    "forum.listViews.rows": "52d0b35277ee4b2b",
+    "forum.listViews.grid": "701c483f813cf119",
+    "settings.choices.all_devices": "a8b16c49cb26efaa"
   }
 }

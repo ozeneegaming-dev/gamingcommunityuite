@@ -9,6 +9,7 @@
     "./acp-areas": "./src/acp/areas.ts",
     "./diff": "./src/templates/diff.ts",
     "./rich-fields": "./src/content/richFields.ts",
+    "./rating-stars": "./src/content/ratingStars.ts",
     "./member-name": "./src/members/memberName.ts",
     "./text-mentions": "./src/members/textMentions.ts",
     "./test/redis": "./test/redis.ts",

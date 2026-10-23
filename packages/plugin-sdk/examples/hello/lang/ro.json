@@ -1,7 +1,10 @@
 {
   "name": "Hello",
   "settings": {
-    "tabs": { "general": "General", "advanced": "Avansat" },
+    "tabs": {
+      "general": "General",
+      "advanced": "Avansat"
+    },
     "greeting": "Mesajul de salut",
     "greetingHint": "Apare în widget și pe pagina pluginului.",
     "showCount": "Arată numărul de postări noi",
@@ -10,7 +13,9 @@
     "keepDays": "Păstrează jurnalul",
     "days": "zile"
   },
-  "permissions": { "view": "Poate vedea pagina pluginului Hello" },
+  "permissions": {
+    "view": "Poate vedea pagina pluginului Hello"
+  },
   "widget": {
     "title": "Hello",
     "description": "Un salut și numărul de postări noi văzute de plugin.",
@@ -28,7 +33,21 @@
     "today": "Azi",
     "settings": "Setările se schimbă din pagina pluginului: Sistem → Aplicații și pluginuri."
   },
-  "postbit": { "badge": "Salutat de Hello" },
-  "menu": { "user": "Hello" },
-  "jobs": { "cleanup": "Curăță jurnalul vechi" }
+  "postbit": {
+    "badge": "Salutat de Hello"
+  },
+  "menu": {
+    "user": "Hello"
+  },
+  "jobs": {
+    "cleanup": "Curăță jurnalul vechi"
+  },
+  "forum": {
+    "tab": "Hello",
+    "description": "Exemplul pluginului Hello pentru sloturile forumului.",
+    "label": "Eticheta Hello de lângă titlu",
+    "titleColor": "Culoarea titlului (#RRGGBB)",
+    "wave": "Salutul sub descriere",
+    "meta": "Hello te salută aici!"
+  }
 }

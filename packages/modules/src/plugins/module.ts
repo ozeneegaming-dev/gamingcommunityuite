@@ -1,4 +1,15 @@
-import { fieldsConfig, pluginAcpSection, pluginRegistryKey, type GcsModule, type GcsPluginManifest, type GcsWidgetDef, type GcsWidgetField } from "@gcs/core";
+import {
+  fieldsConfig,
+  pluginAcpSection,
+  pluginRegistryKey,
+  type GcsForumExtension,
+  type GcsForumExtField,
+  type GcsModule,
+  type GcsPluginForumTabField,
+  type GcsPluginManifest,
+  type GcsWidgetDef,
+  type GcsWidgetField,
+} from "@gcs/core";
 import { isGcsIcon } from "@gcs/ui/icon-registry";
 
 /** Spațiul de nume al textelor pluginurilor în mesajele next-intl: `pluginText.<vendor>.<nume>.<cheie>`. */
@@ -99,10 +110,82 @@ function widgetDefaults(fields: GcsWidgetField[], given: Record<string, unknown>
 export const pluginIcon = (name: string | undefined) => (name && isGcsIcon(name) ? name : FALLBACK_ICON);
 
 /**
+ * Punțile spre firul pluginului pentru punctele forumului (Forum v2): gazda le dă la încărcare; fără ele (ex. în
+ * testele manifestului), extensia are doar taburile și stilul declarat pe câmpuri.
+ */
+export type GcsPluginForumBridge = Pick<GcsForumExtension, "list" | "forumPage" | "topicBar">;
+
+/** Câmpurile unui tab al pluginului (`forumTabs[].fields`) ca acelea ale unei extensii de forum (etichete next-intl). */
+function forumTabFields(fields: GcsPluginForumTabField[], texts: GcsPluginTexts): GcsForumExtField[] {
+  return fields.map((f): GcsForumExtField => {
+    const base = { key: f.key, labelKey: texts.labelKey(f.label), ...(f.hint ? { hintKey: texts.labelKey(f.hint) } : {}) };
+    switch (f.type) {
+      case "text":
+      case "textarea":
+        return { ...base, type: f.type, maxLength: f.maxLength, ...(f.default !== undefined ? { default: f.default } : {}), ...(f.slot ? { slot: f.slot } : {}) };
+      case "number":
+        return {
+          ...base,
+          type: "number",
+          min: f.min,
+          max: f.max,
+          ...(f.step !== undefined ? { step: f.step } : {}),
+          ...(f.default !== undefined ? { default: f.default } : {}),
+          ...(f.css ? { style: { var: f.css.var, unit: f.css.unit } } : {}),
+        };
+      case "toggle":
+        return { ...base, type: "toggle", ...(f.default !== undefined ? { default: f.default } : {}), ...(f.css ? { style: { class: f.css.class } } : {}) };
+      case "select":
+        return {
+          ...base,
+          type: "select",
+          options: f.options.map((o) => ({ value: o.value, labelKey: texts.labelKey(o.label) })),
+          ...(f.default !== undefined ? { default: f.default } : {}),
+          ...(f.css ? { style: { ...(f.css.class ? { class: f.css.class } : {}), ...(f.css.var ? { var: f.css.var } : {}) } } : {}),
+        };
+      case "color":
+        return { ...base, type: "color", ...(f.default !== undefined ? { default: f.default.toUpperCase() } : {}), ...(f.css ? { style: { var: f.css.var } } : {}) };
+      case "icon":
+        return { ...base, type: "icon", ...(f.default !== undefined ? { default: f.default } : {}) };
+    }
+  });
+}
+
+/**
+ * Extensia de forum a unui plugin (Forum v2): taburile din `forumTabs` (câmpuri salvate de nucleu) și punctele
+ * `forum.list` / `forum.page` / `topic.bar` declarate în `hooks`, prin puntea gazdei. `null` = pluginul nu extinde forumul.
+ */
+export function pluginForumExtension(key: string, manifest: GcsPluginManifest, texts: GcsPluginTexts, bridge?: GcsPluginForumBridge): GcsForumExtension | null {
+  const points = new Set(manifest.hooks.map((h) => h.point));
+  const usesForum = manifest.forumTabs.length > 0 || points.has("forum.list") || points.has("forum.page") || points.has("topic.bar");
+  if (!usesForum) return null;
+  const ext: GcsForumExtension = {
+    key: pluginRegistryKey(key),
+    position: Math.min(...manifest.hooks.filter((h) => h.point.startsWith("forum.") || h.point === "topic.bar").map((h) => h.priority ?? 100), 100) + 100,
+    plugin: key,
+    tabs: manifest.forumTabs.map((t) => ({
+      key: t.key,
+      labelKey: texts.labelKey(t.label),
+      icon: pluginIcon(t.icon),
+      position: t.position,
+      ...(t.description ? { descriptionKey: texts.labelKey(t.description) } : {}),
+      ...(t.types ? { types: t.types } : {}),
+      fields: forumTabFields(t.fields, texts),
+      ...(t.hook ? { pluginHook: true } : {}),
+    })),
+  };
+  if (bridge?.list && points.has("forum.list")) ext.list = bridge.list;
+  if (bridge?.forumPage && points.has("forum.page")) ext.forumPage = bridge.forumPage;
+  if (bridge?.topicBar && points.has("topic.bar")) ext.topicBar = bridge.topicBar;
+  return ext;
+}
+
+/**
  * Modulul GCS al unui plugin încărcat: permisiunile (`plugin.<cheie>.<perm>`), widget-urile (`plugin.<cheie>.<widget>`)
  * și paginile ACP fără parametri în meniul ACP (secțiunea `plugin.<cheie>`). Intră în registry cât timp pluginul e activ.
  */
-export function pluginModule(key: string, manifest: GcsPluginManifest, texts: GcsPluginTexts): GcsModule {
+export function pluginModule(key: string, manifest: GcsPluginManifest, texts: GcsPluginTexts, bridge?: GcsPluginForumBridge): GcsModule {
+  const forumExtension = pluginForumExtension(key, manifest, texts, bridge);
   const base = pluginRegistryKey(key);
   const widgets: GcsWidgetDef[] = manifest.widgets.map((w) => {
     const fields: GcsWidgetField[] = w.fields.map((f) =>
@@ -153,6 +236,7 @@ export function pluginModule(key: string, manifest: GcsPluginManifest, texts: Gc
     })),
     acpMenu: acpItems.length > 0 ? [{ app: "system", area: "apps", title: texts.nameKey, icon: pluginIcon(manifest.icon), items: acpItems }] : [],
     widgets,
+    ...(forumExtension ? { forumExtensions: [forumExtension] } : {}),
     // Aplicația pluginului (ACP → Aplicații): rutele lui (accesul pe grup le închide) și paginile fără parametri ca secțiuni.
     app: {
       optional: false,

@@ -7,18 +7,19 @@ import { memberHref, tagHref, tint, topicHref, unreadHref } from "@/lib/forum-ur
 import { topicRowVars } from "@/lib/template-data";
 import { siteTemplate } from "@/lib/templates";
 import { GcsDeletedMember } from "../GcsDeletedMember";
+import { GcsStarsStatic } from "../topic/GcsTopicRating";
 import { GcsRelTime } from "./GcsRelTime";
 
 /**
  * Un topic în listă: prefix, titlu, stări, tag-uri, autor, contoare și ultimul mesaj. Cu șablonul `forum.topic_row`
  * modificat de temă, markup-ul vine din el (bifa moderatorului intră în slotul `select`).
  */
-export async function GcsTopicRow({ topic, select }: { topic: Row; select?: React.ReactNode }) {
+export async function GcsTopicRow({ topic, select, popular = false }: { topic: Row; select?: React.ReactNode; popular?: boolean }) {
   const custom = await siteTemplate("forum.topic_row", topicRowVars(topic), { select });
   if (custom) return custom;
   const t = await getTranslations("forum");
   return (
-    <div className="gcs-topicRow" data-testid="gcs-topic-row" data-topic-id={topic.id}>
+    <div className={`gcs-topicRow${topic.archived ? " gcs-topicRow--archived" : ""}`} data-testid="gcs-topic-row" data-topic-id={topic.id}>
       {select}
       <span className="gcs-topicRow__avatar">
         {topic.author && <GcsAvatar name={topic.author.name} size="s" userId={topic.author.id} {...(topic.author.image ? { src: topic.author.image } : {})} {...(topic.author.frameKey ? { frame: topic.author.frameKey } : {})} />}
@@ -29,6 +30,12 @@ export async function GcsTopicRow({ topic, select }: { topic: Row; select?: Reac
           {topic.featured && <GcsBadge tone="warn" icon={<GcsIcon name="fa-solid fa-star" />}>{t("featured")}</GcsBadge>}
           {topic.solved && <GcsBadge tone="ok" icon={<GcsIcon name="fa-solid fa-circle-check" />}>{t("solved")}</GcsBadge>}
           {topic.locked && <GcsBadge tone="neutral" icon={<GcsIcon name="fa-solid fa-lock" />}>{t("locked")}</GcsBadge>}
+          {topic.archived && <GcsBadge tone="neutral" icon={<GcsIcon name="fa-solid fa-box-archive" />}>{t("archived")}</GcsBadge>}
+          {popular && (
+            <GcsBadge tone="accent" icon={<GcsIcon name="fa-solid fa-fire" />} data-testid="gcs-topic-popular">
+              {t("popularNow")}
+            </GcsBadge>
+          )}
           {topic.visibility === "PENDING" && <GcsBadge tone="warn" icon={<GcsIcon name="fa-solid fa-hourglass-half" />}>{t("pending")}</GcsBadge>}
           {topic.visibility === "HIDDEN" && <GcsBadge tone="neutral" icon={<GcsIcon name="fa-solid fa-eye-slash" />}>{t("hidden")}</GcsBadge>}
           {topic.prefix && (
@@ -65,6 +72,14 @@ export async function GcsTopicRow({ topic, select }: { topic: Row; select?: Reac
         </span>
       </div>
       <div className="gcs-topicRow__stats">
+        {topic.rating && topic.rating.count > 0 && (
+          // Forum v2: nota (stelele mici, media și numărul voturilor), pe forumurile cu nota pornită.
+          <span className="gcs-topicRow__rating" data-testid="gcs-topic-rating-row">
+            <GcsStarsStatic avg={topic.rating.avg} size="sm" label={t("ratingLabel", { avg: topic.rating.avg.toFixed(1), count: topic.rating.count })} />
+            <strong>{topic.rating.avg.toFixed(1)}</strong>
+            <span className="gcs-muted">({topic.rating.count})</span>
+          </span>
+        )}
         <span>
           <GcsIcon name="fa-regular fa-comment" className="gcs-metaIcon" />
           {t("replies", { count: topic.repliesCount })}

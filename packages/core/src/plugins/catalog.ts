@@ -4,7 +4,7 @@
  */
 
 /** Versiunea platformei pentru `minGcs` (se actualizează la fiecare etapă care schimbă API-ul pluginurilor). */
-export const GCS_PLATFORM_VERSION = "0.8.0";
+export const GCS_PLATFORM_VERSION = "0.9.0";
 
 export const PLUGIN_CAPABILITIES = [
   "db",
@@ -115,7 +115,16 @@ export type GcsPluginFilterPoint = (typeof PLUGIN_FILTER_POINTS)[number];
  * `member.panel` (Membri v2): conținutul panourilor declarate în `memberPanels` (fișa ACP a membrului, profilul); datele
  * apelului: `{ panel, userId, surface }`.
  */
-export const PLUGIN_HOOK_POINTS = ["postbit.after_fields", "vip.page", "member.panel"] as const;
+/**
+ * Forum v2 (sloturile forumului, specul `2026-10-17-forum-v2-sloturi`):
+ * - `forum.list`: lista forumurilor (index, subforumuri), un singur apel pe pagină: `{ surface, nodes: [{ id, type,
+ *   parentId, name, slug, data }] }` → `{ "<id>": { title?, meta?, header?: html, style?: { classes, vars } } }`;
+ * - `forum.page`: cardul de sus al paginii unui forum: `{ forumId, data }` → html;
+ * - `topic.bar`: bara de pe pagina unui topic: `{ topicId, forumId, data }` → html;
+ * - `forum.edit`: corpul unui tab din `forumTabs` cu `hook: true` (ACP → Forumuri → Editează): `{ tab, forumId, data }`
+ *   → html (cu formulare spre rutele pluginului).
+ */
+export const PLUGIN_HOOK_POINTS = ["postbit.after_fields", "vip.page", "member.panel", "forum.list", "forum.page", "topic.bar", "forum.edit"] as const;
 export type GcsPluginHookPoint = (typeof PLUGIN_HOOK_POINTS)[number];
 
 /**

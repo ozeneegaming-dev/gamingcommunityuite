@@ -2,13 +2,13 @@
 
 import { faPaperPlane, faPlus, faSquarePollVertical, faTrash, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { GcsButton, GcsIconSvg } from "@gcs/ui";
-import { GcsEditor, type GcsEditorHandle } from "@gcs/ui/editor";
+import { GcsEditor, type GcsEditorBlock, type GcsEditorHandle } from "@gcs/ui/editor";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useRef, useState, type KeyboardEvent } from "react";
 import { useErrorMessage } from "@/lib/use-error-message";
 import { createTopicAction } from "../../topic-actions";
-import { useEditorLabels } from "../topic/useEditorLabels";
+import { useBlockLabels, useEditorLabels } from "../topic/useEditorLabels";
 
 type Props = {
   forum: { id: number; href: string };
@@ -17,12 +17,15 @@ type Props = {
   /** Limita de caractere a postării (`forums.post_max_chars`). */
   maxLength?: number;
   canPoll: boolean;
+  /** Forum v2: blocurile permise autorului în editor. */
+  blocks?: GcsEditorBlock[];
 };
 
 /** Formularul pentru un topic nou: titlu, prefix, tag-uri, mesaj și sondaj opțional. */
-export function GcsNewTopicForm({ forum, prefixes, tagsMax, canPoll, maxLength }: Props) {
+export function GcsNewTopicForm({ forum, prefixes, tagsMax, canPoll, maxLength, blocks = [] }: Props) {
   const t = useTranslations("newTopic");
   const labels = useEditorLabels();
+  const blockLabels = useBlockLabels();
   const errorMessage = useErrorMessage();
   const editor = useRef<GcsEditorHandle>(null);
   const [title, setTitle] = useState("");
@@ -154,6 +157,8 @@ export function GcsNewTopicForm({ forum, prefixes, tagsMax, canPoll, maxLength }
           uploadUrl="/api/forums/uploads"
           mentionUrl="/api/forums/mentions"
           draftKey={`new-topic-${forum.id}`}
+          blocks={blocks}
+          blockLabels={blockLabels}
         />
       </div>
 

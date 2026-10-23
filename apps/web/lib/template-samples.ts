@@ -81,6 +81,7 @@ export async function templateSample(key: string, actor: GcsActor): Promise<GcsT
         subforumColumns: 2,
         last: { postId: 1, topicId: 1, topicTitle: t("topicTitle"), topicSlug: "salut", at: NOW(), user: sampleUser(name) },
         unread: true,
+        pageTopics: false,
       };
       return {
         data: forumRowVars(forum, found?.accent ?? null),

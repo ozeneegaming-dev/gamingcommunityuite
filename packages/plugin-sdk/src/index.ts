@@ -375,6 +375,34 @@ type Awaitable<T> = T | Promise<T>;
 
 export type GcsWidgetInput = { config: Record<string, GcsPluginJson>; page: string; zone: string };
 
+/** Forum v2: un nod al forumului primit la punctele forumului, cu valorile salvate ale taburilor pluginului (`data`). */
+export type GcsPluginForumNode = {
+  id: number;
+  type: "CATEGORY" | "FORUM" | "QA" | "LINK" | "PAGE";
+  parentId: number | null;
+  name: string;
+  slug: string;
+  data: Record<string, GcsPluginJson>;
+};
+/** Datele punctului `forum.list` (GCS ≥ 0.9.0): toate nodurile listei, o dată pe pagină. */
+export type GcsPluginForumListInput = { surface: "index" | "forum"; nodes: GcsPluginForumNode[] };
+/**
+ * Ce pune pluginul pe un nod din listă: HTML lângă titlu (`title`), sub descriere (`meta`), în banda unei categorii
+ * (`header`) și stilul rândului / categoriei: clase `gcsp-*` (sau modificatorii nucleului, ex. `gcs-forumRow--titleCaps`)
+ * și variabile `--gcsp-*` / `--gcs-forum-*` (culori hex, numere, `url("/plugins/<cheie>/media/…")`, gradiente simple).
+ * Rândul primește și clasa containerului pluginului, deci CSS-ul pluginului (`client.styles`) ajunge în el.
+ */
+export type GcsPluginForumListSlots = {
+  title?: GcsPluginHtml;
+  meta?: GcsPluginHtml;
+  header?: GcsPluginHtml;
+  style?: { classes?: string[]; vars?: Record<string, string> };
+};
+export type GcsPluginForumListResult = Record<string, GcsPluginForumListSlots>;
+
+/** Ce întoarce un punct de extensie: HTML, harta lui `forum.list` sau nimic. */
+export type GcsPluginHookResult = GcsPluginHtml | GcsPluginForumListResult | null;
+
 /** Ce poate exporta `server.mjs`. Cheile corespund declarațiilor din `plugin.json`. */
 export interface GcsPluginDefinition {
   /** Widget-urile, după cheia din `widgets[].key`. */
@@ -389,8 +417,12 @@ export interface GcsPluginDefinition {
   events?: Record<string, (event: GcsPluginEvent, ctx: GcsPluginContext) => Awaitable<void>>;
   /** Filtrele din `filters[].point`. */
   filters?: { "post.before_save"?: (data: GcsPostFilterData, ctx: GcsPluginContext) => Awaitable<GcsFilterResult<GcsPostFilterData>> };
-  /** Punctele de extensie din `hooks[].point` (ex. `postbit.after_fields`). */
-  hooks?: Record<string, (data: Record<string, GcsPluginJson>, ctx: GcsPluginContext) => Awaitable<GcsPluginHtml | null>>;
+  /**
+   * Punctele de extensie din `hooks[].point` (ex. `postbit.after_fields`). Forum v2 (GCS ≥ 0.9.0): `forum.list`
+   * (`GcsPluginForumListInput` → `GcsPluginForumListResult`), `forum.page` (`{ forumId, data }`), `topic.bar`
+   * (`{ topicId, forumId, data }`) și `forum.edit` (`{ tab, forumId, data }`, corpul unui tab din `forumTabs`) → HTML.
+   */
+  hooks?: Record<string, (data: Record<string, GcsPluginJson>, ctx: GcsPluginContext) => Awaitable<GcsPluginHookResult>>;
   /** Joburile din `jobs[].key`. */
   jobs?: Record<string, (data: Record<string, GcsPluginJson>, ctx: GcsPluginContext) => Awaitable<void>>;
 }

@@ -213,7 +213,17 @@ describe("topic", () => {
     count = 0;
     const page = await cq.topic(w.member, t.topicId, { page: 1 });
     expect(page.posts).toHaveLength(20);
-    expect(count).toBeLessThanOrEqual(8);
+    const many = count;
+    // Forum v2 adaugă o interogare fixă (mesajele moderatorilor); numărul rămâne același pentru 2 sau 20 de postări.
+    expect(many).toBeLessThanOrEqual(9);
+
+    const small = await w.topics.create(w.root, { forumId: tree.forum.id, title: "Puține postări", content: doc("start") });
+    await w.clearFlood(users[0]!);
+    await w.posts.reply(users[0]!, { topicId: small.topicId, content: doc("unul") });
+    await cq.topic(w.member, small.topicId, { page: 1 });
+    count = 0;
+    expect((await cq.topic(w.member, small.topicId, { page: 1 })).posts).toHaveLength(2);
+    expect(many).toBe(count);
   });
 });
 

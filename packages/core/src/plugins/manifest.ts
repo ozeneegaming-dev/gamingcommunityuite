@@ -1,5 +1,6 @@
 import * as z from "zod";
 import { GCS_ACP_AREAS } from "../acp/areas";
+import { GCS_FORUM_STYLE_CLASSES } from "../modules/forumSlots";
 import { isPluginKey, PLUGIN_CAPABILITIES, PLUGIN_EVENTS, PLUGIN_FILTER_POINTS, PLUGIN_HOOK_POINTS, PLUGIN_MEDIA_CAPS, type GcsPluginCapability } from "./catalog";
 import { isValidSemverRange, parseSemver } from "./semver";
 
@@ -63,6 +64,54 @@ const widgetField = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("number"), key: localKey, label, min: z.number().int(), max: z.number().int() }),
   z.strictObject({ type: z.literal("select"), key: localKey, label, options: z.array(z.strictObject({ value: z.string().max(100), label })).min(1).max(50) }),
 ]);
+
+/**
+ * Forum v2: un câmp al unui tab din formularul forumului (`forumTabs`). Valorile le salvează nucleul, per forum; `css`
+ * leagă valoarea de stilul rândului (o variabilă `--gcsp-*` / `--gcs-forum-*` sau o clasă `gcsp-*` / a nucleului), iar
+ * `slot` pune un text direct într-un slot de listă (ca pastilă sau rând).
+ */
+const forumCssVar = z.string().regex(/^--(?:gcs-forum|gcsp)-[a-z0-9][a-z0-9-]{0,47}$/, "invalid_css_var");
+const pluginCssClass = z.string().regex(/^gcsp-[a-z0-9][a-z0-9-]{0,47}$/, "invalid_css_class");
+/** O clasă a pluginului (`gcsp-*`) sau un modificator documentat al nucleului (`GCS_FORUM_STYLE_CLASSES`). */
+const forumCssClass = z.union([pluginCssClass, z.enum(GCS_FORUM_STYLE_CLASSES)]);
+const forumTabField = z.discriminatedUnion("type", [
+  z.strictObject({
+    type: z.enum(["text", "textarea"]),
+    key: localKey,
+    label,
+    hint,
+    default: z.string().max(2000).optional(),
+    maxLength: z.number().int().min(1).max(5000).default(200),
+    slot: z
+      .strictObject({ slot: z.enum(["forum.row.title", "forum.row.meta", "category.header"]), as: z.enum(["chip", "text"]).default("chip"), icon: icon.optional(), tone: z.enum(["accent", "neutral", "ok", "warn", "danger", "info"]).optional() })
+      .optional(),
+  }),
+  z.strictObject({
+    type: z.literal("number"),
+    key: localKey,
+    label,
+    hint,
+    default: z.number().finite().optional(),
+    min: z.number().finite(),
+    max: z.number().finite(),
+    step: z.number().positive().optional(),
+    css: z.strictObject({ var: forumCssVar, unit: z.enum(["px", "%", "deg", "s", ""]).default("") }).optional(),
+  }),
+  z.strictObject({ type: z.literal("toggle"), key: localKey, label, hint, default: z.boolean().optional(), css: z.strictObject({ class: forumCssClass }).optional() }),
+  z.strictObject({
+    type: z.literal("select"),
+    key: localKey,
+    label,
+    hint,
+    options: z.array(z.strictObject({ value: z.string().regex(/^[a-z0-9][a-z0-9-]{0,30}$/, "invalid_key"), label })).min(1).max(30),
+    default: z.string().max(31).optional(),
+    // La `select`, `class` e un prefix: clasa pusă e prefixul + valoarea aleasă (ex. `gcsp-style-` + `glow`).
+    css: z.strictObject({ class: pluginCssClass.optional(), var: forumCssVar.optional() }).optional(),
+  }),
+  z.strictObject({ type: z.literal("color"), key: localKey, label, hint, default: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "invalid_color").optional(), css: z.strictObject({ var: forumCssVar }).optional() }),
+  z.strictObject({ type: z.literal("icon"), key: localKey, label, hint, default: icon.optional() }),
+]);
+export type GcsPluginForumTabField = z.infer<typeof forumTabField>;
 
 const json: z.ZodType<unknown> = z.lazy(() => z.union([z.null(), z.boolean(), z.number().finite(), z.string().max(5000), z.array(json).max(100), z.record(z.string().max(100), json)]));
 
@@ -168,6 +217,26 @@ export const pluginManifestSchema = z.strictObject({
     )
     .max(10)
     .default([]),
+  /**
+   * Forum v2: taburile pluginului în ACP → Forumuri → Editează (ex. „Aspect”). Câmpurile le salvează nucleul, per forum
+   * (pluginul le primește în `data` la punctele `forum.*`); `hook: true` adaugă sub câmpuri HTML-ul punctului
+   * `forum.edit`. `types`: tipurile de noduri unde apare tabul (implicit toate).
+   */
+  forumTabs: z
+    .array(
+      z.strictObject({
+        key: localKey,
+        label,
+        icon: icon.default("fa-solid fa-puzzle-piece"),
+        position: z.number().int().min(0).max(1000).default(100),
+        types: z.array(z.enum(["CATEGORY", "FORUM", "QA", "LINK", "PAGE"])).min(1).max(5).optional(),
+        description: z.string().trim().max(300).optional(),
+        fields: z.array(forumTabField).max(30).default([]),
+        hook: z.boolean().default(false),
+      }),
+    )
+    .max(5)
+    .default([]),
   jobs: z.array(z.strictObject({ key: localKey, everyMinutes: z.number().int().min(5).max(10080).optional(), label: label.optional() })).max(20).default([]),
   menus: z.strictObject({ site: z.array(menuEntry).max(10).default([]), user: z.array(menuEntry).max(10).default([]) }).default({ site: [], user: [] }),
   /** Fișierele media proprii (capabilitatea `media`): tipurile acceptate și limitele lor, sub plafoanele nucleului. */
@@ -266,6 +335,20 @@ function crossCheck(m: GcsPluginManifest): GcsPluginManifestIssue[] {
   for (const d of duplicates(m.jobs.map((j) => j.key))) issues.push({ path: `jobs.${d}`, code: "duplicate_key" });
   for (const d of duplicates(m.memberPanels.map((p) => p.key))) issues.push({ path: `memberPanels.${d}`, code: "duplicate_key" });
   if (m.memberPanels.length > 0 && !m.hooks.some((h) => h.point === "member.panel")) issues.push({ path: "memberPanels", code: "missing_hook:member.panel" });
+  // Forum v2: taburile din formularul forumului (punctele de extensie ale forumului cer capabilitatea `hooks`).
+  if (m.forumTabs.length > 0 && !caps.has("hooks")) issues.push({ path: "forumTabs", code: "missing_capability:hooks" });
+  for (const d of duplicates(m.forumTabs.map((t) => t.key))) issues.push({ path: `forumTabs.${d}`, code: "duplicate_key" });
+  for (const d of duplicates(m.forumTabs.flatMap((t) => t.fields.map((f) => f.key)))) issues.push({ path: `forumTabs.fields.${d}`, code: "duplicate_key" });
+  if (m.forumTabs.some((t) => t.hook) && !m.hooks.some((h) => h.point === "forum.edit")) issues.push({ path: "forumTabs", code: "missing_hook:forum.edit" });
+  for (const tab of m.forumTabs) {
+    for (const f of tab.fields) {
+      if (f.type === "number") {
+        if (f.min > f.max) issues.push({ path: `forumTabs.${tab.key}.${f.key}`, code: "invalid_range" });
+        if (f.default !== undefined && (f.default < f.min || f.default > f.max)) issues.push({ path: `forumTabs.${tab.key}.${f.key}.default`, code: "out_of_range" });
+      }
+      if (f.type === "select" && f.default !== undefined && !f.options.some((o) => o.value === f.default)) issues.push({ path: `forumTabs.${tab.key}.${f.key}.default`, code: "invalid_choice" });
+    }
+  }
 
   // Meniurile site-ului și ale userului duc doar spre paginile pluginului.
   const own = `/p/${m.key}`;

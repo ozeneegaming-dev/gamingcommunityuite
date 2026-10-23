@@ -354,6 +354,33 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
     );
   },
 
+  // Forum v2: „Cele mai bine notate”: topicurile notate din ultima lună (cu cel puțin 2 voturi), cu media.
+  "forums.topRated": async ({ id, config, actor }) => {
+    const [t, topics] = await Promise.all([getTranslations("widgets"), services().forumQueries.topRated(actor, { limit: limitOf(config, 5), minVotes: 2, days: 30 })]);
+    return (
+      <GcsWidgetCard id={id} type="forums.topRated" config={config} title={t("forums.topRated")} testId="gcs-widget-top-rated">
+        {topics.length === 0 ? (
+          <p className="gcs-sideCard__line">{t("empty")}</p>
+        ) : (
+          <ul className="gcs-widgetList">
+            {topics.map((tp) => (
+              <li key={tp.id} className="gcs-widgetRow">
+                <span className="gcs-widgetRow__body">
+                  <Link href={topicHref(tp)} className="gcs-widgetRow__title">
+                    {tp.title}
+                  </Link>
+                </span>
+                <span className="gcs-widgetRow__rating" aria-label={t("ratingAria", { avg: tp.avg.toFixed(1), count: tp.count })}>
+                  ★ {tp.avg.toFixed(1)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </GcsWidgetCard>
+    );
+  },
+
   // Caruselul topicurilor recomandate: carduri cu imaginea primului mesaj (sau un gradient generat), forumul, data,
   // titlul, extrasul, autorul și „Citește”. Fără topicuri recomandate nu se afișează nimic.
   "forums.featuredCarousel": async ({ id, config, actor }) => {

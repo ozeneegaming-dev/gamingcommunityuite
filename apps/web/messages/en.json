@@ -218,7 +218,15 @@
       "self": "You cannot do this to your own account.",
       "donation_reviewed": "The donation was already reviewed.",
       "donation_pending_limit": "You already have pending requests; wait for them to be confirmed.",
-      "donations_closed": "Reporting donations is turned off right now."
+      "donations_closed": "Reporting donations is turned off right now.",
+      "rules_not_accepted": "Accept the forum rules first.",
+      "min_posts": "You need more posts to post here.",
+      "archived": "The topic is archived: read only.",
+      "already_rated": "You have already rated this topic.",
+      "no_permission": "You don't have the right for this action.",
+      "account_too_new": "Your account is too new for this action.",
+      "not_enough_posts": "You need more posts for this action.",
+      "disabled": "This feature is off here."
     },
     "fields": {
       "invalid_color": "Invalid color (#RRGGBB)",
@@ -354,7 +362,12 @@
       "email_invalid": "The email address is not valid.",
       "group_unknown": "Unknown group.",
       "separator_top": "A separator can only sit between sub-items.",
-      "invalid_file": "The file is not a valid export."
+      "invalid_file": "The file is not a valid export.",
+      "block_forbidden": "One of the blocks isn't allowed for your group.",
+      "wrong_password": "The password is not correct.",
+      "unknown_member": "A name doesn't belong to any member.",
+      "invalid_icon": "The icon isn't valid.",
+      "disabled": "This option is off in this forum."
     }
   },
   "acp": {
@@ -490,7 +503,8 @@
         "chat_pro_bar": "Announcement bar",
         "chat_pro_emotes": "Emotes",
         "chat_moderation": "Moderation",
-        "chat_moderators": "Moderators"
+        "chat_moderators": "Moderators",
+        "archive": "Archiving"
       },
       "vip": {
         "vip_group": "VIP",
@@ -1280,7 +1294,8 @@
         "CATEGORY": "Category",
         "FORUM": "Forum",
         "QA": "Q&A",
-        "LINK": "Link"
+        "LINK": "Link",
+        "PAGE": "Page / Announcement"
       },
       "moveUp": "Move {name} up",
       "moveDown": "Move {name} down",
@@ -1330,6 +1345,55 @@
         "users": "Community",
         "help": "Help",
         "link": "Link"
+      },
+      "tabs": {
+        "label": "Forum sections",
+        "details": "Details",
+        "options": "Options",
+        "page": "Page",
+        "plugin": "PLUGIN"
+      },
+      "options": {
+        "title": "Forum options",
+        "access": "Access",
+        "ownTopicsOnly": "Members only see their own topics",
+        "ownTopicsOnlyHint": "Moderators see everything; guests see no topics. Good for requests, complaints or tickets.",
+        "password": "Password (empty = no password)",
+        "passwordChange": "New password (empty = unchanged)",
+        "removePassword": "Remove the password",
+        "minPosts": "Minimum posts to post (0 = no threshold)",
+        "rules": "Forum rules",
+        "rulesMode": "Rules box",
+        "rulesModes": {
+          "off": "No rules",
+          "show": "Shown at the top",
+          "accept": "Must be accepted before posting"
+        },
+        "rulesText": "Rules text",
+        "topics": "Topics",
+        "defaultSort": "Default sort",
+        "pollsEnabled": "Polls allowed",
+        "tagsEnabled": "Tags allowed",
+        "countPosts": "Posts count towards the member",
+        "autoCloseDays": "Close topics after N days without replies (0 = never)",
+        "rating": "Star rating",
+        "ratingEnabled": "Topics can be rated with stars",
+        "ratingHint": "Groups that can rate: <perms>permission matrix</perms> (“Rate topics”). Vote changes, rating your own topic, account age and minimum posts: <settings>forum settings</settings>.",
+        "resetRatings": "Reset the forum ratings",
+        "resetRatingsHint": "Deletes all topic votes in this forum.",
+        "resetRatingsConfirm": "Delete all votes in this forum? This can't be undone."
+      },
+      "page": {
+        "title": "The page",
+        "content": "Page content",
+        "contentHint": "Headings, coloured titles, lists, links, images and the safe blocks (sections, cards, buttons, steps…).",
+        "cta": "Main button (optional)",
+        "ctaLabel": "Button text",
+        "ctaUrl": "Button link (/… or https://…)",
+        "ctaIcon": "Button icon",
+        "allowTopics": "Topics below the page",
+        "audience": "Who sees the page",
+        "audienceHint": "No group ticked = everyone who sees the forum (its permissions)."
       }
     },
     "prefixes": {
@@ -2573,7 +2637,11 @@
           "user_deleting": "An account starts being deleted (the plugin deletes the member's data).",
           "user_deleted": "An account was deleted.",
           "user_merged": "An account was merged into another (the plugin moves its data to the target account).",
-          "member_panel": "Cards and tabs on the ACP member page and on profiles (declared in memberPanels)."
+          "member_panel": "Cards and tabs on the ACP member page and on profiles (declared in memberPanels).",
+          "forum_list": "The forum list (index, subforums): labels next to the title, a line under the description, the category band and the row style (one call per page).",
+          "forum_page": "A card at the top of a forum page.",
+          "topic_bar": "A bar on a topic page, under the header.",
+          "forum_edit": "The body of a plugin tab in ACP → Forums → Edit (declared in forumTabs)."
         }
       }
     },
@@ -4188,6 +4256,59 @@
           "groupsHint": "No group ticked = everyone."
         }
       }
+    },
+    "archive": {
+      "title": "Automatic archiving",
+      "description": "Rules that archive old topics on their own. An archived topic is read only and can be restored any time.",
+      "enabled": "Automatic archiving is on (one run per hour).",
+      "disabled": "Automatic archiving is off: rules only run with “Run now”.",
+      "settingsLink": "Forum settings",
+      "rules": "Rules",
+      "new": "New rule",
+      "empty": "No rules yet.",
+      "on": "On",
+      "off": "Off",
+      "summary": "Last post older than {days} days · would archive {count, plural, one {# topic} other {# topics}} now",
+      "lastRun": "Last run: {date} ({count})",
+      "edit": "Edit",
+      "runNow": "Run now",
+      "runConfirm": "Archive {count, plural, one {# topic} other {# topics}} now?",
+      "delete": "Delete",
+      "deleteConfirm": "Delete the rule? Topics already archived stay archived.",
+      "editTitle": "Edit: {name}",
+      "save": "Save rule",
+      "name": "Rule name",
+      "ruleEnabled": "The rule is on",
+      "conditions": "Archive topics that…",
+      "lastPostDays": "…have their last post older than (days)",
+      "forums": "Forums",
+      "forumsHint": "No forum ticked = all forums.",
+      "flags": {
+        "pinned": "Pinned",
+        "locked": "Locked",
+        "hidden": "Hidden",
+        "poll": "With a poll"
+      },
+      "tri": {
+        "any": "Any",
+        "yes": "Only yes",
+        "no": "Only no"
+      },
+      "repliesBelow": "Fewer than N replies",
+      "viewsBelow": "Fewer than N views",
+      "ratingBelow": "Rating below",
+      "starters": "Started by (names, comma separated)",
+      "startersHint": "e.g. Krypt, ShadowRO",
+      "exclusions": "…but not when",
+      "not": {
+        "pinned": "The topic is pinned",
+        "locked": "The topic is locked",
+        "poll": "The topic has a poll",
+        "repliesAtLeast": "It has at least N replies",
+        "viewsAtLeast": "It has at least N views",
+        "ratingAtLeast": "Its rating is at least",
+        "starters": "It was started by (names, comma separated)"
+      }
     }
   },
   "settings": {
@@ -4245,14 +4366,38 @@
       "copy": "Copy: images are downloaded and kept on the site",
       "all": "All time",
       "year": "Current year",
-      "month": "Current month"
+      "month": "Current month",
+      "rows": "Rows",
+      "grid": "Grid",
+      "list": "List",
+      "snippet": "With snippet",
+      "top": "Top",
+      "bottom": "Bottom",
+      "desktop": "Desktop only",
+      "all_devices": "All devices"
     },
     "forums": {
       "posts_per_page": "Posts per page",
       "topics_per_page": "Topics per page",
       "post_max_chars": "Maximum post length (characters)",
       "embeds": "Allowed embeds (youtube, twitch, medal, image)",
-      "revisions_visible_to_author": "Authors see their edit history"
+      "revisions_visible_to_author": "Authors see their edit history",
+      "pinned_first": "Pinned topics stay first",
+      "forum_view": "Default forum view (members can choose another)",
+      "topic_view": "Default topic list view (members can choose another)",
+      "popular_threshold": "“Popular now”: replies in the last 24 hours (0 = off)",
+      "mod_names_public": "The moderator's name shows on moderation messages",
+      "summary_enabled": "Topic summary (most active, popular posts, busiest days)",
+      "summary_min_replies": "The summary shows from N replies",
+      "summary_position": "Summary position",
+      "summary_devices": "The summary shows on",
+      "rss_enabled": "RSS feed for each forum",
+      "rating_change_vote": "Star rating: members can change their vote",
+      "rating_own": "Star rating: authors can rate their own topic",
+      "rating_min_age_days": "Star rating: minimum account age (days)",
+      "rating_min_posts": "Star rating: minimum posts",
+      "archive_enabled": "Automatic archiving (the rules in Forums → Archiving)",
+      "qa_voting": "Q&A voting: members vote on posts in Q&A forums"
     },
     "profile": {
       "cover_max_mb": "Maximum cover size (MB)",
@@ -4855,7 +5000,17 @@
       "flood_seconds": "Delay between posts (seconds)",
       "moderate_all": "Moderator in all forums",
       "poll_create": "Creates polls",
-      "tags_max": "Tags per topic (maximum)"
+      "tags_max": "Tags per topic (maximum)",
+      "rate": "Rate topics (stars)",
+      "block_section": "Blocks: section",
+      "block_callout": "Blocks: callout",
+      "block_cards": "Blocks: card grid",
+      "block_button": "Blocks: button",
+      "block_columns": "Blocks: columns",
+      "block_steps": "Blocks: steps",
+      "block_progress": "Blocks: progress",
+      "block_hidden": "Blocks: hidden content",
+      "block_html": "Blocks: HTML (Root Admin only)"
     },
     "vip": {
       "manage": "Grants, extends and revokes VIP"
@@ -5330,7 +5485,58 @@
     "topicsCount": "{count, plural, one {# topic} other {# topics}}",
     "statsOf": "Statistics of the forum {name}",
     "statsTopics": "{count, plural, one {<b>#</b> topic} other {<b>#</b> topics}}",
-    "statsPosts": "{count, plural, one {<b>#</b> reply} other {<b>#</b> replies}}"
+    "statsPosts": "{count, plural, one {<b>#</b> reply} other {<b>#</b> replies}}",
+    "pageHint": "Page",
+    "archived": "Archived",
+    "popularNow": "Popular now",
+    "ratingLabel": "{avg} out of 5 · {count, plural, one {# vote} other {# votes}}",
+    "pageEmpty": "This page has no content yet.",
+    "sortLabel": "Sort",
+    "sorts": {
+      "last": "Latest reply",
+      "created": "Newest",
+      "replies": "Most replies",
+      "views": "Most viewed",
+      "rating": "Top rated",
+      "title": "Title (A–Z)"
+    },
+    "fourStars": "Only 4★+",
+    "emptyRated": "No topics rated 4★ or higher.",
+    "listViews": {
+      "label": "List view",
+      "list": "List",
+      "snippet": "With snippet",
+      "forumsLabel": "Forum view",
+      "rows": "Rows",
+      "grid": "Grid"
+    },
+    "password": {
+      "title": "{name} is password protected",
+      "hint": "Enter the forum password to open it. It stays unlocked in this browser for 30 days.",
+      "label": "Forum password",
+      "submit": "Unlock"
+    },
+    "rules": {
+      "title": "Forum rules",
+      "accepted": "Accepted",
+      "mustAccept": "To post here, you must accept the rules.",
+      "accept": "I have read and accept the rules"
+    },
+    "slotsDemo": {
+      "tab": "Slots demo",
+      "description": "The forum slots demo extension: a label next to the title, a line under the description, the row style, a card on the forum page and the topic bar.",
+      "enabled": "Show the demo on this forum",
+      "badge": "Label next to the title",
+      "note": "Line under the description",
+      "accent": "Bar colour (#RRGGBB)",
+      "caps": "Uppercase title",
+      "headerChip": "Demo",
+      "visibleTopics": "visible topics",
+      "cardTitle": "Demo card",
+      "cardBody": "The top card of the {name} forum, added by the demo extension.",
+      "cardAction": "Open the forum",
+      "barText": "Demo bar of topic #{id}"
+    }
   },
   "topic": {
     "reply": "Reply",
@@ -5457,7 +5663,76 @@
       "characters": "{count} characters",
       "charactersMax": "{count} / {max} characters",
       "mentionGroup": "Group",
-      "mentionOnline": "Online"
+      "mentionOnline": "Online",
+      "blocks": {
+        "blocks": "Blocks",
+        "blockSettings": "Block settings",
+        "insert": "Insert",
+        "apply": "Apply",
+        "cancel": "Cancel",
+        "type": {
+          "section": "Section",
+          "callout": "Callout",
+          "cards": "Card grid",
+          "button": "Button",
+          "columns": "Columns",
+          "steps": "Steps",
+          "progress": "Progress",
+          "hidden": "Hidden content",
+          "html": "HTML (Root only)"
+        },
+        "node": {
+          "gcsSection": "Section",
+          "gcsCallout": "Callout",
+          "gcsCardGrid": "Card grid",
+          "gcsCard": "Card",
+          "gcsButton": "Button",
+          "gcsColumns": "Columns",
+          "gcsColumn": "Column",
+          "gcsSteps": "Steps",
+          "gcsStep": "Step",
+          "gcsProgress": "Progress",
+          "gcsHidden": "Hidden content",
+          "gcsHtml": "HTML"
+        },
+        "field": {
+          "title": "Title",
+          "icon": "Icon (e.g. fa-solid fa-gift)",
+          "tone": "Colour",
+          "kind": "Type",
+          "columns": "Columns",
+          "subtitle": "Subtitle",
+          "value": "Value",
+          "badge": "Badge",
+          "highlight": "Highlighted",
+          "label": "Text",
+          "href": "Link",
+          "variant": "Style",
+          "max": "Maximum",
+          "mode": "Who sees it",
+          "groups": "Groups (ids, comma separated)",
+          "html": "HTML"
+        },
+        "option": {
+          "1": "1",
+          "2": "2",
+          "3": "3",
+          "4": "4",
+          "accent": "Accent",
+          "neutral": "Neutral",
+          "ok": "Green (ok)",
+          "warn": "Warning",
+          "danger": "Danger",
+          "info": "Info",
+          "warning": "Warning",
+          "success": "Success",
+          "primary": "Filled",
+          "ghost": "Outline",
+          "reply": "Who replied in the topic",
+          "members": "Signed-in members",
+          "groups": "Certain groups"
+        }
+      }
     },
     "ignored": "You are ignoring <name></name>. Show post",
     "live": {
@@ -5477,7 +5752,79 @@
     "reactedYou": "You liked this post.",
     "reactedYouAndOthers": "You and {count, plural, one {# other person} other {# others}} liked this post.",
     "reactedCount": "{count, plural, one {# person} other {# people}} liked this post.",
-    "quickReply": "Quick reply"
+    "quickReply": "Quick reply",
+    "pills": {
+      "author": "Author",
+      "staff": "Staff",
+      "recommended": "Recommended"
+    },
+    "ip": "IP: {ip}",
+    "ipTools": "IP tools",
+    "recommend": "Recommend reply",
+    "unrecommend": "Remove recommendation",
+    "recommendedTitle": "Reply recommended by staff",
+    "archivedNotice": "Topic archived on {date}: read only.",
+    "archivedReply": "This topic is archived: no more replies can be added.",
+    "you": "You",
+    "and": "and",
+    "reactedNames": "<names></names> {count, plural, one {reacted} other {reacted}}",
+    "reactedNamesOthers": "<names></names> and {count, plural, one {one other} other {# others}} reacted",
+    "share": {
+      "label": "Share",
+      "copy": "Copy link",
+      "copied": "Link copied",
+      "email": "Email"
+    },
+    "multiQuote": {
+      "add": "+ Quote",
+      "remove": "Remove quote",
+      "label": "Selected quotes",
+      "insert": "Quote {count, plural, one {# post} other {# posts}}",
+      "clear": "Clear quotes"
+    },
+    "replyBox": {
+      "placeholder": "Reply…",
+      "draftRestored": "Your draft was restored.",
+      "discardDraft": "Discard draft",
+      "plainPaste": "Paste as text",
+      "plainPasteOn": "Paste as text: on",
+      "preview": "Preview",
+      "closePreview": "Close preview",
+      "previewDevices": "Preview on",
+      "devices": {
+        "desktop": "Desktop",
+        "tablet": "Tablet",
+        "phone": "Phone"
+      }
+    },
+    "notices": {
+      "label": "Message from the moderators",
+      "title": "Message from the moderators",
+      "team": "Moderation team",
+      "delete": "Delete message",
+      "cancel": "Cancel",
+      "confirmDelete": "Delete the moderator message?"
+    },
+    "gap": {
+      "months": "{count, plural, one {A month} other {# months}} later…",
+      "years": "{count, plural, one {A year} other {# years}} later…"
+    },
+    "summary": {
+      "title": "Topic summary",
+      "posters": "Most active",
+      "popular": "Popular posts",
+      "days": "Busiest days",
+      "postsCount": "{count, plural, one {# post} other {# posts}}",
+      "reactions": "{count, plural, one {# reaction} other {# reactions}}",
+      "noText": "(no text)"
+    },
+    "vote": {
+      "up": "Upvote",
+      "down": "Downvote",
+      "score": "Score: {score}",
+      "login": "Sign in to vote",
+      "own": "You can’t vote on your own post"
+    }
   },
   "newTopic": {
     "title": "New topic in {forum}",
@@ -5528,7 +5875,62 @@
     "menu": "Moderation tools",
     "confirmDelete": "Permanently delete the topic and all its posts?",
     "done": "Done",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "v2": {
+      "addNotice": "Add message",
+      "noticeTone": "Message tone",
+      "tones": {
+        "info": "Info",
+        "warn": "Warning",
+        "ok": "Confirmation",
+        "danger": "Alert"
+      },
+      "publishNotice": "Publish message",
+      "approvalOn": "Approve posts",
+      "approvalOff": "Stop approving",
+      "archive": "Archive",
+      "unarchive": "Restore from archive",
+      "resetRating": "Reset rating",
+      "resetRatingConfirm": "Delete all votes of this topic? The rating starts from zero.",
+      "history": "Moderation history",
+      "historyEmpty": "No moderation actions yet.",
+      "system": "System",
+      "savedActions": "Saved actions",
+      "actions": {
+        "mod": {
+          "topic": {
+            "pin": "Pinned / unpinned",
+            "lock": "Locked / unlocked",
+            "feature": "Featured",
+            "move": "Moved",
+            "merge": "Merged",
+            "split": "Split",
+            "delete": "Deleted",
+            "solved": "Best answer",
+            "notice": "Moderator message",
+            "notice_delete": "Moderator message deleted",
+            "recommend": "Recommended reply",
+            "approval": "Post approval",
+            "archive": "Archived",
+            "unarchive": "Restored from archive",
+            "saved_action": "Saved action applied"
+          },
+          "post": {
+            "edit": "Post edited",
+            "delete": "Post deleted",
+            "restore": "Post restored",
+            "approve": "Post approved",
+            "hide": "Post hidden"
+          }
+        },
+        "rating": {
+          "reset": "Rating reset",
+          "vote": {
+            "remove": "Vote removed"
+          }
+        }
+      }
+    }
   },
   "search": {
     "title": "Search",
@@ -6683,7 +7085,8 @@
       "recentPosts": "Recent posts",
       "topPosters": "Top posters",
       "featuredTopics": "Featured topics",
-      "featuredCarousel": "Featured carousel"
+      "featuredCarousel": "Featured carousel",
+      "topRated": "Top rated"
     },
     "chat": {
       "shoutbox": "Shoutbox"
@@ -6729,7 +7132,8 @@
         "recentPosts": "The latest replies, with an excerpt.",
         "topPosters": "Members with the most posts over the chosen period.",
         "featuredTopics": "Topics featured by the staff.",
-        "featuredCarousel": "Topics featured by the staff, in an image carousel: forum, date, title, excerpt and author."
+        "featuredCarousel": "Topics featured by the staff, in an image carousel: forum, date, title, excerpt and author.",
+        "topRated": "The topics with the most stars in the last month (at least 2 votes)."
       },
       "chat": {
         "shoutbox": "A chat room, right on the page."
@@ -6789,7 +7193,8 @@
     "recentBadges": {
       "empty": "No achievements yet.",
       "received": "earned"
-    }
+    },
+    "ratingAria": "{avg} out of 5, {count, plural, one {# vote} other {# votes}}"
   },
   "pageEditor": {
     "title": "Edit page",
@@ -9263,5 +9668,32 @@
       "reactionGiver": "whoever gave the reaction",
       "topicAuthor": "the topic author"
     }
+  },
+  "rating": {
+    "average": "{avg} out of 5 · {count, plural, one {# vote} other {# votes}}",
+    "decimal": ".",
+    "rateThis": "Rate this topic",
+    "starLabel": "{value} {value, plural, one {star} other {stars}}: {label}",
+    "labels": {
+      "poor": "Poor",
+      "fair": "Fair",
+      "good": "Good",
+      "great": "Great",
+      "excellent": "Excellent"
+    },
+    "none": "No ratings yet",
+    "yours": "Your rating: {value}★",
+    "undo": "Remove rating",
+    "signIn": "Sign in",
+    "signInHint": "to rate this topic.",
+    "reasons": {
+      "own_content": "You can't rate your own topic.",
+      "no_permission": "Your group can't rate in this forum.",
+      "account_too_new": "Your account is too new to rate.",
+      "not_enough_posts": "You need more posts to rate.",
+      "disabled": "Rating isn't available on this topic."
+    },
+    "distribution": "Rating distribution",
+    "starsShort": "{value}★"
   }
 }

@@ -1,5 +1,5 @@
 import { GcsForbidden, GcsNotFound, writeAudit, type GcsActor } from "@gcs/core";
-import type { Post, Prisma, Topic } from "@gcs/db";
+import { Prisma, type Post, type Topic } from "@gcs/db";
 import { GcsForumPosting, POST_CONTENT_TYPE, WRITE_TX } from "./posting";
 import { slugify } from "./slug";
 
@@ -26,11 +26,16 @@ export class GcsPostService {
     // Un topic în așteptare sau ascuns primește răspunsuri doar de la moderatori.
     if (topic.visibility !== "VISIBLE" && !(await posting.isModerator(actor, "approve", forumId))) throw new GcsForbidden({ reason: "not_visible" });
     if (topic.locked && !(await posting.isModerator(actor, "lock", forumId))) throw new GcsForbidden({ reason: "locked" });
+    // Forum v2: un topic arhivat e doar de citit; „doar topicurile mele”: doar autorul (și moderatorii) răspund.
+    if (topic.archivedAt) throw new GcsForbidden({ reason: "archived" });
+    if (topic.forum.ownTopicsOnly && topic.authorId !== actor.userId && !(await posting.isModerator(actor, "edit", forumId))) throw new GcsNotFound();
+    await posting.checkForumOptions(actor, topic.forum);
 
     const filtered = await posting.filterContent(actor, { kind: "reply", title: null, content: input.content, forumId, topicId: topic.id, authorId: actor.userId });
-    const rendered = await posting.render(filtered.content, { actor, cooldown: true });
+    const rendered = await posting.render(filtered.content, { actor, cooldown: true, blocks: true });
     await posting.checkFlood(actor);
-    const pending = await posting.needsApproval(actor, topic.forum);
+    // Forum v2: „Aprobare postări” pe topic (în afară de moderatori, ca la forum).
+    const pending = await posting.needsApproval(actor, { id: forumId, requireApproval: topic.forum.requireApproval || topic.requireApproval });
     const authorId = actor.userId;
 
     const result = await db.$transaction(async (tx) => {
@@ -43,6 +48,7 @@ export class GcsPostService {
           authorId,
           contentJson: rendered.json as Prisma.InputJsonValue,
           contentHtml: rendered.html,
+          hiddenParts: rendered.hiddenParts.length > 0 ? (rendered.hiddenParts as unknown as Prisma.InputJsonValue) : Prisma.DbNull,
           visibility: pending ? "PENDING" : "VISIBLE",
           ip: actor.ip,
         },
@@ -54,7 +60,7 @@ export class GcsPostService {
       if (!pending) {
         await posting.counters.onReply(
           tx,
-          { postId: post.id, topicId: topic.id, forumId, authorId, createdAt: post.createdAt },
+          { postId: post.id, topicId: topic.id, forumId, authorId, createdAt: post.createdAt, countPosts: topic.forum.countPosts },
           locked.visibility === "VISIBLE",
         );
         promoted = await posting.promoteIfReady(tx, authorId);
@@ -103,7 +109,7 @@ export class GcsPostService {
       authorId: post.authorId,
     });
     // La editare nu se trimit notificări, deci nici pauza dintre mențiuni nu se aplică; pastilele vechi rămân.
-    const rendered = await posting.render(filtered.content, { actor, keep: post.contentJson });
+    const rendered = await posting.render(filtered.content, { actor, keep: post.contentJson, blocks: true });
     const title = filtered.title !== null ? posting.cleanTitle(filtered.title) : null;
 
     await db.$transaction(async (tx) => {
@@ -112,7 +118,13 @@ export class GcsPostService {
       });
       await tx.post.update({
         where: { id: postId },
-        data: { contentJson: rendered.json as Prisma.InputJsonValue, contentHtml: rendered.html, editedAt: new Date(), editedById: actor.userId },
+        data: {
+          contentJson: rendered.json as Prisma.InputJsonValue,
+          contentHtml: rendered.html,
+          hiddenParts: rendered.hiddenParts.length > 0 ? (rendered.hiddenParts as unknown as Prisma.InputJsonValue) : Prisma.DbNull,
+          editedAt: new Date(),
+          editedById: actor.userId,
+        },
       });
       await posting.search.indexPost(tx, postId, rendered.text);
       if (title !== null && title !== post.topic.title) {

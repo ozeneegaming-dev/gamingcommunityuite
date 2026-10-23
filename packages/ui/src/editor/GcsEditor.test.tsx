@@ -3,6 +3,7 @@ import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import { createRef } from "react";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { GcsEditor, type GcsEditorHandle, type GcsEditorLabels } from "./GcsEditor";
+import { GCS_EDITOR_BLOCK_NODES, type GcsEditorBlock } from "./blocks";
 import { gcsEditorExtensions, GCS_EDITOR_MARKS, GCS_EDITOR_NODES, isEmbedUrl, isImageUrl, type GcsEditorAllow } from "./extensions";
 
 const labels: GcsEditorLabels = {
@@ -80,11 +81,16 @@ afterEach(() => {
 });
 
 describe("extensiile editorului", () => {
-  test("schema conține exact nodurile și mărcile permise de server", () => {
+  test("schema conține exact nodurile și mărcile permise de server; blocurile Forum v2 doar când sunt permise", () => {
+    const blockNodes = new Set<string>(Object.values(GCS_EDITOR_BLOCK_NODES).flat());
     const editor = headless("");
-    expect(Object.keys(editor.schema.nodes).sort()).toEqual([...GCS_EDITOR_NODES].sort());
+    expect(Object.keys(editor.schema.nodes).sort()).toEqual(GCS_EDITOR_NODES.filter((n) => !blockNodes.has(n)).sort());
     expect(Object.keys(editor.schema.marks).sort()).toEqual([...GCS_EDITOR_MARKS].sort());
     editor.destroy();
+    const all = Object.keys(GCS_EDITOR_BLOCK_NODES) as GcsEditorBlock[];
+    const withBlocks = new Editor({ element: document.createElement("div"), extensions: gcsEditorExtensions({ placeholder: "", blocks: all }), content: "" });
+    expect(Object.keys(withBlocks.schema.nodes).sort()).toEqual([...GCS_EDITOR_NODES].sort());
+    withBlocks.destroy();
   });
 
   test("Bold pe selecție produce marca `bold`", () => {

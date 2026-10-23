@@ -1,0 +1,1169 @@
+/*
+ * Forum v2 (în ORICE temă, pe tokenurile temei): sloturile extensiilor (rândul forumului, banda categoriei, pagina
+ * forumului, bara topicului) și variabilele lor de stil, nodul „Pagină / Anunț”, regulile și parola forumului, nota cu
+ * stele, uneltele topicului (mesajele moderatorilor, recomandat, separatorii de timp, rezumatul, MultiQuote, caseta de
+ * răspuns strânsă, previzualizarea), blocurile sigure din postări și din editor, taburile ACP ale forumului și arhivarea.
+ * Designurile (ex. GCS Dark / White) doar le restilizează. Culorile decorative urmează accentul temei.
+ */
+
+/* ─── Tonurile elementelor de slot (culorile temei; o culoare proprie vine prin `--gcs-slot-color`) ─────────────── */
+.gcs-slotTone--accent { --gcs-slot-color: var(--gcs-accentInk, var(--gcs-accent)); }
+.gcs-slotTone--neutral { --gcs-slot-color: var(--gcs-muted); }
+.gcs-slotTone--ok { --gcs-slot-color: var(--gcs-ok); }
+.gcs-slotTone--warn { --gcs-slot-color: var(--gcs-warn); }
+.gcs-slotTone--danger { --gcs-slot-color: var(--gcs-danger, #ef5350); }
+.gcs-slotTone--info { --gcs-slot-color: var(--gcs-info, var(--gcs-accentInk, var(--gcs-accent))); }
+
+.gcs-forumSlot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.gcs-forumSlot--forum-row-title {
+  display: inline-flex;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.gcs-forumSlot--forum-row-meta {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-category__slot {
+  margin-left: auto;
+}
+.gcs-category__slot + .gcs-collapseToggle {
+  margin-left: 8px;
+}
+.gcs-forumPageSlot {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+.gcs-topicBar {
+  padding: 10px 14px;
+  border: 1px solid var(--gcs-border);
+  border-radius: var(--gcs-radius-box, 8px);
+  background-color: var(--gcs-box-bg, var(--gcs-surface));
+}
+
+/* Pastila: culoarea ei la 14% fundal / 35% chenar; la hover 30% / 60%, strălucire și -1px (regula pastilelor). */
+.gcs-slotChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border: 1px solid color-mix(in srgb, var(--gcs-slot-color) 35%, transparent);
+  border-radius: 6px;
+  background-color: color-mix(in srgb, var(--gcs-slot-color) 14%, transparent);
+  color: var(--gcs-slot-color);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  transition: background-color var(--gcs-ease, 0.18s), border-color var(--gcs-ease, 0.18s), box-shadow var(--gcs-ease, 0.18s), transform var(--gcs-ease, 0.18s);
+}
+.gcs-slotChipWrap {
+  display: inline-flex;
+}
+.gcs-root a.gcs-slotChip--link:hover,
+.gcs-root a.gcs-slotChip--link:focus-visible,
+.gcs-slotChip[data-tip]:hover {
+  background-color: color-mix(in srgb, var(--gcs-slot-color) 30%, transparent);
+  border-color: color-mix(in srgb, var(--gcs-slot-color) 60%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--gcs-slot-color) 35%, transparent);
+  color: var(--gcs-slot-color);
+  transform: translateY(-1px);
+}
+.gcs-slotChip__icon {
+  font-size: 0.95em;
+}
+.gcs-slotLine {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gcs-muted);
+}
+.gcs-slotLine.gcs-slotTone--accent,
+.gcs-slotLine.gcs-slotTone--ok,
+.gcs-slotLine.gcs-slotTone--warn,
+.gcs-slotLine.gcs-slotTone--danger,
+.gcs-slotLine.gcs-slotTone--info {
+  color: var(--gcs-slot-color);
+}
+.gcs-slotLine__icon,
+.gcs-slotStat__icon {
+  color: var(--gcs-slot-color, var(--gcs-muted));
+}
+.gcs-root .gcs-slotLine__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: inherit;
+}
+.gcs-root .gcs-slotLine__link:hover {
+  color: var(--gcs-accentInk, var(--gcs-accent));
+}
+.gcs-slotStat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-slotStat__value {
+  color: var(--gcs-heading, var(--gcs-text));
+  font-weight: 700;
+}
+.gcs-slotCard {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--gcs-slot-color, var(--gcs-accent));
+}
+.gcs-slotCard__image {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+.gcs-slotCard__main {
+  flex: 1 1 220px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gcs-slotCard__title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+.gcs-slotCard__icon {
+  color: var(--gcs-slot-color, var(--gcs-accent));
+}
+.gcs-slotCard__body {
+  margin: 0;
+  color: var(--gcs-muted);
+  font-size: 13px;
+}
+.gcs-slotCard__items,
+.gcs-slotCard__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ─── Variabilele și clasele de stil ale extensiilor (documentate în GCS_FORUM_STYLE_VARS / _CLASSES) ──────── */
+.gcs-root .gcs-forumRow[style*="--gcs-forum-title-color"] .gcs-forumRow__title > a,
+.gcs-root .gcs-category[style*="--gcs-forum-title-color"] .gcs-category__title a {
+  color: var(--gcs-forum-title-color);
+}
+.gcs-forumRow[style*="--gcs-forum-row-bg"],
+:root[data-gcs-lists="cards"] .gcs-category__well > .gcs-forumRow[style*="--gcs-forum-row-bg"] {
+  background-color: var(--gcs-forum-row-bg);
+}
+.gcs-forumRow[style*="--gcs-forum-row-border"] {
+  border-color: var(--gcs-forum-row-border);
+}
+/* Imaginea de fundal a rândului (sau a benzii categoriei), sub un voal închis; la hover voalul se schimbă. */
+.gcs-forumRow--image,
+.gcs-category--image .gcs-category__header {
+  position: relative;
+  isolation: isolate;
+  background-image: var(--gcs-forum-row-image, none);
+  background-size: cover;
+  background-position: var(--gcs-forum-row-image-pos, 50% 50%);
+}
+.gcs-forumRow--image::after,
+.gcs-category--image .gcs-category__header::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--gcs-bg);
+  opacity: var(--gcs-forum-row-veil, 0.7);
+  transition: opacity var(--gcs-ease, 0.18s);
+  pointer-events: none;
+  border-radius: inherit;
+}
+.gcs-forumRow--image:hover::after {
+  opacity: var(--gcs-forum-row-veil-hover, var(--gcs-forum-row-veil, 0.6));
+}
+.gcs-forumRow--titleCaps .gcs-forumRow__title > a,
+.gcs-category--titleCaps .gcs-category__title {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.gcs-forumRow--titleGlow .gcs-forumRow__title > a {
+  text-shadow: 0 0 14px color-mix(in srgb, var(--gcs-forum-title-color, var(--gcs-forum-color, var(--gcs-accent))) 55%, transparent);
+}
+.gcs-forumRow--muted {
+  opacity: 0.72;
+}
+.gcs-forumRow__pageHint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+
+/* ─── Nodul „Pagină / Anunț” ──────────────────────────────────────────────────────────────────────────────── */
+.gcs-forumPage {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.gcs-forumPage__cta {
+  margin: 0;
+}
+
+/* ─── Parola și regulile forumului ───────────────────────────────────────────────────────────────────────── */
+.gcs-forumGate {
+  padding: 24px;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gcs-forumGate__title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+}
+.gcs-forumGate__form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.gcs-forumGate__form .gcs-input {
+  flex: 1 1 220px;
+}
+.gcs-forumRules {
+  overflow: hidden;
+}
+.gcs-forumRules__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  cursor: pointer;
+  list-style: none;
+}
+.gcs-forumRules__head::-webkit-details-marker {
+  display: none;
+}
+.gcs-forumRules__ok {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gcs-ok);
+  font-size: 12px;
+}
+.gcs-forumRules__body {
+  padding: 0 16px 12px;
+}
+.gcs-forumRules__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px 16px;
+}
+.gcs-forumRules__actions p {
+  margin: 0;
+}
+
+/* ─── Lista topicurilor: filtrele, vederea, nota, „Popular acum” ─────────────────────────────────────────── */
+.gcs-topicList__stars {
+  white-space: nowrap;
+}
+.gcs-viewToggle {
+  margin-left: auto;
+}
+.gcs-topicRow__rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+.gcs-topicRow--archived .gcs-topicRow__title > a {
+  color: var(--gcs-muted);
+}
+
+/* ─── Nota cu stele ──────────────────────────────────────────────────────────────────────────────────────── */
+.gcs-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  line-height: 1;
+}
+.gcs-stars--sm {
+  font-size: 11px;
+}
+.gcs-stars--md {
+  font-size: 18px;
+}
+.gcs-star--full,
+.gcs-star--half {
+  color: var(--gcs-accentInk, var(--gcs-accent));
+}
+.gcs-star--empty {
+  color: color-mix(in srgb, var(--gcs-muted) 70%, transparent);
+}
+.gcs-starBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background-color: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.gcs-starBtn:hover,
+.gcs-starBtn:focus-visible {
+  background-color: color-mix(in srgb, var(--gcs-text) 5%, transparent);
+}
+.gcs-starBtn:hover .gcs-star,
+.gcs-starBtn:focus-visible .gcs-star {
+  transform: scale(1.15);
+}
+.gcs-star {
+  transition: transform var(--gcs-ease, 0.18s), color var(--gcs-ease, 0.18s);
+}
+.gcs-starBtn--pop .gcs-star {
+  animation: gcs-star-pop 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes gcs-star-pop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.45); }
+  100% { transform: scale(1); }
+}
+.gcs-topicRating {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--gcs-muted);
+}
+.gcs-topicRating__hint {
+  color: var(--gcs-heading, var(--gcs-text));
+}
+.gcs-topicRating__mine {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  border-radius: 6px;
+  background-color: color-mix(in srgb, var(--gcs-accent) 12%, transparent);
+  color: var(--gcs-accentInk, var(--gcs-accent));
+  font-size: 12px;
+}
+.gcs-topicRating__undo {
+  display: inline-flex;
+  padding: 0 2px;
+  border: 0;
+  background-color: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.gcs-topicRating__error {
+  color: var(--gcs-danger, #ef5350);
+}
+.gcs-topicRating__dist {
+  position: relative;
+}
+.gcs-ratingDist {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 220px;
+  padding: 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 8px;
+  background-color: var(--gcs-surface);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.35);
+  animation: gcs-v2-drop 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.gcs-ratingDist__title {
+  color: var(--gcs-heading, var(--gcs-text));
+}
+.gcs-ratingDist__row {
+  display: grid;
+  grid-template-columns: 28px 1fr 28px;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.gcs-ratingDist__bar {
+  height: 6px;
+  border-radius: 3px;
+  background-color: color-mix(in srgb, var(--gcs-text) 10%, transparent);
+  overflow: hidden;
+}
+.gcs-ratingDist__bar > span {
+  display: block;
+  height: 100%;
+  background-color: var(--gcs-accent);
+}
+@keyframes gcs-v2-drop {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ─── Uneltele topicului ────────────────────────────────────────────────────────────────────────────────── */
+.gcs-topicNotices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gcs-topicNotice {
+  --gcs-notice-color: var(--gcs-accentInk, var(--gcs-accent));
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--gcs-notice-color) 40%, var(--gcs-border));
+  border-left-width: 4px;
+  border-radius: var(--gcs-radius-box, 8px);
+  background-color: color-mix(in srgb, var(--gcs-notice-color) 8%, var(--gcs-box-bg, var(--gcs-surface)));
+}
+.gcs-topicNotice--warn { --gcs-notice-color: var(--gcs-warn); }
+.gcs-topicNotice--ok { --gcs-notice-color: var(--gcs-ok); }
+.gcs-topicNotice--danger { --gcs-notice-color: var(--gcs-danger, #ef5350); }
+.gcs-topicNotice__icon {
+  color: var(--gcs-notice-color);
+  font-size: 18px;
+}
+.gcs-topicNotice__main {
+  flex: 1;
+  min-width: 0;
+}
+.gcs-topicNotice__head {
+  margin: 0 0 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+}
+.gcs-topicNotice__meta {
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-timeGap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 6px 0;
+  color: var(--gcs-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.gcs-timeGap::before,
+.gcs-timeGap::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background-color: var(--gcs-border);
+}
+.gcs-topicSummary {
+  overflow: hidden;
+}
+.gcs-topicSummary__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  cursor: pointer;
+  list-style: none;
+}
+.gcs-topicSummary__head::-webkit-details-marker {
+  display: none;
+}
+.gcs-topicSummary__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  padding: 0 16px 16px;
+}
+.gcs-topicSummary__subtitle {
+  margin: 0 0 6px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gcs-muted);
+}
+.gcs-topicSummary__list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+.gcs-topicSummary__list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+@media (max-width: 760px) {
+  .gcs-topicSummary--desktop {
+    display: none;
+  }
+}
+.gcs-archivedBanner {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px dashed var(--gcs-border);
+  border-radius: var(--gcs-radius-box, 8px);
+  color: var(--gcs-muted);
+}
+.gcs-recommended {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gcs-recommended__title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--gcs-accentInk, var(--gcs-accent));
+}
+.gcs-recommended .gcs-post {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gcs-accent) 45%, transparent);
+}
+.gcs-postPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  border: 1px solid color-mix(in srgb, var(--gcs-pill-color) 45%, transparent);
+  border-radius: 6px;
+  background-color: color-mix(in srgb, var(--gcs-pill-color) 14%, transparent);
+  color: var(--gcs-pill-color);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: background-color var(--gcs-ease, 0.18s), border-color var(--gcs-ease, 0.18s), box-shadow var(--gcs-ease, 0.18s), transform var(--gcs-ease, 0.18s);
+}
+.gcs-postPill--author,
+.gcs-postPill--recommended {
+  --gcs-pill-color: var(--gcs-accentInk, var(--gcs-accent));
+}
+.gcs-postPill--staff:not([style]) {
+  --gcs-pill-color: var(--gcs-accentInk, var(--gcs-accent));
+}
+.gcs-postPill:hover {
+  background-color: color-mix(in srgb, var(--gcs-pill-color) 30%, transparent);
+  border-color: color-mix(in srgb, var(--gcs-pill-color) 60%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--gcs-pill-color) 35%, transparent);
+  transform: translateY(-1px);
+}
+.gcs-post__ip {
+  margin: 4px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-post[data-staff] {
+  border-color: color-mix(in srgb, var(--gcs-post-group, var(--gcs-accent)) 55%, var(--gcs-border));
+}
+.gcs-multiQuote {
+  position: sticky;
+  bottom: 12px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-end;
+  margin-left: auto;
+  padding: 8px 10px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 8px;
+  background-color: var(--gcs-surface);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.3);
+  width: fit-content;
+}
+.gcs-replyBox--collapsed .gcs-editor__toolbar,
+.gcs-replyBox--collapsed .gcs-editor__footer,
+.gcs-replyBox--collapsed .gcs-replyBox__actions {
+  display: none;
+}
+.gcs-replyBox--collapsed .gcs-editor__content {
+  min-height: 44px !important;
+  cursor: text;
+}
+.gcs-replyBox__draft {
+  margin: 0 0 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--gcs-muted);
+}
+.gcs-replyBox__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.gcs-replyPreview {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.gcs-replyPreview__frame {
+  width: 100%;
+  padding: 16px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 8px;
+  background-color: var(--gcs-box-bg, var(--gcs-surface));
+  transition: max-width 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.gcs-replyPreview[data-device="tablet"] .gcs-replyPreview__frame {
+  max-width: 768px;
+}
+.gcs-replyPreview[data-device="phone"] .gcs-replyPreview__frame {
+  max-width: 375px;
+}
+.gcs-modMenu__saved {
+  align-items: center;
+}
+.gcs-modMenu__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gcs-muted);
+  font-size: 12px;
+}
+.gcs-modHistory {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 60vh;
+  overflow: auto;
+}
+.gcs-modHistory__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background-color: color-mix(in srgb, var(--gcs-text) 4%, transparent);
+}
+.gcs-modHistory__meta {
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+
+/* ─── Blocurile sigure din postări (macheta GiveawayBlocks) ─────────────────────────────────────────────── */
+.gcs-blockTone--accent { --gcs-block-color: var(--gcs-accent); }
+.gcs-blockTone--neutral { --gcs-block-color: var(--gcs-muted); }
+.gcs-blockTone--ok { --gcs-block-color: var(--gcs-ok); }
+.gcs-blockTone--warn { --gcs-block-color: var(--gcs-warn); }
+.gcs-blockTone--danger { --gcs-block-color: var(--gcs-danger, #ef5350); }
+.gcs-blockTone--info { --gcs-block-color: var(--gcs-info, var(--gcs-accentInk, var(--gcs-accent))); }
+.gcs-postBody .gcs-block {
+  margin: 12px 0;
+}
+.gcs-blockIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.gcs-blockIcon svg {
+  width: 1em;
+  height: 1em;
+}
+.gcs-block--section {
+  --gcs-block-color: var(--gcs-accent);
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--gcs-block-color) 35%, var(--gcs-border));
+  border-left: 4px solid var(--gcs-block-color);
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--gcs-block-color) 7%, var(--gcs-box-bg, var(--gcs-surface)));
+}
+.gcs-block__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.gcs-block__title {
+  color: var(--gcs-heading, var(--gcs-text));
+  font-family: var(--gcs-font-display);
+  font-size: 16px;
+  letter-spacing: 0.03em;
+}
+.gcs-block__icon {
+  color: var(--gcs-block-color, var(--gcs-accent));
+}
+.gcs-block__body > :first-child {
+  margin-top: 0;
+}
+.gcs-block__body > :last-child {
+  margin-bottom: 0;
+}
+.gcs-block--callout {
+  --gcs-block-color: var(--gcs-info, var(--gcs-accentInk, var(--gcs-accent)));
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--gcs-block-color) 40%, transparent);
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--gcs-block-color) 10%, transparent);
+}
+.gcs-callout--warning { --gcs-block-color: var(--gcs-warn); }
+.gcs-callout--success { --gcs-block-color: var(--gcs-ok); }
+.gcs-callout__icon {
+  color: var(--gcs-block-color);
+  font-size: 18px;
+  padding-top: 2px;
+}
+.gcs-block--callout .gcs-block__title {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+.gcs-block--cards,
+.gcs-block--columns {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(var(--gcs-block-cols, 3), minmax(0, 1fr));
+}
+.gcs-block--cards[data-columns="1"] { --gcs-block-cols: 1; }
+.gcs-block--cards[data-columns="2"],
+.gcs-block--columns[data-columns="2"] { --gcs-block-cols: 2; }
+.gcs-block--cards[data-columns="4"] { --gcs-block-cols: 4; }
+.gcs-block--columns[data-columns="3"] { --gcs-block-cols: 3; }
+@media (max-width: 640px) {
+  .gcs-block--cards,
+  .gcs-block--columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.gcs-blockCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 8px;
+  background-color: var(--gcs-box-bg, var(--gcs-surface));
+}
+.gcs-blockCard--highlight {
+  border-color: color-mix(in srgb, var(--gcs-accent) 55%, var(--gcs-border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gcs-accent) 35%, transparent), 0 6px 18px color-mix(in srgb, var(--gcs-accent) 14%, transparent);
+}
+.gcs-blockCard__badge {
+  align-self: flex-start;
+  padding: 1px 7px;
+  border-radius: 6px;
+  background-color: color-mix(in srgb, var(--gcs-accent) 16%, transparent);
+  color: var(--gcs-accentInk, var(--gcs-accent));
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.gcs-blockCard__icon {
+  color: var(--gcs-accentInk, var(--gcs-accent));
+  font-size: 20px;
+}
+.gcs-blockCard__title {
+  color: var(--gcs-heading, var(--gcs-text));
+}
+.gcs-blockCard__sub {
+  color: var(--gcs-muted);
+  font-size: 12px;
+}
+.gcs-blockCard__value {
+  margin-top: auto;
+  color: var(--gcs-accentInk, var(--gcs-accent));
+  font-weight: 800;
+}
+.gcs-block--button {
+  margin: 12px 0;
+}
+.gcs-root .gcs-postBody a.gcs-blockBtn {
+  text-decoration: none;
+}
+.gcs-blockCol > :first-child {
+  margin-top: 0;
+}
+.gcs-block--steps {
+  list-style: none;
+  counter-reset: gcs-step;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gcs-blockStep {
+  counter-increment: gcs-step;
+  position: relative;
+  padding: 10px 12px 10px 48px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 8px;
+  background-color: var(--gcs-box-bg, var(--gcs-surface));
+}
+.gcs-blockStep::before {
+  content: counter(gcs-step);
+  position: absolute;
+  left: 12px;
+  top: 10px;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  background-color: color-mix(in srgb, var(--gcs-accent) 18%, transparent);
+  color: var(--gcs-accentInk, var(--gcs-accent));
+  font-weight: 800;
+  font-size: 13px;
+}
+.gcs-blockStep__title {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--gcs-heading, var(--gcs-text));
+}
+.gcs-block--progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gcs-progress__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}
+.gcs-progress__value {
+  color: var(--gcs-muted);
+  font-variant-numeric: tabular-nums;
+}
+.gcs-progress__track {
+  height: 10px;
+  border-radius: 5px;
+  background-color: color-mix(in srgb, var(--gcs-text) 10%, transparent);
+  overflow: hidden;
+}
+.gcs-progress__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background-image: linear-gradient(90deg, var(--gcs-accent), var(--gcs-accentInk, var(--gcs-accent)));
+}
+.gcs-hiddenBlock {
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px dashed color-mix(in srgb, var(--gcs-accent) 45%, var(--gcs-border));
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--gcs-accent) 6%, transparent);
+}
+.gcs-hiddenBlock__head {
+  font-weight: 700;
+  color: var(--gcs-heading, var(--gcs-text));
+}
+.gcs-hiddenBlock__head::before {
+  content: "🔒 ";
+}
+.gcs-hiddenBlock--open .gcs-hiddenBlock__head::before {
+  content: "🔓 ";
+}
+.gcs-hiddenBlock__why {
+  margin: 4px 0 0;
+  color: var(--gcs-muted);
+  font-size: 13px;
+}
+.gcs-hiddenBlock__body {
+  margin-top: 8px;
+}
+
+/* ─── Blocurile în editor ───────────────────────────────────────────────────────────────────────────────── */
+.gcs-blockEd {
+  position: relative;
+  margin: 10px 0;
+  padding: 26px 12px 10px;
+  border: 1px dashed color-mix(in srgb, var(--gcs-accent) 50%, var(--gcs-border));
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--gcs-accent) 5%, transparent);
+}
+.gcs-blockEd::before {
+  content: attr(data-gcs-block) " " attr(data-title) attr(data-label);
+  position: absolute;
+  top: 6px;
+  left: 12px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gcs-accentInk, var(--gcs-accent));
+}
+.gcs-blockEd--leaf {
+  padding: 22px 12px 8px;
+}
+.gcs-blockEd--cards,
+.gcs-blockEd--columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+}
+.gcs-blockEd.ProseMirror-selectednode {
+  outline: 2px solid var(--gcs-accent);
+}
+.gcs-blockTools {
+  position: relative;
+  display: inline-flex;
+  gap: 2px;
+}
+.gcs-blockTools__menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.gcs-blockTools__item {
+  padding: 6px 10px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 6px;
+  background-color: var(--gcs-surface2);
+  color: var(--gcs-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+.gcs-blockTools__item:hover,
+.gcs-blockTools__item:focus-visible {
+  background-color: color-mix(in srgb, var(--gcs-text) 3%, var(--gcs-surface2));
+  transform: scale(1.01);
+}
+.gcs-blockTools__form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+  align-items: end;
+}
+.gcs-blockTools__title {
+  grid-column: 1 / -1;
+}
+.gcs-blockTools__actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+}
+
+/* ─── ACP: taburile forumului, opțiunile, arhivarea ──────────────────────────────────────────────────────── */
+.gcs-forumTabs {
+  flex-wrap: wrap;
+}
+.gcs-forumTabs__plugin {
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 4px;
+  background-color: color-mix(in srgb, var(--gcs-accent) 18%, transparent);
+  color: var(--gcs-accentInk, var(--gcs-accent));
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+.gcs-forumTabPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: gcs-v2-fade 0.2s ease-out;
+}
+@keyframes gcs-v2-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.gcs-acpFieldset {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gcs-acpFieldset > legend {
+  padding: 0 6px;
+  font-weight: 700;
+}
+.gcs-acpHint {
+  margin: 0;
+  font-size: 12px;
+}
+.gcs-forumAudience,
+.gcs-archiveForums__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 6px 12px;
+}
+.gcs-archiveRules {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gcs-archiveRule {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 6px;
+}
+.gcs-archiveRule__main,
+.gcs-archiveRule__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.gcs-archiveGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+.gcs-widgetRow__rating {
+  margin-left: auto;
+  color: var(--gcs-accentInk, var(--gcs-accent));
+  font-weight: 700;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gcs-starBtn--pop .gcs-star,
+  .gcs-ratingDist,
+  .gcs-forumTabPanel {
+    animation: none;
+  }
+  .gcs-star,
+  .gcs-slotChip,
+  .gcs-postPill,
+  .gcs-replyPreview__frame {
+    transition: opacity 0.18s;
+  }
+}
+
+/* Votul Q&A (Forum v2): ▲ scorul ▼ în antetul postării; votul dat în accentul temei. */
+.gcs-postVote {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.gcs-postVote__btn {
+  width: 26px;
+  height: 26px;
+}
+.gcs-postVote__btn--on {
+  color: var(--gcs-accent);
+}
+.gcs-postVote__btn:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.gcs-postVote__score {
+  min-width: 1.6em;
+  text-align: center;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Vederea forumurilor (Forum v2): rânduri (implicit) sau grilă, alegerea membrului. În grilă, fiecare forum e o plăcuță
+ * pe coloane (cel puțin 260 px, una singură pe telefon); stilul rândurilor (lista sau cardurile temei) rămâne.
+ */
+.gcs-forumIndex__tools {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 10px;
+  padding: 10px;
+}
+.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well > .gcs-forumRow {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  min-width: 0;
+  border: 1px solid var(--gcs-border);
+  border-radius: 8px;
+}
+/* În coloană, baza flex a rândului (ex. 260 px) ar deveni înălțime: părțile plăcuței au înălțimea conținutului. */
+.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-forumRow > * {
+  flex: 0 0 auto;
+}
+.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-forumRow__main,
+.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-forumRow__last {
+  width: 100%;
+  min-width: 0;
+}
+/* Contoarele pe un rând, sub descriere. */
+.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-forumRow__stats {
+  width: auto;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 10px;
+  text-align: left;
+}
+.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-forumRow__statsTool {
+  align-self: flex-start;
+}
+/* Bara în culoarea forumului (cardurile temei): sus, în dreptul iconiței, nu la mijlocul plăcuței. */
+.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well > .gcs-forumRow::before {
+  top: 22px;
+  transform: none;
+}
+/* Subforumurile, pe o coloană în plăcuță (coloanele alese de admin sunt pentru vederea pe rânduri). */
+.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-forumRow__subs {
+  grid-template-columns: minmax(0, 1fr) !important;
+}

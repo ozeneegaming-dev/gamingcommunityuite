@@ -8,6 +8,7 @@ import TextAlign from "@tiptap/extension-text-align";
 import { Color, FontSize, TextStyle } from "@tiptap/extension-text-style";
 import { CharacterCount, Placeholder } from "@tiptap/extensions";
 import StarterKit from "@tiptap/starter-kit";
+import { gcsBlockExtensions, type GcsEditorBlock } from "./blocks";
 
 /**
  * Nodurile și mărcile pe care editorul le poate produce. Trebuie să fie exact cele acceptate de
@@ -30,6 +31,19 @@ export const GCS_EDITOR_NODES = [
   "spoiler",
   "embed",
   "mention",
+  // Forum v2: blocurile sigure (doar în postările forumului, după permisiunile autorului).
+  "gcsSection",
+  "gcsCallout",
+  "gcsCardGrid",
+  "gcsCard",
+  "gcsButton",
+  "gcsColumns",
+  "gcsColumn",
+  "gcsSteps",
+  "gcsStep",
+  "gcsProgress",
+  "gcsHidden",
+  "gcsHtml",
 ] as const;
 export const GCS_EDITOR_MARKS = ["bold", "italic", "underline", "strike", "code", "link", "subscript", "superscript", "highlight", "textStyle"] as const;
 
@@ -197,8 +211,11 @@ const GcsHighlight = Highlight.extend({
  */
 export type GcsEditorAllow = { nodes: readonly string[]; marks: readonly string[] };
 
-/** Extensiile editorului. `mention` primește sugestiile (vezi `mentions.tsx`); `allow` restrânge schema. */
-export function gcsEditorExtensions(opts: { placeholder: string; mention?: Partial<MentionOptions>["suggestion"]; maxLength?: number; allow?: GcsEditorAllow }): Extensions {
+/**
+ * Extensiile editorului. `mention` primește sugestiile (vezi `mentions.tsx`); `allow` restrânge schema; `blocks`: familiile
+ * de blocuri permise autorului (Forum v2; lipsă = niciun bloc în schemă).
+ */
+export function gcsEditorExtensions(opts: { placeholder: string; mention?: Partial<MentionOptions>["suggestion"]; maxLength?: number; allow?: GcsEditorAllow; blocks?: readonly GcsEditorBlock[] }): Extensions {
   const node = (n: (typeof GCS_EDITOR_NODES)[number]) => !opts.allow || opts.allow.nodes.includes(n);
   const mark = (m: (typeof GCS_EDITOR_MARKS)[number]) => !opts.allow || opts.allow.marks.includes(m);
   const off = <K extends string>(key: K, on: boolean) => (on ? {} : ({ [key]: false } as Record<K, false>));
@@ -239,6 +256,7 @@ export function gcsEditorExtensions(opts: { placeholder: string; mention?: Parti
     ...(mark("highlight") ? [GcsHighlight.configure({ multicolor: true })] : []),
     ...(mark("subscript") ? [Subscript] : []),
     ...(mark("superscript") ? [Superscript] : []),
+    ...(opts.blocks && opts.blocks.length > 0 && !opts.allow ? gcsBlockExtensions(opts.blocks) : []),
     TextAlign.configure({ types: node("heading") ? ["heading", "paragraph"] : ["paragraph"], alignments: [...GCS_EDITOR_ALIGNS] }),
     CharacterCount.configure(opts.maxLength ? { limit: opts.maxLength } : {}),
   ];

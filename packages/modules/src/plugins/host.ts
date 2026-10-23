@@ -18,7 +18,10 @@ import {
   type GcsActor,
   type GcsEvent,
   type GcsEventBus,
+  type GcsForumListSlots,
   type GcsJobQueue,
+  type GcsSlotItem,
+  type GcsSlotStyle,
   type GcsModule,
   type GcsModuleRegistry,
   type GcsPermissionService,
@@ -37,7 +40,7 @@ import type Redis from "ioredis";
 import type { GcsPluginPublicApi } from "./api";
 import { extractPlugin } from "./files";
 import { pluginFetch } from "./http";
-import { GcsPluginTexts, pluginIcon, pluginModule, type GcsPluginLangs } from "./module";
+import { GcsPluginTexts, pluginIcon, pluginModule, type GcsPluginForumBridge, type GcsPluginLangs } from "./module";
 import { GcsPluginSandbox, GcsPluginTimeout, GcsPluginUnavailable, type GcsSandboxCall } from "./sandbox";
 
 /** Canalul Redis pe care procesele află că starea pluginurilor s-a schimbat. */
@@ -374,7 +377,7 @@ export class GcsPluginHost {
     const dir = await extractPlugin(this.deps.dataDir, key, row.packageSha256!, row.package);
     const langs = await this.readLangs(dir);
     const texts = new GcsPluginTexts(key, row.manifest, langs);
-    const module = pluginModule(key, row.manifest, texts);
+    const module = pluginModule(key, row.manifest, texts, this.forumBridge(key));
     const css = new Map<string, string>();
     for (const style of row.manifest.client.styles) {
       const scoped = scopePluginCss(await readFile(path.join(dir, ...style.split("/")), "utf8"), { pluginKey: key, file: style });
@@ -950,6 +953,99 @@ export class GcsPluginHost {
     } catch {
       return "";
     }
+  }
+
+  // ─── Forum v2: sloturile forumului ───
+
+  /** Pluginul e încărcat, declară punctul și punctul e pornit (pagina Hook-uri). */
+  private forumPoint(key: string, point: string): Loaded | null {
+    const l = this.loaded.get(key);
+    return l && l.row.manifest.hooks.some((h) => h.point === point) && this.hookEnabled(key, point) ? l : null;
+  }
+
+  /** Un rezultat HTML al pluginului ca element de slot (sanitizat, în containerul lui), sau `null` dacă e gol. */
+  private async slotHtml(l: Loaded, value: unknown, page = false): Promise<GcsSlotItem | null> {
+    if (value === null || value === undefined) return null;
+    const html = await this.html(l, value, { page });
+    return html ? { kind: "html", html, plugin: l.row.key } : null;
+  }
+
+  /**
+   * Puntea extensiei de forum a unui plugin (`pluginForumExtension`): apelurile `forum.list`, `forum.page` și `topic.bar`
+   * spre firul lui, cu vizitatorul cererii. Un eșec sau un timeout lasă slotul gol (pagina nu se strică).
+   */
+  private forumBridge(key: string): GcsPluginForumBridge {
+    return {
+      list: async (ctx, nodes) => {
+        const l = this.forumPoint(key, "forum.list");
+        if (!l || nodes.length === 0) return {};
+        let value: unknown;
+        try {
+          value = await this.invoke(l, "hook", "forum.list", { surface: ctx.surface, nodes: nodes.map((n) => ({ id: n.id, type: n.type, parentId: n.parentId, name: n.name, slug: n.slug, data: n.data })) }, { actor: ctx.actor, locale: ctx.locale });
+        } catch {
+          return {};
+        }
+        if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+        const ids = new Set(nodes.map((n) => n.id));
+        const out: Record<number, GcsForumListSlots> = {};
+        for (const [rawId, raw] of Object.entries(value as Record<string, unknown>).slice(0, 500)) {
+          const id = Number(rawId);
+          if (!ids.has(id) || !raw || typeof raw !== "object") continue;
+          const r = raw as Record<string, unknown>;
+          const slots: GcsForumListSlots = {};
+          for (const part of ["title", "meta", "header"] as const) {
+            const item = await this.slotHtml(l, r[part]);
+            if (item) slots[part] = [item];
+          }
+          // Stilul se verifică de serviciul sloturilor (`sanitizeSlotStyle`, cu containerul pluginului).
+          if (r.style && typeof r.style === "object") slots.style = r.style as GcsSlotStyle;
+          out[id] = slots;
+        }
+        return out;
+      },
+      forumPage: async (ctx, node) => {
+        const l = this.forumPoint(key, "forum.page");
+        if (!l) return null;
+        try {
+          const item = await this.slotHtml(l, await this.invoke(l, "hook", "forum.page", { forumId: node.id, data: node.data }, { actor: ctx.actor, locale: ctx.locale }));
+          return item ? [item] : null;
+        } catch {
+          return null;
+        }
+      },
+      topicBar: async (ctx, { node, topic }) => {
+        const l = this.forumPoint(key, "topic.bar");
+        if (!l) return null;
+        try {
+          const item = await this.slotHtml(l, await this.invoke(l, "hook", "topic.bar", { topicId: topic.id, forumId: node.id, data: node.data }, { actor: ctx.actor, locale: ctx.locale }));
+          return item ? [item] : null;
+        } catch {
+          return null;
+        }
+      },
+    };
+  }
+
+  /**
+   * Corpul unui tab al pluginului în formularul ACP al forumului (`forumTabs[].hook`, punctul `forum.edit`): HTML cu
+   * formulare spre rutele pluginului (ca o pagină ACP a lui). Gol la eroare, timeout sau punct oprit.
+   */
+  async renderForumEditTab(plugin: string, tab: string, input: { forumId: number; data: Record<string, unknown>; actor: GcsActor; locale: string }): Promise<GcsPluginRenderedHtml | null> {
+    const l = this.forumPoint(plugin, "forum.edit");
+    if (!l || !l.row.manifest.forumTabs.some((t) => t.key === tab && t.hook)) return null;
+    try {
+      const value = await this.invoke(l, "hook", "forum.edit", { tab, forumId: input.forumId, data: input.data as Record<string, unknown> }, { actor: input.actor, locale: input.locale, acp: true });
+      const html = await this.html(l, value, { page: true });
+      return html ? { html, styles: this.styleUrls(l), scripts: [] } : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Foile de stil ale unui plugin încărcat (sloturile forumului le adaugă în pagina unde apare HTML-ul lui). */
+  pluginStyles(key: string): string[] {
+    const l = this.loaded.get(key);
+    return l ? this.styleUrls(l) : [];
   }
 
   /** Intrările pluginurilor în meniul site-ului sau al userului, vizibile pentru actor. */

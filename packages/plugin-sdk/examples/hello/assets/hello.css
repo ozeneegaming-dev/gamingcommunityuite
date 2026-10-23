@@ -43,3 +43,12 @@
   border-radius: 10px;
   background: var(--gcs-surface-2, rgb(255 255 255 / 0.04));
 }
+
+/* Forum v2: salutul de sub descrierea unui forum (punctul forum.list). */
+.gcsp-hello__wave {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--gcs-accentInk, var(--gcs-accent));
+}

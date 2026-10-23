@@ -1,5 +1,5 @@
 import { forumAchievementEvents } from "./achievementEvents";
-import type { GcsAcpMenuSection, GcsModule, GcsPermissionDef, GcsSettingDef } from "@gcs/core";
+import { blockPermission, GCS_BLOCK_TYPES, type GcsAcpMenuSection, type GcsModule, type GcsPermissionDef, type GcsSettingDef } from "@gcs/core";
 import { forumWidgets } from "../widgets";
 import { forumStatTiles } from "./stats";
 import { seedForumDemo, seedForums } from "./seed";
@@ -62,6 +62,10 @@ const permissions: GcsPermissionDef[] = [
   // Și membrii noi: sondajul trece prin coada de aprobare odată cu topicul (specul etapei 2, §1).
   groupPermission("forums.poll_create", { ...MEMBERS }),
   groupPermission("forums.tags_max", perTier({ newMember: 5, member: 5, vip: 5, staff: 10 })),
+  // Forum v2: cine poate nota topicurile (pe forumurile cu nota pornită), în matricea forumului.
+  containerPermission("rate", { ...MEMBERS }),
+  // Forum v2: blocurile sigure din editor, pe familii; blocul HTML doar Root Admin (verificat și după grup).
+  ...GCS_BLOCK_TYPES.map((t) => groupPermission(blockPermission(t), t === "html" ? { root_admin: true } : { ...MEMBERS })),
 ];
 
 const EMBED_PROVIDERS = ["youtube", "twitch", "medal", "image"];
@@ -74,6 +78,7 @@ function postingSetting(key: string, type: GcsSettingDef["type"], defaultValue: 
 
 const between = (min: number, max: number) => (v: unknown) =>
   Number.isInteger(v) && (v as number) >= min && (v as number) <= max ? null : "invalid_range";
+const oneOfValues = (values: string[]) => (v: unknown) => (typeof v === "string" && values.includes(v) ? null : "invalid_choice");
 
 const settings: GcsSettingDef[] = [
   postingSetting("forums.posts_per_page", "number", 20, between(5, 100)),
@@ -83,6 +88,33 @@ const settings: GcsSettingDef[] = [
     Array.isArray(v) && v.every((p) => EMBED_PROVIDERS.includes(p as string)) ? null : "invalid_choice",
   ),
   postingSetting("forums.revisions_visible_to_author", "boolean", true),
+  // ─── Forum v2: setările globale ───
+  // Topicurile fixate stau primele în listă (indiferent de sortare).
+  postingSetting("forums.pinned_first", "boolean", true),
+  // Vederea implicită a listelor (membrul poate alege alta): forumurile pe rânduri sau în grilă; topicurile ca listă
+  // sau cu fragmentul primei postări.
+  { ...postingSetting("forums.forum_view", "string", "rows", oneOfValues(["rows", "grid"])), options: ["rows", "grid"] },
+  { ...postingSetting("forums.topic_view", "string", "list", oneOfValues(["list", "snippet"])), options: ["list", "snippet"] },
+  // „Popular acum”: topicurile cu cel puțin N răspunsuri în ultimele 24 de ore (0 = oprit).
+  postingSetting("forums.popular_threshold", "number", 10, between(0, 10_000)),
+  // Numele moderatorului apare pe mesajele și evenimentele de moderare (altfel „Echipa de moderare”).
+  postingSetting("forums.mod_names_public", "boolean", true),
+  // Rezumatul topicului (postatori activi, postări populare, zile active), de la N răspunsuri.
+  postingSetting("forums.summary_enabled", "boolean", true),
+  postingSetting("forums.summary_min_replies", "number", 20, between(1, 100_000)),
+  { ...postingSetting("forums.summary_position", "string", "top", oneOfValues(["top", "bottom"])), options: ["top", "bottom"] },
+  { ...postingSetting("forums.summary_devices", "string", "all_devices", oneOfValues(["all_devices", "desktop"])), options: ["all_devices", "desktop"] },
+  // Votul Q&A: membrii votează postările din forumurile Q&A (+1 / −1), scorul apare lângă postare.
+  postingSetting("forums.qa_voting", "boolean", true),
+  // Fluxul RSS al fiecărui forum (`/forum/<id>/rss.xml`).
+  postingSetting("forums.rss_enabled", "boolean", true),
+  // Nota cu stele: schimbarea votului, nota pe propriul topic, vechimea minimă a contului (zile) și postările minime.
+  postingSetting("forums.rating_change_vote", "boolean", true),
+  postingSetting("forums.rating_own", "boolean", false),
+  postingSetting("forums.rating_min_age_days", "number", 0, between(0, 3650)),
+  postingSetting("forums.rating_min_posts", "number", 0, between(0, 1_000_000)),
+  // Arhivarea automată (regulile din ACP → Forumuri → Arhivare): comutatorul general.
+  postingSetting("forums.archive_enabled", "boolean", false),
 ];
 
 const acpMenu: GcsAcpMenuSection[] = [
@@ -94,12 +126,14 @@ const acpMenu: GcsAcpMenuSection[] = [
       ["forums", "/admin/community/forums", "fa-solid fa-comments"],
       ["prefixes", "/admin/community/prefixes", "fa-solid fa-tag"],
       ["saved_actions", "/admin/community/saved-actions", "fa-solid fa-wand-magic-sparkles"],
+      // Forum v2: regulile arhivării automate (aceleași drepturi ca structura forumului).
+      ["archive", "/admin/community/archive", "fa-solid fa-box-archive", "community.forums"],
       ["forum_settings", "/admin/settings/posting", "fa-solid fa-sliders"],
-    ].map(([key, href, icon]) => ({
+    ].map(([key, href, icon, section]) => ({
       key: `community.${key}`,
       labelKey: `acp.menu.community.${key}`,
       href: href!,
-      section: `community.${key}`,
+      section: section ?? `community.${key}`,
       icon: icon!,
     })),
   },

@@ -121,6 +121,8 @@ export const forumWidgets: GcsWidgetDef[] = [
     defaultConfig: { limit: 8 },
     fields: [limitField(12)],
   }),
+  // Forum v2: „Cele mai bine notate” (macheta TopicRating): topicurile cu cele mai multe stele din forumurile notate.
+  widget({ key: "forums.topRated", labelKey: "widgets.forums.topRated", descriptionKey: "widgets.desc.forums.topRated", icon: "fa-solid fa-star-half-stroke", defaultConfig: { limit: 5 }, fields: [limitField()] }),
 ];
 
 /** Shoutbox-ul: o cameră de chat aleasă (gol = primul canal marcat „pe pagina principală”). */

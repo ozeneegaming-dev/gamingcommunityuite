@@ -4,6 +4,7 @@ import { nameKeyOf, nameKeySelect } from "../profile/nameKeys";
 import {
   GcsForbidden,
   GcsNotFound,
+  staffGroupIds,
   type GcsActor,
   type GcsCache,
   type GcsFollowService,
@@ -14,6 +15,8 @@ import {
   type GcsSettingsService,
 } from "@gcs/core";
 import type { ContentVisibility, ForumType, Prisma, PrismaClient } from "@gcs/db";
+import { hiddenLabels, revealHidden } from "./blocks";
+import { isNoticeTone } from "./notices";
 import type { GcsPollService, GcsPollView } from "./polls";
 import { forumContainer, POST_CONTENT_TYPE } from "./posting";
 import type { GcsReadMarkerService } from "./readMarkers";
@@ -57,6 +60,8 @@ export type GcsForumRow = {
   subforumColumns: number;
   last: GcsLastPost | null;
   unread: boolean;
+  /** Forum v2: o pagină („Pagină / Anunț”) cu topicuri dedesubt (altfel rândul nu are contoare). */
+  pageTopics: boolean;
 };
 /** O postare în widget-ul „Postări recente”. */
 /** Cel mai nou membru (panoul de statistici): referința, cu data înscrierii. */
@@ -83,7 +88,31 @@ export type GcsTopicRow = {
   unread: boolean;
   /** Începutul primei postări (setarea temei „Fragment în lista topicurilor”); `null` = necerut sau gol. */
   snippet?: string | null;
+  /** Forum v2: nota medie (0 = fără voturi) și numărul voturilor (doar pe forumurile cu nota pornită). */
+  rating?: { avg: number; count: number } | null;
+  /** Forum v2: topicul e arhivat (doar citire). */
+  archived?: boolean;
 };
+
+/** Forum v2: sortările listei de topicuri (setarea forumului „Sortarea implicită” și alegerea vizitatorului). */
+export const GCS_TOPIC_SORTS = ["last", "created", "replies", "views", "rating", "title"] as const;
+export type GcsTopicSort = (typeof GCS_TOPIC_SORTS)[number];
+export const isTopicSort = (v: unknown): v is GcsTopicSort => typeof v === "string" && (GCS_TOPIC_SORTS as readonly string[]).includes(v);
+
+/** Forum v2: opțiunile unui forum care schimbă pagina lui (din arborele cache-uit). */
+export type GcsForumPageOptions = {
+  ownTopicsOnly: boolean;
+  hasPassword: boolean;
+  rulesMode: "off" | "show" | "accept";
+  defaultSort: GcsTopicSort;
+  ratingEnabled: boolean;
+  pollsEnabled: boolean;
+  tagsEnabled: boolean;
+  minPosts: number;
+};
+
+/** Forum v2: pagina unui nod „Pagină / Anunț”: conținutul (HTML sanitizat), butonul CTA și topicurile de dedesubt. */
+export type GcsForumPageContent = { html: string; ctaLabel: string | null; ctaUrl: string | null; ctaIcon: string | null; allowTopics: boolean };
 
 export type GcsForumPage = {
   forum: { id: number; type: ForumType; name: string; slug: string; description: string; linkUrl: string | null; icon: string | null; color: string | null };
@@ -94,6 +123,14 @@ export type GcsForumPage = {
   canCreate: boolean;
   /** Puterile de moderare ale actorului pe forum; `["*"]` = toate. */
   modPowers: string[];
+  /** Forum v2: opțiunile forumului, sortarea aplicată și filtrul de notă (`minRating`, ex. 4 = „4★+”). */
+  options: GcsForumPageOptions;
+  sort: GcsTopicSort;
+  minRating: number | null;
+  /** Forum v2: pagina unui nod PAGE (altfel `null`). */
+  page: GcsForumPageContent | null;
+  /** Forum v2: regulile forumului (HTML sanitizat), dacă se afișează. */
+  rulesHtml: string | null;
 };
 
 export type GcsPostAuthor = GcsUserRef & {
@@ -124,7 +161,30 @@ export type GcsPostView = {
   canHide: boolean;
   reactions: GcsReactionCount[];
   myReaction: number | null;
+  /** Forum v2: IP-ul postării (doar pentru moderatorii globali), pentru linkul spre uneltele IP din ACP. */
+  ip: string | null;
+  /** Forum v2: autorul e din staff (pastila „Staff” și chenarul în culoarea grupului). */
+  staff: boolean;
+  /** Forum v2: rândul „Tu, A, B și alți N au reacționat”: primii membri (vizitatorul primul) și totalul. */
+  reactors: { users: { id: string; name: string; nameKey: string }[]; total: number; mine: boolean };
+  /** Forum v2: votul Q&A (scorul = suma voturilor, `mine` = votul vizitatorului); `null` în afara Q&A sau cu votul oprit. */
+  votes: { score: number; mine: -1 | 0 | 1 } | null;
 };
+
+/** Scorurile Q&A ale postărilor (suma voturilor) și voturile unui membru pe ele. */
+export async function postVotes(db: PrismaClient, postIds: number[], userId: string | null): Promise<{ score: Map<number, number>; mine: Map<number, -1 | 0 | 1> }> {
+  const [sums, mine] = await Promise.all([
+    db.postVote.groupBy({ by: ["postId"], where: { postId: { in: postIds } }, _sum: { value: true } }),
+    userId ? db.postVote.findMany({ where: { postId: { in: postIds }, userId }, select: { postId: true, value: true } }) : Promise.resolve([]),
+  ]);
+  return {
+    score: new Map(sums.map((r) => [r.postId, r._sum.value ?? 0])),
+    mine: new Map(mine.map((r) => [r.postId, Math.sign(r.value) as -1 | 0 | 1])),
+  };
+}
+
+/** Forum v2: mesajul unui moderator într-un topic („Adaugă mesaj”). */
+export type GcsTopicNoticeView = { id: number; html: string; tone: "info" | "warn" | "ok" | "danger"; createdAt: string; author: GcsUserRef | null };
 
 export type GcsTopicPage = {
   topic: {
@@ -144,10 +204,19 @@ export type GcsTopicPage = {
     prefix: { id: number; name: string; color: string } | null;
     tags: { name: string; slug: string }[];
     author: GcsUserRef | null;
+    /** Forum v2: nota (doar cu nota pornită pe forum), răspunsul recomandat, aprobarea per topic, arhivarea. */
+    rating: { avg: number; count: number } | null;
+    recommendedPostId: number | null;
+    requireApproval: boolean;
+    archivedAt: string | null;
   };
-  forum: { id: number; type: ForumType; name: string; slug: string };
+  forum: { id: number; type: ForumType; name: string; slug: string; options: GcsForumPageOptions };
   breadcrumb: GcsCrumb[];
   posts: GcsPostView[];
+  /** Forum v2: răspunsul recomandat de staff (arătat sus pe prima pagină), dacă e vizibil vizitatorului. */
+  recommended: GcsPostView | null;
+  /** Forum v2: mesajele moderatorilor din topic. */
+  notices: GcsTopicNoticeView[];
   pagination: GcsPagination;
   canReply: boolean;
   modPowers: string[];
@@ -156,6 +225,16 @@ export type GcsTopicPage = {
   /** Reacțiile active (bara de reacții). */
   reactions: GcsReactionView[];
 };
+
+/** Forum v2: rezumatul unui topic lung: cei mai activi postatori, postările cu cele mai multe reacții, zilele active. */
+export type GcsTopicSummary = {
+  posters: { user: GcsUserRef; posts: number }[];
+  popular: { postId: number; user: GcsUserRef | null; reactions: number; excerpt: string; at: string }[];
+  days: { day: string; posts: number }[];
+};
+
+/** Forum v2: un topic din widget-ul „Cele mai bine notate”. */
+export type GcsTopRatedTopic = { id: number; title: string; slug: string; avg: number; count: number };
 
 export type GcsTagPage = { tag: { name: string; slug: string }; topics: GcsTopicRow[]; pagination: GcsPagination };
 
@@ -185,6 +264,10 @@ type TreeForum = {
   linkUrl: string | null;
   /** Coloanele subforumurilor din listă (1–5); lipsește în arborii cache-uiți înainte de etapa 5. */
   subforumColumns?: number;
+  /** Forum v2: opțiunile forumului (lipsesc în arborii cache-uiți înainte de Forum v2: valorile implicite). */
+  options?: GcsForumPageOptions;
+  /** Forum v2: pagina unui nod PAGE (topicurile de dedesubt și grupurile care o văd; gol = toți). */
+  page?: { allowTopics: boolean; audience: number[] } | null;
   topicsCount: number;
   postsCount: number;
   lastPostId: number | null;
@@ -274,8 +357,12 @@ export class GcsForumQueries {
     return categories;
   }
 
-  /** `snippets`: începutul primei postări a fiecărui topic (setarea temei „Fragment în lista topicurilor”). */
-  async forum(actor: GcsActor, forumId: number, opts: { page: number; prefixId?: number; snippets?: boolean }): Promise<GcsForumPage> {
+  /**
+   * `snippets`: începutul primei postări a fiecărui topic (setarea temei „Fragment în lista topicurilor”). Forum v2:
+   * `sort` (implicit sortarea forumului), `minRating` (filtrul „4★+”, doar cu nota pornită), topicurile proprii pe
+   * forumurile „doar topicurile mele” și pagina unui nod PAGE.
+   */
+  async forum(actor: GcsActor, forumId: number, opts: { page: number; prefixId?: number; snippets?: boolean; sort?: string; minRating?: number }): Promise<GcsForumPage> {
     const { db, settings } = this.deps;
     const tree = await this.tree();
     const node = tree.byId.get(forumId);
@@ -283,27 +370,38 @@ export class GcsForumQueries {
     if (!node || !viewable.has(node.id)) throw new GcsNotFound();
     if (!readable.has(node.id)) throw new GcsForbidden({ permission: "forums.read" });
 
+    const options = nodeOptions(node);
     const modPowers = await this.modPowers(actor, forumId);
-    const perPage = await settings.get<number>("forums.topics_per_page");
-    const hostsTopics = node.type === "FORUM" || node.type === "QA";
+    const isMod = modPowers.length > 0;
+    const [perPage, pinnedFirst] = await Promise.all([settings.get<number>("forums.topics_per_page"), settings.get<boolean>("forums.pinned_first")]);
+    const hostsTopics = node.type === "FORUM" || node.type === "QA" || (node.type === "PAGE" && (node.page?.allowTopics ?? false));
+    const sort: GcsTopicSort = isTopicSort(opts.sort) && (opts.sort !== "rating" || options.ratingEnabled) ? opts.sort : options.defaultSort === "rating" && !options.ratingEnabled ? "last" : options.defaultSort;
+    const minRating = options.ratingEnabled && opts.minRating !== undefined && opts.minRating >= 1 && opts.minRating <= 5 ? opts.minRating : null;
     const where: Prisma.TopicWhereInput = {
       forumId,
-      ...this.visibilityFilter(actor, modPowers.length > 0),
+      ...this.visibilityFilter(actor, isMod),
       ...(opts.prefixId ? { prefixId: opts.prefixId } : {}),
+      ...(minRating !== null ? { ratingAvg: { gte: minRating } } : {}),
     };
+    // „Doar topicurile mele”: membrii văd doar topicurile lor, vizitatorii niciunul; moderatorii văd tot.
+    if (options.ownTopicsOnly && !isMod) where.authorId = actor.userId ?? "__none__";
 
     const [total, rows] = hostsTopics
       ? await Promise.all([
           db.topic.count({ where }),
           db.topic.findMany({
             where,
-            orderBy: [{ pinned: "desc" }, { lastPostAt: "desc" }, { id: "desc" }],
+            orderBy: [...(pinnedFirst ? [{ pinned: "desc" as const }] : []), ...topicOrder(sort), { id: "desc" }],
             skip: (Math.max(1, opts.page) - 1) * perPage,
             take: perPage,
             include: topicRowInclude,
           }),
         ])
       : [0, []];
+    const [pageRow, rulesRow] = await Promise.all([
+      node.type === "PAGE" ? db.forumPage.findUnique({ where: { forumId }, select: { contentHtml: true, ctaLabel: true, ctaUrl: true, ctaIcon: true, allowTopics: true } }) : null,
+      options.rulesMode !== "off" ? db.forum.findUnique({ where: { id: forumId }, select: { rulesHtml: true } }) : null,
+    ]);
     const subtreeIds = tree.subtree(forumId).filter((f) => readable.has(f.id)).map((f) => f.id);
     const firstIds = opts.snippets ? rows.map((t) => t.firstPostId).filter((id): id is number => id !== null) : [];
     const [posters, unreadTopics, unreadForums, firstPosts] = await Promise.all([
@@ -319,16 +417,25 @@ export class GcsForumQueries {
       breadcrumb: this.crumbs(tree, forumId, viewable),
       subforums: tree.childrenOf(forumId).filter((f) => viewable.has(f.id)).map((f) => this.row(tree, f, viewable, readable, unreadForums)),
       topics: rows.map((t) => {
-        const row = topicRow(t, posters, unreadTopics);
+        const row = topicRow(t, posters, unreadTopics, options.ratingEnabled);
         return opts.snippets ? { ...row, snippet: (t.firstPostId !== null ? snippets.get(t.firstPostId) : null) || null } : row;
       }),
       pagination: paginate(opts.page, perPage, total),
       canCreate: hostsTopics && actor.userId !== null && (await this.deps.permissions.can(actor, "forums.create", forumContainer(forumId))),
       modPowers,
+      options,
+      sort,
+      minRating,
+      page: pageRow
+        ? { html: pageRow.contentHtml, ctaLabel: pageRow.ctaLabel, ctaUrl: pageRow.ctaUrl, ctaIcon: pageRow.ctaIcon, allowTopics: pageRow.allowTopics }
+        : node.type === "PAGE"
+          ? { html: "", ctaLabel: null, ctaUrl: null, ctaIcon: null, allowTopics: false }
+          : null,
+      rulesHtml: rulesRow?.rulesHtml ? rulesRow.rulesHtml : null,
     };
   }
 
-  async topic(actor: GcsActor, topicId: number, opts: { page: number }): Promise<GcsTopicPage> {
+  async topic(actor: GcsActor, topicId: number, opts: { page: number; locale?: string }): Promise<GcsTopicPage> {
     const { db, permissions, settings } = this.deps;
     const topic = await db.topic.findUnique({
       where: { id: topicId },
@@ -352,6 +459,9 @@ export class GcsForumQueries {
       (topic.visibility === "PENDING" && (isAuthor || has(modPowers, "approve"))) ||
       (topic.visibility === "HIDDEN" && has(modPowers, "hide"));
     if (!visible) throw new GcsNotFound();
+    const options = nodeOptions(forum);
+    // „Doar topicurile mele”: topicul altcuiva nu există pentru un membru fără puteri de moderare.
+    if (options.ownTopicsOnly && modPowers.length === 0 && !isAuthor) throw new GcsNotFound();
 
     const [perPage, editMinutes, hideOwn, canReplyPerm] = await Promise.all([
       settings.get<number>("forums.posts_per_page"),
@@ -360,32 +470,39 @@ export class GcsForumQueries {
       actor.userId ? permissions.can(actor, "forums.reply", forumContainer(forum.id)) : Promise.resolve(false),
     ]);
     const page = Math.max(1, opts.page);
+    const archived = topic.archivedAt !== null;
     const where: Prisma.PostWhereInput = { topicId, ...this.visibilityFilter(actor, modPowers.length > 0) };
-    const [total, posts] = await Promise.all([
+    const postSelect = {
+      id: true,
+      authorId: true,
+      contentHtml: true,
+      hiddenParts: true,
+      visibility: true,
+      createdAt: true,
+      editedAt: true,
+      editedById: true,
+      hiddenReason: true,
+      ip: true,
+    } as const;
+    const [total, posts, noticeRows] = await Promise.all([
       db.post.count({ where }),
-      db.post.findMany({
-        where,
-        orderBy: { id: "asc" },
-        skip: (page - 1) * perPage,
-        take: perPage,
-        select: {
-          id: true,
-          authorId: true,
-          contentHtml: true,
-          visibility: true,
-          createdAt: true,
-          editedAt: true,
-          editedById: true,
-          hiddenReason: true,
-        },
-      }),
+      db.post.findMany({ where, orderBy: { id: "asc" }, skip: (page - 1) * perPage, take: perPage, select: postSelect }),
+      db.topicNotice.findMany({ where: { topicId }, orderBy: { id: "asc" }, take: 20 }),
     ]);
+    // Răspunsul recomandat: doar pe prima pagină și doar dacă vizitatorul îl vede (regula de vizibilitate a postărilor).
+    const recommendedRow =
+      page === 1 && topic.recommendedPostId !== null && topic.recommendedPostId !== topic.firstPostId
+        ? await db.post.findFirst({ where: { ...where, id: topic.recommendedPostId }, select: postSelect })
+        : null;
+    const recommendedNumber = recommendedRow ? await db.post.count({ where: { ...where, id: { lte: recommendedRow.id } } }) : 0;
 
-    const ids = posts.map((p) => p.id);
-    const userIds = [...new Set(posts.flatMap((p) => [p.authorId, p.editedById]).filter((id): id is string => id !== null))];
+    const all = recommendedRow ? [...posts, recommendedRow] : posts;
+    const ids = [...new Set(all.map((p) => p.id))];
+    const votes = forum.type === "QA" && ids.length > 0 && (await settings.get<boolean>("forums.qa_voting")) ? await postVotes(db, ids, actor.userId) : null;
+    const userIds = [...new Set([...all.flatMap((p) => [p.authorId, p.editedById]), ...noticeRows.map((n) => n.authorId)].filter((id): id is string => id !== null))];
     const { follows, reactions, polls } = this.deps;
     const postKeys = ids.map(String);
-    const [users, files, followCount, following, summary, mine, poll, reactionList, rankData] = await Promise.all([
+    const [users, files, followCount, following, summary, myReactions, poll, reactionList, rankData, staffIds, reactorRows, isGlobalMod, ownVisiblePost] = await Promise.all([
       userIds.length === 0
         ? Promise.resolve([])
         : db.user.findMany({
@@ -415,21 +532,45 @@ export class GcsForumQueries {
       polls.forTopic(actor, topicId),
       reactions.list(),
       this.deps.ranks.data(),
+      staffGroupIds(db),
+      ids.length === 0
+        ? Promise.resolve([])
+        : db.contentReaction.findMany({
+            where: { contentType: POST_CONTENT_TYPE, contentId: { in: postKeys } },
+            orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+            take: 1000,
+            select: { contentId: true, user: { select: { id: true, name: true, ...nameKeySelect } } },
+          }),
+      actor.userId ? permissions.can(actor, "forums.moderate_all") : Promise.resolve(false),
+      // „Răspunde ca să vezi”: vizitatorul are o postare vizibilă în topic.
+      actor.userId ? db.post.findFirst({ where: { topicId, authorId: actor.userId, visibility: "VISIBLE" }, select: { id: true } }) : Promise.resolve(null),
     ]);
     const userMap = new Map(users.map((u) => [u.id, u]));
-    const myReactions = mine;
+    const staff = new Set(staffIds);
     const now = Date.now();
     const inWindow = (createdAt: Date) =>
       editMinutes === -1 || (typeof editMinutes === "number" && editMinutes > 0 && now - createdAt.getTime() <= editMinutes * 60_000);
+    const reactorsOf = new Map<string, { id: string; name: string; nameKey: string }[]>();
+    for (const r of reactorRows) {
+      const list = reactorsOf.get(r.contentId) ?? [];
+      list.push({ id: r.user.id, name: r.user.name, nameKey: nameKeyOf(r.user) });
+      reactorsOf.set(r.contentId, list);
+    }
+    const viewer = { userId: actor.userId, groupIds: actor.groupIds, replied: ownVisiblePost !== null || modPowers.length > 0 };
+    const labels = hiddenLabels(opts.locale);
 
-    const views: GcsPostView[] = posts.map((p, i) => {
+    const toView = (p: (typeof posts)[number], number: number): GcsPostView => {
       const author = p.authorId ? userMap.get(p.authorId) : undefined;
       const editor = p.editedById ? userMap.get(p.editedById) : undefined;
       const mine = actor.userId !== null && actor.userId === p.authorId;
+      const list = reactorsOf.get(String(p.id)) ?? [];
+      const reactedMine = actor.userId !== null && list.some((u) => u.id === actor.userId);
+      const ordered = reactedMine ? [list.find((u) => u.id === actor.userId)!, ...list.filter((u) => u.id !== actor.userId)] : list;
+      const totalReactions = (summary[String(p.id)] ?? []).reduce((n, r) => n + r.count, 0);
       return {
         id: p.id,
-        number: (page - 1) * perPage + i + 1,
-        html: p.contentHtml,
+        number,
+        html: revealHidden(p.contentHtml, p.hiddenParts, { ...viewer, isAuthor: mine, labels }),
         visibility: p.visibility,
         createdAt: p.createdAt.toISOString(),
         editedAt: p.editedAt?.toISOString() ?? null,
@@ -449,12 +590,17 @@ export class GcsForumQueries {
             }
           : null,
         attachments: files.filter((f) => f.contentId === String(p.id)).map(({ contentId: _c, ...f }) => f),
-        canEdit: has(modPowers, "edit") || (mine && p.visibility !== "HIDDEN" && !topic.locked && inWindow(p.createdAt)),
-        canHide: has(modPowers, "hide") || (mine && hideOwn === true && p.visibility === "VISIBLE"),
+        canEdit: !archived && (has(modPowers, "edit") || (mine && p.visibility !== "HIDDEN" && !topic.locked && inWindow(p.createdAt))),
+        canHide: has(modPowers, "hide") || (!archived && mine && hideOwn === true && p.visibility === "VISIBLE"),
         reactions: summary[String(p.id)] ?? [],
         myReaction: myReactions[String(p.id)] ?? null,
+        ip: isGlobalMod ? (p.ip ?? null) : null,
+        staff: author ? staff.has(author.primaryGroupId) : false,
+        reactors: { users: ordered.slice(0, 3), total: Math.max(totalReactions, list.length), mine: reactedMine },
+        votes: votes ? { score: votes.score.get(p.id) ?? 0, mine: votes.mine.get(p.id) ?? 0 } : null,
       };
-    });
+    };
+    const views: GcsPostView[] = posts.map((p, i) => toView(p, (page - 1) * perPage + i + 1));
 
     return {
       topic: {
@@ -474,18 +620,28 @@ export class GcsForumQueries {
         prefix: topic.prefix,
         tags: topic.tags.map((x) => x.tag),
         author: topic.author ? toRef(topic.author) : null,
+        rating: options.ratingEnabled ? { avg: topic.ratingAvg, count: topic.ratingCount } : null,
+        recommendedPostId: topic.recommendedPostId,
+        requireApproval: topic.requireApproval,
+        archivedAt: topic.archivedAt?.toISOString() ?? null,
       },
-      forum: { id: forum.id, type: forum.type, name: forum.name, slug: forum.slug },
+      forum: { id: forum.id, type: forum.type, name: forum.name, slug: forum.slug, options },
       breadcrumb: this.crumbs(tree, forum.id, viewable),
       posts: views,
+      recommended: recommendedRow ? toView(recommendedRow, recommendedNumber) : null,
+      notices: noticeRows.map((n) => {
+        const author = n.authorId ? userMap.get(n.authorId) : undefined;
+        return { id: n.id, html: n.contentHtml, tone: isNoticeTone(n.tone) ? n.tone : "info", createdAt: n.createdAt.toISOString(), author: author ? toRef(author) : null };
+      }),
       pagination: paginate(page, perPage, total),
       canReply:
+        !archived &&
         canReplyPerm &&
         (topic.visibility === "VISIBLE" || has(modPowers, "approve")) &&
         (!topic.locked || has(modPowers, "lock")),
       modPowers,
       follow: { count: followCount, following },
-      poll: poll ? { ...poll, canVote: poll.canVote && topic.visibility === "VISIBLE" } : null,
+      poll: poll ? { ...poll, canVote: poll.canVote && topic.visibility === "VISIBLE" && !archived } : null,
       reactions: reactionList,
     };
   }
@@ -495,15 +651,83 @@ export class GcsForumQueries {
    * Poate actorul citi topicul (forum vizibil și citibil, topic vizibil pentru el) și răspunde în el?
    * Folosit de camerele `gcs-realtime` și de notificări (fără să încarce pagina topicului).
    */
+  /**
+   * Forum v2: rezumatul unui topic (postările vizibile): primii 5 postatori, primele 3 postări după reacții și primele 3
+   * zile după numărul de postări. Apelantul a verificat deja că actorul vede topicul (pagina topicului).
+   */
+  async topicSummary(topicId: number): Promise<GcsTopicSummary> {
+    const { db } = this.deps;
+    const [posters, reacted, days] = await Promise.all([
+      db.post.groupBy({ by: ["authorId"], where: { topicId, visibility: "VISIBLE", authorId: { not: null } }, _count: { _all: true }, orderBy: { _count: { authorId: "desc" } }, take: 5 }),
+      db.$queryRaw<{ id: number; n: number }[]>`
+        SELECT p.id, count(r.id)::int AS n FROM posts p JOIN content_reactions r ON r."contentType" = ${POST_CONTENT_TYPE} AND r."contentId" = p.id::text
+        WHERE p."topicId" = ${topicId} AND p.visibility = 'VISIBLE' GROUP BY p.id ORDER BY n DESC, p.id ASC LIMIT 3`,
+      db.$queryRaw<{ day: Date; n: number }[]>`
+        SELECT date_trunc('day', "createdAt") AS day, count(*)::int AS n FROM posts
+        WHERE "topicId" = ${topicId} AND visibility = 'VISIBLE' GROUP BY 1 ORDER BY n DESC, day ASC LIMIT 3`,
+    ]);
+    const posts = reacted.length > 0 ? await db.post.findMany({ where: { id: { in: reacted.map((r) => r.id) } }, select: { id: true, authorId: true, contentJson: true, createdAt: true } }) : [];
+    const users = await this.users([...posters.map((p) => p.authorId), ...posts.map((p) => p.authorId)]);
+    const byId = new Map(posts.map((p) => [p.id, p]));
+    return {
+      posters: posters.flatMap((p) => {
+        const user = p.authorId ? users.get(p.authorId) : undefined;
+        return user ? [{ user, posts: p._count._all }] : [];
+      }),
+      popular: reacted.flatMap((r) => {
+        const p = byId.get(r.id);
+        return p && r.n > 0 ? [{ postId: p.id, user: p.authorId ? (users.get(p.authorId) ?? null) : null, reactions: r.n, excerpt: docSnippet(p.contentJson, 120), at: p.createdAt.toISOString() }] : [];
+      }),
+      days: days.map((d) => ({ day: new Date(d.day).toISOString().slice(0, 10), posts: d.n })),
+    };
+  }
+
+  /** Forum v2: „Popular acum”: topicurile din listă cu cel puțin `threshold` răspunsuri în ultimele 24 de ore. */
+  async popularNow(topicIds: number[], threshold: number): Promise<Set<number>> {
+    if (topicIds.length === 0 || threshold <= 0) return new Set();
+    const rows = await this.deps.db.post.groupBy({
+      by: ["topicId"],
+      where: { topicId: { in: topicIds }, visibility: "VISIBLE", createdAt: { gte: new Date(Date.now() - 86_400_000) } },
+      _count: { _all: true },
+    });
+    return new Set(rows.filter((r) => r._count._all >= threshold).map((r) => r.topicId));
+  }
+
+  /** Forum v2: widget-ul „Cele mai bine notate”: topicurile notate din forumurile citibile, cu cel puțin `minVotes` voturi. */
+  async topRated(actor: GcsActor, opts: { limit: number; minVotes: number; days: number }): Promise<GcsTopRatedTopic[]> {
+    const tree = await this.tree();
+    const { readable } = await this.access(actor, tree);
+    const rated = [...readable].filter((id) => nodeOptions(tree.byId.get(id) ?? {}).ratingEnabled);
+    if (rated.length === 0) return [];
+    const rows = await this.deps.db.topic.findMany({
+      where: {
+        ...this.aggregateWhere(actor, tree, new Set(rated)),
+        visibility: "VISIBLE",
+        ratingCount: { gte: Math.max(1, opts.minVotes) },
+        ...(opts.days > 0 ? { lastPostAt: { gte: new Date(Date.now() - opts.days * 86_400_000) } } : {}),
+      },
+      orderBy: [{ ratingAvg: "desc" }, { ratingCount: "desc" }, { id: "desc" }],
+      take: opts.limit,
+      select: { id: true, title: true, slug: true, ratingAvg: true, ratingCount: true },
+    });
+    return rows.map((r) => ({ id: r.id, title: r.title, slug: r.slug, avg: r.ratingAvg, count: r.ratingCount }));
+  }
+
   async topicAccess(actor: GcsActor, topicId: number): Promise<{ canRead: boolean; canReply: boolean }> {
     const none = { canRead: false, canReply: false };
-    const topic = await this.deps.db.topic.findUnique({ where: { id: topicId }, select: { forumId: true, authorId: true, visibility: true, locked: true } });
+    const topic = await this.deps.db.topic.findUnique({
+      where: { id: topicId },
+      select: { forumId: true, authorId: true, visibility: true, locked: true, archivedAt: true, forum: { select: { ownTopicsOnly: true } } },
+    });
     if (!topic) return none;
     const ref = forumContainer(topic.forumId);
     const [view, read] = await Promise.all([this.deps.permissions.can(actor, "forums.view", ref), this.deps.permissions.can(actor, "forums.read", ref)]);
     if (!view || !read) return none;
-    const modPowers = topic.visibility === "VISIBLE" && !topic.locked ? [] : await this.modPowers(actor, topic.forumId);
     const isAuthor = actor.userId !== null && actor.userId === topic.authorId;
+    const needPowers = topic.visibility !== "VISIBLE" || topic.locked || (topic.forum.ownTopicsOnly && !isAuthor);
+    const modPowers = needPowers ? await this.modPowers(actor, topic.forumId) : [];
+    // Forum v2: „doar topicurile mele”: topicul altcuiva e doar al moderatorilor.
+    if (topic.forum.ownTopicsOnly && !isAuthor && modPowers.length === 0) return none;
     const visible =
       topic.visibility === "VISIBLE" ||
       (topic.visibility === "PENDING" && (isAuthor || has(modPowers, "approve"))) ||
@@ -511,6 +735,7 @@ export class GcsForumQueries {
     if (!visible) return none;
     const canReply =
       actor.userId !== null &&
+      topic.archivedAt === null &&
       (topic.visibility === "VISIBLE" || has(modPowers, "approve")) &&
       (!topic.locked || has(modPowers, "lock")) &&
       (await this.deps.permissions.can(actor, "forums.reply", ref));
@@ -524,7 +749,7 @@ export class GcsForumQueries {
     const tree = await this.tree();
     const { readable } = await this.access(actor, tree);
     const perPage = await settings.get<number>("forums.topics_per_page");
-    const where: Prisma.TopicWhereInput = { forumId: { in: [...readable] }, visibility: "VISIBLE", tags: { some: { tagId: tag.id } } };
+    const where: Prisma.TopicWhereInput = { ...this.aggregateWhere(actor, tree, readable), visibility: "VISIBLE", tags: { some: { tagId: tag.id } } };
     const [total, rows] = await Promise.all([
       db.topic.count({ where }),
       db.topic.findMany({
@@ -545,7 +770,7 @@ export class GcsForumQueries {
     const { readable } = await this.access(actor, tree);
     if (readable.size === 0) return [];
     const rows = await this.deps.db.topic.findMany({
-      where: { forumId: { in: [...readable] }, visibility: "VISIBLE" },
+      where: { ...this.aggregateWhere(actor, tree, readable), visibility: "VISIBLE" },
       orderBy: [{ lastPostAt: "desc" }, { id: "desc" }],
       take: limit,
       select: { id: true, title: true, slug: true, lastPostAt: true, lastPosterId: true },
@@ -566,7 +791,7 @@ export class GcsForumQueries {
     const { readable } = await this.access(actor, tree);
     if (readable.size === 0) return [];
     const rows = await this.deps.db.post.findMany({
-      where: { visibility: "VISIBLE", topic: { forumId: { in: [...readable] }, visibility: "VISIBLE" } },
+      where: { visibility: "VISIBLE", topic: { ...this.aggregateWhere(actor, tree, readable), visibility: "VISIBLE" } },
       orderBy: { id: "desc" },
       take: limit,
       select: { id: true, contentJson: true, createdAt: true, authorId: true, topic: { select: { id: true, title: true, slug: true } } },
@@ -589,7 +814,7 @@ export class GcsForumQueries {
     const { readable } = await this.access(actor, tree);
     if (readable.size === 0) return [];
     const rows = await this.deps.db.topic.findMany({
-      where: { forumId: { in: [...readable] }, visibility: "VISIBLE", featured: true },
+      where: { ...this.aggregateWhere(actor, tree, readable), visibility: "VISIBLE", featured: true },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: limit,
       select: { id: true, title: true, slug: true, repliesCount: true, createdAt: true, authorId: true },
@@ -614,7 +839,7 @@ export class GcsForumQueries {
     const { readable } = await this.access(actor, tree);
     if (readable.size === 0) return [];
     const rows = await this.deps.db.topic.findMany({
-      where: { forumId: { in: [...readable] }, visibility: "VISIBLE", featured: true },
+      where: { ...this.aggregateWhere(actor, tree, readable), visibility: "VISIBLE", featured: true },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: limit,
       select: { id: true, title: true, slug: true, createdAt: true, authorId: true, forumId: true, firstPostId: true },
@@ -712,7 +937,7 @@ export class GcsForumQueries {
     const cached = await cache.get<TreeData>(TREE_KEY);
     if (cached) return new GcsTree(cached);
 
-    const forums = await db.forum.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] });
+    const forums = await db.forum.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }], include: { page: { select: { allowTopics: true, audienceGroupIds: true } } } });
     const topicIds = forums.map((f) => f.lastTopicId).filter((id): id is number => id !== null);
     const [topics, users] = await Promise.all([
       topicIds.length === 0 ? Promise.resolve([]) : db.topic.findMany({ where: { id: { in: topicIds } }, select: { id: true, title: true, slug: true } }),
@@ -731,6 +956,17 @@ export class GcsForumQueries {
         position: f.position,
         linkUrl: f.linkUrl,
         subforumColumns: f.subforumColumns,
+        page: f.type === "PAGE" ? { allowTopics: f.page?.allowTopics ?? false, audience: f.page?.audienceGroupIds ?? [] } : null,
+        options: {
+          ownTopicsOnly: f.ownTopicsOnly,
+          hasPassword: f.passwordHash !== null,
+          rulesMode: f.rulesMode === "show" || f.rulesMode === "accept" ? f.rulesMode : "off",
+          defaultSort: isTopicSort(f.defaultSort) ? f.defaultSort : "last",
+          ratingEnabled: f.ratingEnabled,
+          pollsEnabled: f.pollsEnabled,
+          tagsEnabled: f.tagsEnabled,
+          minPosts: f.minPosts,
+        },
         topicsCount: f.topicsCount,
         postsCount: f.postsCount,
         lastPostId: f.lastPostId,
@@ -753,7 +989,34 @@ export class GcsForumQueries {
       this.deps.permissions.filterContainers(actor, "forums.read", refs),
     ]);
     const toIds = (s: Set<string>) => new Set([...s].map(Number));
-    return { viewable: toIds(view), readable: toIds(read) };
+    const viewable = toIds(view);
+    const readable = toIds(read);
+    // Forum v2: o pagină cu public restrâns (grupuri) e doar a membrilor acelor grupuri (și a moderatorilor globali).
+    const restricted = tree.data.forums.filter((f) => f.type === "PAGE" && (f.page?.audience.length ?? 0) > 0 && viewable.has(f.id));
+    if (restricted.length > 0 && !(actor.userId && (await this.deps.permissions.can(actor, "forums.moderate_all")))) {
+      for (const f of restricted) {
+        if (f.page!.audience.some((g) => actor.groupIds.includes(g))) continue;
+        viewable.delete(f.id);
+        readable.delete(f.id);
+      }
+    }
+    return { viewable, readable };
+  }
+
+  /**
+   * Forum v2: filtrul listelor adunate din mai multe forumuri (topicuri recente, tag-uri, carusel…): forumurile citibile,
+   * fără cele cu parolă, iar din cele „doar topicurile mele” doar topicurile actorului.
+   */
+  private aggregateWhere(actor: GcsActor, tree: GcsTree, readable: Set<number>): Prisma.TopicWhereInput {
+    const open: number[] = [];
+    const own: number[] = [];
+    for (const id of readable) {
+      const o = nodeOptions(tree.byId.get(id) ?? {});
+      if (o.hasPassword) continue;
+      (o.ownTopicsOnly ? own : open).push(id);
+    }
+    if (own.length === 0 || !actor.userId) return { forumId: { in: open } };
+    return { OR: [{ forumId: { in: open } }, { forumId: { in: own }, authorId: actor.userId }] };
   }
 
   /** Puterile de moderare pe forum: `["*"]` pentru moderatorii globali (`forums.moderate_all`). */
@@ -773,7 +1036,8 @@ export class GcsForumQueries {
   /** Un forum în listă: contoarele și ultimul mesaj, adunate din subarborele citibil de actor. */
   private row(tree: GcsTree, f: TreeForum, viewable: Set<number>, readable: Set<number>, unread: Set<number>): GcsForumRow {
     const nodes = tree.subtree(f.id).filter((n) => readable.has(n.id));
-    const latest = nodes.reduce<TreeForum | null>((best, n) => (n.lastPostId !== null && (best === null || n.lastPostId > best.lastPostId!) ? n : best), null);
+    const shareable = nodes.filter((n) => !nodeOptions(n).hasPassword && !nodeOptions(n).ownTopicsOnly);
+    const latest = shareable.reduce<TreeForum | null>((best, n) => (n.lastPostId !== null && (best === null || n.lastPostId > best.lastPostId!) ? n : best), null);
     const topic = latest?.lastTopicId ? tree.data.topics[String(latest.lastTopicId)] : undefined;
     return {
       id: f.id,
@@ -800,6 +1064,7 @@ export class GcsForumQueries {
             }
           : null,
       unread: nodes.some((n) => unread.has(n.id)),
+      pageTopics: f.type === "PAGE" && (f.page?.allowTopics ?? false),
     };
   }
 
@@ -820,9 +1085,45 @@ const topicRowInclude = {
 
 type TopicWithRow = Prisma.TopicGetPayload<{ include: typeof topicRowInclude }>;
 
-/** Un topic în listă (forum, pagina unui tag). */
-function topicRow(t: TopicWithRow, posters: Map<string, GcsUserRef>, unread: Set<number>): GcsTopicRow {
+/** Ordinea topicurilor după sortarea aleasă (după `pinned`, dacă fixatele sunt primele). */
+function topicOrder(sort: GcsTopicSort): Prisma.TopicOrderByWithRelationInput[] {
+  switch (sort) {
+    case "created":
+      return [{ createdAt: "desc" }];
+    case "replies":
+      return [{ repliesCount: "desc" }, { lastPostAt: "desc" }];
+    case "views":
+      return [{ viewsCount: "desc" }, { lastPostAt: "desc" }];
+    case "rating":
+      return [{ ratingAvg: "desc" }, { ratingCount: "desc" }, { lastPostAt: "desc" }];
+    case "title":
+      return [{ title: "asc" }];
+    default:
+      return [{ lastPostAt: "desc" }];
+  }
+}
+
+const DEFAULT_OPTIONS: GcsForumPageOptions = {
+  ownTopicsOnly: false,
+  hasPassword: false,
+  rulesMode: "off",
+  defaultSort: "last",
+  ratingEnabled: false,
+  pollsEnabled: true,
+  tagsEnabled: true,
+  minPosts: 0,
+};
+
+/** Opțiunile unui nod din arbore (arborii cache-uiți înainte de Forum v2 nu le au: valorile implicite). */
+function nodeOptions(node: { options?: GcsForumPageOptions | undefined }): GcsForumPageOptions {
+  return node.options ?? DEFAULT_OPTIONS;
+}
+
+/** Un topic în listă (forum, pagina unui tag). `rated`: forumul are nota pornită (rândul arată stelele). */
+function topicRow(t: TopicWithRow, posters: Map<string, GcsUserRef>, unread: Set<number>, rated = false): GcsTopicRow {
   return {
+    rating: rated ? { avg: t.ratingAvg, count: t.ratingCount } : null,
+    archived: t.archivedAt !== null,
     id: t.id,
     title: t.title,
     slug: t.slug,

@@ -1,5 +1,6 @@
 import sanitizeHtml from "sanitize-html";
 import { GcsValidationError } from "../errors";
+import { GCS_BLOCK_OF_NODE, GCS_BLOCK_TONES, GCS_CALLOUT_KINDS, GCS_HIDDEN_MODES, sanitizeHtmlBlock, type GcsBlockType, type GcsHiddenPart } from "./blocks";
 import { embedIframeSrc, GCS_EMBED_IFRAME_HOSTS, parseEmbedUrl, type GcsEmbedProvider } from "./embeds";
 
 /** Un nod Tiptap (JSON), după validare: doar câmpurile cunoscute. */
@@ -24,6 +25,13 @@ export type GcsRenderOptions = {
    * O mențiune de grup care nu e aici (sau fără listă: semnături, importuri…) devine text simplu `@Nume`.
    */
   groups?: ReadonlyMap<string, { name: string }>;
+  /**
+   * Forum v2: familiile de blocuri pe care autorul le poate folosi (permisiunile `forums.block_*`, calculate de
+   * apelant). Lipsă = niciun bloc (semnături, mesaje private, câmpuri): un bloc nepermis → `block_forbidden`.
+   */
+  blocks?: readonly GcsBlockType[];
+  /** SVG-ul unei iconițe Font Awesome după nume (iconițele blocurilor); lipsă = blocurile fără iconițe. */
+  icon?: (name: string) => string | null;
 };
 
 export type GcsRendered = {
@@ -37,6 +45,8 @@ export type GcsRendered = {
   groupMentions: number[];
   attachments: string[];
   quotes: number[];
+  /** Forum v2: blocurile „conținut ascuns”, scoase din `html` (în locul lor rămâne un marcaj gol). */
+  hiddenParts: GcsHiddenPart[];
 };
 
 /** Tipul unei mențiuni: un membru (implicit, și pentru conținutul vechi fără `kind`) sau un grup. */
@@ -65,11 +75,15 @@ export const GCS_HIGHLIGHTS = ["#FDE68A", "#BBF7D0", "#BFDBFE", "#FBCFE8", "#FEC
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 const isColor: AttrRule = (v) => typeof v === "string" && HEX_COLOR.test(v);
 const textAlign = optional(oneOf(GCS_TEXT_ALIGNS));
+/** O iconiță Font Awesome după nume (`fa-solid fa-gift`); iconițele necunoscute nu se desenează. */
+const isIcon: AttrRule = (v) => typeof v === "string" && /^fa-(?:solid|regular|brands) fa-[a-z0-9-]{1,60}$/.test(v);
 
+/** Grupurile de noduri: blocurile, textul, elementele de listă și copiii blocurilor (carduri, coloane, pași). */
+type NodeGroup = "block" | "inline" | "listItem" | "blockCard" | "blockColumn" | "blockStep";
 type NodeSpec = {
-  group: "block" | "inline" | "listItem";
+  group: NodeGroup;
   /** Ce conținut acceptă: un grup, sau nimic (nod frunză). */
-  content?: "block" | "inline" | "listItem";
+  content?: NodeGroup;
   attrs?: Record<string, AttrRule>;
   /** Atributele obligatorii. */
   required?: string[];
@@ -110,6 +124,23 @@ export const GCS_DOC_NODES: Record<string, NodeSpec> = {
     attrs: { id: isId, label: isText(MENTION_LABEL_MAX, 1), mentionSuggestionChar: optional((v) => v === "@"), kind: optional(oneOf(GCS_MENTION_KINDS)) },
     required: ["id", "label"],
   },
+  // ─── Forum v2: blocurile sigure (macheta GiveawayBlocks) ───
+  gcsSection: { group: "block", content: "block", attrs: { title: optional(isText(120)), icon: optional(isIcon), tone: optional(oneOf(GCS_BLOCK_TONES)) } },
+  gcsCallout: { group: "block", content: "block", attrs: { kind: oneOf(GCS_CALLOUT_KINDS), title: optional(isText(120)) }, required: ["kind"] },
+  gcsCardGrid: { group: "block", content: "blockCard", attrs: { columns: optional(isInt(1, 4)) } },
+  gcsCard: {
+    group: "blockCard",
+    attrs: { title: isText(120, 1), subtitle: optional(isText(160)), value: optional(isText(60)), badge: optional(isText(30)), icon: optional(isIcon), highlight: optional((v) => v === "1") },
+    required: ["title"],
+  },
+  gcsButton: { group: "block", attrs: { label: isText(60, 1), href: (v) => typeof v === "string" && isSafeHref(v), variant: optional(oneOf(["primary", "ghost"])), icon: optional(isIcon) }, required: ["label", "href"] },
+  gcsColumns: { group: "block", content: "blockColumn" },
+  gcsColumn: { group: "blockColumn", content: "block" },
+  gcsSteps: { group: "block", content: "blockStep" },
+  gcsStep: { group: "blockStep", content: "block", attrs: { title: optional(isText(120)) } },
+  gcsProgress: { group: "block", attrs: { label: isText(80, 1), value: isInt(0, 1_000_000_000), max: isInt(1, 1_000_000_000) }, required: ["label", "value", "max"] },
+  gcsHidden: { group: "block", content: "block", attrs: { mode: oneOf(GCS_HIDDEN_MODES), groups: optional((v) => typeof v === "string" && /^\d{1,9}(?:,\d{1,9}){0,19}$/.test(v)), label: optional(isText(120)) }, required: ["mode"] },
+  gcsHtml: { group: "block", attrs: { html: isText(20_000, 1) }, required: ["html"] },
 };
 
 /** Mărcile permise. La `link`, `target`/`rel`/`class`/`title` din Tiptap sunt acceptate, dar ignorate (le punem noi). */
@@ -167,11 +198,16 @@ function validateAttrs(raw: unknown, rules: Record<string, AttrRule>, required: 
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
+/** Un bloc pe care autorul nu-l poate folosi (permisiunile `forums.block_*`). */
+function forbiddenBlock(block: GcsBlockType): never {
+  throw new GcsValidationError({ content: "block_forbidden" }, { block });
+}
+
 /** Validează documentul și întoarce o copie care conține doar câmpurile cunoscute. */
-function validate(raw: unknown): GcsDoc {
+function validate(raw: unknown, allowedBlocks: readonly GcsBlockType[] = []): GcsDoc {
   let nodes = 0;
 
-  function node(value: unknown, expected: "block" | "inline" | "listItem", depth: number): GcsDocNode {
+  function node(value: unknown, expected: NodeGroup, depth: number): GcsDocNode {
     if (++nodes > MAX_NODES || depth > MAX_DEPTH) invalid();
     if (!isRecord(value) || typeof value.type !== "string") invalid();
 
@@ -199,6 +235,8 @@ function validate(raw: unknown): GcsDoc {
 
     const spec = GCS_DOC_NODES[value.type];
     if (!spec || spec.group !== expected) invalid();
+    const block = GCS_BLOCK_OF_NODE[value.type];
+    if (block && !allowedBlocks.includes(block)) forbiddenBlock(block);
     checkKeys(value, ["type", "attrs", "content"]);
     const out: GcsDocNode = { type: value.type };
     const attrs = validateAttrs(value.attrs, spec.attrs ?? {}, spec.required);
@@ -255,6 +293,9 @@ const SANDBOX = "allow-scripts allow-same-origin allow-popups allow-presentation
 /** Transformă JSON-ul validat în HTML și colectează textul, mențiunile, atașamentele și citatele. */
 function toHtml(doc: GcsDoc, opts: GcsRenderOptions) {
   const text: string[] = [];
+  const hiddenParts: GcsHiddenPart[] = [];
+  // Iconițele blocurilor: un marcaj gol acum, înlocuit cu SVG-ul după sanitizare (`withBlockIcons`).
+  const iconTag = (name: unknown, cls: string) => (typeof name === "string" && opts.icon ? `<i class="gcs-blockIcon ${cls}" data-gcs-icon="${esc(name)}"></i>` : "");
   const mentions = new Set<string>();
   const groupMentions = new Set<number>();
   const attachments = new Set<string>();
@@ -348,6 +389,74 @@ function toHtml(doc: GcsDoc, opts: GcsRenderOptions) {
         const summary = esc(a.summary ? String(a.summary) : opts.labels.spoiler);
         return `<details class="gcs-spoiler"><summary>${summary}</summary>${children(n)}</details>`;
       }
+      case "gcsSection": {
+        const tone = a.tone ? String(a.tone) : "accent";
+        const head = a.title || a.icon ? `<div class="gcs-block__head">${iconTag(a.icon, "gcs-block__icon")}${a.title ? `<strong class="gcs-block__title">${esc(String(a.title))}</strong>` : ""}</div>` : "";
+        if (a.title) text.push(`\n${String(a.title)}\n`);
+        return `<section class="gcs-block gcs-block--section gcs-blockTone--${tone}">${head}<div class="gcs-block__body">${children(n)}</div></section>`;
+      }
+      case "gcsCallout": {
+        const kind = String(a.kind);
+        const icon = kind === "warning" ? "fa-solid fa-triangle-exclamation" : kind === "success" ? "fa-solid fa-circle-check" : "fa-solid fa-circle-info";
+        if (a.title) text.push(`\n${String(a.title)}\n`);
+        const title = a.title ? `<strong class="gcs-block__title">${esc(String(a.title))}</strong>` : "";
+        return `<div class="gcs-block gcs-block--callout gcs-callout--${kind}" role="note">${iconTag(icon, "gcs-callout__icon")}<div class="gcs-block__body">${title}${children(n)}</div></div>`;
+      }
+      case "gcsCardGrid":
+        return `<div class="gcs-block gcs-block--cards" data-columns="${a.columns ?? 3}">${children(n)}</div>`;
+      case "gcsCard": {
+        text.push(`\n${String(a.title)}${a.subtitle ? ` ${String(a.subtitle)}` : ""}${a.value ? ` ${String(a.value)}` : ""}\n`);
+        return (
+          `<div class="gcs-blockCard${a.highlight === "1" ? " gcs-blockCard--highlight" : ""}">` +
+          (a.badge ? `<span class="gcs-blockCard__badge">${esc(String(a.badge))}</span>` : "") +
+          iconTag(a.icon, "gcs-blockCard__icon") +
+          `<strong class="gcs-blockCard__title">${esc(String(a.title))}</strong>` +
+          (a.subtitle ? `<span class="gcs-blockCard__sub">${esc(String(a.subtitle))}</span>` : "") +
+          (a.value ? `<span class="gcs-blockCard__value">${esc(String(a.value))}</span>` : "") +
+          `</div>`
+        );
+      }
+      case "gcsButton": {
+        const href = String(a.href);
+        const variant = a.variant === "ghost" ? "ghost" : "primary";
+        const external = !href.startsWith("/") && !href.startsWith("#");
+        text.push(`\n${String(a.label)}\n`);
+        return `<p class="gcs-block gcs-block--button"><a class="gcs-btn gcs-btn--${variant} gcs-blockBtn" href="${esc(href)}"${external ? ` ${LINK_ATTRS}` : ""}>${iconTag(a.icon, "gcs-btn__icon")}<span>${esc(String(a.label))}</span></a></p>`;
+      }
+      case "gcsColumns":
+        return `<div class="gcs-block gcs-block--columns" data-columns="${Math.min(Math.max(n.content?.length ?? 2, 2), 3)}">${children(n)}</div>`;
+      case "gcsColumn":
+        return `<div class="gcs-blockCol">${children(n)}</div>`;
+      case "gcsSteps":
+        return `<ol class="gcs-block gcs-block--steps">${children(n)}</ol>`;
+      case "gcsStep": {
+        if (a.title) text.push(`\n${String(a.title)}\n`);
+        return `<li class="gcs-blockStep">${a.title ? `<strong class="gcs-blockStep__title">${esc(String(a.title))}</strong>` : ""}<div class="gcs-block__body">${children(n)}</div></li>`;
+      }
+      case "gcsProgress": {
+        const value = Number(a.value);
+        const max = Number(a.max);
+        const pct = Math.round(Math.min(100, Math.max(0, (value / max) * 100)) * 10) / 10;
+        text.push(`\n${String(a.label)} ${value} / ${max}\n`);
+        return (
+          `<div class="gcs-block gcs-block--progress" role="progressbar" aria-valuemin="0" aria-valuemax="${max}" aria-valuenow="${Math.min(value, max)}" aria-label="${esc(String(a.label))}">` +
+          `<div class="gcs-progress__head"><span class="gcs-progress__label">${esc(String(a.label))}</span><span class="gcs-progress__value">${value} / ${max}</span></div>` +
+          `<div class="gcs-progress__track"><span class="gcs-progress__fill" style="width:${pct}%"></span></div></div>`
+        );
+      }
+      case "gcsHidden": {
+        // Conținutul ascuns nu rămâne în HTML (nici în text, deci nici în căutare): îl arată pagina, per vizitator.
+        const id = `h${hiddenParts.length + 1}`;
+        const mark = text.length;
+        const inner = children(n);
+        text.length = mark;
+        const groups = typeof a.groups === "string" && a.groups ? a.groups.split(",").map(Number) : [];
+        hiddenParts.push({ id, mode: String(a.mode) as GcsHiddenPart["mode"], groups, label: a.label ? String(a.label) : null, html: inner });
+        return `<div class="gcs-hiddenBlock" data-hidden-id="${id}" data-hidden-mode="${esc(String(a.mode))}"></div>`;
+      }
+      case "gcsHtml":
+        // Doar Root Admin (permisiunea `forums.block_html`); lista albă a blocului HTML, nu a postărilor.
+        return `<div class="gcs-block gcs-block--html">${sanitizeHtmlBlock(String(a.html))}</div>`;
       case "embed": {
         const url = String(a.url);
         const embed = parseEmbedUrl(url);
@@ -375,7 +484,17 @@ function toHtml(doc: GcsDoc, opts: GcsRenderOptions) {
     groupMentions: [...groupMentions],
     attachments: [...attachments],
     quotes: [...quotes],
+    hiddenParts,
   };
+}
+
+/** Marcajele iconițelor blocurilor (puse înaintea sanitizării) → SVG-ul iconiței, sau nimic dacă e necunoscută. */
+function withBlockIcons(html: string, icon: GcsRenderOptions["icon"]): string {
+  if (!html.includes("data-gcs-icon")) return html;
+  return html.replace(/<i class="gcs-blockIcon ([a-zA-Z_ -]*)" data-gcs-icon="([a-z0-9 -]{1,80})"><\/i>/g, (_m, cls: string, name: string) => {
+    const svg = icon?.(name);
+    return svg ? `<span class="gcs-blockIcon ${cls.replace(/[^a-zA-Z_ -]/g, "")}" aria-hidden="true">${svg}</span>` : "";
+  });
 }
 
 /** A doua linie de apărare: chiar dacă randarea de mai sus ar greși, doar acest HTML ajunge în pagină. */
@@ -384,21 +503,40 @@ const SANITIZE: sanitizeHtml.IOptions & { allowedEmptyAttributes: string[] } = {
   allowedTags: [
     "p", "br", "hr", "h2", "h3", "h4", "strong", "em", "u", "s", "code", "pre", "a", "ul", "ol", "li",
     "blockquote", "span", "details", "summary", "img", "div", "iframe", "sub", "sup", "mark",
+    // Forum v2: blocurile (secțiuni, carduri, pași, progres) și iconițele lor (SVG-ul registrului, fără atribute active).
+    "section", "i", "svg", "path",
+    // Blocul HTML (doar Root, deja trecut prin lista lui albă): tabelele.
+    "table", "thead", "tbody", "tfoot", "tr", "th", "td", "caption", "small",
   ],
   allowedAttributes: {
     a: ["href", "rel", "target", "class", "data-user", "data-user-id", "data-group-id"],
+    section: ["class"],
+    i: ["class", "data-gcs-icon"],
+    svg: ["class", "viewbox", "viewBox", "width", "height", "fill", "focusable", "aria-hidden", "data-icon"],
+    path: ["d"],
+    li: ["class"],
+    table: ["class"],
+    thead: ["class"],
+    tbody: ["class"],
+    tfoot: ["class"],
+    tr: ["class"],
+    caption: ["class"],
+    small: ["class"],
+    th: ["colspan", "rowspan", "class", "style", "scope"],
+    td: ["colspan", "rowspan", "class", "style"],
     img: ["src", "alt", "width", "height", "loading", "class"],
     iframe: ["src", "title", "loading", "allowfullscreen", "sandbox"],
     blockquote: ["class", "data-post"],
-    ol: ["start"],
+    ol: ["start", "class"],
     code: ["class"],
-    span: ["class", "style"],
-    p: ["style"],
+    span: ["class", "style", "aria-hidden"],
+    p: ["style", "class"],
+    strong: ["class"],
     h2: ["style"],
     h3: ["style"],
     h4: ["style"],
     mark: ["style"],
-    div: ["class"],
+    div: ["class", "data-columns", "data-hidden-id", "data-hidden-mode", "role", "aria-valuemin", "aria-valuemax", "aria-valuenow", "aria-label"],
     details: ["class"],
   },
   allowedClasses: { "*": ["gcs-*", "language-*"] },
@@ -409,6 +547,10 @@ const SANITIZE: sanitizeHtml.IOptions & { allowedEmptyAttributes: string[] } = {
       "background-color": [/^#[0-9a-fA-F]{6}$/],
       "font-size": [/^(?:12|14|18|24|32)px$/],
       "text-align": [/^(?:left|center|right|justify)$/],
+      // Bara de progres a blocului „Progres”.
+      width: [/^\d{1,3}(?:\.\d)?%$/],
+      // Blocul HTML (doar Root): îngroșarea textului.
+      "font-weight": [/^(?:400|600|700|bold|normal)$/],
     },
   },
   allowedSchemes: ["http", "https", "mailto"],
@@ -431,9 +573,10 @@ export function sanitizeContentHtml(html: string): string {
  */
 export class GcsContentRenderer {
   render(raw: unknown, opts: GcsRenderOptions): GcsRendered {
-    const json = resolveGroupMentions(validate(raw), opts.groups);
+    const json = resolveGroupMentions(validate(raw, opts.blocks ?? []), opts.groups);
     const out = toHtml(json, opts);
-    return { json, ...out, html: sanitizeHtml(out.html, SANITIZE) };
+    const clean = (html: string) => withBlockIcons(sanitizeHtml(html, SANITIZE), opts.icon);
+    return { json, ...out, html: clean(out.html), hiddenParts: out.hiddenParts.map((p) => ({ ...p, html: clean(p.html) })) };
   }
 }
 

@@ -99,7 +99,7 @@ describe("system UI: CSS-ul componentelor funcționale e al sistemului", () => {
   });
 
   test("fișierele sistemului nu depind de design: fără `.gcs-nova` în system-ui.css, header-menus.css, sweep.css și fișierele pachetului de finisare", () => {
-    for (const f of ["system-ui.css", "header-menus.css", "sweep.css", "lists.css", "loaders.css", "scroll.css", "announce.css", "notifications.css"]) expect(selectors(ui(f)).filter((s) => s.includes("gcs-nova"))).toEqual([]);
+    for (const f of ["system-ui.css", "header-menus.css", "sweep.css", "lists.css", "loaders.css", "scroll.css", "announce.css", "notifications.css", "forum-v2.css"]) expect(selectors(ui(f)).filter((s) => s.includes("gcs-nova"))).toEqual([]);
   });
 
   test("notificările v2 sunt ale sistemului: dropdown-ul clopoțelului, pagina, tabelul canalelor, web push", () => {
@@ -126,7 +126,7 @@ describe("system UI: CSS-ul componentelor funcționale e al sistemului", () => {
     expect(at("system-ui.css")).toBeGreaterThan(at("titles.css"));
     expect(at("header-menus.css")).toBeGreaterThan(at("system-ui.css"));
     expect(at("nova.css")).toBeGreaterThan(at("header-menus.css"));
-    for (const f of ["lists.css", "loaders.css", "scroll.css", "announce.css", "notifications.css"]) {
+    for (const f of ["lists.css", "loaders.css", "scroll.css", "announce.css", "notifications.css", "forum-v2.css"]) {
       expect(at(f), f).toBeGreaterThan(at("header-menus.css"));
       expect(at(f), f).toBeLessThan(at("nova.css"));
     }
