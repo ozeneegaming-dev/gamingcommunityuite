@@ -8,7 +8,9 @@ import type { GcsEventBus } from "../events";
 import { compileNameStylesCss, type GcsNameStyle } from "../groups/nameStyles";
 import type { GcsModuleRegistry } from "../modules/registry";
 import type { GcsActor } from "../permissions/types";
+import { APPS_LANDING_SETTING } from "../apps/service";
 import { GcsSettingsService } from "../settings/service";
+import { applyAppSelection, landingSettingValue, type GcsAppSelection } from "./apps";
 import { seedDefaults } from "./seed";
 import type { GcsInstallState } from "./state";
 
@@ -88,9 +90,13 @@ export type GcsInstallInput = {
   /** Parola adminului ajunge aici deja ca hash Argon2 (nu stă niciodată în clar pe disc). */
   admin: { name: string; email: string; passwordHash: string };
   data: "demo" | "empty" | "import";
+  /** Aplicațiile alese în wizard (pornite / oprite, pornirea). Fără ea, aplicațiile rămân cu starea implicită din seed. */
+  apps?: GcsAppSelection;
+  /** Tokenul licenței (verificat la pasul „Licență”); se păstrează doar pe server, în folderul de configurare (0600). */
+  license?: string;
 };
 
-export const GCS_INSTALL_RUN_STEPS = ["migrate", "seed", "settings", "admin", "demo", "name_styles", "search_indexes", "lock"] as const;
+export const GCS_INSTALL_RUN_STEPS = ["migrate", "seed", "settings", "apps", "admin", "demo", "name_styles", "search_indexes", "lock"] as const;
 export type GcsInstallRunStep = (typeof GCS_INSTALL_RUN_STEPS)[number];
 
 export type GcsInstallDeps = {
@@ -145,6 +151,17 @@ export async function runInstall(
           if (JSON.stringify(await settings.get(key)) !== JSON.stringify(value)) await settings.set(key, value, INSTALL_ACTOR);
         }
       },
+      // Aplicațiile nebifate rămân instalate (tabelele există), dar oprite; se pornesc din ACP › Aplicații.
+      apps: async () => {
+        if (!input.apps) return;
+        await applyAppSelection(db, input.apps);
+        if (deps.registry.settingDef(APPS_LANDING_SETTING)) {
+          const settings = new GcsSettingsService({ db, cache: deps.cache, bus: deps.bus, registry: deps.registry });
+          const landing = landingSettingValue(deps.registry, input.apps.landing);
+          if ((await settings.get(APPS_LANDING_SETTING)) !== landing) await settings.set(APPS_LANDING_SETTING, landing, INSTALL_ACTOR);
+        }
+        await deps.cache.invalidateTags(["apps", "nav", "layout"]);
+      },
       admin: async () => {
         const root = await db.group.findUniqueOrThrow({ where: { key: "root_admin" } });
         const email = normalizeEmail(input.admin.email);
@@ -178,7 +195,10 @@ export async function runInstall(
           `CREATE INDEX IF NOT EXISTS "users_nameNormalized_trgm_idx" ON "users" USING gin ("nameNormalized" gin_trgm_ops)`,
         );
       },
-      lock: () => deps.state.markInstalled(),
+      lock: async () => {
+        if (input.license) await deps.state.saveLicense(input.license);
+        await deps.state.markInstalled();
+      },
     };
 
     for (const [index, step] of GCS_INSTALL_RUN_STEPS.entries()) {

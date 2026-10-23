@@ -15,8 +15,8 @@ const nextConfig: NextConfig = {
   // Rădăcina monorepo-ului, ca build-ul standalone să includă și pachetele @gcs/*.
   outputFileTracingRoot: path.resolve(process.cwd(), "../.."),
   // Migrațiile SQL, aplicate la pornire și de installer (fără CLI-ul Prisma în imagine), și binarele pluginurilor de
-  // server (pasul de release), puse în pachetele descărcate din ACP.
-  outputFileTracingIncludes: { "/*": ["../../packages/db/prisma/migrations/**/*", "../../servers-plugins/release/**/*"] },
+  // server (pasul de release), puse în pachetele descărcate din ACP; EULA-ul, afișat la pasul „Licență” al instalării.
+  outputFileTracingIncludes: { "/*": ["../../packages/db/prisma/migrations/**/*", "../../servers-plugins/release/**/*", "../../EULA.md"] },
   transpilePackages: ["@gcs/core", "@gcs/modules", "@gcs/ui"],
   // Module native: rămân `require` la runtime, nu intră în bundle. Clienții FTP / SFTP ai demo-urilor (aplicația Servere,
   // „Testează conexiunea”) au legături native opționale și fișiere încărcate după cale: tot la runtime.

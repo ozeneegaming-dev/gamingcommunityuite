@@ -74,6 +74,7 @@ export const INSTALL_ENV = {
   smtpPass: "GCS_INSTALL_SMTP_PASS",
   smtpFrom: "GCS_INSTALL_SMTP_FROM",
   databaseUrl: "GCS_INSTALL_DATABASE_URL",
+  license: "GCS_INSTALL_LICENSE",
 } as const;
 const REQUIRED_INSTALL: (keyof typeof INSTALL_ENV)[] = ["siteName", "adminName", "adminEmail", "adminPassword"];
 
@@ -224,7 +225,7 @@ export async function runCli(argv: string[], io: GcsCliIo): Promise<number> {
 
     case "backup":
     case "restore":
-      io.err(`„gcs ${command}” rulează pe server, prin wrapper-ul gcs din /opt/redline (are nevoie de docker compose).`);
+      io.err(`„gcs ${command}” rulează pe server, prin wrapper-ul gcs din folderul instalării, ex. /opt/gcs (are nevoie de docker compose).`);
       return 2;
 
     default:

@@ -1,23 +1,51 @@
 import "server-only";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import {
   databaseUrlFor,
   GCS_INSTALL_STEPS,
+  GCS_PREMIUM_APPS,
   GcsInstallState,
+  installDomain,
+  resolveAppSelection,
+  verifyLicense,
   type GcsDbConnection,
   type GcsInstallInput,
   type GcsInstallProgress,
   type GcsInstallStep,
+  type GcsLicense,
+  type GcsLicenseResult,
 } from "@gcs/core";
 import { cookies } from "next/headers";
 import { gcsConfigDir } from "./config";
+import { services } from "./services";
 
 export const INSTALL_COOKIE = "gcs-install";
-export const INSTALL_VERSION = "1.0.0";
+/** Versiunea afișată de installer: `GCS_VERSION` (scris de release în `.env`) sau versiunea din surse. */
+export const INSTALL_VERSION = process.env.GCS_VERSION || "1.0.0";
 
 export const installState = () => new GcsInstallState(gcsConfigDir());
 
-/** Pașii afișați în wizard (9, ca în machetă). */
-export const WIZARD_STEPS = GCS_INSTALL_STEPS;
+/** Pașii afișați în stânga wizard-ului („Gata” e finalul pasului „Instalare”). */
+export const WIZARD_STEPS = GCS_INSTALL_STEPS.filter((s) => s !== "done");
+
+/** Verifică offline licența pentru domeniul acestei instalări (aplicațiile premium cunoscute, pentru licența de test). */
+export function verifyInstallLicense(token: string | null | undefined): GcsLicenseResult {
+  return verifyLicense(token, { domain: installDomain(), premiumApps: GCS_PREMIUM_APPS });
+}
+
+/** Licența salvată la pasul „Licență” (doar pe server, în `.env.runtime`), verificată din nou; `null` dacă lipsește sau nu mai e validă. */
+export async function savedLicense(): Promise<{ token: string; license: GcsLicense } | null> {
+  const token = await installState().secret("license", "token");
+  const result = verifyInstallLicense(token);
+  return token && result.ok ? { token, license: result.license } : null;
+}
+
+/** Textul EULA din pachet (`EULA.md`, la rădăcina proiectului; și în imaginea standalone). */
+export async function eulaText(): Promise<string> {
+  const file = process.env.GCS_EULA_FILE ?? path.resolve(process.cwd(), "../../EULA.md");
+  return readFile(file, "utf8").catch(() => "");
+}
 export const isWizardStep = (v: string): v is GcsInstallStep => (GCS_INSTALL_STEPS as readonly string[]).includes(v);
 export const stepIndex = (step: GcsInstallStep) => GCS_INSTALL_STEPS.indexOf(step);
 
@@ -74,10 +102,19 @@ export async function installInput(data: Data): Promise<GcsInstallInput | null> 
   const email = data.email ?? {};
   const passwordHash = await state.secret("admin", "password_hash");
   if (!site.name || !admin.email || !admin.name || !passwordHash) return null;
+  // Licența și aplicațiile se verifică din nou la rulare (o licență expirată între timp oprește instalarea).
+  const licensed = await savedLicense();
+  if (!licensed) return null;
+  const apps = data.apps ?? {};
+  const selected = Array.isArray(apps.selected) ? apps.selected.filter((k): k is string => typeof k === "string") : [];
+  const resolved = resolveAppSelection(services().registry, licensed.license, { selected, landing: str(apps.landing) });
+  if (!resolved.ok) return null;
   const input: GcsInstallInput = {
     site: { name: str(site.name), url: str(site.url), locale: str(site.locale, "ro"), timezone: str(site.timezone, "Europe/Bucharest") },
     admin: { name: str(admin.name), email: str(admin.email), passwordHash },
     data: data.data?.kind === "empty" ? "empty" : "demo",
+    apps: resolved.selection,
+    license: licensed.token,
   };
   if (email.host) {
     input.email = {
