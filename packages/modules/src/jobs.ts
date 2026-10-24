@@ -5,6 +5,8 @@ import type { GcsServices } from "./services";
 export const HEARTBEAT_JOB = "system.heartbeat";
 /** Curățenia ediției Lite: cheile expirate din `gcs_kv` și jurnalul live mai vechi de 5 minute. */
 export const LITE_SWEEP_JOB = "system.lite_sweep";
+/** Verificarea zilnică a licenței la platforma-mamă (Data Center). */
+export const LICENSE_CHECK_JOB = "license.check";
 /** Jobul care scoate grupurile secundare temporare expirate (Membri v2). */
 export const SECONDARY_EXPIRY_JOB = "groups.secondary_expiry";
 
@@ -42,6 +44,17 @@ export function registerAppJobs(s: GcsServices): void {
     },
   });
   s.jobs.register({ name: "translate.cleanup", everyMs: 24 * 3600_000, handler: async () => void (await s.translation.cleanup()) });
+  // Licența: verificarea zilnică la platforma-mamă (doar licențele emise de Data Center). Când aplicațiile premium se
+  // opresc sau repornesc, meniul și paginile se recalculează.
+  s.jobs.register({
+    name: LICENSE_CHECK_JOB,
+    pattern: "37 3 * * *",
+    handler: async () => {
+      const before = await s.licenseOnline.premiumBlocked();
+      await s.licenseOnline.run();
+      if ((await s.licenseOnline.premiumBlocked()) !== before) await s.cache.invalidateTags(["apps", "nav", "layout", "stats"]);
+    },
+  });
   // Timpul online: totalurile zilei copiate din Redis în baza de date (5 min).
   s.onlineTime.registerJobs(s.jobs);
   // Joburile pluginurilor (etapa 6): un singur job generic, rulat de gazda pluginurilor din worker.

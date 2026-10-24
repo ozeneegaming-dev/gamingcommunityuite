@@ -250,3 +250,16 @@ describe("ordinea și catalogul", () => {
     expect(list.find((a) => a.key === "chatx")).toMatchObject({ descriptionKey: null, sections: [], landing: null });
   });
 });
+
+describe("licența declarată invalidă de Data Center (după perioada de grație)", () => {
+  test("aplicațiile premium se opresc; cele standard rămân", async () => {
+    const settings = new GcsSettingsService({ db: w.db, cache: w.cache, bus: w.bus, registry: w.registry });
+    let blocked = false;
+    const gated = new GcsAppService({ db: w.db, cache: w.cache, bus: w.bus, registry: w.registry, acp: w.acp, permissions: w.permissions, settings, premiumBlocked: async () => blocked });
+    expect(await gated.enabled("chatplus")).toBe(true);
+    blocked = true;
+    expect(await gated.enabled("chatplus")).toBe(false);
+    expect(await gated.enabled("chatx")).toBe(true);
+    expect(await gated.enabled("srv")).toBe(true);
+  });
+});

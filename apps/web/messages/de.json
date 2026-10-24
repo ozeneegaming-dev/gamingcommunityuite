@@ -226,7 +226,8 @@
       "no_permission": "Du hast nicht das Recht für diese Aktion.",
       "account_too_new": "Dein Konto ist für diese Aktion zu neu.",
       "not_enough_posts": "Du brauchst mehr Beiträge für diese Aktion.",
-      "disabled": "Diese Funktion ist hier aus."
+      "disabled": "Diese Funktion ist hier aus.",
+      "db_plugins_unsupported": "Unter MySQL (Lite-Edition) sind Plugins mit eigener Datenbank nicht verfügbar. Sie funktionieren mit PostgreSQL."
     },
     "fields": {
       "invalid_color": "Ungültige Farbe (#RRGGBB)",
@@ -458,7 +459,8 @@
         "settings_rules": "Community rules",
         "apps_manage": "Management",
         "apps_dev": "Development",
-        "update": "Aktualisierung"
+        "update": "Aktualisierung",
+        "cron": "Cron"
       },
       "members": {
         "members": "Mitglieder",
@@ -677,6 +679,26 @@
         "realtimeDown": {
           "title": "Der Echtzeitdienst läuft nicht",
           "body": "Live-benachrichtigungen, chat und \"wer ist online\" werden nur beim erneuten laden der seite aktualisiert (starten sie den echtzeitdienst)."
+        },
+        "cronStale": {
+          "title": "Der Cron des Hosters läuft nicht",
+          "never": "Er ist noch nie gelaufen: Digests, VIP-Abläufe und Aufräumen laufen nur, solange die Seite Besuche bekommt.",
+          "since": "Letzter Lauf: {time}. Digests, VIP-Abläufe und Aufräumen verspäten sich.",
+          "link": "Cron-Befehl ansehen"
+        },
+        "license": {
+          "title": "Die GCS-Lizenz ist {reason}",
+          "grace": "Das Data Center hat die Lizenz für ungültig erklärt. Premium-Anwendungen bleiben bis {date} aktiv; das Forum und die anderen Anwendungen laufen weiter. Kontaktiere uns zur Verlängerung.",
+          "blocked": "Die 30-tägige Kulanzfrist ist abgelaufen: Premium-Anwendungen sind deaktiviert. Das Forum und die anderen Anwendungen laufen weiter; eine verlängerte Lizenz aktiviert sie bei der nächsten Prüfung wieder.",
+          "reasons": {
+            "revoked": "widerrufen",
+            "suspended": "ausgesetzt",
+            "expired": "abgelaufen",
+            "domain": "für eine andere Domain",
+            "blocked": "für diese Seite gesperrt",
+            "unknown": "dem Data Center unbekannt",
+            "invalid": "ungültig"
+          }
         }
       },
       "actions": {
@@ -2492,7 +2514,8 @@
         "version_not_newer": "Version {version} ist nicht neuer als die installierte ({installed}).",
         "signature_invalid": "The certification does not match: the package was changed or the certification is broken ({reason}).",
         "unsigned_denied": "Packages that are not certified are not allowed on this server.",
-        "client_js_unsigned": "Browser JavaScript is only allowed for GCS certified plugins."
+        "client_js_unsigned": "Browser JavaScript is only allowed for GCS certified plugins.",
+        "db_plugins_unsupported": "Das Plugin hat eine eigene Datenbank: Unter MySQL (Lite-Edition) kann es nicht installiert werden. Es funktioniert mit PostgreSQL."
       },
       "confirm": {
         "pageTitle": "Bestätigen der Installation",
@@ -4340,6 +4363,21 @@
         "verify": "Es prüft die Prüfsummen des neuen Pakets.",
         "keep": "Es behält die Servereinstellungen, die Konfiguration und die Backups.",
         "restart": "Es startet die Dienste neu; Datenbankmigrationen laufen automatisch, deine Daten bleiben erhalten."
+      },
+      "online": {
+        "label": "Online-Prüfung",
+        "checked": "zuletzt: {time}",
+        "statuses": {
+          "valid": "gültig",
+          "unreachable": "Data Center nicht erreichbar (die Lizenz bleibt gültig)",
+          "revoked": "widerrufen",
+          "suspended": "ausgesetzt",
+          "expired": "abgelaufen",
+          "domain": "für eine andere Domain",
+          "blocked": "für diese Seite gesperrt",
+          "unknown": "dem Data Center unbekannt",
+          "invalid": "ungültig"
+        }
       }
     }
   },
@@ -4406,7 +4444,8 @@
       "top": "Oben",
       "bottom": "Unten",
       "desktop": "Nur Desktop",
-      "all_devices": "Alle Geräte"
+      "all_devices": "Alle Geräte",
+      "poll": "Nur Polling (Hoster, die lange Verbindungen kappen)"
     },
     "forums": {
       "posts_per_page": "Beiträge pro Seite",
@@ -4981,6 +5020,10 @@
     "achievements": {
       "excluded_groups": "Von Regeln ausgeschlossene Gruppen",
       "rare_percent": "Schwelle für seltene Abzeichen (%)"
+    },
+    "realtime": {
+      "poll_interval": "Intervall der Live-Updates ohne Websocket (Sekunden, 2–60)",
+      "transport": "Transport der Live-Updates"
     }
   },
   "permissions": {
@@ -5361,7 +5404,13 @@
         "name": "Datenbankname",
         "test": "Prüfanschluss",
         "ok": "Die Verbindung funktioniert",
-        "okCreated": "Die Verbindung funktioniert; die Datenbank wurde erstellt"
+        "okCreated": "Die Verbindung funktioniert; die Datenbank wurde erstellt",
+        "bodyLite": "Lege zuerst die Datenbank und ihren Benutzer im Hosting-Panel an (cPanel → MySQL Databases, Plesk → Datenbanken) und gib dann hier die Verbindungsdaten ein.",
+        "engineGroup": "Datenbanktyp",
+        "mysql": "MySQL / MariaDB (empfohlen für Shared Hosting)",
+        "mysqlHint": "MySQL 8.0.13+ oder MariaDB 10.6+, bei fast jedem cPanel- oder Plesk-Hoster verfügbar.",
+        "postgresql": "PostgreSQL",
+        "postgresqlHint": "Wenn der Hoster PostgreSQL 14+ mit den Erweiterungen unaccent und pg_trgm anbietet (Suche mit Wortformen)."
       },
       "site": {
         "label": "Website",
@@ -5481,7 +5530,9 @@
       "redis": "Redis",
       "minio": "Dateispeicherung (MinIO)",
       "disk": "Speicherplatz (mindestens 2 GB)",
-      "config_writable": "Konfigurationsordner"
+      "config_writable": "Konfigurationsordner",
+      "node": "Node.js-Version",
+      "database": "Datenbank (aus DATABASE_URL)"
     },
     "fix": {
       "postgres": "Starten Sie den postgres-Dienst (\"docker compose up -d postgres\") und überprüfen Sie DATABASE URL in .env.",
@@ -5497,7 +5548,32 @@
       "db_no_create_privilege": "Die Datenbank existiert nicht und der Benutzer darf sie nicht erstellen (CREATEDB).",
       "db_missing_extensions": "Die unaccent- und pg trgm-Erweiterungen können auf diesem Server nicht aktiviert werden.",
       "session": "Die Installationssitzung ist abgelaufen. Geben Sie den Code erneut ein.",
-      "busy": "Die Installation läuft bereits."
+      "busy": "Die Installation läuft bereits.",
+      "db_no_privileges": "Der Datenbankbenutzer kann keine Tabellen anlegen: Gib ihm im Hosting-Panel alle Rechte („ALL PRIVILEGES“) auf diese Datenbank.",
+      "db_mysql_version": "Die MySQL-Serverversion ist zu alt: MySQL 8.0.13+ oder MariaDB 10.6+ wird benötigt."
+    },
+    "fixLite": {
+      "node": "Wähle Node.js 20.9 oder neuer unter „Setup Node.js App“ (cPanel) oder in den Node.js-Einstellungen der Domain (Plesk) und starte die Anwendung neu.",
+      "database": "Prüfe die Angaben in DATABASE_URL oder entferne die Variable und wähle die Datenbank im Schritt „Datenbank“.",
+      "disk": "Gib Speicherplatz im Hosting-Konto frei oder bitte den Hoster um mehr Kontingent: Die Plattform braucht mindestens 2 GB frei.",
+      "config_writable": "Der Ordner „config“ im Anwendungsordner muss für die Anwendung beschreibbar sein (Rechte 755, Eigentümer ist der Kontobenutzer)."
+    },
+    "cron": {
+      "title": "Letzter Schritt: Cron",
+      "body": "Auf Shared Hosting laufen geplante Aufgaben (Digest-E-Mails, VIP-Ablauf, Aufräumen, Statistiken) über den Cron des Hosters. Füge im Panel (cPanel → Cron Jobs, Plesk → Geplante Aufgaben) einen der Befehle unten hinzu und klicke dann auf „Prüfen“.",
+      "acpTitle": "Cron des Hosters",
+      "acpBody": "Geplante Aufgaben laufen über den Cron des Hosters. Ohne ihn laufen sie nur, solange die Anwendung wach ist (nach Anfragen), und manche (Digests, Abläufe) verspäten sich.",
+      "schedule": "Zeitplan:",
+      "node": "Befehl (Node.js, aus dem Anwendungsordner)",
+      "curl": "Oder, falls das Panel kein Node.js ausführen kann: die Adresse mit Token",
+      "copy": "Kopieren",
+      "copied": "Kopiert",
+      "check": "Prüfen",
+      "checking": "Wird geprüft…",
+      "never": "Der Cron ist noch nicht gelaufen. Warte nach dem Hinzufügen bis zu 5 Minuten und prüfe erneut.",
+      "lastRun": "Letzter Lauf: {time}",
+      "stale": "Der Cron läuft seit über 15 Minuten nicht mehr.",
+      "vps": "In der VPS-Edition führt der Dienst „worker“ (Docker) die geplanten Aufgaben aus: Ein Cron ist nicht nötig."
     }
   },
   "forum": {

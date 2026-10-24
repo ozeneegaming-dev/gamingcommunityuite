@@ -26,6 +26,8 @@ export default async function AcpUpdatePage() {
   const token = await installState().readLicense();
   const result = token ? verifyLicense(token, { domain: installDomain(), premiumApps: GCS_PREMIUM_APPS }) : null;
   const registry = services().registry;
+  // Verificarea online a licenței (doar cele emise de Data Center): ultima stare, scrisă de jobul zilnic.
+  const online = await services().licenseOnline.read().catch(() => null);
   const appName = (key: string) => {
     const labelKey = registry.module(key)?.app?.labelKey;
     return labelKey && tr.has(labelKey) ? tr(labelKey) : key;
@@ -67,6 +69,17 @@ export default async function AcpUpdatePage() {
           "gcs-update-license",
         )}
         {result?.ok && row(t("premium"), result.license.apps.length > 0 ? result.license.apps.map(appName).join(", ") : t("noPremium"))}
+        {result?.ok &&
+          online &&
+          online.status !== "disabled" &&
+          row(
+            t("online.label"),
+            <>
+              {t.has(`online.statuses.${online.status}`) ? t(`online.statuses.${online.status}`) : online.status}
+              {online.checkedAt ? ` · ${t("online.checked", { time: format.dateTime(new Date(online.checkedAt), { dateStyle: "medium", timeStyle: "short" }) })}` : ""}
+            </>,
+            "gcs-update-license-online",
+          )}
       </GcsCard>
 
       <GcsCard style={{ padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>

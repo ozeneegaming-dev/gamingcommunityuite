@@ -177,31 +177,78 @@ export function verifyLicense(token: string | null | undefined, opts: GcsLicense
 /** Licența include aplicația premium (sau e licența de test). */
 export const licenseIncludesApp = (license: Pick<GcsLicense, "apps">, appKey: string) => license.apps.includes(appKey);
 
-export type GcsLicenseOnlineResult = { status: "disabled" | "valid" | "revoked" | "unreachable" };
+export type GcsLicenseOnlineResult = {
+  status: "disabled" | "valid" | "revoked" | "unreachable";
+  /** Motivul unei licențe invalide, cum îl dă Data Center-ul (ex. `suspended`, `revoked`, `expired`, `domain`). */
+  reason?: string;
+  /** Un token mai nou al aceleiași licențe (ex. după o prelungire), de verificat offline înainte de păstrare. */
+  token?: string;
+};
+
+/** Platforma-mamă (Data Center-ul): verifică licențele emise de ea (cheile `gcs-lic-dc-*`). */
+export const GCS_LICENSE_SERVER_DEFAULT = "https://client.gamingcommunitysuite.com";
+
+/** Cheia cu care e semnat tokenul (fără verificare: doar pentru alegerea serverului). */
+function tokenKeyId(token: string): string | null {
+  const body = token.trim().split(".")[1];
+  if (!body) return null;
+  try {
+    const kid = (JSON.parse(Buffer.from(body, "base64url").toString("utf8")) as { kid?: unknown }).kid;
+    return typeof kid === "string" ? kid : null;
+  } catch {
+    return null;
+  }
+}
 
 /**
- * Verificarea ONLINE, opțională, la platforma-mamă (`GCS_LICENSE_SERVER`; dezactivată când e gol):
- * `POST <server>/api/license/verify` cu `{ token, domain }` → `{ valid: boolean }`. O licență revocată blochează;
- * un server indisponibil nu blochează (verificarea offline e suficientă).
+ * Serverul verificării online: `GCS_LICENSE_SERVER` (`off` o oprește), altfel Data Center-ul pentru licențele emise de
+ * el (cheile `gcs-lic-dc-*`); licențele emise offline de proprietar nu au o evidență online (`""` = fără verificare).
+ */
+export function licenseServerFor(token: string, env: NodeJS.ProcessEnv = process.env): string {
+  const configured = (env.GCS_LICENSE_SERVER ?? "").trim();
+  if (configured === "off") return "";
+  if (configured) return configured;
+  return tokenKeyId(token)?.startsWith("gcs-lic-dc-") ? GCS_LICENSE_SERVER_DEFAULT : "";
+}
+
+/**
+ * Verificarea ONLINE la platforma-mamă (vezi `licenseServerFor`): `POST <server>/api/license/verify` cu
+ * `{ token, domain, instance_uuid?, version?, edition? }` → `{ valid, status?, token? }`. O licență invalidă e
+ * `revoked` (cu motivul în `reason`); un server indisponibil nu blochează (verificarea offline e suficientă).
  */
 export async function checkLicenseOnline(
   token: string,
-  opts: { domain: string; server?: string | undefined; fetch?: typeof fetch; timeoutMs?: number },
+  opts: {
+    domain: string;
+    server?: string | undefined;
+    fetch?: typeof fetch;
+    timeoutMs?: number;
+    instanceUuid?: string;
+    version?: string;
+    edition?: string;
+  },
 ): Promise<GcsLicenseOnlineResult> {
-  const server = (opts.server ?? process.env.GCS_LICENSE_SERVER ?? "").trim();
+  const server = (opts.server ?? licenseServerFor(token)).trim();
   if (!server) return { status: "disabled" };
   const doFetch = opts.fetch ?? fetch;
   try {
     const res = await doFetch(new URL("/api/license/verify", server), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, domain: normalizeDomain(opts.domain) }),
+      body: JSON.stringify({
+        token,
+        domain: normalizeDomain(opts.domain),
+        ...(opts.instanceUuid ? { instance_uuid: opts.instanceUuid } : {}),
+        ...(opts.version ? { version: opts.version } : {}),
+        ...(opts.edition ? { edition: opts.edition } : {}),
+      }),
       signal: AbortSignal.timeout(opts.timeoutMs ?? 5000),
     });
     if (!res.ok) return { status: "unreachable" };
-    const body = (await res.json().catch(() => null)) as { valid?: unknown } | null;
-    if (body?.valid === true) return { status: "valid" };
-    if (body?.valid === false) return { status: "revoked" };
+    const body = (await res.json().catch(() => null)) as { valid?: unknown; status?: unknown; token?: unknown } | null;
+    const fresh = typeof body?.token === "string" && body.token.startsWith(`${GCS_LICENSE_PREFIX}.`) ? { token: body.token } : {};
+    if (body?.valid === true) return { status: "valid", ...fresh };
+    if (body?.valid === false) return { status: "revoked", ...(typeof body.status === "string" ? { reason: body.status.slice(0, 32) } : {}) };
     return { status: "unreachable" };
   } catch {
     return { status: "unreachable" };

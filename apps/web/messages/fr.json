@@ -226,7 +226,8 @@
       "no_permission": "Tu n'as pas le droit pour cette action.",
       "account_too_new": "Ton compte est trop récent pour cette action.",
       "not_enough_posts": "Il te faut plus de messages pour cette action.",
-      "disabled": "Cette fonction est désactivée ici."
+      "disabled": "Cette fonction est désactivée ici.",
+      "db_plugins_unsupported": "Sous MySQL (édition Lite), les plugins avec leur propre base de données ne sont pas disponibles. Ils fonctionnent sous PostgreSQL."
     },
     "fields": {
       "invalid_color": "Couleur non valide (#RRGBB)",
@@ -458,7 +459,8 @@
         "settings_rules": "Community rules",
         "apps_manage": "Management",
         "apps_dev": "Development",
-        "update": "Mise à jour"
+        "update": "Mise à jour",
+        "cron": "Cron"
       },
       "members": {
         "members": "Membres",
@@ -677,6 +679,26 @@
         "realtimeDown": {
           "title": "Le service en temps réel ne fonctionne pas",
           "body": "Les notifications en direct, le chat et la mise à jour en ligne de Qui est en ligne (démarrer le service en temps réel)."
+        },
+        "cronStale": {
+          "title": "Le cron de l’hébergeur ne tourne pas",
+          "never": "Il n’a jamais tourné : les récapitulatifs, les expirations VIP et les nettoyages ne s’exécutent que lorsque le site reçoit des visites.",
+          "since": "Dernière exécution : {time}. Les récapitulatifs, les expirations VIP et les nettoyages prennent du retard.",
+          "link": "Voir la commande cron"
+        },
+        "license": {
+          "title": "La licence GCS est {reason}",
+          "grace": "Le Data Center a déclaré la licence invalide. Les applications premium restent actives jusqu’au {date} ; le forum et les autres applications continuent de fonctionner. Contacte-nous pour renouveler.",
+          "blocked": "La période de grâce de 30 jours est terminée : les applications premium sont désactivées. Le forum et les autres applications continuent ; une licence renouvelée les réactive à la prochaine vérification.",
+          "reasons": {
+            "revoked": "révoquée",
+            "suspended": "suspendue",
+            "expired": "expirée",
+            "domain": "pour un autre domaine",
+            "blocked": "bloquée pour ce site",
+            "unknown": "inconnue du Data Center",
+            "invalid": "invalide"
+          }
         }
       },
       "actions": {
@@ -2492,7 +2514,8 @@
         "version_not_newer": "La version {version} n'est pas plus récente que celle installée ({installed}).",
         "signature_invalid": "The certification does not match: the package was changed or the certification is broken ({reason}).",
         "unsigned_denied": "Packages that are not certified are not allowed on this server.",
-        "client_js_unsigned": "Browser JavaScript is only allowed for GCS certified plugins."
+        "client_js_unsigned": "Browser JavaScript is only allowed for GCS certified plugins.",
+        "db_plugins_unsupported": "Le plugin a sa propre base de données : il ne peut pas être installé sous MySQL (édition Lite). Il fonctionne sous PostgreSQL."
       },
       "confirm": {
         "pageTitle": "Confirmer l'installation",
@@ -4340,6 +4363,21 @@
         "verify": "Il vérifie les sommes de contrôle du nouveau paquet.",
         "keep": "Il conserve les réglages du serveur, la configuration et les sauvegardes.",
         "restart": "Il redémarre les services ; les migrations de la base s’exécutent automatiquement et tes données restent."
+      },
+      "online": {
+        "label": "Vérification en ligne",
+        "checked": "dernière : {time}",
+        "statuses": {
+          "valid": "valide",
+          "unreachable": "Data Center injoignable (la licence reste valide)",
+          "revoked": "révoquée",
+          "suspended": "suspendue",
+          "expired": "expirée",
+          "domain": "pour un autre domaine",
+          "blocked": "bloquée pour ce site",
+          "unknown": "inconnue du Data Center",
+          "invalid": "invalide"
+        }
       }
     }
   },
@@ -4406,7 +4444,8 @@
       "top": "En haut",
       "bottom": "En bas",
       "desktop": "Ordinateur uniquement",
-      "all_devices": "Tous les appareils"
+      "all_devices": "Tous les appareils",
+      "poll": "Polling uniquement (hébergeurs qui coupent les connexions longues)"
     },
     "forums": {
       "posts_per_page": "Postes par page",
@@ -4981,6 +5020,10 @@
     "achievements": {
       "excluded_groups": "Groupes exclus des règles",
       "rare_percent": "Seuil des badges rares (%)"
+    },
+    "realtime": {
+      "poll_interval": "Intervalle des mises à jour en direct sans websocket (secondes, 2–60)",
+      "transport": "Transport des mises à jour en direct"
     }
   },
   "permissions": {
@@ -5361,7 +5404,13 @@
         "name": "Nom de la base de données",
         "test": "Connexion d ' essai",
         "ok": "La connexion fonctionne",
-        "okCreated": "La connexion fonctionne; la base de données a été créée"
+        "okCreated": "La connexion fonctionne; la base de données a été créée",
+        "bodyLite": "Crée d’abord la base de données et son utilisateur dans le panneau de l’hébergeur (cPanel → MySQL Databases, Plesk → Bases de données), puis saisis ici les informations de connexion.",
+        "engineGroup": "Type de base de données",
+        "mysql": "MySQL / MariaDB (recommandé en hébergement mutualisé)",
+        "mysqlHint": "MySQL 8.0.13+ ou MariaDB 10.6+, proposé par presque tous les hébergeurs cPanel ou Plesk.",
+        "postgresql": "PostgreSQL",
+        "postgresqlHint": "Si l’hébergeur propose PostgreSQL 14+ avec les extensions unaccent et pg_trgm (recherche avec flexions)."
       },
       "site": {
         "label": "Site",
@@ -5481,7 +5530,9 @@
       "redis": "Redis",
       "minio": "Stockage de fichiers (MinIO)",
       "disk": "Espace disque (au moins 2 Go)",
-      "config_writable": "Dossier de configuration"
+      "config_writable": "Dossier de configuration",
+      "node": "Version de Node.js",
+      "database": "Base de données (depuis DATABASE_URL)"
     },
     "fix": {
       "postgres": "Démarrer le service postgres (=docker composer -d postgres=) et vérifier DATABASE URL dans .env.",
@@ -5497,7 +5548,32 @@
       "db_no_create_privilege": "La base de données n'existe pas et l'utilisateur n'est pas autorisé à la créer (CREATEDB).",
       "db_missing_extensions": "Les extensions unaccent et pg trgm ne peuvent pas être activées sur ce serveur.",
       "session": "La session d'installation a expiré. Entrez à nouveau le code.",
-      "busy": "L'installation est déjà en cours."
+      "busy": "L'installation est déjà en cours.",
+      "db_no_privileges": "L’utilisateur de la base ne peut pas créer de tables : dans le panneau de l’hébergeur, accorde-lui tous les droits (« ALL PRIVILEGES ») sur cette base.",
+      "db_mysql_version": "La version du serveur MySQL est trop ancienne : MySQL 8.0.13+ ou MariaDB 10.6+ est requis."
+    },
+    "fixLite": {
+      "node": "Choisis Node.js 20.9 ou plus récent dans « Setup Node.js App » (cPanel) ou dans les réglages Node.js du domaine (Plesk), puis redémarre l’application.",
+      "database": "Vérifie les informations de DATABASE_URL, ou supprime la variable et choisis la base à l’étape « Base de données ».",
+      "disk": "Libère de l’espace dans le compte d’hébergement ou demande un quota plus grand : la plateforme a besoin d’au moins 2 Go libres.",
+      "config_writable": "Le dossier « config » dans le dossier de l’application doit être accessible en écriture (droits 755, propriétaire : l’utilisateur du compte)."
+    },
+    "cron": {
+      "title": "Dernière étape : Cron",
+      "body": "En hébergement mutualisé, les tâches planifiées (e-mails récapitulatifs, expiration VIP, nettoyages, statistiques) s’exécutent via le cron de l’hébergeur. Ajoute dans le panneau (cPanel → Cron Jobs, Plesk → Tâches planifiées) l’une des commandes ci-dessous, puis appuie sur « Vérifier ».",
+      "acpTitle": "Cron de l’hébergeur",
+      "acpBody": "Les tâches planifiées s’exécutent via le cron de l’hébergeur. Sans lui, elles ne tournent que lorsque l’application est éveillée (après des requêtes), et certaines (récapitulatifs, expirations) prennent du retard.",
+      "schedule": "Planification :",
+      "node": "Commande (Node.js, depuis le dossier de l’application)",
+      "curl": "Ou, si le panneau ne peut pas exécuter Node.js : l’adresse avec jeton",
+      "copy": "Copier",
+      "copied": "Copié",
+      "check": "Vérifier",
+      "checking": "Vérification…",
+      "never": "Le cron n’a pas encore tourné. Après l’avoir ajouté, attends jusqu’à 5 minutes et vérifie à nouveau.",
+      "lastRun": "Dernière exécution : {time}",
+      "stale": "Le cron ne tourne plus depuis plus de 15 minutes.",
+      "vps": "Dans l’édition VPS, les tâches planifiées sont exécutées par le service « worker » (Docker) : aucun cron n’est nécessaire."
     }
   },
   "forum": {

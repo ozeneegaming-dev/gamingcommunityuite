@@ -49,6 +49,7 @@ export * from "./install/apps";
 export * from "./install/checks";
 export * from "./install/license";
 export * from "./install/runner";
+export * from "./install/licenseOnline";
 export * from "./install/seed";
 export * from "./install/seedMarks";
 export * from "./install/state";

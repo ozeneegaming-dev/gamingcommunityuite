@@ -9,6 +9,7 @@ emit licențele. Fișierul nu intră în pachetul clientului (din `docs/` se liv
 |---|---|---|
 | `gcs-licenses-ed25519.pem` | cheia **privată** de licențe (`gcs-lic-2026`) | doar la `pnpm license:issue`, pe calculatorul tău |
 | `gcs-licenses-ed25519.pub.txt` | cheia publică de licențe | inclusă în fiecare release |
+| `gcs-licenses-dc-ed25519.pub.txt` | cheia publică a licențelor emise de Data Center (`gcs-lic-dc-2026`; cea privată stă doar pe VPS, în `/etc/gcs-datacenter/keys/`) | inclusă în fiecare release |
 | `gcs-plugins-ed25519.pem` | cheia **privată** a pluginurilor (`gcs-2026`) | doar la `pnpm release:sign` |
 | `gcs-plugins-ed25519.pub.txt` | cheia publică a pluginurilor | `GCS_PLUGIN_TRUSTED_KEYS` |
 
@@ -18,7 +19,13 @@ fără cheia privată de licențe nu mai poți emite licențe valabile pentru ve
 ## 1. Pachetul pentru clienți
 
 ```bash
-pnpm release -- --version 1.0.0 --license-key-file "../keys/gcs-licenses-ed25519.pub.txt"
+pnpm release -- --version 1.0.0 --license-key-file "../keys/gcs-licenses-ed25519.pub.txt" --license-key-file "../keys/gcs-licenses-dc-ed25519.pub.txt"
+```
+
+Ediția Lite (găzduire partajată, pachetul gata construit `gcs-lite-<versiune>.zip`): aceleași chei, plus `--edition lite`:
+
+```bash
+pnpm release -- --edition lite --version 1.0.0 --license-key-file "../keys/gcs-licenses-ed25519.pub.txt" --license-key-file "../keys/gcs-licenses-dc-ed25519.pub.txt"
 ```
 
 Scrie în `dist/release/<versiune>/` pachetul standard (`gcs-<versiune>.tar.gz` / `.zip`, cu `.sha256`) și, în
@@ -33,6 +40,15 @@ pnpm release:sign -- --key "../keys/gcs-plugins-ed25519.pem"
 
 ## 3. Licența unui client
 
+**Din Data Center (varianta obișnuită):** panoul Data Center → licența clientului → secțiunea „GamingCommunitySuite licence
+(GCS1)”: domeniile (câte unul pe rând, `*.domeniu.ro` pentru subdomenii), aplicațiile premium (ale planului sau alese),
+apoi „Issue GCS licence token”. Tokenul (`GCS1.…`) îl trimiți clientului. Site-urile verifică licența zilnic la
+`https://client.gamingcommunitysuite.com/api/license/verify`: suspendarea sau revocarea din panou se văd în ACP-ul
+clientului (avertisment), iar după 30 de zile de grație aplicațiile premium se opresc (forumul merge mai departe); o
+prelungire ajunge singură la client (tokenul nou se preia la verificarea următoare).
+
+**Offline, cu cheia ta (urgențe, fără Data Center):**
+
 ```bash
 pnpm license:issue -- --key "../keys/gcs-licenses-ed25519.pem" --licensee "Comunitatea X SRL" \
   --domain forum.x.ro --domain "*.x.ro" --apps servers,chat_pro --expires 2027-10-23 --out licenta-x.txt
@@ -43,5 +59,6 @@ pnpm license:issue -- --key "../keys/gcs-licenses-ed25519.pem" --licensee "Comun
 - `--expires`: `AAAA-LL-ZZ` (valabilă până la sfârșitul zilei, UTC) sau `never`.
 - Tokenul (`GCS1.…`) îl trimiți clientului; îl introduce la pasul „Licență” al installer-ului.
 
-Până există platforma-mamă (`GCS_LICENSE_SERVER`), licențele se emit doar așa; o licență nu se poate revoca înainte de
-expirare, deci pentru clienți noi e preferabilă o expirare (ex. un an) în loc de `never`.
+O licență emisă offline nu se poate revoca înainte de expirare (nu are evidență în Data Center), deci e preferabilă o
+expirare (ex. un an) în loc de `never`. `GCS_LICENSE_SERVER` (pe site-ul clientului) schimbă adresa verificării online
+sau o oprește (`off`).

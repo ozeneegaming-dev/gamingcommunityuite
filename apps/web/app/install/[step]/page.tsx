@@ -53,7 +53,7 @@ export default async function InstallStepPage({ params }: { params: Promise<{ st
         configDir: gcsConfigDir(),
         edition: gcsEdition(),
       });
-      const optional = new Set(["minio", "postgres", "extensions"]);
+      const optional = new Set(["minio", "postgres", "extensions", "database"]);
       content = (
         <>
           <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 10 }} data-testid="gcs-install-checks">
@@ -69,7 +69,7 @@ export default async function InstallStepPage({ params }: { params: Promise<{ st
                     {!r.ok && optional.has(r.id) ? ` · ${t("steps.checks.optional")}` : ""}
                   </span>
                 </span>
-                {!r.ok && r.fixKey && <span style={{ fontSize: 12.5, color: "var(--gcs-muted)", paddingLeft: 26 }}>{t(`fix.${r.id}`)}</span>}
+                {!r.ok && r.fixKey && <span style={{ fontSize: 12.5, color: "var(--gcs-muted)", paddingLeft: 26 }}>{t(r.fixKey.replace(/^install\./, ""))}</span>}
               </li>
             ))}
           </ul>
@@ -175,12 +175,16 @@ export default async function InstallStepPage({ params }: { params: Promise<{ st
     case "database": {
       const db = data.database ?? {};
       const inc = includedConnection();
+      const lite = gcsEdition() === "lite";
+      const engine = lite && db.engine !== "postgresql" ? "mysql" : "postgresql";
       content = (
         <DatabaseStep
+          lite={lite}
           initial={{
             mode: db.mode === "external" ? "external" : "included",
+            engine,
             host: str(db.host, "localhost"),
-            port: str(db.port, "5432"),
+            port: str(db.port, engine === "mysql" ? "3306" : "5432"),
             user: str(db.user, "gcs"),
             database: str(db.database, "gcs"),
           }}
@@ -191,6 +195,11 @@ export default async function InstallStepPage({ params }: { params: Promise<{ st
             includedHint: t("steps.database.includedHint"),
             external: t("steps.database.external"),
             externalHint: t("steps.database.externalHint"),
+            engineGroup: t("steps.database.engineGroup"),
+            mysql: t("steps.database.mysql"),
+            mysqlHint: t("steps.database.mysqlHint"),
+            postgresql: t("steps.database.postgresql"),
+            postgresqlHint: t("steps.database.postgresqlHint"),
             host: t("steps.database.host"),
             port: t("steps.database.port"),
             user: t("steps.database.user"),

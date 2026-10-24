@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
  * Release-ul de redistribuire GamingCommunitySuite (etapa 11): `pnpm release [-- --version 1.2.0] [--out <folder>] [--no-premium]`.
+ * Ediția Lite (găzduire partajată): `pnpm release -- --edition lite …`, în `scripts/release-lite.mjs`.
  *
  * Scrie în `dist/release/<versiune>/`:
  * - `gcs-<versiune>.tar.gz` și `gcs-<versiune>.zip` (pachetul standard), fiecare cu `<arhivă>.sha256`. În pachet, folderul
@@ -40,6 +41,8 @@ export const RELEASE_EXCLUDES = [
   /(^|\/)gcs-shots\//,
   /^tools\//,
   /^themes\//,
+  // Fișierele de pornire ale ediției Lite: doar în pachetul ei (`release-lite.mjs`).
+  /^lite\//,
   /^scripts\/(runner\.|check\.cmd|test-|release|license)/,
   /^servers-plugins\/(?!release\/)/,
   /(^|\/)e2e\//,
@@ -59,7 +62,8 @@ export const isShipped = (rel) => !RELEASE_EXCLUDES.some((re) => re.test(rel));
  * Brandul: pachetul clientului e doar GamingCommunitySuite. Numele vechi al proiectului nostru și alte platforme de
  * comunitate nu apar nicăieri (aceeași listă ca garda din `apps/web/lib/branding.test.ts`, plus numele nostru intern).
  */
-export const RELEASE_BRANDING = [/red-?line/i, /\bIPS\b/, /invision/i, /indungi/i, /ipsappzone/i, /xenforo/i, /vbulletin/i, /phpbb/i];
+// `red-?line` nu în mijlocul unui cuvânt (ex. `isErroredLine` din codul compilat al Next.js).
+export const RELEASE_BRANDING = [/(?<![a-z])red-?line/i, /\bIPS\b/, /invision/i, /indungi/i, /ipsappzone/i, /xenforo/i, /vbulletin/i, /phpbb/i];
 const TEXT = /\.(ts|tsx|mts|cts|js|mjs|cjs|jsx|json|css|md|prisma|sql|yml|yaml|sh|cmd|ps1|txt|html|svg|example|cfg|inc|sma|toml|lock|Dockerfile)$|(^|\/)(Dockerfile|Caddyfile|gcs|LICENSE|VERSION|\.gitignore|\.nvmrc|[^./]+)$/;
 
 /** Rescrierile din copia clientului (sursele rămân neschimbate: serverele noastre își păstrează numele proiectului Docker). */
@@ -108,7 +112,7 @@ export function projectFiles(root = ROOT) {
   return [...new Set(res.stdout.toString("utf8").split("\u0000").filter(Boolean))].filter((rel) => existsSync(path.join(root, rel)));
 }
 
-const LICENSE_TEXT = (version) => `GamingCommunitySuite ${version}
+export const LICENSE_TEXT = (version) => `GamingCommunitySuite ${version}
 
 Copyright (c) the GamingCommunitySuite owner. All rights reserved.
 
@@ -120,8 +124,8 @@ listed in THIRD-PARTY-NOTICES.md.
 // ─── Cheia publică de licență ──────────────────────────────────────────────────────────────────────────────
 
 /** Fișierul cu cheile de licență de încredere: lista goală din surse devine, în pachet, cheile proprietarului. */
-const LICENSE_KEYS_FILE = "packages/core/src/install/license.ts";
-const LICENSE_KEYS_EMPTY = "export const GCS_LICENSE_KEYS: Record<string, string> = {};";
+export const LICENSE_KEYS_FILE = "packages/core/src/install/license.ts";
+export const LICENSE_KEYS_EMPTY = "export const GCS_LICENSE_KEYS: Record<string, string> = {};";
 
 /** Cheile de licență din forma fișierului `.pub.txt` (`id=base64`, câte una pe argument). */
 export function parseLicenseKeys(list) {
@@ -136,7 +140,7 @@ export function parseLicenseKeys(list) {
 }
 
 /** O cheie de licență: id scurt și o cheie publică Ed25519 (32 de octeți în base64). */
-function assertLicenseKeys(keys) {
+export function assertLicenseKeys(keys) {
   const entries = Object.entries(keys ?? {});
   if (entries.length === 0) {
     throw new Error(
@@ -329,12 +333,18 @@ function arg(name) {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  // Ediția Lite (găzduire partajată): pachetul gata construit, în propriul script (`scripts/release-lite.mjs`).
+  if (arg("edition") === "lite") {
+    const res = spawnSync(process.execPath, [path.join(ROOT, "scripts", "release-lite.mjs"), ...process.argv.slice(2)], { stdio: "inherit" });
+    process.exit(res.status ?? 1);
+  }
   try {
     const version = arg("version") ?? JSON.parse(readFileSync(path.join(ROOT, "package.json"), "utf8")).version;
     // Cheile publice de licență: `--license-key id=base64` (repetabil) sau `--license-key-file <fișierul .pub.txt>`.
     const keyArgs = process.argv.flatMap((a, i) => (a === "--license-key" ? [process.argv[i + 1]] : []));
-    const keyFile = arg("license-key-file");
-    if (keyFile) keyArgs.push(...readFileSync(keyFile, "utf8").split(/\r?\n/).filter((l) => l.trim()));
+    // `--license-key-file` se poate repeta: cheia offline a proprietarului și cea a Data Center-ului (`gcs-lic-dc-2026`).
+    const keyFiles = process.argv.flatMap((a, i) => (a === "--license-key-file" ? [process.argv[i + 1]] : []));
+    for (const keyFile of keyFiles) keyArgs.push(...readFileSync(keyFile, "utf8").split(/\r?\n/).filter((l) => l.trim()));
     const licenseKeys = keyArgs.length ? parseLicenseKeys(keyArgs) : undefined;
     const result = buildRelease({ version, out: arg("out"), premium: !process.argv.includes("--no-premium"), licenseKeys });
     console.log(`release ${version}: ${result.files} fișiere`);

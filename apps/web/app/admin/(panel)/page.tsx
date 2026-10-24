@@ -1,4 +1,4 @@
-import { ACP_WIDGETS, checkHealth, realtimeStatus, serviceStatus, type GcsAcpWidget } from "@gcs/core";
+import { ACP_WIDGETS, checkHealth, CRON_STALE_MS, realtimeStatus, serviceStatus, type GcsAcpWidget } from "@gcs/core";
 import { GcsAvatar, GcsButton, GcsCard, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
@@ -7,6 +7,7 @@ import { notFound, redirect } from "next/navigation";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { requireAcpPanel } from "@/lib/acp";
+import { cronLastRun } from "@/lib/cron";
 import { getHealthDeps } from "@/lib/health-deps";
 import { services } from "@/lib/services";
 import { diskUsage, GCS_APP_VERSION } from "@/lib/system-info";
@@ -73,7 +74,7 @@ function More({ href, children }: { href: string; children: ReactNode }) {
 
 export default async function AcpDashboardPage() {
   const panel = await requireAcpPanel();
-  const { acp, acpDashboard, moderation, kv, edition, settings, vip } = services();
+  const { acp, acpDashboard, moderation, kv, edition, settings, vip, licenseOnline } = services();
   if (!(await acp.can(panel.actor, "system.dashboard", "view"))) {
     // Un admin fără dashboard ajunge pe prima secțiune pe care o vede.
     const first = panel.menu[0]?.items[0]?.href;
@@ -87,7 +88,7 @@ export default async function AcpDashboardPage() {
   const locale = await getLocale();
   const [siteName, timeZone] = await Promise.all([settings.get<string>("site.name"), settings.get<string>("site.timezone").catch(() => "Europe/Bucharest")]);
   const canLogs = panel.rights["system.logs"]?.view === true;
-  const [layout, overview, registrations, health, note, online, admins, failed, canEditNote, queueCount, queue, worker, [expiring], realtime, disk] =
+  const [layout, overview, registrations, health, note, online, admins, failed, canEditNote, queueCount, queue, worker, [expiring], realtime, disk, cronAt, licenseState] =
     await Promise.all([
       acpDashboard.getLayout(panel.user.id),
       acpDashboard.overview(new Date(), timeZone),
@@ -104,7 +105,14 @@ export default async function AcpDashboardPage() {
       vip.subscribers({ expiringDays: 7, page: 1, perPage: 8 }),
       realtimeStatus(kv, edition).catch(() => ({ up: false, lastBeatAt: null })),
       diskUsage(),
+      // Ediția Lite: joburile programate rulează la cron-ul gazdei (fără el, doar cât procesul e treaz).
+      edition === "lite" ? cronLastRun() : Promise.resolve(null),
+      licenseOnline.read().catch(() => null),
     ]);
+  // Licența declarată invalidă de platforma-mamă: perioada de grație (aplicațiile premium încă pornite) sau după ea.
+  const licenseGraceEnds = licenseOnline.graceEndsAt(licenseState);
+  const licenseBlocked = licenseGraceEnds !== null && Date.now() >= licenseGraceEnds.getTime();
+  const cronStale = edition === "lite" && (cronAt === null || Date.now() - cronAt > CRON_STALE_MS);
 
   const w = (key: GcsAcpWidget, k: string, values?: Record<string, string | number>) => t(`widgets.${key}.${k}`, values);
   const status = (ok: boolean) => (
@@ -428,6 +436,31 @@ export default async function AcpDashboardPage() {
           </strong>
           <span>
             {worker.lastBeatAt ? t("banners.workerDown.since", { time: format.relativeTime(worker.lastBeatAt) }) : t("banners.workerDown.never")}
+          </span>
+        </GcsCard>
+      )}
+
+      {licenseGraceEnds && (
+        <GcsCard role="alert" data-testid="gcs-banner-license" className="gcs-acpBanner">
+          <strong>
+            <GcsIcon name="fa-solid fa-certificate" />
+            {t("banners.license.title", { reason: t.has(`banners.license.reasons.${licenseState?.status}`) ? t(`banners.license.reasons.${licenseState?.status}`) : (licenseState?.status ?? "") })}
+          </strong>
+          <span>
+            {licenseBlocked ? t("banners.license.blocked") : t("banners.license.grace", { date: format.dateTime(licenseGraceEnds, { dateStyle: "long" }) })}
+          </span>
+        </GcsCard>
+      )}
+
+      {cronStale && (
+        <GcsCard role="alert" data-testid="gcs-banner-cron" className="gcs-acpBanner">
+          <strong>
+            <GcsIcon name="fa-solid fa-clock" />
+            {t("banners.cronStale.title")}
+          </strong>
+          <span>
+            {cronAt === null ? t("banners.cronStale.never") : t("banners.cronStale.since", { time: format.relativeTime(cronAt) })}{" "}
+            <Link href="/admin/system/cron">{t("banners.cronStale.link")}</Link>
           </span>
         </GcsCard>
       )}

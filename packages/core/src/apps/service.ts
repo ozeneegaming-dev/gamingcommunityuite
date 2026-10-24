@@ -84,7 +84,9 @@ const asActor = (v: GcsAppViewer): GcsActor => ({
  * - **accesul pe grup:** permisiunea generată `<app>.app_access` (implicit pentru orice grup); o aplicație e
  *   „restricționată” când măcar un grup nu o are, și doar atunci se verifică actorul (proxy, meniu, widget-uri);
  * - **pornirea:** aplicația a cărei pagină se vede pe `/` (setarea `apps.landing`; implicit aplicația `home`, Forumul);
- * - **ordinea:** lista din ACP și itemii aplicațiilor din meniul principal (setarea `apps.order`).
+ * - **ordinea:** lista din ACP și itemii aplicațiilor din meniul principal (setarea `apps.order`);
+ * - **licența:** aplicațiile premium se opresc când platforma-mamă declară licența invalidă de peste 30 de zile
+ *   (`premiumBlocked`, vezi `GcsLicenseOnline`).
  */
 export class GcsAppService {
   constructor(
@@ -96,6 +98,8 @@ export class GcsAppService {
       acp: GcsAcpRoleService;
       permissions: GcsPermissionService;
       settings: GcsSettingsService;
+      /** Licența declarată invalidă de platforma-mamă de peste 30 de zile: aplicațiile premium sunt oprite. */
+      premiumBlocked?: () => Promise<boolean>;
     },
   ) {}
 
@@ -118,12 +122,13 @@ export class GcsAppService {
 
   /** Funcția de filtrare pentru mai multe chei (o singură citire). */
   async enabledFilter(): Promise<(key: string) => boolean> {
-    const off = await this.disabled();
+    const [off, premiumBlocked] = await Promise.all([this.disabled(), this.deps.premiumBlocked?.() ?? Promise.resolve(false)]);
     const registry = this.deps.registry;
     const active = (key: string, seen: Set<string>): boolean => {
       const m = registry.module(key);
       if (!m || seen.has(key)) return false;
       if (m.app?.optional && off.has(key)) return false;
+      if (premiumBlocked && m.app?.premium) return false;
       seen.add(key);
       return (m.app?.requires ?? []).every((dep) => active(dep, seen));
     };

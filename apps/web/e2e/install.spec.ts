@@ -80,6 +80,7 @@ test("instalarea completă: licența, aplicațiile, reluare după refresh, login
     if (process.env.GCS_EDITION === "lite") await expect(checks.getByText("Redis")).toHaveCount(0);
     else await expect(checks.getByText("Redis")).toBeVisible();
     await expect(checks.getByText("Folderul de configurare")).toBeVisible();
+    if (process.env.GCS_EDITION === "lite") await expect(checks.getByText("Versiunea Node.js")).toBeVisible();
     await next(page);
     await expect(page).toHaveURL(/\/install\/license$/);
   });
@@ -142,8 +143,26 @@ test("instalarea completă: licența, aplicațiile, reluare după refresh, login
     await expect(page).toHaveURL(/\/install\/database$/);
   });
 
-  await test.step("5. baza de date inclusă: testul conexiunii, apoi Continuă", async () => {
-    await expect(page.getByRole("radio", { name: /PostgreSQL inclus/ })).toBeChecked();
+  await test.step("5. baza de date: testul conexiunii, apoi Continuă", async () => {
+    if (process.env.GCS_EDITION === "lite") {
+      // Ediția Lite: baza e creată în panoul gazdei; MySQL e varianta implicită, PostgreSQL a doua.
+      const url = new URL(process.env.GCS_E2E_INSTALL_DATABASE_URL!);
+      const mysql = url.protocol === "mysql:";
+      await expect(page.getByRole("radio", { name: /^MySQL \/ MariaDB/ })).toBeChecked();
+      await expect(page.getByLabel("Port")).toHaveValue("3306");
+      if (!mysql) {
+        await page.locator("label.gcs-option").filter({ hasText: "PostgreSQL 14+" }).click();
+        await expect(page.getByRole("radio", { name: /^PostgreSQL/ })).toBeChecked();
+        await expect(page.getByLabel("Port")).toHaveValue("5432");
+      }
+      await page.getByLabel("Host").fill(url.hostname);
+      await page.getByLabel("Port").fill(url.port);
+      await page.getByLabel("Utilizator").fill(decodeURIComponent(url.username));
+      await page.getByLabel("Parolă", { exact: true }).fill(decodeURIComponent(url.password));
+      await page.getByLabel("Numele bazei de date").fill(url.pathname.slice(1));
+    } else {
+      await expect(page.getByRole("radio", { name: /PostgreSQL inclus/ })).toBeChecked();
+    }
     await page.getByRole("button", { name: "Testează conexiunea" }).click();
     await expect(page.getByRole("status")).toContainText("Conexiunea funcționează");
     await next(page);
@@ -190,10 +209,26 @@ test("instalarea completă: licența, aplicațiile, reluare după refresh, login
 
   await test.step("10. instalarea rulează (cu pasul aplicațiilor) și se termină; login automat în ACP", async () => {
     await page.getByRole("button", { name: "Pornește instalarea" }).click();
-    await expect(page.getByRole("status")).toContainText("Instalare finalizată", { timeout: 90_000 });
+    await expect(page.getByRole("status").filter({ hasText: "Instalare finalizată" })).toBeVisible({ timeout: 90_000 });
     await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "100");
     await expect(page.getByTestId("gcs-install-log")).toContainText("Pornesc aplicațiile alese");
     await expect(page.getByTestId("gcs-install-log")).toContainText("Creez contul Root Admin");
+    if (process.env.GCS_EDITION === "lite") {
+      // Pasul final al ediției Lite: comanda de cron și verificarea că rulează (aici, o rulare a `/api/cron` cu tokenul).
+      const cron = page.getByTestId("gcs-cron-panel");
+      await expect(cron.getByTestId("gcs-cron-schedule")).toHaveText("*/5 * * * *");
+      await expect(cron.getByTestId("gcs-cron-node")).toContainText("cron.mjs");
+      await expect(cron.getByTestId("gcs-cron-curl")).toContainText("/api/cron?token=");
+      await cron.getByTestId("gcs-cron-check").click();
+      await expect(cron.getByTestId("gcs-cron-status")).toHaveAttribute("data-running", "false");
+      const { createHmac } = await import("node:crypto");
+      const token = createHmac("sha256", process.env.GCS_SECRET!).update("gcs-cron").digest("hex").slice(0, 40);
+      const res = await page.request.post(`${process.env.GCS_E2E_INSTALL_URL}/api/cron`, { headers: { authorization: `Bearer ${token}` } });
+      expect(res.status(), await res.text()).toBe(200);
+      await cron.getByTestId("gcs-cron-check").click();
+      await expect(cron.getByTestId("gcs-cron-status")).toHaveAttribute("data-running", "true");
+      await expect(cron.getByTestId("gcs-cron-status")).toContainText("Ultima rulare");
+    }
     await page.getByRole("button", { name: "Intră în ACP" }).click();
     await expect(page).toHaveURL(/\/admin\/2fa-setup$/);
     await expect(page.getByRole("heading", { name: "Activează autentificarea în doi pași" })).toBeVisible();

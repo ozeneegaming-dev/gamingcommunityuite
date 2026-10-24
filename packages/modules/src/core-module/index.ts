@@ -77,6 +77,10 @@ const settings: GcsSettingDef[] = [
   setting("auth.turnstile_site_key", "string", "", "auth"),
   setting("auth.turnstile_secret", "secret", "", "auth"),
   setting("system.maintenance", "boolean", false, "advanced"),
+  // Timpul real fără websocket (ediția Lite, sau rezerva din VPS): intervalul polling-ului și, pentru gazdele care taie
+  // conexiunile lungi, doar polling (fără SSE).
+  setting("realtime.poll_interval", "number", 5, "advanced", (v) => (Number.isInteger(v) && (v as number) >= 2 && (v as number) <= 60 ? null : "invalid_range")),
+  { ...setting("realtime.transport", "string", "auto", "advanced", oneOf(["auto", "poll"])), options: ["auto", "poll"] },
   // Limbile și traducerea automată (etapa 5): limbile oferite membrilor și providerul butonului „Traduce”.
   setting("i18n.locales", "json", [...GCS_LOCALE_KEYS], "languages", (v) =>
     Array.isArray(v) && v.length > 0 && v.every((l) => GCS_LOCALE_KEYS.includes(l as (typeof GCS_LOCALE_KEYS)[number])) ? null : "invalid_choice",
@@ -204,6 +208,7 @@ const acpMenu: GcsAcpMenuSection[] = [
     ["files", "/admin/system/files", "fa-solid fa-folder-open"],
     ["status", "/admin/system/status", "fa-solid fa-heart-pulse"],
     ["update", "/admin/system/update", "fa-solid fa-arrows-rotate"],
+    ["cron", "/admin/system/cron", "fa-solid fa-clock"],
   ]),
   menuSection("system", "site_features", "fa-solid fa-puzzle-piece", [
     ["applications", "/admin/system/applications", "fa-solid fa-cubes"],

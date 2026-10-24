@@ -1,4 +1,4 @@
-import type { GcsInstallStep } from "@gcs/core";
+import { gcsEdition, type GcsInstallStep } from "@gcs/core";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { stepIndex, WIZARD_STEPS } from "@/lib/install";
@@ -7,6 +7,8 @@ import { stepIndex, WIZARD_STEPS } from "@/lib/install";
 export async function InstallShell({ step, children }: { step: GcsInstallStep; children: ReactNode }) {
   const t = await getTranslations("install");
   const current = stepIndex(step);
+  // Ediția Lite (găzduire partajată) are, la unii pași, alt text (ex. baza creată în panoul gazdei).
+  const lite = gcsEdition() === "lite";
   return (
     <div className="gcs-card" style={{ display: "flex", flexWrap: "wrap", overflow: "hidden", borderRadius: 16 }}>
       <ol
@@ -67,7 +69,7 @@ export async function InstallShell({ step, children }: { step: GcsInstallStep; c
           <h1 className="gcs-display" style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
             {t(`steps.${step}.title`)}
           </h1>
-          <p style={{ margin: 0, color: "var(--gcs-muted)", fontSize: 14, lineHeight: 1.6 }}>{t(`steps.${step}.body`)}</p>
+          <p style={{ margin: 0, color: "var(--gcs-muted)", fontSize: 14, lineHeight: 1.6 }}>{t(lite && t.has(`steps.${step}.bodyLite`) ? `steps.${step}.bodyLite` : `steps.${step}.body`)}</p>
         </div>
         {children}
       </section>

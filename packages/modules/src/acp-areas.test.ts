@@ -22,7 +22,7 @@ describe("zonele ACP ale aplicației", () => {
     expect(areas.map((a) => a.key)).toEqual(["system", "community", "members", "appearance", "gaming", "vip", "stats", "apps"]);
     expect(shape(areas)).toEqual({
       system: [
-        ["acp.menu.system.overview", ["system.files", "system.status", "system.update"]],
+        ["acp.menu.system.overview", ["system.files", "system.status", "system.update", "system.cron"]],
         ["acp.menu.system.site_features", ["system.applications", "system.integrations", "system.api", "system.webhooks", "system.rss_import"]],
         [
           "acp.menu.system.settings",

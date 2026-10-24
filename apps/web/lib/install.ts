@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import {
   databaseUrlFor,
+  defaultDbPort,
   GCS_INSTALL_STEPS,
   GCS_PREMIUM_APPS,
   GcsInstallState,
@@ -83,9 +84,11 @@ export async function targetDatabaseUrl(data: Data): Promise<string | null> {
   const db = data.database ?? {};
   if (db.mode === "external") {
     const password = (await installState().secret("database", "password")) ?? "";
+    const engine = db.engine === "mysql" ? "mysql" : "postgresql";
     return databaseUrlFor({
+      engine,
       host: str(db.host),
-      port: Number(db.port) || 5432,
+      port: Number(db.port) || defaultDbPort(engine),
       user: str(db.user),
       password,
       database: str(db.database, "gcs"),

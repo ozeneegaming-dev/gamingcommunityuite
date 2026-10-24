@@ -1,17 +1,19 @@
 "use client";
 
 import { GcsButton } from "@gcs/ui";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 type Props = {
   stepLabels: Record<string, string>;
   labels: { start: string; retry: string; copyLog: string; copied: string; progress: string; failed: string; doneTitle: string; doneBody: string; enter: string; back: string };
+  /** Afișat după instalare (ediția Lite: pasul final, cron-ul). */
+  afterDone?: ReactNode;
 };
 
 type Phase = { kind: "idle" } | { kind: "running" } | { kind: "error"; message: string } | { kind: "done"; finishUrl: string };
 
 /** Pasul „Instalare”: pornește rularea (POST /install/run) și afișează progresul primit prin SSE. */
-export function RunStep({ stepLabels, labels }: Props) {
+export function RunStep({ stepLabels, labels, afterDone }: Props) {
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
   const [pct, setPct] = useState(0);
   const [log, setLog] = useState<string[]>([]);
@@ -84,6 +86,7 @@ export function RunStep({ stepLabels, labels }: Props) {
           <span style={{ fontSize: 14, color: "var(--gcs-muted)" }}>{labels.doneBody}</span>
         </div>
       )}
+      {phase.kind === "done" && afterDone}
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", paddingTop: 8, borderTop: "1px solid var(--gcs-border)" }}>
         {phase.kind === "idle" ? (
           <GcsButton variant="ghost" type="button" onClick={() => window.location.assign("/install/data")}>

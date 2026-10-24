@@ -1,4 +1,4 @@
-import { createPrismaClient, gcsDbDialect } from "@gcs/db";
+import { createPrismaClient, gcsDbDialect, probeMysql } from "@gcs/db";
 import { migrateDatabase } from "@gcs/db/migrate";
 import pg from "pg";
 import { prepareNewUser } from "../auth/registration";
@@ -14,18 +14,24 @@ import { applyAppSelection, landingSettingValue, type GcsAppSelection } from "./
 import { seedDefaults } from "./seed";
 import type { GcsInstallState } from "./state";
 
-export type GcsDbConnection = { host: string; port: number; user: string; password: string; database: string };
+/** Motorul bazei de date: PostgreSQL (ambele ediții) sau MySQL / MariaDB (doar ediția Lite). */
+export type GcsDbEngine = "postgresql" | "mysql";
+
+export type GcsDbConnection = { host: string; port: number; user: string; password: string; database: string; engine?: GcsDbEngine };
 
 export type GcsTestDatabaseResult =
   | { ok: true; created: boolean }
-  | { ok: false; errorKey: "db_unreachable" | "db_auth" | "db_no_create_privilege" | "db_missing_extensions" };
+  | { ok: false; errorKey: "db_unreachable" | "db_auth" | "db_no_create_privilege" | "db_missing_extensions" | "db_no_privileges" | "db_mysql_version" };
 
 const TIMEOUT_MS = 5000;
 const EXTENSIONS = ["unaccent", "pg_trgm"];
 
-/** Construiește URL-ul PostgreSQL pentru o conexiune introdusă în wizard. */
+/** Portul implicit al motorului. */
+export const defaultDbPort = (engine: GcsDbEngine | undefined) => (engine === "mysql" ? 3306 : 5432);
+
+/** Construiește URL-ul bazei (PostgreSQL sau MySQL) pentru o conexiune introdusă în wizard. */
 export function databaseUrlFor(conn: GcsDbConnection): string {
-  const url = new URL("postgresql://localhost");
+  const url = new URL(conn.engine === "mysql" ? "mysql://localhost" : "postgresql://localhost");
   url.hostname = conn.host;
   url.port = String(conn.port);
   url.username = conn.user;
@@ -41,10 +47,15 @@ function pgError(error: unknown): "db_unreachable" | "db_auth" {
 }
 
 /**
- * Pasul „Baza de date” (spec §17.1): conectare la baza `postgres`, crearea bazei dacă lipsește,
- * apoi extensiile `unaccent` și `pg_trgm`. Întoarce cheia erorii (tradusă în wizard).
+ * Pasul „Baza de date” (spec §17.1). PostgreSQL: conectare la baza `postgres`, crearea bazei dacă lipsește,
+ * apoi extensiile `unaccent` și `pg_trgm`. MySQL / MariaDB (ediția Lite): `probeMysql` (versiunea, crearea bazei,
+ * dreptul de a crea tabele). Întoarce cheia erorii (tradusă în wizard).
  */
 export async function testDatabase(conn: GcsDbConnection): Promise<GcsTestDatabaseResult> {
+  if (conn.engine === "mysql") {
+    const probe = await probeMysql(conn);
+    return probe.ok ? { ok: true, created: probe.created } : { ok: false, errorKey: probe.errorKey };
+  }
   const maintenance = new pg.Client({ connectionString: databaseUrlFor({ ...conn, database: "postgres" }), connectionTimeoutMillis: TIMEOUT_MS });
   maintenance.on("error", () => {});
   let created = false;

@@ -71,6 +71,7 @@ describe("lista de fișiere a pachetului", () => {
       ["x.ts", Buffer.from("// limita de IPs pe cont")],
       ["y.css", Buffer.from("/* stil inspirat din xenforo */")],
       ["img.png", Buffer.from("redline")],
+      ["chunk.js", Buffer.from("const { lineNumber, isErroredLine } = parsedLine")],
       ["logo.tsx", Buffer.from("<span>RED<span className=\"x\">-</span>LINE</span>")],
     ]);
     expect(brandingIssues(files)).toEqual(["docs/a.md:1: Instalarea Red-Line", "y.css:1: /* stil inspirat din xenforo */", "logo.tsx:1: <span>RED<span className=\"x\">-</span>LINE</span>"]);

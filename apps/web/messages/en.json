@@ -226,7 +226,8 @@
       "no_permission": "You don't have the right for this action.",
       "account_too_new": "Your account is too new for this action.",
       "not_enough_posts": "You need more posts for this action.",
-      "disabled": "This feature is off here."
+      "disabled": "This feature is off here.",
+      "db_plugins_unsupported": "On MySQL (Lite edition), plugins with their own database aren’t available. They work on PostgreSQL."
     },
     "fields": {
       "invalid_color": "Invalid color (#RRGGBB)",
@@ -458,7 +459,8 @@
         "settings_rules": "Community rules",
         "apps_manage": "Management",
         "apps_dev": "Development",
-        "update": "Update"
+        "update": "Update",
+        "cron": "Cron"
       },
       "members": {
         "members": "Members",
@@ -677,6 +679,26 @@
         "realtimeDown": {
           "title": "The real-time service is not running",
           "body": "Live notifications, chat and “Who's online” only update on page reload (start the `realtime` service)."
+        },
+        "cronStale": {
+          "title": "The host cron isn’t running",
+          "never": "It has never run: digests, VIP expiries and cleanups only run while the site gets visits.",
+          "since": "Last run: {time}. Digests, VIP expiries and cleanups are delayed.",
+          "link": "See the cron command"
+        },
+        "license": {
+          "title": "The GCS licence is {reason}",
+          "grace": "The Data Center has declared the licence invalid. Premium applications stay on until {date}; the forum and the other applications keep working. Contact us to renew.",
+          "blocked": "The 30-day grace period has ended: premium applications are off. The forum and the other applications keep working; a renewed licence turns them back on at the next check.",
+          "reasons": {
+            "revoked": "revoked",
+            "suspended": "suspended",
+            "expired": "expired",
+            "domain": "for another domain",
+            "blocked": "blocked for this site",
+            "unknown": "unknown to the Data Center",
+            "invalid": "invalid"
+          }
         }
       },
       "actions": {
@@ -2492,7 +2514,8 @@
         "version_not_newer": "Version {version} is not newer than the installed one ({installed}).",
         "signature_invalid": "The certification does not match: the package was changed or the certification is broken ({reason}).",
         "unsigned_denied": "Packages that are not certified are not allowed on this server.",
-        "client_js_unsigned": "Browser JavaScript is only allowed for GCS certified plugins."
+        "client_js_unsigned": "Browser JavaScript is only allowed for GCS certified plugins.",
+        "db_plugins_unsupported": "The plugin has its own database: it can’t be installed on MySQL (Lite edition). It works on PostgreSQL."
       },
       "confirm": {
         "pageTitle": "Confirm the installation",
@@ -4340,6 +4363,21 @@
         "verify": "It checks the new package's checksums.",
         "keep": "It keeps the server settings, the configuration and the backups.",
         "restart": "It restarts the services; database migrations run automatically and your data stays."
+      },
+      "online": {
+        "label": "Online check",
+        "checked": "last: {time}",
+        "statuses": {
+          "valid": "valid",
+          "unreachable": "Data Center unreachable (the licence stays valid)",
+          "revoked": "revoked",
+          "suspended": "suspended",
+          "expired": "expired",
+          "domain": "for another domain",
+          "blocked": "blocked for this site",
+          "unknown": "unknown to the Data Center",
+          "invalid": "invalid"
+        }
       }
     }
   },
@@ -4406,7 +4444,8 @@
       "top": "Top",
       "bottom": "Bottom",
       "desktop": "Desktop only",
-      "all_devices": "All devices"
+      "all_devices": "All devices",
+      "poll": "Polling only (hosts that cut long connections)"
     },
     "forums": {
       "posts_per_page": "Posts per page",
@@ -4981,6 +5020,10 @@
     "achievements": {
       "excluded_groups": "Groups excluded from rules",
       "rare_percent": "Rare badge threshold (%)"
+    },
+    "realtime": {
+      "poll_interval": "Live update interval without websocket (seconds, 2–60)",
+      "transport": "Live update transport"
     }
   },
   "permissions": {
@@ -5361,7 +5404,13 @@
         "name": "Database name",
         "test": "Test connection",
         "ok": "The connection works",
-        "okCreated": "The connection works; the database was created"
+        "okCreated": "The connection works; the database was created",
+        "bodyLite": "First create the database and its user in the hosting panel (cPanel → MySQL Databases, Plesk → Databases), then enter the connection details here.",
+        "engineGroup": "Database type",
+        "mysql": "MySQL / MariaDB (recommended on shared hosting)",
+        "mysqlHint": "MySQL 8.0.13+ or MariaDB 10.6+, offered by almost every cPanel or Plesk host.",
+        "postgresql": "PostgreSQL",
+        "postgresqlHint": "If the host offers PostgreSQL 14+ with the unaccent and pg_trgm extensions (search with word forms)."
       },
       "site": {
         "label": "Site",
@@ -5481,7 +5530,9 @@
       "redis": "Redis",
       "minio": "File storage (MinIO)",
       "disk": "Disk space (at least 2 GB)",
-      "config_writable": "Configuration folder"
+      "config_writable": "Configuration folder",
+      "node": "Node.js version",
+      "database": "Database (from DATABASE_URL)"
     },
     "fix": {
       "postgres": "Start the postgres service (“docker compose up -d postgres”) and check DATABASE_URL in .env.",
@@ -5497,7 +5548,32 @@
       "db_no_create_privilege": "The database does not exist and the user is not allowed to create it (CREATEDB).",
       "db_missing_extensions": "The unaccent and pg_trgm extensions cannot be enabled on this server.",
       "session": "The installation session expired. Enter the code again.",
-      "busy": "The installation is already running."
+      "busy": "The installation is already running.",
+      "db_no_privileges": "The database user can’t create tables: in the hosting panel, grant it all privileges (“ALL PRIVILEGES”) on this database.",
+      "db_mysql_version": "The MySQL server version is too old: MySQL 8.0.13+ or MariaDB 10.6+ is required."
+    },
+    "fixLite": {
+      "node": "Choose Node.js 20.9 or newer in “Setup Node.js App” (cPanel) or in the domain’s Node.js settings (Plesk), then restart the application.",
+      "database": "Check the details in DATABASE_URL, or remove the variable and choose the database at the “Database” step.",
+      "disk": "Free up space in the hosting account or ask the host for a larger quota: the platform needs at least 2 GB free.",
+      "config_writable": "The “config” folder inside the application folder must be writable by the application (755 permissions, owned by the account user)."
+    },
+    "cron": {
+      "title": "Final step: Cron",
+      "body": "On shared hosting, scheduled tasks (digest emails, VIP expiry, cleanups, statistics) run on the host’s cron. Add one of the commands below in the panel (cPanel → Cron Jobs, Plesk → Scheduled Tasks), then press “Check”.",
+      "acpTitle": "Host cron",
+      "acpBody": "Scheduled tasks run on the host’s cron. Without it they only run while the application is awake (after requests), and some (digests, expiries) are delayed.",
+      "schedule": "Schedule:",
+      "node": "Command (Node.js, from the application folder)",
+      "curl": "Or, if the panel can’t run Node.js: the address with a token",
+      "copy": "Copy",
+      "copied": "Copied",
+      "check": "Check",
+      "checking": "Checking…",
+      "never": "The cron hasn’t run yet. After adding it, wait up to 5 minutes and check again.",
+      "lastRun": "Last run: {time}",
+      "stale": "The cron hasn’t run for more than 15 minutes.",
+      "vps": "In the VPS edition, scheduled tasks are run by the “worker” service (Docker): no cron is needed."
     }
   },
   "forum": {

@@ -226,7 +226,8 @@
       "no_permission": "Nu ai dreptul pentru această acțiune.",
       "account_too_new": "Contul tău e prea nou pentru această acțiune.",
       "not_enough_posts": "Ai nevoie de mai multe postări pentru această acțiune.",
-      "disabled": "Funcția e oprită aici."
+      "disabled": "Funcția e oprită aici.",
+      "db_plugins_unsupported": "Pe MySQL (ediția Lite) pluginurile cu bază de date proprie nu sunt disponibile. Ele merg pe PostgreSQL."
     },
     "fields": {
       "invalid_color": "Culoare invalidă (#RRGGBB)",
@@ -458,7 +459,8 @@
         "settings_rules": "Reguli comunitate",
         "apps_manage": "Gestionare",
         "apps_dev": "Dezvoltare",
-        "update": "Actualizare"
+        "update": "Actualizare",
+        "cron": "Cron"
       },
       "members": {
         "members": "Membri",
@@ -677,6 +679,26 @@
         "realtimeDown": {
           "title": "Serviciul de timp real nu rulează",
           "body": "Notificările live, chat-ul și „Cine e online” se actualizează doar la reîncărcarea paginii (pornește serviciul `realtime`)."
+        },
+        "cronStale": {
+          "title": "Cron-ul gazdei nu rulează",
+          "never": "Nu a rulat niciodată: digesturile, expirările VIP și curățenia rulează doar cât site-ul primește vizite.",
+          "since": "Ultima rulare: {time}. Digesturile, expirările VIP și curățenia întârzie.",
+          "link": "Vezi comanda de cron"
+        },
+        "license": {
+          "title": "Licența GCS e {reason}",
+          "grace": "Data Center-ul a declarat licența invalidă. Aplicațiile premium rămân pornite până pe {date}; forumul și celelalte aplicații merg mai departe. Contactează-ne pentru reînnoire.",
+          "blocked": "Perioada de grație de 30 de zile s-a încheiat: aplicațiile premium sunt oprite. Forumul și celelalte aplicații merg mai departe; o licență reînnoită le repornește la verificarea următoare.",
+          "reasons": {
+            "revoked": "revocată",
+            "suspended": "suspendată",
+            "expired": "expirată",
+            "domain": "pentru alt domeniu",
+            "blocked": "blocată pentru acest site",
+            "unknown": "necunoscută la Data Center",
+            "invalid": "invalidă"
+          }
         }
       },
       "actions": {
@@ -2492,7 +2514,8 @@
         "version_not_newer": "Versiunea {version} nu e mai nouă decât cea instalată ({installed}).",
         "signature_invalid": "Certificarea nu se potrivește: pachetul a fost modificat sau certificarea e stricată ({reason}).",
         "unsigned_denied": "Pachetele necertificate sunt interzise pe acest server.",
-        "client_js_unsigned": "JavaScript-ul în browser e permis doar pluginurilor Certificat GCS."
+        "client_js_unsigned": "JavaScript-ul în browser e permis doar pluginurilor Certificat GCS.",
+        "db_plugins_unsupported": "Pluginul are bază de date proprie: pe MySQL (ediția Lite) nu se poate instala. Merge pe PostgreSQL."
       },
       "confirm": {
         "pageTitle": "Confirmarea instalării",
@@ -4340,6 +4363,21 @@
         "verify": "Verifică sumele de control ale pachetului nou.",
         "keep": "Păstrează setările serverului, configurarea și backup-urile.",
         "restart": "Repornește serviciile; migrațiile bazei de date rulează automat, iar datele rămân."
+      },
+      "online": {
+        "label": "Verificarea online",
+        "checked": "ultima: {time}",
+        "statuses": {
+          "valid": "validă",
+          "unreachable": "Data Center indisponibil (licența rămâne valabilă)",
+          "revoked": "revocată",
+          "suspended": "suspendată",
+          "expired": "expirată",
+          "domain": "pentru alt domeniu",
+          "blocked": "blocată pentru acest site",
+          "unknown": "necunoscută la Data Center",
+          "invalid": "invalidă"
+        }
       }
     }
   },
@@ -4406,7 +4444,8 @@
       "top": "Sus",
       "bottom": "Jos",
       "desktop": "Doar desktop",
-      "all_devices": "Toate dispozitivele"
+      "all_devices": "Toate dispozitivele",
+      "poll": "Doar polling (gazde care taie conexiunile lungi)"
     },
     "forums": {
       "posts_per_page": "Postări pe pagină",
@@ -4981,6 +5020,10 @@
     "achievements": {
       "excluded_groups": "Grupuri excluse din reguli",
       "rare_percent": "Pragul badge-urilor rare (%)"
+    },
+    "realtime": {
+      "poll_interval": "Intervalul actualizărilor live fără websocket (secunde, 2–60)",
+      "transport": "Transportul actualizărilor live"
     }
   },
   "permissions": {
@@ -5361,7 +5404,13 @@
         "name": "Numele bazei de date",
         "test": "Testează conexiunea",
         "ok": "Conexiunea funcționează",
-        "okCreated": "Conexiunea funcționează; baza de date a fost creată"
+        "okCreated": "Conexiunea funcționează; baza de date a fost creată",
+        "bodyLite": "Creează mai întâi baza de date și utilizatorul ei în panoul gazdei (cPanel → MySQL Databases, Plesk → Baze de date), apoi introdu aici datele de conexiune.",
+        "engineGroup": "Tipul bazei de date",
+        "mysql": "MySQL / MariaDB (recomandat pe găzduire partajată)",
+        "mysqlHint": "MySQL 8.0.13+ sau MariaDB 10.6+, oferit de aproape orice gazdă cu cPanel sau Plesk.",
+        "postgresql": "PostgreSQL",
+        "postgresqlHint": "Dacă gazda oferă PostgreSQL 14+ cu extensiile unaccent și pg_trgm (căutare cu flexiuni)."
       },
       "site": {
         "label": "Site",
@@ -5481,7 +5530,9 @@
       "redis": "Redis",
       "minio": "Stocare fișiere (MinIO)",
       "disk": "Spațiu pe disc (minimum 2 GB)",
-      "config_writable": "Folderul de configurare"
+      "config_writable": "Folderul de configurare",
+      "node": "Versiunea Node.js",
+      "database": "Baza de date (din DATABASE_URL)"
     },
     "fix": {
       "postgres": "Pornește serviciul postgres („docker compose up -d postgres”) și verifică DATABASE_URL din .env.",
@@ -5497,7 +5548,32 @@
       "db_no_create_privilege": "Baza de date nu există, iar utilizatorul nu are dreptul să o creeze (CREATEDB).",
       "db_missing_extensions": "Extensiile unaccent și pg_trgm nu pot fi activate pe acest server.",
       "session": "Sesiunea de instalare a expirat. Introdu din nou codul.",
-      "busy": "Instalarea rulează deja."
+      "busy": "Instalarea rulează deja.",
+      "db_no_privileges": "Utilizatorul bazei nu poate crea tabele: în panoul gazdei, dă-i toate drepturile („ALL PRIVILEGES”) pe această bază.",
+      "db_mysql_version": "Versiunea serverului MySQL e prea veche: e nevoie de MySQL 8.0.13+ sau MariaDB 10.6+."
+    },
+    "fixLite": {
+      "node": "Alege Node.js 20.9 sau mai nou în „Setup Node.js App” (cPanel) sau în setările Node.js ale domeniului (Plesk), apoi repornește aplicația.",
+      "database": "Verifică datele din DATABASE_URL sau șterge variabila și alege baza la pasul „Baza de date”.",
+      "disk": "Eliberează spațiu în contul de găzduire sau cere gazdei o cotă mai mare: platforma are nevoie de cel puțin 2 GB liberi.",
+      "config_writable": "Folderul „config” din folderul aplicației trebuie să poată fi scris de aplicație (drepturi 755 pentru folder, proprietar utilizatorul contului)."
+    },
+    "cron": {
+      "title": "Pasul final: Cron",
+      "body": "Pe găzduirea partajată, sarcinile programate (emailurile digest, expirarea VIP, curățenia, statisticile) rulează la cron-ul gazdei. Adaugă în panou (cPanel → Cron Jobs, Plesk → Sarcini programate) una dintre comenzile de mai jos, apoi apasă „Verifică”.",
+      "acpTitle": "Cron-ul gazdei",
+      "acpBody": "Sarcinile programate rulează la cron-ul gazdei. Fără el, rulează doar cât aplicația e trează (după cereri), iar unele (digesturile, expirările) întârzie.",
+      "schedule": "Programare:",
+      "node": "Comanda (Node.js, din folderul aplicației)",
+      "curl": "Sau, dacă panoul nu poate rula Node.js: adresa cu token",
+      "copy": "Copiază",
+      "copied": "Copiat",
+      "check": "Verifică",
+      "checking": "Se verifică…",
+      "never": "Cron-ul nu a rulat încă. După ce îl adaugi, așteaptă până la 5 minute și verifică din nou.",
+      "lastRun": "Ultima rulare: {time}",
+      "stale": "Cron-ul nu mai rulează de peste 15 minute.",
+      "vps": "În ediția VPS sarcinile programate le rulează serviciul „worker” (Docker): nu e nevoie de cron."
     }
   },
   "forum": {

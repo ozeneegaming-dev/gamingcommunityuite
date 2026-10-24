@@ -1,4 +1,4 @@
-import { jsonStrings, type Prisma, type PrismaClient } from "@gcs/db";
+import { isMysql, jsonStrings, type Prisma, type PrismaClient } from "@gcs/db";
 import type { KeyObject } from "node:crypto";
 import type { GcsAcpRoleService } from "../acp/roles";
 import { AUDIT_REDACTED, writeAudit } from "../audit";
@@ -176,6 +176,7 @@ export class GcsPluginService {
       installed: await this.installedInfo(),
       trustedKeys: this.deps.trustedKeys(),
       unsignedPolicy: this.deps.unsignedPolicy(),
+      dbPlugins: !isMysql(),
       ...(this.deps.platformVersion ? { platformVersion: this.deps.platformVersion } : {}),
     });
   }

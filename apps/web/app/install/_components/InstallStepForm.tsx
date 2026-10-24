@@ -2,7 +2,7 @@
 
 import { GcsButton } from "@gcs/ui";
 import { useRouter } from "next/navigation";
-import { createContext, useContext, useState, type FormEvent, type ReactNode } from "react";
+import { createContext, useContext, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import type { GcsInstallActionResult } from "../actions";
 
 /** Erorile pe câmpuri ale formularului curent (citite de `InstallField`). */
@@ -73,11 +73,16 @@ export function InstallField({
   autoComplete,
   span,
   options,
+  value,
+  onChange,
 }: {
   name: string;
   label: string;
   type?: string;
   defaultValue?: string;
+  /** Câmp controlat (ex. portul, care urmează motorul ales). */
+  value?: string;
+  onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
   disabled?: boolean;
   autoComplete?: string;
   span?: boolean;
@@ -90,7 +95,7 @@ export function InstallField({
     id,
     name,
     className: "gcs-input",
-    defaultValue,
+    ...(value !== undefined ? { value } : { defaultValue }),
     disabled,
     "aria-invalid": error ? true : undefined,
     "aria-describedby": error ? errorId : undefined,
@@ -107,7 +112,7 @@ export function InstallField({
           ))}
         </select>
       ) : (
-        <input {...common} type={type} autoComplete={autoComplete} />
+        <input {...common} type={type} autoComplete={autoComplete} onChange={onChange} />
       )}
       {error && (
         <p id={errorId} className="gcs-field__error" role="alert">

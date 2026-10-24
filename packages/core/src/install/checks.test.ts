@@ -49,3 +49,25 @@ describe.skipIf(testOnMysql())("runChecks", () => {
     expect(results.extensions?.ok).toBe(false);
   });
 });
+
+// Ediția Lite (găzduire partajată): fără Redis / MinIO; baza se alege la pasul următor, deci fără DATABASE_URL nu se verifică.
+describe("runChecks (ediția Lite)", () => {
+  test("fără bază: Node.js, disc și config, cu textele de remediere ale găzduirii partajate", async () => {
+    const results = byId(await runChecks({ configDir: dir, edition: "lite" }));
+    expect(Object.keys(results).sort()).toEqual(["config_writable", "disk", "node"]);
+    expect(results.node).toMatchObject({ ok: true, detail: `Node.js ${process.versions.node}` });
+    const failing = await runChecks({ configDir: path.join(dir, "\u0000invalid"), edition: "lite" });
+    expect(failing.find((r) => r.id === "config_writable")).toMatchObject({ ok: false, fixKey: "install.fixLite.config_writable" });
+  });
+
+  test.skipIf(testOnMysql())("cu DATABASE_URL (PostgreSQL): verificarea bazei", async () => {
+    const results = byId(await runChecks({ databaseUrl: testDbUrl(), configDir: dir, edition: "lite", timeoutMs: 30_000 }));
+    expect(results.database).toMatchObject({ ok: true });
+  });
+
+  test.skipIf(!testOnMysql())("cu DATABASE_URL (MySQL): versiunea serverului", async () => {
+    const results = byId(await runChecks({ databaseUrl: testDbUrl(), configDir: dir, edition: "lite", timeoutMs: 30_000 }));
+    expect(results.database).toMatchObject({ ok: true });
+    expect(results.database!.detail).toMatch(/^MySQL 8\./);
+  });
+});

@@ -2,6 +2,7 @@
 
 import {
   checkLicenseOnline,
+  defaultDbPort,
   GcsMemoryRateLimiter,
   GcsRateLimited,
   gcsEdition,
@@ -14,6 +15,7 @@ import {
   validateUsername,
   verifyInstallCode,
   type GcsDbConnection,
+  type GcsDbEngine,
   type GcsInstallStep,
 } from "@gcs/core";
 import { cookies, headers } from "next/headers";
@@ -127,12 +129,16 @@ export async function saveApps(fd: FormData): Promise<GcsInstallActionResult> {
 }
 
 function connectionFrom(fd: FormData): { mode: "included" | "external"; conn: GcsDbConnection | null } {
-  if (field(fd, "mode") !== "external") return { mode: "included", conn: includedConnection() };
+  // Ediția Lite (găzduire partajată): baza e mereu „externă” (creată în panoul gazdei), MySQL sau PostgreSQL.
+  const lite = gcsEdition() === "lite";
+  if (!lite && field(fd, "mode") !== "external") return { mode: "included", conn: includedConnection() };
+  const engine: GcsDbEngine = lite && field(fd, "engine") === "mysql" ? "mysql" : "postgresql";
   return {
     mode: "external",
     conn: {
+      engine,
       host: field(fd, "host"),
-      port: Number(field(fd, "port")) || 5432,
+      port: Number(field(fd, "port")) || defaultDbPort(engine),
       user: field(fd, "user"),
       password: typeof fd.get("password") === "string" ? (fd.get("password") as string) : "",
       database: field(fd, "database") || "gcs",
@@ -160,7 +166,7 @@ export async function saveDatabase(fd: FormData): Promise<GcsInstallActionResult
   const result = await testDatabase(conn);
   if (!result.ok) return { ok: false, errors: { _: t(`errors.${result.errorKey}`) } };
   const data: Record<string, unknown> = { mode };
-  if (mode === "external") Object.assign(data, { host: conn.host, port: conn.port, user: conn.user, database: conn.database, password: conn.password });
+  if (mode === "external") Object.assign(data, { engine: conn.engine, host: conn.host, port: conn.port, user: conn.user, database: conn.database, password: conn.password });
   return complete("database", "site", data);
 }
 
@@ -224,3 +230,4 @@ export async function saveData(fd: FormData): Promise<GcsInstallActionResult> {
   if (denied) return { ok: false, errors: denied };
   return complete("data", "run", { kind: field(fd, "kind") === "empty" ? "empty" : "demo" });
 }
+

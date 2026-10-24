@@ -6,6 +6,8 @@ import {
   installDomain,
   licenseDomainMatches,
   licenseIncludesApp,
+  licenseServerFor,
+  GCS_LICENSE_SERVER_DEFAULT,
   licenseTrustedKeys,
   signLicense,
   verifyLicense,
@@ -110,5 +112,33 @@ describe("verificarea online (platforma-mamă, simulată)", () => {
       throw new Error("ECONNREFUSED");
     });
     expect(await checkLicenseOnline("t", { domain: "x.ro", server, fetch: down })).toEqual({ status: "unreachable" });
+  });
+});
+
+describe("Data Center-ul (licențele emise de el)", () => {
+  const dcToken = signLicense(payload({ kid: "gcs-lic-dc-2026", id: "dc-7" }), privateKey);
+  const offlineToken = signLicense(payload({ kid: "gcs-lic-2026" }), privateKey);
+
+  test("serverul: implicit doar pentru cheile Data Center-ului; GCS_LICENSE_SERVER îl schimbă sau îl oprește (off)", () => {
+    expect(licenseServerFor(dcToken, {})).toBe(GCS_LICENSE_SERVER_DEFAULT);
+    expect(licenseServerFor(offlineToken, {})).toBe("");
+    expect(licenseServerFor("GCS-DEV-LICENSE", {})).toBe("");
+    expect(licenseServerFor(dcToken, { GCS_LICENSE_SERVER: "off" })).toBe("");
+    expect(licenseServerFor(offlineToken, { GCS_LICENSE_SERVER: "https://alt.test" })).toBe("https://alt.test");
+  });
+
+  test("cererea: instanța, versiunea, ediția; răspunsul: motivul invalidității și tokenul nou", async () => {
+    const reply = (body: unknown) => vi.fn(async () => new Response(JSON.stringify(body), { status: 200 }));
+    const server = "https://dc.exemplu.test";
+    const fresh = signLicense(payload({ kid: "gcs-lic-dc-2026", id: "dc-7", expiresAt: "2028-10-01T00:00:00.000Z" }), privateKey);
+    const valid = reply({ valid: true, status: "active", token: fresh });
+    expect(await checkLicenseOnline(dcToken, { domain: "forum.exemplu.ro", server, fetch: valid, instanceUuid: "inst-1", version: "1.2.0", edition: "lite" })).toEqual({ status: "valid", token: fresh });
+    expect(valid).toHaveBeenCalledWith(
+      new URL("/api/license/verify", server),
+      expect.objectContaining({ body: JSON.stringify({ token: dcToken, domain: "forum.exemplu.ro", instance_uuid: "inst-1", version: "1.2.0", edition: "lite" }) }),
+    );
+    expect(await checkLicenseOnline(dcToken, { domain: "x.ro", server, fetch: reply({ valid: false, status: "suspended" }) })).toEqual({ status: "revoked", reason: "suspended" });
+    // Un „token” care nu e o licență GCS e ignorat.
+    expect(await checkLicenseOnline(dcToken, { domain: "x.ro", server, fetch: reply({ valid: true, token: "<html>" }) })).toEqual({ status: "valid" });
   });
 });

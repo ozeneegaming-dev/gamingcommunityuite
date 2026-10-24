@@ -313,6 +313,8 @@ async function main(): Promise<number> {
     GCS_PLUGIN_TRUSTED_KEYS: [process.env.GCS_PLUGIN_TRUSTED_KEYS, `e2e=${e2eKey.publicKeyBase64}`].filter(Boolean).join(","),
     // Licențele de test (pasul „Licență” al installer-ului): semnate în teste cu aceeași cheie de unică folosință.
     GCS_LICENSE_TRUSTED_KEYS: `e2e=${e2eKey.publicKeyBase64}`,
+    // Testele nu vorbesc niciodată cu Data Center-ul real (verificarea online a licenței).
+    GCS_LICENSE_SERVER: "off",
     DATABASE_URL: databaseUrl,
     REDIS_URL: redisUrl,
     GCS_BASE_URL: BASE_URL,

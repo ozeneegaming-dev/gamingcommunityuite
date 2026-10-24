@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import {
+  GcsInstallState,
+  GcsLicenseOnline,
   GcsAcpDashboardService,
   GcsContentRatingService,
   GcsAcpRoleService,
@@ -320,6 +322,8 @@ export type GcsServices = {
   whereabouts: GcsWhereabouts;
   /** Membri v2: datele panourilor de membru aduse de aplicații (conturi legate, identități de joc, ELO, sancțiuni, clan). */
   memberPanels: GcsMemberPanelData;
+  /** Verificarea zilnică a licenței la platforma-mamă (Data Center) și perioada de grație. */
+  licenseOnline: GcsLicenseOnline;
 };
 
 export type GcsServicesOptions = {
@@ -329,6 +333,8 @@ export type GcsServicesOptions = {
   revalidate?: (tag: string) => void;
   /** Module în plus (ex. modulul de test al E2E). */
   extraModules?: GcsModule[];
+  /** Versiunea aplicației (trimisă platformei-mamă la verificarea licenței). */
+  appVersion?: string;
 };
 
 /**
@@ -343,7 +349,7 @@ export function loadRuntimeEnv(configDir: string): void {
     return;
   }
   for (const line of content.split(/\r?\n/)) {
-    const m = /^(DATABASE_URL|GCS_SECRET)=(.*)$/.exec(line);
+    const m = /^(DATABASE_URL|GCS_SECRET|GCS_BASE_URL)=(.*)$/.exec(line);
     if (m) process.env[m[1]!] = m[2]!.startsWith('"') ? (JSON.parse(m[2]!) as string) : m[2]!;
   }
 }
@@ -415,7 +421,21 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   groupDisplay.listen();
   const groupDirectory = new GcsGroupDirectory({ db, cache, display: groupDisplay });
   const groupsPro = new GcsGroupsProService({ db, cache, bus, settings, groups: groupDirectory });
-  const apps = new GcsAppService({ db, cache, bus, registry, acp, permissions, settings });
+  // Licența: verificarea online (jobul zilnic) și oprirea aplicațiilor premium după perioada de grație. Starea se
+  // citește din folderul de configurare cel mult o dată pe minut.
+  const appVersion = opts.appVersion ?? process.env.GCS_VERSION;
+  const licenseOnline = new GcsLicenseOnline({
+    configDir: opts.configDir,
+    state: new GcsInstallState(opts.configDir),
+    edition: infra.edition,
+    ...(appVersion ? { version: appVersion } : {}),
+  });
+  let premiumBlockedMemo: { at: number; value: Promise<boolean> } | null = null;
+  const premiumBlocked = () => {
+    if (!premiumBlockedMemo || Date.now() - premiumBlockedMemo.at > 60_000) premiumBlockedMemo = { at: Date.now(), value: licenseOnline.premiumBlocked().catch(() => false) };
+    return premiumBlockedMemo.value;
+  };
+  const apps = new GcsAppService({ db, cache, bus, registry, acp, permissions, settings, premiumBlocked });
   const members = new GcsMemberDirectory({ db });
   const notifications = new GcsNotificationService({ db, bus, cache, registry, apps, settings });
   const push = new GcsPushService({ db });
@@ -758,6 +778,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const memberList = new GcsMemberList({ db, permissions, ranks, groups: groupDirectory });
   const services: GcsServices = {
     db,
+    licenseOnline,
     edition: infra.edition,
     infra,
     kv,

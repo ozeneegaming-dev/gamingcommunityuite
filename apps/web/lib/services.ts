@@ -4,6 +4,7 @@ import { BACKFILL_JOB, forumSlotsDemoModule } from "@gcs/modules";
 import { closeGcsServices, createGcsServices, type GcsServices } from "@gcs/modules/services";
 import { revalidateTag } from "next/cache";
 import { gcsConfigDir } from "./config";
+import { GCS_APP_VERSION } from "./system-info";
 
 export type { GcsServices } from "@gcs/modules/services";
 
@@ -19,6 +20,7 @@ function revalidate(tag: string): void {
 function createServices(): GcsServices {
   return createGcsServices({
     configDir: gcsConfigDir(),
+    appVersion: GCS_APP_VERSION,
     revalidate,
     // Permisiunea de test folosită de E2E (ruta /_test/container/…); există doar cu GCS_TEST_ROUTES=1.
     extraModules:

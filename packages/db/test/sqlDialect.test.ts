@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test } from "vitest";
 import { mysqlStatement, toMysql } from "../src/dialect";
+import { mysqlVersionSupported } from "../src/probe";
 import { sql } from "../src/sql";
 
 const squash = (s: string) => s.replace(/\s+/g, " ").trim();
@@ -109,5 +110,12 @@ describe("toMysql", () => {
     delete process.env.GCS_DB;
     const pg = sql`SELECT 1 FROM t WHERE id = ANY(${[1, 2]}::int[])`;
     expect(pg.sql).toBe("SELECT 1 FROM t WHERE id = ANY(?::int[])");
+  });
+});
+
+describe("mysqlVersionSupported", () => {
+  test("MySQL 8.0.13+ și MariaDB 10.6+", () => {
+    for (const v of ["8.0.13", "8.0.36-0ubuntu0.22.04.1", "8.4.9", "9.1.0", "10.6.18-MariaDB", "11.4.2-MariaDB-log"]) expect(mysqlVersionSupported(v), v).toBe(true);
+    for (const v of ["5.7.44", "8.0.12", "10.5.22-MariaDB", "abc"]) expect(mysqlVersionSupported(v), v).toBe(false);
   });
 });

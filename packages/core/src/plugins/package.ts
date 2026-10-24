@@ -19,6 +19,8 @@ export type GcsPluginValidateContext = {
   trustedKeys: ReadonlyMap<string, KeyObject>;
   /** `deny` (`GCS_PLUGINS_UNSIGNED=deny`): pachetele nesemnate sunt refuzate. */
   unsignedPolicy?: "allow" | "deny";
+  /** Ediția Lite pe MySQL: pluginurile cu bază de date proprie (capabilitatea `db`) nu se pot instala. */
+  dbPlugins?: boolean;
 };
 
 /** Raportul validării (se păstrează ca JSON lângă încărcare și se afișează pe ecranul de confirmare). */
@@ -162,6 +164,7 @@ export function validatePluginPackage(zip: Buffer, ctx: GcsPluginValidateContext
   const migrations = [...files.keys()].filter((p) => p.startsWith("migrations/")).sort(comparePluginMigrations);
   report.migrations = migrations.map((p) => p.slice("migrations/".length));
   if (migrations.length > 0 && !manifest.capabilities.includes("db")) error("missing_capability", { capability: "db", path: "migrations/" });
+  if (ctx.dbPlugins === false && manifest.capabilities.includes("db")) error("db_plugins_unsupported");
   for (const path of migrations) {
     const check = checkPluginSql(files.get(path)!.toString("utf8"), { schema, mode: "migration" });
     if (!check.ok) error("migration_rejected", { path, issue: check.code, detail: check.detail });
