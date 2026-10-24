@@ -43,7 +43,7 @@ export function chatProMemberData(deps: { db: PrismaClient }): GcsMemberDataHand
             const { userId: _source, updatedAt: _at, ...rest } = source;
             void _source;
             void _at;
-            await tx.chatProProfile.create({ data: { ...rest, userId: targetId, prefs: rest.prefs ?? {}, gifFavorites: rest.gifFavorites ?? [] } });
+            await tx.chatProProfile.create({ data: { ...rest, userId: targetId, prefs: rest.prefs ?? {}, gifFavorites: rest.gifFavorites ?? [], badgeIds: rest.badgeIds ?? [], emoteFavorites: rest.emoteFavorites ?? [] } });
           }
           n++;
         }

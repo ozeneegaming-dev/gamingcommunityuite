@@ -1,3 +1,4 @@
+import { jsonStrings } from "@gcs/db";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createWorld, type GcsTestWorld } from "../../test/world";
 import { seedDefaults } from "../install/seed";
@@ -63,7 +64,7 @@ async function v4Install(items: Item[]): Promise<void> {
   };
   for (const [i, it] of items.entries()) await create(it, i, null);
   const state = await w.db.systemState.findUniqueOrThrow({ where: { id: 1 } });
-  await w.db.systemState.update({ where: { id: 1 }, data: { seedMarks: state.seedMarks.filter((m) => m !== "nav:v5") } });
+  await w.db.systemState.update({ where: { id: 1 }, data: { seedMarks: jsonStrings(state.seedMarks).filter((m) => m !== "nav:v5") } });
 }
 
 async function menu() {

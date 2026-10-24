@@ -1,3 +1,5 @@
+import { jsonStrings } from "@gcs/db";
+import { addSeedMarks } from "../install/seedMarks";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createWorld, type GcsTestWorld } from "../../test/world";
 import { compileThemeCss } from "./css";
@@ -201,7 +203,7 @@ describe("temele incluse: instalare nouă și actualizare", () => {
     // Lumea de test are deja seed-ul: pornim de la o bază fără teme și fără marcajele temelor.
     await w.db.theme.deleteMany();
     const state = await w.db.systemState.findUniqueOrThrow({ where: { id: 1 } });
-    await w.db.systemState.update({ where: { id: 1 }, data: { seedMarks: state.seedMarks.filter((m) => m !== NOVA_SEED_MARK && m !== GCS_DARK_SEED_MARK) } });
+    await w.db.systemState.update({ where: { id: 1 }, data: { seedMarks: jsonStrings(state.seedMarks).filter((m) => m !== NOVA_SEED_MARK && m !== GCS_DARK_SEED_MARK) } });
   });
 
   afterAll(async () => {
@@ -210,7 +212,7 @@ describe("temele incluse: instalare nouă și actualizare", () => {
 
   const seed = () => w.db.$transaction((tx) => GcsThemeService.seedDefault(tx));
   const rows = () => w.db.theme.findMany({ orderBy: { key: "asc" }, select: { id: true, key: true, name: true, isDefault: true, enabled: true, settings: true } });
-  const marks = async () => (await w.db.systemState.findUniqueOrThrow({ where: { id: 1 } })).seedMarks;
+  const marks = async () => jsonStrings((await w.db.systemState.findUniqueOrThrow({ where: { id: 1 } })).seedMarks);
   /** O instalare de dinaintea redenumirii: „GCS Nova” (implicită, cu CSS și un șablon propriu) și „Clasic”. */
   async function legacyInstall(novaKey = NOVA_THEME_KEY) {
     // Antetul „Standard” de atunci: fără luna / soarele (comutatorul perechii a venit odată cu GCS Dark / White).
@@ -221,7 +223,7 @@ describe("temele incluse: instalare nouă și actualizare", () => {
     await w.db.$transaction((tx) => GcsThemeCssService.seed(tx, nova.id, ".gcs-card { outline: 1px solid red; }", { authorId: null, authorName: "" }));
     await w.db.themeTemplate.create({ data: { themeId: nova.id, key: "forum.row", source: "<div>{{ forum.title }}</div>", baseVersion: 1, baseSource: "" } });
     const classic = await w.db.theme.create({ data: { key: "default", name: "Clasic", settings: DEFAULT_THEME_SETTINGS as never } });
-    await w.db.systemState.update({ where: { id: 1 }, data: { seedMarks: { push: NOVA_SEED_MARK } } });
+    await addSeedMarks(w.db, NOVA_SEED_MARK);
     return { nova, classic };
   }
 

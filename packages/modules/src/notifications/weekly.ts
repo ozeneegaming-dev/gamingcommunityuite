@@ -1,5 +1,5 @@
 import type { GcsMail, GcsNotificationService } from "@gcs/core";
-import type { PrismaClient } from "@gcs/db";
+import { type PrismaClient, jsonStrings } from "@gcs/db";
 import { slugify } from "../forums/slug";
 import { notificationText, type GcsNotificationMailItem } from "./emails";
 
@@ -104,14 +104,14 @@ export class GcsWeeklyDigestBuilder {
       this.deps.db.notification.count({ where }),
       this.deps.db.notification.findMany({ where, orderBy: { updatedAt: "desc" }, take: MENTIONS_SHOWN }),
     ]);
-    const actorIds = [...new Set(rows.flatMap((r) => r.actorIds))];
+    const actorIds = [...new Set(rows.flatMap((r) => jsonStrings(r.actorIds)))];
     const names = new Map((await this.deps.db.user.findMany({ where: { id: { in: actorIds } }, select: { id: true, name: true } })).map((u) => [u.id, u.name]));
     return {
       count,
       items: rows.map((r) => {
         const data = (r.data ?? {}) as Record<string, unknown>;
         return {
-          text: notificationText({ type: r.type, actors: r.actorIds.map((id) => names.get(id)).filter((n): n is string => !!n), count: r.count, title: typeof data.title === "string" ? data.title : "", data }, locale),
+          text: notificationText({ type: r.type, actors: jsonStrings(r.actorIds).map((id) => names.get(id)).filter((n): n is string => !!n), count: r.count, title: typeof data.title === "string" ? data.title : "", data }, locale),
           href: `/notifications/${r.id}`,
           at: r.updatedAt.toISOString(),
         };

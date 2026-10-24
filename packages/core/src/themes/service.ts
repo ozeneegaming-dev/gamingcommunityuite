@@ -1,4 +1,5 @@
 import { Prisma, type PrismaClient, type Theme } from "@gcs/db";
+import { addSeedMarks, seedMarksOf } from "../install/seedMarks";
 import type { GcsAcpRoleService } from "../acp/roles";
 import { writeAudit } from "../audit";
 import type { GcsCache } from "../cache";
@@ -364,14 +365,14 @@ export class GcsThemeService {
    *   Temele existente (inclusiv „Clasic”) rămân, cu tot cu datele lor.
    */
   static async seedDefault(tx: Prisma.TransactionClient): Promise<void> {
-    const state = await tx.systemState.upsert({ where: { id: 1 }, update: {}, create: { id: 1 } });
-    const marked = state.seedMarks.includes(NOVA_SEED_MARK);
+    const seedMarks = await seedMarksOf(tx);
+    const marked = seedMarks.includes(NOVA_SEED_MARK);
     const count = await tx.theme.count();
     if (count === 0) {
       await GcsThemeService.createBuiltIn(tx, GCS_DARK_THEME_KEY, GCS_DARK_THEME_NAME, GCS_DARK_THEME_SETTINGS, true);
       await GcsThemeService.createBuiltIn(tx, GCS_WHITE_THEME_KEY, GCS_WHITE_THEME_NAME, GCS_WHITE_THEME_SETTINGS, false);
-      const marks = [NOVA_SEED_MARK, GCS_DARK_SEED_MARK].filter((m) => !state.seedMarks.includes(m));
-      if (marks.length > 0) await tx.systemState.update({ where: { id: 1 }, data: { seedMarks: { push: marks } } });
+      const marks = [NOVA_SEED_MARK, GCS_DARK_SEED_MARK].filter((m) => !seedMarks.includes(m));
+      if (marks.length > 0) await addSeedMarks(tx, marks);
       return;
     } else if (!marked) {
       const taken = new Set((await tx.theme.findMany({ select: { key: true } })).map((t) => t.key));
@@ -382,10 +383,10 @@ export class GcsThemeService {
       }
       await tx.theme.updateMany({ where: { key: CLASSIC_THEME_KEY, name: LEGACY_THEME_NAME }, data: { name: CLASSIC_THEME_NAME } });
     }
-    if (!marked) await tx.systemState.update({ where: { id: 1 }, data: { seedMarks: { push: NOVA_SEED_MARK } } });
-    if (!state.seedMarks.includes(GCS_DARK_SEED_MARK)) {
+    if (!marked) await addSeedMarks(tx, NOVA_SEED_MARK);
+    if (!seedMarks.includes(GCS_DARK_SEED_MARK)) {
       await GcsThemeService.migrateGcsDark(tx);
-      await tx.systemState.update({ where: { id: 1 }, data: { seedMarks: { push: GCS_DARK_SEED_MARK } } });
+      await addSeedMarks(tx, GCS_DARK_SEED_MARK);
     }
   }
 

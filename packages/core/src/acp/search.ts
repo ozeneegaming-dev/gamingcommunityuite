@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@gcs/db";
+import { type PrismaClient, ci } from "@gcs/db";
 import { normalizeUsername } from "../auth/usernames";
 import type { GcsModuleRegistry } from "../modules/registry";
 import type { GcsActor } from "../permissions/types";
@@ -51,7 +51,7 @@ export class GcsAcpSearch {
 
     if (await acp.can(actor, "members.groups", "view")) {
       const groups = await db.group.findMany({
-        where: { name: { contains: query, mode: "insensitive" } },
+        where: { name: ci({ contains: query }) },
         select: { id: true, name: true },
         orderBy: { position: "asc" },
         take: MAX_PER_GROUP,

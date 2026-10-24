@@ -1,3 +1,4 @@
+import { jsonInts } from "@gcs/db";
 import type { GcsNameStyle } from "@gcs/core";
 import { NAME_STYLES_ACP_SECTION } from "@gcs/modules";
 import { GcsCard } from "@gcs/ui";
@@ -22,7 +23,7 @@ export default async function AcpNameStylesPage() {
   const tg = await getTranslations("acp.group");
   const { db } = services();
   const [styles, groups, badges] = await Promise.all([
-    db.nameStyle.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] }),
+    db.nameStyle.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] }).then((rows) => rows.map((r) => ({ ...r, groupIds: jsonInts(r.groupIds), badgeIds: jsonInts(r.badgeIds) }))),
     db.group.findMany({ orderBy: { position: "asc" }, select: { id: true, name: true } }),
     db.badge.findMany({ orderBy: { position: "asc" }, select: AVAILABILITY_BADGE_SELECT }),
   ]);

@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@gcs/db";
+import { jsonStrings, Prisma, type PrismaClient } from "@gcs/db";
 import { writeAudit } from "../audit";
 import type { GcsCache } from "../cache";
 import { GcsValidationError } from "../errors";
@@ -293,8 +293,8 @@ export class GcsNotificationService {
     if (!described || !defaults) return [];
     const overrides = new Map(prefRows.map((p) => [p.userId, parseOverride(p.channels)]));
     const groupKey = `${input.type}:${input.targetType}:${input.targetId}`;
-    const data = JSON.stringify({ ...described, ...(input.data ?? {}) });
-    const now = new Date().toISOString();
+    const data = { ...described, ...(input.data ?? {}) } as Prisma.InputJsonObject;
+    const now = new Date();
     const out: number[] = [];
     const sent: Record<"site" | "toast", number> = { site: 0, toast: 0 };
 
@@ -302,37 +302,19 @@ export class GcsNotificationService {
       const delivery = resolveDelivery(defaults, overrides.get(userId), { important, emailsOff: emailsOff.has(userId) });
       if (input.skipEmail) delivery.email = null;
       if (deliversNothing(delivery)) continue;
-      const channels = JSON.stringify({ toast: delivery.toast, push: delivery.push, email: delivery.email });
+      const channels = { toast: delivery.toast, push: delivery.push, email: delivery.email };
       // Fără email de trimis: marcată ca „trimisă”, deci nu intră în emailul imediat sau în digesturi.
       const emailedAt = delivery.email === null ? now : null;
       const actor = input.actorId;
       let row: { id: number; inserted: boolean } | undefined;
+      const fields = { userId, type: input.type, targetType: input.targetType, targetId: input.targetId, groupKey, data, important, channels, emailedAt };
       if (delivery.site) {
-        // Upsert pe indexul parțial (necitite): grupare cu ultimii 3 actori; un actor repetat nu crește numărul
-        // (în afară de tipurile `countEach`, unde fiecare eveniment contează).
-        const countEach = def.countEach === true;
-        const rows = await db.$queryRaw<{ id: number; inserted: boolean }[]>`
-          INSERT INTO notifications ("userId", type, "targetType", "targetId", "groupKey", "actorIds", count, data, site, important, channels, "emailedAt", "createdAt", "updatedAt")
-          VALUES (${userId}, ${input.type}, ${input.targetType}, ${input.targetId}, ${groupKey},
-                  ${actor ? [actor] : []}::text[], 1, ${data}::jsonb, true, ${important}, ${channels}::jsonb, ${emailedAt}::timestamp, ${now}::timestamp, ${now}::timestamp)
-          ON CONFLICT ("userId", "groupKey") WHERE "readAt" IS NULL DO UPDATE SET
-            count = CASE WHEN NOT ${countEach}::boolean AND ${actor}::text IS NOT NULL AND ${actor}::text = ANY(notifications."actorIds")
-                         THEN notifications.count ELSE notifications.count + 1 END,
-            "actorIds" = CASE WHEN ${actor}::text IS NULL THEN notifications."actorIds"
-                              ELSE (ARRAY[${actor}::text] || array_remove(notifications."actorIds", ${actor}::text))[1:3] END,
-            data = EXCLUDED.data,
-            important = notifications.important OR EXCLUDED.important,
-            channels = EXCLUDED.channels,
-            "updatedAt" = EXCLUDED."updatedAt"
-          RETURNING id, (xmax = 0) AS inserted`;
-        row = rows[0];
+        // Grupare pe notificarea necitită a aceluiași `groupKey` (unică prin `unreadKey`, coloana generată), cu ultimii 3
+        // actori; un actor repetat nu crește numărul (în afară de tipurile `countEach`, unde fiecare eveniment contează).
+        row = await this.upsertUnread(fields, actor ?? null, def.countEach === true, now);
       } else {
-        const rows = await db.$queryRaw<{ id: number; inserted: boolean }[]>`
-          INSERT INTO notifications ("userId", type, "targetType", "targetId", "groupKey", "actorIds", count, data, site, important, channels, "emailedAt", "readAt", "createdAt", "updatedAt")
-          VALUES (${userId}, ${input.type}, ${input.targetType}, ${input.targetId}, ${groupKey},
-                  ${actor ? [actor] : []}::text[], 1, ${data}::jsonb, false, ${important}, ${channels}::jsonb, ${emailedAt}::timestamp, ${now}::timestamp, ${now}::timestamp, ${now}::timestamp)
-          RETURNING id, true AS inserted`;
-        row = rows[0];
+        const created = await db.notification.create({ data: { ...fields, actorIds: actor ? [actor] : [], count: 1, site: false, readAt: now, createdAt: now, updatedAt: now }, select: { id: true } });
+        row = { id: created.id, inserted: true };
       }
       if (!row) continue;
       out.push(row.id);
@@ -361,13 +343,47 @@ export class GcsNotificationService {
     return out;
   }
 
+  /**
+   * Notificarea necitită a grupului: actualizată dacă există (cu verificare optimistă pe `count`), altfel creată; două
+   * creări simultane se ciocnesc pe indexul unic `(userId, unreadKey)` și a doua trece la actualizare.
+   */
+  private async upsertUnread(
+    fields: { userId: string; type: string; targetType: string; targetId: string; groupKey: string; data: Prisma.InputJsonObject; important: boolean; channels: Prisma.InputJsonObject; emailedAt: Date | null },
+    actor: string | null,
+    countEach: boolean,
+    now: Date,
+  ): Promise<{ id: number; inserted: boolean } | undefined> {
+    const { db } = this.deps;
+    for (let attempt = 0; attempt < 8; attempt++) {
+      const existing = await db.notification.findFirst({ where: { userId: fields.userId, groupKey: fields.groupKey, readAt: null }, select: { id: true, count: true, actorIds: true, important: true } });
+      if (existing) {
+        const prev = jsonStrings(existing.actorIds);
+        const repeated = !countEach && actor !== null && prev.includes(actor);
+        const actorIds = actor === null ? prev : [actor, ...prev.filter((a) => a !== actor)].slice(0, 3);
+        const updated = await db.notification.updateMany({
+          where: { id: existing.id, readAt: null, count: existing.count },
+          data: { count: repeated ? existing.count : existing.count + 1, actorIds, data: fields.data, important: existing.important || fields.important, channels: fields.channels, updatedAt: now },
+        });
+        if (updated.count === 1) return { id: existing.id, inserted: false };
+        continue;
+      }
+      try {
+        const created = await db.notification.create({ data: { ...fields, actorIds: actor ? [actor] : [], count: 1, site: true, createdAt: now, updatedAt: now }, select: { id: true } });
+        return { id: created.id, inserted: true };
+      } catch (error) {
+        if (!(error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002")) throw error;
+      }
+    }
+    return undefined;
+  }
+
   // ─── Citirea ───────────────────────────────────────────────────────────────
 
   private view(r: {
     id: number;
     type: string;
     count: number;
-    actorIds: string[];
+    actorIds: unknown;
     data: unknown;
     readAt: Date | null;
     important: boolean;
@@ -379,7 +395,7 @@ export class GcsNotificationService {
       id: r.id,
       type: r.type,
       count: r.count,
-      actorIds: r.actorIds,
+      actorIds: jsonStrings(r.actorIds),
       data: (r.data ?? {}) as GcsNotificationView["data"],
       read: r.readAt !== null,
       important: r.important,

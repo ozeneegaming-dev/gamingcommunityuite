@@ -1,5 +1,5 @@
 import type { GcsActor, GcsAppService, GcsCache, GcsPermissionService, GcsSettingsService } from "@gcs/core";
-import type { PrismaClient } from "@gcs/db";
+import { type PrismaClient, jsonInts } from "@gcs/db";
 import { toRef, userRefSelect, type GcsUserRef } from "../forums/queries";
 import { connectHref, gameDef, serverAddress } from "./games";
 import { SERVERS_APP, SHOW_PLAYERS_SETTING } from "./poller";
@@ -104,8 +104,9 @@ export class GcsServerQueries {
       orderBy: [{ position: "asc" }, { id: "asc" }],
       select: { id: true, game: true, host: true, port: true, name: true, slug: true, bannerId: true, description: true, forumId: true, groups: true },
     });
-    await this.deps.cache.set("servers:list", rows, { ttlSec: LIST_TTL, tags: [SERVERS_CACHE_TAG] });
-    return rows;
+    const list = rows.map((r) => ({ ...r, groups: jsonInts(r.groups) }));
+    await this.deps.cache.set("servers:list", list, { ttlSec: LIST_TTL, tags: [SERVERS_CACHE_TAG] });
+    return list;
   }
 
   async appEnabled(): Promise<boolean> {

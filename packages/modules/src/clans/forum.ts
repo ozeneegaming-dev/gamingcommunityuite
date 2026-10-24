@@ -1,5 +1,5 @@
 import type { GcsMemberGrant, GcsMemberGrantsContext } from "@gcs/core";
-import type { Prisma } from "@gcs/db";
+import { type Prisma, jsonStrings } from "@gcs/db";
 import { slugify } from "../forums/slug";
 
 /**
@@ -34,7 +34,7 @@ export async function clanMemberGrants({ db }: GcsMemberGrantsContext, userId: s
   });
   return rows.map((r) => {
     const readOnly = r.clan.locked || r.clan.status !== "ACTIVE";
-    const moderates = !readOnly && (r.role === "LEADER" || (r.role === "OFFICER" && r.clan.officerRights.includes("forum")));
+    const moderates = !readOnly && (r.role === "LEADER" || (r.role === "OFFICER" && jsonStrings(r.clan.officerRights).includes("forum")));
     return {
       type: CONTAINER,
       id: String(r.clan.forumId),

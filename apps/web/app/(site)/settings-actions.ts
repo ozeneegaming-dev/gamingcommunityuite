@@ -1,5 +1,6 @@
 "use server";
 
+import { ci } from "@gcs/db";
 import { GcsConflict, GcsForbidden, GcsRateLimited, GcsValidationError, verifyPassword } from "@gcs/core";
 import { cookies, headers } from "next/headers";
 import * as z from "zod";
@@ -69,7 +70,7 @@ export const ignoreByName = gcsAction(
   z.object({ name: z.string().min(1).max(60), posts: z.boolean(), messages: z.boolean() }),
   async ({ name, posts, messages }, { actor }) => {
     const { db, social } = services();
-    const user = await db.user.findFirst({ where: { name: { equals: name.trim(), mode: "insensitive" } }, select: { id: true } });
+    const user = await db.user.findFirst({ where: { name: ci({ equals: name.trim() }) }, select: { id: true } });
     if (!user) throw new GcsValidationError({ name: "unknown_user" });
     await social.ignore(actor, user.id, { posts, messages });
   },

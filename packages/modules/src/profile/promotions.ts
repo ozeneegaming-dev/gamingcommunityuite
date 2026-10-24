@@ -1,5 +1,5 @@
 import { GcsNotFound, GcsValidationError, writeAudit, type GcsAcpRoleService, type GcsActor, type GcsEventBus } from "@gcs/core";
-import type { GroupPromotion, PrismaClient } from "@gcs/db";
+import { type GroupPromotion, type PrismaClient, jsonInts } from "@gcs/db";
 import type { GcsMembership } from "./membership";
 
 export const PROMOTIONS_ACP_SECTION = "members.promotions";
@@ -27,8 +27,9 @@ export type GcsPromotionInput = {
 export class GcsPromotionService {
   constructor(private readonly deps: { db: PrismaClient; bus: GcsEventBus; acp: GcsAcpRoleService; membership: GcsMembership }) {}
 
-  list(): Promise<GroupPromotion[]> {
-    return this.deps.db.groupPromotion.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] });
+  async list(): Promise<(Omit<GroupPromotion, "fromGroupIds"> & { fromGroupIds: number[] })[]> {
+    const rows = await this.deps.db.groupPromotion.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] });
+    return rows.map((r) => ({ ...r, fromGroupIds: jsonInts(r.fromGroupIds) }));
   }
 
   /** Aplică promovările potrivite unui user (cel mult `MAX_STEPS` în lanț). Întoarce câte s-au aplicat. */

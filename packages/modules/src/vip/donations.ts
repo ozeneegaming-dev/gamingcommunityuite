@@ -12,11 +12,15 @@ import {
   type GcsRealtime,
   type GcsSettingsService,
 } from "@gcs/core";
-import type { DonationGoal, MemberDonation, Prisma, PrismaClient } from "@gcs/db";
+import { type DonationGoal, type MemberDonation, type Prisma, type PrismaClient, jsonInts, ci } from "@gcs/db";
 import { dayKey } from "../chat-pro/period";
 import { toRef, userRefSelect, type GcsUserRef } from "../forums/queries";
 import { SPONSOR_MIN_SETTING } from "../profile/extras";
 import { donationRange, goalPeriod, zonedDayStart, type GcsDonationRangeKind } from "./donationPeriod";
+
+/** Un obiectiv de donații cu lista grupurilor citită din coloana JSON. */
+export type GcsDonationGoalRow = Omit<DonationGoal, "groupIds"> & { groupIds: number[] };
+const goalRow = (r: DonationGoal): GcsDonationGoalRow => ({ ...r, groupIds: jsonInts(r.groupIds) });
 
 /**
  * Donațiile și „Obiectivul lunii” (VIP clasic): un singur model, `MemberDonation`.
@@ -300,8 +304,8 @@ export class GcsDonationService {
     const where: Prisma.MemberDonationWhereInput = {};
     if (f.status && DONATION_STATUSES.includes(f.status as GcsDonationStatus)) where.status = f.status as GcsDonationStatus;
     const q = f.q?.trim();
-    if (q) where.OR = [{ donorName: { contains: q, mode: "insensitive" } }, { reference: { contains: q, mode: "insensitive" } }, { user: { name: { contains: q, mode: "insensitive" } } }];
-    if (f.method?.trim()) where.method = { equals: f.method.trim(), mode: "insensitive" };
+    if (q) where.OR = [{ donorName: ci({ contains: q }) }, { reference: ci({ contains: q }) }, { user: { name: ci({ contains: q }) } }];
+    if (f.method?.trim()) where.method = ci({ equals: f.method.trim() });
     const day = (v: string | undefined) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
     const from = day(f.from);
     const to = day(f.to);
@@ -474,12 +478,14 @@ export class GcsDonationService {
 
   // ─── Obiectivele ────────────────────────────────────────────────────────────────────────────────
 
-  goals(): Promise<DonationGoal[]> {
-    return this.deps.db.donationGoal.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] });
+  async goals(): Promise<GcsDonationGoalRow[]> {
+    const rows = await this.deps.db.donationGoal.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] });
+    return rows.map(goalRow);
   }
 
-  goal(id: number): Promise<DonationGoal | null> {
-    return this.deps.db.donationGoal.findUnique({ where: { id } });
+  async goal(id: number): Promise<GcsDonationGoalRow | null> {
+    const row = await this.deps.db.donationGoal.findUnique({ where: { id } });
+    return row ? goalRow(row) : null;
   }
 
   async saveGoal(actor: GcsActor, id: number | null, input: GcsDonationGoalInput): Promise<DonationGoal> {
@@ -543,7 +549,7 @@ export class GcsDonationService {
     const { db } = this.deps;
     const tz = await this.timeZone();
     const now = this.now();
-    const visible = (g: DonationGoal) => g.enabled && (g.groupIds.length === 0 || g.groupIds.some((id) => viewer.groupIds.includes(id)));
+    const visible = (g: DonationGoal) => g.enabled && (jsonInts(g.groupIds).length === 0 || jsonInts(g.groupIds).some((id) => viewer.groupIds.includes(id)));
     let goal: DonationGoal | null;
     if (goalId !== null) {
       goal = await db.donationGoal.findUnique({ where: { id: goalId } });

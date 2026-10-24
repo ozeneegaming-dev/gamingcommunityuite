@@ -8,7 +8,7 @@ import {
   type GcsRendered,
   type GcsReportService,
 } from "@gcs/core";
-import type { ModSavedAction, Prisma } from "@gcs/db";
+import { type ModSavedAction, type Prisma, jsonHas, jsonInts } from "@gcs/db";
 import { POST_CONTENT_TYPE, WRITE_TX, type GcsForumPosting } from "./posting";
 import type { GcsPostService } from "./posts";
 import { toRef as userToRef, userRefSelect, type GcsUserRef } from "./queries";
@@ -261,8 +261,9 @@ export class GcsForumModerationService {
     return { pending, reports };
   }
 
-  listActions(): Promise<ModSavedAction[]> {
-    return this.posting.deps.db.modSavedAction.findMany({ orderBy: { name: "asc" } });
+  async listActions(): Promise<(Omit<ModSavedAction, "forumIds"> & { forumIds: number[] })[]> {
+    const rows = await this.posting.deps.db.modSavedAction.findMany({ orderBy: { name: "asc" } });
+    return rows.map((r) => ({ ...r, forumIds: jsonInts(r.forumIds) }));
   }
 
   async saveAction(actor: GcsActor, input: GcsSavedActionInput): Promise<ModSavedAction> {
@@ -309,7 +310,7 @@ export class GcsForumModerationService {
     if (steps.moveTo !== undefined) powers.push("move");
     if (steps.prefixId !== undefined) powers.push("edit");
     for (const t of topics) {
-      if (action.forumIds.length > 0 && !action.forumIds.includes(t.forumId)) throw new GcsValidationError({ actionId: "forum" });
+      if (jsonInts(action.forumIds).length > 0 && !jsonInts(action.forumIds).includes(t.forumId)) throw new GcsValidationError({ actionId: "forum" });
       for (const power of powers.length > 0 ? powers : ["edit"]) await this.assertPower(actor, power, t.forumId);
     }
     if (steps.moveTo !== undefined) await this.assertTarget(actor, steps.moveTo);
@@ -398,7 +399,7 @@ export class GcsForumModerationService {
     const rows = await db.moderator.findMany({
       where: {
         containerType: "forum",
-        powers: { has: power },
+        powers: jsonHas(power),
         OR: [{ userId: actor.userId }, { groupId: { in: actor.groupIds } }],
       },
       select: { containerId: true },

@@ -13,7 +13,7 @@ import {
   type GcsNameStyle,
   type GcsPermissionService,
 } from "@gcs/core";
-import type { AvatarFrame, FrameKind, NameStyle, Prisma, PrismaClient } from "@gcs/db";
+import { type AvatarFrame, type FrameKind, type NameStyle, type Prisma, type PrismaClient, jsonInts } from "@gcs/db";
 import { actorOf } from "./social";
 
 export const NAME_STYLES_ACP_SECTION = "vip.name_styles";
@@ -108,11 +108,12 @@ export class GcsCosmeticsService {
       db.nameStyle.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] }),
       db.avatarFrame.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] }),
     ]);
+    const lists = <T extends { groupIds: unknown; badgeIds: unknown }>(r: T) => ({ ...r, groupIds: jsonInts(r.groupIds), badgeIds: jsonInts(r.badgeIds) });
     const groups = new Set(actor.groupIds);
     const badgeIds = new Set(badges.map((b) => b.badgeId));
     return {
-      styles: canStyle ? styles.filter((s) => isAvailable(s, groups, badgeIds)) : [],
-      frames: canFrame ? frames.filter((f) => isAvailable(f, groups, badgeIds)) : [],
+      styles: canStyle ? styles.filter((s) => isAvailable(lists(s), groups, badgeIds)) : [],
+      frames: canFrame ? frames.filter((f) => isAvailable(lists(f), groups, badgeIds)) : [],
     };
   }
 

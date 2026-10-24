@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { Prisma, PrismaClient } from "@gcs/db";
+import { jsonStrings, type Prisma, type PrismaClient } from "@gcs/db";
 import { writeAudit } from "../audit";
 import type { GcsCache } from "../cache";
 import { GcsForbidden, GcsNotFound, GcsValidationError } from "../errors";
@@ -135,10 +135,12 @@ export class GcsPermissionService {
     const cacheKey = `perm:${version}:mod:${container.type}:${container.id}`;
     let rows = await this.deps.cache.get<GcsModeratorRow[]>(cacheKey);
     if (!rows) {
-      rows = await this.deps.db.moderator.findMany({
-        where: { containerType: container.type, containerId: container.id },
-        select: { userId: true, groupId: true, powers: true },
-      });
+      rows = (
+        await this.deps.db.moderator.findMany({
+          where: { containerType: container.type, containerId: container.id },
+          select: { userId: true, groupId: true, powers: true },
+        })
+      ).map((r) => ({ ...r, powers: jsonStrings(r.powers) }));
       await this.deps.cache.set(cacheKey, rows, { ttlSec: CACHE_TTL_SEC, tags: [CACHE_TAG] });
     }
     const mine = rows.filter(

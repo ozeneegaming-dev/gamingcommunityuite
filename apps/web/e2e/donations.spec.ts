@@ -52,9 +52,9 @@ test.beforeAll(async ({ browser }) => {
   // „Plata serverelor”: 1.000 lei pe lună, cu reînnoire, pentru toată lumea.
   await sql(
     `INSERT INTO donation_goals (title, target, currency, period, "startsOn", "autoRenew", "groupIds", enabled, position, "updatedAt")
-     VALUES ('Plata serverelor', 100000, 'RON', 'MONTHLY', date_trunc('month', now())::date, true, '{}', true, 1, now())`,
+     VALUES ('Plata serverelor', 100000, 'RON', 'MONTHLY', date_trunc('month', now())::date, true, '[]', true, 1, now())`,
   );
-  await sql(`INSERT INTO widget_placements (page, zone, position, type, config, groups) VALUES ('index', 'sidebar', 0, 'vip.donationGoal', '{"goal":"","lastDonor":"show","donorCount":"show","icon":""}', '{}')`);
+  await sql(`INSERT INTO widget_placements (page, zone, position, type, config, groups) VALUES ('index', 'sidebar', 0, 'vip.donationGoal', '{"goal":"","lastDonor":"show","donorCount":"show","icon":""}', '[]')`);
   await sql(
     `INSERT INTO themes (key, name, "isDefault", enabled, settings, "updatedAt") VALUES ($1, 'Clasic donații', false, true, '{"preset":"classic"}'::jsonb, now())
      ON CONFLICT (key) DO UPDATE SET enabled = true, settings = EXCLUDED.settings, "updatedAt" = now()`,

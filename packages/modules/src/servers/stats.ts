@@ -1,3 +1,4 @@
+import { JSON_EMPTY_LIST } from "@gcs/db";
 import type { GcsStatTile, GcsStatsContext } from "@gcs/core";
 
 /**
@@ -6,14 +7,15 @@ import type { GcsStatTile, GcsStatsContext } from "@gcs/core";
  * vechime). Fără niciun server public, plăcile lipsesc. Worker-ul invalidează cache-ul lor la fiecare schimbare.
  */
 export async function serverStatTiles({ db }: GcsStatsContext): Promise<GcsStatTile[]> {
-  const total = await db.gameServer.count({ where: { enabled: true, groups: { isEmpty: true } } });
-  if (total === 0) return [];
-  const since = new Date(Date.now() - 10 * 60_000).toISOString();
-  const rows = await db.$queryRaw<{ online: boolean; players: number }[]>`
-    SELECT DISTINCT ON (s."serverId") s.online, s.players
-    FROM server_snapshots s JOIN game_servers g ON g.id = s."serverId"
-    WHERE g.enabled AND cardinality(g.groups) = 0 AND s.hourly = false AND s.at >= ${since}::timestamp
-    ORDER BY s."serverId", s.at DESC`;
+  const servers = await db.gameServer.findMany({ where: { enabled: true, groups: JSON_EMPTY_LIST }, select: { id: true } });
+  if (servers.length === 0) return [];
+  const snapshots = await db.serverSnapshot.findMany({
+    where: { serverId: { in: servers.map((g) => g.id) }, hourly: false, at: { gte: new Date(Date.now() - 10 * 60_000) } },
+    orderBy: [{ serverId: "asc" }, { at: "desc" }],
+    select: { serverId: true, online: true, players: true },
+  });
+  // Ultimul rând al fiecărui server.
+  const rows = snapshots.filter((r, i) => i === 0 || snapshots[i - 1]!.serverId !== r.serverId);
   const online = rows.filter((r) => r.online);
   return [
     { key: "servers.online", labelKey: "stats.tiles.serversOnline", value: online.length, icon: "fa-solid fa-server", href: "/servers", color: "#3DDC97" },

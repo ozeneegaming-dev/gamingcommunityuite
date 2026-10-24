@@ -332,7 +332,7 @@ test("blocul pentru vizitatori: sub topic în locul formularului și ca widget; 
   await g.context.close();
 
   // Widget-ul pe pagina principală (doar pentru vizitatori).
-  await sql(`INSERT INTO widget_placements (page, zone, position, type, config, groups) VALUES ('index', 'sidebar', 0, 'core.guestCta', '{}', '{}')`);
+  await sql(`INSERT INTO widget_placements (page, zone, position, type, config, groups) VALUES ('index', 'sidebar', 0, 'core.guestCta', '{}', '[]')`);
   await clearWidgetCache();
   try {
     const w = await guest(browser, "gcs-white", "100.94.11");

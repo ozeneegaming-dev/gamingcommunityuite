@@ -1,3 +1,4 @@
+import { jsonStrings } from "@gcs/db";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createWorld, type GcsTestWorld } from "../../test/world";
 import { NAV_SEED_MARK, seedDefaults } from "../install/seed";
@@ -78,7 +79,7 @@ async function legacyInstall(items: { label: object; icon: string; href: string;
     await w.db.navItem.create({ data: { position, label: it.label, icon: it.icon, href: it.href, groups: [], enabled: it.enabled ?? true } });
   }
   const state = await w.db.systemState.findUniqueOrThrow({ where: { id: 1 } });
-  await w.db.systemState.update({ where: { id: 1 }, data: { seedMarks: state.seedMarks.filter((m) => !NAV_MARKS.includes(m)) } });
+  await w.db.systemState.update({ where: { id: 1 }, data: { seedMarks: jsonStrings(state.seedMarks).filter((m) => !NAV_MARKS.includes(m)) } });
 }
 
 const LEGACY = [

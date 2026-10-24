@@ -14,7 +14,7 @@ import {
   type GcsSettingsService,
   type GcsWarningService,
 } from "@gcs/core";
-import type { ChatSanctionKind, Prisma, PrismaClient } from "@gcs/db";
+import { type ChatSanctionKind, type Prisma, type PrismaClient, jsonStrings } from "@gcs/db";
 import { toRef, userRefSelect, type GcsUserRef } from "../forums/queries";
 import { toChatView, type GcsChatMessageView, type GcsChatService } from "./chat";
 import type { GcsChatCommandContext } from "./extensions";
@@ -442,12 +442,12 @@ export class GcsChatModeration {
 
   // ─── Accesul de moderator în chat ──────────────────────────────────────────────────
 
-  private grantView(g: { id: number; rights: string[]; rooms: string[]; expiresAt: Date | null; createdAt: Date; user: Parameters<typeof toRef>[0]; grantedBy: Parameters<typeof toRef>[0] | null }): GcsChatGrantView {
+  private grantView(g: { id: number; rights: unknown; rooms: unknown; expiresAt: Date | null; createdAt: Date; user: Parameters<typeof toRef>[0]; grantedBy: Parameters<typeof toRef>[0] | null }): GcsChatGrantView {
     return {
       id: g.id,
       user: toRef(g.user),
-      rights: g.rights.filter(isChatRight),
-      rooms: g.rooms,
+      rights: jsonStrings(g.rights).filter(isChatRight),
+      rooms: jsonStrings(g.rooms),
       expiresAt: g.expiresAt?.toISOString() ?? null,
       grantedBy: g.grantedBy ? toRef(g.grantedBy) : null,
       createdAt: g.createdAt.toISOString(),

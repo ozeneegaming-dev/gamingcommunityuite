@@ -1,3 +1,4 @@
+import { jsonInts } from "@gcs/db";
 import type { GcsForumExtField } from "@gcs/core";
 import { allowedBlocks, FORUMS_ACP_SECTION, GCS_TOPIC_SORTS, type GcsForumTabView } from "@gcs/modules";
 import { GcsCard } from "@gcs/ui";
@@ -318,7 +319,7 @@ export default async function AcpForumPage({ params, searchParams }: Props) {
     const f = forum!;
     const tp = await getTranslations("acp.forums.page");
     const [groups, blocks] = await Promise.all([db.group.findMany({ where: { key: { notIn: ["banned"] } }, orderBy: { position: "asc" }, select: { id: true, name: true } }), allowedBlocks(services(), panel.actor)]);
-    const audience = new Set(f.page?.audienceGroupIds ?? []);
+    const audience = new Set(jsonInts(f.page?.audienceGroupIds));
     return (
       <GcsCard as="section" aria-label={tp("title")} style={{ padding: 16 }} data-testid="gcs-forum-page-form">
         <GcsActionForm action={saveForumPage.bind(null, f.id)} submitLabel={t("form.save")} submitKind="save">

@@ -1,6 +1,6 @@
 import { createHash, randomBytes, randomInt } from "node:crypto";
-import { GcsNotFound, GcsValidationError, writeAudit, type GcsAcpRoleService, type GcsActor } from "@gcs/core";
-import type { GameAdminSubject, Prisma, PrismaClient } from "@gcs/db";
+import { addSeedMarks, GcsNotFound, GcsValidationError, seedMarksOf, writeAudit, type GcsAcpRoleService, type GcsActor } from "@gcs/core";
+import { type GameAdminSubject, type Prisma, type PrismaClient, ci } from "@gcs/db";
 import { SERVER_ADMINS_ACP_SECTION } from "./config";
 import { cssPermissions, effectiveImmunity, mergeGrants, normalizeFlags, type GcsFlagGrant } from "./flags";
 import { identityTrust, normalizePlayerName, parseTypedIdentity } from "./identity";
@@ -172,12 +172,11 @@ export class GcsBridgeAdmins {
 
   /** Presetările implicite, o singură dată (seed-ul modulului, marcajul `servers:presets`). */
   static async seedPresets(tx: Prisma.TransactionClient): Promise<void> {
-    const state = await tx.systemState.upsert({ where: { id: 1 }, update: {}, create: { id: 1 } });
-    if (state.seedMarks.includes("servers:presets")) return;
+    if ((await seedMarksOf(tx)).includes("servers:presets")) return;
     if ((await tx.gameAdminPreset.count()) === 0) {
       await tx.gameAdminPreset.createMany({ data: DEFAULT_ADMIN_PRESETS.map((p, position) => ({ ...p, position })) });
     }
-    await tx.systemState.update({ where: { id: 1 }, data: { seedMarks: { push: "servers:presets" } } });
+    await addSeedMarks(tx, "servers:presets");
   }
 
   // ─── Intrările ─────────────────────────────────────────────────────────────
@@ -191,11 +190,11 @@ export class GcsBridgeAdmins {
       where.AND = [
         {
           OR: [
-            { user: { name: { contains: q, mode: "insensitive" } } },
-            { player: { name: { contains: q, mode: "insensitive" } } },
+            { user: { name: ci({ contains: q }) } },
+            { player: { name: ci({ contains: q }) } },
             { player: { value: { contains: q } } },
-            { name: { contains: q, mode: "insensitive" } },
-            { note: { contains: q, mode: "insensitive" } },
+            { name: ci({ contains: q }) },
+            { note: ci({ contains: q }) },
           ],
         },
       ];

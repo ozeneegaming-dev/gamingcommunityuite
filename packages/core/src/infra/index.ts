@@ -12,6 +12,7 @@ export * from "./kv";
 export * from "./kvRedis";
 export * from "./kvSql";
 export * from "./lock";
+export * from "./txLock";
 
 /**
  * Ediția: `vps` (Docker: Redis, worker, websocket) sau `lite` (shared hosting cu Node.js: un singur proces, totul în

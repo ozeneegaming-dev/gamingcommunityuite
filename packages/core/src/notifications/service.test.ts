@@ -75,6 +75,16 @@ describe("GcsNotificationService — crearea și gruparea", () => {
     expect(created[1]!.payload).toMatchObject({ inserted: false });
   });
 
+  test("concurență: 6 reacții simultane de la actori diferiți → o singură notificare necitită, cu count 6", async () => {
+    const owner = await w.createUser("OwnerC", "member");
+    const actors = await Promise.all(["P1", "P2", "P3", "P4", "P5", "P6"].map((n) => w.createUser(n, "member")));
+    await Promise.all(actors.map((a) => svc.notify({ userIds: [owner.id], type: "forums.reaction", targetType: "post", targetId: "9", actorId: a.id })));
+    const list = await svc.list(owner.id);
+    expect(list).toHaveLength(1);
+    expect(list[0]).toMatchObject({ count: 6 });
+    expect(list[0]!.actorIds).toHaveLength(3);
+  });
+
   test("countEach: fiecare mesaj crește numărul, chiar de la același actor; tipul important trece pe push", async () => {
     const owner = await w.createUser("Owner", "member");
     const a = await w.createUser("A1", "member");

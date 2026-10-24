@@ -14,7 +14,7 @@ import {
   type GcsReactionView,
   type GcsSettingsService,
 } from "@gcs/core";
-import type { ContentVisibility, ForumType, Prisma, PrismaClient } from "@gcs/db";
+import { type ContentVisibility, type ForumType, type Prisma, type PrismaClient, jsonInts } from "@gcs/db";
 import { hiddenLabels, revealHidden } from "./blocks";
 import { isNoticeTone } from "./notices";
 import type { GcsPollService, GcsPollView } from "./polls";
@@ -956,7 +956,7 @@ export class GcsForumQueries {
         position: f.position,
         linkUrl: f.linkUrl,
         subforumColumns: f.subforumColumns,
-        page: f.type === "PAGE" ? { allowTopics: f.page?.allowTopics ?? false, audience: f.page?.audienceGroupIds ?? [] } : null,
+        page: f.type === "PAGE" ? { allowTopics: f.page?.allowTopics ?? false, audience: jsonInts(f.page?.audienceGroupIds) } : null,
         options: {
           ownTopicsOnly: f.ownTopicsOnly,
           hasPassword: f.passwordHash !== null,

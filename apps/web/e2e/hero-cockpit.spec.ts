@@ -300,7 +300,7 @@ test("consola Hero Cockpit: pornită / oprită, feed-ul, meciul live, trofeele p
   });
 
   await test.step("widget-ul „Clasament” în coloana laterală: măsurile, perioada, trofeele, mesajul, locul tău", async () => {
-    await sql(`INSERT INTO widget_placements (page, zone, position, type, config, groups) VALUES ('index', 'sidebar', 0, 'core.ranking', '{"metric":"posts","period":"day"}', '{}')`);
+    await sql(`INSERT INTO widget_placements (page, zone, position, type, config, groups) VALUES ('index', 'sidebar', 0, 'core.ranking', '{"metric":"posts","period":"day"}', '[]')`);
     await clearWidgetCache();
     await page.goto("/");
     // Widgeturile vin în flux (streaming): rezerva ascunsă rămâne în pagină, deci doar copia vizibilă.

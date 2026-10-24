@@ -1,5 +1,5 @@
 import { GcsValidationError, settingValueError, type GcsAcpRoleService, type GcsActor, type GcsEventBus, type GcsModuleRegistry, type GcsPermissionService, type GcsSettingsService } from "@gcs/core";
-import type { Prisma, PrismaClient } from "@gcs/db";
+import { type Prisma, type PrismaClient, jsonHas, jsonStrings, ci } from "@gcs/db";
 import { toRef, userRefSelect, type GcsPagination, type GcsUserRef } from "../forums/queries";
 import { syncClanForumStaff } from "./forum";
 import { CLAN_SETTING, CLAN_SETTINGS, readClanOptions } from "./options";
@@ -41,7 +41,7 @@ export class GcsClanAdmin {
     const q = (query.q ?? "").trim().slice(0, 40);
     const where: Prisma.ClanWhereInput = {
       ...filterWhere(query.filter),
-      ...(q ? { OR: [{ tag: { contains: q, mode: "insensitive" } }, { name: { contains: q, mode: "insensitive" } }] } : {}),
+      ...(q ? { OR: [{ tag: ci({ contains: q }) }, { name: ci({ contains: q }) }] } : {}),
     };
     const counts = Object.fromEntries(
       await Promise.all(GCS_CLAN_ACP_FILTERS.map(async (f) => [f, await db.clan.count({ where: filterWhere(f) })] as const)),
@@ -138,8 +138,10 @@ export class GcsClanAdmin {
     // Drepturile ofițerilor care nu mai sunt permise dispar din toate clanurile (și din drepturile pe forum).
     const removedRights = before.officerRights.filter((r) => !after.officerRights.includes(r));
     if (removedRights.length > 0) {
-      const affected = await db.clan.findMany({ where: { officerRights: { hasSome: removedRights } }, select: { id: true, officerRights: true } });
-      for (const c of affected) await db.clan.update({ where: { id: c.id }, data: { officerRights: c.officerRights.filter((r) => after.officerRights.includes(r as never)) } });
+      const affected = (await db.clan.findMany({ where: { OR: removedRights.map((r) => ({ officerRights: jsonHas(r) })) }, select: { id: true, officerRights: true } })).filter((c) =>
+        jsonStrings(c.officerRights).some((r) => removedRights.includes(r as never)),
+      );
+      for (const c of affected) await db.clan.update({ where: { id: c.id }, data: { officerRights: jsonStrings(c.officerRights).filter((r) => after.officerRights.includes(r as never)) } });
       const officers = await db.clanMember.findMany({ where: { role: "OFFICER", clanId: { in: affected.map((c) => c.id) } }, select: { userId: true } });
       await permissions.invalidateMemberGrants(officers.map((o) => o.userId));
     }

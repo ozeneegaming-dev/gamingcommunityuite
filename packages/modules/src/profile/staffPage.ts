@@ -12,7 +12,7 @@ import {
   type GcsEventBus,
   type GcsPermissionService,
 } from "@gcs/core";
-import { Prisma, type PrismaClient } from "@gcs/db";
+import { Prisma, type PrismaClient, jsonStrings } from "@gcs/db";
 import { contactLink } from "./fieldGroups";
 import type { GcsMemberCard, GcsMemberList } from "./members";
 
@@ -90,7 +90,7 @@ export class GcsStaffPage {
         .sort((a, b) => (a.staffProfile?.position ?? UNORDERED) - (b.staffProfile?.position ?? UNORDERED) || a.nameNormalized.localeCompare(b.nameNormalized))
         .flatMap((u) => {
           const card = cards.get(u.id);
-          return card ? [{ ...card, descriptionHtml: u.staffProfile?.descriptionHtml ?? "", duties: u.staffProfile?.duties ?? [], contacts: contacts.get(u.id) ?? [] }] : [];
+          return card ? [{ ...card, descriptionHtml: u.staffProfile?.descriptionHtml ?? "", duties: jsonStrings(u.staffProfile?.duties), contacts: contacts.get(u.id) ?? [] }] : [];
         });
       if (!opts.all && list.length === 0) continue;
       out.push({

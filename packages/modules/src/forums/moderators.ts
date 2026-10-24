@@ -7,7 +7,7 @@ import {
   type GcsActor,
   type GcsPermissionService,
 } from "@gcs/core";
-import type { PrismaClient } from "@gcs/db";
+import { type PrismaClient, jsonStrings } from "@gcs/db";
 
 /** Secțiunea ACP Membri → Staff → Moderatori. */
 export const MODERATORS_ACP_SECTION = "members.moderators";
@@ -49,7 +49,7 @@ export class GcsForumModeratorService {
         userName: r.user?.name ?? null,
         groupId: r.groupId,
         groupName: r.group?.name ?? null,
-        powers: r.powers,
+        powers: jsonStrings(r.powers),
       }))
       .sort((a, b) => a.forumName.localeCompare(b.forumName) || a.id - b.id);
   }

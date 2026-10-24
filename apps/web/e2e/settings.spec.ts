@@ -188,7 +188,7 @@ test.describe("setările din etapa 5", () => {
   test("un câmp de profil „Text lung” se scrie în editorul compact și apare formatat în tabul Despre", async ({ page }) => {
     const id = uid();
     const key = `despre_${id}`;
-    await sql(`INSERT INTO profile_fields (key, label, type, section, "maxLength", position, options) VALUES ($1, $2, 'TEXTAREA', 'ABOUT', 300, 50, '{}')`, [key, `Despre mine ${id}`]);
+    await sql(`INSERT INTO profile_fields (key, label, type, section, "maxLength", position, options) VALUES ($1, $2, 'TEXTAREA', 'ABOUT', 300, 50, '[]')`, [key, `Despre mine ${id}`]);
     try {
       await member(page, `Ab${id}`, `ab-${id}@example.com`);
       await page.goto("/settings/profile");

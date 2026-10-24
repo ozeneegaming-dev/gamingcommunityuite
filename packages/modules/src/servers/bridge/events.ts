@@ -349,10 +349,11 @@ export async function openSession(
   p: GcsPlayerRow,
   s: { name: string; ip: string | null; adminId: number | null; at: Date; adminFlags?: string | null },
 ): Promise<void> {
-  await tx.$executeRaw`
-    INSERT INTO game_sessions ("serverId", "playerId", "adminId", name, ip, "connectedAt", "adminFlags")
-    VALUES (${serverId}, ${p.id}, ${s.adminId}, ${s.name || p.name}, ${s.ip}, ${s.at.toISOString()}::timestamp, ${s.adminFlags ?? null})
-    ON CONFLICT ("serverId", "playerId") WHERE "disconnectedAt" IS NULL DO NOTHING`;
+  // O sesiune deja deschisă (indexul unic pe `openKey`, coloana generată) rămâne: inserarea se sare.
+  await tx.gameSession.createMany({
+    data: [{ serverId, playerId: p.id, adminId: s.adminId, name: s.name || p.name, ip: s.ip, connectedAt: s.at, adminFlags: s.adminFlags ?? null }],
+    skipDuplicates: true,
+  });
 }
 
 /**

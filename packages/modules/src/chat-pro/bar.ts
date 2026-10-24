@@ -1,5 +1,5 @@
 import { GcsNotFound, GcsValidationError, writeAudit, type GcsAcpRoleService, type GcsActor, type GcsCache, type GcsRealtime } from "@gcs/core";
-import type { ChatProBarItem, PrismaClient } from "@gcs/db";
+import { type ChatProBarItem, type PrismaClient, jsonInts } from "@gcs/db";
 import { CHAT_PRO_ACP_BAR, safeChatProUrl } from "./index";
 import type { GcsChatProBarItemView } from "./types";
 
@@ -27,7 +27,7 @@ const toAdmin = (r: ChatProBarItem): GcsChatProBarAdminItem => ({
   ctaUrl: r.ctaUrl,
   startsAt: r.startsAt?.toISOString() ?? null,
   endsAt: r.endsAt?.toISOString() ?? null,
-  groupIds: r.groupIds,
+  groupIds: jsonInts(r.groupIds),
   enabled: r.enabled,
   position: r.position,
 });

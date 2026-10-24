@@ -1,4 +1,5 @@
 import type { Prisma } from "@gcs/db";
+import { GcsSearchIndex } from "@gcs/core";
 import { POST_CONTENT_TYPE } from "../../../forums/posting";
 import { PM_CONTENT_TYPE } from "../../../messages/conversations";
 import type { GcsStepContext } from "../context";
@@ -89,7 +90,7 @@ export async function importPosts(s: GcsStepContext): Promise<void> {
             },
             select: { id: true },
           });
-          await tx.$executeRaw`UPDATE posts SET "searchVector" = setweight(to_tsvector('gcs_ro', ${content.rendered.text}), 'B') WHERE id = ${post.id}`;
+          await new GcsSearchIndex().indexPost(tx, post.id, content.rendered.text);
           if (content.attachmentIds.length > 0) {
             await tx.attachment.updateMany({ where: { id: { in: content.attachmentIds }, contentType: null }, data: { contentType: POST_CONTENT_TYPE, contentId: String(post.id) } });
           }

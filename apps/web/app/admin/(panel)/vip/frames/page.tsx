@@ -1,3 +1,4 @@
+import { jsonInts } from "@gcs/db";
 import { FRAMES_ACP_SECTION, type GcsFrameStyle } from "@gcs/modules";
 import { GcsAvatar, GcsCard } from "@gcs/ui";
 import type { Metadata } from "next";
@@ -21,7 +22,7 @@ export default async function AcpFramesPage() {
   const t = await getTranslations("acp.vip");
   const { db } = services();
   const [frames, groups, badges] = await Promise.all([
-    db.avatarFrame.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] }),
+    db.avatarFrame.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] }).then((rows) => rows.map((r) => ({ ...r, groupIds: jsonInts(r.groupIds), badgeIds: jsonInts(r.badgeIds) }))),
     db.group.findMany({ orderBy: { position: "asc" }, select: { id: true, name: true } }),
     db.badge.findMany({ orderBy: { position: "asc" }, select: AVAILABILITY_BADGE_SELECT }),
   ]);

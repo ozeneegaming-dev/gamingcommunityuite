@@ -328,7 +328,7 @@ model StaffProfile {
   userId          String   @id
   descriptionJson Json?
   descriptionHtml String   @default("")
-  duties          String[] @default([])
+  duties          Json    @default("[]")
   position        Int      @default(0)
   updatedAt       DateTime @updatedAt
 
@@ -380,7 +380,7 @@ model Moderator {
   containerId   String
   userId        String?
   groupId       Int?
-  powers        String[]
+  powers        Json    @default("[]")
 
   user  User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
   group Group? @relation(fields: [groupId], references: [id], onDelete: Cascade)
@@ -524,7 +524,7 @@ model SystemState {
   permVersion Int       @default(0)
   appVersion  String    @default("1.0.0")
   /// Seed-urile făcute o singură dată (ex. `layout:index`), ca alegerile adminului să nu fie refăcute la repornire.
-  seedMarks   String[]  @default([])
+  seedMarks   Json    @default("[]")
 
   @@map("system_state")
 }
@@ -655,7 +655,7 @@ model ForumPage {
   ctaIcon          String?
   allowTopics      Boolean  @default(false)
   /// Grupurile care văd pagina (gol = toți cei care văd forumul).
-  audienceGroupIds Int[]    @default([])
+  audienceGroupIds Json @default("[]")
   updatedAt        DateTime @updatedAt
   updatedById      String?
 
@@ -695,7 +695,6 @@ model Topic {
   repliesCount Int                      @default(0)
   viewsCount   Int                      @default(0)
   createdAt    DateTime                 @default(now())
-  searchVector Unsupported("tsvector")?
   /// Forum v2: nota medie (0 = fără voturi) și numărul voturilor (sortarea și filtrul „4★+”).
   ratingAvg         Float     @default(0)
   ratingCount       Int       @default(0)
@@ -738,7 +737,6 @@ model Post {
   editedById   String?
   ip           String?
   createdAt    DateTime                 @default(now())
-  searchVector Unsupported("tsvector")?
   /// Forum v2: blocurile „conținut ascuns” scoase din `contentHtml` (id, mod, grupuri, HTML), arătate per vizitator.
   hiddenParts  Json?
 
@@ -1054,7 +1052,7 @@ model Attachment {
 model ModSavedAction {
   id       Int    @id @default(autoincrement())
   name     String
-  forumIds Int[]
+  forumIds Json @default("[]")
   actions  Json
 
   @@map("mod_saved_actions")
@@ -1106,7 +1104,7 @@ model ProfileField {
   key           String              @unique
   label         String
   type          ProfileFieldType    @default(TEXT)
-  options       String[]
+  options       Json    @default("[]")
   section       ProfileFieldSection @default(ABOUT)
   required      Boolean             @default(false)
   maxLength     Int                 @default(200)
@@ -1397,7 +1395,7 @@ model AchievementLog {
 model GroupPromotion {
   id            Int     @id @default(autoincrement())
   name          String
-  fromGroupIds  Int[]
+  fromGroupIds  Json @default("[]")
   toGroupId     Int
   asPrimary     Boolean @default(true)
   minPosts      Int?
@@ -1476,8 +1474,8 @@ model NameStyle {
   name      String
   style     Json
   allGroups Boolean @default(false)
-  groupIds  Int[]
-  badgeIds  Int[]
+  groupIds  Json @default("[]")
+  badgeIds  Json @default("[]")
   position  Int     @default(0)
 
   users     User[]
@@ -1500,8 +1498,8 @@ model AvatarFrame {
   style             Json?
   imageAttachmentId String?
   allGroups         Boolean   @default(false)
-  groupIds          Int[]
-  badgeIds          Int[]
+  groupIds          Json @default("[]")
+  badgeIds          Json @default("[]")
   position          Int       @default(0)
 
   users User[]
@@ -1526,7 +1524,7 @@ model Notification {
   targetType String
   targetId   String
   groupKey   String
-  actorIds   String[]
+  actorIds   Json    @default("[]")
   count      Int       @default(1)
   data       Json
   readAt     DateTime?
@@ -1771,8 +1769,8 @@ model ChatModLog {
 model ChatModeratorGrant {
   id          Int       @id @default(autoincrement())
   userId      String    @unique
-  rights      String[]  @default([])
-  rooms       String[]  @default([])
+  rights      Json    @default("[]")
+  rooms       Json    @default("[]")
   expiresAt   DateTime?
   grantedById String?
   createdAt   DateTime  @default(now())
@@ -1827,7 +1825,7 @@ model NavItem {
   icon        String?
   href        String?
   appKey      String?
-  groups      Int[]
+  groups      Json @default("[]")
   newTab      Boolean @default(false)
   enabled     Boolean @default(true)
   /// Manager meniu v2: tipul itemului — `link` (link propriu), `app` (o pagină a unei aplicații), `dropdown` (grup cu
@@ -1958,7 +1956,7 @@ model WidgetPlacement {
   position Int    @default(0)
   type     String
   config   Json   @default("{}")
-  groups   Int[]
+  groups   Json @default("[]")
 
   @@index([page, zone, position])
   @@map("widget_placements")
@@ -2015,9 +2013,9 @@ model ChatProProfile {
   nickname           String?
   nicknameNormalized String?  @unique
   /// Cel mult 2 badge-uri obținute, afișate lângă nume.
-  badgeIds           Int[]    @default([])
+  badgeIds           Json @default("[]")
   /// Emoticoanele favorite (codurile, fără `:`) și GIF-urile favorite (`[{ id, url, preview, width, height }]`).
-  emoteFavorites     String[] @default([])
+  emoteFavorites     Json    @default("[]")
   gifFavorites       Json     @default("[]")
   updatedAt          DateTime @updatedAt
 
@@ -2076,7 +2074,7 @@ model ChatProBarItem {
   startsAt  DateTime?
   endsAt    DateTime?
   /// Grupurile care îl văd (gol = toți).
-  groupIds  Int[]     @default([])
+  groupIds  Json @default("[]")
   enabled   Boolean   @default(true)
   position  Int       @default(0)
   createdAt DateTime  @default(now())
@@ -2141,14 +2139,14 @@ model Plugin {
   status              String                  @default("installed")
   signed              Boolean                 @default(false)
   signatureKeyId      String?
-  capabilities        String[]
+  capabilities        Json    @default("[]")
   manifest            Json
   settings            Json                    @default("{}")
   package             Bytes?
   packageSha256       String?
   dbRole              String?
   dbPassword          String?
-  migrations          String[]
+  migrations          Json    @default("[]")
   /// `admin`, `auto` (eșecuri la rând) sau `cli` (dezactivare din consolă), când `enabled = false`.
   disabledReason      String?
   consecutiveFailures Int                     @default(0)
@@ -2381,7 +2379,7 @@ model GameServer {
   description String   @default("")
   forumId     Int?
   enabled     Boolean  @default(true)
-  groups      Int[]    @default([])
+  groups      Json @default("[]")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -2519,7 +2517,7 @@ model Clan {
   /// `{ discord?, steam?, website?, youtube?, twitch? }`, adrese https validate.
   links           Json         @default("{}")
   /// Drepturile date ofițerilor de lider (`members`, `invite`, `requests`, `edit`, `forum`, `events`).
-  officerRights   String[]     @default([])
+  officerRights   Json    @default("[]")
   memberLimit     Int?
   membersCount    Int          @default(0)
   score           Int          @default(0)
@@ -3436,7 +3434,7 @@ model DonationGoal {
   endsOn    DateTime?          @db.Date
   /// `MONTHLY`: obiectivul trece singur în luna următoare (progresul pornește de la zero în fiecare lună).
   autoRenew Boolean            @default(true)
-  groupIds  Int[]              @default([])
+  groupIds  Json @default("[]")
   enabled   Boolean            @default(true)
   position  Int                @default(0)
   createdAt DateTime           @default(now())

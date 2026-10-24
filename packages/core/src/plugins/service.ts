@@ -1,4 +1,4 @@
-import type { Prisma, PrismaClient } from "@gcs/db";
+import { jsonStrings, type Prisma, type PrismaClient } from "@gcs/db";
 import type { KeyObject } from "node:crypto";
 import type { GcsAcpRoleService } from "../acp/roles";
 import { AUDIT_REDACTED, writeAudit } from "../audit";
@@ -79,7 +79,7 @@ function toRow(r: RawRow): GcsPluginRow {
   // Manifestul a fost validat la instalare; îl parsăm din nou ca să primim valorile implicite și tipurile.
   const parsed = parsePluginManifest(r.manifest);
   if (!parsed.ok) throw new Error(`Manifest invalid în baza de date pentru ${r.key}`);
-  return { ...r, manifest: parsed.manifest, settings: (r.settings ?? {}) as Record<string, unknown>, capabilities: r.capabilities ?? [], migrations: r.migrations ?? [] };
+  return { ...r, manifest: parsed.manifest, settings: (r.settings ?? {}) as Record<string, unknown>, capabilities: jsonStrings(r.capabilities), migrations: jsonStrings(r.migrations) };
 }
 
 /** Id-ul programării unui job periodic al pluginului (BullMQ nu acceptă `:`). */
@@ -168,7 +168,7 @@ export class GcsPluginService {
 
   private async installedInfo() {
     const rows = await this.deps.db.plugin.findMany({ select: { key: true, version: true, status: true, enabled: true, capabilities: true } });
-    return rows.map((r) => ({ ...r, capabilities: r.capabilities ?? [] }));
+    return rows.map((r) => ({ ...r, capabilities: jsonStrings(r.capabilities) }));
   }
 
   private async validate(data: Buffer): Promise<ReturnType<typeof validatePluginPackage>> {

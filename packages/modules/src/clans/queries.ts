@@ -1,5 +1,5 @@
 import { GcsForbidden, type GcsActor, type GcsAppService, type GcsCache, type GcsPermissionService } from "@gcs/core";
-import type { ClanJoinMode, ClanRole, ClanStatus, Prisma, PrismaClient } from "@gcs/db";
+import { type ClanJoinMode, type ClanRole, type ClanStatus, type Prisma, type PrismaClient, ci } from "@gcs/db";
 import { forumContainer } from "../forums/posting";
 import { toRef, userRefSelect, type GcsPagination, type GcsUserRef } from "../forums/queries";
 import { readClanOptions, type GcsClanOptions, type GcsClanRight, type GcsClanTagPlace } from "./options";
@@ -191,7 +191,7 @@ export class GcsClanQueries {
     const where: Prisma.ClanWhereInput = {
       status: query.archived ? "ARCHIVED" : "ACTIVE",
       ...(query.join ? { joinMode: query.join.toUpperCase() as ClanJoinMode } : {}),
-      ...(q ? { OR: [{ tag: { contains: q, mode: "insensitive" } }, { name: { contains: q, mode: "insensitive" } }] } : {}),
+      ...(q ? { OR: [{ tag: ci({ contains: q }) }, { name: ci({ contains: q }) }] } : {}),
     };
     const sort = query.sort ?? "rank";
     const orderBy: Prisma.ClanOrderByWithRelationInput[] =

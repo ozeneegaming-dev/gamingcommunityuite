@@ -1,5 +1,5 @@
 import { displaySettingsOf, GcsForbidden, GcsNotFound, GcsValidationError, type GcsActor, type GcsPermissionService } from "@gcs/core";
-import type { ChatSanction, PrismaClient } from "@gcs/db";
+import { type ChatSanction, type PrismaClient, jsonStrings } from "@gcs/db";
 
 /**
  * Drepturile de moderare ale chat-ului (permisiunile de grup `chat.<drept>`), pe care le poate primi și un membru prin
@@ -120,7 +120,8 @@ export class GcsChatRights {
   async rights(actor: GcsActor, channelKey: string | null): Promise<GcsChatRight[]> {
     if (!actor.userId || actor.isBanned) return [];
     const grant = await this.grantOf(actor.userId);
-    const granted = new Set(grant && (grant.rooms.length === 0 || (channelKey !== null && grant.rooms.includes(channelKey))) ? grant.rights.filter(isChatRight) : []);
+    const rooms = jsonStrings(grant?.rooms);
+    const granted = new Set(grant && (rooms.length === 0 || (channelKey !== null && rooms.includes(channelKey))) ? jsonStrings(grant.rights).filter(isChatRight) : []);
     const out: GcsChatRight[] = [];
     for (const r of CHAT_MOD_RIGHTS) if (granted.has(r) || (await this.deps.permissions.can(actor, `chat.${r}`))) out.push(r);
     return out;
@@ -130,7 +131,8 @@ export class GcsChatRights {
     if (!actor.userId || actor.isBanned) return false;
     if (await this.deps.permissions.can(actor, `chat.${right}`)) return true;
     const grant = await this.grantOf(actor.userId);
-    return grant !== null && grant.rights.includes(right) && (grant.rooms.length === 0 || (channelKey !== null && grant.rooms.includes(channelKey)));
+    const rooms = jsonStrings(grant?.rooms);
+    return grant !== null && jsonStrings(grant.rights).includes(right) && (rooms.length === 0 || (channelKey !== null && rooms.includes(channelKey)));
   }
 
   async assert(actor: GcsActor, right: GcsChatRight, channelKey: string | null): Promise<void> {

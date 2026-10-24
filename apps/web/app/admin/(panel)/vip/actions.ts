@@ -1,7 +1,7 @@
 "use server";
 
 import type { GcsNameStyle, GcsResult } from "@gcs/core";
-import type { Prisma } from "@gcs/db";
+import { type Prisma, jsonInts } from "@gcs/db";
 import { FRAMES_ACP_SECTION, NAME_STYLES_ACP_SECTION, type GcsFrameStyle } from "@gcs/modules";
 import { field, intField, runAcpAction } from "@/lib/acp-actions";
 import { services } from "@/lib/services";
@@ -77,7 +77,7 @@ export async function saveNameStyleLook(id: number, style: GcsNameStyle): Promis
   return runAcpAction(NAME_STYLES_ACP_SECTION, "edit", async (actor) => {
     const { db, cosmetics } = services();
     const row = await db.nameStyle.findUniqueOrThrow({ where: { id } });
-    await cosmetics.saveNameStyle(actor, id, { key: row.key, name: row.name, style, allGroups: row.allGroups, groupIds: row.groupIds, badgeIds: row.badgeIds });
+    await cosmetics.saveNameStyle(actor, id, { key: row.key, name: row.name, style, allGroups: row.allGroups, groupIds: jsonInts(row.groupIds), badgeIds: jsonInts(row.badgeIds) });
     return null;
   });
 }

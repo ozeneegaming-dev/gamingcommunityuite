@@ -19,7 +19,7 @@ import {
   type GcsSettingsService,
   type GcsUploadedFile,
 } from "@gcs/core";
-import { Prisma, type FieldVisibility, type PrismaClient, type ProfileField } from "@gcs/db";
+import { Prisma, type FieldVisibility, type PrismaClient, type ProfileField, jsonStrings } from "@gcs/db";
 import { RENDER_LABELS } from "../forums/labels";
 import { emailChangeMail } from "./emails";
 import { cleanHandle, contactLink } from "./fieldGroups";
@@ -136,8 +136,9 @@ export class GcsProfileService {
 
   // ─── Câmpuri custom ───────────────────────────────────────────────────────
 
-  fields(): Promise<ProfileField[]> {
-    return this.deps.db.profileField.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] });
+  async fields(): Promise<(Omit<ProfileField, "options"> & { options: string[] })[]> {
+    const rows = await this.deps.db.profileField.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] });
+    return rows.map((r) => ({ ...r, options: jsonStrings(r.options) }));
   }
 
   /** Câmpurile completate pe care `viewer` le poate vedea la `userId`. */
@@ -206,7 +207,7 @@ export class GcsProfileService {
         return /^-?\d{1,12}(\.\d{1,4})?$/.test(value) ? { value } : { error: "invalid_number" };
       case "SELECT":
       case "IMAGE_SELECT":
-        return field.options.includes(value) ? { value } : { error: "invalid_choice" };
+        return jsonStrings(field.options).includes(value) ? { value } : { error: "invalid_choice" };
       default:
         return { value };
     }

@@ -1,4 +1,4 @@
-import type { Prisma, PrismaClient } from "@gcs/db";
+import { jsonInts, type Prisma, type PrismaClient } from "@gcs/db";
 import type { GcsAcpRoleService } from "../acp/roles";
 import type { GcsAppService, GcsAppViewer } from "../apps/service";
 import { writeAudit } from "../audit";
@@ -53,7 +53,7 @@ export class GcsWidgetService {
     const rows = await this.deps.db.widgetPlacement.findMany({ where: { page }, orderBy: [{ zone: "asc" }, { position: "asc" }, { id: "asc" }] });
     const list = rows
       .filter((r) => isZone(r.zone))
-      .map((r) => ({ id: r.id, zone: r.zone as GcsWidgetZone, position: r.position, type: r.type, config: (r.config ?? {}) as Record<string, unknown>, groups: r.groups }));
+      .map((r) => ({ id: r.id, zone: r.zone as GcsWidgetZone, position: r.position, type: r.type, config: (r.config ?? {}) as Record<string, unknown>, groups: jsonInts(r.groups) }));
     await this.deps.cache.set(key, list, { ttlSec: CACHE_TTL, tags: [CACHE_TAG] });
     return list;
   }

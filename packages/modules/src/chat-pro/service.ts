@@ -17,7 +17,7 @@ import {
   type GcsReportService,
   type GcsSettingsService,
 } from "@gcs/core";
-import type { Prisma, PrismaClient } from "@gcs/db";
+import { type Prisma, type PrismaClient, jsonInts, jsonStrings } from "@gcs/db";
 import { badgeArtSrc } from "@gcs/ui/badge-art";
 import { toChatView, type GcsChatMessageView, type GcsChatService } from "../chat/chat";
 import type { GcsChatExtension } from "../chat/extensions";
@@ -164,8 +164,8 @@ export class GcsChatProService {
     return {
       prefs: normalizeChatProPrefs(row?.prefs),
       nickname: row?.nickname ?? null,
-      badgeIds: row?.badgeIds ?? [],
-      emoteFavorites: row?.emoteFavorites ?? [],
+      badgeIds: jsonInts(row?.badgeIds),
+      emoteFavorites: jsonStrings(row?.emoteFavorites),
       gifFavorites: Array.isArray(row?.gifFavorites) ? (row.gifFavorites as unknown[]).map(cleanGif).filter((g): g is GcsChatProGif => g !== null) : [],
     };
   }
@@ -383,7 +383,7 @@ export class GcsChatProService {
       this.emotes.map(),
       this.ranking.lastWinner(),
     ]);
-    const chosen = profiles.flatMap((p) => p.badgeIds.map((badgeId) => ({ userId: p.userId, badgeId })));
+    const chosen = profiles.flatMap((p) => jsonInts(p.badgeIds).map((badgeId) => ({ userId: p.userId, badgeId })));
     const owned =
       chosen.length > 0
         ? await db.userBadge.findMany({
@@ -400,7 +400,7 @@ export class GcsChatProService {
       const authorId = view.author?.id ?? null;
       const profile = authorId ? profileMap.get(authorId) : undefined;
       const reply = row?.replyToId ? replyMap.get(row.replyToId) : undefined;
-      const badges = (profile?.badgeIds ?? []).flatMap((badgeId) => {
+      const badges = jsonInts(profile?.badgeIds).flatMap((badgeId) => {
         const b = owned.find((o) => o.userId === authorId && o.badge.id === badgeId)?.badge;
         return b ? [{ kind: "badge" as const, key: b.key, name: b.name, art: badgeArtSrc(b), image: b.imageAttachmentId ? `/files/${b.imageAttachmentId}` : null }] : [];
       });

@@ -1,6 +1,6 @@
 import { isIP, type BlockList } from "node:net";
 import { GcsNotFound, GcsRateLimited, GcsValidationError, writeAudit, type GcsAcpRoleService, type GcsActor, type GcsAttachmentService, type GcsEventBus, type GcsRateLimiter } from "@gcs/core";
-import type { Prisma, PrismaClient } from "@gcs/db";
+import { type Prisma, type PrismaClient, jsonInts } from "@gcs/db";
 import { slugify } from "../forums/slug";
 import { enabledGames } from "./games";
 import { isQueryableAddress, normalizeHost, serversAllowNets } from "./net";
@@ -120,7 +120,7 @@ export class GcsServerService {
       host: r.host,
       port: r.port,
       enabled: r.enabled,
-      restricted: r.groups.length > 0,
+      restricted: jsonInts(r.groups).length > 0,
       status: r.enabled ? (statuses.get(r.id) ?? null) : null,
     }));
   }
@@ -141,7 +141,7 @@ export class GcsServerService {
       slug: row.slug,
       description: row.description,
       forumId: row.forumId,
-      groups: row.groups,
+      groups: jsonInts(row.groups),
       enabled: row.enabled,
       bannerId: row.bannerId,
       admins: row.admins.map((a) => ({ id: a.user.id, name: a.user.name })),

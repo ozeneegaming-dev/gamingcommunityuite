@@ -1,3 +1,4 @@
+import { jsonStrings } from "@gcs/db";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createWorld, type GcsTestWorld } from "../../test/world";
 import { seedDefaults } from "../install/seed";
@@ -49,7 +50,7 @@ async function v3Install(items: { label: object; icon: string; href: string; app
     await w.db.navItem.create({ data: { position, label: it.label, icon: it.icon, href: it.href, appKey: it.appKey ?? null, groups: [] } });
   }
   const state = await w.db.systemState.findUniqueOrThrow({ where: { id: 1 } });
-  await w.db.systemState.update({ where: { id: 1 }, data: { seedMarks: state.seedMarks.filter((m) => m !== "nav:v4") } });
+  await w.db.systemState.update({ where: { id: 1 }, data: { seedMarks: jsonStrings(state.seedMarks).filter((m) => m !== "nav:v4") } });
 }
 
 const V3 = [

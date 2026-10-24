@@ -1,4 +1,5 @@
 import type { Prisma, PrismaClient } from "@gcs/db";
+import { addSeedMarks, seedMarksOf } from "./seedMarks";
 import type { GcsNameStyle } from "../groups/nameStyles";
 import { GCS_WIDGET_PAGES, type GcsModuleRegistry, type GcsWidgetPage } from "../modules/registry";
 import { GcsNavService, NAV_MARKS } from "../nav/service";
@@ -127,17 +128,17 @@ export async function seedDefaults(db: PrismaClient, registry: GcsModuleRegistry
     // `nav:v3` cu Servere; `nav:v4` cu Clanuri; `nav:v5` pornește itemii adăugați dezactivați și completează submeniul Membri;
     // `nav:v6` adaugă submeniul Servere): o instalare nouă le primește direct; una existentă își actualizează meniul o singură dată
     // pentru fiecare marcaj lipsă, în ordine (`GcsNavService.upgradeDefaults`).
-    const navState = await tx.systemState.upsert({ where: { id: 1 }, update: {}, create: { id: 1 } });
-    if (!navState.seedMarks.includes("nav")) {
+    const navMarks = await seedMarksOf(tx);
+    if (!navMarks.includes("nav")) {
       await GcsNavService.seedDefaults(tx, registry);
-      await tx.systemState.update({ where: { id: 1 }, data: { seedMarks: { push: ["nav", ...NAV_MARKS] } } });
+      await addSeedMarks(tx, ["nav", ...NAV_MARKS]);
     } else {
       for (const mark of NAV_MARKS) {
-        if (navState.seedMarks.includes(mark)) continue;
+        if (navMarks.includes(mark)) continue;
         if (mark === "nav:v5") await GcsNavService.enableDefaults(tx, registry);
         else if (mark === "nav:v6") await GcsNavService.appendDefaultChildren(tx, registry, mark);
         else await GcsNavService.upgradeDefaults(tx, registry, mark);
-        await tx.systemState.update({ where: { id: 1 }, data: { seedMarks: { push: mark } } });
+        await addSeedMarks(tx, mark);
       }
     }
     // Tema implicită (etapa 5), doar dacă nu există încă nicio temă.
@@ -148,10 +149,10 @@ export async function seedDefaults(db: PrismaClient, registry: GcsModuleRegistry
       const list = defaultWidgetLayout(registry, page);
       if (list.length > 0) layouts[page] = list;
     }
-    const state = await tx.systemState.upsert({ where: { id: 1 }, update: {}, create: { id: 1 } });
-    const pending = (Object.keys(layouts) as GcsWidgetPage[]).filter((page) => !state.seedMarks.includes(`layout:${page}`));
+    const marks = await seedMarksOf(tx);
+    const pending = (Object.keys(layouts) as GcsWidgetPage[]).filter((page) => !marks.includes(`layout:${page}`));
     await GcsWidgetService.seedDefaults(tx, Object.fromEntries(pending.map((page) => [page, layouts[page]!])));
-    if (pending.length > 0) await tx.systemState.update({ where: { id: 1 }, data: { seedMarks: { push: pending.map((page) => `layout:${page}`) } } });
+    if (pending.length > 0) await addSeedMarks(tx, pending.map((page) => `layout:${page}`));
 
     await tx.systemState.upsert({ where: { id: 1 }, update: {}, create: { id: 1 } });
   }, SEED_TX);

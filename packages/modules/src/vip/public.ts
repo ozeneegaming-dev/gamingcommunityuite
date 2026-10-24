@@ -1,5 +1,5 @@
 import { isSafeHref, type GcsActor, type GcsModuleRegistry, type GcsPermissionService, type GcsSettingsService } from "@gcs/core";
-import type { PrismaClient } from "@gcs/db";
+import { type PrismaClient, jsonInts } from "@gcs/db";
 import { forumContainer } from "../forums/posting";
 import type { GcsVipService } from "./vip";
 
@@ -105,8 +105,8 @@ export class GcsVipPublic {
           icon: tier.icon,
           benefits,
           forums: forums.filter((f) => readable.has(String(f.id)) && !baseReadable.has(String(f.id)) && viewable.has(String(f.id))),
-          nameStyles: styles.filter((s) => s.groupIds.includes(tier.id)).length,
-          frames: frames.filter((f) => f.groupIds.includes(tier.id)).length,
+          nameStyles: styles.filter((s) => jsonInts(s.groupIds).includes(tier.id)).length,
+          frames: frames.filter((f) => jsonInts(f.groupIds).includes(tier.id)).length,
           action: href ? { kind: "checkout", href } : { kind: "contact", href: contact },
         };
       }),

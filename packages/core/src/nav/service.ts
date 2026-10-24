@@ -1,4 +1,4 @@
-import type { Prisma, PrismaClient } from "@gcs/db";
+import { jsonInts, type Prisma, type PrismaClient } from "@gcs/db";
 import type { GcsAcpRoleService } from "../acp/roles";
 import { APPS_ACP_SECTION, type GcsAppService, type GcsAppViewer } from "../apps/service";
 import { writeAudit } from "../audit";
@@ -173,7 +173,7 @@ export class GcsNavService {
   private async rows(): Promise<Row[]> {
     const cached = await this.deps.cache.get<Row[]>(CACHE_KEY);
     if (cached) return cached;
-    const rows = await this.deps.db.navItem.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] });
+    const rows = (await this.deps.db.navItem.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] })).map((r) => ({ ...r, groups: jsonInts(r.groups) }));
     await this.deps.cache.set(CACHE_KEY, rows, { ttlSec: CACHE_TTL, tags: [CACHE_TAG] });
     return rows;
   }
@@ -474,7 +474,7 @@ export class GcsNavService {
    * aduși de el sau de marcajele de după (`since`).
    */
   static async upgradeDefaults(tx: Prisma.TransactionClient, registry: GcsModuleRegistry, mark: string = NAV_MARKS[0]!): Promise<"replaced" | "appended" | "unchanged"> {
-    const rows = await tx.navItem.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] });
+    const rows = (await tx.navItem.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }] })).map((r) => ({ ...r, groups: jsonInts(r.groups) }));
     const current = navDefaults(registry, "current");
     const index = Math.max(0, NAV_MARKS.indexOf(mark));
     // Meniul dinaintea marcajului: fără itemii și fără copiii aduși de el sau de marcajele de după.

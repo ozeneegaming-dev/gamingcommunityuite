@@ -1,5 +1,5 @@
 import { GcsNotFound, GcsValidationError, writeAudit, type GcsActor, type GcsCache, type GcsEventBus, type GcsSettingsService } from "@gcs/core";
-import type { Prisma, PrismaClient } from "@gcs/db";
+import { type Prisma, type PrismaClient, ci } from "@gcs/db";
 import { byDisplayPriority, type GcsGroupCount, type GcsGroupDirectory, type GcsGroupRef } from "../profile/groupDirectory";
 import { nameKeyOf, nameKeySelect } from "../profile/nameKeys";
 import {
@@ -241,7 +241,7 @@ export class GcsGroupsProService {
     const rows = await Promise.all(
       visible.map(async (g) => {
         const groupMatch = q !== "" && g.name.toLowerCase().includes(q);
-        const where: Prisma.UserWhereInput = q && !groupMatch ? { AND: [memberWhere(g), { name: { contains: q, mode: "insensitive" } }] } : memberWhere(g);
+        const where: Prisma.UserWhereInput = q && !groupMatch ? { AND: [memberWhere(g), { name: ci({ contains: q }) }] } : memberWhere(g);
         const [matched, list] = await Promise.all([
           this.deps.db.user.count({ where }),
           this.deps.db.user.findMany({

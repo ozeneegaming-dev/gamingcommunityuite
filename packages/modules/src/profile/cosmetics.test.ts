@@ -1,3 +1,4 @@
+import { jsonInts } from "@gcs/db";
 import { GcsForbidden, GcsValidationError, type GcsActor } from "@gcs/core";
 import sharp from "sharp";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
@@ -109,7 +110,7 @@ describe("ACP", () => {
     const before = await w.cosmetics.version();
     await w.cosmetics.css();
     const fire = await w.db.nameStyle.findUniqueOrThrow({ where: { key: "ns_fire" } });
-    await w.cosmetics.saveNameStyle(admin, fire.id, { key: "ns_fire", name: "Fire", style: { gradient: ["#111111", "#222222"], animated: true, bold: true }, allGroups: false, groupIds: fire.groupIds, badgeIds: [] });
+    await w.cosmetics.saveNameStyle(admin, fire.id, { key: "ns_fire", name: "Fire", style: { gradient: ["#111111", "#222222"], animated: true, bold: true }, allGroups: false, groupIds: jsonInts(fire.groupIds), badgeIds: [] });
     expect(await w.cosmetics.version()).toBeGreaterThan(before);
     expect(await w.cosmetics.css()).toContain("#111111,#222222,#111111");
   });

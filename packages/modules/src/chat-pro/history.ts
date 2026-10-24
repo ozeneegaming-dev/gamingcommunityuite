@@ -1,5 +1,5 @@
 import { GcsForbidden, normalizeUsername, type GcsActor, type GcsPermissionService } from "@gcs/core";
-import type { Prisma, PrismaClient } from "@gcs/db";
+import { type Prisma, type PrismaClient, ci } from "@gcs/db";
 import type { GcsChatFile } from "../chat/chat";
 import { chatMentionsOf, chatSystemOf } from "../chat/chat";
 import type { GcsChatSystemLine } from "../chat/moderation-types";
@@ -105,7 +105,7 @@ export class GcsChatHistory {
     };
     const where: Prisma.ChatMessageWhereInput[] = [base];
     const q = (query.q ?? "").trim().slice(0, 100);
-    if (q) where.push({ body: { contains: q, mode: "insensitive" } });
+    if (q) where.push({ body: ci({ contains: q }) });
     const member = normalizeUsername((query.member ?? "").replace(/^@/, "")).slice(0, 40);
     if (member) {
       const pattern = likeEscape(member);

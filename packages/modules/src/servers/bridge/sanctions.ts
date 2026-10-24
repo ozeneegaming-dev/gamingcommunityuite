@@ -1,12 +1,12 @@
-import { GcsForbidden, GcsNotFound, GcsValidationError, writeAudit, type GcsActor, type GcsAttachmentService, type GcsEventBus, type GcsPermissionService, type GcsSettingsService } from "@gcs/core";
-import type { GamePlayerKind, GameSanctionScope, GameSanctionType, Prisma, PrismaClient } from "@gcs/db";
+import { gcsTxLock, GcsForbidden, GcsNotFound, GcsValidationError, writeAudit, type GcsActor, type GcsAttachmentService, type GcsEventBus, type GcsPermissionService, type GcsSettingsService } from "@gcs/core";
+import { type GamePlayerKind, type GameSanctionScope, type GameSanctionType, type Prisma, type PrismaClient, ci } from "@gcs/db";
 import type { GcsBridgeAdmins } from "./admins";
 import { BRIDGE_PERMISSION, BRIDGE_SETTING, SANCTION_EVIDENCE } from "./config";
 import { cleanIp, identityTrust, normalizePlayerName, parseTypedIdentity, type GcsPlayerRef } from "./identity";
 import { authOf, plainText, unix, type GcsBridgeAuth, type GcsBridgeServer, type GcsPlayerRow } from "./types";
 
 /** Lacătul scrierilor de sancțiuni: reviziile se dau în ordinea commit-urilor (sincronizarea incrementală e corectă). */
-const REVISION_LOCK = 726_354_001;
+const REVISION_LOCK = "game-sync-revision";
 export const SANCTION_REASON_MAX = 200;
 export const SANCTION_PAGE = 1000;
 const MAX_EVIDENCE = 10;
@@ -122,7 +122,7 @@ export class GcsBridgeSanctions {
   }
 
   private async lock(tx: Prisma.TransactionClient): Promise<void> {
-    await tx.$executeRaw`SELECT pg_advisory_xact_lock(${REVISION_LOCK})`;
+    await gcsTxLock(tx, REVISION_LOCK);
   }
 
   private async bumpRevision(tx: Prisma.TransactionClient, id: number): Promise<void> {
@@ -640,9 +640,9 @@ export class GcsBridgeSanctions {
       const ip = showIp ? cleanIp(q) : null;
       and.push({
         OR: [
-          { name: { contains: q, mode: "insensitive" } },
-          { player: { name: { contains: q, mode: "insensitive" } } },
-          { reason: { contains: q, mode: "insensitive" } },
+          { name: ci({ contains: q }) },
+          { player: { name: ci({ contains: q }) } },
+          { reason: ci({ contains: q }) },
           ...typed.map((t) => ({ targetKind: t.kind, targetValue: t.value })),
           ...(ip ? [{ ip }] : []),
         ],

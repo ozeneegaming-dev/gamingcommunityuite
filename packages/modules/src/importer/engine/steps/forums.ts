@@ -1,5 +1,5 @@
-import { normalizeTag } from "@gcs/core";
-import type { Prisma } from "@gcs/db";
+import { GcsSearchIndex, normalizeTag } from "@gcs/core";
+import { type Prisma, ci } from "@gcs/db";
 import { slugify } from "../../../forums/slug";
 import { GCS_FORUM_ACTIONS, type GcsForumAction, type SrcForum } from "../../types";
 import type { GcsStepContext } from "../context";
@@ -153,7 +153,7 @@ export async function importPrefixes(s: GcsStepContext): Promise<void> {
     }
     await db.$transaction(async (tx) => {
       // Un prefix cu același nume există deja în GCS: se refolosește.
-      const same = await tx.topicPrefix.findFirst({ where: { name: { equals: p.name, mode: "insensitive" } }, select: { id: true } });
+      const same = await tx.topicPrefix.findFirst({ where: { name: ci({ equals: p.name }) }, select: { id: true } });
       const id = same?.id ?? (await tx.topicPrefix.create({ data: { name: p.name, color: p.color ?? "#5EA2FF", position: position++ } })).id;
       await s.map.set(tx, "prefix", p.id, id);
     });
@@ -223,7 +223,7 @@ export async function importTopics(s: GcsStepContext): Promise<void> {
             });
             if (votes.length > 0) await tx.pollVote.createMany({ data: votes, skipDuplicates: true });
           }
-          await tx.$executeRaw`UPDATE topics SET "searchVector" = setweight(to_tsvector('gcs_ro', title), 'A') WHERE id = ${topic.id}`;
+          await new GcsSearchIndex().indexTopic(tx, topic.id);
           await s.map.set(tx, "topic", t.id, topic.id);
           return "imported";
         },

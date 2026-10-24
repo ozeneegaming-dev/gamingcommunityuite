@@ -22,8 +22,9 @@ import {
   type GcsRateLimiter,
   type GcsSettingsService,
   type GcsUploadedFile,
+  gcsTxLock,
 } from "@gcs/core";
-import { Prisma, type Clan, type ClanJoinMode, type ClanRole, type PrismaClient } from "@gcs/db";
+import { Prisma, type Clan, type ClanJoinMode, type ClanRole, type PrismaClient, jsonStrings } from "@gcs/db";
 import { clanForumParent, createClanForum, renameClanForum, retireClanForum } from "./forum";
 import { CLAN_OFFICER_RIGHTS, readClanOptions, type GcsClanOptions, type GcsClanRight } from "./options";
 import type { GcsClanGameStatsSource } from "./gameStats";
@@ -154,7 +155,7 @@ export class GcsClanService {
     const frozen = clan.locked || clan.status === "ARCHIVED";
     const allowed = new Set<string>(opts.officerRights);
     const can = Object.fromEntries(
-      CLAN_OFFICER_RIGHTS.map((r) => [r, staff || (!frozen && (role === "LEADER" || (role === "OFFICER" && clan.officerRights.includes(r) && allowed.has(r))))]),
+      CLAN_OFFICER_RIGHTS.map((r) => [r, staff || (!frozen && (role === "LEADER" || (role === "OFFICER" && jsonStrings(clan.officerRights).includes(r) && allowed.has(r))))]),
     ) as Record<GcsClanRight, boolean>;
     return { role, staff, leader: staff || (!frozen && role === "LEADER"), can, frozen };
   }
@@ -305,7 +306,7 @@ export class GcsClanService {
    * apoi toate verificările din §4.2. Cererile și invitațiile rămase ale membrului pentru acest clan se închid.
    */
   private async addMember(tx: Tx, clanId: number, userId: string, options: GcsClanOptions, keepRequestId: number | null): Promise<void> {
-    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`clan-member:${userId}`}))`;
+    await gcsTxLock(tx, `clan-member:${userId}`);
     const rows = await tx.$queryRaw<{ id: number; status: string; locked: boolean; membersCount: number; memberLimit: number | null }[]>`
       SELECT id, status::text AS status, locked, "membersCount", "memberLimit" FROM clans WHERE id = ${clanId} FOR UPDATE`;
     const clan = rows[0];
@@ -349,7 +350,7 @@ export class GcsClanService {
     let created: Clan;
     try {
       created = await db.$transaction(async (tx) => {
-        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`clan-member:${userId}`}))`;
+        await gcsTxLock(tx, `clan-member:${userId}`);
         if ((await tx.clanMember.count({ where: { userId } })) >= options.maxPerMember) throw new GcsConflict({ reason: "clan_max_clans", max: String(options.maxPerMember) });
         const now = new Date();
         const clan = await tx.clan.create({
@@ -402,8 +403,8 @@ export class GcsClanService {
     if (!access.leader && (data.tagNormalized !== clan.tagNormalized || data.tag !== clan.tag || data.name !== clan.name)) throw new GcsForbidden({ permission: "clans.leader" });
     if (input.logoId) await this.checkImage(actor, "logo", input.logoId, clan.id);
     if (input.bannerId) await this.checkImage(actor, "banner", input.bannerId, clan.id);
-    const officerRights = input.officerRights === undefined ? clan.officerRights : this.officerRights(input.officerRights, options);
-    if (input.officerRights !== undefined && !access.leader && officerRights.join() !== clan.officerRights.join()) throw new GcsForbidden({ permission: "clans.leader" });
+    const officerRights = input.officerRights === undefined ? jsonStrings(clan.officerRights) : this.officerRights(input.officerRights, options);
+    if (input.officerRights !== undefined && !access.leader && officerRights.join() !== jsonStrings(clan.officerRights).join()) throw new GcsForbidden({ permission: "clans.leader" });
     try {
       await db.$transaction(async (tx) => {
         await tx.clan.update({ where: { id: clan.id }, data: { ...data, officerRights, lastActivityAt: new Date() } });
@@ -423,7 +424,7 @@ export class GcsClanService {
     }
     await this.bindImages(clan.id, clan, input);
     // Drepturile ofițerilor pe forum se schimbă odată cu `officerRights`.
-    if (officerRights.join() !== clan.officerRights.join()) await this.invalidateMembers(clan.id);
+    if (officerRights.join() !== jsonStrings(clan.officerRights).join()) await this.invalidateMembers(clan.id);
     await this.changed(clan.id, { forum: data.name !== clan.name || data.tag !== clan.tag });
     return { slug: data.slug };
   }
@@ -1055,7 +1056,7 @@ export class GcsClanService {
 
   /** Membrii care au un drept în clan: liderul și ofițerii cărora liderul (și staff-ul) le-au dat dreptul. */
   private async rightHolders(clan: Pick<Clan, "id" | "officerRights">, right: GcsClanRight, options: GcsClanOptions): Promise<string[]> {
-    const officers = clan.officerRights.includes(right) && options.officerRights.includes(right);
+    const officers = jsonStrings(clan.officerRights).includes(right) && options.officerRights.includes(right);
     const rows = await this.deps.db.clanMember.findMany({ where: { clanId: clan.id, role: { in: officers ? ["LEADER", "OFFICER"] : ["LEADER"] } }, select: { userId: true } });
     return rows.map((r) => r.userId);
   }

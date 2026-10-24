@@ -1,3 +1,4 @@
+import { jsonInts } from "@gcs/db";
 import { seedDefaults } from "@gcs/core";
 import { createWorld, type GcsTestWorld } from "@gcs/core/test/world";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
@@ -73,7 +74,7 @@ describe("modulele Profil, Mesaje și VIP", () => {
   test("rama Neon e disponibilă doar pentru VIP Legend și admini; Fire pentru toate nivelurile VIP", async () => {
     const g = world.groups;
     const neon = await world.db.avatarFrame.findUniqueOrThrow({ where: { key: "neon" } });
-    expect([...neon.groupIds].sort()).toEqual([g.vip_legend!, g.root_admin!, g.admin!].sort());
+    expect([...jsonInts(neon.groupIds)].sort()).toEqual([g.vip_legend!, g.root_admin!, g.admin!].sort());
     const fire = await world.db.avatarFrame.findUniqueOrThrow({ where: { key: "fire" } });
     expect(fire.groupIds).toEqual(expect.arrayContaining([g.vip_bronze!, g.vip_silver!, g.vip_gold!, g.vip_legend!]));
     expect(fire.groupIds).not.toContain(g.member!);

@@ -2,12 +2,13 @@ import {
   GcsRateLimited,
   GcsValidationError,
   normalizeUsername,
+  searchBackend,
   type GcsActor,
   type GcsPermissionService,
   type GcsRateLimiter,
   type GcsSettingsService,
 } from "@gcs/core";
-import { Prisma, type PrismaClient } from "@gcs/db";
+import type { PrismaClient } from "@gcs/db";
 import sanitizeHtml from "sanitize-html";
 import { forumContainer } from "./posting";
 import { toRef, userRefSelect, type GcsPagination, type GcsUserRef } from "./queries";
@@ -38,22 +39,10 @@ export type GcsSearchResult = {
 };
 
 const SEARCH_LIMIT = { window: 60, max: 20 };
-const HEADLINE = "StartSel=<mark>, StopSel=</mark>, MaxWords=35, MinWords=12, MaxFragments=2, FragmentDelimiter= … ";
-
-type Row = {
-  topicId: number;
-  topicTitle: string;
-  topicSlug: string;
-  postId: number;
-  forumId: number;
-  forumName: string;
-  authorId: string | null;
-  createdAt: Date;
-  snippet: string;
-};
 
 /**
- * Căutarea în forum (spec §2.1, §7): full-text PostgreSQL cu configurația `gcs_ro` (fără diacritice, cu flexiuni).
+ * Căutarea în forum (spec §2.1, §7): full-text prin `GcsSearchBackend` (PostgreSQL: configurația `gcs_ro`, fără
+ * diacritice, cu flexiuni; MySQL: `FULLTEXT`).
  * Rulează doar pe forumurile citibile de actor și doar pe conținutul vizibil tuturor.
  */
 export class GcsForumSearch {
@@ -85,47 +74,22 @@ export class GcsForumSearch {
     const page = Math.max(1, input.page);
     if (ids.length === 0) return { results: [], pagination: { page, pages: 1, perPage, total: 0 } };
 
-    const filters: Prisma.Sql[] = [];
+    let authorId: string | undefined;
     if (input.authorName) {
       const author = await db.user.findUnique({ where: { nameNormalized: normalizeUsername(input.authorName) }, select: { id: true } });
       if (!author) return { results: [], pagination: { page, pages: 1, perPage, total: 0 } };
-      filters.push(Prisma.sql`AND p."authorId" = ${author.id}`);
+      authorId = author.id;
     }
-    if (input.since) {
-      const since = new Date(input.since);
-      if (!Number.isNaN(since.getTime())) filters.push(Prisma.sql`AND p."createdAt" >= ${since.toISOString().slice(0, -1)}::timestamp`);
-    }
-    const extra = filters.length > 0 ? Prisma.join(filters, " ") : Prisma.empty;
-    const query = Prisma.sql`websearch_to_tsquery('gcs_ro', ${q})`;
-    // La topicuri: titlul sau prima postare; la postări: orice postare vizibilă.
-    const match =
-      input.type === "topics"
-        ? Prisma.sql`p.id = t."firstPostId" AND (t."searchVector" @@ ${query} OR p."searchVector" @@ ${query})`
-        : Prisma.sql`p."searchVector" @@ ${query}`;
-    const rank =
-      input.type === "topics"
-        ? Prisma.sql`ts_rank(coalesce(t."searchVector", ''::tsvector) || coalesce(p."searchVector", ''::tsvector), ${query})`
-        : Prisma.sql`ts_rank(p."searchVector", ${query})`;
-    const base = Prisma.sql`
-      FROM posts p
-      JOIN topics t ON t.id = p."topicId"
-      JOIN forums f ON f.id = t."forumId"
-      WHERE ${match}
-        AND p.visibility = 'VISIBLE' AND t.visibility = 'VISIBLE'
-        AND t."forumId" = ANY(${ids})
-        ${extra}`;
-
-    const [countRows, rows] = await Promise.all([
-      db.$queryRaw<{ total: bigint }[]>`SELECT count(*) AS total ${base}`,
-      db.$queryRaw<Row[]>`
-        SELECT t.id AS "topicId", t.title AS "topicTitle", t.slug AS "topicSlug", p.id AS "postId",
-               f.id AS "forumId", f.name AS "forumName", p."authorId", p."createdAt",
-               ts_headline('gcs_ro', regexp_replace(p."contentHtml", '<[^>]*>', ' ', 'g'), ${query}, ${HEADLINE}) AS snippet
-        ${base}
-        ORDER BY ${rank} DESC, p."createdAt" DESC
-        LIMIT ${perPage} OFFSET ${(page - 1) * perPage}`,
-    ]);
-    const total = Number(countRows[0]?.total ?? 0);
+    const since = input.since ? new Date(input.since) : null;
+    const { total, hits: rows } = await searchBackend().search(db, {
+      q,
+      type: input.type,
+      forumIds: ids,
+      ...(authorId ? { authorId } : {}),
+      ...(since && !Number.isNaN(since.getTime()) ? { since } : {}),
+      limit: perPage,
+      offset: (page - 1) * perPage,
+    });
 
     const authorIds = [...new Set(rows.map((r) => r.authorId).filter((id): id is string => id !== null))];
     const users = authorIds.length

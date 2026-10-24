@@ -1,6 +1,6 @@
 import { createHash, randomInt } from "node:crypto";
 import { GcsForbidden, GcsNotFound, GcsRateLimited, GcsValidationError, writeAudit, type GcsActor, type GcsEventBus, type GcsPermissionService } from "@gcs/core";
-import { Prisma, type GamePlayerKind, type PrismaClient } from "@gcs/db";
+import { Prisma, type GamePlayerKind, type PrismaClient, ci } from "@gcs/db";
 import { BRIDGE_PERMISSION } from "./config";
 import { parseTypedIdentity, resolveIdentity, type GcsPlayerRef, type GcsResolvedIdentity } from "./identity";
 import type { GcsBridgeStore } from "./store";
@@ -112,7 +112,7 @@ export class GcsBridgePlayers {
     if (text.length < 2) return [];
     const typed = [parseTypedIdentity(text, "steam"), parseTypedIdentity(text, "nonsteam")].filter((x) => x !== null);
     const rows = await this.deps.db.gamePlayer.findMany({
-      where: { OR: [{ name: { contains: text, mode: "insensitive" } }, ...typed.map((t) => ({ kind: t.kind, value: t.value }))] },
+      where: { OR: [{ name: ci({ contains: text }) }, ...typed.map((t) => ({ kind: t.kind, value: t.value }))] },
       include: { user: { select: { id: true, name: true } } },
       orderBy: { lastSeenAt: "desc" },
       take: Math.min(Math.max(limit, 1), 50),

@@ -17,7 +17,7 @@ import {
   type GcsSettingsService,
   type GcsKv,
 } from "@gcs/core";
-import type { PrismaClient } from "@gcs/db";
+import { type PrismaClient, jsonStrings } from "@gcs/db";
 import { canViewPost } from "../forums/content";
 import { POST_CONTENT_TYPE, type GcsForumPosting } from "../forums/posting";
 import type { GcsForumQueries } from "../forums/queries";
@@ -445,8 +445,8 @@ export class GcsNotificationProducers {
     return { site, locale, siteUrl };
   }
 
-  private async mailItems(rows: { id?: number; type: string; count: number; actorIds: string[]; data: unknown }[]): Promise<GcsNotificationMailItem[]> {
-    const ids = [...new Set(rows.flatMap((r) => r.actorIds))];
+  private async mailItems(rows: { id?: number; type: string; count: number; actorIds: unknown; data: unknown }[]): Promise<GcsNotificationMailItem[]> {
+    const ids = [...new Set(rows.flatMap((r) => jsonStrings(r.actorIds)))];
     const names = new Map((await this.deps.db.user.findMany({ where: { id: { in: ids } }, select: { id: true, name: true } })).map((u) => [u.id, u.name]));
     return rows.map((r) => {
       const data = (r.data ?? {}) as Record<string, unknown>;
@@ -454,7 +454,7 @@ export class GcsNotificationProducers {
         ...(r.id ? { id: r.id } : {}),
         type: r.type,
         count: r.count,
-        actors: r.actorIds.map((id) => names.get(id)).filter((n): n is string => !!n),
+        actors: jsonStrings(r.actorIds).map((id) => names.get(id)).filter((n): n is string => !!n),
         title: typeof data.title === "string" ? data.title : "",
         href: typeof data.href === "string" ? data.href : "/notifications",
         ...(typeof data.snippet === "string" && data.snippet ? { snippet: data.snippet } : {}),
@@ -491,7 +491,7 @@ export class GcsNotificationProducers {
    * doar pentru email / push), al căror email e acum pe acel mod după preferințele de acum (un email oprit între timp
    * nu mai pleacă). Revendicarea e un singur `UPDATE … RETURNING`, deci două rulări simultane nu trimit de două ori.
    */
-  private async claimDigest(userId: string, kind: "daily" | "weekly", now: Date): Promise<{ id: number; type: string; count: number; actorIds: string[]; data: unknown }[]> {
+  private async claimDigest(userId: string, kind: "daily" | "weekly", now: Date): Promise<{ id: number; type: string; count: number; actorIds: unknown; data: unknown }[]> {
     const { db, notifications } = this.deps;
     const pending = await db.notification.findMany({
       where: { userId, emailedAt: null, OR: [{ readAt: null }, { site: false }] },

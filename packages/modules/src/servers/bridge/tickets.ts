@@ -1,4 +1,4 @@
-import { contentRefs, GcsForbidden, GcsNotFound, GcsRateLimited, GcsValidationError, writeAudit, type GcsActor, type GcsEventBus, type GcsPermissionService, type GcsRendered } from "@gcs/core";
+import { contentRefs, gcsTxLock, GcsForbidden, GcsNotFound, GcsRateLimited, GcsValidationError, writeAudit, type GcsActor, type GcsEventBus, type GcsPermissionService, type GcsRendered } from "@gcs/core";
 import type { GameTicketKind, GameTicketStatus, Prisma, PrismaClient } from "@gcs/db";
 import type { GcsBridgeAdmins } from "./admins";
 import { BRIDGE_PERMISSION } from "./config";
@@ -208,13 +208,13 @@ export class GcsBridgeTickets {
     data.contentHtml = rendered!.html;
 
     const row = await db.$transaction(async (tx) => {
-      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`game-ticket:${actor.userId}`}))`;
+      await gcsTxLock(tx, `game-ticket:${actor.userId}`);
       const recent = await tx.gameTicket.count({ where: { authorId: actor.userId!, createdAt: { gte: new Date(now.getTime() - 3_600_000) } } });
       if (recent >= MAX_PER_HOUR) throw new GcsRateLimited({ retryAfter: "3600" });
       const open = await tx.gameTicket.count({ where: { authorId: actor.userId!, kind: input.kind, status: { in: OPEN_STATES } } });
       if (open >= MAX_OPEN_PER_KIND) throw new GcsValidationError({ kind: "too_many_open" }, { max: String(MAX_OPEN_PER_KIND) });
       if (data.sanctionId) {
-        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`game-appeal:${data.sanctionId}`}))`;
+        await gcsTxLock(tx, `game-appeal:${data.sanctionId}`);
         if ((await tx.gameTicket.count({ where: { kind: "APPEAL", sanctionId: data.sanctionId, status: { in: OPEN_STATES } } })) > 0) throw new GcsValidationError({ sanctionId: "appeal_open" });
       }
       const created = await tx.gameTicket.create({ data });
