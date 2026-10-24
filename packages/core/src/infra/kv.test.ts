@@ -185,6 +185,20 @@ describe.each(drivers)("GcsKv pe $name", ({ name, kv: getKv }) => {
     expect(await cache.get("c")).toBeNull();
   });
 
+  test("GcsCache: o valoare citită înaintea unei invalidări nu se mai scrie", async () => {
+    let now = 1_000_000;
+    const cache = new GcsCache(kv(), "gcs", () => now);
+    expect(await cache.get("lista")).toBeNull();
+    now += 5;
+    await cache.invalidateTags(["teme"]);
+    now += 5;
+    await cache.set("lista", "veche", { ttlSec: 60, tags: ["teme"] });
+    expect(await cache.get("lista")).toBeNull();
+    now += 5;
+    await cache.set("lista", "noua", { ttlSec: 60, tags: ["teme"] });
+    expect(await cache.get("lista")).toBe("noua");
+  });
+
   test("GcsRateLimiter și GcsLock", async () => {
     const limiter = new GcsRateLimiter(kv());
     const rule = { window: 60, max: 2 };

@@ -273,7 +273,8 @@ function sseTransport(ctx: TransportCtx): Transport {
       ready.settle(true);
       ctx.setConnected(true);
       pending.confirm(hello.rooms, requested);
-      if (everConnected) ctx.dispatch("resync", null);
+      // Fără `resync` la redeschidere: fluxul reia de la cursor (mesajele pierdute vin acum); dacă serverul nu le mai
+      // are, trimite el `resync`.
       everConnected = true;
     });
     es.addEventListener("cursor", (e) => {
@@ -348,7 +349,6 @@ function pollTransport(ctx: TransportCtx): Transport {
   let cursor: string | null = null;
   let closed = false;
   let everConnected = false;
-  let failed = false;
   let timer: unknown = null;
   let lastPing = Date.now();
   let joinPending = true;
@@ -381,8 +381,8 @@ function pollTransport(ctx: TransportCtx): Transport {
       ready.settle(true);
       ctx.setConnected(true);
       pending.confirm(body.rooms, requested);
-      if ((failed && everConnected) || body.reset) ctx.dispatch("resync", null);
-      failed = false;
+      // Cursorul reia mesajele de după o pană; `resync` doar dacă serverul nu le mai are.
+      if (body.reset) ctx.dispatch("resync", null);
       everConnected = true;
       for (const e of body.events) ctx.dispatch(e.event, e.data);
       inFlight = false;
@@ -393,7 +393,6 @@ function pollTransport(ctx: TransportCtx): Transport {
         ready.settle(false);
         return;
       }
-      failed = true;
       ctx.setConnected(false);
       schedule(Math.min(interval * 3, MAX_BACKOFF_MS));
     }

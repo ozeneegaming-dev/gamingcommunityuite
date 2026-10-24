@@ -108,8 +108,11 @@ describe("transporturile live ale clientului", () => {
     client.close();
   });
 
-  test("polling: după o pană, revenirea emite `resync`; mesajele clientului merg prin /send", async () => {
-    const { fetch, calls } = fakeFetch({ transports: ["poll"], polls: [{ cursor: "1", rooms: [], events: [], reset: false }, "fail"] });
+  test("polling: după o pană reia de la cursor (`resync` doar dacă serverul a pierdut mesaje); mesajele clientului merg prin /send", async () => {
+    const { fetch, calls } = fakeFetch({
+      transports: ["poll"],
+      polls: [{ cursor: "1", rooms: [], events: [], reset: false }, "fail", { cursor: "4", rooms: [], events: [{ event: "pm", data: 1 }], reset: false }, { cursor: "9", rooms: [], events: [], reset: true }],
+    });
     const events: string[] = [];
     const states: GcsRealtimeState[] = [];
     const client = createRealtimeClient({ rooms: () => [], dispatch: (e) => void events.push(e), onState: (s) => void states.push(s), env: envWith(fetch) });
@@ -118,7 +121,10 @@ describe("transporturile live ale clientului", () => {
     expect(states.at(-1)).toEqual({ connected: false, transport: "poll" });
     await flush(6000);
     expect(states.at(-1)).toEqual({ connected: true, transport: "poll" });
-    expect(events).toContain("resync");
+    expect(calls.filter((c) => c.url.startsWith("/api/realtime/poll")).at(-1)!.url).toContain("since=1");
+    expect(events).toEqual(["pm"]);
+    await flush(2000);
+    expect(events).toEqual(["pm", "resync"]);
     client.emit("typing", 42);
     await flush();
     const send = calls.find((c) => c.url === "/api/realtime/send")!;
@@ -160,6 +166,9 @@ describe("transporturile live ale clientului", () => {
     const second = FakeEventSource.instances[1]!;
     expect(second.url).toContain("since=11");
     second.fire("hello", { cursor: "11", rooms: ["chat:general"] });
+    // Reluarea de la cursor nu cere reîncărcarea componentelor; `resync` vine doar de la server.
+    expect(events.map((e) => e[0])).toEqual(["message"]);
+    second.fire("resync", {});
     expect(events.map((e) => e[0])).toEqual(["message", "resync"]);
 
     // O cameră nouă redeschide fluxul o singură dată, iar `join` primește răspunsul din `hello`.

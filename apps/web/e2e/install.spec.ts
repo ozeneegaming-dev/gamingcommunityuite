@@ -76,7 +76,9 @@ test("instalarea completă: licența, aplicațiile, reluare după refresh, login
 
   await test.step("2. verificarea sistemului", async () => {
     const checks = page.getByTestId("gcs-install-checks");
-    await expect(checks.getByText("Redis")).toBeVisible();
+    // Ediția Lite (shared hosting) nu are Redis: verificarea lui lipsește.
+    if (process.env.GCS_EDITION === "lite") await expect(checks.getByText("Redis")).toHaveCount(0);
+    else await expect(checks.getByText("Redis")).toBeVisible();
     await expect(checks.getByText("Folderul de configurare")).toBeVisible();
     await next(page);
     await expect(page).toHaveURL(/\/install\/license$/);

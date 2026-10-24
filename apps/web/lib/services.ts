@@ -1,6 +1,6 @@
 import "server-only";
 import { GcsInstallState } from "@gcs/core";
-import { forumSlotsDemoModule } from "@gcs/modules";
+import { BACKFILL_JOB, forumSlotsDemoModule } from "@gcs/modules";
 import { closeGcsServices, createGcsServices, type GcsServices } from "@gcs/modules/services";
 import { revalidateTag } from "next/cache";
 import { gcsConfigDir } from "./config";
@@ -57,6 +57,9 @@ export function services(): GcsServices {
         // cron-ul (`/api/cron`) le duce mai departe când procesul e oprit.
         if (created.edition === "lite") {
           void created.jobs.start({ onError: (name, error) => console.error(`[GCS] Jobul ${name} a eșuat`, error) }).catch((error: unknown) => console.error("[GCS] Joburile nu au pornit", error));
+          // Ce face gcs-worker la pornire în VPS: cheile web push (o singură dată) și evaluarea inițială a membrilor.
+          void created.push.ensureKeys().catch((error: unknown) => console.error("[GCS] Cheile web push nu au putut fi generate", error));
+          void created.jobs.enqueue(BACKFILL_JOB, {}, { jobId: "achievements-backfill" }).catch(() => {});
         }
         await created.plugins.start();
       })

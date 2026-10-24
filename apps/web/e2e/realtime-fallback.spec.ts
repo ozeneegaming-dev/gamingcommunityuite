@@ -1,6 +1,7 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { fixture, forumTree, member, topicWithReplies, typeInEditor, uid } from "./forum-fixtures";
-import { useFreshIp } from "./helpers";
+import { sql, useFreshIp } from "./helpers";
+import { e2eKv } from "./kv";
 
 /**
  * Transporturile de rezervă (ediția Lite): același topic live ca pe websocket — „Citesc acum”, „scrie…”, bannerul
@@ -43,13 +44,27 @@ for (const transport of ["sse", "poll"] as const) {
     await banner.getByRole("link", { name: "arată" }).click();
     await expect(a.getByText("Un răspuns pe rezervă")).toBeVisible();
 
-    // O notificare ajunge live la clopoțel: un nou răspuns al lui B în topicul lui A, cât timp A e pe prima pagină.
+    // O notificare ajunge live la clopoțel: B răspunde într-un topic nou al lui A (notificările aceluiași topic se
+    // grupează), cât timp A e pe prima pagină.
+    const second = await topicWithReplies(request, forum.id, aEmail, `Clopoțel ${transport} ${id}`);
     await a.goto("/");
     await expect(a.locator("html")).toHaveAttribute("data-realtime-transport", transport, { timeout: 20_000 });
+    // Notificările de până acum ale lui A, citite: clopoțelul pornește de la zero.
+    const [aRow] = await sql<{ id: string }>(`SELECT id FROM users WHERE email = $1`, [aEmail]);
+    await sql(`UPDATE notifications SET "readAt" = now() WHERE "userId" = $1`, [aRow!.id]);
+    const kv = await e2eKv();
+    try {
+      await kv.del(`gcs:k:notif:unread:${aRow!.id}`);
+    } finally {
+      kv.disconnect();
+    }
+    await a.reload();
+    await expect(a.locator("html")).toHaveAttribute("data-realtime", "on", { timeout: 20_000 });
     const bell = a.getByTestId("gcs-header-bell-count");
-    const before = (await bell.count()) > 0 ? Number(await bell.textContent()) : 0;
-    await fixture(request, { action: "reply", topicId: topic.topicId, text: `Pentru A ${id}`, authorEmail: bEmail });
-    await expect(bell).toHaveText(String(before + 1), { timeout: 20_000 });
+    await expect(bell).toHaveCount(0);
+    await fixture(request, { action: "reply", topicId: second.topicId, text: `Pentru A ${id}`, authorEmail: bEmail });
+    // Contorul apare fără reîncărcare (pe Lite pot sosi tot acum și notificările amânate ale răspunsurilor de mai sus).
+    await expect(bell).toHaveText(/^[1-9]\d*$/, { timeout: 20_000 });
     for (const p of [a, b]) await p.context().close();
   });
 }

@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@gcs/db";
+import { nextCronTime } from "./cron";
 import { GcsJobRegistry, type GcsEnqueueOptions, type GcsJobData, type GcsJobQueue, type GcsJobStartOptions } from "./queue";
 
 const MAX_ATTEMPTS = 5;
@@ -65,8 +66,15 @@ export class GcsSqlJobQueue extends GcsJobRegistry implements GcsJobQueue {
   private async ensureSchedules(): Promise<void> {
     if (this.schedulesReady) return;
     for (const def of this.defs.values()) {
-      if (def.pattern) throw new Error(`Jobul „${def.name}”: programarea cron (pattern) nu e suportată de coada SQL; folosește everyMs`);
       if (def.everyMs) await this.upsertScheduler(def.name, def.everyMs, { name: def.name, data: {} });
+      else if (def.pattern) {
+        nextCronTime(def.pattern, this.now());
+        await this.db.gcsJobSchedule.upsert({
+          where: { id: def.name },
+          create: { id: def.name, name: def.name, data: "{}", everyMs: null, pattern: def.pattern, nextRunAt: BigInt(nextCronTime(def.pattern, this.now())) },
+          update: { name: def.name, everyMs: null, pattern: def.pattern },
+        });
+      }
     }
     this.schedulesReady = true;
   }
@@ -76,9 +84,9 @@ export class GcsSqlJobQueue extends GcsJobRegistry implements GcsJobQueue {
     const due = await this.db.gcsJobSchedule.findMany({ where: { nextRunAt: { lte: BigInt(now) } } });
     let added = 0;
     for (const s of due) {
-      const every = Math.max(1000, s.everyMs ?? 60_000);
       // Următoarea rulare sare peste ferestrele pierdute (gazda a ținut procesul oprit): nu se adună restanțe.
-      const next = Number(s.nextRunAt) + every * Math.max(1, Math.ceil((now - Number(s.nextRunAt) + 1) / every));
+      const every = Math.max(1000, s.everyMs ?? 60_000);
+      const next = s.pattern ? nextCronTime(s.pattern, now) : Number(s.nextRunAt) + every * Math.max(1, Math.ceil((now - Number(s.nextRunAt) + 1) / every));
       const claimed = await this.db.gcsJobSchedule.updateMany({ where: { id: s.id, nextRunAt: s.nextRunAt }, data: { nextRunAt: BigInt(next) } });
       if (claimed.count !== 1) continue;
       await this.enqueue(s.name, JSON.parse(s.data) as GcsJobData, { jobId: `sched-${s.id}-${s.nextRunAt}` });

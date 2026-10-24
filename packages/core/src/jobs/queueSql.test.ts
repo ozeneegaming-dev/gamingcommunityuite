@@ -1,5 +1,6 @@
 import { testDb, truncateAll } from "@gcs/db/test/helpers";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
+import { nextCronTime } from "./cron";
 import { GcsSqlJobQueue } from "./queueSql";
 
 const db = testDb();
@@ -161,10 +162,28 @@ describe("GcsSqlJobQueue (ediția Lite)", () => {
     expect(await queue.schedulerIds("plugin-")).toEqual(["plugin-x-a"]);
   });
 
-  test("programarea cron (pattern) e refuzată clar", async () => {
+  test("programarea cron (pattern): rulează la minutul potrivit, în UTC, o dată pe fereastră", async () => {
+    now = Date.UTC(2026, 9, 23, 3, 58);
     const queue = new GcsSqlJobQueue(db, { now: clock });
-    queue.register({ name: "cron", pattern: "0 * * * *", handler: async () => {} });
-    await expect(queue.runDue()).rejects.toThrow(/pattern/);
+    let runs = 0;
+    queue.register({ name: "cron", pattern: "0 4 * * *", handler: async () => void runs++ });
+    await queue.runDue();
+    expect(runs).toBe(0);
+    now = Date.UTC(2026, 9, 23, 4, 0, 5);
+    await queue.runDue();
+    await queue.runDue();
+    expect(runs).toBe(1);
+    now = Date.UTC(2026, 9, 24, 4, 1);
+    await queue.runDue();
+    expect(runs).toBe(2);
+  });
+
+  test("nextCronTime: pași, intervale, liste și ziua săptămânii", () => {
+    const at = Date.UTC(2026, 9, 23, 10, 7);
+    expect(new Date(nextCronTime("*/10 * * * *", at)).toISOString()).toBe("2026-10-23T10:10:00.000Z");
+    expect(new Date(nextCronTime("0 4 * * *", at)).toISOString()).toBe("2026-10-24T04:00:00.000Z");
+    expect(new Date(nextCronTime("30 9-11 * * 1,3", at)).toISOString()).toBe("2026-10-26T09:30:00.000Z");
+    expect(() => nextCronTime("61 * * * *", at)).toThrow(/cron/);
   });
 
   test("start: bucla din proces rulează joburile fără cron", async () => {
