@@ -5,7 +5,10 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { expect, test } from "@playwright/test";
 import { uid } from "./forum-fixtures";
-import { enterAcpAsRoot, sql, useFreshIp } from "./helpers";
+import { enterAcpAsRoot, onMysql, sql, useFreshIp } from "./helpers";
+
+// Ediția Lite pe MySQL: add-on-urile portate au bază de date proprie, iar pluginurile cu bază proprie nu sunt suportate.
+test.skip(onMysql, "pluginurile cu bază de date proprie rulează doar pe PostgreSQL");
 
 /**
  * Asistentul de portare a pluginurilor (ACP → Sistem → Conversii → Portare plugin): Root Admin încarcă add-on-ul de

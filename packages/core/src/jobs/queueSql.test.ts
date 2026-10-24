@@ -45,6 +45,22 @@ describe("GcsSqlJobQueue (ediția Lite)", () => {
     expect(runs).toBe(2);
   });
 
+  test("același jobId adăugat în timp ce jobul rulează → încă o rulare după el (nu se pierde)", async () => {
+    const queue = new GcsSqlJobQueue(db, { now: clock });
+    let runs = 0;
+    queue.register({
+      name: "t.debounced",
+      handler: async () => {
+        runs++;
+        // Ca evaluarea realizărilor: o postare nouă vine cât rulează evaluarea pentru cea de dinainte.
+        if (runs === 1) await queue.enqueue("t.debounced", {}, { jobId: "ach-u1-0" });
+      },
+    });
+    await queue.enqueue("t.debounced", {}, { jobId: "ach-u1-0" });
+    await queue.runDue();
+    expect(runs).toBe(2);
+  });
+
   test("un job care eșuează e reîncercat cu backoff exponențial, apoi rămâne „failed” după 5 încercări", async () => {
     const queue = new GcsSqlJobQueue(db, { now: clock });
     let attempts = 0;

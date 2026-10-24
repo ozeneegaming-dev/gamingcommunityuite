@@ -80,7 +80,10 @@ describe("pachetul ediției Lite", () => {
     }
     pruneEngines(dest, "linux-x64-gnu");
     expect(existsSync(path.join(dest, "node_modules/.prisma/client/query_engine-windows.dll.node"))).toBe(false);
-    expect(existsSync(path.join(dest, "packages/db/generated/mysql-client/libquery_engine-rhel-openssl-3.0.x.so.node"))).toBe(true);
+    // Motoarele MySQL stau lângă server (bundle-ul Next.js le caută în `apps/web/generated/mysql-client`), o singură copie.
+    expect(existsSync(path.join(dest, "packages/db/generated/mysql-client/libquery_engine-rhel-openssl-3.0.x.so.node"))).toBe(false);
+    expect(existsSync(path.join(dest, "apps/web/generated/mysql-client/libquery_engine-rhel-openssl-3.0.x.so.node"))).toBe(true);
+    expect(existsSync(path.join(dest, "apps/web/generated/mysql-client/query_engine-windows.dll.node"))).toBe(false);
   });
 
   test("fișierele de la rădăcină: app.js, cron.mjs, documentația RO / EN, migrațiile ambelor dialecte, sumele de control", () => {

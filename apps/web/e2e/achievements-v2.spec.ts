@@ -123,7 +123,8 @@ test("urcarea în rang: toast-ul de sărbătorire și bara de progres pe profil"
     // 3 postări → worker-ul evaluează și trimite evenimentul live în camera membrului.
     await topicWithReplies(request, forum.id, `urcare-${id}@example.com`, `Urcare ${id}`, 2);
     const toast = member.getByTestId("gcs-rank-up");
-    await expect(toast).toBeVisible({ timeout: 25_000 });
+    // Ediția Lite: evaluarea rulează în coada din procesul web (la 5 s, după joburile programate scadente).
+    await expect(toast).toBeVisible({ timeout: process.env.GCS_EDITION === "lite" ? 60_000 : 25_000 });
     await expect(toast).toContainText(rankName);
     await shot(member, "rank-up-toast");
     const uidMember = await userId(`urcare-${id}@example.com`);

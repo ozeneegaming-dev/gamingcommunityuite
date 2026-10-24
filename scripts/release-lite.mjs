@@ -219,6 +219,18 @@ export function pruneEngines(dest, target) {
     }
   }
   if (missing.length > 0) throw new Error(`lipsesc motoarele Prisma:\n${missing.join("\n")}`);
+  // Clientul MySQL e inclus în bundle-ul Next.js, care caută motorul și în `<folderul curent>/generated/mysql-client`
+  // (folderul curent e `apps/web`: `server.js` se mută acolo); celelalte căi ale lui (`/ROOT/…`, cea de build) nu există
+  // pe gazdă. Motoarele se mută acolo (o singură copie: fiecare are ~20 MB), schema rămâne în ambele locuri.
+  const mysqlClient = path.join(dest, "packages", "db", "generated", "mysql-client");
+  const besideServer = path.join(dest, "apps", "web", "generated", "mysql-client");
+  mkdirSync(besideServer, { recursive: true });
+  for (const name of readdirSync(mysqlClient)) {
+    if (/\.(so|dll|dylib)\.node$/.test(name)) {
+      cpSync(path.join(mysqlClient, name), path.join(besideServer, name));
+      rmSync(path.join(mysqlClient, name));
+    } else if (name === "schema.prisma") cpSync(path.join(mysqlClient, name), path.join(besideServer, name));
+  }
 }
 
 /**

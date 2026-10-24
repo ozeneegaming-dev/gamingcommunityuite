@@ -108,9 +108,11 @@ export class GcsSqlJobQueue extends GcsJobRegistry implements GcsJobQueue {
         orderBy: [{ runAt: "asc" }, { id: "asc" }],
       });
       if (!job) return null;
+      // Jobul pornit își eliberează cheia (`jobKey`): un `enqueue` cu aceeași cheie în timpul rulării (ex. evaluarea
+      // „debounced” a unui membru care tocmai a mai postat) e un job nou, rulat după, nu unul pierdut.
       const taken = await this.db.gcsJob.updateMany({
         where: { id: job.id, status: job.status, attempts: job.attempts },
-        data: { status: "running", attempts: job.attempts + 1, lockedUntil: BigInt(now + LEASE_MS) },
+        data: { status: "running", attempts: job.attempts + 1, lockedUntil: BigInt(now + LEASE_MS), jobKey: null },
       });
       if (taken.count === 1) return { ...job, attempts: job.attempts + 1 };
     }

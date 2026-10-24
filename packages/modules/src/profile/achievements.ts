@@ -38,6 +38,13 @@ export type GcsUserStats = { postsCount: number; reputation: number; points: num
 
 const userTags = (id: string) => [`user:${id}`];
 
+/** Rangul nou e peste cel vechi (poziția, apoi id-ul la egalitate); de la „fără rang” orice rang e o urcare. */
+function isPromotion(list: Rank[], previousRankId: number | null, rankId: number | null): boolean {
+  const prev = list.find((r) => r.id === previousRankId) ?? null;
+  const next = list.find((r) => r.id === rankId) ?? null;
+  return next !== null && (prev === null || next.position > prev.position || (next.position === prev.position && next.id > prev.id));
+}
+
 /** Dependențele rangurilor moderne (metricile aplicațiilor, avantajele, toast-ul live). */
 export type GcsRankingDeps = {
   registry: GcsModuleRegistry;
@@ -237,7 +244,7 @@ export class GcsAchievementService {
     if (perks.groups.length > 0 && this.ranking) await this.ranking.membership.notify(userId, perks.groups);
     if (perks.revokedBadgeId !== null) await bus.emit({ name: "badge.revoked", payload: { userId, badgeId: perks.revokedBadgeId }, tags: userTags(userId) });
     if (perks.badgeId !== null) await bus.emit({ name: "badge.awarded", payload: { userId, badgeId: perks.badgeId, byRule: true }, tags: userTags(userId) });
-    const up = next !== null && (prev === null || next.position > prev.position || (next.position === prev.position && next.id > prev.id));
+    const up = isPromotion(list, previousRankId, rankId);
     await bus.emit({ name: "rank.changed", payload: { userId, rankId, previousRankId, up }, tags: userTags(userId) });
     if (up && next && this.ranking?.realtime) {
       const sorted = [...list].sort((a, b) => a.position - b.position || a.id - b.id);
@@ -277,8 +284,9 @@ export class GcsAchievementService {
         const rankId = pickRank(ranks, { ...u, ...(withMetrics ? { metrics: await this.rankMetricsFor(u.id, ranks) } : {}) });
         if (rankId === u.rankId) continue;
         changed++;
-        // Cu avantaje, fiecare schimbare trece prin grupuri / badge-uri; altfel, actualizarea în lot.
-        if (withPerks) await this.changeRank(u.id, ranks, u.rankId, rankId);
+        // Cu avantaje, fiecare schimbare trece prin grupuri / badge-uri; o urcare, prin toast-ul live (altfel recalcularea
+        // pornită de un rang nou poate lua înaintea evaluării membrului și îi dă rangul în tăcere); restul, în lot.
+        if (withPerks || isPromotion(ranks, u.rankId, rankId)) await this.changeRank(u.id, ranks, u.rankId, rankId);
         else byRank.set(rankId, [...(byRank.get(rankId) ?? []), u.id]);
       }
       for (const [rankId, ids] of byRank) await db.user.updateMany({ where: { id: { in: ids } }, data: { rankId } });
