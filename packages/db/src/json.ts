@@ -21,11 +21,21 @@ export function jsonHas(value: string | number): { array_contains: (string | num
 /** Filtrul „lista e goală” (fostul `isEmpty: true`). */
 export const JSON_EMPTY_LIST = { equals: [] as never[] };
 
+/**
+ * Calea unui filtru Prisma pe o coloană Json (`{ path: jsonPath("bot", "state"), equals: "open" }`): lista de chei pe
+ * PostgreSQL, textul `$.bot.state` pe MySQL (sintaxa diferă între conectori).
+ */
+export function jsonPath(...keys: string[]): string[] {
+  return (gcsDbDialect() === "mysql" ? `$.${keys.join(".")}` : keys) as string[];
+}
+
 /** Dialectul bazei de date a procesului, după `DATABASE_URL` (`mysql://` = MySQL / MariaDB, altfel PostgreSQL). */
 export type GcsDbDialect = "postgresql" | "mysql";
 
 export function gcsDbDialect(url: string | undefined = process.env.DATABASE_URL): GcsDbDialect {
-  return url?.startsWith("mysql://") || url?.startsWith("mariadb://") ? "mysql" : "postgresql";
+  // Testele pe MySQL (`GCS_DB=mysql`) nu au mereu `DATABASE_URL` (clientul vine din `testDb()`).
+  if (!url) return process.env.GCS_DB === "mysql" ? "mysql" : "postgresql";
+  return url.startsWith("mysql://") || url.startsWith("mariadb://") ? "mysql" : "postgresql";
 }
 
 /**

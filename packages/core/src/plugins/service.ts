@@ -258,7 +258,7 @@ export class GcsPluginService {
     const { data, report, files, manifest, signed } = await this.confirmedUpload(actor, uploadId, confirm);
     const existing = await db.plugin.findUnique({ where: { key: manifest.key } });
     let creds = existing?.dbRole && existing.dbPassword ? { role: existing.dbRole, password: existing.dbPassword } : null;
-    let applied = existing?.migrations ?? [];
+    let applied = jsonStrings(existing?.migrations);
     if (manifest.capabilities.includes("db")) {
       // Cu credențiale existente parola rămâne aceeași: o migrație eșuată nu taie accesul versiunii instalate.
       creds = await database.provision(manifest.key, creds);

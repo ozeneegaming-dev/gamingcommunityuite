@@ -1,5 +1,5 @@
+import { e2eDb } from "./db";
 import { expect, test, type Browser, type Page } from "@playwright/test";
-import pg from "pg";
 import { register, useFreshIp } from "./helpers";
 
 /**
@@ -17,8 +17,7 @@ const PNG = Buffer.from(
 async function installSql(query: string, params: unknown[] = []): Promise<void> {
   const url = new URL(process.env.GCS_E2E_INSTALL_DB_URL ?? process.env.DATABASE_URL!);
   if (!process.env.GCS_E2E_INSTALL_DB_URL) url.pathname = "/redline_e2e_install";
-  const client = new pg.Client({ connectionString: url.toString() });
-  await client.connect();
+  const client = await e2eDb(url.toString());
   try {
     await client.query(query, params);
   } finally {

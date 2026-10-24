@@ -24,7 +24,7 @@ import {
   type GcsUploadedFile,
   gcsTxLock,
 } from "@gcs/core";
-import { Prisma, type Clan, type ClanJoinMode, type ClanRole, type PrismaClient, jsonStrings } from "@gcs/db";
+import { Prisma, type Clan, type ClanJoinMode, type ClanRole, type PrismaClient, jsonStrings, sql } from "@gcs/db";
 import { clanForumParent, createClanForum, renameClanForum, retireClanForum } from "./forum";
 import { CLAN_OFFICER_RIGHTS, readClanOptions, type GcsClanOptions, type GcsClanRight } from "./options";
 import type { GcsClanGameStatsSource } from "./gameStats";
@@ -307,8 +307,8 @@ export class GcsClanService {
    */
   private async addMember(tx: Tx, clanId: number, userId: string, options: GcsClanOptions, keepRequestId: number | null): Promise<void> {
     await gcsTxLock(tx, `clan-member:${userId}`);
-    const rows = await tx.$queryRaw<{ id: number; status: string; locked: boolean; membersCount: number; memberLimit: number | null }[]>`
-      SELECT id, status::text AS status, locked, "membersCount", "memberLimit" FROM clans WHERE id = ${clanId} FOR UPDATE`;
+    const rows = await tx.$queryRaw<{ id: number; status: string; locked: boolean; membersCount: number; memberLimit: number | null }[]>(sql`
+      SELECT id, status::text AS status, locked, "membersCount", "memberLimit" FROM clans WHERE id = ${clanId} FOR UPDATE`);
     const clan = rows[0];
     if (!clan) throw new GcsNotFound();
     if (clan.status !== "ACTIVE" || clan.locked) throw new GcsConflict({ reason: "clan_closed" });
@@ -930,13 +930,13 @@ export class GcsClanService {
     if (options.archiveInactiveDays > 0) {
       const before = new Date(now.getTime() - options.archiveInactiveDays * 86_400_000);
       // Fără activitate = nici clanul (membri, schimbări), nici vreun membru nu a fost activ pe site de atunci.
-      const stale = await db.$queryRaw<{ id: number }[]>`
+      const stale = await db.$queryRaw<{ id: number }[]>(sql`
         SELECT c.id FROM clans c
         WHERE c.status = 'ACTIVE' AND c."lastActivityAt" < ${before}
           AND NOT EXISTS (
             SELECT 1 FROM clan_members m JOIN users u ON u.id = m."userId"
             WHERE m."clanId" = c.id AND u."lastActiveAt" >= ${before}
-          )`;
+          )`);
       for (const { id } of stale) {
         const clan = await db.clan.findUnique({ where: { id } });
         if (clan) await this.setStatus(null, clan, "ARCHIVED", "clans.archive");

@@ -489,7 +489,7 @@ export class GcsNotificationProducers {
   /**
    * Notificările unui membru care așteaptă un digest de felul dat (`daily` / `weekly`): netrimise încă, necitite (sau
    * doar pentru email / push), al căror email e acum pe acel mod după preferințele de acum (un email oprit între timp
-   * nu mai pleacă). Revendicarea e un singur `UPDATE … RETURNING`, deci două rulări simultane nu trimit de două ori.
+   * nu mai pleacă). Revendicarea e atomică pe fiecare rând, deci două rulări simultane nu trimit de două ori.
    */
   private async claimDigest(userId: string, kind: "daily" | "weekly", now: Date): Promise<{ id: number; type: string; count: number; actorIds: unknown; data: unknown }[]> {
     const { db, notifications } = this.deps;
@@ -508,12 +508,15 @@ export class GcsNotificationProducers {
       if (modes.get(key) === kind) keep.push(p.id);
     }
     if (keep.length === 0) return [];
-    const claimed = await db.$queryRaw<{ id: number }[]>`
-      UPDATE notifications SET "emailedAt" = ${now.toISOString()}::timestamp
-      WHERE id = ANY(${keep}::int[]) AND "emailedAt" IS NULL
-      RETURNING id`;
+    // Revendicarea, rând cu rând (fără `RETURNING`, portabil): o rulare simultană găsește rândul deja marcat
+    // (`count === 0`), deci nu îl trimite a doua oară — chiar dacă ambele rulări au același moment `now`.
+    const claimed: number[] = [];
+    for (const id of keep) {
+      const { count } = await db.notification.updateMany({ where: { id, emailedAt: null }, data: { emailedAt: now } });
+      if (count > 0) claimed.push(id);
+    }
     if (claimed.length === 0) return [];
-    return db.notification.findMany({ where: { id: { in: claimed.map((c) => c.id) } }, orderBy: { updatedAt: "desc" }, take: DIGEST_MAX_ITEMS });
+    return db.notification.findMany({ where: { id: { in: claimed } }, orderBy: { updatedAt: "desc" }, take: DIGEST_MAX_ITEMS });
   }
 
   /** Destinatarii unui digest: membrii cu notificări netrimise încă pe email (fără cei cu emailurile oprite din ACP). */

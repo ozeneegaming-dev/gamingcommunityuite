@@ -1,4 +1,5 @@
-import type { Prisma, PrismaClient } from "@gcs/db";
+import { gcsTryTxLock } from "@gcs/core";
+import { type Prisma, type PrismaClient, sql } from "@gcs/db";
 import { gamePartsByClan, type GcsClanGameParts, type GcsClanGameStatsSource } from "./gameStats";
 
 /** Fereastra „recent” a clasamentului (postările și membrii activi). */
@@ -26,7 +27,7 @@ type Row = { id: number; members: number; reputation: number; active: number; po
 
 /** Valorile formulei pentru clanurile date (sau toate clanurile active), într-o singură interogare. */
 async function scoreRows(db: Pick<PrismaClient, "$queryRaw">, since: Date, clanId: number | null): Promise<Row[]> {
-  return db.$queryRaw<Row[]>`
+  return db.$queryRaw<Row[]>(sql`
     SELECT c.id, c."createdAt",
            COUNT(m."userId")::int AS members,
            COALESCE(SUM(u.reputation), 0)::int AS reputation,
@@ -40,7 +41,7 @@ async function scoreRows(db: Pick<PrismaClient, "$queryRaw">, since: Date, clanI
     JOIN clan_members m ON m."clanId" = c.id
     JOIN users u ON u.id = m."userId"
     WHERE c.status = 'ACTIVE' AND (${clanId}::int IS NULL OR c.id = ${clanId}::int)
-    GROUP BY c.id`;
+    GROUP BY c.id`);
 }
 
 const partsJson = (r: Row, game: GcsClanGameParts | null): Prisma.InputJsonValue => ({
@@ -63,8 +64,7 @@ export async function recomputeClanRanking(db: PrismaClient, weights: GcsClanWei
   const game = hasGameWeights(weights) ? await gamePartsByClan(db, games, active.map((c) => c.id)) : new Map<number, GcsClanGameParts>();
   return db.$transaction(
     async (tx) => {
-      const [lock] = await tx.$queryRaw<{ locked: boolean }[]>`SELECT pg_try_advisory_xact_lock(${RANK_LOCK}) AS locked`;
-      if (!lock?.locked) return -1;
+      if (!(await gcsTryTxLock(tx, String(RANK_LOCK)))) return -1;
       const rows = (await scoreRows(tx, since, null))
         .map((r) => ({ ...r, game: game.get(r.id) ?? null }))
         .map((r) => ({ ...r, score: clanScore({ posts: r.posts, reputation: r.reputation, active: r.active, members: r.members, game: r.game }, weights) }))

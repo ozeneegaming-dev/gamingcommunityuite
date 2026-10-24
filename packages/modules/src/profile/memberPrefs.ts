@@ -1,5 +1,5 @@
 import { GcsForbidden, GcsValidationError, type GcsActor, type GcsEventBus } from "@gcs/core";
-import type { PrismaClient } from "@gcs/db";
+import { type PrismaClient, sql, sqlJsonMerge } from "@gcs/db";
 
 /**
  * Preferințele contului din setările v2 (salvate în `users.prefs`, lângă `sound` / `toasts` / `theme`):
@@ -64,7 +64,7 @@ export class GcsMemberPrefsService {
       clean[k] = patch[k];
     }
     if (Object.keys(clean).length > 0) {
-      await this.deps.db.$executeRaw`UPDATE users SET prefs = prefs || ${JSON.stringify(clean)}::jsonb WHERE id = ${actor.userId}`;
+      await this.deps.db.$executeRaw(sql`UPDATE users SET prefs = ${sqlJsonMerge("prefs", clean)} WHERE id = ${actor.userId}`);
       await this.deps.bus.emit({ name: "profile.updated", payload: { userId: actor.userId, what: "prefs" }, tags: [`user:${actor.userId}`] });
     }
     return this.get(actor.userId);

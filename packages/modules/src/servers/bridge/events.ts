@@ -1,4 +1,4 @@
-import { Prisma, type PrismaClient } from "@gcs/db";
+import { Prisma, type PrismaClient, sql } from "@gcs/db";
 import { cleanGameText } from "../text";
 import type { GcsBridgeAdmins } from "./admins";
 import type { GcsBridgeDemos } from "./demos/service";
@@ -124,9 +124,9 @@ export class GcsBridgeEvents {
     if (!prepared) return { id, status: "rejected", error: "unknown_type" };
     try {
       const extra = await this.deps.db.$transaction(async (tx) => {
-        const inserted = await tx.$executeRaw`
+        const inserted = await tx.$executeRaw(sql`
           INSERT INTO game_bridge_events ("serverId", "eventId", "createdAt") VALUES (${ctx.server.id}, ${id}, ${new Date(this.now()).toISOString()}::timestamp)
-          ON CONFLICT DO NOTHING`;
+          ON CONFLICT DO NOTHING`);
         if (inserted === 0) return "duplicate" as const;
         return (await prepared(tx)) ?? {};
       });

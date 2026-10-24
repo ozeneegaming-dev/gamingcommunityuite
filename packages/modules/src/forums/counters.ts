@@ -1,4 +1,4 @@
-import type { Prisma } from "@gcs/db";
+import { type Prisma, sql } from "@gcs/db";
 
 type Tx = Prisma.TransactionClient;
 
@@ -26,7 +26,7 @@ export type GcsVisiblePost = {
 export class GcsForumCounters {
   /** Un topic nou, vizibil, cu prima lui postare. */
   async onTopicCreated(tx: Tx, post: GcsVisiblePost): Promise<void> {
-    await tx.$executeRaw`UPDATE forums SET "topicsCount" = "topicsCount" + 1 WHERE id = ${post.forumId}`;
+    await tx.$executeRaw(sql`UPDATE forums SET "topicsCount" = "topicsCount" + 1 WHERE id = ${post.forumId}`);
     await this.forumPost(tx, post);
     await this.userPost(tx, post.authorId, post.countPosts !== false);
   }
@@ -49,7 +49,7 @@ export class GcsForumCounters {
    * Data se ia din `posts` în SQL: un `Date` trimis ca parametru ar fi convertit în fusul orar al sesiunii (coloana e `timestamp`).
    */
   private async forumPost(tx: Tx, p: GcsVisiblePost): Promise<void> {
-    await tx.$executeRaw`
+    await tx.$executeRaw(sql`
       UPDATE forums SET
         "postsCount" = "postsCount" + 1,
         "lastPostAt" = CASE WHEN "lastPostId" IS NULL OR "lastPostId" < ${p.postId}
@@ -57,7 +57,7 @@ export class GcsForumCounters {
         "lastTopicId" = CASE WHEN "lastPostId" IS NULL OR "lastPostId" < ${p.postId} THEN ${p.topicId} ELSE "lastTopicId" END,
         "lastPosterId" = CASE WHEN "lastPostId" IS NULL OR "lastPostId" < ${p.postId} THEN ${p.authorId} ELSE "lastPosterId" END,
         "lastPostId" = CASE WHEN "lastPostId" IS NULL OR "lastPostId" < ${p.postId} THEN ${p.postId} ELSE "lastPostId" END
-      WHERE id = ${p.forumId}`;
+      WHERE id = ${p.forumId}`);
   }
 
   private async userPost(tx: Tx, userId: string | null, countsAsPost: boolean): Promise<void> {
@@ -120,7 +120,7 @@ export class GcsForumCounters {
       tx.post.count({ where: { authorId: userId, visibility: "VISIBLE", topic: { visibility: "VISIBLE", forum: { countPosts: true } } } }),
       tx.post.count({ where: { authorId: userId, visibility: { not: "PENDING" } } }),
       // Răspunsurile marcate „cel mai bun răspuns” (etapa 3: regula Top helper).
-      tx.$queryRaw<{ n: number }[]>`SELECT count(*)::int AS n FROM topics t JOIN posts p ON p.id = t."solvedPostId" WHERE p."authorId" = ${userId}`,
+      tx.$queryRaw<{ n: number }[]>(sql`SELECT count(*)::int AS n FROM topics t JOIN posts p ON p.id = t."solvedPostId" WHERE p."authorId" = ${userId}`),
     ]);
     await tx.user.update({ where: { id: userId }, data: { postsCount, approvedPostsCount, solutionsCount: solutions[0]?.n ?? 0 } });
   }

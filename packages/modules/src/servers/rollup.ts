@@ -1,4 +1,5 @@
-import type { PrismaClient } from "@gcs/db";
+import { gcsTryTxLock } from "@gcs/core";
+import { type PrismaClient, sql } from "@gcs/db";
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
@@ -19,11 +20,10 @@ export async function rollupSnapshots(db: PrismaClient, opts: { retentionDays: n
   const pruneBefore = new Date(now - opts.retentionDays * DAY).toISOString();
   return db.$transaction(
     async (tx) => {
-      const [lock] = await tx.$queryRaw<{ locked: boolean }[]>`SELECT pg_try_advisory_xact_lock(${LOCK_KEY}) AS locked`;
-      if (!lock?.locked) return { aggregated: 0, pruned: 0 };
+      if (!(await gcsTryTxLock(tx, String(LOCK_KEY)))) return { aggregated: 0, pruned: 0 };
       // Întâi ce a ieșit din retenție (nu mai merită agregat), apoi orele vechi.
-      const pruned = await tx.$executeRaw`DELETE FROM server_snapshots WHERE at < ${pruneBefore}::timestamp`;
-      const aggregated = await tx.$executeRaw`
+      const pruned = await tx.$executeRaw(sql`DELETE FROM server_snapshots WHERE at < ${pruneBefore}::timestamp`);
+      const aggregated = await tx.$executeRaw(sql`
         INSERT INTO server_snapshots ("serverId", at, hourly, online, players, peak, "maxPlayers", map, ping, samples, "onlineSamples")
         SELECT "serverId",
                date_trunc('hour', at),
@@ -38,8 +38,8 @@ export async function rollupSnapshots(db: PrismaClient, opts: { retentionDays: n
                sum("onlineSamples")::int
         FROM server_snapshots
         WHERE hourly = false AND at < ${cutoff}::timestamp
-        GROUP BY "serverId", date_trunc('hour', at)`;
-      await tx.$executeRaw`DELETE FROM server_snapshots WHERE hourly = false AND at < ${cutoff}::timestamp`;
+        GROUP BY "serverId", date_trunc('hour', at)`);
+      await tx.$executeRaw(sql`DELETE FROM server_snapshots WHERE hourly = false AND at < ${cutoff}::timestamp`);
       return { aggregated, pruned };
     },
     { timeout: 60_000, maxWait: 10_000 },

@@ -70,7 +70,7 @@ import { vipMemberData } from "./vip/memberData";
 import { clanMemberData } from "./clans/memberData";
 import { serverMemberData } from "./servers/bridge/memberData";
 import { importerMemberData } from "./importer/memberData";
-import { PrismaClient } from "@gcs/db";
+import { createPrismaClient, PrismaClient, isMysql, retryOnUnique, sql } from "@gcs/db";
 import { templateComponents, withEmailLayout } from "./templates/components";
 import { isGcsIcon, resolveIcon } from "@gcs/ui/icon-registry";
 import { registerForumContent } from "./forums/content";
@@ -394,7 +394,7 @@ function createFileStore(configDir: string): GcsFileStore {
 export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   loadRuntimeEnv(opts.configDir);
   const databaseUrl = process.env.DATABASE_URL;
-  const db = databaseUrl ? new PrismaClient({ datasourceUrl: databaseUrl }) : new PrismaClient();
+  const db = createPrismaClient(databaseUrl);
   const infra = createGcsInfra({ db });
   const { kv, jobs, lock } = infra;
 
@@ -431,10 +431,18 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     // Scrierile concurente nu pot coborî recordul: se actualizează doar dacă numărul e mai mare.
     persistRecord: async (r) => {
       const value = JSON.stringify({ count: r.count, at: r.at.toISOString() });
-      await db.$executeRaw`
+      if (isMysql()) {
+        // MySQL: citire și scriere (ediția Lite, un singur proces; recordul doar urcă).
+        const row = await db.setting.findUnique({ where: { key: PRESENCE_RECORD_SETTING } });
+        if (Number((row?.value as { count?: number } | undefined)?.count ?? 0) >= r.count) return;
+        const data = { value: { count: r.count, at: r.at.toISOString() }, updatedAt: r.at };
+        await retryOnUnique(() => db.setting.upsert({ where: { key: PRESENCE_RECORD_SETTING }, create: { key: PRESENCE_RECORD_SETTING, ...data }, update: data }));
+        return;
+      }
+      await db.$executeRaw(sql`
         INSERT INTO settings (key, value, "updatedAt") VALUES (${PRESENCE_RECORD_SETTING}, ${value}::jsonb, ${r.at.toISOString()}::timestamp)
         ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, "updatedAt" = EXCLUDED."updatedAt"
-        WHERE COALESCE((settings.value->>'count')::int, 0) < (EXCLUDED.value->>'count')::int`;
+        WHERE COALESCE((settings.value->>'count')::int, 0) < (EXCLUDED.value->>'count')::int`);
     },
     loadRecord: async () => {
       const row = await db.setting.findUnique({ where: { key: PRESENCE_RECORD_SETTING } });

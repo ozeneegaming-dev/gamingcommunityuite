@@ -1,5 +1,5 @@
 import type { GcsCache, GcsRateLimiter, GcsSettingsService } from "@gcs/core";
-import { Prisma, type PrismaClient } from "@gcs/db";
+import { type PrismaClient, sql } from "@gcs/db";
 import { toRef, userRefSelect } from "../forums/queries";
 import { addDays, dayKey, daysBetween, previousPeriod, rankingPeriod, secondsSinceMidnight, weekStart, type GcsRankingPeriod } from "./period";
 import { badgeArtSrc } from "@gcs/ui/badge-art";
@@ -64,7 +64,7 @@ export class GcsChatProRankingService {
   /** Primii membri (nebanați) după mesajele dintre două zile (inclusiv). */
   private async top(from: string, to: string, limit: number): Promise<GcsChatProRankRow[]> {
     const { db } = this.deps;
-    const rows = await db.$queryRaw<{ userId: string; messages: number }[]>(Prisma.sql`
+    const rows = await db.$queryRaw<{ userId: string; messages: number }[]>(sql`
       SELECT s."userId", SUM(s.messages)::int AS messages
       FROM chat_pro_daily_stats s JOIN users u ON u.id = s."userId" JOIN groups g ON g.id = u."primaryGroupId"
       WHERE s.day >= ${from} AND s.day <= ${to} AND g.key <> 'banned'
@@ -147,7 +147,7 @@ export class GcsChatProRankingService {
 
   /** Locul unui total în perioadă: câți membri nebanați au strict mai multe mesaje, plus unu. */
   private async position(total: number, period: GcsRankingPeriod): Promise<number> {
-    const [row] = await this.deps.db.$queryRaw<{ n: number }[]>(Prisma.sql`
+    const [row] = await this.deps.db.$queryRaw<{ n: number }[]>(sql`
       SELECT COUNT(*)::int AS n FROM (
         SELECT s."userId" FROM chat_pro_daily_stats s JOIN users u ON u.id = s."userId" JOIN groups g ON g.id = u."primaryGroupId"
         WHERE s.day >= ${period.start} AND s.day <= ${period.end} AND g.key <> 'banned'

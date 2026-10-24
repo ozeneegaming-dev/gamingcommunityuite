@@ -1,3 +1,5 @@
+import { ftsIds } from "../../test/fts";
+import { isMysql } from "@gcs/db";
 import { GcsForbidden, GcsRateLimited, GcsValidationError, type GcsActor } from "@gcs/core";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createForumWorld, doc, snapshotCounters, type GcsForumWorld } from "../../test/world";
@@ -55,10 +57,9 @@ describe("GcsTopicService.create", () => {
 
   test("topicul e indexat pentru căutare (titlu și conținut), fără diacritice", async () => {
     const res = await w.topics.create(w.member, { forumId, title: "Mașina lui Ștefan", content: doc("Am cumpărat două mașini noi") });
-    const topics = await w.db.$queryRaw<{ id: number }[]>`SELECT id FROM topics WHERE "searchVector" @@ plainto_tsquery('gcs_ro', 'masina stefan')`;
-    const posts = await w.db.$queryRaw<{ id: number }[]>`SELECT id FROM posts WHERE "searchVector" @@ plainto_tsquery('gcs_ro', 'masina')`;
-    expect(topics.map((t) => t.id)).toEqual([res.topicId]);
-    expect(posts.map((p) => p.id)).toEqual([res.postId]);
+    expect(await ftsIds(w.db, "topics", "masina stefan")).toEqual([res.topicId]);
+    // PostgreSQL găsește și flexiunile („mașini”); MySQL caută prefixul.
+    expect(await ftsIds(w.db, "posts", isMysql() ? "masin" : "masina")).toEqual([res.postId]);
   });
 
   test("validări: titlu prea scurt, conținut invalid sau prea lung, forum categorie/link", async () => {

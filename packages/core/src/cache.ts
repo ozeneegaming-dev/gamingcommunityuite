@@ -87,7 +87,8 @@ const MISS_MEMO_MAX = 5_000;
  * valoarea veche) e oprită: `get` ține minte când a ratat, iar `set` nu scrie dacă un tag a fost invalidat între timp.
  */
 export class GcsCache {
-  private readonly misses = new Map<string, number>();
+  /** Ratările încă nescrise, pe cheie (momentele, în ordine): mai multe cereri pot calcula aceeași cheie deodată. */
+  private readonly misses = new Map<string, number[]>();
 
   constructor(
     private readonly kv: GcsKv,
@@ -112,15 +113,22 @@ export class GcsCache {
     const raw = await this.kv.get(this.key(key));
     if (raw === null) {
       if (this.misses.size >= MISS_MEMO_MAX) this.misses.clear();
-      this.misses.set(key, at);
+      const pending = (this.misses.get(key) ?? []).filter((t) => at - t < INVALIDATED_TTL_MS);
+      pending.push(at);
+      this.misses.set(key, pending);
       return null;
     }
     return JSON.parse(raw) as T;
   }
 
   async set<T>(key: string, value: T, opts: { ttlSec: number; tags: string[] }): Promise<void> {
-    const since = this.misses.get(key) ?? 0;
-    this.misses.delete(key);
+    // Nu știm care dintre ratările în curs scrie acum: verificarea se face față de cea mai veche (o valoare citită
+    // înaintea unei invalidări nu ajunge în cache), iar ratarea consumată e cea mai recentă (cea veche rămâne pentru
+    // scrierea întârziată care i-ar corespunde).
+    const pending = this.misses.get(key) ?? [];
+    const since = pending[0] ?? 0;
+    pending.pop();
+    if (pending.length === 0) this.misses.delete(key);
     const fresh = since > 0 && this.now() - since < INVALIDATED_TTL_MS ? since : 0;
     // Setul de tag trăiește cel puțin cât cea mai lungă cheie din el.
     await this.kv.script(

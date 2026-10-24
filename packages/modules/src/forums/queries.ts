@@ -14,7 +14,7 @@ import {
   type GcsReactionView,
   type GcsSettingsService,
 } from "@gcs/core";
-import { type ContentVisibility, type ForumType, type Prisma, type PrismaClient, jsonInts } from "@gcs/db";
+import { type ContentVisibility, type ForumType, type Prisma, type PrismaClient, jsonInts, sql } from "@gcs/db";
 import { hiddenLabels, revealHidden } from "./blocks";
 import { isNoticeTone } from "./notices";
 import type { GcsPollService, GcsPollView } from "./polls";
@@ -659,12 +659,12 @@ export class GcsForumQueries {
     const { db } = this.deps;
     const [posters, reacted, days] = await Promise.all([
       db.post.groupBy({ by: ["authorId"], where: { topicId, visibility: "VISIBLE", authorId: { not: null } }, _count: { _all: true }, orderBy: { _count: { authorId: "desc" } }, take: 5 }),
-      db.$queryRaw<{ id: number; n: number }[]>`
+      db.$queryRaw<{ id: number; n: number }[]>(sql`
         SELECT p.id, count(r.id)::int AS n FROM posts p JOIN content_reactions r ON r."contentType" = ${POST_CONTENT_TYPE} AND r."contentId" = p.id::text
-        WHERE p."topicId" = ${topicId} AND p.visibility = 'VISIBLE' GROUP BY p.id ORDER BY n DESC, p.id ASC LIMIT 3`,
-      db.$queryRaw<{ day: Date; n: number }[]>`
+        WHERE p."topicId" = ${topicId} AND p.visibility = 'VISIBLE' GROUP BY p.id ORDER BY n DESC, p.id ASC LIMIT 3`),
+      db.$queryRaw<{ day: Date; n: number }[]>(sql`
         SELECT date_trunc('day', "createdAt") AS day, count(*)::int AS n FROM posts
-        WHERE "topicId" = ${topicId} AND visibility = 'VISIBLE' GROUP BY 1 ORDER BY n DESC, day ASC LIMIT 3`,
+        WHERE "topicId" = ${topicId} AND visibility = 'VISIBLE' GROUP BY 1 ORDER BY n DESC, day ASC LIMIT 3`),
     ]);
     const posts = reacted.length > 0 ? await db.post.findMany({ where: { id: { in: reacted.map((r) => r.id) } }, select: { id: true, authorId: true, contentJson: true, createdAt: true } }) : [];
     const users = await this.users([...posters.map((p) => p.authorId), ...posts.map((p) => p.authorId)]);

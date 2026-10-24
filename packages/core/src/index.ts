@@ -32,6 +32,7 @@ export * from "./content/renderer";
 export * from "./content/richFields";
 export * from "./content/richRender";
 export * from "./content/search";
+export * from "./content/searchMysql";
 export * from "./content/tags";
 export * from "./errors";
 export * from "./email/send";

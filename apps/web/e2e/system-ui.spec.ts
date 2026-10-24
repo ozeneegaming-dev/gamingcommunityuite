@@ -193,7 +193,8 @@ for (const theme of THEMES) {
     // Mențiunile: sugestiile din editorul răspunsului; hover card-ul pe numele autorului.
     await page.goto(topic.url);
     await typeInEditor(page, "Salut ");
-    await page.keyboard.type(`@${bName.slice(0, 6)}`);
+    // Un prefix unic (alte specuri creează multe conturi „Bogdan…”; lista arată primele 10 în ordine alfabetică).
+    await page.keyboard.type(`@${bName.slice(0, -2)}`);
     const option = page.locator(".gcs-mentionList").getByRole("option").filter({ hasText: `@${bName}` });
     await expect(option).toBeVisible();
     await shot(page, `${theme.label}-desktop-mention`);

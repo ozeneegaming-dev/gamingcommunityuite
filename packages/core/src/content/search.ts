@@ -1,4 +1,5 @@
 import { gcsDbDialect, Prisma, type GcsDbDialect, type PrismaClient } from "@gcs/db";
+import { GcsMysqlSearchBackend } from "./searchMysql";
 
 type Tx = Prisma.TransactionClient;
 
@@ -95,10 +96,13 @@ export class GcsPgSearchBackend implements GcsSearchBackend {
 
 const backends = new Map<GcsDbDialect, GcsSearchBackend>();
 
-/** Driverul de căutare pentru dialectul bazei (MySQL se înregistrează cu `registerSearchBackend`). */
+/** Driverul de căutare pentru dialectul bazei (`registerSearchBackend` îl poate înlocui, ex. în teste). */
 export function searchBackend(dialect: GcsDbDialect = gcsDbDialect()): GcsSearchBackend {
-  const found = backends.get(dialect) ?? (dialect === "postgresql" ? new GcsPgSearchBackend() : undefined);
-  if (!found) throw new Error(`Căutarea nu are driver pentru ${dialect}`);
+  let found = backends.get(dialect);
+  if (!found) {
+    found = dialect === "mysql" ? new GcsMysqlSearchBackend() : new GcsPgSearchBackend();
+    backends.set(dialect, found);
+  }
   return found;
 }
 

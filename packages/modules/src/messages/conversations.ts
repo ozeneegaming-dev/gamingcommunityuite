@@ -14,7 +14,7 @@ import {
   type GcsReportService,
   type GcsSettingsService,
 } from "@gcs/core";
-import type { Conversation, ConversationMessage, Prisma, PrismaClient } from "@gcs/db";
+import { type Conversation, type ConversationMessage, type Prisma, type PrismaClient, sql } from "@gcs/db";
 import type { GcsRenderContext } from "../forums/posting";
 import type { GcsProfileService } from "../profile/profile";
 import { normalizePrivacy } from "../profile/privacy";
@@ -154,7 +154,7 @@ export class GcsConversationService {
 
   /** Mesajul nou + contoarele conversației, în tranzacție, cu rândul conversației blocat (răspunsuri simultane). */
   private async addMessage(tx: Tx, conversationId: number, actor: GcsActor, rendered: GcsRendered): Promise<ConversationMessage> {
-    await tx.$queryRaw`SELECT id FROM conversations WHERE id = ${conversationId} FOR UPDATE`;
+    await tx.$queryRaw(sql`SELECT id FROM conversations WHERE id = ${conversationId} FOR UPDATE`);
     const message = await tx.conversationMessage.create({
       data: { conversationId, authorId: actor.userId, contentJson: rendered.json as Prisma.InputJsonValue, contentHtml: rendered.html, ip: actor.ip },
     });
@@ -254,11 +254,11 @@ export class GcsConversationService {
     const key = `pm:unread:${userId}`;
     const cached = await this.deps.cache.get<number>(key);
     if (cached !== null) return cached;
-    const [row] = await this.deps.db.$queryRaw<{ n: number }[]>`
+    const [row] = await this.deps.db.$queryRaw<{ n: number }[]>(sql`
       SELECT count(*)::int AS n
       FROM conversation_participants p
       JOIN conversations c ON c.id = p."conversationId"
-      WHERE p."userId" = ${userId} AND p."leftAt" IS NULL AND c."lastMessageId" > p."lastReadMessageId"`;
+      WHERE p."userId" = ${userId} AND p."leftAt" IS NULL AND c."lastMessageId" > p."lastReadMessageId"`);
     const n = row?.n ?? 0;
     await this.deps.cache.set(key, n, { ttlSec: UNREAD_TTL, tags: pmTags([userId]) });
     return n;

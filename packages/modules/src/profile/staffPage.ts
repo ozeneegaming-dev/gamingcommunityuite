@@ -133,7 +133,8 @@ export class GcsStaffPage {
     ]);
     const out = new Map<string, GcsStaffContact[]>();
     const push = (userId: string, c: GcsStaffContact) => out.set(userId, [...(out.get(userId) ?? []), c]);
-    for (const a of accounts) {
+    // Steam înaintea Discord, indiferent de ordinea fizică a rândurilor (diferă între baze).
+    for (const a of [...accounts].sort((x, y) => (x.providerId === y.providerId ? 0 : x.providerId === "steam" ? -1 : 1))) {
       if (a.providerId === "steam" && /^\d{17}$/.test(a.accountId)) push(a.userId, { kind: "steam", label: "Steam", href: `https://steamcommunity.com/profiles/${a.accountId}`, icon: "fa-brands fa-steam", external: true });
       if (a.providerId === "discord" && /^\d{5,25}$/.test(a.accountId)) push(a.userId, { kind: "discord", label: "Discord", href: `https://discord.com/users/${a.accountId}`, icon: "fa-brands fa-discord", external: true });
     }

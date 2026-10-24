@@ -1,5 +1,5 @@
 import type { GcsActor, GcsAppService, GcsCache, GcsPermissionService, GcsSettingsService } from "@gcs/core";
-import { type PrismaClient, jsonInts } from "@gcs/db";
+import { type PrismaClient, jsonInts, sql } from "@gcs/db";
 import { toRef, userRefSelect, type GcsUserRef } from "../forums/queries";
 import { connectHref, gameDef, serverAddress } from "./games";
 import { SERVERS_APP, SHOW_PLAYERS_SETTING } from "./poller";
@@ -123,9 +123,9 @@ export class GcsServerQueries {
     const hit = await this.deps.cache.get<[number, number][]>("servers:uptime30");
     if (hit) return new Map(hit);
     const from = iso(this.now() - 30 * DAY);
-    const rows = await this.deps.db.$queryRaw<{ id: number; uptime: number | null }[]>`
+    const rows = await this.deps.db.$queryRaw<{ id: number; uptime: number | null }[]>(sql`
       SELECT "serverId" AS id, sum("onlineSamples")::float8 / nullif(sum(samples), 0) AS uptime
-      FROM server_snapshots WHERE at >= ${from}::timestamp GROUP BY "serverId"`;
+      FROM server_snapshots WHERE at >= ${from}::timestamp GROUP BY "serverId"`);
     const pairs = rows.filter((r) => r.uptime !== null).map((r) => [r.id, r.uptime!] as [number, number]);
     await this.deps.cache.set("servers:uptime30", pairs, { ttlSec: 300, tags: [SERVERS_CACHE_TAG] });
     return new Map(pairs);
@@ -220,12 +220,12 @@ export class GcsServerQueries {
     const d7 = iso(now - 7 * DAY);
     const d30 = iso(now - 30 * DAY);
     const [uptime, maps, peak, avg] = await Promise.all([
-      db.$queryRaw<{ d1: number | null; d7: number | null; d30: number | null }[]>`
+      db.$queryRaw<{ d1: number | null; d7: number | null; d30: number | null }[]>(sql`
         SELECT sum("onlineSamples") FILTER (WHERE at >= ${d1}::timestamp)::float8 / nullif(sum(samples) FILTER (WHERE at >= ${d1}::timestamp), 0) AS d1,
                sum("onlineSamples") FILTER (WHERE at >= ${d7}::timestamp)::float8 / nullif(sum(samples) FILTER (WHERE at >= ${d7}::timestamp), 0) AS d7,
                sum("onlineSamples")::float8 / nullif(sum(samples), 0) AS d30
-        FROM server_snapshots WHERE "serverId" = ${id} AND at >= ${d30}::timestamp`,
-      db.$queryRaw<{ map: string; from: Date; to: Date }[]>`
+        FROM server_snapshots WHERE "serverId" = ${id} AND at >= ${d30}::timestamp`),
+      db.$queryRaw<{ map: string; from: Date; to: Date }[]>(sql`
         SELECT map, min(at) AS "from", max(at) AS "to" FROM (
           SELECT at, map, sum(chg) OVER (ORDER BY at) AS grp FROM (
             SELECT at, map, CASE WHEN map IS DISTINCT FROM lag(map) OVER (ORDER BY at) THEN 1 ELSE 0 END AS chg
@@ -233,12 +233,12 @@ export class GcsServerQueries {
             WHERE "serverId" = ${id} AND hourly = false AND online AND map IS NOT NULL AND at >= ${d1}::timestamp
           ) changes
         ) runs
-        GROUP BY grp, map ORDER BY min(at) DESC LIMIT ${MAX_MAPS}`,
-      db.$queryRaw<{ peak: number; at: Date }[]>`
-        SELECT peak, at FROM server_snapshots WHERE "serverId" = ${id} AND online AND at >= ${d1}::timestamp ORDER BY peak DESC, at DESC LIMIT 1`,
-      db.$queryRaw<{ avg: number | null }[]>`
+        GROUP BY grp, map ORDER BY min(at) DESC LIMIT ${MAX_MAPS}`),
+      db.$queryRaw<{ peak: number; at: Date }[]>(sql`
+        SELECT peak, at FROM server_snapshots WHERE "serverId" = ${id} AND online AND at >= ${d1}::timestamp ORDER BY peak DESC, at DESC LIMIT 1`),
+      db.$queryRaw<{ avg: number | null }[]>(sql`
         SELECT sum(players * samples)::float8 / nullif(sum(samples), 0) AS avg
-        FROM server_snapshots WHERE "serverId" = ${id} AND online AND at >= ${d1}::timestamp`,
+        FROM server_snapshots WHERE "serverId" = ${id} AND online AND at >= ${d1}::timestamp`),
     ]);
     const out = {
       uptime: { d1: uptime[0]?.d1 ?? null, d7: uptime[0]?.d7 ?? null, d30: uptime[0]?.d30 ?? null },
@@ -261,7 +261,7 @@ export class GcsServerQueries {
     const { size, count } = RANGES[range];
     const first = Math.floor(this.now() / 1000 / size) - (count - 1);
     const from = iso(first * size * 1000);
-    const rows = await this.deps.db.$queryRaw<BucketRow[]>`
+    const rows = await this.deps.db.$queryRaw<BucketRow[]>(sql`
       SELECT floor(extract(epoch from at) / ${size})::bigint AS b,
              sum(players * samples)::float8 / nullif(sum(samples), 0) AS avg,
              max(peak) AS peak,
@@ -269,7 +269,7 @@ export class GcsServerQueries {
              sum(samples)::int AS samples,
              sum("onlineSamples")::int AS online
       FROM server_snapshots WHERE "serverId" = ${id} AND at >= ${from}::timestamp
-      GROUP BY b ORDER BY b`;
+      GROUP BY b ORDER BY b`);
     const byBucket = new Map(rows.map((r) => [Number(r.b), r]));
     let maxPlayers = 0;
     const buckets = Array.from({ length: count }, (_, i) => {

@@ -1,0 +1,3525 @@
+// GENERAT din ../schema.prisma de scripts/mysql-schema.mjs — nu edita aici.
+// GCS — schema nucleului (Etapa 1, Task 3).
+// Tabele: snake_case plural, fără prefix (spec §4).
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../generated/mysql-client"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Utilizatori și autentificare (Better Auth) ─────────────────────────────
+
+model User {
+  id                     String @db.VarChar(191)    @id @default(cuid())
+  name                   String @db.LongText
+  nameNormalized         String @db.VarChar(191)    @unique
+  email                  String @db.VarChar(191)    @unique // salvat lowercase
+  emailVerified          Boolean   @default(false)
+  image                  String? @db.LongText
+  primaryGroupId         Int
+  previousPrimaryGroupId Int?
+  /// Grupul afișat (stilul numelui): calculat de GCS dintre grupul principal și cele secundare, după „Prioritate
+  /// afișare”, sau cel ales de membru. `null` = grupul principal.
+  nameGroupId            Int?
+  /// Grupul ales de membru ca grup afișat (Setări), dacă grupul permite; `null` = automat (după prioritate).
+  displayGroupChoiceId   Int?
+  locale                 String @db.LongText    @default("ro")
+  timezone               String @db.LongText    @default("Europe/Bucharest")
+  twoFactorEnabled       Boolean   @default(false)
+  twoFactorSecret        String? @db.LongText
+  lastActiveAt           DateTime?
+  lastAcpAuthAt          DateTime?
+  lastAcpAuthIp          String? @db.LongText
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  primaryGroup       Group               @relation("UserPrimaryGroup", fields: [primaryGroupId], references: [id], onDelete: Restrict)
+  nameGroup          Group?              @relation("UserNameGroup", fields: [nameGroupId], references: [id], onDelete: SetNull)
+  displayGroupChoice Group?              @relation("UserDisplayGroupChoice", fields: [displayGroupChoiceId], references: [id], onDelete: SetNull)
+  groups             UserGroup[]
+  accounts           Account[]
+  sessions           Session[]
+  twoFactors         TwoFactor[]
+  warnings           Warning[]           @relation("WarningTarget")
+  warningsIssued     Warning[]           @relation("WarningIssuer")
+  bans               Ban[]               @relation("BanTarget")
+  bansCreated        Ban[]               @relation("BanCreator")
+  moderatorOf        Moderator[]
+  acpRoles           AcpRoleAssignment[]
+  dashboardLayout    AcpDashboardLayout?
+
+  // Forum (etapa 2). Contoarele sunt denormalizate și se actualizează în tranzacția scrierii.
+  postsCount         Int @default(0)
+  approvedPostsCount Int @default(0)
+  reputation         Int @default(0)
+
+  topics         Topic[]           @relation("TopicAuthor")
+  posts          Post[]            @relation("PostAuthor")
+  postRevisions  PostRevision[]
+  reactionsGiven ContentReaction[]
+  /// Forum v2: notele date (serviciul generic `contentRating`).
+  contentRatings ContentRating[]
+  /// Forum v2: voturile date pe postări Q&A.
+  postVotes      PostVote[]
+  pollVotes      PollVote[]
+  readMarkers    ReadMarker[]
+  forumReadMarks ForumReadMark[]
+  follows        Follow[]
+  reports        Report[]          @relation("ReportReporter")
+  attachments    Attachment[]
+
+  // Profil, social, VIP (etapa 3). `privacy`: { profile, messages, wall, showOnline } (specul etapei 3 §6).
+  bio               String @db.LongText  @default("")
+  accentColor       String? @db.LongText
+  coverAttachmentId String? @db.LongText
+  coverPositionY    Int     @default(50)
+  privacy           Json    @default("{}")
+  points            Int     @default(0)
+  followersCount    Int     @default(0)
+  solutionsCount    Int     @default(0)
+  rankId            Int?
+  nameStyleId       Int?
+  avatarFrameId     Int?
+
+  /// Ziua de naștere (fără oră) și dacă e publică (comanda `/zi-de-nastere` din Chat Pro, profilul).
+  birthday        DateTime? @db.Date
+  birthdayVisible Boolean   @default(false)
+
+  // UI modern (etapa 5). `prefs`: { sound, toasts, theme } (specul etapei 5).
+  signatureJson Json?
+  signatureHtml String @db.LongText  @default("")
+  customTitle   String? @db.LongText
+  prefs         Json    @default("{}")
+
+  /// Importul din altă platformă: IP-ul de la înregistrarea pe site-ul vechi (apare în uneltele IP din ACP).
+  registrationIp String? @db.LongText
+
+  userPermissions UserPermission[]
+  chatRoomsOwned  ChatChannel[]         @relation("ChatRoomOwner")
+  chatRooms       ChatRoomMember[]      @relation("ChatRoomMember")
+  chatReactions   ChatMessageReaction[]
+  /// Serverele de joc la care membrul e admin (aplicația Servere).
+  gameServerAdmin GameServerAdmin[]
+  /// Puntea cu serverele de joc: identitățile de joc legate, codurile de legare, intrările de admin și tichetele.
+  gamePlayers     GamePlayer[]
+  gameLinkCodes   GameLinkCode[]
+  gameAdmins      GameAdmin[]
+  gameTickets     GameTicket[]          @relation("GameTicketAuthor")
+  /// Aplicația Clanuri: clanurile membrului, cererile / invitațiile lui, invitațiile trimise și clanurile fondate.
+  clanMemberships ClanMember[]
+  clanRequests    ClanRequest[]         @relation("ClanRequestUser")
+  clanInvitesSent ClanRequest[]         @relation("ClanRequestInviter")
+  clansCreated    Clan[]                @relation("ClanCreator")
+
+  rank             Rank?                     @relation(fields: [rankId], references: [id], onDelete: SetNull)
+  nameStyle        NameStyle?                @relation(fields: [nameStyleId], references: [id], onDelete: SetNull)
+  avatarFrame      AvatarFrame?              @relation(fields: [avatarFrameId], references: [id], onDelete: SetNull)
+  profileValues    ProfileFieldValue[]
+  wallPosts        StatusUpdate[]            @relation("StatusProfile")
+  statusesWritten  StatusUpdate[]            @relation("StatusAuthor")
+  ignoring         UserIgnore[]              @relation("IgnoreOwner")
+  ignoredBy        UserIgnore[]              @relation("IgnoreTarget")
+  conversations    ConversationParticipant[]
+  messagesWritten  ConversationMessage[]
+  badges           UserBadge[]
+  achievementLog   AchievementLog[]
+  /// Realizări v2: aparițiile numărate ale evenimentelor (regulile „a n-a oară / la fiecare n”).
+  achievementHits  AchievementOccurrence[]
+  vipSubscriptions VipSubscription[]
+  /// Aspectul publicat de pluginuri (capabilitatea `appearance`, Studio VIP).
+  appearances      MemberAppearance[]
+
+  // Timp real (etapa 4).
+  notifications           Notification[]
+  notificationPreferences NotificationPreference[]
+  /// Notificări v2: abonamentele web push (pe dispozitiv) și setările de livrare ale membrului (ex. emailurile oprite din ACP).
+  pushSubscriptions       PushSubscription[]
+  notificationMember      NotificationMember?
+  chatMessages            ChatMessage[]            @relation("ChatAuthor")
+  chatMutes               ChatMute[]               @relation("ChatMuted")
+  /// Chat Pro (aplicația premium): profilul de chat, statisticile zilnice și perioadele câștigate.
+  chatProProfile          ChatProProfile?
+  chatProStats            ChatProDailyStat[]
+  chatProWins             ChatProWinner[]
+  /// Moderarea chat-ului: sancțiunile primite (kick, ban, slow mode personal), jurnalul și accesul de moderator dat.
+  chatSanctions           ChatSanction[]           @relation("ChatSanctioned")
+  chatModActions          ChatModLog[]             @relation("ChatModActor")
+  chatModTargeted         ChatModLog[]             @relation("ChatModTarget")
+  chatModGrant            ChatModeratorGrant?      @relation("ChatModGrant")
+  chatModGrantsGiven      ChatModeratorGrant[]     @relation("ChatModGrantedBy")
+  /// Timpul online pe zile (clasamentul „Timp online”, Hero Cockpit).
+  onlineDays              MemberOnlineDay[]
+  /// Profil gaming v2: dispozitivele cu care membrul a intrat în cont, vizitele pe profiluri, datele externe cache-uite
+  /// (Steam, FACEIT) și donațiile (insigna automată „Sponsor”).
+  devices                 UserDevice[]
+  profileVisits           ProfileVisit[]           @relation("ProfileVisitProfile")
+  profileVisitsMade       ProfileVisit[]           @relation("ProfileVisitVisitor")
+  externalProfiles        ExternalProfile[]
+  donations               MemberDonation[]
+
+  /// Ziua de naștere: anul e opțional pe profil (`false` = doar ziua și luna).
+  birthdayShowYear Boolean @default(false)
+
+  /// Membri v2: marcat ca spammer din ACP (filtrul „Spammeri”; contul e și banat).
+  isSpammer                Boolean       @default(false)
+  /// Membri v2: echipa a cerut schimbarea parolei; până o schimbă, membrul e trimis la Setări → Cont.
+  passwordResetRequestedAt DateTime?
+  /// Membri v2: ultimul IP văzut (actualizat odată cu `lastActiveAt`), coloana „IP” din lista ACP.
+  lastIp                   String? @db.LongText
+  /// Pagina Staff v2: descrierea și responsabilitățile membrului de staff.
+  staffProfile             StaffProfile?
+
+  @@index([primaryGroupId])
+  @@index([createdAt])
+  @@index([lastActiveAt])
+  @@map("users")
+}
+
+model Session {
+  id        String @db.VarChar(191)   @id @default(cuid())
+  token     String @db.VarChar(191)   @unique
+  userId    String @db.VarChar(191)
+  expiresAt DateTime
+  ipAddress String? @db.LongText
+  userAgent String? @db.LongText
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Account {
+  id                    String @db.VarChar(191)    @id @default(cuid())
+  userId                String @db.VarChar(191)
+  accountId             String @db.VarChar(191)
+  providerId            String @db.VarChar(191)
+  accessToken           String? @db.LongText
+  refreshToken          String? @db.LongText
+  idToken               String? @db.LongText
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String? @db.LongText
+  password              String? @db.LongText
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Verification {
+  id         String @db.VarChar(191)   @id @default(cuid())
+  identifier String @db.VarChar(191)
+  value      String @db.LongText
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verifications")
+}
+
+/// Secretul TOTP și codurile de rezervă (plugin-ul `twoFactor` din Better Auth). Câmpurile sunt criptate de Better Auth.
+model TwoFactor {
+  id                      String @db.VarChar(191)    @id @default(cuid())
+  secret                  String @db.VarChar(191)
+  backupCodes             String @db.LongText
+  userId                  String @db.VarChar(191)
+  verified                Boolean   @default(true)
+  failedVerificationCount Int       @default(0)
+  lockedUntil             DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([secret])
+  @@index([userId])
+  @@map("two_factors")
+}
+
+// ─── Grupuri și permisiuni (spec §6) ────────────────────────────────────────
+
+model Group {
+  id          Int     @id @default(autoincrement())
+  key         String @db.VarChar(191)  @unique // root_admin, admin, …, vip_legend; custom_<id> pentru grupurile din ACP
+  name        String @db.LongText
+  isProtected Boolean @default(false)
+  isVip       Boolean @default(false)
+  color       String? @db.LongText
+  nameStyle   Json?
+  title       String? @db.LongText
+  position    Int     @default(0)
+  /// Etapa 5: iconița Font Awesome, banner-ul din postbit (culoare sau gradient validat) și apariția în legenda grupurilor.
+  icon        String? @db.LongText
+  banner      String? @db.LongText
+  inLegend    Boolean @default(true)
+
+  primaryUsers         User[]                @relation("UserPrimaryGroup")
+  nameUsers            User[]                @relation("UserNameGroup")
+  displayChoiceUsers   User[]                @relation("UserDisplayGroupChoice")
+  members              UserGroup[]
+  settings             GroupSetting[]
+  containerPermissions ContainerPermission[]
+  moderators           Moderator[]
+  acpRoles             AcpRoleAssignment[]
+  promotionsTo         GroupPromotion[]
+  vipSubscriptions     VipSubscription[]
+  vipLog               VipLog[]
+  /// VIP pe serverele de joc (flag-urile grupului pe fiecare server).
+  gameVipMappings      GameVipMapping[]
+  /// Pagina Staff v2: secțiunea grupului pe /staff (titlul, aspectul, ordinea).
+  staffSection         StaffSection?
+  /// Realizări v2: rangurile care dau grupul ca avantaj (grup secundar cât timp membrul are rangul).
+  rankPerks            Rank[]                @relation("RankPerkGroup")
+
+  /// Membri v2: grup public (opt-in): membrii se pot înscrie / retrage singuri din Setări → Grupuri, ca grup secundar.
+  optIn Boolean @default(false)
+
+  @@map("groups")
+}
+
+/// Grupurile secundare ale unui user.
+model UserGroup {
+  userId    String @db.VarChar(191)
+  groupId   Int
+  /// Membri v2: de unde vine grupul — `manual` (ACP), `store` (Magazin), `servers` (aplicația Servere), `promotion`,
+  /// `optin` (membrul s-a înscris), `vip`, `import`. Aplicațiile pot folosi și cheia lor.
+  source    String @db.LongText    @default("manual")
+  /// Grupul temporar: la această dată jobul `groups.secondary_expiry` îl scoate și anunță membrul (`null` = permanent).
+  expiresAt DateTime?
+  addedAt   DateTime  @default(now())
+  addedById String? @db.LongText
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([userId, groupId])
+  @@index([groupId])
+  @@index([expiresAt])
+  @@map("user_groups")
+}
+
+/// Pagina Staff v2: o secțiune de pe /staff = un grup de staff, cu titlul ei (bandă), aspectul cardurilor și ordinea.
+model StaffSection {
+  id       Int     @id @default(autoincrement())
+  groupId  Int     @unique
+  /// Titlul afișat pe bandă (`null` = numele grupului).
+  title    String? @db.LongText
+  /// `detailed` (card mare, 2 pe rând) sau `compact`.
+  layout   String @db.LongText  @default("detailed")
+  position Int     @default(0)
+  enabled  Boolean @default(true)
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@map("staff_sections")
+}
+
+/// Pagina Staff v2: descrierea (text formatat) și responsabilitățile unui membru al echipei, ordinea lui în secțiune.
+model StaffProfile {
+  userId          String @db.VarChar(191)   @id
+  descriptionJson Json?
+  descriptionHtml String @db.LongText   @default("")
+  duties          Json    @default("[]")
+  position        Int      @default(0)
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("staff_profiles")
+}
+
+model GroupSetting {
+  id      Int    @id @default(autoincrement())
+  groupId Int
+  key     String @db.VarChar(191)
+  value   Json
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, key])
+  @@map("group_settings")
+}
+
+model ContainerPermission {
+  id            Int    @id @default(autoincrement())
+  containerType String @db.VarChar(191)
+  containerId   String @db.VarChar(191)
+  groupId       Int
+  action        String @db.VarChar(191)
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([containerType, containerId, groupId, action])
+  @@index([containerType, containerId])
+  @@map("container_permissions")
+}
+
+model ContainerInherit {
+  id            Int     @id @default(autoincrement())
+  containerType String @db.VarChar(191)
+  containerId   String @db.VarChar(191)
+  parentId      String? @db.LongText
+  inherits      Boolean @default(false)
+
+  @@unique([containerType, containerId])
+  @@map("container_inherit")
+}
+
+model Moderator {
+  id            Int      @id @default(autoincrement())
+  containerType String @db.VarChar(191)
+  containerId   String @db.VarChar(191)
+  userId        String? @db.VarChar(191)
+  groupId       Int?
+  powers        Json    @default("[]")
+
+  user  User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group Group? @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([containerType, containerId])
+  @@map("moderators")
+}
+
+// ─── Bannuri și avertismente (spec §6.5) ────────────────────────────────────
+
+enum BanType {
+  ACCOUNT
+  IP
+  EMAIL
+}
+
+model Ban {
+  id          String @db.VarChar(191)    @id @default(cuid())
+  type        BanType
+  value       String @db.VarChar(191)
+  userId      String? @db.VarChar(191)
+  reason      String @db.LongText
+  expiresAt   DateTime?
+  createdById String? @db.VarChar(191)
+  createdAt   DateTime  @default(now())
+  liftedAt    DateTime?
+
+  user      User? @relation("BanTarget", fields: [userId], references: [id], onDelete: Cascade)
+  createdBy User? @relation("BanCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([type, value])
+  @@index([userId])
+  @@map("bans")
+}
+
+model Warning {
+  id         String @db.VarChar(191)    @id @default(cuid())
+  userId     String @db.VarChar(191)
+  points     Int
+  reason     String @db.LongText
+  expiresAt  DateTime?
+  issuedById String? @db.VarChar(191)
+  /// Dovada (ex. mesajul de chat avertizat: `{ type: "chat.message", id, channel, body }`).
+  evidence   Json?
+  createdAt  DateTime  @default(now())
+
+  user     User  @relation("WarningTarget", fields: [userId], references: [id], onDelete: Cascade)
+  issuedBy User? @relation("WarningIssuer", fields: [issuedById], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@map("warnings")
+}
+
+enum WarningActionType {
+  MODERATE_POSTS
+  RESTRICT
+  BAN
+}
+
+model WarningAction {
+  id            Int               @id @default(autoincrement())
+  threshold     Int               @unique
+  action        WarningActionType
+  durationHours Int?
+
+  @@map("warning_actions")
+}
+
+// ─── ACP (spec §6.4, §12) ───────────────────────────────────────────────────
+
+model AcpRole {
+  id   Int    @id @default(autoincrement())
+  name String @db.VarChar(191) @unique
+
+  permissions AcpRolePermission[]
+  assignments AcpRoleAssignment[]
+
+  @@map("acp_roles")
+}
+
+model AcpRolePermission {
+  id        Int     @id @default(autoincrement())
+  roleId    Int
+  section   String @db.VarChar(191)
+  canView   Boolean @default(false)
+  canEdit   Boolean @default(false)
+  canDelete Boolean @default(false)
+
+  role AcpRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, section])
+  @@map("acp_role_permissions")
+}
+
+model AcpRoleAssignment {
+  id      Int     @id @default(autoincrement())
+  roleId  Int
+  userId  String? @db.VarChar(191)
+  groupId Int?
+
+  role  AcpRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user  User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group Group?  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([groupId])
+  @@map("acp_role_assignments")
+}
+
+model AcpDashboardLayout {
+  userId String @db.VarChar(191) @id
+  layout Json
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("acp_dashboard_layouts")
+}
+
+model AdminNote {
+  id          Int      @id @default(1)
+  body        String @db.LongText   @default("")
+  updatedById String? @db.LongText
+  updatedAt   DateTime @updatedAt
+
+  @@map("admin_notes")
+}
+
+// ─── Sistem ─────────────────────────────────────────────────────────────────
+
+model Setting {
+  key       String @db.VarChar(191)   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
+
+model SystemState {
+  id          Int       @id @default(1)
+  installedAt DateTime?
+  permVersion Int       @default(0)
+  appVersion  String @db.LongText    @default("1.0.0")
+  /// Seed-urile făcute o singură dată (ex. `layout:index`), ca alegerile adminului să nu fie refăcute la repornire.
+  seedMarks   Json    @default("[]")
+
+  @@map("system_state")
+}
+
+/// Jurnalul ACP. `actorId` nu are cheie străină, ca intrările să rămână după ștergerea unui user.
+model AuditLog {
+  id         String @db.VarChar(191)   @id @default(cuid())
+  actorId    String? @db.VarChar(191)
+  action     String @db.LongText
+  targetType String @db.VarChar(191)
+  targetId   String @db.VarChar(191)
+  before     Json?
+  after      Json?
+  ip         String? @db.LongText
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([actorId])
+  @@index([targetType, targetId])
+  @@map("audit_logs")
+}
+
+// ─── Forum (etapa 2, specul etapei §4) ──────────────────────────────────────
+
+enum ForumType {
+  CATEGORY
+  FORUM
+  LINK
+  QA
+  /// Forum v2: „Pagină / Anunț”: o pagină bogată în locul listei de topicuri (opțional cu topicuri dedesubt).
+  PAGE
+}
+
+/// Starea de vizibilitate a unui topic sau a unei postări.
+enum ContentVisibility {
+  VISIBLE
+  PENDING
+  HIDDEN
+}
+
+enum ReportStatus {
+  OPEN
+  CLOSED
+}
+
+/// Categorie, forum, subforum sau link. `parentId` null = rădăcină. Câmpurile `last*` nu au chei străine (evită ciclurile).
+model Forum {
+  id              Int       @id @default(autoincrement())
+  parentId        Int?
+  type            ForumType @default(FORUM)
+  name            String @db.LongText
+  slug            String @db.LongText
+  description     String @db.LongText    @default("")
+  icon            String? @db.LongText
+  color           String? @db.LongText
+  position        Int       @default(0)
+  linkUrl         String? @db.LongText
+  requireApproval Boolean   @default(false)
+  /// Etapa 5: pe câte coloane se afișează subforumurile (1–5).
+  subforumColumns Int       @default(2)
+  topicsCount     Int       @default(0)
+  postsCount      Int       @default(0)
+  lastPostId      Int?
+  lastPostAt      DateTime?
+  lastTopicId     Int?
+  lastPosterId    String? @db.LongText
+  createdAt       DateTime  @default(now())
+  /// Forum v2 (opțiunile forumului): membrii văd doar topicurile lor (moderatorii văd tot).
+  ownTopicsOnly   Boolean   @default(false)
+  /// Forum v2: parola forumului (hash); null = fără parolă.
+  passwordHash    String? @db.LongText
+  /// Forum v2: caseta regulilor: off | show (afișată) | accept (de acceptat înainte de a posta).
+  rulesMode       String @db.LongText    @default("off")
+  rulesJson       Json?
+  rulesHtml       String @db.LongText    @default("")
+  /// Forum v2: sortarea implicită a topicurilor (last | created | replies | views | rating | title).
+  defaultSort     String @db.LongText    @default("last")
+  /// Forum v2: sondaje și tag-uri permise în forum.
+  pollsEnabled    Boolean   @default(true)
+  tagsEnabled     Boolean   @default(true)
+  /// Forum v2: postările minime ale autorului ca să poată posta (0 = fără prag).
+  minPosts        Int       @default(0)
+  /// Forum v2: postările din forum se numără la contorul membrului.
+  countPosts      Boolean   @default(true)
+  /// Forum v2: topicurile se închid automat după N zile fără răspuns (0 = niciodată).
+  autoCloseDays   Int       @default(0)
+  /// Forum v2: nota cu stele pe topicuri (serviciul `contentRating`).
+  ratingEnabled   Boolean   @default(false)
+
+  parent      Forum?        @relation("ForumTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children    Forum[]       @relation("ForumTree")
+  topics      Topic[]
+  prefixes    ForumPrefix[]
+  /// Serverele de joc care au acest forum ca „forumul serverului”.
+  gameServers GameServer[]
+  /// Clanul care are acest forum ca forum privat.
+  clan        Clan?
+  /// Forum v2: datele extensiilor (taburile contribuite în ACP), pagina unui nod PAGE și acceptările regulilor.
+  extensions    ForumExtensionData[]
+  page          ForumPage?
+  rulesAccepted ForumRulesAcceptance[]
+
+  @@index([parentId, position])
+  @@map("forums")
+}
+
+/// Forum v2: datele unei extensii de forum (tab contribuit în ACP: Aspect, Server…), per forum și per extensie.
+model ForumExtensionData {
+  forumId     Int
+  key         String @db.VarChar(191)
+  data        Json     @default("{}")
+  updatedAt   DateTime @updatedAt
+  updatedById String? @db.LongText
+
+  forum Forum @relation(fields: [forumId], references: [id], onDelete: Cascade)
+
+  @@id([forumId, key])
+  @@map("forum_extension_data")
+}
+
+/// Forum v2: conținutul unui nod „Pagină / Anunț” (`ForumType.PAGE`), butonul CTA, publicul și topicurile de dedesubt.
+model ForumPage {
+  forumId          Int      @id
+  contentJson      Json?
+  contentHtml      String @db.LongText   @default("")
+  ctaLabel         String? @db.LongText
+  ctaUrl           String? @db.LongText
+  ctaIcon          String? @db.LongText
+  allowTopics      Boolean  @default(false)
+  /// Grupurile care văd pagina (gol = toți cei care văd forumul).
+  audienceGroupIds Json @default("[]")
+  updatedAt        DateTime @updatedAt
+  updatedById      String? @db.LongText
+
+  forum Forum @relation(fields: [forumId], references: [id], onDelete: Cascade)
+
+  @@map("forum_pages")
+}
+
+/// Forum v2: cine a acceptat regulile unui forum (opțiunea „Reguli: de acceptat”).
+model ForumRulesAcceptance {
+  forumId    Int
+  userId     String @db.VarChar(191)
+  acceptedAt DateTime @default(now())
+
+  forum Forum @relation(fields: [forumId], references: [id], onDelete: Cascade)
+
+  @@id([forumId, userId])
+  @@map("forum_rules_acceptances")
+}
+
+model Topic {
+  id           Int                      @id @default(autoincrement())
+  forumId      Int
+  title        String @db.LongText
+  slug         String @db.LongText
+  authorId     String? @db.VarChar(191)
+  prefixId     Int?
+  visibility   ContentVisibility        @default(VISIBLE)
+  pinned       Boolean                  @default(false)
+  locked       Boolean                  @default(false)
+  featured     Boolean                  @default(false)
+  solvedPostId Int?
+  firstPostId  Int?
+  lastPostId   Int?
+  lastPostAt   DateTime                 @default(now())
+  lastPosterId String? @db.LongText
+  repliesCount Int                      @default(0)
+  viewsCount   Int                      @default(0)
+  createdAt    DateTime                 @default(now())
+  /// Forum v2: nota medie (0 = fără voturi) și numărul voturilor (sortarea și filtrul „4★+”).
+  ratingAvg         Float     @default(0)
+  ratingCount       Int       @default(0)
+  /// Forum v2: răspunsul recomandat de staff (afișat sus, „Recomandat”).
+  recommendedPostId Int?
+  /// Forum v2: răspunsurile din acest topic trec prin aprobare.
+  requireApproval   Boolean   @default(false)
+  /// Forum v2: arhivat (doar citire, restaurabil); `archivedById` null = arhivarea automată.
+  archivedAt        DateTime?
+  archivedById      String? @db.LongText
+
+  forum       Forum        @relation(fields: [forumId], references: [id], onDelete: Cascade)
+  author      User?        @relation("TopicAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  prefix      TopicPrefix? @relation(fields: [prefixId], references: [id], onDelete: SetNull)
+  posts       Post[]
+  tags        TopicTag[]
+  poll        Poll?
+  readMarkers ReadMarker[]
+  notices     TopicNotice[]
+
+  @@index([forumId, visibility, pinned(sort: Desc), lastPostAt(sort: Desc)])
+  /// Forum v2: „Cele mai bine notate”.
+  @@index([forumId, ratingAvg(sort: Desc)])
+  @@index([authorId])
+  /// Fluxul de activitate (`/activity`): topicurile noi, cele mai noi primele.
+  @@index([createdAt(sort: Desc), id(sort: Desc)])
+  @@map("topics")
+}
+
+model Post {
+  id           Int                      @id @default(autoincrement())
+  topicId      Int
+  authorId     String? @db.VarChar(191)
+  contentJson  Json
+  contentHtml  String @db.LongText
+  visibility   ContentVisibility        @default(VISIBLE)
+  hiddenById   String? @db.LongText
+  hiddenReason String? @db.LongText
+  editedAt     DateTime?
+  editedById   String? @db.LongText
+  ip           String? @db.LongText
+  createdAt    DateTime                 @default(now())
+  /// Forum v2: blocurile „conținut ascuns” scoase din `contentHtml` (id, mod, grupuri, HTML), arătate per vizitator.
+  hiddenParts  Json?
+
+  topic     Topic          @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  author    User?          @relation("PostAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  revisions PostRevision[]
+  /// Forum v2: voturile Q&A.
+  votes     PostVote[]
+
+  @@index([topicId, visibility, id])
+  @@index([authorId, createdAt])
+  /// Fluxul de activitate și clasamentul pe perioade (postările create recent).
+  @@index([createdAt(sort: Desc), id(sort: Desc)])
+  @@map("posts")
+}
+
+/// Forum v2: mesajul unui moderator într-un topic („Adaugă mesaj”), afișat sus, în culorile tonului ales.
+model TopicNotice {
+  id          Int      @id @default(autoincrement())
+  topicId     Int
+  authorId    String? @db.LongText
+  contentJson Json
+  contentHtml String @db.LongText
+  tone        String @db.LongText   @default("info")
+  createdAt   DateTime @default(now())
+
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@index([topicId])
+  @@map("topic_notices")
+}
+
+/// Forum v2: o regulă de arhivare automată (condiții + excepții „dar nu când”), rulată periodic de `gcs-worker`.
+model ArchiveRule {
+  id         Int       @id @default(autoincrement())
+  name       String @db.LongText
+  enabled    Boolean   @default(true)
+  conditions Json
+  exclusions Json      @default("{}")
+  position   Int       @default(0)
+  lastRunAt  DateTime?
+  lastCount  Int       @default(0)
+  createdAt  DateTime  @default(now())
+
+  @@map("archive_rules")
+}
+
+model PostRevision {
+  id          Int      @id @default(autoincrement())
+  postId      Int
+  contentJson Json
+  contentHtml String @db.LongText
+  editorId    String? @db.VarChar(191)
+  createdAt   DateTime @default(now())
+
+  post   Post  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  editor User? @relation(fields: [editorId], references: [id], onDelete: SetNull)
+
+  @@index([postId])
+  @@map("post_revisions")
+}
+
+model TopicPrefix {
+  id       Int    @id @default(autoincrement())
+  name     String @db.LongText
+  color    String @db.LongText
+  position Int    @default(0)
+
+  topics Topic[]
+  forums ForumPrefix[]
+
+  @@map("topic_prefixes")
+}
+
+/// Prefixele permise pe un forum. Niciun rând pentru forum = toate prefixele sunt permise.
+model ForumPrefix {
+  forumId  Int
+  prefixId Int
+
+  forum  Forum       @relation(fields: [forumId], references: [id], onDelete: Cascade)
+  prefix TopicPrefix @relation(fields: [prefixId], references: [id], onDelete: Cascade)
+
+  @@id([forumId, prefixId])
+  @@map("forum_prefixes")
+}
+
+model Tag {
+  id   Int    @id @default(autoincrement())
+  name String @db.LongText
+  slug String @db.VarChar(191) @unique
+
+  topics TopicTag[]
+
+  @@map("tags")
+}
+
+model TopicTag {
+  topicId Int
+  tagId   Int
+
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  tag   Tag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([topicId, tagId])
+  @@index([tagId])
+  @@map("topic_tags")
+}
+
+model Poll {
+  id       Int       @id @default(autoincrement())
+  topicId  Int       @unique
+  question String @db.LongText
+  multiple Boolean   @default(false)
+  closesAt DateTime?
+
+  topic   Topic        @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  options PollOption[]
+  votes   PollVote[]
+
+  @@map("polls")
+}
+
+model PollOption {
+  id         Int    @id @default(autoincrement())
+  pollId     Int
+  text       String @db.LongText
+  position   Int    @default(0)
+  votesCount Int    @default(0)
+
+  poll  Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes PollVote[]
+
+  @@index([pollId])
+  @@map("poll_options")
+}
+
+model PollVote {
+  pollId    Int
+  optionId  Int
+  userId    String @db.VarChar(191)
+  createdAt DateTime @default(now())
+
+  poll   Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  option PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([pollId, optionId, userId])
+  @@index([pollId, userId])
+  @@map("poll_votes")
+}
+
+/// Reacțiile configurabile din ACP. `weight` se adună la reputația autorului.
+model Reaction {
+  id       Int     @id @default(autoincrement())
+  key      String @db.VarChar(191)  @unique
+  label    String @db.LongText
+  symbol   String @db.LongText
+  color    String @db.LongText
+  weight   Int     @default(0)
+  position Int     @default(0)
+  enabled  Boolean @default(true)
+
+  given ContentReaction[]
+
+  @@map("reactions")
+}
+
+/// Forum v2: nota (1–5 stele) dată de un membru unui conținut (serviciul generic `contentRating`: topicuri, fișiere…).
+model ContentRating {
+  contentType String @db.VarChar(191)
+  contentId   String @db.VarChar(191)
+  userId      String @db.VarChar(191)
+  value       Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([contentType, contentId, userId])
+  @@index([userId])
+  @@map("content_ratings")
+}
+
+/// Forum v2: votul unui membru pe o postare dintr-un forum Q&A (+1 / −1). Scorul postării e suma voturilor.
+model PostVote {
+  postId    Int
+  userId    String @db.VarChar(191)
+  value     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([postId, userId])
+  @@index([userId])
+  @@map("post_votes")
+}
+
+/// Forum v2: media și numărul notelor unui conținut, ținute la zi de serviciu (sortări, widget-ul „Cele mai bine notate”).
+model ContentRatingSummary {
+  contentType String @db.VarChar(191)
+  contentId   String @db.VarChar(191)
+  count       Int      @default(0)
+  sum         Int      @default(0)
+  avg         Float    @default(0)
+  updatedAt   DateTime @updatedAt
+
+  @@id([contentType, contentId])
+  @@index([contentType, avg(sort: Desc)])
+  @@map("content_rating_summaries")
+}
+
+/// O reacție pe orice conținut (`forums.post`, `downloads.file`…). Una per user per conținut.
+model ContentReaction {
+  id          Int      @id @default(autoincrement())
+  contentType String @db.VarChar(191)
+  contentId   String @db.VarChar(191)
+  userId      String @db.VarChar(191)
+  reactionId  Int
+  createdAt   DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reaction Reaction @relation(fields: [reactionId], references: [id], onDelete: Cascade)
+
+  @@unique([contentType, contentId, userId])
+  @@index([contentType, contentId])
+  /// Clasamentul pe perioade: reacțiile primite recent.
+  @@index([createdAt])
+  @@map("content_reactions")
+}
+
+model ReadMarker {
+  userId         String @db.VarChar(191)
+  topicId        Int
+  lastReadPostId Int
+  updatedAt      DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@id([userId, topicId])
+  @@index([topicId])
+  @@map("read_markers")
+}
+
+/// „Marchează tot citit” pe un forum: topicurile fără activitate după `markedAt` sunt citite.
+model ForumReadMark {
+  userId   String @db.VarChar(191)
+  forumId  Int
+  markedAt DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, forumId])
+  @@map("forum_read_marks")
+}
+
+model Follow {
+  id          Int      @id @default(autoincrement())
+  userId      String @db.VarChar(191)
+  contentType String @db.VarChar(191)
+  contentId   String @db.VarChar(191)
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contentType, contentId])
+  @@index([contentType, contentId])
+  @@map("follows")
+}
+
+model Report {
+  id          String @db.VarChar(191)       @id @default(cuid())
+  contentType String @db.VarChar(191)
+  contentId   String @db.VarChar(191)
+  reporterId  String? @db.VarChar(191)
+  reason      String @db.LongText
+  status      ReportStatus @default(OPEN)
+  handledById String? @db.LongText
+  handledAt   DateTime?
+  createdAt   DateTime     @default(now())
+
+  reporter User? @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([contentType, contentId])
+  @@map("reports")
+}
+
+/// Un fișier încărcat. `contentType`/`contentId` sunt null până la salvarea conținutului care îl folosește.
+model Attachment {
+  id          String @db.VarChar(191)   @id @default(cuid())
+  ownerId     String? @db.VarChar(191)
+  storageKey  String @db.VarChar(191)   @unique
+  filename    String @db.LongText
+  mime        String @db.LongText
+  size        Int
+  width       Int?
+  height      Int?
+  contentType String? @db.VarChar(191)
+  contentId   String? @db.VarChar(191)
+  createdAt   DateTime @default(now())
+
+  owner User? @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
+  @@index([contentType, contentId])
+  @@index([ownerId, createdAt])
+  @@map("attachments")
+}
+
+/// Macro de moderare: `actions` = listă de pași (lock, pin, feature, move, prefix, reply). `forumIds` gol = toate forumurile.
+model ModSavedAction {
+  id       Int    @id @default(autoincrement())
+  name     String @db.LongText
+  forumIds Json @default("[]")
+  actions  Json
+
+  @@map("mod_saved_actions")
+}
+
+// ─── Profil, social, VIP (etapa 3, specul etapei §4) ─────────────────────────
+
+enum ProfileFieldType {
+  TEXT
+  TEXTAREA
+  URL
+  NUMBER
+  SELECT
+  /// Etapa 5: select cu o imagine pe opțiune (ex. „Armă favorită”).
+  IMAGE_SELECT
+  /// Profil gaming v2: alegerea unui server al comunității (aplicația Servere); valoarea e numele serverului.
+  SERVER_SELECT
+}
+
+/// Un grup de câmpuri de profil (ACP → Membri → Profiluri), cu textul de ajutor din formularul „Editează profilul”.
+model ProfileFieldGroup {
+  id       Int     @id @default(autoincrement())
+  key      String @db.VarChar(191)  @unique
+  label    String @db.LongText
+  helper   String @db.LongText  @default("")
+  icon     String? @db.LongText
+  position Int     @default(0)
+
+  fields ProfileField[]
+
+  @@map("profile_field_groups")
+}
+
+/// Tabul în care apare câmpul pe profil.
+enum ProfileFieldSection {
+  ABOUT
+  GAMES
+}
+
+enum FieldVisibility {
+  PUBLIC
+  MEMBERS
+  STAFF
+}
+
+/// Câmp custom de profil, definit în ACP → Membri → Setări membri → Profiluri.
+model ProfileField {
+  id            Int                 @id @default(autoincrement())
+  key           String @db.VarChar(191)              @unique
+  label         String @db.LongText
+  type          ProfileFieldType    @default(TEXT)
+  options       Json    @default("[]")
+  section       ProfileFieldSection @default(ABOUT)
+  required      Boolean             @default(false)
+  maxLength     Int                 @default(200)
+  visibility    FieldVisibility     @default(PUBLIC)
+  showOnCard    Boolean             @default(false)
+  position      Int                 @default(0)
+  /// Etapa 5: iconița, afișarea în postbit și imaginile opțiunilor (`IMAGE_SELECT`: opțiune → URL public).
+  icon          String? @db.LongText
+  showInPostbit Boolean             @default(false)
+  optionImages  Json                @default("{}")
+  /// Profil gaming v2: grupul câmpului, textul de ajutor și, la câmpurile de contact, adresa construită din handle
+  /// (`https://twitch.tv/{handle}`): membrul scrie doar handle-ul.
+  groupId       Int?
+  helper        String @db.LongText              @default("")
+  linkTemplate  String? @db.LongText
+
+  group  ProfileFieldGroup?  @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  values ProfileFieldValue[]
+
+  @@map("profile_fields")
+}
+
+model ProfileFieldValue {
+  userId  String @db.VarChar(191)
+  fieldId Int
+  /// Textul simplu (postbit, card, căutare); la câmpurile „Text lung” e textul documentului de mai jos.
+  value   String @db.LongText
+  /// Câmpurile „Text lung” (`TEXTAREA`) formatate cu editorul: documentul și HTML-ul randat de server la salvare.
+  /// Lipsă (valorile vechi) = textul `value` se afișează ca paragrafe (conversie la citire).
+  json    Json?
+  html    String @db.LongText @default("")
+
+  user  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  field ProfileField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@id([userId, fieldId])
+  @@index([fieldId])
+  @@map("profile_field_values")
+}
+
+/// Un status pe peretele unui profil. `parentId` = răspuns (un singur nivel).
+model StatusUpdate {
+  id            Int               @id @default(autoincrement())
+  profileUserId String @db.VarChar(191)
+  authorId      String? @db.VarChar(191)
+  parentId      Int?
+  contentJson   Json
+  contentHtml   String @db.LongText
+  visibility    ContentVisibility @default(VISIBLE)
+  repliesCount  Int               @default(0)
+  ip            String? @db.LongText
+  createdAt     DateTime          @default(now())
+
+  profileUser User           @relation("StatusProfile", fields: [profileUserId], references: [id], onDelete: Cascade)
+  author      User?          @relation("StatusAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  parent      StatusUpdate?  @relation("StatusReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies     StatusUpdate[] @relation("StatusReplies")
+
+  @@index([profileUserId, parentId, createdAt])
+  /// Fluxul de activitate: statusurile noi de pe toate profilurile.
+  @@index([createdAt(sort: Desc), id(sort: Desc)])
+  @@map("status_updates")
+}
+
+model UserIgnore {
+  userId    String @db.VarChar(191)
+  ignoredId String @db.VarChar(191)
+  posts     Boolean  @default(true)
+  messages  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  user    User @relation("IgnoreOwner", fields: [userId], references: [id], onDelete: Cascade)
+  ignored User @relation("IgnoreTarget", fields: [ignoredId], references: [id], onDelete: Cascade)
+
+  @@id([userId, ignoredId])
+  @@index([ignoredId])
+  @@map("user_ignores")
+}
+
+/// Conversație privată cu mai mulți participanți. `lastMessageId` nu are cheie străină (evită ciclul).
+model Conversation {
+  id            Int      @id @default(autoincrement())
+  title         String @db.LongText
+  starterId     String? @db.LongText
+  lastMessageId Int?
+  lastMessageAt DateTime @default(now())
+  messagesCount Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  participants ConversationParticipant[]
+  messages     ConversationMessage[]
+
+  @@map("conversations")
+}
+
+/// `leftAt` setat = a părăsit conversația (nu o mai vede).
+model ConversationParticipant {
+  conversationId    Int
+  userId            String @db.VarChar(191)
+  joinedAt          DateTime  @default(now())
+  leftAt            DateTime?
+  lastReadMessageId Int       @default(0)
+  invitedById       String? @db.LongText
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+  @@index([userId, leftAt])
+  @@map("conversation_participants")
+}
+
+model ConversationMessage {
+  id             Int       @id @default(autoincrement())
+  conversationId Int
+  authorId       String? @db.VarChar(191)
+  contentJson    Json
+  contentHtml    String @db.LongText
+  editedAt       DateTime?
+  ip             String? @db.LongText
+  createdAt      DateTime  @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  author       User?        @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([conversationId, id])
+  @@map("conversation_messages")
+}
+
+/// Rang: pragurile null nu se cer. Se acordă cel mai înalt rang (după `position`) cu pragurile atinse: toate (`match`
+/// = `all`) sau măcar unul (`any`), inclusiv criteriile aplicațiilor (`criteria`: `[{ metric, min }]`, ex. orele jucate).
+model Rank {
+  id            Int     @id @default(autoincrement())
+  name          String @db.LongText
+  icon          String? @db.LongText
+  minPosts      Int?
+  minPoints     Int?
+  minReputation Int?
+  position      Int     @default(0)
+
+  /// Ranguri moderne (Realizări v2): emblema pe trepte (bronz → legendă), desenată cu insignele GCS sau încărcată.
+  emblemTier        String? @db.LongText
+  emblemShape       String? @db.LongText
+  emblemIcon        String? @db.LongText
+  color             String? @db.LongText
+  imageAttachmentId String? @db.LongText
+  /// Animație discretă a emblemei (rangurile de vârf; oprită la „mișcare redusă”).
+  animated          Boolean @default(false)
+  match             String @db.LongText  @default("all")
+  criteria          Json    @default("[]")
+  /// Avantajele rangului: un grup secundar, un badge și un stil de nume (date la urcare, retrase la pierderea rangului).
+  perkGroupId       Int?
+  perkBadgeId       Int?
+  perkNameStyleId   Int?
+
+  users         User[]
+  perkGroup     Group?     @relation("RankPerkGroup", fields: [perkGroupId], references: [id], onDelete: SetNull)
+  perkBadge     Badge?     @relation("RankPerkBadge", fields: [perkBadgeId], references: [id], onDelete: SetNull)
+  perkNameStyle NameStyle? @relation("RankPerkNameStyle", fields: [perkNameStyleId], references: [id], onDelete: SetNull)
+
+  @@map("ranks")
+}
+
+/// Badge: insignă desenată (specul 2026-10-07-insigne-grafice) sau imagine proprie. `color` = emailul/panglica
+/// insignei (categoria); `artShape`/`artTier`/`artIcon` = forma, metalul și iconița (null = implicite); `symbol` =
+/// textul insignei (1–3 caractere) când nu are iconiță. `manual` = acordat doar de staff.
+model Badge {
+  id                Int     @id @default(autoincrement())
+  key               String @db.VarChar(191)  @unique
+  name              String @db.LongText
+  description       String @db.LongText  @default("")
+  symbol            String? @db.LongText
+  imageAttachmentId String? @db.LongText
+  color             String @db.LongText
+  artShape          String? @db.LongText
+  artTier           String? @db.LongText
+  artIcon           String? @db.LongText
+  manual            Boolean @default(false)
+  points            Int     @default(0)
+  position          Int     @default(0)
+
+  users     UserBadge[]
+  rules     AchievementRule[]
+  rankPerks Rank[]            @relation("RankPerkBadge")
+
+  @@map("badges")
+}
+
+model UserBadge {
+  id          Int      @id @default(autoincrement())
+  userId      String @db.VarChar(191)
+  badgeId     Int
+  awardedById String? @db.LongText
+  reason      String? @db.LongText
+  createdAt   DateTime @default(now())
+  /// Realizări v2: ultima acordare și de câte ori (insignele pe perioadă, ex. „Câștigătorul zilei”, se câștigă de mai
+  /// multe ori). Widget-ul „Ultimele realizări” ordonează după ea.
+  lastAwardedAt DateTime @default(now())
+  timesAwarded  Int      @default(1)
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@index([badgeId])
+  @@index([lastAwardedAt])
+  @@map("user_badges")
+}
+
+/// Ce declanșează o regulă. `EACH_*` dau puncte la fiecare eveniment; restul au prag și se acordă o singură dată.
+enum AchievementTrigger {
+  POSTS_COUNT
+  REPUTATION
+  POINTS
+  MEMBER_DAYS
+  SOLUTIONS_COUNT
+  IS_VIP
+  EACH_POST
+  EACH_REACTION_RECEIVED
+  EACH_SOLUTION
+  /// Realizări v2: o regulă din constructor („Când → Și → Atunci”) pe un eveniment din registrul aplicațiilor.
+  EVENT
+}
+
+model AchievementRule {
+  id        Int                @id @default(autoincrement())
+  key       String? @db.VarChar(191)            @unique // regulile din seed; null pentru cele create în ACP
+  name      String @db.LongText
+  trigger   AchievementTrigger
+  threshold Int                @default(0)
+  points    Int                @default(0)
+  badgeId   Int?
+  enabled   Boolean            @default(true)
+  position  Int                @default(0)
+  /// Realizări v2 (`trigger` = `EVENT`): evenimentul (ex. `forums.post`), condițiile (`{ mode, n, forumIds, serverIds,
+  /// groupIds, windowDays }`) și recompensele (`{ actor, other }`; vezi `profile/achievementRules.ts`).
+  event      String? @db.VarChar(191)
+  conditions Json     @default("{}")
+  rewards    Json     @default("{}")
+  createdAt  DateTime @default(now())
+
+  badge       Badge?                  @relation(fields: [badgeId], references: [id], onDelete: SetNull)
+  log         AchievementLog[]
+  occurrences AchievementOccurrence[]
+
+  @@index([event])
+  @@map("achievement_rules")
+}
+
+/// Realizări v2: o apariție numărată a unui eveniment pentru o regulă (o singură dată pe `ref`, ex. `post:120`), pentru
+/// „a n-a oară”, „la fiecare n” și fereastra de timp.
+model AchievementOccurrence {
+  id        Int      @id @default(autoincrement())
+  ruleId    Int
+  userId    String @db.VarChar(191)
+  ref       String @db.VarChar(191)
+  createdAt DateTime @default(now())
+
+  rule AchievementRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  user User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([ruleId, userId, ref])
+  @@index([ruleId, userId, createdAt])
+  @@map("achievement_occurrences")
+}
+
+/// Ce s-a acordat prin reguli. `uniqueKey` (ex. `rule:3`, `post:120`) împiedică acordarea dublă.
+model AchievementLog {
+  id         Int      @id @default(autoincrement())
+  userId     String @db.VarChar(191)
+  ruleId     Int?
+  points     Int      @default(0)
+  uniqueKey  String? @db.VarChar(191)
+  contentRef String? @db.LongText
+  createdAt  DateTime @default(now())
+
+  user User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rule AchievementRule? @relation(fields: [ruleId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, uniqueKey])
+  @@index([userId, createdAt])
+  /// Clasamentul pe perioade: XP-ul primit recent.
+  @@index([createdAt])
+  @@map("achievement_log")
+}
+
+/// Promovare automată: din unul dintre `fromGroupIds`, cu toate pragurile completate atinse → `toGroupId`.
+model GroupPromotion {
+  id            Int     @id @default(autoincrement())
+  name          String @db.LongText
+  fromGroupIds  Json @default("[]")
+  toGroupId     Int
+  asPrimary     Boolean @default(true)
+  minPosts      Int?
+  minDays       Int?
+  minReputation Int?
+  minPoints     Int?
+  enabled       Boolean @default(true)
+  position      Int     @default(0)
+
+  toGroup Group @relation(fields: [toGroupId], references: [id], onDelete: Cascade)
+
+  @@map("group_promotions")
+}
+
+enum VipSource {
+  MANUAL
+  STORE
+}
+
+enum VipStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+enum VipAction {
+  GRANT
+  EXTEND
+  REVOKE
+  EXPIRE
+}
+
+/// Abonament VIP. `expiresAt` null = permanent. Cel mult unul `ACTIVE` pe user (index unic parțial, în migrație).
+model VipSubscription {
+  id          Int       @id @default(autoincrement())
+  userId      String @db.VarChar(191)
+  groupId     Int
+  startsAt    DateTime  @default(now())
+  expiresAt   DateTime?
+  source      VipSource @default(MANUAL)
+  grantedById String? @db.LongText
+  status      VipStatus @default(ACTIVE)
+  warnedAt    DateTime?
+  madePrimary Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([status, expiresAt])
+  @@index([userId, status])
+  @@map("vip_subscriptions")
+}
+
+model VipLog {
+  id        Int       @id @default(autoincrement())
+  userId    String @db.VarChar(191)
+  groupId   Int?
+  action    VipAction
+  expiresAt DateTime?
+  actorId   String? @db.LongText
+  note      String? @db.LongText
+  createdAt DateTime  @default(now())
+
+  group Group? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@map("vip_log")
+}
+
+/// Stil de nume ales de user (clasa `gcs-name--{key}`; cheile încep cu `ns_`). Disponibil pentru toți, pe grupuri sau pe badge-uri.
+model NameStyle {
+  id        Int     @id @default(autoincrement())
+  key       String @db.VarChar(191)  @unique
+  name      String @db.LongText
+  style     Json
+  allGroups Boolean @default(false)
+  groupIds  Json @default("[]")
+  badgeIds  Json @default("[]")
+  position  Int     @default(0)
+
+  users     User[]
+  rankPerks Rank[]  @relation("RankPerkNameStyle")
+
+  @@map("name_styles")
+}
+
+enum FrameKind {
+  CSS
+  IMAGE
+}
+
+/// Ramă de avatar (clasa `gcs-avatarFrame--{key}`): CSS (conic-gradient) sau imagine.
+model AvatarFrame {
+  id                Int       @id @default(autoincrement())
+  key               String @db.VarChar(191)    @unique
+  name              String @db.LongText
+  kind              FrameKind @default(CSS)
+  style             Json?
+  imageAttachmentId String? @db.LongText
+  allGroups         Boolean   @default(false)
+  groupIds          Json @default("[]")
+  badgeIds          Json @default("[]")
+  position          Int       @default(0)
+
+  users User[]
+
+  @@map("avatar_frames")
+}
+
+// ─── Timp real (etapa 4, specul etapei §4) ───────────────────────────────────
+
+/**
+ * O notificare. Notificările necitite de același fel, pe același conținut, se grupează (`groupKey`; index unic
+ * parțial `WHERE readAt IS NULL`, în migrație): `count` crește, iar `actorIds` ține ultimii actori.
+ *
+ * Notificări v2: `site` = apare în clopoțel și pe pagina notificărilor (una trimisă doar ca toast / email / push e
+ * creată deja citită, fără grupare); `important` = a trecut și prin canalele „doar important”; `channels` = canalele pe
+ * care a plecat (`toast`, `push`, `email`: modul); `clickedAt` = deschisă din clopoțel, pagină, toast, email sau push.
+ */
+model Notification {
+  id         Int       @id @default(autoincrement())
+  userId     String @db.VarChar(191)
+  type       String @db.LongText
+  targetType String @db.LongText
+  targetId   String @db.LongText
+  groupKey   String @db.LongText
+  actorIds   Json    @default("[]")
+  count      Int       @default(1)
+  data       Json
+  readAt     DateTime?
+  emailedAt  DateTime?
+  site       Boolean   @default(true)
+  important  Boolean   @default(false)
+  channels   Json      @default("{}")
+  clickedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, updatedAt])
+  @@index([readAt, emailedAt])
+  @@index([updatedAt])
+  @@map("notifications")
+}
+
+/**
+ * Alegerile unui membru pentru un tip (Notificări v2): doar canalele schimbate față de valorile implicite,
+ * `{ site, toast, email, push: "on" | "important" | "off", emailMode: "instant" | "daily" | "weekly" }`.
+ */
+model NotificationPreference {
+  userId    String @db.VarChar(191)
+  type      String @db.VarChar(191)
+  channels  Json     @default("{}")
+  updatedAt DateTime @default(now()) @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, type])
+  @@map("notification_preferences")
+}
+
+/**
+ * Valorile implicite pe tip (ACP → Membri → Setări membri → Notificări): canalele (aceeași formă ca la membri) și
+ * blocările (`{ <canal>: "forced" | "disabled" }`). Un tip fără rând folosește valorile declarate de modulul lui.
+ */
+model NotificationDefault {
+  type      String @db.VarChar(191)   @id
+  channels  Json     @default("{}")
+  locks     Json     @default("{}")
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@map("notification_defaults")
+}
+
+/**
+ * Livrarea notificărilor pentru un membru (Notificări v2): „Oprește toate emailurile” (din ACP, cu cine și când) și
+ * ultima trimitere a rezumatului săptămânal „Ce ai ratat”.
+ */
+model NotificationMember {
+  userId        String @db.VarChar(191)    @id
+  emailsOff     Boolean   @default(false)
+  emailsOffAt   DateTime?
+  emailsOffById String? @db.LongText
+  weeklySentAt  DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_members")
+}
+
+/**
+ * Un abonament web push (un browser / dispozitiv al membrului). `endpoint` e adresa serviciului de push al browserului;
+ * `p256dh` și `auth` sunt cheile publice ale abonamentului (criptarea mesajului). După prea multe eșecuri se șterge.
+ */
+model PushSubscription {
+  id         Int       @id @default(autoincrement())
+  userId     String @db.VarChar(191)
+  endpoint   String @db.VarChar(191)    @unique
+  p256dh     String @db.LongText
+  auth       String @db.LongText
+  userAgent  String @db.LongText    @default("")
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  failures   Int       @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}
+
+/** Statisticile notificărilor pe zi, tip și canal (ACP): câte au plecat și câte au fost deschise. */
+model NotificationStat {
+  day     DateTime @db.Date
+  type    String @db.VarChar(191)
+  channel String @db.VarChar(191)
+  sent    Int      @default(0)
+  clicked Int      @default(0)
+
+  @@id([day, type, channel])
+  @@map("notification_stats")
+}
+
+/**
+ * Un canal de chat. Permisiunile sunt în matricea pe container (`containerType = "chat"`, id = cheia).
+ */
+model ChatChannel {
+  id              Int          @id @default(autoincrement())
+  key             String @db.VarChar(191)       @unique
+  name            String @db.LongText
+  description     String @db.LongText       @default("")
+  position        Int          @default(0)
+  slowModeSeconds Int          @default(0)
+  retentionDays   Int          @default(7)
+  enabled         Boolean      @default(true)
+  showOnHome      Boolean      @default(false)
+  /// Etapa 5: camerele private (cu invitați) și anunțul fixat.
+  type            ChatRoomType @default(PUBLIC)
+  ownerId         String? @db.VarChar(191)
+  pinnedMessageId Int?
+  createdAt       DateTime     @default(now())
+
+  messages  ChatMessage[]
+  mutes     ChatMute[]
+  sanctions ChatSanction[]
+  members   ChatRoomMember[]
+  owner     User?            @relation("ChatRoomOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+
+  @@map("chat_channels")
+}
+
+model ChatMessage {
+  id          Int       @id @default(autoincrement())
+  channelId   Int
+  authorId    String? @db.VarChar(191)
+  body        String @db.LongText
+  createdAt   DateTime  @default(now())
+  deletedAt   DateTime?
+  deletedById String? @db.LongText
+  editedAt    DateTime?
+  /// Chat v3: imaginile și mesajele vocale încărcate (`[{ id, kind, width, height }]`); atașamentele sunt `chat.message`.
+  files       Json      @default("[]")
+  /// Răspunsul citat (Chat Pro): mesajul la care răspunde; dispare odată cu el.
+  replyToId   Int?
+  /// Datele extensiilor (Chat Pro): `{ first?, bot? }`; chat-ul standard le ignoră.
+  meta        Json?
+  /// Moderarea: mesajul ascuns de staff (membrii nu-l mai văd; staff-ul îl vede estompat, cu „ascuns de X”).
+  hiddenAt    DateTime?
+  hiddenById  String? @db.LongText
+
+  channel   ChatChannel           @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  author    User?                 @relation("ChatAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  reactions ChatMessageReaction[]
+  replyTo   ChatMessage?          @relation("ChatReply", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies   ChatMessage[]         @relation("ChatReply")
+
+  @@index([channelId, id])
+  @@index([createdAt])
+  /// Istoricul Chat Pro (căutarea după membru) și ștergerea / unirea conturilor.
+  @@index([authorId, id])
+  @@map("chat_messages")
+}
+
+/**
+ * Mute în chat: pe un canal sau pe toate (`channelId` null); `until` null = permanent.
+ */
+model ChatMute {
+  id          Int       @id @default(autoincrement())
+  userId      String @db.VarChar(191)
+  channelId   Int?
+  until       DateTime?
+  reason      String @db.LongText    @default("")
+  createdById String? @db.LongText
+  createdAt   DateTime  @default(now())
+
+  user    User         @relation("ChatMuted", fields: [userId], references: [id], onDelete: Cascade)
+  channel ChatChannel? @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@index([userId, until])
+  @@map("chat_mutes")
+}
+
+/// Felul unei sancțiuni de chat (mute-ul are tabelul lui, `chat_mutes`).
+enum ChatSanctionKind {
+  /// Scos dintr-o cameră (`channelId`) sau din tot chat-ul, pentru N minute.
+  KICK
+  /// Ban doar din chat (toate camerele), temporar sau permanent.
+  BAN
+  /// Slow mode personal: cel mult un mesaj la `seconds` secunde.
+  SLOW
+}
+
+/**
+ * O sancțiune de chat (kick, ban din chat, slow mode personal): pe o cameră sau pe tot chat-ul (`channelId` null);
+ * `until` null = permanentă. Ridicată din ACP sau la expirare (jobul de moderare): `liftedAt`.
+ */
+model ChatSanction {
+  id          Int              @id @default(autoincrement())
+  kind        ChatSanctionKind
+  userId      String @db.VarChar(191)
+  channelId   Int?
+  until       DateTime?
+  seconds     Int              @default(0)
+  reason      String @db.LongText           @default("")
+  createdById String? @db.LongText
+  createdAt   DateTime         @default(now())
+  liftedAt    DateTime?
+  liftedById  String? @db.LongText
+
+  user    User         @relation("ChatSanctioned", fields: [userId], references: [id], onDelete: Cascade)
+  channel ChatChannel? @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@index([userId, kind])
+  @@index([until])
+  @@map("chat_sanctions")
+}
+
+/**
+ * Jurnalul moderării chat-ului (ACP → Chat → Moderare): cine, ce, cui, motivul, mesajul și, pentru mute / kick / ban,
+ * sancțiunea (`ref`: `mute:<id>` sau `sanction:<id>`) care se poate anula.
+ */
+model ChatModLog {
+  id         Int       @id @default(autoincrement())
+  actorId    String? @db.VarChar(191)
+  action     String @db.LongText
+  targetId   String? @db.VarChar(191)
+  channelKey String? @db.LongText
+  messageId  Int?
+  reason     String @db.LongText    @default("")
+  data       Json?
+  ref        String? @db.LongText
+  undoneAt   DateTime?
+  undoneById String? @db.LongText
+  createdAt  DateTime  @default(now())
+
+  actor  User? @relation("ChatModActor", fields: [actorId], references: [id], onDelete: SetNull)
+  target User? @relation("ChatModTarget", fields: [targetId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([targetId])
+  @@map("chat_mod_log")
+}
+
+/**
+ * Accesul de moderator în chat dat unui membru (din ACP sau cu `/acces`): drepturile (`chat.<drept>`), camerele
+ * (goale = toate) și expirarea. Drepturile efective = permisiunile grupurilor SAU un acces activ.
+ */
+model ChatModeratorGrant {
+  id          Int       @id @default(autoincrement())
+  userId      String @db.VarChar(191)    @unique
+  rights      Json    @default("[]")
+  rooms       Json    @default("[]")
+  expiresAt   DateTime?
+  grantedById String? @db.VarChar(191)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user      User  @relation("ChatModGrant", fields: [userId], references: [id], onDelete: Cascade)
+  grantedBy User? @relation("ChatModGrantedBy", fields: [grantedById], references: [id], onDelete: SetNull)
+
+  @@index([expiresAt])
+  @@map("chat_moderator_grants")
+}
+
+// ─── UI modern și personalizare (etapa 5, specul etapei §4) ──────────────────
+
+enum ChatRoomType {
+  PUBLIC
+  PRIVATE
+}
+
+/// Permisiuni individuale: o valoare pentru un singur membru, peste cea a grupurilor lui.
+model UserPermission {
+  userId    String @db.VarChar(191)
+  key       String @db.VarChar(191)
+  value     Json
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, key])
+  @@map("user_permissions")
+}
+
+/// Aplicațiile opționale (Chat, VIP; în etapa 6 Clanuri, Servere), activate sau dezactivate din ACP.
+model App {
+  key       String @db.VarChar(191)   @id
+  enabled   Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+
+  @@map("apps")
+}
+
+/// Meniul din header. `label`: { "ro": "...", "en": "..." } sau { "key": "cheie de traducere" } pentru cele implicite.
+model NavItem {
+  id          Int     @id @default(autoincrement())
+  parentId    Int?
+  position    Int     @default(0)
+  label       Json
+  /// Descrierea de un rând din mega meniu: { "ro": "...", "en": "..." } (null = cea implicită, după cheia etichetei).
+  description Json?
+  /// Insigna fixă din mega meniu (ex. „NOU”); insignele live (online, live) vin din aplicații.
+  badge       String? @db.LongText
+  icon        String? @db.LongText
+  href        String? @db.LongText
+  appKey      String? @db.LongText
+  groups      Json @default("[]")
+  newTab      Boolean @default(false)
+  enabled     Boolean @default(true)
+  /// Manager meniu v2: tipul itemului — `link` (link propriu), `app` (o pagină a unei aplicații), `dropdown` (grup cu
+  /// subitemi), `separator` (linie între subitemi).
+  kind        String @db.LongText  @default("link")
+  /// Cine îl vede (pe lângă grupuri): `all`, `guests` (doar vizitatorii), `members` (doar membrii autentificați).
+  audience    String @db.LongText  @default("all")
+  /// Insigna live (un contor al unei aplicații, ex. `online`), în locul insignei fixe.
+  counter     String? @db.LongText
+  /// Stilul de evidențiere (`accent`, `glow`); `null` = normal.
+  highlight   String? @db.LongText
+
+  parent   NavItem?  @relation("NavTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children NavItem[] @relation("NavTree")
+
+  @@index([parentId, position])
+  @@map("nav_items")
+}
+
+/// Manager meniu v2: ciorna meniului (arborele nepublicat). „Publică” o scrie în `nav_items`, „Renunță” o șterge.
+model NavDraft {
+  id          Int      @id @default(1)
+  items       Json
+  updatedById String? @db.LongText
+  updatedAt   DateTime @updatedAt
+
+  @@map("nav_drafts")
+}
+
+/// O temă: tokenurile (dark + light), fonturile, raza, lățimea, logo, favicon; `draft` = modificările nepublicate.
+/// CSS-ul extra stă în fișierele temei (`theme_css_files`), iar markup-ul modificat în `theme_templates`.
+model Theme {
+  id         Int      @id @default(autoincrement())
+  key        String @db.VarChar(191)   @unique
+  name       String @db.LongText
+  isDefault  Boolean  @default(false)
+  enabled    Boolean  @default(true)
+  settings   Json     @default("{}")
+  logoUrl    String? @db.LongText
+  faviconUrl String? @db.LongText
+  draft      Json?
+  version    Int      @default(1)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  cssFiles         ThemeCssFile[]
+  templates        ThemeTemplate[]
+  templateVersions ThemeTemplateVersion[]
+
+  @@map("themes")
+}
+
+/// Un fișier CSS al unei teme (ACP → Aspect → CSS), compilat după setări în ordinea `position`. `content` e deja
+/// sanitizat. `custom.css` e și CSS-ul din editorul vizual (nu se poate redenumi sau șterge).
+model ThemeCssFile {
+  id        Int      @id @default(autoincrement())
+  themeId   Int
+  name      String @db.VarChar(191)
+  position  Int      @default(0)
+  content   String @db.LongText   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  theme    Theme             @relation(fields: [themeId], references: [id], onDelete: Cascade)
+  versions ThemeCssVersion[]
+
+  @@unique([themeId, name])
+  @@index([themeId, position])
+  @@map("theme_css_files")
+}
+
+/// O versiune a unui fișier CSS (`create`, `save`, `restore`, `publish`, `migrate`, `import`); prima e originalul.
+model ThemeCssVersion {
+  id         Int      @id @default(autoincrement())
+  fileId     Int
+  content    String @db.LongText
+  action     String @db.LongText
+  authorId   String? @db.LongText
+  authorName String @db.LongText   @default("")
+  createdAt  DateTime @default(now())
+
+  file ThemeCssFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@index([fileId, id])
+  @@map("theme_css_versions")
+}
+
+/// Șablonul modificat al unei teme (ACP → Aspect → Șabloane). Fără rând, se folosește șablonul implicit din cod.
+/// `baseVersion`/`baseSource`: șablonul implicit de la care a pornit (o versiune nouă în cod = „necesită revizuire”).
+model ThemeTemplate {
+  id          Int      @id @default(autoincrement())
+  themeId     Int
+  key         String @db.VarChar(191)
+  source      String @db.LongText
+  baseVersion Int
+  baseSource  String @db.LongText
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  theme Theme @relation(fields: [themeId], references: [id], onDelete: Cascade)
+
+  @@unique([themeId, key])
+  @@map("theme_templates")
+}
+
+/// Istoricul unui șablon pe o temă (`save`, `restore`, `revert`, `import`); rămâne și după „Revino la original”.
+model ThemeTemplateVersion {
+  id         Int      @id @default(autoincrement())
+  themeId    Int
+  key        String @db.VarChar(191)
+  source     String @db.LongText
+  action     String @db.LongText
+  authorId   String? @db.LongText
+  authorName String @db.LongText   @default("")
+  createdAt  DateTime @default(now())
+
+  theme Theme @relation(fields: [themeId], references: [id], onDelete: Cascade)
+
+  @@index([themeId, key, id])
+  @@map("theme_template_versions")
+}
+
+/// Un widget pus pe o pagină (`index`, `forum`, `topic`), într-o zonă (`top`, `bottom`, `sidebar`). `groups` gol = toți.
+model WidgetPlacement {
+  id       Int    @id @default(autoincrement())
+  page     String @db.VarChar(191)
+  zone     String @db.VarChar(191)
+  position Int    @default(0)
+  type     String @db.LongText
+  config   Json   @default("{}")
+  groups   Json @default("[]")
+
+  @@index([page, zone, position])
+  @@map("widget_placements")
+}
+
+/// Membrii unei camere private de chat.
+model ChatRoomMember {
+  channelId   Int
+  userId      String @db.VarChar(191)
+  invitedById String? @db.LongText
+  joinedAt    DateTime @default(now())
+
+  channel ChatChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user    User        @relation("ChatRoomMember", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([channelId, userId])
+  @@index([userId])
+  @@map("chat_room_members")
+}
+
+/// O reacție la un mesaj de chat (unică pe user și pe reacție).
+model ChatMessageReaction {
+  messageId  Int
+  userId     String @db.VarChar(191)
+  reactionId Int
+  createdAt  DateTime @default(now())
+
+  message ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([messageId, userId, reactionId])
+  @@map("chat_message_reactions")
+}
+
+/// Anunțurile globale din chat (în toate camerele), până la `expiresAt`.
+model ChatAnnouncement {
+  id          Int       @id @default(autoincrement())
+  body        String @db.LongText
+  createdById String? @db.LongText
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime?
+
+  @@index([expiresAt])
+  @@map("chat_announcements")
+}
+
+// ─── Chat Pro (aplicația premium, specul 2026-10-10-chat-pro) ────────────────
+
+/// Profilul de chat al unui membru: preferințele (JSON normalizat de modul), porecla, insignele alese, favoritele.
+model ChatProProfile {
+  userId             String @db.VarChar(191)   @id
+  prefs              Json     @default("{}")
+  /// Porecla din chat (gol = numele de pe forum); unică după normalizare, nu poate fi numele altui membru.
+  nickname           String? @db.LongText
+  nicknameNormalized String? @db.VarChar(191)  @unique
+  /// Cel mult 2 badge-uri obținute, afișate lângă nume.
+  badgeIds           Json @default("[]")
+  /// Emoticoanele favorite (codurile, fără `:`) și GIF-urile favorite (`[{ id, url, preview, width, height }]`).
+  emoteFavorites     Json    @default("[]")
+  gifFavorites       Json     @default("[]")
+  updatedAt          DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("chat_pro_profiles")
+}
+
+/// Mesajele numărate ale unui membru într-o zi (`day` = YYYY-MM-DD în fusul orar al site-ului): clasamentul și statisticile.
+model ChatProDailyStat {
+  userId   String @db.VarChar(191)
+  day      String @db.VarChar(191)
+  messages Int    @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, day])
+  @@index([day])
+  @@map("chat_pro_daily_stats")
+}
+
+/// Timpul online al unui membru într-o zi (`day` = YYYY-MM-DD în fusul orar al site-ului), în secunde: totalurile
+/// adunate din semnele de prezență (specul 2026-10-10-hero-cockpit §4).
+model MemberOnlineDay {
+  userId  String @db.VarChar(191)
+  day     String @db.VarChar(191)
+  seconds Int    @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, day])
+  @@index([day])
+  @@map("member_online_days")
+}
+
+/// Câștigătorul unei perioade a clasamentului (`periodStart` – `periodEnd`, zile YYYY-MM-DD, inclusiv).
+model ChatProWinner {
+  id          Int      @id @default(autoincrement())
+  periodStart String @db.VarChar(191)   @unique
+  periodEnd   String @db.LongText
+  userId      String? @db.VarChar(191)
+  messages    Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("chat_pro_winners")
+}
+
+/// Un element al barei de anunțuri de deasupra conversației (text, buton opțional, program, grupuri).
+model ChatProBarItem {
+  id        Int       @id @default(autoincrement())
+  text      String @db.LongText
+  ctaLabel  String @db.LongText    @default("")
+  ctaUrl    String @db.LongText    @default("")
+  startsAt  DateTime?
+  endsAt    DateTime?
+  /// Grupurile care îl văd (gol = toți).
+  groupIds  Json @default("[]")
+  enabled   Boolean   @default(true)
+  position  Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("chat_pro_bar_items")
+}
+
+/// Un pachet (categorie) de emoticoane încărcate de admini.
+model ChatEmotePack {
+  id        Int      @id @default(autoincrement())
+  name      String @db.LongText
+  position  Int      @default(0)
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  emotes ChatEmote[]
+
+  @@map("chat_emote_packs")
+}
+
+/// Un emoticon: codul `:cod:` (unic), imaginea (atașamentul `chat_pro.emote`) și dimensiunile ei.
+model ChatEmote {
+  id           Int      @id @default(autoincrement())
+  packId       Int
+  code         String @db.VarChar(191)   @unique
+  attachmentId String @db.LongText
+  width        Int
+  height       Int
+  animated     Boolean  @default(false)
+  position     Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  pack ChatEmotePack @relation(fields: [packId], references: [id], onDelete: Cascade)
+
+  @@index([packId, position])
+  @@map("chat_emotes")
+}
+
+/// Cache-ul traducerilor de conținut: `hash` = sha256(provider + limba țintă + text).
+model TranslationCache {
+  hash      String @db.VarChar(191)   @id
+  target    String @db.LongText
+  text      String @db.LongText
+  provider  String @db.LongText
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("translation_cache")
+}
+
+// ─── Pluginuri (etapa 6 §2; designul: docs/superpowers/specs/2026-10-06-pluginuri.md) ───
+
+/// Un plugin instalat. Arhiva (`package`) e sursa de adevăr: fiecare proces o dezarhivează în `GCS_PLUGINS_DIR`.
+/// `status`: `installed` sau `removed_kept_data` (dezinstalat cu păstrarea datelor: schema, rolul DB și setările).
+/// `dbRole` / `dbPassword`: rolul PostgreSQL dedicat, cu care rulează SQL-ul pluginului (doar în schema lui).
+model Plugin {
+  key                 String @db.VarChar(191)                  @id
+  name                String @db.LongText
+  version             String @db.LongText
+  enabled             Boolean                 @default(false)
+  status              String @db.LongText                  @default("installed")
+  signed              Boolean                 @default(false)
+  signatureKeyId      String? @db.LongText
+  capabilities        Json    @default("[]")
+  manifest            Json
+  settings            Json                    @default("{}")
+  package             Bytes?
+  packageSha256       String? @db.LongText
+  dbRole              String? @db.LongText
+  dbPassword          String? @db.LongText
+  migrations          Json    @default("[]")
+  /// `admin`, `auto` (eșecuri la rând) sau `cli` (dezactivare din consolă), când `enabled = false`.
+  disabledReason      String? @db.LongText
+  consecutiveFailures Int                     @default(0)
+  lastError           String? @db.LongText
+  lastErrorAt         DateTime?
+  installedAt         DateTime                @default(now())
+  installedById       String? @db.LongText
+  updatedAt           DateTime                @updatedAt
+  hookSettings        PluginHookSetting[]
+  logs                PluginLog[]
+  media               PluginMedia[]
+  appearances         MemberAppearance[]
+  appearanceStyles    PluginAppearanceStyle[]
+
+  @@map("plugins")
+}
+
+/// O arhivă încărcată din ACP, în așteptarea confirmării (ștearsă după o oră).
+model PluginUpload {
+  id        String @db.VarChar(191)   @id @default(cuid())
+  actorId   String? @db.LongText
+  fileName  String @db.LongText
+  data      Bytes
+  sha256    String @db.LongText
+  report    Json
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("plugin_uploads")
+}
+
+/// Jurnalul unui plugin: erorile hook-urilor și mesajele lui (`ctx.log`), ultimele câteva sute.
+model PluginLog {
+  id         Int      @id @default(autoincrement())
+  pluginKey  String @db.VarChar(191)
+  level      String @db.LongText
+  hook       String? @db.LongText
+  message    String @db.LongText
+  durationMs Int?
+  createdAt  DateTime @default(now())
+  plugin     Plugin   @relation(fields: [pluginKey], references: [key], onDelete: Cascade)
+
+  @@index([pluginKey, id])
+  @@map("plugin_logs")
+}
+
+/// ACP → Sistem → Hook-uri: un hook al unui plugin oprit sau cu altă prioritate decât cea din manifest.
+model PluginHookSetting {
+  pluginKey String @db.VarChar(191)
+  hook      String @db.VarChar(191)
+  enabled   Boolean @default(true)
+  priority  Int?
+  plugin    Plugin  @relation(fields: [pluginKey], references: [key], onDelete: Cascade)
+
+  @@id([pluginKey, hook])
+  @@map("plugin_hook_settings")
+}
+
+/// Un fișier media al unui plugin (capabilitatea `media`, Studio VIP): tipul verificat din conținut, imaginile recodate.
+/// `pending` până când pluginul îl păstrează (`ctx.media.keep`); cele nepăstrate se șterg după 6 ore.
+model PluginMedia {
+  id         String @db.VarChar(191)   @id @default(cuid())
+  pluginKey  String @db.VarChar(191)
+  /// `image`, `video` sau `audio`.
+  kind       String @db.LongText
+  mime       String @db.LongText
+  ext        String @db.LongText
+  size       Int
+  width      Int?
+  height     Int?
+  durationMs Int?
+  storageKey String @db.VarChar(191)   @unique
+  /// `pending` sau `kept`.
+  status     String @db.VarChar(191)   @default("pending")
+  uploadedBy String? @db.LongText
+  createdAt  DateTime @default(now())
+  plugin     Plugin   @relation(fields: [pluginKey], references: [key], onDelete: Cascade)
+
+  @@index([pluginKey, status, createdAt])
+  @@map("plugin_media")
+}
+
+/// Un stil CSS scris de un admin în ACP-ul unui plugin cu `appearance` (stil de nume sau de banner). `css` e sursa,
+/// verificată la salvare; nucleul o compilează în `/gcs-names.css`, închisă pe clasa stilului și pe numele membrilor
+/// care l-au ales (`customStyle.ts`).
+model PluginAppearanceStyle {
+  pluginKey String @db.VarChar(191)
+  /// `name` sau `banner`.
+  kind      String @db.VarChar(191)
+  key       String @db.VarChar(191)
+  css       String @db.LongText
+  updatedBy String? @db.LongText
+  updatedAt DateTime @updatedAt
+  plugin    Plugin   @relation(fields: [pluginKey], references: [key], onDelete: Cascade)
+
+  @@id([pluginKey, kind, key])
+  @@map("plugin_appearance_styles")
+}
+
+/// Aspectul unui membru publicat de un plugin (capabilitatea `appearance`): JSON validat de nucleu
+/// (`parseMemberAppearance`), randat în nume, avatare, postbit, hover card și profil.
+model MemberAppearance {
+  pluginKey String @db.VarChar(191)
+  userId    String @db.VarChar(191)
+  data      Json
+  updatedAt DateTime @updatedAt
+  plugin    Plugin   @relation(fields: [pluginKey], references: [key], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([pluginKey, userId])
+  @@index([userId])
+  @@map("member_appearances")
+}
+
+// ─── Importul din altă platformă (specul importului, etapa 6) ────────────────
+
+enum ImportStatus {
+  DRAFT
+  READY
+  QUEUED
+  RUNNING
+  PAUSED
+  CANCELLED
+  FAILED
+  DONE
+}
+
+/// Un import configurat în ACP → Sistem → Conversii. `config` nu conține secrete; `secret` = parola bazei vechi,
+/// criptată (`sealSecret`). `steps`: progresul și checkpoint-ul (cursorul) fiecărui pas.
+model ImportJob {
+  id          String @db.VarChar(191)       @id @default(cuid())
+  /// Schema detectată (`core-schema`, `prefixed-schema`) și cheia hărții de id-uri (schema + host-ul vechi).
+  source      String @db.LongText       @default("")
+  mapKey      String @db.LongText       @default("")
+  status      ImportStatus @default(DRAFT)
+  dryRun      Boolean      @default(false)
+  config      Json         @default("{}")
+  secret      String? @db.LongText
+  detected    Json?
+  steps       Json         @default("[]")
+  currentStep String? @db.LongText
+  /// Cererea de `pause` sau `cancel`, citită de worker între loturi.
+  control     String? @db.LongText
+  error       String? @db.LongText
+  createdById String? @db.LongText
+  heartbeatAt DateTime?
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  logs ImportLog[]
+
+  @@index([status])
+  @@map("import_jobs")
+}
+
+/// Legătura id vechi → id nou, pe tip (`member`, `topic`, `post`…). Rulările de pe aceeași sursă o refolosesc.
+model ImportMap {
+  source   String @db.VarChar(191)
+  type     String @db.VarChar(191)
+  sourceId String @db.VarChar(191)
+  targetId String @db.VarChar(191)
+
+  @@id([source, type, sourceId])
+  @@index([type, targetId])
+  @@map("import_map")
+}
+
+/// Jurnalul unui import (`info`, `warn`, `error`), pe pași.
+model ImportLog {
+  id        Int      @id @default(autoincrement())
+  jobId     String @db.VarChar(191)
+  step      String @db.LongText
+  level     String @db.LongText
+  message   String @db.LongText
+  sourceId  String? @db.LongText
+  createdAt DateTime @default(now())
+
+  job ImportJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId, id])
+  @@map("import_logs")
+}
+
+/// O portare de plugin (ACP → Sistem → Conversii → Portare plugin): arhiva sursă până la conversie, apoi raportul,
+/// rezultatul (`.zip` cu folderul generat, `ORIGINAL/` și `PORTING.md`) și pachetul instalabil. Ștearsă după o zi.
+model PluginPort {
+  id          String @db.VarChar(191)    @id @default(cuid())
+  actorId     String? @db.LongText
+  fileName    String @db.LongText
+  /// Formatul detectat: `app-json`, `plugin-xml` sau `addon-json`.
+  format      String @db.LongText
+  sourceName  String @db.LongText
+  sha256      String @db.LongText
+  /// Metadatele, licența și numerele pe tipuri (fără cod), afișate înaintea confirmării.
+  analysis    Json
+  /// Arhiva încărcată, ștearsă după conversie.
+  source      Bytes?
+  /// Temeiul confirmării dreptului de a modifica și folosi pluginul: `author`, `consent` sau `license`.
+  rightsBasis String? @db.LongText
+  confirmedAt DateTime?
+  pluginKey   String? @db.LongText
+  report      Json?
+  result      Bytes?
+  package     Bytes?
+  createdAt   DateTime  @default(now())
+
+  @@index([createdAt])
+  @@map("plugin_ports")
+}
+
+// ─── Servere de joc (etapa Gaming, specul 2026-10-07-servere) ─────────────────
+
+/// Un server de joc afișat pe `/servers`. `game` = cheia din catalogul jocurilor (`cs16`, `cs2`, `minecraft`,
+/// `minecraft_bedrock`). `groups` gol = îl vede oricine are `servers.view`; altfel doar aceste grupuri.
+model GameServer {
+  id          Int      @id @default(autoincrement())
+  game        String @db.VarChar(191)
+  host        String @db.VarChar(191)
+  port        Int
+  /// Portul de interogare, dacă diferă de portul jocului.
+  queryPort   Int?
+  name        String @db.LongText
+  slug        String @db.LongText
+  position    Int      @default(0)
+  /// Atașamentul bannerului (`servers.banner`, legat de id-ul serverului).
+  bannerId    String? @db.LongText
+  /// Text simplu (rândurile noi se păstrează), max 2000 de caractere.
+  description String @db.LongText   @default("")
+  forumId     Int?
+  enabled     Boolean  @default(true)
+  groups      Json @default("[]")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  /// Puntea (specul 2026-10-08-servere-bridge §4.1): modul identităților (`steam` / `mixed`), identitățile pe nume,
+  /// serverul de meciuri mix, ultimul heartbeat și pluginul raportat.
+  identityMode     String @db.LongText    @default("mixed")
+  nameIds          Boolean   @default(false)
+  isMix            Boolean   @default(false)
+  bridgeSeenAt     DateTime?
+  bridgePlugin     String? @db.LongText
+  /// Modulele opționale ale pluginului (specul 2026-10-08-servere-plugin-v2 §1.2), implicit oprite: pluginul doar
+  /// colectează date. Adminii din GCS, sancțiunile, VIP-ul, ready-up-ul mix și comenzile de admin GCS.
+  manageAdmins     Boolean   @default(false)
+  enforceSanctions Boolean   @default(false)
+  manageVip        Boolean   @default(false)
+  mixReady         Boolean   @default(false)
+  adminCommands    Boolean   @default(false)
+
+  forum        Forum?                 @relation(fields: [forumId], references: [id], onDelete: SetNull)
+  admins       GameServerAdmin[]
+  snapshots    ServerSnapshot[]
+  bridgeKeys   GameServerKey[]
+  sessions     GameSession[]
+  playerStats  GamePlayerStat[]
+  gameAdmins   GameAdmin[]
+  sanctions    GameSanction[]
+  vipMappings  GameVipMapping[]
+  matches      GameMatch[]
+  adminActions GameAdminAction[]
+  tickets      GameTicket[]
+  lastPlayers  GamePlayer[]           @relation("GamePlayerLastServer")
+  enrollments  GameServerEnrollment[]
+  tv           GameServerTv?
+  demos        GameMatchDemo[]
+
+  @@unique([game, host, port])
+  @@index([enabled, position])
+  @@map("game_servers")
+}
+
+/// Adminii unui server de joc (membri GCS), în ordinea afișată.
+model GameServerAdmin {
+  serverId Int
+  userId   String @db.VarChar(191)
+  position Int    @default(0)
+
+  server GameServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([serverId, userId])
+  @@index([userId])
+  @@map("game_server_admins")
+}
+
+/// Istoricul interogărilor: un rând brut pe interogare (`hourly = false`), agregat pe oră după 7 zile (`hourly = true`).
+/// `samples` e greutatea rândului (multiplicatorul backoff-ului), `onlineSamples` partea ei „online”: uptime-ul =
+/// Σ onlineSamples / Σ samples, ponderat cu timpul.
+model ServerSnapshot {
+  id            BigInt   @id @default(autoincrement())
+  serverId      Int
+  at            DateTime @default(now())
+  hourly        Boolean  @default(false)
+  online        Boolean
+  players       Int      @default(0)
+  peak          Int      @default(0)
+  maxPlayers    Int      @default(0)
+  map           String? @db.LongText
+  ping          Int?
+  samples       Int      @default(1)
+  onlineSamples Int      @default(0)
+
+  server GameServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@index([serverId, at])
+  @@index([hourly, at])
+  @@map("server_snapshots")
+}
+
+// ─── Clanuri (etapa Gaming, specul 2026-10-08-clanuri) ───────────────────────
+
+/// Starea unui clan: în așteptarea aprobării staff-ului, activ sau arhivat (fără activitate sau de staff).
+enum ClanStatus {
+  PENDING
+  ACTIVE
+  ARCHIVED
+}
+
+enum ClanRole {
+  LEADER
+  OFFICER
+  MEMBER
+}
+
+/// Cum se intră în clan: liber, cu cerere aprobată sau doar cu invitație.
+enum ClanJoinMode {
+  OPEN
+  REQUEST
+  INVITE
+}
+
+enum ClanRequestKind {
+  REQUEST
+  INVITE
+}
+
+enum ClanRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+  EXPIRED
+}
+
+/// Un clan. `tagNormalized` / `nameNormalized` (litere mari / mici, fără diacritice) țin unicitatea. `forumId` = forumul
+/// privat (drepturile vin din apartenență, nu din grupuri). `memberLimit` gol = limita grupurilor liderului.
+model Clan {
+  id              Int          @id @default(autoincrement())
+  tag             String @db.LongText
+  tagNormalized   String @db.VarChar(191)       @unique
+  name            String @db.LongText
+  nameNormalized  String @db.VarChar(191)       @unique
+  slug            String @db.LongText
+  status          ClanStatus   @default(PENDING)
+  locked          Boolean      @default(false)
+  lockReason      String? @db.LongText
+  joinMode        ClanJoinMode @default(REQUEST)
+  /// Documentul editorului (profilul `clanDescription`) și HTML-ul sanitizat de renderer.
+  descriptionJson Json?
+  descriptionHtml String @db.LongText       @default("")
+  /// Atașamentele logo-ului și bannerului (`clans.logo` / `clans.banner`, legate de id-ul clanului).
+  logoId          String? @db.LongText
+  bannerId        String? @db.LongText
+  color           String @db.LongText       @default("#D62839")
+  color2          String @db.LongText       @default("#1B1E26")
+  /// `{ discord?, steam?, website?, youtube?, twitch? }`, adrese https validate.
+  links           Json         @default("{}")
+  /// Drepturile date ofițerilor de lider (`members`, `invite`, `requests`, `edit`, `forum`, `events`).
+  officerRights   Json    @default("[]")
+  memberLimit     Int?
+  membersCount    Int          @default(0)
+  score           Int          @default(0)
+  /// Locul în clasament (doar clanurile active); `scoreParts` = valorile formulei.
+  rank            Int?
+  scoreParts      Json         @default("{}")
+  scoredAt        DateTime?
+  forumId         Int?         @unique
+  /// Liderul a cerut forumul privat la creare (opțiunea „opțional”): se creează la aprobare.
+  forumRequested  Boolean      @default(false)
+  createdById     String? @db.VarChar(191)
+  approvedById    String? @db.LongText
+  approvedAt      DateTime?
+  lastActivityAt  DateTime     @default(now())
+  archivedAt      DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  forum     Forum?        @relation(fields: [forumId], references: [id], onDelete: SetNull)
+  createdBy User?         @relation("ClanCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  members   ClanMember[]
+  requests  ClanRequest[]
+
+  @@index([status, rank])
+  @@index([status, membersCount])
+  @@index([status, createdAt])
+  @@map("clans")
+}
+
+/// Membrii unui clan. Un singur lider pe clan (indexul unic parțial `clan_members_one_leader`, din migrare).
+model ClanMember {
+  clanId   Int
+  userId   String @db.VarChar(191)
+  role     ClanRole @default(MEMBER)
+  joinedAt DateTime @default(now())
+
+  clan Clan @relation(fields: [clanId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([clanId, userId])
+  @@index([userId])
+  @@map("clan_members")
+}
+
+/// Cererile de intrare (`REQUEST`, `userId` = candidatul) și invitațiile (`INVITE`, `userId` = invitatul). O singură
+/// cerere / invitație în așteptare pe (clan, membru, fel): indexul unic parțial `clan_requests_one_pending`, din migrare.
+model ClanRequest {
+  id          Int               @id @default(autoincrement())
+  clanId      Int
+  userId      String @db.VarChar(191)
+  kind        ClanRequestKind
+  status      ClanRequestStatus @default(PENDING)
+  message     String @db.LongText            @default("")
+  invitedById String? @db.VarChar(191)
+  decidedById String? @db.LongText
+  createdAt   DateTime          @default(now())
+  expiresAt   DateTime
+  decidedAt   DateTime?
+
+  clan      Clan  @relation(fields: [clanId], references: [id], onDelete: Cascade)
+  user      User  @relation("ClanRequestUser", fields: [userId], references: [id], onDelete: Cascade)
+  invitedBy User? @relation("ClanRequestInviter", fields: [invitedById], references: [id], onDelete: SetNull)
+
+  @@index([clanId, status])
+  @@index([userId, status])
+  @@map("clan_requests")
+}
+
+// ─── Puntea cu serverele de joc (specul 2026-10-08-servere-bridge) ───────────
+
+/// Tipul unei identități de joc: Steam (dovedit), non-Steam (ID-ul emulatorului) sau numele.
+enum GamePlayerKind {
+  STEAM
+  NONSTEAM
+  NAME
+}
+
+enum GameTrust {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+/// Cum a fost legată identitatea de un membru: contul Steam conectat, codul din joc sau staff-ul.
+enum GameLinkSource {
+  STEAM
+  CODE
+  STAFF
+}
+
+/// Cine primește drepturile unui admin de server: un membru, o identitate brută sau un nume cu parolă.
+enum GameAdminSubject {
+  USER
+  PLAYER
+  NAME
+}
+
+enum GameSanctionType {
+  BAN
+  MUTE
+  GAG
+}
+
+enum GameSanctionScope {
+  SERVER
+  GLOBAL
+}
+
+enum GameSanctionSource {
+  SITE
+  GAME
+}
+
+enum GameMatchStatus {
+  WARMUP
+  LIVE
+  HALFTIME
+  ENDED
+  ABORTED
+}
+
+/// Contestația unui ban, reclamația unui cheater sau a unui admin.
+enum GameTicketKind {
+  APPEAL
+  CHEATER
+  ADMIN
+}
+
+enum GameTicketStatus {
+  OPEN
+  REVIEW
+  ACCEPTED
+  REJECTED
+  CLOSED
+}
+
+enum GameTicketMessageKind {
+  MESSAGE
+  STATUS
+  ASSIGN
+}
+
+enum GameMapSource {
+  UPLOAD
+  TEMPLATE
+}
+
+/// Cheile API ale unui server. `signingKey` = hash-ul secretului (SHA-256 hex), sigilat cu `GCS_SECRET`; secretul nu e
+/// păstrat nicăieri. `expiresAt` = perioada de grație a unei chei rotite.
+model GameServerKey {
+  id          Int       @id @default(autoincrement())
+  serverId    Int
+  keyId       String @db.VarChar(191)    @unique
+  signingKey  String @db.LongText
+  label       String @db.LongText    @default("")
+  createdById String? @db.LongText
+  createdAt   DateTime  @default(now())
+  lastUsedAt  DateTime?
+  lastIp      String? @db.LongText
+  revokedAt   DateTime?
+  expiresAt   DateTime?
+
+  server GameServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@index([serverId])
+  @@map("game_server_keys")
+}
+
+enum GameEnrollmentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+/// O înrolare automată (specul 2026-10-08-servere-plugin-v2 §5): un server necunoscut cu pluginul general cere o cheie.
+/// `ref` = referința aleatorie dată doar pluginului; `secretHash` = SHA-256(secretul generat de plugin). `ip` = IP-ul
+/// sursei cererii (nu o adresă raportată); `check` = rezultatul interogării acelui IP:port. Cheia se creează abia la
+/// livrare (`keyId`), o singură dată.
+model GameServerEnrollment {
+  id          Int                  @id @default(autoincrement())
+  ref         String @db.VarChar(191)               @unique
+  secretHash  String @db.VarChar(191)               @unique
+  game        String @db.LongText
+  ip          String @db.VarChar(191)
+  port        Int
+  hostname    String @db.LongText               @default("")
+  map         String? @db.LongText
+  players     Int                  @default(0)
+  maxPlayers  Int                  @default(0)
+  plugin      String @db.LongText               @default("")
+  status      GameEnrollmentStatus @default(PENDING)
+  check       Json?
+  checkedAt   DateTime?
+  serverId    Int?
+  decidedById String? @db.LongText
+  decidedAt   DateTime?
+  keyId       String? @db.LongText
+  deliveredAt DateTime?
+  deliveries  Int                  @default(0)
+  createdAt   DateTime             @default(now())
+  lastSeenAt  DateTime             @default(now())
+  expiresAt   DateTime
+
+  server GameServer? @relation(fields: [serverId], references: [id], onDelete: SetNull)
+
+  @@index([status, expiresAt])
+  @@index([ip])
+  @@map("game_server_enrollments")
+}
+
+/// O identitate de joc (`kind`, `value`), cu sau fără cont pe site. `value`: SteamID64 (`STEAM`), ID-ul canonic al
+/// emulatorului (`NONSTEAM`) sau numele normalizat (`NAME`).
+model GamePlayer {
+  id           Int             @id @default(autoincrement())
+  kind         GamePlayerKind
+  value        String @db.VarChar(191)
+  trust        GameTrust
+  userId       String? @db.VarChar(191)
+  linkSource   GameLinkSource?
+  linkedAt     DateTime?
+  /// Ultimul nume văzut (curățat, max 32).
+  name         String @db.LongText          @default("")
+  firstSeenAt  DateTime        @default(now())
+  lastSeenAt   DateTime        @default(now())
+  lastServerId Int?
+
+  user         User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  lastServer   GameServer?       @relation("GamePlayerLastServer", fields: [lastServerId], references: [id], onDelete: SetNull)
+  linkCodes    GameLinkCode[]
+  sessions     GameSession[]
+  stats        GamePlayerStat[]
+  weaponStats  GameWeaponStat[]
+  mapStats     GameMapStat[]
+  adminEntries GameAdmin[]
+  sanctions    GameSanction[]
+  matches      GameMatchPlayer[]
+  rating       GameRating?
+
+  @@unique([kind, value])
+  @@index([userId])
+  @@index([lastSeenAt])
+  @@map("game_players")
+}
+
+/// Codurile de legare din joc (`/gcs COD`): doar hash-ul codului (SHA-256), valabil 10 minute, o singură folosire.
+model GameLinkCode {
+  id        Int       @id @default(autoincrement())
+  userId    String @db.VarChar(191)
+  codeHash  String @db.VarChar(191)    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  playerId  Int?
+  createdAt DateTime  @default(now())
+
+  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  player GamePlayer? @relation(fields: [playerId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@map("game_link_codes")
+}
+
+/// Conectările pe servere. `disconnectedAt` gol = online; `adminId` = adminul recunoscut în sesiune.
+model GameSession {
+  id             BigInt    @id @default(autoincrement())
+  serverId       Int
+  playerId       Int
+  adminId        Int?
+  name           String @db.LongText    @default("")
+  ip             String? @db.LongText
+  connectedAt    DateTime  @default(now())
+  disconnectedAt DateTime?
+  seconds        Int       @default(0)
+  /// Flag-urile de admin raportate de server (litere AMXX normalizate), din sistemul de admini al serverului.
+  adminFlags     String? @db.LongText
+
+  server GameServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  admin  GameAdmin? @relation(fields: [adminId], references: [id], onDelete: SetNull)
+
+  @@index([serverId, disconnectedAt])
+  @@index([playerId, connectedAt])
+  @@index([adminId, connectedAt])
+  @@map("game_sessions")
+}
+
+/// Statisticile unui jucător pe un server. `score` = ucideri − decese − ucideri în echipă; `rank` = locul pe server
+/// (jobul `servers.bridge.ranks`), gol sub timpul minim de joc.
+model GamePlayerStat {
+  playerId   Int
+  serverId   Int
+  kills      Int      @default(0)
+  deaths     Int      @default(0)
+  headshots  Int      @default(0)
+  assists    Int      @default(0)
+  teamkills  Int      @default(0)
+  suicides   Int      @default(0)
+  shots      Int      @default(0)
+  hits       Int      @default(0)
+  damage     Int      @default(0)
+  playtime   Int      @default(0)
+  rounds     Int      @default(0)
+  roundsWon  Int      @default(0)
+  score      Int      @default(0)
+  rank       Int?
+  lastSeenAt DateTime @default(now())
+
+  player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  server GameServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@id([playerId, serverId])
+  @@index([serverId, rank])
+  @@map("game_player_stats")
+}
+
+model GameWeaponStat {
+  playerId  Int
+  serverId  Int
+  weapon    String @db.VarChar(191)
+  kills     Int    @default(0)
+  deaths    Int    @default(0)
+  headshots Int    @default(0)
+  shots     Int    @default(0)
+  hits      Int    @default(0)
+  damage    Int    @default(0)
+
+  player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@id([playerId, serverId, weapon])
+  @@map("game_weapon_stats")
+}
+
+model GameMapStat {
+  playerId  Int
+  serverId  Int
+  map       String @db.VarChar(191)
+  kills     Int    @default(0)
+  deaths    Int    @default(0)
+  headshots Int    @default(0)
+  playtime  Int    @default(0)
+  rounds    Int    @default(0)
+  roundsWon Int    @default(0)
+
+  player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@id([playerId, serverId, map])
+  @@map("game_map_stats")
+}
+
+/// Id-urile evenimentelor aplicate (idempotența), păstrate 14 zile.
+model GameBridgeEvent {
+  serverId  Int
+  eventId   String @db.VarChar(191)
+  createdAt DateTime @default(now())
+
+  @@id([serverId, eventId])
+  @@index([createdAt])
+  @@map("game_bridge_events")
+}
+
+/// Presetările de admin (flag-uri AMXX + imunitate), editabile.
+model GameAdminPreset {
+  id       Int    @id @default(autoincrement())
+  name     String @db.LongText
+  flags    String @db.LongText
+  immunity Int    @default(0)
+  position Int    @default(0)
+
+  admins GameAdmin[]
+
+  @@map("game_admin_presets")
+}
+
+/// Un admin de server. `serverId` gol = toate serverele; `flags` / `immunity` goale = ale presetului. Subiectul `NAME`
+/// are doar sarea și verificatorul parolei (`hex(SHA-256(salt:parolă))`), niciodată parola.
+model GameAdmin {
+  id               Int              @id @default(autoincrement())
+  subject          GameAdminSubject
+  userId           String? @db.VarChar(191)
+  playerId         Int?
+  name             String? @db.LongText
+  nameNormalized   String? @db.VarChar(191)
+  passwordSalt     String? @db.LongText
+  passwordVerifier String? @db.LongText
+  serverId         Int?
+  presetId         Int?
+  flags            String? @db.LongText
+  immunity         Int?
+  allowNonSteam    Boolean          @default(false)
+  note             String @db.LongText           @default("")
+  expiresAt        DateTime?
+  /// Expirarea a fost deja scrisă în jurnal (jobul de curățenie).
+  expiredLoggedAt  DateTime?
+  createdById      String? @db.LongText
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  user     User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  player   GamePlayer?      @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  server   GameServer?      @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  preset   GameAdminPreset? @relation(fields: [presetId], references: [id], onDelete: SetNull)
+  sessions GameSession[]
+
+  @@index([userId])
+  @@index([playerId])
+  @@index([serverId])
+  @@index([nameNormalized])
+  @@map("game_admins")
+}
+
+/// Bannurile și comunicațiile (mute vocal / gag chat). Activă = `unbannedAt` gol și (`expiresAt` gol sau în viitor);
+/// se aplică pe serverul S = `GLOBAL` sau `serverId = S`. `revision` vine din secvența `game_sync_revision` și se
+/// schimbă la orice modificare (sincronizarea incrementală a pluginurilor).
+model GameSanction {
+  id             Int                @id @default(autoincrement())
+  type           GameSanctionType
+  scope          GameSanctionScope
+  serverId       Int?
+  playerId       Int?
+  targetKind     GamePlayerKind?
+  targetValue    String? @db.VarChar(191)
+  ip             String? @db.VarChar(191)
+  name           String? @db.LongText
+  reason         String @db.LongText
+  createdAt      DateTime           @default(now())
+  expiresAt      DateTime?
+  adminUserId    String? @db.LongText
+  adminPlayerId  Int?
+  adminName      String @db.LongText             @default("")
+  source         GameSanctionSource
+  unbannedAt     DateTime?
+  unbannedById   String? @db.LongText
+  unbannedByName String? @db.LongText
+  unbanReason    String? @db.LongText
+  /// `[{ url }]`, max 10 adrese https.
+  evidence       Json               @default("[]")
+  revision       BigInt             @default(0)
+  updatedAt      DateTime           @updatedAt
+
+  server  GameServer?  @relation(fields: [serverId], references: [id], onDelete: SetNull)
+  player  GamePlayer?  @relation(fields: [playerId], references: [id], onDelete: SetNull)
+  tickets GameTicket[]
+
+  @@index([revision])
+  @@index([playerId])
+  @@index([targetKind, targetValue])
+  @@index([ip])
+  @@index([type, expiresAt])
+  @@map("game_sanctions")
+}
+
+/// Jurnalul acțiunilor din joc (ban, kick, slay, mute…), raportate de plugin.
+model GameAdminAction {
+  id             Int      @id @default(autoincrement())
+  serverId       Int
+  adminPlayerId  Int?
+  adminUserId    String? @db.VarChar(191)
+  adminId        Int?
+  adminName      String @db.LongText   @default("")
+  action         String @db.LongText
+  targetPlayerId Int?
+  targetName     String @db.LongText   @default("")
+  reason         String @db.LongText   @default("")
+  details        Json?
+  sanctionId     Int?
+  at             DateTime @default(now())
+
+  server GameServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@index([serverId, at])
+  @@index([adminId, at])
+  @@index([adminUserId, at])
+  @@map("game_admin_actions")
+}
+
+/// VIP pe servere: grupul VIP pornit pe server, cu flag-urile lui (implicit `b`, rezervarea).
+model GameVipMapping {
+  id       Int     @id @default(autoincrement())
+  serverId Int
+  groupId  Int
+  enabled  Boolean @default(true)
+  flags    String @db.LongText  @default("b")
+
+  server GameServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  group  Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([serverId, groupId])
+  @@map("game_vip_mappings")
+}
+
+/// Un meci mix (5v5). `externalId` = id-ul dat de plugin, unic pe server; `winner` = `A` / `B` / `DRAW` la final;
+/// `rated` = ELO-ul a fost aplicat.
+model GameMatch {
+  id         Int             @id @default(autoincrement())
+  serverId   Int
+  externalId String @db.VarChar(191)
+  map        String @db.LongText          @default("")
+  status     GameMatchStatus @default(WARMUP)
+  teamAName  String @db.LongText          @default("")
+  teamBName  String @db.LongText          @default("")
+  scoreA     Int             @default(0)
+  scoreB     Int             @default(0)
+  round      Int             @default(0)
+  winner     String? @db.LongText
+  startedAt  DateTime        @default(now())
+  liveAt     DateTime?
+  endedAt    DateTime?
+  rated      Boolean         @default(false)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  server  GameServer        @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  players GameMatchPlayer[]
+  rounds  GameMatchRound[]
+  demos   GameMatchDemo[]
+
+  @@unique([serverId, externalId])
+  @@index([serverId, startedAt])
+  @@index([status, endedAt])
+  @@map("game_matches")
+}
+
+model GameMatchPlayer {
+  matchId   Int
+  playerId  Int
+  team      String @db.LongText
+  name      String @db.LongText @default("")
+  kills     Int    @default(0)
+  deaths    Int    @default(0)
+  assists   Int    @default(0)
+  headshots Int    @default(0)
+  damage    Int    @default(0)
+  mvps      Int    @default(0)
+  eloBefore Int?
+  eloAfter  Int?
+
+  match  GameMatch  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@id([matchId, playerId])
+  @@index([playerId])
+  @@map("game_match_players")
+}
+
+model GameMatchRound {
+  matchId Int
+  number  Int
+  winner  String @db.LongText
+  scoreA  Int
+  scoreB  Int
+  reason  String @db.LongText   @default("")
+  endedAt DateTime @default(now())
+
+  match GameMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@id([matchId, number])
+  @@map("game_match_rounds")
+}
+
+/// HLTV / GOTV și demo-urile unui server (specul 2026-10-08-servere-hltv §2.1); lipsa rândului = totul oprit. Secretele
+/// (`secret`, `privateKey`, `rconPassword`) sunt sigilate cu `sealSecret` și nu se arată niciodată înapoi.
+model GameServerTv {
+  serverId      Int       @id
+  address       String? @db.LongText
+  delay         Int?
+  source        String @db.LongText    @default("none")
+  host          String? @db.LongText
+  port          Int?
+  username      String? @db.LongText
+  secret        String? @db.LongText
+  privateKey    String? @db.LongText
+  remoteDir     String @db.LongText    @default("/")
+  tlsInsecure   Boolean   @default(false)
+  hostKey       String? @db.LongText
+  httpTemplate  String? @db.LongText
+  namePrefix    String @db.LongText    @default("")
+  timeZone      String @db.LongText    @default("UTC")
+  record        Boolean   @default(false)
+  rconPassword  String? @db.LongText
+  lastFetchAt   DateTime?
+  lastFetchOk   Boolean?
+  lastFetchCode String? @db.LongText
+  lastFetchInfo Json?
+  lastRcon      Json?
+  updatedAt     DateTime  @updatedAt
+
+  server GameServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@map("game_server_tv")
+}
+
+/// Starea unui demo (specul 2026-10-08-servere-hltv §2.2).
+enum GameDemoStatus {
+  WAITING
+  FETCHING
+  AVAILABLE
+  NOT_FOUND
+  FAILED
+  EXPIRED
+}
+
+/// Un fișier demo al unui meci mix (un meci poate avea mai multe părți). Fișierul stă privat în store-ul platformei
+/// (`storageKey`), servit doar prin ruta descărcării, cu drepturile verificate. Rândurile rămase fără meci se curăță
+/// împreună cu fișierul lor.
+model GameMatchDemo {
+  id            Int            @id @default(autoincrement())
+  matchId       Int?
+  serverId      Int?
+  part          Int            @default(1)
+  status        GameDemoStatus @default(WAITING)
+  source        String @db.LongText
+  remoteName    String? @db.LongText
+  fileName      String @db.LongText
+  storageKey    String? @db.LongText
+  encoding      String @db.LongText         @default("identity")
+  size          Int?
+  storedSize    Int?
+  sha256        String? @db.LongText
+  downloads     Int            @default(0)
+  attempts      Int            @default(0)
+  nextAttemptAt DateTime?
+  error         String? @db.LongText
+  chunkSize     Int?
+  received      Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  availableAt   DateTime?
+  expiresAt     DateTime?
+
+  match  GameMatch?  @relation(fields: [matchId], references: [id], onDelete: SetNull)
+  server GameServer? @relation(fields: [serverId], references: [id], onDelete: SetNull)
+
+  @@unique([matchId, part])
+  @@index([status, nextAttemptAt])
+  @@index([status, availableAt])
+  @@index([serverId, createdAt])
+  @@map("game_match_demos")
+}
+
+/// ELO-ul unei identități (meciurile mix) și totalurile ei.
+model GameRating {
+  playerId  Int      @id
+  elo       Int
+  matches   Int      @default(0)
+  wins      Int      @default(0)
+  losses    Int      @default(0)
+  draws     Int      @default(0)
+  peak      Int
+  updatedAt DateTime @updatedAt
+
+  player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([elo])
+  @@map("game_ratings")
+}
+
+/// Contestațiile bannurilor și reclamațiile (cheater / admin). Conținutul e documentul editorului, randat ca postările.
+model GameTicket {
+  id             Int              @id @default(autoincrement())
+  kind           GameTicketKind
+  status         GameTicketStatus @default(OPEN)
+  authorId       String @db.VarChar(191)
+  serverId       Int?
+  sanctionId     Int?
+  targetPlayerId Int?
+  targetUserId   String? @db.LongText
+  targetAdminId  Int?
+  targetName     String @db.LongText           @default("")
+  title          String @db.LongText
+  contentJson    Json
+  contentHtml    String @db.LongText
+  /// `[{ url }]`, max 10 adrese https.
+  evidence       Json             @default("[]")
+  assigneeId     String? @db.LongText
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  lastActivityAt DateTime         @default(now())
+  closedAt       DateTime?
+
+  author   User                @relation("GameTicketAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  server   GameServer?         @relation(fields: [serverId], references: [id], onDelete: SetNull)
+  sanction GameSanction?       @relation(fields: [sanctionId], references: [id], onDelete: SetNull)
+  messages GameTicketMessage[]
+
+  @@index([status, lastActivityAt])
+  @@index([authorId, kind, status])
+  @@index([sanctionId])
+  @@index([serverId, status])
+  @@map("game_tickets")
+}
+
+model GameTicketMessage {
+  id          Int                   @id @default(autoincrement())
+  ticketId    Int
+  authorId    String? @db.LongText
+  kind        GameTicketMessageKind @default(MESSAGE)
+  contentJson Json?
+  contentHtml String @db.LongText                @default("")
+  internal    Boolean               @default(false)
+  data        Json?
+  createdAt   DateTime              @default(now())
+
+  ticket GameTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt])
+  @@map("game_ticket_messages")
+}
+
+/// Catalogul hărților pe joc. `imageId` = atașamentul `servers.map` (public); fără el se arată arta generică.
+model GameMap {
+  id          Int            @id @default(autoincrement())
+  game        String @db.VarChar(191)
+  name        String @db.VarChar(191)
+  imageId     String? @db.VarChar(191)
+  source      GameMapSource?
+  fetchedAt   DateTime?
+  fetchError  String? @db.LongText
+  attempts    Int            @default(0)
+  nextFetchAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@unique([game, name])
+  @@index([imageId, nextFetchAt])
+  @@map("game_maps")
+}
+
+// ─── Ștergerea și unirea conturilor (specul 2026-10-09-stergere-unire-membri) ─
+
+enum MemberRemovalKind {
+  DELETE
+  MERGE
+}
+
+/// Ce se întâmplă cu conținutul public la ștergere: rămâne ca „Membru șters” sau se șterge și el.
+enum MemberRemovalMode {
+  KEEP_CONTENT
+  DELETE_CONTENT
+}
+
+/// Cine a cerut operația: staff-ul (ACP) sau membrul însuși (Setări → Cont).
+enum MemberRemovalSource {
+  ACP
+  SELF
+}
+
+/// `SCHEDULED` = cererea membrului, în perioada de răzgândire (`runAfter`); `QUEUED` / `RUNNING` = jobul; `FAILED` = de reluat.
+enum MemberRemovalStatus {
+  SCHEDULED
+  QUEUED
+  RUNNING
+  DONE
+  FAILED
+  CANCELLED
+}
+
+/// O ștergere sau o unire de conturi (ACP → Membri → Cereri GDPR). `userId` / `targetId` nu au chei străine: rândul rămâne
+/// după ștergerea userului, cu numele vechi (singura dată personală păstrată, ca în jurnal). `steps` = progresul pe pașii
+/// handler-elor (`{ [cheie]: { done, processed } }`). Un singur rând activ pe `userId` (index unic parțial, din migrare).
+model MemberRemoval {
+  id            String @db.VarChar(191)              @id @default(cuid())
+  kind          MemberRemovalKind
+  status        MemberRemovalStatus
+  source        MemberRemovalSource @default(ACP)
+  mode          MemberRemovalMode   @default(KEEP_CONTENT)
+  /// Ștergerea: mesajele private trimise rămân în conversațiile celorlalți (ca „Membru șters”).
+  keepMessages  Boolean             @default(false)
+  userId        String @db.VarChar(191)
+  userName      String @db.LongText
+  targetId      String? @db.LongText
+  targetName    String? @db.LongText
+  requestedById String? @db.LongText
+  /// Cererea membrului: sfârșitul perioadei de răzgândire.
+  runAfter      DateTime?
+  steps         Json                @default("{}")
+  currentStep   String? @db.LongText
+  error         String? @db.LongText
+  attempts      Int                 @default(0)
+  heartbeatAt   DateTime?
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([status, runAfter])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("member_removals")
+}
+
+// ─── Profil gaming v2 (hover card v2, profilul public v2, setările contului v2) ───────────────────
+
+/// Un dispozitiv cu care membrul a intrat în cont (Setări → Dispozitive): browserul și sistemul (din user-agent), metoda
+/// de autentificare, IP-ul și locația aproximativă (țara, din antetul proxy-ului). `autoLogin: false` = sesiunile noi de
+/// pe dispozitiv expiră după câteva ore (fără „ține-mă minte”).
+model UserDevice {
+  id          String @db.VarChar(191)   @id @default(cuid())
+  userId      String @db.VarChar(191)
+  /// Amprenta dispozitivului: hash-ul (membru, browser, sistem).
+  key         String @db.VarChar(191)
+  browser     String @db.LongText
+  os          String @db.LongText
+  method      String @db.LongText
+  ip          String? @db.LongText
+  location    String? @db.LongText
+  autoLogin   Boolean  @default(true)
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
+  @@index([userId, lastSeenAt])
+  @@map("user_devices")
+}
+
+/// Ultima vizită a unui membru pe profilul altuia (caseta „Vizitatori recenți”, cu opțiunea de confidențialitate).
+model ProfileVisit {
+  profileUserId String @db.VarChar(191)
+  visitorId     String @db.VarChar(191)
+  visitedAt     DateTime @default(now())
+
+  profile User @relation("ProfileVisitProfile", fields: [profileUserId], references: [id], onDelete: Cascade)
+  visitor User @relation("ProfileVisitVisitor", fields: [visitorId], references: [id], onDelete: Cascade)
+
+  @@id([profileUserId, visitorId])
+  @@index([profileUserId, visitedAt])
+  @@index([visitorId])
+  @@map("profile_visits")
+}
+
+/// Datele unui cont extern legat (Steam, FACEIT), aduse de worker și cache-uite: doar ce ține de contul legat de membru.
+model ExternalProfile {
+  userId    String @db.VarChar(191)
+  provider  String @db.VarChar(191)
+  data      Json     @default("{}")
+  fetchedAt DateTime @default(now())
+  /// Ultima eroare a citirii (cheia lipsă, profil privat, limită de cereri); datele vechi rămân.
+  error     String? @db.LongText
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, provider])
+  @@index([provider, fetchedAt])
+  @@map("external_profiles")
+}
+
+/// Starea unei donații: confirmată de echipă (intră în obiective, clasamente și insigna „Sponsor”), în așteptare
+/// („Am donat” trimis de un membru) sau respinsă.
+enum DonationStatus {
+  CONFIRMED
+  PENDING
+  REJECTED
+}
+
+/// Perioada unui obiectiv de donații: luna calendaristică (cu reînnoire lunară opțională) sau un interval ales.
+enum DonationGoalPeriod {
+  MONTHLY
+  CUSTOM
+}
+
+/// O donație (VIP clasic › Donații): înregistrată de echipă din ACP, trimisă de un membru („Am donat”, cu o referință de
+/// verificat) sau, mai târziu, adusă de un procesator de plăți (`source` + `externalId`, idempotent). Nu se păstrează
+/// niciodată date de card. Fără cont (`userId` gol), donatorul are doar un nume; un cont șters lasă donația fără membru.
+/// Peste pragul din setări, insigna „Sponsor”.
+model MemberDonation {
+  id           Int            @id @default(autoincrement())
+  userId       String? @db.VarChar(191)
+  /// Numele afișat al unui donator fără cont (gol = „Anonim”).
+  donorName    String @db.LongText         @default("")
+  /// Suma, în subunități (bani / cenți).
+  amount       Int
+  currency     String @db.LongText         @default("EUR")
+  note         String @db.LongText         @default("")
+  /// Metoda (o etichetă liberă: PayPal, Revolut, transfer bancar…).
+  method       String @db.LongText         @default("")
+  /// Referința dată de membru la „Am donat” (ex. id-ul tranzacției), pentru verificarea echipei.
+  reference    String @db.LongText         @default("")
+  /// Numele ascuns în paginile publice („Anonim”); donația intră totuși în progresul obiectivelor.
+  anonymous    Boolean        @default(false)
+  status       DonationStatus @default(CONFIRMED)
+  /// De unde vine: `manual` (ACP), `member` („Am donat”) sau cheia procesatorului de plăți.
+  source       String @db.VarChar(191)         @default("manual")
+  /// Id-ul plății la procesator (unic pe `source`), ca notificările repetate să nu dubleze donația.
+  externalId   String? @db.VarChar(191)
+  /// Data donației (perioada obiectivelor și a clasamentelor).
+  donatedAt    DateTime       @default(now())
+  createdById  String? @db.LongText
+  reviewedById String? @db.LongText
+  reviewedAt   DateTime?
+  /// Motivul respingerii (îl vede membrul în notificare).
+  rejectReason String @db.LongText         @default("")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @default(now()) @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([source, externalId])
+  @@index([userId])
+  @@index([status, donatedAt])
+  @@map("member_donations")
+}
+
+/// Un obiectiv de donații („Obiectivul lunii”): titlul, ținta, moneda, perioada (luna, reînnoită lunar sau nu, ori un
+/// interval) și grupurile care îl văd (gol = toată lumea). Progresul = donațiile confirmate din perioadă, în moneda lui.
+model DonationGoal {
+  id        Int                @id @default(autoincrement())
+  title     String @db.LongText
+  /// Ținta, în subunități.
+  target    Int
+  currency  String @db.LongText             @default("EUR")
+  period    DonationGoalPeriod @default(MONTHLY)
+  /// Prima zi (luna ei, pentru `MONTHLY`) și ultima zi inclusă (doar `CUSTOM`), în fusul orar al site-ului.
+  startsOn  DateTime           @db.Date
+  endsOn    DateTime?          @db.Date
+  /// `MONTHLY`: obiectivul trece singur în luna următoare (progresul pornește de la zero în fiecare lună).
+  autoRenew Boolean            @default(true)
+  groupIds  Json @default("[]")
+  enabled   Boolean            @default(true)
+  position  Int                @default(0)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @default(now()) @updatedAt
+
+  @@map("donation_goals")
+}
+
+// ─── Infrastructură fără Redis (ediția Lite) ─────────────────────────────────
+// Folosite doar cu driverele SQL (`GCS_EDITION=lite`); în ediția VPS rămân goale.
+
+/// O cheie din `GcsSqlKv` (tipul: string, hash, zset, set, list). `expiresAt` în ms (null = fără expirare); o cheie
+/// expirată e ignorată la citire și ștearsă de curățenie. Elementele colecțiilor stau în `gcs_kv_items`.
+model GcsKvEntry {
+  key       String      @id @db.VarChar(255)
+  type      String      @db.VarChar(8)
+  value     String? @db.LongText
+  expiresAt BigInt?
+  items     GcsKvItem[]
+
+  @@index([expiresAt])
+  @@map("gcs_kv")
+}
+
+/// Un element al unei colecții din `gcs_kv`: câmpul unui hash, membrul unui set / sorted set (cu scorul) sau al unei liste.
+model GcsKvItem {
+  key   String     @db.VarChar(255)
+  field String     @db.VarChar(255)
+  value String? @db.LongText
+  score Float?
+  entry GcsKvEntry @relation(fields: [key], references: [key], onDelete: Cascade)
+
+  @@id([key, field])
+  @@index([key, score])
+  @@map("gcs_kv_items")
+}
+
+/// Lacătele operațiilor atomice ale `GcsSqlKv` (o cheie → una din 256 de benzi, blocată cu `FOR UPDATE`).
+model GcsKvLock {
+  stripe Int @id
+
+  @@map("gcs_kv_locks")
+}
+
+/// Un job din coada SQL (`GcsSqlJobQueue`): `jobKey` deduplică, `runAt` / `lockedUntil` în ms.
+model GcsJob {
+  id          BigInt  @id @default(autoincrement())
+  name        String  @db.VarChar(191)
+  data        String @db.LongText
+  jobKey      String? @unique @db.VarChar(191)
+  status      String  @default("waiting") @db.VarChar(16)
+  runAt       BigInt
+  attempts    Int     @default(0)
+  maxAttempts Int     @default(5)
+  lockedUntil BigInt?
+  lastError   String? @db.LongText
+  createdAt   BigInt
+
+  @@index([status, runAt])
+  @@map("gcs_jobs")
+}
+
+/// O programare repetabilă a cozii SQL (jobul unui modul sau al unui plugin): la `nextRunAt` se adaugă un job.
+model GcsJobSchedule {
+  id        String  @id @db.VarChar(191)
+  name      String  @db.VarChar(191)
+  data      String @db.LongText
+  everyMs   Int?
+  pattern   String? @db.VarChar(100)
+  nextRunAt BigInt
+
+  @@map("gcs_job_schedules")
+}
+
+/// Jurnalul scurt al mesajelor live (transporturile SSE și polling ale ediției Lite); păstrat câteva minute.
+model GcsRealtimeEvent {
+  id        BigInt  @id @default(autoincrement())
+  room      String  @db.VarChar(191)
+  event     String  @db.VarChar(64)
+  data      String @db.LongText
+  origin    String? @db.VarChar(64)
+  createdAt BigInt
+
+  @@index([createdAt])
+  @@map("gcs_realtime_events")
+}

@@ -1,4 +1,5 @@
 import { cpSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
+import { testOnMysql } from "./url";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -51,6 +52,7 @@ function migrationsUntil(stop: string | null): string {
 }
 
 beforeAll(async () => {
+  if (testOnMysql()) return;
   tmp = mkdtempSync(path.join(os.tmpdir(), "gcs-portable-"));
   await admin(async (c) => {
     await c.query(`DROP DATABASE IF EXISTS "${DB}" WITH (FORCE)`);
@@ -60,11 +62,12 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  if (testOnMysql()) return;
   await admin((c) => c.query(`DROP DATABASE IF EXISTS "${DB}" WITH (FORCE)`));
   rmSync(tmp, { recursive: true, force: true });
 });
 
-describe("migrațiile portabile (ediția Lite) pe o bază existentă", () => {
+describe.skipIf(testOnMysql())("migrațiile portabile (ediția Lite) pe o bază existentă", () => {
   test("listele scalare devin JSON cu datele păstrate; indexurile parțiale păstrează regulile", async () => {
     await migrateDatabase(url, migrationsUntil(FIRST_PORTABLE));
     const ids = await db(async (c) => {

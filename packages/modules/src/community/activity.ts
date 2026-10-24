@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import type { GcsActor, GcsCache, GcsPermissionService } from "@gcs/core";
-import { Prisma, type PrismaClient } from "@gcs/db";
+import { Prisma, type PrismaClient, sql } from "@gcs/db";
 import { forumContainer } from "../forums/posting";
 import { toRef, userRefSelect, type GcsUserRef } from "../forums/queries";
 import { UNREAD_DAYS } from "../forums/readMarkers";
@@ -93,65 +93,65 @@ export class GcsActivityStream {
     const before = (col: Prisma.Sql, k: number, ref: Prisma.Sql) => {
       if (!cursor) return Prisma.empty;
       const at = cursor.at;
-      return Prisma.sql`AND ${col} <= ${at}::timestamp AND (${col}, ${Prisma.raw(String(k))}, ${ref}) < (${at}::timestamp, ${cursor.k}::int, ${cursor.ref}::text)`;
+      return sql`AND ${col} <= ${at}::timestamp AND (${col}, ${Prisma.raw(String(k))}, ${ref}) < (${at}::timestamp, ${cursor.k}::int, ${cursor.ref}::text)`;
     };
-    const notIgnored = (col: Prisma.Sql) => (ignored.length > 0 ? Prisma.sql`AND (${col} IS NULL OR ${col} <> ALL(${ignored}))` : Prisma.empty);
+    const notIgnored = (col: Prisma.Sql) => (ignored.length > 0 ? sql`AND (${col} IS NULL OR ${col} <> ALL(${ignored}))` : Prisma.empty);
     const profileVisible = (u: Prisma.Sql) => profileVisibleSql(u, audience, viewer.userId);
     const unreadJoin = (topic: Prisma.Sql) =>
       unread
-        ? Prisma.sql`LEFT JOIN read_markers m ON m."topicId" = ${topic}.id AND m."userId" = ${viewer.userId}
+        ? sql`LEFT JOIN read_markers m ON m."topicId" = ${topic}.id AND m."userId" = ${viewer.userId}
                      LEFT JOIN forum_read_marks fm ON fm."forumId" = ${topic}."forumId" AND fm."userId" = ${viewer.userId}`
         : Prisma.empty;
     const unreadWhere = (at: Prisma.Sql, postId: Prisma.Sql, author: Prisma.Sql) =>
       unread
-        ? Prisma.sql`AND ${at} > ${pgTimestamp(cutoff!)}::timestamp AND (fm."markedAt" IS NULL OR ${at} > fm."markedAt")
+        ? sql`AND ${at} > ${pgTimestamp(cutoff!)}::timestamp AND (fm."markedAt" IS NULL OR ${at} > fm."markedAt")
                      AND ${postId} > COALESCE(m."lastReadPostId", 0) AND ${author} IS DISTINCT FROM ${viewer.userId}`
         : Prisma.empty;
 
     const parts: Prisma.Sql[] = [];
     if (wants("topic")) {
-      const ref = Prisma.sql`lpad(t.id::text, 12, '0')`;
-      parts.push(Prisma.sql`(SELECT 'topic'::text AS kind, 4 AS k, ${ref} AS ref, t."createdAt" AS at, t."authorId" AS "userId",
+      const ref = sql`lpad(t.id::text, 12, '0')`;
+      parts.push(sql`(SELECT 'topic'::text AS kind, 4 AS k, ${ref} AS ref, t."createdAt" AS at, t."authorId" AS "userId",
           t.id AS "topicId", t."firstPostId" AS "postId", NULL::text AS "ownerId"
-        FROM topics t ${unreadJoin(Prisma.sql`t`)}
+        FROM topics t ${unreadJoin(sql`t`)}
         WHERE t.visibility = 'VISIBLE' AND t."firstPostId" IS NOT NULL AND t."forumId" = ANY(${forumIds})
-          ${notIgnored(Prisma.sql`t."authorId"`)} ${before(Prisma.sql`t."createdAt"`, 4, ref)}
-          ${unreadWhere(Prisma.sql`t."createdAt"`, Prisma.sql`t."firstPostId"`, Prisma.sql`t."authorId"`)}
+          ${notIgnored(sql`t."authorId"`)} ${before(sql`t."createdAt"`, 4, ref)}
+          ${unreadWhere(sql`t."createdAt"`, sql`t."firstPostId"`, sql`t."authorId"`)}
         ORDER BY t."createdAt" DESC, t.id DESC LIMIT ${take})`);
     }
     if (wants("reply")) {
-      const ref = Prisma.sql`lpad(p.id::text, 12, '0')`;
-      parts.push(Prisma.sql`(SELECT 'reply'::text AS kind, 3 AS k, ${ref} AS ref, p."createdAt" AS at, p."authorId" AS "userId",
+      const ref = sql`lpad(p.id::text, 12, '0')`;
+      parts.push(sql`(SELECT 'reply'::text AS kind, 3 AS k, ${ref} AS ref, p."createdAt" AS at, p."authorId" AS "userId",
           t.id AS "topicId", p.id AS "postId", NULL::text AS "ownerId"
-        FROM posts p JOIN topics t ON t.id = p."topicId" ${unreadJoin(Prisma.sql`t`)}
+        FROM posts p JOIN topics t ON t.id = p."topicId" ${unreadJoin(sql`t`)}
         WHERE p.visibility = 'VISIBLE' AND t.visibility = 'VISIBLE' AND t."forumId" = ANY(${forumIds}) AND p.id IS DISTINCT FROM t."firstPostId"
-          ${notIgnored(Prisma.sql`p."authorId"`)} ${before(Prisma.sql`p."createdAt"`, 3, ref)}
-          ${unreadWhere(Prisma.sql`p."createdAt"`, Prisma.sql`p.id`, Prisma.sql`p."authorId"`)}
+          ${notIgnored(sql`p."authorId"`)} ${before(sql`p."createdAt"`, 3, ref)}
+          ${unreadWhere(sql`p."createdAt"`, sql`p.id`, sql`p."authorId"`)}
         ORDER BY p."createdAt" DESC, p.id DESC LIMIT ${take})`);
     }
     if (wants("status")) {
-      const ref = Prisma.sql`lpad(s.id::text, 12, '0')`;
-      parts.push(Prisma.sql`(SELECT 'status'::text AS kind, 2 AS k, ${ref} AS ref, s."createdAt" AS at, s."authorId" AS "userId",
+      const ref = sql`lpad(s.id::text, 12, '0')`;
+      parts.push(sql`(SELECT 'status'::text AS kind, 2 AS k, ${ref} AS ref, s."createdAt" AS at, s."authorId" AS "userId",
           NULL::int AS "topicId", s.id AS "postId", s."profileUserId" AS "ownerId"
         FROM status_updates s JOIN users o ON o.id = s."profileUserId"
-        WHERE s."parentId" IS NULL AND s.visibility = 'VISIBLE' ${profileVisible(Prisma.sql`o`)}
-          ${notIgnored(Prisma.sql`s."authorId"`)} ${before(Prisma.sql`s."createdAt"`, 2, ref)}
+        WHERE s."parentId" IS NULL AND s.visibility = 'VISIBLE' ${profileVisible(sql`o`)}
+          ${notIgnored(sql`s."authorId"`)} ${before(sql`s."createdAt"`, 2, ref)}
         ORDER BY s."createdAt" DESC, s.id DESC LIMIT ${take})`);
     }
     if (wants("member") && filter === "all") {
-      parts.push(Prisma.sql`(SELECT 'member'::text AS kind, 1 AS k, u.id AS ref, u."createdAt" AS at, u.id AS "userId",
+      parts.push(sql`(SELECT 'member'::text AS kind, 1 AS k, u.id AS ref, u."createdAt" AS at, u.id AS "userId",
           NULL::int AS "topicId", NULL::int AS "postId", NULL::text AS "ownerId"
         FROM users u
-        WHERE ${notBannedSql(Prisma.sql`u`)} ${profileVisible(Prisma.sql`u`)} ${before(Prisma.sql`u."createdAt"`, 1, Prisma.sql`u.id`)}
+        WHERE ${notBannedSql(sql`u`)} ${profileVisible(sql`u`)} ${before(sql`u."createdAt"`, 1, sql`u.id`)}
         ORDER BY u."createdAt" DESC, u.id DESC LIMIT ${take})`);
     }
 
     let result: GcsActivityPage = { items: [], next: null };
     if (parts.length > 0) {
-      const rows = await db.$queryRaw<Row[]>`
+      const rows = await db.$queryRaw<Row[]>(sql`
         SELECT x.*, to_char(x.at, 'YYYY-MM-DD"T"HH24:MI:SS.US') AS "atKey" FROM (${Prisma.join(parts, " UNION ALL ")}) x
         ORDER BY x.at DESC, x.k DESC, x.ref DESC
-        LIMIT ${take}`;
+        LIMIT ${take}`);
       const page = rows.slice(0, limit);
       const last = page[page.length - 1];
       result = {

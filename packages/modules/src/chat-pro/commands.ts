@@ -1,5 +1,5 @@
 import { GcsValidationError, normalizeUsername, type GcsActor } from "@gcs/core";
-import { Prisma, type PrismaClient } from "@gcs/db";
+import { type PrismaClient, sql } from "@gcs/db";
 import type { GcsChatProCommand } from "./prefs";
 import { RPS_CHOICES, type GcsChatProBot, type GcsRpsChoice } from "./types";
 
@@ -86,7 +86,7 @@ const birthday: GcsChatCommand = {
   names: ["zi-de-nastere", "zile-de-nastere", "birthday"],
   async run({ db, today }) {
     const [month, day] = [Number(today.slice(5, 7)), Number(today.slice(8, 10))];
-    const rows = await db.$queryRaw<{ id: string; name: string; group: string; style: string | null }[]>(Prisma.sql`
+    const rows = await db.$queryRaw<{ id: string; name: string; group: string; style: string | null }[]>(sql`
       SELECT u.id, u.name, COALESCE(dg.key, g.key) AS "group", ns.key AS style
       FROM users u JOIN groups g ON g.id = u."primaryGroupId" LEFT JOIN groups dg ON dg.id = u."nameGroupId" LEFT JOIN name_styles ns ON ns.id = u."nameStyleId"
       WHERE u."birthdayVisible" AND u.birthday IS NOT NULL

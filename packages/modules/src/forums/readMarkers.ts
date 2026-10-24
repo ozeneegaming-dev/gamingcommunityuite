@@ -1,5 +1,5 @@
 import type { GcsActor, GcsSettingsService } from "@gcs/core";
-import type { PrismaClient } from "@gcs/db";
+import { type PrismaClient, sql } from "@gcs/db";
 
 /** Topicurile fără activitate de mai mult de atât sunt considerate citite (ține interogările mărginite pe forumuri mari). */
 export const UNREAD_DAYS = 60;
@@ -22,11 +22,11 @@ export class GcsReadMarkerService {
 
   /** Marchează topicul citit până la postarea dată. Marker-ul doar crește. */
   async markRead(userId: string, topicId: number, lastPostId: number): Promise<void> {
-    await this.deps.db.$executeRaw`
+    await this.deps.db.$executeRaw(sql`
       INSERT INTO read_markers ("userId", "topicId", "lastReadPostId", "updatedAt")
       VALUES (${userId}, ${topicId}, ${lastPostId}, now() AT TIME ZONE 'UTC')
       ON CONFLICT ("userId", "topicId") DO UPDATE
-      SET "lastReadPostId" = GREATEST(read_markers."lastReadPostId", EXCLUDED."lastReadPostId"), "updatedAt" = EXCLUDED."updatedAt"`;
+      SET "lastReadPostId" = GREATEST(read_markers."lastReadPostId", EXCLUDED."lastReadPostId"), "updatedAt" = EXCLUDED."updatedAt"`);
   }
 
   /** „Marchează tot citit” pe un forum: forumul și toate subforumurile lui. */
@@ -78,7 +78,7 @@ export class GcsReadMarkerService {
   async unreadForumIds(userId: string | null, forumIds: number[]): Promise<Set<number>> {
     if (!userId || forumIds.length === 0) return new Set();
     const cutoff = pgTimestamp(await this.cutoff(userId));
-    const rows = await this.deps.db.$queryRaw<{ forumId: number }[]>`
+    const rows = await this.deps.db.$queryRaw<{ forumId: number }[]>(sql`
       SELECT DISTINCT t."forumId"
       FROM topics t
       LEFT JOIN read_markers m ON m."topicId" = t.id AND m."userId" = ${userId}
@@ -88,7 +88,7 @@ export class GcsReadMarkerService {
         AND t."lastPostId" IS NOT NULL
         AND t."lastPostAt" > ${cutoff}::timestamp
         AND (f."markedAt" IS NULL OR t."lastPostAt" > f."markedAt")
-        AND t."lastPostId" > COALESCE(m."lastReadPostId", 0)`;
+        AND t."lastPostId" > COALESCE(m."lastReadPostId", 0)`);
     return new Set(rows.map((r) => r.forumId));
   }
 

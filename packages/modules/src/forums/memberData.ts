@@ -1,5 +1,5 @@
 import type { GcsMemberDataHandler } from "@gcs/core";
-import type { Prisma } from "@gcs/db";
+import { type Prisma, sql } from "@gcs/db";
 import { POST_CONTENT_TYPE, WRITE_TX, type GcsForumPosting } from "./posting";
 
 type Tx = Prisma.TransactionClient;
@@ -28,7 +28,7 @@ export function forumMemberData(posting: GcsForumPosting): GcsMemberDataHandler 
       const votes = await tx.pollVote.findMany({ where: { userId }, take: limit, select: { pollId: true, optionId: true } });
       for (const v of votes) {
         const { count } = await tx.pollVote.deleteMany({ where: { pollId: v.pollId, optionId: v.optionId, userId } });
-        if (count > 0) await tx.$executeRaw`UPDATE poll_options SET "votesCount" = GREATEST(0, "votesCount" - 1) WHERE id = ${v.optionId}`;
+        if (count > 0) await tx.$executeRaw(sql`UPDATE poll_options SET "votesCount" = GREATEST(0, "votesCount" - 1) WHERE id = ${v.optionId}`);
       }
       return votes.length;
     });
@@ -37,11 +37,11 @@ export function forumMemberData(posting: GcsForumPosting): GcsMemberDataHandler 
   /** Golește referințele fără cheie străină spre membru (ultimul mesaj, „editat de”, „ascuns de”, reviziile). */
   async function clearRefs(userId: string): Promise<number> {
     let n = 0;
-    n += await db.$executeRaw`UPDATE topics SET "lastPosterId" = NULL WHERE "lastPosterId" = ${userId}`;
-    n += await db.$executeRaw`UPDATE forums SET "lastPosterId" = NULL WHERE "lastPosterId" = ${userId}`;
-    n += await db.$executeRaw`UPDATE posts SET "editedById" = NULL WHERE "editedById" = ${userId}`;
-    n += await db.$executeRaw`UPDATE posts SET "hiddenById" = NULL WHERE "hiddenById" = ${userId}`;
-    n += await db.$executeRaw`UPDATE post_revisions SET "editorId" = NULL WHERE "editorId" = ${userId}`;
+    n += await db.$executeRaw(sql`UPDATE topics SET "lastPosterId" = NULL WHERE "lastPosterId" = ${userId}`);
+    n += await db.$executeRaw(sql`UPDATE forums SET "lastPosterId" = NULL WHERE "lastPosterId" = ${userId}`);
+    n += await db.$executeRaw(sql`UPDATE posts SET "editedById" = NULL WHERE "editedById" = ${userId}`);
+    n += await db.$executeRaw(sql`UPDATE posts SET "hiddenById" = NULL WHERE "hiddenById" = ${userId}`);
+    n += await db.$executeRaw(sql`UPDATE post_revisions SET "editorId" = NULL WHERE "editorId" = ${userId}`);
     return n;
   }
 
@@ -106,9 +106,9 @@ export function forumMemberData(posting: GcsForumPosting): GcsMemberDataHandler 
   /** Mută rândurile unui tabel de la sursă la țintă (un lot); `column` e una dintre coloanele de autor. */
   async function moveBatch(tx: Tx | typeof db, table: "posts" | "topics", sourceId: string, targetId: string): Promise<number> {
     if (table === "posts") {
-      return tx.$executeRaw`UPDATE posts SET "authorId" = ${targetId} WHERE id IN (SELECT id FROM posts WHERE "authorId" = ${sourceId} LIMIT ${BULK})`;
+      return tx.$executeRaw(sql`UPDATE posts SET "authorId" = ${targetId} WHERE id IN (SELECT id FROM posts WHERE "authorId" = ${sourceId} LIMIT ${BULK})`);
     }
-    return tx.$executeRaw`UPDATE topics SET "authorId" = ${targetId} WHERE id IN (SELECT id FROM topics WHERE "authorId" = ${sourceId} LIMIT ${BULK})`;
+    return tx.$executeRaw(sql`UPDATE topics SET "authorId" = ${targetId} WHERE id IN (SELECT id FROM topics WHERE "authorId" = ${sourceId} LIMIT ${BULK})`);
   }
 
   return {
@@ -150,9 +150,9 @@ export function forumMemberData(posting: GcsForumPosting): GcsMemberDataHandler 
         if (posts.length > 0) return posts.length;
       } else {
         // Anonimizarea, pe loturi mari: autorul gol („Membru șters”) și fără IP.
-        const posts = await db.$executeRaw`UPDATE posts SET "authorId" = NULL, ip = NULL WHERE id IN (SELECT id FROM posts WHERE "authorId" = ${userId} LIMIT ${BULK})`;
+        const posts = await db.$executeRaw(sql`UPDATE posts SET "authorId" = NULL, ip = NULL WHERE id IN (SELECT id FROM posts WHERE "authorId" = ${userId} LIMIT ${BULK})`);
         if (posts > 0) return posts;
-        const topics = await db.$executeRaw`UPDATE topics SET "authorId" = NULL WHERE id IN (SELECT id FROM topics WHERE "authorId" = ${userId} LIMIT ${BULK})`;
+        const topics = await db.$executeRaw(sql`UPDATE topics SET "authorId" = NULL WHERE id IN (SELECT id FROM topics WHERE "authorId" = ${userId} LIMIT ${BULK})`);
         if (topics > 0) return topics;
       }
       return clearRefs(userId);
@@ -160,11 +160,10 @@ export function forumMemberData(posting: GcsForumPosting): GcsMemberDataHandler 
     async merge({ sourceId, targetId }) {
       // Voturile: dacă ținta votase deja în același sondaj, votul sursei dispare (cu contorul opțiunii).
       const votes = await db.$transaction(async (tx) => {
-        const dropped = await tx.$queryRaw<{ optionId: number }[]>`
-          DELETE FROM poll_votes s WHERE s."userId" = ${sourceId}
-            AND EXISTS (SELECT 1 FROM poll_votes t WHERE t."userId" = ${targetId} AND t."pollId" = s."pollId")
-          RETURNING "optionId"`;
-        for (const d of dropped) await tx.$executeRaw`UPDATE poll_options SET "votesCount" = GREATEST(0, "votesCount" - 1) WHERE id = ${d.optionId}`;
+        const targetPolls = (await tx.pollVote.findMany({ where: { userId: targetId }, distinct: ["pollId"], select: { pollId: true } })).map((v) => v.pollId);
+        const dropped = await tx.pollVote.findMany({ where: { userId: sourceId, pollId: { in: targetPolls } }, select: { pollId: true, optionId: true } });
+        await tx.pollVote.deleteMany({ where: { userId: sourceId, pollId: { in: targetPolls } } });
+        for (const d of dropped) await tx.$executeRaw(sql`UPDATE poll_options SET "votesCount" = GREATEST(0, "votesCount" - 1) WHERE id = ${d.optionId}`);
         const moved = await tx.pollVote.updateMany({ where: { userId: sourceId }, data: { userId: targetId } });
         return dropped.length + moved.count;
       });
@@ -175,15 +174,15 @@ export function forumMemberData(posting: GcsForumPosting): GcsMemberDataHandler 
       if (topics > 0) return topics;
       const refs = await db.$transaction(async (tx) => {
         let n = 0;
-        n += await tx.$executeRaw`UPDATE topics SET "lastPosterId" = ${targetId} WHERE "lastPosterId" = ${sourceId}`;
-        n += await tx.$executeRaw`UPDATE forums SET "lastPosterId" = ${targetId} WHERE "lastPosterId" = ${sourceId}`;
-        n += await tx.$executeRaw`UPDATE posts SET "editedById" = ${targetId} WHERE "editedById" = ${sourceId}`;
-        n += await tx.$executeRaw`UPDATE posts SET "hiddenById" = ${targetId} WHERE "hiddenById" = ${sourceId}`;
-        n += await tx.$executeRaw`UPDATE post_revisions SET "editorId" = ${targetId} WHERE "editorId" = ${sourceId}`;
+        n += await tx.$executeRaw(sql`UPDATE topics SET "lastPosterId" = ${targetId} WHERE "lastPosterId" = ${sourceId}`);
+        n += await tx.$executeRaw(sql`UPDATE forums SET "lastPosterId" = ${targetId} WHERE "lastPosterId" = ${sourceId}`);
+        n += await tx.$executeRaw(sql`UPDATE posts SET "editedById" = ${targetId} WHERE "editedById" = ${sourceId}`);
+        n += await tx.$executeRaw(sql`UPDATE posts SET "hiddenById" = ${targetId} WHERE "hiddenById" = ${sourceId}`);
+        n += await tx.$executeRaw(sql`UPDATE post_revisions SET "editorId" = ${targetId} WHERE "editorId" = ${sourceId}`);
         // Marcajele de citire: al țintei rămâne unde există, restul trec la ea.
-        n += await tx.$executeRaw`DELETE FROM read_markers s WHERE s."userId" = ${sourceId} AND EXISTS (SELECT 1 FROM read_markers t WHERE t."userId" = ${targetId} AND t."topicId" = s."topicId")`;
+        n += await tx.$executeRaw(sql`DELETE FROM read_markers s WHERE s."userId" = ${sourceId} AND EXISTS (SELECT 1 FROM read_markers t WHERE t."userId" = ${targetId} AND t."topicId" = s."topicId")`);
         n += (await tx.readMarker.updateMany({ where: { userId: sourceId }, data: { userId: targetId } })).count;
-        n += await tx.$executeRaw`DELETE FROM forum_read_marks s WHERE s."userId" = ${sourceId} AND EXISTS (SELECT 1 FROM forum_read_marks t WHERE t."userId" = ${targetId} AND t."forumId" = s."forumId")`;
+        n += await tx.$executeRaw(sql`DELETE FROM forum_read_marks s WHERE s."userId" = ${sourceId} AND EXISTS (SELECT 1 FROM forum_read_marks t WHERE t."userId" = ${targetId} AND t."forumId" = s."forumId")`);
         n += (await tx.forumReadMark.updateMany({ where: { userId: sourceId }, data: { userId: targetId } })).count;
         return n;
       });

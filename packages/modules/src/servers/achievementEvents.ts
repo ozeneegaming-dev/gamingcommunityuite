@@ -1,14 +1,15 @@
 import type { GcsAchievementContext, GcsAchievementEventDef } from "@gcs/core";
-import { Prisma } from "@gcs/db";
+import { Prisma, sql } from "@gcs/db";
 
 type Stat = "kills" | "headshots" | "playtime";
 
 /** Suma unei statistici a jucătorilor legați de membru, pe serverele alese (toate, dacă lista e goală). */
 async function statSum({ db }: GcsAchievementContext, userId: string, serverIds: number[], stat: Stat): Promise<number> {
-  const col = Prisma.raw(`s."${stat}"`);
-  const rows = await db.$queryRaw<{ total: bigint | null }[]>`
+  // Nume cu litere mici, din lista fixă `Stat`: nu au nevoie de citare (identic pe PostgreSQL și MySQL).
+  const col = Prisma.raw(`s.${stat}`);
+  const rows = await db.$queryRaw<{ total: bigint | null }[]>(sql`
     SELECT SUM(${col})::bigint AS total FROM game_player_stats s JOIN game_players p ON p.id = s."playerId"
-    WHERE p."userId" = ${userId} ${serverIds.length > 0 ? Prisma.sql`AND s."serverId" IN (${Prisma.join(serverIds)})` : Prisma.empty}`;
+    WHERE p."userId" = ${userId} ${serverIds.length > 0 ? sql`AND s."serverId" IN (${Prisma.join(serverIds)})` : Prisma.empty}`);
   return Number(rows[0]?.total ?? 0);
 }
 

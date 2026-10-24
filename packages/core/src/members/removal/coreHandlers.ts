@@ -108,14 +108,13 @@ export function followDataHandler(deps: { db: PrismaClient }): GcsMemberDataHand
     },
     async erase({ userId, batchSize }) {
       return db.$transaction(async (tx) => {
-        const removed = await tx.$queryRaw<{ contentType: string; contentId: string }[]>`
-          DELETE FROM follows WHERE id IN (SELECT id FROM follows WHERE "userId" = ${userId} ORDER BY id LIMIT ${batchSize * 10})
-          RETURNING "contentType", "contentId"`;
-        const followed = removed.filter((r) => r.contentType === USER_FOLLOW).map((r) => r.contentId);
-        if (followed.length > 0) {
-          await tx.$executeRaw`
-            UPDATE users u SET "followersCount" = GREATEST(0, u."followersCount" - c.n)
-            FROM (SELECT id, COUNT(*)::int AS n FROM unnest(${followed}::text[]) AS id GROUP BY id) c WHERE u.id = c.id`;
+        const removed = await tx.follow.findMany({ where: { userId }, orderBy: { id: "asc" }, take: batchSize * 10, select: { id: true, contentType: true, contentId: true } });
+        await tx.follow.deleteMany({ where: { id: { in: removed.map((r) => r.id) } } });
+        const followed = new Map<string, number>();
+        for (const r of removed) if (r.contentType === USER_FOLLOW) followed.set(r.contentId, (followed.get(r.contentId) ?? 0) + 1);
+        for (const [id, n] of followed) {
+          await tx.user.updateMany({ where: { id, followersCount: { gte: n } }, data: { followersCount: { decrement: n } } });
+          await tx.user.updateMany({ where: { id, followersCount: { lt: n } }, data: { followersCount: 0 } });
         }
         const followers = await tx.follow.deleteMany({ where: { contentType: USER_FOLLOW, contentId: userId } });
         return removed.length + followers.count;
@@ -124,23 +123,27 @@ export function followDataHandler(deps: { db: PrismaClient }): GcsMemberDataHand
     async merge({ sourceId, targetId }) {
       return db.$transaction(async (tx) => {
         // Urmăririle sursei: dublurile și „ținta se urmărește pe ea” se șterg, restul trec la țintă.
-        const dup = await tx.$executeRaw`
-          DELETE FROM follows s WHERE s."userId" = ${sourceId}
-            AND (EXISTS (SELECT 1 FROM follows t WHERE t."userId" = ${targetId} AND t."contentType" = s."contentType" AND t."contentId" = s."contentId")
-                 OR (s."contentType" = ${USER_FOLLOW} AND s."contentId" = ${targetId}))`;
+        const [mine, theirs] = await Promise.all([
+          tx.follow.findMany({ where: { userId: sourceId }, select: { id: true, contentType: true, contentId: true } }),
+          tx.follow.findMany({ where: { userId: targetId }, select: { contentType: true, contentId: true } }),
+        ]);
+        const has = new Set(theirs.map((t) => `${t.contentType}|${t.contentId}`));
+        const drop = mine.filter((s) => has.has(`${s.contentType}|${s.contentId}`) || (s.contentType === USER_FOLLOW && s.contentId === targetId)).map((s) => s.id);
+        const dup = (await tx.follow.deleteMany({ where: { id: { in: drop } } })).count;
         const moved = await tx.follow.updateMany({ where: { userId: sourceId }, data: { userId: targetId } });
         // Urmăritorii sursei: ținta însăși și cei care urmăreau deja ținta se șterg, restul o urmăresc pe țintă.
-        const dupFollowers = await tx.$executeRaw`
-          DELETE FROM follows f WHERE f."contentType" = ${USER_FOLLOW} AND f."contentId" = ${sourceId}
-            AND (f."userId" = ${targetId}
-                 OR EXISTS (SELECT 1 FROM follows g WHERE g."userId" = f."userId" AND g."contentType" = ${USER_FOLLOW} AND g."contentId" = ${targetId}))`;
+        const followersOfTarget = new Set((await tx.follow.findMany({ where: { contentType: USER_FOLLOW, contentId: targetId }, select: { userId: true } })).map((f) => f.userId));
+        const sourceFollowers = await tx.follow.findMany({ where: { contentType: USER_FOLLOW, contentId: sourceId }, select: { id: true, userId: true } });
+        const dropFollowers = sourceFollowers.filter((f) => f.userId === targetId || followersOfTarget.has(f.userId)).map((f) => f.id);
+        const dupFollowers = (await tx.follow.deleteMany({ where: { id: { in: dropFollowers } } })).count;
         const movedFollowers = await tx.follow.updateMany({ where: { contentType: USER_FOLLOW, contentId: sourceId }, data: { contentId: targetId } });
         const changed = dup + moved.count + dupFollowers + movedFollowers.count;
         if (changed > 0) {
-          await tx.$executeRaw`
-            UPDATE users u SET "followersCount" = (SELECT COUNT(*)::int FROM follows f WHERE f."contentType" = ${USER_FOLLOW} AND f."contentId" = u.id)
-            WHERE u.id IN (${sourceId}, ${targetId})
-               OR u.id IN (SELECT "contentId" FROM follows WHERE "userId" = ${targetId} AND "contentType" = ${USER_FOLLOW})`;
+          const followedByTarget = await tx.follow.findMany({ where: { userId: targetId, contentType: USER_FOLLOW }, select: { contentId: true } });
+          for (const id of new Set([sourceId, targetId, ...followedByTarget.map((f) => f.contentId)])) {
+            const followersCount = await tx.follow.count({ where: { contentType: USER_FOLLOW, contentId: id } });
+            await tx.user.updateMany({ where: { id }, data: { followersCount } });
+          }
         }
         return changed;
       });
@@ -160,7 +163,8 @@ export function notificationDataHandler(deps: { db: PrismaClient }): GcsMemberDa
       return [{ key: "notifications.all", count: await db.notification.count({ where: { userId } }) }];
     },
     async erase({ userId, batchSize }) {
-      const removed = await db.$executeRaw`DELETE FROM notifications WHERE id IN (SELECT id FROM notifications WHERE "userId" = ${userId} LIMIT ${batchSize * 20})`;
+      const batch = await db.notification.findMany({ where: { userId }, take: batchSize * 20, select: { id: true } });
+      const removed = (await db.notification.deleteMany({ where: { id: { in: batch.map((n) => n.id) } } })).count;
       if (removed > 0) return removed;
       const prefs = await db.notificationPreference.deleteMany({ where: { userId } });
       // Notificări v2: dispozitivele web push și setările de livrare.
@@ -170,9 +174,9 @@ export function notificationDataHandler(deps: { db: PrismaClient }): GcsMemberDa
     },
     async merge({ sourceId, targetId }) {
       return db.$transaction(async (tx) => {
-        const clash = await tx.$executeRaw`
-          DELETE FROM notifications s WHERE s."userId" = ${sourceId} AND s."readAt" IS NULL
-            AND EXISTS (SELECT 1 FROM notifications t WHERE t."userId" = ${targetId} AND t."readAt" IS NULL AND t."groupKey" = s."groupKey")`;
+        const targetUnread = new Set((await tx.notification.findMany({ where: { userId: targetId, readAt: null }, select: { groupKey: true } })).map((n) => n.groupKey));
+        const sourceUnread = await tx.notification.findMany({ where: { userId: sourceId, readAt: null }, select: { id: true, groupKey: true } });
+        const clash = (await tx.notification.deleteMany({ where: { id: { in: sourceUnread.filter((n) => targetUnread.has(n.groupKey)).map((n) => n.id) } } })).count;
         const moved = await tx.notification.updateMany({ where: { userId: sourceId }, data: { userId: targetId } });
         return clash + moved.count;
       });

@@ -1,5 +1,5 @@
 import type { GcsActor, GcsAppService, GcsPermissionService } from "@gcs/core";
-import { Prisma, type GameMatchStatus, type GamePlayerKind, type PrismaClient } from "@gcs/db";
+import { Prisma, type GameMatchStatus, type GamePlayerKind, type PrismaClient, sql } from "@gcs/db";
 import { SERVERS_APP } from "../poller";
 import { BRIDGE_PERMISSION } from "./config";
 import { cleanMapName } from "./mapImages";
@@ -194,12 +194,12 @@ export class GcsBridgeQueries {
   /** Profilul de joc al unui membru: identitatea principală (Steam cu cel mai mult timp de joc, altfel cea mai recentă). */
   async userProfile(actor: GcsActor, userId: string): Promise<GcsPlayerProfile | null> {
     if (!(await this.canViewStats(actor))) return null;
-    const rows = await this.deps.db.$queryRaw<{ id: number }[]>`
+    const rows = await this.deps.db.$queryRaw<{ id: number }[]>(sql`
       SELECT p.id FROM game_players p LEFT JOIN game_player_stats s ON s."playerId" = p.id
       WHERE p."userId" = ${userId}
       GROUP BY p.id, p.kind, p."lastSeenAt"
       ORDER BY (p.kind = 'STEAM') DESC, COALESCE(SUM(s.playtime), 0) DESC, p."lastSeenAt" DESC
-      LIMIT 1`;
+      LIMIT 1`);
     return rows[0] ? this.playerProfile(actor, rows[0].id) : null;
   }
 
@@ -212,12 +212,12 @@ export class GcsBridgeQueries {
     const { db } = this.deps;
     const identities = await db.gamePlayer.findMany({ where: { userId }, select: { id: true } });
     if (identities.length === 0) return null;
-    const [main] = await db.$queryRaw<{ id: number }[]>`
+    const [main] = await db.$queryRaw<{ id: number }[]>(sql`
       SELECT p.id FROM game_players p LEFT JOIN game_player_stats s ON s."playerId" = p.id
       WHERE p."userId" = ${userId}
       GROUP BY p.id, p.kind, p."lastSeenAt"
       ORDER BY (p.kind = 'STEAM') DESC, COALESCE(SUM(s.playtime), 0) DESC, p."lastSeenAt" DESC
-      LIMIT 1`;
+      LIMIT 1`);
     const visible = await this.deps.visibleServers(actor);
     const [player, sum, rating] = await Promise.all([
       db.gamePlayer.findUniqueOrThrow({ where: { id: main!.id }, select: { id: true, name: true, kind: true, trust: true, value: true } }),
@@ -391,7 +391,7 @@ export class GcsBridgeQueries {
    */
   private async matchStats(ids: number[]): Promise<Map<number, GcsMatchStats>> {
     if (ids.length === 0) return new Map();
-    const rows = await this.deps.db.$queryRaw<{ id: number; a: number; b: number; elo: number | null }[]>`
+    const rows = await this.deps.db.$queryRaw<{ id: number; a: number; b: number; elo: number | null }[]>(sql`
       SELECT mp."matchId" AS id,
              (COUNT(*) FILTER (WHERE mp.team = 'A'))::int AS a,
              (COUNT(*) FILTER (WHERE mp.team = 'B'))::int AS b,
@@ -399,7 +399,7 @@ export class GcsBridgeQueries {
       FROM game_match_players mp
       LEFT JOIN game_ratings r ON r."playerId" = mp."playerId"
       WHERE mp."matchId" IN (${Prisma.join(ids)})
-      GROUP BY mp."matchId"`;
+      GROUP BY mp."matchId"`);
     return new Map(rows.map((r) => [r.id, { players: { A: r.a, B: r.b }, avgElo: r.elo }]));
   }
 

@@ -8,12 +8,15 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const prismaCli = path.resolve(here, "../node_modules/prisma/build/index.js");
 const ATTEMPTS = 5;
 
+// Ambii clienți: PostgreSQL (`@prisma/client`) și MySQL (`generated/mysql-client`, schema generată din cea principală).
+spawnSync(process.execPath, [path.join(here, "mysql-schema.mjs")], { stdio: "inherit" });
+for (const schema of ["prisma/schema.prisma", "prisma/mysql/schema.prisma"])
 for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
-  const result = spawnSync(process.execPath, [prismaCli, "generate"], { cwd: path.resolve(here, ".."), encoding: "utf8" });
+  const result = spawnSync(process.execPath, [prismaCli, "generate", "--schema", schema], { cwd: path.resolve(here, ".."), encoding: "utf8" });
   const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
   if (result.status === 0) {
     process.stdout.write(output);
-    process.exit(0);
+    break;
   }
   if (!output.includes("EPERM") || attempt === ATTEMPTS) {
     process.stderr.write(output);

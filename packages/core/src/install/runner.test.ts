@@ -1,4 +1,5 @@
 import { mkdtempSync, rmSync } from "node:fs";
+import { testOnMysql } from "@gcs/db/test/url";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -73,6 +74,7 @@ function input(overrides: Partial<GcsInstallInput> = {}): GcsInstallInput {
 }
 
 beforeEach(async () => {
+  if (testOnMysql()) return;
   dir = mkdtempSync(path.join(os.tmpdir(), "gcs-run-"));
   await admin(async (c) => {
     await c.query(`DROP DATABASE IF EXISTS "${DB}" WITH (FORCE)`);
@@ -88,6 +90,7 @@ afterEach(() => {
 });
 
 afterAll(async () => {
+  if (testOnMysql()) return;
   await admin((c) => c.query(`DROP DATABASE IF EXISTS "${DB}" WITH (FORCE)`));
   kv.disconnect();
 });
@@ -104,7 +107,8 @@ async function inspect() {
   }
 }
 
-describe("runInstall", () => {
+// Installer-ul pe PostgreSQL; pasul MySQL al ediției Lite are testele lui.
+describe.skipIf(testOnMysql())("runInstall", () => {
   test("pe o bază goală: 12 grupuri, adminul în root_admin, setările scrise, instalarea marcată", async () => {
     const state = new GcsInstallState(dir);
     const events: { stepKey: string; pct: number }[] = [];
@@ -186,7 +190,7 @@ describe("runInstall", () => {
 });
 
 // Creează o bază nouă (CREATE DATABASE copiază șablonul); sub încărcarea `pnpm test` depășește 30 s.
-describe("testDatabase", { timeout: 120_000 }, () => {
+describe.skipIf(testOnMysql())("testDatabase", { timeout: 120_000 }, () => {
   test("baza existentă → ok fără creare; o bază nouă e creată și primește extensiile", async () => {
     await expect(testDatabase({ ...pgTarget(), database: DB })).resolves.toEqual({ ok: true, created: false });
     const fresh = `${DB}_nou`;

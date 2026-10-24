@@ -1,4 +1,5 @@
 import { GcsForbidden, GcsRateLimited, GcsValidationError, type GcsActor, type GcsRealtime } from "@gcs/core";
+import { jsonPath } from "@gcs/db";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createProfileWorld, type GcsProfileWorld } from "../../test/profileWorld";
 import { GcsChatService } from "./chat";
@@ -271,7 +272,7 @@ describe("accesul de moderator în chat", () => {
     expect(await w.db.chatSanction.count({ where: { userId: dst.userId! } })).toBe(1);
     expect(await w.db.chatModLog.count({ where: { targetId: src.userId! } })).toBe(0);
     expect(await w.db.chatModeratorGrant.findUnique({ where: { userId: dst.userId! } })).not.toBeNull();
-    const lines = await w.db.chatMessage.findMany({ where: { meta: { path: ["system", "targetId"], equals: dst.userId! } } });
+    const lines = await w.db.chatMessage.findMany({ where: { meta: { path: jsonPath("system", "targetId"), equals: dst.userId! } } });
     expect(lines.length).toBeGreaterThanOrEqual(2);
   });
 });

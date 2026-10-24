@@ -1,4 +1,5 @@
 import { mkdtempSync, rmSync } from "node:fs";
+import { testOnMysql } from "@gcs/db/test/url";
 import os from "node:os";
 import path from "node:path";
 import { inject } from "vitest";
@@ -19,7 +20,7 @@ afterAll(() => {
 const byId = (results: Awaited<ReturnType<typeof runChecks>>) => Object.fromEntries(results.map((r) => [r.id, r]));
 
 // Sub încărcarea `pnpm test` (toate pachetele în paralel), conexiunile pot depăși limita de 3 s din producție.
-describe("runChecks", () => {
+describe.skipIf(testOnMysql())("runChecks", () => {
   test("cu PostgreSQL și Redis pornite → postgres, redis, disc și config ok", async () => {
     const results = byId(await runChecks({ databaseUrl: testDbUrl(), redisUrl: inject("redisUrl"), configDir: dir, timeoutMs: 30_000 }));
     expect(results.postgres).toMatchObject({ ok: true });

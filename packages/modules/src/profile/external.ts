@@ -1,5 +1,5 @@
 import type { GcsJobQueue, GcsSettingsService } from "@gcs/core";
-import { Prisma, type PrismaClient } from "@gcs/db";
+import { Prisma, type PrismaClient, sql } from "@gcs/db";
 import { accountFromSteam64, steam2, steam3 } from "../servers/bridge/steamid";
 
 /**
@@ -229,7 +229,7 @@ export class GcsExternalProfiles {
     if (!entry) return null;
     const elo = entry.data.elo;
     if (elo === null) return { ...entry, ranking: null };
-    const [row] = await this.deps.db.$queryRaw<{ above: bigint; total: bigint }[]>(Prisma.sql`
+    const [row] = await this.deps.db.$queryRaw<{ above: bigint; total: bigint }[]>(sql`
       SELECT COUNT(*) FILTER (WHERE (data->>'elo')::int > ${elo}) AS above, COUNT(*) AS total
       FROM external_profiles WHERE provider = 'faceit' AND jsonb_typeof(data->'elo') = 'number'`);
     return { ...entry, ranking: row ? { position: Number(row.above) + 1, total: Number(row.total) } : null };

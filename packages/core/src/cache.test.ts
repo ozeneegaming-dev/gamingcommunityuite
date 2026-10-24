@@ -44,6 +44,23 @@ describe("GcsCache", () => {
     await expect(cache.get("scurt")).resolves.toBeNull();
   });
 
+  test("două citiri ratate în paralel, cu o invalidare între ele: valoarea veche nu ajunge în cache, oricare scrie întâi", async () => {
+    let clock = 1_000_000;
+    const c = new GcsCache(kv, "cursa", () => clock);
+    await expect(c.get("apps")).resolves.toBeNull(); // A citește din bază: valoarea veche
+    clock += 10;
+    await c.invalidateTags(["apps"]);
+    clock += 10;
+    await expect(c.get("apps")).resolves.toBeNull(); // B citește după invalidare: valoarea nouă
+    clock += 10;
+    await c.set("apps", "nou", { ttlSec: 60, tags: ["apps"] }); // B scrie primul (refuzat, prudent: nu știm care e)
+    await c.set("apps", "vechi", { ttlSec: 60, tags: ["apps"] }); // A scrie după: refuzat
+    await expect(c.get("apps")).resolves.not.toBe("vechi");
+    clock += 10;
+    await c.set("apps", "nou", { ttlSec: 60, tags: ["apps"] }); // o citire nouă, după invalidare: se scrie
+    await expect(c.get("apps")).resolves.toBe("nou");
+  });
+
   test("prefixul separă două cache-uri pe același Redis", async () => {
     const other = new GcsCache(kv, "altul");
     await cache.set("k", "gcs", { ttlSec: 60, tags: ["t"] });

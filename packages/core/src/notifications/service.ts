@@ -1,4 +1,4 @@
-import { jsonStrings, Prisma, type PrismaClient } from "@gcs/db";
+import { jsonStrings, Prisma, type PrismaClient, retryOnUnique } from "@gcs/db";
 import { writeAudit } from "../audit";
 import type { GcsCache } from "../cache";
 import { GcsValidationError } from "../errors";
@@ -465,10 +465,14 @@ export class GcsNotificationService {
 
   /** Marchează din nou necitită o notificare din clopoțel (dacă nu există deja una necitită în același grup). */
   async markUnread(userId: string, id: number): Promise<number> {
-    await this.deps.db.$executeRaw`
-      UPDATE notifications n SET "readAt" = NULL
-      WHERE n.id = ${id} AND n."userId" = ${userId} AND n.site AND n."readAt" IS NOT NULL
-        AND NOT EXISTS (SELECT 1 FROM notifications o WHERE o."userId" = n."userId" AND o."groupKey" = n."groupKey" AND o."readAt" IS NULL)`;
+    const { db } = this.deps;
+    const row = await db.notification.findFirst({ where: { id, userId, site: true, readAt: { not: null } }, select: { groupKey: true } });
+    // O necitită din același grup există deja: rămâne citită (indexul unic `(userId, unreadKey)` ar refuza oricum).
+    if (row && !(await db.notification.findFirst({ where: { userId, groupKey: row.groupKey, readAt: null }, select: { id: true } }))) {
+      await db.notification.updateMany({ where: { id, userId, readAt: { not: null } }, data: { readAt: null } }).catch((error: unknown) => {
+        if ((error as { code?: string }).code !== "P2002") throw error;
+      });
+    }
     return this.changed(userId);
   }
 
@@ -489,9 +493,10 @@ export class GcsNotificationService {
   /** Adaugă `n` trimiteri pe canal (ziua de azi, UTC). */
   async recordSent(type: string, channel: GcsNotifyStatChannel, n = 1, now = new Date()): Promise<void> {
     if (n <= 0) return;
-    await this.deps.db.$executeRaw`
-      INSERT INTO notification_stats (day, type, channel, sent) VALUES (${dayOf(now)}::date, ${type}, ${channel}, ${n})
-      ON CONFLICT (day, type, channel) DO UPDATE SET sent = notification_stats.sent + EXCLUDED.sent`;
+    const day = new Date(`${dayOf(now)}T00:00:00Z`);
+    await retryOnUnique(() =>
+      this.deps.db.notificationStat.upsert({ where: { day_type_channel: { day, type, channel } }, create: { day, type, channel, sent: n }, update: { sent: { increment: n } } }),
+    );
   }
 
   /**
@@ -500,13 +505,15 @@ export class GcsNotificationService {
    */
   async recordClick(userId: string, id: number, channel: GcsNotifyStatChannel, now = new Date()): Promise<boolean> {
     if (!Number.isSafeInteger(id)) return false;
-    const rows = await this.deps.db.$queryRaw<{ type: string }[]>`
-      UPDATE notifications SET "clickedAt" = ${now.toISOString()}::timestamp WHERE id = ${id} AND "userId" = ${userId} AND "clickedAt" IS NULL RETURNING type`;
-    const row = rows[0];
+    const { db } = this.deps;
+    const claimed = await db.notification.updateMany({ where: { id, userId, clickedAt: null }, data: { clickedAt: now } });
+    if (claimed.count !== 1) return false;
+    const row = await db.notification.findUnique({ where: { id }, select: { type: true } });
     if (!row) return false;
-    await this.deps.db.$executeRaw`
-      INSERT INTO notification_stats (day, type, channel, clicked) VALUES (${dayOf(now)}::date, ${row.type}, ${channel}, 1)
-      ON CONFLICT (day, type, channel) DO UPDATE SET clicked = notification_stats.clicked + 1`;
+    const day = new Date(`${dayOf(now)}T00:00:00Z`);
+    await retryOnUnique(() =>
+      db.notificationStat.upsert({ where: { day_type_channel: { day, type: row.type, channel } }, create: { day, type: row.type, channel, clicked: 1 }, update: { clicked: { increment: 1 } } }),
+    );
     return true;
   }
 

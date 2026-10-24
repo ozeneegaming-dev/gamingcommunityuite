@@ -1,5 +1,5 @@
 import { normalizeGroupName, normalizeUsername, type GcsActor, type GcsCache, type GcsGroupMentionService, type GcsPermissionService } from "@gcs/core";
-import type { PrismaClient } from "@gcs/db";
+import { type PrismaClient, sql } from "@gcs/db";
 import { toRef, userRefSelect, type GcsUserRef } from "../forums/queries";
 import { normalizePrivacy } from "./privacy";
 
@@ -59,11 +59,11 @@ export class GcsMentionQueries {
   async users(query: string, now = Date.now()): Promise<GcsMentionUser[]> {
     const q = normalizeUsername(query);
     if (q.length < 2 || q.length > 40) return [];
-    const ids = await this.deps.db.$queryRaw<{ id: string }[]>`
+    const ids = await this.deps.db.$queryRaw<{ id: string }[]>(sql`
       SELECT id FROM users
       WHERE "nameNormalized" COLLATE "C" LIKE ${likePrefix(q)}
       ORDER BY "nameNormalized" COLLATE "C"
-      LIMIT ${MENTION_USER_LIMIT}`;
+      LIMIT ${MENTION_USER_LIMIT}`);
     if (ids.length === 0) return [];
     const rows = await this.deps.db.user.findMany({ where: { id: { in: ids.map((r) => r.id) } }, select: memberSelect });
     const byId = new Map(rows.map((r) => [r.id, r]));
@@ -105,17 +105,17 @@ export class GcsMentionQueries {
     if (!group) return null;
     const since = new Date(now - ONLINE_MS);
     // Membrii: grupul principal sau secundar. Online = activ recent și cu statusul vizibil (lipsa setării = vizibil).
-    const [counts] = await db.$queryRaw<{ total: number; online: number }[]>`
+    const [counts] = await db.$queryRaw<{ total: number; online: number }[]>(sql`
       SELECT count(*)::int AS total,
              count(*) FILTER (WHERE u."lastActiveAt" >= ${since.toISOString()}::timestamp AND COALESCE((u.privacy->>'showOnline')::boolean, true))::int AS online
       FROM users u
-      WHERE u."primaryGroupId" = ${groupId} OR EXISTS (SELECT 1 FROM user_groups ug WHERE ug."userId" = u.id AND ug."groupId" = ${groupId})`;
-    const top = await db.$queryRaw<{ id: string }[]>`
+      WHERE u."primaryGroupId" = ${groupId} OR EXISTS (SELECT 1 FROM user_groups ug WHERE ug."userId" = u.id AND ug."groupId" = ${groupId})`);
+    const top = await db.$queryRaw<{ id: string }[]>(sql`
       SELECT u.id FROM users u
       WHERE u."primaryGroupId" = ${groupId} OR EXISTS (SELECT 1 FROM user_groups ug WHERE ug."userId" = u.id AND ug."groupId" = ${groupId})
       ORDER BY (u."lastActiveAt" >= ${since.toISOString()}::timestamp AND COALESCE((u.privacy->>'showOnline')::boolean, true)) DESC NULLS LAST,
                u."lastActiveAt" DESC NULLS LAST, u.id
-      LIMIT ${GROUP_CARD_MEMBERS}`;
+      LIMIT ${GROUP_CARD_MEMBERS}`);
     const rows = top.length > 0 ? await db.user.findMany({ where: { id: { in: top.map((r) => r.id) } }, select: memberSelect }) : [];
     const byId = new Map(rows.map((r) => [r.id, r]));
     const members = top.flatMap(({ id }) => {

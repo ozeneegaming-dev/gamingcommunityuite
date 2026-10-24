@@ -1,5 +1,5 @@
 import type { GcsMemberDataHandler, GcsMemberDataNote } from "@gcs/core";
-import type { PrismaClient } from "@gcs/db";
+import { type PrismaClient, sql } from "@gcs/db";
 import { STATUS_CONTENT_TYPE } from "./social";
 
 const BULK = 5000;
@@ -59,7 +59,7 @@ export function profileMemberData(deps: { db: PrismaClient; evaluate?: (userId: 
     },
     async erase({ userId, mode, batchSize }) {
       // Peretele propriului profil (cu răspunsurile, în cascadă).
-      const wall = await db.$executeRaw`DELETE FROM status_updates WHERE id IN (SELECT id FROM status_updates WHERE "profileUserId" = ${userId} AND "parentId" IS NULL LIMIT ${batchSize * 10})`;
+      const wall = await db.$executeRaw(sql`DELETE FROM status_updates WHERE id IN (SELECT id FROM status_updates WHERE "profileUserId" = ${userId} AND "parentId" IS NULL LIMIT ${batchSize * 10})`);
       if (wall > 0) return wall;
       if (mode === "DELETE_CONTENT") {
         const rows = await db.statusUpdate.findMany({ where: { authorId: userId }, take: batchSize, orderBy: { id: "asc" }, select: { id: true, parentId: true, visibility: true } });
@@ -68,43 +68,43 @@ export function profileMemberData(deps: { db: PrismaClient; evaluate?: (userId: 
             const replies = await tx.statusUpdate.findMany({ where: { parentId: s.id }, select: { id: true } });
             const { count } = await tx.statusUpdate.deleteMany({ where: { id: s.id } });
             if (count > 0 && s.parentId !== null && s.visibility !== "HIDDEN") {
-              await tx.$executeRaw`UPDATE status_updates SET "repliesCount" = GREATEST(0, "repliesCount" - 1) WHERE id = ${s.parentId}`;
+              await tx.$executeRaw(sql`UPDATE status_updates SET "repliesCount" = GREATEST(0, "repliesCount" - 1) WHERE id = ${s.parentId}`);
             }
             await tx.contentReaction.deleteMany({ where: { contentType: STATUS_CONTENT_TYPE, contentId: { in: [s.id, ...replies.map((r) => r.id)].map(String) } } });
           });
         }
         return rows.length;
       }
-      return db.$executeRaw`UPDATE status_updates SET "authorId" = NULL, ip = NULL WHERE id IN (SELECT id FROM status_updates WHERE "authorId" = ${userId} LIMIT ${BULK})`;
+      return db.$executeRaw(sql`UPDATE status_updates SET "authorId" = NULL, ip = NULL WHERE id IN (SELECT id FROM status_updates WHERE "authorId" = ${userId} LIMIT ${BULK})`);
     },
     async merge({ sourceId, targetId }) {
-      const wall = await db.$executeRaw`UPDATE status_updates SET "profileUserId" = ${targetId} WHERE id IN (SELECT id FROM status_updates WHERE "profileUserId" = ${sourceId} LIMIT ${BULK})`;
+      const wall = await db.$executeRaw(sql`UPDATE status_updates SET "profileUserId" = ${targetId} WHERE id IN (SELECT id FROM status_updates WHERE "profileUserId" = ${sourceId} LIMIT ${BULK})`);
       if (wall > 0) return wall;
-      const statuses = await db.$executeRaw`UPDATE status_updates SET "authorId" = ${targetId} WHERE id IN (SELECT id FROM status_updates WHERE "authorId" = ${sourceId} LIMIT ${BULK})`;
+      const statuses = await db.$executeRaw(sql`UPDATE status_updates SET "authorId" = ${targetId} WHERE id IN (SELECT id FROM status_updates WHERE "authorId" = ${sourceId} LIMIT ${BULK})`);
       if (statuses > 0) return statuses;
       const moved = await db.$transaction(async (tx) => {
         let n = 0;
         // Ignorările sursei: dublurile și „ținta se ignoră pe ea” dispar; ignorările altora față de sursă trec pe țintă.
-        n += await tx.$executeRaw`
+        n += await tx.$executeRaw(sql`
           DELETE FROM user_ignores s WHERE s."userId" = ${sourceId}
-            AND (s."ignoredId" = ${targetId} OR EXISTS (SELECT 1 FROM user_ignores t WHERE t."userId" = ${targetId} AND t."ignoredId" = s."ignoredId"))`;
+            AND (s."ignoredId" = ${targetId} OR EXISTS (SELECT 1 FROM user_ignores t WHERE t."userId" = ${targetId} AND t."ignoredId" = s."ignoredId"))`);
         n += (await tx.userIgnore.updateMany({ where: { userId: sourceId }, data: { userId: targetId } })).count;
-        n += await tx.$executeRaw`
+        n += await tx.$executeRaw(sql`
           DELETE FROM user_ignores s WHERE s."ignoredId" = ${sourceId}
-            AND (s."userId" = ${targetId} OR EXISTS (SELECT 1 FROM user_ignores t WHERE t."ignoredId" = ${targetId} AND t."userId" = s."userId"))`;
+            AND (s."userId" = ${targetId} OR EXISTS (SELECT 1 FROM user_ignores t WHERE t."ignoredId" = ${targetId} AND t."userId" = s."userId"))`);
         n += (await tx.userIgnore.updateMany({ where: { ignoredId: sourceId }, data: { ignoredId: targetId } })).count;
 
         // Insignele și realizările, fără dubluri; punctele dublurilor nu se adaugă țintei.
-        const badgePoints = await tx.$queryRaw<{ points: number }[]>`
-          DELETE FROM user_badges s USING badges b WHERE s."userId" = ${sourceId} AND b.id = s."badgeId"
-            AND EXISTS (SELECT 1 FROM user_badges t WHERE t."userId" = ${targetId} AND t."badgeId" = s."badgeId")
-          RETURNING b.points`;
+        const targetBadges = (await tx.userBadge.findMany({ where: { userId: targetId }, select: { badgeId: true } })).map((b) => b.badgeId);
+        const dupBadges = await tx.userBadge.findMany({ where: { userId: sourceId, badgeId: { in: targetBadges } }, select: { badgeId: true, badge: { select: { points: true } } } });
+        await tx.userBadge.deleteMany({ where: { userId: sourceId, badgeId: { in: dupBadges.map((b) => b.badgeId) } } });
+        const badgePoints = dupBadges.map((b) => ({ points: b.badge.points }));
         n += badgePoints.length;
         n += (await tx.userBadge.updateMany({ where: { userId: sourceId }, data: { userId: targetId } })).count;
-        const logPoints = await tx.$queryRaw<{ points: number }[]>`
-          DELETE FROM achievement_log s WHERE s."userId" = ${sourceId} AND s."uniqueKey" IS NOT NULL
-            AND EXISTS (SELECT 1 FROM achievement_log t WHERE t."userId" = ${targetId} AND t."uniqueKey" = s."uniqueKey")
-          RETURNING s.points`;
+        const targetKeys = (await tx.achievementLog.findMany({ where: { userId: targetId, uniqueKey: { not: null } }, select: { uniqueKey: true } })).map((l) => l.uniqueKey!);
+        const dupLogs = await tx.achievementLog.findMany({ where: { userId: sourceId, uniqueKey: { in: targetKeys } }, select: { id: true, points: true } });
+        await tx.achievementLog.deleteMany({ where: { id: { in: dupLogs.map((l) => l.id) } } });
+        const logPoints = dupLogs.map((l) => ({ points: l.points }));
         n += logPoints.length;
         n += (await tx.achievementLog.updateMany({ where: { userId: sourceId }, data: { userId: targetId } })).count;
 

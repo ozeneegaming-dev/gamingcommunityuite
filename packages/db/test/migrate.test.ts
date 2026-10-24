@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { testOnMysql } from "./url";
 import { cpSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -32,6 +33,7 @@ async function admin<T>(fn: (c: pg.Client) => Promise<T>): Promise<T> {
 }
 
 beforeAll(async () => {
+  if (testOnMysql()) return;
   await admin(async (c) => {
     await c.query(`DROP DATABASE IF EXISTS "${DB}" WITH (FORCE)`);
     await c.query(`CREATE DATABASE "${DB}"`);
@@ -40,11 +42,13 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  if (testOnMysql()) return;
   await admin((c) => c.query(`DROP DATABASE IF EXISTS "${DB}" WITH (FORCE)`));
 });
 
 // Fiecare test aplică toate migrațiile; sub încărcarea `pnpm test` (toate pachetele în paralel) durează peste 30 s.
-describe("migrateDatabase", { timeout: 120_000 }, () => {
+// Migrațiile PostgreSQL (istoricul de la etapa 1); cele MySQL au testul lor (mysqlMigrate.test.ts).
+describe.skipIf(testOnMysql())("migrateDatabase", { timeout: 120_000 }, () => {
   test("pe o bază goală aplică toate migrațiile; a doua rulare nu mai aplică nimic", async () => {
     const first = await migrateDatabase(url, migrationsDir);
     expect(first.applied).toEqual(ALL_MIGRATIONS);

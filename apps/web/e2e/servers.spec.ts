@@ -98,7 +98,7 @@ test("ACP: „Testează” refuză adresele private, citește serverul fals; ad�
     [CS],
   );
   expect(row!.bannerId).not.toBeNull();
-  expect(row!.admins).toBe("1");
+  expect(Number(row!.admins)).toBe(1);
 });
 
 test("/servers: cardurile cu statusul citit de worker, Connect, copierea adresei, filtrul pe joc; vizitatorul le vede", async ({ page, context, browser }) => {
@@ -190,6 +190,8 @@ test("widget-ul „Servere” pe pagina principală; aplicația dezactivată dis
     await row.getByRole("switch", { name: "Servere pornită" }).click();
     if (!enabled) await page.getByTestId("gcs-app-confirm-ok").click();
     await expect(row.getByTestId("gcs-app-status")).toHaveText(enabled ? "Activă" : "Oprită");
+    // Insigna se schimbă optimist; notificarea apare după răspunsul serverului (salvarea e gata).
+    await expect(page.getByTestId("gcs-apps-notice")).toHaveText(enabled ? "Servere a fost pornită." : "Servere a fost oprită.");
   };
   await app(false);
   const other = await browser.newContext();

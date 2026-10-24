@@ -1,5 +1,5 @@
 import { GcsForbidden, GcsNotFound, writeAudit, type GcsActor } from "@gcs/core";
-import { Prisma, type Post, type Topic } from "@gcs/db";
+import { Prisma, type Post, type Topic, sql } from "@gcs/db";
 import { GcsForumPosting, POST_CONTENT_TYPE, WRITE_TX } from "./posting";
 import { slugify } from "./slug";
 
@@ -40,7 +40,7 @@ export class GcsPostService {
 
     const result = await db.$transaction(async (tx) => {
       // Lock pe topic: răspunsurile simultane se serializează, deci ultima postare e mereu cea cu id-ul cel mai mare.
-      const [locked] = await tx.$queryRaw<{ visibility: string }[]>`SELECT visibility FROM topics WHERE id = ${topic.id} FOR UPDATE`;
+      const [locked] = await tx.$queryRaw<{ visibility: string }[]>(sql`SELECT visibility FROM topics WHERE id = ${topic.id} FOR UPDATE`);
       if (!locked) throw new GcsNotFound();
       const post = await tx.post.create({
         data: {

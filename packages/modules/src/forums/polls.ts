@@ -1,5 +1,5 @@
 import { GcsConflict, GcsForbidden, GcsNotFound, GcsValidationError, type GcsActor } from "@gcs/core";
-import type { Prisma } from "@gcs/db";
+import { type Prisma, sql } from "@gcs/db";
 import { forumContainer, type GcsForumPosting } from "./posting";
 
 export type GcsPollInput = { question: string; options: string[]; multiple: boolean; closesAt?: string | null };
@@ -67,8 +67,8 @@ export class GcsPollService {
 
     await db.$transaction(async (tx) => {
       // Lock pe sondaj: două voturi simultane ale aceluiași user nu pot trece amândouă de verificarea de mai jos.
-      const [locked] = await tx.$queryRaw<{ closed: boolean }[]>`
-        SELECT ("closesAt" IS NOT NULL AND "closesAt" <= now() AT TIME ZONE 'UTC') AS closed FROM polls WHERE id = ${pollId} FOR UPDATE`;
+      const [locked] = await tx.$queryRaw<{ closed: boolean }[]>(sql`
+        SELECT ("closesAt" IS NOT NULL AND "closesAt" <= now() AT TIME ZONE 'UTC') AS closed FROM polls WHERE id = ${pollId} FOR UPDATE`);
       if (!locked) throw new GcsNotFound();
       if (locked.closed) throw new GcsConflict({ reason: "poll_closed" });
       if ((await tx.pollVote.count({ where: { pollId, userId: actor.userId! } })) > 0) throw new GcsConflict({ reason: "already_voted" });

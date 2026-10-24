@@ -1,4 +1,5 @@
 import { GcsRateLimited, GcsValidationError, type GcsActor } from "@gcs/core";
+import { testOnMysql } from "@gcs/db/test/url";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createForumWorld, doc, type GcsForumWorld } from "../../test/world";
 
@@ -25,7 +26,8 @@ describe("GcsForumSearch", () => {
     const t = await w.topics.create(w.root, { forumId: tree.forum.id, title: "Mașina lui Ștefan", content: doc("Detalii") });
     await w.topics.create(w.root, { forumId: tree.forum.id, title: "Altceva complet", content: doc("nimic") });
     expect(await topicIds(w.member, "masina")).toEqual([t.topicId]);
-    expect(await topicIds(w.member, "mașini")).toEqual([t.topicId]);
+    // MySQL FULLTEXT: fără flexiuni (doar prefixe) — degradare documentată a ediției Lite.
+    if (!testOnMysql()) expect(await topicIds(w.member, "mașini")).toEqual([t.topicId]);
   });
 
   test("căutarea în postări întoarce fragmente cu <mark> și nimic altceva din HTML", async () => {

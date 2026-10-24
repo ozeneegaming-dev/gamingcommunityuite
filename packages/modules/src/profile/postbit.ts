@@ -1,5 +1,5 @@
 import type { GcsActor, GcsCache, GcsPermissionService, GcsSettingsService } from "@gcs/core";
-import type { FieldVisibility, PrismaClient, ProfileFieldType } from "@gcs/db";
+import { type FieldVisibility, type PrismaClient, type ProfileFieldType, sql } from "@gcs/db";
 import { badgeArtSrc } from "@gcs/ui/badge-art";
 import type { GcsGroupDirectory } from "./groupDirectory";
 import { normalizePrivacy } from "./privacy";
@@ -167,7 +167,7 @@ export class GcsPostbitService {
           artTier: string | null;
           artIcon: string | null;
         }[]
-      >`
+      >(sql`
         SELECT r."userId", b."key", b."name", b."description", b."symbol", b."color", b."imageAttachmentId", b."manual", b."artShape", b."artTier", b."artIcon"
         FROM (
           SELECT ub."userId", ub."badgeId", ub."createdAt",
@@ -177,7 +177,7 @@ export class GcsPostbitService {
         ) r
         JOIN "badges" b ON b."id" = r."badgeId"
         WHERE r.rn <= ${RECENT_BADGES}
-        ORDER BY r."userId", r.rn`,
+        ORDER BY r."userId", r.rn`),
       defs.length === 0
         ? Promise.resolve([])
         : db.profileFieldValue.findMany({ where: { userId: { in: ids }, fieldId: { in: defs.map((d) => d.id) } }, select: { userId: true, fieldId: true, value: true } }),
@@ -189,14 +189,14 @@ export class GcsPostbitService {
         orderBy: [{ group: { position: "asc" } }, { groupId: "asc" }],
       }),
       // Ultimul status scris de membru pe propriul perete (fără răspunsuri), unul per autor, într-o singură interogare.
-      db.$queryRaw<{ userId: string; contentHtml: string }[]>`
+      db.$queryRaw<{ userId: string; contentHtml: string }[]>(sql`
         SELECT DISTINCT ON (s."profileUserId") s."profileUserId" AS "userId", s."contentHtml"
         FROM "status_updates" s
         WHERE s."profileUserId" = ANY(${ids})
           AND s."authorId" = s."profileUserId"
           AND s."parentId" IS NULL
           AND s."visibility" = 'VISIBLE'
-        ORDER BY s."profileUserId", s."createdAt" DESC, s."id" DESC`,
+        ORDER BY s."profileUserId", s."createdAt" DESC, s."id" DESC`),
       this.deps.groups ? this.deps.groups.memberGroups(ids) : Promise.resolve(new Map<string, never>()),
     ]);
 

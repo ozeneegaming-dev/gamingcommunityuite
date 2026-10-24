@@ -1,3 +1,4 @@
+import { ftsIds } from "../../test/fts";
 import { GcsForbidden, GcsNotFound, type GcsActor } from "@gcs/core";
 import { afterAll, afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { createForumWorld, doc, snapshotCounters, type GcsForumWorld } from "../../test/world";
@@ -78,8 +79,7 @@ describe("GcsPostService.edit", () => {
       title: "Configuri pentru Mașina nouă",
       slug: "configuri-pentru-masina-noua",
     });
-    const hits = await w.db.$queryRaw<{ id: number }[]>`SELECT id FROM topics WHERE "searchVector" @@ plainto_tsquery('gcs_ro', 'masina')`;
-    expect(hits.map((h) => h.id)).toEqual([topicId]);
+    expect(await ftsIds(w.db, "topics", "masina")).toEqual([topicId]);
   });
 
   test("istoricul: moderatorul îl vede; autorul doar dacă setarea o permite", async () => {

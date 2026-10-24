@@ -1,5 +1,5 @@
 import type { GcsAttachmentService, GcsMemberDataHandler } from "@gcs/core";
-import type { PrismaClient } from "@gcs/db";
+import { type PrismaClient, sql } from "@gcs/db";
 import { PM_CONTENT_TYPE } from "./conversations";
 
 const BULK = 5000;
@@ -18,12 +18,12 @@ export function messageMemberData(deps: { db: PrismaClient; attachments: Pick<Gc
   /** Numărul de mesaje și ultimul mesaj ale conversațiilor date, din date. */
   async function recount(conversationIds: number[]): Promise<void> {
     if (conversationIds.length === 0) return;
-    await db.$executeRaw`
+    await db.$executeRaw(sql`
       UPDATE conversations c SET
         "messagesCount" = (SELECT COUNT(*)::int FROM conversation_messages m WHERE m."conversationId" = c.id),
         "lastMessageId" = (SELECT MAX(m.id) FROM conversation_messages m WHERE m."conversationId" = c.id),
         "lastMessageAt" = COALESCE((SELECT MAX(m."createdAt") FROM conversation_messages m WHERE m."conversationId" = c.id), c."lastMessageAt")
-      WHERE c.id = ANY(${conversationIds}::int[])`;
+      WHERE c.id = ANY(${conversationIds}::int[])`);
   }
 
   return {
@@ -48,7 +48,7 @@ export function messageMemberData(deps: { db: PrismaClient; attachments: Pick<Gc
     },
     async erase({ userId, mode, keepMessages, batchSize }) {
       if (keepMessages && mode === "KEEP_CONTENT") {
-        const kept = await db.$executeRaw`UPDATE conversation_messages SET "authorId" = NULL, ip = NULL WHERE id IN (SELECT id FROM conversation_messages WHERE "authorId" = ${userId} LIMIT ${BULK})`;
+        const kept = await db.$executeRaw(sql`UPDATE conversation_messages SET "authorId" = NULL, ip = NULL WHERE id IN (SELECT id FROM conversation_messages WHERE "authorId" = ${userId} LIMIT ${BULK})`);
         if (kept > 0) return kept;
       } else {
         const rows = await db.conversationMessage.findMany({ where: { authorId: userId }, take: batchSize * 10, select: { id: true, conversationId: true } });
@@ -73,26 +73,26 @@ export function messageMemberData(deps: { db: PrismaClient; attachments: Pick<Gc
       }
       if (parts.length > 0) return parts.length;
       return (
-        (await db.$executeRaw`UPDATE conversations SET "starterId" = NULL WHERE "starterId" = ${userId}`) +
-        (await db.$executeRaw`UPDATE conversation_participants SET "invitedById" = NULL WHERE "invitedById" = ${userId}`)
+        (await db.$executeRaw(sql`UPDATE conversations SET "starterId" = NULL WHERE "starterId" = ${userId}`)) +
+        (await db.$executeRaw(sql`UPDATE conversation_participants SET "invitedById" = NULL WHERE "invitedById" = ${userId}`))
       );
     },
     async merge({ sourceId, targetId }) {
-      const messages = await db.$executeRaw`UPDATE conversation_messages SET "authorId" = ${targetId} WHERE id IN (SELECT id FROM conversation_messages WHERE "authorId" = ${sourceId} LIMIT ${BULK})`;
+      const messages = await db.$executeRaw(sql`UPDATE conversation_messages SET "authorId" = ${targetId} WHERE id IN (SELECT id FROM conversation_messages WHERE "authorId" = ${sourceId} LIMIT ${BULK})`);
       if (messages > 0) return messages;
       return db.$transaction(async (tx) => {
         let n = 0;
         // Ținta era deja în conversație: rămâne participarea ei (redeschisă dacă sursa era încă activă acolo).
-        n += await tx.$executeRaw`
+        n += await tx.$executeRaw(sql`
           UPDATE conversation_participants t SET "leftAt" = NULL, "lastReadMessageId" = GREATEST(t."lastReadMessageId", s."lastReadMessageId")
           FROM conversation_participants s
-          WHERE t."userId" = ${targetId} AND s."userId" = ${sourceId} AND s."conversationId" = t."conversationId" AND s."leftAt" IS NULL AND t."leftAt" IS NOT NULL`;
-        n += await tx.$executeRaw`
+          WHERE t."userId" = ${targetId} AND s."userId" = ${sourceId} AND s."conversationId" = t."conversationId" AND s."leftAt" IS NULL AND t."leftAt" IS NOT NULL`);
+        n += await tx.$executeRaw(sql`
           DELETE FROM conversation_participants s WHERE s."userId" = ${sourceId}
-            AND EXISTS (SELECT 1 FROM conversation_participants t WHERE t."userId" = ${targetId} AND t."conversationId" = s."conversationId")`;
+            AND EXISTS (SELECT 1 FROM conversation_participants t WHERE t."userId" = ${targetId} AND t."conversationId" = s."conversationId")`);
         n += (await tx.conversationParticipant.updateMany({ where: { userId: sourceId }, data: { userId: targetId } })).count;
-        n += await tx.$executeRaw`UPDATE conversations SET "starterId" = ${targetId} WHERE "starterId" = ${sourceId}`;
-        n += await tx.$executeRaw`UPDATE conversation_participants SET "invitedById" = ${targetId} WHERE "invitedById" = ${sourceId}`;
+        n += await tx.$executeRaw(sql`UPDATE conversations SET "starterId" = ${targetId} WHERE "starterId" = ${sourceId}`);
+        n += await tx.$executeRaw(sql`UPDATE conversation_participants SET "invitedById" = ${targetId} WHERE "invitedById" = ${sourceId}`);
         return n;
       });
     },

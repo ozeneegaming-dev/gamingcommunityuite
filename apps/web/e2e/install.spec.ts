@@ -1,8 +1,8 @@
+import { e2eDb } from "./db";
 import { e2eKv } from "./kv";
 import { createPrivateKey, sign } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import pg from "pg";
 
 const CODE = process.env.GCS_E2E_INSTALL_CODE ?? "";
 const LICENSE_KEY = process.env.GCS_E2E_LICENSE_KEY ?? "";
@@ -213,8 +213,7 @@ test("instalarea completă: licența, aplicațiile, reluare după refresh, login
   });
 
   await test.step("pentru smoke-uri: starea de după seed (premium oprite, restul pornite), Forumul pe /, cache-ul golit", async () => {
-    const db = new pg.Client({ connectionString: process.env.GCS_E2E_INSTALL_DATABASE_URL });
-    await db.connect();
+    const db = await e2eDb(process.env.GCS_E2E_INSTALL_DATABASE_URL);
     try {
       await db.query(`DELETE FROM settings WHERE key = $1`, ["apps.landing"]);
       // Starea de după seed: aplicațiile premium (Chat Pro, Grupuri Pro) își pun singure un rând „oprită”; restul, fără rând = pornite.

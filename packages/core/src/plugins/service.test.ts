@@ -1,4 +1,5 @@
 import { generateSigningKey } from "@gcs/plugin-sdk/pack";
+import { testOnMysql } from "@gcs/db/test/url";
 import { testDbUrl } from "@gcs/db/test/helpers";
 import pg from "pg";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
@@ -120,7 +121,8 @@ afterAll(async () => {
   await database.close();
 });
 
-describe("ciclul de viață al pluginurilor", () => {
+// Pluginurile cu bază de date proprie (rol și schemă PostgreSQL) nu există pe MySQL (ediția Lite v1).
+describe.skipIf(testOnMysql())("ciclul de viață al pluginurilor", () => {
   test("un pachet semnat: un admin cu drept îl instalează, activ, cu jurnal ACP", async () => {
     const { id, report } = await service.stage(admin, { fileName: "demo.zip", data: testPluginZip({ sign }) });
     expect(report).toMatchObject({ ok: true, mode: "install", signature: { status: "signed" } });

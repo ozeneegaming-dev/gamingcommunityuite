@@ -1,6 +1,6 @@
 import { createHash, randomInt } from "node:crypto";
 import { GcsForbidden, GcsNotFound, GcsRateLimited, GcsValidationError, writeAudit, type GcsActor, type GcsEventBus, type GcsPermissionService } from "@gcs/core";
-import { Prisma, type GamePlayerKind, type PrismaClient, ci } from "@gcs/db";
+import { Prisma, type GamePlayerKind, type PrismaClient, ci, sql, isMysql } from "@gcs/db";
 import { BRIDGE_PERMISSION } from "./config";
 import { parseTypedIdentity, resolveIdentity, type GcsPlayerRef, type GcsResolvedIdentity } from "./identity";
 import type { GcsBridgeStore } from "./store";
@@ -74,15 +74,22 @@ export class GcsBridgePlayers {
 
   async upsert(identity: GcsResolvedIdentity, serverId: number | null, at: Date = this.now()): Promise<GcsPlayerRow> {
     const { db } = this.deps;
-    const rows = await db.$queryRaw<(GcsPlayerRow & { created: boolean })[]>`
+    const upsert = sql`
       INSERT INTO game_players (kind, value, trust, name, "firstSeenAt", "lastSeenAt", "lastServerId")
       VALUES (${identity.kind}::"GamePlayerKind", ${identity.value}, ${identity.trust}::"GameTrust", ${identity.name}, ${at.toISOString()}::timestamp, ${at.toISOString()}::timestamp, ${serverId})
       ON CONFLICT (kind, value) DO UPDATE SET
         name = CASE WHEN EXCLUDED.name <> '' THEN EXCLUDED.name ELSE game_players.name END,
         "lastSeenAt" = GREATEST(game_players."lastSeenAt", EXCLUDED."lastSeenAt"),
-        "lastServerId" = CASE WHEN EXCLUDED."lastSeenAt" >= game_players."lastSeenAt" THEN COALESCE(EXCLUDED."lastServerId", game_players."lastServerId") ELSE game_players."lastServerId" END
-      RETURNING id, kind, value, "userId", name, (xmax = 0) AS created`;
-    const row = rows[0]!;
+        "lastServerId" = CASE WHEN EXCLUDED."lastSeenAt" >= game_players."lastSeenAt" THEN COALESCE(EXCLUDED."lastServerId", game_players."lastServerId") ELSE game_players."lastServerId" END`;
+    let row: GcsPlayerRow & { created: boolean };
+    if (isMysql()) {
+      // MySQL: fără `RETURNING`; 1 rând afectat = inserat, 2 = actualizat (0 = neschimbat).
+      const affected = await db.$executeRaw(upsert);
+      const found = await db.gamePlayer.findUniqueOrThrow({ where: { kind_value: { kind: identity.kind, value: identity.value } }, select: { id: true, kind: true, value: true, userId: true, name: true } });
+      row = { ...found, created: affected === 1 };
+    } else {
+      row = (await db.$queryRaw<(GcsPlayerRow & { created: boolean })[]>(sql`${upsert} RETURNING id, kind, value, "userId", name, (xmax = 0) AS created`))[0]!;
+    }
     const player: GcsPlayerRow = { id: row.id, kind: row.kind, value: row.value, userId: row.userId, name: row.name };
     if (row.created && player.kind === "STEAM" && !player.userId) {
       const account = await db.account.findFirst({ where: { providerId: "steam", accountId: player.value }, select: { userId: true } });
@@ -256,14 +263,14 @@ export class GcsBridgePlayers {
   /** Jobul `servers.bridge.steam` (la 10 minute): repară orice diferență între conturile Steam și identitățile legate. */
   async reconcileSteam(): Promise<number> {
     const { db } = this.deps;
-    const fromAccounts = await db.$queryRaw<{ userId: string }[]>`
+    const fromAccounts = await db.$queryRaw<{ userId: string }[]>(sql`
       SELECT DISTINCT a."userId" FROM accounts a
       JOIN game_players p ON p.kind = 'STEAM' AND p.value = a."accountId"
-      WHERE a."providerId" = 'steam' AND (p."userId" IS DISTINCT FROM a."userId" OR p."linkSource" IS DISTINCT FROM 'STEAM')`;
-    const fromPlayers = await db.$queryRaw<{ userId: string }[]>`
+      WHERE a."providerId" = 'steam' AND (p."userId" IS DISTINCT FROM a."userId" OR p."linkSource" IS DISTINCT FROM 'STEAM')`);
+    const fromPlayers = await db.$queryRaw<{ userId: string }[]>(sql`
       SELECT DISTINCT p."userId" FROM game_players p
       WHERE p.kind = 'STEAM' AND p."linkSource" = 'STEAM' AND p."userId" IS NOT NULL
-        AND NOT EXISTS (SELECT 1 FROM accounts a WHERE a."providerId" = 'steam' AND a."accountId" = p.value AND a."userId" = p."userId")`;
+        AND NOT EXISTS (SELECT 1 FROM accounts a WHERE a."providerId" = 'steam' AND a."accountId" = p.value AND a."userId" = p."userId")`);
     let changed = 0;
     for (const userId of new Set([...fromAccounts, ...fromPlayers].map((r) => r.userId))) changed += await this.syncSteam(userId);
     return changed;

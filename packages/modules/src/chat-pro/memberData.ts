@@ -1,5 +1,5 @@
 import type { GcsMemberDataHandler } from "@gcs/core";
-import type { PrismaClient } from "@gcs/db";
+import { type PrismaClient, sql } from "@gcs/db";
 
 /**
  * Chat Pro la ștergerea / unirea unui cont (specul 2026-10-09-stergere-unire-membri): profilul de chat și statisticile
@@ -27,10 +27,10 @@ export function chatProMemberData(deps: { db: PrismaClient }): GcsMemberDataHand
     },
     async merge({ sourceId, targetId }) {
       return db.$transaction(async (tx) => {
-        let n = await tx.$executeRaw`
+        let n = await tx.$executeRaw(sql`
           INSERT INTO chat_pro_daily_stats ("userId", day, messages)
           SELECT ${targetId}, day, messages FROM chat_pro_daily_stats WHERE "userId" = ${sourceId}
-          ON CONFLICT ("userId", day) DO UPDATE SET messages = chat_pro_daily_stats.messages + EXCLUDED.messages`;
+          ON CONFLICT ("userId", day) DO UPDATE SET messages = chat_pro_daily_stats.messages + EXCLUDED.messages`);
         n += (await tx.chatProDailyStat.deleteMany({ where: { userId: sourceId } })).count;
         n += (await tx.chatProWinner.updateMany({ where: { userId: sourceId }, data: { userId: targetId } })).count;
         const [source, target] = await Promise.all([

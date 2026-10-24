@@ -1,7 +1,7 @@
 import { e2eKv } from "./kv";
 import { expect, test, type Browser, type Locator, type Page } from "@playwright/test";
 import { member, uid } from "./forum-fixtures";
-import { enterAcpAsRoot, resetSetting, sql, useFreshIp } from "./helpers";
+import { enterAcpAsRoot, resetSetting, siteDay, sql, useFreshIp } from "./helpers";
 
 /**
  * Moderarea chat-ului pentru staff (chat-ul standard; meniul e același în Chat Pro) și accesul de moderator în chat
@@ -289,7 +289,7 @@ test("clasamentul: podiumul, locul liber, ultimul câștigător cu insigna, stat
   const [aId] = await sql<{ id: string }>(`SELECT id FROM users WHERE email = $1`, [`cm-t-${id}@example.com`]);
   // Mesajele de azi (ziua după fusul site-ului: poate fi ieri în UTC) și un câștigător „din viitor” (cel mai recent).
   await sql(`DELETE FROM chat_pro_daily_stats`);
-  await sql(`INSERT INTO chat_pro_daily_stats ("userId", day, messages) VALUES ($1, to_char(now() AT TIME ZONE 'Europe/Bucharest', 'YYYY-MM-DD'), 42)`, [aId!.id]);
+  await sql(`INSERT INTO chat_pro_daily_stats ("userId", day, messages) VALUES ($1, $2, 42)`, [aId!.id, siteDay()]);
   await sql(`INSERT INTO chat_pro_winners ("periodStart", "periodEnd", "userId", messages) VALUES ('2099-01-01', '2099-01-31', $1, 1480) ON CONFLICT ("periodStart") DO NOTHING`, [aId!.id]);
   await redisDel([], "gcs:k:chat_pro:*");
   await a.reload();
@@ -307,9 +307,12 @@ test("clasamentul: podiumul, locul liber, ultimul câștigător cu insigna, stat
   await expect(a.locator(".gcs-hoverCardLayer")).toBeVisible({ timeout: 10_000 });
 
   // Istoricul: 60 de mesaje → 3 pagini; „Sari la pagina”; membrul nu are exportul.
+  // Rândurile se construiesc aici (fără `generate_series` / `||`, care nu există pe MySQL).
+  const [general] = await sql<{ id: number }>(`SELECT id FROM chat_channels WHERE key = 'general'`);
+  const rows = Array.from({ length: 60 }, (_, i) => i + 1);
   await sql(
-    `INSERT INTO chat_messages ("channelId", "authorId", body, "createdAt") SELECT c.id, $1, 'istoric ' || $2 || ' ' || g, now() - (g || ' minutes')::interval FROM chat_channels c, generate_series(1, 60) g WHERE c.key = 'general'`,
-    [aId!.id, id],
+    `INSERT INTO chat_messages ("channelId", "authorId", body, "createdAt") VALUES ${rows.map((g) => `($1, $2, $${g + 2}, $${g + 62})`).join(", ")}`,
+    [general!.id, aId!.id, ...rows.map((g) => `istoric ${id} ${g}`), ...rows.map((g) => new Date(Date.now() - g * 60_000).toISOString())],
   );
   await a.goto(`/chat/history?member=CmTop${id}`);
   await expect(a.getByTestId("gcs-chat-history-row")).toHaveCount(25);
@@ -412,8 +415,8 @@ test("capturi moderare, clasament, istoric", async ({ browser }) => {
   const [ow] = await sql<{ id: string }>(`SELECT id FROM users WHERE email = $1`, [`cm-so-${id}@example.com`]);
   await sql(`DELETE FROM chat_pro_daily_stats`);
   await sql(
-    `INSERT INTO chat_pro_daily_stats ("userId", day, messages) VALUES ($1, to_char(now() AT TIME ZONE 'Europe/Bucharest', 'YYYY-MM-DD'), 1225), ($2, to_char(now() AT TIME ZONE 'Europe/Bucharest', 'YYYY-MM-DD'), 709)`,
-    [ow!.id, kr!.id],
+    `INSERT INTO chat_pro_daily_stats ("userId", day, messages) VALUES ($1, $3, 1225), ($2, $3, 709)`,
+    [ow!.id, kr!.id, siteDay()],
   );
   await sql(`INSERT INTO chat_pro_winners ("periodStart", "periodEnd", "userId", messages) VALUES ('2099-01-01', '2099-01-31', $1, 1480) ON CONFLICT ("periodStart") DO NOTHING`, [kr!.id]);
   await redisDel([], "gcs:k:chat_pro:*");

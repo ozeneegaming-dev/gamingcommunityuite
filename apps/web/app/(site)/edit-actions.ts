@@ -1,5 +1,6 @@
 "use server";
 
+import { sql, sqlJsonMerge } from "@gcs/db";
 import { GCS_WIDGET_PAGES, GCS_WIDGET_ZONES, GcsNotFound, WIDGETS_ACP_SECTION } from "@gcs/core";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
@@ -19,7 +20,7 @@ export const setSkin = gcsAction(z.object({ key: themeKey }), async ({ key }, { 
   const theme = await themes.get(key);
   if (!theme?.enabled) throw new GcsNotFound();
   (await cookies()).set(SKIN_COOKIE, key, { ...cookieOpts, maxAge: 60 * 60 * 24 * 365 });
-  if (actor.userId) await db.$executeRaw`UPDATE users SET prefs = prefs || jsonb_build_object('skin', ${key}::text) WHERE id = ${actor.userId}`;
+  if (actor.userId) await db.$executeRaw(sql`UPDATE users SET prefs = ${sqlJsonMerge("prefs", { skin: key })} WHERE id = ${actor.userId}`);
   revalidatePath("/", "layout");
   return { key };
 });
@@ -69,7 +70,7 @@ export const saveWidgetFavorites = gcsAction(z.object({ keys: z.array(z.string()
   const { db, registry } = services();
   const known = new Set(registry.widgetDefs().map((w) => w.def.key));
   const clean = [...new Set(keys)].filter((k) => known.has(k));
-  await db.$executeRaw`UPDATE users SET prefs = prefs || jsonb_build_object('widgetFavorites', ${JSON.stringify(clean)}::jsonb) WHERE id = ${actor.userId}`;
+  await db.$executeRaw(sql`UPDATE users SET prefs = ${sqlJsonMerge("prefs", { widgetFavorites: clean })} WHERE id = ${actor.userId}`);
   return { keys: clean };
 });
 

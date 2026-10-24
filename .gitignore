@@ -18,3 +18,6 @@ apps/web/cli/dist/
 # Claude Code: setări locale și worktree-urile agenților
 .claude/settings.local.json
 .claude/worktrees/
+
+# Clientul Prisma pentru MySQL (ediția Lite), generat de `pnpm --filter @gcs/db generate`
+packages/db/generated/

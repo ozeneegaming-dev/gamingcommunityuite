@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { isMysql } from "@gcs/db";
 import { mockPlayer } from "../../../../../servers-plugins/mock/gcs-mock-server.mjs";
 import { createBridgeWorld, type GcsBridgeWorld } from "../../../test/bridgeWorld";
 import type { GcsSanctionInput } from "./sanctions";
@@ -72,7 +73,8 @@ describe("sancțiunile (§8): scopul, expirarea, sincronizarea, verificarea la c
   it("paginile: max 1000 de rânduri, `more` și cursorul", async () => {
     const server = await w.bridgeServer();
     const mock = w.mock(server.token);
-    await w.db.gameSanction.createMany({ data: Array.from({ length: 1205 }, (_, i) => ({ type: "BAN" as const, scope: "GLOBAL" as const, targetKind: "STEAM" as const, targetValue: String(76561197960265728n + BigInt(i + 1)), reason: "x", source: "SITE" as const })) });
+    // MySQL nu are secvențe: revizia o dă serviciul (`nextRevision`); rândurile inserate direct o primesc aici.
+    await w.db.gameSanction.createMany({ data: Array.from({ length: 1205 }, (_, i) => ({ type: "BAN" as const, scope: "GLOBAL" as const, targetKind: "STEAM" as const, targetValue: String(76561197960265728n + BigInt(i + 1)), reason: "x", source: "SITE" as const, ...(isMysql() ? { revision: BigInt(i + 1) } : {}) })) });
     const first = await mock.request("GET", "/sanctions?since=0");
     expect(first.json).toMatchObject({ full: true, more: true });
     expect(first.json.sanctions).toHaveLength(1000);

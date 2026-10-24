@@ -1,6 +1,6 @@
 "use server";
 
-import { ci } from "@gcs/db";
+import { ci, sql, sqlJsonMerge } from "@gcs/db";
 import { GcsConflict, GcsForbidden, GcsRateLimited, GcsValidationError, verifyPassword } from "@gcs/core";
 import { cookies, headers } from "next/headers";
 import * as z from "zod";
@@ -121,7 +121,7 @@ export const setTimezone = gcsAction(z.object({ timezone: z.string().min(1).max(
 /** Toast-urile și sunetul notificărilor (Setări → Notificări); implicit ambele pornite. */
 export const saveAlertPrefs = gcsAction(z.object({ toasts: z.boolean(), sound: z.boolean() }), async ({ toasts, sound }, { actor }) => {
   if (!actor.userId) throw new GcsForbidden({ reason: "guest" });
-  await services().db.$executeRaw`UPDATE users SET prefs = prefs || jsonb_build_object('toasts', ${toasts}::boolean, 'sound', ${sound}::boolean) WHERE id = ${actor.userId}`;
+  await services().db.$executeRaw(sql`UPDATE users SET prefs = ${sqlJsonMerge("prefs", { toasts, sound })} WHERE id = ${actor.userId}`);
 });
 
 /** Închide o altă sesiune a contului (Setări → Securitate); sesiunea curentă se închide cu „Ieșire”. */

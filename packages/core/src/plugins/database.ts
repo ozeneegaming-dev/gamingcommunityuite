@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import pg from "pg";
+import { gcsDbDialect } from "@gcs/db";
 import { GcsConflict, GcsValidationError } from "../errors";
 import { comparePluginMigrations, pluginSchema } from "./catalog";
 import { checkPluginSql } from "./sqlGuard";
@@ -49,7 +50,14 @@ export class GcsPluginDatabase {
 
   private get url(): string {
     if (!this.deps.databaseUrl) throw new GcsConflict({ reason: "db_unavailable" });
+    // Ediția Lite pe MySQL: pluginurile cu bază de date proprie (rol și schemă PostgreSQL) nu sunt acceptate (v1).
+    if (this.onMysql) throw new GcsConflict({ reason: "db_plugins_unsupported" });
     return this.deps.databaseUrl;
+  }
+
+  /** Baza aplicației e MySQL: fără roluri și scheme separate pentru pluginuri. */
+  get onMysql(): boolean {
+    return gcsDbDialect(this.deps.databaseUrl) === "mysql";
   }
 
   /** Numele rolului: unic per bază de date și plugin (rolurile sunt globale pe serverul PostgreSQL). */
@@ -75,7 +83,7 @@ export class GcsPluginDatabase {
    */
   async withInstallLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
     // Fără bază de date (pluginuri fără `db`, într-un proces fără URL) nu avem unde ține lacătul.
-    if (!this.deps.databaseUrl) return fn();
+    if (!this.deps.databaseUrl || this.onMysql) return fn();
     return this.admin(async (c) => {
       await c.query("SELECT pg_advisory_lock(hashtext('gcs-plugin-install'), hashtext($1))", [key]);
       try {
@@ -209,6 +217,7 @@ export class GcsPluginDatabase {
 
   /** Mărimea schemei pluginului (octeți), pentru pagina lui din ACP. */
   async schemaSize(key: string): Promise<number | null> {
+    if (this.onMysql) return null;
     try {
       return await this.admin(async (c) => {
         const r = await c.query<{ size: string | null }>(
@@ -234,6 +243,7 @@ export class GcsPluginDatabase {
    */
   async drop(key: string, role: string | null): Promise<void> {
     await this.closePool(key);
+    if (this.onMysql) return;
     await this.admin(async (c) => {
       if (role) await c.query("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE usename = $1", [role]).catch(() => {});
       await c.query(`DROP SCHEMA IF EXISTS ${pg.escapeIdentifier(pluginSchema(key))} CASCADE`);

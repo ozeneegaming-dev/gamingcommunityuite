@@ -8,7 +8,7 @@ import {
   type GcsPermissionService,
   type GcsSettingsService,
 } from "@gcs/core";
-import type { Prisma, PrismaClient, VipAction, VipStatus, VipSubscription } from "@gcs/db";
+import { type Prisma, type PrismaClient, type VipAction, type VipStatus, type VipSubscription, sql } from "@gcs/db";
 import type { GcsMembership } from "../profile/membership";
 
 export const VIP_SWEEP_JOB = "vip.sweep";
@@ -108,7 +108,7 @@ export class GcsVipService {
 
     const result = await db.$transaction(async (tx) => {
       // Serializează schimbările VIP ale aceluiași user (două acordări simultane).
-      await tx.$queryRaw`SELECT id FROM users WHERE id = ${input.userId} FOR UPDATE`;
+      await tx.$queryRaw(sql`SELECT id FROM users WHERE id = ${input.userId} FOR UPDATE`);
       const changed = new Set<number>([input.groupId]);
       const current = await tx.vipSubscription.findFirst({ where: { userId: input.userId, status: "ACTIVE" } });
       if (current) {
@@ -239,7 +239,7 @@ export class GcsVipService {
     let moved: VipSubscription | null = null;
     if (outcome !== "none" && source) {
       const result = await db.$transaction(async (tx) => {
-        await tx.$queryRaw`SELECT id FROM users WHERE id IN (${sourceId}, ${targetId}) FOR UPDATE`;
+        await tx.$queryRaw(sql`SELECT id FROM users WHERE id IN (${sourceId}, ${targetId}) FOR UPDATE`);
         const { count } = await tx.vipSubscription.updateMany({ where: { id: source.id, status: "ACTIVE" }, data: { status: "REVOKED" } });
         if (count === 0) return { changed: [] as number[], sub: null };
         await this.log(tx, source, "REVOKE", null, "merged");

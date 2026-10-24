@@ -1,5 +1,5 @@
 import type { GcsAchievementEventDef, GcsAchievementOccurrence, GcsActor, GcsEventBus, GcsJobQueue, GcsModuleRegistry, GcsRealtime } from "@gcs/core";
-import type { AchievementRule, Prisma, PrismaClient } from "@gcs/db";
+import { type AchievementRule, type Prisma, type PrismaClient, sql } from "@gcs/db";
 import type { GcsMembership } from "./membership";
 import { toRef, userRefSelect } from "../forums/queries";
 
@@ -386,9 +386,9 @@ export class GcsAchievementRules {
       }
     }
     if (on.some((e) => e.def.key === "core.birthday") && (await db.achievementRule.count({ where: { trigger: "EVENT", event: "core.birthday", enabled: true } })) > 0) {
-      const born = await db.$queryRaw<{ id: string }[]>`
+      const born = await db.$queryRaw<{ id: string }[]>(sql`
         SELECT id FROM users WHERE birthday IS NOT NULL
-          AND EXTRACT(MONTH FROM birthday) = ${now.getUTCMonth() + 1} AND EXTRACT(DAY FROM birthday) = ${now.getUTCDate()}`;
+          AND EXTRACT(MONTH FROM birthday) = ${now.getUTCMonth() + 1} AND EXTRACT(DAY FROM birthday) = ${now.getUTCDate()}`);
       for (const u of born) fired += await this.handle("core.birthday", { userId: u.id, ref: `birthday:${now.getUTCFullYear()}` }, now);
     }
     return fired;

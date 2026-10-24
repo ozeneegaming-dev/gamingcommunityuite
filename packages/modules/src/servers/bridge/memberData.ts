@@ -1,5 +1,5 @@
 import type { GcsMemberDataHandler, GcsMemberDataNote } from "@gcs/core";
-import type { PrismaClient } from "@gcs/db";
+import { type PrismaClient, sql } from "@gcs/db";
 import type { GcsBridgePlayers } from "./players";
 import type { GcsBridgeStore } from "./store";
 
@@ -61,13 +61,13 @@ export function serverMemberData(deps: { db: PrismaClient; store: Pick<GcsBridge
         let n = 0;
         n += (await tx.gamePlayer.updateMany({ where: { userId: sourceId }, data: { userId: targetId } })).count;
         // O intrare de admin pe un server (sau pe toate) pe care ținta o are deja: rămâne a țintei.
-        n += await tx.$executeRaw`
+        n += await tx.$executeRaw(sql`
           DELETE FROM game_admins s WHERE s."userId" = ${sourceId}
-            AND EXISTS (SELECT 1 FROM game_admins t WHERE t."userId" = ${targetId} AND t."serverId" IS NOT DISTINCT FROM s."serverId")`;
+            AND EXISTS (SELECT 1 FROM game_admins t WHERE t."userId" = ${targetId} AND t."serverId" IS NOT DISTINCT FROM s."serverId")`);
         n += (await tx.gameAdmin.updateMany({ where: { userId: sourceId }, data: { userId: targetId } })).count;
-        n += await tx.$executeRaw`
+        n += await tx.$executeRaw(sql`
           DELETE FROM game_server_admins s WHERE s."userId" = ${sourceId}
-            AND EXISTS (SELECT 1 FROM game_server_admins t WHERE t."userId" = ${targetId} AND t."serverId" = s."serverId")`;
+            AND EXISTS (SELECT 1 FROM game_server_admins t WHERE t."userId" = ${targetId} AND t."serverId" = s."serverId")`);
         n += (await tx.gameServerAdmin.updateMany({ where: { userId: sourceId }, data: { userId: targetId } })).count;
         n += (await tx.gameLinkCode.deleteMany({ where: { userId: sourceId } })).count;
         n += (await tx.gameTicket.updateMany({ where: { authorId: sourceId }, data: { authorId: targetId } })).count;

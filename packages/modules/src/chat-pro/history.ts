@@ -1,5 +1,5 @@
 import { GcsForbidden, normalizeUsername, type GcsActor, type GcsPermissionService } from "@gcs/core";
-import { type Prisma, type PrismaClient, ci } from "@gcs/db";
+import { type Prisma, type PrismaClient, ci, sql } from "@gcs/db";
 import type { GcsChatFile } from "../chat/chat";
 import { chatMentionsOf, chatSystemOf } from "../chat/chat";
 import type { GcsChatSystemLine } from "../chat/moderation-types";
@@ -109,10 +109,10 @@ export class GcsChatHistory {
     const member = normalizeUsername((query.member ?? "").replace(/^@/, "")).slice(0, 40);
     if (member) {
       const pattern = likeEscape(member);
-      const matches = await db.$queryRaw<{ id: string }[]>`
+      const matches = await db.$queryRaw<{ id: string }[]>(sql`
         SELECT u.id FROM users u LEFT JOIN chat_pro_profiles p ON p."userId" = u.id
         WHERE u."nameNormalized" LIKE ${`%${pattern}%`} OR p."nicknameNormalized" LIKE ${`%${pattern}%`}
-        LIMIT 200`;
+        LIMIT 200`);
       where.push({ authorId: { in: matches.map((m) => m.id) } });
     }
     if (query.from && DAY.test(query.from)) where.push({ createdAt: { gte: new Date(`${query.from}T00:00:00Z`) } });
@@ -128,9 +128,9 @@ export class GcsChatHistory {
     const [messages, edited, users, total, canExport, canDelete] = await Promise.all([
       db.chatMessage.count({ where: base }),
       db.chatMessage.count({ where: { ...base, editedAt: { not: null } } }),
-      db.$queryRaw<{ n: number }[]>`
+      db.$queryRaw<{ n: number }[]>(sql`
         SELECT COUNT(DISTINCT "authorId")::int AS n FROM chat_messages
-        WHERE "channelId" = ANY(${channelIds}::int[]) AND "deletedAt" IS NULL AND "hiddenAt" IS NULL`.then((r) => r[0]?.n ?? 0),
+        WHERE "channelId" = ANY(${channelIds}::int[]) AND "deletedAt" IS NULL AND "hiddenAt" IS NULL`).then((r) => r[0]?.n ?? 0),
       db.chatMessage.count({ where: filter }),
       this.canExport(viewer),
       rights ? rights.has(viewer, "delete_any", query.channel ?? null) : Promise.resolve(false),

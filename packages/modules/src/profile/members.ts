@@ -1,5 +1,5 @@
 import { GcsForbidden, normalizeUsername, type GcsActor, type GcsPermissionService } from "@gcs/core";
-import type { Prisma, PrismaClient } from "@gcs/db";
+import { jsonPath, type Prisma, type PrismaClient } from "@gcs/db";
 import { toRef, userRefSelect, type GcsPagination, type GcsUserRef } from "../forums/queries";
 import { rankLabel, type GcsRankDirectory, type GcsRankLabel } from "./display";
 import type { GcsGroupDirectory } from "./groupDirectory";
@@ -74,7 +74,7 @@ export class GcsMemberList {
     // „Online”: activ în ultimele 5 minute; cei cu statusul ascuns nu apar. Ascunșii se caută separat: un
     // `NOT { privacy.showOnline = false }` ar scoate și conturile fără setarea asta (NULL în SQL), adică aproape pe toți.
     const hidden = query.online
-      ? (await db.user.findMany({ where: { lastActiveAt: { gte: since }, privacy: { path: ["showOnline"], equals: false } }, select: { id: true } })).map((u) => u.id)
+      ? (await db.user.findMany({ where: { lastActiveAt: { gte: since }, privacy: { path: jsonPath("showOnline"), equals: false } }, select: { id: true } })).map((u) => u.id)
       : [];
     // Membrii grupului: principal sau secundar (linkul unei pastile de grup), sau doar principal dacă grupul cere.
     const group = query.groupId && this.deps.groups ? await this.deps.groups.group(query.groupId) : null;

@@ -1,5 +1,5 @@
 import { GcsForbidden, type GcsActor, type GcsCache, type GcsPermissionService, type GcsSettingsService } from "@gcs/core";
-import { Prisma, type PrismaClient } from "@gcs/db";
+import { Prisma, type PrismaClient, sql, sqlIdent } from "@gcs/db";
 import { secondsSinceMidnight } from "../chat-pro/period";
 import { toRef, userRefSelect, type GcsUserRef } from "../forums/queries";
 import type { GcsOnlineTime } from "./onlineTime";
@@ -75,13 +75,13 @@ export class GcsLeaderboard {
     const audience = await this.guard(viewer);
     if (!viewer.userId) return null;
     const values = await this.values(metric, period, now);
-    const rows = await this.deps.db.$queryRaw<{ value: number; above: number }[]>`
+    const rows = await this.deps.db.$queryRaw<{ value: number; above: number }[]>(sql`
       WITH v AS (
         SELECT v.id, v.value::int AS value FROM (${values}) v
         JOIN users u ON u.id = v.id
-        WHERE v.value > 0 AND ${notBannedSql(Prisma.sql`u`)} ${profileVisibleSql(Prisma.sql`u`, audience)} ${this.extraSql(metric)}
+        WHERE v.value > 0 AND ${notBannedSql(sql`u`)} ${profileVisibleSql(sql`u`, audience)} ${this.extraSql(metric)}
       )
-      SELECT me.value, (SELECT count(*)::int FROM v WHERE v.value > me.value) AS above FROM v me WHERE me.id = ${viewer.userId}`;
+      SELECT me.value, (SELECT count(*)::int FROM v WHERE v.value > me.value) AS above FROM v me WHERE me.id = ${viewer.userId}`);
     const me = rows[0];
     return me ? { rank: Number(me.above) + 1, value: Number(me.value) } : null;
   }
@@ -95,35 +95,36 @@ export class GcsLeaderboard {
 
   /** Condiții în plus pe măsură: timpul online nu arată membrii cu statusul ascuns. */
   private extraSql(metric: GcsLeaderboardMetric): Prisma.Sql {
-    return metric === "online" ? Prisma.sql`AND COALESCE(u.privacy->>'showOnline', 'true') <> 'false'` : Prisma.empty;
+    return metric === "online" ? sql`AND COALESCE(u.privacy->>'showOnline', 'true') <> 'false'` : Prisma.empty;
   }
 
   private async values(metric: GcsLeaderboardMetric, period: GcsLeaderboardPeriod, now: number): Promise<Prisma.Sql> {
     if (metric === "online") {
-      if (!this.deps.onlineTime) return Prisma.sql`SELECT NULL::text AS id, 0 AS value WHERE false`;
+      if (!this.deps.onlineTime) return sql`SELECT NULL::text AS id, 0 AS value WHERE false`;
       return this.deps.onlineTime.valuesSql(period, now);
     }
     const counter = COUNTER[metric];
     if (period === "all" && counter) {
-      const col = Prisma.raw(`"${counter}"`);
-      return Prisma.sql`SELECT c.id, c.${col} AS value FROM users c WHERE c.${col} > 0`;
+      const col = sqlIdent(counter);
+      return sql`SELECT c.id, c.${col} AS value FROM users c WHERE c.${col} > 0`;
     }
-    const since = period === "all" ? Prisma.sql`'-infinity'::timestamp` : Prisma.sql`${pgTimestamp(await this.since(period, now))}::timestamp`;
+    // „Tot timpul”: un început înaintea oricărei activități (MySQL nu are `-infinity`).
+    const since = period === "all" ? sql`${"1970-01-01T00:00:00.000"}::timestamp` : sql`${pgTimestamp(await this.since(period, now))}::timestamp`;
     // `contentId` e text (orice tip de conținut): convertit doar când e un număr, în CASE (ordinea evaluării e garantată).
-    const numericId = Prisma.sql`(CASE WHEN cr."contentId" ~ '^[0-9]{1,9}$' THEN cr."contentId"::int END)`;
+    const numericId = sql`(CASE WHEN cr."contentId" ~ '^[0-9]{1,9}$' THEN cr."contentId"::int END)`;
     switch (metric) {
       case "posts":
-        return Prisma.sql`SELECT p."authorId" AS id, count(*)::int AS value
+        return sql`SELECT p."authorId" AS id, count(*)::int AS value
           FROM posts p JOIN topics t ON t.id = p."topicId"
           WHERE p.visibility = 'VISIBLE' AND t.visibility = 'VISIBLE' AND p."createdAt" >= ${since} AND p."authorId" IS NOT NULL
           GROUP BY p."authorId"`;
       case "topics":
-        return Prisma.sql`SELECT t."authorId" AS id, count(*)::int AS value
+        return sql`SELECT t."authorId" AS id, count(*)::int AS value
           FROM topics t
           WHERE t.visibility = 'VISIBLE' AND t."createdAt" >= ${since} AND t."authorId" IS NOT NULL
           GROUP BY t."authorId"`;
       case "reputation":
-        return Prisma.sql`SELECT x.id, sum(x.weight)::int AS value FROM (
+        return sql`SELECT x.id, sum(x.weight)::int AS value FROM (
             SELECT p."authorId" AS id, r.weight FROM content_reactions cr
               JOIN reactions r ON r.id = cr."reactionId" JOIN posts p ON p.id = ${numericId}
               WHERE cr."contentType" = 'forums.post' AND cr."createdAt" >= ${since}
@@ -133,9 +134,9 @@ export class GcsLeaderboard {
               WHERE cr."contentType" = 'profile.status' AND cr."createdAt" >= ${since}
           ) x WHERE x.id IS NOT NULL GROUP BY x.id`;
       case "xp":
-        return Prisma.sql`SELECT a."userId" AS id, sum(a.points)::int AS value FROM achievement_log a WHERE a."createdAt" >= ${since} GROUP BY a."userId"`;
+        return sql`SELECT a."userId" AS id, sum(a.points)::int AS value FROM achievement_log a WHERE a."createdAt" >= ${since} GROUP BY a."userId"`;
       case "solutions":
-        return Prisma.sql`SELECT p."authorId" AS id, count(*)::int AS value
+        return sql`SELECT p."authorId" AS id, count(*)::int AS value
           FROM topics t JOIN posts p ON p.id = t."solvedPostId"
           WHERE p."createdAt" >= ${since} AND p."authorId" IS NOT NULL
           GROUP BY p."authorId"`;
@@ -144,12 +145,12 @@ export class GcsLeaderboard {
 
   private async compute(metric: GcsLeaderboardMetric, period: GcsLeaderboardPeriod, audience: GcsProfileAudience, now: number): Promise<GcsLeaderboardRow[]> {
     const { db } = this.deps;
-    const top = await db.$queryRaw<{ id: string; value: number }[]>`
+    const top = await db.$queryRaw<{ id: string; value: number }[]>(sql`
       SELECT v.id, v.value::int AS value FROM (${await this.values(metric, period, now)}) v
       JOIN users u ON u.id = v.id
-      WHERE v.value > 0 AND ${notBannedSql(Prisma.sql`u`)} ${profileVisibleSql(Prisma.sql`u`, audience)} ${this.extraSql(metric)}
+      WHERE v.value > 0 AND ${notBannedSql(sql`u`)} ${profileVisibleSql(sql`u`, audience)} ${this.extraSql(metric)}
       ORDER BY v.value DESC, u."createdAt" ASC, u.id ASC
-      LIMIT ${LEADERBOARD_SIZE}`;
+      LIMIT ${LEADERBOARD_SIZE}`);
     if (top.length === 0) return [];
     const users = new Map((await db.user.findMany({ where: { id: { in: top.map((t) => t.id) } }, select: rowSelect })).map((u) => [u.id, u]));
     const rows: GcsLeaderboardRow[] = [];

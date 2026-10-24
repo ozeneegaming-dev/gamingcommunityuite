@@ -1,5 +1,6 @@
 "use server";
 
+import { sql, sqlJsonMerge } from "@gcs/db";
 import { cookies, headers } from "next/headers";
 import { GCS_LOCALES, LOCALE_COOKIE, type GcsLocale } from "@/i18n";
 import { currentActor } from "@/lib/actor";
@@ -27,7 +28,7 @@ export async function setLocale(formData: FormData): Promise<void> {
   });
   const actor = await currentActor();
   if (actor.userId) {
-    await db.$executeRaw`UPDATE users SET prefs = prefs || jsonb_build_object('locale', ${locale as string}::text) WHERE id = ${actor.userId}`;
+    await db.$executeRaw(sql`UPDATE users SET prefs = ${sqlJsonMerge("prefs", { locale: locale as string })} WHERE id = ${actor.userId}`);
   }
 }
 
@@ -50,7 +51,7 @@ export async function setSkinChoice(formData: FormData): Promise<void> {
   });
   const actor = await currentActor();
   if (actor.userId) {
-    await db.$executeRaw`UPDATE users SET prefs = prefs || jsonb_build_object('skin', ${key}::text) WHERE id = ${actor.userId}`;
+    await db.$executeRaw(sql`UPDATE users SET prefs = ${sqlJsonMerge("prefs", { skin: key })} WHERE id = ${actor.userId}`);
   }
 }
 
@@ -68,6 +69,6 @@ export async function setThemeMode(formData: FormData): Promise<void> {
   });
   const actor = await currentActor();
   if (actor.userId) {
-    await services().db.$executeRaw`UPDATE users SET prefs = prefs || jsonb_build_object('theme', ${mode}::text) WHERE id = ${actor.userId}`;
+    await services().db.$executeRaw(sql`UPDATE users SET prefs = ${sqlJsonMerge("prefs", { theme: mode })} WHERE id = ${actor.userId}`);
   }
 }

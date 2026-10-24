@@ -6,6 +6,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import pg from "pg";
 import type { TestProject } from "vitest/node";
+import { setupMysql, testOnMysql } from "./mysqlSetup";
 import { TEST_DB_COUNT, withDatabase } from "./url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -81,6 +82,8 @@ function cleanOldRuns(root: string): void {
  * - Fără, pornește un PostgreSQL embedded (pachetul `embedded-postgres`), fără Docker și fără instalare.
  */
 export default async function setup(project: TestProject): Promise<() => Promise<void>> {
+  // Ediția Lite pe MySQL: aceeași suită, pe un server MySQL de test (`GCS_DB=mysql`).
+  if (testOnMysql()) return setupMysql(project);
   let baseUrl = process.env.TEST_PG_URL;
   let stopServer: (() => Promise<void>) | undefined;
 

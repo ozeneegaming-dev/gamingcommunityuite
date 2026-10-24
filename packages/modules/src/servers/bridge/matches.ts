@@ -1,5 +1,5 @@
 import type { GcsRealtime, GcsSettingsService } from "@gcs/core";
-import type { GameMatchStatus, Prisma, PrismaClient } from "@gcs/db";
+import { type GameMatchStatus, type Prisma, type PrismaClient, sql } from "@gcs/db";
 import { cleanGameText } from "../text";
 import { eloConfig } from "./config";
 import { rateMatch } from "./elo";
@@ -102,8 +102,8 @@ export class GcsBridgeMatches {
     players: (GcsPlayerRow | null)[],
     at: Date,
   ): Promise<{ matchId: number; ended: boolean; status: GameMatchStatus; previous: GameMatchStatus | null } | { error: string }> {
-    const existing = await tx.$queryRaw<{ id: number; status: GameMatchStatus }[]>`
-      SELECT id, status FROM game_matches WHERE "serverId" = ${server.id} AND "externalId" = ${state.externalId} FOR UPDATE`;
+    const existing = await tx.$queryRaw<{ id: number; status: GameMatchStatus }[]>(sql`
+      SELECT id, status FROM game_matches WHERE "serverId" = ${server.id} AND "externalId" = ${state.externalId} FOR UPDATE`);
     const current = existing[0];
     if (current && !NEXT[current.status].includes(state.status)) return { error: "invalid_state" };
     const final = state.status === "ENDED" || state.status === "ABORTED";
@@ -173,8 +173,8 @@ export class GcsBridgeMatches {
 
   /** Evenimentul `match_round`: istoricul rundelor (meciul trebuie să fie deschis). */
   async applyRound(tx: Prisma.TransactionClient, server: GcsBridgeServer, ev: { externalId: string; round: number; winner: "A" | "B"; scoreA: number; scoreB: number; reason: string }, at: Date): Promise<{ matchId: number } | { error: string }> {
-    const [match] = await tx.$queryRaw<{ id: number; status: GameMatchStatus; round: number }[]>`
-      SELECT id, status, round FROM game_matches WHERE "serverId" = ${server.id} AND "externalId" = ${ev.externalId} FOR UPDATE`;
+    const [match] = await tx.$queryRaw<{ id: number; status: GameMatchStatus; round: number }[]>(sql`
+      SELECT id, status, round FROM game_matches WHERE "serverId" = ${server.id} AND "externalId" = ${ev.externalId} FOR UPDATE`);
     if (!match) return { error: "unknown_match" };
     if (!OPEN.includes(match.status)) return { error: "invalid_state" };
     const data = { winner: ev.winner, scoreA: ev.scoreA, scoreB: ev.scoreB, reason: ev.reason, endedAt: at };

@@ -4,7 +4,10 @@ import path from "node:path";
 import { crc32, deflateSync } from "node:zlib";
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 import { forumTree, memberInNewContext, topicWithReplies, uid } from "./forum-fixtures";
-import { enterAcpAsRoot, sql, useFreshIp } from "./helpers";
+import { enterAcpAsRoot, sql, useFreshIp, onMysql } from "./helpers";
+
+// Ediția Lite pe MySQL: pluginurile cu bază de date proprie (aici și Studio VIP) nu sunt suportate.
+test.skip(onMysql, "pluginurile cu bază de date proprie rulează doar pe PostgreSQL");
 
 /**
  * Studio VIP (pluginul `gcs.vip_studio`, semnat cu cheia de test a rulării): instalarea din ACP, intrarea din meniul

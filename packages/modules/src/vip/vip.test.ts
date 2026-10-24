@@ -1,3 +1,4 @@
+import { sql } from "@gcs/db";
 import { GcsForbidden, GcsValidationError, type GcsActor } from "@gcs/core";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createProfileWorld, type GcsProfileWorld } from "../../test/profileWorld";
@@ -92,7 +93,7 @@ describe("expirare (Review Focus #1)", () => {
     const custom = await w.db.group.create({ data: { key: "custom_x", name: "Clan" } });
     await w.db.user.update({ where: { id: w.member.userId! }, data: { primaryGroupId: custom.id } });
     const sub = await w.vip.grant(admin, { userId: w.member.userId!, groupId: w.groups.vip_gold!, days: 1 });
-    await w.db.group.delete({ where: { id: custom.id } }).catch(() => w.db.$executeRaw`DELETE FROM groups WHERE id = ${custom.id}`);
+    await w.db.group.delete({ where: { id: custom.id } }).catch(() => w.db.$executeRaw(sql`DELETE FROM groups WHERE id = ${custom.id}`));
     await w.db.vipSubscription.update({ where: { id: sub.id }, data: { expiresAt: new Date(Date.now() - 1000) } });
     await w.vip.sweep();
     expect((await user(w.member)).primaryGroupId).toBe(w.groups.member);

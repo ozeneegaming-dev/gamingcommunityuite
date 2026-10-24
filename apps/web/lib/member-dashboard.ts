@@ -1,3 +1,4 @@
+import { sql } from "@gcs/db";
 import "server-only";
 import { services } from "./services";
 
@@ -13,8 +14,8 @@ export async function memberActivity(userId: string, days = 30, now = new Date()
   const since = new Date(now.getTime() - (days - 1) * 86_400_000);
   since.setUTCHours(0, 0, 0, 0);
   const [posts, chat] = await Promise.all([
-    db.$queryRaw<{ day: Date; n: bigint }[]>`SELECT date_trunc('day', "createdAt") AS day, COUNT(*)::bigint AS n FROM posts WHERE "authorId" = ${userId} AND "createdAt" >= ${since} GROUP BY 1`,
-    db.$queryRaw<{ day: Date; n: bigint }[]>`SELECT date_trunc('day', "createdAt") AS day, COUNT(*)::bigint AS n FROM chat_messages WHERE "authorId" = ${userId} AND "createdAt" >= ${since} GROUP BY 1`,
+    db.$queryRaw<{ day: Date; n: bigint }[]>(sql`SELECT date_trunc('day', "createdAt") AS day, COUNT(*)::bigint AS n FROM posts WHERE "authorId" = ${userId} AND "createdAt" >= ${since} GROUP BY 1`),
+    db.$queryRaw<{ day: Date; n: bigint }[]>(sql`SELECT date_trunc('day', "createdAt") AS day, COUNT(*)::bigint AS n FROM chat_messages WHERE "authorId" = ${userId} AND "createdAt" >= ${since} GROUP BY 1`),
   ]);
   const key = (d: Date) => d.toISOString().slice(0, 10);
   const postsBy = new Map(posts.map((r) => [key(new Date(r.day)), Number(r.n)]));

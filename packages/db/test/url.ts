@@ -7,3 +7,8 @@ export function withDatabase(url: string, database: string): string {
   u.pathname = `/${database}`;
   return u.toString();
 }
+
+/** Testele rulează pe MySQL (ediția Lite) cu `GCS_DB=mysql`; implicit pe PostgreSQL. */
+export function testOnMysql(): boolean {
+  return process.env.GCS_DB === "mysql";
+}

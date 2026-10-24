@@ -1,4 +1,4 @@
-import { PrismaClient } from "@gcs/db";
+import { createPrismaClient, gcsDbDialect } from "@gcs/db";
 import { migrateDatabase } from "@gcs/db/migrate";
 import pg from "pg";
 import { prepareNewUser } from "../auth/registration";
@@ -122,7 +122,7 @@ export async function runInstall(
   onProgress: (e: { stepKey: GcsInstallRunStep; pct: number }) => void,
   deps: GcsInstallDeps,
 ): Promise<void> {
-  const db = new PrismaClient({ datasourceUrl: deps.databaseUrl });
+  const db = createPrismaClient(deps.databaseUrl);
   const total = GCS_INSTALL_RUN_STEPS.length;
   try {
     const steps: Record<GcsInstallRunStep, () => Promise<void>> = {
@@ -190,6 +190,8 @@ export async function runInstall(
         await deps.cache.set("name-styles:css", css, { ttlSec: 3600, tags: ["name-styles"] });
       },
       search_indexes: async () => {
+        // MySQL: indexurile FULLTEXT vin din migrația de bază; extensiile și indexul trigram sunt doar PostgreSQL.
+        if (gcsDbDialect(deps.databaseUrl) === "mysql") return;
         for (const ext of EXTENSIONS) await db.$executeRawUnsafe(`CREATE EXTENSION IF NOT EXISTS ${ext}`);
         await db.$executeRawUnsafe(
           `CREATE INDEX IF NOT EXISTS "users_nameNormalized_trgm_idx" ON "users" USING gin ("nameNormalized" gin_trgm_ops)`,

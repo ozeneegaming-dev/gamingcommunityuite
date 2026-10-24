@@ -3,7 +3,10 @@ import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { forumTree, memberInNewContext, topicWithReplies, uid } from "./forum-fixtures";
-import { enterAcpAsRoot, sql, useFreshIp } from "./helpers";
+import { enterAcpAsRoot, sql, useFreshIp, onMysql } from "./helpers";
+
+// Ediția Lite pe MySQL: pluginurile cu bază de date proprie (aici și Studio VIP) nu sunt suportate.
+test.skip(onMysql, "pluginurile cu bază de date proprie rulează doar pe PostgreSQL");
 
 /**
  * Nume stilizate peste tot (specul 2026-10-10-nume-mentiuni-grupuri-peste-tot): un membru VIP cu efectul lui din

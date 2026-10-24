@@ -17,7 +17,8 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { ensureInstallCode, seedDefaults } from "@gcs/core";
 import { createRegistry } from "@gcs/modules";
-import { PrismaClient } from "@gcs/db";
+import { createPrismaClient } from "@gcs/db";
+import { migrateDatabase } from "@gcs/db/migrate";
 import pg from "pg";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -109,6 +110,49 @@ async function startPostgres(): Promise<string> {
   return `postgresql://postgres:postgres@localhost:${port}/postgres`;
 }
 
+/**
+ * MySQL 8.4 local (`mysql-memory-server`, dependența de test a lui `@gcs/db`; binarele se descarcă o singură dată) sau
+ * `TEST_MYSQL_URL`. Întoarce adresa bazei de serviciu (`mysql://…/gcs_e2e_bootstrap`).
+ */
+async function startMysql(): Promise<string> {
+  if (process.env.TEST_MYSQL_URL) return process.env.TEST_MYSQL_URL;
+  const dbRequire = createRequire(path.join(dbDir, "package.json"));
+  const { createDB } = (await import(pathToFileURL(dbRequire.resolve("mysql-memory-server")).href)) as {
+    createDB(o: { version: string; dbName: string; logLevel: string; downloadBinaryOnce: boolean }): Promise<{ username: string; port: number; stop(): Promise<void> }>;
+  };
+  const server = await createDB({ version: process.env.TEST_MYSQL_VERSION ?? "8.4.9", dbName: "gcs_e2e_bootstrap", logLevel: "ERROR", downloadBinaryOnce: true });
+  cleanups.push(async () => {
+    await server.stop();
+  });
+  return `mysql://${server.username}@127.0.0.1:${server.port}/gcs_e2e_bootstrap`;
+}
+
+/** O conexiune `mysql2` de administrare (din dependențele lui `@gcs/db`). */
+async function mysqlAdmin(baseUrl: string): Promise<{ query(sql: string): Promise<unknown>; end(): Promise<void> }> {
+  const dbRequire = createRequire(path.join(dbDir, "package.json"));
+  const mysql = dbRequire("mysql2/promise") as { createConnection(o: { uri: string }): Promise<{ query(sql: string): Promise<unknown>; end(): Promise<void> }> };
+  return mysql.createConnection({ uri: baseUrl });
+}
+
+/** Baza `name` creată din nou (goală), pe serverul din `baseUrl`; întoarce adresa ei. */
+async function recreateDatabase(baseUrl: string, name: string): Promise<string> {
+  const url = new URL(baseUrl);
+  url.pathname = `/${name}`;
+  if (MYSQL) {
+    const admin = await mysqlAdmin(baseUrl);
+    await admin.query(`DROP DATABASE IF EXISTS \`${name}\``);
+    await admin.query(`CREATE DATABASE \`${name}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
+    await admin.end();
+    return url.toString();
+  }
+  const admin = new pg.Client({ connectionString: baseUrl });
+  await admin.connect();
+  await admin.query(`DROP DATABASE IF EXISTS "${name}" WITH (FORCE)`);
+  await admin.query(`CREATE DATABASE "${name}"`);
+  await admin.end();
+  return url.toString();
+}
+
 async function startRedis(): Promise<string> {
   if (process.env.TEST_REDIS_URL) return process.env.TEST_REDIS_URL;
   process.env.REDISMS_DOWNLOAD_DIR ??= path.join(os.tmpdir(), "redis-memory-server");
@@ -169,21 +213,20 @@ async function startFakeSteam(secret: string): Promise<string> {
 const HEALTH_TIMEOUT_MS = 360_000;
 
 async function prepareDatabase(baseUrl: string, translatorUrl: string): Promise<string> {
-  const admin = new pg.Client({ connectionString: baseUrl });
-  await admin.connect();
-  await admin.query(`DROP DATABASE IF EXISTS "redline_e2e" WITH (FORCE)`);
-  await admin.query(`CREATE DATABASE "redline_e2e"`);
-  await admin.end();
-  const url = new URL(baseUrl);
-  url.pathname = "/redline_e2e";
+  const url = new URL(await recreateDatabase(baseUrl, "redline_e2e"));
   // Sub sarcină mare (alte teste sau build-uri pe aceeași mașină), conectarea poate depăși cele 5 s implicite ale Prisma:
   // valabil pentru migrații, seed și instanțele aplicației (toate primesc adresa asta).
   url.searchParams.set("connect_timeout", "60");
-  execFileSync(process.execPath, [prismaCli, "migrate", "deploy", "--schema", schemaPath], {
-    env: { ...process.env, DATABASE_URL: url.toString() },
-    stdio: "pipe",
-  });
-  const db = new PrismaClient({ datasourceUrl: url.toString() });
+  if (MYSQL) {
+    // MySQL: migrația de bază MySQL, prin runner-ul aplicației (ca installer-ul ediției Lite).
+    await migrateDatabase(url.toString(), path.join(dbDir, "prisma/migrations"));
+  } else {
+    execFileSync(process.execPath, [prismaCli, "migrate", "deploy", "--schema", schemaPath], {
+      env: { ...process.env, DATABASE_URL: url.toString() },
+      stdio: "pipe",
+    });
+  }
+  const db = createPrismaClient(url.toString());
   await seedDefaults(db, createRegistry());
   await db.setting.upsert({
     where: { key: "i18n.libretranslate_url" },
@@ -196,14 +239,7 @@ async function prepareDatabase(baseUrl: string, translatorUrl: string): Promise<
 
 /** O bază goală (fără migrații): installer-ul o pregătește singur. */
 async function emptyDatabase(baseUrl: string, name: string): Promise<string> {
-  const admin = new pg.Client({ connectionString: baseUrl });
-  await admin.connect();
-  await admin.query(`DROP DATABASE IF EXISTS "${name}" WITH (FORCE)`);
-  await admin.query(`CREATE DATABASE "${name}"`);
-  await admin.end();
-  const url = new URL(baseUrl);
-  url.pathname = `/${name}`;
-  return url.toString();
+  return recreateDatabase(baseUrl, name);
 }
 
 async function waitForHealth(timeoutMs: number, baseUrl = BASE_URL): Promise<void> {
@@ -251,9 +287,12 @@ async function startRealtime(env: NodeJS.ProcessEnv): Promise<string> {
  * joburile și timpul real (SSE / polling) stau în baza de date și în procesul web.
  */
 const LITE = process.env.GCS_EDITION === "lite";
+/** `GCS_DB=mysql` (doar cu `GCS_EDITION=lite`): ediția Lite pe MySQL 8.4 în locul PostgreSQL. */
+const MYSQL = process.env.GCS_DB === "mysql";
 
 async function main(): Promise<number> {
-  const [pgUrl, redisUrl] = await Promise.all([startPostgres(), LITE ? Promise.resolve("") : startRedis()]);
+  if (MYSQL && !LITE) throw new Error("GCS_DB=mysql merge doar cu GCS_EDITION=lite (ediția VPS e pe PostgreSQL)");
+  const [pgUrl, redisUrl] = await Promise.all([MYSQL ? startMysql() : startPostgres(), LITE ? Promise.resolve("") : startRedis()]);
   const databaseUrl = await prepareDatabase(pgUrl, await startFakeTranslator());
   // Un folder de configurare „deja instalat”: testele (în afară de cele ale installer-ului) pornesc de pe un site instalat.
   const configDir = path.join(webDir, ".e2e", `config-${process.pid}`);

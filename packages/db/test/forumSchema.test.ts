@@ -1,4 +1,5 @@
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
+import { testOnMysql } from "./url";
 import { testDb, truncateAll } from "./helpers";
 
 const db = testDb();
@@ -28,7 +29,8 @@ async function seedTopic() {
 }
 
 describe("schema forum", () => {
-  test("configurația gcs_ro ignoră diacriticele și flexiunile", async () => {
+  // Doar PostgreSQL: pe MySQL (ediția Lite) căutarea e FULLTEXT (testată în core), fără `gcs_ro` și `pg_trgm`.
+  test.skipIf(testOnMysql())("configurația gcs_ro ignoră diacriticele și flexiunile", async () => {
     const [row] = await db.$queryRaw<{ hit: boolean; flex: boolean }[]>`
       SELECT
         to_tsvector('gcs_ro', 'Mașina lui Ștefan') @@ plainto_tsquery('gcs_ro', 'masina stefan') AS hit,
@@ -36,7 +38,7 @@ describe("schema forum", () => {
     expect(row).toEqual({ hit: true, flex: true });
   });
 
-  test("cuvintele cu litere și cifre (ex. nume de jucători) ignoră și ele diacriticele", async () => {
+  test.skipIf(testOnMysql())("cuvintele cu litere și cifre (ex. nume de jucători) ignoră și ele diacriticele", async () => {
     const [row] = await db.$queryRaw<{ numword: boolean; hyphen: boolean }[]>`
       SELECT
         to_tsvector('gcs_ro', 'Ștefan99 și Mașina2') @@ plainto_tsquery('gcs_ro', 'stefan99 masina2') AS numword,
@@ -44,7 +46,7 @@ describe("schema forum", () => {
     expect(row).toEqual({ numword: true, hyphen: true });
   });
 
-  test("search_vector pe topicuri e indexat și interogabil", async () => {
+  test.skipIf(testOnMysql())("search_vector pe topicuri e indexat și interogabil", async () => {
     const { topic } = await seedTopic();
     await db.$executeRaw`
       UPDATE topics SET "searchVector" = setweight(to_tsvector('gcs_ro', title), 'A') WHERE id = ${topic.id}`;
@@ -53,7 +55,7 @@ describe("schema forum", () => {
     expect(hits.map((h) => h.id)).toEqual([topic.id]);
   });
 
-  test("pg_trgm găsește numele de membri aproximativ", async () => {
+  test.skipIf(testOnMysql())("pg_trgm găsește numele de membri aproximativ", async () => {
     await seedTopic();
     const rows = await db.$queryRaw<{ name: string }[]>`
       SELECT name FROM users WHERE "nameNormalized" % 'stefn' OR "nameNormalized" LIKE 'ste%'`;

@@ -246,8 +246,10 @@ describe("temele incluse: instalare nouă și actualizare", () => {
     const { nova, classic } = await legacyInstall();
     const ana = await w.createUser("Ana", "member");
     const ion = await w.createUser("Ion", "member");
-    await w.db.$executeRaw`UPDATE users SET prefs = prefs || jsonb_build_object('skin', 'nova') WHERE id = ${ana.id}`;
-    await w.db.$executeRaw`UPDATE users SET prefs = prefs || jsonb_build_object('skin', 'default') WHERE id = ${ion.id}`;
+    for (const [user, skin] of [[ana, "nova"], [ion, "default"]] as const) {
+      const { prefs } = await w.db.user.findUniqueOrThrow({ where: { id: user.id }, select: { prefs: true } });
+      await w.db.user.update({ where: { id: user.id }, data: { prefs: { ...(prefs as Record<string, unknown>), skin } } });
+    }
     await seed();
     await seed();
 

@@ -1,4 +1,4 @@
-import pg from "pg";
+import { e2eDb } from "./db";
 
 /**
  * Cheile aplicației pentru specuri (cache-ul paginilor, statusul serverelor…): Redis în ediția VPS, tabelul `gcs_kv` în
@@ -19,8 +19,7 @@ export async function e2eKv(redisUrl = process.env.REDIS_URL, databaseUrl = proc
     const { default: Redis } = await import("ioredis");
     return new Redis(redisUrl ?? "redis://localhost:6379") as unknown as GcsE2eKv;
   }
-  const client = new pg.Client({ connectionString: databaseUrl });
-  await client.connect();
+  const client = await e2eDb(databaseUrl);
   const live = `("expiresAt" IS NULL OR "expiresAt" > $NOW)`;
   const now = () => Date.now();
   return {

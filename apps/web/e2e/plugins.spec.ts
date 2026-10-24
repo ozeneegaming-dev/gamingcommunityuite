@@ -2,7 +2,10 @@ import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { forumTree, topicWithReplies, uid } from "./forum-fixtures";
-import { enterAcpAsRoot, sql, totp, useFreshIp } from "./helpers";
+import { enterAcpAsRoot, sql, totp, useFreshIp, onMysql } from "./helpers";
+
+// Ediția Lite pe MySQL: pluginurile cu bază de date proprie (aici și Studio VIP) nu sunt suportate.
+test.skip(onMysql, "pluginurile cu bază de date proprie rulează doar pe PostgreSQL");
 
 /**
  * Pluginurile (etapa 6 §2): Root Admin instalează pluginul de exemplu `gcs.hello` din ACP (pachet nesemnat: codul 2FA

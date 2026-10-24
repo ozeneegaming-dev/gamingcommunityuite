@@ -17,7 +17,7 @@ import {
   type GcsReportService,
   type GcsSettingsService,
 } from "@gcs/core";
-import { type Prisma, type PrismaClient, jsonInts, jsonStrings } from "@gcs/db";
+import { type Prisma, type PrismaClient, jsonInts, jsonPath, jsonStrings } from "@gcs/db";
 import { badgeArtSrc } from "@gcs/ui/badge-art";
 import { toChatView, type GcsChatMessageView, type GcsChatService } from "../chat/chat";
 import type { GcsChatExtension } from "../chat/extensions";
@@ -311,7 +311,7 @@ export class GcsChatProService {
     const body = `✊✋✌️ @${stored.opponent.name}: ${RPS_EMOJI[first]} vs ${RPS_EMOJI[choice]}`;
     // Doar dacă provocarea e încă deschisă (două răspunsuri simultane: câștigă primul).
     const updated = await db.chatMessage.updateMany({
-      where: { id: messageId, meta: { path: ["bot", "state"], equals: "open" } },
+      where: { id: messageId, meta: { path: jsonPath("bot", "state"), equals: "open" } },
       data: { body, meta: { ...(message.meta as object), bot } as Prisma.InputJsonValue },
     });
     if (updated.count === 0) throw new GcsValidationError({ choice: "closed" });

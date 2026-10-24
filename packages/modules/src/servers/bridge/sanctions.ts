@@ -1,5 +1,5 @@
 import { gcsTxLock, GcsForbidden, GcsNotFound, GcsValidationError, writeAudit, type GcsActor, type GcsAttachmentService, type GcsEventBus, type GcsPermissionService, type GcsSettingsService } from "@gcs/core";
-import { type GamePlayerKind, type GameSanctionScope, type GameSanctionType, type Prisma, type PrismaClient, ci } from "@gcs/db";
+import { type GamePlayerKind, type GameSanctionScope, type GameSanctionType, type Prisma, type PrismaClient, ci, sql, isMysql } from "@gcs/db";
 import type { GcsBridgeAdmins } from "./admins";
 import { BRIDGE_PERMISSION, BRIDGE_SETTING, SANCTION_EVIDENCE } from "./config";
 import { cleanIp, identityTrust, normalizePlayerName, parseTypedIdentity, type GcsPlayerRef } from "./identity";
@@ -126,12 +126,24 @@ export class GcsBridgeSanctions {
   }
 
   private async bumpRevision(tx: Prisma.TransactionClient, id: number): Promise<void> {
-    await tx.$executeRaw`UPDATE game_sanctions SET revision = nextval('game_sync_revision') WHERE id = ${id}`;
+    const next = await this.nextRevision(tx);
+    if (next !== undefined) await tx.gameSanction.update({ where: { id }, data: { revision: next } });
+    else await tx.$executeRaw(sql`UPDATE game_sanctions SET revision = nextval('game_sync_revision') WHERE id = ${id}`);
+  }
+
+  /**
+   * MySQL (fără secvențe): revizia următoare = cea mai mare + 1, sub lacătul reviziilor (`lock`). PostgreSQL: `undefined`
+   * (valoarea implicită a coloanei, din secvență).
+   */
+  private async nextRevision(tx: Prisma.TransactionClient): Promise<bigint | undefined> {
+    if (!isMysql()) return undefined;
+    const max = await tx.gameSanction.aggregate({ _max: { revision: true } });
+    return (max._max.revision ?? 0n) + 1n;
   }
 
   /** Cea mai mare revizie (versiunea din heartbeat). */
   async maxRevision(): Promise<number> {
-    const [row] = await this.deps.db.$queryRaw<{ max: bigint | null }[]>`SELECT max(revision) AS max FROM game_sanctions`;
+    const [row] = await this.deps.db.$queryRaw<{ max: bigint | null }[]>(sql`SELECT max(revision) AS max FROM game_sanctions`);
     return Number(row?.max ?? 0n);
   }
 
@@ -233,8 +245,10 @@ export class GcsBridgeSanctions {
     const now = this.now();
     const row = await db.$transaction(async (tx) => {
       await this.lock(tx);
+      const revision = await this.nextRevision(tx);
       const created = await tx.gameSanction.create({
         data: {
+          ...(revision !== undefined ? { revision } : {}),
           type: input.type,
           scope: input.scope,
           serverId,
@@ -411,8 +425,10 @@ export class GcsBridgeSanctions {
       }
     }
     await this.lock(tx);
+    const revision = await this.nextRevision(tx);
     const created = await tx.gameSanction.create({
       data: {
+        ...(revision !== undefined ? { revision } : {}),
         type: ev.type,
         scope,
         serverId: server.id,

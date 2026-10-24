@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { GcsConflict, GcsForbidden, GcsValidationError } from "@gcs/core";
+import { testOnMysql } from "@gcs/db/test/url";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createForumWorld, type GcsForumWorld } from "../../test/world";
 
@@ -192,7 +193,8 @@ describe("iconițe și coloanele subforumurilor (etapa 5)", () => {
     expect(row).toMatchObject({ icon: "fa-solid fa-gamepad", subforumColumns: 3, subforums: [{ name: "Configuri", icon: "fa-solid fa-gear", topicsCount: 0 }] });
   });
 
-  test("migrația etapei 5 transformă iconițele vechi în iconițe Font Awesome", async () => {
+  // Rulează SQL-ul migrației PostgreSQL; pe MySQL schema de bază vine deja migrată.
+  test.skipIf(testOnMysql())("migrația etapei 5 transformă iconițele vechi în iconițe Font Awesome", async () => {
     const category = await w.forums.create({ parentId: null, type: "CATEGORY", name: "Vechi" }, w.root);
     const legacy = await w.db.forum.create({ data: { parentId: category.id, type: "FORUM", name: "Anunțuri", slug: "anunturi", icon: "megaphone", position: 9 } });
     const custom = await w.db.forum.create({ data: { parentId: category.id, type: "FORUM", name: "Altul", slug: "altul", icon: "fa-solid fa-star", position: 10 } });

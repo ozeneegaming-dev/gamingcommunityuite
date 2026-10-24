@@ -1,5 +1,5 @@
+import { e2eDb } from "./db";
 import { expect, test, type Browser, type Page } from "@playwright/test";
-import pg from "pg";
 import { PASSWORD, register, totp, useFreshIp } from "./helpers";
 
 /**
@@ -13,8 +13,7 @@ async function installSql<T extends Record<string, unknown>>(query: string, para
   // Pe VPS (prin tunel), baza instanței se dă explicit; local e `redline_e2e_install` pe serverul E2E.
   const url = new URL(process.env.GCS_E2E_INSTALL_DB_URL ?? process.env.DATABASE_URL!);
   if (!process.env.GCS_E2E_INSTALL_DB_URL) url.pathname = "/redline_e2e_install";
-  const client = new pg.Client({ connectionString: url.toString() });
-  await client.connect();
+  const client = await e2eDb(url.toString());
   try {
     return (await client.query<T>(query, params)).rows;
   } finally {

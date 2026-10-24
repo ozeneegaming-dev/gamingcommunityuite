@@ -102,7 +102,8 @@ describe("preferințele contului", () => {
     expect(await prefs.get(w.member.userId!)).toMatchObject({ topicOpen: "start", showSignatures: true, showVisitors: true });
     expect(await prefs.set(w.member, { topicOpen: "last", showSignatures: false })).toMatchObject({ topicOpen: "last", showSignatures: false, steamTab: true });
     // Celelalte chei din `prefs` (sunetul, toast-urile) rămân.
-    await w.db.$executeRaw`UPDATE users SET prefs = prefs || '{"sound": false}'::jsonb WHERE id = ${w.member.userId!}`;
+    const before = (await w.db.user.findUniqueOrThrow({ where: { id: w.member.userId! } })).prefs as Record<string, unknown>;
+    await w.db.user.update({ where: { id: w.member.userId! }, data: { prefs: { ...before, sound: false } } });
     await prefs.set(w.member, { steamTab: false });
     expect((await w.db.user.findUniqueOrThrow({ where: { id: w.member.userId! } })).prefs).toMatchObject({ sound: false, topicOpen: "last", steamTab: false });
     await expect(prefs.set(w.member, { topicOpen: "middle" as never })).rejects.toMatchObject({ fields: { topicOpen: "invalid_choice" } });

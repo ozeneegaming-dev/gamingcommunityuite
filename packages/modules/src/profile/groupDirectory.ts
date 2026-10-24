@@ -1,5 +1,5 @@
 import type { GcsCache, GcsDisplayGroupInfo, GcsGroupDisplayService } from "@gcs/core";
-import type { PrismaClient } from "@gcs/db";
+import { type PrismaClient, sql } from "@gcs/db";
 
 /** „Online” = activ în ultimele 15 minute, cu statusul vizibil (ca cardul unui grup). */
 const ONLINE_MS = 15 * 60_000;
@@ -94,7 +94,7 @@ export class GcsGroupDirectory {
     const cached = await this.deps.cache.get<[number, GcsGroupCount][]>(COUNTS_KEY);
     if (cached) return new Map(cached);
     const since = new Date(now - ONLINE_MS).toISOString();
-    const rows = await this.deps.db.$queryRaw<{ gid: number; total: number; secondary: number; online: number; ptotal: number; ponline: number }[]>`
+    const rows = await this.deps.db.$queryRaw<{ gid: number; total: number; secondary: number; online: number; ptotal: number; ponline: number }[]>(sql`
       WITH m AS (
         SELECT u."primaryGroupId" AS gid, false AS secondary,
                (u."lastActiveAt" >= ${since}::timestamp AND COALESCE((u.privacy->>'showOnline')::boolean, true)) AS online
@@ -107,7 +107,7 @@ export class GcsGroupDirectory {
       )
       SELECT gid, count(*)::int AS total, count(*) FILTER (WHERE secondary)::int AS secondary, count(*) FILTER (WHERE online)::int AS online,
              count(*) FILTER (WHERE NOT secondary)::int AS ptotal, count(*) FILTER (WHERE online AND NOT secondary)::int AS ponline
-      FROM m GROUP BY gid`;
+      FROM m GROUP BY gid`);
     const primaryOnly = new Set((await this.groups()).filter((g) => g.primaryOnly).map((g) => g.id));
     const out = new Map<number, GcsGroupCount>(
       rows.map((r) => [

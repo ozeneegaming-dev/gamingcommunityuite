@@ -1,4 +1,4 @@
-import type { Prisma, PrismaClient } from "@gcs/db";
+import { type Prisma, type PrismaClient, isMysql, sql } from "@gcs/db";
 import { writeAudit } from "../audit";
 import type { GcsCache } from "../cache";
 import { GcsValidationError } from "../errors";
@@ -174,6 +174,50 @@ export class GcsAcpDashboardService {
     return fresh;
   }
 
+  /**
+   * Seriile pe zile fără funcțiile de dată ale PostgreSQL (MySQL pe shared hosting nu are de obicei tabelele de fusuri
+   * orare): momentele se aduc și se numără în aplicație, în fusul site-ului.
+   */
+  private async portableSeries(since: Date, timeZone: string): Promise<{ s: string; d: string; n: number }[]> {
+    const { db } = this.deps;
+    const day = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" });
+    const [users, posts, topics, reports, vips] = await Promise.all([
+      db.user.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } }),
+      db.post.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true, visibility: true, authorId: true } }),
+      db.topic.findMany({ where: { createdAt: { gte: since }, visibility: "VISIBLE" }, select: { createdAt: true } }),
+      db.report.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } }),
+      db.vipSubscription.findMany({ where: { startsAt: { gte: since } }, select: { startsAt: true } }),
+    ]);
+    const counts = new Map<string, number>();
+    const add = (s: string, at: Date) => {
+      const k = `${s}:${day.format(at)}`;
+      counts.set(k, (counts.get(k) ?? 0) + 1);
+    };
+    for (const u of users) add("registrations", u.createdAt);
+    for (const p of posts) if (p.visibility === "VISIBLE") add("posts", p.createdAt);
+    const active = new Set<string>();
+    for (const p of posts) if (p.authorId) active.add(`${day.format(p.createdAt)}|${p.authorId}`);
+    for (const a of active) add("active", new Date(`${a.slice(0, 10)}T12:00:00Z`));
+    for (const t of topics) add("topics", t.createdAt);
+    for (const r of reports) add("reports", r.createdAt);
+    for (const v of vips) add("vips", v.startsAt);
+    return [...counts].map(([k, n]) => ({ s: k.slice(0, k.indexOf(":")), d: k.slice(k.indexOf(":") + 1), n }));
+  }
+
+  private async portableTotals(since30: Date): Promise<GcsAcpOverview["totals"][]> {
+    const { db } = this.deps;
+    const [members, posts, topics, vips, openReports, reports, active30] = await Promise.all([
+      db.user.count(),
+      db.post.count({ where: { visibility: "VISIBLE" } }),
+      db.topic.count({ where: { visibility: "VISIBLE" } }),
+      db.vipSubscription.count({ where: { status: "ACTIVE" } }),
+      db.report.count({ where: { status: "OPEN" } }),
+      db.report.count(),
+      db.user.count({ where: { lastActiveAt: { gte: since30 } } }),
+    ]);
+    return [{ members, posts, topics, vips, openReports, reports, active30 }];
+  }
+
   private async computeOverview(now: Date, timeZone: string): Promise<GcsAcpOverview> {
     const { db } = this.deps;
     const day = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" });
@@ -184,7 +228,7 @@ export class GcsAcpDashboardService {
     const since30 = new Date(now.getTime() - ACP_OVERVIEW_DAYS * 86_400_000);
 
     const [rows, [totals], latest, audit] = await Promise.all([
-      db.$queryRaw<{ s: string; d: string; n: number }[]>`
+      isMysql() ? this.portableSeries(since, timeZone) : db.$queryRaw<{ s: string; d: string; n: number }[]>(sql`
         SELECT 'registrations'::text AS s, to_char(date_trunc('day', ("createdAt" AT TIME ZONE 'UTC') AT TIME ZONE ${timeZone}::text), 'YYYY-MM-DD') AS d, count(*)::int AS n
           FROM users WHERE "createdAt" >= ${since} GROUP BY 2
         UNION ALL
@@ -201,15 +245,15 @@ export class GcsAcpDashboardService {
           FROM reports WHERE "createdAt" >= ${since} GROUP BY 2
         UNION ALL
         SELECT 'vips'::text, to_char(date_trunc('day', ("startsAt" AT TIME ZONE 'UTC') AT TIME ZONE ${timeZone}::text), 'YYYY-MM-DD'), count(*)::int
-          FROM vip_subscriptions WHERE "startsAt" >= ${since} GROUP BY 2`,
-      db.$queryRaw<GcsAcpOverview["totals"][]>`
+          FROM vip_subscriptions WHERE "startsAt" >= ${since} GROUP BY 2`),
+      isMysql() ? this.portableTotals(since30) : db.$queryRaw<GcsAcpOverview["totals"][]>(sql`
         SELECT (SELECT count(*) FROM users)::int AS members,
                (SELECT count(*) FROM posts WHERE visibility = 'VISIBLE')::int AS posts,
                (SELECT count(*) FROM topics WHERE visibility = 'VISIBLE')::int AS topics,
                (SELECT count(*) FROM vip_subscriptions WHERE status = 'ACTIVE')::int AS vips,
                (SELECT count(*) FROM reports WHERE status = 'OPEN')::int AS "openReports",
                (SELECT count(*) FROM reports)::int AS reports,
-               (SELECT count(*) FROM users WHERE "lastActiveAt" >= ${since30})::int AS active30`,
+               (SELECT count(*) FROM users WHERE "lastActiveAt" >= ${since30})::int AS active30`),
       db.user.findMany({
         orderBy: { createdAt: "desc" },
         take: 6,

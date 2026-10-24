@@ -1,7 +1,7 @@
+import { e2eDb } from "./db";
 import { e2eKv } from "./kv";
 import { expect, type BrowserContext, type Page } from "@playwright/test";
 import { generateSync } from "otplib";
-import pg from "pg";
 
 export const PASSWORD = "parola-sigura-123";
 
@@ -19,14 +19,21 @@ export async function sql<T extends Record<string, unknown> = Record<string, unk
   query: string,
   params: unknown[] = [],
 ): Promise<T[]> {
-  const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
-  await client.connect();
+  const client = await e2eDb(process.env.DATABASE_URL);
   try {
     return (await client.query<T>(query, params)).rows;
   } finally {
     await client.end();
   }
 }
+
+/** Ziua de azi după fusul site-ului (`YYYY-MM-DD`, Europe/Bucharest): calculată aici, portabil pe ambele baze. */
+export function siteDay(at = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Bucharest", year: "numeric", month: "2-digit", day: "2-digit" }).format(at);
+}
+
+/** Pe MySQL (ediția Lite) pluginurile cu bază de date proprie nu sunt suportate: specurile lor rulează doar pe PostgreSQL. */
+export const onMysql = /^mysql:\/\//i.test(process.env.DATABASE_URL ?? "");
 
 /** Mută userul în grupul dat (ca grup principal) și invalidează cache-ul de permisiuni. */
 export async function setPrimaryGroup(email: string, groupKey: string): Promise<void> {

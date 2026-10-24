@@ -1,4 +1,4 @@
-import { Prisma, type PrismaClient, type Theme } from "@gcs/db";
+import { Prisma, type PrismaClient, type Theme, sql, sqlJsonMerge } from "@gcs/db";
 import { addSeedMarks, seedMarksOf } from "../install/seedMarks";
 import type { GcsAcpRoleService } from "../acp/roles";
 import { writeAudit } from "../audit";
@@ -415,7 +415,7 @@ export class GcsThemeService {
       taken.delete(nova.key);
       taken.add(GCS_DARK_THEME_KEY);
       // Membrii care aleseseră Nova o păstrează, sub cheia nouă.
-      await tx.$executeRaw`UPDATE users SET prefs = prefs || jsonb_build_object('skin', ${GCS_DARK_THEME_KEY}::text) WHERE prefs->>'skin' = ${nova.key}`;
+      await tx.$executeRaw(sql`UPDATE users SET prefs = ${sqlJsonMerge("prefs", { skin: GCS_DARK_THEME_KEY })} WHERE prefs->>'skin' = ${nova.key}`);
     }
     if (!taken.has(GCS_WHITE_THEME_KEY)) await GcsThemeService.createBuiltIn(tx, GCS_WHITE_THEME_KEY, GCS_WHITE_THEME_NAME, GCS_WHITE_THEME_SETTINGS, false);
     // Temele clasice: antetul neatins („Standard”, valoarea implicită de până acum) devine aspectul „Clasic” al

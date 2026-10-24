@@ -1,4 +1,4 @@
-import { type PrismaClient, ci } from "@gcs/db";
+import { type PrismaClient, ci, isMysql, sql } from "@gcs/db";
 import { normalizeUsername } from "../auth/usernames";
 import type { GcsModuleRegistry } from "../modules/registry";
 import type { GcsActor } from "../permissions/types";
@@ -61,11 +61,14 @@ export class GcsAcpSearch {
 
     if (await acp.can(actor, "community.forums", "view")) {
       // Fără diacritice: numele forumurilor sunt comparate cu `unaccent` (extensia din migrația forumului).
-      const forums = await db.$queryRaw<{ id: number; name: string }[]>`
-        SELECT id, name FROM forums
-        WHERE unaccent(lower(name)) LIKE '%' || unaccent(lower(${query})) || '%'
-        ORDER BY "parentId" NULLS FIRST, position
-        LIMIT ${MAX_PER_GROUP}`;
+      // Pe MySQL colația (`utf8mb4_unicode_ci`) ignoră deja diacriticele și majusculele.
+      const forums = isMysql()
+        ? await db.forum.findMany({ where: { name: { contains: query } }, orderBy: [{ parentId: { sort: "asc", nulls: "first" } }, { position: "asc" }], take: MAX_PER_GROUP, select: { id: true, name: true } })
+        : await db.$queryRaw<{ id: number; name: string }[]>(sql`
+            SELECT id, name FROM forums
+            WHERE unaccent(lower(name)) LIKE '%' || unaccent(lower(${query})) || '%'
+            ORDER BY "parentId" NULLS FIRST, position
+            LIMIT ${MAX_PER_GROUP}`);
       results.push(...forums.map((f) => ({ group: "forums" as const, label: f.name, href: `/admin/community/forums/${f.id}` })));
     }
 

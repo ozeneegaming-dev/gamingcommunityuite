@@ -1,4 +1,4 @@
-import { Prisma, type PrismaClient } from "@gcs/db";
+import { Prisma, sqlIdent, type PrismaClient, sql } from "@gcs/db";
 import type { GcsPlayerStatsAggregate, GcsPlayerStatsProvider, GcsPlayerStatsScope } from "../playerStats";
 
 /**
@@ -21,15 +21,15 @@ async function addRow(tx: Tx, table: string, keys: Record<string, unknown>, delt
   const keyCols = Object.keys(keys);
   const insertCols = [...keyCols, ...cols.map(([c]) => c), ...Object.keys(extra.insert ?? {})];
   // Timpii: text ISO cu `::timestamp` (coloanele sunt fără fus orar; un `Date` brut ar fi mutat de fusul sesiunii).
-  const values = [...Object.values(keys), ...cols.map(([, v]) => Math.trunc(v)), ...Object.values(extra.insert ?? {})].map((v) => (v instanceof Date ? Prisma.sql`${v.toISOString()}::timestamp` : v));
-  const ident = (c: string) => Prisma.raw(`"${c}"`);
+  const values = [...Object.values(keys), ...cols.map(([, v]) => Math.trunc(v)), ...Object.values(extra.insert ?? {})].map((v) => (v instanceof Date ? sql`${v.toISOString()}::timestamp` : v));
+  const ident = (c: string) => sqlIdent(c);
   const updates = [
-    ...cols.map(([c]) => Prisma.sql`${ident(c)} = ${Prisma.raw(table)}.${ident(c)} + EXCLUDED.${ident(c)}`),
-    ...Object.entries(extra.set ?? {}).map(([c, sql]) => Prisma.sql`${ident(c)} = ${sql}`),
+    ...cols.map(([c]) => sql`${ident(c)} = ${Prisma.raw(table)}.${ident(c)} + EXCLUDED.${ident(c)}`),
+    ...Object.entries(extra.set ?? {}).map(([c, expr]) => sql`${ident(c)} = ${expr}`),
   ];
-  await tx.$executeRaw`
+  await tx.$executeRaw(sql`
     INSERT INTO ${Prisma.raw(table)} (${Prisma.join(insertCols.map(ident))}) VALUES (${Prisma.join(values)})
-    ON CONFLICT (${Prisma.join(keyCols.map(ident))}) DO UPDATE SET ${Prisma.join(updates)}`;
+    ON CONFLICT (${Prisma.join(keyCols.map(ident))}) DO UPDATE SET ${Prisma.join(updates)}`);
 }
 
 /** Deltele unui jucător pe un server; scorul (ucideri − decese − ucideri în echipă) se actualizează odată cu ele. */
@@ -40,7 +40,7 @@ export async function addPlayerStats(tx: Tx, playerId: number, serverId: number,
     "game_player_stats",
     { playerId, serverId },
     { ...delta, score },
-    { insert: { lastSeenAt: at }, set: { lastSeenAt: Prisma.sql`GREATEST(game_player_stats."lastSeenAt", EXCLUDED."lastSeenAt")` } },
+    { insert: { lastSeenAt: at }, set: { lastSeenAt: sql`GREATEST(game_player_stats."lastSeenAt", EXCLUDED."lastSeenAt")` } },
   );
 }
 
@@ -59,14 +59,14 @@ export async function addMapStats(tx: Tx, playerId: number, serverId: number, ma
 export async function recomputeRanks(db: PrismaClient, minMinutes: number): Promise<number> {
   const min = Math.max(0, Math.floor(minMinutes)) * 60;
   return db.$transaction(async (tx) => {
-    const ranked = await tx.$executeRaw`
+    const ranked = await tx.$executeRaw(sql`
       UPDATE game_player_stats s SET rank = r.rank
       FROM (
         SELECT "playerId", "serverId", ROW_NUMBER() OVER (PARTITION BY "serverId" ORDER BY score DESC, kills DESC, "playerId" ASC)::int AS rank
         FROM game_player_stats WHERE playtime >= ${min}
       ) r
-      WHERE s."playerId" = r."playerId" AND s."serverId" = r."serverId" AND s.rank IS DISTINCT FROM r.rank`;
-    const cleared = await tx.$executeRaw`UPDATE game_player_stats SET rank = NULL WHERE playtime < ${min} AND rank IS NOT NULL`;
+      WHERE s."playerId" = r."playerId" AND s."serverId" = r."serverId" AND s.rank IS DISTINCT FROM r.rank`);
+    const cleared = await tx.$executeRaw(sql`UPDATE game_player_stats SET rank = NULL WHERE playtime < ${min} AND rank IS NOT NULL`);
     return ranked + cleared;
   });
 }
@@ -108,10 +108,10 @@ export class GcsBridgeStatsProvider implements GcsPlayerStatsProvider {
     const ids = [...new Set(userIds)].slice(0, 5000);
     if (ids.length === 0) return out;
     const scope = opts.scope;
-    const serverFilter = typeof scope === "number" ? Prisma.sql`AND s."serverId" = ${scope}` : Prisma.empty;
+    const serverFilter = typeof scope === "number" ? sql`AND s."serverId" = ${scope}` : Prisma.empty;
 
     const [mix, elo] = await Promise.all([
-      db.$queryRaw<MixRow[]>`
+      db.$queryRaw<MixRow[]>(sql`
         SELECT p."userId", COUNT(*)::int AS played,
           COUNT(*) FILTER (WHERE m.winner = mp.team)::int AS won,
           COALESCE(SUM(mp.kills), 0)::int AS kills, COALESCE(SUM(mp.deaths), 0)::int AS deaths,
@@ -120,12 +120,12 @@ export class GcsBridgeStatsProvider implements GcsPlayerStatsProvider {
         JOIN game_matches m ON m.id = mp."matchId" AND m.status = 'ENDED'
         JOIN game_players p ON p.id = mp."playerId" AND p.kind IN ('STEAM', 'NONSTEAM')
         WHERE p."userId" IN (${Prisma.join(ids)})
-        GROUP BY p."userId"`,
-      db.$queryRaw<EloRow[]>`
+        GROUP BY p."userId"`),
+      db.$queryRaw<EloRow[]>(sql`
         SELECT DISTINCT ON (p."userId") p."userId", r.elo
         FROM game_ratings r JOIN game_players p ON p.id = r."playerId" AND p.kind IN ('STEAM', 'NONSTEAM')
         WHERE p."userId" IN (${Prisma.join(ids)})
-        ORDER BY p."userId", r.matches DESC, r.elo DESC`,
+        ORDER BY p."userId", r.matches DESC, r.elo DESC`),
     ]);
     const mixBy = new Map(mix.map((r) => [r.userId, r]));
     const eloBy = new Map(elo.map((r) => [r.userId, r.elo]));
@@ -150,7 +150,7 @@ export class GcsBridgeStatsProvider implements GcsPlayerStatsProvider {
       return out;
     }
 
-    const rows = await db.$queryRaw<StatRow[]>`
+    const rows = await db.$queryRaw<StatRow[]>(sql`
       SELECT p."userId",
         COALESCE(SUM(s.kills), 0)::int AS kills, COALESCE(SUM(s.deaths), 0)::int AS deaths,
         COALESCE(SUM(s.headshots), 0)::int AS headshots, COALESCE(SUM(s.shots), 0)::int AS shots,
@@ -161,7 +161,7 @@ export class GcsBridgeStatsProvider implements GcsPlayerStatsProvider {
       FROM game_player_stats s
       JOIN game_players p ON p.id = s."playerId" AND p.kind IN ('STEAM', 'NONSTEAM')
       WHERE p."userId" IN (${Prisma.join(ids)}) ${serverFilter}
-      GROUP BY p."userId"`;
+      GROUP BY p."userId"`);
     for (const r of rows) {
       const m = mixBy.get(r.userId);
       out.set(r.userId, {
@@ -171,7 +171,8 @@ export class GcsBridgeStatsProvider implements GcsPlayerStatsProvider {
         accuracy: r.shots > 0 ? Math.min(1, r.hits / r.shots) : null,
         playtimeSeconds: r.playtime,
         lastSeenAt: r.lastSeenAt?.toISOString() ?? null,
-        lastServerId: r.lastServerId,
+        // MySQL: primul din GROUP_CONCAT vine ca text.
+        lastServerId: r.lastServerId == null ? null : Number(r.lastServerId),
         serverRank: typeof scope === "number" ? r.rank : null,
         mixPlayed: m?.played ?? 0,
         mixWon: m?.won ?? 0,

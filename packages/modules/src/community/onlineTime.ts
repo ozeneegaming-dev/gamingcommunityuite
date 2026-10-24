@@ -1,5 +1,5 @@
 import { defineKvScript, type GcsJobQueue, type GcsKv, type GcsMemberDataHandler, type GcsSettingsService } from "@gcs/core";
-import { Prisma, type PrismaClient } from "@gcs/db";
+import { Prisma, type PrismaClient, isMysql, sql } from "@gcs/db";
 import { addDays, dayKey } from "../chat-pro/period";
 export { formatOnlineDuration } from "./onlineFormat";
 
@@ -95,12 +95,24 @@ export class GcsOnlineTime {
         .map(([userId, ms]) => ({ userId, seconds: Math.floor(Number(ms) / 1000) }))
         .filter((r) => r.seconds > 0);
       if (rows.length === 0) continue;
-      written += await db.$executeRaw`
+      if (isMysql()) {
+        // MySQL: fără `unnest`; membrii șterși între timp se scot înainte, cea mai mare valoare câștigă la fel.
+        const alive = new Set((await db.user.findMany({ where: { id: { in: rows.map((r) => r.userId) } }, select: { id: true } })).map((u) => u.id));
+        const valid = rows.filter((r) => alive.has(r.userId));
+        if (valid.length === 0) continue;
+        await db.$executeRaw(sql`
+          INSERT INTO member_online_days (userId, day, seconds)
+          VALUES ${Prisma.join(valid.map((r) => sql`(${r.userId}, ${day}, ${r.seconds})`))}
+          ON DUPLICATE KEY UPDATE seconds = GREATEST(seconds, VALUES(seconds))`);
+        written += valid.length;
+        continue;
+      }
+      written += await db.$executeRaw(sql`
         INSERT INTO member_online_days ("userId", day, seconds)
         SELECT v."userId", ${day}, v.seconds
         FROM unnest(${rows.map((r) => r.userId)}::text[], ${rows.map((r) => r.seconds)}::int[]) AS v("userId", seconds)
         JOIN users u ON u.id = v."userId"
-        ON CONFLICT ("userId", day) DO UPDATE SET seconds = GREATEST(member_online_days.seconds, EXCLUDED.seconds)`;
+        ON CONFLICT ("userId", day) DO UPDATE SET seconds = GREATEST(member_online_days.seconds, EXCLUDED.seconds)`);
     }
     return written;
   }
@@ -127,8 +139,8 @@ export class GcsOnlineTime {
   async valuesSql(period: GcsOnlinePeriod, now = Date.now()): Promise<Prisma.Sql> {
     await this.flush(now);
     const from = onlinePeriodStart(await this.today(now), period);
-    const where = from ? Prisma.sql`WHERE d.day >= ${from}` : Prisma.empty;
-    return Prisma.sql`SELECT d."userId" AS id, sum(d.seconds)::int AS value FROM member_online_days d ${where} GROUP BY d."userId"`;
+    const where = from ? sql`WHERE d.day >= ${from}` : Prisma.empty;
+    return sql`SELECT d."userId" AS id, sum(d.seconds)::int AS value FROM member_online_days d ${where} GROUP BY d."userId"`;
   }
 
   /** Jobul de copiere (5 minute), rulat de worker. */
@@ -153,10 +165,10 @@ export function onlineTimeMemberData(deps: { db: PrismaClient }): GcsMemberDataH
     },
     async merge({ sourceId, targetId }) {
       return db.$transaction(async (tx) => {
-        const n = await tx.$executeRaw`
+        const n = await tx.$executeRaw(sql`
           INSERT INTO member_online_days ("userId", day, seconds)
           SELECT ${targetId}, day, seconds FROM member_online_days WHERE "userId" = ${sourceId}
-          ON CONFLICT ("userId", day) DO UPDATE SET seconds = member_online_days.seconds + EXCLUDED.seconds`;
+          ON CONFLICT ("userId", day) DO UPDATE SET seconds = member_online_days.seconds + EXCLUDED.seconds`);
         return n + (await tx.memberOnlineDay.deleteMany({ where: { userId: sourceId } })).count;
       });
     },
