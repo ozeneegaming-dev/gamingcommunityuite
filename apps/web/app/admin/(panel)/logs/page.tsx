@@ -1,4 +1,4 @@
-import { normalizeUsername, queryAudit } from "@gcs/core";
+import { queryAudit } from "@gcs/core";
 import { GcsButton, GcsCard } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
@@ -8,14 +8,13 @@ import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsAcpTitle } from "../_components/GcsAcpTitle";
 import { GcsMemberLink } from "@/lib/member-names";
+import { auditFilters, type GcsLogSearch } from "./filters";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.logs"))("title") };
 }
 
-type Props = { searchParams: Promise<{ actor?: string; action?: string; from?: string; to?: string; page?: string }> };
-
-const isDate = (v: string | undefined): v is string => !!v && /^\d{4}-\d{2}-\d{2}$/.test(v);
+type Props = { searchParams: Promise<GcsLogSearch & { page?: string }> };
 
 /** Cheile care diferă între două obiecte (sau `["*"]` dacă nu sunt obiecte). */
 function changedKeys(before: unknown, after: unknown): string[] {
@@ -36,19 +35,9 @@ export default async function AcpLogsPage({ searchParams }: Props) {
   const sp = await searchParams;
   const { db } = services();
 
-  const actor = sp.actor?.trim()
-    ? await db.user.findUnique({ where: { nameNormalized: normalizeUsername(sp.actor) }, select: { id: true } })
-    : null;
-  const result =
-    sp.actor?.trim() && !actor
-      ? { items: [], total: 0, page: 1, pages: 1 }
-      : await queryAudit(db, {
-          ...(actor ? { actorId: actor.id } : {}),
-          ...(sp.action?.trim() ? { action: sp.action.trim() } : {}),
-          ...(isDate(sp.from) ? { from: new Date(`${sp.from}T00:00:00`) } : {}),
-          ...(isDate(sp.to) ? { to: new Date(`${sp.to}T23:59:59.999`) } : {}),
-          page: Number(sp.page) || 1,
-        });
+  const filters = await auditFilters(db, sp);
+  const result = filters ? await queryAudit(db, { ...filters, page: Number(sp.page) || 1 }) : { items: [], total: 0, page: 1, pages: 1 };
+  const exportHref = `/admin/logs/export.csv?${new URLSearchParams(Object.entries(sp).filter(([k, v]) => k !== "page" && v) as [string, string][])}`;
 
   const pageHref = (page: number) => {
     const params = new URLSearchParams(Object.entries(sp).filter(([k, v]) => k !== "page" && v) as [string, string][]);
@@ -71,6 +60,14 @@ export default async function AcpLogsPage({ searchParams }: Props) {
             {t("filters.action")}
             <input className="gcs-input" name="action" defaultValue={sp.action ?? ""} placeholder="group.update" />
           </label>
+          <label className="gcs-field" style={{ flex: "1 1 180px" }}>
+            {t("filters.target")}
+            <input className="gcs-input" name="target" defaultValue={sp.target ?? ""} data-testid="gcs-logs-target" />
+          </label>
+          <label className="gcs-field" style={{ flex: "1 1 140px" }}>
+            {t("filters.targetType")}
+            <input className="gcs-input" name="targetType" defaultValue={sp.targetType ?? ""} placeholder="user" />
+          </label>
           <label className="gcs-field">
             {t("filters.from")}
             <input className="gcs-input" type="date" name="from" defaultValue={sp.from ?? ""} />
@@ -82,6 +79,10 @@ export default async function AcpLogsPage({ searchParams }: Props) {
           <GcsButton variant="primary" type="submit" icon={<GcsIcon name="fa-solid fa-filter" />}>
             {t("filters.apply")}
           </GcsButton>
+          <a href={exportHref} className="gcs-btn gcs-btn--ghost" download data-testid="gcs-logs-csv">
+            <GcsIcon name="fa-solid fa-file-csv" className="gcs-btn__icon" />
+            {t("exportCsv")}
+          </a>
         </form>
       </GcsCard>
 
@@ -96,7 +97,7 @@ export default async function AcpLogsPage({ searchParams }: Props) {
                 <span style={{ fontWeight: 600, minWidth: 120 }}>{item.actorId && item.actorName ? <GcsMemberLink user={{ id: item.actorId, name: item.actorName }} href={`/admin/members/${item.actorId}`} /> : (item.actorName ?? t("system"))}</span>
                 <code style={{ color: "var(--gcs-accentInk)" }}>{item.action}</code>
                 <span style={{ color: "var(--gcs-muted)" }}>
-                  {item.targetType}:{item.targetId}
+                  {item.targetType === "user" && item.targetName ? <Link href={`/admin/members/${item.targetId}`}>{item.targetName}</Link> : `${item.targetType}:${item.targetId}`}
                 </span>
                 {item.ip && <span style={{ color: "var(--gcs-muted)", marginLeft: "auto" }}>{item.ip}</span>}
               </summary>

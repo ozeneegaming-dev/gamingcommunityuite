@@ -98,6 +98,28 @@ export class GcsAcpRoleService {
 
   // ─── Gestionarea rolurilor (ACP → Staff → Administratori și roluri ACP) ───
 
+  /**
+   * Membrii cu un drept pe o secțiune (Root Admin + rolurile atribuite direct sau prin grup), pentru alertele staff-ului.
+   * Conturile-bot nu intră.
+   */
+  async usersWith(section: string, right: GcsAcpRight = "view", limit = 100): Promise<string[]> {
+    const { db } = this.deps;
+    const flag = right === "view" ? { canView: true } : right === "edit" ? { canEdit: true } : { canDelete: true };
+    const [assignments, root] = await Promise.all([
+      db.acpRoleAssignment.findMany({ where: { role: { permissions: { some: { section, ...flag } } } }, select: { userId: true, groupId: true } }),
+      db.group.findUnique({ where: { key: "root_admin" }, select: { id: true } }),
+    ]);
+    const groupIds = [...assignments.map((a) => a.groupId).filter((id): id is number => id !== null), ...(root ? [root.id] : [])];
+    const userIds = assignments.map((a) => a.userId).filter((id): id is string => id !== null);
+    const users = await db.user.findMany({
+      where: { isBot: false, OR: [{ id: { in: userIds } }, { primaryGroupId: { in: groupIds } }, { groups: { some: { groupId: { in: groupIds } } } }] },
+      select: { id: true },
+      orderBy: { createdAt: "asc" },
+      take: limit,
+    });
+    return users.map((u) => u.id);
+  }
+
   /** Secțiunile ACP cunoscute (din meniurile modulelor), în ordinea meniului. */
   sections(): string[] {
     return [...new Set(this.deps.registry.acpMenu().flatMap((s) => s.items.map((i) => i.section)))];

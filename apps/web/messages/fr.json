@@ -1296,7 +1296,9 @@
         "action": "Action",
         "from": "De",
         "to": "À",
-        "apply": "Filtrer"
+        "apply": "Filtrer",
+        "target": "Cible (membre)",
+        "targetType": "Type de cible"
       },
       "columns": {
         "time": "Date",
@@ -1309,7 +1311,8 @@
       "details": "Détails",
       "before": "Avant",
       "after": "Après",
-      "system": "système"
+      "system": "système",
+      "exportCsv": "Exporter en CSV"
     },
     "settings": {
       "titles": {
@@ -4588,7 +4591,8 @@
         "links_moderated": "Lien en approbation (nouveau membre)",
         "images_blocked": "Trop d'images",
         "pm_limited": "Limite de messages privés",
-        "spammer_marked": "Marqué comme spammeur"
+        "spammer_marked": "Marqué comme spammeur",
+        "multi_account": "Multi-compte à l'inscription"
       },
       "log": {
         "title": "Journal de défense",
@@ -4660,6 +4664,49 @@
         "keySet": "enregistrée — laisser vide pour la garder",
         "keyEmpty": "non renseignée",
         "clearKey": "Supprimer la clé enregistrée"
+      }
+    },
+    "ipTools": {
+      "title": "Outils IP",
+      "search": "Rechercher",
+      "save": "Enregistrer",
+      "spammer": "Spammeur",
+      "banned": "Banni",
+      "sources": {
+        "registration": "inscription",
+        "last": "dernière visite",
+        "session": "session",
+        "device": "appareil",
+        "post": "messages",
+        "pm": "messages privés",
+        "status": "statuts"
+      },
+      "ip": {
+        "title": "Rechercher par IP",
+        "label": "IP (ou préfixe terminé par *)",
+        "invalid": "Ce n'est pas une IP valide.",
+        "counts": "{posts} messages · {pms} messages privés · {statuses} statuts · {sessions} sessions",
+        "banned": "IP bannie : {reason}",
+        "noAccounts": "Aucun compte avec cette IP.",
+        "memberIps": "Ses IP",
+        "posts": "Derniers messages depuis cette IP"
+      },
+      "member": {
+        "title": "IP d'un membre",
+        "label": "Nom du membre",
+        "notFound": "Ce membre n'existe pas.",
+        "noIps": "Aucune IP enregistrée.",
+        "others": "{count} autres comptes"
+      },
+      "shared": {
+        "title": "IP partagées (multi-comptes)",
+        "body": "IP utilisées par plusieurs comptes ces 30 derniers jours ; celles avec un compte banni ou spammeur d'abord. Il peut aussi s'agir de familles ou de cybercafés. L'équipe est notifiée quand un nouveau compte partage l'IP d'autres comptes.",
+        "empty": "Aucune IP partagée."
+      },
+      "retention": {
+        "title": "Conservation des IP (RGPD)",
+        "body": "Après le nombre de jours choisi, les IP des messages, MP, statuts, journaux, appareils, sessions et comptes sont effacées chaque jour. Les bannissements d'IP restent. 0 = les conserver.",
+        "days": "Jours (0 = conserver)"
       }
     }
   },
@@ -5139,7 +5186,8 @@
     },
     "members": {
       "deletion_cooling_days": "Cooling-off before a member's requested deletion (days, 0–90)",
-      "warnings_ack": "Les avertissements doivent être confirmés avant de publier à nouveau"
+      "warnings_ack": "Les avertissements doivent être confirmés avant de publier à nouveau",
+      "ip_retention_days": "Conserver les IP (jours, 0 = toujours)"
     },
     "apps": {
       "landing": "Landing app",
@@ -6509,7 +6557,8 @@
         "group_mention": "Group mentions",
         "group_expired": "Groupes temporaires expirés",
         "weekly_digest": "Résumé hebdomadaire « Ce que vous avez manqué »",
-        "warning_appeal": "Décisions sur les contestations d'avertissements"
+        "warning_appeal": "Décisions sur les contestations d'avertissements",
+        "multi_account": "Nouveaux comptes partageant l'IP d'autres comptes (équipe)"
       },
       "chat": {
         "mention": "Discussion mentions",

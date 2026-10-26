@@ -1296,7 +1296,9 @@
         "action": "Action",
         "from": "From",
         "to": "To",
-        "apply": "Filter"
+        "apply": "Filter",
+        "target": "Target (member)",
+        "targetType": "Target type"
       },
       "columns": {
         "time": "Date",
@@ -1309,7 +1311,8 @@
       "details": "Details",
       "before": "Before",
       "after": "After",
-      "system": "system"
+      "system": "system",
+      "exportCsv": "Export CSV"
     },
     "settings": {
       "titles": {
@@ -4588,7 +4591,8 @@
         "links_moderated": "Link sent for approval (new member)",
         "images_blocked": "Too many images",
         "pm_limited": "Private message limit",
-        "spammer_marked": "Marked as spammer"
+        "spammer_marked": "Marked as spammer",
+        "multi_account": "Multiple accounts at sign-up"
       },
       "log": {
         "title": "Defense log",
@@ -4660,6 +4664,49 @@
         "keySet": "saved — leave empty to keep it",
         "keyEmpty": "not set",
         "clearKey": "Remove the saved key"
+      }
+    },
+    "ipTools": {
+      "title": "IP tools",
+      "search": "Search",
+      "save": "Save",
+      "spammer": "Spammer",
+      "banned": "Banned",
+      "sources": {
+        "registration": "registration",
+        "last": "last visit",
+        "session": "session",
+        "device": "device",
+        "post": "posts",
+        "pm": "private messages",
+        "status": "statuses"
+      },
+      "ip": {
+        "title": "Search by IP",
+        "label": "IP (or a prefix ending in *)",
+        "invalid": "That isn't a valid IP.",
+        "counts": "{posts} posts · {pms} private messages · {statuses} statuses · {sessions} sessions",
+        "banned": "IP banned: {reason}",
+        "noAccounts": "No accounts with this IP.",
+        "memberIps": "Their IPs",
+        "posts": "Latest posts from this IP"
+      },
+      "member": {
+        "title": "A member's IPs",
+        "label": "Member name",
+        "notFound": "No such member.",
+        "noIps": "No IPs stored.",
+        "others": "{count} other accounts"
+      },
+      "shared": {
+        "title": "Shared IPs (multiple accounts)",
+        "body": "IPs used by several accounts in the last 30 days; those with a banned or spammer account come first. They can also be families or internet cafés. Staff get a notification when a new account shares another account's IP.",
+        "empty": "No shared IPs."
+      },
+      "retention": {
+        "title": "Keeping IPs (GDPR)",
+        "body": "After the chosen number of days, IPs in posts, private messages, statuses, logs, devices, sessions and accounts are erased daily. IP bans stay. 0 = keep them.",
+        "days": "Days (0 = keep)"
       }
     }
   },
@@ -5139,7 +5186,8 @@
     },
     "members": {
       "deletion_cooling_days": "Cooling-off before a member's requested deletion (days, 0–90)",
-      "warnings_ack": "Warnings must be acknowledged before posting again"
+      "warnings_ack": "Warnings must be acknowledged before posting again",
+      "ip_retention_days": "Keep IPs (days, 0 = forever)"
     },
     "apps": {
       "landing": "Landing app",
@@ -6509,7 +6557,8 @@
         "group_mention": "Group mentions",
         "group_expired": "Temporary groups that expired",
         "weekly_digest": "Weekly digest “What you missed”",
-        "warning_appeal": "Warning appeal decisions"
+        "warning_appeal": "Warning appeal decisions",
+        "multi_account": "New accounts sharing another account's IP (staff)"
       },
       "chat": {
         "mention": "Chat mentions",

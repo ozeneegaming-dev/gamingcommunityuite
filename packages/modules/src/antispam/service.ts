@@ -39,6 +39,7 @@ export const SPAM_LOG_KINDS = [
   "images_blocked",
   "pm_limited",
   "spammer_marked",
+  "multi_account",
 ] as const;
 export type GcsSpamLogKind = (typeof SPAM_LOG_KINDS)[number];
 

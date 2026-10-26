@@ -4,6 +4,7 @@ export { forumsModule } from "./forums";
 export * from "./forums/stats";
 export * from "./bot/service";
 export * from "./antispam/service";
+export * from "./antispam/ipTools";
 export { canViewPost, registerForumContent } from "./forums/content";
 export { GcsForumCounters } from "./forums/counters";
 export { FORUMS_ACP_SECTION, GcsForumService, type GcsForumInput, type GcsForumOrderItem, type GcsForumPatch } from "./forums/forums";

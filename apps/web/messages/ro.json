@@ -1296,7 +1296,9 @@
         "action": "Acțiune",
         "from": "De la",
         "to": "Până la",
-        "apply": "Filtrează"
+        "apply": "Filtrează",
+        "target": "Ținta (membru)",
+        "targetType": "Tipul țintei"
       },
       "columns": {
         "time": "Data",
@@ -1309,7 +1311,8 @@
       "details": "Detalii",
       "before": "Înainte",
       "after": "După",
-      "system": "sistem"
+      "system": "sistem",
+      "exportCsv": "Export CSV"
     },
     "settings": {
       "titles": {
@@ -4588,7 +4591,8 @@
         "links_moderated": "Link în aprobare (membru nou)",
         "images_blocked": "Prea multe imagini",
         "pm_limited": "Limita de mesaje private",
-        "spammer_marked": "Marcat ca spammer"
+        "spammer_marked": "Marcat ca spammer",
+        "multi_account": "Multi-cont la înregistrare"
       },
       "log": {
         "title": "Jurnalul apărării",
@@ -4660,6 +4664,49 @@
         "keySet": "salvată — lasă gol ca s-o păstrezi",
         "keyEmpty": "necompletată",
         "clearKey": "Șterge cheia salvată"
+      }
+    },
+    "ipTools": {
+      "title": "Unelte IP",
+      "search": "Caută",
+      "save": "Salvează",
+      "spammer": "Spammer",
+      "banned": "Banat",
+      "sources": {
+        "registration": "înregistrare",
+        "last": "ultima vizită",
+        "session": "sesiune",
+        "device": "dispozitiv",
+        "post": "postări",
+        "pm": "mesaje private",
+        "status": "statusuri"
+      },
+      "ip": {
+        "title": "Caută după IP",
+        "label": "IP (sau prefix cu * la final)",
+        "invalid": "Nu e un IP valid.",
+        "counts": "{posts} postări · {pms} mesaje private · {statuses} statusuri · {sessions} sesiuni",
+        "banned": "IP banat: {reason}",
+        "noAccounts": "Niciun cont cu acest IP.",
+        "memberIps": "IP-urile lui",
+        "posts": "Ultimele postări de pe acest IP"
+      },
+      "member": {
+        "title": "IP-urile unui membru",
+        "label": "Numele membrului",
+        "notFound": "Membrul nu există.",
+        "noIps": "Niciun IP salvat.",
+        "others": "încă {count} conturi"
+      },
+      "shared": {
+        "title": "IP-uri comune (multi-conturi)",
+        "body": "IP-urile folosite de mai multe conturi în ultimele 30 de zile; cele cu un cont banat sau spammer sunt primele. Pot fi și familii sau internet cafe-uri. Staff-ul primește o notificare când un cont nou are IP-ul altor conturi.",
+        "empty": "Niciun IP comun."
+      },
+      "retention": {
+        "title": "Păstrarea IP-urilor (GDPR)",
+        "body": "După numărul de zile ales, IP-urile din postări, mesaje private, statusuri, jurnale, dispozitive, sesiuni și conturi se șterg zilnic. Banurile pe IP rămân. 0 = se păstrează.",
+        "days": "Zile (0 = se păstrează)"
       }
     }
   },
@@ -5139,7 +5186,8 @@
     },
     "members": {
       "deletion_cooling_days": "Perioada de răzgândire a ștergerii cerute de membru (zile, 0–90)",
-      "warnings_ack": "Avertismentele trebuie confirmate înainte de a posta din nou"
+      "warnings_ack": "Avertismentele trebuie confirmate înainte de a posta din nou",
+      "ip_retention_days": "Păstrarea IP-urilor (zile, 0 = mereu)"
     },
     "apps": {
       "landing": "Aplicația de pornire",
@@ -6509,7 +6557,8 @@
         "group_mention": "Mențiuni prin grup",
         "group_expired": "Grupurile temporare care au expirat",
         "weekly_digest": "Rezumatul săptămânal „Ce ai ratat”",
-        "warning_appeal": "Decizii la contestațiile avertismentelor"
+        "warning_appeal": "Decizii la contestațiile avertismentelor",
+        "multi_account": "Conturi noi cu IP-ul altor conturi (staff)"
       },
       "chat": {
         "mention": "Mențiuni în chat",

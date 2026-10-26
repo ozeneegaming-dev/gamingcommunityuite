@@ -130,6 +130,7 @@ const settings: GcsSettingDef[] = [
   setting("antispam.sfs_enabled", "boolean", false, "antispam"),
   setting("antispam.sfs_api_key", "secret", "", "antispam"),
   setting("antispam.sfs_confidence", "number", 60, "antispam", range(1, 100)),
+  setting("members.ip_retention_days", "number", 0, "gdpr", range(0, 3650)),
   setting("members.deletion_cooling_days", "number", 7, "gdpr", (v) => (Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 90 ? null : "invalid_range")),
 ];
 
@@ -410,6 +411,8 @@ export const coreModule: GcsModule = {
     { key: "core.warning", labelKey: "notifications.type.core.warning", important: true, defaultEmail: "INSTANT" },
     // Anti-spam: decizia echipei pe contestația unui avertisment.
     { key: "core.warning_appeal", labelKey: "notifications.type.core.warning_appeal", important: true, defaultEmail: "INSTANT", category: "moderation" },
+  // Unelte IP: un cont nou cu IP-ul altor conturi (staff-ul cu acces la Unelte IP).
+  { key: "core.multi_account", labelKey: "notifications.type.core.multi_account", important: false, defaultEmail: "OFF", category: "moderation" },
     // Mențiuni v2: un membru a menționat un grup din care faci parte (postare sau mesaj privat).
     { key: "core.group_mention", labelKey: "notifications.type.core.group_mention", important: false, defaultEmail: "DIGEST" },
     // Membri v2: un grup secundar temporar a expirat (jobul `groups.secondary_expiry`).

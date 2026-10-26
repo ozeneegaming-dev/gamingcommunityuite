@@ -12,6 +12,8 @@ export const LICENSE_CHECK_JOB = "license.check";
 export const WARNINGS_EXPIRY_JOB = "warnings.expiry";
 /** Jobul care scoate grupurile secundare temporare expirate (Membri v2). */
 export const SECONDARY_EXPIRY_JOB = "groups.secondary_expiry";
+/** GDPR: IP-urile mai vechi decât setarea de păstrare se golesc (zilnic). */
+export const IP_RETENTION_JOB = "members.ip_retention";
 
 /**
  * Joburile aplicației. Se înregistrează în orice proces (în `web` doar ca nume cunoscute),
@@ -36,6 +38,7 @@ export function registerAppJobs(s: GcsServices): void {
   // Anti-spam: avertismentele expirate ridică pragurile care nu mai sunt atinse (postări moderate, restricție, ban de prag).
   s.jobs.register({ name: WARNINGS_EXPIRY_JOB, everyMs: 10 * 60_000, handler: async () => void (await s.warnings.expireSweep()) });
   s.jobs.register({ name: SECONDARY_EXPIRY_JOB, everyMs: 60_000, handler: async () => void (await s.groups.expireSecondary()) });
+  s.jobs.register({ name: IP_RETENTION_JOB, everyMs: 24 * 3_600_000, handler: async () => void (await s.ipTools.stripOldIps()) });
   s.notificationProducers.registerJobs(s.jobs);
   s.chat.registerJobs(s.jobs);
   // Moderarea chat-ului: expirarea accesului de moderator, a mute-urilor și a sancțiunilor (la minut).

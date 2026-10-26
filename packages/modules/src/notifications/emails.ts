@@ -78,6 +78,11 @@ const TEXTS: Record<string, Record<Locale, (a: string, t: string, n: number, dat
     ro: (_a, t, _n, d) => (d.accepted ? `Contestația ta a fost acceptată: avertismentul „${t}” a fost anulat` : `Contestația ta pentru avertismentul „${t}” a fost respinsă`),
     en: (_a, t, _n, d) => (d.accepted ? `Your appeal was accepted: the warning “${t}” was revoked` : `Your appeal against the warning “${t}” was rejected`),
   },
+  // Unelte IP: contul nou cu IP-ul altor conturi (`data.others`, `data.banned`).
+  "core.multi_account": {
+    ro: (_a, t, _n, d) => `Cont nou „${t}” cu IP-ul altor ${Number(d.others) || 0} conturi${Number(d.banned) ? ` (${Number(d.banned)} banate)` : ""}`,
+    en: (_a, t, _n, d) => `New account “${t}” shares its IP with ${Number(d.others) || 0} other accounts${Number(d.banned) ? ` (${Number(d.banned)} banned)` : ""}`,
+  },
   "clans.invite": { ro: (a, t) => `${a} te-a invitat în clanul „${t}”`, en: (a, t) => `${a} invited you to the clan “${t}”` },
   "clans.request": {
     ro: (a, t, n) => (n > 1 ? `${n} cereri noi de intrare în clanul „${t}”` : `${a} vrea să intre în clanul „${t}”`),

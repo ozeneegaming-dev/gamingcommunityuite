@@ -1296,7 +1296,9 @@
         "action": "Aktion",
         "from": "Von",
         "to": "An",
-        "apply": "Filtern"
+        "apply": "Filtern",
+        "target": "Ziel (Mitglied)",
+        "targetType": "Zieltyp"
       },
       "columns": {
         "time": "Datum",
@@ -1309,7 +1311,8 @@
       "details": "Details",
       "before": "Vorher",
       "after": "Nach",
-      "system": "system"
+      "system": "system",
+      "exportCsv": "CSV exportieren"
     },
     "settings": {
       "titles": {
@@ -4588,7 +4591,8 @@
         "links_moderated": "Link zur Freigabe (neues Mitglied)",
         "images_blocked": "Zu viele Bilder",
         "pm_limited": "Limit für private Nachrichten",
-        "spammer_marked": "Als Spammer markiert"
+        "spammer_marked": "Als Spammer markiert",
+        "multi_account": "Mehrfachkonto bei Registrierung"
       },
       "log": {
         "title": "Abwehrprotokoll",
@@ -4660,6 +4664,49 @@
         "keySet": "gespeichert — leer lassen zum Behalten",
         "keyEmpty": "nicht gesetzt",
         "clearKey": "Gespeicherten Schlüssel entfernen"
+      }
+    },
+    "ipTools": {
+      "title": "IP-Werkzeuge",
+      "search": "Suchen",
+      "save": "Speichern",
+      "spammer": "Spammer",
+      "banned": "Gesperrt",
+      "sources": {
+        "registration": "Registrierung",
+        "last": "letzter Besuch",
+        "session": "Sitzung",
+        "device": "Gerät",
+        "post": "Beiträge",
+        "pm": "private Nachrichten",
+        "status": "Status"
+      },
+      "ip": {
+        "title": "Nach IP suchen",
+        "label": "IP (oder Präfix mit * am Ende)",
+        "invalid": "Das ist keine gültige IP.",
+        "counts": "{posts} Beiträge · {pms} private Nachrichten · {statuses} Status · {sessions} Sitzungen",
+        "banned": "IP gesperrt: {reason}",
+        "noAccounts": "Keine Konten mit dieser IP.",
+        "memberIps": "Seine IPs",
+        "posts": "Neueste Beiträge von dieser IP"
+      },
+      "member": {
+        "title": "IPs eines Mitglieds",
+        "label": "Name des Mitglieds",
+        "notFound": "Kein solches Mitglied.",
+        "noIps": "Keine IPs gespeichert.",
+        "others": "{count} weitere Konten"
+      },
+      "shared": {
+        "title": "Gemeinsame IPs (Mehrfachkonten)",
+        "body": "IPs, die in den letzten 30 Tagen von mehreren Konten genutzt wurden; solche mit gesperrten oder Spammer-Konten zuerst. Es können auch Familien oder Internetcafés sein. Das Team wird benachrichtigt, wenn ein neues Konto die IP anderer Konten nutzt.",
+        "empty": "Keine gemeinsamen IPs."
+      },
+      "retention": {
+        "title": "Aufbewahrung von IPs (DSGVO)",
+        "body": "Nach der gewählten Anzahl von Tagen werden IPs in Beiträgen, privaten Nachrichten, Status, Protokollen, Geräten, Sitzungen und Konten täglich gelöscht. IP-Sperren bleiben. 0 = behalten.",
+        "days": "Tage (0 = behalten)"
       }
     }
   },
@@ -5139,7 +5186,8 @@
     },
     "members": {
       "deletion_cooling_days": "Cooling-off before a member's requested deletion (days, 0–90)",
-      "warnings_ack": "Verwarnungen müssen vor dem erneuten Schreiben bestätigt werden"
+      "warnings_ack": "Verwarnungen müssen vor dem erneuten Schreiben bestätigt werden",
+      "ip_retention_days": "IPs aufbewahren (Tage, 0 = immer)"
     },
     "apps": {
       "landing": "Landing app",
@@ -6509,7 +6557,8 @@
         "group_mention": "Group mentions",
         "group_expired": "Abgelaufene befristete Gruppen",
         "weekly_digest": "Wochenrückblick „Was du verpasst hast“",
-        "warning_appeal": "Entscheidungen zu Verwarnungseinsprüchen"
+        "warning_appeal": "Entscheidungen zu Verwarnungseinsprüchen",
+        "multi_account": "Neue Konten mit der IP anderer Konten (Team)"
       },
       "chat": {
         "mention": "Chat Erwähnungen",

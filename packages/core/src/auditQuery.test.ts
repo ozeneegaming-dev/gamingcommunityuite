@@ -1,6 +1,6 @@
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createWorld, type GcsTestWorld } from "../test/world";
-import { queryAudit, writeAudit } from "./audit";
+import { auditCsv, exportAudit, queryAudit, writeAudit } from "./audit";
 
 let w: GcsTestWorld;
 
@@ -41,5 +41,25 @@ describe("queryAudit", () => {
     expect(page1.items).toHaveLength(50);
     expect(page1.pages).toBe(2);
     expect(page1.items[0]?.action).toBe("a.54");
+  });
+
+  test("ținta: după membru (cu numele lui) și după tip; exportul CSV cu aceleași filtre", async () => {
+    const a = await w.createUser("AdminA", "admin");
+    const victim = await w.createUser("Ținta", "member");
+    await writeAudit(w.db, { actorId: a.id, action: "user.ban", targetType: "user", targetId: victim.id, after: { reason: 'spam, "grav"' }, ip: "203.0.113.9" });
+    await writeAudit(w.db, { actorId: a.id, action: "group.update", targetType: "group", targetId: "3" });
+    await writeAudit(w.db, { actorId: null, action: "user.warn", targetType: "user", targetId: "=cmd()" });
+
+    const byTarget = await queryAudit(w.db, { targetType: "user", targetId: victim.id, page: 1 });
+    expect(byTarget.items).toMatchObject([{ action: "user.ban", targetName: "Ținta", actorName: "AdminA" }]);
+    expect((await queryAudit(w.db, { targetType: "group", page: 1 })).total).toBe(1);
+
+    const csv = auditCsv(await exportAudit(w.db, { targetType: "user" }));
+    const lines = csv.split("\r\n");
+    expect(lines[0]).toBe("\uFEFFcreatedAt,actor,actorId,action,targetType,targetId,target,before,after,ip");
+    expect(lines).toHaveLength(4);
+    // Ghilimelele dublate; o valoare care începe cu „=” nu devine formulă.
+    expect(csv).toContain(`,user.ban,user,${victim.id},Ținta,,"{""reason"":""spam, \\""grav\\""""}",203.0.113.9`);
+    expect(csv).toContain(",user.warn,user,'=cmd(),,,,");
   });
 });

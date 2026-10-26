@@ -163,6 +163,7 @@ import { GcsStaffPage } from "./profile/staffPage";
 import { GcsWhereabouts } from "./community/whereabouts";
 import { GcsMemberPanelData } from "./profile/memberPanels";
 import { GcsAntispamService } from "./antispam/service";
+import { GcsIpToolsService, IP_TOOLS_ACP_SECTION } from "./antispam/ipTools";
 
 export type GcsServices = {
   db: PrismaClient;
@@ -229,6 +230,7 @@ export type GcsServices = {
   bans: GcsBanService;
   warnings: GcsWarningService;
   antispam: GcsAntispamService;
+  ipTools: GcsIpToolsService;
   actors: GcsActorResolver;
   rateLimiter: GcsRateLimiter;
   files: GcsFileStore;
@@ -606,6 +608,25 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   registerTopicRatings(ratings, { db, permissions, settings, posting, queries: forumQueries });
   const topicTools = new GcsTopicToolsService(posting, { settings });
   const archive = new GcsArchiveService({ db, bus, acp, settings, posting });
+  // Unelte IP: căutarea, multi-conturile (alerta staff-ului la înregistrare) și ștergerea IP-urilor vechi (GDPR).
+  const ipTools = new GcsIpToolsService({ db, acp, bans, bus, settings });
+  ipTools.listen(bus);
+  notifications.registerTarget("core.multi_account", {
+    canView: async (userId) => (await acp.usersWith(IP_TOOLS_ACP_SECTION, "view", 500)).includes(userId),
+    describe: async (id) => {
+      const user = await db.user.findUnique({ where: { id }, select: { name: true } });
+      return user ? { title: user.name, href: `/admin/members/ip-tools?member=${encodeURIComponent(id)}` } : null;
+    },
+  });
+  bus.on("antispam.multi_account", async (e) => {
+    const userId = typeof e.payload.userId === "string" ? e.payload.userId : null;
+    if (!userId) return;
+    const others = Array.isArray(e.payload.others) ? e.payload.others.length : 0;
+    const banned = Array.isArray(e.payload.banned) ? e.payload.banned.length : 0;
+    await antispam.log("multi_account", { userId, ip: typeof e.payload.ip === "string" ? e.payload.ip : null, detail: { others, banned } });
+    const staff = (await acp.usersWith(IP_TOOLS_ACP_SECTION, "view")).filter((id) => id !== userId);
+    if (staff.length > 0) await notifications.notify({ userIds: staff, type: "core.multi_account", targetType: "core.multi_account", targetId: userId, actorId: null, data: { others, banned } });
+  });
   const notificationProducers = new GcsNotificationProducers({
     db,
     kv,
@@ -881,6 +902,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     bans,
     warnings,
     antispam,
+    ipTools,
     actors,
     rateLimiter,
     files,

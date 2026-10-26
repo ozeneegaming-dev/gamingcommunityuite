@@ -1296,7 +1296,9 @@
         "action": "Acción",
         "from": "De",
         "to": "Para",
-        "apply": "Filtrar"
+        "apply": "Filtrar",
+        "target": "Objetivo (miembro)",
+        "targetType": "Tipo de objetivo"
       },
       "columns": {
         "time": "Fecha",
@@ -1309,7 +1311,8 @@
       "details": "Detalles",
       "before": "Antes",
       "after": "Después",
-      "system": "sistema"
+      "system": "sistema",
+      "exportCsv": "Exportar CSV"
     },
     "settings": {
       "titles": {
@@ -4588,7 +4591,8 @@
         "links_moderated": "Enlace en aprobación (miembro nuevo)",
         "images_blocked": "Demasiadas imágenes",
         "pm_limited": "Límite de mensajes privados",
-        "spammer_marked": "Marcado como spammer"
+        "spammer_marked": "Marcado como spammer",
+        "multi_account": "Multicuenta al registrarse"
       },
       "log": {
         "title": "Registro de defensa",
@@ -4660,6 +4664,49 @@
         "keySet": "guardada — déjala vacía para mantenerla",
         "keyEmpty": "sin configurar",
         "clearKey": "Eliminar la clave guardada"
+      }
+    },
+    "ipTools": {
+      "title": "Herramientas IP",
+      "search": "Buscar",
+      "save": "Guardar",
+      "spammer": "Spammer",
+      "banned": "Bloqueado",
+      "sources": {
+        "registration": "registro",
+        "last": "última visita",
+        "session": "sesión",
+        "device": "dispositivo",
+        "post": "publicaciones",
+        "pm": "mensajes privados",
+        "status": "estados"
+      },
+      "ip": {
+        "title": "Buscar por IP",
+        "label": "IP (o prefijo terminado en *)",
+        "invalid": "No es una IP válida.",
+        "counts": "{posts} publicaciones · {pms} mensajes privados · {statuses} estados · {sessions} sesiones",
+        "banned": "IP bloqueada: {reason}",
+        "noAccounts": "Ninguna cuenta con esta IP.",
+        "memberIps": "Sus IP",
+        "posts": "Últimas publicaciones desde esta IP"
+      },
+      "member": {
+        "title": "IP de un miembro",
+        "label": "Nombre del miembro",
+        "notFound": "No existe ese miembro.",
+        "noIps": "No hay IP guardadas.",
+        "others": "{count} cuentas más"
+      },
+      "shared": {
+        "title": "IP compartidas (multicuentas)",
+        "body": "IP usadas por varias cuentas en los últimos 30 días; primero las que tienen una cuenta bloqueada o spammer. También pueden ser familias o cibercafés. El equipo recibe un aviso cuando una cuenta nueva comparte IP con otras.",
+        "empty": "Ninguna IP compartida."
+      },
+      "retention": {
+        "title": "Conservación de IP (RGPD)",
+        "body": "Tras el número de días elegido, las IP de publicaciones, mensajes privados, estados, registros, dispositivos, sesiones y cuentas se borran a diario. Los bloqueos por IP se mantienen. 0 = conservarlas.",
+        "days": "Días (0 = conservar)"
       }
     }
   },
@@ -5139,7 +5186,8 @@
     },
     "members": {
       "deletion_cooling_days": "Cooling-off before a member's requested deletion (days, 0–90)",
-      "warnings_ack": "Las advertencias deben confirmarse antes de volver a publicar"
+      "warnings_ack": "Las advertencias deben confirmarse antes de volver a publicar",
+      "ip_retention_days": "Conservar IP (días, 0 = siempre)"
     },
     "apps": {
       "landing": "Landing app",
@@ -6509,7 +6557,8 @@
         "group_mention": "Group mentions",
         "group_expired": "Grupos temporales caducados",
         "weekly_digest": "Resumen semanal «Lo que te perdiste»",
-        "warning_appeal": "Decisiones sobre apelaciones de advertencias"
+        "warning_appeal": "Decisiones sobre apelaciones de advertencias",
+        "multi_account": "Cuentas nuevas con la IP de otras (equipo)"
       },
       "chat": {
         "mention": "Menciones de chat",
