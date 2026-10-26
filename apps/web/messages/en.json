@@ -4549,7 +4549,9 @@
       "settings": {
         "title": "Acknowledging warnings",
         "ack": "The member must acknowledge the warning before posting again",
-        "ackHint": "Until they acknowledge it (on the “My warnings” page), the member can't write posts, private messages, chat messages or status updates."
+        "ackHint": "Until they acknowledge it (on the “My warnings” page), the member can't write posts, private messages, chat messages or status updates.",
+        "whoCanWarn": "Staff with edit rights on Warnings (ACP roles) can warn, and in chat the moderators with the warn right.",
+        "rolesLink": "ACP roles"
       },
       "reasons": {
         "title": "Preset reasons",

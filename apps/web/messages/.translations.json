@@ -2404,7 +2404,9 @@
     "settings.members.ip_retention_days": "42134fd5654a7b0c",
     "acp.logs.filters.target": "dd926d512dd3ebb1",
     "acp.logs.filters.targetType": "a45f8055dba40f87",
-    "acp.logs.exportCsv": "5755f9ac0aa1684e"
+    "acp.logs.exportCsv": "5755f9ac0aa1684e",
+    "acp.warnings.settings.whoCanWarn": "6608ee96a84fcadd",
+    "acp.warnings.settings.rolesLink": "29a5e316261d0143"
   },
   "es": {
     "site.myProfile": "2f3df0a939fdd38f",
@@ -4810,7 +4812,9 @@
     "settings.members.ip_retention_days": "42134fd5654a7b0c",
     "acp.logs.filters.target": "dd926d512dd3ebb1",
     "acp.logs.filters.targetType": "a45f8055dba40f87",
-    "acp.logs.exportCsv": "5755f9ac0aa1684e"
+    "acp.logs.exportCsv": "5755f9ac0aa1684e",
+    "acp.warnings.settings.whoCanWarn": "6608ee96a84fcadd",
+    "acp.warnings.settings.rolesLink": "29a5e316261d0143"
   },
   "fr": {
     "site.myProfile": "2f3df0a939fdd38f",
@@ -7203,7 +7207,9 @@
     "settings.members.ip_retention_days": "42134fd5654a7b0c",
     "acp.logs.filters.target": "dd926d512dd3ebb1",
     "acp.logs.filters.targetType": "a45f8055dba40f87",
-    "acp.logs.exportCsv": "5755f9ac0aa1684e"
+    "acp.logs.exportCsv": "5755f9ac0aa1684e",
+    "acp.warnings.settings.whoCanWarn": "6608ee96a84fcadd",
+    "acp.warnings.settings.rolesLink": "29a5e316261d0143"
   },
   "ru": {
     "site.myProfile": "2f3df0a939fdd38f",
@@ -9610,6 +9616,8 @@
     "settings.members.ip_retention_days": "42134fd5654a7b0c",
     "acp.logs.filters.target": "dd926d512dd3ebb1",
     "acp.logs.filters.targetType": "a45f8055dba40f87",
-    "acp.logs.exportCsv": "5755f9ac0aa1684e"
+    "acp.logs.exportCsv": "5755f9ac0aa1684e",
+    "acp.warnings.settings.whoCanWarn": "6608ee96a84fcadd",
+    "acp.warnings.settings.rolesLink": "29a5e316261d0143"
   }
 }

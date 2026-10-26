@@ -77,6 +77,9 @@ export default async function AcpWarningsPage() {
             </label>
             <p style={muted}>{t("settings.ackHint")}</p>
           </GcsActionForm>
+          <p style={muted}>
+            {t("settings.whoCanWarn")} <Link href="/admin/staff/roles">{t("settings.rolesLink")}</Link>
+          </p>
         </GcsCard>
 
         <GcsCard style={card} data-testid="gcs-warnings-reasons">

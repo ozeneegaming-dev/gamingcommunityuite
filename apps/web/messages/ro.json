@@ -4549,7 +4549,9 @@
       "settings": {
         "title": "Confirmarea avertismentelor",
         "ack": "Membrul trebuie să confirme avertismentul înainte să posteze din nou",
-        "ackHint": "Până confirmă (pe pagina „Avertismentele mele”), membrul nu poate scrie postări, mesaje private, mesaje în chat sau statusuri."
+        "ackHint": "Până confirmă (pe pagina „Avertismentele mele”), membrul nu poate scrie postări, mesaje private, mesaje în chat sau statusuri.",
+        "whoCanWarn": "Avertizează staff-ul cu dreptul de editare pe Avertismente (rolurile ACP) și, în chat, moderatorii cu dreptul de avertizare.",
+        "rolesLink": "Rolurile ACP"
       },
       "reasons": {
         "title": "Motive predefinite",

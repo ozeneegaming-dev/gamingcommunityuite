@@ -4549,7 +4549,9 @@
       "settings": {
         "title": "Confirmación de advertencias",
         "ack": "El miembro debe confirmar la advertencia antes de volver a publicar",
-        "ackHint": "Hasta que la confirme (en la página «Mis advertencias»), el miembro no puede escribir publicaciones, mensajes privados, mensajes de chat ni estados."
+        "ackHint": "Hasta que la confirme (en la página «Mis advertencias»), el miembro no puede escribir publicaciones, mensajes privados, mensajes de chat ni estados.",
+        "whoCanWarn": "Pueden advertir los miembros del equipo con derecho de edición en Advertencias (roles del ACP) y, en el chat, los moderadores con ese derecho.",
+        "rolesLink": "Roles del ACP"
       },
       "reasons": {
         "title": "Motivos predefinidos",

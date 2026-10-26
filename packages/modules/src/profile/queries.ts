@@ -449,7 +449,7 @@ export class GcsProfileQueries {
     return this.deps.db.warning.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
-      select: { id: true, points: true, reason: true, expiresAt: true, createdAt: true, issuedBy: { select: { id: true, name: true } } },
+      select: { id: true, points: true, reason: true, expiresAt: true, revokedAt: true, createdAt: true, issuedBy: { select: { id: true, name: true } } },
     });
   }
 }

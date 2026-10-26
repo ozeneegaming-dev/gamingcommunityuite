@@ -55,11 +55,12 @@ test("un IP din intervalul banat nu se poate înregistra (banul creat din ACP �
   const id = uid();
   await enterAcpAsRoot(page, `RootB${id}`, `root-b${id}@example.com`);
   await page.goto("/admin/members/settings/bans");
-  await page.getByLabel("Tipul").selectOption("IP");
-  await page.getByLabel("Ce se banează").fill("100.71.0.0/16");
-  await page.getByLabel("Motivul").fill(`roboți ${id}`);
-  await page.getByRole("button", { name: "Banează" }).click();
-  await expect(page.getByText(`roboți ${id}`)).toBeVisible();
+  const form = page.getByTestId("gcs-bans-new");
+  await form.getByTestId("gcs-bans-type").selectOption("IP");
+  await form.getByTestId("gcs-bans-value").fill("100.71.0.0/16");
+  await form.getByTestId("gcs-bans-reason").fill(`roboți ${id}`);
+  await form.getByRole("button", { name: "Banează" }).click();
+  await expect(page.getByTestId("gcs-bans-row").filter({ hasText: `roboți ${id}` })).toBeVisible();
 
   const context = await browser.newContext();
   await context.setExtraHTTPHeaders({ "x-forwarded-for": "100.71.3.4" });
@@ -168,7 +169,7 @@ test("„Marchează ca spammer” din fișa membrului: ban, IP, conținut ascuns
   await page.goto(`/admin/members/ip-tools?ip=100.72.0.9`);
   await expect(page.getByTestId("gcs-iptools-account").filter({ hasText: `Spam${id}` })).toBeVisible();
   await page.goto(`/admin/members/ip-tools?member=Spam${id}`);
-  await expect(page.getByTestId("gcs-iptools-member-ip")).toContainText("100.72.0.9");
+  await expect(page.getByTestId("gcs-iptools-member-ip").filter({ hasText: "100.72.0.9" })).toContainText("înregistrare");
 
   await page.goto(`/admin/members/spam${id}`);
   await page.getByTestId("gcs-member-spammer").locator("summary").click();

@@ -836,13 +836,18 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
       </GcsCard>
     );
   } else if (tab === "warnings" && viewer.canSeeWarnings) {
-    const warnings = (await services().profileQueries.warnings(actor, user.id)) ?? [];
+    const [warnings, tw] = await Promise.all([services().profileQueries.warnings(actor, user.id).then((r) => r ?? []), getTranslations("warningsPage")]);
     main = (
       <GcsCard as="section" className="gcs-titledBox" style={{ display: "flex", flexDirection: "column", gap: 12 }} data-testid="gcs-profile-warnings">
         <h2 className="gcs-display gcs-titleBand gcs-cardTitle">
           <GcsIcon name={TAB_ICONS.warnings} className="gcs-hIcon" />
           {t("tabs.warnings")}
         </h2>
+        {viewer.isSelf && warnings.length > 0 && (
+          <Link href="/warnings" className="gcs-muted">
+            {tw("title")} →
+          </Link>
+        )}
         {warnings.length === 0 && (
           <span className="gcs-muted">
             <GcsIcon name="fa-regular fa-circle-check" className="gcs-emptyIcon" />
@@ -864,6 +869,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
             </span>
             <span>
               {t("warningPoints", { count: w.points })} · {format.dateTime(w.createdAt, { dateStyle: "medium" })}
+              {w.revokedAt ? ` · ${tw("state.revoked")}` : w.expiresAt && w.expiresAt <= new Date() ? ` · ${tw("state.expired")}` : ""}
             </span>
           </div>
         ))}

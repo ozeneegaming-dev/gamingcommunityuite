@@ -4549,7 +4549,9 @@
       "settings": {
         "title": "Bestätigung von Verwarnungen",
         "ack": "Das Mitglied muss die Verwarnung bestätigen, bevor es wieder schreibt",
-        "ackHint": "Bis zur Bestätigung (auf der Seite „Meine Verwarnungen“) kann das Mitglied keine Beiträge, privaten Nachrichten, Chatnachrichten oder Statusmeldungen schreiben."
+        "ackHint": "Bis zur Bestätigung (auf der Seite „Meine Verwarnungen“) kann das Mitglied keine Beiträge, privaten Nachrichten, Chatnachrichten oder Statusmeldungen schreiben.",
+        "whoCanWarn": "Verwarnen kann das Team mit Bearbeitungsrecht für Verwarnungen (ACP-Rollen) und im Chat die Moderatoren mit Verwarnungsrecht.",
+        "rolesLink": "ACP-Rollen"
       },
       "reasons": {
         "title": "Vordefinierte Gründe",

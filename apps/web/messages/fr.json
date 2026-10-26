@@ -4549,7 +4549,9 @@
       "settings": {
         "title": "Confirmation des avertissements",
         "ack": "Le membre doit confirmer l'avertissement avant de publier à nouveau",
-        "ackHint": "Tant qu'il ne l'a pas confirmé (sur la page « Mes avertissements »), le membre ne peut écrire ni messages, ni messages privés, ni messages de chat, ni statuts."
+        "ackHint": "Tant qu'il ne l'a pas confirmé (sur la page « Mes avertissements »), le membre ne peut écrire ni messages, ni messages privés, ni messages de chat, ni statuts.",
+        "whoCanWarn": "Peuvent avertir les membres de l'équipe ayant le droit de modifier les Avertissements (rôles ACP) et, dans le chat, les modérateurs ayant ce droit.",
+        "rolesLink": "Rôles ACP"
       },
       "reasons": {
         "title": "Motifs prédéfinis",
