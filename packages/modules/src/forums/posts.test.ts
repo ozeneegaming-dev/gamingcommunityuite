@@ -156,3 +156,21 @@ describe("ascundere, restaurare, ștergere", () => {
     await expect(w.posts.hide(moderator, 99999)).rejects.toBeInstanceOf(GcsNotFound);
   });
 });
+
+describe("avertismente: poarta scrierii", () => {
+  test("restricția din praguri blochează postarea; postările moderate intră în aprobare", async () => {
+    const t = await w.topics.create(author, { forumId, title: "Topic pentru avertismente", content: doc("prima") });
+    await w.db.user.update({ where: { id: other.userId! }, data: { postingRestrictedUntil: new Date(Date.now() + 3_600_000) } });
+    await expect(w.posts.reply(other, { topicId: t.topicId, content: doc("blocat") })).rejects.toMatchObject({ params: { reason: "posting_restricted" } });
+
+    await w.db.user.update({ where: { id: other.userId! }, data: { postingRestrictedUntil: null, postsModeratedUntil: new Date(Date.now() + 3_600_000) } });
+    const res = await w.posts.reply(other, { topicId: t.topicId, content: doc("în aprobare") });
+    expect(res.pending).toBe(true);
+
+    // Un avertisment neconfirmat oprește scrierea până la confirmare.
+    const warning = await w.db.warning.create({ data: { userId: author.userId!, points: 1, reason: "off-topic" } });
+    await expect(w.posts.reply(author, { topicId: t.topicId, content: doc("încă") })).rejects.toMatchObject({ params: { reason: "warning_ack" } });
+    await w.db.warning.update({ where: { id: warning.id }, data: { acknowledgedAt: new Date() } });
+    await expect(w.posts.reply(author, { topicId: t.topicId, content: doc("după confirmare") })).resolves.toMatchObject({ pending: false });
+  });
+});
