@@ -153,13 +153,13 @@ function acpPage(ctx: GcsPluginContext, statuses: (FeedStatus | null)[], query: 
       const state = !st
         ? `<span class="gcs-badge">${esc(ctx.t("acp.never"))}</span>`
         : st.error
-          ? `<span class="gcs-badge gcs-badge--danger" title="${esc(st.error)}">${esc(ctx.t("acp.error"))}</span>`
+          ? `<span class="gcs-badge gcs-badge--warn" title="${esc(st.error)}">${esc(ctx.t("acp.error"))}</span>`
           : `<span class="gcs-badge gcs-badge--ok">${esc(ctx.t("acp.ok", { posted: st.posted, fetched: st.fetched }))}</span>`;
-      return `<tr data-testid="gcsp-feed-row">
-        <td><strong>${esc(feed.name)}</strong>${feed.label ? ` <span class="gcs-badge">${esc(feed.label)}</span>` : ""}<br><small>${esc(source)}</small></td>
-        <td>${esc(feed.forum)}</td>
-        <td>${esc(ctx.t("acp.every", { minutes: feed.minutes }))}</td>
-        <td>${state}${st ? `<br><small>${esc(date(st.at))}${st.error ? ` · ${esc(st.error)}` : ""}</small>` : ""}</td>
+      return `<tr class="gcs-table__row" data-gcsp-test="feed-row">
+        <td class="gcs-table__td"><strong>${esc(feed.name)}</strong>${feed.label ? ` <span class="gcs-badge">${esc(feed.label)}</span>` : ""}<br><small>${esc(source)}</small></td>
+        <td class="gcs-table__td">${esc(feed.forum)}</td>
+        <td class="gcs-table__td">${esc(ctx.t("acp.every", { minutes: feed.minutes }))}</td>
+        <td class="gcs-table__td">${state}${st ? `<br><small>${esc(date(st.at))}${st.error ? ` · ${esc(st.error)}` : ""}</small>` : ""}</td>
       </tr>`;
     })
     .join("");
@@ -167,18 +167,18 @@ function acpPage(ctx: GcsPluginContext, statuses: (FeedStatus | null)[], query: 
   // `?ran=` vine din adresă: doar un număr, iar textul tradus e escapat (`esc`), deci nu poate injecta HTML.
   const ran = /^\d{1,4}$/.test(query.ran ?? "") ? Number(query.ran) : null;
   // nosemgrep: javascript.express.security.injection.raw-html-format.raw-html-format
-  const notice = ran !== null ? `<p class="gcs-badge gcs-badge--ok" role="status" data-testid="gcsp-ran">${esc(ctx.t("acp.ran", { feeds: ran }))}</p>` : "";
-  return `<div class="gcs-card" style="padding:20px;display:flex;flex-direction:column;gap:14px">
+  const notice = ran !== null ? `<p class="gcs-badge gcs-badge--ok" role="status" data-gcsp-test="ran">${esc(ctx.t("acp.ran", { feeds: ran }))}</p>` : "";
+  return `<div class="gcsp-newsbot" style="display:flex;flex-direction:column;gap:14px">
     <p style="margin:0;color:var(--gcs-muted)">${esc(ctx.t("acp.intro"))}</p>
     ${notice}
     ${
       s.feeds.feeds.length === 0
-        ? `<p data-testid="gcsp-no-feeds">${esc(ctx.t("acp.empty"))}</p>`
-        : `<table class="gcs-table" data-testid="gcsp-feeds"><thead><tr><th>${esc(ctx.t("acp.feed"))}</th><th>${esc(ctx.t("acp.forum"))}</th><th>${esc(ctx.t("acp.interval"))}</th><th>${esc(ctx.t("acp.status"))}</th></tr></thead><tbody>${rows}</tbody></table>`
+        ? `<p data-gcsp-test="no-feeds">${esc(ctx.t("acp.empty"))}</p>`
+        : `<div class="gcs-table"><table class="gcs-table__table" data-gcsp-test="feeds"><thead><tr><th class="gcs-table__th">${esc(ctx.t("acp.feed"))}</th><th class="gcs-table__th">${esc(ctx.t("acp.forum"))}</th><th class="gcs-table__th">${esc(ctx.t("acp.interval"))}</th><th class="gcs-table__th">${esc(ctx.t("acp.status"))}</th></tr></thead><tbody>${rows}</tbody></table></div>`
     }
-    ${errors ? `<ul class="gcs-badge--danger" data-testid="gcsp-feed-errors">${errors}</ul>` : ""}
+    ${errors ? `<ul class="gcsp-errors" data-gcsp-test="feed-errors">${errors}</ul>` : ""}
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-      <form method="post" action="${API}/run"><button type="submit" class="gcs-btn gcs-btn--primary" data-testid="gcsp-run-now">${esc(ctx.t("acp.run"))}</button></form>
+      <form method="post" action="${API}/run"><button type="submit" class="gcs-btn gcs-btn--primary" data-gcsp-test="run-now">${esc(ctx.t("acp.run"))}</button></form>
       <a href="/admin/system/applications/plugins/${PLUGIN_KEY}">${esc(ctx.t("acp.settings"))}</a>
       <a href="/admin/system/bot">${esc(ctx.t("acp.bot"))}</a>
     </div>

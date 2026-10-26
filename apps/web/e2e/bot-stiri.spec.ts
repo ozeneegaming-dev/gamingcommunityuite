@@ -101,9 +101,9 @@ test("ACP › Sistem › Botul comunității, apoi pluginul Bot de știri: RSS t
 
   // „Rulează acum” din pagina pluginului: fluxurile ajung în coadă și devin topicuri ale botului.
   await page.goto(`/admin/plugins/${KEY}`);
-  await expect(page.getByTestId("gcsp-feeds").getByTestId("gcsp-feed-row")).toHaveCount(2);
-  await page.getByTestId("gcsp-run-now").click();
-  await expect(page.getByTestId("gcsp-ran")).toBeVisible();
+  await expect(page.locator('[data-gcsp-test="feeds"] [data-gcsp-test="feed-row"]')).toHaveCount(2);
+  await page.locator('[data-gcsp-test="run-now"]').click();
+  await expect(page.locator('[data-gcsp-test="ran"]')).toBeVisible();
   await expect.poll(async () => (await botTopics()).length, { timeout: 120_000 }).toBe(2);
   const topics = await botTopics();
   const news = topics.find((t) => t.title.includes("Turneul de toamnă"))!;
@@ -131,8 +131,8 @@ test("ACP › Sistem › Botul comunității, apoi pluginul Bot de știri: RSS t
 
   // Rulat din nou: deduplicarea nu republică nimic.
   await page.goto(`/admin/plugins/${KEY}`);
-  await page.getByTestId("gcsp-run-now").click();
-  await expect(page.getByTestId("gcsp-ran")).toBeVisible();
+  await page.locator('[data-gcsp-test="run-now"]').click();
+  await expect(page.locator('[data-gcsp-test="ran"]')).toBeVisible();
   await page.waitForTimeout(8_000);
   expect(await botTopics()).toHaveLength(2);
 
