@@ -144,7 +144,9 @@
       "steam_linked": "Ce compte Steam est déjà lié à un autre utilisateur.",
       "account_not_linked": "Un compte avec cet e-mail existe déjà, mais son e-mail n'est pas confirmé, il n'a donc pas été lié automatiquement. Connecte-toi avec ton mot de passe, puis lie-le dans Paramètres → Compte → Comptes liés.",
       "social": "La connexion a échoué. Réessaie.",
-      "generic": "Quelque chose a mal tourné. Veuillez réessayer."
+      "generic": "Quelque chose a mal tourné. Veuillez réessayer.",
+      "banned": "Votre accès à ce site est restreint. S'il s'agit d'une erreur, contactez l'équipe.",
+      "registration_closed": "Les inscriptions sont actuellement fermées."
     }
   },
   "errors": {
@@ -4447,6 +4449,54 @@
         "cancel": "Annuler",
         "cancelConfirm": "La publication planifiée est supprimée et ne sera pas publiée."
       }
+    },
+    "bans": {
+      "title": "Bannissements",
+      "new": {
+        "title": "Nouveau bannissement",
+        "body": "Sur un compte (le nom du membre), une IP ou une plage (ex. 203.0.113.0/24), un email ou un domaine entier (ex. @spam-mail.com). Le bannissement s'applique aussi à l'inscription et à la connexion.",
+        "type": "Type",
+        "value": "Ce qui est banni",
+        "valuePlaceholder": "nom, IP / plage ou email / @domaine",
+        "duration": "Durée",
+        "reason": "Motif",
+        "submit": "Bannir"
+      },
+      "types": {
+        "ACCOUNT": "Compte",
+        "IP": "IP / plage",
+        "EMAIL": "Email / domaine"
+      },
+      "durations": {
+        "permanent": "Permanent",
+        "d1": "1 jour",
+        "d7": "7 jours",
+        "d30": "30 jours",
+        "d365": "Un an"
+      },
+      "filter": {
+        "state": "Afficher",
+        "active": "Actifs uniquement",
+        "all": "Tous (y compris levés / expirés)",
+        "anyType": "Tout type",
+        "search": "Rechercher (valeur ou motif)",
+        "apply": "Filtrer"
+      },
+      "empty": "Aucun bannissement.",
+      "by": "par {name}",
+      "bySystem": "automatique",
+      "until": "jusqu'au {date}",
+      "permanent": "permanent",
+      "status": {
+        "active": "Actif",
+        "expired": "Expiré",
+        "lifted": "Levé"
+      },
+      "lift": "Lever",
+      "liftConfirm": "Le bannissement est levé immédiatement ; la personne retrouve l'accès.",
+      "prev": "‹ Précédent",
+      "next": "Suivant ›",
+      "page": "Page {page} sur {pages}"
     }
   },
   "settings": {

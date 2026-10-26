@@ -1,4 +1,4 @@
-import { isIP } from "node:net";
+import { BlockList, isIP } from "node:net";
 import type { Ban, BanType, Prisma, PrismaClient } from "@gcs/db";
 import type { GcsAcpRoleService } from "../acp/roles";
 import { writeAudit } from "../audit";
@@ -22,7 +22,61 @@ const ACP_SECTION = "members.members";
 /** Cheia de cache care marchează token-ul unei sesiuni șterse la ban (vezi `GcsActorResolver`). */
 export const bannedSessionKey = (token: string) => `banned-session:${token}`;
 
-/** Bannul activ care se potrivește cu userul, IP-ul sau emailul dat; `null` dacă nu există. */
+/** Un interval IP (`203.0.113.0/24`, `2001:db8::/32`): adresa și prefixul, sau `null` dacă textul nu e unul valid. */
+export function parseCidr(value: string): { address: string; prefix: number; family: "ipv4" | "ipv6" } | null {
+  const m = /^([^/\s]+)\/(\d{1,3})$/.exec(value.trim());
+  if (!m) return null;
+  const family = isIP(m[1]!);
+  const prefix = Number(m[2]);
+  if (family === 4 && prefix <= 32) return { address: m[1]!, prefix, family: "ipv4" };
+  if (family === 6 && prefix <= 128) return { address: m[1]!, prefix, family: "ipv6" };
+  return null;
+}
+
+/** Domeniul unui email (`ana@Mail.ro` → `mail.ro`), pentru banurile pe domeniu (`@mail.ro`). */
+export function emailDomain(email: string): string | null {
+  const at = email.lastIndexOf("@");
+  return at > 0 && at < email.length - 1 ? email.slice(at + 1).trim().toLowerCase() : null;
+}
+
+/** Intervalele IP banate, din cache (30 s, pe client): cererile verifică IP-ul la fiecare acces. */
+const RANGES_TTL_MS = 30_000;
+const rangesCache = new WeakMap<object, { at: number; list: Ban[] }>();
+
+async function activeIpRanges(db: Pick<PrismaClient, "ban">, now: Date): Promise<Ban[]> {
+  const cached = rangesCache.get(db);
+  if (cached && now.getTime() - cached.at < RANGES_TTL_MS) return cached.list.filter((b) => !b.expiresAt || b.expiresAt > now);
+  const list = await db.ban.findMany({
+    where: { type: "IP", value: { contains: "/" }, liftedAt: null, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
+    orderBy: { createdAt: "desc" },
+  });
+  rangesCache.set(db, { at: now.getTime(), list });
+  return list;
+}
+
+/** Golește cache-ul intervalelor (după un ban sau o ridicare). */
+export function clearIpRangeCache(db: object): void {
+  rangesCache.delete(db);
+}
+
+/** Dacă IP-ul e într-un interval (`BlockList`; IPv4 mapat în IPv6 se verifică și ca IPv4). */
+export function ipInRange(ip: string, cidr: string): boolean {
+  const range = parseCidr(cidr);
+  const family = isIP(ip);
+  if (!range || family === 0) return false;
+  const list = new BlockList();
+  list.addSubnet(range.address, range.prefix, range.family);
+  if (family === 6) {
+    const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/i.exec(ip);
+    if (mapped) return list.check(mapped[1]!, "ipv4");
+  }
+  return list.check(ip, family === 4 ? "ipv4" : "ipv6");
+}
+
+/**
+ * Bannul activ care se potrivește cu userul, IP-ul (exact sau dintr-un interval) sau emailul (exact sau domeniul lui,
+ * `@domeniu`); `null` dacă nu există.
+ */
 export async function findActiveBan(
   db: Pick<PrismaClient, "ban">,
   q: { userId?: string; ip?: string; email?: string },
@@ -31,13 +85,24 @@ export async function findActiveBan(
   const match: Prisma.BanWhereInput[] = [];
   if (q.userId) match.push({ type: "ACCOUNT", userId: q.userId });
   if (q.ip) match.push({ type: "IP", value: q.ip });
-  if (q.email) match.push({ type: "EMAIL", value: normalizeEmail(q.email) });
+  if (q.email) {
+    const email = normalizeEmail(q.email);
+    match.push({ type: "EMAIL", value: email });
+    const domain = emailDomain(email);
+    if (domain) match.push({ type: "EMAIL", value: `@${domain}` });
+  }
   if (match.length === 0) return null;
-  return db.ban.findFirst({
+  const exact = await db.ban.findFirst({
     where: { OR: match, liftedAt: null, AND: [{ OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] }] },
     orderBy: { createdAt: "desc" },
   });
+  if (exact || !q.ip) return exact;
+  return (await activeIpRanges(db, now)).find((b) => ipInRange(q.ip!, b.value)) ?? null;
 }
+
+export type GcsBanListFilter = { state?: "active" | "all"; type?: BanType; q?: string; page?: number };
+export type GcsBanListRow = Ban & { user: { id: string; name: string } | null; createdBy: { id: string; name: string } | null };
+const BANS_PER_PAGE = 50;
 
 /**
  * Bannuri pe cont, IP sau email (spec §6.5). Un ban de cont (sau pe emailul unui cont) șterge sesiunile
@@ -55,6 +120,30 @@ export class GcsBanService {
   async ban(input: GcsBanInput, actor: GcsActor): Promise<Ban> {
     await this.deps.acp.assert(actor, ACP_SECTION, "edit");
     return this.applyBan(input, actor);
+  }
+
+  /** Lista banurilor (ACP › Membri › Banuri): active sau toate, pe tip, căutare în valoare / motiv, 50 pe pagină. */
+  async list(filter: GcsBanListFilter = {}, now = new Date()): Promise<{ rows: GcsBanListRow[]; total: number; page: number; pages: number }> {
+    const { db } = this.deps;
+    const page = Math.max(1, Math.floor(filter.page ?? 1));
+    const q = filter.q?.trim();
+    const where: Prisma.BanWhereInput = {
+      ...(filter.type ? { type: filter.type } : {}),
+      ...(filter.state === "all" ? {} : { liftedAt: null, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] }),
+      ...(q ? { AND: [{ OR: [{ value: { contains: q } }, { reason: { contains: q } }] }] } : {}),
+    };
+    const [total, bans] = await Promise.all([
+      db.ban.count({ where }),
+      db.ban.findMany({ where, orderBy: { createdAt: "desc" }, skip: (page - 1) * BANS_PER_PAGE, take: BANS_PER_PAGE }),
+    ]);
+    const ids = [...new Set(bans.flatMap((b) => [b.userId, b.createdById]).filter((id): id is string => id !== null))];
+    const users = new Map((ids.length ? await db.user.findMany({ where: { id: { in: ids } }, select: { id: true, name: true } }) : []).map((u) => [u.id, u]));
+    return {
+      rows: bans.map((b) => ({ ...b, user: b.userId ? (users.get(b.userId) ?? null) : null, createdBy: b.createdById ? (users.get(b.createdById) ?? null) : null })),
+      total,
+      page,
+      pages: Math.max(1, Math.ceil(total / BANS_PER_PAGE)),
+    };
   }
 
   /**
@@ -101,6 +190,7 @@ export class GcsBanService {
       return { ban, sessions };
     });
 
+    if (ban.type === "IP") clearIpRangeCache(db);
     const now = Date.now();
     for (const s of sessions) {
       const ttlSec = Math.max(1, Math.ceil((s.expiresAt.getTime() - now) / 1000));
@@ -114,8 +204,9 @@ export class GcsBanService {
     return ban;
   }
 
-  async lift(banId: string, actor: GcsActor): Promise<void> {
-    await this.deps.acp.assert(actor, ACP_SECTION, "edit");
+  /** Ridică un ban; `section` = secțiunea ACP de unde vine cererea (pagina membrului sau lista Banuri). */
+  async lift(banId: string, actor: GcsActor, section = ACP_SECTION): Promise<void> {
+    await this.deps.acp.assert(actor, section, "edit");
     const ban = await this.deps.db.$transaction(async (tx) => {
       const ban = await tx.ban.findUnique({ where: { id: banId } });
       if (!ban) throw new GcsNotFound({ entity: "ban" });
@@ -132,6 +223,7 @@ export class GcsBanService {
       });
       return lifted;
     });
+    if (ban.type === "IP") clearIpRangeCache(this.deps.db);
     await this.deps.bus.emit({
       name: "user.unbanned",
       payload: { banId: ban.id, userId: ban.userId },
@@ -149,10 +241,14 @@ export class GcsBanService {
       if (!input.userId) errors.userId = "required";
       value = input.userId ?? value;
     } else if (input.type === "IP") {
-      if (isIP(value) === 0) errors.value = "invalid_ip";
+      // O adresă sau un interval (CIDR), ex. `203.0.113.0/24`.
+      const range = parseCidr(value);
+      if (range) value = `${range.address}/${range.prefix}`;
+      else if (isIP(value) === 0) errors.value = "invalid_ip";
     } else {
-      value = normalizeEmail(value);
-      if (!/^[^\s@]+@[^\s@]+$/.test(value)) errors.value = "invalid_email";
+      // Un email sau un domeniu întreg: `@domeniu.ro` (și `*@domeniu.ro`).
+      value = normalizeEmail(value.replace(/^\*@/, "@"));
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && !/^@[a-z0-9.-]+\.[a-z]{2,}$/.test(value)) errors.value = "invalid_email";
     }
     if (input.expiresAt && Number.isNaN(input.expiresAt.getTime())) errors.expiresAt = "invalid_date";
     if (Object.keys(errors).length > 0) throw new GcsValidationError(errors);

@@ -144,7 +144,9 @@
       "steam_linked": "Contul Steam e legat deja de alt utilizator.",
       "account_not_linked": "Există deja un cont cu acest email, dar emailul lui nu e confirmat, așa că nu l-am legat automat. Intră cu parola, apoi leagă contul din Setări → Cont → Conturi legate.",
       "social": "Autentificarea nu a reușit. Încearcă din nou.",
-      "generic": "A apărut o eroare. Încearcă din nou."
+      "generic": "A apărut o eroare. Încearcă din nou.",
+      "banned": "Accesul tău pe acest site e restricționat. Dacă e o greșeală, contactează echipa.",
+      "registration_closed": "Înregistrările sunt închise momentan."
     }
   },
   "errors": {
@@ -4447,6 +4449,54 @@
         "cancel": "Anulează",
         "cancelConfirm": "Postarea programată se șterge și nu mai e publicată."
       }
+    },
+    "bans": {
+      "title": "Banuri",
+      "new": {
+        "title": "Ban nou",
+        "body": "Pe un cont (numele membrului), pe un IP sau un interval (ex. 203.0.113.0/24), pe un email sau un domeniu întreg (ex. @mail-spam.ro). Banul se aplică și la înregistrare și la autentificare.",
+        "type": "Tipul",
+        "value": "Ce se banează",
+        "valuePlaceholder": "nume, IP / interval sau email / @domeniu",
+        "duration": "Durata",
+        "reason": "Motivul",
+        "submit": "Banează"
+      },
+      "types": {
+        "ACCOUNT": "Cont",
+        "IP": "IP / interval",
+        "EMAIL": "Email / domeniu"
+      },
+      "durations": {
+        "permanent": "Permanent",
+        "d1": "1 zi",
+        "d7": "7 zile",
+        "d30": "30 de zile",
+        "d365": "Un an"
+      },
+      "filter": {
+        "state": "Afișează",
+        "active": "Doar active",
+        "all": "Toate (și ridicate / expirate)",
+        "anyType": "Orice tip",
+        "search": "Caută (valoare sau motiv)",
+        "apply": "Filtrează"
+      },
+      "empty": "Niciun ban.",
+      "by": "de {name}",
+      "bySystem": "automat",
+      "until": "până la {date}",
+      "permanent": "permanent",
+      "status": {
+        "active": "Activ",
+        "expired": "Expirat",
+        "lifted": "Ridicat"
+      },
+      "lift": "Ridică",
+      "liftConfirm": "Banul se ridică imediat; persoana își recapătă accesul.",
+      "prev": "‹ Înapoi",
+      "next": "Înainte ›",
+      "page": "Pagina {page} din {pages}"
     }
   },
   "settings": {

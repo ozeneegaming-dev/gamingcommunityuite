@@ -144,7 +144,9 @@
       "steam_linked": "Dieses Steam-Konto ist bereits mit einem anderen Benutzer verknüpft.",
       "account_not_linked": "Ein Konto mit dieser E-Mail existiert bereits, aber die E-Mail ist nicht bestätigt, daher wurde es nicht automatisch verknüpft. Melde dich mit deinem Passwort an und verknüpfe es unter Einstellungen → Konto → Verknüpfte Konten.",
       "social": "Die Anmeldung ist fehlgeschlagen. Versuche es erneut.",
-      "generic": "Irgendetwas ging schief. Bitte versuchen Sie es noch einmal."
+      "generic": "Irgendetwas ging schief. Bitte versuchen Sie es noch einmal.",
+      "banned": "Dein Zugang zu dieser Website ist eingeschränkt. Falls das ein Fehler ist, kontaktiere das Team.",
+      "registration_closed": "Registrierungen sind derzeit geschlossen."
     }
   },
   "errors": {
@@ -4447,6 +4449,54 @@
         "cancel": "Abbrechen",
         "cancelConfirm": "Der geplante Beitrag wird gelöscht und nicht veröffentlicht."
       }
+    },
+    "bans": {
+      "title": "Sperren",
+      "new": {
+        "title": "Neue Sperre",
+        "body": "Auf ein Konto (Name des Mitglieds), eine IP oder einen Bereich (z. B. 203.0.113.0/24), eine E-Mail oder eine ganze Domain (z. B. @spam-mail.com). Die Sperre gilt auch bei Registrierung und Anmeldung.",
+        "type": "Typ",
+        "value": "Was gesperrt wird",
+        "valuePlaceholder": "Name, IP / Bereich oder E-Mail / @Domain",
+        "duration": "Dauer",
+        "reason": "Grund",
+        "submit": "Sperren"
+      },
+      "types": {
+        "ACCOUNT": "Konto",
+        "IP": "IP / Bereich",
+        "EMAIL": "E-Mail / Domain"
+      },
+      "durations": {
+        "permanent": "Dauerhaft",
+        "d1": "1 Tag",
+        "d7": "7 Tage",
+        "d30": "30 Tage",
+        "d365": "Ein Jahr"
+      },
+      "filter": {
+        "state": "Anzeigen",
+        "active": "Nur aktive",
+        "all": "Alle (auch aufgehobene / abgelaufene)",
+        "anyType": "Jeder Typ",
+        "search": "Suchen (Wert oder Grund)",
+        "apply": "Filtern"
+      },
+      "empty": "Keine Sperren.",
+      "by": "von {name}",
+      "bySystem": "automatisch",
+      "until": "bis {date}",
+      "permanent": "dauerhaft",
+      "status": {
+        "active": "Aktiv",
+        "expired": "Abgelaufen",
+        "lifted": "Aufgehoben"
+      },
+      "lift": "Aufheben",
+      "liftConfirm": "Die Sperre wird sofort aufgehoben; die Person erhält wieder Zugang.",
+      "prev": "‹ Zurück",
+      "next": "Weiter ›",
+      "page": "Seite {page} von {pages}"
     }
   },
   "settings": {

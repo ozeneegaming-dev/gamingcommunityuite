@@ -144,7 +144,9 @@
       "steam_linked": "This Steam account is already linked to another user.",
       "account_not_linked": "An account with this email already exists, but its email isn't confirmed, so it wasn't linked automatically. Sign in with your password, then link it in Settings → Account → Linked accounts.",
       "social": "Sign-in failed. Try again.",
-      "generic": "Something went wrong. Please try again."
+      "generic": "Something went wrong. Please try again.",
+      "banned": "Your access to this site is restricted. If this is a mistake, contact the team.",
+      "registration_closed": "Registrations are currently closed."
     }
   },
   "errors": {
@@ -4447,6 +4449,54 @@
         "cancel": "Cancel",
         "cancelConfirm": "The scheduled post is deleted and will not be published."
       }
+    },
+    "bans": {
+      "title": "Bans",
+      "new": {
+        "title": "New ban",
+        "body": "On an account (the member's name), an IP or a range (e.g. 203.0.113.0/24), an email or a whole domain (e.g. @spam-mail.com). The ban also applies at sign-up and sign-in.",
+        "type": "Type",
+        "value": "What is banned",
+        "valuePlaceholder": "name, IP / range or email / @domain",
+        "duration": "Duration",
+        "reason": "Reason",
+        "submit": "Ban"
+      },
+      "types": {
+        "ACCOUNT": "Account",
+        "IP": "IP / range",
+        "EMAIL": "Email / domain"
+      },
+      "durations": {
+        "permanent": "Permanent",
+        "d1": "1 day",
+        "d7": "7 days",
+        "d30": "30 days",
+        "d365": "One year"
+      },
+      "filter": {
+        "state": "Show",
+        "active": "Active only",
+        "all": "All (incl. lifted / expired)",
+        "anyType": "Any type",
+        "search": "Search (value or reason)",
+        "apply": "Filter"
+      },
+      "empty": "No bans.",
+      "by": "by {name}",
+      "bySystem": "automatic",
+      "until": "until {date}",
+      "permanent": "permanent",
+      "status": {
+        "active": "Active",
+        "expired": "Expired",
+        "lifted": "Lifted"
+      },
+      "lift": "Lift",
+      "liftConfirm": "The ban is lifted at once; the person gets access back.",
+      "prev": "‹ Previous",
+      "next": "Next ›",
+      "page": "Page {page} of {pages}"
     }
   },
   "settings": {

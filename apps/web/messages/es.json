@@ -144,7 +144,9 @@
       "steam_linked": "Esta cuenta de Steam ya está vinculada a otro usuario.",
       "account_not_linked": "Ya existe una cuenta con este correo, pero su correo no está confirmado, así que no se vinculó automáticamente. Inicia sesión con tu contraseña y vincúlala en Ajustes → Cuenta → Cuentas vinculadas.",
       "social": "No se pudo iniciar sesión. Inténtalo de nuevo.",
-      "generic": "Algo salió mal. Por favor, inténtalo de nuevo."
+      "generic": "Algo salió mal. Por favor, inténtalo de nuevo.",
+      "banned": "Tu acceso a este sitio está restringido. Si es un error, contacta con el equipo.",
+      "registration_closed": "Los registros están cerrados por ahora."
     }
   },
   "errors": {
@@ -4447,6 +4449,54 @@
         "cancel": "Cancelar",
         "cancelConfirm": "La publicación programada se elimina y no se publicará."
       }
+    },
+    "bans": {
+      "title": "Bloqueos",
+      "new": {
+        "title": "Nuevo bloqueo",
+        "body": "Sobre una cuenta (el nombre del miembro), una IP o un rango (p. ej. 203.0.113.0/24), un email o un dominio entero (p. ej. @spam-mail.com). El bloqueo también se aplica al registrarse y al iniciar sesión.",
+        "type": "Tipo",
+        "value": "Qué se bloquea",
+        "valuePlaceholder": "nombre, IP / rango o email / @dominio",
+        "duration": "Duración",
+        "reason": "Motivo",
+        "submit": "Bloquear"
+      },
+      "types": {
+        "ACCOUNT": "Cuenta",
+        "IP": "IP / rango",
+        "EMAIL": "Email / dominio"
+      },
+      "durations": {
+        "permanent": "Permanente",
+        "d1": "1 día",
+        "d7": "7 días",
+        "d30": "30 días",
+        "d365": "Un año"
+      },
+      "filter": {
+        "state": "Mostrar",
+        "active": "Solo activos",
+        "all": "Todos (también levantados / caducados)",
+        "anyType": "Cualquier tipo",
+        "search": "Buscar (valor o motivo)",
+        "apply": "Filtrar"
+      },
+      "empty": "Ningún bloqueo.",
+      "by": "por {name}",
+      "bySystem": "automático",
+      "until": "hasta {date}",
+      "permanent": "permanente",
+      "status": {
+        "active": "Activo",
+        "expired": "Caducado",
+        "lifted": "Levantado"
+      },
+      "lift": "Levantar",
+      "liftConfirm": "El bloqueo se levanta al instante; la persona recupera el acceso.",
+      "prev": "‹ Anterior",
+      "next": "Siguiente ›",
+      "page": "Página {page} de {pages}"
     }
   },
   "settings": {

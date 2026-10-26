@@ -108,3 +108,41 @@ describe("token revocat la ban", () => {
     });
   });
 });
+
+describe("banurile pe intervale IP și pe domenii de email (antispam)", () => {
+  test("un interval CIDR (IPv4 și IPv6) prinde adresele din el, nu și pe cele din afară; ridicat → liber imediat", async () => {
+    const root = await rootActor();
+    const ban = await w.bans.ban({ type: "IP", value: "203.0.113.0/24", reason: "rețea de spam" }, root);
+    await w.bans.ban({ type: "IP", value: "2001:db8::/32", reason: "rețea de spam" }, root);
+    await expect(w.actors.getActor({ ip: "203.0.113.77" })).resolves.toMatchObject({ isBanned: true });
+    await expect(w.actors.getActor({ ip: "::ffff:203.0.113.5" })).resolves.toMatchObject({ isBanned: true });
+    await expect(w.actors.getActor({ ip: "2001:db8:1::9" })).resolves.toMatchObject({ isBanned: true });
+    await expect(w.actors.getActor({ ip: "203.0.114.1" })).resolves.toMatchObject({ isBanned: false });
+    await w.bans.lift(ban.id, root);
+    await expect(w.actors.getActor({ ip: "203.0.113.77" })).resolves.toMatchObject({ isBanned: false });
+  });
+
+  test("un domeniu de email (`@domeniu` sau `*@domeniu`) banează orice adresă de pe el; validarea refuză valorile greșite", async () => {
+    const root = await rootActor();
+    const ban = await w.bans.ban({ type: "EMAIL", value: "*@Mail-Spam.ro", reason: "spam" }, root);
+    expect(ban.value).toBe("@mail-spam.ro");
+    await expect(w.bans.activeFor({ email: "oricine@mail-spam.ro" })).resolves.toMatchObject({ id: ban.id });
+    await expect(w.bans.activeFor({ email: "oricine@mail.ro" })).resolves.toBeNull();
+    await expect(w.bans.ban({ type: "IP", value: "203.0.113.0/40", reason: "x" }, root)).rejects.toBeInstanceOf(GcsValidationError);
+    await expect(w.bans.ban({ type: "EMAIL", value: "@nu-e-domeniu", reason: "x" }, root)).rejects.toBeInstanceOf(GcsValidationError);
+  });
+
+  test("lista din ACP: active / toate, pe tip, căutare; numele membrului și al celui care a banat", async () => {
+    const root = await rootActor();
+    const target = await w.createUser("Țintă", "member");
+    const a = await w.bans.ban({ type: "ACCOUNT", value: target.id, userId: target.id, reason: "reclame" }, root);
+    await w.bans.ban({ type: "IP", value: "198.51.100.9", reason: "boți" }, root);
+    await w.bans.lift(a.id, root);
+    const active = await w.bans.list({});
+    expect(active.rows.map((r) => r.type)).toEqual(["IP"]);
+    const all = await w.bans.list({ state: "all", type: "ACCOUNT" });
+    expect(all.rows).toHaveLength(1);
+    expect(all.rows[0]).toMatchObject({ user: { name: "Țintă" }, createdBy: { name: "Root" } });
+    expect((await w.bans.list({ state: "all", q: "boți" })).rows).toHaveLength(1);
+  });
+});

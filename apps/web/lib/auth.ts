@@ -1,11 +1,12 @@
 import "server-only";
-import { GcsValidationError, hashPassword, isBotUser, isLegacyPasswordHash, prepareNewUser, upgradeLegacyPassword, verifyPassword } from "@gcs/core";
+import { findActiveBan, GcsValidationError, hashPassword, isBotUser, isLegacyPasswordHash, prepareNewUser, upgradeLegacyPassword, verifyPassword } from "@gcs/core";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { APIError } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { captcha } from "better-auth/plugins";
 import { twoFactor } from "better-auth/plugins/two-factor";
+import { clientIp } from "./client-ip";
 import { installFinishPlugin } from "./install-plugin";
 import { services } from "./services";
 import { steamPlugin } from "./steam-plugin";
@@ -59,12 +60,23 @@ function createAuth(config: GcsAuthConfig) {
       additionalFields: {
         nameNormalized: { type: "string", required: false, input: false },
         primaryGroupId: { type: "number", required: false, input: false },
+        registrationIp: { type: "string", required: false, input: false },
       },
     },
     databaseHooks: {
       user: {
         create: {
           before: async (user, ctx) => {
+            // Anti-spam: înregistrarea închisă din ACP și banurile (IP sau interval, email sau domeniu) opresc contul nou
+            // pe orice cale (email, Discord, Google, Steam), nu doar butonul din pagină.
+            const headers = ctx?.headers ?? ctx?.request?.headers ?? null;
+            const ip = headers ? clientIp(headers) : null;
+            if ((await settings.get<boolean>("auth.registration_open").catch(() => true)) === false) {
+              throw new APIError("FORBIDDEN", { code: "REGISTRATION_CLOSED", message: "registration_closed" });
+            }
+            if (await findActiveBan(db, { email: user.email, ...(ip && ip !== "0.0.0.0" ? { ip } : {}) })) {
+              throw new APIError("FORBIDDEN", { code: "BANNED", message: "banned" });
+            }
             // La înregistrarea cu email, userul își poate corecta numele; la Discord/Google/Steam alegem automat unul liber.
             const strict = ctx?.path === "/sign-up/email";
             try {
@@ -73,7 +85,7 @@ function createAuth(config: GcsAuthConfig) {
                 { name: user.name, email: user.email },
                 { emailConfirm: config.emailConfirm, autoRename: !strict },
               );
-              return { data: { ...user, ...data } };
+              return { data: { ...user, ...data, registrationIp: ip && ip !== "0.0.0.0" ? ip : null } };
             } catch (error) {
               if (error instanceof GcsValidationError) {
                 const [field, code] = Object.entries(error.fields)[0] ?? ["name", "validation"];
@@ -98,6 +110,12 @@ function createAuth(config: GcsAuthConfig) {
           // Contul-bot nu se autentifică pe nicio cale (parolă, Discord, Steam): fără sesiune.
           before: async (session) => {
             if (await isBotUser(services().db, session.userId)) throw new APIError("FORBIDDEN", { code: "BOT_ACCOUNT", message: "bot_account" });
+            // Un cont, un email (sau domeniu) ori un IP banat nu primește sesiune (nu doar vizitator la cererea următoare).
+            const user = await services().db.user.findUnique({ where: { id: session.userId }, select: { email: true } });
+            const ip = session.ipAddress ?? null;
+            if (await findActiveBan(services().db, { userId: session.userId, ...(user ? { email: user.email } : {}), ...(ip ? { ip } : {}) })) {
+              throw new APIError("FORBIDDEN", { code: "BANNED", message: "banned" });
+            }
           },
           after: async (session, ctx) => {
             const headers = ctx?.headers ?? ctx?.request?.headers ?? null;

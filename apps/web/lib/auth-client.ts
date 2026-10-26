@@ -37,6 +37,10 @@ export function authErrorKey(error: { status?: number; code?: string } | null | 
     case "USERNAME_TOO_LONG":
     case "USERNAME_INVALID_CHARS":
       return error.code.toLowerCase();
+    case "BANNED":
+      return "banned";
+    case "REGISTRATION_CLOSED":
+      return "registration_closed";
     case "MISSING_RESPONSE":
     case "VERIFICATION_FAILED":
     case "UNKNOWN_ERROR":

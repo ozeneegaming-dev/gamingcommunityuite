@@ -1,4 +1,4 @@
-import { legacyPasswordHash, seedDefaults } from "@gcs/core";
+import { clearIpRangeCache, legacyPasswordHash, seedDefaults } from "@gcs/core";
 import { truncateAll } from "@gcs/db/test/helpers";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { getAuth } from "./auth";
@@ -109,5 +109,36 @@ describe("Better Auth (integrare)", () => {
     const account = await db.account.findFirstOrThrow({ where: { userId: user.id } });
     expect(account.password?.startsWith("$argon2id$")).toBe(true);
     expect((await call("/sign-in/email", { email: "importat@mail.com", password: "parola-veche-9" }, "198.51.100.31")).status).toBe(200);
+  });
+
+  test("anti-spam: înregistrarea închisă din ACP e refuzată pe server; IP-ul înregistrării se salvează", async () => {
+    const ok = await call("/sign-up/email", { name: "Primul", email: "primul@mail.com", password: "parola-sigura-123" }, "198.51.100.40");
+    expect(ok.status).toBe(200);
+    expect((await db.user.findUniqueOrThrow({ where: { email: "primul@mail.com" } })).registrationIp).toBe("198.51.100.40");
+    await db.setting.upsert({ where: { key: "auth.registration_open" }, create: { key: "auth.registration_open", value: false }, update: { value: false } });
+    await kv.flushAll();
+    const closed = await signUp("Alt", "alt@mail.com");
+    expect(closed.status).toBe(403);
+    expect(await closed.json()).toMatchObject({ code: "REGISTRATION_CLOSED" });
+    expect(await db.user.count({ where: { email: "alt@mail.com" } })).toBe(0);
+  });
+
+  test("anti-spam: un domeniu de email sau un interval IP banat nu se poate înregistra; un cont banat nu se poate autentifica", async () => {
+    await db.ban.create({ data: { type: "EMAIL", value: "@mail-spam.ro", reason: "spam" } });
+    const byDomain = await signUp("Spam", "cineva@mail-spam.ro");
+    expect(byDomain.status).toBe(403);
+    expect(await byDomain.json()).toMatchObject({ code: "BANNED" });
+
+    await db.ban.create({ data: { type: "IP", value: "203.0.113.0/24", reason: "boți" } });
+    clearIpRangeCache(services().db);
+    const byRange = await call("/sign-up/email", { name: "Bot", email: "bot@mail.com", password: "parola-sigura-123" }, "203.0.113.200");
+    expect(byRange.status).toBe(403);
+
+    expect((await signUp("Cinstit", "cinstit@mail.com")).status).toBe(200);
+    const user = await db.user.findUniqueOrThrow({ where: { email: "cinstit@mail.com" } });
+    await db.ban.create({ data: { type: "ACCOUNT", value: user.id, userId: user.id, reason: "reclame" } });
+    const signIn = await call("/sign-in/email", { email: "cinstit@mail.com", password: "parola-sigura-123" }, "198.51.100.41");
+    expect(signIn.status).toBe(403);
+    expect(await db.session.count({ where: { userId: user.id } })).toBe(0);
   });
 });
