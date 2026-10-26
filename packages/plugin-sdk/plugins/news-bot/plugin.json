@@ -74,6 +74,14 @@
             "default": 500,
             "min": 100,
             "max": 3000
+          },
+          {
+            "type": "text",
+            "key": "steamApi",
+            "label": "settings.steamApi",
+            "hint": "settings.steamApiHint",
+            "default": "https://api.steampowered.com",
+            "maxLength": 200
           }
         ]
       }

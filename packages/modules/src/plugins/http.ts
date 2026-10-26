@@ -66,6 +66,17 @@ const guardedLookup: net.LookupFunction = (hostname, options, callback) => {
   });
 };
 
+/**
+ * Doar pentru testele E2E (`GCS_TEST_ROUTES=1`): adresele exacte `gazdă:port` din `GCS_PLUGIN_HTTP_TEST_HOSTS` (serverul
+ * local cu fluxuri de test) trec de lista adreselor blocate. În afara testelor, variabila nu are niciun efect.
+ */
+function testHostAllowed(url: URL): boolean {
+  if (process.env.GCS_TEST_ROUTES !== "1") return false;
+  const hosts = (process.env.GCS_PLUGIN_HTTP_TEST_HOSTS ?? "").split(",").map((h) => h.trim()).filter(Boolean);
+  const port = url.port || (url.protocol === "https:" ? "443" : "80");
+  return hosts.includes(`${url.hostname}:${port}`);
+}
+
 export type GcsPluginFetchInput = { method?: string; headers?: Record<string, string>; body?: string };
 export type GcsPluginFetchResult = { status: number; headers: Record<string, string>; body: string };
 
@@ -83,8 +94,9 @@ export function pluginFetch(rawUrl: unknown, rawInit: unknown, opts: { timeoutMs
   const url = new URL(rawUrl);
   if ((url.protocol !== "https:" && url.protocol !== "http:") || url.username || url.password) return Promise.reject(new Error("invalid_url"));
   const host = url.hostname.replace(/^\[|\]$/g, "");
-  if (net.isIP(host) && isBlockedAddress(host)) return Promise.reject(new Error("address_blocked"));
-  if (/^(localhost|.*\.localhost|.*\.local|.*\.internal)$/i.test(host)) return Promise.reject(new Error("address_blocked"));
+  const testHost = testHostAllowed(url);
+  if (!testHost && net.isIP(host) && isBlockedAddress(host)) return Promise.reject(new Error("address_blocked"));
+  if (!testHost && /^(localhost|.*\.localhost|.*\.local|.*\.internal)$/i.test(host)) return Promise.reject(new Error("address_blocked"));
 
   const init = (rawInit && typeof rawInit === "object" ? rawInit : {}) as GcsPluginFetchInput;
   const method = typeof init.method === "string" ? init.method.toUpperCase() : "GET";
@@ -99,7 +111,7 @@ export function pluginFetch(rawUrl: unknown, rawInit: unknown, opts: { timeoutMs
 
   return new Promise((resolve, reject) => {
     const lib = url.protocol === "https:" ? https : http;
-    const req = lib.request(url, { method, headers, lookup: guardedLookup, timeout: timeoutMs, agent: false }, (res) => {
+    const req = lib.request(url, { method, headers, ...(testHost ? {} : { lookup: guardedLookup }), timeout: timeoutMs, agent: false }, (res) => {
       const chunks: Buffer[] = [];
       let size = 0;
       res.on("data", (chunk: Buffer) => {

@@ -40,6 +40,7 @@ function settingsOf(ctx: GcsPluginContext) {
     maxPerRun: Math.min(20, Math.max(1, Math.round(num("maxPerRun", 3)))),
     window: parseWindow(text("window")),
     timezone: text("timezone") || "UTC",
+    steamApi: text("steamApi"),
     excerptChars: Math.min(3000, Math.max(100, Math.round(num("excerptChars", 500)))),
   };
 }
@@ -71,8 +72,8 @@ async function fetchText(ctx: GcsPluginContext, url: string, accept: string): Pr
   throw new Error("too_many_redirects");
 }
 
-async function itemsOf(ctx: GcsPluginContext, feed: GcsFeedConfig): Promise<GcsFeedItem[]> {
-  if (feed.source.kind === "steam") return steamItems(JSON.parse(await fetchText(ctx, steamNewsUrl(feed.source.appId), "application/json")));
+async function itemsOf(ctx: GcsPluginContext, feed: GcsFeedConfig, steamApi: string): Promise<GcsFeedItem[]> {
+  if (feed.source.kind === "steam") return steamItems(JSON.parse(await fetchText(ctx, steamNewsUrl(feed.source.appId, 10, steamApi || undefined), "application/json")));
   return parseFeed(await fetchText(ctx, feed.source.url, "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.5"));
 }
 
@@ -90,7 +91,7 @@ async function runFeed(ctx: GcsPluginContext, feed: GcsFeedConfig, s: ReturnType
   try {
     const forumId = await forumIdOf(ctx, feed.forum);
     if (forumId === null) throw new Error("forum_not_found");
-    const items = await itemsOf(ctx, feed);
+    const items = await itemsOf(ctx, feed, s.steamApi);
     status.fetched = items.length;
     // Cele mai vechi dintre cele noi întâi, ca topicurile să apară în ordinea publicării la sursă.
     for (const item of items.slice(0, s.maxPerRun).reverse()) {

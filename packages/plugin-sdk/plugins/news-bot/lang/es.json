@@ -13,7 +13,9 @@
     "timezone": "Zona horaria del horario de publicación",
     "timezoneHint": "Una zona IANA, por ejemplo Europe/Bucharest.",
     "excerptChars": "Longitud del extracto (caracteres)",
-    "excerptCharsHint": "Sin «complet», el bot publica solo el título, el extracto, la imagen y el enlace a la fuente."
+    "excerptCharsHint": "Sin «complet», el bot publica solo el título, el extracto, la imagen y el enlace a la fuente.",
+    "steamApi": "Dirección de la API de Steam",
+    "steamApiHint": "Por defecto, la API oficial. Cámbiala solo para un proxy de ella."
   },
   "acp": {
     "menu": "Bot de noticias",

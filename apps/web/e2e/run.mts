@@ -189,6 +189,57 @@ async function startFakeTranslator(): Promise<string> {
 }
 
 /**
+ * Fluxurile de test ale botului de știri (bot-stiri): un RSS (și o redirecționare spre el) și API-ul de știri Steam cu
+ * un anunț oficial. Pluginurile ajung la el doar prin `GCS_PLUGIN_HTTP_TEST_HOSTS` (cu `GCS_TEST_ROUTES=1`).
+ */
+async function startFakeFeeds(): Promise<string> {
+  const port = await freePort();
+  const rss = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel><title>Fluxul de test</title>
+<item><title>Turneul de toamnă începe sâmbătă</title><link>https://news.example.com/turneu</link><guid>e2e-news-1</guid>
+<pubDate>Mon, 26 Oct 2026 10:00:00 GMT</pubDate>
+<description><![CDATA[<p>Înscrierile sunt deschise pentru echipele de cinci jucători. Detaliile complete sunt pe site-ul organizatorului.</p><img src="https://news.example.com/turneu.jpg">]]></description></item>
+</channel></rss>`;
+  const steam = {
+    appnews: {
+      appid: 730,
+      newsitems: [
+        {
+          gid: "e2e-steam-1",
+          title: "Counter-Strike 2 Update",
+          url: "https://store.steampowered.com/news/app/730/view/e2e",
+          feedname: "steam_community_announcements",
+          date: 1_793_000_000,
+          contents: "[ MISC ]\n[list][*]Agents now wear gloves in the buy menu.[*]Fixed the grenade crosshair.[/list]",
+        },
+        { gid: "e2e-steam-2", title: "Third-party article", url: "https://example.com/x", feedname: "pcgamer", date: 1_793_000_100, contents: "<p>not official</p>" },
+      ],
+    },
+  };
+  const server = http.createServer((req, res) => {
+    const url = new URL(req.url ?? "/", "http://127.0.0.1");
+    if (url.pathname === "/rss.xml") {
+      res.setHeader("content-type", "application/rss+xml; charset=utf-8");
+      return res.end(rss);
+    }
+    if (url.pathname === "/moved.xml") {
+      res.statusCode = 301;
+      res.setHeader("location", "/rss.xml");
+      return res.end();
+    }
+    if (url.pathname === "/steam/ISteamNews/GetNewsForApp/v2/") {
+      res.setHeader("content-type", "application/json");
+      return res.end(JSON.stringify(steam));
+    }
+    res.statusCode = 404;
+    res.end();
+  });
+  await new Promise<void>((resolve) => server.listen(port, "127.0.0.1", () => resolve()));
+  cleanups.push(() => new Promise<void>((resolve) => server.close(() => resolve())));
+  return `http://127.0.0.1:${port}`;
+}
+
+/**
  * Verificatorul OpenID Steam fals (login-ul cu Steam în E2E): la `check_authentication` răspunde `is_valid:true` doar
  * pentru răspunsurile semnate de teste (`openid.sig` = HMAC-SHA256 cu secretul acestei rulări al lui `openid.claimed_id`).
  * Instanța web îl folosește doar cu `GCS_TEST_ROUTES=1` (vezi `steam-plugin.ts`).
@@ -311,6 +362,7 @@ async function main(): Promise<number> {
   // Login-ul cu Steam: un secret de unică folosință, cunoscut doar de verificatorul fals și de Playwright.
   const steamSecret = (await import("node:crypto")).randomBytes(24).toString("base64url");
   const steamCheckUrl = await startFakeSteam(steamSecret);
+  const feedsUrl = await startFakeFeeds();
   const env: NodeJS.ProcessEnv = {
     ...process.env,
     GCS_PLUGIN_TRUSTED_KEYS: [process.env.GCS_PLUGIN_TRUSTED_KEYS, `e2e=${e2eKey.publicKeyBase64}`].filter(Boolean).join(","),
@@ -328,6 +380,8 @@ async function main(): Promise<number> {
     GCS_STEAM_OPENID_CHECK_URL: steamCheckUrl,
     // Aplicația Servere: serverul de joc fals al testelor rulează pe 127.0.0.1 (altfel adresa locală e refuzată).
     GCS_SERVERS_ALLOW_NETS: "127.0.0.1/32",
+    // Botul de știri: fluxurile de test (doar această adresă, doar cu `GCS_TEST_ROUTES=1`).
+    GCS_PLUGIN_HTTP_TEST_HOSTS: new URL(feedsUrl).host,
     NEXT_TELEMETRY_DISABLED: "1",
   };
   if (LITE) {
@@ -386,7 +440,7 @@ async function main(): Promise<number> {
   const playwright = run(
     playwrightBin,
     ["test", ...process.argv.slice(2)],
-    { ...env, ...installEnv, GCS_E2E_BASE_URL: BASE_URL, GCS_E2E_PLUGIN_KEY: e2eKeyFile, GCS_E2E_LICENSE_KEY: e2eKeyFile, GCS_E2E_STEAM_SECRET: steamSecret },
+    { ...env, ...installEnv, GCS_E2E_BASE_URL: BASE_URL, GCS_E2E_PLUGIN_KEY: e2eKeyFile, GCS_E2E_LICENSE_KEY: e2eKeyFile, GCS_E2E_STEAM_SECRET: steamSecret, GCS_E2E_FEEDS_URL: feedsUrl },
     "inherit",
   );
   const code = await new Promise<number>((resolve) => playwright.on("exit", (c) => resolve(c ?? 1)));

@@ -13,7 +13,9 @@
     "timezone": "Time zone of the posting hours",
     "timezoneHint": "An IANA time zone, for example Europe/Bucharest.",
     "excerptChars": "Excerpt length (characters)",
-    "excerptCharsHint": "Without “full”, the bot posts only the title, the excerpt, the image and the source link."
+    "excerptCharsHint": "Without “full”, the bot posts only the title, the excerpt, the image and the source link.",
+    "steamApi": "Steam API address",
+    "steamApiHint": "The official API by default. Change it only for a proxy of it."
   },
   "acp": {
     "menu": "News bot",

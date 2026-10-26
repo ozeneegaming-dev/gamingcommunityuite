@@ -136,7 +136,8 @@ export function parseFeed(xml: string): GcsFeedItem[] {
   const blocks = [...xml.matchAll(atom ? /<entry[\s>][\s\S]*?<\/entry>/gi : /<item[\s>][\s\S]*?<\/item>/gi)].map((m) => m[0]);
   const items: GcsFeedItem[] = [];
   for (const block of blocks) {
-    const title = elementText(child(block, ["title"])).replace(/<[^>]+>/g, "").trim();
+    // Doar etichetele HTML reale (un titlu ca „Turneu <sâmbătă>” rămâne întreg).
+    const title = elementText(child(block, ["title"])).replace(/<\/?[a-z][a-z0-9]*(?:\s[^>]*)?\/?>/gi, "").trim();
     let link: string | null;
     if (atom) {
       const links = [...block.matchAll(/<link\b[^>]*>/gi)].map((m) => m[0]);
@@ -164,9 +165,12 @@ export function parseFeed(xml: string): GcsFeedItem[] {
 
 // ─── Steam ─────────────────────────────────────────────────────────────────────────────────────────────────
 
-/** Adresa API-ului oficial (gratuit, fără cheie) pentru știrile unui joc. */
-export function steamNewsUrl(appId: number, count = 10): string {
-  return `https://api.steampowered.com/ISteamNews/GetNewsForApp/v2/?appid=${appId}&count=${count}&maxlength=0&format=json`;
+export const STEAM_API = "https://api.steampowered.com";
+
+/** Adresa API-ului oficial (gratuit, fără cheie) pentru știrile unui joc; `base` = un proxy al API-ului, dacă e setat. */
+export function steamNewsUrl(appId: number, count = 10, base = STEAM_API): string {
+  const root = /^https?:\/\/[^\s?#]+$/i.test(base) ? base.replace(/\/+$/, "") : STEAM_API;
+  return `${root}/ISteamNews/GetNewsForApp/v2/?appid=${appId}&count=${count}&maxlength=0&format=json`;
 }
 
 const STEAM_IMAGES = "https://clan.cloudflare.steamstatic.com/images";

@@ -13,7 +13,9 @@
     "timezone": "Fusul orar al orelor de publicare",
     "timezoneHint": "Un fus IANA, de exemplu Europe/Bucharest.",
     "excerptChars": "Lungimea extrasului (caractere)",
-    "excerptCharsHint": "Fără „complet”, botul publică doar titlul, extrasul, imaginea și linkul spre sursă."
+    "excerptCharsHint": "Fără „complet”, botul publică doar titlul, extrasul, imaginea și linkul spre sursă.",
+    "steamApi": "Adresa API-ului Steam",
+    "steamApiHint": "Implicit API-ul oficial. Schimb-o doar pentru un proxy al lui."
   },
   "acp": {
     "menu": "Bot de știri",

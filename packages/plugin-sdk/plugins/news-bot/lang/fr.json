@@ -13,7 +13,9 @@
     "timezone": "Fuseau horaire des heures de publication",
     "timezoneHint": "Un fuseau IANA, par exemple Europe/Bucharest.",
     "excerptChars": "Longueur de l'extrait (caractères)",
-    "excerptCharsHint": "Sans « complet », le bot publie seulement le titre, l'extrait, l'image et le lien vers la source."
+    "excerptCharsHint": "Sans « complet », le bot publie seulement le titre, l'extrait, l'image et le lien vers la source.",
+    "steamApi": "Adresse de l'API Steam",
+    "steamApiHint": "Par défaut l'API officielle. À changer uniquement pour un proxy de celle-ci."
   },
   "acp": {
     "menu": "Bot d'actualités",
