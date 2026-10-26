@@ -140,7 +140,8 @@ test("ACP › Sistem › Botul comunității, apoi pluginul Bot de știri: RSS t
   await page.goto("/admin/system/applications");
   const toggle = page.getByTestId(`gcs-plugin-toggle-${KEY}`);
   await toggle.click();
-  await expect(toggle).toHaveAttribute("aria-checked", "false");
+  await expect(toggle).not.toBeChecked();
+  await expect.poll(async () => (await sql<{ enabled: boolean }>(`SELECT enabled FROM plugins WHERE key = $1`, [KEY]))[0]?.enabled).toBe(false);
   await page.goto(`/topic/${news.id}`);
   await expect(page.getByTestId("gcs-post").first().getByTestId("gcs-post-bot-label")).toHaveText("ȘTIRI");
   expect(await botTopics()).toHaveLength(2);
