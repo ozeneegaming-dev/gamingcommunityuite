@@ -1,5 +1,6 @@
 import { GcsSqlKv, PLUGIN_JOB, writeWorkerHeartbeat } from "@gcs/core";
 import type { GcsServices } from "./services";
+import { BOT_SCHEDULED_JOB, BOT_WELCOME_JOB } from "./bot/settings";
 
 /** Jobul care dovedește că worker-ul procesează coada (nu doar că procesul trăiește). */
 export const HEARTBEAT_JOB = "system.heartbeat";
@@ -43,6 +44,9 @@ export function registerAppJobs(s: GcsServices): void {
       if (await s.chatPro.active()) await s.chatPro.ranking.finalize();
     },
   });
+  // Botul comunității: bun venitul (după înregistrare) și postările programate scadente.
+  s.jobs.register({ name: BOT_WELCOME_JOB, handler: async (data) => void (typeof data.userId === "string" ? await s.communityBot.welcome(data.userId) : false) });
+  s.jobs.register({ name: BOT_SCHEDULED_JOB, everyMs: 60_000, handler: async () => void (await s.communityBot.publishScheduled()) });
   s.jobs.register({ name: "translate.cleanup", everyMs: 24 * 3600_000, handler: async () => void (await s.translation.cleanup()) });
   // Licența: verificarea zilnică la platforma-mamă (doar licențele emise de Data Center). Când aplicațiile premium se
   // opresc sau repornesc, meniul și paginile se recalculează.

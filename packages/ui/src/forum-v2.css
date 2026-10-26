@@ -583,6 +583,44 @@
 .gcs-postPill--staff:not([style]) {
   --gcs-pill-color: var(--gcs-accentInk, var(--gcs-accent));
 }
+/* Botul comunității: eticheta plină („UPDATE CS2”), linia „Publicat automat / Tradus automat” și caseta cu sursa. */
+.gcs-postPill--botLabel {
+  --gcs-pill-color: var(--gcs-accent);
+  background-color: var(--gcs-accent);
+  border-color: var(--gcs-accent);
+  color: #fff;
+}
+.gcs-postBot__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-postBot__source {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background-color: color-mix(in srgb, var(--gcs-bg) 60%, transparent);
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-postBot__sourceText {
+  flex: 1;
+  min-width: 0;
+}
+.gcs-postBot__sourceText b {
+  color: var(--gcs-text);
+}
+.gcs-postBot__read {
+  font-weight: 700;
+  color: var(--gcs-accentInk, var(--gcs-accent));
+}
 .gcs-postPill:hover {
   background-color: color-mix(in srgb, var(--gcs-pill-color) 30%, transparent);
   border-color: color-mix(in srgb, var(--gcs-pill-color) 60%, transparent);

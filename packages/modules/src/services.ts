@@ -109,6 +109,7 @@ import { GcsExternalProfiles } from "./profile/external";
 import { GcsProfileExtras } from "./profile/extras";
 import { registerDonationNotifications } from "./vip/donationNotify";
 import { GcsDonationService } from "./vip/donations";
+import { BOT_WELCOME_JOB, GcsCommunityBot } from "./bot/service";
 import { GcsHoverCardLoader } from "./profile/hoverCard";
 import { GcsMemberPrefsService } from "./profile/memberPrefs";
 import { GcsChatService } from "./chat/chat";
@@ -208,6 +209,8 @@ export type GcsServices = {
   chatPro: GcsChatProService;
   apps: GcsAppService;
   translation: GcsTranslationService;
+  /** Botul comunității (bot-stiri): publică în numele contului-bot pentru nucleu și pluginuri. */
+  communityBot: GcsCommunityBot;
   widgets: GcsWidgetService;
   nav: GcsNavService;
   themes: GcsThemeService;
@@ -776,6 +779,15 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   );
 
   const memberList = new GcsMemberList({ db, permissions, ranks, groups: groupDirectory });
+  const topics = new GcsTopicService(posting, { polls, prefixes });
+  const forumModeration = new GcsForumModerationService(posting, { posts, reports, acp });
+  const communityBot = new GcsCommunityBot({ db, settings, topics, posts, moderation: forumModeration, conversations, chat, acp, translator: () => translation.provider(), setAvatar: (actor, file) => profiles.setAvatar(actor, file) });
+  // Bun venitul botului: din coadă (ascultătorii magistralei rulează în cererea de înregistrare).
+  bus.on("user.registered", async (e) => {
+    const userId = e.payload.userId;
+    if (typeof userId === "string") await jobs.enqueue(BOT_WELCOME_JOB, { userId }, { jobId: `bot-welcome-${userId}` });
+  });
+
   const services: GcsServices = {
     db,
     licenseOnline,
@@ -811,6 +823,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     chatModeration,
     apps,
     translation,
+    communityBot,
     widgets: new GcsWidgetService({ db, cache, bus, registry, acp, apps }),
     nav: new GcsNavService({ db, cache, bus, registry, acp, apps, isIcon: isGcsIcon }),
     themes: new GcsThemeService({ db, cache, bus, acp }),
@@ -832,7 +845,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     files,
     attachments,
     forums,
-    topics: new GcsTopicService(posting, { polls, prefixes }),
+    topics,
     posts,
     forumQueries,
     readMarkers,
@@ -841,7 +854,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     polls,
     prefixes,
     reports,
-    moderation: new GcsForumModerationService(posting, { posts, reports, acp }),
+    moderation: forumModeration,
     search: new GcsForumSearch({ db, permissions, settings, rateLimiter }),
     posting,
     forumModerators: new GcsForumModeratorService({ db, permissions, acp }),

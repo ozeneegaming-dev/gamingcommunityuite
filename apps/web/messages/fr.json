@@ -427,7 +427,6 @@
         "menu_manager": "Gestionnaire de menus",
         "api": "API",
         "webhooks": "Hooks Web",
-        "rss_import": "Importation de RSS",
         "settings": "Paramètres",
         "settings_general": "Général",
         "settings_terms": "Termes & Confidentialité",
@@ -460,7 +459,8 @@
         "apps_manage": "Management",
         "apps_dev": "Development",
         "update": "Mise à jour",
-        "cron": "Cron"
+        "cron": "Cron",
+        "bot": "Bot de la communauté"
       },
       "members": {
         "members": "Membres",
@@ -4379,6 +4379,68 @@
           "invalid": "invalide"
         }
       }
+    },
+    "bot": {
+      "title": "Bot de la communauté",
+      "account": {
+        "title": "Compte du bot",
+        "body": "Publie automatiquement des actualités, des mises à jour et des messages. Il ne peut pas se connecter et n'apparaît ni dans les listes de membres, ni dans les classements, ni dans les statistiques.",
+        "name": "Nom du bot",
+        "save": "Enregistrer le nom",
+        "avatar": "Avatar du bot",
+        "avatarSave": "Téléverser l'avatar",
+        "group": "Couleur et icône du badge « BOT » (groupe Bot)",
+        "missing": "Le compte du bot est manquant. Redémarrez l'application pour le recréer."
+      },
+      "features": {
+        "title": "Ce qui peut utiliser le bot",
+        "body": "Désactivez une fonction pour que le bot ne publie plus rien pour elle. Ce qui est déjà publié reste.",
+        "on": "Activé",
+        "off": "Désactivé",
+        "enable": "Activer",
+        "disable": "Désactiver",
+        "plugin": "Un plugin qui publie via le bot (capacité « bot.post »).",
+        "welcome_pm": {
+          "title": "Message de bienvenue",
+          "body": "Un message privé envoyé à chaque nouveau membre juste après l'inscription."
+        },
+        "moderation_notes": {
+          "title": "Notes de modération",
+          "body": "Quand un modérateur déplace, verrouille ou archive un sujet et choisit « Note du bot », le bot publie la note dans le sujet."
+        },
+        "scheduled": {
+          "title": "Publications planifiées",
+          "body": "Les publications rédigées ci-dessous, publiées par le bot à la date choisie."
+        }
+      },
+      "welcome": {
+        "title": "Message de bienvenue",
+        "body": "Écrivez '{name}' pour le nom du membre et '{site}' pour le nom du site.",
+        "subject": "Titre du message",
+        "text": "Texte du message",
+        "save": "Enregistrer le message"
+      },
+      "scheduled": {
+        "title": "Publications planifiées",
+        "body": "Rédigez une publication maintenant, le bot la publie seul à la date choisie (votre heure locale).",
+        "forum": "Forum",
+        "postTitle": "Titre",
+        "content": "Contenu",
+        "publishAt": "Date et heure de publication",
+        "lock": "Verrouiller le sujet",
+        "pin": "Épingler le sujet",
+        "submit": "Planifier",
+        "noForums": "Il n'y a pas encore de forum.",
+        "empty": "Aucune publication planifiée.",
+        "status": {
+          "pending": "Planifiée",
+          "posted": "Publiée",
+          "failed": "Échouée"
+        },
+        "open": "Ouvrir le sujet",
+        "cancel": "Annuler",
+        "cancelConfirm": "La publication planifiée est supprimée et ne sera pas publiée."
+      }
     }
   },
   "settings": {
@@ -5024,6 +5086,11 @@
     "realtime": {
       "poll_interval": "Intervalle des mises à jour en direct sans websocket (secondes, 2–60)",
       "transport": "Transport des mises à jour en direct"
+    },
+    "bot": {
+      "features": "Fonctions du bot",
+      "welcome_title": "Titre du message de bienvenue",
+      "welcome_text": "Message de bienvenue"
     }
   },
   "permissions": {
@@ -5975,6 +6042,13 @@
       "score": "Score : {score}",
       "login": "Connecte-toi pour voter",
       "own": "Tu ne peux pas voter pour ton propre message"
+    },
+    "bot": {
+      "auto": "Publié automatiquement",
+      "translated": "Traduit automatiquement de : {language}",
+      "source": "Source : <b>{name}</b>",
+      "every": "import automatique toutes les {minutes} min",
+      "read": "Lire à la source"
     }
   },
   "newTopic": {

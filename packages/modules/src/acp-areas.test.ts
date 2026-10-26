@@ -23,7 +23,7 @@ describe("zonele ACP ale aplicației", () => {
     expect(shape(areas)).toEqual({
       system: [
         ["acp.menu.system.overview", ["system.files", "system.status", "system.update", "system.cron"]],
-        ["acp.menu.system.site_features", ["system.applications", "system.integrations", "system.api", "system.webhooks", "system.rss_import"]],
+        ["acp.menu.system.site_features", ["system.applications", "system.integrations", "system.api", "system.webhooks", "system.bot"]],
         [
           "acp.menu.system.settings",
           [

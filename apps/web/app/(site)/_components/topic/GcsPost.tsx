@@ -3,7 +3,7 @@ import type { GcsClanTag, GcsPostbitData, GcsPostView } from "@gcs/modules";
 import type { GcsEditorBlock } from "@gcs/ui/editor";
 import { GcsAvatar, GcsBadgeArt, GcsClanTag as GcsClanPlate, GcsTooltip, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
-import { getFormatter, getTranslations } from "next-intl/server";
+import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import type { CSSProperties } from "react";
 import { memberHref, postHref } from "@/lib/forum-urls";
 import { postbitVars } from "@/lib/template-data";
@@ -80,8 +80,43 @@ export async function GcsPost({
   // (acces la moderare / ACP) sau, pentru datele vechi, cheile implicite.
   const isStaff = post.staff || (postbit !== null && STAFF_GROUPS.has(postbit.group.key));
   const staffColor = isStaff ? (postbit?.group.color ?? author?.groupColor ?? "var(--gcs-accent)") : null;
+  // Botul comunității: eticheta (ex. „UPDATE CS2”), „Publicat automat”, traducerea și caseta cu sursa.
+  const bot = post.bot;
+  const language = bot?.translatedFrom ? languageName(bot.translatedFrom, await getLocale()) : null;
+  const botSource =
+    bot && (bot.sourceName || bot.sourceUrl) ? (
+      <div className="gcs-postBot__source" data-testid="gcs-post-bot-source">
+        <GcsIcon name="fa-regular fa-clock" />
+        <span className="gcs-postBot__sourceText">
+          {bot.sourceName ? t.rich("bot.source", { name: bot.sourceName, b: (c) => <b>{c}</b> }) : null}
+          {bot.importEveryMinutes ? <> · {t("bot.every", { minutes: bot.importEveryMinutes })}</> : null}
+        </span>
+        {bot.sourceUrl && (
+          <a className="gcs-postBot__read" href={bot.sourceUrl} target="_blank" rel="nofollow noopener noreferrer ugc" data-testid="gcs-post-bot-read">
+            {t("bot.read")} →
+          </a>
+        )}
+      </div>
+    ) : null;
   const pills = (
     <>
+      {bot?.label && (
+        <span className="gcs-postPill gcs-postPill--botLabel" data-testid="gcs-post-bot-label">
+          {bot.label}
+        </span>
+      )}
+      {bot && (
+        <span className="gcs-postBot__meta" data-testid="gcs-post-bot-auto">
+          <GcsIcon name="fa-solid fa-robot" />
+          {t("bot.auto")}
+        </span>
+      )}
+      {language && (
+        <span className="gcs-postBot__meta" data-testid="gcs-post-bot-translated">
+          <GcsIcon name="fa-solid fa-language" />
+          {t("bot.translated", { language })}
+        </span>
+      )}
       {isTopicAuthor && (
         <span className="gcs-postPill gcs-postPill--author" data-testid="gcs-post-pill-author">
           {t("pills.author")}
@@ -166,10 +201,11 @@ export async function GcsPost({
         multiQuote
         blocks={blocks}
         signature={
-          showSignature && author?.signatureHtml && post.visibility === "VISIBLE" ? (
+          botSource ??
+          (showSignature && author?.signatureHtml && post.visibility === "VISIBLE" ? (
             // Semnătura: HTML-ul produs și sanitizat de renderer la salvare (Setări → Semnătură).
             <GcsNamedHtml className="gcs-post__signature gcs-postBody" data-testid="gcs-post-signature" html={author.signatureHtml} />
-          ) : null
+          ) : null)
         }
       />
     </article>
@@ -181,6 +217,15 @@ export async function GcsPost({
       {article}
     </details>
   );
+}
+
+/** Numele limbii originalului, în limba vizitatorului („engleză”); codul, dacă nu e cunoscut. */
+function languageName(code: string, locale: string): string {
+  try {
+    return new Intl.DisplayNames([locale], { type: "language" }).of(code) ?? code;
+  } catch {
+    return code;
+  }
 }
 
 /** Câte coroane arată postbit-ul pentru nivelul rangului (rangurile de peste plafon rămân la plafon). */

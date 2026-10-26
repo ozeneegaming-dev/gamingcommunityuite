@@ -2,6 +2,7 @@
 export { coreModule, DEFAULT_GROUP_KEYS, GCS_LOCALE_KEYS } from "./core-module";
 export { forumsModule } from "./forums";
 export * from "./forums/stats";
+export * from "./bot/service";
 export { canViewPost, registerForumContent } from "./forums/content";
 export { GcsForumCounters } from "./forums/counters";
 export { FORUMS_ACP_SECTION, GcsForumService, type GcsForumInput, type GcsForumOrderItem, type GcsForumPatch } from "./forums/forums";

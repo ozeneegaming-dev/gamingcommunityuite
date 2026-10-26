@@ -427,7 +427,6 @@
         "menu_manager": "Menümanager",
         "api": "API",
         "webhooks": "Webhooks",
-        "rss_import": "RSS Einfuhr",
         "settings": "Einstellungen",
         "settings_general": "Allgemein",
         "settings_terms": "Bedingungen & Privatsphäre",
@@ -460,7 +459,8 @@
         "apps_manage": "Management",
         "apps_dev": "Development",
         "update": "Aktualisierung",
-        "cron": "Cron"
+        "cron": "Cron",
+        "bot": "Community-Bot"
       },
       "members": {
         "members": "Mitglieder",
@@ -4379,6 +4379,68 @@
           "invalid": "ungültig"
         }
       }
+    },
+    "bot": {
+      "title": "Community-Bot",
+      "account": {
+        "title": "Bot-Konto",
+        "body": "Veröffentlicht automatisch News, Updates und Nachrichten. Es kann sich nicht anmelden und erscheint nicht in Mitgliederlisten, Ranglisten oder Statistiken.",
+        "name": "Name des Bots",
+        "save": "Namen speichern",
+        "avatar": "Avatar des Bots",
+        "avatarSave": "Avatar hochladen",
+        "group": "Farbe und Symbol des „BOT“-Abzeichens (Gruppe Bot)",
+        "missing": "Das Bot-Konto fehlt. Starte die Anwendung neu, um es neu anzulegen."
+      },
+      "features": {
+        "title": "Was den Bot nutzen darf",
+        "body": "Schalte eine Funktion aus, damit der Bot dafür nichts mehr veröffentlicht. Bereits Veröffentlichtes bleibt.",
+        "on": "An",
+        "off": "Aus",
+        "enable": "Einschalten",
+        "disable": "Ausschalten",
+        "plugin": "Ein Plugin, das über den Bot veröffentlicht (Berechtigung „bot.post“).",
+        "welcome_pm": {
+          "title": "Willkommensnachricht",
+          "body": "Eine private Nachricht an jedes neue Mitglied direkt nach der Registrierung."
+        },
+        "moderation_notes": {
+          "title": "Moderationshinweise",
+          "body": "Wenn ein Moderator ein Thema verschiebt, schließt oder archiviert und „Hinweis vom Bot“ wählt, schreibt der Bot den Hinweis ins Thema."
+        },
+        "scheduled": {
+          "title": "Geplante Beiträge",
+          "body": "Die unten geschriebenen Beiträge, vom Bot zum gewählten Zeitpunkt veröffentlicht."
+        }
+      },
+      "welcome": {
+        "title": "Willkommensnachricht",
+        "body": "Schreibe '{name}' für den Namen des Mitglieds und '{site}' für den Namen der Website.",
+        "subject": "Titel der Nachricht",
+        "text": "Text der Nachricht",
+        "save": "Nachricht speichern"
+      },
+      "scheduled": {
+        "title": "Geplante Beiträge",
+        "body": "Schreibe jetzt einen Beitrag, der Bot veröffentlicht ihn selbst zum gewählten Zeitpunkt (deine Ortszeit).",
+        "forum": "Forum",
+        "postTitle": "Titel",
+        "content": "Inhalt",
+        "publishAt": "Datum und Uhrzeit der Veröffentlichung",
+        "lock": "Thema schließen",
+        "pin": "Thema anheften",
+        "submit": "Planen",
+        "noForums": "Es gibt noch keine Foren.",
+        "empty": "Keine geplanten Beiträge.",
+        "status": {
+          "pending": "Geplant",
+          "posted": "Veröffentlicht",
+          "failed": "Fehlgeschlagen"
+        },
+        "open": "Thema öffnen",
+        "cancel": "Abbrechen",
+        "cancelConfirm": "Der geplante Beitrag wird gelöscht und nicht veröffentlicht."
+      }
     }
   },
   "settings": {
@@ -5024,6 +5086,11 @@
     "realtime": {
       "poll_interval": "Intervall der Live-Updates ohne Websocket (Sekunden, 2–60)",
       "transport": "Transport der Live-Updates"
+    },
+    "bot": {
+      "features": "Bot-Funktionen",
+      "welcome_title": "Titel der Willkommensnachricht",
+      "welcome_text": "Willkommensnachricht"
     }
   },
   "permissions": {
@@ -5975,6 +6042,13 @@
       "score": "Wertung: {score}",
       "login": "Melde dich an, um abzustimmen",
       "own": "Du kannst nicht über deinen eigenen Beitrag abstimmen"
+    },
+    "bot": {
+      "auto": "Automatisch veröffentlicht",
+      "translated": "Automatisch übersetzt aus: {language}",
+      "source": "Quelle: <b>{name}</b>",
+      "every": "automatischer Import alle {minutes} Min.",
+      "read": "An der Quelle lesen"
     }
   },
   "newTopic": {

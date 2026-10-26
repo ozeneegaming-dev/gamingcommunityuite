@@ -1,3 +1,4 @@
+import type { GcsBotPostView } from "../bot/service";
 import { docFirstImage, docSnippet } from "../content-text";
 import { rankLabel, type GcsRankDirectory, type GcsRankLabel } from "../profile/display";
 import { nameKeyOf, nameKeySelect } from "../profile/nameKeys";
@@ -169,6 +170,8 @@ export type GcsPostView = {
   reactors: { users: { id: string; name: string; nameKey: string }[]; total: number; mine: boolean };
   /** Forum v2: votul Q&A (scorul = suma voturilor, `mine` = votul vizitatorului); `null` în afara Q&A sau cu votul oprit. */
   votes: { score: number; mine: -1 | 0 | 1 } | null;
+  /** Botul comunității: eticheta, sursa și traducerea unei postări publicate automat; `null` pentru restul. */
+  bot: GcsBotPostView | null;
 };
 
 /** Scorurile Q&A ale postărilor (suma voturilor) și voturile unui membru pe ele. */
@@ -559,6 +562,12 @@ export class GcsForumQueries {
     const viewer = { userId: actor.userId, groupIds: actor.groupIds, replied: ownVisiblePost !== null || modPowers.length > 0 };
     const labels = hiddenLabels(opts.locale);
 
+    const botRows = await db.botPost.findMany({
+      where: { postId: { in: posts.map((p) => p.id) } },
+      select: { postId: true, label: true, sourceName: true, sourceUrl: true, translatedFrom: true, importEveryMinutes: true },
+    });
+    const botMeta = new Map(botRows.map(({ postId, ...meta }) => [postId!, meta]));
+
     const toView = (p: (typeof posts)[number], number: number): GcsPostView => {
       const author = p.authorId ? userMap.get(p.authorId) : undefined;
       const editor = p.editedById ? userMap.get(p.editedById) : undefined;
@@ -598,6 +607,7 @@ export class GcsForumQueries {
         staff: author ? staff.has(author.primaryGroupId) : false,
         reactors: { users: ordered.slice(0, 3), total: Math.max(totalReactions, list.length), mine: reactedMine },
         votes: votes ? { score: votes.score.get(p.id) ?? 0, mine: votes.mine.get(p.id) ?? 0 } : null,
+        bot: botMeta.get(p.id) ?? null,
       };
     };
     const views: GcsPostView[] = posts.map((p, i) => toView(p, (page - 1) * perPage + i + 1));

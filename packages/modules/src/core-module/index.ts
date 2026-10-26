@@ -2,6 +2,7 @@ import { FOOTER_SETTING, SOCIAL_NETWORKS, footerConfigError } from "../community
 import { ANNOUNCEMENT_SETTING, announcementConfigError } from "../community/announcement";
 import { communityRulesSetting } from "../community/rules";
 import { coreWidgets } from "../widgets";
+import { BOT_FEATURES_SETTING, BOT_WELCOME_SETTING, BOT_WELCOME_TITLE_SETTING } from "../bot/settings";
 import { NOTIFICATION_SETTING_DEFS } from "../notifications/settings";
 import { DEFAULT_THEME_TOGGLE, THEME_TOGGLE_SETTING, themeTogglePairError, APP_SETTING_DEFS, type GcsAcpApp, type GcsAcpArea, type GcsAcpMenuSection, type GcsModule, type GcsPermissionDef, type GcsSettingDef } from "@gcs/core";
 
@@ -45,6 +46,9 @@ const isUrlOrEmpty = (v: unknown) => (v === "" || URL.canParse(v as string) ? nu
 const isEmailOrEmpty = (v: unknown) => (v === "" || /^[^\s@]+@[^\s@]+$/.test(v as string) ? null : "invalid_email");
 const oneOf = (values: string[]) => (v: unknown) => (values.includes(v as string) ? null : "invalid_choice");
 const notEmpty = (v: unknown) => ((v as string).trim() === "" ? "required" : null);
+/** `{ [funcție]: boolean }` (comutatoarele botului). */
+const botFeaturesError = (v: unknown) =>
+  v && typeof v === "object" && !Array.isArray(v) && Object.values(v).every((x) => typeof x === "boolean") ? null : "invalid";
 
 const settings: GcsSettingDef[] = [
   setting("site.name", "string", "Comunitatea mea", "general", notEmpty),
@@ -58,6 +62,18 @@ const settings: GcsSettingDef[] = [
   setting(THEME_TOGGLE_SETTING, "json", DEFAULT_THEME_TOGGLE, "themes", themeTogglePairError),
   // Profilurile sociale ale comunității (cercurile colorate din subsol); goale = ascunse.
   ...SOCIAL_NETWORKS.map((n) => setting(n.setting, "string", "", "general", isUrlOrEmpty)),
+  // Botul comunității (ACP › Sistem › Botul comunității): comutatoarele pe funcție și mesajul de bun venit.
+  setting(BOT_FEATURES_SETTING, "json", {}, "bot", botFeaturesError),
+  setting(BOT_WELCOME_TITLE_SETTING, "string", "Bine ai venit pe {site}!", "bot", (v) => (notEmpty(v) ?? ((v as string).length > 150 ? "too_long" : null))),
+  setting(
+    BOT_WELCOME_SETTING,
+    "string",
+    "Salut, {name}! Bine ai venit pe {site}.
+
+Citește regulile, prezintă-te comunității și spune-ne la ce jocuri te găsim. Dacă ai nevoie de ajutor, scrie-i oricui din staff.",
+    "bot",
+    (v) => (notEmpty(v) ?? ((v as string).length > 5000 ? "too_long" : null)),
+  ),
   // Subsolul (ACP → Aspect → Subsol); `null` = valorile implicite, construite din aplicațiile instalate.
   setting(FOOTER_SETTING, "json", null, "footer", footerConfigError),
   // Bara de anunț de deasupra conținutului (ACP → Aspect → Conținut → Bară de anunț); `null` = nicio bară.
@@ -215,7 +231,7 @@ const acpMenu: GcsAcpMenuSection[] = [
     ["integrations", "/admin/system/integrations", "fa-solid fa-plug"],
     ["api", "/admin/system/api", "fa-solid fa-code"],
     ["webhooks", "/admin/system/webhooks", "fa-solid fa-satellite-dish"],
-    ["rss_import", "/admin/system/rss-import", "fa-solid fa-square-rss"],
+    ["bot", "/admin/system/bot", "fa-solid fa-robot"],
   ]),
   menuSection("system", "settings", "fa-solid fa-sliders", [
     ["settings_general", "/admin/settings/general", "fa-solid fa-gear"],

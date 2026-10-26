@@ -427,7 +427,6 @@
         "menu_manager": "Manager meniu",
         "api": "API",
         "webhooks": "Webhooks",
-        "rss_import": "Import RSS",
         "settings": "Setări",
         "settings_general": "Generale",
         "settings_terms": "Termeni & Confidențialitate",
@@ -460,7 +459,8 @@
         "apps_manage": "Gestionare",
         "apps_dev": "Dezvoltare",
         "update": "Actualizare",
-        "cron": "Cron"
+        "cron": "Cron",
+        "bot": "Botul comunității"
       },
       "members": {
         "members": "Membri",
@@ -4379,6 +4379,68 @@
           "invalid": "invalidă"
         }
       }
+    },
+    "bot": {
+      "title": "Botul comunității",
+      "account": {
+        "title": "Contul botului",
+        "body": "Publică automat știri, actualizări și mesaje. Nu se poate autentifica și nu apare în listele de membri, în clasamente sau în statistici.",
+        "name": "Numele botului",
+        "save": "Salvează numele",
+        "avatar": "Avatarul botului",
+        "avatarSave": "Încarcă avatarul",
+        "group": "Culoarea și iconița pastilei „BOT” (grupul Bot)",
+        "missing": "Contul botului lipsește. Repornește aplicația ca să fie creat din nou."
+      },
+      "features": {
+        "title": "Ce poate folosi botul",
+        "body": "Oprește o funcție ca botul să nu mai publice nimic pentru ea. Ce a publicat deja rămâne.",
+        "on": "Pornit",
+        "off": "Oprit",
+        "enable": "Pornește",
+        "disable": "Oprește",
+        "plugin": "Plugin care publică prin bot (capabilitatea „bot.post”).",
+        "welcome_pm": {
+          "title": "Mesaj de bun venit",
+          "body": "Un mesaj privat trimis fiecărui membru nou, imediat după înregistrare."
+        },
+        "moderation_notes": {
+          "title": "Note de moderare",
+          "body": "Când un moderator mută, închide sau arhivează un topic și alege „Notă de la bot”, botul scrie nota în topic."
+        },
+        "scheduled": {
+          "title": "Postări programate",
+          "body": "Postările scrise mai jos, publicate de bot la data aleasă."
+        }
+      },
+      "welcome": {
+        "title": "Mesajul de bun venit",
+        "body": "Scrie '{name}' pentru numele membrului și '{site}' pentru numele site-ului.",
+        "subject": "Titlul mesajului",
+        "text": "Textul mesajului",
+        "save": "Salvează mesajul"
+      },
+      "scheduled": {
+        "title": "Postări programate",
+        "body": "Scrie o postare acum, iar botul o publică singur la data aleasă (în ora ta).",
+        "forum": "Forumul",
+        "postTitle": "Titlul",
+        "content": "Conținutul",
+        "publishAt": "Data și ora publicării",
+        "lock": "Închide topicul",
+        "pin": "Fixează topicul",
+        "submit": "Programează",
+        "noForums": "Nu există încă niciun forum.",
+        "empty": "Nicio postare programată.",
+        "status": {
+          "pending": "Programată",
+          "posted": "Publicată",
+          "failed": "Eșuată"
+        },
+        "open": "Deschide topicul",
+        "cancel": "Anulează",
+        "cancelConfirm": "Postarea programată se șterge și nu mai e publicată."
+      }
     }
   },
   "settings": {
@@ -5024,6 +5086,11 @@
     "realtime": {
       "poll_interval": "Intervalul actualizărilor live fără websocket (secunde, 2–60)",
       "transport": "Transportul actualizărilor live"
+    },
+    "bot": {
+      "features": "Funcțiile botului",
+      "welcome_title": "Titlul mesajului de bun venit",
+      "welcome_text": "Mesajul de bun venit"
     }
   },
   "permissions": {
@@ -5975,6 +6042,13 @@
       "score": "Scor: {score}",
       "login": "Intră în cont ca să votezi",
       "own": "Nu poți vota propria postare"
+    },
+    "bot": {
+      "auto": "Publicat automat",
+      "translated": "Tradus automat din {language}",
+      "source": "Sursa: <b>{name}</b>",
+      "every": "import automat la fiecare {minutes} min",
+      "read": "Citește pe sursă"
     }
   },
   "newTopic": {

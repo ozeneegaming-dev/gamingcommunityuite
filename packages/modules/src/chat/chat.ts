@@ -338,7 +338,7 @@ export class GcsChatService {
    * încă nelegate). Imaginile cer `chat.allow_images`, vocea `chat.voice_enabled`. `replyTo`: un mesaj al aceleiași
    * camere (răspunsul citat din Chat Pro).
    */
-  async send(actor: GcsActor, key: string, raw: unknown, opts: { files?: string[]; replyTo?: number | null; mentions?: GcsMentionHint[] } = {}): Promise<GcsChatMessageView> {
+  async send(actor: GcsActor, key: string, raw: unknown, opts: { files?: string[]; replyTo?: number | null; mentions?: GcsMentionHint[]; bot?: boolean } = {}): Promise<GcsChatMessageView> {
     const { db, bus, permissions, settings, rateLimiter, realtime } = this.deps;
     const channel = await this.accessible(actor, key);
     if (!actor.userId || actor.isBanned || !(await permissions.can(actor, "chat.write", chatContainer(channel.key)))) {
@@ -383,7 +383,9 @@ export class GcsChatService {
     }
 
     // Extensiile (Chat Pro): comenzile își scriu rezultatul în locul textului, datele lor rămân în `meta`.
-    const patch = await this.extensions.beforeSend({ actor, channel, body, files: fileIds.length, replyToId });
+    // Botul comunității (`opts.bot`): mesajul e marcat `bot` (fără mențiuni, în afara clasamentului), ca liniile Chat Pro.
+    const extended = await this.extensions.beforeSend({ actor, channel, body, files: fileIds.length, replyToId });
+    const patch = opts.bot ? { ...extended, meta: { ...(extended.meta ?? {}), bot: true } } : extended;
     const words = await settings.get<string[]>("chat.word_filter");
     const filtered = applyWordFilter(patch.body ?? body, Array.isArray(words) ? words : []);
     const authorId = actor.userId;

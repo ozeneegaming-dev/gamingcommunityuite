@@ -427,7 +427,6 @@
         "menu_manager": "Menu manager",
         "api": "API",
         "webhooks": "Webhooks",
-        "rss_import": "RSS import",
         "settings": "Settings",
         "settings_general": "General",
         "settings_terms": "Terms & Privacy",
@@ -460,7 +459,8 @@
         "apps_manage": "Management",
         "apps_dev": "Development",
         "update": "Update",
-        "cron": "Cron"
+        "cron": "Cron",
+        "bot": "Community bot"
       },
       "members": {
         "members": "Members",
@@ -4379,6 +4379,68 @@
           "invalid": "invalid"
         }
       }
+    },
+    "bot": {
+      "title": "Community bot",
+      "account": {
+        "title": "Bot account",
+        "body": "Posts news, updates and messages automatically. It cannot sign in and does not appear in member lists, leaderboards or statistics.",
+        "name": "Bot name",
+        "save": "Save name",
+        "avatar": "Bot avatar",
+        "avatarSave": "Upload avatar",
+        "group": "Colour and icon of the “BOT” pill (Bot group)",
+        "missing": "The bot account is missing. Restart the application to recreate it."
+      },
+      "features": {
+        "title": "What can use the bot",
+        "body": "Turn a feature off and the bot stops posting for it. What it already posted stays.",
+        "on": "On",
+        "off": "Off",
+        "enable": "Turn on",
+        "disable": "Turn off",
+        "plugin": "A plugin that posts through the bot (“bot.post” capability).",
+        "welcome_pm": {
+          "title": "Welcome message",
+          "body": "A private message sent to every new member right after sign-up."
+        },
+        "moderation_notes": {
+          "title": "Moderation notes",
+          "body": "When a moderator moves, locks or archives a topic and picks “Note from the bot”, the bot posts the note in the topic."
+        },
+        "scheduled": {
+          "title": "Scheduled posts",
+          "body": "The posts written below, published by the bot at the chosen time."
+        }
+      },
+      "welcome": {
+        "title": "Welcome message",
+        "body": "Write '{name}' for the member's name and '{site}' for the site name.",
+        "subject": "Message title",
+        "text": "Message text",
+        "save": "Save message"
+      },
+      "scheduled": {
+        "title": "Scheduled posts",
+        "body": "Write a post now and the bot publishes it on its own at the chosen time (your local time).",
+        "forum": "Forum",
+        "postTitle": "Title",
+        "content": "Content",
+        "publishAt": "Publish date and time",
+        "lock": "Lock the topic",
+        "pin": "Pin the topic",
+        "submit": "Schedule",
+        "noForums": "There are no forums yet.",
+        "empty": "No scheduled posts.",
+        "status": {
+          "pending": "Scheduled",
+          "posted": "Published",
+          "failed": "Failed"
+        },
+        "open": "Open topic",
+        "cancel": "Cancel",
+        "cancelConfirm": "The scheduled post is deleted and will not be published."
+      }
     }
   },
   "settings": {
@@ -5024,6 +5086,11 @@
     "realtime": {
       "poll_interval": "Live update interval without websocket (seconds, 2–60)",
       "transport": "Live update transport"
+    },
+    "bot": {
+      "features": "Bot features",
+      "welcome_title": "Welcome message title",
+      "welcome_text": "Welcome message"
     }
   },
   "permissions": {
@@ -5975,6 +6042,13 @@
       "score": "Score: {score}",
       "login": "Sign in to vote",
       "own": "You can’t vote on your own post"
+    },
+    "bot": {
+      "auto": "Posted automatically",
+      "translated": "Automatically translated from {language}",
+      "source": "Source: <b>{name}</b>",
+      "every": "imported automatically every {minutes} min",
+      "read": "Read at the source"
     }
   },
   "newTopic": {
