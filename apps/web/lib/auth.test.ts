@@ -134,7 +134,7 @@ describe("Better Auth (integrare)", () => {
     const byRange = await call("/sign-up/email", { name: "Bot", email: "bot@mail.com", password: "parola-sigura-123" }, "203.0.113.200");
     expect(byRange.status).toBe(403);
 
-    expect((await signUp("Cinstit", "cinstit@mail.com")).status).toBe(200);
+    expect((await call("/sign-up/email", { name: "Cinstit", email: "cinstit@mail.com", password: "parola-sigura-123" }, "198.51.100.42")).status).toBe(200);
     const user = await db.user.findUniqueOrThrow({ where: { email: "cinstit@mail.com" } });
     await db.ban.create({ data: { type: "ACCOUNT", value: user.id, userId: user.id, reason: "reclame" } });
     const signIn = await call("/sign-in/email", { email: "cinstit@mail.com", password: "parola-sigura-123" }, "198.51.100.41");
