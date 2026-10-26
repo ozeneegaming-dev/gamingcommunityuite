@@ -139,8 +139,11 @@ test("ACP › Sistem › Botul comunității, apoi pluginul Bot de știri: RSS t
   // Pluginul oprit: topicurile rămân, nimic nou nu se publică.
   await page.goto("/admin/system/applications");
   const toggle = page.getByTestId(`gcs-plugin-toggle-${KEY}`);
-  await toggle.click();
-  await expect(toggle).not.toBeChecked();
+  // Comutatorul răspunde după hidratarea paginii: `uncheck` apasă doar cât timp e încă bifat.
+  await expect(async () => {
+    await toggle.uncheck({ timeout: 2_000 });
+    await expect(toggle).not.toBeChecked({ timeout: 2_000 });
+  }).toPass({ timeout: 20_000 });
   await expect.poll(async () => (await sql<{ enabled: boolean }>(`SELECT enabled FROM plugins WHERE key = $1`, [KEY]))[0]?.enabled).toBe(false);
   await page.goto(`/topic/${news.id}`);
   await expect(page.getByTestId("gcs-post").first().getByTestId("gcs-post-bot-label")).toHaveText("ȘTIRI");
