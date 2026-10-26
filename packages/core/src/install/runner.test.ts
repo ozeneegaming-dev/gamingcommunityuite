@@ -115,7 +115,7 @@ describe.skipIf(testOnMysql())("runInstall", () => {
     await runInstall(input(), (e) => events.push(e), { databaseUrl: url, migrationsDir, registry: registry(), cache, bus, state });
 
     const result = await inspect();
-    expect(result.groups).toBe(12);
+    expect(result.groups).toBe(13);
     expect(result.admins).toHaveLength(1);
     expect(result.admins[0]?.primaryGroup.key).toBe("root_admin");
     expect(result.admins[0]?.accounts[0]).toMatchObject({ providerId: "credential", password: passwordHash });
@@ -156,7 +156,7 @@ describe.skipIf(testOnMysql())("runInstall", () => {
       acpMenu: [],
       eventListeners: [],
       seedDemo: async (ctx) => {
-        calls.push({ variant: ctx.variant, adminEmail: ctx.adminEmail, admins: await ctx.db.user.count() });
+        calls.push({ variant: ctx.variant, adminEmail: ctx.adminEmail, admins: await ctx.db.user.count({ where: { isBot: false } }) });
       },
     });
     await runInstall(input(), () => {}, { databaseUrl: url, migrationsDir, registry: r, cache, bus, state });
@@ -184,7 +184,7 @@ describe.skipIf(testOnMysql())("runInstall", () => {
     await runInstall(input(), () => {}, deps);
     const result = await inspect();
     expect(result.admins).toHaveLength(1);
-    expect(result.groups).toBe(12);
+    expect(result.groups).toBe(13);
     await expect(state.isInstalled()).resolves.toBe(true);
   });
 });

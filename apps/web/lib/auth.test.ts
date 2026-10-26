@@ -51,14 +51,14 @@ describe("Better Auth (integrare)", () => {
     const res = await signUp("ştefan", "b@mail.com");
     expect(res.status).toBe(400);
     expect(await res.json()).toMatchObject({ code: "USERNAME_TAKEN" });
-    expect(await db.user.count()).toBe(1);
+    expect(await db.user.count({ where: { isBot: false } })).toBe(1);
   });
 
   test("Review Focus #1: Bling@Mail.com și bling@mail.com sunt același cont", async () => {
     await signUp("Bling", "bling@mail.com");
     const res = await signUp("Bling2", "Bling@Mail.com");
     expect(res.ok).toBe(false);
-    expect(await db.user.count()).toBe(1);
+    expect(await db.user.count({ where: { isBot: false } })).toBe(1);
 
     const signIn = await call("/sign-in/email", { email: "BLING@mail.com", password: "parola-sigura-123" });
     expect(signIn.status).toBe(200);

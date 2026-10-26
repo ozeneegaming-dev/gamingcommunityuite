@@ -35,7 +35,7 @@ describe("plăcile panoului", () => {
     const tiles = await stats.tiles();
     expect(tiles.map((t) => t.key)).toEqual(expect.arrayContaining(["forums.topics", "forums.posts", "forums.members", "vip.members"]));
     expect(tiles.find((t) => t.key === "vip.members")?.value).toBe(2);
-    expect(tiles.find((t) => t.key === "forums.members")?.value).toBe(await w.db.user.count());
+    expect(tiles.find((t) => t.key === "forums.members")?.value).toBe(await w.db.user.count({ where: { isBot: false } }));
   });
 
   test("plăcile unei aplicații dezactivate lipsesc", async () => {

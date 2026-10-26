@@ -216,7 +216,7 @@ export class GcsMemberDirectory {
 
   /** Id-urile tuturor membrilor care se potrivesc (acțiunile în masă pe „toți cei filtrați”), cel mult `limit`. */
   async ids(s: GcsMemberSearch, limit = 5000, now = new Date()): Promise<string[]> {
-    const rows = await this.deps.db.user.findMany({ where: await this.where(s, now), select: { id: true }, orderBy: { nameNormalized: "asc" }, take: limit });
+    const rows = await this.deps.db.user.findMany({ where: { AND: [await this.where(s, now), { isBot: false }] }, select: { id: true }, orderBy: { nameNormalized: "asc" }, take: limit });
     return rows.map((r) => r.id);
   }
 

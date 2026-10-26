@@ -56,7 +56,7 @@ describe("lista de membri", () => {
   });
 
   test("24 pe pagină; a doua pagină are restul", async () => {
-    const before = await w.db.user.count();
+    const before = await w.db.user.count({ where: { isBot: false } });
     for (let i = 0; i < 30; i++) await w.createUser(`Membru${String(i).padStart(2, "0")}`, "member");
     const first = await list.list(w.member, { page: 1 });
     expect(first.members).toHaveLength(MEMBERS_PER_PAGE);

@@ -15,11 +15,11 @@ afterAll(async () => {
 });
 
 describe("seedDefaults", () => {
-  test("rulat de două ori produce tot 12 grupuri și nu dublează nimic", async () => {
+  test("rulat de două ori produce tot 13 grupuri (cu „Bot”) și nu dublează nimic", async () => {
     await seedDefaults(db, registry);
     await seedDefaults(db, registry);
 
-    expect(await db.group.count()).toBe(12);
+    expect(await db.group.count()).toBe(13);
     expect(await db.acpRole.count()).toBe(1);
     expect(await db.acpRoleAssignment.count()).toBe(1);
     expect(await db.warningAction.count()).toBe(3);

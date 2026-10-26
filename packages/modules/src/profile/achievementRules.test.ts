@@ -197,7 +197,7 @@ describe("recalcularea în fundal", () => {
     expect(await badgeOf(w.member.userId!, "retro")).toBeNull();
     const status = await w.achievementRules.requestRecalc();
     expect(status).toMatchObject({ state: "done" });
-    expect(status.done).toBe(await w.db.user.count());
+    expect(status.done).toBe(await w.db.user.count({ where: { isBot: false } }));
     expect(await badgeOf(w.member.userId!, "retro")).not.toBeNull();
     // A doua recalculare nu dublează nimic.
     await w.achievementRules.requestRecalc();

@@ -230,7 +230,7 @@ export class GcsAcpDashboardService {
     const [rows, [totals], latest, audit] = await Promise.all([
       isMysql() ? this.portableSeries(since, timeZone) : db.$queryRaw<{ s: string; d: string; n: number }[]>(sql`
         SELECT 'registrations'::text AS s, to_char(date_trunc('day', ("createdAt" AT TIME ZONE 'UTC') AT TIME ZONE ${timeZone}::text), 'YYYY-MM-DD') AS d, count(*)::int AS n
-          FROM users WHERE "createdAt" >= ${since} GROUP BY 2
+          FROM users WHERE "createdAt" >= ${since} AND NOT "isBot" GROUP BY 2
         UNION ALL
         SELECT 'posts'::text, to_char(date_trunc('day', ("createdAt" AT TIME ZONE 'UTC') AT TIME ZONE ${timeZone}::text), 'YYYY-MM-DD'), count(*)::int
           FROM posts WHERE "createdAt" >= ${since} AND visibility = 'VISIBLE' GROUP BY 2
@@ -247,13 +247,13 @@ export class GcsAcpDashboardService {
         SELECT 'vips'::text, to_char(date_trunc('day', ("startsAt" AT TIME ZONE 'UTC') AT TIME ZONE ${timeZone}::text), 'YYYY-MM-DD'), count(*)::int
           FROM vip_subscriptions WHERE "startsAt" >= ${since} GROUP BY 2`),
       isMysql() ? this.portableTotals(since30) : db.$queryRaw<GcsAcpOverview["totals"][]>(sql`
-        SELECT (SELECT count(*) FROM users)::int AS members,
+        SELECT (SELECT count(*) FROM users WHERE NOT "isBot")::int AS members,
                (SELECT count(*) FROM posts WHERE visibility = 'VISIBLE')::int AS posts,
                (SELECT count(*) FROM topics WHERE visibility = 'VISIBLE')::int AS topics,
                (SELECT count(*) FROM vip_subscriptions WHERE status = 'ACTIVE')::int AS vips,
                (SELECT count(*) FROM reports WHERE status = 'OPEN')::int AS "openReports",
                (SELECT count(*) FROM reports)::int AS reports,
-               (SELECT count(*) FROM users WHERE "lastActiveAt" >= ${since30})::int AS active30`),
+               (SELECT count(*) FROM users WHERE "lastActiveAt" >= ${since30} AND NOT "isBot")::int AS active30`),
       db.user.findMany({
         where: { isBot: false },
         orderBy: { createdAt: "desc" },
