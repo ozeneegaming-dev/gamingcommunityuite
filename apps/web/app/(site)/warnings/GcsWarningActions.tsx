@@ -31,7 +31,7 @@ export function GcsWarningActions({ warningId, canAcknowledge, canAppeal }: { wa
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         {canAcknowledge && (
-          <GcsButton size="sm" disabled={pending} onClick={() => run(() => acknowledgeWarningAction({ warningId }))} data-testid="gcs-warning-ack">
+          <GcsButton variant="primary" size="sm" disabled={pending} onClick={() => run(() => acknowledgeWarningAction({ warningId }))} data-testid="gcs-warning-ack">
             {t("acknowledge")}
           </GcsButton>
         )}
@@ -54,7 +54,7 @@ export function GcsWarningActions({ warningId, canAcknowledge, canAppeal }: { wa
             <textarea className="gcs-input" rows={4} minLength={10} maxLength={2000} required value={text} onChange={(e) => setText(e.target.value)} data-testid="gcs-warning-appeal-text" />
           </label>
           <div style={{ display: "flex", gap: 8 }}>
-            <GcsButton size="sm" type="submit" disabled={pending} data-testid="gcs-warning-appeal-send">
+            <GcsButton variant="primary" size="sm" type="submit" disabled={pending} data-testid="gcs-warning-appeal-send">
               {t("appealSend")}
             </GcsButton>
             <GcsButton size="sm" variant="ghost" type="button" onClick={() => setOpen(false)}>

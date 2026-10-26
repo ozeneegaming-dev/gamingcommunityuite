@@ -167,10 +167,11 @@ describe("avertismente: poarta scrierii", () => {
     const res = await w.posts.reply(other, { topicId: t.topicId, content: doc("în aprobare") });
     expect(res.pending).toBe(true);
 
-    // Un avertisment neconfirmat oprește scrierea până la confirmare.
-    const warning = await w.db.warning.create({ data: { userId: author.userId!, points: 1, reason: "off-topic" } });
-    await expect(w.posts.reply(author, { topicId: t.topicId, content: doc("încă") })).rejects.toMatchObject({ params: { reason: "warning_ack" } });
+    // Un avertisment neconfirmat oprește scrierea până la confirmare (alt membru: fără pauza de flood).
+    const fresh = await w.actorFor(await w.createUser("Proaspat", "member"));
+    const warning = await w.db.warning.create({ data: { userId: fresh.userId!, points: 1, reason: "off-topic" } });
+    await expect(w.posts.reply(fresh, { topicId: t.topicId, content: doc("încă") })).rejects.toMatchObject({ params: { reason: "warning_ack" } });
     await w.db.warning.update({ where: { id: warning.id }, data: { acknowledgedAt: new Date() } });
-    await expect(w.posts.reply(author, { topicId: t.topicId, content: doc("după confirmare") })).resolves.toMatchObject({ pending: false });
+    await expect(w.posts.reply(fresh, { topicId: t.topicId, content: doc("după confirmare") })).resolves.toMatchObject({ postId: expect.any(Number) });
   });
 });
