@@ -63,7 +63,8 @@ test("un IP din intervalul banat nu se poate înregistra (banul creat din ACP �
   await expect(page.getByTestId("gcs-bans-row").filter({ hasText: `roboți ${id}` })).toBeVisible();
 
   const context = await browser.newContext();
-  await context.setExtraHTTPHeaders({ "x-forwarded-for": "100.71.3.4" });
+  // Ca în spatele proxy-ului din producție: X-Real-IP e adresa clientului.
+  await context.setExtraHTTPHeaders({ "x-forwarded-for": "100.71.3.4", "x-real-ip": "100.71.3.4" });
   const visitor = await context.newPage();
   try {
     await register(visitor, `Banat${id}`, `banat-${id}@example.com`);

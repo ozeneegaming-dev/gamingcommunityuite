@@ -111,11 +111,14 @@ function createAuth(config: GcsAuthConfig) {
       session: {
         create: {
           // Contul-bot nu se autentifică pe nicio cale (parolă, Discord, Steam): fără sesiune.
-          before: async (session) => {
+          before: async (session, ctx) => {
             if (await isBotUser(services().db, session.userId)) throw new APIError("FORBIDDEN", { code: "BOT_ACCOUNT", message: "bot_account" });
             // Un cont, un email (sau domeniu) ori un IP banat nu primește sesiune (nu doar vizitator la cererea următoare).
+            // IP-ul după aceeași regulă ca la înregistrare (`clientIp`: X-Real-IP sau ultima adresă din X-Forwarded-For).
             const user = await services().db.user.findUnique({ where: { id: session.userId }, select: { email: true } });
-            const ip = session.ipAddress ?? null;
+            const headers = ctx?.headers ?? ctx?.request?.headers ?? null;
+            const fromHeaders = headers ? clientIp(headers) : null;
+            const ip = fromHeaders && fromHeaders !== "0.0.0.0" ? fromHeaders : (session.ipAddress ?? null);
             if (await findActiveBan(services().db, { userId: session.userId, ...(user ? { email: user.email } : {}), ...(ip ? { ip } : {}) })) {
               throw new APIError("FORBIDDEN", { code: "BANNED", message: "banned" });
             }
