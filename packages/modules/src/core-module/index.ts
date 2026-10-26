@@ -68,9 +68,7 @@ const settings: GcsSettingDef[] = [
   setting(
     BOT_WELCOME_SETTING,
     "string",
-    "Salut, {name}! Bine ai venit pe {site}.
-
-Citește regulile, prezintă-te comunității și spune-ne la ce jocuri te găsim. Dacă ai nevoie de ajutor, scrie-i oricui din staff.",
+    "Salut, {name}! Bine ai venit pe {site}.\n\nCitește regulile, prezintă-te comunității și spune-ne la ce jocuri te găsim. Dacă ai nevoie de ajutor, scrie-i oricui din staff.",
     "bot",
     (v) => (notEmpty(v) ?? ((v as string).length > 5000 ? "too_long" : null)),
   ),
