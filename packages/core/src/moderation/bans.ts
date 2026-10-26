@@ -41,22 +41,27 @@ export function emailDomain(email: string): string | null {
 
 /** Intervalele IP banate, din cache (30 s, pe client): cererile verifică IP-ul la fiecare acces. */
 const RANGES_TTL_MS = 30_000;
-const rangesCache = new WeakMap<object, { at: number; list: Ban[] }>();
+/**
+ * Cache-ul intervalelor, comun în proces: Next încarcă pachetul în mai multe bundle-uri (acțiunile ACP, rutele de
+ * autentificare), iar golirea după un ban trebuie să ajungă la toate.
+ */
+type RangesState = { gen: number; byDb: WeakMap<object, { at: number; gen: number; list: Ban[] }> };
+const ranges = ((globalThis as { [k: symbol]: unknown })[Symbol.for("gcs.ipRanges")] ??= { gen: 0, byDb: new WeakMap() }) as RangesState;
 
 async function activeIpRanges(db: Pick<PrismaClient, "ban">, now: Date): Promise<Ban[]> {
-  const cached = rangesCache.get(db);
-  if (cached && now.getTime() - cached.at < RANGES_TTL_MS) return cached.list.filter((b) => !b.expiresAt || b.expiresAt > now);
+  const cached = ranges.byDb.get(db);
+  if (cached && cached.gen === ranges.gen && now.getTime() - cached.at < RANGES_TTL_MS) return cached.list.filter((b) => !b.expiresAt || b.expiresAt > now);
   const list = await db.ban.findMany({
     where: { type: "IP", value: { contains: "/" }, liftedAt: null, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
     orderBy: { createdAt: "desc" },
   });
-  rangesCache.set(db, { at: now.getTime(), list });
+  ranges.byDb.set(db, { at: now.getTime(), gen: ranges.gen, list });
   return list;
 }
 
-/** Golește cache-ul intervalelor (după un ban sau o ridicare). */
-export function clearIpRangeCache(db: object): void {
-  rangesCache.delete(db);
+/** Golește cache-ul intervalelor (după un ban sau o ridicare), pentru orice conexiune din proces. */
+export function clearIpRangeCache(_db?: object): void {
+  ranges.gen++;
 }
 
 /** Dacă IP-ul e într-un interval (`BlockList`; IPv4 mapat în IPv6 se verifică și ca IPv4). */
