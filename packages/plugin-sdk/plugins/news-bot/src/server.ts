@@ -164,7 +164,10 @@ function acpPage(ctx: GcsPluginContext, statuses: (FeedStatus | null)[], query: 
     })
     .join("");
   const errors = s.feeds.errors.map((e) => `<li>${esc(ctx.t(`acp.lineError.${e.reason}`, { line: e.line }))}</li>`).join("");
-  const notice = query.ran ? `<p class="gcs-badge gcs-badge--ok" role="status" data-testid="gcsp-ran">${esc(ctx.t("acp.ran", { feeds: query.ran }))}</p>` : "";
+  // `?ran=` vine din adresă: doar un număr, iar textul tradus e escapat (`esc`), deci nu poate injecta HTML.
+  const ran = /^\d{1,4}$/.test(query.ran ?? "") ? Number(query.ran) : null;
+  // nosemgrep: javascript.express.security.injection.raw-html-format.raw-html-format
+  const notice = ran !== null ? `<p class="gcs-badge gcs-badge--ok" role="status" data-testid="gcsp-ran">${esc(ctx.t("acp.ran", { feeds: ran }))}</p>` : "";
   return `<div class="gcs-card" style="padding:20px;display:flex;flex-direction:column;gap:14px">
     <p style="margin:0;color:var(--gcs-muted)">${esc(ctx.t("acp.intro"))}</p>
     ${notice}
