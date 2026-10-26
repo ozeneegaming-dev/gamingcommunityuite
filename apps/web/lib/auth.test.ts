@@ -137,8 +137,10 @@ describe("Better Auth (integrare)", () => {
     expect((await call("/sign-up/email", { name: "Cinstit", email: "cinstit@mail.com", password: "parola-sigura-123" }, "198.51.100.42")).status).toBe(200);
     const user = await db.user.findUniqueOrThrow({ where: { email: "cinstit@mail.com" } });
     await db.ban.create({ data: { type: "ACCOUNT", value: user.id, userId: user.id, reason: "reclame" } });
+    // Sesiunea de la înregistrare rămâne (o șterge doar banul dat prin serviciu); autentificarea nu mai creează alta.
+    const before = await db.session.count({ where: { userId: user.id } });
     const signIn = await call("/sign-in/email", { email: "cinstit@mail.com", password: "parola-sigura-123" }, "198.51.100.41");
     expect(signIn.status).toBe(403);
-    expect(await db.session.count({ where: { userId: user.id } })).toBe(0);
+    expect(await db.session.count({ where: { userId: user.id } })).toBe(before);
   });
 });
