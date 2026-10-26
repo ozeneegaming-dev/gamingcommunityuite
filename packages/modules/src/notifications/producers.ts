@@ -492,7 +492,7 @@ export class GcsNotificationProducers {
    * nu mai pleacă). Revendicarea e atomică pe fiecare rând, deci două rulări simultane nu trimit de două ori.
    */
   private async claimDigest(userId: string, kind: "daily" | "weekly", now: Date): Promise<{ id: number; type: string; count: number; actorIds: unknown; data: unknown }[]> {
-    const { db, notifications } = this.deps;
+    const { db, notifications, kv } = this.deps;
     const pending = await db.notification.findMany({
       where: { userId, emailedAt: null, OR: [{ readAt: null }, { site: false }] },
       select: { id: true, type: true, important: true },
@@ -508,12 +508,20 @@ export class GcsNotificationProducers {
       if (modes.get(key) === kind) keep.push(p.id);
     }
     if (keep.length === 0) return [];
-    // Revendicarea, rând cu rând (fără `RETURNING`, portabil): o rulare simultană găsește rândul deja marcat
-    // (`count === 0`), deci nu îl trimite a doua oară — chiar dacă ambele rulări au același moment `now`.
+    // Revendicarea, rând cu rând (fără `RETURNING`, portabil), sub un lacăt pe membru: altfel două rulări simultane
+    // își împart rândurile și trimit fiecare câte un digest parțial. Cea care nu ia lacătul sare membrul; cea care vine
+    // după eliberare găsește rândurile deja marcate (`count === 0`).
+    const lock = `gcs:notifications:digest-claim:${userId}`;
+    const token = `${process.pid}-${Math.random().toString(36).slice(2)}`;
+    if (!(await kv.set(lock, token, { ttlMs: 60_000, nx: true }))) return [];
     const claimed: number[] = [];
-    for (const id of keep) {
-      const { count } = await db.notification.updateMany({ where: { id, emailedAt: null }, data: { emailedAt: now } });
-      if (count > 0) claimed.push(id);
+    try {
+      for (const id of keep) {
+        const { count } = await db.notification.updateMany({ where: { id, emailedAt: null }, data: { emailedAt: now } });
+        if (count > 0) claimed.push(id);
+      }
+    } finally {
+      await kv.delIfEquals(lock, token);
     }
     if (claimed.length === 0) return [];
     return db.notification.findMany({ where: { id: { in: claimed } }, orderBy: { updatedAt: "desc" }, take: DIGEST_MAX_ITEMS });
