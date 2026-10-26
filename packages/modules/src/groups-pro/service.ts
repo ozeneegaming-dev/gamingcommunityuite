@@ -241,7 +241,7 @@ export class GcsGroupsProService {
     const rows = await Promise.all(
       visible.map(async (g) => {
         const groupMatch = q !== "" && g.name.toLowerCase().includes(q);
-        const where: Prisma.UserWhereInput = q && !groupMatch ? { AND: [memberWhere(g), { name: ci({ contains: q }) }] } : memberWhere(g);
+        const where: Prisma.UserWhereInput = q && !groupMatch ? { AND: [memberWhere(g), { name: ci({ contains: q }) }, { isBot: false }] } : { AND: [memberWhere(g), { isBot: false }] };
         const [matched, list] = await Promise.all([
           this.deps.db.user.count({ where }),
           this.deps.db.user.findMany({
@@ -284,7 +284,7 @@ export class GcsGroupsProService {
       }),
     );
     const found = rows.filter((r) => r !== null);
-    const members = await this.deps.db.user.count({ where: { primaryGroup: { key: { notIn: ["guest"] } } } });
+    const members = await this.deps.db.user.count({ where: { primaryGroup: { key: { notIn: ["guest"] } }, isBot: false } });
     return {
       categories: categories
         .map((c) => ({

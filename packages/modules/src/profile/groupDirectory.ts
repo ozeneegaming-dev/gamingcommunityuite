@@ -8,7 +8,7 @@ const COUNTS_TTL_SEC = 60;
 const GROUPS_KEY = "groups:directory";
 const GROUPS_TTL_SEC = 600;
 /** Grupurile fără pagină de membri (și fără link pe pastilă), orice ar fi în setări. */
-const NEVER_PUBLIC = new Set(["guest"]);
+const NEVER_PUBLIC = new Set(["guest", "bot"]);
 
 /** Un grup așa cum îl arată pastilele: id, nume (titlul grupului, dacă are), culoare, iconiță, setările de afișare. */
 export type GcsGroupRef = {
@@ -99,11 +99,12 @@ export class GcsGroupDirectory {
         SELECT u."primaryGroupId" AS gid, false AS secondary,
                (u."lastActiveAt" >= ${since}::timestamp AND COALESCE((u.privacy->>'showOnline')::boolean, true)) AS online
         FROM users u
+        WHERE NOT u."isBot"
         UNION ALL
         SELECT ug."groupId", true,
                (u."lastActiveAt" >= ${since}::timestamp AND COALESCE((u.privacy->>'showOnline')::boolean, true))
         FROM user_groups ug JOIN users u ON u.id = ug."userId"
-        WHERE ug."groupId" <> u."primaryGroupId"
+        WHERE ug."groupId" <> u."primaryGroupId" AND NOT u."isBot"
       )
       SELECT gid, count(*)::int AS total, count(*) FILTER (WHERE secondary)::int AS secondary, count(*) FILTER (WHERE online)::int AS online,
              count(*) FILTER (WHERE NOT secondary)::int AS ptotal, count(*) FILTER (WHERE online AND NOT secondary)::int AS ponline

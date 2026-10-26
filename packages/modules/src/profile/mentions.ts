@@ -61,7 +61,7 @@ export class GcsMentionQueries {
     if (q.length < 2 || q.length > 40) return [];
     const ids = await this.deps.db.$queryRaw<{ id: string }[]>(sql`
       SELECT id FROM users
-      WHERE "nameNormalized" COLLATE "C" LIKE ${likePrefix(q)}
+      WHERE NOT "isBot" AND "nameNormalized" COLLATE "C" LIKE ${likePrefix(q)}
       ORDER BY "nameNormalized" COLLATE "C"
       LIMIT ${MENTION_USER_LIMIT}`);
     if (ids.length === 0) return [];
@@ -109,10 +109,10 @@ export class GcsMentionQueries {
       SELECT count(*)::int AS total,
              count(*) FILTER (WHERE u."lastActiveAt" >= ${since.toISOString()}::timestamp AND COALESCE((u.privacy->>'showOnline')::boolean, true))::int AS online
       FROM users u
-      WHERE u."primaryGroupId" = ${groupId} OR EXISTS (SELECT 1 FROM user_groups ug WHERE ug."userId" = u.id AND ug."groupId" = ${groupId})`);
+      WHERE NOT u."isBot" AND (u."primaryGroupId" = ${groupId} OR EXISTS (SELECT 1 FROM user_groups ug WHERE ug."userId" = u.id AND ug."groupId" = ${groupId}))`);
     const top = await db.$queryRaw<{ id: string }[]>(sql`
       SELECT u.id FROM users u
-      WHERE u."primaryGroupId" = ${groupId} OR EXISTS (SELECT 1 FROM user_groups ug WHERE ug."userId" = u.id AND ug."groupId" = ${groupId})
+      WHERE NOT u."isBot" AND (u."primaryGroupId" = ${groupId} OR EXISTS (SELECT 1 FROM user_groups ug WHERE ug."userId" = u.id AND ug."groupId" = ${groupId}))
       ORDER BY (u."lastActiveAt" >= ${since.toISOString()}::timestamp AND COALESCE((u.privacy->>'showOnline')::boolean, true)) DESC NULLS LAST,
                u."lastActiveAt" DESC NULLS LAST, u.id
       LIMIT ${GROUP_CARD_MEMBERS}`);

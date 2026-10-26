@@ -42,6 +42,7 @@ export class GcsActorResolver {
                 email: true,
                 primaryGroupId: true,
                 lastActiveAt: true,
+                isBot: true,
                 groups: { select: { groupId: true } },
               },
             },
@@ -57,6 +58,11 @@ export class GcsActorResolver {
     }
 
     const { user } = session;
+    // Contul-bot nu are sesiuni: una apărută totuși (ex. scrisă direct în bază) e ștearsă, iar cererea e a unui vizitator.
+    if (user.isBot) {
+      await db.session.deleteMany({ where: { userId: user.id } });
+      return this.guest(req.ip, ipBanned, now);
+    }
     const accountBanned = (await findActiveBan(db, { userId: user.id, email: user.email }, now)) !== null;
     if (accountBanned) {
       await db.session.deleteMany({ where: { userId: user.id } });
@@ -87,9 +93,9 @@ export class GcsActorResolver {
     const { db } = this.deps;
     const user = await db.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, primaryGroupId: true, groups: { select: { groupId: true } } },
+      select: { id: true, email: true, primaryGroupId: true, isBot: true, groups: { select: { groupId: true } } },
     });
-    if (!user) return this.guestActor(ip, false);
+    if (!user || user.isBot) return this.guestActor(ip, false);
     const banned =
       (await findActiveBan(db, { userId: user.id, email: user.email }, now)) !== null || (await findActiveBan(db, { ip }, now)) !== null;
     if (banned) return this.guestActor(ip, true);

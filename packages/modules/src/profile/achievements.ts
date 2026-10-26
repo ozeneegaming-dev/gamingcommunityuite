@@ -3,6 +3,7 @@ import {
   GcsConflict,
   GcsNotFound,
   GcsValidationError,
+  isBotUser,
   writeAudit,
   type GcsAcpRoleService,
   type GcsActor,
@@ -140,6 +141,7 @@ export class GcsAchievementService {
   /** Punctele unei acțiuni (`EACH_*`), o singură dată pe `ref` (ex. `post:120`). Întoarce punctele acordate. */
   async awardEach(userId: string, trigger: EachTrigger, ref: string): Promise<number> {
     const { db, bus } = this.deps;
+    if (await isBotUser(db, userId)) return 0;
     const rules = await db.achievementRule.findMany({ where: { trigger, enabled: true, points: { not: 0 } } });
     if (rules.length === 0) return 0;
     const total = await db.$transaction(async (tx) => {
@@ -168,6 +170,8 @@ export class GcsAchievementService {
    */
   async evaluate(userId: string, now = new Date()): Promise<void> {
     const { db, bus } = this.deps;
+    // Contul-bot nu primește insigne, puncte sau ranguri.
+    if (await isBotUser(db, userId)) return;
     const rules = await db.achievementRule.findMany({
       where: { enabled: true, trigger: { in: THRESHOLD_TRIGGERS } },
       include: { badge: true },

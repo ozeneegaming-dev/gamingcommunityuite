@@ -17,6 +17,7 @@ export * from "./auth/rateLimit";
 export * from "./auth/registration";
 export * from "./auth/steam";
 export * from "./auth/usernames";
+export * from "./bot/account";
 export * from "./cache";
 export * from "./content/embeds";
 export * from "./content/files/attachments";

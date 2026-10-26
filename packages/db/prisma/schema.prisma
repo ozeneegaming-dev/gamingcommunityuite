@@ -171,6 +171,9 @@ model User {
   lastIp                   String?
   /// Pagina Staff v2: descrierea și responsabilitățile membrului de staff.
   staffProfile             StaffProfile?
+  /// Botul comunității: cont fără autentificare (fără parolă, fără email real), exclus din liste, clasamente și
+  /// contoare, protejat la ștergere și unire. Publică prin `GcsCommunityBot`.
+  isBot                    Boolean       @default(false)
 
   @@index([primaryGroupId])
   @@index([createdAt])
@@ -3520,4 +3523,50 @@ model GcsRealtimeEvent {
 
   @@index([createdAt])
   @@map("gcs_realtime_events")
+}
+
+/// Botul comunității: ce a publicat (deduplicarea importurilor și rândul de sursă afișat sub postare).
+model BotPost {
+  id                 Int      @id @default(autoincrement())
+  /// Funcția care a folosit botul (`welcome_pm`, `moderation_notes`, `scheduled`, `plugin:gcs.news_bot`…).
+  feature            String
+  /// Cheia de deduplicare (ex. `gcs.news_bot:<flux>:<guid>`): același import nu se publică de două ori.
+  dedupeKey          String?  @unique
+  topicId            Int?
+  postId             Int?
+  conversationId     Int?
+  /// Eticheta de deasupra postării (ex. „UPDATE CS2”).
+  label              String?
+  sourceName         String?
+  sourceUrl          String?
+  /// Limba din care a fost tradus automat textul (`en`), sau `null`.
+  translatedFrom     String?
+  /// Intervalul importului, afișat în rândul de sursă („import automat la fiecare N minute”).
+  importEveryMinutes Int?
+  createdAt          DateTime @default(now())
+
+  @@index([topicId])
+  @@index([postId])
+  @@map("bot_posts")
+}
+
+/// Botul comunității: o postare scrisă de un admin și publicată de bot la data aleasă.
+model BotScheduledPost {
+  id          Int      @id @default(autoincrement())
+  forumId     Int
+  title       String
+  contentJson Json
+  prefixId    Int?
+  lock        Boolean  @default(false)
+  pin         Boolean  @default(false)
+  publishAt   DateTime
+  /// `pending` → `posted` (cu `topicId`) sau `failed` (cu `error`).
+  status      String   @default("pending")
+  topicId     Int?
+  error       String?
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  @@index([status, publishAt])
+  @@map("bot_scheduled_posts")
 }

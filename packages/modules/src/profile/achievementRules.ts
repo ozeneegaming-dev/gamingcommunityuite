@@ -153,8 +153,9 @@ export class GcsAchievementRules {
   }
 
   private async groupsOf(userId: string): Promise<number[] | null> {
-    const u = await this.deps.db.user.findUnique({ where: { id: userId }, select: { primaryGroupId: true, groups: { select: { groupId: true } } } });
-    return u ? [u.primaryGroupId, ...u.groups.map((g) => g.groupId)] : null;
+    const u = await this.deps.db.user.findUnique({ where: { id: userId }, select: { primaryGroupId: true, isBot: true, groups: { select: { groupId: true } } } });
+    // Contul-bot e tratat ca un user inexistent: nicio realizare.
+    return u && !u.isBot ? [u.primaryGroupId, ...u.groups.map((g) => g.groupId)] : null;
   }
 
   /** Ascultătorii: fiecare sursă a fiecărui eveniment din registru, plus evenimentul generic `achievements.occurrence`. */
@@ -308,7 +309,7 @@ export class GcsAchievementRules {
 
   /** Pornește recalcularea în worker (sau pe loc, fără coadă). */
   async requestRecalc(): Promise<GcsRecalcStatus> {
-    const status: GcsRecalcStatus = { state: "queued", done: 0, total: await this.deps.db.user.count(), awarded: 0, startedAt: new Date().toISOString(), finishedAt: null };
+    const status: GcsRecalcStatus = { state: "queued", done: 0, total: await this.deps.db.user.count({ where: { isBot: false } }), awarded: 0, startedAt: new Date().toISOString(), finishedAt: null };
     await this.writeStatus(status);
     if (this.deps.jobs) await this.deps.jobs.enqueue(RECALC_JOB, {}, { jobId: `recalc-${Date.now()}` });
     else await this.recalculate();
@@ -330,11 +331,11 @@ export class GcsAchievementRules {
       for (const r of await this.rulesFor(def.key, def)) if (def.kind === "value" || (r.cond.mode === "nth" && r.cond.windowDays === null)) rules.push(r);
     }
     const excluded = await this.excludedGroups();
-    const status: GcsRecalcStatus = { state: "running", done: 0, total: await db.user.count(), awarded: 0, startedAt: new Date().toISOString(), finishedAt: null };
+    const status: GcsRecalcStatus = { state: "running", done: 0, total: await db.user.count({ where: { isBot: false } }), awarded: 0, startedAt: new Date().toISOString(), finishedAt: null };
     await this.writeStatus(status);
     let cursor: string | undefined;
     for (;;) {
-      const users = await db.user.findMany({ take: BATCH, ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}), orderBy: { id: "asc" }, select: { id: true, primaryGroupId: true, groups: { select: { groupId: true } } } });
+      const users = await db.user.findMany({ where: { isBot: false }, take: BATCH, ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}), orderBy: { id: "asc" }, select: { id: true, primaryGroupId: true, groups: { select: { groupId: true } } } });
       if (users.length === 0) break;
       for (const u of users) {
         const groups = [u.primaryGroupId, ...u.groups.map((g) => g.groupId)];
@@ -381,7 +382,7 @@ export class GcsAchievementRules {
       const rules = await db.achievementRule.findMany({ where: { trigger: "EVENT", event: "core.member_days", enabled: true } });
       for (const rule of rules) {
         const n = normalizeConditions(rule.conditions, "value").n;
-        const users = await db.user.findMany({ where: { createdAt: { lte: new Date(now.getTime() - n * 86_400_000) }, achievementLog: { none: { uniqueKey: `v2:${rule.id}` } } }, select: { id: true }, take: 5000 });
+        const users = await db.user.findMany({ where: { isBot: false, createdAt: { lte: new Date(now.getTime() - n * 86_400_000) }, achievementLog: { none: { uniqueKey: `v2:${rule.id}` } } }, select: { id: true }, take: 5000 });
         for (const u of users) fired += await this.handle("core.member_days", { userId: u.id, ref: "value" }, now);
       }
     }

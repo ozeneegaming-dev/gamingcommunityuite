@@ -1,5 +1,6 @@
 import type { Prisma, PrismaClient } from "@gcs/db";
 import { addSeedMarks, seedMarksOf } from "./seedMarks";
+import { BOT_GROUP_KEY, ensureCommunityBot } from "../bot/account";
 import type { GcsNameStyle } from "../groups/nameStyles";
 import { GCS_WIDGET_PAGES, type GcsModuleRegistry, type GcsWidgetPage } from "../modules/registry";
 import { GcsNavService, NAV_MARKS } from "../nav/service";
@@ -50,6 +51,8 @@ export const DEFAULT_GROUPS: DefaultGroup[] = [
     color: "#C7ADFF",
     nameStyle: { gradient: ["#B794FF", "#FF7AC6", "#6FB6FF"], animated: true, bold: true },
   },
+  // Botul comunității: grupul sistem al contului-bot (pastila „BOT”); culoarea se schimbă din ACP.
+  { key: BOT_GROUP_KEY, name: "Bot", icon: "fa-solid fa-robot", isProtected: true, color: "#4F86C6", nameStyle: { color: "#9AD0FF", bold: true } },
 ];
 
 const WARNING_ACTIONS = [
@@ -89,6 +92,7 @@ export async function seedDefaults(db: PrismaClient, registry: GcsModuleRegistry
       });
       groupIds.set(g.key, row.id);
     }
+    await ensureCommunityBot(tx, groupIds.get(BOT_GROUP_KEY)!);
 
     const settings: Prisma.GroupSettingCreateManyInput[] = [];
     for (const def of registry.permissionDefs()) {

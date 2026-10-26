@@ -31,7 +31,7 @@ export function registerNavHooks(): void {
     const since = new Date(Date.now() - DAY_MS);
     if (key === "online") return (await s.presence.online()).users.length;
     if (key === "topics_today") return s.db.topic.count({ where: { createdAt: { gte: since }, visibility: "VISIBLE" } });
-    if (key === "members_today") return s.db.user.count({ where: { createdAt: { gte: since } } });
+    if (key === "members_today") return s.db.user.count({ where: { createdAt: { gte: since }, isBot: false } });
     return null;
   });
 }

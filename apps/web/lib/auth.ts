@@ -1,5 +1,5 @@
 import "server-only";
-import { GcsValidationError, hashPassword, isLegacyPasswordHash, prepareNewUser, upgradeLegacyPassword, verifyPassword } from "@gcs/core";
+import { GcsValidationError, hashPassword, isBotUser, isLegacyPasswordHash, prepareNewUser, upgradeLegacyPassword, verifyPassword } from "@gcs/core";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { APIError } from "better-auth/api";
@@ -95,6 +95,10 @@ function createAuth(config: GcsAuthConfig) {
       // automată. O eroare nu oprește autentificarea.
       session: {
         create: {
+          // Contul-bot nu se autentifică pe nicio cale (parolă, Discord, Steam): fără sesiune.
+          before: async (session) => {
+            if (await isBotUser(services().db, session.userId)) throw new APIError("FORBIDDEN", { code: "BOT_ACCOUNT", message: "bot_account" });
+          },
           after: async (session, ctx) => {
             const headers = ctx?.headers ?? ctx?.request?.headers ?? null;
             await services()

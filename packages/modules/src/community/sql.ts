@@ -32,10 +32,11 @@ export function profileVisibleSql(u: Prisma.Sql, audience: GcsProfileAudience, v
 
 /**
  * Condiția SQL „userul `u` nu e banat”: nici grupul „Banat” (principal sau secundar), nici un ban de cont activ
- * (de cont sau de email legat de cont, neridicat și neexpirat).
+ * (de cont sau de email legat de cont, neridicat și neexpirat). Exclude și contul-bot (clasamente, membri noi).
  */
 export function notBannedSql(u: Prisma.Sql): Prisma.Sql {
-  return sql`NOT EXISTS (SELECT 1 FROM groups bg WHERE bg.id = ${u}."primaryGroupId" AND bg.key = 'banned')
+  return sql`NOT ${u}."isBot"
+    AND NOT EXISTS (SELECT 1 FROM groups bg WHERE bg.id = ${u}."primaryGroupId" AND bg.key = 'banned')
     AND NOT EXISTS (SELECT 1 FROM user_groups bug JOIN groups bg2 ON bg2.id = bug."groupId" WHERE bug."userId" = ${u}.id AND bg2.key = 'banned')
     AND NOT EXISTS (SELECT 1 FROM bans bb WHERE bb."userId" = ${u}.id AND bb."liftedAt" IS NULL AND bb.type IN ('ACCOUNT', 'EMAIL')
       AND (bb."expiresAt" IS NULL OR bb."expiresAt" > (now() AT TIME ZONE 'UTC')))`;

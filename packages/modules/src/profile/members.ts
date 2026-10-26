@@ -80,6 +80,7 @@ export class GcsMemberList {
     const group = query.groupId && this.deps.groups ? await this.deps.groups.group(query.groupId) : null;
     const primaryOnly = group?.primaryOnly === true;
     const where: Prisma.UserWhereInput = {
+      isBot: false,
       ...(q ? { nameNormalized: { contains: q } } : {}),
       ...(query.groupId ? (primaryOnly ? { primaryGroupId: query.groupId } : { OR: [{ primaryGroupId: query.groupId }, { groups: { some: { groupId: query.groupId } } }] }) : {}),
       ...(query.online ? { lastActiveAt: { gte: since }, ...(hidden.length ? { id: { notIn: hidden } } : {}) } : {}),

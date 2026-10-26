@@ -51,8 +51,8 @@ export class GcsProfileExtras {
       this.deps.sponsor(userId),
     ]);
     const [above, total] = await Promise.all([
-      db.user.count({ where: { reputation: { gt: user.reputation }, primaryGroup: { key: { not: "banned" } } } }),
-      db.user.count({ where: { primaryGroup: { key: { not: "banned" } } } }),
+      db.user.count({ where: { reputation: { gt: user.reputation }, primaryGroup: { key: { not: "banned" } }, isBot: false } }),
+      db.user.count({ where: { primaryGroup: { key: { not: "banned" } }, isBot: false } }),
     ]);
     const latest = [...showcase.earned].sort((a, b) => b.awardedAt.localeCompare(a.awardedAt)).slice(0, 5);
     return {

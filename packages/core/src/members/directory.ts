@@ -175,7 +175,8 @@ export class GcsMemberDirectory {
     page: number;
     pages: number;
   }> {
-    const where = await this.where(q, now);
+    // Contul-bot are pagina lui (Sistem › Botul comunității), nu apare printre membri.
+    const where: Prisma.UserWhereInput = { AND: [await this.where(q, now), { isBot: false }] };
     const perPage = Math.min(MAX_PAGE_SIZE, Math.max(1, Math.floor(q.perPage ?? PAGE_SIZE)));
     const page = Math.max(1, Math.floor(q.page) || 1);
     const [total, rows] = await Promise.all([

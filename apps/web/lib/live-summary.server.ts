@@ -22,7 +22,7 @@ export async function liveSummary(actor: GcsActor, servers?: GcsServerView[]): P
   const online = list.filter((s) => s.status?.online);
   const [matches, total, present, chatOnline] = await Promise.all([
     list.length > 0 && (await bridge.queries.canViewStats(actor).catch(() => false)) ? bridge.queries.matchCounts(actor, {}).then((c) => c.live).catch(() => 0) : 0,
-    db.user.count(),
+    db.user.count({ where: { isBot: false } }),
     presence.online().catch(() => ({ users: [] as string[], guests: 0, record: null })),
     usable("chat") ? chatPresence() : Promise.resolve(null),
   ]);

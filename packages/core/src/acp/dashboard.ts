@@ -140,7 +140,7 @@ export class GcsAcpDashboardService {
     const keys: string[] = [];
     for (let i = days - 1; i >= 0; i--) keys.push(day.format(new Date(now.getTime() - i * 86_400_000)));
     const since = new Date(now.getTime() - (days + 1) * 86_400_000);
-    const users = await this.deps.db.user.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } });
+    const users = await this.deps.db.user.findMany({ where: { createdAt: { gte: since }, isBot: false }, select: { createdAt: true } });
     const counts = new Map(keys.map((k) => [k, 0]));
     for (const u of users) {
       const key = day.format(u.createdAt);
@@ -153,8 +153,8 @@ export class GcsAcpDashboardService {
     const startOfDay = new Date(now);
     startOfDay.setHours(0, 0, 0, 0);
     const [members, today, online] = await Promise.all([
-      this.deps.db.user.count(),
-      this.deps.db.user.count({ where: { createdAt: { gte: startOfDay } } }),
+      this.deps.db.user.count({ where: { isBot: false } }),
+      this.deps.db.user.count({ where: { createdAt: { gte: startOfDay }, isBot: false } }),
       this.onlineCount(now),
     ]);
     return { members, today, online };
@@ -182,7 +182,7 @@ export class GcsAcpDashboardService {
     const { db } = this.deps;
     const day = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" });
     const [users, posts, topics, reports, vips] = await Promise.all([
-      db.user.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } }),
+      db.user.findMany({ where: { createdAt: { gte: since }, isBot: false }, select: { createdAt: true } }),
       db.post.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true, visibility: true, authorId: true } }),
       db.topic.findMany({ where: { createdAt: { gte: since }, visibility: "VISIBLE" }, select: { createdAt: true } }),
       db.report.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } }),
@@ -207,13 +207,13 @@ export class GcsAcpDashboardService {
   private async portableTotals(since30: Date): Promise<GcsAcpOverview["totals"][]> {
     const { db } = this.deps;
     const [members, posts, topics, vips, openReports, reports, active30] = await Promise.all([
-      db.user.count(),
+      db.user.count({ where: { isBot: false } }),
       db.post.count({ where: { visibility: "VISIBLE" } }),
       db.topic.count({ where: { visibility: "VISIBLE" } }),
       db.vipSubscription.count({ where: { status: "ACTIVE" } }),
       db.report.count({ where: { status: "OPEN" } }),
       db.report.count(),
-      db.user.count({ where: { lastActiveAt: { gte: since30 } } }),
+      db.user.count({ where: { lastActiveAt: { gte: since30 }, isBot: false } }),
     ]);
     return [{ members, posts, topics, vips, openReports, reports, active30 }];
   }
@@ -255,6 +255,7 @@ export class GcsAcpDashboardService {
                (SELECT count(*) FROM reports)::int AS reports,
                (SELECT count(*) FROM users WHERE "lastActiveAt" >= ${since30})::int AS active30`),
       db.user.findMany({
+        where: { isBot: false },
         orderBy: { createdAt: "desc" },
         take: 6,
         select: { id: true, name: true, image: true, createdAt: true, primaryGroup: { select: { key: true, name: true } } },

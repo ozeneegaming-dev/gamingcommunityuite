@@ -877,7 +877,7 @@ export class GcsForumQueries {
     if (cached) return cached;
     let counts: { id: string; posts: number }[];
     if (period === "all") {
-      const rows = await db.user.findMany({ where: { postsCount: { gt: 0 } }, orderBy: [{ postsCount: "desc" }, { createdAt: "asc" }], take: limit, select: { id: true, postsCount: true } });
+      const rows = await db.user.findMany({ where: { postsCount: { gt: 0 }, isBot: false }, orderBy: [{ postsCount: "desc" }, { createdAt: "asc" }], take: limit, select: { id: true, postsCount: true } });
       counts = rows.map((r) => ({ id: r.id, posts: r.postsCount }));
     } else {
       const since = new Date(Date.now() - (period === "week" ? 7 : 30) * 86_400_000);
@@ -905,7 +905,7 @@ export class GcsForumQueries {
     const key = `forums:newMembers:${limit}`;
     const cached = await cache.get<{ user: GcsUserRef; joinedAt: string }[]>(key);
     if (cached) return cached;
-    const rows = await db.user.findMany({ orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: limit, select: { ...userRefSelect, createdAt: true } });
+    const rows = await db.user.findMany({ where: { isBot: false }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: limit, select: { ...userRefSelect, createdAt: true } });
     const list = rows.map((r) => ({ user: toRef(r), joinedAt: r.createdAt.toISOString() }));
     await cache.set(key, list, { ttlSec: STATS_TTL, tags: ["forums-tree"] });
     return list;
@@ -918,8 +918,8 @@ export class GcsForumQueries {
     if (cached) return cached;
     const tree = await this.tree();
     const [members, newest] = await Promise.all([
-      db.user.count(),
-      db.user.findFirst({ orderBy: [{ createdAt: "desc" }, { id: "desc" }], select: { ...userRefSelect, createdAt: true } }),
+      db.user.count({ where: { isBot: false } }),
+      db.user.findFirst({ where: { isBot: false }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], select: { ...userRefSelect, createdAt: true } }),
     ]);
     const stats = {
       topics: tree.data.forums.reduce((n, f) => n + f.topicsCount, 0),

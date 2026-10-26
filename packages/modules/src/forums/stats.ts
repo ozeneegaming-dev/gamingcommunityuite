@@ -8,7 +8,7 @@ export async function forumStatTiles({ db }: GcsStatsContext): Promise<GcsStatTi
   const [topics, posts, members] = await Promise.all([
     db.topic.count({ where: { visibility: "VISIBLE" } }),
     db.post.count({ where: { visibility: "VISIBLE" } }),
-    db.user.count(),
+    db.user.count({ where: { isBot: false } }),
   ]);
   return [
     { key: "forums.topics", labelKey: "stats.tiles.topics", value: topics, icon: "fa-solid fa-layer-group", color: "#F97316" },
@@ -28,7 +28,7 @@ export type GcsWhoWasOnline = { members: GcsUserRef[]; hidden: number; total: nu
  */
 export async function whoWasOnline(db: PrismaClient, now = Date.now()): Promise<GcsWhoWasOnline> {
   const rows = await db.user.findMany({
-    where: { lastActiveAt: { gte: new Date(now - DAY_MS) } },
+    where: { lastActiveAt: { gte: new Date(now - DAY_MS) }, isBot: false },
     orderBy: [{ lastActiveAt: "desc" }, { id: "asc" }],
     select: { ...userRefSelect, privacy: true },
     take: 2000,

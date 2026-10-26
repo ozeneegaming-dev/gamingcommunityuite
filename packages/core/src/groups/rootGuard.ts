@@ -18,7 +18,8 @@ export function rootUsersWhere(rootId: number) {
  * Protecția Root Admin (spec §6.4, Review Focus #4):
  * - un actor care nu e Root Admin nu poate edita, retrograda, bana sau avertiza un Root Admin (`GcsForbidden`);
  * - o acțiune care i-ar lua ultimului Root Admin rolul (`removesRoot`) e refuzată pentru oricine,
- *   inclusiv pentru el însuși (`GcsConflict` cu `reason: "last_root"`).
+ *   inclusiv pentru el însuși (`GcsConflict` cu `reason: "last_root"`);
+ * - contul-bot nu se gestionează ca un membru (ștergere, unire, ban, avertisment, grupuri): `reason: "bot_protected"`.
  */
 export async function assertCanManageUser(
   db: Db,
@@ -29,9 +30,10 @@ export async function assertCanManageUser(
   const rootId = await rootGroupId(db);
   const target = await db.user.findUnique({
     where: { id: targetUserId },
-    select: { primaryGroupId: true, groups: { where: { groupId: rootId }, select: { groupId: true } } },
+    select: { primaryGroupId: true, isBot: true, groups: { where: { groupId: rootId }, select: { groupId: true } } },
   });
   if (!target) throw new GcsNotFound({ entity: "user" });
+  if (target.isBot) throw new GcsForbidden({ reason: "bot_protected" });
 
   const targetIsRoot = target.primaryGroupId === rootId || target.groups.length > 0;
   if (!targetIsRoot) return;

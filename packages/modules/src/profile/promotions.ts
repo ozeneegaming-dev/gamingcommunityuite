@@ -1,4 +1,4 @@
-import { GcsNotFound, GcsValidationError, writeAudit, type GcsAcpRoleService, type GcsActor, type GcsEventBus } from "@gcs/core";
+import { GcsNotFound, GcsValidationError, isBotUser, writeAudit, type GcsAcpRoleService, type GcsActor, type GcsEventBus } from "@gcs/core";
 import { type GroupPromotion, type PrismaClient, jsonInts } from "@gcs/db";
 import type { GcsMembership } from "./membership";
 
@@ -34,6 +34,7 @@ export class GcsPromotionService {
 
   /** Aplică promovările potrivite unui user (cel mult `MAX_STEPS` în lanț). Întoarce câte s-au aplicat. */
   async evaluateUser(userId: string, now = new Date()): Promise<number> {
+    if (await isBotUser(this.deps.db, userId)) return 0;
     let applied = 0;
     for (let step = 0; step < MAX_STEPS; step++) {
       if (!(await this.applyFirst(userId, now))) break;
