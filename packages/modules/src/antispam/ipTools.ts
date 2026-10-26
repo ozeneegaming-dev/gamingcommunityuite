@@ -17,7 +17,7 @@ export type GcsIpLookup = {
   accounts: GcsIpAccount[];
   posts: { id: number; topicId: number; title: string; authorName: string | null; createdAt: Date }[];
   counts: { posts: number; pms: number; statuses: number; sessions: number };
-  ban: { id: number; value: string; reason: string } | null;
+  ban: { id: string; value: string; reason: string } | null;
 };
 export type GcsMemberIp = { ip: string; sources: GcsIpSource[]; lastSeen: Date | null; others: number };
 export type GcsSharedIp = { ip: string; lastSeen: Date | null; users: { id: string; name: string; isSpammer: boolean; banned: boolean }[] };
