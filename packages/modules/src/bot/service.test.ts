@@ -112,8 +112,10 @@ describe("GcsCommunityBot.post (bot-stiri §1–2)", () => {
 });
 
 describe("bun venitul și postările programate", () => {
-  test("bun venitul: mesaj privat de la bot cu numele membrului și al site-ului, o singură dată; oprit → nimic", async () => {
+  test("bun venitul: oprit implicit; pornit → mesaj privat de la bot cu numele membrului și al site-ului, o singură dată", async () => {
     const user = await w.createUser("Ionut", "new_member");
+    expect(await bot.welcome(user.id)).toBe(false);
+    await bot.toggle(w.root, "welcome_pm", true);
     await w.settings.set(BOT_WELCOME_SETTING, "Salut, {name}! Bine ai venit pe {site}.", w.root);
     expect(await bot.welcome(user.id)).toBe(true);
     expect(await bot.welcome(user.id)).toBe(false);

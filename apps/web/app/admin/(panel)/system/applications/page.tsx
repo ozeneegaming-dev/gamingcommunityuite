@@ -1,4 +1,4 @@
-import { APPS_ACP_SECTION, appAccessKey, pluginRegistryKey, pluginSchema, trustedPluginKeys, type GcsAppInfo, type GcsModule, type GcsPluginRow } from "@gcs/core";
+import { APPS_ACP_SECTION, appAccessKey, BOT_GROUP_KEY, pluginRegistryKey, pluginSchema, trustedPluginKeys, type GcsAppInfo, type GcsModule, type GcsPluginRow } from "@gcs/core";
 import { GcsPluginTexts, pluginIcon } from "@gcs/modules";
 import { GcsButton, GcsCard } from "@gcs/ui";
 import { resolveIcon } from "@gcs/ui/icon-registry";
@@ -63,7 +63,8 @@ export default async function AcpApplicationsPage() {
   const label = (key: string) => (tAll.has(key) ? tAll(key) : key);
   const trusted = trustedPluginKeys();
   // Banat nu apare în dialogul de acces: bannul anulează oricum tot.
-  const groups: GcsAppGroup[] = groupRows.filter((g) => g.key !== "banned").map((g) => ({ id: g.id, name: g.name, root: g.key === "root_admin" }));
+  // Fără „Banat” și fără grupul botului (contul-bot nu folosește aplicațiile).
+  const groups: GcsAppGroup[] = groupRows.filter((g) => g.key !== "banned" && g.key !== BOT_GROUP_KEY).map((g) => ({ id: g.id, name: g.name, root: g.key === "root_admin" }));
 
   /** Accesul unei permisiuni de grup (dialogul 🔒), dacă e editabilă de aici. */
   const access = async (permission: string | undefined, title: string): Promise<GcsAppAccess | null> => {

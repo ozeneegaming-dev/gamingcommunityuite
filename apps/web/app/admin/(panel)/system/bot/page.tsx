@@ -1,5 +1,5 @@
 import { BOT_GROUP_KEY } from "@gcs/core";
-import { BOT_ACP_SECTION, BOT_CORE_FEATURES, BOT_WELCOME_SETTING, BOT_WELCOME_TITLE_SETTING } from "@gcs/modules";
+import { BOT_ACP_SECTION, BOT_CORE_FEATURES, BOT_WELCOME_SETTING, BOT_WELCOME_TITLE_SETTING, botFeatureOn } from "@gcs/modules";
 import { GcsAvatar, GcsCard } from "@gcs/ui";
 import type { Metadata } from "next";
 import { getFormatter, getTranslations } from "next-intl/server";
@@ -85,7 +85,7 @@ export default async function AcpBotPage() {
           <h2 style={{ margin: 0, fontSize: 16 }}>{t("features.title")}</h2>
           <p style={muted}>{t("features.body")}</p>
           {rows.map((row) => {
-            const on = features[row.key] !== false;
+            const on = botFeatureOn(features, row.key);
             return (
               <div key={row.key} style={{ display: "flex", alignItems: "center", gap: 14, borderTop: "1px solid var(--gcs-border)", paddingTop: 12 }} data-testid={`gcs-bot-feature-${row.key}`}>
                 <div style={{ flex: 1, minWidth: 0 }}>

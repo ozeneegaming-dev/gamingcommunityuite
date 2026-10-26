@@ -20,7 +20,7 @@ import type { GcsTopicService } from "../forums/topics";
 import { convertContent } from "../importer/convert";
 import { emptyContext } from "../importer/convert/context";
 import type { GcsConversationService } from "../messages/conversations";
-import { BOT_ACP_SECTION, BOT_FEATURES_SETTING, BOT_WELCOME_SETTING, BOT_WELCOME_TITLE_SETTING, pluginBotFeature } from "./settings";
+import { BOT_ACP_SECTION, BOT_FEATURES_SETTING, BOT_WELCOME_SETTING, BOT_WELCOME_TITLE_SETTING, botFeatureOn, pluginBotFeature } from "./settings";
 
 export * from "./settings";
 
@@ -108,7 +108,7 @@ export class GcsCommunityBot {
   }
 
   async enabled(feature: string): Promise<boolean> {
-    return (await this.features())[feature] !== false;
+    return botFeatureOn(await this.features(), feature);
   }
 
   async setFeature(feature: string, on: boolean, actor: GcsActor): Promise<void> {

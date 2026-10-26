@@ -20,8 +20,8 @@ async function shot(page: Page, name: string): Promise<void> {
 }
 
 /** Topicurile botului (titlurile), cele mai noi întâi. */
-async function botTopics(): Promise<{ id: number; title: string }[]> {
-  return sql<{ id: number; title: string }>(`SELECT t.id, t.title FROM topics t JOIN users u ON u.id = t."authorId" WHERE u."isBot" = true ORDER BY t.id DESC`);
+async function botTopics(): Promise<{ id: number; title: string; forumId: number }[]> {
+  return sql<{ id: number; title: string; forumId: number }>(`SELECT t.id, t.title, t."forumId" FROM topics t JOIN users u ON u.id = t."authorId" WHERE u."isBot" = true ORDER BY t.id DESC`);
 }
 
 test.beforeAll(() => {
@@ -32,12 +32,33 @@ test.afterAll(async () => {
   await sql(`UPDATE plugins SET enabled = false WHERE key = $1`, [KEY]).catch(() => {});
 });
 
-test("bun venitul: un membru nou primește un mesaj privat de la botul comunității", async ({ page, context }) => {
-  test.setTimeout(120_000);
+/** Comutatorul unei funcții a botului din ACP (pagina deschisă de un admin). */
+async function setBotFeature(page: Page, feature: string, on: boolean): Promise<void> {
+  await page.goto("/admin/system/bot");
+  const row = page.getByTestId(`gcs-bot-feature-${feature}`);
+  if ((await row.locator("[data-state]").getAttribute("data-state")) === (on ? "on" : "off")) return;
+  await row.getByRole("button", { name: on ? "Pornește" : "Oprește" }).click();
+  await expect(row.locator(`[data-state="${on ? "on" : "off"}"]`)).toBeVisible();
+}
+
+test("bun venitul: oprit implicit; pornit din ACP, un membru nou primește un mesaj privat de la botul comunității", async ({ page, context, browser }) => {
+  test.setTimeout(150_000);
   await useFreshIp(context, "100.76.0");
   const id = uid();
+  await enterAcpAsRoot(page, `WelAdm${id}`, `weladm-${id}@example.com`);
+  await page.goto("/admin/system/bot");
+  await expect(page.getByTestId("gcs-bot-feature-welcome_pm").locator('[data-state="off"]')).toBeVisible();
+  await setBotFeature(page, "welcome_pm", true);
   const email = `bunvenit-${id}@example.com`;
-  await member(page, `Nou${id}`, email);
+  const memberContext = await browser.newContext();
+  await useFreshIp(memberContext, "100.76.2");
+  const m = await memberContext.newPage();
+  try {
+    await member(m, `Nou${id}`, email);
+  } finally {
+    // Ceilalți membri ai suitei nu primesc mesajul (numărătorile lor de necitite rămân neatinse).
+    await setBotFeature(page, "welcome_pm", false);
+  }
   // Jobul de bun venit rulează în worker (în Lite, în coada din procesul web).
   await expect
     .poll(
@@ -48,10 +69,11 @@ test("bun venitul: un membru nou primește un mesaj privat de la botul comunită
       { timeout: 90_000 },
     )
     .toBe(1);
-  await page.goto("/messages");
-  await page.getByText(/Bine ai venit pe/).first().click();
-  await expect(page.getByText(`Salut, Nou${id}!`, { exact: false }).first()).toBeVisible();
-  await shot(page, "bot-welcome");
+  await m.goto("/messages");
+  await m.getByText(/Bine ai venit pe/).first().click();
+  await expect(m.getByText(`Salut, Nou${id}!`, { exact: false }).first()).toBeVisible();
+  await shot(m, "bot-welcome");
+  await memberContext.close();
 });
 
 test("ACP › Sistem › Botul comunității, apoi pluginul Bot de știri: RSS tradus + actualizare Steam ca topicuri ale botului", async ({ page, context, request }) => {
@@ -65,7 +87,7 @@ test("ACP › Sistem › Botul comunității, apoi pluginul Bot de știri: RSS t
   // Pagina botului: contul, funcțiile (pornite implicit) și postările programate.
   await page.goto("/admin/system/bot");
   await expect(page.getByTestId("gcs-bot-name")).toBeVisible();
-  await expect(page.getByTestId("gcs-bot-feature-welcome_pm").locator('[data-state="on"]')).toBeVisible();
+  await expect(page.getByTestId("gcs-bot-feature-welcome_pm").locator('[data-state="off"]')).toBeVisible();
   await expect(page.getByTestId("gcs-bot-scheduled")).toBeVisible();
   await shot(page, "bot-acp");
 
@@ -90,7 +112,9 @@ test("ACP › Sistem › Botul comunității, apoi pluginul Bot de știri: RSS t
   await page.goto(`/admin/system/applications/plugins/${KEY}`);
   await page.getByRole("tab", { name: "Fluxuri" }).click();
   await page.getByLabel("Fluxurile").fill(
-    [`Fluxul de test | ${feeds}/moved.xml | ${forum!.id} | 5 | ȘTIRI | traduce`, `Counter-Strike 2 | steam:730 | ${forum!.id} | 5 | UPDATE CS2`].join("\n"),
+    // `?run=`: un flux nou la fiecare rulare (deduplicarea ține de sursă). Știrile Steam au o singură sursă: o reluare a
+    // testului în aceeași bază găsește actualizarea deja publicată.
+    [`Fluxul de test | ${feeds}/moved.xml?run=${id} | ${forum!.id} | 5 | ȘTIRI | traduce`, `Counter-Strike 2 | steam:730 | ${forum!.id} | 5 | UPDATE CS2`].join("\n"),
   );
   await page.getByRole("tabpanel").getByRole("button", { name: "Salvează" }).click();
   await expect(page.getByRole("tabpanel").getByRole("status")).toBeVisible();
@@ -104,10 +128,21 @@ test("ACP › Sistem › Botul comunității, apoi pluginul Bot de știri: RSS t
   await expect(page.locator('[data-gcsp-test="feeds"] [data-gcsp-test="feed-row"]')).toHaveCount(2);
   await page.locator('[data-gcsp-test="run-now"]').click();
   await expect(page.locator('[data-gcsp-test="ran"]')).toBeVisible();
-  await expect.poll(async () => (await botTopics()).length, { timeout: 120_000 }).toBe(2);
+  const isNews = (t: { title: string; forumId: number }) => t.title.includes("Turneul de toamnă") && t.forumId === forum!.id;
+  const isSteam = (t: { title: string }) => t.title === "Counter-Strike 2 Update";
+  await expect
+    .poll(
+      async () => {
+        const all = await botTopics();
+        return all.filter(isNews).length + (all.some(isSteam) ? 1 : 0);
+      },
+      { timeout: 120_000 },
+    )
+    .toBe(2);
   const topics = await botTopics();
-  const news = topics.find((t) => t.title.includes("Turneul de toamnă"))!;
-  const steam = topics.find((t) => t.title === "Counter-Strike 2 Update")!;
+  const total = topics.length;
+  const news = topics.find(isNews)!;
+  const steam = topics.find(isSteam)!;
   // Traducătorul fals al testelor pune limba în față.
   expect(news.title).toBe("[ro] Turneul de toamnă începe sâmbătă");
 
@@ -134,7 +169,7 @@ test("ACP › Sistem › Botul comunității, apoi pluginul Bot de știri: RSS t
   await page.locator('[data-gcsp-test="run-now"]').click();
   await expect(page.locator('[data-gcsp-test="ran"]')).toBeVisible();
   await page.waitForTimeout(8_000);
-  expect(await botTopics()).toHaveLength(2);
+  expect(await botTopics()).toHaveLength(total);
 
   // Pluginul oprit: topicurile rămân, nimic nou nu se publică.
   await page.goto("/admin/system/applications");
@@ -151,5 +186,5 @@ test("ACP › Sistem › Botul comunității, apoi pluginul Bot de știri: RSS t
   await expect.poll(async () => (await sql<{ enabled: boolean }>(`SELECT enabled FROM plugins WHERE key = $1`, [KEY]))[0]?.enabled).toBe(false);
   await page.goto(`/topic/${news.id}`);
   await expect(page.getByTestId("gcs-post").first().getByTestId("gcs-post-bot-label")).toHaveText("ȘTIRI");
-  expect(await botTopics()).toHaveLength(2);
+  expect(await botTopics()).toHaveLength(total);
 });
