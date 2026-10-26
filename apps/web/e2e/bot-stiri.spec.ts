@@ -55,20 +55,21 @@ test("bun venitul: oprit implicit; pornit din ACP, un membru nou primește un me
   const m = await memberContext.newPage();
   try {
     await member(m, `Nou${id}`, email);
+    // Jobul de bun venit rulează în worker (în Lite, în coada din procesul web, la câteva secunde): funcția rămâne
+    // pornită până ajunge mesajul.
+    await expect
+      .poll(
+        async () =>
+          Number(
+            (await sql<{ n: string }>(`SELECT count(*) AS n FROM conversation_participants cp JOIN users u ON u.id = cp."userId" WHERE u.email = $1`, [email]))[0]?.n ?? 0,
+          ),
+        { timeout: 90_000 },
+      )
+      .toBe(1);
   } finally {
     // Ceilalți membri ai suitei nu primesc mesajul (numărătorile lor de necitite rămân neatinse).
     await setBotFeature(page, "welcome_pm", false);
   }
-  // Jobul de bun venit rulează în worker (în Lite, în coada din procesul web).
-  await expect
-    .poll(
-      async () =>
-        Number(
-          (await sql<{ n: string }>(`SELECT count(*) AS n FROM conversation_participants cp JOIN users u ON u.id = cp."userId" WHERE u.email = $1`, [email]))[0]?.n ?? 0,
-        ),
-      { timeout: 90_000 },
-    )
-    .toBe(1);
   await m.goto("/messages");
   await m.getByText(/Bine ai venit pe/).first().click();
   await expect(m.getByText(`Salut, Nou${id}!`, { exact: false }).first()).toBeVisible();
@@ -110,16 +111,17 @@ test("ACP › Sistem › Botul comunității, apoi pluginul Bot de știri: RSS t
   // Setările: un flux RSS (prin redirecționare, tradus) și știrile Steam, în primul forum; API-ul Steam = serverul de test.
   const forum = (await forumTree(request)).forum;
   await page.goto(`/admin/system/applications/plugins/${KEY}`);
+  // Adresa Steam de test întâi: jobul pluginului poate rula oricând după salvarea fluxurilor (nu spre API-ul real).
+  await page.getByRole("tab", { name: "General" }).click();
+  await page.getByLabel("Adresa API-ului Steam").fill(`${feeds}/steam`);
+  await page.getByRole("tabpanel").getByRole("button", { name: "Salvează" }).click();
+  await expect(page.getByRole("tabpanel").getByRole("status")).toBeVisible();
   await page.getByRole("tab", { name: "Fluxuri" }).click();
   await page.getByLabel("Fluxurile").fill(
     // `?run=`: un flux nou la fiecare rulare (deduplicarea ține de sursă). Știrile Steam au o singură sursă: o reluare a
     // testului în aceeași bază găsește actualizarea deja publicată.
     [`Fluxul de test | ${feeds}/moved.xml?run=${id} | ${forum!.id} | 5 | ȘTIRI | traduce`, `Counter-Strike 2 | steam:730 | ${forum!.id} | 5 | UPDATE CS2`].join("\n"),
   );
-  await page.getByRole("tabpanel").getByRole("button", { name: "Salvează" }).click();
-  await expect(page.getByRole("tabpanel").getByRole("status")).toBeVisible();
-  await page.getByRole("tab", { name: "General" }).click();
-  await page.getByLabel("Adresa API-ului Steam").fill(`${feeds}/steam`);
   await page.getByRole("tabpanel").getByRole("button", { name: "Salvează" }).click();
   await expect(page.getByRole("tabpanel").getByRole("status")).toBeVisible();
 

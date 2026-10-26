@@ -183,7 +183,8 @@ function escapeHtml(text: string): string {
 export function steamMarkupToHtml(contents: string): string {
   const text = contents.replace(/\{STEAM_CLAN_IMAGE\}/g, STEAM_IMAGES);
   if (!/\[(?:list|olist|\*|b|i|u|h[1-6]|url|img|p)\b/i.test(text)) return text;
-  let html = escapeHtml(text);
+  // Anunțurile reale închid elementele de listă cu `[/*]` (`[*]text[/*]`); închiderea e implicită la elementul următor.
+  let html = escapeHtml(text).replace(/\[\/\*\]/g, "");
   html = html.replace(/\[\*\]([\s\S]*?)(?=\[\*\]|\[\/list\]|\[\/olist\]|$)/gi, (_m, item: string) => `<li>${item.trim()}</li>`);
   html = html
     .replace(/\[list\]/gi, "<ul>")

@@ -111,6 +111,14 @@ describe("Steam", () => {
     expect(steamNewsUrl(730)).toBe("https://api.steampowered.com/ISteamNews/GetNewsForApp/v2/?appid=730&count=10&maxlength=0&format=json");
   });
 
+  test("formatul real al notelor de patch: `[*]text[/*]` și antetele `[ SECȚIUNE ]` (fără resturi de marcaj)", () => {
+    const html = steamMarkupToHtml("[ MAP SCRIPTING ]\n[list][*]Added Instance.Precache[/*][*]Added CSPrecache.Release[/*][/list]");
+    expect(html).toContain("<li>Added Instance.Precache</li>");
+    expect(html).toContain("<li>Added CSPrecache.Release</li>");
+    expect(html).toContain("[ MAP SCRIPTING ]");
+    expect(html).not.toContain("[/*]");
+  });
+
   test("HTML-ul din marcaj e escapat (un <script> din text rămâne text)", () => {
     expect(steamMarkupToHtml("[b]<script>x</script>[/b]")).toBe("<p><b>&lt;script&gt;x&lt;/script&gt;</b></p>");
   });
