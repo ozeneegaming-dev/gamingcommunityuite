@@ -5,7 +5,7 @@
       "general": "Général"
     },
     "feeds": "Flux",
-    "feedsHint": "Un flux par ligne : Nom | Source | Forum | Minutes | Étiquette | Options. Source : une adresse RSS / Atom (https://…) ou steam:<id du jeu> (730 = CS2, 10 = CS 1.6). Forum : son nom ou son id. Options : traduce (traduire de l'anglais), complet (seulement si la source autorise la republication), fixat (épingler), închis (verrouiller). Les lignes commençant par # sont ignorées.",
+    "feedsHint": "Un flux par ligne : Nom | Source | Forum | Minutes | Étiquette | Options. Source : une adresse RSS / Atom (https://…) ou steam:ID (730 = CS2, 10 = CS 1.6). Forum : son nom ou son id. Options : traduce (traduire de l'anglais), complet (seulement si la source autorise la republication), fixat (épingler), închis (verrouiller). Les lignes commençant par # sont ignorées.",
     "maxPerRun": "Actualités publiées par exécution, par flux",
     "maxPerRunHint": "Les autres attendent l'exécution suivante.",
     "window": "Heures de publication",
@@ -38,7 +38,7 @@
     "always": "à tout moment",
     "lineError": {
       "columns": "Ligne {line} : des colonnes manquent (au moins Nom | Source | Forum).",
-      "source": "Ligne {line} : la source doit être https://… ou steam:<id du jeu>.",
+      "source": "Ligne {line} : la source doit être https://… ou steam:ID.",
       "forum": "Ligne {line} : le forum manque."
     }
   },

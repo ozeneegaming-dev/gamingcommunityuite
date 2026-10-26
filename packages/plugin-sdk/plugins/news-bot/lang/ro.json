@@ -5,7 +5,7 @@
       "general": "General"
     },
     "feeds": "Fluxurile",
-    "feedsHint": "Un flux pe rând: Nume | Sursă | Forum | Minute | Eticheta | Opțiuni. Sursa: o adresă RSS / Atom (https://…) sau steam:<id joc> (730 = CS2, 10 = CS 1.6). Forumul: numele sau id-ul lui. Opțiuni: traduce (din engleză), complet (doar dacă sursa permite republicarea), fixat, închis. Rândurile care încep cu # sunt ignorate.",
+    "feedsHint": "Un flux pe rând: Nume | Sursă | Forum | Minute | Eticheta | Opțiuni. Sursa: o adresă RSS / Atom (https://…) sau steam:ID (730 = CS2, 10 = CS 1.6). Forumul: numele sau id-ul lui. Opțiuni: traduce (din engleză), complet (doar dacă sursa permite republicarea), fixat, închis. Rândurile care încep cu # sunt ignorate.",
     "maxPerRun": "Știri publicate la o rulare, per flux",
     "maxPerRunHint": "Celelalte așteaptă rularea următoare.",
     "window": "Orele de publicare",
@@ -38,7 +38,7 @@
     "always": "oricând",
     "lineError": {
       "columns": "Rândul {line}: lipsesc coloane (cel puțin Nume | Sursă | Forum).",
-      "source": "Rândul {line}: sursa trebuie să fie https://… sau steam:<id joc>.",
+      "source": "Rândul {line}: sursa trebuie să fie https://… sau steam:ID.",
       "forum": "Rândul {line}: lipsește forumul."
     }
   },

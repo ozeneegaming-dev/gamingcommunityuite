@@ -5,7 +5,7 @@
       "general": "General"
     },
     "feeds": "Feeds",
-    "feedsHint": "One feed per line: Name | Source | Forum | Minutes | Label | Options. Source: an RSS / Atom address (https://…) or steam:<game id> (730 = CS2, 10 = CS 1.6). Forum: its name or id. Options: translate (from English), full (only if the source allows republishing), pin, lock. Lines starting with # are ignored.",
+    "feedsHint": "One feed per line: Name | Source | Forum | Minutes | Label | Options. Source: an RSS / Atom address (https://…) or steam:ID (730 = CS2, 10 = CS 1.6). Forum: its name or id. Options: translate (from English), full (only if the source allows republishing), pin, lock. Lines starting with # are ignored.",
     "maxPerRun": "News posted per run, per feed",
     "maxPerRunHint": "The rest wait for the next run.",
     "window": "Posting hours",
@@ -38,7 +38,7 @@
     "always": "any time",
     "lineError": {
       "columns": "Line {line}: columns are missing (at least Name | Source | Forum).",
-      "source": "Line {line}: the source must be https://… or steam:<game id>.",
+      "source": "Line {line}: the source must be https://… or steam:ID.",
       "forum": "Line {line}: the forum is missing."
     }
   },

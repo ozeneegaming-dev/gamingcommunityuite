@@ -5,7 +5,7 @@
       "general": "Allgemein"
     },
     "feeds": "Feeds",
-    "feedsHint": "Ein Feed pro Zeile: Name | Quelle | Forum | Minuten | Label | Optionen. Quelle: eine RSS-/Atom-Adresse (https://…) oder steam:<Spiel-ID> (730 = CS2, 10 = CS 1.6). Forum: Name oder ID. Optionen: traduce (aus dem Englischen übersetzen), complet (nur wenn die Quelle die Wiederveröffentlichung erlaubt), fixat (anheften), închis (schließen). Zeilen, die mit # beginnen, werden ignoriert.",
+    "feedsHint": "Ein Feed pro Zeile: Name | Quelle | Forum | Minuten | Label | Optionen. Quelle: eine RSS-/Atom-Adresse (https://…) oder steam:ID (730 = CS2, 10 = CS 1.6). Forum: Name oder ID. Optionen: traduce (aus dem Englischen übersetzen), complet (nur wenn die Quelle die Wiederveröffentlichung erlaubt), fixat (anheften), închis (schließen). Zeilen, die mit # beginnen, werden ignoriert.",
     "maxPerRun": "Veröffentlichte News pro Lauf und Feed",
     "maxPerRunHint": "Der Rest wartet auf den nächsten Lauf.",
     "window": "Veröffentlichungszeiten",
@@ -38,7 +38,7 @@
     "always": "jederzeit",
     "lineError": {
       "columns": "Zeile {line}: Spalten fehlen (mindestens Name | Quelle | Forum).",
-      "source": "Zeile {line}: Die Quelle muss https://… oder steam:<Spiel-ID> sein.",
+      "source": "Zeile {line}: Die Quelle muss https://… oder steam:ID sein.",
       "forum": "Zeile {line}: Das Forum fehlt."
     }
   },

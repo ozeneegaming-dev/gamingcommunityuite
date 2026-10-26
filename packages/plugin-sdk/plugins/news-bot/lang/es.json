@@ -5,7 +5,7 @@
       "general": "General"
     },
     "feeds": "Fuentes",
-    "feedsHint": "Una fuente por línea: Nombre | Fuente | Foro | Minutos | Etiqueta | Opciones. Fuente: una dirección RSS / Atom (https://…) o steam:<id del juego> (730 = CS2, 10 = CS 1.6). Foro: su nombre o id. Opciones: traduce (traducir del inglés), complet (solo si la fuente permite republicar), fixat (fijar), închis (cerrar). Las líneas que empiezan con # se ignoran.",
+    "feedsHint": "Una fuente por línea: Nombre | Fuente | Foro | Minutos | Etiqueta | Opciones. Fuente: una dirección RSS / Atom (https://…) o steam:ID (730 = CS2, 10 = CS 1.6). Foro: su nombre o id. Opciones: traduce (traducir del inglés), complet (solo si la fuente permite republicar), fixat (fijar), închis (cerrar). Las líneas que empiezan con # se ignoran.",
     "maxPerRun": "Noticias publicadas por ejecución, por fuente",
     "maxPerRunHint": "El resto espera a la siguiente ejecución.",
     "window": "Horario de publicación",
@@ -38,7 +38,7 @@
     "always": "a cualquier hora",
     "lineError": {
       "columns": "Línea {line}: faltan columnas (al menos Nombre | Fuente | Foro).",
-      "source": "Línea {line}: la fuente debe ser https://… o steam:<id del juego>.",
+      "source": "Línea {line}: la fuente debe ser https://… o steam:ID.",
       "forum": "Línea {line}: falta el foro."
     }
   },
