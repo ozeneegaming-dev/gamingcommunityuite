@@ -274,6 +274,7 @@ export default async function TopicPage({ params, searchParams }: Props) {
             requireApproval={topic.requireApproval}
             archived={archived}
             rating={topic.rating ? { count: topic.rating.count } : null}
+            botNotes={await services().communityBot.enabled("moderation_notes")}
           />
         </>
       )}

@@ -54,6 +54,8 @@ type Props = {
   requireApproval?: boolean;
   archived?: boolean;
   rating?: { count: number } | null;
+  /** Botul comunității: „Notă de la bot” la mutare, închidere și arhivare (funcția pornită din ACP). */
+  botNotes?: boolean;
 };
 
 type HistoryEntry = { id: string; action: string; at: string; actor: { id: string; name: string; nameKey: string } | null };
@@ -63,7 +65,7 @@ export const SPLIT_FORM_ID = "gcs-split-posts";
 const has = (powers: string[], p: string) => powers.includes("*") || powers.includes(p);
 
 /** Uneltele de moderare ale unui topic (macheta Topic, pentru moderatori). */
-export function GcsTopicModMenu({ topicId, forumId, forumHref, powers, flags, forums, savedActions = [], requireApproval = false, archived = false, rating = null }: Props) {
+export function GcsTopicModMenu({ topicId, forumId, forumHref, powers, flags, forums, savedActions = [], requireApproval = false, archived = false, rating = null, botNotes = false }: Props) {
   const t = useTranslations("mod");
   const tv = useTranslations("mod.v2");
   const labels = useEditorLabels();
@@ -81,6 +83,10 @@ export function GcsTopicModMenu({ topicId, forumId, forumHref, powers, flags, fo
   const [splitTitle, setSplitTitle] = useState("");
   const [splitForum, setSplitForum] = useState(String(forumId));
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [botNoteOn, setBotNoteOn] = useState(false);
+  const [botNoteText, setBotNoteText] = useState("");
+  /** Nota botului trimisă cu acțiunea (doar dacă e bifată și scrisă). */
+  const note = () => (botNotes && botNoteOn && botNoteText.trim() ? { botNote: botNoteText.trim() } : {});
 
   function run<T>(action: () => Promise<Result<T>>, after?: (data: T) => void) {
     setError(null);
@@ -109,7 +115,7 @@ export function GcsTopicModMenu({ topicId, forumId, forumHref, powers, flags, fo
         data-tone={flagTone[name]}
         icon={<GcsIconSvg icon={flagIcons[name][flags[name] ? 1 : 0]} />}
         disabled={pending}
-        onClick={() => run(() => setTopicFlagAction({ topicIds: [topicId], flag: name, value: !flags[name] }))}
+        onClick={() => run(() => setTopicFlagAction({ topicIds: [topicId], flag: name, value: !flags[name], ...(name === "locked" ? note() : {}) }))}
       >
         {flags[name] ? off : on}
       </GcsButton>
@@ -125,6 +131,27 @@ export function GcsTopicModMenu({ topicId, forumId, forumHref, powers, flags, fo
         {t("menu")}
       </summary>
       <div className="gcs-modMenu__body">
+        {botNotes && (has(powers, "lock") || has(powers, "move")) && (
+          // Botul comunității: nota scrisă de bot în topic după mutare, închidere sau arhivare.
+          <div className="gcs-modMenu__row gcs-modMenu__botNote" data-testid="gcs-mod-bot-note">
+            <label className="gcs-check">
+              <input type="checkbox" checked={botNoteOn} onChange={(e) => setBotNoteOn(e.target.checked)} data-testid="gcs-mod-bot-note-toggle" />
+              {tv("botNote")}
+            </label>
+            {botNoteOn && (
+              <textarea
+                className="gcs-input"
+                rows={2}
+                maxLength={2000}
+                value={botNoteText}
+                onChange={(e) => setBotNoteText(e.target.value)}
+                placeholder={tv("botNotePlaceholder")}
+                aria-label={tv("botNote")}
+                data-testid="gcs-mod-bot-note-text"
+              />
+            )}
+          </div>
+        )}
         {/* Plăcile acțiunilor rapide (în designul Nova, colorate la hover după tipul acțiunii). */}
         <div className="gcs-modMenu__row gcs-modTiles">
           {flag("pinned", t("pin"), t("unpin"), "pin")}
@@ -180,7 +207,7 @@ export function GcsTopicModMenu({ topicId, forumId, forumHref, powers, flags, fo
               data-tone={archived ? "feature" : "other"}
               icon={<GcsIconSvg icon={archived ? faBoxOpen : faBoxArchive} />}
               disabled={pending}
-              onClick={() => run(() => setTopicsArchivedAction({ topicIds: [topicId], archived: !archived }))}
+              onClick={() => run(() => setTopicsArchivedAction({ topicIds: [topicId], archived: !archived, ...note() }))}
               data-testid="gcs-mod-archive"
             >
               {archived ? tv("unarchive") : tv("archive")}
@@ -240,7 +267,7 @@ export function GcsTopicModMenu({ topicId, forumId, forumHref, powers, flags, fo
                   </option>
                 ))}
             </select>
-            <GcsButton variant="ghost" size="sm" className="gcs-modTile" data-tone="move" icon={<GcsIconSvg icon={faRightLeft} />} disabled={!moveTo || pending} onClick={() => run(() => moveTopicsAction({ topicIds: [topicId], forumId: Number(moveTo) }))}>
+            <GcsButton variant="ghost" size="sm" className="gcs-modTile" data-tone="move" icon={<GcsIconSvg icon={faRightLeft} />} disabled={!moveTo || pending} onClick={() => run(() => moveTopicsAction({ topicIds: [topicId], forumId: Number(moveTo), ...note() }))}>
               {t("move")}
             </GcsButton>
           </div>

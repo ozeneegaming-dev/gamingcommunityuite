@@ -1,0 +1,46 @@
+{
+  "settings": {
+    "tabs": {
+      "feeds": "Fluxuri",
+      "general": "General"
+    },
+    "feeds": "Fluxurile",
+    "feedsHint": "Un flux pe rând: Nume | Sursă | Forum | Minute | Eticheta | Opțiuni. Sursa: o adresă RSS / Atom (https://…) sau steam:<id joc> (730 = CS2, 10 = CS 1.6). Forumul: numele sau id-ul lui. Opțiuni: traduce (din engleză), complet (doar dacă sursa permite republicarea), fixat, închis. Rândurile care încep cu # sunt ignorate.",
+    "maxPerRun": "Știri publicate la o rulare, per flux",
+    "maxPerRunHint": "Celelalte așteaptă rularea următoare.",
+    "window": "Orele de publicare",
+    "windowHint": "De exemplu 08-23 (de la 8:00 la 23:00) sau 22-06. Gol = oricând.",
+    "timezone": "Fusul orar al orelor de publicare",
+    "timezoneHint": "Un fus IANA, de exemplu Europe/Bucharest.",
+    "excerptChars": "Lungimea extrasului (caractere)",
+    "excerptCharsHint": "Fără „complet”, botul publică doar titlul, extrasul, imaginea și linkul spre sursă."
+  },
+  "acp": {
+    "menu": "Bot de știri",
+    "title": "Bot de știri",
+    "intro": "Fluxurile verificate de botul comunității. Știrile noi devin topicuri ale botului, o singură dată fiecare.",
+    "empty": "Niciun flux încă. Adaugă-le în setările pluginului.",
+    "feed": "Flux",
+    "forum": "Forum",
+    "interval": "Interval",
+    "status": "Ultima rulare",
+    "never": "Încă nu a rulat",
+    "error": "Eroare",
+    "ok": "{posted} publicate din {fetched}",
+    "every": "la {minutes} min",
+    "ran": "Rularea a pornit pentru {feeds} fluxuri; rezultatul apare aici în câteva momente.",
+    "run": "Rulează acum",
+    "settings": "Setările fluxurilor",
+    "bot": "Botul comunității",
+    "window": "Orele de publicare: {window}",
+    "always": "oricând",
+    "lineError": {
+      "columns": "Rândul {line}: lipsesc coloane (cel puțin Nume | Sursă | Forum).",
+      "source": "Rândul {line}: sursa trebuie să fie https://… sau steam:<id joc>.",
+      "forum": "Rândul {line}: lipsește forumul."
+    }
+  },
+  "jobs": {
+    "fetch": "Verifică fluxurile scadente"
+  }
+}

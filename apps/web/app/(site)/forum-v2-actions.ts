@@ -6,6 +6,7 @@ import * as z from "zod";
 import { gcsAction } from "@/lib/actions";
 import { rememberForumUnlock } from "@/lib/forum-access";
 import { namesHtml } from "@/lib/member-names";
+import { assertModeratorOn, postBotNotes } from "@/lib/bot-notes";
 import { services } from "@/lib/services";
 
 /**
@@ -55,9 +56,18 @@ export const topicHistoryAction = gcsAction(z.object({ topicId: id }), async ({ 
   return services().topicTools.history(actor, topicId);
 });
 
-export const setTopicsArchivedAction = gcsAction(z.object({ topicIds: z.array(id).min(1).max(100), archived: z.boolean() }), async ({ topicIds, archived }, { actor }) => {
-  await services().archive.setArchived(actor, topicIds, archived);
-});
+export const setTopicsArchivedAction = gcsAction(
+  z.object({ topicIds: z.array(id).min(1).max(100), archived: z.boolean(), botNote: z.string().trim().min(1).max(2000).optional() }),
+  async ({ topicIds, archived, botNote }, { actor }) => {
+    // Nota botului înainte de arhivare (un topic arhivat nu mai primește răspunsuri), după dezarhivare; drepturile întâi.
+    if (archived && botNote) {
+      await assertModeratorOn(actor, topicIds, "lock");
+      await postBotNotes(topicIds, botNote);
+    }
+    await services().archive.setArchived(actor, topicIds, archived);
+    if (!archived) await postBotNotes(topicIds, botNote);
+  },
+);
 
 // ─── Previzualizarea postării ────────────────────────────────────────────────────────────────────────────
 

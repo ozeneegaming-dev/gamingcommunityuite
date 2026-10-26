@@ -766,6 +766,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     dataDir: process.env.GCS_PLUGINS_DIR ?? path.join(opts.configDir, "plugins"),
     iconSvg,
     siteLocale: () => settings.get<string>("site.locale"),
+    bot: () => communityBot,
     safeMode: process.env.GCS_PLUGINS_SAFE_MODE === "1",
     ...(Number(process.env.GCS_PLUGINS_MAX_FAILURES) > 0 ? { maxFailures: Number(process.env.GCS_PLUGINS_MAX_FAILURES) } : {}),
     // Anunțurile între procese (VPS); în Lite, celelalte procese află la reconcilierea periodică.

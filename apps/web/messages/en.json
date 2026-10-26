@@ -2470,6 +2470,12 @@
         "appearance": {
           "title": "Member appearance",
           "body": "Can change how members look across the site: name style, avatar frame, banner, card background and profile extras. GCS validates everything (only colours and the plugin's own files)."
+        },
+        "bot": {
+          "post": {
+            "title": "Posts through the community bot",
+            "body": "Can publish topics, replies, private messages and chat messages as the community bot. You can turn it off any time in ACP › System › Community bot."
+          }
         }
       },
       "checks": {
@@ -6154,7 +6160,9 @@
             "remove": "Vote removed"
           }
         }
-      }
+      },
+      "botNote": "Note from the bot",
+      "botNotePlaceholder": "What the bot posts in the topic after the action (e.g. “Topic moved to Support.”)"
     }
   },
   "search": {

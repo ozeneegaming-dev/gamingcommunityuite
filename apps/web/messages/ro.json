@@ -2470,6 +2470,12 @@
         "appearance": {
           "title": "Aspectul membrilor",
           "body": "Poate schimba cum apar membrii pe site: stilul numelui, rama avatarului, banner-ul, fundalul cardului și extra-uri pe profil. GCS validează tot (doar culori și fișiere ale pluginului)."
+        },
+        "bot": {
+          "post": {
+            "title": "Postări prin botul comunității",
+            "body": "Poate publica topicuri, răspunsuri, mesaje private și mesaje în chat în numele botului comunității. Îl oprești oricând din ACP › Sistem › Botul comunității."
+          }
         }
       },
       "checks": {
@@ -6154,7 +6160,9 @@
             "remove": "Vot scos"
           }
         }
-      }
+      },
+      "botNote": "Notă de la bot",
+      "botNotePlaceholder": "Ce scrie botul în topic după acțiune (ex. „Topic mutat la Suport.”)"
     }
   },
   "search": {

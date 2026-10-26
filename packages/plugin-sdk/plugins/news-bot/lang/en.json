@@ -1,0 +1,46 @@
+{
+  "settings": {
+    "tabs": {
+      "feeds": "Feeds",
+      "general": "General"
+    },
+    "feeds": "Feeds",
+    "feedsHint": "One feed per line: Name | Source | Forum | Minutes | Label | Options. Source: an RSS / Atom address (https://…) or steam:<game id> (730 = CS2, 10 = CS 1.6). Forum: its name or id. Options: translate (from English), full (only if the source allows republishing), pin, lock. Lines starting with # are ignored.",
+    "maxPerRun": "News posted per run, per feed",
+    "maxPerRunHint": "The rest wait for the next run.",
+    "window": "Posting hours",
+    "windowHint": "For example 08-23 (from 8:00 to 23:00) or 22-06. Empty = any time.",
+    "timezone": "Time zone of the posting hours",
+    "timezoneHint": "An IANA time zone, for example Europe/Bucharest.",
+    "excerptChars": "Excerpt length (characters)",
+    "excerptCharsHint": "Without “full”, the bot posts only the title, the excerpt, the image and the source link."
+  },
+  "acp": {
+    "menu": "News bot",
+    "title": "News bot",
+    "intro": "The feeds checked by the community bot. New stories become bot topics, each one only once.",
+    "empty": "No feeds yet. Add them in the plugin settings.",
+    "feed": "Feed",
+    "forum": "Forum",
+    "interval": "Interval",
+    "status": "Last run",
+    "never": "Not run yet",
+    "error": "Error",
+    "ok": "{posted} posted of {fetched}",
+    "every": "every {minutes} min",
+    "ran": "The run started for {feeds} feeds; the result shows here in a few moments.",
+    "run": "Run now",
+    "settings": "Feed settings",
+    "bot": "Community bot",
+    "window": "Posting hours: {window}",
+    "always": "any time",
+    "lineError": {
+      "columns": "Line {line}: columns are missing (at least Name | Source | Forum).",
+      "source": "Line {line}: the source must be https://… or steam:<game id>.",
+      "forum": "Line {line}: the forum is missing."
+    }
+  },
+  "jobs": {
+    "fetch": "Check the feeds that are due"
+  }
+}

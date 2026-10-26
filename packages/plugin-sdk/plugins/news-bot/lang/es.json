@@ -1,0 +1,46 @@
+{
+  "settings": {
+    "tabs": {
+      "feeds": "Fuentes",
+      "general": "General"
+    },
+    "feeds": "Fuentes",
+    "feedsHint": "Una fuente por línea: Nombre | Fuente | Foro | Minutos | Etiqueta | Opciones. Fuente: una dirección RSS / Atom (https://…) o steam:<id del juego> (730 = CS2, 10 = CS 1.6). Foro: su nombre o id. Opciones: traduce (traducir del inglés), complet (solo si la fuente permite republicar), fixat (fijar), închis (cerrar). Las líneas que empiezan con # se ignoran.",
+    "maxPerRun": "Noticias publicadas por ejecución, por fuente",
+    "maxPerRunHint": "El resto espera a la siguiente ejecución.",
+    "window": "Horario de publicación",
+    "windowHint": "Por ejemplo 08-23 (de 8:00 a 23:00) o 22-06. Vacío = a cualquier hora.",
+    "timezone": "Zona horaria del horario de publicación",
+    "timezoneHint": "Una zona IANA, por ejemplo Europe/Bucharest.",
+    "excerptChars": "Longitud del extracto (caracteres)",
+    "excerptCharsHint": "Sin «complet», el bot publica solo el título, el extracto, la imagen y el enlace a la fuente."
+  },
+  "acp": {
+    "menu": "Bot de noticias",
+    "title": "Bot de noticias",
+    "intro": "Las fuentes que revisa el bot de la comunidad. Las noticias nuevas se convierten en temas del bot, cada una una sola vez.",
+    "empty": "Aún no hay fuentes. Añádelas en los ajustes del plugin.",
+    "feed": "Fuente",
+    "forum": "Foro",
+    "interval": "Intervalo",
+    "status": "Última ejecución",
+    "never": "Aún no se ha ejecutado",
+    "error": "Error",
+    "ok": "{posted} publicadas de {fetched}",
+    "every": "cada {minutes} min",
+    "ran": "La ejecución comenzó para {feeds} fuentes; el resultado aparece aquí en unos momentos.",
+    "run": "Ejecutar ahora",
+    "settings": "Ajustes de las fuentes",
+    "bot": "Bot de la comunidad",
+    "window": "Horario de publicación: {window}",
+    "always": "a cualquier hora",
+    "lineError": {
+      "columns": "Línea {line}: faltan columnas (al menos Nombre | Fuente | Foro).",
+      "source": "Línea {line}: la fuente debe ser https://… o steam:<id del juego>.",
+      "forum": "Línea {line}: falta el foro."
+    }
+  },
+  "jobs": {
+    "fetch": "Revisar las fuentes pendientes"
+  }
+}

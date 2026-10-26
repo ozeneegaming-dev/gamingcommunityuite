@@ -37,6 +37,8 @@ import {
   type GcsKv,
 } from "@gcs/core";
 import type { PrismaClient } from "@gcs/db";
+import type { GcsBotContent, GcsCommunityBot } from "../bot/service";
+import { pluginBotFeature } from "../bot/settings";
 import type Redis from "ioredis";
 import type { GcsPluginPublicApi } from "./api";
 import { extractPlugin } from "./files";
@@ -108,6 +110,8 @@ export type GcsPluginHostDeps = {
   iconSvg: (name: string) => string | null;
   /** Limba site-ului (evenimente, joburi). */
   siteLocale: () => Promise<string>;
+  /** Botul comunității (capabilitatea `bot.post`); citit la apel, fiindcă se construiește după gazdă. */
+  bot?: () => GcsCommunityBot;
   /** `GCS_PLUGINS_SAFE_MODE=1`: procesul nu încarcă niciun plugin. */
   safeMode?: boolean;
   maxFailures?: number;
@@ -667,12 +671,65 @@ export class GcsPluginHost {
         case "http.fetch":
           need("http-out");
           return await pluginFetch(args[0], args[1]);
+        case "bot.post":
+        case "bot.reply":
+        case "bot.pm":
+        case "bot.chat":
+          need("bot.post");
+          return await this.botCall(key, method, args[0]);
         default:
           throw new Error("unknown_method");
       }
     } catch (error) {
       throw new Error(errorText(error));
     }
+  }
+
+  /**
+   * Botul comunității pentru un plugin (`bot.post`): funcția `plugin:<cheie>` (comutatorul din ACP), cheile de deduplicare
+   * prefixate cu cheia pluginului, conținutul HTML curățat de nucleu. `null` = funcția e oprită din ACP.
+   */
+  private async botCall(key: string, method: string, raw: unknown): Promise<unknown> {
+    const bot = this.deps.bot?.();
+    if (!bot) throw new Error("bot_unavailable");
+    const input = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+    const feature = pluginBotFeature(key);
+    const str = (v: unknown, max: number) => (typeof v === "string" ? v.slice(0, max) : "");
+    const int = (v: unknown) => (typeof v === "number" && Number.isSafeInteger(v) ? v : Number.NaN);
+    const content = (): GcsBotContent => {
+      const c = (input.content ?? {}) as Record<string, unknown>;
+      if (typeof c.html === "string") return { html: c.html.slice(0, 200_000) };
+      if (typeof c.text === "string") return { text: c.text.slice(0, 50_000) };
+      throw new GcsValidationError({ content: "required" });
+    };
+    const meta = (input.meta ?? {}) as Record<string, unknown>;
+    const botMeta = {
+      label: str(meta.label, 40) || null,
+      sourceName: str(meta.sourceName, 120) || null,
+      sourceUrl: str(meta.sourceUrl, 2000) || null,
+      importEveryMinutes: Number.isSafeInteger(meta.importEveryMinutes) ? (meta.importEveryMinutes as number) : null,
+    };
+    const translateFrom = typeof input.translateFrom === "string" && /^[a-z]{2}$/.test(input.translateFrom) ? input.translateFrom : null;
+    if (method === "bot.post") {
+      return bot.post(feature, {
+        forumId: int(input.forumId),
+        title: str(input.title, 150),
+        content: content(),
+        prefixId: Number.isSafeInteger(input.prefixId) ? (input.prefixId as number) : null,
+        ...(Array.isArray(input.tags) ? { tags: input.tags.filter((t): t is string => typeof t === "string").slice(0, 20) } : {}),
+        lock: input.lock === true,
+        pin: input.pin === true,
+        dedupeKey: typeof input.dedupeKey === "string" && input.dedupeKey ? `${key}:${input.dedupeKey}` : null,
+        meta: botMeta,
+        translateFrom,
+      });
+    }
+    if (method === "bot.reply") return bot.reply(feature, { topicId: int(input.topicId), content: content(), meta: botMeta, translateFrom });
+    if (method === "bot.pm") {
+      const to = Array.isArray(input.to) ? input.to.filter((t): t is string => typeof t === "string").slice(0, 20) : [];
+      return bot.pm(feature, { to, title: str(input.title, 150), content: content() });
+    }
+    return bot.chat(feature, { channelKey: str(input.channelKey, 80), text: str(input.text, 2000) });
   }
 
   private async cache(key: string, method: string, args: unknown[]): Promise<unknown> {

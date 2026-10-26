@@ -4,7 +4,7 @@
  */
 
 /** Versiunea platformei pentru `minGcs` (se actualizează la fiecare etapă care schimbă API-ul pluginurilor). */
-export const GCS_PLATFORM_VERSION = "0.9.0";
+export const GCS_PLATFORM_VERSION = "0.10.0";
 
 export const PLUGIN_CAPABILITIES = [
   "db",
@@ -25,6 +25,8 @@ export const PLUGIN_CAPABILITIES = [
   "templates",
   "media",
   "appearance",
+  // Botul comunității: topicuri, răspunsuri, mesaje private și chat în numele contului-bot (comutatorul lui din ACP).
+  "bot.post",
 ] as const;
 export type GcsPluginCapability = (typeof PLUGIN_CAPABILITIES)[number];
 
@@ -48,6 +50,7 @@ export const CAPABILITY_RISK: Record<GcsPluginCapability, "low" | "medium" | "hi
   templates: "low",
   media: "medium",
   appearance: "medium",
+  "bot.post": "medium",
 };
 
 /** Iconița Font Awesome a fiecărei capabilități (ecranul de confirmare, pagina pluginului). */
@@ -70,6 +73,7 @@ export const CAPABILITY_ICONS: Record<GcsPluginCapability, string> = {
   templates: "fa-solid fa-file-code",
   media: "fa-solid fa-photo-film",
   appearance: "fa-solid fa-wand-magic-sparkles",
+  "bot.post": "fa-solid fa-robot",
 };
 
 /**

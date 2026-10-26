@@ -192,6 +192,12 @@ export const PLUGIN_WORKER_SOURCE = String.raw`
       log: Object.freeze({ info: log("info"), warn: log("warn"), error: log("error") }),
       jobs: Object.freeze({ enqueue: (job, data) => rpc("jobs.enqueue", [job, data || {}], token) }),
       http: Object.freeze({ fetch: (url, init) => rpc("http.fetch", [url, init || {}], token) }),
+      bot: Object.freeze({
+        post: (input) => rpc("bot.post", [input || {}], token),
+        reply: (input) => rpc("bot.reply", [input || {}], token),
+        pm: (input) => rpc("bot.pm", [input || {}], token),
+        chat: (input) => rpc("bot.chat", [input || {}], token),
+      }),
     });
   }
 

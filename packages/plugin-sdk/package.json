@@ -14,12 +14,13 @@
   },
   "scripts": {
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p plugins/vip-studio && tsc --noEmit -p plugins/tickets",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p plugins/vip-studio && tsc --noEmit -p plugins/tickets && tsc --noEmit -p plugins/news-bot",
     "test": "vitest run --passWithNoTests",
     "build:example": "tsx scripts/build-example.ts",
     "build:vip-studio": "tsx scripts/build-vip-studio.ts",
     "build:tickets": "tsx scripts/build-tickets.ts",
-    "sign:plugin": "tsx scripts/sign-plugin.ts"
+    "sign:plugin": "tsx scripts/sign-plugin.ts",
+    "build:news-bot": "tsx scripts/build-news-bot.ts"
   },
   "devDependencies": {
     "@gcs/config": "workspace:*",

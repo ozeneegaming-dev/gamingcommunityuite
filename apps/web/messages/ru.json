@@ -2470,6 +2470,12 @@
         "appearance": {
           "title": "Member appearance",
           "body": "Can change how members look across the site: name style, avatar frame, banner, card background and profile extras. GCS validates everything (only colours and the plugin's own files)."
+        },
+        "bot": {
+          "post": {
+            "title": "Публикации через бота сообщества",
+            "body": "Может публиковать темы, ответы, личные сообщения и сообщения в чате от имени бота сообщества. Отключается в любой момент в ACP › Система › Бот сообщества."
+          }
         }
       },
       "checks": {
@@ -6154,7 +6160,9 @@
             "remove": "Голос удалён"
           }
         }
-      }
+      },
+      "botNote": "Заметка от бота",
+      "botNotePlaceholder": "Что бот напишет в теме после действия (например, «Тема перенесена в Поддержку.»)"
     }
   },
   "search": {

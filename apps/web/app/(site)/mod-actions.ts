@@ -3,24 +3,29 @@
 import { GcsNotFound } from "@gcs/core";
 import * as z from "zod";
 import { gcsAction } from "@/lib/actions";
+import { postBotNotes } from "@/lib/bot-notes";
 import { services } from "@/lib/services";
 
 const id = z.number().int().positive();
 const ids = z.array(id).min(1).max(100);
+/** Nota botului comunității după o acțiune de moderare (funcția „Note de moderare” din ACP). */
+const botNote = z.string().trim().min(1).max(2000).optional();
 
 /** Fixează / blochează / evidențiază topicuri (în masă). */
 export const setTopicFlagAction = gcsAction(
-  z.object({ topicIds: ids, flag: z.enum(["pinned", "locked", "featured"]), value: z.boolean() }),
-  async ({ topicIds, flag, value }, { actor }) => {
+  z.object({ topicIds: ids, flag: z.enum(["pinned", "locked", "featured"]), value: z.boolean(), botNote }),
+  async ({ topicIds, flag, value, botNote: note }, { actor }) => {
     const { moderation } = services();
     if (flag === "pinned") await moderation.setPinned(actor, topicIds, value);
     else if (flag === "locked") await moderation.setLocked(actor, topicIds, value);
     else await moderation.setFeatured(actor, topicIds, value);
+    if (flag === "locked") await postBotNotes(topicIds, note);
   },
 );
 
-export const moveTopicsAction = gcsAction(z.object({ topicIds: ids, forumId: id }), async ({ topicIds, forumId }, { actor }) => {
+export const moveTopicsAction = gcsAction(z.object({ topicIds: ids, forumId: id, botNote }), async ({ topicIds, forumId, botNote: note }, { actor }) => {
   await services().moderation.move(actor, topicIds, forumId);
+  await postBotNotes(topicIds, note);
 });
 
 /** Ascunde sau restaurează topicuri (prin prima lor postare). */

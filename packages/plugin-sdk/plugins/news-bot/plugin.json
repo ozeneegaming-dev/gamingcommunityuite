@@ -1,0 +1,108 @@
+{
+  "manifestVersion": 1,
+  "key": "gcs.news_bot",
+  "name": "Bot de știri",
+  "version": "1.0.0",
+  "author": {
+    "name": "GamingCommunitySuite",
+    "url": "https://gamingcommunitysuite.com"
+  },
+  "description": "Botul comunității publică automat știri din fluxuri RSS / Atom și actualizările oficiale ale jocurilor (Steam), cu traducere automată, deduplicare și ore de publicare.",
+  "icon": "fa-solid fa-newspaper",
+  "license": "MIT",
+  "minGcs": "0.10.0",
+  "capabilities": [
+    "acp",
+    "api",
+    "jobs",
+    "settings",
+    "http-out",
+    "bot.post"
+  ],
+  "settings": {
+    "tabs": [
+      {
+        "key": "feeds",
+        "label": "settings.tabs.feeds",
+        "icon": "fa-solid fa-square-rss",
+        "fields": [
+          {
+            "type": "textarea",
+            "key": "feeds",
+            "label": "settings.feeds",
+            "hint": "settings.feedsHint",
+            "default": "# Nume | Sursă | Forum | Minute | Eticheta | Opțiuni\n# Counter-Strike 2 | steam:730 | Știri | 30 | UPDATE CS2 | traduce",
+            "maxLength": 20000
+          }
+        ]
+      },
+      {
+        "key": "general",
+        "label": "settings.tabs.general",
+        "icon": "fa-solid fa-sliders",
+        "fields": [
+          {
+            "type": "number",
+            "key": "maxPerRun",
+            "label": "settings.maxPerRun",
+            "hint": "settings.maxPerRunHint",
+            "default": 3,
+            "min": 1,
+            "max": 20
+          },
+          {
+            "type": "text",
+            "key": "window",
+            "label": "settings.window",
+            "hint": "settings.windowHint",
+            "default": "",
+            "maxLength": 11
+          },
+          {
+            "type": "text",
+            "key": "timezone",
+            "label": "settings.timezone",
+            "hint": "settings.timezoneHint",
+            "default": "Europe/Bucharest",
+            "maxLength": 64
+          },
+          {
+            "type": "number",
+            "key": "excerptChars",
+            "label": "settings.excerptChars",
+            "hint": "settings.excerptCharsHint",
+            "default": 500,
+            "min": 100,
+            "max": 3000
+          }
+        ]
+      }
+    ]
+  },
+  "routes": {
+    "acp": [
+      {
+        "path": "/",
+        "label": "acp.menu",
+        "icon": "fa-solid fa-newspaper",
+        "area": "system"
+      }
+    ],
+    "api": [
+      {
+        "path": "/run",
+        "methods": [
+          "POST"
+        ],
+        "acp": "edit"
+      }
+    ]
+  },
+  "jobs": [
+    {
+      "key": "fetch",
+      "everyMinutes": 5,
+      "label": "jobs.fetch"
+    }
+  ]
+}

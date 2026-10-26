@@ -2470,6 +2470,12 @@
         "appearance": {
           "title": "Member appearance",
           "body": "Can change how members look across the site: name style, avatar frame, banner, card background and profile extras. GCS validates everything (only colours and the plugin's own files)."
+        },
+        "bot": {
+          "post": {
+            "title": "Publicaciones mediante el bot de la comunidad",
+            "body": "Puede publicar temas, respuestas, mensajes privados y mensajes de chat como el bot de la comunidad. Puedes desactivarlo en cualquier momento en ACP › Sistema › Bot de la comunidad."
+          }
         }
       },
       "checks": {
@@ -6154,7 +6160,9 @@
             "remove": "Voto eliminado"
           }
         }
-      }
+      },
+      "botNote": "Nota del bot",
+      "botNotePlaceholder": "Lo que el bot publica en el tema tras la acción (p. ej. «Tema movido a Soporte.»)"
     }
   },
   "search": {

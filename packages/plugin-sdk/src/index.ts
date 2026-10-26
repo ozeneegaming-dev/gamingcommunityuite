@@ -260,6 +260,11 @@ export type GcsPluginFetchInit = { method?: "GET" | "POST" | "PUT" | "PATCH" | "
 export type GcsPluginFetchResponse = { status: number; headers: Record<string, string>; body: string };
 
 /** Contextul primit de fiecare handler. Toate apelurile asincrone trec prin gazdă, care le verifică. */
+/** Conținutul unei publicări a botului: HTML (curățat de nucleu) sau text simplu. */
+export type GcsPluginBotContent = { html: string } | { text: string };
+/** Ce apare deasupra / sub postarea botului: eticheta, sursa, „Citește pe sursă”, intervalul importului. */
+export type GcsPluginBotMeta = { label?: string; sourceName?: string; sourceUrl?: string; importEveryMinutes?: number };
+
 export interface GcsPluginContext {
   readonly plugin: { readonly key: string; readonly version: string };
   readonly viewer: GcsPluginViewer;
@@ -321,6 +326,28 @@ export interface GcsPluginContext {
     list(opts?: { kind?: "image" | "video" | "audio"; limit?: number; offset?: number }): Promise<GcsPluginMediaInfo[]>;
     delete(ids: string[]): Promise<number>;
     usage(): Promise<{ files: number; bytes: number }>;
+  };
+  /**
+   * Botul comunității (capabilitatea `bot.post`, GCS ≥ 0.10.0): publică în numele contului-bot. Fiecare apel întoarce
+   * `null` dacă adminul a oprit pluginul în ACP › Sistem › Botul comunității. `dedupeKey` (ex. GUID-ul unei știri) face
+   * ca același import să se publice o singură dată, chiar peste reporniri; `translateFrom` traduce automat în limba site-ului.
+   */
+  readonly bot: {
+    post(input: {
+      forumId: number;
+      title: string;
+      content: GcsPluginBotContent;
+      prefixId?: number;
+      tags?: string[];
+      lock?: boolean;
+      pin?: boolean;
+      dedupeKey?: string;
+      meta?: GcsPluginBotMeta;
+      translateFrom?: string;
+    }): Promise<{ topicId: number; postId: number; duplicate: boolean } | null>;
+    reply(input: { topicId: number; content: GcsPluginBotContent; meta?: GcsPluginBotMeta; translateFrom?: string }): Promise<{ postId: number } | null>;
+    pm(input: { to: string[]; title: string; content: GcsPluginBotContent }): Promise<{ conversationId: number } | null>;
+    chat(input: { channelKey: string; text: string }): Promise<{ messageId: number } | null>;
   };
   /** Cache în Redis, în spațiul de nume al pluginului (valori JSON ≤ 64 KB, TTL ≤ o zi). */
   readonly cache: {

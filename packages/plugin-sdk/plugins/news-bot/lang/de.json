@@ -1,0 +1,46 @@
+{
+  "settings": {
+    "tabs": {
+      "feeds": "Feeds",
+      "general": "Allgemein"
+    },
+    "feeds": "Feeds",
+    "feedsHint": "Ein Feed pro Zeile: Name | Quelle | Forum | Minuten | Label | Optionen. Quelle: eine RSS-/Atom-Adresse (https://…) oder steam:<Spiel-ID> (730 = CS2, 10 = CS 1.6). Forum: Name oder ID. Optionen: traduce (aus dem Englischen übersetzen), complet (nur wenn die Quelle die Wiederveröffentlichung erlaubt), fixat (anheften), închis (schließen). Zeilen, die mit # beginnen, werden ignoriert.",
+    "maxPerRun": "Veröffentlichte News pro Lauf und Feed",
+    "maxPerRunHint": "Der Rest wartet auf den nächsten Lauf.",
+    "window": "Veröffentlichungszeiten",
+    "windowHint": "Zum Beispiel 08-23 (von 8:00 bis 23:00) oder 22-06. Leer = jederzeit.",
+    "timezone": "Zeitzone der Veröffentlichungszeiten",
+    "timezoneHint": "Eine IANA-Zeitzone, zum Beispiel Europe/Bucharest.",
+    "excerptChars": "Länge des Auszugs (Zeichen)",
+    "excerptCharsHint": "Ohne „complet“ veröffentlicht der Bot nur Titel, Auszug, Bild und den Link zur Quelle."
+  },
+  "acp": {
+    "menu": "News-Bot",
+    "title": "News-Bot",
+    "intro": "Die vom Community-Bot geprüften Feeds. Neue Meldungen werden zu Themen des Bots, jede nur einmal.",
+    "empty": "Noch keine Feeds. Füge sie in den Plugin-Einstellungen hinzu.",
+    "feed": "Feed",
+    "forum": "Forum",
+    "interval": "Intervall",
+    "status": "Letzter Lauf",
+    "never": "Noch nicht gelaufen",
+    "error": "Fehler",
+    "ok": "{posted} von {fetched} veröffentlicht",
+    "every": "alle {minutes} Min.",
+    "ran": "Der Lauf wurde für {feeds} Feeds gestartet; das Ergebnis erscheint hier in wenigen Augenblicken.",
+    "run": "Jetzt ausführen",
+    "settings": "Feed-Einstellungen",
+    "bot": "Community-Bot",
+    "window": "Veröffentlichungszeiten: {window}",
+    "always": "jederzeit",
+    "lineError": {
+      "columns": "Zeile {line}: Spalten fehlen (mindestens Name | Quelle | Forum).",
+      "source": "Zeile {line}: Die Quelle muss https://… oder steam:<Spiel-ID> sein.",
+      "forum": "Zeile {line}: Das Forum fehlt."
+    }
+  },
+  "jobs": {
+    "fetch": "Fällige Feeds prüfen"
+  }
+}

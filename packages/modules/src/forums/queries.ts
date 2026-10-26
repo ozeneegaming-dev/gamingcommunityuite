@@ -517,6 +517,7 @@ export class GcsForumQueries {
               createdAt: true,
               signatureHtml: true,
               rankId: true,
+              isBot: true,
               primaryGroupId: true,
               primaryGroup: { select: { key: true, name: true, title: true, color: true } },
             },
@@ -562,8 +563,10 @@ export class GcsForumQueries {
     const viewer = { userId: actor.userId, groupIds: actor.groupIds, replied: ownVisiblePost !== null || modPowers.length > 0 };
     const labels = hiddenLabels(opts.locale);
 
-    const botRows = await db.botPost.findMany({
-      where: { postId: { in: posts.map((p) => p.id) } },
+    // Doar când topicul are postări ale botului (altfel nicio interogare în plus).
+    const botPostIds = posts.filter((p) => p.authorId !== null && userMap.get(p.authorId)?.isBot).map((p) => p.id);
+    const botRows = botPostIds.length === 0 ? [] : await db.botPost.findMany({
+      where: { postId: { in: botPostIds } },
       select: { postId: true, label: true, sourceName: true, sourceUrl: true, translatedFrom: true, importEveryMinutes: true },
     });
     const botMeta = new Map(botRows.map(({ postId, ...meta }) => [postId!, meta]));

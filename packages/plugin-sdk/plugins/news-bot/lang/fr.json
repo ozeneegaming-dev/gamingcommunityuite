@@ -1,0 +1,46 @@
+{
+  "settings": {
+    "tabs": {
+      "feeds": "Flux",
+      "general": "Général"
+    },
+    "feeds": "Flux",
+    "feedsHint": "Un flux par ligne : Nom | Source | Forum | Minutes | Étiquette | Options. Source : une adresse RSS / Atom (https://…) ou steam:<id du jeu> (730 = CS2, 10 = CS 1.6). Forum : son nom ou son id. Options : traduce (traduire de l'anglais), complet (seulement si la source autorise la republication), fixat (épingler), închis (verrouiller). Les lignes commençant par # sont ignorées.",
+    "maxPerRun": "Actualités publiées par exécution, par flux",
+    "maxPerRunHint": "Les autres attendent l'exécution suivante.",
+    "window": "Heures de publication",
+    "windowHint": "Par exemple 08-23 (de 8 h à 23 h) ou 22-06. Vide = à tout moment.",
+    "timezone": "Fuseau horaire des heures de publication",
+    "timezoneHint": "Un fuseau IANA, par exemple Europe/Bucharest.",
+    "excerptChars": "Longueur de l'extrait (caractères)",
+    "excerptCharsHint": "Sans « complet », le bot publie seulement le titre, l'extrait, l'image et le lien vers la source."
+  },
+  "acp": {
+    "menu": "Bot d'actualités",
+    "title": "Bot d'actualités",
+    "intro": "Les flux vérifiés par le bot de la communauté. Les nouvelles actualités deviennent des sujets du bot, une seule fois chacune.",
+    "empty": "Aucun flux pour l'instant. Ajoutez-les dans les réglages du plugin.",
+    "feed": "Flux",
+    "forum": "Forum",
+    "interval": "Intervalle",
+    "status": "Dernière exécution",
+    "never": "Pas encore exécuté",
+    "error": "Erreur",
+    "ok": "{posted} publiées sur {fetched}",
+    "every": "toutes les {minutes} min",
+    "ran": "L'exécution a démarré pour {feeds} flux ; le résultat apparaît ici dans quelques instants.",
+    "run": "Exécuter maintenant",
+    "settings": "Réglages des flux",
+    "bot": "Bot de la communauté",
+    "window": "Heures de publication : {window}",
+    "always": "à tout moment",
+    "lineError": {
+      "columns": "Ligne {line} : des colonnes manquent (au moins Nom | Source | Forum).",
+      "source": "Ligne {line} : la source doit être https://… ou steam:<id du jeu>.",
+      "forum": "Ligne {line} : le forum manque."
+    }
+  },
+  "jobs": {
+    "fetch": "Vérifier les flux à échéance"
+  }
+}

@@ -2164,7 +2164,11 @@
     "topic.bot.read": "7610005d5d5f988c",
     "settings.bot.features": "ca6e2c948cdb3c7a",
     "settings.bot.welcome_title": "9a2b0629897a3308",
-    "settings.bot.welcome_text": "93a5129472cc4f0b"
+    "settings.bot.welcome_text": "93a5129472cc4f0b",
+    "acp.plugins.capabilities.bot.post.title": "f047ad278d8ac6f3",
+    "acp.plugins.capabilities.bot.post.body": "811c5475c9708ace",
+    "mod.v2.botNote": "ea5bbed1f8ec889d",
+    "mod.v2.botNotePlaceholder": "9bb11199a9d98cc1"
   },
   "es": {
     "site.myProfile": "2f3df0a939fdd38f",
@@ -4330,7 +4334,11 @@
     "topic.bot.read": "7610005d5d5f988c",
     "settings.bot.features": "ca6e2c948cdb3c7a",
     "settings.bot.welcome_title": "9a2b0629897a3308",
-    "settings.bot.welcome_text": "93a5129472cc4f0b"
+    "settings.bot.welcome_text": "93a5129472cc4f0b",
+    "acp.plugins.capabilities.bot.post.title": "f047ad278d8ac6f3",
+    "acp.plugins.capabilities.bot.post.body": "811c5475c9708ace",
+    "mod.v2.botNote": "ea5bbed1f8ec889d",
+    "mod.v2.botNotePlaceholder": "9bb11199a9d98cc1"
   },
   "fr": {
     "site.myProfile": "2f3df0a939fdd38f",
@@ -6483,7 +6491,11 @@
     "topic.bot.read": "7610005d5d5f988c",
     "settings.bot.features": "ca6e2c948cdb3c7a",
     "settings.bot.welcome_title": "9a2b0629897a3308",
-    "settings.bot.welcome_text": "93a5129472cc4f0b"
+    "settings.bot.welcome_text": "93a5129472cc4f0b",
+    "acp.plugins.capabilities.bot.post.title": "f047ad278d8ac6f3",
+    "acp.plugins.capabilities.bot.post.body": "811c5475c9708ace",
+    "mod.v2.botNote": "ea5bbed1f8ec889d",
+    "mod.v2.botNotePlaceholder": "9bb11199a9d98cc1"
   },
   "ru": {
     "site.myProfile": "2f3df0a939fdd38f",
@@ -8650,6 +8662,10 @@
     "topic.bot.read": "7610005d5d5f988c",
     "settings.bot.features": "ca6e2c948cdb3c7a",
     "settings.bot.welcome_title": "9a2b0629897a3308",
-    "settings.bot.welcome_text": "93a5129472cc4f0b"
+    "settings.bot.welcome_text": "93a5129472cc4f0b",
+    "acp.plugins.capabilities.bot.post.title": "f047ad278d8ac6f3",
+    "acp.plugins.capabilities.bot.post.body": "811c5475c9708ace",
+    "mod.v2.botNote": "ea5bbed1f8ec889d",
+    "mod.v2.botNotePlaceholder": "9bb11199a9d98cc1"
   }
 }
