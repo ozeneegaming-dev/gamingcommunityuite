@@ -381,7 +381,7 @@ export class GcsCommunityBot {
     }
     if (html !== null) return { title: outTitle, doc: convertContent("html", html, emptyContext("core-schema")).doc, translatedFrom };
     if ("text" in content) return { title: outTitle, doc: textDoc(content.text), translatedFrom };
-    return { title: outTitle, doc: content.doc, translatedFrom };
+    return { title: outTitle, doc: "doc" in content ? content.doc : textDoc(""), translatedFrom };
   }
 }
 
