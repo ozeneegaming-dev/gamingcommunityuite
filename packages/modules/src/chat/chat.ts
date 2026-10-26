@@ -29,6 +29,7 @@ import { writeChatModLog } from "./modlog";
 import { GcsChatRights, isChatRight } from "./rights";
 import { CHAT_ACP_CHANNELS, CHAT_CONTAINER, defaultChannelPermissions } from "./index";
 import { applyWordFilter, chatEmbeds, cleanChatText, countEmoji, renderChatText, type GcsChatEmbed } from "./text";
+import type { GcsContentGuard } from "../antispam/service";
 
 export const CHAT_CLEANUP_JOB = "chat.cleanup";
 const KEY_RE = /^[a-z0-9][a-z0-9-]{1,31}$/;
@@ -222,6 +223,8 @@ export class GcsChatService {
       groupMentions?: GcsGroupMentionService;
       /** Drepturile de moderare (grupuri + accesul de moderator) și sancțiunile; implicit, create aici. */
       rights?: GcsChatRights;
+      /** Anti-spam: linkurile de phishing (oricui), linkurile și ritmul membrilor noi. */
+      antispam?: GcsContentGuard;
     },
   ) {
     this.rights = deps.rights ?? new GcsChatRights({ db: deps.db, permissions: deps.permissions });
@@ -366,6 +369,8 @@ export class GcsChatService {
     if (mute) throw new GcsForbidden({ reason: "muted", ...(mute.until ? { until: mute.until.toISOString() } : {}) });
 
     const moderator = await this.canModerate(actor);
+    if (this.deps.antispam && body) await this.deps.antispam.checkContent(actor, { kind: "chat", text: body, trusted: moderator });
+    if (this.deps.antispam && !moderator) await this.deps.antispam.checkChatPace(actor);
     // Slow mode-ul personal (moderarea): peste slow mode-ul camerei, pentru oricine îl are.
     const personal = await this.rights.slow(actor.userId);
     if (personal && personal.seconds > 0) {
@@ -487,6 +492,7 @@ export class GcsChatService {
     const body = cleanChatText(typeof raw === "string" ? raw : "");
     if (!body && !(Array.isArray(message.files) && message.files.length > 0)) throw new GcsValidationError({ body: "required" });
     await this.checkLimits(body);
+    if (this.deps.antispam && body) await this.deps.antispam.checkContent(actor, { kind: "chat", text: body, trusted: any });
     const words = await settings.get<string[]>("chat.word_filter");
     const updated = await db.chatMessage.update({
       where: { id: messageId },

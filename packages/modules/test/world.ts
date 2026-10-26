@@ -28,6 +28,7 @@ import { GcsReadMarkerService } from "../src/forums/readMarkers";
 import { GcsForumSearch } from "../src/forums/search";
 import { GcsTopicService } from "../src/forums/topics";
 import { GcsRankDirectory } from "../src/profile/display";
+import { GcsAntispamService } from "../src/antispam/service";
 import { createRegistry } from "../src/registry";
 
 /** Registry-ul real: modulele din producție. */
@@ -71,6 +72,19 @@ export async function createForumWorld(extraModules: GcsModule[] = []) {
   // Forum v2: paginile și regulile forumurilor se randează cu editorul postărilor (blocurile staff-ului).
   const forums = new GcsForumService({ db, bus, permissions, acp: world.acp, registry, render: (content, actor) => posting.render(content, { actor, blocks: true }) });
   const groupMentions = new GcsGroupMentionService({ db, cache, kv });
+  // Anti-spam: `fetch` înlocuibil în teste (lista publică de spammeri).
+  const fetchRef: { current: ((url: string, init?: RequestInit) => Promise<Response>) | null } = { current: null };
+  const antispam = new GcsAntispamService({
+    db,
+    settings,
+    cache,
+    rateLimiter,
+    bans: world.bans,
+    acp: world.acp,
+    bus,
+    secret: () => "gcs-test-secret",
+    fetch: (url, init) => (fetchRef.current ? fetchRef.current(url, init) : Promise.reject(new Error("offline"))),
+  });
   const posting = new GcsForumPosting({
     db,
     bus,
@@ -81,6 +95,7 @@ export async function createForumWorld(extraModules: GcsModule[] = []) {
     attachments,
     siteHost: async () => "forum.test",
     groupMentions,
+    antispam,
   });
   const polls = new GcsPollService(posting);
   const prefixes = new GcsPrefixService({ db, bus, acp: world.acp });
@@ -121,6 +136,8 @@ export async function createForumWorld(extraModules: GcsModule[] = []) {
     ...world,
     settings,
     rateLimiter,
+    antispam,
+    fetchRef,
     groupMentions,
     files,
     attachments,

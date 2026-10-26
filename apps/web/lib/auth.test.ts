@@ -1,4 +1,4 @@
-import { clearIpRangeCache, legacyPasswordHash, seedDefaults } from "@gcs/core";
+import { clearIpRangeCache, legacyPasswordHash, POW_HEADER, seedDefaults, solvePow } from "@gcs/core";
 import { truncateAll } from "@gcs/db/test/helpers";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { getAuth } from "./auth";
@@ -14,18 +14,20 @@ beforeEach(async () => {
   await truncateAll(db);
   await kv.flushAll();
   await seedDefaults(db, registry);
+  // Captcha-ul proof-of-work are testele lui (mai jos); restul înregistrărilor merg fără el.
+  await db.setting.upsert({ where: { key: "antispam.captcha" }, create: { key: "antispam.captcha", value: "none" }, update: { value: "none" } });
 });
 
 afterAll(async () => {
   await resetServices();
 });
 
-async function call(path: string, body: unknown, ip = "203.0.113.10"): Promise<Response> {
+async function call(path: string, body: unknown, ip = "203.0.113.10", extra: Record<string, string> = {}): Promise<Response> {
   const auth = await getAuth();
   return auth.handler(
     new Request(`${BASE}${path}`, {
       method: "POST",
-      headers: { "content-type": "application/json", origin: "http://localhost:3000", "x-forwarded-for": ip },
+      headers: { "content-type": "application/json", origin: "http://localhost:3000", "x-forwarded-for": ip, ...extra },
       body: JSON.stringify(body),
     }),
   );
@@ -142,5 +144,29 @@ describe("Better Auth (integrare)", () => {
     const signIn = await call("/sign-in/email", { email: "cinstit@mail.com", password: "parola-sigura-123" }, "198.51.100.41");
     expect(signIn.status).toBe(403);
     expect(await db.session.count({ where: { userId: user.id } })).toBe(before);
+  });
+
+  test("anti-spam: captcha-ul proof-of-work și întrebarea opresc înregistrarea cu email până la răspunsul corect", async () => {
+    const setSetting = (key: string, value: unknown) =>
+      db.setting.upsert({ where: { key }, create: { key, value: value as never }, update: { value: value as never } }).then(() => kv.flushAll());
+    await setSetting("antispam.captcha", "pow");
+    await setSetting("antispam.pow_difficulty", 8);
+    const body = { name: "Captcha", email: "captcha@mail.com", password: "parola-sigura-123" };
+    const missing = await call("/sign-up/email", body, "198.51.100.50");
+    expect(missing.status).toBe(403);
+    expect(await missing.json()).toMatchObject({ code: "CAPTCHA_FAILED" });
+    const token = solvePow(await services().antispam.powChallenge());
+    expect((await call("/sign-up/email", body, "198.51.100.50", { [POW_HEADER]: token })).status).toBe(200);
+    // Aceeași soluție nu merge de două ori.
+    expect((await call("/sign-up/email", { ...body, name: "Captcha2", email: "captcha2@mail.com" }, "198.51.100.50", { [POW_HEADER]: token })).status).toBe(403);
+
+    await setSetting("antispam.captcha", "none");
+    const q = await db.registrationQuestion.create({ data: { question: "Ce joc?", answers: ["Counter-Strike 2"] } });
+    const qa = { name: "Intrebare", email: "intrebare@mail.com", password: "parola-sigura-123" };
+    const wrong = await call("/sign-up/email", qa, "198.51.100.51", { "x-gcs-qa-id": String(q.id), "x-gcs-qa-answer": encodeURIComponent("minecraft") });
+    expect(await wrong.json()).toMatchObject({ code: "QA_FAILED" });
+    const ok = await call("/sign-up/email", qa, "198.51.100.51", { "x-gcs-qa-id": String(q.id), "x-gcs-qa-answer": encodeURIComponent("counter-strike 2") });
+    expect(ok.status).toBe(200);
+    expect(await db.spamLog.count({ where: { kind: { in: ["captcha_failed", "qa_failed"] } } })).toBe(3);
   });
 });

@@ -6,6 +6,7 @@ import { APIError } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { captcha } from "better-auth/plugins";
 import { twoFactor } from "better-auth/plugins/two-factor";
+import { antispamPlugin } from "./antispam-plugin";
 import { clientIp } from "./client-ip";
 import { installFinishPlugin } from "./install-plugin";
 import { services } from "./services";
@@ -21,6 +22,8 @@ type GcsAuthConfig = {
   googleClientId: string;
   googleClientSecret: string;
   turnstileSecret: string;
+  /** Captcha-ul la înregistrare (ACP › Anti-spam): Turnstile doar în modul „turnstile”, cu cheile completate. */
+  captcha: string;
 };
 
 const SIGN_IN_RULE = { window: 15 * 60, max: 5 };
@@ -150,8 +153,10 @@ function createAuth(config: GcsAuthConfig) {
     plugins: [
       // allowPasswordless: și conturile fără parolă (doar Discord/Google/Steam) pot activa 2FA, cerut pentru ACP.
       twoFactor({ issuer: config.siteName, allowPasswordless: true }),
-      // Cloudflare Turnstile la înregistrare, doar când e configurat în ACP (spec §15).
-      ...(config.turnstileSecret
+      // Anti-spam la înregistrare: captcha-ul proof-of-work propriu, întrebarea și lista publică de spammeri.
+      antispamPlugin(),
+      // Cloudflare Turnstile la înregistrare, doar în modul „turnstile” și cu cheile din ACP (spec §15).
+      ...(config.captcha === "turnstile" && config.turnstileSecret
         ? [captcha({ provider: "cloudflare-turnstile", secretKey: config.turnstileSecret, endpoints: ["/sign-up/email"] })]
         : []),
       // La login / legarea Steam, identitatea de joc Steam a membrului se leagă de cont (puntea serverelor de joc).
@@ -175,7 +180,7 @@ export async function getAuth(): Promise<GcsAuth> {
   const { settings } = services();
   // Înainte de instalare (sau dacă baza nu răspunde) folosim valorile implicite ale setărilor.
   const get = <T,>(key: string, fallback: T) => settings.get<T>(key).catch(() => fallback);
-  const [siteName, siteUrl, emailConfirm, discordClientId, discordClientSecret, googleClientId, googleClientSecret, turnstileSecret] = await Promise.all([
+  const [siteName, siteUrl, emailConfirm, discordClientId, discordClientSecret, googleClientId, googleClientSecret, turnstileSecret, captcha] = await Promise.all([
     get("site.name", "GamingCommunitySuite"),
     get("site.url", ""),
     get("auth.email_confirm", true),
@@ -184,8 +189,9 @@ export async function getAuth(): Promise<GcsAuth> {
     get("auth.google_client_id", ""),
     get("auth.google_client_secret", ""),
     get("auth.turnstile_secret", ""),
+    get("antispam.captcha", "pow"),
   ]);
-  const config: GcsAuthConfig = { siteName, siteUrl, emailConfirm, discordClientId, discordClientSecret, googleClientId, googleClientSecret, turnstileSecret };
+  const config: GcsAuthConfig = { siteName, siteUrl, emailConfirm, discordClientId, discordClientSecret, googleClientId, googleClientSecret, turnstileSecret, captcha };
   const key = JSON.stringify(config);
   if (globalForAuth.gcsAuth?.key !== key) globalForAuth.gcsAuth = { key, auth: createAuth(config) };
   return globalForAuth.gcsAuth.auth;

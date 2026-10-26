@@ -61,6 +61,7 @@ export * from "./jobs/cron";
 export * from "./infra";
 export * from "./moderation/bans";
 export * from "./moderation/warnings";
+export * from "./antispam";
 export * from "./nav/service";
 export * from "./members/appearance";
 export * from "./members/memberName";

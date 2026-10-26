@@ -66,6 +66,20 @@ export async function setSpammer(userId: string, flag: boolean): Promise<GcsResu
   });
 }
 
+/** „Marchează ca spammer” (ACP › Anti-spam): ban, opțional IP-urile și domeniul emailului, conținutul ascuns, raportarea. */
+export async function markSpammerAction(userId: string, fd: FormData): Promise<GcsResult<null>> {
+  return runAcpAction("members.antispam", "edit", async (actor) => {
+    await services().antispam.markSpammer(actor, userId, {
+      banIp: fd.get("banIp") === "on",
+      banEmailDomain: fd.get("banDomain") === "on",
+      hideContent: fd.get("hide") === "on",
+      report: fd.get("report") === "on",
+      reason: field(fd, "reason"),
+    });
+    return null;
+  });
+}
+
 export async function unlockMember(userId: string): Promise<GcsResult<null>> {
   return runAcpAction(SECTION, "edit", async (actor) => {
     await services().memberAdmin.unlock(actor, userId);

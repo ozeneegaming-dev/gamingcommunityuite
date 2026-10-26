@@ -50,8 +50,9 @@ export class GcsTopicService {
     const poll = input.poll ? validatePoll(input.poll) : null;
     if (poll && (await permissions.groupValue<boolean>(actor, "forums.poll_create")) !== true) throw new GcsForbidden({ permission: "forums.poll_create" });
 
+    const spamModerated = await posting.checkSpam(actor, rendered, { forumId: forum.id, title });
     await posting.checkFlood(actor);
-    const pending = await posting.needsApproval(actor, forum);
+    const pending = spamModerated || (await posting.needsApproval(actor, forum));
     const visibility = pending ? "PENDING" : "VISIBLE";
     const authorId = actor.userId;
 

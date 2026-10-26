@@ -45,6 +45,8 @@ const isPort = (v: unknown) => (Number.isInteger(v) && (v as number) > 0 && (v a
 const isUrlOrEmpty = (v: unknown) => (v === "" || URL.canParse(v as string) ? null : "invalid_url");
 const isEmailOrEmpty = (v: unknown) => (v === "" || /^[^\s@]+@[^\s@]+$/.test(v as string) ? null : "invalid_email");
 const oneOf = (values: string[]) => (v: unknown) => (values.includes(v as string) ? null : "invalid_choice");
+const range = (min: number, max: number) => (v: unknown) => (Number.isInteger(v) && (v as number) >= min && (v as number) <= max ? null : "invalid_range");
+const maxLen = (max: number) => (v: unknown) => (typeof v === "string" && v.length <= max ? null : "too_long");
 const notEmpty = (v: unknown) => ((v as string).trim() === "" ? "required" : null);
 /** `{ [funcție]: boolean }` (comutatoarele botului). */
 const botFeaturesError = (v: unknown) =>
@@ -111,6 +113,23 @@ const settings: GcsSettingDef[] = [
   // Perioada de răzgândire a cererii „Șterge contul meu” (zile; 0 = la următoarea trecere a jobului), ACP → Cereri GDPR.
   // Anti-spam: membrul confirmă un avertisment nou înainte să poată posta din nou (ACP › Moderare › Avertismente).
   setting(WARNINGS_ACK_SETTING, "boolean", true, "warnings"),
+  // Anti-spam (ACP › Moderare › Anti-spam): captcha-ul la înregistrare, întrebarea, membrii noi, phishing-ul și lista publică de spammeri.
+  { ...setting("antispam.captcha", "string", "pow", "antispam", oneOf(["none", "pow", "turnstile"])), options: ["none", "pow", "turnstile"] },
+  setting("antispam.pow_difficulty", "number", 15, "antispam", range(8, 24)),
+  setting("antispam.qa_enabled", "boolean", true, "antispam"),
+  setting("antispam.new_member_days", "number", 0, "antispam", range(0, 365)),
+  setting("antispam.new_member_posts", "number", 0, "antispam", range(0, 1000)),
+  { ...setting("antispam.new_member_links", "string", "moderate", "antispam", oneOf(["allow", "moderate", "block"])), options: ["allow", "moderate", "block"] },
+  setting("antispam.new_member_images", "number", 2, "antispam", range(0, 50)),
+  setting("antispam.new_member_pms_per_day", "number", 5, "antispam", range(0, 1000)),
+  setting("antispam.new_member_approval", "boolean", false, "antispam"),
+  setting("antispam.new_member_chat_slow", "number", 10, "antispam", range(0, 600)),
+  setting("antispam.phishing_enabled", "boolean", true, "antispam"),
+  setting("antispam.phishing_domains", "string", "", "antispam", maxLen(20_000)),
+  setting("antispam.phishing_allow", "string", "", "antispam", maxLen(20_000)),
+  setting("antispam.sfs_enabled", "boolean", false, "antispam"),
+  setting("antispam.sfs_api_key", "secret", "", "antispam"),
+  setting("antispam.sfs_confidence", "number", 60, "antispam", range(1, 100)),
   setting("members.deletion_cooling_days", "number", 7, "gdpr", (v) => (Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 90 ? null : "invalid_range")),
 ];
 

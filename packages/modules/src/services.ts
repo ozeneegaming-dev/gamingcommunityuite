@@ -162,6 +162,7 @@ import { chatMentionNames } from "./chat/mentionNames";
 import { GcsStaffPage } from "./profile/staffPage";
 import { GcsWhereabouts } from "./community/whereabouts";
 import { GcsMemberPanelData } from "./profile/memberPanels";
+import { GcsAntispamService } from "./antispam/service";
 
 export type GcsServices = {
   db: PrismaClient;
@@ -227,6 +228,7 @@ export type GcsServices = {
   chatQueries: GcsChatQueries;
   bans: GcsBanService;
   warnings: GcsWarningService;
+  antispam: GcsAntispamService;
   actors: GcsActorResolver;
   rateLimiter: GcsRateLimiter;
   files: GcsFileStore;
@@ -477,6 +479,17 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const actors = new GcsActorResolver({ db, cache, presence });
   const acpDashboard = new GcsAcpDashboardService({ db, acp, presence, cache });
   const rateLimiter = new GcsRateLimiter(kv);
+  // Anti-spam: captcha-ul propriu, întrebarea de la înregistrare, membrii noi, phishing-ul și „Marchează ca spammer”.
+  const antispam = new GcsAntispamService({
+    db,
+    settings,
+    cache,
+    rateLimiter,
+    bans,
+    acp,
+    bus,
+    secret: () => process.env.GCS_SECRET ?? "gcs-dev-secret-not-for-production-use",
+  });
   const files = createFileStore(opts.configDir);
   const attachments = new GcsAttachmentService({ db, store: files, permissions, rateLimiter });
   // Logo-ul și favicon-ul temelor sunt publice (etapa 5).
@@ -502,6 +515,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     groupMentions,
     // Forum v2: iconițele blocurilor din postări (SVG-ul registrului Font Awesome).
     icon: iconSvg,
+    antispam,
   });
   const polls = new GcsPollService(posting);
   const prefixes = new GcsPrefixService({ db, bus, acp });
@@ -528,6 +542,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     rateLimiter,
     mailer,
     baseUrl: async () => baseUrl(await settings.get<string>("site.url")),
+    antispam,
   });
   const social = new GcsSocialService({
     db,
@@ -539,6 +554,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     profiles,
     render: (content, ctx) => posting.render(content, ctx),
     markGroupMentions: (actor, rendered) => posting.markGroupMentions(actor, rendered),
+    antispam,
   });
   social.registerContent({ reactions, reports });
   const achievements = new GcsAchievementService({ db, bus, acp, jobs });
@@ -561,6 +577,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     social,
     render: (content, ctx) => posting.render(content, ctx),
     markGroupMentions: (actor, rendered) => posting.markGroupMentions(actor, rendered),
+    antispam,
   });
   conversations.registerContent({ reports });
   const vip = new GcsVipService({ db, bus, permissions, settings, membership });
@@ -615,7 +632,28 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const textMentions = new GcsTextMentions({ db, groupMentions });
   // Drepturile de moderare (grupuri + accesul de moderator) și sancțiunile, aceleași pentru scriere și citire.
   const chatRights = new GcsChatRights({ db, permissions });
-  const chat = new GcsChatService({ db, bus, permissions, settings, rateLimiter, realtime, acp, attachments, extensions: chatExtensions, textMentions, groupMentions, rights: chatRights });
+  const chat = new GcsChatService({ db, bus, permissions, settings, rateLimiter, realtime, acp, attachments, extensions: chatExtensions, textMentions, groupMentions, rights: chatRights, antispam });
+  // „Marchează ca spammer”: fiecare aplicație își ascunde conținutul membrului (postările prin moderare, cu contoarele).
+  antispam.registerContent({
+    key: "forums.posts",
+    hide: async (userId, actor) => {
+      const rows = await db.post.findMany({ where: { authorId: userId, visibility: "VISIBLE" }, select: { id: true }, orderBy: { id: "desc" }, take: 500 });
+      let count = 0;
+      for (const r of rows) {
+        const ok = await posts.hide(actor, r.id, "spam").then(() => true, () => false);
+        if (ok) count++;
+      }
+      return count;
+    },
+  });
+  antispam.registerContent({
+    key: "chat.messages",
+    hide: async (userId, actor) => (await db.chatMessage.updateMany({ where: { authorId: userId, hiddenAt: null, deletedAt: null }, data: { hiddenAt: new Date(), hiddenById: actor.userId } })).count,
+  });
+  antispam.registerContent({
+    key: "profile.statuses",
+    hide: async (userId) => (await db.statusUpdate.updateMany({ where: { authorId: userId, visibility: "VISIBLE" }, data: { visibility: "HIDDEN" } })).count,
+  });
   // Stilul numelor din pastilele mențiunilor (decorarea de bază, înaintea extensiilor); `appearance` e creat mai jos.
   chatExtensions.useBase(chatMentionNames({ db, letterUsers: () => appearance.letterUsers() }));
   const chatQueries = new GcsChatQueries({ db, permissions, extensions: chatExtensions, rights: chatRights });
@@ -842,6 +880,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     vipPublic: new GcsVipPublic({ db, registry, permissions, settings, vip, checkout: null }),
     bans,
     warnings,
+    antispam,
     actors,
     rateLimiter,
     files,

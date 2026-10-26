@@ -12,6 +12,8 @@
     "./rating-stars": "./src/content/ratingStars.ts",
     "./member-name": "./src/members/memberName.ts",
     "./text-mentions": "./src/members/textMentions.ts",
+    "./phishing": "./src/antispam/phishing.ts",
+    "./pow": "./src/antispam/powShared.ts",
     "./test/redis": "./test/redis.ts",
     "./test/kv": "./test/kv.ts",
     "./test/realtime": "./test/realtime.ts",

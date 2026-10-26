@@ -21,6 +21,7 @@ import type { GcsRenderContext } from "../forums/posting";
 import type { GcsProfileService } from "../profile/profile";
 import { normalizePrivacy } from "../profile/privacy";
 import type { GcsSocialService } from "../profile/social";
+import type { GcsContentGuard } from "../antispam/service";
 
 export const PM_CONTENT_TYPE = "pm.message";
 const TITLE_MAX = 120;
@@ -55,6 +56,8 @@ export class GcsConversationService {
       render: (content: unknown, ctx?: GcsRenderContext) => Promise<GcsRendered>;
       /** Pornește pauza dintre mențiunile de grup, după salvarea mesajului. */
       markGroupMentions?: (actor: GcsActor, rendered: GcsRendered) => Promise<void>;
+      /** Anti-spam: linkurile de phishing și restricțiile membrilor noi (linkuri, imagini, mesaje pe zi). */
+      antispam?: GcsContentGuard;
     },
   ) {}
 
@@ -110,6 +113,7 @@ export class GcsConversationService {
   private async renderMessage(content: unknown, actor: GcsActor): Promise<GcsRendered> {
     const rendered = await this.deps.render(content, { actor, cooldown: true });
     if (rendered.text.trim() === "" && rendered.attachments.length === 0) throw new GcsValidationError({ content: "required" });
+    await this.deps.antispam?.checkContent(actor, { kind: "pm", html: rendered.html, text: rendered.text });
     return rendered;
   }
 
@@ -136,6 +140,7 @@ export class GcsConversationService {
     await this.assertRecipients(actor, to);
     const rendered = await this.renderMessage(input.content, actor);
     await this.checkFlood(actor);
+    await this.deps.antispam?.checkPmQuota(actor);
 
     const result = await db.$transaction(async (tx) => {
       const conversation = await tx.conversation.create({
@@ -184,6 +189,7 @@ export class GcsConversationService {
     await permissions.assert(actor, "pm.send");
     const rendered = await this.renderMessage(content, actor);
     await this.checkFlood(actor);
+    await this.deps.antispam?.checkPmQuota(actor);
     const message = await db.$transaction((tx) => this.addMessage(tx, conversationId, actor, rendered));
     await this.deps.markGroupMentions?.(actor, rendered);
     const participants = await this.activeIds(conversationId);

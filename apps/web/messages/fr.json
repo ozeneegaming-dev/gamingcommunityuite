@@ -126,7 +126,9 @@
       "passwordHint": "Au moins 8 caractères.",
       "submit": "Créer un compte",
       "hasAccount": "Vous avez déjà un compte ?",
-      "loginLink": "Se connecter"
+      "loginLink": "Se connecter",
+      "answerHint": "La question de la communauté contre les robots.",
+      "verifying": "Vérification…"
     },
     "errors": {
       "invalid_credentials": "Courriel ou mot de passe incorrect",
@@ -146,7 +148,9 @@
       "social": "La connexion a échoué. Réessaie.",
       "generic": "Quelque chose a mal tourné. Veuillez réessayer.",
       "banned": "Votre accès à ce site est restreint. S'il s'agit d'une erreur, contactez l'équipe.",
-      "registration_closed": "Les inscriptions sont actuellement fermées."
+      "registration_closed": "Les inscriptions sont actuellement fermées.",
+      "qa_failed": "La réponse à la question n'est pas correcte.",
+      "spam_source": "L'inscription a été bloquée par le filtre anti-spam. S'il s'agit d'une erreur, contactez l'équipe."
     }
   },
   "errors": {
@@ -234,7 +238,14 @@
       "warning_ack": "Confirmez d'abord votre avertissement (page « Mes avertissements »).",
       "already_appealed": "Vous avez déjà contesté cet avertissement.",
       "warning_inactive": "L'avertissement a expiré ou a été annulé.",
-      "already_decided": "La contestation a déjà été tranchée."
+      "already_decided": "La contestation a déjà été tranchée.",
+      "phishing_link": "Le lien mène vers un site de phishing et ne peut pas être publié.",
+      "new_member_links": "Les nouveaux membres ne peuvent pas encore publier de liens externes ici.",
+      "new_member_images": "Les nouveaux membres ne peuvent ajouter que quelques images pour l'instant.",
+      "new_member_pm_limit": "Vous avez atteint la limite quotidienne de messages privés des nouveaux membres.",
+      "captcha_failed": "La vérification anti-spam a échoué. Réessayez.",
+      "qa_failed": "La réponse à la question n'est pas correcte.",
+      "spam_source": "Bloqué par le filtre anti-spam."
     },
     "fields": {
       "invalid_color": "Couleur non valide (#RRGBB)",
@@ -1127,6 +1138,14 @@
           "OFFICER": "Officier",
           "MEMBER": "Membre"
         }
+      },
+      "spammer": {
+        "submit": "Marquer comme spammeur",
+        "hide": "Masquer tout le contenu (messages, chat, statuts)",
+        "banIp": "Bannir ses IP (90 jours)",
+        "banDomain": "Bannir le domaine de l'email (pas les grands fournisseurs)",
+        "report": "Signaler à la liste publique de spammeurs",
+        "reason": "Motif du bannissement"
       }
     },
     "groups": {
@@ -4551,6 +4570,96 @@
           "BAN": "Bannissement"
         },
         "deleteConfirm": "Le seuil est supprimé ; ses restrictions sont levées au prochain avertissement ou à l'expiration."
+      }
+    },
+    "antispam": {
+      "title": "Anti-spam",
+      "save": "Enregistrer",
+      "delete": "Supprimer",
+      "stats": {
+        "title": "Défense sur les 30 derniers jours : {count} blocages"
+      },
+      "kinds": {
+        "captcha_failed": "Captcha échoué",
+        "qa_failed": "Mauvaise réponse",
+        "spam_source": "Sur la liste des spammeurs",
+        "phishing_blocked": "Lien de phishing",
+        "links_blocked": "Lien bloqué (nouveau membre)",
+        "links_moderated": "Lien en approbation (nouveau membre)",
+        "images_blocked": "Trop d'images",
+        "pm_limited": "Limite de messages privés",
+        "spammer_marked": "Marqué comme spammeur"
+      },
+      "log": {
+        "title": "Journal de défense",
+        "kind": "Type",
+        "anyKind": "Tout type",
+        "search": "IP, email ou id du membre",
+        "filter": "Filtrer",
+        "empty": "Rien dans le journal.",
+        "when": "Quand",
+        "who": "Qui",
+        "detail": "Détails",
+        "prev": "‹ Précédent",
+        "next": "Suivant ›",
+        "page": "Page {page} sur {pages}"
+      },
+      "captcha": {
+        "title": "Inscription",
+        "body": "Le captcha proof-of-work est intégré : le navigateur effectue un petit calcul en arrière-plan, sans scripts tiers ni images à deviner.",
+        "mode": "Captcha",
+        "modes": {
+          "pow": "Proof-of-work (recommandé)",
+          "turnstile": "Cloudflare Turnstile",
+          "none": "Pas de captcha"
+        },
+        "difficulty": "Difficulté (8–24 ; +1 = deux fois plus de calcul)",
+        "turnstileHint": "Les clés Turnstile se renseignent dans Paramètres › Connexion.",
+        "qa": "Poser aussi une question (s'il y en a)"
+      },
+      "questions": {
+        "title": "Questions d'inscription",
+        "body": "Une est choisie au hasard pour la langue du visiteur. Les réponses ignorent la casse, les accents et les espaces.",
+        "question": "Question",
+        "locale": "Langue",
+        "allLocales": "Toutes les langues",
+        "answers": "Réponses acceptées (une par ligne)",
+        "enabled": "Active",
+        "add": "Ajouter la question",
+        "deleteConfirm": "La question est supprimée définitivement."
+      },
+      "newMembers": {
+        "title": "Nouveaux membres",
+        "body": "Les restrictions s'appliquent les premiers jours après l'inscription ou jusqu'à un nombre de messages approuvés. Laissez les deux à 0 pour les désactiver.",
+        "days": "Premiers jours",
+        "posts": "Sous ce nombre de messages approuvés",
+        "links": "Liens externes",
+        "linkModes": {
+          "moderate": "Le message passe en approbation (chat / MP : bloqués)",
+          "block": "Bloqués partout",
+          "allow": "Autorisés"
+        },
+        "images": "Images max. par message",
+        "pms": "Messages privés par jour (0 = illimité)",
+        "chatSlow": "Pause dans le chat (secondes)",
+        "approval": "Tous les messages des nouveaux membres passent en approbation"
+      },
+      "phishing": {
+        "title": "Anti-phishing",
+        "body": "Les liens vers des domaines qui imitent Steam / Discord ou figurent sur la liste sont refusés dans les messages, le chat, les MP, les statuts et les signatures ; un clic sur un ancien lien affiche d'abord une page d'avertissement. La liste fournie compte {count} domaines.",
+        "enabled": "La vérification des liens est activée",
+        "blocked": "Domaines bloqués (un par ligne)",
+        "allowed": "Domaines toujours autorisés (un par ligne)"
+      },
+      "sfs": {
+        "title": "Liste publique de spammeurs",
+        "body": "À l'inscription, l'IP et l'email sont vérifiés dans la base StopForumSpam (résultat mis en cache 24 h). La clé API ne sert qu'à signaler les spammeurs marqués.",
+        "enabled": "Vérifier les inscriptions",
+        "confidence": "Bloquer à partir de la confiance (%)",
+        "apiKey": "Clé API (pour signaler)",
+        "keySet": "enregistrée — laisser vide pour la garder",
+        "keyEmpty": "non renseignée",
+        "clearKey": "Supprimer la clé enregistrée"
       }
     }
   },
@@ -10063,5 +10172,16 @@
     "appealText": "Pourquoi pensez-vous que l'avertissement est injustifié ? (10–2000 caractères)",
     "appealSend": "Envoyer la contestation",
     "cancel": "Annuler"
+  },
+  "linkPage": {
+    "title": "Vous quittez le site",
+    "dangerTitle": "Attention : lien dangereux",
+    "invalid": "Le lien n'est pas valide.",
+    "dangerBody": "{domain} ressemble à un site de phishing qui vole des comptes Steam / Discord.",
+    "dangerHint": "N'y saisissez pas votre mot de passe et ne vous connectez pas avec Steam. Les sites officiels sont steamcommunity.com et steampowered.com.",
+    "body": "Le lien mène vers {domain}, un site externe.",
+    "back": "Retour au site",
+    "continue": "Continuer vers {domain}",
+    "continueDanger": "J'accepte le risque, ouvrir {domain}"
   }
 }

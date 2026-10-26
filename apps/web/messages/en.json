@@ -126,7 +126,9 @@
       "passwordHint": "At least 8 characters.",
       "submit": "Create account",
       "hasAccount": "Already have an account?",
-      "loginLink": "Sign in"
+      "loginLink": "Sign in",
+      "answerHint": "The community's question against bots.",
+      "verifying": "Verifying…"
     },
     "errors": {
       "invalid_credentials": "Incorrect email or password",
@@ -146,7 +148,9 @@
       "social": "Sign-in failed. Try again.",
       "generic": "Something went wrong. Please try again.",
       "banned": "Your access to this site is restricted. If this is a mistake, contact the team.",
-      "registration_closed": "Registrations are currently closed."
+      "registration_closed": "Registrations are currently closed.",
+      "qa_failed": "The answer to the question isn't correct.",
+      "spam_source": "Registration was stopped by the spam filter. If this is a mistake, contact the team."
     }
   },
   "errors": {
@@ -234,7 +238,14 @@
       "warning_ack": "Acknowledge your warning first (the “My warnings” page).",
       "already_appealed": "You already appealed this warning.",
       "warning_inactive": "The warning has expired or was revoked.",
-      "already_decided": "The appeal was already decided."
+      "already_decided": "The appeal was already decided.",
+      "phishing_link": "The link goes to a phishing site and can't be posted.",
+      "new_member_links": "New members can't post external links here yet.",
+      "new_member_images": "New members can only add a few images for now.",
+      "new_member_pm_limit": "You reached the daily private message limit for new members.",
+      "captcha_failed": "The anti-spam check failed. Try again.",
+      "qa_failed": "The answer to the question isn't correct.",
+      "spam_source": "Stopped by the spam filter."
     },
     "fields": {
       "invalid_color": "Invalid color (#RRGGBB)",
@@ -1127,6 +1138,14 @@
           "OFFICER": "Officer",
           "MEMBER": "Member"
         }
+      },
+      "spammer": {
+        "submit": "Mark as spammer",
+        "hide": "Hide all content (posts, chat, statuses)",
+        "banIp": "Ban their IPs (90 days)",
+        "banDomain": "Ban the email domain (not big providers)",
+        "report": "Report to the public spammer list",
+        "reason": "Ban reason"
       }
     },
     "groups": {
@@ -4551,6 +4570,96 @@
           "BAN": "Ban"
         },
         "deleteConfirm": "The threshold is deleted; restrictions it applied are lifted at the next warning or on expiry."
+      }
+    },
+    "antispam": {
+      "title": "Anti-spam",
+      "save": "Save",
+      "delete": "Delete",
+      "stats": {
+        "title": "Defense in the last 30 days: {count} blocks"
+      },
+      "kinds": {
+        "captcha_failed": "Failed captcha",
+        "qa_failed": "Wrong answer",
+        "spam_source": "On the spammer list",
+        "phishing_blocked": "Phishing link",
+        "links_blocked": "Link blocked (new member)",
+        "links_moderated": "Link sent for approval (new member)",
+        "images_blocked": "Too many images",
+        "pm_limited": "Private message limit",
+        "spammer_marked": "Marked as spammer"
+      },
+      "log": {
+        "title": "Defense log",
+        "kind": "Type",
+        "anyKind": "Any type",
+        "search": "IP, email or member id",
+        "filter": "Filter",
+        "empty": "Nothing in the log.",
+        "when": "When",
+        "who": "Who",
+        "detail": "Details",
+        "prev": "‹ Previous",
+        "next": "Next ›",
+        "page": "Page {page} of {pages}"
+      },
+      "captcha": {
+        "title": "Registration",
+        "body": "The proof-of-work captcha is built in: the browser does a little computing work in the background, with no third-party scripts and no images to guess.",
+        "mode": "Captcha",
+        "modes": {
+          "pow": "Proof-of-work (recommended)",
+          "turnstile": "Cloudflare Turnstile",
+          "none": "No captcha"
+        },
+        "difficulty": "Difficulty (8–24; +1 = twice the work)",
+        "turnstileHint": "Turnstile keys are set in Settings › Login & Registration.",
+        "qa": "Also ask a question (if there are questions)"
+      },
+      "questions": {
+        "title": "Registration questions",
+        "body": "One is picked at random for the visitor's language. Answers ignore case, accents and spacing.",
+        "question": "Question",
+        "locale": "Language",
+        "allLocales": "All languages",
+        "answers": "Accepted answers (one per line)",
+        "enabled": "Active",
+        "add": "Add question",
+        "deleteConfirm": "The question is deleted for good."
+      },
+      "newMembers": {
+        "title": "New members",
+        "body": "Restrictions apply during the first days after registration or until a number of approved posts. Leave both at 0 to turn them off.",
+        "days": "First days",
+        "posts": "Below this many approved posts",
+        "links": "External links",
+        "linkModes": {
+          "moderate": "The post needs approval (chat / PMs: blocked)",
+          "block": "Blocked everywhere",
+          "allow": "Allowed"
+        },
+        "images": "Max images per post",
+        "pms": "Private messages per day (0 = no limit)",
+        "chatSlow": "Chat pause (seconds)",
+        "approval": "All new members' posts need approval"
+      },
+      "phishing": {
+        "title": "Anti-phishing",
+        "body": "Links to domains that imitate Steam / Discord or are on the list are refused in posts, chat, private messages, statuses and signatures; clicking an old link shows a warning page first. The shipped list has {count} domains.",
+        "enabled": "Link checking is on",
+        "blocked": "Blocked domains (one per line)",
+        "allowed": "Always allowed domains (one per line)"
+      },
+      "sfs": {
+        "title": "Public spammer list",
+        "body": "At registration, the IP and email are checked against the StopForumSpam database (the result is cached for 24 h). The API key is only needed to report marked spammers.",
+        "enabled": "Check registrations",
+        "confidence": "Block from confidence (%)",
+        "apiKey": "API key (for reporting)",
+        "keySet": "saved — leave empty to keep it",
+        "keyEmpty": "not set",
+        "clearKey": "Remove the saved key"
       }
     }
   },
@@ -10063,5 +10172,16 @@
     "appealText": "Why do you think the warning is wrong? (10–2000 characters)",
     "appealSend": "Send appeal",
     "cancel": "Cancel"
+  },
+  "linkPage": {
+    "title": "You are leaving the site",
+    "dangerTitle": "Warning: dangerous link",
+    "invalid": "The link isn't valid.",
+    "dangerBody": "{domain} looks like a phishing site that steals Steam / Discord accounts.",
+    "dangerHint": "Don't enter your password there or sign in with Steam. The official sites are steamcommunity.com and steampowered.com.",
+    "body": "The link goes to {domain}, an external site.",
+    "back": "Back to the site",
+    "continue": "Continue to {domain}",
+    "continueDanger": "I accept the risk, open {domain}"
   }
 }

@@ -19,6 +19,7 @@ import {
 import type { PrismaClient, StatusUpdate } from "@gcs/db";
 import { normalizePrivacy, type GcsContactPolicy } from "./privacy";
 import type { GcsProfileService } from "./profile";
+import type { GcsContentGuard } from "../antispam/service";
 
 export const USER_FOLLOW = "user";
 export const STATUS_CONTENT_TYPE = "profile.status";
@@ -41,6 +42,8 @@ export type GcsSocialDeps = {
   render: (content: unknown, ctx?: { actor?: GcsActor; cooldown?: boolean }) => Promise<GcsRendered>;
   /** Pornește pauza dintre mențiunile de grup după salvare. */
   markGroupMentions?: (actor: GcsActor, rendered: GcsRendered) => Promise<void>;
+  /** Anti-spam: linkurile de phishing și restricțiile membrilor noi. */
+  antispam?: GcsContentGuard;
 };
 
 const userTags = (...ids: string[]) => ids.map((id) => `user:${id}`);
@@ -178,6 +181,7 @@ export class GcsSocialService {
     }
     const rendered = await render(content, { actor, cooldown: true });
     if (rendered.text.trim() === "" && rendered.attachments.length === 0) throw new GcsValidationError({ content: "required" });
+    await this.deps.antispam?.checkContent(actor, { kind: "status", html: rendered.html, text: rendered.text });
 
     const status = await db.$transaction(async (tx) => {
       const row = await tx.statusUpdate.create({

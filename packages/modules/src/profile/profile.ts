@@ -24,6 +24,7 @@ import { RENDER_LABELS } from "../forums/labels";
 import { emailChangeMail } from "./emails";
 import { cleanHandle, contactLink } from "./fieldGroups";
 import { isValidPrivacy, normalizePrivacy, type GcsPrivacy } from "./privacy";
+import type { GcsContentGuard } from "../antispam/service";
 
 export const USER_AVATAR = "user.avatar";
 export const USER_COVER = "user.cover";
@@ -67,6 +68,8 @@ export type GcsProfileDeps = {
   mailer: GcsMailer;
   /** Adresa publică a site-ului, pentru linkurile din emailuri. */
   baseUrl: () => Promise<string>;
+  /** Anti-spam: linkurile de phishing și restricțiile membrilor noi în semnătură. */
+  antispam?: GcsContentGuard;
 };
 
 const userTags = (id: string) => [`user:${id}`];
@@ -330,6 +333,7 @@ export class GcsProfileService {
     if (limits.maxChars <= 0) throw new GcsValidationError({ content: "signature_disabled" });
     const locale = await settings.get<string>("site.locale");
     const rendered = renderRichField(content, GCS_RICH_FIELDS.signature, { ...limits, render: { labels: RENDER_LABELS[locale] ?? RENDER_LABELS.ro! } });
+    await this.deps.antispam?.checkContent(actor, { kind: "signature", html: rendered.html, text: rendered.html.replace(/<[^>]*>/g, " ") });
     await db.user.update({ where: { id: actor.userId }, data: { signatureJson: rendered.json as Prisma.InputJsonValue, signatureHtml: rendered.html } });
   }
 

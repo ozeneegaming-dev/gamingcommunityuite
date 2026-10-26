@@ -487,6 +487,35 @@ model WarningAppeal {
   @@map("warning_appeals")
 }
 
+/// Anti-spam: întrebările de la înregistrare (mai multe răspunsuri acceptate, pe limbă; `locale` gol = toate limbile).
+model RegistrationQuestion {
+  id        Int      @id @default(autoincrement())
+  locale    String? @db.LongText
+  question  String @db.LongText
+  /// Răspunsurile acceptate, normalizate (`normalizeAnswer`): string[].
+  answers   Json
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("registration_questions")
+}
+
+/// Anti-spam: jurnalul apărării (captcha / întrebare greșită, IP-uri din lista de spam, linkuri de phishing blocate,
+/// restricțiile membrilor noi, spammeri marcați) — pentru jurnal și statistici.
+model SpamLog {
+  id        Int      @id @default(autoincrement())
+  kind      String @db.VarChar(191)
+  userId    String? @db.LongText
+  ip        String? @db.LongText
+  email     String? @db.LongText
+  detail    Json?
+  createdAt DateTime @default(now())
+
+  @@index([kind, createdAt])
+  @@index([createdAt])
+  @@map("spam_logs")
+}
+
 model WarningAction {
   id            Int               @id @default(autoincrement())
   threshold     Int               @unique

@@ -367,6 +367,23 @@ th[aria-sort="descending"] .gcs-sortLink__icon {
 .gcs-memberActions__grid > form {
   flex-direction: row;
 }
+/* „Marchează ca spammer”: butonul deschide opțiunile acțiunii pe tot rândul. */
+.gcs-memberSpam[open] {
+  flex-basis: 100%;
+}
+.gcs-memberSpam > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.gcs-memberSpam > summary::-webkit-details-marker {
+  display: none;
+}
+.gcs-memberSpam[open] > form {
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: var(--gcs-radius, 8px);
+}
 .gcs-memberActions__hint {
   margin: 0;
   padding: 0 16px 16px;

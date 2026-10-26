@@ -41,6 +41,11 @@ export function authErrorKey(error: { status?: number; code?: string } | null | 
       return "banned";
     case "REGISTRATION_CLOSED":
       return "registration_closed";
+    case "QA_FAILED":
+      return "qa_failed";
+    case "SPAM_SOURCE":
+      return "spam_source";
+    case "CAPTCHA_FAILED":
     case "MISSING_RESPONSE":
     case "VERIFICATION_FAILED":
     case "UNKNOWN_ERROR":

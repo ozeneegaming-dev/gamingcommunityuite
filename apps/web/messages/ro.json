@@ -126,7 +126,9 @@
       "passwordHint": "Cel puțin 8 caractere.",
       "submit": "Creează cont",
       "hasAccount": "Ai deja cont?",
-      "loginLink": "Autentifică-te"
+      "loginLink": "Autentifică-te",
+      "answerHint": "Întrebarea comunității împotriva roboților.",
+      "verifying": "Se verifică…"
     },
     "errors": {
       "invalid_credentials": "Email sau parolă incorectă",
@@ -146,7 +148,9 @@
       "social": "Autentificarea nu a reușit. Încearcă din nou.",
       "generic": "A apărut o eroare. Încearcă din nou.",
       "banned": "Accesul tău pe acest site e restricționat. Dacă e o greșeală, contactează echipa.",
-      "registration_closed": "Înregistrările sunt închise momentan."
+      "registration_closed": "Înregistrările sunt închise momentan.",
+      "qa_failed": "Răspunsul la întrebare nu e corect.",
+      "spam_source": "Înregistrarea a fost oprită de filtrul anti-spam. Dacă e o greșeală, contactează echipa."
     }
   },
   "errors": {
@@ -234,7 +238,14 @@
       "warning_ack": "Confirmă întâi avertismentul primit (pagina „Avertismentele mele”).",
       "already_appealed": "Ai contestat deja acest avertisment.",
       "warning_inactive": "Avertismentul a expirat sau a fost anulat.",
-      "already_decided": "Contestația a fost deja decisă."
+      "already_decided": "Contestația a fost deja decisă.",
+      "phishing_link": "Linkul duce spre un site de phishing și nu poate fi postat.",
+      "new_member_links": "Membrii noi nu pot posta linkuri externe aici deocamdată.",
+      "new_member_images": "Membrii noi pot adăuga doar câteva imagini deocamdată.",
+      "new_member_pm_limit": "Ai atins limita zilnică de mesaje private pentru membrii noi.",
+      "captcha_failed": "Verificarea anti-spam a eșuat. Încearcă din nou.",
+      "qa_failed": "Răspunsul la întrebare nu e corect.",
+      "spam_source": "Oprit de filtrul anti-spam."
     },
     "fields": {
       "invalid_color": "Culoare invalidă (#RRGGBB)",
@@ -1127,6 +1138,14 @@
           "OFFICER": "Ofițer",
           "MEMBER": "Membru"
         }
+      },
+      "spammer": {
+        "submit": "Marchează ca spammer",
+        "hide": "Ascunde tot conținutul (postări, chat, statusuri)",
+        "banIp": "Banează IP-urile lui (90 de zile)",
+        "banDomain": "Banează domeniul emailului (nu și furnizorii mari)",
+        "report": "Raportează în lista publică de spammeri",
+        "reason": "Motivul banului"
       }
     },
     "groups": {
@@ -4551,6 +4570,96 @@
           "BAN": "Ban"
         },
         "deleteConfirm": "Pragul se șterge; restricțiile date de el se ridică la următorul avertisment sau la expirare."
+      }
+    },
+    "antispam": {
+      "title": "Anti-spam",
+      "save": "Salvează",
+      "delete": "Șterge",
+      "stats": {
+        "title": "Apărarea în ultimele 30 de zile: {count} blocări"
+      },
+      "kinds": {
+        "captcha_failed": "Captcha greșit",
+        "qa_failed": "Răspuns greșit",
+        "spam_source": "În lista de spammeri",
+        "phishing_blocked": "Link de phishing",
+        "links_blocked": "Link blocat (membru nou)",
+        "links_moderated": "Link în aprobare (membru nou)",
+        "images_blocked": "Prea multe imagini",
+        "pm_limited": "Limita de mesaje private",
+        "spammer_marked": "Marcat ca spammer"
+      },
+      "log": {
+        "title": "Jurnalul apărării",
+        "kind": "Tipul",
+        "anyKind": "Orice tip",
+        "search": "IP, email sau id membru",
+        "filter": "Filtrează",
+        "empty": "Nimic în jurnal.",
+        "when": "Când",
+        "who": "Cine",
+        "detail": "Detalii",
+        "prev": "‹ Înapoi",
+        "next": "Înainte ›",
+        "page": "Pagina {page} din {pages}"
+      },
+      "captcha": {
+        "title": "Înregistrarea",
+        "body": "Captcha-ul proof-of-work e al platformei: browserul face o mică muncă de calcul în fundal, fără scripturi terțe și fără imagini de ghicit.",
+        "mode": "Captcha",
+        "modes": {
+          "pow": "Proof-of-work (recomandat)",
+          "turnstile": "Cloudflare Turnstile",
+          "none": "Fără captcha"
+        },
+        "difficulty": "Dificultatea (8–24; +1 = de două ori mai mult calcul)",
+        "turnstileHint": "Cheile Turnstile se completează în Setări › Autentificare.",
+        "qa": "Cere și răspunsul la o întrebare (dacă există întrebări)"
+      },
+      "questions": {
+        "title": "Întrebări la înregistrare",
+        "body": "Se alege una la întâmplare, pentru limba vizitatorului. Răspunsurile nu țin cont de litere mari, diacritice sau spații.",
+        "question": "Întrebarea",
+        "locale": "Limba",
+        "allLocales": "Toate limbile",
+        "answers": "Răspunsuri acceptate (câte unul pe rând)",
+        "enabled": "Activă",
+        "add": "Adaugă întrebarea",
+        "deleteConfirm": "Întrebarea se șterge definitiv."
+      },
+      "newMembers": {
+        "title": "Membrii noi",
+        "body": "Restricțiile se aplică în primele zile de la înregistrare sau până la un număr de postări aprobate. Lasă 0 la amândouă ca să le oprești.",
+        "days": "Primele zile",
+        "posts": "Sub atâtea postări aprobate",
+        "links": "Linkurile externe",
+        "linkModes": {
+          "moderate": "Postarea intră în aprobare (în chat / PM: blocate)",
+          "block": "Blocate peste tot",
+          "allow": "Permise"
+        },
+        "images": "Imagini maxime pe postare",
+        "pms": "Mesaje private pe zi (0 = fără limită)",
+        "chatSlow": "Pauza în chat (secunde)",
+        "approval": "Toate postările membrilor noi trec prin aprobare"
+      },
+      "phishing": {
+        "title": "Anti-phishing",
+        "body": "Linkurile spre domenii care imită Steam / Discord sau din listă se refuză în postări, chat, mesaje private, statusuri și semnături; un click pe un link vechi duce întâi pe o pagină de avertizare. Lista livrată are {count} domenii.",
+        "enabled": "Verificarea linkurilor e pornită",
+        "blocked": "Domenii blocate (unul pe rând)",
+        "allowed": "Domenii permise mereu (unul pe rând)"
+      },
+      "sfs": {
+        "title": "Lista publică de spammeri",
+        "body": "La înregistrare, IP-ul și emailul se verifică în baza StopForumSpam (rezultatul stă 24 h în cache). Cheia API e necesară doar ca să raportezi spammerii marcați.",
+        "enabled": "Verifică înregistrările",
+        "confidence": "Blochează de la încrederea (%)",
+        "apiKey": "Cheia API (pentru raportare)",
+        "keySet": "salvată — lasă gol ca s-o păstrezi",
+        "keyEmpty": "necompletată",
+        "clearKey": "Șterge cheia salvată"
       }
     }
   },
@@ -10063,5 +10172,16 @@
     "appealText": "De ce crezi că avertismentul e greșit? (10–2000 de caractere)",
     "appealSend": "Trimite contestația",
     "cancel": "Renunță"
+  },
+  "linkPage": {
+    "title": "Părăsești site-ul",
+    "dangerTitle": "Atenție: link periculos",
+    "invalid": "Linkul nu este valid.",
+    "dangerBody": "{domain} arată ca un site de phishing care fură conturi Steam / Discord.",
+    "dangerHint": "Nu introduce acolo parola și nu te autentifica cu Steam. Site-urile oficiale sunt steamcommunity.com și steampowered.com.",
+    "body": "Linkul duce pe {domain}, un site extern.",
+    "back": "Înapoi la site",
+    "continue": "Continuă spre {domain}",
+    "continueDanger": "Îmi asum riscul, deschide {domain}"
   }
 }

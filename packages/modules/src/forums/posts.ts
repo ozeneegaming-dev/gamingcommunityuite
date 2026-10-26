@@ -33,9 +33,10 @@ export class GcsPostService {
 
     const filtered = await posting.filterContent(actor, { kind: "reply", title: null, content: input.content, forumId, topicId: topic.id, authorId: actor.userId });
     const rendered = await posting.render(filtered.content, { actor, cooldown: true, blocks: true });
+    const spamModerated = await posting.checkSpam(actor, rendered, { forumId });
     await posting.checkFlood(actor);
-    // Forum v2: „Aprobare postări” pe topic (în afară de moderatori, ca la forum).
-    const pending = await posting.needsApproval(actor, { id: forumId, requireApproval: topic.forum.requireApproval || topic.requireApproval });
+    // Forum v2: „Aprobare postări” pe topic (în afară de moderatori, ca la forum); anti-spam: linkurile membrilor noi.
+    const pending = spamModerated || (await posting.needsApproval(actor, { id: forumId, requireApproval: topic.forum.requireApproval || topic.requireApproval }));
     const authorId = actor.userId;
 
     const result = await db.$transaction(async (tx) => {
@@ -111,6 +112,8 @@ export class GcsPostService {
     // La editare nu se trimit notificări, deci nici pauza dintre mențiuni nu se aplică; pastilele vechi rămân.
     const rendered = await posting.render(filtered.content, { actor, keep: post.contentJson, blocks: true });
     const title = filtered.title !== null ? posting.cleanTitle(filtered.title) : null;
+    // Anti-spam: la editare linkurile de phishing și cele ale membrilor noi se refuză (nu există coadă pentru editări).
+    await posting.checkSpam(actor, rendered, { forumId, edit: true, title });
 
     await db.$transaction(async (tx) => {
       await tx.postRevision.create({

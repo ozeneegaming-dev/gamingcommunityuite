@@ -17,6 +17,7 @@ import {
   warningAckRequired,
 } from "@gcs/core";
 import type { Forum, Prisma, PrismaClient } from "@gcs/db";
+import type { GcsContentGuard } from "../antispam/service";
 import { allowedBlocks } from "./blocks";
 import { GcsForumCounters } from "./counters";
 import { RENDER_LABELS } from "./labels";
@@ -43,6 +44,8 @@ export type GcsForumDeps = {
   groupMentions?: GcsGroupMentionService;
   /** Forum v2: SVG-ul unei iconițe Font Awesome (iconițele blocurilor din postări). */
   icon?: (name: string) => string | null;
+  /** Anti-spam: linkurile de phishing și restricțiile membrilor noi. Lipsă = fără verificare. */
+  antispam?: GcsContentGuard;
 };
 
 /**
@@ -122,6 +125,19 @@ export class GcsForumPosting {
       const accepted = await this.deps.db.forumRulesAcceptance.findUnique({ where: { forumId_userId: { forumId: forum.id, userId: actor.userId } }, select: { forumId: true } });
       if (!accepted) throw new GcsForbidden({ reason: "rules_not_accepted" });
     }
+  }
+
+  /**
+   * Anti-spam: linkurile de phishing se refuză oricui; membrii noi au linkurile / imaginile limitate. `true` = postarea
+   * intră în aprobare (moderatorii forumului trec direct).
+   */
+  async checkSpam(actor: GcsActor, rendered: { html: string; text: string }, opts: { forumId: number; edit?: boolean; title?: string | null }): Promise<boolean> {
+    if (!this.deps.antispam) return false;
+    const text = opts.title ? `${opts.title}
+${rendered.text}` : rendered.text;
+    const trusted = await this.isModerator(actor, "approve", opts.forumId);
+    const { moderate } = await this.deps.antispam.checkContent(actor, { kind: opts.edit ? "post_edit" : "post", html: rendered.html, text, trusted });
+    return moderate;
   }
 
   /** Pauza minimă între două postări ale aceluiași user (`forums.flood_seconds`). */

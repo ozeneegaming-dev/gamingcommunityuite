@@ -7,6 +7,7 @@ import { GcsCockpitSlot } from "./_components/cockpit/GcsCockpitSlot";
 import { GcsNavProgress } from "./_components/GcsNavProgress";
 import { GcsHoverCardHost } from "./_components/GcsHoverCardHost";
 import { GcsImageViewerHost } from "./_components/GcsImageViewerHost";
+import { GcsLinkGuard } from "./_components/GcsLinkGuard";
 import { GcsSiteFooter } from "./_components/GcsSiteFooter";
 import { GcsSiteHeader } from "./_components/GcsSiteHeader";
 import { GcsAnnouncementBar } from "./_components/GcsAnnouncementBar";
@@ -33,7 +34,7 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
   registerNavHooks();
   // Conturile create prin Steam au un email placeholder: le cerem unul real (specul etapei 3, §8).
   const email = actor.userId ? (await services().db.user.findUnique({ where: { id: actor.userId }, select: { email: true } }))?.email : null;
-  const [tb, alerts, tc, tp, safeMode, { preview, shown }, deletion, format, tv, announcements, writeGate] = await Promise.all([
+  const [tb, alerts, tc, tp, safeMode, { preview, shown }, deletion, format, tv, announcements, writeGate, phishing] = await Promise.all([
     getTranslations("settings.account"),
     alertPrefs(actor.userId),
     getTranslations("site"),
@@ -48,6 +49,8 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
     announcementView(actor),
     // Avertismente: banda „confirmă avertismentul” cât timp membrul nu poate posta din cauza lui.
     actor.userId ? services().warnings.writeGate(actor.userId) : null,
+    // Anti-phishing: listele din ACP pentru paza linkurilor din browser (lista livrată e în cod).
+    services().antispam.clientPhishingLists().catch(() => null),
   ]);
   const viewerLabels = Object.fromEntries(
     (["dialog", "close", "prev", "next", "zoomIn", "zoomOut", "original", "download", "thumbnails", "counter", "by", "source", "enlarge"] as const).map((k) => [k, tv.raw(k) as string]),
@@ -112,6 +115,7 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
       {actor.userId && !preview && <GcsNotificationToasts toasts={alerts.toasts} sound={alerts.sound} closeLabel={tc("closeToast")} />}
       {/* Vizualizatorul de imagini (postări, chat, profil, clanuri, dovezi): o singură instanță pe site. */}
       <GcsImageViewerHost labels={viewerLabels} locale={locale} />
+      {phishing && <GcsLinkGuard lists={phishing} />}
       <GcsHoverCardHost
         locale={locale}
         labels={{

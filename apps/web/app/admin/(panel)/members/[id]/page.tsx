@@ -20,7 +20,7 @@ import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 import { addSecondaryGroup, banMember, liftBan, removeSecondaryGroup, revokeWarning, setPrimaryGroup, setSecondaryExpiry, warnMember } from "../actions";
 import { addMemberDonation, confirmDonation, deleteDonation } from "../../vip/donations/actions";
 import { GcsDonationFields } from "../../vip/donations/GcsDonationFields";
-import { disableMemberTwoFactor, forcePasswordReset, saveMemberPermissions, setSpammer, unlockMember, validateMember } from "./actions";
+import { disableMemberTwoFactor, forcePasswordReset, markSpammerAction, saveMemberPermissions, setSpammer, unlockMember, validateMember } from "./actions";
 import { MemberProfileSections } from "./MemberProfileSections";
 
 type Props = { params: Promise<{ id: string }>; searchParams?: Promise<{ ban?: string; reason?: string; tab?: string }> };
@@ -87,12 +87,13 @@ export default async function AcpMemberPage({ params, searchParams }: Props) {
     ...panels.filter((p) => p.kind === "tab").map((p) => ({ key: p.key, label: p.label, icon: p.icon })),
   ];
   const tab = tabs.some((x) => x.key === sp.tab) ? sp.tab! : "overview";
-  const [canRemove, canGdpr, removal, rootGroup, hasPassword] = await Promise.all([
+  const [canRemove, canGdpr, removal, rootGroup, hasPassword, canSpam] = await Promise.all([
     acp.can(panel.actor, MEMBER_REMOVAL_ACP_SECTION, "delete"),
     acp.can(panel.actor, GDPR_ACP_SECTION, "view"),
     memberRemoval.activeFor(member.id),
     db.group.findUnique({ where: { key: "root_admin" }, select: { id: true } }),
     db.account.count({ where: { userId: member.id, providerId: "credential", password: { not: null } } }),
+    acp.can(panel.actor, "members.antispam", "edit"),
   ]);
   const actorIsRoot = !!rootGroup && panel.actor.groupIds.includes(rootGroup.id);
   const now = new Date();
@@ -170,14 +171,37 @@ export default async function AcpMemberPage({ params, searchParams }: Props) {
           </div>
           <div className="gcs-memberActions__grid">
             {!member.emailVerified && <GcsActionForm compact variant="ghost" action={validateMember.bind(null, member.id)} submitLabel={t("actions.validate")} submitKind="approve" confirm={t("actions.validateConfirm")} />}
-            <GcsActionForm
-              compact
-              variant="ghost"
-              action={setSpammer.bind(null, member.id, !member.isSpammer)}
-              submitLabel={member.isSpammer ? t("actions.unspammer") : t("actions.spammer")}
-              submitKind={member.isSpammer ? "reset" : "ban"}
-              confirm={member.isSpammer ? t("actions.unspammerConfirm") : t("actions.spammerConfirm")}
-            />
+            {member.isSpammer ? (
+              <GcsActionForm compact variant="ghost" action={setSpammer.bind(null, member.id, false)} submitLabel={t("actions.unspammer")} submitKind="reset" confirm={t("actions.unspammerConfirm")} />
+            ) : canSpam ? (
+              // Anti-spam: acțiunea completă, cu opțiunile ei (IP, domeniu, conținut, raportare).
+              <details className="gcs-memberSpam" data-testid="gcs-member-spammer">
+                <summary className="gcs-btn gcs-btn--ghost gcs-btn--sm">
+                  <GcsIcon name="fa-solid fa-user-slash" className="gcs-btn__icon" />
+                  {t("actions.spammer")}
+                </summary>
+                <GcsActionForm action={markSpammerAction.bind(null, member.id)} submitLabel={t("spammer.submit")} submitKind="ban" confirm={t("actions.spammerConfirm")}>
+                  <label className="gcs-check">
+                    <input type="checkbox" name="hide" defaultChecked /> {t("spammer.hide")}
+                  </label>
+                  <label className="gcs-check">
+                    <input type="checkbox" name="banIp" defaultChecked /> {t("spammer.banIp")}
+                  </label>
+                  <label className="gcs-check">
+                    <input type="checkbox" name="banDomain" /> {t("spammer.banDomain")}
+                  </label>
+                  <label className="gcs-check">
+                    <input type="checkbox" name="report" /> {t("spammer.report")}
+                  </label>
+                  <label className="gcs-field">
+                    {t("spammer.reason")}
+                    <input className="gcs-input" name="reason" maxLength={300} placeholder="spam" />
+                  </label>
+                </GcsActionForm>
+              </details>
+            ) : (
+              <GcsActionForm compact variant="ghost" action={setSpammer.bind(null, member.id, true)} submitLabel={t("actions.spammer")} submitKind="ban" confirm={t("actions.spammerConfirm")} />
+            )}
             {member.twoFactorLocked && <GcsActionForm compact variant="ghost" action={unlockMember.bind(null, member.id)} submitLabel={t("actions.unlock")} submitKind="lift" confirm={t("actions.unlockConfirm")} />}
             {hasPassword > 0 && <GcsActionForm compact variant="ghost" action={forcePasswordReset.bind(null, member.id)} submitLabel={t("actions.resetPassword")} submitKind="reset" confirm={t("actions.resetPasswordConfirm")} />}
             {actorIsRoot && member.twoFactorEnabled && (
