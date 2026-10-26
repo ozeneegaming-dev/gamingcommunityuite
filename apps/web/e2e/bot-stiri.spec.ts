@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
-import { member, uid } from "./forum-fixtures";
+import { forumTree, member, uid } from "./forum-fixtures";
 import { enterAcpAsRoot, sql, totp, useFreshIp } from "./helpers";
 
 /**
@@ -54,7 +54,7 @@ test("bun venitul: un membru nou primește un mesaj privat de la botul comunită
   await shot(page, "bot-welcome");
 });
 
-test("ACP › Sistem › Botul comunității, apoi pluginul Bot de știri: RSS tradus + actualizare Steam ca topicuri ale botului", async ({ page, context }) => {
+test("ACP › Sistem › Botul comunității, apoi pluginul Bot de știri: RSS tradus + actualizare Steam ca topicuri ale botului", async ({ page, context, request }) => {
   test.setTimeout(300_000);
   const feeds = process.env.GCS_E2E_FEEDS_URL;
   expect(feeds, "runner-ul E2E pornește serverul cu fluxuri de test").toBeTruthy();
@@ -86,7 +86,7 @@ test("ACP › Sistem › Botul comunității, apoi pluginul Bot de știri: RSS t
   await expect(page.getByTestId(`gcs-bot-feature-plugin:${KEY}`)).toBeVisible();
 
   // Setările: un flux RSS (prin redirecționare, tradus) și știrile Steam, în primul forum; API-ul Steam = serverul de test.
-  const [forum] = await sql<{ id: number }>(`SELECT id FROM forums WHERE type = 'FORUM' ORDER BY id LIMIT 1`);
+  const forum = (await forumTree(request)).forum;
   await page.goto(`/admin/system/applications/plugins/${KEY}`);
   await page.getByRole("tab", { name: "Fluxuri" }).click();
   await page.getByLabel("Fluxurile").fill(
