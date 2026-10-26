@@ -345,6 +345,10 @@
 :root body:has(.gcs-mbar) .gcs-siteFooter {
   padding-bottom: 80px;
 }
+/* Toast-urile stau deasupra barei, nu peste butoanele ei. */
+:root body:has(.gcs-mbar) .gcs-toastHost {
+  bottom: 90px;
+}
 :root .gcs-mbar__item {
   flex: 1;
   min-width: 0;

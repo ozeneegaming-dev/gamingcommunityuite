@@ -21,6 +21,8 @@ test("B scrie în shoutbox → apare la A; moderatorul șterge → dispare; mute
   const b = await memberPage(browser, `Bogdan${id}`, `chat-b-${id}@example.com`, "198.18.0");
   const mod = await memberPage(browser, `Mod${id}`, `chat-m-${id}@example.com`, "198.18.1", "moderator");
   await mod.reload();
+  // După reîncărcare, conexiunea live se refăce: fără așteptare, mesajul lui B poate sosi înainte să asculte.
+  await expect(mod.locator("html")).toHaveAttribute("data-realtime", "on", { timeout: 20_000 });
 
   const text = `salut de la Bogdan ${id}`;
   await shout(b).getByTestId("gcs-chat-input").fill(text);

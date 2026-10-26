@@ -156,6 +156,9 @@ async function recreateDatabase(baseUrl: string, name: string): Promise<string> 
 async function startRedis(): Promise<string> {
   if (process.env.TEST_REDIS_URL) return process.env.TEST_REDIS_URL;
   process.env.REDISMS_DOWNLOAD_DIR ??= path.join(os.tmpdir(), "redis-memory-server");
+  // Scriptul de pază al serverului Redis pornește cu `$NODE`; sub pnpm-ul standalone acesta e `pnpm.exe`, care dă
+  // `.js`-ul shell-ului, iar Windows îl deschide în editorul asociat.
+  process.env.NODE = process.execPath;
   const { RedisMemoryServer } = await import("redis-memory-server");
   const server = await RedisMemoryServer.create();
   cleanups.push(async () => {
