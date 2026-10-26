@@ -157,16 +157,32 @@ export async function liftBan(banId: string): Promise<GcsResult<null>> {
 
 export async function warnMember(userId: string, fd: FormData): Promise<GcsResult<null>> {
   return runAcpAction("members.warnings", "edit", async (actor) => {
-    const days = intField(fd, "expiresDays");
-    await services().warnings.warn(
+    const { warnings } = services();
+    // Un motiv predefinit completează câmpurile lăsate goale (textul, punctele, expirarea).
+    const reasonId = intField(fd, "reasonId");
+    const preset = Number.isFinite(reasonId) ? (await warnings.reasons()).find((r) => r.id === reasonId) : undefined;
+    const pointsField = intField(fd, "points");
+    const daysField = intField(fd, "expiresDays");
+    const points = Number.isFinite(pointsField) ? pointsField : (preset?.points ?? Number.NaN);
+    const days = Number.isFinite(daysField) ? daysField : (preset?.expiresDays ?? 0);
+    await warnings.warn(
       {
         userId,
-        points: intField(fd, "points"),
-        reason: field(fd, "reason"),
-        expiresAt: Number.isFinite(days) && days > 0 ? new Date(Date.now() + days * 86_400_000) : null,
+        points,
+        reason: field(fd, "reason").trim() || preset?.name || "",
+        expiresAt: days > 0 ? new Date(Date.now() + days * 86_400_000) : null,
+        reasonId: preset?.id ?? null,
       },
       actor,
     );
+    return null;
+  });
+}
+
+/** Anulează un avertisment (punctele nu mai contează; pragurile se recalculează). */
+export async function revokeWarning(warningId: string): Promise<GcsResult<null>> {
+  return runAcpAction("members.warnings", "edit", async (actor) => {
+    await services().warnings.revoke(warningId, actor);
     return null;
   });
 }

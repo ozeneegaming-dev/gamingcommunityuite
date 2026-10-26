@@ -15,6 +15,8 @@ import {
   type GcsRealtime,
   type GcsRateLimiter,
   type GcsSettingsService,
+  assertMemberCanWrite,
+  warningAckRequired,
 } from "@gcs/core";
 import { normalizeUsername, parseTextMentions, type GcsGroupMentionService, type GcsMentionHint, type GcsTextMention } from "@gcs/core";
 import { mentionIds, type GcsTextMentions } from "../profile/textMentions";
@@ -359,6 +361,8 @@ export class GcsChatService {
     const files = fileIds.length > 0 ? await this.chatFiles(actor.userId, fileIds) : [];
     const replyToId = opts.replyTo ? await this.replyTarget(channel.id, opts.replyTo) : null;
     const mute = await this.activeMute(actor.userId, channel.id);
+    // Anti-spam: restricționat de un prag de avertisment sau cu un avertisment neconfirmat → nu scrie nici în chat.
+    await assertMemberCanWrite(db, actor.userId, { ackRequired: await warningAckRequired(settings) });
     if (mute) throw new GcsForbidden({ reason: "muted", ...(mute.until ? { until: mute.until.toISOString() } : {}) });
 
     const moderator = await this.canModerate(actor);

@@ -33,7 +33,7 @@ export async function createWorld(extraModules: GcsModule[] = [], makeRegistry: 
   const cache = new GcsCache(kv);
   const bus = new GcsEventBus({ cache });
   const events: GcsEvent[] = [];
-  for (const name of ["user.banned", "user.unbanned", "user.warned", "user.warning_action", "group.updated"]) {
+  for (const name of ["user.banned", "user.unbanned", "user.warned", "user.warning_action", "user.warning_revoked", "warning.appealed", "warning.appeal_decided", "group.updated"]) {
     bus.on(name, async (e) => {
       events.push(e);
     });

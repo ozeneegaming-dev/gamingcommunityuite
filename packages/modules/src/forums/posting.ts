@@ -13,6 +13,8 @@ import {
   type GcsRateLimiter,
   type GcsRendered,
   type GcsSettingsService,
+  assertMemberCanWrite,
+  warningAckRequired,
 } from "@gcs/core";
 import type { Forum, Prisma, PrismaClient } from "@gcs/db";
 import { allowedBlocks } from "./blocks";
@@ -92,6 +94,11 @@ export class GcsForumPosting {
   async needsApproval(actor: GcsActor, forum: Pick<Forum, "id" | "requireApproval">): Promise<boolean> {
     if (await this.isModerator(actor, "approve", forum.id)) return false;
     if (forum.requireApproval) return true;
+    // Anti-spam: un prag de avertisment „postări moderate” trimite postările membrului în coada de aprobare.
+    if (actor.userId) {
+      const moderated = await this.deps.db.user.findUnique({ where: { id: actor.userId }, select: { postsModeratedUntil: true } });
+      if (moderated?.postsModeratedUntil && moderated.postsModeratedUntil > new Date()) return true;
+    }
     const firstPosts = await this.deps.permissions.groupValue<number | boolean>(actor, "forums.approval_first_posts");
     if (typeof firstPosts !== "number" || firstPosts <= 0) return false;
     const user = await this.deps.db.user.findUnique({ where: { id: actor.userId! }, select: { approvedPostsCount: true } });
@@ -119,6 +126,8 @@ export class GcsForumPosting {
 
   /** Pauza minimă între două postări ale aceluiași user (`forums.flood_seconds`). */
   async checkFlood(actor: GcsActor): Promise<void> {
+    // Anti-spam: restricționat de un prag de avertisment sau cu un avertisment neconfirmat → nu postează.
+    if (actor.userId) await assertMemberCanWrite(this.deps.db, actor.userId, { ackRequired: await warningAckRequired(this.deps.settings) });
     const seconds = await this.deps.permissions.groupValue<number | boolean>(actor, "forums.flood_seconds");
     if (typeof seconds !== "number" || seconds <= 0) return;
     const res = await this.deps.rateLimiter.consume(`forum-post:${actor.userId}`, { window: seconds, max: 1 });

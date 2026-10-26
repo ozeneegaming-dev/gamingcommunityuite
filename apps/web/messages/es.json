@@ -229,7 +229,12 @@
       "account_too_new": "Tu cuenta es demasiado nueva para esta acción.",
       "not_enough_posts": "Necesitas más mensajes para esta acción.",
       "disabled": "Esta función está desactivada aquí.",
-      "db_plugins_unsupported": "En MySQL (edición Lite) no están disponibles los plugins con base de datos propia. Funcionan en PostgreSQL."
+      "db_plugins_unsupported": "En MySQL (edición Lite) no están disponibles los plugins con base de datos propia. Funcionan en PostgreSQL.",
+      "posting_restricted": "Por ahora no puedes publicar por tus puntos de advertencia.",
+      "warning_ack": "Confirma primero tu advertencia (página «Mis advertencias»).",
+      "already_appealed": "Ya apelaste esta advertencia.",
+      "warning_inactive": "La advertencia ha caducado o fue anulada.",
+      "already_decided": "La apelación ya fue resuelta."
     },
     "fields": {
       "invalid_color": "Color inválido (#RRGGBB)",
@@ -956,7 +961,14 @@
         "history": "Historia de la advertencia",
         "none": "No hay advertencias",
         "by": "por {name}",
-        "expired": "caducado"
+        "expired": "caducado",
+        "preset": "Motivo predefinido",
+        "presetNone": "— escribir el motivo —",
+        "presetOption": "{name} ({points} pts)",
+        "fromPreset": "del motivo elegido",
+        "revoked": "anulada",
+        "revoke": "Anular",
+        "revokeConfirm": "La advertencia se anula y sus puntos dejan de contar; las restricciones se recalculan."
       },
       "ips": {
         "title": "IPs conocidos",
@@ -1296,7 +1308,8 @@
         "clans": "Clans",
         "servers_bridge": "Bridge and ELO",
         "gdpr": "GDPR requests",
-        "donations": "Donaciones"
+        "donations": "Donaciones",
+        "warnings": "Advertencias"
       },
       "save": "Guardar ajustes",
       "secretSet": "••••• guardar (dejar vacío para mantener el valor)",
@@ -4497,6 +4510,48 @@
       "prev": "‹ Anterior",
       "next": "Siguiente ›",
       "page": "Página {page} de {pages}"
+    },
+    "warnings": {
+      "title": "Advertencias",
+      "save": "Guardar",
+      "delete": "Eliminar",
+      "appeals": {
+        "title": "Apelaciones pendientes ({count})",
+        "empty": "Ninguna apelación pendiente.",
+        "warning": "advertencia de {points} pts: {reason}",
+        "decide": "Enviar decisión",
+        "accept": "Aceptar (la advertencia se anula)",
+        "reject": "Rechazar",
+        "reason": "Mensaje para el miembro (opcional)"
+      },
+      "settings": {
+        "title": "Confirmación de advertencias",
+        "ack": "El miembro debe confirmar la advertencia antes de volver a publicar",
+        "ackHint": "Hasta que la confirme (en la página «Mis advertencias»), el miembro no puede escribir publicaciones, mensajes privados, mensajes de chat ni estados."
+      },
+      "reasons": {
+        "title": "Motivos predefinidos",
+        "body": "Aparecen en la ficha del miembro: eliges el motivo y los puntos y la caducidad se rellenan solos.",
+        "add": "Añadir motivo",
+        "name": "Motivo (p. ej. Spam)",
+        "points": "Puntos",
+        "expiresDays": "Caduca tras (días)",
+        "deleteConfirm": "El motivo desaparece de la lista; las advertencias ya dadas se mantienen."
+      },
+      "thresholds": {
+        "title": "Umbrales",
+        "body": "Cuando los puntos activos llegan al umbral: las publicaciones requieren aprobación, el miembro no puede publicar o recibe un bloqueo. Sin duración = mientras los puntos sigan por encima del umbral.",
+        "add": "Añadir umbral",
+        "points": "Puntos",
+        "action": "Acción",
+        "hours": "Duración (horas)",
+        "actions": {
+          "MODERATE_POSTS": "Publicaciones con aprobación",
+          "RESTRICT": "No puede publicar",
+          "BAN": "Bloqueo"
+        },
+        "deleteConfirm": "El umbral se elimina; sus restricciones se levantan con la próxima advertencia o al caducar."
+      }
     }
   },
   "settings": {
@@ -4759,7 +4814,9 @@
         "banner": "Your account will be deleted on {date}.",
         "bannerLink": "Cancel deletion"
       },
-      "passwordResetRequired": "El equipo te pidió que cambies tu contraseña. Pon una nueva abajo para continuar."
+      "passwordResetRequired": "El equipo te pidió que cambies tu contraseña. Pon una nueva abajo para continuar.",
+      "warningBanner": "Has recibido una advertencia. Confírmala para volver a publicar.",
+      "warningBannerLink": "Ver la advertencia"
     },
     "notifications": {
       "title": "Notificaciones",
@@ -4972,7 +5029,8 @@
       "weight_elo": "Clan ranking: average ELO weight"
     },
     "members": {
-      "deletion_cooling_days": "Cooling-off before a member's requested deletion (days, 0–90)"
+      "deletion_cooling_days": "Cooling-off before a member's requested deletion (days, 0–90)",
+      "warnings_ack": "Las advertencias deben confirmarse antes de volver a publicar"
     },
     "apps": {
       "landing": "Landing app",
@@ -6341,7 +6399,8 @@
         "warning": "Advertencias",
         "group_mention": "Group mentions",
         "group_expired": "Grupos temporales caducados",
-        "weekly_digest": "Resumen semanal «Lo que te perdiste»"
+        "weekly_digest": "Resumen semanal «Lo que te perdiste»",
+        "warning_appeal": "Decisiones sobre apelaciones de advertencias"
       },
       "chat": {
         "mention": "Menciones de chat",
@@ -9978,5 +10037,31 @@
     },
     "distribution": "Distribución de valoraciones",
     "starsShort": "{value}★"
+  },
+  "warningsPage": {
+    "title": "Mis advertencias",
+    "restricted": "No puedes publicar hasta el {date} por tus puntos de advertencia.",
+    "restrictedPoints": "No puedes publicar mientras tus puntos de advertencia activos sigan por encima del umbral.",
+    "moderated": "Por ahora tus publicaciones requieren la aprobación del equipo.",
+    "empty": "No tienes advertencias.",
+    "state": {
+      "active": "Activa",
+      "expired": "Caducada",
+      "revoked": "Anulada"
+    },
+    "points": "Puntos: {count}",
+    "expires": "caduca el {date}",
+    "noExpiry": "no caduca",
+    "acknowledged": "confirmada",
+    "appealState": {
+      "pending": "Tu apelación está pendiente.",
+      "accepted": "Tu apelación fue aceptada; la advertencia está anulada.",
+      "rejected": "Tu apelación fue rechazada."
+    },
+    "acknowledge": "He leído la advertencia",
+    "appeal": "Apelar",
+    "appealText": "¿Por qué crees que la advertencia es errónea? (10–2000 caracteres)",
+    "appealSend": "Enviar apelación",
+    "cancel": "Cancelar"
   }
 }

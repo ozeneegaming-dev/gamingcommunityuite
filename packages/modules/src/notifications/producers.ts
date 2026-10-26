@@ -167,7 +167,14 @@ export class GcsNotificationProducers {
       canView: async (userId, id) => (await db.warning.findUnique({ where: { id }, select: { userId: true } }))?.userId === userId,
       describe: async (id) => {
         const warning = await db.warning.findUnique({ where: { id }, select: { reason: true } });
-        return warning ? { title: warning.reason, href: "/settings" } : null;
+        return warning ? { title: warning.reason, href: "/warnings" } : null;
+      },
+    });
+    notifications.registerTarget("core.warning_appeal", {
+      canView: async (userId, id) => (await db.warningAppeal.findUnique({ where: { id: Number(id) }, select: { userId: true } }))?.userId === userId,
+      describe: async (id) => {
+        const appeal = await db.warningAppeal.findUnique({ where: { id: Number(id) }, include: { warning: { select: { reason: true } } } });
+        return appeal ? { title: appeal.warning.reason, href: "/warnings" } : null;
       },
     });
   }
@@ -292,6 +299,12 @@ export class GcsNotificationProducers {
     bus.on("user.warned", async (e) => {
       const userId = str(e.payload.userId);
       if (userId) await notifications.notify({ userIds: [userId], type: "core.warning", targetType: "core.warning", targetId: String(e.payload.warningId), actorId: null });
+    });
+
+    // Anti-spam: decizia pe contestație (acceptată = avertismentul anulat), fără actor, ca avertismentul.
+    bus.on("warning.appeal_decided", async (e) => {
+      const userId = str(e.payload.userId);
+      if (userId) await notifications.notify({ userIds: [userId], type: "core.warning_appeal", targetType: "core.warning_appeal", targetId: String(e.payload.appealId), actorId: null, data: { accepted: e.payload.accepted === true } });
     });
 
     // Livrarea (Notificări v2): live în camera userului (numărul și, dacă tipul are toast-ul pornit, toast-ul); emailul

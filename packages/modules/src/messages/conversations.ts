@@ -13,6 +13,8 @@ import {
   type GcsRendered,
   type GcsReportService,
   type GcsSettingsService,
+  assertMemberCanWrite,
+  warningAckRequired,
 } from "@gcs/core";
 import { type Conversation, type ConversationMessage, type Prisma, type PrismaClient, sql } from "@gcs/db";
 import type { GcsRenderContext } from "../forums/posting";
@@ -74,6 +76,7 @@ export class GcsConversationService {
   }
 
   private async checkFlood(actor: GcsActor): Promise<void> {
+    if (actor.userId) await assertMemberCanWrite(this.deps.db, actor.userId, { ackRequired: await warningAckRequired(this.deps.settings) });
     const seconds = await this.limit(actor, "pm.flood_seconds");
     if (seconds <= 0) return;
     const res = await this.deps.rateLimiter.consume(`pm:${actor.userId}`, { window: seconds, max: 1 });

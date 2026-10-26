@@ -63,6 +63,7 @@ import {
   type GcsMailer,
   type GcsModule,
   type GcsModuleRegistry,
+  warningAckRequired,
 } from "@gcs/core";
 import { forumMemberData } from "./forums/memberData";
 import { profileMemberData } from "./profile/memberData";
@@ -443,7 +444,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const notifications = new GcsNotificationService({ db, bus, cache, registry, apps, settings });
   const push = new GcsPushService({ db });
   const bans = new GcsBanService({ db, cache, bus, acp });
-  const warnings = new GcsWarningService({ db, bus, acp, bans });
+  const warnings = new GcsWarningService({ db, bus, acp, bans, ackRequired: () => warningAckRequired(settings) });
   const realtime = new GcsRealtime(infra.realtimeLog);
   // Timpul online pe zile: fiecare semn de prezență al unui membru adaugă pauza scurtă de la semnul precedent.
   const onlineTime = new GcsOnlineTime({ db, kv, settings });

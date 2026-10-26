@@ -13,6 +13,8 @@ import {
   type GcsRendered,
   type GcsReportService,
   type GcsSettingsService,
+  assertMemberCanWrite,
+  warningAckRequired,
 } from "@gcs/core";
 import type { PrismaClient, StatusUpdate } from "@gcs/db";
 import { normalizePrivacy, type GcsContactPolicy } from "./privacy";
@@ -168,6 +170,7 @@ export class GcsSocialService {
       const parent = await db.statusUpdate.findUnique({ where: { id: parentId } });
       if (!parent || parent.profileUserId !== profileUserId || parent.parentId !== null || parent.visibility !== "VISIBLE") throw new GcsNotFound();
     }
+    await assertMemberCanWrite(db, actor.userId, { ackRequired: await warningAckRequired(this.deps.settings) });
     const seconds = await permissions.groupValue<number | boolean>(actor, "forums.flood_seconds");
     if (typeof seconds === "number" && seconds > 0) {
       const res = await rateLimiter.consume(`wall-post:${actor.userId}`, { window: seconds, max: 1 });

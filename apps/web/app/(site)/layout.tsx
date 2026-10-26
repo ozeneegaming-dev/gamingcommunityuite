@@ -33,7 +33,7 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
   registerNavHooks();
   // Conturile create prin Steam au un email placeholder: le cerem unul real (specul etapei 3, §8).
   const email = actor.userId ? (await services().db.user.findUnique({ where: { id: actor.userId }, select: { email: true } }))?.email : null;
-  const [tb, alerts, tc, tp, safeMode, { preview, shown }, deletion, format, tv, announcements] = await Promise.all([
+  const [tb, alerts, tc, tp, safeMode, { preview, shown }, deletion, format, tv, announcements, writeGate] = await Promise.all([
     getTranslations("settings.account"),
     alertPrefs(actor.userId),
     getTranslations("site"),
@@ -46,6 +46,8 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
     getTranslations("imageViewer"),
     // Bara de anunț (ACP → Aspect → Conținut): barele acestui membru / vizitator, fără cele închise.
     announcementView(actor),
+    // Avertismente: banda „confirmă avertismentul” cât timp membrul nu poate posta din cauza lui.
+    actor.userId ? services().warnings.writeGate(actor.userId) : null,
   ]);
   const viewerLabels = Object.fromEntries(
     (["dialog", "close", "prev", "next", "zoomIn", "zoomOut", "original", "download", "thumbnails", "counter", "by", "source", "enlarge"] as const).map((k) => [k, tv.raw(k) as string]),
@@ -65,6 +67,12 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
         <GcsCockpitSlot />
       </Suspense>
       <main className="gcs-siteMain" style={{ maxWidth: "var(--gcs-page-width, 1320px)", margin: "0 auto", padding: 24, display: "flex", flexDirection: "column", gap: 24 }}>
+        {writeGate?.ackPending && (
+          // Anti-spam: un avertisment de confirmat (până atunci membrul nu poate posta).
+          <p role="status" className="gcs-notice gcs-notice--warn" data-testid="gcs-warning-banner">
+            {tb("warningBanner")} <Link href="/warnings">{tb("warningBannerLink")}</Link>
+          </p>
+        )}
         {email?.endsWith(STEAM_PLACEHOLDER_DOMAIN) && (
           <p role="status" className="gcs-notice gcs-notice--warn" data-testid="gcs-steam-email-banner">
             {tb("steamBanner")} <Link href="/settings/account">{tb("steamBannerLink")}</Link>

@@ -229,7 +229,12 @@
       "account_too_new": "Dein Konto ist für diese Aktion zu neu.",
       "not_enough_posts": "Du brauchst mehr Beiträge für diese Aktion.",
       "disabled": "Diese Funktion ist hier aus.",
-      "db_plugins_unsupported": "Unter MySQL (Lite-Edition) sind Plugins mit eigener Datenbank nicht verfügbar. Sie funktionieren mit PostgreSQL."
+      "db_plugins_unsupported": "Unter MySQL (Lite-Edition) sind Plugins mit eigener Datenbank nicht verfügbar. Sie funktionieren mit PostgreSQL.",
+      "posting_restricted": "Du kannst wegen deiner Verwarnungspunkte vorerst nicht schreiben.",
+      "warning_ack": "Bestätige zuerst deine Verwarnung (Seite „Meine Verwarnungen“).",
+      "already_appealed": "Du hast gegen diese Verwarnung bereits Einspruch eingelegt.",
+      "warning_inactive": "Die Verwarnung ist abgelaufen oder wurde aufgehoben.",
+      "already_decided": "Über den Einspruch wurde bereits entschieden."
     },
     "fields": {
       "invalid_color": "Ungültige Farbe (#RRGGBB)",
@@ -956,7 +961,14 @@
         "history": "Warngeschichte",
         "none": "Keine Warnungen",
         "by": "von {name}",
-        "expired": "abgelaufen"
+        "expired": "abgelaufen",
+        "preset": "Vordefinierter Grund",
+        "presetNone": "— eigenen Grund schreiben —",
+        "presetOption": "{name} ({points} Pkt.)",
+        "fromPreset": "aus dem gewählten Grund",
+        "revoked": "aufgehoben",
+        "revoke": "Aufheben",
+        "revokeConfirm": "Die Verwarnung wird aufgehoben und ihre Punkte zählen nicht mehr; Einschränkungen werden neu berechnet."
       },
       "ips": {
         "title": "Bekannte IPs",
@@ -1296,7 +1308,8 @@
         "clans": "Clans",
         "servers_bridge": "Bridge and ELO",
         "gdpr": "GDPR requests",
-        "donations": "Spenden"
+        "donations": "Spenden",
+        "warnings": "Verwarnungen"
       },
       "save": "Einstellungen speichern",
       "secretSet": "•••• gespeichert (leave empty, um den wert zu behalten)",
@@ -4497,6 +4510,48 @@
       "prev": "‹ Zurück",
       "next": "Weiter ›",
       "page": "Seite {page} von {pages}"
+    },
+    "warnings": {
+      "title": "Verwarnungen",
+      "save": "Speichern",
+      "delete": "Löschen",
+      "appeals": {
+        "title": "Offene Einsprüche ({count})",
+        "empty": "Keine offenen Einsprüche.",
+        "warning": "Verwarnung mit {points} Pkt.: {reason}",
+        "decide": "Entscheidung senden",
+        "accept": "Annehmen (die Verwarnung wird aufgehoben)",
+        "reject": "Ablehnen",
+        "reason": "Nachricht an das Mitglied (optional)"
+      },
+      "settings": {
+        "title": "Bestätigung von Verwarnungen",
+        "ack": "Das Mitglied muss die Verwarnung bestätigen, bevor es wieder schreibt",
+        "ackHint": "Bis zur Bestätigung (auf der Seite „Meine Verwarnungen“) kann das Mitglied keine Beiträge, privaten Nachrichten, Chatnachrichten oder Statusmeldungen schreiben."
+      },
+      "reasons": {
+        "title": "Vordefinierte Gründe",
+        "body": "Sie erscheinen auf der Mitgliedskarte: Grund wählen, Punkte und Ablauf werden automatisch ausgefüllt.",
+        "add": "Grund hinzufügen",
+        "name": "Grund (z. B. Spam)",
+        "points": "Punkte",
+        "expiresDays": "Läuft ab nach (Tagen)",
+        "deleteConfirm": "Der Grund verschwindet aus der Liste; bereits erteilte Verwarnungen bleiben."
+      },
+      "thresholds": {
+        "title": "Schwellen",
+        "body": "Wenn die aktiven Punkte eine Schwelle erreichen: Beiträge müssen freigegeben werden, das Mitglied darf nicht schreiben oder wird gesperrt. Ohne Dauer = solange die Punkte über der Schwelle bleiben.",
+        "add": "Schwelle hinzufügen",
+        "points": "Punkte",
+        "action": "Aktion",
+        "hours": "Dauer (Stunden)",
+        "actions": {
+          "MODERATE_POSTS": "Beiträge mit Freigabe",
+          "RESTRICT": "Darf nicht schreiben",
+          "BAN": "Sperre"
+        },
+        "deleteConfirm": "Die Schwelle wird gelöscht; ihre Einschränkungen enden bei der nächsten Verwarnung oder beim Ablauf."
+      }
     }
   },
   "settings": {
@@ -4759,7 +4814,9 @@
         "banner": "Your account will be deleted on {date}.",
         "bannerLink": "Cancel deletion"
       },
-      "passwordResetRequired": "Das Team hat dich gebeten, dein Passwort zu ändern. Lege unten ein neues fest, um fortzufahren."
+      "passwordResetRequired": "Das Team hat dich gebeten, dein Passwort zu ändern. Lege unten ein neues fest, um fortzufahren.",
+      "warningBanner": "Du hast eine Verwarnung erhalten. Bestätige sie, um wieder schreiben zu können.",
+      "warningBannerLink": "Verwarnung ansehen"
     },
     "notifications": {
       "title": "Benachrichtigungen",
@@ -4972,7 +5029,8 @@
       "weight_elo": "Clan ranking: average ELO weight"
     },
     "members": {
-      "deletion_cooling_days": "Cooling-off before a member's requested deletion (days, 0–90)"
+      "deletion_cooling_days": "Cooling-off before a member's requested deletion (days, 0–90)",
+      "warnings_ack": "Verwarnungen müssen vor dem erneuten Schreiben bestätigt werden"
     },
     "apps": {
       "landing": "Landing app",
@@ -6341,7 +6399,8 @@
         "warning": "Verwarnungen",
         "group_mention": "Group mentions",
         "group_expired": "Abgelaufene befristete Gruppen",
-        "weekly_digest": "Wochenrückblick „Was du verpasst hast“"
+        "weekly_digest": "Wochenrückblick „Was du verpasst hast“",
+        "warning_appeal": "Entscheidungen zu Verwarnungseinsprüchen"
       },
       "chat": {
         "mention": "Chat Erwähnungen",
@@ -9978,5 +10037,31 @@
     },
     "distribution": "Verteilung der Bewertungen",
     "starsShort": "{value}★"
+  },
+  "warningsPage": {
+    "title": "Meine Verwarnungen",
+    "restricted": "Du kannst wegen deiner Verwarnungspunkte bis {date} nicht schreiben.",
+    "restrictedPoints": "Du kannst nicht schreiben, solange deine aktiven Verwarnungspunkte über der Schwelle liegen.",
+    "moderated": "Deine Beiträge müssen derzeit vom Team freigegeben werden.",
+    "empty": "Du hast keine Verwarnungen.",
+    "state": {
+      "active": "Aktiv",
+      "expired": "Abgelaufen",
+      "revoked": "Aufgehoben"
+    },
+    "points": "Punkte: {count}",
+    "expires": "läuft ab am {date}",
+    "noExpiry": "läuft nicht ab",
+    "acknowledged": "bestätigt",
+    "appealState": {
+      "pending": "Dein Einspruch wird geprüft.",
+      "accepted": "Dein Einspruch wurde angenommen; die Verwarnung ist aufgehoben.",
+      "rejected": "Dein Einspruch wurde abgelehnt."
+    },
+    "acknowledge": "Ich habe die Verwarnung gelesen",
+    "appeal": "Einspruch einlegen",
+    "appealText": "Warum hältst du die Verwarnung für falsch? (10–2000 Zeichen)",
+    "appealSend": "Einspruch senden",
+    "cancel": "Abbrechen"
   }
 }

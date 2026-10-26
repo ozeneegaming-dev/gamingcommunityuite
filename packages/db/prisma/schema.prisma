@@ -171,6 +171,9 @@ model User {
   lastIp                   String?
   /// Pagina Staff v2: descrierea și responsabilitățile membrului de staff.
   staffProfile             StaffProfile?
+  /// Anti-spam (pragurile de avertisment): postările membrului trec prin aprobare / membrul nu poate scrie, până la data dată.
+  postsModeratedUntil      DateTime?
+  postingRestrictedUntil   DateTime?
   /// Botul comunității: cont fără autentificare (fără parolă, fără email real), exclus din liste, clasamente și
   /// contoare, protejat la ștergere și unire. Publică prin `GcsCommunityBot`.
   isBot                    Boolean       @default(false)
@@ -429,7 +432,15 @@ model Warning {
   /// Dovada (ex. mesajul de chat avertizat: `{ type: "chat.message", id, channel, body }`).
   evidence   Json?
   createdAt  DateTime  @default(now())
+  /// Anti-spam: membrul a confirmat avertismentul (până atunci nu poate posta, dacă setarea o cere).
+  acknowledgedAt DateTime?
+  /// Anti-spam: anulat de echipă (sau prin contestație acceptată); nu mai contează la puncte.
+  revokedAt      DateTime?
+  revokedById    String?
+  /// Motivul predefinit din care a pornit (ACP › Moderare › Avertismente), dacă e cazul.
+  reasonId       Int?
 
+  appeal   WarningAppeal?
   user     User  @relation("WarningTarget", fields: [userId], references: [id], onDelete: Cascade)
   issuedBy User? @relation("WarningIssuer", fields: [issuedById], references: [id], onDelete: SetNull)
 
@@ -441,6 +452,37 @@ enum WarningActionType {
   MODERATE_POSTS
   RESTRICT
   BAN
+}
+
+/// Anti-spam: un motiv de avertisment predefinit (punctele și expirarea implicite).
+model WarningReason {
+  id          Int      @id @default(autoincrement())
+  name        String
+  points      Int
+  /// Expirarea implicită în zile (`null` = nu expiră).
+  expiresDays Int?
+  position    Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@map("warning_reasons")
+}
+
+/// Anti-spam: contestația unui avertisment (una pe avertisment): `pending` → `accepted` (avertismentul se anulează) sau `rejected`.
+model WarningAppeal {
+  id             Int       @id @default(autoincrement())
+  warningId      String    @unique
+  userId         String
+  text           String
+  status         String    @default("pending")
+  decidedById    String?
+  decisionReason String?
+  createdAt      DateTime  @default(now())
+  decidedAt      DateTime?
+
+  warning Warning @relation(fields: [warningId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@map("warning_appeals")
 }
 
 model WarningAction {

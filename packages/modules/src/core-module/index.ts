@@ -4,7 +4,7 @@ import { communityRulesSetting } from "../community/rules";
 import { coreWidgets } from "../widgets";
 import { BOT_FEATURES_SETTING, BOT_WELCOME_SETTING, BOT_WELCOME_TITLE_SETTING } from "../bot/settings";
 import { NOTIFICATION_SETTING_DEFS } from "../notifications/settings";
-import { DEFAULT_THEME_TOGGLE, THEME_TOGGLE_SETTING, themeTogglePairError, APP_SETTING_DEFS, type GcsAcpApp, type GcsAcpArea, type GcsAcpMenuSection, type GcsModule, type GcsPermissionDef, type GcsSettingDef } from "@gcs/core";
+import { DEFAULT_THEME_TOGGLE, THEME_TOGGLE_SETTING, WARNINGS_ACK_SETTING, themeTogglePairError, APP_SETTING_DEFS, type GcsAcpApp, type GcsAcpArea, type GcsAcpMenuSection, type GcsModule, type GcsPermissionDef, type GcsSettingDef } from "@gcs/core";
 
 /** Grupurile create la instalare (spec §6.1). */
 export const DEFAULT_GROUP_KEYS = [
@@ -109,6 +109,8 @@ const settings: GcsSettingDef[] = [
   // Regulile comunității (pagina `/rules`), editate cu editorul postărilor în ACP → Setări → Reguli comunitate.
   communityRulesSetting,
   // Perioada de răzgândire a cererii „Șterge contul meu” (zile; 0 = la următoarea trecere a jobului), ACP → Cereri GDPR.
+  // Anti-spam: membrul confirmă un avertisment nou înainte să poată posta din nou (ACP › Moderare › Avertismente).
+  setting(WARNINGS_ACK_SETTING, "boolean", true, "warnings"),
   setting("members.deletion_cooling_days", "number", 7, "gdpr", (v) => (Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 90 ? null : "invalid_range")),
 ];
 
@@ -387,6 +389,8 @@ export const coreModule: GcsModule = {
   },
   notificationTypes: [
     { key: "core.warning", labelKey: "notifications.type.core.warning", important: true, defaultEmail: "INSTANT" },
+    // Anti-spam: decizia echipei pe contestația unui avertisment.
+    { key: "core.warning_appeal", labelKey: "notifications.type.core.warning_appeal", important: true, defaultEmail: "INSTANT", category: "moderation" },
     // Mențiuni v2: un membru a menționat un grup din care faci parte (postare sau mesaj privat).
     { key: "core.group_mention", labelKey: "notifications.type.core.group_mention", important: false, defaultEmail: "DIGEST" },
     // Membri v2: un grup secundar temporar a expirat (jobul `groups.secondary_expiry`).

@@ -8,6 +8,8 @@ export const HEARTBEAT_JOB = "system.heartbeat";
 export const LITE_SWEEP_JOB = "system.lite_sweep";
 /** Verificarea zilnică a licenței la platforma-mamă (Data Center). */
 export const LICENSE_CHECK_JOB = "license.check";
+/** Anti-spam: recalcularea pragurilor de avertisment după expirări (la 10 minute). */
+export const WARNINGS_EXPIRY_JOB = "warnings.expiry";
 /** Jobul care scoate grupurile secundare temporare expirate (Membri v2). */
 export const SECONDARY_EXPIRY_JOB = "groups.secondary_expiry";
 
@@ -31,6 +33,8 @@ export function registerAppJobs(s: GcsServices): void {
   s.achievementRules.registerJobs(s.jobs, (userId) => s.achievements.evaluate(userId));
   s.vip.registerJobs(s.jobs);
   // Membri v2: grupurile secundare temporare ajunse la expirare se scot (membrul e anunțat), la minut.
+  // Anti-spam: avertismentele expirate ridică pragurile care nu mai sunt atinse (postări moderate, restricție, ban de prag).
+  s.jobs.register({ name: WARNINGS_EXPIRY_JOB, everyMs: 10 * 60_000, handler: async () => void (await s.warnings.expireSweep()) });
   s.jobs.register({ name: SECONDARY_EXPIRY_JOB, everyMs: 60_000, handler: async () => void (await s.groups.expireSecondary()) });
   s.notificationProducers.registerJobs(s.jobs);
   s.chat.registerJobs(s.jobs);

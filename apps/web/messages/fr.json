@@ -229,7 +229,12 @@
       "account_too_new": "Ton compte est trop récent pour cette action.",
       "not_enough_posts": "Il te faut plus de messages pour cette action.",
       "disabled": "Cette fonction est désactivée ici.",
-      "db_plugins_unsupported": "Sous MySQL (édition Lite), les plugins avec leur propre base de données ne sont pas disponibles. Ils fonctionnent sous PostgreSQL."
+      "db_plugins_unsupported": "Sous MySQL (édition Lite), les plugins avec leur propre base de données ne sont pas disponibles. Ils fonctionnent sous PostgreSQL.",
+      "posting_restricted": "Vous ne pouvez pas publier pour l'instant à cause de vos points d'avertissement.",
+      "warning_ack": "Confirmez d'abord votre avertissement (page « Mes avertissements »).",
+      "already_appealed": "Vous avez déjà contesté cet avertissement.",
+      "warning_inactive": "L'avertissement a expiré ou a été annulé.",
+      "already_decided": "La contestation a déjà été tranchée."
     },
     "fields": {
       "invalid_color": "Couleur non valide (#RRGBB)",
@@ -956,7 +961,14 @@
         "history": "Historique des avertissements",
         "none": "Pas d'avertissement",
         "by": "par {name}",
-        "expired": "expiré"
+        "expired": "expiré",
+        "preset": "Motif prédéfini",
+        "presetNone": "— écrire le motif —",
+        "presetOption": "{name} ({points} pts)",
+        "fromPreset": "du motif choisi",
+        "revoked": "annulé",
+        "revoke": "Annuler",
+        "revokeConfirm": "L'avertissement est annulé et ses points ne comptent plus ; les restrictions sont recalculées."
       },
       "ips": {
         "title": "IP connues",
@@ -1296,7 +1308,8 @@
         "clans": "Clans",
         "servers_bridge": "Bridge and ELO",
         "gdpr": "GDPR requests",
-        "donations": "Dons"
+        "donations": "Dons",
+        "warnings": "Avertissements"
       },
       "save": "Enregistrer les paramètres",
       "secretSet": "•••• enregistré (laissez vide pour conserver la valeur)",
@@ -4497,6 +4510,48 @@
       "prev": "‹ Précédent",
       "next": "Suivant ›",
       "page": "Page {page} sur {pages}"
+    },
+    "warnings": {
+      "title": "Avertissements",
+      "save": "Enregistrer",
+      "delete": "Supprimer",
+      "appeals": {
+        "title": "Contestations en attente ({count})",
+        "empty": "Aucune contestation en attente.",
+        "warning": "avertissement de {points} pts : {reason}",
+        "decide": "Envoyer la décision",
+        "accept": "Accepter (l'avertissement est annulé)",
+        "reject": "Rejeter",
+        "reason": "Message au membre (facultatif)"
+      },
+      "settings": {
+        "title": "Confirmation des avertissements",
+        "ack": "Le membre doit confirmer l'avertissement avant de publier à nouveau",
+        "ackHint": "Tant qu'il ne l'a pas confirmé (sur la page « Mes avertissements »), le membre ne peut écrire ni messages, ni messages privés, ni messages de chat, ni statuts."
+      },
+      "reasons": {
+        "title": "Motifs prédéfinis",
+        "body": "Ils apparaissent sur la fiche du membre : choisissez le motif, les points et l'expiration se remplissent seuls.",
+        "add": "Ajouter le motif",
+        "name": "Motif (ex. Spam)",
+        "points": "Points",
+        "expiresDays": "Expire après (jours)",
+        "deleteConfirm": "Le motif disparaît de la liste ; les avertissements déjà donnés restent."
+      },
+      "thresholds": {
+        "title": "Seuils",
+        "body": "Quand les points actifs atteignent un seuil : les messages passent en approbation, le membre ne peut plus publier ou est banni. Sans durée = tant que les points restent au-dessus du seuil.",
+        "add": "Ajouter le seuil",
+        "points": "Points",
+        "action": "Action",
+        "hours": "Durée (heures)",
+        "actions": {
+          "MODERATE_POSTS": "Messages soumis à approbation",
+          "RESTRICT": "Ne peut plus publier",
+          "BAN": "Bannissement"
+        },
+        "deleteConfirm": "Le seuil est supprimé ; ses restrictions sont levées au prochain avertissement ou à l'expiration."
+      }
     }
   },
   "settings": {
@@ -4759,7 +4814,9 @@
         "banner": "Your account will be deleted on {date}.",
         "bannerLink": "Cancel deletion"
       },
-      "passwordResetRequired": "L'équipe t'a demandé de changer ton mot de passe. Choisis-en un nouveau ci-dessous pour continuer."
+      "passwordResetRequired": "L'équipe t'a demandé de changer ton mot de passe. Choisis-en un nouveau ci-dessous pour continuer.",
+      "warningBanner": "Vous avez reçu un avertissement. Confirmez-le pour publier à nouveau.",
+      "warningBannerLink": "Voir l'avertissement"
     },
     "notifications": {
       "title": "Notifications",
@@ -4972,7 +5029,8 @@
       "weight_elo": "Clan ranking: average ELO weight"
     },
     "members": {
-      "deletion_cooling_days": "Cooling-off before a member's requested deletion (days, 0–90)"
+      "deletion_cooling_days": "Cooling-off before a member's requested deletion (days, 0–90)",
+      "warnings_ack": "Les avertissements doivent être confirmés avant de publier à nouveau"
     },
     "apps": {
       "landing": "Landing app",
@@ -6341,7 +6399,8 @@
         "warning": "Avertissements",
         "group_mention": "Group mentions",
         "group_expired": "Groupes temporaires expirés",
-        "weekly_digest": "Résumé hebdomadaire « Ce que vous avez manqué »"
+        "weekly_digest": "Résumé hebdomadaire « Ce que vous avez manqué »",
+        "warning_appeal": "Décisions sur les contestations d'avertissements"
       },
       "chat": {
         "mention": "Discussion mentions",
@@ -9978,5 +10037,31 @@
     },
     "distribution": "Répartition des notes",
     "starsShort": "{value}★"
+  },
+  "warningsPage": {
+    "title": "Mes avertissements",
+    "restricted": "Vous ne pouvez pas publier avant le {date} à cause de vos points d'avertissement.",
+    "restrictedPoints": "Vous ne pouvez pas publier tant que vos points d'avertissement actifs restent au-dessus du seuil.",
+    "moderated": "Vos messages doivent pour l'instant être approuvés par l'équipe.",
+    "empty": "Vous n'avez aucun avertissement.",
+    "state": {
+      "active": "Actif",
+      "expired": "Expiré",
+      "revoked": "Annulé"
+    },
+    "points": "Points : {count}",
+    "expires": "expire le {date}",
+    "noExpiry": "n'expire pas",
+    "acknowledged": "confirmé",
+    "appealState": {
+      "pending": "Votre contestation est en attente.",
+      "accepted": "Votre contestation a été acceptée ; l'avertissement est annulé.",
+      "rejected": "Votre contestation a été rejetée."
+    },
+    "acknowledge": "J'ai lu l'avertissement",
+    "appeal": "Contester",
+    "appealText": "Pourquoi pensez-vous que l'avertissement est injustifié ? (10–2000 caractères)",
+    "appealSend": "Envoyer la contestation",
+    "cancel": "Annuler"
   }
 }

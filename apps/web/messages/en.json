@@ -229,7 +229,12 @@
       "account_too_new": "Your account is too new for this action.",
       "not_enough_posts": "You need more posts for this action.",
       "disabled": "This feature is off here.",
-      "db_plugins_unsupported": "On MySQL (Lite edition), plugins with their own database aren’t available. They work on PostgreSQL."
+      "db_plugins_unsupported": "On MySQL (Lite edition), plugins with their own database aren’t available. They work on PostgreSQL.",
+      "posting_restricted": "You can't post for now because of your warning points.",
+      "warning_ack": "Acknowledge your warning first (the “My warnings” page).",
+      "already_appealed": "You already appealed this warning.",
+      "warning_inactive": "The warning has expired or was revoked.",
+      "already_decided": "The appeal was already decided."
     },
     "fields": {
       "invalid_color": "Invalid color (#RRGGBB)",
@@ -956,7 +961,14 @@
         "history": "Warning history",
         "none": "No warnings",
         "by": "by {name}",
-        "expired": "expired"
+        "expired": "expired",
+        "preset": "Preset reason",
+        "presetNone": "— write my own —",
+        "presetOption": "{name} ({points} pts)",
+        "fromPreset": "from the chosen reason",
+        "revoked": "revoked",
+        "revoke": "Revoke",
+        "revokeConfirm": "The warning is revoked and its points no longer count; restrictions are recalculated."
       },
       "ips": {
         "title": "Known IPs",
@@ -1296,7 +1308,8 @@
         "clans": "Clans",
         "servers_bridge": "Bridge and ELO",
         "gdpr": "GDPR requests",
-        "donations": "Donations"
+        "donations": "Donations",
+        "warnings": "Warnings"
       },
       "save": "Save settings",
       "secretSet": "•••• saved (leave empty to keep the value)",
@@ -4497,6 +4510,48 @@
       "prev": "‹ Previous",
       "next": "Next ›",
       "page": "Page {page} of {pages}"
+    },
+    "warnings": {
+      "title": "Warnings",
+      "save": "Save",
+      "delete": "Delete",
+      "appeals": {
+        "title": "Pending appeals ({count})",
+        "empty": "No pending appeals.",
+        "warning": "warning of {points} pts: {reason}",
+        "decide": "Send decision",
+        "accept": "Accept (the warning is revoked)",
+        "reject": "Reject",
+        "reason": "Message to the member (optional)"
+      },
+      "settings": {
+        "title": "Acknowledging warnings",
+        "ack": "The member must acknowledge the warning before posting again",
+        "ackHint": "Until they acknowledge it (on the “My warnings” page), the member can't write posts, private messages, chat messages or status updates."
+      },
+      "reasons": {
+        "title": "Preset reasons",
+        "body": "They show up on the member's card: pick a reason and its points and expiry fill in by themselves.",
+        "add": "Add reason",
+        "name": "Reason (e.g. Spam)",
+        "points": "Points",
+        "expiresDays": "Expires after (days)",
+        "deleteConfirm": "The reason leaves the list; warnings already given stay."
+      },
+      "thresholds": {
+        "title": "Thresholds",
+        "body": "When active points reach a threshold: posts need approval, the member can't post, or gets banned. No duration = as long as the points stay above the threshold.",
+        "add": "Add threshold",
+        "points": "Points",
+        "action": "Action",
+        "hours": "Duration (hours)",
+        "actions": {
+          "MODERATE_POSTS": "Posts need approval",
+          "RESTRICT": "Can't post",
+          "BAN": "Ban"
+        },
+        "deleteConfirm": "The threshold is deleted; restrictions it applied are lifted at the next warning or on expiry."
+      }
     }
   },
   "settings": {
@@ -4759,7 +4814,9 @@
         "banner": "Your account will be deleted on {date}.",
         "bannerLink": "Cancel deletion"
       },
-      "passwordResetRequired": "The team asked you to change your password. Set a new one below to continue."
+      "passwordResetRequired": "The team asked you to change your password. Set a new one below to continue.",
+      "warningBanner": "You received a warning. Acknowledge it to post again.",
+      "warningBannerLink": "See the warning"
     },
     "notifications": {
       "title": "Notifications",
@@ -4972,7 +5029,8 @@
       "weight_elo": "Clan ranking: average ELO weight"
     },
     "members": {
-      "deletion_cooling_days": "Cooling-off before a member's requested deletion (days, 0–90)"
+      "deletion_cooling_days": "Cooling-off before a member's requested deletion (days, 0–90)",
+      "warnings_ack": "Warnings must be acknowledged before posting again"
     },
     "apps": {
       "landing": "Landing app",
@@ -6341,7 +6399,8 @@
         "warning": "Warnings",
         "group_mention": "Group mentions",
         "group_expired": "Temporary groups that expired",
-        "weekly_digest": "Weekly digest “What you missed”"
+        "weekly_digest": "Weekly digest “What you missed”",
+        "warning_appeal": "Warning appeal decisions"
       },
       "chat": {
         "mention": "Chat mentions",
@@ -9978,5 +10037,31 @@
     },
     "distribution": "Rating distribution",
     "starsShort": "{value}★"
+  },
+  "warningsPage": {
+    "title": "My warnings",
+    "restricted": "You can't post until {date} because of your warning points.",
+    "restrictedPoints": "You can't post while your active warning points stay above the threshold.",
+    "moderated": "Your posts currently need approval from the team.",
+    "empty": "You have no warnings.",
+    "state": {
+      "active": "Active",
+      "expired": "Expired",
+      "revoked": "Revoked"
+    },
+    "points": "Points: {count}",
+    "expires": "expires on {date}",
+    "noExpiry": "doesn't expire",
+    "acknowledged": "acknowledged",
+    "appealState": {
+      "pending": "Your appeal is pending.",
+      "accepted": "Your appeal was accepted; the warning is revoked.",
+      "rejected": "Your appeal was rejected."
+    },
+    "acknowledge": "I've read this warning",
+    "appeal": "Appeal",
+    "appealText": "Why do you think the warning is wrong? (10–2000 characters)",
+    "appealSend": "Send appeal",
+    "cancel": "Cancel"
   }
 }

@@ -73,6 +73,11 @@ const TEXTS: Record<string, Record<Locale, (a: string, t: string, n: number, dat
   "chat.sanction": { ro: (_a, _t, _n, d) => chatSanctionText("ro", d), en: (_a, _t, _n, d) => chatSanctionText("en", d) },
   "chat.access": { ro: (_a, _t, _n, d) => chatAccessText("ro", d), en: (_a, _t, _n, d) => chatAccessText("en", d) },
   "core.warning": { ro: (_a, t) => `Ai primit un avertisment: ${t}`, en: (_a, t) => `You received a warning: ${t}` },
+  // Anti-spam: decizia pe contestație (`data.accepted`).
+  "core.warning_appeal": {
+    ro: (_a, t, _n, d) => (d.accepted ? `Contestația ta a fost acceptată: avertismentul „${t}” a fost anulat` : `Contestația ta pentru avertismentul „${t}” a fost respinsă`),
+    en: (_a, t, _n, d) => (d.accepted ? `Your appeal was accepted: the warning “${t}” was revoked` : `Your appeal against the warning “${t}” was rejected`),
+  },
   "clans.invite": { ro: (a, t) => `${a} te-a invitat în clanul „${t}”`, en: (a, t) => `${a} invited you to the clan “${t}”` },
   "clans.request": {
     ro: (a, t, n) => (n > 1 ? `${n} cereri noi de intrare în clanul „${t}”` : `${a} vrea să intre în clanul „${t}”`),

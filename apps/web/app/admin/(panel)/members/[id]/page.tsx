@@ -17,7 +17,7 @@ import { permissionLabel } from "@/lib/permission-label";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
-import { addSecondaryGroup, banMember, liftBan, removeSecondaryGroup, setPrimaryGroup, setSecondaryExpiry, warnMember } from "../actions";
+import { addSecondaryGroup, banMember, liftBan, removeSecondaryGroup, revokeWarning, setPrimaryGroup, setSecondaryExpiry, warnMember } from "../actions";
 import { addMemberDonation, confirmDonation, deleteDonation } from "../../vip/donations/actions";
 import { GcsDonationFields } from "../../vip/donations/GcsDonationFields";
 import { disableMemberTwoFactor, forcePasswordReset, saveMemberPermissions, setSpammer, unlockMember, validateMember } from "./actions";
@@ -285,7 +285,8 @@ export default async function AcpMemberPage({ params, searchParams }: Props) {
     const totals = activity.reduce((s, d) => ({ posts: s.posts + d.posts, chat: s.chat + d.chat }), { posts: 0, chat: 0 });
     const bySteps = new Map<string, typeof content>();
     for (const item of content) bySteps.set(item.step, [...(bySteps.get(item.step) ?? []), item]);
-    const warnPoints = m.warnings.filter((w) => !w.expiresAt || w.expiresAt > now).reduce((s, w) => s + w.points, 0);
+    const warnPoints = m.warnings.filter((w) => !w.revokedAt && (!w.expiresAt || w.expiresAt > now)).reduce((s, w) => s + w.points, 0);
+    const warnReasons = await services().warnings.reasons();
 
     return (
       <div className="gcs-mdGrid">
@@ -437,17 +438,30 @@ export default async function AcpMemberPage({ params, searchParams }: Props) {
             <strong>{t("cards.warnPoints", { count: warnPoints })}</strong>
           </p>
           <GcsActionForm action={warnMember.bind(null, m.id)} submitLabel={t("warn.submit")} submitKind="warn">
+            {warnReasons.length > 0 && (
+              <label className="gcs-field">
+                {t("warn.preset")}
+                <select className="gcs-input" name="reasonId" defaultValue="" data-testid="gcs-warn-preset">
+                  <option value="">{t("warn.presetNone")}</option>
+                  {warnReasons.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {t("warn.presetOption", { name: r.name, points: r.points })}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <label className="gcs-field">
               {t("warn.points")}
-              <input className="gcs-input" name="points" type="number" min={1} max={100} defaultValue={1} required />
+              <input className="gcs-input" name="points" type="number" min={1} max={100} placeholder={t("warn.fromPreset")} />
             </label>
             <label className="gcs-field">
               {t("warn.reason")}
-              <input className="gcs-input" name="reason" required maxLength={500} />
+              <input className="gcs-input" name="reason" maxLength={500} placeholder={t("warn.fromPreset")} />
             </label>
             <label className="gcs-field">
               {t("warn.expiresDays")}
-              <input className="gcs-input" name="expiresDays" type="number" min={0} defaultValue={30} />
+              <input className="gcs-input" name="expiresDays" type="number" min={0} placeholder={t("warn.fromPreset")} />
             </label>
           </GcsActionForm>
           <div>
@@ -460,8 +474,11 @@ export default async function AcpMemberPage({ params, searchParams }: Props) {
                 </span>
                 <span className="gcs-mdCard__muted">
                   {w.issuedByName ? t("warn.by", { name: w.issuedByName }) : ""} · {dateLong(w.createdAt)}
-                  {w.expiresAt && w.expiresAt <= now ? ` · ${t("warn.expired")}` : ""}
+                  {w.revokedAt ? ` · ${t("warn.revoked")}` : w.expiresAt && w.expiresAt <= now ? ` · ${t("warn.expired")}` : ""}
                 </span>
+                {!w.revokedAt && (!w.expiresAt || w.expiresAt > now) && (
+                  <GcsActionForm compact variant="ghost" action={revokeWarning.bind(null, w.id)} submitLabel={t("warn.revoke")} submitKind="revoke" confirm={t("warn.revokeConfirm")} />
+                )}
               </div>
             ))}
           </div>

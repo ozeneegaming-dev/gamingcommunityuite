@@ -229,7 +229,12 @@
       "account_too_new": "Contul tău e prea nou pentru această acțiune.",
       "not_enough_posts": "Ai nevoie de mai multe postări pentru această acțiune.",
       "disabled": "Funcția e oprită aici.",
-      "db_plugins_unsupported": "Pe MySQL (ediția Lite) pluginurile cu bază de date proprie nu sunt disponibile. Ele merg pe PostgreSQL."
+      "db_plugins_unsupported": "Pe MySQL (ediția Lite) pluginurile cu bază de date proprie nu sunt disponibile. Ele merg pe PostgreSQL.",
+      "posting_restricted": "Nu poți posta deocamdată din cauza punctelor de avertisment.",
+      "warning_ack": "Confirmă întâi avertismentul primit (pagina „Avertismentele mele”).",
+      "already_appealed": "Ai contestat deja acest avertisment.",
+      "warning_inactive": "Avertismentul a expirat sau a fost anulat.",
+      "already_decided": "Contestația a fost deja decisă."
     },
     "fields": {
       "invalid_color": "Culoare invalidă (#RRGGBB)",
@@ -956,7 +961,14 @@
         "history": "Istoric avertismente",
         "none": "Niciun avertisment",
         "by": "de {name}",
-        "expired": "expirat"
+        "expired": "expirat",
+        "preset": "Motiv predefinit",
+        "presetNone": "— scriu motivul —",
+        "presetOption": "{name} ({points} p.)",
+        "fromPreset": "din motivul ales",
+        "revoked": "anulat",
+        "revoke": "Anulează",
+        "revokeConfirm": "Avertismentul se anulează și punctele lui nu se mai numără; restricțiile se recalculează."
       },
       "ips": {
         "title": "IP-uri cunoscute",
@@ -1296,7 +1308,8 @@
         "clans": "Clanuri",
         "servers_bridge": "Bridge și ELO",
         "gdpr": "Cereri GDPR",
-        "donations": "Donații"
+        "donations": "Donații",
+        "warnings": "Avertismente"
       },
       "save": "Salvează setările",
       "secretSet": "•••• salvat (lasă gol ca să păstrezi valoarea)",
@@ -4497,6 +4510,48 @@
       "prev": "‹ Înapoi",
       "next": "Înainte ›",
       "page": "Pagina {page} din {pages}"
+    },
+    "warnings": {
+      "title": "Avertismente",
+      "save": "Salvează",
+      "delete": "Șterge",
+      "appeals": {
+        "title": "Contestații în așteptare ({count})",
+        "empty": "Nicio contestație în așteptare.",
+        "warning": "avertisment de {points} p.: {reason}",
+        "decide": "Trimite decizia",
+        "accept": "Acceptă (avertismentul se anulează)",
+        "reject": "Respinge",
+        "reason": "Mesaj pentru membru (opțional)"
+      },
+      "settings": {
+        "title": "Confirmarea avertismentelor",
+        "ack": "Membrul trebuie să confirme avertismentul înainte să posteze din nou",
+        "ackHint": "Până confirmă (pe pagina „Avertismentele mele”), membrul nu poate scrie postări, mesaje private, mesaje în chat sau statusuri."
+      },
+      "reasons": {
+        "title": "Motive predefinite",
+        "body": "Apar în fișa membrului: alegi motivul și punctele și expirarea se completează singure.",
+        "add": "Adaugă motivul",
+        "name": "Motivul (ex. Spam)",
+        "points": "Puncte",
+        "expiresDays": "Expiră după (zile)",
+        "deleteConfirm": "Motivul dispare din listă; avertismentele date deja rămân."
+      },
+      "thresholds": {
+        "title": "Praguri",
+        "body": "Când punctele active ajung la prag: postările trec prin aprobare, membrul nu mai poate posta sau primește ban. Fără durată = cât timp punctele rămân peste prag.",
+        "add": "Adaugă pragul",
+        "points": "Puncte",
+        "action": "Acțiunea",
+        "hours": "Durata (ore)",
+        "actions": {
+          "MODERATE_POSTS": "Postări cu aprobare",
+          "RESTRICT": "Nu mai poate posta",
+          "BAN": "Ban"
+        },
+        "deleteConfirm": "Pragul se șterge; restricțiile date de el se ridică la următorul avertisment sau la expirare."
+      }
     }
   },
   "settings": {
@@ -4759,7 +4814,9 @@
         "banner": "Contul tău va fi șters pe {date}.",
         "bannerLink": "Anulează ștergerea"
       },
-      "passwordResetRequired": "Echipa ți-a cerut să-ți schimbi parola. Pune una nouă mai jos ca să continui."
+      "passwordResetRequired": "Echipa ți-a cerut să-ți schimbi parola. Pune una nouă mai jos ca să continui.",
+      "warningBanner": "Ai primit un avertisment. Confirmă-l ca să poți posta din nou.",
+      "warningBannerLink": "Vezi avertismentul"
     },
     "notifications": {
       "title": "Notificări",
@@ -4972,7 +5029,8 @@
       "weight_elo": "Clasamentul clanurilor: ponderea ELO-ului mediu"
     },
     "members": {
-      "deletion_cooling_days": "Perioada de răzgândire a ștergerii cerute de membru (zile, 0–90)"
+      "deletion_cooling_days": "Perioada de răzgândire a ștergerii cerute de membru (zile, 0–90)",
+      "warnings_ack": "Avertismentele trebuie confirmate înainte de a posta din nou"
     },
     "apps": {
       "landing": "Aplicația de pornire",
@@ -6341,7 +6399,8 @@
         "warning": "Avertismente",
         "group_mention": "Mențiuni prin grup",
         "group_expired": "Grupurile temporare care au expirat",
-        "weekly_digest": "Rezumatul săptămânal „Ce ai ratat”"
+        "weekly_digest": "Rezumatul săptămânal „Ce ai ratat”",
+        "warning_appeal": "Decizii la contestațiile avertismentelor"
       },
       "chat": {
         "mention": "Mențiuni în chat",
@@ -9978,5 +10037,31 @@
     },
     "distribution": "Distribuția notelor",
     "starsShort": "{value}★"
+  },
+  "warningsPage": {
+    "title": "Avertismentele mele",
+    "restricted": "Nu poți posta până la {date}, din cauza punctelor de avertisment.",
+    "restrictedPoints": "Nu poți posta cât timp punctele de avertisment active rămân peste prag.",
+    "moderated": "Postările tale trec deocamdată prin aprobarea echipei.",
+    "empty": "Nu ai niciun avertisment.",
+    "state": {
+      "active": "Activ",
+      "expired": "Expirat",
+      "revoked": "Anulat"
+    },
+    "points": "Puncte: {count}",
+    "expires": "expiră la {date}",
+    "noExpiry": "nu expiră",
+    "acknowledged": "confirmat",
+    "appealState": {
+      "pending": "Contestația ta e în așteptare.",
+      "accepted": "Contestația a fost acceptată; avertismentul e anulat.",
+      "rejected": "Contestația a fost respinsă."
+    },
+    "acknowledge": "Am citit avertismentul",
+    "appeal": "Contestă",
+    "appealText": "De ce crezi că avertismentul e greșit? (10–2000 de caractere)",
+    "appealSend": "Trimite contestația",
+    "cancel": "Renunță"
   }
 }
