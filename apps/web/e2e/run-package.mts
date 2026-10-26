@@ -103,8 +103,12 @@ async function main(): Promise<number> {
   rmSync(work, { recursive: true, force: true });
   mkdirSync(work, { recursive: true });
   cleanups.push(() => rmSync(work, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 }));
-  const tar = process.platform === "win32" ? path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe") : "tar";
-  execFileSync(tar, ["-xf", path.resolve(zip!), "-C", work], { stdio: "inherit" });
+  // Windows: tar-ul din System32 (bsdtar) citește și zip-uri; pe Linux tar-ul GNU nu, deci `unzip`.
+  if (process.platform === "win32") {
+    execFileSync(path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe"), ["-xf", path.resolve(zip!), "-C", work], { stdio: "inherit" });
+  } else {
+    execFileSync("unzip", ["-q", path.resolve(zip!), "-d", work], { stdio: "inherit" });
+  }
   const root = path.join(work, readdirSync(work).find((n) => n.startsWith("gcs-lite-"))!);
 
   const databaseUrl = await emptyDatabase(work);
