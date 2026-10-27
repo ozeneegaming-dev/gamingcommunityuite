@@ -164,6 +164,7 @@ export const PLUGIN_WORKER_SOURCE = String.raw`
           status: (ids) => rpc("api.vip.status", [ids], token),
           members: (opts) => rpc("api.vip.members", [opts || {}], token),
         }),
+        servers: Object.freeze({ byForums: (ids) => rpc("api.servers.byForums", [ids], token) }),
       }),
       members: Object.freeze({
         appearance: Object.freeze({

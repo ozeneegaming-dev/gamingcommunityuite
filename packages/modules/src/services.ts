@@ -823,7 +823,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     jobs,
     plugins: pluginAdmin,
     database: pluginDatabase,
-    api: new GcsPluginPublicApi({ db, forumQueries, posting }),
+    api: new GcsPluginPublicApi({ db, forumQueries, posting, servers: serverQueries }),
     appearance,
     media: pluginMedia,
     dataDir: process.env.GCS_PLUGINS_DIR ?? path.join(opts.configDir, "plugins"),

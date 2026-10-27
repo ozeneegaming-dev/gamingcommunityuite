@@ -4,6 +4,7 @@ import { docSnippet } from "../content-text";
 import { canViewPost } from "../forums/content";
 import type { GcsForumPosting } from "../forums/posting";
 import type { GcsForumQueries } from "../forums/queries";
+import type { GcsServerQueries } from "../servers/queries";
 import { slugify } from "../forums/slug";
 import { nameKeyOf, nameKeySelect } from "../profile/nameKeys";
 import { normalizePrivacy } from "../profile/privacy";
@@ -23,7 +24,7 @@ const idOf = (v: unknown) => (Number.isSafeInteger(v) && (v as number) > 0 ? (v 
  * prin serviciile existente și cu permisiunile actorului (vizitatorul apelului sau un vizitator anonim).
  */
 export class GcsPluginPublicApi {
-  constructor(private readonly deps: { db: PrismaClient; forumQueries: GcsForumQueries; posting: GcsForumPosting }) {}
+  constructor(private readonly deps: { db: PrismaClient; forumQueries: GcsForumQueries; posting: GcsForumPosting; servers?: Pick<GcsServerQueries, "byForums"> }) {}
 
   async call(method: string, args: unknown[], actor: GcsActor): Promise<unknown> {
     switch (method) {
@@ -45,6 +46,10 @@ export class GcsPluginPublicApi {
         return this.vipStatus(args[0]);
       case "api.vip.members":
         return this.vipMembers(args[0]);
+      case "api.servers.byForums": {
+        const ids = Array.isArray(args[0]) ? args[0].filter((v): v is number => Number.isSafeInteger(v)) : [];
+        return this.deps.servers ? this.deps.servers.byForums(actor, ids) : {};
+      }
       case "api.stats": {
         const s = await this.deps.forumQueries.stats();
         return { topics: s.topics, posts: s.posts, members: s.members };

@@ -164,6 +164,25 @@ export class GcsServerQueries {
     return rows.map((r) => this.view(r, statuses.get(r.id) ?? null, uptime.get(r.id) ?? null));
   }
 
+  /**
+   * Starea serverelor legate de forumuri (`GameServer.forumId`), după id-ul forumului: doar serverele vizibile
+   * viewer-ului; `online: false` și pentru un status prea vechi sau lipsă. Gol cu aplicația Servere oprită (insignele
+   * automate ON / OFF ale subforumurilor, Aspect forumuri).
+   */
+  async byForums(actor: GcsActor, forumIds: number[]): Promise<Record<number, { serverId: number; name: string; online: boolean; players: number; maxPlayers: number }>> {
+    const wanted = new Set(forumIds.filter((id) => Number.isSafeInteger(id) && id > 0).slice(0, 200));
+    if (wanted.size === 0) return {};
+    const rows = (await this.visibleRows(actor)).filter((r) => r.forumId !== null && wanted.has(r.forumId));
+    if (rows.length === 0) return {};
+    const statuses = await this.statuses(rows);
+    const out: Record<number, { serverId: number; name: string; online: boolean; players: number; maxPlayers: number }> = {};
+    for (const r of rows) {
+      const s = statuses.get(r.id);
+      out[r.forumId!] = { serverId: r.id, name: r.name, online: s?.online ?? false, players: s?.players ?? 0, maxPlayers: s?.maxPlayers ?? 0 };
+    }
+    return out;
+  }
+
   /** Viewer-ul poate vedea serverul (camera live, bannerul, ruta de status). */
   async canView(actor: GcsActor, id: number): Promise<boolean> {
     return (await this.visibleRows(actor)).some((r) => r.id === id);

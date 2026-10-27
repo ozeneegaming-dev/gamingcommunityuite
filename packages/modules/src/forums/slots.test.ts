@@ -13,6 +13,32 @@ const appExtension: GcsForumExtension = {
     return Object.fromEntries(nodes.map((n) => [n.id, { title: [{ kind: "chip" as const, label: "App" }] }]));
   },
 };
+/** O extensie care moștenește fundalul părintelui și pune insigne pe subforumuri (ca „Aspect forumuri”). */
+const inheritExtension: GcsForumExtension = {
+  key: "inherit",
+  tabs: [
+    {
+      key: "look",
+      labelKey: "x",
+      icon: "fa-solid fa-palette",
+      fields: [
+        { key: "bg", type: "image", labelKey: "x", maxKb: 512, maxSide: 1600, style: { var: "--gcs-forum-row-image" } },
+        { key: "badge", type: "text", labelKey: "x", maxLength: 8 },
+      ],
+    },
+  ],
+  list: async (_ctx, nodes) =>
+    Object.fromEntries(
+      nodes.map((n) => [
+        n.id,
+        {
+          ...(n.data.bg === "" && n.parent && typeof n.parent.data.bg === "string" && n.parent.data.bg !== "" ? { style: { vars: { "--gcs-forum-row-image": `url("/files/${n.parent.data.bg}")` } } } : {}),
+          subs: Object.fromEntries((n.children ?? []).filter((c) => c.data.badge).map((c) => [c.id, [{ kind: "chip" as const, label: String(c.data.badge), tone: "ok" as const }]])),
+        },
+      ]),
+    ),
+};
+const inheritModule: GcsModule = { key: "inherit", permissions: [], settings: [], acpMenu: [], eventListeners: [], forumExtensions: [inheritExtension] };
 const appModule: GcsModule = { key: "testapp", permissions: [], settings: [], acpMenu: [], eventListeners: [], app: { optional: true, labelKey: "x", icon: "fa-solid fa-x" }, forumExtensions: [appExtension] };
 
 let w: GcsForumWorld;
@@ -20,7 +46,7 @@ let slots: GcsForumSlotService;
 let disabled: Set<string>;
 
 beforeEach(async () => {
-  w = await createForumWorld([forumSlotsDemoModule, appModule]);
+  w = await createForumWorld([forumSlotsDemoModule, appModule, inheritModule]);
   disabled = new Set();
   listCalls = 0;
   slots = new GcsForumSlotService({ db: w.db, cache: w.cache, bus: w.bus, registry: w.registry, apps: { enabledFilter: async () => (key: string) => !disabled.has(key) }, acp: w.acp });
@@ -104,6 +130,22 @@ describe("sloturile forumului cu extensia demo (Forum v2)", () => {
     expect(bundles.get(forum.id)?.title ?? []).toEqual([]);
     expect(listCalls).toBe(0);
     expect((await slots.active({ plugins: false })).map((e) => e.def.key)).toEqual(expect.arrayContaining([FORUM_SLOTS_DEMO_EXTENSION]));
+  });
+
+  test("Aspect forumuri: nodul primește datele părintelui și ale subforumurilor; insignele merg doar la copiii rândului", async () => {
+    const { category, forum, subforum } = await w.createTree({ subforum: true });
+    await slots.saveTab(w.root, { forumId: forum.id, extension: "inherit", tab: "look", values: { bg: "bgForum1", badge: "" } }, OPTS);
+    await slots.saveTab(w.root, { forumId: subforum!.id, extension: "inherit", tab: "look", values: { bg: "", badge: "ON" } }, OPTS);
+    await expect(slots.saveTab(w.root, { forumId: forum.id, extension: "inherit", tab: "look", values: { bg: "../x" } }, OPTS)).rejects.toBeInstanceOf(GcsValidationError);
+
+    // Indexul: rândul forumului are imaginea lui și insigna subforumului din lista lui (nu și a altor forumuri).
+    const index = await slots.list(w.member, "ro", "index", [ref(category), { ...ref(forum), children: [{ id: subforum!.id, type: "FORUM", name: subforum!.name, slug: subforum!.slug }, { id: 999_999, type: "FORUM", name: "x", slug: "x" }] }], OPTS);
+    expect(index.get(forum.id)!.style.vars["--gcs-forum-row-image"]).toBe('url("/files/bgForum1")');
+    expect(index.get(forum.id)!.subs).toEqual({ [subforum!.id]: [{ kind: "chip", label: "ON", tone: "ok" }] });
+
+    // Pagina forumului: subforumul (fără imagine proprie) moștenește fundalul părintelui, care nu e în listă.
+    const page = await slots.list(w.member, "ro", "forum", [{ ...ref(subforum!), parentType: "FORUM" }], OPTS);
+    expect(page.get(subforum!.id)!.style.vars["--gcs-forum-row-image"]).toBe('url("/files/bgForum1")');
   });
 
   test("o extensie care aruncă o eroare lasă slotul gol (pagina nu se strică)", async () => {

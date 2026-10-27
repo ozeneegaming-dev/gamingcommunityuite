@@ -610,6 +610,7 @@ export class GcsPluginHost {
         case "api.vip.plans":
         case "api.vip.status":
         case "api.vip.members":
+        case "api.servers.byForums":
           return await this.deps.api.call(method, args, await this.actorFor(key, token));
         case "members.appearance.set":
           need("appearance");
@@ -1042,7 +1043,25 @@ export class GcsPluginHost {
         if (!l || nodes.length === 0) return {};
         let value: unknown;
         try {
-          value = await this.invoke(l, "hook", "forum.list", { surface: ctx.surface, nodes: nodes.map((n) => ({ id: n.id, type: n.type, parentId: n.parentId, name: n.name, slug: n.slug, data: n.data })) }, { actor: ctx.actor, locale: ctx.locale });
+          value = await this.invoke(
+            l,
+            "hook",
+            "forum.list",
+            {
+              surface: ctx.surface,
+              nodes: nodes.map((n) => ({
+                id: n.id,
+                type: n.type,
+                parentId: n.parentId,
+                name: n.name,
+                slug: n.slug,
+                data: n.data,
+                parent: n.parent ?? null,
+                children: (n.children ?? []).map((c) => ({ id: c.id, type: c.type, name: c.name, slug: c.slug, data: c.data })),
+              })),
+            },
+            { actor: ctx.actor, locale: ctx.locale },
+          );
         } catch {
           return {};
         }
@@ -1057,6 +1076,19 @@ export class GcsPluginHost {
           for (const part of ["title", "meta", "header"] as const) {
             const item = await this.slotHtml(l, r[part]);
             if (item) slots[part] = [item];
+          }
+          // Insignele subforumurilor din lista rândului (doar copiii nodului).
+          const node = nodes.find((n) => n.id === id);
+          if (r.subs && typeof r.subs === "object" && !Array.isArray(r.subs) && node?.children?.length) {
+            const childIds = new Set(node.children.map((c) => c.id));
+            const subs: Record<number, GcsSlotItem[]> = {};
+            for (const [rawChild, html] of Object.entries(r.subs as Record<string, unknown>).slice(0, 60)) {
+              const childId = Number(rawChild);
+              if (!childIds.has(childId)) continue;
+              const item = await this.slotHtml(l, html);
+              if (item) subs[childId] = [item];
+            }
+            if (Object.keys(subs).length > 0) slots.subs = subs;
           }
           // Stilul se verifică de serviciul sloturilor (`sanitizeSlotStyle`, cu containerul pluginului).
           if (r.style && typeof r.style === "object") slots.style = r.style as GcsSlotStyle;

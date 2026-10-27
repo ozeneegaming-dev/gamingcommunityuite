@@ -292,6 +292,11 @@ export interface GcsPluginContext {
     forums: { list(): Promise<GcsPluginForum[]> };
     stats(): Promise<GcsPluginStats>;
     /** Planurile VIP, abonamentele active (≤ 100 de useri) și membrii VIP (online întâi). */
+    /**
+     * GCS ≥ 0.11.0: starea serverelor de joc legate de forumuri (`forumId` → server), vizibile vizitatorului; gol cu
+     * aplicația Servere oprită sau lipsă.
+     */
+    servers: { byForums(forumIds: number[]): Promise<Record<string, { serverId: number; name: string; online: boolean; players: number; maxPlayers: number }>> };
     vip: {
       plans(): Promise<GcsPluginVipPlan[]>;
       status(userIds: string[]): Promise<GcsPluginVipStatus[]>;

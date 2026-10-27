@@ -30,14 +30,27 @@ import {
 import type { ForumType, Prisma, PrismaClient } from "@gcs/db";
 import { FORUMS_ACP_SECTION } from "./forums";
 
-/** Un nod al forumului, fără datele extensiilor (le adaugă serviciul). */
-export type GcsSlotNodeRef = { id: number; type: ForumType; parentId: number | null; name: string; slug: string };
+/**
+ * Un nod al forumului, fără datele extensiilor (le adaugă serviciul). `parentType`: tipul părintelui, când părintele nu
+ * e în listă (ex. forumul paginii, pentru subforumurile lui); `children`: subforumurile din lista rândului.
+ */
+export type GcsSlotNodeRef = {
+  id: number;
+  type: ForumType;
+  parentId: number | null;
+  name: string;
+  slug: string;
+  parentType?: ForumType;
+  children?: { id: number; type: ForumType; name: string; slug: string }[];
+};
 
 /** Ce primește un rând de forum / o categorie din toate extensiile, gata de desenat. */
 export type GcsForumSlotBundle = {
   title: GcsSlotItem[];
   meta: GcsSlotItem[];
   header: GcsSlotItem[];
+  /** Insignele subforumurilor din lista rândului (`forum.row.sub`), după id-ul subforumului. */
+  subs: Record<number, GcsSlotItem[]>;
   style: GcsSlotStyleResult;
   /** Pluginurile care au pus HTML sau stil (pagina le adaugă foile de stil). */
   plugins: string[];
@@ -60,7 +73,7 @@ const DATA_TTL = 3600;
 /** Cât poate dura o extensie de modul pe o pagină (o extensie lentă nu ține pagina). */
 const EXTENSION_TIMEOUT_MS = 3000;
 
-const empty = (): GcsForumSlotBundle => ({ title: [], meta: [], header: [], style: { classes: [], vars: {} }, plugins: [] });
+const empty = (): GcsForumSlotBundle => ({ title: [], meta: [], header: [], subs: {}, style: { classes: [], vars: {} }, plugins: [] });
 
 async function withTimeout<T>(p: Promise<T>, fallback: T, label: string): Promise<T> {
   let timer: NodeJS.Timeout | undefined;
@@ -123,9 +136,23 @@ export class GcsForumSlotService {
     return out;
   }
 
+  /**
+   * Nodurile pentru o extensie, cu valorile ei: ale nodului, ale părintelui (doar dacă părintele are valori salvate) și
+   * ale subforumurilor din lista rândului.
+   */
   private nodes(ext: GcsForumExtension, refs: GcsSlotNodeRef[], data: ExtData): GcsForumSlotNode[] {
     const fields = extensionFields(ext);
-    return refs.map((r) => ({ ...r, data: withExtensionDefaults(fields, data[ext.key]?.[r.id]) }));
+    const own = data[ext.key] ?? {};
+    const types = new Map(refs.map((r) => [r.id, r.type]));
+    return refs.map(({ parentType, children, ...r }) => {
+      const parent = r.parentId !== null && own[r.parentId] ? { id: r.parentId, type: types.get(r.parentId) ?? parentType ?? "FORUM", data: withExtensionDefaults(fields, own[r.parentId]) } : null;
+      return {
+        ...r,
+        data: withExtensionDefaults(fields, own[r.id]),
+        parent,
+        ...(children && children.length > 0 ? { children: children.map((c) => ({ ...c, data: withExtensionDefaults(fields, own[c.id]) })) } : {}),
+      };
+    });
   }
 
   private ctx(actor: GcsActor, locale: string, surface: GcsForumSlotContext["surface"]): GcsForumSlotContext {
@@ -171,6 +198,13 @@ export class GcsForumSlotService {
         add("forum.row.title", "title", [...(declared.title ?? []), ...(dyn.title ?? [])]);
         add("forum.row.meta", "meta", [...(declared.meta ?? []), ...(dyn.meta ?? [])]);
         add("category.header", "header", [...(declared.header ?? []), ...(dyn.header ?? [])]);
+        // Insignele subforumurilor: doar pentru subforumurile din lista acestui rând.
+        for (const child of ref.children ?? []) {
+          const clean = sanitizeSlotItems("forum.row.sub", dyn.subs?.[child.id] ?? [], { allowHtml });
+          if (clean.length === 0) continue;
+          (bundle.subs[child.id] ??= []).push(...clean);
+          if (def.plugin && clean.some((i) => i.kind === "html") && !bundle.plugins.includes(def.plugin)) bundle.plugins.push(def.plugin);
+        }
 
         const scope = def.plugin ? pluginCssScope(def.plugin) : undefined;
         let custom: unknown = null;
@@ -192,7 +226,7 @@ export class GcsForumSlotService {
         styles.push(style);
       }
       bundle.style = mergeSlotStyles(styles);
-      if (bundle.title.length || bundle.meta.length || bundle.header.length || bundle.style.classes.length || Object.keys(bundle.style.vars).length) out.set(ref.id, bundle);
+      if (bundle.title.length || bundle.meta.length || bundle.header.length || Object.keys(bundle.subs).length || bundle.style.classes.length || Object.keys(bundle.style.vars).length) out.set(ref.id, bundle);
     }
     return out;
   }
