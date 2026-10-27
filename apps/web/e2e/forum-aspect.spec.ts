@@ -139,14 +139,19 @@ test("aspectul unui forum din pluginul instalat: tabul cu previzualizare, indexu
   await expect.poll(() => styleOf(row, "mask-image", "::after")).not.toBe(before);
 
   // 5. Pluginul oprit: forumul arată implicit (valorile rămân); pornit, aspectul revine.
+  // Procesele site-ului încarcă / descarcă pluginul la câteva secunde după comutare: pagina se reîncarcă până apare.
   await setPlugin(page, false);
-  await page.goto("/");
-  await expect(row).toBeVisible();
-  await expect(row).not.toHaveClass(/gcs-forumRow--image/);
+  await expect(async () => {
+    await page.goto("/");
+    await expect(row).toBeVisible();
+    await expect(row).not.toHaveClass(/gcs-forumRow--image/, { timeout: 2_000 });
+  }).toPass({ timeout: 45_000 });
   await expect(row.locator(".gcs-slotChip--above")).toHaveCount(0);
   await setPlugin(page, true);
-  await page.goto("/");
-  await expect(row).toHaveClass(/gcs-forumRow--image-right/);
+  await expect(async () => {
+    await page.goto("/");
+    await expect(row).toHaveClass(/gcs-forumRow--image-right/, { timeout: 2_000 });
+  }).toPass({ timeout: 45_000 });
   await expect(row.locator(".gcs-slotChip--above")).toHaveText("Recrutăm");
 
   // 6. Un widget: banda de titlu cu imaginea, titlul colorat și eticheta (ACP → Aspect → Widget-uri → Aspect).
