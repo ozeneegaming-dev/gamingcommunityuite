@@ -45,7 +45,7 @@ export default async function AcpWidgetsPage() {
             {(["top", "sidebar", "bottom"] as const).map((z) => `${tp(`zones.${z}`)}: ${layout[z].length}`).join(" · ")}
           </p>
           {aspect && (
-            <ul className="gcs-acpWidgetList" aria-label={ta("widget.listLabel")}>
+            <ul className="gcs-acpWidgetList" aria-label={ta("widget.listLabel")} data-page={page}>
               {(["top", "sidebar", "bottom"] as const).flatMap((z) =>
                 layout[z].map((p) => (
                   <li key={p.id}>

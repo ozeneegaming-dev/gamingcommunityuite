@@ -105,6 +105,7 @@ test("aspectul unui forum din pluginul instalat: tabul cu previzualizare, indexu
   // Previzualizarea live: rândul cu valorile încă nesalvate.
   const preview = page.frameLocator('[data-testid="gcs-aspect-preview-frame"]').getByTestId("gcs-forum-row").first();
   await expect(preview).toHaveClass(/gcs-forumRow--image-right/, { timeout: 20_000 });
+  await expect(preview).toHaveClass(/gcs-forumRow--iconImage/);
   await expect(preview.locator(".gcs-slotChip--above")).toHaveText("Recrutăm");
   await shot(page, "aspect-acp-tab");
   await card.getByRole("button", { name: "Salvează" }).click();
@@ -150,9 +151,16 @@ test("aspectul unui forum din pluginul instalat: tabul cu previzualizare, indexu
 
   // 6. Un widget: banda de titlu cu imaginea, titlul colorat și eticheta (ACP → Aspect → Widget-uri → Aspect).
   await page.goto("/admin/appearance/widgets");
-  const link = page.locator('[data-testid="gcs-widget-aspect-link"][data-widget="forums.stats"], [data-testid="gcs-widget-aspect-link"][data-widget="core.newMembers"], [data-testid="gcs-widget-aspect-link"][data-widget="forums.recentTopics"]').first();
-  const widgetType = (await link.getAttribute("data-widget"))!;
-  await link.click();
+  // Un widget al indexului desenat cu cardul comun (titlul cu bandă), în ordinea preferinței.
+  let widgetType = "";
+  for (const type of ["forums.recentTopics", "forums.recentPosts", "core.newMembers", "forums.stats", "profile.recentBadges"]) {
+    if ((await page.locator(`ul[data-page="index"] [data-testid="gcs-widget-aspect-link"][data-widget="${type}"]`).count()) > 0) {
+      widgetType = type;
+      break;
+    }
+  }
+  expect(widgetType, "un widget cu cardul comun pe index").not.toBe("");
+  await page.locator(`ul[data-page="index"] [data-testid="gcs-widget-aspect-link"][data-widget="${widgetType}"]`).first().click();
   const wcard = page.getByTestId(`gcs-widget-ext-${EXT}-aspect`);
   await wcard.getByTestId("gcs-ext-bg-file").setInputFiles(BG);
   await expect(wcard.getByTestId("gcs-ext-bg").locator("img")).toBeVisible({ timeout: 20_000 });

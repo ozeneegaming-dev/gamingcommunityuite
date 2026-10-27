@@ -3,7 +3,7 @@
 import type { GcsErrorPayload, GcsResult } from "@gcs/core";
 import { GcsButton } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useErrorMessage } from "@/lib/use-error-message";
 
 /** Unde se încarcă imaginea: ținta (forumul sau amplasarea widget-ului), extensia, tabul și câmpul (limitele le știe serverul). */
@@ -24,14 +24,17 @@ export function GcsExtImageField({ name, value, upload, labels, hint, testId }: 
   const hidden = useRef<HTMLInputElement>(null);
   const message = useErrorMessage();
 
-  const change = (next: string) => {
-    setId(next);
-    // Câmpul ascuns primește valoarea înainte de eveniment (previzualizarea citește formularul).
-    if (hidden.current) {
-      hidden.current.value = next;
-      hidden.current.dispatchEvent(new Event("input", { bubbles: true }));
+  const first = useRef(true);
+  // Câmpul ascuns e controlat (altfel React l-ar readuce la valoarea inițială la randare); după fiecare schimbare,
+  // formularul primește `input`, ca previzualizarea live să citească noua valoare.
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
     }
-  };
+    hidden.current?.dispatchEvent(new Event("input", { bubbles: true }));
+  }, [id]);
+  const change = (next: string) => setId(next);
 
   const send = async (picked: File) => {
     setBusy(true);
@@ -54,7 +57,7 @@ export function GcsExtImageField({ name, value, upload, labels, hint, testId }: 
 
   return (
     <div className="gcs-extImage" data-testid={testId}>
-      <input ref={hidden} type="hidden" name={name} defaultValue={value} />
+      <input ref={hidden} type="hidden" name={name} value={id} readOnly />
       <span className="gcs-extImage__preview" aria-hidden={id ? undefined : true}>
         {id ? <img src={`/files/${id}`} alt={labels.preview} /> : <GcsIcon name="fa-regular fa-image" />}
       </span>
