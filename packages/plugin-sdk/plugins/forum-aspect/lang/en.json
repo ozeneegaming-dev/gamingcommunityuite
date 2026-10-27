@@ -1,0 +1,72 @@
+{
+  "tabs": {
+    "aspect": "Look",
+    "aspectHint": "This forum's icon, title, tag, accent bar, background and badge. Everything works in any theme; with the plugin off, the forum looks default.",
+    "categoryHint": "The category's title band: icon, title, tag and background (compact, ~64 px).",
+    "widgetHint": "The widget's title band: icon, coloured title, tag, accent bar and background under a veil."
+  },
+  "icon": {
+    "normal": "Icon (image)",
+    "normalHint": "Replaces the Font Awesome icon; shown in the theme's tile, round or square.",
+    "unread": "Icon with new posts (optional)",
+    "unreadHint": "Empty: the normal one is used, with an outline."
+  },
+  "title": {
+    "color": "Title colour",
+    "colorHint": "Empty: the theme's colour.",
+    "gradient": "Gradient title",
+    "glow": "Glow",
+    "caps": "Upper case, condensed font"
+  },
+  "tag": {
+    "text": "Tag",
+    "textHint": "For example Important, Official, Recruiting, Popular. Empty: no tag.",
+    "color": "Tag colour",
+    "place": "Tag position",
+    "above": "Above the title",
+    "beside": "Beside the title"
+  },
+  "tones": {
+    "accent": "Theme accent",
+    "info": "Blue (info)",
+    "ok": "Green",
+    "warn": "Orange",
+    "danger": "Red",
+    "neutral": "Neutral"
+  },
+  "accent": {
+    "color": "Accent bar on the left",
+    "hint": "In the “Separate cards” layout it stays the theme's small bar. Empty: no bar."
+  },
+  "badge": {
+    "label": "Badge as a sub-forum",
+    "hint": "Shown next to its name in the sub-forum list. “Automatic”: ON / OFF from the linked server's status (Servers app).",
+    "auto": "Automatic (server status)",
+    "none": "No badge",
+    "on": "ON",
+    "off": "OFF",
+    "new": "NEW",
+    "serverTip": "{name}: {players}/{max} players",
+    "serverOff": "{name}: offline"
+  },
+  "bg": {
+    "image": "Row background image",
+    "imageHint": "At least 1600×240 px recommended. Only your own images; no third-party images are bundled.",
+    "light": "Light theme variant",
+    "lightHint": "Empty: the same image.",
+    "band": "Band background image",
+    "bandHint": "Set from the category itself.",
+    "style": "Style",
+    "full": "Full row",
+    "right": "Right side only",
+    "focus": "Image focal point",
+    "left": "Left",
+    "center": "Centre",
+    "focusRight": "Right",
+    "veil": "Veil opacity (%)",
+    "veilHover": "Veil opacity on hover (%)",
+    "inherit": "Sub-forums inherit the background",
+    "inheritHint": "A sub-forum with its own background keeps it.",
+    "noMobile": "Hide the background on phones"
+  }
+}

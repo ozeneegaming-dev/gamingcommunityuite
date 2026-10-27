@@ -1,0 +1,72 @@
+{
+  "tabs": {
+    "aspect": "Aspect",
+    "aspectHint": "Iconița, titlul, eticheta, bara de accent, fundalul și insigna acestui forum. Totul merge în orice temă; cu pluginul oprit, forumul arată implicit.",
+    "categoryHint": "Banda de titlu a categoriei: iconița, titlul, eticheta și fundalul (compact, ~64 px).",
+    "widgetHint": "Banda de titlu a widget-ului: iconița, titlul colorat, eticheta, bara de accent și fundalul cu voal."
+  },
+  "icon": {
+    "normal": "Iconiță (imagine)",
+    "normalHint": "Înlocuiește iconița Font Awesome; se afișează în pătratul temei, rotund sau pătrat.",
+    "unread": "Iconiță cu mesaje noi (opțional)",
+    "unreadHint": "Gol: se folosește cea normală, cu contur."
+  },
+  "title": {
+    "color": "Culoarea titlului",
+    "colorHint": "Gol: culoarea temei.",
+    "gradient": "Titlu în gradient",
+    "glow": "Strălucire",
+    "caps": "Majuscule, font condensat"
+  },
+  "tag": {
+    "text": "Etichetă",
+    "textHint": "De exemplu Important, Oficial, Recrutăm, Popular. Gol: fără etichetă.",
+    "color": "Culoarea etichetei",
+    "place": "Poziția etichetei",
+    "above": "Deasupra titlului",
+    "beside": "Lângă titlu"
+  },
+  "tones": {
+    "accent": "Accentul temei",
+    "info": "Albastru (info)",
+    "ok": "Verde",
+    "warn": "Portocaliu",
+    "danger": "Roșu",
+    "neutral": "Neutru"
+  },
+  "accent": {
+    "color": "Bară de accent în stânga",
+    "hint": "În aspectul „Carduri separate” rămâne bara mică a temei. Gol: fără bară."
+  },
+  "badge": {
+    "label": "Insigna ca subforum",
+    "hint": "Apare lângă numele lui în lista subforumurilor. „Automat”: ON / OFF după starea serverului legat (aplicația Servere).",
+    "auto": "Automat (starea serverului)",
+    "none": "Fără insignă",
+    "on": "ON",
+    "off": "OFF",
+    "new": "NOU",
+    "serverTip": "{name}: {players}/{max} jucători",
+    "serverOff": "{name}: offline"
+  },
+  "bg": {
+    "image": "Imagine de fundal pe rând",
+    "imageHint": "Recomandat cel puțin 1600×240 px. Doar imaginile tale; nu se livrează imagini ale altora.",
+    "light": "Varianta pentru tema deschisă",
+    "lightHint": "Gol: aceeași imagine.",
+    "band": "Imagine de fundal pe bandă",
+    "bandHint": "Se setează din categoria însăși.",
+    "style": "Stil",
+    "full": "Pe tot rândul",
+    "right": "Doar în dreapta",
+    "focus": "Punctul de interes al imaginii",
+    "left": "Stânga",
+    "center": "Centru",
+    "focusRight": "Dreapta",
+    "veil": "Opacitate voal (%)",
+    "veilHover": "Opacitate voal la hover (%)",
+    "inherit": "Subforumurile moștenesc fundalul",
+    "inheritHint": "Un subforum cu fundalul lui îl păstrează pe al lui.",
+    "noMobile": "Ascunde fundalul pe telefon"
+  }
+}

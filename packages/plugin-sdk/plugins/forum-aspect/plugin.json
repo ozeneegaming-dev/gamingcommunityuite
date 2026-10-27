@@ -1,0 +1,146 @@
+{
+  "manifestVersion": 1,
+  "key": "gcs.forum_aspect",
+  "name": "Aspect forumuri",
+  "version": "1.0.0",
+  "author": {
+    "name": "GamingCommunitySuite",
+    "url": "https://gamingcommunitysuite.com"
+  },
+  "description": "Aspectul forumurilor, categoriilor și widget-urilor: iconițe-imagine, titluri colorate sau în gradient, etichete, bara de accent, fundaluri cu voal (pe tot rândul sau doar în dreapta), insignele ON / OFF / NOU ale subforumurilor. Merge în orice temă; oprit, totul revine la aspectul implicit fără să se piardă nimic.",
+  "icon": "fa-solid fa-palette",
+  "license": "MIT",
+  "minGcs": "0.11.0",
+  "capabilities": ["hooks"],
+  "hooks": [{ "point": "forum.list" }],
+  "forumTabs": [
+    {
+      "key": "aspect",
+      "label": "tabs.aspect",
+      "icon": "fa-solid fa-palette",
+      "position": 50,
+      "types": ["FORUM", "QA", "LINK", "PAGE"],
+      "description": "tabs.aspectHint",
+      "fields": [
+        { "type": "image", "key": "icon", "label": "icon.normal", "hint": "icon.normalHint", "maxKb": 512, "maxSide": 256, "animated": true, "css": { "var": "--gcs-forum-icon-image", "class": "gcs-forumRow--iconImage" } },
+        { "type": "image", "key": "iconUnread", "label": "icon.unread", "hint": "icon.unreadHint", "maxKb": 512, "maxSide": 256, "animated": true, "css": { "var": "--gcs-forum-icon-image-unread" } },
+        { "type": "color", "key": "titleColor", "label": "title.color", "hint": "title.colorHint", "css": { "var": "--gcs-forum-title-color" } },
+        { "type": "gradient", "key": "titleGradient", "label": "title.gradient", "css": { "var": "--gcs-forum-title-fill" } },
+        { "type": "toggle", "key": "titleGlow", "label": "title.glow", "css": { "class": "gcs-forumRow--titleGlow" } },
+        { "type": "toggle", "key": "titleCaps", "label": "title.caps", "css": { "class": "gcs-forumRow--titleCaps" } },
+        { "type": "text", "key": "tag", "label": "tag.text", "hint": "tag.textHint", "maxLength": 24, "slot": { "slot": "forum.row.title", "as": "chip", "icon": "fa-solid fa-tag", "toneFrom": "tagColor", "placeFrom": "tagPlace" } },
+        {
+          "type": "select",
+          "key": "tagColor",
+          "label": "tag.color",
+          "default": "accent",
+          "options": [
+            { "value": "accent", "label": "tones.accent" },
+            { "value": "info", "label": "tones.info" },
+            { "value": "ok", "label": "tones.ok" },
+            { "value": "warn", "label": "tones.warn" },
+            { "value": "danger", "label": "tones.danger" },
+            { "value": "neutral", "label": "tones.neutral" }
+          ]
+        },
+        { "type": "select", "key": "tagPlace", "label": "tag.place", "default": "above", "options": [{ "value": "above", "label": "tag.above" }, { "value": "beside", "label": "tag.beside" }] },
+        { "type": "color", "key": "accent", "label": "accent.color", "hint": "accent.hint", "css": { "var": "--gcs-forum-accent", "class": "gcs-forumRow--accentBar" } },
+        {
+          "type": "select",
+          "key": "badge",
+          "label": "badge.label",
+          "hint": "badge.hint",
+          "default": "auto",
+          "options": [
+            { "value": "auto", "label": "badge.auto" },
+            { "value": "none", "label": "badge.none" },
+            { "value": "on", "label": "badge.on" },
+            { "value": "off", "label": "badge.off" },
+            { "value": "new", "label": "badge.new" }
+          ]
+        },
+        { "type": "image", "key": "bg", "label": "bg.image", "hint": "bg.imageHint", "maxKb": 2048, "maxSide": 1600, "css": { "var": "--gcs-forum-row-image", "class": "gcs-forumRow--image" } },
+        { "type": "image", "key": "bgLight", "label": "bg.light", "hint": "bg.lightHint", "maxKb": 2048, "maxSide": 1600, "css": { "var": "--gcs-forum-row-image-light" } },
+        { "type": "select", "key": "bgStyle", "label": "bg.style", "default": "full", "options": [{ "value": "full", "label": "bg.full" }, { "value": "right", "label": "bg.right" }], "css": { "class": "gcs-forumRow--image-" } },
+        { "type": "select", "key": "bgFocus", "label": "bg.focus", "default": "center", "options": [{ "value": "left", "label": "bg.left" }, { "value": "center", "label": "bg.center" }, { "value": "right", "label": "bg.focusRight" }], "css": { "var": "--gcs-forum-row-image-pos" } },
+        { "type": "number", "key": "veil", "label": "bg.veil", "min": 60, "max": 90, "step": 1, "default": 80, "css": { "var": "--gcs-forum-row-veil", "unit": "%" } },
+        { "type": "number", "key": "veilHover", "label": "bg.veilHover", "min": 30, "max": 90, "step": 1, "default": 65, "css": { "var": "--gcs-forum-row-veil-hover", "unit": "%" } },
+        { "type": "toggle", "key": "inherit", "label": "bg.inherit", "hint": "bg.inheritHint", "default": true },
+        { "type": "toggle", "key": "noMobile", "label": "bg.noMobile", "css": { "class": "gcs-forumRow--imageDesktop" } }
+      ]
+    },
+    {
+      "key": "categoryAspect",
+      "label": "tabs.aspect",
+      "icon": "fa-solid fa-palette",
+      "position": 50,
+      "types": ["CATEGORY"],
+      "description": "tabs.categoryHint",
+      "fields": [
+        { "type": "image", "key": "catIcon", "label": "icon.normal", "hint": "icon.normalHint", "maxKb": 512, "maxSide": 256, "animated": true, "css": { "var": "--gcs-forum-icon-image", "class": "gcs-category--iconImage" } },
+        { "type": "color", "key": "catTitleColor", "label": "title.color", "css": { "var": "--gcs-forum-title-color" } },
+        { "type": "gradient", "key": "catTitleGradient", "label": "title.gradient", "css": { "var": "--gcs-forum-title-fill" } },
+        { "type": "toggle", "key": "catTitleGlow", "label": "title.glow", "css": { "class": "gcs-category--titleGlow" } },
+        { "type": "toggle", "key": "catTitleCaps", "label": "title.caps", "css": { "class": "gcs-category--titleCaps" } },
+        { "type": "text", "key": "catTag", "label": "tag.text", "maxLength": 24, "slot": { "slot": "category.header", "as": "chip", "icon": "fa-solid fa-tag", "toneFrom": "catTagColor" } },
+        {
+          "type": "select",
+          "key": "catTagColor",
+          "label": "tag.color",
+          "default": "accent",
+          "options": [
+            { "value": "accent", "label": "tones.accent" },
+            { "value": "info", "label": "tones.info" },
+            { "value": "ok", "label": "tones.ok" },
+            { "value": "warn", "label": "tones.warn" },
+            { "value": "danger", "label": "tones.danger" },
+            { "value": "neutral", "label": "tones.neutral" }
+          ]
+        },
+        { "type": "image", "key": "catBg", "label": "bg.band", "hint": "bg.bandHint", "maxKb": 2048, "maxSide": 1600, "css": { "var": "--gcs-forum-row-image", "class": "gcs-category--image" } },
+        { "type": "image", "key": "catBgLight", "label": "bg.light", "maxKb": 2048, "maxSide": 1600, "css": { "var": "--gcs-forum-row-image-light" } },
+        { "type": "select", "key": "catBgStyle", "label": "bg.style", "default": "full", "options": [{ "value": "full", "label": "bg.full" }, { "value": "right", "label": "bg.right" }], "css": { "class": "gcs-category--image-" } },
+        { "type": "select", "key": "catBgFocus", "label": "bg.focus", "default": "center", "options": [{ "value": "left", "label": "bg.left" }, { "value": "center", "label": "bg.center" }, { "value": "right", "label": "bg.focusRight" }], "css": { "var": "--gcs-forum-row-image-pos" } },
+        { "type": "number", "key": "catVeil", "label": "bg.veil", "min": 60, "max": 90, "step": 1, "default": 80, "css": { "var": "--gcs-forum-row-veil", "unit": "%" } }
+      ]
+    }
+  ],
+  "widgetTabs": [
+    {
+      "key": "aspect",
+      "label": "tabs.aspect",
+      "icon": "fa-solid fa-palette",
+      "description": "tabs.widgetHint",
+      "fields": [
+        { "type": "image", "key": "icon", "label": "icon.normal", "hint": "icon.normalHint", "maxKb": 512, "maxSide": 256, "animated": true, "css": { "var": "--gcs-forum-icon-image", "class": "gcs-widget--iconImage" } },
+        { "type": "color", "key": "titleColor", "label": "title.color", "css": { "var": "--gcs-forum-title-color" } },
+        { "type": "gradient", "key": "titleGradient", "label": "title.gradient", "css": { "var": "--gcs-forum-title-fill" } },
+        { "type": "toggle", "key": "titleGlow", "label": "title.glow", "css": { "class": "gcs-widget--titleGlow" } },
+        { "type": "toggle", "key": "titleCaps", "label": "title.caps", "css": { "class": "gcs-widget--titleCaps" } },
+        { "type": "text", "key": "tag", "label": "tag.text", "maxLength": 24, "slot": { "slot": "widget.title", "as": "chip", "icon": "fa-solid fa-tag", "toneFrom": "tagColor", "placeFrom": "tagPlace" } },
+        {
+          "type": "select",
+          "key": "tagColor",
+          "label": "tag.color",
+          "default": "accent",
+          "options": [
+            { "value": "accent", "label": "tones.accent" },
+            { "value": "info", "label": "tones.info" },
+            { "value": "ok", "label": "tones.ok" },
+            { "value": "warn", "label": "tones.warn" },
+            { "value": "danger", "label": "tones.danger" },
+            { "value": "neutral", "label": "tones.neutral" }
+          ]
+        },
+        { "type": "select", "key": "tagPlace", "label": "tag.place", "default": "beside", "options": [{ "value": "above", "label": "tag.above" }, { "value": "beside", "label": "tag.beside" }] },
+        { "type": "color", "key": "accent", "label": "accent.color", "css": { "var": "--gcs-forum-accent", "class": "gcs-widget--accentBar" } },
+        { "type": "image", "key": "bg", "label": "bg.band", "maxKb": 2048, "maxSide": 1600, "css": { "var": "--gcs-forum-row-image", "class": "gcs-widget--image" } },
+        { "type": "image", "key": "bgLight", "label": "bg.light", "maxKb": 2048, "maxSide": 1600, "css": { "var": "--gcs-forum-row-image-light" } },
+        { "type": "select", "key": "bgStyle", "label": "bg.style", "default": "full", "options": [{ "value": "full", "label": "bg.full" }, { "value": "right", "label": "bg.right" }], "css": { "class": "gcs-widget--image-" } },
+        { "type": "select", "key": "bgFocus", "label": "bg.focus", "default": "center", "options": [{ "value": "left", "label": "bg.left" }, { "value": "center", "label": "bg.center" }, { "value": "right", "label": "bg.focusRight" }], "css": { "var": "--gcs-forum-row-image-pos" } },
+        { "type": "number", "key": "veil", "label": "bg.veil", "min": 60, "max": 90, "step": 1, "default": 80, "css": { "var": "--gcs-forum-row-veil", "unit": "%" } },
+        { "type": "number", "key": "veilHover", "label": "bg.veilHover", "min": 30, "max": 90, "step": 1, "default": 65, "css": { "var": "--gcs-forum-row-veil-hover", "unit": "%" } }
+      ]
+    }
+  ]
+}

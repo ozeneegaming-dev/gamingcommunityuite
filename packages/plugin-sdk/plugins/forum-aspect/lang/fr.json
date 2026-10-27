@@ -1,0 +1,72 @@
+{
+  "tabs": {
+    "aspect": "Apparence",
+    "aspectHint": "L'icône, le titre, l'étiquette, la barre d'accent, le fond et le badge de ce forum. Tout fonctionne dans n'importe quel thème ; plugin désactivé, le forum reprend son apparence par défaut.",
+    "categoryHint": "Le bandeau de titre de la catégorie : icône, titre, étiquette et fond (compact, ~64 px).",
+    "widgetHint": "Le bandeau de titre du widget : icône, titre coloré, étiquette, barre d'accent et fond sous un voile."
+  },
+  "icon": {
+    "normal": "Icône (image)",
+    "normalHint": "Remplace l'icône Font Awesome ; affichée dans la tuile du thème, ronde ou carrée.",
+    "unread": "Icône avec nouveaux messages (facultatif)",
+    "unreadHint": "Vide : l'icône normale est utilisée, avec un contour."
+  },
+  "title": {
+    "color": "Couleur du titre",
+    "colorHint": "Vide : couleur du thème.",
+    "gradient": "Titre en dégradé",
+    "glow": "Lueur",
+    "caps": "Majuscules, police condensée"
+  },
+  "tag": {
+    "text": "Étiquette",
+    "textHint": "Par exemple Important, Officiel, On recrute, Populaire. Vide : pas d'étiquette.",
+    "color": "Couleur de l'étiquette",
+    "place": "Position de l'étiquette",
+    "above": "Au-dessus du titre",
+    "beside": "À côté du titre"
+  },
+  "tones": {
+    "accent": "Accent du thème",
+    "info": "Bleu (info)",
+    "ok": "Vert",
+    "warn": "Orange",
+    "danger": "Rouge",
+    "neutral": "Neutre"
+  },
+  "accent": {
+    "color": "Barre d'accent à gauche",
+    "hint": "Dans la disposition « Cartes séparées », c'est la petite barre du thème. Vide : pas de barre."
+  },
+  "badge": {
+    "label": "Badge en tant que sous-forum",
+    "hint": "Affiché à côté de son nom dans la liste des sous-forums. « Automatique » : ON / OFF selon l'état du serveur lié (application Serveurs).",
+    "auto": "Automatique (état du serveur)",
+    "none": "Pas de badge",
+    "on": "ON",
+    "off": "OFF",
+    "new": "NOUVEAU",
+    "serverTip": "{name} : {players}/{max} joueurs",
+    "serverOff": "{name} : hors ligne"
+  },
+  "bg": {
+    "image": "Image de fond de la ligne",
+    "imageHint": "Au moins 1600×240 px recommandé. Uniquement vos images ; aucune image tierce n'est fournie.",
+    "light": "Variante pour le thème clair",
+    "lightHint": "Vide : la même image.",
+    "band": "Image de fond du bandeau",
+    "bandHint": "Se règle depuis la catégorie elle-même.",
+    "style": "Style",
+    "full": "Toute la ligne",
+    "right": "À droite seulement",
+    "focus": "Point d'intérêt de l'image",
+    "left": "Gauche",
+    "center": "Centre",
+    "focusRight": "Droite",
+    "veil": "Opacité du voile (%)",
+    "veilHover": "Opacité du voile au survol (%)",
+    "inherit": "Les sous-forums héritent du fond",
+    "inheritHint": "Un sous-forum avec son propre fond le garde.",
+    "noMobile": "Masquer le fond sur téléphone"
+  }
+}

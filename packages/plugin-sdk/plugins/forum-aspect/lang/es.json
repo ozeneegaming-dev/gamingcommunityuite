@@ -1,0 +1,72 @@
+{
+  "tabs": {
+    "aspect": "Aspecto",
+    "aspectHint": "El icono, el título, la etiqueta, la barra de acento, el fondo y la insignia de este foro. Todo funciona en cualquier tema; con el plugin desactivado, el foro se ve por defecto.",
+    "categoryHint": "La banda de título de la categoría: icono, título, etiqueta y fondo (compacta, ~64 px).",
+    "widgetHint": "La banda de título del widget: icono, título en color, etiqueta, barra de acento y fondo con velo."
+  },
+  "icon": {
+    "normal": "Icono (imagen)",
+    "normalHint": "Sustituye el icono de Font Awesome; se muestra en el recuadro del tema, redondo o cuadrado.",
+    "unread": "Icono con mensajes nuevos (opcional)",
+    "unreadHint": "Vacío: se usa el normal, con contorno."
+  },
+  "title": {
+    "color": "Color del título",
+    "colorHint": "Vacío: el color del tema.",
+    "gradient": "Título en degradado",
+    "glow": "Resplandor",
+    "caps": "Mayúsculas, fuente condensada"
+  },
+  "tag": {
+    "text": "Etiqueta",
+    "textHint": "Por ejemplo Importante, Oficial, Reclutamos, Popular. Vacío: sin etiqueta.",
+    "color": "Color de la etiqueta",
+    "place": "Posición de la etiqueta",
+    "above": "Encima del título",
+    "beside": "Junto al título"
+  },
+  "tones": {
+    "accent": "Acento del tema",
+    "info": "Azul (info)",
+    "ok": "Verde",
+    "warn": "Naranja",
+    "danger": "Rojo",
+    "neutral": "Neutro"
+  },
+  "accent": {
+    "color": "Barra de acento a la izquierda",
+    "hint": "En el diseño «Tarjetas separadas» queda la barra pequeña del tema. Vacío: sin barra."
+  },
+  "badge": {
+    "label": "Insignia como subforo",
+    "hint": "Aparece junto a su nombre en la lista de subforos. «Automático»: ON / OFF según el estado del servidor vinculado (aplicación Servidores).",
+    "auto": "Automático (estado del servidor)",
+    "none": "Sin insignia",
+    "on": "ON",
+    "off": "OFF",
+    "new": "NUEVO",
+    "serverTip": "{name}: {players}/{max} jugadores",
+    "serverOff": "{name}: sin conexión"
+  },
+  "bg": {
+    "image": "Imagen de fondo de la fila",
+    "imageHint": "Se recomienda al menos 1600×240 px. Solo tus imágenes; no se incluyen imágenes de terceros.",
+    "light": "Variante para tema claro",
+    "lightHint": "Vacío: la misma imagen.",
+    "band": "Imagen de fondo de la banda",
+    "bandHint": "Se configura desde la propia categoría.",
+    "style": "Estilo",
+    "full": "Toda la fila",
+    "right": "Solo a la derecha",
+    "focus": "Punto de interés de la imagen",
+    "left": "Izquierda",
+    "center": "Centro",
+    "focusRight": "Derecha",
+    "veil": "Opacidad del velo (%)",
+    "veilHover": "Opacidad del velo al pasar el ratón (%)",
+    "inherit": "Los subforos heredan el fondo",
+    "inheritHint": "Un subforo con su propio fondo lo mantiene.",
+    "noMobile": "Ocultar el fondo en el móvil"
+  }
+}

@@ -292,7 +292,7 @@ describe("câmpurile și layout-ul implicit", () => {
   });
 
   test("layout-ul implicit se pune o singură dată; o pagină golită de admin rămâne goală; „reset” îl readuce", async () => {
-    const withDefaults: GcsModule = { ...base, key: "defaults", widgets: [], nav: [], widgetLayout: { index: [{ zone: "sidebar", type: "base.recent" }, { zone: "top", type: "base.sidebarOnly" }] } };
+    const withDefaults: GcsModule = { ...base, key: "defaults", widgets: [], nav: [], widgetExtensions: [], widgetLayout: { index: [{ zone: "sidebar", type: "base.recent" }, { zone: "top", type: "base.sidebarOnly" }] } };
     const world = await createWorld([base, withDefaults]);
     const ws = new GcsWidgetService({ db: world.db, cache: world.cache, bus: world.bus, registry: world.registry, acp: world.acp, apps: new GcsAppService({ db: world.db, cache: world.cache, bus: world.bus, registry: world.registry, acp: world.acp, permissions: world.permissions, settings: new GcsSettingsService({ db: world.db, cache: world.cache, bus: world.bus, registry: world.registry }) }) });
     const admin = await world.actorFor(await world.createUser("Root2", "root_admin"));

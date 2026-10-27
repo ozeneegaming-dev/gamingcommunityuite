@@ -217,7 +217,8 @@ export class GcsForumSlotService {
           console.error(`[GCS] stilul extensiei de forum ${def.key} a eșuat`, error);
         }
         const style = mergeSlotStyles([
-          sanitizeSlotStyle(fieldsStyle(fields, node.data), scope ? { pluginScope: scope } : {}),
+          // Stilul declarat pe câmpuri doar pentru nodurile cu valori salvate (fără nimic ales = aspectul implicit).
+          sanitizeSlotStyle(data[def.key]?.[ref.id] !== undefined ? fieldsStyle(fields, node.data) : null, scope ? { pluginScope: scope } : {}),
           sanitizeSlotStyle(custom, scope ? { pluginScope: scope } : {}),
           sanitizeSlotStyle(dyn.style, scope ? { pluginScope: scope } : {}),
         ]);

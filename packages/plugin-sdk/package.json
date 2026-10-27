@@ -10,17 +10,19 @@
     "./example": "./scripts/build-example.ts",
     "./vip-studio": "./scripts/build-vip-studio.ts",
     "./tickets": "./scripts/build-tickets.ts",
-    "./sign": "./scripts/sign-plugin.ts"
+    "./sign": "./scripts/sign-plugin.ts",
+    "./forum-aspect": "./scripts/build-forum-aspect.ts"
   },
   "scripts": {
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p plugins/vip-studio && tsc --noEmit -p plugins/tickets && tsc --noEmit -p plugins/news-bot",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p plugins/vip-studio && tsc --noEmit -p plugins/tickets && tsc --noEmit -p plugins/news-bot && tsc --noEmit -p plugins/forum-aspect",
     "test": "vitest run --passWithNoTests",
     "build:example": "tsx scripts/build-example.ts",
     "build:vip-studio": "tsx scripts/build-vip-studio.ts",
     "build:tickets": "tsx scripts/build-tickets.ts",
     "sign:plugin": "tsx scripts/sign-plugin.ts",
-    "build:news-bot": "tsx scripts/build-news-bot.ts"
+    "build:news-bot": "tsx scripts/build-news-bot.ts",
+    "build:forum-aspect": "tsx scripts/build-forum-aspect.ts"
   },
   "devDependencies": {
     "@gcs/config": "workspace:*",

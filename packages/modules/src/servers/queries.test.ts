@@ -158,3 +158,27 @@ describe("agregarea și curățarea istoricului", () => {
     expect(await rollupSnapshots(w.db, { retentionDays: 90 })).toEqual({ aggregated: 0, pruned: 0 });
   });
 });
+
+describe("Aspect forumuri: starea serverelor legate de forumuri", () => {
+  test("după id-ul forumului: online / offline (status vechi = offline), doar serverele vizibile; nimic cu aplicația oprită", async () => {
+    const forumA = await w.db.forum.create({ data: { name: "Public 128 tick", slug: "public-128", type: "FORUM" } });
+    const forumB = await w.db.forum.create({ data: { name: "AWP only", slug: "awp-only", type: "FORUM" } });
+    const forumC = await w.db.forum.create({ data: { name: "Staff", slug: "staff", type: "FORUM" } });
+    const a = await w.addServer({ name: "Public" });
+    const b = await w.addServer({ name: "AWP" });
+    const c = await w.addServer({ name: "Staff", groups: [w.groups.root_admin!] });
+    await w.db.gameServer.update({ where: { id: a.id }, data: { forumId: forumA.id } });
+    await w.db.gameServer.update({ where: { id: b.id }, data: { forumId: forumB.id } });
+    await w.db.gameServer.update({ where: { id: c.id }, data: { forumId: forumC.id } });
+    await w.store.save(a.id, onlineStatus({ players: 18, maxPlayers: 32 }), { nextAt: 0, failures: 0 });
+    await w.store.save(b.id, onlineStatus({ updatedAt: new Date(Date.now() - 20 * 60_000).toISOString() }), { nextAt: 0, failures: 0 });
+
+    expect(await w.serverQueries.byForums(w.guest, [forumA.id, forumB.id, forumC.id, 999_999])).toEqual({
+      [forumA.id]: { serverId: a.id, name: "Public", online: true, players: 18, maxPlayers: 32 },
+      [forumB.id]: { serverId: b.id, name: "AWP", online: false, players: 0, maxPlayers: 0 },
+    });
+    expect(Object.keys(await w.serverQueries.byForums(w.root, [forumC.id]))).toEqual([String(forumC.id)]);
+    await w.apps.setEnabled(w.root, "servers", false);
+    expect(await w.serverQueries.byForums(w.root, [forumA.id])).toEqual({});
+  });
+});

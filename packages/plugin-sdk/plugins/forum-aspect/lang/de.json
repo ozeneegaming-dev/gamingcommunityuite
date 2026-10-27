@@ -1,0 +1,72 @@
+{
+  "tabs": {
+    "aspect": "Aussehen",
+    "aspectHint": "Symbol, Titel, Etikett, Akzentleiste, Hintergrund und Abzeichen dieses Forums. Alles funktioniert in jedem Design; ist das Plugin aus, sieht das Forum standardmäßig aus.",
+    "categoryHint": "Das Titelband der Kategorie: Symbol, Titel, Etikett und Hintergrund (kompakt, ~64 px).",
+    "widgetHint": "Das Titelband des Widgets: Symbol, farbiger Titel, Etikett, Akzentleiste und Hintergrund mit Schleier."
+  },
+  "icon": {
+    "normal": "Symbol (Bild)",
+    "normalHint": "Ersetzt das Font-Awesome-Symbol; wird in der Kachel des Designs angezeigt, rund oder eckig.",
+    "unread": "Symbol bei neuen Beiträgen (optional)",
+    "unreadHint": "Leer: Das normale wird mit Umriss verwendet."
+  },
+  "title": {
+    "color": "Titelfarbe",
+    "colorHint": "Leer: Farbe des Designs.",
+    "gradient": "Titel mit Verlauf",
+    "glow": "Leuchten",
+    "caps": "Großbuchstaben, schmale Schrift"
+  },
+  "tag": {
+    "text": "Etikett",
+    "textHint": "Zum Beispiel Wichtig, Offiziell, Wir rekrutieren, Beliebt. Leer: kein Etikett.",
+    "color": "Etikettfarbe",
+    "place": "Position des Etiketts",
+    "above": "Über dem Titel",
+    "beside": "Neben dem Titel"
+  },
+  "tones": {
+    "accent": "Akzent des Designs",
+    "info": "Blau (Info)",
+    "ok": "Grün",
+    "warn": "Orange",
+    "danger": "Rot",
+    "neutral": "Neutral"
+  },
+  "accent": {
+    "color": "Akzentleiste links",
+    "hint": "Im Layout „Getrennte Karten“ bleibt es die kleine Leiste des Designs. Leer: keine Leiste."
+  },
+  "badge": {
+    "label": "Abzeichen als Unterforum",
+    "hint": "Erscheint neben dem Namen in der Unterforenliste. „Automatisch“: ON / OFF nach dem Status des verknüpften Servers (Server-App).",
+    "auto": "Automatisch (Serverstatus)",
+    "none": "Kein Abzeichen",
+    "on": "ON",
+    "off": "OFF",
+    "new": "NEU",
+    "serverTip": "{name}: {players}/{max} Spieler",
+    "serverOff": "{name}: offline"
+  },
+  "bg": {
+    "image": "Hintergrundbild der Zeile",
+    "imageHint": "Empfohlen mindestens 1600×240 px. Nur eigene Bilder; es werden keine fremden Bilder mitgeliefert.",
+    "light": "Variante für helles Design",
+    "lightHint": "Leer: dasselbe Bild.",
+    "band": "Hintergrundbild des Bandes",
+    "bandHint": "Wird in der Kategorie selbst eingestellt.",
+    "style": "Stil",
+    "full": "Ganze Zeile",
+    "right": "Nur rechts",
+    "focus": "Bildschwerpunkt",
+    "left": "Links",
+    "center": "Mitte",
+    "focusRight": "Rechts",
+    "veil": "Deckkraft des Schleiers (%)",
+    "veilHover": "Deckkraft des Schleiers bei Hover (%)",
+    "inherit": "Unterforen erben den Hintergrund",
+    "inheritHint": "Ein Unterforum mit eigenem Hintergrund behält ihn.",
+    "noMobile": "Hintergrund auf Handys ausblenden"
+  }
+}
