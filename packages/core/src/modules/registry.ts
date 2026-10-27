@@ -5,7 +5,7 @@ import type { GcsRichFieldKey } from "../content/richFields";
 import type { GcsEvent, GcsEventBus } from "../events";
 import type { GcsTypeChannels } from "../notifications/channels";
 import type { GcsSettingDef } from "../settings/registry";
-import { assertForumExtension, type GcsForumExtension } from "./forumSlots";
+import { assertForumExtension, type GcsForumExtension, type GcsWidgetExtension } from "./forumSlots";
 
 /** Valorile `Group.key` (root_admin, member, vip_gold, custom_<id>…). */
 export type GroupKey = string;
@@ -292,6 +292,8 @@ export interface GcsModule {
    * din formularul ACP al forumului). Apar doar cât aplicația modulului e pornită (specul `2026-10-17-forum-v2-sloturi`).
    */
   forumExtensions?: GcsForumExtension[];
+  /** Aspect forumuri: extensiile widget-urilor (taburile din pagina de aspect a unui widget și stilul benzii lui). */
+  widgetExtensions?: GcsWidgetExtension[];
 }
 
 /** Contextul funcțiilor unui eveniment de realizări (citiri în baza de date). */
@@ -371,6 +373,9 @@ export class GcsModuleRegistry {
     for (const ext of m.forumExtensions ?? []) assertForumExtension(ext);
     const extKeys = new Map(this.forumExtensions().map((e) => [e.def.key, e]));
     assertUnique((m.forumExtensions ?? []).map((e) => e.key), extKeys, "extensia de forum");
+    for (const ext of m.widgetExtensions ?? []) assertForumExtension(ext);
+    const widgetExtKeys = new Map(this.widgetExtensions().map((e) => [e.def.key, e]));
+    assertUnique((m.widgetExtensions ?? []).map((e) => e.key), widgetExtKeys, "extensia de widget");
 
     this.modules.push(m);
     for (const s of m.settings) this.settings.set(s.key, s);
@@ -487,6 +492,14 @@ export class GcsModuleRegistry {
   forumExtensions(): { module: string; def: GcsForumExtension }[] {
     return this.modules
       .flatMap((m, i) => (m.forumExtensions ?? []).map((def, j) => ({ module: m.key, def, order: i * 100 + j })))
+      .sort((a, b) => (a.def.position ?? 100) - (b.def.position ?? 100) || a.order - b.order)
+      .map(({ module, def }) => ({ module, def }));
+  }
+
+  /** Extensiile widget-urilor (Aspect forumuri), cu modulul lor, în ordinea `position` (apoi a înregistrării). */
+  widgetExtensions(): { module: string; def: GcsWidgetExtension }[] {
+    return this.modules
+      .flatMap((m, i) => (m.widgetExtensions ?? []).map((def, j) => ({ module: m.key, def, order: i * 100 + j })))
       .sort((a, b) => (a.def.position ?? 100) - (b.def.position ?? 100) || a.order - b.order)
       .map(({ module, def }) => ({ module, def }));
   }

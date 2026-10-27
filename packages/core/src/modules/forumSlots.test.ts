@@ -137,7 +137,7 @@ describe("Aspect forumuri: imaginile și stilurile noi ale nucleului", () => {
 
   test("variabilele și clasele noi trec de curățare; gradientul titlului doar ca gradient simplu", () => {
     const style = sanitizeSlotStyle({
-      classes: ["gcs-forumRow--iconImage", "gcs-forumRow--titleGradient", "gcs-forumRow--imageRight", "gcs-forumRow--accentBar", "gcs-forumRow--imageDesktop", "gcs-category--titleGradient", "gcs-category--imageRight"],
+      classes: ["gcs-forumRow--iconImage", "gcs-forumRow--image-right", "gcs-forumRow--accentBar", "gcs-forumRow--imageDesktop", "gcs-category--image-right", "gcs-widget--image", "gcs-widget--titleGlow", "gcs-forumRow--titleGradient"],
       vars: {
         "--gcs-forum-title-fill": "linear-gradient(90deg, #FF6A3D, #FFD36A)",
         "--gcs-forum-accent": "#FF8A3D",
@@ -152,6 +152,32 @@ describe("Aspect forumuri: imaginile și stilurile noi ale nucleului", () => {
 
   test("insignele subforumurilor: slotul „forum.row.sub” acceptă pastile (și HTML-ul pluginurilor)", () => {
     expect(sanitizeSlotItems("forum.row.sub", [{ kind: "chip", label: "ON", tone: "ok" }, { kind: "text", text: "nu" }])).toEqual([{ kind: "chip", label: "ON", tone: "ok" }]);
+  });
+
+  test("declarativ: gradientul, clasa pusă doar cu valoare, eticheta cu tonul și poziția alese, selectul cu prefixul nucleului", () => {
+    const LOOK: GcsForumExtField[] = [
+      { key: "fill", type: "gradient", labelKey: "x", style: { var: "--gcs-forum-title-fill" } },
+      { key: "accent", type: "color", labelKey: "x", style: { var: "--gcs-forum-accent", class: "gcs-forumRow--accentBar" } },
+      { key: "bg", type: "image", labelKey: "x", maxKb: 2048, maxSide: 1600, style: { var: "--gcs-forum-row-image", class: "gcs-forumRow--image" } },
+      { key: "bgStyle", type: "select", labelKey: "x", options: [{ value: "full", labelKey: "x" }, { value: "right", labelKey: "x" }], style: { class: "gcs-forumRow--image-" } },
+      { key: "tag", type: "text", labelKey: "x", maxLength: 20, slot: { slot: "forum.row.title", as: "chip", toneFrom: "tagTone", placeFrom: "tagPlace" } },
+      { key: "tagTone", type: "select", labelKey: "x", options: [{ value: "accent", labelKey: "x" }, { value: "warn", labelKey: "x" }] },
+      { key: "tagPlace", type: "select", labelKey: "x", options: [{ value: "beside", labelKey: "x" }, { value: "above", labelKey: "x" }] },
+    ];
+    expect(() => assertForumExtension({ key: "aspect", tabs: [{ key: "t", labelKey: "t", icon: "fa-solid fa-t", fields: LOOK }] })).not.toThrow();
+    expect(() => assertForumExtension({ key: "aspect", tabs: [{ key: "t", labelKey: "t", icon: "fa-solid fa-t", fields: [LOOK[4]!] }] })).toThrow(/select lipsă/);
+
+    const ok = validateExtensionValues(LOOK, { fill: "linear-gradient(90deg,#ff6a3d , #ffd36a)", accent: "", bg: "bg1", bgStyle: "right", tag: "Recrutăm", tagTone: "warn", tagPlace: "above" });
+    expect(ok.ok && ok.values.fill).toBe("linear-gradient(90deg, #FF6A3D, #FFD36A)");
+    expect(validateExtensionValues(LOOK, { fill: "linear-gradient(90deg, red, blue)" })).toMatchObject({ ok: false, errors: { fill: "invalid_gradient" } });
+    const data = withExtensionDefaults(LOOK, ok.ok ? ok.values : {});
+    expect(fieldsStyle(LOOK, data)).toEqual({
+      classes: ["gcs-forumRow--image", "gcs-forumRow--image-right"],
+      vars: { "--gcs-forum-title-fill": "linear-gradient(90deg, #FF6A3D, #FFD36A)", "--gcs-forum-row-image": 'url("/files/bg1")' },
+    });
+    expect(sanitizeSlotStyle(fieldsStyle(LOOK, data)).classes).toEqual(["gcs-forumRow--image", "gcs-forumRow--image-right"]);
+    expect(fieldsListSlots(LOOK, data).title).toEqual([{ kind: "chip", label: "Recrutăm", tone: "warn", id: "tag", place: "above" }]);
+    expect(sanitizeSlotItems("forum.row.title", fieldsListSlots(LOOK, data).title)).toEqual([{ kind: "chip", label: "Recrutăm", tone: "warn", id: "tag", place: "above" }]);
   });
 
   test("înregistrarea: limitele imaginii trebuie să fie rezonabile", () => {

@@ -47,7 +47,18 @@ export type GcsSlotJson = null | boolean | number | string | GcsSlotJson[] | { [
  * O pastilă: eticheta, iconița (Font Awesome după nume), tonul (culoarea temei) sau o culoare proprie `#RRGGBB`, un link
  * intern (`/…`) sau `https://`, și tooltip-ul. `id`: o cheie stabilă (folosită în `data-slot-item`, pentru teste și CSS).
  */
-export type GcsSlotChip = { kind: "chip"; label: GcsSlotText; icon?: string; tone?: GcsSlotTone; color?: string; href?: string; tooltip?: GcsSlotText; id?: string };
+export type GcsSlotChip = {
+  kind: "chip";
+  label: GcsSlotText;
+  icon?: string;
+  tone?: GcsSlotTone;
+  color?: string;
+  href?: string;
+  tooltip?: GcsSlotText;
+  id?: string;
+  /** `above`: eticheta stă deasupra titlului, peste chenarul de sus al rândului (sau al benzii widget-ului). */
+  place?: "above";
+};
 /** Un rând de text (cu iconiță și link opțional). */
 export type GcsSlotLine = { kind: "text"; text: GcsSlotText; icon?: string; tone?: GcsSlotTone; href?: string; id?: string };
 /** O valoare cu etichetă (ex. „Jucători 12/32”). */
@@ -121,7 +132,7 @@ export const GCS_FORUM_STYLE_VARS = {
   /** Iconița ca imagine (cu `gcs-forumRow--iconImage`) și varianta „cu mesaje noi” (lipsă: cea normală, cu contur). */
   "--gcs-forum-icon-image": "url",
   "--gcs-forum-icon-image-unread": "url",
-  /** Gradientul titlului (cu `gcs-forumRow--titleGradient` / `gcs-category--titleGradient`). */
+  /** Gradientul titlului (rândul, categoria, banda widget-ului); prezent = titlul e desenat cu el. */
   "--gcs-forum-title-fill": "gradient",
   /** Bara de accent din stânga (cu `gcs-forumRow--accentBar`; lipsă: `--gcs-forum-color`). */
   "--gcs-forum-accent": "color",
@@ -130,22 +141,27 @@ export const GCS_FORUM_STYLE_VARS = {
 /** Clasele de stil ale nucleului (modificatori documentați, cu CSS în orice temă). */
 export const GCS_FORUM_STYLE_CLASSES = [
   "gcs-forumRow--image",
-  /** Imaginea doar în dreapta rândului (estompată spre stânga), în locul celei pe tot rândul. */
-  "gcs-forumRow--imageRight",
+  /** Imaginea doar în dreapta rândului (estompată spre stânga); un select cu prefixul `gcs-forumRow--image-` o alege. */
+  "gcs-forumRow--image-right",
   /** Fără imaginea de fundal pe ecranele înguste. */
   "gcs-forumRow--imageDesktop",
   "gcs-forumRow--iconImage",
   "gcs-forumRow--titleCaps",
   "gcs-forumRow--titleGlow",
-  "gcs-forumRow--titleGradient",
   "gcs-forumRow--accentBar",
   "gcs-forumRow--muted",
   "gcs-category--image",
-  "gcs-category--imageRight",
+  "gcs-category--image-right",
   "gcs-category--iconImage",
   "gcs-category--titleCaps",
   "gcs-category--titleGlow",
-  "gcs-category--titleGradient",
+  /** Banda de titlu a unui widget (Aspect forumuri: aceleași opțiuni ca rândurile). */
+  "gcs-widget--image",
+  "gcs-widget--image-right",
+  "gcs-widget--iconImage",
+  "gcs-widget--titleCaps",
+  "gcs-widget--titleGlow",
+  "gcs-widget--accentBar",
 ] as const;
 
 const CLASS_RE = /^(?:gcsx|gcsp)-[a-z0-9][a-z0-9-]{0,47}$/;
@@ -276,7 +292,7 @@ function cleanSmall(raw: Record<string, unknown>): GcsSlotChip | GcsSlotLine | G
     if (!label) return null;
     const tooltip = cleanText(raw.tooltip, 200);
     const color = typeof raw.color === "string" && /^#[0-9a-fA-F]{6}$/.test(raw.color) ? { color: raw.color.toUpperCase() } : {};
-    return { kind: "chip", label, ...optIcon(raw.icon), ...optTone(raw.tone), ...color, ...optHref(raw.href), ...(tooltip ? { tooltip } : {}), ...optId(raw.id) };
+    return { kind: "chip", label, ...optIcon(raw.icon), ...optTone(raw.tone), ...color, ...optHref(raw.href), ...(tooltip ? { tooltip } : {}), ...optId(raw.id), ...(raw.place === "above" ? { place: "above" as const } : {}) };
   }
   if (raw.kind === "text") {
     const text = cleanText(raw.text, 300);
@@ -365,12 +381,24 @@ export function sanitizeSlotItems(slot: GcsForumSlot, raw: unknown, opts: { allo
 // ─── Formularul ACP (taburi contribuite) ───────────────────────────────────────────────────────────────
 
 /**
- * Legătura unui câmp cu stilul rândului: o variabilă CSS (valoarea câmpului, cu `unit` la numere) sau o clasă (la
- * `toggle`: pusă când e bifat; la `select`: `class` + valoarea aleasă, ex. `gcsx-aspect--` + `glow`).
+ * Legătura unui câmp cu stilul rândului: o variabilă CSS (valoarea câmpului, cu `unit` la numere) și / sau o clasă (la
+ * `toggle`: pusă când e bifat; la `select`: `class` + valoarea aleasă, ex. `gcsx-aspect--` + `glow`; la `color`,
+ * `gradient` și `image`: pusă când câmpul are o valoare).
  */
 export type GcsExtFieldStyle = { var?: string; unit?: "px" | "%" | "deg" | "s" | ""; class?: string };
-/** Un câmp text pus direct într-un slot de listă, ca pastilă (`chip`) sau rând (`text`). */
-export type GcsExtFieldSlot = { slot: "forum.row.title" | "forum.row.meta" | "category.header"; as?: "chip" | "text"; icon?: string; tone?: GcsSlotTone };
+/**
+ * Un câmp text pus direct într-un slot de listă, ca pastilă (`chip`) sau rând (`text`). `widget.title`: pastila stă
+ * în banda de titlu a unui widget. `toneFrom` / `placeFrom`: cheile câmpurilor (select) care aleg tonul pastilei
+ * (`accent`, `neutral`, `ok`, `warn`, `danger`, `info`) și poziția ei (`above` = deasupra titlului).
+ */
+export type GcsExtFieldSlot = {
+  slot: "forum.row.title" | "forum.row.meta" | "category.header" | "widget.title";
+  as?: "chip" | "text";
+  icon?: string;
+  tone?: GcsSlotTone;
+  toneFrom?: string;
+  placeFrom?: string;
+};
 
 type FieldBase = { key: string; labelKey: string; hintKey?: string };
 /**
@@ -383,6 +411,8 @@ export type GcsForumExtField =
   | (FieldBase & { type: "toggle"; default?: boolean; style?: GcsExtFieldStyle })
   | (FieldBase & { type: "select"; options?: readonly { value: string; labelKey: string }[]; optionsFrom?: string; default?: string; style?: GcsExtFieldStyle })
   | (FieldBase & { type: "color"; default?: string; style?: GcsExtFieldStyle })
+  /** Un gradient liniar din două culori și un unghi (`linear-gradient(90deg, #RRGGBB, #RRGGBB)`); gol = fără. */
+  | (FieldBase & { type: "gradient"; default?: string; style?: GcsExtFieldStyle })
   | (FieldBase & { type: "icon"; default?: string })
   /**
    * O imagine încărcată în stocarea platformei (`/files/<id>`; PNG, WebP, GIF sau SVG curățat, recodate în WebP):
@@ -461,6 +491,19 @@ export type GcsForumExtension = {
   plugin?: string;
 };
 
+/**
+ * Un tab contribuit în pagina de aspect a unui widget (ACP → Aspect → Widget-uri → widget): câmpurile, salvate de nucleu
+ * în configurarea amplasării (`config.$ext[<cheia extensiei>]`).
+ */
+export type GcsWidgetEditTab = { key: string; labelKey: string; icon: string; position?: number; descriptionKey?: string; fields?: readonly GcsForumExtField[] };
+
+/**
+ * O extensie a widget-urilor (Aspect forumuri): taburile din pagina de aspect a unui widget; stilul benzii de titlu vine din
+ * câmpuri (variabile `--gcs-forum-*` și modificatorii `gcs-widget--*`), iar pastilele din câmpurile text cu slotul
+ * `widget.title`. `plugin`: cheia pluginului care o aduce (foaia lui de stil se adaugă în pagină).
+ */
+export type GcsWidgetExtension = { key: string; position?: number; tabs: readonly GcsWidgetEditTab[]; plugin?: string };
+
 /** Câmpurile tuturor taburilor unei extensii (cheile sunt unice în extensie). */
 export function extensionFields(ext: Pick<GcsForumExtension, "tabs">): GcsForumExtField[] {
   return (ext.tabs ?? []).flatMap((t) => t.fields ?? []);
@@ -484,6 +527,7 @@ export function extFieldDefault(f: GcsForumExtField): unknown {
     case "select":
       return f.default ?? f.options?.[0]?.value ?? "";
     case "color":
+    case "gradient":
     case "icon":
       return f.default ?? "";
     case "image":
@@ -548,6 +592,12 @@ export function validateExtensionValues(
         else values[f.key] = s;
         break;
       }
+      case "gradient": {
+        const s = typeof v === "string" ? normalizeGradient(v) : "";
+        if (s === null) errors[f.key] = "invalid_gradient";
+        else values[f.key] = s;
+        break;
+      }
     }
   }
   return Object.keys(errors).length > 0 ? { ok: false, errors } : { ok: true, values };
@@ -577,10 +627,16 @@ export function fieldsStyle(fields: readonly GcsForumExtField[], data: Record<st
       }
     } else if (f.type === "number") {
       if (typeof v === "number" && s.var) vars[s.var] = `${v}${s.unit ?? ""}`;
-    } else if (f.type === "color") {
-      if (typeof v === "string" && v !== "" && s.var) vars[s.var] = v;
+    } else if (f.type === "color" || f.type === "gradient") {
+      if (typeof v === "string" && v !== "") {
+        if (s.var) vars[s.var] = v;
+        if (s.class) classes.push(s.class);
+      }
     } else if (f.type === "image") {
-      if (typeof v === "string" && FILE_ID_RE.test(v) && s.var) vars[s.var] = fileUrlValue(v);
+      if (typeof v === "string" && FILE_ID_RE.test(v)) {
+        if (s.var) vars[s.var] = fileUrlValue(v);
+        if (s.class) classes.push(s.class);
+      }
     }
   }
   return { classes, vars };
@@ -593,14 +649,28 @@ export function fieldsListSlots(fields: readonly GcsForumExtField[], data: Recor
     if ((f.type !== "text" && f.type !== "textarea") || !f.slot) continue;
     const v = data[f.key];
     if (typeof v !== "string" || v.trim() === "") continue;
+    const chosen = f.slot.toneFrom ? data[f.slot.toneFrom] : undefined;
+    const tone = typeof chosen === "string" && (GCS_SLOT_TONES as readonly string[]).includes(chosen) ? (chosen as GcsSlotTone) : f.slot.tone;
+    const above = f.slot.placeFrom !== undefined && data[f.slot.placeFrom] === "above";
     const item: GcsSlotItem =
       (f.slot.as ?? "chip") === "chip"
-        ? { kind: "chip", label: v.trim(), ...(f.slot.icon ? { icon: f.slot.icon } : {}), tone: f.slot.tone ?? "accent", id: f.key }
-        : { kind: "text", text: v.trim(), ...(f.slot.icon ? { icon: f.slot.icon } : {}), ...(f.slot.tone ? { tone: f.slot.tone } : {}), id: f.key };
-    const target = f.slot.slot === "forum.row.title" ? "title" : f.slot.slot === "forum.row.meta" ? "meta" : "header";
+        ? { kind: "chip", label: v.trim(), ...(f.slot.icon ? { icon: f.slot.icon } : {}), tone: tone ?? "accent", id: f.key, ...(above ? { place: "above" as const } : {}) }
+        : { kind: "text", text: v.trim(), ...(f.slot.icon ? { icon: f.slot.icon } : {}), ...(tone ? { tone } : {}), id: f.key };
+    const target = f.slot.slot === "forum.row.title" || f.slot.slot === "widget.title" ? "title" : f.slot.slot === "forum.row.meta" ? "meta" : "header";
     (out[target] ??= []).push(item);
   }
   return out;
+}
+
+const GRADIENT_RE = /^linear-gradient\(\s*(\d{1,3})deg\s*,\s*(#[0-9a-fA-F]{6})\s*,\s*(#[0-9a-fA-F]{6})\s*\)$/;
+
+/** Un gradient din formular în forma canonică (`linear-gradient(90deg, #FF6A3D, #FFD36A)`); gol = `""`, greșit = `null`. */
+export function normalizeGradient(raw: string): string | null {
+  const v = raw.trim();
+  if (v === "") return "";
+  const m = GRADIENT_RE.exec(v);
+  if (!m || Number(m[1]) > 360) return null;
+  return `linear-gradient(${Number(m[1])}deg, ${m[2]!.toUpperCase()}, ${m[3]!.toUpperCase()})`;
 }
 
 /** Id-ul unui fișier din stocarea platformei (`/files/<id>`). */
@@ -640,11 +710,18 @@ export function assertForumExtension(ext: GcsForumExtension): void {
       if ("style" in f && f.style) {
         if (f.style.var !== undefined && !VAR_RE.test(f.style.var)) fail(`variabilă CSS nepermisă la „${f.key}”`);
         if (f.style.class !== undefined) {
+          // La `select`, clasa e un prefix: al unei clase `gcsx-` / `gcsp-` sau al unui modificator al nucleului.
           const cls = f.type === "select" ? `${f.style.class}x` : f.style.class;
-          if (!(GCS_FORUM_STYLE_CLASSES as readonly string[]).includes(cls) && !CLASS_RE.test(cls)) fail(`clasă CSS nepermisă la „${f.key}”`);
+          const corePrefix = f.type === "select" && (GCS_FORUM_STYLE_CLASSES as readonly string[]).some((c) => c.startsWith(f.style!.class!) && c !== f.style!.class);
+          if (!corePrefix && !(GCS_FORUM_STYLE_CLASSES as readonly string[]).includes(cls) && !CLASS_RE.test(cls)) fail(`clasă CSS nepermisă la „${f.key}”`);
         }
       }
       if ((f.type === "text" || f.type === "textarea") && f.slot && f.slot.icon !== undefined && !ICON_RE.test(f.slot.icon)) fail(`iconiță invalidă la „${f.key}”`);
+      if ((f.type === "text" || f.type === "textarea") && f.slot) {
+        for (const ref of [f.slot.toneFrom, f.slot.placeFrom]) {
+          if (ref !== undefined && !(tab.fields ?? []).some((x) => x.key === ref && x.type === "select")) fail(`„${f.key}” trimite la un câmp select lipsă („${ref}”)`);
+        }
+      }
     }
   }
 }

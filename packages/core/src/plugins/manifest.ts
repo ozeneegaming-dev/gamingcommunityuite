@@ -74,6 +74,13 @@ const forumCssVar = z.string().regex(/^--(?:gcs-forum|gcsp)-[a-z0-9][a-z0-9-]{0,
 const pluginCssClass = z.string().regex(/^gcsp-[a-z0-9][a-z0-9-]{0,47}$/, "invalid_css_class");
 /** O clasă a pluginului (`gcsp-*`) sau un modificator documentat al nucleului (`GCS_FORUM_STYLE_CLASSES`). */
 const forumCssClass = z.union([pluginCssClass, z.enum(GCS_FORUM_STYLE_CLASSES)]);
+/** Prefixul unui select: al unei clase `gcsp-*` sau al unor modificatori ai nucleului (ex. `gcs-forumRow--image-` + `right`). */
+const selectCssClass = z.union([
+  pluginCssClass,
+  z.string().refine((p) => /^gcs-[A-Za-z-]+-$/.test(p) && (GCS_FORUM_STYLE_CLASSES as readonly string[]).some((c) => c.startsWith(p) && c !== p), "invalid_css_class"),
+]);
+/** Legătura cu stilul a câmpurilor cu valoare (culoare, gradient, imagine): variabila și / sau clasa pusă când au valoare. */
+const valueCss = z.strictObject({ var: forumCssVar.optional(), class: forumCssClass.optional() }).refine((c) => c.var !== undefined || c.class !== undefined, "required");
 const forumTabField = z.discriminatedUnion("type", [
   z.strictObject({
     type: z.enum(["text", "textarea"]),
@@ -83,7 +90,15 @@ const forumTabField = z.discriminatedUnion("type", [
     default: z.string().max(2000).optional(),
     maxLength: z.number().int().min(1).max(5000).default(200),
     slot: z
-      .strictObject({ slot: z.enum(["forum.row.title", "forum.row.meta", "category.header"]), as: z.enum(["chip", "text"]).default("chip"), icon: icon.optional(), tone: z.enum(["accent", "neutral", "ok", "warn", "danger", "info"]).optional() })
+      .strictObject({
+        slot: z.enum(["forum.row.title", "forum.row.meta", "category.header", "widget.title"]),
+        as: z.enum(["chip", "text"]).default("chip"),
+        icon: icon.optional(),
+        tone: z.enum(["accent", "neutral", "ok", "warn", "danger", "info"]).optional(),
+        /** Cheile câmpurilor select din același tab care aleg tonul și poziția (`above`) pastilei. */
+        toneFrom: localKey.optional(),
+        placeFrom: localKey.optional(),
+      })
       .optional(),
   }),
   z.strictObject({
@@ -108,9 +123,18 @@ const forumTabField = z.discriminatedUnion("type", [
     optionsFrom: z.enum(["groups", "forums", "servers"]).optional(),
     default: z.string().max(31).optional(),
     // La `select`, `class` e un prefix: clasa pusă e prefixul + valoarea aleasă (ex. `gcsp-style-` + `glow`).
-    css: z.strictObject({ class: pluginCssClass.optional(), var: forumCssVar.optional() }).optional(),
+    css: z.strictObject({ class: selectCssClass.optional(), var: forumCssVar.optional() }).optional(),
   }),
-  z.strictObject({ type: z.literal("color"), key: localKey, label, hint, default: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "invalid_color").optional(), css: z.strictObject({ var: forumCssVar }).optional() }),
+  z.strictObject({ type: z.literal("color"), key: localKey, label, hint, default: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "invalid_color").optional(), css: valueCss.optional() }),
+  // Un gradient liniar din două culori (`linear-gradient(90deg, #RRGGBB, #RRGGBB)`).
+  z.strictObject({
+    type: z.literal("gradient"),
+    key: localKey,
+    label,
+    hint,
+    default: z.string().regex(/^linear-gradient\(\d{1,3}deg, #[0-9A-Fa-f]{6}, #[0-9A-Fa-f]{6}\)$/, "invalid_gradient").optional(),
+    css: valueCss.optional(),
+  }),
   z.strictObject({ type: z.literal("icon"), key: localKey, label, hint, default: icon.optional() }),
   // O imagine încărcată în stocarea platformei (recodată în WebP; SVG curățat); `css.var` primește `url("/files/<id>")`.
   z.strictObject({
@@ -121,7 +145,7 @@ const forumTabField = z.discriminatedUnion("type", [
     maxKb: z.number().int().min(16).max(4096).default(512),
     maxSide: z.number().int().min(16).max(4096).default(1600),
     animated: z.boolean().default(false),
-    css: z.strictObject({ var: forumCssVar }).optional(),
+    css: valueCss.optional(),
   }),
 ]);
 export type GcsPluginForumTabField = z.infer<typeof forumTabField>;
@@ -250,6 +274,24 @@ export const pluginManifestSchema = z.strictObject({
     )
     .max(5)
     .default([]),
+  /**
+   * Aspect forumuri (GCS ≥ 0.11.0): taburile pluginului în pagina de aspect a unui widget (ACP → Aspect → Widget-uri).
+   * Aceleași câmpuri ca `forumTabs`, salvate de nucleu în configurarea amplasării; stilul benzii de titlu din `css`
+   * (variabilele `--gcs-forum-*`, modificatorii `gcs-widget--*`), pastilele din câmpurile text cu slotul `widget.title`.
+   */
+  widgetTabs: z
+    .array(
+      z.strictObject({
+        key: localKey,
+        label,
+        icon: icon.default("fa-solid fa-puzzle-piece"),
+        position: z.number().int().min(0).max(1000).default(100),
+        description: z.string().trim().max(300).optional(),
+        fields: z.array(forumTabField).min(1).max(30),
+      }),
+    )
+    .max(5)
+    .default([]),
   jobs: z.array(z.strictObject({ key: localKey, everyMinutes: z.number().int().min(5).max(10080).optional(), label: label.optional() })).max(20).default([]),
   menus: z.strictObject({ site: z.array(menuEntry).max(10).default([]), user: z.array(menuEntry).max(10).default([]) }).default({ site: [], user: [] }),
   /** Fișierele media proprii (capabilitatea `media`): tipurile acceptate și limitele lor, sub plafoanele nucleului. */
@@ -353,7 +395,20 @@ function crossCheck(m: GcsPluginManifest): GcsPluginManifestIssue[] {
   for (const d of duplicates(m.forumTabs.map((t) => t.key))) issues.push({ path: `forumTabs.${d}`, code: "duplicate_key" });
   for (const d of duplicates(m.forumTabs.flatMap((t) => t.fields.map((f) => f.key)))) issues.push({ path: `forumTabs.fields.${d}`, code: "duplicate_key" });
   if (m.forumTabs.some((t) => t.hook) && !m.hooks.some((h) => h.point === "forum.edit")) issues.push({ path: "forumTabs", code: "missing_hook:forum.edit" });
-  for (const tab of m.forumTabs) {
+  if (m.widgetTabs.length > 0 && !caps.has("hooks")) issues.push({ path: "widgetTabs", code: "missing_capability:hooks" });
+  for (const d of duplicates(m.widgetTabs.map((t) => t.key))) issues.push({ path: `widgetTabs.${d}`, code: "duplicate_key" });
+  for (const d of duplicates(m.widgetTabs.flatMap((t) => t.fields.map((f) => f.key)))) issues.push({ path: `widgetTabs.fields.${d}`, code: "duplicate_key" });
+  for (const [area, tabs] of [["forumTabs", m.forumTabs], ["widgetTabs", m.widgetTabs]] as const) {
+    for (const tab of tabs) {
+      for (const f of tab.fields) {
+        if ((f.type !== "text" && f.type !== "textarea") || !f.slot) continue;
+        for (const ref of [f.slot.toneFrom, f.slot.placeFrom]) {
+          if (ref !== undefined && !tab.fields.some((x) => x.key === ref && x.type === "select")) issues.push({ path: `${area}.${tab.key}.${f.key}.slot`, code: "unknown_field" });
+        }
+      }
+    }
+  }
+  for (const tab of [...m.forumTabs, ...m.widgetTabs]) {
     for (const f of tab.fields) {
       if (f.type === "number") {
         if (f.min > f.max) issues.push({ path: `forumTabs.${tab.key}.${f.key}`, code: "invalid_range" });

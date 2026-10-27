@@ -9,6 +9,7 @@ import {
   type GcsPluginManifest,
   type GcsWidgetDef,
   type GcsWidgetField,
+  type GcsWidgetExtension,
 } from "@gcs/core";
 import { isGcsIcon } from "@gcs/ui/icon-registry";
 
@@ -115,6 +116,9 @@ export const pluginIcon = (name: string | undefined) => (name && isGcsIcon(name)
  */
 export type GcsPluginForumBridge = Pick<GcsForumExtension, "list" | "forumPage" | "topicBar">;
 
+/** Variabila și / sau clasa unui câmp cu valoare (culoare, gradient, imagine). */
+const valueStyle = (css: { var?: string | undefined; class?: string | undefined }) => ({ ...(css.var ? { var: css.var } : {}), ...(css.class ? { class: css.class } : {}) });
+
 /** Câmpurile unui tab al pluginului (`forumTabs[].fields`) ca acelea ale unei extensii de forum (etichete next-intl). */
 function forumTabFields(fields: GcsPluginForumTabField[], texts: GcsPluginTexts): GcsForumExtField[] {
   return fields.map((f): GcsForumExtField => {
@@ -145,11 +149,13 @@ function forumTabFields(fields: GcsPluginForumTabField[], texts: GcsPluginTexts)
           ...(f.css ? { style: { ...(f.css.class ? { class: f.css.class } : {}), ...(f.css.var ? { var: f.css.var } : {}) } } : {}),
         };
       case "color":
-        return { ...base, type: "color", ...(f.default !== undefined ? { default: f.default.toUpperCase() } : {}), ...(f.css ? { style: { var: f.css.var } } : {}) };
+        return { ...base, type: "color", ...(f.default !== undefined ? { default: f.default.toUpperCase() } : {}), ...(f.css ? { style: valueStyle(f.css) } : {}) };
+      case "gradient":
+        return { ...base, type: "gradient", ...(f.default !== undefined ? { default: f.default } : {}), ...(f.css ? { style: valueStyle(f.css) } : {}) };
       case "icon":
         return { ...base, type: "icon", ...(f.default !== undefined ? { default: f.default } : {}) };
       case "image":
-        return { ...base, type: "image", maxKb: f.maxKb, maxSide: f.maxSide, animated: f.animated, ...(f.css ? { style: { var: f.css.var } } : {}) };
+        return { ...base, type: "image", maxKb: f.maxKb, maxSide: f.maxSide, animated: f.animated, ...(f.css ? { style: valueStyle(f.css) } : {}) };
     }
   });
 }
@@ -183,12 +189,31 @@ export function pluginForumExtension(key: string, manifest: GcsPluginManifest, t
   return ext;
 }
 
+/** Extensia widget-urilor a unui plugin (Aspect forumuri): taburile din `widgetTabs`. `null` = nu are. */
+export function pluginWidgetExtension(key: string, manifest: GcsPluginManifest, texts: GcsPluginTexts): GcsWidgetExtension | null {
+  if (manifest.widgetTabs.length === 0) return null;
+  return {
+    key: pluginRegistryKey(key),
+    position: 200,
+    plugin: key,
+    tabs: manifest.widgetTabs.map((t) => ({
+      key: t.key,
+      labelKey: texts.labelKey(t.label),
+      icon: pluginIcon(t.icon),
+      position: t.position,
+      ...(t.description ? { descriptionKey: texts.labelKey(t.description) } : {}),
+      fields: forumTabFields(t.fields, texts),
+    })),
+  };
+}
+
 /**
  * Modulul GCS al unui plugin încărcat: permisiunile (`plugin.<cheie>.<perm>`), widget-urile (`plugin.<cheie>.<widget>`)
  * și paginile ACP fără parametri în meniul ACP (secțiunea `plugin.<cheie>`). Intră în registry cât timp pluginul e activ.
  */
 export function pluginModule(key: string, manifest: GcsPluginManifest, texts: GcsPluginTexts, bridge?: GcsPluginForumBridge): GcsModule {
   const forumExtension = pluginForumExtension(key, manifest, texts, bridge);
+  const widgetExtension = pluginWidgetExtension(key, manifest, texts);
   const base = pluginRegistryKey(key);
   const widgets: GcsWidgetDef[] = manifest.widgets.map((w) => {
     const fields: GcsWidgetField[] = w.fields.map((f) =>
@@ -240,6 +265,7 @@ export function pluginModule(key: string, manifest: GcsPluginManifest, texts: Gc
     acpMenu: acpItems.length > 0 ? [{ app: "system", area: "apps", title: texts.nameKey, icon: pluginIcon(manifest.icon), items: acpItems }] : [],
     widgets,
     ...(forumExtension ? { forumExtensions: [forumExtension] } : {}),
+    ...(widgetExtension ? { widgetExtensions: [widgetExtension] } : {}),
     // Aplicația pluginului (ACP → Aplicații): rutele lui (accesul pe grup le închide) și paginile fără parametri ca secțiuni.
     app: {
       optional: false,

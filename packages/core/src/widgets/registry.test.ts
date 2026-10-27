@@ -31,6 +31,25 @@ const base: GcsModule = {
   eventListeners: [],
   widgets: [limited("base.recent"), limited("base.sidebarOnly", { zones: ["sidebar"] }), limited("base.indexOnly", { pages: ["index"] })],
   nav: [{ key: "forum", labelKey: "nav.forum", icon: "fa-solid fa-comments", href: "/", position: 0 }],
+  // Aspect forumuri: banda de titlu a widget-urilor (culoarea titlului, imaginea, eticheta deasupra).
+  widgetExtensions: [
+    {
+      key: "look",
+      tabs: [
+        {
+          key: "aspect",
+          labelKey: "x",
+          icon: "fa-solid fa-palette",
+          fields: [
+            { key: "title", type: "color", labelKey: "x", style: { var: "--gcs-forum-title-color" } },
+            { key: "bg", type: "image", labelKey: "x", maxKb: 2048, maxSide: 1600, style: { var: "--gcs-forum-row-image", class: "gcs-widget--image" } },
+            { key: "tag", type: "text", labelKey: "x", maxLength: 20, slot: { slot: "widget.title", as: "chip", placeFrom: "tagPlace" } },
+            { key: "tagPlace", type: "select", labelKey: "x", options: [{ value: "beside", labelKey: "x" }, { value: "above", labelKey: "x" }] },
+          ],
+        },
+      ],
+    },
+  ],
 };
 const optional: GcsModule = {
   key: "optapp",
@@ -288,5 +307,30 @@ describe("câmpurile și layout-ul implicit", () => {
     await ws.reset(admin, "index");
     expect((await ws.layout("index", admin)).sidebar.map((p) => p.type)).toEqual(["base.recent"]);
     await expect(ws.reset(await world.actorFor(await world.createUser("Ion2", "member")), "index")).rejects.toBeInstanceOf(GcsForbidden);
+  });
+});
+
+describe("Aspect forumuri: aspectul widget-urilor", () => {
+  test("tabul de aspect al unei amplasări: valorile validate, păstrate la reordonare, banda primește stilul și eticheta", async () => {
+    await widgets.save(root, "index", [{ zone: "sidebar", type: "base.recent", config: { limit: 5 } }]);
+    const [placement] = (await widgets.layout("index", root)).sidebar;
+    const opts = { plugins: true };
+    expect((await widgets.editTabs(placement!.config, opts)).map((t) => `${t.extension}:${t.tab.key}`)).toEqual(["look:aspect"]);
+
+    await expect(widgets.saveExtension(member, { placementId: placement!.id, extension: "look", tab: "aspect", values: { title: "#FF6A3D" } }, opts)).rejects.toBeInstanceOf(GcsForbidden);
+    await expect(widgets.saveExtension(root, { placementId: 999_999, extension: "look", tab: "aspect", values: {} }, opts)).rejects.toBeInstanceOf(GcsNotFound);
+    await widgets.saveExtension(root, { placementId: placement!.id, extension: "look", tab: "aspect", values: { title: "#ff6a3d", bg: "bg42", tag: "Live", tagPlace: "above" } }, opts);
+
+    const saved = (await widgets.layout("index", root)).sidebar[0]!;
+    expect(saved.id).toBe(placement!.id);
+    const decor = await widgets.decor(saved.config, opts);
+    expect(decor.style).toEqual({ classes: ["gcs-widget--image"], vars: { "--gcs-forum-title-color": "#FF6A3D", "--gcs-forum-row-image": 'url("/files/bg42")' } });
+    expect(decor.title).toEqual([{ kind: "chip", label: "Live", tone: "accent", id: "tag", place: "above" }]);
+
+    // Editorul paginii trimite configurarea înapoi la reordonare: aspectul rămâne (o valoare stricată se pierde).
+    await widgets.save(root, "index", [{ zone: "top", type: "base.recent", config: saved.config }, { zone: "sidebar", type: "base.recent", config: { limit: 3, $ext: { look: { title: "rosu" }, other: { x: 1 } } } }]);
+    const after = await widgets.layout("index", root);
+    expect((await widgets.decor(after.top[0]!.config, opts)).style.vars["--gcs-forum-title-color"]).toBe("#FF6A3D");
+    expect(after.sidebar[0]!.config).toEqual({ limit: 3 });
   });
 });

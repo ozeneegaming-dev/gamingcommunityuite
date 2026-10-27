@@ -181,6 +181,9 @@ export function sanitizeSvg(input: string): string | null {
   let skip = 0;
   let root = false;
   let rootClosed = false;
+  // Închiderile făcute de `end()` sunt ale etichetelor rămase deschise: un SVG neterminat e refuzat.
+  let ending = false;
+  let unclosed = false;
   const parser = new Parser(
     {
       onopentag(rawName, attrs) {
@@ -204,6 +207,7 @@ export function sanitizeSvg(input: string): string | null {
         if (skip === 0 && depth > 0) out += escapeText(text);
       },
       onclosetag(rawName) {
+        if (ending) unclosed = true;
         if (skip > 0) {
           skip--;
           return;
@@ -218,8 +222,9 @@ export function sanitizeSvg(input: string): string | null {
     { xmlMode: true, decodeEntities: true, recognizeSelfClosing: true },
   );
   parser.write(input.replace(/^﻿/, "").replace(/<\?xml[^>]*\?>/i, ""));
+  ending = true;
   parser.end();
-  return root && rootClosed ? out : null;
+  return root && rootClosed && !unclosed ? out : null;
 }
 
 /** Dacă textul unui fișier pare SVG (fără magic bytes: începe, după declarația XML și comentarii, cu `<svg`). */
