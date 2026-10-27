@@ -1,7 +1,7 @@
 "use client";
 
 import { compactHeaderLayout, HEADER_ROWS, HEADER_ZONES, placedHeaderElements, type GcsHeaderBuilder, type GcsHeaderDeviceLayout, type GcsHeaderElement, type GcsHeaderRow } from "@gcs/core/themes";
-import { useEffect, useMemo, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
 import { deviceForWidth, type GcsDevice } from "@/lib/header-device";
 import { HEADER_EVENTS, HeaderStateContext, type GcsHeaderState } from "./header-context";
 
@@ -21,6 +21,8 @@ export type GcsHeaderOptions = {
 
 /** Pragul de la care antetul devine compact (specul §9: „~120px”). */
 export const COMPACT_AFTER = 120;
+/** Sub acest prag antetul compact revine la mărimea întreagă (histerezis: fără comutări repetate în jurul pragului). */
+export const EXPAND_BELOW = 80;
 /** Elementele care trebuie să existe chiar dacă nu sunt puse în antet (Ctrl+K, bara de jos: „Creează”, meniul). */
 const HELPERS: readonly GcsHeaderElement[] = ["search", "create", "nav"];
 
@@ -66,6 +68,7 @@ export function GcsHeaderFrame({
   const device = useDevice(initialDevice);
   const [compact, setCompact] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const header = useRef<HTMLElement>(null);
 
   useEffect(() => setLayout(initialLayout), [initialLayout]);
   useEffect(() => setOptions(initialOptions), [initialOptions]);
@@ -77,7 +80,7 @@ export function GcsHeaderFrame({
     const update = () => {
       frame = 0;
       const y = window.scrollY;
-      setCompact(options.compact && y > COMPACT_AFTER);
+      setCompact((was) => options.compact && y > (was ? EXPAND_BELOW : COMPACT_AFTER));
       if (options.hideOnScroll) {
         if (y <= COMPACT_AFTER || y < last - 4) setHidden(false);
         else if (y > last + 4) setHidden(true);
@@ -94,6 +97,45 @@ export function GcsHeaderFrame({
       if (frame) cancelAnimationFrame(frame);
     };
   }, [options.compact, options.hideOnScroll]);
+
+  /*
+   * Antetul lipit sus stă în fluxul paginii: când se strânge, pagina s-ar scurta, iar browserul ar muta derularea înapoi
+   * cu tot atât (sub prag: antetul s-ar mări la loc, în buclă; la o derulare ușoară, antetul „tremură”). Cât se strânge
+   * antetul, atâta spațiu îi punem dedesubt, ca înălțimea din flux să rămână cea întreagă. Spațiul se pune în aceeași
+   * schimbare cu starea compactă (înainte de layout), apoi `ResizeObserver` îl potrivește exact (și în timpul tranziției).
+   */
+  const flow = useRef({ full: 0, compact: 0, nav: 0 });
+  const keepsFlow = options.sticky || options.compact;
+  useLayoutEffect(() => {
+    const el = header.current;
+    if (!el || !keepsFlow) return;
+    const { full, compact: compactHeight, nav } = flow.current;
+    // Fără citiri de layout aici. Prima strângere: înălțimea compactă se estimează după rândul meniului (rămâne vizibil).
+    const estimate = compactHeight || nav;
+    el.style.marginBottom = compact && full > estimate ? `${full - estimate}px` : "";
+  }, [compact, keepsFlow]);
+  useEffect(() => {
+    const el = header.current;
+    if (!el || !keepsFlow || typeof ResizeObserver === "undefined") return;
+    flow.current = { full: 0, compact: 0, nav: 0 };
+    const sync = () => {
+      const h = el.getBoundingClientRect().height;
+      const f = flow.current;
+      if (el.hasAttribute("data-compact")) f.compact = h;
+      else {
+        if (h > f.full) f.full = h;
+        f.nav = el.querySelector<HTMLElement>("[data-nav-row]")?.offsetHeight ?? 0;
+      }
+      el.style.marginBottom = f.full - h > 0.5 ? `${f.full - h}px` : "";
+    };
+    const observer = new ResizeObserver(sync);
+    observer.observe(el);
+    sync();
+    return () => {
+      observer.disconnect();
+      el.style.marginBottom = "";
+    };
+  }, [keepsFlow, device, layout, options.rowTop, options.rowMain, options.rowBottom]);
 
   // Previzualizarea live din editorul vizual (aspectul și opțiunile antetului, din draft).
   useEffect(() => {
@@ -143,6 +185,7 @@ export function GcsHeaderFrame({
   return (
     <HeaderStateContext.Provider value={state}>
       <header
+        ref={header}
         className={`gcs-hb gcs-hb--${layout.preset}`}
         data-preset={layout.preset}
         data-device={device}
