@@ -48,13 +48,8 @@ async function setPlugin(page: Page, on: boolean): Promise<void> {
   }).toPass({ timeout: 20_000 });
   if (!on) await page.getByRole("dialog").getByRole("button", { name: "Oprește" }).click();
   await expect(toggle).toBeChecked({ checked: on });
-  await expect.poll(async () => (await sql<{ enabled: boolean | number }>(`SELECT enabled FROM plugins WHERE key = $1`, [KEY]))[0]?.enabled).toBe(on ? (await isMysqlBool()) : (await isMysqlBool(false)));
-}
-
-/** MySQL întoarce booleanele ca 0 / 1. */
-async function isMysqlBool(value = true): Promise<boolean | number> {
-  const [row] = await sql<{ v: boolean | number }>(`SELECT ${value ? "true" : "false"} AS v`);
-  return row!.v;
+  // MySQL întoarce booleanele ca 0 / 1.
+  await expect.poll(async () => Boolean((await sql<{ enabled: boolean | number }>(`SELECT enabled FROM plugins WHERE key = $1`, [KEY]))[0]?.enabled)).toBe(on);
 }
 
 /** Tema văzută de vizitator: GCS Dark (implicită) sau GCS White. */
