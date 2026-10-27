@@ -19,10 +19,11 @@ import type { GcsCache } from "../cache";
  * - `forum.row.title`: lângă titlul forumului din listă (etichete, insigne);
  * - `forum.row.meta`: un rând sub descrierea forumului din listă;
  * - `category.header`: în banda de titlu a categoriei (în dreapta titlului);
+ * - `forum.row.sub`: lângă un subforum din lista rândului părinte (insigne ON / OFF / NOU);
  * - `forum.page.top`: un card sus pe pagina forumului (sub antet);
  * - `topic.bar`: o bară mică pe pagina topicului (sub antet).
  */
-export const GCS_FORUM_SLOTS = ["forum.row.title", "forum.row.meta", "category.header", "forum.page.top", "topic.bar"] as const;
+export const GCS_FORUM_SLOTS = ["forum.row.title", "forum.row.meta", "forum.row.sub", "category.header", "forum.page.top", "topic.bar"] as const;
 export type GcsForumSlot = (typeof GCS_FORUM_SLOTS)[number];
 
 /** Cârligele de stil: rândul unui forum din listă și secțiunea unei categorii (clase + variabile CSS pe rădăcină). */
@@ -78,6 +79,7 @@ export type GcsSlotItem = GcsSlotChip | GcsSlotLine | GcsSlotStat | GcsSlotCard 
 export const GCS_SLOT_KINDS: Record<GcsForumSlot, readonly GcsSlotItem["kind"][]> = {
   "forum.row.title": ["chip", "html", "component"],
   "forum.row.meta": ["chip", "text", "stat", "html", "component"],
+  "forum.row.sub": ["chip", "html", "component"],
   "category.header": ["chip", "text", "stat", "html", "component"],
   "forum.page.top": ["card", "chip", "text", "stat", "html", "component"],
   "topic.bar": ["chip", "text", "stat", "card", "html", "component"],
@@ -114,16 +116,36 @@ export const GCS_FORUM_STYLE_VARS = {
   "--gcs-forum-row-veil-hover": "number",
   /** Chenarul rândului. */
   "--gcs-forum-row-border": "color",
+  /** Imaginea pentru temele deschise (lipsă: aceeași imagine). */
+  "--gcs-forum-row-image-light": "url",
+  /** Iconița ca imagine (cu `gcs-forumRow--iconImage`) și varianta „cu mesaje noi” (lipsă: cea normală, cu contur). */
+  "--gcs-forum-icon-image": "url",
+  "--gcs-forum-icon-image-unread": "url",
+  /** Gradientul titlului (cu `gcs-forumRow--titleGradient` / `gcs-category--titleGradient`). */
+  "--gcs-forum-title-fill": "gradient",
+  /** Bara de accent din stânga (cu `gcs-forumRow--accentBar`; lipsă: `--gcs-forum-color`). */
+  "--gcs-forum-accent": "color",
 } as const;
 
 /** Clasele de stil ale nucleului (modificatori documentați, cu CSS în orice temă). */
 export const GCS_FORUM_STYLE_CLASSES = [
   "gcs-forumRow--image",
+  /** Imaginea doar în dreapta rândului (estompată spre stânga), în locul celei pe tot rândul. */
+  "gcs-forumRow--imageRight",
+  /** Fără imaginea de fundal pe ecranele înguste. */
+  "gcs-forumRow--imageDesktop",
+  "gcs-forumRow--iconImage",
   "gcs-forumRow--titleCaps",
   "gcs-forumRow--titleGlow",
+  "gcs-forumRow--titleGradient",
+  "gcs-forumRow--accentBar",
   "gcs-forumRow--muted",
   "gcs-category--image",
+  "gcs-category--imageRight",
+  "gcs-category--iconImage",
   "gcs-category--titleCaps",
+  "gcs-category--titleGlow",
+  "gcs-category--titleGradient",
 ] as const;
 
 const CLASS_RE = /^(?:gcsx|gcsp)-[a-z0-9][a-z0-9-]{0,47}$/;
@@ -361,7 +383,13 @@ export type GcsForumExtField =
   | (FieldBase & { type: "toggle"; default?: boolean; style?: GcsExtFieldStyle })
   | (FieldBase & { type: "select"; options?: readonly { value: string; labelKey: string }[]; optionsFrom?: string; default?: string; style?: GcsExtFieldStyle })
   | (FieldBase & { type: "color"; default?: string; style?: GcsExtFieldStyle })
-  | (FieldBase & { type: "icon"; default?: string });
+  | (FieldBase & { type: "icon"; default?: string })
+  /**
+   * O imagine încărcată în stocarea platformei (`/files/<id>`; PNG, WebP, GIF sau SVG curățat, recodate în WebP):
+   * valoarea e id-ul fișierului, iar `style.var` primește `url("/files/<id>")`. `maxKb`: mărimea maximă a fișierului
+   * încărcat; `maxSide`: latura maximă după recodare; `animated`: un GIF / WebP animat rămâne animat.
+   */
+  | (FieldBase & { type: "image"; maxKb: number; maxSide: number; animated?: boolean; style?: GcsExtFieldStyle });
 
 /**
  * Un tab contribuit în ACP → Forumuri → Editează: câmpurile (formular generic, salvat de nucleu) și/sau o componentă a
@@ -381,14 +409,33 @@ export type GcsForumEditTab = {
   pluginHook?: boolean;
 };
 
-/** Un nod al forumului (categorie, forum, link, pagină) cu datele salvate ale extensiei (`data`). */
-export type GcsForumSlotNode = { id: number; type: ForumType; parentId: number | null; name: string; slug: string; data: Record<string, unknown> };
+/** Un subforum din lista unui rând (sub descriere), cu datele salvate ale extensiei. */
+export type GcsForumSlotChild = { id: number; type: ForumType; name: string; slug: string; data: Record<string, unknown> };
+
+/**
+ * Un nod al forumului (categorie, forum, link, pagină) cu datele salvate ale extensiei (`data`). `parent`: nodul
+ * părinte cu datele lui (moștenirea, ex. fundalul unui forum pentru subforumurile lui); `children`: subforumurile din
+ * lista rândului (pentru insignele lor, slotul `forum.row.sub`).
+ */
+export type GcsForumSlotNode = {
+  id: number;
+  type: ForumType;
+  parentId: number | null;
+  name: string;
+  slug: string;
+  data: Record<string, unknown>;
+  parent?: { id: number; type: ForumType; data: Record<string, unknown> } | null;
+  children?: GcsForumSlotChild[];
+};
 
 /** Contextul unei extensii: baza, cache-ul, vizitatorul, limba și pagina pe care se randează. */
 export type GcsForumSlotContext = { db: PrismaClient; cache: GcsCache; actor: GcsActor; locale: string; surface: "index" | "forum" | "topic" };
 
-/** Ce pune o extensie pe un nod dintr-o listă: în sloturile rândului / categoriei și stilul lui. */
-export type GcsForumListSlots = { title?: GcsSlotItem[]; meta?: GcsSlotItem[]; header?: GcsSlotItem[]; style?: GcsSlotStyle };
+/**
+ * Ce pune o extensie pe un nod dintr-o listă: în sloturile rândului / categoriei, stilul lui și, în `subs`, insignele
+ * subforumurilor din lista rândului (după id-ul subforumului).
+ */
+export type GcsForumListSlots = { title?: GcsSlotItem[]; meta?: GcsSlotItem[]; header?: GcsSlotItem[]; subs?: Record<number, GcsSlotItem[]>; style?: GcsSlotStyle };
 
 /**
  * O extensie a forumului (declarată de un modul în `GcsModule.forumExtensions` sau generată din manifestul unui plugin).
@@ -439,6 +486,8 @@ export function extFieldDefault(f: GcsForumExtField): unknown {
     case "color":
     case "icon":
       return f.default ?? "";
+    case "image":
+      return "";
   }
 }
 
@@ -493,6 +542,12 @@ export function validateExtensionValues(
         else values[f.key] = s;
         break;
       }
+      case "image": {
+        const s = typeof v === "string" ? v.trim() : "";
+        if (s !== "" && !FILE_ID_RE.test(s)) errors[f.key] = "invalid_image";
+        else values[f.key] = s;
+        break;
+      }
     }
   }
   return Object.keys(errors).length > 0 ? { ok: false, errors } : { ok: true, values };
@@ -524,6 +579,8 @@ export function fieldsStyle(fields: readonly GcsForumExtField[], data: Record<st
       if (typeof v === "number" && s.var) vars[s.var] = `${v}${s.unit ?? ""}`;
     } else if (f.type === "color") {
       if (typeof v === "string" && v !== "" && s.var) vars[s.var] = v;
+    } else if (f.type === "image") {
+      if (typeof v === "string" && FILE_ID_RE.test(v) && s.var) vars[s.var] = fileUrlValue(v);
     }
   }
   return { classes, vars };
@@ -544,6 +601,14 @@ export function fieldsListSlots(fields: readonly GcsForumExtField[], data: Recor
     (out[target] ??= []).push(item);
   }
   return out;
+}
+
+/** Id-ul unui fișier din stocarea platformei (`/files/<id>`). */
+export const FILE_ID_RE = /^[A-Za-z0-9_-]{1,40}$/;
+
+/** Valoarea CSS a unui fișier al site-ului: `url("/files/<id>")` (trece de `isSafeCssValue`). */
+export function fileUrlValue(id: string): string {
+  return `url("/files/${id}")`;
 }
 
 const EXT_KEY_RE = /^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*){0,3}$/;
@@ -569,6 +634,7 @@ export function assertForumExtension(ext: GcsForumExtension): void {
       if (!LOCAL_KEY_RE.test(f.key) || fieldKeys.has(f.key)) fail(`câmp invalid sau repetat „${f.key}”`);
       fieldKeys.add(f.key);
       if (f.type === "number" && (f.min > f.max || (f.default !== undefined && (f.default < f.min || f.default > f.max)))) fail(`interval invalid la „${f.key}”`);
+      if (f.type === "image" && (f.maxKb < 1 || f.maxKb > 10_240 || f.maxSide < 16 || f.maxSide > 4096)) fail(`limite invalide la „${f.key}”`);
       if (f.type === "select" && !f.options && !f.optionsFrom) fail(`„${f.key}” nu are opțiuni`);
       if (f.type === "select" && f.options && f.default !== undefined && !f.options.some((o) => o.value === f.default)) fail(`valoare implicită invalidă la „${f.key}”`);
       if ("style" in f && f.style) {

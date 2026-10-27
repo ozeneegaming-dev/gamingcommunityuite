@@ -243,3 +243,25 @@ describe("GcsAttachmentService.importFile (importul din altă platformă)", () =
     await expect(service.importFile(null, { name: "x.png", bytes: await png() }, { maxBytes: 10 })).rejects.toBeInstanceOf(GcsValidationError);
   });
 });
+
+describe("GcsAttachmentService.storeDecorImage (Aspect forumuri)", () => {
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" onload="alert(1)"><script>alert(2)</script><rect width="20" height="20" fill="#FF6A3D"/></svg>';
+
+  test("PNG și SVG devin WebP de cel mult `maxSide`; publice, legate de țintă", async () => {
+    const icon = await service.storeDecorImage(member.userId, { name: "cs2.png", bytes: await png(600, 300) }, { maxBytes: 512 * 1024, maxSide: 256, animated: false, target: "forum:12:icon" });
+    expect(icon).toMatchObject({ mime: "image/webp", width: 256, height: 128, filename: "cs2.webp" });
+    expect(await world.db.attachment.findUniqueOrThrow({ where: { id: icon.id } })).toMatchObject({ contentType: "decor.image", contentId: "forum:12:icon" });
+    const vector = await service.storeDecorImage(member.userId, { name: "logo.svg", bytes: Buffer.from(svg) }, { maxBytes: 512 * 1024, maxSide: 128, animated: false, target: "forum:12:icon" });
+    expect(vector).toMatchObject({ mime: "image/webp", width: 128, height: 128 });
+    service.registerAccess("decor.image", async () => true);
+    await expect(service.open(guest, vector.id)).resolves.toMatchObject({ inline: true, mime: "image/webp" });
+  });
+
+  test("peste limită, alt tip de fișier, SVG stricat sau țintă invalidă → refuz", async () => {
+    const opts = { maxBytes: 512 * 1024, maxSide: 256, animated: false, target: "forum:1:bg" };
+    await expect(service.storeDecorImage(null, { name: "a.png", bytes: await png() }, { ...opts, maxBytes: 10 })).rejects.toMatchObject({ fields: { file: "too_large" } });
+    await expect(service.storeDecorImage(null, { name: "a.html", bytes: Buffer.from("<html><script>x</script></html>") }, opts)).rejects.toMatchObject({ fields: { file: "unsupported_type" } });
+    await expect(service.storeDecorImage(null, { name: "a.svg", bytes: Buffer.from("<svg><rect/>") }, opts)).rejects.toMatchObject({ fields: { file: "invalid_svg" } });
+    await expect(service.storeDecorImage(null, { name: "a.png", bytes: await png() }, { ...opts, target: "../x" })).rejects.toBeInstanceOf(GcsValidationError);
+  });
+});

@@ -8,6 +8,10 @@ import { GcsForbidden, GcsNotFound, GcsRateLimited, GcsValidationError } from ".
 import type { GcsPermissionService } from "../../permissions/service";
 import type { GcsActor, GcsContainerRef } from "../../permissions/types";
 import type { GcsFileStore } from "./store";
+import { looksLikeSvg, sanitizeSvg, SVG_MAX_BYTES } from "./svg";
+
+/** Imaginile decorative (iconițe, fundaluri ale forumurilor și widget-urilor): publice, legate de ținta lor. */
+export const DECOR_CONTENT_TYPE = "decor.image";
 
 /** Imaginile se recodează (fără EXIF, max 4096 px). */
 const IMAGE_FORMATS = { "image/jpeg": "jpeg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" } as const;
@@ -297,6 +301,59 @@ export class GcsAttachmentService {
       width: meta.width ?? null,
       height: meta.height ?? null,
     });
+  }
+
+  /**
+   * O imagine decorativă (Aspect forumuri: iconița, fundalul unui forum sau al benzii unui widget): PNG, WebP, GIF, JPEG
+   * sau SVG. SVG-ul se curăță (listă albă, fără scripturi și legături externe) și se rasterizează; totul devine WebP de cel
+   * mult `maxSide` px, fără EXIF. Un GIF / WebP animat rămâne animat doar cu `animated`. Fișierul e public
+   * (`decor.image`, legat de `target`, ex. `forum:12:icon`); dreptul ACP și limita de rată le verifică apelantul.
+   */
+  async storeDecorImage(ownerId: string | null, file: GcsUploadedFile, opts: { maxBytes: number; maxSide: number; animated: boolean; target: string }): Promise<GcsAttachmentInfo> {
+    const { db, store } = this.deps;
+    if (file.bytes.length > opts.maxBytes) throw new GcsValidationError({ file: "too_large" }, { maxKb: String(Math.floor(opts.maxBytes / 1024)) });
+    if (!/^[a-z][a-z0-9_.:-]{0,80}$/.test(opts.target)) throw new GcsValidationError({ target: "invalid" });
+    const detected = await fileTypeFromBuffer(file.bytes);
+    let out: Buffer;
+    try {
+      if (detected && detected.mime in IMAGE_FORMATS) {
+        const animated = opts.animated && (detected.mime === "image/gif" || detected.mime === "image/webp");
+        let img = sharp(file.bytes, { animated, limitInputPixels: 100_000_000 });
+        if (!animated) img = img.rotate();
+        out = await img.resize({ width: opts.maxSide, height: opts.maxSide, fit: "inside", withoutEnlargement: true }).webp({ quality: 88 }).toBuffer();
+      } else if (!detected && file.bytes.length <= SVG_MAX_BYTES && looksLikeSvg(file.bytes)) {
+        const clean = sanitizeSvg(file.bytes.toString("utf8"));
+        if (!clean) throw new GcsValidationError({ file: "invalid_svg" });
+        // Desenul vectorial se rasterizează la latura maximă (iconițele rămân clare pe ecranele dense).
+        out = await sharp(Buffer.from(clean), { density: 300, limitInputPixels: 100_000_000 })
+          .resize({ width: opts.maxSide, height: opts.maxSide, fit: "inside" })
+          .webp({ quality: 90 })
+          .toBuffer();
+      } else {
+        throw new GcsValidationError({ file: "unsupported_type" });
+      }
+    } catch (error) {
+      if (error instanceof GcsValidationError) throw error;
+      throw new GcsValidationError({ file: "invalid_image" });
+    }
+    const meta = await sharp(out).metadata();
+    const now = new Date();
+    const key = `${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, "0")}/${randomUUID()}.webp`;
+    await store.put(key, out, "image/webp");
+    const row = await db.attachment.create({
+      data: {
+        ownerId,
+        storageKey: key,
+        filename: `${cleanFilename(file.name).replace(/\.[a-z0-9]+$/i, "") || "imagine"}.webp`,
+        mime: "image/webp",
+        size: out.length,
+        width: meta.width ?? null,
+        height: meta.pageHeight ?? meta.height ?? null,
+        contentType: DECOR_CONTENT_TYPE,
+        contentId: opts.target,
+      },
+    });
+    return { id: row.id, url: `/files/${row.id}`, filename: row.filename, mime: row.mime, size: row.size, isImage: true, width: row.width, height: row.height };
   }
 
   /**

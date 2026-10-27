@@ -48,6 +48,17 @@ describe("manifestul: extensiile forumului (Forum v2)", () => {
     expect(issues(withField({ type: "toggle", key: "t", label: "x", css: { class: "gcs-forumRow--titleCaps" } }))).toEqual([]);
   });
 
+  test("Aspect forumuri: câmpul imagine (limitele implicite) și selectul cu opțiunile din site", () => {
+    const withFields = (fields: unknown[]) => forumManifest({ forumTabs: [{ ...TAB, fields }] });
+    const r = parsePluginManifest(withFields([{ type: "image", key: "icon", label: "x", css: { var: "--gcs-forum-icon-image" } }, { type: "select", key: "server", label: "x", optionsFrom: "servers" }]));
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.manifest.forumTabs[0]!.fields[0]).toMatchObject({ type: "image", maxKb: 512, maxSide: 1600, animated: false });
+    expect(issues(withFields([{ type: "image", key: "i", label: "x", maxKb: 99999 }]))[0]).toMatch(/^forumTabs\.0\.fields\.0\.maxKb/);
+    expect(issues(withFields([{ type: "select", key: "s", label: "x" }]))).toContain("forumTabs.aspect.s.options:required");
+    expect(issues(withFields([{ type: "select", key: "s", label: "x", optionsFrom: "forums", options: [{ value: "a", label: "a" }] }]))).toContain("forumTabs.aspect.s.options:not_allowed");
+    expect(issues(withFields([{ type: "select", key: "s", label: "x", optionsFrom: "users" }]))[0]).toMatch(/optionsFrom/);
+  });
+
   test("cheile repetate, intervalele și valorile implicite greșite", () => {
     const dup = forumManifest({ forumTabs: [TAB, { ...TAB, fields: [{ type: "text", key: "tag", label: "x" }] }] });
     expect(issues(dup)).toEqual(expect.arrayContaining(["forumTabs.aspect:duplicate_key", "forumTabs.fields.tag:duplicate_key"]));

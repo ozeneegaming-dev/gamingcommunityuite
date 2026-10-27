@@ -121,6 +121,46 @@ describe("taburile contribuite: câmpurile", () => {
   });
 });
 
+describe("Aspect forumuri: imaginile și stilurile noi ale nucleului", () => {
+  const IMAGE: GcsForumExtField[] = [
+    { key: "icon", type: "image", labelKey: "x", maxKb: 512, maxSide: 256, style: { var: "--gcs-forum-icon-image" } },
+    { key: "bg", type: "image", labelKey: "x", maxKb: 2048, maxSide: 1600, style: { var: "--gcs-forum-row-image" } },
+  ];
+
+  test("câmpul imagine: id-ul fișierului sau gol; altceva e refuzat; stilul devine url(/files/<id>)", () => {
+    expect(validateExtensionValues(IMAGE, { icon: " abc_123 ", bg: "" })).toEqual({ ok: true, values: { icon: "abc_123", bg: "" } });
+    expect(validateExtensionValues(IMAGE, { icon: "../x", bg: 'x")' })).toEqual({ ok: false, errors: { icon: "invalid_image", bg: "invalid_image" } });
+    const style = fieldsStyle(IMAGE, withExtensionDefaults(IMAGE, { icon: "abc_123" }));
+    expect(style).toEqual({ classes: [], vars: { "--gcs-forum-icon-image": 'url("/files/abc_123")' } });
+    expect(sanitizeSlotStyle(style)).toEqual(style);
+  });
+
+  test("variabilele și clasele noi trec de curățare; gradientul titlului doar ca gradient simplu", () => {
+    const style = sanitizeSlotStyle({
+      classes: ["gcs-forumRow--iconImage", "gcs-forumRow--titleGradient", "gcs-forumRow--imageRight", "gcs-forumRow--accentBar", "gcs-forumRow--imageDesktop", "gcs-category--titleGradient", "gcs-category--imageRight"],
+      vars: {
+        "--gcs-forum-title-fill": "linear-gradient(90deg, #FF6A3D, #FFD36A)",
+        "--gcs-forum-accent": "#FF8A3D",
+        "--gcs-forum-row-image-light": 'url("/files/light1")',
+        "--gcs-forum-icon-image-unread": 'url("/files/un1")',
+        "--gcs-forum-title-color": "linear-gradient(90deg, red, blue)",
+      },
+    });
+    expect(style.classes).toHaveLength(7);
+    expect(Object.keys(style.vars)).toEqual(["--gcs-forum-title-fill", "--gcs-forum-accent", "--gcs-forum-row-image-light", "--gcs-forum-icon-image-unread"]);
+  });
+
+  test("insignele subforumurilor: slotul „forum.row.sub” acceptă pastile (și HTML-ul pluginurilor)", () => {
+    expect(sanitizeSlotItems("forum.row.sub", [{ kind: "chip", label: "ON", tone: "ok" }, { kind: "text", text: "nu" }])).toEqual([{ kind: "chip", label: "ON", tone: "ok" }]);
+  });
+
+  test("înregistrarea: limitele imaginii trebuie să fie rezonabile", () => {
+    const tab = (f: GcsForumExtField) => ({ key: "x", tabs: [{ key: "t", labelKey: "t", icon: "fa-solid fa-t", fields: [f] }] });
+    expect(() => assertForumExtension(tab({ key: "i", type: "image", labelKey: "i", maxKb: 0, maxSide: 256 }))).toThrow(/limite/);
+    expect(() => assertForumExtension(tab(IMAGE[0]!))).not.toThrow();
+  });
+});
+
 describe("înregistrarea extensiilor", () => {
   test("declarații greșite sunt refuzate (cheie, câmpuri repetate, interval, stil nepermis)", () => {
     expect(() => assertForumExtension({ key: "Bad Key" })).toThrow(/cheie/);

@@ -139,7 +139,8 @@ function forumTabFields(fields: GcsPluginForumTabField[], texts: GcsPluginTexts)
         return {
           ...base,
           type: "select",
-          options: f.options.map((o) => ({ value: o.value, labelKey: texts.labelKey(o.label) })),
+          ...(f.options ? { options: f.options.map((o) => ({ value: o.value, labelKey: texts.labelKey(o.label) })) } : {}),
+          ...(f.optionsFrom ? { optionsFrom: f.optionsFrom } : {}),
           ...(f.default !== undefined ? { default: f.default } : {}),
           ...(f.css ? { style: { ...(f.css.class ? { class: f.css.class } : {}), ...(f.css.var ? { var: f.css.var } : {}) } } : {}),
         };
@@ -147,6 +148,8 @@ function forumTabFields(fields: GcsPluginForumTabField[], texts: GcsPluginTexts)
         return { ...base, type: "color", ...(f.default !== undefined ? { default: f.default.toUpperCase() } : {}), ...(f.css ? { style: { var: f.css.var } } : {}) };
       case "icon":
         return { ...base, type: "icon", ...(f.default !== undefined ? { default: f.default } : {}) };
+      case "image":
+        return { ...base, type: "image", maxKb: f.maxKb, maxSide: f.maxSide, animated: f.animated, ...(f.css ? { style: { var: f.css.var } } : {}) };
     }
   });
 }

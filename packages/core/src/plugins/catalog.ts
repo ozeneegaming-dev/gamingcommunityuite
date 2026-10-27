@@ -4,7 +4,7 @@
  */
 
 /** Versiunea platformei pentru `minGcs` (se actualizează la fiecare etapă care schimbă API-ul pluginurilor). */
-export const GCS_PLATFORM_VERSION = "0.10.0";
+export const GCS_PLATFORM_VERSION = "0.11.0";
 
 export const PLUGIN_CAPABILITIES = [
   "db",

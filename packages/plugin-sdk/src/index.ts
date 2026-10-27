@@ -410,6 +410,10 @@ export type GcsPluginForumNode = {
   name: string;
   slug: string;
   data: Record<string, GcsPluginJson>;
+  /** GCS ≥ 0.11.0: nodul părinte, cu valorile lui (moștenirea, ex. fundalul forumului pentru subforumuri). */
+  parent?: { id: number; type: GcsPluginForumNode["type"]; data: Record<string, GcsPluginJson> } | null;
+  /** GCS ≥ 0.11.0: subforumurile din lista rândului, cu valorile lor (insignele, `subs`). */
+  children?: { id: number; type: GcsPluginForumNode["type"]; name: string; slug: string; data: Record<string, GcsPluginJson> }[];
 };
 /** Datele punctului `forum.list` (GCS ≥ 0.9.0): toate nodurile listei, o dată pe pagină. */
 export type GcsPluginForumListInput = { surface: "index" | "forum"; nodes: GcsPluginForumNode[] };
@@ -423,6 +427,8 @@ export type GcsPluginForumListSlots = {
   title?: GcsPluginHtml;
   meta?: GcsPluginHtml;
   header?: GcsPluginHtml;
+  /** GCS ≥ 0.11.0: HTML lângă subforumurile din lista rândului, după id-ul subforumului (ex. insigna ON / OFF / NOU). */
+  subs?: Record<string, GcsPluginHtml>;
   style?: { classes?: string[]; vars?: Record<string, string> };
 };
 export type GcsPluginForumListResult = Record<string, GcsPluginForumListSlots>;

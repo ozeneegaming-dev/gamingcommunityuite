@@ -8,6 +8,7 @@ import {
   GcsAcpRoleService,
   GcsAcpSearch,
   GcsActorResolver,
+  DECOR_CONTENT_TYPE,
   GcsAttachmentService,
   GcsBanService,
   GcsCache,
@@ -498,6 +499,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   attachments.registerAccess("theme.logo", async () => true);
   attachments.registerAccess("theme.favicon", async () => true);
   attachments.registerAccess("theme.header", async () => true);
+  // Aspect forumuri: iconițele și fundalurile forumurilor și ale widget-urilor sunt publice.
+  attachments.registerAccess(DECOR_CONTENT_TYPE, async () => true);
   // Forum v2: paginile („Pagină / Anunț”) și regulile forumurilor se scriu cu editorul postărilor, cu blocurile staff-ului.
   const forums = new GcsForumService({ db, bus, permissions, acp, registry, render: (content, actor) => posting.render(content, { actor, blocks: true }) });
   const readMarkers = new GcsReadMarkerService({ db, settings });

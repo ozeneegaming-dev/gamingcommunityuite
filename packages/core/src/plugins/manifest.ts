@@ -103,13 +103,26 @@ const forumTabField = z.discriminatedUnion("type", [
     key: localKey,
     label,
     hint,
-    options: z.array(z.strictObject({ value: z.string().regex(/^[a-z0-9][a-z0-9-]{0,30}$/, "invalid_key"), label })).min(1).max(30),
+    options: z.array(z.strictObject({ value: z.string().regex(/^[a-z0-9][a-z0-9-]{0,30}$/, "invalid_key"), label })).min(1).max(30).optional(),
+    /** Opțiunile din site în locul celor fixe: grupurile, forumurile sau serverele de joc (aplicația Servere). */
+    optionsFrom: z.enum(["groups", "forums", "servers"]).optional(),
     default: z.string().max(31).optional(),
     // La `select`, `class` e un prefix: clasa pusă e prefixul + valoarea aleasă (ex. `gcsp-style-` + `glow`).
     css: z.strictObject({ class: pluginCssClass.optional(), var: forumCssVar.optional() }).optional(),
   }),
   z.strictObject({ type: z.literal("color"), key: localKey, label, hint, default: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "invalid_color").optional(), css: z.strictObject({ var: forumCssVar }).optional() }),
   z.strictObject({ type: z.literal("icon"), key: localKey, label, hint, default: icon.optional() }),
+  // O imagine încărcată în stocarea platformei (recodată în WebP; SVG curățat); `css.var` primește `url("/files/<id>")`.
+  z.strictObject({
+    type: z.literal("image"),
+    key: localKey,
+    label,
+    hint,
+    maxKb: z.number().int().min(16).max(4096).default(512),
+    maxSide: z.number().int().min(16).max(4096).default(1600),
+    animated: z.boolean().default(false),
+    css: z.strictObject({ var: forumCssVar }).optional(),
+  }),
 ]);
 export type GcsPluginForumTabField = z.infer<typeof forumTabField>;
 
@@ -346,7 +359,8 @@ function crossCheck(m: GcsPluginManifest): GcsPluginManifestIssue[] {
         if (f.min > f.max) issues.push({ path: `forumTabs.${tab.key}.${f.key}`, code: "invalid_range" });
         if (f.default !== undefined && (f.default < f.min || f.default > f.max)) issues.push({ path: `forumTabs.${tab.key}.${f.key}.default`, code: "out_of_range" });
       }
-      if (f.type === "select" && f.default !== undefined && !f.options.some((o) => o.value === f.default)) issues.push({ path: `forumTabs.${tab.key}.${f.key}.default`, code: "invalid_choice" });
+      if (f.type === "select" && !f.options === !f.optionsFrom) issues.push({ path: `forumTabs.${tab.key}.${f.key}.options`, code: f.options ? "not_allowed" : "required" });
+      if (f.type === "select" && f.options && f.default !== undefined && !f.options.some((o) => o.value === f.default)) issues.push({ path: `forumTabs.${tab.key}.${f.key}.default`, code: "invalid_choice" });
     }
   }
 
