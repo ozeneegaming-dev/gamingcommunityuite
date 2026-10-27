@@ -1,6 +1,7 @@
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createWorld, type GcsTestWorld } from "../../test/world";
 import { GcsForbidden, GcsValidationError } from "../errors";
+import { isLocalIp } from "./bans";
 
 let w: GcsTestWorld;
 
@@ -110,6 +111,11 @@ describe("token revocat la ban", () => {
 });
 
 describe("banurile pe intervale IP și pe domenii de email (antispam)", () => {
+  test("isLocalIp: adresele locale / private nu se banează automat; cele publice da", () => {
+    for (const ip of ["127.0.0.1", "10.2.3.4", "172.20.0.1", "192.168.0.133", "169.254.1.1", "::1", "fd00::1", "fe80::1", "::ffff:127.0.0.1", "nu-e-ip"]) expect(isLocalIp(ip), ip).toBe(true);
+    for (const ip of ["203.0.113.77", "100.72.0.9", "8.8.8.8", "2001:db8::1", "172.32.0.1"]) expect(isLocalIp(ip), ip).toBe(false);
+  });
+
   test("un interval CIDR (IPv4 și IPv6) prinde adresele din el, nu și pe cele din afară; ridicat → liber imediat", async () => {
     const root = await rootActor();
     const ban = await w.bans.ban({ type: "IP", value: "203.0.113.0/24", reason: "rețea de spam" }, root);

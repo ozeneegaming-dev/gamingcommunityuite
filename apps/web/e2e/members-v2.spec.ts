@@ -187,12 +187,13 @@ test("fișa membrului: taburile, acțiunile contului, cardul clanului apare și 
     });
 
     await test.step("„Marchează spammer” cu confirmarea din pagină, apoi jurnalul contului", async () => {
-      await page.getByTestId("gcs-member-danger").getByRole("button", { name: "Marchează spammer" }).click();
+      await page.getByTestId("gcs-member-spammer").locator("summary").click();
+      await page.getByTestId("gcs-member-spammer").getByRole("button", { name: "Marchează ca spammer" }).click();
       await page.getByTestId("gcs-confirm-ok").click();
       await expect(page.getByTestId("gcs-member-identity")).toContainText("Spammer");
       expect((await sql<{ isSpammer: boolean }>(`SELECT "isSpammer" FROM users WHERE id = $1`, [member]))[0]!.isSpammer).toBe(true);
       await page.getByTestId("gcs-member-tab-log").click();
-      await expect(page.getByTestId("gcs-member-log").locator('[data-action="member.spammer"]')).toBeVisible();
+      await expect(page.getByTestId("gcs-member-log").locator('[data-action="user.mark_spammer"]')).toBeVisible();
     });
 
     await test.step("exportul GDPR: o arhivă ZIP cu datele, intrată în jurnal", async () => {

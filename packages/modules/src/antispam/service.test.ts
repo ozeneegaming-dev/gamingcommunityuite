@@ -161,7 +161,9 @@ describe("„Marchează ca spammer”", () => {
 
     // Furnizorii mari de email nu se banează ca domeniu.
     const other = await w.createUser("Altul", "member");
-    await w.db.user.update({ where: { id: other.id }, data: { email: "cineva@gmail.com" } });
+    await w.db.user.update({ where: { id: other.id }, data: { email: "cineva@gmail.com", registrationIp: "127.0.0.1" } });
+    // Nici IP-urile locale / private (un proxy greșit ar bloca tot site-ul).
+    await w.db.session.create({ data: { id: "spam-sess", token: "spam-sess", userId: other.id, ipAddress: "192.168.1.5", expiresAt: new Date(Date.now() + 86_400_000) } });
     await expect(w.antispam.markSpammer(w.root, other.id, { banIp: true, banEmailDomain: true, hideContent: false, report: false })).resolves.toMatchObject({ domain: null, ips: [] });
 
   });

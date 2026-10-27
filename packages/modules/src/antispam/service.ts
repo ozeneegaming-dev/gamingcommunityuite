@@ -9,6 +9,7 @@ import {
   GcsNotFound,
   GcsRateLimited,
   GcsValidationError,
+  isLocalIp,
   normalizeAnswer,
   normalizeHost,
   parseDomainList,
@@ -427,7 +428,7 @@ export class GcsAntispamService {
     const ips: string[] = [];
     if (opts.banIp) {
       const sessions = await db.session.findMany({ where: { userId }, select: { ipAddress: true }, orderBy: { createdAt: "desc" }, take: 20 });
-      const candidates = [user.registrationIp, ...sessions.map((s) => s.ipAddress)].filter((ip): ip is string => !!ip && ip !== "0.0.0.0");
+      const candidates = [user.registrationIp, ...sessions.map((s) => s.ipAddress)].filter((ip): ip is string => !!ip && !isLocalIp(ip) && ip !== actor.ip);
       for (const ip of [...new Set(candidates)].slice(0, 5)) {
         if (await bans.activeFor({ ip })) continue;
         await bans.applyBan({ type: "IP", value: ip, reason, expiresAt: new Date(Date.now() + 90 * 86_400_000) }, actor);

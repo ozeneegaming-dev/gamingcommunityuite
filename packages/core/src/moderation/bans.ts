@@ -33,6 +33,15 @@ export function parseCidr(value: string): { address: string; prefix: number; fam
   return null;
 }
 
+/** Adresele care nu se banează automat: locale, private, link-local (un proxy greșit ar bloca tot site-ul). */
+const LOCAL_RANGES = ["127.0.0.0/8", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "169.254.0.0/16", "0.0.0.0/8", "::1/128", "::/128", "fc00::/7", "fe80::/10"];
+
+/** Dacă IP-ul e local / privat (vezi `LOCAL_RANGES`); un text care nu e IP contează ca local. */
+export function isLocalIp(ip: string): boolean {
+  if (isIP(ip) === 0) return true;
+  return LOCAL_RANGES.some((r) => ipInRange(ip, r));
+}
+
 /** Domeniul unui email (`ana@Mail.ro` → `mail.ro`), pentru banurile pe domeniu (`@mail.ro`). */
 export function emailDomain(email: string): string | null {
   const at = email.lastIndexOf("@");
