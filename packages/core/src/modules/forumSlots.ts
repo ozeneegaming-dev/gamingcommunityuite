@@ -603,6 +603,21 @@ export function validateExtensionValues(
   return Object.keys(errors).length > 0 ? { ok: false, errors } : { ok: true, values };
 }
 
+/**
+ * Previzualizarea live (Aspect forumuri): valorile încă nesalvate ale unui tab, peste cele salvate, câmp cu câmp; o
+ * valoare greșită (sau un select cu opțiuni din site) păstrează valoarea salvată. Nimic nu se scrie în bază.
+ */
+export function applyExtensionDraft(fields: readonly GcsForumExtField[], saved: Record<string, unknown> | null | undefined, draft: Record<string, unknown>): Record<string, unknown> {
+  const out = withExtensionDefaults(fields, saved);
+  for (const f of fields) {
+    // Un comutator nebifat lipsește din formular: în schiță, lipsa înseamnă „oprit”.
+    if (!(f.key in draft) && f.type !== "toggle") continue;
+    const result = validateExtensionValues([f], draft);
+    if (result.ok) out[f.key] = result.values[f.key];
+  }
+  return out;
+}
+
 /** Valorile salvate, completate cu cele implicite pentru câmpurile lipsă (ex. un câmp adăugat într-o versiune nouă). */
 export function withExtensionDefaults(fields: readonly GcsForumExtField[], data: Record<string, unknown> | null | undefined): Record<string, unknown> {
   const out: Record<string, unknown> = { ...(data ?? {}) };

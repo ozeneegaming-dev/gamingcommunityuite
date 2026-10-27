@@ -386,7 +386,9 @@
       "wrong_password": "The password is not correct.",
       "unknown_member": "A name doesn't belong to any member.",
       "invalid_icon": "The icon isn't valid.",
-      "disabled": "This option is off in this forum."
+      "disabled": "This option is off in this forum.",
+      "invalid_gradient": "Invalid gradient",
+      "invalid_svg": "The SVG isn't valid or can't be cleaned."
     }
   },
   "acp": {
@@ -4709,6 +4711,38 @@
         "title": "Keeping IPs (GDPR)",
         "body": "After the chosen number of days, IPs in posts, private messages, statuses, logs, devices, sessions and accounts are erased daily. IP bans stay. 0 = keep them.",
         "days": "Days (0 = keep)"
+      }
+    },
+    "aspect": {
+      "image": {
+        "upload": "Upload",
+        "replace": "Replace",
+        "remove": "Remove",
+        "uploading": "Uploading…",
+        "preview": "Uploaded image",
+        "hint": "PNG, WebP, GIF or SVG (checked automatically), up to {kb} KB; stored as WebP of at most {px} px."
+      },
+      "gradient": {
+        "from": "Start colour",
+        "to": "End colour",
+        "angle": "Angle",
+        "none": "No gradient"
+      },
+      "preview": {
+        "title": "Live preview",
+        "dark": "Dark theme",
+        "light": "Light theme",
+        "unread": "With new posts",
+        "hint": "The preview updates as you edit. Nothing shows on the site until you press “Save”."
+      },
+      "widget": {
+        "title": "Widget look",
+        "heading": "Look: {name}",
+        "back": "Widgets",
+        "none": "No plugin or app adds look options for widgets.",
+        "save": "Save",
+        "listLabel": "Widgets on this page",
+        "edit": "Look"
       }
     }
   },

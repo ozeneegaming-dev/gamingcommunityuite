@@ -1,4 +1,5 @@
 import {
+  applyExtensionDraft,
   extensionFields,
   fieldsListSlots,
   fieldsStyle,
@@ -63,6 +64,8 @@ export type GcsForumTabView = { extension: string; module: string; plugin: strin
 export type GcsForumSlotOptions = {
   /** `false` în modul sigur (pluginurile nu rulează). */
   plugins: boolean;
+  /** Previzualizarea live din ACP: valorile nesalvate ale unei extensii pe un nod (nimic nu se scrie). */
+  draft?: { extension: string; forumId: number; values: Record<string, unknown> };
 };
 
 type ActiveExtension = { module: string; def: GcsForumExtension };
@@ -168,7 +171,7 @@ export class GcsForumSlotService {
     if (refs.length === 0) return out;
     const active = await this.active(opts);
     if (active.length === 0) return out;
-    const data = await this.extensionData();
+    const data = this.withDraft(await this.extensionData(), active, opts.draft);
     const ctx = this.ctx(actor, locale, surface);
 
     const contributions = await Promise.all(
@@ -229,6 +232,13 @@ export class GcsForumSlotService {
       if (bundle.title.length || bundle.meta.length || bundle.header.length || Object.keys(bundle.subs).length || bundle.style.classes.length || Object.keys(bundle.style.vars).length) out.set(ref.id, bundle);
     }
     return out;
+  }
+
+  /** Valorile salvate, cu schița previzualizării peste cele ale nodului ei (o copie; cache-ul rămâne neatins). */
+  private withDraft(data: ExtData, active: ActiveExtension[], draft: GcsForumSlotOptions["draft"]): ExtData {
+    const ext = draft ? active.find((e) => e.def.key === draft.extension)?.def : undefined;
+    if (!draft || !ext) return data;
+    return { ...data, [ext.key]: { ...(data[ext.key] ?? {}), [draft.forumId]: applyExtensionDraft(extensionFields(ext), data[ext.key]?.[draft.forumId], draft.values) } };
   }
 
   /** Cardurile de sus ale paginii unui forum (`forum.page.top`). */

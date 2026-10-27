@@ -15,7 +15,7 @@ import { GcsViewToggle } from "./GcsViewToggle";
 export function indexSlotNodes(categories: GcsIndexCategory[]): GcsSlotNodeRef[] {
   return categories.flatMap((c) => [
     { id: c.id, type: "CATEGORY" as const, parentId: null, name: c.name, slug: c.slug },
-    ...c.forums.map((f) => ({ id: f.id, type: f.type, parentId: c.id, name: f.name, slug: f.slug })),
+    ...c.forums.map((f) => ({ id: f.id, type: f.type, parentId: c.id, name: f.name, slug: f.slug, children: f.subforums.map((s) => ({ id: s.id, type: "FORUM" as const, name: s.name, slug: s.slug })) })),
   ]);
 }
 

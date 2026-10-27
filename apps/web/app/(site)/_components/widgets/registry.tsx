@@ -24,6 +24,8 @@ import { GcsGuestCta } from "../GcsGuestCta";
 import { GcsRecentBadges } from "./GcsRecentBadges";
 import { recentBadges, recentBadgesQuery } from "@/lib/recent-badges";
 import { GcsWidgetTitle, widgetIcon } from "./GcsWidgetTitle";
+import { GcsSlot, GcsSlotStyles, slotRootProps } from "@/lib/forum-slots";
+import { widgetDecor } from "@/lib/widget-decor";
 import { GcsMemberLink } from "@/lib/member-names";
 import { GcsRankingPanel } from "../cockpit/GcsRankingPanel";
 import { GcsDonationGoal } from "../donations/GcsDonationGoal";
@@ -50,9 +52,12 @@ async function GcsWidgetCard({ id, type, config, title, extra, children, testId 
     extra,
   });
   if (custom) return custom;
+  // Aspect forumuri: stilul benzii de titlu (imagine, voal, titlu colorat, iconiță) și eticheta, din extensiile active.
+  const decor = await widgetDecor(config);
   return (
-    <section className="gcs-card gcs-sideCard gcs-widget" aria-labelledby={headingId} data-widget={type} data-testid={testId}>
-      <GcsWidgetTitle id={headingId} icon={widgetIcon(type, config)} extra={extra}>
+    <section {...slotRootProps(decor.style, { className: "gcs-card gcs-sideCard gcs-widget" })} aria-labelledby={headingId} data-widget={type} data-testid={testId}>
+      <GcsSlotStyles plugins={decor.plugins} />
+      <GcsWidgetTitle id={headingId} icon={widgetIcon(type, config)} extra={extra} chips={<GcsSlot slot="widget.title" items={decor.title} as="span" />}>
         {title}
       </GcsWidgetTitle>
       {/* Săgeata de restrângere stă în bandă (poziționată din CSS), în afara titlului. */}

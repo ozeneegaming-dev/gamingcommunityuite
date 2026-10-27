@@ -1,5 +1,5 @@
 import { jsonInts } from "@gcs/db";
-import type { GcsForumExtField } from "@gcs/core";
+import { DEFAULT_THEME_TOGGLE } from "@gcs/core";
 import { allowedBlocks, FORUMS_ACP_SECTION, GCS_TOPIC_SORTS, type GcsForumTabView } from "@gcs/modules";
 import { GcsCard } from "@gcs/ui";
 import type { JSONContent } from "@tiptap/core";
@@ -7,7 +7,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
-import type { ReactNode } from "react";
 import { requireAcpSection } from "@/lib/acp";
 import { forumExtOptions } from "@/lib/forum-ext-options";
 import { FORUM_TAB_COMPONENTS } from "@/lib/forum-slot-components";
@@ -20,6 +19,8 @@ import { GcsActionForm } from "../../../_components/GcsActionForm";
 import { deleteForum, resetForumRatings, saveForumExtensionTab, saveForumOptions, saveForumPage, setForumPrefixes, updateForum } from "../actions";
 import { GcsAcpTitle } from "../../../_components/GcsAcpTitle";
 import { GcsAcpDocInput } from "./GcsAcpDocInput";
+import { GcsAspectPreview } from "../../../_components/GcsAspectPreview";
+import { GcsExtFields } from "../../../_components/GcsExtFields";
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string }> };
 
@@ -374,15 +375,23 @@ export default async function AcpForumPage({ params, searchParams }: Props) {
       pluginHtml = await host.renderForumEditTab(view.plugin, view.tab.key, { forumId: f.id, data: view.values, actor: panel.actor, locale: await getLocale() });
     }
     const options = await forumExtOptions(fields);
+    const ta = await getTranslations("acp.aspect");
     return (
-      <GcsCard as="section" aria-label={label(tAll, view.tab.labelKey)} style={{ padding: 16, maxWidth: 760 }} data-testid={`gcs-forum-ext-${view.extension}-${view.tab.key}`}>
+      <GcsCard as="section" aria-label={label(tAll, view.tab.labelKey)} style={{ padding: 16, maxWidth: 760 }} data-testid={`gcs-forum-ext-${view.extension}-${view.tab.key}`} data-aspect-card="">
         {view.tab.descriptionKey && <p className="gcs-muted" style={{ marginTop: 0 }}>{label(tAll, view.tab.descriptionKey)}</p>}
         {fields.length > 0 && (
           <GcsActionForm action={saveForumExtensionTab.bind(null, f.id, view.extension, view.tab.key)} submitLabel={t("form.save")} submitKind="save">
-            {fields.map((field) => (
-              <ExtField key={field.key} field={field} value={view.values[field.key]} options={options[field.key] ?? []} />
-            ))}
+            <GcsExtFields fields={fields} values={view.values} options={options} upload={{ scope: "forum", id: f.id, extension: view.extension, tab: view.tab.key }} />
           </GcsActionForm>
+        )}
+        {/* Aspect forumuri: previzualizarea live cu valorile încă nesalvate (câmpuri care schimbă stilul rândului). */}
+        {fields.some((x) => ("style" in x && x.style) || ((x.type === "text" || x.type === "textarea") && x.slot)) && (
+          <GcsAspectPreview
+            base={`/aspect-preview?scope=forum&id=${f.id}&ext=${encodeURIComponent(view.extension)}&tab=${encodeURIComponent(view.tab.key)}`}
+            themes={{ dark: DEFAULT_THEME_TOGGLE.dark, light: DEFAULT_THEME_TOGGLE.light }}
+            labels={{ title: ta("preview.title"), dark: ta("preview.dark"), light: ta("preview.light"), unread: ta("preview.unread"), hint: ta("preview.hint") }}
+            unreadToggle={forum!.type !== "CATEGORY"}
+          />
         )}
         {Component && <Component forumId={f.id} extension={view.extension} tab={view.tab.key} values={view.values} />}
         {pluginHtml && (
@@ -396,78 +405,5 @@ export default async function AcpForumPage({ params, searchParams }: Props) {
         )}
       </GcsCard>
     );
-  }
-
-  function ExtField({ field, value, options }: { field: GcsForumExtField; value: unknown; options: { value: string; label: string }[] }): ReactNode {
-    const id = `gcs-ext-${field.key}`;
-    const hint = field.hintKey ? <span className="gcs-muted gcs-acpHint">{label(tAll, field.hintKey)}</span> : null;
-    const name = label(tAll, field.labelKey);
-    switch (field.type) {
-      case "toggle":
-        return (
-          <label className="gcs-check">
-            <input type="checkbox" name={field.key} defaultChecked={value === true} data-testid={id} />
-            {name}
-            {hint}
-          </label>
-        );
-      case "textarea":
-        return (
-          <label className="gcs-field" htmlFor={id}>
-            {name}
-            <textarea id={id} className="gcs-input" name={field.key} maxLength={field.maxLength} rows={3} defaultValue={typeof value === "string" ? value : ""} />
-            {hint}
-          </label>
-        );
-      case "number":
-        return (
-          <label className="gcs-field" htmlFor={id}>
-            {name}
-            <input id={id} className="gcs-input" type="number" name={field.key} min={field.min} max={field.max} step={field.step ?? 1} defaultValue={typeof value === "number" ? value : field.min} />
-            {hint}
-          </label>
-        );
-      case "select": {
-        const list = field.options ? field.options.map((o) => ({ value: o.value, label: label(tAll, o.labelKey) })) : options;
-        return (
-          <label className="gcs-field" htmlFor={id}>
-            {name}
-            <select id={id} className="gcs-input" name={field.key} defaultValue={typeof value === "string" ? value : ""}>
-              {!field.options && <option value="">—</option>}
-              {list.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-            {hint}
-          </label>
-        );
-      }
-      case "color":
-        return (
-          <label className="gcs-field" htmlFor={id}>
-            {name}
-            <input id={id} className="gcs-input" name={field.key} defaultValue={typeof value === "string" ? value : ""} placeholder="#RRGGBB" pattern="#[0-9A-Fa-f]{6}" maxLength={7} />
-            {hint}
-          </label>
-        );
-      case "icon":
-        return (
-          <div className="gcs-field" role="group" aria-label={name}>
-            <span>{name}</span>
-            <GcsIconPicker name={field.key} value={typeof value === "string" && value ? value : null} searchUrl="/api/icons/search" labels={{ search: t("form.iconSearch"), none: t("form.iconNone"), noResults: t("form.iconNoResults") }} />
-            {hint}
-          </div>
-        );
-      default:
-        return (
-          <label className="gcs-field" htmlFor={id}>
-            {name}
-            <input id={id} className="gcs-input" name={field.key} maxLength={field.maxLength} defaultValue={typeof value === "string" ? value : ""} data-testid={id} />
-            {hint}
-          </label>
-        );
-    }
   }
 }

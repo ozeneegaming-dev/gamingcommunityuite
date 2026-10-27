@@ -208,6 +208,216 @@
 .gcs-forumRow--muted {
   opacity: 0.72;
 }
+
+/*
+ * ─── Aspect forumuri (variabilele / modificatorii din GCS_FORUM_STYLE_VARS / _CLASSES, în orice temă) ─────────────
+ * Iconița ca imagine, titlul în gradient, bara de accent, fundalul „Doar în dreapta”, imaginea pentru temele deschise,
+ * eticheta deasupra titlului, insignele subforumurilor și aceleași opțiuni pe banda de titlu a widget-urilor.
+ */
+.gcs-forumRow--accentBar,
+.gcs-forumRow:has(.gcs-slotChip--above) {
+  position: relative;
+}
+/* Bara de accent: în rândurile continue, pe toată înălțimea, cu strălucire; în „Carduri separate” rămâne bara mică. */
+.gcs-forumRow--accentBar::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 14px;
+  bottom: 14px;
+  width: 4px;
+  border-radius: 0 3px 3px 0;
+  background: var(--gcs-forum-accent, var(--gcs-forum-color, var(--gcs-accent)));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--gcs-forum-accent, var(--gcs-accent)) 60%, transparent);
+  pointer-events: none;
+}
+:root[data-gcs-lists="cards"] .gcs-category__well > .gcs-forumRow--accentBar::before {
+  top: 50%;
+  bottom: auto;
+  left: -1px;
+  width: 3px;
+  height: 26px;
+  border-radius: 0 2px 2px 0;
+  box-shadow: none;
+  opacity: 0.9;
+  transform: translateY(-50%);
+}
+/* Iconița ca imagine (PNG / WebP / GIF / SVG recodat), în pătratul temei; „cu mesaje noi”: varianta ei sau conturul. */
+:root .gcs-root .gcs-forumRow.gcs-forumRow--iconImage .gcs-forumRow__icon {
+  background: var(--gcs-forum-icon-image) center / cover no-repeat !important;
+}
+.gcs-forumRow--iconImage .gcs-forumRow__icon > * {
+  visibility: hidden;
+}
+:root .gcs-root .gcs-forumRow.gcs-forumRow--iconImage[data-unread] .gcs-forumRow__icon {
+  background-image: var(--gcs-forum-icon-image-unread, var(--gcs-forum-icon-image)) !important;
+  outline: 2px solid var(--gcs-accent);
+  outline-offset: 3px;
+}
+.gcs-category--iconImage .gcs-category__icon,
+.gcs-widget--iconImage .gcs-widgetTitle__icon {
+  background: var(--gcs-forum-icon-image) center / cover no-repeat !important;
+}
+.gcs-category--iconImage .gcs-category__icon > *,
+.gcs-widget--iconImage .gcs-widgetTitle__icon > * {
+  visibility: hidden;
+}
+/* Titlul în gradient (prezența variabilei îl pornește); strălucirea trece pe `drop-shadow` (umbra textului l-ar acoperi). */
+.gcs-root .gcs-forumRow[style*="--gcs-forum-title-fill"] .gcs-forumRow__title > a,
+.gcs-root .gcs-category[style*="--gcs-forum-title-fill"] .gcs-category__title a,
+.gcs-root .gcs-widget[style*="--gcs-forum-title-fill"] .gcs-widgetTitle__text {
+  background-image: var(--gcs-forum-title-fill);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+.gcs-forumRow--titleGlow[style*="--gcs-forum-title-fill"] .gcs-forumRow__title > a,
+.gcs-category--titleGlow[style*="--gcs-forum-title-fill"] .gcs-category__title a,
+.gcs-widget--titleGlow[style*="--gcs-forum-title-fill"] .gcs-widgetTitle__text {
+  text-shadow: none;
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--gcs-forum-accent, var(--gcs-accent)) 55%, transparent));
+}
+.gcs-category--titleGlow .gcs-category__title a,
+.gcs-widget--titleGlow .gcs-widgetTitle__text {
+  text-shadow: 0 0 14px color-mix(in srgb, var(--gcs-forum-title-color, var(--gcs-forum-accent, var(--gcs-accent))) 55%, transparent);
+}
+.gcs-root .gcs-widget[style*="--gcs-forum-title-color"] .gcs-widgetTitle__text {
+  color: var(--gcs-forum-title-color);
+}
+/* Majuscule cu fontul condensat al temei. */
+.gcs-forumRow--titleCaps .gcs-forumRow__title > a,
+.gcs-category--titleCaps .gcs-category__title,
+.gcs-widget--titleCaps .gcs-widgetTitle__text {
+  font-family: var(--gcs-font-display, inherit);
+  font-stretch: condensed;
+}
+.gcs-widget--titleCaps .gcs-widgetTitle__text {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+/* Imaginea pentru temele deschise (lipsă: aceeași). */
+:root[data-theme="light"] .gcs-forumRow--image[style*="--gcs-forum-row-image-light"],
+:root[data-theme="light"] .gcs-category--image[style*="--gcs-forum-row-image-light"] .gcs-category__header,
+:root[data-theme="light"] .gcs-widget--image[style*="--gcs-forum-row-image-light"] > .gcs-widgetTitle {
+  background-image: var(--gcs-forum-row-image-light);
+}
+/* „Doar în dreapta”: imaginea ancorată în dreapta, voalul plin în stânga și tot mai subțire spre dreapta. */
+.gcs-forumRow--image-right,
+.gcs-category--image-right .gcs-category__header,
+.gcs-widget--image-right > .gcs-widgetTitle {
+  background-position: var(--gcs-forum-row-image-pos, 100% 50%);
+}
+.gcs-forumRow--image-right::after,
+.gcs-category--image-right .gcs-category__header::after,
+.gcs-widget--image-right > .gcs-widgetTitle::after {
+  opacity: 1;
+  background-color: var(--gcs-forum-veil-color, var(--gcs-surface));
+  -webkit-mask-image: linear-gradient(90deg, #000 0 40%, rgb(0 0 0 / var(--gcs-forum-row-veil, 0.8)) 64%, rgb(0 0 0 / calc(var(--gcs-forum-row-veil, 0.8) * 0.35)) 100%);
+  mask-image: linear-gradient(90deg, #000 0 40%, rgb(0 0 0 / var(--gcs-forum-row-veil, 0.8)) 64%, rgb(0 0 0 / calc(var(--gcs-forum-row-veil, 0.8) * 0.35)) 100%);
+}
+.gcs-forumRow--image-right:hover::after,
+.gcs-widget--image-right:hover > .gcs-widgetTitle::after {
+  opacity: 1;
+  -webkit-mask-image: linear-gradient(90deg, #000 0 36%, rgb(0 0 0 / var(--gcs-forum-row-veil-hover, 0.65)) 60%, rgb(0 0 0 / calc(var(--gcs-forum-row-veil-hover, 0.65) * 0.3)) 100%);
+  mask-image: linear-gradient(90deg, #000 0 36%, rgb(0 0 0 / var(--gcs-forum-row-veil-hover, 0.65)) 60%, rgb(0 0 0 / calc(var(--gcs-forum-row-veil-hover, 0.65) * 0.3)) 100%);
+}
+:root[data-gcs-lists="cards"] .gcs-category__well > .gcs-forumRow--image-right {
+  --gcs-forum-veil-color: var(--gcs-list-row-bg, var(--gcs-surface));
+}
+.gcs-category--image-right .gcs-category__header,
+.gcs-widget--image-right > .gcs-widgetTitle {
+  --gcs-forum-veil-color: var(--gcs-box-header-bg, var(--gcs-surface));
+}
+/* Fără imagine pe ecranele înguste (setarea forumului). */
+@media (max-width: 640px) {
+  .gcs-forumRow--imageDesktop {
+    background-image: none !important;
+  }
+  .gcs-forumRow--imageDesktop::after {
+    display: none;
+  }
+}
+/* Banda categoriei cu imagine: compactă (~64 px). */
+.gcs-category--image .gcs-category__header {
+  min-height: 64px;
+}
+/* Banda de titlu a widget-ului cu imagine, sub voal (aceleași variabile ca rândurile). */
+.gcs-widget--image > .gcs-widgetTitle {
+  position: relative;
+  isolation: isolate;
+  background-image: var(--gcs-forum-row-image, none);
+  background-size: cover;
+  background-position: var(--gcs-forum-row-image-pos, 50% 50%);
+}
+.gcs-widget--image > .gcs-widgetTitle::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--gcs-bg);
+  opacity: var(--gcs-forum-row-veil, 0.7);
+  transition: opacity var(--gcs-ease, 0.18s);
+  pointer-events: none;
+  border-radius: inherit;
+}
+.gcs-widget--image:hover > .gcs-widgetTitle::after {
+  opacity: var(--gcs-forum-row-veil-hover, var(--gcs-forum-row-veil, 0.6));
+}
+.gcs-widget--accentBar > .gcs-widgetTitle {
+  box-shadow: inset 4px 0 0 var(--gcs-forum-accent, var(--gcs-accent));
+}
+.gcs-widget:has(.gcs-slotChip--above) {
+  position: relative;
+  overflow: visible;
+}
+
+/* Eticheta deasupra titlului: peste chenarul de sus al rândului (sau al widget-ului), aliniată cu titlul. */
+.gcs-slotChip--above {
+  position: absolute;
+  z-index: 3;
+  top: -11px;
+  left: var(--gcs-forum-tag-left, 82px);
+  padding: 4px 9px 4px 7px;
+  border-radius: 4px;
+  border: 0;
+  background-color: var(--gcs-slot-color, var(--gcs-accent));
+  color: var(--gcs-on-accent, #fff);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.35);
+}
+.gcs-slotChip--above.gcs-slotTone--ok,
+.gcs-slotChip--above.gcs-slotTone--warn {
+  color: #10141c;
+}
+:root[data-gcs-lists="cards"] .gcs-category__well > .gcs-forumRow {
+  --gcs-forum-tag-left: 74px;
+}
+.gcs-forumIndex[data-view="grid"] .gcs-forumRow,
+.gcs-widget {
+  --gcs-forum-tag-left: 16px;
+}
+/* Insignele subforumurilor (ON / OFF / NOU), mici, lângă numele subforumului. */
+.gcs-forumSlot--forum-row-sub {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: 2px;
+}
+.gcs-forumSlot--forum-row-sub .gcs-slotChip {
+  padding: 1px 5px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+}
+.gcs-widgetTitle .gcs-forumSlot {
+  display: inline-flex;
+  margin-left: 2px;
+}
 .gcs-forumRow__pageHint {
   display: inline-flex;
   align-items: center;
@@ -1204,4 +1414,15 @@
 /* Subforumurile, pe o coloană în plăcuță (coloanele alese de admin sunt pentru vederea pe rânduri). */
 .gcs-forumIndex[data-view="grid"] .gcs-category .gcs-forumRow__subs {
   grid-template-columns: minmax(0, 1fr) !important;
+}
+
+/* Pagina previzualizării de aspect (în `iframe` din ACP): doar rândul / banda sau widget-ul, pe fundalul site-ului. */
+.gcs-aspectPreviewPage {
+  min-height: 100vh;
+  padding: 24px 16px;
+  box-sizing: border-box;
+  background-color: var(--gcs-bg);
+}
+.gcs-aspectPreviewPage__widget {
+  max-width: 360px;
 }

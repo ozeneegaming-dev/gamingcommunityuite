@@ -103,7 +103,7 @@ export default async function ForumPage({ params, searchParams }: Props) {
     forumPageSlots(node),
     forumListSlots(
       "forum",
-      data.subforums.map((f: Row) => ({ id: f.id, type: f.type, parentId: forum.id, name: f.name, slug: f.slug })),
+      data.subforums.map((f: Row) => ({ id: f.id, type: f.type, parentId: forum.id, parentType: forum.type, name: f.name, slug: f.slug, children: f.subforums.map((s) => ({ id: s.id, type: "FORUM" as const, name: s.name, slug: s.slug })) })),
     ),
     settings.get<number>("forums.popular_threshold"),
   ]);

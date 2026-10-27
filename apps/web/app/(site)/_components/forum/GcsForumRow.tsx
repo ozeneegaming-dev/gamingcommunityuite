@@ -38,7 +38,7 @@ export async function GcsForumRow({ forum, accent, slots }: { forum: Row; accent
 
   return (
     // `--gcs-forum-color`: bara mică din stânga, în aspectul „Carduri separate”.
-    <div {...slotRootProps(slots?.style, { className: "gcs-forumRow", style: base })} data-testid="gcs-forum-row" data-forum-type={forum.type}>
+    <div {...slotRootProps(slots?.style, { className: "gcs-forumRow", style: base })} data-testid="gcs-forum-row" data-forum-type={forum.type} data-forum-id={forum.id} {...(forum.unread ? { "data-unread": "" } : {})}>
       <span className="gcs-forumRow__icon" style={{ background: tint(color) }}>
         <GcsForumIcon icon={external ? "fa-solid fa-link" : page ? (forum.icon ?? PAGE_ICON) : forum.icon} color={color} />
       </span>
@@ -64,6 +64,7 @@ export async function GcsForumRow({ forum, accent, slots }: { forum: Row; accent
               <li key={s.id}>
                 <GcsForumIcon icon={s.icon ?? "fa-regular fa-comment"} color="var(--gcs-muted)" size={12} />
                 <Link href={forumHref(s)}>{s.name}</Link>
+                <GcsSlot slot="forum.row.sub" items={slots?.subs[s.id]} as="span" />
                 <span className="gcs-forumRow__subCount" title={t("topicsCount", { count: s.topicsCount })}>
                   {s.topicsCount}
                 </span>

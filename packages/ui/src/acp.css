@@ -2836,3 +2836,107 @@ input[type="checkbox"].gcs-switch:checked::before,
     flex-direction: column;
   }
 }
+
+/* ─── Aspect forumuri: câmpurile imagine și gradient, previzualizarea live, lista widget-urilor ─────────────────── */
+.gcs-extImage {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.gcs-extImage__preview {
+  width: 58px;
+  height: 58px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1px dashed var(--gcs-border);
+  background-color: var(--gcs-surface2);
+  color: var(--gcs-muted);
+  overflow: hidden;
+}
+.gcs-extImage__preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.gcs-extImage__tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.gcs-extGradient,
+.gcs-extGradient__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.gcs-extGradient {
+  flex-direction: column;
+  align-items: flex-start;
+}
+.gcs-extGradient__swatch {
+  width: 96px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--gcs-border);
+}
+.gcs-extGradient input[type="color"] {
+  width: 36px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--gcs-border);
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+}
+.gcs-extGradient__angle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+.gcs-extGradient__angle .gcs-input {
+  width: 80px;
+}
+.gcs-aspectPreview {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gcs-aspectPreview__bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.gcs-aspectPreview__frame {
+  width: 100%;
+  height: 300px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 8px;
+  background-color: var(--gcs-bg);
+}
+.gcs-acpWidgetList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gcs-acpWidgetList li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background-color: var(--gcs-surface2);
+}

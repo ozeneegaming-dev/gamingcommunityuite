@@ -92,6 +92,14 @@ export const PLUGIN_GCS_CLASSES = [
   "gcs-table__row",
   "gcs-rep--pos",
   "gcs-rep--neg",
+  // Forum v2 / Aspect forumuri: pastilele sistemului (insignele subforumurilor) în tonurile temei.
+  "gcs-slotChip",
+  "gcs-slotTone--accent",
+  "gcs-slotTone--neutral",
+  "gcs-slotTone--ok",
+  "gcs-slotTone--warn",
+  "gcs-slotTone--danger",
+  "gcs-slotTone--info",
 ];
 
 /**

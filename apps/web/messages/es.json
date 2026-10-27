@@ -386,7 +386,9 @@
       "wrong_password": "La contraseña no es correcta.",
       "unknown_member": "Un nombre no pertenece a ningún miembro.",
       "invalid_icon": "El icono no es válido.",
-      "disabled": "Esta opción está desactivada en este foro."
+      "disabled": "Esta opción está desactivada en este foro.",
+      "invalid_gradient": "Degradado no válido",
+      "invalid_svg": "El SVG no es válido o no se puede limpiar."
     }
   },
   "acp": {
@@ -4709,6 +4711,38 @@
         "title": "Conservación de IP (RGPD)",
         "body": "Tras el número de días elegido, las IP de publicaciones, mensajes privados, estados, registros, dispositivos, sesiones y cuentas se borran a diario. Los bloqueos por IP se mantienen. 0 = conservarlas.",
         "days": "Días (0 = conservar)"
+      }
+    },
+    "aspect": {
+      "image": {
+        "upload": "Subir",
+        "replace": "Reemplazar",
+        "remove": "Quitar",
+        "uploading": "Subiendo…",
+        "preview": "Imagen subida",
+        "hint": "PNG, WebP, GIF o SVG (revisado automáticamente), máximo {kb} KB; se guarda como WebP de como mucho {px} px."
+      },
+      "gradient": {
+        "from": "Color inicial",
+        "to": "Color final",
+        "angle": "Ángulo",
+        "none": "Sin degradado"
+      },
+      "preview": {
+        "title": "Vista previa en vivo",
+        "dark": "Tema oscuro",
+        "light": "Tema claro",
+        "unread": "Con mensajes nuevos",
+        "hint": "La vista previa cambia al instante. Nada aparece en el sitio hasta que pulses «Guardar»."
+      },
+      "widget": {
+        "title": "Aspecto del widget",
+        "heading": "Aspecto: {name}",
+        "back": "Widgets",
+        "none": "Ningún plugin o aplicación añade opciones de aspecto para widgets.",
+        "save": "Guardar",
+        "listLabel": "Widgets de la página",
+        "edit": "Aspecto"
       }
     }
   },

@@ -98,7 +98,8 @@ function renderItem(item: GcsSlotItem, t: Translate, key: string): ReactNode {
           <span>{label}</span>
         </>
       );
-      const className = `gcs-slotChip ${tone(item.tone)}${item.color ? " gcs-slotChip--custom" : ""}${item.href ? " gcs-slotChip--link gcs-sweep" : ""}`;
+      // `place: above`: eticheta stă deasupra titlului, peste chenarul de sus al rândului (CSS-ul sistemului).
+      const className = `gcs-slotChip ${tone(item.tone)}${item.color ? " gcs-slotChip--custom" : ""}${item.href ? " gcs-slotChip--link gcs-sweep" : ""}${item.place === "above" ? " gcs-slotChip--above" : ""}`;
       return item.href ? (
         <span key={key} {...id} className="gcs-slotChipWrap">
           <SlotLink href={item.href} className={className} tip={tip} style={style}>

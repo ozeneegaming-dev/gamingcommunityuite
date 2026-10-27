@@ -386,7 +386,9 @@
       "wrong_password": "Parola nu e corectă.",
       "unknown_member": "Un nume nu aparține niciunui membru.",
       "invalid_icon": "Iconița nu e validă.",
-      "disabled": "Opțiunea e oprită pe acest forum."
+      "disabled": "Opțiunea e oprită pe acest forum.",
+      "invalid_gradient": "Gradient invalid",
+      "invalid_svg": "SVG-ul nu e valid sau nu se poate curăța."
     }
   },
   "acp": {
@@ -4709,6 +4711,38 @@
         "title": "Păstrarea IP-urilor (GDPR)",
         "body": "După numărul de zile ales, IP-urile din postări, mesaje private, statusuri, jurnale, dispozitive, sesiuni și conturi se șterg zilnic. Banurile pe IP rămân. 0 = se păstrează.",
         "days": "Zile (0 = se păstrează)"
+      }
+    },
+    "aspect": {
+      "image": {
+        "upload": "Încarcă",
+        "replace": "Înlocuiește",
+        "remove": "Scoate",
+        "uploading": "Se încarcă…",
+        "preview": "Imaginea încărcată",
+        "hint": "PNG, WebP, GIF sau SVG (verificat automat), maxim {kb} KB; devine WebP de cel mult {px} px."
+      },
+      "gradient": {
+        "from": "Culoarea de început",
+        "to": "Culoarea de final",
+        "angle": "Unghi",
+        "none": "Fără gradient"
+      },
+      "preview": {
+        "title": "Previzualizare live",
+        "dark": "Temă închisă",
+        "light": "Temă deschisă",
+        "unread": "Cu mesaje noi",
+        "hint": "Previzualizarea se schimbă pe loc. Nimic nu apare pe site până nu apeși „Salvează”."
+      },
+      "widget": {
+        "title": "Aspectul widget-ului",
+        "heading": "Aspect: {name}",
+        "back": "Widget-uri",
+        "none": "Niciun plugin sau aplicație nu adaugă opțiuni de aspect pentru widget-uri.",
+        "save": "Salvează",
+        "listLabel": "Widget-urile paginii",
+        "edit": "Aspect"
       }
     }
   },

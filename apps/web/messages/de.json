@@ -386,7 +386,9 @@
       "wrong_password": "Das Passwort ist nicht korrekt.",
       "unknown_member": "Ein Name gehört zu keinem Mitglied.",
       "invalid_icon": "Das Symbol ist ungültig.",
-      "disabled": "Diese Option ist in diesem Forum aus."
+      "disabled": "Diese Option ist in diesem Forum aus.",
+      "invalid_gradient": "Ungültiger Verlauf",
+      "invalid_svg": "Das SVG ist ungültig oder lässt sich nicht bereinigen."
     }
   },
   "acp": {
@@ -4709,6 +4711,38 @@
         "title": "Aufbewahrung von IPs (DSGVO)",
         "body": "Nach der gewählten Anzahl von Tagen werden IPs in Beiträgen, privaten Nachrichten, Status, Protokollen, Geräten, Sitzungen und Konten täglich gelöscht. IP-Sperren bleiben. 0 = behalten.",
         "days": "Tage (0 = behalten)"
+      }
+    },
+    "aspect": {
+      "image": {
+        "upload": "Hochladen",
+        "replace": "Ersetzen",
+        "remove": "Entfernen",
+        "uploading": "Wird hochgeladen…",
+        "preview": "Hochgeladenes Bild",
+        "hint": "PNG, WebP, GIF oder SVG (automatisch geprüft), höchstens {kb} KB; wird als WebP mit höchstens {px} px gespeichert."
+      },
+      "gradient": {
+        "from": "Startfarbe",
+        "to": "Endfarbe",
+        "angle": "Winkel",
+        "none": "Kein Verlauf"
+      },
+      "preview": {
+        "title": "Live-Vorschau",
+        "dark": "Dunkles Design",
+        "light": "Helles Design",
+        "unread": "Mit neuen Beiträgen",
+        "hint": "Die Vorschau ändert sich sofort. Auf der Website erscheint nichts, bevor du „Speichern“ drückst."
+      },
+      "widget": {
+        "title": "Aussehen des Widgets",
+        "heading": "Aussehen: {name}",
+        "back": "Widgets",
+        "none": "Kein Plugin und keine App fügt Aussehen-Optionen für Widgets hinzu.",
+        "save": "Speichern",
+        "listLabel": "Widgets dieser Seite",
+        "edit": "Aussehen"
       }
     }
   },

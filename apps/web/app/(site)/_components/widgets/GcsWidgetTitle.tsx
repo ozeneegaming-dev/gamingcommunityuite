@@ -22,6 +22,8 @@ type GcsWidgetTitleProps = {
   className?: string;
   /** Conținut în dreapta titlului (ex. perioada „Top posteri”). */
   extra?: ReactNode;
+  /** Pastilele extensiilor lângă titlu (Aspect forumuri: eticheta, eventual deasupra benzii). */
+  chips?: ReactNode;
   /** `card` = titlul cardurilor (majuscule, mic); `hero` = titlul mare al anunțului. */
   variant?: "card" | "hero";
 };
@@ -30,7 +32,7 @@ type GcsWidgetTitleProps = {
  * Titlul comun al widget-urilor (componentă server): iconița Font Awesome într-un pătrat cu accent + textul.
  * Se poate trimite randat și componentelor client (ex. „Cine e online”), ca prop `ReactNode`.
  */
-export function GcsWidgetTitle({ id, icon, children, as: Tag = "h2", className, extra, variant = "card" }: GcsWidgetTitleProps) {
+export function GcsWidgetTitle({ id, icon, children, as: Tag = "h2", className, extra, chips, variant = "card" }: GcsWidgetTitleProps) {
   return (
     <Tag id={id} className={cx("gcs-display gcs-widgetTitle", variant === "card" ? "gcs-sideCard__title" : "gcs-widgetTitle--hero", className)}>
       {icon && isGcsIcon(icon) && (
@@ -39,6 +41,7 @@ export function GcsWidgetTitle({ id, icon, children, as: Tag = "h2", className, 
         </span>
       )}
       <span className="gcs-widgetTitle__text">{children}</span>
+      {chips}
       {extra && <span className="gcs-widgetTitle__extra">{extra}</span>}
     </Tag>
   );

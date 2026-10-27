@@ -386,7 +386,9 @@
       "wrong_password": "Le mot de passe n'est pas correct.",
       "unknown_member": "Un nom n'appartient à aucun membre.",
       "invalid_icon": "L'icône n'est pas valide.",
-      "disabled": "Cette option est désactivée sur ce forum."
+      "disabled": "Cette option est désactivée sur ce forum.",
+      "invalid_gradient": "Dégradé invalide",
+      "invalid_svg": "Le SVG n'est pas valide ou ne peut pas être nettoyé."
     }
   },
   "acp": {
@@ -4709,6 +4711,38 @@
         "title": "Conservation des IP (RGPD)",
         "body": "Après le nombre de jours choisi, les IP des messages, MP, statuts, journaux, appareils, sessions et comptes sont effacées chaque jour. Les bannissements d'IP restent. 0 = les conserver.",
         "days": "Jours (0 = conserver)"
+      }
+    },
+    "aspect": {
+      "image": {
+        "upload": "Téléverser",
+        "replace": "Remplacer",
+        "remove": "Retirer",
+        "uploading": "Téléversement…",
+        "preview": "Image téléversée",
+        "hint": "PNG, WebP, GIF ou SVG (vérifié automatiquement), {kb} Ko maximum ; enregistré en WebP de {px} px au plus."
+      },
+      "gradient": {
+        "from": "Couleur de départ",
+        "to": "Couleur de fin",
+        "angle": "Angle",
+        "none": "Sans dégradé"
+      },
+      "preview": {
+        "title": "Aperçu en direct",
+        "dark": "Thème sombre",
+        "light": "Thème clair",
+        "unread": "Avec nouveaux messages",
+        "hint": "L'aperçu se met à jour en direct. Rien n'apparaît sur le site avant d'appuyer sur « Enregistrer »."
+      },
+      "widget": {
+        "title": "Apparence du widget",
+        "heading": "Apparence : {name}",
+        "back": "Widgets",
+        "none": "Aucun plugin ni aucune application n'ajoute d'options d'apparence pour les widgets.",
+        "save": "Enregistrer",
+        "listLabel": "Widgets de la page",
+        "edit": "Apparence"
       }
     }
   },
