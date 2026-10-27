@@ -2,6 +2,7 @@ import { buildForumAspect } from "@gcs/plugin-sdk/forum-aspect";
 import { pluginRegistryKey, type GcsActor } from "@gcs/core";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { closePluginServices, createPluginServices, resetPluginWorld, TEST_SIGN } from "../../test/pluginWorld";
+import type { ForumType } from "@gcs/db";
 import type { GcsServices } from "../services";
 
 /**
@@ -39,7 +40,7 @@ async function tree() {
   return { category, forum, sub };
 }
 
-const ref = (f: { id: number; type: "CATEGORY" | "FORUM"; parentId: number | null; name: string; slug: string }) => ({ id: f.id, type: f.type, parentId: f.parentId, name: f.name, slug: f.slug });
+const ref = (f: { id: number; type: ForumType; parentId: number | null; name: string; slug: string }) => ({ id: f.id, type: f.type, parentId: f.parentId, name: f.name, slug: f.slug });
 
 describe("Aspect forumuri (pluginul instalat)", () => {
   test("taburile, stilul rândului, eticheta deasupra, moștenirea fundalului și insignele; oprit = implicit, pornit = înapoi", async () => {

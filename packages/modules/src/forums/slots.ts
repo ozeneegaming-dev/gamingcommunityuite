@@ -177,16 +177,17 @@ export class GcsForumSlotService {
     const contributions = await Promise.all(
       active.map(async ({ def }) => {
         const nodes = this.nodes(def, refs, data);
-        const fields = extensionFields(def);
         const dynamic = def.list ? await withTimeout(def.list(ctx, nodes), {} as Record<number, GcsForumListSlots>, def.key) : {};
-        return { def, nodes, fields, dynamic };
+        return { def, nodes, dynamic };
       }),
     );
 
     for (const ref of refs) {
       const bundle = empty();
       const styles: GcsSlotStyleResult[] = [];
-      for (const { def, nodes, fields, dynamic } of contributions) {
+      for (const { def, nodes, dynamic } of contributions) {
+        // Doar câmpurile taburilor care apar pe tipul nodului (ex. tabul categoriei nu stilizează rândurile de forum).
+        const fields = tabsForType(def, ref.type).flatMap((t) => t.fields ?? []);
         const node = nodes.find((n) => n.id === ref.id)!;
         const declared = fieldsListSlots(fields, node.data);
         const dyn = dynamic[ref.id] ?? {};

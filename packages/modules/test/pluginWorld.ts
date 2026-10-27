@@ -36,6 +36,8 @@ export async function closePluginServices(services: GcsServices, configDir: stri
 export async function dropPluginData(services: GcsServices, keys: string[]): Promise<void> {
   const { GcsPluginDatabase } = await import("@gcs/core");
   const database = new GcsPluginDatabase({ databaseUrl: process.env.DATABASE_URL });
+  // Ediția Lite pe MySQL: pluginurile n-au bază proprie (nimic de șters).
+  if (database.onMysql) return database.close();
   for (const key of keys) await database.drop(key, database.roleName(key)).catch(() => {});
   await database.close();
   void services;
