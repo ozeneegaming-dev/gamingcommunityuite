@@ -411,3 +411,28 @@ test("editorul vizual: constructorul de antet (presetările, drag & drop), live 
   await expect(page.locator('[data-row="main"] [data-zone="right"] [data-el="create"]')).toHaveCount(1);
   await restoreNova(saved);
 });
+
+test("antetul compact la derulare: fără tremur la prag (derularea nu sare înapoi; revine la mărimea întreagă abia mai sus)", async ({ page }) => {
+  // Antetul Esports, lipit sus, cu starea compactă (tema se reface după fiecare test).
+  await patchNova({ header: { layout: await preset("esports"), compact: true } });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  const header = page.getByTestId("gcs-header-builder");
+  await expect(header).toHaveAttribute("data-sticky", "");
+  // Pagina destul de lungă pentru derulare, oricâte forumuri are baza.
+  await page.evaluate(() => (document.body.style.minHeight = "3000px"));
+  const scrollTo = async (y: number) => {
+    await page.evaluate((v) => window.scrollTo(0, v), y);
+    await page.waitForTimeout(500);
+    return page.evaluate(() => window.scrollY);
+  };
+  await scrollTo(0);
+  // Peste prag: antetul se strânge, iar derularea rămâne unde a fost (înainte sărea înapoi și antetul se mărea la loc).
+  for (const y of [125, 130, 140]) expect(Math.abs((await scrollTo(y)) - y), `derularea la ${y}`).toBeLessThanOrEqual(30);
+  await expect(header).toHaveAttribute("data-compact", "");
+  // Puțin sub prag: rămâne compact (histerezis); mult mai sus: revine la mărimea întreagă.
+  await scrollTo(105);
+  await expect(header).toHaveAttribute("data-compact", "");
+  await scrollTo(20);
+  await expect(header).not.toHaveAttribute("data-compact", "");
+});
