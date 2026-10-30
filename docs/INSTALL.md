@@ -81,7 +81,7 @@ GCS_INSTALL_LICENSE="GCS1.…" GCS_INSTALL_SITE_NAME="Comunitatea mea" GCS_INSTA
 - Cheia începe cu `GCS1.` și e semnată digital. Se verifică **pe server, fără internet**: semnătura, data de expirare și domeniul.
 - Licența e valabilă pentru domeniile din ea (ex. `forum.exemplu.ro`, cu sau fără `www.`, sau `*.exemplu.ro` pentru subdomenii).
 - Mesajele posibile: format greșit, cheie necunoscută, semnătură invalidă (cheia a fost modificată), licență expirată, domeniu greșit, licență revocată.
-- Verificarea online la platforma GamingCommunitySuite e opțională: se activează cu `GCS_LICENSE_SERVER=<adresă>` în `.env`. Doar o licență revocată blochează; dacă serverul nu răspunde, verificarea offline e suficientă.
+- Licențele emise din contul de client (Data Center) se verifică și **online, o dată pe zi**. Dacă licența e suspendată sau revocată, ACP-ul afișează un avertisment, iar după 30 de zile aplicațiile premium se opresc (forumul și restul aplicațiilor merg mai departe). Dacă serverul de licențe nu răspunde, nu se schimbă nimic. `GCS_LICENSE_SERVER=<adresă>` în `.env` schimbă adresa verificării, iar `GCS_LICENSE_SERVER=off` o oprește.
 - Cheia se păstrează doar pe server (folderul de configurare, permisiuni `600`); nu ajunge în browser și nu apare în log-uri.
 
 ## 5. Aplicațiile
@@ -229,7 +229,7 @@ GCS_INSTALL_LICENSE="GCS1.…" GCS_INSTALL_SITE_NAME="My community" GCS_INSTALL_
 - The key starts with `GCS1.` and is digitally signed. It is checked **on the server, offline**: signature, expiry date and domain.
 - The licence is valid for the domains it lists (e.g. `forum.example.com`, with or without `www.`, or `*.example.com` for subdomains).
 - Possible messages: wrong format, unknown key, invalid signature (the key was changed), expired licence, wrong domain, revoked licence.
-- The online check with the GamingCommunitySuite platform is optional: turn it on with `GCS_LICENSE_SERVER=<address>` in `.env`. Only a revoked licence blocks; if the server doesn't answer, the offline check is enough.
+- Licences issued from the client account (Data Center) are also checked **online, once a day**. If the licence is suspended or revoked, the ACP shows a warning and, after 30 days, the premium apps stop (the forum and the other apps keep working). If the licence server doesn't answer, nothing changes. `GCS_LICENSE_SERVER=<address>` in `.env` changes the check's address; `GCS_LICENSE_SERVER=off` turns it off.
 - The key is kept on the server only (the config folder, permissions `600`); it never reaches the browser or the logs.
 
 ## 5. Apps
