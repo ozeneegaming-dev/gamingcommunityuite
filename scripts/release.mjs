@@ -2,6 +2,8 @@
 /**
  * Release-ul de redistribuire GamingCommunitySuite (etapa 11): `pnpm release [-- --version 1.2.0] [--out <folder>] [--no-premium]`.
  * Ediția Lite (găzduire partajată): `pnpm release -- --edition lite …`, în `scripts/release-lite.mjs`.
+ * Cheile publice: `--license-key-file <.pub.txt>` (obligatorie, repetabilă) și `--plugin-key-file <.pub.txt>` (cheia de
+ * semnare a pluginurilor, ca pachetele premium semnate să fie de încredere la client).
  *
  * Scrie în `dist/release/<versiune>/`:
  * - `gcs-<versiune>.tar.gz` și `gcs-<versiune>.zip` (pachetul standard), fiecare cu `<arhivă>.sha256`. În pachet, folderul
@@ -152,23 +154,60 @@ export function assertLicenseKeys(keys) {
   }
 }
 
-/** Conținutul pachetului standard (cale → octeți), cu fișierele generate și cheile de licență incluse. */
-export function releaseFiles({ root = ROOT, version, files = projectFiles(root), licenseKeys }) {
+// ─── Cheia publică a pluginurilor ────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Cheile de încredere ale pluginurilor: lista goală din surse devine, în pachet, cheia de semnare a proprietarului
+ * (`gcs-2026`), ca pachetele premium semnate să fie „Certificat GCS” la client fără `GCS_PLUGIN_TRUSTED_KEYS` (un plugin
+ * cu cod în browser, ca Studio VIP, e refuzat dacă semnătura nu e de încredere).
+ */
+export const PLUGIN_KEYS_FILE = "packages/core/src/plugins/signature.ts";
+export const PLUGIN_KEYS_EMPTY = "export const MARKETPLACE_PLUGIN_KEYS: Record<string, string> = {};";
+
+/** Cheile pluginurilor: aceeași formă ca la licențe (id scurt, Ed25519 în base64); lista poate lipsi. */
+export function assertPluginKeys(keys) {
+  for (const [id, value] of Object.entries(keys ?? {})) {
+    if (!/^[A-Za-z0-9._-]{1,64}$/.test(id) || Buffer.from(String(value), "base64").length !== 32) throw new Error(`cheie de plugin invalidă: ${id}`);
+  }
+}
+
+/**
+ * Cheile pluginurilor din linia de comandă: `--plugin-key id=base64` sau `--plugin-key-file <.pub.txt>` (repetabile).
+ * Fără ele, pachetele premium semnate nu sunt de încredere la client: se afișează un avertisment.
+ */
+export function pluginKeysFromArgv(argv) {
+  const list = argv.flatMap((a, i) => (a === "--plugin-key" ? [argv[i + 1]] : []));
+  for (const file of argv.flatMap((a, i) => (a === "--plugin-key-file" ? [argv[i + 1]] : []))) list.push(...readFileSync(file, "utf8").split(/\r?\n/).filter((l) => l.trim()));
+  if (list.length === 0) console.warn("atenție: fără --plugin-key-file, pachetele premium semnate nu vor fi de încredere la client");
+  return parseLicenseKeys(list);
+}
+
+/** Sursele în care pachetul clientului primește cheile publice (cale → rescrierea sursei). */
+export function keyRewrites({ licenseKeys, pluginKeys = {} }) {
+  const fill = (rel, empty, name, label, keys) => (source) => {
+    if (!source.includes(empty)) throw new Error(`nu găsesc lista ${label} în ${rel}`);
+    return source.replace(empty, `export const ${name}: Record<string, string> = ${JSON.stringify(keys)};`);
+  };
+  const out = { [LICENSE_KEYS_FILE]: fill(LICENSE_KEYS_FILE, LICENSE_KEYS_EMPTY, "GCS_LICENSE_KEYS", "cheilor de licență", licenseKeys) };
+  if (Object.keys(pluginKeys).length > 0) out[PLUGIN_KEYS_FILE] = fill(PLUGIN_KEYS_FILE, PLUGIN_KEYS_EMPTY, "MARKETPLACE_PLUGIN_KEYS", "cheilor pluginurilor", pluginKeys);
+  return out;
+}
+
+/** Conținutul pachetului standard (cale → octeți), cu fișierele generate și cheile publice incluse. */
+export function releaseFiles({ root = ROOT, version, files = projectFiles(root), licenseKeys, pluginKeys }) {
   assertLicenseKeys(licenseKeys);
+  assertPluginKeys(pluginKeys);
+  const keys = keyRewrites({ licenseKeys, pluginKeys });
   const out = new Map();
   for (const rel of files) {
     if (!isShipped(rel)) continue;
     let data = readFileSync(path.join(root, rel));
     const rewrite = CLIENT_REWRITES[rel];
     if (rewrite) data = Buffer.from(rewrite(data.toString("utf8")), "utf8");
-    if (rel === LICENSE_KEYS_FILE) {
-      const source = data.toString("utf8");
-      if (!source.includes(LICENSE_KEYS_EMPTY)) throw new Error(`nu găsesc lista cheilor de licență în ${LICENSE_KEYS_FILE}`);
-      data = Buffer.from(source.replace(LICENSE_KEYS_EMPTY, `export const GCS_LICENSE_KEYS: Record<string, string> = ${JSON.stringify(licenseKeys)};`), "utf8");
-    }
+    if (keys[rel]) data = Buffer.from(keys[rel](data.toString("utf8")), "utf8");
     out.set(rel, data);
   }
-  if (!out.has(LICENSE_KEYS_FILE)) throw new Error(`lipsește din pachet: ${LICENSE_KEYS_FILE}`);
+  for (const rel of Object.keys(keys)) if (!out.has(rel)) throw new Error(`lipsește din pachet: ${rel}`);
   out.set("VERSION", Buffer.from(`${version}\n`, "utf8"));
   out.set("LICENSE", Buffer.from(LICENSE_TEXT(version), "utf8"));
   for (const required of ["install.sh", "docker-compose.yml", ".env.example", "docs/INSTALL.md", "EULA.md", "THIRD-PARTY-NOTICES.md"]) {
@@ -304,14 +343,15 @@ function buildPremium(root, outDir) {
 // ─── Release-ul ────────────────────────────────────────────────────────────────────────────────────────────
 
 /** Construiește release-ul și întoarce căile scrise. */
-export function buildRelease({ root = ROOT, version, out, premium = true, files, licenseKeys } = {}) {
+export function buildRelease({ root = ROOT, version, out, premium = true, files, licenseKeys, pluginKeys } = {}) {
   if (!version || !/^\d+\.\d+\.\d+([-.][0-9A-Za-z.]+)?$/.test(version)) throw new Error(`versiune invalidă: ${version}`);
   assertLicenseKeys(licenseKeys);
+  assertPluginKeys(pluginKeys);
   const outDir = out ?? path.join(root, "dist", "release", version);
   rmSync(outDir, { recursive: true, force: true });
   mkdirSync(outDir, { recursive: true });
 
-  const content = releaseFiles({ root, version, licenseKeys, ...(files ? { files } : {}) });
+  const content = releaseFiles({ root, version, licenseKeys, pluginKeys, ...(files ? { files } : {}) });
   const issues = brandingIssues(content);
   if (issues.length > 0) throw new Error(`garda de branding a găsit nume interzise în pachet:\n${issues.join("\n")}`);
 
@@ -346,7 +386,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     const keyFiles = process.argv.flatMap((a, i) => (a === "--license-key-file" ? [process.argv[i + 1]] : []));
     for (const keyFile of keyFiles) keyArgs.push(...readFileSync(keyFile, "utf8").split(/\r?\n/).filter((l) => l.trim()));
     const licenseKeys = keyArgs.length ? parseLicenseKeys(keyArgs) : undefined;
-    const result = buildRelease({ version, out: arg("out"), premium: !process.argv.includes("--no-premium"), licenseKeys });
+    const pluginKeys = pluginKeysFromArgv(process.argv);
+    const result = buildRelease({ version, out: arg("out"), premium: !process.argv.includes("--no-premium"), licenseKeys, pluginKeys });
     console.log(`release ${version}: ${result.files} fișiere`);
     console.log(`  ${path.relative(ROOT, result.tarGz)}`);
     console.log(`  ${path.relative(ROOT, result.zip)}`);

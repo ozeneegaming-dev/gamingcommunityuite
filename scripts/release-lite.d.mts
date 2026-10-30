@@ -15,6 +15,7 @@ export declare function buildLiteRelease(opts?: {
   version?: string;
   out?: string;
   licenseKeys?: Record<string, string>;
+  pluginKeys?: Record<string, string>;
   target?: string;
   skipBuild?: boolean;
 }): { zip: string; files: number; natives: string[]; target: string };

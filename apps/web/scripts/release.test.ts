@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { readPluginZip, verifyPluginSignature } from "@gcs/core";
 import { afterAll, describe, expect, test } from "vitest";
-import { brandingIssues, buildRelease, checksumsFile, CLIENT_REWRITES, isShipped, parseLicenseKeys, sha256, writeZip } from "../../../scripts/release.mjs";
+import { brandingIssues, buildRelease, checksumsFile, CLIENT_REWRITES, isShipped, keyRewrites, parseLicenseKeys, PLUGIN_KEYS_FILE, pluginKeysFromArgv, sha256, writeZip } from "../../../scripts/release.mjs";
 import { signRelease } from "../../../scripts/release-sign.mjs";
 
 const ROOT = path.resolve(__dirname, "../../..");
@@ -83,7 +83,7 @@ describe("release-ul (fum): construit, dezarhivat și verificat", () => {
     "pachetul standard: tar.gz + zip cu sume, conținutul complet, sumele verificate, nimic exclus, brandul GCS",
     () => {
       const out = path.join(tmp, "out");
-      const result = buildRelease({ root: ROOT, version: "9.9.9", out, premium: false, licenseKeys: { "test-lic": TEST_LICENSE_PUB } });
+      const result = buildRelease({ root: ROOT, version: "9.9.9", out, premium: false, licenseKeys: { "test-lic": TEST_LICENSE_PUB }, pluginKeys: { "test-plg": TEST_LICENSE_PUB } });
       for (const file of [result.tarGz, result.zip]) {
         expect(readFileSync(`${file}.sha256`, "utf8")).toBe(`${sha256(readFileSync(file))}  ${path.basename(file)}\n`);
       }
@@ -110,6 +110,9 @@ describe("release-ul (fum): construit, dezarhivat și verificat", () => {
       // Cheia publică de licență e inclusă în copia clientului (sursele rămân cu lista goală).
       expect(read("packages/core/src/install/license.ts").toString()).toContain(`export const GCS_LICENSE_KEYS: Record<string, string> = {"test-lic":"${TEST_LICENSE_PUB}"};`);
       expect(readFileSync(path.join(ROOT, "packages/core/src/install/license.ts"), "utf8")).toContain("export const GCS_LICENSE_KEYS: Record<string, string> = {};");
+      // La fel cheia pluginurilor: pachetele premium semnate sunt de încredere la client fără GCS_PLUGIN_TRUSTED_KEYS.
+      expect(read("packages/core/src/plugins/signature.ts").toString()).toContain(`export const MARKETPLACE_PLUGIN_KEYS: Record<string, string> = {"test-plg":"${TEST_LICENSE_PUB}"};`);
+      expect(readFileSync(path.join(ROOT, "packages/core/src/plugins/signature.ts"), "utf8")).toContain("export const MARKETPLACE_PLUGIN_KEYS: Record<string, string> = {};");
       expect(brandingIssues(lines.map((l) => l.split("  ")[1]!).map((rel) => [rel, read(rel)] as [string, Buffer]))).toEqual([]);
 
       // Zip-ul: directorul central are aceleași fișiere (numărul și căile), toate sub `gcs-9.9.9/`.
@@ -139,6 +142,22 @@ describe("cheia publică de licență a release-ului", () => {
   });
   test("forma din fișierul .pub.txt (`id=base64`) se citește ca hartă", () => {
     expect(parseLicenseKeys([`gcs-lic-2026=${TEST_LICENSE_PUB}`, ` second=${TEST_LICENSE_PUB} `])).toEqual({ "gcs-lic-2026": TEST_LICENSE_PUB, second: TEST_LICENSE_PUB });
+  });
+});
+
+describe("cheia publică a pluginurilor", () => {
+  test("se scrie în lista marketplace-ului doar când e dată; o cheie invalidă e refuzată", () => {
+    const source = "a\nexport const MARKETPLACE_PLUGIN_KEYS: Record<string, string> = {};\nb";
+    expect(Object.keys(keyRewrites({ licenseKeys: { l: TEST_LICENSE_PUB } }))).toEqual(["packages/core/src/install/license.ts"]);
+    const rewrite = keyRewrites({ licenseKeys: { l: TEST_LICENSE_PUB }, pluginKeys: { "gcs-2026": TEST_LICENSE_PUB } })[PLUGIN_KEYS_FILE]!;
+    expect(rewrite(source)).toBe(`a\nexport const MARKETPLACE_PLUGIN_KEYS: Record<string, string> = {"gcs-2026":"${TEST_LICENSE_PUB}"};\nb`);
+    expect(() => rewrite("fără listă")).toThrow(/cheilor pluginurilor/);
+    expect(() => buildRelease({ root: ROOT, version: "9.9.8", out: path.join(tmp, "bad-plg"), premium: false, licenseKeys: { l: TEST_LICENSE_PUB }, pluginKeys: { ok: "scurt" } })).toThrow(/cheie de plugin invalidă/);
+  });
+  test("din linia de comandă: --plugin-key și --plugin-key-file", () => {
+    const file = path.join(tmp, "plugins.pub.txt");
+    writeFileSync(file, `gcs-2026=${TEST_LICENSE_PUB}\n`);
+    expect(pluginKeysFromArgv(["node", "release.mjs", "--plugin-key", `a=${TEST_LICENSE_PUB}`, "--plugin-key-file", file])).toEqual({ a: TEST_LICENSE_PUB, "gcs-2026": TEST_LICENSE_PUB });
   });
 });
 

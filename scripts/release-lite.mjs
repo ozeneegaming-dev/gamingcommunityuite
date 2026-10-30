@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Pachetul ediției Lite (găzduire partajată cu „Setup Node.js App”, cPanel / Plesk): `pnpm release -- --edition lite
- * --license-key-file <cheia publică> [--version 1.2.0] [--out <folder>] [--target linux-x64-gnu|win32-x64] [--skip-build]`.
+ * --license-key-file <cheia publică> [--plugin-key-file <cheia pluginurilor>] [--version 1.2.0] [--out <folder>] [--target linux-x64-gnu|win32-x64] [--skip-build]`.
  *
  * Scrie `dist/release/<versiune>/gcs-lite-<versiune>.zip` (+ `.sha256`). În arhivă, folderul `gcs-lite-<versiune>/`:
  * - aplicația Next.js gata construită (`apps/web`, build „standalone”), cu `node_modules` de producție plat (fără
@@ -20,7 +20,7 @@ import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, rea
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { assertLicenseKeys, brandingIssues, checksumsFile, LICENSE_KEYS_EMPTY, LICENSE_KEYS_FILE, LICENSE_TEXT, parseLicenseKeys, sha256, writeZip } from "./release.mjs";
+import { assertLicenseKeys, assertPluginKeys, brandingIssues, checksumsFile, keyRewrites, LICENSE_TEXT, parseLicenseKeys, pluginKeysFromArgv, sha256, writeZip } from "./release.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const WEB = path.join(ROOT, "apps", "web");
@@ -280,23 +280,28 @@ export function liteReleaseFiles(dest, { version, root = ROOT }) {
   return files;
 }
 
-/** Rulează `fn` cu cheile de licență scrise în surse (ca la build-ul VPS) și restaurează fișierul după. */
-function withLicenseKeys(licenseKeys, fn) {
-  const file = path.join(ROOT, LICENSE_KEYS_FILE);
-  const original = readFileSync(file, "utf8");
-  if (!original.includes(LICENSE_KEYS_EMPTY)) throw new Error(`nu găsesc lista cheilor de licență în ${LICENSE_KEYS_FILE}`);
-  writeFileSync(file, original.replace(LICENSE_KEYS_EMPTY, `export const GCS_LICENSE_KEYS: Record<string, string> = ${JSON.stringify(licenseKeys)};`));
+/** Rulează `fn` cu cheile publice (licență, pluginuri) scrise în surse, ca la build-ul VPS, și restaurează fișierele după. */
+function withKeys(keys, fn) {
+  const originals = new Map();
   try {
+    for (const [rel, rewrite] of Object.entries(keyRewrites(keys))) {
+      const file = path.join(ROOT, rel);
+      const original = readFileSync(file, "utf8");
+      const next = rewrite(original);
+      originals.set(file, original);
+      writeFileSync(file, next);
+    }
     return fn();
   } finally {
-    writeFileSync(file, original);
+    for (const [file, original] of originals) writeFileSync(file, original);
   }
 }
 
 /** Construiește pachetul Lite și întoarce căile scrise. */
-export function buildLiteRelease({ version, out, licenseKeys, target = "linux-x64-gnu", skipBuild = false } = {}) {
+export function buildLiteRelease({ version, out, licenseKeys, pluginKeys, target = "linux-x64-gnu", skipBuild = false } = {}) {
   if (!version || !/^\d+\.\d+\.\d+([-.][0-9A-Za-z.]+)?$/.test(version)) throw new Error(`versiune invalidă: ${version}`);
   assertLicenseKeys(licenseKeys);
+  assertPluginKeys(pluginKeys);
   if (!LITE_TARGETS[target]) throw new Error(`țintă necunoscută: ${target}`);
   const outDir = out ?? path.join(ROOT, "dist", "release", version);
   mkdirSync(outDir, { recursive: true });
@@ -306,7 +311,7 @@ export function buildLiteRelease({ version, out, licenseKeys, target = "linux-x6
     const targets = ["native", ...LITE_TARGETS[target].prisma].join(",");
     try {
       run(process.execPath, [path.join(ROOT, "packages/db/scripts/generate.mjs")], { env: { ...process.env, GCS_PRISMA_BINARY_TARGETS: targets } });
-      withLicenseKeys(licenseKeys, () => run("pnpm", ["--filter", "@gcs/web", "exec", "next", "build"], { env: { ...process.env, NEXT_TELEMETRY_DISABLED: "1" } }));
+      withKeys({ licenseKeys, pluginKeys }, () => run("pnpm", ["--filter", "@gcs/web", "exec", "next", "build"], { env: { ...process.env, NEXT_TELEMETRY_DISABLED: "1" } }));
     } finally {
       run(process.execPath, [path.join(ROOT, "packages/db/scripts/generate.mjs")]);
     }
@@ -349,7 +354,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     const keyFiles = process.argv.flatMap((a, i) => (a === "--license-key-file" ? [process.argv[i + 1]] : []));
     for (const keyFile of keyFiles) keyArgs.push(...readFileSync(keyFile, "utf8").split(/\r?\n/).filter((l) => l.trim()));
     const licenseKeys = keyArgs.length ? parseLicenseKeys(keyArgs) : undefined;
-    const result = buildLiteRelease({ version, out: arg("out"), licenseKeys, target: arg("target") ?? "linux-x64-gnu", skipBuild: process.argv.includes("--skip-build") });
+    const pluginKeys = pluginKeysFromArgv(process.argv);
+    const result = buildLiteRelease({ version, out: arg("out"), licenseKeys, pluginKeys, target: arg("target") ?? "linux-x64-gnu", skipBuild: process.argv.includes("--skip-build") });
     console.log(`release Lite ${version} (${result.target}): ${result.files} fișiere`);
     console.log(`  ${path.relative(ROOT, result.zip)}`);
     for (const n of result.natives) console.log(`  binar nativ: ${n}`);

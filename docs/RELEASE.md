@@ -11,7 +11,7 @@ emit licențele. Fișierul nu intră în pachetul clientului (din `docs/` se liv
 | `gcs-licenses-ed25519.pub.txt` | cheia publică de licențe | inclusă în fiecare release |
 | `gcs-licenses-dc-ed25519.pub.txt` | cheia publică a licențelor emise de Data Center (`gcs-lic-dc-2026`; cea privată stă doar pe VPS, în `/etc/gcs-datacenter/keys/`) | inclusă în fiecare release |
 | `gcs-plugins-ed25519.pem` | cheia **privată** a pluginurilor (`gcs-2026`) | doar la `pnpm release:sign` |
-| `gcs-plugins-ed25519.pub.txt` | cheia publică a pluginurilor | `GCS_PLUGIN_TRUSTED_KEYS` |
+| `gcs-plugins-ed25519.pub.txt` | cheia publică a pluginurilor | `--plugin-key-file` (inclusă în pachet: pluginurile semnate sunt „Certificat GCS” la client) |
 
 Cheile private nu ajung niciodată în cod, pe server sau în chat. Păstrează o copie de siguranță a folderului `keys/`:
 fără cheia privată de licențe nu mai poți emite licențe valabile pentru versiunile deja livrate.
@@ -19,13 +19,13 @@ fără cheia privată de licențe nu mai poți emite licențe valabile pentru ve
 ## 1. Pachetul pentru clienți
 
 ```bash
-pnpm release -- --version 1.0.0 --license-key-file "../keys/gcs-licenses-ed25519.pub.txt" --license-key-file "../keys/gcs-licenses-dc-ed25519.pub.txt"
+pnpm release -- --version 1.0.0 --license-key-file "../keys/gcs-licenses-ed25519.pub.txt" --license-key-file "../keys/gcs-licenses-dc-ed25519.pub.txt" --plugin-key-file "../keys/gcs-plugins-ed25519.pub.txt"
 ```
 
 Ediția Lite (găzduire partajată, pachetul gata construit `gcs-lite-<versiune>.zip`): aceleași chei, plus `--edition lite`:
 
 ```bash
-pnpm release -- --edition lite --version 1.0.0 --license-key-file "../keys/gcs-licenses-ed25519.pub.txt" --license-key-file "../keys/gcs-licenses-dc-ed25519.pub.txt"
+pnpm release -- --edition lite --version 1.0.0 --license-key-file "../keys/gcs-licenses-ed25519.pub.txt" --license-key-file "../keys/gcs-licenses-dc-ed25519.pub.txt" --plugin-key-file "../keys/gcs-plugins-ed25519.pub.txt"
 ```
 
 Scrie în `dist/release/<versiune>/` pachetul standard (`gcs-<versiune>.tar.gz` / `.zip`, cu `.sha256`) și, în
