@@ -11,6 +11,12 @@ import {
   PASSWORD_MIN_FLOOR,
   PASSWORD_MIN_LENGTH_SETTING,
   PASSWORD_REQUIRE_MIX_SETTING,
+  PASSWORD_RESET_ENABLED_SETTING,
+  PASSWORD_RESET_MINUTES_DEFAULT,
+  PASSWORD_RESET_MINUTES_MAX,
+  PASSWORD_RESET_MINUTES_MIN,
+  PASSWORD_RESET_MINUTES_SETTING,
+  PASSWORD_RESET_REVOKE_SESSIONS_SETTING,
   mfaRequiredGroupsError,
   type GcsSettingDef,
 } from "@gcs/core";
@@ -46,12 +52,19 @@ const def = (key: string, type: GcsSettingDef["type"], defaultValue: unknown, se
   ...extra,
 });
 
-/** ACP → Setări → Securitate: blocarea după parole greșite, parolele, 2FA, emailul la dispozitiv nou, sesiunea ACP. */
+/**
+ * ACP → Setări → Securitate: blocarea după parole greșite, parolele, „Am uitat parola” (resetarea prin email), 2FA,
+ * emailul la dispozitiv nou, sesiunea ACP.
+ */
 export const SECURITY_SETTING_DEFS: GcsSettingDef[] = [
   def(LOGIN_MAX_ATTEMPTS_SETTING, "number", 5, SECURITY_SECTION, "settings.siteSecurity.login_max_attempts", intIn(0, 100)),
   def(LOGIN_LOCK_MINUTES_SETTING, "number", 15, SECURITY_SECTION, "settings.siteSecurity.login_lock_minutes", intIn(1, 1440)),
   def(PASSWORD_MIN_LENGTH_SETTING, "number", PASSWORD_MIN_FLOOR, SECURITY_SECTION, "settings.siteSecurity.password_min_length", intIn(PASSWORD_MIN_FLOOR, PASSWORD_MAX_LENGTH)),
   def(PASSWORD_REQUIRE_MIX_SETTING, "boolean", true, SECURITY_SECTION, "settings.siteSecurity.password_require_mix"),
+  // „Am uitat parola”: linkul pe email (merge doar cu emailul configurat), valabilitatea lui și închiderea sesiunilor.
+  def(PASSWORD_RESET_ENABLED_SETTING, "boolean", true, SECURITY_SECTION, "settings.siteSecurity.password_reset_enabled"),
+  def(PASSWORD_RESET_MINUTES_SETTING, "number", PASSWORD_RESET_MINUTES_DEFAULT, SECURITY_SECTION, "settings.siteSecurity.password_reset_minutes", intIn(PASSWORD_RESET_MINUTES_MIN, PASSWORD_RESET_MINUTES_MAX)),
+  def(PASSWORD_RESET_REVOKE_SESSIONS_SETTING, "boolean", true, SECURITY_SECTION, "settings.siteSecurity.password_reset_revoke_sessions"),
   // Grupurile cu 2FA obligatoriu: formularul paginii are căsuțe (nu câmpul JSON generic).
   def(MFA_REQUIRED_GROUPS_SETTING, "json", [], SECURITY_SECTION, "settings.siteSecurity.mfa_required_groups", mfaRequiredGroupsError),
   def(MFA_RECOVERY_SETTING, "string", "backup_codes", SECURITY_SECTION, "settings.siteSecurity.mfa_recovery", oneOf(MFA_RECOVERY_MODES), { options: [...MFA_RECOVERY_MODES] }),
