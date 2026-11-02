@@ -5750,6 +5750,7 @@
         "label": "Installationscode",
         "title": "Installationscode",
         "body": "Geben Sie den Code ein, der beim ersten Start im Serverlog angezeigt wird (z. B. „docker compose logs web). Auf diese Weise kann nur jemand mit Serverzugang die Plattform installieren.",
+        "bodyLite": "Geben Sie den Code ein, der beim ersten Start in das Anwendungsprotokoll geschrieben wird, in der Zeile „[GCS] Cod de instalare“: die Datei stderr.log oder passenger.log im Anwendungsordner (cPanel → File Manager; Plesk → Node.js → Logs). So kann nur jemand mit Zugang zum Hosting-Konto die Plattform installieren.",
         "field": "Installationscode",
         "invalid": "Der Code ist nicht korrekt",
         "rateLimited": "Zu viele Versuche. Versuchen Sie es in 15 Minuten erneut."

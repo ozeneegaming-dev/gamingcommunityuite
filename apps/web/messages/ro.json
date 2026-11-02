@@ -5750,6 +5750,7 @@
         "label": "Cod de instalare",
         "title": "Cod de instalare",
         "body": "Introdu codul afișat în log-ul serverului la prima pornire (ex. „docker compose logs web”). Așa doar cine are acces la server poate instala platforma.",
+        "bodyLite": "Introdu codul scris în jurnalul aplicației la prima pornire, pe rândul „[GCS] Cod de instalare”: fișierul stderr.log sau passenger.log din folderul aplicației (cPanel → File Manager; Plesk → Node.js → Logs). Așa doar cine are acces la găzduire poate instala platforma.",
         "field": "Cod de instalare",
         "invalid": "Codul nu e corect",
         "rateLimited": "Prea multe încercări. Încearcă din nou peste 15 minute."

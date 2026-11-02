@@ -63,6 +63,13 @@ test("instalarea completă: licența, aplicațiile, reluare după refresh, login
     await expect(page).toHaveURL(/\/install\/code$/);
     await expect(page.getByRole("heading", { name: "Cod de instalare", level: 1 })).toBeVisible();
     await expect(page.getByText("Pasul 1 din 10")).toBeVisible();
+    // Unde găsește proprietarul codul: în Lite nu există Docker, codul e în jurnalul aplicației din panoul gazdei.
+    if (process.env.GCS_EDITION === "lite") {
+      await expect(page.getByText(/stderr\.log sau passenger\.log/)).toBeVisible();
+      await expect(page.getByText(/docker compose/)).toHaveCount(0);
+    } else {
+      await expect(page.getByText(/docker compose logs web/)).toBeVisible();
+    }
   });
 
   await test.step("1. codul de instalare (unul greșit e refuzat)", async () => {

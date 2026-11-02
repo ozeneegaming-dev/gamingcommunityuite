@@ -5750,6 +5750,7 @@
         "label": "Instalar código",
         "title": "Instalar código",
         "body": "Introduzca el código que se muestra en el registro del servidor en el primer inicio (por ejemplo, “docker compose logs web”). De esta manera sólo alguien con acceso al servidor puede instalar la plataforma.",
+        "bodyLite": "Introduzca el código escrito en el registro de la aplicación en el primer inicio, en la línea “[GCS] Cod de instalare”: el archivo stderr.log o passenger.log de la carpeta de la aplicación (cPanel → File Manager; Plesk → Node.js → Logs). Así solo alguien con acceso al alojamiento puede instalar la plataforma.",
         "field": "Instalar código",
         "invalid": "El código no es correcto",
         "rateLimited": "Demasiados intentos. Inténtalo de nuevo en 15 minutos."

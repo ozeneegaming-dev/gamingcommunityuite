@@ -5750,6 +5750,7 @@
         "label": "Installer le code",
         "title": "Installer le code",
         "body": "Saisissez le code affiché dans le journal du serveur au premier démarrage (p. ex., le docker compose les journaux web). Ainsi, seule une personne ayant accès au serveur peut installer la plateforme.",
+        "bodyLite": "Saisissez le code écrit dans le journal de l’application au premier démarrage, sur la ligne « [GCS] Cod de instalare » : le fichier stderr.log ou passenger.log du dossier de l’application (cPanel → File Manager ; Plesk → Node.js → Logs). Ainsi, seule une personne ayant accès à l’hébergement peut installer la plateforme.",
         "field": "Installer le code",
         "invalid": "Le code n'est pas correct",
         "rateLimited": "Trop de tentatives. Essayez encore dans 15 minutes."

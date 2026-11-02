@@ -5750,6 +5750,7 @@
         "label": "Install code",
         "title": "Install code",
         "body": "Enter the code shown in the server log on first start (e.g. “docker compose logs web”). This way only someone with server access can install the platform.",
+        "bodyLite": "Enter the code written to the application log on first start, on the line “[GCS] Cod de instalare”: the stderr.log or passenger.log file in the application folder (cPanel → File Manager; Plesk → Node.js → Logs). This way only someone with access to the hosting account can install the platform.",
         "field": "Install code",
         "invalid": "The code is not correct",
         "rateLimited": "Too many attempts. Try again in 15 minutes."
