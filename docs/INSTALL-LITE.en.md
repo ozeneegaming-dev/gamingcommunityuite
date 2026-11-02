@@ -55,6 +55,8 @@ to pick.
 - *Enable Node.js*. Don’t run “NPM install”.
 
 Environment variables: none required. Optionally `GCS_BASE_URL=https://your-domain` (the exact public address).
+Without it, the installer uses the address from the browser (after the install code) and keeps it in
+`config/.env.runtime`; so open the installer at the community’s final address (the licensed domain, with `https://`).
 
 ## 4. Installing from the browser
 

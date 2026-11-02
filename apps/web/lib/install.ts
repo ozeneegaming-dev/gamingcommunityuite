@@ -6,6 +6,7 @@ import {
   defaultDbPort,
   GCS_INSTALL_STEPS,
   GCS_PREMIUM_APPS,
+  gcsEdition,
   GcsInstallState,
   installDomain,
   resolveAppSelection,
@@ -55,6 +56,23 @@ export const stepIndex = (step: GcsInstallStep) => GCS_INSTALL_STEPS.indexOf(ste
  * instalarea, iar în Next.js o rută API și o pagină nu pot avea aceeași cale.
  */
 export const stepPath = (step: GcsInstallStep) => (step === "run" ? "/install/progress" : `/install/${step}`);
+
+/**
+ * Ediția Lite: panoul gazdei nu cere variabile de mediu, deci fără `GCS_BASE_URL` adresa site-ului se ia din cererea
+ * proprietarului (originea browserului, altfel `x-forwarded-proto` + host-ul), doar după codul de instalare: un
+ * vizitator oarecare nu o poate impune. Se păstrează în `config/.env.runtime` (`app.js` o citește la pornire); din ea
+ * vin domeniul licenței (`installDomain()`) și adresa apelată de `cron.mjs`. O adresă setată în panou nu se schimbă.
+ */
+export async function rememberLiteBaseUrl(h: Pick<Headers, "get">): Promise<void> {
+  if (gcsEdition() !== "lite" || process.env.GCS_BASE_URL) return;
+  const first = (value: string | null) => value?.split(",")[0]?.trim() || null;
+  const host = first(h.get("x-forwarded-host")) ?? first(h.get("host"));
+  const candidates = [h.get("origin"), host ? `${first(h.get("x-forwarded-proto")) ?? "http"}://${host}` : null];
+  const url = candidates.map((c) => (c && URL.canParse(c) ? new URL(c) : null)).find((u) => u && /^https?:$/.test(u.protocol) && u.hostname);
+  if (!url) return;
+  await installState().writeSecrets({ GCS_BASE_URL: url.origin });
+  process.env.GCS_BASE_URL = url.origin;
+}
 
 /** Browserul a trecut de pasul „Cod de instalare” (cookie-ul sesiunii de instalare e valid). */
 export async function hasInstallSession(): Promise<boolean> {

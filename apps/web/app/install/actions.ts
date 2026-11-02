@@ -23,7 +23,7 @@ import { getTranslations } from "next-intl/server";
 import { clientIp } from "@/lib/actor";
 import { isSameOrigin } from "@/lib/actions";
 import { gcsConfigDir } from "@/lib/config";
-import { hasInstallSession, INSTALL_COOKIE, includedConnection, installState, savedLicense, stepIndex, stepPath, verifyInstallLicense } from "@/lib/install";
+import { hasInstallSession, INSTALL_COOKIE, includedConnection, installState, rememberLiteBaseUrl, savedLicense, stepIndex, stepPath, verifyInstallLicense } from "@/lib/install";
 import { services } from "@/lib/services";
 
 export type GcsInstallActionResult = { ok: true; next: string } | { ok: false; errors: Record<string, string> };
@@ -62,6 +62,7 @@ export async function submitInstallCode(fd: FormData): Promise<GcsInstallActionR
     if (error instanceof GcsRateLimited) return { ok: false, errors: { code: t("rateLimited") } };
     throw error;
   }
+  await rememberLiteBaseUrl(h);
   const state = installState();
   const token = await state.createInstallSession();
   (await cookies()).set(INSTALL_COOKIE, token, {
@@ -99,6 +100,8 @@ export async function continueFromChecks(): Promise<GcsInstallActionResult> {
 export async function saveLicense(fd: FormData): Promise<GcsInstallActionResult> {
   const denied = await guard();
   if (denied) return { ok: false, errors: denied };
+  // Domeniul licenței vine din adresa site-ului (o sesiune începută înaintea ei o primește aici).
+  await rememberLiteBaseUrl(await headers());
   const t = await getTranslations("install.steps.license.errors");
   const token = field(fd, "token");
   const result = verifyInstallLicense(token);

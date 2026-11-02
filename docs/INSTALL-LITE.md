@@ -53,7 +53,9 @@ Versiunea Node.js se poate schimba oricând: *Setup Node.js App* → aplicația 
 - *Application Startup File*: **`app.js`**; *Application Mode*: `production`;
 - *Enable Node.js*. Nu rula „NPM install”.
 
-Variabile de mediu: nu sunt necesare. Opțional `GCS_BASE_URL=https://domeniul-tau` (adresa publică exactă).
+Variabile de mediu: nu sunt necesare. Opțional `GCS_BASE_URL=https://domeniul-tau` (adresa publică exactă). Fără ea,
+installer-ul folosește adresa din browser (după codul de instalare) și o păstrează în `config/.env.runtime`; de aceea
+deschide installer-ul la adresa finală a comunității (domeniul din licență, cu `https://`).
 
 ## 4. Instalarea din browser
 

@@ -11,7 +11,7 @@
  */
 import { execFileSync, spawn, type ChildProcess } from "node:child_process";
 import { generateKeyPairSync } from "node:crypto";
-import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import net from "node:net";
 import path from "node:path";
@@ -129,15 +129,15 @@ async function main(): Promise<number> {
     ...process.env,
     PORT: String(port),
     HOSTNAME: "127.0.0.1",
-    GCS_BASE_URL: url,
     GCS_SECRET: secret,
     GCS_LICENSE_TRUSTED_KEYS: `e2e=${Buffer.from(spki.subarray(spki.length - 32)).toString("base64")}`,
     GCS_LICENSE_SERVER: "off",
     GCS_TEST_ROUTES: "1",
     NEXT_TELEMETRY_DISABLED: "1",
   };
-  // Ca pe găzduire: fără bază configurată, fără ediție sau mod impuse din afară (le pune `app.js`).
-  for (const k of ["DATABASE_URL", "REDIS_URL", "GCS_EDITION", "NODE_ENV", "GCS_CONFIG_DIR", "GCS_MIGRATIONS_DIR", "GCS_REALTIME_URL"]) delete env[k];
+  // Ca pe găzduire: fără bază configurată, fără adresa site-ului (installer-ul o ia din browser), fără ediție sau mod
+  // impuse din afară (le pune `app.js`).
+  for (const k of ["DATABASE_URL", "REDIS_URL", "GCS_EDITION", "NODE_ENV", "GCS_CONFIG_DIR", "GCS_MIGRATIONS_DIR", "GCS_REALTIME_URL", "GCS_BASE_URL", "GCS_DOMAIN"]) delete env[k];
 
   let code = "";
   const log: string[] = [];
@@ -181,8 +181,17 @@ async function main(): Promise<number> {
     },
   });
   const exit = await new Promise<number>((resolve) => playwright.on("exit", (c) => resolve(c ?? 1)));
-  if (exit !== 0) console.log("[gcs package e2e] ultimele rânduri din jurnalul aplicației:\n" + log.join("").slice(-4000));
-  return exit;
+  if (exit !== 0) {
+    console.log("[gcs package e2e] ultimele rânduri din jurnalul aplicației:\n" + log.join("").slice(-4000));
+    return exit;
+  }
+  // Adresa luată din browser la instalare rămâne pentru reporniri și pentru `cron.mjs`.
+  const runtime = readFileSync(path.join(root, "config", ".env.runtime"), "utf8");
+  if (!runtime.includes(`GCS_BASE_URL=${url}\n`)) {
+    console.error(`[gcs package e2e] config/.env.runtime nu conține GCS_BASE_URL=${url}`);
+    return 1;
+  }
+  return 0;
 }
 
 let exitCode = 1;
