@@ -1,4 +1,4 @@
-import { loadMfaRecovery } from "@gcs/core";
+import { loadMfaRecovery, PASSWORD_RESET_ENABLED_SETTING } from "@gcs/core";
 import { GcsIcon } from "@gcs/ui/icons";
 import { getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
@@ -11,15 +11,22 @@ export default async function LoginModal() {
   if ((await currentActor()).userId) return null;
   const [t, tc] = await Promise.all([getTranslations("auth.login"), getTranslations("site")]);
   const { settings } = services();
-  const [siteName, discordClientId, googleClientId, recovery] = await Promise.all([
+  const [siteName, discordClientId, googleClientId, recovery, forgotEnabled] = await Promise.all([
     settings.get<string>("site.name"),
     settings.get<string>("auth.discord_client_id"),
     settings.get<string>("auth.google_client_id"),
     loadMfaRecovery(settings),
+    settings.get<boolean>(PASSWORD_RESET_ENABLED_SETTING).catch(() => true),
   ]);
   return (
     <GcsAuthModal title={t("title")} subtitle={t("subtitle", { site: siteName })} closeLabel={tc("closeMenu")} icon={<GcsIcon name="fa-solid fa-right-to-bracket" />}>
-      <LoginForm discordEnabled={discordClientId !== ""} googleEnabled={googleClientId !== ""} initialError={null} emailRecovery={recovery === "email_code"} />
+      <LoginForm
+        discordEnabled={discordClientId !== ""}
+        googleEnabled={googleClientId !== ""}
+        initialError={null}
+        emailRecovery={recovery === "email_code"}
+        forgotEnabled={forgotEnabled !== false}
+      />
     </GcsAuthModal>
   );
 }

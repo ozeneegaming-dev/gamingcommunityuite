@@ -1,4 +1,4 @@
-import { loadMfaRecovery } from "@gcs/core";
+import { loadMfaRecovery, PASSWORD_RESET_ENABLED_SETTING } from "@gcs/core";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -13,22 +13,32 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("title") };
 }
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string; reset?: string }> }) {
   if ((await currentActor()).userId) redirect("/");
   const t = await getTranslations("auth.login");
   const { settings } = services();
-  const [siteName, discordClientId, googleClientId, recovery] = await Promise.all([
+  const [siteName, discordClientId, googleClientId, recovery, forgotEnabled] = await Promise.all([
     settings.get<string>("site.name"),
     settings.get<string>("auth.discord_client_id"),
     settings.get<string>("auth.google_client_id"),
     loadMfaRecovery(settings),
+    settings.get<boolean>(PASSWORD_RESET_ENABLED_SETTING).catch(() => true),
   ]);
-  const { error } = await searchParams;
+  const { error, reset } = await searchParams;
   const initialError = loginError(error);
+  // După „Am uitat parola”: parola nouă e salvată, membrul intră cu ea (2FA se cere în continuare, dacă e activ).
+  const initialNotice = reset === "done" ? t("resetDone") : null;
 
   return (
     <GcsAuthCard title={t("title")} subtitle={t("subtitle", { site: siteName })} icon={<GcsIcon name="fa-solid fa-right-to-bracket" />}>
-      <LoginForm discordEnabled={discordClientId !== ""} googleEnabled={googleClientId !== ""} initialError={initialError} emailRecovery={recovery === "email_code"} />
+      <LoginForm
+        discordEnabled={discordClientId !== ""}
+        googleEnabled={googleClientId !== ""}
+        initialError={initialError}
+        emailRecovery={recovery === "email_code"}
+        forgotEnabled={forgotEnabled !== false}
+        initialNotice={initialNotice}
+      />
     </GcsAuthCard>
   );
 }

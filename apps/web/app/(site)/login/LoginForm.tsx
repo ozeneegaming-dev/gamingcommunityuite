@@ -10,18 +10,27 @@ import { authClient, authErrorKey, lockMinutes } from "@/lib/auth-client";
 import { authReturnPath } from "@/lib/auth-return";
 import { useHydrated } from "@/lib/use-hydrated";
 
-type Props = { discordEnabled: boolean; googleEnabled?: boolean; initialError: string | null; emailRecovery?: boolean };
+type Props = {
+  discordEnabled: boolean;
+  googleEnabled?: boolean;
+  initialError: string | null;
+  emailRecovery?: boolean;
+  /** Linkul „Ai uitat parola?” (ACP → Setări → Securitate: resetarea prin email pornită). */
+  forgotEnabled?: boolean;
+  /** Anunțul de deasupra formularului (ex. după resetarea parolei). */
+  initialNotice?: string | null;
+};
 
 /** Pasul 2FA: codul din aplicație, un cod de rezervă sau (dacă ACP → Setări → Securitate permite) un cod pe email. */
 type GcsTwoFactorMethod = "totp" | "backup" | "email";
 
-export function LoginForm({ discordEnabled, googleEnabled = false, initialError, emailRecovery = false }: Props) {
+export function LoginForm({ discordEnabled, googleEnabled = false, initialError, emailRecovery = false, forgotEnabled = false, initialNotice = null }: Props) {
   const t = useTranslations("auth");
   const [step, setStep] = useState<"credentials" | "twoFactor">("credentials");
   const [method, setMethod] = useState<GcsTwoFactorMethod>("totp");
   const [error, setError] = useState<string | null>(initialError);
   const [minutes, setMinutes] = useState(1);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(initialNotice);
   const [pending, setPending] = useState(false);
   // Până la hidratare, trimiterea nativă ar ocoli `onSubmit`: butonul așteaptă React.
   const hydrated = useHydrated();
@@ -37,6 +46,7 @@ export function LoginForm({ discordEnabled, googleEnabled = false, initialError,
     const form = new FormData(e.currentTarget);
     setPending(true);
     setError(null);
+    setNotice(null);
     const { data, error } = await authClient.signIn.email({
       email: String(form.get("email") ?? ""),
       password: String(form.get("password") ?? ""),
@@ -131,6 +141,11 @@ export function LoginForm({ discordEnabled, googleEnabled = false, initialError,
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {notice && (
+        <p role="status" className="gcs-notice" style={{ margin: 0, fontSize: 13 }} data-testid="gcs-login-notice">
+          {notice}
+        </p>
+      )}
       <form method="post" onSubmit={onCredentials} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <GcsField label={t("login.email")}>
           <input name="email" type="email" autoComplete="email" required />
@@ -138,6 +153,13 @@ export function LoginForm({ discordEnabled, googleEnabled = false, initialError,
         <GcsField label={t("login.password")}>
           <input name="password" type="password" autoComplete="current-password" required />
         </GcsField>
+        {forgotEnabled && (
+          <p style={{ margin: "-8px 0 0", fontSize: 13, textAlign: "right" }}>
+            <Link href="/forgot-password" data-testid="gcs-login-forgot">
+              {t("login.forgot")}
+            </Link>
+          </p>
+        )}
         {errorBox}
         <GcsButton variant="primary" type="submit" disabled={pending || !hydrated} icon={<GcsIconSvg icon={faRightToBracket} />}>
           {t("login.submit")}

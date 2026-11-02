@@ -43,6 +43,11 @@ const nextConfig: NextConfig = {
         source: "/api/servers/maps/image/:path*",
         headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
       },
+      // Pagina resetării parolei are tokenul în adresă: nu pleacă mai departe în `Referer`.
+      {
+        source: "/reset-password",
+        headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
+      },
       // Previzualizarea editorului vizual de temă rulează într-un iframe pe aceeași origine: doar pentru cererile ei
       // (parametrul sau cookie-ul de previzualizare) `DENY` devine `SAMEORIGIN`. Ultima regulă potrivită câștigă.
       // Același lucru pentru previzualizarea managerului de meniu (Manager meniu v2: `gcs-nav-preview`).

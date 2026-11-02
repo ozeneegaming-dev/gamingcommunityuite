@@ -111,9 +111,9 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 const MFA_SETUP_PATH = "/settings/security";
 /**
  * Ce rămâne deschis cât timp 2FA e obligatoriu și încă neactivat: configurarea, API-ul (autentificarea, ieșirea), ACP-ul
- * (cere oricum 2FA, cu pagina lui de configurare), intrarea, paginile legale și fișierele.
+ * (cere oricum 2FA, cu pagina lui de configurare), intrarea, „Am uitat parola”, paginile legale și fișierele.
  */
-const MFA_OPEN = [/^\/settings\/security(\/|$)/, /^\/api\//, /^\/_next\//, /^\/admin(\/|$)/, /^\/(login|register|terms|privacy|rules|maintenance|install)(\/|$)/, /\.[a-z0-9]{2,5}$/i];
+const MFA_OPEN = [/^\/settings\/security(\/|$)/, /^\/api\//, /^\/_next\//, /^\/admin(\/|$)/, /^\/(login|register|forgot-password|reset-password|terms|privacy|rules|maintenance|install)(\/|$)/, /\.[a-z0-9]{2,5}$/i];
 
 /**
  * 2FA obligatoriu pe grupuri (ACP → Setări → Securitate): un membru dintr-un grup ales, fără 2FA activ, e trimis la
