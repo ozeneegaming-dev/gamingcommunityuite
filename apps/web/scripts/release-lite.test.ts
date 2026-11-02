@@ -3,14 +3,22 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, 
 import os from "node:os";
 import path from "node:path";
 import vm from "node:vm";
+import { GCS_PREMIUM_APPS } from "@gcs/core";
 import { afterAll, describe, expect, test } from "vitest";
 import { isShipped } from "../../../scripts/release.mjs";
-import { assembleStandalone, LITE_SERVER_DIR, liteReleaseFiles, PLATFORM_PACKAGE, pruneEngines, swapNatives } from "../../../scripts/release-lite.mjs";
+import { assembleStandalone, isShippedSource, LITE_SERVER_DIR, liteReleaseFiles, PLATFORM_PACKAGE, pruneEngines, swapNatives } from "../../../scripts/release-lite.mjs";
 
 const tmp = mkdtempSync(path.join(os.tmpdir(), "gcs-release-lite-"));
 afterAll(() => rmSync(tmp, { recursive: true, force: true }));
 
 const APP_JS = path.join(__dirname, "../../../lite/app.js");
+
+/** Mediul unei găzduiri: folderele instalării le alege `app.js`, nu procesul de test. */
+function appEnv(): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = { ...process.env, GCS_SECRET: "test" };
+  for (const key of ["GCS_CONFIG_DIR", "GCS_UPLOADS_DIR", "GCS_PLUGINS_DIR", "GCS_APPLICATIONS_DIR", "GCS_MIGRATIONS_DIR"]) delete env[key];
+  return env;
+}
 
 /** Rulează `app.js` ca modul CommonJS, cu un `process` fals (versiunea Node.js) și un `require` care notează ce i se cere. */
 function runAppJs(nodeVersion: string) {
@@ -69,6 +77,12 @@ function fakeStandalone(): string {
   write(path.join(root, "apps", "web", "e2e", "auth.spec.ts"), "test");
   write(path.join(root, "apps", "web", "lib", "x.test.ts"), "test");
   write(path.join(root, "apps", "web", "lib", "x.ts"), "export {}");
+  write(path.join(root, "apps", "web", "app", "page.tsx"), "export default function Page() {}");
+  write(path.join(root, "apps", "web", "app", "globals.css"), "body {}");
+  write(path.join(root, "apps", "web", "instrumentation.ts"), "export {}");
+  write(path.join(root, "apps", "web", "postcss.config.mjs"), "export default {}");
+  write(path.join(root, "apps", "web", "messages", "ro.json"), "{}");
+  write(path.join(root, "apps", "web", "package.json"), "{}");
   write(path.join(root, "apps", "web", "tsconfig.json"), "{}");
   mkdirSync(path.join(root, "apps", "web", "node_modules"), { recursive: true });
   symlinkSync(path.join(store, "next@16.3.8", "node_modules", "next"), path.join(root, "apps", "web", "node_modules", "next"), "junction");
@@ -83,14 +97,17 @@ function fakeStandalone(): string {
 describe("pachetul ediției Lite", () => {
   const dest = path.join(tmp, "app");
 
-  test("node_modules plat, fără link-uri, fără testele și configurările de dezvoltare", () => {
+  test("node_modules plat, fără link-uri, fără sursele TypeScript, testele și configurările de dezvoltare", () => {
     assembleStandalone(fakeStandalone(), dest);
-    for (const rel of ["node_modules/sharp/package.json", "node_modules/next/package.json", "node_modules/@prisma/client/package.json", "node_modules/.prisma/client/query_engine-windows.dll.node", "apps/web/server.js", "apps/web/lib/x.ts", "apps/web/.next/node_modules/@prisma/client-10a2/package.json"]) {
+    for (const rel of ["node_modules/sharp/package.json", "node_modules/next/package.json", "node_modules/@prisma/client/package.json", "node_modules/.prisma/client/query_engine-windows.dll.node", "apps/web/server.js", "apps/web/package.json", "apps/web/messages/ro.json", "apps/web/.next/node_modules/@prisma/client-10a2/package.json"]) {
       expect(existsSync(path.join(dest, rel)), rel).toBe(true);
     }
-    for (const rel of ["node_modules/.pnpm", "apps/web/node_modules", "apps/web/e2e/auth.spec.ts", "apps/web/lib/x.test.ts", "apps/web/tsconfig.json"]) {
+    for (const rel of ["node_modules/.pnpm", "apps/web/node_modules", "apps/web/e2e/auth.spec.ts", "apps/web/lib", "apps/web/app", "apps/web/instrumentation.ts", "apps/web/postcss.config.mjs", "apps/web/tsconfig.json"]) {
       expect(existsSync(path.join(dest, rel)), rel).toBe(false);
     }
+    expect(isShippedSource("server/apps/web/lib/x.ts")).toBe(true);
+    expect(isShippedSource("server/apps/web/.next/node_modules/sharp-1/dist/index.d.mts")).toBe(false);
+    expect(isShippedSource("server/node_modules/zod/index.ts")).toBe(false);
   });
 
   test("binarele native: cele ale țintei vin din registru (versiunea cerută), celelalte platforme ies", () => {
@@ -133,16 +150,60 @@ describe("pachetul ediției Lite", () => {
     expect(files.get("CHECKSUMS.sha256")!.toString()).toContain("  app.js\n");
   });
 
-  test("app.js pornește serverul din server/, care își găsește dependențele în server/node_modules", () => {
+  test("app.js pornește serverul din server/ (dependențele din server/node_modules) și creează structura instalării", () => {
     const app = path.join(tmp, "lite-app");
     write(path.join(app, "app.js"), readFileSync(APP_JS, "utf8"));
     write(path.join(app, "server", "node_modules", "next", "index.js"), "module.exports = 'next din server/node_modules';");
     write(path.join(app, "server", "apps", "web", "server.js"), "process.stdout.write(require('next') + ' | ' + process.env.GCS_MIGRATIONS_DIR);");
-    const env: NodeJS.ProcessEnv = { ...process.env, GCS_SECRET: "test", GCS_CONFIG_DIR: path.join(app, "config") };
-    delete env.GCS_MIGRATIONS_DIR;
-    const res = spawnSync(process.execPath, ["app.js"], { cwd: app, env, encoding: "utf8" });
+    const res = spawnSync(process.execPath, ["app.js"], { cwd: app, env: appEnv(), encoding: "utf8" });
     expect(res.stderr).toBe("");
     expect(res.stdout).toBe(`next din server/node_modules | ${path.join(app, "server", "packages", "db", "prisma", "migrations")}`);
+    for (const dir of ["config", "uploads", "plugins", "applications"]) expect(existsSync(path.join(app, dir)), dir).toBe(true);
+  });
+
+  test("app.js mută o instalare cu structura veche (fișierele, pachetele, codul) fără să suprascrie sau să șteargă ceva", () => {
+    const app = path.join(tmp, "lite-upgrade");
+    write(path.join(app, "app.js"), readFileSync(APP_JS, "utf8"));
+    write(path.join(app, "server", "apps", "web", "server.js"), "");
+    // Structura pachetului din 2026-10-30: fișierele membrilor și pachetele în config/, codul în rădăcină.
+    write(path.join(app, "config", "license.token"), "GCS1.test");
+    write(path.join(app, "config", "files", "avatars", "a.png"), "avatar");
+    write(path.join(app, "config", "files", "dublu.txt"), "vechi");
+    write(path.join(app, "uploads", "dublu.txt"), "nou");
+    write(path.join(app, "config", "plugins", "gcs.news_bot", "abc", "plugin.json"), "{}");
+    write(path.join(app, "config", "plugins", "gcs.vip_studio", "def", "plugin.json"), "{}");
+    write(path.join(app, "apps", "web", "server.js"), "vechi");
+    write(path.join(app, "node_modules", "next", "package.json"), "{}");
+    write(path.join(app, "packages", "db", "schema.prisma"), "");
+
+    const res = spawnSync(process.execPath, ["app.js"], { cwd: app, env: appEnv(), encoding: "utf8" });
+    expect(res.status).toBe(0);
+    const read = (rel: string) => readFileSync(path.join(app, rel), "utf8");
+    expect(read("uploads/avatars/a.png")).toBe("avatar");
+    // Un fișier care există deja în destinație nu se suprascrie: rămâne pe loc și apare în jurnal.
+    expect(read("uploads/dublu.txt")).toBe("nou");
+    expect(read("config/files/dublu.txt")).toBe("vechi");
+    expect(res.stderr).toContain("1 fișiere din structura veche au rămas pe loc");
+    expect(read("plugins/gcs.news_bot/abc/plugin.json")).toBe("{}");
+    expect(read("applications/gcs.vip_studio/def/plugin.json")).toBe("{}");
+    expect(existsSync(path.join(app, "config", "plugins"))).toBe(false);
+    expect(read("config/license.token")).toBe("GCS1.test");
+    // Codul vechi iese din rădăcină (CloudLinux), dar nu se șterge.
+    for (const name of ["node_modules", "apps", "packages"]) {
+      expect(existsSync(path.join(app, name)), name).toBe(false);
+      expect(existsSync(path.join(app, "old-version", name)), name).toBe(true);
+    }
+    expect(res.stderr).toContain("old-version/");
+
+    // A doua pornire nu mai are cod vechi de mutat.
+    const again = spawnSync(process.execPath, ["app.js"], { cwd: app, env: appEnv(), encoding: "utf8" });
+    expect(again.status).toBe(0);
+    expect(again.stderr).not.toContain("old-version/");
+  });
+
+  test("app.js știe pachetele aplicațiilor premium ale aplicației", () => {
+    const list = /PREMIUM_APP_PACKAGES = (\[[^\]]*\])/.exec(readFileSync(APP_JS, "utf8"))![1]!;
+    expect(JSON.parse(list)).toEqual(GCS_PREMIUM_APPS.map((key) => `gcs.${key}`));
   });
 
   test("app.js oprește un Node.js sub 20.9 cu un mesaj pe stderr, înaintea oricărui require", () => {

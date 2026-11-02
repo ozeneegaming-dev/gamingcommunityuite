@@ -388,7 +388,10 @@ function baseUrl(siteUrl: string): string {
   return siteUrl || process.env.GCS_BASE_URL || "http://localhost:3000";
 }
 
-/** MinIO (S3) dacă e configurat (`docker compose`); altfel un folder local, în folderul de configurare (dev, E2E). */
+/**
+ * MinIO (S3) dacă e configurat (`docker compose`); altfel un folder local: `GCS_UPLOADS_DIR` (ediția Lite: `uploads/`
+ * lângă `config/`, setat de `app.js`), implicit `<config>/files` (dev, E2E).
+ */
 function createFileStore(configDir: string): GcsFileStore {
   const endpoint = process.env.S3_ENDPOINT;
   if (endpoint) {
@@ -399,7 +402,7 @@ function createFileStore(configDir: string): GcsFileStore {
       bucket: process.env.S3_BUCKET ?? "gcs",
     });
   }
-  return new GcsLocalFileStore(path.join(configDir, "files"));
+  return new GcsLocalFileStore(process.env.GCS_UPLOADS_DIR || path.join(configDir, "files"));
 }
 
 /**
@@ -826,7 +829,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     api: new GcsPluginPublicApi({ db, forumQueries, posting, servers: serverQueries }),
     appearance,
     media: pluginMedia,
-    dataDir: process.env.GCS_PLUGINS_DIR ?? path.join(opts.configDir, "plugins"),
+    dataDir: process.env.GCS_PLUGINS_DIR || path.join(opts.configDir, "plugins"),
+    ...(process.env.GCS_APPLICATIONS_DIR ? { applicationsDir: process.env.GCS_APPLICATIONS_DIR } : {}),
     iconSvg,
     siteLocale: () => settings.get<string>("site.locale"),
     bot: () => communityBot,

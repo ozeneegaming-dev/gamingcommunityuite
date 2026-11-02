@@ -115,6 +115,17 @@ async function main(): Promise<number> {
     console.error("[gcs package e2e] pachetul are node_modules în rădăcină (dependențele trebuie să stea în server/)");
     return 1;
   }
+  // Sursele TypeScript nu intră în pachet (sunt compilate în `.next`).
+  if (existsSync(path.join(root, "server", "apps", "web", "app")) || existsSync(path.join(root, "server", "apps", "web", "lib"))) {
+    console.error("[gcs package e2e] pachetul conține sursele aplicației (server/apps/web/app sau lib)");
+    return 1;
+  }
+  // Un upgrade peste structura veche (pachetul din 2026-10-30): `app.js` o mută la pornire, fără pierderi.
+  const legacy = { file: path.join(root, "config", "files", "legacy", "vechi.txt"), code: path.join(root, "apps", "web", "server.js") };
+  for (const file of Object.values(legacy)) {
+    mkdirSync(path.dirname(file), { recursive: true });
+    writeFileSync(file, "vechi");
+  }
 
   const databaseUrl = await emptyDatabase(work);
   // Cheia licenței de test (Ed25519): privată doar pentru Playwright, publică pentru aplicație.
@@ -137,7 +148,7 @@ async function main(): Promise<number> {
   };
   // Ca pe găzduire: fără bază configurată, fără adresa site-ului (installer-ul o ia din browser), fără ediție sau mod
   // impuse din afară (le pune `app.js`).
-  for (const k of ["DATABASE_URL", "REDIS_URL", "GCS_EDITION", "NODE_ENV", "GCS_CONFIG_DIR", "GCS_MIGRATIONS_DIR", "GCS_REALTIME_URL", "GCS_BASE_URL", "GCS_DOMAIN"]) delete env[k];
+  for (const k of ["DATABASE_URL", "REDIS_URL", "GCS_EDITION", "NODE_ENV", "GCS_CONFIG_DIR", "GCS_UPLOADS_DIR", "GCS_PLUGINS_DIR", "GCS_APPLICATIONS_DIR", "GCS_MIGRATIONS_DIR", "GCS_REALTIME_URL", "GCS_BASE_URL", "GCS_DOMAIN"]) delete env[k];
 
   let code = "";
   const log: string[] = [];
@@ -164,6 +175,18 @@ async function main(): Promise<number> {
     return 1;
   }
   console.log(`[gcs package e2e] pachetul pornit (${url}), baza: ${engine}`);
+  const layout: [string, boolean][] = [
+    ["uploads/legacy/vechi.txt", true],
+    ["old-version/apps/web/server.js", true],
+    ["config/files", false],
+    ["apps", false],
+    ...["config", "uploads", "plugins", "applications", "server"].map((dir): [string, boolean] => [dir, true]),
+  ];
+  const wrong = layout.filter(([rel, expected]) => existsSync(path.join(root, rel)) !== expected).map(([rel, expected]) => `${rel} ${expected ? "lipsește" : "nu trebuia să existe"}`);
+  if (wrong.length > 0) {
+    console.error(`[gcs package e2e] structura instalării nu e cea așteptată: ${wrong.join("; ")}`);
+    return 1;
+  }
 
   const playwright = spawn(process.execPath, [playwrightBin, "test", "--project=install", "--project=smoke", ...argv], {
     cwd: webDir,
@@ -189,6 +212,11 @@ async function main(): Promise<number> {
   const runtime = readFileSync(path.join(root, "config", ".env.runtime"), "utf8");
   if (!runtime.includes(`GCS_BASE_URL=${url}\n`)) {
     console.error(`[gcs package e2e] config/.env.runtime nu conține GCS_BASE_URL=${url}`);
+    return 1;
+  }
+  // Fișierele încărcate în timpul testelor ajung în `uploads/`, nu în folderul de configurare.
+  if (existsSync(path.join(root, "config", "files")) || existsSync(path.join(root, "config", "plugins"))) {
+    console.error("[gcs package e2e] config/ conține fișiere sau pachete (trebuiau în uploads/ și plugins/)");
     return 1;
   }
   return 0;

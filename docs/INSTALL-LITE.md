@@ -29,11 +29,28 @@ Notează: gazda (de obicei `localhost`), portul (MySQL `3306`, PostgreSQL `5432`
 ## 2. Fișierele aplicației
 
 1. Încarcă arhiva în *File Manager*, într-un folder **în afara** `public_html` (ex. `/home/cont/gcs`).
-2. *Extract* — se creează folderul `gcs-lite-<versiune>`; poți să-l redenumești (ex. `gcs`). În el găsești `app.js`
-   (fișierul de pornire), `cron.mjs`, `docs/` și `server/` (aplicația cu dependențele ei, inclusiv `node_modules`).
-   Rădăcina nu are `node_modules` intenționat: altfel panoul nu te-ar lăsa să schimbi versiunea Node.js.
-3. Folderul `config` (creat la prima pornire) trebuie să poată fi scris de aplicație; nu-l șterge niciodată: acolo stau
-   secretul aplicației, licența și fișierele încărcate.
+2. *Extract* — se creează folderul `gcs-lite-<versiune>`; poți să-l redenumești (ex. `gcs`).
+3. Folderul trebuie să poată fi scris de aplicație: la prima pornire ea își creează folderele de date.
+
+Structura, după prima pornire:
+
+```
+gcs/
+├── app.js · cron.mjs   fișierul de pornire și cron-ul (nu se editează)
+├── config/             setările instalării, licența, secretele (nu-l șterge niciodată)
+├── uploads/            fișierele încărcate de membri (avatare, atașamente, galerie, descărcări)
+├── applications/       aplicațiile premium instalate ca pachete (ex. Studio VIP)
+├── plugins/            pluginurile instalate
+├── server/             motorul compilat și dependențele lui (nu se editează)
+└── docs/ · VERSION · LICENSE · EULA.md · THIRD-PARTY-NOTICES.md · CHECKSUMS.sha256
+```
+
+- Pachetele din `applications/` și `plugins/` se instalează din **ACP → Aplicații** și se păstrează în baza de date;
+  folderele sunt copia lor dezarhivată, refăcută singură la pornire (nu le modifica de mână).
+- **Temele** stau în baza de date, cu istoricul fiecărui fișier CSS (**ACP → Aspect**); se exportă și se importă ca
+  pachete din ACP, deci nu au un folder.
+- Rădăcina nu are `node_modules` intenționat (dependențele sunt în `server/`): altfel panoul nu te-ar lăsa să schimbi
+  versiunea Node.js.
 
 ## 3. Aplicația Node.js
 
@@ -97,8 +114,24 @@ nu rulează.
 
 - **Actualizări live** (notificări, chat, „cine e online”): fără websocket, prin SSE sau polling. Dacă gazda taie
   conexiunile lungi, alege în **ACP → Setări → Avansat** „Doar polling” și, după nevoie, intervalul (implicit 5 s).
-- **Backup**: baza de date (cPanel → *Backup* / phpMyAdmin → *Export*) și folderul `config` (secretul, licența, fișierele).
+- **Backup**: baza de date (cPanel → *Backup* / phpMyAdmin → *Export*) și folderele `config/` (secretul, licența) și
+  `uploads/` (fișierele membrilor). `applications/` și `plugins/` se refac singure din baza de date.
 - **Mutarea pe alt domeniu**: schimbă *Application URL* și adresa din ACP → Setări → General.
+
+## 7. Actualizarea
+
+1. Fă un backup (vezi mai sus).
+2. Încarcă arhiva versiunii noi și dezarhiveaz-o lângă aplicație (ex. în `/home/cont/gcs-nou`).
+3. În folderul aplicației, înlocuiește `server/` cu cel nou (șterge-l pe cel vechi, apoi mută-l pe cel nou) și
+   suprascrie fișierele de la rădăcină (`app.js`, `cron.mjs`, `docs/`, `VERSION`, `LICENSE`, `EULA.md`,
+   `THIRD-PARTY-NOTICES.md`, `CHECKSUMS.sha256`). `config/`, `uploads/`, `applications/` și `plugins/` nu sunt în
+   arhivă: rămân neatinse.
+4. *Restart* în panou, apoi deschide site-ul: migrațiile bazei de date rulează singure.
+
+O instalare cu structura veche (pachetul 1.0.0 din 2026-10-30: fișierele membrilor în `config/files`, codul în rădăcină)
+se mută singură la prima pornire: `config/files` → `uploads/`, pachetele → `applications/` și `plugins/`, iar codul vechi
+(`apps/`, `packages/`, `node_modules/`, `servers-plugins/`) în `old-version/`. Nimic nu se șterge: un fișier care există
+deja în destinație rămâne pe loc și apare în jurnal. După ce verifici site-ul, poți șterge `old-version/`.
 
 ## Ce diferă față de ediția VPS
 
