@@ -41,6 +41,9 @@ const signUp = (name: string, email: string, password = "parola-sigura-123") =>
 /** O setare scrisă ca din ACP (validată, cu invalidarea cache-ului). */
 const ACP_ACTOR = { userId: null, groupIds: [], primaryGroupId: 0, isBanned: false, ip: "test" };
 const setAcpSetting = (key: string, value: unknown) => services().settings.set(key, value, ACP_ACTOR);
+/** O înregistrare de pe un IP dat (Better Auth limitează înregistrările la 3 pe 10 secunde de pe același IP). */
+const signUpFrom = (ip: string, name: string, email: string, password = "parola-sigura-123", extra: Record<string, string> = {}) =>
+  call("/sign-up/email", { name, email, password }, ip, extra);
 const LEGAL_DOC = { doc: { type: "doc", content: [] }, html: "<p>Termenii</p>", updatedAt: "2026-11-01T10:00:00.000Z" };
 
 describe("Better Auth (integrare)", () => {
@@ -210,16 +213,16 @@ describe("Better Auth (integrare)", () => {
   });
 
   test("politica parolelor: refuzată pe server la înregistrare (lungimea din ACP, litere și cifre)", async () => {
-    const mix = await signUp("Litere", "litere@mail.com", "parolafaracifre");
+    const mix = await signUpFrom("198.51.100.101", "Litere", "litere@mail.com", "parolafaracifre");
     expect(mix.status).toBe(400);
     expect(await mix.json()).toMatchObject({ code: "PASSWORD_NEEDS_MIX" });
     await setAcpSetting("security.password_min_length", 12);
-    const short = await signUp("Scurt", "scurt@mail.com", "parola-123");
+    const short = await signUpFrom("198.51.100.102", "Scurt", "scurt@mail.com", "parola-123");
     expect(short.status).toBe(400);
     expect(await short.json()).toMatchObject({ code: "PASSWORD_TOO_SHORT" });
-    expect((await signUp("Lung", "lung@mail.com", "parola-sigura-123")).status).toBe(200);
+    expect((await signUpFrom("198.51.100.103", "Lung", "lung@mail.com", "parola-sigura-123")).status).toBe(200);
     await setAcpSetting("security.password_require_mix", false);
-    expect((await signUp("FaraCifre", "faracifre@mail.com", "parolafaracifre")).status).toBe(200);
+    expect((await signUpFrom("198.51.100.104", "FaraCifre", "faracifre@mail.com", "parolafaracifre")).status).toBe(200);
     expect(await db.user.count({ where: { isBot: false } })).toBe(2);
   });
 
@@ -235,25 +238,25 @@ describe("Better Auth (integrare)", () => {
 
   test("termenii: cu o pagină de termeni, înregistrarea fără acceptare e refuzată; acceptarea se salvează la membru", async () => {
     // Fără termeni publicați, nimic nu se cere.
-    expect((await signUp("Liber", "liber@mail.com")).status).toBe(200);
+    expect((await signUpFrom("198.51.100.111", "Liber", "liber@mail.com")).status).toBe(200);
     expect((await db.user.findUniqueOrThrow({ where: { email: "liber@mail.com" } })).termsAcceptedAt).toBeNull();
 
     await setAcpSetting("legal.terms_content", LEGAL_DOC);
     await setAcpSetting("legal.terms_mode", "page");
-    const refused = await signUp("Grabit", "grabit@mail.com");
+    const refused = await signUpFrom("198.51.100.112", "Grabit", "grabit@mail.com");
     expect(refused.status).toBe(403);
     expect(await refused.json()).toMatchObject({ code: "TERMS_REQUIRED" });
     expect(await db.user.count({ where: { email: "grabit@mail.com" } })).toBe(0);
 
     const before = Date.now();
-    const ok = await call("/sign-up/email", { name: "Atent", email: "atent@mail.com", password: "parola-sigura-123" }, "203.0.113.10", { "x-gcs-terms": "1" });
+    const ok = await signUpFrom("198.51.100.113", "Atent", "atent@mail.com", "parola-sigura-123", { "x-gcs-terms": "1" });
     expect(ok.status).toBe(200);
     const accepted = (await db.user.findUniqueOrThrow({ where: { email: "atent@mail.com" } })).termsAcceptedAt;
     expect(accepted?.getTime()).toBeGreaterThanOrEqual(before - 1000);
 
     // Acceptarea poate fi făcută opțională din ACP.
     await setAcpSetting("legal.require_terms_on_register", false);
-    expect((await signUp("Optional", "optional@mail.com")).status).toBe(200);
+    expect((await signUpFrom("198.51.100.114", "Optional", "optional@mail.com")).status).toBe(200);
   });
 
   test("2FA: codul pe email e refuzat cât timp recuperarea e doar cu codurile de rezervă; 2FA nu se activează doar cu emailul", async () => {
