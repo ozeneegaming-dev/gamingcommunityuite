@@ -3,21 +3,20 @@ import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 
 /**
- * Capturile pentru proprietar (doar cu `GCS_SHOTS_DIR`), pe instanța instalată de `install.spec.ts` cu „Date demo”:
- * exact ce vede o comunitate nouă, ca vizitator. GCS Dark (antetul implicit, cel de pe preview) și GCS White, pe
- * desktop, contoarele forumului la hover, după derulare (antetul compact) și pe telefon. Doar navigare: nu schimbă
- * nimic pe instanță.
+ * Aspectul livrat implicit, pe instanța instalată de `install.spec.ts` cu „Date demo”: exact ce vede o comunitate nouă,
+ * ca vizitator. GCS Dark și GCS White au antetul de pe preview (Esports), contoarele forumului doar la hover și nicio
+ * derulare orizontală la 375 px. Cu `GCS_SHOTS_DIR`, și capturile pentru proprietar. Doar navigare: nu schimbă nimic.
  */
 const SHOTS = process.env.GCS_SHOTS_DIR;
-test.skip(!SHOTS, "doar la cerere (GCS_SHOTS_DIR)");
 
 async function shot(page: Page, name: string, full = false) {
-  mkdirSync(SHOTS!, { recursive: true });
+  if (!SHOTS) return;
+  mkdirSync(SHOTS, { recursive: true });
   await page.waitForTimeout(600);
   await page.screenshot({ path: path.join(SHOTS!, `new-${name}.png`), fullPage: full });
 }
 
-test("capturi: forumul unei instalări noi, GCS Dark și GCS White", async ({ page, context }) => {
+test("o instalare nouă: antetul de pe preview, contoarele la hover, fără derulare orizontală pe telefon (GCS Dark și White)", async ({ page, context }) => {
   test.setTimeout(180_000);
   const host = new URL(test.info().project.use.baseURL ?? "http://localhost:3101").hostname;
   for (const skin of ["gcs-dark", "gcs-white"] as const) {
@@ -34,7 +33,7 @@ test("capturi: forumul unei instalări noi, GCS Dark și GCS White", async ({ pa
     await row.hover();
     await expect(row.locator(".gcs-forumRow__bubble")).toBeVisible();
     await page.waitForTimeout(400);
-    await page.locator(".gcs-category").first().screenshot({ path: path.join(SHOTS!, `new-forum-${skin}-hover.png`) });
+    if (SHOTS) await page.locator(".gcs-category").first().screenshot({ path: path.join(SHOTS, `new-forum-${skin}-hover.png`) });
     await page.mouse.move(0, 0);
     // La derulare: antetul se ascunde în jos și revine compact la o derulare în sus.
     await page.mouse.wheel(0, 1200);
@@ -43,6 +42,8 @@ test("capturi: forumul unei instalări noi, GCS Dark și GCS White", async ({ pa
     await shot(page, `forum-${skin}-scrolled`);
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto("/");
+    // Pe telefon, antetul (meniul, logo-ul, „Înregistrare / Autentificare”) încape fără derulare orizontală.
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
     await shot(page, `forum-${skin}-375`);
   }
 });
