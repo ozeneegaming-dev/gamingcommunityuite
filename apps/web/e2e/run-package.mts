@@ -11,7 +11,7 @@
  */
 import { execFileSync, spawn, type ChildProcess } from "node:child_process";
 import { generateKeyPairSync } from "node:crypto";
-import { mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import net from "node:net";
 import path from "node:path";
@@ -110,6 +110,11 @@ async function main(): Promise<number> {
     execFileSync("unzip", ["-q", path.resolve(zip!), "-d", work], { stdio: "inherit" });
   }
   const root = path.join(work, readdirSync(work).find((n) => n.startsWith("gcs-lite-"))!);
+  // CloudLinux (NodeJS Selector) nu schimbă versiunea Node.js a unei aplicații cu `node_modules` în rădăcină.
+  if (existsSync(path.join(root, "node_modules"))) {
+    console.error("[gcs package e2e] pachetul are node_modules în rădăcină (dependențele trebuie să stea în server/)");
+    return 1;
+  }
 
   const databaseUrl = await emptyDatabase(work);
   // Cheia licenței de test (Ed25519): privată doar pentru Playwright, publică pentru aplicație.
@@ -142,15 +147,20 @@ async function main(): Promise<number> {
     const text = String(d);
     log.push(text);
     if (process.env.GCS_E2E_VERBOSE) process.stdout.write(text);
-    const m = /Cod de instalare: ([A-Z0-9-]+)/.exec(text);
-    if (m) code = m[1]!;
   };
   app.stdout.on("data", onData);
-  app.stderr.on("data", onData);
+  let stderr = "";
+  app.stderr.on("data", (d: Buffer) => {
+    onData(d);
+    // Codul se ia doar de pe stderr, ca pe găzduire: Passenger / LiteSpeed păstrează în jurnal doar stderr.
+    stderr += String(d);
+    const m = /Cod de instalare: ([A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4})/.exec(stderr);
+    if (m) code = m[1]!;
+  });
   const deadline = Date.now() + 120_000;
   while (Date.now() < deadline && !code) await new Promise((r) => setTimeout(r, 500));
   if (!code) {
-    console.error("[gcs package e2e] codul de instalare nu a apărut în jurnal:\n" + log.join("").slice(-3000));
+    console.error("[gcs package e2e] codul de instalare nu a apărut pe stderr:\n" + log.join("").slice(-3000));
     return 1;
   }
   console.log(`[gcs package e2e] pachetul pornit (${url}), baza: ${engine}`);

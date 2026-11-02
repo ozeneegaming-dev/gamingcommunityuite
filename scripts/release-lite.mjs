@@ -4,10 +4,11 @@
  * --license-key-file <cheia publică> [--plugin-key-file <cheia pluginurilor>] [--version 1.2.0] [--out <folder>] [--target linux-x64-gnu|win32-x64] [--skip-build]`.
  *
  * Scrie `dist/release/<versiune>/gcs-lite-<versiune>.zip` (+ `.sha256`). În arhivă, folderul `gcs-lite-<versiune>/`:
- * - aplicația Next.js gata construită (`apps/web`, build „standalone”), cu `node_modules` de producție plat (fără
- *   link-uri simbolice: arhivele se dezarhivează din File Manager-ul gazdei) și binarele native ale țintei — implicit
- *   **linux-x64 (glibc)**: sharp, argon2 și motoarele Prisma ale ambelor dialecte pentru OpenSSL 1.0 / 1.1 / 3;
- * - migrațiile PostgreSQL și MySQL (`packages/db/prisma/migrations*`);
+ * - `server/`: aplicația Next.js gata construită (`apps/web`, build „standalone”), cu `node_modules` de producție plat
+ *   (fără link-uri simbolice: arhivele se dezarhivează din File Manager-ul gazdei) și binarele native ale țintei —
+ *   implicit **linux-x64 (glibc)**: sharp, argon2 și motoarele Prisma ale ambelor dialecte pentru OpenSSL 1.0 / 1.1 / 3;
+ *   plus migrațiile PostgreSQL și MySQL (`server/packages/db/prisma/migrations*`). Nimic din `node_modules` la rădăcină:
+ *   CloudLinux (NodeJS Selector) nu schimbă versiunea Node.js a unei aplicații care are `node_modules` în rădăcină;
  * - `app.js` (fișierul de pornire pentru Passenger), `cron.mjs` (cron-ul gazdei), `docs/INSTALL-LITE.md` (RO) și
  *   `docs/INSTALL-LITE.en.md` (EN), `EULA.md`, `THIRD-PARTY-NOTICES.md`, `LICENSE`, `VERSION`, `CHECKSUMS.sha256`.
  *
@@ -253,12 +254,16 @@ export function neutralizeBuildPaths(data, root = ROOT) {
 /** Numele din bibliotecile incluse care seamănă cu mărci (iconița de brand `faInvision` din Font Awesome), ignorate de gardă. */
 export const LITE_BRANDING_ALLOW = [/faInvision/g, /iconName:"invision"/g];
 
+/** Folderul din pachet cu serverul și dependențele lui (`app.js` îl pornește de acolo). */
+export const LITE_SERVER_DIR = "server";
+
 /** Fișierele pachetului Lite (cale → octeți) pornind de la folderul asamblat, cu fișierele de la rădăcină. */
 export function liteReleaseFiles(dest, { version, root = ROOT }) {
   const files = new Map();
+  const server = (rel) => `${LITE_SERVER_DIR}/${rel}`;
   for (const rel of walk(dest)) {
     const data = readFileSync(path.join(dest, rel));
-    files.set(rel, /\.(m?js|cjs|json|prisma|ts)$/.test(rel) ? neutralizeBuildPaths(data, root) : data);
+    files.set(server(rel), /\.(m?js|cjs|json|prisma|ts)$/.test(rel) ? neutralizeBuildPaths(data, root) : data);
   }
   const add = (rel, from) => files.set(rel, readFileSync(path.join(root, from)));
   add("app.js", "lite/app.js");
@@ -269,11 +274,11 @@ export function liteReleaseFiles(dest, { version, root = ROOT }) {
   add("THIRD-PARTY-NOTICES.md", "THIRD-PARTY-NOTICES.md");
   // Migrațiile ambelor dialecte (runner-ul aplicației le aplică la instalare și la pornire).
   for (const dir of ["packages/db/prisma/migrations", "packages/db/prisma/migrations-mysql"]) {
-    for (const rel of walk(path.join(root, dir))) files.set(`${dir}/${rel}`, readFileSync(path.join(root, dir, rel)));
+    for (const rel of walk(path.join(root, dir))) files.set(server(`${dir}/${rel}`), readFileSync(path.join(root, dir, rel)));
   }
   files.set("VERSION", Buffer.from(`${version}\n`, "utf8"));
   files.set("LICENSE", Buffer.from(LICENSE_TEXT(version), "utf8"));
-  for (const required of ["apps/web/server.js", "apps/web/.next/BUILD_ID", "node_modules/next/package.json"]) {
+  for (const required of ["apps/web/server.js", "apps/web/.next/BUILD_ID", "node_modules/next/package.json"].map(server)) {
     if (!files.has(required)) throw new Error(`lipsește din pachet: ${required}`);
   }
   files.set("CHECKSUMS.sha256", Buffer.from(checksumsFile(files), "utf8"));

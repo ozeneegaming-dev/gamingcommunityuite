@@ -103,17 +103,20 @@ describe("sesiunea wizard-ului și tokenul de final", () => {
 });
 
 describe("codul de instalare", () => {
-  test("ensureInstallCode: primul apel întoarce codul (și îl scrie în log), al doilea → null", async () => {
-    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+  test("ensureInstallCode: primul apel întoarce codul (și îl scrie pe stderr), al doilea → null", async () => {
+    // Pe stderr: Passenger / LiteSpeed (ediția Lite) păstrează doar stderr în jurnal, stdout se pierde.
+    const stdout = vi.spyOn(console, "log").mockImplementation(() => {});
+    const stderr = vi.spyOn(console, "error").mockImplementation(() => {});
     const code = await ensureInstallCode(dir);
     expect(code).toMatch(/^[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}$/);
-    expect(log).toHaveBeenCalledWith(`[GCS] Cod de instalare: ${code}`);
+    expect(stderr).toHaveBeenCalledWith(`[GCS] Cod de instalare: ${code}`);
+    expect(stdout).not.toHaveBeenCalled();
     await expect(ensureInstallCode(dir)).resolves.toBeNull();
     expect(readFileSync(path.join(dir, "install_code.hash"), "utf8")).toMatch(/^\$argon2id\$/);
   });
 
   test("verifyInstallCode: corect → true, greșit → false, a 6-a încercare → GcsRateLimited", async () => {
-    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
     const code = (await ensureInstallCode(dir))!;
     const opts = { ip: "203.0.113.9", limiter };
     await expect(verifyInstallCode(dir, code.toLowerCase().replace(/-/g, " "), opts)).resolves.toBe(true);

@@ -29,7 +29,9 @@ Notează: gazda (de obicei `localhost`), portul (MySQL `3306`, PostgreSQL `5432`
 ## 2. Fișierele aplicației
 
 1. Încarcă arhiva în *File Manager*, într-un folder **în afara** `public_html` (ex. `/home/cont/gcs`).
-2. *Extract* — se creează folderul `gcs-lite-<versiune>`; poți să-l redenumești (ex. `gcs`).
+2. *Extract* — se creează folderul `gcs-lite-<versiune>`; poți să-l redenumești (ex. `gcs`). În el găsești `app.js`
+   (fișierul de pornire), `cron.mjs`, `docs/` și `server/` (aplicația cu dependențele ei, inclusiv `node_modules`).
+   Rădăcina nu are `node_modules` intenționat: altfel panoul nu te-ar lăsa să schimbi versiunea Node.js.
 3. Folderul `config` (creat la prima pornire) trebuie să poată fi scris de aplicație; nu-l șterge niciodată: acolo stau
    secretul aplicației, licența și fișierele încărcate.
 
@@ -41,7 +43,10 @@ Notează: gazda (de obicei `localhost`), portul (MySQL `3306`, PostgreSQL `5432`
 - *Application root*: folderul de la pasul 2 (ex. `gcs`);
 - *Application URL*: domeniul sau subdomeniul comunității;
 - *Application startup file*: **`app.js`**;
-- *Create*. **Nu** apăsa „Run NPM Install”: dependențele sunt deja în arhivă.
+- *Create*. **Nu** apăsa „Run NPM Install”: dependențele sunt deja în arhivă (în `server/node_modules`).
+
+Versiunea Node.js se poate schimba oricând: *Setup Node.js App* → aplicația (*Edit*) → *Node.js version* → *Save*, apoi
+*Restart*. Pe o versiune sub 20.9 aplicația nu pornește, iar în `stderr.log` scrie ce versiune să alegi.
 
 **Plesk → domeniul → Node.js**
 - *Node.js Version*: 22.x; *Document Root*: lasă-l pe cel implicit al domeniului (`httpdocs`); *Application Root*: `gcs`;
@@ -53,9 +58,13 @@ Variabile de mediu: nu sunt necesare. Opțional `GCS_BASE_URL=https://domeniul-t
 ## 4. Instalarea din browser
 
 1. Deschide `https://domeniul-tau/install`.
-2. **Codul de instalare**: apare în jurnalul aplicației (cPanel: *Setup Node.js App* → aplicația → fișierul de log din
-   folderul aplicației, `stderr.log` / `passenger.log`; Plesk: *Node.js* → *Logs*) pe rândul
-   `[GCS] Cod de instalare: XXXX-XXXX-XXXX`.
+2. **Codul de instalare**: aplicația îl generează la prima pornire (prima vizită a site-ului) și îl scrie în jurnalul de
+   erori (stderr), pe rândul `[GCS] Cod de instalare: XXXX-XXXX-XXXX`:
+   - cPanel: fișierul `stderr.log` din folderul aplicației (deschide-l din *File Manager*), sau fișierul din câmpul
+     *Passenger log file* al aplicației, dacă panoul îl afișează;
+   - Plesk: *Node.js* → *Logs*.
+
+   Codul apare o singură dată (pe disc stă doar o amprentă a lui). Dacă nu-l mai găsești, vezi „Probleme frecvente”.
 3. **Verificări**: versiunea Node.js, discul, folderul `config`.
 4. **Licență**, **Aplicații**, apoi **Baza de date**: alege **MySQL / MariaDB** (sau PostgreSQL), completează datele de la
    pasul 1 și apasă *Testează conexiunea*.
@@ -101,7 +110,10 @@ nu rulează.
 
 | Simptom | Ce faci |
 |---|---|
-| „Cannot find module …/server.js” | *Application root* trebuie să fie folderul care conține `app.js`. |
+| „Cannot find module …/server.js” | *Application root* trebuie să fie folderul care conține `app.js` (și `server/`). |
+| Nu găsesc codul de instalare | Șterge din *File Manager* fișierul `config/install_code.hash`, apasă *Restart* în panou și deschide site-ul: în `stderr.log` apare un cod nou (cel vechi nu mai e valid). |
+| Aplicația nu pornește, iar în `stderr.log` scrie „Node.js … e prea vechi” sau `SyntaxError: Unexpected token '??='` | Versiunea Node.js e sub 20.9: alege 22 sau 24 în panou (pasul 3), apoi *Restart*. |
+| Panoul refuză schimbarea versiunii Node.js: „application should not contain folder/file named node_modules in application root” | Rădăcina aplicației conține un folder `node_modules` (ex. după „Run NPM Install”). Aplicația nu-l folosește (dependențele ei sunt în `server/node_modules`): șterge-l, schimbă versiunea, apoi *Restart*. |
 | Pagina dă 503 după instalare | Repornește aplicația din panou (*Restart*); verifică jurnalul. |
 | „Utilizatorul bazei nu poate crea tabele” | Dă utilizatorului **ALL PRIVILEGES** pe bază (pasul 1). |
 | Cron-ul „nu a rulat încă” | Verifică folderul din comandă și calea spre `node`; rulează comanda o dată în *Terminal* (dacă există). |

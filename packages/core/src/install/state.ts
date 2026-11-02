@@ -224,7 +224,9 @@ const normalizeCode = (code: string) => code.toUpperCase().replace(/[^A-Z0-9]/g,
 
 /**
  * Codul de instalare (spec §17.1): la prima pornire se generează 12 caractere `[A-Z2-9]`, se salvează doar
- * hash-ul Argon2 și codul apare în log-ul containerului. Apelurile următoare întorc `null`.
+ * hash-ul Argon2 și codul apare în jurnalul aplicației, pe **stderr**: `docker compose logs` arată ambele fluxuri, dar
+ * Passenger / LiteSpeed (ediția Lite pe cPanel, CloudLinux) păstrează doar stderr (`stderr.log`), iar stdout se pierde.
+ * Apelurile următoare întorc `null`.
  */
 export async function ensureInstallCode(configDir: string): Promise<string | null> {
   const file = path.join(configDir, FILES.codeHash);
@@ -239,7 +241,7 @@ export async function ensureInstallCode(configDir: string): Promise<string | nul
     throw error;
   }
   const code = raw.match(/.{4}/g)!.join("-");
-  console.log(`[GCS] Cod de instalare: ${code}`);
+  console.error(`[GCS] Cod de instalare: ${code}`);
   return code;
 }
 

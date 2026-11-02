@@ -29,7 +29,9 @@ Write down: the host (usually `localhost`), the port (MySQL `3306`, PostgreSQL `
 ## 2. Application files
 
 1. Upload the archive in the *File Manager*, to a folder **outside** `public_html` (e.g. `/home/account/gcs`).
-2. *Extract* — this creates the `gcs-lite-<version>` folder; you can rename it (e.g. `gcs`).
+2. *Extract* — this creates the `gcs-lite-<version>` folder; you can rename it (e.g. `gcs`). Inside are `app.js` (the
+   startup file), `cron.mjs`, `docs/` and `server/` (the application with its dependencies, `node_modules` included).
+   The root has no `node_modules` on purpose: otherwise the panel wouldn’t let you change the Node.js version.
 3. The `config` folder (created on first start) must be writable by the application; never delete it: it holds the
    application secret, the licence and the uploaded files.
 
@@ -41,7 +43,10 @@ Write down: the host (usually `localhost`), the port (MySQL `3306`, PostgreSQL `
 - *Application root*: the folder from step 2 (e.g. `gcs`);
 - *Application URL*: the community’s domain or subdomain;
 - *Application startup file*: **`app.js`**;
-- *Create*. Do **not** press “Run NPM Install”: the dependencies are already in the archive.
+- *Create*. Do **not** press “Run NPM Install”: the dependencies are already in the archive (in `server/node_modules`).
+
+You can change the Node.js version at any time: *Setup Node.js App* → the application (*Edit*) → *Node.js version* →
+*Save*, then *Restart*. On a version below 20.9 the application doesn’t start, and `stderr.log` says which version to pick.
 
 **Plesk → the domain → Node.js**
 - *Node.js Version*: 22.x; *Document Root*: keep the domain’s default (`httpdocs`); *Application Root*: `gcs`;
@@ -53,9 +58,13 @@ Environment variables: none required. Optionally `GCS_BASE_URL=https://your-doma
 ## 4. Installing from the browser
 
 1. Open `https://your-domain/install`.
-2. **Install code**: it appears in the application log (cPanel: *Setup Node.js App* → the app → the log file in the
-   application folder, `stderr.log` / `passenger.log`; Plesk: *Node.js* → *Logs*) on the line
-   `[GCS] Cod de instalare: XXXX-XXXX-XXXX`.
+2. **Install code**: the application generates it on first start (the site’s first visit) and writes it to the error log
+   (stderr), on the line `[GCS] Cod de instalare: XXXX-XXXX-XXXX`:
+   - cPanel: the `stderr.log` file in the application folder (open it from the *File Manager*), or the file in the
+     application’s *Passenger log file* field, if the panel shows one;
+   - Plesk: *Node.js* → *Logs*.
+
+   The code is shown only once (only a fingerprint of it is kept on disk). If you can’t find it, see “Common problems”.
 3. **Checks**: the Node.js version, disk, the `config` folder.
 4. **Licence**, **Applications**, then **Database**: choose **MySQL / MariaDB** (or PostgreSQL), fill in the details from
    step 1 and press *Test connection*.
@@ -100,7 +109,10 @@ After adding the cron, wait 5 minutes and press **Check**. The ACP dashboard sho
 
 | Symptom | What to do |
 |---|---|
-| “Cannot find module …/server.js” | *Application root* must be the folder that contains `app.js`. |
+| “Cannot find module …/server.js” | *Application root* must be the folder that contains `app.js` (and `server/`). |
+| I can’t find the install code | Delete the `config/install_code.hash` file in the *File Manager*, press *Restart* in the panel and open the site: a new code appears in `stderr.log` (the old one is no longer valid). |
+| The application doesn’t start and `stderr.log` says “Node.js … is too old” or `SyntaxError: Unexpected token '??='` | The Node.js version is below 20.9: pick 22 or 24 in the panel (step 3), then *Restart*. |
+| The panel refuses to change the Node.js version: “application should not contain folder/file named node_modules in application root” | The application root contains a `node_modules` folder (e.g. after “Run NPM Install”). The application doesn’t use it (its dependencies are in `server/node_modules`): delete it, change the version, then *Restart*. |
 | The page returns 503 after installing | Restart the application from the panel (*Restart*); check the log. |
 | “The database user can’t create tables” | Grant the user **ALL PRIVILEGES** on the database (step 1). |
 | The cron “hasn’t run yet” | Check the folder in the command and the path to `node`; run the command once in *Terminal* (if available). |

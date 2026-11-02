@@ -1,12 +1,48 @@
+import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import vm from "node:vm";
 import { afterAll, describe, expect, test } from "vitest";
 import { isShipped } from "../../../scripts/release.mjs";
-import { assembleStandalone, liteReleaseFiles, PLATFORM_PACKAGE, pruneEngines, swapNatives } from "../../../scripts/release-lite.mjs";
+import { assembleStandalone, LITE_SERVER_DIR, liteReleaseFiles, PLATFORM_PACKAGE, pruneEngines, swapNatives } from "../../../scripts/release-lite.mjs";
 
 const tmp = mkdtempSync(path.join(os.tmpdir(), "gcs-release-lite-"));
 afterAll(() => rmSync(tmp, { recursive: true, force: true }));
+
+const APP_JS = path.join(__dirname, "../../../lite/app.js");
+
+/** Rulează `app.js` ca modul CommonJS, cu un `process` fals (versiunea Node.js) și un `require` care notează ce i se cere. */
+function runAppJs(nodeVersion: string) {
+  const required: string[] = [];
+  let stderr = "";
+  let exitCode: number | undefined;
+  const fakeProcess = {
+    versions: { node: nodeVersion },
+    env: {},
+    stderr: {
+      write: (text: string) => {
+        stderr += text;
+        return true;
+      },
+    },
+    exit: (code: number) => {
+      exitCode = code;
+      throw new Error("exit");
+    },
+  };
+  const fakeRequire = (id: string) => {
+    required.push(id);
+    throw new Error("require");
+  };
+  const wrapper = vm.runInThisContext(`(function (exports, require, module, __filename, __dirname, process) {${readFileSync(APP_JS, "utf8")}\n})`) as (...args: unknown[]) => void;
+  try {
+    wrapper({}, fakeRequire, {}, path.join(tmp, "app.js"), tmp, fakeProcess);
+  } catch {
+    // `process.exit` sau primul `require` opresc rularea.
+  }
+  return { required, stderr, exitCode };
+}
 
 const write = (file: string, content: string) => {
   mkdirSync(path.dirname(file), { recursive: true });
@@ -86,14 +122,44 @@ describe("pachetul ediției Lite", () => {
     expect(existsSync(path.join(dest, "apps/web/generated/mysql-client/query_engine-windows.dll.node"))).toBe(false);
   });
 
-  test("fișierele de la rădăcină: app.js, cron.mjs, documentația RO / EN, migrațiile ambelor dialecte, sumele de control", () => {
+  test("la rădăcină: app.js, cron.mjs, documentația RO / EN, sumele de control; serverul, dependențele și migrațiile în server/", () => {
     const files = liteReleaseFiles(dest, { version: "1.2.3" });
-    for (const rel of ["app.js", "cron.mjs", "docs/INSTALL-LITE.md", "docs/INSTALL-LITE.en.md", "EULA.md", "LICENSE", "VERSION", "CHECKSUMS.sha256", "packages/db/prisma/migrations-mysql/20261120300000_base/migration.sql", "packages/db/prisma/migrations/migration_lock.toml"]) {
+    for (const rel of ["app.js", "cron.mjs", "docs/INSTALL-LITE.md", "docs/INSTALL-LITE.en.md", "EULA.md", "LICENSE", "VERSION", "CHECKSUMS.sha256", "server/apps/web/server.js", "server/node_modules/next/package.json", "server/packages/db/prisma/migrations-mysql/20261120300000_base/migration.sql", "server/packages/db/prisma/migrations/migration_lock.toml"]) {
       expect(files.has(rel), rel).toBe(true);
     }
+    // CloudLinux (NodeJS Selector) nu schimbă versiunea Node.js cât timp rădăcina aplicației conține `node_modules`.
+    expect([...files.keys()].filter((rel) => !rel.startsWith(`${LITE_SERVER_DIR}/`) && /(^|\/)(node_modules|apps|packages)\//.test(rel))).toEqual([]);
     expect(files.get("VERSION")!.toString()).toBe("1.2.3\n");
     expect(files.get("CHECKSUMS.sha256")!.toString()).toContain("  app.js\n");
-    expect(readFileSync(path.join(__dirname, "../../../lite/app.js"), "utf8")).toContain('require(path.join(root, "apps", "web", "server.js"))');
+  });
+
+  test("app.js pornește serverul din server/, care își găsește dependențele în server/node_modules", () => {
+    const app = path.join(tmp, "lite-app");
+    write(path.join(app, "app.js"), readFileSync(APP_JS, "utf8"));
+    write(path.join(app, "server", "node_modules", "next", "index.js"), "module.exports = 'next din server/node_modules';");
+    write(path.join(app, "server", "apps", "web", "server.js"), "process.stdout.write(require('next') + ' | ' + process.env.GCS_MIGRATIONS_DIR);");
+    const env = { ...process.env, GCS_SECRET: "test", GCS_CONFIG_DIR: path.join(app, "config") };
+    delete env.GCS_MIGRATIONS_DIR;
+    const res = spawnSync(process.execPath, ["app.js"], { cwd: app, env, encoding: "utf8" });
+    expect(res.stderr).toBe("");
+    expect(res.stdout).toBe(`next din server/node_modules | ${path.join(app, "server", "packages", "db", "prisma", "migrations")}`);
+  });
+
+  test("app.js oprește un Node.js sub 20.9 cu un mesaj pe stderr, înaintea oricărui require", () => {
+    for (const version of ["14.21.3", "18.20.4", "20.8.1"]) {
+      const run = runAppJs(version);
+      expect(run.exitCode, version).toBe(1);
+      expect(run.required, version).toEqual([]);
+      expect(run.stderr).toContain(`[GCS] Node.js ${version} e prea vechi`);
+      expect(run.stderr).toContain("Node.js 20.9 sau mai nou");
+      expect(run.stderr).toContain(`Node.js ${version} is too old`);
+    }
+    for (const version of ["20.9.0", "22.11.0", "26.0.0"]) {
+      const run = runAppJs(version);
+      expect(run.exitCode, version).toBeUndefined();
+      expect(run.stderr, version).toBe("");
+      expect(run.required[0], version).toBe("node:crypto");
+    }
   });
 
   test("pachetul VPS nu ia fișierele ediției Lite", () => {

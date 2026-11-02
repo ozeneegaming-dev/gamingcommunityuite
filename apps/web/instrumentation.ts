@@ -1,6 +1,6 @@
 /**
  * Rulează o singură dată, la pornirea serverului Next.js (spec §17, §17.1):
- * - neinstalat: generează codul de instalare și îl scrie în log (`docker compose logs web`);
+ * - neinstalat: generează codul de instalare și îl scrie pe stderr (`docker compose logs web`; în Lite, `stderr.log`);
  * - instalat: aplică migrațiile care lipsesc (cu lock, sigur și cu mai multe containere `web`), apoi seed-ul modulelor.
  */
 export async function register(): Promise<void> {

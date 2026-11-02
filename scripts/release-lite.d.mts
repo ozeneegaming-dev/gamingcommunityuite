@@ -3,6 +3,7 @@
 export declare const LITE_TARGETS: Record<"linux-x64-gnu" | "win32-x64", { prisma: string[]; native: (name: string) => boolean }>;
 export declare const PLATFORM_PACKAGE: RegExp;
 export declare const LITE_EXCLUDES: RegExp[];
+export declare const LITE_SERVER_DIR: string;
 export declare function assembleStandalone(standalone: string, dest: string): string;
 export declare function swapNatives(
   dest: string,
