@@ -88,6 +88,19 @@ describe("GcsLoginLockout", () => {
     expect(await lockout.status({ userId: null, ip: "203.0.113.5" })).toBeNull();
   });
 
+  test("clear (parola resetată) uită blocarea și încercările contului, fără jurnal; blocarea IP-ului rămâne", async () => {
+    values = { "security.login_max_attempts": 2 };
+    await fail(2, "u1", "203.0.113.8");
+    await fail(2 * IP_LOCK_FACTOR, null, "203.0.113.8");
+    await expect(lockout.status({ userId: "u1", ip: null })).resolves.toMatchObject({ scope: "account" });
+    await lockout.clear("u1");
+    expect(await lockout.status({ userId: "u1", ip: null })).toBeNull();
+    // Contorul a pornit de la zero: o singură parolă greșită nu blochează din nou.
+    expect(await lockout.recordFailure({ userId: "u1", ip: null })).toBeNull();
+    await expect(lockout.status({ userId: "u1", ip: "203.0.113.8" })).resolves.toMatchObject({ scope: "ip" });
+    expect(await db.auditLog.count({ where: { action: "auth.login_unlocked" } })).toBe(0);
+  });
+
   test("adminul deblochează contul (jurnal); a doua oară nu mai e nimic de deblocat", async () => {
     values = { "security.login_max_attempts": 1 };
     await lockout.recordFailure({ userId: "u1", ip: null });

@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
 import { GcsValidationError } from "../errors";
-import { sendEmail, type GcsEmailSettings } from "./send";
+import { emailConfigured, sendEmail, type GcsEmailSettings } from "./send";
 
 function settings(values: Record<string, unknown>): GcsEmailSettings {
   const defaults: Record<string, unknown> = {
@@ -47,5 +47,17 @@ describe("sendEmail", () => {
       sendEmail({ to: "a@b.c", subject: "x", html: "x" }, settings({ "email.from": "" }), { createTransport }),
     ).rejects.toBeInstanceOf(GcsValidationError);
     expect(createTransport).not.toHaveBeenCalled();
+  });
+});
+
+describe("emailConfigured", () => {
+  test("da doar cu serverul SMTP și expeditorul completate", async () => {
+    await expect(emailConfigured(settings({}))).resolves.toBe(true);
+    await expect(emailConfigured(settings({ "email.smtp_host": "" }))).resolves.toBe(false);
+    await expect(emailConfigured(settings({ "email.from": "  " }))).resolves.toBe(false);
+  });
+
+  test("o setare care nu se poate citi înseamnă „nu”", async () => {
+    await expect(emailConfigured({ get: async () => Promise.reject(new Error("db down")) })).resolves.toBe(false);
   });
 });
