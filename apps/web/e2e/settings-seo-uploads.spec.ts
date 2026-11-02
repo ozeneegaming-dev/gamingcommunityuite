@@ -61,11 +61,11 @@ async function sitemapUrls(request: APIRequestContext): Promise<{ files: string[
   return { files, urls };
 }
 
-/** Salvează un card al paginii SEO și așteaptă „Salvat.”. */
+/** Salvează un card al paginii SEO și așteaptă „Salvat”. */
 async function saveCard(page: Page, testId: string): Promise<void> {
   const card = page.getByTestId(testId);
   await card.getByRole("button", { name: "Salvează" }).first().click();
-  await expect(card.getByRole("status")).toHaveText("Salvat.");
+  await expect(card.getByRole("status")).toHaveText("Salvat");
 }
 
 test("ACP SEO: robots.txt personalizat, sitemap-ul fără profiluri sau oprit, verificarea și formatul titlului", async ({ page, request }) => {
@@ -265,7 +265,7 @@ test("ACP Încărcări și imagini: pagina reală (driverul, limitele pe grup), 
     await expect(page.getByText("Lista conține o extensie periculoasă (programe, scripturi, pagini web, SVG).")).toBeVisible();
     await page.getByLabel("Extensii permise la atașamente").fill("jpg, png, webp, gif, txt");
     await page.getByRole("button", { name: "Salvează" }).first().click();
-    await expect(page.locator("form.gcs-acpForm").first().getByRole("status")).toHaveText("Salvat.");
+    await expect(page.locator("form.gcs-acpForm").first().getByRole("status")).toHaveText("Salvat");
     await page.reload();
     await expect(page.getByLabel("Calitatea imaginilor (%)")).toHaveValue("75");
     await expect(page.getByLabel("Extensii permise la atașamente")).toHaveValue("jpg, png, webp, gif, txt");
