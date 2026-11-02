@@ -1,7 +1,7 @@
 import "server-only";
 import { buildSteamLoginUrl, fetchSteamProfile, verifySteamAssertion } from "@gcs/core";
 import type { BetterAuthPlugin } from "better-auth";
-import { createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
+import { createAuthEndpoint, getSessionFromCtx, isAPIError } from "better-auth/api";
 import { setSessionCookie } from "better-auth/cookies";
 import * as z from "zod";
 
@@ -76,15 +76,24 @@ export function steamPlugin(opts: { apiKey: () => Promise<string>; errorURL?: st
             throw ctx.redirect(callbackURL);
           } else {
             const profile = await fetchSteamProfile(steamId, await opts.apiKey());
-            const created = await adapter.createOAuthUser(
-              {
-                name: profile?.name ?? `steam_${steamId.slice(-6)}`,
-                email: `${steamId}@steam.invalid`,
-                emailVerified: false,
-                image: profile?.avatar ?? null,
-              },
-              { providerId: PROVIDER_ID, accountId: steamId },
-            );
+            let created: Awaited<ReturnType<typeof adapter.createOAuthUser>>;
+            try {
+              created = await adapter.createOAuthUser(
+                {
+                  name: profile?.name ?? `steam_${steamId.slice(-6)}`,
+                  email: `${steamId}@steam.invalid`,
+                  emailVerified: false,
+                  image: profile?.avatar ?? null,
+                },
+                { providerId: PROVIDER_ID, accountId: steamId },
+              );
+            } catch (error) {
+              // Contul nou oprit de hook-ul creării (termeni neacceptați, înregistrări închise, ban): înapoi la login, cu
+              // codul erorii (pagina îl traduce), nu un răspuns JSON.
+              const code = isAPIError(error) ? (error as { body?: { code?: unknown } }).body?.code : undefined;
+              if (typeof code === "string" && /^[A-Z_]{1,40}$/.test(code)) throw ctx.redirect(`/login?error=${code}`);
+              throw error;
+            }
             userId = created.user.id;
           }
 

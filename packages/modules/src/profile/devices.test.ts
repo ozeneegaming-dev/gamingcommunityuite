@@ -68,6 +68,16 @@ describe("dispozitivele contului", () => {
     expect(list.find((d) => d.browser === "Chrome")).toMatchObject({ ip: "203.0.113.x", location: "RO" });
   });
 
+  test("comutatorul site-ului (ACP → Setări → Securitate) oprește emailul pentru toți", async () => {
+    const userId = w.member.userId!;
+    await w.settings.set("security.new_device_email", false, w.root);
+    const s1 = await session(userId, CHROME_WIN);
+    await devices.recordLogin({ userId, sessionId: s1.id, userAgent: CHROME_WIN, ip: null, path: "/sign-in/email" });
+    const s2 = await session(userId, SAFARI_IOS);
+    expect((await devices.recordLogin({ userId, sessionId: s2.id, userAgent: SAFARI_IOS, ip: null, path: "/sign-in/email" })).isNew).toBe(true);
+    expect(w.outbox).toHaveLength(0);
+  });
+
   test("doar ultimele 90 de zile", async () => {
     const userId = w.member.userId!;
     const s = await session(userId, CHROME_WIN);

@@ -1,6 +1,7 @@
 "use server";
 
-import { GcsValidationError, sendEmail, settingsAcpSection, type GcsResult } from "@gcs/core";
+import { GcsValidationError, MFA_REQUIRED_GROUPS_SETTING, sendEmail, settingsAcpSection, type GcsResult } from "@gcs/core";
+import { SECURITY_SECTION } from "@gcs/modules";
 import { getTranslations } from "next-intl/server";
 import { runAcpAction } from "@/lib/acp-actions";
 import { getAcpContext } from "@/lib/acp";
@@ -41,6 +42,19 @@ export async function sendTestEmail(): Promise<{ ok: true; to: string } | { ok: 
   });
   if (!result.ok) return { ok: false, error: Object.keys(result.error.fields ?? {}).join(", ") || result.error.code };
   return result.data;
+}
+
+/** Grupurile cu 2FA obligatoriu (ACP → Setări → Securitate): doar grupurile care există, fără vizitatori. */
+export async function saveMfaGroups(fd: FormData): Promise<GcsResult<null>> {
+  return runAcpAction(settingsAcpSection(SECURITY_SECTION), "edit", async (actor) => {
+    const { db, settings } = services();
+    const ids = [...new Set(fd.getAll("group").map((v) => Number(v)).filter((n) => Number.isInteger(n) && n > 0))];
+    const existing = await db.group.findMany({ where: { id: { in: ids }, key: { not: "guest" } }, select: { id: true } });
+    const valid = existing.map((g) => g.id).sort((a, b) => a - b);
+    const current = await settings.get<unknown>(MFA_REQUIRED_GROUPS_SETTING);
+    if (JSON.stringify(current) !== JSON.stringify(valid)) await settings.set(MFA_REQUIRED_GROUPS_SETTING, valid, actor);
+    return null;
+  });
 }
 
 /** Limbile active ale site-ului (cel puțin una); limba implicită rămâne în setările de mai sus. */

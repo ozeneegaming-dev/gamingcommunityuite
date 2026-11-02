@@ -30,6 +30,14 @@ describe("acpGate", () => {
     expect(acpGate(base, "10.0.0.2", now)).toBe("need_reauth");
   });
 
+  test("fereastra din setări (minute): 60 de minute → reautentificare după o oră", () => {
+    const at = new Date("2026-10-05T10:59:00Z");
+    expect(acpGate({ ...base, lastAcpAuthAt: at, reauthMinutes: 60 }, "10.0.0.1", now)).toBe("need_reauth");
+    expect(acpGate({ ...base, lastAcpAuthAt: at, reauthMinutes: 120 }, "10.0.0.1", now)).toBe("ok");
+    // Fără setare (sau o valoare invalidă) rămân cele 12 ore.
+    expect(acpGate({ ...base, lastAcpAuthAt: at, reauthMinutes: 0 }, "10.0.0.1", now)).toBe("ok");
+  });
+
   test("altfel → ok", () => {
     expect(acpGate(base, "10.0.0.1", now)).toBe("ok");
     expect(acpGate({ ...base, lastAcpAuthAt: new Date("2026-10-05T00:00:01Z") }, "10.0.0.1", now)).toBe("ok");

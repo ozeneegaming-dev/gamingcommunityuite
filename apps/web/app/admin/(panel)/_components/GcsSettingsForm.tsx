@@ -16,6 +16,8 @@ export type GcsSettingsField = {
   options?: { value: string; label: string }[];
   /** Text pe mai multe rânduri (ex. regulile chat-ului). */
   multiline?: boolean;
+  /** Ajutorul de sub câmp (ce înseamnă valoarea, ex. „0 = oprit”). */
+  hint?: string;
 };
 
 type Props = {
@@ -79,8 +81,14 @@ export function GcsSettingsForm({ fields, action, labels }: Props) {
                 className="gcs-switch"
                 name={name}
                 defaultChecked={f.value === true}
-                {...(error ? { "aria-invalid": true, "aria-describedby": `${id}-error` } : {})}
+                {...(error ? { "aria-invalid": true } : {})}
+                {...(error || f.hint ? { "aria-describedby": [f.hint ? `${id}-hint` : "", error ? `${id}-error` : ""].filter(Boolean).join(" ") } : {})}
               />
+              {f.hint && (
+                <p id={`${id}-hint`} className="gcs-field__hint">
+                  {f.hint}
+                </p>
+              )}
               {error && (
                 <p id={`${id}-error`} className="gcs-field__error" role="alert">
                   {error}
@@ -89,7 +97,7 @@ export function GcsSettingsForm({ fields, action, labels }: Props) {
             </div>
           );
         }
-        const props = { className: "gcs-field--row", ...(error ? { error } : {}) };
+        const props = { className: "gcs-field--row", ...(error ? { error } : {}), ...(f.hint ? { hint: f.hint } : {}) };
         return (
           <div key={f.key} id={f.key}>
             {f.options ? (
@@ -103,7 +111,7 @@ export function GcsSettingsForm({ fields, action, labels }: Props) {
                 </select>
               </GcsField>
             ) : f.type === "secret" ? (
-              <GcsField label={f.label} hint={f.secretSet ? labels.secretSet : labels.secretEmpty} {...props}>
+              <GcsField label={f.label} {...props} hint={f.secretSet ? labels.secretSet : labels.secretEmpty}>
                 <input name={name} type="password" autoComplete="new-password" placeholder={f.secretSet ? "••••••••" : ""} />
               </GcsField>
             ) : f.multiline ? (

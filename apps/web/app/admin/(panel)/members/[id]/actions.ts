@@ -87,6 +87,14 @@ export async function unlockMember(userId: string): Promise<GcsResult<null>> {
   });
 }
 
+/** Ridică blocarea după parole greșite (ACP → Setări → Securitate); intră în jurnal. */
+export async function unlockMemberLogin(userId: string): Promise<GcsResult<null>> {
+  return runAcpAction(SECTION, "edit", async (actor) => {
+    await services().loginLockout.unlock(actor, userId);
+    return null;
+  });
+}
+
 export async function forcePasswordReset(userId: string): Promise<GcsResult<null>> {
   return runAcpAction(SECTION, "edit", async (actor) => {
     await services().memberAdmin.requestPasswordReset(actor, userId);

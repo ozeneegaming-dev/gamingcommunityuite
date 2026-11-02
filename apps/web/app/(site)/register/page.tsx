@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { currentActor } from "@/lib/actor";
+import { registrationLegal } from "@/lib/legal";
 import { services } from "@/lib/services";
 import { GcsAuthCard } from "../_components/GcsAuthCard";
 import { RegisterForm } from "./RegisterForm";
@@ -17,18 +18,27 @@ export default async function RegisterPage() {
   const t = await getTranslations("auth.register");
   const { settings, antispam } = services();
   const locale = await getLocale();
-  const [siteName, turnstileSiteKey, turnstileSecret, challenge] = await Promise.all([
+  const [siteName, turnstileSiteKey, turnstileSecret, challenge, legal, discordClientId, googleClientId] = await Promise.all([
     settings.get<string>("site.name"),
     settings.get<string>("auth.turnstile_site_key"),
     settings.get<string>("auth.turnstile_secret"),
     antispam.registrationChallenge(locale),
+    registrationLegal(),
+    settings.get<string>("auth.discord_client_id"),
+    settings.get<string>("auth.google_client_id"),
   ]);
   // Turnstile apare doar în modul lui și configurat complet (cheia publică și secretul verificat pe server).
   const turnstile = challenge.captcha === "turnstile" && turnstileSiteKey && turnstileSecret ? turnstileSiteKey : null;
 
   return (
     <GcsAuthCard title={t("title")} subtitle={t("subtitle", { site: siteName })} icon={<GcsIcon name="fa-solid fa-user-plus" />}>
-      <RegisterForm turnstileSiteKey={turnstile} pow={challenge.captcha === "pow"} question={challenge.question} locale={locale} />
+      <RegisterForm
+        turnstileSiteKey={turnstile}
+        pow={challenge.captcha === "pow"}
+        question={challenge.question}
+        locale={locale}
+        legal={{ ...legal, minLength: legal.policy.minLength, discord: discordClientId !== "", google: googleClientId !== "" }}
+      />
     </GcsAuthCard>
   );
 }

@@ -1,3 +1,4 @@
+import { loadMfaRecovery } from "@gcs/core";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -16,17 +17,18 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   if ((await currentActor()).userId) redirect("/");
   const t = await getTranslations("auth.login");
   const { settings } = services();
-  const [siteName, discordClientId, googleClientId] = await Promise.all([
+  const [siteName, discordClientId, googleClientId, recovery] = await Promise.all([
     settings.get<string>("site.name"),
     settings.get<string>("auth.discord_client_id"),
     settings.get<string>("auth.google_client_id"),
+    loadMfaRecovery(settings),
   ]);
   const { error } = await searchParams;
   const initialError = loginError(error);
 
   return (
     <GcsAuthCard title={t("title")} subtitle={t("subtitle", { site: siteName })} icon={<GcsIcon name="fa-solid fa-right-to-bracket" />}>
-      <LoginForm discordEnabled={discordClientId !== ""} googleEnabled={googleClientId !== ""} initialError={initialError} />
+      <LoginForm discordEnabled={discordClientId !== ""} googleEnabled={googleClientId !== ""} initialError={initialError} emailRecovery={recovery === "email_code"} />
     </GcsAuthCard>
   );
 }
@@ -40,5 +42,10 @@ function loginError(error: string | undefined): string | null {
   if (!error) return null;
   if (error === "steam" || error === "steam_linked") return error;
   if (error === "account_not_linked") return "account_not_linked";
+  // Contul nou oprit la creare (Discord / Google / Steam): termenii neacceptați, înregistrările închise, un ban.
+  const code = error.toUpperCase();
+  if (code === "TERMS_REQUIRED") return "terms_required_social";
+  if (code === "REGISTRATION_CLOSED") return "registration_closed";
+  if (code === "BANNED") return "banned";
   return "social";
 }

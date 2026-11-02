@@ -114,7 +114,22 @@
       "subtitle": "Geben Sie den 6-stelligen Code aus Ihrer Authenticator-App ein.",
       "code": "Prüfcode",
       "trustDevice": "Erinnern Sie sich an dieses Gerät für 30 Tage",
-      "submit": "Überprüfung"
+      "submit": "Überprüfung",
+      "backupSubtitle": "Gib einen der Backup-Codes ein, die du beim Aktivieren von 2FA erhalten hast. Jeder Code funktioniert nur einmal.",
+      "emailSubtitle": "Wir haben einen 6-stelligen Code an die E-Mail deines Kontos gesendet. Er ist 3 Minuten gültig.",
+      "backupCode": "Backup-Code",
+      "emailSent": "Der Code wurde per E-Mail gesendet.",
+      "use": {
+        "totp": "Authenticator-App verwenden",
+        "backup": "Einen Backup-Code verwenden",
+        "email": "Code per E-Mail senden"
+      },
+      "email": {
+        "subject": "Dein Anmeldecode — {site}",
+        "greeting": "Hallo, {name}!",
+        "body": "Dein Code für die Zwei-Faktor-Anmeldung lautet:",
+        "ignore": "Wenn du nicht versucht hast, dich anzumelden, ändere dein Passwort."
+      }
     },
     "register": {
       "title": "Registrieren",
@@ -128,7 +143,11 @@
       "hasAccount": "Haben Sie bereits ein Konto?",
       "loginLink": "Anmelden",
       "answerHint": "Die Frage der Community gegen Bots.",
-      "verifying": "Wird geprüft…"
+      "verifying": "Wird geprüft…",
+      "acceptTerms": "Ich habe die <terms>Nutzungsbedingungen</terms> gelesen und akzeptiere sie.",
+      "acceptTermsPrivacy": "Ich habe die <terms>Nutzungsbedingungen</terms> und die <privacy>Datenschutzerklärung</privacy> gelesen und akzeptiere sie.",
+      "termsLink": "Nutzungsbedingungen",
+      "privacyLink": "Datenschutzerklärung"
     },
     "errors": {
       "invalid_credentials": "Falsche E-Mail oder Passwort",
@@ -150,7 +169,18 @@
       "banned": "Dein Zugang zu dieser Website ist eingeschränkt. Falls das ein Fehler ist, kontaktiere das Team.",
       "registration_closed": "Registrierungen sind derzeit geschlossen.",
       "qa_failed": "Die Antwort auf die Frage ist nicht richtig.",
-      "spam_source": "Die Registrierung wurde vom Spamfilter gestoppt. Falls das ein Fehler ist, kontaktiere das Team."
+      "spam_source": "Die Registrierung wurde vom Spamfilter gestoppt. Falls das ein Fehler ist, kontaktiere das Team.",
+      "account_locked": "Dieses Konto ist nach zu vielen falschen Passwörtern vorübergehend gesperrt. Versuche es in {minutes} Min. erneut.",
+      "password_too_short_min": "Das Passwort muss mindestens {min} Zeichen haben",
+      "password_too_long": "Das Passwort darf höchstens 128 Zeichen haben",
+      "password_needs_mix": "Das Passwort muss Buchstaben und Ziffern enthalten",
+      "terms_required": "Du musst die Bedingungen akzeptieren, um dein Konto zu erstellen.",
+      "terms_required_social": "Für ein neues Konto setze auf der Registrierungsseite den Haken bei den Bedingungen und fahre dann mit Discord, Google oder Steam fort.",
+      "otp_disabled": "Codes per E-Mail sind auf dieser Seite nicht verfügbar. Nutze deine Authenticator-App oder einen Backup-Code."
+    },
+    "passwordRule": {
+      "length": "Mindestens {min} Zeichen.",
+      "mix": "Mindestens {min} Zeichen, mit Buchstaben und Ziffern."
     }
   },
   "errors": {
@@ -388,7 +418,10 @@
       "invalid_icon": "Das Symbol ist ungültig.",
       "disabled": "Diese Option ist in diesem Forum aus.",
       "invalid_gradient": "Ungültiger Verlauf",
-      "invalid_svg": "Das SVG ist ungültig oder lässt sich nicht bereinigen."
+      "invalid_svg": "Das SVG ist ungültig oder lässt sich nicht bereinigen.",
+      "password_needs_mix": "Das Passwort muss Buchstaben und Ziffern enthalten.",
+      "password_too_long": "Das Passwort darf höchstens 128 Zeichen haben.",
+      "password_policy_length": "Das Passwort ist für die Regel der Seite zu kurz (siehe unter dem Feld)."
     }
   },
   "acp": {
@@ -449,12 +482,12 @@
         "webhooks": "Webhooks",
         "settings": "Einstellungen",
         "settings_general": "Allgemein",
-        "settings_terms": "Bedingungen & Privatsphäre",
+        "settings_terms": "Bedingungen und Datenschutz",
         "settings_posting": "Posting & Editor",
         "settings_email": "E-Mail",
         "settings_auth": "Login & Registrierung",
         "settings_contact": "Kontakt",
-        "settings_2fa": "Zwei-Faktor-Authentifizierung",
+        "settings_2fa": "Sicherheit",
         "settings_advanced": "Erweitert",
         "settings_pwa": "Web App (PWA)",
         "discovery": "Discovery",
@@ -1042,7 +1075,8 @@
           "discord": "Discord",
           "google": "Google",
           "other": "Andere"
-        }
+        },
+        "loginLocked": "Anmeldung gesperrt bis {time}"
       },
       "actions": {
         "title": "Kontoaktionen",
@@ -1060,7 +1094,9 @@
         "disable2faConfirm": "Zwei-Faktor-Anmeldung für dieses Mitglied deaktivieren? Nur wenn es keinen Zugang mehr zur Authenticator-App hat.",
         "ban": "Sperren",
         "gdpr": "DSGVO-Export",
-        "hint": "Jede Aktion wird protokolliert. Zusammenführen und Löschen haben eigene Bestätigungsseiten."
+        "hint": "Jede Aktion wird protokolliert. Zusammenführen und Löschen haben eigene Bestätigungsseiten.",
+        "unlockLogin": "Anmeldung entsperren",
+        "unlockLoginConfirm": "Sperre nach falschen Passwörtern aufheben? Das Mitglied kann es sofort erneut versuchen."
       },
       "cards": {
         "activity": "Aktivität (30 Tage)",
@@ -1333,7 +1369,9 @@
         "servers_bridge": "Bridge and ELO",
         "gdpr": "GDPR requests",
         "donations": "Spenden",
-        "warnings": "Verwarnungen"
+        "warnings": "Verwarnungen",
+        "2fa": "Sicherheit",
+        "terms": "Bedingungen und Datenschutz"
       },
       "save": "Einstellungen speichern",
       "secretSet": "•••• gespeichert (leave empty, um den wert zu behalten)",
@@ -4744,6 +4782,45 @@
         "listLabel": "Widgets dieser Seite",
         "edit": "Aussehen"
       }
+    },
+    "securitySettings": {
+      "mfaGroups": "Gruppen mit Pflicht-2FA",
+      "mfaGroupsHint": "Mitglieder dieser Gruppen müssen die Zwei-Faktor-Anmeldung aktivieren, bevor sie die Seite nutzen: bis dahin werden sie zu Einstellungen → Sicherheit geschickt. Das ACP verlangt 2FA ohnehin von allen mit Zugriff.",
+      "save": "Gruppen speichern"
+    },
+    "legal": {
+      "title": "Bedingungen und Datenschutz",
+      "terms": {
+        "title": "Nutzungsbedingungen",
+        "hint": "Die öffentliche Seite /terms oder eine externe Adresse. Solange sie existiert, wird sie im Footer und bei der Registrierung verlinkt."
+      },
+      "privacy": {
+        "title": "Datenschutzerklärung",
+        "hint": "Die öffentliche Seite /privacy oder eine externe Adresse, verlinkt im Footer, bei der Registrierung und im Cookie-Hinweis."
+      },
+      "view": "Seite ansehen",
+      "mode": "Wo sie liegt",
+      "modes": {
+        "none": "Nirgends (die Seite antwortet mit 404)",
+        "page": "Seite auf der Website",
+        "external": "Externe Adresse"
+      },
+      "url": "Externe Adresse",
+      "urlHint": "Nur https://…-Adressen",
+      "content": "Text",
+      "saveDoc": "Speichern",
+      "savedDoc": "Gespeichert.",
+      "options": "Registrierung und Cookies",
+      "save": "Speichern",
+      "retention": {
+        "title": "Datenaufbewahrung",
+        "hint": "Was älter als der Zeitraum ist, wird einmal täglich automatisch gelöscht (Job system.retention). 0 = für immer behalten.",
+        "days": "{days, plural, one {# Tag} other {# Tage}}",
+        "forever": "für immer",
+        "ips": "IP-Adressen in Beiträgen, Nachrichten und Protokollen: {value}.",
+        "notifications": "Gelesene Benachrichtigungen: {value}.",
+        "edit": "Ändern"
+      }
     }
   },
   "settings": {
@@ -4810,7 +4887,9 @@
       "bottom": "Unten",
       "desktop": "Nur Desktop",
       "all_devices": "Alle Geräte",
-      "poll": "Nur Polling (Hoster, die lange Verbindungen kappen)"
+      "poll": "Nur Polling (Hoster, die lange Verbindungen kappen)",
+      "backup_codes": "Nur Backup-Codes",
+      "email_code": "Backup-Codes oder ein Code per E-Mail"
     },
     "forums": {
       "posts_per_page": "Beiträge pro Seite",
@@ -5137,7 +5216,8 @@
       "enable": "Einschalten",
       "disable": "Abschalten",
       "password": "Passwort des Kontos",
-      "wrongPassword": "Das Passwort ist nicht korrekt."
+      "wrongPassword": "Das Passwort ist nicht korrekt.",
+      "mfaRequired": "Deine Gruppe verlangt die Zwei-Faktor-Anmeldung. Aktiviere sie unten, um die Seite weiter zu nutzen."
     },
     "signature": {
       "title": "Unterschrift",
@@ -5398,6 +5478,47 @@
       "features": "Bot-Funktionen",
       "welcome_title": "Titel der Willkommensnachricht",
       "welcome_text": "Willkommensnachricht"
+    },
+    "siteSecurity": {
+      "login_max_attempts": "Falsche Passwörter bis zur Sperre",
+      "login_max_attempts_hint": "Nach so vielen falschen Passwörtern wird das Konto vorübergehend gesperrt (0 = keine Sperre). Eine IP wird nach dreimal so vielen Versuchen gesperrt.",
+      "login_lock_minutes": "Sperrdauer (Minuten)",
+      "login_lock_minutes_hint": "Danach entsperrt sich das Konto von selbst. Das Team kann es auf der Mitgliederseite früher entsperren.",
+      "password_min_length": "Mindestlänge des Passworts",
+      "password_min_length_hint": "Zwischen 8 und 128 Zeichen; gilt bei der Registrierung und beim Ändern des Passworts.",
+      "password_require_mix": "Passwörter müssen Buchstaben und Ziffern enthalten",
+      "mfa_required_groups": "Gruppen mit Pflicht-2FA",
+      "mfa_recovery": "2FA-Wiederherstellung (Gerät verloren)",
+      "mfa_recovery_hint": "Die bei der Aktivierung erhaltenen Backup-Codes funktionieren immer. Die zweite Option erlaubt auch die Anmeldung mit einem Code an die E-Mail des Kontos.",
+      "new_device_email": "E-Mail bei Anmeldung von einem neuen Gerät",
+      "new_device_email_hint": "Hier aus, bekommt sie niemand. An, kann jedes Mitglied sie unter Einstellungen → Geräte abschalten.",
+      "acp_session_minutes": "ACP-Sitzung (Minuten)",
+      "acp_session_minutes_hint": "So lange nach der letzten erneuten Anmeldung (oder bei einem IP-Wechsel) fragt das ACP erneut nach Passwort und 2FA-Code. Standard 720 (12 Stunden)."
+    },
+    "legal": {
+      "terms_mode": "Bedingungen: wo sie liegen",
+      "terms_content": "Bedingungen: Text",
+      "terms_url": "Bedingungen: externe Adresse",
+      "privacy_mode": "Datenschutz: wo er liegt",
+      "privacy_content": "Datenschutz: Text",
+      "privacy_url": "Datenschutz: externe Adresse",
+      "require_terms_on_register": "Bedingungen müssen bei der Registrierung akzeptiert werden",
+      "require_terms_on_register_hint": "Nur solange es Bedingungen gibt. Gilt auch für neue Konten über Discord, Google oder Steam; der Zeitpunkt der Zustimmung wird beim Mitglied gespeichert.",
+      "cookie_banner": "Cookie-Hinweis",
+      "cookie_banner_hint": "Ein kleiner Hinweis unten, für Gäste und Mitglieder, bis sie ihn schließen.",
+      "cookie_text": "Text des Cookie-Hinweises",
+      "cookie_text_hint": "Leer = der Standardtext, übersetzt in die Sprache des Besuchers. Der Link zur Datenschutzerklärung wird automatisch ergänzt."
+    },
+    "retention": {
+      "audit_days": "ACP-Protokoll (Tage)",
+      "audit_days_hint": "Aktionen des Teams aus ACP → Protokolle (ohne Anmeldungen).",
+      "login_days": "Anmeldungen (Tage)",
+      "login_days_hint": "Geräte, die so viele Tage nicht gesehen wurden (mit ihrer IP), und die Anmeldeeinträge im Protokoll.",
+      "spam_log_days": "Anti-Spam-Protokoll (Tage)",
+      "plugin_log_days": "Plugin-Protokoll (Tage)",
+      "plugin_log_days_hint": "Fehler und Meldungen der Plugins.",
+      "sessions_days": "Abgelaufene Sitzungen (Tage)",
+      "sessions_days_hint": "Sitzungen und Bestätigungscodes, die seit so vielen Tagen abgelaufen sind."
     }
   },
   "permissions": {
@@ -9361,7 +9482,8 @@
       "privacy": "Privacy",
       "contact": "Contact",
       "cookies": "Cookies",
-      "unread": "Unread content"
+      "unread": "Unread content",
+      "terms": "Bedingungen"
     }
   },
   "imageViewer": {
@@ -10269,5 +10391,20 @@
     "back": "Zurück zur Seite",
     "continue": "Weiter zu {domain}",
     "continueDanger": "Ich trage das Risiko, {domain} öffnen"
+  },
+  "legalPage": {
+    "terms": {
+      "title": "Nutzungsbedingungen"
+    },
+    "privacy": {
+      "title": "Datenschutzerklärung"
+    },
+    "updated": "Aktualisiert am {date}"
+  },
+  "cookieBanner": {
+    "region": "Cookies",
+    "text": "Diese Seite verwendet Cookies, die für die Anmeldung und das Speichern deiner Einstellungen (Sprache, Design) nötig sind.",
+    "accept": "Verstanden",
+    "privacy": "Datenschutzerklärung"
   }
 }
