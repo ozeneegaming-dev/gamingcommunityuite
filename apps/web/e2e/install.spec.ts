@@ -63,6 +63,12 @@ test("instalarea completă: licența, aplicațiile, reluare după refresh, login
     await expect(page).toHaveURL(/\/install\/code$/);
     await expect(page.getByRole("heading", { name: "Cod de instalare", level: 1 })).toBeVisible();
     await expect(page.getByText("Pasul 1 din 10")).toBeVisible();
+    // Brandul GCS (docs/BRAND.md): installer-ul e cromul produsului, cu marca, fundalul navy, accentul și DM Sans.
+    const product = page.locator(".gcs-product").first();
+    await expect(product).toHaveCSS("background-color", "rgb(11, 15, 23)");
+    await expect(product.locator("svg.gcs-mark rect")).toHaveAttribute("fill", "#DF390C");
+    await expect(page.locator("[aria-current=step] span").first()).toHaveCSS("background-color", "rgb(205, 52, 11)");
+    expect(await page.getByRole("heading", { level: 1 }).evaluate((h) => getComputedStyle(h).fontFamily)).toMatch(/DM[ _]Sans/);
     // Unde găsește proprietarul codul: în Lite nu există Docker, codul e în jurnalul aplicației din panoul gazdei.
     if (process.env.GCS_EDITION === "lite") {
       await expect(page.getByText(/stderr\.log sau passenger\.log/)).toBeVisible();

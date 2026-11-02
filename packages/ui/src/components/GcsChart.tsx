@@ -1,6 +1,7 @@
 "use client";
 
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { GCS_BRAND } from "@gcs/core/themes";
 import { cx } from "../cx";
 
 export type GcsChartType = "area" | "column" | "bar";
@@ -16,10 +17,11 @@ export type GcsChartProps = {
   className?: string;
 };
 
-const ACCENT = "#D62839";
-const GRID = "#262A34";
-const MUTED = "#A1A7B4";
-const TOOLTIP_STYLE = { background: "#1B1E26", border: "1px solid #262A34", borderRadius: 10, color: "#ECEDF1" };
+// Culorile brandului GCS: atributele SVG nu citesc variabile CSS; tooltip-ul (stil CSS) urmează modul ACP-ului.
+const ACCENT = GCS_BRAND.color.dark.accent;
+const GRID = GCS_BRAND.color.dark.borderStrong;
+const MUTED = GCS_BRAND.color.dark.muted;
+const TOOLTIP_STYLE = { background: "var(--gcs-surface2)", border: "1px solid var(--gcs-border)", borderRadius: GCS_BRAND.radius.input, color: "var(--gcs-text)" };
 
 /** Graficul din ACP (spec §12.3): area, coloane sau bare orizontale, cu schimbarea tipului și export CSV. */
 export function GcsChart({ data, type, onTypeChange, csvHref, labels, height = 240, className }: GcsChartProps) {

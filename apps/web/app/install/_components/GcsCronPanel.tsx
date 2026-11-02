@@ -45,7 +45,7 @@ function Command({ id, label, text, labels }: { id: string; label: string; text:
       <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
         <code
           data-testid={`gcs-cron-${id}`}
-          style={{ flex: 1, minWidth: 0, padding: "10px 12px", borderRadius: 10, background: "var(--gcs-surface2)", border: "1px solid var(--gcs-border)", fontSize: 12.5, overflowWrap: "anywhere", userSelect: "all" }}
+          style={{ flex: 1, minWidth: 0, padding: "10px 12px", borderRadius: "var(--gcs-radius-sm)", background: "var(--gcs-surface2)", border: "1px solid var(--gcs-border)", fontSize: 12.5, overflowWrap: "anywhere", userSelect: "all" }}
         >
           {text}
         </code>

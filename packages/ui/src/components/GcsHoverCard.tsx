@@ -1,3 +1,4 @@
+import { GCS_BRAND } from "@gcs/core/themes";
 import { GcsClanTag, type GcsClanTagData } from "./GcsClanTag";
 import type { CSSProperties, ReactNode } from "react";
 import { GcsAvatar } from "./GcsAvatar";
@@ -109,7 +110,7 @@ export function GcsHoverCard({
   v2Labels?: GcsHoverCardV2Labels;
 }) {
   const { user, stats } = data;
-  const accent = user.accentColor ?? "#D62839";
+  const accent = user.accentColor ?? GCS_BRAND.color.dark.accent;
   const symbol = rankSymbol(user.rank?.icon);
   const look = data.look ?? null;
   const v2 = data.v2 && v2Labels ? data.v2 : null;

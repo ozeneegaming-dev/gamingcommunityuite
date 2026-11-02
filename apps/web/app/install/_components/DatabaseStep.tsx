@@ -142,12 +142,12 @@ export function DatabaseStep({ initial, included, lite, labels }: Props) {
           style={{
             margin: 0,
             padding: "12px 16px",
-            borderRadius: 12,
+            borderRadius: "var(--gcs-radius-sm)",
             fontSize: 13,
             fontWeight: 600,
-            background: test.ok ? "rgba(61,220,151,.08)" : "rgba(255,77,87,.08)",
-            border: `1px solid ${test.ok ? "rgba(61,220,151,.3)" : "rgba(255,77,87,.3)"}`,
-            color: test.ok ? "var(--gcs-ok)" : "#FF8A91",
+            background: `color-mix(in srgb, ${test.ok ? "var(--gcs-ok)" : "var(--gcs-danger)"} 8%, transparent)`,
+            border: `1px solid color-mix(in srgb, ${test.ok ? "var(--gcs-ok)" : "var(--gcs-danger)"} 30%, transparent)`,
+            color: test.ok ? "var(--gcs-ok)" : "var(--gcs-danger)",
           }}
         >
           {test.ok ? "✓ " : "✗ "}

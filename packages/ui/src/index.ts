@@ -24,4 +24,5 @@ export { GcsTooltip, type GcsTooltipProps } from "./components/GcsTooltip";
 export { GcsTooltipHost, autoTipText } from "./components/GcsTooltipHost";
 export { placeTooltip, positionTooltip, type GcsTipPlacement } from "./components/tooltipPlace";
 export { GcsSpinner, type GcsSpinnerProps } from "./components/GcsSpinner";
+export { GcsMark, type GcsMarkProps } from "./components/GcsMark";
 export { GcsIconSvg, type GcsIconSvgProps } from "./icons/svg";

@@ -1,3 +1,4 @@
+import { GCS_BRAND } from "../themes/brand";
 import type { GcsTemplateErrorCode } from "./parser";
 import { escapeHtml, getProperty, GcsSafeHtml, isTruthy, toDate, toList, toNumber, toText, equals } from "./values";
 
@@ -24,7 +25,8 @@ const num = (v: unknown, fallback: number) => (v === undefined || v === null || 
 export function tintColor(hex: unknown, alpha = 0.14): string {
   const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(typeof hex === "string" ? hex : "");
   const a = Number.isFinite(alpha) ? Math.min(1, Math.max(0, alpha)) : 0.14;
-  if (!m) return `rgba(214, 40, 57, ${a})`;
+  // Fără o culoare validă: accentul brandului GCS.
+  if (!m) return tintColor(GCS_BRAND.color.dark.accent, a);
   return `rgba(${parseInt(m[1]!, 16)}, ${parseInt(m[2]!, 16)}, ${parseInt(m[3]!, 16)}, ${a})`;
 }
 
