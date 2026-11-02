@@ -114,9 +114,16 @@ describe("designul Nova: setările", () => {
     expect(themeSingleScheme(GCS_WHITE_THEME_SETTINGS)).toBe("light");
     expect(themeSingleScheme(NOVA_THEME_SETTINGS)).toBeNull();
     expect(GCS_WHITE_THEME_SETTINGS.light).toEqual(NOVA_THEME_SETTINGS.light);
-    expect({ ...GCS_DARK_THEME_SETTINGS, scheme: null, header: { ...GCS_DARK_THEME_SETTINGS.header, compact: true, rowMain: 94 } }).toEqual({ ...NOVA_THEME_SETTINGS, scheme: null });
-    // Antetul „Standard” în flux, ca antetul designului de până acum.
-    expect(GCS_DARK_THEME_SETTINGS.header.compact).toBe(false);
+    expect({ ...GCS_DARK_THEME_SETTINGS, scheme: null, header: NOVA_THEME_SETTINGS.header, logo: NOVA_THEME_SETTINGS.logo }).toEqual({ ...NOVA_THEME_SETTINGS, scheme: null });
+    // Antetul de pe preview (2026-11-02): Esports, cu chatul, limba, breadcrumb-ul și serverele live; compact, ascuns la derulare.
+    for (const s of [GCS_DARK_THEME_SETTINGS, GCS_WHITE_THEME_SETTINGS]) {
+      expect(s.header.layout.preset).toBe("esports");
+      expect(s.header.layout.desktop.main).toEqual({ left: ["chat.button", "nav"], center: ["logo", "language"], right: ["navRight", "search"] });
+      expect(s.header.layout.desktop.bottom).toEqual({ left: ["breadcrumb"], center: [], right: ["serversLive"] });
+      expect([s.header.height, s.header.rowTop, s.header.rowMain, s.header.rowBottom]).toEqual([120, 101, 48, 58]);
+      expect([s.header.compact, s.header.hideOnScroll, s.header.sticky, s.header.image]).toEqual([true, true, false, null]);
+      expect([s.logo.size, s.logo.sizeMobile, s.logo.text]).toEqual([40, 32, ""]);
+    }
     expect(themeSettingsErrors(GCS_DARK_THEME_SETTINGS)).toEqual({});
     expect(themeSettingsErrors(GCS_WHITE_THEME_SETTINGS)).toEqual({});
   });
