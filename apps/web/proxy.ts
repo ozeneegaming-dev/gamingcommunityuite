@@ -1,4 +1,4 @@
-import { GcsInstallState, installGate, type GcsActor } from "@gcs/core";
+import { GcsInstallState, installGate, loadMfaRequiredGroups, mfaSetupRequired, type GcsActor } from "@gcs/core";
 import { NextResponse, type NextRequest } from "next/server";
 import { clientIp } from "./lib/actor";
 import { getAuth } from "./lib/auth";
@@ -96,6 +96,8 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
       });
     }
   }
+  const mfa = await mfaGate(request);
+  if (mfa) return mfa;
   const safe = await withSafeMode(request);
   if (safe) return safe;
   const legacy = await legacyRedirect(request);
@@ -103,6 +105,40 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   const routed = await appRouting(request);
   if (routed instanceof NextResponse) return routed;
   return withThemePreview(request, routed);
+}
+
+/** Pagina pe care membrul își activează 2FA (Setări → Securitate). */
+const MFA_SETUP_PATH = "/settings/security";
+/**
+ * Ce rămâne deschis cât timp 2FA e obligatoriu și încă neactivat: configurarea, API-ul (autentificarea, ieșirea), ACP-ul
+ * (cere oricum 2FA, cu pagina lui de configurare), intrarea, paginile legale și fișierele.
+ */
+const MFA_OPEN = [/^\/settings\/security(\/|$)/, /^\/api\//, /^\/_next\//, /^\/admin(\/|$)/, /^\/(login|register|terms|privacy|rules|maintenance|install)(\/|$)/, /\.[a-z0-9]{2,5}$/i];
+
+/**
+ * 2FA obligatoriu pe grupuri (ACP → Setări → Securitate): un membru dintr-un grup ales, fără 2FA activ, e trimis la
+ * Setări → Securitate până îl activează (orice pagină, inclusiv navigarea din aplicație și Server Actions). Fără grupuri
+ * alese sau fără cookie de sesiune nu costă nimic în plus; o eroare nu blochează site-ul.
+ */
+async function mfaGate(request: NextRequest): Promise<NextResponse | null> {
+  const path = request.nextUrl.pathname;
+  if (MFA_OPEN.some((r) => r.test(path))) return null;
+  if (!request.cookies.getAll().some((c) => c.name.endsWith("session_token"))) return null;
+  try {
+    const { settings, actors } = services();
+    const required = await loadMfaRequiredGroups(settings);
+    if (required.length === 0) return null;
+    const session = await (await getAuth()).api.getSession({ headers: request.headers });
+    if (!session || (session.user as { twoFactorEnabled?: boolean | null }).twoFactorEnabled === true) return null;
+    const actor = await actors.getActor({ sessionToken: session.session.token, ip: clientIp(request.headers) });
+    if (!actor.userId || !mfaSetupRequired({ groupIds: actor.groupIds, twoFactorEnabled: false }, required)) return null;
+    const url = request.nextUrl.clone();
+    url.pathname = MFA_SETUP_PATH;
+    url.search = "?mfa=required";
+    return NextResponse.redirect(url, 307);
+  } catch {
+    return null;
+  }
 }
 
 /**

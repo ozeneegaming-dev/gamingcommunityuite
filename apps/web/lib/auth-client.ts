@@ -26,11 +26,23 @@ export function authErrorKey(error: { status?: number; code?: string } | null | 
       return "email_taken";
     case "PASSWORD_TOO_SHORT":
       return "password_too_short";
+    case "PASSWORD_TOO_LONG":
+      return "password_too_long";
+    case "PASSWORD_NEEDS_MIX":
+      return "password_needs_mix";
+    case "ACCOUNT_LOCKED":
+      return "account_locked";
+    case "TERMS_REQUIRED":
+      return "terms_required";
+    case "OTP_DISABLED":
+      return "otp_disabled";
     case "INVALID_EMAIL":
     case "EMAIL_INVALID":
       return "email_invalid";
     case "INVALID_CODE":
     case "INVALID_TWO_FACTOR_CODE":
+    case "INVALID_BACKUP_CODE":
+    case "OTP_HAS_EXPIRED":
       return "invalid_code";
     case "USERNAME_TAKEN":
     case "USERNAME_TOO_SHORT":
@@ -56,9 +68,16 @@ export function authErrorKey(error: { status?: number; code?: string } | null | 
 }
 
 /** Câmpul formularului de înregistrare de care ține o eroare (pentru afișarea pe câmp). */
-export function registerErrorField(key: string): "name" | "email" | "password" | null {
+export function registerErrorField(key: string): "name" | "email" | "password" | "terms" | null {
   if (key.startsWith("username_")) return "name";
   if (key.startsWith("email_")) return "email";
   if (key.startsWith("password_")) return "password";
+  if (key === "terms_required") return "terms";
   return null;
+}
+
+/** Minutele rămase până la deblocarea contului (mesajul erorii `ACCOUNT_LOCKED`). */
+export function lockMinutes(error: { message?: string } | null | undefined): number {
+  const n = Number(error?.message);
+  return Number.isInteger(n) && n > 0 ? n : 1;
 }

@@ -1,3 +1,4 @@
+import { loadMfaRequiredGroups, mfaSetupRequired } from "@gcs/core";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { getFormatter, getTranslations } from "next-intl/server";
@@ -25,11 +26,14 @@ export default async function SecuritySettingsPage() {
   const actor = await currentActor();
   const [t, format, auth] = await Promise.all([getTranslations("settings.security"), getFormatter(), getAuth()]);
   const { db } = services();
-  const [current, sessions, user] = await Promise.all([
+  const [current, sessions, user, requiredGroups] = await Promise.all([
     auth.api.getSession({ headers: await headers() }),
     db.session.findMany({ where: { userId: actor.userId!, expiresAt: { gt: new Date() } }, orderBy: { updatedAt: "desc" } }),
     db.user.findUniqueOrThrow({ where: { id: actor.userId! }, select: { twoFactorEnabled: true, accounts: { select: { providerId: true, password: true } } } }),
+    loadMfaRequiredGroups(services().settings),
   ]);
+  // ACP → Setări → Securitate: grupul membrului cere 2FA; până îl activează, site-ul îl trimite aici.
+  const mfaRequired = mfaSetupRequired({ groupIds: actor.groupIds, twoFactorEnabled: user.twoFactorEnabled }, requiredGroups);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <h2 className="gcs-settingsTitle">
@@ -52,6 +56,11 @@ export default async function SecuritySettingsPage() {
           labels={{ current: t("current"), revoke: t("revoke"), revokeOthers: t("revokeOthers"), lastSeen: t.raw("lastSeen") as string, done: t("done") }}
         />
       </section>
+      {mfaRequired && (
+        <p role="alert" className="gcs-notice gcs-notice--warn" style={{ margin: 0 }} data-testid="gcs-mfa-required">
+          {t("mfaRequired")}
+        </p>
+      )}
       <section aria-labelledby="gcs-sec-2fa">
         <h3 id="gcs-sec-2fa" className="gcs-settingsSubtitle">
           <GcsIcon name="fa-solid fa-shield-halved" className="gcs-hIcon" />

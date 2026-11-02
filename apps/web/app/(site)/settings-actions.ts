@@ -1,7 +1,7 @@
 "use server";
 
 import { ci, sql, sqlJsonMerge } from "@gcs/db";
-import { GcsConflict, GcsForbidden, GcsRateLimited, GcsValidationError, verifyPassword } from "@gcs/core";
+import { GcsConflict, GcsForbidden, GcsRateLimited, GcsValidationError, loadPasswordPolicy, passwordPolicyError, verifyPassword } from "@gcs/core";
 import { cookies, headers } from "next/headers";
 import * as z from "zod";
 import { verifyTwoFactorCode } from "@/lib/acp";
@@ -84,11 +84,16 @@ export const requestEmailChange = gcsAction(z.object({ email: z.string().max(200
   await services().profiles.requestEmailChange(actor, email);
 });
 
-/** Parola: prin Better Auth (verifică parola curentă și deconectează celelalte sesiuni). */
+/**
+ * Parola: prin Better Auth (verifică parola curentă și deconectează celelalte sesiuni). Parola nouă respectă politica din
+ * ACP → Setări → Securitate (verificată și de Better Auth, la `/change-password`).
+ */
 export const changePassword = gcsAction(
   z.object({ currentPassword: z.string().min(1).max(200), newPassword: z.string().min(8, "password_too_short").max(200) }),
   async ({ currentPassword, newPassword }, { actor }) => {
     if (!actor.userId) throw new GcsForbidden({ reason: "guest" });
+    const policyError = passwordPolicyError(newPassword, await loadPasswordPolicy(services().settings));
+    if (policyError) throw new GcsValidationError({ newPassword: policyError === "password_too_short" ? "password_policy_length" : policyError });
     const auth = await getAuth();
     try {
       await auth.api.changePassword({ body: { currentPassword, newPassword, revokeOtherSessions: true }, headers: await headers() });
