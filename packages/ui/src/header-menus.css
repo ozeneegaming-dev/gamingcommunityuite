@@ -127,7 +127,8 @@
   width: 0;
   height: 0;
 }
-:root .gcs-hb__helpers :is(.gcs-sp__trigger, .gcs-sp__field, .gcs-hb__create, .gcs-mobileNav__open) {
+/* `[data-device]`: mai tare decât butoanele pătrate de 44 px de pe telefon, ca ajutoarele să nu lățească pagina. */
+:root .gcs-hb[data-device] .gcs-hb__helpers :is(.gcs-sp__trigger, .gcs-sp__field, .gcs-hb__create, .gcs-mobileNav__open) {
   position: absolute;
   width: 1px;
   height: 1px;
