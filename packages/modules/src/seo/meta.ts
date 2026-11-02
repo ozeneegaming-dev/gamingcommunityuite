@@ -1,4 +1,4 @@
-import { GCS_DEFAULT_CONTENT_POLICY, parseDomainList, type GcsContentPolicy, type GcsSettingsService } from "@gcs/core";
+import { GCS_DEFAULT_CONTENT_POLICY, parseLinkDomains, type GcsContentPolicy, type GcsSettingsService } from "@gcs/core";
 import { loadRemoteImageMode } from "../uploads/settings";
 import { SEO_SETTINGS, TITLE_FORMAT_DEFAULT, titleFormatError, verificationToken } from "./settings";
 
@@ -62,5 +62,5 @@ export async function loadContentPolicy(settings: Settings, siteHost: string): P
     settings.get<string>(SEO_SETTINGS.nofollowExclude).catch(() => ""),
     loadRemoteImageMode(settings),
   ]);
-  return { siteHost, nofollowExternal: nofollow !== false, nofollowExclude: parseDomainList(typeof exclude === "string" ? exclude : ""), remoteImages };
+  return { siteHost, nofollowExternal: nofollow !== false, nofollowExclude: parseLinkDomains(typeof exclude === "string" ? exclude : ""), remoteImages };
 }

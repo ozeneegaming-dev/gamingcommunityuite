@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { GcsContentRenderer } from "./renderer";
-import { applyContentPolicy, domainListError, hostMatches, linkRel, normalizeDomain, parseDomainList, remoteImageShown, type GcsContentPolicy } from "./outputPolicy";
+import { applyContentPolicy, domainListError, hostMatches, linkRel, normalizeLinkDomain, parseLinkDomains, remoteImageShown, type GcsContentPolicy } from "./outputPolicy";
 
 const POLICY: GcsContentPolicy = { siteHost: "forum.exemplu.ro", nofollowExternal: true, nofollowExclude: [], remoteImages: "allow" };
 const renderer = new GcsContentRenderer();
@@ -14,10 +14,10 @@ const link = (href: string, text = "link") => ({ type: "text", text, marks: [{ t
 
 describe("domeniile listei albe", () => {
   test("se normalizează (schema, www., calea, *.) și se validează", () => {
-    expect(normalizeDomain("https://www.Clanul-Meu.ro/servere?x=1")).toBe("clanul-meu.ro");
-    expect(normalizeDomain("*.cs.exemplu.com")).toBe("cs.exemplu.com");
-    expect(normalizeDomain("nu e domeniu")).toBeNull();
-    expect(parseDomainList("clan.ro, https://srv.exemplu.com\nclan.ro")).toEqual(["clan.ro", "srv.exemplu.com"]);
+    expect(normalizeLinkDomain("https://www.Clanul-Meu.ro/servere?x=1")).toBe("clanul-meu.ro");
+    expect(normalizeLinkDomain("*.cs.exemplu.com")).toBe("cs.exemplu.com");
+    expect(normalizeLinkDomain("nu e domeniu")).toBeNull();
+    expect(parseLinkDomains("clan.ro, https://srv.exemplu.com\nclan.ro")).toEqual(["clan.ro", "srv.exemplu.com"]);
     expect(domainListError("clan.ro\nsrv.exemplu.com")).toBeNull();
     expect(domainListError("clan.ro, <script>")).toBe("invalid_domain");
     expect(domainListError(Array.from({ length: 201 }, (_, i) => `d${i}.ro`).join(","))).toBe("too_many");

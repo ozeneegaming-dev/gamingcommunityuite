@@ -13,7 +13,7 @@ export type GcsContentPolicy = {
   /** Host-ul site-ului (ex. `forum.exemplu.ro`); `www.` în plus sau în minus e tot site-ul. */
   siteHost: string;
   nofollowExternal: boolean;
-  /** Domeniile fără nofollow, normalizate (`parseDomainList`). */
+  /** Domeniile fără nofollow, normalizate (`parseLinkDomains`). */
   nofollowExclude: readonly string[];
   remoteImages: GcsRemoteImageMode;
 };
@@ -26,7 +26,7 @@ const DOMAIN = /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a
 export const DOMAIN_LIST_MAX = 200;
 
 /** Un domeniu scris de admin (`https://www.Exemplu.ro/cale`, `*.exemplu.ro`) → `exemplu.ro`; `null` dacă nu e un domeniu. */
-export function normalizeDomain(raw: string): string | null {
+export function normalizeLinkDomain(raw: string): string | null {
   let v = raw.trim().toLowerCase();
   if (v === "") return null;
   v = v.replace(/^[a-z][a-z0-9+.-]*:\/\//, "").replace(/^\*\./, "");
@@ -36,10 +36,10 @@ export function normalizeDomain(raw: string): string | null {
 }
 
 /** Lista albă (un domeniu pe rând, sau separate prin virgulă / spațiu), normalizată și fără dubluri. */
-export function parseDomainList(raw: string): string[] {
+export function parseLinkDomains(raw: string): string[] {
   const out = new Set<string>();
   for (const part of raw.split(/[\s,;]+/)) {
-    const d = normalizeDomain(part);
+    const d = normalizeLinkDomain(part);
     if (d) out.add(d);
   }
   return [...out];
@@ -51,7 +51,7 @@ export function domainListError(v: unknown): string | null {
   if (v.length > 5000) return "too_long";
   const parts = v.split(/[\s,;]+/).filter((p) => p.trim() !== "");
   if (parts.length > DOMAIN_LIST_MAX) return "too_many";
-  return parts.every((p) => normalizeDomain(p) !== null) ? null : "invalid_domain";
+  return parts.every((p) => normalizeLinkDomain(p) !== null) ? null : "invalid_domain";
 }
 
 /** Host-ul fără `www.` și fără port, cu litere mici. */

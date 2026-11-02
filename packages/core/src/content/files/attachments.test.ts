@@ -270,7 +270,7 @@ describe("GcsAttachmentService.storeDecorImage (Aspect forumuri)", () => {
 });
 
 describe("GcsAttachmentService: setările încărcărilor (ACP → Setări → Încărcări și imagini)", () => {
-  const withPolicy = (policy: Partial<GcsUploadPolicy> & { image?: Partial<GcsUploadPolicy["image"]> }) =>
+  const withPolicy = (policy: { allowedExtensions?: readonly string[]; image?: Partial<GcsUploadPolicy["image"]> }) =>
     new GcsAttachmentService({
       db: world.db,
       store: new GcsLocalFileStore(dir),
