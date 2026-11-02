@@ -1,6 +1,6 @@
 import { mkdirSync } from "node:fs";
 import path from "node:path";
-import { expect, test, type Browser, type Locator, type Page } from "@playwright/test";
+import { expect, test, type Browser, type ElementHandle, type Locator, type Page } from "@playwright/test";
 import { forumTree, topicWithReplies, uid } from "./forum-fixtures";
 import { sql, useFreshIp } from "./helpers";
 
@@ -46,15 +46,18 @@ async function shot(page: Page, name: string): Promise<void> {
 
 type Rect = { x: number; y: number; width: number; height: number };
 
-/** Pagina s-a așezat: elementul nu se mai mișcă (benzile care apar după încărcare, fonturile). */
-async function settled(target: Locator) {
-  await target.scrollIntoViewIfNeeded();
-  let last = -1;
+/**
+ * Pagina s-a așezat: nici derularea, nici elementul nu se mai mișcă (pagina unui topic sare singură la ultimul mesaj,
+ * iar o derulare închide tooltip-ul, intenționat).
+ */
+async function settled(el: ElementHandle<Element>) {
+  await el.scrollIntoViewIfNeeded();
+  let last = "";
   await expect
     .poll(async () => {
-      const y = (await target.boundingBox())?.y ?? -2;
-      const same = y === last;
-      last = y;
+      const now = await el.evaluate((n) => `${window.scrollY}:${n.getBoundingClientRect().y}`);
+      const same = now === last;
+      last = now;
       return same;
     }, { intervals: [300] })
     .toBe(true);
@@ -62,17 +65,18 @@ async function settled(target: Locator) {
 
 /**
  * Bula afișată pentru element, după animația de intrare (opacă și nemișcată între două cadre), cu dreptunghiurile
- * bulei și ale elementului măsurate în același cadru.
+ * bulei și ale elementului măsurate în același cadru. Elementul se fixează ÎNAINTE de hover: tooltip-ul îi mută
+ * `title`-ul în `data-gcs-title`, iar un locator după `[title]` ar trece apoi la elementul următor.
  */
 async function hoverTip(page: Page, target: Locator) {
-  await settled(target);
-  const text = (await target.getAttribute("data-tip")) ?? (await target.getAttribute("title"));
-  await target.hover();
+  const anchor = (await target.elementHandle())!;
+  const text = (await anchor.getAttribute("data-tip")) ?? (await anchor.getAttribute("title"));
+  await settled(anchor);
+  await anchor.hover();
   const visible = page.getByRole("tooltip").filter({ visible: true });
   const tip = visible.first();
   await expect(tip).toHaveText(text!);
   await expect(visible).toHaveCount(1);
-  const anchor = await target.elementHandle();
   let rects: { ok: boolean; box: Rect; anchor: Rect } | undefined;
   await expect
     .poll(async () => {
@@ -138,14 +142,14 @@ for (const motion of ["reduce", "no-preference"] as const) {
   test(`Activitate (animații ${motion === "reduce" ? "reduse" : "normale"}): tooltip-urile apar lângă element, mai deschise decât pagina`, async ({ browser }) => {
     const { context, page } = await guest(browser, { width: 1440, motion, ip: motion === "reduce" ? "100.96.1" : "100.96.2" });
     await page.goto("/activity");
-    const kinds = page.locator(".gcs-stream__kind[title]");
+    const kinds = page.locator(".gcs-stream__kind");
     await expect(kinds.first()).toBeVisible();
     // Mai multe rânduri la rând (bula precedentă dispare, următoarea se așază de la zero).
     for (let i = 0; i < Math.min(3, await kinds.count()); i++) {
       const { box, anchor } = await hoverTip(page, kinds.nth(i));
       expectNear(box, anchor);
     }
-    const time = await hoverTip(page, page.locator(".gcs-stream time[title]").first());
+    const time = await hoverTip(page, page.locator(".gcs-stream time").first());
     expectNear(time.box, time.anchor);
     const { tip, box, anchor } = await hoverTip(page, kinds.first());
     expectNear(box, anchor);
@@ -164,7 +168,7 @@ test("tema luminoasă: tooltip-ul lângă element, text lizibil", async ({ brows
   const { context, page } = await guest(browser, { width: 1440, motion: "reduce", light: true, ip: "100.96.3" });
   await page.goto("/activity");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-  const { tip, box, anchor } = await hoverTip(page, page.locator(".gcs-stream__kind[title]").first());
+  const { tip, box, anchor } = await hoverTip(page, page.locator(".gcs-stream__kind").first());
   expectNear(box, anchor);
   const bg = await tip.evaluate((el) => getComputedStyle(el).backgroundColor);
   expect(contrast(await tip.evaluate((el) => getComputedStyle(el).color), bg)).toBeGreaterThanOrEqual(7);
@@ -176,8 +180,8 @@ test("tema luminoasă: tooltip-ul lângă element, text lizibil", async ({ brows
 test("telefon (375 px): tooltip-ul și banda „Sus / Jos” stau în ecran, pagina nu se lățește", async ({ browser }) => {
   const { context, page } = await guest(browser, { width: 375, motion: "reduce", ip: "100.96.4" });
   await page.goto("/activity");
-  const kinds = page.locator(".gcs-stream__kind[title]");
-  for (const target of [kinds.first(), page.locator(".gcs-stream time[title]").first()]) {
+  const kinds = page.locator(".gcs-stream__kind");
+  for (const target of [kinds.first(), page.locator(".gcs-stream time").first()]) {
     const { box, anchor } = await hoverTip(page, target);
     expectNear(box, anchor);
     expect(box.x).toBeGreaterThanOrEqual(0);
