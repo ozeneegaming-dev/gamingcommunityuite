@@ -6,7 +6,7 @@ import { GcsButton } from "./GcsButton";
 import { GcsSpinner } from "./GcsSpinner";
 import { GcsTooltip } from "./GcsTooltip";
 import { GcsTooltipHost, autoTipText } from "./GcsTooltipHost";
-import { placeTooltip } from "./tooltipPlace";
+import { placeTooltip, positionTooltip } from "./tooltipPlace";
 
 const css = (f: string) => readFileSync(path.resolve(__dirname, "..", f), "utf8");
 
@@ -26,6 +26,45 @@ describe("poziția tooltip-ului", () => {
     expect(p.left).toBe(8);
     expect(p.top).toBe(34);
     expect(p.arrow).toBe(10);
+  });
+
+  /**
+   * Bula măsurată cum o vede browserul: cu o tranziție activă (animațiile reduse din sistem dau oricărei proprietăți o
+   * tranziție de 0.01ms) poziția citită imediat e cea VECHE; cu animația de intrare, e mutată cu 6 px.
+   */
+  function measuredBubble() {
+    const bubble = document.createElement("span");
+    document.body.append(bubble);
+    let shown = { left: 0, top: 0 };
+    let animating = true;
+    const seen: { transition: string; animation: string }[] = [];
+    vi.spyOn(bubble, "getBoundingClientRect").mockImplementation(() => {
+      seen.push({ transition: bubble.style.transition, animation: bubble.style.animation });
+      const next = { left: parseFloat(bubble.style.left) || 0, top: parseFloat(bubble.style.top) || 0 };
+      if (bubble.style.transition === "none") shown = next;
+      const lift = animating && bubble.style.animation !== "none" ? 6 : 0;
+      return { left: shown.left, top: shown.top + lift, width: 80, height: 24, right: 0, bottom: 0, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
+    });
+    return { bubble, seen, finishAnimation: () => void (animating = false) };
+  }
+
+  test("așezarea nu se lasă păcălită de tranziții sau de animația de intrare: bula ajunge exact lângă element", () => {
+    const anchor = document.createElement("button");
+    document.body.append(anchor);
+    vi.spyOn(anchor, "getBoundingClientRect").mockReturnValue({ left: 180, top: 100, width: 40, height: 20 } as DOMRect);
+    const { bubble, seen, finishAnimation } = measuredBubble();
+    positionTooltip(anchor, bubble, "top");
+    // Aceeași poziție ca `placeTooltip` (nu dublată de corecție), fără tranziții, animația pusă la loc după măsurare.
+    expect([bubble.style.left, bubble.style.top]).toEqual(["160px", "66px"]);
+    expect(seen.length).toBeGreaterThan(0);
+    expect(seen.every((s) => s.transition === "none" && s.animation === "none")).toBe(true);
+    expect(bubble.style.animation).toBe("");
+    expect(bubble.dataset.side).toBe("top");
+    // O nouă așezare (conținut schimbat, animația terminată) nu mai repornește animația de intrare și rămâne pe loc.
+    finishAnimation();
+    positionTooltip(anchor, bubble, "top");
+    expect(bubble.style.animation).toBe("");
+    expect([bubble.style.left, bubble.style.top]).toEqual(["160px", "66px"]);
   });
 });
 

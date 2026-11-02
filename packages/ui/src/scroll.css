@@ -3,9 +3,12 @@
  * 1. bara de derulare ESTE progresul paginii (fără bară peste pagină): 8 px, pista = fundalul paginii, cursorul = accentul
  *    la 45% cu un chenar de 2 px în culoarea fundalului (70% la hover); aceeași bară în zonele derulabile din pagină.
  *    Setarea temei „Bara de derulare în culoarea accentului” (`data-gcs-scrollbar` pe `<html>`).
- * 2. banda „Sus / Jos” din stânga, lipită de marginea conținutului, care iese după o mică derulare (`GcsScrollRail`):
- *    butoane de 36 × 58 cu vârful oblic, la 2 px unul de altul, gradient închis și linia de accent de 2 px (care
- *    strălucește la hover), fiecare estompat la capătul lui de pagină. Setarea „Banda Sus / Jos” (`data-gcs-rail`).
+ * 2. banda „Sus / Jos” din stânga, care iese după o mică derulare (`GcsScrollRail`): un control de sine stătător (chenar,
+ *    colțuri rotunjite, umbră), cu două butoane de 36 × 46 despărțite de o linie, gradient închis și linia de accent de
+ *    2 px spre conținut (care strălucește la hover), fiecare buton estompat la capătul lui de pagină. Stă în marginea din
+ *    stânga a conținutului când are loc acolo (`--gcs-rail-left`, măsurat de componentă); altfel (lățime completă,
+ *    ecran îngust, telefon) se andochează compact în colțul de jos (`gcs-scrollRail--dock`), fără să iasă din ecran.
+ *    Setarea „Banda Sus / Jos” (`data-gcs-rail`).
  */
 
 /* ─── 1. Bara de derulare ─────────────────────────────────────────────────────────────────────────── */
@@ -52,12 +55,18 @@
 /* ─── 2. Banda „Sus / Jos” ────────────────────────────────────────────────────────────────────────── */
 .gcs-scrollRail {
   position: fixed;
-  left: max(4px, calc((100vw - min(100vw, var(--gcs-page-width, 1320px))) / 2 - 44px));
+  /* Rezerva până măsoară componenta: marginea paginii centrate (100% = lățimea ecranului fără bara de derulare). */
+  left: var(--gcs-rail-left, max(8px, calc((100% - min(100%, var(--gcs-page-width, 1320px))) / 2 - 46px)));
   bottom: 30%;
   z-index: 60;
   display: grid;
-  gap: 2px;
-  width: 36px;
+  width: 38px;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--gcs-text) 12%, var(--gcs-border));
+  border-radius: 8px;
+  background: var(--gcs-surface2);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.28);
   opacity: 0;
   visibility: hidden;
   transform: translateX(-36px);
@@ -80,19 +89,18 @@
   isolation: isolate;
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 58px;
+  width: 100%;
+  height: 46px;
   padding: 0;
   border: 0;
   cursor: pointer;
-  color: color-mix(in srgb, var(--gcs-text) 70%, var(--gcs-bg));
+  color: color-mix(in srgb, var(--gcs-text) 78%, var(--gcs-bg));
   background-color: color-mix(in srgb, var(--gcs-surface2) 80%, #000);
   background-image: linear-gradient(240deg, color-mix(in srgb, var(--gcs-surface2) 85%, #fff 6%), color-mix(in srgb, var(--gcs-bg) 85%, #000) 62%, color-mix(in srgb, var(--gcs-surface2) 90%, #000));
-  clip-path: polygon(0 20%, 100% 0, 100% 100%, 0 100%);
   transition: color 0.2s ease, background-color 0.2s ease;
 }
-.gcs-scrollRail__btn:last-child {
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 80%);
+.gcs-scrollRail__btn + .gcs-scrollRail__btn {
+  border-top: 1px solid color-mix(in srgb, var(--gcs-text) 10%, var(--gcs-border));
 }
 /*
  * Sweep-ul de sticlă al sistemului (aceleași timpi ca `.gcs-sweep`), pe un strat propriu: fundalul butonului e deja un
@@ -158,16 +166,26 @@
 .gcs-scrollRail__btn:last-child:not([data-end]):hover svg {
   transform: translateY(2px);
 }
-/* Telefon: banda mai mică, pe margine, deasupra barei de jos. */
+/*
+ * Andocată (nu are loc în marginea conținutului): mai mică, în colțul de jos, întreagă în ecran. Pe telefon stă deasupra
+ * barei de jos.
+ */
+.gcs-scrollRail--dock {
+  left: 8px;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  width: 34px;
+}
+.gcs-scrollRail--dock .gcs-scrollRail__btn {
+  height: 38px;
+}
 @media (max-width: 760px) {
   .gcs-scrollRail {
-    left: 0;
+    left: 8px;
     bottom: calc(96px + env(safe-area-inset-bottom, 0px));
-    width: 28px;
+    width: 34px;
   }
   .gcs-scrollRail__btn {
-    width: 28px;
-    height: 46px;
+    height: 38px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
