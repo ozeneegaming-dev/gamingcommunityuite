@@ -180,10 +180,16 @@ describe("cheia scurtă (GCS-XXXX-XXXX-XXXX) și activarea la Data Center", () =
     const reply = (body: unknown, status = 200) => vi.fn(async () => new Response(JSON.stringify(body), { status }));
     const token = signLicense(payload({ kid: "gcs-lic-dc-2026", id: "dc-7" }), privateKey);
     const ok = reply({ ok: true, token, licensee: "Comunitatea Test" });
-    expect(await activateLicenseKey("gcs 7kq4 m2xd 9prh", { domain: "https://Forum.Exemplu.ro:3000", server, fetch: ok, instanceUuid: "inst-1", version: "1.2.0", edition: "vps" })).toEqual({ ok: true, token });
+    const sums = "a".repeat(64);
+    expect(
+      await activateLicenseKey("gcs 7kq4 m2xd 9prh", { domain: "https://Forum.Exemplu.ro:3000", server, fetch: ok, instanceUuid: "inst-1", version: "1.2.0", edition: "vps", filesSha256: sums }),
+    ).toEqual({ ok: true, token });
     expect(ok).toHaveBeenCalledWith(
       new URL("/api/license/activate", server),
-      expect.objectContaining({ method: "POST", body: JSON.stringify({ key: "GCS-7KQ4-M2XD-9PRH", domain: "forum.exemplu.ro", instance_uuid: "inst-1", version: "1.2.0", edition: "vps" }) }),
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ key: "GCS-7KQ4-M2XD-9PRH", domain: "forum.exemplu.ro", instance_uuid: "inst-1", version: "1.2.0", edition: "vps", files_sha256: sums }),
+      }),
     );
     for (const error of ["invalid_key", "revoked", "suspended", "expired", "blocked", "domain", "rate_limited"]) {
       expect(await activateLicenseKey("GCS-7KQ4-M2XD-9PRH", { domain: "x.ro", server, fetch: reply({ ok: false, error }) })).toEqual({ ok: false, error });

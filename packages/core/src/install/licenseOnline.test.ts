@@ -145,7 +145,7 @@ describe("activarea unei chei scurte (installer, ACP)", () => {
     expect(await a.state.readLicense()).toBeNull();
     // O a doua activare (ex. din ACP) trimite același uuid.
     await a.online.activate("GCS-7KQ4-M2XD-9PRH");
-    expect(a.activate.mock.calls[1]?.[1]).toMatchObject({ instanceUuid: state!.instanceUuid });
+    expect(a.activate).toHaveBeenNthCalledWith(2, "GCS-7KQ4-M2XD-9PRH", expect.objectContaining({ instanceUuid: state!.instanceUuid }));
   });
 
   test("refuzul Data Center-ului trece neschimbat; starea online nu se scrie", async () => {

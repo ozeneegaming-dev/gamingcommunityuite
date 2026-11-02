@@ -311,7 +311,7 @@ export function licenseActivationServer(env: NodeJS.ProcessEnv = process.env): s
 
 /**
  * Activarea unei chei scurte la Data Center: `POST <server>/api/license/activate` cu
- * `{ key, domain, instance_uuid?, version?, edition? }` → `{ ok: true, token }` sau `{ ok: false, error }`. Data
+ * `{ key, domain, instance_uuid?, version?, edition?, files_sha256? }` → `{ ok: true, token }` sau `{ ok: false, error }`. Data
  * Center-ul verifică cheia (doar hash-ul ei e la el), statusul, expirarea și domeniul (prima activare îl fixează) și
  * întoarce tokenul GCS1 semnat, pe care aplicația îl verifică apoi offline ca pe orice token.
  */
@@ -325,6 +325,8 @@ export async function activateLicenseKey(
     instanceUuid?: string;
     version?: string;
     edition?: string;
+    /** Amprenta fișierelor livrate (`CHECKSUMS.sha256`), pentru recunoașterea versiunii oficiale la Data Center. */
+    filesSha256?: string;
   },
 ): Promise<GcsLicenseActivationResult> {
   const canonical = normalizeLicenseKey(key);
@@ -342,10 +344,11 @@ export async function activateLicenseKey(
         ...(opts.instanceUuid ? { instance_uuid: opts.instanceUuid } : {}),
         ...(opts.version ? { version: opts.version } : {}),
         ...(opts.edition ? { edition: opts.edition } : {}),
+        ...(opts.filesSha256 ? { files_sha256: opts.filesSha256 } : {}),
       }),
       signal: AbortSignal.timeout(opts.timeoutMs ?? 10_000),
     });
-    // 400: cererea e bună de la noi, deci domeniul e cel refuzat (o adresă IP, localhost, gol).
+    // 400: cererea e bună de la noi, deci domeniul e cel refuzat (o adresă IP, un domeniu gol sau invalid).
     if (res.status === 400) return { ok: false, error: "bad_domain" };
     if (!res.ok) return { ok: false, error: "unreachable" };
     const body = (await res.json().catch(() => null)) as { ok?: unknown; token?: unknown; error?: unknown } | null;
