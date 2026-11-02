@@ -41,6 +41,7 @@ import {
   GcsPermissionService,
   GcsReactionService,
   GcsRateLimiter,
+  GcsLoginLockout,
   GcsReportService,
   GcsS3FileStore,
   GcsSettingsService,
@@ -165,6 +166,7 @@ import { GcsWhereabouts } from "./community/whereabouts";
 import { GcsMemberPanelData } from "./profile/memberPanels";
 import { GcsAntispamService } from "./antispam/service";
 import { GcsIpToolsService, IP_TOOLS_ACP_SECTION } from "./antispam/ipTools";
+import { GcsRetentionService } from "./security/retention";
 
 export type GcsServices = {
   db: PrismaClient;
@@ -234,6 +236,10 @@ export type GcsServices = {
   ipTools: GcsIpToolsService;
   actors: GcsActorResolver;
   rateLimiter: GcsRateLimiter;
+  /** Blocarea după parole greșite (ACP → Setări → Securitate), pe cont și pe IP. */
+  loginLockout: GcsLoginLockout;
+  /** Perioadele de păstrare a datelor (jobul zilnic `system.retention`). */
+  retention: GcsRetentionService;
   files: GcsFileStore;
   attachments: GcsAttachmentService;
   forums: GcsForumService;
@@ -908,6 +914,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     ipTools,
     actors,
     rateLimiter,
+    loginLockout: new GcsLoginLockout({ db, kv, settings, ipLock: () => process.env.GCS_DISABLE_RATE_LIMIT !== "1" }),
+    retention: new GcsRetentionService({ db, settings }),
     files,
     attachments,
     forums,

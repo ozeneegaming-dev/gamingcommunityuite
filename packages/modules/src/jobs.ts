@@ -1,6 +1,7 @@
 import { GcsSqlKv, PLUGIN_JOB, writeWorkerHeartbeat } from "@gcs/core";
 import type { GcsServices } from "./services";
 import { BOT_SCHEDULED_JOB, BOT_WELCOME_JOB } from "./bot/settings";
+import { RETENTION_JOB } from "./security/retention";
 
 /** Jobul care dovedește că worker-ul procesează coada (nu doar că procesul trăiește). */
 export const HEARTBEAT_JOB = "system.heartbeat";
@@ -39,6 +40,9 @@ export function registerAppJobs(s: GcsServices): void {
   s.jobs.register({ name: WARNINGS_EXPIRY_JOB, everyMs: 10 * 60_000, handler: async () => void (await s.warnings.expireSweep()) });
   s.jobs.register({ name: SECONDARY_EXPIRY_JOB, everyMs: 60_000, handler: async () => void (await s.groups.expireSecondary()) });
   s.jobs.register({ name: IP_RETENTION_JOB, everyMs: 24 * 3_600_000, handler: async () => void (await s.ipTools.stripOldIps()) });
+  // Perioadele de păstrare a datelor (ACP → Setări → Termeni și confidențialitate): jurnalele, autentificările, sesiunile
+  // expirate; zilnic, pe loturi.
+  s.jobs.register({ name: RETENTION_JOB, everyMs: 24 * 3_600_000, handler: async () => void (await s.retention.run()) });
   s.notificationProducers.registerJobs(s.jobs);
   s.chat.registerJobs(s.jobs);
   // Moderarea chat-ului: expirarea accesului de moderator, a mute-urilor și a sancțiunilor (la minut).
