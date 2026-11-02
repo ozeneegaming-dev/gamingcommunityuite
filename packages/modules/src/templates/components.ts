@@ -1,4 +1,4 @@
-import { escapeHtml, safeHtml, type GcsMailer, type GcsSettingsService, type GcsTemplateComponents, type GcsTemplateService } from "@gcs/core";
+import { defaultTemplate, escapeHtml, safeHtml, type GcsMailer, type GcsSettingsService, type GcsTemplateComponents, type GcsTemplateService } from "@gcs/core";
 import type { PrismaClient } from "@gcs/db";
 import { resolveIcon } from "@gcs/ui/icon-registry";
 
@@ -23,23 +23,24 @@ export function templateIconSvg(name: string, opts: Record<string, unknown> = {}
 export const templateComponents = (): Partial<GcsTemplateComponents> => ({ icon: templateIconSvg });
 
 /**
- * Învelișul emailurilor (`email.layout`): dacă tema implicită l-a modificat, fiecare email pleacă prin el (corpul
- * generat de site e `content`, HTML deja sigur); rezultatul e sanitizat cu regulile emailurilor. Orice eroare lasă
- * emailul neschimbat (și ajunge în log): un șablon greșit nu oprește trimiterea.
+ * Învelișul emailurilor (`email.layout`): fiecare email pleacă prin el, cu sursa temei implicite dacă l-a modificat,
+ * altfel cu cea implicită (brandul GCS). Corpul generat de site e `content`, HTML deja sigur; rezultatul e sanitizat cu
+ * regulile emailurilor. Orice eroare lasă emailul neschimbat (și ajunge în log): un șablon greșit nu oprește trimiterea.
  */
 export function withEmailLayout(mailer: GcsMailer, deps: { db: PrismaClient; templates: GcsTemplateService; settings: Pick<GcsSettingsService, "get"> }): GcsMailer {
   return async (mail) => {
     let html = mail.html;
     try {
       const theme = await deps.db.theme.findFirst({ where: { isDefault: true }, select: { key: true } });
-      if (theme && (await deps.templates.overrides(theme.key))["email.layout"]) {
+      const source = theme ? ((await deps.templates.overrides(theme.key))["email.layout"]?.source ?? defaultTemplate("email.layout")?.source) : undefined;
+      if (theme && source) {
         const [siteName, siteUrl, locale] = await Promise.all([
           deps.settings.get<string>("site.name"),
           deps.settings.get<string>("site.url"),
           deps.settings.get<string>("site.locale").catch(() => "ro"),
         ]);
         const data = { site: { name: siteName, url: siteUrl }, subject: mail.subject, content: safeHtml(mail.html), year: new Date().getFullYear() };
-        const rendered = await deps.templates.render(theme.key, "email.layout", data, { locale, components: templateComponents() });
+        const rendered = await deps.templates.render(theme.key, "email.layout", data, { locale, components: templateComponents(), source });
         if (rendered !== null && rendered.trim()) html = rendered;
       }
     } catch (error) {

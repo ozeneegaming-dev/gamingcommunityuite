@@ -193,10 +193,10 @@ body {
   padding: 3px 8px;
   border-radius: 999px;
 }
-.gcs-badge--accent { background: rgba(214, 40, 57, 0.18); color: var(--gcs-accentInk); }
-.gcs-badge--ok { background: rgba(61, 220, 151, 0.14); color: var(--gcs-ok); }
-.gcs-badge--warn { background: rgba(244, 183, 64, 0.14); color: var(--gcs-warn); }
-.gcs-badge--info { background: rgba(94, 162, 255, 0.14); color: #5EA2FF; }
+.gcs-badge--accent { background: color-mix(in srgb, var(--gcs-accent) 18%, transparent); color: var(--gcs-accentInk); }
+.gcs-badge--ok { background: color-mix(in srgb, var(--gcs-ok) 14%, transparent); color: var(--gcs-ok); }
+.gcs-badge--warn { background: color-mix(in srgb, var(--gcs-warn) 14%, transparent); color: var(--gcs-warn); }
+.gcs-badge--info { background: color-mix(in srgb, var(--gcs-info) 14%, transparent); color: var(--gcs-info); }
 .gcs-badge--vip { background: rgba(183, 148, 255, 0.16); color: #C7ADFF; }
 .gcs-badge--neutral { background: color-mix(in srgb, var(--gcs-text) 10%, transparent); color: var(--gcs-text); }
 
@@ -227,7 +227,7 @@ body {
   margin: 0;
   font-size: 12px;
   font-weight: 600;
-  color: var(--gcs-accentInk);
+  color: var(--gcs-danger);
 }
 
 .gcs-input {
@@ -251,7 +251,7 @@ textarea.gcs-input {
   outline: none;
 }
 .gcs-input[aria-invalid="true"] {
-  border-color: #FF4D57;
+  border-color: var(--gcs-danger);
 }
 
 .gcs-option {
@@ -266,7 +266,21 @@ textarea.gcs-input {
 }
 .gcs-option--active {
   border-color: var(--gcs-accent);
-  background: rgba(214, 40, 57, 0.08);
+  background: color-mix(in srgb, var(--gcs-accent) 8%, transparent);
+}
+
+/*
+ * Cromul produsului (ACP, installer, intrarea în ACP): formele brandului GCS — carduri de 12 px, câmpuri și opțiuni de
+ * 6 px, insigne de 6 px (butoanele: `--gcs-btn-radius`, tot din brand). Pe site, formele le dă tema.
+ */
+.gcs-product :where(.gcs-card) {
+  border-radius: var(--gcs-radius);
+}
+.gcs-product :where(.gcs-input, .gcs-option, .gcs-iconBtn, .gcs-seg) {
+  border-radius: var(--gcs-radius-sm);
+}
+.gcs-product :where(.gcs-badge) {
+  border-radius: var(--gcs-brand-radius-badge);
 }
 
 /* ─── Tabel ───────────────────────────────────────────────────────────────── */

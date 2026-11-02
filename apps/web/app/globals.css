@@ -58,8 +58,11 @@
 /* Componentele Gcs* din @gcs/ui folosesc utilitare Tailwind; sursele lor trebuie scanate. */
 @source "../../../packages/ui/src";
 
-/* Fonturile vin prin next/font (Chakra Petch pentru titluri, Manrope pentru text). */
+/*
+ * Fonturile vin prin next/font. Rezerva (până se încarcă tema, installer-ul): DM Sans, fontul brandului GCS; Chakra
+ * Petch și Manrope rămân pentru tema Clasic.
+ */
 :root {
-  --gcs-font-display: var(--font-gcs-display), "Chakra Petch", sans-serif;
-  --gcs-font-text: var(--font-gcs-text), Manrope, system-ui, sans-serif;
+  --gcs-font-display: var(--font-gcs-nova), var(--gcs-brand-font);
+  --gcs-font-text: var(--font-gcs-nova), var(--gcs-brand-font);
 }

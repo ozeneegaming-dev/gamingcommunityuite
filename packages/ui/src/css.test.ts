@@ -4,21 +4,26 @@ import { describe, expect, test } from "vitest";
 const read = (file: string) => readFileSync(new URL(file, import.meta.url), "utf8");
 
 describe("CSS-ul design system-ului", () => {
-  test("tokens.css conține exact tokenurile din macheta aprobată", () => {
+  test("tokens.css: brandul GCS (generat din `brand.ts`), rezerva pe `:root` și cromul produsului", () => {
     const css = read("./tokens.css");
     const expected = {
-      "--gcs-bg": "#0B0C10",
-      "--gcs-surface": "#14161C",
-      "--gcs-surface2": "#1B1E26",
-      "--gcs-border": "#262A34",
-      "--gcs-text": "#ECEDF1",
-      "--gcs-muted": "#A1A7B4",
-      "--gcs-accent": "#D62839",
-      "--gcs-accentInk": "#FF6B74",
-      "--gcs-ok": "#3DDC97",
-      "--gcs-warn": "#F4B740",
+      "--gcs-brand-bg": "#0B0F17",
+      "--gcs-brand-surface": "#151922",
+      "--gcs-brand-accent": "#DF390C",
+      "--gcs-brand-accent-ink": "#FF6A3D",
+      "--gcs-brand-warn": "#F2B33D",
+      "--gcs-bg": "var(--gcs-brand-bg)",
+      "--gcs-accent": "var(--gcs-brand-accent)",
     };
     for (const [name, value] of Object.entries(expected)) expect(css).toContain(`${name}: ${value};`);
+    expect(css).toContain(".gcs-product {");
+    expect(css).toContain('.gcs-product[data-theme="light"]');
+  });
+
+  test("acp.css nu mai are o paletă proprie: cromul vine din brand (`.gcs-product`)", () => {
+    const css = read("./acp.css");
+    for (const old of ["#152036", "#1B2A47", "#0E1830", "#C21F31", "#7B57C9))"]) expect(css).not.toContain(old);
+    expect(css).toContain("--gcs-acp-rail: var(--gcs-brand-chrome);");
   });
 
   test("base.css are clasele din machetă și oprește animațiile la prefers-reduced-motion", () => {

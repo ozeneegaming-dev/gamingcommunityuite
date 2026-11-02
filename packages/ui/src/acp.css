@@ -1,23 +1,22 @@
 /*
- * ACP-ul modern (etapa 6 §1): paleta bleumarin, navigația pe două niveluri (bara de iconițe și coloana a doua, specul
+ * ACP-ul modern (etapa 6 §1): navigația pe două niveluri (bara de iconițe și coloana a doua, specul
  * 2026-10-09-acp-navigatie-aplicatii), bara de sus, antetul de pagină, cardurile KPI, graficele, listele rapide,
  * formularele pe rânduri și comutatoarele.
  *
- * Tokenurile: `.gcs-acp` redefinește tokenurile comune (`--gcs-bg`, `--gcs-surface`…) cu paleta bleumarin, deci
- * cardurile, câmpurile și tabelele existente o preiau automat. `data-theme="light"` (sau `auto` cu sistemul pe
- * luminos) are varianta luminoasă; bara de iconițe rămâne închisă la culoare în ambele.
+ * Tokenurile: ACP-ul e cromul produsului (`.gcs-product`, din `tokens.css`, generat din brandul GCS), deci cardurile,
+ * câmpurile și tabelele iau culorile, fonturile și formele brandului, oricare ar fi tema site-ului. `data-theme="light"`
+ * (sau `auto` cu sistemul pe luminos) are varianta luminoasă; bara de iconițe rămâne închisă la culoare în ambele.
  */
 
 /* ─── Tokeni ──────────────────────────────────────────────────────────────── */
 
 /*
  * Tema site-ului (editorul vizual) nu schimbă ACP-ul: variabilele elementelor revin la „nedefinit”, deci regulile
- * de bază folosesc rezerva lor (aspectul implicit, cu tokenurile ACP). La fel în editorul vizual.
+ * de bază folosesc rezerva lor. Butoanele și titlurile le dă brandul (`.gcs-product`). La fel în editorul vizual.
  */
 .gcs-acp,
 .gcs-themeStudio {
   --gcs-body-bg: initial;
-  --gcs-heading: initial;
   --gcs-link: initial;
   --gcs-link-hover: initial;
   --gcs-header-bg: initial;
@@ -32,28 +31,14 @@
   --gcs-box-header-text: initial;
   --gcs-widget-title: initial;
   --gcs-widget-icon: initial;
-  --gcs-btn-primary-bg: initial;
-  --gcs-btn-primary-text: initial;
-  --gcs-btn-primary-hover: initial;
-  --gcs-btn-secondary-bg: initial;
-  --gcs-btn-secondary-text: initial;
-  --gcs-btn-radius: initial;
   --gcs-box-border-w: initial;
   --gcs-avatar-radius: initial;
   --gcs-base-size: initial;
 }
 
 .gcs-acp {
-  /* Sidebar (la fel în ambele teme). */
-  --gcs-acp-side: #1B2A47;
-  --gcs-acp-side2: #15223B;
-  --gcs-acp-sideText: #C7D1E4;
-  --gcs-acp-sideMuted: #8494B2;
-  --gcs-acp-sideHover: rgba(255, 255, 255, 0.06);
-  --gcs-acp-sideActive: rgba(255, 255, 255, 0.1);
-  --gcs-acp-sideLine: rgba(255, 255, 255, 0.08);
-  --gcs-acp-tooltip: #0D1729;
-  /* Cardurile dashboard-ului: identitatea fiecărui card (nu stări). */
+  --gcs-acp-tooltip: var(--gcs-brand-bg);
+  /* Cardurile dashboard-ului: identitatea fiecărui card (paleta de date a brandului, nu stări). */
   --gcs-acp-c1: #20AA92;
   --gcs-acp-c2: #9B78DC;
   --gcs-acp-c3: #3B9EEA;
@@ -63,22 +48,10 @@
   /* Seriile graficului de arie (validate pentru daltonism pe suprafața cardului). */
   --gcs-acp-series1: #20AA92;
   --gcs-acp-series2: #9B78DC;
-  /* Variațiile: creștere bună / rea. */
-  --gcs-acp-good: #3DCB8E;
-  --gcs-acp-bad: #FF6B6B;
-
-  /* Tokenurile comune, în bleumarin. */
-  --gcs-bg: #152036;
-  --gcs-surface: #1B2A47;
-  --gcs-surface2: #22345A;
-  --gcs-border: #2B3E64;
-  --gcs-text: #E6EBF5;
-  --gcs-muted: #9AA8C3;
-  --gcs-chrome: #1B2A47;
-  --gcs-chrome2: #15223B;
-  --gcs-sweep: rgb(255 255 255 / 0.08);
+  /* Variațiile: creștere bună / rea (culorile de stare ale brandului, urmează modul). */
+  --gcs-acp-good: var(--gcs-ok);
+  --gcs-acp-bad: var(--gcs-danger);
   --gcs-name-plain: initial;
-  color-scheme: dark;
 
   min-height: 100vh;
   background: var(--gcs-bg);
@@ -86,15 +59,6 @@
 }
 
 .gcs-acp[data-theme="light"] {
-  --gcs-bg: #EEF2F8;
-  --gcs-surface: #FFFFFF;
-  --gcs-surface2: #F2F5FA;
-  --gcs-border: #D8E0EC;
-  --gcs-text: #172340;
-  --gcs-muted: #56657F;
-  --gcs-accentInk: #C21F31;
-  --gcs-chrome: #FFFFFF;
-  --gcs-chrome2: #F6F8FC;
   --gcs-acp-series1: #13866F;
   --gcs-acp-series2: #7B57C9;
   --gcs-acp-c1: #13866F;
@@ -103,24 +67,11 @@
   --gcs-acp-c4: #B57F12;
   --gcs-acp-c5: #B8478E;
   --gcs-acp-c6: #D64541;
-  --gcs-acp-good: #16804F;
-  --gcs-acp-bad: #C62828;
-  --gcs-sweep: color-mix(in srgb, var(--gcs-text) 7%, transparent);
   --gcs-name-plain: var(--gcs-text);
-  color-scheme: light;
 }
 
 @media (prefers-color-scheme: light) {
   .gcs-acp[data-theme="auto"] {
-    --gcs-bg: #EEF2F8;
-    --gcs-surface: #FFFFFF;
-    --gcs-surface2: #F2F5FA;
-    --gcs-border: #D8E0EC;
-    --gcs-text: #172340;
-    --gcs-muted: #56657F;
-    --gcs-accentInk: #C21F31;
-    --gcs-chrome: #FFFFFF;
-    --gcs-chrome2: #F6F8FC;
     --gcs-acp-series1: #13866F;
     --gcs-acp-series2: #7B57C9;
     --gcs-acp-c1: #13866F;
@@ -129,11 +80,7 @@
     --gcs-acp-c4: #B57F12;
     --gcs-acp-c5: #B8478E;
     --gcs-acp-c6: #D64541;
-    --gcs-acp-good: #16804F;
-    --gcs-acp-bad: #C62828;
-    --gcs-sweep: color-mix(in srgb, var(--gcs-text) 7%, transparent);
     --gcs-name-plain: var(--gcs-text);
-    color-scheme: light;
   }
 }
 
@@ -143,35 +90,36 @@
  * Navigația pe două niveluri (specul 2026-10-09-acp-navigatie-aplicatii §1): bara de iconițe rămâne închisă la culoare
  * în ambele teme, coloana a doua urmează tema. Zona afișată în coloană e un „tab” care se lipește de coloană (aceeași
  * culoare, colțuri concave spre ea), ca legătura dintre cele două niveluri să se vadă; zona paginii curente are semnul
- * roșu de pe marginea barei.
+ * accentului pe marginea barei.
  */
 .gcs-acp {
-  --gcs-acp-rail: #0E1830;
-  --gcs-acp-railText: #9AA8C6;
+  /* Bara de iconițe: cromul închis al brandului, în ambele moduri. */
+  --gcs-acp-rail: var(--gcs-brand-chrome);
+  --gcs-acp-railText: color-mix(in srgb, var(--gcs-brand-text) 78%, var(--gcs-brand-chrome));
   --gcs-acp-railHover: rgba(255, 255, 255, 0.06);
-  --gcs-acp-col: #1A2845;
-  --gcs-acp-colText: #D6DDEB;
-  --gcs-acp-colMuted: #8494B3;
+  --gcs-acp-col: var(--gcs-brand-surface);
+  --gcs-acp-colText: var(--gcs-brand-text);
+  --gcs-acp-colMuted: var(--gcs-brand-muted);
   --gcs-acp-colHover: rgba(255, 255, 255, 0.05);
   --gcs-acp-colActive: rgba(255, 255, 255, 0.09);
   --gcs-acp-colLine: rgba(255, 255, 255, 0.07);
 }
 .gcs-acp[data-theme="light"] {
-  --gcs-acp-col: #FFFFFF;
-  --gcs-acp-colText: #24304B;
-  --gcs-acp-colMuted: #66748E;
-  --gcs-acp-colHover: #F0F3F8;
-  --gcs-acp-colActive: #E9EEF6;
-  --gcs-acp-colLine: #E0E6EF;
+  --gcs-acp-col: var(--gcs-brand-light-surface);
+  --gcs-acp-colText: var(--gcs-brand-light-text);
+  --gcs-acp-colMuted: var(--gcs-brand-light-muted);
+  --gcs-acp-colHover: var(--gcs-brand-light-surface-2);
+  --gcs-acp-colActive: var(--gcs-brand-light-secondary);
+  --gcs-acp-colLine: var(--gcs-brand-light-border);
 }
 @media (prefers-color-scheme: light) {
   .gcs-acp[data-theme="auto"] {
-    --gcs-acp-col: #FFFFFF;
-    --gcs-acp-colText: #24304B;
-    --gcs-acp-colMuted: #66748E;
-    --gcs-acp-colHover: #F0F3F8;
-    --gcs-acp-colActive: #E9EEF6;
-    --gcs-acp-colLine: #E0E6EF;
+    --gcs-acp-col: var(--gcs-brand-light-surface);
+    --gcs-acp-colText: var(--gcs-brand-light-text);
+    --gcs-acp-colMuted: var(--gcs-brand-light-muted);
+    --gcs-acp-colHover: var(--gcs-brand-light-surface-2);
+    --gcs-acp-colActive: var(--gcs-brand-light-secondary);
+    --gcs-acp-colLine: var(--gcs-brand-light-border);
   }
 }
 
@@ -244,9 +192,9 @@
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: linear-gradient(135deg, var(--gcs-accent), color-mix(in srgb, var(--gcs-accent) 55%, #7B57C9));
+  background: var(--gcs-accent-fill);
   color: #fff;
-  font: 700 19px var(--gcs-font-display);
+  font: 800 19px var(--gcs-font-display);
 }
 .gcs-acpRail__list {
   display: flex;
