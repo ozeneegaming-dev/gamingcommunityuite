@@ -47,19 +47,17 @@ async function shot(page: Page, name: string): Promise<void> {
 type Rect = { x: number; y: number; width: number; height: number };
 
 /**
- * Pagina s-a așezat: nici derularea, nici elementul nu se mai mișcă (pagina unui topic sare singură la ultimul mesaj,
- * iar o derulare închide tooltip-ul, intenționat).
+ * Pagina s-a așezat: derularea, înălțimea paginii și elementul nu s-au mai mișcat aproape o secundă (conținutul care
+ * se încarcă după pagină o mai lungește, iar browserul ține derularea pe loc; o derulare închide tooltip-ul, intenționat).
  */
 async function settled(el: ElementHandle<Element>) {
   await el.scrollIntoViewIfNeeded();
-  let last = "";
+  const seen: string[] = [];
   await expect
     .poll(async () => {
-      const now = await el.evaluate((n) => `${window.scrollY}:${n.getBoundingClientRect().y}`);
-      const same = now === last;
-      last = now;
-      return same;
-    }, { intervals: [300] })
+      seen.push(await el.evaluate((n) => `${window.scrollY}:${document.documentElement.scrollHeight}:${n.getBoundingClientRect().y}`));
+      return seen.length >= 3 && seen.slice(-3).every((s) => s === seen.at(-1));
+    }, { intervals: [400] })
     .toBe(true);
 }
 
@@ -72,10 +70,14 @@ async function hoverTip(page: Page, target: Locator) {
   const anchor = (await target.elementHandle())!;
   const text = (await anchor.getAttribute("data-tip")) ?? (await anchor.getAttribute("title"));
   await settled(anchor);
-  await anchor.hover();
   const visible = page.getByRole("tooltip").filter({ visible: true });
   const tip = visible.first();
-  await expect(tip).toHaveText(text!);
+  // O derulare întârziată închide bula (intenționat): mouse-ul pleacă și revine, ca un vizitator.
+  await expect(async () => {
+    await page.mouse.move(1, 1);
+    await anchor.hover();
+    await expect(tip).toHaveText(text!, { timeout: 2_000 });
+  }).toPass({ timeout: 15_000 });
   await expect(visible).toHaveCount(1);
   let rects: { ok: boolean; box: Rect; anchor: Rect } | undefined;
   await expect
