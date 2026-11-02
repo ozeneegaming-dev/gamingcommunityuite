@@ -428,8 +428,9 @@ export const NOVA_THEME_SETTINGS: GcsThemeSettings = {
   buttons: { radius: 4 },
   bands: { style: "solid", icon: "circle" },
   effects: { hover: true },
-  // Designul GCS livrează rândurile ca și carduri separate (macheta CardRows) și loaderul cu bare.
-  lists: { layout: "cards", stats: "visible" },
+  // Designul GCS livrează rândurile ca și carduri separate (macheta CardRows) și loaderul cu bare. Contoarele
+  // forumurilor (topicuri, postări) apar doar la hover, în bula butonului de statistici (proprietarul, 2026-11-02).
+  lists: { layout: "cards", stats: "hover" },
   loader: { style: "bars" },
 };
 

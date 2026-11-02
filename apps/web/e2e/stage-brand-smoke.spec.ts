@@ -5,7 +5,8 @@ import { expect, test, type Page } from "@playwright/test";
 /**
  * Capturile pentru proprietar (doar cu `GCS_SHOTS_DIR`), pe instanța instalată de `install.spec.ts` cu „Date demo”:
  * exact ce vede o comunitate nouă, ca vizitator. GCS Dark (antetul implicit, cel de pe preview) și GCS White, pe
- * desktop, după derulare (antetul compact) și pe telefon. Doar navigare: nu schimbă nimic pe instanță.
+ * desktop, contoarele forumului la hover, după derulare (antetul compact) și pe telefon. Doar navigare: nu schimbă
+ * nimic pe instanță.
  */
 const SHOTS = process.env.GCS_SHOTS_DIR;
 test.skip(!SHOTS, "doar la cerere (GCS_SHOTS_DIR)");
@@ -27,6 +28,14 @@ test("capturi: forumul unei instalări noi, GCS Dark și GCS White", async ({ pa
     await expect(page.locator(".gcs-hb--esports")).toBeVisible();
     await shot(page, `forum-${skin}-desktop`);
     await shot(page, `forum-${skin}-desktop-full`, true);
+    // Contoarele forumului (topicuri, postări): doar la hover, în bula butonului de statistici.
+    const row = page.locator(".gcs-forumRow").first();
+    await expect(row.locator(".gcs-forumRow__stats")).toBeHidden();
+    await row.hover();
+    await expect(row.locator(".gcs-forumRow__bubble")).toBeVisible();
+    await page.waitForTimeout(400);
+    await page.locator(".gcs-category").first().screenshot({ path: path.join(SHOTS!, `new-forum-${skin}-hover.png`) });
+    await page.mouse.move(0, 0);
     // La derulare: antetul se ascunde în jos și revine compact la o derulare în sus.
     await page.mouse.wheel(0, 1200);
     await page.waitForTimeout(500);
