@@ -18,4 +18,9 @@ export interface GcsFileStore {
   /** Fișierul întreg sau, cu `range`, doar acea parte (`size` rămâne mărimea totală). */
   get(key: string, range?: GcsByteRange): Promise<GcsStoredFile | null>;
   delete(key: string): Promise<void>;
+  /** Unde stau fișierele (afișat read-only în ACP → Setări → Încărcări și imagini); fără secrete. */
+  describe?(): GcsFileStoreInfo;
 }
+
+/** Driverul stocării: un folder local (`location` = calea) sau S3 / MinIO (`location` = host-ul și bucket-ul). */
+export type GcsFileStoreInfo = { driver: "local" | "s3"; location: string };

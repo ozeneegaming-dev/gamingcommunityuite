@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -8,7 +9,8 @@ import { GcsForbidden, GcsNotFound, GcsRateLimited, GcsValidationError } from ".
 import type { GcsModule } from "../../modules/registry";
 import { GcsRateLimiter } from "../../auth/rateLimit";
 import type { GcsActor } from "../../permissions/types";
-import { GcsAttachmentService } from "./attachments";
+import { GCS_DEFAULT_UPLOAD_POLICY, GcsAttachmentService, thumbnailKey } from "./attachments";
+import { GCS_IMAGE_DEFAULTS, type GcsUploadPolicy } from "./images";
 import { GcsLocalFileStore } from "./localStore";
 
 /** Un modul de test cu un container „test” pe care membrii pot încărca și descărca. */
@@ -71,22 +73,23 @@ afterAll(async () => {
 });
 
 describe("GcsAttachmentService.upload", () => {
-  test("o imagine e recodată: dimensiunile rămân, metadatele EXIF dispar", async () => {
+  test("o imagine e recodată (implicit WebP): dimensiunile rămân, metadatele EXIF dispar", async () => {
     const input = await png(32, 16, true);
     expect((await sharp(input).metadata()).exif).toBeDefined();
 
     const att = await service.upload(member, { name: "poza.png", bytes: input }, CTX);
-    expect(att).toMatchObject({ isImage: true, width: 32, height: 16, mime: "image/png", url: `/files/${att.id}` });
+    expect(att).toMatchObject({ isImage: true, width: 32, height: 16, mime: "image/webp", filename: "poza.webp", url: `/files/${att.id}` });
 
     const stored = await service.open(member, att.id);
     const meta = await sharp(await readAll(stored.body)).metadata();
+    expect(meta.format).toBe("webp");
     expect(meta.exif).toBeUndefined();
     expect(meta.width).toBe(32);
   });
 
-  test("imaginile foarte mari sunt micșorate la maxim 4096 px", async () => {
+  test("imaginile mari sunt micșorate la latura maximă implicită (2000 px)", async () => {
     const att = await service.upload(member, { name: "mare.png", bytes: await png(5000, 100) }, CTX);
-    expect(att.width).toBe(4096);
+    expect(att.width).toBe(2000);
   });
 
   test("un fișier HTML cu extensia .png e refuzat (tipul real din magic bytes)", async () => {
@@ -232,7 +235,7 @@ describe("GcsAttachmentService.uploadSiteImage", () => {
 describe("GcsAttachmentService.importFile (importul din altă platformă)", () => {
   test("aceeași verificare ca un upload: imaginea e recodată (fără EXIF), tipul real decide, fără limitele de grup", async () => {
     const att = await service.importFile(member.userId, { name: "../../vechi.png", bytes: await png(40, 20, true) }, { maxBytes: 10 * 1024 * 1024 });
-    expect(att).toMatchObject({ isImage: true, width: 40, height: 20, mime: "image/png", filename: "vechi.png" });
+    expect(att).toMatchObject({ isImage: true, width: 40, height: 20, mime: "image/webp", filename: "vechi.webp" });
     const row = await world.db.attachment.findUniqueOrThrow({ where: { id: att.id } });
     expect(row).toMatchObject({ ownerId: member.userId, contentType: null });
     expect((await sharp(await readAll((await service.open(member, att.id)).body)).metadata()).exif).toBeUndefined();
@@ -263,5 +266,78 @@ describe("GcsAttachmentService.storeDecorImage (Aspect forumuri)", () => {
     await expect(service.storeDecorImage(null, { name: "a.html", bytes: Buffer.from("<html><script>x</script></html>") }, opts)).rejects.toMatchObject({ fields: { file: "unsupported_type" } });
     await expect(service.storeDecorImage(null, { name: "a.svg", bytes: Buffer.from("<svg><rect/>") }, opts)).rejects.toMatchObject({ fields: { file: "invalid_svg" } });
     await expect(service.storeDecorImage(null, { name: "a.png", bytes: await png() }, { ...opts, target: "../x" })).rejects.toBeInstanceOf(GcsValidationError);
+  });
+});
+
+describe("GcsAttachmentService: setările încărcărilor (ACP → Setări → Încărcări și imagini)", () => {
+  const withPolicy = (policy: Partial<GcsUploadPolicy> & { image?: Partial<GcsUploadPolicy["image"]> }) =>
+    new GcsAttachmentService({
+      db: world.db,
+      store: new GcsLocalFileStore(dir),
+      permissions: world.permissions,
+      rateLimiter: new GcsRateLimiter(world.kv),
+      policy: async () => ({ allowedExtensions: policy.allowedExtensions ?? GCS_DEFAULT_UPLOAD_POLICY.allowedExtensions, image: { ...GCS_IMAGE_DEFAULTS, ...policy.image } }),
+    });
+  const pdf = Buffer.from(["%PDF-1.4", "1 0 obj", "<<>>", "endobj", "trailer", "<<>>", "%%EOF", ""].join("\n"));
+
+  test("extensiile: lista decide, cele periculoase sunt refuzate mereu, extensia trebuie să se potrivească", async () => {
+    const svc = withPolicy({ allowedExtensions: ["png", "txt"] });
+    await expect(svc.upload(member, { name: "a.txt", bytes: Buffer.from("x\n") }, CTX)).resolves.toMatchObject({ mime: "text/plain" });
+    await expect(svc.upload(member, { name: "a.cfg", bytes: Buffer.from("x\n") }, CTX)).rejects.toMatchObject({ fields: { file: "extension_not_allowed" } });
+    await expect(svc.upload(member, { name: "a.pdf", bytes: pdf }, CTX)).rejects.toMatchObject({ fields: { file: "extension_not_allowed" } });
+    await expect(svc.upload(member, { name: "shell.php", bytes: await png() }, CTX)).rejects.toMatchObject({ fields: { file: "dangerous_type" } });
+    await expect(service.upload(member, { name: "arhiva.zip", bytes: pdf }, CTX)).rejects.toMatchObject({ fields: { file: "type_mismatch" } });
+    await expect(service.upload(member, { name: "raport.pdf", bytes: pdf }, CTX)).resolves.toMatchObject({ mime: "application/pdf", isImage: false });
+  });
+
+  test("fără WebP, imaginea își păstrează formatul; latura și calitatea vin din setări", async () => {
+    const svc = withPolicy({ image: { webp: false, maxSide: 100 } });
+    const att = await svc.upload(member, { name: "lat.png", bytes: await png(400, 40) }, CTX);
+    expect(att).toMatchObject({ mime: "image/png", filename: "lat.png", width: 100, height: 10 });
+  });
+
+  test("cu ștergerea metadatelor oprită, EXIF-ul rămâne în imaginea salvată", async () => {
+    const svc = withPolicy({ image: { stripMetadata: false } });
+    const att = await svc.upload(member, { name: "exif.png", bytes: await png(32, 16, true) }, CTX);
+    expect((await sharp(await readAll((await svc.open(member, att.id)).body)).metadata()).exif).toBeDefined();
+  });
+
+  test("miniatura: doar pentru imaginile mai mari decât ea; se servește cu `thumb` și se șterge odată cu fișierul", async () => {
+    const svc = withPolicy({ image: { thumbnailSide: 100 } });
+    const big = await svc.upload(member, { name: "mare.png", bytes: await png(800, 400) }, CTX);
+    const thumb = await svc.open(member, big.id, { thumb: true });
+    expect(thumb.mime).toBe("image/webp");
+    expect((await sharp(await readAll(thumb.body)).metadata()).width).toBe(100);
+    const small = await svc.upload(member, { name: "mica.png", bytes: await png(50, 20) }, CTX);
+    expect((await sharp(await readAll((await svc.open(member, small.id, { thumb: true })).body)).metadata()).width).toBe(50);
+
+    const row = await world.db.attachment.findUniqueOrThrow({ where: { id: big.id } });
+    expect(existsSync(path.join(dir, thumbnailKey(row.storageKey)))).toBe(true);
+    await svc.discard([big.id]);
+    expect(existsSync(path.join(dir, row.storageKey))).toBe(false);
+    expect(existsSync(path.join(dir, thumbnailKey(row.storageKey)))).toBe(false);
+  });
+
+  test("avatarul își păstrează mărimea; calitatea și metadatele vin din setări", async () => {
+    const svc = withPolicy({ image: { quality: 30 } });
+    const low = await svc.uploadProfileImage(member, { name: "a.png", bytes: await png(800, 800) }, { kind: "avatar", maxMb: 2, animated: false });
+    expect(low).toMatchObject({ mime: "image/webp", width: 512, height: 512 });
+  });
+
+  test("emoticoanele (`original`) își păstrează formatul, fără lista de extensii", async () => {
+    const svc = withPolicy({ allowedExtensions: ["txt"] });
+    await expect(svc.importFile(member.userId, { name: "kappa.png", bytes: await png() }, { maxBytes: 1024 * 1024, original: true })).resolves.toMatchObject({ mime: "image/png" });
+    await expect(svc.importFile(member.userId, { name: "kappa.png", bytes: await png() }, { maxBytes: 1024 * 1024 })).rejects.toMatchObject({ fields: { file: "extension_not_allowed" } });
+  });
+
+  test("unattachedBefore: doar fișierele nelegate, mai vechi decât data, pe loturi", async () => {
+    const old = await service.upload(member, { name: "a.txt", bytes: Buffer.from("x\n") }, CTX);
+    const linked = await service.upload(member, { name: "b.txt", bytes: Buffer.from("y\n") }, CTX);
+    await world.db.$transaction((tx) => service.attach(tx, [linked.id], { contentType: "test.item", contentId: "1", ownerId: member.userId! }));
+    await world.db.attachment.updateMany({ where: { id: { in: [old.id, linked.id] } }, data: { createdAt: new Date("2026-01-01T00:00:00Z") } });
+    await service.upload(member, { name: "c.txt", bytes: Buffer.from("z\n") }, CTX);
+    const rows = await service.unattachedBefore(new Date("2026-06-01T00:00:00Z"), 10);
+    expect(rows.map((r) => r.id)).toEqual([old.id]);
+    expect(await service.unattachedBefore(new Date("2026-06-01T00:00:00Z"), 10, old.id)).toEqual([]);
   });
 });
