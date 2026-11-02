@@ -138,7 +138,7 @@ describe("pachetul ediției Lite", () => {
     write(path.join(app, "app.js"), readFileSync(APP_JS, "utf8"));
     write(path.join(app, "server", "node_modules", "next", "index.js"), "module.exports = 'next din server/node_modules';");
     write(path.join(app, "server", "apps", "web", "server.js"), "process.stdout.write(require('next') + ' | ' + process.env.GCS_MIGRATIONS_DIR);");
-    const env = { ...process.env, GCS_SECRET: "test", GCS_CONFIG_DIR: path.join(app, "config") };
+    const env: NodeJS.ProcessEnv = { ...process.env, GCS_SECRET: "test", GCS_CONFIG_DIR: path.join(app, "config") };
     delete env.GCS_MIGRATIONS_DIR;
     const res = spawnSync(process.execPath, ["app.js"], { cwd: app, env, encoding: "utf8" });
     expect(res.stderr).toBe("");
