@@ -107,7 +107,9 @@
       "discord": "Continuar con la discordia",
       "steam": "Continuar con Steam",
       "noAccount": "¿Todavía no tiene cuenta?",
-      "registerLink": "Registrarse"
+      "registerLink": "Registrarse",
+      "forgot": "¿Olvidaste tu contraseña?",
+      "resetDone": "Tu contraseña se ha cambiado. Inicia sesión con la contraseña nueva."
     },
     "twoFactor": {
       "title": "Verificación de dos pasos",
@@ -181,6 +183,54 @@
     "passwordRule": {
       "length": "Al menos {min} caracteres.",
       "mix": "Al menos {min} caracteres, con letras y números."
+    },
+    "forgot": {
+      "title": "¿Olvidaste tu contraseña?",
+      "subtitle": "Te enviamos por email un enlace para elegir una contraseña nueva.",
+      "identifier": "Email o nombre de usuario",
+      "submit": "Enviar enlace de restablecimiento",
+      "sent": "Si existe una cuenta con estos datos, te hemos enviado un email con un enlace para restablecer la contraseña. El enlace es válido durante {minutes} minutos; revisa también la carpeta de spam.",
+      "back": "Volver a iniciar sesión",
+      "required": "Escribe tu email o tu nombre de usuario.",
+      "disabled": "El restablecimiento de la contraseña por email está desactivado en este sitio. Para recuperar tu cuenta, contacta con el equipo del sitio.",
+      "noEmail": "El restablecimiento de la contraseña por email no está disponible ahora mismo: este sitio no tiene configurado el envío de emails. Para recuperar tu cuenta, contacta con el equipo del sitio.",
+      "staffLink": "Ver el equipo del sitio"
+    },
+    "reset": {
+      "title": "Contraseña nueva",
+      "subtitle": "Elige una contraseña nueva para tu cuenta de {site}.",
+      "password": "Contraseña nueva",
+      "confirm": "Repite la contraseña nueva",
+      "submit": "Guardar contraseña",
+      "mismatch": "Las contraseñas no coinciden.",
+      "invalid": "Este enlace de restablecimiento ya no es válido: ha caducado, ya se ha usado o lo ha sustituido una solicitud más reciente.",
+      "requestNew": "Pedir un enlace nuevo"
+    },
+    "resetEmail": {
+      "greeting": "¡Hola, {name}!",
+      "fallback": "Si el botón no funciona, copia esta dirección en tu navegador:",
+      "link": {
+        "subject": "Restablece tu contraseña — {site}",
+        "body": "Hemos recibido una solicitud para restablecer la contraseña de tu cuenta de {site}. Usa el botón de abajo para elegir una contraseña nueva.",
+        "button": "Elegir una contraseña nueva",
+        "validity": "El enlace es válido durante {minutes} minutos y solo funciona una vez. Una solicitud más reciente lo anula.",
+        "ignore": "Si no lo has pedido tú, ignora este email: tu contraseña sigue siendo la misma."
+      },
+      "social": {
+        "subject": "Cómo iniciar sesión — {site}",
+        "body": "Hemos recibido una solicitud para restablecer la contraseña de tu cuenta de {site}, pero tu cuenta no tiene contraseña: inicias sesión con {providers}. En la página de inicio de sesión, elige el mismo botón.",
+        "bodyNone": "Hemos recibido una solicitud para restablecer la contraseña de tu cuenta de {site}, pero tu cuenta no tiene contraseña. Contacta con el equipo del sitio para recuperar tu cuenta.",
+        "button": "Ir a iniciar sesión",
+        "ignore": "Si no lo has pedido tú, ignora este email."
+      },
+      "changed": {
+        "subject": "Tu contraseña se ha cambiado — {site}",
+        "body": "La contraseña de tu cuenta de {site} se cambió el {when} desde la dirección IP {ip}.",
+        "bodyNoIp": "La contraseña de tu cuenta de {site} se cambió el {when}.",
+        "sessions": "Por tu seguridad, se han cerrado todas las sesiones abiertas de la cuenta.",
+        "notYou": "Si no has sido tú, pide enseguida un nuevo restablecimiento y avisa al equipo del sitio.",
+        "button": "Restablecer de nuevo la contraseña"
+      }
     }
   },
   "errors": {
@@ -5487,6 +5537,12 @@
       "password_min_length": "Longitud mínima de la contraseña",
       "password_min_length_hint": "Entre 8 y 128 caracteres; se aplica al registrarse y al cambiar la contraseña.",
       "password_require_mix": "Las contraseñas deben contener letras y números",
+      "password_reset_enabled": "«¿Olvidaste tu contraseña?» (restablecimiento por email)",
+      "password_reset_enabled_hint": "Los miembros eligen ellos mismos una contraseña nueva con un enlace enviado por email. Solo funciona con el envío de emails configurado (Ajustes → Email); si no, la página les pide que contacten con el equipo.",
+      "password_reset_minutes": "Validez del enlace de restablecimiento (minutos)",
+      "password_reset_minutes_hint": "Entre 5 y 1440; 30 por defecto. El enlace funciona una vez y una solicitud más reciente anula la anterior.",
+      "password_reset_revoke_sessions": "Al restablecer la contraseña, cerrar todas las sesiones del miembro",
+      "password_reset_revoke_sessions_hint": "Recomendado: quien conocía la contraseña antigua queda fuera en todos los dispositivos y se vuelve a pedir el 2FA en todas partes.",
       "mfa_required_groups": "Grupos con 2FA obligatoria",
       "mfa_recovery": "Recuperación de la 2FA (dispositivo perdido)",
       "mfa_recovery_hint": "Los códigos de respaldo recibidos al activarla siempre funcionan. La segunda opción también permite entrar con un código enviado al correo de la cuenta.",

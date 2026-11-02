@@ -21,6 +21,11 @@ describe("setările de securitate și legale", () => {
     expect(settingValueError(byKey.get("security.login_max_attempts")!, -1)).toBe("invalid_range");
     expect(settingValueError(byKey.get("security.password_min_length")!, 6)).toBe("invalid_range");
     expect(settingValueError(byKey.get("security.mfa_recovery")!, "sms")).toBe("invalid_choice");
+    expect(settingValueError(byKey.get("auth.password_reset_minutes")!, 4)).toBe("invalid_range");
+    expect(settingValueError(byKey.get("auth.password_reset_minutes")!, 1441)).toBe("invalid_range");
+    expect(settingValueError(byKey.get("auth.password_reset_minutes")!, 60)).toBeNull();
+    expect(byKey.get("auth.password_reset_enabled")).toMatchObject({ type: "boolean", default: true, section: "2fa" });
+    expect(byKey.get("auth.password_reset_revoke_sessions")).toMatchObject({ type: "boolean", default: true, section: "2fa" });
     expect(settingValueError(byKey.get("security.mfa_required_groups")!, [1, 1])).toBe("invalid");
     expect(settingValueError(byKey.get("legal.terms_mode")!, "pdf")).toBe("invalid_choice");
     expect(settingValueError(byKey.get("legal.terms_content")!, { html: "<p>x</p>" })).toBe("invalid");

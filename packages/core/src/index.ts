@@ -12,6 +12,7 @@ export * from "./auth/adminReset";
 export * from "./auth/passwords";
 export * from "./auth/legacyPasswords";
 export * from "./auth/lockout";
+export * from "./auth/passwordReset";
 export * from "./net/safeFetch";
 export * from "./secrets";
 export * from "./auth/rateLimit";

@@ -107,7 +107,9 @@
       "discord": "Weiter mit Discord",
       "steam": "Weiter mit Steam",
       "noAccount": "Noch kein Account?",
-      "registerLink": "Registrieren"
+      "registerLink": "Registrieren",
+      "forgot": "Passwort vergessen?",
+      "resetDone": "Dein Passwort wurde geändert. Melde dich mit dem neuen Passwort an."
     },
     "twoFactor": {
       "title": "Zweistufige Überprüfung",
@@ -181,6 +183,54 @@
     "passwordRule": {
       "length": "Mindestens {min} Zeichen.",
       "mix": "Mindestens {min} Zeichen, mit Buchstaben und Ziffern."
+    },
+    "forgot": {
+      "title": "Passwort vergessen?",
+      "subtitle": "Wir schicken dir per E-Mail einen Link, mit dem du ein neues Passwort wählst.",
+      "identifier": "E-Mail oder Benutzername",
+      "submit": "Link zum Zurücksetzen senden",
+      "sent": "Wenn ein Konto zu diesen Angaben existiert, haben wir dir eine E-Mail mit einem Link zum Zurücksetzen des Passworts geschickt. Der Link ist {minutes} Minuten gültig; schau auch im Spam-Ordner nach.",
+      "back": "Zurück zur Anmeldung",
+      "required": "Gib deine E-Mail oder deinen Benutzernamen ein.",
+      "disabled": "Das Zurücksetzen des Passworts per E-Mail ist auf dieser Seite ausgeschaltet. Um dein Konto wiederherzustellen, wende dich an das Team der Seite.",
+      "noEmail": "Das Zurücksetzen des Passworts per E-Mail ist gerade nicht verfügbar: Diese Seite hat keinen E-Mail-Versand eingerichtet. Um dein Konto wiederherzustellen, wende dich an das Team der Seite.",
+      "staffLink": "Zum Team der Seite"
+    },
+    "reset": {
+      "title": "Neues Passwort",
+      "subtitle": "Wähle ein neues Passwort für dein Konto auf {site}.",
+      "password": "Neues Passwort",
+      "confirm": "Neues Passwort wiederholen",
+      "submit": "Passwort speichern",
+      "mismatch": "Die Passwörter stimmen nicht überein.",
+      "invalid": "Dieser Link zum Zurücksetzen ist nicht mehr gültig: Er ist abgelaufen, wurde schon benutzt oder durch eine neuere Anfrage ersetzt.",
+      "requestNew": "Neuen Link anfordern"
+    },
+    "resetEmail": {
+      "greeting": "Hallo, {name}!",
+      "fallback": "Wenn der Button nicht funktioniert, kopiere diese Adresse in deinen Browser:",
+      "link": {
+        "subject": "Passwort zurücksetzen — {site}",
+        "body": "Wir haben eine Anfrage erhalten, das Passwort deines Kontos auf {site} zurückzusetzen. Mit dem Button unten wählst du ein neues Passwort.",
+        "button": "Neues Passwort wählen",
+        "validity": "Der Link ist {minutes} Minuten gültig und funktioniert nur einmal. Eine neuere Anfrage macht ihn ungültig.",
+        "ignore": "Wenn du das nicht angefordert hast, ignoriere diese E-Mail: Dein Passwort bleibt gleich."
+      },
+      "social": {
+        "subject": "So meldest du dich an — {site}",
+        "body": "Wir haben eine Anfrage erhalten, das Passwort deines Kontos auf {site} zurückzusetzen, aber dein Konto hat kein Passwort: Du meldest dich mit {providers} an. Wähle auf der Anmeldeseite denselben Button.",
+        "bodyNone": "Wir haben eine Anfrage erhalten, das Passwort deines Kontos auf {site} zurückzusetzen, aber dein Konto hat kein Passwort. Wende dich an das Team der Seite, um dein Konto wiederherzustellen.",
+        "button": "Zur Anmeldung",
+        "ignore": "Wenn du das nicht angefordert hast, ignoriere diese E-Mail."
+      },
+      "changed": {
+        "subject": "Dein Passwort wurde geändert — {site}",
+        "body": "Das Passwort deines Kontos auf {site} wurde am {when} von der IP-Adresse {ip} geändert.",
+        "bodyNoIp": "Das Passwort deines Kontos auf {site} wurde am {when} geändert.",
+        "sessions": "Zu deiner Sicherheit wurden alle offenen Sitzungen des Kontos abgemeldet.",
+        "notYou": "Wenn du das nicht warst, fordere sofort ein neues Zurücksetzen an und informiere das Team der Seite.",
+        "button": "Passwort erneut zurücksetzen"
+      }
     }
   },
   "errors": {
@@ -5487,6 +5537,12 @@
       "password_min_length": "Mindestlänge des Passworts",
       "password_min_length_hint": "Zwischen 8 und 128 Zeichen; gilt bei der Registrierung und beim Ändern des Passworts.",
       "password_require_mix": "Passwörter müssen Buchstaben und Ziffern enthalten",
+      "password_reset_enabled": "„Passwort vergessen“ (Zurücksetzen per E-Mail)",
+      "password_reset_enabled_hint": "Mitglieder wählen selbst ein neues Passwort über einen Link per E-Mail. Funktioniert nur mit eingerichtetem E-Mail-Versand (Einstellungen → E-Mail); sonst bittet die Seite sie, das Team zu kontaktieren.",
+      "password_reset_minutes": "Gültigkeit des Links zum Zurücksetzen (Minuten)",
+      "password_reset_minutes_hint": "Zwischen 5 und 1440; Standard 30. Der Link funktioniert einmal, und eine neuere Anfrage macht den alten ungültig.",
+      "password_reset_revoke_sessions": "Beim Zurücksetzen des Passworts alle Sitzungen des Mitglieds beenden",
+      "password_reset_revoke_sessions_hint": "Empfohlen: Wer das alte Passwort kannte, wird auf allen Geräten abgemeldet, und 2FA wird überall erneut verlangt.",
       "mfa_required_groups": "Gruppen mit Pflicht-2FA",
       "mfa_recovery": "2FA-Wiederherstellung (Gerät verloren)",
       "mfa_recovery_hint": "Die bei der Aktivierung erhaltenen Backup-Codes funktionieren immer. Die zweite Option erlaubt auch die Anmeldung mit einem Code an die E-Mail des Kontos.",

@@ -15,6 +15,15 @@ type GcsTransportFactory = (options: Record<string, unknown>) => GcsMailTranspor
 const TIMEOUT_MS = 10_000;
 
 /**
+ * Site-ul poate trimite emailuri: serverul SMTP și expeditorul sunt completate (ACP → Setări → Email). Aceleași câmpuri
+ * pe care `sendEmail` le cere; o setare care nu se poate citi înseamnă „nu”.
+ */
+export async function emailConfigured(settings: GcsEmailSettings): Promise<boolean> {
+  const [host, from] = await Promise.all([settings.get<string>("email.smtp_host").catch(() => ""), settings.get<string>("email.from").catch(() => "")]);
+  return typeof host === "string" && host.trim() !== "" && typeof from === "string" && from.trim() !== "";
+}
+
+/**
  * Trimite un email prin serverul SMTP din setări (ACP → Setări → Email). `createTransport` se poate
  * înlocui în teste. Fără server sau expeditor configurat → `GcsValidationError` pe câmpul lipsă.
  */

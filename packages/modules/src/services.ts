@@ -42,6 +42,7 @@ import {
   GcsReactionService,
   GcsRateLimiter,
   GcsLoginLockout,
+  GcsPasswordResetService,
   GcsReportService,
   GcsS3FileStore,
   GcsSettingsService,
@@ -238,6 +239,8 @@ export type GcsServices = {
   rateLimiter: GcsRateLimiter;
   /** Blocarea după parole greșite (ACP → Setări → Securitate), pe cont și pe IP. */
   loginLockout: GcsLoginLockout;
+  /** „Am uitat parola”: linkul de resetare pe email (ACP → Setări → Securitate). */
+  passwordReset: GcsPasswordResetService;
   /** Perioadele de păstrare a datelor (jobul zilnic `system.retention`). */
   retention: GcsRetentionService;
   files: GcsFileStore;
@@ -770,6 +773,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const profileExtras = new GcsProfileExtras({ db, cache, queries: profileQueries, sponsor: (userId) => donations.sponsor(userId) });
   const externalProfiles = new GcsExternalProfiles({ db, settings, jobs });
   const devices = new GcsDeviceService({ db, mailer, settings, baseUrl: async () => baseUrl(await settings.get<string>("site.url")) });
+  // Blocarea după parole greșite, folosită și de „Am uitat parola” (resetarea uită blocarea contului).
+  const loginLockout = new GcsLoginLockout({ db, kv, settings, ipLock: () => process.env.GCS_DISABLE_RATE_LIMIT !== "1" });
   const memberPrefs = new GcsMemberPrefsService({ db, bus });
   attachments.registerAccess(CLAN_LOGO, (actor, id) => clanQueries.canSeeClan(actor, Number(id)));
   attachments.registerAccess(CLAN_BANNER, (actor, id) => clanQueries.canSeeClan(actor, Number(id)));
@@ -918,7 +923,15 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     ipTools,
     actors,
     rateLimiter,
-    loginLockout: new GcsLoginLockout({ db, kv, settings, ipLock: () => process.env.GCS_DISABLE_RATE_LIMIT !== "1" }),
+    loginLockout,
+    passwordReset: new GcsPasswordResetService({
+      db,
+      settings,
+      rateLimiter,
+      lockout: loginLockout,
+      baseUrl: async () => baseUrl(await settings.get<string>("site.url")),
+      ipLimit: () => process.env.GCS_DISABLE_RATE_LIMIT !== "1",
+    }),
     retention: new GcsRetentionService({ db, settings }),
     files,
     attachments,

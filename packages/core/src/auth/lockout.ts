@@ -120,6 +120,14 @@ export class GcsLoginLockout {
     await this.deps.kv.del(failKey("u", userId));
   }
 
+  /**
+   * Uită blocarea și încercările greșite ale contului, fără jurnal: parola s-a schimbat prin „Am uitat parola” (resetarea
+   * are intrarea ei în jurnal). Blocarea IP-ului rămâne.
+   */
+  async clear(userId: string): Promise<void> {
+    await this.deps.kv.del(lockKey("u", userId), failKey("u", userId));
+  }
+
   /** Ridică blocarea contului (ACP → Membri → membrul). Întoarce `false` dacă nu era blocat. */
   async unlock(actor: GcsActor, userId: string, now = new Date()): Promise<boolean> {
     const locked = (await this.lockedUntil(userId, now)) !== null;
