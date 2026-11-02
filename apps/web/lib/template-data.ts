@@ -4,6 +4,7 @@
  * Numele și formele variabilelor sunt documentate în `@gcs/core` (`DEFAULT_TEMPLATES[].variables`).
  */
 import { isSafeBanner } from "@gcs/core";
+import { GCS_BRAND } from "@gcs/core/themes";
 import type { GcsCardView, GcsClanTag, GcsForumRow, GcsMemberCard, GcsPostAuthor, GcsPostbitData, GcsTopicRow, GcsUserRef } from "@gcs/modules";
 import { forumHref, memberHref, tagHref, topicHref, unreadHref } from "./forum-urls";
 
@@ -192,7 +193,8 @@ export function hoverCardVars(card: GcsCardView, clan: GcsClanTag | null = null)
       frameKey: card.user.frameKey,
       groupKey: card.user.groupKey,
       bio: card.user.bio,
-      accentColor: card.user.accentColor ?? "#D62839",
+      // Ca în `GcsHoverCard`: fără accentul membrului, accentul brandului GCS.
+      accentColor: card.user.accentColor ?? GCS_BRAND.color.dark.accent,
       cover: card.user.cover,
       coverPositionY: card.user.coverPositionY,
       group: { name: card.user.group.name, color: card.user.group.color },

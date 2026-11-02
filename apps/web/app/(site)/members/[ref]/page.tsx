@@ -1,3 +1,4 @@
+import { GCS_BRAND } from "@gcs/core/themes";
 import { BIRTHDAY_NO_YEAR, groupFields, type GcsLockedBadge, type GcsProfileView } from "@gcs/modules";
 import { parseUserRef, slugify } from "@gcs/modules/slug";
 import { profileTabs } from "@/lib/profile-tabs";
@@ -91,7 +92,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
   const format = await getFormatter();
   const tabHref = (k: Tab) => `/members/${user.id}-${user.slug}${k === firstTab ? "" : `?tab=${k}`}`;
   const relative = (iso: string) => format.relativeTime(new Date(iso));
-  const accent = user.accentColor ?? "#D62839";
+  const accent = user.accentColor ?? GCS_BRAND.color.dark.accent;
   const about = profile.fields.filter((f) => f.section === "ABOUT");
   const games = profile.fields.filter((f) => f.section === "GAMES");
   /** Câmpurile tabului Jocuri fără grup: rămân în caseta conturilor legate. */
