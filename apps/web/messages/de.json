@@ -471,7 +471,15 @@
       "invalid_svg": "Das SVG ist ungültig oder lässt sich nicht bereinigen.",
       "password_needs_mix": "Das Passwort muss Buchstaben und Ziffern enthalten.",
       "password_too_long": "Das Passwort darf höchstens 128 Zeichen haben.",
-      "password_policy_length": "Das Passwort ist für die Regel der Seite zu kurz (siehe unter dem Feld)."
+      "password_policy_length": "Das Passwort ist für die Regel der Seite zu kurz (siehe unter dem Feld).",
+      "extension_not_allowed": "Diese Dateiendung ist auf dieser Seite nicht erlaubt.",
+      "dangerous_type": "Dieser Dateityp kann nicht hochgeladen werden (Programme, Skripte, Webseiten).",
+      "type_mismatch": "Die Endung passt nicht zum echten Dateityp.",
+      "dangerous_extension": "Die Liste enthält eine gefährliche Endung (Programme, Skripte, Webseiten, SVG).",
+      "unknown_extension": "Die Liste enthält eine Endung, die die Plattform nicht akzeptiert.",
+      "invalid_domain": "Nur Domains (z. B. beispiel.de), eine pro Zeile.",
+      "page_placeholder": "Das Format muss '{page}' genau einmal enthalten, ohne spitze Klammern.",
+      "invalid_token": "Ungültiger Code: nur der Wert aus content=\"…\" oder das ganze Meta-Tag."
     }
   },
   "acp": {
@@ -563,7 +571,8 @@
         "apps_dev": "Development",
         "update": "Aktualisierung",
         "cron": "Cron",
-        "bot": "Community-Bot"
+        "bot": "Community-Bot",
+        "settings_uploads": "Uploads & Bilder"
       },
       "members": {
         "members": "Mitglieder",
@@ -1421,7 +1430,9 @@
         "donations": "Spenden",
         "warnings": "Verwarnungen",
         "2fa": "Sicherheit",
-        "terms": "Bedingungen und Datenschutz"
+        "terms": "Bedingungen und Datenschutz",
+        "uploads": "Uploads & Bilder",
+        "seo": "SEO"
       },
       "save": "Einstellungen speichern",
       "secretSet": "•••• gespeichert (leave empty, um den wert zu behalten)",
@@ -4871,6 +4882,70 @@
         "notifications": "Gelesene Benachrichtigungen: {value}.",
         "edit": "Ändern"
       }
+    },
+    "seo": {
+      "title": "SEO",
+      "intro": "Wie die Community in Suchmaschinen und beim Teilen erscheint: Titel, robots.txt, Sitemap, IndexNow, Seitenverifizierung und externe Links.",
+      "save": "Speichern",
+      "meta": {
+        "title": "Titel und Metadaten",
+        "hint": "Der Titel in der Browserleiste, die Standardbeschreibung und das Bild, das beim Teilen einer Seite erscheint.",
+        "image": "Teilen-Bild",
+        "imageHint": "PNG, JPEG, WebP oder GIF, max. 5 MB; empfohlen 1200 × 630 px. Wird zu WebP.",
+        "upload": "Hochladen",
+        "replace": "Ersetzen",
+        "uploading": "Wird hochgeladen…",
+        "remove": "Entfernen"
+      },
+      "robots": {
+        "title": "robots.txt",
+        "hint": "Welche Seiten die Roboter der Suchmaschinen lesen dürfen.",
+        "preview": "Was Roboter jetzt erhalten:"
+      },
+      "sitemap": {
+        "title": "Sitemap",
+        "hint": "Die Liste der öffentlichen Seiten für Suchmaschinen: nur was ein Gast sieht, mit dem Datum der letzten Änderung.",
+        "status": "Dateien im Index: {files}.",
+        "off": "Die Sitemap ist aus (/sitemap.xml antwortet mit 404)."
+      },
+      "indexNow": {
+        "title": "IndexNow",
+        "hint": "Meldet neue Inhalte sofort an Suchmaschinen (Bing, Yandex und andere, die das Protokoll nutzen). Der Schlüssel wird automatisch erzeugt.",
+        "key": "Schlüssel",
+        "noKey": "wird beim Aktivieren erzeugt",
+        "keyFile": "Schlüsseldatei",
+        "lastRun": "Letzter Stapel: {at}",
+        "lastSent": "gesendet: {count}, um {at}",
+        "lastError": "Fehler: {error}",
+        "retryAt": "nächster Versuch: {at}",
+        "never": "nie",
+        "regenerate": "Neuer Schlüssel",
+        "regenerateConfirm": "Der aktuelle Schlüssel wird nicht mehr bereitgestellt; Suchmaschinen erhalten den neuen mit dem nächsten Stapel."
+      },
+      "verification": {
+        "title": "Seitenverifizierung",
+        "hint": "Die Codes aus den Konsolen der Suchmaschinen; als Meta-Tags im Kopf jeder Seite."
+      },
+      "links": {
+        "title": "Externe Links",
+        "hint": "Gilt beim Anzeigen, auch für bereits geschriebene Inhalte: Beiträge, Signaturen, Profile, private Nachrichten und Chat."
+      }
+    },
+    "uploads": {
+      "storageTitle": "Dateispeicher",
+      "driver": "Treiber",
+      "drivers": {
+        "local": "Lokale Festplatte",
+        "s3": "S3 / MinIO",
+        "unknown": "Unbekannt"
+      },
+      "driverHint": "Wird in der Serverumgebung gewählt (S3_ENDPOINT für S3 / MinIO, sonst der Upload-Ordner), nicht im ACP.",
+      "limitsTitle": "Maximale Größe pro Gruppe",
+      "limitsHint": "Die Gruppeneinstellung „upload.max_mb“, bei jeder Gruppe änderbar (ACP → Gruppen).",
+      "unlimited": "unbegrenzt",
+      "mb": "{mb} MB",
+      "none": "kann nicht hochladen",
+      "unattached": "Hochgeladene, noch nicht angehängte Dateien: {count}."
     }
   },
   "settings": {
@@ -4939,7 +5014,12 @@
       "all_devices": "Alle Geräte",
       "poll": "Nur Polling (Hoster, die lange Verbindungen kappen)",
       "backup_codes": "Nur Backup-Codes",
-      "email_code": "Backup-Codes oder ein Code per E-Mail"
+      "email_code": "Backup-Codes oder ein Code per E-Mail",
+      "default": "Standard (von der Plattform erzeugt)",
+      "custom": "Benutzerdefiniert",
+      "allow": "Angezeigt",
+      "https_only": "Nur HTTPS",
+      "block": "Blockiert (als Link angezeigt)"
     },
     "forums": {
       "posts_per_page": "Beiträge pro Seite",
@@ -5575,6 +5655,60 @@
       "plugin_log_days_hint": "Fehler und Meldungen der Plugins.",
       "sessions_days": "Abgelaufene Sitzungen (Tage)",
       "sessions_days_hint": "Sitzungen und Bestätigungscodes, die seit so vielen Tagen abgelaufen sind."
+    },
+    "seo": {
+      "robots_mode": "robots.txt",
+      "robots_mode_hint": "Standard: Die ganze Seite ist offen, außer ACP, API, Installer, Anmeldung, Suche und den privaten Seiten der Mitglieder.",
+      "robots_custom": "Eigener Text",
+      "robots_custom_hint": "Nur mit „Benutzerdefiniert“ (höchstens 10.000 Zeichen). Die Sitemap-Zeile wird automatisch ergänzt, falls sie fehlt.",
+      "sitemap_enabled": "Sitemap aktiv",
+      "sitemap_pages": "Startseite und öffentliche Seiten",
+      "sitemap_forums": "Foren",
+      "sitemap_topics": "Themen",
+      "sitemap_members": "Mitgliederprofile",
+      "sitemap_clans": "Clans",
+      "sitemap_servers": "Gameserver",
+      "sitemap_max_urls": "URLs pro Inhaltstyp (maximal)",
+      "sitemap_max_urls_hint": "Der Index wird in Dateien mit höchstens 10.000 URLs aufgeteilt (das Protokoll erlaubt 50.000).",
+      "indexnow_enabled": "IndexNow aktiv",
+      "indexnow_enabled_hint": "Neue öffentliche Themen und Themen mit neuen Antworten werden den Suchmaschinen gemeldet, gebündelt, alle 10 Minuten.",
+      "indexnow_key": "IndexNow-Schlüssel",
+      "title_format": "Titelformat",
+      "title_format_hint": "'{page}' = Seitentitel (Pflicht), '{site}' = Name der Seite. Z. B.: '{page} · {site}'",
+      "description": "Beschreibung der Seite",
+      "description_hint": "Als Meta-Beschreibung auf Seiten ohne eigene Beschreibung (max. 300 Zeichen). Leer = ein allgemeiner Text mit dem Namen der Seite.",
+      "share_image": "Teilen-Bild (URL)",
+      "share_image_hint": "Eine https://-Adresse oder ein unten hochgeladenes Bild; erscheint, wenn eine Seite ohne Bild geteilt wird (OpenGraph, X).",
+      "x_handle": "X-Konto (Twitter)",
+      "x_handle_hint": "Z. B.: @meine_community — erscheint in den X-Karten der Seiten.",
+      "google_verification": "Google Search Console",
+      "google_verification_hint": "Nur der Code aus content=\"…\" oder das ganze Meta-Tag aus der Konsole.",
+      "bing_verification": "Bing Webmaster Tools",
+      "yandex_verification": "Yandex Webmaster",
+      "nofollow_external": "rel=\"nofollow\" bei externen Links",
+      "nofollow_external_hint": "Links in Mitgliederinhalten auf andere Seiten erhalten rel=\"nofollow ugc noopener\". Interne Links nicht.",
+      "nofollow_exclude": "Domains ohne nofollow",
+      "nofollow_exclude_hint": "Eine Domain pro Zeile (z. B. die Seiten der Gameserver der Community). Subdomains eingeschlossen.",
+      "index_profiles": "Mitgliederprofile indexieren",
+      "index_profiles_hint": "Aus: Profile erhalten noindex und fehlen in der Sitemap."
+    },
+    "uploads": {
+      "allowed_extensions": "Erlaubte Dateiendungen für Anhänge",
+      "allowed_extensions_hint": "Durch Komma getrennt. Geprüft werden Endung und echter Dateityp; Programme, Skripte, Webseiten und SVGs werden immer abgelehnt.",
+      "image_max_side": "Maximale Bildseite (px)",
+      "image_max_side_hint": "Größere Bilder werden beim Hochladen verkleinert (320–10.000).",
+      "image_quality": "Bildqualität (%)",
+      "image_quality_hint": "Für JPEG und WebP (30–100). Gilt auch für Avatare und Cover.",
+      "convert_webp": "Bilder in WebP umwandeln",
+      "convert_webp_hint": "Kleinere Dateien bei gleicher Qualität; animierte GIFs bleiben animiert.",
+      "strip_metadata": "Metadaten entfernen (EXIF, GPS)",
+      "strip_metadata_hint": "Empfohlen: Handyfotos enthalten den Standort und das Kameramodell.",
+      "thumbnail_side": "Seitenlänge der Vorschaubilder (px)",
+      "thumbnail_side_hint": "0 = keine Vorschaubilder; sonst 64–1200. Nur für größere Bilder.",
+      "remote_images": "Bilder von anderen Seiten",
+      "remote_images_hint": "In Beiträgen, Signaturen, Profilen und Nachrichten. Blockiert = als Link zum Bild angezeigt.",
+      "orphan_days": "Unbenutzte Dateien löschen nach (Tagen)",
+      "orphan_days_hint": "Hochgeladene Dateien, die nie an einen Beitrag oder eine Nachricht angehängt wurden, täglich, gebündelt. 0 = aus. Empfohlen: mindestens 7."
     }
   },
   "permissions": {
