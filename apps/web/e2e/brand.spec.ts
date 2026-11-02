@@ -18,7 +18,8 @@ async function shot(page: Page, name: string, full = false) {
   await page.screenshot({ path: path.join(SHOTS, `brand-${name}.png`), fullPage: full });
 }
 
-const cssVar = (el: Locator, name: string) => el.evaluate((node, n) => getComputedStyle(node).getPropertyValue(n).trim(), name);
+/** Valoarea calculată a unei variabile CSS, cu litere mici (build-ul minifică hex-urile). */
+const cssVar = (el: Locator, name: string) => el.evaluate((node, n) => getComputedStyle(node).getPropertyValue(n).trim().toLowerCase(), name);
 
 async function acpTheme(page: Page, value: "dark" | "light") {
   await page.context().addCookies([{ name: "gcs-acp-theme", value, url: page.url() }]);
@@ -44,8 +45,8 @@ test("ACP-ul are brandul GCS: navy, accentul portocaliu, DM Sans, bara de iconi�
   await acpTheme(page, "dark");
   await expect(acp).toHaveCSS("background-color", "rgb(11, 15, 23)");
   await expect(page.locator(".gcs-acpRail").first()).toHaveCSS("background-color", "rgb(14, 18, 26)");
-  expect(await cssVar(acp, "--gcs-accent")).toBe("#DF390C");
-  expect(await cssVar(acp, "--gcs-btn-primary-bg")).toBe("#CD340B");
+  expect(await cssVar(acp, "--gcs-accent")).toBe("#df390c");
+  expect(await cssVar(acp, "--gcs-btn-primary-bg")).toBe("#cd340b");
   expect(await acp.evaluate((el) => getComputedStyle(el).fontFamily)).toMatch(/DM[ _]Sans/);
   await shot(page, "acp-dashboard-dark");
   await page.goto("/admin/groups");
@@ -56,7 +57,7 @@ test("ACP-ul are brandul GCS: navy, accentul portocaliu, DM Sans, bara de iconi�
   await acpTheme(page, "light");
   await expect(acp).toHaveCSS("background-color", "rgb(241, 243, 247)");
   await expect(page.locator(".gcs-acpRail").first()).toHaveCSS("background-color", "rgb(14, 18, 26)");
-  expect(await cssVar(acp, "--gcs-accentInk")).toBe("#C2300A");
+  expect(await cssVar(acp, "--gcs-accentInk")).toBe("#c2300a");
   await shot(page, "acp-dashboard-light");
 
   await page.setViewportSize({ width: 375, height: 812 });
@@ -72,12 +73,12 @@ test("forumul are tokenii brandului (tema implicită GCS Dark)", async ({ page, 
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
   const html = page.locator("html");
-  expect(await cssVar(html, "--gcs-brand-accent")).toBe("#DF390C");
+  expect(await cssVar(html, "--gcs-brand-accent")).toBe("#df390c");
   expect(await cssVar(html, "--gcs-danger")).not.toBe("");
   if (await html.evaluate((el) => el.classList.contains("gcs-nova"))) {
-    expect(await cssVar(html, "--gcs-accent")).toBe("#DF390C");
+    expect(await cssVar(html, "--gcs-accent")).toBe("#df390c");
     // Avertismentul e chihlimbar, nu portocaliul mărcii.
-    expect(await cssVar(html, "--gcs-warn")).toBe("#F2B33D");
+    expect(await cssVar(html, "--gcs-warn")).toBe("#f2b33d");
   }
   await shot(page, "forum-home-dark", true);
   await page.setViewportSize({ width: 375, height: 812 });
