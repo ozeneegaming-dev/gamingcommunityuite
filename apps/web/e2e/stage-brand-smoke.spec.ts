@@ -43,7 +43,14 @@ test("o instalare nouă: antetul de pe preview, contoarele la hover, fără deru
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto("/");
     // Pe telefon, antetul (meniul, logo-ul, „Înregistrare / Autentificare”) încape fără derulare orizontală.
-    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
     await shot(page, `forum-${skin}-375`);
+    const wide = await page.evaluate(() => {
+      const w = document.documentElement.clientWidth;
+      const out = [...document.querySelectorAll("body *")]
+        .filter((el) => el.getBoundingClientRect().right > w + 0.5 && el.getBoundingClientRect().width > 0)
+        .map((el) => `${el.tagName.toLowerCase()}.${String((el as HTMLElement).className).trim().split(/\s+/).slice(0, 3).join(".")} → ${Math.round(el.getBoundingClientRect().right)}`);
+      return { overflow: document.documentElement.scrollWidth - w, out: out.slice(0, 12) };
+    });
+    expect(wide.overflow, `${skin}: ${wide.out.join(" | ")}`).toBeLessThanOrEqual(0);
   }
 });
