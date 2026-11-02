@@ -228,7 +228,7 @@ describe("filtrele", () => {
       'forum.topics({})|forum.replies({&quot;count&quot;:3})|x.y({&quot;name&quot;:&quot;&lt;A&gt;&quot;})',
     );
     expect(render('{{ "forum.topics" | t }}')).toBe("forum.topics");
-    expect(render('{{ "#FF0000" | tint }} {{ c | tint: 0.5 }}', { c: "bad" })).toBe("rgba(255, 0, 0, 0.14) rgba(214, 40, 57, 0.5)");
+    expect(render('{{ "#FF0000" | tint }} {{ c | tint: 0.5 }}', { c: "bad" })).toBe("rgba(255, 0, 0, 0.14) rgba(223, 57, 12, 0.5)");
   });
 
   test("liste", () => {

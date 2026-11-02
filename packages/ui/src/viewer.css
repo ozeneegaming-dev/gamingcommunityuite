@@ -93,7 +93,7 @@
 .gcs-viewer__nav:focus-visible,
 .gcs-viewer__thumb:focus-visible,
 .gcs-viewer__source:focus-visible {
-  outline: 2px solid var(--gcs-accent, #d62839);
+  outline: 2px solid var(--gcs-accent, #df390c);
   outline-offset: 2px;
 }
 .gcs-viewer__stage {
@@ -173,7 +173,7 @@
 }
 .gcs-viewer__thumb--active {
   opacity: 1;
-  border-color: var(--gcs-accent, #d62839);
+  border-color: var(--gcs-accent, #df390c);
 }
 
 /* Telefoanele: săgețile mai mici, bara pe două rânduri când legenda e lungă, fără miniaturi pe ecranele foarte joase. */
