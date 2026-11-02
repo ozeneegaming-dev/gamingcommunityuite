@@ -13,6 +13,8 @@ const BASE = "http://localhost:3000/api/auth";
 beforeEach(async () => {
   await truncateAll(db);
   await kv.flushAll();
+  // Intervalele IP banate stau într-un cache din proces: un test anterior (203.0.113.0/24) nu trebuie să rămână activ.
+  clearIpRangeCache(services().db);
   await seedDefaults(db, registry);
   // Captcha-ul proof-of-work are testele lui (mai jos); restul înregistrărilor merg fără el.
   await db.setting.upsert({ where: { key: "antispam.captcha" }, create: { key: "antispam.captcha", value: "none" }, update: { value: "none" } });
