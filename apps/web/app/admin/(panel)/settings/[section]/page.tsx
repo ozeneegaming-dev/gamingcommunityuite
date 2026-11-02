@@ -1,5 +1,5 @@
 import { MFA_REQUIRED_GROUPS_SETTING, loadMfaRequiredGroups, settingsAcpSection } from "@gcs/core";
-import { GCS_LOCALE_KEYS, SECURITY_SECTION } from "@gcs/modules";
+import { GCS_LOCALE_KEYS, SECURITY_SECTION, SEO_SECTION, UPLOADS_SECTION } from "@gcs/modules";
 import { GcsButton, GcsCard } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
@@ -37,6 +37,8 @@ export default async function AcpSettingsPage({ params }: Props) {
   if (section === "footer") redirect("/admin/appearance/footer");
   // Perechea comutatorului lună / soare se alege în pagina temelor.
   if (section === "themes") redirect("/admin/appearance/themes");
+  // Setările SEO au pagina lor, sub Promovare (robots.txt, sitemap, IndexNow, metadatele, linkurile).
+  if (section === SEO_SECTION) redirect("/admin/system/seo");
   const { registry, settings, db } = services();
   const defs = registry.settingDefs().filter((d) => d.section === section);
 
@@ -93,6 +95,7 @@ export default async function AcpSettingsPage({ params }: Props) {
       </GcsCard>
       {section === "languages" && <LanguagesCard />}
       {section === SECURITY_SECTION && <MfaGroupsCard />}
+      {section === UPLOADS_SECTION && <UploadsInfoCard />}
       {section === "email" && (
         <GcsCard as="section" aria-label={t("testEmail.title")} style={{ padding: 20, maxWidth: 720, display: "flex", flexDirection: "column", gap: 12 }}>
           <h2 className="gcs-acpWidget__title"><GcsAcpTitleIcon name="fa-solid fa-paper-plane" />{t("testEmail.title")}</h2>
@@ -132,6 +135,53 @@ async function MfaGroupsCard() {
           ))}
         </div>
       </GcsActionForm>
+    </GcsCard>
+  );
+}
+
+/**
+ * ACP → Setări → Încărcări și imagini: unde stau fișierele (driverul de stocare, read-only: se schimbă din mediul
+ * serverului), limita de mărime pe grup (setarea `upload.max_mb`, editată la fiecare grup) și fișierele încă nelegate.
+ */
+async function UploadsInfoCard() {
+  const { files, db } = services();
+  const [t, groups, limits, unattached] = await Promise.all([
+    getTranslations("acp.uploads"),
+    db.group.findMany({ where: { key: { not: "guest" } }, orderBy: [{ position: "asc" }, { id: "asc" }], select: { id: true, name: true } }),
+    db.groupSetting.findMany({ where: { key: "upload.max_mb" }, select: { groupId: true, value: true } }),
+    db.attachment.count({ where: { contentType: null } }),
+  ]);
+  const store = files.describe?.() ?? null;
+  const limit = new Map(limits.map((l) => [l.groupId, l.value]));
+  const mb = (v: unknown) => (v === -1 ? t("unlimited") : typeof v === "number" && v > 0 ? t("mb", { mb: v }) : t("none"));
+  return (
+    <GcsCard as="section" aria-labelledby="gcs-uploads-info-title" style={{ padding: 20, maxWidth: 720, display: "flex", flexDirection: "column", gap: 12 }} data-testid="gcs-acp-uploads-info">
+      <h2 id="gcs-uploads-info-title" className="gcs-acpWidget__title">
+        <GcsAcpTitleIcon name="fa-solid fa-hard-drive" />
+        {t("storageTitle")}
+      </h2>
+      <p style={{ margin: 0 }} data-testid="gcs-uploads-driver">
+        {t("driver")}: <strong>{store ? t(`drivers.${store.driver}`) : t("drivers.unknown")}</strong>
+        {store && (
+          <>
+            {" "}
+            <code style={{ fontSize: 13, wordBreak: "break-all" }}>{store.location}</code>
+          </>
+        )}
+      </p>
+      <p style={{ margin: 0, color: "var(--gcs-muted)", fontSize: 14 }}>{t("driverHint")}</p>
+      <h3 style={{ margin: "8px 0 0", fontSize: 15 }}>{t("limitsTitle")}</h3>
+      <p style={{ margin: 0, color: "var(--gcs-muted)", fontSize: 14 }}>{t("limitsHint")}</p>
+      <ul className="gcs-plainList" style={{ margin: 0, display: "flex", flexDirection: "column", gap: 6, fontSize: 14 }} data-testid="gcs-uploads-limits">
+        {groups.map((g) => (
+          <li key={g.id}>
+            <Link href={`/admin/groups/${g.id}`}>{g.name}</Link>: {mb(limit.get(g.id))}
+          </li>
+        ))}
+      </ul>
+      <p style={{ margin: 0, color: "var(--gcs-muted)", fontSize: 14 }} data-testid="gcs-uploads-unattached">
+        {t("unattached", { count: unattached })}
+      </p>
     </GcsCard>
   );
 }
