@@ -236,7 +236,8 @@ describe("sweep.css: sweep-ul și hover-ul butoanelor, în orice temă", () => {
     expect(themes).toMatch(/:root \{[^}]*--gcs-sweep: rgb\(255 255 255 \/ 0\.08\);/);
     expect(themes).toMatch(/\[data-theme="light"\] \{[^}]*--gcs-sweep: color-mix\(in srgb, var\(--gcs-text\) 7%, transparent\);/);
     expect(themes).toMatch(/\[data-theme="auto"\] \{[^}]*--gcs-sweep: color-mix\(in srgb, var\(--gcs-text\) 7%, transparent\);/);
-    expect(strip(read("./acp.css"))).toMatch(/\.gcs-acp\[data-theme="light"\] \{[^}]*--gcs-sweep: color-mix\(in srgb, var\(--gcs-text\) 7%, transparent\);/);
+    // ACP-ul (și restul cromului produsului) ia stratul din brand: `.gcs-product` în `tokens.css`.
+    expect(strip(read("./tokens.css"))).toMatch(/\.gcs-product\[data-theme="light"\] \{[^}]*--gcs-sweep: color-mix\(in srgb, var\(--gcs-text\) 7%, transparent\);/);
   });
 
   test("numele simple (aproape albe) urmează textul temei pe luminos, inclusiv în ACP; antetul închis Nova le păstrează", () => {
