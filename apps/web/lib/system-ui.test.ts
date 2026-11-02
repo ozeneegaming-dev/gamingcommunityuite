@@ -80,6 +80,8 @@ const FUNCTIONAL = [
   /^gcs-pushCard/,
   /^gcs-weekly/,
   /^gcs-acpNotif/,
+  // Termeni și confidențialitate: banda de cookie-uri.
+  /^gcs-cookieBar/,
 ];
 /**
  * Clase care apar sub `.gcs-nova` doar ca decor (modificatori fără CSS de bază propriu): grafica antetului „Standard”
@@ -115,7 +117,7 @@ describe("system UI: CSS-ul componentelor funcționale e al sistemului", () => {
   });
 
   test("pachetul de finisare e al sistemului: listele, statisticile, tooltip-ul, loaderele, banda de derulare, bara de anunț, blocul vizitatorilor", () => {
-    for (const c of ["gcs-category__well", "gcs-forumRow__statsBtn", "gcs-forumRow__bubble", "gcs-tooltip", "gcs-spinner", "gcs-scrollRail", "gcs-scrollRail__btn", "gcs-annBar", "gcs-guestCta"]) {
+    for (const c of ["gcs-category__well", "gcs-forumRow__statsBtn", "gcs-forumRow__bubble", "gcs-tooltip", "gcs-spinner", "gcs-scrollRail", "gcs-scrollRail__btn", "gcs-annBar", "gcs-guestCta", "gcs-cookieBar"]) {
       expect(systemClasses.has(c), c).toBe(true);
     }
   });

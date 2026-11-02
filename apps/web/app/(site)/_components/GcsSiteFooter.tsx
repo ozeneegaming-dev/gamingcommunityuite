@@ -1,4 +1,4 @@
-import { footerRichText, type GcsFooterLink } from "@gcs/modules";
+import { footerRichText, legalLinks, type GcsFooterLink } from "@gcs/modules";
 import { GcsIcon, isGcsIcon } from "@gcs/ui/icons";
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -57,7 +57,7 @@ function FooterTitle({ id, title, accent }: { id: string; title: string; accent:
  */
 export async function GcsSiteFooter() {
   const actor = await currentActor();
-  const [t, tf, locale, mode, locales, siteName, view, skins, viewer, toggle] = await Promise.all([
+  const [t, tf, locale, mode, locales, siteName, view, skins, viewer, toggle, legalDocs] = await Promise.all([
     getTranslations("site"),
     getTranslations("footer"),
     getLocale(),
@@ -71,6 +71,8 @@ export async function GcsSiteFooter() {
       .catch(() => []),
     viewerTheme(),
     viewerThemeToggle(),
+    // Termenii și confidențialitatea din ACP → Setări → Termeni și confidențialitate (dacă există).
+    legalLinks(services().settings).catch(() => ({ terms: null, privacy: null })),
   ]);
   const { config, socials } = view;
   const year = new Date().getFullYear();
@@ -247,16 +249,18 @@ export async function GcsSiteFooter() {
         ))}
       </ul>
     ) : null;
-  // Linkurile legale și „Conținut necitit” (doar pentru membri).
+  // Linkurile legale și „Conținut necitit” (doar pentru membri). Confidențialitatea: adresa din subsol, altfel pagina din
+  // ACP → Setări → Termeni și confidențialitate.
   const legal = [
-    { key: "privacy", href: bottom.privacy, icon: "fa-solid fa-user-shield" },
+    { key: "terms", href: legalDocs.terms ?? "", icon: "fa-solid fa-file-contract" },
+    { key: "privacy", href: bottom.privacy || (legalDocs.privacy ?? ""), icon: "fa-solid fa-user-shield" },
     { key: "contact", href: bottom.contact, icon: "fa-solid fa-envelope" },
     { key: "cookies", href: bottom.cookies, icon: "fa-solid fa-cookie-bite" },
   ].filter((l) => l.href);
   const links = (
     <>
       {legal.map((l) => (
-        <FooterAnchor key={l.key} link={l} className="gcs-siteFooter__barLink">
+        <FooterAnchor key={l.key} link={l} className="gcs-siteFooter__barLink" testId={`gcs-footer-${l.key}`}>
           <GcsIcon name={l.icon} />
           {tf(`bar.${l.key}`)}
         </FooterAnchor>

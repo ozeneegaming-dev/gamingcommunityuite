@@ -31,6 +31,7 @@ const RAW_HTML: Record<string, string> = {
   "apps/web/app/(site)/chat/history/page.tsx": "namesHtml peste HTML-ul mesajelor",
   "apps/web/app/(site)/p/[plugin]/[[...path]]/page.tsx": "namesHtml",
   "apps/web/app/(site)/rules/page.tsx": "regulile chat-ului: fără mențiuni (profilul chatRules)",
+  "apps/web/app/(site)/_components/GcsLegalDocPage.tsx": "termenii și confidențialitatea scrise în ACP (ca regulile): sanitizeContentHtml, fără mențiuni",
   "apps/web/app/(site)/search/page.tsx": "fragmentele căutării: text simplu cu evidențieri",
   "apps/web/app/(site)/vip/page.tsx": "namesHtml (previzualizările efectelor)",
   "apps/web/app/(site)/_components/chat/GcsChatRoom.tsx": "HTML decorat pe server (chatMentionNames)",
