@@ -15,7 +15,7 @@ import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { ensureInstallCode, seedDefaults } from "@gcs/core";
+import { ensureInstallCode, GCS_DARK_THEME_KEY, GCS_WHITE_THEME_KEY, NOVA_THEME_SETTINGS, seedDefaults } from "@gcs/core";
 import { createRegistry } from "@gcs/modules";
 import { createPrismaClient } from "@gcs/db";
 import { E2E_LICENSE_SHORT_KEY, startFakeDataCenter } from "./fake-datacenter.mts";
@@ -283,6 +283,15 @@ async function prepareDatabase(baseUrl: string, translatorUrl: string): Promise<
   }
   const db = createPrismaClient(url.toString());
   await seedDefaults(db, createRegistry());
+  // Instanța testelor de sistem păstrează antetul „Standard” (un rând cu meniul întreg, clopoțelul și luna / soarele,
+  // fără ascundere la derulare), pe care sunt scrise testele lor. Antetul livrat implicit (cel de pe preview, Esports)
+  // se verifică pe instanța installer-ului (`stage-brand-smoke.spec.ts`) și în `hero-cockpit.spec.ts`.
+  for (const key of [GCS_DARK_THEME_KEY, GCS_WHITE_THEME_KEY]) {
+    const theme = await db.theme.findUnique({ where: { key }, select: { settings: true } });
+    if (!theme) continue;
+    const standard = { ...NOVA_THEME_SETTINGS.header, compact: false, rowMain: 76 };
+    await db.theme.update({ where: { key }, data: { settings: { ...(theme.settings as object), header: standard, logo: NOVA_THEME_SETTINGS.logo } as never } });
+  }
   await db.setting.upsert({
     where: { key: "i18n.libretranslate_url" },
     create: { key: "i18n.libretranslate_url", value: translatorUrl },

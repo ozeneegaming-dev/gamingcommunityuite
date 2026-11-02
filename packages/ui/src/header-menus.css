@@ -127,7 +127,8 @@
   width: 0;
   height: 0;
 }
-:root .gcs-hb__helpers :is(.gcs-sp__trigger, .gcs-sp__field, .gcs-hb__create, .gcs-mobileNav__open) {
+/* `[data-device]`: mai tare decât butoanele pătrate de 44 px de pe telefon, ca ajutoarele să nu lățească pagina. */
+:root .gcs-hb[data-device] .gcs-hb__helpers :is(.gcs-sp__trigger, .gcs-sp__field, .gcs-hb__create, .gcs-mobileNav__open) {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -1526,4 +1527,14 @@
 }
 :root .gcs-hb[data-device="mobile"] .gcs-hb__notch {
   display: none;
+}
+/*
+ * Esports pe telefon: fără crestătură, centrul nu mai păstrează locul ei (260 px). Marginile iau cât le trebuie (meniul,
+ * contul sau „Înregistrare / Autentificare”), iar logo-ul din centru se scurtează, ca pagina să nu se lățească la 375 px.
+ */
+:root .gcs-hb--esports[data-device="mobile"] .gcs-hb__inner--center {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+:root .gcs-hb--esports[data-device="mobile"] .gcs-hb__row--main .gcs-hb__zone--center {
+  width: auto;
 }

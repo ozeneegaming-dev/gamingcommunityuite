@@ -1,12 +1,12 @@
 import { createHash } from "node:crypto";
-import { GcsForbidden, GcsNotFound, type GcsActor, type GcsMail, type GcsMailer, type GcsSettingsService } from "@gcs/core";
+import { GcsForbidden, GcsNotFound, NEW_DEVICE_EMAIL_SETTING, type GcsActor, type GcsMail, type GcsMailer, type GcsSettingsService } from "@gcs/core";
 import type { PrismaClient } from "@gcs/db";
 import { normalizeMemberPrefs } from "./memberPrefs";
 
 /**
  * Dispozitivele contului (Setări → Dispozitive, profil gaming v2 §3): la fiecare autentificare se notează browserul și
  * sistemul (din user-agent), metoda (parolă, Discord, Google, Steam), IP-ul și locația aproximativă (țara dată de proxy).
- * Un dispozitiv nou trimite un email (dacă membrul nu l-a oprit). „Fără autentificare automată” pe un dispozitiv:
+ * Un dispozitiv nou trimite un email (dacă nici site-ul, nici membrul nu l-a oprit). „Fără autentificare automată” pe un dispozitiv:
  * sesiunile lui expiră după `NO_AUTO_LOGIN_HOURS` și cele active se închid.
  */
 
@@ -121,6 +121,8 @@ export class GcsDeviceService {
 
   private async notifyNewDevice(userId: string, device: string, now: Date): Promise<void> {
     const { db, mailer, settings, baseUrl } = this.deps;
+    // ACP → Setări → Securitate: emailul poate fi oprit pentru tot site-ul (implicit pornit).
+    if ((await settings.get<boolean>(NEW_DEVICE_EMAIL_SETTING).catch(() => true)) === false) return;
     const user = await db.user.findUnique({ where: { id: userId }, select: { name: true, email: true, prefs: true, locale: true, timezone: true } });
     if (!user || !normalizeMemberPrefs(user.prefs).newDeviceEmail || user.email.endsWith(".invalid")) return;
     const [site, base] = await Promise.all([settings.get<string>("site.name"), baseUrl()]);

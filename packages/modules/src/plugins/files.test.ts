@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { packPlugin } from "@gcs/plugin-sdk/pack";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { extractPlugin } from "./files";
+import { extractPlugin, pluginFilesDir } from "./files";
 
 let dataDir: string;
 
@@ -47,5 +47,15 @@ describe("extractPlugin: curățarea versiunilor vechi", () => {
     expect((await readdir(base)).sort()).toEqual(
       [sha.slice(0, 16), "a".repeat(16), `${sha.slice(0, 16)}.tmp-999-abcd`, "d".repeat(16), "altceva"].sort(),
     );
+  });
+});
+
+describe("pluginFilesDir: aplicațiile premium separat de pluginuri", () => {
+  test("cu folderul aplicațiilor: pachetele aplicațiilor premium acolo, restul în plugins; fără el, totul în plugins", () => {
+    const dirs = { plugins: "/gcs/plugins", applications: "/gcs/applications" };
+    expect(pluginFilesDir("gcs.vip_studio", dirs)).toBe("/gcs/applications");
+    expect(pluginFilesDir("gcs.news_bot", dirs)).toBe("/gcs/plugins");
+    expect(pluginFilesDir("acme.vip_studio", dirs)).toBe("/gcs/plugins");
+    expect(pluginFilesDir("gcs.vip_studio", { plugins: "/gcs/plugins" })).toBe("/gcs/plugins");
   });
 });

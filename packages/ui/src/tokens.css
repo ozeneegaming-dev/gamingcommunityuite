@@ -1,15 +1,181 @@
-/* GCS — tokenurile vizuale din macheta aprobată (Global Constraints, plan Etapa 1). */
+/*
+ * GENERAT din packages/core/src/themes/brand.ts: nu edita de mână (`pnpm --filter @gcs/web brand`).
+ * Brandul GamingCommunitySuite: valorile brute (`--gcs-brand-*`), rezerva tokenilor comuni pe `:root` (tema
+ * publicată îi suprascrie pe `html:root`) și cromul produsului (`.gcs-product`: ACP, installer), care nu urmează tema.
+ */
 :root {
-  --gcs-bg: #0B0C10;
-  --gcs-surface: #14161C;
-  --gcs-surface2: #1B1E26;
-  --gcs-border: #262A34;
-  --gcs-text: #ECEDF1;
-  --gcs-muted: #A1A7B4;
-  --gcs-accent: #D62839;
-  --gcs-accentInk: #FF6B74;
-  --gcs-ok: #3DDC97;
-  --gcs-warn: #F4B740;
-  --gcs-font-display: "Chakra Petch", sans-serif;
-  --gcs-font-text: Manrope, system-ui, sans-serif;
+  --gcs-brand-bg: #0B0F17;
+  --gcs-brand-chrome: #0E121A;
+  --gcs-brand-chrome-2: #10141D;
+  --gcs-brand-surface: #151922;
+  --gcs-brand-surface-2: #1A1F29;
+  --gcs-brand-border: #1E2533;
+  --gcs-brand-border-strong: #2A3242;
+  --gcs-brand-text: #CED5DE;
+  --gcs-brand-heading: #FFFFFF;
+  --gcs-brand-muted: #7E8999;
+  --gcs-brand-accent: #DF390C;
+  --gcs-brand-accent-ink: #FF6A3D;
+  --gcs-brand-accent-fill: #CD340B;
+  --gcs-brand-secondary: #202630;
+  --gcs-brand-secondary-text: #FFFFFF;
+  --gcs-brand-ok: #2ECC71;
+  --gcs-brand-warn: #F2B33D;
+  --gcs-brand-danger: #F0444F;
+  --gcs-brand-info: #4D9BE6;
+  --gcs-brand-premium: #F2B33D;
+  --gcs-brand-light-bg: #F1F3F7;
+  --gcs-brand-light-chrome: #FFFFFF;
+  --gcs-brand-light-chrome-2: #F7F8FA;
+  --gcs-brand-light-surface: #FFFFFF;
+  --gcs-brand-light-surface-2: #F3F5F9;
+  --gcs-brand-light-border: #DCE1E9;
+  --gcs-brand-light-border-strong: #C9D0DB;
+  --gcs-brand-light-text: #1B2230;
+  --gcs-brand-light-heading: #0B0F17;
+  --gcs-brand-light-muted: #596374;
+  --gcs-brand-light-accent: #DF390C;
+  --gcs-brand-light-accent-ink: #C2300A;
+  --gcs-brand-light-accent-fill: #CD340B;
+  --gcs-brand-light-secondary: #E9EDF2;
+  --gcs-brand-light-secondary-text: #1B2230;
+  --gcs-brand-light-ok: #167A45;
+  --gcs-brand-light-warn: #9A6200;
+  --gcs-brand-light-danger: #C8283A;
+  --gcs-brand-light-info: #2167C2;
+  --gcs-brand-light-premium: #9A6200;
+  --gcs-brand-font: "DM Sans", system-ui, sans-serif;
+  --gcs-brand-font-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --gcs-brand-radius-button: 4px;
+  --gcs-brand-radius-input: 6px;
+  --gcs-brand-radius-badge: 6px;
+  --gcs-brand-radius-card: 12px;
+  --gcs-brand-radius-pill: 999px;
+  --gcs-brand-shadow-card: 0 2px 4px -1px rgb(11 15 23 / 0.1);
+  --gcs-brand-shadow-menu: 0 4px 16px rgb(0 0 0 / 0.16);
+  --gcs-brand-shadow-dialog: 0 12px 34px rgb(0 0 0 / 0.34);
+  --gcs-brand-space-1: 4px;
+  --gcs-brand-space-2: 8px;
+  --gcs-brand-space-3: 12px;
+  --gcs-brand-space-4: 16px;
+  --gcs-brand-space-5: 24px;
+  --gcs-brand-space-6: 32px;
+  --gcs-brand-space-7: 48px;
+  --gcs-brand-space-8: 64px;
+  --gcs-brand-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --gcs-brand-duration-fast: 0.15s;
+  --gcs-brand-duration: 0.2s;
+  --gcs-brand-duration-slow: 0.3s;
+  /* Rezerva tokenilor comuni: brandul, întunecat. */
+  --gcs-bg: var(--gcs-brand-bg);
+  --gcs-surface: var(--gcs-brand-surface);
+  --gcs-surface2: var(--gcs-brand-surface-2);
+  --gcs-border: var(--gcs-brand-border);
+  --gcs-text: var(--gcs-brand-text);
+  --gcs-muted: var(--gcs-brand-muted);
+  --gcs-accent: var(--gcs-brand-accent);
+  --gcs-accentInk: var(--gcs-brand-accent-ink);
+  --gcs-chrome: var(--gcs-brand-chrome);
+  --gcs-chrome2: var(--gcs-brand-chrome-2);
+  --gcs-ok: var(--gcs-brand-ok);
+  --gcs-warn: var(--gcs-brand-warn);
+  --gcs-danger: var(--gcs-brand-danger);
+  --gcs-info: var(--gcs-brand-info);
+  --gcs-font-display: var(--gcs-brand-font);
+  --gcs-font-text: var(--gcs-brand-font);
+}
+/* Temele nu compilează culorile de eroare și informare: urmează modul paginii. */
+:root[data-theme="light"] {
+  --gcs-danger: var(--gcs-brand-light-danger);
+  --gcs-info: var(--gcs-brand-light-info);
+}
+@media (prefers-color-scheme: light) {
+  :root[data-theme="auto"] {
+    --gcs-danger: var(--gcs-brand-light-danger);
+    --gcs-info: var(--gcs-brand-light-info);
+  }
+}
+/* Cromul produsului GCS: aceleași culori, fonturi și forme oricare ar fi tema site-ului. */
+.gcs-product {
+  --gcs-bg: var(--gcs-brand-bg);
+  --gcs-surface: var(--gcs-brand-surface);
+  --gcs-surface2: var(--gcs-brand-surface-2);
+  --gcs-border: var(--gcs-brand-border);
+  --gcs-text: var(--gcs-brand-text);
+  --gcs-muted: var(--gcs-brand-muted);
+  --gcs-accent: var(--gcs-brand-accent);
+  --gcs-accentInk: var(--gcs-brand-accent-ink);
+  --gcs-chrome: var(--gcs-brand-chrome);
+  --gcs-chrome2: var(--gcs-brand-chrome-2);
+  --gcs-ok: var(--gcs-brand-ok);
+  --gcs-warn: var(--gcs-brand-warn);
+  --gcs-danger: var(--gcs-brand-danger);
+  --gcs-info: var(--gcs-brand-info);
+  --gcs-heading: var(--gcs-brand-heading);
+  --gcs-accent-fill: var(--gcs-brand-accent-fill);
+  --gcs-btn-primary-bg: var(--gcs-brand-accent-fill);
+  --gcs-btn-primary-text: #FFFFFF;
+  --gcs-btn-primary-hover: color-mix(in srgb, var(--gcs-brand-accent-fill) 92%, #fff);
+  --gcs-btn-secondary-bg: var(--gcs-brand-secondary);
+  --gcs-btn-secondary-text: var(--gcs-brand-secondary-text);
+  --gcs-font-display: var(--font-gcs-nova), var(--gcs-brand-font);
+  --gcs-font-text: var(--font-gcs-nova), var(--gcs-brand-font);
+  --gcs-radius: var(--gcs-brand-radius-card);
+  --gcs-radius-sm: var(--gcs-brand-radius-input);
+  --gcs-btn-radius: var(--gcs-brand-radius-button);
+  --gcs-sweep: rgb(255 255 255 / 0.08);
+  color-scheme: dark;
+  font-family: var(--gcs-font-text);
+}
+.gcs-product[data-theme="light"] {
+  --gcs-bg: var(--gcs-brand-light-bg);
+  --gcs-surface: var(--gcs-brand-light-surface);
+  --gcs-surface2: var(--gcs-brand-light-surface-2);
+  --gcs-border: var(--gcs-brand-light-border);
+  --gcs-text: var(--gcs-brand-light-text);
+  --gcs-muted: var(--gcs-brand-light-muted);
+  --gcs-accent: var(--gcs-brand-light-accent);
+  --gcs-accentInk: var(--gcs-brand-light-accent-ink);
+  --gcs-chrome: var(--gcs-brand-light-chrome);
+  --gcs-chrome2: var(--gcs-brand-light-chrome-2);
+  --gcs-ok: var(--gcs-brand-light-ok);
+  --gcs-warn: var(--gcs-brand-light-warn);
+  --gcs-danger: var(--gcs-brand-light-danger);
+  --gcs-info: var(--gcs-brand-light-info);
+  --gcs-heading: var(--gcs-brand-light-heading);
+  --gcs-accent-fill: var(--gcs-brand-light-accent-fill);
+  --gcs-btn-primary-bg: var(--gcs-brand-light-accent-fill);
+  --gcs-btn-primary-text: #FFFFFF;
+  --gcs-btn-primary-hover: color-mix(in srgb, var(--gcs-brand-light-accent-fill) 92%, #fff);
+  --gcs-btn-secondary-bg: var(--gcs-brand-light-secondary);
+  --gcs-btn-secondary-text: var(--gcs-brand-light-secondary-text);
+  --gcs-sweep: color-mix(in srgb, var(--gcs-text) 7%, transparent);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: light) {
+  .gcs-product[data-theme="auto"] {
+    --gcs-bg: var(--gcs-brand-light-bg);
+    --gcs-surface: var(--gcs-brand-light-surface);
+    --gcs-surface2: var(--gcs-brand-light-surface-2);
+    --gcs-border: var(--gcs-brand-light-border);
+    --gcs-text: var(--gcs-brand-light-text);
+    --gcs-muted: var(--gcs-brand-light-muted);
+    --gcs-accent: var(--gcs-brand-light-accent);
+    --gcs-accentInk: var(--gcs-brand-light-accent-ink);
+    --gcs-chrome: var(--gcs-brand-light-chrome);
+    --gcs-chrome2: var(--gcs-brand-light-chrome-2);
+    --gcs-ok: var(--gcs-brand-light-ok);
+    --gcs-warn: var(--gcs-brand-light-warn);
+    --gcs-danger: var(--gcs-brand-light-danger);
+    --gcs-info: var(--gcs-brand-light-info);
+    --gcs-heading: var(--gcs-brand-light-heading);
+    --gcs-accent-fill: var(--gcs-brand-light-accent-fill);
+    --gcs-btn-primary-bg: var(--gcs-brand-light-accent-fill);
+    --gcs-btn-primary-text: #FFFFFF;
+    --gcs-btn-primary-hover: color-mix(in srgb, var(--gcs-brand-light-accent-fill) 92%, #fff);
+    --gcs-btn-secondary-bg: var(--gcs-brand-light-secondary);
+    --gcs-btn-secondary-text: var(--gcs-brand-light-secondary-text);
+    --gcs-sweep: color-mix(in srgb, var(--gcs-text) 7%, transparent);
+    color-scheme: light;
+  }
 }

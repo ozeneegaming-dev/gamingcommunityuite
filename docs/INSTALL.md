@@ -111,6 +111,20 @@ sudo bash /opt/gcs/install.sh --upgrade --from gcs-<versiune-nouă>.tar.gz
 
 Actualizarea face un backup (`gcs backup`), verifică și copiază fișierele noi, păstrează `.env`, `config/`, `backups/` și `docker-compose.override.yml`, apoi repornește serviciile. Migrațiile bazei de date rulează automat la pornire; datele rămân.
 
+### Unde stau datele
+
+Pe VPS, codul și datele sunt separate ca în ediția Lite, dar datele stau în volume Docker (nu în foldere lângă cod):
+
+| Ediția Lite (folder) | VPS | Ce conține |
+|---|---|---|
+| `server/`, `app.js` | `/opt/gcs/` (+ imaginile Docker) | codul și pornirea; actualizarea le înlocuiește |
+| `config/` | volumul `gcsconfig` (`/app/config` în containere) și `/opt/gcs/.env` | setările instalării, licența, secretele |
+| `uploads/` | volumul `miniodata` (MinIO, compatibil S3) | fișierele încărcate de membri |
+| `applications/`, `plugins/` | volumul `gcsconfig` (`/app/config/plugins`) | pachetele instalate din ACP, dezarhivate din baza de date |
+| baza de date a gazdei | volumul `pgdata` (PostgreSQL) | toate datele comunității, inclusiv temele |
+
+`gcs backup` le salvează pe toate (secțiunea 8).
+
 ## 8. Backup și restaurare
 
 ```bash
@@ -264,6 +278,20 @@ sudo bash /opt/gcs/install.sh --upgrade --from gcs-<new-version>.tar.gz
 ```
 
 The upgrade makes a backup (`gcs backup`), checks and copies the new files, keeps `.env`, `config/`, `backups/` and `docker-compose.override.yml`, then restarts the services. Database migrations run automatically on start; your data stays.
+
+### Where the data lives
+
+On a VPS, code and data are kept apart as in the Lite edition, but the data lives in Docker volumes (not in folders next to the code):
+
+| Lite edition (folder) | VPS | What it holds |
+|---|---|---|
+| `server/`, `app.js` | `/opt/gcs/` (+ the Docker images) | the code and startup; upgrades replace them |
+| `config/` | the `gcsconfig` volume (`/app/config` in the containers) and `/opt/gcs/.env` | installation settings, licence, secrets |
+| `uploads/` | the `miniodata` volume (MinIO, S3-compatible) | files uploaded by members |
+| `applications/`, `plugins/` | the `gcsconfig` volume (`/app/config/plugins`) | packages installed from the ACP, unpacked from the database |
+| the host’s database | the `pgdata` volume (PostgreSQL) | all community data, themes included |
+
+`gcs backup` saves all of them (section 8).
 
 ## 8. Backup and restore
 

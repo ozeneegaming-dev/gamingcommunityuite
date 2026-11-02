@@ -1,10 +1,11 @@
-import { DELETION_COOLING_SETTING, type GcsActor } from "@gcs/core";
+import { DELETION_COOLING_SETTING, loadPasswordPolicy, type GcsActor } from "@gcs/core";
 import { BRIDGE_PERMISSION, LINK_COMMAND, STEAM_PLACEHOLDER_DOMAIN } from "@gcs/modules";
 import { GcsGameAccounts } from "../../_components/servers/GcsGameAccounts";
 import type { Metadata } from "next";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { freshSignIn } from "@/lib/account-deletion";
 import { currentActor } from "@/lib/actor";
+import { passwordRuleHint } from "@/lib/legal";
 import { services } from "@/lib/services";
 import { GcsDeleteAccount } from "../../_components/settings/GcsDeleteAccount";
 import { GcsAccountForms } from "../../_components/settings/GcsSettingsForms";
@@ -55,6 +56,9 @@ export default async function AccountSettingsPage({ searchParams }: { searchPara
   const [discordId, googleId] = await Promise.all([settings.get<string>("auth.discord_client_id"), settings.get<string>("auth.google_client_id")]);
   const available = [...(discordId ? (["discord"] as const) : []), ...(googleId ? (["google"] as const) : []), "steam" as const];
   const games = await gameAccounts(actor);
+  // Regula parolei din ACP → Setări → Securitate (verificată și pe server la schimbare).
+  const policy = await loadPasswordPolicy(settings);
+  const passwordHint = await passwordRuleHint(policy);
   const email = user.email.endsWith(STEAM_PLACEHOLDER_DOMAIN) ? null : user.email;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -88,7 +92,8 @@ export default async function AccountSettingsPage({ searchParams }: { searchPara
         hasPassword={hasPassword}
         accounts={user.accounts.filter((a) => a.providerId === "discord" || a.providerId === "google" || a.providerId === "steam").map((a) => ({ providerId: a.providerId as "discord" | "google" | "steam" }))}
         available={available}
-        labels={{ ...Object.fromEntries(KEYS.map((k) => [k, t(k)])), currentEmail: email ? t("currentEmail", { email }) : "" }}
+        passwordMinLength={policy.minLength}
+        labels={{ ...Object.fromEntries(KEYS.map((k) => [k, t(k)])), currentEmail: email ? t("currentEmail", { email }) : "", passwordHint }}
       />
       {games && <GcsGameAccounts identities={games.identities} canLink={games.canLink} command={LINK_COMMAND} />}
       <GcsDeleteAccount

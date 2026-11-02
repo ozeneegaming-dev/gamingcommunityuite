@@ -1,5 +1,5 @@
-import { settingsAcpSection } from "@gcs/core";
-import { GCS_LOCALE_KEYS } from "@gcs/modules";
+import { MFA_REQUIRED_GROUPS_SETTING, loadMfaRequiredGroups, settingsAcpSection } from "@gcs/core";
+import { GCS_LOCALE_KEYS, SECURITY_SECTION } from "@gcs/modules";
 import { GcsButton, GcsCard } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
@@ -12,7 +12,7 @@ import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 import { GcsSettingsForm, type GcsSettingsField } from "../../_components/GcsSettingsForm";
-import { saveActiveLocales, saveSettings } from "./actions";
+import { saveActiveLocales, saveMfaGroups, saveSettings } from "./actions";
 import { TestEmailButton } from "./TestEmailButton";
 
 type Props = { params: Promise<{ section: string }> };
@@ -65,8 +65,8 @@ export default async function AcpSettingsPage({ params }: Props) {
   // Iconița titlului: a intrării din meniu pentru secțiune.
   const icon = registry.acpMenu().flatMap((s) => s.items).find((i) => i.href === `/admin/settings/${section}`)?.icon ?? "fa-solid fa-sliders";
 
-  // Limbile active au formularul lor (căsuțe), nu câmpul JSON generic.
-  const shown = section === "languages" ? defs.filter((d) => d.key !== "i18n.locales") : defs;
+  // Limbile active și grupurile cu 2FA obligatoriu au formularul lor (căsuțe), nu câmpul JSON generic.
+  const shown = section === "languages" ? defs.filter((d) => d.key !== "i18n.locales") : section === SECURITY_SECTION ? defs.filter((d) => d.key !== MFA_REQUIRED_GROUPS_SETTING) : defs;
   const fields: GcsSettingsField[] = await Promise.all(
     shown.map(async (def) => {
       const value = await settings.get(def.key);
@@ -74,6 +74,8 @@ export default async function AcpSettingsPage({ params }: Props) {
       if (def.type === "secret") f.secretSet = typeof value === "string" && value !== "";
       if (def.options) f.options = def.options.map((o) => ({ value: o, label: label(`settings.choices.${o}`) }));
       if (def.multiline) f.multiline = true;
+      // Ajutorul câmpului, dacă are unul (`<eticheta>_hint`).
+      if (tAll.has(`${def.labelKey}_hint`)) f.hint = tAll(`${def.labelKey}_hint`);
       return f;
     }),
   );
@@ -90,6 +92,7 @@ export default async function AcpSettingsPage({ params }: Props) {
         />
       </GcsCard>
       {section === "languages" && <LanguagesCard />}
+      {section === SECURITY_SECTION && <MfaGroupsCard />}
       {section === "email" && (
         <GcsCard as="section" aria-label={t("testEmail.title")} style={{ padding: 20, maxWidth: 720, display: "flex", flexDirection: "column", gap: 12 }}>
           <h2 className="gcs-acpWidget__title"><GcsAcpTitleIcon name="fa-solid fa-paper-plane" />{t("testEmail.title")}</h2>
@@ -98,6 +101,38 @@ export default async function AcpSettingsPage({ params }: Props) {
         </GcsCard>
       )}
     </>
+  );
+}
+
+/**
+ * ACP → Setări → Securitate: grupurile ai căror membri trebuie să-și activeze 2FA înainte să folosească site-ul
+ * (căsuțe; vizitatorii nu au cont, deci lipsesc). ACP-ul cere oricum 2FA tuturor celor cu acces.
+ */
+async function MfaGroupsCard() {
+  const { settings, db } = services();
+  const [t, selected, groups] = await Promise.all([
+    getTranslations("acp.securitySettings"),
+    loadMfaRequiredGroups(settings),
+    db.group.findMany({ where: { key: { not: "guest" } }, orderBy: [{ position: "asc" }, { id: "asc" }], select: { id: true, name: true } }),
+  ]);
+  return (
+    <GcsCard as="section" aria-label={t("mfaGroups")} style={{ padding: 20, maxWidth: 720, display: "flex", flexDirection: "column", gap: 12 }} data-testid="gcs-acp-mfa-groups">
+      <h2 className="gcs-acpWidget__title">
+        <GcsAcpTitleIcon name="fa-solid fa-user-shield" />
+        {t("mfaGroups")}
+      </h2>
+      <p style={{ margin: 0, color: "var(--gcs-muted)", fontSize: 14 }}>{t("mfaGroupsHint")}</p>
+      <GcsActionForm action={saveMfaGroups} submitLabel={t("save")} submitKind="save">
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+          {groups.map((g) => (
+            <label key={g.id} className="gcs-checkRow">
+              <input type="checkbox" name="group" value={g.id} defaultChecked={selected.includes(g.id)} />
+              {g.name}
+            </label>
+          ))}
+        </div>
+      </GcsActionForm>
+    </GcsCard>
   );
 }
 

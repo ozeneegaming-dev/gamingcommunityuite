@@ -62,13 +62,13 @@ export function RunStep({ stepLabels, labels, afterDone }: Props) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <div role="progressbar" aria-label={labels.progress} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} style={{ height: 10, borderRadius: 999, background: "var(--gcs-surface2)", overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${pct}%`, background: phase.kind === "error" ? "#FF4D57" : "var(--gcs-accent)", transition: "width .3s ease" }} />
+        <div style={{ height: "100%", width: `${pct}%`, background: phase.kind === "error" ? "var(--gcs-danger)" : "var(--gcs-accent)", transition: "width .3s ease" }} />
       </div>
       {log.length > 0 && (
         <pre
           aria-live="polite"
           data-testid="gcs-install-log"
-          style={{ margin: 0, padding: "12px 14px", borderRadius: 12, background: "var(--gcs-surface2)", border: "1px solid var(--gcs-border)", fontSize: 12.5, lineHeight: 1.7, whiteSpace: "pre-wrap", maxHeight: 260, overflowY: "auto" }}
+          style={{ margin: 0, padding: "12px 14px", borderRadius: "var(--gcs-radius-sm)", background: "var(--gcs-surface2)", border: "1px solid var(--gcs-border)", fontSize: 12.5, lineHeight: 1.7, whiteSpace: "pre-wrap", maxHeight: 260, overflowY: "auto" }}
         >
           {log.join("\n")}
         </pre>
@@ -79,7 +79,7 @@ export function RunStep({ stepLabels, labels, afterDone }: Props) {
         </p>
       )}
       {phase.kind === "done" && (
-        <div role="status" style={{ padding: "16px 18px", borderRadius: 12, background: "rgba(61,220,151,.08)", border: "1px solid rgba(61,220,151,.3)", display: "flex", flexDirection: "column", gap: 6 }}>
+        <div role="status" style={{ padding: "16px 18px", borderRadius: "var(--gcs-radius-sm)", background: "color-mix(in srgb, var(--gcs-ok) 8%, transparent)", border: "1px solid color-mix(in srgb, var(--gcs-ok) 30%, transparent)", display: "flex", flexDirection: "column", gap: 6 }}>
           <strong className="gcs-display" style={{ fontSize: 18 }}>
             {labels.doneTitle}
           </strong>

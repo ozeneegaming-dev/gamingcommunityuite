@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { GCS_BRAND } from "@gcs/core/themes";
 import { cx } from "../cx";
 
 /** Ce trebuie pentru plăcuța tagului unui clan (culorile vin validate `#RRGGBB`, textul calculat din contrast). */
@@ -23,8 +24,8 @@ const safe = (v: string, fallback: string) => (HEX.test(v) ? v : fallback);
  */
 export function GcsClanTag({ clan, size = "md", plain = false, className, testId }: GcsClanTagProps) {
   const style = {
-    "--gcs-clan-color": safe(clan.color, "#D62839"),
-    "--gcs-clan-color2": safe(clan.color2, "#1B1E26"),
+    "--gcs-clan-color": safe(clan.color, GCS_BRAND.color.dark.accent),
+    "--gcs-clan-color2": safe(clan.color2, GCS_BRAND.color.dark.surface2),
     "--gcs-clan-ink": safe(clan.ink, "#FFFFFF"),
   } as CSSProperties;
   const classes = cx("gcs-clanTag", size !== "md" && `gcs-clanTag--${size}`, className);

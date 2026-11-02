@@ -107,14 +107,31 @@
       "discord": "Continuă cu Discord",
       "steam": "Continuă cu Steam",
       "noAccount": "Nu ai cont?",
-      "registerLink": "Înregistrează-te"
+      "registerLink": "Înregistrează-te",
+      "forgot": "Ai uitat parola?",
+      "resetDone": "Parola a fost schimbată. Intră în cont cu parola nouă."
     },
     "twoFactor": {
       "title": "Verificare în doi pași",
       "subtitle": "Introdu codul de 6 cifre din aplicația de autentificare.",
       "code": "Cod de verificare",
       "trustDevice": "Ține minte acest dispozitiv 30 de zile",
-      "submit": "Verifică"
+      "submit": "Verifică",
+      "backupSubtitle": "Introdu unul dintre codurile de rezervă primite la activarea 2FA. Fiecare cod merge o singură dată.",
+      "emailSubtitle": "Am trimis un cod de 6 cifre pe emailul contului. E valabil 3 minute.",
+      "backupCode": "Cod de rezervă",
+      "emailSent": "Codul a fost trimis pe email.",
+      "use": {
+        "totp": "Folosește aplicația de autentificare",
+        "backup": "Folosește un cod de rezervă",
+        "email": "Trimite-mi un cod pe email"
+      },
+      "email": {
+        "subject": "Codul tău de autentificare — {site}",
+        "greeting": "Salut, {name}!",
+        "body": "Codul pentru autentificarea în doi pași este:",
+        "ignore": "Dacă nu ai încercat tu să intri în cont, schimbă-ți parola."
+      }
     },
     "register": {
       "title": "Înregistrare",
@@ -128,7 +145,11 @@
       "hasAccount": "Ai deja cont?",
       "loginLink": "Autentifică-te",
       "answerHint": "Întrebarea comunității împotriva roboților.",
-      "verifying": "Se verifică…"
+      "verifying": "Se verifică…",
+      "acceptTerms": "Am citit și accept <terms>termenii de utilizare</terms>.",
+      "acceptTermsPrivacy": "Am citit și accept <terms>termenii de utilizare</terms> și <privacy>politica de confidențialitate</privacy>.",
+      "termsLink": "Termeni de utilizare",
+      "privacyLink": "Politica de confidențialitate"
     },
     "errors": {
       "invalid_credentials": "Email sau parolă incorectă",
@@ -150,7 +171,66 @@
       "banned": "Accesul tău pe acest site e restricționat. Dacă e o greșeală, contactează echipa.",
       "registration_closed": "Înregistrările sunt închise momentan.",
       "qa_failed": "Răspunsul la întrebare nu e corect.",
-      "spam_source": "Înregistrarea a fost oprită de filtrul anti-spam. Dacă e o greșeală, contactează echipa."
+      "spam_source": "Înregistrarea a fost oprită de filtrul anti-spam. Dacă e o greșeală, contactează echipa.",
+      "account_locked": "Contul e blocat temporar după prea multe parole greșite. Încearcă din nou peste {minutes} min.",
+      "password_too_short_min": "Parola trebuie să aibă cel puțin {min} caractere",
+      "password_too_long": "Parola poate avea cel mult 128 de caractere",
+      "password_needs_mix": "Parola trebuie să conțină și litere, și cifre",
+      "terms_required": "Trebuie să accepți termenii ca să-ți creezi contul.",
+      "terms_required_social": "Pentru un cont nou, bifează acceptarea termenilor pe pagina de înregistrare, apoi continuă cu Discord, Google sau Steam.",
+      "otp_disabled": "Codul pe email nu e disponibil pe acest site. Folosește aplicația de autentificare sau un cod de rezervă."
+    },
+    "passwordRule": {
+      "length": "Cel puțin {min} caractere.",
+      "mix": "Cel puțin {min} caractere, cu litere și cifre."
+    },
+    "forgot": {
+      "title": "Ai uitat parola?",
+      "subtitle": "Îți trimitem pe email un link ca să-ți alegi o parolă nouă.",
+      "identifier": "Email sau nume de utilizator",
+      "submit": "Trimite linkul de resetare",
+      "sent": "Dacă există un cont cu aceste date, ți-am trimis un email cu un link pentru resetarea parolei. Linkul e valabil {minutes, plural, one {# minut} few {# minute} other {# de minute}}; verifică și folderul Spam.",
+      "back": "Înapoi la autentificare",
+      "required": "Scrie emailul sau numele de utilizator.",
+      "disabled": "Resetarea parolei prin email e oprită pe acest site. Ca să-ți recuperezi contul, contactează echipa site-ului.",
+      "noEmail": "Resetarea parolei prin email nu e disponibilă momentan: site-ul nu are configurată trimiterea emailurilor. Ca să-ți recuperezi contul, contactează echipa site-ului.",
+      "staffLink": "Vezi echipa site-ului"
+    },
+    "reset": {
+      "title": "Parolă nouă",
+      "subtitle": "Alege o parolă nouă pentru contul tău de pe {site}.",
+      "password": "Parola nouă",
+      "confirm": "Repetă parola nouă",
+      "submit": "Salvează parola",
+      "mismatch": "Parolele nu coincid.",
+      "invalid": "Linkul de resetare nu mai e valabil: a expirat, a fost deja folosit sau a fost înlocuit de o cerere mai nouă.",
+      "requestNew": "Cere un link nou"
+    },
+    "resetEmail": {
+      "greeting": "Salut, {name}!",
+      "fallback": "Dacă butonul nu merge, copiază adresa în browser:",
+      "link": {
+        "subject": "Resetarea parolei — {site}",
+        "body": "Am primit o cerere de resetare a parolei pentru contul tău de pe {site}. Apasă butonul de mai jos ca să-ți alegi o parolă nouă.",
+        "button": "Alege o parolă nouă",
+        "validity": "Linkul e valabil {minutes, plural, one {# minut} few {# minute} other {# de minute}} și merge o singură dată. O cerere nouă îl anulează pe acesta.",
+        "ignore": "Dacă nu ai cerut tu resetarea, ignoră acest email: parola ta rămâne aceeași."
+      },
+      "social": {
+        "subject": "Cum intri în cont — {site}",
+        "body": "Am primit o cerere de resetare a parolei pentru contul tău de pe {site}, dar contul tău nu are o parolă: intri cu {providers}. Pe pagina de autentificare, alege același buton.",
+        "bodyNone": "Am primit o cerere de resetare a parolei pentru contul tău de pe {site}, dar contul tău nu are o parolă. Contactează echipa site-ului ca să-ți recuperezi contul.",
+        "button": "Mergi la autentificare",
+        "ignore": "Dacă nu ai cerut tu asta, ignoră acest email."
+      },
+      "changed": {
+        "subject": "Parola a fost schimbată — {site}",
+        "body": "Parola contului tău de pe {site} a fost schimbată pe {when}, de la adresa IP {ip}.",
+        "bodyNoIp": "Parola contului tău de pe {site} a fost schimbată pe {when}.",
+        "sessions": "Din motive de siguranță, toate sesiunile deschise ale contului au fost închise.",
+        "notYou": "Dacă nu ai fost tu, cere imediat o resetare nouă a parolei și anunță echipa site-ului.",
+        "button": "Resetează din nou parola"
+      }
     }
   },
   "errors": {
@@ -407,7 +487,10 @@
       "invalid_icon": "Iconița nu e validă.",
       "disabled": "Opțiunea e oprită pe acest forum.",
       "invalid_gradient": "Gradient invalid",
-      "invalid_svg": "SVG-ul nu e valid sau nu se poate curăța."
+      "invalid_svg": "SVG-ul nu e valid sau nu se poate curăța.",
+      "password_needs_mix": "Parola trebuie să conțină și litere, și cifre.",
+      "password_too_long": "Parola poate avea cel mult 128 de caractere.",
+      "password_policy_length": "Parola e prea scurtă pentru regula site-ului (vezi sub câmp)."
     }
   },
   "acp": {
@@ -468,12 +551,12 @@
         "webhooks": "Webhooks",
         "settings": "Setări",
         "settings_general": "Generale",
-        "settings_terms": "Termeni & Confidențialitate",
+        "settings_terms": "Termeni și confidențialitate",
         "settings_posting": "Postare & Editor",
         "settings_email": "Email",
         "settings_auth": "Login & Înregistrare",
         "settings_contact": "Contact",
-        "settings_2fa": "Autentificare 2FA",
+        "settings_2fa": "Securitate",
         "settings_advanced": "Avansat",
         "settings_pwa": "Web App (PWA)",
         "discovery": "Descoperire",
@@ -1062,7 +1145,8 @@
           "discord": "Discord",
           "google": "Google",
           "other": "Altele"
-        }
+        },
+        "loginLocked": "Login blocat până la {time}"
       },
       "actions": {
         "title": "Acțiuni cont",
@@ -1080,7 +1164,9 @@
         "disable2faConfirm": "Dezactivezi autentificarea în doi pași pentru acest membru? Doar dacă nu mai are acces la aplicația de coduri.",
         "ban": "Ban",
         "gdpr": "Export GDPR",
-        "hint": "Fiecare acțiune intră în jurnal. Unirea și ștergerea au paginile lor de confirmare."
+        "hint": "Fiecare acțiune intră în jurnal. Unirea și ștergerea au paginile lor de confirmare.",
+        "unlockLogin": "Deblochează login-ul",
+        "unlockLoginConfirm": "Ridici blocarea după parole greșite? Membrul poate încerca din nou imediat."
       },
       "cards": {
         "activity": "Activitate (30 de zile)",
@@ -1353,7 +1439,9 @@
         "servers_bridge": "Bridge și ELO",
         "gdpr": "Cereri GDPR",
         "donations": "Donații",
-        "warnings": "Avertismente"
+        "warnings": "Avertismente",
+        "2fa": "Securitate",
+        "terms": "Termeni și confidențialitate"
       },
       "save": "Salvează setările",
       "secretSet": "•••• salvat (lasă gol ca să păstrezi valoarea)",
@@ -4766,6 +4854,45 @@
         "edit": "Aspect"
       }
     },
+    "securitySettings": {
+      "mfaGroups": "Grupuri cu 2FA obligatoriu",
+      "mfaGroupsHint": "Membrii acestor grupuri trebuie să-și activeze autentificarea în doi pași înainte să folosească site-ul: până atunci sunt trimiși la Setări → Securitate. ACP-ul cere oricum 2FA tuturor celor cu acces.",
+      "save": "Salvează grupurile"
+    },
+    "legal": {
+      "title": "Termeni și confidențialitate",
+      "terms": {
+        "title": "Termeni de utilizare",
+        "hint": "Pagina publică /terms sau o adresă externă. Cât timp există, apare în subsol și la înregistrare."
+      },
+      "privacy": {
+        "title": "Politica de confidențialitate",
+        "hint": "Pagina publică /privacy sau o adresă externă, legată din subsol, de la înregistrare și din banda de cookie-uri."
+      },
+      "view": "Vezi pagina",
+      "mode": "Unde se află",
+      "modes": {
+        "none": "Nicăieri (pagina răspunde 404)",
+        "page": "Pagină pe site",
+        "external": "Adresă externă"
+      },
+      "url": "Adresa externă",
+      "urlHint": "Doar adrese https://…",
+      "content": "Textul",
+      "saveDoc": "Salvează",
+      "savedDoc": "Salvat.",
+      "options": "Înregistrare și cookie-uri",
+      "save": "Salvează",
+      "retention": {
+        "title": "Păstrarea datelor",
+        "hint": "Ce e mai vechi decât perioada se șterge automat, o dată pe zi (jobul system.retention). 0 = se păstrează mereu.",
+        "days": "{days, plural, one {# zi} few {# zile} other {# de zile}}",
+        "forever": "mereu",
+        "ips": "IP-urile din postări, mesaje și jurnale: {value}.",
+        "notifications": "Notificările citite: {value}.",
+        "edit": "Schimbă"
+      }
+    },
     "license": {
       "title": "Licență",
       "description": "Licența GamingCommunitySuite a acestui site: ce include, verificarea online și schimbarea cheii.",
@@ -4849,7 +4976,9 @@
       "bottom": "Jos",
       "desktop": "Doar desktop",
       "all_devices": "Toate dispozitivele",
-      "poll": "Doar polling (gazde care taie conexiunile lungi)"
+      "poll": "Doar polling (gazde care taie conexiunile lungi)",
+      "backup_codes": "Doar codurile de rezervă",
+      "email_code": "Codurile de rezervă sau un cod pe email"
     },
     "forums": {
       "posts_per_page": "Postări pe pagină",
@@ -5176,7 +5305,8 @@
       "enable": "Activează",
       "disable": "Dezactivează",
       "password": "Parola contului",
-      "wrongPassword": "Parola nu este corectă."
+      "wrongPassword": "Parola nu este corectă.",
+      "mfaRequired": "Grupul tău cere autentificarea în doi pași. Activeaz-o mai jos ca să poți folosi site-ul."
     },
     "signature": {
       "title": "Semnătură",
@@ -5437,6 +5567,53 @@
       "features": "Funcțiile botului",
       "welcome_title": "Titlul mesajului de bun venit",
       "welcome_text": "Mesajul de bun venit"
+    },
+    "siteSecurity": {
+      "login_max_attempts": "Parole greșite până la blocare",
+      "login_max_attempts_hint": "După atâtea parole greșite, contul se blochează temporar (0 = fără blocare). Un IP se blochează la de 3 ori mai multe încercări.",
+      "login_lock_minutes": "Durata blocării (minute)",
+      "login_lock_minutes_hint": "După acest timp contul se deblochează singur. Staff-ul îl poate debloca mai devreme din pagina membrului.",
+      "password_min_length": "Lungimea minimă a parolei",
+      "password_min_length_hint": "Între 8 și 128 de caractere; se aplică la înregistrare și la schimbarea parolei.",
+      "password_require_mix": "Parola trebuie să conțină litere și cifre",
+      "password_reset_enabled": "„Am uitat parola” (resetarea parolei prin email)",
+      "password_reset_enabled_hint": "Membrii își aleg singuri o parolă nouă cu un link primit pe email. Merge doar cu trimiterea emailurilor configurată (Setări → Email); altfel pagina le spune să contacteze echipa.",
+      "password_reset_minutes": "Valabilitatea linkului de resetare (minute)",
+      "password_reset_minutes_hint": "Între 5 și 1440; implicit 30. Linkul merge o singură dată, iar o cerere nouă îl anulează pe cel vechi.",
+      "password_reset_revoke_sessions": "La resetarea parolei, închide toate sesiunile membrului",
+      "password_reset_revoke_sessions_hint": "Recomandat: cine știa parola veche e scos din cont pe toate dispozitivele, iar 2FA se cere din nou peste tot.",
+      "mfa_required_groups": "Grupuri cu 2FA obligatoriu",
+      "mfa_recovery": "Recuperarea 2FA (dispozitiv pierdut)",
+      "mfa_recovery_hint": "Codurile de rezervă primite la activare merg mereu. A doua variantă permite și intrarea cu un cod trimis pe emailul contului.",
+      "new_device_email": "Email la autentificarea de pe un dispozitiv nou",
+      "new_device_email_hint": "Oprit aici, nu pleacă nimănui. Pornit, fiecare membru îl poate opri din Setări → Dispozitive.",
+      "acp_session_minutes": "Sesiunea ACP (minute)",
+      "acp_session_minutes_hint": "După acest timp de la ultima reautentificare (sau la schimbarea IP-ului), ACP-ul cere din nou parola și codul 2FA. Implicit 720 (12 ore)."
+    },
+    "legal": {
+      "terms_mode": "Termeni: unde se află",
+      "terms_content": "Termeni: textul",
+      "terms_url": "Termeni: adresa externă",
+      "privacy_mode": "Confidențialitate: unde se află",
+      "privacy_content": "Confidențialitate: textul",
+      "privacy_url": "Confidențialitate: adresa externă",
+      "require_terms_on_register": "Acceptarea termenilor e obligatorie la înregistrare",
+      "require_terms_on_register_hint": "Doar cât timp există termenii. Se aplică și conturilor noi prin Discord, Google sau Steam; momentul acceptării se păstrează la membru.",
+      "cookie_banner": "Banda de cookie-uri",
+      "cookie_banner_hint": "O bandă mică jos, pentru vizitatori și membri, până o închid.",
+      "cookie_text": "Textul benzii de cookie-uri",
+      "cookie_text_hint": "Gol = textul implicit, tradus în limba vizitatorului. Linkul spre politica de confidențialitate se adaugă singur."
+    },
+    "retention": {
+      "audit_days": "Jurnalul ACP (zile)",
+      "audit_days_hint": "Acțiunile staff-ului din ACP → Jurnale (fără autentificări).",
+      "login_days": "Autentificările (zile)",
+      "login_days_hint": "Dispozitivele nevăzute de atâtea zile (cu IP-ul lor) și intrările de autentificare din jurnal.",
+      "spam_log_days": "Jurnalul anti-spam (zile)",
+      "plugin_log_days": "Jurnalul pluginurilor (zile)",
+      "plugin_log_days_hint": "Erorile și mesajele pluginurilor.",
+      "sessions_days": "Sesiunile expirate (zile)",
+      "sessions_days_hint": "Sesiunile și codurile de verificare expirate de atâtea zile."
     }
   },
   "permissions": {
@@ -9400,7 +9577,8 @@
       "privacy": "Confidențialitate",
       "contact": "Contact",
       "cookies": "Cookie-uri",
-      "unread": "Conținut necitit"
+      "unread": "Conținut necitit",
+      "terms": "Termeni"
     }
   },
   "imageViewer": {
@@ -10308,5 +10486,20 @@
     "back": "Înapoi la site",
     "continue": "Continuă spre {domain}",
     "continueDanger": "Îmi asum riscul, deschide {domain}"
+  },
+  "legalPage": {
+    "terms": {
+      "title": "Termeni de utilizare"
+    },
+    "privacy": {
+      "title": "Politica de confidențialitate"
+    },
+    "updated": "Actualizat pe {date}"
+  },
+  "cookieBanner": {
+    "region": "Cookie-uri",
+    "text": "Acest site folosește cookie-uri necesare pentru autentificare și pentru a-ți păstra preferințele (limba, tema).",
+    "accept": "Am înțeles",
+    "privacy": "Politica de confidențialitate"
   }
 }

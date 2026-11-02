@@ -4,6 +4,7 @@ import { communityRulesSetting } from "../community/rules";
 import { coreWidgets } from "../widgets";
 import { BOT_FEATURES_SETTING, BOT_WELCOME_SETTING, BOT_WELCOME_TITLE_SETTING } from "../bot/settings";
 import { NOTIFICATION_SETTING_DEFS } from "../notifications/settings";
+import { LEGAL_SETTING_DEFS, RETENTION_SETTING_DEFS, SECURITY_SETTING_DEFS } from "../security/settings";
 import { DEFAULT_THEME_TOGGLE, THEME_TOGGLE_SETTING, WARNINGS_ACK_SETTING, themeTogglePairError, APP_SETTING_DEFS, type GcsAcpApp, type GcsAcpArea, type GcsAcpMenuSection, type GcsModule, type GcsPermissionDef, type GcsSettingDef } from "@gcs/core";
 
 /** Grupurile create la instalare (spec §6.1). */
@@ -132,6 +133,11 @@ const settings: GcsSettingDef[] = [
   setting("antispam.sfs_confidence", "number", 60, "antispam", range(1, 100)),
   setting("members.ip_retention_days", "number", 0, "gdpr", range(0, 3650)),
   setting("members.deletion_cooling_days", "number", 7, "gdpr", (v) => (Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 90 ? null : "invalid_range")),
+  // ACP → Setări → Securitate (blocarea la parole greșite, parolele, 2FA) și → Termeni și confidențialitate (documentele
+  // legale, banda de cookie-uri, perioadele de păstrare a datelor).
+  ...SECURITY_SETTING_DEFS,
+  ...LEGAL_SETTING_DEFS,
+  ...RETENTION_SETTING_DEFS,
 ];
 
 function groupPermission(key: string, defaults: GcsPermissionDef["default"], merge?: "max" | "min"): GcsPermissionDef {

@@ -575,7 +575,7 @@ export function GcsThemeStudio({
   const statusText = status?.text ?? (hasDraft ? t("status.unpublished") : t("status.upToDate"));
 
   return (
-    <div className="gcs-themeStudio" data-testid="gcs-theme-studio">
+    <div className="gcs-themeStudio gcs-product" data-testid="gcs-theme-studio">
       {/* Previzualizarea în stânga (restul lățimii), bara de iconițe la mijloc, panoul în dreapta. */}
       <main className="gcs-themeStudio__preview" aria-label={t("preview")}>
         <div className="gcs-themeStudio__frameWrap" data-size={size}>

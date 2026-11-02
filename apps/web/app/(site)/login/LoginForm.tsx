@@ -6,16 +6,31 @@ import { GcsButton, GcsField, GcsIconSvg } from "@gcs/ui";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
-import { authClient, authErrorKey } from "@/lib/auth-client";
+import { authClient, authErrorKey, lockMinutes } from "@/lib/auth-client";
 import { authReturnPath } from "@/lib/auth-return";
 import { useHydrated } from "@/lib/use-hydrated";
 
-type Props = { discordEnabled: boolean; googleEnabled?: boolean; initialError: string | null };
+type Props = {
+  discordEnabled: boolean;
+  googleEnabled?: boolean;
+  initialError: string | null;
+  emailRecovery?: boolean;
+  /** Linkul „Ai uitat parola?” (ACP → Setări → Securitate: resetarea prin email pornită). */
+  forgotEnabled?: boolean;
+  /** Anunțul de deasupra formularului (ex. după resetarea parolei). */
+  initialNotice?: string | null;
+};
 
-export function LoginForm({ discordEnabled, googleEnabled = false, initialError }: Props) {
+/** Pasul 2FA: codul din aplicație, un cod de rezervă sau (dacă ACP → Setări → Securitate permite) un cod pe email. */
+type GcsTwoFactorMethod = "totp" | "backup" | "email";
+
+export function LoginForm({ discordEnabled, googleEnabled = false, initialError, emailRecovery = false, forgotEnabled = false, initialNotice = null }: Props) {
   const t = useTranslations("auth");
   const [step, setStep] = useState<"credentials" | "twoFactor">("credentials");
+  const [method, setMethod] = useState<GcsTwoFactorMethod>("totp");
   const [error, setError] = useState<string | null>(initialError);
+  const [minutes, setMinutes] = useState(1);
+  const [notice, setNotice] = useState<string | null>(initialNotice);
   const [pending, setPending] = useState(false);
   // Până la hidratare, trimiterea nativă ar ocoli `onSubmit`: butonul așteaptă React.
   const hydrated = useHydrated();
@@ -31,14 +46,31 @@ export function LoginForm({ discordEnabled, googleEnabled = false, initialError 
     const form = new FormData(e.currentTarget);
     setPending(true);
     setError(null);
+    setNotice(null);
     const { data, error } = await authClient.signIn.email({
       email: String(form.get("email") ?? ""),
       password: String(form.get("password") ?? ""),
     });
     setPending(false);
-    if (error) return setError(authErrorKey(error));
+    if (error) {
+      const key = authErrorKey(error);
+      if (key === "account_locked") setMinutes(lockMinutes(error));
+      return setError(key);
+    }
     if (data && "twoFactorRedirect" in data && data.twoFactorRedirect) return setStep("twoFactor");
     done();
+  }
+
+  async function chooseMethod(next: GcsTwoFactorMethod) {
+    setError(null);
+    setNotice(null);
+    setMethod(next);
+    if (next !== "email") return;
+    setPending(true);
+    const { error } = await authClient.twoFactor.sendOtp();
+    setPending(false);
+    if (error) return setError(authErrorKey(error));
+    setNotice(t("twoFactor.emailSent"));
   }
 
   async function onTwoFactor(e: FormEvent<HTMLFormElement>) {
@@ -46,10 +78,14 @@ export function LoginForm({ discordEnabled, googleEnabled = false, initialError 
     const form = new FormData(e.currentTarget);
     setPending(true);
     setError(null);
-    const { error } = await authClient.twoFactor.verifyTotp({
-      code: String(form.get("code") ?? "").replace(/\s/g, ""),
-      trustDevice: form.get("trustDevice") === "on",
-    });
+    const code = String(form.get("code") ?? "").replace(/\s/g, "");
+    const trustDevice = form.get("trustDevice") === "on";
+    const { error } =
+      method === "backup"
+        ? await authClient.twoFactor.verifyBackupCode({ code, trustDevice })
+        : method === "email"
+          ? await authClient.twoFactor.verifyOtp({ code, trustDevice })
+          : await authClient.twoFactor.verifyTotp({ code, trustDevice });
     setPending(false);
     if (error) return setError(authErrorKey(error));
     done();
@@ -57,7 +93,7 @@ export function LoginForm({ discordEnabled, googleEnabled = false, initialError 
 
   const errorBox = error && (
     <p role="alert" className="gcs-field__error" style={{ fontSize: 13, margin: 0 }}>
-      {t(`errors.${error}`)}
+      {t(`errors.${error}`, { minutes })}
     </p>
   );
 
@@ -68,24 +104,48 @@ export function LoginForm({ discordEnabled, googleEnabled = false, initialError 
           <GcsIconSvg icon={faShieldHalved} className="gcs-hIcon" />
           {t("twoFactor.title")}
         </h2>
-        <p style={{ margin: 0, color: "var(--gcs-muted)", fontSize: 14 }}>{t("twoFactor.subtitle")}</p>
-        <GcsField label={t("twoFactor.code")}>
-          <input name="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9 ]{6,7}" required autoFocus />
+        <p style={{ margin: 0, color: "var(--gcs-muted)", fontSize: 14 }}>{t(method === "backup" ? "twoFactor.backupSubtitle" : method === "email" ? "twoFactor.emailSubtitle" : "twoFactor.subtitle")}</p>
+        <GcsField label={t(method === "backup" ? "twoFactor.backupCode" : "twoFactor.code")}>
+          {method === "backup" ? (
+            <input key="backup" name="code" autoComplete="off" spellCheck={false} required autoFocus maxLength={40} data-testid="gcs-2fa-backup-code" />
+          ) : (
+            <input key={method} name="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9 ]{6,7}" required autoFocus />
+          )}
         </GcsField>
         <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, color: "#C9CDD6", minHeight: 44 }}>
           <input type="checkbox" name="trustDevice" style={{ width: 18, height: 18, accentColor: "var(--gcs-accent)" }} />
           {t("twoFactor.trustDevice")}
         </label>
+        {notice && (
+          <p role="status" className="gcs-notice" style={{ margin: 0, fontSize: 13 }}>
+            {notice}
+          </p>
+        )}
         {errorBox}
         <GcsButton variant="primary" type="submit" disabled={pending || !hydrated} icon={<GcsIconSvg icon={faShieldHalved} />}>
           {t("twoFactor.submit")}
         </GcsButton>
+        {/* „Am pierdut dispozitivul”: codurile de rezervă de la activare și, dacă site-ul permite, un cod pe email. */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }} data-testid="gcs-2fa-recovery">
+          {(["totp", "backup", ...(emailRecovery ? (["email"] as const) : [])] as GcsTwoFactorMethod[])
+            .filter((m) => m !== method)
+            .map((m) => (
+              <GcsButton key={m} type="button" variant="ghost" size="sm" disabled={pending || !hydrated} onClick={() => void chooseMethod(m)}>
+                {t(`twoFactor.use.${m}`)}
+              </GcsButton>
+            ))}
+        </div>
       </form>
     );
   }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {notice && (
+        <p role="status" className="gcs-notice" style={{ margin: 0, fontSize: 13 }} data-testid="gcs-login-notice">
+          {notice}
+        </p>
+      )}
       <form method="post" onSubmit={onCredentials} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <GcsField label={t("login.email")}>
           <input name="email" type="email" autoComplete="email" required />
@@ -93,6 +153,13 @@ export function LoginForm({ discordEnabled, googleEnabled = false, initialError 
         <GcsField label={t("login.password")}>
           <input name="password" type="password" autoComplete="current-password" required />
         </GcsField>
+        {forgotEnabled && (
+          <p style={{ margin: "-8px 0 0", fontSize: 13, textAlign: "right" }}>
+            <Link href="/forgot-password" data-testid="gcs-login-forgot">
+              {t("login.forgot")}
+            </Link>
+          </p>
+        )}
         {errorBox}
         <GcsButton variant="primary" type="submit" disabled={pending || !hydrated} icon={<GcsIconSvg icon={faRightToBracket} />}>
           {t("login.submit")}

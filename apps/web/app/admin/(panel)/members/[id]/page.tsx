@@ -20,7 +20,7 @@ import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 import { addSecondaryGroup, banMember, liftBan, removeSecondaryGroup, revokeWarning, setPrimaryGroup, setSecondaryExpiry, warnMember } from "../actions";
 import { addMemberDonation, confirmDonation, deleteDonation } from "../../vip/donations/actions";
 import { GcsDonationFields } from "../../vip/donations/GcsDonationFields";
-import { disableMemberTwoFactor, forcePasswordReset, markSpammerAction, saveMemberPermissions, setSpammer, unlockMember, validateMember } from "./actions";
+import { disableMemberTwoFactor, forcePasswordReset, markSpammerAction, saveMemberPermissions, setSpammer, unlockMember, unlockMemberLogin, validateMember } from "./actions";
 import { MemberProfileSections } from "./MemberProfileSections";
 
 type Props = { params: Promise<{ id: string }>; searchParams?: Promise<{ ban?: string; reason?: string; tab?: string }> };
@@ -78,7 +78,7 @@ export default async function AcpMemberPage({ params, searchParams }: Props) {
   // „Ban pe site…” din meniul de moderare al chat-ului: motivul vine completat, cu mesajul ca dovadă.
   const sp = (await searchParams) ?? {};
   const banReason = typeof sp.reason === "string" ? sp.reason.slice(0, 500) : "";
-  const { members, db, memberRemoval, acp, permissions, registry, donations, vip, apps } = services();
+  const { members, db, memberRemoval, acp, permissions, registry, donations, vip, apps, loginLockout } = services();
   const member = await members.detail(id);
   if (!member) notFound();
   const [t, tr, tAll, format, panels] = await Promise.all([getTranslations("acp.member"), getTranslations("acp.removal"), getTranslations(), getFormatter(), memberPanels("acp", panel.actor)]);
@@ -87,13 +87,15 @@ export default async function AcpMemberPage({ params, searchParams }: Props) {
     ...panels.filter((p) => p.kind === "tab").map((p) => ({ key: p.key, label: p.label, icon: p.icon })),
   ];
   const tab = tabs.some((x) => x.key === sp.tab) ? sp.tab! : "overview";
-  const [canRemove, canGdpr, removal, rootGroup, hasPassword, canSpam] = await Promise.all([
+  const [canRemove, canGdpr, removal, rootGroup, hasPassword, canSpam, loginLockedUntil] = await Promise.all([
     acp.can(panel.actor, MEMBER_REMOVAL_ACP_SECTION, "delete"),
     acp.can(panel.actor, GDPR_ACP_SECTION, "view"),
     memberRemoval.activeFor(member.id),
     db.group.findUnique({ where: { key: "root_admin" }, select: { id: true } }),
     db.account.count({ where: { userId: member.id, providerId: "credential", password: { not: null } } }),
     acp.can(panel.actor, "members.antispam", "edit"),
+    // ACP → Setări → Securitate: contul blocat după parole greșite (expiră singur; staff-ul îl poate debloca).
+    loginLockout.lockedUntil(member.id).catch(() => null),
   ]);
   const actorIsRoot = !!rootGroup && panel.actor.groupIds.includes(rootGroup.id);
   const now = new Date();
@@ -128,6 +130,11 @@ export default async function AcpMemberPage({ params, searchParams }: Props) {
                 {t("info.twoFactor")}: {member.twoFactorEnabled ? t("info.yes") : t("info.no")}
               </GcsBadge>
               {member.twoFactorLocked && <GcsBadge tone="accent">{t("identity.locked")}</GcsBadge>}
+              {loginLockedUntil && (
+                <GcsBadge tone="accent" data-testid="gcs-member-login-locked">
+                  {t("identity.loginLocked", { time: format.dateTime(loginLockedUntil, { timeStyle: "short" }) })}
+                </GcsBadge>
+              )}
               {member.passwordResetRequestedAt && <GcsBadge tone="accent">{t("identity.passwordReset")}</GcsBadge>}
             </div>
             <dl className="gcs-memberId__meta">
@@ -203,6 +210,7 @@ export default async function AcpMemberPage({ params, searchParams }: Props) {
               <GcsActionForm compact variant="ghost" action={setSpammer.bind(null, member.id, true)} submitLabel={t("actions.spammer")} submitKind="ban" confirm={t("actions.spammerConfirm")} />
             )}
             {member.twoFactorLocked && <GcsActionForm compact variant="ghost" action={unlockMember.bind(null, member.id)} submitLabel={t("actions.unlock")} submitKind="lift" confirm={t("actions.unlockConfirm")} />}
+            {loginLockedUntil && <GcsActionForm compact variant="ghost" action={unlockMemberLogin.bind(null, member.id)} submitLabel={t("actions.unlockLogin")} submitKind="lift" confirm={t("actions.unlockLoginConfirm")} />}
             {hasPassword > 0 && <GcsActionForm compact variant="ghost" action={forcePasswordReset.bind(null, member.id)} submitLabel={t("actions.resetPassword")} submitKind="reset" confirm={t("actions.resetPasswordConfirm")} />}
             {actorIsRoot && member.twoFactorEnabled && (
               <GcsActionForm compact variant="ghost" action={disableMemberTwoFactor.bind(null, member.id)} submitLabel={t("actions.disable2fa")} submitKind="remove" confirm={t("actions.disable2faConfirm")} />

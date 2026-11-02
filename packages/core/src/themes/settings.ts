@@ -1,3 +1,4 @@
+import { GCS_BRAND, type GcsBrandScheme } from "./brand";
 import {
   COCKPIT_PANELS,
   DEFAULT_MOBILE_BAR,
@@ -351,8 +352,8 @@ export const DEFAULT_THEME_SETTINGS: GcsThemeSettings = {
  */
 const NOVA_ELEMENTS_DARK: GcsThemeElements = {
   ...DEFAULT_ELEMENTS,
-  heading: "#FFFFFF",
-  link: "#FFFFFF",
+  heading: GCS_BRAND.color.dark.heading,
+  link: GCS_BRAND.color.dark.heading,
   linkHover: "@accent",
   headerBg: "@chrome",
   headerText: "#D3D9E2",
@@ -362,17 +363,17 @@ const NOVA_ELEMENTS_DARK: GcsThemeElements = {
   drawerText: "@text",
   widgetTitle: "#FFFFFF",
   widgetIcon: "@accentInk",
-  btnSecondaryBg: "#202630",
-  btnSecondaryText: "#FFFFFF",
+  btnSecondaryBg: GCS_BRAND.color.dark.secondary,
+  btnSecondaryText: GCS_BRAND.color.dark.secondaryText,
 };
 
 const NOVA_ELEMENTS_LIGHT: GcsThemeElements = {
   ...DEFAULT_ELEMENTS,
-  heading: "#0B0F17",
+  heading: GCS_BRAND.color.light.heading,
   link: "@text",
   linkHover: "@accent",
   // Antetul rămâne închis și în modul luminos (imaginea cu stratul întunecat).
-  headerBg: "#0E121A",
+  headerBg: GCS_BRAND.color.dark.chrome,
   headerText: "#D3D9E2",
   footerBg: "@chrome",
   footerText: "@text",
@@ -380,9 +381,14 @@ const NOVA_ELEMENTS_LIGHT: GcsThemeElements = {
   drawerText: "@text",
   widgetTitle: "@text",
   widgetIcon: "@accent",
-  btnSecondaryBg: "#E9EDF2",
+  btnSecondaryBg: GCS_BRAND.color.light.secondary,
   btnSecondaryText: "@text",
 };
+
+/** Tokenurile de culoare ale unei teme, luate din brand. */
+function brandPalette(b: GcsBrandScheme): GcsThemePalette {
+  return Object.fromEntries(THEME_TOKENS.map((k) => [k, b[k]])) as GcsThemePalette;
+}
 
 /**
  * Designul Nova (specul 2026-10-10-tema-nova): bleumarin închis + portocaliu-roșu, DM Sans 13 px, casete de 12 px cu
@@ -392,34 +398,9 @@ const NOVA_ELEMENTS_LIGHT: GcsThemeElements = {
 export const NOVA_THEME_SETTINGS: GcsThemeSettings = {
   ...DEFAULT_THEME_SETTINGS,
   preset: "nova",
-  dark: {
-    bg: "#0B0F17",
-    surface: "#151922",
-    surface2: "#1A1F29",
-    border: "#1E2533",
-    text: "#CED5DE",
-    muted: "#7E8999",
-    accent: "#DF390C",
-    accentInk: "#FF6A3D",
-    chrome: "#0E121A",
-    chrome2: "#10141D",
-    ok: "#2ECC71",
-    warn: "#EA6C00",
-  },
-  light: {
-    bg: "#F1F3F7",
-    surface: "#FFFFFF",
-    surface2: "#F3F5F9",
-    border: "#DCE1E9",
-    text: "#1B2230",
-    muted: "#596374",
-    accent: "#DF390C",
-    accentInk: "#C2300A",
-    chrome: "#FFFFFF",
-    chrome2: "#F7F8FA",
-    ok: "#1E9E55",
-    warn: "#B35A00",
-  },
+  // Paleta vine din brandul GCS (`brand.ts`, direcția „Forja”): tema implicită e brandul.
+  dark: brandPalette(GCS_BRAND.color.dark),
+  light: brandPalette(GCS_BRAND.color.light),
   fontDisplay: "DM Sans",
   fontText: "DM Sans",
   radius: 12,
@@ -447,8 +428,9 @@ export const NOVA_THEME_SETTINGS: GcsThemeSettings = {
   buttons: { radius: 4 },
   bands: { style: "solid", icon: "circle" },
   effects: { hover: true },
-  // Designul GCS livrează rândurile ca și carduri separate (macheta CardRows) și loaderul cu bare.
-  lists: { layout: "cards", stats: "visible" },
+  // Designul GCS livrează rândurile ca și carduri separate (macheta CardRows) și loaderul cu bare. Contoarele
+  // forumurilor (topicuri, postări) apar doar la hover, în bula butonului de statistici (proprietarul, 2026-11-02).
+  lists: { layout: "cards", stats: "hover" },
   loader: { style: "bars" },
 };
 
@@ -473,11 +455,40 @@ export const themeHasDesignDecor = (preset: string | undefined | null): boolean 
  * (doar luminoasă), același design (`preset: "nova"`), fiecare cu paleta ei, editată separat. Comutatorul lună / soare
  * trece de la una la alta (perechea din ACP → Aspect → Teme).
  */
-// Antetul „Standard” rămâne în flux și are înălțimea antetului designului de până acum (76 px, fără bara compactă).
-const GCS_HEADER: GcsThemeSettings["header"] = { ...NOVA_THEME_SETTINGS.header, compact: false, rowMain: 76 };
-export const GCS_DARK_THEME_SETTINGS: GcsThemeSettings = { ...NOVA_THEME_SETTINGS, header: GCS_HEADER, scheme: { default: "dark", toggle: false } };
+/**
+ * Antetul temelor incluse: cel de pe preview, ales de proprietar (2026-11-02). Presetarea Esports (rețelele sociale și
+ * contul sus, meniul împărțit în jurul logo-ului, căutarea în dreapta), plus butonul chatului și limba pe rândul
+ * principal, breadcrumb-ul și serverele live dedesubt; 120 px, compact și ascuns la derularea în jos. Imaginea de fundal
+ * a preview-ului e un fișier al acelei instalări, deci rămâne grafica GCS; meniul se împarte jumătate-jumătate.
+ */
+function gcsHeaderLayout(): GcsHeaderBuilder {
+  const layout = headerPreset("esports");
+  layout.desktop.main.left = ["chat.button", "nav"];
+  layout.desktop.main.center = ["logo", "language"];
+  layout.desktop.bottom = { left: ["breadcrumb"], center: [], right: ["serversLive"] };
+  return layout;
+}
+const GCS_HEADER: GcsThemeSettings["header"] = {
+  ...NOVA_THEME_SETTINGS.header,
+  height: 120,
+  heightMobile: 60,
+  navIcons: true,
+  overlay: 95,
+  layout: gcsHeaderLayout(),
+  rowTop: 101,
+  rowMain: 48,
+  rowBottom: 58,
+  compact: true,
+  hideOnScroll: true,
+  dropdowns: "click",
+  mega: true,
+  navAlign: "center",
+};
+/** Logo-ul text al antetului de pe preview (numele site-ului, 40 px; 32 px pe mobil). */
+const GCS_LOGO: GcsThemeSettings["logo"] = { ...NOVA_THEME_SETTINGS.logo, size: 40, sizeMobile: 32 };
+export const GCS_DARK_THEME_SETTINGS: GcsThemeSettings = { ...NOVA_THEME_SETTINGS, header: GCS_HEADER, logo: GCS_LOGO, scheme: { default: "dark", toggle: false } };
 /** „GCS White”: paleta luminoasă a designului (modul e mereu „light”, deci paleta `light` e cea afișată). */
-export const GCS_WHITE_THEME_SETTINGS: GcsThemeSettings = { ...NOVA_THEME_SETTINGS, header: GCS_HEADER, scheme: { default: "light", toggle: false } };
+export const GCS_WHITE_THEME_SETTINGS: GcsThemeSettings = { ...NOVA_THEME_SETTINGS, header: GCS_HEADER, logo: GCS_LOGO, scheme: { default: "light", toggle: false } };
 
 /** Modul unei teme cu un singur mod (fără comutatorul întunecat / luminos al aceleiași teme); altfel `null`. */
 export const themeSingleScheme = (s: Pick<GcsThemeSettings, "scheme">): "dark" | "light" | null =>

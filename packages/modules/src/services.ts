@@ -41,6 +41,8 @@ import {
   GcsPermissionService,
   GcsReactionService,
   GcsRateLimiter,
+  GcsLoginLockout,
+  GcsPasswordResetService,
   GcsReportService,
   GcsS3FileStore,
   GcsSettingsService,
@@ -165,6 +167,7 @@ import { GcsWhereabouts } from "./community/whereabouts";
 import { GcsMemberPanelData } from "./profile/memberPanels";
 import { GcsAntispamService } from "./antispam/service";
 import { GcsIpToolsService, IP_TOOLS_ACP_SECTION } from "./antispam/ipTools";
+import { GcsRetentionService } from "./security/retention";
 
 export type GcsServices = {
   db: PrismaClient;
@@ -234,6 +237,12 @@ export type GcsServices = {
   ipTools: GcsIpToolsService;
   actors: GcsActorResolver;
   rateLimiter: GcsRateLimiter;
+  /** Blocarea după parole greșite (ACP → Setări → Securitate), pe cont și pe IP. */
+  loginLockout: GcsLoginLockout;
+  /** „Am uitat parola”: linkul de resetare pe email (ACP → Setări → Securitate). */
+  passwordReset: GcsPasswordResetService;
+  /** Perioadele de păstrare a datelor (jobul zilnic `system.retention`). */
+  retention: GcsRetentionService;
   files: GcsFileStore;
   attachments: GcsAttachmentService;
   forums: GcsForumService;
@@ -388,7 +397,10 @@ function baseUrl(siteUrl: string): string {
   return siteUrl || process.env.GCS_BASE_URL || "http://localhost:3000";
 }
 
-/** MinIO (S3) dacă e configurat (`docker compose`); altfel un folder local, în folderul de configurare (dev, E2E). */
+/**
+ * MinIO (S3) dacă e configurat (`docker compose`); altfel un folder local: `GCS_UPLOADS_DIR` (ediția Lite: `uploads/`
+ * lângă `config/`, setat de `app.js`), implicit `<config>/files` (dev, E2E).
+ */
 function createFileStore(configDir: string): GcsFileStore {
   const endpoint = process.env.S3_ENDPOINT;
   if (endpoint) {
@@ -399,7 +411,7 @@ function createFileStore(configDir: string): GcsFileStore {
       bucket: process.env.S3_BUCKET ?? "gcs",
     });
   }
-  return new GcsLocalFileStore(path.join(configDir, "files"));
+  return new GcsLocalFileStore(process.env.GCS_UPLOADS_DIR || path.join(configDir, "files"));
 }
 
 /**
@@ -761,6 +773,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const profileExtras = new GcsProfileExtras({ db, cache, queries: profileQueries, sponsor: (userId) => donations.sponsor(userId) });
   const externalProfiles = new GcsExternalProfiles({ db, settings, jobs });
   const devices = new GcsDeviceService({ db, mailer, settings, baseUrl: async () => baseUrl(await settings.get<string>("site.url")) });
+  // Blocarea după parole greșite, folosită și de „Am uitat parola” (resetarea uită blocarea contului).
+  const loginLockout = new GcsLoginLockout({ db, kv, settings, ipLock: () => process.env.GCS_DISABLE_RATE_LIMIT !== "1" });
   const memberPrefs = new GcsMemberPrefsService({ db, bus });
   attachments.registerAccess(CLAN_LOGO, (actor, id) => clanQueries.canSeeClan(actor, Number(id)));
   attachments.registerAccess(CLAN_BANNER, (actor, id) => clanQueries.canSeeClan(actor, Number(id)));
@@ -826,7 +840,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     api: new GcsPluginPublicApi({ db, forumQueries, posting, servers: serverQueries }),
     appearance,
     media: pluginMedia,
-    dataDir: process.env.GCS_PLUGINS_DIR ?? path.join(opts.configDir, "plugins"),
+    dataDir: process.env.GCS_PLUGINS_DIR || path.join(opts.configDir, "plugins"),
+    ...(process.env.GCS_APPLICATIONS_DIR ? { applicationsDir: process.env.GCS_APPLICATIONS_DIR } : {}),
     iconSvg,
     siteLocale: () => settings.get<string>("site.locale"),
     bot: () => communityBot,
@@ -908,6 +923,16 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     ipTools,
     actors,
     rateLimiter,
+    loginLockout,
+    passwordReset: new GcsPasswordResetService({
+      db,
+      settings,
+      rateLimiter,
+      lockout: loginLockout,
+      baseUrl: async () => baseUrl(await settings.get<string>("site.url")),
+      ipLimit: () => process.env.GCS_DISABLE_RATE_LIMIT !== "1",
+    }),
+    retention: new GcsRetentionService({ db, settings }),
     files,
     attachments,
     forums,

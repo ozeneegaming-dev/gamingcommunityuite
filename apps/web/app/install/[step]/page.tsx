@@ -58,9 +58,9 @@ export default async function InstallStepPage({ params }: { params: Promise<{ st
         <>
           <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 10 }} data-testid="gcs-install-checks">
             {results.map((r) => (
-              <li key={r.id} style={{ display: "flex", flexDirection: "column", gap: 4, padding: "10px 14px", borderRadius: 12, background: "var(--gcs-surface2)", border: "1px solid var(--gcs-border)" }}>
+              <li key={r.id} style={{ display: "flex", flexDirection: "column", gap: 4, padding: "10px 14px", borderRadius: "var(--gcs-radius-sm)", background: "var(--gcs-surface2)", border: "1px solid var(--gcs-border)" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14 }}>
-                  <span style={{ color: r.ok ? "var(--gcs-ok)" : "#FF4D57", fontWeight: 800, width: 16 }} aria-hidden="true">
+                  <span style={{ color: r.ok ? "var(--gcs-ok)" : "var(--gcs-danger)", fontWeight: 800, width: 16 }} aria-hidden="true">
                     {r.ok ? "✓" : "✗"}
                   </span>
                   <span style={{ fontWeight: 600 }}>{t(`checks.${r.id}`)}</span>
@@ -104,7 +104,7 @@ export default async function InstallStepPage({ params }: { params: Promise<{ st
             <div
               tabIndex={0}
               data-testid="gcs-install-eula"
-              style={{ maxHeight: 220, overflowY: "auto", whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.6, padding: "12px 14px", borderRadius: 12, background: "var(--gcs-surface2)", border: "1px solid var(--gcs-border)", color: "var(--gcs-muted)" }}
+              style={{ maxHeight: 220, overflowY: "auto", whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.6, padding: "12px 14px", borderRadius: "var(--gcs-radius-sm)", background: "var(--gcs-surface2)", border: "1px solid var(--gcs-border)", color: "var(--gcs-muted)" }}
             >
               {eula || t("steps.license.eulaMissing")}
             </div>

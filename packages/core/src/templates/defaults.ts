@@ -6,6 +6,8 @@
  * mai veche apar „necesită revizuire”. Variabilele documentate aici apar lângă editor (și în autocompletare).
  */
 
+import { GCS_BRAND } from "../themes/brand";
+
 export type GcsTemplateText = { ro: string; en: string };
 /** O variabilă: calea (`forum.name`), tipul și descrierea. */
 export type GcsTemplateVariable = { name: string; type: string; text: GcsTemplateText };
@@ -376,8 +378,30 @@ const WIDGET_CARD = `<section class="gcs-card gcs-sideCard gcs-widget" aria-labe
 </section>
 `;
 
-const EMAIL_LAYOUT = `{{ content }}
+/**
+ * Învelișul emailurilor: brandul GCS (culorile din `brand.ts`), cu numele comunității sus și „Powered by” jos. Tabele
+ * și stiluri inline, ca în orice client de email. Primul link al emailului rămâne cel din conținut (antetul e text).
+ */
+const EMAIL_LAYOUT = (() => {
+  const d = GCS_BRAND.color.dark;
+  const l = GCS_BRAND.color.light;
+  const font = `font-family:'${GCS_BRAND.font.family}',Arial,Helvetica,sans-serif`;
+  return `<div style="margin:0;padding:24px 12px;background-color:${l.bg};${font};color:${l.text}">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;margin:0 auto;border-collapse:separate">
+<tr><td style="background-color:${d.bg};padding:18px 24px;border-radius:${GCS_BRAND.radius.card}px ${GCS_BRAND.radius.card}px 0 0;border-bottom:3px solid ${d.accent}">
+<span style="color:${d.heading};font-size:18px;line-height:24px;font-weight:800">{{ site.name }}</span>
+</td></tr>
+<tr><td style="background-color:${l.surface};padding:24px;font-size:15px;line-height:24px;color:${l.text};border-left:1px solid ${l.border};border-right:1px solid ${l.border}">
+<h1 style="margin:0 0 12px;font-size:20px;line-height:28px;font-weight:800;color:${l.heading}">{{ subject }}</h1>
+{{ content }}
+</td></tr>
+<tr><td style="background-color:${l.chrome2};padding:16px 24px;font-size:12px;line-height:18px;color:${l.muted};border:1px solid ${l.border};border-top:0;border-radius:0 0 ${GCS_BRAND.radius.card}px ${GCS_BRAND.radius.card}px">
+© {{ year }} <a href="{{ site.url }}" style="color:${l.accentInk};text-decoration:none">{{ site.name }}</a> · Powered by GamingCommunitySuite
+</td></tr>
+</table>
+</div>
 `;
+})();
 
 const T = (ro: string, en: string): GcsTemplateText => ({ ro, en });
 const slot = (name: string, required: boolean, ro: string, en: string): GcsTemplateSlot => ({ name, required, text: { ro, en } });
@@ -624,7 +648,8 @@ export const DEFAULT_TEMPLATES: GcsTemplateDef[] = [
     key: "email.layout",
     group: "email",
     icon: "fa-solid fa-envelope-open-text",
-    version: 1,
+    // Versiunea 2: învelișul de brand (antetul cu numele comunității, corpul alb, subsolul cu „Powered by”).
+    version: 2,
     title: T("Învelișul emailurilor", "Email layout"),
     description: T(
       "HTML-ul din jurul fiecărui email trimis de site (notificări, digest, confirmări). Fără texte traduse: emailurile pleacă în limba site-ului.",

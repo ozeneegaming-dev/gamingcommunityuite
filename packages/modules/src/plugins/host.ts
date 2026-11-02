@@ -41,7 +41,7 @@ import type { GcsBotContent, GcsCommunityBot } from "../bot/service";
 import { pluginBotFeature } from "../bot/settings";
 import type Redis from "ioredis";
 import type { GcsPluginPublicApi } from "./api";
-import { extractPlugin } from "./files";
+import { extractPlugin, pluginFilesDir } from "./files";
 import { pluginFetch } from "./http";
 import { GcsPluginTexts, pluginIcon, pluginModule, type GcsPluginForumBridge, type GcsPluginLangs } from "./module";
 import { GcsPluginSandbox, GcsPluginTimeout, GcsPluginUnavailable, type GcsSandboxCall } from "./sandbox";
@@ -106,6 +106,8 @@ export type GcsPluginHostDeps = {
   media: GcsPluginMediaService;
   /** Folderul în care se dezarhivează pluginurile (în afara codului aplicației). */
   dataDir: string;
+  /** Folderul aplicațiilor premium instalate ca pachete (ex. Studio VIP); lipsă = același cu `dataDir`. */
+  applicationsDir?: string;
   /** SVG-ul unei iconițe Font Awesome (pentru `<gcs-icon>` din HTML-ul pluginurilor). */
   iconSvg: (name: string) => string | null;
   /** Limba site-ului (evenimente, joburi). */
@@ -382,7 +384,8 @@ export class GcsPluginHost {
 
   private async load(row: GcsPluginLoadable, settingsHash: string): Promise<void> {
     const key = row.key;
-    const dir = await extractPlugin(this.deps.dataDir, key, row.packageSha256!, row.package);
+    const base = pluginFilesDir(key, { plugins: this.deps.dataDir, applications: this.deps.applicationsDir });
+    const dir = await extractPlugin(base, key, row.packageSha256!, row.package);
     const langs = await this.readLangs(dir);
     const texts = new GcsPluginTexts(key, row.manifest, langs);
     const module = pluginModule(key, row.manifest, texts, this.forumBridge(key));

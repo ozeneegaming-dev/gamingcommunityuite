@@ -1,5 +1,7 @@
 import "server-only";
 import {
+  ACP_SESSION_MINUTES_DEFAULT,
+  ACP_SESSION_MINUTES_SETTING,
   acpGate,
   buildAcpMenu,
   GcsForbidden,
@@ -37,7 +39,7 @@ export const getAcpContext = cache(async (): Promise<GcsAcpContext> => {
   const actor = await currentActor();
   if (!actor.userId) return { state: "forbidden", actor, ip, user: null };
 
-  const { db, permissions } = services();
+  const { db, permissions, settings } = services();
   const user = await db.user.findUnique({
     where: { id: actor.userId },
     select: {
@@ -52,9 +54,13 @@ export const getAcpContext = cache(async (): Promise<GcsAcpContext> => {
   });
   if (!user) return { state: "forbidden", actor, ip, user: null };
 
-  const canAccess = await permissions.can(actor, "acp.access");
+  const [canAccess, reauthMinutes] = await Promise.all([
+    permissions.can(actor, "acp.access"),
+    // ACP → Setări → Securitate: fereastra reautentificării (implicit 12 ore).
+    settings.get<number>(ACP_SESSION_MINUTES_SETTING).catch(() => ACP_SESSION_MINUTES_DEFAULT),
+  ]);
   const state = acpGate(
-    { canAccess, twoFactorEnabled: user.twoFactorEnabled, lastAcpAuthAt: user.lastAcpAuthAt, lastAcpAuthIp: user.lastAcpAuthIp },
+    { canAccess, twoFactorEnabled: user.twoFactorEnabled, lastAcpAuthAt: user.lastAcpAuthAt, lastAcpAuthIp: user.lastAcpAuthIp, reauthMinutes },
     ip,
   );
   if (state === "forbidden") return { state, actor, ip, user: null };

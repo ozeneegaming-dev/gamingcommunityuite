@@ -29,11 +29,28 @@ Write down: the host (usually `localhost`), the port (MySQL `3306`, PostgreSQL `
 ## 2. Application files
 
 1. Upload the archive in the *File Manager*, to a folder **outside** `public_html` (e.g. `/home/account/gcs`).
-2. *Extract* — this creates the `gcs-lite-<version>` folder; you can rename it (e.g. `gcs`). Inside are `app.js` (the
-   startup file), `cron.mjs`, `docs/` and `server/` (the application with its dependencies, `node_modules` included).
-   The root has no `node_modules` on purpose: otherwise the panel wouldn’t let you change the Node.js version.
-3. The `config` folder (created on first start) must be writable by the application; never delete it: it holds the
-   application secret, the licence and the uploaded files.
+2. *Extract* — this creates the `gcs-lite-<version>` folder; you can rename it (e.g. `gcs`).
+3. The folder must be writable by the application: on first start it creates its data folders.
+
+The layout, after the first start:
+
+```
+gcs/
+├── app.js · cron.mjs   the startup file and the cron (don’t edit)
+├── config/             installation settings, licence, secrets (never delete it)
+├── uploads/            files uploaded by members (avatars, attachments, gallery, downloads)
+├── applications/       premium applications installed as packages (e.g. VIP Studio)
+├── plugins/            installed plugins
+├── server/             the compiled engine and its dependencies (don’t edit)
+└── docs/ · VERSION · LICENSE · EULA.md · THIRD-PARTY-NOTICES.md · CHECKSUMS.sha256
+```
+
+- The packages in `applications/` and `plugins/` are installed from **ACP → Applications** and kept in the database;
+  the folders are their unpacked copy, rebuilt automatically on start (don’t change them by hand).
+- **Themes** live in the database, with the history of every CSS file (**ACP → Appearance**); they are exported and
+  imported as packages from the ACP, so they have no folder.
+- The root has no `node_modules` on purpose (the dependencies are in `server/`): otherwise the panel wouldn’t let you
+  change the Node.js version.
 
 ## 3. The Node.js application
 
@@ -98,8 +115,25 @@ After adding the cron, wait 5 minutes and press **Check**. The ACP dashboard sho
 
 - **Live updates** (notifications, chat, “who’s online”): no websocket, via SSE or polling. If the host cuts long
   connections, choose “Polling only” in **ACP → Settings → Advanced** and, if needed, the interval (default 5 s).
-- **Backups**: the database (cPanel → *Backup* / phpMyAdmin → *Export*) and the `config` folder (secret, licence, files).
+- **Backups**: the database (cPanel → *Backup* / phpMyAdmin → *Export*) and the `config/` (secret, licence) and
+  `uploads/` (members’ files) folders. `applications/` and `plugins/` are rebuilt automatically from the database.
 - **Moving to another domain**: change the *Application URL* and the address in ACP → Settings → General.
+
+## 7. Upgrading
+
+1. Make a backup (see above).
+2. Upload the new version’s archive and extract it next to the application (e.g. into `/home/account/gcs-new`).
+3. In the application folder, replace `server/` with the new one (delete the old one, then move the new one in) and
+   overwrite the files in the root (`app.js`, `cron.mjs`, `docs/`, `VERSION`, `LICENSE`, `EULA.md`,
+   `THIRD-PARTY-NOTICES.md`, `CHECKSUMS.sha256`). `config/`, `uploads/`, `applications/` and `plugins/` are not in the
+   archive: they stay untouched.
+4. *Restart* in the panel, then open the site: database migrations run automatically.
+
+An installation with the old layout (the 1.0.0 package from 2026-10-30: members’ files in `config/files`, the code in
+the root) moves automatically on first start: `config/files` → `uploads/`, the packages → `applications/` and
+`plugins/`, and the old code (`apps/`, `packages/`, `node_modules/`, `servers-plugins/`) into `old-version/`. Nothing is
+deleted: a file that already exists at the destination stays where it is and is listed in the log. Once you’ve checked
+the site, you can delete `old-version/`.
 
 ## How it differs from the VPS edition
 

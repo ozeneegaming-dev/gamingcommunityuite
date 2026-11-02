@@ -1,5 +1,6 @@
 import "server-only";
 import { findActiveBan, GcsValidationError, hashPassword, isBotUser, isLegacyPasswordHash, prepareNewUser, upgradeLegacyPassword, verifyPassword } from "@gcs/core";
+import { termsRequiredOnRegister } from "@gcs/modules";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { APIError } from "better-auth/api";
@@ -9,6 +10,9 @@ import { twoFactor } from "better-auth/plugins/two-factor";
 import { antispamPlugin } from "./antispam-plugin";
 import { clientIp } from "./client-ip";
 import { installFinishPlugin } from "./install-plugin";
+import { termsAcceptedIn } from "./legal-consent";
+import { securityPlugin } from "./security-plugin";
+import { sendTwoFactorEmailCode } from "./two-factor-email";
 import { services } from "./services";
 import { steamPlugin } from "./steam-plugin";
 
@@ -64,6 +68,7 @@ function createAuth(config: GcsAuthConfig) {
         nameNormalized: { type: "string", required: false, input: false },
         primaryGroupId: { type: "number", required: false, input: false },
         registrationIp: { type: "string", required: false, input: false },
+        termsAcceptedAt: { type: "date", required: false, input: false },
       },
     },
     databaseHooks: {
@@ -80,6 +85,13 @@ function createAuth(config: GcsAuthConfig) {
             if (await findActiveBan(db, { email: user.email, ...(ip && ip !== "0.0.0.0" ? { ip } : {}) })) {
               throw new APIError("FORBIDDEN", { code: "BANNED", message: "banned" });
             }
+            // Termenii (ACP → Setări → Termeni și confidențialitate): cât timp acceptarea e cerută, contul nou are nevoie de
+            // căsuța bifată, pe orice cale (antetul formularului cu email sau cookie-ul lăsat înainte de Discord/Google/Steam).
+            // Apelurile interne fără antete (serverul) nu sunt oprite.
+            const termsAccepted = termsAcceptedIn(headers, ctx?.path);
+            if (headers && !termsAccepted && (await termsRequiredOnRegister(settings).catch(() => false))) {
+              throw new APIError("FORBIDDEN", { code: "TERMS_REQUIRED", message: "terms_required" });
+            }
             // La înregistrarea cu email, userul își poate corecta numele; la Discord/Google/Steam alegem automat unul liber.
             const strict = ctx?.path === "/sign-up/email";
             try {
@@ -88,7 +100,7 @@ function createAuth(config: GcsAuthConfig) {
                 { name: user.name, email: user.email },
                 { emailConfirm: config.emailConfirm, autoRename: !strict },
               );
-              return { data: { ...user, ...data, registrationIp: ip && ip !== "0.0.0.0" ? ip : null } };
+              return { data: { ...user, ...data, registrationIp: ip && ip !== "0.0.0.0" ? ip : null, termsAcceptedAt: termsAccepted ? new Date() : null } };
             } catch (error) {
               if (error instanceof GcsValidationError) {
                 const [field, code] = Object.entries(error.fields)[0] ?? ["name", "validation"];
@@ -155,9 +167,12 @@ function createAuth(config: GcsAuthConfig) {
     },
     plugins: [
       // allowPasswordless: și conturile fără parolă (doar Discord/Google/Steam) pot activa 2FA, cerut pentru ACP.
-      twoFactor({ issuer: config.siteName, allowPasswordless: true }),
+      // Codul pe email e doar recuperarea (ACP → Setări → Securitate), oprită implicit: `securityPlugin` îl refuză atunci.
+      twoFactor({ issuer: config.siteName, allowPasswordless: true, otpOptions: { sendOTP: ({ user, otp }) => sendTwoFactorEmailCode(user, otp), storeOTP: "hashed" } }),
       // Anti-spam la înregistrare: captcha-ul proof-of-work propriu, întrebarea și lista publică de spammeri.
       antispamPlugin(),
+      // Securitatea autentificării: blocarea după parole greșite, politica parolelor, codul 2FA pe email.
+      securityPlugin(),
       // Cloudflare Turnstile la înregistrare, doar în modul „turnstile” și cu cheile din ACP (spec §15).
       ...(config.captcha === "turnstile" && config.turnstileSecret
         ? [captcha({ provider: "cloudflare-turnstile", secretKey: config.turnstileSecret, endpoints: ["/sign-up/email"] })]

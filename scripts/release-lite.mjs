@@ -4,11 +4,13 @@
  * --license-key-file <cheia publică> [--plugin-key-file <cheia pluginurilor>] [--version 1.2.0] [--out <folder>] [--target linux-x64-gnu|win32-x64] [--skip-build]`.
  *
  * Scrie `dist/release/<versiune>/gcs-lite-<versiune>.zip` (+ `.sha256`). În arhivă, folderul `gcs-lite-<versiune>/`:
- * - `server/`: aplicația Next.js gata construită (`apps/web`, build „standalone”), cu `node_modules` de producție plat
- *   (fără link-uri simbolice: arhivele se dezarhivează din File Manager-ul gazdei) și binarele native ale țintei —
- *   implicit **linux-x64 (glibc)**: sharp, argon2 și motoarele Prisma ale ambelor dialecte pentru OpenSSL 1.0 / 1.1 / 3;
- *   plus migrațiile PostgreSQL și MySQL (`server/packages/db/prisma/migrations*`). Nimic din `node_modules` la rădăcină:
- *   CloudLinux (NodeJS Selector) nu schimbă versiunea Node.js a unei aplicații care are `node_modules` în rădăcină;
+ * - `server/`: aplicația Next.js gata construită (`apps/web`, build „standalone”, fără sursele TypeScript), cu
+ *   `node_modules` de producție plat (fără link-uri simbolice: arhivele se dezarhivează din File Manager-ul gazdei) și
+ *   binarele native ale țintei — implicit **linux-x64 (glibc)**: sharp, argon2 și motoarele Prisma ale ambelor dialecte
+ *   pentru OpenSSL 1.0 / 1.1 / 3; plus migrațiile PostgreSQL și MySQL (`server/packages/db/prisma/migrations*`). Nimic
+ *   din `node_modules` la rădăcină: CloudLinux (NodeJS Selector) nu schimbă versiunea Node.js a unei aplicații care are
+ *   `node_modules` în rădăcină. La prima pornire, `app.js` creează lângă ele `config/`, `uploads/`, `plugins/` și
+ *   `applications/`;
  * - `app.js` (fișierul de pornire pentru Passenger), `cron.mjs` (cron-ul gazdei), `docs/INSTALL-LITE.md` (RO) și
  *   `docs/INSTALL-LITE.en.md` (EN), `EULA.md`, `THIRD-PARTY-NOTICES.md`, `LICENSE`, `VERSION`, `CHECKSUMS.sha256`.
  *
@@ -54,7 +56,15 @@ export const LITE_EXCLUDES = [
   /(^|\/)\.gcs-config\//,
   /(^|\/)\.e2e\//,
   /\.(pem|key)$/,
+  // Sursele aplicației (TypeScript, CSS, configurările de build): sunt compilate în `.next`, serverul nu le citește.
+  /^apps\/web\/(app|lib)\//,
+  /^apps\/web\/[^/]+\.(ts|tsx|mts|cts)$/,
+  /^apps\/web\/postcss\.config\.[cm]?js$/,
+  /^apps\/web\/\.next\/types\//,
 ];
+
+/** Sursele TypeScript rămase în pachet (în afara `node_modules`): release-ul se oprește dacă există. */
+export const isShippedSource = (rel) => /\.(ts|tsx|mts|cts)$/.test(rel) && !/\.d\.[cm]?ts$/.test(rel) && !/(^|\/)node_modules\//.test(rel);
 
 const run = (cmd, args, opts = {}) => {
   const res = spawnSync(cmd, args, { cwd: ROOT, stdio: "inherit", shell: process.platform === "win32" && !path.isAbsolute(cmd), ...opts });
@@ -281,6 +291,8 @@ export function liteReleaseFiles(dest, { version, root = ROOT }) {
   for (const required of ["apps/web/server.js", "apps/web/.next/BUILD_ID", "node_modules/next/package.json"].map(server)) {
     if (!files.has(required)) throw new Error(`lipsește din pachet: ${required}`);
   }
+  const sources = [...files.keys()].filter(isShippedSource);
+  if (sources.length > 0) throw new Error(`surse TypeScript în pachet:\n${sources.slice(0, 20).join("\n")}`);
   files.set("CHECKSUMS.sha256", Buffer.from(checksumsFile(files), "utf8"));
   return files;
 }

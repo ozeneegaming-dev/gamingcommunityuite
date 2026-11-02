@@ -13,6 +13,8 @@ const BASE = "http://localhost:3000/api/auth";
 beforeEach(async () => {
   await truncateAll(db);
   await kv.flushAll();
+  // Intervalele IP banate stau într-un cache din proces: un test anterior (203.0.113.0/24) nu trebuie să rămână activ.
+  clearIpRangeCache(services().db);
   await seedDefaults(db, registry);
   // Captcha-ul proof-of-work are testele lui (mai jos); restul înregistrărilor merg fără el.
   await db.setting.upsert({ where: { key: "antispam.captcha" }, create: { key: "antispam.captcha", value: "none" }, update: { value: "none" } });
@@ -35,6 +37,14 @@ async function call(path: string, body: unknown, ip = "203.0.113.10", extra: Rec
 
 const signUp = (name: string, email: string, password = "parola-sigura-123") =>
   call("/sign-up/email", { name, email, password });
+
+/** O setare scrisă ca din ACP (validată, cu invalidarea cache-ului). */
+const ACP_ACTOR = { userId: null, groupIds: [], primaryGroupId: 0, isBanned: false, ip: "test" };
+const setAcpSetting = (key: string, value: unknown) => services().settings.set(key, value, ACP_ACTOR);
+/** O înregistrare de pe un IP dat (Better Auth limitează înregistrările la 3 pe 10 secunde de pe același IP). */
+const signUpFrom = (ip: string, name: string, email: string, password = "parola-sigura-123", extra: Record<string, string> = {}) =>
+  call("/sign-up/email", { name, email, password }, ip, extra);
+const LEGAL_DOC = { doc: { type: "doc", content: [] }, html: "<p>Termenii</p>", updatedAt: "2026-11-01T10:00:00.000Z" };
 
 describe("Better Auth (integrare)", () => {
   test("înregistrarea cu email creează userul în new_member, cu email lowercase și hash Argon2id", async () => {
@@ -85,6 +95,8 @@ describe("Better Auth (integrare)", () => {
   });
 
   test("rate limit: a 6-a încercare de login de pe același IP în 15 minute → 429", async () => {
+    // Doar rate limit-ul: blocarea după parole greșite (ACP → Setări → Securitate) are testul ei.
+    await setAcpSetting("security.login_max_attempts", 0);
     await signUp("Tinta", "tinta@mail.com");
     for (let i = 0; i < 5; i++) {
       const res = await call("/sign-in/email", { email: "tinta@mail.com", password: "gresita-123" }, "198.51.100.7");
@@ -168,5 +180,94 @@ describe("Better Auth (integrare)", () => {
     const ok = await call("/sign-up/email", qa, "198.51.100.51", { "x-gcs-qa-id": String(q.id), "x-gcs-qa-answer": encodeURIComponent("counter-strike 2") });
     expect(ok.status).toBe(200);
     expect(await db.spamLog.count({ where: { kind: { in: ["captcha_failed", "qa_failed"] } } })).toBe(3);
+  });
+  test("blocarea după parole greșite: a N-a parolă greșită blochează contul de pe orice IP; o parolă corectă nu trece până la deblocare", async () => {
+    await setAcpSetting("security.login_max_attempts", 3);
+    await setAcpSetting("security.login_lock_minutes", 20);
+    await signUp("Blocat", "blocat@mail.com");
+    // IP-uri diferite: rate limit-ul pe IP nu se amestecă.
+    for (let i = 0; i < 3; i++) expect((await call("/sign-in/email", { email: "blocat@mail.com", password: "gresita-123" }, `198.51.100.${60 + i}`)).status).toBe(401);
+    const user = await db.user.findUniqueOrThrow({ where: { email: "blocat@mail.com" } });
+    const sessions = await db.session.count({ where: { userId: user.id } });
+    const locked = await call("/sign-in/email", { email: "blocat@mail.com", password: "parola-sigura-123" }, "198.51.100.70");
+    expect(locked.status).toBe(403);
+    const body = (await locked.json()) as { code: string; message: string };
+    expect(body.code).toBe("ACCOUNT_LOCKED");
+    expect(Number(body.message)).toBeGreaterThanOrEqual(19);
+    // Parola corectă nu a deschis nicio sesiune.
+    expect(await db.session.count({ where: { userId: user.id } })).toBe(sessions);
+    expect(await db.auditLog.count({ where: { action: "auth.login_locked", targetId: user.id } })).toBe(1);
+
+    // Deblocarea din ACP (pagina membrului) → parola corectă trece din nou.
+    await services().loginLockout.unlock(ACP_ACTOR, user.id);
+    expect((await call("/sign-in/email", { email: "blocat@mail.com", password: "parola-sigura-123" }, "198.51.100.71")).status).toBe(200);
+  });
+
+  test("blocarea: o parolă corectă înainte de prag uită încercările greșite", async () => {
+    await setAcpSetting("security.login_max_attempts", 3);
+    await signUp("Uituc", "uituc@mail.com");
+    for (let i = 0; i < 2; i++) await call("/sign-in/email", { email: "uituc@mail.com", password: "gresita-123" }, `198.51.100.${80 + i}`);
+    expect((await call("/sign-in/email", { email: "uituc@mail.com", password: "parola-sigura-123" }, "198.51.100.82")).status).toBe(200);
+    for (let i = 0; i < 2; i++) await call("/sign-in/email", { email: "uituc@mail.com", password: "gresita-123" }, `198.51.100.${83 + i}`);
+    expect((await call("/sign-in/email", { email: "uituc@mail.com", password: "parola-sigura-123" }, "198.51.100.85")).status).toBe(200);
+  });
+
+  test("politica parolelor: refuzată pe server la înregistrare (lungimea din ACP, litere și cifre)", async () => {
+    const mix = await signUpFrom("198.51.100.101", "Litere", "litere@mail.com", "parolafaracifre");
+    expect(mix.status).toBe(400);
+    expect(await mix.json()).toMatchObject({ code: "PASSWORD_NEEDS_MIX" });
+    await setAcpSetting("security.password_min_length", 12);
+    const short = await signUpFrom("198.51.100.102", "Scurt", "scurt@mail.com", "parola-123");
+    expect(short.status).toBe(400);
+    expect(await short.json()).toMatchObject({ code: "PASSWORD_TOO_SHORT" });
+    expect((await signUpFrom("198.51.100.103", "Lung", "lung@mail.com", "parola-sigura-123")).status).toBe(200);
+    await setAcpSetting("security.password_require_mix", false);
+    expect((await signUpFrom("198.51.100.104", "FaraCifre", "faracifre@mail.com", "parolafaracifre")).status).toBe(200);
+    expect(await db.user.count({ where: { isBot: false } })).toBe(2);
+  });
+
+  test("politica parolelor: și la schimbarea parolei", async () => {
+    await signUp("Schimb", "schimb@mail.com");
+    const signIn = await call("/sign-in/email", { email: "schimb@mail.com", password: "parola-sigura-123" }, "198.51.100.90");
+    const cookie = signIn.headers.getSetCookie().map((c) => c.split(";")[0]).join("; ");
+    const weak = await call("/change-password", { currentPassword: "parola-sigura-123", newPassword: "doarlitere" }, "198.51.100.90", { cookie });
+    expect(weak.status).toBe(400);
+    expect(await weak.json()).toMatchObject({ code: "PASSWORD_NEEDS_MIX" });
+    expect((await call("/change-password", { currentPassword: "parola-sigura-123", newPassword: "parola-noua-456" }, "198.51.100.90", { cookie })).status).toBe(200);
+  });
+
+  test("termenii: cu o pagină de termeni, înregistrarea fără acceptare e refuzată; acceptarea se salvează la membru", async () => {
+    // Fără termeni publicați, nimic nu se cere.
+    expect((await signUpFrom("198.51.100.111", "Liber", "liber@mail.com")).status).toBe(200);
+    expect((await db.user.findUniqueOrThrow({ where: { email: "liber@mail.com" } })).termsAcceptedAt).toBeNull();
+
+    await setAcpSetting("legal.terms_content", LEGAL_DOC);
+    await setAcpSetting("legal.terms_mode", "page");
+    const refused = await signUpFrom("198.51.100.112", "Grabit", "grabit@mail.com");
+    expect(refused.status).toBe(403);
+    expect(await refused.json()).toMatchObject({ code: "TERMS_REQUIRED" });
+    expect(await db.user.count({ where: { email: "grabit@mail.com" } })).toBe(0);
+
+    const before = Date.now();
+    const ok = await signUpFrom("198.51.100.113", "Atent", "atent@mail.com", "parola-sigura-123", { "x-gcs-terms": "1" });
+    expect(ok.status).toBe(200);
+    const accepted = (await db.user.findUniqueOrThrow({ where: { email: "atent@mail.com" } })).termsAcceptedAt;
+    expect(accepted?.getTime()).toBeGreaterThanOrEqual(before - 1000);
+
+    // Acceptarea poate fi făcută opțională din ACP.
+    await setAcpSetting("legal.require_terms_on_register", false);
+    expect((await signUpFrom("198.51.100.114", "Optional", "optional@mail.com")).status).toBe(200);
+  });
+
+  test("2FA: codul pe email e refuzat cât timp recuperarea e doar cu codurile de rezervă; 2FA nu se activează doar cu emailul", async () => {
+    const otp = await call("/two-factor/send-otp", {}, "198.51.100.95");
+    expect(otp.status).toBe(403);
+    expect(await otp.json()).toMatchObject({ code: "OTP_DISABLED" });
+    await signUp("Doi", "doi@mail.com");
+    const signIn = await call("/sign-in/email", { email: "doi@mail.com", password: "parola-sigura-123" }, "198.51.100.96");
+    const cookie = signIn.headers.getSetCookie().map((c) => c.split(";")[0]).join("; ");
+    const enable = await call("/two-factor/enable", { password: "parola-sigura-123", method: "otp" }, "198.51.100.96", { cookie });
+    expect(enable.status).toBe(403);
+    expect((await db.user.findUniqueOrThrow({ where: { email: "doi@mail.com" } })).twoFactorEnabled).toBe(false);
   });
 });

@@ -28,6 +28,12 @@ Ediția Lite (găzduire partajată, pachetul gata construit `gcs-lite-<versiune>
 pnpm release -- --edition lite --version 1.0.0 --license-key-file "../keys/gcs-licenses-ed25519.pub.txt" --license-key-file "../keys/gcs-licenses-dc-ed25519.pub.txt" --plugin-key-file "../keys/gcs-plugins-ed25519.pub.txt"
 ```
 
+Pachetul Lite are la rădăcină doar `app.js`, `cron.mjs`, `docs/`, `EULA.md`, `LICENSE`, `VERSION`,
+`THIRD-PARTY-NOTICES.md` și `CHECKSUMS.sha256`; motorul compilat (fără sursele TypeScript) și dependențele lui stau în
+`server/`. La prima pornire, `app.js` creează lângă ele `config/`, `uploads/`, `applications/` și `plugins/` și mută
+singur o instalare cu structura veche (`INSTALL-LITE.md` › Actualizarea). Release-ul se oprește dacă în pachet rămân
+surse `.ts` / `.tsx` sau un `node_modules` în rădăcină.
+
 Scrie în `dist/release/<versiune>/` pachetul standard (`gcs-<versiune>.tar.gz` / `.zip`, cu `.sha256`) și, în
 `premium/`, pachetele `.gcs` ale aplicațiilor premium livrate ca plugin (nesemnate). Fără cheia publică de licență,
 release-ul e refuzat: instalarea clientului ar respinge orice licență.

@@ -11,6 +11,7 @@ import { GcsLinkGuard } from "./_components/GcsLinkGuard";
 import { GcsSiteFooter } from "./_components/GcsSiteFooter";
 import { GcsSiteHeader } from "./_components/GcsSiteHeader";
 import { GcsAnnouncementBar } from "./_components/GcsAnnouncementBar";
+import { GcsCookieBanner } from "./_components/GcsCookieBanner";
 import { GcsScrollRail } from "./_components/GcsScrollRail";
 import { GcsWhereBeacon } from "./_components/GcsWhereBeacon";
 import { passwordResetGate } from "@/lib/password-reset-gate";
@@ -21,6 +22,7 @@ import { GcsRealtimeProvider } from "./_components/realtime/GcsRealtimeProvider"
 import { currentActor } from "@/lib/actor";
 import { alertPrefs, viewerTheme } from "@/lib/appearance";
 import { announcementView } from "@/lib/announcement";
+import { cookieNoticeView } from "@/lib/legal";
 import { safeModeActive } from "@/lib/plugins";
 import { services } from "@/lib/services";
 import { designClass } from "@/lib/theme-preview";
@@ -34,7 +36,7 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
   registerNavHooks();
   // Conturile create prin Steam au un email placeholder: le cerem unul real (specul etapei 3, §8).
   const email = actor.userId ? (await services().db.user.findUnique({ where: { id: actor.userId }, select: { email: true } }))?.email : null;
-  const [tb, alerts, tc, tp, safeMode, { preview, shown }, deletion, format, tv, announcements, writeGate, phishing] = await Promise.all([
+  const [tb, alerts, tc, tp, safeMode, { preview, shown }, deletion, format, tv, announcements, writeGate, phishing, cookieNotice] = await Promise.all([
     getTranslations("settings.account"),
     alertPrefs(actor.userId),
     getTranslations("site"),
@@ -51,6 +53,8 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
     actor.userId ? services().warnings.writeGate(actor.userId) : null,
     // Anti-phishing: listele din ACP pentru paza linkurilor din browser (lista livrată e în cod).
     services().antispam.clientPhishingLists().catch(() => null),
+    // Banda de cookie-uri (ACP → Setări → Termeni și confidențialitate), până o închide vizitatorul / membrul.
+    cookieNoticeView().catch(() => null),
   ]);
   const viewerLabels = Object.fromEntries(
     (["dialog", "close", "prev", "next", "zoomIn", "zoomOut", "original", "download", "thumbnails", "counter", "by", "source", "enlarge"] as const).map((k) => [k, tv.raw(k) as string]),
@@ -116,6 +120,7 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
       {/* Vizualizatorul de imagini (postări, chat, profil, clanuri, dovezi): o singură instanță pe site. */}
       <GcsImageViewerHost labels={viewerLabels} locale={locale} />
       {phishing && <GcsLinkGuard lists={phishing} />}
+      {cookieNotice && !preview && <GcsCookieBanner {...cookieNotice} />}
       <GcsHoverCardHost
         locale={locale}
         labels={{

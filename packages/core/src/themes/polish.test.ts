@@ -46,8 +46,8 @@ describe("setările pachetului de finisare", () => {
     for (const k of THEME_LOADERS.slice(1)) expect(sheet, k).toContain(`[data-gcs-loader="${k}"]`);
   });
 
-  test("designul GCS livrează cardurile separate; Clasic rămâne lista continuă; statisticile vizibile peste tot", () => {
-    expect(NOVA_THEME_SETTINGS.lists).toEqual({ layout: "cards", stats: "visible" });
+  test("designul GCS livrează cardurile separate cu contoarele la hover; Clasic rămâne lista continuă cu ele vizibile", () => {
+    expect(NOVA_THEME_SETTINGS.lists).toEqual({ layout: "cards", stats: "hover" });
     expect(GCS_DARK_THEME_SETTINGS.lists.layout).toBe("cards");
     expect(GCS_WHITE_THEME_SETTINGS.lists.layout).toBe("cards");
     expect(DEFAULT_THEME_SETTINGS.lists).toEqual({ layout: "list", stats: "visible" });

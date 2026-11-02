@@ -107,14 +107,31 @@
       "discord": "Continuar con la discordia",
       "steam": "Continuar con Steam",
       "noAccount": "¿Todavía no tiene cuenta?",
-      "registerLink": "Registrarse"
+      "registerLink": "Registrarse",
+      "forgot": "¿Olvidaste tu contraseña?",
+      "resetDone": "Tu contraseña se ha cambiado. Inicia sesión con la contraseña nueva."
     },
     "twoFactor": {
       "title": "Verificación de dos pasos",
       "subtitle": "Introduzca el código de 6 dígitos de su aplicación de autenticador.",
       "code": "Código de verificación",
       "trustDevice": "Recuerde este dispositivo durante 30 días",
-      "submit": "Verificar"
+      "submit": "Verificar",
+      "backupSubtitle": "Introduce uno de los códigos de respaldo que recibiste al activar la 2FA. Cada código funciona una sola vez.",
+      "emailSubtitle": "Enviamos un código de 6 dígitos al correo de tu cuenta. Es válido durante 3 minutos.",
+      "backupCode": "Código de respaldo",
+      "emailSent": "El código se ha enviado por correo.",
+      "use": {
+        "totp": "Usar la aplicación de autenticación",
+        "backup": "Usar un código de respaldo",
+        "email": "Enviarme un código por correo"
+      },
+      "email": {
+        "subject": "Tu código de acceso — {site}",
+        "greeting": "¡Hola, {name}!",
+        "body": "Tu código de verificación en dos pasos es:",
+        "ignore": "Si no intentaste iniciar sesión, cambia tu contraseña."
+      }
     },
     "register": {
       "title": "Registrarse",
@@ -128,7 +145,11 @@
       "hasAccount": "¿Ya tienes una cuenta?",
       "loginLink": "Iniciar sesión",
       "answerHint": "La pregunta de la comunidad contra los bots.",
-      "verifying": "Verificando…"
+      "verifying": "Verificando…",
+      "acceptTerms": "He leído y acepto los <terms>términos de uso</terms>.",
+      "acceptTermsPrivacy": "He leído y acepto los <terms>términos de uso</terms> y la <privacy>política de privacidad</privacy>.",
+      "termsLink": "Términos de uso",
+      "privacyLink": "Política de privacidad"
     },
     "errors": {
       "invalid_credentials": "Correo electrónico incorrecto o contraseña",
@@ -150,7 +171,66 @@
       "banned": "Tu acceso a este sitio está restringido. Si es un error, contacta con el equipo.",
       "registration_closed": "Los registros están cerrados por ahora.",
       "qa_failed": "La respuesta a la pregunta no es correcta.",
-      "spam_source": "El filtro antispam detuvo el registro. Si es un error, contacta con el equipo."
+      "spam_source": "El filtro antispam detuvo el registro. Si es un error, contacta con el equipo.",
+      "account_locked": "Esta cuenta está bloqueada temporalmente tras demasiadas contraseñas incorrectas. Inténtalo de nuevo en {minutes} min.",
+      "password_too_short_min": "La contraseña debe tener al menos {min} caracteres",
+      "password_too_long": "La contraseña puede tener como máximo 128 caracteres",
+      "password_needs_mix": "La contraseña debe contener letras y números",
+      "terms_required": "Debes aceptar los términos para crear tu cuenta.",
+      "terms_required_social": "Para una cuenta nueva, marca la aceptación de los términos en la página de registro y luego continúa con Discord, Google o Steam.",
+      "otp_disabled": "Los códigos por correo no están disponibles en este sitio. Usa tu aplicación de autenticación o un código de respaldo."
+    },
+    "passwordRule": {
+      "length": "Al menos {min} caracteres.",
+      "mix": "Al menos {min} caracteres, con letras y números."
+    },
+    "forgot": {
+      "title": "¿Olvidaste tu contraseña?",
+      "subtitle": "Te enviamos por email un enlace para elegir una contraseña nueva.",
+      "identifier": "Email o nombre de usuario",
+      "submit": "Enviar enlace de restablecimiento",
+      "sent": "Si existe una cuenta con estos datos, te hemos enviado un email con un enlace para restablecer la contraseña. El enlace es válido durante {minutes} minutos; revisa también la carpeta de spam.",
+      "back": "Volver a iniciar sesión",
+      "required": "Escribe tu email o tu nombre de usuario.",
+      "disabled": "El restablecimiento de la contraseña por email está desactivado en este sitio. Para recuperar tu cuenta, contacta con el equipo del sitio.",
+      "noEmail": "El restablecimiento de la contraseña por email no está disponible ahora mismo: este sitio no tiene configurado el envío de emails. Para recuperar tu cuenta, contacta con el equipo del sitio.",
+      "staffLink": "Ver el equipo del sitio"
+    },
+    "reset": {
+      "title": "Contraseña nueva",
+      "subtitle": "Elige una contraseña nueva para tu cuenta de {site}.",
+      "password": "Contraseña nueva",
+      "confirm": "Repite la contraseña nueva",
+      "submit": "Guardar contraseña",
+      "mismatch": "Las contraseñas no coinciden.",
+      "invalid": "Este enlace de restablecimiento ya no es válido: ha caducado, ya se ha usado o lo ha sustituido una solicitud más reciente.",
+      "requestNew": "Pedir un enlace nuevo"
+    },
+    "resetEmail": {
+      "greeting": "¡Hola, {name}!",
+      "fallback": "Si el botón no funciona, copia esta dirección en tu navegador:",
+      "link": {
+        "subject": "Restablece tu contraseña — {site}",
+        "body": "Hemos recibido una solicitud para restablecer la contraseña de tu cuenta de {site}. Usa el botón de abajo para elegir una contraseña nueva.",
+        "button": "Elegir una contraseña nueva",
+        "validity": "El enlace es válido durante {minutes} minutos y solo funciona una vez. Una solicitud más reciente lo anula.",
+        "ignore": "Si no lo has pedido tú, ignora este email: tu contraseña sigue siendo la misma."
+      },
+      "social": {
+        "subject": "Cómo iniciar sesión — {site}",
+        "body": "Hemos recibido una solicitud para restablecer la contraseña de tu cuenta de {site}, pero tu cuenta no tiene contraseña: inicias sesión con {providers}. En la página de inicio de sesión, elige el mismo botón.",
+        "bodyNone": "Hemos recibido una solicitud para restablecer la contraseña de tu cuenta de {site}, pero tu cuenta no tiene contraseña. Contacta con el equipo del sitio para recuperar tu cuenta.",
+        "button": "Ir a iniciar sesión",
+        "ignore": "Si no lo has pedido tú, ignora este email."
+      },
+      "changed": {
+        "subject": "Tu contraseña se ha cambiado — {site}",
+        "body": "La contraseña de tu cuenta de {site} se cambió el {when} desde la dirección IP {ip}.",
+        "bodyNoIp": "La contraseña de tu cuenta de {site} se cambió el {when}.",
+        "sessions": "Por tu seguridad, se han cerrado todas las sesiones abiertas de la cuenta.",
+        "notYou": "Si no has sido tú, pide enseguida un nuevo restablecimiento y avisa al equipo del sitio.",
+        "button": "Restablecer de nuevo la contraseña"
+      }
     }
   },
   "errors": {
@@ -407,7 +487,10 @@
       "invalid_icon": "El icono no es válido.",
       "disabled": "Esta opción está desactivada en este foro.",
       "invalid_gradient": "Degradado no válido",
-      "invalid_svg": "El SVG no es válido o no se puede limpiar."
+      "invalid_svg": "El SVG no es válido o no se puede limpiar.",
+      "password_needs_mix": "La contraseña debe contener letras y números.",
+      "password_too_long": "La contraseña puede tener como máximo 128 caracteres.",
+      "password_policy_length": "La contraseña es demasiado corta para la regla del sitio (mira debajo del campo)."
     }
   },
   "acp": {
@@ -468,12 +551,12 @@
         "webhooks": "Webhooks",
         "settings": "Ajustes",
         "settings_general": "General",
-        "settings_terms": "Términos de Privacidad",
+        "settings_terms": "Términos y privacidad",
         "settings_posting": "Publicación \" Editor",
         "settings_email": "Correo electrónico",
         "settings_auth": "Iniciar sesión \" Registro",
         "settings_contact": "Contacto",
-        "settings_2fa": "Autenticación de dos factores",
+        "settings_2fa": "Seguridad",
         "settings_advanced": "Avanzado",
         "settings_pwa": "Web App (PWA)",
         "discovery": "Discovery",
@@ -1062,7 +1145,8 @@
           "discord": "Discord",
           "google": "Google",
           "other": "Otro"
-        }
+        },
+        "loginLocked": "Acceso bloqueado hasta las {time}"
       },
       "actions": {
         "title": "Acciones de la cuenta",
@@ -1080,7 +1164,9 @@
         "disable2faConfirm": "¿Desactivar el acceso en dos pasos de este miembro? Solo si perdió el acceso a su aplicación de códigos.",
         "ban": "Banear",
         "gdpr": "Exportación RGPD",
-        "hint": "Cada acción queda en el registro. Fusionar y eliminar tienen sus propias páginas de confirmación."
+        "hint": "Cada acción queda en el registro. Fusionar y eliminar tienen sus propias páginas de confirmación.",
+        "unlockLogin": "Desbloquear el acceso",
+        "unlockLoginConfirm": "¿Quitar el bloqueo por contraseñas incorrectas? El miembro puede volver a intentarlo enseguida."
       },
       "cards": {
         "activity": "Actividad (30 días)",
@@ -1353,7 +1439,9 @@
         "servers_bridge": "Bridge and ELO",
         "gdpr": "GDPR requests",
         "donations": "Donaciones",
-        "warnings": "Advertencias"
+        "warnings": "Advertencias",
+        "2fa": "Seguridad",
+        "terms": "Términos y privacidad"
       },
       "save": "Guardar ajustes",
       "secretSet": "••••• guardar (dejar vacío para mantener el valor)",
@@ -4766,6 +4854,45 @@
         "edit": "Aspecto"
       }
     },
+    "securitySettings": {
+      "mfaGroups": "Grupos con 2FA obligatoria",
+      "mfaGroupsHint": "Los miembros de estos grupos deben activar la verificación en dos pasos antes de usar el sitio: hasta entonces se les envía a Ajustes → Seguridad. El ACP exige 2FA a todos los que tienen acceso de todos modos.",
+      "save": "Guardar grupos"
+    },
+    "legal": {
+      "title": "Términos y privacidad",
+      "terms": {
+        "title": "Términos de uso",
+        "hint": "La página pública /terms o una dirección externa. Mientras exista, se enlaza en el pie de página y en el registro."
+      },
+      "privacy": {
+        "title": "Política de privacidad",
+        "hint": "La página pública /privacy o una dirección externa, enlazada en el pie de página, en el registro y en el aviso de cookies."
+      },
+      "view": "Ver la página",
+      "mode": "Dónde está",
+      "modes": {
+        "none": "En ningún sitio (la página responde 404)",
+        "page": "Página en el sitio",
+        "external": "Dirección externa"
+      },
+      "url": "Dirección externa",
+      "urlHint": "Solo direcciones https://…",
+      "content": "Texto",
+      "saveDoc": "Guardar",
+      "savedDoc": "Guardado.",
+      "options": "Registro y cookies",
+      "save": "Guardar",
+      "retention": {
+        "title": "Conservación de datos",
+        "hint": "Lo que sea más antiguo que el periodo se borra automáticamente, una vez al día (la tarea system.retention). 0 = conservar siempre.",
+        "days": "{days, plural, one {# día} many {# días} other {# días}}",
+        "forever": "siempre",
+        "ips": "Direcciones IP en publicaciones, mensajes y registros: {value}.",
+        "notifications": "Notificaciones leídas: {value}.",
+        "edit": "Cambiar"
+      }
+    },
     "license": {
       "title": "Licencia",
       "description": "La licencia de GamingCommunitySuite de este sitio: qué incluye, la verificación en línea y el cambio de clave.",
@@ -4849,7 +4976,9 @@
       "bottom": "Abajo",
       "desktop": "Solo escritorio",
       "all_devices": "Todos los dispositivos",
-      "poll": "Solo polling (proveedores que cortan conexiones largas)"
+      "poll": "Solo polling (proveedores que cortan conexiones largas)",
+      "backup_codes": "Solo códigos de respaldo",
+      "email_code": "Códigos de respaldo o un código por correo"
     },
     "forums": {
       "posts_per_page": "Puestos por página",
@@ -5176,7 +5305,8 @@
       "enable": "Enciende",
       "disable": "Apaga",
       "password": "Contraseña de cuenta",
-      "wrongPassword": "La contraseña no es correcta."
+      "wrongPassword": "La contraseña no es correcta.",
+      "mfaRequired": "Tu grupo exige la verificación en dos pasos. Actívala abajo para seguir usando el sitio."
     },
     "signature": {
       "title": "Firma",
@@ -5437,6 +5567,53 @@
       "features": "Funciones del bot",
       "welcome_title": "Título del mensaje de bienvenida",
       "welcome_text": "Mensaje de bienvenida"
+    },
+    "siteSecurity": {
+      "login_max_attempts": "Contraseñas incorrectas hasta el bloqueo",
+      "login_max_attempts_hint": "Tras tantas contraseñas incorrectas, la cuenta se bloquea temporalmente (0 = sin bloqueo). Una IP se bloquea tras el triple de intentos.",
+      "login_lock_minutes": "Duración del bloqueo (minutos)",
+      "login_lock_minutes_hint": "Pasado este tiempo, la cuenta se desbloquea sola. El equipo puede desbloquearla antes desde la página del miembro.",
+      "password_min_length": "Longitud mínima de la contraseña",
+      "password_min_length_hint": "Entre 8 y 128 caracteres; se aplica al registrarse y al cambiar la contraseña.",
+      "password_require_mix": "Las contraseñas deben contener letras y números",
+      "password_reset_enabled": "«¿Olvidaste tu contraseña?» (restablecimiento por email)",
+      "password_reset_enabled_hint": "Los miembros eligen ellos mismos una contraseña nueva con un enlace enviado por email. Solo funciona con el envío de emails configurado (Ajustes → Email); si no, la página les pide que contacten con el equipo.",
+      "password_reset_minutes": "Validez del enlace de restablecimiento (minutos)",
+      "password_reset_minutes_hint": "Entre 5 y 1440; 30 por defecto. El enlace funciona una vez y una solicitud más reciente anula la anterior.",
+      "password_reset_revoke_sessions": "Al restablecer la contraseña, cerrar todas las sesiones del miembro",
+      "password_reset_revoke_sessions_hint": "Recomendado: quien conocía la contraseña antigua queda fuera en todos los dispositivos y se vuelve a pedir el 2FA en todas partes.",
+      "mfa_required_groups": "Grupos con 2FA obligatoria",
+      "mfa_recovery": "Recuperación de la 2FA (dispositivo perdido)",
+      "mfa_recovery_hint": "Los códigos de respaldo recibidos al activarla siempre funcionan. La segunda opción también permite entrar con un código enviado al correo de la cuenta.",
+      "new_device_email": "Correo al iniciar sesión desde un dispositivo nuevo",
+      "new_device_email_hint": "Desactivado aquí, no le llega a nadie. Activado, cada miembro puede desactivarlo en Ajustes → Dispositivos.",
+      "acp_session_minutes": "Sesión del ACP (minutos)",
+      "acp_session_minutes_hint": "Pasado este tiempo desde la última reautenticación (o al cambiar la IP), el ACP vuelve a pedir la contraseña y el código 2FA. Por defecto 720 (12 horas)."
+    },
+    "legal": {
+      "terms_mode": "Términos: dónde están",
+      "terms_content": "Términos: texto",
+      "terms_url": "Términos: dirección externa",
+      "privacy_mode": "Privacidad: dónde está",
+      "privacy_content": "Privacidad: texto",
+      "privacy_url": "Privacidad: dirección externa",
+      "require_terms_on_register": "Aceptar los términos es obligatorio al registrarse",
+      "require_terms_on_register_hint": "Solo mientras existan los términos. También se aplica a cuentas nuevas con Discord, Google o Steam; el momento de la aceptación se guarda en el miembro.",
+      "cookie_banner": "Aviso de cookies",
+      "cookie_banner_hint": "Un pequeño aviso abajo, para visitantes y miembros, hasta que lo cierren.",
+      "cookie_text": "Texto del aviso de cookies",
+      "cookie_text_hint": "Vacío = el texto predeterminado, traducido al idioma del visitante. El enlace a la política de privacidad se añade solo."
+    },
+    "retention": {
+      "audit_days": "Registro del ACP (días)",
+      "audit_days_hint": "Acciones del equipo de ACP → Registros (sin inicios de sesión).",
+      "login_days": "Inicios de sesión (días)",
+      "login_days_hint": "Dispositivos no vistos en tantos días (con su IP) y las entradas de inicio de sesión del registro.",
+      "spam_log_days": "Registro antispam (días)",
+      "plugin_log_days": "Registro de plugins (días)",
+      "plugin_log_days_hint": "Errores y mensajes de los plugins.",
+      "sessions_days": "Sesiones caducadas (días)",
+      "sessions_days_hint": "Sesiones y códigos de verificación caducados desde hace tantos días."
     }
   },
   "permissions": {
@@ -9400,7 +9577,8 @@
       "privacy": "Privacy",
       "contact": "Contact",
       "cookies": "Cookies",
-      "unread": "Unread content"
+      "unread": "Unread content",
+      "terms": "Términos"
     }
   },
   "imageViewer": {
@@ -10308,5 +10486,20 @@
     "back": "Volver al sitio",
     "continue": "Continuar a {domain}",
     "continueDanger": "Acepto el riesgo, abrir {domain}"
+  },
+  "legalPage": {
+    "terms": {
+      "title": "Términos de uso"
+    },
+    "privacy": {
+      "title": "Política de privacidad"
+    },
+    "updated": "Actualizado el {date}"
+  },
+  "cookieBanner": {
+    "region": "Cookies",
+    "text": "Este sitio usa cookies necesarias para iniciar sesión y para recordar tus preferencias (idioma, tema).",
+    "accept": "Entendido",
+    "privacy": "Política de privacidad"
   }
 }

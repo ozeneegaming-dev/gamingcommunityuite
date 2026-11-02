@@ -249,3 +249,80 @@ a:hover > .gcs-annBar__arrow {
     font-size: 17px;
   }
 }
+
+/*
+ * ─── Banda de cookie-uri (ACP → Setări → Termeni și confidențialitate) ─────────────────────────────────────────
+ * Componenta sistemului, în orice temă, pe tokenurile temei: fixată jos (peste pagină, fără să mute conținutul), deasupra
+ * barei de jos de pe mobil; intră cu fade + 6px, iar cu „reduced motion” doar cu opacitate.
+ */
+.gcs-cookieBar {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 60;
+  max-width: 760px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px 12px 16px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-box-bg, var(--gcs-surface));
+  color: var(--gcs-text);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.35);
+  animation: gcs-cookie-in var(--gcs-motion-base, 0.25s) var(--gcs-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)) both;
+}
+:root body:has(.gcs-mbar) .gcs-cookieBar {
+  bottom: 86px;
+}
+.gcs-cookieBar__icon {
+  flex: none;
+  font-size: 20px;
+  color: var(--gcs-accentInk, var(--gcs-accent));
+}
+.gcs-cookieBar__text {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font: 500 13px/1.45 var(--gcs-font-text);
+}
+.gcs-root a.gcs-cookieBar__link,
+a.gcs-cookieBar__link {
+  color: var(--gcs-accentInk, var(--gcs-accent));
+  font-weight: 700;
+  white-space: nowrap;
+}
+.gcs-cookieBar .gcs-btn {
+  flex: none;
+}
+@keyframes gcs-cookie-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (max-width: 520px) {
+  .gcs-cookieBar {
+    left: 12px;
+    right: 12px;
+    flex-wrap: wrap;
+  }
+  .gcs-cookieBar__text {
+    flex-basis: calc(100% - 32px);
+  }
+  .gcs-cookieBar .gcs-btn {
+    margin-left: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gcs-cookieBar {
+    animation-name: gcs-tip-fade;
+  }
+}

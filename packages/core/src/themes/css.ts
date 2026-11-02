@@ -10,6 +10,7 @@ import {
   type GcsThemePalette,
   type GcsThemeSettings,
 } from "./settings";
+import { GCS_BRAND } from "./brand";
 import { isHex6, readableFill } from "./palette";
 
 /**
@@ -167,9 +168,9 @@ const fontStack = (name: string, fallback: string) => {
 
 const SHADOWS: Record<GcsThemeSettings["boxes"]["shadow"], string> = {
   none: "none",
-  subtle: "0 2px 4px -1px rgb(11 15 23 / 0.1)",
-  soft: "0 4px 16px rgb(0 0 0 / 0.16)",
-  strong: "0 12px 34px rgb(0 0 0 / 0.34)",
+  subtle: GCS_BRAND.shadow.card,
+  soft: GCS_BRAND.shadow.menu,
+  strong: GCS_BRAND.shadow.dialog,
 };
 
 /** Variabilele care nu depind de mod (dimensiuni, fonturi, umbre). */

@@ -1022,8 +1022,8 @@
   font-size: 14px;
 }
 .gcs-notice--error {
-  background: rgba(214, 40, 57, 0.14);
-  color: var(--gcs-accentInk);
+  background: color-mix(in srgb, var(--gcs-danger) 14%, transparent);
+  color: var(--gcs-danger);
 }
 .gcs-replyBox {
   display: flex;
@@ -1277,7 +1277,7 @@
   line-height: 1.6;
 }
 .gcs-searchResult__snippet mark {
-  background: rgba(214, 40, 57, 0.25);
+  background: color-mix(in srgb, var(--gcs-accent) 25%, transparent);
   color: var(--gcs-text);
   border-radius: 3px;
   padding: 0 2px;

@@ -31,6 +31,12 @@ export const GCS_INSTALL_APP_CATALOG: readonly GcsInstallCatalogEntry[] = [
 /** Cheile aplicațiilor premium (din catalog). */
 export const GCS_PREMIUM_APPS = GCS_INSTALL_APP_CATALOG.filter((a) => a.tier === "premium").map((a) => a.key);
 
+/**
+ * Pachetul (plugin `.gcs`) al unei aplicații premium, ex. `gcs.vip_studio`: pe disc se dezarhivează în `applications/`,
+ * nu în `plugins/` (structura instalării Lite).
+ */
+export const isPremiumAppPackage = (pluginKey: string): boolean => pluginKey.startsWith("gcs.") && GCS_PREMIUM_APPS.includes(pluginKey.slice(4));
+
 export type GcsInstallAppChoice = {
   key: string;
   tier: GcsInstallAppTier;

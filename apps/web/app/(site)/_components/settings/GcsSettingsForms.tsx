@@ -2,6 +2,7 @@
 
 import { faDiscord, faGoogle, faSteam } from "@fortawesome/free-brands-svg-icons";
 import { faEnvelope, faFloppyDisk, faKey, faLink, faLinkSlash, faPaperPlane, faRotateLeft, faUserCheck, faUserPlus } from "@fortawesome/free-solid-svg-icons";
+import { GCS_BRAND } from "@gcs/core/themes";
 import { GcsAvatar, GcsButton, GcsIconSvg, GcsMemberName } from "@gcs/ui";
 import { useEffect, useState } from "react";
 import {
@@ -19,6 +20,8 @@ import { GcsStatus } from "./GcsStatus";
 import { useSettingsAction } from "./useSettingsAction";
 import { memberHref } from "@/lib/forum-urls";
 
+/** Accentul profilului când membrul nu și-a ales unul (ca în hover card și pe profil). */
+const BRAND_ACCENT = GCS_BRAND.color.dark.accent;
 const ACCENT_PRESETS = ["#D62839", "#B794FF", "#5EA2FF", "#3DDC97", "#F4B740", "#FF7AC6", "#22D3EE"];
 
 type Option = { id: number; key: string; name: string };
@@ -53,7 +56,7 @@ export function GcsAppearanceForm({
       }}
     >
       <section className="gcs-appearancePreview" aria-label={labels.preview} style={{ borderColor: accent ?? undefined }} data-testid="gcs-appearance-preview">
-        <div className="gcs-appearancePreview__cover" style={{ background: `linear-gradient(120deg, ${accent ?? "#D62839"}, transparent)` }} />
+        <div className="gcs-appearancePreview__cover" style={{ background: `linear-gradient(120deg, ${accent ?? BRAND_ACCENT}, transparent)` }} />
         <GcsAvatar name={user.name} size="l" {...(user.image ? { src: user.image } : {})} {...(frameKey ? { frame: frameKey } : {})} />
         <span className={`gcs-display gcs-name--${nameKey}`} style={{ fontSize: 26 }}>
           {user.name}
@@ -114,7 +117,7 @@ export function GcsAppearanceForm({
               onClick={() => setAccent(c)}
             />
           ))}
-          <input type="color" aria-label={labels.accent} value={accent ?? "#D62839"} onChange={(e) => setAccent(e.target.value.toUpperCase())} className="gcs-swatchInput" data-testid="gcs-accent-input" />
+          <input type="color" aria-label={labels.accent} value={accent ?? BRAND_ACCENT} onChange={(e) => setAccent(e.target.value.toUpperCase())} className="gcs-swatchInput" data-testid="gcs-accent-input" />
           <GcsButton icon={<GcsIconSvg icon={faRotateLeft} />} variant="ghost" onClick={() => setAccent(null)}>
             {labels.defaultAccent}
           </GcsButton>
@@ -319,6 +322,7 @@ export function GcsAccountForms({
   hasPassword,
   accounts,
   available = ["discord", "google", "steam"],
+  passwordMinLength = 8,
   labels,
 }: {
   email: string | null;
@@ -326,6 +330,8 @@ export function GcsAccountForms({
   accounts: { providerId: "discord" | "google" | "steam" }[];
   /** Metodele de login pornite pe site (Discord / Google doar cu cheile completate în ACP). */
   available?: ("discord" | "google" | "steam")[];
+  /** Lungimea minimă a parolei (ACP → Setări → Securitate); regula completă e în `labels.passwordHint`. */
+  passwordMinLength?: number;
   labels: Record<string, string>;
 }) {
   const emailAction = useSettingsAction(labels.emailSent!);
@@ -383,7 +389,22 @@ export function GcsAccountForms({
           </div>
           <div className="gcs-field">
             <label htmlFor="new-password">{labels.newPassword}</label>
-            <input id="new-password" type="password" autoComplete="new-password" minLength={8} className="gcs-input" value={next} onChange={(e) => setNext(e.target.value)} required />
+            <input
+              id="new-password"
+              type="password"
+              autoComplete="new-password"
+              minLength={passwordMinLength}
+              className="gcs-input"
+              value={next}
+              onChange={(e) => setNext(e.target.value)}
+              required
+              {...(labels.passwordHint ? { "aria-describedby": "new-password-hint" } : {})}
+            />
+            {labels.passwordHint && (
+              <p id="new-password-hint" className="gcs-field__hint" style={{ margin: 0 }}>
+                {labels.passwordHint}
+              </p>
+            )}
           </div>
           <div>
             <GcsButton icon={<GcsIconSvg icon={faKey} />} type="submit" variant="primary" disabled={passwordAction.pending}>

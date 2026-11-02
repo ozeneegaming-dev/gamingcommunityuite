@@ -145,7 +145,7 @@ export default async function AcpPanelLayout({ children }: { children: ReactNode
   );
 
   return (
-    <div className="gcs-acp" data-theme={theme}>
+    <div className="gcs-acp gcs-product" data-theme={theme}>
       <GcsAcpShell
         areas={areas}
         dashboard={dashboard}

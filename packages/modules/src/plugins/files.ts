@@ -1,9 +1,17 @@
 import { createHash, randomBytes } from "node:crypto";
 import { mkdir, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { isSafeArchivePath, readPluginZip } from "@gcs/core";
+import { isPremiumAppPackage, isSafeArchivePath, readPluginZip } from "@gcs/core";
 
 const COMPLETE = ".gcs-complete";
+
+/**
+ * Folderul în care se dezarhivează un pachet: aplicațiile premium (ex. `gcs.vip_studio`) în `applications`, dacă e
+ * configurat (structura Lite: `applications/` lângă `plugins/`), restul în `plugins`.
+ */
+export function pluginFilesDir(key: string, dirs: { plugins: string; applications?: string | undefined }): string {
+  return dirs.applications && isPremiumAppPackage(key) ? dirs.applications : dirs.plugins;
+}
 
 async function exists(p: string): Promise<boolean> {
   try {
