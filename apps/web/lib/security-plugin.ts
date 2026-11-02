@@ -56,7 +56,8 @@ export function securityPlugin(): BetterAuthPlugin {
         {
           matcher: (ctx) => !!ctx.path && ctx.path in NEW_PASSWORD_FIELD,
           handler: createAuthMiddleware(async (ctx) => {
-            const field = NEW_PASSWORD_FIELD[ctx.path]!;
+            const field = NEW_PASSWORD_FIELD[ctx.path ?? ""];
+            if (!field) return;
             const password = (ctx.body as Record<string, unknown> | undefined)?.[field];
             if (typeof password !== "string") return;
             const error = passwordPolicyError(password, await loadPasswordPolicy(services().settings));
