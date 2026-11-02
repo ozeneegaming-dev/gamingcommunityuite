@@ -79,8 +79,8 @@ describe("ACP → Realizări", () => {
     const b = await w.achievementAdmin.saveBadge(admin, null, { ...base, imageAttachmentId: first.id });
     expect(b.imageAttachmentId).toBe(first.id);
     expect(await w.db.attachment.findUnique({ where: { id: first.id } })).toMatchObject({ contentType: "badges.image", contentId: String(b.id) });
-    // Publică: un vizitator o poate deschide.
-    await expect(w.attachments.open(w.guest, first.id)).resolves.toMatchObject({ mime: "image/png" });
+    // Publică: un vizitator o poate deschide (recodată implicit în WebP).
+    await expect(w.attachments.open(w.guest, first.id)).resolves.toMatchObject({ mime: "image/webp" });
 
     // Salvarea fără imagine nouă o păstrează; o imagine nouă o înlocuiește pe cea veche; `null` o scoate.
     expect((await w.achievementAdmin.saveBadge(admin, b.id, base)).imageAttachmentId).toBe(first.id);

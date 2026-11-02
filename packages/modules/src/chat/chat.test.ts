@@ -248,7 +248,8 @@ describe("GcsChatService / GcsChatQueries", () => {
     expect(m.files).toEqual([{ id: mine.id, kind: "image", width: 8, height: 8 }]);
     expect((await queries.recent(b, "general"))[0]!.files).toHaveLength(1);
     // Cine citește camera descarcă fișierul; un vizitator nu.
-    await expect(w.attachments.open(b, mine.id)).resolves.toMatchObject({ mime: "image/png" });
+    // Imaginile se recodează implicit în WebP (ACP → Setări → Încărcări și imagini).
+    await expect(w.attachments.open(b, mine.id)).resolves.toMatchObject({ mime: "image/webp" });
     await expect(w.attachments.open(w.guest, mine.id)).rejects.toBeInstanceOf(GcsNotFound);
     // Același fișier nu se poate refolosi într-un alt mesaj.
     await clear(a);
