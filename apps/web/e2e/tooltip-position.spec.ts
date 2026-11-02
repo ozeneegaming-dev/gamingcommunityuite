@@ -44,27 +44,71 @@ async function shot(page: Page, name: string): Promise<void> {
   await page.screenshot({ path: path.join(SHOTS, `${name}.png`) });
 }
 
-/** Bula afișată pentru element (după animația de intrare) și dreptunghiurile bulei și ale elementului. */
-async function hoverTip(page: Page, target: Locator) {
+type Rect = { x: number; y: number; width: number; height: number };
+
+/** Pagina s-a așezat: elementul nu se mai mișcă (benzile care apar după încărcare, fonturile). */
+async function settled(target: Locator) {
   await target.scrollIntoViewIfNeeded();
+  let last = -1;
+  await expect
+    .poll(async () => {
+      const y = (await target.boundingBox())?.y ?? -2;
+      const same = y === last;
+      last = y;
+      return same;
+    }, { intervals: [300] })
+    .toBe(true);
+}
+
+/**
+ * Bula afișată pentru element, după animația de intrare (opacă și nemișcată între două cadre), cu dreptunghiurile
+ * bulei și ale elementului măsurate în același cadru.
+ */
+async function hoverTip(page: Page, target: Locator) {
+  await settled(target);
   const text = (await target.getAttribute("data-tip")) ?? (await target.getAttribute("title"));
   await target.hover();
   const visible = page.getByRole("tooltip").filter({ visible: true });
   const tip = visible.first();
   await expect(tip).toHaveText(text!);
   await expect(visible).toHaveCount(1);
-  await expect.poll(() => tip.evaluate((el) => el.getAnimations().every((a) => a.playState === "finished"))).toBe(true);
-  return { tip, box: (await tip.boundingBox())!, anchor: (await target.boundingBox())! };
+  const anchor = await target.elementHandle();
+  let rects: { ok: boolean; box: Rect; anchor: Rect } | undefined;
+  await expect
+    .poll(async () => {
+      rects = await tip.evaluate(
+        (el, a) =>
+          new Promise<{ ok: boolean; box: Rect; anchor: Rect }>((resolve) => {
+            const r = (n: Element) => {
+              const b = n.getBoundingClientRect();
+              return { x: b.x, y: b.y, width: b.width, height: b.height };
+            };
+            const first = r(el);
+            requestAnimationFrame(() =>
+              requestAnimationFrame(() => {
+                const box = r(el);
+                const opacity = getComputedStyle(el).opacity;
+                resolve({ ok: opacity === "1" && box.x === first.x && box.y === first.y, box, anchor: r(a as Element) });
+              }),
+            );
+          }),
+        anchor,
+      );
+      return rects.ok;
+    }, { message: "bula se așază: opacă și nemișcată între două cadre" })
+    .toBe(true);
+  return { tip, box: rects!.box, anchor: rects!.anchor };
 }
 
 /** Bula e lângă element: deasupra sau dedesubt la cel mult `NEAR` px, cu centrul elementului în dreptul ei. */
-function expectNear(box: { x: number; y: number; width: number; height: number }, anchor: { x: number; y: number; width: number; height: number }) {
+function expectNear(box: Rect, anchor: Rect) {
+  const where = `bula la ${JSON.stringify(box)}, elementul la ${JSON.stringify(anchor)}`;
   const gap = box.y + box.height <= anchor.y ? anchor.y - (box.y + box.height) : box.y - (anchor.y + anchor.height);
-  expect(gap, `bula la ${JSON.stringify(box)}, elementul la ${JSON.stringify(anchor)}`).toBeGreaterThanOrEqual(0);
-  expect(gap).toBeLessThanOrEqual(NEAR);
+  expect(gap, where).toBeGreaterThanOrEqual(0);
+  expect(gap, where).toBeLessThanOrEqual(NEAR);
   const cx = anchor.x + anchor.width / 2;
-  expect(cx).toBeGreaterThanOrEqual(box.x);
-  expect(cx).toBeLessThanOrEqual(box.x + box.width);
+  expect(cx, where).toBeGreaterThanOrEqual(box.x);
+  expect(cx, where).toBeLessThanOrEqual(box.x + box.width);
 }
 
 /** Luminanța relativă (WCAG) a unei culori calculate (`rgb()` sau `color(srgb …)`, cum o dă `color-mix`). */
