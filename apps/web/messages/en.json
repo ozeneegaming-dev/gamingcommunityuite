@@ -245,7 +245,26 @@
       "new_member_pm_limit": "You reached the daily private message limit for new members.",
       "captcha_failed": "The anti-spam check failed. Try again.",
       "qa_failed": "The answer to the question isn't correct.",
-      "spam_source": "Stopped by the spam filter."
+      "spam_source": "Stopped by the spam filter.",
+      "license_key_format": "The key isn’t in the right format (e.g. GCS-7KQ4-M2XD-9PRH).",
+      "license_key_invalid_key": "This licence key doesn’t exist. Check the letters and digits (keys never contain 0, O, 1 or I).",
+      "license_key_revoked": "The licence for this key has been revoked.",
+      "license_key_suspended": "The licence for this key is suspended. Contact us.",
+      "license_key_expired": "The licence for this key has expired.",
+      "license_key_blocked": "The licence is blocked for this site. Contact us.",
+      "license_key_domain": "The key is already used on another domain. Ask for the domain to be released and try again.",
+      "license_key_bad_domain": "The licence needs the forum’s real domain (not an IP address or localhost). Open the site on its domain and try again.",
+      "license_key_rate_limited": "Too many activation attempts. Try again in 15 minutes.",
+      "license_key_unreachable": "The licence server isn’t answering. Try again in a few minutes or ask for an offline licence token.",
+      "license_key_disabled": "Online activation is turned off on this server (GCS_LICENSE_SERVER=off): use the licence’s long token.",
+      "license_key_invalid_token": "The licence sent by the Data Center didn’t pass the check on this site. Update GCS or contact us.",
+      "license_missing": "Enter the licence key.",
+      "license_malformed": "The key isn’t in the right format.",
+      "license_unknown_key": "The licence was signed with a key this version doesn’t know.",
+      "license_bad_signature": "The licence’s signature isn’t valid (the licence was changed).",
+      "license_expired": "The licence has expired.",
+      "license_domain": "The licence isn’t valid for this site’s domain.",
+      "license_revoked": "The licence has been revoked."
     },
     "fields": {
       "invalid_color": "Invalid color (#RRGGBB)",
@@ -480,7 +499,8 @@
         "apps_dev": "Development",
         "update": "Update",
         "cron": "Cron",
-        "bot": "Community bot"
+        "bot": "Community bot",
+        "license": "Licence"
       },
       "members": {
         "members": "Members",
@@ -4423,7 +4443,8 @@
           "unknown": "unknown to the Data Center",
           "invalid": "invalid"
         }
-      }
+      },
+      "manageLicense": "Licence details and change →"
     },
     "bot": {
       "title": "Community bot",
@@ -4743,6 +4764,24 @@
         "save": "Save",
         "listLabel": "Widgets on this page",
         "edit": "Look"
+      }
+    },
+    "license": {
+      "title": "Licence",
+      "description": "This site’s GamingCommunitySuite licence: what it includes, the online check and changing the key.",
+      "key": "Licence key",
+      "tokenOnly": "Long token (offline licence or one issued before short keys)",
+      "domains": "Domains",
+      "expiry": "Expires",
+      "graceActive": "The Data Center has declared the licence invalid. Premium apps stay on until {date}, then they stop (the forum keeps working). Activate a valid key below or contact us.",
+      "graceEnded": "The licence has been invalid for more than 30 days: premium apps are off (the forum keeps working). Activate a valid key below.",
+      "change": {
+        "title": "Change the licence",
+        "titleFirst": "Activate the licence",
+        "field": "Licence key",
+        "hint": "The GCS-XXXX-XXXX-XXXX key you received with your purchase: we check it with the Data Center and the new licence replaces the current one. The long token (GCS1.…) of an offline licence works too. The licence must be for the domain {domain}.",
+        "submit": "Change the licence",
+        "submitFirst": "Activate the licence"
       }
     }
   },
@@ -5850,7 +5889,7 @@
         "title": "GCS licence",
         "body": "Enter the licence key you received with your purchase and accept the terms of use.",
         "field": "Licence key",
-        "fieldHint": "It starts with “GCS1.” and you can find it in your customer account.",
+        "fieldHint": "The GCS-XXXX-XXXX-XXXX key you received with your purchase. For an installation without internet access, the long token (GCS1.…) works too.",
         "eula": "Terms of use (EULA)",
         "eulaMissing": "The EULA text is missing from the package (EULA.md).",
         "accept": "I have read and accept the terms of use",

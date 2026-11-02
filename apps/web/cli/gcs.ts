@@ -63,6 +63,18 @@ const FIELD_TEXT: Record<string, string> = {
   license_expired: "licența a expirat",
   license_domain: "licența nu e valabilă pentru domeniul acestei instalări",
   license_revoked: "licența a fost revocată",
+  license_key_format: "cheia nu are formatul corect (ex. GCS-7KQ4-M2XD-9PRH)",
+  license_key_invalid_key: "cheia de licență nu există",
+  license_key_revoked: "licența acestei chei a fost revocată",
+  license_key_suspended: "licența acestei chei e suspendată",
+  license_key_expired: "licența acestei chei a expirat",
+  license_key_blocked: "licența e blocată pentru acest site",
+  license_key_domain: "cheia e deja folosită pe alt domeniu",
+  license_key_bad_domain: "licența are nevoie de domeniul real al forumului (GCS_DOMAIN / GCS_BASE_URL), nu o adresă IP",
+  license_key_rate_limited: "prea multe încercări de activare; încearcă peste 15 minute",
+  license_key_unreachable: "serverul de licențe nu răspunde; încearcă din nou sau folosește un token offline",
+  license_key_disabled: "activarea online e oprită (GCS_LICENSE_SERVER=off): folosește tokenul lung",
+  license_key_invalid_token: "licența primită de la Data Center nu a trecut verificarea",
   apps_premium_not_licensed: "o aplicație premium nu e inclusă în licență",
   apps_requires: "o aplicație are nevoie de aplicațiile de care depinde",
   apps_landing_invalid: "aplicația de pornire trebuie să fie pornită și să aibă o pagină de pornire",
@@ -103,7 +115,7 @@ function reportError(io: GcsCliIo, res: GcsCliResponse): number {
 
 async function interactiveInstall(prompt: GcsCliPrompt): Promise<Record<string, string>> {
   const values: Record<string, string> = {};
-  values.license = await prompt.input("Cheia de licență (GCS1.…)");
+  values.license = await prompt.input("Cheia de licență (GCS-XXXX-XXXX-XXXX sau tokenul GCS1.…)");
   values.siteName = await prompt.input("Numele site-ului", { default: "Comunitatea mea" });
   values.siteUrl = await prompt.input("Adresa site-ului (ex. https://forum.exemplu.ro)");
   values.locale = await prompt.select("Limba implicită", [

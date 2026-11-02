@@ -15,7 +15,7 @@ Ghid pentru instalarea GamingCommunitySuite pe un server propriu (VPS), cu Docke
 
 Mai ai nevoie de:
 
-- **pachetul GamingCommunitySuite** (`gcs-<versiune>.tar.gz` și `gcs-<versiune>.tar.gz.sha256`) și **cheia de licență** din contul tău de client;
+- **pachetul GamingCommunitySuite** (`gcs-<versiune>.tar.gz` și `gcs-<versiune>.tar.gz.sha256`) și **cheia de licență** (`GCS-XXXX-XXXX-XXXX`) primită la cumpărare;
 - **un domeniu** (ex. `forum.exemplu.ro`) și acces la setările lui DNS;
 - **acces root** la server (direct sau cu `sudo`);
 - **porturile 80 și 443** deschise în firewall. Caddy obține automat certificatul HTTPS (Let's Encrypt).
@@ -58,7 +58,7 @@ Deschide `https://forum.exemplu.ro/install`. Pașii apar în stânga, cu starea 
 
 1. **Cod de instalare**: codul afișat de script. Îl găsești oricând cu `cd /opt/gcs && docker compose logs web | grep "Cod de instalare"`.
 2. **Verificare sistem**: PostgreSQL, Redis, stocarea fișierelor, spațiul pe disc, folderul de configurare.
-3. **Licență**: cheia de licență și acceptarea termenilor de utilizare (EULA). Vezi secțiunea 4.
+3. **Licență**: cheia de licență (`GCS-XXXX-XXXX-XXXX`) și acceptarea termenilor de utilizare (EULA). Vezi secțiunea 4.
 4. **Aplicații**: aplicațiile pornite la instalare și aplicația de pornire. Vezi secțiunea 5.
 5. **Baza de date**: lasă „PostgreSQL inclus”, cu excepția cazului în care folosești un server PostgreSQL extern.
 6. **Site**: numele, adresa, limba și fusul orar.
@@ -73,16 +73,20 @@ Varianta din consolă, fără browser (aceeași verificare a licenței; implicit
 
 ```bash
 gcs install                    # interactiv
-GCS_INSTALL_LICENSE="GCS1.…" GCS_INSTALL_SITE_NAME="Comunitatea mea" GCS_INSTALL_SITE_URL="https://forum.exemplu.ro" \nGCS_INSTALL_ADMIN_NAME="Fondator" GCS_INSTALL_ADMIN_EMAIL="admin@exemplu.ro" GCS_INSTALL_ADMIN_PASSWORD="…" \nGCS_INSTALL_APPS="chat,clans" GCS_INSTALL_LANDING="forums" gcs install --non-interactive
+GCS_INSTALL_LICENSE="GCS-7KQ4-M2XD-9PRH" GCS_INSTALL_SITE_NAME="Comunitatea mea" GCS_INSTALL_SITE_URL="https://forum.exemplu.ro" \
+GCS_INSTALL_ADMIN_NAME="Fondator" GCS_INSTALL_ADMIN_EMAIL="admin@exemplu.ro" GCS_INSTALL_ADMIN_PASSWORD="…" \
+GCS_INSTALL_APPS="chat,clans" GCS_INSTALL_LANDING="forums" gcs install --non-interactive
 ```
 
 ## 4. Licența
 
-- Cheia începe cu `GCS1.` și e semnată digital. Se verifică **pe server, fără internet**: semnătura, data de expirare și domeniul.
+- Primești o **cheie de licență** scurtă, de forma `GCS-7KQ4-M2XD-9PRH` (literele mari sau mici, spațiile și cratimele nu contează; cheile nu conțin `0`, `O`, `1` sau `I`). La pasul „Licență”, installerul o trimite, împreună cu domeniul site-ului, la serverul de licențe (`https://client.gamingcommunitysuite.com`, HTTPS spre internet), care întoarce licența semnată. **Prima activare fixează domeniul** licenței: pentru a muta forumul pe alt domeniu, cere-ne eliberarea domeniului, apoi activează cheia din nou.
+- Licența semnată (un token care începe cu `GCS1.`) se verifică apoi **pe server, fără internet**: semnătura, data de expirare și domeniul. Pentru o instalare **fără acces la internet**, cere-ne tokenul lung și introdu-l în același câmp.
 - Licența e valabilă pentru domeniile din ea (ex. `forum.exemplu.ro`, cu sau fără `www.`, sau `*.exemplu.ro` pentru subdomenii).
-- Mesajele posibile: format greșit, cheie necunoscută, semnătură invalidă (cheia a fost modificată), licență expirată, domeniu greșit, licență revocată.
-- Licențele emise din contul de client (Data Center) se verifică și **online, o dată pe zi**. Dacă licența e suspendată sau revocată, ACP-ul afișează un avertisment, iar după 30 de zile aplicațiile premium se opresc (forumul și restul aplicațiilor merg mai departe). Dacă serverul de licențe nu răspunde, nu se schimbă nimic. `GCS_LICENSE_SERVER=<adresă>` în `.env` schimbă adresa verificării, iar `GCS_LICENSE_SERVER=off` o oprește.
-- Cheia se păstrează doar pe server (folderul de configurare, permisiuni `600`); nu ajunge în browser și nu apare în log-uri.
+- Mesajele posibile: cheie inexistentă, cheie folosită pe alt domeniu, licență suspendată, revocată sau expirată, serverul de licențe nu răspunde (încearcă din nou peste câteva minute), format greșit, semnătură invalidă (licența a fost modificată), domeniu greșit.
+- Licențele emise din contul de client (Data Center) se verifică și **online, o dată pe zi**. Dacă licența e suspendată sau revocată, ACP-ul afișează un avertisment, iar după 30 de zile aplicațiile premium se opresc (forumul și restul aplicațiilor merg mai departe). Dacă serverul de licențe nu răspunde, nu se schimbă nimic. `GCS_LICENSE_SERVER=<adresă>` în `.env` schimbă adresa verificării și a activării, iar `GCS_LICENSE_SERVER=off` le oprește (rămâne doar tokenul lung).
+- **ACP → Sistem → Licență** arată licența (licențiatul, cheia mascată, domeniile, expirarea, aplicațiile premium, ultima verificare online) și o schimbă cu o cheie nouă (ex. după un upgrade de plan) sau cu un token lung.
+- Cheia și licența se păstrează doar pe server (folderul de configurare, permisiuni `600`); nu ajung în browser și nu apar în log-uri.
 
 ## 5. Aplicațiile
 
@@ -133,6 +137,8 @@ Pentru backup automat zilnic, adaugă în `crontab -e` (ca root):
 | `/install` nu se deschide | `cd /opt/gcs && docker compose ps` (toate serviciile `running`) și `docker compose logs web`. |
 | Nu am codul de instalare | `cd /opt/gcs && docker compose logs web \| grep "Cod de instalare"` |
 | „Licența nu e valabilă pentru domeniul …” | Adresa site-ului (`GCS_DOMAIN` din `.env`) trebuie să fie unul din domeniile licenței. |
+| „Cheia e deja folosită pe alt domeniu” | Cheia a fost activată pe alt domeniu: cere-ne eliberarea domeniului, apoi activeaz-o din nou. |
+| „Serverul de licențe nu răspunde” | Serverul trebuie să poată face cereri HTTPS spre `client.gamingcommunitysuite.com`; fără internet, folosește tokenul lung al licenței. |
 | Certificatul HTTPS lipsește | Verifică DNS-ul (secțiunea 1) și porturile 80/443. |
 | O aplicație lipsește din site | ACP → Aplicații: pornește-o (cele premium cer o licență care le include). |
 
@@ -163,7 +169,7 @@ A guide to installing GamingCommunitySuite on your own server (VPS), with Docker
 
 You also need:
 
-- **the GamingCommunitySuite package** (`gcs-<version>.tar.gz` and `gcs-<version>.tar.gz.sha256`) and **your licence key** from your customer account;
+- **the GamingCommunitySuite package** (`gcs-<version>.tar.gz` and `gcs-<version>.tar.gz.sha256`) and **your licence key** (`GCS-XXXX-XXXX-XXXX`) from your purchase;
 - **a domain** (e.g. `forum.example.com`) and access to its DNS settings;
 - **root access** to the server (directly or with `sudo`);
 - **ports 80 and 443** open in the firewall. Caddy gets the HTTPS certificate automatically (Let's Encrypt).
@@ -206,7 +212,7 @@ Open `https://forum.example.com/install`. The steps are listed on the left with 
 
 1. **Install code**: the code printed by the script. You can find it any time with `cd /opt/gcs && docker compose logs web | grep "Cod de instalare"`.
 2. **System check**: PostgreSQL, Redis, file storage, disk space, the config folder.
-3. **Licence**: the licence key and accepting the terms of use (EULA). See section 4.
+3. **Licence**: the licence key (`GCS-XXXX-XXXX-XXXX`) and accepting the terms of use (EULA). See section 4.
 4. **Apps**: the apps enabled at install and the landing app. See section 5.
 5. **Database**: keep "Included PostgreSQL" unless you use an external PostgreSQL server.
 6. **Site**: name, address, language and time zone.
@@ -221,16 +227,20 @@ From the console, without a browser (the same licence check; by default it enabl
 
 ```bash
 gcs install                    # interactive
-GCS_INSTALL_LICENSE="GCS1.…" GCS_INSTALL_SITE_NAME="My community" GCS_INSTALL_SITE_URL="https://forum.example.com" \nGCS_INSTALL_ADMIN_NAME="Founder" GCS_INSTALL_ADMIN_EMAIL="admin@example.com" GCS_INSTALL_ADMIN_PASSWORD="…" \nGCS_INSTALL_APPS="chat,clans" GCS_INSTALL_LANDING="forums" gcs install --non-interactive
+GCS_INSTALL_LICENSE="GCS-7KQ4-M2XD-9PRH" GCS_INSTALL_SITE_NAME="My community" GCS_INSTALL_SITE_URL="https://forum.example.com" \
+GCS_INSTALL_ADMIN_NAME="Founder" GCS_INSTALL_ADMIN_EMAIL="admin@example.com" GCS_INSTALL_ADMIN_PASSWORD="…" \
+GCS_INSTALL_APPS="chat,clans" GCS_INSTALL_LANDING="forums" gcs install --non-interactive
 ```
 
 ## 4. The licence
 
-- The key starts with `GCS1.` and is digitally signed. It is checked **on the server, offline**: signature, expiry date and domain.
+- You receive a short **licence key** like `GCS-7KQ4-M2XD-9PRH` (upper or lower case, spaces and dashes don't matter; keys never contain `0`, `O`, `1` or `I`). At the "Licence" step, the installer sends it, together with the site's domain, to the licence server (`https://client.gamingcommunitysuite.com`, outgoing HTTPS), which returns the signed licence. **The first activation locks the licence's domain**: to move the forum to another domain, ask us to release the domain, then activate the key again.
+- The signed licence (a token starting with `GCS1.`) is then checked **on the server, offline**: signature, expiry date and domain. For an installation **without internet access**, ask us for the long token and enter it in the same field.
 - The licence is valid for the domains it lists (e.g. `forum.example.com`, with or without `www.`, or `*.example.com` for subdomains).
-- Possible messages: wrong format, unknown key, invalid signature (the key was changed), expired licence, wrong domain, revoked licence.
-- Licences issued from the client account (Data Center) are also checked **online, once a day**. If the licence is suspended or revoked, the ACP shows a warning and, after 30 days, the premium apps stop (the forum and the other apps keep working). If the licence server doesn't answer, nothing changes. `GCS_LICENSE_SERVER=<address>` in `.env` changes the check's address; `GCS_LICENSE_SERVER=off` turns it off.
-- The key is kept on the server only (the config folder, permissions `600`); it never reaches the browser or the logs.
+- Possible messages: the key doesn't exist, the key is used on another domain, the licence is suspended, revoked or expired, the licence server isn't answering (try again in a few minutes), wrong format, invalid signature (the licence was changed), wrong domain.
+- Licences issued from the client account (Data Center) are also checked **online, once a day**. If the licence is suspended or revoked, the ACP shows a warning and, after 30 days, the premium apps stop (the forum and the other apps keep working). If the licence server doesn't answer, nothing changes. `GCS_LICENSE_SERVER=<address>` in `.env` changes the address of the check and of the activation; `GCS_LICENSE_SERVER=off` turns both off (only the long token works then).
+- **ACP → System → Licence** shows the licence (licensee, masked key, domains, expiry, premium apps, last online check) and changes it with a new key (e.g. after a plan upgrade) or a long token.
+- The key and the licence are kept on the server only (the config folder, permissions `600`); they never reach the browser or the logs.
 
 ## 5. Apps
 
@@ -281,6 +291,8 @@ For a daily automatic backup, add to `crontab -e` (as root):
 | `/install` doesn't open | `cd /opt/gcs && docker compose ps` (all services `running`) and `docker compose logs web`. |
 | I don't have the install code | `cd /opt/gcs && docker compose logs web \| grep "Cod de instalare"` |
 | "The licence isn't valid for the domain …" | The site address (`GCS_DOMAIN` in `.env`) must be one of the licence's domains. |
+| "The key is already used on another domain" | The key was activated on another domain: ask us to release the domain, then activate it again. |
+| "The licence server isn't answering" | The server must be able to make HTTPS requests to `client.gamingcommunitysuite.com`; without internet access, use the licence's long token. |
 | No HTTPS certificate | Check DNS (section 1) and ports 80/443. |
 | An app is missing from the site | ACP → Apps: turn it on (premium apps need a licence that includes them). |
 

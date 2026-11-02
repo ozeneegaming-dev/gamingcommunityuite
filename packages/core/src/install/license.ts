@@ -9,6 +9,9 @@ import { ed25519PublicKey } from "../plugins/signature";
  * Mesajul semnat e `GCS-LICENSE-V1\n` + payload-ul (base64url, exact cum apare în token). Payload-ul (JSON) listează
  * licențiatul, domeniile, pachetul (standard), aplicațiile premium incluse și expirarea. Tokenul se ține doar pe server
  * (folderul de configurare, 0600), niciodată în browser după pasul „Licență”.
+ *
+ * Clientul primește de obicei o cheie scurtă (`GCS-7KQ4-M2XD-9PRH`, vezi `normalizeLicenseKey`): installerul și ACP-ul
+ * o schimbă la Data Center pe tokenul semnat (`activateLicenseKey`). Tokenul lung rămâne acceptat (licențe offline).
  */
 export const GCS_LICENSE_PREFIX = "GCS1";
 const SIGNED_HEADER = "GCS-LICENSE-V1\n";
@@ -252,6 +255,107 @@ export async function checkLicenseOnline(
     return { status: "unreachable" };
   } catch {
     return { status: "unreachable" };
+  }
+}
+
+// ─── Cheia scurtă (`GCS-7KQ4-M2XD-9PRH`), schimbată la Data Center pe tokenul semnat ───────────────────────────────
+
+/** Alfabetul cheilor scurte ale Data Center-ului (`LicenseEngine::generateRawKey`): fără 0 / O / 1 / I. */
+export const GCS_LICENSE_KEY_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const KEY_BODY = new RegExp(`^[${GCS_LICENSE_KEY_ALPHABET}]+$`);
+
+/**
+ * Forma canonică a unei chei scurte (cum o hash-uiește Data Center-ul): `GCS-XXXX-XXXX-XXXX` (12 caractere) sau
+ * formatul vechi `GCS-XXXXX-XXXXX-XXXXX-XXXXX` (20). Acceptă litere mici, spații, fără cratime și fără prefixul `GCS`;
+ * `null` dacă nu e o cheie scurtă (ex. un token `GCS1.…`).
+ */
+export function normalizeLicenseKey(value: string | null | undefined): string | null {
+  const compact = (value ?? "").replace(/[\s-]+/g, "").toUpperCase();
+  const rest = compact.startsWith("GCS") ? compact.slice(3) : "";
+  const body = rest.length === 12 || rest.length === 20 ? rest : compact.length === 12 || compact.length === 20 ? compact : "";
+  if (!body || !KEY_BODY.test(body)) return null;
+  const size = body.length === 12 ? 4 : 5;
+  return ["GCS", ...(body.match(new RegExp(`.{${size}}`, "g")) ?? [])].join("-");
+}
+
+/** Cheia mascată, ca în panoul Data Center-ului: `GCS-7KQ4-****-****`. */
+export function maskLicenseKey(key: string): string {
+  const [prefix, first, ...rest] = key.split("-");
+  return [prefix, first, ...rest.map((part) => "*".repeat(part.length))].join("-");
+}
+
+export type GcsLicenseActivationError =
+  | "format"
+  | "invalid_key"
+  | "revoked"
+  | "suspended"
+  | "expired"
+  | "blocked"
+  | "domain"
+  | "bad_domain"
+  | "rate_limited"
+  | "unreachable"
+  | "disabled"
+  | "invalid_token";
+
+export type GcsLicenseActivationResult = { ok: true; token: string } | { ok: false; error: GcsLicenseActivationError };
+
+const ACTIVATION_ERRORS: readonly string[] = ["invalid_key", "revoked", "suspended", "expired", "blocked", "domain", "rate_limited"];
+
+/** Serverul activării cheilor scurte: `GCS_LICENSE_SERVER` (`off` = fără activare online), altfel Data Center-ul. */
+export function licenseActivationServer(env: NodeJS.ProcessEnv = process.env): string {
+  const configured = (env.GCS_LICENSE_SERVER ?? "").trim();
+  if (configured === "off") return "";
+  return configured || GCS_LICENSE_SERVER_DEFAULT;
+}
+
+/**
+ * Activarea unei chei scurte la Data Center: `POST <server>/api/license/activate` cu
+ * `{ key, domain, instance_uuid?, version?, edition? }` → `{ ok: true, token }` sau `{ ok: false, error }`. Data
+ * Center-ul verifică cheia (doar hash-ul ei e la el), statusul, expirarea și domeniul (prima activare îl fixează) și
+ * întoarce tokenul GCS1 semnat, pe care aplicația îl verifică apoi offline ca pe orice token.
+ */
+export async function activateLicenseKey(
+  key: string,
+  opts: {
+    domain: string;
+    server?: string | undefined;
+    fetch?: typeof fetch;
+    timeoutMs?: number;
+    instanceUuid?: string;
+    version?: string;
+    edition?: string;
+  },
+): Promise<GcsLicenseActivationResult> {
+  const canonical = normalizeLicenseKey(key);
+  if (!canonical) return { ok: false, error: "format" };
+  const server = (opts.server ?? licenseActivationServer()).trim();
+  if (!server) return { ok: false, error: "disabled" };
+  const doFetch = opts.fetch ?? fetch;
+  try {
+    const res = await doFetch(new URL("/api/license/activate", server), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        key: canonical,
+        domain: normalizeDomain(opts.domain),
+        ...(opts.instanceUuid ? { instance_uuid: opts.instanceUuid } : {}),
+        ...(opts.version ? { version: opts.version } : {}),
+        ...(opts.edition ? { edition: opts.edition } : {}),
+      }),
+      signal: AbortSignal.timeout(opts.timeoutMs ?? 10_000),
+    });
+    // 400: cererea e bună de la noi, deci domeniul e cel refuzat (o adresă IP, localhost, gol).
+    if (res.status === 400) return { ok: false, error: "bad_domain" };
+    if (!res.ok) return { ok: false, error: "unreachable" };
+    const body = (await res.json().catch(() => null)) as { ok?: unknown; token?: unknown; error?: unknown } | null;
+    if (body?.ok === true && typeof body.token === "string" && body.token.startsWith(`${GCS_LICENSE_PREFIX}.`)) return { ok: true, token: body.token };
+    if (body?.ok === false && typeof body.error === "string" && ACTIVATION_ERRORS.includes(body.error)) {
+      return { ok: false, error: body.error as GcsLicenseActivationError };
+    }
+    return { ok: false, error: "unreachable" };
+  } catch {
+    return { ok: false, error: "unreachable" };
   }
 }
 

@@ -245,7 +245,26 @@
       "new_member_pm_limit": "Vous avez atteint la limite quotidienne de messages privés des nouveaux membres.",
       "captcha_failed": "La vérification anti-spam a échoué. Réessayez.",
       "qa_failed": "La réponse à la question n'est pas correcte.",
-      "spam_source": "Bloqué par le filtre anti-spam."
+      "spam_source": "Bloqué par le filtre anti-spam.",
+      "license_key_format": "La clé n’a pas le bon format (ex. GCS-7KQ4-M2XD-9PRH).",
+      "license_key_invalid_key": "Cette clé de licence n’existe pas. Vérifiez les lettres et les chiffres (les clés ne contiennent jamais 0, O, 1 ni I).",
+      "license_key_revoked": "La licence de cette clé a été révoquée.",
+      "license_key_suspended": "La licence de cette clé est suspendue. Contactez-nous.",
+      "license_key_expired": "La licence de cette clé a expiré.",
+      "license_key_blocked": "La licence est bloquée pour ce site. Contactez-nous.",
+      "license_key_domain": "La clé est déjà utilisée sur un autre domaine. Demandez la libération du domaine et réessayez.",
+      "license_key_bad_domain": "La licence a besoin du vrai domaine du forum (pas d’adresse IP ni localhost). Ouvrez le site sur son domaine et réessayez.",
+      "license_key_rate_limited": "Trop de tentatives d’activation. Réessayez dans 15 minutes.",
+      "license_key_unreachable": "Le serveur de licences ne répond pas. Réessayez dans quelques minutes ou demandez un jeton de licence hors ligne.",
+      "license_key_disabled": "L’activation en ligne est désactivée sur ce serveur (GCS_LICENSE_SERVER=off) : utilisez le jeton long de la licence.",
+      "license_key_invalid_token": "La licence envoyée par le Data Center n’a pas passé la vérification sur ce site. Mettez GCS à jour ou contactez-nous.",
+      "license_missing": "Saisissez la clé de licence.",
+      "license_malformed": "La clé n’a pas le bon format.",
+      "license_unknown_key": "La licence a été signée avec une clé que cette version ne connaît pas.",
+      "license_bad_signature": "La signature de la licence n’est pas valide (la licence a été modifiée).",
+      "license_expired": "La licence a expiré.",
+      "license_domain": "La licence n’est pas valable pour le domaine de ce site.",
+      "license_revoked": "La licence a été révoquée."
     },
     "fields": {
       "invalid_color": "Couleur non valide (#RRGBB)",
@@ -480,7 +499,8 @@
         "apps_dev": "Development",
         "update": "Mise à jour",
         "cron": "Cron",
-        "bot": "Bot de la communauté"
+        "bot": "Bot de la communauté",
+        "license": "Licence"
       },
       "members": {
         "members": "Membres",
@@ -4423,7 +4443,8 @@
           "unknown": "inconnue du Data Center",
           "invalid": "invalide"
         }
-      }
+      },
+      "manageLicense": "Détails et changement de licence →"
     },
     "bot": {
       "title": "Bot de la communauté",
@@ -4743,6 +4764,24 @@
         "save": "Enregistrer",
         "listLabel": "Widgets de la page",
         "edit": "Apparence"
+      }
+    },
+    "license": {
+      "title": "Licence",
+      "description": "La licence GamingCommunitySuite de ce site : ce qu’elle inclut, la vérification en ligne et le changement de clé.",
+      "key": "Clé de licence",
+      "tokenOnly": "Jeton long (licence hors ligne ou émise avant les clés courtes)",
+      "domains": "Domaines",
+      "expiry": "Expire",
+      "graceActive": "Le Data Center a déclaré la licence invalide. Les applications premium restent actives jusqu’au {date}, puis s’arrêtent (le forum continue de fonctionner). Activez ci-dessous une clé valide ou contactez-nous.",
+      "graceEnded": "La licence est invalide depuis plus de 30 jours : les applications premium sont arrêtées (le forum continue de fonctionner). Activez ci-dessous une clé valide.",
+      "change": {
+        "title": "Changer de licence",
+        "titleFirst": "Activer la licence",
+        "field": "Clé de licence",
+        "hint": "La clé au format GCS-XXXX-XXXX-XXXX reçue lors de l’achat : nous la vérifions auprès du Data Center et la nouvelle licence remplace l’actuelle. Le jeton long (GCS1.…) d’une licence hors ligne fonctionne aussi. La licence doit être valable pour le domaine {domain}.",
+        "submit": "Changer de licence",
+        "submitFirst": "Activer la licence"
       }
     }
   },
@@ -5850,7 +5889,7 @@
         "title": "Licence GCS",
         "body": "Saisis la clé de licence reçue à l’achat et accepte les conditions d’utilisation.",
         "field": "Clé de licence",
-        "fieldHint": "Elle commence par « GCS1. » et se trouve dans ton compte client.",
+        "fieldHint": "La clé au format GCS-XXXX-XXXX-XXXX reçue lors de l’achat. Pour une installation sans internet, le jeton long (GCS1.…) fonctionne aussi.",
         "eula": "Conditions d’utilisation (CLUF)",
         "eulaMissing": "Le texte du CLUF manque dans le paquet (EULA.md).",
         "accept": "J’ai lu et j’accepte les conditions d’utilisation",

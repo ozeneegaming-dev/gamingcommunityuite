@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterAll, describe, expect, test, vi } from "vitest";
-import { signLicense, type GcsLicenseOnlineResult, type GcsLicensePayload } from "./license";
+import { signLicense, type GcsLicenseActivationResult, type GcsLicenseOnlineResult, type GcsLicensePayload } from "./license";
 import { GCS_LICENSE_GRACE_DAYS, GcsLicenseOnline } from "./licenseOnline";
 import { GcsInstallState } from "./state";
 
@@ -114,5 +114,58 @@ describe("verificarea zilnică a licenței la Data Center", () => {
     const b = await s.online.run();
     expect(a?.instanceUuid).toBe(b?.instanceUuid);
     s.restoreEnv();
+  });
+});
+
+describe("activarea unei chei scurte (installer, ACP)", () => {
+  const prevEnv = { ...process.env };
+  afterAll(() => {
+    for (const k of Object.keys(env)) if (prevEnv[k] === undefined) delete process.env[k];
+  });
+
+  async function activation(reply: GcsLicenseActivationResult, extraEnv: Record<string, string> = {}) {
+    const configDir = mkdtempSync(path.join(os.tmpdir(), "gcs-licence-activate-"));
+    dirs.push(configDir);
+    const state = new GcsInstallState(configDir);
+    const activate = vi.fn(async () => reply);
+    Object.assign(process.env, env);
+    const online = new GcsLicenseOnline({ configDir, state, version: "1.0.0", edition: "vps", activate, now: () => Date.parse("2026-11-02T10:00:00Z"), env: { ...process.env, ...env, ...extraEnv } });
+    return { online, state, activate };
+  }
+
+  test("reușită: cheia canonică, tokenul verificat offline, starea online pornește „validă”, același uuid la verificări", async () => {
+    const token = signLicense(payload(), privateKey);
+    const a = await activation({ ok: true, token });
+    const result = await a.online.activate("gcs-7kq4-m2xd-9prh");
+    expect(result).toMatchObject({ ok: true, key: "GCS-7KQ4-M2XD-9PRH", token, license: { id: "dc-7", licensee: "Comunitatea Test" } });
+    const state = await a.online.read();
+    expect(state).toMatchObject({ status: "valid", checkedAt: "2026-11-02T10:00:00.000Z", invalidSince: null });
+    expect(a.activate).toHaveBeenCalledWith("GCS-7KQ4-M2XD-9PRH", expect.objectContaining({ domain: "forum.exemplu.ro", instanceUuid: state!.instanceUuid, version: "1.0.0", edition: "vps" }));
+    // Nimic salvat de activare: apelantul păstrează tokenul.
+    expect(await a.state.readLicense()).toBeNull();
+    // O a doua activare (ex. din ACP) trimite același uuid.
+    await a.online.activate("GCS-7KQ4-M2XD-9PRH");
+    expect(a.activate.mock.calls[1]?.[1]).toMatchObject({ instanceUuid: state!.instanceUuid });
+  });
+
+  test("refuzul Data Center-ului trece neschimbat; starea online nu se scrie", async () => {
+    const a = await activation({ ok: false, error: "domain" });
+    expect(await a.online.activate("GCS-7KQ4-M2XD-9PRH")).toEqual({ ok: false, error: "domain" });
+    expect(await a.online.read()).toBeNull();
+  });
+
+  test("format greșit: fără cerere; GCS_LICENSE_SERVER=off: serverul gol ajunge la activare", async () => {
+    const a = await activation({ ok: false, error: "disabled" }, { GCS_LICENSE_SERVER: "off" });
+    expect(await a.online.activate("GCS1.abc.def")).toEqual({ ok: false, error: "format" });
+    expect(a.activate).not.toHaveBeenCalled();
+    expect(await a.online.activate("GCS-7KQ4-M2XD-9PRH")).toEqual({ ok: false, error: "disabled" });
+    expect(a.activate).toHaveBeenCalledWith("GCS-7KQ4-M2XD-9PRH", expect.objectContaining({ server: "" }));
+  });
+
+  test("un token primit care nu trece verificarea offline (alt domeniu, cheie necunoscută) → invalid_token", async () => {
+    const other = signLicense(payload({ domains: ["alt-forum.ro"] }), privateKey);
+    expect(await (await activation({ ok: true, token: other })).online.activate("GCS-7KQ4-M2XD-9PRH")).toEqual({ ok: false, error: "invalid_token" });
+    const unknown = signLicense(payload({ kid: "necunoscuta" }), privateKey);
+    expect(await (await activation({ ok: true, token: unknown })).online.activate("GCS-7KQ4-M2XD-9PRH")).toEqual({ ok: false, error: "invalid_token" });
   });
 });
