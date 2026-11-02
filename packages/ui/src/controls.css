@@ -102,18 +102,22 @@ select option {
 }
 
 /*
- * Tooltip-ul sistemului (`GcsTooltip` și tooltip-urile automate din `GcsTooltipHost`), în orice temă: o bulă mică,
- * închisă, cu săgeată, care intră înclinată (stilul „skew”, CSS-ul nostru, inspirat de colecția de tooltip-uri CSS MIT
- * creditată în THIRD-PARTY-NOTICES.md). Bula stă în `<body>` cu poziție fixă (coordonatele vin din script), peste
- * meniurile deschise și panourile cu `overflow`; săgeata urmează centrul elementului (`--gcs-tip-arrow`).
+ * Tooltip-ul sistemului (`GcsTooltip` și tooltip-urile automate din `GcsTooltipHost`), în orice temă: o bulă mică cu
+ * săgeată, care intră înclinată (stilul „skew”, CSS-ul nostru, inspirat de colecția de tooltip-uri CSS MIT creditată în
+ * THIRD-PARTY-NOTICES.md). Bula stă în `<body>` cu poziție fixă (coordonatele vin din script), peste meniurile deschise
+ * și panourile cu `overflow`; săgeata urmează centrul elementului (`--gcs-tip-arrow`).
+ * Culorile vin din tokenurile temei (o temă le poate da direct: `--gcs-tooltip-bg`, `--gcs-tooltip-text`,
+ * `--gcs-tooltip-border`): pe tema închisă bula e un ardezie mai deschis decât cardurile (se desprinde de pagină), pe
+ * cea luminoasă un ardezie mai închis; textul alb are contrast ≥ 7:1 în ambele.
  */
 .gcs-tooltipWrap {
   position: relative;
   display: inline-flex;
 }
 .gcs-tooltip {
-  --gcs-tip-bg: #0b0f17;
-  --gcs-tip-border: #222a39;
+  --gcs-tip-bg: var(--gcs-tooltip-bg, color-mix(in srgb, var(--gcs-text) 20%, var(--gcs-surface2)));
+  --gcs-tip-border: var(--gcs-tooltip-border, color-mix(in srgb, var(--gcs-text) 34%, var(--gcs-surface2)));
+  --gcs-tip-text: var(--gcs-tooltip-text, var(--gcs-heading, #fff));
   position: fixed;
   left: 0;
   top: 0;
@@ -124,7 +128,7 @@ select option {
   border-radius: 5px;
   border: 1px solid var(--gcs-tip-border);
   background: var(--gcs-tip-bg);
-  color: #e9edf2;
+  color: var(--gcs-tip-text);
   font: 600 12px/1.35 var(--gcs-font-text, system-ui, sans-serif);
   letter-spacing: 0;
   text-transform: none;
@@ -133,6 +137,7 @@ select option {
   overflow-wrap: anywhere;
   pointer-events: none;
   box-shadow: 0 8px 22px rgb(0 0 0 / 0.42);
+  transition: none;
   transform-origin: bottom center;
   animation: gcs-tip-skew var(--gcs-motion-base, 0.22s) var(--gcs-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)) both;
 }
@@ -161,7 +166,18 @@ select option {
   border-right: 0;
 }
 :root[data-theme="light"] .gcs-tooltip {
-  --gcs-tip-border: #0b0f17;
+  --gcs-tip-bg: var(--gcs-tooltip-bg, color-mix(in srgb, var(--gcs-text) 86%, var(--gcs-surface)));
+  --gcs-tip-border: var(--gcs-tooltip-border, color-mix(in srgb, var(--gcs-text) 94%, var(--gcs-surface)));
+  --gcs-tip-text: var(--gcs-tooltip-text, var(--gcs-surface, #fff));
+  box-shadow: 0 6px 18px rgb(11 15 23 / 0.2);
+}
+@media (prefers-color-scheme: light) {
+  :root[data-theme="auto"] .gcs-tooltip {
+    --gcs-tip-bg: var(--gcs-tooltip-bg, color-mix(in srgb, var(--gcs-text) 86%, var(--gcs-surface)));
+    --gcs-tip-border: var(--gcs-tooltip-border, color-mix(in srgb, var(--gcs-text) 94%, var(--gcs-surface)));
+    --gcs-tip-text: var(--gcs-tooltip-text, var(--gcs-surface, #fff));
+    box-shadow: 0 6px 18px rgb(11 15 23 / 0.2);
+  }
 }
 
 /*

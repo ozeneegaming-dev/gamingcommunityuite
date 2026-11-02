@@ -491,8 +491,12 @@ textarea.gcs-input {
   .gcs-fx::after {
     animation: none !important;
   }
+  /*
+   * Fără tranziții: durata 0 (nu 0.01ms), altfel ORICE schimbare de stil (proprietatea implicită e `all`) ar porni o
+   * tranziție, iar scripturile care măsoară imediat după (tooltip-ul, cardurile la hover) ar citi poziția veche.
+   */
   * {
-    transition-duration: 0.01ms !important;
+    transition-duration: 0s !important;
     scroll-behavior: auto !important;
   }
 }
