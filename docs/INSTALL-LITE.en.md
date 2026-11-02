@@ -46,7 +46,8 @@ Write down: the host (usually `localhost`), the port (MySQL `3306`, PostgreSQL `
 - *Create*. Do **not** press “Run NPM Install”: the dependencies are already in the archive (in `server/node_modules`).
 
 You can change the Node.js version at any time: *Setup Node.js App* → the application (*Edit*) → *Node.js version* →
-*Save*, then *Restart*. On a version below 20.9 the application doesn’t start, and `stderr.log` says which version to pick.
+*Save*, then *Restart*. On a version below 20.9 the application doesn’t start, and its log (step 4) says which version
+to pick.
 
 **Plesk → the domain → Node.js**
 - *Node.js Version*: 22.x; *Document Root*: keep the domain’s default (`httpdocs`); *Application Root*: `gcs`;
@@ -60,8 +61,8 @@ Environment variables: none required. Optionally `GCS_BASE_URL=https://your-doma
 1. Open `https://your-domain/install`.
 2. **Install code**: the application generates it on first start (the site’s first visit) and writes it to the error log
    (stderr), on the line `[GCS] Cod de instalare: XXXX-XXXX-XXXX`:
-   - cPanel: the `stderr.log` file in the application folder (open it from the *File Manager*), or the file in the
-     application’s *Passenger log file* field, if the panel shows one;
+   - cPanel: the log in the application folder, `stderr.log` or `passenger.log` (open it from the *File Manager*); if
+     the application’s *Passenger log file* field is filled in, the file named there;
    - Plesk: *Node.js* → *Logs*.
 
    The code is shown only once (only a fingerprint of it is kept on disk). If you can’t find it, see “Common problems”.
@@ -110,8 +111,8 @@ After adding the cron, wait 5 minutes and press **Check**. The ACP dashboard sho
 | Symptom | What to do |
 |---|---|
 | “Cannot find module …/server.js” | *Application root* must be the folder that contains `app.js` (and `server/`). |
-| I can’t find the install code | Delete the `config/install_code.hash` file in the *File Manager*, press *Restart* in the panel and open the site: a new code appears in `stderr.log` (the old one is no longer valid). |
-| The application doesn’t start and `stderr.log` says “Node.js … is too old” or `SyntaxError: Unexpected token '??='` | The Node.js version is below 20.9: pick 22 or 24 in the panel (step 3), then *Restart*. |
+| I can’t find the install code | Delete the `config/install_code.hash` file in the *File Manager*, press *Restart* in the panel and open the site: a new code appears in the log (`stderr.log` / `passenger.log`; the old one is no longer valid). |
+| The application doesn’t start and the log (`stderr.log` / `passenger.log`) says “Node.js … is too old” or `SyntaxError: Unexpected token '??='` | The Node.js version is below 20.9: pick 22 or 24 in the panel (step 3), then *Restart*. |
 | The panel refuses to change the Node.js version: “application should not contain folder/file named node_modules in application root” | The application root contains a `node_modules` folder (e.g. after “Run NPM Install”). The application doesn’t use it (its dependencies are in `server/node_modules`): delete it, change the version, then *Restart*. |
 | The page returns 503 after installing | Restart the application from the panel (*Restart*); check the log. |
 | “The database user can’t create tables” | Grant the user **ALL PRIVILEGES** on the database (step 1). |

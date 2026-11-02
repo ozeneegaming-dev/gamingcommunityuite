@@ -46,7 +46,7 @@ Notează: gazda (de obicei `localhost`), portul (MySQL `3306`, PostgreSQL `5432`
 - *Create*. **Nu** apăsa „Run NPM Install”: dependențele sunt deja în arhivă (în `server/node_modules`).
 
 Versiunea Node.js se poate schimba oricând: *Setup Node.js App* → aplicația (*Edit*) → *Node.js version* → *Save*, apoi
-*Restart*. Pe o versiune sub 20.9 aplicația nu pornește, iar în `stderr.log` scrie ce versiune să alegi.
+*Restart*. Pe o versiune sub 20.9 aplicația nu pornește, iar jurnalul ei (pasul 4) spune ce versiune să alegi.
 
 **Plesk → domeniul → Node.js**
 - *Node.js Version*: 22.x; *Document Root*: lasă-l pe cel implicit al domeniului (`httpdocs`); *Application Root*: `gcs`;
@@ -60,8 +60,8 @@ Variabile de mediu: nu sunt necesare. Opțional `GCS_BASE_URL=https://domeniul-t
 1. Deschide `https://domeniul-tau/install`.
 2. **Codul de instalare**: aplicația îl generează la prima pornire (prima vizită a site-ului) și îl scrie în jurnalul de
    erori (stderr), pe rândul `[GCS] Cod de instalare: XXXX-XXXX-XXXX`:
-   - cPanel: fișierul `stderr.log` din folderul aplicației (deschide-l din *File Manager*), sau fișierul din câmpul
-     *Passenger log file* al aplicației, dacă panoul îl afișează;
+   - cPanel: jurnalul din folderul aplicației, `stderr.log` sau `passenger.log` (deschide-l din *File Manager*); dacă
+     aplicația are completat câmpul *Passenger log file*, fișierul de acolo;
    - Plesk: *Node.js* → *Logs*.
 
    Codul apare o singură dată (pe disc stă doar o amprentă a lui). Dacă nu-l mai găsești, vezi „Probleme frecvente”.
@@ -111,8 +111,8 @@ nu rulează.
 | Simptom | Ce faci |
 |---|---|
 | „Cannot find module …/server.js” | *Application root* trebuie să fie folderul care conține `app.js` (și `server/`). |
-| Nu găsesc codul de instalare | Șterge din *File Manager* fișierul `config/install_code.hash`, apasă *Restart* în panou și deschide site-ul: în `stderr.log` apare un cod nou (cel vechi nu mai e valid). |
-| Aplicația nu pornește, iar în `stderr.log` scrie „Node.js … e prea vechi” sau `SyntaxError: Unexpected token '??='` | Versiunea Node.js e sub 20.9: alege 22 sau 24 în panou (pasul 3), apoi *Restart*. |
+| Nu găsesc codul de instalare | Șterge din *File Manager* fișierul `config/install_code.hash`, apasă *Restart* în panou și deschide site-ul: în jurnal (`stderr.log` / `passenger.log`) apare un cod nou (cel vechi nu mai e valid). |
+| Aplicația nu pornește, iar în jurnal (`stderr.log` / `passenger.log`) scrie „Node.js … e prea vechi” sau `SyntaxError: Unexpected token '??='` | Versiunea Node.js e sub 20.9: alege 22 sau 24 în panou (pasul 3), apoi *Restart*. |
 | Panoul refuză schimbarea versiunii Node.js: „application should not contain folder/file named node_modules in application root” | Rădăcina aplicației conține un folder `node_modules` (ex. după „Run NPM Install”). Aplicația nu-l folosește (dependențele ei sunt în `server/node_modules`): șterge-l, schimbă versiunea, apoi *Restart*. |
 | Pagina dă 503 după instalare | Repornește aplicația din panou (*Restart*); verifică jurnalul. |
 | „Utilizatorul bazei nu poate crea tabele” | Dă utilizatorului **ALL PRIVILEGES** pe bază (pasul 1). |
