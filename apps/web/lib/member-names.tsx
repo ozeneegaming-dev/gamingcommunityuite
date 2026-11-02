@@ -5,6 +5,7 @@ import { GcsMemberName, type GcsMemberNameProps } from "@gcs/ui";
 import { cache } from "react";
 import { memberHref } from "./forum-urls";
 import { pluginHost, safeModeActive } from "./plugins";
+import { userContentHtml } from "./seo";
 import { services } from "./services";
 
 /**
@@ -52,10 +53,13 @@ export async function namesHtml(html: string | string[]): Promise<string | strin
 
 /**
  * HTML produs de server (statusurile și comentariile de pe profil, mesajele private, tichetele, descrierea clanului,
- * câmpurile de profil, semnăturile): randat ca element, cu numele și pastilele mențiunilor aduse la stilul de acum.
+ * câmpurile de profil, semnăturile): randat ca element, cu numele și pastilele mențiunilor aduse la stilul de acum și,
+ * pentru conținutul membrilor, cu politica linkurilor și a imaginilor externe (ACP → SEO, → Încărcări și imagini).
+ * `userContent={false}`: HTML-ul pluginurilor (sanitizat de gazdă, cu regulile lui).
  */
-export async function GcsNamedHtml({ html, as: Tag = "div", ...props }: { html: string; as?: "div" | "td"; className?: string; "data-testid"?: string }) {
-  return <Tag {...props} dangerouslySetInnerHTML={{ __html: await namesHtml(html) }} />;
+export async function GcsNamedHtml({ html, as: Tag = "div", userContent = true, ...props }: { html: string; as?: "div" | "td"; className?: string; "data-testid"?: string; userContent?: boolean }) {
+  const shown = userContent ? await userContentHtml(html) : html;
+  return <Tag {...props} dangerouslySetInnerHTML={{ __html: await namesHtml(shown) }} />;
 }
 
 /**

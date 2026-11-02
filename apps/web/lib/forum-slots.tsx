@@ -168,7 +168,7 @@ function renderItem(item: GcsSlotItem, t: Translate, key: string): ReactNode {
       );
     case "html":
       // HTML-ul sanitizat al pluginului, cu numele membrilor aduse la stilul comun.
-      return <GcsNamedHtml key={key} html={item.html} className="gcs-pluginHook gcs-slotHtml" />;
+      return <GcsNamedHtml key={key} html={item.html} className="gcs-pluginHook gcs-slotHtml" userContent={false} />;
     case "component": {
       const Component = FORUM_SLOT_COMPONENTS[item.component];
       return Component ? <Component key={key} {...(item.props ?? {})} /> : null;

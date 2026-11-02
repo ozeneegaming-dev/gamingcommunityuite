@@ -10,10 +10,12 @@ type Props = { params: Promise<{ id: string }> };
  * Descărcarea unui atașament (spec §15). Accesul îl decide `GcsAttachmentService.open` (permisiunile conținutului).
  * Imaginile se afișează în pagină; restul se descarcă. `nosniff` + CSP `sandbox`: browserul nu interpretează fișierul.
  */
-export async function GET(_req: Request, { params }: Props): Promise<Response> {
+export async function GET(req: Request, { params }: Props): Promise<Response> {
   const { id } = await params;
+  // `?thumb=1`: miniatura imaginii (ACP → Setări → Încărcări și imagini), dacă are una; altfel fișierul întreg.
+  const thumb = new URL(req.url).searchParams.get("thumb") === "1";
   try {
-    const file = await services().attachments.open(await currentActor(), id);
+    const file = await services().attachments.open(await currentActor(), id, { thumb });
     const disposition = `${file.inline ? "inline" : "attachment"}; filename*=UTF-8''${encodeURIComponent(file.filename)}`;
     return new Response(file.body, {
       headers: {

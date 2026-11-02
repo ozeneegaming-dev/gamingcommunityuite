@@ -302,6 +302,10 @@
   margin: 0 0 12px;
   border-radius: 10px;
 }
+/* O imagine de pe alt site afișată ca link (ACP → Setări → Încărcări și imagini: imaginile externe blocate). */
+.gcs-remoteImage {
+  overflow-wrap: anywhere;
+}
 .gcs-embed {
   position: relative;
   margin: 0 0 12px;

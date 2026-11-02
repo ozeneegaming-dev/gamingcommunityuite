@@ -8,6 +8,7 @@ import type { ReactNode } from "react";
 import { currentActor } from "@/lib/actor";
 import { memberHref } from "@/lib/forum-urls";
 import { namesHtml } from "@/lib/member-names";
+import { userContentHtml } from "@/lib/seo";
 import { services } from "@/lib/services";
 import { GcsHistoryActions, GcsHistoryIdChip, GcsHistoryJump, GcsHistorySystem } from "../../_components/chat-pro/GcsChatHistoryParts";
 
@@ -84,7 +85,8 @@ export default async function ChatHistoryPage({ searchParams }: { searchParams: 
       </span>
     </label>
   );
-  const rows = await Promise.all(data.rows.map(async (r) => ({ ...r, html: await namesHtml(r.html) })));
+  // Linkurile externe (nofollow după ACP → SEO), apoi numele membrilor.
+  const rows = await Promise.all(data.rows.map(async (r) => ({ ...r, html: await namesHtml(await userContentHtml(r.html)) })));
 
   return (
     <div className="gcs-chHist gcs-chatHistory" data-testid="gcs-chat-history">

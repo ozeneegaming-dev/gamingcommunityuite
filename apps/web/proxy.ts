@@ -9,6 +9,9 @@ import { isRootAdmin, SAFE_MODE_COOKIE, SAFE_MODE_PARAM } from "./lib/plugins";
 import { services } from "./lib/services";
 import { previewKeyFor, SITE_AREA_HEADER, SITE_PATH_HEADER, siteAreaFor, THEME_PREVIEW_COOKIE, THEME_PREVIEW_HEADER, THEME_PREVIEW_PARAM } from "./lib/theme-preview";
 
+/** Adresa fișierului cheii IndexNow: 32 de caractere hexazecimale + `.txt`, în rădăcina site-ului. */
+const INDEXNOW_KEY_PATH = /^\/([a-f0-9]{32})\.txt$/;
+
 /** Odată instalat, rămâne instalat: nu mai verificăm fișierul la fiecare request. */
 let installedCache = false;
 
@@ -84,6 +87,9 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   if (gate === "redirect") return NextResponse.redirect(new URL("/install", request.url), 307);
   if (gate === "not_found") return NextResponse.rewrite(new URL("/_not-found", request.url), { status: 404 });
   if (path === "/install" || path.startsWith("/install/")) return NextResponse.next();
+  // Fișierul cheii IndexNow (ACP → Promovare → SEO): `/<cheie>.txt` → ruta care o servește doar dacă e cheia salvată.
+  const indexNowKey = INDEXNOW_KEY_PATH.exec(path)?.[1];
+  if (indexNowKey) return NextResponse.rewrite(new URL(`/api/seo/indexnow-key/${indexNowKey}`, request.url));
 
   if (!isMaintenanceExempt(path)) {
     const maintenance = await services()
