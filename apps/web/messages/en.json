@@ -107,7 +107,9 @@
       "discord": "Continue with Discord",
       "steam": "Continue with Steam",
       "noAccount": "No account yet?",
-      "registerLink": "Register"
+      "registerLink": "Register",
+      "forgot": "Forgot your password?",
+      "resetDone": "Your password has been changed. Sign in with your new password."
     },
     "twoFactor": {
       "title": "Two-step verification",
@@ -181,6 +183,54 @@
     "passwordRule": {
       "length": "At least {min} characters.",
       "mix": "At least {min} characters, with letters and digits."
+    },
+    "forgot": {
+      "title": "Forgot your password?",
+      "subtitle": "We will email you a link to choose a new password.",
+      "identifier": "Email or username",
+      "submit": "Send reset link",
+      "sent": "If an account matches these details, we have sent you an email with a link to reset your password. The link is valid for {minutes} minutes; check your spam folder too.",
+      "back": "Back to sign in",
+      "required": "Enter your email or username.",
+      "disabled": "Password reset by email is turned off on this site. To recover your account, contact the site staff.",
+      "noEmail": "Password reset by email is not available right now: this site has no outgoing email set up. To recover your account, contact the site staff.",
+      "staffLink": "See the site staff"
+    },
+    "reset": {
+      "title": "New password",
+      "subtitle": "Choose a new password for your {site} account.",
+      "password": "New password",
+      "confirm": "Repeat new password",
+      "submit": "Save password",
+      "mismatch": "The passwords do not match.",
+      "invalid": "This reset link is no longer valid: it has expired, was already used or was replaced by a newer request.",
+      "requestNew": "Request a new link"
+    },
+    "resetEmail": {
+      "greeting": "Hi, {name}!",
+      "fallback": "If the button does not work, copy this address into your browser:",
+      "link": {
+        "subject": "Reset your password — {site}",
+        "body": "We received a request to reset the password of your {site} account. Use the button below to choose a new password.",
+        "button": "Choose a new password",
+        "validity": "The link is valid for {minutes} minutes and works only once. A newer request cancels it.",
+        "ignore": "If you did not ask for this, ignore this email: your password stays the same."
+      },
+      "social": {
+        "subject": "How to sign in — {site}",
+        "body": "We received a request to reset the password of your {site} account, but your account has no password: you sign in with {providers}. On the sign-in page, choose the same button.",
+        "bodyNone": "We received a request to reset the password of your {site} account, but your account has no password. Contact the site staff to recover your account.",
+        "button": "Go to sign in",
+        "ignore": "If you did not ask for this, ignore this email."
+      },
+      "changed": {
+        "subject": "Your password was changed — {site}",
+        "body": "The password of your {site} account was changed on {when}, from IP address {ip}.",
+        "bodyNoIp": "The password of your {site} account was changed on {when}.",
+        "sessions": "For your safety, all open sessions of the account were signed out.",
+        "notYou": "If this was not you, request a new password reset right away and tell the site staff.",
+        "button": "Reset my password again"
+      }
     }
   },
   "errors": {
@@ -5487,6 +5537,12 @@
       "password_min_length": "Minimum password length",
       "password_min_length_hint": "Between 8 and 128 characters; applies at registration and when changing the password.",
       "password_require_mix": "Passwords must contain letters and digits",
+      "password_reset_enabled": "“Forgot password” (password reset by email)",
+      "password_reset_enabled_hint": "Members choose a new password themselves with a link sent by email. Works only with outgoing email set up (Settings → Email); otherwise the page tells them to contact the staff.",
+      "password_reset_minutes": "Reset link validity (minutes)",
+      "password_reset_minutes_hint": "Between 5 and 1440; default 30. The link works once, and a newer request cancels the old one.",
+      "password_reset_revoke_sessions": "On password reset, sign the member out everywhere",
+      "password_reset_revoke_sessions_hint": "Recommended: whoever knew the old password is signed out on every device, and 2FA is asked again everywhere.",
       "mfa_required_groups": "Groups that must use 2FA",
       "mfa_recovery": "2FA recovery (lost device)",
       "mfa_recovery_hint": "The backup codes received at setup always work. The second option also allows signing in with a code sent to the account email.",

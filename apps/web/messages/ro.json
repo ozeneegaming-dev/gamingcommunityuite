@@ -107,7 +107,9 @@
       "discord": "Continuă cu Discord",
       "steam": "Continuă cu Steam",
       "noAccount": "Nu ai cont?",
-      "registerLink": "Înregistrează-te"
+      "registerLink": "Înregistrează-te",
+      "forgot": "Ai uitat parola?",
+      "resetDone": "Parola a fost schimbată. Intră în cont cu parola nouă."
     },
     "twoFactor": {
       "title": "Verificare în doi pași",
@@ -181,6 +183,54 @@
     "passwordRule": {
       "length": "Cel puțin {min} caractere.",
       "mix": "Cel puțin {min} caractere, cu litere și cifre."
+    },
+    "forgot": {
+      "title": "Ai uitat parola?",
+      "subtitle": "Îți trimitem pe email un link ca să-ți alegi o parolă nouă.",
+      "identifier": "Email sau nume de utilizator",
+      "submit": "Trimite linkul de resetare",
+      "sent": "Dacă există un cont cu aceste date, ți-am trimis un email cu un link pentru resetarea parolei. Linkul e valabil {minutes, plural, one {# minut} few {# minute} other {# de minute}}; verifică și folderul Spam.",
+      "back": "Înapoi la autentificare",
+      "required": "Scrie emailul sau numele de utilizator.",
+      "disabled": "Resetarea parolei prin email e oprită pe acest site. Ca să-ți recuperezi contul, contactează echipa site-ului.",
+      "noEmail": "Resetarea parolei prin email nu e disponibilă momentan: site-ul nu are configurată trimiterea emailurilor. Ca să-ți recuperezi contul, contactează echipa site-ului.",
+      "staffLink": "Vezi echipa site-ului"
+    },
+    "reset": {
+      "title": "Parolă nouă",
+      "subtitle": "Alege o parolă nouă pentru contul tău de pe {site}.",
+      "password": "Parola nouă",
+      "confirm": "Repetă parola nouă",
+      "submit": "Salvează parola",
+      "mismatch": "Parolele nu coincid.",
+      "invalid": "Linkul de resetare nu mai e valabil: a expirat, a fost deja folosit sau a fost înlocuit de o cerere mai nouă.",
+      "requestNew": "Cere un link nou"
+    },
+    "resetEmail": {
+      "greeting": "Salut, {name}!",
+      "fallback": "Dacă butonul nu merge, copiază adresa în browser:",
+      "link": {
+        "subject": "Resetarea parolei — {site}",
+        "body": "Am primit o cerere de resetare a parolei pentru contul tău de pe {site}. Apasă butonul de mai jos ca să-ți alegi o parolă nouă.",
+        "button": "Alege o parolă nouă",
+        "validity": "Linkul e valabil {minutes, plural, one {# minut} few {# minute} other {# de minute}} și merge o singură dată. O cerere nouă îl anulează pe acesta.",
+        "ignore": "Dacă nu ai cerut tu resetarea, ignoră acest email: parola ta rămâne aceeași."
+      },
+      "social": {
+        "subject": "Cum intri în cont — {site}",
+        "body": "Am primit o cerere de resetare a parolei pentru contul tău de pe {site}, dar contul tău nu are o parolă: intri cu {providers}. Pe pagina de autentificare, alege același buton.",
+        "bodyNone": "Am primit o cerere de resetare a parolei pentru contul tău de pe {site}, dar contul tău nu are o parolă. Contactează echipa site-ului ca să-ți recuperezi contul.",
+        "button": "Mergi la autentificare",
+        "ignore": "Dacă nu ai cerut tu asta, ignoră acest email."
+      },
+      "changed": {
+        "subject": "Parola a fost schimbată — {site}",
+        "body": "Parola contului tău de pe {site} a fost schimbată pe {when}, de la adresa IP {ip}.",
+        "bodyNoIp": "Parola contului tău de pe {site} a fost schimbată pe {when}.",
+        "sessions": "Din motive de siguranță, toate sesiunile deschise ale contului au fost închise.",
+        "notYou": "Dacă nu ai fost tu, cere imediat o resetare nouă a parolei și anunță echipa site-ului.",
+        "button": "Resetează din nou parola"
+      }
     }
   },
   "errors": {
@@ -5487,6 +5537,12 @@
       "password_min_length": "Lungimea minimă a parolei",
       "password_min_length_hint": "Între 8 și 128 de caractere; se aplică la înregistrare și la schimbarea parolei.",
       "password_require_mix": "Parola trebuie să conțină litere și cifre",
+      "password_reset_enabled": "„Am uitat parola” (resetarea parolei prin email)",
+      "password_reset_enabled_hint": "Membrii își aleg singuri o parolă nouă cu un link primit pe email. Merge doar cu trimiterea emailurilor configurată (Setări → Email); altfel pagina le spune să contacteze echipa.",
+      "password_reset_minutes": "Valabilitatea linkului de resetare (minute)",
+      "password_reset_minutes_hint": "Între 5 și 1440; implicit 30. Linkul merge o singură dată, iar o cerere nouă îl anulează pe cel vechi.",
+      "password_reset_revoke_sessions": "La resetarea parolei, închide toate sesiunile membrului",
+      "password_reset_revoke_sessions_hint": "Recomandat: cine știa parola veche e scos din cont pe toate dispozitivele, iar 2FA se cere din nou peste tot.",
       "mfa_required_groups": "Grupuri cu 2FA obligatoriu",
       "mfa_recovery": "Recuperarea 2FA (dispozitiv pierdut)",
       "mfa_recovery_hint": "Codurile de rezervă primite la activare merg mereu. A doua variantă permite și intrarea cu un cod trimis pe emailul contului.",

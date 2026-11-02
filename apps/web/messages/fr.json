@@ -107,7 +107,9 @@
       "discord": "Continuer avec Discord",
       "steam": "Continuer avec Steam",
       "noAccount": "Pas encore de compte ?",
-      "registerLink": "S'inscrire"
+      "registerLink": "S'inscrire",
+      "forgot": "Mot de passe oublié ?",
+      "resetDone": "Ton mot de passe a été changé. Connecte-toi avec le nouveau mot de passe."
     },
     "twoFactor": {
       "title": "Vérification en deux étapes",
@@ -181,6 +183,54 @@
     "passwordRule": {
       "length": "Au moins {min} caractères.",
       "mix": "Au moins {min} caractères, avec des lettres et des chiffres."
+    },
+    "forgot": {
+      "title": "Mot de passe oublié ?",
+      "subtitle": "On t’envoie par email un lien pour choisir un nouveau mot de passe.",
+      "identifier": "Email ou nom d’utilisateur",
+      "submit": "Envoyer le lien de réinitialisation",
+      "sent": "Si un compte correspond à ces informations, nous t’avons envoyé un email avec un lien pour réinitialiser ton mot de passe. Le lien est valable {minutes} minutes ; vérifie aussi le dossier spam.",
+      "back": "Retour à la connexion",
+      "required": "Saisis ton email ou ton nom d’utilisateur.",
+      "disabled": "La réinitialisation du mot de passe par email est désactivée sur ce site. Pour récupérer ton compte, contacte l’équipe du site.",
+      "noEmail": "La réinitialisation du mot de passe par email n’est pas disponible pour le moment : ce site n’a pas configuré l’envoi d’emails. Pour récupérer ton compte, contacte l’équipe du site.",
+      "staffLink": "Voir l’équipe du site"
+    },
+    "reset": {
+      "title": "Nouveau mot de passe",
+      "subtitle": "Choisis un nouveau mot de passe pour ton compte sur {site}.",
+      "password": "Nouveau mot de passe",
+      "confirm": "Répète le nouveau mot de passe",
+      "submit": "Enregistrer le mot de passe",
+      "mismatch": "Les mots de passe ne correspondent pas.",
+      "invalid": "Ce lien de réinitialisation n’est plus valable : il a expiré, a déjà été utilisé ou a été remplacé par une demande plus récente.",
+      "requestNew": "Demander un nouveau lien"
+    },
+    "resetEmail": {
+      "greeting": "Salut, {name} !",
+      "fallback": "Si le bouton ne fonctionne pas, copie cette adresse dans ton navigateur :",
+      "link": {
+        "subject": "Réinitialise ton mot de passe — {site}",
+        "body": "Nous avons reçu une demande de réinitialisation du mot de passe de ton compte sur {site}. Utilise le bouton ci-dessous pour choisir un nouveau mot de passe.",
+        "button": "Choisir un nouveau mot de passe",
+        "validity": "Le lien est valable {minutes} minutes et ne fonctionne qu’une fois. Une demande plus récente l’annule.",
+        "ignore": "Si tu n’as rien demandé, ignore cet email : ton mot de passe reste le même."
+      },
+      "social": {
+        "subject": "Comment te connecter — {site}",
+        "body": "Nous avons reçu une demande de réinitialisation du mot de passe de ton compte sur {site}, mais ton compte n’a pas de mot de passe : tu te connectes avec {providers}. Sur la page de connexion, choisis le même bouton.",
+        "bodyNone": "Nous avons reçu une demande de réinitialisation du mot de passe de ton compte sur {site}, mais ton compte n’a pas de mot de passe. Contacte l’équipe du site pour récupérer ton compte.",
+        "button": "Aller à la connexion",
+        "ignore": "Si tu n’as rien demandé, ignore cet email."
+      },
+      "changed": {
+        "subject": "Ton mot de passe a été changé — {site}",
+        "body": "Le mot de passe de ton compte sur {site} a été changé le {when}, depuis l’adresse IP {ip}.",
+        "bodyNoIp": "Le mot de passe de ton compte sur {site} a été changé le {when}.",
+        "sessions": "Pour ta sécurité, toutes les sessions ouvertes du compte ont été fermées.",
+        "notYou": "Si ce n’était pas toi, demande tout de suite une nouvelle réinitialisation et préviens l’équipe du site.",
+        "button": "Réinitialiser à nouveau le mot de passe"
+      }
     }
   },
   "errors": {
@@ -5487,6 +5537,12 @@
       "password_min_length": "Longueur minimale du mot de passe",
       "password_min_length_hint": "Entre 8 et 128 caractères ; s'applique à l'inscription et au changement de mot de passe.",
       "password_require_mix": "Les mots de passe doivent contenir des lettres et des chiffres",
+      "password_reset_enabled": "« Mot de passe oublié » (réinitialisation par email)",
+      "password_reset_enabled_hint": "Les membres choisissent eux-mêmes un nouveau mot de passe grâce à un lien reçu par email. Fonctionne uniquement avec l’envoi d’emails configuré (Paramètres → Email) ; sinon, la page leur demande de contacter l’équipe.",
+      "password_reset_minutes": "Validité du lien de réinitialisation (minutes)",
+      "password_reset_minutes_hint": "Entre 5 et 1440 ; 30 par défaut. Le lien fonctionne une seule fois, et une demande plus récente annule l’ancien.",
+      "password_reset_revoke_sessions": "À la réinitialisation, fermer toutes les sessions du membre",
+      "password_reset_revoke_sessions_hint": "Recommandé : quiconque connaissait l’ancien mot de passe est déconnecté sur tous les appareils, et le 2FA est redemandé partout.",
       "mfa_required_groups": "Groupes avec 2FA obligatoire",
       "mfa_recovery": "Récupération de la 2FA (appareil perdu)",
       "mfa_recovery_hint": "Les codes de secours reçus à l'activation fonctionnent toujours. La deuxième option permet aussi de se connecter avec un code envoyé à l'e-mail du compte.",
