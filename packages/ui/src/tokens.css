@@ -125,6 +125,7 @@
   --gcs-btn-radius: var(--gcs-brand-radius-button);
   --gcs-sweep: rgb(255 255 255 / 0.08);
   color-scheme: dark;
+  font-family: var(--gcs-font-text);
 }
 .gcs-product[data-theme="light"] {
   --gcs-bg: var(--gcs-brand-light-bg);

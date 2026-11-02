@@ -241,6 +241,7 @@ export function brandTokensCss(): string {
       `  --gcs-btn-radius: var(--gcs-brand-radius-button);`,
       `  --gcs-sweep: rgb(255 255 255 / 0.08);`,
       `  color-scheme: dark;`,
+      `  font-family: var(--gcs-font-text);`,
     ]),
     lightBlocks('.gcs-product[data-theme="light"]', '.gcs-product[data-theme="auto"]', [
       ...productLines("light-"),

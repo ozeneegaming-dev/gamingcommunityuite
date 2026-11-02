@@ -88,7 +88,8 @@ test("un cont Steam fără email vede bannerul; după confirmarea emailului bann
 
   const mails = await profileFixture<{ to: string; html: string }[]>(request, { action: "outbox" });
   const mail = mails.find((m) => m.to === `real-${id}@example.com`)!;
-  const link = /href="([^"]+)"/.exec(mail.html)![1]!.replace(/&#38;/g, "&");
+  // Primul link al emailului e cel din conținut (antetul învelișului e text); `&` poate ieși `&#38;` sau `&amp;`.
+  const link = /href="([^"]+)"/.exec(mail.html)![1]!.replace(/&(?:#38|amp);/g, "&");
   await page.goto(new URL(link).pathname + new URL(link).search);
   await expect(page.getByTestId("gcs-email-changed")).toBeVisible();
   await expect(page.getByTestId("gcs-steam-email-banner")).toHaveCount(0);
