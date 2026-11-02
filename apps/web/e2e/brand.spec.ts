@@ -65,6 +65,10 @@ test("ACP-ul are brandul GCS: navy, accentul portocaliu, DM Sans, bara de iconi�
   await shot(page, "acp-dashboard-light-375");
   await acpTheme(page, "dark");
   await shot(page, "acp-dashboard-dark-375");
+  console.log(`[GCS] dashboard ACP la 375 px: ${await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)} px peste lățime`);
+  // Fără defilare orizontală pe o pagină de listă (ca `acp-screens.spec.ts`).
+  await page.goto("/admin/groups");
+  await expect(page.getByRole("heading", { name: "Grupuri", level: 1 })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
 });
 
