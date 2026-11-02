@@ -38,7 +38,7 @@ describe("uploadTypeError: extensia ȘI tipul real", () => {
   });
 
   test("tipul real trebuie să fie cunoscut și permis de listă", () => {
-    expect(uploadTypeError("a.bin", { mime: "application/x-msdownload", ext: "exe" }, ALL, false)).toBe("unsupported_type");
+    expect(uploadTypeError("a.dat", { mime: "application/x-msdownload", ext: "exe" }, ALL, false)).toBe("unsupported_type");
     expect(uploadTypeError("arhiva.zip", ZIP, ["jpg", "png"], false)).toBe("extension_not_allowed");
     expect(uploadTypeError("log.txt", null, ["jpg"], true)).toBe("extension_not_allowed");
   });

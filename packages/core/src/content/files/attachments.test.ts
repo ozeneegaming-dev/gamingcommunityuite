@@ -149,7 +149,7 @@ describe("GcsAttachmentService.attach / open", () => {
 
   test("un atașament nelegat îl poate deschide doar proprietarul", async () => {
     const att = await service.upload(member, { name: "a.png", bytes: await png() }, CTX);
-    await expect(service.open(member, att.id)).resolves.toMatchObject({ mime: "image/png", inline: true });
+    await expect(service.open(member, att.id)).resolves.toMatchObject({ mime: "image/webp", inline: true });
     await expect(service.open(other, att.id)).rejects.toBeInstanceOf(GcsNotFound);
   });
 
@@ -159,7 +159,7 @@ describe("GcsAttachmentService.attach / open", () => {
     await expect(service.open(other, att.id)).rejects.toBeInstanceOf(GcsNotFound);
 
     service.registerAccess("test.item", async (actor, contentId) => contentId === "7" && actor.userId === other.userId);
-    await expect(service.open(other, att.id)).resolves.toMatchObject({ filename: "a.png" });
+    await expect(service.open(other, att.id)).resolves.toMatchObject({ filename: "a.webp" });
     await expect(service.open(guest, att.id)).rejects.toBeInstanceOf(GcsNotFound);
   });
 
